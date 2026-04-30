@@ -98,8 +98,9 @@ function rTotal(C,T){
   const raceOpts=['전체','T','Z','P','N'];
   const _showBulk=isLoggedIn&&_bulkEditMode;
   const _ncols=(isLoggedIn?11:10)+(_showBulk?1:0);
-  let filterBar=`<div class="fbar" style="margin-bottom:16px;flex-wrap:wrap;gap:6px">
-    <strong style="font-size:11px;color:var(--gray-l)">종족:</strong>
+  // (모바일/태블릿) 검색창이 커서 버튼들이 2줄로 밀리는 문제 방지
+  // - 한 줄 유지 + 가로 스크롤(드래그)로 접근
+  let filterBar=`<div class="fbar utilbar utilbar--scroll" style="margin-bottom:16px;flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
     <span style="color:var(--border2);align-self:center">│</span>
     <input id="total-search" type="text" value="${(totalSearch||'').replace(/"/g,'&quot;')}" placeholder="🔍 이름/대학/티어/직책 + (테/저/프, 남/여) 검색..."
@@ -107,7 +108,7 @@ function rTotal(C,T){
       oncompositionend="window._tsComp=false;totalSearch=this.value;totalApplySearchFilter()"
       oninput="totalSearch=this.value;if(!window._tsComp)totalApplySearchFilter()"
       autocomplete="off" spellcheck="false"
-      style="padding:5px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:220px;flex:1;background:var(--white);color:var(--text)">
+      style="padding:5px 8px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:140px;max-width:220px;flex:0 1 190px;background:var(--white);color:var(--text)">
     <button class="pill ${totalHideNoRecord?'on':''}" style="${totalHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
     <span style="color:var(--border2);align-self:center">│</span>
     <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode=(totalViewMode==='gallery'?'table':'gallery');_bulkEditMode=false;render()" title="${totalViewMode==='gallery'?'목록으로 돌아가기':'갤러리 뷰'}">▦ 갤러리</button>
@@ -162,103 +163,10 @@ function rTotal(C,T){
 
   let totalShown=0;
   
-  // Add crew section for general/boracrew streamers
-  if(typeof crewCfg !== 'undefined' && crewCfg.length > 0) {
-    let crewMembers = players.filter(p => (p.gameType === 'general' || p.gameType === '보라크루') && !p.retired);
-    if(totalRaceFilter!=='전체') crewMembers = crewMembers.filter(p=>p.race===totalRaceFilter);
-    if(totalHideNoRecord) crewMembers = crewMembers.filter(p=>((p.win||0)+(p.loss||0))>0);
-    
-    if(crewMembers.length > 0) {
-      totalShown+=crewMembers.length;
-      const crewGroups = {};
-      crewMembers.forEach(p => {
-        const crewName = p.crewName || '기타';
-        if(!crewGroups[crewName]) crewGroups[crewName] = [];
-        crewGroups[crewName].push(p);
-      });
-      
-      Object.entries(crewGroups).forEach(([crewName, members]) => {
-        const crewConfig = crewCfg.find(c => c.name === crewName);
-        const crewColor = crewConfig?.color || '#7c3aed';
-        const crewDisplayName = crewConfig?.name || crewName;
-        
-        tableHTML+=`<tr class="ugrp" data-univ-header="${crewName}" style="--c:${crewColor}">
-          <td colspan="${_ncols}">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-              <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-                <span class="clickable-univ" onclick="if(typeof openCrewModal==='function')openCrewModal('${crewName}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">👥 ${crewDisplayName}</span>
-                <span style="font-size:10px;background:rgba(124,58,237,.2);color:#7c3aed;border-radius:4px;padding:1px 6px;font-weight:700">종합 게임</span>
-              </div>
-              <span style="font-size:11px;color:rgba(255,255,255,.8);white-space:nowrap;font-weight:600">${members.length}명</span>
-            </div>
-          </td>
-        </tr>`;
-        
-        // Sort crew members by tier then points
-        const sorted = [...members].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
-        const rolePl = sorted.filter(p=>p.role&&MAIN_ROLES.includes(p.role));
-        const normalPl = sorted.filter(p=>!p.role||!MAIN_ROLES.includes(p.role));
-        const displayList = rolePl.length ? [...rolePl, null, ...normalPl] : normalPl;
-        let inRoleSection = rolePl.length > 0;
-        
-        if(inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${crewColor}"><td colspan="${_ncols}" style="background:${crewColor}22;color:${crewColor}">주요 직책 (${rolePl.length}명)</td></tr>`;
-        
-        displayList.forEach(p => {
-          if(p===null){
-            inRoleSection=false;
-            if(normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${crewColor}"><td colspan="${_ncols}">일반 스트리머 (${normalPl.length}명)</td></tr>`;
-            return;
-          }
-          const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):0;
-          const pRank = _rankMap[p.name];
-          const pChange = typeof getRankChangeBadge==='function' ? getRankChangeBadge(p.name, pRank) : '';
-          const pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          const q = `${p.name||''} ${crewName} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
-          
-          tableHTML+=`<tr data-player-row="1" data-univ="${crewName}" data-q="${q.replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
-            ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
-            <td style="text-align:center;white-space:nowrap;padding:5px 4px">
-              <div style="font-size:11px;font-weight:800;color:var(--text3);line-height:1.2">${pRank||'-'}</div>
-              <div>${pChange}</div>
-            </td>
-            <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
-            <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
-            <td style="text-align:left;padding:6px 12px;white-space:nowrap">
-              <span style="display:inline-flex;align-items:center;gap:8px">
-                ${p.photo?`<span onclick="openPlayerModal('${pSafe}')" title="스트리머 상세" style="width:40px;height:40px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid ${crewColor};background:${crewColor}22;font-size:11px;font-weight:900;color:${crewColor};position:relative;cursor:pointer">${p.race||'?'}<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:`<span style="display:inline-block;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);background:${crewColor}22;border:2px solid ${crewColor};flex-shrink:0"></span>`}
-                <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${pSafe}')">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
-              </span>
-            </td>
-            <td class="col-hide-mobile wt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.win}</td>
-            <td class="col-hide-mobile lt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.loss}</td>
-            <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
-              ${(p.win+p.loss)?wr+'%':'-'}${(p.win+p.loss)?`<br><span style="font-size:9px;color:var(--gray-l);font-weight:400">${p.win+p.loss}판</span>`:''}
-            </td>
-            <td class="col-hide-mobile ${pC(p.points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${pS(p.points)}</td>
-            <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:12px;color:${(p.elo||ELO_DEFAULT)>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${p.elo||ELO_DEFAULT}</td>
-            <td class="col-hide-mobile" style="text-align:center;padding:7px 4px">${(()=>{
-              const today2=new Date().toISOString().slice(0,10);
-              const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
-              const _7ago2=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
-              const lastD=(p.history||[]).reduce((mx,h)=>h.date>mx?h.date:mx,'');
-              if(!lastD) return '<span style="font-size:9px;color:#9ca3af" title="기록 없음">-</span>';
-              if(lastD>=_7ago2) return `<span style="font-size:11px;font-weight:800;color:#16a34a" title="최근 활동 (7일 이내)">🟢</span>`;
-              if(lastD>=_30ago2) return `<span style="font-size:11px;font-weight:800;color:#f59e0b" title="최근 활동 (30일 이내)">🟡</span>`;
-              return '<span style="font-size:11px;font-weight:800;color:#9ca3af" title="비활동 (30일 초과)">⚪</span>';
-            })()}</td>
-            ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${pSafe}')">수정</button>`)}</td>`:''}
-
-          </tr>`;
-        });
-      });
-    }
-  }
-
-
-  // University section for StarCraft streamers (exclude general/boracrew)
+  // University section for StarCraft streamers (exclude general)
   getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
     const _isHiddenUniv=isLoggedIn&&u.hidden;
-    let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general'&&p.gameType!=='보라크루');
+    let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general');
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
     if(totalHideNoRecord) up=up.filter(p=>((p.win||0)+(p.loss||0))>0);
     if(!up.length)return;
@@ -267,7 +175,7 @@ function rTotal(C,T){
     tableHTML+=`<tr class="ugrp" data-univ-header="${u.name}" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${_ncols}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
         <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-          <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,'26px')}${u.name}</span>
+          <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','26px'):'26px'))}${u.name}</span>
           ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
           ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;font-weight:700">🚫 방문자 숨김</span>`:''}
         </div>
@@ -306,7 +214,7 @@ function rTotal(C,T){
         <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span style="display:inline-flex;align-items:center;gap:8px">
-            ${p.photo?`<span onclick="openPlayerModal('${_pSafe}')" title="스트리머 상세" style="width:40px;height:40px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border);background:var(--border2);font-size:11px;font-weight:900;color:#64748b;position:relative;cursor:pointer">${p.race||'?'}<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span style="display:inline-block;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
+            ${p.photo?`<span onclick="openPlayerModal('${_pSafe}')" title="스트리머 상세" style="width:40px;height:40px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border);background:var(--border2);font-size:11px;font-weight:900;color:#64748b;position:relative;cursor:pointer">${p.race||'?'}<img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span style="display:inline-block;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
             <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${_pSafe}')">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
           </span>
         </td>
@@ -350,14 +258,15 @@ function _buildGalleryView(rankMap){
   let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:4px 0">';
   let anyShown=false;
   getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
-    let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general'&&p.gameType!=='보라크루'&&!p.retired);
+    let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general'&&!p.retired);
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
     if(totalHideNoRecord) up=up.filter(p=>((p.win||0)+(p.loss||0))>0);
     if(!up.length) return;
     anyShown=true;
     const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    // 대학 헤더: 로고 배경이 대학색으로 보이도록(요청)
     html+=`<div data-gallery-univ-header="${u.name}" style="grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:10px 4px 4px;border-bottom:2px solid ${u.color||'#6366f1'};margin-top:6px">
-      <span style="display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:800;color:${u.color||'#6366f1'}">${gUI(u.name,'20px')}${u.name}</span>
+      <span class="ubadge" data-icon-done="1" style="background:${u.color||'#6366f1'};display:inline-flex;align-items:center;gap:4px;font-size:12px">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','20px'):'20px'))}${u.name}</span>
       <span style="font-size:11px;color:var(--gray-l);font-weight:600">${up.length}명</span>
     </div>`;
     sorted.forEach(p=>{
@@ -380,7 +289,7 @@ function _buildGalleryView(rankMap){
         onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 28px rgba(0,0,0,.22)'"
         onmouseleave="this.style.transform='';this.style.boxShadow=''">
         ${p.photo
-          ? `<img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
+          ? `<img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
           : ''}
         <div class="gc-placeholder" style="position:absolute;inset:0;display:${p.photo?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:${clr}15">${p.race||'?'}</div>
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 40%,rgba(0,0,0,.82) 100%)"></div>
@@ -541,7 +450,8 @@ function openMergePlayersModal(){
   if(modal) modal.remove();
   modal=document.createElement('div');
   modal.id=modalId;
-  modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:12000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  // (개선) z-index CSS 변수로 통일
+  modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:var(--z-modal-5);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
   const list=players.map(p=>p.name).filter(Boolean).sort((a,b)=>a.localeCompare(b));
   modal.innerHTML=`<div style="background:var(--white);border-radius:16px;padding:18px 18px 16px;width:520px;max-width:100%;box-shadow:0 10px 50px rgba(0,0,0,.35)">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
@@ -784,13 +694,11 @@ function rTier(C,T){
   {
     // ── 2행: 대학 (스크롤) ──
     fh+=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;padding-bottom:2px">`;
-    fh+=`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--text3);align-self:center">대학</span>`;
     fh+=`<button class="pill ${fUniv==='전체'?'on':''}" style="flex-shrink:0" onclick="sf('전체','${fTier}')">전체</button>`;
     allU.forEach(u=>{fh+=`<button class="pill ${fUniv===u.name?'on':''}" style="flex-shrink:0;${fUniv===u.name?`background:${u.color};border-color:${u.color};color:#fff`:''}" onclick="sf('${u.name}','${fTier}')">${u.name}</button>`;});
     fh+=`</div>`;
     // ── 3행: 티어 (스크롤) ──
     fh+=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;padding-bottom:2px">`;
-    fh+=`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--text3);align-self:center">티어</span>`;
     fh+=`<button class="pill ${fTier==='전체'?'on':''}" style="flex-shrink:0" onclick="sf('${fUniv}','전체')">전체</button>`;
     TIERS.forEach(t=>{
       const _bc=getTierBtnColor(t),_bt=getTierBtnTextColor(t),_sel=fTier===t;
@@ -799,7 +707,6 @@ function rTier(C,T){
     fh+=`</div>`;
     // ── 4행: 종족 + 옵션 (flex-wrap) ──
     fh+=`<div class="fbar" style="flex-wrap:wrap;gap:6px">`;
-    fh+=`<span style="font-size:11px;font-weight:700;color:var(--text3);align-self:center">종족</span>`;
     ['전체','T','Z','P'].forEach(r=>{
       fh+=`<button class="pill ${window._tierRaceFilter===r?'on':''}" onclick="window._tierRaceFilter='${r}';render()">${r==='전체'?'전체':r}</button>`;
     });
@@ -816,7 +723,6 @@ function rTier(C,T){
     ?'padding:3px 10px;border-radius:12px;border:2px solid var(--blue);background:var(--blue);font-size:11px;cursor:pointer;color:#fff;font-weight:700'
     :'padding:3px 10px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);font-size:11px;cursor:pointer;color:var(--text3)';
   fh+=`<div class="fbar" style="gap:6px;flex-wrap:wrap;align-items:center">
-    <span style="font-size:11px;font-weight:700;color:var(--text3);align-self:center">유형별</span>
     <button class="pill ${!_hasTypeFilter?'on':''}" onclick="window._tierTypeSet=new Set();window._tierTypeFilterOpen=false;render()">전체</button>`;
   if(_hasTypeFilter){
     window._tierTypeSet.forEach(id=>{
@@ -835,7 +741,6 @@ function rTier(C,T){
     fh+=`</div>`;
   }
   fh+=`</div>`;
-  fh+=`<div style="font-size:10px;color:var(--gray-l);margin:-2px 0 10px">유형별 승/패는 기본적으로 세트 내 게임 수 기준으로 집계됩니다.</div>`;
   } // end filter open block
   F.innerHTML=fh;
 
@@ -894,11 +799,11 @@ function rTier(C,T){
       });
     }
 
-    let fh=`<div class="fbar"><strong>종족:</strong>`;
+    let fh=`<div class="fbar">`;
     ['전체','T','Z','P'].forEach(r=>{
       fh+=`<button class="pill ${window._recentRaceFilter===r?'on':''}" onclick="window._recentRaceFilter='${r}';render()">${r==='전체'?'전체':r}</button>`;
     });
-    fh+=`<strong style="margin-left:8px">티어:</strong><button class="pill ${window._recentTierFilter==='전체'?'on':''}" onclick="window._recentTierFilter='전체';render()">전체</button>`;
+    fh+=`<button class="pill ${window._recentTierFilter==='전체'?'on':''}" style="margin-left:8px" onclick="window._recentTierFilter='전체';render()">전체</button>`;
     TIERS.forEach(t=>{
     const _bc=getTierBtnColor(t),_bt=getTierBtnTextColor(t),_sel=window._recentTierFilter===t;
     fh+=`<button class="pill" style="border-color:${_bc};border-width:${_sel?'2':'1'}px;${_sel?`background:${_bc};color:${_bt};font-weight:700;`:'color:'+_bc+';'}" onmouseover="if(!${_sel})this.style.background='${_bc}22'" onmouseout="if(!${_sel})this.style.background=''" onclick="window._recentTierFilter='${t}';render()">${getTierPillLabel(t)}</button>`;
@@ -1138,16 +1043,16 @@ function rTier(C,T){
       const cnt=_v?(isWin?_v.w:_v.l):0;
       extraVal=`<span style="font-weight:800;color:${isWin?'#16a34a':'#dc2626'}">${cnt}</span>`;
     }
-    const univIconHTML=(()=>{const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${url}" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:``})();
+    const univIconHTML=(()=>{const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:22px;height:22px;object-fit:contain;border-radius:var(--su_univ_logo_radius,6px);flex-shrink:0" onerror="this.style.display='none'">`:``})();
     const _pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const _modePick = hasTypeSet && window._tierTypeSet.size===1 ? [...window._tierTypeSet][0] : (!hasTypeSet ? tierRankMode : '');
     const _clickHist = (_canGoHist && _modePick) ? `onclick="tierRankGoHist('${_modePick}','${_pSafe}')"` : '';
     h+=`<tr style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${rnkHTML}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="ubadge clickable-univ" data-icon-done="1" style="background:${col};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${p.univ}')">${univIconHTML}${p.univ}</span></td>
+      <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="ubadge clickable-univ" data-icon-done="1" style="background:${col};display:inline-flex;align-items:center;gap:6px;font-size:13px" onclick="openUnivModal('${p.univ}')">${univIconHTML}${p.univ}</span></td>
       <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}">${p.race}</span></td>
-      <td style="text-align:left;padding:7px 12px;font-weight:700;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'40px')}<span class="clickable-name" onclick="openPlayerModal('${_pSafe}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span></td>
+      <td style="text-align:left;padding:7px 12px;font-weight:700;white-space:nowrap;font-size:14px"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'40px')}<span class="clickable-name" onclick="openPlayerModal('${_pSafe}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span></td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="lt">${p.loss}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>

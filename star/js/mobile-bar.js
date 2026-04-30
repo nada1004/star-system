@@ -46,20 +46,44 @@ window.addEventListener('DOMContentLoaded',function(){
 (function(){
   var tabs=document.querySelector('.tabs');
   if(!tabs)return;
-  // 래퍼로 감싸기
-  var wrap=document.createElement('div');
-  wrap.className='tabs-scroll-wrap no-export';
-  tabs.parentNode.insertBefore(wrap,tabs);
-  wrap.appendChild(tabs);
-  // 화살표 버튼
-  var btnL=document.createElement('button');
-  btnL.className='tabs-arrow';btnL.innerHTML='&#9664;';btnL.title='이전 탭';
-  btnL.addEventListener('click',function(){tabs.scrollBy({left:-200,behavior:'smooth'});});
-  var btnR=document.createElement('button');
-  btnR.className='tabs-arrow';btnR.innerHTML='&#9654;';btnR.title='다음 탭';
-  btnR.addEventListener('click',function(){tabs.scrollBy({left:200,behavior:'smooth'});});
-  wrap.insertBefore(btnL,tabs);
-  wrap.appendChild(btnR);
+  // 레이아웃 점프 방지:
+  // - index.html에서 .tabs-scroll-wrap을 미리 렌더할 수 있으므로,
+  //   이미 래핑되어 있으면 다시 DOM을 옮기지 않습니다.
+  var wrap=tabs.closest('.tabs-scroll-wrap');
+  var btns=null, btnL=null, btnR=null;
+  if(!wrap){
+    // 래퍼로 감싸기(구버전 호환)
+    wrap=document.createElement('div');
+    wrap.className='tabs-scroll-wrap no-export';
+    tabs.parentNode.insertBefore(wrap,tabs);
+    wrap.appendChild(tabs);
+  }
+  // 화살표 버튼(없으면 생성)
+  btns=wrap.querySelectorAll('.tabs-arrow');
+  btnL=btns[0]||null;
+  btnR=btns[1]||null;
+  if(!btnL){
+    btnL=document.createElement('button');
+    btnL.className='tabs-arrow';
+    btnL.innerHTML='&#9664;';
+    btnL.title='이전 탭';
+    btnL.setAttribute('aria-label','이전 탭');
+    wrap.insertBefore(btnL, tabs);
+  }
+  if(!btnR){
+    btnR=document.createElement('button');
+    btnR.className='tabs-arrow';
+    btnR.innerHTML='&#9654;';
+    btnR.title='다음 탭';
+    btnR.setAttribute('aria-label','다음 탭');
+    wrap.appendChild(btnR);
+  }
+  // 이벤트(중복 바인딩 방지 위해 onclick 사용)
+  btnL.onclick=function(){tabs.scrollBy({left:-200,behavior:'smooth'});};
+  btnR.onclick=function(){tabs.scrollBy({left:200,behavior:'smooth'});};
+  // 새로고침 시 브라우저가 가로 스크롤 위치를 복원하면서 '메뉴 위치가 바뀌는' 느낌이 날 수 있어,
+  // 초기에는 항상 맨 왼쪽에서 시작하도록 고정합니다.
+  try{ tabs.scrollLeft = 0; }catch(e){}
   function update(){
     var canL=tabs.scrollLeft>4;
     var canR=tabs.scrollLeft<tabs.scrollWidth-tabs.clientWidth-4;

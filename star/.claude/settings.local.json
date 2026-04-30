@@ -19,7 +19,12 @@
       "Bash(git commit *)",
       "Bash(claude model *)",
       "Bash(claude --model sonnet --print \"Test model availability\")",
-      "Bash(claude --model sonnet --version)"
+      "Bash(claude --model sonnet --version)",
+      "Bash(cat)",
+      "Read(//tmp/**)",
+      "Bash(node -c /d/projects/star/star-datacenter/js/config.js)",
+      "Bash(node -c /d/projects/star/star-datacenter/js/app-state.js)",
+      "Bash(node -c /d/projects/star/star-datacenter/js/init.js)"
     ]
   }
 }

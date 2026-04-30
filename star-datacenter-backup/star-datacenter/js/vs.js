@@ -25,7 +25,7 @@ function vsSearchHTML(){
       const p=players.find(x=>x.name===name);
       const raceLabel=p?(p.race==='T'?'테란':p.race==='Z'?'저그':'프로토스'):'';
       return `<div style="display:flex;align-items:center;gap:7px;flex:1;min-width:160px;background:${col}18;border:2px solid ${col}55;border-radius:10px;padding:8px 12px">
-        ${p&&p.photo?`<img src="${p.photo}" onclick="openPlayerModal('${(name||'').replace(/'/g,"\\'")}')" title="스트리머 상세" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid ${col};flex-shrink:0;cursor:pointer" onerror="this.style.display='none'">` : `<div onclick="openPlayerModal('${(name||'').replace(/'/g,"\\'")}')" title="스트리머 상세" style="width:34px;height:34px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;cursor:pointer">${name[0]}</div>`}
+        ${p&&p.photo?`<img src="${p.photo}" onclick="openPlayerModal('${(name||'').replace(/'/g,"\\'")}')" title="스트리머 상세" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col};flex-shrink:0;cursor:pointer" onerror="this.style.display='none'">` : `<div onclick="openPlayerModal('${(name||'').replace(/'/g,"\\'")}')" title="스트리머 상세" style="width:34px;height:34px;border-radius:var(--su_profile_radius,50%);background:${col};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;cursor:pointer">${name[0]}</div>`}
         <div style="flex:1;min-width:0">
           <div style="font-weight:800;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
           <div style="font-size:10px;color:var(--gray-l)">${p?p.univ+' · '+p.tier+' · '+raceLabel:''}</div>
@@ -382,8 +382,8 @@ function openVsShareCard(){
   const ct=t=>t?t.replace(/티어$/,''):'';
   const tierBadgeVS=(tier,lead)=>tier?`<span style="background:${_TIER_BG[tier]||'#64748b'};color:${_TIER_TEXT[tier]||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(tier)}</span>`:'';
   const raceBadgeVS=race=>race?`<span style="font-size:10px;opacity:.8">${race}</span>`:'';
-  const photoA=getPlayerPhotoHTML(vsNameA,'56px',`border-radius:50%;border:3px solid ${aLead?colA:'rgba(255,255,255,.3)'};${aLead?'box-shadow:0 0 12px '+colA+'66':''}`);
-  const photoB=getPlayerPhotoHTML(vsNameB,'56px',`border-radius:50%;border:3px solid ${bLead?colB:'rgba(255,255,255,.3)'};${bLead?'box-shadow:0 0 12px '+colB+'66':''}`);
+  const photoA=getPlayerPhotoHTML(vsNameA,'56px',`border:3px solid ${aLead?colA:'rgba(255,255,255,.3)'};${aLead?'box-shadow:0 0 12px '+colA+'66':''}`);
+  const photoB=getPlayerPhotoHTML(vsNameB,'56px',`border:3px solid ${bLead?colB:'rgba(255,255,255,.3)'};${bLead?'box-shadow:0 0 12px '+colB+'66':''}`);
 
   // 카드 HTML
   const cardHTML=`<div id="vs-share-card-inner" style="background:${cardBg};padding:22px;color:${vsTextColor};width:min(380px,calc(100vw - 48px));font-family:'Noto Sans KR',sans-serif;position:relative;overflow:hidden">

@@ -2,6 +2,13 @@
    TAB & RENDER
 ══════════════════════════════════════ */
 function sw(t,el){
+  // (요청사항) 부관리자는 설정탭 접근 불가
+  try{
+    if(typeof isSubAdmin!=='undefined' && isSubAdmin && t==='cfg'){
+      if(typeof showToast==='function') showToast('부관리자는 설정탭에 접근할 수 없습니다.');
+      return;
+    }
+  }catch(e){}
   // 탭 변경 시 서브탭 초기화
   if(t==='comp') { compSub='league'; leagueFilterDate=''; leagueFilterGrp=''; grpRankFilter=''; }
   if(t==='mini') miniSub='records';
@@ -77,12 +84,15 @@ function render(){
   // 렌더링 후 빈 rec-summary 제거 (내용 없는 빈 줄 방지)
   // 즉시 1차 inject (PC 포함 즉시 적용)
   injectUnivIcons(C);
+  // (요청사항) 이모지 → SVG 아이콘 치환(전체 UI)
+  try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
   requestAnimationFrame(()=>{
     C.querySelectorAll('.rec-summary').forEach(el=>{
       const header=el.querySelector('.rec-sum-header');
       if(!header||header.innerText.trim()==='')el.remove();
     });
     injectUnivIcons(C);
+    try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
     // 경기 검색창 포커스 복원
     const _restoreFocus=()=>{
       // 검색 중인 특정 input으로 포커스
@@ -107,9 +117,76 @@ function render(){
       _restoreFocus();
       // 탭/필터 바 가로 스크롤 드래그 활성화(렌더링 후 생성된 요소 포함)
       try{ window.enableDragScroll && window.enableDragScroll(); }catch(e){}
+      try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
+      // 체크박스 선택 행 하이라이트 (테이블)
+      try{
+        document.querySelectorAll('#rcont table input[type="checkbox"]').forEach(cb=>{
+          cb.onchange = function(){
+            const tr = cb.closest('tr');
+            if(tr) tr.classList.toggle('is-selected', cb.checked);
+          };
+          // 초기 상태 반영
+          const tr = cb.closest('tr');
+          if(tr) tr.classList.toggle('is-selected', cb.checked);
+        });
+      }catch(e){}
     });
   });
 }
+
+/* ══════════════════════════════════════
+   SVG 아이콘(이모지 치환)
+══════════════════════════════════════ */
+// - 버튼/탭 텍스트 앞쪽에 붙은 이모지를 SVG로 교체
+// - 렌더 후 반복 호출되어도 안전(기존 SVG가 있으면 중복 삽입 안 함)
+window.iconifyUI = window.iconifyUI || function(root){
+  try{
+    root = root || document.body;
+    const MAP = {
+      '🔍': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>`,
+      '🌙': `<svg class="svg-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"/></svg>`,
+      '🔐': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11V8a5 5 0 0 1 10 0v3"/><rect x="6" y="11" width="12" height="10" rx="2"/><path d="M12 15v3"/></svg>`,
+      '📋': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="4" width="12" height="18" rx="2"/><path d="M16 2H6a2 2 0 0 0-2 2v14"/><path d="M12 4V2"/><path d="M10 6h6"/></svg>`,
+      '📊': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 17V9"/><path d="M12 17V7"/><path d="M16 17v-5"/></svg>`,
+      '📅': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg>`,
+      '🏆': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 4h8v3a4 4 0 0 1-8 0V4Z"/><path d="M6 4H4v3a3 3 0 0 0 3 3"/><path d="M18 4h2v3a3 3 0 0 1-3 3"/><path d="M10 14h4"/><path d="M9 20h6"/><path d="M10 14v3a2 2 0 0 1-2 2"/><path d="M14 14v3a2 2 0 0 0 2 2"/></svg>`,
+      '🏅': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 2l5 7 5-7"/><circle cx="12" cy="16" r="5"/><path d="M12 13v6"/></svg>`,
+      '⚔️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3l7 7-4 4-7-7 4-4Z"/><path d="M10 7l-7 7 4 4 7-7-4-4Z"/><path d="M8 15l-4 4"/><path d="M16 15l4 4"/></svg>`,
+      '🎯': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="M12 12l7-7"/></svg>`,
+      '🎰': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="14" height="14" rx="2"/><path d="M18 10h2a2 2 0 0 1 2 2v2"/><path d="M7 10h8"/><path d="M7 14h8"/><path d="M7 18h8"/></svg>`,
+      '▶': `<svg class="svg-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M9 6l10 6-10 6V6Z"/></svg>`,
+      '◀': `<svg class="svg-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6L5 12l10 6V6Z"/></svg>`,
+      '➡️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h12"/><path d="M13 6l6 6-6 6"/></svg>`,
+      '🔄': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-15.5-6.4"/><path d="M3 4v6h6"/><path d="M3 12a9 9 0 0 0 15.5 6.4"/><path d="M21 20v-6h-6"/></svg>`,
+      '🗑': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`,
+      '🗺️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3Z"/><path d="M9 3v15"/><path d="M15 6v15"/></svg>`,
+      '✅': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>`,
+      '✏️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"/></svg>`,
+      '⚙️': `<svg class="svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.2-2-3.4-2.3.5a7.7 7.7 0 0 0-1.7-1l-.4-2.4H9l-.4 2.4c-.6.3-1.2.6-1.7 1l-2.3-.5-2 3.4 2 1.2a7.9 7.9 0 0 0 .1 1 7.9 7.9 0 0 0-.1 1l-2 1.2 2 3.4 2.3-.5c.5.4 1.1.7 1.7 1l.4 2.4h6l.4-2.4c.6-.3 1.2-.6 1.7-1l2.3.5 2-3.4-2-1.2c.1-.3.1-.7.1-1Z"/></svg>`,
+    };
+    const RX = new RegExp('^(' + Object.keys(MAP).map(k=>k.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&')).join('|') + ')\\s*');
+
+    const targets = root.querySelectorAll('button, .tab, .bnav-item, summary, .pill, .btn, .flabel, label');
+    targets.forEach(el=>{
+      if(!el) return;
+      // 이미 SVG 아이콘이 있으면 스킵(중복 방지)
+      if(el.querySelector && el.querySelector('.svg-ico')) return;
+      // 첫 텍스트 노드만 처리
+      const tn = Array.from(el.childNodes||[]).find(n=>n && n.nodeType===3 && String(n.nodeValue||'').trim().length>0);
+      if(!tn) return;
+      const raw = tn.nodeValue || '';
+      const m = raw.match(RX);
+      if(!m) return;
+      const emo = m[1];
+      const rest = raw.replace(RX,'').replace(/^\s+/,'');
+      const wrap = document.createElement('span');
+      wrap.className = 'svg-ico-wrap';
+      wrap.innerHTML = MAP[emo] || '';
+      el.insertBefore(wrap, tn);
+      tn.nodeValue = (rest ? ' ' + rest : '');
+    });
+  }catch(e){}
+};
 
 /* ══════════════════════════════════════
    스트리머 상세 모달 페이지네이션 헬퍼
@@ -145,6 +222,17 @@ window._rebuildPlayerDetail = function(name){
   _mb.innerHTML = buildPlayerDetailHTML(_p);
   injectUnivIcons(_mb);
 };
+// 열려있는 스트리머 상세(최근 경기) 즉시 갱신 헬퍼
+// - 티어대회/대회 조별리그/토너먼트 등 다양한 저장 경로에서 공통 호출 가능
+window.refreshPlayerModalIfOpen = function(){
+  try{
+    const pm = document.getElementById('playerModal');
+    if(!pm || pm.style.display==='none') return;
+    const name = window._playerModalCurrentName || '';
+    if(!name) return;
+    if(typeof window._rebuildPlayerDetail==='function') window._rebuildPlayerDetail(name);
+  }catch(e){}
+};
 
 /* ══════════════════════════════════════
    선수 이름 클릭 → 모달
@@ -153,6 +241,12 @@ window._rebuildPlayerDetail = function(name){
 function openPlayerModal(name){
   const p=players.find(x=>x.name===name);
   if(!p)return;
+  // (버그픽스) 공유카드(sharecard)에서 스트리머 클릭 시 상세 모달이 뒤로 깔리는 문제:
+  // 공유카드 오버레이를 먼저 닫고(제거) 스트리머 상세를 연다.
+  try{
+    const sc=document.getElementById('sharecard-overlay');
+    if(sc) sc.remove();
+  }catch(e){}
   // REQ4: 다른 선수로 변경 시 페이지 초기화
   if(window._playerModalCurrentName!==name){
     playerHistPage=0; window._oppPage=0; window._playerModalYear='';
@@ -180,6 +274,9 @@ function openPlayerModal(name){
 function openEPFromModal(nameArg) {
   const name = nameArg || window._playerModalCurrentName;
   if (!name) { alert('선수 이름을 확인할 수 없습니다.'); return; }
+  // (버그픽스) 스트리머 상세(playerModal) 위에서 수정창(emModal)이 가려지는 환경이 있음
+  // → 수정창을 열기 전에 상세 모달을 먼저 닫아 레이어 문제를 원천 차단
+  try{ if(typeof cm==='function') cm('playerModal'); }catch(e){}
   if (typeof openEP !== 'function') {
     // tier-tour.js가 아직 로드되지 않은 경우 지연 후 재시도
     let attempts = 0;
@@ -187,7 +284,7 @@ function openEPFromModal(nameArg) {
       attempts++;
       if (typeof openEP === 'function') {
         clearInterval(checkOpenEP);
-        try { openEP(name); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
+        try { setTimeout(()=>openEP(name), 50); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
       } else if (attempts >= 20) {
         clearInterval(checkOpenEP);
         alert('수정창 로드 실패: 페이지를 새로고침해주세요.');
@@ -195,12 +292,31 @@ function openEPFromModal(nameArg) {
     }, 200);
     return;
   }
-  try { openEP(name); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
+  try { setTimeout(()=>openEP(name), 50); } catch(e) { alert('수정창 열기 실패: ' + e.message); }
 }
 
 /* ── 선수 최근 경기 수정 (관리자 전용) ── */
 let _playerHistBulkSelected = new Set(); // 일괄 선택된 경기 인덱스
 let _playerHistBulkMode = false; // 일괄 선택 모드
+
+// (요청사항) 부관리자: 최근 N일 경기만 수정/삭제 허용
+function _canEditByDate(dateStr){
+  if(typeof isLoggedIn==='undefined' || !isLoggedIn) return false;
+  if(typeof isSubAdmin==='undefined' || !isSubAdmin) return true; // 일반 관리자는 제한 없음
+  const s=String(dateStr||'').trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const t = new Date();
+  t.setHours(0,0,0,0);
+  const d = new Date(s+'T00:00:00');
+  if(isNaN(d.getTime())) return false;
+  const diffDays = Math.floor((t.getTime() - d.getTime()) / (24*60*60*1000));
+  return diffDays >= 0 && diffDays <= 1; // 최근 2일(오늘/어제)
+}
+function _guardRecentEdit(dateStr){
+  if(_canEditByDate(dateStr)) return true;
+  alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
+  return false;
+}
 
 function deletePlayerHist(playerName, histIdx){
   if(!isLoggedIn)return;
@@ -208,6 +324,7 @@ function deletePlayerHist(playerName, histIdx){
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history||!p.history[histIdx])return;
   const hh=p.history[histIdx];
+  if(!_guardRecentEdit(hh.date)) return;
   // ELO + 승/패 + 포인트 차감
   if(hh.eloDelta!=null) p.elo=(p.elo||ELO_DEFAULT)-hh.eloDelta;
   if(hh.result==='승'){ p.win=Math.max(0,(p.win||0)-1); p.points=(p.points||0)-3; }
@@ -267,9 +384,16 @@ function deletePlayerHistBulk(playerName){
     alert('선택된 경기 기록이 없습니다.');
     return;
   }
-  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.`))return;
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history)return;
+  // 부관리자는 최근 2일만 가능
+  const idxArr=[..._playerHistBulkSelected];
+  const blocked = idxArr.filter(i=>p.history[i] && !_canEditByDate(p.history[i].date));
+  if(blocked.length){
+    alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
+    return;
+  }
+  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.`))return;
   // 인덱스 내림차순 정렬 후 삭제 (인덱스 변동 방지)
   const sortedIdx=[..._playerHistBulkSelected].sort((a,b)=>b-a);
   sortedIdx.forEach(idx=>{
@@ -318,10 +442,12 @@ function togglePlayerHistSelect(idx){
 }
 
 function togglePlayerHistSelectAll(playerName, allIndices){
-  if(_playerHistBulkSelected.size===allIndices.length){
+  const p=players.find(x=>x.name===playerName);
+  const allowed = (p&&p.history)?allIndices.filter(i=>p.history[i] && _canEditByDate(p.history[i].date)):allIndices;
+  if(_playerHistBulkSelected.size===allowed.length){
     _playerHistBulkSelected.clear();
   }else{
-    allIndices.forEach(idx=>_playerHistBulkSelected.add(idx));
+    allowed.forEach(idx=>_playerHistBulkSelected.add(idx));
   }
   const btn=document.getElementById('bulk-delete-btn');
   if(btn) btn.textContent=`🗑 선택 삭제 (${_playerHistBulkSelected.size})`;
@@ -339,6 +465,12 @@ function openPlayerHistBulkEdit(playerName){
   }
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history)return;
+  const idxArr=[..._playerHistBulkSelected];
+  const blocked = idxArr.filter(i=>p.history[i] && !_canEditByDate(p.history[i].date));
+  if(blocked.length){
+    alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
+    return;
+  }
   
   // 선택된 기록들의 공통 값 추출
   const selectedHists=[..._playerHistBulkSelected].map(idx=>p.history[idx]).filter(Boolean);
@@ -358,7 +490,7 @@ function openPlayerHistBulkEdit(playerName){
           ${allModes.map(m=>`<option value="${m}">${m} (현재값)</option>`).join('')}
           <option value="개인전">개인전</option>
           <option value="프로리그">프로리그</option>
-          <option value="끝장전">끝장전</option>
+          <option value="끝장전">중장전</option>
           <option value="미니대전">미니대전</option>
           <option value="시빌워">시빌워</option>
           <option value="대학대전">대학대전</option>
@@ -393,6 +525,12 @@ function savePlayerHistBulkEdit(playerName){
   if(!isLoggedIn)return;
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history)return;
+  const idxArr=[..._playerHistBulkSelected];
+  const blocked = idxArr.filter(i=>p.history[i] && !_canEditByDate(p.history[i].date));
+  if(blocked.length){
+    alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
+    return;
+  }
   
   const newMode=document.getElementById('phe-bulk-mode').value;
   const newMap=document.getElementById('phe-bulk-map').value;
@@ -434,6 +572,7 @@ function openPlayerHistEdit(playerName, histIdx){
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history||!p.history[histIdx])return;
   const hh=p.history[histIdx];
+  if(!_guardRecentEdit(hh.date)) return;
   const races=['T','Z','P'];
   // mapOpts: select는 항상 "목록에서 선택" 기본값, selected 없음
   const mapOpts=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
@@ -606,15 +745,183 @@ function openShareCardFromUniv(){
   setTimeout(()=>renderShareCardByUniv(name),80);
 }
 function openProCompMatchShare(a,b,sa,sb,d){
-  window._shareMatchObj={a,b,sa,sb,d,_noUnivIcon:true,_matchType:'pro'};
-  _shareMode='match';openShareCardModal();
-  setTimeout(function(){if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);},80);
+  const A=String(a||'A팀'), B=String(b||'B팀');
+  const ds=String(d||'').slice(0,10);
+  const _eq=(x,y)=>String(x||'')===String(y||'');
+  const _pairEq=(a1,b1,a2,b2)=>(_eq(a1,a2)&&_eq(b1,b2))||(_eq(a1,b2)&&_eq(b1,a2));
+  const _invWinner=w=>w==='A'?'B':w==='B'?'A':w;
+
+  // 기본값(매칭 실패 시)
+  let share={
+    a:A,b:B,sa:Number(sa||0),sb:Number(sb||0),d:ds,
+    n:'',_matchType:'pro',_subLabel:'프로리그',_noUnivIcon:false,_usePlayerPhoto:true
+  };
+
+  try{
+    const tourneys=Array.isArray(proTourneys)?proTourneys:[];
+
+    // 1) 팀전 우선 매칭 (팀명끼리 공유카드)
+    outerTeam:
+    for(const tn of tourneys){
+      for(const tm of (tn.teamMatches||[])){
+        const tmd=String(tm.d||'').slice(0,10);
+        if(ds && tmd && tmd!==ds) continue;
+        if(!_pairEq(tm.teamAName, tm.teamBName, A, B)) continue;
+        const swap = !_eq(tm.teamAName,A); // 입력 A/B가 데이터의 teamA/teamB와 반대면 swap
+        const teamAName = swap ? (tm.teamBName||B) : (tm.teamAName||A);
+        const teamBName = swap ? (tm.teamAName||A) : (tm.teamBName||B);
+        const games=(tm.games||[]).map(g=>{
+          // winner side 보정 (swap이면 반전)
+          const sideW = swap ? _invWinner(g._sideW) : g._sideW; // 'A' or 'B'
+          // 팀 A(left) vs 팀 B(right) 방향 유지
+          if(sideW==='A'){
+            return { playerA:g.wName||'', playerB:g.lName||'', winner:'A', map:g.map||'' };
+          } else if(sideW==='B'){
+            return { playerA:g.lName||'', playerB:g.wName||'', winner:'B', map:g.map||'' };
+          }
+          // 예외 케이스(사이드 정보 없으면 winner 미표기)
+          return { playerA:g.lName||'', playerB:g.wName||'', winner:'', map:g.map||'' };
+        }).filter(x=>x.playerA||x.playerB);
+        const scoreA=games.filter(g=>g.winner==='A').length;
+        const scoreB=games.filter(g=>g.winner==='B').length;
+        share={
+          a:teamAName,b:teamBName,sa:scoreA,sb:scoreB,d:tmd||ds,
+          n:tn.name||'',_matchType:'procomp-team',_subLabel:(tn.name?`${tn.name} · 팀전`:'팀전'),
+          _noUnivIcon:true,_usePlayerPhoto:false,
+          sets:[{label:'팀전',scoreA,scoreB,games}]
+        };
+        break outerTeam;
+      }
+    }
+
+    // 2) 토너먼트(대진표) 매칭
+    if(!share.sets){
+      outerBkt:
+      for(const tn of tourneys){
+        const totalRnd=(tn.bracket||[]).length||0;
+        const rndLabel = (ri)=>{
+          if(ri==='3rd') return '3·4위전';
+          const r=Number(ri);
+          if(!isFinite(r) || totalRnd<=0) return '토너먼트';
+          // 라운드 표기: 16강/8강/4강/결승 (※ 4강=준결승)
+          return r===totalRnd-1?'결승':r===totalRnd-2?'4강':r===totalRnd-3?'8강':`${Math.pow(2,totalRnd-r)}강`;
+        };
+        // 일반 라운드
+        for(let ri=0; ri<(tn.bracket||[]).length; ri++){
+          const rnd=tn.bracket[ri]||[];
+          for(let mi=0; mi<rnd.length; mi++){
+            const m=rnd[mi];
+            if(!m||!m.a||!m.b) continue;
+            const md=String(m.d||'').slice(0,10);
+            if(ds && md && md!==ds) continue;
+            if(!_pairEq(m.a,m.b,A,B)) continue;
+            const swapped = _eq(m.a,B) && _eq(m.b,A);
+            const gamesRaw = Array.isArray(m._games) && m._games.length ? m._games : [{winner:m.winner, map:m.map||''}];
+            const games = gamesRaw.map(g=>({
+              playerA:A,
+              playerB:B,
+              winner: swapped ? _invWinner(g.winner) : (g.winner||''),
+              map: g.map||m.map||''
+            })).filter(x=>x.playerA||x.playerB);
+            const scoreA=games.filter(g=>g.winner==='A').length;
+            const scoreB=games.filter(g=>g.winner==='B').length;
+            const lbl=rndLabel(ri);
+            share={
+              a:A,b:B,sa:scoreA,sb:scoreB,d:md||ds,
+              n:tn.name||'',_matchType:'procomp-bkt',_subLabel:(tn.name?`${tn.name} · ${lbl}`:lbl),
+              _noUnivIcon:false,_usePlayerPhoto:true,
+              sets:[{label:lbl,scoreA,scoreB,games}]
+            };
+            break outerBkt;
+          }
+        }
+        // 3위전
+        if(tn.thirdPlace && tn.thirdPlace.a && tn.thirdPlace.b){
+          const m=tn.thirdPlace;
+          const md=String(m.d||'').slice(0,10);
+          if(ds && md && md!==ds) continue;
+          if(_pairEq(m.a,m.b,A,B)){
+            const swapped = _eq(m.a,B) && _eq(m.b,A);
+            const games = [{playerA:A,playerB:B,winner: swapped ? _invWinner(m.winner) : (m.winner||''), map:m.map||''}];
+            const scoreA=games.filter(g=>g.winner==='A').length;
+            const scoreB=games.filter(g=>g.winner==='B').length;
+            const lbl=rndLabel('3rd');
+            share={
+              a:A,b:B,sa:scoreA,sb:scoreB,d:md||ds,
+              n:tn.name||'',_matchType:'procomp-bkt',_subLabel:(tn.name?`${tn.name} · ${lbl}`:lbl),
+              _noUnivIcon:false,_usePlayerPhoto:true,
+              sets:[{label:lbl,scoreA,scoreB,games}]
+            };
+            break;
+          }
+        }
+      }
+    }
+
+    // 3) 조별리그 매칭
+    if(!share.sets){
+      outerGrp:
+      for(const tn of tourneys){
+        for(const grp of (tn.groups||[])){
+          for(const m of (grp.matches||[])){
+            if(!m||!m.a||!m.b) continue;
+            const md=String(m.d||'').slice(0,10);
+            if(ds && md && md!==ds) continue;
+            if(!_pairEq(m.a,m.b,A,B)) continue;
+            const swapped = _eq(m.a,B) && _eq(m.b,A);
+            const winner = swapped ? _invWinner(m.winner) : (m.winner||'');
+            const games=[{playerA:A,playerB:B,winner,map:m.map||''}];
+            const scoreA=winner==='A'?1:0;
+            const scoreB=winner==='B'?1:0;
+            const lbl=(grp.stage||grp.name||'조별리그');
+            share={
+              a:A,b:B,sa:scoreA,sb:scoreB,d:md||ds,
+              n:tn.name||'',_matchType:'pro',_subLabel:(tn.name?`${tn.name} · ${lbl}`:lbl),
+              _noUnivIcon:false,_usePlayerPhoto:true,
+              sets:[{label:lbl,scoreA,scoreB,games}]
+            };
+            break outerGrp;
+          }
+        }
+      }
+    }
+  }catch(e){}
+
+  window._shareMatchObj=share;
+  _shareMode='match';
+  openShareCardModal();
+  setTimeout(function(){
+    if(window._shareMatchObj) renderShareCardByMatchObj(window._shareMatchObj);
+  },80);
 }
 function openShareCardFromMatch(mode,idx){
-  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='comp'?comps:mode==='pro'?proM:miniM;
+  const arr=mode==='mini'?miniM
+    :mode==='univm'?univM
+    :mode==='ck'?ckM
+    :mode==='comp'?comps
+    :mode==='pro'?proM
+    :mode==='tt'?(typeof ttM!=='undefined'?ttM:[])
+    :miniM;
   const m=arr[idx]||null;
   const isCKorPro=(mode==='ck'||mode==='pro');
-  window._shareMatchObj=m?{...m,_noUnivIcon:isCKorPro,_matchType:isCKorPro?mode:''}:null;
+  // 티어대회(tt): 대학 로고가 아닌 "선수 사진/종족" 기반으로 표시 (대학 로고 노출 방지)
+  const isTier = (mode==='tt');
+  // (보강) 티어대회 "일반 기록"(A팀/B팀 팀전) 공유카드에서 로고가 '?'로 나오는 문제:
+  // - 일반 기록은 m.a/m.b가 없거나 'A팀'/'B팀' 형태일 수 있어 getPlayerPhotoHTML이 '?'를 출력함
+  // → 이 경우 대학/선수 로고 대신 텍스트(A팀/B팀)만 표시하도록 처리
+  const isTierTeamStyle = isTier && m && (
+    (Array.isArray(m.teamAMembers) && m.teamAMembers.length) ||
+    (Array.isArray(m.teamBMembers) && m.teamBMembers.length) ||
+    (!m.a && !m.b) ||
+    (String(m.a||'').trim()==='A팀' && String(m.b||'').trim()==='B팀')
+  );
+  window._shareMatchObj=m?{...m,
+    _matchType:isCKorPro?mode:(isTier?'tt':''),
+    _noUnivIcon:isCKorPro || isTierTeamStyle,
+    _usePlayerPhoto:isTier ? (!isTierTeamStyle) : (m._usePlayerPhoto||false),
+    // 팀 스타일은 a/b를 강제로 A팀/B팀으로
+    ...(isTierTeamStyle ? {a:'A팀', b:'B팀'} : {})
+  }:null;
   _shareMode='match';
   openShareCardModal();
   setTimeout(()=>{
@@ -718,8 +1025,8 @@ function toggleUnivEdit(){
       </div>
       <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">🖼 로고 이미지 URL</label>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-        <input type="text" id="ue-icon" value="${u.icon||''}" placeholder="https://... 이미지 URL" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" oninput="const v=this.value.trim();const img=document.getElementById('ue-icon-preview');if(v){img.src=v;img.style.display='block';}else img.style.display='none'">
-        <img id="ue-icon-preview" src="${u.icon||''}" style="width:40px;height:40px;object-fit:contain;border-radius:var(--su_univ_logo_radius,8px);border:1px solid var(--border);${u.icon?'':'display:none'}" onerror="this.style.display='none'">
+        <input type="text" id="ue-icon" value="${u.icon||''}" placeholder="https://... 이미지 URL" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" oninput="const v=this.value.trim();const img=document.getElementById('ue-icon-preview');if(v){img.src=toHttpsUrl(v);img.style.display='block';}else img.style.display='none'">
+        <img id="ue-icon-preview" src="${toHttpsUrl(u.icon||'')}" style="width:40px;height:40px;object-fit:contain;border-radius:var(--su_univ_logo_radius,8px);border:1px solid var(--border);${u.icon?'':'display:none'}" onerror="this.style.display='none'">
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:12px">현황판·선수 상세에서 대학 로고로 표시됩니다.</div>
       <div style="display:flex;gap:6px">
@@ -838,11 +1145,6 @@ function navToMatch(matchId, modeLbl){
 }
 
 function buildPlayerDetailHTML(p){
-  // 보라크루/종합게임 전용 UI 분기
-  const _gt = p.gameType || 'starcraft';
-  if (_gt === '보라크루') return _buildCrewPlayerDetailHTML(p, '#7c3aed', '💜 보라크루');
-  if (_gt === 'general') return _buildCrewPlayerDetailHTML(p, '#10b981', '🎮 종합게임');
-
   // gjM/indM/tourneys/comps/proTourneys에 _id 미리 할당 (matchId 검색용)
   (typeof gjM!=='undefined'?gjM:[]).forEach(m=>{
     if(!m._id) m._id=`gj_${m.d||''}${m.map||''}${(m.wName||'').replace(/\s+/g,'')}${(m.lName||'').replace(/\s+/g,'')}`;
@@ -888,10 +1190,21 @@ function buildPlayerDetailHTML(p){
   const _darken=((_pdStyle.univ_darken||{})[p.univ]||0);
   // 모바일/PC 이미지 설정 적용
   const _isMobile=window.innerWidth<=768;
+  const _isTablet=(window.innerWidth>768 && window.innerWidth<=1024);
   const _imgUrl=_isMobile?(_pdStyle.img2||''):(_pdStyle.img1||'');
   const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  const _imgZoom=(_pdStyle.img_zoom||100) * (_isMobile?(_imgSettings.scaleLeft||1):(_imgSettings.scaleRight||1));
-  const _imgFill=_pdStyle.img_fill||'cover';
+  // (버그) "좌우 개별 크기 사용" 체크가 반영되지 않던 문제 수정
+  // - 기본: settings.scale 사용
+  // - 체크 시: 모바일=scaleLeft, PC=scaleRight
+  const _useRight = !!_imgSettings.useRightScale;
+  const _scaleMul = _useRight
+    ? (_isMobile ? (_imgSettings.scaleLeft||1) : (_imgSettings.scaleRight||1))
+    : (_imgSettings.scale||1);
+  const _imgZoom=(_pdStyle.img_zoom||100) * _scaleMul;
+  // (버그) "이미지 채우기(cover)/맞춤(contain)" 설정이 반영되지 않던 문제 수정
+  const _imgFill=(_pdStyle.img_fill!=null && _pdStyle.img_fill!=='')
+    ? _pdStyle.img_fill
+    : (_imgSettings.fill ? 'cover' : 'contain');
   const _imgX=_pdStyle.img_x||0;
   const _imgY=_pdStyle.img_y||0;
   let _hdrBg;
@@ -1061,11 +1374,37 @@ function buildPlayerDetailHTML(p){
 
   // miniM/univM/ckM/proM에서 추출 (p.history 미반영분)
   const _otherMatches=[];
+  // (추가) 팀전(2:2) 게임 처리 헬퍼
+  function _pushTeamGameIfAny(m, s, g, setIdx, gameIdx, modeLabel){
+    try{
+      if(!g || !g.winner || !g._isTeam || !Array.isArray(g.teamA) || !Array.isArray(g.teamB)) return false;
+      const inA = g.teamA.includes(p.name);
+      const inB = g.teamB.includes(p.name);
+      if(!inA && !inB) return false;
+      const oppTeam = (inA ? g.teamB : g.teamA).filter(Boolean).join(',');
+      const winnerTeam = (g.winner==='A') ? g.teamA : g.teamB;
+      const isWin = winnerTeam.includes(p.name);
+      const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+      const isDupInHist = _dedupedHistory.some(h =>
+        h.matchId===gameId || (h.date===m.d && h.map===(g.map||'-') && h.opp===oppTeam)
+      );
+      if(isDupInHist) return true;
+      _otherMatches.push({
+        date:m.d||'', time:0, result:isWin?'승':'패',
+        opp: oppTeam, oppRace:'', map:g.map||'-',
+        matchId: gameId, mode: modeLabel,
+        _dupKey:`mid:${gameId}`, _team:true
+      });
+      return true;
+    }catch(e){
+      return false;
+    }
+  }
   if(typeof miniM!=='undefined'&&miniM.length){
     miniM.forEach(m=>{
       (m.sets||[]).forEach((s,setIdx)=>{
         (s.games||[]).forEach((g,gameIdx)=>{
-          if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
+          if(g.winner && (_pushTeamGameIfAny(m,s,g,setIdx,gameIdx,(m.type==='civil')?'시빌워':'미니대전') || (g.playerA===p.name||g.playerB===p.name))){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             // gameId 일관성: g._id > 새 생성
@@ -1091,7 +1430,7 @@ function buildPlayerDetailHTML(p){
     univM.forEach(m=>{
       (m.sets||[]).forEach((s,setIdx)=>{
         (s.games||[]).forEach((g,gameIdx)=>{
-          if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
+          if(g.winner && (_pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'대학대전') || (g.playerA===p.name||g.playerB===p.name))){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
@@ -1114,7 +1453,7 @@ function buildPlayerDetailHTML(p){
     ckM.forEach(m=>{
       (m.sets||[]).forEach((s,setIdx)=>{
         (s.games||[]).forEach((g,gameIdx)=>{
-          if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
+          if(g.winner && (_pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'대학CK') || (g.playerA===p.name||g.playerB===p.name))){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
@@ -1137,7 +1476,7 @@ function buildPlayerDetailHTML(p){
     proM.forEach(m=>{
       (m.sets||[]).forEach((s,setIdx)=>{
         (s.games||[]).forEach((g,gameIdx)=>{
-          if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
+          if(g.winner && (_pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'프로리그') || (g.playerA===p.name||g.playerB===p.name))){
             const opp=g.playerA===p.name?g.playerB:g.playerA;
             const oppP=players.find(x=>x.name===opp);
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
@@ -1160,9 +1499,9 @@ function buildPlayerDetailHTML(p){
     (tourneys.filter(t=>t.type==='tier')).forEach(tn=>{
       (tn.groups||[]).forEach(grp=>{
         (grp.matches||[]).forEach(m=>{
-          (m.sets||[]).forEach(s=>{
-            (s.games||[]).forEach(g=>{
-              if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
+          (m.sets||[]).forEach((s,setIdx)=>{
+            (s.games||[]).forEach((g,gameIdx)=>{
+              if(g.winner && (_pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'티어대회') || (g.playerA===p.name||g.playerB===p.name))){
                 const opp=g.playerA===p.name?g.playerB:g.playerA;
                 const oppP=players.find(x=>x.name===opp);
                 _otherMatches.push({
@@ -1176,9 +1515,9 @@ function buildPlayerDetailHTML(p){
         });
       });
       Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
-        (m.sets||[]).forEach(s=>{
-          (s.games||[]).forEach(g=>{
-            if((g.playerA===p.name||g.playerB===p.name)&&g.winner){
+        (m.sets||[]).forEach((s,setIdx)=>{
+          (s.games||[]).forEach((g,gameIdx)=>{
+            if(g.winner && (_pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'티어대회') || (g.playerA===p.name||g.playerB===p.name))){
               const opp=g.playerA===p.name?g.playerB:g.playerA;
               const oppP=players.find(x=>x.name===opp);
               _otherMatches.push({
@@ -1188,6 +1527,49 @@ function buildPlayerDetailHTML(p){
               });
             }
           });
+        });
+      });
+    });
+  }
+
+  // (보강) ttM(티어대회 기록) 기반으로도 최근 경기 추출
+  // - 티어대회 "일반 기록"은 tourneys.groups/bracket에 없고 ttM에만 쌓일 수 있음
+  // - 이 경우 players.history 반영이 지연/누락되면 스트리머 상세에서 안 보이는 문제가 발생
+  // → ttM의 세트/게임을 직접 스캔해서 최근 경기 목록에 포함
+  if(typeof ttM!=='undefined' && Array.isArray(ttM) && ttM.length){
+    ttM.forEach(m=>{
+      if(!m || !m._id || !m.sets) return;
+      (m.sets||[]).forEach((s,setIdx)=>{
+        (s.games||[]).forEach((g,gameIdx)=>{
+          if(!g || !g.playerA || !g.playerB || !g.winner) return;
+          // 2v2 팀전/콤마 구분 이름 포함 케이스 지원
+          const sp = (x)=>String(x||'').split(/[,+，]/).map(v=>v.trim()).filter(Boolean);
+          const aList = sp(g.playerA), bList = sp(g.playerB);
+          const hasMe = (g.playerA===p.name || g.playerB===p.name || aList.includes(p.name) || bList.includes(p.name));
+          const pushedTeam = (typeof _pushTeamGameIfAny==='function')
+            ? _pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'티어대회')
+            : false;
+          if(!pushedTeam && !hasMe) return;
+          const opp = (g.playerA===p.name || aList.includes(p.name)) ? g.playerB : g.playerA;
+          const oppP=players.find(x=>x.name===opp);
+          const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+          // players.history에 동일 gameId가 있으면 eloDelta/eloAfter를 가져와 표시(티어대회 ELO 표시 보강)
+          let _ed=null,_ea=null;
+          try{
+            const hh = (p.history||[]).find(h=>h && h.matchId===gameId);
+            if(hh){ _ed = (hh.eloDelta!=null ? hh.eloDelta : null); _ea = (hh.eloAfter!=null ? hh.eloAfter : null); }
+          }catch(e){}
+          const isDupInHist = _dedupedHistory.some(h =>
+            h.matchId===gameId || (h.date===(m.d||'') && h.map===(g.map||'-') && h.opp===opp)
+          );
+          if(!isDupInHist){
+            _otherMatches.push({
+              date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
+              opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:'티어대회',
+              eloDelta:_ed, eloAfter:_ea,
+              _dupKey:`mid:${gameId}`
+            });
+          }
         });
       });
     });
@@ -1309,11 +1691,11 @@ function buildPlayerDetailHTML(p){
       const _imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
       const _imgScale=(_isMobile?(_imgSettings.scaleLeft||1):(_imgSettings.scaleRight||1));
       const _imgBrightness=_imgSettings.brightness||1;
-      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${p.photo}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:center;transform:scale(${_imgScale});filter:brightness(${_imgBrightness})" onerror="this.style.display='none'">`;
+      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:center;transform:scale(${_imgScale});filter:brightness(${_imgBrightness})" onerror="this.style.display='none'">`;
     }
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
     return url
-      ? `<img src="${url}" style="width:42px;height:42px;object-fit:contain;filter:brightness(0) invert(1) opacity(0.9)" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`
+      ? `<img src="${toHttpsUrl(url)}" style="width:42px;height:42px;object-fit:contain;filter:brightness(0) invert(1) opacity(0.9)" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`
       : `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='32' height='32'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;
   })();
   const _channelHTML=(()=>{
@@ -1340,42 +1722,55 @@ function buildPlayerDetailHTML(p){
     return `<svg viewBox="0 0 ${SW} ${SH}" width="${SW}" height="${SH}" style="display:block;margin:3px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lc}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   })();
 
-  let h=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:18px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
-    <div style="background:${_hdrBg};padding:18px 18px 16px;position:relative;overflow:hidden">
+  // (요청사항) 모바일/태블릿에서 상단 대학/프로필 카드가 너무 커 보이는 문제 완화
+  const _pmCardR = _isMobile ? 14 : (_isTablet ? 16 : 18);
+  const _pmHdrPad = _isMobile ? '14px 14px 12px' : (_isTablet ? '16px 16px 14px' : '18px 18px 16px');
+  const _pmPhotoSz = _isMobile ? 62 : (_isTablet ? 70 : 76);
+  const _pmPhotoR = _isMobile ? 14 : 16;
+  const _pmNameFs = _isMobile ? 17 : (_isTablet ? 18 : 20);
+  const _pmMetaFs = _isMobile ? 9 : 11;
+  const _pmMetaPad = _isMobile ? '2px 7px' : '3px 10px';
+  const _pmMetaPad2 = _isMobile ? '2px 7px' : '3px 9px';
+  const _pmStatsPad = _isMobile ? '10px 6px' : (_isTablet ? '12px 6px' : '14px 6px');
+  const _pmStatsNum1 = _isMobile ? 13 : 14;
+  const _pmStatsBig = _isMobile ? 18 : 22;
+
+  let h=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:${_pmCardR}px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+    <div style="background:${_hdrBg};padding:${_pmHdrPad};position:relative;overflow:hidden">
       <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
       <div style="position:absolute;bottom:-40px;left:5px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative">
-        <div style="width:76px;height:76px;border-radius:16px;background:rgba(255,255,255,.2);border:2.5px solid rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 3px 14px rgba(0,0,0,.2)">${_photoHTML}</div>
+        <div style="width:${_pmPhotoSz}px;height:${_pmPhotoSz}px;border-radius:${_pmPhotoR}px;background:rgba(255,255,255,.2);border:2.5px solid rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 3px 14px rgba(0,0,0,.2)">${_photoHTML}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
-            <span style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.2)">${p.name}${genderIcon(p.gender)}</span>
+            <span style="font-size:${_pmNameFs}px;font-weight:900;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.2)">${p.name}${genderIcon(p.gender)}</span>
             ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
             ${p.tier?`<span style="background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:800;color:#fff">${getTierLabel(p.tier)||p.tier}</span>`:''}
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
-              style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:700${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
+              style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:${_pmMetaFs}px;padding:${_pmMetaPad};display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:800${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
               ${p.univ&&p.univ!=='무소속'?`onclick="cm('playerModal');setTimeout(()=>openUnivModal('${p.univ}'),100)"`:''}>${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
-            <span style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:#fff">${p.race||''} ${RNAME[p.race]||''}</span>
+            <span style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:${_pmMetaPad2};font-size:${_pmMetaFs}px;font-weight:800;color:#fff">${p.race||''} ${RNAME[p.race]||''}</span>
             ${_channelHTML}
           </div>
         </div>
       </div>
     </div>
     <div style="background:${col}${_p2h(_statsTint)};display:grid;grid-template-columns:repeat(4,1fr)">
-      <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
+      <div style="text-align:center;padding:${_pmStatsPad};border-right:1px solid ${col}30">
         <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">전적</div>
-        <div style="font-weight:900;font-size:14px"><span style="color:${_cWin}">${p.win}W</span> <span style="color:${_cLoss}">${p.loss}L</span></div>
+        <div style="font-weight:900;font-size:${_pmStatsNum1}px"><span style="color:${_cWin}">${p.win}W</span> <span style="color:${_cLoss}">${p.loss}L</span></div>
       </div>
-      <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
+      <div style="text-align:center;padding:${_pmStatsPad};border-right:1px solid ${col}30">
         <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">승률</div>
-        <div style="font-weight:900;font-size:22px;line-height:1;color:${tot?(wr>=50?_cWin:_cLoss):'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
+        <div style="font-weight:900;font-size:${_pmStatsBig}px;line-height:1;color:${tot?(wr>=50?_cWin:_cLoss):'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
       </div>
-      <div style="text-align:center;padding:14px 6px;border-right:1px solid ${col}30">
+      <div style="text-align:center;padding:${_pmStatsPad};border-right:1px solid ${col}30">
         <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">포인트</div>
         <div style="font-weight:900;font-size:20px;line-height:1;color:${(p.points||0)>=0?_cWin:_cLoss}">${pS(p.points)}</div>
       </div>
-      <div style="text-align:center;padding:14px 6px">
+      <div style="text-align:center;padding:${_pmStatsPad}">
         <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">ELO</div>
         <div style="font-weight:900;font-size:20px;line-height:1;color:${eloColor}">${eloVal}</div>
         ${_eloSparkHTML}
@@ -1411,7 +1806,7 @@ function buildPlayerDetailHTML(p){
     // 최근 10경기 폼
     const recent10 = hist.slice(0,10);
     const formHTML = recent10.length>=3 ? `<div style="display:flex;gap:2px;align-items:center">
-      ${recent10.map(h=>`<span style="width:14px;height:14px;border-radius:50%;background:${h.result==='승'?'#16a34a':'#dc2626'};display:inline-block;flex-shrink:0" title="${h.result} vs ${h.opp||''}"></span>`).join('')}
+      ${recent10.map(h=>`<span style="width:14px;height:14px;border-radius:50%;background:${h.result==='승'?'#16a34a':(h.result==='무'?'#a3a3a3':'#dc2626')};display:inline-block;flex-shrink:0" title="${h.result} vs ${h.opp||''}"></span>`).join('')}
       <span style="font-size:10px;color:var(--gray-l);margin-left:3px">최근${recent10.length}</span>
     </div>` : '';
 
@@ -1428,17 +1823,26 @@ function buildPlayerDetailHTML(p){
   const allModes=[...new Set(_histAll.map(h=>h.mode||'').filter(Boolean))].sort();
   if(!window._playerHistFilters) window._playerHistFilters=[];
   if(!window._playerHistFilter) window._playerHistFilter='';
+  // (요청사항) 종목/연도 필터 칩 크기: 설정(su_pd_chip_scale)로 조절 가능
+  const _chipScale = 'var(--su_pd_chip_scale,1)';
+  const _chipFsBase = _isMobile ? 8 : (_isTablet ? 9 : 9);
+  const _chipPadYBase = _isMobile ? 1 : 2;
+  const _chipPadXBase = _isMobile ? 5 : 6;
+  const _chipRBase = _isMobile ? 7 : 8;
+  const _chipFs = `calc(${_chipFsBase}px * ${_chipScale})`;
+  const _chipPad = `calc(${_chipPadYBase}px * ${_chipScale}) calc(${_chipPadXBase}px * ${_chipScale})`;
+  const _chipR = `calc(${_chipRBase}px * ${_chipScale})`;
   const _histFilterBar = allModes.length>1?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin:0 0 8px;align-items:center">
-    <span style="font-size:10px;font-weight:800;color:var(--text3);flex-shrink:0">📂 종목</span>
+    <span style="font-size:${_chipFs}px;font-weight:900;color:var(--text3);flex-shrink:0">📂 종목</span>
     ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-      <label class="mode-filter-chip ${window._playerHistFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerHistFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
+      <label class="mode-filter-chip ${window._playerHistFilters.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:${_chipFs}px;font-weight:900;padding:${_chipPad};border-radius:${_chipR};border:1px solid var(--border2);background:${window._playerHistFilters.length===0?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerHistFilters=[];window._playerHistFilter='';}else{window._playerHistFilters=allModes.map(m=>m);window._playerHistFilter='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
         <input type="checkbox" ${window._playerHistFilters.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
       </label>
-      ${allModes.map(m=>`<label class="mode-filter-chip ${window._playerHistFilters.includes(m)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerHistFilters.includes(m)?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.includes(m)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerHistFilters||[];if(cb.checked){if(!arr.includes('${m}'))arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
+      ${allModes.map(m=>`<label class="mode-filter-chip ${window._playerHistFilters.includes(m)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:${_chipFs}px;font-weight:900;padding:${_chipPad};border-radius:${_chipR};border:1px solid var(--border2);background:${window._playerHistFilters.includes(m)?'var(--blue)':'var(--surface)'};color:${window._playerHistFilters.includes(m)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerHistFilters||[];if(cb.checked){if(!arr.includes('${m}'))arr.push('${m}');}else{const idx=arr.indexOf('${m}');if(idx>-1)arr.splice(idx,1);}window._playerHistFilters=arr;window._playerHistFilter=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')">
         <input type="checkbox" value="${m}" ${window._playerHistFilters.includes(m)?'checked':''} style="cursor:pointer;pointer-events:none">${m}
       </label>`).join('')}
     </div>`:`<select onchange="window._playerHistFilter=this.value||null;window._playerHistFilters=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${escJS(p.name)}')"
-      style="padding:3px 8px;border:1px solid ${window._playerHistFilter?'var(--blue)':'var(--border2)'};border-radius:10px;font-size:11px;font-weight:800;background:${window._playerHistFilter?'#eff6ff':'var(--white)'};color:${window._playerHistFilter?'var(--blue)':'var(--text)'}">
+      style="padding:2px 6px;border:1px solid ${window._playerHistFilter?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:10px;font-weight:900;background:${window._playerHistFilter?'#eff6ff':'var(--white)'};color:${window._playerHistFilter?'var(--blue)':'var(--text)'}">
       <option value="" ${!window._playerHistFilter?'selected':''}>전체</option>
       ${allModes.map(m=>`<option value="${m}" ${window._playerHistFilter===m?'selected':''}>${m}</option>`).join('')}
     </select>`}
@@ -1453,17 +1857,17 @@ function buildPlayerDetailHTML(p){
     const _yLoss=_modeHist.filter(h=>h.result==='패').length;
     const _yTot=_yWin+_yLoss;
     const _yWr=_yTot?Math.round(_yWin/_yTot*100):0;
-    return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <span style="font-size:10px;font-weight:800;color:var(--text3);flex-shrink:0">📅 연도</span>
+    return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px;padding:${_isMobile?'5px 7px':'6px 8px'};background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <span style="font-size:${_chipFs}px;font-weight:900;color:var(--text3);flex-shrink:0">📅 연도</span>
       ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-        <label class="year-filter-chip ${window._playerModalYears.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerModalYears.length===0?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
+        <label class="year-filter-chip ${window._playerModalYears.length===0?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:${_chipFs}px;font-weight:900;padding:${_chipPad};border-radius:${_chipR};border:1px solid var(--border2);background:${window._playerModalYears.length===0?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.length===0?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;if(cb.checked){window._playerModalYears=[];window._playerModalYear='';}else{window._playerModalYears=_availYears.map(y=>y);window._playerModalYear='multi';}window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
           <input type="checkbox" ${window._playerModalYears.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
         </label>
-        ${_availYears.map(y=>`<label class="year-filter-chip ${window._playerModalYears.includes(y)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${window._playerModalYears.includes(y)?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.includes(y)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerModalYears||[];if(cb.checked){if(!arr.includes('${y}'))arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
+        ${_availYears.map(y=>`<label class="year-filter-chip ${window._playerModalYears.includes(y)?'active':''}" style="display:flex;align-items:center;gap:4px;font-size:${_chipFs}px;font-weight:900;padding:${_chipPad};border-radius:${_chipR};border:1px solid var(--border2);background:${window._playerModalYears.includes(y)?'var(--blue)':'var(--surface)'};color:${window._playerModalYears.includes(y)?'#fff':'var(--text3)'};cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;const arr=window._playerModalYears||[];if(cb.checked){if(!arr.includes('${y}'))arr.push('${y}');}else{const idx=arr.indexOf('${y}');if(idx>-1)arr.splice(idx,1);}window._playerModalYears=arr;window._playerModalYear=arr.length===1?arr[0]:(arr.length>1?'multi':'');window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)">
           <input type="checkbox" value="${y}" ${window._playerModalYears.includes(y)?'checked':''} style="cursor:pointer;pointer-events:none">${y}년
         </label>`).join('')}
       </div>`:`<select onchange="window._playerModalYear=this.value;window._playerModalYears=[];window._oppPage=0;playerHistPage=0;window._rebuildPlayerDetail('${_pSafeY}');setTimeout(()=>initPEloChart('${_pSafeY}',window._playerModalYear),60)"
-        style="padding:3px 8px;border:1px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:10px;font-size:11px;font-weight:800;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
+        style="padding:2px 6px;border:1px solid ${_year?'var(--blue)':'var(--border2)'};border-radius:8px;font-size:10px;font-weight:900;background:${_year?'#eff6ff':'var(--white)'};color:${_year?'var(--blue)':'var(--text)'}">
         <option value="" ${!_year?'selected':''}>전체</option>
         ${_availYears.map(y=>`<option value="${y}" ${_year===y?'selected':''}>${y}년</option>`).join('')}
       </select>`}
@@ -1720,18 +2124,36 @@ function buildPlayerDetailHTML(p){
     displayHist.forEach((hh)=>{
       const hi=hh._origIdx;
       const isWin=hh.result==='승';
-      const eloStr=hh.eloDelta!=null?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':'#dc2626'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`:'-';
+      const isDraw=hh.result==='무';
+      const eloStr=hh.eloDelta!=null
+        ?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':hh.eloDelta<0?'#dc2626':'#64748b'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`
+        :'-';
       const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
       // Backfill missing oppRace from players array
       const oppRace=hh.oppRace||oppP?.race||'';
-      const selectCheckboxHTML=_playerHistBulkMode?`<td class="no-export" style="text-align:center"><input type="checkbox" class="hist-select-checkbox" value="${hi}" ${_playerHistBulkSelected.has(hi)?'checked':''} onchange="togglePlayerHistSelect(${hi})" style="cursor:pointer"></td>`:'';
-      const editBtnHTML=(isLoggedIn&&!hh._readOnly)?`<td class="no-export" style="text-align:center;white-space:nowrap">
+      const _canEdit = (isLoggedIn && !hh._readOnly && _canEditByDate(hh.date));
+      const selectCheckboxHTML=(_playerHistBulkMode && _canEdit)?`<td class="no-export" style="text-align:center"><input type="checkbox" class="hist-select-checkbox" value="${hi}" ${_playerHistBulkSelected.has(hi)?'checked':''} onchange="togglePlayerHistSelect(${hi})" style="cursor:pointer"></td>`:(_playerHistBulkMode?`<td class="no-export" style="text-align:center;color:#9ca3af;font-size:11px">-</td>`:'');
+      const editBtnHTML=_canEdit?`<td class="no-export" style="text-align:center;white-space:nowrap">
         <button class="btn btn-w btn-xs" onclick="openPlayerHistEdit('${p.name}',${hi})" title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
         <button class="btn btn-r btn-xs" onclick="deletePlayerHist('${p.name}',${hi})" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
       </td>`:(isLoggedIn?'<td class="no-export"></td>':'');
-      const modeLbl=hh.mode||'';
-      const modeBadgeColors={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
-      const modeColor=modeBadgeColors[modeLbl]||'#6b7280';
+      // (표기 통일) 과거 데이터/외부 데이터에서 mode가 짧은 키로 들어간 경우 사람이 읽는 라벨로 정규화
+      // - 예: 'tier' → '티어대회'
+      // - 가능한 한 "표시만" 바꾸고, matchId 기반 네비게이션은 그대로 유지
+      let modeLbl=hh.mode||'';
+      if(modeLbl==='tier') modeLbl='티어대회';
+      if(modeLbl==='tt') modeLbl='티어대회';
+      if(modeLbl==='univ') modeLbl='대학대전';
+      if(modeLbl==='ck') modeLbl='대학CK';
+      if(modeLbl==='pro') modeLbl='프로리그';
+      const _getPdModeBadgeColors = ()=>{
+        const defaults={'조별리그':'#2563eb','토너먼트':'#16a34a','미니대전':'#7c3aed','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그대회':'#7c3aed','끝장전':'#8b5cf6','개인전':'#8b5cf6','테스트':'#6b7280'};
+        try{
+          const user=JSON.parse(localStorage.getItem('su_pd_mode_badge_colors')||'{}')||{};
+          return {...defaults, ...user};
+        }catch(e){ return defaults; }
+      };
+      const modeColor=(_getPdModeBadgeColors()[modeLbl])||'#6b7280';
       const _hhMid=(hh.matchId||'').replace(/'/g,"\\'");
       const _navModes=['미니대전','시빌워','대학대전','대학CK','프로리그','티어대회','끝장전','프로리그끝장전','프로리그대회끝장전','개인전','조별리그','대회','토너먼트','프로리그대회','프로리그팀전','티어대회 토너먼트'];
       const _selfSafe=escJS(p.name);
@@ -1739,15 +2161,21 @@ function buildPlayerDetailHTML(p){
       const _dSafe=escJS(hh.date||'');
       const _mSafe=escJS(hh.map||'');
       const _rSafe=escJS(hh.result||'');
+      // (요청사항) '종류' 배지: 설정(su_pd_badge_scale)로 크기 조절 가능
+      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 calc(5px * var(--su_pd_badge_scale,1));border-radius:calc(3px * var(--su_pd_badge_scale,1));font-size:calc(8px * var(--su_pd_badge_scale,1));font-weight:900;line-height:calc(14px * var(--su_pd_badge_scale,1));height:calc(14px * var(--su_pd_badge_scale,1));white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle`;
       const modeCellHTML=modeLbl?(_navModes.includes(modeLbl)
-        ?`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
-        :`<span style="background:${modeColor};color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${modeLbl}</span>`)
+        ?`<span style="${_modeBadgeStyle};cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
+        :`<span style="${_modeBadgeStyle}">${modeLbl}</span>`)
         :'';
-      h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
+      h+=`<tr style="background:${isWin?'#f0fdf4':isDraw?'#f1f5f9':'#fef2f2'}10">
         ${selectCheckboxHTML}
         <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
-        <td>${modeCellHTML}</td>
-        <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
+        <td style="white-space:nowrap">${modeCellHTML}</td>
+        <td>${isWin
+          ?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">WIN</span>`
+          :isDraw
+            ?`<span style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:10px;font-weight:900;padding:2px 8px;border-radius:20px">DRAW</span>`
+            :`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">LOSE</span>`}</td>
         <td style="cursor:pointer;font-weight:700" onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${escJS(hh.opp)}'),100)"><span style="display:inline-flex;align-items:center;gap:5px">${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span></span></td>
         <td><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
         <td style="color:var(--gray-l);font-size:11px">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
@@ -1821,7 +2249,7 @@ function buildPlayerDetailHTML(p){
         const qCol=gc(q.univ);
         const qSafe=q.name.replace(/'/g,"\'");
         const qPhoto=q.photo
-          ?`<img src="${q.photo}" style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid ${qCol}66" onerror="this.style.display='none'">`
+          ?`<img src="${toHttpsUrl(q.photo)}" style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid ${qCol}66" onerror="this.style.display='none'">`
           :`<div style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);background:${qCol};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
         return `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),80)" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:24px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
           ${qPhoto}<span>${q.role?getRoleBadgeHTML(q.role,'9px')+' ':''} ${q.name}</span>${getTierBadge(q.tier)}
@@ -1854,7 +2282,14 @@ function buildPlayerDetailHTML(p){
 
 function buildUnivDetailHTML(univName){
   const col=gc(univName);
+  const _w = (typeof window!=='undefined' && window.innerWidth) ? window.innerWidth : 1200;
+  const _isMobile = _w<=768;
+  const _isTablet = (_w>768 && _w<=1024);
   const members=getMembers(univName);
+  const _logoSize = (typeof getUnivLogoSizeStr==='function')
+    ? getUnivLogoSizeStr(univName, 'detail', 'var(--su_univ_logo_size_detail,46px)')
+    : 'var(--su_univ_logo_size_detail,46px)';
+  const _logoSizeEff = `calc(${_logoSize} * var(--su_univ_detail_scale,1))`;
   const oppStats={};
   function addOpp(myU,oppU,myWin){
     if(myU!==univName)return;
@@ -1880,35 +2315,40 @@ function buildUnivDetailHTML(univName){
   const wr=tot?Math.round(wins/tot*100):0;
 
   // ── 상단 대학 헤더 카드 ──
-  let h=`<div style="background:linear-gradient(135deg,${col},${col}cc);border-radius:16px;padding:20px 24px;margin-bottom:18px;color:#fff;position:relative;overflow:hidden">
+  const _uHdrPad = _isMobile ? '14px 14px' : (_isTablet ? '16px 18px' : '20px 24px');
+  const _uHdrR = _isMobile ? 14 : 16;
+  const _uNameFs = _isMobile ? 17 : (_isTablet ? 18 : 20);
+  const _uSubFs = _isMobile ? 11 : 12;
+  const _uStatPad = _isMobile ? '8px 6px' : '10px 8px';
+  let h=`<div style="background:linear-gradient(135deg,${col},${col}cc);border-radius:${_uHdrR}px;padding:${_uHdrPad};margin-bottom:14px;color:#fff;position:relative;overflow:hidden">
     <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none"></div>
     <div style="position:absolute;bottom:-30px;right:40px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
-      <div style="width:var(--su_univ_logo_box_detail,72px);height:var(--su_univ_logo_box_detail,72px);border-radius:var(--su_univ_logo_radius,18px);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:38px;border:2px solid rgba(255,255,255,.35);flex-shrink:0;overflow:hidden">
-        ${gUI(univName,'var(--su_univ_logo_size_detail,46px)')}
+      <div style="width:calc(var(--su_univ_logo_box_detail,72px) * var(--su_univ_detail_scale,1));height:calc(var(--su_univ_logo_box_detail,72px) * var(--su_univ_detail_scale,1));border-radius:var(--su_univ_logo_radius,18px);background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:38px;border:2px solid rgba(255,255,255,.35);flex-shrink:0;overflow:hidden">
+        ${gUI(univName,_logoSizeEff)}
       </div>
       <div>
-        <div style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.2)">
+        <div style="font-size:${_uNameFs}px;font-weight:900;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.2)">
           ${univName}
           ${(()=>{const _u=univCfg.find(u=>u.name===univName);return _u?.dissolved?`<span style="font-size:12px;font-weight:700;background:rgba(0,0,0,.3);color:#fca5a5;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:middle">🏚️ 해체${_u.dissolvedDate?' '+_u.dissolvedDate:''}</span>`:'';})()}
         </div>
-        <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">소속 스트리머 ${members.length}명</div>
+        <div style="font-size:${_uSubFs}px;color:rgba(255,255,255,.75);margin-top:2px">소속 스트리머 ${members.length}명</div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
+      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:${_uStatPad};text-align:center;backdrop-filter:blur(4px)">
         <div style="font-size:10px;color:rgba(255,255,255,.75);margin-bottom:3px">개인 전적</div>
         <div style="font-weight:900;font-size:13px;color:#fff">${wins}승 ${tot-wins}패</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
+      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:${_uStatPad};text-align:center;backdrop-filter:blur(4px)">
         <div style="font-size:10px;color:rgba(255,255,255,.75);margin-bottom:3px">개인 승률</div>
         <div style="font-weight:900;font-size:14px;color:${wr>=50?'#bbf7d0':'#fca5a5'}">${tot?wr+'%':'-'}</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
+      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:${_uStatPad};text-align:center;backdrop-filter:blur(4px)">
         <div style="font-size:10px;color:rgba(255,255,255,.75);margin-bottom:3px">총 포인트</div>
         <div style="font-weight:900;font-size:13px;color:${pts>0?'#fef08a':pts<0?'#fca5a5':'#fff'}">${pts>0?'+':''}${pts}</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:10px 8px;text-align:center;backdrop-filter:blur(4px)">
+      <div style="background:rgba(255,255,255,.15);border-radius:10px;padding:${_uStatPad};text-align:center;backdrop-filter:blur(4px)">
         <div style="font-size:10px;color:rgba(255,255,255,.75);margin-bottom:3px">선수 수</div>
         <div style="font-weight:900;font-size:14px;color:#fff">${members.length}명</div>
       </div>
@@ -1950,11 +2390,11 @@ function buildUnivDetailHTML(univName){
     oppList.forEach(([opp,s])=>{
       const ot=s.w+s.l;const ow=ot?Math.round(s.w/ot*100):0;
       const oc=gc(opp);
-      h+=`<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 14px;text-align:center;cursor:pointer;min-width:90px;box-shadow:0 1px 4px rgba(0,0,0,.04)"
+      h+=`<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:${_isMobile?'8px 10px':(_isTablet?'9px 12px':'10px 14px')};text-align:center;cursor:pointer;min-width:${_isMobile?'76px':'90px'};box-shadow:0 1px 4px rgba(0,0,0,.04)"
         onclick="cm('univModal');setTimeout(()=>openUnivModal('${opp}'),100)">
-        <span class="ubadge" data-icon-done="1" style="background:${oc};font-size:11px;margin-bottom:6px;display:inline-flex;align-items:center;gap:3px">${gUI(opp,'11px')}${opp}</span>
-        <div style="font-size:11px;margin-top:4px"><span class="wt">${s.w}</span>승 <span class="lt">${s.l}</span>패</div>
-        <div style="font-weight:700;font-size:11px;color:${ow>=50?'#16a34a':'#dc2626'}">${ow}%</div>
+        <span class="ubadge" data-icon-done="1" style="background:${oc};font-size:${_isMobile?'9px':'10px'};margin-bottom:6px;display:inline-flex;align-items:center;gap:3px">${gUI(opp,_isMobile?'10px':'11px')}${opp}</span>
+        <div style="font-size:${_isMobile?'10px':'11px'};margin-top:4px"><span class="wt">${s.w}</span>승 <span class="lt">${s.l}</span>패</div>
+        <div style="font-weight:800;font-size:${_isMobile?'10px':'11px'};color:${ow>=50?'#16a34a':'#dc2626'}">${ow}%</div>
       </div>`;
     });
     h+=`</div>`;
@@ -2012,7 +2452,7 @@ function buildUnivDetailHTML(univName){
           const wr=(ap.win+ap.loss)?Math.round(ap.win/(ap.win+ap.loss)*100):0;
           const safeName=escJS(ap.name);
           const photoEl=ap.photo
-            ?`<img src="${ap.photo}" style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">`
+            ?`<img src="${toHttpsUrl(ap.photo)}" style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">`
             :`<div style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);background:${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff">${ap.name[0]}</div>`;
           return `<div style="flex:1;min-width:120px;background:linear-gradient(135deg,${col}18,${col}08);border:1.5px solid ${col}44;border-radius:12px;padding:10px 12px;cursor:pointer" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${safeName}'),100)">
             <div style="font-size:10px;font-weight:700;color:${col};margin-bottom:5px">${label}</div>
@@ -2044,14 +2484,14 @@ var _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
 var _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'gj' | 'comp'
 
 function _mergedSubBar(tabs, curSub, setFn) {
-  return `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:16px">
+  return `<div class="fbar utilbar utilbar--scroll no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:16px">
     ${tabs.map(t=>`<button class="pill ${curSub===t.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${setFn}='${t.id}';render()">${t.lbl}</button>`).join('')}
   </div>`;
 }
 
 function rMergedInd(C, T) {
   const bar = _mergedSubBar(
-    [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 끝장전'}],
+    [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 중장전'}],
     _mergedIndSub, '_mergedIndSub'
   );
   const sub = document.createElement('div');
@@ -2094,7 +2534,7 @@ function rMergedComp(C, T) {
 
 function rMergedPro(C, T) {
   const bar = _mergedSubBar(
-    [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 끝장전'},{id:'comp',lbl:'🎖️ 대회'}],
+    [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 중장전'},{id:'comp',lbl:'🎖️ 대회'}],
     _mergedProSub, '_mergedProSub'
   );
   const sub = document.createElement('div');
@@ -2301,93 +2741,4 @@ window.openStarSystemInfo = function(){
   }
 };
 
-/* ══════════════════════════════════════
-   보라크루 / 종합게임 스트리머 상세 UI
-══════════════════════════════════════ */
-function _buildCrewPlayerDetailHTML(p, accentCol, typeLabel) {
-  const crewCfgArr = typeof crewCfg !== 'undefined' ? crewCfg : [];
-  const crewInfo = p.crewName ? crewCfgArr.find(c => c.name === p.crewName) : null;
-  const crewCol = crewInfo ? (crewInfo.color || accentCol) : accentCol;
-
-  // 헤더 배경
-  const hdrBg = crewInfo && crewInfo.bgImage
-    ? `url(${JSON.stringify(crewInfo.bgImage)}) center/cover no-repeat`
-    : `linear-gradient(135deg, ${crewCol}, ${crewCol}cc)`;
-
-  // 프로필 이미지
-  const photoHTML = p.photo
-    ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" onerror="this.style.display='none'">`
-    : `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:900;color:rgba(255,255,255,.7)">${(p.name||'?')[0]}</div>`;
-
-  // 방송 링크
-  const channelHTML = (()=>{
-    if (!p.channelUrl) return '';
-    const url = p.channelUrl;
-    let icon = '🏠', label = '방송';
-    if (url.includes('chzzk.naver.com')) { icon = '🎮'; label = '치지직'; }
-    else if (url.includes('afreecatv.com')) { icon = '📺'; label = '아프리카'; }
-    else if (url.includes('youtube.com') || url.includes('youtu.be')) { icon = '▶️'; label = '유튜브'; }
-    else if (url.includes('twitch.tv')) { icon = '📡'; label = '트위치'; }
-    return `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);text-decoration:none;font-size:11px;font-weight:700;color:#fff">${icon} ${label}</a>`;
-  })();
-
-  // 크루 로고
-  const crewLogoHTML = crewInfo && crewInfo.logo
-    ? `<img src="${crewInfo.logo}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'"> `
-    : '';
-
-  // 직책 뱃지
-  const crewRoleHTML = (p.crewRole||p.role)
-    ? `<span style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:800;color:#fff">${p.crewRole||p.role}</span>`
-    : '';
-
-  // 성별
-  const genderIcon = p.gender === 'M' ? '👨' : p.gender === 'F' ? '👩' : '';
-
-  let h = `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:18px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
-    <div style="background:${hdrBg};padding:20px 18px 18px;position:relative;overflow:hidden">
-      <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative">
-        <div style="width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.2);border:2.5px solid rgba(255,255,255,.45);flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 3px 14px rgba(0,0,0,.2)">${photoHTML}</div>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
-            <span style="font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.2)">${p.name} ${genderIcon}</span>
-            ${crewRoleHTML}
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            ${p.crewName ? `<span style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:11px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:700">${crewLogoHTML}${p.crewName}</span>` : ''}
-            <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:#fff">${typeLabel}</span>
-            ${channelHTML}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>`;
-
-  // 메모가 있으면 표시
-  if (p.memo) {
-    h += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--text2);line-height:1.6">
-      <span style="font-weight:700;color:${crewCol}">📝 메모</span><br>${p.memo.replace(/\n/g,'<br>')}
-    </div>`;
-  }
-
-  // 같은 크루 멤버 보기
-  if (p.crewName) {
-    const crewMembers = (typeof players !== 'undefined' ? players : [])
-      .filter(q => q.crewName === p.crewName && q.name !== p.name && !q.hidden && !q.retired);
-    if (crewMembers.length) {
-      h += `<div style="background:var(--white);border:1.5px solid ${crewCol}33;border-radius:12px;padding:14px;margin-bottom:14px">
-        <div style="font-size:12px;font-weight:800;color:${crewCol};margin-bottom:10px">${crewLogoHTML}${p.crewName} 크루원 (${crewMembers.length}명)</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px">`;
-      crewMembers.forEach(q => {
-        const qSafe = escJS(q.name);
-        h += `<button onclick="cm('playerModal');setTimeout(()=>openPlayerModal('${qSafe}'),100)" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:24px;border:1.5px solid ${crewCol}44;background:${crewCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
-          ${getPlayerPhotoHTML(q.name,'22px','pointer-events:none;')} ${q.name}${q.crewRole?` <span style="font-size:9px;color:${crewCol}">${q.crewRole}</span>`:''}
-        </button>`;
-      });
-      h += `</div></div>`;
-    }
-  }
-
-  return h;
-}
+// (요청사항) 보라크루/종합게임 전용 스트리머 상세 UI(크루 기반) 삭제됨

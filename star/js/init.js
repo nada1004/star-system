@@ -31,12 +31,119 @@ function closeNoticePopup(){
   cm('noticePopupModal');
 }
 
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 가로 "드래그 메뉴" 지원
+// - overflow-x:auto 인 메뉴 바를 마우스로 클릭-드래그 해서 스크롤 가능하게
+// - render() 이후 동적으로 생성되는 요소에도 적용됨 (render.js에서 호출)
+// ─────────────────────────────────────────────────────────────
+window.enableDragScroll = function(root){
+  const scope = root || document;
+  const bars = scope.querySelectorAll ? scope.querySelectorAll('.hist-inlinebar') : [];
+  bars.forEach(el=>{
+    if(el.dataset && el.dataset.dragScrollBound==='1') return;
+    if(el.dataset) el.dataset.dragScrollBound='1';
+
+    let isDown=false, startX=0, startScroll=0, moved=false;
+
+    const down = (e)=>{
+      // 마우스 좌클릭만(우클릭/휠클릭 제외)
+      if(e.pointerType==='mouse' && e.button!==0) return;
+      isDown=true;
+      moved=false;
+      startX=e.clientX;
+      startScroll=el.scrollLeft;
+      el.classList.add('dragging');
+      try{ el.setPointerCapture(e.pointerId); }catch(_){}
+    };
+    const move = (e)=>{
+      if(!isDown) return;
+      const dx = e.clientX - startX;
+      if(Math.abs(dx)>3) moved=true;
+      el.scrollLeft = startScroll - dx;
+      if(moved) e.preventDefault();
+    };
+    const up = (e)=>{
+      if(!isDown) return;
+      isDown=false;
+      el.classList.remove('dragging');
+      // 드래그로 스크롤한 경우 버튼 클릭 방지
+      el._dragMoved = moved;
+      setTimeout(()=>{ try{ el._dragMoved=false; }catch(_){} }, 0);
+      try{ el.releasePointerCapture(e.pointerId); }catch(_){}
+    };
+
+    el.addEventListener('pointerdown', down, {passive:true});
+    el.addEventListener('pointermove', move, {passive:false});
+    el.addEventListener('pointerup', up, {passive:true});
+    el.addEventListener('pointercancel', up, {passive:true});
+    el.addEventListener('click', (ev)=>{
+      if(el._dragMoved){
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+    }, true);
+  });
+};
+
+// ─────────────────────────────────────────────────────────────
+// (복구) 티어대회 기록(ttM) 시드 로딩
+// - 일부 백업 데이터는 tourneys(type:'tier')에 브라켓 결과만 있고 ttM이 비어있는 경우가 있음
+// - 이 경우 대전기록탭(티어대회)이 "전부 사라진 것처럼" 보이므로, 배포 번들에 시드 JSON을 넣어 복구
+// - 로컬에 ttM이 이미 있으면 절대 덮어쓰지 않음
+// ─────────────────────────────────────────────────────────────
+let _ttSeedLoaded = false;
+let _ttSeedLoading = false;
+async function _seedTierTtM(){
+  try{
+    if(_ttSeedLoaded || _ttSeedLoading) return;
+    if(typeof ttM!=='undefined' && Array.isArray(ttM) && ttM.length){ _ttSeedLoaded=true; return; }
+    _ttSeedLoading = true;
+    const urls = ['ttm_seed_part1.json','ttm_seed_part2.json'];
+    const all = [];
+    for(const u of urls){
+      try{
+        const res = await fetch(u, {cache:'no-store'});
+        if(!res || !res.ok) continue;
+        const arr = await res.json();
+        if(Array.isArray(arr)) all.push(...arr);
+      }catch(e){}
+    }
+    if(all.length){
+      const seen = new Set();
+      const merged = [];
+      all.forEach(m=>{
+        if(!m || !m._id || seen.has(m._id)) return;
+        seen.add(m._id);
+        merged.push(m);
+      });
+      merged.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+      ttM = merged;
+      try{ save && save(); }catch(e){}
+      // 티어대회 마이그레이션/표시 캐시 갱신
+      try{ if(typeof _ttMigrated!=='undefined') _ttMigrated=false; }catch(e){}
+      try{ if(typeof _migrateTierTourneys==='function') _migrateTierTourneys(); }catch(e){}
+      // 스트리머 상세(최근 경기)에도 보이도록 ttM → history 반영
+      try{ if(typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
+      try{ render && render(); }catch(e){}
+    }
+    _ttSeedLoaded = true;
+    _ttSeedLoading = false;
+  }catch(e){
+    _ttSeedLoaded = true;
+    _ttSeedLoading = false;
+  }
+}
+
 function init(){
   fixPoints();
+  // 티어대회 기록(ttM) 시드가 있으면 로드(비동기) — 로컬 데이터가 비어 있을 때만
+  try{ _seedTierTtM(); }catch(e){}
   // 전역 폰트 설정 적용
   try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
   // (요청사항) 버튼/필 스타일 설정 적용
   try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
+  // 🎨 디자인 모드(리뉴얼) 적용
+  try{ if(typeof window.applyDesignV2 === 'function') window.applyDesignV2(); }catch(e){}
   // ELO 미설정 선수에게 기본값 부여
   if(typeof ELO_DEFAULT!=='undefined'){
     players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
@@ -54,6 +161,10 @@ function init(){
   initLoginHash();
   applyLoginState();
   render();
+  // 🎵 BGM 버튼 초기화
+  try{ if(typeof window.initBgm==='function') window.initBgm(); }catch(e){}
+  // 📺 SOOP 멀티뷰 버튼 초기화
+  try{ if(typeof window.initSoopMulti==='function') window.initSoopMulti(); }catch(e){}
   setTimeout(showNoticePopup, 800);
   // 🆕 URL 파라미터로 선수/대학 자동 오픈
   setTimeout(()=>{
@@ -96,6 +207,8 @@ window._applyAppFont = function(){
   try{ preset = (localStorage.getItem('su_app_font_preset') || 'noto').trim(); }catch(e){}
   try{ cssUrl = (localStorage.getItem('su_app_font_css') || '').trim(); }catch(e){}
   try{ fam = (localStorage.getItem('su_app_font_family') || '').trim(); }catch(e){}
+  let cssTxt = '';
+  try{ cssTxt = (localStorage.getItem('su_app_font_css_text') || '').trim(); }catch(e){}
 
   const ensureLink = (id, href) => {
     const head = document.head || document.getElementsByTagName('head')[0];
@@ -127,6 +240,24 @@ window._applyAppFont = function(){
   ensureLink('app-font-preset-css', presetCss[preset] || '');
   ensureLink('app-font-custom-css', cssUrl);
 
+  // CSS 직접 입력(@font-face 등) 지원
+  try{
+    const head = document.head || document.getElementsByTagName('head')[0];
+    if(head){
+      let st = document.getElementById('app-font-custom-style');
+      if(!cssTxt){
+        if(st) st.remove();
+      }else{
+        if(!st){
+          st = document.createElement('style');
+          st.id = 'app-font-custom-style';
+          head.appendChild(st);
+        }
+        st.textContent = cssTxt;
+      }
+    }
+  }catch(e){}
+
   // preset → font-family
   const presetFam = {
     system: 'system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif',
@@ -139,7 +270,12 @@ window._applyAppFont = function(){
     ibmplexsans: '"IBM Plex Sans KR", "Noto Sans KR", sans-serif',
   };
   const finalFam = fam || presetFam[preset] || presetFam.noto;
-  try{ document.documentElement.style.setProperty('--app-font', finalFam); }catch(e){}
+  // 이모지(📊📅🏆 등)가 흑백으로 보이는 문제 방지:
+  // - 전역 폰트를 강제 적용(body * { font-family: var(--app-font) !important; })하는 구조라
+  //   이모지 폰트 폴백을 명시적으로 앞에 둬야 컬러 이모지가 유지됩니다.
+  const emojiFam = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji"';
+  const finalFamWithEmoji = `${emojiFam}, ${finalFam}`;
+  try{ document.documentElement.style.setProperty('--app-font', finalFamWithEmoji); }catch(e){}
 };
 // 초기 1회 적용(렌더 전후 모두 대응)
 try{ window._applyAppFont(); }catch(e){}
@@ -167,6 +303,45 @@ window._applyUiBtnStyle = function(){
 try{ window._applyUiBtnStyle(); }catch(e){}
 
 // ─────────────────────────────────────────────────────────────
+// (요청사항) 전체 테마 변수 적용 (헤더 프리셋과 연동)
+// - localStorage: su_theme_vars_v1 (JSON: { "--bg":"...", "--surface":"...", ... })
+// - dark 모드에서는 배경 계열은 유지하고, 강조색(--blue 계열)만 적용
+// ─────────────────────────────────────────────────────────────
+window._applyThemeVars = function(){
+  let obj=null;
+  try{ obj = JSON.parse(localStorage.getItem('su_theme_vars_v1')||'null'); }catch(e){ obj=null; }
+  if(!obj || typeof obj!=='object') obj=null;
+  const tgt = document.body || document.documentElement;
+  if(!tgt) return;
+  // 기존 적용값 제거 후 재적용(없는 키는 제거)
+  const keys = ['--bg','--white','--surface','--border','--border2','--blue','--blue-d','--blue-l','--blue-ll','--gold','--gold-bg','--gold-b','--green','--red','--gray','--gray-l'];
+  try{
+    keys.forEach(k=>{
+      // obj가 없거나 해당 키가 없으면 inline 제거
+      if(!obj || !Object.prototype.hasOwnProperty.call(obj,k)) tgt.style.removeProperty(k);
+    });
+  }catch(e){}
+  if(!obj) return;
+  const isDark = !!document.body?.classList?.contains('dark');
+  const allowDark = new Set(['--blue','--blue-d','--blue-l','--blue-ll','--gold','--gold-bg','--gold-b','--green','--red']);
+  try{
+    Object.keys(obj).forEach(k=>{
+      if(typeof obj[k] !== 'string') return;
+      if(isDark && !allowDark.has(k)) return;
+      tgt.style.setProperty(k, obj[k]);
+    });
+  }catch(e){}
+};
+window.setThemeVars = function(vars){
+  try{
+    if(!vars){ localStorage.removeItem('su_theme_vars_v1'); window._applyThemeVars(); return; }
+    localStorage.setItem('su_theme_vars_v1', JSON.stringify(vars));
+  }catch(e){}
+  try{ window._applyThemeVars(); }catch(e){}
+};
+try{ window._applyThemeVars(); }catch(e){}
+
+// ─────────────────────────────────────────────────────────────
 // (요청사항) 헤더 커스텀(제목/좌측 아이콘/우측 이미지/배경 이미지/높이)
 // - localStorage:
 //   su_hdr_title
@@ -179,6 +354,8 @@ try{ window._applyUiBtnStyle(); }catch(e){}
 // ─────────────────────────────────────────────────────────────
 window._applyHeaderSettings = function(){
   let title='', leftIco='', leftSz=22, rightImg='', rightSz=32, bgImg='', hdrH=0;
+  // 신규: 헤더 색/효과 + 테마 동기화
+  let fx='classic', c1='', c2='', syncTheme=false;
   try{ title=(localStorage.getItem('su_hdr_title')||'').trim(); }catch(e){}
   try{ leftIco=(localStorage.getItem('su_hdr_left_icon')||'').trim(); }catch(e){}
   try{ leftSz=parseInt(localStorage.getItem('su_hdr_left_size')||'22',10)||22; }catch(e){}
@@ -186,6 +363,10 @@ window._applyHeaderSettings = function(){
   try{ rightSz=parseInt(localStorage.getItem('su_hdr_right_size')||'32',10)||32; }catch(e){}
   try{ bgImg=(localStorage.getItem('su_hdr_bg_img')||'').trim(); }catch(e){}
   try{ hdrH=parseInt(localStorage.getItem('su_hdr_height')||'0',10)||0; }catch(e){}
+  try{ fx=(localStorage.getItem('su_hdr_fx')||'classic').trim(); }catch(e){}
+  try{ c1=(localStorage.getItem('su_hdr_c1')||'').trim(); }catch(e){}
+  try{ c2=(localStorage.getItem('su_hdr_c2')||'').trim(); }catch(e){}
+  try{ syncTheme=(localStorage.getItem('su_hdr_sync_theme')==='1'); }catch(e){ syncTheme=false; }
   leftSz=Math.max(14,Math.min(44,leftSz));
   rightSz=Math.max(18,Math.min(70,rightSz));
   hdrH=Math.max(0,Math.min(140,hdrH));
@@ -199,21 +380,101 @@ window._applyHeaderSettings = function(){
       if(hdrH>0) document.documentElement.style.setProperty('--hdr-h', hdrH+'px');
       else document.documentElement.style.removeProperty('--hdr-h');
     }catch(e){}
+    // 색 유틸
+    const _hexToRgb=(hex)=>{
+      const h=String(hex||'').replace('#','').trim();
+      if(!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+      return {r:parseInt(h.slice(0,2),16), g:parseInt(h.slice(2,4),16), b:parseInt(h.slice(4,6),16)};
+    };
+    const _rgbToHex=(r,g,b)=>{
+      const to=(n)=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,'0');
+      return `#${to(r)}${to(g)}${to(b)}`;
+    };
+    const _mix=(a,b,t)=>{
+      const A=_hexToRgb(a), B=_hexToRgb(b);
+      if(!A||!B) return a||b||'#2563eb';
+      return _rgbToHex(A.r+(B.r-A.r)*t, A.g+(B.g-A.g)*t, A.b+(B.b-A.b)*t);
+    };
+    const _darken=(hex,t)=>_mix(hex,'#000000',t);
+    const _lighten=(hex,t)=>_mix(hex,'#ffffff',t);
+
+    // 기본 컬러
+    const base1 = _hexToRgb(c1) ? c1 : '#1e3a8a';
+    const base2 = _hexToRgb(c2) ? c2 : '#2563eb';
+    const base3 = _darken(base1, 0.15);
+
+    // 클래스 정리
     try{
+      hdr.classList.remove('hdr-stripes','hdr-glass','hdr-aurora','hdr-mesh');
+      if(fx==='glass') hdr.classList.add('hdr-glass');
+      else if(fx==='aurora') hdr.classList.add('hdr-aurora');
+      else if(fx==='mesh') hdr.classList.add('hdr-mesh');
+      else hdr.classList.add('hdr-stripes'); // classic 기본
+    }catch(e){}
+
+    // CSS 변수로 전달
+    try{
+      hdr.style.setProperty('--hdr-c1', base1);
+      hdr.style.setProperty('--hdr-c2', base2);
+      hdr.style.setProperty('--hdr-c3', base3);
+    }catch(e){}
+
+    // 배경(이미지 포함)
+    try{
+      let g = '';
+      // fx별 기본 배경 (그라데이션 말고도 제공)
+      if(fx==='solid'){
+        g = base2;
+      } else if(fx==='glass'){
+        // glass는 CSS에서 배경/블러 처리를 하므로, 여기서 background를 덮어쓰지 않음
+        g = '';
+      } else {
+        // classic/aurora/mesh는 기본 그라데이션을 유지하고, 효과는 ::before로 표현
+        g = `linear-gradient(135deg,${base1} 0%,${base2} 55%,${base3} 100%)`;
+      }
       if(bgImg){
-        const dark = !!document.body?.classList?.contains('dark');
-        const g = dark
-          ? 'linear-gradient(135deg,rgba(15,23,42,.85) 0%,rgba(30,58,138,.72) 55%,rgba(15,23,42,.85) 100%)'
-          : 'linear-gradient(135deg,rgba(30,58,138,.78) 0%,rgba(37,99,235,.62) 55%,rgba(30,64,175,.78) 100%)';
-        hdr.style.backgroundImage = `${g}, url('${bgImg.replace(/'/g,"%27")}')`;
+        // glass 모드일 때는 gradient를 합치지 않고 배경 이미지만 깔기
+        if(fx==='glass'){
+          hdr.style.backgroundImage = `url('${bgImg.replace(/'/g,"%27")}')`;
+        }else{
+          hdr.style.backgroundImage = `${g}, url('${bgImg.replace(/'/g,"%27")}')`;
+        }
         hdr.style.backgroundSize = 'cover';
         hdr.style.backgroundPosition = 'center';
         hdr.style.backgroundRepeat = 'no-repeat';
       }else{
+        if(fx==='glass'){
+          hdr.style.background = '';
+        }else{
+          hdr.style.background = g;
+        }
         hdr.style.backgroundImage = '';
         hdr.style.backgroundSize = '';
         hdr.style.backgroundPosition = '';
         hdr.style.backgroundRepeat = '';
+      }
+    }catch(e){}
+
+    // 전체 테마(주색) 동기화
+    try{
+      if(syncTheme){
+        const accent = base2;
+        const blue = accent;
+        const blueD = _darken(accent, 0.18);
+        const blueL = _lighten(accent, 0.86);
+        const blueLL = _lighten(accent, 0.92);
+        // body에 inline으로 깔면 dark 모드 변수도 덮어씀
+        const tgt = document.body || document.documentElement;
+        tgt.style.setProperty('--blue', blue);
+        tgt.style.setProperty('--blue-d', blueD);
+        tgt.style.setProperty('--blue-l', blueL);
+        tgt.style.setProperty('--blue-ll', blueLL);
+      }else{
+        const tgt = document.body || document.documentElement;
+        tgt.style.removeProperty('--blue');
+        tgt.style.removeProperty('--blue-d');
+        tgt.style.removeProperty('--blue-l');
+        tgt.style.removeProperty('--blue-ll');
       }
     }catch(e){}
   }
@@ -251,6 +512,8 @@ window._applyHeaderSettings = function(){
 };
 // 초기 1회 적용(렌더 전후 대응)
 try{ window._applyHeaderSettings(); }catch(e){}
+// 헤더 적용 후 테마도 다시 적용(우선순위: 테마 vars → 헤더 sync는 --blue만 건드림)
+try{ window._applyThemeVars && window._applyThemeVars(); }catch(e){}
 
 // ─────────────────────────────────────────────────────────────
 // 반응형 UI 스케일(자동): 브라우저/기기 폭에 따라 글자/아이콘 크기 자동 조절
@@ -267,10 +530,19 @@ function _applyUiScale(){
     else if (w <= 768) s = 1.00;
     else if (w <= 1024) s = 1.02;
     else s = 1.00;
+    // (신규) 수동 UI 스케일(폰트 크기) — 자동값에 곱해서 전역 적용
+    // - localStorage: su_ui_scale_pct (80~140, 기본 100)
+    try{
+      const pct = parseInt(localStorage.getItem('su_ui_scale_pct')||'100',10) || 100;
+      const mul = Math.max(80, Math.min(140, pct)) / 100;
+      s = s * mul;
+    }catch(e){}
     document.documentElement.style.setProperty('--uiS', String(s));
   }catch(e){}
 }
 window.addEventListener('resize', ()=>{ _applyUiScale(); }, {passive:true});
+// 설정에서 즉시 반영할 수 있도록 노출
+window._applyUiScale = _applyUiScale;
 _applyUiScale();
 
 // ─────────────────────────────────────────────────────────────
@@ -346,23 +618,31 @@ function _applyRecCardTheme(){
   const bgKey='su_rc_bg_alpha';
   const hdKey='su_rc_hd_alpha';
   const iconKey='su_rc_uicon';
+  const univFontKey='su_rc_univ_font_pct';
+  const ymScaleKey='su_ym_scale_pct';
   const memoKey='su_rc_memo_on';
   const vsKey='su_rc_vs_align';
   const scKey='su_rc_score_scale';
-  let on=true, accent='none', bg=12, hd=14, uicon=18, memoOn=false, vsAlign='left', scScale=100;
+  let on=true, accent='none', bg=12, hd=14, uicon=24;
+  let univFontPct=110, ymScalePct=100;
+  let memoOn=false, vsAlign='left', scScale=100;
   try{
     const v=localStorage.getItem(onKey); if(v!=null) on = v==='1';
     const a=localStorage.getItem(acKey); if(a) accent=a;
     const b=parseInt(localStorage.getItem(bgKey)||'',10); if(!isNaN(b)) bg=b;
     const h=parseInt(localStorage.getItem(hdKey)||'',10); if(!isNaN(h)) hd=h;
     const ic=parseInt(localStorage.getItem(iconKey)||'',10); if(!isNaN(ic)) uicon=ic;
+    const uf=parseInt(localStorage.getItem(univFontKey)||'',10); if(!isNaN(uf)) univFontPct=uf;
+    const ys=parseInt(localStorage.getItem(ymScaleKey)||'',10); if(!isNaN(ys)) ymScalePct=ys;
     const mo=localStorage.getItem(memoKey); if(mo!=null) memoOn = mo==='1';
     const va=localStorage.getItem(vsKey); if(va) vsAlign=va;
     const ss=parseInt(localStorage.getItem(scKey)||'',10); if(!isNaN(ss)) scScale=ss;
   }catch(e){}
   bg=Math.max(0,Math.min(30,bg));
   hd=Math.max(0,Math.min(30,hd));
-  uicon=Math.max(12,Math.min(28,uicon));
+  uicon=Math.max(12,Math.min(34,uicon));
+  univFontPct=Math.max(90,Math.min(150,univFontPct||100));
+  ymScalePct=Math.max(80,Math.min(140,ymScalePct||100));
   accent = ['none','header','border','full','gradient'].includes(accent) ? accent : 'none';
   vsAlign = ['left','center','right'].includes(vsAlign) ? vsAlign : 'left';
   scScale = Math.max(80, Math.min(130, scScale||100));
@@ -379,6 +659,8 @@ function _applyRecCardTheme(){
     document.documentElement.style.setProperty('--rc-bg-a', String(bg/100));
     document.documentElement.style.setProperty('--rc-hd-a', String(hd/100));
     document.documentElement.style.setProperty('--rc-uicon', uicon+'px');
+    document.documentElement.style.setProperty('--rc-univ-font-scale', String(univFontPct/100));
+    document.documentElement.style.setProperty('--ym-scale', String(ymScalePct/100));
     document.documentElement.style.setProperty('--rc-memo-on', memoOn?'1':'0');
     document.documentElement.style.setProperty('--rc-vs-justify', vsJust);
     document.documentElement.style.setProperty('--rc-score-scale', String(scScale/100));
@@ -478,16 +760,26 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
 // ── 사이트 첫 접속 시 자동 불러오기 ──
 (async function autoLoad(){
   try{
-    // J()를 사용해 LZ-String 압축 데이터도 올바르게 감지
-    const localPlayers = J('su_p');
-    if(localPlayers && localPlayers.length > 0) return;
+    // (복구) 로컬 기록이 있으면 자동 불러오기 금지 (덮어쓰기 방지)
+    const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
+    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey);
+    if(hasRecordKeys) return;
+    // su_p는 배열 또는 {v:2,p:[...]}일 수 있음
+    const localPlayers = (typeof J==='function') ? J('su_p') : null;
+    const ok = Array.isArray(localPlayers)
+      ? localPlayers.length>0
+      : (localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length>0);
+    if(ok) return;
   }catch(e){}
   console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
-  const _RAW = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
-  const _API = 'https://api.github.com/repos/nada1004/star-system/contents/data.json';
-  const _CDN = 'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json';
+  // (복구) 번들에 포함된 data.json을 최우선으로 시도
+  const _LOCAL = 'data.json';
+  // (수정) 실제 경로: star-datacenter/data.json
+  const _RAW = 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
+  const _API = 'https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
+  const _CDN = 'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json';
   const _PROXY = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(_RAW);
-  const urls = [_RAW, _CDN, _API, _PROXY];
+  const urls = [_LOCAL, _RAW, _CDN, _API, _PROXY];
   gsSetStatus && gsSetStatus('🔄 데이터 불러오는 중...','var(--blue)');
   let d = null;
   for(const url of urls){

@@ -36,6 +36,8 @@ function _decompressCloudData(d) {
 
 function _applyCloudData(d) {
   d = _decompressCloudData(d);
+  // (동기화) 클라우드 적용 중에는 로컬 설정 변경 감지(자동 업로드)를 막는다
+  try{ window._applyingCloudData = true; }catch(e){}
   // 🔧 Firebase는 빈 배열을 키 자체를 삭제해버림
   // savedAt이 있으면 완전한 데이터 → 없는 키는 빈 배열/기본값으로 처리
   const _has = (key) => d[key] !== undefined && d[key] !== null;
@@ -47,6 +49,13 @@ function _applyCloudData(d) {
     if(v !== undefined) {
       players=_fbArr(v, []);
       players.forEach(p=>{ if(p.history) p.history=_fbArr(p.history, []); });
+      // photo 복원 (players에 photo가 없고, playerPhotos 맵이 있으면 주입)
+      try{
+        const pm = d.playerPhotos || d.pPhotoMap || d.playerPhotoMap || null;
+        if(pm){
+          players.forEach(p=>{ if(p && p.name && !p.photo && pm[p.name]) p.photo = pm[p.name]; });
+        }
+      }catch(e){}
     }
   }
   if(_has('univCfg')||_has('univConfig')||_has('universities')) univCfg=_fbArr(d.univCfg||d.univConfig||d.universities, univCfg);
@@ -103,6 +112,23 @@ function _applyCloudData(d) {
   }
   {
   }
+  // ttM (티어대회 기록)
+  {
+    const v = d.ttM||d.tiertour||d.tierTourM;
+    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ttM') ? [] : null);
+    if(arr !== null){
+      ttM = arr;
+      // 중첩 구조 보정
+      try{
+        (ttM||[]).forEach(m=>{
+          if(m.sets) m.sets=_fbArr(m.sets,[]);
+          (m.sets||[]).forEach(s=>{ if(s.games) s.games=_fbArr(s.games,[]); });
+        });
+      }catch(e){}
+      // 티어대회 마이그레이션 캐시 갱신
+      try{ if(typeof _ttMigrated!=='undefined') _ttMigrated=false; }catch(e){}
+    }
+  }
   {
     const v = d.indM||d.ind;
     const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('indM') ? [] : null);
@@ -132,9 +158,7 @@ function _applyCloudData(d) {
   }
   // 공지사항
   if(d.notices!==undefined&&typeof notices!=='undefined') notices=d.notices;
-  // 보라크루
-  if(d.crew!==undefined&&typeof crew!=='undefined') crew=_fbArr(d.crew,[]);
-  if(d.crewCfg!==undefined&&typeof crewCfg!=='undefined') crewCfg=_fbArr(d.crewCfg,[]);
+  // (요청사항) 보라크루 기능 삭제: crew/crewCfg 수신 적용 제거
   // 🆕 시즌
   if(d.seasons!==undefined&&typeof seasons!=='undefined') seasons=_fbArr(d.seasons,[]);
   // 🆕 캘린더 예정 경기
@@ -165,9 +189,39 @@ function _applyCloudData(d) {
     if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
     if(s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
     if(s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
+    // (보강) 설정탭에서 바꾸는 su_* 설정을 통째로 동기화
+    // - 사진(base64)/토큰/비밀번호 등은 제외
+    try{
+      const ls = s.ls || s.localStorage || null;
+      if(ls && typeof ls==='object'){
+        // 외부탭(대전기록>외부) 데이터는 로컬이 더 최신인 경우 덮어쓰지 않음
+        // - cloud쪽 timestamp가 없을 수도 있으므로(구버전 데이터), 0으로 간주하고 비교한다.
+        let localExtTs = 0, cloudExtTs = 0;
+        try{ localExtTs = Number(localStorage.getItem('su_hist_ext_last_modified')||0) || 0; }catch(e){}
+        try{ cloudExtTs = Number(ls.su_hist_ext_last_modified||0) || 0; }catch(e){}
+        const extKeys = new Set([
+          'su_hist_ext_data_v1',
+          'su_hist_ext_proxy_presets_v1',
+          'su_hist_ext_proxy_preset_sel_v1',
+          'su_hist_ext_last_modified'
+        ]);
+        Object.entries(ls).forEach(([k,v])=>{
+          if(!k || typeof k!=='string') return;
+          if(!k.startsWith('su_')) return;
+          if(k.startsWith('su_pp')) return;
+          if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') return;
+          if(k==='su_last_admin_save' || k==='su_last_save_time') return;
+          // 로컬 외부탭 데이터가 더 최신이면(삭제/초기화 포함) 클라우드 값으로 덮어쓰지 않음
+          if(extKeys.has(k) && localExtTs && localExtTs > cloudExtTs) return;
+          try{ localStorage.setItem(k, String(v)); }catch(e){}
+        });
+      }
+    }catch(e){}
     // UI 즉시 반영
     if(typeof updateFabVisibility==='function') updateFabVisibility();
     if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
+    // 프로필 모양/크기/효과 즉시 반영
+    try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
     if(s.darkMode!==undefined){
       document.body.classList.toggle('dark', s.darkMode);
       if(window._fixHdrBtns) window._fixHdrBtns();
@@ -180,7 +234,46 @@ function _applyCloudData(d) {
       b2Content.innerHTML=_b2UnivView();
       if(typeof injectUnivIcons==='function') injectUnivIcons(b2Content);
     }
+
+    // 🎵 유튜브 BGM / 📺 SOOP 멀티뷰 설정 동기화
+    try{
+      if(s.bgmEnabled!==undefined) localStorage.setItem('su_bgm_enabled', s.bgmEnabled ? '1' : '0');
+      if(s.bgmShuffle!==undefined) localStorage.setItem('su_bgm_shuffle', s.bgmShuffle ? '1' : '0');
+      if(s.bgmVolume!==undefined) localStorage.setItem('su_bgm_volume', String(s.bgmVolume));
+      if(s.bgmList!==undefined) localStorage.setItem('su_bgm_list', String(s.bgmList||''));
+      if(s.soopList!==undefined) localStorage.setItem('su_soop_list', String(s.soopList||''));
+      // 버튼 즉시 반영
+      if(typeof window.bgmApplySettings==='function') window.bgmApplySettings();
+      if(typeof window.soopApplySettings==='function') window.soopApplySettings();
+    }catch(e){}
+
+    // 🧾 대전기록 > 외부 탭 데이터 동기화
+    try{
+      if(s.histExtData!==undefined) localStorage.setItem('su_hist_ext_data_v1', String(s.histExtData||''));
+      if(s.histExtProxyPresets!==undefined) localStorage.setItem('su_hist_ext_proxy_presets_v1', String(s.histExtProxyPresets||''));
+      if(s.histExtProxyPresetSel!==undefined) localStorage.setItem('su_hist_ext_proxy_preset_sel_v1', String(s.histExtProxyPresetSel||''));
+    }catch(e){}
+
+    // 🎨 디자인 모드(리뉴얼) / 🅰️ 폰트 설정 동기화
+    try{
+      if(s.designV2On!==undefined) localStorage.setItem('su_design_v2', s.designV2On ? '1' : '0');
+      if(s.designV2Preset!==undefined) localStorage.setItem('su_design_v2_preset', String(s.designV2Preset||'base'));
+      if(s.designV2Bright!==undefined) localStorage.setItem('su_design_v2_bright', String(s.designV2Bright||'0'));
+      if(s.designV2Dark!==undefined) localStorage.setItem('su_design_v2_dark', String(s.designV2Dark||'0'));
+      if(s.designV2Colors!==undefined) localStorage.setItem('su_design_v2_colors', String(s.designV2Colors||'{}'));
+      if(s.designV2Effects!==undefined) localStorage.setItem('su_design_v2_effects', String(s.designV2Effects||'{}'));
+      if(s.appFontPreset!==undefined) localStorage.setItem('su_app_font_preset', String(s.appFontPreset||'noto'));
+      if(s.appFontCss!==undefined) localStorage.setItem('su_app_font_css', String(s.appFontCss||''));
+      if(s.appFontFamily!==undefined) localStorage.setItem('su_app_font_family', String(s.appFontFamily||''));
+      if(s.appFontCssText!==undefined) localStorage.setItem('su_app_font_css_text', String(s.appFontCssText||''));
+      if(s.appFontAliasMap!==undefined) localStorage.setItem('su_app_font_alias_map', String(s.appFontAliasMap||'{}'));
+      if(s.uiScalePct!==undefined) localStorage.setItem('su_ui_scale_pct', String(s.uiScalePct||'100'));
+      if(typeof window._applyAppFont==='function') window._applyAppFont();
+      if(typeof window.applyDesignV2==='function') window.applyDesignV2();
+      if(typeof window._applyUiScale==='function') window._applyUiScale();
+    }catch(e){}
   }
+  try{ window._applyingCloudData = false; }catch(e){}
 }
 
 // Firebase 실시간 수신 콜백 (firebase-init.js 에서 호출)
@@ -190,6 +283,17 @@ function _applyCloudData(d) {
 window.onFirebaseLoad = function(data) {
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
+  // (버그/개선) 동일 savedAt 중복 수신(포그라운드 복귀 get + onValue 등) 시
+  // 매번 localSave/render가 반복 호출되어 끊김/버벅임이 발생할 수 있어 중복을 스킵
+  try{
+    const sa = clean && clean.savedAt ? Number(clean.savedAt) : 0;
+    if(!window._forcingSync && sa && window._lastAppliedSavedAt === sa){
+      const fbTs = document.getElementById('fbLastSync');
+      if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
+      return;
+    }
+    if(sa) window._lastAppliedSavedAt = sa;
+  }catch(e){}
   _applyCloudData(clean);
   // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
   // (savedAt 비교 로직 제거로 인해 불필요, 오히려 자기 에코 방어 타이밍 오염 가능)
@@ -221,11 +325,47 @@ async function fbCloudSave() {
   window._lastAdminSaveTime = savedAt;
   window._isSaving = true;
   localStorage.setItem('su_last_admin_save', String(savedAt)); // 새로고침 후에도 복원
+  // (용량 최적화) Firebase 페이로드를 줄이기 위해 players.photo(base64)를 분리 저장
+  // - localSave와 동일한 전략: 사진은 map으로 따로 보내고, players에는 photo를 제거
+  // - history의 eloAfter는 UI에서 재계산 가능하므로 제거(크기 절감)
+  const _pPhotoMap = {};
+  const _pNoPhoto = (players||[]).map(p=>{
+    const c={...p};
+    if(c.photo){ _pPhotoMap[c.name]=c.photo; delete c.photo; }
+    if(c.history && c.history.length){
+      // eslint-disable-next-line no-unused-vars
+      c.history = c.history.map(({eloAfter,...h})=>h);
+    }
+    return c;
+  });
+
+  // 설정(localStorage)도 함께 업로드해서 다른 기기에서도 "바로" 적용되게 함
+  const _syncLs = {};
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(!k || typeof k!=='string') continue;
+      if(!k.startsWith('su_')) continue;
+      if(k.startsWith('su_pp')) continue;
+      if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') continue;
+      if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
+      const v = localStorage.getItem(k);
+      if(v==null) continue;
+      // 너무 큰 값은 제외(예: 이미지 base64 등)
+      if(String(v).length > 200000) continue;
+      _syncLs[k] = v;
+    }
+  }catch(e){}
+
   const dataObj = {
-    players, univCfg, maps, tourD, miniM, univM, comps, ckM,
+    players: _pNoPhoto,
+    playerPhotos: _pPhotoMap,
+    univCfg, maps, tourD, miniM, univM, comps, ckM,
     compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, indM, gjM,
+    // 🎯 티어대회 기록(대전기록 탭/스트리머 history 동기화용)
+    ttM: (typeof ttM!=='undefined' ? ttM : []),
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
-    curProComp, _ttCurComp, seasons, calScheduled, crew, crewCfg,
+    curProComp, _ttCurComp, seasons, calScheduled,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
     // 🔧 앱 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등)
@@ -237,7 +377,38 @@ async function fbCloudSave() {
       fabHidePC: localStorage.getItem('su_fabHidePC')==='1',
       darkMode: localStorage.getItem('su_dark')==='1',
       b2LabelAlpha: localStorage.getItem('su_b2la')||'16',
-      b2BgAlpha: localStorage.getItem('su_b2ba')||'9'
+      b2BgAlpha: localStorage.getItem('su_b2ba')||'9',
+      // 🎨 디자인 모드(리뉴얼) — 모든 기기 동기화
+      designV2On: localStorage.getItem('su_design_v2')==='1',
+      designV2Preset: localStorage.getItem('su_design_v2_preset')||'base',
+      designV2Bright: localStorage.getItem('su_design_v2_bright')||'0',
+      designV2Dark: localStorage.getItem('su_design_v2_dark')||'0',
+      designV2Colors: localStorage.getItem('su_design_v2_colors')||'{}',
+      designV2Effects: localStorage.getItem('su_design_v2_effects')||'{}',
+      // 🅰️ 전역 폰트 — 모든 기기 동기화
+      appFontPreset: localStorage.getItem('su_app_font_preset')||'noto',
+      appFontCss: localStorage.getItem('su_app_font_css')||'',
+      appFontFamily: localStorage.getItem('su_app_font_family')||'',
+      appFontCssText: localStorage.getItem('su_app_font_css_text')||'',
+      appFontAliasMap: localStorage.getItem('su_app_font_alias_map')||'{}',
+      // 📏 전역 UI 배율(글자/아이콘)
+      uiScalePct: localStorage.getItem('su_ui_scale_pct')||'100',
+      // 🎵 유튜브 BGM (설정 동기화)
+      bgmEnabled: (localStorage.getItem('su_bgm_enabled') ?? '1') === '1',
+      bgmShuffle: (localStorage.getItem('su_bgm_shuffle') ?? '0') === '1',
+      bgmVolume: parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50,
+      bgmList: localStorage.getItem('su_bgm_list') || '',
+      // 📺 SOOP 멀티뷰 (설정 동기화)
+      soopList: localStorage.getItem('su_soop_list') || '',
+
+      // 🧾 대전기록 > 외부 탭 데이터 동기화
+      // - 외부 사이트에서 자동 인식/저장한 데이터가 다른 기기에서 안 보이는 문제 해결
+      // - history.js에서 su_hist_ext_data_v1 등에 저장함 (크기가 커질 수 있어 문자열 그대로 저장)
+      histExtData: localStorage.getItem('su_hist_ext_data_v1') || '',
+      histExtProxyPresets: localStorage.getItem('su_hist_ext_proxy_presets_v1') || '',
+      histExtProxyPresetSel: localStorage.getItem('su_hist_ext_proxy_preset_sel_v1') || '',
+      // localStorage 설정(문자열) 묶음
+      ls: _syncLs
     },
     savedAt
   };
@@ -570,7 +741,7 @@ function rBoard(C,T){
     <span style="font-size:11px;font-weight:800;color:var(--text2)">👥 ${_brdAllVis.length}명</span>
     <span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>
     <span style="font-size:11px;font-weight:800;color:var(--text2)">🏫 ${visUnivs.length}개 대학</span>
-    ${TIERS.filter(t=>_brdTierCts[t]).length?`<span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_brdTierCts[t]).map(t=>`<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;background:${_TIER_BG[t]||'#64748b'};color:${_TIER_TEXT[t]||'#fff'}">${t} ${_brdTierCts[t]}</span>`).join('')}`:''}
+    ${TIERS.filter(t=>_brdTierCts[t]).length?`<span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_brdTierCts[t]).map(t=>`<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;background:${getTierBtnColor(t)||'#64748b'};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_brdTierCts[t]}</span>`).join('')}`:''}
   </div>`;
   let h=`
   <style>
@@ -674,7 +845,7 @@ function buildUnivBoardCard(u, forExport){
   if(!sorted.length&&!forExport){
     // 선수 없는 대학도 빈 카드로 표시
     return `<div class="brd-card" data-univ="${u.name}" style="border:2px dashed ${col}66;border-radius:14px;padding:20px 18px;background:${col}08;display:flex;align-items:center;gap:10px;opacity:.75">
-      ${iconUrl?`<img src="${iconUrl}" style="width:var(--su_univ_logo_size,32px);height:var(--su_univ_logo_size,32px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.style.display='none'">`:''}
+      ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,32px);height:var(--su_univ_logo_size,32px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.style.display='none'">`:''}
       <span style="font-weight:900;font-size:15px;color:${col}">${u.name}</span>
       <span style="font-size:11px;color:var(--gray-l)">등록된 스트리머 없음</span>
     </div>`;
@@ -718,12 +889,12 @@ function buildUnivBoardCard(u, forExport){
       // ── 포토카드 뷰 (화면 + 이미지저장 공통) ──
       if (boardCardView) {
         const rcBg = rc.col || col;
-        const cardTierCol = p.tier ? (_TIER_BG[p.tier] || '#64748b') : null;
-        const cardTierText = p.tier ? (_TIER_TEXT[p.tier] || '#fff') : '#fff';
+        const cardTierCol = p.tier ? (getTierBtnColor(p.tier) || '#64748b') : null;
+        const cardTierText = p.tier ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
         const rTxtCard = rc.txt||p.race||'?';
         const imgBorderRadius = boardCardShape === 'square' ? '8px' : '10px';
         const imgInner = photoSrcChip
-          ? `<img src="${photoSrcChip}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;border-radius:${imgBorderRadius}" ${forExport?'':' onerror="this.style.display=\'none\'"'}>`
+          ? `<img src="${toHttpsUrl(photoSrcChip)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;border-radius:${imgBorderRadius}" ${forExport?'':' onerror="this.style.display=\'none\'"'}>`
           + (forExport?'':`<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:none;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:${imgBorderRadius}">${rTxtCard}</div>`)
           : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:${imgBorderRadius}">${rTxtCard}</div>`;
         // 종족/티어 배지 (좌상단)
@@ -763,12 +934,13 @@ function buildUnivBoardCard(u, forExport){
         const cBgE=hexToRgba(col,.16);
         const cBdE=hexToRgba(col,.45);
         const rTxt=rc.txt||p.race||'?';
-        const chipTierCol2 = p.tier ? (_TIER_BG[p.tier] || col) : '#9ca3af';
-        const chipTierText2 = p.tier ? (_TIER_TEXT[p.tier] || '#fff') : '#fff';
-        const imgRadius = boardCardShape === 'square' ? '8px' : '50%';
+        const chipTierCol2 = p.tier ? (getTierBtnColor(p.tier) || col) : '#9ca3af';
+        const chipTierText2 = p.tier ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
+        // 전역 프로필 이미지 모양 설정(원/네모) 반영
+        const imgRadius = 'var(--su_profile_radius,50%)';
         return `<span style="display:inline-flex;align-items:center;gap:12px;background:${cBgE};border-radius:16px;padding:10px 18px 10px 10px;margin:5px;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBdE}">
           ${photoSrcChip
-            ?`<img src="${photoSrcChip}" style="width:64px;height:64px;border-radius:${imgRadius};object-fit:cover;flex-shrink:0;border:3px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)}">`
+            ?`<img src="${toHttpsUrl(photoSrcChip)}" style="width:64px;height:64px;border-radius:${imgRadius};object-fit:cover;flex-shrink:0;border:3px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)}">`
             :`<span style="width:64px;height:64px;border-radius:${imgRadius};background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;flex-shrink:0;border:3px solid ${hexToRgba(col,.7)}">${rTxt}</span>`}
           <span style="display:inline-flex;flex-direction:column;gap:3px;min-width:0">
             ${isMain?`<span style="font-size:11px;font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
@@ -789,8 +961,8 @@ function buildUnivBoardCard(u, forExport){
         : `openPlayerModal('${pNameSafe}')`;
 
       // 티어 고정 색상 (칩)
-      const chipTierCol = p.tier ? (_TIER_BG[p.tier] || col) : '#9ca3af';
-      const chipTierText = p.tier ? (_TIER_TEXT[p.tier] || '#fff') : '#fff';
+      const chipTierCol = p.tier ? (getTierBtnColor(p.tier) || col) : '#9ca3af';
+      const chipTierText = p.tier ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
 
       // 칩 배경: 대학 지정색
       const cBgL=hexToRgba(col,.16);
@@ -806,8 +978,8 @@ function buildUnivBoardCard(u, forExport){
       const tierBadgeFs=compact?'9px':'11px';
       // 사진 렌더: 사진 로드 실패 시 플레이스홀더(종족 텍스트) 표시
       const _photoEl = photoSrcChip
-        ? `<span style="width:${photoSz};height:${photoSz};border-radius:50%;flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)};background:${col};color:#fff;font-size:${photoFs};font-weight:900">${rTxt}<img src="${photoSrcChip}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'"></span>`
-        : `<span style="width:${photoSz};height:${photoSz};border-radius:50%;background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`;
+        ? `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)};background:${col};color:#fff;font-size:${photoFs};font-weight:900">${rTxt}<img src="${toHttpsUrl(photoSrcChip)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--su_profile_radius,50%)" onerror="this.style.display='none'"></span>`
+        : `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`;
       return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:${chipGap};background:${cBgL};border-radius:16px;padding:${chipPad};margin:${compact?'3px':'5px'};cursor:${isLoggedIn?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(isLoggedIn){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
         ${_photoEl}
         <span style="display:inline-flex;flex-direction:column;gap:${compact?'2px':'3px'};min-width:0">
@@ -853,8 +1025,8 @@ function buildUnivBoardCard(u, forExport){
       const freeTierOrder=[...TIERS.filter(t=>freeTierMap[t]),...(freeTierMap['기타']?['기타']:[])];
       tierRows=freeTierOrder.map(tier=>{
         const ps=freeTierMap[tier];
-        const tColor=_TIER_BG[tier]||col;
-        const tText=_TIER_TEXT[tier]||'#fff';
+        const tColor=getTierBtnColor(tier)||col;
+        const tText=getTierBtnTextColor(tier)||'#fff';
         return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
           <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${toPastel(tColor,Math.max(0,(50-b2LabelAlpha)*0.005))}!important;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
           <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${ps.map(p=>buildPlayerChip(p, chipIdxMapElo[p.name]??0)).join('')}</div>
@@ -864,8 +1036,8 @@ function buildUnivBoardCard(u, forExport){
     } else {
       tierRows=tierOrder.map((tier,tidx)=>{
         const ps=tierMap[tier];
-        const tColor = _TIER_BG[tier] || col;
-        const tText = _TIER_TEXT[tier] || '#fff';
+        const tColor = getTierBtnColor(tier) || col;
+        const tText = getTierBtnTextColor(tier) || '#fff';
         return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
           <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${toPastel(tColor,Math.max(0,(50-b2LabelAlpha)*0.005))}!important;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
           <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${ps.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
@@ -887,7 +1059,7 @@ function buildUnivBoardCard(u, forExport){
       <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${isLoggedIn&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
         <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
           <div style="width:var(--su_univ_logo_box,46px);height:var(--su_univ_logo_box,46px);border-radius:var(--su_univ_logo_radius,13px);background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="대학 상세 보기">
-            ${iconUrl?`<img src="${iconUrl}" style="width:var(--su_univ_logo_size,34px);height:var(--su_univ_logo_size,34px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
+            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,34px);height:var(--su_univ_logo_size,34px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;overflow:hidden">
@@ -1078,7 +1250,7 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
       </div>
     </div>
     <div class="brd-move-popup-sep"></div>
-    ${(p.gameType==='general'||p.gameType==='보라크루')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName}을(를) 스트리머 목록에서 삭제할까요?\\n\\n⚠️ 삭제하면 복구가 어렵습니다.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('🗑️ 스트리머 삭제 완료');}}">🗑️ 스트리머 삭제</button>`:''}
+    ${(p.gameType==='general')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName}을(를) 스트리머 목록에서 삭제할까요?\\n\\n⚠️ 삭제하면 복구가 어렵습니다.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('🗑️ 스트리머 삭제 완료');}}">🗑️ 스트리머 삭제</button>`:''}
     <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">👤 스트리머 상세 보기</button>
   `;
 

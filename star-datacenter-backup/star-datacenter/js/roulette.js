@@ -8,7 +8,49 @@ function rRoulette(C, T) {
   const _capR = Math.round(_dome * 0.076);
   window._GC_DOME = _dome;
   window._GC_CAP_R = _capR;
+
+  // [Fix-4] players 비어있으면 구슬뽑기 탭 진입 시 경고 배너 + 재시도 버튼
+  const _playersEmpty = (typeof players === 'undefined' || !Array.isArray(players) || players.length === 0);
+  if (_playersEmpty && _gcTab === 'player') {
+    const _pad = Math.max(14, Math.round(_dome * 0.085));
+    C.innerHTML = renderRoulettePanel(_dome, _capR, isWide, avW, avH);
+    // 탭바 위에 경고 배너 삽입
+    const _tabBarEl = C.querySelector('.subtab-bar');
+    if (_tabBarEl) {
+      const _banner = document.createElement('div');
+      _banner.id = 'gc-players-banner';
+      _banner.style.cssText = 'background:#FFF7ED;border:2px solid #FED7AA;border-radius:12px;padding:14px 18px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px';
+      _banner.innerHTML = '<div style="font-size:14px;font-weight:800;color:#C2410C">⚠️ 스트리머 데이터 로드 실패</div>'
+        + '<div style="font-size:12px;color:#92400E;line-height:1.6">구슬뽑기를 사용하려면 스트리머 목록이 필요합니다.<br>데이터를 불러오지 못했거나 아직 로딩 중입니다.</div>'
+        + '<button onclick="location.reload()" style="align-self:flex-start;padding:7px 16px;border-radius:8px;border:none;background:#EA580C;color:#fff;font-size:12px;font-weight:700;cursor:pointer">🔄 페이지 새로고침</button>';
+      C.insertBefore(_banner, C.firstChild);
+    }
+    // textarea 값 주입
+    (function _injectTextareaValues() {
+      var _gcInp = document.getElementById('gc-items-input');
+      if (_gcInp) _gcInp.value = localStorage.getItem(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m') || '';
+      var _ldN = document.getElementById('ld-names-input');
+      if (_ldN) _ldN.value = localStorage.getItem('su_ld_names') || '';
+      var _ldI = document.getElementById('ld-items-input');
+      if (_ldI) _ldI.value = localStorage.getItem('su_ld_items') || '';
+    })();
+    if (_gcTab === 'ladder') { setTimeout(_ldInit, 60); }
+    else if (_gcTab === 'duck') { setTimeout(_drInit, 60); }
+    else if (_gcTab === 'wheel') { setTimeout(_whInit, 60); }
+    else { setTimeout(_gcSetup, 60); }
+    return;
+  }
+
   C.innerHTML = renderRoulettePanel(_dome, _capR, isWide, avW, avH);
+  // [Fix-2] localStorage 값을 innerHTML 삽입 대신 .value로 안전하게 세팅 (XSS/DOM 깨짐 방지)
+  (function _injectTextareaValues() {
+    var _gcInp = document.getElementById('gc-items-input');
+    if (_gcInp) _gcInp.value = localStorage.getItem(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m') || '';
+    var _ldN = document.getElementById('ld-names-input');
+    if (_ldN) _ldN.value = localStorage.getItem('su_ld_names') || '';
+    var _ldI = document.getElementById('ld-items-input');
+    if (_ldI) _ldI.value = localStorage.getItem('su_ld_items') || '';
+  })();
   if (_gcTab === 'ladder') {
     setTimeout(_ldInit, 60);
   } else if (_gcTab === 'duck') {
@@ -18,6 +60,7 @@ function rRoulette(C, T) {
   } else {
     setTimeout(_gcSetup, 60);
   }
+  // (요청사항) 확률(%) 표시는 제거
 }
 
 (function _gcInjectCSS(){
@@ -46,6 +89,76 @@ let _gcAudioCtx = null;
 window._GC_DOME = 220;
 window._GC_CAP_R = 17;
 
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 룰렛 결과 팝업
+// ─────────────────────────────────────────────────────────────
+if (typeof window._rrShowPopup !== 'function') {
+  window._rrShowPopup = function(title, bodyHTML){
+    let m=document.getElementById('rrPopupModal');
+    if(!m){
+      m=document.createElement('div');
+      m.id='rrPopupModal';
+      m.className='modal no-export';
+      m.style.cssText='display:none;z-index:9100;align-items:center;justify-content:center';
+      m.addEventListener('click', (e)=>{ if(e && e.target===m) window._rrClosePopup(); });
+      document.body.appendChild(m);
+    }
+    m.innerHTML = `
+      <div class="mbox" style="width:min(520px,94vw);max-height:86vh;overflow:auto">
+        <div class="mtitle" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span>${title||'결과'}</span>
+          <button class="btn btn-w btn-xs" onclick="_rrClosePopup()">✕</button>
+        </div>
+        <div style="padding:10px 2px 4px">${bodyHTML||''}</div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+          <button class="btn btn-b btn-sm" onclick="_rrClosePopup()">확인</button>
+        </div>
+      </div>`;
+    m.style.display='flex';
+  };
+  window._rrClosePopup = function(){
+    const m=document.getElementById('rrPopupModal');
+    if(m) m.style.display='none';
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// (추가) 가중치/확률 파서
+// 형식: "이름" 또는 "이름*2.5" (쉼표로 구분)
+// - 같은 이름이 여러 번 나오면 가중치를 합산
+// ─────────────────────────────────────────────────────────────
+function _gcParseWeightedCSV(text){
+  const raw = String(text||'');
+  const tokens = raw.split(',').map(v=>v.trim()).filter(Boolean);
+  const map = new Map();
+  tokens.forEach(t=>{
+    let name=t, w=1;
+    const m=t.match(/^(.*?)(?:\*(\d+(?:\.\d+)?))$/);
+    if(m){
+      name=(m[1]||'').trim();
+      const n=parseFloat(m[2]);
+      if(!isNaN(n) && isFinite(n)) w=n;
+    }
+    if(!name) return;
+    w=Math.max(0.01, Math.min(1000, w));
+    map.set(name, (map.get(name)||0) + w);
+  });
+  const items=[...map.entries()].map(([name,weight])=>({name,weight}));
+  const total=items.reduce((s,x)=>s+x.weight,0)||0;
+  return {items,total};
+}
+
+function _gcPickWeighted(items,total){
+  if(!items||!items.length) return null;
+  if(!(total>0)) total = items.reduce((s,x)=>s+x.weight,0);
+  let r=Math.random()*total;
+  for(const it of items){
+    r -= it.weight;
+    if(r<=0) return it;
+  }
+  return items[items.length-1];
+}
+
 const _GC_COLORS = [
   ['#FF80AB','#FF4081'],['#81D4FA','#29B6F6'],['#FFF176','#FFD600'],
   ['#B9F6CA','#00E676'],['#CE93D8','#AB47BC'],['#FFCC80','#FFA726'],
@@ -70,8 +183,10 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isLadder = _gcTab === 'ladder';
   const isDuck   = _gcTab === 'duck';
   const isWheel   = _gcTab === 'wheel';
+  const isNew     = _gcTab === 'new';
   const savedText   = (!isLadder && !isDuck && !isWheel) ? (localStorage.getItem(isPlayer ? 'su_gc_p' : 'su_gc_m') || '') : '';
-  const activeItems = savedText.split(',').map(v=>v.trim()).filter(v=>v);
+  const _w = _gcParseWeightedCSV(savedText);
+  const activeItems = _w.items.map(x=>x.name);
 
   const ldNamesText = isLadder ? (localStorage.getItem('su_ld_names') || '') : '';
   const ldItemsText = isLadder ? (localStorage.getItem('su_ld_items') || '') : '';
@@ -81,21 +196,97 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const fsLg = Math.max(16, Math.round(dome * 0.095));
   const pad  = Math.max(14, Math.round(dome * 0.085));
 
-  // 탭 버튼 스타일 헬퍼 (TDZ 방지: isDuck 블록보다 먼저 선언)
-  const _tbP = Math.round(pad * 0.65);
-  const _tbF = Math.max(11, fs - 1);
-  const tbStyle = (active, isSpecial) => active
-    ? `flex:1;padding:${_tbP}px 5px;font-size:${_tbF}px;font-weight:800;border:none;border-radius:10px;background:${isSpecial?'linear-gradient(135deg,#0ea5e9,#38bdf8)':'linear-gradient(135deg,#FF4B6E,#FF89AB)'};color:#fff;cursor:pointer;transition:.15s;box-shadow:0 2px 8px ${isSpecial?'rgba(14,165,233,.35)':'rgba(255,75,110,.35)'};text-align:center;line-height:1.3;min-width:0`
-    : `flex:1;padding:${_tbP}px 5px;font-size:${_tbF}px;font-weight:700;border:none;border-radius:10px;background:transparent;color:var(--text3);cursor:pointer;transition:.15s;text-align:center;line-height:1.3;min-width:0`;
-
-  // 공통 탭바 HTML
-  const _tabBar = `<div style="background:var(--surface);border-radius:14px;padding:4px;display:flex;gap:2px;margin-bottom:${pad}px">
-    <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player')}">🎰 구슬뽑기</button>
-    <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map')}">🗺️ 맵뽑기</button>
-    <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder')}">🪜 사다리</button>
-    <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(_gcTab==='duck',true)}">🐥 경주</button>
-    <button onclick="_gcSwitchTab('wheel')"  style="${tbStyle(_gcTab==='wheel',true)}">🎡 휠</button>
+  // 공통 탭바 HTML — 다른 탭 하위 메뉴와 동일한 pill/fbar 스타일
+  const _tabBar = `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+    <button class="pill${_gcTab==='player'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('player')">🎰 구슬뽑기</button>
+    <button class="pill${_gcTab==='map'?' on':''}"    style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('map')">🗺️ 맵뽑기</button>
+    <button class="pill${_gcTab==='ladder'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('ladder')">🪜 사다리</button>
+    <button class="pill${_gcTab==='duck'?' on':''}"   style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('duck')">🐥 경주</button>
+    <button class="pill${_gcTab==='wheel'?' on':''}"  style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('wheel')">🎡 휠</button>
+    <button class="pill${_gcTab==='new'?' on':''}"    style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('new')">🧩 신규</button>
   </div>`;
+
+  // ── 신규(프로토타입) 탭: 기존 룰렛과 다른 "도구" UI ──
+  if(isNew){
+    const _mDef = (localStorage.getItem('su_rr_missions')||'공중전 금지\n올인 금지\n멀티 3개 제한\n업그레이드 금지\n셔틀/드랍 1회 이상\n스캔 금지').trim();
+    const _qDef = (localStorage.getItem('su_rr_queue')||'').trim();
+    const _sDef = (localStorage.getItem('su_rr_swiss')||'').trim();
+    const _setN = parseInt(localStorage.getItem('su_rr_map_sets')||'3',10) || 3;
+    const _banN = parseInt(localStorage.getItem('su_rr_map_bans')||'1',10) || 1;
+    const _cool = parseInt(localStorage.getItem('su_rr_queue_cool')||'1',10) || 1;
+    const _rmv  = (localStorage.getItem('su_rr_queue_remove')||'0')==='1';
+    const _setsOpts=[1,3,5,7].map(n=>`<option value="${n}"${n===_setN?' selected':''}>${n}세트</option>`).join('');
+    const _banOpts=[0,1,2,3].map(n=>`<option value="${n}"${n===_banN?' selected':''}>${n}개</option>`).join('');
+
+    return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+      <div class="subtab-bar">
+        <button class="subtab-btn${_gcTab==='player'?' is-active':''}" onclick="_gcSwitchTab('player')">🎰 구슬뽑기</button>
+        <button class="subtab-btn${_gcTab==='map'?' is-active':''}"    onclick="_gcSwitchTab('map')">🗺️ 맵뽑기</button>
+        <button class="subtab-btn${_gcTab==='ladder'?' is-active':''}" onclick="_gcSwitchTab('ladder')">🪜 사다리</button>
+        <button class="subtab-btn is-special${_gcTab==='duck'?' is-active':''}" onclick="_gcSwitchTab('duck')">🐥 경주</button>
+        <button class="subtab-btn is-special${_gcTab==='wheel'?' is-active':''}" onclick="_gcSwitchTab('wheel')">🎡 휠</button>
+        <button class="subtab-btn${_gcTab==='new'?' is-active':''}"    onclick="_gcSwitchTab('new')">🧩 신규</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:${Math.max(10,Math.round(pad*0.7))}px">
+
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--sh)">
+          <div style="font-weight:900;font-size:14px;margin-bottom:8px">🎯 미션/도전 룰렛</div>
+          <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">한 줄에 1개. ‘뽑기’로 랜덤 선택</div>
+          <textarea id="rr-mission-inp" rows="6" style="width:100%;resize:vertical" onblur="localStorage.setItem('su_rr_missions',this.value)">${_mDef.replace(/</g,'&lt;')}</textarea>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn btn-b btn-sm" onclick="rrMissionRoll()">🎯 뽑기</button>
+            <button class="btn btn-w btn-sm" onclick="rrMissionReroll()">🔄 리롤</button>
+            <button class="btn btn-r btn-sm" onclick="rrMissionClear()">🧹 초기화</button>
+          </div>
+          <div id="rr-mission-out" style="margin-top:10px;padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);font-weight:900;min-height:44px;display:flex;align-items:center;justify-content:center;text-align:center"></div>
+          <div id="rr-mission-hist" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+        </div>
+
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--sh)">
+          <div style="font-weight:900;font-size:14px;margin-bottom:8px">🗺️ 맵 밴/픽 생성기</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <label style="font-size:12px;font-weight:800;color:var(--text2)">세트수</label>
+            <select id="rr-map-sets" onchange="localStorage.setItem('su_rr_map_sets',this.value)">${_setsOpts}</select>
+            <label style="font-size:12px;font-weight:800;color:var(--text2)">밴(팀당)</label>
+            <select id="rr-map-bans" onchange="localStorage.setItem('su_rr_map_bans',this.value)">${_banOpts}</select>
+            <button class="btn btn-p btn-sm" onclick="rrMapBanPickGenerate()">📋 생성</button>
+          </div>
+          <div style="font-size:11px;color:var(--gray-l);margin-top:6px">현재 ‘맵 목록’(설정 탭)에서 랜덤 추출</div>
+          <div id="rr-map-out" style="margin-top:10px"></div>
+        </div>
+
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--sh)">
+          <div style="font-weight:900;font-size:14px;margin-bottom:8px">👤 다음 경기 지정(대기열)</div>
+          <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">한 줄에 1명</div>
+          <textarea id="rr-queue-inp" rows="6" style="width:100%;resize:vertical" onblur="localStorage.setItem('su_rr_queue',this.value)">${_qDef.replace(/</g,'&lt;')}</textarea>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px">
+            <label style="font-size:12px;font-weight:800;color:var(--text2)">연속 방지</label>
+            <select id="rr-queue-cool" onchange="localStorage.setItem('su_rr_queue_cool',this.value)">${[0,1,2,3].map(n=>`<option value="${n}"${n===_cool?' selected':''}>최근 ${n}명 제외</option>`).join('')}</select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text2);cursor:pointer">
+              <input id="rr-queue-remove" type="checkbox" ${_rmv?'checked':''} onchange="localStorage.setItem('su_rr_queue_remove',this.checked?'1':'0')"> 뽑힌 사람 제거
+            </label>
+            <button class="btn btn-b btn-sm" onclick="rrQueuePickNext()">🎲 뽑기</button>
+            <button class="btn btn-w btn-sm" onclick="rrQueueReset()">초기화</button>
+          </div>
+          <div id="rr-queue-out" style="margin-top:10px;padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);font-weight:900;min-height:44px;display:flex;align-items:center;justify-content:center"></div>
+          <div id="rr-queue-hist" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+        </div>
+
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--sh)">
+          <div style="font-weight:900;font-size:14px;margin-bottom:8px">🧾 스위스 1라운드 매칭</div>
+          <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">한 줄에 1명. 홀수면 마지막 1명은 BYE</div>
+          <textarea id="rr-swiss-inp" rows="6" style="width:100%;resize:vertical" onblur="localStorage.setItem('su_rr_swiss',this.value)">${_sDef.replace(/</g,'&lt;')}</textarea>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn btn-b btn-sm" onclick="rrSwissGenerate()">🧩 생성</button>
+            <button class="btn btn-w btn-sm" onclick="rrSwissCopy()">📋 복사</button>
+          </div>
+          <div id="rr-swiss-out" style="margin-top:10px;font-size:12px"></div>
+        </div>
+
+      </div>
+    </div>`;
+  }
 
   // 오리경주 탭: 별도 레이아웃
   if (isDuck) {
@@ -146,14 +337,13 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     : `display:flex;flex-direction:column;align-items:center`;
   const inputColStyle = isWide ? `width:${inputW}px;flex-shrink:0` : `width:100%`;
 
-  // 탭 버튼 스타일 헬퍼 (상단에서 이미 선언됨 - 중복 선언 제거)
 
   // 사다리: 항상 표시할 결과 항목 블록 (접기 영역 밖)
   const ldItemsAlways = isLadder ? `
     <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">결과 항목 (쉼표 구분, 이름 수와 동일하게)</div>
       <textarea id="ld-items-input" rows="2" oninput="_ldSaveItems(this.value)"
-        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box">${ldItemsText}</textarea>
+        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
       <button onclick="_ldRebuild()" style="margin-top:10px;font-size:${fs}px;padding:6px 14px;border-radius:8px;border:1.5px solid #a78bfa;background:#f5f3ff;color:#7c3aed;cursor:pointer;font-weight:600">🎲 사다리 다시 만들기</button>
     </div>
     <div id="ld-hist-box"></div>
@@ -164,13 +354,16 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">참가자 이름 (쉼표 구분, 2명 이상)</div>
       <textarea id="ld-names-input" rows="2" oninput="_ldSaveNames(this.value)"
-        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box">${ldNamesText}</textarea>
+        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
     </div>
   ` : `
     <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${pad}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">${isPlayer?'스트리머 이름 (쉼표 구분, 부분 입력 가능)':'맵 이름 (쉼표 구분)'}</div>
       <textarea id="gc-items-input" rows="3" oninput="_gcSaveText(this.value)"
-        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box">${savedText}</textarea>
+        style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
+      <div style="margin-top:8px;font-size:${Math.max(11,fs-1)}px;color:var(--gray-l);line-height:1.5">
+        ✅ 가중치: <b>이름*2</b> (2배) · 예) <span style="font-family:${'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace'}">폴리포이드*2, 라데온*1</span>
+      </div>
       <button onclick="_gcClearItems()" style="margin-top:10px;font-size:${fs}px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;font-weight:600">지우기</button>
     </div>
     ${(!isPlayer && mapBadges) ? `
@@ -185,7 +378,8 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     <div id="gc-result-card" style="display:none;background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2.5px solid #FF89AB;border-radius:16px;padding:${pad*1.2}px;text-align:center;animation:gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)">
       <div style="font-size:${fs}px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>
       <div id="gc-pop-icon" style="font-size:${resIconSz}px;display:block;margin-bottom:8px;line-height:1.1"></div>
-      <div id="gc-res-text" style="font-size:${resTextSz}px;font-weight:900;color:#C0274A;margin-bottom:16px;word-break:keep-all"></div>
+      <div id="gc-res-text" style="font-size:${resTextSz}px;font-weight:900;color:#C0274A;margin-bottom:6px;word-break:keep-all"></div>
+      <div id="gc-res-prob" style="display:none"></div>
       <button onclick="_gcReset()" style="background:linear-gradient(135deg,#FF4B6E,#FF89AB);color:white;border:none;border-radius:14px;padding:${Math.round(pad*0.7)}px ${pad*1.5}px;font-size:${fsLg}px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #C0274A"
         onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 #C0274A'"
         onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 #C0274A'">🎰 다시 뽑기!</button>
@@ -249,12 +443,13 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   `;
 
   return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
-  <div style="background:var(--surface);border-radius:14px;padding:4px;display:flex;gap:2px;margin-bottom:${pad}px">
-    <button onclick="_gcSwitchTab('player')" style="${tbStyle(_gcTab==='player')}">🎰 구슬뽑기</button>
-    <button onclick="_gcSwitchTab('map')"    style="${tbStyle(_gcTab==='map')}">🗺️ 맵뽑기</button>
-    <button onclick="_gcSwitchTab('ladder')" style="${tbStyle(_gcTab==='ladder')}">🪜 사다리</button>
-    <button onclick="_gcSwitchTab('duck')"   style="${tbStyle(_gcTab==='duck',true)}">🐥 경주</button>
-    <button onclick="_gcSwitchTab('wheel')"  style="${tbStyle(false,true)}">🎡 휠</button>
+  <div class="subtab-bar"><!-- [Fix-3] 인라인 style 제거, CSS 클래스 사용 -->
+    <button class="subtab-btn${_gcTab==='player'?' is-active':''}" onclick="_gcSwitchTab('player')">🎰 구슬뽑기</button>
+    <button class="subtab-btn${_gcTab==='map'?' is-active':''}"    onclick="_gcSwitchTab('map')">🗺️ 맵뽑기</button>
+    <button class="subtab-btn${_gcTab==='ladder'?' is-active':''}" onclick="_gcSwitchTab('ladder')">🪜 사다리</button>
+    <button class="subtab-btn is-special${_gcTab==='duck'?' is-active':''}" onclick="_gcSwitchTab('duck')">🐥 경주</button>
+    <button class="subtab-btn is-special${_gcTab==='wheel'?' is-active':''}" onclick="_gcSwitchTab('wheel')">🎡 휠</button>
+    <button class="subtab-btn${_gcTab==='new'?' is-active':''}"    onclick="_gcSwitchTab('new')">🧩 신규</button>
   </div>
   <div style="${innerLayout}">
     <div style="${inputColStyle}">
@@ -288,8 +483,169 @@ function _gcSwitchTab(tab) {
     setTimeout(_drInit, 60);
   } else if (tab === 'wheel') {
     setTimeout(_whInit, 60);
+  } else if (tab === 'new') {
+    setTimeout(rrInitNewTab, 60);
   } else {
     setTimeout(_gcSetup, 60);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 신규(프로토타입) 기능들
+// ─────────────────────────────────────────────────────────────
+function rrInitNewTab(){
+  // 초기 렌더에서 결과 영역 기본 텍스트
+  try{
+    const out=document.getElementById('rr-mission-out');
+    if(out && !out.textContent.trim()) out.textContent='미션을 뽑아보세요';
+  }catch(e){}
+  try{
+    const out=document.getElementById('rr-queue-out');
+    if(out && !out.textContent.trim()) out.textContent='다음 출전자를 뽑아보세요';
+  }catch(e){}
+}
+function _rrLines(id){
+  const el=document.getElementById(id);
+  const raw = (el?el.value:'')||'';
+  return raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+}
+function _rrRandPick(arr, avoidSet){
+  const a = arr.filter(x=>!(avoidSet&&avoidSet.has(x)));
+  const pool = a.length ? a : arr;
+  if(!pool.length) return '';
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function rrMissionRoll(){
+  const items=_rrLines('rr-mission-inp');
+  if(!items.length) return alert('미션 목록을 입력하세요.');
+  const hist = JSON.parse(localStorage.getItem('su_rr_mission_hist')||'[]');
+  const last = hist[0] ? new Set([hist[0]]) : null;
+  const pick=_rrRandPick(items, last);
+  hist.unshift(pick);
+  localStorage.setItem('su_rr_mission_hist', JSON.stringify(hist.slice(0,20)));
+  const out=document.getElementById('rr-mission-out');
+  if(out) out.textContent=pick;
+  rrMissionRenderHist();
+}
+function rrMissionReroll(){ rrMissionRoll(); }
+function rrMissionClear(){
+  localStorage.removeItem('su_rr_mission_hist');
+  const out=document.getElementById('rr-mission-out');
+  if(out) out.textContent='미션을 뽑아보세요';
+  rrMissionRenderHist();
+}
+function rrMissionRenderHist(){
+  const hist = JSON.parse(localStorage.getItem('su_rr_mission_hist')||'[]');
+  const el=document.getElementById('rr-mission-hist');
+  if(!el) return;
+  if(!hist.length){ el.innerHTML=''; return; }
+  el.innerHTML = `<div style="font-weight:900;margin-bottom:6px">최근</div>`+
+    `<div style="display:flex;flex-wrap:wrap;gap:6px">${hist.slice(0,8).map(x=>`<span class="ubadge" style="background:#334155;min-width:auto;padding:2px 8px;font-size:11px">${x}</span>`).join('')}</div>`;
+}
+function rrMapBanPickGenerate(){
+  const sets = parseInt(document.getElementById('rr-map-sets')?.value||'3',10)||3;
+  const bans = parseInt(document.getElementById('rr-map-bans')?.value||'1',10)||1;
+  if(!Array.isArray(maps) || maps.length===0) return alert('맵 목록이 없습니다. (설정→맵 관리)');
+  // 후보 맵 셔플
+  const pool = maps.filter(m=>m && m!=='-');
+  const arr = [...pool];
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  const need = (bans*2) + sets;
+  // 부족하면 반복 허용
+  const pickMaps=[];
+  for(let i=0;i<need;i++){ pickMaps.push(arr[i%arr.length]); }
+  const banA = pickMaps.slice(0,bans);
+  const banB = pickMaps.slice(bans,bans*2);
+  const picks = pickMaps.slice(bans*2);
+  const lines=[];
+  lines.push(`🔵 A팀 밴: ${banA.length?banA.join(', '):'(없음)'}`);
+  lines.push(`🔴 B팀 밴: ${banB.length?banB.join(', '):'(없음)'}`);
+  lines.push('');
+  picks.forEach((m,i)=>lines.push(`세트${i+1}: ${m}`));
+  const out=document.getElementById('rr-map-out');
+  if(out){
+    out.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px">
+      <pre style="margin:0;white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:12px">${lines.join('\n')}</pre>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn btn-w btn-xs" onclick="rrCopyText(${JSON.stringify(lines.join('\n'))})">📋 복사</button></div>
+    </div>`;
+  }
+}
+function rrQueuePickNext(){
+  const names=_rrLines('rr-queue-inp');
+  if(!names.length) return alert('대기열(이름)을 입력하세요.');
+  const cool = parseInt(document.getElementById('rr-queue-cool')?.value||'1',10)||0;
+  const remove = !!document.getElementById('rr-queue-remove')?.checked;
+  const hist = JSON.parse(localStorage.getItem('su_rr_queue_hist')||'[]');
+  const avoid = new Set(hist.slice(0,cool));
+  const pick=_rrRandPick(names, avoid);
+  if(!pick) return;
+  hist.unshift(pick);
+  localStorage.setItem('su_rr_queue_hist', JSON.stringify(hist.slice(0,20)));
+  if(remove){
+    const next = names.filter(n=>n!==pick);
+    const ta=document.getElementById('rr-queue-inp');
+    if(ta){ ta.value = next.join('\n'); localStorage.setItem('su_rr_queue', ta.value); }
+  }
+  const out=document.getElementById('rr-queue-out');
+  if(out) out.textContent=pick;
+  rrQueueRenderHist();
+}
+function rrQueueReset(){
+  localStorage.removeItem('su_rr_queue_hist');
+  const out=document.getElementById('rr-queue-out');
+  if(out) out.textContent='다음 출전자를 뽑아보세요';
+  rrQueueRenderHist();
+}
+function rrQueueRenderHist(){
+  const hist = JSON.parse(localStorage.getItem('su_rr_queue_hist')||'[]');
+  const el=document.getElementById('rr-queue-hist');
+  if(!el) return;
+  if(!hist.length){ el.innerHTML=''; return; }
+  el.innerHTML = `<div style="font-weight:900;margin-bottom:6px">최근 출전</div>`+
+    `<div style="display:flex;flex-wrap:wrap;gap:6px">${hist.slice(0,10).map(x=>`<span class="ubadge" style="background:#0f172a;min-width:auto;padding:2px 8px;font-size:11px">${x}</span>`).join('')}</div>`;
+}
+function rrSwissGenerate(){
+  const names=_rrLines('rr-swiss-inp');
+  if(!names.length) return alert('참가자 이름을 입력하세요.');
+  const arr=[...new Set(names)];
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  const pairs=[];
+  for(let i=0;i<arr.length;i+=2){
+    const a=arr[i], b=arr[i+1];
+    if(b) pairs.push([a,b]);
+    else pairs.push([a,'BYE']);
+  }
+  localStorage.setItem('su_rr_swiss_last', JSON.stringify(pairs));
+  const out=document.getElementById('rr-swiss-out');
+  if(out){
+    out.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px">
+      ${pairs.map((p,i)=>`<div style="padding:6px 0;border-bottom:1px dashed var(--border2)"><b>${i+1}경기</b> · ${p[0]} <span style="color:var(--gray-l)">vs</span> ${p[1]}</div>`).join('')}
+    </div>`;
+  }
+}
+function rrSwissCopy(){
+  const pairs = JSON.parse(localStorage.getItem('su_rr_swiss_last')||'[]');
+  if(!pairs.length) return alert('먼저 생성하세요.');
+  const txt = pairs.map((p,i)=>`${i+1}경기: ${p[0]} vs ${p[1]}`).join('\n');
+  rrCopyText(txt);
+}
+function rrCopyText(txt){
+  const t=String(txt||'');
+  if(!t) return;
+  try{
+    navigator.clipboard.writeText(t).then(()=>{
+      if(typeof showToast==='function') showToast('📋 복사됨');
+      else alert('복사됨');
+    }).catch(()=>{ throw new Error('no'); });
+  }catch(e){
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=t;ta.style.cssText='position:fixed;top:-9999px;left:-9999px';
+      document.body.appendChild(ta);ta.focus();ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      if(typeof showToast==='function') showToast('📋 복사됨');
+    }catch(_){}
   }
 }
 
@@ -303,13 +659,20 @@ function _gcToggleInput() {
 
 function _gcSaveText(val) {
   localStorage.setItem(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m', val);
+  // (요청사항) 확률(%) 표시는 제거
 }
+
+// (요청사항) 확률(%) 표시는 제거됨
 
 function _gcToggleMap(mapName, el) {
   const inp = document.getElementById('gc-items-input');
   if (!inp) return;
   let items = inp.value.split(',').map(v=>v.trim()).filter(v=>v);
-  const idx = items.indexOf(mapName);
+  const idx = items.findIndex(x=>{
+    const m=String(x).match(/^(.*?)(?:\*(\d+(?:\.\d+)?))?$/);
+    const n=(m?m[1]:x).trim();
+    return n===mapName;
+  });
   if (idx >= 0) {
     items.splice(idx, 1);
     el.style.background = 'var(--surface)';
@@ -334,6 +697,7 @@ function _gcClearItems() {
     el.style.borderColor = 'var(--border)';
     el.style.color = 'var(--text2)';
   });
+  // (요청사항) 확률(%) 표시는 제거
 }
 
 function _gcSetup() {
@@ -392,8 +756,8 @@ function _gcSpin() {
   if (_gcSpinning) return;
   const inp = document.getElementById('gc-items-input');
   if (!inp) return;
-  const items = inp.value.split(',').map(v=>v.trim()).filter(v=>v);
-  if (!items.length) { alert('항목을 먼저 입력해주세요!'); return; }
+  const parsed = _gcParseWeightedCSV(inp.value);
+  if (!parsed.items.length) { alert('항목을 먼저 입력해주세요!'); return; }
 
   const card = document.getElementById('gc-result-card');
   if (card) card.style.display = 'none';
@@ -445,7 +809,8 @@ function _gcSpin() {
     });
 
     setTimeout(() => {
-      const keyword = items[Math.floor(Math.random()*items.length)];
+      const picked = _gcPickWeighted(parsed.items, parsed.total) || parsed.items[0];
+      const keyword = picked.name;
       const p = _gcFindPlayer(keyword);
       const displayName = p ? p.name : keyword;
       const iconSz = Math.round(window._GC_DOME * 0.36);
@@ -453,7 +818,7 @@ function _gcSpin() {
       let icon = '';
       if (p) {
         if (p.photo) {
-          icon = `<img src="${p.photo}" style="width:${iconSz}px;height:${iconSz}px;border-radius:50%;object-fit:cover;border:4px solid #FF89AB;display:inline-block;animation:gcBounceIcon 0.65s ease 0.1s both" onerror="this.outerHTML='🎮'">`;
+          icon = `<img src="${p.photo}" style="width:${iconSz}px;height:${iconSz}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:4px solid #FF89AB;display:inline-block;animation:gcBounceIcon 0.65s ease 0.1s both" onerror="this.outerHTML='🎮'">`;
         } else {
           icon = p.race==='T'?'🤖':p.race==='Z'?'🐛':p.race==='P'?'💎':'🎮';
         }
@@ -467,6 +832,10 @@ function _gcSpin() {
       if (iconEl) iconEl.innerHTML = icon.startsWith('<img') ? icon : `<span style="animation:gcBounceIcon 0.65s ease 0.1s both;display:inline-block">${icon}</span>`;
       const resEl = document.getElementById('gc-res-text');
       if (resEl) resEl.textContent = displayName;
+      const probEl = document.getElementById('gc-res-prob');
+      if (probEl) {
+        probEl.textContent = '';
+      }
 
       const histKey = _gcTab === 'player' ? 'player' : 'map';
       const now = new Date();
@@ -477,12 +846,17 @@ function _gcSpin() {
       _gcRefreshHistory();
 
       const resultCard = document.getElementById('gc-result-card');
-      if (resultCard) {
-        resultCard.style.display = 'block';
-        resultCard.style.animation = 'none';
-        void resultCard.offsetWidth;
-        resultCard.style.animation = 'gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)';
-      }
+      if (resultCard) resultCard.style.display = 'none';
+
+      // (요청사항) 결과는 팝업으로 표시
+      try{
+        if(typeof window._rrShowPopup==='function'){
+          window._rrShowPopup('🎉 결과', `<div style="text-align:center;padding:6px 4px">
+            <div style="font-size:46px;line-height:1;margin-bottom:10px">${(p && p.photo) ? '🎮' : (icon && !String(icon).startsWith('<') ? icon : '🎁')}</div>
+            <div style="font-size:22px;font-weight:1000;color:var(--text1)">${displayName}</div>
+          </div>`);
+        }
+      }catch(e){}
       _gcSpinning = false;
     }, 750);
   }, 950);
@@ -834,14 +1208,18 @@ function _ldAnimate(nameIdx) {
       const resName = _ldLadder.names[nameIdx];
       const resItem = _ldLadder.items[resultCol];
 
-      if (rc) {
-        document.getElementById('ld-res-name').textContent = resName;
-        document.getElementById('ld-res-item').textContent = resItem;
-        rc.style.display = 'block';
-        rc.style.animation = 'none';
-        void rc.offsetWidth;
-        rc.style.animation = 'gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)';
-      }
+      if (rc) rc.style.display = 'none';
+
+      // (요청사항) 결과는 팝업으로 표시
+      try{
+        if(typeof window._rrShowPopup==='function'){
+          window._rrShowPopup('🪜 사다리 결과', `<div style="text-align:center;padding:6px 4px">
+            <div style="font-size:18px;font-weight:1000;color:var(--text1);margin-bottom:6px">${resName}</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:6px">▼</div>
+            <div style="font-size:20px;font-weight:1000;color:#2563eb">${resItem}</div>
+          </div>`);
+        }
+      }catch(e){}
 
       // 기록 저장
       const now2 = new Date();

@@ -258,7 +258,10 @@ function rCal(C,T){
         const modeKey=(typeof indM!=='undefined'&&indM.includes(m))?'ind':(typeof gjM!=='undefined'&&gjM.includes(m))?'gj':miniM.includes(m)?'mini':univM.includes(m)?'univm':ckM.includes(m)?'ck':proM.includes(m)?'pro':'comp';
         const detHTML=buildDetailHTML(m,modeKey,tA,tB,ca,cb,aWin,bWin);
         const leftCol = hasResult?(aWin?ca:bWin?cb:'var(--border)'):'var(--border)';
-        return `<div class="rec-summary" style="margin-bottom:10px;border-left:3px solid ${leftCol}">
+        const MODE_COL = {ind:'#2563eb',gj:'#dc2626',mini:'#7c3aed',univm:'#16a34a',ck:'#f59e0b',pro:'#0ea5e9',tt:'#10b981',comp:'#3b82f6'};
+        const _mc = MODE_COL[modeKey] || '#64748b';
+        const _rgb = (hex)=>{const h=String(hex||'').replace('#',''); if(h.length!==6) return '100,116,139'; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `${r},${g},${b}`;};
+        return `<div class="rec-summary rec-mode-${modeKey}" data-rec-mode="${modeKey}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgb(_mc)};margin-bottom:10px;border-left:3px solid ${leftCol}">
           <div class="rec-sum-header" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span style="font-size:11px;font-weight:900;color:${ti.bg}">${ti.lbl}</span>
             ${timeStr}
@@ -422,7 +425,11 @@ function calShowDay(ds){
       const typeLabel=_isInd?'🎮 개인전':'⚔️ 끝장전';
       const detKey='caldm-'+ds+'-'+mi;
       const detHTML=buildDetailHTML(m,_isInd?'ind':'gj',m.wName||'',m.lName||'',typeBg,'#64748b',true,false);
-      return '<div class="rec-summary" style="margin-bottom:6px">'
+      const modeKey=_isInd?'ind':'gj';
+      const MODE_COL = {ind:'#2563eb',gj:'#dc2626'};
+      const _mc = MODE_COL[modeKey] || '#64748b';
+      const _rgb = (hex)=>{const h=String(hex||'').replace('#',''); if(h.length!==6) return '100,116,139'; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `${r},${g},${b}`;};
+      return '<div class="rec-summary rec-mode-'+modeKey+'" data-rec-mode="'+modeKey+'" style="--rec-mode-col:'+_mc+';--rec-mode-rgb:'+_rgb(_mc)+';margin-bottom:6px">'
         +'<div class="rec-sum-header" style="cursor:pointer" onclick="calToggleDetail(\''+detKey+'\')">'
         +'<span style="background:'+typeBg+';color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">'+typeLabel+'</span>'
         +'<div class="rec-sum-vs" style="flex:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
@@ -455,7 +462,10 @@ function calShowDay(ds){
     const detHTML=buildDetailHTML(m,modeKey,tA,tB,ca,cb,aWin,bWin);
     const winLabel=aWin?'▶ '+tA+' 승':bWin?'▶ '+tB+' 승':'무승부';
     const winColor=aWin?ca:bWin?cb:'#888';
-    return '<div class="rec-summary" style="margin-bottom:6px">'
+    const MODE_COL = {mini:'#7c3aed',univm:'#16a34a',ck:'#f59e0b',pro:'#0ea5e9',comp:'#3b82f6'};
+    const _mc = MODE_COL[modeKey] || '#64748b';
+    const _rgb = (hex)=>{const h=String(hex||'').replace('#',''); if(h.length!==6) return '100,116,139'; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `${r},${g},${b}`;};
+    return '<div class="rec-summary rec-mode-'+modeKey+'" data-rec-mode="'+modeKey+'" style="--rec-mode-col:'+_mc+';--rec-mode-rgb:'+_rgb(_mc)+';margin-bottom:6px">'
       +'<div class="rec-sum-header" style="cursor:pointer" onclick="calToggleDetail(\''+detKey+'\')">'
       +'<span style="background:'+typeBg+';color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">'+typeLabel+'</span>'
       +'<div class="rec-sum-vs" style="flex:1">'

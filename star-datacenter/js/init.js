@@ -85,8 +85,59 @@ window.enableDragScroll = function(root){
   });
 };
 
+// ─────────────────────────────────────────────────────────────
+// (복구) 티어대회 기록(ttM) 시드 로딩
+// - 일부 백업 데이터는 tourneys(type:'tier')에 브라켓 결과만 있고 ttM이 비어있는 경우가 있음
+// - 이 경우 대전기록탭(티어대회)이 "전부 사라진 것처럼" 보이므로, 배포 번들에 시드 JSON을 넣어 복구
+// - 로컬에 ttM이 이미 있으면 절대 덮어쓰지 않음
+// ─────────────────────────────────────────────────────────────
+let _ttSeedLoaded = false;
+let _ttSeedLoading = false;
+async function _seedTierTtM(){
+  try{
+    if(_ttSeedLoaded || _ttSeedLoading) return;
+    if(typeof ttM!=='undefined' && Array.isArray(ttM) && ttM.length){ _ttSeedLoaded=true; return; }
+    _ttSeedLoading = true;
+    const urls = ['ttm_seed_part1.json','ttm_seed_part2.json'];
+    const all = [];
+    for(const u of urls){
+      try{
+        const res = await fetch(u, {cache:'no-store'});
+        if(!res || !res.ok) continue;
+        const arr = await res.json();
+        if(Array.isArray(arr)) all.push(...arr);
+      }catch(e){}
+    }
+    if(all.length){
+      const seen = new Set();
+      const merged = [];
+      all.forEach(m=>{
+        if(!m || !m._id || seen.has(m._id)) return;
+        seen.add(m._id);
+        merged.push(m);
+      });
+      merged.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+      ttM = merged;
+      try{ save && save(); }catch(e){}
+      // 티어대회 마이그레이션/표시 캐시 갱신
+      try{ if(typeof _ttMigrated!=='undefined') _ttMigrated=false; }catch(e){}
+      try{ if(typeof _migrateTierTourneys==='function') _migrateTierTourneys(); }catch(e){}
+      // 스트리머 상세(최근 경기)에도 보이도록 ttM → history 반영
+      try{ if(typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
+      try{ render && render(); }catch(e){}
+    }
+    _ttSeedLoaded = true;
+    _ttSeedLoading = false;
+  }catch(e){
+    _ttSeedLoaded = true;
+    _ttSeedLoading = false;
+  }
+}
+
 function init(){
   fixPoints();
+  // 티어대회 기록(ttM) 시드가 있으면 로드(비동기) — 로컬 데이터가 비어 있을 때만
+  try{ _seedTierTtM(); }catch(e){}
   // 전역 폰트 설정 적용
   try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
   // (요청사항) 버튼/필 스타일 설정 적용
@@ -110,10 +161,19 @@ function init(){
   initLoginHash();
   applyLoginState();
   render();
-  // 🎵 BGM 버튼 초기화
-  try{ if(typeof window.initBgm==='function') window.initBgm(); }catch(e){}
-  // 📺 SOOP 멀티뷰 버튼 초기화
-  try{ if(typeof window.initSoopMulti==='function') window.initSoopMulti(); }catch(e){}
+  // (성능) 부가 기능은 idle 시 지연 로딩
+  // - BGM/멀티뷰는 초기 렌더와 무관하므로, 최초 로딩을 가볍게 유지
+  try{
+    const loadExtras = ()=>{
+      try{
+        if(typeof window._loadScriptOnce!=='function') return;
+        window._loadScriptOnce('js/yt-bgm.js?v=20260420-06').catch(()=>{});
+        window._loadScriptOnce('js/soop-multiview.js?v=20260420-10').catch(()=>{});
+      }catch(e){}
+    };
+    if('requestIdleCallback' in window) requestIdleCallback(loadExtras, {timeout: 2500});
+    else setTimeout(loadExtras, 1200);
+  }catch(e){}
   setTimeout(showNoticePopup, 800);
   // 🆕 URL 파라미터로 선수/대학 자동 오픈
   setTimeout(()=>{
@@ -143,6 +203,47 @@ function init(){
 }
 init();
 initDark();
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 설정 변경 → 다른 기기 "바로" 반영 보강
+// - Gist 동기화(enabled)로 저장(push)한 설정을 다른 기기가 자동으로 주기적으로 pull
+// - 토큰이 없는 기기는 읽기만(pull) 가능
+// ─────────────────────────────────────────────────────────────
+(function(){
+  if(window._settingsAutoSyncStarted) return;
+  window._settingsAutoSyncStarted = true;
+
+  const doPull = async ()=>{
+    try{
+      if(!window.SettingsStore || typeof window.SettingsStore.pull!=='function') return;
+      const c = window.SettingsStore.cfg ? window.SettingsStore.cfg() : { gistId:'' };
+      if(!c || !c.gistId) return;
+      await window.SettingsStore.pull({silent:true});
+      // 설정 팝업이 열려있고 AI 섹션이 보이면 입력값/상태 즉시 반영
+      try{
+        const m = document.getElementById('cfgModal');
+        if(m && m.style.display!=='none'){
+          const sec = document.getElementById('cfg-sec-aibot');
+          if(sec && sec.closest && sec.closest('#cfgModalBody')){
+            if(typeof window.cfgInitAiProxy==='function') window.cfgInitAiProxy();
+          }
+        }
+      }catch(e){}
+    }catch(e){}
+  };
+
+  // 첫 pull
+  setTimeout(doPull, 1200);
+  // 주기적 pull (너무 잦지 않게)
+  setInterval(doPull, 20000);
+  // 포커스/재진입 시 즉시 반영
+  try{ window.addEventListener('focus', ()=>doPull()); }catch(e){}
+  try{
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState === 'visible') doPull();
+    });
+  }catch(e){}
+})();
 
 // ─────────────────────────────────────────────────────────────
 // 전역 폰트 설정
@@ -480,9 +581,12 @@ function _applyUiScale(){
     else if (w <= 1024) s = 1.02;
     else s = 1.00;
     // (신규) 수동 UI 스케일(폰트 크기) — 자동값에 곱해서 전역 적용
-    // - localStorage: su_ui_scale_pct (80~140, 기본 100)
+    // - 기기별 분리: su_ui_scale_pc_pct / su_ui_scale_tb_pct / su_ui_scale_mb_pct
+    // - 구버전 호환: su_ui_scale_pct
     try{
-      const pct = parseInt(localStorage.getItem('su_ui_scale_pct')||'100',10) || 100;
+      const legacy = parseInt(localStorage.getItem('su_ui_scale_pct')||'100',10) || 100;
+      const key = w <= 768 ? 'su_ui_scale_mb_pct' : (w <= 1024 ? 'su_ui_scale_tb_pct' : 'su_ui_scale_pc_pct');
+      const pct = parseInt(localStorage.getItem(key)||String(legacy),10) || legacy;
       const mul = Math.max(80, Math.min(140, pct)) / 100;
       s = s * mul;
     }catch(e){}
@@ -709,17 +813,27 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
 // ── 사이트 첫 접속 시 자동 불러오기 ──
 (async function autoLoad(){
   try{
-    // J()를 사용해 LZ-String 압축 데이터도 올바르게 감지
-    const localPlayers = J('su_p');
-    if(localPlayers && localPlayers.length > 0) return;
+    // (복구) 로컬 기록이 있으면 자동 불러오기 금지 (덮어쓰기 방지)
+    const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
+    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey);
+    if(hasRecordKeys) return;
+    // su_p는 배열 또는 {v:2,p:[...]}일 수 있음
+    const localPlayers = (typeof J==='function') ? J('su_p') : null;
+    const ok = Array.isArray(localPlayers)
+      ? localPlayers.length>0
+      : (localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length>0);
+    if(ok) return;
   }catch(e){}
   console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
-  const _RAW = 'https://raw.githubusercontent.com/nada1004/star-system/main/data.json';
-  const _API = 'https://api.github.com/repos/nada1004/star-system/contents/data.json';
-  const _CDN = 'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/data.json';
+  // (복구) 번들에 포함된 data.json을 최우선으로 시도
+  const _LOCAL = 'data.json';
+  // (수정) 실제 경로: star-datacenter/data.json
+  const _RAW = 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
+  const _API = 'https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
+  const _CDN = 'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json';
   const _PROXY = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(_RAW);
-  const urls = [_RAW, _CDN, _API, _PROXY];
-  gsSetStatus && gsSetStatus('🔄 데이터 불러오는 중...','var(--blue)');
+  const urls = [_LOCAL, _RAW, _CDN, _API, _PROXY];
+  if(typeof window.gsSetStatus === 'function') window.gsSetStatus('🔄 데이터 불러오는 중...','var(--blue)');
   let d = null;
   for(const url of urls){
     try{
@@ -783,14 +897,14 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
         if(typeof _tierTourNameMigrated!=='undefined') _tierTourNameMigrated=false;
         _migrateTierTourName();
       }
-      save(); render();
-      gsSetStatus && gsSetStatus('✅ 자동 불러오기 완료 ('+new Date().toLocaleTimeString()+')','var(--green)');
+      localSave(); render();
+      if(typeof window.gsSetStatus === 'function') window.gsSetStatus('✅ 자동 불러오기 완료 ('+new Date().toLocaleTimeString()+')','var(--green)');
     }catch(e){
       console.error('[자동 불러오기] 데이터 적용 오류:', e);
-      gsSetStatus && gsSetStatus('','');
+      if(typeof window.gsSetStatus === 'function') window.gsSetStatus('','');
     }
   } else {
-    gsSetStatus && gsSetStatus('','');
+    if(typeof window.gsSetStatus === 'function') window.gsSetStatus('','');
     console.warn('[자동 불러오기] 모든 URL 실패');
   }
 })();

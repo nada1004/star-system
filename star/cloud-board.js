@@ -162,6 +162,21 @@ function _applyCloudData(d) {
     if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
     if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
     if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
+    // (보강) 설정 탭의 주요 UI 설정도 다른 기기에서 동일하게 보이도록 localStorage 키들을 동기화
+    // - 값은 문자열로 그대로 저장 (JSON/string/number 모두 지원)
+    // - 대용량/민감 키는 제외(su_pp, su_fb_pw, su_gh_token 등)
+    try{
+      const ls = s.ls || s.localStorage || null; // 구버전 호환
+      if(ls && typeof ls==='object'){
+        Object.entries(ls).forEach(([k,v])=>{
+          if(!k || typeof k!=='string') return;
+          // 안전장치: 프로필 사진/토큰/비밀번호 등은 동기화하지 않음
+          if(k.startsWith('su_pp')) return;
+          if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') return;
+          try{ localStorage.setItem(k, String(v)); }catch(e){}
+        });
+      }
+    }catch(e){}
     // UI 즉시 반영
     if(typeof updateFabVisibility==='function') updateFabVisibility();
     if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
@@ -169,6 +184,13 @@ function _applyCloudData(d) {
       document.body.classList.toggle('dark', s.darkMode);
       if(window._fixHdrBtns) window._fixHdrBtns();
     }
+    // 디자인/폰트/아이콘/프로필 모양 즉시 적용
+    try{ if(typeof window.applyDesignV2==='function') window.applyDesignV2(); }catch(e){}
+    try{ if(typeof window._applyAppFont==='function') window._applyAppFont(); }catch(e){}
+    try{ if(typeof window.applyProfileShapeVars==='function') window.applyProfileShapeVars(); }catch(e){}
+    try{ if(typeof window.applyUnivLogoVars==='function') window.applyUnivLogoVars(); }catch(e){}
+    try{ if(typeof window.applyBoard2LogoVars==='function') window.applyBoard2LogoVars(); }catch(e){}
+    try{ if(typeof window.applyMatchDetailVars==='function') window.applyMatchDetailVars(); }catch(e){}
   }
 }
 
@@ -221,6 +243,35 @@ async function fbCloudSave() {
   window._lastAdminSaveTime = savedAt;
   window._isSaving = true;
   localStorage.setItem('su_last_admin_save', String(savedAt)); // 새로고침 후에도 복원
+  // 설정 탭에서 조절되는 주요 localStorage 키도 함께 업로드(다른 기기 동일 적용)
+  const _syncLsKeys = [
+    // 디자인/테마/폰트
+    'su_dark',
+    'su_design_v2','su_design_v2_preset','su_design_v2_bright','su_design_v2_dark','su_design_v2_colors','su_design_v2_effects',
+    'su_app_font_preset','su_app_font_css','su_app_font_family','su_app_font_css_text','su_app_font_alias_map',
+    'su_ui_scale_pct',
+    // 기록 카드/대회 카드/아바타
+    'su_rc_theme_on','su_rc_accent_mode','su_rc_bg_alpha','su_rc_hd_alpha','su_rc_uicon','su_rc_univ_font_pct','su_ym_scale_pct','su_rc_memo_on','su_rc_vs_align','su_rc_score_scale',
+    'su_tc_theme_on','su_tc_accent_mode','su_tc_hd_alpha','su_tc_border_w','su_tc_uicon','su_tc_line_w','su_tc_line_a',
+    'su_avatar_scale',
+    // 로고/프로필 모양(전역 CSS 변수)
+    'su_bcp_shape','su_bcp_size','su_profile_shape',
+    'su_ul_shape','su_ul_size','su_ul_box','su_ul_size_detail','su_ul_box_detail',
+    'su_b2_univ_logo_size',
+    // 경기 상세(공유카드/모달) 효과
+    'su_md_lose_gray','su_md_win_tint','su_md_logo_size','su_md_fx_on','su_md_fx_preset','su_md_fx_anim','su_md_fx_speed_mul','su_md_fx_int',
+    // 기타 UI
+    'su_date_menu_style','su_share_admin_only',
+    // 이미지 설정(JSON)
+    'su_b2_layout','su_img_settings','su_b2_global_img_settings'
+  ];
+  const _syncLs = {};
+  try{
+    _syncLsKeys.forEach(k=>{
+      const v = localStorage.getItem(k);
+      if(v!=null) _syncLs[k]=v;
+    });
+  }catch(e){}
   const dataObj = {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
     compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, indM, gjM,
@@ -234,7 +285,9 @@ async function fbCloudSave() {
       globalImgSettings: JSON.parse(localStorage.getItem('su_b2_global_img_settings')||'{}'),
       fabHideMobile: localStorage.getItem('su_fabHideMobile')!=='1',
       fabHidePC: localStorage.getItem('su_fabHidePC')!=='1',
-      darkMode: localStorage.getItem('su_dark')==='1'
+      darkMode: localStorage.getItem('su_dark')==='1',
+      // localStorage 설정(문자열) 묶음
+      ls: _syncLs
     },
     savedAt
   };

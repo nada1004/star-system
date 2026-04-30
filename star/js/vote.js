@@ -182,11 +182,6 @@ function selP(type,name){
   if(d) d.style.display='none';
 }
 function upTour(i,v){tourD[i]=v;save();render();}
-function om(id){const el=document.getElementById(id);if(el)el.style.display='block';}
-function cm(id){
-  const el=document.getElementById(id);
-  if(el)el.style.display='none';
-}
 window.addEventListener('click',e=>{
   if(e.target.classList.contains('modal') && !e.target.dataset.noClose){
     e.target.style.display='none';

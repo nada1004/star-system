@@ -136,7 +136,10 @@ function rElboard(C, T) {
     const subLabel = m.n ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text3)">${m.n}</span>` :
       m._label ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text3)">${m._label}</span>` : '';
 
-    h += `<div class="rec-summary" style="margin-bottom:6px">
+    const MODE_COL = {mini:'#7c3aed',univm:'#16a34a',ck:'#f59e0b',pro:'#0ea5e9',tt:'#10b981',all:'#2563eb'};
+    const _mc = MODE_COL[src] || '#64748b';
+    const _rgb = (hex)=>{const h=String(hex||'').replace('#',''); if(h.length!==6) return '100,116,139'; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `${r},${g},${b}`;};
+    h += `<div class="rec-summary rec-mode-${src}" data-rec-mode="${src}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgb(_mc)};margin-bottom:6px">
       <div class="rec-sum-header" style="flex-wrap:wrap;gap:8px">
         <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text3);white-space:nowrap">${srcLabel}</span>
         ${subLabel}

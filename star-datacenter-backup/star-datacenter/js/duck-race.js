@@ -485,20 +485,33 @@ function _drShowResult(winner) {
       + '</div>';
   }).join('');
 
-  var card = document.createElement('div');
-  card.className = 'dr-result-card';
-  card.id = 'dr-result-overlay';
-  card.innerHTML =
-    '<span class="dr-result-trophy">🏆</span>'
-    + '<div style="font-size:13px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:6px">🎉 경주 결과!</div>'
-    + '<div class="dr-result-winner">' + winner.emoji + ' ' + winner.name + '</div>'
-    + '<div class="dr-result-rank">' + rankLines + '</div>'
-    + '<button onclick="_drResetRace()" class="dr-btn-primary">🔄 다시하기</button>';
+  // (요청사항) 결과는 팝업으로 표시
+  if (typeof window._rrShowPopup === 'function') {
+    window._rrShowPopup('🐥 경주 결과', ''
+      + '<div style="text-align:center;padding:4px 2px">'
+      +   '<div style="font-size:44px;line-height:1;margin-bottom:8px">🏆</div>'
+      +   '<div class="dr-result-winner" style="margin:0 0 10px">' + winner.emoji + ' ' + winner.name + '</div>'
+      +   '<div class="dr-result-rank" style="text-align:left;max-height:260px;overflow:auto">' + rankLines + '</div>'
+      +   '<div style="display:flex;justify-content:flex-end;margin-top:12px">'
+      +     '<button class="btn btn-b btn-sm" onclick="_drResetRace();_rrClosePopup && _rrClosePopup()">🔄 다시하기</button>'
+      +   '</div>'
+      + '</div>');
+  } else {
+    var card = document.createElement('div');
+    card.className = 'dr-result-card';
+    card.id = 'dr-result-overlay';
+    card.innerHTML =
+      '<span class="dr-result-trophy">🏆</span>'
+      + '<div style="font-size:13px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:6px">🎉 경주 결과!</div>'
+      + '<div class="dr-result-winner">' + winner.emoji + ' ' + winner.name + '</div>'
+      + '<div class="dr-result-rank">' + rankLines + '</div>'
+      + '<button onclick="_drResetRace()" class="dr-btn-primary">🔄 다시하기</button>';
 
-  var root = document.getElementById('dr-root');
-  if (root) {
-    root.appendChild(card);
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    var root = document.getElementById('dr-root');
+    if (root) {
+      root.appendChild(card);
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }
 
   var status = document.getElementById('dr-status');

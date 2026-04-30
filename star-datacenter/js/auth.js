@@ -82,7 +82,9 @@ async function sha256(str){
       const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
       return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
     }
-  }catch(e){}
+  }catch(e){
+    console.warn('[sha256] Web Crypto API 실패, 동기 방식 사용:', e.message);
+  }
   return sha256Sync(str);
 }
 const ADMIN_HASH_KEY='su_admin_hashes'; // [{hash,role,label}] 배열
@@ -102,7 +104,9 @@ async function initLoginHash(){
       const migrated=parsed.map((h,i)=>({hash:h,role:'admin',label:`관리자${i+1}`}));
       localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(migrated));
     }
-  }catch{}
+  }catch(e){
+    console.warn('[initLoginHash] 관리자 계정 마이그레이션 실패:', e.message);
+  }
 }
 function getAdminAccounts(){
   try{
@@ -167,6 +171,14 @@ function applyLoginState(){
   document.getElementById('hdrLoginBtn').style.display=isLoggedIn?'none':'';
   document.getElementById('hdrLogoutBtn').style.display=isLoggedIn?'':'none';
   document.getElementById('hdrLoginStatus').style.display=isLoggedIn?'':'none';
+  try{
+    const st=document.getElementById('hdrLoginStatus');
+    if(st && isLoggedIn){
+      st.textContent = isSubAdmin ? '✅ 부관리자' : '✅ 관리자';
+    }
+  }catch(e){
+    console.warn('[applyLoginState] 로그인 상태 표시 업데이트 실패:', e.message);
+  }
   const _mobileBar=document.getElementById('mobileActionBar');
   if(_mobileBar && !isLoggedIn) { const _mBtn=_mobileBar.querySelector('button[onclick*="cloudLoad"]'); if(_mBtn) _mBtn.style.display='none'; }
   if(_mobileBar && isLoggedIn) { const _mBtn=_mobileBar.querySelector('button[onclick*="cloudLoad"]'); if(_mBtn) _mBtn.style.display='flex'; }
@@ -176,21 +188,23 @@ function applyLoginState(){
   });
   // 관리자 전용 탭 (설정) - 로그인 필요
   const _cfgTab=document.getElementById('tabCfg');
-  if(_cfgTab) _cfgTab.style.display=isLoggedIn?'':'none';
+  // (요청사항) 부관리자는 설정탭 접근 불가
+  if(_cfgTab) _cfgTab.style.display=(isLoggedIn && !isSubAdmin)?'':'none';
   // 데이터 내보내기/가져오기 버튼 — 로그인 시에만 표시
   const exportHint=document.getElementById('exportHint');
-  if(exportHint)exportHint.style.display=isLoggedIn?'':'none';
+  if(exportHint)exportHint.style.display=(isLoggedIn && !isSubAdmin)?'':'none';
   const exportVis=document.getElementById('btnExportVis');
   const importVis=document.getElementById('btnImportVis');
-  if(exportVis)exportVis.style.display=isLoggedIn?'flex':'none';
-  if(importVis)importVis.style.display=isLoggedIn?'flex':'none';
+  if(exportVis)exportVis.style.display=(isLoggedIn && !isSubAdmin)?'flex':'none';
+  if(importVis)importVis.style.display=(isLoggedIn && !isSubAdmin)?'flex':'none';
   // 대학 상세 모달 수정 버튼 — 모달이 열려 있을 때 즉시 반영
   const univEditBtnEl=document.getElementById('univEditBtn');
   if(univEditBtnEl) univEditBtnEl.style.display=isLoggedIn?'inline-flex':'none';
   // 스트리머 등록/경기 기록 입력폼 — 로그인 + 스트리머 탭일 때만 표시
   const fstrip=document.getElementById('fstrip');
   if(fstrip){
-    if(!isLoggedIn){fstrip.style.display='none';}
+    // (요청사항) 부관리자는 스트리머 등록 불가 → 숨김
+    if(!isLoggedIn || isSubAdmin){fstrip.style.display='none';}
     else{fstrip.style.display=(curTab==='total')?'block':'none';}
   }
   render();
@@ -198,11 +212,37 @@ function applyLoginState(){
 
 // 수정/삭제 버튼 — 비로그인 시 숨김
 function adminBtn(html){
-  return isLoggedIn ? html : '';
+  // (요청사항) 부관리자는 설정/편집 등 관리자 버튼 숨김 (경기 수정은 별도 로직)
+  return (isLoggedIn && !isSubAdmin) ? html : '';
 }
 function doExport(){
   try{
-    const b=new Blob([JSON.stringify({players,univCfg,maps,tourD,miniM,univM,comps,ckM,compNames,curComp,proM,tiers:TIERS,tourneys},null,2)],{type:'application/json'});
+    // 외부 대진기록(히스토리 > 외부탭)도 다른 기기에서 볼 수 있도록 백업에 포함
+    // - history.js에서 LZString 압축("lz:") 형태로 저장할 수 있어 JSON.parse를 하지 않고 "원문 문자열" 그대로 백업
+    const histExtRaw = localStorage.getItem('su_hist_ext_data_v1') || '';
+    const histExtProxyPresets = localStorage.getItem('su_hist_ext_proxy_presets_v1') || '';
+    const histExtProxyPresetSel = localStorage.getItem('su_hist_ext_proxy_preset_sel_v1') || '';
+
+    // (중요) 티어대회 기록(ttM) 및 기타 누락 데이터도 백업에 포함
+    const payload = {
+      players, univCfg, maps, tourD,
+      miniM, univM, comps, ckM,
+      compNames, curComp,
+      proM, proTourneys,
+      tiers: TIERS,
+      tourneys,
+      indM, gjM,
+      // 🎯 티어대회 기록 (대전기록 탭 전용)
+      ttM: (typeof ttM!=='undefined' ? ttM : []),
+      // 설정/부가 데이터
+      curProComp, _ttCurComp,
+      userMapAlias, notices, playerStatusIcons,
+      boardOrder, boardPlayerOrder,
+      seasons, calScheduled,
+      // 외부 탭 데이터(문자열 그대로)
+      histExtRaw, histExtProxyPresets, histExtProxyPresetSel
+    };
+    const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(b);
     const a=document.createElement('a');
     a.href=url;a.download='star_backup.json';
@@ -217,22 +257,48 @@ function doFile(inp){
   r.onload=e=>{
     try{
       const d=JSON.parse(e.target.result);
+      if(!d||typeof d!=='object'||Array.isArray(d)){
+        alert('파일이 유효한 JSON 객체가 아닙니다.');
+        return;
+      }
       players=d.players||[];univCfg=d.univCfg||univCfg;maps=d.maps||maps;tourD=d.tourD||Array(15).fill('');
       if(d.tiers&&d.tiers.length)TIERS.splice(0,TIERS.length,...d.tiers);
       miniM=d.miniM||[];univM=d.univM||[];comps=d.comps||[];ckM=d.ckM||[];
       compNames=d.compNames||[];curComp=d.curComp||'';
       proM=d.proM||[];
+      if(d.proTourneys!==undefined) proTourneys=d.proTourneys||[];
       tourneys=d.tourneys||[];
+      // 🎯 티어대회 기록 복원(있으면 그대로 사용, 없으면 아래에서 tourneys로 마이그레이션)
+      if(d.ttM!==undefined) ttM=d.ttM||[];
+      // 외부 대진기록 복원 (문자열 그대로)
+      if(d.histExtRaw!==undefined){
+        try{ localStorage.setItem('su_hist_ext_data_v1', String(d.histExtRaw||'')); }catch(e){
+          console.warn('[doFile] histExtRaw localStorage 저장 실패:', e.message);
+        }
+      }else if(d.histExt){
+        // 구버전 호환: histExt 객체 형태면 JSON 문자열로 저장
+        try{ localStorage.setItem('su_hist_ext_data_v1', JSON.stringify(d.histExt)); }catch(e){
+          console.warn('[doFile] histExt localStorage 저장 실패:', e.message);
+        }
+      }
+      if(d.histExtProxyPresets!==undefined){
+        try{ localStorage.setItem('su_hist_ext_proxy_presets_v1', String(d.histExtProxyPresets||'')); }catch(e){}
+      }
+      if(d.histExtProxyPresetSel!==undefined){
+        try{ localStorage.setItem('su_hist_ext_proxy_preset_sel_v1', String(d.histExtProxyPresetSel||'')); }catch(e){}
+      }
       // 🔧 누락 변수 복원 추가
       if(d.indM!==undefined) indM=d.indM||[];
       if(d.gjM!==undefined) gjM=d.gjM||[];
-      if(d.proTourneys!==undefined) proTourneys=d.proTourneys||[];
       if(d.curProComp!==undefined) curProComp=d.curProComp||'';
       if(d.userMapAlias!==undefined) userMapAlias=d.userMapAlias||{};
       if(d.notices!==undefined) notices=d.notices||[];
       if(d.playerStatusIcons!==undefined) playerStatusIcons=d.playerStatusIcons||{};
       if(d.boardOrder!==undefined) boardOrder=d.boardOrder||[];
+      if(d.boardPlayerOrder!==undefined) boardPlayerOrder=d.boardPlayerOrder||{};
       if(d.seasons!==undefined) seasons=d.seasons||[];
+      if(d.calScheduled!==undefined) calScheduled=d.calScheduled||[];
+      if(d._ttCurComp!==undefined) _ttCurComp=d._ttCurComp||'';
       window._compListCache={};window._shareAllMatchesCached=null;
       (function(){
         const allD=[...miniM,...univM,...comps,...ckM,...proM];
@@ -241,13 +307,24 @@ function doFile(inp){
         yearOptions.sort();
       })();
       filterYear='전체';filterMonth='전체';
+      // (중요) ttM이 백업에 없었던 구버전 파일이라면 tourneys(type='tier')에서 ttM를 재구성
+      try{
+        if((!ttM || !ttM.length) && typeof _migrateTierTourneys==='function'){
+          try{ if(typeof _ttMigrated!=='undefined') _ttMigrated=false; }catch(e){}
+          _migrateTierTourneys();
+        }
+      }catch(e){}
       fixPoints();save();init();
       // 동명이인 감지
       const _dupSeen={};const _dupFound=[];
       players.forEach(p=>{if(_dupSeen[p.name])_dupFound.push(p.name);else _dupSeen[p.name]=true;});
       const _dupUniq=[...new Set(_dupFound)];
       if(_dupUniq.length) alert('⚠️ 동명이인 감지!\n중복 이름: '+_dupUniq.join(', ')+'\n\n설정 탭 > 데이터 진단에서 수정하세요.');
-    }catch{alert('파일 읽기 오류');}
+      alert('✅ 데이터 임포트 완료');
+    }catch(err){
+      console.error('[doFile] 파일 처리 오류:', err);
+      alert(`파일 읽기 오류: ${err.message}\n올바른 JSON 파일인지 확인하세요.`);
+    }
   };
   r.readAsText(inp.files[0]);
 }
@@ -282,8 +359,9 @@ function openGameEditModal(editRef, si, gi){
 
   const mapOpts=maps.map(mp=>`<option value="${mp}"${g.map===mp?' selected':''}>${mp}</option>`).join('');
   const modal=document.createElement('div');
-  modal.className='modal';modal.style.display='flex';
-  modal.innerHTML=`<div class="mbox" style="max-width:460px">
+  modal.className='modal modal--gameedit';modal.style.display='flex';
+  // (요청사항) 저장/취소 버튼 아래 여백 최소화
+  modal.innerHTML=`<div class="mbox" style="max-width:460px;padding-bottom:12px">
     <div class="mtitle">✏️ 경기 수정 (${si===2?'에이스전':(si+1)+'세트'} · 경기${gi+1})</div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 16px">
       <div style="display:flex;gap:8px;align-items:center">
@@ -384,6 +462,9 @@ function saveGameEdit(editRef, si, gi, btn){
   save();
   btn.closest('.modal').remove();
   render();
+  // (보강) 티어대회 경기 수정 후 최근 경기 누락 방지
+  try{ if(mode==='tt' && typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
+  try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
 }
 
 async function captureStats(){
@@ -391,6 +472,7 @@ async function captureStats(){
   if(!el){alert('캡처할 영역이 없습니다.');return;}
   try{
     _showSaveLoading();
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(el);
     const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
     const a=document.createElement('a');a.download=`stats_${new Date().toISOString().slice(0,10)}.jpg`;
@@ -404,6 +486,7 @@ async function captureSection(sectionId, filename){
   if(!el){alert('캡처할 영역이 없습니다.');return;}
   try{
     _showSaveLoading();
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(el);
     const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false,logging:false});
     const a=document.createElement('a');
@@ -459,6 +542,12 @@ function toggleDark(){
   const isDark=document.body.classList.toggle('dark');
   localStorage.setItem('su_dark',isDark?'1':'');
   if(window._fixHdrBtns) window._fixHdrBtns(); else document.getElementById('darkToggleBtn').textContent=isDark?'☀️ 라이트':'🌙 다크';
+  // 다크 전환 시 테마 변수 재적용(다크 모드에서는 accent만 적용)
+  try{
+    window._applyThemeVars && window._applyThemeVars();
+  }catch(e){
+    console.warn('[toggleDark] 테마 변수 재적용 실패:', e.message);
+  }
 }
 
 /* ── 클립보드 복사 유틸 ── */

@@ -1,4 +1,4 @@
-﻿// ── 검색바 실시간 DOM 필터링 (render() 없이 한글 IME 호환) ──────────────────
+// ── 검색바 실시간 DOM 필터링 (render() 없이 한글 IME 호환) ──────────────────
 function recFilterInPlace(mode, query) {
   const q = (query || '').toLowerCase().trim();
   const container = document.getElementById('rec-list-' + mode);
@@ -42,10 +42,14 @@ const PASTE_MAP_ALIAS_DEFAULT = {
   // ── 전체 이름 ──
   '투혼':'투혼','라데온':'라데온','라데리안':'라데온','녹아웃':'녹아웃','리트리트':'리트리트',
   '폴리포이드':'폴리포이드','플스타':'플스타','옥타곤':'옥타곤',
-  '에티튜드':'에티튜드','매치포인트':'매치포인트','도미네이터':'도미네이터',
+  // 애티튜드 표기 통일 (에티튜드도 호환)
+  '애티튜드':'애티튜드','에티튜드':'애티튜드',
+  '매치포인트':'매치포인트','도미네이터':'도미네이터',
   '실피드':'실피드','블리츠':'블리츠','서킷':'서킷','신 개마고원':'신 개마고원',
   '아이언포리스트':'아이언포리스트','파이썬':'파이썬','화랑':'화랑','지옥섬':'지옥섬',
   '투영':'투영','네오리게이트':'네오리게이트','메트로폴리스':'메트로폴리스',
+  // 제인스
+  '제인스':'제인스',
   // ── 약자 ──
   '라데':'라데온','라':'라데온','라데리안':'라데온',
   '녹아':'녹아웃','녹':'녹아웃',
@@ -53,7 +57,8 @@ const PASTE_MAP_ALIAS_DEFAULT = {
   '폴':'폴리포이드','폴리':'폴리포이드','폴스':'폴리포이드',   // 폴스 추가
   '플스':'플스타','플립':'플스타',                             // 플립 추가
   '옥':'옥타곤','옥타':'옥타곤',                               // 옥타 추가
-  '에티':'에티튜드','에':'에티튜드',
+  // 애티튜드
+  '에티':'애티튜드','애티':'애티튜드','에':'애티튜드',
   '매':'매치포인트','매치':'매치포인트',
   '도미':'도미네이터','도':'도미네이터',
   '실':'실피드','실피':'실피드',
@@ -67,6 +72,8 @@ const PASTE_MAP_ALIAS_DEFAULT = {
   '화':'화랑',
   '지옥':'지옥섬','지':'지옥섬',
   '네오':'네오리게이트','리게':'네오리게이트',
+  // 제인스
+  '제인':'제인스',
 };
 
 // 기본 약자 + 사용자 정의 약자를 합쳐 반환
@@ -100,6 +107,83 @@ function resolveMapName(alias) {
   return alias;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   (요청사항) 자동인식 출력 포맷(전역)
+   - 설정에서 어떤 입력이 와도 결과를 동일 포맷으로 출력할 수 있도록 통합
+   - 변환툴/자동인식(표시·복사·출력)에서 공용으로 사용
+───────────────────────────────────────────────────────────── */
+const _AUTO_OUTFMT_KEY = 'su_auto_outfmt';
+function _autoOutfmtDefault(){
+  return {
+    includeRace: true,      // 선수(종족)
+    includeMap: true,       // [맵]
+    mapBrackets: true,      // 맵을 [ ] 로 감쌈
+    winnerEmphasis: 'none', // none | star | md
+    winMark: '✅',
+    loseMark: '⬜',
+    vsMark: '🆚️',
+    hideUnknownRace: true   // 종족이 N/미정이면 표시 안 함
+  };
+}
+function autoOutfmtLoad(){
+  try{
+    const raw = localStorage.getItem(_AUTO_OUTFMT_KEY);
+    if(!raw) return _autoOutfmtDefault();
+    const obj = JSON.parse(raw) || {};
+    return {..._autoOutfmtDefault(), ...obj};
+  }catch(e){
+    return _autoOutfmtDefault();
+  }
+}
+function autoOutfmtSave(next){
+  try{ localStorage.setItem(_AUTO_OUTFMT_KEY, JSON.stringify({..._autoOutfmtDefault(), ...(next||{})})); }catch(e){}
+}
+function _autoGetRace(name){
+  try{
+    if(typeof players !== 'undefined' && Array.isArray(players)){
+      const p = players.find(x=>x && x.name===name);
+      const r = (p && p.race) ? String(p.race).trim().toUpperCase() : '';
+      if(r==='T'||r==='Z'||r==='P'||r==='N') return r;
+    }
+  }catch(e){}
+  return '';
+}
+function autoFormatMatchLine(winName, loseName, mapName){
+  const fmt = autoOutfmtLoad();
+  const w = String(winName||'').trim();
+  const l = String(loseName||'').trim();
+  const m = String(mapName||'').trim();
+  if(!w || !l) return '';
+
+  const racePart = (nm)=>{
+    if(!fmt.includeRace) return '';
+    const r = _autoGetRace(nm);
+    if(!r) return '';
+    if(fmt.hideUnknownRace && r==='N') return '';
+    return `(${r})`;
+  };
+  const emph = (nm)=>{
+    if(fmt.winnerEmphasis==='md') return `**${nm}**`;
+    if(fmt.winnerEmphasis==='star') return `★${nm}`;
+    return nm;
+  };
+  const mapPart = ()=>{
+    if(!fmt.includeMap) return '';
+    if(!m || m==='-') return '';
+    return fmt.mapBrackets ? `[${m}]` : m;
+  };
+
+  const mp = mapPart();
+  return `${emph(w)}${racePart(w)} ${fmt.winMark} ${fmt.vsMark} ${fmt.loseMark} ${l}${racePart(l)}${mp ? ' ' + mp : ''}`.trim();
+}
+
+// 전역 노출(다른 모듈/설정에서 재사용)
+try{
+  window.autoOutfmtLoad = autoOutfmtLoad;
+  window.autoOutfmtSave = autoOutfmtSave;
+  window.autoFormatMatchLine = autoFormatMatchLine;
+}catch(e){}
+
 /**
  * 형식 C 파싱: N세트 맵약자 선수A 누적A:누적B 선수B
  * 예) "1세트 실피 이재호 0:1 변현제"
@@ -129,7 +213,16 @@ function parseFormatC(line, prevScore) {
     // 판단 기준: alias에 있거나, maps[]에 있거나, 선수 이름이 아닌 한글 단어(맵명 추정)
     const inAlias = !!alias[tok0];
     const inMaps  = typeof maps !== 'undefined' && maps.includes(tok0);
-    const isPlayerName = typeof players !== 'undefined' && players.some(p => p.name === tok0);
+    // tok0이 "선수 이름"인지 판별:
+    // - 기존: players.name 정확 일치만 확인 → 메모 별명(예: 샤이니)이면 선수로 인식 못해서
+    //        tok0을 맵으로 오판(C-1)하는 문제 발생
+    // - 개선: findPlayerByPartialName(메모/별명 포함) 결과까지 반영
+    const _fp = (typeof findPlayerByPartialName === 'function')
+      ? findPlayerByPartialName(tok0)
+      : { player: null, candidates: [] };
+    const isPlayerName = (typeof players !== 'undefined' && players.some(p => p.name === tok0))
+      || !!_fp.player
+      || ((_fp.candidates||[]).length > 0);
     // 맵 판별:
     //  1) alias에 있거나 maps[]에 있으면 → 맵
     //  2) 선수 이름에 해당하면 → 선수(C-2 시도)
@@ -240,11 +333,36 @@ function _findSimilarPlayers(namePart, maxResults=5) {
 function findPlayerByPartialName(namePart) {
   if (!namePart) return { player: null, candidates: [], similar: [] };
   // \u3164(한글 채움 문자), \u00A0(non-breaking), 기타 비표준 공백 → 일반 공백으로 정규화
-  const trimmed = namePart.replace(/[\u3164\u00A0\u200B\u202F\u205F\u3000\uFEFF]/g, ' ').trim();
+  const trimmed = namePart
+    .replace(/[\u3164\u00A0\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+    .replace(/^[\[\(\{<「『"“‘]+/, '')
+    .replace(/[\]\)\}>」』"”’]+$/, '')
+    .trim();
   if (!trimmed) return { player: null, candidates: [], similar: [] };
 
   // 공백 정규화 버전: "안    아" → "안아"
   const noSpace = trimmed.replace(/\s+/g, '');
+
+  // 0) 사용자 별명 매핑 (설정탭에서 등록)
+  // - localStorage: su_player_alias_map = { "샤이니": "김재현", ... }
+  // - 키는 대소문자/공백 무시로 매칭
+  try{
+    const amap = JSON.parse(localStorage.getItem('su_player_alias_map')||'{}')||{};
+    const _nfc = s => (s||'').normalize ? (s||'').normalize('NFC') : (s||'');
+    const q1 = _nfc(trimmed).replace(/\s+/g,'').toLowerCase();
+    const q2 = _nfc(noSpace).replace(/\s+/g,'').toLowerCase();
+    const rs = _nfc(trimmed.replace(/\s*[TZPNtzpn]$/i,'')).replace(/\s+/g,'').toLowerCase();
+    let target = '';
+    for(const k in amap){
+      const nk = _nfc(k).replace(/\s+/g,'').toLowerCase();
+      if(!nk) continue;
+      if(nk===q1 || nk===q2 || (rs && nk===rs)){ target = String(amap[k]||'').trim(); break; }
+    }
+    if(target){
+      const p = (players||[]).find(p=>p && p.name===target);
+      if(p) return { player: p, candidates: [p], similar: [], aliasMatch: true };
+    }
+  }catch(e){}
 
   // 1) 정확 일치 (이름)
   const exact = players.filter(p => p.name === trimmed);
@@ -257,11 +375,18 @@ function findPlayerByPartialName(namePart) {
   const _nfc = s => (s||'').normalize ? (s||'').normalize('NFC') : (s||'');
   const _trimmedLow = _nfc(trimmed).toLowerCase();
   const _noSpaceLow = _nfc(noSpace).toLowerCase();
+  // 메모 토큰 분리: 공백/쉼표뿐 아니라 ":" "/" "()" "[]" 등도 구분자로 처리
+  const _memoTokens = (memoNorm) => {
+    return String(memoNorm||'')
+      .split(/[\s,，;|\/\\\r\n:\(\)\[\]\{\}<>]+/)
+      .map(m=>m.trim())
+      .filter(Boolean);
+  };
   const memoExact = players.filter(p => {
     if (!p.memo) return false;
     const memoNorm = _nfc(p.memo);
     if (memoNorm.trim().toLowerCase() === _trimmedLow) return true; // 메모 전체 일치
-    const memos = memoNorm.split(/[\s,，\r\n]+/).map(m=>m.trim()).filter(Boolean);
+    const memos = _memoTokens(memoNorm);
     return memos.some(m => m.toLowerCase() === _trimmedLow);
   });
   if (memoExact.length === 1) {
@@ -282,7 +407,7 @@ function findPlayerByPartialName(namePart) {
     const memoNS = players.filter(p => {
       if (!p.memo) return false;
       const memoNorm = _nfc(p.memo);
-      const tokens = memoNorm.split(/[\s,，\r\n]+/).map(m=>m.replace(/\s+/g,'').toLowerCase()).filter(Boolean);
+      const tokens = _memoTokens(memoNorm).map(m=>m.replace(/\s+/g,'').toLowerCase()).filter(Boolean);
       return tokens.some(t => t === _noSpaceLow);
     });
     if (memoNS.length === 1) return { player: memoNS[0], candidates: memoNS, similar: [] };
@@ -295,7 +420,9 @@ function findPlayerByPartialName(namePart) {
     const memoPartial = players.filter(p => {
       if (!p.memo) return false;
       const memoNorm = _nfc(p.memo);
-      return memoNorm.includes(_trimmedLow) || memoNorm.toLowerCase().includes(_trimmedLow);
+      // 토큰 단위 포함(권장) + 원문 포함(호환)
+      const toks = _memoTokens(memoNorm).map(t=>t.toLowerCase());
+      return toks.some(t => t.includes(_trimmedLow)) || memoNorm.toLowerCase().includes(_trimmedLow);
     });
     if (memoPartial.length === 1) return { player: memoPartial[0], candidates: memoPartial, similar: [] };
     if (memoPartial.length > 1)   return { player: null, candidates: memoPartial, similar: [] };
@@ -304,7 +431,7 @@ function findPlayerByPartialName(namePart) {
   // 2.8) 종족 접미사(T/Z/P, 대소문자 무관) 제거 후 재시도
   // "샤이니T" → "샤이니" 로 재검색. parsePartWithRace가 종족을 못 걸러낸 경우 또는
   // 사용자가 종족 포함 이름을 그대로 입력했을 때도 메모/이름 매칭이 되도록 보장
-  const _raceStripped = trimmed.replace(/\s*[TZPtzp]$/i, '').trim();
+  const _raceStripped = trimmed.replace(/\s*[TZPNtzpn]$/i, '').trim();
   if (_raceStripped && _raceStripped !== trimmed) {
     const _rsLow = _nfc(_raceStripped).toLowerCase();
     const _rsNS  = _nfc(_raceStripped).replace(/\s+/g,'').toLowerCase();
@@ -316,7 +443,7 @@ function findPlayerByPartialName(namePart) {
       if (!p.memo) return false;
       const mn = _nfc(p.memo);
       if (mn.trim().toLowerCase() === _rsLow) return true;
-      const toks = mn.split(/[\s,，\n]+/).map(m => m.trim()).filter(Boolean);
+      const toks = _memoTokens(mn);
       return toks.some(t => t.toLowerCase() === _rsLow) ||
              toks.some(t => t.replace(/\s+/g,'').toLowerCase() === _rsNS);
     });
@@ -327,7 +454,8 @@ function findPlayerByPartialName(namePart) {
       const rsMemoPartial = players.filter(p => {
         if (!p.memo) return false;
         const memoNorm = _nfc(p.memo);
-        return memoNorm.includes(_rsLow) || memoNorm.toLowerCase().includes(_rsLow);
+        const toks = _memoTokens(memoNorm).map(t=>t.toLowerCase());
+        return toks.some(t => t.includes(_rsLow)) || memoNorm.toLowerCase().includes(_rsLow);
       });
       if (rsMemoPartial.length === 1) return { player: rsMemoPartial[0], candidates: rsMemoPartial, similar: [] };
       if (rsMemoPartial.length > 1) return { player: null, candidates: rsMemoPartial, similar: [] };
@@ -389,7 +517,7 @@ function findPlayerByPartialName(namePart) {
   // 메모 기반 후보도 '혹시:' 목록에 추가 (Levenshtein으로 찾을 수 없는 별명 대비)
   if (trimmed.length >= 2) {
     players.filter(p => p.memo && (
-      p.memo.split(/[\s,，\n]+/).map(m=>m.trim()).filter(Boolean).some(t=>t===trimmed) ||
+      _memoTokens(p.memo).some(t=>t===trimmed) ||
       p.memo.includes(trimmed)
     )).forEach(p => { if (!similar.some(q => q.name === p.name)) similar.push(p); });
   }
@@ -454,7 +582,7 @@ function parseFormatD_blocks(raw) {
 
   // 여러 줄에 걸쳐 이름+종족 수집 헬퍼
   // 종족 단독줄: T, Z, P, T선픽, P선픽, Z선픽, T후픽, 선픽, 후픽 등
-  const isRaceLine = l => /^([TZP](선픽|후픽)?|선픽|후픽)$/.test(l.trim());
+  const isRaceLine = l => /^([TZPN](선픽|후픽)?|선픽|후픽)$/.test(l.trim());
   const isResultLine = l => l==='승리!'||l==='패배!';
   const isVsLine = l => /^VS$/i.test(l);
   const isMapLine = l => l.startsWith('맵:');
@@ -478,7 +606,7 @@ function parseFormatD_blocks(raw) {
       nextIdx++;
     }
     // 이름에서 종족+픽옵션 제거하여 순수 이름 추출
-    const cleaned = name.replace(/[TZP](선픽|후픽)?$/, '').replace(/(선픽|후픽)$/, '').trim();
+    const cleaned = name.replace(/[TZPN](선픽|후픽)?$/, '').replace(/(선픽|후픽)$/, '').trim();
     return { name: cleaned, consumed: nextIdx - startIdx };
   }
 
@@ -612,8 +740,24 @@ function parsePasteLine(line) {
   // \u3164(한글 채움 문자) 등 비표준 공백 → 일반 공백으로 정규화
   line = line.replace(/[\u3164\u00A0\u200B\u202F\u205F\u3000\uFEFF]/g, ' ').trim();
   if (!line) return null;
+  // (호환) 전각 괄호/VS/🆚 등 정규화 (설정에서 끌 수 있음)
+  const _pasteCompat = (localStorage.getItem('su_paste_compat') ?? '1') === '1';
+  if (_pasteCompat) {
+    line = line
+      .replace(/[（]/g, '(').replace(/[）]/g, ')')
+      // 🆚 / 🆚️ (variation selector 포함) 모두 처리
+      .replace(/🆚️?/g, 'vs')
+      .replace(/ＶＳ/g, 'vs')
+      .replace(/V\s*\.?\s*S\s*\.?/gi, 'vs');
+  }
   // 꼬리 장식 이모지 제거 (예: [라] 👈 → [라])
   line = line.replace(/\s*[\u{10000}-\u{10FFFF}]+\s*$/u, '').trimEnd();
+
+  // (요청사항) "1경기" 번호를 미리 추출해 보관 (후속 prefix 제거로 사라지지 않게)
+  // - 예: "1경기 [실피] 도재욱P (패) vs (승) 임홍규Z"
+  let _gameNum = null;
+  const _gm = line.match(/^\s*(\d+)\s*경기\b/);
+  if (_gm) _gameNum = parseInt(_gm[1]);
 
   // 앞쪽 번호/기호 제거
   // "1.", "1)", "1경기", "1경기.", "①~⑳", "1️⃣", "-", "•", "▶" 등
@@ -640,6 +784,7 @@ function parsePasteLine(line) {
   line = line
     .replace(/^\(\d+티어\)\s*/i, '')              // (N티어) 괄호 제거
     .replace(/^\[\d+티어\]\s*/i, '')              // [N티어] 제거
+    .replace(/^\[매치\]\s*/i, '')                 // [매치] 제거
     .replace(/^[\d]+\s*경기[\.\)·\s]*/i, '')      // N경기
     .replace(/^경기\s*[\d]+[\:\.\)·\s]*/i, '')    // 경기N:
     .replace(/^[\d]+[R라r][\.\)·\s]*/i, '')       // NR, N라운드
@@ -648,6 +793,96 @@ function parsePasteLine(line) {
     .trim();
 
   if (!line) return null;
+
+  // ── 형식 A-1: 일반 텍스트 VS + (⭕/❌) 마크 ──
+  // 예: "[라데] 면추가 Z (⭕) vs 김말랑 T (❌)"
+  // - ⭕ = 승 / ❌ = 패 (반대도 지원)
+  // - 앞쪽 [맵] 표기 지원, 뒤쪽 [맵] 표기도 지원
+  // - 종족(T/Z/P/N) 표기는 입력에 있어도 applyGameResult에서 처리 가능하지만, 여기서도 일부 정규화
+  if (/\bvs\b/i.test(line) && !line.includes('🆚')) {
+    const WIN_MARKS  = ['✅', '⭕', '☑', '🔵', '🟢', '🟦', '○'];
+    const LOSE_MARKS = ['❌', '✖', '⬜', '🔴', '🟥', '●'];
+    const ALL_MARKS  = [...WIN_MARKS, ...LOSE_MARKS];
+
+    let map = '-';
+    // 앞쪽 [맵] 추출
+    const headMap = line.match(/^\[([^\]]+)\]\s*/);
+    if (headMap) {
+      map = resolveMapName(headMap[1].trim());
+      line = line.slice(headMap[0].length).trim();
+    }
+
+    // 좌/우 분리
+    // (호환) "vs" 주변 공백이 없어도 인식
+    const parts = line.split(/\s*vs\s*/i);
+    if (parts.length === 2) {
+      let leftPart = parts[0].trim();
+      let rightPart = parts[1].trim();
+
+      // 우측 끝 [맵] 추출 (맵이 아직 없을 때만)
+      if (map === '-') {
+        const tailMap = rightPart.match(/\[([^\]]+)\]\s*$/);
+        if (tailMap) {
+          map = resolveMapName(tailMap[1].trim());
+          rightPart = rightPart.slice(0, tailMap.index).trim();
+        }
+      }
+
+      // 마크 추출: (⭕) / (❌) 또는 끝에 ⭕/❌
+      const pickMarkEnd = (s) => {
+        for (const mk of ALL_MARKS) {
+          if (s.endsWith('(' + mk + ')')) return {mark: mk, text: s.slice(0, -(mk.length + 2)).trim()};
+          if (s.endsWith(mk)) return {mark: mk, text: s.slice(0, -mk.length).trim()};
+        }
+        // (승)/(패) 텍스트도 지원
+        const m = s.match(/\((승|패)\)\s*$/);
+        if (m) return {mark: m[1] === '승' ? '✅' : '❌', text: s.slice(0, s.lastIndexOf('(' + m[1] + ')')).trim()};
+        return {mark: null, text: s.trim()};
+      };
+      const pickMarkStart = (s) => {
+        // "(승) 이름" / "(패) 이름" 형태 지원
+        const m = s.match(/^\((승|패)\)\s*/);
+        if (m) {
+          const mark = m[1] === '승' ? '✅' : '❌';
+          const text = s.slice(m[0].length).trim();
+          return {mark, text};
+        }
+        // "✅ 이름" / "❌ 이름" 형태도 지원
+        for (const mk of ALL_MARKS) {
+          if (s.startsWith(mk)) return {mark: mk, text: s.slice(mk.length).trim()};
+          if (s.startsWith('(' + mk + ')')) return {mark: mk, text: s.slice(mk.length + 2).trim()};
+        }
+        return {mark: null, text: s.trim()};
+      };
+      let L = pickMarkEnd(leftPart);
+      if (!L.mark) L = pickMarkStart(leftPart);
+      let R = pickMarkEnd(rightPart);
+      if (!R.mark) R = pickMarkStart(rightPart);
+      if (!L.mark || !R.mark) {
+        // 마크가 없으면 이 분기에서는 처리하지 않음 (다른 파서로 넘김)
+      } else {
+        const leftWin = WIN_MARKS.includes(L.mark);
+        const rightWin = WIN_MARKS.includes(R.mark);
+        if (leftWin === rightWin) return null;
+
+        const stripRaceSuffix = (s) => {
+          let t = String(s || '').trim();
+          // "(P)" 같은 종족 괄호 제거
+          t = t.replace(/\s*\([TZPRN]\)\s*$/i, '').trim();
+          // "이광용P" 같은 종족 1글자 접미 제거
+          t = t.replace(/\s*[TZPRN]$/i, '').trim();
+          return t;
+        };
+        const leftName = stripRaceSuffix(L.text);
+        const rightName = stripRaceSuffix(R.text);
+
+        const winName = leftWin ? leftName : rightName;
+        const loseName = leftWin ? rightName : leftName;
+
+        if (winName && loseName) return { winName, loseName, map, leftName, rightName, ...( _gameNum ? { gameNum: _gameNum } : {} ) };
+      }
+    }
+  }
 
   // ── 형식 B: 이모지 형식 (🆚) ──
   if (line.includes('🆚')) {
@@ -761,7 +996,7 @@ function parsePasteLine(line) {
       if (prefixM && prefixM[2].trim()) return { name: prefixM[2].trim(), race: prefixM[1] };
       const bracketM = s.match(/^(.+?)\[(\d*)([TZPN])\]$/);
       if (bracketM) return { name: bracketM[1].trim(), race: bracketM[3] };
-      const simpleM = s.match(/^(.+?)([TZP])$/);
+      const simpleM = s.match(/^(.+?)([TZPN])$/);
       if (simpleM) return { name: simpleM[1].trim(), race: simpleM[2] };
       return { name: s.trim(), race: '' };
     };
@@ -809,11 +1044,11 @@ function parsePasteLine(line) {
       }
       const eMap = mapAlias ? resolveMapName(mapAlias) : '-';
       const splitNR_E = (s) => {
-        const prefixM = s.match(/^([TZP])(.+)$/);
+        const prefixM = s.match(/^([TZPN])(.+)$/);
         if (prefixM && prefixM[2].trim()) return { name: prefixM[2].trim(), race: prefixM[1] };
-        const bracketM = s.match(/^(.+?)\[(\d*)([TZP])\]$/);
+        const bracketM = s.match(/^(.+?)\[(\d*)([TZPN])\]$/);
         if (bracketM) return { name: bracketM[1].trim(), race: bracketM[3] };
-        const simpleM = s.match(/^(.+?)([TZP])$/);
+        const simpleM = s.match(/^(.+?)([TZPN])$/);
         if (simpleM) return { name: simpleM[1].trim(), race: simpleM[2] };
         return { name: s.trim(), race: '' };
       };
@@ -859,9 +1094,9 @@ function parsePasteLine(line) {
         const lWin = WIN_F.includes(lMark), rWin = WIN_F.includes(rMark);
         if (lWin !== rWin) {
           const splitNR_F = (s) => {
-            const pm = s.match(/^([TZP])(.+)$/); if (pm && pm[2].trim()) return { name: pm[2].trim(), race: pm[1] };
-            const bm = s.match(/^(.+?)\[(\d*)([TZP])\]$/); if (bm) return { name: bm[1].trim(), race: bm[3] };
-            const sm = s.match(/^(.+?)([TZP])$/); if (sm) return { name: sm[1].trim(), race: sm[2] };
+            const pm = s.match(/^([TZPN])(.+)$/); if (pm && pm[2].trim()) return { name: pm[2].trim(), race: pm[1] };
+            const bm = s.match(/^(.+?)\[(\d*)([TZPN])\]$/); if (bm) return { name: bm[1].trim(), race: bm[3] };
+            const sm = s.match(/^(.+?)([TZPN])$/); if (sm) return { name: sm[1].trim(), race: sm[2] };
             return { name: s.trim(), race: '' };
           };
           const left = splitNR_F(lp), right = splitNR_F(rp);
@@ -948,16 +1183,17 @@ function parsePasteLine(line) {
 
   // vs 구분자로 좌/우 분리
   // 지원: " vs ", " VS ", " v ", " Vs "
-  const vsSplit = line.split(/\s+vs\s+|\s+VS\s+|\s+Vs\s+/i);
+  // (호환) 공백 유무 상관없이 vs 인식
+  const vsSplit = line.split(/\s*(?:vs)\s*/i);
 
   // ── 형식 A-1: 종족 있음 "이름T(승/패)" ──
   const parsePartWithRace = (s) => {
     s = s.trim();
     // 이름 종족(선택) (승/패) : "장윤철T(패)", "장윤철 T (패)", "장윤철(패)"
-    const m = s.match(/^(.+?)\s*([TZP])?\s*\((승|패)\)$/);
+    const m = s.match(/^(.+?)\s*([TZPN])?\s*\((승|패)\)$/);
     if (m) return { name: m[1].trim(), race: m[2] || '', result: m[3] };
     // (승/패) 이름 종족(선택) 형식: "(패) 이재호T", "(승)이재호"
-    const m2 = s.match(/^\((승|패)\)\s*(.+?)\s*([TZP])?$/);
+    const m2 = s.match(/^\((승|패)\)\s*(.+?)\s*([TZPN])?$/);
     if (m2) return { name: m2[2].trim(), race: m2[3] || '', result: m2[1] };
     return null;
   };
@@ -975,7 +1211,7 @@ function parsePasteLine(line) {
   // 예: "[에티] 장윤철(패) (승)이재호" (vs 생략)
   {
     const parts = [];
-    const pat = /(.+?)\s*([TZP])?\s*\((승|패)\)|(\((?:승|패)\))\s*(.+?)\s*([TZP])?(?=\s|$)/g;
+    const pat = /(.+?)\s*([TZPN])?\s*\((승|패)\)|(\((?:승|패)\))\s*(.+?)\s*([TZPN])?(?=\s|$)/g;
     let m3;
     while ((m3 = pat.exec(line)) !== null) {
       if (m3[1]) parts.push({ name: m3[1].trim(), result: m3[3] });
@@ -1080,6 +1316,11 @@ function parseSetSeparator(line) {
     if (/SUPER\s*ACE|슈퍼\s*에이스/i.test(t)) return 3;
   }
 
+  // 패턴 6: "1세트 2경기 ..." 처럼 세트 번호가 문장 앞에 붙는 경우도 세트 헤더로 인식
+  // (기존에는 '1세트' 단독 줄만 인식해서, 같은 줄에 경기 정보가 있으면 세트가 항상 1로 보일 수 있었음)
+  const m6 = t.match(/^(\d+)\s*(?:세트|셋|set)\b/i);
+  if (m6) return parseInt(m6[1]);
+
   return null;
 }
 
@@ -1129,6 +1370,7 @@ function pastePreview() {
   const errors = [];
   let currentSet = 1;
   let currentLineDate = null; // "일자: YYYY-MM-DD" 줄로 설정되는 현재 날짜
+  let currentRoundLabel = null; // "64강/32강/16강/8강/4강/준결승/결승" 헤더 감지
   let formatCScore = null;   // 형식 C 누적 스코어 상태 { a, b }
   let isFormatC    = false;  // 이번 블록이 형식 C인지
 
@@ -1142,6 +1384,40 @@ function pastePreview() {
   lines.forEach((line, idx) => {
     const trimmed = line.trim();
     if (!trimmed) return;
+
+    // ── (요청사항) 세트 스코어만 입력 허용 ──
+    // 예) "2:2", "1:!" (!는 0으로 처리 → 1:0)
+    // 주로 대회/티어대회/프로리그 세트 입력(조별/토너)에서 사용
+    const _scoreOnlyM = trimmed.match(/^(\d+)\s*[：:]\s*([0-9!]+)\s*$/);
+    if (_scoreOnlyM) {
+      const a = parseInt(_scoreOnlyM[1], 10) || 0;
+      const bRaw = String(_scoreOnlyM[2] || '').trim();
+      const b = parseInt(bRaw.replace(/!/g, '0'), 10) || 0;
+      // score-only는 세트/대회 붙여넣기에서만 의미가 있어 _grpPasteMode일 때만 결과로 포함
+      if (window._grpPasteMode) {
+        results.push({
+          _scoreOnly: true,
+          _scoreA: a,
+          _scoreB: b,
+          setNum: currentSet,
+          lineNum: idx + 1,
+          rawLine: trimmed,
+          ...(currentLineDate ? { _lineDate: currentLineDate } : {}),
+          ...(currentRoundLabel ? { _rndLabel: currentRoundLabel } : {})
+        });
+      } else {
+        errors.push({ lineNum: idx + 1, rawLine: trimmed, reason: '스코어만 입력(예: 2:2)은 대회/세트 붙여넣기에서만 지원됩니다.' });
+      }
+      return;
+    }
+
+    // ── 토너먼트 라운드 헤더 감지 ──
+    // 예) "64강", "32강", "16강", "8강", "4강", "준결승", "결승"
+    const _rnd = trimmed.replace(/\s+/g,'');
+    if (/^(?:64강|32강|16강|8강|4강|준결승|결승)$/.test(_rnd)) {
+      currentRoundLabel = _rnd;
+      return;
+    }
 
     // ── 무시할 라인 패턴 ──
     // 팀 스코어: "(승) 수술대 3:1 늪지대 (패)" / "팀명 (승/패) N:M (승/패) 팀명" 등
@@ -1172,7 +1448,16 @@ function pastePreview() {
         // 탭 구분 TSV 형식: 날짜가 이미 추출됐으므로 나머지 컬럼만 파싱
         if (_restLine.includes('\t')) {
           const _tc = _restLine.split('\t');
-          const _tEx = s => { const m = s.trim().match(/^(.+?)\s*\([TZPN]\)\s*$/i); return m ? m[1].trim() : s.trim(); };
+          const _tEx = s => {
+            const t = (s||'').trim();
+            // "이광용(P)" 형태
+            let m = t.match(/^(.+?)\s*\([TZPRN]\)\s*$/i);
+            if(m) return m[1].trim();
+            // "이광용P" 형태 (끝 1글자 종족)
+            m = t.match(/^(.+?)([TZPRN])$/i);
+            if(m && m[1] && m[1].trim().length>=2 && !m[1].includes(' ')) return m[1].trim();
+            return t;
+          };
 
           // ── 1인칭 TSV: 기준 선수 설정 시 ──
           // 형식: 상대(종족)\t맵\t±점수\t...\t스코어
@@ -1214,6 +1499,30 @@ function pastePreview() {
               ...(_lineType ? { _lineType } : {}) });
             return;
           }
+
+          // ── (요청사항) 대회 토너먼트 TSV: 선수1(종족)\t선수2(종족)\t맵\tELO변동\t단판/3판... \t메모... ──
+          // 예) 2026-04-17\t이광용P\t김성민P\t네오 실피드\t16.7\t단판\tE-SCORE...
+          // 규칙: ELO가 +면 선수1 승, -면 선수2 승 (숫자 없으면 선수1 승으로 가정)
+          if (_tc.length >= 4 && _tc[0] && _tc[1] && _tc[2]) {
+            const p1 = _tEx(_tc[0]);
+            const p2 = _tEx(_tc[1]);
+            const mp = _tc[2] ? resolveMapName(_tc[2].trim()) : '-';
+            const eloStr = (_tc[3] || '').trim();
+            const eloNum = parseFloat(eloStr.replace(/[^\d\.\-+]/g,''));
+            const p1Win = isNaN(eloNum) ? true : (eloNum >= 0);
+            const winName = p1Win ? p1 : p2;
+            const loseName = p1Win ? p2 : p1;
+            const _wM = findPlayerByPartialName(winName), _lM = findPlayerByPartialName(loseName);
+            const _memo = (_tc.slice(5).join(' ') || '').trim();
+            results.push({ winName, loseName, map: mp, _rawMapStr: _tc[2]||'', setNum: currentSet,
+              wPlayer: _wM.player, lPlayer: _lM.player,
+              wCandidates: _wM.candidates, lCandidates: _lM.candidates,
+              wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
+              lineNum: idx+1, rawLine: trimmed, _lineDate: _id,
+              ...(currentRoundLabel?{_rndLabel:currentRoundLabel}:{ }),
+              ...(_memo?{_lineMemo:_memo}:{}) });
+            return;
+          }
         }
         const _rp = parsePasteLine(_restLine);
         if (_rp) {
@@ -1223,7 +1532,7 @@ function pastePreview() {
             wPlayer: _wM.player, lPlayer: _lM.player,
             wCandidates: _wM.candidates, lCandidates: _lM.candidates,
             wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
-            lineNum: idx+1, rawLine: trimmed, _lineDate: _id });
+            lineNum: idx+1, rawLine: trimmed, _lineDate: _id, _rndLabel: currentRoundLabel });
         }
       }
       return;
@@ -1246,7 +1555,7 @@ function pastePreview() {
             wPlayer: _wM.player, lPlayer: _lM.player,
             wCandidates: _wM.candidates, lCandidates: _lM.candidates,
             wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
-            lineNum: idx+1, rawLine: trimmed, _lineDate: _kd });
+            lineNum: idx+1, rawLine: trimmed, _lineDate: _kd, _rndLabel: currentRoundLabel });
         }
       }
       return;
@@ -1346,6 +1655,27 @@ function pastePreview() {
       // 같은 줄에 경기 결과가 있을 수 있음 (예: "1set ⭕선수A vs 선수B❌")
       const setRem = trimmed.replace(/^\d+\s*(?:세트|셋|set)\s*/i, '').trim();
       if (setRem && setRem !== trimmed) {
+        // "1세트 2:2" 같은 형태 지원
+        const _m2 = setRem.match(/^(\d+)\s*[：:]\s*([0-9!]+)\s*$/);
+        if (_m2) {
+          const a = parseInt(_m2[1], 10) || 0;
+          const b = parseInt(String(_m2[2] || '').replace(/!/g, '0'), 10) || 0;
+          if (window._grpPasteMode) {
+            results.push({
+              _scoreOnly: true,
+              _scoreA: a,
+              _scoreB: b,
+              setNum: currentSet,
+              lineNum: idx + 1,
+              rawLine: trimmed,
+              ...(currentLineDate ? { _lineDate: currentLineDate } : {}),
+              ...(currentRoundLabel ? { _rndLabel: currentRoundLabel } : {})
+            });
+          } else {
+            errors.push({ lineNum: idx + 1, rawLine: trimmed, reason: '스코어만 입력(예: 2:2)은 대회/세트 붙여넣기에서만 지원됩니다.' });
+          }
+          return;
+        }
         const r2 = parsePasteLine(setRem);
         if (r2) {
           const wM2 = findPlayerByPartialName(r2.winName);
@@ -1455,11 +1785,11 @@ function renderPastePreview(results, errors) {
   const pendWarn  = document.getElementById('paste-pending-warn');
   if (!previewEl) return;
 
-  const savable  = (results || []).filter(r => r.wPlayer && r.lPlayer);
-  const ambig    = (results || []).filter(r => (!r.wPlayer && r.wCandidates?.length > 1) || (!r.lPlayer && r.lCandidates?.length > 1));
+  const savable  = (results || []).filter(r => (r.wPlayer && r.lPlayer) || r._scoreOnly);
+  const ambig    = (results || []).filter(r => !r._scoreOnly).filter(r => (!r.wPlayer && r.wCandidates?.length > 1) || (!r.lPlayer && r.lCandidates?.length > 1));
   const hasSimilar = (r) => (!r.wPlayer && !r.wCandidates?.length && r.wSimilar?.length) || (!r.lPlayer && !r.lCandidates?.length && r.lSimilar?.length);
-  const similarRows = (results || []).filter(r => !r.wPlayer || !r.lPlayer).filter(r => hasSimilar(r) && !ambig.includes(r));
-  const missing  = (results || []).filter(r => (!r.wPlayer && !r.wCandidates?.length && !r.wSimilar?.length) || (!r.lPlayer && !r.lCandidates?.length && !r.lSimilar?.length));
+  const similarRows = (results || []).filter(r => !r._scoreOnly).filter(r => !r.wPlayer || !r.lPlayer).filter(r => hasSimilar(r) && !ambig.includes(r));
+  const missing  = (results || []).filter(r => !r._scoreOnly).filter(r => (!r.wPlayer && !r.wCandidates?.length && !r.wSimilar?.length) || (!r.lPlayer && !r.lCandidates?.length && !r.lSimilar?.length));
 
   // 상단 뱃지
   if (badge) {
@@ -1491,6 +1821,7 @@ function renderPastePreview(results, errors) {
 
     // 최대 세트번호 계산 (세트 드롭다운용)
     const maxSet = Math.max(...results.map(r => r.setNum || 1), 3);
+    const _matchModePreview = window._pasteMatchMode || 'game';
 
     // ── 팀 인식: leftName(A칸)/rightName(B칸) 기준으로 소속 대학 빈도 계산 ──
     const _savableForTeam = results.filter(r => r.wPlayer && r.lPlayer);
@@ -1519,9 +1850,10 @@ function renderPastePreview(results, errors) {
     const _teamALabel = '🔵 ' + teamAPreview;
     const _teamBLabel = '🔴 ' + teamBPreview;
 
+    const _colLabel = _matchModePreview==='set' ? '세트/경기' : '경기';
     html += `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px">`;
     html += `<table style="margin:0;width:100%;font-size:12px"><thead><tr>
-      <th style="text-align:left;padding:6px 8px;font-size:11px;width:76px">세트</th>
+      <th style="text-align:left;padding:6px 8px;font-size:11px;width:86px">${_colLabel}</th>
       <th style="text-align:left;padding:6px 8px;font-size:11px;width:90px">맵</th>
       <th style="text-align:left;padding:6px 8px;font-size:11px">${_teamALabel}</th>
       <th style="text-align:left;padding:6px 8px;font-size:11px">${_teamBLabel}</th>
@@ -1535,14 +1867,28 @@ function renderPastePreview(results, errors) {
     let _prevRowDate = null;
 
     results.forEach((r, i) => {
+      // 스코어만 입력 (예: 2:2)
+      if (r._scoreOnly) {
+        const sA = r._scoreA ?? 0;
+        const sB = r._scoreB ?? 0;
+        html += `<tr style="border-top:1px solid var(--border);background:#f8fafc">
+          <td style="padding:8px 8px;font-weight:900;white-space:nowrap">${_matchModePreview==='set' ? `${r.setNum||1}세트` : '스코어'}</td>
+          <td style="padding:8px 8px;color:var(--gray-l);white-space:nowrap">스코어</td>
+          <td style="padding:8px 8px;font-weight:1000;color:#2563eb">${sA}</td>
+          <td style="padding:8px 8px;font-weight:1000;color:#dc2626">${sB}</td>
+          <td style="padding:8px 8px;white-space:nowrap"><span style="font-weight:900;color:#16a34a">✅</span></td>
+          <td style="padding:8px 8px;text-align:center;color:var(--gray-l)">-</td>
+        </tr>`;
+        return;
+      }
       const wOk    = !!r.wPlayer;
       const lOk    = !!r.lPlayer;
       const wAmbig = !wOk && r.wCandidates?.length > 1;
       const lAmbig = !lOk && r.lCandidates?.length > 1;
       const ok     = wOk && lOk;
 
-      const wDisplayName = wOk ? r.wPlayer.name : r.winName;
-      const lDisplayName = lOk ? r.lPlayer.name : r.loseName;
+      const wDisplayName = r.winName;
+      const lDisplayName = r.loseName;
 
       // ── 선수 셀 빌더 ──
       const buildCell = (isWin, displayName, resolved, isAmbig, candidates, similar, role) => {
@@ -1550,12 +1896,11 @@ function renderPastePreview(results, errors) {
         let cell = `<span style="${style}">${displayName}</span>`;
         if (resolved) {
           const p = isWin ? r.wPlayer : r.lPlayer;
-          if (p?.univ) cell += `<span style="font-size:10px;color:var(--gray-l);margin-left:4px">(${p.univ})</span>`;
-          // 닉네임(메모) 매칭 표시: 입력한 이름과 실제 선수 이름이 다를 때
-          const inputName = isWin ? r.winName : r.loseName;
-          if (inputName && inputName !== displayName) {
-            cell += ` <span style="font-size:10px;background:#fef3c7;border:1px solid #fcd34d;color:#92400e;border-radius:4px;padding:1px 5px;margin-left:2px" title="닉네임 매칭">🏷️ ${inputName}</span>`;
+          // 실제 선수 이름과 입력 이름이 다를 때 실제 선수 이름 표시
+          if (p?.name && p.name !== displayName) {
+            cell += ` <span style="font-size:10px;color:#16a34a;font-weight:600;margin-left:4px">→ ${p.name}</span>`;
           }
+          if (p?.univ) cell += `<span style="font-size:10px;color:var(--gray-l);margin-left:4px">(${p.univ})</span>`;
         } else if (isAmbig) {
           cell += `<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px;align-items:center">
             <span style="font-size:10px;color:#b45309;font-weight:600">선택:</span>` +
@@ -1671,12 +2016,22 @@ function renderPastePreview(results, errors) {
             ? `<span style="background:#faf5ff;color:#6d28d9;border:1px solid #c4b5fd;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap">유사이름</span>`
             : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap">미등록</span>`;
 
-      // ── 세트 드롭다운 ──
-      const setOpts = Array.from({length: Math.max(maxSet, r.setNum||1)}, (_,k) => k+1)
-        .map(n => `<option value="${n}" ${(r.setNum||1)===n?'selected':''}>${n}세트</option>`).join('');
-      const setCell = `<select class="paste-set-sel" data-idx="${i}"
-        style="font-size:11px;font-weight:700;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;color:${(r.setNum||1)>=3?'#7c3aed':'var(--blue)'};background:var(--white);cursor:pointer;max-width:72px"
-        onchange="pasteChangeSet(${i},parseInt(this.value))">${setOpts}</select>`;
+      // ── 경기/세트 표시 ──
+      const gn = r.gameNum || r.game || r.gameNo || null;
+      const gameTag = `<span style="font-size:11px;font-weight:900;color:var(--text3);white-space:nowrap">${(gn|| (i+1))}경기</span>`;
+      let setCell = '';
+      if(_matchModePreview==='set'){
+        // 세트 드롭다운 + 경기번호
+        const setOpts = Array.from({length: Math.max(maxSet, r.setNum||1)}, (_,k) => k+1)
+          .map(n => `<option value="${n}" ${(r.setNum||1)===n?'selected':''}>${n}세트</option>`).join('');
+        const setSel = `<select class="paste-set-sel" data-idx="${i}"
+          style="font-size:11px;font-weight:700;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;color:${(r.setNum||1)>=3?'#7c3aed':'var(--blue)'};background:var(--white);cursor:pointer;max-width:72px"
+          onchange="pasteChangeSet(${i},parseInt(this.value))">${setOpts}</select>`;
+        setCell = `<div style="display:flex;flex-direction:column;gap:2px">${setSel}<span style="font-size:10px;color:var(--gray-l);font-weight:800">${(gn|| (i+1))}경기</span></div>`;
+      } else {
+        // 경기 방식: 경기번호만 표시
+        setCell = gameTag;
+      }
 
       // ── 맵 드롭다운 ──
       const mapVal = r.map && r.map !== '-' ? r.map : '';
@@ -1766,7 +2121,6 @@ function renderPastePreview(results, errors) {
     }).join('');
 
     if(savable.length > 0) {
-      const _matchModePreview = window._pasteMatchMode || 'game';
       const _useSetScore = _matchModePreview === 'set' || multiSetPreview;
       // A/B팀 게임 승리 수
       let teamAWins = 0, teamBWins = 0;
@@ -2058,28 +2412,118 @@ function pasteSelectPlayer(idx, role, name) {
   renderPastePreview(window._pasteResults, window._pasteErrors || []);
 }
 
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 자동인식 저장 전 "중복 경기" 확인 (공용)
+// - 게임 키: 날짜|승자|패자|맵 (맵은 resolveMapName로 정규화)
+// - toAdd: [{mode,d,w,l,map}]
+// ─────────────────────────────────────────────────────────────
+function _normMapDup(s){
+  const t = (s || '').trim();
+  if (!t) return '';
+  try { return resolveMapName(t) || t; } catch (e) { return t; }
+}
+function _dupKey(d, w, l, map){
+  return `${d || ''}|${w || ''}|${l || ''}|${_normMapDup(map)}`;
+}
+function _normModeKey(m){
+  return (m === 'individual' ? 'ind' : (m || ''));
+}
+function _buildExistingPasteKeySet(mode){
+  const mm = _normModeKey(mode);
+  const set = new Set();
+  const addMatchArr = (arr) => {
+    (arr || []).forEach(mat => {
+      const d = mat?.d || '';
+      (mat?.sets || []).forEach(st => {
+        (st?.games || []).forEach(g => {
+          const a = g?.playerA || '';
+          const b = g?.playerB || '';
+          const win = g?.winner || 'A';
+          const w = win === 'A' ? a : b;
+          const l = win === 'A' ? b : a;
+          if (!w || !l) return;
+          set.add(_dupKey(d, w, l, g?.map || ''));
+        });
+      });
+    });
+  };
+  try {
+    if (mm === 'ind') {
+      (typeof indM !== 'undefined' ? indM : []).forEach(g => { if (g?.wName && g?.lName) set.add(_dupKey(g.d || '', g.wName, g.lName, g.map || '')); });
+    } else if (mm === 'gj') {
+      (typeof gjM !== 'undefined' ? gjM : []).forEach(g => { if (g?.wName && g?.lName) set.add(_dupKey(g.d || '', g.wName, g.lName, g.map || '')); });
+    } else if (mm === 'mini') {
+      addMatchArr(typeof miniM !== 'undefined' ? miniM : []);
+    } else if (mm === 'univm') {
+      addMatchArr(typeof univM !== 'undefined' ? univM : []);
+    } else if (mm === 'ck') {
+      addMatchArr(typeof ckM !== 'undefined' ? ckM : []);
+    } else if (mm === 'tt') {
+      addMatchArr(typeof ttM !== 'undefined' ? ttM : []);
+    } else if (mm === 'comp') {
+      addMatchArr(typeof comps !== 'undefined' ? comps : []);
+    } else if (mm === 'pro') {
+      addMatchArr(typeof proM !== 'undefined' ? proM : []);
+    }
+  } catch (e) {}
+  return set;
+}
+function _confirmDupBeforeSave(toAdd){
+  const rows = (toAdd || []).map(x => ({
+    mode: _normModeKey(x.mode),
+    d: x.d || '',
+    w: x.w || '',
+    l: x.l || '',
+    map: x.map || ''
+  })).filter(x => x.mode && x.w && x.l);
+  if (!rows.length) return true;
+
+  const byMode = {};
+  rows.forEach(x => {
+    if (!byMode[x.mode]) byMode[x.mode] = { set: _buildExistingPasteKeySet(x.mode), count: 0 };
+    if (byMode[x.mode].set.has(_dupKey(x.d, x.w, x.l, x.map))) byMode[x.mode].count++;
+  });
+  const entries = Object.entries(byMode).map(([k,v])=>({k,count:v.count})).filter(x=>x.count>0);
+  const total = entries.reduce((s,x)=>s+x.count,0);
+  if (total <= 0) return true;
+  const nm = (k) => ({ ind:'개인전', gj:'끝장전', mini:'미니대전', univm:'대학대전', ck:'대학CK', tt:'티어대회', comp:'대회', pro:'프로리그' }[k] || k);
+  const detail = entries.map(x => `- ${nm(x.k)}: ${x.count}건`).join('\n');
+  return confirm(`⚠️ 이미 저장된 중복 경기가 ${total}건 있습니다.\n${detail}\n\n그래도 저장할까요?\n(확인=저장 / 취소=중단)`);
+}
+
 function pasteApply() {
   if (!window._pasteResults) return;
   if (!isLoggedIn) return alert('로그인이 필요합니다.');
 
   // 대회 경기 세트 적용 모드 분기
   if (window._grpPasteMode) {
-    const savable = window._pasteResults.filter(r => r.wPlayer && r.lPlayer);
+    const savable = window._pasteResults.filter(r => (r.wPlayer && r.lPlayer) || r._scoreOnly);
     if (!savable.length) return alert('저장 가능한 경기가 없습니다.');
-    const ok = _grpPasteApplyLogic(savable);
-    if (ok) {
+
+    const _closeGrpPaste = () => {
       window._grpPasteMode = false;
       cm('pasteModal');
       window._pasteResults = null;
       window._pasteErrors  = null;
-      // 저장 형식 원복
       const compWrap = document.getElementById('paste-comp-wrap');
       if(compWrap) { compWrap.style.display='none'; compWrap.innerHTML='<input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:180px">'; }
       const hintEl = document.getElementById('paste-mode-hint');
       if(hintEl) hintEl.textContent='';
       const applyBtn = document.getElementById('paste-apply-btn');
       if(applyBtn) applyBtn.textContent='✅ 저장하기';
+    };
+
+    // tier-tour.js는 index.html에서 이미 로드됨. 여기서 다시 로드하면 전역 let 재선언으로 깨질 수 있어 로드 시도하지 않음.
+    if (typeof window._grpPasteApplyLogic !== 'function' && typeof _grpPasteApplyLogic === 'function') {
+      window._grpPasteApplyLogic = _grpPasteApplyLogic;
     }
+    if (typeof window._grpPasteApplyLogic !== 'function') {
+      alert('일괄 입력 저장 모듈이 로드되지 않았습니다.\n페이지 새로고침 후 다시 시도해주세요.');
+      return;
+    }
+
+    const ok = window._grpPasteApplyLogic(savable);
+    if (ok) _closeGrpPaste();
     return;
   }
 
@@ -2087,43 +2531,103 @@ function pasteApply() {
   const dateVal = document.getElementById('paste-date')?.value || new Date().toISOString().slice(0, 10);
   const compName = document.getElementById('paste-comp-name')?.value?.trim() || '';
 
+  // (요청사항) YAML 블록 기반 대량입력은 삭제됨 (설정탭 규칙 기반으로 자동 분리 저장)
+
   if (mode === 'comp' && !compName) return alert('대회명을 입력하세요.');
 
   const savable = window._pasteResults.filter(r => r.wPlayer && r.lPlayer);
   if (!savable.length) return alert('저장 가능한 경기가 없습니다.');
 
+  // ── (요청사항) 설정탭 규칙 기반 자동 분리 저장 ──
+  // - 규칙: localStorage 'su_paste_route_rules'
+  // - 형식(한 줄): /정규식/flags => 모드
+  //   또는: 키워드 => 모드
+  // - 모드 예: 개인전, 끝장전, 미니대전, 시빌워, 대학대전, 대학CK, 프로리그, 프로리그끝장전, 티어대회, 대회
+  // - 동작: 메모/원문에서 규칙을 매칭하여 r._lineType에 저장하고, 기존 "혼합 타입" 저장 로직을 활용
+  function _parsePasteRouteRules(){
+    const raw = String(localStorage.getItem('su_paste_route_rules')||'').trim();
+    if(!raw) return [];
+    const out=[];
+    raw.split(/\r?\n/).map(l=>l.trim()).filter(l=>l && !l.startsWith('#')).forEach(line=>{
+      const parts = line.split('=>').map(s=>s.trim());
+      if(parts.length<2) return;
+      const pat = parts[0];
+      const rhs = parts.slice(1).join('=>').trim();
+      // rhs: "mode" 또는 "mode; key=val"
+      const segs = rhs.split(';').map(s=>s.trim()).filter(Boolean);
+      const modeStr = segs[0]||'';
+      const opts={};
+      segs.slice(1).forEach(s=>{
+        const m=s.match(/^([a-zA-Z0-9_]+)\s*=\s*(.+)\s*$/);
+        if(m) opts[m[1]] = m[2];
+      });
+      let rx=null, isRegex=false;
+      const mrx = pat.match(/^\/(.+)\/([gimsuy]*)$/);
+      if(mrx){
+        try{ rx = new RegExp(mrx[1], mrx[2]||''); isRegex=true; }catch(e){ rx=null; }
+      }
+      out.push({ pat, rx, isRegex, modeStr, opts });
+    });
+    return out;
+  }
+  function _normRouteMode(s){
+    const t=String(s||'').trim().toLowerCase();
+    if(['ind','individual','개인전','개인전 기록'].includes(t)) return 'ind';
+    if(['gj','끝장전','개인전 끝장전','개인전 끝장전 기록'].includes(t)) return 'gj';
+    if(['mini','미니','미니대전','미니대전 기록'].includes(t)) return 'mini';
+    if(['civil','시빌','시빌워','시빌워 기록'].includes(t)) return 'mini'; // mini.type=civil로 저장(혼합 저장에서 _miniType 사용)
+    if(['univm','대학대전','대학대전 기록'].includes(t)) return 'univm';
+    if(['ck','대학ck','대학ck 기록'].includes(t)) return 'ck';
+    if(['pro','프로리그','프로리그 기록'].includes(t)) return 'pro';
+    if(['progj','프로리그끝장전','프로리그 끝장전','프로리그 끝장전 기록'].includes(t)) return 'gj'; // pro flag는 옵션으로 확장
+    if(['tt','티어대회','티어대회 일반','티어대회 일반 기록'].includes(t)) return 'tt';
+    if(['comp','대회','대회 기록','조별리그','대회 조별리그'].includes(t)) return 'comp';
+    return '';
+  }
+  const _routeRules = _parsePasteRouteRules();
+  if(_routeRules.length){
+    savable.forEach(r=>{
+      const txt = String((r._lineMemo||'') + ' ' + (r.rawLine||'') + ' ' + (r.winName||'') + ' ' + (r.loseName||'')).trim();
+      for(const rule of _routeRules){
+        let matched=false;
+        if(rule.rx){
+          matched = rule.rx.test(txt);
+        } else {
+          matched = rule.pat && txt.toLowerCase().includes(String(rule.pat).toLowerCase());
+        }
+        if(!matched) continue;
+        const nm = _normRouteMode(rule.modeStr);
+        if(nm){
+          r._lineType = nm; // 혼합 저장 트리거
+          // 시빌워는 mini.type=civil로 저장하도록 표시
+          if(String(rule.modeStr||'').includes('시빌') || String(rule.modeStr||'').toLowerCase()==='civil') r._miniType='civil';
+          // (확장용) 강제 팀명/대회명 등은 추후 적용
+        }
+        break;
+      }
+    });
+  }
+
+  // 저장 예정 게임 목록(혼합 타입 포함) → 중복 확인
+  const _toAdd = savable.map(r => ({
+    mode: _normModeKey(r._lineType || mode),
+    d: r._lineDate || dateVal,
+    w: r.wPlayer?.name || '',
+    l: r.lPlayer?.name || '',
+    map: r.map || ''
+  }));
+  if (!_confirmDupBeforeSave(_toAdd)) return;
+
   const matchId = genId();
 
-  // ── A팀/B팀 결정: 로스터 있으면 소속 기반, 없으면 leftName 위치 기반 ──
-  const _applyRA = window._pasteRosterA, _applyRB = window._pasteRosterB;
-  const _applyInRA = (nm) => _applyRA?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
-  const _applyInRB = (nm) => _applyRB?.members.some(m => m===nm || (nm&&nm.includes(m)) || (m&&m.includes(nm)));
+  // ── A팀/B팀 결정: 입력(좌/우) 순서를 최우선으로 고정 ──
+  // (요청사항) 붙여넣기에서 "A팀 vs B팀"이 뒤집혀 인식되는 경우가 있어,
+  // 로스터/소속 기반으로 A/B를 재배치하지 않고 "좌측= A / 우측= B"로 고정합니다.
   const resolveAB = (r) => {
-    if (_applyRA && _applyRB) {
-      const wInA = _applyInRA(r.winName), wInB = _applyInRB(r.winName);
-      const winnerIsA = wInA ? true : wInB ? false : ((r.leftName||r.winName) === r.winName);
-      return winnerIsA
-        ? { playerA: r.wPlayer, playerB: r.lPlayer, winner: 'A' }
-        : { playerA: r.lPlayer, playerB: r.wPlayer, winner: 'B' };
-    }
-    // 선수 DB 소속 기반 배정 시도 (미리보기에서 인식된 팀명 사용)
-    const _paTA = window._previewTeamA, _paTB = window._previewTeamB;
-    if (r.wPlayer?.univ && r.wPlayer.univ !== '무소속' &&
-        r.lPlayer?.univ && r.lPlayer.univ !== '무소속' &&
-        _paTA && _paTA !== 'A팀' && _paTB && _paTB !== 'B팀') {
-      const _wInA = r.wPlayer.univ === _paTA;
-      const _lInA = r.lPlayer.univ === _paTA;
-      if (_wInA || _lInA) {
-        return _wInA
-          ? { playerA: r.wPlayer, playerB: r.lPlayer, winner: 'A' }
-          : { playerA: r.lPlayer, playerB: r.wPlayer, winner: 'B' };
-      }
-    }
-    // leftName 기준: 좌측이 승자면 playerA=wPlayer, 패자면 playerA=lPlayer
     const leftIsWin = (r.leftName||r.winName) === r.winName;
     return {
-      playerA: leftIsWin ? r.wPlayer : r.lPlayer,
-      playerB: leftIsWin ? r.lPlayer : r.wPlayer,
+      playerA: leftIsWin ? r.wPlayer : r.lPlayer, // 좌측 선수
+      playerB: leftIsWin ? r.lPlayer : r.wPlayer, // 우측 선수
       winner:  leftIsWin ? 'A' : 'B'
     };
   };
@@ -2233,15 +2737,16 @@ function pasteApply() {
         if(games.length) gjM.unshift(...games);
       });
     }
-    // mini 저장
+    // mini 저장 (시빌워 포함)
     if (_mixGroups.mini.length) {
       const _miniDG = {};
       _mixGroups.mini.forEach(r => { const d=r._lineDate||dateVal; (_miniDG[d]||(_miniDG[d]=[])).push(r); });
       Object.entries(_miniDG).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,grp])=>{
         const sid=genId();
-        grp.forEach(r=>{r._id=genId();applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',r._id,'','','미니대전');});
+        const _isCivil = grp.some(r=>r._miniType==='civil');
+        grp.forEach(r=>{r._id=genId();applyGameResult(r.wPlayer.name,r.lPlayer.name,d,r.map||'-',r._id,'','',_isCivil?'시빌워':'미니대전');});
         const games=grp.map(r=>({playerA:r.wPlayer?.name||'',playerB:r.lPlayer?.name||'',map:r.map&&r.map!=='-'?r.map:'',winner:'A'}));
-        miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:'mini'});
+        miniM.unshift({_id:sid,d,a:'A팀',b:'B팀',sa:grp.filter(r=>true).length,sb:0,sets:[{scoreA:grp.length,scoreB:0,winner:'A',games}],type:_isCivil?'civil':'mini'});
       });
     }
     save();
@@ -2981,6 +3486,41 @@ function openUnivmPasteModal() {
 ═══════════════════════════════════════════════════ */
 window._proPasteResults = null;
 window._proPasteMode = 'game'; // 'game' | 'set'
+window._proFormat = 0;         // 0=자유, 2/3/4=팀전 포맷
+
+/* ── 팀전 포맷 선택 ── */
+function setProFormat(n) {
+  window._proFormat = n;
+  const fmts = [0, 2, 3, 4];
+  fmts.forEach(f => {
+    const btn = document.getElementById(`pro-fmt-${f}-btn`);
+    if (!btn) return;
+    const on = f === n;
+    btn.style.border = on ? '1.5px solid #7c3aed' : '1.5px solid var(--border2)';
+    btn.style.background = on ? '#f5f3ff' : 'var(--white)';
+    btn.style.color = on ? '#7c3aed' : 'var(--text3)';
+    btn.style.fontWeight = on ? '900' : '700';
+  });
+  const hint = document.getElementById('pro-fmt-hint');
+  if (hint) {
+    hint.textContent = n === 0
+      ? '포맷 선택 시 경기당 게임 수가 자동 그룹화됩니다'
+      : `${n}:${n} 포맷 — 경기당 ${n*2}게임 (팀당 ${n}개씩) 기준으로 자동 그룹화`;
+  }
+  if (window._proPasteResults) proPreview();
+}
+
+/* ── 경기 구분선 삽입 ── */
+function insertProMatchSep() {
+  const ta = document.getElementById('pro-paste-input');
+  if (!ta) return;
+  const sep = '\n===경기구분===\n';
+  const pos = ta.selectionStart;
+  ta.value = ta.value.slice(0, pos) + sep + ta.value.slice(pos);
+  ta.selectionStart = ta.selectionEnd = pos + sep.length;
+  ta.focus();
+  proPreview();
+}
 
 function openProPasteModal() {
   if (!isLoggedIn) return alert('로그인이 필요합니다.');
@@ -2990,19 +3530,22 @@ function openProPasteModal() {
   const badge = document.getElementById('pro-paste-badge');
   const warn = document.getElementById('pro-paste-warn');
   const swapRow = document.getElementById('pro-swap-row');
+  const multiBadge = document.getElementById('pro-multi-badge');
   if (ta) ta.value = '';
   if (prev) prev.innerHTML = '';
   if (applyBtn) applyBtn.style.display = 'none';
   if (badge) badge.style.display = 'none';
   if (warn) warn.style.display = 'none';
   if (swapRow) swapRow.style.display = 'none';
+  if (multiBadge) multiBadge.style.display = 'none';
   window._proPasteResults = null;
   window._proPasteMode = 'game';
   // 날짜
   const di = document.getElementById('pro-paste-date');
   if (di) di.value = new Date().toISOString().slice(0, 10); // Always reset to today
-  // 경기방식 버튼 초기화
+  // 경기방식·포맷 초기화
   setProPasteMode('game');
+  setProFormat(0);
   om('proPasteModal');
 }
 
@@ -3038,12 +3581,21 @@ function proPreview() {
   const lines = splitPasteLines(raw);
   const results = [];
   let currentSet = 1;
+  let currentMatch = 0;  // 경기 구분선으로 나뉘는 경기 그룹 번호
+  // 경기 그룹별 날짜 추적
+  const matchDates = {};
   lines.forEach((line, idx) => {
     const trimmed = line.trim();
     if (!trimmed) return;
     // [승]/[패] 세트 결과 요약 라인 무시
     if (/^\[(?:승|패)\]/.test(trimmed)) return;
     if (/\((?:승|패)\)\s*\d+\s*[：:]\s*\d+\s*\((?:승|패)\)/.test(trimmed)) return;
+    // 경기 구분선 감지 (===경기구분=== 등) — 새 경기 그룹 시작
+    if (/경기\s*구분/.test(trimmed)) {
+      currentMatch++;
+      currentSet = 1;
+      return;
+    }
     const sepResult = parseSetSeparator(trimmed);
     if (sepResult !== null) {
       if (sepResult === 0) currentSet++;
@@ -3056,7 +3608,7 @@ function proPreview() {
           const lM2 = findPlayerByPartialName(r2.loseName);
           results.push({ winName: r2.winName, loseName: r2.loseName,
             leftName: r2.leftName||r2.winName, rightName: r2.rightName||r2.loseName,
-            map: r2.map||'-', setNum: currentSet,
+            map: r2.map||'-', setNum: currentSet, matchGroup: currentMatch,
             wPlayer: wM2.player, lPlayer: lM2.player,
             wCandidates: wM2.candidates, lCandidates: lM2.candidates,
             wSimilar: wM2.similar||[], lSimilar: lM2.similar||[], lineNum: idx+1 });
@@ -3064,11 +3616,15 @@ function proPreview() {
       }
       return;
     }
-    // 날짜 줄 감지 → pro-paste-date 자동 채움 (항상 덮어씀 — 프로는 경기 단위 날짜)
+    // 날짜 줄 감지 → 현재 경기 그룹 날짜로 저장
     const _proDateM = trimmed.match(/^(?:일자|날짜)\s*[:：]\s*(\d{4}-\d{2}-\d{2})/);
     if (_proDateM) {
-      const _pdi = document.getElementById('pro-paste-date');
-      if (_pdi) _pdi.value = _proDateM[1];
+      matchDates[currentMatch] = _proDateM[1];
+      // 첫 번째 경기면 날짜 입력창도 업데이트
+      if (currentMatch === 0) {
+        const _pdi = document.getElementById('pro-paste-date');
+        if (_pdi) _pdi.value = _proDateM[1];
+      }
       return;
     }
     const parsed = parsePasteLine(line);
@@ -3079,13 +3635,15 @@ function proPreview() {
     results.push({
       winName: parsed.winName, loseName: parsed.loseName,
       leftName: parsed.leftName || parsed.winName, rightName: parsed.rightName || parsed.loseName,
-      map: parsed.map || '-', setNum: currentSet,
+      map: parsed.map || '-', setNum: currentSet, matchGroup: currentMatch,
       wPlayer: wMatch.player, lPlayer: lMatch.player,
       wCandidates: wMatch.candidates, lCandidates: lMatch.candidates,
       wSimilar: wMatch.similar||[], lSimilar: lMatch.similar||[],
       lineNum: idx+1
     });
   });
+  // 경기 그룹별 날짜를 결과에 반영
+  window._proMatchDates = matchDates;
   // 기존 선택 복원: 사용자가 이미 유사이름을 선택한 경우 재파싱 시 유지
   if (window._proPasteResults && window._proPasteResults.length === results.length) {
     results.forEach((r, i) => {
@@ -3137,27 +3695,21 @@ function renderProPreview(results) {
 
   const allMaps = [...new Set([...maps.filter(m=>m&&m!=='-'), ...results.map(r=>r.map).filter(m=>m&&m!=='-')])].sort();
   const maxSet = Math.max(...results.map(r=>r.setNum||1), 1);
+  const fmt = window._proFormat || 0;
+  const fmtLabel = fmt > 0 ? `${fmt}:${fmt}` : '';
 
-  let html = `<div style="border:1px solid #ddd6fe;border-radius:10px;overflow:hidden;margin-bottom:10px">
-  <table style="margin:0;width:100%;font-size:12px;border-collapse:collapse">
-  <thead><tr style="background:linear-gradient(90deg,#5b21b6,#7c3aed);color:#fff">
-    <th style="padding:6px 8px;font-size:10px;width:56px">세트</th>
-    <th style="padding:6px 8px;font-size:10px;width:84px">맵</th>
-    <th style="padding:6px 10px;font-size:11px;font-weight:900">🔵 A팀</th>
-    <th style="padding:6px 4px;font-size:10px;width:44px;text-align:center">교체</th>
-    <th style="padding:6px 10px;font-size:11px;font-weight:900">🔴 B팀</th>
-    <th style="padding:6px 4px;font-size:10px;width:56px">상태</th>
-    <th style="padding:6px 4px;font-size:10px;width:32px;text-align:center">삭제</th>
-  </tr></thead><tbody>`;
+  // ── matchGroup별로 결과 분리 ──
+  const matchGroupNums = [...new Set(results.map(r => r.matchGroup||0))].sort((a,b)=>a-b);
+  const isMultiMatch = matchGroupNums.length > 1;
 
-  results.forEach((r, i) => {
+  // 행 렌더링 헬퍼 (matchGroup에 속하는 results의 글로벌 인덱스 i를 사용)
+  const renderRow = (r, i) => {
     const wOk = !!r.wPlayer;
     const lOk = !!r.lPlayer;
     const wAmbig = !wOk && (r.wCandidates?.length > 1);
     const lAmbig = !lOk && (r.lCandidates?.length > 1);
     const ok = wOk && lOk;
 
-    // A조 = 텍스트 왼쪽(leftName), B조 = 텍스트 오른쪽(rightName)
     const leftRaw  = r.leftName  || r.winName  || '';
     const rightRaw = r.rightName || r.loseName || '';
     const isLeftWinner = (leftRaw === r.winName);
@@ -3183,7 +3735,6 @@ function renderProPreview(results) {
     const winBadge  = `<span style="font-size:10px;color:#16a34a;font-weight:700;background:#dcfce7;border:1px solid #86efac;border-radius:4px;padding:1px 5px">승</span>`;
     const loseBadge = `<span style="font-size:10px;color:#dc2626;font-weight:700;background:#fee2e2;border:1px solid #fca5a5;border-radius:4px;padding:1px 5px">패</span>`;
 
-    // ── A조 셀 (텍스트 왼쪽 선수) ──
     const buildACell = () => {
       if (leftPlayer) {
         return `<div style="display:inline-flex;align-items:center;gap:6px">
@@ -3210,7 +3761,6 @@ function renderProPreview(results) {
       </div>`;
     };
 
-    // ── B조 셀 (텍스트 오른쪽 선수) ──
     const buildBCell = () => {
       if (rightPlayer) {
         return `<div style="display:inline-flex;align-items:center;gap:6px">
@@ -3237,25 +3787,21 @@ function renderProPreview(results) {
       </div>`;
     };
 
-    // 맵 드롭다운
     const mapOpts = `<option value="-">-</option>` +
       allMaps.map(m=>`<option value="${m}" ${m===r.map?'selected':''}>${m}</option>`).join('') +
       `<option value="__custom__">직접입력...</option>`;
     const mapCell = `<select class="pro-map-sel" data-idx="${i}"
       style="width:80px;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;font-size:11px">${mapOpts}</select>`;
 
-    // 세트 드롭다운
     let setOpts='';
     for(let s=1;s<=Math.max(maxSet,3);s++) setOpts+=`<option value="${s}" ${s===(r.setNum||1)?'selected':''}>${s}세트</option>`;
     const setCell = `<select class="pro-set-sel" data-idx="${i}"
       style="width:56px;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;font-size:11px">${setOpts}</select>`;
 
-    // 전체 교체 버튼 (중앙)
     const flipBtn = `<button class="pro-flip-btn" data-idx="${i}" title="A팀↔B팀 교체"
       style="padding:3px 6px;border-radius:5px;border:1px solid #ddd6fe;background:#f5f3ff;font-size:13px;cursor:pointer;transition:.12s"
       onmouseover="this.style.background='#ede9fe'" onmouseout="this.style.background='#f5f3ff'">⇄</button>`;
 
-    // 상태
     const statusBadge = ok
       ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:2px 5px;border-radius:8px;white-space:nowrap">✓저장</span>`
       : (wAmbig||lAmbig)
@@ -3267,7 +3813,7 @@ function renderProPreview(results) {
       onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff5f5'">🗑</button>`;
 
     const rowBg = ok ? '#f8faff' : (wAmbig||lAmbig) ? '#fffbeb' : '#fff8f8';
-    html += `<tr style="background:${rowBg};border-bottom:1px solid #f0f0f0">
+    return `<tr style="background:${rowBg};border-bottom:1px solid #f0f0f0">
       <td style="padding:5px 6px">${setCell}</td>
       <td style="padding:5px 6px">${mapCell}</td>
       <td style="padding:5px 10px">${buildACell()}</td>
@@ -3276,18 +3822,17 @@ function renderProPreview(results) {
       <td style="padding:5px 5px">${statusBadge}</td>
       <td style="padding:5px 4px;text-align:center">${delBtn}</td>
     </tr>`;
-  });
-  html += `</tbody></table></div>`;
+  };
 
-  // 세트별 점수 요약
-  if (savable.length > 0) {
+  // ── matchGroup별 점수 요약 헬퍼 ──
+  const renderGroupSummary = (groupRows) => {
+    const gSavable = groupRows.filter(r => r.wPlayer && r.lPlayer);
+    if (!gSavable.length) return '';
     const mode = window._proPasteMode || 'game';
     const setMap2 = {};
-    savable.forEach(r => {
+    gSavable.forEach(r => {
       const sn = r.setNum||1;
       if(!setMap2[sn]) setMap2[sn]={A:0,B:0};
-      // leftName이 있으면: 왼쪽 선수가 A조, 오른쪽이 B조
-      // 왼쪽 선수가 이겼으면 A++, 오른쪽 선수가 이겼으면 B++
       const leftN = r.leftName || r.winName;
       const isLeftWinner = (leftN === r.winName);
       if (isLeftWinner) setMap2[sn].A++; else setMap2[sn].B++;
@@ -3307,23 +3852,61 @@ function renderProPreview(results) {
     const totalA = (mode==='set'||multiSet) ? sa : Object.values(setMap2).reduce((s,v)=>s+v.A,0);
     const totalB = (mode==='set'||multiSet) ? sb : Object.values(setMap2).reduce((s,v)=>s+v.B,0);
     const winner = totalA>totalB?'🔵 A팀':totalB>totalA?'🔴 B팀':'무승부';
-    html += `<div style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
-      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">📊 결과 미리보기${multiSet?' (세트제)':''}</div>
-      ${multiSet?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">${setRows}</div>`:''}
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-weight:900;font-size:14px;color:#1d4ed8">🔵 A팀</span>
-        <span style="font-weight:900;font-size:22px">
-          <span style="color:${totalA>totalB?'#16a34a':'#dc2626'}">${totalA}</span>
-          <span style="color:var(--gray-l);font-size:14px"> : </span>
-          <span style="color:${totalB>totalA?'#16a34a':'#dc2626'}">${totalB}</span>
-        </span>
+    const fmtBadge = fmtLabel ? `<span style="font-size:10px;padding:2px 8px;border-radius:8px;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;font-weight:700">${fmtLabel}</span>` : '';
+    return `<div style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:${multiSet?'6px':'0'}">
+        ${fmtBadge}
+        <span style="font-size:11px;font-weight:700;color:var(--text3)">📊 결과${multiSet?' (세트제)':''}</span>
+        ${multiSet?'':'<span style="flex:1"></span>'}
+        ${!multiSet?`<span style="font-weight:900;font-size:14px;color:#1d4ed8">🔵 A팀</span>
+        <span style="font-weight:900;font-size:18px;color:${totalA>totalB?'#16a34a':'#dc2626'}">${totalA}</span>
+        <span style="font-size:12px;color:var(--gray-l)">:</span>
+        <span style="font-weight:900;font-size:18px;color:${totalB>totalA?'#16a34a':'#dc2626'}">${totalB}</span>
         <span style="font-weight:900;font-size:14px;color:#dc2626">🔴 B팀</span>
-        <span style="font-size:12px;font-weight:700;padding:3px 12px;border-radius:12px;background:${totalA===totalB?'#f1f5f9':'#dcfce7'};color:${totalA===totalB?'#64748b':'#15803d'}">
-          ${totalA===totalB?'🤝 무승부':'🏆 '+winner+' 승'}
-        </span>
+        <span style="font-size:12px;font-weight:700;padding:2px 10px;border-radius:10px;background:${totalA===totalB?'#f1f5f9':'#dcfce7'};color:${totalA===totalB?'#64748b':'#15803d'}">${totalA===totalB?'🤝 무승부':'🏆 '+winner+' 승'}</span>`:''}
       </div>
+      ${multiSet?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">${setRows}</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-weight:900;font-size:14px;color:#1d4ed8">🔵 A팀</span>
+        <span style="font-weight:900;font-size:18px;color:${totalA>totalB?'#16a34a':'#dc2626'}">${totalA}</span>
+        <span style="font-size:12px;color:var(--gray-l)">:</span>
+        <span style="font-weight:900;font-size:18px;color:${totalB>totalA?'#16a34a':'#dc2626'}">${totalB}</span>
+        <span style="font-weight:900;font-size:14px;color:#dc2626">🔴 B팀</span>
+        <span style="font-size:12px;font-weight:700;padding:2px 10px;border-radius:10px;background:${totalA===totalB?'#f1f5f9':'#dcfce7'};color:${totalA===totalB?'#64748b':'#15803d'}">${totalA===totalB?'🤝 무승부':'🏆 '+winner+' 승'}</span>
+      </div>`:''}
     </div>`;
-  }
+  };
+
+  // ── 경기 그룹별 HTML 빌드 ──
+  let html = '';
+  matchGroupNums.forEach(mg => {
+    const groupRows = results.map((r,i) => ({r,i})).filter(({r}) => (r.matchGroup||0) === mg);
+    if (!groupRows.length) return;
+    const dateVal = (window._proMatchDates||{})[mg] || document.getElementById('pro-paste-date')?.value || '';
+    if (isMultiMatch) {
+      html += `<div style="margin-bottom:10px;border:2px solid #7c3aed;border-radius:12px;overflow:hidden">
+        <div style="background:linear-gradient(90deg,#5b21b6,#7c3aed);color:#fff;padding:7px 14px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;font-weight:900">🏅 경기 ${mg+1}</span>
+          ${dateVal?`<span style="font-size:11px;opacity:.8">${dateVal}</span>`:''}
+          ${fmtLabel?`<span style="font-size:11px;background:rgba(255,255,255,.2);border-radius:8px;padding:1px 7px">${fmtLabel}</span>`:''}
+        </div>`;
+    }
+    html += `<div style="${isMultiMatch?'padding:8px 10px':'border:1px solid #ddd6fe;border-radius:10px;overflow:hidden;margin-bottom:10px'}">
+    <table style="margin:0;width:100%;font-size:12px;border-collapse:collapse">
+    <thead><tr style="background:${isMultiMatch?'#f5f3ff':'linear-gradient(90deg,#5b21b6,#7c3aed)'};color:${isMultiMatch?'#5b21b6':'#fff'}">
+      <th style="padding:6px 8px;font-size:10px;width:56px">세트</th>
+      <th style="padding:6px 8px;font-size:10px;width:84px">맵</th>
+      <th style="padding:6px 10px;font-size:11px;font-weight:900">🔵 A팀</th>
+      <th style="padding:6px 4px;font-size:10px;width:44px;text-align:center">교체</th>
+      <th style="padding:6px 10px;font-size:11px;font-weight:900">🔴 B팀</th>
+      <th style="padding:6px 4px;font-size:10px;width:56px">상태</th>
+      <th style="padding:6px 4px;font-size:10px;width:32px;text-align:center">삭제</th>
+    </tr></thead><tbody>`;
+    groupRows.forEach(({r,i}) => { html += renderRow(r, i); });
+    html += `</tbody></table></div>`;
+    html += renderGroupSummary(groupRows.map(({r})=>r));
+    if (isMultiMatch) html += `</div>`;
+  });
 
   // ── DOM 업데이트 ──
   previewEl.innerHTML = html;
@@ -3496,86 +4079,94 @@ function proApply() {
   if (!window._proPasteResults) return;
   const savable = window._proPasteResults.filter(r => r.wPlayer && r.lPlayer);
   if (!savable.length) return alert('저장 가능한 경기가 없습니다.');
-  const dateVal = document.getElementById('pro-paste-date')?.value || new Date().toISOString().slice(0,10);
-  const matchId = genId();
+  const defaultDate = document.getElementById('pro-paste-date')?.value || new Date().toISOString().slice(0,10);
   const mode = window._proPasteMode || 'game';
+  const fmt = window._proFormat || 0;
 
-  // ── A조/B조 판별: 텍스트에서 왼쪽 선수 = A조, 오른쪽 선수 = B조 ──
-  // parsePasteLine이 leftName/rightName을 보존하므로 이를 활용
-  // leftName의 선수가 A조, rightName의 선수가 B조
+  // (요청사항) 프로리그 자동인식 저장 전 중복 확인
+  const _toAdd = savable.map(r => {
+    const d = (window._proMatchDates||{})[(r.matchGroup||0)] || defaultDate;
+    const leftN = r.leftName || r.winName;
+    const rightN = r.rightName || r.loseName;
+    const isLeftWinner = (leftN === r.winName);
+    const w = isLeftWinner ? leftN : rightN;
+    const l = isLeftWinner ? rightN : leftN;
+    return { mode:'pro', d, w, l, map: r.map || '' };
+  });
+  if (!_confirmDupBeforeSave(_toAdd)) return;
+
+  // A조/B조 판별 헬퍼
   const resolveTeam = (r) => {
-    // leftName/rightName이 있으면 그것을 기준으로 배정
-    const leftN = r.leftName || r.winName;   // 텍스트에서 왼쪽 선수 이름
-    const rightN = r.rightName || r.loseName; // 텍스트에서 오른쪽 선수 이름
-    // 실제 선수 객체 찾기
+    const leftN = r.leftName || r.winName;
+    const rightN = r.rightName || r.loseName;
     const leftPlayerObj = players.find(p => p.name === leftN) || r.wPlayer;
     const rightPlayerObj = players.find(p => p.name === rightN) || r.lPlayer;
-    // null safety: 찾을 수 없으면 fallback
     const playerA = leftPlayerObj || r.wPlayer;
     const playerB = rightPlayerObj || r.lPlayer;
-    // 왼쪽 선수가 A조
     const isLeftWinner = (leftN === r.winName);
-    return {
-      playerA,   // A조 (텍스트 왼쪽)
-      playerB,   // B조 (텍스트 오른쪽)
-      winner: isLeftWinner ? 'A' : 'B'  // 승자가 A조이면 'A', B조이면 'B'
-    };
+    return { playerA, playerB, winner: isLeftWinner ? 'A' : 'B' };
   };
 
-  // setsSnap 구성
-  const setMap2 = {};
-  savable.forEach(r => {
-    const sn = r.setNum||1;
-    if(!setMap2[sn]) setMap2[sn]=[];
-    setMap2[sn].push(r);
-  });
-  const setsSnap = Object.keys(setMap2).sort((a,b)=>a-b).map(sn => {
-    const rows = setMap2[sn];
-    const games = rows.map(r => {
-      const t = resolveTeam(r);
-      return {
-        playerA: t.playerA.name,
-        playerB: t.playerB.name,
-        map: r.map||'-',
-        winner: t.winner
-      };
+  // matchGroup별로 그룹핑
+  const matchGroupNums = [...new Set(savable.map(r => r.matchGroup||0))].sort((a,b)=>a-b);
+  let totalSaved = 0;
+
+  matchGroupNums.forEach(mg => {
+    const groupRows = savable.filter(r => (r.matchGroup||0) === mg);
+    if (!groupRows.length) return;
+    const matchId = genId();
+    const dateVal = (window._proMatchDates||{})[mg] || defaultDate;
+
+    // setsSnap 구성
+    const setMap2 = {};
+    groupRows.forEach(r => {
+      const sn = r.setNum||1;
+      if(!setMap2[sn]) setMap2[sn]=[];
+      setMap2[sn].push(r);
     });
-    const scoreA = games.filter(g=>g.winner==='A').length;
-    const scoreB = games.filter(g=>g.winner==='B').length;
-    const setWinner = scoreA > scoreB ? 'A' : scoreB > scoreA ? 'B' : 'A';
-    return { scoreA, scoreB, winner: setWinner, games };
+    const setsSnap = Object.keys(setMap2).sort((a,b)=>a-b).map(sn => {
+      const rows = setMap2[sn];
+      const games = rows.map(r => {
+        const t = resolveTeam(r);
+        return { playerA: t.playerA.name, playerB: t.playerB.name, map: r.map||'-', winner: t.winner };
+      });
+      const scoreA = games.filter(g=>g.winner==='A').length;
+      const scoreB = games.filter(g=>g.winner==='B').length;
+      const setWinner = scoreA > scoreB ? 'A' : scoreB > scoreA ? 'B' : 'A';
+      return { scoreA, scoreB, winner: setWinner, games };
+    });
+
+    // 경기방식 스코어
+    const isMultiSet = Object.keys(setMap2).length > 1;
+    let sa, sb;
+    if (mode==='set' || isMultiSet) {
+      sa = setsSnap.filter(s=>s.winner==='A').length;
+      sb = setsSnap.filter(s=>s.winner==='B').length;
+    } else {
+      sa = setsSnap.reduce((s,st)=>s+st.scoreA,0);
+      sb = setsSnap.reduce((s,st)=>s+st.scoreB,0);
+    }
+
+    // A조/B조 멤버 목록
+    const mA=[], mB=[];
+    groupRows.forEach(r => {
+      const t = resolveTeam(r);
+      if(!mA.find(x=>x.name===t.playerA.name)) mA.push({name:t.playerA.name,univ:t.playerA.univ||'',race:t.playerA.race||'',tier:t.playerA.tier||''});
+      if(!mB.find(x=>x.name===t.playerB.name)) mB.push({name:t.playerB.name,univ:t.playerB.univ||'',race:t.playerB.race||'',tier:t.playerB.tier||''});
+    });
+
+    proM.unshift({_id:matchId, d:dateVal, sa, sb,
+      teamALabel:'A팀', teamBLabel:'B팀',
+      teamAMembers:mA, teamBMembers:mB,
+      sets:setsSnap, univWins:{}, univLosses:{},
+      ...(fmt > 0 ? {fmt} : {})
+    });
+    totalSaved += groupRows.length;
   });
-
-  // 경기방식 스코어
-  const isMultiSet = Object.keys(setMap2).length > 1;
-  let sa, sb;
-  if (mode==='set' || isMultiSet) {
-    sa = setsSnap.filter(s=>s.winner==='A').length;
-    sb = setsSnap.filter(s=>s.winner==='B').length;
-  } else {
-    const totalA = setsSnap.reduce((s,st)=>s+st.scoreA,0);
-    const totalB = setsSnap.reduce((s,st)=>s+st.scoreB,0);
-    sa = totalA; sb = totalB;
-  }
-
-  // 개인 전적 반영 (승자=wPlayer 그대로)
-  savable.forEach(r => applyGameResult(r.wPlayer.name, r.lPlayer.name, dateVal, r.map||'-', matchId, '', '', '프로리그'));
-
-  // A조/B조 멤버 목록 (팀 배정 기준으로)
-  const mA=[], mB=[];
-  savable.forEach(r => {
-    const t = resolveTeam(r);
-    if(!mA.find(x=>x.name===t.playerA.name)) mA.push({name:t.playerA.name,univ:t.playerA.univ||'',race:t.playerA.race||'',tier:t.playerA.tier||''});
-    if(!mB.find(x=>x.name===t.playerB.name)) mB.push({name:t.playerB.name,univ:t.playerB.univ||'',race:t.playerB.race||'',tier:t.playerB.tier||''});
-  });
-
-  proM.unshift({_id:matchId, d:dateVal, sa, sb,
-    teamALabel:'A팀', teamBLabel:'B팀',
-    teamAMembers:mA, teamBMembers:mB,
-    sets:setsSnap, univWins:{}, univLosses:{}});
 
   if (typeof fixPoints==='function') fixPoints();
   save();
+  if (typeof syncProM==='function') syncProM();
   render();
   closeProPasteModal();
 
@@ -3584,10 +4175,12 @@ function proApply() {
   if (tabBtn) tabBtn.click();
 
   // 성공 토스트
+  const matchCount = matchGroupNums.length;
   const toast = document.createElement('div');
-  toast.textContent = `✅ ${savable.length}건 프로리그 저장 완료!`;
+  toast.textContent = matchCount > 1
+    ? `✅ ${matchCount}경기 (${totalSaved}게임) 프로리그 저장 완료!`
+    : `✅ ${totalSaved}건 프로리그 저장 완료!`;
   toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#7c3aed;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
   document.body.appendChild(toast);
   setTimeout(()=>toast.remove(), 2800);
 }
-

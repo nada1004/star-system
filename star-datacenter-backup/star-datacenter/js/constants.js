@@ -5,6 +5,41 @@ let TIERS = (()=>{const t=J('su_tiers')||['G','K','JA','J','S','0티어','1티�
 const RACES=['T','Z','P','N'];
 const RNAME={T:'테란',Z:'저그',P:'프로토스',N:'종족미정'};
 const RANK_PTS={'🥇 1위':3,'🥈 2위':0,'🥉 3위':-3,'4강':0,'8강':0,'출전':0};
+
+/* ══════════════════════════════════════
+   스트리머 프로필 이미지 공통 스타일
+   - 현황판 칩 프로필 이미지 설정(su_bcp_shape)을 "프로필 이미지 모양"의 기준으로도 사용
+   - 인라인 스타일에서도 적용 가능하도록 CSS 변수로 노출
+══════════════════════════════════════ */
+function applyProfileShapeVars(){
+  try{
+    const shape = localStorage.getItem('su_bcp_shape') || 'circle';
+    const radius = (shape === 'square') ? '5px' : '50%';
+    document.documentElement.style.setProperty('--su_profile_radius', radius);
+  }catch(e){}
+}
+// 초기 1회 적용
+try{ applyProfileShapeVars(); }catch(e){}
+
+/* ══════════════════════════════════════
+   대학 로고 공통 스타일 (현황판/설정 등)
+   - 모양/크기/레이아웃(박스) 크기를 CSS 변수로 노출
+══════════════════════════════════════ */
+function applyUnivLogoVars(){
+  try{
+    const shape = localStorage.getItem('su_ul_shape') || 'circle'; // circle|square
+    const size  = parseInt(localStorage.getItem('su_ul_size') || '34', 10);
+    const box   = parseInt(localStorage.getItem('su_ul_box')  || '46', 10);
+    const radius = (shape === 'square') ? '10px' : '50%';
+    document.documentElement.style.setProperty('--su_univ_logo_radius', radius);
+    document.documentElement.style.setProperty('--su_univ_logo_size', size + 'px');
+    document.documentElement.style.setProperty('--su_univ_logo_box', box + 'px');
+    // 대학 상세(모달)용 (요청: 카드 로고 이미지 크기 조정이 그대로 반영되게)
+    document.documentElement.style.setProperty('--su_univ_logo_size_detail', size + 'px');
+    document.documentElement.style.setProperty('--su_univ_logo_box_detail', box + 'px');
+  }catch(e){}
+}
+try{ applyUnivLogoVars(); }catch(e){}
 function escJS(s){
   return String(s??'')
     .replace(/\\/g,'\\\\')
@@ -145,10 +180,8 @@ let _ttSub     = 'records';
 let indM       = J('su_indm') || [];
 let gjM        = J('su_gjm')  || [];
 let notices    = J('su_notices') || [];
-// 보라크루 멤버: [{name, photo, link, crewName}]
-let crew       = J('su_crew') || [];
-// 크루 목록: [{id, name, color, logo, bgImage, bgAlpha, labelAlpha}]
-let crewCfg    = J('su_crewcfg') || [];
+// (요청사항) 보라크루 기능 삭제: 기존 저장 키 정리
+try{ localStorage.removeItem('su_crew'); localStorage.removeItem('su_crewcfg'); }catch(e){}
 
 let BLD = {};
 let openDetails = {};
@@ -297,10 +330,24 @@ function saveCustomStatusIcon(slot, emoji){
 }
 function getPlayerPhotoHTML(playerName, size, extraStyle){
   size=size||'32px'; extraStyle=extraStyle||'';
+  // (요청사항) 프로필 이미지 크기 배율(전역) — 설정에서 조절
+  // - 기존 코드가 size 문자열(예: "22px")을 넘기므로, 숫자만 뽑아 배율 적용
+  let _scale=1;
+  try{
+    const v=parseFloat(localStorage.getItem('su_avatar_scale')||'1');
+    if(!isNaN(v)) _scale=Math.max(0.7, Math.min(1.6, v));
+  }catch(e){}
+  try{
+    const m=String(size).match(/^(\d+(?:\.\d+)?)px$/);
+    if(m && _scale!==1){
+      const n=parseFloat(m[1]);
+      size=(n*_scale).toFixed(2).replace(/\.00$/,'')+'px';
+    }
+  }catch(e){}
   const p=players.find(x=>x.name===playerName);
   const hasBorder=extraStyle.includes('border');
   const bdr=hasBorder?'':'border:1.5px solid var(--border);';
-  const base='display:inline-block;width:'+size+';height:'+size+';border-radius:50%;flex-shrink:0;vertical-align:middle;'+extraStyle;
+  const base='display:inline-block;width:'+size+';height:'+size+';border-radius:var(--su_profile_radius,50%);flex-shrink:0;vertical-align:middle;'+extraStyle;
   const safeName=(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const clickStyle='cursor:pointer;';
   const clickAttr='onclick="openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
@@ -341,10 +388,10 @@ function localSave(){
     const _pNoPhoto=players.map(p=>{
       const c={...p};
       if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
-      // eloAfter(render.js fallback으로 재계산 가능) + time(위치 순으로 대체) 제거
+      // eloAfter(render.js fallback으로 재계산 가능)만 제거, time은 중복 dedup에 필요하므로 유지
       if(c.history&&c.history.length){
         // eslint-disable-next-line no-unused-vars
-        c.history=c.history.map(({eloAfter,time,...h})=>h);
+        c.history=c.history.map(({eloAfter,...h})=>h);
       }
       return c;
     });
@@ -380,8 +427,6 @@ function localSave(){
     if(typeof boardPlayerOrder!=='undefined') _lsSave('su_bpo',boardPlayerOrder);
     if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
     _lsSave('su_notices',notices);
-    _lsSave('su_crew',crew);
-    _lsSave('su_crewcfg',crewCfg);
     _lsSave('su_seasons',seasons);
     _lsSave('su_cal_sched',calScheduled);
     localStorage.setItem('su_last_save_time',Date.now().toString());
@@ -510,29 +555,15 @@ function gcHex8Hover(n,alpha){
   const a=Math.round((alpha||0.12)*255).toString(16).padStart(2,'0');
   return c+a;
 }
-// 스타대학 아이콘 URL 매핑
-const UNIV_ICONS={
-  '엠비대':'https://i.ibb.co/6cfNW2Nt/image.png',
-  '와플대':'https://i.ibb.co/Zp8f2w8c/image.png',
-  '정선대':'https://i.ibb.co/QFc22RMp/image.png',
-  '츠캄몬스타즈':'https://i.ibb.co/ZpRrMWMt/image.png',
-  '수술대':'https://i.ibb.co/Q7CGzwck/image.png',
-  'JSA':'https://i.ibb.co/tpdY6Z6T/jsa.png',
-  '늪지대':'https://i.ibb.co/1YhTgzdS/image.png',
-  '뉴캣슬':'https://i.ibb.co/qM7NQVMr/image.png',
-  '씨나인':'https://i.ibb.co/8nyMJyWh/image.png',
-  'HM':'https://i.ibb.co/ksZY7Ksq/hm-1.png',
-  'BGM':'https://i.ibb.co/PGL06DJb/bgm-1.png',
-  '흑카데미':'https://i.ibb.co/VW7Rw0G7/image.png',
-  '케이대':'https://i.ibb.co/8n196Hq8/image.png',
-  '이노대':'https://i.ibb.co/pjK8Hb1Z/image.png'
-};
+// ⚠️ 대학 아이콘(로고)은 코드에 하드코딩하지 않습니다.
+// - 저작권/출처 이슈가 발생할 수 있어, 로고 URL은 data.json(univCfg.icon / univCfg.img)로만 관리합니다.
+const UNIV_ICONS = {};
 // 기본 대학 아이콘 SVG (아이콘이 없는 대학에 사용)
 const DEFAULT_UNIV_ICON_SVG=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" data-univ-icon="1" style="flex-shrink:0;opacity:0.75;vertical-align:middle"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
 // 대학명 옆에 아이콘 img 태그 반환 (아이콘 없으면 기본 SVG 반환)
 function gUI(n,size='1em'){
-  const url=(univCfg.find(x=>x.name===n)||{}).icon||UNIV_ICONS[n]||'';
-  if(url)return `<img src="${url}" alt="" data-univ-icon="1" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;margin-right:3px;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">`;
+  const url=(univCfg.find(x=>x.name===n)||{}).icon || (univCfg.find(x=>x.name===n)||{}).img || '';
+  if(url)return `<img src="${url}" alt="" data-univ-icon="1" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;margin-right:3px;border-radius:var(--su_univ_logo_radius,2px);flex-shrink:0" onerror="this.style.display='none'">`;
   // 기본 아이콘 SVG
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" data-univ-icon="1" style="width:${size};height:${size};flex-shrink:0;opacity:0.75;vertical-align:middle;margin-right:3px"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
 }
@@ -552,11 +583,11 @@ function injectUnivIcons(container){
     if(!el.style.display||el.style.display==='inline-block')el.style.display='inline-flex';
     el.style.alignItems='center';
     el.style.gap='3px';
-    const url=UNIV_ICONS[name]||(univCfg.find(x=>x.name===name)||{}).icon||'';
+    const url=(univCfg.find(x=>x.name===name)||{}).icon || (univCfg.find(x=>x.name===name)||{}).img || '';
     if(url){
       const img=document.createElement('img');
       img.src=url; img.setAttribute('data-univ-icon','1');
-      img.style.cssText='width:1em;height:1em;object-fit:contain;vertical-align:middle;border-radius:2px;flex-shrink:0';
+      img.style.cssText='width:1em;height:1em;object-fit:contain;vertical-align:middle;border-radius:var(--su_univ_logo_radius,2px);flex-shrink:0';
       img.onerror=function(){this.style.display='none';};
       el.insertBefore(img,el.firstChild);
     } else {
@@ -605,12 +636,21 @@ function calcElo(winnerElo, loserElo){
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
   // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
   function _findPlayer(name){
+    // 종족 접미사 제거: "김명운Z", "샤이니T" 같이 이름 뒤에 종족이 붙은 입력도 허용
+    // (붙여넣기/자동인식에서 자주 등장)
+    const raw = (name||'').trim();
+    const cleanedRace = raw.replace(/\s*[TZPN]$/i,'').trim();
     let p=players.find(x=>x.name===name);
     if(p)return p;
-    const low=name.toLowerCase();
+    // cleanedRace 우선으로도 재시도
+    if (cleanedRace && cleanedRace !== name) {
+      p = players.find(x => x.name === cleanedRace);
+      if (p) return p;
+    }
+    const low=cleanedRace.toLowerCase();
     p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
     if(p)return p;
-    const ns=name.replace(/\s+/g,'');
+    const ns=cleanedRace.replace(/\s+/g,'');
     return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
   }
   const w=_findPlayer(winName);
@@ -618,12 +658,27 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   if(!w||!l||w===l)return;
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
-  // 중복 체크: matchId가 있으면 matchId로, 없으면 날짜+맵+상대로 체크
+  // 중복 체크: gameId(_sN_gN 포함)면 matchId 자체가 고유 → matchId만 비교
+  // 경기 단위 matchId면 matchId+opp 조합으로 비교, 없으면 date+map+opp fallback
   const d=date||new Date().toISOString().slice(0,10);
   const m=map||'-';
-  const wDup=(w.history||[]).find(h=>(matchId&&h.matchId===matchId&&h.map===m&&h.opp===l.name)||(!matchId&&h.date===d&&h.map===m&&h.opp===l.name));
-  const lDup=(l.history||[]).find(h=>(matchId&&h.matchId===matchId&&h.map===m&&h.opp===w.name)||(!matchId&&h.date===d&&h.map===m&&h.opp===w.name));
-  if(wDup||lDup)return; // 이미 기록되어 있으면 중단
+  const isGameId=matchId&&matchId.includes('_s')&&matchId.includes('_g');
+  // matchId 기반 체크
+  const wDupMatch=matchId
+    ?(isGameId
+      ?(w.history||[]).find(h=>h.matchId===matchId)
+      :(w.history||[]).find(h=>h.matchId===matchId&&h.opp===l.name))
+    :null;
+  const lDupMatch=matchId
+    ?(isGameId
+      ?(l.history||[]).find(h=>h.matchId===matchId)
+      :(l.history||[]).find(h=>h.matchId===matchId&&h.opp===w.name))
+    :null;
+  // date+map+opp 기반 체크 (matchId가 없거나 다른 경우에도 체크)
+  const wDupFallback=(w.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===l.name);
+  const lDupFallback=(l.history||[]).find(h=>h.date===d&&h.map===m&&h.opp===w.name);
+  // 둘 중 하나라도 중복이면 중단
+  if(wDupMatch||lDupMatch||wDupFallback||lDupFallback)return; // 이미 기록되어 있으면 중단
   w.win++;l.loss++;w.points+=3;l.points-=3;
   // ELO 계산
   const wElo=w.elo||ELO_DEFAULT;
@@ -637,4 +692,304 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   const lu=univL||l.univ||'';
   w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
   l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
+}
+
+function rebuildAllPlayerHistory() {
+  if(!confirm('모든 스트리머의 경기 기록을 대전 데이터에서 다시 생성합니다.\n\n⚠️ 기존 history가 초기화되고 대전 기록 기반으로 재구성됩니다.\n\n계속하시겠습니까?')) return;
+
+  // 1. 모든 선수의 history, win, loss, points, elo 초기화
+  players.forEach(p => {
+    p.history = [];
+    p.win = 0;
+    p.loss = 0;
+    p.points = 0;
+    p.elo = ELO_DEFAULT;
+  });
+
+  let count = 0;
+
+  // 2. miniM에서 복구
+  (miniM || []).forEach(m => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        // (요청/수정) 시빌워(내전)는 팀 라벨(A/B)과 무관하게 "선수 실제 소속 대학"을 기록
+        // → univW/univL을 비워두면 applyGameResult가 w.univ / l.univ를 사용
+        const isCivil = (m.type === 'civil') || (m.a === 'A팀' && m.b === 'B팀');
+        const univW = isCivil ? '' : (g.winner === 'A' ? (m.a || '') : (m.b || ''));
+        const univL = isCivil ? '' : (g.winner === 'A' ? (m.b || '') : (m.a || ''));
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
+        count++;
+      });
+    });
+  });
+
+  // 3. univM에서 복구
+  (univM || []).forEach(m => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const univW = g.winner === 'A' ? m.a : m.b;
+        const univL = g.winner === 'A' ? m.b : m.a;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대학대전');
+        count++;
+      });
+    });
+  });
+
+  // 4. ckM에서 복구
+  (ckM || []).forEach(m => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '대학CK');
+        count++;
+      });
+    });
+  });
+
+  // 5. proM에서 복구
+  (proM || []).forEach(m => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '프로리그');
+        count++;
+      });
+    });
+  });
+
+  // 6. ttM에서 복구
+  (ttM || []).forEach(m => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '티어대회');
+        count++;
+      });
+    });
+  });
+
+  // 7. indM에서 복구
+  (indM || []).forEach(m => {
+    if(!m.wName || !m.lName) return;
+    applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id || genId(), '', '', m._proLabel ? '프로리그' : '개인전');
+    count++;
+  });
+
+  // 8. gjM에서 복구
+  (gjM || []).forEach(m => {
+    if(!m.wName || !m.lName) return;
+    applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id || genId(), '', '', m._proLabel ? '프로리그끝장전' : '끝장전');
+    count++;
+  });
+
+  // 9. comps에서 복구
+  (comps || []).forEach(m => {
+    if(!m._id) return;
+    (m.sets || []).forEach((set, setIdx) => {
+      (set.games || []).forEach((g, gameIdx) => {
+        if(!g.playerA || !g.playerB || !g.winner) return;
+        const wName = g.winner === 'A' ? g.playerA : g.playerB;
+        const lName = g.winner === 'A' ? g.playerB : g.playerA;
+        const univW = g.winner === 'A' ? m.a : m.b;
+        const univL = g.winner === 'A' ? m.b : m.a;
+        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대회');
+        count++;
+      });
+    });
+  });
+
+  // 10. tourneys에서 복구
+  if (typeof tourneys !== 'undefined') {
+    tourneys.forEach(tn => {
+      const isTier = tn.type === 'tier';
+      (tn.groups || []).forEach(grp => {
+        (grp.matches || []).forEach(m => {
+          if (!m._id) return;
+          (m.sets || []).forEach((set, setIdx) => {
+            (set.games || []).forEach((g, gameIdx) => {
+              if (!g.playerA || !g.playerB || !g.winner) return;
+              const wName = g.winner === 'A' ? g.playerA : g.playerB;
+              const lName = g.winner === 'A' ? g.playerB : g.playerA;
+              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+              applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '조별리그');
+              count++;
+            });
+          });
+        });
+      });
+      Object.values((tn.bracket || {}).matchDetails || {}).forEach(m => {
+        if (!m._id) return;
+        (m.sets || []).forEach((set, setIdx) => {
+          (set.games || []).forEach((g, gameIdx) => {
+            if (!g.playerA || !g.playerB || !g.winner) return;
+            const wName = g.winner === 'A' ? g.playerA : g.playerB;
+            const lName = g.winner === 'A' ? g.playerB : g.playerA;
+            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+            applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
+            count++;
+          });
+        });
+      });
+      ((tn.bracket || {}).manualMatches || []).forEach(m => {
+        if (!m._id) return;
+        (m.sets || []).forEach((set, setIdx) => {
+          (set.games || []).forEach((g, gameIdx) => {
+            if (!g.playerA || !g.playerB || !g.winner) return;
+            const wName = g.winner === 'A' ? g.playerA : g.playerB;
+            const lName = g.winner === 'A' ? g.playerB : g.playerA;
+            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+            applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
+            count++;
+          });
+        });
+      });
+    });
+  }
+
+  // 11. proTourneys에서 복구
+  if (typeof proTourneys !== 'undefined') {
+    proTourneys.forEach(tn => {
+      (tn.groups || []).forEach(grp => {
+        (grp.matches || []).forEach((m, matchIdx) => {
+          if (!m._id) return;
+          (m.sets || []).forEach((set, setIdx) => {
+            (set.games || []).forEach((g, gameIdx) => {
+              if (!g.playerA || !g.playerB || !g.winner) return;
+              const wName = g.winner === 'A' ? g.playerA : g.playerB;
+              const lName = g.winner === 'A' ? g.playerB : g.playerA;
+              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+              applyGameResult(wName, lName, m.d || '', g.map || '', gameId, '', '', '프로리그대회');
+              count++;
+            });
+          });
+        });
+      });
+      (tn.bracket || []).forEach((rnd, rndIdx) => {
+        rnd.forEach((m, matchIdx) => {
+          if (!m || !m._id) return;
+          (m.sets || []).forEach((set, setIdx) => {
+            (set.games || []).forEach((g, gameIdx) => {
+              if (!g.playerA || !g.playerB || !g.winner) return;
+              const wName = g.winner === 'A' ? g.playerA : g.playerB;
+              const lName = g.winner === 'A' ? g.playerB : g.playerA;
+              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+              applyGameResult(wName, lName, m.d || '', g.map || '', gameId, '', '', '프로리그대회');
+              count++;
+            });
+          });
+        });
+      });
+      if (tn.thirdPlace && tn.thirdPlace._id) {
+        const tp = tn.thirdPlace;
+        (tp.sets || []).forEach((set, setIdx) => {
+          (set.games || []).forEach((g, gameIdx) => {
+            if (!g.playerA || !g.playerB || !g.winner) return;
+            const wName = g.winner === 'A' ? g.playerA : g.playerB;
+            const lName = g.winner === 'A' ? g.playerB : g.playerA;
+            const gameId = g._id || `${tp._id}_s${setIdx}_g${gameIdx}`;
+            applyGameResult(wName, lName, tp.d || '', g.map || '', gameId, '', '', '프로리그대회');
+            count++;
+          });
+        });
+      }
+      (tn.teamMatches || []).forEach((tm, tmIdx) => {
+        (tm.games || []).forEach((g, gameIdx) => {
+          if (!g.wName || !g.lName) return;
+          const gameId = tm._id ? `${tm._id}_g${gameIdx}` : genId();
+          applyGameResult(g.wName, g.lName, tm.d || '', g.map || '', gameId, '', '', '프로리그대회');
+          count++;
+        });
+      });
+    });
+  }
+
+  save();
+  alert(`✅ ${count}개의 경기가 스트리머 기록에 복구되었습니다!`);
+  render();
+}
+
+function deduplicatePlayerHistory(){
+  if(!confirm('중복 경기 기록을 제거합니다.\n\n완전히 동일한 항목(같은 게임 ID 또는 같은 time+matchId+상대+결과+맵)만 제거합니다.\n계속하시겠습니까?')) return;
+
+  let totalRemoved=0;
+  players.forEach(p=>{
+    if(!p.history||!p.history.length)return;
+    const seen=new Set();
+    const before=p.history.length;
+    p.history=p.history.filter(h=>{
+      const mid=h.matchId||'';
+      // 게임 단위 고유 ID(_sN_gN 포함)면 matchId 자체가 고유 키
+      const isGameId=mid.includes('_s')&&mid.includes('_g');
+      let key;
+      if(isGameId){
+        key=mid;
+      } else if(h.time){
+        // time이 있으면 포함하여 진짜 중복만 제거 (합법적 재매치와 구분)
+        key=`${mid}|${h.opp||''}|${h.result||''}|${h.map||'-'}|${h.time}`;
+      } else {
+        // time도 없고 bare matchId면 건드리지 않음 (합법적 재매치와 구분 불가)
+        return true;
+      }
+      if(seen.has(key))return false;
+      seen.add(key);
+      return true;
+    });
+    totalRemoved+=before-p.history.length;
+  });
+
+  // 승패/포인트/ELO 재계산 (날짜 오름차순으로 delta 누적)
+  players.forEach(p=>{
+    p.win=0;p.loss=0;p.points=0;p.elo=ELO_DEFAULT;
+    const sorted=[...(p.history||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    sorted.forEach(h=>{
+      if(h.result==='승'){p.win++;p.points+=3;}
+      else if(h.result==='패'){p.loss++;p.points-=3;}
+      if(h.eloDelta!=null)p.elo=(p.elo||ELO_DEFAULT)+h.eloDelta;
+    });
+  });
+
+  if(typeof fixPoints==='function')fixPoints();
+  save();
+  alert(`🧹 중복 제거 완료: ${totalRemoved}개 항목 삭제`);
+  render();
+}
+
+// game 객체에서 playerA, playerB, winner 정보를 추출해서
+// applyGameResult를 호출한다.
+function updatePlayerHistoryFromGame(game, date, mode){
+  if(!game.playerA || !game.playerB || !game.winner) return;
+
+  const winName = game.winner === 'A' ? game.playerA : 
+                  game.winner === 'B' ? game.playerB : game.winner;
+  const loseName = game.winner === 'A' ? game.playerB : 
+                   game.winner === 'B' ? game.playerA : '';
+
+  if(!winName || !loseName) return;
+
+  // applyGameResult 내부에서 history 추가와 중복 방지를 처리함
+  applyGameResult(winName, loseName, date, game.map||'', game._id||'', 
+                  game.univA||'', game.univB||'', mode);
 }

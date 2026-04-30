@@ -1,10 +1,89 @@
 ﻿/* ══════════════════════════════════════
    로그인 시스템
 ══════════════════════════════════════ */
-// SHA-256 암호화
+// SHA-256 암호화 (crypto.subtle 미지원 환경(file:// 등) 폴백 포함)
+function _rightRotate(value, amount){ return (value >>> amount) | (value << (32 - amount)); }
+function sha256Sync(ascii){
+  const mathPow = Math.pow;
+  const maxWord = mathPow(2, 32);
+  const lengthProperty = 'length';
+  let i, j;
+  let result = '';
+  const words = [];
+  const asciiBitLength = ascii[lengthProperty] * 8;
+  let hash = sha256Sync.h = sha256Sync.h || [];
+  let k = sha256Sync.k = sha256Sync.k || [];
+  let primeCounter = k[lengthProperty];
+  const isComposite = {};
+
+  for (let candidate = 2; primeCounter < 64; candidate++){
+    if (!isComposite[candidate]){
+      for (i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+      k[primeCounter++] = (mathPow(candidate, 1/3) * maxWord) | 0;
+    }
+  }
+
+  ascii += '\x80';
+  while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
+  for (i = 0; i < ascii[lengthProperty]; i++){
+    j = ascii.charCodeAt(i);
+    words[i >> 2] |= j << ((3 - i) % 4) * 8;
+  }
+  words[words[lengthProperty]] = (asciiBitLength / maxWord) | 0;
+  words[words[lengthProperty]] = asciiBitLength;
+
+  for (j = 0; j < words[lengthProperty];){
+    const w = words.slice(j, j += 16);
+    const oldHash = hash.slice(0);
+    hash = hash.slice(0, 8);
+
+    for (i = 0; i < 64; i++){
+      const w15 = w[i - 15];
+      const w2 = w[i - 2];
+      const a = hash[0];
+      const e = hash[4];
+      const temp1 = (hash[7]
+        + (_rightRotate(e, 6) ^ _rightRotate(e, 11) ^ _rightRotate(e, 25))
+        + ((e & hash[5]) ^ ((~e) & hash[6]))
+        + k[i]
+        + (w[i] = (i < 16) ? w[i] : (
+          (w[i - 16]
+            + (_rightRotate(w15, 7) ^ _rightRotate(w15, 18) ^ (w15 >>> 3))
+            + w[i - 7]
+            + (_rightRotate(w2, 17) ^ _rightRotate(w2, 19) ^ (w2 >>> 10))
+          ) | 0
+        ))
+      ) | 0;
+      const temp2 = ((_rightRotate(a, 2) ^ _rightRotate(a, 13) ^ _rightRotate(a, 22))
+        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]))
+      ) | 0;
+
+      hash = [(temp1 + temp2) | 0].concat(hash);
+      hash[4] = (hash[4] + temp1) | 0;
+      hash.pop();
+    }
+
+    for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+  }
+
+  for (i = 0; i < 8; i++){
+    for (j = 3; j + 1; j--){
+      const b = (hash[i] >> (j * 8)) & 255;
+      result += ((b < 16) ? '0' : '') + b.toString(16);
+    }
+  }
+  return result;
+}
+
 async function sha256(str){
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  try{
+    if (globalThis.crypto && crypto.subtle && typeof crypto.subtle.digest === 'function'){
+      const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+  }catch(e){}
+  return sha256Sync(str);
 }
 const ADMIN_HASH_KEY='su_admin_hashes'; // [{hash,role,label}] 배열
 async function initLoginHash(){
@@ -88,6 +167,12 @@ function applyLoginState(){
   document.getElementById('hdrLoginBtn').style.display=isLoggedIn?'none':'';
   document.getElementById('hdrLogoutBtn').style.display=isLoggedIn?'':'none';
   document.getElementById('hdrLoginStatus').style.display=isLoggedIn?'':'none';
+  try{
+    const st=document.getElementById('hdrLoginStatus');
+    if(st && isLoggedIn){
+      st.textContent = isSubAdmin ? '✅ 부관리자' : '✅ 관리자';
+    }
+  }catch(e){}
   const _mobileBar=document.getElementById('mobileActionBar');
   if(_mobileBar && !isLoggedIn) { const _mBtn=_mobileBar.querySelector('button[onclick*="cloudLoad"]'); if(_mBtn) _mBtn.style.display='none'; }
   if(_mobileBar && isLoggedIn) { const _mBtn=_mobileBar.querySelector('button[onclick*="cloudLoad"]'); if(_mBtn) _mBtn.style.display='flex'; }
@@ -97,21 +182,23 @@ function applyLoginState(){
   });
   // 관리자 전용 탭 (설정) - 로그인 필요
   const _cfgTab=document.getElementById('tabCfg');
-  if(_cfgTab) _cfgTab.style.display=isLoggedIn?'':'none';
+  // (요청사항) 부관리자는 설정탭 접근 불가
+  if(_cfgTab) _cfgTab.style.display=(isLoggedIn && !isSubAdmin)?'':'none';
   // 데이터 내보내기/가져오기 버튼 — 로그인 시에만 표시
   const exportHint=document.getElementById('exportHint');
-  if(exportHint)exportHint.style.display=isLoggedIn?'':'none';
+  if(exportHint)exportHint.style.display=(isLoggedIn && !isSubAdmin)?'':'none';
   const exportVis=document.getElementById('btnExportVis');
   const importVis=document.getElementById('btnImportVis');
-  if(exportVis)exportVis.style.display=isLoggedIn?'flex':'none';
-  if(importVis)importVis.style.display=isLoggedIn?'flex':'none';
+  if(exportVis)exportVis.style.display=(isLoggedIn && !isSubAdmin)?'flex':'none';
+  if(importVis)importVis.style.display=(isLoggedIn && !isSubAdmin)?'flex':'none';
   // 대학 상세 모달 수정 버튼 — 모달이 열려 있을 때 즉시 반영
   const univEditBtnEl=document.getElementById('univEditBtn');
   if(univEditBtnEl) univEditBtnEl.style.display=isLoggedIn?'inline-flex':'none';
   // 스트리머 등록/경기 기록 입력폼 — 로그인 + 스트리머 탭일 때만 표시
   const fstrip=document.getElementById('fstrip');
   if(fstrip){
-    if(!isLoggedIn){fstrip.style.display='none';}
+    // (요청사항) 부관리자는 스트리머 등록 불가 → 숨김
+    if(!isLoggedIn || isSubAdmin){fstrip.style.display='none';}
     else{fstrip.style.display=(curTab==='total')?'block':'none';}
   }
   render();
@@ -119,7 +206,8 @@ function applyLoginState(){
 
 // 수정/삭제 버튼 — 비로그인 시 숨김
 function adminBtn(html){
-  return isLoggedIn ? html : '';
+  // (요청사항) 부관리자는 설정/편집 등 관리자 버튼 숨김 (경기 수정은 별도 로직)
+  return (isLoggedIn && !isSubAdmin) ? html : '';
 }
 function doExport(){
   try{
@@ -380,6 +468,8 @@ function toggleDark(){
   const isDark=document.body.classList.toggle('dark');
   localStorage.setItem('su_dark',isDark?'1':'');
   if(window._fixHdrBtns) window._fixHdrBtns(); else document.getElementById('darkToggleBtn').textContent=isDark?'☀️ 라이트':'🌙 다크';
+  // 다크 전환 시 테마 변수 재적용(다크 모드에서는 accent만 적용)
+  try{ window._applyThemeVars && window._applyThemeVars(); }catch(e){}
 }
 
 /* ── 클립보드 복사 유틸 ── */

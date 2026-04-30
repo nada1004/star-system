@@ -132,9 +132,7 @@ function _applyCloudData(d) {
   }
   // 공지사항
   if(d.notices!==undefined&&typeof notices!=='undefined') notices=d.notices;
-  // 보라크루
-  if(d.crew!==undefined&&typeof crew!=='undefined') crew=_fbArr(d.crew,[]);
-  if(d.crewCfg!==undefined&&typeof crewCfg!=='undefined') crewCfg=_fbArr(d.crewCfg,[]);
+  // (요청사항) 보라크루 기능 삭제: crew/crewCfg 수신 적용 제거
   // 🆕 시즌
   if(d.seasons!==undefined&&typeof seasons!=='undefined') seasons=_fbArr(d.seasons,[]);
   // 🆕 캘린더 예정 경기
@@ -180,6 +178,18 @@ function _applyCloudData(d) {
       b2Content.innerHTML=_b2UnivView();
       if(typeof injectUnivIcons==='function') injectUnivIcons(b2Content);
     }
+
+    // 🎵 유튜브 BGM / 📺 SOOP 멀티뷰 설정 동기화
+    try{
+      if(s.bgmEnabled!==undefined) localStorage.setItem('su_bgm_enabled', s.bgmEnabled ? '1' : '0');
+      if(s.bgmShuffle!==undefined) localStorage.setItem('su_bgm_shuffle', s.bgmShuffle ? '1' : '0');
+      if(s.bgmVolume!==undefined) localStorage.setItem('su_bgm_volume', String(s.bgmVolume));
+      if(s.bgmList!==undefined) localStorage.setItem('su_bgm_list', String(s.bgmList||''));
+      if(s.soopList!==undefined) localStorage.setItem('su_soop_list', String(s.soopList||''));
+      // 버튼 즉시 반영
+      if(typeof window.bgmApplySettings==='function') window.bgmApplySettings();
+      if(typeof window.soopApplySettings==='function') window.soopApplySettings();
+    }catch(e){}
   }
 }
 
@@ -225,7 +235,7 @@ async function fbCloudSave() {
     players, univCfg, maps, tourD, miniM, univM, comps, ckM,
     compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, indM, gjM,
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
-    curProComp, _ttCurComp, seasons, calScheduled, crew, crewCfg,
+    curProComp, _ttCurComp, seasons, calScheduled,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
     // 🔧 앱 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등)
@@ -237,7 +247,14 @@ async function fbCloudSave() {
       fabHidePC: localStorage.getItem('su_fabHidePC')==='1',
       darkMode: localStorage.getItem('su_dark')==='1',
       b2LabelAlpha: localStorage.getItem('su_b2la')||'16',
-      b2BgAlpha: localStorage.getItem('su_b2ba')||'9'
+      b2BgAlpha: localStorage.getItem('su_b2ba')||'9',
+      // 🎵 유튜브 BGM (설정 동기화)
+      bgmEnabled: (localStorage.getItem('su_bgm_enabled') ?? '1') === '1',
+      bgmShuffle: (localStorage.getItem('su_bgm_shuffle') ?? '0') === '1',
+      bgmVolume: parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50,
+      bgmList: localStorage.getItem('su_bgm_list') || '',
+      // 📺 SOOP 멀티뷰 (설정 동기화)
+      soopList: localStorage.getItem('su_soop_list') || ''
     },
     savedAt
   };
@@ -455,6 +472,18 @@ let boardGridCols=1; // 1열/2열 보기
 let boardCardView=false; // 포토카드 뷰
 let boardCardShape='circle'; // 포토카드 이미지 모양: 'circle' | 'square'
 let boardCollapsed = new Set(); // 접힌 대학 이름 집합
+// 칩 프로필 이미지 설정 (localStorage에서 복원)
+// NOTE: 전역(인라인 onclick) 접근 호환을 위해 var 사용 (window 프로퍼티로 노출)
+var boardChipPhotoShape = localStorage.getItem('su_bcp_shape') || 'circle'; // 'circle' | 'square'
+var boardChipPhotoSize  = parseInt(localStorage.getItem('su_bcp_size') || '26', 10); // px
+var boardChipLayoutScale = parseInt(localStorage.getItem('su_bcp_layout') || '100', 10); // percent
+function saveBoardChipPhotoSettings(){
+  localStorage.setItem('su_bcp_shape', boardChipPhotoShape);
+  localStorage.setItem('su_bcp_size', String(boardChipPhotoSize));
+  localStorage.setItem('su_bcp_layout', String(boardChipLayoutScale||100));
+  // 스트리머 프로필 이미지 공통 CSS 변수 동기화
+  try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
+}
 // 현황판 선수 순서: {univ: [name, name, ...]}
 let boardPlayerOrder = J('su_bpo') || {};
 
@@ -543,6 +572,13 @@ function rBoard(C,T){
   const univs=_getBoardUnivs();
   const visUnivs=(isLoggedIn?univs:univs.filter(u=>!u.hidden)).filter(u=>!u.dissolved);
   if(!univs.length){C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">등록된 선수가 없습니다.</div>';return;}
+  // 칩 이미지 크기에 따라 행 레이아웃도 함께 스케일 (이미지만 커지고 레이아웃은 고정되는 현상 방지)
+  const _bcpScale = Math.max(0.7, Math.min(1.8, (boardChipLayoutScale||100) / 100));
+  const _bcpGap = Math.round(7 * _bcpScale);
+  const _bcpPadY = Math.round(5 * _bcpScale);
+  const _bcpPadX = Math.round(10 * _bcpScale);
+  const _bcpNameFs = Math.round(12 * _bcpScale);
+  const _bcpRoleFs = Math.round(9 * _bcpScale);
   // 통계 계산
   const _brdAllVis = visUnivs.flatMap(u => _getBoardPlayers(u.name));
   const _brdTierCts = {}; _brdAllVis.forEach(p=>{ const t=p.tier||'?'; _brdTierCts[t]=(_brdTierCts[t]||0)+1; });
@@ -563,15 +599,15 @@ function rBoard(C,T){
     .brd-hdr:active{cursor:grabbing;}
     .brd-hdr::before{content:'';position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,0) 55%);pointer-events:none;z-index:0;}
     .brd-circle{position:absolute;border-radius:50%;background:rgba(255,255,255,.15);pointer-events:none;}
-    .brd-row{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:9px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.7);transition:background .12s,box-shadow .12s;}
+    .brd-row{display:flex;align-items:center;gap:${_bcpGap}px;padding:${_bcpPadY}px ${_bcpPadX}px;border-radius:9px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.7);transition:background .12s,box-shadow .12s;}
     .brd-row:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);}
     .brd-row-btn{cursor:pointer;flex:1;display:flex;align-items:center;gap:7px;background:none;border:none;padding:0;font-family:'Noto Sans KR',sans-serif;min-width:0;}
-    .brd-photo{width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;background:rgba(0,0,0,.08);border:1.5px solid rgba(255,255,255,.7);}
-    .brd-photo-placeholder{width:26px;height:26px;border-radius:50%;flex-shrink:0;background:rgba(255,255,255,.4);border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(0,0,0,.35);}
+    .brd-photo{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;background:rgba(0,0,0,.08);border:1.5px solid rgba(255,255,255,.7);}
+    .brd-photo-placeholder{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;background:rgba(255,255,255,.4);border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:${Math.round(12*_bcpScale)}px;color:rgba(0,0,0,.35);}
     .brd-race{font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;flex-shrink:0;letter-spacing:.3px;}
-    .brd-name{font-weight:700;font-size:12px;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;text-align:left;}
-    .brd-role-main{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap;flex-shrink:0;border:1px solid;}
-    .brd-role-sub{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600;white-space:nowrap;flex-shrink:0;background:rgba(100,116,139,.1);color:#475569;border:1px solid rgba(100,116,139,.2);}
+    .brd-name{font-weight:700;font-size:${_bcpNameFs}px;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;text-align:left;}
+    .brd-role-main{font-size:${_bcpRoleFs}px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap;flex-shrink:0;border:1px solid;}
+    .brd-role-sub{font-size:${_bcpRoleFs}px;padding:1px 5px;border-radius:4px;font-weight:600;white-space:nowrap;flex-shrink:0;background:rgba(100,116,139,.1);color:#475569;border:1px solid rgba(100,116,139,.2);}
     .brd-move-btn{display:flex;flex-direction:column;gap:1px;flex-shrink:0;opacity:.55;}
     .brd-move-btn button{background:none;border:none;cursor:pointer;font-size:9px;padding:0 2px;line-height:1;color:#1e293b;transition:opacity .12s;}
     .brd-move-btn button:hover{opacity:.5;}
@@ -594,28 +630,16 @@ function rBoard(C,T){
     .brd-move-popup-btn:hover{background:var(--blue-l);color:var(--blue);}
     .brd-move-popup-btn:disabled{opacity:.35;cursor:default;background:none;}
     .brd-move-popup-sep{height:1px;background:var(--border);margin:4px 0;}
-    /* 현황판 툴바 버튼 */
-    .brd-tbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;line-height:1.4;}
-    .brd-tbtn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.12);}
-    .brd-tbtn:active{transform:translateY(0);box-shadow:none;}
-    .brd-tbtn-img{border-color:#3b82f6;color:#2563eb;background:linear-gradient(135deg,#eff6ff,#dbeafe);}
-    .brd-tbtn-img:hover{background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-color:#2563eb;}
-    .brd-tbtn-share{border-color:#8b5cf6;color:#6d28d9;background:linear-gradient(135deg,#f5f3ff,#ede9fe);}
-    .brd-tbtn-share:hover{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-color:#6d28d9;}
-    body.dark .brd-tbtn-img{background:linear-gradient(135deg,#1e3a5f,#1e3a8a);color:#93c5fd;border-color:#3b82f6;}
-    body.dark .brd-tbtn-share{background:linear-gradient(135deg,#2e1f5e,#3b2080);color:#c4b5fd;border-color:#7c3aed;}
-    .brd-toolbar{position:sticky;top:0;z-index:100;background:var(--white)!important;}
-    .brd-tbtn-grid{border-color:#6366f1;color:#4338ca;background:linear-gradient(135deg,#eef2ff,#e0e7ff);}
-    .brd-tbtn-grid:hover{background:linear-gradient(135deg,#e0e7ff,#c7d2fe);border-color:#4338ca;}
-    body.dark .brd-tbtn-grid{background:linear-gradient(135deg,#1e1b4b,#312e81);color:#a5b4fc;border-color:#6366f1;}
+    .brd-toolbar{position:sticky;top:0;z-index:100;background:var(--white)!important;padding-bottom:6px;}
     @media(max-width:768px){#board-wrap{grid-template-columns:1fr!important;}}
   </style>
-  <div class="no-export brd-toolbar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.07)">
-    <div style="display:flex;align-items:center;gap:8px;margin-right:2px">
-      <span style="font-size:18px;line-height:1">📊</span>
-      <span style="font-weight:900;font-size:15px;color:var(--text);letter-spacing:-.3px">현황판</span>
-    </div>
-    <div style="width:1px;height:22px;background:var(--border);opacity:.6"></div>
+  <div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+    <button class="pill ${boardGridCols===2?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardGridCols=boardGridCols===2?1:2;render()" title="1열/2열 보기 전환">${boardGridCols===2?'▦ 1열':'⊞ 2열'}</button>
+    <button class="pill ${boardCardView?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardCardView=!boardCardView;if(boardCardView)boardCardShape=boardCardShape==='circle'?'square':'circle';render()" title="포토카드 뷰 전환">▦ 포토카드</button>
+    <button class="pill ${boardCompactMode?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="boardCompactMode=!boardCompactMode;render()" title="소형/대형 칩 전환">${boardCompactMode?'⬛ 크게보기':'🔲 소형으로'}</button>
+    <button class="pill ${_brdAllCollapsed?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${_brdAllCollapsed?'_brdExpandAll()':'_brdCollapseAll()'}" title="${_brdAllCollapsed?'모두 펼치기':'모두 접기'}">${_brdAllCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
+  </div>
+  <div class="no-export brd-toolbar fbar" style="gap:8px;flex-wrap:wrap;margin-bottom:16px">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <div style="position:relative">
         <select id="board-univ-sel" onchange="boardSelUniv=this.value;_updateBoardSaveLabel();render();if(boardSelUniv!=='전체'){setTimeout(()=>{const c=document.querySelector(\`.brd-card[data-univ='\${boardSelUniv}']\`);if(c)c.scrollIntoView({behavior:'smooth',block:'center'});},120);}" style="appearance:none;-webkit-appearance:none;padding:6px 28px 6px 12px;border-radius:9px;border:1.5px solid var(--border2);font-size:12px;font-weight:700;color:var(--text);background:var(--surface);cursor:pointer;outline:none;min-width:120px;">
@@ -624,13 +648,9 @@ function rBoard(C,T){
         </select>
         <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
-      <button class="brd-tbtn brd-tbtn-img" onclick="boardSelUniv&&boardSelUniv!=='전체'?downloadBoardSel():downloadBoardAll()" id="brd-save-btn">
+      <button class="pill" onclick="boardSelUniv&&boardSelUniv!=='전체'?downloadBoardSel():downloadBoardAll()" id="brd-save-btn">
         📷 <span id="brd-save-btn-label">${boardSelUniv&&boardSelUniv!=='전체'?boardSelUniv+' 이미지저장':'이미지저장'}</span>
       </button>
-      <button class="brd-tbtn brd-tbtn-grid" onclick="boardGridCols=boardGridCols===2?1:2;render()" style="${boardGridCols===2?'background:#e0e7ff;border-color:#4338ca;color:#3730a3;':''}" title="1열/2열 보기 전환">${boardGridCols===2?'▦ 1열':'⊞ 2열'}</button>
-      <button class="brd-tbtn" onclick="boardCardView=!boardCardView;if(boardCardView)boardCardShape=boardCardShape==='circle'?'square':'circle';render()" style="${boardCardView?'background:#fdf4ff;border-color:#a855f7;color:#7e22ce;':''}" title="포토카드 뷰 전환">▦ 포토카드</button>
-      <button class="brd-tbtn" onclick="boardCompactMode=!boardCompactMode;render()" style="${boardCompactMode?'background:#f0fdf4;border-color:#22c55e;color:#15803d;':''}" title="소형/대형 칩 전환">${boardCompactMode?'⬛ 크게보기':'🔲 소형으로'}</button>
-<button class="brd-tbtn" onclick="${_brdAllCollapsed?'_brdExpandAll()':'_brdCollapseAll()'}" style="${_brdAllCollapsed?'background:#fef9c3;border-color:#ca8a04;color:#854d0e;':''}" title="${_brdAllCollapsed?'모두 펼치기':'모두 접기'}">${_brdAllCollapsed?'⊕ 펼치기':'⊖ 접기'}</button>
       <div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface)">
         <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">배경</span>
         <button onclick="b2BgAlpha=Math.max(0,b2BgAlpha-5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 연하게">−</button>
@@ -671,7 +691,7 @@ function buildUnivBoardCard(u, forExport){
   if(!sorted.length&&!forExport){
     // 선수 없는 대학도 빈 카드로 표시
     return `<div class="brd-card" data-univ="${u.name}" style="border:2px dashed ${col}66;border-radius:14px;padding:20px 18px;background:${col}08;display:flex;align-items:center;gap:10px;opacity:.75">
-      ${iconUrl?`<img src="${iconUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'">`:''}
+      ${iconUrl?`<img src="${iconUrl}" style="width:var(--su_univ_logo_size,32px);height:var(--su_univ_logo_size,32px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.style.display='none'">`:''}
       <span style="font-weight:900;font-size:15px;color:${col}">${u.name}</span>
       <span style="font-size:11px;color:var(--gray-l)">등록된 스트리머 없음</span>
     </div>`;
@@ -883,8 +903,8 @@ function buildUnivBoardCard(u, forExport){
     return `<div class="brd-card" data-univ="${u.name}" style="position:relative;--brd-col:${toPastel(col,Math.min(1, Math.max(0.35, 0.95 - b2BgAlpha * 0.01) + 0.08))};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
       <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${isLoggedIn&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
         <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
-          <div style="width:46px;height:46px;border-radius:13px;background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="대학 상세 보기">
-            ${iconUrl?`<img src="${iconUrl}" style="width:34px;height:34px;object-fit:contain" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
+          <div style="width:var(--su_univ_logo_box,46px);height:var(--su_univ_logo_box,46px);border-radius:var(--su_univ_logo_radius,13px);background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="대학 상세 보기">
+            ${iconUrl?`<img src="${iconUrl}" style="width:var(--su_univ_logo_size,34px);height:var(--su_univ_logo_size,34px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;overflow:hidden">
@@ -1075,8 +1095,8 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
       </div>
     </div>
     <div class="brd-move-popup-sep"></div>
-    ${(p.gameType==='general'||p.gameType==='?? ???')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName} ??? ??? ???????\\n\\n?? ??? ???? ???? ??????.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('?? ??? ????.');}}">?? ??</button>`:''}
-    <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">?? ????? ???? ?</button>
+    ${(p.gameType==='general')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName}을(를) 스트리머 목록에서 삭제할까요?\\n\\n⚠️ 삭제하면 복구가 어렵습니다.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('🗑️ 스트리머 삭제 완료');}}">🗑️ 스트리머 삭제</button>`:''}
+    <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">👤 스트리머 상세 보기</button>
   `;
 
   document.body.appendChild(popup);

@@ -27,6 +27,9 @@
     '.wh-hist-box{width:100%;background:var(--white);border:2px solid var(--border);border-radius:14px;padding:12px 14px;margin-top:4px}',
     '.wh-hist-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}',
     '.wh-hist-item:last-child{border-bottom:none}',
+    '.wh-chipbox{width:100%;display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}',
+    '.wh-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border);background:var(--surface);border-radius:999px;font-size:12px;font-weight:900;color:var(--text2)}',
+    '.wh-chip-x{border:none;background:transparent;color:var(--gray-l);cursor:pointer;font-weight:1000;font-size:12px;line-height:1}',
     '.wh-particle{position:fixed;pointer-events:none;font-size:22px;z-index:10000;animation:whParticle 1.2s ease-out forwards}',
     '@keyframes whPop{0%{transform:scale(0) rotate(-20deg);opacity:0}100%{transform:scale(1);opacity:1}}',
     '@keyframes whSlideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}',
@@ -80,25 +83,20 @@ function _whParseWeightedCSV(text){
   return {entries,total,tokens};
 }
 
-function _whProbHTML(){
-  const inp = document.getElementById('wh-input');
-  const raw = inp ? inp.value : (localStorage.getItem('su_wh_input') || '');
-  const p = _whParseWeightedCSV(raw);
-  if(!p.entries.length) return '';
-  const rows = p.entries.slice().sort((a,b)=>b.weight-a.weight).slice(0, 12).map(function(it){
-    const pr = p.total ? (it.weight/p.total*100) : 0;
-    return '<div style="display:flex;gap:8px;align-items:center;padding:4px 0;border-top:1px solid var(--border)">'
-      + '<span style="flex:1;font-weight:700;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + it.name + '</span>'
-      + '<span style="font-size:11px;color:var(--text3)">w=' + (''+it.weight.toFixed(2)).replace(/\\.00$/,'') + '</span>'
-      + '<span style="min-width:62px;text-align:right;font-size:11px;font-weight:900;color:#FF4B6E">' + pr.toFixed(1) + '%</span>'
-      + '</div>';
-  }).join('');
-  const more = p.entries.length>12 ? '<div style="margin-top:6px;font-size:11px;color:var(--text3)">… 외 ' + (p.entries.length-12) + '개</div>' : '';
-  return '<div id="wh-prob" style="width:100%;max-width:520px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;margin:2px 0 6px">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-    + '<span style="font-size:12px;font-weight:900;color:var(--text2)">📊 확률(가중치) · 형식: 이름*2</span>'
-    + '<span style="font-size:11px;color:var(--text3)">합=' + (''+p.total.toFixed(2)).replace(/\\.00$/,'') + '</span>'
-    + '</div>' + rows + more + '</div>';
+// (요청사항) 확률(%) 표시는 제거됨
+function _whRemoveOne(name){
+  const ta  = document.getElementById('wh-input');
+  if(!ta) return;
+  const raw = String(ta.value||'');
+  const tokens = raw.split(',').map(v=>v.trim()).filter(Boolean);
+  const idx = tokens.findIndex(t=>{
+    const m=t.match(/^(.*?)(?:\*(\d+(?:\.\d+)?))?$/);
+    return ((m?m[1]:t)||'').trim()===name;
+  });
+  if(idx>=0) tokens.splice(idx,1);
+  const next = tokens.join(', ');
+  ta.value = next;
+  _whOnInput(next);
 }
 
 // ─── 공개 API ────────────────────────────────────────────────────────────────
@@ -113,16 +111,23 @@ function _whRender(root) {
   const savedInput = localStorage.getItem('su_wh_input') || '';
   const speedIdx   = _WH_SPEED_DUR.indexOf(_whSpinDur);
   const sIdx       = speedIdx >= 0 ? speedIdx : 2;
+  const parsed = _whParseWeightedCSV(savedInput);
 
   root.innerHTML =
     '<div class="wh-wrap">'
     // 입력 + 속도 행
     + '<div class="wh-input-row">'
-    + '<textarea class="wh-textarea" id="wh-input" placeholder="이름 입력... (쉼표로 구분, 가중치: 이름*2)" oninput="_whOnInput(this.value)">' + savedInput + '</textarea>'
+    + '<textarea class="wh-textarea" id="wh-input" placeholder="이름 입력... (쉼표로 구분, 가중치: 이름*2)" oninput="_whOnInput(this.value,event)" oncompositionend="_whOnInput(this.value)">' + savedInput + '</textarea>'
     + '<button onclick="_whShuffleInput()" style="padding:6px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">🔀 섞기</button>'
     + '<div class="wh-speed-wrap"><span style="font-size:12px;font-weight:700;color:var(--text3)">⚡</span><input type="range" id="wh-speed" min="1" max="5" value="' + (sIdx+1) + '" oninput="_whUpdateSpeed(this.value)" style="width:70px;accent-color:#FF4B6E"><span class="wh-speed-lbl" id="wh-speed-lbl">' + _WH_SPEED_LBLS[sIdx] + '</span></div>'
     + '</div>'
-    + _whProbHTML()
+    // 칩(입력 편의)
+    + '<div class="wh-chipbox">' + (parsed.entries.map(function(it){
+        const nmRaw = (it.name||'');
+        const nmDisp = nmRaw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        const nmJs = nmRaw.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        return '<span class="wh-chip">' + nmDisp + '<button class="wh-chip-x" onclick="_whRemoveOne(\'' + nmJs + '\')">✕</button></span>';
+      }).join('') || '') + '</div>'
     // 캔버스 + 버튼
     + '<div class="wh-canvas-wrap" id="wh-canvas-wrap">'
     + '<div class="wh-pointer">▼</div>'
@@ -134,7 +139,6 @@ function _whRender(root) {
     + '<div style="font-size:15px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>'
     + '<div id="wh-res-icon" style="font-size:52px;margin-bottom:6px;line-height:1.1">🏆</div>'
     + '<div id="wh-res-name" style="font-size:clamp(28px,6vw,48px);font-weight:900;color:#C0274A;word-break:break-all;margin-bottom:6px"></div>'
-    + '<div id="wh-res-prob" style="font-size:14px;font-weight:900;color:#FF4B6E;margin-bottom:14px"></div>'
     + '<button onclick="_whSpin()" style="font-family:inherit;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,#FF4B6E,#FF89AB);border:none;border-radius:22px;padding:10px 28px;cursor:pointer;box-shadow:0 4px 0 #C0274A;transition:transform .12s,box-shadow .12s" onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'\'">🎡 다시 돌리기</button>'
     + '</div>'
     // 히스토리
@@ -291,28 +295,27 @@ function _whShowResult(name) {
   const card = document.getElementById('wh-result-card');
   const nameEl = document.getElementById('wh-res-name');
   const iconEl = document.getElementById('wh-res-icon');
-  if (!card || !nameEl) return;
+  if (!nameEl) return;
   if (nameEl) nameEl.textContent = name;
-  // 확률 표시
-  const probEl = document.getElementById('wh-res-prob');
-  if (probEl) {
-    const raw = (document.getElementById('wh-input')||{}).value || (localStorage.getItem('su_wh_input') || '');
-    const parsed = _whParseWeightedCSV(raw);
-    const it = parsed.entries.find(e=>e.name===name);
-    const pr = (it && parsed.total) ? (it.weight/parsed.total*100) : 0;
-    probEl.textContent = (it && parsed.total) ? ('확률 ' + pr.toFixed(1) + '% (w=' + (''+it.weight.toFixed(2)).replace(/\\.00$/,'') + ')') : '';
-  }
   if (iconEl) {
     const icons = ['🏆','🥇','🎖️','👑','🌟'];
     iconEl.textContent = icons[Math.floor(Math.random() * icons.length)];
   }
-  card.style.display = 'block';
-  card.style.animation = 'none';
-  void card.offsetWidth;
-  card.style.animation = 'whCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)';
-  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (card) card.style.display = 'none';
   _whFireConfetti();
   _whPlayWin();
+  // (요청사항) 결과는 팝업으로 표시
+  try{
+    const ico = (iconEl && iconEl.textContent) ? iconEl.textContent : '🏆';
+    if(typeof window._rrShowPopup==='function'){
+      window._rrShowPopup('🎡 휠 결과', `<div style="text-align:center;padding:6px 4px">
+        <div style="font-size:46px;line-height:1;margin-bottom:10px">${ico}</div>
+        <div style="font-size:24px;font-weight:1000;color:var(--text1)">${name}</div>
+      </div>`);
+    } else {
+      alert('🎡 결과: ' + name);
+    }
+  }catch(e){}
 }
 
 // ─── 히스토리 ────────────────────────────────────────────────────────────────
@@ -344,10 +347,25 @@ function _whClearHistory() {
 }
 
 // ─── 입력 관리 ────────────────────────────────────────────────────────────────
-function _whOnInput(val) {
-  localStorage.setItem('su_wh_input', val);
-  const root = document.getElementById('wh-root');
-  if (root) _whRender(root);
+function _whRefreshChips(){
+  const box = document.querySelector('#wh-root .wh-chipbox');
+  if(!box) return;
+  const raw = (document.getElementById('wh-input')||{}).value || (localStorage.getItem('su_wh_input') || '');
+  const parsed = _whParseWeightedCSV(raw);
+  box.innerHTML = (parsed.entries.map(function(it){
+    const nmRaw = (it.name||'');
+    const nmDisp = nmRaw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const nmJs = nmRaw.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return '<span class="wh-chip">' + nmDisp + '<button class="wh-chip-x" onclick="_whRemoveOne(\'' + nmJs + '\')">✕</button></span>';
+  }).join('') || '');
+}
+
+function _whOnInput(val, ev) {
+  try { localStorage.setItem('su_wh_input', val); } catch(e) {}
+  // (IME 한글 입력) 조합 중에는 DOM 변경을 최소화
+  if(ev && ev.isComposing) return;
+  _whRefreshChips();
+  _whDraw(_whAngle);
 }
 function _whShuffleInput() {
   if (_whSpinning) return;
@@ -357,8 +375,7 @@ function _whShuffleInput() {
   const arr = tokens;
   for (var i = arr.length-1; i > 0; i--) { var j = Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
   if (inp) { inp.value = arr.join(', '); localStorage.setItem('su_wh_input', inp.value); }
-  const root = document.getElementById('wh-root');
-  if (root) _whRender(root);
+  _whOnInput(inp.value);
 }
 function _whUpdateSpeed(val) {
   const idx = parseInt(val) - 1;
