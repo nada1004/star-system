@@ -205,6 +205,8 @@ const _HIST_EXT_KEY='su_hist_ext_data_v1';
 const _HIST_EXT_PROXY_KEY='su_hist_ext_proxy_v1';
 const _HIST_EXT_PROXY_CFG_KEY='su_hist_ext_proxy_cfg_v1';
 const _HIST_EXT_TARGET_KEY='su_hist_ext_target_v1';
+const _HIST_EXT2_TARGET_KEY='su_hist_ext2_target_v1';
+const _HIST_EXT3_TARGET_KEY='su_hist_ext3_target_v1';
 // (요청사항) 프록시 프리셋(여러개) 지원
 const _HIST_EXT_PROXY_PRESETS_KEY='su_hist_ext_proxy_presets_v1';
 const _HIST_EXT_PROXY_PRESET_SEL_KEY='su_hist_ext_proxy_preset_sel_v1';
@@ -373,6 +375,21 @@ function _histExtTargetSave(v){
     localStorage.setItem(_HIST_EXT_TARGET_KEY, String(v||''));
   }catch(e){
     console.warn('[_histExtTargetSave] 타겟 저장 실패:', e.message);
+  }
+}
+function _histExtTargetLoadByKey(key){
+  try{
+    return localStorage.getItem(String(key||_HIST_EXT_TARGET_KEY))||'';
+  }catch(e){
+    console.warn('[_histExtTargetLoadByKey] 타겟 로드 실패:', e.message);
+    return '';
+  }
+}
+function _histExtTargetSaveByKey(key, v){
+  try{
+    localStorage.setItem(String(key||_HIST_EXT_TARGET_KEY), String(v||''));
+  }catch(e){
+    console.warn('[_histExtTargetSaveByKey] 타겟 저장 실패:', e.message);
   }
 }
 function _histExtNormDate(s){
@@ -717,6 +734,73 @@ window.histExtSendToPasteModal = function(){
       if(typeof pastePreview==='function') pastePreview();
     }catch(e){}
   }, 60);
+};
+function _histExtTargetOptions(kind){
+  if(kind==='ext2') return [
+    {v:'pro', t:'프로리그 일반'},
+    {v:'gjpro', t:'프로리그 중장전'},
+    {v:'comp', t:'프로리그 토너먼트'}
+  ];
+  if(kind==='ext3') return [
+    {v:'ind', t:'개인전'},
+    {v:'gj', t:'끝장전'}
+  ];
+  return [
+    {v:'mini', t:'미니대전'},
+    {v:'univm', t:'대학대전'},
+    {v:'ck', t:'대학CK'},
+    {v:'ind', t:'개인전'},
+    {v:'gj', t:'끝장전'}
+  ];
+}
+function _histExtTargetSelectHTML(id, kind, value){
+  const opts = _histExtTargetOptions(kind);
+  const cur = String(value || opts[0]?.v || '');
+  const saveKey = kind==='ext2' ? _HIST_EXT2_TARGET_KEY : kind==='ext3' ? _HIST_EXT3_TARGET_KEY : _HIST_EXT_TARGET_KEY;
+  return `
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div style="font-size:12px;font-weight:900;color:var(--text2)">자동인식 저장대상</div>
+      <select id="${id}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:180px" onchange="_histExtTargetSaveByKey('${saveKey}', this.value)">
+        ${opts.map(o=>`<option value="${o.v}" ${cur===o.v?'selected':''}>${o.t}</option>`).join('')}
+      </select>
+      <button class="btn btn-p btn-sm" onclick="histExtSendClipboardToPasteModal('${id}')">📋 복사/붙여넣기 → 자동인식 저장</button>
+    </div>`;
+}
+window.histExtSendClipboardToPasteModal = function(selectId){
+  const target = (document.getElementById(selectId||'hist-ext-target')?.value || '').trim();
+  if(!target){ alert('저장 대상을 먼저 선택해주세요'); return; }
+  const saveKey = selectId==='hist-ext2-target' ? _HIST_EXT2_TARGET_KEY : selectId==='hist-ext3-target' ? _HIST_EXT3_TARGET_KEY : _HIST_EXT_TARGET_KEY;
+  _histExtTargetSaveByKey(saveKey, target);
+  const openByTarget = ()=>{
+    try{
+      if(target==='ind' && typeof openIndPasteModal==='function') openIndPasteModal();
+      else if(target==='gj' && typeof openGJPasteModal==='function'){ window._gjProPaste=false; openGJPasteModal(); }
+      else if(target==='gjpro' && typeof openGJPasteModal==='function'){ window._gjProPaste=true; openGJPasteModal(); }
+      else if(target==='ck' && typeof openCKPasteModal==='function') openCKPasteModal();
+      else if(target==='univm' && typeof openUnivmPasteModal==='function') openUnivmPasteModal();
+      else if(target==='comp' && typeof openCompPasteModal==='function') openCompPasteModal();
+      else if(target==='pro' && typeof openProPasteModal==='function') openProPasteModal();
+      else if(typeof openMiniPasteModal==='function') openMiniPasteModal();
+    }catch(e){}
+  };
+  const fillAndPreview = (txt)=>{
+    try{ window._pasteFromHistExt = true; }catch(e){}
+    openByTarget();
+    setTimeout(()=>{
+      try{
+        const ta = document.getElementById('paste-input');
+        if(ta) ta.value = txt || '';
+        if(typeof pastePreview==='function') pastePreview();
+      }catch(e){}
+    }, 60);
+  };
+  try{
+    if(navigator.clipboard && navigator.clipboard.readText){
+      navigator.clipboard.readText().then(fillAndPreview).catch(()=>alert('클립보드 읽기에 실패했습니다. 먼저 복사 후 다시 시도해주세요.'));
+      return;
+    }
+  }catch(e){}
+  alert('브라우저에서 클립보드 읽기를 지원하지 않습니다. 수동 붙여넣기를 사용해주세요.');
 };
 
 // 프록시 URL 빠른 입력: 전체 URL을 붙여넣으면 proxy/bo/page 범위를 자동 세팅
@@ -1121,12 +1205,10 @@ function histExternalHTML(){
           <select id="hist-ext-target" style="padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
             <option value="" ${!tSel?'selected':''}>(저장대상 선택)</option>
             <option value="mini" ${tSel==='mini'?'selected':''}>미니대전</option>
-            <option value="ind" ${tSel==='ind'?'selected':''}>개인전</option>
-            <option value="gj" ${tSel==='gj'?'selected':''}>중장전</option>
-            <option value="ck" ${tSel==='ck'?'selected':''}>대학CK</option>
             <option value="univm" ${tSel==='univm'?'selected':''}>대학대전</option>
-            <option value="tt" ${tSel==='tt'?'selected':''}>티어대회</option>
-            <option value="comp" ${tSel==='comp'?'selected':''}>대회</option>
+            <option value="ck" ${tSel==='ck'?'selected':''}>대학CK</option>
+            <option value="ind" ${tSel==='ind'?'selected':''}>개인전</option>
+            <option value="gj" ${tSel==='gj'?'selected':''}>끝장전</option>
           </select>
           <button class="btn btn-p btn-xs" onclick="histExtSendToPasteModal()">선택 → 자동인식 열기</button>
         </div>
@@ -3924,6 +4006,7 @@ function histExternal2HTML(){
     }
   }catch(e){}
   const url = 'https://rapid-scene-ac45.kpoppd.workers.dev/men/bbs/board.php?bo_table=search_list';
+  const st=_histExtLoad();
   return `
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
       <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
@@ -3932,6 +4015,13 @@ function histExternal2HTML(){
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px;line-height:1.5">
         ※ 외부 사이트가 <b>X-Frame-Options / CSP</b>로 iframe을 차단하면 화면에 표시되지 않을 수 있습니다. (그 경우 ‘새 창으로 열기’만 가능)
+      </div>
+      <div style="margin-top:10px;padding:10px;border:1px dashed var(--border);border-radius:10px;background:var(--surface)">
+        ${_histExtTargetSelectHTML('hist-ext2-target','ext2',String(st.target2||'pro'))}
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px;line-height:1.45">
+          · 외부2에서 복사한 내용을 클립보드에서 읽어 자동인식 저장 모달로 보냅니다.<br>
+          · 저장 대상: 프로리그 일반 / 중장전 / 토너먼트
+        </div>
       </div>
     </div>
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);overflow:hidden">
@@ -3968,6 +4058,7 @@ function histExternal3HTML(){
     }
   }catch(e){}
   const page = (()=>{ try{ return parseInt(localStorage.getItem(_HIST_EXT3_PAGE_KEY)||'1',10)||1; }catch(e){ return 1; } })();
+  const st=_histExtLoad();
   const base = 'https://elo-proxy1.kpoppd.workers.dev/board.php?bo_table=bj_board&page=';
   const url = base + encodeURIComponent(String(page));
   return `
@@ -3987,6 +4078,13 @@ function histExternal3HTML(){
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px;line-height:1.5">
         ※ 외부 사이트가 <b>X-Frame-Options / CSP</b>로 iframe을 차단하면 화면에 표시되지 않을 수 있습니다.
+      </div>
+      <div style="margin-top:10px;padding:10px;border:1px dashed var(--border);border-radius:10px;background:var(--surface)">
+        ${_histExtTargetSelectHTML('hist-ext3-target','ext3',String(st.target3||'ind'))}
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px;line-height:1.45">
+          · 외부3에서 복사한 내용을 클립보드에서 읽어 자동인식 저장 모달로 보냅니다.<br>
+          · 저장 대상: 개인전 / 끝장전
+        </div>
       </div>
     </div>
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);overflow:hidden">
