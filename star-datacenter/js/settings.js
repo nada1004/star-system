@@ -4247,6 +4247,7 @@ ${_scfgD('notice','📢 공지 관리')}
           ${(!isSubAdmin?`<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text2);cursor:pointer"><input id="cfg-gist-enabled" type="checkbox"> 동기화 ON</label>`:'')}
           ${(!isSubAdmin?`<input id="cfg-gist-token" type="password" placeholder="GitHub 토큰(gist)" style="width:220px;max-width:100%" autocomplete="new-password">`:'')}
           ${(!isSubAdmin?`<button class="btn btn-b btn-sm" onclick="cfgGistSyncSaveCfg()">💾 저장</button>`:`<button class="btn btn-w btn-sm" onclick="cfgGistSyncSaveCfg()">💾 저장</button>`)}
+          ${(!isSubAdmin?`<button class="btn btn-r btn-sm" onclick="cfgGistSyncReset()">초기화</button>`:'')}
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
           <button class="btn btn-w btn-sm" onclick="cfgGistSyncPull()">⬇️ 원격 불러오기</button>
@@ -5139,16 +5140,43 @@ window.cfgGistSyncSaveCfg = function(){
   const enEl=document.getElementById('cfg-gist-enabled');
   const en = enEl ? !!enEl.checked : (window.SettingsStore.cfg().enabled);
   const patch={};
-  if(gid) patch.gistId=gid;
+  // 빈 값도 저장(=초기화/삭제) 가능해야 함
+  // - 잘못 입력한 Gist ID가 계속 남아있는 문제 해결
+  if(/[^a-f0-9]/i.test(gid) && gid){ 
+    const msg=document.getElementById('cfg-gist-sync-msg');
+    if(msg) msg.textContent='❌ Gist ID는 영문/숫자(16진수) 형태여야 합니다. 예: a1b2c3d4...';
+    return;
+  }
+  patch.gistId = gid; // '' 허용
   if(typeof en !== 'undefined') patch.enabled=en;
-  // 보안: 토큰은 입력했을 때만 업데이트(빈 값은 "유지")
-  if(tok) patch.token=tok;
+  // 토큰도 빈 값이면 삭제(초기화)되도록 허용
+  patch.token = tok; // '' 허용
   try{
     window.SettingsStore.setCfg(patch);
     const msg=document.getElementById('cfg-gist-sync-msg');
     if(msg) msg.textContent='✅ 저장됨';
   }catch(e){
     alert('저장 실패: '+e.message);
+  }
+  try{ window.cfgRenderGistSyncStatus(); }catch(e){}
+};
+
+// (요청사항) Gist 동기화 초기화 버튼
+window.cfgGistSyncReset = function(){
+  if(!window.SettingsStore) return alert('SettingsStore 모듈이 없습니다.');
+  if(!confirm('Gist 동기화 설정(Gist ID/토큰/ON)을 초기화할까요?')) return;
+  try{
+    window.SettingsStore.setCfg({ enabled:false, gistId:'', token:'' });
+    // 상태 표시용 키도 함께 정리
+    try{ localStorage.removeItem('su_sync_last_error'); }catch(e){}
+    try{ localStorage.removeItem('su_sync_last_pull'); }catch(e){}
+    try{ localStorage.removeItem('su_sync_last_push'); }catch(e){}
+    try{ localStorage.removeItem('su_sync_last_remote_mode'); }catch(e){}
+    try{ localStorage.removeItem('su_sync_last_migrated'); }catch(e){}
+    const msg=document.getElementById('cfg-gist-sync-msg');
+    if(msg) msg.textContent='🧹 초기화 완료';
+  }catch(e){
+    alert('초기화 실패: '+e.message);
   }
   try{ window.cfgRenderGistSyncStatus(); }catch(e){}
 };
@@ -6882,11 +6910,24 @@ function clearFbPw(){
   if (statusEl) statusEl.textContent = '미설정';
 }
 function saveGhToken(){
-  const val = document.getElementById('cfg-gh-token')?.value.trim();
+  let val = document.getElementById('cfg-gh-token')?.value || '';
+  val = String(val).trim();
   const statusEl = document.getElementById('gh-token-status');
   if (!val) { if(statusEl) statusEl.textContent = '⚠️ 토큰을 입력하세요.'; return; }
+  // 사용자가 "Bearer xxx" / "token xxx" 형태로 붙여넣는 경우 방지
+  val = val.replace(/^Bearer\s+/i,'').replace(/^token\s+/i,'').trim();
+  // 헤더(ByteString) 오류 방지: 토큰은 ASCII여야 함
+  if (/[^ -~]/.test(val)) {
+    if(statusEl) statusEl.textContent = '❌ 토큰에 한글/이모지/특수문자가 포함되어 있어 저장할 수 없습니다. (ghp_... 또는 github_pat_...만 입력)';
+    return;
+  }
+  // 형식 힌트(강제는 아님)
+  if (!/^ghp_[A-Za-z0-9_]+$/.test(val) && !/^github_pat_[A-Za-z0-9_]+$/.test(val)) {
+    if(statusEl) statusEl.textContent = '⚠️ 토큰 형식이 일반적이지 않습니다. (ghp_... 또는 github_pat_...) 그래도 저장은 됩니다.';
+  } else {
+    if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (저장 시 GitHub 자동 업로드 활성)';
+  }
   localStorage.setItem('su_gh_token', val);
-  if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (저장 시 GitHub 자동 업로드 활성)';
   const input = document.getElementById('cfg-gh-token');
   if(input) input.value = '';
 }
