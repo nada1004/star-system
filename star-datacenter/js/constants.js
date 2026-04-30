@@ -1083,7 +1083,9 @@ async function save(){
   const statusEl = document.getElementById('cloudStatus');
   if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
     if (!localStorage.getItem('su_gh_token')) {
-      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},5000); }
+      try{ localStorage.setItem('su_sync_last_fail_msg','GitHub 토큰 없음'); }catch(e){}
+      if (typeof window.refreshCloudSyncStatus === 'function') window.refreshCloudSyncStatus('⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)', '#d97706');
+      else if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)'; }
       return;
     }
     if (typeof window.fbCloudSave !== 'function') {
@@ -1098,15 +1100,31 @@ async function save(){
       }
     }
     if (typeof window.fbCloudSave !== 'function' || typeof window.fbSet !== 'function') {
-      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ GitHub 저장 모듈 미연결'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},4000); }
+      try{ localStorage.setItem('su_sync_last_fail_msg','GitHub 저장 모듈 미연결'); }catch(e){}
+      if (typeof window.refreshCloudSyncStatus === 'function') window.refreshCloudSyncStatus('❌ GitHub 저장 모듈 미연결', '#dc2626');
+      else if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ GitHub 저장 모듈 미연결'; }
       return;
     }
     if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ GitHub 저장 중...'; }
     // 경기 기록 저장은 "데이터"만 우선 빠르게 업로드
     // - 설정 동기화는 saveCfg()/자동 설정 저장 경로에서 별도로 처리
     window.fbCloudSave({ includeSettings:false })
-      .then(() => { if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ GitHub 저장됨'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},3000);} })
-      .catch(e => { if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ GitHub 저장 실패';} console.error('[fbCloudSave]',e); });
+      .then(() => {
+        try{
+          const now = Date.now();
+          localStorage.setItem('su_last_save_time', String(now));
+          localStorage.setItem('su_sync_last_upload_ok_at', String(now));
+          localStorage.removeItem('su_sync_last_fail_msg');
+        }catch(e){}
+        if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('✅ GitHub 저장됨', '#16a34a');
+        else if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ GitHub 저장됨';}
+      })
+      .catch(e => {
+        try{ localStorage.setItem('su_sync_last_fail_msg', String((e&&e.message)||e||'GitHub 저장 실패')); }catch(err){}
+        if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('❌ GitHub 저장 실패', '#dc2626');
+        else if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ GitHub 저장 실패';}
+        console.error('[fbCloudSave]',e);
+      });
   }
 }
 
