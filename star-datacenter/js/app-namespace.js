@@ -1,5 +1,7 @@
 // ─── App Namespace ─────────────────────────────────────────────────────────────
 // 전역 변수 충돌 방지를 위한 네임스페이스 구조
+// - 기존 전역 함수들은 호환성 유지를 위해 그대로 둠
+// - 새로운 함수는 App 객체 내에 추가
 (function() {
   'use strict';
 
@@ -74,6 +76,37 @@
       // 전역 변수 설정 (마이그레이션용)
       setGlobal: function(name, value) {
         window[name] = value;
+      },
+
+      // ErrorHandler 래퍼 (utils/index.js의 ErrorHandler 사용)
+      safe: function(fn, context, options) {
+        if (typeof window.ErrorHandler === 'object' && typeof window.ErrorHandler.safe === 'function') {
+          return window.ErrorHandler.safe(fn, context, options);
+        }
+        // 폴백: 기본 try-catch
+        return (...args) => {
+          try {
+            return fn(...args);
+          } catch (error) {
+            console.error(`[${context}]`, error);
+            return options?.defaultValue ?? null;
+          }
+        };
+      },
+
+      safeAsync: function(fn, context, options) {
+        if (typeof window.ErrorHandler === 'object' && typeof window.ErrorHandler.safeAsync === 'function') {
+          return window.ErrorHandler.safeAsync(fn, context, options);
+        }
+        // 폴백: 기본 try-catch
+        return async (...args) => {
+          try {
+            return await fn(...args);
+          } catch (error) {
+            console.error(`[${context}]`, error);
+            return options?.defaultValue ?? null;
+          }
+        };
       }
     }
   };

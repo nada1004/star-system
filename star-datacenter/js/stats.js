@@ -8,24 +8,6 @@ function _scGet(sub){
 }
 function _scSet(sub,html){ _sCache[sub]=html; return html; }
 
-// ─────────────────────────────────────────────────────────────
-// (안전) HTML escape 헬퍼
-// - 일부 화면(스타시스템/랭킹)에서 escHTML 사용
-// - 기존 전역 escHTML이 없을 때 ReferenceError 방지
-// ─────────────────────────────────────────────────────────────
-if (typeof window.escHTML !== 'function') {
-  window.escHTML = function(s){
-    return String(s ?? '')
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/\"/g,'&quot;')
-      .replace(/'/g,'&#39;');
-  };
-}
-// ⚠️ top-level function escHTML()는 window에 바인딩되어 무한재귀가 날 수 있으므로 const로만 참조
-const escHTML = (s) => window.escHTML(s);
-
 /* ─── 전역 필터 상태 ─── */
 let _statsDateFrom='', _statsDateTo='', _statsMinGames=3, _statsLastN=0;
 // 🚀 티어 랭킹(선수) 상태
