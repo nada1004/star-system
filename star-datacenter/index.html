@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>⭐ 스타대학 데이터 센터</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
-<!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render.js) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="css/style.css?v=20260428-08"><!-- /* [Z-IDX] */ -->
 </head>
 <body>
@@ -187,7 +188,6 @@
 
   <button id="btnExportVis" class="btn btn-w" onclick="doExport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📤</span> 데이터 내보내기</button>
   <button id="btnImportVis" class="btn btn-w" onclick="doImport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📁</span> 데이터 가져오기</button>
-  <button id="btnSyncNow" class="btn btn-w btn-sm" onclick="(async()=>{const b=this;const old=b.innerHTML;b.disabled=true;b.innerHTML='⏳ 동기화';try{if(typeof window.fbForceSync==='function'){await window.fbForceSync(); if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('🔄 수동 동기화 완료','#2563eb');}}catch(e){if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('❌ 수동 동기화 실패','#dc2626'); console.error('[manual sync]',e);}finally{setTimeout(()=>{b.disabled=false;b.innerHTML=old;},500);}})()" style="display:flex;align-items:center;gap:5px;border:1px solid var(--border2);"><span>🔄</span> 동기화</button>
   <span id="cloudStatus" style="font-size:12px;color:var(--gray-l);margin-left:4px"></span>
   <span id="exportHint" style="font-size:12px;color:var(--gray-l)">💡 다른 기기와 공유 시 데이터 내보내기 → 가져오기를 사용하세요</span>
 </div>
@@ -598,14 +598,10 @@
 <script src="js/data.js?v=20260424-02"></script>
 <script src="js/auth.js?v=20260421-01"></script>
 <script src="js/settings-store.js?v=20260423-02"></script>
-<script src="js/settings/design.js?v=20260430-01"></script>
-<script src="js/settings/profile.js?v=20260430-01"></script>
-<script src="js/settings/tabs.js?v=20260430-01"></script>
-<script src="js/settings/index.js?v=20260430-01"></script>
-<script src="js/settings.js?v=20260430-06"></script>
+<script src="js/settings.js?v=20260428-05"></script>
 <script src="js/tier-tour.js?v=20260428-01"></script>
 <script src="js/competition.js?v=20260425-01"></script>
-<script src="js/render.js?v=20260430-03"></script>
+<script src="js/render.js?v=20260428-04"></script>
 <script src="js/players.js?v=20260428-02"></script>
 <script src="js/vs.js?v=20260425-01"></script>
 <script src="js/history.js?v=20260428-11"></script>
@@ -613,12 +609,19 @@
 <script src="js/match-builder.js?v=20260425-01"></script>
 <script src="js/search.js?v=20260427-01"></script>
 <script src="js/pro-comp.js?v=20260428-09"></script>
-<!-- (성능) stats/calendar는 탭 진입 시 지연 로딩 (render.js) -->
-<!-- (성능) 룰렛/부가기능은 탭 진입 시 지연 로딩 (render.js에서 로드) -->
-<!-- (성능) vote/board/elboard/bgm/soop는 기능 사용 시 지연 로딩 (render.js/init.js) -->
+<script src="js/stats.js?v=20260425-01"></script>
+<script src="js/calendar.js?v=20260422-01"></script>
+<script src="js/roulette.js?v=20260424-08"></script>
+<script src="js/duck-race.js?v=20260424-04"></script>
+<script src="js/wheel.js?v=20260416-08"></script>
+<script src="js/vote.js"></script>
+<script src="js/cloud-board.js?v=20260425-01"></script>
+<script src="js/elboard.js?v=20260422-01"></script>
+<script src="js/yt-bgm.js?v=20260420-06"></script>
+<script src="js/soop-multiview.js?v=20260420-10"></script>
 <script src="js/init.js?v=20260426-01"></script>
 <script src="js/board2.js?v=20260428-02"></script>
-<!-- (성능) 챗봇은 열 때 지연 로딩 (render.js) -->
+<script src="js/chatbot.js?v=20260423-08"></script>
 <script src="js/mobile-bar.js?v=20260422-02"></script>
 
 
@@ -700,7 +703,7 @@ function fabActionCfgSearch(){
 <div id="mobileFab">
   <div class="fab-sub-list" id="fabSubList">
     <div class="fab-sub-item" id="fabAIBotItem" onclick="closeFab();openChatbot('aibot')"><span>⚽</span> 펨붕이붓</div>
-    <div class="fab-sub-item" onclick="closeFab();openChatbot('aldeungi')"><span><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:20px;height:20px;object-fit:contain"></span> 알등이</div>
+    <div class="fab-sub-item" onclick="closeFab();openChatbot()"><span><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:20px;height:20px;object-fit:contain"></span> 알등이</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('cal')"><span>🗓️</span> 캘린더</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('comp')"><span>⚡</span> 미니대전</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('univm')"><span>🏟️</span> 대학대전</div>
