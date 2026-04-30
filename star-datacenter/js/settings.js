@@ -4107,8 +4107,10 @@ ${_scfgD('notice','📢 공지 관리')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-b btn-sm" onclick="bulkConvertToGameScore()">🔄 게임수 합산으로 변환</button>
         <button class="btn btn-b btn-sm" onclick="bulkConvertToSetScore()">🔄 세트승으로 변환</button>
+        <button class="btn btn-p btn-sm" onclick="bulkRecalcScoreByMode()">🧩 저장형식대로 재계산</button>
         <span id="bulk-conv-result" style="font-size:12px;color:var(--blue)"></span>
         <span id="bulk-conv2-result" style="font-size:12px;color:var(--blue)"></span>
+        <span id="bulk-conv3-result" style="font-size:12px;color:var(--blue)"></span>
       </div>
     </div>
   </details>
@@ -5383,6 +5385,7 @@ function bulkConvertToGameScore(){
       // 세트 수와 다를 때만 변환
       if(gA!==m.sa||gB!==m.sb){
         m.sa=gA; m.sb=gB;
+        m.scoreMode='game';
         converted++;
       }
     });
@@ -5398,6 +5401,7 @@ function bulkConvertToGameScore(){
         const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
         if(gA!==m.sa||gB!==m.sb){
           m.sa=gA; m.sb=gB;
+          m.scoreMode='game';
           converted++;
         }
       });
@@ -5410,6 +5414,7 @@ function bulkConvertToGameScore(){
       const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
       if(gA!==m.sa||gB!==m.sb){
         m.sa=gA; m.sb=gB;
+        m.scoreMode='game';
         converted++;
       }
     });
@@ -5419,6 +5424,7 @@ function bulkConvertToGameScore(){
       const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
       if(gA!==m.sa||gB!==m.sb){
         m.sa=gA; m.sb=gB;
+        m.scoreMode='game';
         converted++;
       }
     });
@@ -5433,6 +5439,86 @@ function bulkConvertToGameScore(){
   const el=document.getElementById('bulk-conv-result');
   if(el) el.textContent='✅ '+converted+'건 변환 완료!';
   setTimeout(()=>{ if(el) el.textContent=''; }, 3000);
+}
+
+// (요청사항) 저장된 점수 방식(scoreMode: set/game)에 맞춰 sa/sb를 일괄 재계산
+// - 세트로 저장된 기록은 세트승으로, 경기제로 저장된 기록은 게임수 합산으로 정리
+// - scoreMode 미설정(old data)은 sets 기반으로 추정(set wins 합이 2 이상이면 set, 아니면 game)
+function bulkRecalcScoreByMode(){
+  if(!isLoggedIn) return;
+  const arrMap = {mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM};
+  const targets = ['mini','univm','ck','pro','tt'].filter(m=>document.getElementById('bulk-conv-chk-'+m)?.checked);
+  if(!targets.length){ alert('대상을 선택하세요.'); return; }
+
+  const _calc = (sets, mode)=>{
+    let sa=0, sb=0;
+    (sets||[]).forEach(st=>{
+      if(!st) return;
+      const games = Array.isArray(st.games) ? st.games : [];
+      const scoreA = (st.scoreA!=null) ? Number(st.scoreA) : games.filter(g=>g && g.winner==='A').length;
+      const scoreB = (st.scoreB!=null) ? Number(st.scoreB) : games.filter(g=>g && g.winner==='B').length;
+      let w = st.winner;
+      if(!w) w = scoreA>scoreB?'A':scoreB>scoreA?'B':'';
+      if(mode==='set'){
+        if(w==='A') sa += 1;
+        else if(w==='B') sb += 1;
+      }else{
+        sa += (isNaN(scoreA)?0:scoreA);
+        sb += (isNaN(scoreB)?0:scoreB);
+      }
+    });
+    return {sa, sb};
+  };
+  const _inferMode = (m)=>{
+    const sm = (m && m.scoreMode) ? String(m.scoreMode) : '';
+    if(sm==='set' || sm==='game') return sm;
+    const sets = Array.isArray(m?.sets) ? m.sets : [];
+    let wA=0, wB=0;
+    sets.forEach(st=>{
+      if(!st) return;
+      const w = st.winner || ((st.scoreA||0)>(st.scoreB||0)?'A':(st.scoreB||0)>(st.scoreA||0)?'B':'');
+      if(w==='A') wA++; else if(w==='B') wB++;
+    });
+    return (wA+wB>=2) ? 'set' : 'game';
+  };
+
+  let changed=0, setCnt=0, gameCnt=0;
+  const _applyToMatch = (m)=>{
+    if(!m || !m.sets || !m.sets.length) return;
+    const mode = _inferMode(m);
+    const sc = _calc(m.sets, mode);
+    const need = (m.sa!==sc.sa || m.sb!==sc.sb) || (m.scoreMode!==mode);
+    if(!need) return;
+    m.sa = sc.sa;
+    m.sb = sc.sb;
+    m.scoreMode = mode;
+    changed++;
+    if(mode==='set') setCnt++; else gameCnt++;
+  };
+
+  targets.forEach(key=>{
+    (arrMap[key]||[]).forEach(_applyToMatch);
+  });
+  // 대회(tourneys)도 포함
+  (tourneys||[]).forEach(tn=>{
+    if(tn?.groups){
+      tn.groups.forEach(grp=>{
+        (grp?.matches||[]).forEach(_applyToMatch);
+      });
+    }
+    const br=tn?.bracket||{};
+    Object.values(br.matchDetails||{}).forEach(_applyToMatch);
+    (br.manualMatches||[]).forEach(_applyToMatch);
+  });
+
+  const el=document.getElementById('bulk-conv3-result');
+  if(changed===0){
+    if(el) el.textContent='재계산할 항목이 없습니다. (이미 저장형식대로 정리됨)';
+    return;
+  }
+  save(); render();
+  if(el) el.textContent=`✅ ${changed}건 재계산 완료! (세트제 ${setCnt} / 경기제 ${gameCnt})`;
+  setTimeout(()=>{ if(el) el.textContent=''; }, 3500);
 }
 
 // (요청사항) 경기 기록을 "세트제(세트 승리 수)" 스코어로 일괄 변환

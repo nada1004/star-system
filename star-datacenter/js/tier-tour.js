@@ -2661,6 +2661,7 @@ function bulkConvertToGameScore(){
       // 세트 수와 다를 때만 변환
       if(gA!==m.sa||gB!==m.sb){
         m.sa=gA; m.sb=gB;
+        m.scoreMode='game';
         converted++;
       }
     });
@@ -2676,6 +2677,7 @@ function bulkConvertToGameScore(){
         const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
         if(gA!==m.sa||gB!==m.sb){
           m.sa=gA; m.sb=gB;
+          m.scoreMode='game';
           converted++;
         }
       });
@@ -2688,6 +2690,7 @@ function bulkConvertToGameScore(){
       const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
       if(gA!==m.sa||gB!==m.sb){
         m.sa=gA; m.sb=gB;
+        m.scoreMode='game';
         converted++;
       }
     });
@@ -2697,6 +2700,7 @@ function bulkConvertToGameScore(){
       const gB=m.sets.reduce((s,st)=>s+(st.scoreB||0),0);
       if(gA!==m.sa||gB!==m.sb){
         m.sa=gA; m.sb=gB;
+        m.scoreMode='game';
         converted++;
       }
     });
