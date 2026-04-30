@@ -192,6 +192,43 @@ function _lazyRStats(C, T){
     }
   })();
 }
+async function _ensureStatsFeatureReady(){
+  try{
+    await _ensureStatsLoaded();
+    return true;
+  }catch(e){
+    console.error('[lazy] stats feature load fail', e);
+    return false;
+  }
+}
+function _lazyOnGlobalSearch(val){
+  const q = String(val||'');
+  (async()=>{
+    const ok = await _ensureStatsFeatureReady();
+    if(!ok) return;
+    const fn = window.onGlobalSearch;
+    if(typeof fn === 'function' && fn !== _lazyOnGlobalSearch) fn(q);
+  })();
+}
+function _lazyOpenShareCardModal(){
+  (async()=>{
+    const ok = await _ensureStatsFeatureReady();
+    if(!ok) return;
+    const fn = window.openShareCardModal;
+    if(typeof fn === 'function' && fn !== _lazyOpenShareCardModal) fn();
+  })();
+}
+function _lazyRenderShareCardByMatchObj(m){
+  (async()=>{
+    const ok = await _ensureStatsFeatureReady();
+    if(!ok) return;
+    const fn = window.renderShareCardByMatchObj;
+    if(typeof fn === 'function' && fn !== _lazyRenderShareCardByMatchObj) fn(m);
+  })();
+}
+window.onGlobalSearch = window.onGlobalSearch || _lazyOnGlobalSearch;
+window.openShareCardModal = window.openShareCardModal || _lazyOpenShareCardModal;
+window.renderShareCardByMatchObj = window.renderShareCardByMatchObj || _lazyRenderShareCardByMatchObj;
 function _lazyRCal(C, T){
   _lazyLoadingView(T, C, '캘린더', '캘린더 모듈을 불러오는 중...');
   (async()=>{
@@ -1177,10 +1214,18 @@ function openShareCardFromMatch(mode,idx){
     ...(isTierTeamStyle ? {a:'A팀', b:'B팀'} : {})
   }:null;
   _shareMode='match';
-  openShareCardModal();
-  setTimeout(()=>{
-    if(window._shareMatchObj)renderShareCardByMatchObj(window._shareMatchObj);
-  },80);
+  (async()=>{
+    const ok = await _ensureStatsFeatureReady();
+    if(!ok) return;
+    if(typeof window.openShareCardModal==='function') window.openShareCardModal();
+    setTimeout(()=>{
+      try{
+        if(window._shareMatchObj && typeof window.renderShareCardByMatchObj==='function'){
+          window.renderShareCardByMatchObj(window._shareMatchObj);
+        }
+      }catch(e){}
+    },80);
+  })();
 }
 
 // ── 이미지 저장 로딩 토스트 ──────────────────────────────────────
