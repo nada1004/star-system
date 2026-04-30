@@ -87,7 +87,6 @@ function readBody(req) {
 
 async function handleAIBot(req, res) {
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method Not Allowed' });
-  if (!GROQ_API_KEY) return sendJson(res, 500, { error: 'Server missing GROQ_API_KEY' });
 
   let payload = null;
   try{
@@ -96,6 +95,11 @@ async function handleAIBot(req, res) {
   }catch(e){
     return sendJson(res, 400, { error: 'Invalid JSON body' });
   }
+
+  // (요청사항) 클라이언트(설정탭)에서 전달한 apiKey를 우선 사용
+  const clientKey = (payload && (payload.apiKey || payload.api_key) ? String(payload.apiKey || payload.api_key) : '').trim();
+  const apiKey = (clientKey || GROQ_API_KEY || '').trim();
+  if (!apiKey) return sendJson(res, 500, { error: 'Missing GROQ_API_KEY (env/.env) or apiKey (request)' });
 
   const userMessages = Array.isArray(payload.messages) ? payload.messages : null;
   const prompt = (payload.prompt || '').toString();
@@ -115,7 +119,7 @@ async function handleAIBot(req, res) {
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
