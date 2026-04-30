@@ -374,7 +374,7 @@ const _DEFAULT_CATSECS = {
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
   // (요청사항) 모바일/태블릿 UI 크기 조절(버튼/메뉴/배지)
   '🎨 디자인/테마':['tablabels','designv2','hdr','appfont','uisize','reccard','tourneycard','calui'],
-  '🧠 자동화/도구':['bgm','soopmv','pasteRoute','autofitall','fab'],
+  '🧠 자동화/도구':['bgm','soopmv','aibotkey','pasteRoute','autofitall','fab'],
   '🧪 고급/점검':['cfgmenu','storage','selfcheck'],
   '💾 데이터':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
@@ -1451,6 +1451,33 @@ window.cfgSaveSoopSettings = function(){
   }catch(e){}
   try{ localStorage.setItem('su_soop_list', list); }catch(e){}
   try{ window.soopApplySettings && window.soopApplySettings(); }catch(e){}
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// ⚽ 펨붕이붓 AI API Key 저장
+// - localStorage: su_aibot_api_key
+// - chatbot.js → /api/aibot 호출 시 apiKey로 함께 전송
+// ─────────────────────────────────────────────────────────────
+window.cfgSaveAIBotKey = function(){
+  const v = String(document.getElementById('cfg-aibot-key')?.value || '').trim();
+  if(!v){ alert('API Key를 입력하세요.'); return; }
+  try{ localStorage.setItem('su_aibot_api_key', v); }catch(e){}
+  try{
+    const st = document.getElementById('cfg-aibot-key-status');
+    if(st) st.textContent = '✅ 저장됨';
+  }catch(e){}
+  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+};
+window.cfgClearAIBotKey = function(){
+  if(!confirm('저장된 AI API Key를 삭제할까요?')) return;
+  try{ localStorage.removeItem('su_aibot_api_key'); }catch(e){}
+  try{
+    const inp = document.getElementById('cfg-aibot-key');
+    if(inp) inp.value = '';
+    const st = document.getElementById('cfg-aibot-key-status');
+    if(st) st.textContent = '미설정';
+  }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
 };
 
@@ -2630,7 +2657,7 @@ function rCfg(C,T){
     '🖼️ 이미지/프로필':'이미지탭/스트리머 상세/경기 상세(팝업)',
     '🧩 현황판/펨코':'신현황판/펨코스타일/순서/칩/밝기/배경',
     '🎨 디자인/테마':'디자인모드/헤더/폰트/카드/캘린더',
-    '🧠 자동화/도구':'BGM/멀티뷰/붙여넣기 분리/자동 맞춤',
+    '🧠 자동화/도구':'BGM/멀티뷰/AI키/붙여넣기 분리/자동 맞춤',
     '🧪 고급/점검':'메뉴정리/저장소/설정 점검',
     '💾 데이터':'동기화/백업/일괄 작업'
   };
@@ -2647,7 +2674,7 @@ function rCfg(C,T){
     uisize:'📱 모바일/태블릿 UI 크기',
     siAssign:'🎭 스트리머별 상태 아이콘 지정',
     cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
-    bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
+    bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', aibotkey:'⚽ 펨붕이붓 AI API Key', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
     fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
     sync:'🔄 동기화', firebase:'🔥 Firebase', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
@@ -3130,6 +3157,28 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-b btn-sm" onclick="cfgSaveSoopSettings();if(typeof showToast==='function')showToast('저장됨');">저장</button>
           <button class="btn btn-w btn-sm" onclick="document.getElementById('cfg-soop-list').value='';cfgSaveSoopSettings();">목록 비우기</button>
+        </div>
+      </div>
+    </details>`;
+  })()}
+  ${(()=>{
+    const has = !!(localStorage.getItem('su_aibot_api_key')||'').trim();
+    return _scfgD('aibotkey','⚽ 펨붕이붓 AI API Key') + `
+      <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.6">
+        펨붕이붓(채팅 AI) 호출에 사용할 API Key를 저장합니다.<br>
+        <span style="color:#dc2626;font-weight:800">주의:</span> 키는 이 브라우저(localStorage)에 저장됩니다. 공유 PC에서는 저장하지 마세요.
+      </div>
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <input id="cfg-aibot-key" type="password" placeholder="${has ? '이미 저장됨 (새로 입력하면 변경)' : 'API Key 입력'}" autocomplete="new-password"
+            value=""
+            style="flex:1;min-width:220px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:12px;background:var(--white)">
+          <button class="btn btn-b btn-sm" onclick="cfgSaveAIBotKey()">저장</button>
+          <button class="btn btn-w btn-sm" onclick="cfgClearAIBotKey()">삭제</button>
+          <span id="cfg-aibot-key-status" style="font-size:11px;color:var(--gray-l);font-weight:900">${has?'✅ 저장됨':'미설정'}</span>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);line-height:1.5">
+          입력 후 <b>펨붕이붓</b> 모드에서 자동으로 적용됩니다.
         </div>
       </div>
     </details>`;

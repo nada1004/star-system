@@ -4579,11 +4579,16 @@ function proCompGJSection(tn) {
   if (!tn.gjMatches) tn.gjMatches = [];
   let h = '';
   if (isLoggedIn) {
+    const _today = new Date().toISOString().slice(0,10);
+    const _editing = (window._pcgjEdit && window._pcgjEdit.tnId === tn.id);
     const pA = _pcgjA, pB = _pcgjB;
     const pAObj = players.find(p=>p.name===pA)||{}, pBObj = players.find(p=>p.name===pB)||{};
     const aCol = gc(pAObj.univ)||'#2563eb', bCol = gc(pBObj.univ)||'#dc2626';
     h += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
-      <div style="font-weight:700;font-size:13px;margin-bottom:10px">📢 중장전 추가</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="font-weight:700;font-size:13px">${_editing?'✏️ 중장전 수정':'📢 중장전 추가'}</div>
+        ${_editing?`<button class="btn btn-w btn-xs" style="margin-left:auto" onclick="proCompGJCancelEdit()">취소</button>`:`<span style="margin-left:auto"></span>`}
+      </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
         <div style="flex:1;min-width:140px">
           <div style="font-size:11px;font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
@@ -4604,14 +4609,14 @@ function proCompGJSection(tn) {
         </div>
         <div>
           <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:3px">📅 날짜</div>
-          <input type="date" id="pcgj-date" value="${new Date().toISOString().slice(0,10)}" style="width:140px">
+          <input type="date" id="pcgj-date" value="${_editing ? (window._pcgjEdit.d||_today) : _today}" style="width:140px">
         </div>
       </div>
       <div id="pcgj-games" style="margin-top:10px"></div>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-b btn-sm" onclick="pcgjAddGame()">+ 게임 추가</button>
         <button class="btn btn-p btn-sm" onclick="openPcGJPasteModal('${tn.id}')">📋 자동인식</button>
-        <button class="btn btn-g btn-sm" onclick="proCompGJSave('${tn.id}')">💾 저장</button>
+        <button class="btn btn-g btn-sm" onclick="proCompGJSave('${tn.id}')">💾 ${_editing?'수정 저장':'저장'}</button>
       </div>
     </div>`;
   }
@@ -4632,7 +4637,10 @@ function proCompGJSection(tn) {
         <span style="font-weight:700;cursor:pointer" onclick="openPlayerModal('${(sess.b||'').replace(/'/g,"\\'")}')">${sess.b||'?'}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${(sess.games||[]).length}게임</span>
-        ${isLoggedIn?`<button class="btn btn-r btn-xs" style="margin-left:auto" onclick="proCompGJDel('${tn.id}',${si})">🗑️ 삭제</button>`:'<span style="margin-left:auto"></span>'}
+        ${isLoggedIn?`<span style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn btn-w btn-xs" onclick="proCompGJEdit('${tn.id}',${si})">✏️ 수정</button>
+          <button class="btn btn-r btn-xs" onclick="proCompGJDel('${tn.id}',${si})">🗑️ 삭제</button>
+        </span>`:'<span style="margin-left:auto"></span>'}
       </div>
       <table style="margin:0;border-radius:0"><thead><tr><th>게임</th><th>${sess.a||'A'}</th><th style="color:var(--gray-l)">vs</th><th>${sess.b||'B'}</th><th>맵</th></tr></thead><tbody>
       ${(sess.games||[]).map((g,gi)=>{
@@ -4652,6 +4660,32 @@ function proCompGJSection(tn) {
 }
 
 let _pcgjGames = [], _pcgjA = '', _pcgjB = '';
+// 수정 모드 상태: { tnId, si, d }
+window._pcgjEdit = null;
+
+function proCompGJEdit(tnId, si){
+  const tn = _findTourneyById(tnId); if (!tn || !tn.gjMatches) return;
+  const sess = tn.gjMatches[si]; if (!sess) return;
+  _pcgjA = sess.a || '';
+  _pcgjB = sess.b || '';
+  _pcgjGames = (sess.games||[]).map(g => ({ winner: g.winner || '', map: g.map || '' }));
+  window._pcgjEdit = { tnId, si, d: sess.d || '' };
+  render();
+  // 렌더 후 입력값/게임 UI 반영
+  setTimeout(()=>{
+    try{
+      const di = document.getElementById('pcgj-date');
+      if(di) di.value = sess.d || new Date().toISOString().slice(0,10);
+      _pcgjRender();
+    }catch(e){}
+  }, 0);
+}
+function proCompGJCancelEdit(){
+  window._pcgjEdit = null;
+  _pcgjGames = []; _pcgjA = ''; _pcgjB = '';
+  render();
+}
+
 function pcgjAddGame() {
   _pcgjGames.push({winner:'', map:''});
   _pcgjRender();
@@ -4780,16 +4814,34 @@ function proCompGJSave(tnId) {
   const d = document.getElementById('pcgj-date')?.value||'';
   if (!a||!b) return alert('선수 A와 B를 선택하세요.');
   if (!_pcgjGames.length) return alert('게임을 1개 이상 추가하세요.');
-  const matchId = genId();
   if (!tn.gjMatches) tn.gjMatches = [];
+  const editing = (window._pcgjEdit && window._pcgjEdit.tnId === tnId && typeof window._pcgjEdit.si === 'number');
+  let matchId = genId();
+  let prevSess = null;
+  if(editing){
+    prevSess = tn.gjMatches[window._pcgjEdit.si] || null;
+    if(prevSess && prevSess._id) matchId = prevSess._id;
+  }
   const sess = {_id:matchId, d, a, b, games:_pcgjGames.map(g=>({...g}))};
-  tn.gjMatches.unshift(sess);
+  if(editing && prevSess){
+    // 기존 전적 롤백(기존 matchId 기준)
+    if (prevSess._id) {
+      (players||[]).forEach(p => {
+        if (!p.history) return;
+        p.history = p.history.filter(h => h.matchId !== prevSess._id);
+      });
+    }
+    tn.gjMatches[window._pcgjEdit.si] = sess;
+  }else{
+    tn.gjMatches.unshift(sess);
+  }
   // 선수 전적 반영
   sess.games.forEach(g => {
     if (!g.winner) return;
     const win = g.winner, loss = g.winner===a?b:a;
     applyGameResult(win, loss, d, g.map||'', matchId, '', '', '프로리그대회끝장전');
   });
+  window._pcgjEdit = null;
   _pcgjGames=[]; _pcgjA=''; _pcgjB='';
   save(); render();
 }

@@ -428,6 +428,7 @@ async function generateResponse(msg) {
   // AI봇 모드: server.js의 /api/aibot 프록시로 연동
   if (chatbotMode === 'aibot') {
     try{
+      const apiKey = (localStorage.getItem('su_aibot_api_key') || '').trim();
       const recent = (chatHistory||[]).slice(-14).map(m=>({
         role: m.role === 'bot' ? 'assistant' : 'user',
         content: String(m.content || '').replace(/<[^>]*>/g,'').slice(0, 4000)
@@ -438,13 +439,15 @@ async function generateResponse(msg) {
       const r = await fetch('/api/aibot', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ messages: recent })
+        // (요청사항) 설정탭에서 입력한 펨붕이붓 AI API Key가 있으면 함께 전송
+        // - 서버(server.js)가 apiKey를 우선 사용하도록 처리
+        body: JSON.stringify({ messages: recent, ...(apiKey ? { apiKey } : {}) })
       });
       const j = await r.json().catch(()=>null);
       if(!r.ok) throw new Error((j && j.error) ? j.error : ('HTTP '+r.status));
       return (j && j.text) ? String(j.text) : '응답이 비어있어.';
     }catch(e){
-      return `❌ AI봇 호출 실패: ${e.message}\n\n서버(server.js)에 GROQ_API_KEY가 설정되어 있는지 확인해줘.`;
+      return `❌ AI봇 호출 실패: ${e.message}\n\n(1) 설정탭에서 “펨붕이붓 AI API Key”를 입력했는지\n(2) 또는 서버(server.js)에 GROQ_API_KEY가 설정되어 있는지 확인해줘.`;
     }
   }
 
