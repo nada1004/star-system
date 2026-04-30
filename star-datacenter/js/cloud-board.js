@@ -538,6 +538,35 @@ function gsSetStatus(msg, color='var(--gray-l)'){
   if(el){el.textContent=msg;el.style.color=color;}
 }
 try{ window.gsSetStatus = gsSetStatus; }catch(e){}
+function _fmtSyncTs(ts){
+  const n = Number(ts||0) || 0;
+  if(!n) return '기록 없음';
+  try{ return new Date(n).toLocaleString('ko-KR'); }catch(e){ return '기록 없음'; }
+}
+function refreshCloudSyncStatus(msg, color){
+  const el=document.getElementById('cloudStatus');
+  const panel=document.getElementById('cfg-fb-sync-result');
+  const lastUploadOk = Number(localStorage.getItem('su_sync_last_upload_ok_at')||0) || 0;
+  const lastReceived = Number(localStorage.getItem('su_sync_last_received_at')||0) || 0;
+  const lastRemoteSaved = Number(localStorage.getItem('su_sync_last_remote_saved_at')||0) || 0;
+  const failMsg = String(localStorage.getItem('su_sync_last_fail_msg')||'').trim();
+  const summary = `저장 ${_fmtSyncTs(lastUploadOk)} / 수신 ${_fmtSyncTs(lastReceived)}${lastRemoteSaved?` / 원격저장 ${_fmtSyncTs(lastRemoteSaved)}`:''}`;
+  if(el){
+    el.style.color = color || (failMsg ? '#dc2626' : 'var(--gray-l)');
+    el.textContent = msg ? `${msg} · ${summary}` : summary;
+  }
+  if(panel){
+    panel.innerHTML = `
+      <div style="display:grid;gap:6px">
+        <div><b>최근 업로드:</b> ${_fmtSyncTs(lastUploadOk)}</div>
+        <div><b>최근 수신:</b> ${_fmtSyncTs(lastReceived)}</div>
+        <div><b>원격 savedAt:</b> ${_fmtSyncTs(lastRemoteSaved)}</div>
+        <div><b>최근 상태:</b> ${msg || (failMsg ? '업로드 실패 기록 있음' : '대기 중')}</div>
+        ${failMsg?`<div style="color:#dc2626"><b>최근 실패:</b> ${failMsg}</div>`:''}
+      </div>`;
+  }
+}
+try{ window.refreshCloudSyncStatus = refreshCloudSyncStatus; }catch(e){}
 try{ window.fbCloudSave = fbCloudSave; }catch(e){}
 
 // ── GitHub JSON 불러오기 ───────────────────────────────────

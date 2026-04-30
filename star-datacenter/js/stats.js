@@ -1937,13 +1937,13 @@ function renderShareCardByMatchObj(m){
       return`<div style="background:${setBg};border:1px solid ${setBorder};border-radius:10px;padding:10px 12px;margin-bottom:8px">
         <div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:${gameList.length?'7':'0'}px">
           <span style="font-size:11px;font-weight:900;color:${isAce?theme.accentDark:theme.textDim};letter-spacing:.3px;min-width:60px;text-align:center">${sLabel}</span>
-          <span style="font-weight:900;background:${sAW?ca:'transparent'};${sAW?'':'border:1px solid '+theme.divider};color:${sAW?'#fff':theme.textDim};padding:2px 10px;border-radius:6px;font-size:12px;text-align:center">${a}</span>
+          <span style="font-weight:900;background:${sAW?ca:'transparent'};${sAW?'':'border:1px solid '+theme.divider};color:${sAW?'#fff':theme.textDim};padding:2px 10px;border-radius:6px;font-size:12px;text-align:center">${_dispA}</span>
           <span style="font-weight:900;font-size:16px;letter-spacing:2px;min-width:48px;text-align:center">
             <span style="color:${sAW?ca:theme.textDim}">${swA}</span>
             <span style="color:${theme.textDim};font-size:12px;margin:0 4px">:</span>
             <span style="color:${sBW?cb:theme.textDim}">${swB}</span>
           </span>
-          <span style="font-weight:900;background:${sBW?cb:'transparent'};${sBW?'':'border:1px solid '+theme.divider};color:${sBW?'#fff':theme.textDim};padding:2px 10px;border-radius:6px;font-size:12px;text-align:center">${b}</span>
+          <span style="font-weight:900;background:${sBW?cb:'transparent'};${sBW?'':'border:1px solid '+theme.divider};color:${sBW?'#fff':theme.textDim};padding:2px 10px;border-radius:6px;font-size:12px;text-align:center">${_dispB}</span>
           <span style="font-size:11px;color:${theme.textDim};white-space:nowrap;font-weight:800">${sAW?'▶ '+a:sBW?'▶ '+b:'무승부'}</span>
         </div>
         ${games}
@@ -1961,7 +1961,49 @@ function renderShareCardByMatchObj(m){
   function _pickTeamRep(side){
     const arr = side==='A' ? (m.teamAMembers||[]) : (m.teamBMembers||[]);
     if(!Array.isArray(arr) || !arr.length) return null;
+    const byName = new Map(arr.map(x=>[String((x&&x.name)||'').trim(), x]).filter(([n])=>!!n));
+    const sets = Array.isArray(m.sets) ? m.sets : [];
+    const lastSet = sets.length ? sets[sets.length-1] : null;
+    const lastGames = Array.isArray(lastSet && lastSet.games) ? lastSet.games : [];
+    for(const g of lastGames){
+      const aceName = String(side==='A' ? (g && g.playerA) : (g && g.playerB) || '').trim();
+      if(aceName && byName.has(aceName)){
+        return { ...(byName.get(aceName)||{}), __repReason:'ace' };
+      }
+    }
+    const winCount = new Map();
+    sets.forEach(s=>{
+      (Array.isArray(s&&s.games)?s.games:[]).forEach(g=>{
+        const winnerSide = String((g&&g.winner)||'').trim();
+        const winnerName = String(winnerSide===side ? (side==='A' ? g.playerA : g.playerB) : '').trim();
+        if(!winnerName) return;
+        winCount.set(winnerName, (winCount.get(winnerName)||0)+1);
+      });
+    });
+    let bestName = '', bestWins = -1;
+    winCount.forEach((wins, name)=>{
+      if(wins > bestWins){ bestWins = wins; bestName = name; }
+    });
+    if(bestName && byName.has(bestName)){
+      return { ...(byName.get(bestName)||{}), __repReason:'wins', __repWins:bestWins };
+    }
     return arr.find(x=>x && (x.name || x.univ || x.photo)) || arr[0] || null;
+  }
+  function _teamRepNote(side){
+    const rep = _pickTeamRep(side);
+    if(!rep) return '';
+    if(rep.__repReason==='ace') return '에이스전';
+    if(rep.__repReason==='wins' && rep.__repWins>0) return `${rep.__repWins}승`;
+    return '';
+  }
+  function _teamLineupSummary(side){
+    const arr = side==='A' ? (m.teamAMembers||[]) : (m.teamBMembers||[]);
+    if(!Array.isArray(arr) || !arr.length) return '';
+    const names = arr.map(x=>String((x&&x.name)||'').trim()).filter(Boolean);
+    if(!names.length) return `${arr.length}인 팀`;
+    if(names.length===1) return names[0];
+    if(names.length===2) return `${names[0]} · ${names[1]}`;
+    return `${names[0]} · ${names[1]} 외 ${names.length-2}명`;
   }
   function _teamRepIconHTML(side, win){
     const rep = _pickTeamRep(side);
@@ -1974,8 +2016,11 @@ function renderShareCardByMatchObj(m){
     if(rep && rep.name){
       const p = statsP(rep.name) || rep;
       if(p && p.photo){
-        return `<div style="width:${sOuter};height:${sOuter};border-radius:var(--su_profile_radius,50%);margin:0 auto 8px;overflow:hidden;${ring}">
-          <img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.outerHTML='<div style=\\'width:${sOuter};height:${sOuter};border-radius:16px;background:rgba(${rgb},.22);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);':''}\\'>${univIconHTML(p.univ||'', '44px')}</div>'">
+        return `<div style="position:relative;width:${sOuter};height:${sOuter};border-radius:var(--su_profile_radius,50%);margin:0 auto 8px;overflow:hidden;${ring}">
+          <img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div style="display:none;position:absolute;inset:0;border-radius:16px;background:rgba(${rgb},.22);align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);':''}">
+            ${univIconHTML(p.univ||'', '44px')}
+          </div>
         </div>`;
       }
       if(p && p.univ){
@@ -1986,6 +2031,46 @@ function renderShareCardByMatchObj(m){
     }
     return `<div style="width:58px;height:58px;border-radius:16px;background:${win?`rgba(${rgb},.38)`:`rgba(${rgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden;color:#fff;font-weight:1000;font-size:22px">${side}</div>`;
   }
+  function _teamMiniMemberCell(side, mem, idx){
+    const p = mem && mem.name ? (statsP(mem.name) || mem) : (mem || {});
+    const col = side==='A' ? ca : cb;
+    const rgb = side==='A' ? caRgb : cbRgb;
+    const name = String((p && p.name) || '').trim() || `${idx+1}번`;
+    const race = String((p && p.race) || '').trim();
+    const univ = String((p && p.univ) || '').trim();
+    let icon = '';
+    if(p && p.photo){
+      icon = `<img src="${toHttpsUrl(p.photo)}" style="width:28px;height:28px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:1.5px solid rgba(255,255,255,.55)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:28px;height:28px;border-radius:10px;background:rgba(${rgb},.22);align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.35);overflow:hidden">${univIconHTML(univ,'18px')}</div>`;
+    }else{
+      icon = `<div style="width:28px;height:28px;border-radius:10px;background:rgba(${rgb},.22);display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.35);overflow:hidden">${univ ? univIconHTML(univ,'18px') : `<span style="color:#fff;font-weight:1000;font-size:11px">${name.slice(0,1)}</span>`}</div>`;
+    }
+    return `<div style="min-width:0;padding:6px 5px;border-radius:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="display:flex;align-items:center;justify-content:center">${icon}</div>
+      <div style="font-size:10px;font-weight:900;color:#fff;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+      <div style="display:flex;align-items:center;gap:3px;min-height:14px">
+        ${race ? `<span class="rbadge r${race}" style="font-size:8px;padding:0 4px;line-height:14px">${race}</span>` : ''}
+        ${univ ? `<span style="font-size:8px;color:rgba(255,255,255,.68);max-width:54px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${univ}</span>` : ''}
+      </div>
+    </div>`;
+  }
+  function _teamRosterPanel(side, win){
+    const arr = side==='A' ? (m.teamAMembers||[]) : (m.teamBMembers||[]);
+    const label = side==='A' ? _dispA : _dispB;
+    const rgb = side==='A' ? caRgb : cbRgb;
+    const show = arr.slice(0,5);
+    const extra = Math.max(0, arr.length - show.length);
+    return `<div style="flex:1;min-width:0;padding:10px 10px 8px;border-radius:14px;background:${win?`rgba(${rgb},.17)`:'rgba(255,255,255,.10)'};border:1px solid ${win?'rgba(255,255,255,.38)':'rgba(255,255,255,.16)'};box-shadow:${win?'0 10px 24px rgba(0,0,0,.16)':'none'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:1000;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
+        <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.82);background:rgba(255,255,255,.14);padding:2px 8px;border-radius:999px;flex-shrink:0">${arr.length}명</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px">
+        ${show.map((mem,idx)=>_teamMiniMemberCell(side, mem, idx)).join('')}
+      </div>
+      ${extra>0?`<div style="margin-top:6px;text-align:right;font-size:9px;font-weight:800;color:rgba(255,255,255,.72)">+ ${extra}명</div>`:''}
+    </div>`;
+  }
+  const _teamHeaderHTML = '';
 
   card.innerHTML=`<div style="background:${theme.bodyBg};color:${theme.text};min-width:340px;border-radius:18px;overflow:hidden;font-family:'Noto Sans KR',sans-serif">
 
@@ -2006,6 +2091,7 @@ function renderShareCardByMatchObj(m){
         <div style="font-size:11px;color:rgba(255,255,255,.65)">${m.d||''}</div>
       </div>
 
+      ${(_teamMode && _teamHeaderHTML) ? _teamHeaderHTML : `
       <!-- 팀 대결 -->
       <div style="display:flex;align-items:center;justify-content:center;gap:10px">
         <!-- A팀 -->
@@ -2019,7 +2105,7 @@ function renderShareCardByMatchObj(m){
             </div>`)
           :'<div style="height:12px"></div>')}
           <div style="font-size:14px;font-weight:${aWin?1000:700};color:${aWin?'#fff':'rgba(255,255,255,.7)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isCivil?'⚔️ A팀':_dispA}</div>
-          ${_teamMode?(()=>{const _pa=_pickTeamRep('A');const _pp=(_pa&&_pa.name)?(statsP(_pa.name)||_pa):_pa;return _pp&&(_pp.name||_pp.univ)?`<div style="display:flex;justify-content:center;align-items:center;gap:3px;margin-top:2px;flex-wrap:wrap">${_pp.name?`<span style="font-size:9px;color:rgba(255,255,255,.88);font-weight:800;max-width:92px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_pp.name}</span>`:''}${_pp.univ?`<span style="font-size:9px;color:rgba(255,255,255,.58);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:86px">${_pp.univ}</span>`:''}</div>`:''})():(m._usePlayerPhoto?(()=>{const _pa=statsP(a);return _pa&&(_pa.race||_pa.univ)?`<div style="display:flex;justify-content:center;align-items:center;gap:3px;margin-top:2px;flex-wrap:wrap">${_pa.race?`<span class="rbadge r${_pa.race}" style="font-size:9px;padding:1px 5px">${_pa.race}</span>`:''}${_pa.univ?`<span style="font-size:9px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:86px">${_pa.univ}</span>`:''}</div>`:''})():'')}
+          ${_teamMode?(()=>{const _pa=_pickTeamRep('A');const _pp=(_pa&&_pa.name)?(statsP(_pa.name)||_pa):_pa;const _note=_teamRepNote('A');return (_note||(_pp&&_pp.univ))?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;margin-top:4px;flex-wrap:wrap">${_note?`<span style="font-size:9px;color:rgba(255,255,255,.96);font-weight:900;background:rgba(255,255,255,.14);padding:2px 6px;border-radius:999px">${_note}</span>`:''}${(_pp&&_pp.univ)?`<span style="font-size:9px;color:rgba(255,255,255,.68);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px">${_pp.univ}</span>`:''}</div>`:''})():(m._usePlayerPhoto?(()=>{const _pa=statsP(a);return _pa&&(_pa.race||_pa.univ)?`<div style="display:flex;justify-content:center;align-items:center;gap:3px;margin-top:2px;flex-wrap:wrap">${_pa.race?`<span class="rbadge r${_pa.race}" style="font-size:9px;padding:1px 5px">${_pa.race}</span>`:''}${_pa.univ?`<span style="font-size:9px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:86px">${_pa.univ}</span>`:''}</div>`:''})():'')}
           ${aWin?`<div style="margin-top:5px"><span style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff;font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px;letter-spacing:.5px">🏆 승리</span></div>`:`<div style="margin-top:5px;font-size:10px;color:rgba(255,255,255,.5);font-weight:600">패배</div>`}
         </div>
 
@@ -2042,10 +2128,11 @@ function renderShareCardByMatchObj(m){
             </div>`)
           :'<div style="height:12px"></div>')}
           <div style="font-size:14px;font-weight:${bWin?1000:700};color:${bWin?'#fff':'rgba(255,255,255,.7)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isCivil?'🛡️ B팀':_dispB}</div>
-          ${_teamMode?(()=>{const _pb=_pickTeamRep('B');const _pp=(_pb&&_pb.name)?(statsP(_pb.name)||_pb):_pb;return _pp&&(_pp.name||_pp.univ)?`<div style="display:flex;justify-content:center;align-items:center;gap:3px;margin-top:2px;flex-wrap:wrap">${_pp.name?`<span style="font-size:9px;color:rgba(255,255,255,.88);font-weight:800;max-width:92px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_pp.name}</span>`:''}${_pp.univ?`<span style="font-size:9px;color:rgba(255,255,255,.58);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:86px">${_pp.univ}</span>`:''}</div>`:''})():(m._usePlayerPhoto?(()=>{const _pb=statsP(b);return _pb&&(_pb.race||_pb.univ)?`<div style="display:flex;justify-content:center;align-items:center;gap:3px;margin-top:2px;flex-wrap:wrap">${_pb.race?`<span class="rbadge r${_pb.race}" style="font-size:9px;padding:1px 5px">${_pb.race}</span>`:''}${_pb.univ?`<span style="font-size:9px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:86px">${_pb.univ}</span>`:''}</div>`:''})():'')}
+          ${_teamMode?(()=>{const _pb=_pickTeamRep('B');const _pp=(_pb&&_pb.name)?(statsP(_pb.name)||_pb):_pb;const _note=_teamRepNote('B');return (_note||(_pp&&_pp.univ))?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;margin-top:4px;flex-wrap:wrap">${_note?`<span style="font-size:9px;color:rgba(255,255,255,.96);font-weight:900;background:rgba(255,255,255,.14);padding:2px 6px;border-radius:999px">${_note}</span>`:''}${(_pp&&_pp.univ)?`<span style="font-size:9px;color:rgba(255,255,255,.68);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px">${_pp.univ}</span>`:''}</div>`:''})():(m._usePlayerPhoto?(()=>{const _pb=statsP(b);return _pb&&(_pb.race||_pb.univ)?`<div style="display:flex;justify-content:center;align-items:center;gap:3px;margin-top:2px;flex-wrap:wrap">${_pb.race?`<span class="rbadge r${_pb.race}" style="font-size:9px;padding:1px 5px">${_pb.race}</span>`:''}${_pb.univ?`<span style="font-size:9px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:86px">${_pb.univ}</span>`:''}</div>`:''})():'')}
           ${bWin?`<div style="margin-top:5px"><span style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff;font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px;letter-spacing:.5px">🏆 승리</span></div>`:`<div style="margin-top:5px;font-size:10px;color:rgba(255,255,255,.5);font-weight:600">패배</div>`}
         </div>
       </div>
+      `}
     </div>
 
     <!-- 바디: 연한 배경 -->
