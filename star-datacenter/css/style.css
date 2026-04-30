@@ -1744,7 +1744,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   .modal--matchdetail .cmd-team{
     padding:6px 8px;
     border-radius:12px;
-    font-size:calc(var(--su_md_team_font,16px) * .72);
+    font-size:var(--su_md_team_font,16px);
     white-space:normal;
     line-height:1.15;
     /* 긴 대학명 줄바꿈 허용 + 잘림 방지 */
@@ -1753,8 +1753,8 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   }
   :root{ --su_md_btn_scale: var(--su_md_mb_btn_scale); }
   .modal--matchdetail .cmd-team .cmd-uicon{
-    width:clamp(28px, calc(var(--su_md_logo_size,42px) * .82), 52px) !important;
-    height:clamp(28px, calc(var(--su_md_logo_size,42px) * .82), 52px) !important;
+    width:clamp(28px, var(--su_md_logo_size,42px), 52px) !important;
+    height:clamp(28px, var(--su_md_logo_size,42px), 52px) !important;
   }
   .modal--matchdetail .cmd-team .cmd-team-name{
     white-space:normal;
@@ -1778,12 +1778,12 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 @media(max-width:1024px){
   /* (요청사항) 태블릿에서도 경기 상세 상단 대학/팀 카드 글자 짤림 완화 */
   .modal--matchdetail .cmd-team{
-    font-size:calc(var(--su_md_team_font,16px) * .82);
+    font-size:var(--su_md_team_font,16px);
     padding:7px 9px;
   }
   .modal--matchdetail .cmd-team .cmd-uicon{
-    width:clamp(30px, calc(var(--su_md_logo_size,42px) * .9), 58px);
-    height:clamp(30px, calc(var(--su_md_logo_size,42px) * .9), 58px);
+    width:clamp(30px, var(--su_md_logo_size,42px), 58px);
+    height:clamp(30px, var(--su_md_logo_size,42px), 58px);
   }
   :root{ --su_md_btn_scale: var(--su_md_tb_btn_scale); }
 }
