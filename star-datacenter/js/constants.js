@@ -162,7 +162,12 @@ function applyResponsiveUiVars(){
     const mdMb = clamp(gf('su_md_mb_btn_scale', 1.00), 0.70, 1.30);
     const mdTb = clamp(gf('su_md_tb_btn_scale', 1.00), 0.70, 1.30);
     const badge = clamp(gf('su_pd_badge_scale', 1.00), 0.70, 1.30);
+    // (요청사항) 최근경기 종류(종목) 폰트 크기만 별도로 조절
+    const badgeFont = clamp(gf('su_pd_badge_font_scale', 1.00), 0.70, 1.80);
     const chip = clamp(gf('su_pd_chip_scale', 1.00), 0.70, 1.30);
+    // (요청사항) 스트리머 상세(팝업) 버튼/메뉴 크기 별도 조절
+    const pdModalMb = clamp(gf('su_player_modal_mb_scale', gf('su_modal_mb_scale', 0.70)), 0.45, 1.20);
+    const pdModalTb = clamp(gf('su_player_modal_tb_scale', gf('su_modal_tb_scale', 0.78)), 0.45, 1.20);
 
     document.documentElement.style.setProperty('--su_mb_scale', String(mb));
     document.documentElement.style.setProperty('--su_tb_scale', String(tb));
@@ -173,7 +178,10 @@ function applyResponsiveUiVars(){
     document.documentElement.style.setProperty('--su_md_mb_btn_scale', String(mdMb));
     document.documentElement.style.setProperty('--su_md_tb_btn_scale', String(mdTb));
     document.documentElement.style.setProperty('--su_pd_badge_scale', String(badge));
+    document.documentElement.style.setProperty('--su_pd_badge_font_scale', String(badgeFont));
     document.documentElement.style.setProperty('--su_pd_chip_scale', String(chip));
+    document.documentElement.style.setProperty('--su_player_modal_mb_scale', String(pdModalMb));
+    document.documentElement.style.setProperty('--su_player_modal_tb_scale', String(pdModalTb));
   }catch(e){}
 }
 try{ window.applyResponsiveUiVars = applyResponsiveUiVars; }catch(e){}

@@ -2161,8 +2161,8 @@ function buildPlayerDetailHTML(p){
       const _dSafe=escJS(hh.date||'');
       const _mSafe=escJS(hh.map||'');
       const _rSafe=escJS(hh.result||'');
-      // (요청사항) '종류' 배지: 설정(su_pd_badge_scale)로 크기 조절 가능
-      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 calc(5px * var(--su_pd_badge_scale,1));border-radius:calc(3px * var(--su_pd_badge_scale,1));font-size:calc(8px * var(--su_pd_badge_scale,1));font-weight:900;line-height:calc(14px * var(--su_pd_badge_scale,1));height:calc(14px * var(--su_pd_badge_scale,1));white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle`;
+      // (요청사항) '종류' 배지: 배지 전체 크기(su_pd_badge_scale) + 폰트 크기(su_pd_badge_font_scale) 분리
+      const _modeBadgeStyle=`background:${modeColor};color:#fff;padding:0 calc(5px * var(--su_pd_badge_scale,1));border-radius:calc(3px * var(--su_pd_badge_scale,1));font-size:calc(8px * var(--su_pd_badge_scale,1) * var(--su_pd_badge_font_scale,1));font-weight:900;line-height:calc(14px * var(--su_pd_badge_scale,1));height:calc(14px * var(--su_pd_badge_scale,1));white-space:nowrap;display:inline-flex;align-items:center;vertical-align:middle`;
       const modeCellHTML=modeLbl?(_navModes.includes(modeLbl)
         ?`<span style="${_modeBadgeStyle};cursor:pointer;text-decoration:underline dotted" onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_badge!==false) cm('playerModal'); })();setTimeout(()=>{ if(typeof openMatchDetailFromHistory==='function') openMatchDetailFromHistory('${_selfSafe}','${_oppSafe}','${_dSafe}','${_mSafe}','${modeLbl.replace(/'/g,"\\'")}','${_hhMid}','${_rSafe}'); else if(typeof openMatchDetailByMatchId==='function') openMatchDetailByMatchId('${_hhMid}','${modeLbl.replace(/'/g,"\\'")}'); },80)" title="경기 상세 보기">${modeLbl}</span>`
         :`<span style="${_modeBadgeStyle}">${modeLbl}</span>`)

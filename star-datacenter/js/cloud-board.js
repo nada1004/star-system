@@ -421,6 +421,8 @@ async function fbCloudSave() {
       if(!k.startsWith('su_')) continue;
       if(k.startsWith('su_pp')) continue;
       if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') continue;
+      // 보안: AI API Key는 GitHub(특히 public repo)에 올리면 유출 위험 → 동기화 제외(각 기기에서 따로 입력)
+      if(k==='su_aibot_api_key') continue;
       if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
       const v = localStorage.getItem(k);
       if(v==null) continue;
@@ -597,7 +599,8 @@ async function githubDataSave(dataObj) {
   const apiUrl = ghGetContentsApiUrl();
   // 현재 파일 SHA 조회 (업데이트 시 필수)
   const getRes = await fetch(apiUrl, {
-    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+    // Fine-grained PAT는 Bearer 권장
+    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
   });
   let sha = null;
   if (getRes.ok) {
@@ -607,7 +610,9 @@ async function githubDataSave(dataObj) {
     // 신규 생성
     sha = null;
   } else {
-    throw new Error('GitHub 파일 조회 실패: ' + getRes.status);
+    let msg = '';
+    try{ const j = await getRes.json(); msg = (j && (j.message || j.error)) ? String(j.message || j.error) : ''; }catch(e){}
+    throw new Error('GitHub 파일 조회 실패: ' + getRes.status + (msg?(' - '+msg):''));
   }
   // LZString 압축 후 base64 인코딩
   const compressed = LZString.compressToBase64(JSON.stringify(dataObj));
@@ -617,14 +622,22 @@ async function githubDataSave(dataObj) {
   // 파일 업데이트
   const putRes = await fetch(apiUrl, {
     method: 'PUT',
-    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
     body: JSON.stringify({
       message: `데이터 업데이트 ${new Date().toLocaleString('ko-KR')}`,
       content: b64,
       ...(sha ? { sha } : {})
     })
   });
-  if (!putRes.ok) throw new Error('GitHub 저장 실패: ' + putRes.status);
+  if (!putRes.ok) {
+    let msg = '';
+    try{
+      const j = await putRes.json();
+      msg = (j && (j.message || j.error)) ? String(j.message || j.error) : '';
+      if (j && j.documentation_url) msg += (msg ? ' ' : '') + String(j.documentation_url);
+    }catch(e){}
+    throw new Error('GitHub 저장 실패: ' + putRes.status + (msg?(' - '+msg):''));
+  }
 }
 
 

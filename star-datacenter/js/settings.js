@@ -1467,6 +1467,8 @@ window.cfgSaveAIBotKey = function(){
     const st = document.getElementById('cfg-aibot-key-status');
     if(st) st.textContent = '✅ 저장됨';
   }catch(e){}
+  // 보안: 이 키는 GitHub/클라우드 동기화 대상에서 제외됨(각 기기에서 따로 입력)
+  try{ alert('✅ 저장됨 (보안상 다른 기기 자동 동기화는 하지 않습니다)'); }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
 };
 window.cfgClearAIBotKey = function(){
@@ -7046,7 +7048,10 @@ function _renderCfgUiSizeSection(){
   const mdMb = clamp(getF('su_md_mb_btn_scale', 1.00), 0.70, 1.30);
   const mdTb = clamp(getF('su_md_tb_btn_scale', 1.00), 0.70, 1.30);
   const badge = clamp(getF('su_pd_badge_scale', 1.00), 0.70, 1.30);
+  const badgeFont = clamp(getF('su_pd_badge_font_scale', 1.00), 0.70, 1.80);
   const chip = clamp(getF('su_pd_chip_scale', 1.00), 0.70, 1.30);
+  const pdModalMb = clamp(getF('su_player_modal_mb_scale', mmb), 0.45, 1.20);
+  const pdModalTb = clamp(getF('su_player_modal_tb_scale', mtb), 0.45, 1.20);
 
   const row=(label, id, val, min, max, step, hint)=>{
     const pct=Math.round(val*100);
@@ -7068,14 +7073,17 @@ function _renderCfgUiSizeSection(){
       ${row('태블릿 버튼/메뉴 전체', 'su_tb_scale', tb, 0.65, 1.10, 0.02, '기본 92%')}
       ${row('모바일 팝업(스트리머/대학) 버튼', 'su_modal_mb_scale', mmb, 0.55, 1.10, 0.02, '기본 70%')}
       ${row('태블릿 팝업(스트리머/대학) 버튼', 'su_modal_tb_scale', mtb, 0.55, 1.10, 0.02, '기본 78%')}
+      ${row('스트리머 상세 버튼/메뉴(모바일)', 'su_player_modal_mb_scale', pdModalMb, 0.45, 1.20, 0.02, '기본값은 “모바일 팝업”과 동일')}
+      ${row('스트리머 상세 버튼/메뉴(태블릿)', 'su_player_modal_tb_scale', pdModalTb, 0.45, 1.20, 0.02, '기본값은 “태블릿 팝업”과 동일')}
       ${row('모바일 탭 버튼(.tab)', 'su_tab_mb_scale', mbTab, 0.65, 1.10, 0.02, '기본 90%')}
       ${row('태블릿 탭 버튼(.tab)', 'su_tab_tb_scale', tbTab, 0.65, 1.10, 0.02, '기본 94%')}
       ${row('경기 상세 상단 버튼(모바일)', 'su_md_mb_btn_scale', mdMb, 0.70, 1.30, 0.05, '')}
       ${row('경기 상세 상단 버튼(태블릿)', 'su_md_tb_btn_scale', mdTb, 0.70, 1.30, 0.05, '')}
       ${row('최근경기 “종류” 배지', 'su_pd_badge_scale', badge, 0.70, 1.30, 0.05, '')}
+      ${row('최근경기 “종류” 폰트', 'su_pd_badge_font_scale', badgeFont, 0.70, 1.80, 0.05, '배지 높이/패딩은 유지하고 글자만 조절')}
       ${row('종목/연도 필터 칩', 'su_pd_chip_scale', chip, 0.70, 1.30, 0.05, '')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
-        <button class="btn btn-w btn-sm" onclick="['su_mb_scale','su_tb_scale','su_modal_mb_scale','su_modal_tb_scale','su_tab_mb_scale','su_tab_tb_scale','su_md_mb_btn_scale','su_md_tb_btn_scale','su_pd_badge_scale','su_pd_chip_scale'].forEach(k=>localStorage.removeItem(k)); try{ window.applyResponsiveUiVars && window.applyResponsiveUiVars(); }catch(e){}; try{ render(); }catch(e){}; try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}; try{ window._renderCfgUiSizeSection && window._renderCfgUiSizeSection(); }catch(e){}">↩️ 기본값으로</button>
+        <button class="btn btn-w btn-sm" onclick="['su_mb_scale','su_tb_scale','su_modal_mb_scale','su_modal_tb_scale','su_player_modal_mb_scale','su_player_modal_tb_scale','su_tab_mb_scale','su_tab_tb_scale','su_md_mb_btn_scale','su_md_tb_btn_scale','su_pd_badge_scale','su_pd_badge_font_scale','su_pd_chip_scale'].forEach(k=>localStorage.removeItem(k)); try{ window.applyResponsiveUiVars && window.applyResponsiveUiVars(); }catch(e){}; try{ render(); }catch(e){}; try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}; try{ window._renderCfgUiSizeSection && window._renderCfgUiSizeSection(); }catch(e){}">↩️ 기본값으로</button>
         <div style="font-size:11px;color:var(--gray-l);align-self:center">※ PC에는 영향 거의 없고, 모바일/태블릿만 주로 변화합니다</div>
       </div>
     </div>
