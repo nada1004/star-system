@@ -50,7 +50,9 @@ async function groqChat(messages) {
       Authorization: `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'llama-3.1-70b-versatile',
+      // Groq 모델은 종종 deprecation이 있으므로 최신 권장 모델 사용
+      // (이전: llama-3.1-70b-versatile → decommissioned)
+      model: 'llama-3.3-70b-versatile',
       messages,
       temperature: 0.2,
       max_tokens: 700,
@@ -99,4 +101,3 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`[server] listening on http://localhost:${PORT}`);
 });
-
