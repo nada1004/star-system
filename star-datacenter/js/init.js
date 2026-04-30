@@ -161,19 +161,10 @@ function init(){
   initLoginHash();
   applyLoginState();
   render();
-  // (성능) 부가 기능은 idle 시 지연 로딩
-  // - BGM/멀티뷰는 초기 렌더와 무관하므로, 최초 로딩을 가볍게 유지
-  try{
-    const loadExtras = ()=>{
-      try{
-        if(typeof window._loadScriptOnce!=='function') return;
-        window._loadScriptOnce('js/yt-bgm.js?v=20260420-06').catch(()=>{});
-        window._loadScriptOnce('js/soop-multiview.js?v=20260420-10').catch(()=>{});
-      }catch(e){}
-    };
-    if('requestIdleCallback' in window) requestIdleCallback(loadExtras, {timeout: 2500});
-    else setTimeout(loadExtras, 1200);
-  }catch(e){}
+  // 🎵 BGM 버튼 초기화
+  try{ if(typeof window.initBgm==='function') window.initBgm(); }catch(e){}
+  // 📺 SOOP 멀티뷰 버튼 초기화
+  try{ if(typeof window.initSoopMulti==='function') window.initSoopMulti(); }catch(e){}
   setTimeout(showNoticePopup, 800);
   // 🆕 URL 파라미터로 선수/대학 자동 오픈
   setTimeout(()=>{

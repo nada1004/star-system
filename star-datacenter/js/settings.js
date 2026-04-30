@@ -378,125 +378,6 @@ const _DEFAULT_CATSECS = {
   '🧪 고급/점검':['cfgmenu','storage','selfcheck'],
   '💾 데이터':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
 };
-
-// ─────────────────────────────────────────────────────────────
-// 🤖 AI봇(Groq) 프록시 서버 설정
-// - 브라우저에 API 키를 저장/동기화하지 않고, 서버에만 키를 두는 방식(권장)
-// - 여기서는 프록시 서버 URL만 저장하고 SettingsStore(동기화)로 다른 기기 반영
-// ─────────────────────────────────────────────────────────────
-window.cfgInitAiProxy = async function(){
-  try{ if(window.SettingsStore) await window.SettingsStore.pull({silent:true}); }catch(e){}
-  let cur = { proxyUrl:'' };
-  try{
-    if(window.SettingsStore && typeof window.SettingsStore.getAiCfg==='function') cur = window.SettingsStore.getAiCfg() || cur;
-    else cur = JSON.parse(localStorage.getItem('su_ai_cfg')||'{}') || cur;
-  }catch(e){}
-  const inp=document.getElementById('cfg-ai-proxy-url');
-  if(inp) inp.value = cur.proxyUrl || '';
-
-  // 키 상태
-  try{
-    const st=document.getElementById('cfg-ai-key-status');
-    const has = !!(cur && cur.apiKey);
-    if(st) st.textContent = has ? '✅ 키 설정됨' : '미설정';
-  }catch(e){}
-};
-window.cfgSaveAiProxyUrl = async function(){
-  const inp=document.getElementById('cfg-ai-proxy-url');
-  const url=String(inp?.value||'').trim();
-  const st=document.getElementById('cfg-ai-proxy-status');
-  try{
-    if(window.SettingsStore && typeof window.SettingsStore.setAiCfg==='function'){
-      window.SettingsStore.setAiCfg({ proxyUrl: url });
-      // (관리자+동기화 ON) 즉시 원격 반영
-      try{
-        const c = window.SettingsStore.cfg();
-        if(c && c.enabled){
-          await window.SettingsStore.push('ai');
-          if(st) st.textContent = '✅ 저장 + 다른 기기 반영 완료';
-          return;
-        }
-      }catch(e){}
-      if(st) st.textContent = '✅ 저장 완료 (동기화 OFF면 이 기기만 적용)';
-    }else{
-      const next={ proxyUrl:url, updatedAt:new Date().toISOString() };
-      localStorage.setItem('su_ai_cfg', JSON.stringify(next));
-      if(st) st.textContent = '✅ 저장 완료';
-    }
-  }catch(e){
-    if(st) st.textContent = '❌ 저장 실패: '+(e.message||e);
-  }
-};
-window.cfgTestAiProxy = async function(){
-  const inp=document.getElementById('cfg-ai-proxy-url');
-  const st=document.getElementById('cfg-ai-proxy-status');
-  const base=String(inp?.value||'').trim().replace(/\/+$/,'');
-  if(!base){ if(st) st.textContent='서버 주소를 입력하세요.'; return; }
-  if(st) st.textContent='테스트 중...';
-  try{
-    const r = await fetch(base+'/api/health', {cache:'no-store'});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const j = await r.json().catch(()=>({}));
-    if(j && j.ok) { if(st) st.textContent='✅ 연결 성공'; }
-    else { if(st) st.textContent='⚠️ 응답은 받았지만 ok가 아닙니다.'; }
-  }catch(e){
-    if(st) st.textContent='❌ 연결 실패: '+(e.message||e);
-  }
-};
-
-window.cfgSaveAiApiKey = async function(){
-  const inp=document.getElementById('cfg-ai-api-key');
-  const key=String(inp?.value||'').trim();
-  const st=document.getElementById('cfg-ai-key-status');
-  if(!key){ if(st) st.textContent='키를 입력하세요.'; return; }
-  try{
-    if(window.SettingsStore && typeof window.SettingsStore.setAiCfg==='function'){
-      window.SettingsStore.setAiCfg({ apiKey: key });
-      // 입력칸은 즉시 비움(노출 최소화)
-      try{ if(inp) inp.value=''; }catch(e){}
-      try{
-        const c = window.SettingsStore.cfg();
-        if(c && c.enabled){
-          await window.SettingsStore.push('ai');
-          if(st) st.textContent='✅ 키 저장 + 다른 기기 반영 완료';
-          return;
-        }
-      }catch(e){
-        // push 실패면 로컬 저장은 성공
-      }
-      if(st) st.textContent='✅ 키 저장 완료 (동기화 OFF면 이 기기만 적용)';
-    }else{
-      const cur = JSON.parse(localStorage.getItem('su_ai_cfg')||'{}');
-      const next={ ...cur, apiKey:key, updatedAt:new Date().toISOString() };
-      localStorage.setItem('su_ai_cfg', JSON.stringify(next));
-      try{ if(inp) inp.value=''; }catch(e){}
-      if(st) st.textContent='✅ 키 저장 완료';
-    }
-  }catch(e){
-    if(st) st.textContent='❌ 저장 실패: '+(e.message||e);
-  }
-};
-window.cfgClearAiApiKey = async function(){
-  const st=document.getElementById('cfg-ai-key-status');
-  try{
-    if(window.SettingsStore && typeof window.SettingsStore.setAiCfg==='function'){
-      window.SettingsStore.setAiCfg({ apiKey: '' });
-      try{
-        const c = window.SettingsStore.cfg();
-        if(c && c.enabled){
-          await window.SettingsStore.push('ai');
-        }
-      }catch(e){}
-    }else{
-      const cur = JSON.parse(localStorage.getItem('su_ai_cfg')||'{}');
-      const next={ ...cur, apiKey:'', updatedAt:new Date().toISOString() };
-      localStorage.setItem('su_ai_cfg', JSON.stringify(next));
-    }
-    if(st) st.textContent='✅ 키 삭제됨';
-  }catch(e){
-    if(st) st.textContent='❌ 실패: '+(e.message||e);
-  }
-};
 const _cfgAllSecs=[...new Set(Object.values(_DEFAULT_CATSECS).flat())];
 
 function _cfgMenuLoad(){
@@ -2445,69 +2326,6 @@ window.cfgUnivOrderMove = function(i, dir){
 };
 
 // ─────────────────────────────────────────────────────────────
-// (호환/성능) 지연 로딩으로 인해 “함수 없음”으로 오탐되는 케이스 방지용 스텁들
-// - settings.js는 render.js보다 먼저 로드되므로 여기서 먼저 기본 스텁을 제공해둔다.
-// - 실제 구현 파일이 로드되면(또는 render.js가 더 강력한 스텁을 등록하면) 자동으로 대체된다.
-// ─────────────────────────────────────────────────────────────
-(function(){
-  // cloud-board.js에 정의됨
-  function _lazyCheckFbSyncStatus(){
-    try{
-      const loader = window._loadScriptOnce;
-      if(typeof loader !== 'function'){
-        alert('기능 로딩 중입니다. 잠시 후 다시 시도해주세요.');
-        return;
-      }
-      loader('js/cloud-board.js?v=20260425-01').then(()=>{
-        const fn = window.checkFbSyncStatus;
-        if(typeof fn === 'function' && fn !== _lazyCheckFbSyncStatus) fn();
-      }).catch((e)=>{
-        console.error('[lazy] checkFbSyncStatus load fail', e);
-        alert('Firebase 상태 확인 로딩 실패');
-      });
-    }catch(e){}
-  }
-  window.checkFbSyncStatus = window.checkFbSyncStatus || _lazyCheckFbSyncStatus;
-
-  // calendar.js에 정의됨
-  function _lazyRCal(C, T){
-    try{
-      const loader = window._loadScriptOnce;
-      if(typeof loader !== 'function'){
-        if(C) C.innerHTML = '<div style="padding:24px;color:var(--gray-l);text-align:center">캘린더 로딩 중...</div>';
-        return;
-      }
-      loader('js/calendar.js?v=20260422-01').then(()=>{
-        const fn = window.rCal;
-        if(typeof fn === 'function' && fn !== _lazyRCal) fn(C, T);
-      }).catch((e)=>{
-        console.error('[lazy] rCal load fail', e);
-      });
-    }catch(e){}
-  }
-  window.rCal = window.rCal || _lazyRCal;
-
-  // stats.js + Chart.js에 정의됨
-  function _lazyRStats(C, T){
-    try{
-      const loader = window._loadScriptOnce;
-      if(typeof loader !== 'function'){
-        if(C) C.innerHTML = '<div style="padding:24px;color:var(--gray-l);text-align:center">통계 로딩 중...</div>';
-        return;
-      }
-      const ensureChart = window.ensureChartJS || (()=>loader('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'));
-      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats.js?v=20260425-01')).then(()=>{
-        const fn = window.rStats;
-        if(typeof fn === 'function' && fn !== _lazyRStats) fn(C, T);
-      }).catch((e)=>{
-        console.error('[lazy] rStats load fail', e);
-      });
-    }catch(e){}
-  }
-  window.rStats = window.rStats || _lazyRStats;
-})();
-
-// ─────────────────────────────────────────────────────────────
 // (요청사항) "QA 체크리스트 전부 되는지" 빠른 드라이런 점검
 // - 실제 사용자 데이터는 건드리지 않도록:
 //   1) 전역 배열/함수(save/render/document.getElementById/localStorage 일부키)를 백업
@@ -2549,27 +2367,12 @@ window.cfgRunFullQaDryRun = function(){
   try{
     // 로그인 강제(드라이런에서는 권한/계정과 무관하게 동작 확인만)
     backup.isLoggedIn = (typeof window.isLoggedIn !== 'undefined') ? window.isLoggedIn : undefined;
-    backup.isLoggedInLex = (typeof isLoggedIn !== 'undefined') ? isLoggedIn : undefined;
-    try{ window.isLoggedIn = true; }catch(e){}
-    try{ if(typeof isLoggedIn !== 'undefined') isLoggedIn = true; }catch(e){}
+    window.isLoggedIn = true;
 
     // 전역 배열 백업
     ['miniM','univM','ckM','proM','ttM','comps','indM','gjM','tourneys','maps','players','compNames','curComp','userMapAlias','playerStatusIcons','playerStatusExpiry'].forEach(k=>{
       if(typeof window[k] !== 'undefined') backup[k] = window[k];
     });
-    // (중요) 이 프로젝트는 constants.js/auth.js에서 top-level let로 전역 데이터를 들고 있어
-    // window.*와 분리될 수 있음 → 드라이런은 실제 바인딩(miniM 등)을 직접 교체해야 테스트가 통과함
-    try{ backup._lex_miniM = (typeof miniM!=='undefined') ? miniM : undefined; }catch(e){}
-    try{ backup._lex_univM = (typeof univM!=='undefined') ? univM : undefined; }catch(e){}
-    try{ backup._lex_ckM   = (typeof ckM!=='undefined') ? ckM : undefined; }catch(e){}
-    try{ backup._lex_proM  = (typeof proM!=='undefined') ? proM : undefined; }catch(e){}
-    try{ backup._lex_ttM   = (typeof ttM!=='undefined') ? ttM : undefined; }catch(e){}
-    try{ backup._lex_comps = (typeof comps!=='undefined') ? comps : undefined; }catch(e){}
-    try{ backup._lex_indM  = (typeof indM!=='undefined') ? indM : undefined; }catch(e){}
-    try{ backup._lex_gjM   = (typeof gjM!=='undefined') ? gjM : undefined; }catch(e){}
-    try{ backup._lex_tourneys = (typeof tourneys!=='undefined') ? tourneys : undefined; }catch(e){}
-    try{ backup._lex_maps  = (typeof maps!=='undefined') ? maps : undefined; }catch(e){}
-    try{ backup._lex_players = (typeof players!=='undefined') ? players : undefined; }catch(e){}
     // save/render 백업
     backup.save = window.save;
     backup.render = window.render;
@@ -2586,36 +2389,17 @@ window.cfgRunFullQaDryRun = function(){
     window.render = ()=>{ renderCnt++; };
 
     // 더미 데이터 세팅
-    const _dmMini = [{ d:'2026-04-01', map:'투혼II', sets:[{scoreA:1,scoreB:0,games:[{playerA:'A',playerB:'B',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];
-    const _dmUniv = [{ d:'2026-04-01', sets:[{map:'투혼 II',scoreA:1,scoreB:0,games:[{playerA:'C',playerB:'D',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];
-    const _dmTT   = [{ d:'2026-04-01', sets:[{scoreA:1,scoreB:0,games:[{playerA:'E',playerB:'F',map:'폴리포이드',winner:'A'}]}], sa:1, sb:0, stage:'general' }];
-    const _dmPlayers = [{name:'A',tier:'S',univ:'U1'},{name:'B',tier:'A',univ:'U1'},{name:'C',tier:'S',univ:'U2'}];
-    const _dmMaps = ['투혼 II','폴리포이드'];
-
-    try{ if(typeof miniM!=='undefined') miniM = _dmMini; }catch(e){}
-    try{ if(typeof univM!=='undefined') univM = _dmUniv; }catch(e){}
-    try{ if(typeof ckM!=='undefined') ckM = []; }catch(e){}
-    try{ if(typeof proM!=='undefined') proM = []; }catch(e){}
-    try{ if(typeof ttM!=='undefined') ttM = _dmTT; }catch(e){}
-    try{ if(typeof comps!=='undefined') comps = []; }catch(e){}
-    try{ if(typeof indM!=='undefined') indM = []; }catch(e){}
-    try{ if(typeof gjM!=='undefined') gjM = []; }catch(e){}
-    try{ if(typeof tourneys!=='undefined') tourneys = []; }catch(e){}
-    try{ if(typeof players!=='undefined') players = _dmPlayers; }catch(e){}
-    try{ if(typeof maps!=='undefined') maps = _dmMaps; }catch(e){}
-
-    // window.*도 동일 객체를 가리키게 맞춰서 검증/출력 PASS 처리
-    try{ window.miniM = (typeof miniM!=='undefined') ? miniM : _dmMini; }catch(e){}
-    try{ window.univM = (typeof univM!=='undefined') ? univM : _dmUniv; }catch(e){}
-    try{ window.ckM   = (typeof ckM!=='undefined') ? ckM : []; }catch(e){}
-    try{ window.proM  = (typeof proM!=='undefined') ? proM : []; }catch(e){}
-    try{ window.ttM   = (typeof ttM!=='undefined') ? ttM : _dmTT; }catch(e){}
-    try{ window.comps = (typeof comps!=='undefined') ? comps : []; }catch(e){}
-    try{ window.indM  = (typeof indM!=='undefined') ? indM : []; }catch(e){}
-    try{ window.gjM   = (typeof gjM!=='undefined') ? gjM : []; }catch(e){}
-    try{ window.tourneys = (typeof tourneys!=='undefined') ? tourneys : []; }catch(e){}
-    try{ window.players = (typeof players!=='undefined') ? players : _dmPlayers; }catch(e){}
-    try{ window.maps = (typeof maps!=='undefined') ? maps : _dmMaps; }catch(e){}
+    window.miniM = [{ d:'2026-04-01', map:'투혼II', sets:[{scoreA:1,scoreB:0,games:[{playerA:'A',playerB:'B',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];
+    window.univM = [{ d:'2026-04-01', sets:[{map:'투혼 II',scoreA:1,scoreB:0,games:[{playerA:'C',playerB:'D',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];
+    window.ckM = [];
+    window.proM = [];
+    window.ttM = [{ d:'2026-04-01', sets:[{scoreA:1,scoreB:0,games:[{playerA:'E',playerB:'F',map:'폴리포이드',winner:'A'}]}], sa:1, sb:0, stage:'general' }];
+    window.comps = [];
+    window.indM = [];
+    window.gjM = [];
+    window.tourneys = [];
+    window.players = [{name:'A',tier:'S',univ:'U1'},{name:'B',tier:'A',univ:'U1'},{name:'C',tier:'S',univ:'U2'}];
+    window.maps = ['투혼 II','폴리포이드'];
 
     // document.getElementById 훅(일괄 입력값 제공)
     const fake = {
@@ -2657,33 +2441,33 @@ window.cfgRunFullQaDryRun = function(){
     // 1-1) 일괄 날짜 변경
     if(typeof window.bulkChangeDate==='function'){
       window.bulkChangeDate();
-      ok('드라이런: 날짜 일괄 변경', (miniM?.[0]?.d)==='2026-04-30' && (univM?.[0]?.d)==='2026-04-30');
+      ok('드라이런: 날짜 일괄 변경', window.miniM[0].d==='2026-04-30' && window.univM[0].d==='2026-04-30');
     } else ok('드라이런: 날짜 일괄 변경', false, '함수 없음');
 
     // 1-2) 맵 일괄 교체(띄어쓰기 무시 포함)
     if(typeof window.bulkChangeMap==='function'){
       window.bulkChangeMap();
-      ok('드라이런: 맵 일괄 교체', (miniM?.[0]?.map)==='투혼' && (univM?.[0]?.sets?.[0]?.map)==='투혼');
+      ok('드라이런: 맵 일괄 교체', window.miniM[0].map==='투혼' && window.univM[0].sets[0].map==='투혼');
     } else ok('드라이런: 맵 일괄 교체', false, '함수 없음');
 
     // 1-3) 선수 일괄 티어 변경
     if(typeof window.bulkChangeTier==='function'){
       window.bulkChangeTier();
-      ok('드라이런: 선수 일괄 티어 변경', players.find(p=>p.name==='A')?.tier==='B' && players.find(p=>p.name==='C')?.tier==='S');
+      ok('드라이런: 선수 일괄 티어 변경', window.players.find(p=>p.name==='A')?.tier==='B' && window.players.find(p=>p.name==='C')?.tier==='S');
     } else ok('드라이런: 선수 일괄 티어 변경', false, '함수 없음');
 
     // 1-4) 날짜 범위 일괄 삭제
     if(typeof window.bulkDeleteByDate==='function'){
       window.bulkDeleteByDate();
-      ok('드라이런: 날짜 범위 일괄 삭제', Array.isArray(miniM) && miniM.length===0);
+      ok('드라이런: 날짜 범위 일괄 삭제', Array.isArray(window.miniM) && window.miniM.length===0);
     } else ok('드라이런: 날짜 범위 일괄 삭제', false, '함수 없음');
 
     // 1-5) 세트→게임수 합산 변환
     if(typeof window.bulkConvertToGameScore==='function'){
-      try{ if(typeof miniM!=='undefined') miniM = [{ sa:2, sb:1, sets:[{scoreA:1,scoreB:0},{scoreA:1,scoreB:1},{scoreA:1,scoreB:0}] }]; }catch(e){}
-      try{ if(typeof univM!=='undefined') univM = [{ sa:0, sb:0, sets:[{scoreA:0,scoreB:1},{scoreA:0,scoreB:1},{scoreA:0,scoreB:1}] }]; }catch(e){}
+      window.miniM = [{ sa:2, sb:1, sets:[{scoreA:1,scoreB:0},{scoreA:1,scoreB:1},{scoreA:1,scoreB:0}] }];
+      window.univM = [{ sa:0, sb:0, sets:[{scoreA:0,scoreB:1},{scoreA:0,scoreB:1},{scoreA:0,scoreB:1}] }];
       window.bulkConvertToGameScore();
-      ok('드라이런: 세트→게임수 합산 변환', miniM[0].sa===3 && miniM[0].sb===1 && univM[0].sb===3);
+      ok('드라이런: 세트→게임수 합산 변환', window.miniM[0].sa===3 && window.miniM[0].sb===1 && window.univM[0].sb===3);
     } else ok('드라이런: 세트→게임수 합산 변환', false, '함수 없음');
 
     // 1-6) 상태 아이콘 저장/해제
@@ -2715,23 +2499,10 @@ window.cfgRunFullQaDryRun = function(){
       if(backup.save) window.save = backup.save;
       if(backup.render) window.render = backup.render;
       if(typeof backup.isLoggedIn !== 'undefined') window.isLoggedIn = backup.isLoggedIn;
-      try{ if(typeof backup.isLoggedInLex !== 'undefined' && typeof isLoggedIn !== 'undefined') isLoggedIn = backup.isLoggedInLex; }catch(e){}
       Object.keys(backup).forEach(k=>{
         if(['save','render','getEl','confirm','isLoggedIn'].includes(k)) return;
         window[k] = backup[k];
       });
-      // lexical 전역 원복
-      try{ if(typeof backup._lex_miniM!=='undefined' && typeof miniM!=='undefined') miniM = backup._lex_miniM; }catch(e){}
-      try{ if(typeof backup._lex_univM!=='undefined' && typeof univM!=='undefined') univM = backup._lex_univM; }catch(e){}
-      try{ if(typeof backup._lex_ckM!=='undefined' && typeof ckM!=='undefined') ckM = backup._lex_ckM; }catch(e){}
-      try{ if(typeof backup._lex_proM!=='undefined' && typeof proM!=='undefined') proM = backup._lex_proM; }catch(e){}
-      try{ if(typeof backup._lex_ttM!=='undefined' && typeof ttM!=='undefined') ttM = backup._lex_ttM; }catch(e){}
-      try{ if(typeof backup._lex_comps!=='undefined' && typeof comps!=='undefined') comps = backup._lex_comps; }catch(e){}
-      try{ if(typeof backup._lex_indM!=='undefined' && typeof indM!=='undefined') indM = backup._lex_indM; }catch(e){}
-      try{ if(typeof backup._lex_gjM!=='undefined' && typeof gjM!=='undefined') gjM = backup._lex_gjM; }catch(e){}
-      try{ if(typeof backup._lex_tourneys!=='undefined' && typeof tourneys!=='undefined') tourneys = backup._lex_tourneys; }catch(e){}
-      try{ if(typeof backup._lex_maps!=='undefined' && typeof maps!=='undefined') maps = backup._lex_maps; }catch(e){}
-      try{ if(typeof backup._lex_players!=='undefined' && typeof players!=='undefined') players = backup._lex_players; }catch(e){}
       Object.keys(backupLs).forEach(k=>{
         try{
           if(backupLs[k] === null || typeof backupLs[k] === 'undefined') localStorage.removeItem(k);
@@ -4198,37 +3969,6 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
     </div>
   </details>
-  ${_scfgD('aibot','🤖 AI봇(Groq) 서버 설정')}
-    <div style="font-size:12px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
-      펨붕이봇(AI봇)은 기본적으로 <code>/api/aibot</code> 프록시 서버가 필요합니다.<br>
-      관리자 전용으로 <b>API Key를 직접 입력</b>해서 사용할 수도 있습니다. (동기화 ON이면 다른 기기에도 적용)
-    </div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
-        <label style="font-size:12px;font-weight:800;color:var(--text2)">AI봇 서버 주소</label>
-        <input id="cfg-ai-proxy-url" type="text" placeholder="예: http://내서버:3000" style="width:320px;max-width:100%">
-        <button class="btn btn-b btn-sm" onclick="cfgSaveAiProxyUrl()">💾 저장</button>
-        <button class="btn btn-w btn-sm" onclick="cfgTestAiProxy()">🔍 테스트</button>
-      </div>
-      <div style="font-size:11px;color:var(--gray-l)">※ 저장 후 (관리자+동기화 ON이면) 다른 기기에도 자동 반영됩니다.</div>
-      <div id="cfg-ai-proxy-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--blue)"></div>
-    </div>
-    <div style="height:10px"></div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px">Groq API Key (관리자 전용)</div>
-      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
-        • 키를 저장하면 서버 없이도 AI봇을 바로 호출할 수 있습니다.<br>
-        • <b>동기화 ON</b>이면 다른 기기에도 반영됩니다. (다른 기기에서 토큰이 없어도 pull로 받아옵니다)<br>
-        • 주의: 이 경우 Gist를 아는 사람이면 키를 볼 수 있어 <b>유출 위험</b>이 있습니다.
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <input type="password" id="cfg-ai-api-key" placeholder="gsk_..." style="width:320px;max-width:100%" autocomplete="new-password">
-        <button class="btn btn-b btn-sm" onclick="cfgSaveAiApiKey()">💾 저장</button>
-        <button class="btn btn-r btn-xs" onclick="cfgClearAiApiKey()">지우기</button>
-      </div>
-      <div id="cfg-ai-key-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)"></div>
-    </div>
-  </details>
   ${_scfgD('season','🏆 시즌 관리','id="cfg-season-sec"')}
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">시즌을 정의하면 대전기록·통계 등 모든 탭에서 시즌 단위로 필터링할 수 있습니다.</p>
     <div id="cfg-season-list" style="margin-bottom:12px"></div>
@@ -5257,11 +4997,7 @@ ${_scfgD('notice','📢 공지 관리')}
     // UI 반영(열려있는 FAB 표시/숨김)
     try{ if(typeof updateFabVisibility==='function') updateFabVisibility(); }catch(e){}
   };
-  setTimeout(function(){
-    window.initFabTabSettings();
-    window.initFabVisibilitySettings();
-    try{ window.cfgInitAiProxy && window.cfgInitAiProxy(); }catch(e){}
-  }, 50);
+  setTimeout(function(){window.initFabTabSettings();window.initFabVisibilitySettings();}, 50);
 } // end first rCfg
 
 // ── 설정/메모 동기화(GitHub Gist) 상태 패널 ──

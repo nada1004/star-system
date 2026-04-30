@@ -2500,10 +2500,7 @@ function _bulkSelected(keys, prefix, defaultChecked=true){
   });
 }
 function bulkChangeDate(){
-  // (QA 드라이런/호환) 일부 환경은 isLoggedIn이 top-level let 으로 선언되어 window.isLoggedIn과 분리됨
-  // - 드라이런은 window.isLoggedIn을 조작하므로 둘 다 허용
-  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  if(!_li) return;
+  if(!isLoggedIn) return;
   const from=document.getElementById('bulk-date-from')?.value||'';
   const to=document.getElementById('bulk-date-to')?.value||'';
   if(!from||!to){ alert('변경 전/후 날짜를 입력하세요.'); return; }
@@ -2520,8 +2517,7 @@ function bulkChangeDate(){
   if(el){ el.textContent = changed?`✅ ${changed}건 변경 완료!`:'변경할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
 }
 function bulkChangeMap(){
-  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  if(!_li){ alert('로그인이 필요합니다.'); return; }
+  if(!isLoggedIn){ alert('로그인이 필요합니다.'); return; }
   const from=(document.getElementById('bulk-map-from')?.value||'').trim();
   const to=(document.getElementById('bulk-map-to')?.value||'').trim();
   if(!from||!to){ alert('교체 전/후 맵 이름을 입력하세요.'); return; }
@@ -2571,8 +2567,7 @@ function bulkChangeMap(){
   if(el){ el.textContent = changed?`✅ ${changed}개 맵명 교체 완료!`:'교체할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
 }
 function bulkDeleteByDate(){
-  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  if(!_li) return;
+  if(!isLoggedIn) return;
   const from=document.getElementById('bulk-del-from')?.value||'';
   const to=document.getElementById('bulk-del-to')?.value||'';
   if(!from||!to){ alert('시작/종료 날짜를 입력하세요.'); return; }
@@ -2629,8 +2624,7 @@ function deleteSeason(i){
 }
 
 function bulkChangeTier(){
-  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  if(!_li) return;
+  if(!isLoggedIn) return;
   const fromTier=document.getElementById('bulk-tier-from')?.value||'';
   const toTier=document.getElementById('bulk-tier-to')?.value||'';
   const targetUniv=document.getElementById('bulk-tier-univ')?.value||'';
@@ -2652,8 +2646,7 @@ function bulkChangeTier(){
    경기 일괄 수정 함수들
 ══════════════════════════════════════ */
 function bulkConvertToGameScore(){
-  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  if(!_li) return;
+  if(!isLoggedIn) return;
   const arrMap = {mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM};
   const targets = ['mini','univm','ck','pro','tt'].filter(m=>document.getElementById('bulk-conv-chk-'+m)?.checked);
   if(!targets.length){ alert('대상을 선택하세요.'); return; }
