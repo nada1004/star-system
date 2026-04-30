@@ -658,22 +658,35 @@ window.histExtInputToPasteModal = function(){
 function _histOpenPasteModalByTarget(target){
   try{
     if(target==='ind' && typeof openIndPasteModal==='function') openIndPasteModal();
+    else if(target==='pro' && typeof openProPasteModal==='function') openProPasteModal();
+    else if(target==='progj' && typeof openGJProPasteModal==='function') openGJProPasteModal();
     else if(target==='gj' && typeof openGJPasteModal==='function') openGJPasteModal();
     else if(target==='ck' && typeof openCKPasteModal==='function') openCKPasteModal();
     else if(target==='univm' && typeof openUnivmPasteModal==='function') openUnivmPasteModal();
+    else if(target==='tt-general' && typeof openTTPasteModal==='function'){ try{ localStorage.setItem('su_tt_paste_stage','general'); }catch(e){} openTTPasteModal(); }
+    else if(target==='tt-league' && typeof openTTPasteModal==='function'){ try{ localStorage.setItem('su_tt_paste_stage','league'); }catch(e){} openTTPasteModal(); }
+    else if(target==='tt-bkt' && typeof openTTPasteModal==='function'){ try{ localStorage.setItem('su_tt_paste_stage','bkt'); }catch(e){} openTTPasteModal(); }
     else if(target==='tt' && typeof openTTPasteModal==='function') openTTPasteModal();
     else if(target==='comp' && typeof openCompPasteModal==='function') openCompPasteModal();
     else if(typeof openMiniPasteModal==='function') openMiniPasteModal();
   }catch(e){}
 }
+function _histExtTargetToPasteMode(target){
+  const t = String(target||'').trim();
+  if(t==='pro') return 'pro';
+  if(t==='progj') return 'progj';
+  if(t==='tt-general' || t==='tt-league' || t==='tt-bkt') return 'tt';
+  return t || 'mini';
+}
 function _histExtRowsToPasteLines(items, target){
+  const pasteMode = _histExtTargetToPasteMode(target);
   return (items||[]).map(x=>{
     const d = (x.date||'').trim();
     const w = _histExtToPasteName(x.winner);
     const l = _histExtToPasteName(x.loser);
     const mp = (x.map||'-').trim();
     const memo = String(x.memo||'').replace(/\t+/g,' ').replace(/\r?\n/g,' ').trim();
-    return `${d} ${w}\t${l}\t${mp}\t승\t${target}${memo?`\t${memo}`:''}`;
+    return `${d} ${w}\t${l}\t${mp}\t승\t${pasteMode}${memo?`\t${memo}`:''}`;
   }).join('\n');
 }
 function _histExtRawToPastePayload(raw, target){
@@ -4079,14 +4092,22 @@ function histExternal2HTML(){
           <option value="" ${!tSel?'selected':''}>(저장대상 선택)</option>
           <option value="mini" ${tSel==='mini'?'selected':''}>미니대전</option>
           <option value="ind" ${tSel==='ind'?'selected':''}>개인전</option>
+          <option value="pro" ${tSel==='pro'?'selected':''}>프로리그 일반</option>
+          <option value="progj" ${tSel==='progj'?'selected':''}>프로리그 중장전</option>
           <option value="gj" ${tSel==='gj'?'selected':''}>중장전</option>
           <option value="ck" ${tSel==='ck'?'selected':''}>대학CK</option>
           <option value="univm" ${tSel==='univm'?'selected':''}>대학대전</option>
-          <option value="tt" ${tSel==='tt'?'selected':''}>티어대회</option>
+          <option value="tt-general" ${tSel==='tt-general'?'selected':''}>티어대회 일반</option>
+          <option value="tt-league" ${tSel==='tt-league'?'selected':''}>티어대회 조별리그</option>
+          <option value="tt-bkt" ${tSel==='tt-bkt'?'selected':''}>티어대회 토너먼트</option>
           <option value="comp" ${tSel==='comp'?'selected':''}>대회</option>
         </select>
         <button class="btn btn-w btn-xs" onclick="histExt2PasteFromClipboard()">📋 클립보드 붙여넣기</button>
         <button class="btn btn-p btn-xs" onclick="histExt2SendRawToPasteModal()">➡️ 자동인식 열기</button>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin:-2px 0 8px 0;line-height:1.5">
+        ※ 프로리그 일반/중장전, 티어대회 일반/조별리그/토너먼트까지 선택 가능하게 연결했습니다.<br>
+        ※ 프로리그대회/브라켓 전용 기록은 현재 외부2 단독 저장보다 해당 탭 내부 자동인식이 더 정확합니다.
       </div>
       <textarea id="hist-ext2-raw" style="width:100%;min-height:110px;border:1px solid var(--border2);border-radius:10px;padding:10px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace" placeholder="예: 특정 경기 몇 개만 선택 복사한 텍스트"></textarea>
     </div>
