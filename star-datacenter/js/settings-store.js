@@ -26,6 +26,7 @@
     lastError: 'su_sync_last_error',
     lastRemoteMode: 'su_sync_last_remote_mode', // new|legacy|none
     lastMigrated: 'su_sync_last_migrated', // 1/0
+    lastRemoteUpdatedAt: 'su_sync_last_settings_remote_updated_at',
 
     // AI(프록시/API키) 설정
     aiCfg: 'su_ai_cfg',
@@ -250,17 +251,27 @@
       return t.toISOString();
     }catch(e){ return null; }
   }
+  function _rememberRemoteUpdatedAt(iso){
+    try{
+      const normalized = _coerceIso(iso);
+      if(normalized) localStorage.setItem(LS.lastRemoteUpdatedAt, normalized);
+      return normalized;
+    }catch(e){
+      return null;
+    }
+  }
 
   async function _getRemoteStateWithMigrationDecision(){
     const gist = await _getGist();
-    if(!gist) return { state:null, mode:'none', gist:null, hasNew:false, hasLegacy:false };
+    const remoteUpdatedAt = _coerceIso(gist && gist.updated_at) || null;
+    if(!gist) return { state:null, mode:'none', gist:null, hasNew:false, hasLegacy:false, remoteUpdatedAt:null };
 
     // 1) new 통합 파일 우선
     const txtNew = await _readFileFromGist(gist, FILE);
     if (txtNew) {
       try{
         const st = JSON.parse(txtNew);
-        return { state: st, mode:'new', gist, hasNew:true, hasLegacy:false };
+        return { state: st, mode:'new', gist, hasNew:true, hasLegacy:false, remoteUpdatedAt };
       }catch(e){
         // 파싱 실패면 legacy fallback
       }
@@ -279,7 +290,7 @@
       hasLegacy = true;
       try{ uiFab = JSON.parse(txtFab); }catch(e){ uiFab = null; }
     }
-    if (!hasLegacy) return { state:null, mode:'none', gist, hasNew:false, hasLegacy:false };
+    if (!hasLegacy) return { state:null, mode:'none', gist, hasNew:false, hasLegacy:false, remoteUpdatedAt };
 
     const out = { memo: { last:'', updatedAt:null }, ui: { fab: { hideMobile:false, hidePC:false, updatedAt:null } } };
     if (memo) {
@@ -297,7 +308,7 @@
     if (!out.memo.updatedAt) out.memo.updatedAt = nowIso;
     if (!out.ui.fab.updatedAt) out.ui.fab.updatedAt = nowIso;
 
-    return { state: out, mode:'legacy', gist, hasNew:false, hasLegacy:true };
+    return { state: out, mode:'legacy', gist, hasNew:false, hasLegacy:true, remoteUpdatedAt };
   }
 
   async function _patchGistFile(gistId, token, filename, content){
@@ -315,6 +326,13 @@
       const remoteInfo = await _getRemoteStateWithMigrationDecision();
       const remote = remoteInfo.state;
       if (!remote) { _markSync(null, 'none', false); return false; }
+      const remoteUpdatedAt = _coerceIso(remoteInfo.remoteUpdatedAt) || null;
+      const lastSeenRemote = _coerceIso(localStorage.getItem(LS.lastRemoteUpdatedAt) || null);
+      if(!opts.force && remoteUpdatedAt && lastSeenRemote && (new Date(remoteUpdatedAt).getTime() <= new Date(lastSeenRemote).getTime())){
+        _markSync(null, remoteInfo.mode, false);
+        if (opts.returnInfo) return { ok:true, mode:remoteInfo.mode, migrated:false, skipped:true };
+        return true;
+      }
 
       const local = _loadLocalState();
       const merged = _mergeByUpdatedAt(local, remote);
@@ -336,6 +354,7 @@
       }
 
       try{ if (typeof updateFabVisibility === 'function') updateFabVisibility(); }catch(e){}
+      _rememberRemoteUpdatedAt(remoteUpdatedAt);
       _markSync('pull', remoteInfo.mode, migrated);
       if (opts.returnInfo) return { ok:true, mode:remoteInfo.mode, migrated };
       return true;
@@ -374,6 +393,7 @@
     const merged = _mergeByUpdatedAt(remoteState || {}, local);
 
     await _patchGistFile(id, c.token, FILE, JSON.stringify(merged, null, 2));
+    _rememberRemoteUpdatedAt(new Date().toISOString());
     _markSync('push', mode, false);
     if (section && section.indexOf('.') !== -1) {
       // no-op

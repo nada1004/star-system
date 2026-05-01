@@ -623,6 +623,7 @@ window.fbRetryMissingMonths = async function(){
       next._missingMonths = stillMissing;
       _deliver(next);
       try{ if(typeof localSave==='function') localSave(); }catch(e){}
+      try{ if(typeof window._primeMatchSyncSignature === 'function') window._primeMatchSyncSignature(true); }catch(e){}
     }else{
       _setMissingMonthsMeta(stillMissing);
       try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('⚠️ 누락 월 재수신 실패', '#d97706'); }catch(e){}
@@ -644,8 +645,9 @@ async function _pollFirebaseSignalOnce(force){
     if(!sigTs) return;
     const prev = _lastFirebaseSignalAt;
     _rememberFirebaseSignal(sig);
-    if(force || sigTs > prev){
-      if(!force && sigTs > prev){
+    const hasNewSignal = sigTs > prev;
+    if(hasNewSignal){
+      if(!force){
         _toastPendingSignalTs = sigTs;
         _toastSync('📡 다른 기기에서 새 데이터 감지됨', 2200);
       }
@@ -654,9 +656,11 @@ async function _pollFirebaseSignalOnce(force){
           window.refreshCloudSyncStatus('📡 보조 신호 감지 — GitHub 확인 중', '#2563eb');
         }
       }catch(e){}
-      if(force || sigTs > _lastSavedAt || !_lastSnapshot){
+      if(sigTs > _lastSavedAt || !_lastSnapshot){
         await _pollGithubOnce(true);
       }
+    }else if(force && !_lastSnapshot){
+      await _pollGithubOnce(true);
     }
   }catch(e){}
   finally{
@@ -757,24 +761,20 @@ window.fbForceSync = async function () {
     window._forcingSync = false;
   }
   try{ if(typeof localSave==='function') localSave(); }catch(e){}
+  try{ if(typeof window._primeMatchSyncSignature === 'function') window._primeMatchSyncSignature(true); }catch(e){}
   try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('🔄 수동 동기화 완료', '#2563eb'); }catch(e){}
   return true;
 };
 
-// 초기 로드 + 주기적 GitHub polling
+// 초기 로드 + 신호 기반 변경 감지
 setTimeout(()=>{ _pollGithubOnce(true); _pollFirebaseSignalOnce(true); }, 150);
 setInterval(()=>{
   if(document.visibilityState !== 'visible') return;
   _pollFirebaseSignalOnce(false);
 }, 8000);
-setInterval(()=>{
-  if(document.visibilityState !== 'visible') return;
-  _pollGithubOnce(false);
-}, 45000);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     _pollFirebaseSignalOnce(true);
-    _pollGithubOnce(true);
     _updateSyncAgeBadge();
   }
 });

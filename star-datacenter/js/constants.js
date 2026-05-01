@@ -1355,6 +1355,44 @@ function _updateSyncNetworkBadge(){
   }catch(e){}
 }
 try{ window._updateSyncNetworkBadge = _updateSyncNetworkBadge; }catch(e){}
+const _MATCH_SYNC_SIG_KEYS = {
+  pending: 'su_sync_pending_match_sig',
+  uploaded: 'su_sync_last_uploaded_match_sig'
+};
+let _lastObservedMatchSyncSig = '';
+function _matchSyncHash(str){
+  let h = 2166136261;
+  for(let i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16);
+}
+function _buildMatchSyncSignature(){
+  const payload = {
+    miniM,
+    univM,
+    comps,
+    ckM,
+    proM,
+    ttM,
+    indM,
+    gjM
+  };
+  const json = JSON.stringify(payload);
+  return `${json.length}:${_matchSyncHash(json)}`;
+}
+function _primeMatchSyncSignature(force){
+  try{
+    const sig = _buildMatchSyncSignature();
+    if(force || !_lastObservedMatchSyncSig) _lastObservedMatchSyncSig = sig;
+    return sig;
+  }catch(e){
+    if(force) _lastObservedMatchSyncSig = '';
+    return _lastObservedMatchSyncSig || '';
+  }
+}
+try{ window._primeMatchSyncSignature = _primeMatchSyncSignature; }catch(e){}
 async function _ensureRemoteSaveReady(){
   if(typeof window.fbCloudSave === 'function' && typeof window.fbSet === 'function') return true;
   try{
@@ -1400,9 +1438,13 @@ async function _flushRemoteCloudSave(reason){
     await window.fbCloudSave({ includeSettings:false });
     try{
       const now = Date.now();
+      const uploadedSig = localStorage.getItem(_MATCH_SYNC_SIG_KEYS.pending) || _buildMatchSyncSignature();
       localStorage.setItem('su_last_save_time', String(now));
       localStorage.setItem('su_sync_last_upload_ok_at', String(now));
+      localStorage.setItem(_MATCH_SYNC_SIG_KEYS.uploaded, uploadedSig);
+      localStorage.removeItem(_MATCH_SYNC_SIG_KEYS.pending);
       localStorage.removeItem('su_sync_last_fail_msg');
+      _primeMatchSyncSignature(true);
     }catch(e){}
     _clearPendingRemoteSave();
     _setCloudStatusMsg('✅ GitHub 저장됨', '#16a34a');
@@ -1465,8 +1507,25 @@ window.addEventListener('DOMContentLoaded', ()=>{
 async function save(){
   localSave();
   if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
-    // 경기 기록은 로컬 저장 즉시, 원격 업로드만 debounce
-    _scheduleRemoteCloudSave(_REMOTE_SAVE_DEBOUNCE_MS, 'save');
+    let shouldUpload = false;
+    try{
+      const nextSig = _buildMatchSyncSignature();
+      const prevSig = _lastObservedMatchSyncSig || nextSig;
+      const pendingSig = localStorage.getItem(_MATCH_SYNC_SIG_KEYS.pending) || '';
+      _lastObservedMatchSyncSig = nextSig;
+      if(nextSig !== prevSig){
+        localStorage.setItem(_MATCH_SYNC_SIG_KEYS.pending, nextSig);
+        shouldUpload = true;
+      }else if(pendingSig){
+        shouldUpload = true;
+      }
+    }catch(e){
+      shouldUpload = true;
+    }
+    if(shouldUpload){
+      // 경기 기록 변경만 원격 업로드
+      _scheduleRemoteCloudSave(_REMOTE_SAVE_DEBOUNCE_MS, 'match-save');
+    }
   }
 }
 
@@ -1498,6 +1557,9 @@ let filterSeason = '전체'; // '전체' 또는 시즌 id
 
 // 🆕 캘린더 예정 경기 (Firebase 동기화)
 let calScheduled = J('su_cal_sched') || [];
+window.addEventListener('DOMContentLoaded', ()=>{
+  try{ _primeMatchSyncSignature(true); }catch(e){}
+}, { once:true });
 
 // 🆕 랭킹 변동 스냅샷 (points 기준 순위)
 // { playerName: rank } 형태로 저장

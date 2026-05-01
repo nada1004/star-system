@@ -337,6 +337,7 @@ window.onFirebaseLoad = function(data) {
   // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
   // (savedAt 비교 로직 제거로 인해 불필요, 오히려 자기 에코 방어 타이밍 오염 가능)
   if (typeof localSave === 'function') localSave();
+  try{ if(typeof window._primeMatchSyncSignature === 'function') window._primeMatchSyncSignature(true); }catch(e){}
   if (typeof fixPoints === 'function') fixPoints();
   window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
   if (typeof render === 'function') render();
@@ -548,6 +549,7 @@ async function fbCloudSave(opts) {
           if(pendingSa) window._lastAppliedSavedAt = Math.max(lastApplied, pendingSa);
           _applyCloudData(pending);
           if (typeof localSave === 'function') localSave();
+          try{ if(typeof window._primeMatchSyncSignature === 'function') window._primeMatchSyncSignature(true); }catch(e){}
           if (typeof fixPoints === 'function') fixPoints();
           window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
           if (typeof render === 'function') render();
