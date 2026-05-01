@@ -2284,7 +2284,7 @@ window.cfgUnivOrderMove = function(i, dir){
         alert('기능 로딩 중입니다. 잠시 후 다시 시도해주세요.');
         return;
       }
-      loader('js/cloud-board.js?v=20260425-01').then(()=>{
+      loader('js/cloud-board.js?v=20260501-85').then(()=>{
         const fn = window.checkFbSyncStatus;
         if(typeof fn === 'function' && fn !== _lazyCheckFbSyncStatus) fn();
       }).catch((e)=>{

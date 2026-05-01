@@ -940,6 +940,102 @@ try{ localStorage.removeItem('su_crew'); localStorage.removeItem('su_crewcfg'); 
 let BLD = {};
 let openDetails = {};
 let tierRankModeFilter = '전체';
+function _queueHistoryPersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueueHistoryPersist === 'function'){
+      window.__suQueueHistoryPersist({
+        miniM: miniM || [],
+        univM: univM || [],
+        ckM: ckM || [],
+        proM: proM || [],
+        ttM: ttM || [],
+        indM: indM || [],
+        gjM: gjM || [],
+        comps: comps || [],
+        tourneys: tourneys || [],
+        proTourneys: proTourneys || [],
+      }, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _queuePlayerHistoryPersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueuePlayerHistoryPersist === 'function'){
+      const map = {};
+      (Array.isArray(players) ? players : []).forEach(p=>{
+        const name = String(p && p.name || '').trim();
+        if(!name) return;
+        map[name] = Array.isArray(p.history) ? p.history.map(({eloAfter,...h})=>h) : [];
+      });
+      window.__suQueuePlayerHistoryPersist(map, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _queuePlayerBasePersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueuePlayerBasePersist === 'function'){
+      const list = (Array.isArray(players) ? players : []).map(p=>{
+        const c = { ...(p||{}) };
+        delete c.photo;
+        delete c.history;
+        return c;
+      });
+      window.__suQueuePlayerBasePersist(list, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _queuePlayerPhotoPersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueuePlayerPhotoPersist === 'function'){
+      const map = {};
+      (Array.isArray(players) ? players : []).forEach(p=>{
+        const name = String(p && p.name || '').trim();
+        if(!name || !p || !p.photo) return;
+        map[name] = p.photo;
+      });
+      window.__suQueuePlayerPhotoPersist(map, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _queueBoardPlayerOrderPersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueueBoardPlayerOrderPersist === 'function'){
+      const map = (typeof boardPlayerOrder === 'object' && boardPlayerOrder) ? boardPlayerOrder : {};
+      window.__suQueueBoardPlayerOrderPersist(map, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _queueVoteDataPersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueueVoteDataPersist === 'function'){
+      window.__suQueueVoteDataPersist((typeof voteData === 'object' && voteData) ? voteData : {}, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _queueRankSnapshotPersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueueRankSnapshotPersist === 'function'){
+      window.__suQueueRankSnapshotPersist({
+        snap: (typeof _rankSnapshot === 'object' && _rankSnapshot) ? _rankSnapshot : {},
+        date: String(typeof _rankSnapDate !== 'undefined' ? (_rankSnapDate || '') : '')
+      }, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
 
 // ── 선수별 상태 아이콘 시스템 ──────────────────────────────
 let playerStatusIcons = J('su_psi') || {};
@@ -1171,13 +1267,25 @@ function localSave(){
     _lsSave('su_tiers',TIERS);
     // 사진(base64)을 su_pp로 분리해서 su_p 크기 감소
     const _pPhotoMap={};
+    const _playerBasePersisted = _queuePlayerBasePersistFromGlobals(false);
+    const _photoPersisted = _queuePlayerPhotoPersistFromGlobals(false);
+    const _playerHistPersisted = _queuePlayerHistoryPersistFromGlobals(false);
     const _pNoPhoto=players.map(p=>{
       const c={...p};
-      if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
+      if(p.photo){
+        if(!_photoPersisted) _pPhotoMap[p.name]=p.photo;
+        delete c.photo;
+      }
       // eloAfter(render-player-detail.js 경로에서 재계산 가능)만 제거, time은 중복 dedup에 필요하므로 유지
       if(c.history&&c.history.length){
-        // eslint-disable-next-line no-unused-vars
-        c.history=c.history.map(({eloAfter,...h})=>h);
+        if(_playerHistPersisted){
+          delete c.history;
+        }else{
+          // eslint-disable-next-line no-unused-vars
+          c.history=c.history.map(({eloAfter,...h})=>h);
+        }
+      }else if(_playerHistPersisted){
+        delete c.history;
       }
       return c;
     });
@@ -1189,32 +1297,36 @@ function localSave(){
       if(r.teamBMembers)r.teamBMembers=r.teamBMembers.map(x=>({name:x.name,univ:x.univ}));
       return r;
     });
-    _lsSave('su_pp',_pPhotoMap);
-    _lsSave('su_p',_pNoPhoto);
-    _lsSave('su_u',univCfg);
-    _lsSave('su_m',maps);
+    if(!_photoPersisted) _lsSave('su_pp',_pPhotoMap);
+    if(!_playerBasePersisted) _lsSave('su_p',_pNoPhoto);
     _lsSave('su_mAlias',userMapAlias);
-    _lsSave('su_t',tourD);
-    _lsSave('su_mm',miniM);
-    _lsSave('su_um',univM);
-    _lsSave('su_cm',comps);
-    _lsSave('su_ck',_trimM(ckM));
+    const _histPersisted = _queueHistoryPersistFromGlobals(false);
+    if(!_histPersisted){
+      _lsSave('su_u',univCfg);
+      _lsSave('su_m',maps);
+      _lsSave('su_t',tourD);
+      _lsSave('su_mm',miniM);
+      _lsSave('su_um',univM);
+      _lsSave('su_ck',_trimM(ckM));
+      _lsSave('su_pro',_trimM(proM));
+      _lsSave('su_ttm',_trimM(ttM));
+      _lsSave('su_indm',indM);
+      _lsSave('su_gjm',gjM);
+      _lsSave('su_cm',comps);
+      _lsSave('su_tn',tourneys);
+      _lsSave('su_ptn',proTourneys);
+      if(typeof boardOrder!=='undefined') _lsSave('su_boardOrder',boardOrder);
+      _lsSave('su_notices',notices);
+      _lsSave('su_seasons',seasons);
+      _lsSave('su_cal_sched',calScheduled);
+    }
+    // 대회/조편성도 IndexedDB 분리 저장 대상
     _lsSave('su_cn',compNames);
     _lsSave('su_cc',curComp);
-    _lsSave('su_pro',_trimM(proM));
-    _lsSave('su_ptn',proTourneys);
     _lsSave('su_ptc',curProComp);
-    _lsSave('su_tn',tourneys);
-    _lsSave('su_ttm',_trimM(ttM));
     _lsSave('su_ttcur',_ttCurComp);
-    _lsSave('su_indm',indM);
-    _lsSave('su_gjm',gjM);
-    if(typeof boardOrder!=='undefined') _lsSave('su_boardOrder',boardOrder);
-    if(typeof boardPlayerOrder!=='undefined') _lsSave('su_bpo',boardPlayerOrder);
+    if(typeof boardPlayerOrder!=='undefined' && !_queueBoardPlayerOrderPersistFromGlobals(false)) _lsSave('su_bpo',boardPlayerOrder);
     if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
-    _lsSave('su_notices',notices);
-    _lsSave('su_seasons',seasons);
-    _lsSave('su_cal_sched',calScheduled);
     localStorage.setItem('su_last_save_time',Date.now().toString());
     if(BLD['ck'])_lsSave('su_bld_ck',{membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]});
     if(BLD['pro'])_lsSave('su_bld_pro',{date:BLD['pro'].date||'',membersA:BLD['pro'].membersA||[],membersB:BLD['pro'].membersB||[],tierFilters:BLD['pro'].tierFilters||[],sets:BLD['pro'].sets||[]});
@@ -1233,9 +1345,12 @@ function localSave(){
 function saveCfg(){
   try{
     _lsSave('su_tiers',TIERS);
-    _lsSave('su_u',univCfg);
-    _lsSave('su_m',maps);
     _lsSave('su_mAlias',userMapAlias);
+    if(!_queueHistoryPersistFromGlobals(true)){
+      _lsSave('su_u',univCfg);
+      _lsSave('su_m',maps);
+      _lsSave('su_t',tourD);
+    }
     if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
     localStorage.setItem('su_last_save_time',Date.now().toString());
 
@@ -1291,7 +1406,7 @@ function savePhotos(){
   try{
     const _ppm={};
     players.forEach(p=>{if(p.photo)_ppm[p.name]=p.photo;});
-    _lsSave('su_pp',_ppm);
+    if(!_queuePlayerPhotoPersistFromGlobals(true)) _lsSave('su_pp',_ppm);
     localStorage.setItem('su_last_save_time',Date.now().toString());
   }catch(e){console.error('[savePhotos error]',e);}
 }
@@ -1361,7 +1476,7 @@ async function _ensureRemoteSaveReady(){
     if (typeof window._ensureCloudBoardLoaded === 'function') {
       await window._ensureCloudBoardLoaded();
     } else if (typeof window._loadScriptOnce === 'function') {
-      await window._loadScriptOnce('js/cloud-board.js?v=20260425-01');
+          await window._loadScriptOnce('js/cloud-board.js?v=20260501-85');
     }
   }catch(e){
     console.error('[save] cloud-board load fail', e);
@@ -1514,10 +1629,12 @@ function updateRankSnapshot() {
     .sort((a,b) => (b.points||0)-(a.points||0) || (b.win||0)-(a.win||0));
   const snap = {};
   ranked.forEach((p,i) => { snap[p.name] = i+1; });
-  localStorage.setItem('su_rank_snap', JSON.stringify(snap));
-  localStorage.setItem('su_rank_snap_date', today);
   _rankSnapshot = snap;
   _rankSnapDate = today;
+  if(!_queueRankSnapshotPersistFromGlobals(true)){
+    localStorage.setItem('su_rank_snap', JSON.stringify(snap));
+    localStorage.setItem('su_rank_snap_date', today);
+  }
 }
 
 // 랭킹 변동 HTML 반환 (▲3 / ▼2 / NEW / -)

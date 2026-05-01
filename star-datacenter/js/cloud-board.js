@@ -173,7 +173,12 @@ function _applyCloudData(d) {
     // Firebase 집계로 교체 후 내 투표 복원
     Object.keys(voteData).forEach(k=>delete voteData[k]);
     Object.assign(voteData, d.voteAgg||{}, myVotes);
-    localStorage.setItem('su_votes', JSON.stringify(voteData));
+    try{
+      if(typeof window.__suQueueVoteDataPersist === 'function') window.__suQueueVoteDataPersist(voteData||{}, true);
+      else localStorage.setItem('su_votes', JSON.stringify(voteData));
+    }catch(e){
+      localStorage.setItem('su_votes', JSON.stringify(voteData));
+    }
   }
   // 현재 대회 선택 상태
   if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
@@ -859,6 +864,12 @@ function _getBoardPlayers(univName, includeRetired=false){
 }
 
 function saveBoardPlayerOrder(){
+  try{
+    if(typeof window.__suQueueBoardPlayerOrderPersist === 'function'){
+      window.__suQueueBoardPlayerOrderPersist(boardPlayerOrder||{}, true);
+      return;
+    }
+  }catch(e){}
   localStorage.setItem('su_bpo', JSON.stringify(boardPlayerOrder));
 }
 

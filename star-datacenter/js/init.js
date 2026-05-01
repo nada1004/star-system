@@ -208,7 +208,14 @@ async function _seedTierTtM(){
   }
 }
 
-function init(){
+async function init(){
+  try{
+    if(typeof window.__suHydrateHistoryFromIDB === 'function'){
+      await window.__suHydrateHistoryFromIDB();
+    }
+  }catch(e){
+    console.warn('[init] history idb hydrate failed', e);
+  }
   fixPoints();
   // 티어대회 기록(ttM) 시드가 있으면 로드(비동기) — 로컬 데이터가 비어 있을 때만
   try{ _seedTierTtM(); }catch(e){}
@@ -854,12 +861,19 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
     const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
     const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey);
     if(hasRecordKeys) return;
+    const lastLocalSaveAt = Number(localStorage.getItem('su_last_save_time')||0) || 0;
+    if(lastLocalSaveAt > 0) return;
     // su_p는 배열 또는 {v:2,p:[...]}일 수 있음
     const localPlayers = (typeof J==='function') ? J('su_p') : null;
     const ok = Array.isArray(localPlayers)
       ? localPlayers.length>0
       : (localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length>0);
     if(ok) return;
+    if(typeof window.__suHasIndexedDBData === 'function'){
+      try{
+        if(await window.__suHasIndexedDBData()) return;
+      }catch(e){}
+    }
   }catch(e){}
   console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
   // (복구) 번들에 포함된 data.json을 최우선으로 시도
