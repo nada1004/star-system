@@ -2,6 +2,9 @@
    GitHub data.json 동기화 호환 레이어
    - 파일명은 firebase-init.js 유지(기존 참조 호환)
    - 실제 동작은 Firebase를 쓰지 않고 GitHub 업로드/폴링만 수행
+   - GitHub 토큰은 Fine-grained Personal Access Token 권장
+   - 권한은 nada1004/star-system 저장소의 Contents: Read and Write 만 부여
+   - Classic PAT의 repo 전체 권한은 사용하지 않음
    - 저장 구조:
      1) star-datacenter/data.json        : 경량 엔트리 포인터
      2) star-datacenter/data/index.json  : 분리 저장 인덱스
@@ -30,6 +33,100 @@ let _lastFirebaseSignalAt = Number(localStorage.getItem('su_sync_last_firebase_s
 let _firebaseSignalBusy = false;
 let _toastPendingSignalTs = 0;
 let _lastMissingMonthsSig = String(localStorage.getItem('su_sync_missing_months_sig')||'');
+let _missingRetryInFlight = false;
+let _autoRetryMissingBusy = false;
+let _autoRetryMissingAttempt = 0;
+let _autoRetryMissingTimer = null;
+let _autoRetryMissingSig = '';
+let _syncAgeBadgeBound = false;
+
+function _getLastSyncSeenAt(){
+  try{
+    return Math.max(
+      Number(localStorage.getItem('su_sync_last_received_at')||0) || 0,
+      Number(localStorage.getItem('su_sync_last_remote_saved_at')||0) || 0,
+      Number(_lastSavedAt||0) || 0
+    );
+  }catch(e){
+    return Number(_lastSavedAt||0) || 0;
+  }
+}
+function _formatSyncAge(ts){
+  const n = Number(ts||0) || 0;
+  if(!n) return '동기화 대기';
+  const diffSec = Math.max(0, Math.floor((Date.now() - n) / 1000));
+  if(diffSec < 60) return '마지막 동기화: 방금';
+  const diffMin = Math.floor(diffSec / 60);
+  if(diffMin < 60) return `마지막 동기화: ${diffMin}분 전`;
+  const diffHour = Math.floor(diffMin / 60);
+  if(diffHour < 24) return `마지막 동기화: ${diffHour}시간 전`;
+  const diffDay = Math.floor(diffHour / 24);
+  return `마지막 동기화: ${diffDay}일 전`;
+}
+function _updateSyncAgeBadge(){
+  try{
+    const el = document.getElementById('syncAgeBadge');
+    if(!el) return;
+    const ts = _getLastSyncSeenAt();
+    el.textContent = _formatSyncAge(ts);
+    el.title = ts ? `마지막 동기화 시각: ${new Date(ts).toLocaleString('ko-KR')}` : '아직 동기화 기록이 없습니다';
+    el.style.opacity = ts ? '1' : '.8';
+  }catch(e){}
+}
+function _bindSyncAgeBadge(){
+  if(_syncAgeBadgeBound) return;
+  _syncAgeBadgeBound = true;
+  _updateSyncAgeBadge();
+  setInterval(_updateSyncAgeBadge, 60000);
+}
+function _clearAutoRetryMissingTimer(){
+  if(_autoRetryMissingTimer){
+    clearTimeout(_autoRetryMissingTimer);
+    _autoRetryMissingTimer = null;
+  }
+}
+function _scheduleMissingMonthsAutoRetry(months){
+  const miss = Array.isArray(months) ? months.filter(Boolean) : [];
+  const sig = miss.join(',');
+  if(!sig){
+    _autoRetryMissingAttempt = 0;
+    _autoRetryMissingSig = '';
+    _clearAutoRetryMissingTimer();
+    return;
+  }
+  if(sig !== _autoRetryMissingSig){
+    _autoRetryMissingSig = sig;
+    _autoRetryMissingAttempt = 0;
+    _clearAutoRetryMissingTimer();
+  }
+  if(_autoRetryMissingBusy || _autoRetryMissingTimer || _autoRetryMissingAttempt >= 2) return;
+  const delay = _autoRetryMissingAttempt === 0 ? 5000 : 30000;
+  _autoRetryMissingTimer = setTimeout(async ()=>{
+    _autoRetryMissingTimer = null;
+    if(_autoRetryMissingBusy || _autoRetryMissingAttempt >= 2) return;
+    _autoRetryMissingBusy = true;
+    _autoRetryMissingAttempt += 1;
+    try{
+      if(typeof window.fbRetryMissingMonths === 'function'){
+        await window.fbRetryMissingMonths();
+      }
+    }catch(e){}
+    finally{
+      _autoRetryMissingBusy = false;
+      const latestMiss = (()=>{ try{ return JSON.parse(localStorage.getItem('su_sync_missing_months')||'[]')||[]; }catch(e){ return []; } })().filter(Boolean);
+      if(latestMiss.length){
+        if(_autoRetryMissingAttempt < 2){
+          _scheduleMissingMonthsAutoRetry(latestMiss);
+        }else{
+          _toastSync(`⚠️ 누락 월 자동 재시도 후에도 남음: ${latestMiss.join(', ')}`, 3600);
+        }
+      }else{
+        _autoRetryMissingAttempt = 0;
+        _autoRetryMissingSig = '';
+      }
+    }
+  }, delay);
+}
 
 function _deliver(data) {
   _lastSnapshot = data;
@@ -40,6 +137,7 @@ function _deliver(data) {
       localStorage.setItem('su_sync_last_remote_saved_at', String(sa));
     }
     localStorage.setItem('su_sync_last_received_at', String(Date.now()));
+    _updateSyncAgeBadge();
   }catch(e){}
   try{
     const sa = Number(data && data.savedAt || 0) || 0;
@@ -56,11 +154,13 @@ function _deliver(data) {
         _toastSync(`⚠️ 일부 월 데이터 누락: ${miss.join(', ')}`, 3600);
       }
       _setMissingMonthsMeta(miss);
+      _scheduleMissingMonthsAutoRetry(miss);
     }else{
       if(_lastMissingMonthsSig){
         _toastSync('✅ 누락된 월 데이터 없이 모두 반영되었습니다', 2200);
       }
       _setMissingMonthsMeta([]);
+      _scheduleMissingMonthsAutoRetry([]);
     }
   }catch(e){}
   try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('📥 다른 기기 데이터 수신', 'var(--blue)'); }catch(e){}
@@ -490,41 +590,50 @@ async function _pollGithubOnce(force){
   }catch(e){}
 }
 window.fbRetryMissingMonths = async function(){
+  if(_missingRetryInFlight){
+    return { ok:false, retried:[], stillMissing:[], busy:true };
+  }
+  _missingRetryInFlight = true;
   const missing = (()=>{ try{ return JSON.parse(localStorage.getItem('su_sync_missing_months')||'[]')||[]; }catch(e){ return []; } })().filter(Boolean);
   if(!missing.length){
     _toastSync('✅ 누락된 월이 없습니다', 1800);
     try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('✅ 누락 월 없음', '#16a34a'); }catch(e){}
+    _missingRetryInFlight = false;
     return { ok:true, retried:[], stillMissing:[] };
   }
-  try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('🔄 누락 월 다시 받는 중...', '#2563eb'); }catch(e){}
-  const idx = await _fetchRepoJson(GH_SPLIT_INDEX_PATH);
-  const historyDir = String((idx && idx.historyDir) || GH_SPLIT_HISTORY_DIR);
-  const retried = [];
-  const stillMissing = [];
-  const parts = await Promise.all(missing.map(async mk=>{
-    try{
-      const part = await _fetchRepoJson(`${historyDir}/${mk}.json`);
-      retried.push(mk);
-      return part;
-    }catch(e){
-      stillMissing.push(mk);
-      return null;
+  try{
+    try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('🔄 누락 월 다시 받는 중...', '#2563eb'); }catch(e){}
+    const idx = await _fetchRepoJson(GH_SPLIT_INDEX_PATH);
+    const historyDir = String((idx && idx.historyDir) || GH_SPLIT_HISTORY_DIR);
+    const retried = [];
+    const stillMissing = [];
+    const parts = await Promise.all(missing.map(async mk=>{
+      try{
+        const part = await _fetchRepoJson(`${historyDir}/${mk}.json`);
+        retried.push(mk);
+        return part;
+      }catch(e){
+        stillMissing.push(mk);
+        return null;
+      }
+    }));
+    if(retried.length){
+      const base = _lastSnapshot || await _fetchGithubData();
+      const next = _mergeMonthPartsIntoData(base, parts);
+      next._missingMonths = stillMissing;
+      _deliver(next);
+      try{ if(typeof localSave==='function') localSave(); }catch(e){}
+    }else{
+      _setMissingMonthsMeta(stillMissing);
+      try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('⚠️ 누락 월 재수신 실패', '#d97706'); }catch(e){}
     }
-  }));
-  if(retried.length){
-    const base = _lastSnapshot || await _fetchGithubData();
-    const next = _mergeMonthPartsIntoData(base, parts);
-    next._missingMonths = stillMissing;
-    _deliver(next);
-    try{ if(typeof localSave==='function') localSave(); }catch(e){}
-  }else{
-    _setMissingMonthsMeta(stillMissing);
-    try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('⚠️ 누락 월 재수신 실패', '#d97706'); }catch(e){}
+    if(retried.length && !stillMissing.length) _toastSync('✅ 누락 월 데이터를 모두 다시 받았습니다', 2400);
+    else if(retried.length) _toastSync(`⚠️ 일부만 복구됨: ${stillMissing.join(', ')}`, 3200);
+    else _toastSync('❌ 누락 월 다시받기 실패', 2400);
+    return { ok: retried.length>0, retried, stillMissing };
+  } finally {
+    _missingRetryInFlight = false;
   }
-  if(retried.length && !stillMissing.length) _toastSync('✅ 누락 월 데이터를 모두 다시 받았습니다', 2400);
-  else if(retried.length) _toastSync(`⚠️ 일부만 복구됨: ${stillMissing.join(', ')}`, 3200);
-  else _toastSync('❌ 누락 월 다시받기 실패', 2400);
-  return { ok: retried.length>0, retried, stillMissing };
 };
 async function _pollFirebaseSignalOnce(force){
   if(_firebaseSignalBusy) return;
@@ -657,14 +766,16 @@ setTimeout(()=>{ _pollGithubOnce(true); _pollFirebaseSignalOnce(true); }, 150);
 setInterval(()=>{
   if(document.visibilityState !== 'visible') return;
   _pollFirebaseSignalOnce(false);
-}, 2000);
+}, 8000);
 setInterval(()=>{
   if(document.visibilityState !== 'visible') return;
   _pollGithubOnce(false);
-}, 5000);
+}, 45000);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     _pollFirebaseSignalOnce(true);
     _pollGithubOnce(true);
+    _updateSyncAgeBadge();
   }
 });
+setTimeout(()=>{ _bindSyncAgeBadge(); }, 0);

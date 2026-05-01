@@ -404,7 +404,14 @@ function recalcSet(mode,si){
   set.scoreA=a;set.scoreB=b;set.winner=a>b?'A':b>a?'B':'';
 }
 
-function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function genId(){
+  try{
+    if(globalThis.crypto && typeof crypto.randomUUID === 'function'){
+      return crypto.randomUUID().replace(/-/g,'');
+    }
+  }catch(e){}
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+}
 
 function saveMatch(mode){
   const bld=BLD[mode];if(!bld)return;

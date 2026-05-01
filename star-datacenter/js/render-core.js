@@ -137,7 +137,14 @@ function render(immediate){
   _renderScheduled = true;
   requestAnimationFrame(()=>{
     _renderScheduled = false;
-    try{ window.renderNow(); }catch(e){ console.error('[render] fail', e); }
+    try{ window.renderNow(); }catch(e){
+      console.error('[render] fail', e);
+      try{
+        if(typeof window._showGlobalAppError === 'function'){
+          window._showGlobalAppError(`렌더링 오류: ${(e&&e.message)||'알 수 없는 오류'}`, { renderFallback:true });
+        }
+      }catch(_){}
+    }
   });
 }
 

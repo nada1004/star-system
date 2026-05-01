@@ -1088,7 +1088,73 @@ function saveCustomStatusIcon(slot, emoji){
   const k='custom'+slot;
   if(STATUS_ICON_DEFS[k]) STATUS_ICON_DEFS[k].emoji=emoji;
 }
+const SU_MATCH_ID_MIGRATION_KEY = 'su_match_id_migrated_v1';
+function _ensureObjId(obj, key){
+  if(!obj || typeof obj !== 'object') return false;
+  if(obj[key]) return false;
+  obj[key] = genId();
+  return true;
+}
+function _ensureMatchArrayIds(arr){
+  let changed = false;
+  (Array.isArray(arr) ? arr : []).forEach(m=>{
+    if(!m || typeof m !== 'object') return;
+    if(_ensureObjId(m, '_id')) changed = true;
+  });
+  return changed;
+}
+function _ensureNestedCompetitionIds(arr){
+  let changed = false;
+  (Array.isArray(arr) ? arr : []).forEach(m=>{
+    if(!m || typeof m !== 'object') return;
+    if(_ensureObjId(m, '_id')) changed = true;
+  });
+  return changed;
+}
+function _ensureTourneyIds(list){
+  let changed = false;
+  (Array.isArray(list) ? list : []).forEach(tn=>{
+    if(!tn || typeof tn !== 'object') return;
+    if(_ensureObjId(tn, 'id')) changed = true;
+    const touchMatch = (m)=>{
+      if(!m || typeof m !== 'object') return;
+      if(_ensureObjId(m, '_id')) changed = true;
+    };
+    (Array.isArray(tn.groups) ? tn.groups : []).forEach(g=>{
+      (Array.isArray(g && g.matches) ? g.matches : []).forEach(touchMatch);
+    });
+    if(Array.isArray(tn.matches)) tn.matches.forEach(touchMatch);
+    if(tn.thirdPlace) touchMatch(tn.thirdPlace);
+    if(tn.final) touchMatch(tn.final);
+    if(Array.isArray(tn.manualMatches)) tn.manualMatches.forEach(touchMatch);
+    if(tn.matchDetails && typeof tn.matchDetails === 'object'){
+      Object.values(tn.matchDetails).forEach(touchMatch);
+    }
+  });
+  return changed;
+}
+function _ensureLegacyMatchIdsOnce(){
+  try{
+    if(localStorage.getItem(SU_MATCH_ID_MIGRATION_KEY) === '1') return false;
+  }catch(e){}
+  let changed = false;
+  changed = _ensureMatchArrayIds(miniM) || changed;
+  changed = _ensureMatchArrayIds(univM) || changed;
+  changed = _ensureMatchArrayIds(ckM) || changed;
+  changed = _ensureMatchArrayIds(proM) || changed;
+  changed = _ensureMatchArrayIds(ttM) || changed;
+  changed = _ensureMatchArrayIds(indM) || changed;
+  changed = _ensureMatchArrayIds(gjM) || changed;
+  changed = _ensureNestedCompetitionIds(comps) || changed;
+  changed = _ensureTourneyIds(tourneys) || changed;
+  try{ localStorage.setItem(SU_MATCH_ID_MIGRATION_KEY, '1'); }catch(e){}
+  if(changed){
+    try{ localSave(); }catch(e){}
+  }
+  return changed;
+}
 function fixPoints(){
+  try{ _ensureLegacyMatchIdsOnce(); }catch(e){}
   // 구 티어명 → 새 약어 마이그레이션
   const tierMap={god:'G',king:'K',jack:'JA',joker:'J',spade:'S'};
   players.forEach(p=>{
@@ -1229,53 +1295,178 @@ function savePhotos(){
     localStorage.setItem('su_last_save_time',Date.now().toString());
   }catch(e){console.error('[savePhotos error]',e);}
 }
-async function save(){
-  localSave();
-  const statusEl = document.getElementById('cloudStatus');
-  if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
-    if (!localStorage.getItem('su_gh_token')) {
-      try{ localStorage.setItem('su_sync_last_fail_msg','GitHub 토큰 없음'); }catch(e){}
-      if (typeof window.refreshCloudSyncStatus === 'function') window.refreshCloudSyncStatus('⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)', '#d97706');
-      else if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)'; }
-      return;
-    }
-    if (typeof window.fbCloudSave !== 'function') {
-      try{
-        if (typeof window._ensureCloudBoardLoaded === 'function') {
-          await window._ensureCloudBoardLoaded();
-        } else if (typeof window._loadScriptOnce === 'function') {
-          await window._loadScriptOnce('js/cloud-board.js?v=20260425-01');
-        }
-      }catch(e){
-        console.error('[save] cloud-board load fail', e);
+const _REMOTE_SAVE_DEBOUNCE_MS = 1500;
+let _remoteCloudSaveTimer = null;
+let _remoteCloudSaveBusy = false;
+function _setPendingRemoteSave(reason, failMsg, mode){
+  try{
+    localStorage.setItem('su_sync_pending_save', '1');
+    localStorage.setItem('su_sync_pending_save_at', String(Date.now()));
+    if(reason) localStorage.setItem('su_sync_pending_save_reason', String(reason));
+    if(mode) localStorage.setItem('su_sync_pending_save_mode', String(mode));
+    if(failMsg) localStorage.setItem('su_sync_last_fail_msg', String(failMsg));
+  }catch(e){}
+  try{ if(typeof window._updateSyncNetworkBadge==='function') window._updateSyncNetworkBadge(); }catch(e){}
+}
+function _clearPendingRemoteSave(){
+  try{
+    localStorage.removeItem('su_sync_pending_save');
+    localStorage.removeItem('su_sync_pending_save_at');
+    localStorage.removeItem('su_sync_pending_save_reason');
+    localStorage.removeItem('su_sync_pending_save_mode');
+  }catch(e){}
+  try{ if(typeof window._updateSyncNetworkBadge==='function') window._updateSyncNetworkBadge(); }catch(e){}
+}
+function _setCloudStatusMsg(msg, color){
+  try{
+    if(typeof window.refreshCloudSyncStatus === 'function') window.refreshCloudSyncStatus(msg, color);
+    else{
+      const statusEl = document.getElementById('cloudStatus');
+      if(statusEl){
+        statusEl.style.color = color || '';
+        statusEl.textContent = msg;
       }
     }
-    if (typeof window.fbCloudSave !== 'function' || typeof window.fbSet !== 'function') {
-      try{ localStorage.setItem('su_sync_last_fail_msg','GitHub 저장 모듈 미연결'); }catch(e){}
-      if (typeof window.refreshCloudSyncStatus === 'function') window.refreshCloudSyncStatus('❌ GitHub 저장 모듈 미연결', '#dc2626');
-      else if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ GitHub 저장 모듈 미연결'; }
-      return;
+  }catch(e){}
+}
+function _updateSyncNetworkBadge(){
+  try{
+    const el = document.getElementById('syncNetBadge');
+    if(!el) return;
+    const online = navigator.onLine !== false;
+    const pending = localStorage.getItem('su_sync_pending_save') === '1';
+    if(!online){
+      el.textContent = '오프라인';
+      el.style.color = '#b45309';
+      el.style.borderColor = '#fbbf24';
+      el.style.background = '#fffbeb';
+    }else if(pending){
+      el.textContent = '미전송 있음';
+      el.style.color = '#b91c1c';
+      el.style.borderColor = '#fca5a5';
+      el.style.background = '#fef2f2';
+    }else{
+      el.textContent = '온라인';
+      el.style.color = 'var(--text2)';
+      el.style.borderColor = 'var(--border)';
+      el.style.background = 'var(--surface)';
     }
-    if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ GitHub 저장 중...'; }
-    // 경기 기록 저장은 "데이터"만 우선 빠르게 업로드
-    // - 설정 동기화는 saveCfg()/자동 설정 저장 경로에서 별도로 처리
-    window.fbCloudSave({ includeSettings:false })
-      .then(() => {
-        try{
-          const now = Date.now();
-          localStorage.setItem('su_last_save_time', String(now));
-          localStorage.setItem('su_sync_last_upload_ok_at', String(now));
-          localStorage.removeItem('su_sync_last_fail_msg');
-        }catch(e){}
-        if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('✅ GitHub 저장됨', '#16a34a');
-        else if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ GitHub 저장됨';}
-      })
-      .catch(e => {
-        try{ localStorage.setItem('su_sync_last_fail_msg', String((e&&e.message)||e||'GitHub 저장 실패')); }catch(err){}
-        if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('❌ GitHub 저장 실패', '#dc2626');
-        else if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ GitHub 저장 실패';}
-        console.error('[fbCloudSave]',e);
-      });
+    el.title = pending ? '아직 다른 기기에 반영되지 않은 저장이 있습니다' : (online ? '네트워크 연결됨' : '오프라인 상태입니다');
+  }catch(e){}
+}
+try{ window._updateSyncNetworkBadge = _updateSyncNetworkBadge; }catch(e){}
+async function _ensureRemoteSaveReady(){
+  if(typeof window.fbCloudSave === 'function' && typeof window.fbSet === 'function') return true;
+  try{
+    if (typeof window._ensureCloudBoardLoaded === 'function') {
+      await window._ensureCloudBoardLoaded();
+    } else if (typeof window._loadScriptOnce === 'function') {
+      await window._loadScriptOnce('js/cloud-board.js?v=20260425-01');
+    }
+  }catch(e){
+    console.error('[save] cloud-board load fail', e);
+  }
+  return typeof window.fbCloudSave === 'function' && typeof window.fbSet === 'function';
+}
+async function _flushRemoteCloudSave(reason){
+  if(_remoteCloudSaveTimer){
+    clearTimeout(_remoteCloudSaveTimer);
+    _remoteCloudSaveTimer = null;
+  }
+  if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
+  if(!localStorage.getItem('su_gh_token')){
+    try{ localStorage.setItem('su_sync_last_fail_msg','GitHub 토큰 없음'); }catch(e){}
+    _setCloudStatusMsg('⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)', '#d97706');
+    return false;
+  }
+  if(navigator.onLine === false){
+    _setPendingRemoteSave(reason || 'save', '오프라인 상태', 'offline');
+    _setCloudStatusMsg('📴 오프라인 상태 — 온라인 복귀 시 자동 업로드', '#d97706');
+    return false;
+  }
+  if(_remoteCloudSaveBusy){
+    _setPendingRemoteSave(reason || 'save', '', 'queued');
+    return false;
+  }
+  _remoteCloudSaveBusy = true;
+  try{
+    const ready = await _ensureRemoteSaveReady();
+    if(!ready){
+      _setPendingRemoteSave(reason || 'save', 'GitHub 저장 모듈 미연결', 'failed');
+      _setCloudStatusMsg('❌ GitHub 저장 모듈 미연결', '#dc2626');
+      return false;
+    }
+    _setCloudStatusMsg('⏫ GitHub 저장 중...', '#2563eb');
+    await window.fbCloudSave({ includeSettings:false });
+    try{
+      const now = Date.now();
+      localStorage.setItem('su_last_save_time', String(now));
+      localStorage.setItem('su_sync_last_upload_ok_at', String(now));
+      localStorage.removeItem('su_sync_last_fail_msg');
+    }catch(e){}
+    _clearPendingRemoteSave();
+    _setCloudStatusMsg('✅ GitHub 저장됨', '#16a34a');
+    return true;
+  }catch(e){
+    _setPendingRemoteSave(reason || 'save', String((e&&e.message)||e||'GitHub 저장 실패'), 'failed');
+    _setCloudStatusMsg('❌ GitHub 저장 실패 — 복귀 시 자동 재시도', '#dc2626');
+    console.error('[fbCloudSave]',e);
+    return false;
+  }finally{
+    _remoteCloudSaveBusy = false;
+    try{
+      const pending = localStorage.getItem('su_sync_pending_save') === '1';
+      const mode = localStorage.getItem('su_sync_pending_save_mode') || '';
+      if(pending && mode === 'queued' && !_remoteCloudSaveTimer && navigator.onLine !== false){
+        _remoteCloudSaveTimer = setTimeout(()=>{ _flushRemoteCloudSave('queued-retry'); }, 250);
+      }
+      _updateSyncNetworkBadge();
+    }catch(e){}
+  }
+}
+function _scheduleRemoteCloudSave(delay, reason){
+  if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
+  if(_remoteCloudSaveTimer) clearTimeout(_remoteCloudSaveTimer);
+  _remoteCloudSaveTimer = setTimeout(()=>{ _flushRemoteCloudSave(reason || 'save'); }, Math.max(0, Number(delay||_REMOTE_SAVE_DEBOUNCE_MS)));
+  _setCloudStatusMsg('🕓 변경사항 저장 준비 중...', '#2563eb');
+  _updateSyncNetworkBadge();
+  return true;
+}
+window._retryPendingRemoteSave = function(force){
+  try{
+    const pending = localStorage.getItem('su_sync_pending_save') === '1';
+    if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
+    if(navigator.onLine === false) return false;
+    if(!force && !pending) return false;
+    return _scheduleRemoteCloudSave(force ? 120 : _REMOTE_SAVE_DEBOUNCE_MS, force ? 'forced-retry' : 'pending-retry');
+  }catch(e){
+    return false;
+  }
+};
+window.addEventListener('online', ()=>{
+  _updateSyncNetworkBadge();
+  _setCloudStatusMsg('🌐 온라인 복귀 — 저장 재시도 확인 중', '#2563eb');
+  try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(true); }catch(e){}
+});
+window.addEventListener('offline', ()=>{
+  _updateSyncNetworkBadge();
+  _setCloudStatusMsg('📴 오프라인 상태 — 로컬 저장만 유지', '#d97706');
+});
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible'){
+    _updateSyncNetworkBadge();
+    try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(false); }catch(e){}
+  }
+});
+window.addEventListener('DOMContentLoaded', ()=>{
+  _updateSyncNetworkBadge();
+  try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(false); }catch(e){}
+}, { once:true });
+async function save(){
+  localSave();
+  if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
+    // 경기 기록은 로컬 저장 즉시, 원격 업로드만 debounce
+    _scheduleRemoteCloudSave(_REMOTE_SAVE_DEBOUNCE_MS, 'save');
   }
 }
 

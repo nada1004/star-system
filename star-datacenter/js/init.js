@@ -30,6 +30,75 @@ function closeNoticePopup(){
   }
   cm('noticePopupModal');
 }
+let _appErrorBannerEl = null;
+let _lastGlobalErrorMsg = '';
+let _lastGlobalErrorAt = 0;
+function _ensureAppErrorBanner(){
+  try{
+    if(_appErrorBannerEl && document.body.contains(_appErrorBannerEl)) return _appErrorBannerEl;
+    const el = document.createElement('div');
+    el.id = 'app-error-banner';
+    el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:99999;display:none;max-width:min(92vw,720px);width:max-content;background:#7f1d1d;color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 30px rgba(0,0,0,.24);border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.45;align-items:center;gap:10px';
+    const msg = document.createElement('div');
+    msg.id = 'app-error-banner-msg';
+    msg.style.cssText = 'font-weight:700;letter-spacing:-.2px';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = '닫기';
+    btn.style.cssText = 'border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0';
+    btn.onclick = ()=>{ try{ el.style.display='none'; }catch(e){} };
+    el.appendChild(msg);
+    el.appendChild(btn);
+    document.body.appendChild(el);
+    _appErrorBannerEl = el;
+    return el;
+  }catch(e){
+    return null;
+  }
+}
+window._showGlobalAppError = function(message, opts){
+  try{
+    const msg = String(message || '오류가 발생했습니다. 새로고침 후 다시 시도해주세요.');
+    const now = Date.now();
+    if(msg === _lastGlobalErrorMsg && (now - _lastGlobalErrorAt) < 2500) return;
+    _lastGlobalErrorMsg = msg;
+    _lastGlobalErrorAt = now;
+    const el = _ensureAppErrorBanner();
+    if(el){
+      const box = el.querySelector('#app-error-banner-msg');
+      if(box) box.textContent = msg;
+      el.style.display = 'flex';
+    }
+    try{ if(typeof showToast === 'function') showToast(msg, 3200); }catch(e){}
+    if(opts && opts.renderFallback){
+      const C = document.getElementById('rcont');
+      if(C && !String(C.innerHTML||'').trim()){
+        C.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <div class="empty-state-title">화면을 그리는 중 오류가 발생했습니다</div>
+            <div class="empty-state-desc">새로고침 후 다시 시도해주세요. 문제가 계속되면 최근 작업을 확인해주세요.</div>
+          </div>
+        `;
+      }
+    }
+  }catch(e){}
+};
+window.addEventListener('error', (event)=>{
+  try{
+    const message = (event && event.message) ? `오류가 발생했습니다: ${event.message}` : '오류가 발생했습니다. 새로고침 후 다시 시도해주세요.';
+    window._showGlobalAppError(message);
+  }catch(e){}
+});
+window.addEventListener('unhandledrejection', (event)=>{
+  try{
+    const reason = event && event.reason;
+    const detail = typeof reason === 'string'
+      ? reason
+      : (reason && reason.message) ? reason.message : '비동기 처리 중 오류가 발생했습니다.';
+    window._showGlobalAppError(`오류가 발생했습니다: ${detail}`);
+  }catch(e){}
+});
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 가로 "드래그 메뉴" 지원

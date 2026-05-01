@@ -129,6 +129,78 @@ function deleteAdminAccount(idx){
   localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(accounts));
   if(typeof reCfg==='function')reCfg();
 }
+const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const LOGIN_FAIL_KEY = 'su_login_fail_info';
+const LOGIN_FAIL_MAX = 5;
+const LOGIN_LOCK_MS = 30 * 1000;
+function _clearSessionStorage(){
+  try{
+    localStorage.removeItem('su_session');
+    localStorage.removeItem('su_session_role');
+    localStorage.removeItem('su_session_login_at');
+    localStorage.removeItem('su_session_last_active_at');
+  }catch(e){}
+}
+function _getSessionLastSeenAt(){
+  try{
+    return Math.max(
+      Number(localStorage.getItem('su_session_last_active_at')||0) || 0,
+      Number(localStorage.getItem('su_session_login_at')||0) || 0
+    );
+  }catch(e){
+    return 0;
+  }
+}
+function _isSessionExpired(){
+  if(localStorage.getItem('su_session') !== '1') return false;
+  const lastSeen = _getSessionLastSeenAt();
+  if(!lastSeen) return true;
+  return (Date.now() - lastSeen) > SESSION_MAX_AGE_MS;
+}
+function _touchSessionActivity(force){
+  try{
+    if(localStorage.getItem('su_session') !== '1') return;
+    const now = Date.now();
+    const prev = Number(localStorage.getItem('su_session_last_active_at')||0) || 0;
+    if(force || !prev || (now - prev) > 5 * 60 * 1000){
+      localStorage.setItem('su_session_last_active_at', String(now));
+    }
+  }catch(e){}
+}
+function _syncSessionStateAtBoot(){
+  try{
+    if(_isSessionExpired()) _clearSessionStorage();
+  }catch(e){}
+}
+function _getLoginFailInfo(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(LOGIN_FAIL_KEY)||'{}') || {};
+    return {
+      count: Number(raw.count||0) || 0,
+      lockUntil: Number(raw.lockUntil||0) || 0
+    };
+  }catch(e){
+    return { count:0, lockUntil:0 };
+  }
+}
+function _setLoginFailInfo(info){
+  try{ localStorage.setItem(LOGIN_FAIL_KEY, JSON.stringify({ count:Number(info.count||0)||0, lockUntil:Number(info.lockUntil||0)||0 })); }catch(e){}
+}
+function _clearLoginFailInfo(){
+  try{ localStorage.removeItem(LOGIN_FAIL_KEY); }catch(e){}
+}
+function _getLoginLockRemainingMs(){
+  const info = _getLoginFailInfo();
+  return Math.max(0, (Number(info.lockUntil||0)||0) - Date.now());
+}
+function _recordLoginFailure(){
+  const info = _getLoginFailInfo();
+  const nextCount = (Number(info.count||0) || 0) + 1;
+  const lockUntil = nextCount >= LOGIN_FAIL_MAX ? (Date.now() + LOGIN_LOCK_MS) : 0;
+  _setLoginFailInfo({ count: lockUntil ? 0 : nextCount, lockUntil });
+  return { count: nextCount, lockUntil };
+}
+_syncSessionStateAtBoot();
 let isLoggedIn=localStorage.getItem('su_session')==='1';
 let isSubAdmin=localStorage.getItem('su_session_role')==='sub-admin';
 
@@ -137,21 +209,37 @@ async function doLogin(){
   const pw=document.getElementById('li-pw').value;
   const err=document.getElementById('li-err');
   if(!id||!pw){err.textContent='아이디와 비밀번호를 입력하세요.';return;}
+  const remainMs = _getLoginLockRemainingMs();
+  if(remainMs > 0){
+    err.textContent=`로그인 시도 제한 중입니다. ${Math.ceil(remainMs/1000)}초 후 다시 시도하세요.`;
+    return;
+  }
   const inputHash=await sha256(id+':'+pw);
   const accounts=getAdminAccounts();
   const found=accounts.find(a=>a.hash===inputHash);
   if(found){
     isLoggedIn=true;
     isSubAdmin=(found.role==='sub-admin');
+    const now = Date.now();
     localStorage.setItem('su_session','1');
     localStorage.setItem('su_session_role',found.role||'admin');
+    localStorage.setItem('su_session_login_at', String(now));
+    localStorage.setItem('su_session_last_active_at', String(now));
+    _clearLoginFailInfo();
     cm('loginModal');
     document.getElementById('li-id').value='';
     document.getElementById('li-pw').value='';
     document.getElementById('li-err').textContent='';
     applyLoginState();
   } else {
-    err.textContent='아이디 또는 비밀번호가 올바르지 않습니다.';
+    const fail = _recordLoginFailure();
+    const lockedMs = Math.max(0, (Number(fail.lockUntil||0)||0) - Date.now());
+    if(lockedMs > 0){
+      err.textContent=`로그인 ${LOGIN_FAIL_MAX}회 실패로 ${Math.ceil(lockedMs/1000)}초 동안 잠금됩니다.`;
+    }else{
+      const left = Math.max(0, LOGIN_FAIL_MAX - (Number(fail.count||0) || 0));
+      err.textContent=`아이디 또는 비밀번호가 올바르지 않습니다.${left>0?` (${left}회 남음)`:''}`;
+    }
     document.getElementById('li-pw').value='';
   }
 }
@@ -159,14 +247,19 @@ async function doLogin(){
 function doLogout(){
   isLoggedIn=false;
   isSubAdmin=false;
-  localStorage.removeItem('su_session');
-  localStorage.removeItem('su_session_role');
+  _clearSessionStorage();
   if(['member','cfg'].includes(curTab)){curTab='total';document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.querySelector('.tab').classList.add('on');}
   if(['grpedit','input'].includes(compSub)) compSub='league';
   applyLoginState();
 }
 
 function applyLoginState(){
+  if(isLoggedIn && _isSessionExpired()){
+    isLoggedIn = false;
+    isSubAdmin = false;
+    _clearSessionStorage();
+  }
+  if(isLoggedIn) _touchSessionActivity(false);
   // 헤더 버튼 표시
   document.getElementById('hdrLoginBtn').style.display=isLoggedIn?'none':'';
   document.getElementById('hdrLogoutBtn').style.display=isLoggedIn?'':'none';
@@ -209,6 +302,22 @@ function applyLoginState(){
   }
   render();
 }
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState !== 'visible') return;
+  if(_isSessionExpired()){
+    if(isLoggedIn){
+      isLoggedIn = false;
+      isSubAdmin = false;
+      _clearSessionStorage();
+      try{ if(typeof showToast==='function') showToast('🔒 로그인 세션이 만료되어 자동 로그아웃되었습니다.', 2600); }catch(e){}
+      try{ applyLoginState(); }catch(e){}
+    }
+    return;
+  }
+  if(isLoggedIn) _touchSessionActivity(true);
+});
+window.addEventListener('pointerdown', ()=>{ if(isLoggedIn) _touchSessionActivity(false); }, { passive:true });
+window.addEventListener('keydown', ()=>{ if(isLoggedIn) _touchSessionActivity(false); }, { passive:true });
 
 // 수정/삭제 버튼 — 비로그인 시 숨김
 function adminBtn(html){

@@ -70,6 +70,9 @@ async function _ensureCloudBoardLoaded(){
   await window.ensureHtml2Canvas();
   await _loadScriptOnce('js/cloud-board.js?v=20260430-02');
 }
+async function _ensureSettingsLoaded(){
+  await _loadScriptOnce('js/settings.js?v=20260501-76');
+}
 function _lazyGsSetStatus(msg, color='var(--gray-l)'){
   try{
     const el = document.getElementById('cloudStatus');
@@ -112,6 +115,50 @@ window.fbUpdate = window.fbUpdate || _lazyFbUpdate;
 window.cloudLoad = window.cloudLoad || _lazyCloudLoad;
 async function _ensureElboardLoaded(){
   await _loadScriptOnce('js/elboard.js?v=20260422-01');
+}
+function _lazyRCfg(C, T){
+  _lazyLoadingView(T, C, '설정', '설정 모듈을 불러오는 중...');
+  (async()=>{
+    try{
+      await _ensureSettingsLoaded();
+      const fn = window.rCfg;
+      if(typeof fn === 'function' && fn !== _lazyRCfg) fn(C, T);
+      else render(true);
+    }catch(e){
+      console.error('[lazy] settings load fail', e);
+      try{
+        if(C) C.innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">설정 로딩 실패</div><div class="empty-state-desc">새로고침 후 다시 시도해주세요.</div></div>';
+      }catch(_){}
+    }
+  })();
+}
+function _lazyCfgGo(secId){
+  (async()=>{
+    try{
+      await _ensureSettingsLoaded();
+      const fn = window.cfgGo;
+      if(typeof fn === 'function' && fn !== _lazyCfgGo) fn(secId);
+      else{
+        const cfgTab = document.getElementById('tabCfg') || document.querySelector('.tab[onclick*="sw(\'cfg\'"]');
+        if(cfgTab && typeof sw === 'function') sw('cfg', cfgTab);
+      }
+    }catch(e){
+      console.error('[lazy] cfgGo load fail', e);
+      try{ alert('설정 로딩 실패: 새로고침 후 다시 시도해주세요.'); }catch(_){}
+    }
+  })();
+}
+function _lazyReCfg(){
+  (async()=>{
+    try{
+      await _ensureSettingsLoaded();
+      const fn = window.reCfg;
+      if(typeof fn === 'function' && fn !== _lazyReCfg) fn();
+      else render(true);
+    }catch(e){
+      console.error('[lazy] reCfg load fail', e);
+    }
+  })();
 }
 async function _ensureChatbotLoaded(){
   await _loadScriptOnce('js/chatbot.js?v=20260430-01');
@@ -159,6 +206,9 @@ window.openChatbot = window.openChatbot || _lazyOpenChatbot;
 window.closeChatbot = window.closeChatbot || _lazyCloseChatbot;
 window.sendMessage = window.sendMessage || _lazySendMessage;
 window.clearChatHistory = window.clearChatHistory || _lazyClearChatHistory;
+window.rCfg = window.rCfg || _lazyRCfg;
+window.cfgGo = window.cfgGo || _lazyCfgGo;
+window.reCfg = window.reCfg || _lazyReCfg;
 
 try{
   window.RenderLazyUtils = window.RenderLazyUtils || {

@@ -23,6 +23,36 @@ function esc(s){
 // ⚠️ tier-tour.js에도 _cfgOpen/_cfgToggle/_cfgD가 존재해서 전역이 덮어써지는 문제가 있음.
 // settings.js는 고유 접두사(_scfg*)를 사용해 충돌을 원천 차단한다.
 function _scfgOpen(id){try{return !!(JSON.parse(localStorage.getItem('su_cfg_open')||'{}')[id]);}catch(e){return false;}}
+function _renderB2ImgSettingsWrap(){
+  try{
+    const wrap = document.getElementById('cfg-b2-img-settings-wrap');
+    if(!wrap) return false;
+    if(typeof _b2BuildImageControlGroup !== 'function') return false;
+    const _shuffle = (localStorage.getItem('su_b2_profile_shuffle') ?? '1') === '1';
+    wrap.innerHTML=`
+      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">이미지 1 (기본 이미지)</div>
+      ${_b2BuildImageControlGroup('','primary','이미지 1',true)}
+      <div style="font-weight:700;font-size:12px;color:var(--text2);margin:14px 0 10px">이미지 2 (두번째 이미지)</div>
+      ${_b2BuildImageControlGroup('','secondary','이미지 2',true)}
+      <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-b2-profile-shuffle" style="width:15px;height:15px" ${_shuffle?'checked':''} onchange="localStorage.setItem('su_b2_profile_shuffle',this.checked?'1':'0');render()">
+        이미지탭(프로필) 목록 랜덤(셔플)
+      </label>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ PC 좌/우 및 대학 필터에서도 적용됩니다(보기 재미용)</div>
+    `;
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+function _ensureB2ImgSettingsWrap(retry){
+  if(_renderB2ImgSettingsWrap()) return;
+  if(retry === false) return;
+  try{
+    setTimeout(()=>{ _renderB2ImgSettingsWrap(); }, 160);
+  }catch(e){}
+}
 function _scfgToggle(id,el){
   try{
     // 아코디언: 하나 열리면 나머지는 닫기
@@ -55,6 +85,9 @@ function _scfgToggle(id,el){
     }
     if(el && el.open && id==='paste' && typeof window.cfgRenderPlayerAliasMap==='function'){
       window.cfgRenderPlayerAliasMap();
+    }
+    if(el && el.open && id==='imgsettings'){
+      _ensureB2ImgSettingsWrap();
     }
   }catch(e){}
 }
@@ -1884,6 +1917,23 @@ window.cfgFemcoReset = function(){
 };
 
 // 설정 탭 버튼이 "반응 없음"처럼 보일 때를 대비한 이벤트 바인딩(인라인 onclick 불발 대비)
+let _cfgLastTapHandledAt = 0;
+let _cfgLastTapHandledKey = '';
+function _cfgShouldIgnoreDuplicateTap(e, key){
+  try{
+    const now = Date.now();
+    const type = String(e && e.type || '');
+    const safeKey = String(key || '');
+    if(safeKey && _cfgLastTapHandledKey === safeKey && (now - _cfgLastTapHandledAt) < 320){
+      return true;
+    }
+    if(safeKey && (type === 'pointerdown' || type === 'pointerup' || type === 'click' || type === 'touchend')){
+      _cfgLastTapHandledAt = now;
+      _cfgLastTapHandledKey = safeKey;
+    }
+  }catch(_){}
+  return false;
+}
 function _cfgHandleCfgClick(e){
   // 설정탭이 실제로 렌더된 상태에서만 처리
   // (바로가기 UI를 삭제했으므로 cfg-shortcuts는 더 이상 존재하지 않음)
@@ -1896,6 +1946,7 @@ function _cfgHandleCfgClick(e){
   if(catBtn){
     // preventDefault 제거 - 인라인 onclick도 작동하도록
     const cat = catBtn.getAttribute('data-cfg-cat');
+    if(_cfgShouldIgnoreDuplicateTap(e, 'cat:' + String(cat||''))) return;
     if(cat){ _cfgApplyCat(cat, false); }
     return;
   }
@@ -1903,6 +1954,7 @@ function _cfgHandleCfgClick(e){
   if(goBtn){
     // preventDefault 제거 - 인라인 onclick도 작동하도록
     const sec = goBtn.getAttribute('data-cfg-go');
+    if(_cfgShouldIgnoreDuplicateTap(e, 'go:' + String(sec||''))) return;
     if(sec){ _cfgGo(sec); }
     return;
   }
@@ -1935,6 +1987,7 @@ function _cfgHandleCfgClick(e){
         }
         const secId = secWrap.getAttribute('data-cfg-sec');
         if(secId){
+          if(_cfgShouldIgnoreDuplicateTap(e, 'sec:' + String(secId||''))) return;
           try{ if(e && e.preventDefault) e.preventDefault(); }catch(_){}
           try{ if(e && e.stopPropagation) e.stopPropagation(); }catch(_){}
           // (요청사항) '펼치기' 동작은 하지 않고 팝업만 띄우기
@@ -1952,10 +2005,10 @@ function _bindCfgHandlers(){
   // 일부 웹뷰/확장환경에서 document 캡처 클릭이 차단되는 케이스가 있어
   // window 캡처(pointerup)를 우선으로 바인딩한다.
   // details/summary 토글을 확실히 막기 위해 pointerdown도 캡처로 선 바인딩
+  // 모바일에서는 touchend + click 중복 발화가 있어 touchend는 바인딩하지 않음
   try{ document.addEventListener('pointerdown', _cfgHandleCfgClick, true); }catch(e){}
   try{ window.addEventListener('pointerup', _cfgHandleCfgClick, true); }catch(e){}
   try{ document.addEventListener('click', _cfgHandleCfgClick, true); }catch(e){}
-  try{ document.addEventListener('touchend', _cfgHandleCfgClick, true); }catch(e){}
 }
 function _scfgD(id,title,extra){
   // (요청사항) 펼치기 UI 대신 "팝업으로 열기" UX: 기본은 항상 닫힘
@@ -3798,7 +3851,8 @@ ${_scfgD('notice','📢 공지 관리')}
     <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
       <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:8px">GitHub 토큰 (관람자 수천 명 무료 지원)</div>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">설정 시: 저장할 때 GitHub <code>star-datacenter/data/</code> 아래 인덱스/코어/월별 기록 파일로 업로드됩니다. 다른 기기/관람자는 이를 합쳐 반영합니다.</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">GitHub → Settings → Developer settings → Personal access tokens → Fine-grained token → Contents: Read and Write 권한 발급</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">권장: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained token 사용. 대상 저장소는 <code>nada1004/star-system</code>, 권한은 <code>Contents: Read and Write</code>만 부여.</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">Classic PAT의 <code>repo</code> 전체 권한은 사용하지 마세요.</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <input type="password" id="cfg-gh-token" placeholder="ghp_xxxxxxxxxxxx" style="width:260px" autocomplete="new-password">
         <button class="btn btn-b" onclick="saveGhToken()">💾 저장</button>
@@ -4754,22 +4808,7 @@ ${_scfgD('notice','📢 공지 관리')}
     if(document.getElementById('cfg-b2-auto-resize'))document.getElementById('cfg-b2-auto-resize').checked=b2Layout.autoResize!==false;
     if(document.getElementById('cfg-b2-auto-height'))document.getElementById('cfg-b2-auto-height').checked=b2Layout.autoHeight!==false;
     // 이미지탭 이미지 설정 (board2 전역 설정) 렌더링
-    const _cfgB2ImgWrap=document.getElementById('cfg-b2-img-settings-wrap');
-    if(_cfgB2ImgWrap&&typeof _b2BuildImageControlGroup==='function'){
-      const _shuffle = (localStorage.getItem('su_b2_profile_shuffle') ?? '1') === '1';
-      _cfgB2ImgWrap.innerHTML=`
-        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">이미지 1 (기본 이미지)</div>
-        ${_b2BuildImageControlGroup('','primary','이미지 1',true)}
-        <div style="font-weight:700;font-size:12px;color:var(--text2);margin:14px 0 10px">이미지 2 (두번째 이미지)</div>
-        ${_b2BuildImageControlGroup('','secondary','이미지 2',true)}
-        <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
-        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-          <input type="checkbox" id="cfg-b2-profile-shuffle" style="width:15px;height:15px" ${_shuffle?'checked':''} onchange="localStorage.setItem('su_b2_profile_shuffle',this.checked?'1':'0');render()">
-          이미지탭(프로필) 목록 랜덤(셔플)
-        </label>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ PC 좌/우 및 대학 필터에서도 적용됩니다(보기 재미용)</div>
-      `;
-    }
+    _ensureB2ImgSettingsWrap();
     // 스트리머 상세 이미지 설정 초기화
     const imgSettings = (typeof suReadImgSettings==='function')
       ? suReadImgSettings()
