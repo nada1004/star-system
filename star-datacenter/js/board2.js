@@ -2411,6 +2411,11 @@ function _b2PlayersView() {
   const pcHeight = layoutSettings.pcHeight || 600;
   const mobileHeight = layoutSettings.mobileHeight || 320;
   const tabletHeight = layoutSettings.tabletHeight || 400;
+  const pcMainWide = Math.min(Math.max(leftSize + 7, 60), 76);
+  const pcMainMid = Math.min(Math.max(leftSize + 5, 58), 74);
+  const pcMainNarrow = Math.min(Math.max(leftSize + 3, 56), 72);
+  const tabletMainKeepRow = Math.min(Math.max(leftSize + 6, 60), 74);
+  const tallTabletHeight = tabletHeight + 120;
   
   let h = `
     <style>
@@ -2419,25 +2424,28 @@ function _b2PlayersView() {
         gap: 24px;
         height: calc(100vh - 140px);
         min-height: ${pcHeight}px;
+        align-items: stretch;
       }
       .b2-players-main {
-        flex: 0 0 ${leftSize}%;
+        flex: 0 0 ${pcMainNarrow}%;
         position: relative;
+        min-width: 0;
       }
+      .b2-players-grid-wrapper { min-width: 0; }
       ${autoResize ? `
       @media (min-width: 1400px) {
         .b2-players-main {
-          flex: 0 0 ${leftSize - 5}%;
+          flex: 0 0 ${pcMainWide}%;
         }
       }
       @media (min-width: 1200px) and (max-width: 1399px) {
         .b2-players-main {
-          flex: 0 0 ${leftSize - 3}%;
+          flex: 0 0 ${pcMainMid}%;
         }
       }
       @media (min-width: 1025px) and (max-width: 1199px) {
         .b2-players-main {
-          flex: 0 0 ${leftSize}%;
+          flex: 0 0 ${pcMainNarrow}%;
         }
       }
       ` : ''}
@@ -2643,21 +2651,23 @@ function _b2PlayersView() {
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
         gap: 14px;
       }
-      @media (max-width: 1024px) {
+      @media (min-width: 769px) and (max-width: 1024px) {
         .b2-players-wrapper {
-          flex-direction: column;
-          height: auto;
-          min-height: auto;
+          flex-direction: row;
+          gap: 16px;
+          height: clamp(${tallTabletHeight}px, 74vh, ${pcHeight + 140}px);
+          min-height: ${tallTabletHeight}px;
         }
         .b2-players-main {
-          flex: 0 0 auto;
-          width: 100%;
-          min-height: ${tabletHeight}px;
-          height: ${autoHeight ? `clamp(${tabletHeight}px, 52vh, ${tabletHeight + 220}px)` : `${tabletHeight}px`};
+          flex: 0 0 ${tabletMainKeepRow}%;
+          width: auto;
+          min-height: ${tallTabletHeight}px;
+          height: ${autoHeight ? `clamp(${tallTabletHeight}px, 74vh, ${pcHeight + 140}px)` : `${tallTabletHeight}px`};
         }
         .b2-players-grid-wrapper {
           flex: 1;
-          min-height: 300px;
+          min-height: ${tallTabletHeight}px;
+          max-height: 100%;
         }
       }
       @media (max-width: 768px) {
@@ -2736,17 +2746,7 @@ function _b2PlayersView() {
         }
       }
       @media (min-width: 769px) and (max-width: 1024px) {
-        .b2-players-wrapper {
-          flex-direction: column;
-          height: auto;
-          min-height: auto;
-          gap: 14px;
-        }
         .b2-players-main {
-          flex: none;
-          width: 100%;
-          min-height: ${tabletHeight}px;
-          height: clamp(${tabletHeight}px, 55vh, ${tabletHeight + 150}px);
           order: 0;
           position: sticky;
           top: 0;
@@ -2772,10 +2772,10 @@ function _b2PlayersView() {
           min-width: 35px;
         }
         .b2-players-grid-wrapper {
-          flex: none;
-          height: auto;
-          max-height: none;
+          flex: 1;
+          height: 100%;
           order: 1;
+          overflow-y: auto;
         }
         .b2-players-grid {
           grid-template-columns: repeat(3, 1fr);
@@ -2846,10 +2846,10 @@ function _b2PlayersView() {
     <div class="b2-players-main">
       <div class="b2-players-main-content" id="b2-players-main-box" style="--img-zoom:${imgSettings.zoom/100};--img-brightness:${imgSettings.brightness/100};--img-pos-x:${imgSettings.posX}px;--img-pos-y:${imgSettings.posY}px;">
         ${_b2SelectedPlayer.photo 
-          ? `<img src="${toHttpsUrl(_b2SelectedPlayer.photo)}" class="b2-players-main-image" id="b2-main-img-1" alt="${_b2SelectedPlayer.name}" onload="_b2ScheduleImageSwap('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">`
+          ? `<img src="${toHttpsUrl(_b2SelectedPlayer.photo)}" class="b2-players-main-image" id="b2-main-img-1" alt="${_b2SelectedPlayer.name}" onload="_b2ScheduleImageSwap('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}'); if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'primary'); }" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1;object-fit:${primarySettings.fit || 'cover'};object-position:${primarySettings.manualCenter ? 'center center' : 'center center'};transform:${_b2GetImgTransform(primarySettings)};filter:brightness(${(primarySettings.brightness || 100) / 100})">`
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
         }
-        ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">` : ''}
+        ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" onload="if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'secondary'); }" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;object-fit:${secondarySettings.fit || 'cover'};object-position:${secondarySettings.manualCenter ? 'center center' : 'center center'};transform:${_b2GetImgTransform(secondarySettings)};filter:brightness(${(secondarySettings.brightness || 100) / 100})">` : ''}
         
         ${isLoggedIn ? `
         <!-- 이미지 컨트롤 패널 -->

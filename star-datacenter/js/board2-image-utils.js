@@ -73,6 +73,8 @@ function _b2DefaultSingleImgSettings() {
     scale: 100,
     brightness: 100,
     fit: 'cover',
+    autoAdjust: true,
+    manualCenter: false,
     offsetX: 0,
     offsetY: 0,
     zoom: 100,
@@ -91,6 +93,7 @@ function _b2GetImgSettings(playerName, slot) {
   try{
     const s=_b2GlobalImgSettings.__byDevice[dk][key];
     if(s && typeof s==='object'){
+      if(s.autoAdjust==null) s.autoAdjust = true;
       if(s.fit==null && typeof s.fill==='string') s.fit=s.fill;
       if(s.scale==null && s.zoom!=null) s.scale=s.zoom;
       if(s.offsetX==null && s.posX!=null) s.offsetX=s.posX;
@@ -173,16 +176,17 @@ function _b2ResolveAutoPosition(rect, meta, fit){
 }
 function _b2IsAutoFitEligible(settings){
   if(!settings) return true;
+  if(settings.autoAdjust === false) return false;
   const fit = String(settings.fit || settings.fill || 'cover');
   const scale = Number(settings.scale ?? settings.zoom ?? 100) || 100;
   const ox = Number(settings.offsetX ?? settings.posX ?? 0) || 0;
   const oy = Number(settings.offsetY ?? settings.posY ?? 0) || 0;
-  return fit === 'cover' && scale === 100 && ox === 0 && oy === 0;
+  return !settings.manualCenter && fit === 'cover' && scale === 100 && ox === 0 && oy === 0;
 }
 function _b2ApplyImgSettingsToElement(el, settings) {
   if (!el || !settings) return;
   el.style.objectFit = settings.fit || 'contain';
-  el.style.objectPosition = 'center';
+  el.style.objectPosition = settings.manualCenter ? 'center center' : 'center';
   el.style.filter = `brightness(${(settings.brightness || 100) / 100})`;
   el.style.transform = _b2GetImgTransform(settings);
   if(_b2IsAutoFitEligible(settings)){
@@ -222,6 +226,8 @@ function _b2PreviewImgSetting(playerName, slot, key, val){
 }
 function _b2CenterImageCfg(playerName, slot) {
   const s = _b2GetImgSettings(playerName, slot);
+  s.autoAdjust = false;
+  s.manualCenter = true;
   s.offsetX = 0;
   s.offsetY = 0;
   s.posX = 0;
@@ -361,10 +367,29 @@ window._b2RefreshImageControls = function(playerName, slot) {
   document.querySelectorAll(`[data-b2-fit-slot="${slot}"]`).forEach(btn => {
     btn.classList.toggle('active', btn.dataset.fit === settings.fit);
   });
+  document.querySelectorAll(`[data-b2-auto-slot="${slot}"]`).forEach(btn => {
+    const isOn = btn.dataset.autoAdjust === 'on';
+    btn.classList.toggle('active', isOn ? settings.autoAdjust !== false : settings.autoAdjust === false);
+  });
   _b2ApplyImgSettingsToDom(playerName, slot);
+};
+window._b2SetImgAutoAdjust = function(playerName, slot, enabled){
+  const settings = _b2GetImgSettings(playerName, slot);
+  settings.autoAdjust = !!enabled;
+  if(enabled){
+    settings.manualCenter = false;
+  }
+  _b2SaveImgSettings();
+  if(typeof window._b2RefreshImageControls === 'function'){
+    window._b2RefreshImageControls(playerName, slot);
+  }else{
+    _b2ApplyImgSettingsToDom(playerName, slot);
+  }
 };
 window._b2CenterImage = function(playerName, slot) {
   const settings = _b2GetImgSettings(playerName, slot);
+  settings.autoAdjust = false;
+  settings.manualCenter = true;
   settings.offsetX = 0;
   settings.offsetY = 0;
   settings.posX = 0;
@@ -383,6 +408,13 @@ function _b2BuildImageControlGroup(playerName, slot, label, hasImage) {
   return `
     <div class="b2-players-slot-card ${hasImage ? '' : 'is-disabled'}">
       <div class="b2-players-slot-title">${label}${hasImage ? '' : ' <span>미등록</span>'}</div>
+      <div class="b2-players-img-control-group">
+        <div class="b2-players-img-label">자동 보정</div>
+        <div class="b2-players-img-btns">
+          <button class="b2-players-img-btn ${settings.autoAdjust !== false ? 'active' : ''}" data-b2-auto-slot="${slot}" data-auto-adjust="on" ${disabled} onclick="_b2SetImgAutoAdjust('${safeName}','${slot}',true)">ON</button>
+          <button class="b2-players-img-btn ${settings.autoAdjust === false ? 'active' : ''}" data-b2-auto-slot="${slot}" data-auto-adjust="off" ${disabled} onclick="_b2SetImgAutoAdjust('${safeName}','${slot}',false)">OFF</button>
+        </div>
+      </div>
       <div class="b2-players-img-control-group">
         <div class="b2-players-img-label">크기 <span id="${prefix}-scale-val">${settings.scale}%</span></div>
         <input type="range" class="b2-players-img-slider" min="50" max="220" value="${settings.scale}" ${disabled}
@@ -427,6 +459,10 @@ window._b2UpdateImgSetting = function(playerName, slot, key, val) {
   const keyMap = { zoom: 'scale', fill: 'fit', posX: 'offsetX', posY: 'offsetY' };
   key = keyMap[key] || key;
   const s = _b2GetImgSettings(playerName, slot);
+  if(key === 'fit' || key === 'scale' || key === 'brightness' || key === 'offsetX' || key === 'offsetY'){
+    s.autoAdjust = false;
+    s.manualCenter = false;
+  }
   const numVal = parseInt(val, 10);
   s[key] = isNaN(numVal) ? val : numVal;
   s.zoom = s.scale;
@@ -444,6 +480,10 @@ window._b2UpdateImgSetting = function(playerName, slot, key, val) {
   document.querySelectorAll(`[data-b2-fit-slot="${slot}"]`).forEach(btn => {
     btn.classList.toggle('active', btn.dataset.fit === s.fit);
   });
+  document.querySelectorAll(`[data-b2-auto-slot="${slot}"]`).forEach(btn => {
+    const isOn = btn.dataset.autoAdjust === 'on';
+    btn.classList.toggle('active', isOn ? s.autoAdjust !== false : s.autoAdjust === false);
+  });
   _b2ApplyImgSettingsToDom(playerName, slot);
 };
 window._b2MoveImg = function(playerName, slot, dx, dy) {
@@ -453,6 +493,8 @@ window._b2MoveImg = function(playerName, slot, dx, dy) {
     slot = 'primary';
   }
   const s = _b2GetImgSettings(playerName, slot);
+  s.autoAdjust = false;
+  s.manualCenter = false;
   s.offsetX += dx;
   s.offsetY += dy;
   s.posX = s.offsetX;
