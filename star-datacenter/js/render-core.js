@@ -83,9 +83,14 @@ function _renderImpl(){
       break;
     default: break;
   }
-  try{ window._applyRecCardTheme && window._applyRecCardTheme(); }catch(e){}
-  try{ window._applyTourneyCardTheme && window._applyTourneyCardTheme(); }catch(e){}
-  try{ window._applyHeaderSettings && window._applyHeaderSettings(); }catch(e){}
+  try{
+    if(typeof window._applyAllRuntimeSettings === 'function') window._applyAllRuntimeSettings();
+    else{
+      window._applyRecCardTheme && window._applyRecCardTheme();
+      window._applyTourneyCardTheme && window._applyTourneyCardTheme();
+      window._applyHeaderSettings && window._applyHeaderSettings();
+    }
+  }catch(e){}
   injectUnivIcons(C);
   try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
   requestAnimationFrame(()=>{

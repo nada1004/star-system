@@ -186,19 +186,22 @@ function _applyCloudData(d) {
   // 🔧 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등) - Firebase 데이터 적용
   if(d.appSettings!==undefined){
     const s=d.appSettings;
-    if(s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
-    if(s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
-    if(s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
-    if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
-    if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
-    if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
-    if(s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
-    if(s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
+    const _remoteSettingsSa = Number(d.appSettingsSavedAt || s.savedAt || 0) || 0;
+    const _localSettingsSa = (()=>{ try{ return Number(localStorage.getItem('su_last_settings_save')||0) || 0; }catch(e){ return 0; } })();
+    const _skipRemoteSettings = !window._forcingSync && _localSettingsSa && (!_remoteSettingsSa || _localSettingsSa > _remoteSettingsSa);
+    if(!_skipRemoteSettings && s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
+    if(!_skipRemoteSettings && s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
+    if(!_skipRemoteSettings && s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
+    if(!_skipRemoteSettings && s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
+    if(!_skipRemoteSettings && s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
+    if(!_skipRemoteSettings && s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
+    if(!_skipRemoteSettings && s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
+    if(!_skipRemoteSettings && s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
     // (보강) 설정탭에서 바꾸는 su_* 설정을 통째로 동기화
     // - 사진(base64)/토큰/비밀번호 등은 제외
     try{
       const ls = s.ls || s.localStorage || null;
-      if(ls && typeof ls==='object'){
+      if(!_skipRemoteSettings && ls && typeof ls==='object'){
         // 외부탭(대전기록>외부) 데이터는 로컬이 더 최신인 경우 덮어쓰지 않음
         // - cloud쪽 timestamp가 없을 수도 있으므로(구버전 데이터), 0으로 간주하고 비교한다.
         let localExtTs = 0, cloudExtTs = 0;
@@ -225,15 +228,24 @@ function _applyCloudData(d) {
     // UI 즉시 반영
     if(typeof updateFabVisibility==='function') updateFabVisibility();
     if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
-    // 프로필 모양/크기/효과 즉시 반영
-    try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
-    if(s.darkMode!==undefined){
+    try{
+      if(typeof window._applyAllRuntimeSettings === 'function') window._applyAllRuntimeSettings();
+      else{
+        if(typeof applyProfileShapeVars==='function') applyProfileShapeVars();
+        if(typeof applyUnivLogoVars==='function') applyUnivLogoVars();
+        if(typeof applyBoard2LogoVars==='function') applyBoard2LogoVars();
+        if(typeof applyResponsiveUiVars==='function') applyResponsiveUiVars();
+        if(typeof applyMatchDetailVars==='function') applyMatchDetailVars();
+        if(typeof window._applyThemeVars==='function') window._applyThemeVars();
+      }
+    }catch(e){}
+    if(!_skipRemoteSettings && s.darkMode!==undefined){
       document.body.classList.toggle('dark', s.darkMode);
       if(window._fixHdrBtns) window._fixHdrBtns();
     }
     // board2.js 변수 업데이트 및 재렌더링
-    if(s.b2LabelAlpha!==undefined) b2LabelAlpha = parseInt(s.b2LabelAlpha);
-    if(s.b2BgAlpha!==undefined) b2BgAlpha = parseInt(s.b2BgAlpha);
+    if(!_skipRemoteSettings && s.b2LabelAlpha!==undefined) b2LabelAlpha = parseInt(s.b2LabelAlpha);
+    if(!_skipRemoteSettings && s.b2BgAlpha!==undefined) b2BgAlpha = parseInt(s.b2BgAlpha);
     const b2Content=document.getElementById('b2-content');
     if(b2Content && typeof _b2UnivView==='function'){
       b2Content.innerHTML=_b2UnivView();
@@ -242,11 +254,11 @@ function _applyCloudData(d) {
 
     // 🎵 유튜브 BGM / 📺 SOOP 멀티뷰 설정 동기화
     try{
-      if(s.bgmEnabled!==undefined) localStorage.setItem('su_bgm_enabled', s.bgmEnabled ? '1' : '0');
-      if(s.bgmShuffle!==undefined) localStorage.setItem('su_bgm_shuffle', s.bgmShuffle ? '1' : '0');
-      if(s.bgmVolume!==undefined) localStorage.setItem('su_bgm_volume', String(s.bgmVolume));
-      if(s.bgmList!==undefined) localStorage.setItem('su_bgm_list', String(s.bgmList||''));
-      if(s.soopList!==undefined) localStorage.setItem('su_soop_list', String(s.soopList||''));
+      if(!_skipRemoteSettings && s.bgmEnabled!==undefined) localStorage.setItem('su_bgm_enabled', s.bgmEnabled ? '1' : '0');
+      if(!_skipRemoteSettings && s.bgmShuffle!==undefined) localStorage.setItem('su_bgm_shuffle', s.bgmShuffle ? '1' : '0');
+      if(!_skipRemoteSettings && s.bgmVolume!==undefined) localStorage.setItem('su_bgm_volume', String(s.bgmVolume));
+      if(!_skipRemoteSettings && s.bgmList!==undefined) localStorage.setItem('su_bgm_list', String(s.bgmList||''));
+      if(!_skipRemoteSettings && s.soopList!==undefined) localStorage.setItem('su_soop_list', String(s.soopList||''));
       // 버튼 즉시 반영
       if(typeof window.bgmApplySettings==='function') window.bgmApplySettings();
       if(typeof window.soopApplySettings==='function') window.soopApplySettings();
@@ -254,31 +266,34 @@ function _applyCloudData(d) {
 
     // 🧾 대전기록 > 외부 탭 데이터 동기화
     try{
-      if(s.histExtData!==undefined) localStorage.setItem('su_hist_ext_data_v1', String(s.histExtData||''));
-      if(s.histExtProxyPresets!==undefined) localStorage.setItem('su_hist_ext_proxy_presets_v1', String(s.histExtProxyPresets||''));
-      if(s.histExtProxyPresetSel!==undefined) localStorage.setItem('su_hist_ext_proxy_preset_sel_v1', String(s.histExtProxyPresetSel||''));
+      if(!_skipRemoteSettings && s.histExtData!==undefined) localStorage.setItem('su_hist_ext_data_v1', String(s.histExtData||''));
+      if(!_skipRemoteSettings && s.histExtProxyPresets!==undefined) localStorage.setItem('su_hist_ext_proxy_presets_v1', String(s.histExtProxyPresets||''));
+      if(!_skipRemoteSettings && s.histExtProxyPresetSel!==undefined) localStorage.setItem('su_hist_ext_proxy_preset_sel_v1', String(s.histExtProxyPresetSel||''));
     }catch(e){}
 
     // 🎨 디자인 모드(리뉴얼) / 🅰️ 폰트 설정 동기화
     try{
-      if(s.designV2On!==undefined) localStorage.setItem('su_design_v2', s.designV2On ? '1' : '0');
-      if(s.designV2Preset!==undefined) localStorage.setItem('su_design_v2_preset', String(s.designV2Preset||'base'));
-      if(s.designV2Bright!==undefined) localStorage.setItem('su_design_v2_bright', String(s.designV2Bright||'0'));
-      if(s.designV2Dark!==undefined) localStorage.setItem('su_design_v2_dark', String(s.designV2Dark||'0'));
-      if(s.designV2Colors!==undefined) localStorage.setItem('su_design_v2_colors', String(s.designV2Colors||'{}'));
-      if(s.designV2Effects!==undefined) localStorage.setItem('su_design_v2_effects', String(s.designV2Effects||'{}'));
-      if(s.appFontPreset!==undefined) localStorage.setItem('su_app_font_preset', String(s.appFontPreset||'noto'));
-      if(s.appFontCss!==undefined) localStorage.setItem('su_app_font_css', String(s.appFontCss||''));
-      if(s.appFontFamily!==undefined) localStorage.setItem('su_app_font_family', String(s.appFontFamily||''));
-      if(s.appFontCssText!==undefined) localStorage.setItem('su_app_font_css_text', String(s.appFontCssText||''));
-      if(s.appFontAliasMap!==undefined) localStorage.setItem('su_app_font_alias_map', String(s.appFontAliasMap||'{}'));
-      if(s.uiScalePct!==undefined) localStorage.setItem('su_ui_scale_pct', String(s.uiScalePct||'100'));
-      if(s.uiScalePcPct!==undefined) localStorage.setItem('su_ui_scale_pc_pct', String(s.uiScalePcPct||'100'));
-      if(s.uiScaleTbPct!==undefined) localStorage.setItem('su_ui_scale_tb_pct', String(s.uiScaleTbPct||'100'));
-      if(s.uiScaleMbPct!==undefined) localStorage.setItem('su_ui_scale_mb_pct', String(s.uiScaleMbPct||'100'));
-      if(typeof window._applyAppFont==='function') window._applyAppFont();
-      if(typeof window.applyDesignV2==='function') window.applyDesignV2();
-      if(typeof window._applyUiScale==='function') window._applyUiScale();
+      if(!_skipRemoteSettings && s.designV2On!==undefined) localStorage.setItem('su_design_v2', s.designV2On ? '1' : '0');
+      if(!_skipRemoteSettings && s.designV2Preset!==undefined) localStorage.setItem('su_design_v2_preset', String(s.designV2Preset||'base'));
+      if(!_skipRemoteSettings && s.designV2Bright!==undefined) localStorage.setItem('su_design_v2_bright', String(s.designV2Bright||'0'));
+      if(!_skipRemoteSettings && s.designV2Dark!==undefined) localStorage.setItem('su_design_v2_dark', String(s.designV2Dark||'0'));
+      if(!_skipRemoteSettings && s.designV2Colors!==undefined) localStorage.setItem('su_design_v2_colors', String(s.designV2Colors||'{}'));
+      if(!_skipRemoteSettings && s.designV2Effects!==undefined) localStorage.setItem('su_design_v2_effects', String(s.designV2Effects||'{}'));
+      if(!_skipRemoteSettings && s.appFontPreset!==undefined) localStorage.setItem('su_app_font_preset', String(s.appFontPreset||'noto'));
+      if(!_skipRemoteSettings && s.appFontCss!==undefined) localStorage.setItem('su_app_font_css', String(s.appFontCss||''));
+      if(!_skipRemoteSettings && s.appFontFamily!==undefined) localStorage.setItem('su_app_font_family', String(s.appFontFamily||''));
+      if(!_skipRemoteSettings && s.appFontCssText!==undefined) localStorage.setItem('su_app_font_css_text', String(s.appFontCssText||''));
+      if(!_skipRemoteSettings && s.appFontAliasMap!==undefined) localStorage.setItem('su_app_font_alias_map', String(s.appFontAliasMap||'{}'));
+      if(!_skipRemoteSettings && s.uiScalePct!==undefined) localStorage.setItem('su_ui_scale_pct', String(s.uiScalePct||'100'));
+      if(!_skipRemoteSettings && s.uiScalePcPct!==undefined) localStorage.setItem('su_ui_scale_pc_pct', String(s.uiScalePcPct||'100'));
+      if(!_skipRemoteSettings && s.uiScaleTbPct!==undefined) localStorage.setItem('su_ui_scale_tb_pct', String(s.uiScaleTbPct||'100'));
+      if(!_skipRemoteSettings && s.uiScaleMbPct!==undefined) localStorage.setItem('su_ui_scale_mb_pct', String(s.uiScaleMbPct||'100'));
+      if(typeof window._applyAllRuntimeSettings==='function') window._applyAllRuntimeSettings();
+      else{
+        if(typeof window._applyAppFont==='function') window._applyAppFont();
+        if(typeof window.applyDesignV2==='function') window.applyDesignV2();
+        if(typeof window._applyUiScale==='function') window._applyUiScale();
+      }
     }catch(e){}
   }
   try{ window._applyingCloudData = false; }catch(e){}
@@ -423,7 +438,9 @@ async function fbCloudSave(opts) {
     savedAt
   };
   if(includeSettings){
+    const _appSettingsSavedAt = Number(localStorage.getItem('su_last_settings_save')||savedAt) || savedAt;
     dataObj.appSettings = {
+      savedAt: _appSettingsSavedAt,
       fabTabs: JSON.parse(localStorage.getItem('su_fabTabs')||'{}'),
       globalImgSettings: JSON.parse(localStorage.getItem('su_b2_global_img_settings')||'{}'),
       imgSettings: JSON.parse(localStorage.getItem('su_img_settings')||'{}'),
@@ -454,6 +471,7 @@ async function fbCloudSave(opts) {
       soopList: localStorage.getItem('su_soop_list') || '',
       ls: _syncLs
     };
+    dataObj.appSettingsSavedAt = _appSettingsSavedAt;
   }
   // 페이로드 크기 검사
   let _fbPayloadSize = 0;

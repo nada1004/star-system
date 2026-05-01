@@ -219,12 +219,8 @@ async function init(){
   fixPoints();
   // 티어대회 기록(ttM) 시드가 있으면 로드(비동기) — 로컬 데이터가 비어 있을 때만
   try{ _seedTierTtM(); }catch(e){}
-  // 전역 폰트 설정 적용
-  try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
-  // (요청사항) 버튼/필 스타일 설정 적용
-  try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
-  // 🎨 디자인 모드(리뉴얼) 적용
-  try{ if(typeof window.applyDesignV2 === 'function') window.applyDesignV2(); }catch(e){}
+  // 설정탭 진입 여부와 무관한 런타임 설정 일괄 적용
+  try{ if(typeof window._applyAllRuntimeSettings === 'function') window._applyAllRuntimeSettings(); }catch(e){}
   // ELO 미설정 선수에게 기본값 부여
   if(typeof ELO_DEFAULT!=='undefined'){
     players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
@@ -242,6 +238,7 @@ async function init(){
   initLoginHash();
   applyLoginState();
   render();
+  try{ if(typeof window._applyAllRuntimeSettings === 'function') window._applyAllRuntimeSettings(); }catch(e){}
   // (성능) 부가 기능은 idle 시 지연 로딩
   // - BGM/멀티뷰는 초기 렌더와 무관하므로, 최초 로딩을 가볍게 유지
   try{
@@ -847,6 +844,97 @@ function _applyTourneyCardTheme(){
 }
 window._applyTourneyCardTheme=_applyTourneyCardTheme;
 _applyTourneyCardTheme();
+
+// ─────────────────────────────────────────────────────────────
+// 설정 런타임 공용 부팅
+// - 설정탭 진입 여부와 무관하게 앱 시작 시 바로 적용되어야 하는 설정만 모음
+// - settings.js(UI)와 분리된 런타임 SSOT
+// ─────────────────────────────────────────────────────────────
+try{
+  if(typeof window._cfgFemcoDefaults !== 'function'){
+    window._cfgFemcoDefaults = function(){
+      return {
+        autoLayout: 1,
+        logoSize: 150,
+        logoPos: 'top',
+        logoAttachTitle: 1,
+        headGap: 10,
+        titleSize: 28,
+        titleFont: 'system',
+        playerImgSize: 46,
+        playerImgShape: 'square',
+        rowsPerCol: 5,
+        colWidth: 170,
+        colGap: 10,
+        univGap: 18,
+        countFontSize: 12,
+        contentPadX: 16,
+        contentAlign: 'left',
+        contentOffsetX: 0,
+        univSubtitles: {},
+        subtitleSize: 12,
+        subtitleWeight: 800,
+        subtitleColor: '',
+        nameFontSize: 12,
+        roleFontSize: 10,
+        tierBadgeSize: 10,
+        tierBadgePadX: 6,
+        starSize: 15,
+        statusIconSize: 18,
+        univColorOverrides: {},
+        univBgMedia: {},
+        bgOverlay: 22,
+        logoOffsetX: 0,
+        logoOffsetY: 0,
+        titleOffsetX: 0,
+        titleOffsetY: 0,
+        titlePos: 'bottom'
+      };
+    };
+  }
+  if(typeof window._cfgFemcoLoad !== 'function'){
+    window._cfgFemcoLoad = function(){
+      try{
+        const raw = localStorage.getItem('b2_femco_settings_v1');
+        const base = (typeof window._cfgFemcoDefaults === 'function') ? window._cfgFemcoDefaults() : {};
+        if(!raw) return base;
+        const obj = JSON.parse(raw) || {};
+        return {
+          ...base,
+          ...obj,
+          univSubtitles:{...(base.univSubtitles||{}), ...(obj.univSubtitles||{})},
+          univColorOverrides:{...(base.univColorOverrides||{}), ...(obj.univColorOverrides||{})},
+          univBgMedia:{...(base.univBgMedia||{}), ...(obj.univBgMedia||{})}
+        };
+      }catch(e){
+        try{ return (typeof window._cfgFemcoDefaults === 'function') ? window._cfgFemcoDefaults() : {}; }catch(_){ return {}; }
+      }
+    };
+  }
+  if(typeof window._cfgFemcoSave !== 'function'){
+    window._cfgFemcoSave = function(obj){
+      try{ localStorage.setItem('b2_femco_settings_v1', JSON.stringify(obj||{})); }catch(e){}
+    };
+  }
+}catch(e){}
+
+window._applyAllRuntimeSettings = function(){
+  try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
+  try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
+  try{ if(typeof window.applyDesignV2 === 'function') window.applyDesignV2(); }catch(e){}
+  try{ if(typeof window._applyThemeVars === 'function') window._applyThemeVars(); }catch(e){}
+  try{ if(typeof window._applyHeaderSettings === 'function') window._applyHeaderSettings(); }catch(e){}
+  try{ if(typeof window._applyUiScale === 'function') window._applyUiScale(); }catch(e){}
+  try{ if(typeof window._applyAllTabsAutoFit === 'function') window._applyAllTabsAutoFit(); }catch(e){}
+  try{ if(typeof window._applyRecCardTheme === 'function') window._applyRecCardTheme(); }catch(e){}
+  try{ if(typeof window._applyTourneyCardTheme === 'function') window._applyTourneyCardTheme(); }catch(e){}
+  try{ if(typeof applyProfileShapeVars === 'function') applyProfileShapeVars(); }catch(e){}
+  try{ if(typeof applyUnivLogoVars === 'function') applyUnivLogoVars(); }catch(e){}
+  try{ if(typeof applyBoard2LogoVars === 'function') applyBoard2LogoVars(); }catch(e){}
+  try{ if(typeof applyResponsiveUiVars === 'function') applyResponsiveUiVars(); }catch(e){}
+  try{ if(typeof applyMatchDetailVars === 'function') applyMatchDetailVars(); }catch(e){}
+};
+try{ window._applyAllRuntimeSettings(); }catch(e){}
 
 // ─────────────────────────────────────────────────────────────
 // 상단 탭/필터바와 기록 인라인바는 공통 `enableDragScroll()`로 처리

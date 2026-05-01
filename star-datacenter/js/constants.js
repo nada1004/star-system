@@ -46,6 +46,66 @@ try{
 }catch(e){}
 
 /* ══════════════════════════════════════
+   로컬 설정 변경 시각 추적
+   - 새로고침 직후 원격 설정이 늦게 도착해도, 로컬 설정이 더 최신이면 덮어쓰지 않기 위함
+══════════════════════════════════════ */
+function _markLocalSettingsChanged(){
+  try{
+    const now = String(Date.now());
+    localStorage.setItem('su_last_settings_save', now);
+    localStorage.setItem('su_last_save_time', now);
+  }catch(e){}
+}
+try{ window._markLocalSettingsChanged = _markLocalSettingsChanged; }catch(e){}
+try{
+  if(typeof window.__suTouchSettingsWrapped==='undefined'){
+    window.__suTouchSettingsWrapped = true;
+    const _origSet = Storage.prototype.setItem;
+    const _origRemove = Storage.prototype.removeItem;
+    const _settingPrefixes = [
+      'su_profile_','su_ul_','su_b2_','su_mb_','su_tb_','su_modal_','su_tab_','su_select_',
+      'su_md_','su_pd_','su_univ_recent_','su_design_','su_app_font_','su_theme_','su_hdr_',
+      'su_rc_','su_tc_','su_bgm_','su_soop_','su_top_tab_','su_btn_','su_pill_','su_avatar_',
+      'su_ym_','su_cfg_','su_ai_'
+    ];
+    const _settingExact = new Set([
+      'su_dark','su_b2la','su_b2ba','su_fabHideMobile','su_fabHidePC','su_fabTabs',
+      'su_img_settings','su_b2_global_img_settings','su_auto_outfmt','su_date_menu_style',
+      'su_share_admin_only','su_cal_chip_mode','su_bcp_shape','su_bcp_size','su_bcp_layout',
+      'su_teamMatchSize'
+    ]);
+    const _shouldTouch = (key)=>{
+      try{
+        const k = String(key||'');
+        if(!k.startsWith('su_') && !k.startsWith('cfg_')) return false;
+        if(k==='su_last_settings_save' || k==='su_last_save_time' || k==='su_last_admin_save') return false;
+        if(k==='su_gh_token' || k==='su_fb_pw' || k==='su_admin_hash') return false;
+        if(_settingExact.has(k)) return true;
+        return _settingPrefixes.some(p=>k.startsWith(p)) || k.startsWith('cfg_');
+      }catch(e){ return false; }
+    };
+    Storage.prototype.setItem = function(key, value){
+      const out = _origSet.call(this, key, value);
+      try{
+        if(this===localStorage && _shouldTouch(key) && !window._applyingCloudData && !window._isSaving && !window.__suSkipTouchLocalSettings){
+          _origSet.call(localStorage, 'su_last_settings_save', String(Date.now()));
+        }
+      }catch(e){}
+      return out;
+    };
+    Storage.prototype.removeItem = function(key){
+      const out = _origRemove.call(this, key);
+      try{
+        if(this===localStorage && _shouldTouch(key) && !window._applyingCloudData && !window._isSaving && !window.__suSkipTouchLocalSettings){
+          _origSet.call(localStorage, 'su_last_settings_save', String(Date.now()));
+        }
+      }catch(e){}
+      return out;
+    };
+  }
+}catch(e){}
+
+/* ══════════════════════════════════════
    상세 상태 객체
    - 기존 전역 변수와 호환되는 alias를 유지하면서
      선수/대학 상세 상태를 공통 객체로 수렴
@@ -1344,6 +1404,7 @@ function localSave(){
 // 맵·약자·상태아이콘·티어·대학 설정 변경 시 사용
 function saveCfg(){
   try{
+    try{ if(typeof window._markLocalSettingsChanged==='function') window._markLocalSettingsChanged(); }catch(e){}
     _lsSave('su_tiers',TIERS);
     _lsSave('su_mAlias',userMapAlias);
     if(!_queueHistoryPersistFromGlobals(true)){
@@ -1378,6 +1439,7 @@ function saveCfg(){
           }catch(e){}
 
           const patch = {
+            appSettingsSavedAt: Number(localStorage.getItem('su_last_settings_save')||Date.now()) || Date.now(),
             tiers: TIERS,
             univCfg,
             maps,
@@ -1476,7 +1538,7 @@ async function _ensureRemoteSaveReady(){
     if (typeof window._ensureCloudBoardLoaded === 'function') {
       await window._ensureCloudBoardLoaded();
     } else if (typeof window._loadScriptOnce === 'function') {
-          await window._loadScriptOnce('js/cloud-board.js?v=20260501-85');
+          await window._loadScriptOnce('js/cloud-board.js?v=20260501-88');
     }
   }catch(e){
     console.error('[save] cloud-board load fail', e);

@@ -1669,74 +1669,74 @@ function _cfgFindUpAttr(el, attrName, maxDepth){
    - localStorage: b2_femco_settings_v1
 ══════════════════════════════════════ */
 const _FEMCO_CFG_KEY = 'b2_femco_settings_v1';
-function _cfgFemcoDefaults(){
-  return {
-    autoLayout: 1,     // 1: 인원수/화면폭에 맞춰 자동 레이아웃, 0: 수동 설정값 사용
-    logoSize: 150,
-    logoPos: 'top',
-    logoAttachTitle: 1, // 1: 로고+대학명 같이 이동, 0: 로고만 이동
-    headGap: 10,        // 로고-대학명(세로) 간격
-    titleSize: 28,
-    titleFont: 'system',
-    playerImgSize: 46,
-    playerImgShape: 'square',
-    rowsPerCol: 5,
-    colWidth: 170,
-    colGap: 10,
-    univGap: 18,
-    countFontSize: 12,
-    contentPadX: 16,
-    contentAlign: 'left', // left | center (기본은 좌측)
-    contentOffsetX: 0,      // 좌우 미세 이동(-40~40)
-    univSubtitles: {},
-    subtitleSize: 12,
-    subtitleWeight: 800,
-    subtitleColor: '',
-    nameFontSize: 12,
-    roleFontSize: 10,
-    tierBadgeSize: 10,
-    tierBadgePadX: 6,
-    starSize: 15,
-    statusIconSize: 18,
-    univColorOverrides: {},
-    // 대학별 배경 미디어
-    // - 기존 호환: 값이 string이면 URL로 처리
-    // - 신규: {url, alpha, sizeMode, sizeVal, pos, repeat, ox, oy}
-    univBgMedia: {},
-    // (요청) 배경 미디어 오버레이(투명도) — 0(없음) ~ 70(진하게)
-    bgOverlay: 22,
-    // (요청) 로고/대학명 위치 미세조정(px)
-    logoOffsetX: 0,
-    logoOffsetY: 0,
-    titleOffsetX: 0,
-    titleOffsetY: 0,
-    // (요청) 대학명 위치(로고 기준) — left/right/top/bottom
-    titlePos: 'bottom'
-  };
-}
-function _cfgFemcoLoad(){
-  try{
-    const raw = localStorage.getItem(_FEMCO_CFG_KEY);
-    if(!raw) return _cfgFemcoDefaults();
-    const obj = JSON.parse(raw) || {};
-    return {..._cfgFemcoDefaults(), ...obj,
-      univSubtitles:{...((_cfgFemcoDefaults().univSubtitles)||{}), ...(obj.univSubtitles||{})},
-      univColorOverrides:{...((_cfgFemcoDefaults().univColorOverrides)||{}), ...(obj.univColorOverrides||{})},
-      univBgMedia:{...((_cfgFemcoDefaults().univBgMedia)||{}), ...(obj.univBgMedia||{})}
-    };
-  }catch(e){ return _cfgFemcoDefaults(); }
-}
-function _cfgFemcoSave(obj){
-  try{ localStorage.setItem(_FEMCO_CFG_KEY, JSON.stringify(obj)); }catch(e){}
-}
-
-// (리팩터) 펨코 설정 단일 소스(SSOT): 다른 모듈(board2.js 등)에서 재사용할 수 있도록 노출
-// - 기존 동작은 그대로 유지하며, 중복 defaults/load/save를 제거하기 위한 목적
 try{
-  window._cfgFemcoDefaults = _cfgFemcoDefaults;
-  window._cfgFemcoLoad = _cfgFemcoLoad;
-  window._cfgFemcoSave = _cfgFemcoSave;
+  if(typeof window._cfgFemcoDefaults !== 'function'){
+    window._cfgFemcoDefaults = function(){
+      return {
+        autoLayout: 1,
+        logoSize: 150,
+        logoPos: 'top',
+        logoAttachTitle: 1,
+        headGap: 10,
+        titleSize: 28,
+        titleFont: 'system',
+        playerImgSize: 46,
+        playerImgShape: 'square',
+        rowsPerCol: 5,
+        colWidth: 170,
+        colGap: 10,
+        univGap: 18,
+        countFontSize: 12,
+        contentPadX: 16,
+        contentAlign: 'left',
+        contentOffsetX: 0,
+        univSubtitles: {},
+        subtitleSize: 12,
+        subtitleWeight: 800,
+        subtitleColor: '',
+        nameFontSize: 12,
+        roleFontSize: 10,
+        tierBadgeSize: 10,
+        tierBadgePadX: 6,
+        starSize: 15,
+        statusIconSize: 18,
+        univColorOverrides: {},
+        univBgMedia: {},
+        bgOverlay: 22,
+        logoOffsetX: 0,
+        logoOffsetY: 0,
+        titleOffsetX: 0,
+        titleOffsetY: 0,
+        titlePos: 'bottom'
+      };
+    };
+  }
+  if(typeof window._cfgFemcoLoad !== 'function'){
+    window._cfgFemcoLoad = function(){
+      try{
+        const raw = localStorage.getItem(_FEMCO_CFG_KEY);
+        const base = window._cfgFemcoDefaults();
+        if(!raw) return base;
+        const obj = JSON.parse(raw) || {};
+        return {
+          ...base,
+          ...obj,
+          univSubtitles:{...(base.univSubtitles||{}), ...(obj.univSubtitles||{})},
+          univColorOverrides:{...(base.univColorOverrides||{}), ...(obj.univColorOverrides||{})},
+          univBgMedia:{...(base.univBgMedia||{}), ...(obj.univBgMedia||{})}
+        };
+      }catch(e){ return window._cfgFemcoDefaults(); }
+    };
+  }
+  if(typeof window._cfgFemcoSave !== 'function'){
+    window._cfgFemcoSave = function(obj){
+      try{ localStorage.setItem(_FEMCO_CFG_KEY, JSON.stringify(obj)); }catch(e){}
+    };
+  }
 }catch(e){}
+const _cfgFemcoDefaults = () => window._cfgFemcoDefaults();
+const _cfgFemcoLoad = () => window._cfgFemcoLoad();
+const _cfgFemcoSave = (obj) => window._cfgFemcoSave(obj);
 
 window.cfgFemcoUpd = function(k, v){
   const cur = _cfgFemcoLoad();
@@ -2308,7 +2308,7 @@ window.cfgUnivOrderMove = function(i, dir){
         alert('기능 로딩 중입니다. 잠시 후 다시 시도해주세요.');
         return;
       }
-      loader('js/cloud-board.js?v=20260501-85').then(()=>{
+      loader('js/cloud-board.js?v=20260501-88').then(()=>{
         const fn = window.checkFbSyncStatus;
         if(typeof fn === 'function' && fn !== _lazyCheckFbSyncStatus) fn();
       }).catch((e)=>{

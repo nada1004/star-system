@@ -68,10 +68,11 @@ async function _ensureVoteLoaded(){
 }
 async function _ensureCloudBoardLoaded(){
   await window.ensureHtml2Canvas();
-  await _loadScriptOnce('js/cloud-board.js?v=20260501-85');
+  await _loadScriptOnce('js/cloud-board.js?v=20260501-88');
 }
 async function _ensureSettingsLoaded(){
-  await _loadScriptOnce('js/settings.js?v=20260501-80');
+  if(typeof window.rCfg === 'function') return;
+  await _loadScriptOnce('js/settings.js?v=20260501-83');
 }
 function _lazyGsSetStatus(msg, color='var(--gray-l)'){
   try{
