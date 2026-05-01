@@ -1669,74 +1669,74 @@ function _cfgFindUpAttr(el, attrName, maxDepth){
    - localStorage: b2_femco_settings_v1
 ══════════════════════════════════════ */
 const _FEMCO_CFG_KEY = 'b2_femco_settings_v1';
+function _cfgFemcoDefaults(){
+  return {
+    autoLayout: 1,     // 1: 인원수/화면폭에 맞춰 자동 레이아웃, 0: 수동 설정값 사용
+    logoSize: 150,
+    logoPos: 'top',
+    logoAttachTitle: 1, // 1: 로고+대학명 같이 이동, 0: 로고만 이동
+    headGap: 10,        // 로고-대학명(세로) 간격
+    titleSize: 28,
+    titleFont: 'system',
+    playerImgSize: 46,
+    playerImgShape: 'square',
+    rowsPerCol: 5,
+    colWidth: 170,
+    colGap: 10,
+    univGap: 18,
+    countFontSize: 12,
+    contentPadX: 16,
+    contentAlign: 'left', // left | center (기본은 좌측)
+    contentOffsetX: 0,      // 좌우 미세 이동(-40~40)
+    univSubtitles: {},
+    subtitleSize: 12,
+    subtitleWeight: 800,
+    subtitleColor: '',
+    nameFontSize: 12,
+    roleFontSize: 10,
+    tierBadgeSize: 10,
+    tierBadgePadX: 6,
+    starSize: 15,
+    statusIconSize: 18,
+    univColorOverrides: {},
+    // 대학별 배경 미디어
+    // - 기존 호환: 값이 string이면 URL로 처리
+    // - 신규: {url, alpha, sizeMode, sizeVal, pos, repeat, ox, oy}
+    univBgMedia: {},
+    // (요청) 배경 미디어 오버레이(투명도) — 0(없음) ~ 70(진하게)
+    bgOverlay: 22,
+    // (요청) 로고/대학명 위치 미세조정(px)
+    logoOffsetX: 0,
+    logoOffsetY: 0,
+    titleOffsetX: 0,
+    titleOffsetY: 0,
+    // (요청) 대학명 위치(로고 기준) — left/right/top/bottom
+    titlePos: 'bottom'
+  };
+}
+function _cfgFemcoLoad(){
+  try{
+    const raw = localStorage.getItem(_FEMCO_CFG_KEY);
+    if(!raw) return _cfgFemcoDefaults();
+    const obj = JSON.parse(raw) || {};
+    return {..._cfgFemcoDefaults(), ...obj,
+      univSubtitles:{...((_cfgFemcoDefaults().univSubtitles)||{}), ...(obj.univSubtitles||{})},
+      univColorOverrides:{...((_cfgFemcoDefaults().univColorOverrides)||{}), ...(obj.univColorOverrides||{})},
+      univBgMedia:{...((_cfgFemcoDefaults().univBgMedia)||{}), ...(obj.univBgMedia||{})}
+    };
+  }catch(e){ return _cfgFemcoDefaults(); }
+}
+function _cfgFemcoSave(obj){
+  try{ localStorage.setItem(_FEMCO_CFG_KEY, JSON.stringify(obj)); }catch(e){}
+}
+
+// (리팩터) 펨코 설정 단일 소스(SSOT): 다른 모듈(board2.js 등)에서 재사용할 수 있도록 노출
+// - 기존 동작은 그대로 유지하며, 중복 defaults/load/save를 제거하기 위한 목적
 try{
-  if(typeof window._cfgFemcoDefaults !== 'function'){
-    window._cfgFemcoDefaults = function(){
-      return {
-        autoLayout: 1,
-        logoSize: 150,
-        logoPos: 'top',
-        logoAttachTitle: 1,
-        headGap: 10,
-        titleSize: 28,
-        titleFont: 'system',
-        playerImgSize: 46,
-        playerImgShape: 'square',
-        rowsPerCol: 5,
-        colWidth: 170,
-        colGap: 10,
-        univGap: 18,
-        countFontSize: 12,
-        contentPadX: 16,
-        contentAlign: 'left',
-        contentOffsetX: 0,
-        univSubtitles: {},
-        subtitleSize: 12,
-        subtitleWeight: 800,
-        subtitleColor: '',
-        nameFontSize: 12,
-        roleFontSize: 10,
-        tierBadgeSize: 10,
-        tierBadgePadX: 6,
-        starSize: 15,
-        statusIconSize: 18,
-        univColorOverrides: {},
-        univBgMedia: {},
-        bgOverlay: 22,
-        logoOffsetX: 0,
-        logoOffsetY: 0,
-        titleOffsetX: 0,
-        titleOffsetY: 0,
-        titlePos: 'bottom'
-      };
-    };
-  }
-  if(typeof window._cfgFemcoLoad !== 'function'){
-    window._cfgFemcoLoad = function(){
-      try{
-        const raw = localStorage.getItem(_FEMCO_CFG_KEY);
-        const base = window._cfgFemcoDefaults();
-        if(!raw) return base;
-        const obj = JSON.parse(raw) || {};
-        return {
-          ...base,
-          ...obj,
-          univSubtitles:{...(base.univSubtitles||{}), ...(obj.univSubtitles||{})},
-          univColorOverrides:{...(base.univColorOverrides||{}), ...(obj.univColorOverrides||{})},
-          univBgMedia:{...(base.univBgMedia||{}), ...(obj.univBgMedia||{})}
-        };
-      }catch(e){ return window._cfgFemcoDefaults(); }
-    };
-  }
-  if(typeof window._cfgFemcoSave !== 'function'){
-    window._cfgFemcoSave = function(obj){
-      try{ localStorage.setItem(_FEMCO_CFG_KEY, JSON.stringify(obj)); }catch(e){}
-    };
-  }
+  window._cfgFemcoDefaults = _cfgFemcoDefaults;
+  window._cfgFemcoLoad = _cfgFemcoLoad;
+  window._cfgFemcoSave = _cfgFemcoSave;
 }catch(e){}
-const _cfgFemcoDefaults = () => window._cfgFemcoDefaults();
-const _cfgFemcoLoad = () => window._cfgFemcoLoad();
-const _cfgFemcoSave = (obj) => window._cfgFemcoSave(obj);
 
 window.cfgFemcoUpd = function(k, v){
   const cur = _cfgFemcoLoad();
@@ -2170,8 +2170,6 @@ function _cfgGo(secId){
         if(secId==='pd' && typeof window._renderCfgPdSection==='function') window._renderCfgPdSection();
         if(secId==='pdModeBadge' && typeof window._renderCfgPdModeBadgeSection==='function') window._renderCfgPdModeBadgeSection();
         if(secId==='matchdetail' && typeof window._renderCfgMatchDetailSection==='function') window._renderCfgMatchDetailSection();
-        if(secId==='boardbg' && typeof window._renderCfgBoardBgList==='function') window._renderCfgBoardBgList();
-        if(secId==='femcoorder' && typeof window._renderCfgFemcoOrderSection==='function') window._renderCfgFemcoOrderSection();
         if(secId==='aibot' && typeof window.cfgInitAiProxy==='function') window.cfgInitAiProxy();
       }catch(e){}
     }
@@ -2247,27 +2245,6 @@ window.cfgApplyCat = function(cat){ return _cfgApplyCat(cat, false); };
 // 펨코스타일/신현황판 대학 순서 이동
 // - 인라인 onclick에서 univCfg 직접 참조가 환경에 따라 막히는 경우가 있어(전역 let 바인딩 이슈),
 //   전용 핸들러로 분리해 안정적으로 동작하게 한다.
-window._renderCfgFemcoOrderSection = function(){
-  try{
-    const wrap =
-      document.querySelector('#cfgModalBody #cfg-femcoorder-list') ||
-      document.querySelector('#cfg-sec-femcoorder #cfg-femcoorder-list') ||
-      document.getElementById('cfg-femcoorder-list');
-    if(!wrap || !Array.isArray(univCfg)) return;
-    wrap.innerHTML = (univCfg||[]).map((u,idx)=>({u,idx})).filter(x=>x.u && !x.u.dissolved).map(({u,idx:i})=>`
-      <div class="srow" style="gap:8px;align-items:center;flex-wrap:wrap">
-        <div class="cdot" style="background:${u.color||'#64748b'}"></div>
-        <div style="flex:1;min-width:140px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
-        <div style="display:flex;gap:6px;flex-shrink:0">
-          <button class="btn btn-w btn-xs" onclick="cfgUnivOrderMove(${i},'up')" ${i<=0?'disabled':''}>▲</button>
-          <button class="btn btn-w btn-xs" onclick="cfgUnivOrderMove(${i},'down')" ${i>=(univCfg.length-1)?'disabled':''}>▼</button>
-        </div>
-      </div>
-    `).join('');
-  }catch(e){
-    try{ console.error('[cfgFemcoOrder] render fail', e); }catch(_){}
-  }
-};
 window.cfgUnivOrderMove = function(i, dir){
   try{
     i = parseInt(i, 10);
@@ -2287,7 +2264,6 @@ window.cfgUnivOrderMove = function(i, dir){
     }catch(e){}
     try{ if(typeof save==='function') save(); else if(typeof localSave==='function') localSave(); else if(typeof saveCfg==='function') saveCfg(); }catch(e){}
     try{ if(typeof render==='function') render(); }catch(e){}
-    try{ if(typeof window._renderCfgFemcoOrderSection==='function') window._renderCfgFemcoOrderSection(); }catch(e){}
     try{ if(typeof showToast==='function') showToast('✅ 순서 저장됨'); }catch(e){}
   }catch(e){
     try{ console.error('[cfgUnivOrderMove] failed', e); }catch(_){}
@@ -2308,7 +2284,7 @@ window.cfgUnivOrderMove = function(i, dir){
         alert('기능 로딩 중입니다. 잠시 후 다시 시도해주세요.');
         return;
       }
-      loader('js/cloud-board.js?v=20260501-88').then(()=>{
+      loader('js/cloud-board.js?v=20260425-01').then(()=>{
         const fn = window.checkFbSyncStatus;
         if(typeof fn === 'function' && fn !== _lazyCheckFbSyncStatus) fn();
       }).catch((e)=>{
@@ -2689,33 +2665,7 @@ try{
 /* ══════════════════════════════════════
    설정
 ══════════════════════════════════════ */
-window._ensureCfgCoreData = async function(){
-  try{
-    if(Array.isArray(univCfg) && univCfg.length && Array.isArray(maps) && maps.length) return true;
-    const urls = [
-      'data.json',
-      'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json',
-      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json'
-    ];
-    for(const url of urls){
-      try{
-        const res = await fetch(url, {cache:'no-store', mode:'cors'});
-        if(!res || !res.ok) continue;
-        const d = await res.json();
-        if(!(Array.isArray(univCfg) && univCfg.length) && Array.isArray(d && d.univCfg) && d.univCfg.length) univCfg = d.univCfg;
-        if(!(Array.isArray(maps) && maps.length) && Array.isArray(d && d.maps) && d.maps.length) maps = d.maps;
-        if(!(Array.isArray(notices) && notices.length) && Array.isArray(d && d.notices) && d.notices.length) notices = d.notices;
-        if(Array.isArray(univCfg) && univCfg.length && Array.isArray(maps) && maps.length){
-          try{ if(typeof localSave==='function') localSave(); }catch(e){}
-          return true;
-        }
-      }catch(e){}
-    }
-  }catch(e){}
-  return Array.isArray(univCfg) && univCfg.length && Array.isArray(maps) && maps.length;
-};
-async function rCfg(C,T){
-  try{ if(typeof window._ensureCfgCoreData==='function') await window._ensureCfgCoreData(); }catch(e){}
+function rCfg(C,T){
   T.innerText='⚙️ 설정';
   if(!isLoggedIn){
     // (요청사항) 설정탭은 관리자 로그인 후만 접근 가능
@@ -4220,18 +4170,16 @@ ${_scfgD('notice','📢 공지 관리')}
       ※ 순서 변경 즉시 저장되며, 현황판에 바로 반영됩니다.
     </div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div id="cfg-femcoorder-list">
-        ${(univCfg||[]).map((u,idx)=>({u,idx})).filter(x=>x.u && !x.u.dissolved).map(({u,idx:i})=>`
-          <div class="srow" style="gap:8px;align-items:center;flex-wrap:wrap">
-            <div class="cdot" style="background:${u.color||'#64748b'}"></div>
-            <div style="flex:1;min-width:140px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
-            <div style="display:flex;gap:6px;flex-shrink:0">
-              <button class="btn btn-w btn-xs" onclick="cfgUnivOrderMove(${i},'up')" ${i<=0?'disabled':''}>▲</button>
-              <button class="btn btn-w btn-xs" onclick="cfgUnivOrderMove(${i},'down')" ${i>=(univCfg.length-1)?'disabled':''}>▼</button>
-            </div>
+      ${(univCfg||[]).map((u,idx)=>({u,idx})).filter(x=>x.u && !x.u.dissolved).map(({u,idx:i})=>`
+        <div class="srow" style="gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="cdot" style="background:${u.color||'#64748b'}"></div>
+          <div style="flex:1;min-width:140px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="btn btn-w btn-xs" onclick="cfgUnivOrderMove(${i},'up')">▲</button>
+            <button class="btn btn-w btn-xs" onclick="cfgUnivOrderMove(${i},'down')">▼</button>
           </div>
-        `).join('')}
-      </div>
+        </div>
+      `).join('')}
       <div style="font-size:11px;color:var(--gray-l);margin-top:8px">팁: ‘대학 관리’에서 대학명/색상도 함께 수정할 수 있습니다.</div>
     </div>
   </details>
@@ -4814,7 +4762,40 @@ ${_scfgD('notice','📢 공지 관리')}
         </div>`).join('');
     }
     // 현황판 배경 설정 렌더링
-    try{ if(typeof window._renderCfgBoardBgList==='function') window._renderCfgBoardBgList(); }catch(e){}
+    const bgListEl=document.getElementById('cfg-board-bg-list');
+    if(bgListEl){
+      bgListEl.innerHTML=univCfg.map((u,i)=>`<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--white)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div class="cdot" style="background:${u.color}"></div>
+          <span style="flex:1;font-weight:700;font-size:13px">${u.name}</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <button class="btn btn-xs btn-w" onclick="promptBoardBgImgUrl('${u.name.replace(/'/g,"\\'")}')">URL 설정</button>
+          ${u.bgImg?`<button class="btn btn-xs btn-r" onclick="removeBoardBgImg('${u.name.replace(/'/g,"\\'")}')">삭제</button>`:''}
+        </div>
+        ${u.bgImg?`<div style="margin-top:8px">
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">위치</div>
+          <select onchange="setBoardBgImgPos('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+            <option value="top left" ${u.bgImgPos==='top left'?' selected':''}>좌상단</option>
+            <option value="top center" ${u.bgImgPos==='top center'?' selected':''}>중상단</option>
+            <option value="top right" ${u.bgImgPos==='top right'?' selected':''}>우상단</option>
+            <option value="center left" ${u.bgImgPos==='center left'?' selected':''}>좌중앙</option>
+            <option value="center center" ${u.bgImgPos==='center center'?' selected':''}>중앙</option>
+            <option value="center right" ${u.bgImgPos==='center right'?' selected':''}>우중앙</option>
+            <option value="bottom left" ${u.bgImgPos==='bottom left'?' selected':''}>좌하단</option>
+            <option value="bottom center" ${u.bgImgPos==='bottom center'?' selected':''}>중하단</option>
+            <option value="bottom right" ${u.bgImgPos==='bottom right'?' selected':''}>우하단</option>
+          </select>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;margin-top:8px">크기</div>
+          <select onchange="setBoardBgImgSize('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+            <option value="auto" ${(!u.bgImgSize||u.bgImgSize==='auto')?' selected':''}>자동 (브라우저/카드 맞춤)</option>
+            <option value="cover" ${u.bgImgSize==='cover'?' selected':''}>채우기 (cover)</option>
+            <option value="contain" ${u.bgImgSize==='contain'?' selected':''}>맞춤 (contain)</option>
+            <option value="fill" ${u.bgImgSize==='fill'?' selected':''}>늘리기 (fill)</option>
+          </select>
+        </div>`:''}
+      </div>`).join('');
+    }
     // 이미지탭 레이아웃 설정 초기화
     const b2Layout=JSON.parse(localStorage.getItem('su_b2_layout')||'{}');
     const _b2ls=b2Layout.leftSize||55, _b2rs=b2Layout.rightSize||45;
@@ -5644,45 +5625,6 @@ function promptBoardBgImgUrl(univName){
   if(!trimmed){showToast('URL을 입력해주세요.');return;}
   setBoardBgImg(univName,trimmed);
 }
-window._renderCfgBoardBgList = function(){
-  try{
-    const bgListEl=document.getElementById('cfg-board-bg-list');
-    if(!bgListEl) return;
-    bgListEl.innerHTML=univCfg.map((u,i)=>`<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--white)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div class="cdot" style="background:${u.color}"></div>
-        <span style="flex:1;font-weight:700;font-size:13px">${u.name}</span>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-        <button class="btn btn-xs btn-w" onclick="promptBoardBgImgUrl('${u.name.replace(/'/g,"\\'")}')">URL 설정</button>
-        ${u.bgImg?`<button class="btn btn-xs btn-r" onclick="removeBoardBgImg('${u.name.replace(/'/g,"\\'")}')">삭제</button>`:''}
-      </div>
-      ${u.bgImg?`<div style="margin-top:8px">
-        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">위치</div>
-        <select onchange="setBoardBgImgPos('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <option value="top left" ${u.bgImgPos==='top left'?' selected':''}>좌상단</option>
-          <option value="top center" ${u.bgImgPos==='top center'?' selected':''}>중상단</option>
-          <option value="top right" ${u.bgImgPos==='top right'?' selected':''}>우상단</option>
-          <option value="center left" ${u.bgImgPos==='center left'?' selected':''}>좌중앙</option>
-          <option value="center center" ${u.bgImgPos==='center center'?' selected':''}>중앙</option>
-          <option value="center right" ${u.bgImgPos==='center right'?' selected':''}>우중앙</option>
-          <option value="bottom left" ${u.bgImgPos==='bottom left'?' selected':''}>좌하단</option>
-          <option value="bottom center" ${u.bgImgPos==='bottom center'?' selected':''}>중하단</option>
-          <option value="bottom right" ${u.bgImgPos==='bottom right'?' selected':''}>우하단</option>
-        </select>
-        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;margin-top:8px">크기</div>
-        <select onchange="setBoardBgImgSize('${u.name.replace(/'/g,"\\'")}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
-          <option value="auto" ${(!u.bgImgSize||u.bgImgSize==='auto')?' selected':''}>자동 (브라우저/카드 맞춤)</option>
-          <option value="cover" ${u.bgImgSize==='cover'?' selected':''}>채우기 (cover)</option>
-          <option value="contain" ${u.bgImgSize==='contain'?' selected':''}>맞춤 (contain)</option>
-          <option value="fill" ${u.bgImgSize==='fill'?' selected':''}>늘리기 (fill)</option>
-        </select>
-      </div>`:''}
-    </div>`).join('');
-  }catch(e){
-    try{ console.error('[cfgBoardBg] render fail', e); }catch(_){}
-  }
-};
 function promptBoardMemoImgUrl(univName){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;

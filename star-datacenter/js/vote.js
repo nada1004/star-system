@@ -2,15 +2,7 @@
    🎯 승부예측 시스템
 ══════════════════════════════════════ */
 function saveVotes(){
-  try{
-    if(typeof window.__suQueueVoteDataPersist === 'function'){
-      window.__suQueueVoteDataPersist(voteData||{}, true);
-    }else{
-      localStorage.setItem('su_votes', JSON.stringify(voteData));
-    }
-  }catch(e){
-    localStorage.setItem('su_votes', JSON.stringify(voteData));
-  }
+  localStorage.setItem('su_votes', JSON.stringify(voteData));
   // 집계 데이터(_my 제외)만 Firebase에 동기화
   if(typeof save === 'function') save();
 }

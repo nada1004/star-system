@@ -584,22 +584,6 @@ async function _pollGithubOnce(force){
   try{
     const d = await _fetchGithubData();
     const sa = Number(d && d.savedAt || 0) || 0;
-    const localSa = (() => {
-      try{
-        return Math.max(
-          Number(window._lastAdminSaveTime||0) || 0,
-          Number(localStorage.getItem('su_last_admin_save')||0) || 0,
-          Number(localStorage.getItem('su_last_save_time')||0) || 0
-        );
-      }catch(e){
-        return Number(window._lastAdminSaveTime||0) || 0;
-      }
-    })();
-    const hasCoreGlobals = Array.isArray(window.univCfg) && window.univCfg.length > 0
-      && Array.isArray(window.maps) && window.maps.length > 0;
-    if(!window._forcingSync && hasCoreGlobals && localSa && (!sa || localSa > sa)){
-      return;
-    }
     if(force || (sa && sa > _lastSavedAt) || !_lastSnapshot){
       _deliver(d);
     }
