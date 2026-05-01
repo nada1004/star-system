@@ -459,7 +459,7 @@ window._b2UpdateImgSetting = function(playerName, slot, key, val) {
   const keyMap = { zoom: 'scale', fill: 'fit', posX: 'offsetX', posY: 'offsetY' };
   key = keyMap[key] || key;
   const s = _b2GetImgSettings(playerName, slot);
-  if(key === 'fit' || key === 'scale' || key === 'brightness' || key === 'offsetX' || key === 'offsetY'){
+  if(key === 'fit' || key === 'scale' || key === 'offsetX' || key === 'offsetY'){
     s.autoAdjust = false;
     s.manualCenter = false;
   }

@@ -3001,62 +3001,6 @@ function _b2UpdateMainDisplay(playerName) {
       thumbnail.style.boxShadow = 'none';
     }
   });
-  return;
-
-  if (mainBox) {
-    mainBox.style.setProperty('--theme-glow', theme.glow);
-    mainBox.style.setProperty('--theme-bg', theme.bg);
-    mainBox.style.setProperty('--img-zoom', imgSettings.zoom / 100);
-    mainBox.style.setProperty('--img-brightness', imgSettings.brightness / 100);
-    mainBox.style.setProperty('--img-pos-x', imgSettings.posX + 'px');
-    mainBox.style.setProperty('--img-pos-y', imgSettings.posY + 'px');
-    
-    // 기존 타이머 정리
-    if (mainBox._videoTimeout) {
-      clearTimeout(mainBox._videoTimeout);
-      mainBox._videoTimeout = null;
-    }
-    
-    const hasSecondProfile = player.secondProfileFile && player.secondProfileFile.length > 0;
-    const ext = hasSecondProfile ? player.secondProfileFile.toLowerCase().split('.').pop() : '';
-    const isGif = ext === 'gif';
-    const isVideo = ['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext);
-    const isImage = ['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(ext);
-    
-    mainBox.innerHTML = `
-      ${player.photo
-        ? `<img src="${toHttpsUrl(player.photo)}" class="b2-players-main-image" id="b2-main-img-1" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:${imgSettings.fill};object-position:center;z-index:1;opacity:1;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 메인 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div style="width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
-        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
-      }
-      ${hasSecondProfile ? `<img src="${player.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:${imgSettings.fill};object-position:center;z-index:2;opacity:0;transition:opacity 0.5s ease">` : ''}
-      <div class="b2-players-info">
-        <div class="b2-players-name">${player.name || '이름 없음'}</div>
-        <div class="b2-players-details">
-          <span class="b2-players-tier" style="background:${theme.border}">${player.tier || '?'}티어</span>
-          <span class="b2-players-race">${player.race === 'P' ? '프로토스' : player.race === 'T' ? '테란' : player.race === 'Z' ? '저그' : '종족미정'}</span>
-          ${player.univ ? (() => {
-            const uCfg = univCfg.find(x => x.name === player.univ) || {};
-            const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[player.univ] || '';
-            return iconUrl 
-              ? `<span style="display:flex;align-items:center;gap:8px"><img src="${toHttpsUrl(iconUrl)}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
-              : `<span>🏫 ${player.univ}</span>`;
-          })() : ''}
-        </div>
-        ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>` : ''}
-      </div>
-    `;
-    
-    // 1초 후 두번째 프로필 표시
-    if (hasSecondProfile) {
-      mainBox._videoTimeout = setTimeout(() => {
-        const img1 = document.getElementById('b2-main-img-1');
-        const img2 = document.getElementById('b2-main-img-2');
-        if (img1) img1.style.opacity = '0';
-        if (img2) img2.style.opacity = '1';
-      }, 1000);
-    }
-  }
   
   // 활성 카드 스타일 업데이트
   document.querySelectorAll('.b2-players-card').forEach(card => {
