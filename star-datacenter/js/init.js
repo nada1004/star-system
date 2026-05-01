@@ -861,17 +861,17 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
     const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
     const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey);
     if(hasRecordKeys) return;
-    const lastLocalSaveAt = Number(localStorage.getItem('su_last_save_time')||0) || 0;
-    if(lastLocalSaveAt > 0) return;
+    const hasCoreGlobals = Array.isArray(window.univCfg) && window.univCfg.length > 0
+      && Array.isArray(window.maps) && window.maps.length > 0;
     // su_p는 배열 또는 {v:2,p:[...]}일 수 있음
     const localPlayers = (typeof J==='function') ? J('su_p') : null;
     const ok = Array.isArray(localPlayers)
       ? localPlayers.length>0
       : (localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length>0);
-    if(ok) return;
+    if(ok && hasCoreGlobals) return;
     if(typeof window.__suHasIndexedDBData === 'function'){
       try{
-        if(await window.__suHasIndexedDBData()) return;
+        if((await window.__suHasIndexedDBData()) && hasCoreGlobals) return;
       }catch(e){}
     }
   }catch(e){}
@@ -916,6 +916,34 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
     if(d && typeof d._lz === 'string'){
       try{ d = JSON.parse(LZString.decompressFromBase64(d._lz)); }
       catch(e){ console.warn('[자동 불러오기] 압축 해제 실패:', e); }
+    }
+    const _needCore = !(
+      (Array.isArray(d.univCfg) && d.univCfg.length) ||
+      (Array.isArray(d.univConfig) && d.univConfig.length) ||
+      (Array.isArray(d.universities) && d.universities.length)
+    ) || !(
+      (Array.isArray(d.maps) && d.maps.length) ||
+      (Array.isArray(d.map) && d.map.length)
+    );
+    if(_needCore){
+      const _CORE_URLS = [
+        'data/core.json',
+        'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data/core.json',
+        'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data/core.json'
+      ];
+      for(const coreUrl of _CORE_URLS){
+        try{
+          const res = await fetch(coreUrl, {cache:'no-store', mode:'cors'});
+          if(!res || !res.ok) continue;
+          const core = JSON.parse(await res.text());
+          if(core && typeof core === 'object'){
+            if(!(Array.isArray(d.univCfg) && d.univCfg.length) && Array.isArray(core.univCfg) && core.univCfg.length) d.univCfg = core.univCfg;
+            if(!(Array.isArray(d.maps) && d.maps.length) && Array.isArray(core.maps) && core.maps.length) d.maps = core.maps;
+            if(!(Array.isArray(d.notices) && d.notices.length) && Array.isArray(core.notices) && core.notices.length) d.notices = core.notices;
+            break;
+          }
+        }catch(e){}
+      }
     }
     try{
       players  = d.players  || d.player  || [];

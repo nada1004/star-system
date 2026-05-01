@@ -71,7 +71,7 @@ async function _ensureCloudBoardLoaded(){
   await _loadScriptOnce('js/cloud-board.js?v=20260501-85');
 }
 async function _ensureSettingsLoaded(){
-  await _loadScriptOnce('js/settings.js?v=20260501-76');
+  await _loadScriptOnce('js/settings.js?v=20260501-80');
 }
 function _lazyGsSetStatus(msg, color='var(--gray-l)'){
   try{

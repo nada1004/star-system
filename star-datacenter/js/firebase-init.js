@@ -595,7 +595,9 @@ async function _pollGithubOnce(force){
         return Number(window._lastAdminSaveTime||0) || 0;
       }
     })();
-    if(!window._forcingSync && localSa && (!sa || localSa > sa)){
+    const hasCoreGlobals = Array.isArray(window.univCfg) && window.univCfg.length > 0
+      && Array.isArray(window.maps) && window.maps.length > 0;
+    if(!window._forcingSync && hasCoreGlobals && localSa && (!sa || localSa > sa)){
       return;
     }
     if(force || (sa && sa > _lastSavedAt) || !_lastSnapshot){
