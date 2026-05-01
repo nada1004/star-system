@@ -25,7 +25,6 @@
 **데이터 저장**: localStorage 전용 (`su_` 접두사)
 **GitHub 동기화**: `data.json` 폴백 자동 로드 (init.js `autoLoad()`)
 **GitHub 저장소**: `nada1004/star-system`
-**GitHub 토큰 권장 설정**: Fine-grained Personal Access Token 사용, `nada1004/star-system` 저장소의 `Contents: Read and Write`만 부여. Classic PAT의 `repo` 전체 권한은 사용하지 않음.
 **배포 URL**: `https://nada1004.github.io/star-system/star-datacenter/index.html`
 
 ---

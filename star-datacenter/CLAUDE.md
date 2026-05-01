@@ -66,7 +66,7 @@ constants.js → data.js → render.js → players.js → vs.js → history.js
 ## 인증
 - `isLoggedIn` 글로벌로 관리자 UI 제어
 - `doLogin()` — `sha256(id+':'+pw)` 해시 검증 (auth.js)
-- 기본 계정 정보는 관리자에게 별도 문의
+- 기본 계정: `admin99` / `99admin`
 
 ## 주의사항
 - `rBoard`는 cloud-board.js에 있음 (다른 탭과 다른 파일)
