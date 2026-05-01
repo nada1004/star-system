@@ -174,7 +174,19 @@ function _b2BindAutoFitResize(){
     try{
       const root = document.getElementById('b2-content');
       if(!root) return;
-      requestAnimationFrame(()=>_b2ApplyBgAutoSizing(root));
+      requestAnimationFrame(()=>{
+        _b2ApplyBgAutoSizing(root);
+        try{
+          if(_b2View === 'players' && _b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function'){
+            _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
+            _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
+            if(typeof window._b2RefreshImageControls === 'function'){
+              window._b2RefreshImageControls(_b2SelectedPlayer.name, 'primary');
+              window._b2RefreshImageControls(_b2SelectedPlayer.name, 'secondary');
+            }
+          }
+        }catch(e){}
+      });
     }catch(e){}
   };
   window.addEventListener('resize', rerun);
