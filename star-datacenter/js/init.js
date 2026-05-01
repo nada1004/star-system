@@ -280,8 +280,8 @@ initDark();
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 설정 변경 → 다른 기기 "바로" 반영 보강
-// - Gist 동기화(enabled)로 저장(push)한 설정을 다른 기기가 자동으로 주기적으로 pull
-// - 토큰이 없는 기기는 읽기만(pull) 가능
+// - 설정 변경 신호가 있을 때만 원격 설정 pull
+// - 토큰이 없는 기기도 신호를 보고 읽기만 가능
 // ─────────────────────────────────────────────────────────────
 (function(){
   if(window._settingsAutoSyncStarted) return;
@@ -289,10 +289,11 @@ initDark();
 
   const doPull = async ()=>{
     try{
-      if(!window.SettingsStore || typeof window.SettingsStore.pull!=='function') return;
+      if(!window.SettingsStore || typeof window.SettingsStore.pullOnSignal!=='function') return;
       const c = window.SettingsStore.cfg ? window.SettingsStore.cfg() : { gistId:'' };
       if(!c || !c.gistId) return;
-      await window.SettingsStore.pull({silent:true});
+      const info = await window.SettingsStore.pullOnSignal({silent:true, returnInfo:true});
+      if(!info || info.skipped) return;
       // 설정 팝업이 열려있고 AI 섹션이 보이면 입력값/상태 즉시 반영
       try{
         const m = document.getElementById('cfgModal');
@@ -306,11 +307,11 @@ initDark();
     }catch(e){}
   };
 
-  // 첫 pull
+  // 첫 신호 확인
   setTimeout(doPull, 1200);
-  // 주기적 pull (너무 잦지 않게)
-  setInterval(doPull, 20000);
-  // 포커스/재진입 시 즉시 반영
+  // 설정 변경 신호 확인
+  setInterval(doPull, 8000);
+  // 포커스/재진입 시 신호 확인
   try{ window.addEventListener('focus', ()=>doPull()); }catch(e){}
   try{
     document.addEventListener('visibilitychange', ()=>{
@@ -401,8 +402,19 @@ window._applyAppFont = function(){
   const finalFamWithEmoji = `${emojiFam}, ${finalFam}`;
   try{ document.documentElement.style.setProperty('--app-font', finalFamWithEmoji); }catch(e){}
 };
+window._applyAppFontScale = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
+    const legacy = parseInt(localStorage.getItem('su_app_font_scale_pct')||'100',10) || 100;
+    const key = w <= 768 ? 'su_app_font_scale_mb_pct' : (w <= 1024 ? 'su_app_font_scale_tb_pct' : 'su_app_font_scale_pc_pct');
+    const pct = parseInt(localStorage.getItem(key)||String(legacy),10) || legacy;
+    const mul = Math.max(85, Math.min(130, pct)) / 100;
+    document.documentElement.style.setProperty('--fontS', String(mul));
+  }catch(e){}
+};
 // 초기 1회 적용(렌더 전후 모두 대응)
 try{ window._applyAppFont(); }catch(e){}
+try{ window._applyAppFontScale(); }catch(e){}
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 버튼/필(탭/필터) 스타일 전역 설정
@@ -666,6 +678,7 @@ function _applyUiScale(){
     }catch(e){}
     document.documentElement.style.setProperty('--uiS', String(s));
   }catch(e){}
+  try{ if(typeof window._applyAppFontScale === 'function') window._applyAppFontScale(); }catch(e){}
 }
 window.addEventListener('resize', ()=>{ _applyUiScale(); }, {passive:true});
 // 설정에서 즉시 반영할 수 있도록 노출

@@ -117,7 +117,7 @@ const _DEFAULT_CATSECS = {
 // - 여기서는 프록시 서버 URL만 저장하고 SettingsStore(동기화)로 다른 기기 반영
 // ─────────────────────────────────────────────────────────────
 window.cfgInitAiProxy = async function(){
-  try{ if(window.SettingsStore) await window.SettingsStore.pull({silent:true}); }catch(e){}
+  try{ if(window.SettingsStore && typeof window.SettingsStore.pullOnSignal==='function') await window.SettingsStore.pullOnSignal({silent:true}); }catch(e){}
   let cur = { proxyUrl:'' };
   try{
     if(window.SettingsStore && typeof window.SettingsStore.getAiCfg==='function') cur = window.SettingsStore.getAiCfg() || cur;
@@ -878,248 +878,8 @@ window.cfgImportSettingsCode = function(){
   alert('✅ 적용 완료');
 };
 
-// ─────────────────────────────────────────────────────────────
-// (요청사항) 전역 폰트 설정(프리셋 + 커스텀 URL)
-// ─────────────────────────────────────────────────────────────
-window.cfgSetAppFontSettings = function(){
-  let preset = (document.getElementById('cfg-appfont-preset')?.value || 'noto').trim();
-  const cssUrl = (document.getElementById('cfg-appfont-css')?.value || '').trim();
-  let fam      = (document.getElementById('cfg-appfont-family')?.value || '').trim();
-  // CSS 직접 입력은 줄바꿈/앞뒤 공백이 의미 있을 수 있어 trim 하지 않음
-  const cssTxt = (document.getElementById('cfg-appfont-csstext')?.value || '');
-  // 프리셋 드롭다운에서 "커스텀:FontName" 형태로 선택한 경우
-  try{
-    if(/^custom:/.test(preset)){
-      const name = preset.slice('custom:'.length).trim();
-      preset = 'custom';
-      if(name){
-        fam = `${name}, "Noto Sans KR", sans-serif`;
-        const inp = document.getElementById('cfg-appfont-family');
-        if(inp) inp.value = fam;
-      }
-    }
-  }catch(e){}
-  try{ localStorage.setItem('su_app_font_preset', preset); }catch(e){}
-  try{ localStorage.setItem('su_app_font_css', cssUrl); }catch(e){}
-  try{ localStorage.setItem('su_app_font_family', fam); }catch(e){}
-  try{ localStorage.setItem('su_app_font_css_text', cssTxt); }catch(e){}
-  try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
-  try{ if(typeof render === 'function') render(); }catch(e){}
-};
-
-// 설정 화면 렌더 후 자동으로 커스텀 폰트 프리셋 목록 갱신
-try{
-  const _prevRender = window.render;
-  if(typeof _prevRender === 'function' && !window.__patchedRenderForFontPreset){
-    window.__patchedRenderForFontPreset = true;
-    window.render = function(){
-      const r = _prevRender.apply(this, arguments);
-      try{ if(typeof window.cfgRenderCustomFontPresetOptions==='function') window.cfgRenderCustomFontPresetOptions(); }catch(e){}
-      try{ if(typeof window.cfgRenderAppFontAliasEditor==='function') window.cfgRenderAppFontAliasEditor(); }catch(e){}
-      return r;
-    };
-  }
-}catch(e){}
-
-// ─────────────────────────────────────────────────────────────
-// (요청사항) CSS 직접입력(@font-face)에서 font-family 자동 추출 → 프리셋 드롭다운
-// ─────────────────────────────────────────────────────────────
-window.cfgGetCustomFontFamilies = function(){
-  let cssTxt = '';
-  try{ cssTxt = (document.getElementById('cfg-appfont-csstext')?.value || localStorage.getItem('su_app_font_css_text') || ''); }catch(e){}
-  cssTxt = String(cssTxt||'');
-  const out = [];
-  const seen = new Set();
-  const re = /font-family\s*:\s*['"]?([^;'"\n\r]+)['"]?\s*;/gi;
-  let m;
-  while((m = re.exec(cssTxt))){
-    const name = String(m[1]||'').trim();
-    if(!name) continue;
-    const key = name.toLowerCase();
-    if(seen.has(key)) continue;
-    seen.add(key);
-    out.push(name);
-  }
-  return out;
-};
-
-// ─────────────────────────────────────────────────────────────
-// (요청사항) 커스텀 폰트 "별칭(표시 이름)" 저장/편집
-// - localStorage: su_app_font_alias_map  (JSON: { "FontFamily": "표시이름" })
-// ─────────────────────────────────────────────────────────────
-window.cfgGetAppFontAliasMap = function(){
-  try{ return JSON.parse(localStorage.getItem('su_app_font_alias_map')||'{}')||{}; }catch(e){ return {}; }
-};
-window.cfgSetAppFontAlias = function(fontFamily, alias){
-  const k = String(fontFamily||'').trim();
-  if(!k) return;
-  const v = String(alias||'').trim();
-  const map = window.cfgGetAppFontAliasMap ? window.cfgGetAppFontAliasMap() : {};
-  if(v) map[k] = v;
-  else delete map[k];
-  try{ localStorage.setItem('su_app_font_alias_map', JSON.stringify(map)); }catch(e){}
-  try{ if(typeof render==='function') render(); }catch(e){}
-};
-window.cfgRenderAppFontAliasEditor = function(){
-  const wrap = document.getElementById('cfg-appfont-alias-wrap');
-  if(!wrap) return;
-  const fams = window.cfgGetCustomFontFamilies ? window.cfgGetCustomFontFamilies() : [];
-  const map = window.cfgGetAppFontAliasMap ? window.cfgGetAppFontAliasMap() : {};
-  if(!fams.length){
-    wrap.innerHTML = `<div style="font-size:11px;color:var(--gray-l)">커스텀 폰트가 없습니다. (CSS 직접 입력에 @font-face를 추가하면 여기에 표시됩니다)</div>`;
-    return;
-  }
-  wrap.innerHTML = fams.map(f=>{
-    const a = map[f] || '';
-    const fjs = JSON.stringify(String(f||''));
-    return `
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-        <div style="font-size:12px;font-weight:900;color:var(--text2);min-width:140px">${esc(f)}</div>
-        <input type="text" value="${esc(a)}" placeholder="예) 본문용 / 타이틀용" style="flex:1;min-width:180px"
-          oninput="cfgSetAppFontAlias(${fjs}, this.value)">
-      </div>
-    `;
-  }).join('');
-};
-window.cfgRenderCustomFontPresetOptions = function(){
-  const sel = document.getElementById('cfg-appfont-custompreset');
-  if(!sel) return;
-  const fams = window.cfgGetCustomFontFamilies ? window.cfgGetCustomFontFamilies() : [];
-  const cur = (document.getElementById('cfg-appfont-family')?.value || '').trim();
-  const curMain = cur.split(',')[0].replace(/['"]/g,'').trim();
-  let html = `<option value="">(직접입력에서 자동 추출)</option>`;
-  fams.forEach(f=>{
-    const on = (curMain && curMain.toLowerCase() === f.toLowerCase());
-    html += `<option value="${esc(f)}" ${on?'selected':''}>${esc(f)}</option>`;
-  });
-  sel.innerHTML = html;
-};
-window.cfgApplyCustomFontPreset = function(v){
-  const val = String(v||'').trim();
-  if(!val) return;
-  const inp = document.getElementById('cfg-appfont-family');
-  if(inp){
-    inp.value = `${val}, "Noto Sans KR", sans-serif`;
-  }
-  try{ window.cfgSetAppFontSettings && window.cfgSetAppFontSettings(); }catch(e){}
-};
-
-// (추가) font-family를 입력 없이 고르기(요청): 드롭다운 선택 → 바로 적용
-window.cfgApplyFontFamilyChoice = function(v){
-  const val = String(v||'').trim();
-  if(!val) return;
-  try{
-    const presetSel = document.getElementById('cfg-appfont-preset');
-    if(presetSel) presetSel.value = 'custom';
-  }catch(e){}
-  const inp = document.getElementById('cfg-appfont-family');
-  if(inp) inp.value = val;
-  try{ window.cfgSetAppFontSettings && window.cfgSetAppFontSettings(); }catch(e){}
-};
-
-// ─────────────────────────────────────────────────────────────
-// (요청사항) 버튼/필 스타일(크기/라운드)
-// ─────────────────────────────────────────────────────────────
-window.cfgSetUiBtnStyleSettings = function(){
-  const pct = parseInt(document.getElementById('cfg-btnscale')?.value || '100',10) || 100;
-  const br  = parseInt(document.getElementById('cfg-btnr')?.value || '8',10) || 8;
-  const pr  = parseInt(document.getElementById('cfg-pillr')?.value || '20',10) || 20;
-  try{ localStorage.setItem('su_btn_scale_pct', String(Math.max(70,Math.min(140,pct)))); }catch(e){}
-  try{ localStorage.setItem('su_btn_r', String(Math.max(0,Math.min(40,br)))); }catch(e){}
-  try{ localStorage.setItem('su_pill_r', String(Math.max(0,Math.min(60,pr)))); }catch(e){}
-  try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
-  try{
-    const a=document.getElementById('cfg-btnscale-v'); if(a) a.textContent=pct+'%';
-    const b=document.getElementById('cfg-btnr-v'); if(b) b.textContent=br+'px';
-    const c=document.getElementById('cfg-pillr-v'); if(c) c.textContent=pr+'px';
-  }catch(e){}
-  try{ if(typeof render === 'function') render(); }catch(e){}
-};
-
-// ─────────────────────────────────────────────────────────────
-// (요청사항) 전역 UI 배율(폰트/아이콘 크기) — 기기별 분리
-// - localStorage:
-//   su_ui_scale_pc_pct / su_ui_scale_tb_pct / su_ui_scale_mb_pct
-//   (구버전 호환: su_ui_scale_pct)
-// ─────────────────────────────────────────────────────────────
-window.cfgSetUiScalePct = function(device, v){
-  try{
-    const n = Math.max(80, Math.min(140, parseInt(v||'100',10)||100));
-    const key = device==='pc' ? 'su_ui_scale_pc_pct' : device==='tb' ? 'su_ui_scale_tb_pct' : device==='mb' ? 'su_ui_scale_mb_pct' : 'su_ui_scale_pct';
-    localStorage.setItem(key, String(n));
-    if(key === 'su_ui_scale_pct'){
-      localStorage.setItem('su_ui_scale_pc_pct', String(n));
-      localStorage.setItem('su_ui_scale_tb_pct', String(n));
-      localStorage.setItem('su_ui_scale_mb_pct', String(n));
-    }
-  }catch(e){}
-  try{
-    const id = device==='pc' ? 'cfg-uiscale-pc-v' : device==='tb' ? 'cfg-uiscale-tb-v' : device==='mb' ? 'cfg-uiscale-mb-v' : 'cfg-uiscale-v';
-    const key = device==='pc' ? 'su_ui_scale_pc_pct' : device==='tb' ? 'su_ui_scale_tb_pct' : device==='mb' ? 'su_ui_scale_mb_pct' : 'su_ui_scale_pct';
-    const el=document.getElementById(id);
-    if(el) el.textContent = (localStorage.getItem(key)||'100') + '%';
-  }catch(e){}
-  try{ if(typeof window._applyUiScale==='function') window._applyUiScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
-  try{ if(typeof render==='function') render(); }catch(e){}
-  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
-};
-window.cfgResetUiScalePct = function(){
-  try{
-    ['su_ui_scale_pct','su_ui_scale_pc_pct','su_ui_scale_tb_pct','su_ui_scale_mb_pct'].forEach(k=>localStorage.removeItem(k));
-  }catch(e){}
-  try{
-    [['cfg-uiscale-pc','100'],['cfg-uiscale-tb','100'],['cfg-uiscale-mb','100']].forEach(([id,v])=>{ const r=document.getElementById(id); if(r) r.value=v; });
-  }catch(e){}
-  try{
-    [['cfg-uiscale-pc-v','100%'],['cfg-uiscale-tb-v','100%'],['cfg-uiscale-mb-v','100%']].forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.textContent=v; });
-  }catch(e){}
-  try{ if(typeof window._applyUiScale==='function') window._applyUiScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
-  try{ if(typeof render==='function') render(); }catch(e){}
-  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
-};
-window.cfgSetTopTabUiSettings = function(){
-  try{
-    const mbFont = Math.max(8, Math.min(16, parseInt(document.getElementById('cfg-top-tab-font-mb')?.value || '10', 10) || 10));
-    const mbGap = Math.max(0, Math.min(16, parseInt(document.getElementById('cfg-top-tab-gap-mb')?.value || '2', 10) || 2));
-    const align = String(document.getElementById('cfg-top-tab-align-mb')?.value || 'start').trim();
-    localStorage.setItem('su_top_tab_font_mb_px', String(mbFont));
-    localStorage.setItem('su_top_tab_gap_mb_px', String(mbGap));
-    localStorage.setItem('su_top_tab_align_mb', align === 'center' ? 'center' : 'start');
-  }catch(e){}
-  try{ if(typeof applyResponsiveUiVars==='function') applyResponsiveUiVars(); else window.dispatchEvent(new Event('resize')); }catch(e){}
-  try{ if(typeof window._centerActiveTopTab==='function') window._centerActiveTopTab(false); }catch(e){}
-  try{ if(typeof render==='function') render(); }catch(e){}
-  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
-};
-window.cfgResetTopTabUiSettings = function(){
-  try{
-    localStorage.removeItem('su_top_tab_font_mb_px');
-    localStorage.removeItem('su_top_tab_gap_mb_px');
-    localStorage.removeItem('su_top_tab_align_mb');
-  }catch(e){}
-  try{
-    const f=document.getElementById('cfg-top-tab-font-mb'); if(f) f.value='10';
-    const fv=document.getElementById('cfg-top-tab-font-mb-v'); if(fv) fv.textContent='10px';
-    const g=document.getElementById('cfg-top-tab-gap-mb'); if(g) g.value='2';
-    const gv=document.getElementById('cfg-top-tab-gap-mb-v'); if(gv) gv.textContent='2px';
-    const a=document.getElementById('cfg-top-tab-align-mb'); if(a) a.value='start';
-  }catch(e){}
-  try{ if(typeof applyResponsiveUiVars==='function') applyResponsiveUiVars(); else window.dispatchEvent(new Event('resize')); }catch(e){}
-  try{ if(typeof window._centerActiveTopTab==='function') window._centerActiveTopTab(false); }catch(e){}
-  try{ if(typeof render==='function') render(); }catch(e){}
-  try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
-};
-window.cfgResetUiBtnStyleSettings = function(){
-  try{ localStorage.removeItem('su_btn_scale_pct'); }catch(e){}
-  try{ localStorage.removeItem('su_btn_r'); }catch(e){}
-  try{ localStorage.removeItem('su_pill_r'); }catch(e){}
-  try{
-    const s=document.getElementById('cfg-btnscale'); if(s) s.value='100';
-    const r=document.getElementById('cfg-btnr'); if(r) r.value='8';
-    const p=document.getElementById('cfg-pillr'); if(p) p.value='20';
-  }catch(e){}
-  window.cfgSetUiBtnStyleSettings();
-};
+// 전역 폰트/전역 폰트 크기/전역 UI 배율 관련 로직은
+// `js/settings/font-controls.js`, `js/settings/ui-scale-controls.js`로 분리
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 필터/하위메뉴(접기) 설정
@@ -3495,6 +3255,9 @@ ${_scfgD('notice','📢 공지 관리')}
     const uiPctPc = parseInt(localStorage.getItem('su_ui_scale_pc_pct')||localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
     const uiPctTb = parseInt(localStorage.getItem('su_ui_scale_tb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
     const uiPctMb = parseInt(localStorage.getItem('su_ui_scale_mb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
+    const appFontScalePc = parseInt(localStorage.getItem('su_app_font_scale_pc_pct')||localStorage.getItem('su_app_font_scale_pct')||'100',10)||100;
+    const appFontScaleTb = parseInt(localStorage.getItem('su_app_font_scale_tb_pct')||localStorage.getItem('su_app_font_scale_pct')||'100',10)||100;
+    const appFontScaleMb = parseInt(localStorage.getItem('su_app_font_scale_mb_pct')||localStorage.getItem('su_app_font_scale_pct')||'100',10)||100;
     // CSS 직접입력에서 font-family 자동 추출 → 프리셋 드롭다운에도 합치기(요청)
     const customFams = (()=>{
       const out=[]; const seen=new Set();
@@ -3569,9 +3332,28 @@ ${_scfgD('notice','📢 공지 관리')}
           ${ffChoices.map(o=>`<option value="${esc(o.k)}">${esc(o.l)}</option>`).join('')}
         </select>
       </div>
-      <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white);font-size:11px;color:var(--gray-l);line-height:1.6">
-        전역 폰트의 <b>기기별 크기(PC/태블릿/모바일)</b>는 아래 <b>🎛️ 버튼 스타일 → 전역 UI 배율</b>에서 따로 조절할 수 있습니다.<br>
-        현재 값: PC ${Math.max(80,Math.min(140,uiPctPc))}% / 태블릿 ${Math.max(80,Math.min(140,uiPctTb))}% / 모바일 ${Math.max(80,Math.min(140,uiPctMb))}%
+      <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+        <div style="font-size:11px;color:var(--text3);font-weight:900;margin-bottom:8px">전역 폰트 크기 (글자 전용)</div>
+        <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">PC</div>
+          <input type="range" id="cfg-appfont-scale-pc" min="85" max="130" step="5" value="${Math.max(85,Math.min(130,appFontScalePc))}" oninput="cfgSetAppFontScalePct('pc',this.value)" style="width:100%">
+          <div id="cfg-appfont-scale-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(85,Math.min(130,appFontScalePc))}%</div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">태블릿</div>
+          <input type="range" id="cfg-appfont-scale-tb" min="85" max="130" step="5" value="${Math.max(85,Math.min(130,appFontScaleTb))}" oninput="cfgSetAppFontScalePct('tb',this.value)" style="width:100%">
+          <div id="cfg-appfont-scale-tb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(85,Math.min(130,appFontScaleTb))}%</div>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+          <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
+          <input type="range" id="cfg-appfont-scale-mb" min="85" max="130" step="5" value="${Math.max(85,Math.min(130,appFontScaleMb))}" oninput="cfgSetAppFontScalePct('mb',this.value)" style="width:100%">
+          <div id="cfg-appfont-scale-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(85,Math.min(130,appFontScaleMb))}%</div>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px;line-height:1.6">
+          글자 크기만 전반적으로 조절합니다. 버튼/아이콘/탭 크기는 아래 <b>🎛️ 버튼 스타일 → 전역 UI 배율</b>에서 따로 조절할 수 있습니다.<br>
+          현재 UI 배율: PC ${Math.max(80,Math.min(140,uiPctPc))}% / 태블릿 ${Math.max(80,Math.min(140,uiPctTb))}% / 모바일 ${Math.max(80,Math.min(140,uiPctMb))}%
+          <button class="btn btn-w btn-xs" style="margin-left:8px" onclick="cfgResetAppFontScalePct()">초기화</button>
+        </div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:120px">커스텀 프리셋</div>
@@ -4898,8 +4680,8 @@ ${_scfgD('notice','📢 공지 관리')}
     try{ if(window.SettingsStore && window.SettingsStore.cfg().enabled) window.SettingsStore.push('ui.fab'); }catch(e){}
   };
   window.initFabVisibilitySettings = async function(){
-    // 다른 기기 반영: 설정 통합 파일에서 pull
-    try{ if(window.SettingsStore) await window.SettingsStore.pull({silent:true}); }catch(e){}
+    // 다른 기기 반영: 설정 변경 신호가 있을 때만 pull
+    try{ if(window.SettingsStore && typeof window.SettingsStore.pullOnSignal==='function') await window.SettingsStore.pullOnSignal({silent:true}); }catch(e){}
     const hideMobile = localStorage.getItem('su_fabHideMobile') === '1';
     const hidePC = localStorage.getItem('su_fabHidePC') === '1';
     const elM=document.getElementById('cfg-fab-hide-mobile');

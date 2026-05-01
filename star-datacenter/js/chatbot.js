@@ -62,8 +62,8 @@ const tournamentMatches = [
 function initChatbot() {
   loadChatHistory();
   renderChatHistory();
-  // 원격 설정(메모 포함) pull (가능하면)
-  try{ if(window.SettingsStore) window.SettingsStore.pull({silent:true}); }catch(e){}
+  // 원격 설정(메모 포함)은 설정 변경 신호가 있을 때만 pull
+  try{ if(window.SettingsStore && typeof window.SettingsStore.pullOnSignal==='function') window.SettingsStore.pullOnSignal({silent:true}); }catch(e){}
   // 로컬 memo 객체 최신화
   try{
     if(window.SettingsStore){

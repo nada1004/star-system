@@ -327,22 +327,8 @@ window.histExtInputToPasteModal = function(){
   _histExtTargetSave(target);
   // (요청사항) 외부탭에서 자동인식 모달로 넘어가도, 저장 후 외부탭 화면이 리셋되지 않게
   try{ window._pasteFromHistExt = true; }catch(e){}
-  try{
-    if(target==='ind' && typeof openIndPasteModal==='function') openIndPasteModal();
-    else if(target==='gj' && typeof openGJPasteModal==='function') openGJPasteModal();
-    else if(target==='ck' && typeof openCKPasteModal==='function') openCKPasteModal();
-    else if(target==='univm' && typeof openUnivmPasteModal==='function') openUnivmPasteModal();
-    else if(target==='tt' && typeof openTTPasteModal==='function') openTTPasteModal();
-    else if(target==='comp' && typeof openCompPasteModal==='function') openCompPasteModal();
-    else if(typeof openMiniPasteModal==='function') openMiniPasteModal();
-  }catch(e){}
-  setTimeout(()=>{
-    try{
-      const ta = document.getElementById('paste-input');
-      if(ta) ta.value = raw;
-      if(typeof pastePreview==='function') pastePreview();
-    }catch(e){}
-  }, 60);
+  _histOpenPasteModalByTarget(target);
+  _histFillPasteModalByTarget(target, raw);
 };
 
 function _histOpenPasteModalByTarget(target){
@@ -358,16 +344,76 @@ function _histOpenPasteModalByTarget(target){
     else if(target==='tt-bkt' && typeof openTTPasteModal==='function'){ try{ localStorage.setItem('su_tt_paste_stage','bkt'); }catch(e){} openTTPasteModal(); }
     else if(target==='tt' && typeof openTTPasteModal==='function') openTTPasteModal();
     else if(target==='comp' && typeof openCompPasteModal==='function') openCompPasteModal();
+    else if(/^procomp-/.test(String(target||'')) && typeof window._histExtOpenProCompStagePaste==='function') window._histExtOpenProCompStagePaste(target);
     else if(typeof openMiniPasteModal==='function') openMiniPasteModal();
   }catch(e){}
+}
+function _histFillPasteModalByTarget(target, payload){
+  const t = String(target||'').trim();
+  const txt = String(payload||'');
+  setTimeout(()=>{
+    try{
+      if(t === 'pro'){
+        const ta = document.getElementById('pro-paste-input');
+        if(ta) ta.value = txt;
+        if(typeof proPreview === 'function') proPreview();
+        return;
+      }
+      if(/^procomp-/.test(t)){
+        const ta = document.getElementById('_pcStageBulkText');
+        if(ta) ta.value = txt;
+        return;
+      }
+      const ta = document.getElementById('paste-input') || document.getElementById('_pasteText') || document.getElementById('_ttPasteText');
+      if(ta) ta.value = txt;
+      if(typeof pastePreview === 'function') pastePreview();
+    }catch(e){}
+  }, 60);
 }
 function _histExtTargetToPasteMode(target){
   const t = String(target||'').trim();
   if(t==='pro') return 'pro';
   if(t==='progj') return 'progj';
   if(t==='tt-general' || t==='tt-league' || t==='tt-bkt') return 'tt';
+  if(/^procomp-/.test(t)) return 'ind';
   return t || 'mini';
 }
+function _histGetCurrentProCompTourney(){
+  try{
+    const list = Array.isArray(proTourneys) ? proTourneys : [];
+    return list.find(t=>t && t.name===curProComp) || list[0] || null;
+  }catch(e){
+    return null;
+  }
+}
+function _histMapProCompTargetToRound(target){
+  const t = String(target||'').trim();
+  if(t==='procomp-64') return '64강';
+  if(t==='procomp-32') return '32강';
+  if(t==='procomp-16') return '16강';
+  if(t==='procomp-8') return '8강';
+  if(t==='procomp-4') return '4강';
+  if(t==='procomp-final') return '결승';
+  return '';
+}
+function _histExtRowsToSimpleWinnerLoserLines(items){
+  return (items||[]).map(x=>{
+    const w = _histExtToPasteName(x.winner);
+    const l = _histExtToPasteName(x.loser);
+    const mp = (x.map||'').trim();
+    return [w, l, mp].filter(Boolean).join(' ').trim();
+  }).filter(Boolean).join('\n');
+}
+window._histExtOpenProCompStagePaste = function(target){
+  const tn = _histGetCurrentProCompTourney();
+  const round = _histMapProCompTargetToRound(target);
+  if(!tn){ alert('현재 선택된 프로리그 대회가 없습니다. 먼저 프로리그 대회 탭에서 대회를 선택해주세요.'); return false; }
+  if(!round){ alert('프로리그 대회 라운드 선택이 올바르지 않습니다.'); return false; }
+  if(typeof openPcStageBulkPasteModal !== 'function'){ alert('프로리그 대회 붙여넣기 모달을 열 수 없습니다.'); return false; }
+  window._pcStageRecRound = round;
+  openPcStageBulkPasteModal(tn.id, round);
+  return true;
+};
 function _histExtRowsToPasteLines(items, target){
   const pasteMode = _histExtTargetToPasteMode(target);
   return (items||[]).map(x=>{
@@ -424,16 +470,22 @@ window.histExt2SendRawToPasteModal = function(){
   const target = (document.getElementById('hist-ext2-target')?.value || '').trim();
   if(!target){ alert('저장 대상(미니/개인전 등)을 먼저 선택해주세요'); return; }
   _histExtTargetSave(target);
+  if(/^procomp-/.test(target)){
+    const ok = window._histExtOpenProCompStagePaste && window._histExtOpenProCompStagePaste(target);
+    if(!ok) return;
+    const htmlRows = _histExtParseHTMLTable(raw);
+    const textRows = _histExtParseTextTable(raw);
+    const payload =
+      (htmlRows && htmlRows.length ? _histExtRowsToSimpleWinnerLoserLines(_histExtMapRows(htmlRows)||[]) : '') ||
+      (textRows && textRows.length ? _histExtRowsToSimpleWinnerLoserLines(_histExtMapRows(textRows)||[]) : '') ||
+      raw;
+    _histFillPasteModalByTarget(target, payload);
+    return;
+  }
   try{ window._pasteFromHistExt = true; }catch(e){}
   _histOpenPasteModalByTarget(target);
   const payload = _histExtRawToPastePayload(raw, target);
-  setTimeout(()=>{
-    try{
-      const ta = document.getElementById('paste-input');
-      if(ta) ta.value = payload;
-      if(typeof pastePreview==='function') pastePreview();
-    }catch(e){}
-  }, 60);
+  _histFillPasteModalByTarget(target, payload);
 };
 window.histExt2PasteFromClipboard = async function(){
   try{
@@ -485,28 +537,12 @@ window.histExtSendToPasteModal = function(){
     const memo = String(x.memo||'').replace(/\t+/g,' ').replace(/\r?\n/g,' ').trim();
     // TSV(2인칭): 선수1\t선수2\t맵\t승/패(ELO)\t[타입]
     // 날짜는 "YYYY-MM-DD " 접두로 포함(파서가 날짜를 먼저 인식)
-    return `${d} ${w}\t${l}\t${mp}\t승\t${target}${memo?`\t${memo}`:''}`;
+    return `${d} ${w}\t${l}\t${mp}\t승\t${_histExtTargetToPasteMode(target)}${memo?`\t${memo}`:''}`;
   }).join('\n');
 
   // 해당 모드의 붙여넣기 모달 열기
-  try{
-    if(target==='ind' && typeof openIndPasteModal==='function') openIndPasteModal();
-    else if(target==='gj' && typeof openGJPasteModal==='function') openGJPasteModal();
-    else if(target==='ck' && typeof openCKPasteModal==='function') openCKPasteModal();
-    else if(target==='univm' && typeof openUnivmPasteModal==='function') openUnivmPasteModal();
-    else if(target==='tt' && typeof openTTPasteModal==='function') openTTPasteModal();
-    else if(target==='comp' && typeof openCompPasteModal==='function') openCompPasteModal();
-    else if(typeof openMiniPasteModal==='function') openMiniPasteModal();
-  }catch(e){}
-
-  // 모달 textarea 채우고 미리보기 실행
-  setTimeout(()=>{
-    try{
-      const ta = document.getElementById('paste-input');
-      if(ta) ta.value = lines;
-      if(typeof pastePreview==='function') pastePreview();
-    }catch(e){}
-  }, 60);
+  _histOpenPasteModalByTarget(target);
+  _histFillPasteModalByTarget(target, lines);
 };
 
 // 프록시 URL 빠른 입력: 전체 URL을 붙여넣으면 proxy/bo/page 범위를 자동 세팅
@@ -3759,6 +3795,12 @@ function histExternal2HTML(){
           <option value="ind" ${tSel==='ind'?'selected':''}>개인전</option>
           <option value="pro" ${tSel==='pro'?'selected':''}>프로리그 일반</option>
           <option value="progj" ${tSel==='progj'?'selected':''}>프로리그 끝장전</option>
+          <option value="procomp-64" ${tSel==='procomp-64'?'selected':''}>프로리그 대회 64강</option>
+          <option value="procomp-32" ${tSel==='procomp-32'?'selected':''}>프로리그 대회 32강</option>
+          <option value="procomp-16" ${tSel==='procomp-16'?'selected':''}>프로리그 대회 16강</option>
+          <option value="procomp-8" ${tSel==='procomp-8'?'selected':''}>프로리그 대회 8강</option>
+          <option value="procomp-4" ${tSel==='procomp-4'?'selected':''}>프로리그 대회 4강</option>
+          <option value="procomp-final" ${tSel==='procomp-final'?'selected':''}>프로리그 대회 결승</option>
           <option value="gj" ${tSel==='gj'?'selected':''}>끝장전</option>
           <option value="ck" ${tSel==='ck'?'selected':''}>대학CK</option>
           <option value="univm" ${tSel==='univm'?'selected':''}>대학대전</option>
@@ -3771,8 +3813,8 @@ function histExternal2HTML(){
         <button class="btn btn-p btn-xs" onclick="histExt2SendRawToPasteModal()">➡️ 자동인식 열기</button>
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin:-2px 0 8px 0;line-height:1.5">
-        ※ 프로리그 일반/끝장전, 티어대회 일반/조별리그/토너먼트까지 선택 가능하게 연결했습니다.<br>
-        ※ 프로리그대회/브라켓 전용 기록은 현재 외부2 단독 저장보다 해당 탭 내부 자동인식이 더 정확합니다.
+        ※ 프로리그 일반/끝장전, 프로리그 대회 64강~결승, 티어대회 일반/조별리그/토너먼트까지 선택 가능하게 연결했습니다.<br>
+        ※ 프로리그 대회 저장은 현재 선택된 프로리그 대회 기준으로 들어갑니다.
       </div>
       <textarea id="hist-ext2-raw" style="width:100%;min-height:110px;border:1px solid var(--border2);border-radius:10px;padding:10px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace" placeholder="예: 특정 경기 몇 개만 선택 복사한 텍스트"></textarea>
     </div>
@@ -3874,13 +3916,7 @@ window.histExt3SendRawToPasteModal = function(){
   try{ window._pasteFromHistExt = true; }catch(e){}
   _histOpenPasteModalByTarget(target);
   const payload = _histExtRawToPastePayload(raw, target);
-  setTimeout(()=>{
-    try{
-      const ta = document.getElementById('paste-input');
-      if(ta) ta.value = payload;
-      if(typeof pastePreview==='function') pastePreview();
-    }catch(e){}
-  }, 60);
+  _histFillPasteModalByTarget(target, payload);
 };
 window.histExt3PasteFromClipboard = async function(){
   try{

@@ -27,10 +27,15 @@
     lastRemoteMode: 'su_sync_last_remote_mode', // new|legacy|none
     lastMigrated: 'su_sync_last_migrated', // 1/0
     lastRemoteUpdatedAt: 'su_sync_last_settings_remote_updated_at',
+    lastSignalSeenAt: 'su_sync_last_settings_signal_at',
+    lastSignalPushedAt: 'su_sync_last_settings_signal_push_at',
 
     // AI(프록시/API키) 설정
     aiCfg: 'su_ai_cfg',
   };
+  const SETTINGS_SIGNAL_DB_URL = 'https://stardata1004-default-rtdb.firebaseio.com';
+  const SETTINGS_SIGNAL_PATH = 'syncSignals/star-datacenter-settings';
+  const SETTINGS_SIGNAL_DEFAULT_PW = 'haram1019!@';
 
   function cfg(){
     return {
@@ -67,6 +72,43 @@
       throw new Error(msg);
     }
     return json;
+  }
+  function _settingsSignalUrl(){
+    return `${SETTINGS_SIGNAL_DB_URL}/${SETTINGS_SIGNAL_PATH}.json`;
+  }
+  function _settingsSignalTs(sig){
+    return Number(sig && (sig.updatedAt || sig.savedAt || sig.version) || 0) || 0;
+  }
+  function _rememberSettingsSignal(sig){
+    const ts = _settingsSignalTs(sig);
+    if(!ts) return 0;
+    try{ localStorage.setItem(LS.lastSignalSeenAt, String(ts)); }catch(e){}
+    return ts;
+  }
+  async function _fetchSettingsSignal(){
+    const res = await fetch(_settingsSignalUrl() + '?_=' + Date.now(), { cache:'no-store', mode:'cors' });
+    if(!res.ok) throw new Error('settings signal HTTP ' + res.status);
+    return await res.json();
+  }
+  async function _pushSettingsSignal(meta){
+    const ts = Number(meta && meta.updatedAt || Date.now()) || Date.now();
+    const payload = {
+      admin_pw: localStorage.getItem('su_fb_pw') || SETTINGS_SIGNAL_DEFAULT_PW,
+      source: 'settings-gist',
+      gistId: cfg().gistId || '',
+      section: String(meta && meta.section || 'all'),
+      updatedAt: ts,
+      savedAt: ts,
+      version: ts
+    };
+    const res = await fetch(_settingsSignalUrl(), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok) throw new Error('settings signal write failed: ' + res.status);
+    try{ localStorage.setItem(LS.lastSignalPushedAt, String(ts)); }catch(e){}
+    return payload;
   }
 
   // ── 상태 직렬화/역직렬화 ──
@@ -365,6 +407,32 @@
       return false;
     }
   }
+  async function pullOnSignal(opts){
+    opts = opts || {};
+    const c = cfg();
+    if (!c.gistId) return false;
+    try{
+      const sig = await _fetchSettingsSignal();
+      const sigTs = _settingsSignalTs(sig);
+      const lastSeen = Number(localStorage.getItem(LS.lastSignalSeenAt) || 0) || 0;
+      if(!sigTs) {
+        if(opts.returnInfo) return { ok:true, skipped:true, reason:'no-signal' };
+        return false;
+      }
+      if(!opts.force && sigTs <= lastSeen){
+        if(opts.returnInfo) return { ok:true, skipped:true, reason:'unchanged-signal' };
+        return false;
+      }
+      const info = await pull({ ...opts, force:true, returnInfo:true });
+      _rememberSettingsSignal(sig);
+      if(opts.returnInfo) return { ...(info||{ok:true}), signalAt:sigTs };
+      return !!(info && info.ok);
+    }catch(e){
+      try{ localStorage.setItem(LS.lastError, e.message || String(e)); }catch(_){}
+      if (!opts.silent) throw e;
+      return false;
+    }
+  }
 
   async function push(section){
     // section: 'memo' | 'ui.fab' | undefined(전체)
@@ -394,6 +462,12 @@
 
     await _patchGistFile(id, c.token, FILE, JSON.stringify(merged, null, 2));
     _rememberRemoteUpdatedAt(new Date().toISOString());
+    try{
+      const sig = await _pushSettingsSignal({ section: section || 'all', updatedAt: Date.now() });
+      _rememberSettingsSignal(sig);
+    }catch(e){
+      try{ localStorage.setItem(LS.lastError, '설정 변경 신호 전송 실패: ' + (e.message || e)); }catch(_){}
+    }
     _markSync('push', mode, false);
     if (section && section.indexOf('.') !== -1) {
       // no-op
@@ -427,7 +501,7 @@
 
   window.SettingsStore = {
     cfg, setCfg, isAdmin,
-    ensureGist, pull, push,
+    ensureGist, pull, pullOnSignal, push,
     getSyncStatus,
     getMemo, setMemo,
     getFab, setFab,

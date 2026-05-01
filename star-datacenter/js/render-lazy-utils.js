@@ -68,10 +68,14 @@ async function _ensureVoteLoaded(){
 }
 async function _ensureCloudBoardLoaded(){
   await window.ensureHtml2Canvas();
-  await _loadScriptOnce('js/cloud-board.js?v=20260430-02');
+  await _loadScriptOnce('js/sync/cloud-apply.js?v=20260502-01');
+  await _loadScriptOnce('js/sync/cloud-status.js?v=20260502-01');
+  await _loadScriptOnce('js/cloud-board.js?v=20260502-01');
 }
 async function _ensureSettingsLoaded(){
-  await _loadScriptOnce('js/settings.js?v=20260501-76');
+  await _loadScriptOnce('js/settings/font-controls.js?v=20260502-01');
+  await _loadScriptOnce('js/settings/ui-scale-controls.js?v=20260502-01');
+  await _loadScriptOnce('js/settings.js?v=20260502-01');
 }
 function _lazyGsSetStatus(msg, color='var(--gray-l)'){
   try{
