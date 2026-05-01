@@ -1187,7 +1187,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const _bgOpacity = ((uCfg.bgImgAlpha ?? b2BgImgAlpha) / 100).toFixed(2);
   const bgImgHtml = uCfg.bgImg
     ? forExport
-      ? `<img src="${uCfg.bgImg}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_bgSize==='auto'?'cover':_bgSize};opacity:${_bgOpacity};pointer-events:none;z-index:0">`
+      ? `<img src="${uCfg.bgImg}" crossorigin="anonymous" class="b2-fit-auto" data-fit-kind="bg" data-fit-mode="${_bgSize}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_bgSize==='auto'?'cover':_bgSize};object-position:${_bgPos};opacity:${_bgOpacity};pointer-events:none;z-index:0" onload="_b2ApplyBgAutoSizing(this)">`
       : `<div class="b2-bg-layer" data-bg-src="${String(uCfg.bgImg).replace(/"/g,'&quot;')}" data-bg-size-mode="${_bgSize}" style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize==='auto'?'cover':_bgSize} no-repeat;opacity:${_bgOpacity};pointer-events:none;z-index:0"></div>`
     : '';
 

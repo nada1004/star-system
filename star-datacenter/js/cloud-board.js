@@ -598,17 +598,55 @@ function _fmtSyncTs(ts){
   if(!n) return '기록 없음';
   try{ return new Date(n).toLocaleString('ko-KR'); }catch(e){ return '기록 없음'; }
 }
+function _getSyncFreshnessMeta(){
+  const localLatest = Math.max(
+    Number(window._lastAdminSaveTime||0) || 0,
+    Number(localStorage.getItem('su_last_admin_save')||0) || 0,
+    Number(localStorage.getItem('su_last_save_time')||0) || 0
+  );
+  const remoteLatest = Number(localStorage.getItem('su_sync_last_remote_saved_at')||0) || 0;
+  const diff = localLatest - remoteLatest;
+  const threshold = 1500;
+  let state = 'unknown';
+  let label = '비교 정보 부족';
+  let color = 'var(--gray-l)';
+  if(localLatest && remoteLatest){
+    if(Math.abs(diff) <= threshold){
+      state = 'same';
+      label = '로컬/원격 거의 동일';
+      color = '#16a34a';
+    }else if(diff > 0){
+      state = 'local_newer';
+      label = '로컬이 더 최신';
+      color = '#d97706';
+    }else{
+      state = 'remote_newer';
+      label = '원격이 더 최신';
+      color = '#2563eb';
+    }
+  }else if(localLatest){
+    state = 'local_only';
+    label = '로컬 저장 기록만 있음';
+    color = '#d97706';
+  }else if(remoteLatest){
+    state = 'remote_only';
+    label = '원격 저장 기록만 있음';
+    color = '#2563eb';
+  }
+  return { localLatest, remoteLatest, diff, state, label, color };
+}
 function refreshCloudSyncStatus(msg, color){
   const el=document.getElementById('cloudStatus');
   const panel=document.getElementById('cfg-fb-sync-result');
   const lastUploadOk = Number(localStorage.getItem('su_sync_last_upload_ok_at')||0) || 0;
   const lastReceived = Number(localStorage.getItem('su_sync_last_received_at')||0) || 0;
   const lastRemoteSaved = Number(localStorage.getItem('su_sync_last_remote_saved_at')||0) || 0;
+  const freshness = _getSyncFreshnessMeta();
   const lastSignalSeen = Number(localStorage.getItem('su_sync_last_firebase_signal_at')||0) || 0;
   const lastSignalPush = Number(localStorage.getItem('su_sync_last_firebase_signal_push_at')||0) || 0;
   const missingMonths = (()=>{ try{ return JSON.parse(localStorage.getItem('su_sync_missing_months')||'[]')||[]; }catch(e){ return []; } })();
   const failMsg = String(localStorage.getItem('su_sync_last_fail_msg')||'').trim();
-  const summary = `저장 ${_fmtSyncTs(lastUploadOk)} / 수신 ${_fmtSyncTs(lastReceived)}${lastRemoteSaved?` / 원격저장 ${_fmtSyncTs(lastRemoteSaved)}`:''}${lastSignalSeen?` / 신호 ${_fmtSyncTs(lastSignalSeen)}`:''}`;
+  const summary = `저장 ${_fmtSyncTs(lastUploadOk)} / 수신 ${_fmtSyncTs(lastReceived)}${lastRemoteSaved?` / 원격저장 ${_fmtSyncTs(lastRemoteSaved)}`:''}${lastSignalSeen?` / 신호 ${_fmtSyncTs(lastSignalSeen)}`:''}${freshness.state!=='unknown'?` / ${freshness.label}`:''}`;
   if(el){
     el.style.color = color || (failMsg ? '#dc2626' : 'var(--gray-l)');
     el.textContent = msg ? `${msg} · ${summary}` : summary;
@@ -616,9 +654,11 @@ function refreshCloudSyncStatus(msg, color){
   if(panel){
     panel.innerHTML = `
       <div style="display:grid;gap:6px">
+        <div><b>로컬 최신 저장:</b> ${_fmtSyncTs(freshness.localLatest)}</div>
         <div><b>최근 업로드:</b> ${_fmtSyncTs(lastUploadOk)}</div>
         <div><b>최근 수신:</b> ${_fmtSyncTs(lastReceived)}</div>
         <div><b>원격 savedAt:</b> ${_fmtSyncTs(lastRemoteSaved)}</div>
+        <div><b>최신 비교:</b> <span style="color:${freshness.color};font-weight:700">${freshness.label}</span></div>
         <div><b>보조 신호 수신:</b> ${_fmtSyncTs(lastSignalSeen)}</div>
         <div><b>보조 신호 발행:</b> ${_fmtSyncTs(lastSignalPush)}</div>
         <div><b>누락 월 파일:</b> ${missingMonths.length ? missingMonths.join(', ') : '없음'}</div>
@@ -2094,6 +2134,12 @@ function _dlCanvasBoard(canvas, filename) {
 async function _captureAndSave(tmpDiv, w, h, filename) {
   // 모든 외부 img를 data URL로 변환 → html2canvas canvas taint 방지
   await _imgToDataUrls(tmpDiv);
+  try{
+    await new Promise(r=>setTimeout(r, 80));
+    if(typeof _applyBoardBgAutoSizing === 'function') _applyBoardBgAutoSizing(tmpDiv);
+    if(typeof _b2ApplyBgAutoSizing === 'function') _b2ApplyBgAutoSizing(tmpDiv);
+    await new Promise(r=>setTimeout(r, 80));
+  }catch(e){}
 
   // 다크모드 CSS(body.dark .brd-card filter 등)가 export에 적용되지 않도록 일시 해제
   const wasDark = document.body.classList.contains('dark');
@@ -2265,10 +2311,10 @@ async function checkFbSyncStatus(){
   const hasPw=!!localStorage.getItem('su_gh_token');
   const lastSave=localStorage.getItem('su_last_save_time');
   const lastSignal=Number(localStorage.getItem('su_sync_last_firebase_signal_at')||0) || 0;
+  const freshness=_getSyncFreshnessMeta();
   const missingMonths=(()=>{ try{ return JSON.parse(localStorage.getItem('su_sync_missing_months')||'[]')||[]; }catch(e){ return []; } })();
   const localSize=(()=>{let t=0;for(let k in localStorage){if(k.startsWith('su_'))t+=((localStorage.getItem(k)||'').length*2);}return t;})();
   const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
-
   // 마지막 수신 데이터 크기(호환 변수명 유지)
   const fbSize=window._lastFbDataSize||null;
 
@@ -2309,6 +2355,14 @@ async function checkFbSyncStatus(){
           <div style="font-size:11px;color:var(--gray-l)">${lastSave?new Date(parseInt(lastSave)).toLocaleString('ko-KR'):'기록 없음'}</div>
         </div>
       </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${freshness.state==='local_newer'?'#fff7ed':freshness.state==='remote_newer'?'#eff6ff':'#f0fdf4'};border:1px solid ${freshness.state==='local_newer'?'#fdba74':freshness.state==='remote_newer'?'#bfdbfe':'#bbf7d0'}">
+        <span style="font-size:16px">${freshness.state==='local_newer'?'🖥️':freshness.state==='remote_newer'?'☁️':'🤝'}</span>
+        <div>
+          <div style="font-weight:700;font-size:12px">로컬/원격 최신 비교</div>
+          <div style="font-size:11px;color:${freshness.color}">${freshness.label}</div>
+          <div style="font-size:10px;color:var(--gray-l)">로컬 ${_fmtSyncTs(freshness.localLatest)} / 원격 ${_fmtSyncTs(freshness.remoteLatest)}</div>
+        </div>
+      </div>
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
         <span style="font-size:16px">📦</span>
         <div>
@@ -2318,7 +2372,6 @@ async function checkFbSyncStatus(){
       </div>
       <div style="display:grid;gap:8px;grid-template-columns:1fr">
         ${missingMonths.length?`<button class="btn btn-w btn-sm" onclick="(async(btn)=>{const old=btn.textContent;btn.disabled=true;btn.textContent='🔄 누락 월 재수신 중...';try{if(typeof fbRetryMissingMonths==='function') await fbRetryMissingMonths();}catch(e){console.error('[fbRetryMissingMonths]',e);}finally{btn.disabled=false;btn.textContent=old;setTimeout(checkFbSyncStatus,300);}})(this)" style="width:100%">🗂️ 누락 월 다시받기</button>`:''}
-        <button class="btn btn-w btn-sm" onclick="(async(btn)=>{const old=btn.textContent;btn.disabled=true;btn.textContent='🔄 전체 동기화 중...';try{if(typeof window.fbForceSync==='function') await window.fbForceSync();}catch(e){console.error('[fbForceSync]',e);}finally{btn.disabled=false;btn.textContent=old;setTimeout(checkFbSyncStatus,300);}})(this)" style="width:100%">🔄 전체 다시 동기화</button>
         ${isLoggedIn&&hasPw?`<button class="btn btn-b btn-sm" onclick="(async(btn)=>{const old=btn.textContent;btn.disabled=true;btn.textContent='⏫ 업로드 중...';try{await fbCloudSave();localStorage.setItem('su_last_save_time',Date.now());btn.textContent='✅ 완료';}catch(e){btn.textContent='❌ 실패';}finally{setTimeout(()=>{btn.disabled=false;btn.textContent=old;checkFbSyncStatus();},500);}})(this)" style="width:100%">⬆️ 지금 GitHub data.json에 업로드</button>`:''}
       </div>
     </div>`;

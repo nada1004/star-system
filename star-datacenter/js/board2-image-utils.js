@@ -3,6 +3,32 @@
 ══════════════════════════════════════ */
 let _b2GlobalImgSettings = JSON.parse(localStorage.getItem('su_b2_global_img_settings') || '{}');
 const _b2ImgMetaCache = {};
+let _b2ImgSettingsSaveTimer = null;
+let _b2ImgSettingsSavePending = false;
+function _b2FlushImgSettingsSave(){
+  if(_b2ImgSettingsSaveTimer){
+    clearTimeout(_b2ImgSettingsSaveTimer);
+    _b2ImgSettingsSaveTimer = null;
+  }
+  if(!_b2ImgSettingsSavePending) return;
+  _b2ImgSettingsSavePending = false;
+  if(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn) save();
+}
+function _b2ScheduleImgSettingsSave(){
+  if(!(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn)) return;
+  _b2ImgSettingsSavePending = true;
+  if(_b2ImgSettingsSaveTimer) clearTimeout(_b2ImgSettingsSaveTimer);
+  _b2ImgSettingsSaveTimer = setTimeout(()=>{
+    _b2FlushImgSettingsSave();
+  }, 800);
+}
+try{ window._b2FlushImgSettingsSave = _b2FlushImgSettingsSave; }catch(e){}
+try{
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'hidden') _b2FlushImgSettingsSave();
+  });
+  window.addEventListener('beforeunload', _b2FlushImgSettingsSave);
+}catch(e){}
 function _b2DeviceKey(){
   const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
   return w <= 768 ? 'mb' : (w <= 1024 ? 'tb' : 'pc');
@@ -40,7 +66,7 @@ function _b2EnsureDeviceImgSettings(){
 function _b2SaveImgSettings() {
   _b2EnsureDeviceImgSettings();
   localStorage.setItem('su_b2_global_img_settings', JSON.stringify(_b2GlobalImgSettings));
-  if(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn) save();
+  _b2ScheduleImgSettingsSave();
 }
 function _b2DefaultSingleImgSettings() {
   return {

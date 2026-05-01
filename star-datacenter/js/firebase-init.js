@@ -594,8 +594,45 @@ window.fbUpdate = async function (patch) {
 
 // 강제 1회 fetch (수동 동기화 버튼용)
 window.fbForceSync = async function () {
+  try{
+    if(typeof window._b2FlushImgSettingsSave === 'function'){
+      window._b2FlushImgSettingsSave();
+      await new Promise(r=>setTimeout(r, 30));
+    }
+  }catch(e){}
+  try{
+    if(window._isSaving){
+      try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('⏳ 저장 중이라 강제 동기화를 잠시 막음', '#d97706'); }catch(e){}
+      alert('저장 중입니다.\n업로드가 끝난 뒤 다시 시도해주세요.');
+      return false;
+    }
+  }catch(e){}
   const data = await _fetchGithubData();
   if (!data) return;
+  try{
+    const remoteSa = Number(data && data.savedAt || 0) || 0;
+    const localSa = Math.max(
+      Number(window._lastAdminSaveTime||0) || 0,
+      Number(localStorage.getItem('su_last_admin_save')||0) || 0
+    );
+    if(remoteSa && localSa && localSa > remoteSa){
+      const fmt = (ts)=>{ try{ return new Date(Number(ts)||0).toLocaleString('ko-KR'); }catch(e){ return String(ts||''); } };
+      const ok = confirm(
+        '로컬 데이터가 원격보다 더 최신으로 보입니다.\n\n'
+        + `로컬 최근 저장: ${fmt(localSa)}\n`
+        + `원격 savedAt: ${fmt(remoteSa)}\n\n`
+        + '그래도 강제 동기화를 진행하면 로컬 변경사항이 원격 상태로 덮일 수 있습니다.\n'
+        + '계속하시겠습니까?'
+      );
+      if(!ok){
+        try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('✋ 강제 동기화 취소됨', '#d97706'); }catch(e){}
+        return false;
+      }
+      try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('⚠️ 로컬보다 오래된 원격 강제 적용 중...', '#d97706'); }catch(e){}
+    }else{
+      try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('🔄 수동 동기화 시작...', '#2563eb'); }catch(e){}
+    }
+  }catch(e){}
   _lastSnapshot = data;
   try{
     const sa = Number(data && data.savedAt || 0) || 0;
@@ -612,6 +649,7 @@ window.fbForceSync = async function () {
   }
   try{ if(typeof localSave==='function') localSave(); }catch(e){}
   try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('🔄 수동 동기화 완료', '#2563eb'); }catch(e){}
+  return true;
 };
 
 // 초기 로드 + 주기적 GitHub polling
