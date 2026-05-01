@@ -2414,8 +2414,7 @@ function _b2PlayersView() {
   const pcMainWide = Math.min(Math.max(leftSize + 7, 60), 76);
   const pcMainMid = Math.min(Math.max(leftSize + 5, 58), 74);
   const pcMainNarrow = Math.min(Math.max(leftSize + 3, 56), 72);
-  const tabletMainKeepRow = Math.min(Math.max(leftSize + 6, 60), 74);
-  const tallTabletHeight = tabletHeight + 120;
+  const tallTabletHeight = tabletHeight + 220;
   
   let h = `
     <style>
@@ -2653,21 +2652,21 @@ function _b2PlayersView() {
       }
       @media (min-width: 769px) and (max-width: 1024px) {
         .b2-players-wrapper {
-          flex-direction: row;
+          flex-direction: column;
           gap: 16px;
-          height: clamp(${tallTabletHeight}px, 74vh, ${pcHeight + 140}px);
-          min-height: ${tallTabletHeight}px;
+          height: auto;
+          min-height: auto;
         }
         .b2-players-main {
-          flex: 0 0 ${tabletMainKeepRow}%;
-          width: auto;
+          flex: none;
+          width: 100%;
           min-height: ${tallTabletHeight}px;
-          height: ${autoHeight ? `clamp(${tallTabletHeight}px, 74vh, ${pcHeight + 140}px)` : `${tallTabletHeight}px`};
+          height: ${autoHeight ? `clamp(${tallTabletHeight}px, 78vh, ${pcHeight + 220}px)` : `${tallTabletHeight}px`};
         }
         .b2-players-grid-wrapper {
-          flex: 1;
-          min-height: ${tallTabletHeight}px;
-          max-height: 100%;
+          flex: none;
+          min-height: 0;
+          max-height: none;
         }
       }
       @media (max-width: 768px) {
@@ -2772,10 +2771,10 @@ function _b2PlayersView() {
           min-width: 35px;
         }
         .b2-players-grid-wrapper {
-          flex: 1;
-          height: 100%;
+          flex: none;
+          height: auto;
           order: 1;
-          overflow-y: auto;
+          overflow-y: visible;
         }
         .b2-players-grid {
           grid-template-columns: repeat(3, 1fr);
