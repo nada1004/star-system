@@ -39,11 +39,11 @@ function rHist(C,T){
   // (요청사항) 관리자 전용 외부 자료 탭
   try{
     if(typeof isLoggedIn!=='undefined' && isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin)){
-      tabDefs.push({id:'ext', grp:'외부', lbl:'📎'});
+      tabDefs.push({id:'ext', grp:'외부', lbl:'📎', disp:(typeof getTabLabel==='function'?getTabLabel('history','ext','📎'):'📎')});
       // 외부2: 관리자 전용(iframe)
-      tabDefs.push({id:'ext2', grp:'외부', lbl:'🌐 외부2'});
+      tabDefs.push({id:'ext2', grp:'외부', lbl:'🌐 외부2', disp:(typeof getTabLabel==='function'?getTabLabel('history','ext2','🌐 외부2'):'🌐 외부2')});
       // 외부3: 관리자 전용(iframe, 페이지 이동 지원)
-      tabDefs.push({id:'ext3', grp:'외부', lbl:'🌐 외부3'});
+      tabDefs.push({id:'ext3', grp:'외부', lbl:'🌐 외부3', disp:(typeof getTabLabel==='function'?getTabLabel('history','ext3','🌐 외부3'):'🌐 외부3')});
     }
   }catch(e){}
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
@@ -65,16 +65,17 @@ function rHist(C,T){
   grps.forEach(g=>{
     const isOn=curTab.grp===g;
     const firstId=tabDefs.find(t=>t.grp===g).id;
-    h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${firstId}';openDetails={};render()">${g}</button>`;
+    const gLbl=(typeof getTabLabel==='function') ? getTabLabel('historyGroup', g, g) : g;
+    h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${firstId}';openDetails={};render()">${gLbl}</button>`;
     // '외부' 우측에 '외부2' 버튼 노출(관리자 전용)
     if(g==='외부' && tabDefs.some(t=>t.id==='ext2')){
       const isOn2=(histSub==='ext2');
-      h+=`<button class="pill ${isOn2?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='ext2';openDetails={};render()">외부2</button>`;
+      h+=`<button class="pill ${isOn2?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='ext2';openDetails={};render()">${(typeof getTabLabel==='function') ? getTabLabel('history','ext2','외부2') : '외부2'}</button>`;
     }
     // '외부' 우측에 '외부3' 버튼 노출(관리자 전용)
     if(g==='외부' && tabDefs.some(t=>t.id==='ext3')){
       const isOn3=(histSub==='ext3');
-      h+=`<button class="pill ${isOn3?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='ext3';openDetails={};render()">외부3</button>`;
+      h+=`<button class="pill ${isOn3?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='ext3';openDetails={};render()">${(typeof getTabLabel==='function') ? getTabLabel('history','ext3','외부3') : '외부3'}</button>`;
     }
   });
   h+=`  </div>`;

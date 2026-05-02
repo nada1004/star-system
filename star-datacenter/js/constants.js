@@ -21,6 +21,54 @@ function getTabLabel(ctx, id, def){
     return def;
   }
 }
+function applyTabLabels(ctx, items, key='lbl'){
+  try{
+    if(!Array.isArray(items)) return items;
+    return items.map(it=>{
+      if(!it || typeof it!=='object') return it;
+      const base = (it[key] != null) ? it[key] : '';
+      return { ...it, [key]: getTabLabel(ctx, it.id, base) };
+    });
+  }catch(e){
+    return items;
+  }
+}
+function applyMainTabLabels(){
+  try{
+    const defs = {
+      total:'스트리머',
+      board2:'현황판',
+      tier:'티어 순위표',
+      hist:'대전 기록',
+      ind:'개인전',
+      univm:'대학대전',
+      comp:'대회',
+      pro:'프로리그',
+      stats:'통계',
+      cal:'캘린더',
+      roulette:'룰렛',
+      cfg:'설정'
+    };
+    document.querySelectorAll('.tab').forEach(btn=>{
+      let id = '';
+      try{
+        const oc = btn.getAttribute('onclick') || '';
+        const m = oc.match(/sw\(['"]([^'"]+)['"]/);
+        id = m ? m[1] : '';
+      }catch(e){}
+      if(!id) return;
+      const label = getTabLabel('main', id, defs[id] || btn.textContent.trim());
+      let txtNode = null;
+      [...btn.childNodes].forEach(n=>{
+        if(txtNode) return;
+        if(n && n.nodeType === Node.TEXT_NODE && String(n.textContent||'').trim()) txtNode = n;
+      });
+      if(txtNode) txtNode.textContent = label;
+      else btn.appendChild(document.createTextNode(label));
+      try{ btn.dataset.tabLabel = label; }catch(e){}
+    });
+  }catch(e){}
+}
 function setTabLabel(ctx, id, val){
   try{
     const m = J(_TAB_LBL_KEY) || {};
@@ -30,6 +78,7 @@ function setTabLabel(ctx, id, val){
     else m[ctx][id] = v;
     _lsSave(_TAB_LBL_KEY, m);
   }catch(e){}
+  try{ if(typeof applyMainTabLabels==='function') applyMainTabLabels(); }catch(e){}
 }
 function resetTabLabels(ctx){
   try{
@@ -38,12 +87,37 @@ function resetTabLabels(ctx){
     delete m[ctx];
     _lsSave(_TAB_LBL_KEY, m);
   }catch(e){}
+  try{ if(typeof applyMainTabLabels==='function') applyMainTabLabels(); }catch(e){}
+}
+function exportTabLabels(){
+  try{
+    const raw = localStorage.getItem(_TAB_LBL_KEY);
+    const m = raw ? (J(_TAB_LBL_KEY) || {}) : {};
+    return JSON.stringify(m, null, 2);
+  }catch(e){
+    return '{}';
+  }
+}
+function importTabLabels(text){
+  try{
+    const obj = JSON.parse(String(text||'').trim() || '{}');
+    _lsSave(_TAB_LBL_KEY, obj && typeof obj==='object' ? obj : {});
+    try{ if(typeof applyMainTabLabels==='function') applyMainTabLabels(); }catch(e){}
+    return true;
+  }catch(e){
+    throw e;
+  }
 }
 try{
   window.getTabLabel = getTabLabel;
+  window.applyTabLabels = applyTabLabels;
+  window.applyMainTabLabels = applyMainTabLabels;
   window.setTabLabel = setTabLabel;
   window.resetTabLabels = resetTabLabels;
+  window.exportTabLabels = exportTabLabels;
+  window.importTabLabels = importTabLabels;
 }catch(e){}
+try{ setTimeout(()=>{ if(typeof applyMainTabLabels==='function') applyMainTabLabels(); }, 0); }catch(e){}
 
 /* ══════════════════════════════════════
    상세 상태 객체

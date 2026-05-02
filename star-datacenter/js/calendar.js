@@ -333,8 +333,9 @@ function rCal(C,T){
     {id:'comp', lbl:'🎖️ 대회'},
     {id:'sched',lbl:'📌 예정'},
   ];
+  const _filterBtns = (typeof applyTabLabels==='function') ? applyTabLabels('calendar', filterBtns) : filterBtns;
   const filterHTML=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px" class="no-export">
-    ${filterBtns.map(f=>`<button class="pill${calTypeFilter===f.id?' on':''}" onclick="calTypeFilter='${f.id}';render()">${f.lbl}</button>`).join('')}
+    ${_filterBtns.map(f=>`<button class="pill${calTypeFilter===f.id?' on':''}" onclick="calTypeFilter='${f.id}';render()">${f.lbl}</button>`).join('')}
   </div>`;
 
   C.innerHTML=`

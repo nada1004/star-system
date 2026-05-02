@@ -82,6 +82,7 @@ function rComp(C,T){
     ];
     if(compSub==='tiertour'||compSub==='input') compSub='league';
   }
+  subOpts = (typeof applyTabLabels==='function') ? applyTabLabels('comp', subOpts) : subOpts;
   // (요청사항) 대회 하위메뉴도 '필터'로 접기/펼치기
   if(_enableSubFilter && !_lockOpen){
     h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:-2px 0 6px;align-items:center">

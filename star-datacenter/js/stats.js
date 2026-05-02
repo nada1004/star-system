@@ -82,6 +82,11 @@ function rStats(C,T){
       ...(isLoggedIn?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
     ]},
   ];
+  try{
+    if(typeof applyTabLabels==='function'){
+      _statsGroups.forEach(g=>{ g.tabs = applyTabLabels('stats', g.tabs); });
+    }
+  }catch(e){}
   // 유효한 서브탭인지 확인(유효하지 않으면 overview로 복귀)
   const _allSubIds = new Set(_statsGroups.flatMap(g=>g.tabs.map(t=>t.id)));
   if(!_allSubIds.has(window.statsSub||'')){
@@ -102,7 +107,8 @@ function rStats(C,T){
   }
   _statsGroups.forEach(grp=>{
     const isOn=grp===_curGrp;
-    h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${grp.tabs[0].id}';localStorage.setItem('su_statsSub','${grp.tabs[0].id}');render()">${grp.label}</button>`;
+    const gLbl = (typeof getTabLabel==='function') ? getTabLabel('statsGroup', grp.label, grp.label) : grp.label;
+    h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${grp.tabs[0].id}';localStorage.setItem('su_statsSub','${grp.tabs[0].id}');render()">${gLbl}</button>`;
   });
   // (요청사항) 우측 끝 현재 선택 글자 숨김
   h+=`</div>`;

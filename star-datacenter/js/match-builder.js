@@ -142,6 +142,8 @@ function rMini(C,T){
   const subOpts = miniType==='civil'
     ? [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}]
     : [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`miniSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}];
+  const _miniCtx = miniType==='civil' ? 'mini' : 'mini';
+  const _miniSubOpts = (typeof applyTabLabels==='function') ? applyTabLabels(_miniCtx, subOpts) : subOpts;
   let h='';
   if(_enableSubFilter && !_lockOpen){
     h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
@@ -154,7 +156,7 @@ function rMini(C,T){
         + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
         + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
       : '';
-    h+=typeof stabsInline==='function' ? stabsInline(miniSub, subOpts, extra) : stabs(miniSub, subOpts) + (extra?`<div>${extra}</div>`:'');
+    h+=typeof stabsInline==='function' ? stabsInline(miniSub, _miniSubOpts, extra) : stabs(miniSub, _miniSubOpts) + (extra?`<div>${extra}</div>`:'');
   }
   const label = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
   const _miniTypeFilter = m=>(m.type||'mini')===miniType;
@@ -257,7 +259,11 @@ function rInd(C,T){
   if(window._indFilterOpen===undefined) window._indFilterOpen=_lockOpen;
   if(_lockOpen) window._indFilterOpen=true;
   if(!isLoggedIn && indSub==='input') indSub='records';
-  const subOpts=[
+  const subOpts=(typeof applyTabLabels==='function') ? applyTabLabels('ind',[
+    {id:'input',lbl:'📝 경기 입력',fn:`indSub='input';render()`},
+    {id:'rank',lbl:'🏆 순위',fn:`indSub='rank';render()`},
+    {id:'records',lbl:'📋 기록',fn:`indSub='records';render()`}
+  ]) : [
     {id:'input',lbl:'📝 경기 입력',fn:`indSub='input';render()`},
     {id:'rank',lbl:'🏆 순위',fn:`indSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`indSub='records';render()`}
@@ -983,9 +989,10 @@ function rGJ(C,T,proOnly,proInput){
   if(_lockOpen) window._gjFilterOpen=true;
   if(!isLoggedIn && gjSub==='input') gjSub='records';
   const showInput=!proOnly||proInput;
-  const subOpts=showInput
+  const subOpts = _gjCanInput()
     ?[{id:'input',lbl:'📝 경기 입력',fn:`gjSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}]
     :[{id:'rank',lbl:'🏆 순위',fn:`gjSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`gjSub='records';render()`}];
+  const _gjSubOpts = (typeof applyTabLabels==='function') ? applyTabLabels('gj', subOpts) : subOpts;
   if(!showInput&&gjSub==='input') gjSub='records';
   let h='';
   if(_enableSubFilter && !_lockOpen){
@@ -999,7 +1006,7 @@ function rGJ(C,T,proOnly,proInput){
         + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
         + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
       : '';
-    h+=typeof stabsInline==='function' ? stabsInline(gjSub, subOpts, extra) : stabs(gjSub, subOpts) + (extra?`<div>${extra}</div>`:'');
+    h+=typeof stabsInline==='function' ? stabsInline(gjSub, _gjSubOpts, extra) : stabs(gjSub, _gjSubOpts) + (extra?`<div>${extra}</div>`:'');
   }
   if(gjSub==='input'&&isLoggedIn&&showInput){
     h+=gjInputHTML();
@@ -1372,7 +1379,9 @@ function rCK(C,T){
   if(window._ckFilterOpen===undefined) window._ckFilterOpen=_lockOpen;
   if(_lockOpen) window._ckFilterOpen=true;
   if(!isLoggedIn && ckSub==='input') ckSub='records';
-  const subOpts=[{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`}];
+  const subOpts=(typeof applyTabLabels==='function')
+    ? applyTabLabels('ck', [{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`}])
+    : [{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`}];
   let h='';
   if(_enableSubFilter && !_lockOpen){
     h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
@@ -1578,7 +1587,9 @@ function rUnivM(C,T){
   if(window._univmFilterOpen===undefined) window._univmFilterOpen=_lockOpen;
   if(_lockOpen) window._univmFilterOpen=true;
   if(!isLoggedIn && univmSub==='input') univmSub='records';
-  const subOpts=[{id:'input',lbl:'📝 경기 입력',fn:`univmSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`univmSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`univmSub='records';openDetails={};render()`}];
+  const subOpts=(typeof applyTabLabels==='function')
+    ? applyTabLabels('univm', [{id:'input',lbl:'📝 경기 입력',fn:`univmSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`univmSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`univmSub='records';openDetails={};render()`}])
+    : [{id:'input',lbl:'📝 경기 입력',fn:`univmSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`univmSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`univmSub='records';openDetails={};render()`}];
   let h='';
   if(_enableSubFilter && !_lockOpen){
     h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
@@ -1682,7 +1693,11 @@ function rPro(C,T){
   if(window._proFilterOpen===undefined) window._proFilterOpen=_lockOpen;
   if(_lockOpen) window._proFilterOpen=true;
   if(!isLoggedIn && proSub==='input') proSub='records';
-  const subOpts=[
+  const subOpts=(typeof applyTabLabels==='function') ? applyTabLabels('pro', [
+    {id:'input',lbl:'📝 경기 입력',fn:`proSub='input';render()`},
+    {id:'rank',lbl:'🏆 순위',fn:`proSub='rank';render()`},
+    {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`}
+  ]) : [
     {id:'input',lbl:'📝 경기 입력',fn:`proSub='input';render()`},
     {id:'rank',lbl:'🏆 순위',fn:`proSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`}

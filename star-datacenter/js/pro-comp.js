@@ -244,9 +244,10 @@ function rProComp(C, T) {
       {id:'stats', lbl:'📈 통계'},
       ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 관리'}]:[]),
     ];
-    if (!subOpts.find(o=>o.id===proCompSub)) proCompSub = 'league';
+    const _subOpts = (typeof applyTabLabels==='function') ? applyTabLabels('procomp', subOpts) : subOpts;
+    if (!_subOpts.find(o=>o.id===proCompSub)) proCompSub = 'league';
     h += `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
-      ${subOpts.map(o=>`<button class="pill ${proCompSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}
+      ${_subOpts.map(o=>`<button class="pill ${proCompSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}
     </div>`;
 
     if (!tn && proCompSub !== 'grpedit') {
@@ -419,11 +420,14 @@ function proCompLeague(tn) {
       const _rb = p => p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 4px">${p.race}</span>`:'';
       const _univ = p => p&&p.univ?`<span style="font-size:9px;color:var(--gray-l);font-weight:600">${p.univ}</span>`:'';
       const _pcard = (p, isWin) => {
-        const photo = p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${isWin?'#16a34a':'var(--border)'};" onerror="this.style.display='none'">`
-          : `<div style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">👤</div>`;
-        return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;border-radius:12px;background:${isWin?'linear-gradient(135deg,#dcfce7,#bbf7d0)':isDone?'var(--surface)':'var(--blue-l)'};border:2px solid ${isWin?'#16a34a':'var(--border)'};min-width:100px">
+        const isLose = isDone && !isWin;
+        const canClick = !!(p && p.name);
+        const clickAttr = canClick ? `onclick="openPlayerModal('${escJS(p.name)}')" title="상세 보기"` : '';
+        const photo = p&&p.photo?`<img ${clickAttr} src="${toHttpsUrl(p.photo)}" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${isWin?'#16a34a':'var(--border)'};${isLose?'filter:grayscale(1);opacity:.58;':''};cursor:${canClick?'pointer':'default'}" onerror="this.style.display='none'">`
+          : `<div ${clickAttr} style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;${isLose?'opacity:.58;filter:grayscale(1);':''};cursor:${canClick?'pointer':'default'}">👤</div>`;
+        return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;border-radius:12px;background:${isWin?'linear-gradient(135deg,#dcfce7,#bbf7d0)':isDone?'#f8fafc':'var(--blue-l)'};border:2px solid ${isWin?'#16a34a':'var(--border)'};min-width:100px;${isLose?'opacity:.9;':''}">
           ${photo}
-          <span style="font-weight:${isWin?'900':'600'};font-size:13px;color:${isWin?'#16a34a':'var(--text)'};margin-top:2px;cursor:${p?'pointer':'default'}" onclick="${p?`openPlayerModal('${escJS(p.name)}')`:''}">${p?p.name:'미정'}</span>
+          <span style="font-weight:${isWin?'900':'600'};font-size:13px;color:${isWin?'#16a34a':isLose?'#94a3b8':'var(--text)'};margin-top:2px;cursor:${p?'pointer':'default'}" onclick="${p?`openPlayerModal('${escJS(p.name)}')`:''}">${p?p.name:'미정'}</span>
           ${_univ(p)}
           <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:center">${_rb(p)}${_tb(p)}</div>
         </div>`;
@@ -1074,15 +1078,16 @@ function proCompBracket(tn) {
   const rounds = tn.bracket;
   const _pc = name => players.find(x=>x.name===name)||null;
   const isTierTourney = tn.type === 'tier';
-  const _photo = (name, isWin, col) => {
+  const _photo = (name, isWin, isDone, col) => {
     const p=_pc(name);
+    const isLose = !!isDone && !isWin;
     if (!name||name==='TBD') return `<div style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#94a3b8">?</div>`;
     const ring = isWin?`box-shadow:0 0 0 2px ${col},0 0 0 4px ${col}33`:`border:2px solid #e2e8f0`;
     const safe = String(name).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const click = `onclick="openPlayerModal('${safe}')" style="cursor:pointer"`;
     return p&&p.photo
-      ?`<img ${click} src="${toHttpsUrl(p.photo)}" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;${ring}" onerror="this.style.display='none'">`
-      :`<div ${click} style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:${col};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;${ring}">${name[0]}</div>`;
+      ?`<img ${click} src="${toHttpsUrl(p.photo)}" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;${ring};${isLose?'filter:grayscale(1);opacity:.58;':''}" onerror="this.style.display='none'">`
+      :`<div ${click} style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:${isLose?'#cbd5e1':col};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:${isLose?'#64748b':'#fff'};${ring};${isLose?'opacity:.7;':''}">${name[0]}</div>`;
   };
   const _info = name => {
     const p=_pc(name); if(!p) return '';
@@ -1154,9 +1159,9 @@ function proCompBracket(tn) {
       h += `<div style="border-radius:12px;overflow:hidden;background:var(--white);box-shadow:${isDone?`0 4px 16px ${col}28,0 1px 4px rgba(0,0,0,.08)`:isLast?`0 2px 12px rgba(0,0,0,.1)`:'0 1px 6px rgba(0,0,0,.07)'};border:${isLast&&isDone?`2px solid ${col}66`:isDone?`1.5px solid ${col}44`:'1.5px solid #e2e8f0'}">
         <!-- A 선수 -->
         <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${aWin?col+'18':aTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${aWin?`border-left:3px solid ${col}`:''};${!isDone||aWin?'':'opacity:.55'}">
-          ${_photo(m.a, aWin, col)}
+          ${_photo(m.a, aWin, isDone, col)}
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:${aWin?'800':aTBD?'400':'550'};color:${aWin?col:aTBD?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.a&&!aTBD?'pointer':'default'}" onclick="${m.a&&!aTBD?`openPlayerModal('${(m.a||'').replace(/'/g,"\\'")}')`:''}">${m.a||'TBD'}</div>
+            <div style="font-size:12px;font-weight:${aWin?'800':aTBD?'400':'550'};color:${aWin?col:aTBD?'#94a3b8':isDone?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.a&&!aTBD?'pointer':'default'}" onclick="${m.a&&!aTBD?`openPlayerModal('${(m.a||'').replace(/'/g,"\\'")}')`:''}">${m.a||'TBD'}</div>
             ${!aTBD?_info(m.a):''}
           </div>
           ${showScore?`<span style="font-size:11px;font-weight:900;color:${aWin?col:'#94a3b8'};flex-shrink:0">${scoreA}</span>`:''}
@@ -1164,16 +1169,17 @@ function proCompBracket(tn) {
         </div>
         <!-- B 선수 -->
         <div style="padding:9px 12px;background:${bWin?col+'18':bTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${bWin?`border-left:3px solid ${col}`:''};${!isDone||bWin?'':'opacity:.55'}">
-          ${_photo(m.b, bWin, col)}
+          ${_photo(m.b, bWin, isDone, col)}
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:${bWin?'800':bTBD?'400':'550'};color:${bWin?col:bTBD?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.b&&!bTBD?'pointer':'default'}" onclick="${m.b&&!bTBD?`openPlayerModal('${(m.b||'').replace(/'/g,"\\'")}')`:''}">${m.b||'TBD'}</div>
+            <div style="font-size:12px;font-weight:${bWin?'800':bTBD?'400':'550'};color:${bWin?col:bTBD?'#94a3b8':isDone?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.b&&!bTBD?'pointer':'default'}" onclick="${m.b&&!bTBD?`openPlayerModal('${(m.b||'').replace(/'/g,"\\'")}')`:''}">${m.b||'TBD'}</div>
             ${!bTBD?_info(m.b):''}
           </div>
           ${showScore?`<span style="font-size:11px;font-weight:900;color:${bWin?col:'#94a3b8'};flex-shrink:0">${scoreB}</span>`:''}
           ${bWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
         <!-- 날짜/맵/동률 -->
-        ${(m.map||m.d)?`<div style="padding:3px 12px;font-size:11px;font-weight:600;color:var(--text3);background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px">${m.d?`<span>🗓️ ${m.d.slice(2).replace(/-/g,'.')}</span>`:''}${m.map?`<span>🗺️ ${m.map}</span>`:''}</div>`:''}
+        ${(m.map||m.d)?`<div style="padding:3px 12px;font-size:11px;font-weight:600;color:var(--text3);background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px;flex-wrap:wrap">${m.d?`<span>🗓️ ${m.d.slice(2).replace(/-/g,'.')}</span>`:''}${m.map?`<span>🗺️ ${m.map}</span>`:''}</div>`:''}
+        ${m.note?`<div style="padding:4px 12px;font-size:10px;color:#64748b;background:#f8fafc;border-top:1px solid #f1f5f9;line-height:1.5;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
         ${isTieSaved?`<div style="padding:3px 12px;font-size:11px;font-weight:900;color:#b45309;background:#fffbeb;border-top:1px solid #f1f5f9;display:flex;gap:8px;align-items:center">
           <span>⚖️ 동률 저장</span><span style="margin-left:auto">${scoreA}:${scoreB}</span>
         </div>`:''}
@@ -1211,7 +1217,7 @@ function proCompBracket(tn) {
       </div>
       <div style="border-radius:12px;overflow:hidden;background:var(--white);box-shadow:0 2px 10px rgba(0,0,0,.08);border:${tp.winner?`1.5px solid ${tpCol}44`:'1.5px solid #e2e8f0'};max-width:230px">
         <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${tpA?tpCol+'18':'#fff'};display:flex;align-items:center;gap:8px;${tpA?`border-left:3px solid ${tpCol}`:''};${tp.winner&&!tpA?'opacity:.55':''}">
-          ${_photo(tp.a, tpA, tpCol)}
+          ${_photo(tp.a, tpA, !!tp.winner, tpCol)}
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;font-weight:${tpA?'800':'550'};color:${tpA?tpCol:'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${tp.a&&tp.a!=='TBD'?'pointer':'default'}" onclick="${tp.a&&tp.a!=='TBD'?`openPlayerModal('${(tp.a||'').replace(/'/g,"\\'")}')`:''}">${tp.a||'TBD'}</div>
             ${tp.a&&tp.a!=='TBD'?_info(tp.a):''}
@@ -1219,7 +1225,7 @@ function proCompBracket(tn) {
           ${tpB?`<span style="font-size:9px;font-weight:900;color:#fff;background:${tpCol};padding:2px 7px;border-radius:6px;flex-shrink:0">🏆 3위</span>`:''}
         </div>
         <div style="padding:9px 12px;background:${tpB?tpCol+'18':'#fff'};display:flex;align-items:center;gap:8px;${tpB?`border-left:3px solid ${tpCol}`:''};${tp.winner&&!tpB?'opacity:.55':''}">
-          ${_photo(tp.b, tpB, tpCol)}
+          ${_photo(tp.b, tpB, !!tp.winner, tpCol)}
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;font-weight:${tpB?'800':'550'};color:${tpB?tpCol:'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${tp.b&&tp.b!=='TBD'?'pointer':'default'}" onclick="${tp.b&&tp.b!=='TBD'?`openPlayerModal('${(tp.b||'').replace(/'/g,"\\'")}')`:''}">${tp.b||'TBD'}</div>
             ${tp.b&&tp.b!=='TBD'?_info(tp.b):''}
@@ -1469,12 +1475,14 @@ function proCompTourMatchInput(tn){
     const _rb = p => p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 4px">${p.race}</span>`:'';
     const _univ = p => p&&p.univ?`<span style="font-size:9px;color:var(--gray-l);font-weight:600">${p.univ}</span>`:'';
     const _pcard = (p, name, isWin) => {
-      const photo = p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${isWin?'#16a34a':'var(--border)'};" onerror="this.style.display='none'">`
-        : `<div style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">👤</div>`;
+      const isLose = isDone && !isWin;
       const canClick = !!name;
-      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;border-radius:12px;background:${isWin?'linear-gradient(135deg,#dcfce7,#bbf7d0)':isDone?'var(--surface)':'var(--blue-l)'};border:2px solid ${isWin?'#16a34a':'var(--border)'};min-width:100px">
+      const photoClick = canClick ? `onclick="openPlayerModal('${escJS(name)}')" title="상세 보기"` : '';
+      const photo = p&&p.photo?`<img ${photoClick} src="${toHttpsUrl(p.photo)}" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${isWin?'#16a34a':'var(--border)'};${isLose?'filter:grayscale(1);opacity:.58;':''};cursor:${canClick?'pointer':'default'}" onerror="this.style.display='none'">`
+        : `<div ${photoClick} style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:${isLose?'#cbd5e1':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:${isLose?'#64748b':'inherit'};${isLose?'opacity:.7;':''};cursor:${canClick?'pointer':'default'}">👤</div>`;
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;border-radius:12px;background:${isWin?'linear-gradient(135deg,#dcfce7,#bbf7d0)':isDone?'#f8fafc':'var(--blue-l)'};border:2px solid ${isWin?'#16a34a':'var(--border)'};min-width:100px;${isLose?'opacity:.9;':''}">
         ${photo}
-        <span style="font-weight:${isWin?'900':'600'};font-size:13px;color:${isWin?'#16a34a':'var(--text)'};margin-top:2px;cursor:${canClick?'pointer':'default'};text-decoration:${canClick?'underline dotted':'none'}" onclick="${canClick?`openPlayerModal('${escJS(name)}')`:''}">${name||'미정'}</span>
+        <span style="font-weight:${isWin?'900':'600'};font-size:13px;color:${isWin?'#16a34a':isLose?'#94a3b8':'var(--text)'};margin-top:2px;cursor:${canClick?'pointer':'default'};text-decoration:${canClick?'underline dotted':'none'}" onclick="${canClick?`openPlayerModal('${escJS(name)}')`:''}">${name||'미정'}</span>
         ${_univ(p)}
         <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:center">${_rb(p)}${_tb(p)}</div>
       </div>`;
@@ -1497,6 +1505,7 @@ function proCompTourMatchInput(tn){
           </div>
           <div style="font-size:10px;font-weight:700;color:#16a34a;margin-top:4px">${aWin?m.a+' 승':bWin?m.b+' 승':'결과없음'}</div>
           ${m.map?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">🗺️ ${m.map}</div>`:''}
+          ${m.note?`<div style="font-size:10px;color:#94a3b8;margin-top:2px;max-width:180px;line-height:1.45;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
           `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${col}">VS</div>`}
         </div>
         ${_pcard(pb, m.b, bWin)}
@@ -1564,6 +1573,8 @@ window.openPcStageRecModal = function(tnId, round, idx){
       </select>
       <div style="font-size:12px;font-weight:800;color:var(--text2)">맵</div>
       <input id="_pcsr_map" type="text" value="${(m.map||'').replace(/\"/g,'&quot;')}" placeholder="맵(선택)" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2)">참고</div>
+      <input id="_pcsr_note" type="text" value="${(m.note||'').replace(/\"/g,'&quot;')}" placeholder="참고 메모(선택)" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px">
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn btn-b" style="flex:1" onclick="pcSaveStageRec('${tnId}','${r}',${idx},'${mid.replace(/'/g,"\\'")}')">✅ 저장</button>
@@ -1583,6 +1594,7 @@ window.pcSaveStageRec = function(tnId, round, idx, mid){
   const bRaw = (document.getElementById('_pcsr_b')?.value || '').trim();
   const w = document.getElementById('_pcsr_w')?.value || '';
   const map = (document.getElementById('_pcsr_map')?.value || '').trim();
+  const note = (document.getElementById('_pcsr_note')?.value || '').trim();
   if(!aRaw || !bRaw) return alert('A/B 선수명을 입력하세요.');
   const aInfo = (typeof window.resolvePlayerName==='function') ? window.resolvePlayerName(aRaw) : {name:aRaw,candidates:[]};
   const bInfo = (typeof window.resolvePlayerName==='function') ? window.resolvePlayerName(bRaw) : {name:bRaw,candidates:[]};
@@ -1602,7 +1614,7 @@ window.pcSaveStageRec = function(tnId, round, idx, mid){
   }catch(e){}
   const prev = (idx>=0 && arr[idx]) ? arr[idx] : null;
   if(prev && prev.winner && prev._id) try{ _revertProMatch(prev._id); }catch(e){}
-  const obj = {a,b,winner:w,d,map,_id:mid};
+  const obj = {a,b,winner:w,d,map,note,_id:mid};
   if(idx>=0 && arr[idx]) arr[idx]=obj;
   else arr.push(obj);
   if(w) try{ applyGameResult(w==='A'?a:b, w==='A'?b:a, d, map, mid, '', '', '프로리그대회'); }catch(e){}
@@ -1671,13 +1683,43 @@ function _pcStageBuildBulkResults(text, defaultDate){
 
     let lineForParse = trimmed;
     let lineDate = String(defaultDate||'');
+    let lineNote = '';
+    let directTsv = null;
     try{
       const cols = trimmed.split('\t').map(x=>x.trim());
       if(cols.length >= 4 && /^\d{4}-\d{2}-\d{2}$/.test(cols[0]||'')){
         lineDate = cols[0] || lineDate;
-        lineForParse = `${cols[1]||''} ${cols[2]||''} ${cols[3]||''}`.trim();
+        const rawW = String(cols[1]||'').trim();
+        const rawL = String(cols[2]||'').trim();
+        const rawMap = String(cols[3]||'').trim() || '-';
+        lineNote = cols.slice(4).filter(Boolean).join(' · ');
+        if(rawW && rawL){
+          const wName = _pcStageResolveAliasName(rawW);
+          const lName = _pcStageResolveAliasName(rawL);
+          const wMatch = (typeof findPlayerByPartialName === 'function') ? findPlayerByPartialName(wName) : {player:null,candidates:[],similar:[]};
+          const lMatch = (typeof findPlayerByPartialName === 'function') ? findPlayerByPartialName(lName) : {player:null,candidates:[],similar:[]};
+          directTsv = {
+            d: lineDate || String(defaultDate||''),
+            wName,
+            lName,
+            map: rawMap,
+            note: lineNote,
+            wPlayer: wMatch.player || null,
+            lPlayer: lMatch.player || null,
+            wCandidates: wMatch.candidates || [],
+            lCandidates: lMatch.candidates || [],
+            wSimilar: wMatch.similar || [],
+            lSimilar: lMatch.similar || []
+          };
+        }
+        lineForParse = `${rawW} ${rawL} ${rawMap}`.trim();
       }
     }catch(e){}
+
+    if(directTsv){
+      out.push(directTsv);
+      return;
+    }
 
     let parsed = null;
     try{
@@ -1695,6 +1737,7 @@ function _pcStageBuildBulkResults(text, defaultDate){
           wName,
           lName,
           map: parsed.map || '-',
+          note: lineNote || '',
           wPlayer: wMatch.player || null,
           lPlayer: lMatch.player || null,
           wCandidates: wMatch.candidates || [],
@@ -1706,7 +1749,7 @@ function _pcStageBuildBulkResults(text, defaultDate){
       }
     }
 
-    const parts = trimmed.split(/[\s\t]+/).filter(Boolean);
+    const parts = String(lineForParse||trimmed).split(/[\s\t]+/).filter(Boolean);
     if(parts.length < 2) return;
     const wName = _pcStageResolveAliasName(parts[0]);
     const lName = _pcStageResolveAliasName(parts[1]);
@@ -1719,6 +1762,7 @@ function _pcStageBuildBulkResults(text, defaultDate){
       wName,
       lName,
       map,
+      note: lineNote || '',
       wPlayer: wMatch.player || null,
       lPlayer: lMatch.player || null,
       wCandidates: wMatch.candidates || [],
@@ -1738,7 +1782,8 @@ function _pcStageParseBulkEntries(text, defaultDate){
       d: r.d || String(defaultDate||''),
       wName: r.wPlayer.name,
       lName: r.lPlayer.name,
-      map: r.map || '-'
+      map: r.map || '-',
+      note: r.note || ''
     }));
 }
 
@@ -1806,6 +1851,7 @@ function _renderPcStageBulkPreview(tnId, round){
       <th style="padding:5px 8px;text-align:left;font-weight:700;color:var(--text3)">패자</th>
       <th style="padding:5px 6px;text-align:left;font-weight:700;color:var(--text3)">맵</th>
       <th style="padding:5px 6px;text-align:left;font-weight:700;color:var(--text3)">날짜</th>
+      <th style="padding:5px 6px;text-align:left;font-weight:700;color:var(--text3)">참고</th>
       <th style="padding:5px 4px;width:28px"></th>
     </tr></thead><tbody>`;
   results.forEach((r, i) => {
@@ -1817,6 +1863,9 @@ function _renderPcStageBulkPreview(tnId, round){
     const mapOpts = `<option value="-">-</option>` + allMaps.map(m=>`<option value="${m}" ${m===r.map?'selected':''}>${m}</option>`).join('') + `<option value="__c__">직접입력</option>`;
     const mapSel = `<select onchange="if(this.value==='__c__'){const v=prompt('맵 이름:');if(v){window._pcStageBulkResults[${i}].map=v;_renderPcStageBulkPreview(${JSON.stringify(tnId)},${JSON.stringify(round)})}}else{window._pcStageBulkResults[${i}].map=this.value}" style="width:75px;border:1px solid var(--border2);border-radius:5px;padding:2px 3px;font-size:10px">${mapOpts}</select>`;
     const dateInp = `<input type="date" value="${(r.d||'').replace(/"/g,'&quot;')}" onchange="window._pcStageBulkResults[${i}].d=this.value;_renderPcStageBulkPreview(${JSON.stringify(tnId)},${JSON.stringify(round)})" style="width:132px;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;font-size:10px">`;
+    const noteCell = r.note
+      ? `<div style="max-width:220px;font-size:10px;line-height:1.5;color:var(--gray-l);white-space:normal;word-break:break-word">${String(r.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
+      : `<span style="font-size:10px;color:#cbd5e1">-</span>`;
     const flipBtn = `<button onclick="pcStageBulkFlip(${i},${JSON.stringify(tnId)},${JSON.stringify(round)})" title="승패 교체" style="padding:2px 5px;border-radius:4px;border:1px solid #ddd6fe;background:#f5f3ff;font-size:12px;cursor:pointer">⇄</button>`;
     const status = ok
       ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:1px 4px;border-radius:6px">✓</span>`
@@ -1829,6 +1878,7 @@ function _renderPcStageBulkPreview(tnId, round){
       <td style="padding:5px 6px">${lCell}</td>
       <td style="padding:5px 5px">${mapSel}</td>
       <td style="padding:5px 5px">${dateInp}</td>
+      <td style="padding:5px 6px">${noteCell}</td>
       <td style="padding:5px 4px;text-align:center">${status}</td>
     </tr>`;
   });
@@ -1917,7 +1967,8 @@ window.pcApplyStageBulkPaste = function(tnId, round){
     d: x.d || d,
     wName: x.wPlayer.name,
     lName: x.lPlayer.name,
-    map: x.map || '-'
+    map: x.map || '-',
+    note: x.note || ''
   })) : _pcStageParseBulkEntries(text, d));
   if(!entries.length){
     alert('인식된 경기 결과가 없습니다.\n일반 경기 결과 자동인식 형식이나 "승자 패자 맵" 형식으로 입력해주세요.');
@@ -1928,10 +1979,11 @@ window.pcApplyStageBulkPaste = function(tnId, round){
     const wName = entry.wName;
     const lName = entry.lName;
     const map = entry.map || '-';
+    const note = entry.note || '';
     const recDate = entry.d || d;
     const a=wName, b=lName, winner='A';
     const mid=`ptr_${tnId}_${r}_${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}`;
-    tn.stageRecords[r].push({a,b,winner,d:recDate,map,_id:mid});
+    tn.stageRecords[r].push({a,b,winner,d:recDate,map,note,_id:mid});
     try{ applyGameResult(wName, lName, recDate, map, mid, '', '', '프로리그대회'); }catch(e){}
     added++;
   });
@@ -3571,7 +3623,8 @@ function _proCompLeaguePasteApplyLogic(savable) {
     const aName = r.wPlayer.name;
     const bName = r.lPlayer.name;
     const mapVal = r.map&&r.map!=='-' ? r.map : '';
-    const newObj = {a:aName, b:bName, winner:'A', d, map:mapVal, _id:newMid};
+      const noteVal = r.note || '';
+      const newObj = {a:aName, b:bName, winner:'A', d, map:mapVal, note:noteVal, _id:newMid};
     grp.matches.push(newObj);
     if (recTarget === 'pro') {
       applyGameResult(aName, bName, d, mapVal, newMid, '', '', '프로리그대회');
@@ -3580,7 +3633,7 @@ function _proCompLeaguePasteApplyLogic(savable) {
       const sid = `ptr_${tnId}_${recRound}_${newMid}`;
       newObj._stageRecId = sid;
       newObj._stageRecRound = recRound;
-      tn.stageRecords[recRound].push({a:aName,b:bName,winner:'A',d,map:mapVal,_id:sid});
+        tn.stageRecords[recRound].push({a:aName,b:bName,winner:'A',d,map:mapVal,note:noteVal,_id:sid});
       applyGameResult(aName, bName, d, mapVal, sid, '', '', '프로리그대회');
     } // none: 반영 안함
     added++;
@@ -3881,7 +3934,8 @@ function proCompAutoApply(tnId, gi) {
     const mapVal = r.map && r.map !== '-' ? r.map : '';
     const dVal = (r._lineDate && /^\d{4}-\d{2}-\d{2}$/.test(r._lineDate)) ? r._lineDate : defDate;
     const aName = r.wPlayer.name, bName = r.lPlayer.name;
-    const newObj = { a: aName, b: bName, winner: 'A', d: dVal, map: mapVal, _id: mid };
+    const noteVal = r.note || '';
+    const newObj = { a: aName, b: bName, winner: 'A', d: dVal, map: mapVal, note: noteVal, _id: mid };
     grp.matches.push(newObj);
     if (recTarget === 'pro') {
       applyGameResult(aName, bName, dVal, mapVal, mid, '', '', '프로리그대회');
@@ -3890,7 +3944,7 @@ function proCompAutoApply(tnId, gi) {
       const sid = `ptr_${tnId}_${recRound}_${mid}`;
       newObj._stageRecId = sid;
       newObj._stageRecRound = recRound;
-      tn.stageRecords[recRound].push({a:aName,b:bName,winner:'A',d:dVal,map:mapVal,_id:sid});
+      tn.stageRecords[recRound].push({a:aName,b:bName,winner:'A',d:dVal,map:mapVal,note:noteVal,_id:sid});
       applyGameResult(aName, bName, dVal, mapVal, sid, '', '', '프로리그대회');
     }
     added++;
@@ -4040,7 +4094,8 @@ function proCompSaveMatch() {
         _revertProMatch(m._id);
       }
     }
-    m.a = aVal; m.b = bVal; m.d = dVal; m.map = mapVal; m.winner = winVal;
+    const noteVal = (document.getElementById('pm_note')?.value || m.note || '').trim();
+    m.a = aVal; m.b = bVal; m.d = dVal; m.map = mapVal; m.note = noteVal; m.winner = winVal;
     if (winVal) {
       if (recTarget === 'pro') {
         applyGameResult(winVal==='A'?aVal:bVal, winVal==='A'?bVal:aVal, dVal, mapVal, m._id, '', '', '프로리그대회');
@@ -4052,7 +4107,7 @@ function proCompSaveMatch() {
         m._stageRecRound = recRound;
         // 기존 동일 id 있으면 업데이트, 없으면 추가
         const si = tn.stageRecords[recRound].findIndex(x=>x && x._id===sid);
-        const recObj = {a:aVal,b:bVal,winner:winVal,d:dVal,map:mapVal,_id:sid};
+        const recObj = {a:aVal,b:bVal,winner:winVal,d:dVal,map:mapVal,note:noteVal,_id:sid};
         if(si>=0) tn.stageRecords[recRound][si]=recObj;
         else tn.stageRecords[recRound].push(recObj);
         applyGameResult(winVal==='A'?aVal:bVal, winVal==='A'?bVal:aVal, dVal, mapVal, sid, '', '', '프로리그대회');

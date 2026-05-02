@@ -10,8 +10,11 @@ function _mergedSubBar(tabs, curSub, setFn) {
 }
 
 function rMergedInd(C, T) {
+  const tabs = (typeof applyTabLabels==='function')
+    ? applyTabLabels('mergedInd', [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 끝장전'}])
+    : [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 끝장전'}];
   const bar = _mergedSubBar(
-    [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 끝장전'}],
+    tabs,
     _mergedIndSub, '_mergedIndSub'
   );
   const sub = document.createElement('div');
@@ -22,8 +25,11 @@ function rMergedInd(C, T) {
 }
 
 function rMergedUnivM(C, T) {
+  const tabs = (typeof applyTabLabels==='function')
+    ? applyTabLabels('mergedUniv', [{id:'civil',lbl:'⚔️ 시빌워'},{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'},{id:'univck',lbl:'🤝 대학CK'}])
+    : [{id:'civil',lbl:'⚔️ 시빌워'},{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'},{id:'univck',lbl:'🤝 대학CK'}];
   const bar = _mergedSubBar(
-    [{id:'civil',lbl:'⚔️ 시빌워'},{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'},{id:'univck',lbl:'🤝 대학CK'}],
+    tabs,
     _mergedUnivSub, '_mergedUnivSub'
   );
   const sub = document.createElement('div');
@@ -36,8 +42,11 @@ function rMergedUnivM(C, T) {
 }
 
 function rMergedComp(C, T) {
+  const tabs = (typeof applyTabLabels==='function')
+    ? applyTabLabels('mergedComp', [{id:'comp',lbl:'🎖️ 대회'},{id:'tiertour',lbl:'🎯 티어대회'}])
+    : [{id:'comp',lbl:'🎖️ 대회'},{id:'tiertour',lbl:'🎯 티어대회'}];
   const bar = _mergedSubBar(
-    [{id:'comp',lbl:'🎖️ 대회'},{id:'tiertour',lbl:'🎯 티어대회'}],
+    tabs,
     _mergedCompSub, '_mergedCompSub'
   );
   const sub = document.createElement('div');
@@ -53,8 +62,11 @@ function rMergedComp(C, T) {
 }
 
 function rMergedPro(C, T) {
+  const tabs = (typeof applyTabLabels==='function')
+    ? applyTabLabels('mergedPro', [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 끝장전'},{id:'comp',lbl:'🎖️ 대회'}])
+    : [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 끝장전'},{id:'comp',lbl:'🎖️ 대회'}];
   const bar = _mergedSubBar(
-    [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 끝장전'},{id:'comp',lbl:'🎖️ 대회'}],
+    tabs,
     _mergedProSub, '_mergedProSub'
   );
   const sub = document.createElement('div');

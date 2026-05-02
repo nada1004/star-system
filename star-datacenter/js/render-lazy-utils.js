@@ -60,10 +60,10 @@ async function _ensureRouletteLoaded(){
 }
 async function _ensureStatsLoaded(){
   await window.ensureChartJS();
-  await _loadScriptOnce('js/stats.js?v=20260502-02');
+  await _loadScriptOnce('js/stats.js?v=20260502-04');
 }
 async function _ensureCalendarLoaded(){
-  await _loadScriptOnce('js/calendar.js?v=20260422-01');
+  await _loadScriptOnce('js/calendar.js?v=20260502-01');
 }
 try{
   const _prewarmCalendar = ()=>{ try{ _ensureCalendarLoaded(); }catch(e){} };
@@ -79,7 +79,7 @@ async function _ensureVoteLoaded(){
 }
 async function _ensureCloudBoardLoaded(){
   await window.ensureHtml2Canvas();
-  await _loadScriptOnce('js/sync/cloud-apply.js?v=20260502-01');
+  await _loadScriptOnce('js/sync/cloud-apply.js?v=20260502-03');
   await _loadScriptOnce('js/sync/cloud-status.js?v=20260502-01');
   await _loadScriptOnce('js/cloud-board.js?v=20260502-03');
 }
