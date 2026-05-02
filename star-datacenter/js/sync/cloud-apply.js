@@ -28,6 +28,240 @@ function _decompressCloudData(d) {
   return d;
 }
 
+function _pcMergeById(remoteArr, localArr, keyFn){
+  const out = [];
+  const seen = new Set();
+  const keyOf = (v, i)=>{
+    try{
+      return String(keyFn ? keyFn(v, i) : (v && v._id) || i);
+    }catch(e){
+      return String(i);
+    }
+  };
+  (Array.isArray(remoteArr) ? remoteArr : []).forEach((v, i)=>{
+    out.push(v);
+    seen.add(keyOf(v, i));
+  });
+  (Array.isArray(localArr) ? localArr : []).forEach((v, i)=>{
+    const k = keyOf(v, i);
+    if(seen.has(k)) return;
+    out.push(v);
+    seen.add(k);
+  });
+  return out;
+}
+
+function _mergeRecordLike(remoteItem, localItem){
+  const r = { ...(remoteItem||{}) };
+  const l = localItem || {};
+  const keepIfEmpty = ['a','b','wName','lName','d','map','memo','note','n','compName','teamALabel','teamBLabel','winner','stage','hostUniv','u','type','rndLabel'];
+  keepIfEmpty.forEach(k=>{
+    if((r[k]===undefined || r[k]===null || r[k]==='' ) && l[k]!==undefined && l[k]!==null && l[k]!=='') r[k] = l[k];
+  });
+  ['sa','sb'].forEach(k=>{
+    if((r[k]===undefined || r[k]===null) && l[k]!==undefined && l[k]!==null) r[k] = l[k];
+  });
+  if((!Array.isArray(r.sets) || !r.sets.length) && Array.isArray(l.sets) && l.sets.length) r.sets = l.sets;
+  if((!Array.isArray(r.games) || !r.games.length) && Array.isArray(l.games) && l.games.length) r.games = l.games;
+  if((!Array.isArray(r.teamAMembers) || !r.teamAMembers.length) && Array.isArray(l.teamAMembers) && l.teamAMembers.length) r.teamAMembers = l.teamAMembers;
+  if((!Array.isArray(r.teamBMembers) || !r.teamBMembers.length) && Array.isArray(l.teamBMembers) && l.teamBMembers.length) r.teamBMembers = l.teamBMembers;
+  if((!Array.isArray(r.teamA) || !r.teamA.length) && Array.isArray(l.teamA) && l.teamA.length) r.teamA = l.teamA;
+  if((!Array.isArray(r.teamB) || !r.teamB.length) && Array.isArray(l.teamB) && l.teamB.length) r.teamB = l.teamB;
+  if((!r.univWins || !Object.keys(r.univWins||{}).length) && l.univWins) r.univWins = l.univWins;
+  if((!r.univLosses || !Object.keys(r.univLosses||{}).length) && l.univLosses) r.univLosses = l.univLosses;
+  return r;
+}
+
+function _mergeRecordCollection(remoteArr, localArr, keyFn){
+  const keyOf = (m, i)=>{
+    try{
+      return String(keyFn ? keyFn(m, i) : (m && (m._id || m.sid || `${m.d||''}|${m.a||m.wName||''}|${m.b||m.lName||''}|${m.map||''}`)) || i);
+    }catch(e){
+      return String(i);
+    }
+  };
+  const localMap = new Map();
+  (Array.isArray(localArr) ? localArr : []).forEach((m, i)=> localMap.set(keyOf(m, i), m));
+  const out = [];
+  const seen = new Set();
+  (Array.isArray(remoteArr) ? remoteArr : []).forEach((m, i)=>{
+    const k = keyOf(m, i);
+    out.push(_mergeRecordLike(m, localMap.get(k)));
+    seen.add(k);
+  });
+  (Array.isArray(localArr) ? localArr : []).forEach((m, i)=>{
+    const k = keyOf(m, i);
+    if(seen.has(k)) return;
+    out.push(m);
+  });
+  return out;
+}
+
+function _pcMergeStageRecordArrays(remoteArr, localArr){
+  const keyFn = (m, i)=> (m && (m._id || `${m.a||''}|${m.b||''}|${m.d||''}|${m.map||''}|${m.winner||''}`)) || i;
+  return _pcMergeById(remoteArr, localArr, keyFn);
+}
+
+function _pcMergeGroupMatches(remoteArr, localArr){
+  const keyFn = (m, i)=> (m && (m._id || `${m.a||''}|${m.b||''}|${m.d||''}|${m.map||''}|${m.winner||''}`)) || i;
+  return _pcMergeById(remoteArr, localArr, keyFn);
+}
+
+function _pcMergeBracket(remoteBracket, localBracket){
+  const rB = _fbArr(remoteBracket, []);
+  const lB = _fbArr(localBracket, []);
+  const len = Math.max(rB.length, lB.length);
+  const out = [];
+  for(let ri=0; ri<len; ri++){
+    const rr = _fbArr(rB[ri], []);
+    const lr = _fbArr(lB[ri], []);
+    const mlen = Math.max(rr.length, lr.length);
+    const row = [];
+    for(let mi=0; mi<mlen; mi++){
+      const rm = rr[mi];
+      const lm = lr[mi];
+      if(!rm && lm){ row.push(lm); continue; }
+      if(rm && !lm){ row.push(rm); continue; }
+      if(!rm && !lm){ row.push(null); continue; }
+      const merged = { ...(rm||{}) };
+      if((!merged.a || merged.a==='TBD') && lm && lm.a) merged.a = lm.a;
+      if((!merged.b || merged.b==='TBD') && lm && lm.b) merged.b = lm.b;
+      if(!merged.winner && lm && lm.winner) merged.winner = lm.winner;
+      if(!merged.d && lm && lm.d) merged.d = lm.d;
+      if(!merged.map && lm && lm.map) merged.map = lm.map;
+      if((!Array.isArray(merged._games) || !merged._games.length) && lm && Array.isArray(lm._games) && lm._games.length) merged._games = lm._games;
+      row.push(merged);
+    }
+    out.push(row.filter(v=>v!=null));
+  }
+  return out;
+}
+
+function _mergeGenericGroups(remoteGroups, localGroups){
+  const rg = _fbArr(remoteGroups, []);
+  const lg = _fbArr(localGroups, []);
+  const out = rg.map((g, gi)=>{
+    const gl = lg[gi] || lg.find(x=>x && g && x.name===g.name) || {};
+    const mg = { ...(g||{}) };
+    mg.univs = _pcMergeById(_fbArr(mg.univs, []), _fbArr(gl.univs, []), (v,i)=>String(v||i));
+    mg.players = _pcMergeById(_fbArr(mg.players, []), _fbArr(gl.players, []), (v,i)=>String(v||i));
+    mg.matches = _mergeRecordCollection(_fbArr(mg.matches, []), _fbArr(gl.matches, []));
+    return mg;
+  });
+  lg.forEach((g, gi)=>{
+    const exists = out.some((x, i)=> i===gi || (x && g && x.name && g.name && x.name===g.name));
+    if(!exists) out.push(g);
+  });
+  return out;
+}
+
+function _mergeBracketDetailObject(remoteObj, localObj){
+  const r = (remoteObj && typeof remoteObj==='object') ? remoteObj : {};
+  const l = (localObj && typeof localObj==='object') ? localObj : {};
+  const out = { ...r };
+  Object.keys(l).forEach(k=>{
+    if(!out[k]) out[k] = l[k];
+    else out[k] = _mergeRecordLike(out[k], l[k]);
+  });
+  return out;
+}
+
+function _mergeSingleTourney(remoteTn, localTn){
+  const rt = { ...(remoteTn||{}) };
+  const lt = localTn || {};
+  if((!rt.name) && lt.name) rt.name = lt.name;
+  if((!rt.type) && lt.type) rt.type = lt.type;
+  if((!rt.createdAt) && lt.createdAt) rt.createdAt = lt.createdAt;
+  rt.groups = _mergeGenericGroups(rt.groups, lt.groups);
+  if(rt.bracket || lt.bracket){
+    const rb = (rt.bracket && typeof rt.bracket==='object') ? { ...rt.bracket } : {};
+    const lb = (lt.bracket && typeof lt.bracket==='object') ? lt.bracket : {};
+    if((!rb.manualMatches || !rb.manualMatches.length) && Array.isArray(lb.manualMatches) && lb.manualMatches.length) rb.manualMatches = lb.manualMatches;
+    else rb.manualMatches = _mergeRecordCollection(_fbArr(rb.manualMatches, []), _fbArr(lb.manualMatches, []));
+    rb.matchDetails = _mergeBracketDetailObject(rb.matchDetails, lb.matchDetails);
+    Object.keys(lb).forEach(k=>{
+      if(rb[k]===undefined || rb[k]===null || rb[k]==='') rb[k] = lb[k];
+    });
+    rt.bracket = rb;
+  }
+  return rt;
+}
+
+function _mergeTourneysRemoteWithLocal(remoteArr, localArr){
+  const remote = _fbArr(remoteArr, []);
+  const local = _fbArr(localArr, []);
+  const out = remote.map(rt=>{
+    const id = String(rt && rt.id || '');
+    const lt = local.find(x=>String(x && x.id || '')===id);
+    return lt ? _mergeSingleTourney(rt, lt) : rt;
+  });
+  local.forEach(lt=>{
+    const id = String(lt && lt.id || '');
+    if(!out.some(rt=>String(rt && rt.id || '')===id)) out.push(lt);
+  });
+  return out;
+}
+
+function _mergeSingleProTourney(remoteTn, localTn){
+  const rt = { ...(remoteTn||{}) };
+  const lt = localTn || {};
+  if((!rt.name) && lt.name) rt.name = lt.name;
+  if((!rt.createdAt) && lt.createdAt) rt.createdAt = lt.createdAt;
+
+  const rGroups = _fbArr(rt.groups, []);
+  const lGroups = _fbArr(lt.groups, []);
+  rt.groups = rGroups.map((g, gi)=>{
+    const lg = lGroups[gi] || lGroups.find(x=>x && g && x.name===g.name) || {};
+    const mg = { ...(g||{}) };
+    mg.players = _pcMergeById(_fbArr(g && g.players, []), _fbArr(lg.players, []), (v,i)=>String(v||i));
+    mg.univs = _pcMergeById(_fbArr(g && g.univs, []), _fbArr(lg.univs, []), (v,i)=>String(v||i));
+    mg.matches = _pcMergeGroupMatches(_fbArr(g && g.matches, []), _fbArr(lg.matches, []));
+    return mg;
+  });
+  lGroups.forEach((lg, gi)=>{
+    const exists = rt.groups.some((g, i)=> i===gi || (g && lg && g.name && lg.name && g.name===lg.name));
+    if(!exists) rt.groups.push(lg);
+  });
+
+  const rStage = (rt.stageRecords && typeof rt.stageRecords==='object') ? rt.stageRecords : {};
+  const lStage = (lt.stageRecords && typeof lt.stageRecords==='object') ? lt.stageRecords : {};
+  const rounds = new Set([...Object.keys(rStage), ...Object.keys(lStage)]);
+  rt.stageRecords = {};
+  rounds.forEach(r=>{
+    rt.stageRecords[r] = _pcMergeStageRecordArrays(_fbArr(rStage[r], []), _fbArr(lStage[r], []));
+  });
+
+  rt.bracket = _pcMergeBracket(rt.bracket, lt.bracket);
+  if(!rt.thirdPlace && lt.thirdPlace) rt.thirdPlace = lt.thirdPlace;
+  else if(rt.thirdPlace && lt.thirdPlace){
+    const tp = { ...rt.thirdPlace };
+    if((!tp.a || tp.a==='TBD') && lt.thirdPlace.a) tp.a = lt.thirdPlace.a;
+    if((!tp.b || tp.b==='TBD') && lt.thirdPlace.b) tp.b = lt.thirdPlace.b;
+    if(!tp.winner && lt.thirdPlace.winner) tp.winner = lt.thirdPlace.winner;
+    if(!tp.d && lt.thirdPlace.d) tp.d = lt.thirdPlace.d;
+    if(!tp.map && lt.thirdPlace.map) tp.map = lt.thirdPlace.map;
+    if((!Array.isArray(tp._games) || !tp._games.length) && Array.isArray(lt.thirdPlace._games) && lt.thirdPlace._games.length) tp._games = lt.thirdPlace._games;
+    rt.thirdPlace = tp;
+  }
+  rt.teamMatches = _pcMergeById(_fbArr(rt.teamMatches, []), _fbArr(lt.teamMatches, []), (m,i)=> (m && m._id) || i);
+  return rt;
+}
+
+function _mergeProTourneysRemoteWithLocal(remoteArr, localArr){
+  const remote = _fbArr(remoteArr, []);
+  const local = _fbArr(localArr, []);
+  const out = remote.map(rt=>{
+    const id = String(rt && rt.id || '');
+    const lt = local.find(x=>String(x && x.id || '')===id);
+    return lt ? _mergeSingleProTourney(rt, lt) : rt;
+  });
+  local.forEach(lt=>{
+    const id = String(lt && lt.id || '');
+    if(!out.some(rt=>String(rt && rt.id || '')===id)) out.push(lt);
+  });
+  return out;
+}
+
 function _applyCloudData(d) {
   d = _decompressCloudData(d);
   try{ window._applyingCloudData = true; }catch(e){}
@@ -54,40 +288,43 @@ function _applyCloudData(d) {
   {
     const v = d.miniM||d.mini||d.miniMatches;
     const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('miniM') ? [] : null);
-    if(arr !== null){ miniM=arr; miniM.forEach(m=>{ if(m.sets)m.sets=_fbArr(m.sets,[]); m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);}); }); }
+    if(arr !== null){ miniM=_mergeRecordCollection(arr, _fbArr(typeof miniM!=='undefined'?miniM:[],[])); miniM.forEach(m=>{ if(m.sets)m.sets=_fbArr(m.sets,[]); m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);}); }); }
   }
   {
     const v = d.univM||d.univ||d.univMatches;
     const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('univM') ? [] : null);
-    if(arr !== null){ univM=arr; univM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
+    if(arr !== null){ univM=_mergeRecordCollection(arr, _fbArr(typeof univM!=='undefined'?univM:[],[])); univM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
   }
   {
     const v = d.comps||d.comp||d.competitions;
     const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('comps') ? [] : null);
-    if(arr !== null) comps=arr;
+    if(arr !== null) comps=_mergeRecordCollection(arr, _fbArr(typeof comps!=='undefined'?comps:[],[]));
   }
   {
     const v = d.ckM||d.ck||d.ckMatches;
     const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ckM') ? [] : null);
-    if(arr !== null){ ckM=arr; ckM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
+    if(arr !== null){ ckM=_mergeRecordCollection(arr, _fbArr(typeof ckM!=='undefined'?ckM:[],[])); ckM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
   }
   if(_has('compNames')) compNames=_fbArr(d.compNames||d.competitionNames, []);
   if(_has('curComp')||d.savedAt) curComp=d.curComp||d.currentComp||'';
   {
     const v = d.proM||d.pro||d.proMatches;
     const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('proM') ? [] : null);
-    if(arr !== null){ proM=arr; proM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
+    if(arr !== null){ proM=_mergeRecordCollection(arr, _fbArr(typeof proM!=='undefined'?proM:[],[])); proM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
   }
   {
     const v = d.proTourneys;
     const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('proTourneys') ? [] : null);
-    if(arr !== null) proTourneys=arr;
+    if(arr !== null){
+      const localProTourneys = _fbArr(typeof proTourneys!=='undefined' ? proTourneys : [], []);
+      proTourneys = _mergeProTourneysRemoteWithLocal(arr, localProTourneys);
+    }
   }
   {
     const v = d.tourneys||d.tournaments||d.tourney;
     const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('tourneys') ? [] : null);
     if(arr !== null){
-      tourneys=arr;
+      tourneys=_mergeTourneysRemoteWithLocal(arr, _fbArr(typeof tourneys!=='undefined'?tourneys:[],[]));
       tourneys.forEach(tn=>{
         tn.groups=_fbArr(tn.groups,[]);
         tn.groups.forEach(g=>{
@@ -104,7 +341,7 @@ function _applyCloudData(d) {
     const v = d.ttM||d.tiertour||d.tierTourM;
     const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ttM') ? [] : null);
     if(arr !== null){
-      ttM = arr;
+      ttM = _mergeRecordCollection(arr, _fbArr(typeof ttM!=='undefined'?ttM:[],[]));
       try{
         (ttM||[]).forEach(m=>{
           if(m.sets) m.sets=_fbArr(m.sets,[]);
@@ -117,12 +354,12 @@ function _applyCloudData(d) {
   {
     const v = d.indM||d.ind;
     const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('indM') ? [] : null);
-    if(arr !== null) indM=arr;
+    if(arr !== null) indM=_mergeRecordCollection(arr, _fbArr(typeof indM!=='undefined'?indM:[],[]));
   }
   {
     const v = d.gjM;
     const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('gjM') ? [] : null);
-    if(arr !== null) gjM=arr;
+    if(arr !== null) gjM=_mergeRecordCollection(arr, _fbArr(typeof gjM!=='undefined'?gjM:[],[]));
   }
   if(d.tiers&&d.tiers.length&&typeof TIERS!=='undefined'){TIERS.splice(0,TIERS.length,...d.tiers);}
   if(d.boardPlayerOrder!==undefined&&typeof boardPlayerOrder!=='undefined'){
