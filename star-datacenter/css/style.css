@@ -1691,7 +1691,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 }
 
 /* 플레이어 모달이 경기상세 뒤로 깔리는 문제 방지 */
-#playerModal{ z-index: var(--z-modal-5); } /* [Z-IDX] */
+#playerModal{ z-index: var(--z-modal-4); } /* [Z-IDX] */
 .modal--matchdetail .cmd-detail .cmd-player-badges{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
 .modal--matchdetail .cmd-detail .cmd-midbox{
   width:46px;
@@ -4433,7 +4433,7 @@ body.dark .b2-players-img-btn:disabled {
 }
 
 /* emModal / bulkEditModal 공통(버튼 영역 flex) */
-.modal--em{ z-index: var(--z-modal-2); }
+.modal--em{ z-index: var(--z-modal-5); }
 .modal--bulkedit{ z-index: var(--z-modal-2); }
 .modal--em .mbtns .btn,
 .modal--bulkedit .mbtns .btn{ flex:1; }
