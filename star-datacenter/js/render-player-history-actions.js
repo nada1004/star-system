@@ -102,6 +102,119 @@ function _guardRecentEdit(dateStr){
   return false;
 }
 
+function _findProTourStageRecordByMeta(meta){
+  try{
+    if(!meta || meta.sourceType !== 'proTourStage') return null;
+    const tn = (typeof proTourneys!=='undefined' ? proTourneys : []).find(t=>String(t&&t.id||'')===String(meta.tnId||''));
+    if(!tn || !tn.stageRecords) return null;
+    const round = String(meta.round||'');
+    const arr = Array.isArray(tn.stageRecords[round]) ? tn.stageRecords[round] : [];
+    const idx = arr.findIndex(x=>x && String(x._id||'')===String(meta.sourceId||''));
+    if(idx < 0) return null;
+    return { tn, round, arr, idx, rec: arr[idx] };
+  }catch(e){
+    return null;
+  }
+}
+
+function deletePlayerRecentEditableSource(playerName, meta){
+  if(!isLoggedIn || !meta) return;
+  if(meta.sourceType === 'proTourStage'){
+    const found = _findProTourStageRecordByMeta(meta);
+    if(!found || !found.rec) return;
+    if(!_guardRecentEdit(found.rec.d||'')) return;
+    if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.')) return;
+    try{
+      if(typeof window.pcDeleteStageRec === 'function'){
+        window.pcDeleteStageRec(found.tn.id, found.round, found.idx);
+      }else{
+        const m = found.rec;
+        if(m && m.winner && m._id && typeof _revertProMatch === 'function') try{ _revertProMatch(m._id); }catch(e){}
+        found.arr.splice(found.idx,1);
+        save(); render();
+      }
+    }catch(e){
+      alert('삭제 실패: '+e.message);
+      return;
+    }
+    refreshPlayerModalIfOpen();
+  }
+}
+
+function openPlayerRecentEditableSourceEdit(playerName, meta){
+  if(!isLoggedIn || !meta) return;
+  if(meta.sourceType !== 'proTourStage') return;
+  const found = _findProTourStageRecordByMeta(meta);
+  if(!found || !found.rec) return;
+  const rec = found.rec;
+  if(!_guardRecentEdit(rec.d||'')) return;
+  const selfIsA = rec.a === playerName;
+  const currentOpp = selfIsA ? rec.b : rec.a;
+  const currentResult = ((selfIsA && rec.winner==='A') || (!selfIsA && rec.winner==='B')) ? '승' : '패';
+  const mapOpts=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
+  document.getElementById('reTitle').textContent=`✏️ 경기 수정 — ${playerName} vs ${currentOpp||''}`;
+  document.getElementById('reBody').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div><label>날짜</label><input id="phe-date" type="date" value="${rec.d||''}" style="width:100%"></div>
+      <div><label>결과</label>
+        <select id="phe-result" style="width:100%">
+          <option value="승"${currentResult==='승'?' selected':''}>승</option>
+          <option value="패"${currentResult==='패'?' selected':''}>패</option>
+        </select>
+      </div>
+      <div><label>상대 이름</label><input id="phe-opp" type="text" value="${currentOpp||''}" style="width:100%"></div>
+      <div><label>맵</label>
+        <div style="display:flex;gap:6px">
+          <select id="phe-map-sel" data-pha-action="single-map-sync" style="flex:1"><option value="">목록에서 선택</option>${mapOpts}</select>
+          <input id="phe-map" type="text" value="${!rec.map||rec.map==='-'?'':rec.map}" placeholder="맵 이름 직접 입력" style="flex:1">
+        </div>
+      </div>
+      <div><label>메모</label><input id="phe-note" type="text" value="${(rec.note||'').replace(/"/g,'&quot;')}" style="width:100%"></div>
+    </div>`;
+  const saveBtnOrig=document.querySelector('#reModal .btn-b');
+  if(saveBtnOrig){
+    const _prevOnclick=saveBtnOrig['onclick'];
+    saveBtnOrig['onclick']=function(){
+      const newDate=document.getElementById('phe-date').value;
+      const newResult=document.getElementById('phe-result').value;
+      const newOpp=(document.getElementById('phe-opp').value||'').trim();
+      const newMap=document.getElementById('phe-map').value||'-';
+      const newNote=(document.getElementById('phe-note').value||'').trim();
+      if(!newOpp){
+        alert('상대 이름을 입력해주세요.');
+        return;
+      }
+      try{
+        if(rec && rec.winner && rec._id && typeof _revertProMatch === 'function') try{ _revertProMatch(rec._id); }catch(e){}
+        if(selfIsA){
+          rec.a = playerName;
+          rec.b = newOpp;
+          rec.winner = (newResult==='승') ? 'A' : 'B';
+        }else{
+          rec.a = newOpp;
+          rec.b = playerName;
+          rec.winner = (newResult==='승') ? 'B' : 'A';
+        }
+        rec.d = newDate || rec.d || '';
+        rec.map = newMap;
+        rec.note = newNote;
+        if(rec.winner && typeof applyGameResult === 'function'){
+          applyGameResult(rec.winner==='A'?rec.a:rec.b, rec.winner==='A'?rec.b:rec.a, rec.d||'', rec.map||'', rec._id, '', '', '프로리그대회');
+        }
+        saveBtnOrig['onclick']=_prevOnclick;
+        if(typeof fixPoints==='function')fixPoints();
+        save();
+        render();
+        cm('reModal');
+        refreshPlayerModalIfOpen();
+      }catch(e){
+        alert('수정 실패: '+e.message);
+      }
+    };
+  }
+  om('reModal');
+}
+
 function deletePlayerHist(playerName, histIdx){
   if(!isLoggedIn)return;
   if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.'))return;
@@ -444,5 +557,7 @@ try{
   window.openPlayerHistBulkEdit = openPlayerHistBulkEdit;
   window.savePlayerHistBulkEdit = savePlayerHistBulkEdit;
   window.openPlayerHistEdit = openPlayerHistEdit;
+  window.deletePlayerRecentEditableSource = deletePlayerRecentEditableSource;
+  window.openPlayerRecentEditableSourceEdit = openPlayerRecentEditableSourceEdit;
   window._canEditByDate = _canEditByDate;
 }catch(e){}

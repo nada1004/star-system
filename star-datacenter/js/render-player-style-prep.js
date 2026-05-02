@@ -18,7 +18,8 @@ function preparePlayerDetailStyleData(player){
   const darken=((pdStyle.univ_darken||{})[p.univ]||0);
   const isMobile=window.innerWidth<=768;
   const isTablet=(window.innerWidth>768 && window.innerWidth<=1024);
-  const imgUrl=isMobile?(pdStyle.img2||''):(pdStyle.img1||'');
+  const imgUrlLegacy=isMobile?(pdStyle.img2||''):(pdStyle.img1||'');
+  const imgUrl=(p.detailHeaderBgImg||pdStyle.header_bg_img||imgUrlLegacy||'').trim();
   const imgSettings=(typeof suReadImgSettings==='function')
     ? suReadImgSettings()
     : (JSON.parse(localStorage.getItem('su_img_settings')||'{}'));
@@ -26,24 +27,20 @@ function preparePlayerDetailStyleData(player){
   const scaleMul = useRight
     ? (isMobile ? (imgSettings.scaleLeft||1) : (imgSettings.scaleRight||1))
     : (imgSettings.scale||1);
-  const imgZoom=(pdStyle.img_zoom||100) * scaleMul;
+  const imgZoom=(Number(p.detailHeaderBgScale||pdStyle.header_bg_scale||pdStyle.img_zoom||100)||100) * scaleMul;
   const hasImgFillSetting = typeof imgSettings.fill === 'boolean';
-  const imgFill=hasImgFillSetting
+  const imgFit=(p.detailHeaderBgFit||pdStyle.header_bg_fit||'').trim();
+  const imgFill=imgFit || (hasImgFillSetting
     ? (imgSettings.fill ? 'cover' : 'contain')
-    : ((pdStyle.img_fill!=null && pdStyle.img_fill!=='') ? pdStyle.img_fill : 'contain');
-  const imgX=pdStyle.img_x||0;
-  const imgY=pdStyle.img_y||0;
-  let hdrBg;
-  if(imgUrl){
-    const baseBg=darken>0
-      ?`linear-gradient(rgba(0,0,0,${darken}),rgba(0,0,0,${darken})),linear-gradient(135deg,${col},${col}ee)`
-      :`linear-gradient(135deg,${col},${col}ee)`;
-    hdrBg=`${baseBg},url('${imgUrl}') ${imgX}px ${imgY}px / ${imgZoom}% ${imgZoom}% ${imgFill} no-repeat`;
-  }else{
-    hdrBg=darken>0
-      ?`linear-gradient(rgba(0,0,0,${darken}),rgba(0,0,0,${darken})),linear-gradient(135deg,${col},${col}ee)`
-      :`linear-gradient(135deg,${col},${col}ee)`;
-  }
+    : ((pdStyle.img_fill!=null && pdStyle.img_fill!=='') ? pdStyle.img_fill : 'contain'));
+  const hdrBg=darken>0
+    ?`linear-gradient(rgba(0,0,0,${darken}),rgba(0,0,0,${darken})),linear-gradient(135deg,${col},${col}ee)`
+    :`linear-gradient(135deg,${col},${col}ee)`;
+  const hdrBgLayer = imgUrl ? {
+    url: imgUrl,
+    fit: (imgFill==='fill' ? 'fill' : imgFill==='cover' ? 'cover' : 'contain'),
+    scale: Math.max(40, Math.min(220, imgZoom||100))
+  } : null;
   const p2h=v=>Math.max(0,Math.min(255,Math.round(v*2.55))).toString(16).padStart(2,'0');
   const statsTint=pdStyle.stats_tint!==undefined?pdStyle.stats_tint:8;
   const modeTint=pdStyle.mode_tint!==undefined?pdStyle.mode_tint:10;
@@ -71,7 +68,7 @@ function preparePlayerDetailStyleData(player){
   const chipPad = `calc(${chipPadYBase}px * ${chipScale}) calc(${chipPadXBase}px * ${chipScale})`;
   const chipR = `calc(${chipRBase}px * ${chipScale})`;
   return {
-    col, winC, lossC, cWin, cLoss, pdStyle, isMobile, isTablet, hdrBg, p2h, statsTint, modeTint,
+    col, winC, lossC, cWin, cLoss, pdStyle, isMobile, isTablet, hdrBg, hdrBgLayer, p2h, statsTint, modeTint,
     pmCardR, pmHdrPad, pmPhotoSz, pmPhotoR, pmNameFs, pmMetaFs, pmMetaPad, pmMetaPad2,
     pmStatsPad, pmStatsNum1, pmStatsBig, chipFs, chipPad, chipR
   };

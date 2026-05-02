@@ -348,8 +348,10 @@ function applyResponsiveUiVars(){
     const selTb = clamp(gf('su_select_tb_scale', 0.96), 0.70, 1.15);
     const badge = clamp(gf('su_pd_badge_scale', 1.00), 0.70, 1.30);
     const chip = clamp(gf('su_pd_chip_scale', 1.00), 0.70, 1.30);
+    const topTabPcFont = clamp(gf('su_top_tab_font_pc_px', 12), 9, 20);
     const topTabMbFont = clamp(gf('su_top_tab_font_mb_px', 10), 8, 16);
     const topTabTbFont = clamp(gf('su_top_tab_font_tb_px', 11), 9, 18);
+    const subTabFont = clamp(gf('su_subtab_font_px', 12), 9, 18);
     const topTabMbGap = clamp(gf('su_top_tab_gap_mb_px', 2), 0, 16);
     const topTabMbAlign = (()=>{ try{ return (localStorage.getItem('su_top_tab_align_mb')||'start').trim(); }catch(e){ return 'start'; } })();
     const topTabMbJustify = topTabMbAlign === 'center' ? 'center' : 'flex-start';
@@ -370,8 +372,10 @@ function applyResponsiveUiVars(){
     document.documentElement.style.setProperty('--su_select_tb_scale', String(selTb));
     document.documentElement.style.setProperty('--su_pd_badge_scale', String(badge));
     document.documentElement.style.setProperty('--su_pd_chip_scale', String(chip));
+    document.documentElement.style.setProperty('--su_top_tab_font_pc', topTabPcFont + 'px');
     document.documentElement.style.setProperty('--su_top_tab_font_mb', topTabMbFont + 'px');
     document.documentElement.style.setProperty('--su_top_tab_font_tb', topTabTbFont + 'px');
+    document.documentElement.style.setProperty('--su_subtab_font_px', subTabFont + 'px');
     document.documentElement.style.setProperty('--su_top_tab_gap_mb', topTabMbGap + 'px');
     document.documentElement.style.setProperty('--su_tabs_justify_mb', topTabMbJustify);
   }catch(e){}

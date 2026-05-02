@@ -1,6 +1,13 @@
 function openPlayerModal(name){
   const p=players.find(x=>x.name===name);
   if(!p)return;
+  try{
+    const pm = document.getElementById('playerModal');
+    if(pm){
+      if(typeof window._bringModalToFront === 'function') window._bringModalToFront(pm);
+      pm.classList.add('modal--player-top');
+    }
+  }catch(e){}
   const st = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
   try{
     const sc=document.getElementById('sharecard-overlay');
@@ -17,7 +24,7 @@ function openPlayerModal(name){
     st.seasonFilter='전체';
     st.seasonFilters=[];
   }
-  document.getElementById('playerModalTitle').innerText=`👤 ${name} 스트리머 상세`;
+  document.getElementById('playerModalTitle').innerHTML=`<span class="detail-main">👤 ${name}</span>`;
   const mbody=document.getElementById('playerModalBody');
   mbody.innerHTML=buildPlayerDetailHTML(p);
   const pdFs=(JSON.parse(localStorage.getItem('su_pd_style')||'{}').font_size||'normal');

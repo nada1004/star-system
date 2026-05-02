@@ -12,6 +12,7 @@ function buildPlayerDetailHTML(p){
   const _isMobile = _style?.isMobile || (window.innerWidth<=768);
   const _isTablet = _style?.isTablet || (window.innerWidth>768 && window.innerWidth<=1024);
   const _hdrBg = _style?.hdrBg || `linear-gradient(135deg,${col},${col}ee)`;
+  const _hdrBgLayer = _style?.hdrBgLayer || null;
   const _p2h = _style?.p2h || (v=>Math.max(0,Math.min(255,Math.round(v*2.55))).toString(16).padStart(2,'0'));
   const _statsTint = _style?.statsTint ?? 8;
   const _modeTint = _style?.modeTint ?? 10;
@@ -105,6 +106,7 @@ function buildPlayerDetailHTML(p){
     ? buildPlayerHeaderCardHTML({
         player: p,
         hdrBg: _hdrBg,
+        hdrBgLayer: _hdrBgLayer,
         photoHTML: _photoHTML,
         channelHTML: _channelHTML,
         col,
@@ -189,6 +191,10 @@ function buildPlayerDetailHTML(p){
       })
     : '';
 
+  h += (typeof buildPlayerMapStatsHTML==='function')
+    ? buildPlayerMapStatsHTML(_modeHist)
+    : '';
+
   h += (typeof buildPlayerRaceStatsHTML==='function')
     ? buildPlayerRaceStatsHTML(_modeHist)
     : '';
@@ -237,10 +243,6 @@ function buildPlayerDetailHTML(p){
         })
       : '';
   }
-
-  h += (typeof buildPlayerMapStatsHTML==='function')
-    ? buildPlayerMapStatsHTML(_modeHist)
-    : '';
 
   h += (typeof buildPlayerTeammatesHTML==='function')
     ? buildPlayerTeammatesHTML({ player:p, col })

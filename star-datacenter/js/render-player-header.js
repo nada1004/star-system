@@ -21,6 +21,7 @@ function buildPlayerHeaderCardHTML(opts){
   const {
     player,
     hdrBg='',
+    hdrBgLayer=null,
     photoHTML='',
     channelHTML='',
     col='',
@@ -47,46 +48,60 @@ function buildPlayerHeaderCardHTML(opts){
   } = opts || {};
   const p = player;
   if(!p) return '';
-  return `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:${pmCardR}px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+  const _bgSize = hdrBgLayer?.fit==='fill' ? '100% 100%' : (hdrBgLayer?.fit==='cover' ? 'cover' : 'contain');
+  const _bgScale = Math.max(40, Math.min(220, Number(hdrBgLayer?.scale||100)));
+  return `<div style="background:linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.18);border-radius:${pmCardR+4}px;margin-bottom:16px;overflow:hidden;box-shadow:0 18px 42px rgba(15,23,42,.10)">
     <div style="background:${hdrBg};padding:${pmHdrPad};position:relative;overflow:hidden">
+      ${hdrBgLayer?.url ? `<div style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl(hdrBgLayer.url).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:center center;background-size:${_bgSize};transform:scale(${_bgScale/100});transform-origin:center center;opacity:.42;pointer-events:none"></div>` : ''}
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(15,23,42,.10),rgba(15,23,42,.28));pointer-events:none"></div>
       <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
       <div style="position:absolute;bottom:-40px;left:5px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative">
-        <div style="width:${pmPhotoSz}px;height:${pmPhotoSz}px;border-radius:${pmPhotoR}px;background:rgba(255,255,255,.2);border:2.5px solid rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 3px 14px rgba(0,0,0,.2)">${photoHTML}</div>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
-            <span style="font-size:${pmNameFs}px;font-weight:900;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.2)">${p.name}${genderIcon(p.gender)}</span>
+      <div style="position:absolute;right:16px;bottom:12px;font-size:52px;line-height:1;opacity:.08;pointer-events:none">👤</div>
+      <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;position:relative">
+        <div style="width:${pmPhotoSz+12}px;height:${pmPhotoSz+12}px;border-radius:${pmPhotoR+4}px;background:rgba(255,255,255,.16);border:2.5px solid rgba(255,255,255,.42);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 8px 24px rgba(0,0,0,.18);backdrop-filter:blur(8px)">${photoHTML}</div>
+        <div style="min-width:0">
+          <div style="font-size:10px;font-weight:900;letter-spacing:.9px;color:rgba(255,255,255,.78);margin-bottom:6px">STREAMER PROFILE</div>
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:8px">
+            <span style="font-size:${pmNameFs+2}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22)">${p.name}${genderIcon(p.gender)}</span>
             ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
-            ${p.tier?`<span style="background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:800;color:#fff">${getTierLabel(p.tier)||p.tier}</span>`:''}
+            ${p.tier?`<span style="background:rgba(255,255,255,.20);border:1.5px solid rgba(255,255,255,.34);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:900;color:#fff">${getTierLabel(p.tier)||p.tier}</span>`:''}
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
               ${p.univ&&p.univ!=='무소속'?`data-pph-action="open-univ" data-pph-univ="${String(p.univ).replace(/"/g,'&quot;')}"`:''}
-              style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.38);font-size:${pmMetaFs}px;padding:${pmMetaPad};display:inline-flex;align-items:center;gap:4px;border-radius:20px;font-weight:800${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
+              style="background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.32);font-size:${pmMetaFs}px;padding:${pmMetaPad};display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-weight:800;backdrop-filter:blur(6px)${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
               >${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
-            <span style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:800;color:#fff">${p.race||''} ${RNAME[p.race]||''}</span>
+            <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.32);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:800;color:#fff;backdrop-filter:blur(6px)">${p.race||''} ${RNAME[p.race]||''}</span>
             ${channelHTML}
           </div>
         </div>
+        <div style="min-width:110px;display:flex;flex-direction:column;gap:8px">
+          <div style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.24);border-radius:14px;padding:8px 10px;text-align:center;backdrop-filter:blur(8px)">
+            <div style="font-size:9px;letter-spacing:.8px;font-weight:900;color:rgba(255,255,255,.74)">ELO RATING</div>
+            <div style="font-size:24px;font-weight:1000;color:#fff;line-height:1.05;margin-top:4px">${eloVal}</div>
+          </div>
+          ${eloSparkHTML?`<div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:6px 8px;backdrop-filter:blur(8px)">${eloSparkHTML}</div>`:''}
+        </div>
       </div>
     </div>
-    <div style="background:${col}${p2h(statsTint)};display:grid;grid-template-columns:repeat(4,1fr)">
-      <div style="text-align:center;padding:${pmStatsPad};border-right:1px solid ${col}30">
-        <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">전적</div>
-        <div style="font-weight:900;font-size:${pmStatsNum1}px"><span style="color:${cWin}">${p.win}W</span> <span style="color:${cLoss}">${p.loss}L</span></div>
-      </div>
-      <div style="text-align:center;padding:${pmStatsPad};border-right:1px solid ${col}30">
-        <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">승률</div>
-        <div style="font-weight:900;font-size:${pmStatsBig}px;line-height:1;color:${tot?(wr>=50?cWin:cLoss):'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
-      </div>
-      <div style="text-align:center;padding:${pmStatsPad};border-right:1px solid ${col}30">
-        <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">포인트</div>
-        <div style="font-weight:900;font-size:20px;line-height:1;color:${(p.points||0)>=0?cWin:cLoss}">${pS(p.points)}</div>
-      </div>
-      <div style="text-align:center;padding:${pmStatsPad}">
-        <div style="font-size:9px;font-weight:800;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">ELO</div>
-        <div style="font-weight:900;font-size:20px;line-height:1;color:${eloColor}">${eloVal}</div>
-        ${eloSparkHTML}
+    <div style="padding:14px;background:linear-gradient(180deg,#ffffff,${col}${p2h(statsTint)})">
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px">
+        <div style="text-align:center;padding:${pmStatsPad};border:1px solid rgba(148,163,184,.18);border-radius:14px;background:rgba(255,255,255,.82);box-shadow:0 8px 18px rgba(15,23,42,.04)">
+          <div style="font-size:9px;font-weight:900;color:var(--gray-l);letter-spacing:.7px;margin-bottom:6px">전적</div>
+          <div style="font-weight:1000;font-size:${pmStatsNum1+1}px"><span style="color:${cWin}">${p.win}W</span> <span style="color:${cLoss}">${p.loss}L</span></div>
+        </div>
+        <div style="text-align:center;padding:${pmStatsPad};border:1px solid rgba(148,163,184,.18);border-radius:14px;background:rgba(255,255,255,.82);box-shadow:0 8px 18px rgba(15,23,42,.04)">
+          <div style="font-size:9px;font-weight:900;color:var(--gray-l);letter-spacing:.7px;margin-bottom:6px">승률</div>
+          <div style="font-weight:1000;font-size:${pmStatsBig}px;line-height:1;color:${tot?(wr>=50?cWin:cLoss):'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
+        </div>
+        <div style="text-align:center;padding:${pmStatsPad};border:1px solid rgba(148,163,184,.18);border-radius:14px;background:rgba(255,255,255,.82);box-shadow:0 8px 18px rgba(15,23,42,.04)">
+          <div style="font-size:9px;font-weight:900;color:var(--gray-l);letter-spacing:.7px;margin-bottom:6px">포인트</div>
+          <div style="font-weight:1000;font-size:20px;line-height:1;color:${(p.points||0)>=0?cWin:cLoss}">${pS(p.points)}</div>
+        </div>
+        <div style="text-align:center;padding:${pmStatsPad};border:1px solid rgba(148,163,184,.18);border-radius:14px;background:rgba(255,255,255,.82);box-shadow:0 8px 18px rgba(15,23,42,.04)">
+          <div style="font-size:9px;font-weight:900;color:var(--gray-l);letter-spacing:.7px;margin-bottom:6px">상태</div>
+          <div style="font-weight:1000;font-size:18px;line-height:1;color:#0f172a">${p.retired?'은퇴':'활동중'}</div>
+        </div>
       </div>
     </div>
   </div>`;
@@ -126,7 +141,7 @@ function buildPlayerSummaryStripHTML(opts){
     <span style="font-size:10px;color:var(--gray-l);margin-left:3px">최근${recent10.length}</span>
   </div>` : '';
   if(!(streakHTML||rankHTML||formHTML)) return '';
-  return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:14px">
+  return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:linear-gradient(135deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:10px 12px 11px;margin-bottom:14px;box-shadow:0 10px 22px rgba(15,23,42,.04)">
     ${rankHTML}
     ${streakHTML}
     ${formHTML}

@@ -60,7 +60,7 @@ async function _ensureRouletteLoaded(){
 }
 async function _ensureStatsLoaded(){
   await window.ensureChartJS();
-  await _loadScriptOnce('js/stats.js?v=20260502-04');
+  await _loadScriptOnce('js/stats.js?v=20260502-16');
 }
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260502-01');
@@ -86,7 +86,7 @@ async function _ensureCloudBoardLoaded(){
 async function _ensureSettingsLoaded(){
   await _loadScriptOnce('js/settings/font-controls.js?v=20260502-01');
   await _loadScriptOnce('js/settings/ui-scale-controls.js?v=20260502-01');
-  await _loadScriptOnce('js/settings.js?v=20260502-01');
+  await _loadScriptOnce('js/settings.js?v=20260502-09');
 }
 function _lazyGsSetStatus(msg, color='var(--gray-l)'){
   try{

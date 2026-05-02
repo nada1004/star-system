@@ -35,15 +35,19 @@ function buildPlayerRecentHistoryRowHTML(opts){
     :'-';
   const oppP=players.find(x=>x.name===hh.opp);
   const oppRace=hh.oppRace||oppP?.race||'';
-  const canEdit = (isLoggedIn && !hh._readOnly && canEditByDate);
+  const canBulkEdit = (isLoggedIn && !hh._readOnly && hi >= 0 && canEditByDate);
+  const canEdit = (isLoggedIn && canEditByDate && (((!hh._readOnly) && hi >= 0) || !!hh._editableSource));
   const isChecked = !!(bulkSelectedSet && typeof bulkSelectedSet.has==='function' && bulkSelectedSet.has(hi));
-  const selectCheckboxHTML=(bulkMode && canEdit)
+  const selectCheckboxHTML=(bulkMode && canBulkEdit)
     ? `<td class="no-export" style="text-align:center"><input type="checkbox" class="hist-select-checkbox" data-ph-action="hist-select-one" data-ph-index="${hi}" value="${hi}" ${isChecked?'checked':''} style="cursor:pointer"></td>`
     : (bulkMode?`<td class="no-export" style="text-align:center;color:#9ca3af;font-size:11px">-</td>`:'');
+  const srcAttrs = hh._editableSource
+    ? ` data-ph-source-type="${escAttr(hh._sourceType||'')}" data-ph-source-tn-id="${escAttr(hh._sourceTnId||'')}" data-ph-source-round="${escAttr(hh._sourceRound||'')}" data-ph-source-id="${escAttr(hh._sourceId||hh.matchId||'')}"`
+    : '';
   const editBtnHTML=canEdit
     ? `<td class="no-export" style="text-align:center;white-space:nowrap">
-        <button class="btn btn-w btn-xs" data-ph-action="hist-edit-one" data-ph-name="${escJS(pName)}" data-ph-index="${hi}" title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
-        <button class="btn btn-r btn-xs" data-ph-action="hist-delete-one" data-ph-name="${escJS(pName)}" data-ph-index="${hi}" title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
+        <button class="btn btn-w btn-xs" data-ph-action="hist-edit-one" data-ph-name="${escJS(pName)}" data-ph-index="${hi}"${srcAttrs} title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
+        <button class="btn btn-r btn-xs" data-ph-action="hist-delete-one" data-ph-name="${escJS(pName)}" data-ph-index="${hi}"${srcAttrs} title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
       </td>`
     : (isLoggedIn?'<td class="no-export"></td>':'');
   const modeLbl=_pdNormalizeRecentModeLabel(hh.mode);
@@ -170,12 +174,32 @@ function _bindPlayerRecentHistoryDelegatedEvents(){
     }
     if(action === 'hist-edit-one'){
       e.preventDefault();
-      if(typeof openPlayerHistEdit === 'function') openPlayerHistEdit(name, Number(el.getAttribute('data-ph-index') || -1));
+      const sourceType = el.getAttribute('data-ph-source-type') || '';
+      if(sourceType){
+        if(typeof openPlayerRecentEditableSourceEdit === 'function'){
+          openPlayerRecentEditableSourceEdit(name, {
+            sourceType,
+            tnId: el.getAttribute('data-ph-source-tn-id') || '',
+            round: el.getAttribute('data-ph-source-round') || '',
+            sourceId: el.getAttribute('data-ph-source-id') || ''
+          });
+        }
+      }else if(typeof openPlayerHistEdit === 'function') openPlayerHistEdit(name, Number(el.getAttribute('data-ph-index') || -1));
       return;
     }
     if(action === 'hist-delete-one'){
       e.preventDefault();
-      if(typeof deletePlayerHist === 'function') deletePlayerHist(name, Number(el.getAttribute('data-ph-index') || -1));
+      const sourceType = el.getAttribute('data-ph-source-type') || '';
+      if(sourceType){
+        if(typeof deletePlayerRecentEditableSource === 'function'){
+          deletePlayerRecentEditableSource(name, {
+            sourceType,
+            tnId: el.getAttribute('data-ph-source-tn-id') || '',
+            round: el.getAttribute('data-ph-source-round') || '',
+            sourceId: el.getAttribute('data-ph-source-id') || ''
+          });
+        }
+      }else if(typeof deletePlayerHist === 'function') deletePlayerHist(name, Number(el.getAttribute('data-ph-index') || -1));
       return;
     }
     if(action === 'hist-open-player'){

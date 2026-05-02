@@ -41,10 +41,10 @@ function buildUnivRecentMatchesHTML(opts){
   const urScale = urMeta.scale;
   const urBase = urMeta.base;
   const urChipStyle = (bg, color)=>`background:${bg};color:${color};padding:0 ${(urBase.chipPx*urScale).toFixed(2)}px;border-radius:${(urBase.chipR*urScale).toFixed(2)}px;font-size:${(urBase.chipFs*urScale).toFixed(2)}px;font-weight:800;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;line-height:${(urBase.chipH*urScale).toFixed(2)}px;height:${(urBase.chipH*urScale).toFixed(2)}px;letter-spacing:0;min-width:${(urBase.chipH*2.4*urScale).toFixed(2)}px`;
-  let h=`<div style="font-weight:700;font-size:12px;color:#d97706;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+  let h=`<div style="font-weight:900;font-size:12px;color:#d97706;margin-bottom:10px;display:flex;align-items:center;gap:6px">
     <span style="display:inline-block;width:3px;height:14px;background:#d97706;border-radius:2px"></span>최근 대전 기록
   </div>`;
-  h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">`;
+  h+=`<div style="border:1px solid rgba(148,163,184,.18);border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#ffffff,#f8fafc);box-shadow:0 10px 22px rgba(15,23,42,.05)">`;
   h+=`<table style="margin:0;border:none;border-radius:0;table-layout:fixed;width:100%"><thead><tr><th style="width:${urDevKey==='mb'?'78px':(urDevKey==='tb'?'92px':'104px')};text-align:center">날짜</th><th style="width:${urDevKey==='mb'?'62px':(urDevKey==='tb'?'78px':'92px')};text-align:center">종류</th><th style="text-align:center">상대</th><th style="width:${urDevKey==='mb'?'64px':(urDevKey==='tb'?'72px':'84px')};text-align:center">결과</th></tr></thead><tbody>`;
   myMatches.slice(0,10).forEach(m=>{
     const isA=m.a===univName;
@@ -94,7 +94,7 @@ function buildUnivAceCardsHTML(opts){
     const photoEl=ap.photo
       ?`<img src="${toHttpsUrl(ap.photo)}" style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col}" onerror="this.style.display='none'">`
       :`<div style="width:30px;height:30px;border-radius:var(--su_profile_radius,50%);background:${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff">${ap.name[0]}</div>`;
-    return `<div style="flex:1;min-width:120px;background:linear-gradient(135deg,${col}18,${col}08);border:1.5px solid ${col}44;border-radius:12px;padding:10px 12px;cursor:pointer" data-ur-action="open-player" data-ur-player="${safeName}">
+    return `<div style="flex:1;min-width:120px;background:linear-gradient(135deg,${col}18,${col}08);border:1.5px solid ${col}44;border-radius:14px;padding:12px 12px;cursor:pointer;box-shadow:0 10px 22px rgba(15,23,42,.05)" data-ur-action="open-player" data-ur-player="${safeName}">
       <div style="font-size:10px;font-weight:700;color:${col};margin-bottom:5px">${label}</div>
       <div style="display:flex;align-items:center;gap:6px">
         ${photoEl}

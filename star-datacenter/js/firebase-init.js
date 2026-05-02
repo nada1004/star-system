@@ -51,7 +51,12 @@ setInterval(()=>{
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     _pollFirebaseSignalOnce(true);
-    _updateSyncAgeBadge();
+    try{
+      const fn = (typeof window!=='undefined' && typeof window._updateSyncAgeBadge==='function')
+        ? window._updateSyncAgeBadge
+        : (typeof _updateSyncAgeBadge==='function' ? _updateSyncAgeBadge : null);
+      if(typeof fn === 'function') fn();
+    }catch(e){}
   }
 });
 function _safeInitSyncAgeBadge(tryCount){

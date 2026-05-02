@@ -105,7 +105,7 @@ const _DEFAULT_CATSECS = {
   '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','pdModeBadge','pd','matchdetail','univlogoimg','si','siAssign'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
   // (요청사항) 모바일/태블릿 UI 크기 조절(버튼/메뉴/배지)
-  '🎨 디자인/테마':['tablabels','designv2','hdr','appfont','uisize','reccard','tourneycard','calui'],
+  '🎨 디자인/테마':['tablabels','designv2','hdr','appfont','uisize','reccard','tourneycard','sharecard','calui'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','autofitall','fab'],
   '🧪 고급/점검':['cfgmenu','storage','selfcheck'],
   '💾 데이터':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
@@ -487,6 +487,41 @@ window.cfgSetTourneyCardSettings = function(){
     document.documentElement.style.setProperty('--tc-line-a', String(_la/100));
   }catch(e){}
   try{ if(typeof window._applyTourneyCardTheme === 'function') window._applyTourneyCardTheme(); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// 공유카드 전역 디자인 모드 / 색상 효과
+// ─────────────────────────────────────────────────────────────
+window.cfgSetShareCardSettings = function(){
+  const mode = (document.getElementById('cfg-sc-mode')?.value || 'campus').trim();
+  const color = parseInt(document.getElementById('cfg-sc-color')?.value||'72',10);
+  const fx = parseInt(document.getElementById('cfg-sc-fx')?.value||'55',10);
+  const surface = (document.getElementById('cfg-sc-surface')?.value || 'glass').trim();
+  try{ localStorage.setItem('su_sc_mode', ['campus','vivid','soft','dark','minimal'].includes(mode)?mode:'campus'); }catch(e){}
+  try{ localStorage.setItem('su_sc_color', String(Math.max(20,Math.min(100,color)))); }catch(e){}
+  try{ localStorage.setItem('su_sc_fx', String(Math.max(0,Math.min(100,fx)))); }catch(e){}
+  try{ localStorage.setItem('su_sc_surface', ['glass','clean','solid'].includes(surface)?surface:'glass'); }catch(e){}
+  try{ if(typeof render === 'function') render(); }catch(e){}
+};
+window.cfgPreviewShareCardMode = function(mode){
+  const el=document.getElementById('cfg-sc-mode');
+  if(el) el.value = ['campus','vivid','soft','dark','minimal'].includes(mode)?mode:'campus';
+  window.cfgSetShareCardSettings && window.cfgSetShareCardSettings();
+};
+window.cfgSetShareCardOverrides = function(){
+  const pairs = [
+    ['ck', document.getElementById('cfg-sc-ov-ck')?.value || 'inherit'],
+    ['pro', document.getElementById('cfg-sc-ov-pro')?.value || 'inherit'],
+    ['tt', document.getElementById('cfg-sc-ov-tt')?.value || 'inherit'],
+    ['comp', document.getElementById('cfg-sc-ov-comp')?.value || 'inherit'],
+  ];
+  pairs.forEach(([k,v])=>{
+    try{
+      if(v==='inherit') localStorage.removeItem(`su_sc_mode_${k}`);
+      else localStorage.setItem(`su_sc_mode_${k}`, v);
+    }catch(e){}
+  });
   try{ if(typeof render === 'function') render(); }catch(e){}
 };
 
@@ -1989,6 +2024,31 @@ function _cfgApplyCat(cat, autoGo=true){
       btn.style.color       = on ? '#fff' : 'var(--text)';
     }
   }catch(e){}
+  try{
+    const btns=document.querySelectorAll('[data-cfg-cat]');
+    for(let i=0;i<btns.length;i++){
+      const btn=btns[i];
+      const on=(btn.getAttribute('data-cfg-cat')===cat);
+      btn.style.background = on ? 'linear-gradient(135deg,var(--blue),#7c3aed)' : 'var(--white)';
+      btn.style.color = on ? '#fff' : 'var(--text2)';
+      btn.style.borderColor = on ? 'transparent' : 'var(--border)';
+      btn.style.boxShadow = on ? '0 10px 24px rgba(37,99,235,.22)' : '0 4px 12px rgba(15,23,42,.04)';
+      const desc=btn.querySelector('[data-cfg-cat-desc]');
+      if(desc) desc.style.opacity = on ? '.9' : '.72';
+    }
+    document.querySelectorAll('[data-cfg-cur-cat-label]').forEach(el=>{ el.textContent = `현재: ${_catLabel(cat)}`; });
+    document.querySelectorAll('[data-cfg-cur-cat-desc]').forEach(el=>{ el.textContent = `${_catLabel(cat)} 안의 세부 메뉴를 버튼으로 바로 엽니다.`; });
+    document.querySelectorAll('[data-cfg-cur-sec-buttons]').forEach(secWrap=>{
+      const titleMap=window._cfgSecTitle||{};
+      secWrap.innerHTML = show.map(id=>{
+        const title=titleMap[id]||id;
+        return `<button type="button" class="btn btn-w no-export" onclick="cfgGo('${id}')" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;text-align:left;background:var(--white);justify-content:flex-start">
+          <span style="font-size:15px;line-height:1">${String(title).match(/^[^\s]+/)?.[0]||'⚙️'}</span>
+          <span style="font-size:12px;font-weight:800;color:var(--text2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${title.replace(/^[^\s]+\s*/,'')}</span>
+        </button>`;
+      }).join('');
+    });
+  }catch(e){}
   if(autoGo){
     const first=show[0];
     if(first) setTimeout(()=>_cfgGo(first),0);
@@ -2001,7 +2061,28 @@ window._cfgApplyCat = _cfgApplyCat;
 // 인라인 onclick에서 try/catch로 에러를 숨기지 않기 위해 단순 래퍼 제공
 window.cfgGo = function(secId){ return _cfgGo(secId); };
 // (요청사항) 카테고리 클릭 시 해당 카테고리 "메뉴만" 보여주고 자동으로 모달을 띄우지 않음
-window.cfgApplyCat = function(cat){ return _cfgApplyCat(cat, false); };
+window.cfgApplyCat = function(cat){
+  const r = _cfgApplyCat(cat, false);
+  try{ if(typeof curTab!=='undefined' && curTab==='cfg' && typeof render==='function') render(); }catch(e){}
+  return r;
+};
+window.cfgFocusSearch = function(){ try{ document.getElementById('cfgSearchInp')?.focus(); }catch(e){} };
+window.cfgCollapseAll = function(){
+  try{
+    document.querySelectorAll('[data-cfg-sec]').forEach(el=>{ if(el.tagName==='DETAILS') el.open=false; });
+  }catch(e){}
+};
+window.cfgOpenFavorites = function(){
+  try{
+    const fav=['pd','matchdetail','profileshape','uisize','tablabels'];
+    document.querySelectorAll('[data-cfg-sec]').forEach(el=>{
+      const id=el.getAttribute('data-cfg-sec');
+      const vis=fav.includes(id);
+      el.style.display=vis?'':'none';
+      if(el.tagName==='DETAILS') el.open=vis;
+    });
+  }catch(e){}
+};
 // 펨코스타일/신현황판 대학 순서 이동
 // - 인라인 onclick에서 univCfg 직접 참조가 환경에 따라 막히는 경우가 있어(전역 let 바인딩 이슈),
 //   전용 핸들러로 분리해 안정적으로 동작하게 한다.
@@ -2082,7 +2163,7 @@ window.cfgUnivOrderMove = function(i, dir){
         return;
       }
       const ensureChart = window.ensureChartJS || (()=>loader('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'));
-      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats.js?v=20260425-01')).then(()=>{
+      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats.js?v=20260502-06')).then(()=>{
         const fn = window.rStats;
         if(typeof fn === 'function' && fn !== _lazyRStats) fn(C, T);
       }).catch((e)=>{
@@ -2461,7 +2542,7 @@ function rCfg(C,T){
     tablabels:'🏷️ 탭 이름(라벨) 설정',
     uisize:'📱 모바일/태블릿 UI 크기',
     siAssign:'🎭 스트리머별 상태 아이콘 지정',
-    cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
+    cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', sharecard:'🪪 공유카드 디자인', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
     bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
     fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
@@ -2491,14 +2572,35 @@ function rCfg(C,T){
   const _ymScale = parseInt(localStorage.getItem('su_ym_scale_pct') ?? '100',10) || 100;
   const _rcMemoOn = (localStorage.getItem('su_rc_memo_on') ?? '0') === '1';
   const _avaScale = Math.round((parseFloat(localStorage.getItem('su_avatar_scale') ?? '1') || 1) * 100);
+  const _quickBtns = [
+    {id:'pd', icon:'🎨', title:'스트리머 상세', desc:'배경/배지/프로필'},
+    {id:'matchdetail', icon:'🎮', title:'경기 상세', desc:'헤더/프로필/색상'},
+    {id:'profileshape', icon:'🖼️', title:'프로필 모양', desc:'원형/네모/효과'},
+    {id:'uisize', icon:'📱', title:'UI 크기', desc:'모바일/태블릿 크기'},
+    {id:'tablabels', icon:'🏷️', title:'탭 이름', desc:'상단/하위 메뉴명'},
+    {id:'hdr', icon:'🧩', title:'헤더 바', desc:'제목/아이콘/배경'},
+    {id:'reccard', icon:'🧾', title:'기록 카드', desc:'목록 카드 스타일'},
+    {id:'cfgmenu', icon:'🧭', title:'메뉴 정리', desc:'자주 쓰는 설정 정리'}
+  ];
+  const _catButtons = _cfgCats.map(c=>{
+    const on=window._cfgCat===c;
+    return `<button type="button" onclick="cfgApplyCat('${c}')" class="no-export" data-cat="${c}" data-cfg-cat="${c}"
+      style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 12px;border-radius:16px;cursor:pointer;text-align:left;background:${on?'linear-gradient(135deg,var(--blue),#7c3aed)':'var(--white)'};color:${on?'#fff':'var(--text2)'};border:1px solid ${on?'transparent':'var(--border)'};box-shadow:${on?'0 10px 24px rgba(37,99,235,.22)':'0 4px 12px rgba(15,23,42,.04)'};min-height:82px">
+      <span style="font-size:18px;line-height:1">${_cfgCatIcons[c]||'🗂️'}</span>
+      <span style="font-size:12px;font-weight:900;line-height:1.25">${_catLabel(c)}</span>
+      <span data-cfg-cat-desc="1" style="font-size:10px;opacity:${on?'.9':'.72'};font-weight:700;line-height:1.35">${_cfgCatDesc[c]||''}</span>
+    </button>`;
+  }).join('');
+  const _secButtons = _curSecs.map(id=>{
+    const title=_cfgSecTitle[id]||id;
+    return `<button type="button" class="btn btn-w no-export" onclick="cfgGo('${id}')" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;text-align:left;background:var(--white);justify-content:flex-start">
+      <span style="font-size:15px;line-height:1">${String(title).match(/^[^\s]+/)?.[0]||'⚙️'}</span>
+      <span style="font-size:12px;font-weight:800;color:var(--text2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${title.replace(/^[^\s]+\s*/,'')}</span>
+    </button>`;
+  }).join('');
 
   let h=`<div class="no-export cfg-topbar" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:6px 0 0;margin-bottom:10px;border-bottom:1px solid var(--border)">
     <div class="cfg-topbar-inner" style="display:flex;align-items:center;gap:10px;padding-bottom:6px;flex-wrap:wrap">
-      <div class="cfg-cat-row" style="display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap">
-        ${_cfgCats.map(c=>{const on=window._cfgCat===c;return`<button type="button" onclick="cfgApplyCat('${c}')" class="cfg-cat-pill${on?' on':''}" data-cat="${c}" data-cfg-cat="${c}"
-          style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:14px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:11px;font-weight:${on?800:700};transition:all .12s;touch-action:manipulation;line-height:1.1">
-          <span style="font-size:12px;line-height:1">${_cfgCatIcons[c]||'🗂️'}</span>${_catLabel(c)}</button>`;}).join('')}
-      </div>
       <div class="cfg-tools-row" style="display:flex;align-items:center;gap:6px;margin-left:auto;flex:1;min-width:220px;justify-content:flex-end">
         <div class="cfg-search-wrap" style="position:relative;flex:1;max-width:360px;min-width:220px">
           <input id="cfgSearchInp" placeholder="설정 검색..." value="${esc(String(window._cfgSearchQ||''))}" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:12px;font-size:12px;font-weight:700" oninput="cfgSearchSettings(this.value)">
@@ -2506,9 +2608,52 @@ function rCfg(C,T){
         </div>
         <span id="cfgSearchCnt" style="font-size:11px;color:var(--gray-l);font-weight:900;white-space:nowrap"></span>
       </div>
-      <span style="flex:1"></span>
       ${_menuBtn}
       ${_regBtn}
+    </div>
+  </div>
+  <div class="no-export" style="margin:0 0 14px;padding:12px;border:1px solid var(--border);border-radius:18px;background:linear-gradient(135deg,var(--surface),rgba(255,255,255,.96));box-shadow:0 10px 22px rgba(15,23,42,.04)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <div>
+        <div style="font-size:13px;font-weight:900;color:var(--text2)">🧭 설정 카테고리</div>
+        <div style="font-size:11px;color:var(--gray-l)">상단 메뉴도 버튼판으로 바꿔서 더 빨리 찾을 수 있게 정리했습니다.</div>
+      </div>
+      <div data-cfg-cur-cat-label="1" style="font-size:11px;color:var(--gray-l);font-weight:800">현재: ${_catLabel(window._cfgCat)}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+      ${_catButtons}
+    </div>
+  </div>
+  <div class="no-export" style="margin:0 0 14px;padding:12px;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 8px 18px rgba(15,23,42,.04)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <div>
+        <div style="font-size:13px;font-weight:900;color:var(--text2)">📚 현재 카테고리 메뉴</div>
+        <div data-cfg-cur-cat-desc="1" style="font-size:11px;color:var(--gray-l)">${_catLabel(window._cfgCat)} 안의 세부 메뉴를 버튼으로 바로 엽니다.</div>
+      </div>
+      <button class="btn btn-w btn-xs" onclick="cfgCollapseAll()">현재 화면 정리</button>
+    </div>
+    <div data-cfg-cur-sec-buttons="1" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">
+      ${_secButtons}
+    </div>
+  </div>
+  <div class="no-export" style="margin:0 0 14px;padding:12px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(135deg,var(--surface),rgba(255,255,255,.92));box-shadow:0 8px 18px rgba(15,23,42,.04)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <div>
+        <div style="font-size:13px;font-weight:900;color:var(--text2)">⚡ 자주 쓰는 설정</div>
+        <div style="font-size:11px;color:var(--gray-l)">복잡한 전체 목록 대신 많이 쓰는 항목만 빠르게 열 수 있습니다.</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-w btn-xs" onclick="cfgFocusSearch()">🔎 설정 검색</button>
+        <button class="btn btn-w btn-xs" onclick="cfgCollapseAll()">📦 전체 접기</button>
+        <button class="btn btn-w btn-xs" onclick="cfgOpenFavorites()">⭐ 자주 쓰는 것만 열기</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:8px">
+      ${_quickBtns.map(x=>`<button type="button" class="btn btn-w no-export" onclick="cfgGo('${x.id}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:14px;text-align:left;background:var(--white)">
+        <span style="font-size:16px;line-height:1">${x.icon}</span>
+        <span style="font-size:12px;font-weight:900;color:var(--text2)">${x.title}</span>
+        <span style="font-size:10px;color:var(--gray-l);font-weight:700">${x.desc}</span>
+      </button>`).join('')}
     </div>
   </div>
 ${_scfgD('notice','📢 공지 관리')}
@@ -3219,6 +3364,90 @@ ${_scfgD('notice','📢 공지 관리')}
           <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">브라켓 연결선 진하기</div>
           <input type="range" id="cfg-tc-line-a" min="25" max="100" step="5" value="${Math.max(25,Math.min(100,_tcLa))}" oninput="document.getElementById('cfg-tc-la-v').textContent=this.value+'%'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
           <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-la-v">${Math.max(25,Math.min(100,_tcLa))}%</span></div>
+        </div>
+      </div>
+    </div>
+  </details>`;
+  })()}
+  ${(()=>{ 
+    const _mode = (localStorage.getItem('su_sc_mode') ?? 'campus');
+    const _color = parseInt(localStorage.getItem('su_sc_color') ?? '72',10) || 72;
+    const _fx = parseInt(localStorage.getItem('su_sc_fx') ?? '55',10) || 55;
+    const _surface = (localStorage.getItem('su_sc_surface') ?? 'glass');
+    const _ovCk = (localStorage.getItem('su_sc_mode_ck') ?? 'inherit');
+    const _ovPro = (localStorage.getItem('su_sc_mode_pro') ?? 'inherit');
+    const _ovTt = (localStorage.getItem('su_sc_mode_tt') ?? 'inherit');
+    const _ovComp = (localStorage.getItem('su_sc_mode_comp') ?? 'inherit');
+    return _scfgD('sharecard','🪪 공유카드 디자인') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머/대학/개인전/끝장전/대학대전/대회/티어대회 공유카드의 전역 톤과 색상 효과를 한 번에 조절합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">모드 미리보기</div>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMode('campus')">캠퍼스</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMode('vivid')">비비드</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMode('soft')">소프트</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMode('dark')">다크</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMode('minimal')">미니멀</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">디자인 모드</div>
+        <select id="cfg-sc-mode" onchange="cfgSetShareCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="campus" ${_mode==='campus'?'selected':''}>캠퍼스 컬러</option>
+          <option value="vivid" ${_mode==='vivid'?'selected':''}>비비드</option>
+          <option value="soft" ${_mode==='soft'?'selected':''}>소프트</option>
+          <option value="dark" ${_mode==='dark'?'selected':''}>다크</option>
+          <option value="minimal" ${_mode==='minimal'?'selected':''}>미니멀</option>
+        </select>
+        <span style="font-size:11px;color:var(--gray-l)">대학색 중심 정도와 대비감을 바꿉니다.</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">표면 스타일</div>
+        <select id="cfg-sc-surface" onchange="cfgSetShareCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="glass" ${_surface==='glass'?'selected':''}>글래스</option>
+          <option value="clean" ${_surface==='clean'?'selected':''}>클린</option>
+          <option value="solid" ${_surface==='solid'?'selected':''}>솔리드</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">대학색 강조 강도</div>
+          <input type="range" id="cfg-sc-color" min="20" max="100" step="5" value="${Math.max(20,Math.min(100,_color))}" oninput="document.getElementById('cfg-sc-color-v').textContent=this.value+'%'" onchange="cfgSetShareCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-sc-color-v">${Math.max(20,Math.min(100,_color))}%</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">빛/그라디언트 효과</div>
+          <input type="range" id="cfg-sc-fx" min="0" max="100" step="5" value="${Math.max(0,Math.min(100,_fx))}" oninput="document.getElementById('cfg-sc-fx-v').textContent=this.value+'%'" onchange="cfgSetShareCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-sc-fx-v">${Math.max(0,Math.min(100,_fx))}%</span></div>
+        </div>
+      </div>
+      <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:11px;color:var(--text3);font-weight:900">카드 타입별 개별 오버라이드</div>
+        <div style="font-size:11px;color:var(--gray-l)">전역 모드와 다르게 CK / 프로리그 / 티어대회 / 대회 카드만 별도 모드를 적용할 수 있습니다.</div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">대학 CK</div>
+            <select id="cfg-sc-ov-ck" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+              <option value="inherit" ${_ovCk==='inherit'?'selected':''}>전역 따름</option><option value="campus" ${_ovCk==='campus'?'selected':''}>캠퍼스</option><option value="vivid" ${_ovCk==='vivid'?'selected':''}>비비드</option><option value="soft" ${_ovCk==='soft'?'selected':''}>소프트</option><option value="dark" ${_ovCk==='dark'?'selected':''}>다크</option><option value="minimal" ${_ovCk==='minimal'?'selected':''}>미니멀</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">프로리그</div>
+            <select id="cfg-sc-ov-pro" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+              <option value="inherit" ${_ovPro==='inherit'?'selected':''}>전역 따름</option><option value="campus" ${_ovPro==='campus'?'selected':''}>캠퍼스</option><option value="vivid" ${_ovPro==='vivid'?'selected':''}>비비드</option><option value="soft" ${_ovPro==='soft'?'selected':''}>소프트</option><option value="dark" ${_ovPro==='dark'?'selected':''}>다크</option><option value="minimal" ${_ovPro==='minimal'?'selected':''}>미니멀</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">티어대회</div>
+            <select id="cfg-sc-ov-tt" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+              <option value="inherit" ${_ovTt==='inherit'?'selected':''}>전역 따름</option><option value="campus" ${_ovTt==='campus'?'selected':''}>캠퍼스</option><option value="vivid" ${_ovTt==='vivid'?'selected':''}>비비드</option><option value="soft" ${_ovTt==='soft'?'selected':''}>소프트</option><option value="dark" ${_ovTt==='dark'?'selected':''}>다크</option><option value="minimal" ${_ovTt==='minimal'?'selected':''}>미니멀</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">대회/토너먼트</div>
+            <select id="cfg-sc-ov-comp" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+              <option value="inherit" ${_ovComp==='inherit'?'selected':''}>전역 따름</option><option value="campus" ${_ovComp==='campus'?'selected':''}>캠퍼스</option><option value="vivid" ${_ovComp==='vivid'?'selected':''}>비비드</option><option value="soft" ${_ovComp==='soft'?'selected':''}>소프트</option><option value="dark" ${_ovComp==='dark'?'selected':''}>다크</option><option value="minimal" ${_ovComp==='minimal'?'selected':''}>미니멀</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -5567,12 +5796,96 @@ window.openEP=function(name){
       </span>
     </div>
     <div id="ed-photo-warn" style="font-size:10px;color:${p.photo&&p.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:-6px">${p.photo&&p.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
+    <label>🖼 프로필 이미지 2 <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(모바일/교체용 · 1초 후 자동 전환)</span></label>
+    <input type="text" id="ed-photo2" value="${p.secondProfileFile||''}" placeholder="https://... 이미지 URL 입력" style="width:100%">
+    <div style="font-size:10px;color:var(--gray-l);margin-top:-6px">현황판 등에서 보조 프로필 이미지로 사용됩니다.</div>
     <label>🏠 방송국 홈 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(홈 아이콘 클릭 시 이동)</span></label>
     <div style="display:flex;gap:8px;align-items:center">
       <input type="text" id="ed-channel" value="${p.channelUrl||''}" placeholder="https://chzzk.naver.com/... 또는 https://twitch.tv/..." style="flex:1">
       ${p.channelUrl?`<a href="${p.channelUrl}" target="_blank" style="font-size:18px;text-decoration:none" title="방송국 바로가기">🏠</a>`:''}
     </div>
     <div style="font-size:10px;color:var(--gray-l);margin-top:-6px">치지직/트위치/유튜브 등 방송국 주소. 스트리머 상세에서 홈 아이콘으로 이동됩니다.</div>
+    <div style="margin-top:14px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">🖼 스트리머 상세 헤더 배경</div>
+      <label>배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 설정탭 기본값 사용)</span></label>
+      <input type="text" id="ed-phbg" value="${p.detailHeaderBgImg||''}" placeholder="https://... 이미지 URL">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div>
+          <label>표시 방식</label>
+          <select id="ed-phbg-fit">
+            <option value=""${!p.detailHeaderBgFit?' selected':''}>설정값 따름</option>
+            <option value="contain"${p.detailHeaderBgFit==='contain'?' selected':''}>맞춤</option>
+            <option value="cover"${p.detailHeaderBgFit==='cover'?' selected':''}>채우기</option>
+            <option value="fill"${p.detailHeaderBgFit==='fill'?' selected':''}>늘리기</option>
+          </select>
+        </div>
+        <div>
+          <label>크기 조절</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="range" id="ed-phbg-scale" min="40" max="220" step="5" value="${Number(p.detailHeaderBgScale||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-scale-val').textContent=this.value+'%'">
+            <span id="ed-phbg-scale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.detailHeaderBgScale||100)||100}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px">
+      <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">🪪 개인 공유카드 배경</div>
+      <label>배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 대학색 배경 사용)</span></label>
+      <input type="text" id="ed-sharebg" value="${p.shareCardBgImg||''}" placeholder="https://... 이미지 URL">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div>
+          <label>표시 방식</label>
+          <select id="ed-sharebg-fit">
+            <option value=""${!p.shareCardBgFit?' selected':''}>기본값</option>
+            <option value="contain"${p.shareCardBgFit==='contain'?' selected':''}>맞춤</option>
+            <option value="cover"${p.shareCardBgFit==='cover'?' selected':''}>채우기</option>
+            <option value="fill"${p.shareCardBgFit==='fill'?' selected':''}>늘리기</option>
+          </select>
+        </div>
+        <div>
+          <label>크기 조절</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="range" id="ed-sharebg-scale" min="40" max="220" step="5" value="${Number(p.shareCardBgScale||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-sharebg-scale-val').textContent=this.value+'%'">
+            <span id="ed-sharebg-scale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.shareCardBgScale||100)||100}%</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div>
+          <label>어둡게 덮기</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="range" id="ed-sharebg-dark" min="0" max="85" step="5" value="${Number(p.shareCardBgDark||18)||18}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-sharebg-dark-val').textContent=this.value+'%'">
+            <span id="ed-sharebg-dark-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.shareCardBgDark||18)||18}%</span>
+          </div>
+        </div>
+        <div>
+          <label>반투명 밝기</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="range" id="ed-sharebg-fade" min="0" max="100" step="5" value="${Number(p.shareCardBgFade||0)||0}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-sharebg-fade-val').textContent=this.value+'%'">
+            <span id="ed-sharebg-fade-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.shareCardBgFade||0)||0}%</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div>
+          <label>가로 위치</label>
+          <select id="ed-sharebg-posx">
+            <option value="left"${(p.shareCardBgPosX||'center')==='left'?' selected':''}>좌</option>
+            <option value="center"${(!p.shareCardBgPosX||p.shareCardBgPosX==='center')?' selected':''}>중</option>
+            <option value="right"${p.shareCardBgPosX==='right'?' selected':''}>우</option>
+          </select>
+        </div>
+        <div>
+          <label>세로 위치</label>
+          <select id="ed-sharebg-posy">
+            <option value="top"${p.shareCardBgPosY==='top'?' selected':''}>상</option>
+            <option value="center"${(!p.shareCardBgPosY||p.shareCardBgPosY==='center')?' selected':''}>중</option>
+            <option value="bottom"${p.shareCardBgPosY==='bottom'?' selected':''}>하</option>
+          </select>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:8px">공유카드 전용 배경입니다. 스트리머 상세 헤더 배경과 별도로 저장됩니다.</div>
+    </div>
     <div style="margin-top:14px;padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#15803d;margin-bottom:10px">🎭 상태 아이콘</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="ed-icon-btns">
@@ -5774,6 +6087,28 @@ function savePlayer(){
   p.memo=_memo||undefined;
   const _channel=(document.getElementById('ed-channel')?.value||'').trim();
   p.channelUrl=_channel||undefined;
+  const _photo2=(document.getElementById('ed-photo2')?.value||'').trim();
+  const _phbg=(document.getElementById('ed-phbg')?.value||'').trim();
+  const _phbgFit=(document.getElementById('ed-phbg-fit')?.value||'').trim();
+  const _phbgScale=parseInt(document.getElementById('ed-phbg-scale')?.value||'100',10)||100;
+  const _shareBg=(document.getElementById('ed-sharebg')?.value||'').trim();
+  const _shareBgFit=(document.getElementById('ed-sharebg-fit')?.value||'').trim();
+  const _shareBgScale=parseInt(document.getElementById('ed-sharebg-scale')?.value||'100',10)||100;
+  const _shareBgDark=parseInt(document.getElementById('ed-sharebg-dark')?.value||'18',10)||0;
+  const _shareBgFade=parseInt(document.getElementById('ed-sharebg-fade')?.value||'0',10)||0;
+  const _shareBgPosX=(document.getElementById('ed-sharebg-posx')?.value||'center').trim();
+  const _shareBgPosY=(document.getElementById('ed-sharebg-posy')?.value||'center').trim();
+  p.secondProfileFile=_photo2||undefined;
+  p.detailHeaderBgImg=_phbg||undefined;
+  p.detailHeaderBgFit=_phbgFit||undefined;
+  p.detailHeaderBgScale=_phbg ? _phbgScale : undefined;
+  p.shareCardBgImg=_shareBg||undefined;
+  p.shareCardBgFit=_shareBgFit||undefined;
+  p.shareCardBgScale=_shareBg ? _shareBgScale : undefined;
+  p.shareCardBgDark=_shareBg ? _shareBgDark : undefined;
+  p.shareCardBgFade=_shareBg ? _shareBgFade : undefined;
+  p.shareCardBgPosX=_shareBg ? _shareBgPosX : undefined;
+  p.shareCardBgPosY=_shareBg ? _shareBgPosY : undefined;
   save();
   cm('emModal');
   

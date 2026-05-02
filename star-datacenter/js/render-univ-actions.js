@@ -22,7 +22,7 @@ function openUnivModal(univName){
   if(!univName)return;
   const st = (typeof getUnivDetailState==='function') ? getUnivDetailState() : (window.UnivDetailState||{});
   try{ if(typeof applyUnivLogoVars==='function') applyUnivLogoVars(); }catch(e){}
-  document.getElementById('univModalTitle').innerText=`${univName} 대학 상세`;
+  document.getElementById('univModalTitle').innerHTML=`<span class="detail-main">🎓 ${univName}</span>`;
   document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(univName);
   injectUnivIcons(document.getElementById('univModalBody'));
   st.currentName=univName;
@@ -59,6 +59,29 @@ function toggleUnivEdit(){
         <img id="ue-icon-preview" src="${toHttpsUrl(u.icon||'')}" style="width:40px;height:40px;object-fit:contain;border-radius:var(--su_univ_logo_radius,8px);border:1px solid var(--border);${u.icon?'':'display:none'}" onerror="this.style.display='none'">
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:12px">현황판·선수 상세에서 대학 로고로 표시됩니다.</div>
+      <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
+        <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">🖼 대학 상세 헤더 배경</div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 설정탭 기본값 사용)</span></label>
+        <input type="text" id="ue-hbg" value="${u.detailHeaderBgImg||''}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;box-sizing:border-box">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">표시 방식</label>
+            <select id="ue-hbg-fit" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px">
+              <option value=""${!u.detailHeaderBgFit?' selected':''}>설정값 따름</option>
+              <option value="contain"${u.detailHeaderBgFit==='contain'?' selected':''}>맞춤</option>
+              <option value="cover"${u.detailHeaderBgFit==='cover'?' selected':''}>채우기</option>
+              <option value="fill"${u.detailHeaderBgFit==='fill'?' selected':''}>늘리기</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">크기 조절</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="ue-hbg-scale" min="40" max="220" step="5" value="${Number(u.detailHeaderBgScale||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-hbg-scale-val').textContent=this.value+'%'">
+              <span id="ue-hbg-scale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(u.detailHeaderBgScale||100)||100}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div style="display:flex;gap:6px">
         <button class="btn btn-b" style="flex:1" data-ua-action="save-edit">💾 저장</button>
         <button class="btn btn-w" data-ua-action="cancel-edit">취소</button>
@@ -81,6 +104,9 @@ function saveUnivEdit(){
   const newName=(document.getElementById('ue-name')?.value||'').trim();
   const newColor=document.getElementById('ue-color')?.value||u.color;
   const newIcon=(document.getElementById('ue-icon')?.value||'').trim();
+  const newHdrBg=(document.getElementById('ue-hbg')?.value||'').trim();
+  const newHdrFit=(document.getElementById('ue-hbg-fit')?.value||'').trim();
+  const newHdrScale=parseInt(document.getElementById('ue-hbg-scale')?.value||'100',10)||100;
   if(!newName){alert('이름을 입력하세요.');return;}
   if(newName!==univName){
     players.forEach(p=>{if(p.univ===univName)p.univ=newName;});
@@ -99,9 +125,12 @@ function saveUnivEdit(){
   u.name=newName;
   u.color=newColor;
   if(newIcon) u.icon=newIcon; else delete u.icon;
+  if(newHdrBg) u.detailHeaderBgImg=newHdrBg; else delete u.detailHeaderBgImg;
+  if(newHdrFit) u.detailHeaderBgFit=newHdrFit; else delete u.detailHeaderBgFit;
+  if(newHdrBg) u.detailHeaderBgScale=newHdrScale; else delete u.detailHeaderBgScale;
   save();render();
   st.currentName=newName;
-  document.getElementById('univModalTitle').innerText=`${newName} 대학 상세`;
+  document.getElementById('univModalTitle').innerHTML=`<span class="detail-main">🎓 ${newName}</span>`;
   document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(newName);
   injectUnivIcons(document.getElementById('univModalBody'));
   st.editOpen=false;

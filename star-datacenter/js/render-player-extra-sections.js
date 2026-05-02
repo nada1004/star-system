@@ -82,13 +82,14 @@ function buildPlayerTeammatesHTML(opts){
       ${qPhoto}<span>${q.role?getRoleBadgeHTML(q.role,'9px')+' ':''} ${q.name}</span>${getTierBadge(q.tier)}
     </button>`;
   }).join('');
-  return `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
-    <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+  return `<details style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+    <summary style="font-weight:700;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none;user-select:none">
       <span style="display:inline-block;width:3px;height:14px;background:${col};border-radius:2px"></span>
-      ${p.univ} 팀원 (${teammates.length}명)
-    </div>
-    <div style="display:flex;flex-wrap:wrap;gap:5px">${tmCards}</div>
-  </div>`;
+      <span>${p.univ} 팀원 (${teammates.length}명)</span>
+      <span style="margin-left:auto;font-size:11px;color:var(--gray-l)">펼치기 / 접기</span>
+    </summary>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px">${tmCards}</div>
+  </details>`;
 }
 
 function buildPlayerMemoHTML(player){

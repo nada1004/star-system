@@ -1440,6 +1440,7 @@ function proCompTourMatchInput(tn){
               _bracketItems.push({
                 m:{a:m.a,b:m.b,winner:g.winner,d,map:g.map||m.map||'', _id:`${baseId}_s0_g${gi}`},
                 src:'bkt',
+                ri, mi,
                 key: `${baseId}_${gi}`,
                 _dateKey: d || ''
               });
@@ -1448,6 +1449,7 @@ function proCompTourMatchInput(tn){
             _bracketItems.push({
               m:{a:m.a,b:m.b,winner:m.winner,d,map:m.map||'', _id:`${baseId}_s0_g0`},
               src:'bkt',
+              ri, mi,
               key: baseId,
               _dateKey: d || ''
             });
@@ -1511,12 +1513,7 @@ function proCompTourMatchInput(tn){
         ${_pcard(pb, m.b, bWin)}
       </div>
       <div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-        ${isLoggedIn && item.src==='stage'
-          ?`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="openPcStageRecModal('${tn.id}','${round}',${item.idx})">✏️ 결과</button>
-            <button class="btn btn-r btn-xs" onclick="pcDeleteStageRec('${tn.id}','${round}',${item.idx})">🗑️ 삭제</button>`
-          : item.src==='bkt'
-            ?`<button class="btn btn-w btn-xs" style="white-space:nowrap" onclick="proCompSub='tour';render()">🗂️ 대진표</button>`
-            :''}
+        <button class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openPcStageActionMenu(this,'${tn.id}','${round}',${item.src==='stage'?item.idx:-1},'${item.src}',${item.ri??-1},${item.mi??-1})">⋯</button>
       </div>
     </div>`;
   };
@@ -1632,6 +1629,57 @@ window.pcDeleteStageRec = function(tnId, round, idx){
   arr.splice(idx,1);
   tn.stageRecords[r]=arr;
   save(); render();
+};
+
+window.openPcStageActionMenu = function(btnEl, tnId, round, idx, src, ri, mi){
+  try{
+    const items=[];
+    if(src==='stage'){
+      items.push({t:'📂 상세', on:()=>openPcStageRecModal(tnId, round, idx)});
+      if(isLoggedIn){
+        items.push({t:'✏️ 수정', on:()=>openPcStageRecModal(tnId, round, idx)});
+        items.push({t:'🗑️ 결과 삭제', on:()=>pcDeleteStageRec(tnId, round, idx)});
+      }
+      const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';
+      if(!_adm || isLoggedIn){
+        items.push({t:'🎴 공유카드', on:()=>openPcStageRecShareCard(tnId, round, idx)});
+      }
+    }else if(src==='bkt'){
+      items.push({t:'🗂️ 대진표', on:()=>{ proCompSub='tour'; render(); }});
+      const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';
+      if((!_adm || isLoggedIn) && ri>=0 && mi>=0){
+        items.push({t:'🎴 공유카드', on:()=>_openProCompBktShareCard(tnId, ri, mi)});
+      }
+      if(isLoggedIn && ri>=0 && mi>=0){
+        items.push({t:'🗑️ 결과 삭제', on:()=>proCompClearBktMatch(tnId, ri, mi)});
+      }
+    }
+    if(window.HistoryActionUtils && typeof window.HistoryActionUtils.openSimpleActionMenu==='function'){
+      window.HistoryActionUtils.openSimpleActionMenu(btnEl, items);
+    }
+  }catch(e){}
+};
+
+window.openPcStageRecShareCard = function(tnId, round, idx){
+  const tn=_findTourneyById(tnId);
+  if(!tn || !tn.stageRecords) return;
+  const r=_pcNormalizeStageRound(round);
+  const m=(tn.stageRecords[r]||[])[idx];
+  if(!m || !m.winner) return alert('승자가 있는 기록만 공유카드를 만들 수 있습니다.');
+  const scoreA = m.winner==='A' ? 1 : 0;
+  const scoreB = m.winner==='B' ? 1 : 0;
+  const shareObj = {
+    a:m.a||'', b:m.b||'',
+    sa:scoreA, sb:scoreB,
+    d:m.d||'', n:tn.name||'프로리그 대회',
+    _subLabel:`${r} 기록`,
+    sets:[{ label:r, scoreA, scoreB, winner:m.winner, games:[{ playerA:m.a||'', playerB:m.b||'', winner:m.winner, map:m.map||'' }] }],
+    _noUnivIcon:false, _usePlayerPhoto:true, _matchType:'procomp-bkt'
+  };
+  window._shareMatchObj=shareObj;
+  window._shareMode='match';
+  openShareCardModal();
+  setTimeout(()=>renderShareCardByMatchObj(shareObj),80);
 };
 
 function _pcStageResolveAliasName(name0){
@@ -4843,15 +4891,17 @@ function _renderProCompGrpShareCard(tnId, gi) {
     </div>`;
   }).join('');
 
-  card.innerHTML = `<div style="background:#f8fafc;color:#1e293b;min-width:320px;border-radius:18px;overflow:hidden;font-family:'Noto Sans KR',sans-serif">
+  card.innerHTML = `<div style="background:linear-gradient(180deg,#f8fbff,#eef4ff);color:#1e293b;min-width:320px;border-radius:18px;overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 18px 40px rgba(15,23,42,.12)">
 
     <!-- ?�더 -->
-    <div style="background:linear-gradient(135deg,${col},${col}dd);padding:18px 20px 16px;position:relative;overflow:hidden">
+    <div style="background:linear-gradient(135deg,#0f172a 0%,${col} 58%,#7c3aed 100%);padding:18px 20px 16px;position:relative;overflow:hidden">
       <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.1)"></div>
       <div style="position:absolute;bottom:-30px;left:10px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.07)"></div>
+      <div style="position:absolute;right:14px;bottom:12px;font-size:54px;line-height:1;opacity:.08">🏅</div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
         <div>
-          <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:600;letter-spacing:.5px;margin-bottom:2px">?�� ${tn.name}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.72);font-weight:800;letter-spacing:.7px;margin-bottom:5px">🏅 프로리그 그룹 스테이지</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:600;letter-spacing:.5px;margin-bottom:2px">${tn.name}</div>
           <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:1px">GROUP ${GL[gi]}</div>
           ${grp.name?`<div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:1px">${grp.name}</div>`:''}
         </div>
@@ -4869,7 +4919,7 @@ function _renderProCompGrpShareCard(tnId, gi) {
     <!-- ?�위??-->
     <div style="padding:14px 16px 10px">
       <div style="font-size:10px;font-weight:800;color:${col};letter-spacing:.5px;margin-bottom:8px">?�� ?�재 ?�위</div>
-      <table style="width:100%;border-collapse:collapse">
+      <table style="width:100%;border-collapse:collapse;background:rgba(255,255,255,.76);border:1px solid ${col}18;border-radius:14px;overflow:hidden">
         <thead><tr style="background:${col}10">
           <th style="padding:5px 8px;text-align:center;width:28px;font-size:10px;color:#64748b;font-weight:700">?�위</th>
           <th style="padding:5px 6px;text-align:left;font-size:10px;color:#64748b;font-weight:700">?�수</th>
@@ -4883,7 +4933,7 @@ function _renderProCompGrpShareCard(tnId, gi) {
 
     ${doneM.length?`<div style="padding:0 16px 14px">
       <div style="font-size:10px;font-weight:800;color:${col};letter-spacing:.5px;margin-bottom:8px">?�� 경기 결과</div>
-      ${matchRows}
+      <div style="background:rgba(255,255,255,.76);border:1px solid ${col}18;border-radius:14px;padding:8px 10px">${matchRows}</div>
     </div>`:''}
 
     ${pendM.length?`<div style="padding:4px 16px 12px;font-size:10px;color:#94a3b8;text-align:center">??${pendM.length}경기 ?�음</div>`:''}

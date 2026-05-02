@@ -67,6 +67,10 @@ function _renderCfgUiSizeSection(){
   const selMb = clamp(getF('su_select_mb_scale', 0.92), 0.70, 1.15);
   const selTb = clamp(getF('su_select_tb_scale', 0.96), 0.70, 1.15);
   const chip = clamp(getF('su_pd_chip_scale', 1.00), 0.70, 1.30);
+  const topTabPcFont = clamp(getF('su_top_tab_font_pc_px', 12), 9, 20);
+  const topTabTbFont = clamp(getF('su_top_tab_font_tb_px', 11), 9, 18);
+  const topTabMbFont = clamp(getF('su_top_tab_font_mb_px', 10), 8, 16);
+  const subTabFont = clamp(getF('su_subtab_font_px', 12), 9, 18);
 
   const row=(label, id, val, min, max, step, hint)=>{
     const pct=Math.round(val*100);
@@ -90,6 +94,10 @@ function _renderCfgUiSizeSection(){
       ${row('태블릿 팝업(스트리머/대학) 버튼', 'su_modal_tb_scale', mtb, 0.55, 1.10, 0.02, '기본 78%')}
       ${row('모바일 탭 버튼(.tab)', 'su_tab_mb_scale', mbTab, 0.65, 1.10, 0.02, '기본 90%')}
       ${row('태블릿 탭 버튼(.tab)', 'su_tab_tb_scale', tbTab, 0.65, 1.10, 0.02, '기본 94%')}
+      ${row('상단 메인 탭 글자(PC)', 'su_top_tab_font_pc_px', topTabPcFont, 9, 20, 1, '기본 12px')}
+      ${row('상단 메인 탭 글자(태블릿)', 'su_top_tab_font_tb_px', topTabTbFont, 9, 18, 1, '기본 11px')}
+      ${row('상단 메인 탭 글자(모바일)', 'su_top_tab_font_mb_px', topTabMbFont, 8, 16, 1, '기본 10px')}
+      ${row('하위 메뉴/하위탭 글자', 'su_subtab_font_px', subTabFont, 9, 18, 1, '기본 12px')}
       ${row('모바일 드롭메뉴(select)', 'su_select_mb_scale', selMb, 0.70, 1.15, 0.02, '폰트/화살표/패딩 같이 조절')}
       ${row('태블릿 드롭메뉴(select)', 'su_select_tb_scale', selTb, 0.70, 1.15, 0.02, '폰트/화살표/패딩 같이 조절')}
       ${row('경기 상세 상단 버튼(모바일)', 'su_md_mb_btn_scale', mdMb, 0.70, 1.30, 0.05, '')}
@@ -100,7 +108,7 @@ function _renderCfgUiSizeSection(){
       ${row('대학상세 최근대전 칩(태블릿)', 'su_univ_recent_chip_scale_tb', univTb, 0.65, 1.25, 0.05, '종류/상대 버튼 함께 조절')}
       ${row('종목/연도 필터 칩', 'su_pd_chip_scale', chip, 0.70, 1.30, 0.05, '')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
-        <button class="btn btn-w btn-sm" onclick="['su_mb_scale','su_tb_scale','su_modal_mb_scale','su_modal_tb_scale','su_tab_mb_scale','su_tab_tb_scale','su_select_mb_scale','su_select_tb_scale','su_md_mb_btn_scale','su_md_tb_btn_scale','su_pd_badge_scale','su_pd_badge_scale_mb','su_pd_badge_scale_tb','su_univ_recent_chip_scale_mb','su_univ_recent_chip_scale_tb','su_pd_chip_scale'].forEach(k=>localStorage.removeItem(k)); try{ window.applyResponsiveUiVars && window.applyResponsiveUiVars(); }catch(e){}; try{ render(); }catch(e){}; try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}; try{ window._renderCfgUiSizeSection && window._renderCfgUiSizeSection(); }catch(e){}">↩️ 기본값으로</button>
+        <button class="btn btn-w btn-sm" onclick="['su_mb_scale','su_tb_scale','su_modal_mb_scale','su_modal_tb_scale','su_tab_mb_scale','su_tab_tb_scale','su_top_tab_font_pc_px','su_top_tab_font_tb_px','su_top_tab_font_mb_px','su_subtab_font_px','su_select_mb_scale','su_select_tb_scale','su_md_mb_btn_scale','su_md_tb_btn_scale','su_pd_badge_scale','su_pd_badge_scale_mb','su_pd_badge_scale_tb','su_univ_recent_chip_scale_mb','su_univ_recent_chip_scale_tb','su_pd_chip_scale'].forEach(k=>localStorage.removeItem(k)); try{ window.applyResponsiveUiVars && window.applyResponsiveUiVars(); }catch(e){}; try{ render(); }catch(e){}; try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}; try{ window._renderCfgUiSizeSection && window._renderCfgUiSizeSection(); }catch(e){}">↩️ 기본값으로</button>
         <div style="font-size:11px;color:var(--gray-l);align-self:center">※ PC에는 영향 거의 없고, 모바일/태블릿만 주로 변화합니다</div>
       </div>
     </div>
