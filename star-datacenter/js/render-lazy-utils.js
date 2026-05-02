@@ -60,8 +60,11 @@ async function _ensureRouletteLoaded(){
 }
 async function _ensureStatsLoaded(){
   await window.ensureChartJS();
-  await _loadScriptOnce('js/stats.js?v=20260502-16');
+  await _loadScriptOnce('js/stats.js?v=20260502-37');
 }
+window._ensureShareCardRuntime = window._ensureShareCardRuntime || async function(){
+  await _loadScriptOnce('js/stats.js?v=20260502-37');
+};
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260502-01');
 }
@@ -71,6 +74,14 @@ try{
     window.requestIdleCallback(_prewarmCalendar, { timeout: 2500 });
   }else{
     setTimeout(_prewarmCalendar, 1200);
+  }
+}catch(e){}
+try{
+  const _prewarmShareCard = ()=>{ try{ window._ensureShareCardRuntime && window._ensureShareCardRuntime(); }catch(e){} };
+  if(typeof window.requestIdleCallback === 'function'){
+    window.requestIdleCallback(_prewarmShareCard, { timeout: 2200 });
+  }else{
+    setTimeout(_prewarmShareCard, 900);
   }
 }catch(e){}
 async function _ensureVoteLoaded(){

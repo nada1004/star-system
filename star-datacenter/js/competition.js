@@ -397,8 +397,7 @@ function rCompLeague(tn){
           </div>
           <div style="text-align:center;min-width:80px">
             ${isDone?`<div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.08)" onclick="openCompMatchDetailModal('${tn.id}',${m.grpIdx},${m.matchNum-1})"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span></div>
-            <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:5px">${(()=>{const winTeam=aWin?m.a:bWin?m.b:'';if(!winTeam)return '<span style="font-size:10px;color:var(--gray-l)">무승부</span>';const url=UNIV_ICONS[winTeam]||(univCfg.find(x=>x.name===winTeam)||{}).icon||'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:calc(var(--tc-uicon) * 0.55);height:calc(var(--tc-uicon) * 0.55);object-fit:contain;border-radius:3px" onerror="this.style.display='none'"><span style="font-size:10px;font-weight:700;color:${aWin?ca:cb}">${winTeam} 승</span>`:`<span style="font-size:10px;font-weight:700;color:${aWin?ca:cb}">${winTeam} 승</span>`;})()}</div>
-            ${isDone && !isLoggedIn ? (()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p" style="margin-top:6px;font-size:10px;padding:4px 10px;border-radius:9px" onclick="openCompMatchShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">🎴 공유 카드</button>`:'';})() : ''}
+            ${isDone ? (()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<div class="no-export" style="margin-top:7px;display:flex;justify-content:flex-end"><button class="btn btn-p btn-xs" style="display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 10px;border-radius:10px;box-shadow:0 4px 10px rgba(37,99,235,.14);margin-left:auto;min-width:98px" onclick="openCompMatchShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">🎴 공유 카드</button></div>`:'';})() : ''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor};text-shadow:0 1px 8px ${m.grpColor}44">VS</div>`}
           </div>
           <div style="text-align:center;min-width:100px">
@@ -411,7 +410,6 @@ function rCompLeague(tn){
         ${isLoggedIn?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">
           <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="leagueEditMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">✏️ 결과</button>
           <button class="btn btn-r btn-xs" onclick="grpDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">🗑️ 삭제</button>
-          ${isDone?(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="openCompMatchShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">🎴 공유 카드</button>`:'';})():''}
         </div>`:''}
       </div>`;
     });
@@ -517,6 +515,35 @@ function closeCompMatchDetailModal(){
     else { const mm=document.getElementById('compMatchDetailModal'); if(mm) mm.style.display='none'; }
   }catch(e){}
 }
+
+async function openCompMatchShareCard(tnId, gi, mi){
+  try{
+    if(typeof window._ensureStatsLoaded==='function'){
+      await window._ensureStatsLoaded();
+    }
+    const tn=(tourneys||[]).find(t=>t.id===tnId);
+    if(!tn) return;
+    const grp=tn.groups&&tn.groups[gi];
+    if(!grp) return;
+    const m=grp.matches&&grp.matches[mi];
+    if(!m) return;
+    window._shareMatchObj={a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,d:m.d||'',n:tn.name,sets:m.sets||[]};
+    try{ window._shareMode='match'; }catch(e){}
+    if(typeof openShareCardModal==='function') openShareCardModal();
+    const _run=()=>{
+      try{
+        if(window._shareMatchObj && typeof renderShareCardByMatchObj==='function'){
+          renderShareCardByMatchObj(window._shareMatchObj);
+        }
+      }catch(e){ console.error('[openCompMatchShareCard]', e); }
+    };
+    if(typeof window._shareCardDeferRender==='function') window._shareCardDeferRender(_run);
+    else setTimeout(_run,0);
+  }catch(e){
+    console.error('[openCompMatchShareCard]', e);
+  }
+}
+try{ window.openCompMatchShareCard = openCompMatchShareCard; }catch(e){}
 
 // 경기 상세 모달 하단 "공유 카드" 버튼
 function openCompDetailShareCard(){
@@ -738,7 +765,7 @@ function rBracketSchedule(tn){
           <div style="text-align:center;min-width:80px">
             ${isDone?`<div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px" onclick="openCompMatchDetailModal('${tn.id}',null,${mi},${r},${isManual})"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${sb}</span></div>
             <div style="margin-top:4px;font-size:11px;font-weight:700;color:${aWin?ca:bWin?cb:'var(--gray-l)'}">${winner?winner+' 승':''}</div>
-            ${!isLoggedIn?`<button class="btn btn-p btn-xs no-export" style="margin-top:4px" onclick="openBktShareCard('${tn.id}',${r},${mi})">🎴 공유 카드</button>`:''}
+            ${!isLoggedIn?`<button class="btn btn-p btn-xs no-export" style="margin-top:4px;margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openBktShareCard('${tn.id}',${r},${mi})">🎴 공유 카드</button>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:var(--blue)">VS</div>`}
           </div>
           <div style="text-align:center;min-width:100px">
@@ -751,7 +778,7 @@ function rBracketSchedule(tn){
           <button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="openBracketMatchModal('${tn.id}',${r},${mi},'${teamA}','${teamB}')">✏️ 수정</button>
           <button class="btn btn-p btn-xs" style="white-space:nowrap" onclick="bracketMatchState={tnId:'${tn.id}',rnd:${r},mi:${mi},teamA:'${teamA}',teamB:'${teamB}'};openBktPasteModal()">📋 붙여넣기</button>
           ${isManual?`<button class="btn btn-r btn-xs" onclick="bktDelManualMatch('${tn.id}',${mi})">🗑️ 삭제</button>`:`<button class="btn btn-r btn-xs" onclick="bktClearMatchResult('${tn.id}',${r},${mi})">🗑️ 초기화</button>`}
-          ${isDone?`<button class="btn btn-p btn-xs" onclick="openBktShareCard('${tn.id}',${r},${mi})">🎴 공유 카드</button>`:''}
+          ${isDone?`<button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openBktShareCard('${tn.id}',${r},${mi})">🎴 공유 카드</button>`:''}
         </div>`:''}
       </div>
     </div>`;
@@ -2051,7 +2078,6 @@ function bktSaveMatch(){
 function openBktShareCard(tnId,rnd,mi){
   const m=getBktMatch(tnId,rnd,mi);if(!m||m.sa==null)return;
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
-  window._shareMatchObj={a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,d:m.d||'',n:tn.name,sets:m.sets||[]};
-  _shareMode='match';
-  if(typeof openShareCardModal==='function'){openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80);}
+  const _payload={a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,d:m.d||'',n:tn.name,sets:m.sets||[]};
+  if(typeof window._openShareMatchObjCard==='function') window._openShareMatchObjCard(_payload);
 }

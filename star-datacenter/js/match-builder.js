@@ -131,12 +131,45 @@ function _mbResolveAliasQuery(q){
 /* ══════════════════════════════════════
    미니대전
 ══════════════════════════════════════ */
-function rMini(C,T){
-  T.innerText = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
+function _buildMatchSubtabShell(currentSub, subOpts, filterStateKey, extraHTML){
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
   const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
-  if(window._miniFilterOpen===undefined) window._miniFilterOpen=_lockOpen;
-  if(_lockOpen) window._miniFilterOpen=true;
+  if(window[filterStateKey]===undefined) window[filterStateKey]=_lockOpen;
+  if(_lockOpen) window[filterStateKey]=true;
+  let h='';
+  if(_enableSubFilter && !_lockOpen){
+    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
+      <button class="pill ${window[filterStateKey]?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window['${filterStateKey}']=!window['${filterStateKey}'];render()">🔍 필터 ${window[filterStateKey]?'▲':'▼'}</button>
+    </div>`;
+  }
+  if(!_enableSubFilter || window[filterStateKey]){
+    h+=typeof stabsInline==='function' ? stabsInline(currentSub, subOpts, extraHTML||'') : stabs(currentSub, subOpts) + (extraHTML?`<div>${extraHTML}</div>`:'');
+  }
+  return h;
+}
+function _mbActionBar(buttons, hint){
+  return `<div class="mb-actions">${(buttons||[]).filter(Boolean).join('')}${hint?`<span class="mb-hint">${hint}</span>`:''}</div>`;
+}
+function _mbSectionCard(title, body, muted){
+  return `<div class="mb-card"><div class="mb-card-title">${title}${muted?` <span class="muted">${muted}</span>`:''}</div>${body}</div>`;
+}
+function _mbFrame(title, actionHTML, bodyHTML, subHTML){
+  return `<div class="match-builder match-builder--refined">
+    <div class="match-builder-head">
+      <div>
+        <div class="match-builder-title">${title}</div>
+        ${subHTML?`<div class="match-builder-sub">${subHTML}</div>`:''}
+      </div>
+      ${actionHTML||''}
+    </div>
+    ${bodyHTML||''}
+  </div>`;
+  if(typeof window._shareCardRenderCached==='function') window._shareCardRenderCached(card, _cacheKey, ()=>_html);
+  else card.innerHTML = _html;
+}
+
+function rMini(C,T){
+  T.innerText = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
   if(!isLoggedIn && miniSub==='input') miniSub='records';
   if(miniType==='civil' && miniSub==='rank') miniSub='records';
   const subOpts = miniType==='civil'
@@ -145,19 +178,12 @@ function rMini(C,T){
   const _miniCtx = miniType==='civil' ? 'mini' : 'mini';
   const _miniSubOpts = (typeof applyTabLabels==='function') ? applyTabLabels(_miniCtx, subOpts) : subOpts;
   let h='';
-  if(_enableSubFilter && !_lockOpen){
-    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
-      <button class="pill ${window._miniFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._miniFilterOpen=!window._miniFilterOpen;render()">🔍 필터 ${window._miniFilterOpen?'▲':'▼'}</button>
-    </div>`;
-  }
-  if(!_enableSubFilter || window._miniFilterOpen){
-    const extra = (miniSub!=='input' && typeof buildYearMonthFilterControls==='function')
-      ? (buildYearMonthFilterControls('mini', true)
-        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
-      : '';
-    h+=typeof stabsInline==='function' ? stabsInline(miniSub, _miniSubOpts, extra) : stabs(miniSub, _miniSubOpts) + (extra?`<div>${extra}</div>`:'');
-  }
+  const extra = (miniSub!=='input' && typeof buildYearMonthFilterControls==='function')
+    ? (buildYearMonthFilterControls('mini', true)
+      + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+    : '';
+  h+=_buildMatchSubtabShell(miniSub, _miniSubOpts, '_miniFilterOpen', extra);
   const label = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
   const _miniTypeFilter = m=>(m.type||'mini')===miniType;
   const filteredMini = miniM.filter(_miniTypeFilter);
@@ -254,10 +280,6 @@ let _indInput={date:'',playerA:'',playerB:'',games:[]};
 
 function rInd(C,T){
   T.innerText='🎮 개인전';
-  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
-  if(window._indFilterOpen===undefined) window._indFilterOpen=_lockOpen;
-  if(_lockOpen) window._indFilterOpen=true;
   if(!isLoggedIn && indSub==='input') indSub='records';
   const subOpts=(typeof applyTabLabels==='function') ? applyTabLabels('ind',[
     {id:'input',lbl:'📝 경기 입력',fn:`indSub='input';render()`},
@@ -269,20 +291,12 @@ function rInd(C,T){
     {id:'records',lbl:'📋 기록',fn:`indSub='records';render()`}
   ];
   let h='';
-  if(_enableSubFilter && !_lockOpen){
-    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
-      <button class="pill ${window._indFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._indFilterOpen=!window._indFilterOpen;render()">🔍 필터 ${window._indFilterOpen?'▲':'▼'}</button>
-    </div>`;
-  }
-  if(!_enableSubFilter || window._indFilterOpen){
-    // (요청사항) 하위메뉴(순위/기록) 바로 우측에 연/월 + 최신/오래된순을 한 줄로 배치
-    const extra = (indSub!=='input' && typeof buildYearMonthFilterControls==='function')
-      ? (buildYearMonthFilterControls('ind', true)
-        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
-      : '';
-    h+=typeof stabsInline==='function' ? stabsInline(indSub, subOpts, extra) : stabs(indSub, subOpts) + (extra?`<div>${extra}</div>`:'');
-  }
+  const extra = (indSub!=='input' && typeof buildYearMonthFilterControls==='function')
+    ? (buildYearMonthFilterControls('ind', true)
+      + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+    : '';
+  h+=_buildMatchSubtabShell(indSub, subOpts, '_indFilterOpen', extra);
   if(indSub==='input'&&isLoggedIn){
     h+=indInputHTML();
   } else if(indSub==='rank'){
@@ -448,7 +462,7 @@ function indRecordsHTML(){
   </div>`:'';
   h+=_dateMenuHTML;
   if(_indBulkOn){
-    h+=`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
+    h+=`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
       <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">
         <input type="checkbox" id="bulk-all-ind" onchange="indBulkToggleAll('ind',this.checked)" style="width:14px;height:14px;cursor:pointer"> 전체
       </label>
@@ -670,20 +684,17 @@ function indInputHTML(){
   } else {
     BLD['ind']=null;
   }
-  return `<div class="match-builder"><h3>🎮 개인전 입력</h3>
-    <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-p btn-sm" onclick="openIndPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>
-      <button class="btn btn-w btn-sm" onclick="openIndBulkModal()" style="display:inline-flex;align-items:center;gap:5px">➕ 여러 경기 입력</button>
-      <span style="font-size:11px;color:var(--gray-l)">텍스트 붙여넣기 지원</span>
-    </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px">① 날짜 & 대전 스트리머</div>
+  const actionBar = _mbActionBar([
+    `<button class="btn btn-p btn-sm mb-mini-btn" onclick="openIndPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`,
+    `<button class="btn btn-w btn-sm mb-mini-btn" onclick="openIndBulkModal()" style="display:inline-flex;align-items:center;gap:5px">➕ 여러 경기 입력</button>`
+  ], '텍스트 붙여넣기 지원');
+  const baseCard = _mbSectionCard('① 날짜 & 대전 스트리머', `
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
         <label style="font-size:12px;font-weight:700">날짜</label>
         <input type="date" value="${gi.date||''}" onchange="_indInput.date=this.value;if(BLD['ind'])BLD['ind'].date=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <div style="flex:1;min-width:140px">
+      <div class="mb-split">
+        <div>
           <div style="font-size:11px;font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
           ${pA?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${aCol}18;border:2px solid ${aCol};border-radius:8px">
             ${getPlayerPhotoHTML(pA,'28px')}<span style="font-weight:800;color:${aCol}">${pA}</span>
@@ -691,8 +702,7 @@ function indInputHTML(){
             <button onclick="_indInput.playerA='';BLD['ind']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
           </div>` : ''}
         </div>
-        <div style="display:flex;align-items:center;font-weight:900;color:var(--gray-l);padding-top:20px">VS</div>
-        <div style="flex:1;min-width:140px">
+        <div>
           <div style="font-size:11px;font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
           ${pB?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${bCol}18;border:2px solid ${bCol};border-radius:8px">
             ${getPlayerPhotoHTML(pB,'28px')}<span style="font-weight:800;color:${bCol}">${pB}</span>
@@ -702,12 +712,9 @@ function indInputHTML(){
         </div>
       </div>
       ${!(pA&&pB)?_matchPlayerAssignPoolHTML('ind'):''}
-    </div>
-    ${pA&&pB&&BLD['ind']?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">② 경기 결과 입력</div>
-      ${setBuilderHTML(BLD['ind'],'ind')}
-    </div>`:''}
-  </div>`;
+    `);
+  const resultCard = pA&&pB&&BLD['ind'] ? _mbSectionCard('② 경기 결과 입력', `${setBuilderHTML(BLD['ind'],'ind')}`) : '';
+  return _mbFrame('🎮 개인전 입력', actionBar, baseCard + resultCard, '공통 입력 카드 레이아웃');
 }
 
 /* ══════════════════════════════════════
@@ -863,7 +870,9 @@ function openIndShareCard(p1, p2, p1wins, p2wins, date, winner, idsJson) {
   _shareMode = 'match';
   openShareCardModal();
   const ids = idsJson ? JSON.parse(idsJson.replace(/'/g,'"')) : null;
-  setTimeout(() => renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids), 80);
+  const _run = () => renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids);
+  if(typeof window._shareCardDeferRender==='function') window._shareCardDeferRender(_run);
+  else setTimeout(_run, 0);
 }
 
 function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids) {
@@ -874,6 +883,16 @@ function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids) {
   const col1 = gc(pp1.univ || '') || '#0ea5e9';
   const col2 = gc(pp2.univ || '') || '#6366f1';
   const scp=(typeof window._getShareCardPrefs==='function'?window._getShareCardPrefs():{mode:'campus',color:.72,fx:.55,surface:'glass'});
+  const _pf = scp.profileScale || 1;
+  const _ff = scp.fontScale || 1;
+  const _darkCard = scp.mode==='dark' || scp.mode==='poster';
+  const _scoreColor = (hex, isWinner) => {
+    const base = String(hex||'#64748b');
+    if(typeof window._scMixHex==='function'){
+      return isWinner ? window._scMixHex(base,'#ffffff',.34) : window._scMixHex(base,'#cbd5e1',.72);
+    }
+    return isWinner ? base : '#94a3b8';
+  };
 
   const games = ids
     ? indM.filter(m => ids.includes(m._id))
@@ -903,19 +922,18 @@ function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids) {
     const photo = profileBlock(name, pObj, '72px', `border:3px solid ${uCol};box-shadow:${isWinner?`0 6px 18px ${uCol}55`:'0 2px 8px rgba(0,0,0,.07)'};${!isWinner&&winner?'opacity:.65;filter:grayscale(.2)':''}`);
     const race = raceLabel(pObj.race||'');
     const tier = pObj.tier ? `<span style="background:${getTierBtnColor(pObj.tier)||'#64748b'};color:${getTierBtnTextColor(pObj.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(pObj.tier)}</span>` : '';
-    const raceSpan = race ? `<span style="font-size:10px;color:#94a3b8">${race}</span>` : '';
-    const univBadge = pObj.univ ? `<span style="background:${uCol};color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:999px">${pObj.univ}</span>` : '';
-    const uniIcon = univLogo(pObj.univ||'', uCol);
+    const raceSpan = race ? `<span style="font-size:9px;color:#94a3b8;font-weight:800">${race}</span>` : '';
     const isRight = side === 'right';
-    const meta = `${uniIcon}${tier}${raceSpan}${univBadge}`;
+    const teamLine = pObj.univ ? `<div style="display:flex;align-items:center;justify-content:${isRight?'flex-end':'flex-start'};gap:4px;margin-top:4px;min-width:0">${univLogo(pObj.univ||'', uCol)}<span style="font-size:10px;color:#475569;font-weight:800;line-height:1.2;white-space:normal;overflow-wrap:anywhere;word-break:keep-all">${pObj.univ}</span></div>` : '';
     return `<div style="flex:1;display:flex;align-items:center;gap:10px;flex-direction:${isRight?'row-reverse':'row'};background:${uCol}18;border:1px solid ${uCol}33;border-radius:16px;padding:10px 12px;min-width:0">
       <div style="flex-shrink:0;position:relative">
         ${photo}
         ${isWinner&&winner?`<div style="position:absolute;bottom:-2px;${isRight?'left:-2px':'right:-2px'};font-size:13px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))">🏆</div>`:''}
       </div>
       <div style="text-align:${isRight?'right':'left'};flex:1;min-width:0">
-        <div style="font-size:15px;font-weight:${isWinner?'900':'700'};color:${isWinner?WC:'#334155'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-        <div style="display:flex;align-items:center;justify-content:${isRight?'flex-end':'flex-start'};gap:4px;flex-wrap:wrap;margin-top:4px">${meta}</div>
+        <div style="font-size:14px;font-weight:${isWinner?'1000':'800'};color:${isWinner?WC:'#334155'};line-height:1.18;white-space:normal;overflow-wrap:anywhere;word-break:keep-all">${name}</div>
+        <div style="display:flex;align-items:center;justify-content:${isRight?'flex-end':'flex-start'};gap:4px;flex-wrap:wrap;margin-top:4px">${tier}${raceSpan}</div>
+        ${teamLine}
       </div>
     </div>`;
   };
@@ -941,26 +959,30 @@ function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids) {
   const heroProfile = (name, pObj, side, isWinner) => {
     const uCol = gc(pObj.univ||'') || (side==='left'?col1:col2);
     const race = raceLabel(pObj.race||'');
-    const tier = pObj.tier ? `<span style="background:${getTierBtnColor(pObj.tier)||'#64748b'};color:${getTierBtnTextColor(pObj.tier)||'#fff'};font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px">${ct(pObj.tier)}</span>` : '';
-    const raceSpan = race ? `<span style="font-size:10px;color:${isWinner?'#334155':'#64748b'};font-weight:700">${race}</span>` : '';
-    const univ = pObj.univ ? `<span style="font-size:10px;color:${isWinner?'#334155':'#64748b'};font-weight:800;display:inline-flex;align-items:center;gap:4px">${univLogo(pObj.univ||'', uCol)}${pObj.univ}</span>` : '';
+    const tier = pObj.tier ? `<span style="background:${getTierBtnColor(pObj.tier)||'#64748b'};color:${getTierBtnTextColor(pObj.tier)||'#fff'};font-size:${Math.round(10*_ff)}px;font-weight:800;padding:2px 7px;border-radius:999px">${ct(pObj.tier)}</span>` : '';
+    const _nameColor = isWinner ? (_darkCard ? '#ffffff' : '#111827') : (_darkCard ? 'rgba(255,255,255,.88)' : '#475569');
+    const _metaColor = _darkCard ? 'rgba(255,255,255,.82)' : (isWinner?'#334155':'#64748b');
+    const raceSpan = race ? `<span style="font-size:${Math.round(10*_ff)}px;color:${_metaColor};font-weight:700">${race}</span>` : '';
+    const univ = pObj.univ ? `<div style="font-size:${Math.round(11*_ff)}px;color:${_metaColor};font-weight:800;display:flex;align-items:center;justify-content:${side==='left'?'flex-start':'flex-end'};gap:4px;line-height:1.25;white-space:normal;word-break:keep-all;overflow-wrap:anywhere">${univLogo(pObj.univ||'', uCol)}<span>${pObj.univ}</span></div>` : '';
     const lossFx = (!isWinner && winner) ? 'filter:grayscale(.15);opacity:.86;' : '';
     return `<div style="flex:1;display:flex;flex-direction:column;align-items:${side==='left'?'flex-start':'flex-end'};justify-content:center;min-width:0">
       <div style="position:relative;display:flex;flex-direction:column;align-items:${side==='left'?'flex-start':'flex-end'};gap:8px">
-        ${profileBlock(name, pObj, '92px', `border:4px solid rgba(255,255,255,.85);box-shadow:0 12px 30px rgba(15,23,42,.30);${lossFx}`)}
+        ${profileBlock(name, pObj, `${Math.round(118*_pf)}px`, `border:4px solid rgba(255,255,255,.85);box-shadow:0 14px 34px rgba(15,23,42,.30);${lossFx}`)}
         ${isWinner&&winner?`<div style="position:absolute;top:-8px;${side==='left'?'right:-6px':'left:-6px'};width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#facc15,#f59e0b);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.22);font-size:15px">🏆</div>`:''}
       </div>
-      <div style="margin-top:10px;max-width:100%;text-align:${side==='left'?'left':'right'}">
-        <div style="font-size:21px;font-weight:900;line-height:1.08;color:${isWinner?'#111827':'#475569'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-        <div style="display:flex;align-items:center;justify-content:${side==='left'?'flex-start':'flex-end'};gap:6px;flex-wrap:wrap;margin-top:6px">${univ}${tier}${raceSpan}</div>
+      <div style="margin-top:10px;max-width:100%;text-align:${side==='left'?'left':'right'};display:flex;flex-direction:column;align-items:${side==='left'?'flex-start':'flex-end'};gap:6px">
+        <div style="font-size:${Math.round(20*_ff)}px;font-weight:1000;line-height:1.14;color:${_nameColor};white-space:normal;overflow-wrap:anywhere;word-break:keep-all;max-width:150px;text-shadow:${_darkCard?'0 1px 10px rgba(0,0,0,.24)':'none'}">${name}</div>
+        <div style="display:flex;align-items:center;justify-content:${side==='left'?'flex-start':'flex-end'};gap:6px;flex-wrap:wrap">${tier}${raceSpan}</div>
+        ${univ}
         <div style="margin-top:6px;display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:${isWinner?`${uCol}16`:'#e2e8f0'};border:1px solid ${isWinner?`${uCol}33`:'#cbd5e1'};font-size:10px;font-weight:800;color:${isWinner?uCol:'#64748b'}">${isWinner?'🥇 승리':'패배'}</div>
       </div>
     </div>`;
   };
 
-  const shellBg = scp.mode==='dark' ? 'linear-gradient(180deg,#0f172a,#111827)' : `linear-gradient(135deg,${col1}12 0%,#f8fafc 36%,${col2}10 100%)`;
+  const shellBg = scp.mode==='dark' ? 'linear-gradient(180deg,#0f172a,#111827)' : scp.mode==='aurora' ? `linear-gradient(160deg,${col1}22 0%,#f8fafc 42%,${col2}1f 100%)` : scp.mode==='poster' ? `linear-gradient(180deg,${typeof window._scMixHex==='function'?window._scMixHex(col1,'#111827',.28):col1},${typeof window._scMixHex==='function'?window._scMixHex(col2,'#111827',.28):col2})` : scp.mode==='mono' ? 'linear-gradient(180deg,#f3f4f6,#e5e7eb)' : `linear-gradient(135deg,${col1}12 0%,#f8fafc 36%,${col2}10 100%)`;
   const panelBg = scp.surface==='solid' ? '#ffffff' : 'rgba(255,255,255,.88)';
-  card.innerHTML = `<div style="background:${shellBg};border-radius:26px;padding:16px;font-family:'Noto Sans KR',sans-serif;color:#111;overflow:hidden;position:relative;box-shadow:0 16px 44px rgba(15,23,42,.16)">
+  const _cacheKey = `ind:${JSON.stringify({p1,p2,p1wins,p2wins,date,winner,ids})}`;
+  const _html = `<div style="background:${shellBg};border-radius:26px;padding:16px;font-family:'Noto Sans KR',sans-serif;color:#111;overflow:hidden;position:relative;box-shadow:0 16px 44px rgba(15,23,42,.16)">
     <div style="position:relative;border-radius:24px;overflow:hidden;background:
       radial-gradient(circle at 18% 22%, ${col1}${Math.round(20+scp.color*20).toString(16).padStart(2,'0')}, transparent 28%),
       radial-gradient(circle at 82% 20%, ${col2}${Math.round(18+scp.color*18).toString(16).padStart(2,'0')}, transparent 30%),
@@ -976,9 +998,9 @@ function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids) {
         ${heroProfile(p1, pp1, 'left', p1===winner)}
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 2px;min-width:88px">
           <div style="font-size:54px;font-weight:1000;line-height:1;letter-spacing:-3px;text-shadow:0 6px 16px rgba(148,163,184,.18)">
-            <span style="color:${p1===winner?col1:`${col1}77`}">${p1wins}</span>
+            <span style="color:${_scoreColor(col1, p1===winner)}">${p1wins}</span>
             <span style="color:#cbd5e1;font-size:26px;margin:0 2px">:</span>
-            <span style="color:${p2===winner?col2:`${col2}77`}">${p2wins}</span>
+            <span style="color:${_scoreColor(col2, p2===winner)}">${p2wins}</span>
           </div>
           <div style="margin-top:10px;font-size:11px;font-weight:900;letter-spacing:.8px;color:#64748b">MATCH RESULT</div>
         </div>
@@ -996,6 +1018,8 @@ function renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids) {
       <span style="font-size:9px;color:#94a3b8;letter-spacing:.3px;font-weight:800">⭐ 스타대학 데이터 센터</span>
     </div>
   </div>`;
+  if(typeof window._shareCardRenderCached==='function') window._shareCardRenderCached(card, _cacheKey, ()=>_html);
+  else card.innerHTML = _html;
 }
 
 /* ══════════════════════════════════════
@@ -1052,10 +1076,6 @@ function rGJ(C,T,proOnly,proInput){
   if(_newProMode!==_gjProMode){_gjInput={date:'',playerA:'',playerB:'',games:[]};BLD['gj']=null;}
   _gjProMode=_newProMode;
   T.innerText=proOnly?'🏅 프로리그 끝장전':'⚔️ 끝장전';
-  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
-  if(window._gjFilterOpen===undefined) window._gjFilterOpen=_lockOpen;
-  if(_lockOpen) window._gjFilterOpen=true;
   if(!isLoggedIn && gjSub==='input') gjSub='records';
   const showInput=!proOnly||proInput;
   const subOpts = _gjCanInput()
@@ -1064,19 +1084,12 @@ function rGJ(C,T,proOnly,proInput){
   const _gjSubOpts = (typeof applyTabLabels==='function') ? applyTabLabels('gj', subOpts) : subOpts;
   if(!showInput&&gjSub==='input') gjSub='records';
   let h='';
-  if(_enableSubFilter && !_lockOpen){
-    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
-      <button class="pill ${window._gjFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._gjFilterOpen=!window._gjFilterOpen;render()">🔍 필터 ${window._gjFilterOpen?'▲':'▼'}</button>
-    </div>`;
-  }
-  if(!_enableSubFilter || window._gjFilterOpen){
-    const extra = (gjSub!=='input' && typeof buildYearMonthFilterControls==='function')
-      ? (buildYearMonthFilterControls('gj', true)
-        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
-      : '';
-    h+=typeof stabsInline==='function' ? stabsInline(gjSub, _gjSubOpts, extra) : stabs(gjSub, _gjSubOpts) + (extra?`<div>${extra}</div>`:'');
-  }
+  const extra = (gjSub!=='input' && typeof buildYearMonthFilterControls==='function')
+    ? (buildYearMonthFilterControls('gj', true)
+      + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+    : '';
+  h+=_buildMatchSubtabShell(gjSub, _gjSubOpts, '_gjFilterOpen', extra);
   if(gjSub==='input'&&isLoggedIn&&showInput){
     h+=gjInputHTML();
   } else if(gjSub==='rank'){
@@ -1113,19 +1126,18 @@ function gjInputHTML(){
   } else {
     BLD['gj']=null;
   }
-
-  return `<div class="match-builder"><h3>${_gjProMode?'🏅 프로리그 끝장전 입력':'⚔️ 끝장전 입력'}</h3>
-    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="${_gjProMode?'openGJProPasteModal':'openGJPasteModal'}()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button></div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px">① 날짜 & 대전 스트리머</div>
+  const actionBar = _mbActionBar([
+    `<button class="btn btn-p btn-sm mb-mini-btn" onclick="${_gjProMode?'openGJProPasteModal':'openGJPasteModal'}()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`
+  ], '하단에서 저장까지 이어집니다');
+  const baseCard = _mbSectionCard('① 날짜 & 대전 스트리머', `
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:6px">
           <label style="font-size:12px;font-weight:700">날짜</label>
           <input type="date" value="${gi.date||''}" onchange="_gjInput.date=this.value;if(BLD['gj'])BLD['gj'].date=this.value;render()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
         </div>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <div style="flex:1;min-width:140px">
+      <div class="mb-split">
+        <div>
           <div style="font-size:11px;font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
           ${pA?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${aCol}18;border:2px solid ${aCol};border-radius:8px">
             ${getPlayerPhotoHTML(pA,'28px')}
@@ -1134,8 +1146,7 @@ function gjInputHTML(){
             <button onclick="_gjInput.playerA='';BLD['gj']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
           </div>` : ''}
         </div>
-        <div style="display:flex;align-items:center;font-weight:900;color:var(--gray-l);padding-top:20px">VS</div>
-        <div style="flex:1;min-width:140px">
+        <div>
           <div style="font-size:11px;font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
           ${pB?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${bCol}18;border:2px solid ${bCol};border-radius:8px">
             ${getPlayerPhotoHTML(pB,'28px')}
@@ -1146,12 +1157,9 @@ function gjInputHTML(){
         </div>
       </div>
       ${!(pA&&pB)?_matchPlayerAssignPoolHTML('gj'):''}
-    </div>
-    ${pA&&pB&&BLD['gj']?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">② 경기 결과 입력</div>
-      ${setBuilderHTML(BLD['gj'],'gj')}
-    </div>`:''}
-  </div>`;
+    `);
+  const resultCard = pA&&pB&&BLD['gj'] ? _mbSectionCard('② 경기 결과 입력', `${setBuilderHTML(BLD['gj'],'gj')}`) : '';
+  return _mbFrame(_gjProMode?'🏅 프로리그 끝장전 입력':'⚔️ 끝장전 입력', actionBar, baseCard + resultCard, _gjProMode?'프로리그 전용 1:1 입력':'끝장전 공통 입력 카드');
 }
 
 function gjDirectSave(){
@@ -1274,13 +1282,15 @@ function gjRecordsHTML(proOnly){
         a: A,
         b: B,
         sa, sb,
+        _matchType: s._proOnly ? 'progj' : 'gj',
+        _usePlayerPhoto: true,
         _subLabel: s._proOnly ? '프로리그끝장전' : '끝장전',
         sets: [{ label: s._proOnly ? '프로리그 끝장전' : '끝장전', scoreA: sa, scoreB: sb, winner, games }]
       };
       const ca = (typeof gc==='function' ? (gc(A)||'#3b82f6') : '#3b82f6');
       const cb = (typeof gc==='function' ? (gc(B)||'#ef4444') : '#ef4444');
       const key = 'mid:'+String(sessKey);
-      if(typeof _regDet==='function') _regDet(key, mm, 'gj', A, B, ca, cb, sa>sb, sb>sa);
+      if(typeof _regDet==='function') _regDet(key, mm, s._proOnly ? 'progj' : 'gj', A, B, ca, cb, sa>sb, sb>sa);
       if(typeof openHistDetailModal==='function') openHistDetailModal(key);
     }catch(e){}
   };
@@ -1379,7 +1389,7 @@ function gjRecordsHTML(proOnly){
   </div>`:'';
   h+=_dateMenuHTML;
   if(_gjBulkOn){
-    h+=`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
+    h+=`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
       <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">
         <input type="checkbox" id="bulk-all-${_gjBulkKey}" onchange="indBulkToggleAll('${_gjBulkKey}',this.checked)" style="width:14px;height:14px;cursor:pointer"> 전체
       </label>
@@ -1448,28 +1458,17 @@ function bulkEditGjDate(idsJson, curDate){
 ══════════════════════════════════════ */
 function rCK(C,T){
   T.innerText='🤝 대학CK';
-  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
-  if(window._ckFilterOpen===undefined) window._ckFilterOpen=_lockOpen;
-  if(_lockOpen) window._ckFilterOpen=true;
   if(!isLoggedIn && ckSub==='input') ckSub='records';
   const subOpts=(typeof applyTabLabels==='function')
     ? applyTabLabels('ck', [{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`}])
     : [{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`}];
   let h='';
-  if(_enableSubFilter && !_lockOpen){
-    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
-      <button class="pill ${window._ckFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._ckFilterOpen=!window._ckFilterOpen;render()">🔍 필터 ${window._ckFilterOpen?'▲':'▼'}</button>
-    </div>`;
-  }
-  if(!_enableSubFilter || window._ckFilterOpen){
-    const extra = (ckSub!=='input' && typeof buildYearMonthFilterControls==='function')
-      ? (buildYearMonthFilterControls('ck', true)
-        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
-      : '';
-    h+=typeof stabsInline==='function' ? stabsInline(ckSub, subOpts, extra) : stabs(ckSub, subOpts) + (extra?`<div>${extra}</div>`:'');
-  }
+  const extra = (ckSub!=='input' && typeof buildYearMonthFilterControls==='function')
+    ? (buildYearMonthFilterControls('ck', true)
+      + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+    : '';
+  h+=_buildMatchSubtabShell(ckSub, subOpts, '_ckFilterOpen', extra);
   if(ckSub==='input'&&isLoggedIn){
     if(!BLD['ck']){const saved=J('su_bld_ck')||{};BLD['ck']={date:'',membersA:saved.membersA||[],membersB:saved.membersB||[],sets:[]};}
     h+=buildCKInputHTML();
@@ -1483,25 +1482,22 @@ function buildCKInputHTML(){
   const bld=BLD['ck'];const allU=getAllUnivs();
   const uO=`<option value="">대학 선택</option>`+allU.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
   const mA=bld.membersA||[];const mB=bld.membersB||[];
-  let h=`<div class="match-builder"><h3>🤝 대학CK 입력</h3>
-    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openCKPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
-    <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">
+  const actionBar = _mbActionBar([
+    `<button class="btn btn-p btn-sm mb-mini-btn" onclick="openCKPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`
+  ], '텍스트 붙여넣기 지원');
+  let h = _mbSectionCard('① 기본 정보', `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['ck'].date=this.value">
-    </div>
-
-    <!-- 선수 검색으로 빠른 팀 짜기 -->
-    <div style="background:var(--blue-l);border:1px solid var(--blue-ll);border-radius:10px;padding:12px 14px;margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">🔍 스트리머 검색으로 빠른 팀 짜기 <span style="font-weight:400;color:var(--gray-l)">(이름·대학 검색 후 A팀/B팀 배정)</span></div>
+    </div>`) + _mbSectionCard('② 스트리머 검색으로 빠른 팀 짜기', `
       <div style="position:relative;display:flex;gap:6px;align-items:center">
         <input type="text" id="ck-search-input" placeholder="스트리머/대학/별명 검색..." 
           style="flex:1;padding:8px 12px;border:1.5px solid var(--blue);border-radius:8px;font-size:13px"
           oninput="ckSearchPlayer()">
       </div>
       <div id="ck-search-results" style="display:none;margin-top:6px;background:var(--white);border:1px solid var(--border2);border-radius:8px;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1)"></div>
-    </div>
-
-    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+    `, '(이름·대학 검색 후 A팀/B팀 배정)') + _mbSectionCard('③ 팀 구성', `
+    <div class="mb-split">
       <div class="ck-panel">
         <h4>🔵 팀 A 구성 (${mA.length}명)</h4>
         <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
@@ -1520,8 +1516,8 @@ function buildCKInputHTML(){
         </div>
         <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['ck'].membersB.splice(${i},1);BLD['ck'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">멤버를 추가하세요</span>'}</div>
       </div>
-    </div>`;
-  h+=setBuilderHTML(bld,'ck');h+=`</div>`;return h;
+    </div>`) + _mbSectionCard('④ 경기 결과 입력', `${setBuilderHTML(bld,'ck')}`);
+  return _mbFrame('🤝 대학CK 입력', actionBar, h, '공통 헤더/액션 바 적용');
 }
 
 function ckSearchPlayer(){
@@ -1656,28 +1652,16 @@ function ckRankHTML(){
 ══════════════════════════════════════ */
 function rUnivM(C,T){
   T.innerText='🏟️ 대학대전';
-  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
-  if(window._univmFilterOpen===undefined) window._univmFilterOpen=_lockOpen;
-  if(_lockOpen) window._univmFilterOpen=true;
   if(!isLoggedIn && univmSub==='input') univmSub='records';
   const subOpts=(typeof applyTabLabels==='function')
     ? applyTabLabels('univm', [{id:'input',lbl:'📝 경기 입력',fn:`univmSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`univmSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`univmSub='records';openDetails={};render()`}])
     : [{id:'input',lbl:'📝 경기 입력',fn:`univmSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`univmSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`univmSub='records';openDetails={};render()`}];
   let h='';
-  if(_enableSubFilter && !_lockOpen){
-    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
-      <button class="pill ${window._univmFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._univmFilterOpen=!window._univmFilterOpen;render()">🔍 필터 ${window._univmFilterOpen?'▲':'▼'}</button>
-    </div>`;
-  }
-  if(!_enableSubFilter || window._univmFilterOpen){
-    // (요청사항) 대학대전 탭: 하위메뉴 우측에 연/월만 표시(최신/오래된순 제거)
-    const extra = (univmSub!=='input' && typeof buildYearMonthFilterControls==='function')
-      ? (buildYearMonthFilterControls('univm', true))
-      : '';
-    h+=typeof stabsInline==='function' ? stabsInline(univmSub, subOpts, extra) : stabs(univmSub, subOpts) + (extra?`<div>${extra}</div>`:'');
-  }
-  if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=`<div class="match-builder"><h3>🏟️ 대학대전 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button></div>${setBuilderHTML(BLD['univm'],'univm')}</div>`;}
+  const extra = (univmSub!=='input' && typeof buildYearMonthFilterControls==='function')
+    ? (buildYearMonthFilterControls('univm', true))
+    : '';
+  h+=_buildMatchSubtabShell(univmSub, subOpts, '_univmFilterOpen', extra);
+  if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=_mbFrame('🏟️ 대학대전 입력', _mbActionBar([`<button class="btn btn-p btn-sm mb-mini-btn" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`], '하단에서 저장까지 이어집니다'), _mbSectionCard('대학대전 입력', `${setBuilderHTML(BLD['univm'],'univm')}`), '공통 입력 카드 레이아웃');}
   else if(univmSub==='rank'){h+=univMRankHTML();}
   else{h+=recSummaryListHTML(univM,'univm','tab');}
   C.innerHTML=h;
@@ -1762,10 +1746,6 @@ var proSub='records';
 
 function rPro(C,T){
   T.innerText='🏅 프로리그';
-  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
-  if(window._proFilterOpen===undefined) window._proFilterOpen=_lockOpen;
-  if(_lockOpen) window._proFilterOpen=true;
   if(!isLoggedIn && proSub==='input') proSub='records';
   const subOpts=(typeof applyTabLabels==='function') ? applyTabLabels('pro', [
     {id:'input',lbl:'📝 경기 입력',fn:`proSub='input';render()`},
@@ -1777,19 +1757,12 @@ function rPro(C,T){
     {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`}
   ];
   let h='';
-  if(_enableSubFilter && !_lockOpen){
-    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
-      <button class="pill ${window._proFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._proFilterOpen=!window._proFilterOpen;render()">🔍 필터 ${window._proFilterOpen?'▲':'▼'}</button>
-    </div>`;
-  }
-  if(!_enableSubFilter || window._proFilterOpen){
-    const extra = (proSub!=='input' && typeof buildYearMonthFilterControls==='function')
-      ? (buildYearMonthFilterControls('pro', true)
-        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
-      : '';
-    h+=typeof stabsInline==='function' ? stabsInline(proSub, subOpts, extra) : stabs(proSub, subOpts) + (extra?`<div>${extra}</div>`:'');
-  }
+  const extra = (proSub!=='input' && typeof buildYearMonthFilterControls==='function')
+    ? (buildYearMonthFilterControls('pro', true)
+      + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+    : '';
+  h+=_buildMatchSubtabShell(proSub, subOpts, '_proFilterOpen', extra);
   if(proSub==='input'&&isLoggedIn){
     if(!BLD['pro']){const _sv=J('su_bld_pro')||{};BLD['pro']={date:_sv.date||'',membersA:_sv.membersA||[],membersB:_sv.membersB||[],tierFilters:_sv.tierFilters||[],sets:_sv.sets||[]};}
     h+=buildProInputHTML();
@@ -1819,26 +1792,20 @@ function buildProInputHTML(){
     return ti(a.tier)-ti(b.tier)||(a.name||'').localeCompare(b.name||'');
   });
 
-  let h=`<div class="match-builder"><h3>🏅 프로리그 입력</h3>
-    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openProPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
-    <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+  const actionBar = _mbActionBar([
+    `<button class="btn btn-p btn-sm mb-mini-btn" onclick="openProPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`
+  ], '텍스트 붙여넣기 지원');
+  let h = _mbSectionCard('① 기본 정보', `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['pro'].date=this.value">
-    </div>
-
-    <!-- ① 참가 티어 선택 -->
-    <div style="background:var(--blue-l);border:1px solid var(--blue-ll);border-radius:10px;padding:10px 14px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">① 참가 티어 <span style="font-weight:400;color:var(--gray-l)">(복수 선택 · god~1티어 · 검색으로 여성 선수도 추가 가능)</span></div>
+    </div>`) + _mbSectionCard('② 참가 티어', `
       <div style="display:flex;gap:5px;flex-wrap:wrap">
         <button class="tier-filter-btn ${tf.length===0?'on':''}" onclick="BLD['pro'].tierFilters=[];BLD['pro'].membersA=[];BLD['pro'].membersB=[];BLD['pro'].sets=[];render()">전체</button>
         ${PRO_TIERS.map(t=>{const _bg=getTierBtnColor(t),_tc=getTierBtnTextColor(t),_on=tf.includes(t);return`<button class="tier-filter-btn ${_on?'on':''}" style="${_on?`background:${_bg};color:${_tc};border-color:${_bg}`:''}" onclick="proToggleTier('${t}')">${getTierLabel(t)}</button>`;}).join('')}
       </div>
       <div style="font-size:11px;color:var(--blue);margin-top:6px">대상 스트리머: <strong>${eligible.length}명</strong></div>
-    </div>
-
-    <!-- ② 스트리머 클릭 → 팀 배정 -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">② 스트리머 클릭 → 팀 배정 <span style="font-weight:400;color:var(--gray-l);font-size:11px">(A팀 / B팀 버튼으로 추가)</span></div>
+    `, '(복수 선택 · god~1티어 · 검색으로 여성 선수도 추가 가능)') + _mbSectionCard('③ 스트리머 클릭 → 팀 배정', `
       <div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto">
         ${eligible.length===0
           ?'<span style="color:var(--gray-l);font-size:12px">티어를 선택하면 스트리머 목록이 표시됩니다</span>'
@@ -1857,10 +1824,8 @@ function buildProInputHTML(){
             }).join('')
         }
       </div>
-    </div>
-
-    <!-- ③ 팀 구성 확인 + 검색 추가 -->
-    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+    `, '(A팀 / B팀 버튼으로 추가)') + _mbSectionCard('④ 팀 구성 확인 + 검색 추가', `
+    <div class="mb-split">
       <div class="ck-panel">
         <h4>🔵 팀 A (${mA.length}명)</h4>
         <div style="display:flex;gap:6px;margin-bottom:6px">
@@ -1877,8 +1842,8 @@ function buildProInputHTML(){
         <div id="pro-b-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:var(--white);margin-bottom:6px"></div>
         <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['pro'].membersB.splice(${i},1);BLD['pro'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">스트리머 없음</span>'}</div>
       </div>
-    </div>`;
-  h+=setBuilderHTML(bld,'pro');h+=`</div>`;return h;
+    </div>`) + _mbSectionCard('⑤ 경기 결과 입력', `${setBuilderHTML(bld,'pro')}`);
+  return _mbFrame('🏅 프로리그 입력', actionBar, h, '프로리그 경기와 프로리그 대회를 상단 탭에서 구분');
 }
 
 function proSearchPlayer(team){
@@ -2186,7 +2151,9 @@ function proRankHTML(){
 function openGJShareCard(p1, p2, p1wins, p2wins, date, winner, opts) {
   _shareMode = 'match';
   openShareCardModal();
-  setTimeout(() => renderGJShareCard(p1, p2, p1wins, p2wins, date, winner, opts), 80);
+  const _run = () => renderGJShareCard(p1, p2, p1wins, p2wins, date, winner, opts);
+  if(typeof window._shareCardDeferRender==='function') window._shareCardDeferRender(_run);
+  else setTimeout(_run, 0);
 }
 
 function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner, opts) {
@@ -2198,6 +2165,16 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner, opts) {
   const col1 = proOnly ? '#1d4ed8' : gc(pp1.univ || '');
   const col2 = proOnly ? '#7c3aed' : gc(pp2.univ || '');
   const scp=(typeof window._getShareCardPrefs==='function'?window._getShareCardPrefs():{mode:'campus',color:.72,fx:.55,surface:'glass'});
+  const _pf = scp.profileScale || 1;
+  const _ff = scp.fontScale || 1;
+  const _darkCard = (!proOnly) || scp.mode==='dark' || scp.mode==='poster';
+  const _scoreColor = (hex, isWinner) => {
+    const base = String(hex||'#64748b');
+    if(typeof window._scMixHex==='function'){
+      return isWinner ? window._scMixHex(base,'#ffffff', proOnly ? .18 : .42) : window._scMixHex(base,'#cbd5e1', proOnly ? .74 : .82);
+    }
+    return isWinner ? base : '#94a3b8';
+  };
   const winnerCol = p1 === winner ? col1 : p2 === winner ? col2 : '#475569';
 
   // 해당 세션 게임 목록 gjM에서 필터링
@@ -2227,27 +2204,26 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner, opts) {
     const paneBd = proOnly ? `${uCol}26` : 'rgba(255,255,255,.14)';
     const photoShadow = isWinner ? `0 6px 18px ${uCol}44` : '0 2px 8px rgba(0,0,0,.07)';
     const photoLossFx = (!isWinner&&winner) ? 'opacity:.86;filter:grayscale(.12);' : '';
-    const photo = profileBlock(name, pObj, '82px', `border:3px solid ${uCol};box-shadow:${photoShadow};${photoLossFx}`);
+    const photo = profileBlock(name, pObj, `${Math.round(112*_pf)}px`, `border:3px solid ${uCol};box-shadow:${photoShadow};${photoLossFx}`);
     const race = raceLabel(pObj.race||'');
-    const tier = pObj.tier ? `<span style="background:${getTierBtnColor(pObj.tier)||'#64748b'};color:${getTierBtnTextColor(pObj.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${ct(pObj.tier)}</span>` : '';
-    const raceSpan = race ? `<span style="font-size:10px;color:${proOnly?'#64748b':'rgba(255,255,255,.68)'}">${race}</span>` : '';
-    const univBadge = pObj.univ ? `<span style="background:${proOnly?uCol:'rgba(255,255,255,.14)'};color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:999px;border:${proOnly?'none':'1px solid rgba(255,255,255,.18)'}">${pObj.univ}</span>` : '';
-    const uniIcon = univLogo(pObj.univ||'', uCol);
+    const tier = pObj.tier ? `<span style="background:${getTierBtnColor(pObj.tier)||'#64748b'};color:${getTierBtnTextColor(pObj.tier)||'#fff'};font-size:${Math.round(10*_ff)}px;font-weight:800;padding:2px 6px;border-radius:999px">${ct(pObj.tier)}</span>` : '';
+    const _nameColor = isWinner ? (_darkCard ? '#ffffff' : '#111827') : (_darkCard ? 'rgba(255,255,255,.88)' : '#334155');
+    const _metaColor = _darkCard ? 'rgba(255,255,255,.84)' : '#475569';
+    const raceSpan = race ? `<span style="font-size:${Math.round(10*_ff)}px;color:${_metaColor};font-weight:800">${race}</span>` : '';
     const isRight = side === 'right';
-    const meta = `${uniIcon}${tier}${raceSpan}${univBadge}`;
-    const dir = isRight ? 'row-reverse' : 'row';
     const alignText = isRight ? 'right' : 'left';
     const justify = isRight ? 'flex-end' : 'flex-start';
-    const loserNameColor = proOnly ? '#334155' : 'rgba(255,255,255,.82)';
     const winBadge = (isWinner&&winner) ? `<div style="position:absolute;bottom:-2px;${isRight?'left:-2px':'right:-2px'};font-size:13px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))">🏆</div>` : '';
-    return `<div style="flex:1;display:flex;align-items:center;gap:10px;flex-direction:${dir};background:${paneBg};border:1px solid ${paneBd};border-radius:16px;padding:12px 12px;min-width:0;backdrop-filter:${proOnly?'none':'blur(10px)'}">
+    const teamLine = pObj.univ ? `<div style="display:flex;align-items:center;justify-content:${justify};gap:4px;min-width:0">${univLogo(pObj.univ||'', uCol)}<span style="font-size:${Math.round(11*_ff)}px;color:${_metaColor};font-weight:800;line-height:1.25;white-space:normal;overflow-wrap:anywhere;word-break:keep-all">${pObj.univ}</span></div>` : '';
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:${isRight?'flex-end':'flex-start'};gap:10px;background:${paneBg};border:1px solid ${paneBd};border-radius:16px;padding:14px 12px;min-width:0;backdrop-filter:${proOnly?'none':'blur(10px)'}">
       <div style="flex-shrink:0;position:relative">
         ${photo}
         ${winBadge}
       </div>
-      <div style="text-align:${alignText};flex:1;min-width:0">
-        <div style="font-size:15px;font-weight:${isWinner?'900':'700'};color:${isWinner?WC:loserNameColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-        <div style="display:flex;align-items:center;justify-content:${justify};gap:4px;flex-wrap:wrap;margin-top:4px">${meta}</div>
+      <div style="text-align:${alignText};width:100%;min-width:0;display:flex;flex-direction:column;align-items:${isRight?'flex-end':'flex-start'};gap:6px">
+        <div style="font-size:${Math.round(18*_ff)}px;font-weight:${isWinner?'1000':'800'};color:${_nameColor};line-height:1.16;white-space:normal;overflow-wrap:anywhere;word-break:keep-all;max-width:150px;text-shadow:${_darkCard?'0 1px 10px rgba(0,0,0,.24)':'none'}">${name}</div>
+        <div style="display:flex;align-items:center;justify-content:${justify};gap:4px;flex-wrap:wrap">${tier}${raceSpan}</div>
+        ${teamLine}
       </div>
     </div>`;
   };
@@ -2273,7 +2249,8 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner, opts) {
   const gjBg = proOnly
     ? 'linear-gradient(135deg,#eef4ff 0%,#ffffff 36%,#f5f3ff 100%)'
     : `linear-gradient(135deg,${col1} 0%, ${typeof window._scMixHex==='function'?window._scMixHex(col1,'#0f172a',.34):'#0f172a'} 46%, ${col2} 100%)`;
-  card.innerHTML = `<div style="background:${gjBg};border-radius:24px;padding:20px 18px;font-family:'Noto Sans KR',sans-serif;color:${proOnly?'#111':'#fff'};overflow:hidden;position:relative;box-shadow:0 14px 42px rgba(15,23,42,.22)">
+  const _cacheKey = `gj:${JSON.stringify({p1,p2,p1wins,p2wins,date,winner,proOnly})}`;
+  const _html = `<div style="background:${gjBg};border-radius:24px;padding:20px 18px;font-family:'Noto Sans KR',sans-serif;color:${proOnly?'#111':'#fff'};overflow:hidden;position:relative;box-shadow:0 14px 42px rgba(15,23,42,.22)">
     <div style="position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,${col1},${col2});border-radius:22px 22px 0 0"></div>
     <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:linear-gradient(135deg,${col2}20,transparent);pointer-events:none"></div>
     <div style="position:absolute;bottom:-30px;left:-30px;width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,${col1}18,transparent);pointer-events:none"></div>
@@ -2285,9 +2262,9 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner, opts) {
       ${playerInfoBlock(p1, pp1, p1===winner, 'left')}
       <div style="text-align:center;flex-shrink:0;padding:10px 2px 0;min-width:80px">
         <div style="font-size:46px;font-weight:900;line-height:1;letter-spacing:-2px;text-shadow:${proOnly?'none':'0 10px 24px rgba(0,0,0,.25)'}">
-          <span style="color:${p1===winner?col1:`${col1}66`}">${p1wins}</span>
+          <span style="color:${_scoreColor(col1, p1===winner)}">${p1wins}</span>
           <span style="color:${proOnly?'#cbd5e1':'rgba(255,255,255,.38)'};font-size:22px;margin:0 1px">:</span>
-          <span style="color:${p2===winner?col2:`${col2}66`}">${p2wins}</span>
+          <span style="color:${_scoreColor(col2, p2===winner)}">${p2wins}</span>
         </div>
         ${winner?`<div style="font-size:8px;background:linear-gradient(90deg,${col1},${col2});-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;margin-top:5px;letter-spacing:1px">WIN</div>`:''}
       </div>
@@ -2299,6 +2276,8 @@ function renderGJShareCard(p1, p2, p1wins, p2wins, date, winner, opts) {
     </div>` : ''}
     <div style="margin-top:12px;text-align:right;font-size:8px;color:${proOnly?'#c4b5fd':'rgba(255,255,255,.36)'};letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
   </div>`;
+  if(typeof window._shareCardRenderCached==='function') window._shareCardRenderCached(card, _cacheKey, ()=>_html);
+  else card.innerHTML = _html;
 }
 
 /* ══════════════════════════════════════

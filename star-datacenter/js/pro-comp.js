@@ -381,7 +381,7 @@ function proCompLeague(tn) {
     }
   } else if (grpList.length===1) {
     const gDone=(grpList[0].grp.matches||[]).filter(m=>m.winner).length;
-    if (gDone>0) h += `<div style="margin-bottom:10px"><button class="btn btn-w btn-sm" onclick="_openProCompGrpAllShareCard('${tn.id}',${grpList[0].gi})">📷 조 전체 공유카드</button></div>`;
+    if (gDone>0) h += `<div style="margin-bottom:10px"><button class="btn btn-w btn-sm" style="min-width:122px;display:inline-flex;align-items:center;justify-content:center" onclick="_openProCompGrpAllShareCard('${tn.id}',${grpList[0].gi})">🎴 공유 카드</button></div>`;
   }
   let filtered = allMatches;
   if (proCompFilterDate) filtered = filtered.filter(m=>m.d===proCompFilterDate);
@@ -453,7 +453,7 @@ function proCompLeague(tn) {
           ${_pcard(pb, bWin)}
         </div>
         <div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-          ${isDone?(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="_openProCompLeagueShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">공유</button>`:'';})():''}
+          ${isDone?(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="_openProCompLeagueShareCard('${tn.id}',${m.grpIdx},${m.matchNum-1})">🎴 공유 카드</button>`:'';})():''}
           ${isLoggedIn?`<button class="btn btn-b btn-xs" style="white-space:nowrap" onclick="proCompEditMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">✏️ 결과</button>
           <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${tn.id}',${m.grpIdx},${m.matchNum-1})">🗑️ 삭제</button>`:''}
         </div>
@@ -573,7 +573,7 @@ function proCompTeamSection(tn) {
           <span style="font-weight:${bWin?900:600};color:${bWin?colB:'var(--text)'};font-size:14px">${tm.teamBName||'B팀'}</span>
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap" class="no-export">
-          ${games.length?`<button class="btn btn-p btn-xs" onclick="_openProCompTeamShareCard('${tn.id}',${tmi})">📷</button>`:''}
+          ${games.length?`<button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="_openProCompTeamShareCard('${tn.id}',${tmi})">🎴 공유 카드</button>`:''}
           ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="proCompAddTeamGame('${tn.id}',${tmi})">+ 경기</button>
           <button class="btn btn-w btn-xs" onclick="proCompOpenTeamPasteModal('${tn.id}',${tmi})">📋</button>
           <button class="btn btn-w btn-xs" onclick="proCompEditTeamMatch('${tn.id}',${tmi})">✏️</button>
@@ -936,10 +936,13 @@ function _proCompTeamSelectThenPaste(tnId) {
   const tms = tn.teamMatches||[];
   const modal = document.createElement('div');
   modal.id = '_tmSelectModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
-  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:420px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-    <div style="font-weight:900;font-size:15px;margin-bottom:12px">팀전 경기 선택</div>
-    <label style="font-size:12px;font-weight:700;color:var(--text3)">경기 선택</label>
+  modal.className = 'modal-compact-overlay';
+  modal.innerHTML = `<div class="modal-compact-box" style="width:420px">
+    <div style="font-weight:900;font-size:15px;margin-bottom:10px">팀전 경기 선택</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+      <label style="font-size:12px;font-weight:700;color:var(--text3)">경기 선택</label>
+      <span class="btn btn-w btn-xs" style="margin-left:auto">선택 가능 ${tms.length||1}경기</span>
+    </div>
     <select id="_tmSel_tmi" onchange="document.getElementById('_tmSel_newFields').style.display=parseInt(this.value)>=0?'none':'flex'" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);margin-top:4px;margin-bottom:10px;box-sizing:border-box">
       <option value="-1">직접 새 경기 구성</option>
       ${tms.map((t,i)=>`<option value="${i}">${t.teamAName||'A팀'} vs ${t.teamBName||'B팀'} (${t.d||'날짜 미정'})</option>`).join('')}
@@ -1187,7 +1190,7 @@ function proCompBracket(tn) {
         ${hasGames?`<div style="padding:3px 12px 4px;font-size:9px;background:#f8fafc;border-top:1px solid #f1f5f9;color:#64748b;line-height:1.9">${m._games.map((g,gi)=>`<span style="margin-right:8px">${gi+1}G·<b style="color:${g.winner==='A'?col:'#dc2626'}">${g.winner==='A'?m.a||'A':m.b||'B'}</b>${g.map?` <span style="color:#94a3b8">${g.map}</span>`:''}</span>`).join('')}</div>`:''}
         <!-- 옵션 버튼 -->
         <div style="padding:5px 8px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:3px;flex-wrap:wrap">
-          ${isDone?(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-xs no-export" style="font-size:9px;padding:1px 6px;background:${col}18;color:${col};border-color:${col}44" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})">공유</button>`:'';})():''}
+          ${isDone?(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs no-export" style="min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})">🎴 공유 카드</button>`:'';})():''}
           ${isLoggedIn?`${hasBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,5)} 승</button>
             <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,5)} 승</button>`:''}
             ${_canBye?`<button class="btn btn-xs" style="font-size:9px;padding:0 6px;border-color:#f59e0b;color:#b45309;background:#fffbeb" onclick="proCompApplyBye('${tn.id}',${ri},${mi})" title="부전승 처리">부전승</button>`:''}
@@ -1676,10 +1679,7 @@ window.openPcStageRecShareCard = function(tnId, round, idx){
     sets:[{ label:r, scoreA, scoreB, winner:m.winner, games:[{ playerA:m.a||'', playerB:m.b||'', winner:m.winner, map:m.map||'' }] }],
     _noUnivIcon:false, _usePlayerPhoto:true, _matchType:'procomp-bkt'
   };
-  window._shareMatchObj=shareObj;
-  window._shareMode='match';
-  openShareCardModal();
-  setTimeout(()=>renderShareCardByMatchObj(shareObj),80);
+  if(typeof window._openShareMatchObjCard==='function') window._openShareMatchObjCard(shareObj);
 };
 
 function _pcStageResolveAliasName(name0){
@@ -2409,9 +2409,12 @@ function proCompOpenBktPasteModal(tnId) {
        </div>` : '';
   const modal = document.createElement('div');
   modal.id = '_bktPasteModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
-  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:440px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-    <div style="font-weight:900;font-size:15px;margin-bottom:8px">대진표 결과 일괄 입력</div>
+  modal.className = 'modal-compact-overlay';
+  modal.innerHTML = `<div class="modal-compact-box" style="width:440px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+      <div style="font-weight:900;font-size:15px">대진표 결과 일괄 입력</div>
+      <span class="btn btn-w btn-xs" style="margin-left:auto">선택 경기 ${pending.length}</span>
+    </div>
     <div style="font-size:11px;color:var(--text3);background:var(--surface);border-radius:8px;padding:10px;margin-bottom:10px;line-height:1.8">
       한 줄에 한 경기 (공백/탭 구분):<br>
       <code>승자이름 패자이름 [맵]</code><br>
@@ -2535,10 +2538,10 @@ function proCompBktSetDate(tnId, ri, mi) {
   const m = tn.bracket[ri][mi];
   if (!m) return;
   const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center';
-  modal.innerHTML = `<div style="background:var(--white);border-radius:14px;padding:20px;min-width:240px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-    <div style="font-weight:900;font-size:14px;margin-bottom:14px">🗓️ 날짜 입력</div>
-    <input id="_bktDateInp" type="date" value="${m.d||''}" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);box-sizing:border-box;margin-bottom:14px">
+  modal.className = 'modal-compact-overlay';
+  modal.innerHTML = `<div class="modal-compact-box modal-compact-box--sm" style="min-width:230px">
+    <div style="font-weight:900;font-size:14px;margin-bottom:10px">🗓️ 날짜 입력</div>
+    <input id="_bktDateInp" type="date" value="${m.d||''}" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);box-sizing:border-box;margin-bottom:10px">
     <div style="display:flex;gap:8px">
       <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_bktDateInp').value;const t2=_findTourneyById('${tnId}');if(t2&&t2.bracket&&t2.bracket[${ri}]&&t2.bracket[${ri}][${mi}]){const m2=t2.bracket[${ri}][${mi}];m2.d=v; if(m2.winner)_syncBktMatchToHistory(t2,m2,'pbn_${tnId}_${ri}_${mi}',${ri},${mi});}document.body.removeChild(document.getElementById('_bktDateModal'));save();render();})()">확인</button>
       <button class="btn btn-w" style="flex:1" onclick="document.body.removeChild(document.getElementById('_bktDateModal'))">취소</button>
@@ -2555,10 +2558,10 @@ function proCompBktSetMap(tnId, ri, mi) {
   if (!m) return;
   const modal = document.createElement('div');
   modal.id = '_bktMapModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
-  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:320px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-    <div style="font-weight:900;font-size:15px;margin-bottom:14px">🗺️ 맵 설정</div>
-    <input id="_bktMapInp" value="${(m.map||'').replace(/"/g,'&quot;')}" placeholder="맵 이름 입력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px;box-sizing:border-box;margin-bottom:14px">
+  modal.className = 'modal-compact-overlay';
+  modal.innerHTML = `<div class="modal-compact-box" style="width:320px">
+    <div style="font-weight:900;font-size:15px;margin-bottom:10px">🗺️ 맵 설정</div>
+    <input id="_bktMapInp" value="${(m.map||'').replace(/"/g,'&quot;')}" placeholder="맵 이름 입력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px;box-sizing:border-box;margin-bottom:10px">
     <div style="display:flex;gap:8px">
       <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_bktMapInp').value.trim();const t2=_findTourneyById('${tnId}');if(t2&&t2.bracket&&t2.bracket[${ri}]&&t2.bracket[${ri}][${mi}]){const m2=t2.bracket[${ri}][${mi}];m2.map=v; if(m2.winner)_syncBktMatchToHistory(t2,m2,'pbn_${tnId}_${ri}_${mi}',${ri},${mi});}document.getElementById('_bktMapModal').remove();save();render();})()">확인</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_bktMapModal').remove()">취소</button>
@@ -3076,21 +3079,21 @@ function proCompOpenBktMatchPaste(tnId, ri, mi) {
 
   const modal = document.createElement('div');
   modal.id = '_pcBktMatchPaste';
-  modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.className = 'modal-compact-overlay';
   const defDate = m.d || new Date().toISOString().slice(0,10);
-  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:22px;width:420px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+  modal.innerHTML = `<div class="modal-compact-box" style="width:400px">
     <div style="font-weight:900;font-size:15px;margin-bottom:6px">📋 결과 붙여넣기</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.6">
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;line-height:1.55">
       <b>${m.a}</b> vs <b>${m.b}</b><br>
       이 경기 결과만 저장합니다. 여러 줄 입력 가능<br>
       형식: <code>A [맵]</code> / <code>B [맵]</code> 또는 <code>승자이름 패자이름 [맵]</code>
     </div>
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
       <div style="font-size:12px;font-weight:700;color:var(--text3);min-width:44px">날짜</div>
       <input id="_pcBktPasteDate" type="date" value="${defDate}" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid var(--border);box-sizing:border-box">
     </div>
     <textarea id="_pcBktPasteText" rows="5" placeholder="A 투혼" style="width:100%;padding:10px;border-radius:12px;border:1.5px solid var(--border);font-size:13px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
-    <div style="display:flex;gap:10px;margin-top:14px">
+    <div style="display:flex;gap:10px;margin-top:10px">
       <button class="btn btn-b" style="flex:1" onclick="proCompSaveBktMatchPaste('${tnId}',${ri},${mi})">적용</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_pcBktMatchPaste').remove()">취소</button>
     </div>
@@ -4744,10 +4747,7 @@ function _openProCompLeagueShareCard(tnId, gi, mi) {
     }],
     _noUnivIcon: false, _usePlayerPhoto: true, _matchType: 'pro'  // 프로리그 일반 카드 스타일 사용
   };
-  window._shareMatchObj = shareObj;
-  window._shareMode = 'match';
-  openShareCardModal();
-  setTimeout(() => renderShareCardByMatchObj(shareObj), 80);
+  if(typeof window._openShareMatchObjCard==='function') window._openShareMatchObjCard(shareObj);
 }
 
 function _openProCompTeamShareCard(tnId, tmi) {
@@ -4769,10 +4769,7 @@ function _openProCompTeamShareCard(tnId, tmi) {
     sets: [{scoreA:tm.sa||0, scoreB:tm.sb||0, winner:tm.sa>tm.sb?'A':tm.sb>tm.sa?'B':'', games}],
     _noUnivIcon: true, _matchType: 'procomp-team'
   };
-  window._shareMatchObj = shareObj;
-  window._shareMode = 'match';
-  openShareCardModal();
-  setTimeout(() => renderShareCardByMatchObj(shareObj), 80);
+  if(typeof window._openShareMatchObjCard==='function') window._openShareMatchObjCard(shareObj);
 }
 
 function _openProCompBktShareCard(tnId, ri, mi) {
@@ -4795,10 +4792,7 @@ function _openProCompBktShareCard(tnId, ri, mi) {
     sets: [{ scoreA, scoreB, winner: m.winner, games }],
     _noUnivIcon: false, _usePlayerPhoto: true, _matchType: 'procomp-bkt'
   };
-  window._shareMatchObj = shareObj;
-  window._shareMode = 'match';
-  openShareCardModal();
-  setTimeout(() => renderShareCardByMatchObj(shareObj), 80);
+  if(typeof window._openShareMatchObjCard==='function') window._openShareMatchObjCard(shareObj);
 }
 
 /* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?
@@ -4809,7 +4803,7 @@ function _openProCompGrpAllShareCard(tnId, gi) {
   if (!tn) return;
   const grp = (tn.groups||[])[gi];
   if (!grp) return;
-  openShareCardModal();
+  if(typeof openShareCardModal==='function') openShareCardModal();
   setTimeout(() => _renderProCompGrpShareCard(tnId, gi), 80);
 }
 

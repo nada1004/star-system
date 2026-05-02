@@ -232,7 +232,7 @@ function _vsRenderResult(){
 
     <!-- 액션 버튼 -->
     <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap" class="no-export">
-      <button class="btn btn-p btn-sm" onclick="openVsShareCard()">🎴 공유 카드</button>
+      <button class="btn btn-p btn-sm" style="min-width:108px;display:inline-flex;align-items:center;justify-content:center" onclick="openVsShareCard()">🎴 공유 카드</button>
       <button class="btn-capture btn-sm" onclick="captureVsCard()">📷 이미지 저장</button>
       <button class="btn btn-w btn-sm" onclick="vsClearAll()">🗑 결과 지우기</button>
     </div>
@@ -452,14 +452,14 @@ function openVsShareCard(){
   if(existing)existing.remove();
   const overlay=document.createElement('div');
   overlay.id='sharecard-overlay';
-  overlay.className='sharecard-modal-overlay';
-  overlay.innerHTML=`<div class="sharecard-modal-box" onclick="event.stopPropagation()" style="max-width:460px;width:96vw">
+  overlay.className='sharecard-modal-overlay modal-compact-overlay';
+  overlay.innerHTML=`<div class="sharecard-modal-box modal-compact-box" onclick="event.stopPropagation()" style="max-width:460px;width:96vw;padding:14px 14px 12px">
     <button class="sharecard-modal-close" onclick="document.getElementById('sharecard-overlay').remove()">✕</button>
-    <div style="font-weight:700;font-size:14px;color:var(--blue);margin-bottom:14px;padding-right:30px">🎴 1:1 상대 전적 공유 카드</div>
+    <div style="font-weight:700;font-size:14px;color:var(--blue);margin-bottom:10px;padding-right:30px">🎴 1:1 상대 전적 공유 카드</div>
     <div id="modal-share-card" style="display:flex;justify-content:center;overflow:auto;max-height:70vh">
       <div id="share-card">${cardHTML}</div>
     </div>
-    <div class="sharecard-modal-actions" style="margin-top:16px">
+    <div class="sharecard-modal-actions" style="margin-top:10px">
       <button class="btn btn-p" onclick="downloadVsShareCard('jpg')">📷 JPG 저장</button>
       <button class="btn btn-w" onclick="downloadVsShareCard('png')">🖼 PNG 저장</button>
       <button class="btn btn-w" onclick="document.getElementById('sharecard-overlay').remove()">닫기</button>

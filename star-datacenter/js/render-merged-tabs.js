@@ -4,7 +4,7 @@ var _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
 var _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'gj' | 'comp'
 
 function _mergedSubBar(tabs, curSub, setFn) {
-  return `<div class="fbar utilbar utilbar--scroll no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:16px">
+  return `<div class="fbar utilbar utilbar--scroll merged-subbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">
     ${tabs.map(t=>`<button class="pill ${curSub===t.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${setFn}='${t.id}';render()">${t.lbl}</button>`).join('')}
   </div>`;
 }
@@ -43,8 +43,8 @@ function rMergedUnivM(C, T) {
 
 function rMergedComp(C, T) {
   const tabs = (typeof applyTabLabels==='function')
-    ? applyTabLabels('mergedComp', [{id:'comp',lbl:'🎖️ 대회'},{id:'tiertour',lbl:'🎯 티어대회'}])
-    : [{id:'comp',lbl:'🎖️ 대회'},{id:'tiertour',lbl:'🎯 티어대회'}];
+    ? applyTabLabels('mergedComp', [{id:'comp',lbl:'🎖️ 일반 대회'},{id:'tiertour',lbl:'🎯 티어대회'}])
+    : [{id:'comp',lbl:'🎖️ 일반 대회'},{id:'tiertour',lbl:'🎯 티어대회'}];
   const bar = _mergedSubBar(
     tabs,
     _mergedCompSub, '_mergedCompSub'
@@ -63,8 +63,8 @@ function rMergedComp(C, T) {
 
 function rMergedPro(C, T) {
   const tabs = (typeof applyTabLabels==='function')
-    ? applyTabLabels('mergedPro', [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 끝장전'},{id:'comp',lbl:'🎖️ 대회'}])
-    : [{id:'pro',lbl:'🏅 일반'},{id:'gj',lbl:'⚔️ 끝장전'},{id:'comp',lbl:'🎖️ 대회'}];
+    ? applyTabLabels('mergedPro', [{id:'pro',lbl:'🏅 프로리그'},{id:'gj',lbl:'⚔️ 프로 끝장전'},{id:'comp',lbl:'🏆 프로리그 대회'}])
+    : [{id:'pro',lbl:'🏅 프로리그'},{id:'gj',lbl:'⚔️ 프로 끝장전'},{id:'comp',lbl:'🏆 프로리그 대회'}];
   const bar = _mergedSubBar(
     tabs,
     _mergedProSub, '_mergedProSub'

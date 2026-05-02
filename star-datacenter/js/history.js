@@ -375,7 +375,7 @@ function histAllHTML(){
               const wp=players.find(p=>p.name===(m.wName||'')); const lp=players.find(p=>p.name===(m.lName||''));
               const wc=wp?gc(wp.univ):'#888'; const lc=lp?gc(lp.univ):'#888';
               const mapStr=m.map&&m.map!=='-'?`<span style="font-size:11px;color:var(--gray-l)">📍 ${m.map}</span>`:'';
-              return `<div style="padding:10px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px">
+              return `<div style="padding:8px 10px;display:flex;align-items:center;gap:8px">
                 ${wp?getPlayerPhotoHTML(wp.name,'24px'):''}<span class="ubadge" style="background:${wc}">${m.wName||''}</span>
                 <span style="color:var(--gray-l)">vs</span>
                 ${lp?getPlayerPhotoHTML(lp.name,'24px'):''}<span class="ubadge" style="background:${lc}">${m.lName||''}</span>
@@ -473,15 +473,7 @@ function histTourneyHTML(context){
         </div>
         <div id="det-${key}" class="rec-detail-area">
         ${_regDet(key,{...m,_editRef:rIdx>=0?'comp:'+rIdx:''},  'comp',a,b,ca,cb,aWin,bWin, rIdx)}
-          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
-            ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-              ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getHistTourneyMatchObj(${idx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>`:'';})()}
-              ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
-              <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>
-              ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''}
-            </div>
-          </div>
+          ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; const _share=((!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(${idx},'${context}'))">🎴 공유 카드</button>`:''); const _memo=(rIdx>=0&&isLoggedIn)?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''; const _note=m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''; return (_share||_memo||_note)?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">${_note}<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${_share}${_memo}</div></div>`:'';})()}
         </div>
       </div>`;
     });
@@ -685,11 +677,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
       </div>
       <div id="det-${key}" class="rec-detail-area">
         ${_regDet(key,{...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin, i)}
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs no-export" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>`:'';})()}
-          </div>
-        </div>
+        ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; const _btn=((!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs no-export" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>`:''); return _btn?`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><div class="fbar merged-subbar no-export" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">${_btn}</div></div>`:'';})()}
       </div>
     </div>`;
   }
@@ -986,14 +974,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       </div>
       <div id="det-${key}" class="rec-detail-area">
         ${_regDet(key,{...m,_editRef:`${mode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin, i)}
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-          ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            ${isLoggedIn&&_rcMemoOn?`<input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px">
-            <button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>
-            ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">🗑️ 삭제</button>`:''}`:''}
-          </div>
-        </div>
+        ${(()=>{const _note=m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''; const _memo=isLoggedIn&&_rcMemoOn?`<div class="fbar merged-subbar no-export" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">🗑️ 삭제</button>`:''}</div>`:''; return (_note||_memo)?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">${_note}${_memo}</div>`:'';})()}
       </div>
     </div>`;
   }
@@ -2529,15 +2510,7 @@ function compSummaryListHTML(context){
       </div>
       <div id="det-${key}" class="rec-detail-area">
         ${_regDet(key,rIdx>=0?{...m,_editRef:'comp:'+rIdx}:m,'comp',a,b,ca,cb,aWin,bWin, rIdx)}
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">
-          ${m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''}
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="_shareMode='match';window._shareMatchObj=_getCompMatchObj(${listIdx},'${context}');openShareCardModal();setTimeout(()=>renderShareCardByMatchObj(window._shareMatchObj),80)">🎴 공유 카드</button>`:'';})()}
-            ${rIdx>=0&&isLoggedIn?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px">
-            <button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>
-            ${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''}
-          </div>
-        </div>
+        ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; const _share=((!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="window._openShareMatchObjCard&&window._openShareMatchObjCard(_getCompMatchObj(${listIdx},'${context}'))">🎴 공유 카드</button>`:''); const _memo=(rIdx>=0&&isLoggedIn)?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''; const _note=m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''; return (_share||_memo||_note)?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">${_note}<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${_share}${_memo}</div></div>`:'';})()}
       </div>
     </div>`;
   });
@@ -2837,15 +2810,44 @@ function openHistDetailModal(key){
   const idx = (reg.idx!==undefined && reg.idx!==null) ? reg.idx : null;
   const modeKey = reg.mode || '';
   // 공유카드: 인덱스 기반이 어려운 케이스(comp 통합/대회 포함)에서는 match 객체로 직접 오픈
+  const _buildDetailSharePayload = ()=>{
+    try{
+      if(!match) return null;
+      if((match.a||match.b) && match.sa!=null && match.sb!=null){
+        return {...match, _matchType:(modeKey||'')};
+      }
+      const A = reg.lA || match.a || match.wName || 'A';
+      const B = reg.lB || match.b || match.lName || 'B';
+      if(Array.isArray(match.games) && match.games.length){
+        const games = match.games.map(g=>{
+          const w = g.wName || (g.winner==='A'?A:(g.winner==='B'?B:''));
+          return {
+            playerA: A,
+            playerB: B,
+            winner: w===A ? 'A' : 'B',
+            map: g.map||''
+          };
+        });
+        const sa = games.filter(g=>g.winner==='A').length;
+        const sb = games.filter(g=>g.winner==='B').length;
+        return { a:A, b:B, sa, sb, d:match.d||'', n:match.n||'', sets:[{scoreA:sa, scoreB:sb, winner:sa>sb?'A':sb>sa?'B':'', games}], _usePlayerPhoto:true, _matchType:(modeKey||'') };
+      }
+      if(match.wName || match.lName){
+        const w = match.wName||'';
+        const sa = w===A ? 1 : 0;
+        const sb = w===B ? 1 : 0;
+        return { a:A, b:B, sa, sb, d:match.d||'', n:match.n||'', sets:[{scoreA:sa, scoreB:sb, winner:sa>sb?'A':sb>sa?'B':'', games:[{playerA:A, playerB:B, winner:sa>sb?'A':'B', map:match.map||''}]}], _usePlayerPhoto:true, _matchType:(modeKey||'') };
+      }
+    }catch(e){}
+    return null;
+  };
   const _openShareByObj = (obj)=>{
     try{
       // 티어대회(tt) 등에서 공유카드 표기 보정
       const _mt = modeKey==='tt' ? 'tt' : (obj?._matchType || (modeKey||''));
       const _usePhoto = modeKey==='tt' ? true : (obj?._usePlayerPhoto || false);
-      window._shareMatchObj = obj ? {...obj, _matchType:_mt, _usePlayerPhoto:_usePhoto} : null;
-      window._shareMode = 'match';
-      if(typeof openShareCardModal==='function') openShareCardModal();
-      setTimeout(()=>{ try{ if(window._shareMatchObj && typeof renderShareCardByMatchObj==='function') renderShareCardByMatchObj(window._shareMatchObj); }catch(_){ } }, 80);
+      const _payload = obj ? {...obj, _matchType:_mt, _usePlayerPhoto:_usePhoto} : null;
+      if(typeof window._openShareMatchObjCard==='function') window._openShareMatchObjCard(_payload);
     }catch(e){}
   };
   // 헤더 액션(고정)
@@ -2867,6 +2869,13 @@ function openHistDetailModal(key){
         try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
         if(!canShare) return;
         // comp 포함 전 모드 지원
+        if(modeKey==='ind' || modeKey==='gj' || modeKey==='progj'){
+          const _payload = _buildDetailSharePayload();
+          if(_payload){
+            _openShareByObj(_payload);
+            return;
+          }
+        }
         if(typeof openShareCardFromMatch==='function' && idx!==null && modeKey!=='comp'){
           openShareCardFromMatch(modeKey, idx);
           return;
@@ -3030,7 +3039,7 @@ function histProCompHTML() {
   // 조별리그 / 토너먼트 / 팀전 / 중장전
   if(!window._histProCompSub) window._histProCompSub='league'; // league | tourney | team | gj
   const sub = window._histProCompSub;
-  const _pcSubBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+  const _pcSubBar=`<div class="fbar merged-subbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">
     <button class="pill ${sub==='league'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histProCompSub='league';render()">📅 조별리그</button>
     <button class="pill ${sub==='tourney'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histProCompSub='tourney';render()">🗂️ 토너먼트</button>
     <button class="pill ${sub==='team'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histProCompSub='team';render()">🤝 팀전</button>
@@ -3107,7 +3116,7 @@ function _histProCompLeagueListHTML(){
           <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           ${stageTypeBadge}${stageBadge}
           <div class="rec-actions no-export" style="margin-left:auto">
-            <button class="btn btn-p btn-xs" onclick="openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${aWin?1:0},${bWin?1:0},'${m.d||''}')">🎴 공유카드</button>
+            <button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${aWin?1:0},${bWin?1:0},'${m.d||''}')">🎴 공유 카드</button>
             ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="proCompEditMatch('${m._tnId||''}',${m._gi||0},${m._mi||0})">✏️ 결과</button>
             <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${m._tnId||''}',${m._gi||0},${m._mi||0})">🗑️ 삭제</button>`:''}
           </div>
@@ -3142,7 +3151,7 @@ function _histProCompLeagueListHTML(){
    대전 기록 > 프로리그 토너먼트 탭 (대진표 + 3위전)
 ══════════════════════════════════════ */
 function histProCompTourneyHTML(_omitBar) {
-  const _pcSubBar2=_omitBar?'':`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+  const _pcSubBar2=_omitBar?'':`<div class="fbar merged-subbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">
     <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="window._histProCompSub='league';histSub='procomp';render()">📅 조별리그</button>
     <button class="pill on" style="flex-shrink:0;white-space:nowrap">🗂️ 토너먼트</button>
     <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="window._histProCompSub='team';histSub='procomp';render()">🤝 팀전</button>
@@ -3221,7 +3230,7 @@ function histProCompTourneyHTML(_omitBar) {
           ${stageBadge}
           ${tieBadge}
           <div class="rec-actions no-export" style="margin-left:auto">
-            <button class="btn btn-p btn-xs" onclick="openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${m._isTie?(m._scoreA||0):(aWin?1:0)},${m._isTie?(m._scoreB||0):(bWin?1:0)},'${m.d||''}')">🎴 공유카드</button>
+            <button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${m._isTie?(m._scoreA||0):(aWin?1:0)},${m._isTie?(m._scoreB||0):(bWin?1:0)},'${m.d||''}')">🎴 공유 카드</button>
             ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="try{ if(typeof openPcStageRecModal==='function' && m._round) openPcStageRecModal('${(m._tnId||'').replace(/'/g,"\\'")}', '${(m._round||'').replace(/'/g,"\\'")}', ${m._idx||0}); else if(typeof openPcBktPasteModal==='function') openPcBktPasteModal('${(m._tnId||'').replace(/'/g,"\\'")}', ${JSON.stringify(m._ri)}, ${m._mi||0}); }catch(e){}">✏️ 기록</button>`:''}
           </div>
         </div>
@@ -3293,7 +3302,7 @@ function histProCompTeamHTML(_omitBar) {
           <span style="font-weight:${aWin?900:600};color:${aWin?colA:'var(--text)'};font-size:13px">${tm.teamAName||'A팀'}</span>
           <span style="font-size:16px;font-weight:900;background:${aWin?colA:bWin?colB:'var(--border)'};color:#fff;padding:1px 10px;border-radius:6px">${tm.sa||0}:${tm.sb||0}</span>
           <span style="font-weight:${bWin?900:600};color:${bWin?colB:'var(--text)'};font-size:13px">${tm.teamBName||'B팀'}</span>
-          <button class="btn btn-p btn-xs no-export" style="margin-left:auto" onclick="openProCompMatchShare('${(tm.teamAName||'A팀').replace(/'/g,"\\'")}','${(tm.teamBName||'B팀').replace(/'/g,"\\'")}',${tm.sa||0},${tm.sb||0},'${tm.d||''}')">🎴 공유카드</button>
+          <button class="btn btn-p btn-xs no-export" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openProCompMatchShare('${(tm.teamAName||'A팀').replace(/'/g,"\\'")}','${(tm.teamBName||'B팀').replace(/'/g,"\\'")}',${tm.sa||0},${tm.sb||0},'${tm.d||''}')">🎴 공유 카드</button>
         </div>
         ${games.map(g=>{
           const pw=players.find(p=>p.name===g.wName), pl=players.find(p=>p.name===g.lName);
@@ -3329,7 +3338,7 @@ function histProCompTeamHTML(_omitBar) {
    ⚔️ 프로리그 대회 중장전 기록
 ══════════════════════════════════════ */
 function histProCompGJHTML(_omitBar){
-  const _pcGjBar=_omitBar?'':`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+  const _pcGjBar=_omitBar?'':`<div class="fbar merged-subbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">
     <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="window._histProCompSub='league';histSub='procomp';render()">📅 조별리그</button>
     <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="window._histProCompSub='tourney';histSub='procomp';render()">🗂️ 토너먼트</button>
     <button class="pill" style="flex-shrink:0;white-space:nowrap" onclick="window._histProCompSub='team';histSub='procomp';render()">🤝 팀전</button>

@@ -1,12 +1,19 @@
 /* ══════════════════════════════════════
    Render Share Utilities
 ══════════════════════════════════════ */
+window._shareBtnHTML = window._shareBtnHTML || function(onclick, label='🎴 공유 카드', extraStyle='', extraClass=''){
+  const cls = `btn btn-p btn-xs share-btn-unified ${extraClass||''}`.trim();
+  return `<button class="${cls}" style="${extraStyle||''}" onclick="${onclick}">${label}</button>`;
+};
+
 function openBoardUnivShareCard(univName){
   if(!univName||univName==='전체')return;
   _shareMode='univ';
   _shareUnivSearch=univName;
   openShareCardModal();
-  setTimeout(()=>renderShareCardByUniv(univName),80);
+  const _run=()=>renderShareCardByUniv(univName);
+  if(typeof window._shareCardDeferRender==='function') window._shareCardDeferRender(_run);
+  else setTimeout(_run,0);
 }
 
 function openShareCardFromPlayer(){
@@ -17,7 +24,7 @@ function openShareCardFromPlayer(){
   _shareMode='player';
   _sharePlayerSearch=name;
   openShareCardModal();
-  setTimeout(()=>{
+  const _run=()=>{
     if(typeof window.renderShareCardByPlayer==='function') return window.renderShareCardByPlayer(name);
     Promise.resolve()
       .then(()=>typeof window._ensureStatsLoaded==='function' ? window._ensureStatsLoaded() : null)
@@ -32,7 +39,9 @@ function openShareCardFromPlayer(){
         const card=document.getElementById('share-card');
         if(card) card.innerHTML='<div style="padding:40px;text-align:center;color:#dc2626">공유카드를 불러오지 못했습니다.</div>';
       });
-  },80);
+  };
+  if(typeof window._shareCardDeferRender==='function') window._shareCardDeferRender(_run);
+  else setTimeout(_run,0);
 }
 
 function openShareCardFromUniv(){
@@ -43,7 +52,9 @@ function openShareCardFromUniv(){
   _shareMode='univ';
   _shareUnivSearch=name;
   openShareCardModal();
-  setTimeout(()=>renderShareCardByUniv(name),80);
+  const _run=()=>renderShareCardByUniv(name);
+  if(typeof window._shareCardDeferRender==='function') window._shareCardDeferRender(_run);
+  else setTimeout(_run,0);
 }
 
 function _renderShareCardByPlayerFallback(name){
@@ -73,11 +84,13 @@ function _renderShareCardByPlayerFallback(name){
   const photo = p.photo ? `<img src="${toHttpsUrl(p.photo)}" style="width:88px;height:88px;border-radius:24px;object-fit:cover;display:block" onerror="this.remove()">` : '';
   const pts=p.points||0;
   const ptsColor=pts>0?'#4ade80':pts<0?'#f87171':'rgba(255,255,255,.8)';
-  const scp=(typeof window._getShareCardPrefs==='function'?window._getShareCardPrefs():{mode:'campus',color:.72,fx:.55,surface:'glass'});
+  const scp=(typeof window._getShareCardPrefs==='function'?window._getShareCardPrefs():{mode:'campus',color:.72,fx:.55,profileScale:1,surface:'glass'});
+  const profileW=Math.round(92*(scp.profileScale||1));
+  const profileH=Math.round(112*(scp.profileScale||1));
   const baseCol=(typeof window._scHexNorm==='function'?window._scHexNorm(col):col)||'#64748b';
-  const accentA = scp.mode==='soft' && typeof window._scShadeHex==='function' ? window._scShadeHex(baseCol,.26) : (scp.mode==='dark' && typeof window._scShadeHex==='function' ? window._scShadeHex(baseCol,-.22) : baseCol);
-  const accentB = typeof window._scMixHex==='function' ? window._scMixHex(baseCol,'#ffffff',scp.mode==='vivid' ? .18 : .34) : baseCol;
-  const shellBg = scp.mode==='dark' ? 'linear-gradient(180deg,#020617,#0f172a)' : `linear-gradient(180deg,${accentA},#111827)`;
+  const accentA = scp.mode==='soft' && typeof window._scShadeHex==='function' ? window._scShadeHex(baseCol,.26) : (scp.mode==='dark' && typeof window._scShadeHex==='function' ? window._scShadeHex(baseCol,-.22) : (scp.mode==='aurora' && typeof window._scMixHex==='function' ? window._scMixHex(baseCol,'#38bdf8',.18) : (scp.mode==='poster' && typeof window._scShadeHex==='function' ? window._scShadeHex(baseCol,-.10) : (scp.mode==='mono' ? '#6b7280' : baseCol))));
+  const accentB = typeof window._scMixHex==='function' ? window._scMixHex(baseCol, scp.mode==='aurora' ? '#7c3aed' : scp.mode==='poster' ? '#111827' : '#ffffff', scp.mode==='vivid' ? .18 : scp.mode==='aurora' ? .22 : scp.mode==='poster' ? .42 : .34) : baseCol;
+  const shellBg = scp.mode==='dark' ? 'linear-gradient(180deg,#020617,#0f172a)' : scp.mode==='aurora' ? `linear-gradient(160deg,${typeof window._scMixHex==='function'?window._scMixHex(baseCol,'#e0f2fe',.72):baseCol},${typeof window._scMixHex==='function'?window._scMixHex(baseCol,'#111827',.18):'#111827'})` : scp.mode==='poster' ? `linear-gradient(180deg,${typeof window._scMixHex==='function'?window._scMixHex(baseCol,'#111827',.18):baseCol},#111827)` : scp.mode==='mono' ? 'linear-gradient(180deg,#1f2937,#111827)' : `linear-gradient(180deg,${accentA},#111827)`;
   const glassBg = scp.surface==='solid' ? `linear-gradient(180deg,${accentA},${accentB})` : scp.surface==='clean' ? 'linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.10))' : 'linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))';
   const bgCss = bgImg
     ? `linear-gradient(135deg, rgba(15,23,42,${(bgDark/100).toFixed(2)}), rgba(15,23,42,${Math.max(0, (bgDark-12)/100).toFixed(2)})), linear-gradient(135deg, rgba(255,255,255,${(bgFade/100).toFixed(2)}), rgba(255,255,255,${Math.max(0, (bgFade-25)/100).toFixed(2)})), url('${toHttpsUrl(bgImg)}') ${bgPos}/${bgScale}% ${bgFit==='fill'?'100%':bgFit} no-repeat, linear-gradient(135deg,${col}dd,${col}88)`
@@ -92,9 +105,9 @@ function _renderShareCardByPlayerFallback(name){
         <div style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 11px;font-size:10px;font-weight:900">${p.tier||'-'}</div>
       </div>
       <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center">
-        <div style="width:92px;height:112px;border-radius:24px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.26);overflow:hidden;box-shadow:0 14px 32px rgba(0,0,0,.24);display:flex;align-items:center;justify-content:center;flex-shrink:0">${photo||`<span style="font-size:34px;font-weight:1000;color:#fff">${String(name||'?').charAt(0)}</span>`}</div>
+        <div style="width:${profileW}px;height:${profileH}px;border-radius:24px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.26);overflow:hidden;box-shadow:0 14px 32px rgba(0,0,0,.24);display:flex;align-items:center;justify-content:center;flex-shrink:0">${photo||`<span style="font-size:${Math.round(34*(scp.profileScale||1))}px;font-weight:1000;color:#fff">${String(name||'?').charAt(0)}</span>`}</div>
         <div style="min-width:0">
-          <div style="font-size:27px;font-weight:1000;letter-spacing:.2px;line-height:1.06;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+          <div style="font-size:27px;font-weight:1000;letter-spacing:.2px;line-height:1.08;white-space:normal;word-break:keep-all">${name}</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px">
             <span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900">${p.univ||'무소속'}</span>
             <span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900">${raceLabel}</span>
@@ -259,15 +272,20 @@ function openProCompMatchShare(a,b,sa,sb,d){
     }
   }catch(e){}
 
-  window._shareMatchObj=share;
-  _shareMode='match';
-  openShareCardModal();
-  setTimeout(function(){
-    if(window._shareMatchObj) renderShareCardByMatchObj(window._shareMatchObj);
-  },80);
+  if(typeof window._openShareMatchObjCard==='function') window._openShareMatchObjCard(share);
 }
 
 function openShareCardFromMatch(mode,idx){
+  if((mode==='ind' || mode==='gj' || mode==='progj') && window._detReg){
+    try{
+      const vals = Object.values(window._detReg||{});
+      const hit = vals.find(v => v && v.mode===mode && v.idx===idx && v.m && (v.m.a||v.m.b) && v.m.sa!=null && v.m.sb!=null);
+      if(hit && typeof window._openShareMatchObjCard==='function'){
+        window._openShareMatchObjCard({...hit.m, _matchType:mode});
+        return;
+      }
+    }catch(e){}
+  }
   const arr=mode==='mini'?miniM
     :mode==='univm'?univM
     :mode==='ck'?ckM

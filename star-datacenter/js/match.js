@@ -120,7 +120,7 @@ function raceSummaryHTML(){
    공통 세트 빌더
 ══════════════════════════════════════ */
 function stabs(current, opts){
-  return `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">${opts.map(o=>{
+  return `<div class="fbar merged-subbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">${opts.map(o=>{
     if(o.id==='input'&&!isLoggedIn) return '';
     return `<button class="pill ${current===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}">${o.lbl}</button>`;
   }).join('')}</div>`;
@@ -133,7 +133,7 @@ function stabsInline(current, opts, extraHTML=''){
     return `<button class="pill ${current===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}">${o.lbl}</button>`;
   }).join('');
   const extra = extraHTML ? `<span class="hist-inline-sep"></span><div class="hist-ctrl-group">${extraHTML}</div>` : '';
-  return `<div class="hist-inlinebar no-export">${btns}${extra}</div>`;
+  return `<div class="hist-inlinebar merged-subbar no-export">${btns}${extra}</div>`;
 }
 
 // 모든 데이터에서 연도를 자동 추출
@@ -210,6 +210,15 @@ function setBuilderHTML(bld, mode){
   let scoreA=0,scoreB=0;
   bld.sets.forEach(s=>{if(s.winner==='A')scoreA++;else if(s.winner==='B')scoreB++;});
   let h='';
+  function _renderSaveBar(){
+    return `<div class="mb-savebar" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+      <div style="font-size:11px;color:var(--gray-l);font-weight:700">저장 전 스코어와 세트 구성을 마지막으로 확인하세요.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-g" onclick="saveMatch('${mode}')">✅ 저장</button>
+        <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">🔄 초기화</button>
+      </div>
+    </div>`;
+  }
   // CK 모드에서는 날짜를 buildCKInputHTML에서만 표시 (중복 방지)
   if(!isCK){
   h+=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
@@ -328,10 +337,7 @@ function setBuilderHTML(bld, mode){
         </div>`;
       });
       h+=`<button class="btn btn-w btn-sm" style="margin-bottom:10px" onclick="BLD['${mode}'].freeGames=BLD['${mode}'].freeGames||[];BLD['${mode}'].freeGames.push({playerA:'${mode==='gj'?_gjDefA:''}',playerB:'${mode==='gj'?_gjDefB:''}',winner:'',map:''});render()">+ 경기 추가</button>`;
-      h+=`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-g" onclick="saveMatch('${mode}')">✅ 저장</button>
-        <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">🔄 초기화</button>
-      </div>`;
+      h+=_renderSaveBar();
     } else {
       h+=`<div class="score-board">
         <span style="font-weight:700">${mode==='gj'?_gjLabelA:(isCK?'팀A ('+mA.map(m=>m.name).join(',')+')':(teamA||'팀A'))}</span>
@@ -389,10 +395,7 @@ function setBuilderHTML(bld, mode){
         const nLabel=bld.sets.length===2?'🎯 에이스전 추가':`${bld.sets.length+1}세트 추가`;
         h+=`<button class="btn btn-b" style="margin-right:8px;margin-top:4px" onclick="BLD['${mode}'].sets.push({games:[],scoreA:0,scoreB:0,winner:''});render()">+ ${nLabel}</button>`;
       }
-      h+=`<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-g" onclick="saveMatch('${mode}')">✅ 저장</button>
-        <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">🔄 초기화</button>
-      </div>`;
+      h+=_renderSaveBar();
     }
   }
   return h;

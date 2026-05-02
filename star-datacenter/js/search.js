@@ -2541,10 +2541,10 @@ function pasteQuickRegister(idx, role, name) {
   const tierOpts = TIERS.map(t => `<option value="${t}">${t}</option>`).join('');
 
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)';
+  overlay.className = 'modal-compact-overlay';
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:14px;padding:22px 24px;width:320px;box-shadow:0 20px 60px rgba(0,0,0,.25);font-family:'Noto Sans KR',sans-serif">
-      <div style="font-weight:900;font-size:15px;margin-bottom:16px;color:#1a202c">👤 선수 즉시 등록</div>
+    <div class="modal-compact-box" style="width:320px;font-family:'Noto Sans KR',sans-serif">
+      <div style="font-weight:900;font-size:15px;margin-bottom:12px;color:#1a202c">👤 선수 즉시 등록</div>
       <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
         <div><label style="font-size:11px;font-weight:700;color:#2563eb;display:block;margin-bottom:3px">이름</label>
           <input id="qreg-name" value="${name.replace(/"/g,'&quot;')}" style="width:100%;padding:7px 10px;border:1px solid #cdd3dc;border-radius:7px;font-size:13px;box-sizing:border-box"></div>
@@ -2558,7 +2558,7 @@ function pasteQuickRegister(idx, role, name) {
               <option value="T">테란</option><option value="Z">저그</option><option value="P">프로토스</option></select></div>
         </div>
       </div>
-      <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end">
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
         <button id="qreg-cancel" style="padding:7px 16px;border-radius:7px;border:1px solid #cdd3dc;background:#f7f9fc;font-size:13px;font-weight:600;cursor:pointer">취소</button>
         <button id="qreg-ok" style="padding:7px 16px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:700;cursor:pointer">등록하기</button>
       </div>
