@@ -196,6 +196,31 @@ function collectPlayerExtraHistoryData(opts){
         tourMatches.push({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',matchId:mid,mode:'프로리그대회',_readOnly:true});
       });
     });
+    const _stageRounds = ['64강','32강','16강','8강','4강','결승'];
+    _stageRounds.forEach(round=>{
+      ((tn.stageRecords||{})[round]||[]).forEach(m=>{
+        const mid=m._id||`protour_stage_${tn.id||''}_${round}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
+        if(existingMatchIds.has(mid)) return;
+        if(m.a!==p.name&&m.b!==p.name) return;
+        const isWin = (m.winner==='A' && m.a===p.name) || (m.winner==='B' && m.b===p.name);
+        const isLose = (m.winner==='A' && m.b===p.name) || (m.winner==='B' && m.a===p.name);
+        if(!isWin && !isLose) return;
+        const opp = m.a===p.name ? m.b : m.a;
+        const oppP=players.find(x=>x.name===opp);
+        tourMatches.push({
+          date:m.d||'',
+          time:0,
+          result:isWin?'승':'패',
+          opp,
+          oppRace:oppP?.race||'',
+          map:m.map||'-',
+          matchId:mid,
+          mode:'프로리그대회',
+          _readOnly:true,
+          _stageRound:round
+        });
+      });
+    });
     (tn.gjMatches||[]).forEach(m=>{
       const mid=m._id||`protour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
       if(existingMatchIds.has(mid))return;

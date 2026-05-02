@@ -3067,7 +3067,7 @@ function histProCompTourneyHTML(_omitBar) {
     // 1) (신규) 대진표 기록(라운드 기록) 기반
     if(tn && tn.stageRecords){
       const st = tn.stageRecords || {};
-      const order=['16강','8강','4강','결승'];
+      const order=['64강','32강','16강','8강','4강','결승'];
       const colOf = (r)=>r==='결승'?'#f59e0b':r==='4강'?'#7c3aed':r==='8강'?'#dc2626':'#2563eb';
       order.forEach(r=>{
         (st[r]||[]).forEach((m, idx)=>{

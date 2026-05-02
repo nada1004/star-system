@@ -54,4 +54,20 @@ document.addEventListener('visibilitychange', () => {
     _updateSyncAgeBadge();
   }
 });
-setTimeout(()=>{ _bindSyncAgeBadge(); }, 0);
+function _safeInitSyncAgeBadge(tryCount){
+  const n = Number(tryCount||0) || 0;
+  try{
+    const fn = (typeof window!=='undefined' && typeof window._bindSyncAgeBadge==='function')
+      ? window._bindSyncAgeBadge
+      : (typeof _bindSyncAgeBadge==='function' ? _bindSyncAgeBadge : null);
+    if(typeof fn === 'function'){
+      fn();
+      return true;
+    }
+  }catch(e){}
+  if(n < 20){
+    setTimeout(()=>{ _safeInitSyncAgeBadge(n+1); }, n < 5 ? 100 : 300);
+  }
+  return false;
+}
+setTimeout(()=>{ _safeInitSyncAgeBadge(0); }, 0);
