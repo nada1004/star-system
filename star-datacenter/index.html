@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="css/style.css?v=20260502-14"><!-- /* [Z-IDX] */ -->
+<link rel="stylesheet" href="css/style.css?v=20260502-21"><!-- /* [Z-IDX] */ -->
 </head>
 <body>
 
@@ -138,9 +138,9 @@
     <button class="tab" role="tab" aria-selected="false" onclick="sw('board2',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 17V9"/><path d="M12 17V7"/><path d="M16 17v-5"/></svg></span>현황판</button><!-- [A11Y] -->
     <button class="tab" role="tab" aria-selected="false" onclick="sw('tier',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 17V9"/><path d="M12 17V7"/><path d="M16 17v-5"/></svg></span>티어 순위표</button><!-- [A11Y] -->
     <button class="tab" role="tab" aria-selected="false" onclick="sw('hist',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg></span>대전 기록</button><!-- [A11Y] -->
-    <button class="tab" role="tab" aria-selected="false" onclick="sw('ind',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3l7 7-4 4-7-7 4-4Z"/><path d="M10 7l-7 7 4 4 7-7-4-4Z"/><path d="M8 15l-4 4"/><path d="M16 15l4 4"/></svg></span>개인전</button><!-- [A11Y] -->
-    <button class="tab" role="tab" aria-selected="false" onclick="sw('univm',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M4 20V9"/><path d="M20 20V9"/><path d="M4 9l8-5 8 5"/><path d="M8 20v-6h8v6"/><path d="M9 11h.01"/><path d="M12 11h.01"/><path d="M15 11h.01"/></svg></span>대학대전</button><!-- [A11Y] -->
-    <button class="tab" role="tab" aria-selected="false" onclick="sw('comp',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 4h8v3a4 4 0 0 1-8 0V4Z"/><path d="M6 4H4v3a3 3 0 0 0 3 3"/><path d="M18 4h2v3a3 3 0 0 1-3 3"/><path d="M10 14h4"/><path d="M9 20h6"/><path d="M10 14v3a2 2 0 0 1-2 2"/><path d="M14 14v3a2 2 0 0 0 2 2"/></svg></span>대회</button><!-- [A11Y] -->
+    <button class="tab" role="tab" aria-selected="false" onclick="sw('ind',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3l7 7-4 4-7-7 4-4Z"/><path d="M10 7l-7 7 4 4 7-7-4-4Z"/><path d="M8 15l-4 4"/><path d="M16 15l4 4"/></svg></span>개인전/끝장전</button><!-- [A11Y] -->
+    <button class="tab" role="tab" aria-selected="false" onclick="sw('univm',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M4 20V9"/><path d="M20 20V9"/><path d="M4 9l8-5 8 5"/><path d="M8 20v-6h8v6"/><path d="M9 11h.01"/><path d="M12 11h.01"/><path d="M15 11h.01"/></svg></span>대학전</button><!-- [A11Y] -->
+    <button class="tab" role="tab" aria-selected="false" onclick="sw('comp',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 4h8v3a4 4 0 0 1-8 0V4Z"/><path d="M6 4H4v3a3 3 0 0 0 3 3"/><path d="M18 4h2v3a3 3 0 0 1-3 3"/><path d="M10 14h4"/><path d="M9 20h6"/><path d="M10 14v3a2 2 0 0 1-2 2"/><path d="M14 14v3a2 2 0 0 0 2 2"/></svg></span>대회/티어</button><!-- [A11Y] -->
     <button class="tab" role="tab" aria-selected="false" onclick="sw('pro',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 2l5 7 5-7"/><circle cx="12" cy="16" r="5"/><path d="M12 13v6"/></svg></span>프로리그</button><!-- [A11Y] -->
     <button class="tab" role="tab" aria-selected="false" onclick="sw('stats',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 17V9"/><path d="M12 17V7"/><path d="M16 17v-5"/></svg></span>통계</button><!-- [A11Y] -->
     <button class="tab" role="tab" aria-selected="false" onclick="sw('cal',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg></span>캘린더</button><!-- [A11Y] -->
@@ -589,7 +589,7 @@
 
 <script src="js/config.js"></script>
 <script src="js/app-state.js"></script>
-<script src="js/constants.js?v=20260502-03"></script>
+<script src="js/constants.js?v=20260502-05"></script>
 <script src="js/constants-player-html.js?v=20260501-08"></script>
 <script src="js/unified-settings.js?v=20260425-01"></script>
 <script src="js/modal-open.js?v=20260502-01"></script>
@@ -605,22 +605,22 @@
 <script src="js/settings/profile.js?v=20260430-01"></script>
 <script src="js/settings/tabs.js?v=20260502-02"></script>
 <script src="js/settings/index.js?v=20260430-01"></script>
-<script src="js/tier-tour.js?v=20260502-03"></script>
+<script src="js/tier-tour.js?v=20260502-04"></script>
 <script src="js/settings/font-controls.js?v=20260502-01"></script>
 <script src="js/settings/ui-scale-controls.js?v=20260502-01"></script>
-<script src="js/settings.js?v=20260502-11"></script>
+<script src="js/settings.js?v=20260502-26"></script>
 <script src="js/settings-map-status.js?v=20260501-01"></script>
 <script src="js/settings-profile-ui.js?v=20260502-01"></script>
 <script src="js/settings-match-detail.js?v=20260501-03"></script>
 <script src="js/settings-player-detail.js?v=20260502-02"></script>
-<script src="js/competition.js?v=20260502-01"></script>
-<script src="js/render-lazy-utils.js?v=20260502-15"></script>
+<script src="js/competition.js?v=20260502-11"></script>
+<script src="js/render-lazy-utils.js?v=20260502-34"></script>
 <script src="js/render-core.js?v=20260501-35"></script>
 <script src="js/render-nav-lazy.js?v=20260502-05"></script>
 <script src="js/render-iconify-ui.js?v=20260501-34"></script>
 <script src="js/render-capture-utils.js?v=20260501-48"></script>
-<script src="js/render-share-utils.js?v=20260502-07"></script>
-<script src="js/render-merged-tabs.js?v=20260502-01"></script>
+<script src="js/render-share-utils.js?v=20260502-12"></script>
+<script src="js/render-merged-tabs.js?v=20260502-05"></script>
 <script src="js/render-standalone-utils.js?v=20260501-48"></script>
 <script src="js/render-player-filters.js?v=20260501-48"></script>
 <script src="js/render-player-header.js?v=20260502-02"></script>
@@ -643,15 +643,15 @@
 <script src="js/render-player-modal-entry.js?v=20260502-06"></script>
 <script src="js/render-match-id-prepare.js?v=20260501-36"></script>
 <script src="js/players.js?v=20260428-02"></script>
-<script src="js/vs.js?v=20260425-01"></script>
+<script src="js/vs.js?v=20260502-03"></script>
 <script src="js/history-action-utils.js?v=20260502-01"></script>
 <script src="js/history-external-utils.js?v=20260501-11"></script>
 <script src="js/history-external-ui.js?v=20260502-01"></script>
-<script src="js/history.js?v=20260502-12"></script>
-<script src="js/match.js?v=20260501-48"></script>
-<script src="js/match-builder.js?v=20260502-13"></script>
-<script src="js/search.js?v=20260502-01"></script>
-<script src="js/pro-comp.js?v=20260502-09"></script>
+<script src="js/history.js?v=20260502-23"></script>
+<script src="js/match.js?v=20260502-03"></script>
+<script src="js/match-builder.js?v=20260502-23"></script>
+<script src="js/search.js?v=20260502-04"></script>
+<script src="js/pro-comp.js?v=20260502-15"></script>
 <!-- (성능) stats/calendar는 탭 진입 시 지연 로딩 (render-core.js) -->
 <!-- (성능) 룰렛/부가기능은 탭 진입 시 지연 로딩 (render-core.js에서 로드) -->
 <!-- (성능) vote/elboard/bgm/soop는 기능 사용 시 지연 로딩 (render-core.js/init.js) -->
