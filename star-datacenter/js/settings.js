@@ -5039,18 +5039,28 @@ function rotateRandomImage(){
 let currentTab = 'total';
 
 // 탭 변경 시 회전 제어
-const originalSw = window.sw;
-window.sw = function(tab, el){
-  currentTab = tab;
-  if(originalSw) originalSw(tab, el);
-
-  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  if(imgSettings.randomRotation){
-    startRandomRotation();
-  } else {
-    stopRandomRotation();
-  }
-};
+if(!window.__swWrappedForSettings){
+  const originalSw = window.sw;
+  window.sw = function(tab, el){
+    currentTab = tab;
+    const ret = originalSw ? originalSw.apply(this, arguments) : undefined;
+    let imgSettings = {};
+    try{
+      imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}') || {};
+    }catch(e){
+      imgSettings = {};
+    }
+    try{
+      if(imgSettings.randomRotation){
+        startRandomRotation();
+      } else {
+        stopRandomRotation();
+      }
+    }catch(e){}
+    return ret;
+  };
+  window.__swWrappedForSettings = true;
+}
 
 function bulkChangeTier(){
   if(!isLoggedIn) return;

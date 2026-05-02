@@ -11,6 +11,80 @@ window._centerActiveTopTab = function(smooth){
   }catch(e){}
 };
 
+window._resolveTopTabEl = function(t, fallbackEl){
+  try{
+    if(fallbackEl && fallbackEl.classList) return fallbackEl;
+    const tabs = [...document.querySelectorAll('.tab')];
+    if(t === 'cfg'){
+      return document.getElementById('tabCfg')
+        || document.querySelector('.tab[onclick*="sw(\'cfg\'"]')
+        || null;
+    }
+    return tabs.find(b => {
+      try{
+        const oc = b.getAttribute('onclick') || '';
+        return oc.includes(`'${t}'`) || oc.includes(`"${t}"`);
+      }catch(e){
+        return false;
+      }
+    }) || null;
+  }catch(e){
+    return null;
+  }
+};
+
+window._goTopTab = function(t, fallbackEl){
+  try{
+    if(typeof sw === 'function'){
+      sw(t, fallbackEl);
+      return true;
+    }
+    const el = (typeof window._resolveTopTabEl === 'function')
+      ? window._resolveTopTabEl(t, fallbackEl)
+      : null;
+    if(el && typeof el.click === 'function'){
+      el.click();
+      return true;
+    }
+  }catch(e){}
+  return false;
+};
+
+window._goCfgSection = function(secId){
+  try{
+    if(typeof window._lazyCfgGo === 'function'){
+      window._lazyCfgGo(secId);
+      return true;
+    }
+  }catch(e){}
+  try{
+    if(typeof window.cfgGo === 'function'){
+      window.cfgGo(secId);
+      return true;
+    }
+  }catch(e){}
+  try{
+    if(typeof window._goTopTab === 'function') return !!window._goTopTab('cfg');
+  }catch(e){}
+  try{
+    if(typeof window.sw === 'function'){
+      window.sw('cfg');
+      return true;
+    }
+  }catch(e){}
+  return false;
+};
+
+window.openCfgHome = function(){
+  try{ return !!window._goCfgSection(); }catch(e){ return false; }
+};
+window.openCfgTier = function(){
+  try{ return !!window._goCfgSection('tier'); }catch(e){ return false; }
+};
+window.openCfgDataSync = function(){
+  try{ return !!window._goCfgSection('💾 데이터'); }catch(e){ return false; }
+};
+
 function sw(t,el){
   try{
     if(typeof isSubAdmin!=='undefined' && isSubAdmin && t==='cfg'){
@@ -39,8 +113,12 @@ function sw(t,el){
   }
   if(t==='total')totalSearch='';
   curTab=t;openDetails={};
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
-  el.classList.add('on');
+  const tabs = [...document.querySelectorAll('.tab')];
+  const resolvedEl = (typeof window._resolveTopTabEl === 'function')
+    ? window._resolveTopTabEl(t, el)
+    : null;
+  tabs.forEach(b=>b.classList.remove('on'));
+  if(resolvedEl && resolvedEl.classList) resolvedEl.classList.add('on');
   document.querySelectorAll('.bnav-item').forEach(b=>{
     const oc=b.getAttribute('onclick')||'';
     b.classList.toggle('on',oc.includes("'"+t+"'"));

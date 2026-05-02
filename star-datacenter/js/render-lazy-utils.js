@@ -7,6 +7,17 @@ function _loadScriptOnce(src){
     try{
       if(window._lazy.loaded[src]) return resolve(true);
       if(window._lazy.loading[src]) return window._lazy.loading[src].then(resolve).catch(reject);
+      try{
+        const resolvedSrc = new URL(src, window.location.href).href;
+        const existing = [...document.scripts].find(s => {
+          try{ return new URL(s.src, window.location.href).href === resolvedSrc; }
+          catch(e){ return false; }
+        });
+        if(existing){
+          window._lazy.loaded[src]=true;
+          return resolve(true);
+        }
+      }catch(e){}
       const p = new Promise((res, rej)=>{
         const s=document.createElement('script');
         s.src=src;
@@ -49,7 +60,7 @@ async function _ensureRouletteLoaded(){
 }
 async function _ensureStatsLoaded(){
   await window.ensureChartJS();
-  await _loadScriptOnce('js/stats.js?v=20260430-01');
+  await _loadScriptOnce('js/stats.js?v=20260502-02');
 }
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260422-01');
@@ -70,7 +81,7 @@ async function _ensureCloudBoardLoaded(){
   await window.ensureHtml2Canvas();
   await _loadScriptOnce('js/sync/cloud-apply.js?v=20260502-01');
   await _loadScriptOnce('js/sync/cloud-status.js?v=20260502-01');
-  await _loadScriptOnce('js/cloud-board.js?v=20260502-01');
+  await _loadScriptOnce('js/cloud-board.js?v=20260502-03');
 }
 async function _ensureSettingsLoaded(){
   await _loadScriptOnce('js/settings/font-controls.js?v=20260502-01');
@@ -143,8 +154,7 @@ function _lazyCfgGo(secId){
       const fn = window.cfgGo;
       if(typeof fn === 'function' && fn !== _lazyCfgGo) fn(secId);
       else{
-        const cfgTab = document.getElementById('tabCfg') || document.querySelector('.tab[onclick*="sw(\'cfg\'"]');
-        if(cfgTab && typeof sw === 'function') sw('cfg', cfgTab);
+        if(typeof window._goTopTab === 'function') window._goTopTab('cfg');
       }
     }catch(e){
       console.error('[lazy] cfgGo load fail', e);

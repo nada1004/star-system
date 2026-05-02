@@ -1622,28 +1622,287 @@ window.pcDeleteStageRec = function(tnId, round, idx){
   save(); render();
 };
 
+function _pcStageResolveAliasName(name0){
+  const stripRace = (s)=> String(s||'').trim().replace(/\s*[TZPNtzpn]$/,'').trim();
+  const nfc = (s)=> (s&&s.normalize) ? s.normalize('NFC') : String(s||'');
+  const normKey = (s)=> nfc(String(s||'')).replace(/\s+/g,'').toLowerCase();
+  const aliasMap = (()=>{ try{ return JSON.parse(localStorage.getItem('su_player_alias_map')||'{}')||{}; }catch(e){ return {}; } })();
+  const name = stripRace(name0);
+  if(!name) return '';
+  if(aliasMap && (name in aliasMap)) return String(aliasMap[name]||'') || name;
+  const nk = normKey(name);
+  for(const k in (aliasMap||{})){
+    if(normKey(k)===nk) return String(aliasMap[k]||'') || name;
+  }
+  return name;
+}
+
+function _pcStageResolvePlayerName(name0){
+  const aliasName = _pcStageResolveAliasName(name0);
+  try{
+    if(typeof findPlayerByPartialName === 'function'){
+      const m = findPlayerByPartialName(aliasName);
+      if(m && m.player && m.player.name) return m.player.name;
+      if(Array.isArray(m && m.candidates) && m.candidates[0] && m.candidates[0].name) return m.candidates[0].name;
+    }
+  }catch(e){}
+  try{
+    if(typeof window.resolvePlayerName === 'function'){
+      const info = window.resolvePlayerName(aliasName);
+      if(info && info.name) return info.name;
+    }
+  }catch(e){}
+  return aliasName || String(name0||'').trim();
+}
+
+function _pcStageBuildBulkResults(text, defaultDate){
+  const raw = String(text||'').trim();
+  if(!raw) return [];
+  const out = [];
+  const lines = (typeof splitPasteLines === 'function')
+    ? splitPasteLines(raw)
+    : raw.split(/\r?\n/).map(v=>v.trim()).filter(Boolean);
+
+  lines.forEach(line=>{
+    const trimmed = String(line||'').trim();
+    if(!trimmed) return;
+    if (/^\[(?:승|패)\]/.test(trimmed)) return;
+    if (/\((?:승|패)\)\s*\d+\s*[：:]\s*\d+\s*\((?:승|패)\)/.test(trimmed)) return;
+
+    let lineForParse = trimmed;
+    let lineDate = String(defaultDate||'');
+    try{
+      const cols = trimmed.split('\t').map(x=>x.trim());
+      if(cols.length >= 4 && /^\d{4}-\d{2}-\d{2}$/.test(cols[0]||'')){
+        lineDate = cols[0] || lineDate;
+        lineForParse = `${cols[1]||''} ${cols[2]||''} ${cols[3]||''}`.trim();
+      }
+    }catch(e){}
+
+    let parsed = null;
+    try{
+      if(typeof parsePasteLine === 'function') parsed = parsePasteLine(lineForParse);
+    }catch(e){}
+
+    if(parsed){
+      const wName = _pcStageResolveAliasName(parsed.winName);
+      const lName = _pcStageResolveAliasName(parsed.loseName);
+      const wMatch = (typeof findPlayerByPartialName === 'function') ? findPlayerByPartialName(wName) : {player:null,candidates:[],similar:[]};
+      const lMatch = (typeof findPlayerByPartialName === 'function') ? findPlayerByPartialName(lName) : {player:null,candidates:[],similar:[]};
+      if(wName && lName){
+        out.push({
+          d: lineDate || String(defaultDate||''),
+          wName,
+          lName,
+          map: parsed.map || '-',
+          wPlayer: wMatch.player || null,
+          lPlayer: lMatch.player || null,
+          wCandidates: wMatch.candidates || [],
+          lCandidates: lMatch.candidates || [],
+          wSimilar: wMatch.similar || [],
+          lSimilar: lMatch.similar || []
+        });
+        return;
+      }
+    }
+
+    const parts = trimmed.split(/[\s\t]+/).filter(Boolean);
+    if(parts.length < 2) return;
+    const wName = _pcStageResolveAliasName(parts[0]);
+    const lName = _pcStageResolveAliasName(parts[1]);
+    const map = parts.slice(2).join(' ').trim() || '-';
+    if(!wName || !lName) return;
+    const wMatch = (typeof findPlayerByPartialName === 'function') ? findPlayerByPartialName(wName) : {player:null,candidates:[],similar:[]};
+    const lMatch = (typeof findPlayerByPartialName === 'function') ? findPlayerByPartialName(lName) : {player:null,candidates:[],similar:[]};
+    out.push({
+      d: lineDate || String(defaultDate||''),
+      wName,
+      lName,
+      map,
+      wPlayer: wMatch.player || null,
+      lPlayer: lMatch.player || null,
+      wCandidates: wMatch.candidates || [],
+      lCandidates: lMatch.candidates || [],
+      wSimilar: wMatch.similar || [],
+      lSimilar: lMatch.similar || []
+    });
+  });
+
+  return out;
+}
+
+function _pcStageParseBulkEntries(text, defaultDate){
+  return _pcStageBuildBulkResults(text, defaultDate)
+    .filter(r => r.wPlayer && r.lPlayer)
+    .map(r => ({
+      d: r.d || String(defaultDate||''),
+      wName: r.wPlayer.name,
+      lName: r.lPlayer.name,
+      map: r.map || '-'
+    }));
+}
+
+function pcStageBulkPreview(tnId, round){
+  const raw = (document.getElementById('_pcStageBulkText')?.value || '').trim();
+  const badge = document.getElementById('_pcStageBulkBadge');
+  const previewEl = document.getElementById('_pcStageBulkPreview');
+  const saveBtn = document.getElementById('_pcStageBulkApplyBtn');
+  const baseDate = (document.getElementById('_pcStageBulkDate')?.value || '').trim() || new Date().toISOString().slice(0,10);
+  if(!previewEl) return;
+  if(!raw){
+    previewEl.innerHTML = '';
+    if(badge) badge.style.display = 'none';
+    if(saveBtn) saveBtn.disabled = false;
+    window._pcStageBulkResults = [];
+    return;
+  }
+  const results = _pcStageBuildBulkResults(raw, baseDate);
+  const prev = window._pcStageBulkResults || [];
+  if(prev && prev.length === results.length){
+    results.forEach((r, i)=>{
+      const p = prev[i];
+      if(!p || p.wName !== r.wName || p.lName !== r.lName) return;
+      if (p.wPlayer && !r.wPlayer) { r.wPlayer = p.wPlayer; r.wCandidates = p.wCandidates; r.wSimilar = p.wSimilar; }
+      if (p.lPlayer && !r.lPlayer) { r.lPlayer = p.lPlayer; r.lCandidates = p.lCandidates; r.lSimilar = p.lSimilar; }
+      if (p.map && p.map !== '-') r.map = p.map;
+    });
+  }
+  window._pcStageBulkResults = results;
+  _renderPcStageBulkPreview(tnId, round);
+}
+
+function _renderPcStageBulkPreview(tnId, round){
+  const results = window._pcStageBulkResults || [];
+  const badge = document.getElementById('_pcStageBulkBadge');
+  const previewEl = document.getElementById('_pcStageBulkPreview');
+  const saveBtn = document.getElementById('_pcStageBulkApplyBtn');
+  const warnEl = document.getElementById('_pcStageBulkWarn');
+  if(!previewEl) return;
+  const savable = results.filter(r => r.wPlayer && r.lPlayer);
+  const unresolved = results.filter(r => !(r.wPlayer && r.lPlayer));
+  if(badge){
+    badge.style.display = results.length ? 'inline' : 'none';
+    badge.textContent = `✅ ${savable.length}/${results.length}건 인식`;
+    badge.style.background = savable.length === results.length ? '#dcfce7' : '#fef9c3';
+    badge.style.color = savable.length === results.length ? '#16a34a' : '#b45309';
+    badge.style.border = `1px solid ${savable.length === results.length ? '#bbf7d0' : '#fcd34d'}`;
+  }
+  if(warnEl) warnEl.style.display = unresolved.length ? 'inline' : 'none';
+  if(saveBtn) saveBtn.disabled = results.length > 0 && !savable.length;
+  if(!results.length){
+    previewEl.innerHTML = '<div style="margin-top:12px;padding:16px 14px;border-radius:12px;border:1px dashed var(--border2);background:var(--surface);font-size:12px;color:var(--gray-l);text-align:center;line-height:1.7">붙여넣기하면 여기에 자동인식 미리보기가 표시됩니다.<br><span style="font-size:11px">선수 선택, 승패 뒤집기, 맵/날짜 수정 후 저장할 수 있습니다.</span></div>';
+    return;
+  }
+  const allMaps = [...new Set([...maps.filter(m=>m&&m!=='-'), ...results.map(r=>r.map).filter(m=>m&&m!=='-')])].sort();
+  const buildCell = (i, ok, ambig, player, rawName, cands, similar, role) => {
+    if (ok) return `<button onclick="pcStageBulkPick(${i},${JSON.stringify(role)},${JSON.stringify(player.name)},${JSON.stringify(tnId)},${JSON.stringify(round)})" style="font-size:12px;font-weight:900;color:${role==='w'?'#1d4ed8':'#991b1b'};background:${role==='w'?'#dbeafe':'#fee2e2'};border:1.5px solid ${role==='w'?'#93c5fd':'#fca5a5'};border-radius:7px;padding:2px 8px;cursor:pointer;white-space:nowrap">${player.name}</button>`;
+    if (ambig) return `<div><span style="color:#b45309;font-size:10px;font-weight:700">${rawName}</span><div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">${(cands||[]).map(c=>`<button onclick="pcStageBulkPick(${i},${JSON.stringify(role)},${JSON.stringify(c.name)},${JSON.stringify(tnId)},${JSON.stringify(round)})" style="padding:2px 6px;border-radius:4px;border:1.5px solid #fcd34d;background:#fffbeb;color:#92400e;font-size:10px;cursor:pointer">${c.name}</button>`).join('')}</div></div>`;
+    return `<div><span style="color:#dc2626;font-size:11px;font-weight:700">${rawName||'?'}</span>${(similar||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">${similar.map(c=>`<button onclick="pcStageBulkPick(${i},${JSON.stringify(role)},${JSON.stringify(c.name)},${JSON.stringify(tnId)},${JSON.stringify(round)})" style="padding:2px 6px;border-radius:4px;border:1.5px solid #c4b5fd;background:#faf5ff;color:#6d28d9;font-size:10px;cursor:pointer">${c.name}</button>`).join('')}</div>`:''}</div>`;
+  };
+  let h = `<div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:11px">
+    <thead><tr style="background:var(--surface)">
+      <th style="padding:5px 8px;text-align:left;font-weight:700;color:var(--text3)">승자</th>
+      <th style="padding:5px 3px;width:28px"></th>
+      <th style="padding:5px 8px;text-align:left;font-weight:700;color:var(--text3)">패자</th>
+      <th style="padding:5px 6px;text-align:left;font-weight:700;color:var(--text3)">맵</th>
+      <th style="padding:5px 6px;text-align:left;font-weight:700;color:var(--text3)">날짜</th>
+      <th style="padding:5px 4px;width:28px"></th>
+    </tr></thead><tbody>`;
+  results.forEach((r, i) => {
+    const wOk = !!r.wPlayer, lOk = !!r.lPlayer, ok = wOk && lOk;
+    const wAmbig = !wOk && (r.wCandidates||[]).length > 1;
+    const lAmbig = !lOk && (r.lCandidates||[]).length > 1;
+    const wCell = buildCell(i, wOk, wAmbig, r.wPlayer, r.wName, r.wCandidates, r.wSimilar, 'w');
+    const lCell = buildCell(i, lOk, lAmbig, r.lPlayer, r.lName, r.lCandidates, r.lSimilar, 'l');
+    const mapOpts = `<option value="-">-</option>` + allMaps.map(m=>`<option value="${m}" ${m===r.map?'selected':''}>${m}</option>`).join('') + `<option value="__c__">직접입력</option>`;
+    const mapSel = `<select onchange="if(this.value==='__c__'){const v=prompt('맵 이름:');if(v){window._pcStageBulkResults[${i}].map=v;_renderPcStageBulkPreview(${JSON.stringify(tnId)},${JSON.stringify(round)})}}else{window._pcStageBulkResults[${i}].map=this.value}" style="width:75px;border:1px solid var(--border2);border-radius:5px;padding:2px 3px;font-size:10px">${mapOpts}</select>`;
+    const dateInp = `<input type="date" value="${(r.d||'').replace(/"/g,'&quot;')}" onchange="window._pcStageBulkResults[${i}].d=this.value;_renderPcStageBulkPreview(${JSON.stringify(tnId)},${JSON.stringify(round)})" style="width:132px;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;font-size:10px">`;
+    const flipBtn = `<button onclick="pcStageBulkFlip(${i},${JSON.stringify(tnId)},${JSON.stringify(round)})" title="승패 교체" style="padding:2px 5px;border-radius:4px;border:1px solid #ddd6fe;background:#f5f3ff;font-size:12px;cursor:pointer">⇄</button>`;
+    const status = ok
+      ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:1px 4px;border-radius:6px">✓</span>`
+      : (wAmbig||lAmbig)
+        ? `<span style="background:#fef9c3;color:#b45309;border:1px solid #fcd34d;font-size:10px;font-weight:700;padding:1px 4px;border-radius:6px">?</span>`
+        : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:1px 4px;border-radius:6px">✗</span>`;
+    h += `<tr style="background:${ok?'#f8faff':(wAmbig||lAmbig)?'#fffbeb':'#fff8f8'};border-bottom:1px solid #f0f0f0">
+      <td style="padding:5px 6px">${wCell}</td>
+      <td style="padding:5px 3px;text-align:center">${flipBtn}</td>
+      <td style="padding:5px 6px">${lCell}</td>
+      <td style="padding:5px 5px">${mapSel}</td>
+      <td style="padding:5px 5px">${dateInp}</td>
+      <td style="padding:5px 4px;text-align:center">${status}</td>
+    </tr>`;
+  });
+  h += `</tbody></table></div>`;
+  previewEl.innerHTML = h;
+}
+
+window.pcStageBulkPick = function(i, role, name, tnId, round){
+  const r = (window._pcStageBulkResults||[])[i];
+  if(!r) return;
+  const p = players.find(pl => pl.name === name);
+  if(!p) return;
+  if(role === 'w'){ r.wPlayer = p; r.wCandidates = [p]; }
+  else { r.lPlayer = p; r.lCandidates = [p]; }
+  _renderPcStageBulkPreview(tnId, round);
+};
+
+window.pcStageBulkFlip = function(i, tnId, round){
+  const r = (window._pcStageBulkResults||[])[i];
+  if(!r) return;
+  [r.wName, r.lName] = [r.lName, r.wName];
+  [r.wPlayer, r.lPlayer] = [r.lPlayer, r.wPlayer];
+  [r.wCandidates, r.lCandidates] = [r.lCandidates, r.wCandidates];
+  [r.wSimilar, r.lSimilar] = [r.lSimilar, r.wSimilar];
+  _renderPcStageBulkPreview(tnId, round);
+};
+
 window.openPcStageBulkPasteModal = function(tnId, round){
   const tn=_findTourneyById(tnId); if(!tn) return;
   const r = _pcNormalizeStageRound(round);
+  const today = new Date().toISOString().slice(0,10);
   const modal=document.createElement('div');
   modal.id='_pcStageBulkPaste';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
-  modal.innerHTML=`<div style="background:var(--white);border-radius:14px;padding:18px;width:min(560px,100%);box-shadow:0 10px 40px rgba(0,0,0,.25)">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <div style="font-weight:900;font-size:14px">📋 ${r} 결과 붙여넣기</div>
-      <button class="btn btn-w btn-xs" style="margin-left:auto" onclick="document.getElementById('_pcStageBulkPaste')?.remove()">닫기</button>
+  modal.innerHTML=`<div class="umbox" style="width:780px;max-width:97vw;max-height:92vh;overflow:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="mtitle" style="margin-bottom:0">🏅 프로리그 대회 ${r} 경기 결과 붙여넣기</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="_pcStageBulkBadge" style="display:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0"></span>
+        <button class="btn btn-w btn-sm" onclick="document.getElementById('_pcStageBulkPaste')?.remove()">✕ 닫기</button>
+      </div>
     </div>
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.5">
-      한 줄에 한 경기씩 입력하세요.<br>
-      형식: <b>승자이름 패자이름 [맵]</b> (날짜는 오늘로 저장)<br>
+    <details style="margin-bottom:12px">
+      <summary style="font-size:12px;font-weight:700;color:#7c3aed;cursor:pointer;padding:6px 10px;background:#f5f3ff;border-radius:8px;border:1px solid #ddd6fe;list-style:none;display:flex;align-items:center;gap:5px">📌 사용법 보기</summary>
+      <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:0 0 8px 8px;padding:10px 14px;font-size:12px;color:#5b21b6;line-height:1.9;margin-top:-1px">
+        형식 A: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">승자이름 패자이름 [맵]</span><br>
+        형식 B: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">[맵] 홍길동T (승) vs (패) 이순신Z</span><br>
+        형식 C: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">2026-05-02[TAB]승자[TAB]패자[TAB]맵</span><br>
+        <span style="color:#7c3aed;font-size:11px">💡 일반 경기 결과 자동인식과 같은 방식으로 선수/맵을 인식하고, 애매하면 아래 미리보기에서 직접 선택할 수 있습니다.</span>
+      </div>
+    </details>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <label style="font-size:12px;font-weight:700;color:var(--text2)">📅 기본 날짜</label>
+      <input type="date" id="_pcStageBulkDate" value="${today}" onchange="pcStageBulkPreview('${tnId}','${r}')" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
+      <div style="font-size:11px;color:var(--gray-l)">줄마다 날짜가 없으면 이 날짜로 저장됩니다.</div>
     </div>
-    <textarea id="_pcStageBulkText" style="width:100%;height:220px;padding:12px;border-radius:10px;border:1.5px solid var(--border);font-size:13px;box-sizing:border-box;resize:none" placeholder="예) 홍길동 임꺽정 투혼"></textarea>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn btn-b" style="flex:1" onclick="pcApplyStageBulkPaste('${tnId}','${r}')">✅ 적용</button>
-      <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_pcStageBulkPaste')?.remove()">취소</button>
+    <div style="position:relative">
+      <textarea id="_pcStageBulkText" oninput="pcStageBulkPreview('${tnId}','${r}')" style="width:100%;min-height:160px;font-size:13px;border:1.5px solid #ddd6fe;border-radius:10px;padding:12px 36px 12px 12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box" placeholder="예)&#10;[실피드] 홍길동T (승) vs (패) 임꺽정Z&#10;또는&#10;홍길동 임꺽정 투혼&#10;또는&#10;2026-05-02\t홍길동\t임꺽정\t투혼"></textarea>
+      <button onclick="document.getElementById('_pcStageBulkText').value='';pcStageBulkPreview('${tnId}','${r}')"
+        title="입력 지우기"
+        style="position:absolute;top:8px;right:8px;background:var(--border2);border:none;border-radius:5px;width:22px;height:22px;font-size:13px;line-height:1;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center;transition:.15s;"
+        onmouseover="this.style.background='#dc2626';this.style.color='#fff'"
+        onmouseout="this.style.background='var(--border2)';this.style.color='var(--text3)'">✕</button>
+    </div>
+    <div id="_pcStageBulkPreview"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;align-items:center">
+      <span id="_pcStageBulkWarn" style="display:none;font-size:11px;color:#b45309;font-weight:600">⚠️ 선택 필요한 항목이 있습니다</span>
+      <button class="btn btn-w" onclick="document.getElementById('_pcStageBulkPaste')?.remove()">취소</button>
+      <button id="_pcStageBulkApplyBtn" class="btn btn-g" onclick="pcApplyStageBulkPaste('${tnId}','${r}')">✅ 저장하기</button>
     </div>
   </div>`;
+  window._pcStageBulkResults = [];
   document.body.appendChild(modal);
+  _renderPcStageBulkPreview(tnId, r);
 };
 
 window.pcApplyStageBulkPaste = function(tnId, round){
@@ -1652,21 +1911,28 @@ window.pcApplyStageBulkPaste = function(tnId, round){
   const r = _pcNormalizeStageRound(round);
   const text=(document.getElementById('_pcStageBulkText')?.value||'').trim();
   if(!text) return;
-  const d = new Date().toISOString().slice(0,10);
-  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const d = (document.getElementById('_pcStageBulkDate')?.value || '').trim() || new Date().toISOString().slice(0,10);
+  const previewList = Array.isArray(window._pcStageBulkResults) ? window._pcStageBulkResults : [];
+  const entries = (previewList.length ? previewList.filter(x=>x && x.wPlayer && x.lPlayer).map(x=>({
+    d: x.d || d,
+    wName: x.wPlayer.name,
+    lName: x.lPlayer.name,
+    map: x.map || '-'
+  })) : _pcStageParseBulkEntries(text, d));
+  if(!entries.length){
+    alert('인식된 경기 결과가 없습니다.\n일반 경기 결과 자동인식 형식이나 "승자 패자 맵" 형식으로 입력해주세요.');
+    return;
+  }
   let added=0;
-  lines.forEach(line=>{
-    const parts=line.split(/[\s\t]+/).filter(Boolean);
-    if(parts.length<2) return;
-    const wRaw=parts[0], lRaw=parts[1], map=parts.slice(2).join(' ').trim();
-    const wInfo = (typeof window.resolvePlayerName==='function') ? window.resolvePlayerName(wRaw) : {name:wRaw};
-    const lInfo = (typeof window.resolvePlayerName==='function') ? window.resolvePlayerName(lRaw) : {name:lRaw};
-    const wName = wInfo.name || wRaw;
-    const lName = lInfo.name || lRaw;
+  entries.forEach(entry=>{
+    const wName = entry.wName;
+    const lName = entry.lName;
+    const map = entry.map || '-';
+    const recDate = entry.d || d;
     const a=wName, b=lName, winner='A';
     const mid=`ptr_${tnId}_${r}_${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}`;
-    tn.stageRecords[r].push({a,b,winner,d,map,_id:mid});
-    try{ applyGameResult(wName, lName, d, map, mid, '', '', '프로리그대회'); }catch(e){}
+    tn.stageRecords[r].push({a,b,winner,d:recDate,map,_id:mid});
+    try{ applyGameResult(wName, lName, recDate, map, mid, '', '', '프로리그대회'); }catch(e){}
     added++;
   });
   try{ document.getElementById('_pcStageBulkPaste')?.remove(); }catch(e){}

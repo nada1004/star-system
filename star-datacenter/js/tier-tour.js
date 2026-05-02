@@ -4430,10 +4430,9 @@ async function clearAllAdmins(){
 
 function openUnifiedSyncSettings(){
   try{
-    if(typeof sw==='function'){
-      const cfgBtn=document.querySelector('.tab.cfg') || [...document.querySelectorAll('.tab')].find(b=>String(b.getAttribute('onclick')||'').includes("'cfg'"));
-      sw('cfg', cfgBtn || document.querySelector('.tab.on') || document.querySelector('.tab'));
-    }
+    if(typeof window.openCfgDataSync === 'function') window.openCfgDataSync();
+    else if(typeof window._goCfgSection === 'function') window._goCfgSection('💾 데이터');
+    else if(typeof sw==='function') sw('cfg');
   }catch(e){}
   setTimeout(()=>{
     try{

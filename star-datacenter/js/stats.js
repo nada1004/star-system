@@ -847,7 +847,7 @@ function statsStarSystemHTML(){
       <button class="btn btn-b btn-sm" ${enabled?'disabled':''} onclick="starSystemSetEnabled(true)">✅ 사용 시작</button>
       <button class="btn btn-w btn-sm" ${!enabled?'disabled':''} onclick="starSystemSetEnabled(false)">⛔ 사용 중지</button>
       <button class="btn btn-w btn-sm" onclick="openStarSystemInfo()">📘 산정기준</button>
-      <button class="btn btn-w btn-sm" onclick="document.querySelector('.tab.cfg')?.click();setTimeout(()=>{ if(typeof cfgGo==='function') cfgGo('tier'); },120)">🎭 티어표 관리</button>
+      <button class="btn btn-w btn-sm" onclick="openCfgTier()">🎭 티어표 관리</button>
       <span style="font-size:12px;color:var(--gray-l)">※ 서버 없이 “기존 기록 데이터(펨코 스타 게시판 경기결과탭에서 등록된 기록 포함)”로 점수 계산합니다.</span>
     </div>
 

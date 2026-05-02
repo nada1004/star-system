@@ -126,7 +126,7 @@ function _fabGo(tabId){
     setTimeout(function(){window.scrollTo({top:0,behavior:'smooth'});},80);
   } else if(typeof sw==='function'){
     // 직접 호출 fallback
-    sw(tabId, {classList:{add:function(){},remove:function(){}}});
+    sw(tabId);
   }
 }
 function updateFabButtonOnclick(){

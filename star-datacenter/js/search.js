@@ -3492,8 +3492,7 @@ function pasteApply() {
   if(!_fromHistExt){
     const tabMap = { mini:'mini', univm:'univm', pro:'pro', comp:'comp', ck:'univck', ind:'ind', gj:'gj' };
     if (tabMap[mode]) {
-      const tabBtn = document.querySelector(`.tab[onclick*="sw('${tabMap[mode]}'"]`);
-      if (tabBtn) tabBtn.click();
+      if(typeof window._goTopTab === 'function') window._goTopTab(tabMap[mode]);
     }
   }
   try{ window._pasteFromHistExt = false; }catch(e){}
@@ -4801,8 +4800,7 @@ function proApply() {
   closeProPasteModal();
 
   // 프로리그 탭으로 이동
-  const tabBtn = document.querySelector(`.tab[onclick*="sw('pro'"]`);
-  if (tabBtn) tabBtn.click();
+  if(typeof window._goTopTab === 'function') window._goTopTab('pro');
 
   // 성공 토스트
   const matchCount = matchGroupNums.length;
