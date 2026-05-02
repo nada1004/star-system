@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="css/style.css?v=20260502-01"><!-- /* [Z-IDX] */ -->
+<link rel="stylesheet" href="css/style.css?v=20260502-14"><!-- /* [Z-IDX] */ -->
 </head>
 <body>
 
@@ -341,13 +341,12 @@
 <!-- 스트리머 상세 모달 -->
 <div id="playerModal" class="modal no-export">
   <div class="umbox">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap">
-      <div class="mtitle" id="playerModalTitle" style="margin-bottom:0">스트리머 상세</div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <button id="playerModalEditBtn" class="btn btn-o btn-sm" style="display:none" onclick="event.stopPropagation();try{openEPFromModal(this.dataset.playerName);}catch(e){alert('수정창 오류: '+e.message);console.error('[editBtn]',e);}">✏️ 수정</button>
-        <button class="btn btn-p btn-sm" onclick="openShareCardFromPlayer()">🎴 공유 카드</button>
-        <button class="btn-capture" onclick="capturePlayerModal()">📸 이미지 저장</button>
-        <button class="btn btn-w btn-sm" onclick="cm('playerModal')" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
+    <div id="playerModalHead" class="detail-modal-head">
+      <div class="mtitle detail-modal-title" id="playerModalTitle" style="margin-bottom:0">스트리머 상세</div>
+      <div class="detail-modal-actions">
+        <button id="playerModalEditBtn" class="btn btn-o btn-sm detail-act detail-act-edit" style="display:none" title="수정" aria-label="수정" onclick="event.stopPropagation();try{openEPFromModal(this.dataset.playerName);}catch(e){alert('수정창 오류: '+e.message);console.error('[editBtn]',e);}">✏️</button>
+        <button class="btn btn-p btn-sm detail-act detail-act-share" title="공유카드" aria-label="공유카드" onclick="openShareCardFromPlayer()">🎴</button>
+        <button class="btn btn-w btn-sm detail-act detail-act-close" title="닫기" onclick="cm('playerModal')" aria-label="닫기">✕</button><!-- [A11Y] -->
       </div>
     </div>
     <div id="playerModalBody"></div>
@@ -357,13 +356,12 @@
 <!-- 대학 상세 모달 -->
 <div id="univModal" class="modal no-export">
   <div class="umbox">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:8px;flex-wrap:wrap">
-      <div class="mtitle" id="univModalTitle" style="margin-bottom:0">대학 상세</div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <button class="btn btn-p btn-sm" onclick="openShareCardFromUniv()">🎴 공유 카드</button>
-        <button class="btn-capture" onclick="captureUnivModal()">📸 이미지 저장</button>
-        <button id="univEditBtn" class="btn btn-o btn-sm no-export" onclick="toggleUnivEdit()" style="display:none">✏️ 수정</button>
-        <button class="btn btn-w btn-sm" onclick="cm('univModal')" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
+    <div id="univModalHead" class="detail-modal-head">
+      <div class="mtitle detail-modal-title" id="univModalTitle" style="margin-bottom:0">대학 상세</div>
+      <div class="detail-modal-actions">
+        <button class="btn btn-p btn-sm detail-act detail-act-share" title="공유카드" aria-label="공유카드" onclick="openShareCardFromUniv()">🎴</button>
+        <button id="univEditBtn" class="btn btn-o btn-sm no-export detail-act detail-act-edit" title="수정" aria-label="수정" onclick="toggleUnivEdit()" style="display:none">✏️</button>
+        <button class="btn btn-w btn-sm detail-act detail-act-close" title="닫기" onclick="cm('univModal')" aria-label="닫기">✕</button><!-- [A11Y] -->
       </div>
     </div>
     <div id="univModalBody"></div>
@@ -591,10 +589,10 @@
 
 <script src="js/config.js"></script>
 <script src="js/app-state.js"></script>
-<script src="js/constants.js?v=20260502-02"></script>
+<script src="js/constants.js?v=20260502-03"></script>
 <script src="js/constants-player-html.js?v=20260501-08"></script>
 <script src="js/unified-settings.js?v=20260425-01"></script>
-<script src="js/modal-open.js"></script>
+<script src="js/modal-open.js?v=20260502-01"></script>
 <script src="js/modal-drag.js?v=20260416-01"></script>
 <script src="js/data.js?v=20260424-02"></script>
 <script src="js/year-utils.js?v=20260501-42"></script>
@@ -610,50 +608,50 @@
 <script src="js/tier-tour.js?v=20260502-03"></script>
 <script src="js/settings/font-controls.js?v=20260502-01"></script>
 <script src="js/settings/ui-scale-controls.js?v=20260502-01"></script>
-<script src="js/settings.js?v=20260502-01"></script>
+<script src="js/settings.js?v=20260502-11"></script>
 <script src="js/settings-map-status.js?v=20260501-01"></script>
-<script src="js/settings-profile-ui.js?v=20260501-02"></script>
+<script src="js/settings-profile-ui.js?v=20260502-01"></script>
 <script src="js/settings-match-detail.js?v=20260501-03"></script>
-<script src="js/settings-player-detail.js?v=20260501-04"></script>
+<script src="js/settings-player-detail.js?v=20260502-02"></script>
 <script src="js/competition.js?v=20260502-01"></script>
-<script src="js/render-lazy-utils.js?v=20260502-02"></script>
+<script src="js/render-lazy-utils.js?v=20260502-15"></script>
 <script src="js/render-core.js?v=20260501-35"></script>
 <script src="js/render-nav-lazy.js?v=20260502-05"></script>
 <script src="js/render-iconify-ui.js?v=20260501-34"></script>
 <script src="js/render-capture-utils.js?v=20260501-48"></script>
-<script src="js/render-share-utils.js?v=20260501-48"></script>
+<script src="js/render-share-utils.js?v=20260502-07"></script>
 <script src="js/render-merged-tabs.js?v=20260502-01"></script>
 <script src="js/render-standalone-utils.js?v=20260501-48"></script>
 <script src="js/render-player-filters.js?v=20260501-48"></script>
-<script src="js/render-player-header.js?v=20260501-44"></script>
+<script src="js/render-player-header.js?v=20260502-02"></script>
 <script src="js/render-player-compute.js?v=20260501-48"></script>
-<script src="js/render-player-style-prep.js?v=20260501-48"></script>
-<script src="js/render-player-detail.js?v=20260501-48"></script>
+<script src="js/render-player-style-prep.js?v=20260502-01"></script>
+<script src="js/render-player-detail.js?v=20260502-01"></script>
 <script src="js/render-player-detail-prep.js?v=20260501-48"></script>
 <script src="js/render-player-stats.js?v=20260501-48"></script>
-<script src="js/render-player-recent-history.js?v=20260501-43"></script>
-<script src="js/render-player-extra-sections.js?v=20260501-44"></script>
-<script src="js/render-player-history-actions.js?v=20260501-48"></script>
+<script src="js/render-player-recent-history.js?v=20260502-01"></script>
+<script src="js/render-player-extra-sections.js?v=20260502-01"></script>
+<script src="js/render-player-history-actions.js?v=20260502-01"></script>
 <script src="js/render-player-history-prune.js?v=20260501-28"></script>
-<script src="js/render-player-history-collector.js?v=20260502-01"></script>
-<script src="js/render-univ-sections.js?v=20260501-45"></script>
+<script src="js/render-player-history-collector.js?v=20260502-05"></script>
+<script src="js/render-univ-sections.js?v=20260502-02"></script>
 <script src="js/render-univ-compute.js?v=20260501-31"></script>
-<script src="js/render-univ-style-prep.js?v=20260501-39"></script>
-<script src="js/render-univ-detail.js?v=20260501-40"></script>
-<script src="js/render-univ-recent.js?v=20260501-45"></script>
-<script src="js/render-univ-actions.js?v=20260501-48"></script>
-<script src="js/render-player-modal-entry.js?v=20260501-48"></script>
+<script src="js/render-univ-style-prep.js?v=20260502-01"></script>
+<script src="js/render-univ-detail.js?v=20260502-01"></script>
+<script src="js/render-univ-recent.js?v=20260502-01"></script>
+<script src="js/render-univ-actions.js?v=20260502-04"></script>
+<script src="js/render-player-modal-entry.js?v=20260502-06"></script>
 <script src="js/render-match-id-prepare.js?v=20260501-36"></script>
 <script src="js/players.js?v=20260428-02"></script>
 <script src="js/vs.js?v=20260425-01"></script>
-<script src="js/history-action-utils.js?v=20260501-06"></script>
+<script src="js/history-action-utils.js?v=20260502-01"></script>
 <script src="js/history-external-utils.js?v=20260501-11"></script>
 <script src="js/history-external-ui.js?v=20260502-01"></script>
-<script src="js/history.js?v=20260502-03"></script>
+<script src="js/history.js?v=20260502-12"></script>
 <script src="js/match.js?v=20260501-48"></script>
-<script src="js/match-builder.js?v=20260502-01"></script>
+<script src="js/match-builder.js?v=20260502-13"></script>
 <script src="js/search.js?v=20260502-01"></script>
-<script src="js/pro-comp.js?v=20260502-07"></script>
+<script src="js/pro-comp.js?v=20260502-09"></script>
 <!-- (성능) stats/calendar는 탭 진입 시 지연 로딩 (render-core.js) -->
 <!-- (성능) 룰렛/부가기능은 탭 진입 시 지연 로딩 (render-core.js에서 로드) -->
 <!-- (성능) vote/elboard/bgm/soop는 기능 사용 시 지연 로딩 (render-core.js/init.js) -->
@@ -813,7 +811,7 @@ function fabActionCfgSearch(){
   </div>
 </div>
 
-<script src="js/firebase-init.js?v=20260502-02"></script>
+<script src="js/firebase-init.js?v=20260502-03"></script>
 <script src="js/sync/firebase-github.js?v=20260502-01"></script>
 <script src="js/sync/firebase-signal.js?v=20260502-01"></script>
 <!-- test.js 제거 (파일 없음 404 오류) -->
