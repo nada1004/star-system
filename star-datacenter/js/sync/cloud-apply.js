@@ -372,7 +372,7 @@ function _applyCloudData(d) {
   if(d.playerStatusIcons!==undefined&&typeof playerStatusIcons!=='undefined'){
     Object.keys(playerStatusIcons).forEach(k=>delete playerStatusIcons[k]);
     Object.assign(playerStatusIcons, d.playerStatusIcons||{});
-    localStorage.setItem('su_psi', JSON.stringify(playerStatusIcons));
+    try{ if(typeof _iconPersistState==='function') _iconPersistState(); }catch(e){}
   }
   if(d.notices!==undefined&&typeof notices!=='undefined') notices=d.notices;
   if(d.seasons!==undefined&&typeof seasons!=='undefined') seasons=_fbArr(d.seasons,[]);
