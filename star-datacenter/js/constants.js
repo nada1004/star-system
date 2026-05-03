@@ -1671,6 +1671,33 @@ function getRankChangeBadge(playerName, currentRank) {
 }
 
 function gc(n){const u=univCfg.find(x=>x.name===n);return u?u.color:'#6b7280';}
+function _normHexColor(v,fallback){
+  const s=String(v||'').trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(s)) return s;
+  return fallback||'#6b7280';
+}
+function getFixedSideColors(kind){
+  const k=String(kind||'').trim();
+  const defaults = {
+    ck: { a:'#2563eb', b:'#6366f1' },
+    pro:{ a:'#0f766e', b:'#4f46e5' },
+    tt: { a:'#2563eb', b:'#dc2626' }
+  };
+  const base = defaults[k] || defaults.ck;
+  try{
+    return {
+      a:_normHexColor(localStorage.getItem(`su_team_color_${k}_a`), base.a),
+      b:_normHexColor(localStorage.getItem(`su_team_color_${k}_b`), base.b)
+    };
+  }catch(e){
+    return { a:base.a, b:base.b };
+  }
+}
+function getFixedSideColor(kind, side, fallback){
+  const colors = getFixedSideColors(kind);
+  if(String(side||'').toUpperCase()==='B') return _normHexColor(colors.b, fallback||colors.b);
+  return _normHexColor(colors.a, fallback||colors.a);
+}
 // Get univ color with alpha hex suffix for row tinting
 function gcHex8(n,alpha){
   const c=gc(n);

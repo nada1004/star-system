@@ -403,6 +403,11 @@ window.cfgSetRecCardSettings = function(){
   const ava = parseInt(document.getElementById('cfg-ava-scale')?.value||'100',10);
   const vsAlign = (document.getElementById('cfg-rc-vs-align')?.value || 'left').trim(); // left|center|right
   const scScale = parseInt(document.getElementById('cfg-rc-score-scale')?.value||'100',10);
+  const ckA = (document.getElementById('cfg-team-ck-a')?.value || '#2563eb').trim();
+  const ckB = (document.getElementById('cfg-team-ck-b')?.value || '#6366f1').trim();
+  const proA = (document.getElementById('cfg-team-pro-a')?.value || '#0f766e').trim();
+  const proB = (document.getElementById('cfg-team-pro-b')?.value || '#4f46e5').trim();
+  const _hex = v => /^#[0-9a-fA-F]{6}$/.test(String(v||'').trim()) ? String(v).trim() : '';
 
   try{ localStorage.setItem('su_rc_theme_on', on ? '1' : '0'); }catch(e){}
   try{ localStorage.setItem('su_rc_accent_mode', ['none','header','border','full','gradient'].includes(accent)?accent:'none'); }catch(e){}
@@ -415,6 +420,11 @@ window.cfgSetRecCardSettings = function(){
   try{ localStorage.setItem('su_avatar_scale', String(Math.max(70,Math.min(160,ava))/100)); }catch(e){}
   try{ localStorage.setItem('su_rc_vs_align', ['left','center','right'].includes(vsAlign)?vsAlign:'left'); }catch(e){}
   try{ localStorage.setItem('su_rc_score_scale', String(Math.max(80,Math.min(130,scScale)))); }catch(e){}
+  try{ if(_hex(ckA)) localStorage.setItem('su_team_color_ck_a', _hex(ckA)); }catch(e){}
+  try{ if(_hex(ckB)) localStorage.setItem('su_team_color_ck_b', _hex(ckB)); }catch(e){}
+  try{ if(_hex(proA)) localStorage.setItem('su_team_color_pro_a', _hex(proA)); }catch(e){}
+  try{ if(_hex(proB)) localStorage.setItem('su_team_color_pro_b', _hex(proB)); }catch(e){}
+  try{ if(typeof window.cfgSyncTeamColorPreview==='function') window.cfgSyncTeamColorPreview(); }catch(e){}
 
   // 즉시 반영 (init.js 미로드/순서 이슈 대비: 여기서도 직접 적용)
   try{
@@ -502,6 +512,9 @@ window.cfgSetShareCardSettings = function(){
   const profile = parseInt(document.getElementById('cfg-sc-profile')?.value||'100',10);
   const font = parseInt(document.getElementById('cfg-sc-font')?.value||'100',10);
   const surface = (document.getElementById('cfg-sc-surface')?.value || 'glass').trim();
+  const logoLayout = (document.getElementById('cfg-sc-logo-layout')?.value || 'stack').trim();
+  const logoSize = parseInt(document.getElementById('cfg-sc-logo-size')?.value||'100',10);
+  const logoFit = (document.getElementById('cfg-sc-logo-fit')?.value || 'contain').trim();
   try{ localStorage.setItem('su_sc_mode', ['campus','vivid','soft','dark','minimal','aurora','poster','mono'].includes(mode)?mode:'campus'); }catch(e){}
   try{ localStorage.setItem('su_sc_color', String(Math.max(20,Math.min(100,color)))); }catch(e){}
   try{ localStorage.setItem('su_sc_fx', String(Math.max(0,Math.min(100,fx)))); }catch(e){}
@@ -510,8 +523,43 @@ window.cfgSetShareCardSettings = function(){
   try{ localStorage.setItem('su_sc_profile_pct', String(Math.max(70,Math.min(145,profile)))); }catch(e){}
   try{ localStorage.setItem('su_sc_font_pct', String(Math.max(85,Math.min(135,font)))); }catch(e){}
   try{ localStorage.setItem('su_sc_surface', ['glass','clean','solid'].includes(surface)?surface:'glass'); }catch(e){}
+  try{ localStorage.setItem('su_sc_logo_layout', ['stack','inline','badge','cover'].includes(logoLayout)?logoLayout:'stack'); }catch(e){}
+  try{ localStorage.setItem('su_sc_logo_size', String(Math.max(70,Math.min(150,logoSize)))); }catch(e){}
+  try{ localStorage.setItem('su_sc_logo_fit', ['contain','cover','fill','zoom'].includes(logoFit)?logoFit:'contain'); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
 };
+window.cfgSyncTeamColorPreview = function(){
+  try{
+    const ckA = document.getElementById('cfg-team-ck-a')?.value || (localStorage.getItem('su_team_color_ck_a')||'#2563eb');
+    const ckB = document.getElementById('cfg-team-ck-b')?.value || (localStorage.getItem('su_team_color_ck_b')||'#6366f1');
+    const proA = document.getElementById('cfg-team-pro-a')?.value || (localStorage.getItem('su_team_color_pro_a')||'#0f766e');
+    const proB = document.getElementById('cfg-team-pro-b')?.value || (localStorage.getItem('su_team_color_pro_b')||'#4f46e5');
+    const paint=(id,color,label)=>{
+      const el=document.getElementById(id);
+      if(!el) return;
+      el.style.background=color;
+      el.style.borderColor=color;
+      el.textContent=label;
+    };
+    paint('cfg-team-ck-prev-a', ckA, `A팀 ${ckA}`);
+    paint('cfg-team-ck-prev-b', ckB, `B팀 ${ckB}`);
+    paint('cfg-team-pro-prev-a', proA, `A팀 ${proA}`);
+    paint('cfg-team-pro-prev-b', proB, `B팀 ${proB}`);
+  }catch(e){}
+};
+try{
+  const _m = [
+    ['su_team_color_ck_a', '#0e7490', '#2563eb'],
+    ['su_team_color_ck_b', '#b45309', '#6366f1'],
+    ['su_team_color_pro_b', '#7c3aed', '#4f46e5']
+  ];
+  _m.forEach(([k, oldV, nextV])=>{
+    try{
+      const cur = String(localStorage.getItem(k)||'').trim().toLowerCase();
+      if(!cur || cur===oldV.toLowerCase()) localStorage.setItem(k, nextV);
+    }catch(e){}
+  });
+}catch(e){}
 window.cfgPreviewShareCardMode = function(mode){
   const el=document.getElementById('cfg-sc-mode');
   if(el) el.value = ['campus','vivid','soft','dark','minimal','aurora','poster','mono'].includes(mode)?mode:'campus';
@@ -2216,7 +2264,7 @@ window.cfgUnivOrderMove = function(i, dir){
         return;
       }
       const ensureChart = window.ensureChartJS || (()=>loader('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'));
-      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats.js?v=20260502-06')).then(()=>{
+      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats.js?v=20260502-60')).then(()=>{
         const fn = window.rStats;
         if(typeof fn === 'function' && fn !== _lazyRStats) fn(C, T);
       }).catch((e)=>{
@@ -2633,7 +2681,7 @@ function rCfg(C,T){
     {id:'uisize', icon:'📱', title:'UI 크기', desc:'모바일/태블릿 크기'},
     {id:'tablabels', icon:'🏷️', title:'탭 이름', desc:'상단/하위 메뉴명'},
     {id:'hdr', icon:'🧩', title:'헤더 바', desc:'제목/아이콘/배경'},
-    {id:'reccard', icon:'🧾', title:'기록 카드', desc:'목록 카드 스타일'},
+    {id:'reccard', icon:'🧾', title:'기록 카드', desc:'CK/프로 버튼색 포함'},
     {id:'cfgmenu', icon:'🧭', title:'메뉴 정리', desc:'자주 쓰는 설정 정리'}
   ];
   const _catButtons = _cfgCats.map(c=>{
@@ -3311,6 +3359,14 @@ ${_scfgD('notice','📢 공지 관리')}
   </details>
   ${_scfgD('reccard','🧾 기록 카드(기록탭) 스타일')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">개인전/끝장전/미니/프로리그/대회 기록 목록에 쓰이는 “기록 카드” 스타일입니다. (대회탭 조별리그 일정 카드는 별도 설정)</div>
+    <div style="margin-bottom:10px;padding:12px 14px;border:1.5px solid #93c5fd;border-radius:12px;background:linear-gradient(135deg,#eff6ff,#eef2ff);box-shadow:0 8px 18px rgba(37,99,235,.08)">
+      <div style="font-size:13px;font-weight:1000;color:#1e3a8a;margin-bottom:4px">🎯 경기 상세 상단 팀 버튼 색상은 여기서 바꿉니다</div>
+      <div style="font-size:11px;color:#475569;line-height:1.6">바로 아래의 <b>대학CK 팀 버튼 색상</b>, <b>프로리그 팀 버튼 색상</b> 컬러피커가 경기 상세 상단 팀 버튼과 관련 공유카드에 공통 적용됩니다.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-w btn-xs no-export" onclick="try{document.getElementById('cfg-team-ck-a')?.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}" style="border-color:#93c5fd">🤝 대학CK 색상으로 이동</button>
+        <button class="btn btn-w btn-xs no-export" onclick="try{document.getElementById('cfg-team-pro-a')?.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}" style="border-color:#c4b5fd">🏅 프로리그 색상으로 이동</button>
+      </div>
+    </div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
         <input type="checkbox" id="cfg-rc-theme-on" style="width:15px;height:15px" ${_rcOn?'checked':''} onchange="cfgSetRecCardSettings()">
@@ -3391,6 +3447,39 @@ ${_scfgD('notice','📢 공지 관리')}
         기록 카드에서 메모 입력 기능 사용(관리자)
       </label>
       <div style="font-size:11px;color:var(--gray-l)">※ 메모가 이미 저장된 경우는 항상 표시됩니다. 이 옵션은 “입력칸”만 켜고 끕니다.</div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:12px;border:2px solid #c7d2fe;border-radius:14px;background:linear-gradient(180deg,#ffffff,#f8fbff);box-shadow:0 10px 24px rgba(79,70,229,.06)">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:13px;font-weight:1000;color:#1e3a8a">🤝 대학CK 팀 버튼 색상</div>
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;color:var(--text2)">
+            <span>A팀</span>
+            <input type="color" id="cfg-team-ck-a" value="${(localStorage.getItem('su_team_color_ck_a')||'#2563eb')}" oninput="cfgSyncTeamColorPreview()" onchange="cfgSetRecCardSettings()" style="width:42px;height:30px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer">
+          </label>
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;color:var(--text2)">
+            <span>B팀</span>
+            <input type="color" id="cfg-team-ck-b" value="${(localStorage.getItem('su_team_color_ck_b')||'#6366f1')}" oninput="cfgSyncTeamColorPreview()" onchange="cfgSetRecCardSettings()" style="width:42px;height:30px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer">
+          </label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div id="cfg-team-ck-prev-a" style="min-height:36px;border-radius:10px;border:1px solid ${(localStorage.getItem('su_team_color_ck_a')||'#2563eb')};background:${(localStorage.getItem('su_team_color_ck_a')||'#2563eb')};color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(15,23,42,.10)">A팀 ${(localStorage.getItem('su_team_color_ck_a')||'#2563eb')}</div>
+            <div id="cfg-team-ck-prev-b" style="min-height:36px;border-radius:10px;border:1px solid ${(localStorage.getItem('su_team_color_ck_b')||'#6366f1')};background:${(localStorage.getItem('su_team_color_ck_b')||'#6366f1')};color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(15,23,42,.10)">B팀 ${(localStorage.getItem('su_team_color_ck_b')||'#6366f1')}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:13px;font-weight:1000;color:#312e81">🏅 프로리그 팀 버튼 색상</div>
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;color:var(--text2)">
+            <span>A팀</span>
+            <input type="color" id="cfg-team-pro-a" value="${(localStorage.getItem('su_team_color_pro_a')||'#0f766e')}" oninput="cfgSyncTeamColorPreview()" onchange="cfgSetRecCardSettings()" style="width:42px;height:30px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer">
+          </label>
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;color:var(--text2)">
+            <span>B팀</span>
+            <input type="color" id="cfg-team-pro-b" value="${(localStorage.getItem('su_team_color_pro_b')||'#4f46e5')}" oninput="cfgSyncTeamColorPreview()" onchange="cfgSetRecCardSettings()" style="width:42px;height:30px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer">
+          </label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div id="cfg-team-pro-prev-a" style="min-height:36px;border-radius:10px;border:1px solid ${(localStorage.getItem('su_team_color_pro_a')||'#0f766e')};background:${(localStorage.getItem('su_team_color_pro_a')||'#0f766e')};color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(15,23,42,.10)">A팀 ${(localStorage.getItem('su_team_color_pro_a')||'#0f766e')}</div>
+            <div id="cfg-team-pro-prev-b" style="min-height:36px;border-radius:10px;border:1px solid ${(localStorage.getItem('su_team_color_pro_b')||'#4f46e5')};background:${(localStorage.getItem('su_team_color_pro_b')||'#4f46e5')};color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(15,23,42,.10)">B팀 ${(localStorage.getItem('su_team_color_pro_b')||'#4f46e5')}</div>
+          </div>
+          <div style="font-size:11px;color:var(--gray-l)">경기 상세 상단 팀 버튼, 기록 카드, 관련 공유카드에 공통 적용됩니다.</div>
+        </div>
+      </div>
     </div>
   </details>
   ${(()=>{ 
@@ -3585,6 +3674,31 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">공유카드 전용 폰트 크기</div>
         <input type="range" id="cfg-sc-font" min="85" max="135" step="5" value="${Math.max(85,Math.min(135,_font))}" oninput="document.getElementById('cfg-sc-font-v').textContent=this.value+'%'" onchange="cfgSetShareCardSettings()" style="width:100%">
         <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-sc-font-v">${Math.max(85,Math.min(135,_font))}%</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">미니대전/대학대전 로고 배치</div>
+          <select id="cfg-sc-logo-layout" onchange="cfgSetShareCardSettings()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+            <option value="stack" ${(localStorage.getItem('su_sc_logo_layout')||'stack')==='stack'?'selected':''}>세로형</option>
+            <option value="inline" ${(localStorage.getItem('su_sc_logo_layout')||'stack')==='inline'?'selected':''}>가로형</option>
+            <option value="badge" ${(localStorage.getItem('su_sc_logo_layout')||'stack')==='badge'?'selected':''}>배지형</option>
+            <option value="cover" ${(localStorage.getItem('su_sc_logo_layout')||'stack')==='cover'?'selected':''}>카드 채움형</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">미니대전/대학대전 로고 크기</div>
+          <input type="range" id="cfg-sc-logo-size" min="70" max="150" step="5" value="${Math.max(70,Math.min(150,parseInt(localStorage.getItem('su_sc_logo_size')||'100',10)||100))}" oninput="document.getElementById('cfg-sc-logo-size-v').textContent=this.value+'%'" onchange="cfgSetShareCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-sc-logo-size-v">${Math.max(70,Math.min(150,parseInt(localStorage.getItem('su_sc_logo_size')||'100',10)||100))}%</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">미니대전/대학대전 로고 맞춤</div>
+          <select id="cfg-sc-logo-fit" onchange="cfgSetShareCardSettings()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+            <option value="contain" ${(localStorage.getItem('su_sc_logo_fit')||'contain')==='contain'?'selected':''}>맞춤</option>
+            <option value="cover" ${(localStorage.getItem('su_sc_logo_fit')||'contain')==='cover'?'selected':''}>채우기</option>
+            <option value="fill" ${(localStorage.getItem('su_sc_logo_fit')||'contain')==='fill'?'selected':''}>늘리기</option>
+            <option value="zoom" ${(localStorage.getItem('su_sc_logo_fit')||'contain')==='zoom'?'selected':''}>확대</option>
+          </select>
+        </div>
       </div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
         <div style="font-size:11px;color:var(--text3);font-weight:900">카드 타입별 개별 오버라이드</div>

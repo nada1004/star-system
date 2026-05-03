@@ -414,8 +414,9 @@ function statsPeriodAnalysisHTML(){
     ${periodSection(week, '#2563eb')}
     ${periodSection(month, '#7c3aed')}
   </div>`;
-  if(typeof window._shareCardRenderCached==='function') window._shareCardRenderCached(card, _cacheKey, ()=>_html);
-  else card.innerHTML=_html;
+  const _finalHtml = _personalPosterHTML || _html;
+  if(typeof window._shareCardRenderCached==='function') window._shareCardRenderCached(card, _cacheKey, ()=>_finalHtml);
+  else card.innerHTML=_finalHtml;
 }
 try{ window.renderShareCardByPlayer = renderShareCardByPlayer; }catch(e){}
 
@@ -1845,12 +1846,12 @@ function statsShareCardHTML(){
     </div>`}
 
     <!-- 카드 미리보기 -->
-    <div id="sharecard-preview-wrap">
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">💡 카드를 클릭하면 사라집니다</div>
-      <div id="share-card" style="width:100%;max-width:420px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);font-family:'Noto Sans KR',sans-serif;display:block;cursor:pointer" title="클릭하여 카드 초기화" onclick="resetShareCard(this)">
+    <div id="sharecard-preview-wrap" class="sharecard-preview-wrap">
+      <div class="sharecard-preview-tip">💡 카드를 클릭하면 사라집니다</div>
+      <div id="share-card" class="share-card-host" style="width:100%;max-width:420px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);font-family:'Noto Sans KR',sans-serif;display:block;cursor:pointer" title="클릭하여 카드 초기화" onclick="resetShareCard(this)">
         <p style="text-align:center;color:var(--gray-l);padding:36px 20px;font-size:13px">위에서 선택하면 카드가 생성됩니다</p>
       </div>
-      <div class="sharecard-modal-actions" style="justify-content:flex-start;margin-top:10px">
+      <div class="sharecard-modal-actions sharecard-modal-actions--left" style="justify-content:flex-start;margin-top:10px">
         <button class="btn btn-p btn-sm" onclick="downloadShareCardJpg()">📷 이미지 저장</button>
       </div>
     </div>
@@ -1914,7 +1915,11 @@ function _getShareCardPrefs(typeKey){
   const profileScale=_scClamp(parseInt(profileSrc,10)||100,70,145)/100;
   const fontScale=_scClamp(parseInt(fontSrc,10)||100,85,135)/100;
   const surface=(localStorage.getItem('su_sc_surface')||'glass').trim();
-  return { mode: ov||mode, color, fx, winbg, loserGray, profileScale, fontScale, surface };
+  const logoLayout=((t ? localStorage.getItem(`su_sc_logo_layout_${t}`) : null) ?? localStorage.getItem('su_sc_logo_layout') ?? 'stack').trim();
+  const logoSizeSrc=((t ? localStorage.getItem(`su_sc_logo_size_${t}`) : null) ?? localStorage.getItem('su_sc_logo_size') ?? '100');
+  const logoSize=_scClamp(parseInt(logoSizeSrc,10)||100,70,150)/100;
+  const logoFit=((t ? localStorage.getItem(`su_sc_logo_fit_${t}`) : null) ?? localStorage.getItem('su_sc_logo_fit') ?? 'contain').trim();
+  return { mode: ov||mode, color, fx, winbg, loserGray, profileScale, fontScale, surface, logoLayout, logoSize, logoFit };
 }
 window._getShareCardPrefs = _getShareCardPrefs;
 window._scMixHex = _scMixHex;
@@ -1961,12 +1966,12 @@ function renderShareCardByPlayer(name){
   const shellBg = scp.mode==='dark' ? 'linear-gradient(180deg,#020617,#0f172a)' : scp.mode==='minimal' ? 'linear-gradient(180deg,#0f172a,#111827)' : scp.mode==='aurora' ? `linear-gradient(160deg,${_scMixHex(baseCol,'#e0f2fe',.72)},${_scMixHex(baseCol,'#111827',.18)})` : scp.mode==='poster' ? `linear-gradient(180deg,${_scMixHex(baseCol,'#111827',.18)},#111827)` : scp.mode==='mono' ? 'linear-gradient(180deg,#1f2937,#111827)' : `linear-gradient(180deg,${_scShadeHex(baseCol,-.22)},#111827)`;
   const glassBg = scp.surface==='solid' ? `linear-gradient(180deg,${_scMixHex(accentA,'#ffffff',.10)},${_scMixHex(accentB,'#ffffff',.04)})` : scp.surface==='clean' ? 'linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.10))' : 'linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))';
   const _cacheKey = `player:${name}`;
-  const _html = `<div style="background:${shellBg};padding:16px;border-radius:26px;color:#fff;position:relative;overflow:hidden;box-shadow:0 22px 48px rgba(15,23,42,.26)">
+  const _html = `<div class="share-shell share-shell--player" style="background:${shellBg};padding:16px;border-radius:26px;color:#fff;position:relative;overflow:hidden;box-shadow:0 22px 48px rgba(15,23,42,.26)">
     <div style="position:absolute;inset:0;background:${bgCss};opacity:.96"></div>
     <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,${(0.08+scp.fx*0.10).toFixed(2)}),rgba(15,23,42,${(0.62+scp.fx*0.22).toFixed(2)}));pointer-events:none"></div>
     <div style="position:absolute;top:-32px;right:-28px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
     <div style="position:absolute;left:-42px;bottom:-44px;width:160px;height:160px;border-radius:50%;background:${baseCol}${Math.round(20+scp.color*30).toString(16).padStart(2,'0')};pointer-events:none"></div>
-    <div style="position:relative;z-index:1;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:18px;background:${glassBg};backdrop-filter:blur(${scp.surface==='glass'?'10px':'4px'})">
+    <div class="share-surface" style="position:relative;z-index:1;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:18px;background:${glassBg};backdrop-filter:blur(${scp.surface==='glass'?'10px':'4px'})">
       <div style="display:flex;align-items:flex-start;justify-content:flex-end;gap:12px;margin-bottom:14px">
         <div style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 11px;font-size:10px;font-weight:900">${p.tier||'-'}</div>
       </div>
@@ -1982,27 +1987,27 @@ function renderShareCardByPlayer(name){
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px">${form||'<span style="opacity:.6;font-size:12px">기록없음</span>'}</div>
         </div>
-        <div style="min-width:92px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:10px 12px;text-align:center">
-          <div style="font-size:9px;letter-spacing:.8px;font-weight:900;color:rgba(255,255,255,.68)">ELO</div>
-          <div style="font-size:28px;font-weight:1000;line-height:1.02;margin-top:4px">${elo}</div>
+        <div class="share-hero-metric" style="min-width:92px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:10px 12px;text-align:center">
+          <div class="share-kicker" style="font-size:9px;letter-spacing:.8px;font-weight:900;color:rgba(255,255,255,.68)">ELO</div>
+          <div class="share-hero-number" style="font-size:28px;font-weight:1000;line-height:1.02;margin-top:4px">${elo}</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:16px">
-        <div style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
-          <div style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800;letter-spacing:.6px">승패</div>
-          <div style="margin-top:5px;font-size:16px;font-weight:1000"><span style="color:#4ade80">${w}</span> / <span style="color:#f87171">${l}</span></div>
+      <div class="share-stat-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:16px">
+        <div class="share-stat-card" style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
+          <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800;letter-spacing:.6px">승패</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:16px;font-weight:1000"><span style="color:#4ade80">${w}</span> / <span style="color:#f87171">${l}</span></div>
         </div>
-        <div style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
-          <div style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800;letter-spacing:.6px">승률</div>
-          <div style="margin-top:5px;font-size:18px;font-weight:1000">${tot?rate+'%':'-'}</div>
+        <div class="share-stat-card" style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
+          <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800;letter-spacing:.6px">승률</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:18px;font-weight:1000">${tot?rate+'%':'-'}</div>
         </div>
-        <div style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
-          <div style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800;letter-spacing:.6px">포인트</div>
-          <div style="margin-top:5px;font-size:18px;font-weight:1000;color:${ptsColor}">${pts>=0?'+':''}${pts}</div>
+        <div class="share-stat-card" style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
+          <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800;letter-spacing:.6px">포인트</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:18px;font-weight:1000;color:${ptsColor}">${pts>=0?'+':''}${pts}</div>
         </div>
-        <div style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
-          <div style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800;letter-spacing:.6px">최근5경기</div>
-          <div style="margin-top:5px;font-size:18px;font-weight:1000">${h.slice(0,5).filter(x=>x.result==='승').length}</div>
+        <div class="share-stat-card" style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
+          <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.62);font-weight:800;letter-spacing:.6px">최근5경기</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:18px;font-weight:1000">${h.slice(0,5).filter(x=>x.result==='승').length}</div>
         </div>
       </div>
       ${tot?`<div style="margin-top:14px">
@@ -2035,12 +2040,12 @@ function renderShareCardByUniv(univName){
   const shellBg = scp.mode==='dark' ? 'linear-gradient(180deg,#020617,#0f172a)' : scp.mode==='aurora' ? `linear-gradient(160deg,${_scMixHex(uCol,'#dbeafe',.70)},${_scMixHex(uCol,'#111827',.16)})` : scp.mode==='poster' ? `linear-gradient(180deg,${_scMixHex(uCol,'#111827',.20)},#111827)` : scp.mode==='mono' ? 'linear-gradient(180deg,#374151,#111827)' : `linear-gradient(180deg,${_scShadeHex(uCol,-.18)},#111827)`;
   const glassBg = scp.surface==='solid' ? `linear-gradient(180deg,${_scMixHex(uCol,'#ffffff',.08)},${_scMixHex(uCol,'#000000',.08)})` : scp.surface==='clean' ? 'linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.10))' : 'linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))';
   const _cacheKey = `univ:${univName}`;
-  const _html = `<div style="background:${shellBg};padding:16px;color:#fff;position:relative;overflow:hidden;border-radius:26px;box-shadow:0 22px 48px rgba(15,23,42,.26)">
+  const _html = `<div class="share-shell share-shell--univ" style="background:${shellBg};padding:16px;color:#fff;position:relative;overflow:hidden;border-radius:26px;box-shadow:0 22px 48px rgba(15,23,42,.26)">
     <div style="position:absolute;inset:0;background:linear-gradient(135deg,${_scMixHex(uCol,'#ffffff',scp.mode==='soft' ? .22 : .08)}ee,${_scMixHex(uCol,'#000000',scp.mode==='dark' ? .18 : .08)}cc);opacity:.98"></div>
     <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,${(0.08+scp.fx*0.08).toFixed(2)}),rgba(15,23,42,${(0.36+scp.fx*0.16).toFixed(2)}));pointer-events:none"></div>
     <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
     <div style="position:absolute;left:-42px;bottom:-44px;width:150px;height:150px;border-radius:50%;background:${uCol}${Math.round(18+scp.color*32).toString(16).padStart(2,'0')};pointer-events:none"></div>
-    <div style="position:relative;z-index:1;border-radius:22px;padding:18px;border:1px solid rgba(255,255,255,.12);background:${glassBg};backdrop-filter:blur(${scp.surface==='glass'?'10px':'4px'})">
+    <div class="share-surface" style="position:relative;z-index:1;border-radius:22px;padding:18px;border:1px solid rgba(255,255,255,.12);background:${glassBg};backdrop-filter:blur(${scp.surface==='glass'?'10px':'4px'})">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px">
         <div style="display:flex;align-items:center;gap:12px;min-width:0">
           <div style="width:78px;height:78px;border-radius:22px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.30);overflow:hidden;box-shadow:0 12px 28px rgba(0,0,0,.18)">
@@ -2051,27 +2056,27 @@ function renderShareCardByUniv(univName){
             <div style="font-size:11px;color:rgba(255,255,255,.72);font-weight:700;margin-top:5px">소속 선수 ${mem.length}명</div>
           </div>
         </div>
-        <div style="min-width:102px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:10px 12px;text-align:center">
-          <div style="font-size:9px;letter-spacing:.8px;font-weight:900;color:rgba(255,255,255,.68)">TEAM POINT</div>
-          <div style="font-size:28px;font-weight:1000;line-height:1.02;margin-top:4px;color:${ptsColor}">${sc.pts>=0?'+':''}${sc.pts}</div>
+        <div class="share-hero-metric" style="min-width:102px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:10px 12px;text-align:center">
+          <div class="share-kicker" style="font-size:9px;letter-spacing:.8px;font-weight:900;color:rgba(255,255,255,.68)">TEAM POINT</div>
+          <div class="share-hero-number" style="font-size:28px;font-weight:1000;line-height:1.02;margin-top:4px;color:${ptsColor}">${sc.pts>=0?'+':''}${sc.pts}</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px">
-        <div style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
-          <div style="font-size:9px;color:rgba(255,255,255,.64);font-weight:800">승률</div>
-          <div style="margin-top:5px;font-size:18px;font-weight:1000">${sc.winrate}%</div>
+      <div class="share-stat-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px">
+        <div class="share-stat-card" style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
+          <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.64);font-weight:800">승률</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:18px;font-weight:1000">${sc.winrate}%</div>
         </div>
-        <div style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
-          <div style="font-size:9px;color:rgba(255,255,255,.64);font-weight:800">전적</div>
-          <div style="margin-top:5px;font-size:15px;font-weight:1000">${sc.w}W / ${sc.l}L</div>
+        <div class="share-stat-card" style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
+          <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.64);font-weight:800">전적</div>
+          <div class="share-stat-value share-stat-value--compact" style="margin-top:5px;font-size:15px;font-weight:1000">${sc.w}W / ${sc.l}L</div>
         </div>
-        <div style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
-          <div style="font-size:9px;color:rgba(255,255,255,.64);font-weight:800">평균ELO</div>
-          <div style="margin-top:5px;font-size:18px;font-weight:1000">${sc.avgElo}</div>
+        <div class="share-stat-card" style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
+          <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.64);font-weight:800">평균ELO</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:18px;font-weight:1000">${sc.avgElo}</div>
         </div>
-        <div style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
-          <div style="font-size:9px;color:rgba(255,255,255,.64);font-weight:800">로스터</div>
-          <div style="margin-top:5px;font-size:18px;font-weight:1000">${mem.length}</div>
+        <div class="share-stat-card" style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 8px;text-align:center">
+          <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.64);font-weight:800">로스터</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:18px;font-weight:1000">${mem.length}</div>
         </div>
       </div>
       ${aces.length?`<div style="margin-bottom:14px">
@@ -2109,8 +2114,12 @@ function renderShareCardByMatchObj(m){
   })();
   const scp=_getShareCardPrefs(_scTypeKey);
   const _teamMode = (
+    m._matchType==='mini' ||
+    m._matchType==='univm' ||
     m._matchType==='ck' ||
     m._matchType==='pro' ||
+    m._matchType==='procomp-team' ||
+    m._matchType==='procomp-bkt' ||
     (m._matchType==='tt' && (
       (Array.isArray(m.teamAMembers) && m.teamAMembers.length) ||
       (Array.isArray(m.teamBMembers) && m.teamBMembers.length) ||
@@ -2119,8 +2128,61 @@ function renderShareCardByMatchObj(m){
   );
   const _dispA = _teamMode ? (m.teamALabel || a || 'A팀') : a;
   const _dispB = _teamMode ? (m.teamBLabel || b || 'B팀') : b;
-  const pa = (!_teamMode && typeof statsP==='function') ? (statsP(a)||null) : null;
-  const pb = (!_teamMode && typeof statsP==='function') ? (statsP(b)||null) : null;
+  const _collectTeamSideNames = (side) => {
+    try{
+      const arr = side==='A' ? (m.teamAMembers||[]) : (m.teamBMembers||[]);
+      const fromMembers = Array.isArray(arr) ? arr.map(x=>String((x&&x.name)||'').trim()).filter(Boolean) : [];
+      if(fromMembers.length) return [...new Set(fromMembers)];
+      const out = [];
+      (Array.isArray(m.sets)?m.sets:[]).forEach(s=>{
+        (Array.isArray(s&&s.games)?s.games:[]).forEach(g=>{
+          const nm = String(side==='A' ? (g&&g.playerA) : (g&&g.playerB) || '').trim();
+          if(!nm) return;
+          if(nm===a || nm===b || nm==='A팀' || nm==='B팀') return;
+          if(!out.includes(nm)) out.push(nm);
+        });
+      });
+      return out;
+    }catch(e){
+      return [];
+    }
+  };
+  const _inferTeamRepPlayer = (side) => {
+    try{
+      const names = _collectTeamSideNames(side);
+      if(!names.length) return null;
+      const lastSet = Array.isArray(m.sets) && m.sets.length ? m.sets[m.sets.length-1] : null;
+      const lastGames = Array.isArray(lastSet&&lastSet.games) ? lastSet.games : [];
+      for(const g of lastGames){
+        const nm = String(side==='A' ? (g&&g.playerA) : (g&&g.playerB) || '').trim();
+        if(nm && names.includes(nm)){
+          const p = typeof statsP==='function' ? (statsP(nm)||null) : null;
+          if(p) return {...p, __repReason:'ace'};
+        }
+      }
+      let bestName='', bestWins=-1;
+      names.forEach(nm=>{
+        let wins=0;
+        (Array.isArray(m.sets)?m.sets:[]).forEach(s=>{
+          (Array.isArray(s&&s.games)?s.games:[]).forEach(g=>{
+            const winnerSide = String((g&&g.winner)||'').trim();
+            const wn = String(winnerSide===side ? (side==='A' ? g.playerA : g.playerB) : '').trim();
+            if(wn===nm) wins += 1;
+          });
+        });
+        if(wins>bestWins){ bestWins=wins; bestName=nm; }
+      });
+      const pick = bestName || names[0];
+      const p = typeof statsP==='function' ? (statsP(pick)||null) : null;
+      return p ? {...p, ...(bestWins>0?{__repReason:'wins',__repWins:bestWins}:{})} : {name:pick};
+    }catch(e){
+      return null;
+    }
+  };
+  const _teamRepPreA = _teamMode ? _inferTeamRepPlayer('A') : null;
+  const _teamRepPreB = _teamMode ? _inferTeamRepPlayer('B') : null;
+  const pa = (!_teamMode && typeof statsP==='function') ? (statsP(a)||null) : _teamRepPreA;
+  const pb = (!_teamMode && typeof statsP==='function') ? (statsP(b)||null) : _teamRepPreB;
   const _usePlayerPhoto = !!(
     !_teamMode &&
     !m._noUnivIcon &&
@@ -2131,6 +2193,7 @@ function renderShareCardByMatchObj(m){
     )
   );
   const _photoOuter = Math.round(104*(scp.profileScale||1));
+  const _photoCoverH = Math.round(132*(scp.profileScale||1));
   const _iconOuter = Math.round(66*(scp.profileScale||1));
   const _iconInner = Math.round(46*(scp.profileScale||1));
   const isCivil=m.type==='civil'||(a==='A팀'&&b==='B팀');
@@ -2142,15 +2205,19 @@ function renderShareCardByMatchObj(m){
   const civColor=civUniv?gc(civUniv):'#6366f1';
   // 경기 타입별 전용 색상 (대학 색상 사용 안함)
   const _TYPE_COLORS={
-    pro:{a:'#1d4ed8',b:'#be123c'},        // 프로리그: 딥블루 vs 크림슨
-    tt: {a:'#7c3aed',b:'#047857'},        // 티어대회: 바이올렛 vs 에메랄드
-    ck: {a:'#0e7490',b:'#b45309'},        // 대학CK:  시안 vs 앰버
-    'procomp-team':{a:'#1e3a8a',b:'#881337'}, // 프로리그 팀전: 네이비 vs 다크레드
-    'procomp-bkt': {a:'#92400e',b:'#4c1d95'},  // 프로리그 토너먼트: 앰버 vs 딥퍼플
+    tt: {a:'#7c3aed',b:'#047857'}
   };
   const _tc=m._matchType&&_TYPE_COLORS[m._matchType]?_TYPE_COLORS[m._matchType]:null;
-  let ca=_tc?_tc.a:(isCivil?civColor:gc(a));
-  let cb=_tc?_tc.b:(isCivil?civColor:gc(b));
+  const _resolveSideColor = (playerObj, label, fallback) => {
+    try{
+      if(playerObj && playerObj.univ) return gc(playerObj.univ) || fallback || '#64748b';
+      return gc(label) || fallback || '#64748b';
+    }catch(e){
+      return fallback || '#64748b';
+    }
+  };
+  let ca=_tc?_tc.a:(isCivil?civColor:_resolveSideColor(pa, _teamMode?_dispA:a, gc(_teamMode?_dispA:a)));
+  let cb=_tc?_tc.b:(isCivil?civColor:_resolveSideColor(pb, _teamMode?_dispB:b, gc(_teamMode?_dispB:b)));
   const aWin=m.sa>m.sb, bWin=m.sb>m.sa;
   const draw=!aWin&&!bWin;
 
@@ -2393,8 +2460,9 @@ function renderShareCardByMatchObj(m){
   let setsHTML='';
   if(m.sets&&m.sets.length){
     setsHTML=m.sets.map((s,si)=>{
-      const isAce=(si===2);
-      const sLabel=s.label ? String(s.label) : (isAce?'⚡ 에이스결전':`${si+1}세트`);
+      const rawLabel=s.label ? String(s.label) : `${si+1}세트`;
+      const isAce=/에이스/.test(rawLabel);
+      const sLabel=rawLabel.replace(/⚡\s*/g,'').replace(/에이스결전|에이스전/g, `${si+1}세트`);
       const swA=s.scoreA||0,swB=s.scoreB||0;
       const sAW=swA>swB,sBW=swB>swA;
       const gameList=(s.games||[]).filter(g=>g.playerA||g.playerB);
@@ -2445,10 +2513,15 @@ function renderShareCardByMatchObj(m){
   function univIconHTML(name, size, fallbackColor){
     const url=UNIV_ICONS[name]||(univCfg.find(x=>x.name===name)||{}).icon||'';
     const s=size||'40px';
-    if(url) return `<img src="${toHttpsUrl(url)}" style="width:${s};height:${s};object-fit:contain" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'${s}\\' height=\\'${s}\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`;
+    const fitMode = ['contain','cover','fill','zoom'].includes(String(scp.logoFit||'')) ? String(scp.logoFit) : 'contain';
+    const objFit = fitMode==='cover' ? 'cover' : fitMode==='fill' ? 'fill' : 'contain';
+    const scale = fitMode==='zoom' ? 'transform:scale(1.16);' : '';
+    if(url) return `<img src="${toHttpsUrl(url)}" style="width:${s};height:${s};object-fit:${objFit};${scale}" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'${s}\\' height=\\'${s}\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`;
     return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='${s}' height='${s}'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;
   }
   function _pickTeamRep(side){
+    const pre = side==='A' ? _teamRepPreA : _teamRepPreB;
+    if(pre) return pre;
     const arr = side==='A' ? (m.teamAMembers||[]) : (m.teamBMembers||[]);
     if(!Array.isArray(arr) || !arr.length) return null;
     const byName = new Map(arr.map(x=>[String((x&&x.name)||'').trim(), x]).filter(([n])=>!!n));
@@ -2482,44 +2555,58 @@ function renderShareCardByMatchObj(m){
   function _teamRepNote(side){
     const rep = _pickTeamRep(side);
     if(!rep) return '';
-    if(rep.__repReason==='ace') return '에이스전';
+    if(rep.__repReason==='ace') return '';
     if(rep.__repReason==='wins' && rep.__repWins>0) return `${rep.__repWins}승`;
     return '';
   }
   function _teamLineupSummary(side){
     const arr = side==='A' ? (m.teamAMembers||[]) : (m.teamBMembers||[]);
-    if(!Array.isArray(arr) || !arr.length) return '';
-    const names = arr.map(x=>String((x&&x.name)||'').trim()).filter(Boolean);
-    if(!names.length) return `${arr.length}인 팀`;
+    const names = (Array.isArray(arr) && arr.length ? arr.map(x=>String((x&&x.name)||'').trim()).filter(Boolean) : _collectTeamSideNames(side));
+    if(!names.length) return '';
     if(names.length===1) return names[0];
     if(names.length===2) return `${names[0]} · ${names[1]}`;
     return `${names[0]} · ${names[1]} 외 ${names.length-2}명`;
   }
   function _teamRepIconHTML(side, win){
     const rep = _pickTeamRep(side);
-    const sOuter = '76px';
+    const sOuter = `${_teamLogoOuter}px`;
     const col = side==='A' ? ca : cb;
     const rgb = side==='A' ? caRgb : cbRgb;
+    const panelBg = win?`rgba(${rgb},.38)`:`rgba(${rgb},.14)`;
     const ring = win
       ? 'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 6px 22px rgba(0,0,0,.32);'
       : 'opacity:.72;box-shadow:0 0 0 2px rgba(255,255,255,.2);';
+    if(_teamHeaderLayout==='cover'){
+      const repPlayer = rep && rep.name ? (statsP(rep.name) || rep) : null;
+      const repUniv = String((repPlayer&&repPlayer.univ) || (side==='A'?m.a:m.b) || '').trim();
+      const iconSize = Math.round(118*scp.logoSize);
+      return `<div style="position:relative;width:100%;height:${Math.round(152*scp.logoSize)}px;border-radius:22px;overflow:hidden;background:linear-gradient(135deg,${_scMixHex(col,'#ffffff',.82)},${_scMixHex(col,'#0f172a',.26)});border:1px solid ${win?'rgba(255,255,255,.36)':'rgba(255,255,255,.16)'};box-shadow:${win?'0 18px 38px rgba(2,6,23,.22)':'0 10px 24px rgba(2,6,23,.12)'};
+        ${win?'':'filter:saturate(.82) brightness(.92);'}">
+        <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 42%, rgba(255,255,255,.18), transparent 46%), linear-gradient(180deg, rgba(255,255,255,.08), rgba(15,23,42,.08) 55%, rgba(15,23,42,.24));pointer-events:none"></div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:10px">
+          <div style="width:${iconSize}px;height:${iconSize}px;display:flex;align-items:center;justify-content:center;opacity:${win?'.96':'.72'};transform:scale(${win?'1':'0.94'})">
+            ${repUniv ? univIconHTML(repUniv,`${iconSize}px`) : `<span style="color:#fff;font-weight:1000;font-size:${Math.round(44*scp.logoSize)}px">${side}</span>`}
+          </div>
+        </div>
+      </div>`;
+    }
     if(rep && rep.name){
       const p = statsP(rep.name) || rep;
       if(p && p.photo){
         return `<div style="position:relative;width:${sOuter};height:${sOuter};border-radius:var(--su_profile_radius,50%);margin:0 auto 8px;overflow:hidden;${ring}">
           <img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
           <div style="display:none;position:absolute;inset:0;border-radius:16px;background:rgba(${rgb},.22);align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);':''}">
-            ${univIconHTML(p.univ||'', '44px')}
+            ${univIconHTML(p.univ||'', `${_teamLogoInner}px`)}
           </div>
         </div>`;
       }
       if(p && p.univ){
-        return `<div style="width:58px;height:58px;border-radius:16px;background:${win?`rgba(${rgb},.38)`:`rgba(${rgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden">
-          ${univIconHTML(p.univ,'40px')}
+        return `<div style="width:${_teamLogoBox}px;height:${_teamLogoBox}px;border-radius:16px;background:${panelBg};margin:${_teamHeaderLayout==='stack'?'0 auto 8px':'0'};display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden">
+          ${univIconHTML(p.univ,`${Math.round(40*scp.logoSize)}px`)}
         </div>`;
       }
     }
-    return `<div style="width:58px;height:58px;border-radius:16px;background:${win?`rgba(${rgb},.38)`:`rgba(${rgb},.14)`};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden;color:#fff;font-weight:1000;font-size:22px">${side}</div>`;
+    return `<div style="width:${_teamLogoBox}px;height:${_teamLogoBox}px;border-radius:16px;background:${panelBg};margin:${_teamHeaderLayout==='stack'?'0 auto 8px':'0'};display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden;color:#fff;font-weight:1000;font-size:${Math.round(22*scp.logoSize)}px">${side}</div>`;
   }
   function _teamMiniMemberCell(side, mem, idx){
     const p = mem && mem.name ? (statsP(mem.name) || mem) : (mem || {});
@@ -2544,7 +2631,11 @@ function renderShareCardByMatchObj(m){
     </div>`;
   }
   function _teamRosterPanel(side, win){
-    const arr = side==='A' ? (m.teamAMembers||[]) : (m.teamBMembers||[]);
+    const arrRaw = side==='A' ? (m.teamAMembers||[]) : (m.teamBMembers||[]);
+    const arr = (Array.isArray(arrRaw) && arrRaw.length) ? arrRaw : _collectTeamSideNames(side).map(name=>{
+      const p = typeof statsP==='function' ? (statsP(name)||null) : null;
+      return p ? {name:p.name, univ:p.univ, race:p.race, photo:p.photo} : {name};
+    });
     const label = side==='A' ? _dispA : _dispB;
     const rgb = side==='A' ? caRgb : cbRgb;
     const show = arr.slice(0,5);
@@ -2552,7 +2643,7 @@ function renderShareCardByMatchObj(m){
     return `<div style="flex:1;min-width:0;padding:10px 10px 8px;border-radius:14px;background:${win?`rgba(${rgb},.17)`:'rgba(255,255,255,.10)'};border:1px solid ${win?'rgba(255,255,255,.38)':'rgba(255,255,255,.16)'};box-shadow:${win?'0 10px 24px rgba(0,0,0,.16)':'none'}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
         <div style="font-size:12px;font-weight:1000;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
-        <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.82);background:rgba(255,255,255,.14);padding:2px 8px;border-radius:999px;flex-shrink:0">${arr.length}명</div>
+        ${arr.length?`<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.82);background:rgba(255,255,255,.14);padding:2px 8px;border-radius:999px;flex-shrink:0">${arr.length}명</div>`:''}
       </div>
       <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px">
         ${show.map((mem,idx)=>_teamMiniMemberCell(side, mem, idx)).join('')}
@@ -2565,31 +2656,85 @@ function renderShareCardByMatchObj(m){
     {label:'승부 결과', value:draw?'무승부':winnerTeam||'결과 대기', tone:draw?'#64748b':winnerColor},
     {label:'세트/경기', value:`${(m.sets||[]).length||1}세트 · ${(Array.isArray(m.sets)?m.sets.reduce((n,s)=>n+((s&&s.games)||[]).filter(g=>g.playerA||g.playerB).length,0):0)||1}경기`, tone:theme.accentDark}
   ];
+  const _teamLogoOuter = Math.round(76*scp.logoSize);
+  const _teamLogoInner = Math.round(44*scp.logoSize);
+  const _teamLogoBox = Math.round(58*scp.logoSize);
+  const _teamHeaderLayout = ['stack','inline','badge','cover'].includes(String(scp.logoLayout||'')) ? String(scp.logoLayout) : 'stack';
   const _summaryHTML = `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:${setsHTML||_teamMode?'12':'0'}px">
-    ${_summaryCards.map(it=>`<div style="padding:10px 10px 9px;border-radius:12px;background:rgba(255,255,255,.72);border:1px solid ${variant.setBorder};box-shadow:0 6px 18px rgba(15,23,42,.04)">
+    ${_summaryCards.map(it=>`<div style="padding:10px 10px 9px;border-radius:14px;background:rgba(255,255,255,.88);border:1px solid ${variant.setBorder};box-shadow:0 8px 22px rgba(15,23,42,.06)">
       <div style="font-size:9px;font-weight:800;color:${theme.textDim};letter-spacing:.3px;margin-bottom:4px">${it.label}</div>
       <div style="font-size:12px;font-weight:900;color:${it.tone};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.value}</div>
     </div>`).join('')}
   </div>`;
-  const _teamHeaderHTML = _teamMode ? `
-    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:center">
-      <div style="min-width:0">
-        ${_teamRepIconHTML('A', aWin)}
-        <div style="text-align:center;font-size:15px;font-weight:${aWin?1000:800};color:${aWin?'#fff':'rgba(255,255,255,.84)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_dispA}</div>
-        <div style="text-align:center;margin-top:4px;font-size:10px;color:rgba(255,255,255,.72);font-weight:800">${_teamLineupSummary('A')||'엔트리 준비중'}</div>
-      </div>
-      <div style="text-align:center;min-width:82px">
-        <div style="font-size:48px;font-weight:1000;letter-spacing:-2px;line-height:1;color:#fff;text-shadow:0 10px 22px rgba(0,0,0,.18)">
-          <span style="color:${aWin?'#fff':'rgba(255,255,255,.58)'}">${m.sa??'-'}</span>
-          <span style="font-size:24px;opacity:.48;margin:0 3px">:</span>
-          <span style="color:${bWin?'#fff':'rgba(255,255,255,.58)'}">${m.sb??'-'}</span>
+  const _teamSideHead = (side, win) => {
+    const label = side==='A' ? _dispA : _dispB;
+    const summary = _teamLineupSummary(side)||'엔트리 준비중';
+    const icon = _teamRepIconHTML(side, win);
+    if(_teamHeaderLayout==='inline'){
+      return `<div style="min-width:0;display:flex;align-items:center;gap:10px">
+        <div style="flex-shrink:0">${icon}</div>
+        <div style="min-width:0">
+          <div style="font-size:15px;font-weight:${win?1000:800};color:${win?'#fff':'rgba(255,255,255,.84)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
+          <div style="margin-top:4px;font-size:10px;color:rgba(255,255,255,.72);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${summary}</div>
         </div>
-        <div style="margin-top:8px;font-size:10px;font-weight:900;letter-spacing:.7px;color:rgba(255,255,255,.82)">${draw?'DRAW':'MATCH RESULT'}</div>
+      </div>`;
+    }
+    if(_teamHeaderLayout==='badge'){
+      return `<div style="min-width:0;display:flex;flex-direction:column;align-items:center">
+        <div style="padding:10px 12px;border-radius:18px;background:${win?'rgba(255,255,255,.18)':'rgba(255,255,255,.10)'};border:1px solid ${win?'rgba(255,255,255,.34)':'rgba(255,255,255,.16)'};display:flex;flex-direction:column;align-items:center;gap:8px;min-width:112px">
+          ${icon}
+          <div style="text-align:center;font-size:15px;font-weight:${win?1000:800};color:${win?'#fff':'rgba(255,255,255,.84)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${label}</div>
+        </div>
+        <div style="text-align:center;margin-top:5px;font-size:10px;color:rgba(255,255,255,.72);font-weight:800">${summary}</div>
+      </div>`;
+    }
+    if(_teamHeaderLayout==='cover'){
+      return `<div style="min-width:0;display:flex;flex-direction:column;gap:8px">
+        ${icon}
+        <div style="text-align:center;font-size:15px;font-weight:${win?1000:800};color:${win?'#fff':'rgba(255,255,255,.84)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
+        <div style="text-align:center;font-size:10px;color:rgba(255,255,255,.72);font-weight:800">${summary}</div>
+      </div>`;
+    }
+    return `<div style="min-width:0">
+      ${icon}
+      <div style="text-align:center;font-size:15px;font-weight:${win?1000:800};color:${win?'#fff':'rgba(255,255,255,.84)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
+      <div style="text-align:center;margin-top:4px;font-size:10px;color:rgba(255,255,255,.72);font-weight:800">${summary}</div>
+    </div>`;
+  };
+  const _centerVersusHTML = `<div style="text-align:center;min-width:44px">
+    <div style="font-size:12px;font-weight:1000;letter-spacing:1px;color:rgba(255,255,255,.72)">VS</div>
+  </div>`;
+  const _teamPosterSide = (side) => {
+    const isA = side==='A';
+    const isWin = isA ? aWin : bWin;
+    const col = isA ? ca : cb;
+    const rgb = isA ? caRgb : cbRgb;
+    const rep = _pickTeamRep(side);
+    const repPlayer = rep && rep.name ? (statsP(rep.name) || rep) : null;
+    const repUniv = String((repPlayer&&repPlayer.univ) || (isA?m.a:m.b) || '').trim();
+    const title = isA ? _dispA : _dispB;
+    const summary = _teamLineupSummary(side);
+    const repNote = _teamRepNote(side);
+    const safeRepName = String((repPlayer&&repPlayer.name)||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    const media = repPlayer?.photo
+      ? `<img ${safeRepName?`onclick="openPlayerModal('${safeRepName}')"`:''} title="스트리머 상세" src="${toHttpsUrl(repPlayer.photo)}" style="width:100%;height:100%;object-fit:cover;display:block;cursor:${safeRepName?'pointer':'default'}">`
+      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${rgb},.62),rgba(15,23,42,.92));">${repUniv ? univIconHTML(repUniv,'96px') : `<span style="font-size:62px;font-weight:1000;color:#fff">${title.slice(0,1)}</span>`}</div>`;
+    return `<div class="share-team-poster-side ${isWin?'is-win':'is-lose'}" style="position:relative;min-width:0;flex:1;height:${isWin?'236px':'208px'};border-radius:22px;overflow:hidden;border:1px solid ${isWin?'rgba(255,255,255,.30)':'rgba(255,255,255,.10)'};box-shadow:${isWin?'0 26px 52px rgba(2,6,23,.34)':'0 14px 28px rgba(2,6,23,.16)'};transform:${isWin?'translateY(-6px) scale(1.02)':'translateY(8px) scale(.96)'};transform-origin:center center">
+      ${media}
+      <div style="position:absolute;inset:0;background:${isWin?`linear-gradient(180deg,rgba(255,255,255,.02),rgba(15,23,42,.08) 28%,rgba(15,23,42,.72))`:`linear-gradient(180deg,rgba(2,6,23,.44),rgba(2,6,23,.66) 34%,rgba(2,6,23,.95))`};pointer-events:none"></div>
+      ${isWin?`<div style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:17px;line-height:1;padding:8px;border-radius:999px;backdrop-filter:blur(8px)">🏆</div>`:''}
+      <div style="position:absolute;inset:auto 0 0 0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-size:${isWin?'26px':'22px'};font-weight:${isWin?1000:900};color:${isWin?'#fff':'rgba(226,232,240,.90)'};line-height:1.05;text-shadow:0 4px 18px rgba(0,0,0,.34);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
+        ${summary?`<div style="font-size:11px;color:${isWin?'rgba(255,255,255,.86)':'rgba(226,232,240,.72)'};font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${summary}</div>`:''}
+        ${repNote?`<div><span style="display:inline-flex;align-items:center;gap:4px;background:${isWin?`rgba(${rgb},.38)`:'rgba(255,255,255,.12)'};border:1px solid ${isWin?'rgba(255,255,255,.34)':'rgba(255,255,255,.14)'};color:#fff;font-size:10px;font-weight:900;padding:3px 8px;border-radius:999px">${repNote}</span></div>`:''}
       </div>
-      <div style="min-width:0">
-        ${_teamRepIconHTML('B', bWin)}
-        <div style="text-align:center;font-size:15px;font-weight:${bWin?1000:800};color:${bWin?'#fff':'rgba(255,255,255,.84)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_dispB}</div>
-        <div style="text-align:center;margin-top:4px;font-size:10px;color:rgba(255,255,255,.72);font-weight:800">${_teamLineupSummary('B')||'엔트리 준비중'}</div>
+    </div>`;
+  };
+  const _teamHeaderHTML = _teamMode ? `
+    <div style="position:relative">
+      <div class="share-personal-grid" style="display:grid;grid-template-columns:${aWin?'minmax(0,1.14fr) minmax(0,.86fr)':bWin?'minmax(0,.86fr) minmax(0,1.14fr)':'minmax(0,1fr) minmax(0,1fr)'};gap:12px;align-items:center;margin-bottom:12px">
+        ${_teamPosterSide('A')}
+        ${_teamPosterSide('B')}
       </div>
     </div>
   ` : '';
@@ -2619,13 +2764,71 @@ function renderShareCardByMatchObj(m){
   const _loserGray = Math.max(.28, Math.min(.82, scp.loserGray||.55));
   const _loserAlpha = Math.max(.72, 1 - (_loserGray * .18));
   const _loserMetaAlpha = Math.max(.58, _loserAlpha - .12);
+  const _isPersonalScoreCard = ['ind','gj','progj'].includes(String(m._matchType||''));
   const _scoreCol = (hex, isWinner) => {
+    if(_isPersonalScoreCard){
+      return isWinner ? '#ffffff' : 'rgba(241,245,249,.68)';
+    }
+    const base = String(hex||'#64748b');
+    const raw = base.replace('#','');
+    if(raw.length===6){
+      const r=parseInt(raw.slice(0,2),16)||0;
+      const g=parseInt(raw.slice(2,4),16)||0;
+      const b=parseInt(raw.slice(4,6),16)||0;
+      const lum=(0.2126*r + 0.7152*g + 0.0722*b)/255;
+      if(lum > 0.62) return isWinner ? '#0f172a' : '#334155';
+      if(lum > 0.42) return isWinner ? '#ffffff' : '#e2e8f0';
+    }
+    return isWinner ? '#ffffff' : '#f8fafc';
+  };
+  const _scoreShadow = (hex) => {
+    if(_isPersonalScoreCard) return 'rgba(2,6,23,.58)';
     const base = String(hex||'#64748b');
     if(typeof window._scMixHex==='function'){
-      return isWinner ? window._scMixHex(base,'#ffffff',.86) : window._scMixHex(base,'#e2e8f0',.90);
+      return window._scMixHex(base, '#020617', .42);
     }
-    return isWinner ? '#ffffff' : '#e2e8f0';
+    return 'rgba(2,6,23,.45)';
   };
+  const _scoreInlineHTML = (kind='default') => {
+    const isMinimal = scp.mode==='minimal' || scp.mode==='mono';
+    const winA = _scoreCol(ca, aWin);
+    const winB = _scoreCol(cb, bWin);
+    const loseA = _isPersonalScoreCard ? 'rgba(255,255,255,.78)' : 'rgba(255,255,255,.82)';
+    const loseB = _isPersonalScoreCard ? 'rgba(255,255,255,.78)' : 'rgba(255,255,255,.82)';
+    const colA = aWin ? winA : loseA;
+    const colB = bWin ? winB : loseB;
+    const baseSize = kind==='compact' ? 22 : kind==='personal' ? 24 : 26;
+    const size = Math.round(baseSize * (scp.fontScale||1));
+    const colon = Math.round(size * .72);
+    const shA = aWin ? _scoreShadow(ca) : 'rgba(2,6,23,.38)';
+    const shB = bWin ? _scoreShadow(cb) : 'rgba(2,6,23,.38)';
+    const pad = isMinimal ? '0' : '1px 0';
+    return `<div class="share-score-inline share-score-inline--${kind}" style="display:inline-flex;align-items:center;gap:5px;font-size:${size}px;font-weight:1000;letter-spacing:-.5px;padding:${pad};white-space:nowrap">
+      <span style="color:${colA};text-shadow:0 2px 10px ${shA}">${_saTxt}</span>
+      <span style="font-size:${colon}px;color:rgba(255,255,255,.82)">:</span>
+      <span style="color:${colB};text-shadow:0 2px 10px ${shB}">${_sbTxt}</span>
+    </div>`;
+  };
+  const _winnerBase = _scHexNorm(winnerColor||'#475569');
+  const _loserBase = _scHexNorm(aWin ? cb : bWin ? ca : _scMixHex(_winnerBase, '#94a3b8', .40));
+  const _headerMatchBg = (() => {
+    if(scp.mode==='dark'){
+      return `linear-gradient(135deg, ${_scMixHex(_winnerBase,'#0f172a',.18)} 0%, ${_scMixHex(_winnerBase,_loserBase,.18)} 58%, ${_scMixHex(_loserBase,'#111827',.54)} 100%)`;
+    }
+    if(scp.mode==='mono'){
+      return `linear-gradient(135deg, ${_scMixHex(_winnerBase,'#cbd5e1',.20)} 0%, ${_scMixHex(_winnerBase,_loserBase,.14)} 55%, ${_scMixHex(_loserBase,'#475569',.42)} 100%)`;
+    }
+    if(scp.mode==='minimal'){
+      return `linear-gradient(135deg, ${_scMixHex(_winnerBase,'#ffffff',.16)} 0%, ${_scMixHex(_winnerBase,_loserBase,.12)} 56%, ${_scMixHex(_loserBase,'#0f172a',.18)} 100%)`;
+    }
+    if(scp.mode==='poster'){
+      return `linear-gradient(135deg, ${_scMixHex(_winnerBase,'#dbeafe',.24)} 0%, ${_scMixHex(_winnerBase,_loserBase,.16)} 52%, ${_scMixHex(_loserBase,'#7c2d12',.22)} 100%)`;
+    }
+    if(scp.mode==='soft'){
+      return `linear-gradient(135deg, ${_scMixHex(_winnerBase,'#e0ecff',.28)} 0%, ${_scMixHex(_winnerBase,_loserBase,.16)} 56%, ${_scMixHex(_loserBase,'#f59e0b',.18)} 100%)`;
+    }
+    return `linear-gradient(135deg, ${_scMixHex(_winnerBase,'#dbeafe',.26)} 0%, ${_scMixHex(_winnerBase,_loserBase,.15)} 56%, ${_scMixHex(_loserBase,'#c2410c',.18)} 100%)`;
+  })();
   const _heroSideBlock = (side) => {
     const isA = side==='A';
     const isWin = isA ? aWin : bWin;
@@ -2638,78 +2841,151 @@ function renderShareCardByMatchObj(m){
     const title = isCivil ? (isA?'⚔️ A팀':'🛡️ B팀') : (player?.name || disp);
     const textMain = isWin ? '#ffffff' : '#9ca3af';
     const textMeta = isWin ? 'rgba(255,255,255,.84)' : '#94a3b8';
-    const paneBg = isWin ? 'linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.08))' : 'linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.05))';
-    const paneBd = isWin ? 'rgba(255,255,255,.26)' : 'rgba(255,255,255,.14)';
+    const paneBg = isWin
+      ? `linear-gradient(180deg, rgba(${rgb},.26), rgba(${rgb},.14))`
+      : `linear-gradient(180deg, rgba(${rgb},.16), rgba(15,23,42,.16))`;
+    const paneBd = isWin ? `rgba(${rgb},.34)` : 'rgba(255,255,255,.14)';
     const tier = player?.tier ? `<span style="background:${_tierBg(player.tier)};color:${_tierFg(player.tier)};font-size:${Math.round(10*(scp.fontScale||1))}px;font-weight:800;padding:2px 7px;border-radius:999px">${ct(player.tier)}</span>` : '';
     const race = player?.race ? _raceLabel(player.race||'') : '';
     const raceSpan = race ? `<span class="rbadge r${player.race}" style="font-size:${Math.round(9*(scp.fontScale||1))}px;padding:1px 6px;opacity:${isWin?'1':'.82'}">${race}</span>` : '';
     const univLine = player?.univ ? `<div style="font-size:${Math.round(11*(scp.fontScale||1))}px;color:${textMeta};font-weight:800;display:flex;align-items:center;justify-content:center;gap:4px;line-height:1.2;white-space:normal;word-break:keep-all;overflow-wrap:anywhere">${_univLogo(player.univ||'', col)}<span>${player.univ}</span></div>` : '';
+    const _safeName = String(name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    const _heroCoverH = _isPersonalScoreCard ? _photoCoverH : Math.round(118*(scp.profileScale||1));
     const photoHTML = !m._noUnivIcon ? (_usePlayerPhoto
-      ? `<div style="width:${_photoOuter}px;height:${_photoOuter}px;border-radius:var(--su_profile_radius,50%);margin:0 auto 10px;overflow:hidden;${isWin?'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 10px 26px rgba(0,0,0,.32)':`opacity:.92;filter:grayscale(1);box-shadow:0 0 0 2px rgba(148,163,184,.42)`}">
+      ? (player?.photo
+        ? `<div style="width:100%;height:${_heroCoverH}px;border-radius:18px;overflow:hidden;margin:0 0 12px;position:relative;${isWin?'box-shadow:0 14px 30px rgba(0,0,0,.28), 0 0 0 1px rgba(255,255,255,.18)':`opacity:.96;filter:saturate(.88) grayscale(.16);box-shadow:0 10px 24px rgba(2,6,23,.22), 0 0 0 1px rgba(148,163,184,.28)`}">
+            <img onclick="openPlayerModal('${_safeName}')" title="스트리머 상세" src="${toHttpsUrl(player.photo)}" style="width:100%;height:100%;object-fit:cover;display:block;cursor:pointer">
+            <div style="position:absolute;inset:0;background:${isWin?'linear-gradient(180deg,rgba(15,23,42,.02),rgba(15,23,42,.34))':'linear-gradient(180deg,rgba(15,23,42,.08),rgba(15,23,42,.48))'};pointer-events:none"></div>
+          </div>`
+        : `<div style="width:${_photoOuter}px;height:${_photoOuter}px;border-radius:var(--su_profile_radius,50%);margin:0 auto 10px;overflow:hidden;${isWin?'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 10px 26px rgba(0,0,0,.32)':`opacity:.92;filter:grayscale(1);box-shadow:0 0 0 2px rgba(148,163,184,.42)`}">
           ${getPlayerPhotoHTML(name,`${_photoOuter}px`,'width:100%;height:100%;object-fit:cover')}
-        </div>`
+        </div>`)
       : `<div style="width:${_iconOuter}px;height:${_iconOuter}px;border-radius:18px;background:${isWin?`rgba(${rgb},.38)`:'rgba(148,163,184,.18)'};margin:0 auto 10px;display:flex;align-items:center;justify-content:center;${isWin?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':`opacity:.92;filter:grayscale(1);border:1px solid rgba(148,163,184,.40);`}overflow:hidden">
           ${univIconHTML(iconName,`${_iconInner}px`)}
         </div>`)
       : '<div style="height:12px"></div>';
-    return `<div style="text-align:center;flex:1;min-width:0;background:${paneBg};border:1px solid ${paneBd};border-radius:18px;padding:12px 10px 10px;backdrop-filter:blur(8px)">
+    return `<div style="text-align:center;flex:1;min-width:0;background:${paneBg};border:1px solid ${paneBd};border-radius:22px;padding:${_isPersonalScoreCard?'10px 10px 12px':'12px 10px 12px'};backdrop-filter:blur(8px);box-shadow:${isWin?'0 18px 36px rgba(2,6,23,.18)':'0 10px 24px rgba(2,6,23,.10)'}">
       ${photoHTML}
-      <div style="font-size:${Math.round(20*(scp.fontScale||1))}px;font-weight:${isWin?1000:800};color:${textMain};line-height:1.14;word-break:keep-all;white-space:normal;overflow-wrap:anywhere;text-shadow:0 1px 10px rgba(0,0,0,.18)">${title}</div>
+      <div style="font-size:${Math.round((_isPersonalScoreCard?22:20)*(scp.fontScale||1))}px;font-weight:${isWin?1000:800};color:${textMain};line-height:1.14;word-break:keep-all;white-space:normal;overflow-wrap:anywhere;text-shadow:0 1px 10px rgba(0,0,0,.18)">${title}</div>
       <div style="margin-top:6px;display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap">${tier}${raceSpan}</div>
       <div style="margin-top:4px">${univLine}</div>
       ${isWin?`<div style="margin-top:7px"><span style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff;font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px;letter-spacing:.5px">🏆 승리</span></div>`:`<div style="margin-top:7px;font-size:10px;color:${textMeta};font-weight:800">패배</div>`}
     </div>`;
   };
 
+  const _scoreBadgeBg = _isPersonalScoreCard
+    ? 'linear-gradient(135deg, rgba(15,23,42,.82), rgba(51,65,85,.68))'
+    : (draw ? 'rgba(255,255,255,.18)' : (aWin ? `linear-gradient(135deg, rgba(${caRgb},.34), rgba(255,255,255,.12))` : bWin ? `linear-gradient(135deg, rgba(${cbRgb},.34), rgba(255,255,255,.12))` : 'rgba(255,255,255,.16)'));
   const _cacheKey = `match:${JSON.stringify({a:m.a,b:m.b,sa:m.sa,sb:m.sb,d:m.d,n:m.n,t:m._matchType,sub:m._subLabel,sets:m.sets,teamA:m.teamAMembers,teamB:m.teamBMembers})}`;
-  const _scoreBadgeBg = draw ? 'rgba(255,255,255,.18)' : (aWin ? `linear-gradient(135deg, rgba(${caRgb},.34), rgba(255,255,255,.12))` : bWin ? `linear-gradient(135deg, rgba(${cbRgb},.34), rgba(255,255,255,.12))` : 'rgba(255,255,255,.16)');
-  const _html = `<div style="background:${variant.outerBg};color:${theme.text};min-width:340px;border-radius:20px;overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 18px 40px rgba(15,23,42,.12)">
+  const _personalPosterSide = (side) => {
+    const isA = side==='A';
+    const isWin = isA ? aWin : bWin;
+    const playerName = isA ? a : b;
+    const player = statsP(playerName) || (isA ? pa : pb) || {};
+    const sideColor = isA ? ca : cb;
+    const rgb = isA ? caRgb : cbRgb;
+    const title = String(player?.name || (isA ? _dispA : _dispB) || '').trim() || (isA ? 'A PLAYER' : 'B PLAYER');
+    const loserInfoTone = `rgba(226,232,240,${Math.max(.42, 1-_loserGray).toFixed(2)})`;
+    const tier = player?.tier ? `<span style="background:${isWin?_tierBg(player.tier):'rgba(255,255,255,.12)'};color:${isWin?_tierFg(player.tier):loserInfoTone};font-size:10px;font-weight:900;padding:3px 8px;border-radius:999px;border:${isWin?'none':'1px solid rgba(255,255,255,.12)'}">${ct(player.tier)}</span>` : '';
+    const race = player?.race ? `<span class="rbadge r${player.race}" style="font-size:9px;padding:1px 6px;${isWin?'':'filter:grayscale(1);opacity:.72;color:'+loserInfoTone}">${_raceLabel(player.race)}</span>` : '';
+    const univ = player?.univ ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:${isWin?'rgba(255,255,255,.86)':loserInfoTone}">${_univLogo(player.univ||'', sideColor)}<span>${player.univ}</span></span>` : '';
+    const safeName = String(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    const media = player?.photo
+      ? `<img onclick="openPlayerModal('${safeName}')" title="스트리머 상세" src="${toHttpsUrl(player.photo)}" style="width:100%;height:100%;object-fit:cover;display:block;cursor:pointer">`
+      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${rgb},.55),rgba(15,23,42,.88));">${player?.univ ? univIconHTML(player.univ,'84px') : `<span style="font-size:54px;font-weight:1000;color:#fff">${title.slice(0,1)}</span>`}</div>`;
+    return `<div class="share-personal-side ${isWin?'is-win':'is-lose'}" style="position:relative;min-width:0;flex:1;height:${isWin?'236px':'208px'};border-radius:22px;overflow:hidden;border:1px solid ${isWin?'rgba(255,255,255,.30)':'rgba(255,255,255,.10)'};box-shadow:${isWin?'0 26px 52px rgba(2,6,23,.34)':'0 14px 28px rgba(2,6,23,.16)'};transform:${isWin?'translateY(-6px) scale(1.02)':'translateY(8px) scale(.96)'};transform-origin:center center">
+      ${media}
+      <div style="position:absolute;inset:0;background:${isWin?`linear-gradient(180deg,rgba(255,255,255,.02),rgba(15,23,42,.08) 28%,rgba(15,23,42,.72))`:`linear-gradient(180deg,rgba(2,6,23,.44),rgba(2,6,23,.66) 34%,rgba(2,6,23,.95))`};pointer-events:none"></div>
+      ${isWin?`<div class="share-personal-winmark" style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:17px;line-height:1;padding:8px;border-radius:999px;backdrop-filter:blur(8px)">🏆</div>`:''}
+      <div style="position:absolute;inset:auto 0 0 0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:${isWin?'28px':'24px'};font-weight:${isWin?1000:900};color:${isWin?'#fff':loserInfoTone};line-height:1.05;text-shadow:0 4px 18px rgba(0,0,0,.34);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${tier}${race}</div>
+        <div>${univ}</div>
+      </div>
+    </div>`;
+  };
+  const _personalMetaBar = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
+      <div style="font-size:11px;color:rgba(255,255,255,.96);font-weight:800;background:${variant.chipBg};border:1px solid ${variant.chipBd};padding:4px 12px;border-radius:999px;backdrop-filter:blur(6px);white-space:nowrap">${(()=>{
+      const _typeLbl={ind:'🎯 개인전',gj:'⚡ 끝장전',progj:'🏆 프로리그 끝장전'}[m._matchType]||'🎮 개인전';
+      return `${_typeLbl}${m._subLabel?` · ${m._subLabel}`:''}`;
+    })()}</div>
+      ${_scoreInlineHTML('personal')}
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,.84);font-weight:800">${m.d||''}</div>
+  </div>`;
+  const _posterOuterBg = scp.mode==='dark'
+    ? `linear-gradient(180deg,#08111f,${_scMixHex(winnerColor||'#475569','#020617',.66)})`
+    : scp.mode==='poster'
+      ? `linear-gradient(180deg,${_scMixHex(winnerColor||'#475569','#111827',.18)},${_scMixHex(winnerColor||'#475569','#000000',.48)})`
+      : `linear-gradient(180deg,${_scMixHex(winnerColor||'#475569','#ffffff',.86)},${_scMixHex(winnerColor||'#475569','#0f172a',.12)})`;
+  const _personalPosterHTML = _isPersonalScoreCard && !_teamMode ? `<div class="share-shell share-shell--match share-shell--personal" style="background:${variant.outerBg};color:${theme.text};min-width:340px;border-radius:24px;overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 24px 52px rgba(15,23,42,.18)">
+    <div style="background:${_headerMatchBg};padding:18px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-28px;right:-10px;width:180px;height:180px;border-radius:50%;background:${_scMixHex(winnerColor||'#475569','#ffffff',.72)}22;filter:blur(2px);pointer-events:none"></div>
+      <div style="position:absolute;bottom:-46px;left:-12px;width:150px;height:150px;border-radius:50%;background:${_scMixHex(winnerColor||'#475569','#0f172a',.40)}1f;filter:blur(2px);pointer-events:none"></div>
+      <div style="position:absolute;inset:0;background:
+        radial-gradient(120px 60px at 18% 20%, rgba(255,255,255,.14), transparent 60%),
+        radial-gradient(140px 70px at 82% 15%, rgba(255,255,255,.10), transparent 62%);
+        pointer-events:none"></div>
+      <div style="position:relative;z-index:1">
+        ${_personalMetaBar}
+          <div style="position:relative">
+          <div class="share-personal-grid" style="display:grid;grid-template-columns:${aWin?'minmax(0,1.14fr) minmax(0,.86fr)':bWin?'minmax(0,.86fr) minmax(0,1.14fr)':'minmax(0,1fr) minmax(0,1fr)'};gap:12px;align-items:center">
+            ${_personalPosterSide('A')}
+            ${_personalPosterSide('B')}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:${setsHTML?'14px 18px 16px':'12px 18px 16px'};background:linear-gradient(180deg,#ffffff,#f8fbff)">
+      ${_summaryHTML}
+      ${setsHTML?`<div style="margin-bottom:2px">${setsHTML}</div>`:''}
+      <div style="text-align:right;font-size:10px;color:${theme.textDim};letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
+    </div>
+  </div>` : '';
+  const _html = `<div class="share-shell share-shell--match" style="background:${variant.outerBg};color:${theme.text};min-width:340px;border-radius:24px;overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 24px 52px rgba(15,23,42,.18)">
 
     <!-- 상단 헤더 바: 승리팀 풀컬러 -->
-    <div style="background:${variant.headerBg};padding:16px 18px 18px;position:relative;overflow:hidden">
+    <div style="background:${_headerMatchBg};padding:18px;position:relative;overflow:hidden">
       <!-- 배경 장식 -->
-      <div style="position:absolute;top:-34px;right:-28px;width:148px;height:148px;border-radius:50%;background:rgba(255,255,255,.11);pointer-events:none;filter:blur(2px)"></div>
-      <div style="position:absolute;bottom:-44px;left:8px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none;filter:blur(2px)"></div>
-      <div style="position:absolute;inset:auto 10px 8px auto;font-size:64px;line-height:1;opacity:.08;pointer-events:none">${variant.hero.split(' ')[0]||'🎮'}</div>
-      <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 40%,rgba(0,0,0,.06));pointer-events:none"></div>
+      <div style="position:absolute;top:-28px;right:-10px;width:180px;height:180px;border-radius:50%;background:${_scMixHex(winnerColor||'#475569','#ffffff',.72)}22;filter:blur(2px);pointer-events:none"></div>
+      <div style="position:absolute;bottom:-46px;left:-12px;width:150px;height:150px;border-radius:50%;background:${_scMixHex(winnerColor||'#475569','#0f172a',.40)}1f;filter:blur(2px);pointer-events:none"></div>
+      <div style="position:absolute;inset:0;background:
+        radial-gradient(120px 60px at 18% 20%, rgba(255,255,255,.14), transparent 60%),
+        radial-gradient(140px 70px at 82% 15%, rgba(255,255,255,.10), transparent 62%);
+        pointer-events:none"></div>
 
       <!-- 대회명 + 날짜 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:relative;z-index:1">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:relative;z-index:1;gap:10px;flex-wrap:wrap">
         ${(()=>{
-          const _typeLbl={pro:'🏆 프로리그',tt:'🎯 티어대회',ck:'🤝 대학CK','procomp-team':'🤝 팀전','procomp-bkt':'🗂️ 토너먼트'}[m._matchType]||'';
+          const _typeLbl={mini:'⚔️ 미니대전',univm:'🏫 대학대전',pro:'🏆 프로리그',tt:'🎯 티어대회',ck:'🤝 대학CK','procomp-team':'🤝 팀전','procomp-bkt':'🗂️ 토너먼트'}[m._matchType]||'';
           const lbl=_typeLbl||(m.n?`🎖️ ${m.n}`:'');
           const fullLbl=lbl?`${lbl}${m._subLabel?` · ${m._subLabel}`:''}`:m._subLabel||'';
           return fullLbl
-            ? `<div style="font-size:11px;color:rgba(255,255,255,.94);font-weight:700;background:${variant.chipBg};border:1px solid ${variant.chipBd};padding:3px 12px;border-radius:20px;backdrop-filter:blur(4px)">${fullLbl}</div>`
+            ? `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
+                <div style="font-size:11px;color:rgba(255,255,255,.94);font-weight:700;background:${variant.chipBg};border:1px solid ${variant.chipBd};padding:3px 12px;border-radius:20px;backdrop-filter:blur(4px);white-space:nowrap">${fullLbl}</div>
+                ${_scoreInlineHTML(_teamMode?'team':'default')}
+              </div>`
             : '<div></div>';
         })()}
         <div style="text-align:right">
           <div style="font-size:11px;color:rgba(255,255,255,.84);font-weight:800">${m.d||''}</div>
         </div>
       </div>
-
       ${(_teamMode && _teamHeaderHTML) ? _teamHeaderHTML : `
       <!-- 팀 대결 -->
       <div style="display:flex;align-items:flex-start;justify-content:center;gap:10px;position:relative;z-index:1">
         ${_heroSideBlock('A')}
-
-        <!-- 스코어 -->
-        <div style="text-align:center;flex-shrink:0;padding:10px 8px 0">
-          <div style="min-width:96px;padding:10px 10px 8px;border-radius:18px;background:${_scoreBadgeBg};border:1px solid rgba(255,255,255,.22);box-shadow:0 10px 24px rgba(0,0,0,.18);backdrop-filter:blur(6px)">
-          <div style="font-size:56px;font-weight:1000;letter-spacing:-2px;line-height:1;text-shadow:0 2px 10px rgba(0,0,0,.30)">
-            <span style="color:${_scoreCol(ca,aWin)}">${_saTxt}</span><span style="color:rgba(255,255,255,.84);font-size:30px;margin:0 3px">:</span><span style="color:${_scoreCol(cb,bWin)}">${_sbTxt}</span>
-          </div>
-          ${draw?`<div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:4px;letter-spacing:2px;font-weight:700">무 승 부</div>`:''}
-          </div>
-        </div>
-
+        ${_centerVersusHTML}
         ${_heroSideBlock('B')}
       </div>
       `}
     </div>
 
     <!-- 바디: 연한 배경 -->
-    <div style="padding:${setsHTML?'14px 18px 16px':'10px 18px 14px'}">
+    <div style="padding:${setsHTML?'14px 18px 16px':'12px 18px 16px'};background:linear-gradient(180deg,#ffffff,#f8fbff)">
       ${_summaryHTML}
       ${_teamRosterHTML}
       ${setsHTML?`<div style="margin-bottom:2px">${setsHTML}</div>`:''}
@@ -2717,8 +2993,9 @@ function renderShareCardByMatchObj(m){
       <div style="text-align:right;font-size:10px;color:${theme.textDim};letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
     </div>
   </div>`;
-  if(typeof window._shareCardRenderCached==='function') window._shareCardRenderCached(card, _cacheKey, ()=>_html);
-  else card.innerHTML=_html;
+  const _finalHtml = _personalPosterHTML || _html;
+  if(typeof window._shareCardRenderCached==='function') window._shareCardRenderCached(card, _cacheKey, ()=>_finalHtml);
+  else card.innerHTML=_finalHtml;
 }
 
 
@@ -2811,6 +3088,9 @@ function _shareCardPrefsSignature(){
       font_pro: localStorage.getItem('su_sc_font_pct_pro')||'inherit',
       font_tt: localStorage.getItem('su_sc_font_pct_tt')||'inherit',
       font_comp: localStorage.getItem('su_sc_font_pct_comp')||'inherit',
+      logo_layout: localStorage.getItem('su_sc_logo_layout')||'stack',
+      logo_size: localStorage.getItem('su_sc_logo_size')||'100',
+      logo_fit: localStorage.getItem('su_sc_logo_fit')||'contain',
       surface: localStorage.getItem('su_sc_surface')||'glass',
       radius: localStorage.getItem('su_profile_radius')||'50%'
     });
@@ -2852,6 +3132,11 @@ function _normalizeShareMatchObj(obj){
   try{
     const m = obj ? {...obj} : null;
     if(!m) return null;
+    if(['ind','gj','progj'].includes(String(m._matchType||''))){
+      m._usePlayerPhoto = true;
+      m._noUnivIcon = false;
+      if(m._subLabel==null) m._subLabel = '';
+    }
     if((m.a||m.b) && m.sa!=null && m.sb!=null) return m;
     const A = String(m.a||m.pA||m.playerA||m.wName||'A').trim();
     const B = String(m.b||m.pB||m.playerB||m.lName||'B').trim();
@@ -2952,8 +3237,8 @@ function openShareCardModal(){
   overlay.innerHTML=`<div class="sharecard-modal-box modal-compact-box" onclick="event.stopPropagation()" style="max-width:438px;width:calc(100vw - 18px);padding:12px 12px 10px;border-radius:16px">
     <button class="sharecard-modal-close" onclick="document.getElementById('sharecard-overlay').remove()" style="z-index:2">✕</button>
     <div style="font-weight:700;font-size:14px;color:var(--blue);margin-bottom:10px;padding-right:30px">🎴 공유 카드</div>
-    <div id="modal-share-card" style="display:flex;justify-content:center;overflow:auto;max-height:72vh;padding-bottom:2px">
-      <div id="share-card" style="width:100%;max-width:420px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.22);font-family:'Noto Sans KR',sans-serif;display:block">
+    <div id="modal-share-card" class="sharecard-stage" style="display:flex;justify-content:center;overflow:auto;max-height:72vh;padding-bottom:2px">
+      <div id="share-card" class="share-card-host" style="width:100%;max-width:420px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.22);font-family:'Noto Sans KR',sans-serif;display:block">
         ${_shareCardSkeletonHTML()}
       </div>
     </div>

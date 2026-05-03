@@ -92,6 +92,7 @@ const LEGACY_ADMIN_HASH_KEY='su_admin_hash';
 const ADMIN_UPDATED_AT_KEY='su_admin_hashes_updated_at';
 const ADMIN_REMOTE_PATH='star-datacenter/data/admin-accounts.json';
 const SESSION_ID_HASH_KEY='su_session_id_hash';
+const ADMIN_REMOTE_SYNC_KEY='su_admin_remote_sync_state';
 const ADMIN_HASH_VERSION=2;
 const ADMIN_PASSWORD_MIN_LEN=8;
 const ADMIN_PBKDF2_ITER=120000;
@@ -193,8 +194,44 @@ function _setSessionIdentity(idHash){
     else localStorage.removeItem(SESSION_ID_HASH_KEY);
   }catch(e){}
 }
+function _setAdminRemoteSyncState(state){
+  try{ localStorage.setItem(ADMIN_REMOTE_SYNC_KEY, String(state||'')); }catch(e){}
+}
+function _getAdminRemoteSyncState(){
+  try{ return String(localStorage.getItem(ADMIN_REMOTE_SYNC_KEY)||'').trim(); }catch(e){ return ''; }
+}
+function _cleanupLegacyAdminArtifacts(){
+  try{
+    localStorage.removeItem(LEGACY_ADMIN_HASH_KEY);
+    const current = getAdminAccounts();
+    const cleaned = Array.isArray(current) ? current.filter(a=>{
+      if(!a || typeof a !== 'object') return false;
+      if(Number(a.v||0) !== ADMIN_HASH_VERSION) return false;
+      return !!(a.idHash && a.hash && a.salt);
+    }) : [];
+    if(cleaned.length !== (current||[]).length){
+      localStorage.setItem(ADMIN_HASH_KEY, JSON.stringify(cleaned));
+      _setLocalAdminUpdatedAt(Date.now());
+    }
+    if(!cleaned.length){
+      _clearSessionStorage();
+      isLoggedIn = false;
+      isSubAdmin = false;
+    }else{
+      const sid = _getSessionIdHash();
+      if(sid && !cleaned.some(a=>String(a.idHash||'')===sid)){
+        _clearSessionStorage();
+        isLoggedIn = false;
+        isSubAdmin = false;
+      }
+    }
+  }catch(e){}
+}
 function _adminRepoRawUrl(){
   try{ return `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${ADMIN_REMOTE_PATH}`; }catch(e){ return ''; }
+}
+function _adminSameOriginUrl(){
+  try{ return new URL('data/admin-accounts.json', window.location.href).href; }catch(e){ return ''; }
 }
 function _adminRepoCdnUrl(){
   try{ return `https://cdn.jsdelivr.net/gh/${GH_OWNER}/${GH_REPO}@${GH_BRANCH}/${ADMIN_REMOTE_PATH}`; }catch(e){ return ''; }
@@ -203,12 +240,18 @@ function _adminRepoApiUrl(){
   try{ return `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${ADMIN_REMOTE_PATH}`; }catch(e){ return ''; }
 }
 async function pullAdminAccountsRemote(force){
-  const urls = [_adminRepoRawUrl(), _adminRepoCdnUrl(), _adminRepoApiUrl()].filter(Boolean);
+  const urls = [_adminSameOriginUrl(), _adminRepoRawUrl(), _adminRepoCdnUrl(), _adminRepoApiUrl()].filter(Boolean);
   let payload = null;
+  let saw404 = false;
+  let sawNetworkError = false;
   for(const base of urls){
     try{
       const res = await fetch(base + '?_=' + Date.now(), { cache:'no-store', mode:'cors' });
-      if(!res.ok) continue;
+      if(!res.ok){
+        if(res.status === 404) saw404 = true;
+        else sawNetworkError = true;
+        continue;
+      }
       const txt = (await res.text()).replace(/^\uFEFF/, '').trim();
       if(!txt || txt.startsWith('<')) continue;
       let raw = JSON.parse(txt);
@@ -219,16 +262,33 @@ async function pullAdminAccountsRemote(force){
         raw = JSON.parse(new TextDecoder('utf-8').decode(bytes));
       }
       if(raw && Array.isArray(raw.accounts)) { payload = raw; break; }
-    }catch(e){}
+    }catch(e){ sawNetworkError = true; }
   }
-  if(!payload || !Array.isArray(payload.accounts)) return false;
+  if(!payload || !Array.isArray(payload.accounts)){
+    if(saw404){
+      try{
+        localStorage.setItem(ADMIN_HASH_KEY, JSON.stringify([]));
+        localStorage.removeItem(LEGACY_ADMIN_HASH_KEY);
+        _setLocalAdminUpdatedAt(Date.now());
+      }catch(e){}
+      _cleanupLegacyAdminArtifacts();
+      _setAdminRemoteSyncState('missing');
+    }else if(sawNetworkError){
+      _setAdminRemoteSyncState('error');
+    }else{
+      _setAdminRemoteSyncState('invalid');
+    }
+    return false;
+  }
   const remoteUpdatedAt = Number(payload.updatedAt||0) || Date.now();
+  _setAdminRemoteSyncState('ok');
   if(!force && remoteUpdatedAt && remoteUpdatedAt <= _getLocalAdminUpdatedAt()) return true;
   try{
     localStorage.setItem(ADMIN_HASH_KEY, JSON.stringify(payload.accounts||[]));
     _setLocalAdminUpdatedAt(remoteUpdatedAt);
     localStorage.removeItem(LEGACY_ADMIN_HASH_KEY);
   }catch(e){}
+  _cleanupLegacyAdminArtifacts();
   return true;
 }
 async function pushAdminAccountsRemote(accounts){
@@ -291,7 +351,6 @@ async function initLoginHash(){
     const oldH=localStorage.getItem(LEGACY_ADMIN_HASH_KEY);
     const arr=oldH?[{hash:oldH,role:'admin',label:'(기존관리자)'}]:[];
     _persistAdminAccounts(arr);
-    return;
   }
   // 구 포맷 마이그레이션: 문자열 배열 → 객체 배열
   try{
@@ -303,7 +362,9 @@ async function initLoginHash(){
   }catch(e){
     console.warn('[initLoginHash] 관리자 계정 마이그레이션 실패:', e.message);
   }
+  _cleanupLegacyAdminArtifacts();
   try{ await pullAdminAccountsRemote(false); }catch(e){}
+  _cleanupLegacyAdminArtifacts();
 }
 function getAdminAccounts(){
   try{
@@ -381,6 +442,9 @@ window.hasAdminAccounts = hasAdminAccounts;
 window.hasPrimaryAdmin = hasPrimaryAdmin;
 window.pullAdminAccountsRemote = pullAdminAccountsRemote;
 window.pushAdminAccountsRemote = pushAdminAccountsRemote;
+window.isRemoteAdminAuthorityReady = function(){
+  return _getAdminRemoteSyncState() === 'ok';
+};
 async function refreshSessionAuthority(forcePull){
   if(localStorage.getItem('su_session') !== '1') return false;
   try{
@@ -462,11 +526,15 @@ let isSubAdmin=localStorage.getItem('su_session_role')==='sub-admin';
 window._authInitPromise = null;
 
 async function doLogin(){
-  try{ if(window._authInitPromise) await window._authInitPromise; else await pullAdminAccountsRemote(false); }catch(e){}
+  try{ if(window._authInitPromise) await window._authInitPromise; else await pullAdminAccountsRemote(true); }catch(e){}
   const id=document.getElementById('li-id').value.trim();
   const pw=document.getElementById('li-pw').value;
   const err=document.getElementById('li-err');
   if(!id||!pw){err.textContent='아이디와 비밀번호를 입력하세요.';return;}
+  if(_getAdminRemoteSyncState() !== 'ok'){
+    err.textContent='원격 관리자 계정 확인 후에만 로그인할 수 있습니다. 잠시 후 다시 시도하세요.';
+    return;
+  }
   const remainMs = _getLoginLockRemainingMs();
   if(remainMs > 0){
     err.textContent=`로그인 시도 제한 중입니다. ${Math.ceil(remainMs/1000)}초 후 다시 시도하세요.`;
@@ -760,37 +828,40 @@ function openGameEditModal(editRef, si, gi){
   const modal=document.createElement('div');
   modal.className='modal modal--gameedit';modal.style.display='flex';
   // (요청사항) 저장/취소 버튼 아래 여백 최소화
-  modal.innerHTML=`<div class="mbox" style="max-width:460px;padding-bottom:12px">
-    <div class="mtitle">✏️ 경기 수정 (${si===2?'에이스전':(si+1)+'세트'} · 경기${gi+1})</div>
-    <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 16px">
-      <div style="display:flex;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:700;color:#2563eb;min-width:60px">🔵 A팀 선수</label>
+  modal.innerHTML=`<div class="mbox su-form-modal su-form-modal--compact" style="max-width:460px;padding-bottom:12px">
+    <div class="su-form-modal__head">
+      <div class="mtitle">✏️ 경기 수정</div>
+      <div class="su-form-modal__sub">${si===2?'에이스전':(si+1)+'세트'} · 경기${gi+1}</div>
+    </div>
+    <div class="su-form-modal__body">
+      <div class="su-field-row">
+        <label class="su-field-label" style="color:#2563eb">🔵 A팀 선수</label>
         <select id="gem-pA" style="flex:1">
           <option value="">—선택—</option>
           ${teamANames.map(n=>`<option value="${n}"${g.playerA===n?' selected':''}>${n}</option>`).join('')}
         </select>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:700;color:#dc2626;min-width:60px">🔴 B팀 선수</label>
+      <div class="su-field-row">
+        <label class="su-field-label" style="color:#dc2626">🔴 B팀 선수</label>
         <select id="gem-pB" style="flex:1">
           <option value="">—선택—</option>
           ${teamBNames.map(n=>`<option value="${n}"${g.playerB===n?' selected':''}>${n}</option>`).join('')}
         </select>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:700;min-width:60px">승자</label>
+      <div class="su-field-row">
+        <label class="su-field-label">승자</label>
         <select id="gem-winner" style="flex:1">
           <option value="">(미정)</option>
           <option value="A"${g.winner==='A'?' selected':''}>🔵 A팀 승</option>
           <option value="B"${g.winner==='B'?' selected':''}>🔴 B팀 승</option>
         </select>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:700;min-width:60px">맵</label>
+      <div class="su-field-row">
+        <label class="su-field-label">맵</label>
         <select id="gem-map" style="flex:1"><option value="">맵 없음</option>${mapOpts}</select>
       </div>
     </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
+    <div class="su-form-modal__foot">
       <button class="btn btn-w btn-sm" onclick="this.closest('.modal').remove()">취소</button>
       <button class="btn btn-g btn-sm" onclick="saveGameEdit('${editRef}',${si},${gi},this)">✅ 저장</button>
     </div>

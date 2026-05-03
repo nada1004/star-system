@@ -177,7 +177,7 @@ function openProCompMatchShare(a,b,sa,sb,d){
         share={
           a:teamAName,b:teamBName,sa:scoreA,sb:scoreB,d:tmd||ds,
           n:tn.name||'',_matchType:'procomp-team',_subLabel:(tn.name?`${tn.name} · 팀전`:'팀전'),
-          _noUnivIcon:true,_usePlayerPhoto:false,
+          _noUnivIcon:false,_usePlayerPhoto:true,
           sets:[{label:'팀전',scoreA,scoreB,games}]
         };
         break outerTeam;
@@ -203,13 +203,18 @@ function openProCompMatchShare(a,b,sa,sb,d){
             if(ds && md && md!==ds) continue;
             if(!_pairEq(m.a,m.b,A,B)) continue;
             const swapped = _eq(m.a,B) && _eq(m.b,A);
-            const gamesRaw = Array.isArray(m._games) && m._games.length ? m._games : [{winner:m.winner, map:m.map||''}];
-            const games = gamesRaw.map(g=>({
-              playerA:A,
-              playerB:B,
-              winner: swapped ? _invWinner(g.winner) : (g.winner||''),
-              map: g.map||m.map||''
-            })).filter(x=>x.playerA||x.playerB);
+            const setGames = Array.isArray(m.sets) ? m.sets.flatMap(s=>Array.isArray(s&&s.games)?s.games:[]) : [];
+            const gamesRaw = setGames.length ? setGames : (Array.isArray(m._games) && m._games.length ? m._games : [{winner:m.winner, map:m.map||''}]);
+            const games = gamesRaw.map(g=>{
+              const ga = g.playerA || g.wName || A;
+              const gb = g.playerB || g.lName || B;
+              return {
+                playerA: swapped ? gb : ga,
+                playerB: swapped ? ga : gb,
+                winner: swapped ? _invWinner(g.winner) : (g.winner||''),
+                map: g.map||m.map||''
+              };
+            }).filter(x=>x.playerA||x.playerB);
             const scoreA=games.filter(g=>g.winner==='A').length;
             const scoreB=games.filter(g=>g.winner==='B').length;
             const lbl=rndLabel(ri);
@@ -228,7 +233,12 @@ function openProCompMatchShare(a,b,sa,sb,d){
           if(ds && md && md!==ds) continue;
           if(_pairEq(m.a,m.b,A,B)){
             const swapped = _eq(m.a,B) && _eq(m.b,A);
-            const games = [{playerA:A,playerB:B,winner: swapped ? _invWinner(m.winner) : (m.winner||''), map:m.map||''}];
+            const setGames = Array.isArray(m.sets) ? m.sets.flatMap(s=>Array.isArray(s&&s.games)?s.games:[]) : [];
+            const games = (setGames.length ? setGames : [{playerA:A,playerB:B,winner:m.winner,map:m.map||''}]).map(g=>{
+              const ga = g.playerA || g.wName || A;
+              const gb = g.playerB || g.lName || B;
+              return {playerA: swapped ? gb : ga, playerB: swapped ? ga : gb, winner: swapped ? _invWinner(g.winner) : (g.winner||''), map:g.map||m.map||''};
+            });
             const scoreA=games.filter(g=>g.winner==='A').length;
             const scoreB=games.filter(g=>g.winner==='B').length;
             const lbl=rndLabel('3rd');
@@ -255,9 +265,14 @@ function openProCompMatchShare(a,b,sa,sb,d){
             if(!_pairEq(m.a,m.b,A,B)) continue;
             const swapped = _eq(m.a,B) && _eq(m.b,A);
             const winner = swapped ? _invWinner(m.winner) : (m.winner||'');
-            const games=[{playerA:A,playerB:B,winner,map:m.map||''}];
-            const scoreA=winner==='A'?1:0;
-            const scoreB=winner==='B'?1:0;
+            const setGames = Array.isArray(m.sets) ? m.sets.flatMap(s=>Array.isArray(s&&s.games)?s.games:[]) : [];
+            const games=(setGames.length ? setGames : [{playerA:A,playerB:B,winner,map:m.map||''}]).map(g=>{
+              const ga = g.playerA || g.wName || A;
+              const gb = g.playerB || g.lName || B;
+              return {playerA: swapped ? gb : ga, playerB: swapped ? ga : gb, winner: swapped ? _invWinner(g.winner) : (g.winner||winner||''), map:g.map||m.map||''};
+            });
+            const scoreA=games.filter(g=>g.winner==='A').length;
+            const scoreB=games.filter(g=>g.winner==='B').length;
             const lbl=(grp.stage||grp.name||'조별리그');
             share={
               a:A,b:B,sa:scoreA,sb:scoreB,d:md||ds,
@@ -276,12 +291,62 @@ function openProCompMatchShare(a,b,sa,sb,d){
 }
 
 function openShareCardFromMatch(mode,idx){
+  const _detailLikePayload = (entry) => {
+    try{
+      const src = entry && entry.m ? entry.m : null;
+      if(!src) return null;
+      const A = entry?.lA || src.a || src.wName || 'A';
+      const B = entry?.lB || src.b || src.lName || 'B';
+      const base = {...src, a:A, b:B, _matchType:mode};
+      if((base.a||base.b) && base.sa!=null && base.sb!=null){
+        return base;
+      }
+      if(Array.isArray(src.games) && src.games.length){
+        const games = src.games.map(g=>{
+          const w = g.wName || (g.winner==='A'?A:(g.winner==='B'?B:''));
+          return {
+            playerA: A,
+            playerB: B,
+            winner: w===A ? 'A' : (w===B ? 'B' : ''),
+            map: g.map||''
+          };
+        });
+        const sa = games.filter(g=>g.winner==='A').length;
+        const sb = games.filter(g=>g.winner==='B').length;
+        return {...base, sa, sb, sets:[{scoreA:sa, scoreB:sb, winner:sa>sb?'A':sb>sa?'B':'', games}]};
+      }
+      if(src.wName || src.lName){
+        const w = src.wName||'';
+        const sa = w===A ? 1 : 0;
+        const sb = w===B ? 1 : 0;
+        return {...base, sa, sb, sets:[{scoreA:sa, scoreB:sb, winner:sa>sb?'A':sb>sa?'B':'', games:[{playerA:A, playerB:B, winner:sa>sb?'A':sb>sa?'B':'', map:src.map||''}]}]};
+      }
+      return base;
+    }catch(e){
+      return entry && entry.m ? {...entry.m, _matchType:mode} : null;
+    }
+  };
+  const _shareDefaults = (obj) => {
+    const base = obj ? {...obj} : null;
+    if(!base) return null;
+    if(mode==='ind'){
+      if(base._subLabel==null) base._subLabel='개인전';
+      base._usePlayerPhoto = true;
+    }else if(mode==='gj'){
+      if(base._subLabel==null) base._subLabel='끝장전';
+      base._usePlayerPhoto = true;
+    }else if(mode==='progj'){
+      if(base._subLabel==null) base._subLabel='프로리그 끝장전';
+      base._usePlayerPhoto = true;
+    }
+    return base;
+  };
   if((mode==='ind' || mode==='gj' || mode==='progj') && window._detReg){
     try{
       const vals = Object.values(window._detReg||{});
       const hit = vals.find(v => v && v.mode===mode && v.idx===idx && v.m && (v.m.a||v.m.b) && v.m.sa!=null && v.m.sb!=null);
       if(hit && typeof window._openShareMatchObjCard==='function'){
-        window._openShareMatchObjCard({...hit.m, _matchType:mode});
+        window._openShareMatchObjCard(_shareDefaults(_detailLikePayload(hit)));
         return;
       }
     }catch(e){}
@@ -291,6 +356,9 @@ function openShareCardFromMatch(mode,idx){
     :mode==='ck'?ckM
     :mode==='comp'?comps
     :mode==='pro'?proM
+    :mode==='ind'?(typeof indM!=='undefined'?indM:[])
+    :mode==='gj'?(typeof gjM!=='undefined'?(gjM||[]).filter(x=>x && !x._proLabel):[])
+    :mode==='progj'?(typeof gjM!=='undefined'?(gjM||[]).filter(x=>x && x._proLabel):[])
     :mode==='tt'?(typeof ttM!=='undefined'?ttM:[])
     :miniM;
   const m=arr[idx]||null;
@@ -304,12 +372,12 @@ function openShareCardFromMatch(mode,idx){
     (!m.a && !m.b) ||
     (String(m.a||'').trim()==='A팀' && String(m.b||'').trim()==='B팀')
   );
-  window._shareMatchObj=m?{...m,
+  window._shareMatchObj=m?_shareDefaults({...m,
     _matchType:_matchType,
     _noUnivIcon:isCKorPro || isTierTeamStyle,
     _usePlayerPhoto:isTier ? (!isTierTeamStyle) : (m._usePlayerPhoto||false),
     ...(isTierTeamStyle ? {a:'A팀', b:'B팀'} : {})
-  }:null;
+  }):null;
   _shareMode='match';
   (async()=>{
     const ok = await _ensureStatsFeatureReady();

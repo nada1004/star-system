@@ -36,7 +36,10 @@ function openSimpleActionMenu(anchorEl, items, ev){
   if(!el) return;
   const list=Array.isArray(items)?items.filter(Boolean):[];
   if(!list.length){ closeSuCtxMenu(); return; }
-  el.innerHTML = list.map((it,i)=>`<button type="button" class="su-ctxmenu-item" data-i="${i}">${it.t||`메뉴 ${i+1}`}</button>`).join('');
+  el.innerHTML = list.map((it,i)=>`<button type="button" class="su-ctxmenu-item ${it.kind?`is-${it.kind}`:''}" data-i="${i}">
+    <span class="su-ctxmenu-item__label">${it.t||`메뉴 ${i+1}`}</span>
+    ${it.d?`<span class="su-ctxmenu-item__desc">${it.d}</span>`:''}
+  </button>`).join('');
   setTimeout(()=>{
     try{
       el.querySelectorAll('button[data-i]').forEach(b=>{
@@ -80,14 +83,17 @@ function openRecActionMenu(ev, opts){
   if(!el) return;
   const o=opts||{};
   const items=[];
-  items.push({t:'📂 상세 보기', on:()=>toggleDetail(o.key)});
-  if(o.canShare) items.push({t:'🎴 공유카드', on:()=>openShareCardFromMatch(o.mode,o.idx)});
-  if(o.canEdit) items.push({t:'✏️ 수정', on:()=>openRE(o.mode,o.idx)});
-  if(o.canDel) items.push({t:'🗑️ 삭제', on:()=>delRec(o.mode,o.idx)});
-  if(o.canMove) items.push({t:'↗ 이동', on:()=>openMoveMatchPop(o._btnEl,o.mode,o.idx)});
-  items.push({t:'📤 결과 복사', on:()=>copyMatchResult(o.a,o.sa,o.b,o.sb,o.d,o.mode,o.idx)});
+  items.push({t:'📂 상세 보기', d:'세트/경기 상세 열기', kind:'primary', on:()=>toggleDetail(o.key)});
+  if(o.canShare && !['ind','gj','progj'].includes(String(o.mode||''))) items.push({t:'🎴 공유카드', d:'공유용 카드 생성', kind:'accent', on:()=>((window._openShareFromDetReg&&o.key&&window._openShareFromDetReg(o.key))||openShareCardFromMatch(o.mode,o.idx))});
+  if(o.canEdit) items.push({t:'✏️ 수정', d:'기록 내용 수정', kind:'normal', on:()=>openRE(o.mode,o.idx)});
+  if(o.canMove) items.push({t:'↗ 이동', d:'다른 기록 분류로 이동', kind:'normal', on:()=>openMoveMatchPop(o._btnEl,o.mode,o.idx)});
+  items.push({t:'📤 결과 복사', d:'점수와 결과 텍스트 복사', kind:'normal', on:()=>copyMatchResult(o.a,o.sa,o.b,o.sb,o.d,o.mode,o.idx)});
+  if(o.canDel) items.push({t:'🗑️ 삭제', d:'이 기록을 완전히 삭제', kind:'danger', on:()=>delRec(o.mode,o.idx)});
 
-  el.innerHTML = items.map((it,i)=>`<button type="button" class="su-ctxmenu-item" data-i="${i}">${it.t}</button>`).join('');
+  el.innerHTML = items.map((it,i)=>`<button type="button" class="su-ctxmenu-item ${it.kind?`is-${it.kind}`:''}" data-i="${i}">
+    <span class="su-ctxmenu-item__label">${it.t}</span>
+    ${it.d?`<span class="su-ctxmenu-item__desc">${it.d}</span>`:''}
+  </button>`).join('');
   setTimeout(()=>{
     try{
       el.querySelectorAll('button[data-i]').forEach(b=>{
