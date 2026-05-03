@@ -972,7 +972,7 @@ function buildTierTourInputHTML(){
   const addedNames=[...mA,...mB].map(m=>m.name);
 
   let h=`<div class="match-builder"><h3>🎯 티어대회 입력</h3>
-    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openTTPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
+    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openTTPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button></div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['tt'].date=this.value">
@@ -1285,8 +1285,8 @@ function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class=
 ══════════════════════════════════════ */
 function rTierTourCfg(C,T){
   T.innerText='⚙️ 설정';
-  if(!isLoggedIn){
-    C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 관리자 로그인 후 이용할 수 있습니다.</div><button class="btn btn-b" onclick="om(\'loginModal\')">&#128273; 로그인</button></div>';
+  if(!isLoggedIn || isSubAdmin){
+    C.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:800;color:var(--text)">총관리자 전용 페이지</div><div style="font-size:13px;color:var(--gray-l)">설정 탭은 총관리자만 이용할 수 있습니다.</div>'+(!isLoggedIn?'<button class="btn btn-b" onclick="om(\'loginModal\')">&#128273; 로그인</button>':'')+'</div>';
     return;
   }
   const typeOpts=[{v:'📢',l:'📢 일반 공지'},{v:'🔥',l:'🔥 중요'},{v:'⚠️',l:'⚠️ 경고/주의'},{v:'🎉',l:'🎉 이벤트'}];
@@ -1489,7 +1489,7 @@ function rTierTourCfg(C,T){
     <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 기본 티어(G/K/JA/J/S/0티어)는 삭제할 수 없습니다.</div>
   </details>
   ${_cfgD('acct','👤 관리자 계정 관리')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:4px">• <b>관리자</b>: 모든 기능 + 설정 접근 가능</div>
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:4px">• <b>총관리자</b>: 모든 기능 + 설정 접근 가능</div>
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">• <b>부관리자</b>: 경기 기록 입력만 가능 (설정/회원관리 불가)</div>
     <div style="margin-bottom:14px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
       <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px">등록된 계정 (<span id="adm-count">-</span>명)</div>
@@ -1499,9 +1499,9 @@ function rTierTourCfg(C,T){
     <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">+ 새 계정 추가</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
       <input type="text" id="adm-id" placeholder="아이디" style="width:140px" autocomplete="off">
-      <input type="password" id="adm-pw" placeholder="비밀번호 (4자 이상)" style="width:150px" autocomplete="new-password">
+      <input type="password" id="adm-pw" placeholder="비밀번호 (8자 이상)" style="width:150px" autocomplete="new-password">
       <select id="adm-role" style="border:1px solid var(--border2);border-radius:7px;padding:5px 8px;font-size:13px">
-        <option value="admin">👑 관리자</option>
+        <option value="admin">👑 총관리자</option>
         <option value="sub-admin">🔰 부관리자</option>
       </select>
       <button class="btn btn-p" onclick="addAdminAccount()">+ 추가</button>
@@ -1960,7 +1960,7 @@ function rTierTourCfg(C,T){
       listEl.innerHTML=accounts.map((a,i)=>`
         <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
           <span style="flex:1;font-size:13px;font-weight:600">${a.label||'(이름없음)'}</span>
-          <span style="padding:2px 9px;border-radius:5px;font-size:10px;font-weight:700;${a.role==='sub-admin'?'background:#fef3c7;color:#92400e;border:1px solid #fde68a':'background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe'}">${a.role==='sub-admin'?'🔰 부관리자':'👑 관리자'}</span>
+          <span style="padding:2px 9px;border-radius:5px;font-size:10px;font-weight:700;${a.role==='sub-admin'?'background:#fef3c7;color:#92400e;border:1px solid #fde68a':'background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe'}">${a.role==='sub-admin'?'🔰 부관리자':'👑 총관리자'}</span>
           <button class="btn btn-r btn-xs" onclick="deleteAdminAccount(${i})">🗑️ 삭제</button>
         </div>`).join('');
     }
@@ -3087,7 +3087,7 @@ function buildTierTourInputHTML(){
   const addedNames=[...mA,...mB].map(m=>m.name);
 
   let h=`<div class="match-builder"><h3>🎯 티어대회 입력</h3>
-    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openTTPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
+    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openTTPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button></div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['tt'].date=this.value">
@@ -4409,26 +4409,49 @@ async function addAdminAccount(){
   const role=roleEl?roleEl.value:'admin';
   const msg=document.getElementById('adm-msg');
   if(!id||!pw){msg.style.color='var(--red)';msg.textContent='아이디와 비밀번호를 모두 입력하세요.';return;}
-  if(pw.length<4){msg.style.color='var(--red)';msg.textContent='비밀번호는 4자 이상이어야 합니다.';return;}
-  const h=await sha256(id+':'+pw);
+  if(pw.length<8){msg.style.color='var(--red)';msg.textContent='비밀번호는 8자 이상이어야 합니다.';return;}
+  const token=(localStorage.getItem('su_gh_token')||'').trim();
+  if(!token){msg.style.color='var(--red)';msg.textContent='원격 관리자 계정 관리를 위해 GitHub 토큰을 먼저 설정하세요.';return;}
+  try{ if(typeof pullAdminAccountsRemote==='function') await pullAdminAccountsRemote(true); }catch(e){}
   const accounts=getAdminAccounts();
-  if(accounts.some(a=>a.hash===h)){msg.style.color='var(--gold)';msg.textContent='이미 동일한 계정이 등록되어 있습니다.';return;}
-  accounts.push({hash:h,role,label:id});
-  localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(accounts));
+  const idNorm=String(id||'').trim().toLowerCase();
+  const idHash=await sha256(idNorm);
+  if(accounts.some(a=>String(a.idHash||'')===idHash)){msg.style.color='var(--gold)';msg.textContent='이미 동일한 아이디가 등록되어 있습니다.';return;}
+  if(role==='admin' && accounts.some(a=>(a && a.role)!=='sub-admin')){msg.style.color='var(--red)';msg.textContent='총관리자 계정은 1명만 등록할 수 있습니다.';return;}
+  const rec=(typeof createAdminAccountRecord==='function') ? await createAdminAccountRecord(id,pw,role,id) : {hash:await sha256(id+':'+pw),role,label:id};
+  const next=accounts.concat([rec]);
+  localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(next));
+  try{ localStorage.setItem('su_admin_hashes_updated_at', String(Date.now())); }catch(e){}
+  const ok=(typeof pushAdminAccountsRemote==='function') ? await pushAdminAccountsRemote(next) : false;
+  if(!ok){
+    localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(accounts));
+    msg.style.color='var(--red)';
+    msg.textContent='원격 관리자 계정 저장에 실패했습니다. 다시 시도해 주세요.';
+    return;
+  }
   msg.style.color='var(--green)';
-  const roleLabel=role==='sub-admin'?'부관리자':'관리자';
-  msg.textContent=`✅ ${roleLabel} 계정이 추가되었습니다. (${id}) 총 ${accounts.length}명`;
+  const roleLabel=role==='sub-admin'?'부관리자':'총관리자';
+  msg.textContent=`✅ ${roleLabel} 계정이 추가되었습니다. 총 ${next.length}명`;
   document.getElementById('adm-id').value='';
   document.getElementById('adm-pw').value='';
   reCfg();
 }
 
 async function clearAllAdmins(){
-  if(!confirm('모든 관리자 계정을 초기화하고 기본 계정(admin99)으로 리셋하시겠습니까?\n이 작업은 되돌릴 수 없습니다.'))return;
-  const h=await sha256('admin99:99admin');
-  localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify([{hash:h,role:'admin',label:'admin99'}]));
-  alert('초기화 완료. 기본 계정(admin99 / 99admin)으로 로그인하세요.');
+  if(!confirm('모든 관리자 계정을 삭제할까요?\n원격 관리자 계정 목록도 함께 비워집니다.'))return;
+  const token=(localStorage.getItem('su_gh_token')||'').trim();
+  if(!token){ alert('원격 관리자 계정 관리를 위해 GitHub 토큰을 먼저 설정하세요.'); return; }
+  const prev=getAdminAccounts();
+  localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify([]));
+  try{ localStorage.setItem('su_admin_hashes_updated_at', String(Date.now())); }catch(e){}
+  const ok=(typeof pushAdminAccountsRemote==='function') ? await pushAdminAccountsRemote([]) : false;
+  if(!ok){
+    localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(prev));
+    alert('원격 관리자 계정 삭제에 실패했습니다. 다시 시도해 주세요.');
+    return;
+  }
   doLogout();
+  alert('초기화 완료. 원격 관리자 계정 목록이 비워졌습니다.');
 }
 
 function openUnifiedSyncSettings(){

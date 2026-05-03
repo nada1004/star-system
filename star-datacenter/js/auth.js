@@ -87,14 +87,205 @@ async function sha256(str){
   }
   return sha256Sync(str);
 }
-const ADMIN_HASH_KEY='su_admin_hashes'; // [{hash,role,label}] 배열
+const ADMIN_HASH_KEY='su_admin_hashes'; // [{v,algo,idHash,salt,iter,hash,role,label}] 배열
+const LEGACY_ADMIN_HASH_KEY='su_admin_hash';
+const ADMIN_UPDATED_AT_KEY='su_admin_hashes_updated_at';
+const ADMIN_REMOTE_PATH='star-datacenter/data/admin-accounts.json';
+const SESSION_ID_HASH_KEY='su_session_id_hash';
+const ADMIN_HASH_VERSION=2;
+const ADMIN_PASSWORD_MIN_LEN=8;
+const ADMIN_PBKDF2_ITER=120000;
+const ADMIN_FALLBACK_ITER=20000;
+function _normAdminId(id){
+  return String(id||'').trim().toLowerCase();
+}
+function _maskAdminId(id){
+  const s=String(id||'').trim();
+  if(!s) return '';
+  if(s.length<=2) return s[0]+'*';
+  if(s.length===3) return s[0]+'*'+s[2];
+  return s.slice(0,2) + '*'.repeat(Math.max(2, s.length-3)) + s.slice(-1);
+}
+function _hexFromBytes(bytes){
+  return Array.from(bytes||[]).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function _bytesFromHex(hex){
+  const s=String(hex||'').trim();
+  const out=new Uint8Array(Math.floor(s.length/2));
+  for(let i=0;i<out.length;i++) out[i]=parseInt(s.substr(i*2,2),16)||0;
+  return out;
+}
+function _randomHex(byteLen){
+  try{
+    const arr=new Uint8Array(Math.max(8, byteLen||16));
+    if(globalThis.crypto && typeof crypto.getRandomValues==='function'){
+      crypto.getRandomValues(arr);
+      return _hexFromBytes(arr);
+    }
+  }catch(e){}
+  let s='';
+  const len=Math.max(16,(byteLen||16)*2);
+  for(let i=0;i<len;i++) s += Math.floor(Math.random()*16).toString(16);
+  return s;
+}
+async function _deriveLegacyAdminHash(id,pw){
+  return sha256(String(id||'').trim()+':'+String(pw||''));
+}
+async function _deriveAdminHashPBKDF2(id,pw,saltHex,iter){
+  const material=`${_normAdminId(id)}\n${String(pw||'')}`;
+  const salt=_bytesFromHex(saltHex);
+  const key=await crypto.subtle.importKey('raw', new TextEncoder().encode(material), 'PBKDF2', false, ['deriveBits']);
+  const bits=await crypto.subtle.deriveBits({ name:'PBKDF2', hash:'SHA-256', salt, iterations:Math.max(1000, iter||ADMIN_PBKDF2_ITER) }, key, 256);
+  return _hexFromBytes(new Uint8Array(bits));
+}
+async function _deriveAdminHashIter(id,pw,saltHex,iter){
+  let acc=`${_normAdminId(id)}\n${String(pw||'')}\n${String(saltHex||'')}`;
+  const rounds=Math.max(1000, iter||ADMIN_FALLBACK_ITER);
+  for(let i=0;i<rounds;i++) acc = await sha256(`${acc}:${i}`);
+  return acc;
+}
+async function _deriveAdminHashByAlgo(id,pw,saltHex,iter,algo){
+  try{
+    if(algo==='pbkdf2-sha256' && globalThis.crypto && crypto.subtle && typeof crypto.subtle.importKey==='function'){
+      return await _deriveAdminHashPBKDF2(id,pw,saltHex,iter);
+    }
+  }catch(e){}
+  return _deriveAdminHashIter(id,pw,saltHex,iter);
+}
+async function createAdminAccountRecord(id,pw,role,label){
+  const cleanId=String(id||'').trim();
+  const salt=_randomHex(16);
+  const algo=(globalThis.crypto && crypto.subtle && typeof crypto.subtle.importKey==='function') ? 'pbkdf2-sha256' : 'sha256-iter';
+  const iter=algo==='pbkdf2-sha256' ? ADMIN_PBKDF2_ITER : ADMIN_FALLBACK_ITER;
+  const idHash=await sha256(_normAdminId(cleanId));
+  const hash=await _deriveAdminHashByAlgo(cleanId,pw,salt,iter,algo);
+  return { v:ADMIN_HASH_VERSION, algo, idHash, salt, iter, hash, role:role||'admin', label:_maskAdminId(label||cleanId) };
+}
+async function verifyAdminAccount(account,id,pw){
+  if(!account) return false;
+  if(account.v===ADMIN_HASH_VERSION && account.hash && account.salt){
+    const idHash=await sha256(_normAdminId(id));
+    if(idHash !== String(account.idHash||'')) return false;
+    const derived=await _deriveAdminHashByAlgo(id,pw,account.salt,account.iter,account.algo);
+    return derived === String(account.hash||'');
+  }
+  return (await _deriveLegacyAdminHash(id,pw)) === String(account.hash||'');
+}
+function _persistAdminAccounts(accounts){
+  try{
+    localStorage.setItem(ADMIN_HASH_KEY, JSON.stringify(Array.isArray(accounts)?accounts:[]));
+    localStorage.setItem(ADMIN_UPDATED_AT_KEY, String(Date.now()));
+    localStorage.removeItem(LEGACY_ADMIN_HASH_KEY);
+  }catch(e){}
+}
+function _getLocalAdminUpdatedAt(){
+  try{ return Number(localStorage.getItem(ADMIN_UPDATED_AT_KEY)||0) || 0; }catch(e){ return 0; }
+}
+function _setLocalAdminUpdatedAt(ts){
+  try{ localStorage.setItem(ADMIN_UPDATED_AT_KEY, String(Number(ts||Date.now())||Date.now())); }catch(e){}
+}
+function _getSessionIdHash(){
+  try{ return String(localStorage.getItem(SESSION_ID_HASH_KEY)||'').trim(); }catch(e){ return ''; }
+}
+function _setSessionIdentity(idHash){
+  try{
+    if(idHash) localStorage.setItem(SESSION_ID_HASH_KEY, String(idHash));
+    else localStorage.removeItem(SESSION_ID_HASH_KEY);
+  }catch(e){}
+}
+function _adminRepoRawUrl(){
+  try{ return `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${ADMIN_REMOTE_PATH}`; }catch(e){ return ''; }
+}
+function _adminRepoCdnUrl(){
+  try{ return `https://cdn.jsdelivr.net/gh/${GH_OWNER}/${GH_REPO}@${GH_BRANCH}/${ADMIN_REMOTE_PATH}`; }catch(e){ return ''; }
+}
+function _adminRepoApiUrl(){
+  try{ return `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${ADMIN_REMOTE_PATH}`; }catch(e){ return ''; }
+}
+async function pullAdminAccountsRemote(force){
+  const urls = [_adminRepoRawUrl(), _adminRepoCdnUrl(), _adminRepoApiUrl()].filter(Boolean);
+  let payload = null;
+  for(const base of urls){
+    try{
+      const res = await fetch(base + '?_=' + Date.now(), { cache:'no-store', mode:'cors' });
+      if(!res.ok) continue;
+      const txt = (await res.text()).replace(/^\uFEFF/, '').trim();
+      if(!txt || txt.startsWith('<')) continue;
+      let raw = JSON.parse(txt);
+      if(raw && raw.content && raw.encoding === 'base64'){
+        const bin = atob(String(raw.content||'').replace(/\s/g,''));
+        const bytes = new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+        raw = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+      }
+      if(raw && Array.isArray(raw.accounts)) { payload = raw; break; }
+    }catch(e){}
+  }
+  if(!payload || !Array.isArray(payload.accounts)) return false;
+  const remoteUpdatedAt = Number(payload.updatedAt||0) || Date.now();
+  if(!force && remoteUpdatedAt && remoteUpdatedAt <= _getLocalAdminUpdatedAt()) return true;
+  try{
+    localStorage.setItem(ADMIN_HASH_KEY, JSON.stringify(payload.accounts||[]));
+    _setLocalAdminUpdatedAt(remoteUpdatedAt);
+    localStorage.removeItem(LEGACY_ADMIN_HASH_KEY);
+  }catch(e){}
+  return true;
+}
+async function pushAdminAccountsRemote(accounts){
+  const token = (localStorage.getItem('su_gh_token') || '').trim();
+  if(!token) return false;
+  const payload = {
+    updatedAt: Date.now(),
+    accounts: Array.isArray(accounts) ? accounts : []
+  };
+  const apiUrl = _adminRepoApiUrl();
+  if(!apiUrl) return false;
+  let sha;
+  try{
+    const getRes = await fetch(apiUrl, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if(getRes.ok){
+      const fileInfo = await getRes.json();
+      sha = fileInfo && fileInfo.sha;
+    }else if(getRes.status !== 404){
+      throw new Error('관리자 계정 원격 조회 실패: ' + getRes.status);
+    }
+    const body = {
+      message: `admin accounts update ${new Date().toLocaleString('ko-KR')}`,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2)))),
+      branch: GH_BRANCH
+    };
+    if(sha) body.sha = sha;
+    const putRes = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if(!putRes.ok) throw new Error('관리자 계정 원격 저장 실패: ' + putRes.status);
+    _setLocalAdminUpdatedAt(payload.updatedAt);
+    return true;
+  }catch(e){
+    console.warn('[pushAdminAccountsRemote] failed:', e.message);
+    return false;
+  }
+}
+function hasPrimaryAdmin(){
+  return getAdminAccounts().some(a => (a && a.role) !== 'sub-admin');
+}
+function hasAdminAccounts(){
+  return getAdminAccounts().length > 0;
+}
 async function initLoginHash(){
   const raw=localStorage.getItem(ADMIN_HASH_KEY);
   if(!raw){
-    const h=await sha256('admin99:99admin');
-    const oldH=localStorage.getItem('su_admin_hash');
-    const arr=oldH?[{hash:oldH,role:'admin',label:'(기존관리자)'},{hash:h,role:'admin',label:'admin99'}]:[{hash:h,role:'admin',label:'admin99'}];
-    localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(arr));
+    const oldH=localStorage.getItem(LEGACY_ADMIN_HASH_KEY);
+    const arr=oldH?[{hash:oldH,role:'admin',label:'(기존관리자)'}]:[];
+    _persistAdminAccounts(arr);
     return;
   }
   // 구 포맷 마이그레이션: 문자열 배열 → 객체 배열
@@ -102,11 +293,12 @@ async function initLoginHash(){
     const parsed=JSON.parse(raw);
     if(Array.isArray(parsed)&&parsed.length>0&&typeof parsed[0]==='string'){
       const migrated=parsed.map((h,i)=>({hash:h,role:'admin',label:`관리자${i+1}`}));
-      localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(migrated));
+      _persistAdminAccounts(migrated);
     }
   }catch(e){
     console.warn('[initLoginHash] 관리자 계정 마이그레이션 실패:', e.message);
   }
+  try{ await pullAdminAccountsRemote(false); }catch(e){}
 }
 function getAdminAccounts(){
   try{
@@ -118,15 +310,42 @@ function getAdminAccounts(){
     return parsed.map((item,i)=>typeof item==='string'?{hash:item,role:'admin',label:`관리자${i+1}`}:item);
   }catch{return [];}
 }
+function _getSessionAccountFromCache(){
+  const sid=_getSessionIdHash();
+  if(!sid) return null;
+  return getAdminAccounts().find(a=>String(a&&a.idHash||'')===sid) || null;
+}
+function _syncSessionRoleFromAccount(acct){
+  if(!acct) return false;
+  const role=(acct.role==='sub-admin')?'sub-admin':'admin';
+  isLoggedIn=true;
+  isSubAdmin=(role==='sub-admin');
+  try{ localStorage.setItem('su_session_role', role); }catch(e){}
+  return true;
+}
 function getAdminHashes(){
   return getAdminAccounts().map(a=>a.hash);
 }
-function deleteAdminAccount(idx){
+async function deleteAdminAccount(idx){
+  if(!(typeof window.canManageAdminSettings==='function' ? window.canManageAdminSettings() : (isLoggedIn&&!isSubAdmin))){ alert('총관리자만 계정을 관리할 수 있습니다.'); return; }
+  const token = (localStorage.getItem('su_gh_token')||'').trim();
+  if(!token){ alert('원격 관리자 계정 관리를 위해 GitHub 토큰을 먼저 설정해 주세요.'); return; }
+  try{ await pullAdminAccountsRemote(true); }catch(e){}
   if(!confirm('이 계정을 삭제할까요?'))return;
   const accounts=getAdminAccounts();
-  if(accounts.length<=1){alert('마지막 관리자 계정은 삭제할 수 없습니다.');return;}
-  accounts.splice(idx,1);
-  localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(accounts));
+  const target = accounts[idx];
+  const adminCount = accounts.filter(a=>a && a.role!=='sub-admin').length;
+  if(target && target.role!=='sub-admin' && adminCount<=1){alert('총관리자 계정은 1명 이상 있어야 합니다.');return;}
+  const next = accounts.slice();
+  next.splice(idx,1);
+  _persistAdminAccounts(next);
+  const ok = await pushAdminAccountsRemote(next);
+  if(!ok){
+    _persistAdminAccounts(accounts);
+    alert('원격 관리자 계정 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    return;
+  }
+  await refreshSessionAuthority(false);
   if(typeof reCfg==='function')reCfg();
 }
 const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
@@ -137,6 +356,7 @@ function _clearSessionStorage(){
   try{
     localStorage.removeItem('su_session');
     localStorage.removeItem('su_session_role');
+    localStorage.removeItem(SESSION_ID_HASH_KEY);
     localStorage.removeItem('su_session_login_at');
     localStorage.removeItem('su_session_last_active_at');
   }catch(e){}
@@ -151,6 +371,37 @@ function _getSessionLastSeenAt(){
     return 0;
   }
 }
+window.createAdminAccountRecord = createAdminAccountRecord;
+window.hasAdminAccounts = hasAdminAccounts;
+window.hasPrimaryAdmin = hasPrimaryAdmin;
+window.pullAdminAccountsRemote = pullAdminAccountsRemote;
+window.pushAdminAccountsRemote = pushAdminAccountsRemote;
+async function refreshSessionAuthority(forcePull){
+  if(localStorage.getItem('su_session') !== '1') return false;
+  try{
+    if(forcePull) await pullAdminAccountsRemote(true);
+    const acct = _getSessionAccountFromCache();
+    if(!acct){
+      isLoggedIn=false;
+      isSubAdmin=false;
+      _clearSessionStorage();
+      return false;
+    }
+    _syncSessionRoleFromAccount(acct);
+    return true;
+  }catch(e){
+    console.warn('[refreshSessionAuthority] failed:', e.message);
+    return !!_getSessionAccountFromCache();
+  }
+}
+window.refreshSessionAuthority = refreshSessionAuthority;
+window.canManageAdminSettings = function(){
+  if(!(typeof isLoggedIn!=='undefined' && isLoggedIn) || (typeof isSubAdmin!=='undefined' && isSubAdmin)) return false;
+  return !!_getSessionAccountFromCache();
+};
+window.canEditMatchRecords = function(){
+  return !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !!_getSessionAccountFromCache();
+};
 function _isSessionExpired(){
   if(localStorage.getItem('su_session') !== '1') return false;
   const lastSeen = _getSessionLastSeenAt();
@@ -203,8 +454,10 @@ function _recordLoginFailure(){
 _syncSessionStateAtBoot();
 let isLoggedIn=localStorage.getItem('su_session')==='1';
 let isSubAdmin=localStorage.getItem('su_session_role')==='sub-admin';
+window._authInitPromise = null;
 
 async function doLogin(){
+  try{ if(window._authInitPromise) await window._authInitPromise; else await pullAdminAccountsRemote(false); }catch(e){}
   const id=document.getElementById('li-id').value.trim();
   const pw=document.getElementById('li-pw').value;
   const err=document.getElementById('li-err');
@@ -214,15 +467,34 @@ async function doLogin(){
     err.textContent=`로그인 시도 제한 중입니다. ${Math.ceil(remainMs/1000)}초 후 다시 시도하세요.`;
     return;
   }
-  const inputHash=await sha256(id+':'+pw);
   const accounts=getAdminAccounts();
-  const found=accounts.find(a=>a.hash===inputHash);
+  if(!accounts.length){
+    err.textContent='등록된 관리자 계정이 없습니다. 총관리자가 먼저 계정을 등록해야 합니다.';
+    return;
+  }
+  let found=null, foundIdx=-1;
+  for(let i=0;i<accounts.length;i++){
+    if(await verifyAdminAccount(accounts[i], id, pw)){
+      found=accounts[i];
+      foundIdx=i;
+      break;
+    }
+  }
   if(found){
+    const _needsRelabel = String(found.label||'').trim().toLowerCase() === _normAdminId(id);
+    if(found.v!==ADMIN_HASH_VERSION || _needsRelabel){
+      try{
+        accounts[foundIdx]=await createAdminAccountRecord(id,pw,found.role||'admin',found.label||id);
+        _persistAdminAccounts(accounts);
+        await pushAdminAccountsRemote(accounts);
+      }catch(e){}
+    }
     isLoggedIn=true;
     isSubAdmin=(found.role==='sub-admin');
     const now = Date.now();
     localStorage.setItem('su_session','1');
     localStorage.setItem('su_session_role',found.role||'admin');
+    _setSessionIdentity(found.idHash || await sha256(_normAdminId(id)));
     localStorage.setItem('su_session_login_at', String(now));
     localStorage.setItem('su_session_last_active_at', String(now));
     _clearLoginFailInfo();
@@ -259,6 +531,16 @@ function applyLoginState(){
     isSubAdmin = false;
     _clearSessionStorage();
   }
+  if(isLoggedIn){
+    const acct = _getSessionAccountFromCache();
+    if(!acct){
+      isLoggedIn = false;
+      isSubAdmin = false;
+      _clearSessionStorage();
+    }else{
+      _syncSessionRoleFromAccount(acct);
+    }
+  }
   if(isLoggedIn) _touchSessionActivity(false);
   // 헤더 버튼 표시
   document.getElementById('hdrLoginBtn').style.display=isLoggedIn?'none':'';
@@ -267,7 +549,7 @@ function applyLoginState(){
   try{
     const st=document.getElementById('hdrLoginStatus');
     if(st && isLoggedIn){
-      st.textContent = isSubAdmin ? '✅ 부관리자' : '✅ 관리자';
+      st.textContent = isSubAdmin ? '✅ 부관리자' : '✅ 총관리자';
     }
   }catch(e){
     console.warn('[applyLoginState] 로그인 상태 표시 업데이트 실패:', e.message);
@@ -279,10 +561,12 @@ function applyLoginState(){
   document.querySelectorAll('.lock-admin').forEach(el=>{
     el.classList.toggle('locked',!isLoggedIn);
   });
-  // 관리자 전용 탭 (설정) - 로그인 필요
+  // 관리자 전용 탭 (설정) - 총관리자만 표시/접근
   const _cfgTab=document.getElementById('tabCfg');
-  // (요청사항) 부관리자는 설정탭 접근 불가
   if(_cfgTab) _cfgTab.style.display=(isLoggedIn && !isSubAdmin)?'':'none';
+  if((!isLoggedIn || isSubAdmin) && curTab==='cfg'){
+    curTab='total';
+  }
   // 데이터 내보내기/가져오기 버튼 — 로그인 시에만 표시
   const exportHint=document.getElementById('exportHint');
   if(exportHint)exportHint.style.display=(isLoggedIn && !isSubAdmin)?'':'none';
@@ -314,7 +598,10 @@ document.addEventListener('visibilitychange', ()=>{
     }
     return;
   }
-  if(isLoggedIn) _touchSessionActivity(true);
+  if(isLoggedIn){
+    _touchSessionActivity(true);
+    try{ refreshSessionAuthority(true).then(()=>applyLoginState()); }catch(e){}
+  }
 });
 window.addEventListener('pointerdown', ()=>{ if(isLoggedIn) _touchSessionActivity(false); }, { passive:true });
 window.addEventListener('keydown', ()=>{ if(isLoggedIn) _touchSessionActivity(false); }, { passive:true });

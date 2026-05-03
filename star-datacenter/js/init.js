@@ -232,7 +232,14 @@ function init(){
   const ptier=document.getElementById('p-tier');
   if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
   try{refreshSel();}catch(e){}
-  initLoginHash();
+  try{
+    window._authInitPromise = (async()=>{
+      await initLoginHash();
+      if(typeof window.refreshSessionAuthority === 'function'){
+        await window.refreshSessionAuthority(true);
+      }
+    })();
+  }catch(e){ try{ initLoginHash(); }catch(_){} }
   applyLoginState();
   render();
   // (성능) 부가 기능은 idle 시 지연 로딩

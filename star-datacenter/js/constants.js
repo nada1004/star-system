@@ -1331,7 +1331,7 @@ function saveCfg(){
               if(!k || typeof k!=='string') continue;
               if(!k.startsWith('su_')) continue;
               if(k.startsWith('su_pp')) continue;
-              if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') continue;
+              if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash' || k==='su_admin_hashes') continue;
               if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
               const v = localStorage.getItem(k);
               if(v==null) continue;

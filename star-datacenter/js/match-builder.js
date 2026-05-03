@@ -189,7 +189,7 @@ function rMini(C,T){
   const filteredMini = miniM.filter(_miniTypeFilter);
   if(miniSub==='input'&&isLoggedIn){
     if(!BLD['mini'])BLD['mini']={date:'',title:'',teamA:'',teamB:'',sets:[]};
-    h+=`<div class="match-builder"><h3>${label} 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openMiniPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트/이미지 OCR 지원</span></div>${setBuilderHTML(BLD['mini'],'mini')}</div>`;
+    h+=`<div class="match-builder"><h3>${label} 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openMiniPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button></div>${setBuilderHTML(BLD['mini'],'mini')}</div>`;
   } else if(miniSub==='rank'){
     h+=miniRankHTML(filteredMini);
   } else {
@@ -687,7 +687,7 @@ function indInputHTML(){
   const actionBar = _mbActionBar([
     `<button class="btn btn-p btn-sm mb-mini-btn" onclick="openIndPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`,
     `<button class="btn btn-w btn-sm mb-mini-btn" onclick="openIndBulkModal()" style="display:inline-flex;align-items:center;gap:5px">➕ 여러 경기 입력</button>`
-  ], '텍스트 붙여넣기 지원');
+  ], '');
   const baseCard = _mbSectionCard('① 날짜 & 대전 스트리머', `
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
         <label style="font-size:12px;font-weight:700">날짜</label>
@@ -1159,7 +1159,7 @@ function gjInputHTML(){
       ${!(pA&&pB)?_matchPlayerAssignPoolHTML('gj'):''}
     `);
   const resultCard = pA&&pB&&BLD['gj'] ? _mbSectionCard('② 경기 결과 입력', `${setBuilderHTML(BLD['gj'],'gj')}`) : '';
-  return _mbFrame(_gjProMode?'🏅 프로리그 끝장전 입력':'⚔️ 끝장전 입력', actionBar, baseCard + resultCard, _gjProMode?'프로리그 전용 1:1 입력':'끝장전 공통 입력 카드');
+  return _mbFrame(_gjProMode?'🏅 프로리그 끝장전 입력':'⚔️ 끝장전 입력', actionBar, baseCard + resultCard, _gjProMode?'':'끝장전 공통 입력 카드');
 }
 
 function gjDirectSave(){
@@ -1484,7 +1484,7 @@ function buildCKInputHTML(){
   const mA=bld.membersA||[];const mB=bld.membersB||[];
   const actionBar = _mbActionBar([
     `<button class="btn btn-p btn-sm mb-mini-btn" onclick="openCKPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`
-  ], '텍스트 붙여넣기 지원');
+  ], '');
   let h = _mbSectionCard('① 기본 정보', `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
@@ -1794,7 +1794,7 @@ function buildProInputHTML(){
 
   const actionBar = _mbActionBar([
     `<button class="btn btn-p btn-sm mb-mini-btn" onclick="openProPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`
-  ], '텍스트 붙여넣기 지원');
+  ], '');
   let h = _mbSectionCard('① 기본 정보', `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
@@ -1843,7 +1843,7 @@ function buildProInputHTML(){
         <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['pro'].membersB.splice(${i},1);BLD['pro'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">스트리머 없음</span>'}</div>
       </div>
     </div>`) + _mbSectionCard('⑤ 경기 결과 입력', `${setBuilderHTML(bld,'pro')}`);
-  return _mbFrame('🏅 프로리그 입력', actionBar, h, '프로리그 경기와 프로리그 대회를 상단 탭에서 구분');
+  return _mbFrame('🏅 프로리그 입력', actionBar, h, '');
 }
 
 function proSearchPlayer(team){
