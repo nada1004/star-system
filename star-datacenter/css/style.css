@@ -2478,6 +2478,62 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   :root{ --su_md_btn_scale: var(--su_md_tb_btn_scale); }
 }
 
+@media(max-width:640px){
+  .share-shell--match{
+    min-width:0 !important;
+    width:100% !important;
+    border-radius:18px !important;
+  }
+  .share-match-summary-grid{
+    grid-template-columns:1fr !important;
+  }
+  .share-match-summary-value{
+    white-space:normal !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+    word-break:keep-all;
+    overflow-wrap:anywhere;
+  }
+  .share-match-game-row{
+    flex-wrap:wrap;
+    align-items:flex-start !important;
+    row-gap:4px;
+  }
+  .share-match-game-idx{
+    min-width:auto !important;
+    width:100%;
+    text-align:left !important;
+  }
+  .share-match-game-player{
+    flex:1 1 calc(50% - 18px) !important;
+    min-width:0;
+  }
+  .share-match-game-name{
+    white-space:normal !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+    word-break:break-word;
+  }
+  .share-match-game-vs{
+    order:3;
+    width:100%;
+    text-align:center;
+  }
+  .share-match-game-map{
+    flex:1 1 100%;
+    max-width:none !important;
+    white-space:normal !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+    text-align:right;
+    padding-left:44px;
+  }
+  .share-shell--player .share-stat-grid,
+  .share-shell--univ .share-stat-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
 @media(max-width:1024px){
   /* (요청사항) 스트리머 상세(팝업) 테이블/필터 UI가 너무 커 보이는 문제 완화 */
   #playerModalBody table th{ padding:8px 8px !important; font-size:10px !important; }
@@ -2991,10 +3047,19 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .rec-detail-area .tbadge { font-size: 9px !important; padding: 2px 5px !important; }
   .rec-detail-area .rbadge { font-size: 9px !important; padding: 1px 4px !important; }
   /* 공유카드 모달 모바일 최적화 */
-  .sharecard-modal-box { padding: 14px 12px !important; border-radius: 12px !important; }
+  .sharecard-modal-box {
+    padding: 14px 12px !important;
+    border-radius: 12px !important;
+    width: min(438px, calc(100vw - 12px)) !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
   .sharecard-modal-actions { flex-wrap: wrap !important; gap: 6px !important; }
   .sharecard-modal-actions .btn { flex: 1; min-width: 80px; font-size: 13px !important; padding: 10px 8px !important; }
-  #modal-share-card { max-height: 60vh !important; overflow-y: auto !important; }
+  #modal-share-card {
+    max-height: none !important;
+    overflow: visible !important;
+  }
 
   /* ── 경기 빌더 ── */
   .match-builder { padding: 12px 10px; border-radius: 10px; }
