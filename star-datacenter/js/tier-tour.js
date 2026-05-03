@@ -1472,7 +1472,7 @@ function rTierTourCfg(C,T){
     <div id="cfg-si-list" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
       <div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">로딩 중...</div>
     </div>
-    <button class="btn btn-r btn-sm" style="margin-top:10px" onclick="if(confirm('모든 상태 아이콘을 초기화할까요?')){playerStatusIcons={};localStorage.setItem('su_psi','{}');render();}">전체 초기화</button>
+    <button class="btn btn-r btn-sm" style="margin-top:10px" onclick="if(confirm('모든 상태 아이콘을 초기화할까요?')){playerStatusIcons={};playerStatusExpiry={};if(typeof _iconPersistState==='function')_iconPersistState();render();}">전체 초기화</button>
   </details>
   ${_cfgD('tier','🎭 티어 관리')}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">

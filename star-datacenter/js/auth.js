@@ -531,8 +531,14 @@ async function doLogin(){
   const pw=document.getElementById('li-pw').value;
   const err=document.getElementById('li-err');
   if(!id||!pw){err.textContent='아이디와 비밀번호를 입력하세요.';return;}
-  if(_getAdminRemoteSyncState() !== 'ok'){
-    err.textContent='원격 관리자 계정 확인 후에만 로그인할 수 있습니다. 잠시 후 다시 시도하세요.';
+  err.textContent='';
+  let accounts=getAdminAccounts();
+  if(!accounts.length){
+    try{ await pullAdminAccountsRemote(true); }catch(e){}
+    accounts=getAdminAccounts();
+  }
+  if(_getAdminRemoteSyncState() !== 'ok' && !accounts.length){
+    err.textContent='관리자 계정 정보를 아직 불러오지 못했습니다. 잠시 후 다시 시도하세요.';
     return;
   }
   const remainMs = _getLoginLockRemainingMs();
@@ -540,7 +546,6 @@ async function doLogin(){
     err.textContent=`로그인 시도 제한 중입니다. ${Math.ceil(remainMs/1000)}초 후 다시 시도하세요.`;
     return;
   }
-  const accounts=getAdminAccounts();
   if(!accounts.length){
     err.textContent='등록된 관리자 계정이 없습니다. 총관리자가 먼저 계정을 등록해야 합니다.';
     return;
@@ -686,9 +691,10 @@ function adminBtn(html){
 }
 function doExport(){
   try{
-    // 외부 대진기록(히스토리 > 외부탭)도 다른 기기에서 볼 수 있도록 백업에 포함
-    // - history.js에서 LZString 압축("lz:") 형태로 저장할 수 있어 JSON.parse를 하지 않고 "원문 문자열" 그대로 백업
-    const histExtRaw = localStorage.getItem('su_hist_ext_data_v1') || '';
+    // 외부 대진기록은 현재 IndexedDB + localStorage(meta) 구조를 우선 사용
+    const histExtState = (typeof _histExtLoad==='function')
+      ? (_histExtLoad() || {})
+      : {items:[],raw:'',mode:'today',today:'',sourceSel:'',keyword:''};
     const histExtProxyPresets = localStorage.getItem('su_hist_ext_proxy_presets_v1') || '';
     const histExtProxyPresetSel = localStorage.getItem('su_hist_ext_proxy_preset_sel_v1') || '';
 
@@ -706,10 +712,12 @@ function doExport(){
       // 설정/부가 데이터
       curProComp, _ttCurComp,
       userMapAlias, notices, playerStatusIcons,
+      playerStatusExpiry: (typeof playerStatusExpiry!=='undefined' ? playerStatusExpiry : {}),
+      customStatusIcons: (typeof _customStatusIcons!=='undefined' ? _customStatusIcons : []),
       boardOrder, boardPlayerOrder,
       seasons, calScheduled,
-      // 외부 탭 데이터(문자열 그대로)
-      histExtRaw, histExtProxyPresets, histExtProxyPresetSel
+      // 외부 탭 데이터
+      histExtState, histExtProxyPresets, histExtProxyPresetSel
     };
     const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(b);
@@ -739,8 +747,15 @@ function doFile(inp){
       tourneys=d.tourneys||[];
       // 🎯 티어대회 기록 복원(있으면 그대로 사용, 없으면 아래에서 tourneys로 마이그레이션)
       if(d.ttM!==undefined) ttM=d.ttM||[];
-      // 외부 대진기록 복원 (문자열 그대로)
-      if(d.histExtRaw!==undefined){
+      // 외부 대진기록 복원
+      if(d.histExtState!==undefined){
+        try{
+          if(typeof _histExtSave==='function') _histExtSave(d.histExtState||{items:[],raw:'',mode:'today',today:'',sourceSel:'',keyword:''});
+          else localStorage.setItem('su_hist_ext_data_v1', JSON.stringify(d.histExtState||{}));
+        }catch(e){
+          console.warn('[doFile] histExtState 복원 실패:', e.message);
+        }
+      }else if(d.histExtRaw!==undefined){
         try{ localStorage.setItem('su_hist_ext_data_v1', String(d.histExtRaw||'')); }catch(e){
           console.warn('[doFile] histExtRaw localStorage 저장 실패:', e.message);
         }
@@ -763,6 +778,10 @@ function doFile(inp){
       if(d.userMapAlias!==undefined) userMapAlias=d.userMapAlias||{};
       if(d.notices!==undefined) notices=d.notices||[];
       if(d.playerStatusIcons!==undefined) playerStatusIcons=d.playerStatusIcons||{};
+      if(d.playerStatusExpiry!==undefined && typeof playerStatusExpiry!=='undefined') playerStatusExpiry=d.playerStatusExpiry||{};
+      if(d.customStatusIcons!==undefined && typeof _customStatusIcons!=='undefined') _customStatusIcons=d.customStatusIcons||[];
+      try{ if(typeof _rebuildCustomStatusDefs==='function') _rebuildCustomStatusDefs(); }catch(e){}
+      try{ if(typeof _iconPersistState==='function') _iconPersistState(); }catch(e){}
       if(d.boardOrder!==undefined) boardOrder=d.boardOrder||[];
       if(d.boardPlayerOrder!==undefined) boardPlayerOrder=d.boardPlayerOrder||{};
       if(d.seasons!==undefined) seasons=d.seasons||[];
@@ -781,7 +800,9 @@ function doFile(inp){
           _migrateTierTourneys();
         }
       }catch(e){}
-      fixPoints();save();init();
+      fixPoints();
+      try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){}
+      save();init();
       // 동명이인 감지
       const _dupSeen={};const _dupFound=[];
       players.forEach(p=>{if(_dupSeen[p.name])_dupFound.push(p.name);else _dupSeen[p.name]=true;});

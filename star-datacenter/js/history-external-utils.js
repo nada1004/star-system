@@ -2,45 +2,266 @@
    History External Utilities
 ══════════════════════════════════════ */
 const _HIST_EXT_KEY='su_hist_ext_data_v1';
+const _HIST_EXT_META_KEY='su_hist_ext_meta_v1';
 const _HIST_EXT_PROXY_KEY='su_hist_ext_proxy_v1';
 const _HIST_EXT_PROXY_CFG_KEY='su_hist_ext_proxy_cfg_v1';
 const _HIST_EXT_TARGET_KEY='su_hist_ext_target_v1';
 const _HIST_EXT_PROXY_PRESETS_KEY='su_hist_ext_proxy_presets_v1';
 const _HIST_EXT_PROXY_PRESET_SEL_KEY='su_hist_ext_proxy_preset_sel_v1';
+const _HIST_EXT_IDB_DB='star_datacenter_history';
+const _HIST_EXT_IDB_STORE='external_records';
+const _HIST_EXT_IDB_KEY='main';
 window._histExtSel = window._histExtSel || new Set();
 window._histExtPage = window._histExtPage || 1;
 const _HIST_EXT_PAGE_SIZE = 30;
+window._histExtCache = window._histExtCache || null;
+window._histExtIdbReady = window._histExtIdbReady || false;
+window._histExtInitPromise = window._histExtInitPromise || null;
 
-function _histExtLoad(){
+function _histExtDefaultState(){
+  return {items:[],raw:'',mode:'today',today:'',sourceSel:'',keyword:''};
+}
+function _histExtNormalizeState(v){
+  const s = v || {};
+  return {
+    items: Array.isArray(s.items) ? s.items : [],
+    raw: String(s.raw||''),
+    mode: String(s.mode||'today'),
+    today: String(s.today||''),
+    sourceSel: String(s.sourceSel||''),
+    keyword: String(s.keyword||'')
+  };
+}
+function _histExtPickPayload(v){
+  const s=_histExtNormalizeState(v);
+  return {items:s.items, raw:s.raw, mode:s.mode, today:s.today};
+}
+function _histExtPickMeta(v){
+  const s=_histExtNormalizeState(v);
+  return {
+    sourceSel:s.sourceSel,
+    keyword:s.keyword,
+    migrated:!!v?.migrated,
+    backend:v?.backend||''
+  };
+}
+function _histExtLoadMeta(){
+  try{
+    return _histExtNormalizeState(JSON.parse(localStorage.getItem(_HIST_EXT_META_KEY)||'null')||{});
+  }catch(e){
+    console.warn('[_histExtLoadMeta] localStorage 메타 로드 실패:', e.message);
+    return _histExtDefaultState();
+  }
+}
+function _histExtSaveMeta(v){
+  try{
+    localStorage.setItem(_HIST_EXT_META_KEY, JSON.stringify(_histExtPickMeta(v)));
+  }catch(e){
+    console.warn('[_histExtSaveMeta] localStorage 메타 저장 실패:', e.message);
+  }
+}
+function _histExtLegacyLoad(){
   try{
     const raw = localStorage.getItem(_HIST_EXT_KEY) || '';
-    if(!raw) return {items:[],raw:'',mode:'today',today:''};
+    if(!raw) return null;
     if(raw.startsWith('lz:')){
       const dec = (typeof LZString!=='undefined' && LZString.decompressFromUTF16)
         ? (LZString.decompressFromUTF16(raw.slice(3)) || '')
         : '';
-      return JSON.parse(dec || 'null') || {items:[],raw:'',mode:'today',today:''};
+      return _histExtNormalizeState(JSON.parse(dec || 'null') || _histExtDefaultState());
     }
-    return JSON.parse(raw||'null')||{items:[],raw:'',mode:'today',today:''};
+    return _histExtNormalizeState(JSON.parse(raw||'null') || _histExtDefaultState());
   }catch(e){
-    console.warn('[_histExtLoad] localStorage 로드 실패:', e.message);
-    return {items:[],raw:'',mode:'today',today:''};
+    console.warn('[_histExtLegacyLoad] legacy localStorage 로드 실패:', e.message);
+    return null;
   }
 }
-function _histExtSave(v){
+function _histExtLegacySave(v){
   try{
-    const json = JSON.stringify(v);
+    const json = JSON.stringify(_histExtNormalizeState(v));
     const packed = (typeof LZString!=='undefined' && LZString.compressFromUTF16)
       ? ('lz:' + LZString.compressFromUTF16(json))
       : json;
     localStorage.setItem(_HIST_EXT_KEY, packed);
-    try{ localStorage.setItem('su_hist_ext_last_modified', String(Date.now())); }catch(e){}
-    try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
     return true;
   }catch(e){
-    console.warn('[_histExtSave] localStorage 저장 실패:', e.message);
+    console.warn('[_histExtLegacySave] legacy localStorage 저장 실패:', e.message);
     return false;
   }
+}
+function _histExtClearLegacyKey(){
+  try{ localStorage.removeItem(_HIST_EXT_KEY); }catch(e){}
+}
+function _histExtIdbAvailable(){
+  try{ return !!window.indexedDB; }catch(e){ return false; }
+}
+function _histExtIdbOpen(){
+  return new Promise((resolve,reject)=>{
+    try{
+      if(!window.indexedDB){ resolve(null); return; }
+      const req = indexedDB.open(_HIST_EXT_IDB_DB, 1);
+      req.onupgradeneeded = function(ev){
+        const db = ev.target.result;
+        if(!db.objectStoreNames.contains(_HIST_EXT_IDB_STORE)) db.createObjectStore(_HIST_EXT_IDB_STORE);
+      };
+      req.onsuccess = ()=>resolve(req.result);
+      req.onerror = ()=>reject(req.error || new Error('indexedDB open failed'));
+    }catch(e){ reject(e); }
+  });
+}
+async function _histExtIdbGet(){
+  const db = await _histExtIdbOpen();
+  if(!db) return null;
+  return await new Promise((resolve,reject)=>{
+    try{
+      const tx = db.transaction(_HIST_EXT_IDB_STORE,'readonly');
+      const st = tx.objectStore(_HIST_EXT_IDB_STORE);
+      const req = st.get(_HIST_EXT_IDB_KEY);
+      req.onsuccess = ()=>resolve(_histExtNormalizeState(req.result||null));
+      req.onerror = ()=>reject(req.error || new Error('indexedDB get failed'));
+    }catch(e){ reject(e); }
+  });
+}
+async function _histExtIdbSet(v){
+  const db = await _histExtIdbOpen();
+  if(!db) return false;
+  return await new Promise((resolve,reject)=>{
+    try{
+      const tx = db.transaction(_HIST_EXT_IDB_STORE,'readwrite');
+      const st = tx.objectStore(_HIST_EXT_IDB_STORE);
+      st.put(_histExtPickPayload(v), _HIST_EXT_IDB_KEY);
+      tx.oncomplete = ()=>resolve(true);
+      tx.onerror = ()=>reject(tx.error || new Error('indexedDB put failed'));
+    }catch(e){ reject(e); }
+  });
+}
+async function _histExtIdbClear(){
+  const db = await _histExtIdbOpen();
+  if(!db) return false;
+  return await new Promise((resolve,reject)=>{
+    try{
+      const tx = db.transaction(_HIST_EXT_IDB_STORE,'readwrite');
+      const st = tx.objectStore(_HIST_EXT_IDB_STORE);
+      st.delete(_HIST_EXT_IDB_KEY);
+      tx.oncomplete = ()=>resolve(true);
+      tx.onerror = ()=>reject(tx.error || new Error('indexedDB delete failed'));
+    }catch(e){ reject(e); }
+  });
+}
+async function _histExtRebuildStorage(){
+  const snap = _histExtNormalizeState(window._histExtCache || _histExtLoad() || _histExtDefaultState());
+  if(_histExtIdbAvailable()){
+    try{
+      await _histExtIdbSet(snap);
+      _histExtClearLegacyKey();
+      _histExtSaveMeta({...snap, migrated:true, backend:'indexedDB'});
+      return {ok:true, backend:'indexedDB'};
+    }catch(e){
+      console.warn('[_histExtRebuildStorage] indexedDB 재빌드 실패:', e.message);
+    }
+  }
+  const legacyOk=_histExtLegacySave(snap);
+  _histExtSaveMeta({...snap, migrated:false, backend:'localStorage'});
+  return {ok:legacyOk, backend:'localStorage'};
+}
+function _histExtMaybeNotifyLoaded(){
+  try{
+    window.dispatchEvent(new CustomEvent('hist-ext-storage-ready'));
+  }catch(e){}
+  try{
+    if(typeof render==='function') setTimeout(()=>render(), 0);
+  }catch(e){}
+}
+async function _histExtInitStorage(){
+  if(window._histExtInitPromise) return window._histExtInitPromise;
+  window._histExtInitPromise = (async()=>{
+    try{
+      const meta = _histExtLoadMeta();
+      const legacy = (meta.migrated && meta.backend!=='localStorage') ? null : _histExtLegacyLoad();
+      if(legacy){
+        window._histExtCache = _histExtNormalizeState({...legacy, ...meta});
+        if(_histExtIdbAvailable()){
+          try{
+            await _histExtIdbSet(legacy);
+            _histExtClearLegacyKey();
+            _histExtSaveMeta({...window._histExtCache, migrated:true, backend:'indexedDB'});
+          }catch(e){
+            console.warn('[_histExtInitStorage] legacy -> indexedDB 이전 실패:', e.message);
+            _histExtSaveMeta({...window._histExtCache, migrated:false, backend:'localStorage'});
+          }
+        }else{
+          _histExtSaveMeta({...window._histExtCache, migrated:false, backend:'localStorage'});
+        }
+        window._histExtIdbReady = true;
+        return window._histExtCache;
+      }
+      const fromIdb = await _histExtIdbGet();
+      if(fromIdb && ((fromIdb.items||[]).length || fromIdb.raw || fromIdb.today)){
+        const next = _histExtNormalizeState({...fromIdb, ...meta});
+        const prevBlob = JSON.stringify(window._histExtCache||{});
+        const nextBlob = JSON.stringify(next);
+        window._histExtCache = next;
+        if(prevBlob!==nextBlob) _histExtMaybeNotifyLoaded();
+      }else if(!window._histExtCache){
+        window._histExtCache = _histExtNormalizeState(meta);
+      }
+      window._histExtIdbReady = true;
+      _histExtSaveMeta({...window._histExtCache, migrated:true, backend:'indexedDB'});
+      return window._histExtCache;
+    }catch(e){
+      console.warn('[_histExtInitStorage] 초기화 실패:', e.message);
+      if(!window._histExtCache) window._histExtCache = _histExtDefaultState();
+      return window._histExtCache;
+    }
+  })();
+  return window._histExtInitPromise;
+}
+
+function _histExtLoad(){
+  try{
+    if(window._histExtCache) return _histExtNormalizeState(window._histExtCache);
+    const meta = _histExtLoadMeta();
+    const legacy = (meta.migrated && meta.backend!=='localStorage') ? null : _histExtLegacyLoad();
+    window._histExtCache = _histExtNormalizeState({..._histExtDefaultState(), ...(legacy||{}), ...meta});
+    try{ _histExtInitStorage(); }catch(e){}
+    return _histExtNormalizeState(window._histExtCache);
+  }catch(e){
+    console.warn('[_histExtLoad] 외부 기록 로드 실패:', e.message);
+    return _histExtDefaultState();
+  }
+}
+function _histExtSave(v){
+  try{
+    const next = _histExtNormalizeState(v);
+    window._histExtCache = next;
+    _histExtSaveMeta(next);
+    if(_histExtIdbAvailable()) _histExtClearLegacyKey();
+    try{ localStorage.setItem('su_hist_ext_last_modified', String(Date.now())); }catch(e){}
+    try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+    Promise.resolve().then(()=>_histExtIdbSet(next)).catch(err=>{
+      console.warn('[_histExtSave] indexedDB 저장 실패:', err && err.message ? err.message : err);
+      _histExtLegacySave(next);
+      _histExtSaveMeta({...next, migrated:false, backend:'localStorage'});
+    });
+    if(!_histExtIdbAvailable()){
+      _histExtLegacySave(next);
+      _histExtSaveMeta({...next, migrated:false, backend:'localStorage'});
+    }
+    return true;
+  }catch(e){
+    console.warn('[_histExtSave] 외부 기록 저장 실패:', e.message);
+    return false;
+  }
+}
+function _histExtClearData(){
+  const empty = _histExtDefaultState();
+  window._histExtCache = empty;
+  _histExtSaveMeta({...empty, migrated:_histExtIdbAvailable(), backend:_histExtIdbAvailable()?'indexedDB':'localStorage'});
+  _histExtClearLegacyKey();
+  Promise.resolve().then(()=>_histExtIdbClear()).catch(err=>{
+    console.warn('[_histExtClearData] indexedDB 삭제 실패:', err && err.message ? err.message : err);
+  });
+  try{ localStorage.setItem('su_hist_ext_last_modified', String(Date.now())); }catch(e){}
 }
 function _histExtUid(){ return 'hex_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
@@ -288,7 +509,11 @@ try{
   window.HistoryExternalUtils = window.HistoryExternalUtils || {
     load: _histExtLoad,
     save: _histExtSave,
+    initStorage: _histExtInitStorage,
+    clearData: _histExtClearData,
+    rebuildStorage: _histExtRebuildStorage,
     renderKey: _histExtKey,
     getViewItems: _histExtGetViewItems
   };
 }catch(e){}
+try{ _histExtInitStorage(); }catch(e){}

@@ -575,7 +575,7 @@ function mergePlayers(fromName, toName, opt){
   if(typeof playerStatusIcons!=='undefined'){
     if(playerStatusIcons[fromName] && !playerStatusIcons[toName]) playerStatusIcons[toName]=playerStatusIcons[fromName];
     delete playerStatusIcons[fromName];
-    localStorage.setItem('su_psi', JSON.stringify(playerStatusIcons));
+    try{ if(typeof _iconPersistState==='function') _iconPersistState(); }catch(e){}
   }
 
   if(opt?.fill){
