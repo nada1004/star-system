@@ -60,10 +60,10 @@ async function _ensureRouletteLoaded(){
 }
 async function _ensureStatsLoaded(){
   await window.ensureChartJS();
-  await _loadScriptOnce('js/stats.js?v=20260502-60');
+  await _loadScriptOnce('js/stats.js?v=20260502-61');
 }
 window._ensureShareCardRuntime = window._ensureShareCardRuntime || async function(){
-  await _loadScriptOnce('js/stats.js?v=20260502-60');
+  await _loadScriptOnce('js/stats.js?v=20260502-61');
 };
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260502-01');

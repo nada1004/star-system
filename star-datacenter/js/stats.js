@@ -2205,6 +2205,8 @@ function renderShareCardByMatchObj(m){
   const civColor=civUniv?gc(civUniv):'#6366f1';
   // 경기 타입별 전용 색상 (대학 색상 사용 안함)
   const _TYPE_COLORS={
+    ck: (typeof getFixedSideColors==='function' ? getFixedSideColors('ck') : {a:'#2563eb',b:'#6366f1'}),
+    pro: (typeof getFixedSideColors==='function' ? getFixedSideColors('pro') : {a:'#0f766e',b:'#4f46e5'}),
     tt: {a:'#7c3aed',b:'#047857'}
   };
   const _tc=m._matchType&&_TYPE_COLORS[m._matchType]?_TYPE_COLORS[m._matchType]:null;
