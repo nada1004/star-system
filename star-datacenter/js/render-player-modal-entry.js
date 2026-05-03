@@ -37,6 +37,7 @@ function openPlayerModal(name){
   }
   st.currentName=name;
   om('playerModal');
+  try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   setTimeout(()=>initPEloChart(name),60);
 }
 

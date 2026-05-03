@@ -28,6 +28,7 @@ function openUnivModal(univName){
   st.currentName=univName;
   st.editOpen=false;
   om('univModal');
+  try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   const editBtn=document.getElementById('univEditBtn');
   if(editBtn) editBtn.style.display=isLoggedIn?'inline-flex':'none';
   requestAnimationFrame(()=>{

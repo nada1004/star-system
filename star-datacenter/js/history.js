@@ -2800,6 +2800,13 @@ function _applyOpenHistDetailTeamHeaderColors(){
 function openHistDetailModal(key){
   const reg=(window._detReg||{})[key];
   if(!reg || !reg.m) return;
+  try{
+    window._lastHistDetailState = {
+      key,
+      mode: String(reg.mode||''),
+      idx: (reg.idx!==undefined && reg.idx!==null) ? Number(reg.idx) : null
+    };
+  }catch(e){}
   try{ window.__detailCtx = 'histModal'; }catch(_){}
   const m=_ensureHistDetailModal();
   const titleEl=document.getElementById('hmdTitle');
@@ -2809,6 +2816,7 @@ function openHistDetailModal(key){
   const match=reg.m;
   const idx = (reg.idx!==undefined && reg.idx!==null) ? reg.idx : null;
   const modeKey = reg.mode || '';
+  try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   // 공유카드: 인덱스 기반이 어려운 케이스(comp 통합/대회 포함)에서는 match 객체로 직접 오픈
   const _buildDetailSharePayload = ()=>{
     try{

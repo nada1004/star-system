@@ -28,6 +28,10 @@ window.cm = function(id) {
   const el = document.getElementById(id);
   if(el) {
     el.style.setProperty('display', 'none', 'important');
+    try{
+      if(id === 'histDetModal') window._lastHistDetailState = null;
+      if(typeof window._syncTabUrlFromState === 'function') window._syncTabUrlFromState('replace');
+    }catch(e){}
   }
 };
 

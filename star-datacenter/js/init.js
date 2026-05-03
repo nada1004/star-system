@@ -241,7 +241,9 @@ function init(){
     })();
   }catch(e){ try{ initLoginHash(); }catch(_){} }
   applyLoginState();
+  try{ if(typeof window._applyTabLinkFromUrl==='function') window._applyTabLinkFromUrl(); }catch(e){}
   render();
+  try{ setTimeout(()=>{ if(typeof window._applyDeepLinkFromUrl==='function') window._applyDeepLinkFromUrl(); }, 80); }catch(e){}
   // (성능) 부가 기능은 idle 시 지연 로딩
   // - BGM/멀티뷰는 초기 렌더와 무관하므로, 최초 로딩을 가볍게 유지
   try{
@@ -301,6 +303,11 @@ initDark();
       if(!c || !c.gistId) return;
       const info = await window.SettingsStore.pullOnSignal({silent:true, returnInfo:true});
       if(!info || info.skipped) return;
+      try{
+        if(typeof window.refreshSessionAuthority === 'function'){
+          await window.refreshSessionAuthority(true);
+        }
+      }catch(e){}
       // 설정 팝업이 열려있고 AI 섹션이 보이면 입력값/상태 즉시 반영
       try{
         const m = document.getElementById('cfgModal');

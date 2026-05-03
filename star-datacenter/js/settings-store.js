@@ -215,6 +215,16 @@
   window.SettingsStore = {
     cfg, setCfg, isAdmin,
     ensureGist, pull, pullOnSignal, push,
+    emitSignal: async function(section){
+      try{
+        const sig = await _pushSettingsSignal({ section: section || 'all', updatedAt: Date.now() });
+        _rememberSettingsSignal(sig);
+        return true;
+      }catch(e){
+        try{ localStorage.setItem(LS.lastError, '설정 변경 신호 전송 실패: ' + (e.message || e)); }catch(_){}
+        return false;
+      }
+    },
     getSyncStatus,
     getMemo, setMemo,
     getFab, setFab,

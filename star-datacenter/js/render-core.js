@@ -125,6 +125,8 @@ function _renderImpl(){
           if(tr) tr.classList.toggle('is-selected', cb.checked);
         });
       }catch(e){}
+      try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState(); }catch(e){}
+      try{ if(typeof window._applyDeepLinkFromUrl==='function') window._applyDeepLinkFromUrl(); }catch(e){}
     });
   });
 }

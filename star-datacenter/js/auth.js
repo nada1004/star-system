@@ -268,6 +268,11 @@ async function pushAdminAccountsRemote(accounts){
     });
     if(!putRes.ok) throw new Error('관리자 계정 원격 저장 실패: ' + putRes.status);
     _setLocalAdminUpdatedAt(payload.updatedAt);
+    try{
+      if(window.SettingsStore && typeof window.SettingsStore.emitSignal === 'function'){
+        await window.SettingsStore.emitSignal('admin-accounts');
+      }
+    }catch(e){}
     return true;
   }catch(e){
     console.warn('[pushAdminAccountsRemote] failed:', e.message);

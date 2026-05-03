@@ -714,7 +714,7 @@ function indInputHTML(){
       ${!(pA&&pB)?_matchPlayerAssignPoolHTML('ind'):''}
     `);
   const resultCard = pA&&pB&&BLD['ind'] ? _mbSectionCard('② 경기 결과 입력', `${setBuilderHTML(BLD['ind'],'ind')}`) : '';
-  return _mbFrame('🎮 개인전 입력', actionBar, baseCard + resultCard, '공통 입력 카드 레이아웃');
+  return _mbFrame('🎮 개인전 입력', actionBar, baseCard + resultCard, '');
 }
 
 /* ══════════════════════════════════════
@@ -1128,7 +1128,7 @@ function gjInputHTML(){
   }
   const actionBar = _mbActionBar([
     `<button class="btn btn-p btn-sm mb-mini-btn" onclick="${_gjProMode?'openGJProPasteModal':'openGJPasteModal'}()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`
-  ], '하단에서 저장까지 이어집니다');
+  ], '');
   const baseCard = _mbSectionCard('① 날짜 & 대전 스트리머', `
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:6px">
@@ -1517,7 +1517,7 @@ function buildCKInputHTML(){
         <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['ck'].membersB.splice(${i},1);BLD['ck'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">멤버를 추가하세요</span>'}</div>
       </div>
     </div>`) + _mbSectionCard('④ 경기 결과 입력', `${setBuilderHTML(bld,'ck')}`);
-  return _mbFrame('🤝 대학CK 입력', actionBar, h, '공통 헤더/액션 바 적용');
+  return _mbFrame('🤝 대학CK 입력', actionBar, h, '');
 }
 
 function ckSearchPlayer(){
@@ -1661,7 +1661,7 @@ function rUnivM(C,T){
     ? (buildYearMonthFilterControls('univm', true))
     : '';
   h+=_buildMatchSubtabShell(univmSub, subOpts, '_univmFilterOpen', extra);
-  if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=_mbFrame('🏟️ 대학대전 입력', _mbActionBar([`<button class="btn btn-p btn-sm mb-mini-btn" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`], '하단에서 저장까지 이어집니다'), _mbSectionCard('대학대전 입력', `${setBuilderHTML(BLD['univm'],'univm')}`), '공통 입력 카드 레이아웃');}
+  if(univmSub==='input'&&isLoggedIn){if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};h+=_mbFrame('🏟️ 대학대전 입력', _mbActionBar([`<button class="btn btn-p btn-sm mb-mini-btn" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`], ''), _mbSectionCard('대학대전 입력', `${setBuilderHTML(BLD['univm'],'univm')}`), '');}
   else if(univmSub==='rank'){h+=univMRankHTML();}
   else{h+=recSummaryListHTML(univM,'univm','tab');}
   C.innerHTML=h;
