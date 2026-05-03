@@ -879,14 +879,34 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
   try{
     // (복구) 로컬 기록이 있으면 자동 불러오기 금지 (덮어쓰기 방지)
     const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
-    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm','su_match_store_meta_v1'].some(hasAnyLocalKey);
+    const hasAnyRecordPayload = (payload)=>{
+      if(!payload || typeof payload!=='object') return false;
+      return ['miniM','univM','comps','ckM','proM','proTourneys','tourneys','ttM','indM','gjM']
+        .some(k=>Array.isArray(payload[k]) && payload[k].length>0);
+    };
+    const hasMatchIdbData = await (async()=>{
+      try{
+        if(!window.indexedDB) return false;
+        const db = await new Promise((resolve,reject)=>{
+          const req = indexedDB.open('star_datacenter_matches', 1);
+          req.onupgradeneeded = ()=>resolve(req.result);
+          req.onsuccess = ()=>resolve(req.result);
+          req.onerror = ()=>reject(req.error||new Error('indexedDB open failed'));
+        });
+        if(!db || !db.objectStoreNames.contains('match_payloads')) return false;
+        const payload = await new Promise((resolve,reject)=>{
+          const tx = db.transaction('match_payloads','readonly');
+          const req = tx.objectStore('match_payloads').get('main');
+          req.onsuccess = ()=>resolve(req.result||null);
+          req.onerror = ()=>reject(req.error||new Error('indexedDB get failed'));
+        });
+        return hasAnyRecordPayload(payload);
+      }catch(e){
+        return false;
+      }
+    })();
+    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey) || hasMatchIdbData;
     if(hasRecordKeys) return;
-    // su_p는 배열 또는 {v:2,p:[...]}일 수 있음
-    const localPlayers = (typeof J==='function') ? J('su_p') : null;
-    const ok = Array.isArray(localPlayers)
-      ? localPlayers.length>0
-      : (localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length>0);
-    if(ok) return;
   }catch(e){}
   console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
   // (복구) 번들에 포함된 data.json을 최우선으로 시도
