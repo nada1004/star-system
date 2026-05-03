@@ -415,7 +415,7 @@ function _applyCloudData(d) {
           if(!k || typeof k!=='string') return;
           if(!k.startsWith('su_')) return;
           if(k.startsWith('su_pp')) return;
-          if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') return;
+          if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash' || k==='su_admin_hashes') return;
           if(k==='su_last_admin_save' || k==='su_last_save_time') return;
           if(extKeys.has(k) && localExtTs && localExtTs > cloudExtTs) return;
           try{ localStorage.setItem(k, String(v)); }catch(e){}
