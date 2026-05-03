@@ -443,7 +443,7 @@ window.histExtFetchFromProxy = async function(){
   setProg(`완료: ${_histExtGetViewItems().length}행 출력`);
 };
 window.histExtClear = function(){
-  try{ localStorage.setItem(_HIST_EXT_KEY, ''); }catch(e){}
+  try{ if(typeof _histExtClearData==='function') _histExtClearData(); else localStorage.setItem(_HIST_EXT_KEY, ''); }catch(e){}
   try{ localStorage.setItem('su_hist_ext_last_modified', String(Date.now())); }catch(e){}
   try{ localStorage.setItem(_HIST_EXT_PROXY_PRESETS_KEY, ''); }catch(e){}
   try{ localStorage.setItem(_HIST_EXT_PROXY_PRESET_SEL_KEY, ''); }catch(e){}
@@ -457,7 +457,7 @@ window.histExtClear = function(){
 };
 window.histExtClearAll = function(){
   if(!confirm('외부 탭 데이터를 모두 삭제할까요?\n(되돌릴 수 없습니다)')) return;
-  try{ localStorage.setItem(_HIST_EXT_KEY, ''); }catch(e){}
+  try{ if(typeof _histExtClearData==='function') _histExtClearData(); else localStorage.setItem(_HIST_EXT_KEY, ''); }catch(e){}
   try{ localStorage.setItem('su_hist_ext_last_modified', String(Date.now())); }catch(e){}
   try{ localStorage.setItem(_HIST_EXT_PROXY_PRESETS_KEY, ''); }catch(e){}
   try{ localStorage.setItem(_HIST_EXT_PROXY_PRESET_SEL_KEY, ''); }catch(e){}

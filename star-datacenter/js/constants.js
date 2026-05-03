@@ -983,6 +983,11 @@ function _unpackPlayers(raw){
     return [];
   }
 }
+function _stripPlayerHistoryForSave(player){
+  const c={...(player||{})};
+  delete c.history;
+  return c;
+}
 
 let playersRaw = J('su_p')  || [];
 let players    = _unpackPlayers(playersRaw) || [];
@@ -993,24 +998,26 @@ let univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
 let userMapAlias = J('su_mAlias') || {};   // 사용자 정의 맵 약자 { '약자': '전체이름' }
 let tourD      = J('su_t')  || Array(15).fill('');
-let miniM      = J('su_mm') || [];
-let univM      = J('su_um') || [];
-let comps      = J('su_cm') || [];
-let ckM        = J('su_ck') || [];
+const _matchStoreMeta = J('su_match_store_meta_v1') || {};
+const _matchLegacyLoadEnabled = !_matchStoreMeta.migrated || _matchStoreMeta.backend==='localStorage' || !window.indexedDB;
+let miniM      = _matchLegacyLoadEnabled ? (J('su_mm') || []) : [];
+let univM      = _matchLegacyLoadEnabled ? (J('su_um') || []) : [];
+let comps      = _matchLegacyLoadEnabled ? (J('su_cm') || []) : [];
+let ckM        = _matchLegacyLoadEnabled ? (J('su_ck') || []) : [];
 let compNames  = J('su_cn') || [];
 let curComp    = J('su_cc') || '';
 // 프로리그 데이터
-let proM       = J('su_pro') || [];
+let proM       = _matchLegacyLoadEnabled ? (J('su_pro') || []) : [];
 // 프로리그 개인 대회: [{id,name,groups:[{name,players:[],matches:[{a,b,winner,d,map}]}]}]
-let proTourneys = J('su_ptn') || [];
+let proTourneys = _matchLegacyLoadEnabled ? (J('su_ptn') || []) : [];
 let curProComp  = J('su_ptc') || '';
 // 대회 조편성: [{id,name,groups:[{name,univs:[],matches:[{a,b,sa,sb,sets:[]}]}]}]
-let tourneys   = J('su_tn') || [];
-let ttM        = J('su_ttm') || [];
+let tourneys   = _matchLegacyLoadEnabled ? (J('su_tn') || []) : [];
+let ttM        = _matchLegacyLoadEnabled ? (J('su_ttm') || []) : [];
 let _ttCurComp = J('su_ttcur') || '';
 let _ttSub     = 'records';
-let indM       = J('su_indm') || [];
-let gjM        = J('su_gjm')  || [];
+let indM       = _matchLegacyLoadEnabled ? (J('su_indm') || []) : [];
+let gjM        = _matchLegacyLoadEnabled ? (J('su_gjm')  || []) : [];
 let notices    = J('su_notices') || [];
 // (요청사항) 보라크루 기능 삭제: 기존 저장 키 정리
 try{ localStorage.removeItem('su_crew'); localStorage.removeItem('su_crewcfg'); }catch(e){}
@@ -1020,8 +1027,11 @@ let openDetails = {};
 let tierRankModeFilter = '전체';
 
 // ── 선수별 상태 아이콘 시스템 ──────────────────────────────
-let playerStatusIcons = J('su_psi') || {};
-let playerStatusExpiry = J('su_psi_expiry') || {};
+const _ICON_META_KEY = 'su_icon_store_meta_v1';
+const _ICON_META = J(_ICON_META_KEY) || {};
+const _ICON_LEGACY_LOAD_ENABLED = !_ICON_META.migrated || _ICON_META.backend==='localStorage' || !window.indexedDB;
+let playerStatusIcons = _ICON_LEGACY_LOAD_ENABLED ? (J('su_psi') || {}) : {};
+let playerStatusExpiry = _ICON_LEGACY_LOAD_ENABLED ? (J('su_psi_expiry') || {}) : {};
 const STATUS_ICON_DEFS = {
   none:    { label: '없음',     emoji: '' },
   fire:    { label: '🔥 불',    emoji: '🔥' },
@@ -1068,22 +1078,177 @@ const STATUS_ICON_DEFS = {
   chick:   { label: '🐥 병아리',emoji: '🐥' },
 };
 // ── 커스텀 URL 아이콘 ──
-let _customStatusIcons = J('su_si_customs') || [];
-(function _loadCustomIcons(){
+let _customStatusIcons = _ICON_LEGACY_LOAD_ENABLED ? (J('su_si_customs') || []) : [];
+function _rebuildCustomStatusDefs(){
+  Object.keys(STATUS_ICON_DEFS).filter(k=>k.startsWith('_c')).forEach(k=>delete STATUS_ICON_DEFS[k]);
   _customStatusIcons.forEach((c,i)=>{ STATUS_ICON_DEFS['_c'+i]={label:c.label||'커스텀'+(i+1),emoji:c.emoji}; });
-})();
+}
+_rebuildCustomStatusDefs();
+function _iconDefaultState(){
+  return {playerStatusIcons:{}, playerStatusExpiry:{}, customStatusIcons:[]};
+}
+function _iconNormalizeState(v){
+  const s=v||{};
+  return {
+    playerStatusIcons:(s.playerStatusIcons && typeof s.playerStatusIcons==='object' && !Array.isArray(s.playerStatusIcons)) ? s.playerStatusIcons : {},
+    playerStatusExpiry:(s.playerStatusExpiry && typeof s.playerStatusExpiry==='object' && !Array.isArray(s.playerStatusExpiry)) ? s.playerStatusExpiry : {},
+    customStatusIcons:Array.isArray(s.customStatusIcons) ? s.customStatusIcons : []
+  };
+}
+function _iconApplyState(v){
+  const s=_iconNormalizeState(v);
+  playerStatusIcons = {...s.playerStatusIcons};
+  playerStatusExpiry = {...s.playerStatusExpiry};
+  _customStatusIcons = [...s.customStatusIcons];
+  _rebuildCustomStatusDefs();
+  return s;
+}
+function _iconLoadMeta(){
+  try{ return JSON.parse(localStorage.getItem(_ICON_META_KEY)||'null')||{}; }catch(e){ return {}; }
+}
+function _iconSaveMeta(state){
+  try{
+    localStorage.setItem(_ICON_META_KEY, JSON.stringify({
+      migrated: !!state?.migrated,
+      backend: state?.backend || '',
+      updatedAt: Date.now()
+    }));
+  }catch(e){}
+}
+function _iconLegacyLoad(){
+  return _iconNormalizeState({
+    playerStatusIcons:J('su_psi')||{},
+    playerStatusExpiry:J('su_psi_expiry')||{},
+    customStatusIcons:J('su_si_customs')||[]
+  });
+}
+function _iconLegacySave(state){
+  const s=_iconNormalizeState(state);
+  try{
+    _lsSave('su_psi', s.playerStatusIcons);
+    _lsSave('su_psi_expiry', s.playerStatusExpiry);
+    _lsSave('su_si_customs', s.customStatusIcons);
+    return true;
+  }catch(e){
+    console.warn('[_iconLegacySave] localStorage 저장 실패:', e.message);
+    return false;
+  }
+}
+function _iconClearLegacyKeys(){
+  ['su_psi','su_psi_expiry','su_si_customs'].forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} });
+}
+function _iconIdbAvailable(){
+  try{ return !!window.indexedDB; }catch(e){ return false; }
+}
+function _iconIdbOpen(){
+  return new Promise((resolve,reject)=>{
+    try{
+      if(!_iconIdbAvailable()){ resolve(null); return; }
+      const req = indexedDB.open('star_datacenter_icons', 1);
+      req.onupgradeneeded = (ev)=>{
+        const db = ev.target.result;
+        if(!db.objectStoreNames.contains('icon_payloads')) db.createObjectStore('icon_payloads');
+      };
+      req.onsuccess = ()=>resolve(req.result);
+      req.onerror = ()=>reject(req.error || new Error('icon indexedDB open failed'));
+    }catch(e){ reject(e); }
+  });
+}
+async function _iconIdbGet(){
+  const db = await _iconIdbOpen();
+  if(!db) return null;
+  return await new Promise((resolve,reject)=>{
+    try{
+      const tx = db.transaction('icon_payloads','readonly');
+      const req = tx.objectStore('icon_payloads').get('main');
+      req.onsuccess = ()=>resolve(_iconNormalizeState(req.result||null));
+      req.onerror = ()=>reject(req.error || new Error('icon indexedDB get failed'));
+    }catch(e){ reject(e); }
+  });
+}
+async function _iconIdbSet(state){
+  const db = await _iconIdbOpen();
+  if(!db) return false;
+  return await new Promise((resolve,reject)=>{
+    try{
+      const tx = db.transaction('icon_payloads','readwrite');
+      tx.objectStore('icon_payloads').put(_iconNormalizeState(state), 'main');
+      tx.oncomplete = ()=>resolve(true);
+      tx.onerror = ()=>reject(tx.error || new Error('icon indexedDB put failed'));
+    }catch(e){ reject(e); }
+  });
+}
+window._iconStoreInitPromise = window._iconStoreInitPromise || null;
+async function _iconInitStorage(){
+  if(window._iconStoreInitPromise) return window._iconStoreInitPromise;
+  window._iconStoreInitPromise = (async()=>{
+    try{
+      const meta=_iconLoadMeta();
+      const useLegacy = !_iconIdbAvailable() || meta.backend==='localStorage' || !meta.migrated;
+      if(useLegacy){
+        const legacy=_iconLegacyLoad();
+        _iconApplyState(legacy);
+        if(_iconIdbAvailable()){
+          try{
+            await _iconIdbSet(legacy);
+            _iconClearLegacyKeys();
+            _iconSaveMeta({migrated:true, backend:'indexedDB'});
+          }catch(e){
+            console.warn('[_iconInitStorage] legacy -> indexedDB 이전 실패:', e.message);
+            _iconSaveMeta({migrated:false, backend:'localStorage'});
+          }
+        }else{
+          _iconSaveMeta({migrated:false, backend:'localStorage'});
+        }
+        try{ if(typeof render==='function') setTimeout(()=>render(),0); }catch(e){}
+        return legacy;
+      }
+      const fromIdb = await _iconIdbGet();
+      const next = fromIdb || _iconDefaultState();
+      _iconApplyState(next);
+      _iconSaveMeta({migrated:true, backend:'indexedDB'});
+      try{ if(typeof render==='function') setTimeout(()=>render(),0); }catch(e){}
+      return next;
+    }catch(e){
+      console.warn('[_iconInitStorage] 초기화 실패:', e.message);
+      const legacy=_iconLegacyLoad();
+      _iconApplyState(legacy);
+      _iconSaveMeta({migrated:false, backend:'localStorage'});
+      try{ if(typeof render==='function') setTimeout(()=>render(),0); }catch(e){}
+      return legacy;
+    }
+  })();
+  return window._iconStoreInitPromise;
+}
+function _iconSnapshot(){
+  return _iconNormalizeState({playerStatusIcons, playerStatusExpiry, customStatusIcons:_customStatusIcons});
+}
+function _iconPersistState(){
+  const snap=_iconSnapshot();
+  if(!_iconIdbAvailable()){
+    _iconLegacySave(snap);
+    _iconSaveMeta({migrated:false, backend:'localStorage'});
+    return;
+  }
+  Promise.resolve().then(()=>_iconIdbSet(snap)).then(()=>{
+    _iconClearLegacyKeys();
+    _iconSaveMeta({migrated:true, backend:'indexedDB'});
+  }).catch(err=>{
+    console.warn('[_iconPersistState] indexedDB 저장 실패:', err && err.message ? err.message : err);
+    _iconLegacySave(snap);
+    _iconSaveMeta({migrated:false, backend:'localStorage'});
+  });
+}
 function addCustomStatusIcon(label, emoji){
   if(!emoji) return;
   _customStatusIcons.push({label:label||'커스텀',emoji});
-  const i=_customStatusIcons.length-1;
-  STATUS_ICON_DEFS['_c'+i]={label:_customStatusIcons[i].label,emoji};
-  localStorage.setItem('su_si_customs',JSON.stringify(_customStatusIcons));
+  _rebuildCustomStatusDefs();
+  _iconPersistState();
 }
 function removeCustomStatusIcon(idx){
   _customStatusIcons.splice(idx,1);
-  Object.keys(STATUS_ICON_DEFS).filter(k=>k.startsWith('_c')).forEach(k=>delete STATUS_ICON_DEFS[k]);
-  _customStatusIcons.forEach((c,i)=>{STATUS_ICON_DEFS['_c'+i]={label:c.label,emoji:c.emoji};});
-  localStorage.setItem('su_si_customs',JSON.stringify(_customStatusIcons));
+  _rebuildCustomStatusDefs();
+  _iconPersistState();
 }
 function _siIsImg(v){ return typeof v==='string'&&(v.startsWith('http')||v.startsWith('data:')); }
 function _siRender(emoji, size){ size=size||'16px'; if(!emoji)return''; if(_siIsImg(emoji))return`<img src="${emoji}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;flex-shrink:0" onerror="this.style.display='none'">`; return emoji; }
@@ -1098,8 +1263,7 @@ function getStatusIcon(name){
   if(expiry && expiry < new Date().toISOString().slice(0,10)){
     delete playerStatusIcons[name];
     delete playerStatusExpiry[name];
-    localStorage.setItem('su_psi', JSON.stringify(playerStatusIcons));
-    localStorage.setItem('su_psi_expiry', JSON.stringify(playerStatusExpiry));
+    _iconPersistState();
     return '';
   }
   return playerStatusIcons[name]||'';
@@ -1113,8 +1277,7 @@ function setStatusIcon(name, iconId, expiryDate){
     if(expiryDate) playerStatusExpiry[name]=expiryDate;
     else delete playerStatusExpiry[name];
   }
-  localStorage.setItem('su_psi', JSON.stringify(playerStatusIcons));
-  localStorage.setItem('su_psi_expiry', JSON.stringify(playerStatusExpiry));
+  _iconPersistState();
 }
 function onStatusExpiryChange(playerName){
   const expiryChk = document.getElementById('ed-icon-expiry');
@@ -1127,7 +1290,7 @@ function onStatusExpiryChange(playerName){
   }
   if(expiryDate) playerStatusExpiry[playerName] = expiryDate;
   else delete playerStatusExpiry[playerName];
-  localStorage.setItem('su_psi_expiry', JSON.stringify(playerStatusExpiry));
+  _iconPersistState();
   const lbl = document.getElementById('ed-icon-label');
   if(lbl){
     const found = Object.entries(STATUS_ICON_DEFS).find(([,d])=>d.emoji&&d.emoji===curIcon);
@@ -1166,6 +1329,7 @@ function saveCustomStatusIcon(slot, emoji){
   const k='custom'+slot;
   if(STATUS_ICON_DEFS[k]) STATUS_ICON_DEFS[k].emoji=emoji;
 }
+try{ _iconInitStorage(); }catch(e){}
 const SU_MATCH_ID_MIGRATION_KEY = 'su_match_id_migrated_v1';
 function _ensureObjId(obj, key){
   if(!obj || typeof obj !== 'object') return false;
@@ -1250,13 +1414,8 @@ function localSave(){
     // 사진(base64)을 su_pp로 분리해서 su_p 크기 감소
     const _pPhotoMap={};
     const _pNoPhoto=players.map(p=>{
-      const c={...p};
+      const c=_stripPlayerHistoryForSave(p);
       if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
-      // eloAfter(render-player-detail.js 경로에서 재계산 가능)만 제거, time은 중복 dedup에 필요하므로 유지
-      if(c.history&&c.history.length){
-        // eslint-disable-next-line no-unused-vars
-        c.history=c.history.map(({eloAfter,...h})=>h);
-      }
       return c;
     });
     // teamAMembers/teamBMembers에서 tier·race 제거 (표시 시 players 배열 조회)
@@ -1273,26 +1432,20 @@ function localSave(){
     _lsSave('su_m',maps);
     _lsSave('su_mAlias',userMapAlias);
     _lsSave('su_t',tourD);
-    _lsSave('su_mm',miniM);
-    _lsSave('su_um',univM);
-    _lsSave('su_cm',comps);
-    _lsSave('su_ck',_trimM(ckM));
+    // 경기 기록 원본은 IndexedDB 우선 저장
     _lsSave('su_cn',compNames);
     _lsSave('su_cc',curComp);
-    _lsSave('su_pro',_trimM(proM));
-    _lsSave('su_ptn',proTourneys);
     _lsSave('su_ptc',curProComp);
-    _lsSave('su_tn',tourneys);
-    _lsSave('su_ttm',_trimM(ttM));
     _lsSave('su_ttcur',_ttCurComp);
-    _lsSave('su_indm',indM);
-    _lsSave('su_gjm',gjM);
     if(typeof boardOrder!=='undefined') _lsSave('su_boardOrder',boardOrder);
     if(typeof boardPlayerOrder!=='undefined') _lsSave('su_bpo',boardPlayerOrder);
-    if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
+    try{ if(typeof _iconPersistState==='function') _iconPersistState(); }catch(e){}
     _lsSave('su_notices',notices);
     _lsSave('su_seasons',seasons);
     _lsSave('su_cal_sched',calScheduled);
+    if(window.MatchStore && typeof window.MatchStore.save==='function'){
+      window.MatchStore.save().catch(e=>console.warn('[MatchStore.save]', e && e.message ? e.message : e));
+    }
     localStorage.setItem('su_last_save_time',Date.now().toString());
     if(BLD['ck'])_lsSave('su_bld_ck',{membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]});
     if(BLD['pro'])_lsSave('su_bld_pro',{date:BLD['pro'].date||'',membersA:BLD['pro'].membersA||[],membersB:BLD['pro'].membersB||[],tierFilters:BLD['pro'].tierFilters||[],sets:BLD['pro'].sets||[]});
@@ -1314,8 +1467,8 @@ function saveCfg(){
     _lsSave('su_u',univCfg);
     _lsSave('su_m',maps);
     _lsSave('su_mAlias',userMapAlias);
-    if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
     localStorage.setItem('su_last_save_time',Date.now().toString());
+    try{ if(typeof _iconPersistState==='function') _iconPersistState(); }catch(e){}
 
     // 설정 변경도 다른 기기에 반영되도록 GitHub data.json 부분 업데이트
     try{
@@ -1581,6 +1734,16 @@ document.addEventListener('visibilitychange', ()=>{
 window.addEventListener('DOMContentLoaded', ()=>{
   _updateSyncNetworkBadge();
   try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(false); }catch(e){}
+}, { once:true });
+window.addEventListener('DOMContentLoaded', ()=>{
+  try{
+    if(window.MatchStore && typeof window.MatchStore.init==='function'){
+      window.MatchStore.init().then(()=>{
+        try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){}
+        try{ if(typeof render==='function') render(); }catch(e){}
+      });
+    }
+  }catch(e){}
 }, { once:true });
 async function save(){
   localSave();
@@ -1948,9 +2111,7 @@ function applyDrawResult(nameA, nameB, date, map, matchId, univA, univB, mode, s
   b.history.unshift({date:d,time:t,result:'무',opp:a.name,oppRace:a.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:b.elo||ELO_DEFAULT,univ:bu,mode:modeNorm,score:scoreStr});
 }
 
-function rebuildAllPlayerHistory() {
-  if(!confirm('모든 스트리머의 경기 기록을 대전 데이터에서 다시 생성합니다.\n\n⚠️ 기존 history가 초기화되고 대전 기록 기반으로 재구성됩니다.\n\n계속하시겠습니까?')) return;
-
+function _rebuildAllPlayerHistoryCore() {
   // 1. 모든 선수의 history, win, loss, points, elo 초기화
   players.forEach(p => {
     p.history = [];
@@ -2216,6 +2377,11 @@ function rebuildAllPlayerHistory() {
     });
   }
 
+  return count;
+}
+function rebuildAllPlayerHistory() {
+  if(!confirm('모든 스트리머의 경기 기록을 대전 데이터에서 다시 생성합니다.\n\n⚠️ 기존 history가 초기화되고 대전 기록 기반으로 재구성됩니다.\n\n계속하시겠습니까?')) return;
+  const count = _rebuildAllPlayerHistoryCore();
   save();
   alert(`✅ ${count}개의 경기가 스트리머 기록에 복구되었습니다!`);
   render();

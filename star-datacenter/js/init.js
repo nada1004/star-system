@@ -879,7 +879,7 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
   try{
     // (복구) 로컬 기록이 있으면 자동 불러오기 금지 (덮어쓰기 방지)
     const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
-    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey);
+    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm','su_match_store_meta_v1'].some(hasAnyLocalKey);
     if(hasRecordKeys) return;
     // su_p는 배열 또는 {v:2,p:[...]}일 수 있음
     const localPlayers = (typeof J==='function') ? J('su_p') : null;
