@@ -82,13 +82,16 @@ function openRecActionMenu(ev, opts){
   const el=_ensureSuCtxMenu();
   if(!el) return;
   const o=opts||{};
+  const _forcePersonal = ['ind','gj','progj'].includes(String(o.mode||''));
+  const _canEdit = _forcePersonal ? true : !!o.canEdit;
+  const _canDel = _forcePersonal ? true : !!o.canDel;
   const items=[];
   items.push({t:'📂 상세 보기', d:'세트/경기 상세 열기', kind:'primary', on:()=>toggleDetail(o.key)});
-  if(o.canShare && !['ind','gj','progj'].includes(String(o.mode||''))) items.push({t:'🎴 공유카드', d:'공유용 카드 생성', kind:'accent', on:()=>((window._openShareFromDetReg&&o.key&&window._openShareFromDetReg(o.key))||openShareCardFromMatch(o.mode,o.idx))});
-  if(o.canEdit) items.push({t:'✏️ 수정', d:'기록 내용 수정', kind:'normal', on:()=>openRE(o.mode,o.idx)});
+  if(o.canShare) items.push({t:'🎴 공유카드', d:'공유용 카드 생성', kind:'accent', on:()=>{ if(window._openShareFromDetReg && o.key) return window._openShareFromDetReg(o.key); }});
+  if(_canEdit) items.push({t:'✏️ 수정', d:'기록 내용 수정', kind:'normal', on:()=>((typeof o.editFn==='function') ? o.editFn() : openRE(o.mode,o.idx))});
   if(o.canMove) items.push({t:'↗ 이동', d:'다른 기록 분류로 이동', kind:'normal', on:()=>openMoveMatchPop(o._btnEl,o.mode,o.idx)});
   items.push({t:'📤 결과 복사', d:'점수와 결과 텍스트 복사', kind:'normal', on:()=>copyMatchResult(o.a,o.sa,o.b,o.sb,o.d,o.mode,o.idx)});
-  if(o.canDel) items.push({t:'🗑️ 삭제', d:'이 기록을 완전히 삭제', kind:'danger', on:()=>delRec(o.mode,o.idx)});
+  if(_canDel) items.push({t:'🗑️ 삭제', d:'이 기록을 완전히 삭제', kind:'danger', on:()=>((typeof o.delFn==='function') ? o.delFn() : delRec(o.mode,o.idx))});
 
   el.innerHTML = items.map((it,i)=>`<button type="button" class="su-ctxmenu-item ${it.kind?`is-${it.kind}`:''}" data-i="${i}">
     <span class="su-ctxmenu-item__label">${it.t}</span>

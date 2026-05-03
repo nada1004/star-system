@@ -60,10 +60,16 @@ async function _ensureRouletteLoaded(){
 }
 async function _ensureStatsLoaded(){
   await window.ensureChartJS();
-  await _loadScriptOnce('js/stats.js?v=20260502-61');
+  await _loadScriptOnce('js/sharecard-normalize.js?v=20260503-01');
+  await _loadScriptOnce('js/sharecard-theme.js?v=20260503-01');
+  await _loadScriptOnce('js/sharecard-team.js?v=20260503-08');
+  await _loadScriptOnce('js/stats.js?v=20260503-11');
 }
 window._ensureShareCardRuntime = window._ensureShareCardRuntime || async function(){
-  await _loadScriptOnce('js/stats.js?v=20260502-61');
+  await _loadScriptOnce('js/sharecard-normalize.js?v=20260503-01');
+  await _loadScriptOnce('js/sharecard-theme.js?v=20260503-01');
+  await _loadScriptOnce('js/sharecard-team.js?v=20260503-08');
+  await _loadScriptOnce('js/stats.js?v=20260503-11');
 };
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260502-01');
@@ -97,7 +103,9 @@ async function _ensureCloudBoardLoaded(){
 async function _ensureSettingsLoaded(){
   await _loadScriptOnce('js/settings/font-controls.js?v=20260502-01');
   await _loadScriptOnce('js/settings/ui-scale-controls.js?v=20260502-01');
-  await _loadScriptOnce('js/settings.js?v=20260502-41');
+  await _loadScriptOnce('js/settings/team-colors.js?v=20260503-01');
+  await _loadScriptOnce('js/settings/sharecard.js?v=20260503-01');
+  await _loadScriptOnce('js/settings.js?v=20260503-01');
 }
 function _lazyGsSetStatus(msg, color='var(--gray-l)'){
   try{

@@ -479,12 +479,16 @@ function indRecordsHTML(){
     const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
     const _sIdsJson=JSON.stringify(s.ids).replace(/"/g,"'");
+    const _indSessKey = ('inds_' + String(s.key||`${s.d||''}|${s.p1||''}|${s.p2||''}`).replace(/[^\w\-]/g,'_')).slice(0,120);
+    window._indSessCache = window._indSessCache || {};
+    window._indSessCache[_indSessKey] = {...s};
     const actionOpts = [];
     actionOpts.push(`{l:'📷 공유카드',fn:()=>openIndShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}','${_sIdsJson}')}`);
+    actionOpts.push(`{l:'✏️ 수정',fn:()=>openIndSessionPopup('${_indSessKey}')}`);
     if(isLoggedIn){
       actionOpts.push(`{l:'↗ 이동',fn:()=>{window._pendingMoveIds=${idsJson};openMoveIndPop(document.getElementById('_indActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}')||document.body,window._pendingMoveIds,'ind');}}`);
-      actionOpts.push(`{l:'🗑 삭제',fn:()=>deleteIndSession(${idsJson})}`);
     }
+    actionOpts.push(`{l:'🗑 삭제',fn:()=>deleteIndSession(${idsJson})}`);
     const _indActionBtnId = `_indActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}`;
     const actionBtn=`<button id="${_indActionBtnId}" class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openIndSessionActionPop(this,[${actionOpts.join(',')}])">⋯</button>`;
     const bulkCbInd=_indBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="ind" data-bids="${idsJson}" onchange="_indBulkCountUpdate('ind')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
@@ -661,6 +665,35 @@ function openIndSessionActionPop(btn, opts){
     }
   }catch(e){}
 }
+
+window.openIndSessionPopup = window.openIndSessionPopup || function(sessKey){
+  try{
+    const s = (window._indSessCache||{})[sessKey];
+    if(!s || !s.games || !s.games.length) return;
+    const A = s.p1 || 'A';
+    const B = s.p2 || 'B';
+    const games = (s.games||[]).map((it, idx)=>({
+      _id: `${sessKey}_s0_g${idx}`,
+      playerA: A,
+      playerB: B,
+      winner: it.wName===A ? 'A' : it.wName===B ? 'B' : '',
+      map: it.map || ''
+    })).filter(g=>g.winner);
+    const sa = games.filter(g=>g.winner==='A').length;
+    const sb = games.filter(g=>g.winner==='B').length;
+    const winner = sa>sb?'A':sb>sa?'B':'';
+    const mm = {
+      _id: sessKey, d: s.d || '', a: A, b: B, sa, sb,
+      _matchType:'ind', _usePlayerPhoto:true, _subLabel:'개인전',
+      sets:[{ label:'개인전', scoreA: sa, scoreB: sb, winner, games }]
+    };
+    const ca = (typeof gc==='function' ? (gc(A)||'#3b82f6') : '#3b82f6');
+    const cb = (typeof gc==='function' ? (gc(B)||'#ef4444') : '#ef4444');
+    const key = 'mid:'+String(sessKey);
+    if(typeof _regDet==='function') _regDet(key, mm, 'ind', A, B, ca, cb, sa>sb, sb>sa);
+    if(typeof openHistDetailModal==='function') openHistDetailModal(key);
+  }catch(e){}
+};
 
 /* ══════════════════════════════════════
    개인전 직접 입력
@@ -867,9 +900,24 @@ function indDirectSave(){
    개인전 공유카드
 ══════════════════════════════════════ */
 function openIndShareCard(p1, p2, p1wins, p2wins, date, winner, idsJson) {
+  const ids = idsJson ? JSON.parse(idsJson.replace(/'/g,'"')) : null;
+  const games = ids
+    ? indM.filter(m => ids.includes(m._id))
+    : indM.filter(m => {
+        const pair = [m.wName, m.lName].sort();
+        const pair2 = [p1, p2].sort();
+        return (m.d||'') === date && pair[0] === pair2[0] && pair[1] === pair2[1];
+      });
+  const payload = {
+    a:p1,b:p2,sa:p1wins,sb:p2wins,d:date||'',
+    _matchType:'ind',_subLabel:'개인전',_usePlayerPhoto:true,
+    sets:[{scoreA:p1wins,scoreB:p2wins,winner:winner===p1?'A':winner===p2?'B':'',games:games.map(m=>({
+      playerA:p1,playerB:p2,winner:m.wName===p1?'A':m.wName===p2?'B':'',map:m.map||''
+    })).filter(g=>g.winner)}]
+  };
+  if(typeof window._openShareMatchObjCard==='function'){ window._openShareMatchObjCard(payload); return; }
   _shareMode = 'match';
   openShareCardModal();
-  const ids = idsJson ? JSON.parse(idsJson.replace(/'/g,'"')) : null;
   const _run = () => renderIndShareCard(p1, p2, p1wins, p2wins, date, winner, ids);
   if(typeof window._shareCardDeferRender==='function') window._shareCardDeferRender(_run);
   else setTimeout(_run, 0);
@@ -1406,12 +1454,14 @@ function gjRecordsHTML(proOnly){
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
     const _gjMoveCtx=proOnly?'pro_gj':'gj';
     const _gjActionBtnId = `_gjActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}`;
+    const _gjSessKey = ('gjs_' + String((s.games.find(x=>x && x.sid)?.sid) || s.key || `${s.d||''}|${s.p1||''}|${s.p2||''}`).replace(/[^\w\-]/g,'_')).slice(0,120);
     const gjActionOpts = [];
     gjActionOpts.push(`{l:'🎴 공유카드',fn:()=>openGJShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}',{proOnly:${proOnly?'true':'false'}})}`);
+    gjActionOpts.push(`{l:'✏️ 수정',fn:()=>openGJSessionPopup('${_gjSessKey}')}`);
     if(isLoggedIn){
       gjActionOpts.push(`{l:'↗ 이동',fn:()=>{window._pendingMoveIds=${idsJson};openMoveIndPop(document.getElementById('${_gjActionBtnId}')||document.body,window._pendingMoveIds,'${_gjMoveCtx}');}}`);
-      gjActionOpts.push(`{l:'🗑 삭제',fn:()=>deleteGjSession(${idsJson})}`);
     }
+    gjActionOpts.push(`{l:'🗑 삭제',fn:()=>deleteGjSession(${idsJson})}`);
     const actionBtn=`<button id="${_gjActionBtnId}" class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openIndSessionActionPop(this,[${gjActionOpts.join(',')}])">⋯</button>`;
     const bulkDateBtn=''; // 요청: 날짜 버튼 삭제
     const bulkCbGj=_gjBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_gjBulkKey}" data-bids="${idsJson}" onchange="_indBulkCountUpdate('${_gjBulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
@@ -2149,6 +2199,20 @@ function proRankHTML(){
    끝장전 공유카드
 ══════════════════════════════════════ */
 function openGJShareCard(p1, p2, p1wins, p2wins, date, winner, opts) {
+  const proOnly = !!(opts && opts.proOnly);
+  const pair = [p1, p2].sort();
+  const games = gjM.filter(m => {
+    const mp = [m.wName, m.lName].sort();
+    return (m.d||'') === date && mp[0] === pair[0] && mp[1] === pair[1] && (!!m._proLabel===proOnly);
+  });
+  const payload = {
+    a:p1,b:p2,sa:p1wins,sb:p2wins,d:date||'',
+    _matchType:proOnly?'progj':'gj',_subLabel:proOnly?'프로리그 끝장전':'끝장전',_usePlayerPhoto:true,
+    sets:[{scoreA:p1wins,scoreB:p2wins,winner:winner===p1?'A':winner===p2?'B':'',games:games.map(m=>({
+      playerA:p1,playerB:p2,winner:m.wName===p1?'A':m.wName===p2?'B':'',map:m.map||''
+    })).filter(g=>g.winner)}]
+  };
+  if(typeof window._openShareMatchObjCard==='function'){ window._openShareMatchObjCard(payload); return; }
   _shareMode = 'match';
   openShareCardModal();
   const _run = () => renderGJShareCard(p1, p2, p1wins, p2wins, date, winner, opts);

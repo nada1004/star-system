@@ -527,7 +527,19 @@ async function openCompMatchShareCard(tnId, gi, mi){
     if(!grp) return;
     const m=grp.matches&&grp.matches[mi];
     if(!m) return;
-    window._shareMatchObj={a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,d:m.d||'',n:tn.name,sets:m.sets||[]};
+    window._shareMatchObj={
+      ...m,
+      a:m.a||'', b:m.b||'',
+      sa:m.sa, sb:m.sb,
+      d:m.d||'',
+      n:tn.name, compName:tn.name,
+      teamALabel:m.a||'', teamBLabel:m.b||'',
+      sets:m.sets||[],
+      stage:'league',
+      _matchType:'comp',
+      grpName:grp.name||'',
+      grpLetter:'ABCDEFGHIJ'[gi]||String(gi+1)
+    };
     try{ window._shareMode='match'; }catch(e){}
     if(typeof openShareCardModal==='function') openShareCardModal();
     const _run=()=>{
@@ -1497,12 +1509,15 @@ function rGrpEditInner(){
           const isDone=m.sa!=null&&m.sb!=null;
           const ca=isTier?gc((players||[]).find(p=>p.name===m.a)?.univ||''):gc(m.a||'');
           const cb=isTier?gc((players||[]).find(p=>p.name===m.b)?.univ||''):gc(m.b||'');
+          const aWin=isDone&&Number(m.sa)>Number(m.sb), bWin=isDone&&Number(m.sb)>Number(m.sa);
+          const aLogo = isTier ? '' : gUI(m.a||'', '14px');
+          const bLogo = isTier ? '' : gUI(m.b||'', '14px');
           return `<div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span style="font-size:10px;font-weight:700;color:${col}">${gl}조 ${mi+1}경기</span>
             ${m.d?`<span style="font-size:11px;font-weight:600;color:var(--text3)">${m.d.slice(2).replace(/-/g,'/')}</span>`:''}
-            <span style="background:${ca||'#888'};color:#fff;padding:1px 7px;border-radius:4px;font-size:11px">${m.a||'?'}</span>
+            <span style="display:inline-flex;align-items:center;gap:5px;background:${ca||'#888'};color:#fff;padding:${aWin?'2px 9px':'1px 7px'};border-radius:6px;font-size:${aWin?'11px':'10px'};font-weight:900;transform:${bWin?'scale(.94)':'none'};opacity:${bWin?'.76':'1'}">${aLogo}${m.a||'?'}</span>
             <span style="color:var(--gray-l)">vs</span>
-            <span style="background:${cb||'#888'};color:#fff;padding:1px 7px;border-radius:4px;font-size:11px">${m.b||'?'}</span>
+            <span style="display:inline-flex;align-items:center;gap:5px;background:${cb||'#888'};color:#fff;padding:${bWin?'2px 9px':'1px 7px'};border-radius:6px;font-size:${bWin?'11px':'10px'};font-weight:900;transform:${aWin?'scale(.94)':'none'};opacity:${aWin?'.76':'1'}">${bLogo}${m.b||'?'}</span>
             ${isDone?`<span style="font-weight:800;font-size:12px"><span class="wt">${m.sa}</span>:<span class="lt">${m.sb}</span></span>`:'<span style="font-size:10px;color:var(--gray-l)">예정</span>'}
             <button class="btn btn-b btn-xs" onclick="grpEditMatch('${tn.id}',${gi},${mi})">✏️ 결과입력</button>
             <button class="btn btn-r btn-xs" onclick="grpDelMatch('${tn.id}',${gi},${mi})">×</button>
@@ -2078,6 +2093,18 @@ function bktSaveMatch(){
 function openBktShareCard(tnId,rnd,mi){
   const m=getBktMatch(tnId,rnd,mi);if(!m||m.sa==null)return;
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
-  const _payload={a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,d:m.d||'',n:tn.name,sets:m.sets||[]};
+  const _payload={
+    ...m,
+    a:m.a||'', b:m.b||'',
+    sa:m.sa, sb:m.sb,
+    d:m.d||'',
+    n:tn.name, compName:tn.name,
+    teamALabel:m.a||'', teamBLabel:m.b||'',
+    sets:m.sets||[],
+    stage:'bkt',
+    _matchType:'comp',
+    grpName:m.rndLabel||'토너먼트',
+    grpLetter:'T'
+  };
   if(typeof window._openShareMatchObjCard==='function') window._openShareMatchObjCard(_payload);
 }

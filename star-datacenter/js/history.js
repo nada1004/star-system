@@ -496,7 +496,9 @@ function _getHistTourneyMatchObj(idx, context){
     return typeof passDateFilter!=='function'||passDateFilter(m.d||'');
   });
   all.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
-  return all[idx]||null;
+  const m = all[idx]||null;
+  if(!m) return null;
+  return {...m,_matchType:'comp',compName:m.compName||m.n||'',teamALabel:m.teamALabel||m.a||'',teamBLabel:m.teamBLabel||m.b||''};
 }
 
 
@@ -674,7 +676,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
           </div>
           <div class="rec-actions rec-actions--inline no-export">
             <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
-            ${(mode==='tt'||mode==='mini'||mode==='univm'||mode==='comp'||mode==='ck'||mode==='ind'||mode==='gj')?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`):''}
+            ${(mode==='tt'||mode==='mini'||mode==='univm'||mode==='comp'||mode==='ck'||mode==='ind'||mode==='gj'||mode==='progj')?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`):''}
             ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`)}
           </div>
         </div>
@@ -687,7 +689,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
       </div>
       <div id="det-${key}" class="rec-detail-area">
         ${_regDet(key,{...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin, i)}
-        ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; const _btn=((!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs no-export rec-share-btn" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="(window._openShareFromDetReg&&window._openShareFromDetReg('${key}'))||openShareCardFromMatch('${mode}',${i})">🎴 공유 카드</button>`:''); return _btn?`<div class="rec-detail-footer"><div class="fbar merged-subbar no-export rec-detail-footer__actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">${_btn}</div></div>`:'';})()}
+        ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; const _share=((!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs no-export rec-share-btn" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="window._openShareFromDetReg&&window._openShareFromDetReg('${key}')">🎴 공유 카드</button>`:''); const _edit=(isLoggedIn&&!isSubAdmin)?`<button class="btn btn-o btn-xs no-export" onclick="openRE('${mode}',${i})">✏️ 수정</button>`:''; const _del=(isLoggedIn&&!isSubAdmin)?`<button class="btn btn-r btn-xs no-export" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`:''; return (_share||_edit||_del)?`<div class="rec-detail-footer"><div class="fbar merged-subbar no-export rec-detail-footer__actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">${_share}${_edit}${_del}</div></div>`:'';})()}
       </div>
     </div>`;
   }
@@ -1048,6 +1050,19 @@ window._openShareFromDetReg = window._openShareFromDetReg || function(key){
       if(mode==='gj' && payload._subLabel==null) payload._subLabel='끝장전';
       if(mode==='progj' && payload._subLabel==null) payload._subLabel='프로리그 끝장전';
     }
+    try{
+      const _personal = ['ind','gj','progj'].includes(String(mode||''));
+      window._sharePopupContext = {
+        source:'history-detail',
+        key,
+        mode,
+        idx:reg.idx,
+        canEdit:_personal && !!(isLoggedIn && !isSubAdmin),
+        canDel:_personal && !!(isLoggedIn && !isSubAdmin),
+        editFn:()=>openRE(mode, reg.idx),
+        delFn:()=>delRec(mode, reg.idx)
+      };
+    }catch(e){}
     window._openShareMatchObjCard(payload);
     return true;
   }catch(e){
@@ -2539,8 +2554,9 @@ function compSummaryListHTML(context){
               idx:${rIdx>=0?rIdx:'null'},
               key:'${key}',
               canShare:false,
-              canEdit:${(rIdx>=0 && isLoggedIn && !isSubAdmin)?'true':'false'},
+              canEdit:${((rIdx>=0 || m._src==='tour') && isLoggedIn && !isSubAdmin)?'true':'false'},
               canDel:${(rIdx>=0 && isLoggedIn && !isSubAdmin)?'true':'false'},
+              editFn:${m._src==='tour' ? `()=>leagueEditMatch('${m._tnId}',${m._gi},${m._mi})` : 'null'},
               canMove:false
             })">⋯</button>
           ${m._src==='tour'?adminBtn(`<button class="btn btn-o btn-xs" onclick="leagueEditMatch('${m._tnId}',${m._gi},${m._mi})">✏️ 수정</button>`):''}
@@ -2566,7 +2582,9 @@ function _getCompMatchObj(listIdx,context){
     all.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
     window._compListCache[context]=all;
   }
-  return window._compListCache[context][listIdx]||null;
+  const m = window._compListCache[context][listIdx]||null;
+  if(!m) return null;
+  return {...m,_matchType:'comp',compName:m.compName||m.n||'',teamALabel:m.teamALabel||m.a||'',teamBLabel:m.teamBLabel||m.b||''};
 }
 
 /* ══════════════════════════════════════
@@ -2855,10 +2873,18 @@ function openHistDetailModal(key){
   const idx = (reg.idx!==undefined && reg.idx!==null) ? reg.idx : null;
   const modeKey = reg.mode || '';
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
+  const _resolveOriginalShareSource = ()=> typeof window._resolveHistoryShareSource==='function'
+    ? window._resolveHistoryShareSource(match, modeKey, idx)
+    : null;
   // 공유카드: 인덱스 기반이 어려운 케이스(comp 통합/대회 포함)에서는 match 객체로 직접 오픈
   const _buildDetailSharePayload = ()=>{
     try{
+      if(typeof window._buildHistoryDetailSharePayload==='function'){
+        return window._buildHistoryDetailSharePayload(match, modeKey, idx);
+      }
       if(!match) return null;
+      const source = _resolveOriginalShareSource();
+      if(source) return source;
       if((match.a||match.b) && match.sa!=null && match.sb!=null){
         return {...match, _matchType:(modeKey||'')};
       }
@@ -2914,14 +2940,12 @@ function openHistDetailModal(key){
       shareBtn.onclick = (e)=>{
         try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
         if(!canShare) return;
-        // comp 포함 전 모드 지원
-        if(modeKey==='ind' || modeKey==='gj' || modeKey==='progj'){
-          const _payload = _buildDetailSharePayload();
-          if(_payload){
-            _openShareByObj(_payload);
-            return;
-          }
+        const _payload = _buildDetailSharePayload();
+        if(_payload){
+          _openShareByObj(_payload);
+          return;
         }
+        // comp 포함 전 모드 지원
         if(typeof openShareCardFromMatch==='function' && idx!==null && modeKey!=='comp'){
           openShareCardFromMatch(modeKey, idx);
           return;

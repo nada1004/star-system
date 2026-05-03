@@ -1901,7 +1901,7 @@ function _scMixHex(a,b,t){
 function _scShadeHex(hex, amt){
   return _scMixHex(hex, amt>=0 ? '#ffffff' : '#000000', Math.abs(amt));
 }
-function _getShareCardPrefs(typeKey){
+const _getShareCardPrefs = window._getShareCardPrefs || function(typeKey){
   const t=String(typeKey||'').trim();
   const ov = t ? (localStorage.getItem(`su_sc_mode_${t}`)||'').trim() : '';
   const mode=(localStorage.getItem('su_sc_mode')||'campus').trim();
@@ -1920,7 +1920,7 @@ function _getShareCardPrefs(typeKey){
   const logoSize=_scClamp(parseInt(logoSizeSrc,10)||100,70,150)/100;
   const logoFit=((t ? localStorage.getItem(`su_sc_logo_fit_${t}`) : null) ?? localStorage.getItem('su_sc_logo_fit') ?? 'contain').trim();
   return { mode: ov||mode, color, fx, winbg, loserGray, profileScale, fontScale, surface, logoLayout, logoSize, logoFit };
-}
+};
 window._getShareCardPrefs = _getShareCardPrefs;
 window._scMixHex = _scMixHex;
 window._scShadeHex = _scShadeHex;
@@ -2103,6 +2103,7 @@ function renderShareCardByUniv(univName){
 function renderShareCardByMatchObj(m){
   const card=document.getElementById('share-card');if(!card)return;
   if(!m){card.innerHTML='<p style="color:var(--gray-l);padding:40px;text-align:center">경기를 선택하세요</p>';return;}
+  m = (typeof window._normalizeShareMatchObjData==='function') ? (window._normalizeShareMatchObjData(m)||m) : ((typeof _normalizeShareMatchObj==='function') ? (_normalizeShareMatchObj(m)||m) : m);
   const a=m.a||'A팀',b=m.b||'B팀';
   const _scTypeKey = (() => {
     const _mk = m._matchType||'';
@@ -2113,6 +2114,14 @@ function renderShareCardByMatchObj(m){
     return '';
   })();
   const scp=_getShareCardPrefs(_scTypeKey);
+  const _isKnownUnivName = (name)=>{
+    const n = String(name||'').trim();
+    if(!n) return false;
+    try{
+      if((window.UNIV_ICONS && window.UNIV_ICONS[n]) || (Array.isArray(window.univCfg) && window.univCfg.find(x=>x&&x.name===n&&(x.icon||window.UNIV_ICONS?.[n])))) return true;
+    }catch(e){}
+    return false;
+  };
   const _teamMode = (
     m._matchType==='mini' ||
     m._matchType==='univm' ||
@@ -2120,6 +2129,12 @@ function renderShareCardByMatchObj(m){
     m._matchType==='pro' ||
     m._matchType==='procomp-team' ||
     m._matchType==='procomp-bkt' ||
+    (m._matchType==='comp' && (
+      !!String(m.stage||'').trim() ||
+      !!String(m.grpName||'').trim() ||
+      !!String(m.grpLetter||'').trim() ||
+      (_isKnownUnivName(a) && _isKnownUnivName(b))
+    )) ||
     (m._matchType==='tt' && (
       (Array.isArray(m.teamAMembers) && m.teamAMembers.length) ||
       (Array.isArray(m.teamBMembers) && m.teamBMembers.length) ||
@@ -2129,6 +2144,9 @@ function renderShareCardByMatchObj(m){
   const _dispA = _teamMode ? (m.teamALabel || a || 'A팀') : a;
   const _dispB = _teamMode ? (m.teamBLabel || b || 'B팀') : b;
   const _collectTeamSideNames = (side) => {
+    if(typeof window._collectSharecardTeamSideNames==='function'){
+      return window._collectSharecardTeamSideNames({m, statsP}, side);
+    }
     try{
       const arr = side==='A' ? (m.teamAMembers||[]) : (m.teamBMembers||[]);
       const fromMembers = Array.isArray(arr) ? arr.map(x=>String((x&&x.name)||'').trim()).filter(Boolean) : [];
@@ -2148,6 +2166,9 @@ function renderShareCardByMatchObj(m){
     }
   };
   const _inferTeamRepPlayer = (side) => {
+    if(typeof window._inferSharecardTeamRepPlayer==='function'){
+      return window._inferSharecardTeamRepPlayer({m, statsP}, side);
+    }
     try{
       const names = _collectTeamSideNames(side);
       if(!names.length) return null;
@@ -2242,214 +2263,15 @@ function renderShareCardByMatchObj(m){
     }
     return{h:Math.round(hue*360),s:Math.round(sat*100),l:Math.round(lit*100)};
   }
-  function makeCardTheme(hex){
-    const hsl=hexToHsl(hex);
-    if(!hsl) return{
-      headerBg:'#1e293b', bodyBg:'#f8fafc',
-      accentHex:hex||'#6366f1', accentDark:'#1e293b',
-      text:'#1e293b', textDim:'rgba(30,41,59,.55)', divider:'rgba(30,41,59,.12)'
-    };
-    const {h,s,l}=hsl;
-    // 헤더: 팀 원색 (진하게)
-    const headerBg=`hsl(${h},${Math.min(s+5,90)}%,${Math.max(l-5,20)}%)`;
-    // 바디: 같은 색조 매우 연한 파스텔
-    const bodyBgL=Math.min(97, l+52);
-    const bodyBgS=Math.min(s*0.25, 18);
-    const bodyBg=`hsl(${h},${bodyBgS}%,${bodyBgL}%)`;
-    // 강조 어두운 버전
-    const accentDark=`hsl(${h},${Math.min(s+10,95)}%,${Math.max(l-15,15)}%)`;
-    const divider=`hsla(${h},${Math.min(s*0.5,35)}%,${Math.max(l-20,30)}%,.18)`;
-    const textDim=`hsla(${h},${Math.min(s*0.4,30)}%,${Math.max(l-45,12)}%,.6)`;
-    return{headerBg, bodyBg, accentHex:hex, accentDark, text:`hsl(${h},${Math.min(s*0.6,45)}%,${Math.max(l-52,8)}%)`, textDim, divider};
-  }
-
-  const theme = aWin ? makeCardTheme(ca) : bWin ? makeCardTheme(cb) : {
-    headerBg:'#334155', bodyBg:'#f8fafc',
-    accentHex:'#475569', accentDark:'#1e293b',
-    text:'#1e293b', textDim:'rgba(71,85,105,.6)', divider:'rgba(148,163,184,.2)'
-  };
-  const _variantKey = (() => {
-    if(m._matchType==='ck') return 'ck';
-    if(m._matchType==='civil') return 'civil';
-    if(m._matchType==='mini') return 'mini';
-    if(m._matchType==='univm') return 'univm';
-    if(m._matchType==='tt' && String(m.stage||'').trim()==='league') return 'tt-league';
-    if(m._matchType==='tt') return 'tt';
-    if(m._matchType==='pro' || m._matchType==='procomp-team') return 'pro';
-    if(m._matchType==='procomp-bkt') return 'procomp-bkt';
-    if(m.n || m._subLabel || m.type==='tourney' || m._matchType==='comp') return 'comp';
-    return 'default';
-  })();
-  const _variantMap = {
-    pro:{
-      outerBg:'linear-gradient(180deg,#f8fbff,#eef4ff)',
-      headerBg:'linear-gradient(135deg,#0f172a 0%,#1d4ed8 52%,#7c3aed 100%)',
-      setBg:'rgba(37,99,235,.06)',
-      setBorder:'rgba(37,99,235,.14)',
-      chipBg:'rgba(255,255,255,.16)',
-      chipBd:'rgba(255,255,255,.24)',
-      hero:'🏅 프로리그',
-      tone:'공식전 · 리그 스타일'
-    },
-    ck:{
-      outerBg:'linear-gradient(180deg,#fffaf0,#fff7ed)',
-      headerBg:'linear-gradient(135deg,#0f766e 0%,#0891b2 38%,#b45309 100%)',
-      setBg:'rgba(245,158,11,.09)',
-      setBorder:'rgba(217,119,6,.16)',
-      chipBg:'rgba(255,255,255,.17)',
-      chipBd:'rgba(255,255,255,.26)',
-      hero:'🤝 대학CK',
-      tone:'라이벌전 · 대학 대항전'
-    },
-    univm:{
-      outerBg:'linear-gradient(180deg,#ecfeff,#eff6ff)',
-      headerBg:'linear-gradient(135deg,#0f766e 0%,#0891b2 42%,#2563eb 100%)',
-      setBg:'rgba(8,145,178,.08)',
-      setBorder:'rgba(14,116,144,.16)',
-      chipBg:'rgba(255,255,255,.16)',
-      chipBd:'rgba(255,255,255,.24)',
-      hero:'🏟️ 대학대전',
-      tone:'캠퍼스 매치 · 팀 배틀'
-    },
-    mini:{
-      outerBg:'linear-gradient(180deg,#f5f3ff,#eff6ff)',
-      headerBg:'linear-gradient(135deg,#6d28d9 0%,#7c3aed 46%,#2563eb 100%)',
-      setBg:'rgba(124,58,237,.08)',
-      setBorder:'rgba(109,40,217,.16)',
-      chipBg:'rgba(255,255,255,.16)',
-      chipBd:'rgba(255,255,255,.24)',
-      hero:'⚡ 미니대전',
-      tone:'라이트 매치 · 스피드 배틀'
-    },
-    civil:{
-      outerBg:'linear-gradient(180deg,#faf5ff,#fdf2f8)',
-      headerBg:'linear-gradient(135deg,#581c87 0%,#7c3aed 46%,#db2777 100%)',
-      setBg:'rgba(219,39,119,.08)',
-      setBorder:'rgba(124,58,237,.16)',
-      chipBg:'rgba(255,255,255,.16)',
-      chipBd:'rgba(255,255,255,.24)',
-      hero:'⚔️ 시빌워',
-      tone:'라이벌 더비 · 내부전'
-    },
-    tt:{
-      outerBg:'linear-gradient(180deg,#faf5ff,#ecfeff)',
-      headerBg:'linear-gradient(135deg,#581c87 0%,#7c3aed 48%,#0f766e 100%)',
-      setBg:'rgba(124,58,237,.08)',
-      setBorder:'rgba(124,58,237,.16)',
-      chipBg:'rgba(255,255,255,.16)',
-      chipBd:'rgba(255,255,255,.24)',
-      hero:'🎯 티어대회',
-      tone:'티어전 · 브라켓 스타일'
-    },
-    'tt-league':{
-      outerBg:'linear-gradient(180deg,#faf5ff,#f0fdf4)',
-      headerBg:'linear-gradient(135deg,#4c1d95 0%,#7c3aed 44%,#047857 100%)',
-      setBg:'rgba(16,185,129,.08)',
-      setBorder:'rgba(124,58,237,.16)',
-      chipBg:'rgba(255,255,255,.16)',
-      chipBd:'rgba(255,255,255,.24)',
-      hero:'🎯 티어대회 조별리그',
-      tone:'그룹 스테이지 · 티어 리그'
-    },
-    comp:{
-      outerBg:'linear-gradient(180deg,#fff7ed,#faf5ff)',
-      headerBg:'linear-gradient(135deg,#7c2d12 0%,#d97706 44%,#7c3aed 100%)',
-      setBg:'rgba(249,115,22,.08)',
-      setBorder:'rgba(217,119,6,.16)',
-      chipBg:'rgba(255,255,255,.17)',
-      chipBd:'rgba(255,255,255,.26)',
-      hero:'🏆 대회',
-      tone:'이벤트 · 토너먼트 포스터'
-    },
-    'procomp-bkt':{
-      outerBg:'linear-gradient(180deg,#fff7ed,#faf5ff)',
-      headerBg:'linear-gradient(135deg,#92400e 0%,#d97706 44%,#4c1d95 100%)',
-      setBg:'rgba(217,119,6,.08)',
-      setBorder:'rgba(146,64,14,.16)',
-      chipBg:'rgba(255,255,255,.17)',
-      chipBd:'rgba(255,255,255,.26)',
-      hero:'🗂️ 프로리그 대회',
-      tone:'브라켓 · 결선 라운드'
-    },
-    default:{
-      outerBg:theme.bodyBg,
-      headerBg:theme.headerBg,
-      setBg:theme.divider,
-      setBorder:theme.divider,
-      chipBg:'rgba(255,255,255,.18)',
-      chipBd:'rgba(255,255,255,.3)',
-      hero:'🎮 매치',
-      tone:'스타대학 데이터 센터'
-    }
-  };
+  const theme = (typeof window._makeShareCardTheme==='function')
+    ? window._makeShareCardTheme(aWin ? ca : bWin ? cb : '#475569', {draw})
+    : ((aWin || bWin) ? {headerBg:'#1e293b', bodyBg:'#f8fafc', accentHex:(aWin?ca:cb), accentDark:'#1e293b', text:'#1e293b', textDim:'rgba(30,41,59,.55)', divider:'rgba(30,41,59,.12)'} : {headerBg:'#334155', bodyBg:'#f8fafc', accentHex:'#475569', accentDark:'#1e293b', text:'#1e293b', textDim:'rgba(71,85,105,.6)', divider:'rgba(148,163,184,.2)'});
+  const _variantKey = (typeof window._getShareCardVariantKey==='function') ? window._getShareCardVariantKey(m) : 'default';
   const winnerTeam=aWin?a:bWin?b:'';
   const winnerColor=aWin?ca:bWin?cb:'#475569';
-  let variant = _variantMap[_variantKey] || _variantMap.default;
-  const _dominantKeys=['mini','univm','civil','tt-league','comp','procomp-bkt','tt','ck','default'];
-  if(_dominantKeys.includes(_variantKey)){
-    const accentBase = _variantKey==='ck' ? '#0f172a'
-      : _variantKey==='tt' || _variantKey==='tt-league' ? '#4c1d95'
-      : _variantKey==='comp' || _variantKey==='procomp-bkt' ? '#7c2d12'
-      : _variantKey==='civil' ? '#6d28d9'
-      : _variantKey==='mini' ? '#1d4ed8'
-      : '#0f172a';
-    const winnerTone = _scHexNorm(winnerColor||theme.accentHex||'#475569');
-    const mixA = scp.mode==='campus' ? (.56 + scp.color*0.24)
-      : scp.mode==='vivid' ? (.48 + scp.color*0.18)
-      : scp.mode==='soft' ? (.36 + scp.color*0.14)
-      : scp.mode==='minimal' ? (.28 + scp.color*0.10)
-      : scp.mode==='aurora' ? (.52 + scp.color*0.20)
-      : scp.mode==='poster' ? (.62 + scp.color*0.22)
-      : scp.mode==='mono' ? (.18 + scp.color*0.06)
-      : (.42 + scp.color*0.16);
-    const mixB = scp.mode==='dark' ? '#020617'
-      : scp.mode==='soft' ? '#ffffff'
-      : scp.mode==='aurora' ? '#0f172a'
-      : scp.mode==='poster' ? '#111827'
-      : scp.mode==='mono' ? '#e5e7eb'
-      : accentBase;
-    const winAlpha = Math.round(4 + scp.winbg*28).toString(16).padStart(2,'0');
-    const outerBg = scp.mode==='dark'
-      ? `linear-gradient(180deg,#0b1220,${_scMixHex(winnerTone,'#020617',.72)})`
-      : scp.mode==='aurora'
-        ? `linear-gradient(160deg,${_scMixHex(winnerTone,'#ffffff',.72)} 0%,${_scMixHex(winnerTone,'#0ea5e9',.34)} 50%,${_scMixHex(winnerTone,'#7c3aed',.30)} 100%)`
-      : scp.mode==='poster'
-        ? `linear-gradient(180deg,${_scMixHex(winnerTone,'#111827',.20)},${_scMixHex(winnerTone,'#000000',.54)})`
-      : scp.mode==='mono'
-        ? `linear-gradient(180deg,#f8fafc,${_scMixHex(winnerTone,'#ffffff',.82)})`
-      : scp.mode==='minimal'
-        ? `linear-gradient(180deg,#ffffff,${winnerTone}0f)`
-        : `linear-gradient(180deg,#ffffff,${winnerTone}${winAlpha})`;
-    const headerBg = scp.mode==='dark'
-      ? `linear-gradient(135deg,${_scMixHex(winnerTone,'#020617',.48)} 0%,${_scMixHex(winnerTone,accentBase,.22)} 58%,#111827 100%)`
-      : scp.mode==='aurora'
-        ? `linear-gradient(135deg,${_scMixHex(winnerTone,'#06b6d4',.18)} 0%,${_scMixHex(winnerTone,'#7c3aed',.18)} 48%,${_scMixHex(winnerTone,accentBase,.22)} 100%)`
-      : scp.mode==='poster'
-        ? `linear-gradient(135deg,${_scMixHex(winnerTone,'#000000',.12)} 0%,${_scMixHex(winnerTone,accentBase,.10)} 36%,#111827 100%)`
-      : scp.mode==='mono'
-        ? `linear-gradient(135deg,#111827 0%,${_scMixHex(winnerTone,'#374151',.70)} 100%)`
-      : `linear-gradient(135deg,${_scMixHex(winnerTone,mixB,mixA)} 0%,${_scMixHex(winnerTone,accentBase,.30)} 54%,${scp.mode==='soft'?'#ffffffdd':'#ffffff22'} 100%)`;
-    variant = {
-      ...variant,
-      outerBg,
-      headerBg,
-      setBg:`${winnerTone}${Math.round(6 + scp.winbg*24 + scp.fx*6).toString(16).padStart(2,'0')}`,
-      setBorder:`${winnerTone}${Math.round(18 + scp.winbg*26 + scp.color*10).toString(16).padStart(2,'0')}`,
-      chipBg:`${winnerTone}${Math.round(26+scp.color*14).toString(16).padStart(2,'0')}`,
-      chipBd:`${winnerTone}${Math.round(42+scp.color*16).toString(16).padStart(2,'0')}`
-    };
-  } else {
-    variant = {
-      ...variant,
-      outerBg: scp.mode==='dark' ? 'linear-gradient(180deg,#0b1220,#131b2d)'
-        : scp.mode==='aurora' ? `linear-gradient(160deg,${_scMixHex(winnerColor,'#ffffff',.76)} 0%,${_scMixHex(winnerColor,'#38bdf8',.36)} 100%)`
-        : scp.mode==='poster' ? `linear-gradient(180deg,${_scMixHex(winnerColor,'#111827',.18)},#0f172a)`
-        : scp.mode==='mono' ? 'linear-gradient(180deg,#f8fafc,#e5e7eb)'
-        : variant.outerBg,
-      setBg: scp.surface==='solid' ? `${winnerColor}${Math.round(6 + scp.winbg*24).toString(16).padStart(2,'0')}` : variant.setBg,
-      setBorder: scp.surface==='solid' ? `${winnerColor}${Math.round(18 + scp.winbg*22).toString(16).padStart(2,'0')}` : variant.setBorder
-    };
-  }
+  let variant = (typeof window._buildShareCardVariant==='function')
+    ? window._buildShareCardVariant({matchObj:m, theme, winnerColor, scp, variantKey:_variantKey})
+    : { outerBg:theme.bodyBg, headerBg:theme.headerBg, setBg:theme.divider, setBorder:theme.divider, chipBg:'rgba(255,255,255,.18)', chipBd:'rgba(255,255,255,.3)', hero:'🎮 매치', tone:'스타대학 데이터 센터' };
 
   function hexToRgb(hex){
     let h=(hex||'').replace('#','');
@@ -2732,18 +2554,6 @@ function renderShareCardByMatchObj(m){
       </div>
     </div>`;
   };
-  const _teamHeaderHTML = _teamMode ? `
-    <div style="position:relative">
-      <div class="share-personal-grid" style="display:grid;grid-template-columns:${aWin?'minmax(0,1.14fr) minmax(0,.86fr)':bWin?'minmax(0,.86fr) minmax(0,1.14fr)':'minmax(0,1fr) minmax(0,1fr)'};gap:12px;align-items:center;margin-bottom:12px">
-        ${_teamPosterSide('A')}
-        ${_teamPosterSide('B')}
-      </div>
-    </div>
-  ` : '';
-  const _teamRosterHTML = _teamMode ? `<div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin-bottom:${setsHTML?'12':'0'}px">
-    ${_teamRosterPanel('A', aWin)}
-    ${_teamRosterPanel('B', bWin)}
-  </div>` : '';
   const _scoreTxt = (v, fb) => {
     const s = String((v ?? fb ?? '')).trim();
     return s==='' ? '-' : s;
@@ -2763,25 +2573,30 @@ function renderShareCardByMatchObj(m){
   const _univLogo = (u, c) => {
     try{ return (typeof univLogo==='function') ? (univLogo(u||'', c)||'') : ''; }catch(e){ return ''; }
   };
+  const _teamRender = (_teamMode && typeof window._buildSharecardTeamRender==='function')
+    ? window._buildSharecardTeamRender({m, scp, ca, cb, caRgb, cbRgb, aWin, bWin, _dispA, _dispB, statsP, univIconHTML, toHttpsUrl, _scMixHex, _tierBg, _tierFg, _raceLabel, _univLogo, setsHTML})
+    : null;
+  const _teamHeaderHTML = _teamMode ? ((_teamRender && _teamRender.headerHTML) || `
+    <div style="position:relative">
+      <div class="share-personal-grid" style="display:grid;grid-template-columns:${aWin?'minmax(0,1.14fr) minmax(0,.86fr)':bWin?'minmax(0,.86fr) minmax(0,1.14fr)':'minmax(0,1fr) minmax(0,1fr)'};gap:12px;align-items:center;margin-bottom:12px">
+        ${_teamPosterSide('A')}
+        ${_teamPosterSide('B')}
+      </div>
+    </div>
+  `) : '';
+  const _teamRosterHTML = _teamMode ? ((_teamRender && _teamRender.rosterHTML) || `<div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin-bottom:${setsHTML?'12':'0'}px">
+    ${_teamRosterPanel('A', aWin)}
+    ${_teamRosterPanel('B', bWin)}
+  </div>`) : '';
   const _loserGray = Math.max(.28, Math.min(.82, scp.loserGray||.55));
   const _loserAlpha = Math.max(.72, 1 - (_loserGray * .18));
   const _loserMetaAlpha = Math.max(.58, _loserAlpha - .12);
   const _isPersonalScoreCard = ['ind','gj','progj'].includes(String(m._matchType||''));
   const _scoreCol = (hex, isWinner) => {
     if(_isPersonalScoreCard){
-      return isWinner ? '#ffffff' : 'rgba(241,245,249,.68)';
+      return isWinner ? '#ffffff' : 'rgba(241,245,249,.74)';
     }
-    const base = String(hex||'#64748b');
-    const raw = base.replace('#','');
-    if(raw.length===6){
-      const r=parseInt(raw.slice(0,2),16)||0;
-      const g=parseInt(raw.slice(2,4),16)||0;
-      const b=parseInt(raw.slice(4,6),16)||0;
-      const lum=(0.2126*r + 0.7152*g + 0.0722*b)/255;
-      if(lum > 0.62) return isWinner ? '#0f172a' : '#334155';
-      if(lum > 0.42) return isWinner ? '#ffffff' : '#e2e8f0';
-    }
-    return isWinner ? '#ffffff' : '#f8fafc';
+    return isWinner ? '#ffffff' : 'rgba(241,245,249,.82)';
   };
   const _scoreShadow = (hex) => {
     if(_isPersonalScoreCard) return 'rgba(2,6,23,.58)';
@@ -2811,26 +2626,9 @@ function renderShareCardByMatchObj(m){
       <span style="color:${colB};text-shadow:0 2px 10px ${shB}">${_sbTxt}</span>
     </div>`;
   };
-  const _winnerBase = _scHexNorm(winnerColor||'#475569');
-  const _loserBase = _scHexNorm(aWin ? cb : bWin ? ca : _scMixHex(_winnerBase, '#94a3b8', .40));
-  const _headerMatchBg = (() => {
-    if(scp.mode==='dark'){
-      return `linear-gradient(135deg, ${_scMixHex(_winnerBase,'#0f172a',.18)} 0%, ${_scMixHex(_winnerBase,_loserBase,.18)} 58%, ${_scMixHex(_loserBase,'#111827',.54)} 100%)`;
-    }
-    if(scp.mode==='mono'){
-      return `linear-gradient(135deg, ${_scMixHex(_winnerBase,'#cbd5e1',.20)} 0%, ${_scMixHex(_winnerBase,_loserBase,.14)} 55%, ${_scMixHex(_loserBase,'#475569',.42)} 100%)`;
-    }
-    if(scp.mode==='minimal'){
-      return `linear-gradient(135deg, ${_scMixHex(_winnerBase,'#ffffff',.16)} 0%, ${_scMixHex(_winnerBase,_loserBase,.12)} 56%, ${_scMixHex(_loserBase,'#0f172a',.18)} 100%)`;
-    }
-    if(scp.mode==='poster'){
-      return `linear-gradient(135deg, ${_scMixHex(_winnerBase,'#dbeafe',.24)} 0%, ${_scMixHex(_winnerBase,_loserBase,.16)} 52%, ${_scMixHex(_loserBase,'#7c2d12',.22)} 100%)`;
-    }
-    if(scp.mode==='soft'){
-      return `linear-gradient(135deg, ${_scMixHex(_winnerBase,'#e0ecff',.28)} 0%, ${_scMixHex(_winnerBase,_loserBase,.16)} 56%, ${_scMixHex(_loserBase,'#f59e0b',.18)} 100%)`;
-    }
-    return `linear-gradient(135deg, ${_scMixHex(_winnerBase,'#dbeafe',.26)} 0%, ${_scMixHex(_winnerBase,_loserBase,.15)} 56%, ${_scMixHex(_loserBase,'#c2410c',.18)} 100%)`;
-  })();
+  const _headerMatchBg = (typeof window._buildShareCardHeaderBg==='function')
+    ? window._buildShareCardHeaderBg({winnerColor, ca, cb, aWin, bWin, scp})
+    : variant.headerBg;
   const _heroSideBlock = (side) => {
     const isA = side==='A';
     const isWin = isA ? aWin : bWin;
@@ -2878,7 +2676,7 @@ function renderShareCardByMatchObj(m){
   const _scoreBadgeBg = _isPersonalScoreCard
     ? 'linear-gradient(135deg, rgba(15,23,42,.82), rgba(51,65,85,.68))'
     : (draw ? 'rgba(255,255,255,.18)' : (aWin ? `linear-gradient(135deg, rgba(${caRgb},.34), rgba(255,255,255,.12))` : bWin ? `linear-gradient(135deg, rgba(${cbRgb},.34), rgba(255,255,255,.12))` : 'rgba(255,255,255,.16)'));
-  const _cacheKey = `match:${JSON.stringify({a:m.a,b:m.b,sa:m.sa,sb:m.sb,d:m.d,n:m.n,t:m._matchType,sub:m._subLabel,sets:m.sets,teamA:m.teamAMembers,teamB:m.teamBMembers})}`;
+  const _cacheKey = `match:${JSON.stringify({a:m.a,b:m.b,sa:m.sa,sb:m.sb,d:m.d,n:m.n,t:m._matchType,sub:m._subLabel,sets:m.sets,teamA:m.teamAMembers,teamB:m.teamBMembers,view:_teamMode?`${Date.now()}-${Math.random().toString(36).slice(2,8)}`:''})}`;
   const _personalPosterSide = (side) => {
     const isA = side==='A';
     const isWin = isA ? aWin : bWin;
@@ -2893,11 +2691,11 @@ function renderShareCardByMatchObj(m){
     const univ = player?.univ ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:${isWin?'rgba(255,255,255,.86)':loserInfoTone}">${_univLogo(player.univ||'', sideColor)}<span>${player.univ}</span></span>` : '';
     const safeName = String(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     const media = player?.photo
-      ? `<img onclick="openPlayerModal('${safeName}')" title="스트리머 상세" src="${toHttpsUrl(player.photo)}" style="width:100%;height:100%;object-fit:cover;display:block;cursor:pointer">`
-      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${rgb},.55),rgba(15,23,42,.88));">${player?.univ ? univIconHTML(player.univ,'84px') : `<span style="font-size:54px;font-weight:1000;color:#fff">${title.slice(0,1)}</span>`}</div>`;
+      ? `<img onclick="openPlayerModal('${safeName}')" title="스트리머 상세" src="${toHttpsUrl(player.photo)}" style="width:100%;height:100%;object-fit:cover;object-position:center 22%;display:block;cursor:pointer;${isWin?'':'filter:grayscale(.95) saturate(.18) brightness(.66) contrast(.95)'}">`
+      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${isWin?`linear-gradient(135deg,rgba(${rgb},.58),rgba(15,23,42,.92))`:'linear-gradient(135deg,rgba(100,116,139,.46),rgba(15,23,42,.96))'};">${player?.univ ? univIconHTML(player.univ,'84px') : `<span style="font-size:54px;font-weight:1000;color:#fff">${title.slice(0,1)}</span>`}</div>`;
     return `<div class="share-personal-side ${isWin?'is-win':'is-lose'}" style="position:relative;min-width:0;flex:1;height:${isWin?'236px':'208px'};border-radius:22px;overflow:hidden;border:1px solid ${isWin?'rgba(255,255,255,.30)':'rgba(255,255,255,.10)'};box-shadow:${isWin?'0 26px 52px rgba(2,6,23,.34)':'0 14px 28px rgba(2,6,23,.16)'};transform:${isWin?'translateY(-6px) scale(1.02)':'translateY(8px) scale(.96)'};transform-origin:center center">
       ${media}
-      <div style="position:absolute;inset:0;background:${isWin?`linear-gradient(180deg,rgba(255,255,255,.02),rgba(15,23,42,.08) 28%,rgba(15,23,42,.72))`:`linear-gradient(180deg,rgba(2,6,23,.44),rgba(2,6,23,.66) 34%,rgba(2,6,23,.95))`};pointer-events:none"></div>
+      <div style="position:absolute;inset:0;background:${isWin?`linear-gradient(180deg,rgba(255,255,255,.02),rgba(15,23,42,.06) 18%,rgba(15,23,42,.74))`:`linear-gradient(180deg,rgba(2,6,23,.22),rgba(15,23,42,.54) 26%,rgba(15,23,42,.95))`};pointer-events:none"></div>
       ${isWin?`<div class="share-personal-winmark" style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:17px;line-height:1;padding:8px;border-radius:999px;backdrop-filter:blur(8px)">🏆</div>`:''}
       <div style="position:absolute;inset:auto 0 0 0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -3058,7 +2856,7 @@ function openCompMatchShareCard(tnId, gi, mi){
   if(!grp)return;
   const m=grp.matches&&grp.matches[mi];
   if(!m)return;
-  const _payload={a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,d:m.d||'',n:tn.name,sets:m.sets||[]};
+  const _payload={...m,a:m.a||'',b:m.b||'',sa:m.sa,sb:m.sb,d:m.d||'',n:tn.name,compName:tn.name,teamALabel:m.a||'',teamBLabel:m.b||'',sets:m.sets||[],stage:'league',_matchType:'comp',grpName:grp.name||'',grpLetter:'ABCDEFGHIJ'[gi]||String(gi+1)};
   if(typeof window._openShareMatchObjCard==='function') window._openShareMatchObjCard(_payload);
 }
 
@@ -3132,6 +2930,9 @@ function _shareCardDeferRender(fn){
 }
 function _normalizeShareMatchObj(obj){
   try{
+    if(typeof window._normalizeShareMatchObjData==='function'){
+      return window._normalizeShareMatchObjData(obj || null);
+    }
     const m = obj ? {...obj} : null;
     if(!m) return null;
     if(['ind','gj','progj'].includes(String(m._matchType||''))){
@@ -3239,7 +3040,7 @@ function openShareCardModal(){
   overlay.innerHTML=`<div class="sharecard-modal-box modal-compact-box" onclick="event.stopPropagation()" style="max-width:438px;width:calc(100vw - 18px);padding:12px 12px 10px;border-radius:16px">
     <button class="sharecard-modal-close" onclick="document.getElementById('sharecard-overlay').remove()" style="z-index:2">✕</button>
     <div style="font-weight:700;font-size:14px;color:var(--blue);margin-bottom:10px;padding-right:30px">🎴 공유 카드</div>
-    <div id="modal-share-card" class="sharecard-stage" style="display:flex;justify-content:center;overflow:auto;max-height:72vh;padding-bottom:2px">
+    <div id="modal-share-card" class="sharecard-stage" style="display:flex;justify-content:center;overflow:visible;max-height:none;padding-bottom:2px">
       <div id="share-card" class="share-card-host" style="width:100%;max-width:420px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.22);font-family:'Noto Sans KR',sans-serif;display:block">
         ${_shareCardSkeletonHTML()}
       </div>
@@ -3254,6 +3055,11 @@ function openShareCardModal(){
   overlay.addEventListener('click', function(e){
     if(e.target===overlay) overlay.remove();
   });
+  try{
+    overlay.style.alignItems='flex-start';
+    overlay.style.overflowY='auto';
+    overlay.style.padding='8px 0 18px';
+  }catch(e){}
   document.body.appendChild(overlay);
   try{
     if(typeof window._bringModalToFront==='function') window._bringModalToFront(overlay);
