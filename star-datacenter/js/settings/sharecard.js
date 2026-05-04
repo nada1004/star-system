@@ -9,6 +9,10 @@
     const losergray = parseInt(document.getElementById('cfg-sc-losergray')?.value||'55',10);
     const profile = parseInt(document.getElementById('cfg-sc-profile')?.value||'100',10);
     const font = parseInt(document.getElementById('cfg-sc-font')?.value||'100',10);
+    const heroBright = parseInt(document.getElementById('cfg-sc-hero-bright')?.value||'100',10);
+    const loserPhotoBright = parseInt(document.getElementById('cfg-sc-loser-photo-bright')?.value||'88',10);
+    const titleFont = parseInt(document.getElementById('cfg-sc-title-font')?.value||'100',10);
+    const univFont = parseInt(document.getElementById('cfg-sc-univ-font')?.value||'100',10);
     const surface = (document.getElementById('cfg-sc-surface')?.value || 'glass').trim();
     const logoLayout = (document.getElementById('cfg-sc-logo-layout')?.value || 'stack').trim();
     const logoSize = parseInt(document.getElementById('cfg-sc-logo-size')?.value||'100',10);
@@ -20,6 +24,10 @@
     try{ localStorage.setItem('su_sc_losergray', String(Math.max(10,Math.min(90,losergray)))); }catch(e){}
     try{ localStorage.setItem('su_sc_profile_pct', String(Math.max(70,Math.min(145,profile)))); }catch(e){}
     try{ localStorage.setItem('su_sc_font_pct', String(Math.max(85,Math.min(135,font)))); }catch(e){}
+    try{ localStorage.setItem('su_sc_hero_bright', String(Math.max(70,Math.min(135,heroBright)))); }catch(e){}
+    try{ localStorage.setItem('su_sc_loser_photo_bright', String(Math.max(55,Math.min(120,loserPhotoBright)))); }catch(e){}
+    try{ localStorage.setItem('su_sc_title_pct', String(Math.max(80,Math.min(150,titleFont)))); }catch(e){}
+    try{ localStorage.setItem('su_sc_univ_pct', String(Math.max(80,Math.min(160,univFont)))); }catch(e){}
     try{ localStorage.setItem('su_sc_surface', ['glass','clean','solid'].includes(surface)?surface:'glass'); }catch(e){}
     try{ localStorage.setItem('su_sc_logo_layout', ['stack','inline','badge','cover'].includes(logoLayout)?logoLayout:'stack'); }catch(e){}
     try{ localStorage.setItem('su_sc_logo_size', String(Math.max(70,Math.min(150,logoSize)))); }catch(e){}
@@ -41,6 +49,10 @@
     const _losergray = parseInt(localStorage.getItem('su_sc_losergray') ?? '55',10) || 55;
     const _profile = parseInt(localStorage.getItem('su_sc_profile_pct') ?? '100',10) || 100;
     const _font = parseInt(localStorage.getItem('su_sc_font_pct') ?? '100',10) || 100;
+    const _heroBright = parseInt(localStorage.getItem('su_sc_hero_bright') ?? '100',10) || 100;
+    const _loserPhotoBright = parseInt(localStorage.getItem('su_sc_loser_photo_bright') ?? '88',10) || 88;
+    const _titleFont = parseInt(localStorage.getItem('su_sc_title_pct') ?? '100',10) || 100;
+    const _univFont = parseInt(localStorage.getItem('su_sc_univ_pct') ?? '100',10) || 100;
     const _surface = (localStorage.getItem('su_sc_surface') ?? 'glass');
     const _ovCk = (localStorage.getItem('su_sc_mode_ck') ?? 'inherit');
     const _ovPro = (localStorage.getItem('su_sc_mode_pro') ?? 'inherit');
@@ -147,6 +159,26 @@
         <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">공유카드 전용 폰트 크기</div>
         <input type="range" id="cfg-sc-font" min="85" max="135" step="5" value="${Math.max(85,Math.min(135,_font))}" oninput="document.getElementById('cfg-sc-font-v').textContent=this.value+'%'" onchange="cfgSetShareCardSettings()" style="width:100%">
         <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-sc-font-v">${Math.max(85,Math.min(135,_font))}%</span></div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">상단 프로필 이미지 밝기</div>
+        <input type="range" id="cfg-sc-hero-bright" min="70" max="135" step="5" value="${Math.max(70,Math.min(135,_heroBright))}" oninput="document.getElementById('cfg-sc-hero-bright-v').textContent=this.value+'%'" onchange="cfgSetShareCardSettings()" style="width:100%">
+        <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-sc-hero-bright-v">${Math.max(70,Math.min(135,_heroBright))}%</span></div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">패자 프로필 밝기</div>
+        <input type="range" id="cfg-sc-loser-photo-bright" min="55" max="120" step="5" value="${Math.max(55,Math.min(120,_loserPhotoBright))}" oninput="document.getElementById('cfg-sc-loser-photo-bright-v').textContent=this.value+'%'" onchange="cfgSetShareCardSettings()" style="width:100%">
+        <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-sc-loser-photo-bright-v">${Math.max(55,Math.min(120,_loserPhotoBright))}%</span></div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">상단 스트리머 이름 크기</div>
+        <input type="range" id="cfg-sc-title-font" min="80" max="150" step="5" value="${Math.max(80,Math.min(150,_titleFont))}" oninput="document.getElementById('cfg-sc-title-font-v').textContent=this.value+'%'" onchange="cfgSetShareCardSettings()" style="width:100%">
+        <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-sc-title-font-v">${Math.max(80,Math.min(150,_titleFont))}%</span></div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">상단 대학명 크기</div>
+        <input type="range" id="cfg-sc-univ-font" min="80" max="160" step="5" value="${Math.max(80,Math.min(160,_univFont))}" oninput="document.getElementById('cfg-sc-univ-font-v').textContent=this.value+'%'" onchange="cfgSetShareCardSettings()" style="width:100%">
+        <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-sc-univ-font-v">${Math.max(80,Math.min(160,_univFont))}%</span></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end">
         <div>
