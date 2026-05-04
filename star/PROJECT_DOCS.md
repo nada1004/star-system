@@ -25,6 +25,7 @@
 **데이터 저장**: localStorage 전용 (`su_` 접두사)
 **GitHub 동기화**: `data.json` 폴백 자동 로드 (init.js `autoLoad()`)
 **GitHub 저장소**: `nada1004/star-system`
+**GitHub 토큰 권장 설정**: Fine-grained Personal Access Token 사용, `nada1004/star-system` 저장소의 `Contents: Read and Write`만 부여. Classic PAT의 `repo` 전체 권한은 사용하지 않음.
 **배포 URL**: `https://nada1004.github.io/star-system/star-datacenter/index.html`
 
 ---
@@ -37,35 +38,61 @@ star-datacenter/
 ├── css/
 │   └── style.css           # 전체 스타일. CSS변수로 테마 관리
 └── js/
-    ├── constants.js        # [필수 1번째 로드] 전역 변수 선언·상수·유틸
-    ├── data.js             # revertMatchRecord() 매치 삭제 롤백
-    ├── render.js           # sw() 탭전환, render() 라우터, save(), 모달
-    ├── players.js          # rTotal() 스트리머목록, rTier() 티어순위
-    ├── vs.js               # 1:1 상대전적 검색
-    ├── history.js          # rHist() 대전기록 탭 (11개 서브탭)
-    ├── match.js            # rRace() 종족별, rUniv() 대학별 탭
-    ├── match-builder.js    # rMini() rCK() rUnivM() rPro() 경기입력
-    ├── competition.js      # rComp() 대회·토너먼트·브래킷 관리
-    ├── tier-tour.js        # rTierTour(), openGrpPasteModal() 대회붙여넣기
-    ├── stats.js            # rStats() 20+ 통계 서브탭
-    ├── calendar.js         # rCal() 캘린더 (월/주/일 뷰)
-    ├── vote.js             # rVote() 승부예측
-    ├── auth.js             # doLogin() SHA-256 인증
-    ├── init.js             # init() 앱 시작, autoLoad() GitHub 자동로드
-    ├── protection.js       # 우클릭·F12·Ctrl+U 차단
-    ├── cloud-board.js      # cloudLoad() 수동동기화, rBoard() 현황판
-    ├── search.js           # 글로벌 선수검색, 붙여넣기 파싱 전체 로직
-    ├── modal-drag.js       # 모달 드래그 이동 (PC), 모바일 경기 상세
-    └── mobile-bar.js       # 모바일 하단 내비 표시 제어
+    ├── constants.js                # [필수 1번째 로드] 전역 변수 선언·상수·유틸
+    ├── data.js                     # revertMatchRecord() 매치 삭제 롤백
+    ├── year-utils.js               # 연도 검증/연도 옵션 추출 공통 유틸
+    ├── render-core.js              # 메인 render()/renderNow(), 탭별 렌더 switch
+    ├── render-lazy-utils.js        # 지연 로딩 보조
+    ├── render-nav-lazy.js          # 탭/기능 지연 로딩 네비게이션 보조
+    ├── render-iconify-ui.js        # 이모지 → SVG 아이콘 치환
+    ├── render-capture-utils.js     # 이미지 저장/캡처 보조
+    ├── render-share-utils.js       # 공유 카드/공유 이미지 보조
+    ├── render-merged-tabs.js       # 병합 탭 렌더 보조
+    ├── render-standalone-utils.js  # 독립 렌더 유틸
+    ├── render-player-detail.js     # 선수 상세 조립 오케스트레이션
+    ├── render-player-style-prep.js # 선수 상세 스타일/필터 준비
+    ├── render-player-detail-prep.js# 선수 상세 헤더/최근기록 준비
+    ├── render-player-compute.js    # 선수 상세 통계 계산
+    ├── render-player-history-prune.js
+    ├── render-player-history-collector.js
+    ├── render-player-header.js
+    ├── render-player-stats.js
+    ├── render-player-recent-history.js
+    ├── render-player-extra-sections.js
+    ├── render-player-filters.js
+    ├── render-player-history-actions.js
+    ├── render-player-modal-entry.js
+    ├── render-match-id-prepare.js  # 외부 경기 기록 `_id` 보정
+    ├── render-univ-detail.js       # 대학 상세 조립 오케스트레이션
+    ├── render-univ-style-prep.js   # 대학 상세 스타일/헤더 준비
+    ├── render-univ-compute.js      # 대학 상세 통계 계산
+    ├── render-univ-sections.js
+    ├── render-univ-recent.js
+    ├── render-univ-actions.js
+    ├── players.js                  # rTotal() 스트리머목록, rTier() 티어순위
+    ├── vs.js                       # 1:1 상대전적 검색
+    ├── history.js                  # rHist() 대전기록 탭
+    ├── match.js                    # 연도 옵션, 기록 관련 렌더 보조
+    ├── match-builder.js            # 경기 입력/세트 빌더
+    ├── competition.js              # 대회·토너먼트·브래킷 관리
+    ├── tier-tour.js                # 티어대회/붙여넣기 로직
+    ├── auth.js                     # SHA-256 인증
+    ├── cloud-board.js              # 수동 동기화, 현황판
+    ├── init.js                     # 앱 시작, autoLoad(), 드래그 스크롤
+    ├── search.js                   # 글로벌 선수검색, 붙여넣기 파싱
+    ├── modal-drag.js               # 모달 드래그 이동 (PC)
+    └── mobile-bar.js               # 모바일 하단 내비 표시 제어
 ```
 
 ### 스크립트 로드 순서 (index.html 하단)
 ```
-constants.js → data.js → render.js → players.js → vs.js → history.js
-→ match.js → match-builder.js → competition.js → tier-tour.js
-→ stats.js → calendar.js → vote.js → auth.js → init.js
+constants.js → data.js → year-utils.js → auth.js → settings 계열
+→ competition.js → render-lazy-utils.js → render-core.js
+→ render-player-* / render-univ-* / render-share-utils 계열
+→ players.js → vs.js → history.js → match.js → match-builder.js
+→ search.js → cloud-board.js → init.js
 ```
-> ⚠️ `constants.js`가 반드시 첫 번째여야 함 (전역변수 선언)
+> ⚠️ `constants.js`는 반드시 첫 번째여야 하며, `render-core.js`는 선수/대학 상세 조립 파일보다 먼저 로드되어야 한다.
 
 ---
 
@@ -77,6 +104,7 @@ sw(tabName, el) → curTab 변경 → render() → switch(curTab) → r{탭명}(
 ```
 - `C` = `#rcont` (콘텐츠 div)
 - `T` = `#rtitle` (제목 span)
+- 실제 render 실행 코어는 현재 `render-core.js`에 있음
 
 ---
 
@@ -356,17 +384,23 @@ sw(tabName, el) → curTab 변경 → render() → switch(curTab) → r{탭명}(
 | `genderIcon(g)` | 성별 아이콘 |
 | `getStatusIconHTML(name)` | 선수 상태 이모지 HTML |
 
-### render.js
+### render-core.js
 | 함수 | 설명 |
 |------|------|
 | `sw(t, el)` | 탭 전환 + 서브탭 초기화 |
 | `render()` | 현재 탭 재렌더링 |
-| `om(id)` | 모달 열기 |
-| `cm(id)` | 모달 닫기 |
-| `openPlayerModal(name)` | 선수 상세 모달 |
-| `openUnivModal(name)` | 대학 상세 모달 |
-| `deletePlayerHist(idx, mode)` | 경기기록 삭제 + ELO 롤백 |
-| `stabs(cur, opts)` | 서브탭 버튼 그룹 HTML |
+| `renderNow()` | 즉시 렌더 실행 |
+| `_renderImpl()` | 탭별 switch + 후처리 코어 |
+
+### render-player-detail.js
+| 함수 | 설명 |
+|------|------|
+| `buildPlayerDetailHTML(player)` | 선수 상세 전체 HTML 조립 |
+
+### render-univ-detail.js
+| 함수 | 설명 |
+|------|------|
+| `buildUnivDetailHTML(univName)` | 대학 상세 전체 HTML 조립 |
 
 ### data.js
 | 함수 | 설명 |
@@ -415,8 +449,8 @@ sw(tabName, el) → curTab 변경 → render() → switch(curTab) → r{탭명}(
 | `proPasteModal` | index.html | 프로리그 전용 붙여넣기 |
 | `grpPasteModal` | index.html | 대회 세트 전용 붙여넣기 |
 | `grpMatchModal` | competition.js HTML | 대회 경기 입력 |
-| `playerModal` | render.js | 선수 상세 정보 |
-| `univModal` | render.js | 대학 상세 정보 |
+| `playerModal` | render-player-detail.js / render-player-modal-entry.js | 선수 상세 정보 |
+| `univModal` | render-univ-detail.js | 대학 상세 정보 |
 | `emModal` | players.js | 선수 추가·수정 |
 | `reModal` | history.js | 매치 기록 수정 |
 | `memberModal` | players.js | 회원 추가·수정 |
@@ -681,5 +715,5 @@ _proPasteResults      프로리그 파싱 결과
 - 경기 저장 로직 → `match.js` 의 `saveMatch`, `setBuilderHTML`
 - 대회 기능 → `competition.js` + `tier-tour.js` (pasteModal은 tier-tour.js에 있음)
 - 선수 스탯 롤백 → `data.js` 의 `revertMatchRecord`
-- 새 탭 추가 시 → `render.js` 의 `render()` switch문에 case 추가
+- 새 탭 추가 시 → `render-core.js` 의 `_renderImpl()` switch문에 case 추가
 - CSS 변수 수정 → `css/style.css` `:root` 섹션

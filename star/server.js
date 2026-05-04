@@ -1,192 +1,103 @@
 /**
- * 스타대학 데이터 센터 - 로컬/자체호스팅 서버
- * - 정적 파일 서빙 + AI봇 프록시(/api/aibot)
+ * 간단 프록시 서버 (Node 18+)
+ * - POST /api/aibot  → Groq Chat Completions 호출 후 { text } 반환
  *
- * 사용:
+ * 실행:
+ *   GROQ_API_KEY=... node server.js
+ *
+ * 또는 (env 파일 사용 시):
+ *   # Linux/macOS
+ *   export GROQ_API_KEY=...
  *   node server.js
- *   PORT=8005 node server.js
- *
- * AI봇 사용:
- * - Groq API 키는 "환경변수" 또는 ".env" 파일로 설정
- *   GROQ_API_KEY=...
- *   GROQ_MODEL=llama-3.3-70b-versatile
  */
 
 const http = require('http');
-const fs = require('fs');
-const path = require('path');
 const { URL } = require('url');
 
-// .env 지원(의존성 없이 간단 파서)
-try{
-  const envPath = path.join(__dirname, '.env');
-  if (fs.existsSync(envPath)) {
-    const raw = fs.readFileSync(envPath, 'utf8');
-    raw.split(/\r?\n/).forEach(line=>{
-      const s = line.trim();
-      if (!s || s.startsWith('#')) return;
-      const idx = s.indexOf('=');
-      if (idx <= 0) return;
-      const k = s.slice(0, idx).trim();
-      let v = s.slice(idx + 1).trim();
-      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
-      if (k && typeof process.env[k] === 'undefined') process.env[k] = v;
-    });
-    console.log('[server] .env loaded');
-  }
-}catch(e){}
-
-const PORT = parseInt(process.env.PORT || '8005', 10);
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const GROQ_API_KEY = (process.env.GROQ_API_KEY || '').trim();
-const GROQ_MODEL = (process.env.GROQ_MODEL || 'llama-3.3-70b-versatile').trim();
 
-const ROOT_DIR = __dirname; // star-datacenter_fixed_v129 폴더
-
-const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.webp': 'image/webp',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
-  '.ttf': 'font/ttf',
-};
-
-function send(res, status, body, headers = {}) {
-  const buf = Buffer.isBuffer(body) ? body : Buffer.from(String(body || ''), 'utf8');
-  res.writeHead(status, { 'Content-Length': buf.length, ...headers });
-  res.end(buf);
+function send(res, code, obj) {
+  res.statusCode = code;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify(obj));
 }
 
-function sendJson(res, status, obj) {
-  const body = JSON.stringify(obj);
-  send(res, status, body, { 'Content-Type': 'application/json; charset=utf-8' });
-}
-
-function readBody(req) {
+function readJson(req) {
   return new Promise((resolve, reject) => {
-    let data = '';
-    req.on('data', (chunk) => {
-      data += chunk;
-      if (data.length > 2_000_000) {
-        reject(new Error('Payload too large'));
-        req.destroy();
+    let body = '';
+    req.on('data', (c) => (body += c));
+    req.on('end', () => {
+      try {
+        resolve(body ? JSON.parse(body) : {});
+      } catch (e) {
+        reject(e);
       }
     });
-    req.on('end', () => resolve(data));
     req.on('error', reject);
   });
 }
 
-async function handleAIBot(req, res) {
-  if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method Not Allowed' });
-  if (!GROQ_API_KEY) return sendJson(res, 500, { error: 'Server missing GROQ_API_KEY' });
-
-  let payload = null;
-  try{
-    const raw = await readBody(req);
-    payload = raw ? JSON.parse(raw) : {};
-  }catch(e){
-    return sendJson(res, 400, { error: 'Invalid JSON body' });
+async function groqChat(messages) {
+  if (!GROQ_API_KEY) {
+    throw new Error('GROQ_API_KEY가 설정되어 있지 않습니다.');
   }
 
-  const userMessages = Array.isArray(payload.messages) ? payload.messages : null;
-  const prompt = (payload.prompt || '').toString();
-
-  const system = {
-    role: 'system',
-    content:
-      '너는 "AI봇"이다. 한국어로 대답하고, 짧고 명확하게 답한다. ' +
-      '민감정보(토큰/API키)는 요구하거나 되풀이하지 않는다.',
-  };
-
-  const messages = userMessages && userMessages.length
-    ? [system, ...userMessages.slice(-16)]
-    : [system, { role: 'user', content: prompt || '' }];
-
-  try{
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages,
-        temperature: 0.5,
-      }),
-    });
-
-    const j = await r.json().catch(() => null);
-    if (!r.ok) {
-      return sendJson(res, r.status, { error: (j && (j.error?.message || j.message)) || 'Groq API error' });
-    }
-    const text = j?.choices?.[0]?.message?.content ?? '';
-    return sendJson(res, 200, { text });
-  }catch(e){
-    return sendJson(res, 500, { error: e.message || String(e) });
-  }
-}
-
-function safePath(urlPath) {
-  // prevent path traversal
-  const decoded = decodeURIComponent(urlPath);
-  const clean = decoded.replace(/\0/g, '');
-  const p = path.normalize(clean).replace(/^(\.\.(\/|\\|$))+/, '');
-  return p;
-}
-
-function serveStatic(req, res, urlObj) {
-  let reqPath = urlObj.pathname || '/';
-  // 호환: 예전 경로(/star-datacenter_fixed_v129/...)로 들어와도 동작하게 prefix 제거
-  if (reqPath.startsWith('/star-datacenter_fixed_v129/')) {
-    reqPath = reqPath.replace('/star-datacenter_fixed_v129', '') || '/';
-  }
-  if (reqPath === '/') reqPath = '/index.html';
-  const rel = safePath(reqPath);
-  const filePath = path.join(ROOT_DIR, rel);
-
-  if (!filePath.startsWith(ROOT_DIR)) return send(res, 403, 'Forbidden', { 'Content-Type': 'text/plain; charset=utf-8' });
-  fs.stat(filePath, (err, st) => {
-    if (err || !st.isFile()) return send(res, 404, 'Not Found', { 'Content-Type': 'text/plain; charset=utf-8' });
-    const ext = path.extname(filePath).toLowerCase();
-    const type = MIME[ext] || 'application/octet-stream';
-    fs.readFile(filePath, (e, buf) => {
-      if (e) return send(res, 500, 'Internal Error', { 'Content-Type': 'text/plain; charset=utf-8' });
-      send(res, 200, buf, { 'Content-Type': type, 'Cache-Control': 'no-store' });
-    });
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      // Groq 모델은 종종 deprecation이 있으므로 최신 권장 모델 사용
+      // (이전: llama-3.1-70b-versatile → decommissioned)
+      model: 'llama-3.3-70b-versatile',
+      messages,
+      temperature: 0.2,
+      max_tokens: 700,
+    }),
   });
+
+  const j = await r.json().catch(() => null);
+  if (!r.ok) {
+    const msg = (j && (j.error?.message || j.error || j.message)) || `HTTP ${r.status}`;
+    throw new Error(msg);
+  }
+  const text = j?.choices?.[0]?.message?.content || '';
+  return text;
 }
 
 const server = http.createServer(async (req, res) => {
   try {
-    const urlObj = new URL(req.url, `http://${req.headers.host}`);
+    const u = new URL(req.url, `http://${req.headers.host}`);
 
-    // CORS/프리플라이트(개발용)
+    // CORS (로컬 개발 편의)
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    if (req.method === 'OPTIONS') return send(res, 204, '');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    if (req.method === 'OPTIONS') return res.end();
 
-    if (urlObj.pathname === '/api/aibot') return await handleAIBot(req, res);
+    if (req.method === 'POST' && u.pathname === '/api/aibot') {
+      const body = await readJson(req);
+      const messages = Array.isArray(body.messages) ? body.messages : [];
+      if (!messages.length) return send(res, 400, { error: 'messages가 비어있습니다.' });
 
-    return serveStatic(req, res, urlObj);
+      const text = await groqChat(messages);
+      return send(res, 200, { text });
+    }
+
+    // 간단 헬스체크
+    if (req.method === 'GET' && u.pathname === '/api/health') {
+      return send(res, 200, { ok: true });
+    }
+
+    return send(res, 404, { error: 'Not found' });
   } catch (e) {
-    return send(res, 500, 'Internal Error', { 'Content-Type': 'text/plain; charset=utf-8' });
+    return send(res, 500, { error: String(e?.message || e) });
   }
 });
 
 server.listen(PORT, () => {
-  console.log(`[server] http://localhost:${PORT}/`);
-  console.log(`[server] static root: ${ROOT_DIR}`);
-  console.log(`[server] aibot proxy: /api/aibot (model=${GROQ_MODEL})`);
-  if (!GROQ_API_KEY) console.log('[server] WARNING: GROQ_API_KEY is not set');
+  console.log(`[server] listening on http://localhost:${PORT}`);
 });
