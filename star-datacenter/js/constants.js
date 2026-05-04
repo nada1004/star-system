@@ -1144,7 +1144,7 @@ function _iconIdbOpen(){
   return new Promise((resolve,reject)=>{
     try{
       if(!_iconIdbAvailable()){ resolve(null); return; }
-      const req = indexedDB.open('star_datacenter_icons', 2);
+      const req = indexedDB.open('star_datacenter_icons', 1);
       req.onupgradeneeded = (ev)=>{
         const db = ev.target.result;
         if(!db.objectStoreNames.contains('icon_payloads')) db.createObjectStore('icon_payloads');
