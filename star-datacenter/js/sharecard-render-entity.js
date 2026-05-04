@@ -36,14 +36,22 @@
     const loserGray=_scClamp(parseInt(loserGraySrc,10)||55,10,90)/100;
     const profileSrc = (t ? localStorage.getItem(`su_sc_profile_pct_${t}`) : null) ?? localStorage.getItem('su_sc_profile_pct') ?? '100';
     const fontSrc = (t ? localStorage.getItem(`su_sc_font_pct_${t}`) : null) ?? localStorage.getItem('su_sc_font_pct') ?? '100';
+    const heroBrightSrc = localStorage.getItem('su_sc_hero_bright') ?? '100';
+    const loserPhotoBrightSrc = localStorage.getItem('su_sc_loser_photo_bright') ?? '88';
+    const titleFontSrc = localStorage.getItem('su_sc_title_pct') ?? '100';
+    const univFontSrc = localStorage.getItem('su_sc_univ_pct') ?? '100';
     const profileScale=_scClamp(parseInt(profileSrc,10)||100,70,145)/100;
     const fontScale=_scClamp(parseInt(fontSrc,10)||100,85,135)/100;
+    const heroBrightness=_scClamp(parseInt(heroBrightSrc,10)||100,70,135)/100;
+    const loserPhotoBrightness=_scClamp(parseInt(loserPhotoBrightSrc,10)||88,55,120)/100;
+    const titleScale=_scClamp(parseInt(titleFontSrc,10)||100,80,150)/100;
+    const univScale=_scClamp(parseInt(univFontSrc,10)||100,80,160)/100;
     const surface=(localStorage.getItem('su_sc_surface')||'glass').trim();
     const logoLayout=((t ? localStorage.getItem(`su_sc_logo_layout_${t}`) : null) ?? localStorage.getItem('su_sc_logo_layout') ?? 'stack').trim();
     const logoSizeSrc=((t ? localStorage.getItem(`su_sc_logo_size_${t}`) : null) ?? localStorage.getItem('su_sc_logo_size') ?? '100');
     const logoSize=_scClamp(parseInt(logoSizeSrc,10)||100,70,150)/100;
     const logoFit=((t ? localStorage.getItem(`su_sc_logo_fit_${t}`) : null) ?? localStorage.getItem('su_sc_logo_fit') ?? 'contain').trim();
-    return { mode: ov||mode, color, fx, winbg, loserGray, profileScale, fontScale, surface, logoLayout, logoSize, logoFit };
+    return { mode: ov||mode, color, fx, winbg, loserGray, profileScale, fontScale, heroBrightness, loserPhotoBrightness, titleScale, univScale, surface, logoLayout, logoSize, logoFit };
   };
 
   window._getShareCardPrefs = _getShareCardPrefs;

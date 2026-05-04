@@ -178,8 +178,10 @@
     overlay.id='sharecard-overlay';
     overlay.className='sharecard-modal-overlay modal-compact-overlay';
     overlay.innerHTML=`<div class="sharecard-modal-box modal-compact-box" onclick="event.stopPropagation()" style="max-width:438px;width:calc(100vw - 18px);padding:12px 12px 10px;border-radius:16px">
-    <button class="sharecard-modal-close" onclick="document.getElementById('sharecard-overlay').remove()" style="z-index:2">✕</button>
-    <div style="font-weight:700;font-size:14px;color:var(--blue);margin-bottom:10px;padding-right:30px">🎴 공유 카드</div>
+    <div class="sharecard-modal-hdr" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;cursor:move;user-select:none">
+      <div style="font-weight:700;font-size:14px;color:var(--blue);padding-right:8px">🎴 공유 카드</div>
+      <button type="button" class="sharecard-modal-close" onclick="document.getElementById('sharecard-overlay').remove()" style="z-index:2;position:static;flex-shrink:0">✕</button>
+    </div>
     <div id="modal-share-card" class="sharecard-stage" style="display:flex;justify-content:center;overflow:visible;max-height:none;padding-bottom:2px">
       <div id="share-card" class="share-card-host" style="width:100%;max-width:420px;min-height:140px;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.22);font-family:'Noto Sans KR',sans-serif;display:block">
         ${_shareCardSkeletonHTML()}

@@ -11,8 +11,8 @@
       const gameList=(s.games||[]).filter(g=>g.playerA||g.playerB);
       const games=gameList.map((g,gi)=>{
         const aW=g.winner==='A',bW=g.winner==='B';
-        const loserA=!aW&&bW?';filter:blur(1px) grayscale(.2);opacity:.6':'';
-        const loserB=!bW&&aW?';filter:blur(1px) grayscale(.2);opacity:.6':'';
+        const loserA=!aW&&bW?';filter:grayscale(.45) brightness(.92);opacity:.74':'';
+        const loserB=!bW&&aW?';filter:grayscale(.45) brightness(.92);opacity:.74':'';
         const photoA=g.playerA?getPlayerPhotoHTML(g.playerA,'28px',`flex-shrink:0${loserA}`):'';
         const photoB=g.playerB?getPlayerPhotoHTML(g.playerB,'28px',`flex-shrink:0${loserB}`):'';
         const winA=aW?`<span style="background:${ca};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';

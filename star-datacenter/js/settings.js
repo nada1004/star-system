@@ -2264,7 +2264,7 @@ window.cfgUnivOrderMove = function(i, dir){
         return;
       }
       const ensureChart = window.ensureChartJS || (()=>loader('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'));
-      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats-core-utils.js?v=20260503-01')).then(()=>loader('js/stats-tier-rank-utils.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-renderer.js?v=20260503-01')).then(()=>loader('js/stats-tierwin-renderer.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-renderer.js?v=20260503-01')).then(()=>loader('js/stats-maprank-renderer.js?v=20260503-01')).then(()=>loader('js/stats-univmatrix-renderer.js?v=20260503-01')).then(()=>loader('js/stats-advanced-renderers.js?v=20260503-01')).then(()=>loader('js/stats-export-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-normalize.js?v=20260503-01')).then(()=>loader('js/sharecard-theme.js?v=20260503-01')).then(()=>loader('js/sharecard-team.js?v=20260503-08')).then(()=>loader('js/sharecard-runtime.js?v=20260503-01')).then(()=>loader('js/sharecard-render-entity.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-helpers.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-score.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-layout.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-shell.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-sections.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-context.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-pipeline.js?v=20260503-01')).then(()=>loader('js/sharecard-match-openers.js?v=20260503-01')).then(()=>loader('js/stats.js?v=20260503-33')).then(()=>{
+      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats-core-utils.js?v=20260503-02')).then(()=>loader('js/stats-tier-rank-utils.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-renderer.js?v=20260503-01')).then(()=>loader('js/stats-tierwin-renderer.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-renderer.js?v=20260503-01')).then(()=>loader('js/stats-maprank-renderer.js?v=20260503-01')).then(()=>loader('js/stats-univmatrix-renderer.js?v=20260503-01')).then(()=>loader('js/stats-advanced-renderers.js?v=20260503-01')).then(()=>loader('js/stats-export-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-normalize.js?v=20260503-01')).then(()=>loader('js/sharecard-theme.js?v=20260503-05')).then(()=>loader('js/sharecard-team.js?v=20260504-01')).then(()=>loader('js/sharecard-runtime.js?v=20260504-01')).then(()=>loader('js/sharecard-render-entity.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-helpers.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-score.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-layout.js?v=20260503-08')).then(()=>loader('js/sharecard-render-match-shell.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-sections.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-context.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-pipeline.js?v=20260503-02')).then(()=>loader('js/sharecard-match-openers.js?v=20260503-01')).then(()=>loader('js/stats.js?v=20260503-33')).then(()=>{
         const fn = window.rStats;
         if(typeof fn === 'function' && fn !== _lazyRStats) fn(C, T);
       }).catch((e)=>{
@@ -2458,9 +2458,9 @@ window.cfgRunFullQaDryRun = function(){
     if(typeof window.setStatusIcon==='function' && typeof window.getStatusIcon==='function'){
       try{
         window.setStatusIcon('테스터', 'fire');
-        ok('드라이런: 상태 아이콘 저장', (localStorage.getItem('su_psi')||'').includes('테스터'));
+        ok('드라이런: 상태 아이콘 저장', window.getStatusIcon('테스터')==='🔥');
         window.setStatusIcon('테스터', 'none');
-        ok('드라이런: 상태 아이콘 해제', !(localStorage.getItem('su_psi')||'').includes('테스터'));
+        ok('드라이런: 상태 아이콘 해제', !window.getStatusIcon('테스터'));
       }catch(e){ ok('드라이런: 상태 아이콘', false, e.message); }
     }
 
@@ -3929,7 +3929,7 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
     <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
       <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:8px">GitHub 토큰 (관람자 수천 명 무료 지원)</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">설정 시: 저장할 때 GitHub <code>star-datacenter/data/</code> 아래 인덱스/코어/월별 기록 파일로 업로드됩니다. 다른 기기/관람자는 이를 합쳐 반영합니다.</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">설정 시: 동기화 섹션의 수동 업로드 버튼으로 GitHub <code>star-datacenter/data/</code> 아래 인덱스/코어/월별 기록 파일을 올릴 수 있습니다. 다른 기기/관람자는 이를 합쳐 반영합니다.</div>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">권장: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained token 사용. 대상 저장소는 <code>nada1004/star-system</code>, 권한은 <code>Contents: Read and Write</code>만 부여.</div>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">Classic PAT의 <code>repo</code> 전체 권한은 사용하지 마세요.</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -3937,7 +3937,7 @@ ${_scfgD('notice','📢 공지 관리')}
         <button class="btn btn-b" onclick="saveGhToken()">💾 저장</button>
         <button class="btn btn-r btn-xs" onclick="clearGhToken()">지우기</button>
       </div>
-      <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (GitHub 저장 불가, 로컬만 저장)'}</div>
+      <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (수동 GitHub 업로드 가능)':'미설정 (GitHub 저장 불가, 로컬만 저장)'}</div>
     </div>
     </div>
   </details>

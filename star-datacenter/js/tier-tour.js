@@ -4495,14 +4495,14 @@ function saveGhToken(){
   const statusEl = document.getElementById('gh-token-status');
   if (!val) { if(statusEl) statusEl.textContent = '⚠️ 토큰을 입력하세요.'; return; }
   localStorage.setItem('su_gh_token', val);
-  if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (저장 시 GitHub 자동 업로드 활성)';
+  if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (수동 GitHub 업로드 가능)';
   const input = document.getElementById('cfg-gh-token');
   if(input) input.value = '';
 }
 function clearGhToken(){
   localStorage.removeItem('su_gh_token');
   const statusEl = document.getElementById('gh-token-status');
-  if(statusEl) statusEl.textContent = '미설정 (GitHub 업로드 비활성 / 보조 신호만 수신)';
+  if(statusEl) statusEl.textContent = '미설정 (GitHub 저장 불가 / 로컬만 저장)';
 }
 
 function _setPdFontSize(size){

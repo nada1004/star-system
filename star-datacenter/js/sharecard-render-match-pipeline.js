@@ -41,8 +41,9 @@
     const univIconHTML = (name, size)=>(typeof window._buildShareMatchUnivIconHTML==='function')
       ? window._buildShareMatchUnivIconHTML({ name, size, scp, toHttpsUrl })
       : `<span style="display:inline-flex;width:${size||'40px'};height:${size||'40px'};align-items:center;justify-content:center;color:#fff">🏫</span>`;
+    const matchTypeLabel = ['ind','gj','progj'].includes(String(m&&m._matchType||'')) ? '일반' : variant.hero.replace(/^[^\s]+\s*/,'');
     const summaryCards = [
-      {label:'매치 타입', value:variant.hero.replace(/^[^\s]+\s*/,''), tone:winnerColor},
+      {label:'매치 타입', value:matchTypeLabel, tone:winnerColor},
       {label:'승부 결과', value:draw?'무승부':winnerTeam||'결과 대기', tone:draw?'#64748b':winnerColor},
       {label:'세트/경기', value:`${(m.sets||[]).length||1}세트 · ${(Array.isArray(m.sets)?m.sets.reduce((n,s)=>n+((s&&s.games)||[]).filter(g=>g.playerA||g.playerB).length,0):0)||1}경기`, tone:theme.accentDark}
     ];
@@ -76,7 +77,7 @@
       ? window._buildShareMatchCacheKey({ m, teamMode })
       : `match:${JSON.stringify({a:m.a,b:m.b,sa:m.sa,sb:m.sb,d:m.d,n:m.n,t:m._matchType,sub:m._subLabel,sets:m.sets,teamA:m.teamAMembers,teamB:m.teamBMembers,view:teamMode?`${Date.now()}-${Math.random().toString(36).slice(2,8)}`:''})}`;
     const personalPosterSide = (side) => (typeof window._buildShareMatchPersonalPosterSide==='function')
-      ? window._buildShareMatchPersonalPosterSide({ side, aWin, bWin, a, b, ca, cb, caRgb, cbRgb, statsP, pa, pb, _dispA:dispA, _dispB:dispB, _loserGray:loserGray, _tierBg:tierBg, _tierFg:tierFg, _raceLabel:raceLabel, _univLogo:univLogo, toHttpsUrl, univIconHTML })
+      ? window._buildShareMatchPersonalPosterSide({ side, aWin, bWin, a, b, ca, cb, caRgb, cbRgb, statsP, pa, pb, _dispA:dispA, _dispB:dispB, _loserGray:loserGray, _tierBg:tierBg, _tierFg:tierFg, _raceLabel:raceLabel, _univLogo:univLogo, toHttpsUrl, univIconHTML, m, scp })
       : '';
     const personalMetaBar = (typeof window._buildShareMatchPersonalMetaBar==='function')
       ? window._buildShareMatchPersonalMetaBar({ m, variant, scoreInlineHTML })

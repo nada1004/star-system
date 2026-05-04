@@ -56,22 +56,28 @@
   window._buildSharecardTeamRender = function(ctx){
     try{
       const {m, scp, ca, cb, caRgb, cbRgb, aWin, bWin, _dispA, _dispB, statsP, univIconHTML, toHttpsUrl, _scMixHex, _tierBg, _tierFg, _raceLabel, _univLogo} = ctx || {};
+      const photoMap = (window.playerPhotos && typeof window.playerPhotos==='object') ? window.playerPhotos : {};
       const collect = side => window._collectSharecardTeamSideNames ? window._collectSharecardTeamSideNames({m, statsP}, side) : [];
+      const hydratePlayer = (name, base)=>{
+        const key = String(name||'').trim();
+        const hit = key && typeof statsP==='function' ? (statsP(key)||null) : null;
+        const src = hit || base || {};
+        const photo = (src && src.photo) || (key && photoMap[key]) || '';
+        return {
+          name: String((src&&src.name)||key||'').trim(),
+          univ: String((src&&src.univ)||'').trim(),
+          race: String((src&&src.race)||'').trim(),
+          tier: String((src&&src.tier)||'').trim(),
+          photo: photo || ''
+        };
+      };
       const buildMembers = (side)=>{
         const arrRaw = side==='A' ? (m.teamAMembers||[]) : (m.teamBMembers||[]);
         const arr = (Array.isArray(arrRaw) && arrRaw.length) ? arrRaw : collect(side).map(name=>{
-          const p = typeof statsP==='function' ? (statsP(name)||null) : null;
-          return p ? {name:p.name, univ:p.univ, race:p.race, photo:p.photo} : {name};
+          const p = hydratePlayer(name, null);
+          return p.name ? p : {name};
         });
-        return arr.map(mem=>{
-          const p = mem && mem.name ? (statsP(mem.name) || mem) : (mem || {});
-          return {
-            name: String((p&&p.name)||'').trim(),
-            univ: String((p&&p.univ)||'').trim(),
-            race: String((p&&p.race)||'').trim(),
-            photo: p&&p.photo ? p.photo : ''
-          };
-        }).filter(x=>x.name || x.univ || x.photo);
+        return arr.map(mem=>hydratePlayer(mem&&mem.name, mem)).filter(x=>x.name || x.univ || x.photo);
       };
       const membersA = buildMembers('A');
       const membersB = buildMembers('B');
@@ -81,9 +87,13 @@
         const last = window.__sharecardRepPickState[key] || '';
         const pool = arr.filter(x=>String(x?.name||'').trim() !== last);
         const src = pool.length ? pool : arr;
-        const idx = Math.floor(Math.random() * src.length);
+        window.__sharecardRepPickRot = window.__sharecardRepPickRot || {};
+        const rot = Number(window.__sharecardRepPickRot[key] || 0);
+        const seed = (Date.now() + Math.floor(Math.random()*997)) % src.length;
+        const idx = src.length > 1 ? ((rot + seed) % src.length) : 0;
         const chosen = src[idx] || src[0] || null;
         window.__sharecardRepPickState[key] = String(chosen?.name||'').trim();
+        window.__sharecardRepPickRot[key] = rot + 1;
         return chosen;
       };
       const preA = null;
@@ -112,38 +122,98 @@
       const teamLogoInner = Math.round(44*scp.logoSize);
       const teamLogoBox = Math.round(58*scp.logoSize);
       const teamHeaderLayout = ['stack','inline','badge','cover'].includes(String(scp.logoLayout||'')) ? String(scp.logoLayout) : 'stack';
+      const matchType = String(m&&m._matchType||'');
+      const hideTopUnivMeta = ['mini','univ','comp','ck','tt','pro','progj','procomp-team','procomp-bkt'].includes(matchType);
+      const hasUnivLogo = (name)=>{
+        try{
+          const key = String(name||'').trim();
+          if(!key) return false;
+          const cfgList = Array.isArray(window.univCfg) && window.univCfg.length
+            ? window.univCfg
+            : (typeof getAllUnivs==='function' ? getAllUnivs() : []);
+          return !!((window.UNIV_ICONS && window.UNIV_ICONS[key]) || (cfgList.find(x=>x&&x.name===key&&(x.icon||x.img||window.UNIV_ICONS?.[key]))));
+        }catch(e){
+          return false;
+        }
+      };
+      const getUnivLogoUrl = (name)=>{
+        try{
+          const key = String(name||'').trim();
+          if(!key) return '';
+          const cfgList = Array.isArray(window.univCfg) && window.univCfg.length
+            ? window.univCfg
+            : (typeof getAllUnivs==='function' ? getAllUnivs() : []);
+          const cfg = (cfgList.find(x=>x&&x.name===key) || {});
+          return String((window.UNIV_ICONS && window.UNIV_ICONS[key]) || cfg.icon || cfg.img || '').trim();
+        }catch(e){
+          return '';
+        }
+      };
+      const directUnivIconHTML = (name, size)=>{
+        try{
+          const url = getUnivLogoUrl(name);
+          if(!url) return '';
+          const s = String(size||'40px');
+          return `<img src="${toHttpsUrl(url)}" style="width:${s};height:${s};object-fit:contain;display:block" onerror="this.style.display='none'">`;
+        }catch(e){
+          return '';
+        }
+      };
+      const resolveSideLogoUniv = (side, repPlayer)=>{
+        try{
+          const sideTitle = side==='A' ? _dispA : _dispB;
+          const teamUniv = String(sideTitle||'').trim();
+          const repUniv = String((repPlayer&&repPlayer.univ) || '').trim();
+          const sideMembers = (side==='A' ? membersA : membersB) || [];
+          const memberUniv = sideMembers
+            .map(mem=>hydratePlayer(mem&&mem.name, mem))
+            .map(p=>String((p&&p.univ)||'').trim())
+            .find(v=>v && hasUnivLogo(v)) || '';
+          if(teamUniv && hasUnivLogo(teamUniv)) return teamUniv;
+          if(repUniv && hasUnivLogo(repUniv)) return repUniv;
+          if(memberUniv) return memberUniv;
+          return teamUniv || repUniv || '';
+        }catch(e){
+          return '';
+        }
+      };
       const teamRepIconHTML = (side, win)=>{
         const rep = pickRep(side);
+        const repPlayer = hydratePlayer(rep&&rep.name, rep);
         const sOuter = `${teamLogoOuter}px`;
         const col = side==='A' ? ca : cb;
         const rgb = side==='A' ? caRgb : cbRgb;
         const sideTitle = side==='A' ? _dispA : _dispB;
-        const panelBg = win?`rgba(${rgb},.38)`:`rgba(${rgb},.14)`;
-        const ring = win ? 'box-shadow:0 0 0 3px rgba(255,255,255,.85),0 6px 22px rgba(0,0,0,.32);' : 'opacity:.72;box-shadow:0 0 0 2px rgba(255,255,255,.2);';
+        const logoUniv = resolveSideLogoUniv(side, repPlayer);
+        const repUnivColor = logoUniv && typeof window.gc==='function' ? (window.gc(logoUniv) || col) : col;
+        const loseGray = Math.round((scp.loserGray||.55)*100);
+        const panelBg = win?`rgba(${rgb},.28)`:`rgba(${rgb},.12)`;
+        const ring = `box-shadow:0 0 0 1px rgba(255,255,255,.18),0 6px 16px rgba(0,0,0,.10);`;
         if(teamHeaderLayout==='cover'){
-          const repPlayer = rep && rep.name ? (statsP(rep.name) || rep) : null;
           const repUniv = String((repPlayer&&repPlayer.univ) || sideTitle || '').trim();
           const iconSize = Math.round(146*scp.logoSize);
-          return `<div style="position:relative;width:100%;height:${Math.round(164*scp.logoSize)}px;border-radius:22px;overflow:hidden;background:linear-gradient(135deg,${_scMixHex(col,'#ffffff',.82)},${_scMixHex(col,'#0f172a',.26)});border:1px solid ${win?'rgba(255,255,255,.36)':'rgba(255,255,255,.16)'};box-shadow:${win?'0 18px 38px rgba(2,6,23,.22)':'0 10px 24px rgba(2,6,23,.12)'};${win?'':'filter:saturate(.82) brightness(.92);'}">
-            <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 38%, rgba(255,255,255,.18), transparent 44%), linear-gradient(180deg, rgba(255,255,255,.08), rgba(15,23,42,.08) 52%, rgba(15,23,42,.24));pointer-events:none"></div>
+          return `<div style="position:relative;width:100%;height:${Math.round(164*scp.logoSize)}px;border-radius:22px;overflow:hidden;background:linear-gradient(135deg,${_scMixHex(col,'#ffffff',.86)},${_scMixHex(col,'#0f172a',.18)});border:1px solid rgba(255,255,255,.18);box-shadow:0 8px 18px rgba(2,6,23,.10);">
+            <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 38%, rgba(255,255,255,.22), transparent 44%), linear-gradient(180deg, rgba(255,255,255,.06), rgba(15,23,42,.04) 52%, rgba(15,23,42,.14));pointer-events:none"></div>
             <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:10px">
-              <div style="width:${iconSize}px;height:${iconSize}px;display:flex;align-items:center;justify-content:center;opacity:${win?'.96':'.72'};transform:scale(${win?'1':'0.94'})">
-                ${repUniv ? univIconHTML(repUniv,`${iconSize}px`) : `<span style="color:#fff;font-weight:1000;font-size:${Math.round(44*scp.logoSize)}px">${side}</span>`}
+              <div style="width:${iconSize}px;height:${iconSize}px;display:flex;align-items:center;justify-content:center;opacity:${win?'.96':'.72'};transform:scale(${win?'1':'0.94'});border-radius:24px;overflow:hidden">
+                ${repPlayer && repPlayer.photo
+                  ? `<img src="${toHttpsUrl(repPlayer.photo)}" style="width:100%;height:100%;object-fit:cover;display:block;filter:${win?`brightness(${scp.heroBrightness||1})`:`grayscale(${loseGray}%) brightness(${scp.loserPhotoBrightness||.92})`}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center">${(!hideTopUnivMeta && logoUniv && hasUnivLogo(logoUniv)) ? univIconHTML(logoUniv,`${iconSize}px`) : `<span style="color:#fff;font-weight:1000;font-size:${Math.round(44*scp.logoSize)}px">${sideTitle.slice(0,1)||side}</span>`}</div>`
+                  : ((!hideTopUnivMeta && logoUniv && hasUnivLogo(logoUniv)) ? univIconHTML(logoUniv,`${iconSize}px`) : `<span style="color:#fff;font-weight:1000;font-size:${Math.round(44*scp.logoSize)}px">${sideTitle.slice(0,1)||side}</span>`)}
               </div>
             </div>
           </div>`;
         }
-        if(rep && rep.name){
-          const p = statsP(rep.name) || rep;
+        if(repPlayer && repPlayer.name){
+          const p = repPlayer;
           if(p && p.photo){
             return `<div style="position:relative;width:${sOuter};height:${sOuter};border-radius:var(--su_profile_radius,50%);margin:0 auto 8px;overflow:hidden;${ring}">
-              <img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover;filter:${win?`brightness(${scp.heroBrightness||1})`:`grayscale(${loseGray}%) brightness(${scp.loserPhotoBrightness||.92})`}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
               <div style="display:none;position:absolute;inset:0;border-radius:16px;background:rgba(${rgb},.22);align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);':''}">
-                ${univIconHTML(p.univ||'', `${teamLogoInner}px`)}
+                ${hasUnivLogo(p.univ||'') ? univIconHTML(p.univ||'', `${teamLogoInner}px`) : `<span style="color:#fff;font-weight:1000;font-size:${Math.round(20*scp.logoSize)}px">${sideTitle.slice(0,1)||side}</span>`}
               </div>
             </div>`;
           }
-          if(p && p.univ){
+          if(p && p.univ && !hideTopUnivMeta && hasUnivLogo(p.univ)){
             return `<div style="width:${teamLogoBox}px;height:${teamLogoBox}px;border-radius:16px;background:${panelBg};margin:${teamHeaderLayout==='stack'?'0 auto 8px':'0'};display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden">
               ${univIconHTML(p.univ,`${Math.round(40*scp.logoSize)}px`)}
             </div>`;
@@ -152,7 +222,7 @@
         return `<div style="width:${teamLogoBox}px;height:${teamLogoBox}px;border-radius:16px;background:${panelBg};margin:${teamHeaderLayout==='stack'?'0 auto 8px':'0'};display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden;color:#fff;font-weight:1000;font-size:${Math.round(22*scp.logoSize)}px">${side}</div>`;
       };
       const teamMiniMemberCell = (side, mem, idx)=>{
-        const p = mem && mem.name ? (statsP(mem.name) || mem) : (mem || {});
+        const p = hydratePlayer(mem&&mem.name, mem);
         const rgb = side==='A' ? caRgb : cbRgb;
         const name = String((p && p.name) || '').trim() || `${idx+1}번`;
         const race = String((p && p.race) || '').trim();
@@ -182,19 +252,37 @@
         const col = isA ? ca : cb;
         const rgb = isA ? caRgb : cbRgb;
         const rep = pickRep(side);
-        const repPlayer = rep && rep.name ? (statsP(rep.name) || rep) : null;
+        const repPlayer = hydratePlayer(rep&&rep.name, rep);
         const title = isA ? _dispA : _dispB;
-        const repUniv = String((repPlayer&&repPlayer.univ) || title || '').trim();
+        const sideMembers = (isA ? membersA : membersB) || [];
+        const logoUniv = resolveSideLogoUniv(side, repPlayer);
         const safeRepName = escName((repPlayer&&repPlayer.name)||'');
+        const repUnivColor = logoUniv && typeof window.gc==='function' ? (window.gc(logoUniv) || col) : col;
+        const loseGray = Math.round((scp.loserGray||.55)*100);
+        const repLogoTone = isWin ? '' : 'filter:grayscale(1) brightness(.82) contrast(.9);opacity:.82;';
+        const repName = String((repPlayer&&repPlayer.name) || (sideMembers[0]&&sideMembers[0].name) || '').trim();
+        const memberNames = sideMembers.map(x=>String((x&&x.name)||'').trim()).filter(Boolean);
+        const remainCount = Math.max(0, memberNames.filter(n=>n!==repName).length);
+        const repSummary = repName ? `${repName}${remainCount>0?` 외 ${remainCount}명`:''}` : (memberNames.length?`참가자 ${memberNames.length}명`:'');
+        const showRepSummary = !['procomp-team','procomp-bkt'].includes(matchType);
         const media = repPlayer?.photo
-          ? `<img ${safeRepName?`onclick="openPlayerModal('${safeRepName}')"`:''} title="스트리머 상세" src="${toHttpsUrl(repPlayer.photo)}" style="width:100%;height:100%;object-fit:cover;display:block;cursor:${safeRepName?'pointer':'default'}">`
-          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${rgb},.62),rgba(15,23,42,.92));">${repUniv ? univIconHTML(repUniv,'156px') : `<span style="font-size:74px;font-weight:1000;color:#fff">${title.slice(0,1)}</span>`}</div>`;
-        return `<div class="share-team-poster-side ${isWin?'is-win':'is-lose'}" style="position:relative;min-width:0;flex:1;height:${isWin?'236px':'208px'};border-radius:22px;overflow:hidden;border:1px solid ${isWin?'rgba(255,255,255,.34)':'rgba(255,255,255,.14)'};box-shadow:${isWin?'0 26px 52px rgba(2,6,23,.34)':'0 14px 28px rgba(2,6,23,.18)'};transform:${isWin?'translateY(-6px) scale(1.02)':'translateY(8px) scale(.96)'};transform-origin:center center">
+          ? `<img ${safeRepName?`onclick="openPlayerModal('${safeRepName}')"`:''} title="스트리머 상세" src="${toHttpsUrl(repPlayer.photo)}" style="width:100%;height:100%;object-fit:cover;display:block;cursor:${safeRepName?'pointer':'default'};filter:${isWin?`brightness(${scp.heroBrightness||1})`:`grayscale(${loseGray}%) brightness(${scp.loserPhotoBrightness||.92})`}">`
+          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(${rgb},.62),rgba(15,23,42,.92));"><span style="font-size:74px;font-weight:1000;color:#fff">${title.slice(0,1)}</span></div>`;
+        const titleColor = hideTopUnivMeta ? (isWin ? '#ffffff' : 'rgba(226,232,240,.78)') : (isWin ? repUnivColor : 'rgba(203,213,225,.78)');
+        const titleLong = title.length >= 7;
+        const logoBox = isWin ? (titleLong?56:52) : (titleLong?29:27);
+        const logoSize = isWin ? (titleLong?'52px':'48px') : (titleLong?'27px':'23px');
+        const logoMarkup = (!hideTopUnivMeta && logoUniv) ? directUnivIconHTML(logoUniv, logoSize) : '';
+        const titleStack = !!String(logoMarkup||'').trim();
+        const summaryColor = ['ck','tt','pro'].includes(matchType) ? (isWin?'rgba(255,255,255,.92)':'rgba(203,213,225,.78)') : (isWin?repUnivColor:'rgba(203,213,225,.78)');
+        const logoTitleGap = 0;
+        return `<div class="share-team-poster-side ${isWin?'is-win':'is-lose'}" style="position:relative;min-width:0;flex:1;height:${isWin?'248px':'201px'};border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 20px rgba(2,6,23,.10);transform:translateY(${isWin?'-3':'2'}px) scale(${isWin?'1.043':'.971'});transform-origin:center center">
           ${media}
-          <div style="position:absolute;inset:0;background:${isWin?`linear-gradient(180deg,rgba(2,6,23,.12),rgba(15,23,42,.18) 24%,rgba(15,23,42,.80))`:`linear-gradient(180deg,rgba(2,6,23,.52),rgba(2,6,23,.74) 34%,rgba(2,6,23,.97))`};pointer-events:none"></div>
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,6,23,.05),rgba(15,23,42,.10) 24%,rgba(15,23,42,.42));pointer-events:none"></div>
           ${isWin?`<div style="position:absolute;top:10px;right:10px;z-index:2;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:17px;line-height:1;padding:8px;border-radius:999px;backdrop-filter:blur(8px)">🏆</div>`:''}
-          <div style="position:absolute;inset:auto 0 0 0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:7px">
-            <div style="font-size:${isWin?'26px':'22px'};font-weight:${isWin?1000:900};color:#fff;line-height:1.05;text-shadow:0 5px 18px rgba(0,0,0,.54),0 1px 0 rgba(0,0,0,.22);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
+          <div style="position:absolute;inset:auto 0 0 0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${titleStack?logoTitleGap:4}px;min-width:0;font-size:${Math.round((isWin?'28':'20')*(scp.titleScale||1))}px;font-weight:${isWin?1000:900};color:${titleColor};line-height:1.05;text-shadow:0 5px 18px rgba(0,0,0,.54),0 1px 0 rgba(0,0,0,.22);white-space:normal;overflow:visible;text-overflow:clip;text-align:center">${titleStack?`<span style="display:inline-flex;align-items:flex-end;justify-content:center;width:${logoBox}px;height:${logoBox}px;flex-shrink:0;background:transparent;border:none;box-shadow:none;line-height:1;${repLogoTone}">${logoMarkup}</span>`:''}<span style="min-width:0;white-space:normal;word-break:keep-all;overflow-wrap:anywhere">${title}</span></div>
+            ${showRepSummary&&repSummary?`<div style="font-size:${isWin?12:11}px;font-weight:800;color:${summaryColor};line-height:1.2;text-align:center;white-space:normal;overflow-wrap:anywhere;text-shadow:0 2px 10px rgba(0,0,0,.22)">${repSummary}</div>`:''}
             ${repNote(side)?`<div><span style="display:inline-flex;align-items:center;gap:4px;background:${isWin?`rgba(${rgb},.38)`:'rgba(255,255,255,.12)'};border:1px solid ${isWin?'rgba(255,255,255,.34)':'rgba(255,255,255,.14)'};color:#fff;font-size:10px;font-weight:900;padding:3px 8px;border-radius:999px">${repNote(side)}</span></div>`:''}
           </div>
         </div>`;

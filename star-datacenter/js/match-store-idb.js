@@ -1,8 +1,10 @@
 (function(){
   const MATCH_DB_NAME='star_datacenter_matches';
-  const MATCH_DB_VER=1;
+  const MATCH_DB_VER=3;
   const MATCH_STORE='match_payloads';
   const MATCH_KEY='main';
+  const PLAYER_STORE='player_payloads';
+  const PLAYER_KEY='main';
   const MATCH_META_KEY='su_match_store_meta_v1';
   const MATCH_LEGACY_KEYS=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm'];
 
@@ -27,6 +29,32 @@
       gjM:Array.isArray(s.gjM)?s.gjM:d.gjM
     };
   }
+  function _hasAnyRecordPayload(v){
+    const d=_matchStoreNormalize(v);
+    return ['miniM','univM','comps','ckM','proM','proTourneys','tourneys','ttM','indM','gjM']
+      .some(k=>Array.isArray(d[k]) && d[k].length>0);
+  }
+  function _mergePreferCurrent(payload, current){
+    const p=_matchStoreNormalize(payload);
+    const c=_matchStoreNormalize(current);
+    const keys=['miniM','univM','comps','ckM','proM','proTourneys','tourneys','ttM','indM','gjM'];
+    const out={};
+    keys.forEach(k=>{
+      out[k] = (Array.isArray(c[k]) && c[k].length>0) ? c[k] : p[k];
+    });
+    return _matchStoreNormalize(out);
+  }
+  function _playerStoreNormalize(v){
+    const s=v||{};
+    return {
+      players:Array.isArray(s.players)?s.players:[],
+      playerPhotos:(s.playerPhotos && typeof s.playerPhotos==='object') ? s.playerPhotos : {}
+    };
+  }
+  function _hasAnyPlayerPayload(v){
+    const d=_playerStoreNormalize(v);
+    return Array.isArray(d.players) && d.players.length>0;
+  }
   function _trimTeamMembers(arr){
     const src=Array.isArray(arr)?arr:[];
     return src.map(m=>{
@@ -37,19 +65,72 @@
       return r;
     });
   }
+  function _readGlobalLexical(name, fallback){
+    try{
+      switch(name){
+        case 'miniM': return (typeof miniM!=='undefined') ? miniM : fallback;
+        case 'univM': return (typeof univM!=='undefined') ? univM : fallback;
+        case 'comps': return (typeof comps!=='undefined') ? comps : fallback;
+        case 'ckM': return (typeof ckM!=='undefined') ? ckM : fallback;
+        case 'proM': return (typeof proM!=='undefined') ? proM : fallback;
+        case 'proTourneys': return (typeof proTourneys!=='undefined') ? proTourneys : fallback;
+        case 'tourneys': return (typeof tourneys!=='undefined') ? tourneys : fallback;
+        case 'ttM': return (typeof ttM!=='undefined') ? ttM : fallback;
+        case 'indM': return (typeof indM!=='undefined') ? indM : fallback;
+        case 'gjM': return (typeof gjM!=='undefined') ? gjM : fallback;
+        default: return fallback;
+      }
+    }catch(e){
+      return fallback;
+    }
+  }
+  function _writeGlobalLexical(name, value){
+    try{
+      switch(name){
+        case 'miniM': if(typeof miniM!=='undefined') miniM=value; break;
+        case 'univM': if(typeof univM!=='undefined') univM=value; break;
+        case 'comps': if(typeof comps!=='undefined') comps=value; break;
+        case 'ckM': if(typeof ckM!=='undefined') ckM=value; break;
+        case 'proM': if(typeof proM!=='undefined') proM=value; break;
+        case 'proTourneys': if(typeof proTourneys!=='undefined') proTourneys=value; break;
+        case 'tourneys': if(typeof tourneys!=='undefined') tourneys=value; break;
+        case 'ttM': if(typeof ttM!=='undefined') ttM=value; break;
+        case 'indM': if(typeof indM!=='undefined') indM=value; break;
+        case 'gjM': if(typeof gjM!=='undefined') gjM=value; break;
+      }
+    }catch(e){}
+  }
   function _snapshotFromGlobals(){
     return _matchStoreNormalize({
-      miniM:window.miniM||[],
-      univM:window.univM||[],
-      comps:window.comps||[],
-      ckM:_trimTeamMembers(window.ckM||[]),
-      proM:_trimTeamMembers(window.proM||[]),
-      proTourneys:window.proTourneys||[],
-      tourneys:window.tourneys||[],
-      ttM:_trimTeamMembers(window.ttM||[]),
-      indM:window.indM||[],
-      gjM:window.gjM||[]
+      miniM:_readGlobalLexical('miniM', window.miniM||[]),
+      univM:_readGlobalLexical('univM', window.univM||[]),
+      comps:_readGlobalLexical('comps', window.comps||[]),
+      ckM:_trimTeamMembers(_readGlobalLexical('ckM', window.ckM||[])),
+      proM:_trimTeamMembers(_readGlobalLexical('proM', window.proM||[])),
+      proTourneys:_readGlobalLexical('proTourneys', window.proTourneys||[]),
+      tourneys:_readGlobalLexical('tourneys', window.tourneys||[]),
+      ttM:_trimTeamMembers(_readGlobalLexical('ttM', window.ttM||[])),
+      indM:_readGlobalLexical('indM', window.indM||[]),
+      gjM:_readGlobalLexical('gjM', window.gjM||[])
     });
+  }
+  function _snapshotPlayersFromGlobals(){
+    let src=[];
+    try{
+      if(typeof players!=='undefined' && Array.isArray(players)) src=players;
+      else if(Array.isArray(window.players)) src=window.players;
+    }catch(e){}
+    const playerPhotos={};
+    const out=(Array.isArray(src)?src:[]).map(p=>{
+      const c={...(p||{})};
+      delete c.history;
+      if(p && p.name && p.photo){
+        playerPhotos[p.name]=p.photo;
+        delete c.photo;
+      }
+      return c;
+    });
+    return _playerStoreNormalize({players:out, playerPhotos});
   }
   function _applyToGlobals(payload){
     const d=_matchStoreNormalize(payload);
@@ -63,6 +144,28 @@
     window.ttM=d.ttM;
     window.indM=d.indM;
     window.gjM=d.gjM;
+    _writeGlobalLexical('miniM', d.miniM);
+    _writeGlobalLexical('univM', d.univM);
+    _writeGlobalLexical('comps', d.comps);
+    _writeGlobalLexical('ckM', d.ckM);
+    _writeGlobalLexical('proM', d.proM);
+    _writeGlobalLexical('proTourneys', d.proTourneys);
+    _writeGlobalLexical('tourneys', d.tourneys);
+    _writeGlobalLexical('ttM', d.ttM);
+    _writeGlobalLexical('indM', d.indM);
+    _writeGlobalLexical('gjM', d.gjM);
+    return d;
+  }
+  function _applyPlayersToGlobals(payload){
+    const d=_playerStoreNormalize(payload);
+    const arr=(Array.isArray(d.players)?d.players:[]).map(p=>{
+      const c={...(p||{})};
+      if(c && c.name && d.playerPhotos[c.name] && !c.photo) c.photo=d.playerPhotos[c.name];
+      return c;
+    });
+    try{ window.playerPhotos = d.playerPhotos || {}; }catch(e){}
+    try{ window.players = arr; }catch(e){}
+    try{ if(typeof players!=='undefined') players = arr; }catch(e){}
     return d;
   }
   function _legacyLoad(){
@@ -123,6 +226,7 @@
         req.onupgradeneeded=(ev)=>{
           const db=ev.target.result;
           if(!db.objectStoreNames.contains(MATCH_STORE)) db.createObjectStore(MATCH_STORE);
+          if(!db.objectStoreNames.contains(PLAYER_STORE)) db.createObjectStore(PLAYER_STORE);
         };
         req.onsuccess=()=>resolve(req.result);
         req.onerror=()=>reject(req.error||new Error('indexedDB open failed'));
@@ -169,9 +273,48 @@
       }catch(e){ reject(e); }
     });
   }
+  async function _playerIdbGet(){
+    const db=await _openDb();
+    if(!db || !db.objectStoreNames.contains(PLAYER_STORE)) return null;
+    return await new Promise((resolve,reject)=>{
+      try{
+        const tx=db.transaction(PLAYER_STORE,'readonly');
+        const st=tx.objectStore(PLAYER_STORE);
+        const req=st.get(PLAYER_KEY);
+        req.onsuccess=()=>resolve(_playerStoreNormalize(req.result||null));
+        req.onerror=()=>reject(req.error||new Error('player indexedDB get failed'));
+      }catch(e){ reject(e); }
+    });
+  }
+  async function _playerIdbSet(payload){
+    const db=await _openDb();
+    if(!db) return false;
+    return await new Promise((resolve,reject)=>{
+      try{
+        const tx=db.transaction(PLAYER_STORE,'readwrite');
+        tx.objectStore(PLAYER_STORE).put(_playerStoreNormalize(payload), PLAYER_KEY);
+        tx.oncomplete=()=>resolve(true);
+        tx.onerror=()=>reject(tx.error||new Error('player indexedDB put failed'));
+      }catch(e){ reject(e); }
+    });
+  }
+  async function _playerIdbClear(){
+    const db=await _openDb();
+    if(!db || !db.objectStoreNames.contains(PLAYER_STORE)) return false;
+    return await new Promise((resolve,reject)=>{
+      try{
+        const tx=db.transaction(PLAYER_STORE,'readwrite');
+        tx.objectStore(PLAYER_STORE).delete(PLAYER_KEY);
+        tx.oncomplete=()=>resolve(true);
+        tx.onerror=()=>reject(tx.error||new Error('player indexedDB delete failed'));
+      }catch(e){ reject(e); }
+    });
+  }
 
   window._matchStoreReady = window._matchStoreReady || false;
   window._matchStoreInitPromise = window._matchStoreInitPromise || null;
+  window._playerStoreReady = window._playerStoreReady || false;
+  window._playerStoreInitPromise = window._playerStoreInitPromise || null;
 
   async function initMatchStore(){
     if(window._matchStoreInitPromise) return window._matchStoreInitPromise;
@@ -201,12 +344,19 @@
           return legacy;
         }
         const payload=await _idbGet();
+        const currentGlobals=_snapshotFromGlobals();
         if(payload){
-          _applyToGlobals(payload);
+          const merged = _mergePreferCurrent(payload, currentGlobals);
+          _applyToGlobals(merged);
+          try{
+            if(JSON.stringify(_matchStoreNormalize(payload)) !== JSON.stringify(merged)){
+              await _idbSet(merged);
+            }
+          }catch(e){}
         }
         _metaSave({migrated:true, backend:'indexedDB', updatedAt:Date.now()});
         window._matchStoreReady=true;
-        return payload || _matchStoreDefault();
+        return payload ? _mergePreferCurrent(payload, currentGlobals) : _matchStoreDefault();
       }catch(e){
         console.warn('[match-store] init failed:', e.message);
         window._matchStoreReady=true;
@@ -215,10 +365,31 @@
     })();
     return window._matchStoreInitPromise;
   }
+  async function initPlayerStore(){
+    if(window._playerStoreInitPromise) return window._playerStoreInitPromise;
+    window._playerStoreInitPromise = (async()=>{
+      try{
+        const payload=await _playerIdbGet();
+        const current=_snapshotPlayersFromGlobals();
+        if(_hasAnyPlayerPayload(payload) && !_hasAnyPlayerPayload(current)){
+          _applyPlayersToGlobals(payload);
+        }
+        window._playerStoreReady=true;
+        return _hasAnyPlayerPayload(payload) ? payload : current;
+      }catch(e){
+        console.warn('[player-store] init failed:', e.message);
+        window._playerStoreReady=true;
+        return _snapshotPlayersFromGlobals();
+      }
+    })();
+    return window._playerStoreInitPromise;
+  }
 
   async function saveMatchStore(){
+    const playerPayload=_snapshotPlayersFromGlobals();
     const payload=_snapshotFromGlobals();
     try{
+      try{ await _playerIdbSet(playerPayload); }catch(e){}
       const ok = await _idbSet(payload);
       if(ok){
         _clearLegacyKeys();
@@ -237,9 +408,11 @@
   }
   async function rebuildMatchStore(){
     const payload=_snapshotFromGlobals();
+    const playerPayload=_snapshotPlayersFromGlobals();
     if(_idbAvailable()){
       try{
         await _idbSet(payload);
+        try{ await _playerIdbSet(playerPayload); }catch(e){}
         _clearLegacyKeys();
         _metaSave({migrated:true, backend:'indexedDB', updatedAt:Date.now()});
         return {ok:true, backend:'indexedDB'};
@@ -253,7 +426,12 @@
   }
   async function clearMatchStore(){
     let idbOk=true;
-    try{ if(_idbAvailable()) await _idbClear(); }catch(e){ idbOk=false; }
+    try{
+      if(_idbAvailable()){
+        await _idbClear();
+        await _playerIdbClear();
+      }
+    }catch(e){ idbOk=false; }
     _clearLegacyKeys();
     _metaSave({migrated:_idbAvailable()&&idbOk, backend:(_idbAvailable()&&idbOk)?'indexedDB':'localStorage', updatedAt:Date.now()});
     return {ok:idbOk, backend:(_idbAvailable()&&idbOk)?'indexedDB':'localStorage'};
@@ -266,5 +444,13 @@
     clear:clearMatchStore,
     snapshot:_snapshotFromGlobals,
     apply:_applyToGlobals
+  };
+  window.PlayerStore = window.PlayerStore || {
+    init:initPlayerStore,
+    load:_playerIdbGet,
+    save:async()=>_playerIdbSet(_snapshotPlayersFromGlobals()),
+    clear:_playerIdbClear,
+    snapshot:_snapshotPlayersFromGlobals,
+    apply:_applyPlayersToGlobals
   };
 })();

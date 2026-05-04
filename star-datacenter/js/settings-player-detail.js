@@ -25,6 +25,8 @@ function _renderCfgPdSection(){
   const mdLogoSize = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size')||'42',10);}catch(e){return 42;} })();
   const mdCkA = (()=>{ try{ return (localStorage.getItem('su_md_team_hdr_ck_a')||'#2563eb').trim(); }catch(e){ return '#2563eb'; } })();
   const mdCkB = (()=>{ try{ return (localStorage.getItem('su_md_team_hdr_ck_b')||'#dc2626').trim(); }catch(e){ return '#dc2626'; } })();
+  const mdTtA = (()=>{ try{ return (localStorage.getItem('su_md_team_hdr_tt_a')||'#7c3aed').trim(); }catch(e){ return '#7c3aed'; } })();
+  const mdTtB = (()=>{ try{ return (localStorage.getItem('su_md_team_hdr_tt_b')||'#0ea5e9').trim(); }catch(e){ return '#0ea5e9'; } })();
   const mdProA = (()=>{ try{ return (localStorage.getItem('su_md_team_hdr_pro_a')||'#2563eb').trim(); }catch(e){ return '#2563eb'; } })();
   const mdProB = (()=>{ try{ return (localStorage.getItem('su_md_team_hdr_pro_b')||'#dc2626').trim(); }catch(e){ return '#dc2626'; } })();
   const _mdDevKey = (()=>{ const w=Math.max(320, Math.min(1920, window.innerWidth||1024)); return w<=768?'mb':(w<=1024?'tb':'pc'); })();
@@ -148,7 +150,7 @@ function _renderCfgPdSection(){
     </div>
     <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🎨 경기 상세 팀 헤더 색상</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">대학CK / 프로리그 경기 상세 상단의 A팀·B팀 색상을 기본 대학색 대신 고정 색으로 덮어쓸 수 있습니다.</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">대학CK / 티어대회 / 프로리그 경기 상세 상단의 A팀·B팀 색상을 기본 대학색 대신 고정 색으로 덮어쓸 수 있습니다.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
         <div style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--white)">
           <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:8px">🤝 대학CK</div>
@@ -161,6 +163,19 @@ function _renderCfgPdSection(){
             <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">B팀</label>
             <input type="color" value="${mdCkB}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('ck','b',this.value)">
             <input type="text" value="${mdCkB}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('ck','b',this.value)">
+          </div>
+        </div>
+        <div style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--white)">
+          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:8px">🎯 티어대회</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">A팀</label>
+            <input type="color" value="${mdTtA}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('tt','a',this.value)">
+            <input type="text" value="${mdTtA}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('tt','a',this.value)">
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">B팀</label>
+            <input type="color" value="${mdTtB}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('tt','b',this.value)">
+            <input type="text" value="${mdTtB}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('tt','b',this.value)">
           </div>
         </div>
         <div style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--white)">
@@ -178,7 +193,7 @@ function _renderCfgPdSection(){
         </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-w btn-xs" onclick="['su_md_team_hdr_ck_a','su_md_team_hdr_ck_b','su_md_team_hdr_pro_a','su_md_team_hdr_pro_b'].forEach(k=>localStorage.removeItem(k));try{ if(typeof _applyOpenHistDetailTeamHeaderColors==='function') _applyOpenHistDetailTeamHeaderColors(); }catch(e){}; _renderCfgPdSection(); try{ if(typeof render==='function') render(); }catch(e){}">🔄 기본값으로 초기화</button>
+        <button class="btn btn-w btn-xs" onclick="['su_md_team_hdr_ck_a','su_md_team_hdr_ck_b','su_md_team_hdr_tt_a','su_md_team_hdr_tt_b','su_md_team_hdr_pro_a','su_md_team_hdr_pro_b'].forEach(k=>localStorage.removeItem(k));try{ if(typeof _applyOpenHistDetailTeamHeaderColors==='function') _applyOpenHistDetailTeamHeaderColors(); }catch(e){}; _renderCfgPdSection(); try{ if(typeof render==='function') render(); }catch(e){}">🔄 기본값으로 초기화</button>
       </div>
     </div>
     <div style="margin-bottom:16px">

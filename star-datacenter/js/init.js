@@ -251,7 +251,7 @@ function init(){
       try{
         if(typeof window._loadScriptOnce!=='function') return;
         window._loadScriptOnce('js/yt-bgm.js?v=20260420-06').catch(()=>{});
-        window._loadScriptOnce('js/soop-multiview.js?v=20260420-10').catch(()=>{});
+        window._loadScriptOnce('js/soop-multiview.js?v=20260504-02').catch(()=>{});
       }catch(e){}
     };
     if('requestIdleCallback' in window) requestIdleCallback(loadExtras, {timeout: 2500});
@@ -877,18 +877,326 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
 // ── 사이트 첫 접속 시 자동 불러오기 ──
 (async function autoLoad(){
   try{
+    try{
+      if(window.MatchStore && typeof window.MatchStore.init==='function') await window.MatchStore.init();
+      if(window.PlayerStore && typeof window.PlayerStore.init==='function') await window.PlayerStore.init();
+    }catch(e){}
     // (복구) 로컬 기록이 있으면 자동 불러오기 금지 (덮어쓰기 방지)
     const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
-    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm','su_match_store_meta_v1'].some(hasAnyLocalKey);
-    if(hasRecordKeys) return;
-    // su_p는 배열 또는 {v:2,p:[...]}일 수 있음
+    const hasAnyRecordPayload = (payload)=>{
+      if(!payload || typeof payload!=='object') return false;
+      return ['miniM','univM','comps','ckM','proM','proTourneys','tourneys','ttM','indM','gjM']
+        .some(k=>Array.isArray(payload[k]) && payload[k].length>0);
+    };
+    const hasMatchIdbData = await (async()=>{
+      try{
+        if(!window.indexedDB) return false;
+        const db = await new Promise((resolve,reject)=>{
+          const req = indexedDB.open('star_datacenter_matches', 1);
+          req.onupgradeneeded = ()=>resolve(req.result);
+          req.onsuccess = ()=>resolve(req.result);
+          req.onerror = ()=>reject(req.error||new Error('indexedDB open failed'));
+        });
+        if(!db || !db.objectStoreNames.contains('match_payloads')) return false;
+        const payload = await new Promise((resolve,reject)=>{
+          const tx = db.transaction('match_payloads','readonly');
+          const req = tx.objectStore('match_payloads').get('main');
+          req.onsuccess = ()=>resolve(req.result||null);
+          req.onerror = ()=>reject(req.error||new Error('indexedDB get failed'));
+        });
+        return hasAnyRecordPayload(payload);
+      }catch(e){
+        return false;
+      }
+    })();
     const localPlayers = (typeof J==='function') ? J('su_p') : null;
-    const ok = Array.isArray(localPlayers)
+    const hasLocalPlayers = Array.isArray(localPlayers)
       ? localPlayers.length>0
-      : (localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length>0);
-    if(ok) return;
+      : !!(localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length>0);
+    const hasRuntimePlayers = Array.isArray(players) && players.length>0;
+    const hasRuntimeRecords = [miniM,univM,comps,ckM,proM,tourneys,ttM,indM,gjM].some(v=>Array.isArray(v)&&v.length>0);
+    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey) || hasMatchIdbData;
+    if(hasRuntimePlayers || hasRuntimeRecords) return;
+    if(hasRecordKeys && hasLocalPlayers) return;
   }catch(e){}
   console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
+  const _fetchAutoJson = async (url)=>{
+    const res = await Promise.race([
+      fetch(url, {cache:'no-store', mode:'cors'}),
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))
+    ]);
+    if(!res || !res.ok) throw new Error(`fetch failed: ${url}`);
+    const text = await res.text();
+    if(!text || !text.trim()) throw new Error(`empty response: ${url}`);
+    let raw = JSON.parse(text);
+    if(raw && raw.content && raw.encoding==='base64'){
+      const b64 = raw.content.replace(/\s/g,'');
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+      raw = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+    }
+    if(raw && typeof raw._lz === 'string'){
+      raw = JSON.parse(LZString.decompressFromBase64(raw._lz));
+    }
+    return raw;
+  };
+  const _resolveAutoUrl = (baseUrl, rel)=>{
+    try{
+      let next = String(rel || '').trim();
+      next = next.replace(/^\.?\//,'');
+      next = next.replace(/^star-datacenter\//,'');
+      return new URL(next, new URL(baseUrl, location.href)).toString();
+    }
+    catch(e){ return String(rel || ''); }
+  };
+  const _recoverMatchArraysFromPlayerHistoryLocal = (baseData, monthParts)=>{
+    const out = {...(baseData||{})};
+    if(!Array.isArray(out.indM)) out.indM = [];
+    if(!Array.isArray(out.gjM)) out.gjM = [];
+    const needInd = !out.indM.length;
+    const needGj = !out.gjM.length;
+    if(!needInd && !needGj) return out;
+    const seenInd = new Set();
+    const seenGj = new Set();
+    (Array.isArray(monthParts)?monthParts:[]).filter(Boolean).forEach(part=>{
+      const ph = part && part.playerHistory || {};
+      Object.keys(ph).forEach(name=>{
+        (Array.isArray(ph[name]) ? ph[name] : []).forEach(h=>{
+          const mode = String(h && h.mode || '').trim();
+          const opp = String(h && h.opp || '').trim();
+          const res = String(h && h.result || '').trim();
+          if(!opp || !res) return;
+          let target = '';
+          let proLabel = false;
+          if(mode === '개인전') target = 'ind';
+          else if(mode === '끝장전') target = 'gj';
+          else if(mode === '프로리그끝장전'){ target = 'gj'; proLabel = true; }
+          else return;
+          if((target==='ind' && !needInd) || (target==='gj' && !needGj)) return;
+          let wName='', lName='';
+          if(res === '승'){ wName = name; lName = opp; }
+          else if(res === '패'){ wName = opp; lName = name; }
+          else return;
+          const d = String(h.date || h.d || '').trim();
+          const map = String(h.map || '').trim();
+          const mid = String(h.matchId || '').trim();
+          const key = mid || [target, proLabel?'pro':'normal', d, map, wName, lName].join('|');
+          if(target === 'ind'){
+            if(seenInd.has(key)) return;
+            seenInd.add(key);
+            out.indM.push({ _id: mid || key, d, wName, lName, map: map || '-' });
+            return;
+          }
+          if(seenGj.has(key)) return;
+          seenGj.add(key);
+          const rec = { _id: mid || key, d, wName, lName, map: map || '-' };
+          if(proLabel) rec._proLabel = true;
+          out.gjM.push(rec);
+        });
+      });
+    });
+    const _byDateDesc = (a,b)=>String(b && b.d || '').localeCompare(String(a && a.d || ''));
+    if(needInd) out.indM.sort(_byDateDesc);
+    if(needGj) out.gjM.sort(_byDateDesc);
+    return out;
+  };
+  const _recoverCivilMiniFromPlayerHistoryLocal = (baseData, monthParts)=>{
+    const out = {...(baseData||{})};
+    if(!Array.isArray(out.miniM)) out.miniM = [];
+    const hasCivil = out.miniM.some(m=>m && (m.type==='civil' || (m.a==='A팀' && m.b==='B팀')));
+    if(hasCivil) return out;
+    const gameMap = new Map();
+    (Array.isArray(monthParts)?monthParts:[]).filter(Boolean).forEach(part=>{
+      const ph = part && part.playerHistory || {};
+      Object.keys(ph).forEach(name=>{
+        (Array.isArray(ph[name]) ? ph[name] : []).forEach(h=>{
+          if(String(h && h.mode || '').trim() !== '시빌워') return;
+          const matchId = String(h.matchId || '').trim();
+          if(!matchId) return;
+          const prev = gameMap.get(matchId) || { _id:matchId, d:String(h.date||'').trim(), map:String(h.map||'').trim(), wName:'', lName:'', univMap:{} };
+          prev.d = prev.d || String(h.date||'').trim();
+          prev.map = prev.map || String(h.map||'').trim();
+          prev.univMap[name] = String(h.univ || '').trim();
+          if(h.result === '승'){ prev.wName = name; prev.lName = String(h.opp || '').trim(); }
+          else if(h.result === '패'){ prev.wName = String(h.opp || '').trim(); prev.lName = name; }
+          gameMap.set(matchId, prev);
+        });
+      });
+    });
+    if(!gameMap.size) return out;
+    const sessions = new Map();
+    const parseParts = (matchId)=>{
+      const m = String(matchId||'').match(/^(.*)_s(\d+)_g(\d+)$/);
+      if(m) return { base:m[1], setIdx:+m[2], gameIdx:+m[3] };
+      return { base:String(matchId||''), setIdx:0, gameIdx:0 };
+    };
+    for(const rec of gameMap.values()){
+      const { base, setIdx, gameIdx } = parseParts(rec._id);
+      if(!rec.wName || !rec.lName) continue;
+      if(!sessions.has(base)) sessions.set(base, { _id:base, d:rec.d||'', games:[], players:new Map(), adj:new Map() });
+      const sess = sessions.get(base);
+      sess.d = sess.d || rec.d || '';
+      sess.games.push({ ...rec, setIdx, gameIdx });
+      [rec.wName, rec.lName].forEach(n=>{
+        if(!n) return;
+        if(!sess.players.has(n)) sess.players.set(n, { name:n, univ:String(rec.univMap && rec.univMap[n] || '') });
+        if(!sess.adj.has(n)) sess.adj.set(n, new Set());
+      });
+      sess.adj.get(rec.wName).add(rec.lName);
+      sess.adj.get(rec.lName).add(rec.wName);
+    }
+    const recovered = [];
+    for(const sess of sessions.values()){
+      const side = new Map();
+      for(const n of sess.players.keys()){
+        if(side.has(n)) continue;
+        side.set(n, 'A');
+        const q=[n];
+        while(q.length){
+          const cur=q.shift();
+          const curSide=side.get(cur);
+          (sess.adj.get(cur)||[]).forEach(nx=>{
+            if(!side.has(nx)){ side.set(nx, curSide==='A'?'B':'A'); q.push(nx); }
+          });
+        }
+      }
+      const setsMap = new Map();
+      sess.games.sort((a,b)=>(a.setIdx-b.setIdx)||(a.gameIdx-b.gameIdx));
+      sess.games.forEach(g=>{
+        const sA = side.get(g.wName)||'A';
+        const playerA = sA==='A' ? g.wName : g.lName;
+        const playerB = sA==='A' ? g.lName : g.wName;
+        const winner = sA==='A' ? 'A' : 'B';
+        if(!setsMap.has(g.setIdx)) setsMap.set(g.setIdx, { scoreA:0, scoreB:0, winner:'', games:[] });
+        const st = setsMap.get(g.setIdx);
+        if(winner==='A') st.scoreA++; else st.scoreB++;
+        st.games.push({ _id:g._id, playerA, playerB, winner, map:g.map||'-', wName:g.wName, lName:g.lName });
+      });
+      const sets = [...setsMap.entries()].sort((a,b)=>a[0]-b[0]).map(([,st])=>{
+        st.winner = st.scoreA>st.scoreB ? 'A' : (st.scoreB>st.scoreA ? 'B' : '');
+        return st;
+      });
+      const teamAMembers = [...sess.players.values()].filter(p=>(side.get(p.name)||'A')==='A');
+      const teamBMembers = [...sess.players.values()].filter(p=>(side.get(p.name)||'A')==='B');
+      const sa = sets.reduce((n,s)=>n+(s.scoreA||0),0);
+      const sb = sets.reduce((n,s)=>n+(s.scoreB||0),0);
+      recovered.push({ _id:sess._id, d:sess.d||'', a:'A팀', b:'B팀', sa, sb, sets, type:'civil', teamAMembers, teamBMembers });
+    }
+    recovered.sort((a,b)=>String(b && b.d || '').localeCompare(String(a && a.d || '')));
+    if(recovered.length) out.miniM = out.miniM.concat(recovered);
+    return out;
+  };
+  const _recoverTierGeneralFromPlayerHistoryLocal = (baseData, monthParts)=>{
+    const out = {...(baseData||{})};
+    if(!Array.isArray(out.ttM)) out.ttM = [];
+    const existing = new Set(out.ttM.map(m=>String(m && m._id || '')).filter(Boolean));
+    const tierIdMap = new Map(((Array.isArray(out.tourneys) ? out.tourneys : [])||[])
+      .filter(t=>t && t.type==='tier' && t.id && t.name)
+      .map(t=>[String(t.id).trim(), String(t.name).trim()]));
+    const parseTierComp = (mid)=>{
+      const s = String(mid||'').trim();
+      let tid = '';
+      let m = s.match(/^pbn_([^_]+)_/);
+      if(m) tid = m[1];
+      if(!tid){
+        m = s.match(/^([a-z0-9]+)_s\d+_g\d+$/i);
+        if(m) tid = m[1];
+      }
+      return tierIdMap.get(tid) || '복구된 일반전';
+    };
+    const byId = new Map();
+    (Array.isArray(monthParts)?monthParts:[]).filter(Boolean).forEach(part=>{
+      const ph = part && part.playerHistory || {};
+      Object.keys(ph).forEach(name=>{
+        (Array.isArray(ph[name]) ? ph[name] : []).forEach(h=>{
+          if(String(h && h.mode || '').trim() !== '티어대회') return;
+          const mid = String(h.matchId || '').trim();
+          if(!mid || existing.has(mid)) return;
+          const prev = byId.get(mid) || { _id:mid, d:String(h.date||'').trim(), map:String(h.map||'').trim(), wName:'', lName:'', compName:parseTierComp(mid) };
+          prev.d = prev.d || String(h.date||'').trim();
+          prev.map = prev.map || String(h.map||'').trim();
+          if(h.result === '승'){ prev.wName = name; prev.lName = String(h.opp || '').trim(); }
+          else if(h.result === '패'){ prev.wName = String(h.opp || '').trim(); prev.lName = name; }
+          byId.set(mid, prev);
+        });
+      });
+    });
+    const recovered = [];
+    byId.forEach(rec=>{
+      if(!rec.wName || !rec.lName) return;
+      recovered.push({
+        _id:rec._id, d:rec.d||'', a:rec.wName, b:rec.lName, sa:1, sb:0,
+        sets:[{ scoreA:1, scoreB:0, winner:'A', games:[{ _id:rec._id, playerA:rec.wName, playerB:rec.lName, winner:'A', map:rec.map||'-', wName:rec.wName, lName:rec.lName }] }],
+        n:rec.compName||'복구된 일반전', compName:rec.compName||'복구된 일반전', stage:'general'
+      });
+    });
+    recovered.sort((a,b)=>String(b && b.d || '').localeCompare(String(a && a.d || '')));
+    if(recovered.length) out.ttM = out.ttM.concat(recovered);
+    return out;
+  };
+  const _mergePlayerPhotosIntoPlayers = (arr, photoMap)=>{
+    if(!Array.isArray(arr) || !photoMap || typeof photoMap!=='object') return arr;
+    arr.forEach(p=>{
+      if(p && p.name && !p.photo && photoMap[p.name]) p.photo = photoMap[p.name];
+    });
+    try{ window.playerPhotos = photoMap; }catch(e){}
+    return arr;
+  };
+  const _mergeSplitStoreData = async (seed, seedUrl)=>{
+    let idx = seed;
+    if(seed && seed.indexPath){
+      try{ idx = await _fetchAutoJson(_resolveAutoUrl(seedUrl, seed.indexPath)); }
+      catch(e){ idx = seed; }
+    }
+    if(!(idx && (idx.splitStore || idx.corePath || idx.historyMonths))) return seed;
+    const coreUrl = _resolveAutoUrl(seedUrl, idx.corePath || 'data/core.json');
+    const historyDirUrl = _resolveAutoUrl(seedUrl, String(idx.historyDir || 'data/history/').replace(/\/?$/, '/'));
+    const core = await _fetchAutoJson(coreUrl);
+    const merged = {...core};
+    const monthParts = [];
+    const histKeys = ['miniM','univM','comps','ckM','proM','ttM','indM','gjM'];
+    histKeys.forEach(k=>{ merged[k] = Array.isArray(core[k]) ? [...core[k]] : []; });
+    const months = Array.isArray(idx.historyMonths) ? idx.historyMonths : [];
+    for(const month of months){
+      try{
+        const monthUrl = _resolveAutoUrl(historyDirUrl, `${month}.json`);
+        const part = await _fetchAutoJson(monthUrl);
+        monthParts.push(part);
+        histKeys.forEach(k=>{
+          if(Array.isArray(part[k]) && part[k].length) merged[k].push(...part[k]);
+        });
+        if(Array.isArray(part.histExtItems) && part.histExtItems.length){
+          merged.histExtItems = (Array.isArray(merged.histExtItems) ? merged.histExtItems : []).concat(part.histExtItems);
+        }
+      }catch(e){
+        console.warn('[자동 불러오기] 월별 데이터 로드 실패:', month, e.message);
+      }
+    }
+    try{
+      const recoverFn = (typeof window.__suRecoverMatchArraysFromPlayerHistory === 'function')
+        ? window.__suRecoverMatchArraysFromPlayerHistory
+        : _recoverMatchArraysFromPlayerHistoryLocal;
+      const recovered = recoverFn(merged, monthParts);
+      if(recovered){
+        if(Array.isArray(recovered.indM)) merged.indM = recovered.indM;
+        if(Array.isArray(recovered.gjM)) merged.gjM = recovered.gjM;
+      }
+      const recoverCivilFn = (typeof window.__suRecoverCivilMiniFromPlayerHistory === 'function')
+        ? window.__suRecoverCivilMiniFromPlayerHistory
+        : _recoverCivilMiniFromPlayerHistoryLocal;
+      const recoveredCivil = recoverCivilFn(merged, monthParts);
+      if(recoveredCivil && Array.isArray(recoveredCivil.miniM)) merged.miniM = recoveredCivil.miniM;
+      const recoverTierFn = (typeof window.__suRecoverTierGeneralFromPlayerHistory === 'function')
+        ? window.__suRecoverTierGeneralFromPlayerHistory
+        : _recoverTierGeneralFromPlayerHistoryLocal;
+      const recoveredTier = recoverTierFn(merged, monthParts);
+      if(recoveredTier && Array.isArray(recoveredTier.ttM)) merged.ttM = recoveredTier.ttM;
+    }catch(e){
+      console.warn('[자동 불러오기] playerHistory match 복구 실패:', e.message);
+    }
+    return merged;
+  };
   // (복구) 번들에 포함된 data.json을 최우선으로 시도
   const _LOCAL = 'data.json';
   // (수정) 실제 경로: star-datacenter/data.json
@@ -899,39 +1207,33 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
   const urls = [_LOCAL, _RAW, _CDN, _API, _PROXY];
   if(typeof window.gsSetStatus === 'function') window.gsSetStatus('🔄 데이터 불러오는 중...','var(--blue)');
   let d = null;
+  let loadedFromUrl = '';
   for(const url of urls){
     try{
-      const res = await Promise.race([
-        fetch(url, {cache:'no-store', mode:'cors'}),
-        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))
-      ]);
-      if(!res || !res.ok) continue;
-      const text = await res.text();
-      if(!text || !text.trim()) continue;
-      let raw;
-      try{ raw = JSON.parse(text); }catch(e){ continue; }
-      if(raw && raw.content && raw.encoding==='base64'){
-        try{
-          const b64 = raw.content.replace(/\s/g,'');
-          const bin = atob(b64);
-          const bytes = new Uint8Array(bin.length);
-          for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-          d = JSON.parse(new TextDecoder('utf-8').decode(bytes));
-        }catch(e){ continue; }
-      } else {
-        d = raw;
-      }
-      if(d){ console.log('[자동 불러오기] 성공:', url); break; }
+      d = await _fetchAutoJson(url);
+      d = await _mergeSplitStoreData(d, url);
+      if(d){ loadedFromUrl = url; console.log('[자동 불러오기] 성공:', url); break; }
     }catch(e){ console.log('[자동 불러오기] 실패:', url, e.message); continue; }
   }
   if(d){
-    // LZString 압축 데이터 자동 해제
-    if(d && typeof d._lz === 'string'){
-      try{ d = JSON.parse(LZString.decompressFromBase64(d._lz)); }
-      catch(e){ console.warn('[자동 불러오기] 압축 해제 실패:', e); }
-    }
     try{
+      const hasPlayers = Array.isArray(d.players) ? d.players.length>0 : (Array.isArray(d.player) ? d.player.length>0 : false);
+      if(!hasPlayers && loadedFromUrl){
+        try{
+          const coreFallback = await _fetchAutoJson(_resolveAutoUrl(loadedFromUrl, 'data/core.json'));
+          if(Array.isArray(coreFallback.players) && coreFallback.players.length) d.players = coreFallback.players;
+          if(!d.playerPhotos && coreFallback.playerPhotos) d.playerPhotos = coreFallback.playerPhotos;
+          if(!d.univCfg && coreFallback.univCfg) d.univCfg = coreFallback.univCfg;
+          if(!d.maps && coreFallback.maps) d.maps = coreFallback.maps;
+          if(!d.tourD && coreFallback.tourD) d.tourD = coreFallback.tourD;
+          if(!d.tourneys && coreFallback.tourneys) d.tourneys = coreFallback.tourneys;
+        }catch(e){
+          console.warn('[자동 불러오기] core fallback 실패:', e.message);
+        }
+      }
       players  = d.players  || d.player  || [];
+      players  = _mergePlayerPhotosIntoPlayers(players, d.playerPhotos || d.pPhotoMap || d.playerPhotoMap || null);
+      try{ window.players = players; }catch(e){}
       univCfg  = d.univCfg  || d.univConfig || d.universities || univCfg;
       maps     = d.maps     || d.map     || maps;
       tourD    = d.tourD    || d.tournamentDates || Array(15).fill('');
@@ -944,6 +1246,54 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
       proM     = d.proM     || d.pro     || d.proMatches  || [];
       tourneys = d.tourneys || d.tournaments || d.tourney || [];
       ttM      = d.ttM      || d.tt      || [];
+      if((!players || !players.length) && loadedFromUrl){
+        try{
+          const coreFallback2 = await _fetchAutoJson(_resolveAutoUrl(loadedFromUrl, 'data/core.json'));
+          if(Array.isArray(coreFallback2.players) && coreFallback2.players.length) players = coreFallback2.players;
+          players = _mergePlayerPhotosIntoPlayers(players, coreFallback2.playerPhotos || null);
+          try{ window.players = players; }catch(e){}
+        }catch(e){}
+      }
+      if(((!players || !players.length) || (!gjM || !gjM.length) || (!indM || !indM.length)) && loadedFromUrl){
+        try{
+          const idxFallback = await _fetchAutoJson(_resolveAutoUrl(loadedFromUrl, 'data/index.json'));
+          const coreFallback3 = await _fetchAutoJson(_resolveAutoUrl(loadedFromUrl, String(idxFallback.corePath || 'data/core.json')));
+          const historyDir = String(idxFallback.historyDir || 'data/history/').replace(/\/?$/, '/');
+          const monthParts = [];
+          for(const month of (Array.isArray(idxFallback.historyMonths) ? idxFallback.historyMonths : [])){
+            try{ monthParts.push(await _fetchAutoJson(_resolveAutoUrl(loadedFromUrl, `${historyDir}${month}.json`))); }catch(e){}
+          }
+          const repaired = _recoverMatchArraysFromPlayerHistoryLocal({
+            ...coreFallback3,
+            miniM, univM, comps, ckM, proM, ttM, indM, gjM
+          }, monthParts);
+          const repairedCivil = _recoverCivilMiniFromPlayerHistoryLocal({
+            ...coreFallback3,
+            miniM, univM, comps, ckM, proM, ttM, indM, gjM
+          }, monthParts);
+          const repairedTier = _recoverTierGeneralFromPlayerHistoryLocal({
+            ...coreFallback3,
+            miniM, univM, comps, ckM, proM, ttM, indM, gjM
+          }, monthParts);
+          if((!players || !players.length) && Array.isArray(coreFallback3.players) && coreFallback3.players.length) players = coreFallback3.players;
+          players = _mergePlayerPhotosIntoPlayers(players, coreFallback3.playerPhotos || null);
+          try{ window.players = players; }catch(e){}
+          if((!indM || !indM.length) && Array.isArray(repaired.indM) && repaired.indM.length) indM = repaired.indM;
+          if((!gjM || !gjM.length) && Array.isArray(repaired.gjM) && repaired.gjM.length) gjM = repaired.gjM;
+          if(Array.isArray(repairedCivil.miniM) && repairedCivil.miniM.length > (Array.isArray(miniM)?miniM.length:0)) miniM = repairedCivil.miniM;
+          if(Array.isArray(repairedTier.ttM) && repairedTier.ttM.length > (Array.isArray(ttM)?ttM.length:0)) ttM = repairedTier.ttM;
+        }catch(e){
+          console.warn('[자동 불러오기] split-store rescue 실패:', e.message);
+        }
+      }
+      if(!players || !players.length){
+        try{
+          const coreDirect = await _fetchAutoJson('data/core.json');
+          if(Array.isArray(coreDirect.players) && coreDirect.players.length) players = coreDirect.players;
+          players = _mergePlayerPhotosIntoPlayers(players, coreDirect.playerPhotos || null);
+          try{ window.players = players; }catch(e){}
+        }catch(e){}
+      }
       if(d.notices && d.notices.length) notices = d.notices;
       if(d.tiers && d.tiers.length) TIERS.splice(0, TIERS.length, ...d.tiers);
       const allD=[...miniM,...univM,...comps,...ckM,...proM];
