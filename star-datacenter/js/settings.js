@@ -2191,12 +2191,22 @@ window.cfgUnivOrderMove = function(i, dir){
   try{
     i = parseInt(i, 10);
     if(isNaN(i)) return;
-    const j = i + (dir==='up' ? -1 : 1);
     if(!Array.isArray(univCfg)) return;
-    if(j < 0 || j >= univCfg.length) return;
-    const tmp = univCfg[i];
-    univCfg[i] = univCfg[j];
-    univCfg[j] = tmp;
+    // 설정 팝업에는 "해체되지 않은 대학"만 노출되므로,
+    // 이동도 원본 배열의 인접 인덱스가 아니라 "표시 중인 목록 순서" 기준으로 처리해야 한다.
+    const visibleIdxs = univCfg
+      .map((u, idx) => ({ u, idx }))
+      .filter(x => x.u && !x.u.dissolved)
+      .map(x => x.idx);
+    const pos = visibleIdxs.indexOf(i);
+    if(pos < 0) return;
+    const nextPos = pos + (dir==='up' ? -1 : 1);
+    if(nextPos < 0 || nextPos >= visibleIdxs.length) return;
+    const j = visibleIdxs[nextPos];
+    const moved = univCfg.splice(i, 1)[0];
+    // splice 제거 후 뒤쪽 요소 인덱스가 당겨지므로 보정
+    const insertAt = j > i ? j - 1 : j;
+    univCfg.splice(insertAt, 0, moved);
     // 중요: boardOrder가 존재하면 추후 syncBoardOrderToUnivCfg()에서 순서가 되돌아갈 수 있음
     // → boardOrder도 함께 갱신하고 "정식 save()"로 저장
     try{

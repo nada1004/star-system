@@ -1699,14 +1699,48 @@ async function _flushRemoteCloudSave(reason){
   }
 }
 function _scheduleRemoteCloudSave(delay, reason){
-  return false;
+  try{
+    if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
+    const wait = Math.max(0, parseInt(delay, 10) || 0);
+    _setPendingRemoteSave(reason || 'save', '', 'queued');
+    if(_remoteCloudSaveTimer){
+      clearTimeout(_remoteCloudSaveTimer);
+      _remoteCloudSaveTimer = null;
+    }
+    _setCloudStatusMsg('💾 로컬 저장됨 · GitHub 업로드 대기', '#2563eb');
+    _remoteCloudSaveTimer = setTimeout(()=>{
+      _remoteCloudSaveTimer = null;
+      _flushRemoteCloudSave(reason || 'save').catch(e=>{
+        console.error('[scheduleRemoteCloudSave]', e);
+      });
+    }, wait);
+    try{ _updateSyncNetworkBadge(); }catch(e){}
+    return true;
+  }catch(e){
+    console.error('[scheduleRemoteCloudSave]', e);
+    return false;
+  }
 }
 window._retryPendingRemoteSave = function(force){
-  return false;
+  try{
+    if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
+    const pending = localStorage.getItem('su_sync_pending_save') === '1';
+    const pendingSig = localStorage.getItem(_MATCH_SYNC_SIG_KEYS.pending);
+    if(!force && !pending && !pendingSig) return false;
+    if(force){
+      _flushRemoteCloudSave('retry').catch(e=>console.error('[retryPendingRemoteSave]', e));
+      return true;
+    }
+    return _scheduleRemoteCloudSave(0, 'retry');
+  }catch(e){
+    console.error('[retryPendingRemoteSave]', e);
+    return false;
+  }
 };
 window.addEventListener('online', ()=>{
   _updateSyncNetworkBadge();
   _setCloudStatusMsg('🌐 온라인 복귀', '#2563eb');
+  try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(); }catch(e){}
 });
 window.addEventListener('offline', ()=>{
   _updateSyncNetworkBadge();
@@ -1738,8 +1772,18 @@ async function save(){
     _lastObservedMatchSyncSig = nextSig;
     localStorage.setItem(_MATCH_SYNC_SIG_KEYS.pending, nextSig);
   }catch(e){}
-  try{ _clearPendingRemoteSave(); }catch(e){}
-  _setCloudStatusMsg('💾 로컬 저장됨', '#16a34a');
+  const scheduled = (()=>{ try{ return _scheduleRemoteCloudSave(_REMOTE_SAVE_DEBOUNCE_MS, 'save'); }catch(e){ return false; } })();
+  if(!scheduled){
+    try{
+      if((typeof isLoggedIn !== 'undefined' && isLoggedIn) && !localStorage.getItem('su_gh_token')){
+        _setCloudStatusMsg('⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)', '#d97706');
+      }else{
+        _setCloudStatusMsg('💾 로컬 저장됨', '#16a34a');
+      }
+    }catch(e){
+      _setCloudStatusMsg('💾 로컬 저장됨', '#16a34a');
+    }
+  }
 }
 
 let curTab='total', editName='', reMode='', reIdx=-1;

@@ -50,7 +50,9 @@ function preparePlayerDetailStyleData(player){
   const cLoss=cp.loss;
   const pmCardR = isMobile ? 14 : (isTablet ? 16 : 18);
   const pmHdrPad = isMobile ? '14px 14px 12px' : (isTablet ? '16px 16px 14px' : '18px 18px 16px');
-  const pmPhotoSz = isMobile ? 62 : (isTablet ? 70 : 76);
+  const _profileBase = isMobile ? 62 : (isTablet ? 70 : 76);
+  const _profileScale = Math.max(50, Math.min(180, parseInt(pdStyle.profile_size ?? 100, 10) || 100)) / 100;
+  const pmPhotoSz = Math.round(_profileBase * _profileScale);
   const pmPhotoR = isMobile ? 14 : 16;
   const pmNameFs = isMobile ? 17 : (isTablet ? 18 : 20);
   const pmMetaFs = isMobile ? 9 : 11;

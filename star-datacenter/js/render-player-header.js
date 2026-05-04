@@ -58,7 +58,7 @@ function buildPlayerHeaderCardHTML(opts){
       <div style="position:absolute;bottom:-40px;left:5px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
       <div style="position:absolute;right:16px;bottom:12px;font-size:52px;line-height:1;opacity:.08;pointer-events:none">👤</div>
       <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;position:relative">
-        <div style="width:${pmPhotoSz+12}px;height:${pmPhotoSz+12}px;border-radius:${pmPhotoR+4}px;background:rgba(255,255,255,.16);border:2.5px solid rgba(255,255,255,.42);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:0 8px 24px rgba(0,0,0,.18);backdrop-filter:blur(8px)">${photoHTML}</div>
+        <div style="width:${pmPhotoSz+12}px;height:${pmPhotoSz+12}px;border-radius:var(--su_profile_radius,${pmPhotoR+4}px);background:rgba(255,255,255,.16);border:2.5px solid rgba(255,255,255,.42);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:var(--su_profile_fx, 0 8px 24px rgba(0,0,0,.18));backdrop-filter:blur(8px)">${photoHTML}</div>
         <div style="min-width:0">
           <div style="font-size:10px;font-weight:900;letter-spacing:.9px;color:rgba(255,255,255,.78);margin-bottom:6px">STREAMER PROFILE</div>
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:8px">
