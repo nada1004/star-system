@@ -1,6 +1,6 @@
 (function(){
   const MATCH_DB_NAME='star_datacenter_matches';
-  const MATCH_DB_VER=2;
+  const MATCH_DB_VER=1;
   const MATCH_STORE='match_payloads';
   const MATCH_KEY='main';
   const MATCH_META_KEY='su_match_store_meta_v1';
