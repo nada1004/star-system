@@ -993,6 +993,8 @@ let playersRaw = J('su_p')  || [];
 let players    = _unpackPlayers(playersRaw) || [];
 // 사진 분리 저장 지원: su_pp에 {이름:base64} 형태로 저장된 사진을 players에 병합
 (function(){const _pp=J('su_pp');if(_pp&&typeof _pp==='object'&&Array.isArray(players))players.forEach(p=>{if(!p.photo&&_pp[p.name])p.photo=_pp[p.name];});})();
+try{ window.players = players; }catch(e){}
+try{ window.playerPhotos = J('su_pp') || {}; }catch(e){}
 let boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
 let univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
@@ -1144,7 +1146,7 @@ function _iconIdbOpen(){
   return new Promise((resolve,reject)=>{
     try{
       if(!_iconIdbAvailable()){ resolve(null); return; }
-      const req = indexedDB.open('star_datacenter_icons', 1);
+      const req = indexedDB.open('star_datacenter_icons', 2);
       req.onupgradeneeded = (ev)=>{
         const db = ev.target.result;
         if(!db.objectStoreNames.contains('icon_payloads')) db.createObjectStore('icon_payloads');
@@ -1444,7 +1446,12 @@ function localSave(){
     _lsSave('su_seasons',seasons);
     _lsSave('su_cal_sched',calScheduled);
     if(window.MatchStore && typeof window.MatchStore.save==='function'){
-      window.MatchStore.save().catch(e=>console.warn('[MatchStore.save]', e && e.message ? e.message : e));
+      window._lastMatchStoreSavePromise = window.MatchStore.save().catch(e=>{
+        console.warn('[MatchStore.save]', e && e.message ? e.message : e);
+        return false;
+      });
+    }else{
+      window._lastMatchStoreSavePromise = Promise.resolve(true);
     }
     localStorage.setItem('su_last_save_time',Date.now().toString());
     if(BLD['ck'])_lsSave('su_bld_ck',{membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]});
@@ -1545,6 +1552,7 @@ function _clearPendingRemoteSave(){
     localStorage.removeItem('su_sync_pending_save_at');
     localStorage.removeItem('su_sync_pending_save_reason');
     localStorage.removeItem('su_sync_pending_save_mode');
+    localStorage.removeItem('su_sync_last_fail_msg');
   }catch(e){}
   try{ if(typeof window._updateSyncNetworkBadge==='function') window._updateSyncNetworkBadge(); }catch(e){}
 }
@@ -1681,45 +1689,24 @@ async function _flushRemoteCloudSave(reason){
     _setCloudStatusMsg('✅ GitHub 저장됨', '#16a34a');
     return true;
   }catch(e){
-    _setPendingRemoteSave(reason || 'save', String((e&&e.message)||e||'GitHub 저장 실패'), 'failed');
-    _setCloudStatusMsg('❌ GitHub 저장 실패 — 복귀 시 자동 재시도', '#dc2626');
+    _setPendingRemoteSave(reason || 'manual-save', String((e&&e.message)||e||'GitHub 저장 실패'), 'failed');
+    _setCloudStatusMsg('❌ GitHub 저장 실패 — 로컬 데이터는 유지됨', '#dc2626');
     console.error('[fbCloudSave]',e);
     return false;
   }finally{
     _remoteCloudSaveBusy = false;
-    try{
-      const pending = localStorage.getItem('su_sync_pending_save') === '1';
-      const mode = localStorage.getItem('su_sync_pending_save_mode') || '';
-      if(pending && mode === 'queued' && !_remoteCloudSaveTimer && navigator.onLine !== false){
-        _remoteCloudSaveTimer = setTimeout(()=>{ _flushRemoteCloudSave('queued-retry'); }, 250);
-      }
-      _updateSyncNetworkBadge();
-    }catch(e){}
+    try{ _updateSyncNetworkBadge(); }catch(e){}
   }
 }
 function _scheduleRemoteCloudSave(delay, reason){
-  if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
-  if(_remoteCloudSaveTimer) clearTimeout(_remoteCloudSaveTimer);
-  _remoteCloudSaveTimer = setTimeout(()=>{ _flushRemoteCloudSave(reason || 'save'); }, Math.max(0, Number(delay||_REMOTE_SAVE_DEBOUNCE_MS)));
-  _setCloudStatusMsg('🕓 변경사항 저장 준비 중...', '#2563eb');
-  _updateSyncNetworkBadge();
-  return true;
+  return false;
 }
 window._retryPendingRemoteSave = function(force){
-  try{
-    const pending = localStorage.getItem('su_sync_pending_save') === '1';
-    if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
-    if(navigator.onLine === false) return false;
-    if(!force && !pending) return false;
-    return _scheduleRemoteCloudSave(force ? 120 : _REMOTE_SAVE_DEBOUNCE_MS, force ? 'forced-retry' : 'pending-retry');
-  }catch(e){
-    return false;
-  }
+  return false;
 };
 window.addEventListener('online', ()=>{
   _updateSyncNetworkBadge();
-  _setCloudStatusMsg('🌐 온라인 복귀 — 저장 재시도 확인 중', '#2563eb');
-  try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(true); }catch(e){}
+  _setCloudStatusMsg('🌐 온라인 복귀', '#2563eb');
 });
 window.addEventListener('offline', ()=>{
   _updateSyncNetworkBadge();
@@ -1728,12 +1715,10 @@ window.addEventListener('offline', ()=>{
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState === 'visible'){
     _updateSyncNetworkBadge();
-    try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(false); }catch(e){}
   }
 });
 window.addEventListener('DOMContentLoaded', ()=>{
   _updateSyncNetworkBadge();
-  try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(false); }catch(e){}
 }, { once:true });
 window.addEventListener('DOMContentLoaded', ()=>{
   try{
@@ -1747,27 +1732,14 @@ window.addEventListener('DOMContentLoaded', ()=>{
 }, { once:true });
 async function save(){
   localSave();
-  if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
-    let shouldUpload = false;
-    try{
-      const nextSig = _buildMatchSyncSignature();
-      const prevSig = _lastObservedMatchSyncSig || nextSig;
-      const pendingSig = localStorage.getItem(_MATCH_SYNC_SIG_KEYS.pending) || '';
-      _lastObservedMatchSyncSig = nextSig;
-      if(nextSig !== prevSig){
-        localStorage.setItem(_MATCH_SYNC_SIG_KEYS.pending, nextSig);
-        shouldUpload = true;
-      }else if(pendingSig){
-        shouldUpload = true;
-      }
-    }catch(e){
-      shouldUpload = true;
-    }
-    if(shouldUpload){
-      // 경기 기록 변경만 원격 업로드
-      _scheduleRemoteCloudSave(_REMOTE_SAVE_DEBOUNCE_MS, 'match-save');
-    }
-  }
+  try{ await (window._lastMatchStoreSavePromise || Promise.resolve(true)); }catch(e){}
+  try{
+    const nextSig = _buildMatchSyncSignature();
+    _lastObservedMatchSyncSig = nextSig;
+    localStorage.setItem(_MATCH_SYNC_SIG_KEYS.pending, nextSig);
+  }catch(e){}
+  try{ _clearPendingRemoteSave(); }catch(e){}
+  _setCloudStatusMsg('💾 로컬 저장됨', '#16a34a');
 }
 
 let curTab='total', editName='', reMode='', reIdx=-1;

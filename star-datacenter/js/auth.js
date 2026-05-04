@@ -731,7 +731,7 @@ function doExport(){
 function doImport(){document.getElementById('fi').click();}
 function doFile(inp){
   const r=new FileReader();
-  r.onload=e=>{
+  r.onload=async e=>{
     try{
       const d=JSON.parse(e.target.result);
       if(!d||typeof d!=='object'||Array.isArray(d)){
@@ -802,7 +802,8 @@ function doFile(inp){
       }catch(e){}
       fixPoints();
       try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){}
-      save();init();
+      await save();
+      init();
       // 동명이인 감지
       const _dupSeen={};const _dupFound=[];
       players.forEach(p=>{if(_dupSeen[p.name])_dupFound.push(p.name);else _dupSeen[p.name]=true;});

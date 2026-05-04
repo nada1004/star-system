@@ -1,6 +1,8 @@
 (function(){
   let _sProIds=null, _sProIdsTime='';
   let _sPMap=null, _sPMapTime='';
+  let _sPMapLen=-1;
+  let _sPMapRef=null;
 
   function statsProMatchIds(){
     const t=localStorage.getItem('su_last_save_time')||'0';
@@ -37,11 +39,33 @@
 
   function statsPMap(){
     const t=localStorage.getItem('su_last_save_time')||'0';
-    if(t!==_sPMapTime){ _sPMap=new Map(((window.players)||[]).map(p=>[p.name,p])); _sPMapTime=t; }
+    const arr = Array.isArray(window.players) ? window.players : [];
+    if(t!==_sPMapTime || _sPMapRef!==arr || _sPMapLen!==arr.length){
+      _sPMap=new Map(arr.map(p=>{
+        const photo = (p&&p.photo) || ((window.playerPhotos && p && p.name) ? window.playerPhotos[p.name] : '');
+        return [p.name,{...p, ...(photo?{photo}:{} )}];
+      }));
+      _sPMapTime=t;
+      _sPMapRef=arr;
+      _sPMapLen=arr.length;
+    }
     return _sPMap || new Map();
   }
 
-  function statsP(name){ return statsPMap().get(name) || null; }
+  function statsP(name){
+    const key=String(name||'').trim();
+    if(!key) return null;
+    const hit = statsPMap().get(key) || null;
+    if(hit) return hit;
+    try{
+      const p = (Array.isArray(window.players)?window.players:[]).find(x=>String(x&&x.name||'').trim()===key);
+      if(!p) return null;
+      const photo = p.photo || ((window.playerPhotos && window.playerPhotos[key]) ? window.playerPhotos[key] : '');
+      return photo ? {...p, photo} : p;
+    }catch(e){
+      return null;
+    }
+  }
 
   window.statsProMatchIds = statsProMatchIds;
   window.statsNonProHist = statsNonProHist;

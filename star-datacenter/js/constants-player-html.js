@@ -27,7 +27,10 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
       }
     }
   }catch(e){}
-  const p=players.find(x=>x.name===playerName);
+  const arr = Array.isArray(window.players) ? window.players : [];
+  const basePlayer = arr.find(x=>String(x&&x.name||'').trim()===String(playerName||'').trim()) || null;
+  const photoMap = (window.playerPhotos && typeof window.playerPhotos==='object') ? window.playerPhotos : {};
+  const p = basePlayer ? ({...basePlayer, ...((!basePlayer.photo && photoMap[basePlayer.name]) ? {photo:photoMap[basePlayer.name]} : {})}) : null;
   const hasBorder=extraStyle.includes('border');
   const bdr=hasBorder?'':'border:1.5px solid var(--border);';
   const sz = 'calc('+size+' * var(--su_profile_scale,1))';
@@ -57,7 +60,7 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
       fit = null;
     }
   }catch(e){ fit='contain'; }
-  return '<img '+clickAttr+' src="'+src+'" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
+  return '<img '+clickAttr+' src="'+src+'" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+bdr+clickStyle+'" onerror="this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');">';
 }
 
 function getStatusIconHTML(name){

@@ -470,15 +470,29 @@ function histTourneyHTML(context){
 
           </div>
           <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
-            <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
-            ${rIdx>=0?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('comp',${rIdx})">✏️ 수정</button>`):''}
-            ${rIdx>=0?adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('comp',${rIdx})">🗑️ 삭제</button>`):''}
-            ${m._src==='tour'?adminBtn(`<button class="btn btn-o btn-xs" onclick="leagueEditMatch('${m._tnId}',${m._gi},${m._mi})">✏️ 수정</button>`):''}
+            <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
+              onclick="openRecActionMenu(event,{
+                _btnEl:this,
+                a:'${(m.a||'').replace(/'/g,"\\'")}',
+                sa:${m.sa||0},
+                b:'${(m.b||'').replace(/'/g,"\\'")}',
+                sb:${m.sb||0},
+                d:'${m.d||''}',
+                mode:'comp',
+                idx:${rIdx>=0?rIdx:0},
+                key:'${key}',
+                canShare:${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?'true':'false';})()},
+                shareFn:${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; if(_adm && !isLoggedIn) return 'null'; return `()=>window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(${idx},'${context}'))`;})()},
+                canEdit:${((rIdx>=0 || m._src==='tour') && isLoggedIn && !isSubAdmin)?'true':'false'},
+                canDel:${(rIdx>=0 && isLoggedIn && !isSubAdmin)?'true':'false'},
+                editFn:${m._src==='tour' ? `()=>leagueEditMatch('${m._tnId}',${m._gi},${m._mi})` : 'null'},
+                canMove:false
+              })">⋯</button>
           </div>
         </div>
         <div id="det-${key}" class="rec-detail-area">
         ${_regDet(key,{...m,_editRef:rIdx>=0?'comp:'+rIdx:''},  'comp',a,b,ca,cb,aWin,bWin, rIdx)}
-          ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; const _share=((!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(${idx},'${context}'))">🎴 공유 카드</button>`:''); const _memo=(rIdx>=0&&isLoggedIn)?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''; const _note=m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''; return (_share||_memo||_note)?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">${_note}<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${_share}${_memo}</div></div>`:'';})()}
+          ${(()=>{const _memo=(rIdx>=0&&isLoggedIn)?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''; const _note=m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''; return (_memo||_note)?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">${_note}<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${_memo}</div></div>`:'';})()}
         </div>
       </div>`;
     });
@@ -675,9 +689,22 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
             ${(m.n&&mode!=='comp')?`<span class="rec-meta-chip rec-meta-chip--note">${m.n}</span>`:''}
           </div>
           <div class="rec-actions rec-actions--inline no-export">
-            <button id="detbtn-${key}" class="btn-detail" onclick="toggleDetail('${key}')">📂 상세</button>
-            ${(mode==='tt'||mode==='mini'||mode==='univm'||mode==='comp'||mode==='ck'||mode==='ind'||mode==='gj'||mode==='progj')?adminBtn(`<button class="btn btn-o btn-xs" onclick="openRE('${mode}',${i})">✏️ 수정</button>`):''}
-            ${adminBtn(`<button class="btn btn-r btn-xs" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`)}
+            <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
+              onclick="openRecActionMenu(event,{
+                _btnEl:this,
+                a:'${(m.a||'').replace(/'/g,"\\'")}',
+                sa:${m.sa||0},
+                b:'${(m.b||'').replace(/'/g,"\\'")}',
+                sb:${m.sb||0},
+                d:'${m.d||''}',
+                mode:'${mode}',
+                idx:${i},
+                key:'${key}',
+                canShare:${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?'true':'false';})()},
+                canEdit:${(isLoggedIn && !isSubAdmin)?'true':'false'},
+                canDel:${(isLoggedIn && !isSubAdmin)?'true':'false'},
+                canMove:${['mini','univm','comp','tt','ck','pro'].includes(String(mode||''))?'true':'false'}
+              })">⋯</button>
           </div>
         </div>
         <div class="rec-sum-vs">
@@ -689,7 +716,6 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
       </div>
       <div id="det-${key}" class="rec-detail-area">
         ${_regDet(key,{...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin, i)}
-        ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; const _share=((!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs no-export rec-share-btn" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="window._openShareFromDetReg&&window._openShareFromDetReg('${key}')">🎴 공유 카드</button>`:''); const _edit=(isLoggedIn&&!isSubAdmin)?`<button class="btn btn-o btn-xs no-export" onclick="openRE('${mode}',${i})">✏️ 수정</button>`:''; const _del=(isLoggedIn&&!isSubAdmin)?`<button class="btn btn-r btn-xs no-export" onclick="delRec('${mode}',${i})">🗑️ 삭제</button>`:''; return (_share||_edit||_del)?`<div class="rec-detail-footer"><div class="fbar merged-subbar no-export rec-detail-footer__actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">${_share}${_edit}${_del}</div></div>`:'';})()}
       </div>
     </div>`;
   }
@@ -2087,13 +2113,13 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     h+=`<div class="set-row">
       <div class="cmd-set-head" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:5px 10px;background:${isAce?'#f5f3ff':'var(--blue-l)'};border-radius:7px;border:1px solid ${isAce?'#ddd6fe':'var(--blue-ll)'}">
         <span class="set-row-title ${isAce?'ace-t':''}" style="margin-bottom:0;font-size:12px">${sLabel}</span>
-        <span class="ubadge${setAWin?'':' loser'}" style="background:${ca};font-size:10px">${labelA}</span>
+        <span class="ubadge${setAWin?'':' loser'}" style="background:${setAWin?ca:`linear-gradient(135deg, ${typeof getMatchWinTint==='function'?getMatchWinTint(ca):ca+'18'}, rgba(255,255,255,.92))`};color:${setAWin?'#fff':'#334155'};border-color:${setAWin?ca:ca+'33'};font-size:10px">${labelA}</span>
         <span style="font-weight:800;font-size:14px">
           <span class="${setAWin?'wt':setBWin?'lt':'pt-z'}">${swA}</span>
           <span style="color:var(--border2)"> : </span>
           <span class="${setBWin?'wt':setAWin?'lt':'pt-z'}">${swB}</span>
         </span>
-        <span class="ubadge${setBWin?'':' loser'}" style="background:${cb};font-size:10px">${labelB}</span>
+        <span class="ubadge${setBWin?'':' loser'}" style="background:${setBWin?cb:`linear-gradient(135deg, ${typeof getMatchWinTint==='function'?getMatchWinTint(cb):cb+'18'}, rgba(255,255,255,.92))`};color:${setBWin?'#fff':'#334155'};border-color:${setBWin?cb:cb+'33'};font-size:10px">${labelB}</span>
         ${setAWin?`<span style="font-size:10px;font-weight:700;color:${ca}">▶ ${labelA} 승</span>`:setBWin?`<span style="font-size:10px;font-weight:700;color:${cb}">▶ ${labelB} 승</span>`:''}
       </div>`;
     if(set.games&&set.games.length){
@@ -2114,13 +2140,16 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         // (설정) 경기 결과 팝업( histDetModal )에서 스트리머 클릭 시 팝업 닫기 여부
         const clickA=g.playerA?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } })();setTimeout(()=>openPlayerModal('${_pASafe}'),80)" data-player-link="1"`:''
         const clickB=g.playerB?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } })();setTimeout(()=>openPlayerModal('${_pBSafe}'),80)" data-player-link="1"`:''
+        const _teamColorMode = ['mini','univm','ck','pro','tt','comp','procomp','procomptn'].includes(String(mode||''));
+        const sideBaseA = _teamColorMode ? ca : pca;
+        const sideBaseB = _teamColorMode ? cb : pcb;
         const raceA=pA?`<span class="rbadge cmd-race-badge r${pA.race}" style="font-size:10px;flex-shrink:0">${pA.race}</span>`:'';
         const raceB=pB?`<span class="rbadge cmd-race-badge r${pB.race}" style="font-size:10px;flex-shrink:0">${pB.race}</span>`:'';
-        const univLogoA=pA?.univ?`<span class="cmd-mini-uicon" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:18px;height:18px;border-radius:5px;background:${pca}22;border:1px solid ${pca}44;overflow:hidden">${typeof gUI==='function'?gUI(pA.univ,'12px'):''}</span>`:'';
-        const univLogoB=pB?.univ?`<span class="cmd-mini-uicon" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:18px;height:18px;border-radius:5px;background:${pcb}22;border:1px solid ${pcb}44;overflow:hidden">${typeof gUI==='function'?gUI(pB.univ,'12px'):''}</span>`:'';
+        const univLogoA='';
+        const univLogoB='';
         // 경기 상세 카드(경기 기록 네모) 프로필 이미지: 1배(조금 더 크게)
-        const photoA=pA?getPlayerPhotoHTML(pA.name,'40px','flex-shrink:0;border:2px solid '+pca+';box-shadow:0 1px 6px '+pca+'44'):'';
-        const photoB=pB?getPlayerPhotoHTML(pB.name,'40px','flex-shrink:0;border:2px solid '+pcb+';box-shadow:0 1px 6px '+pcb+'44'):'';
+        const photoA=pA?getPlayerPhotoHTML(pA.name,'40px','flex-shrink:0;border:2px solid '+sideBaseA+';box-shadow:0 1px 6px '+sideBaseA+'44'):'';
+        const photoB=pB?getPlayerPhotoHTML(pB.name,'40px','flex-shrink:0;border:2px solid '+sideBaseB+';box-shadow:0 1px 6px '+sideBaseB+'44'):'';
         const editBtn=isLoggedIn&&m._editRef?`<button class="btn btn-o btn-xs no-export cmd-edit-btn" style="margin-left:4px;flex-shrink:0" onclick="openGameEditModal('${m._editRef}',${si},${gi})">✏️</button>`:'';
 
         {
@@ -2135,26 +2164,32 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
 
           // 팝업(대회탭/기록탭)에서는 동일한 '세련된' 경기 카드 UI 사용
           if((window.__detailCtx||'')==='compModal' || (window.__detailCtx||'')==='histModal'){
+            const sideColA = sideBaseA;
+            const sideColB = sideBaseB;
             const loseA = hasWinner && !winA;
             const loseB = hasWinner && !winB;
             const pAHtml = photoA ? `<span class="cmd-photo ${loseA?'is-lose':''}">${photoA}</span>` : '';
             const pBHtml = photoB ? `<span class="cmd-photo ${loseB?'is-lose':''}">${photoB}</span>` : '';
+            const loseBgA = `linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))`;
+            const loseBgB = `linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))`;
+            const loseBdA = 'rgba(203,213,225,.85)';
+            const loseBdB = 'rgba(203,213,225,.85)';
             h+=`<div class="cmd-game">
               <div class="cmd-game-row">
-                <div class="cmd-player ${winA?'is-win':''} ${loseA?'is-lose':''}" style="--cmd-col:${pca};background:${winA?(typeof getMatchWinTint==='function'?getMatchWinTint(pca):(pca+'22')):(loseA?'linear-gradient(180deg, rgba(148,163,184,.14), rgba(255,255,255,.96))':(pca+'12'))};border-color:${winA?(pca+'55'):(loseA?'rgba(148,163,184,.26)':(pca+'33'))};">
+                <div class="cmd-player ${winA?'is-win':''} ${loseA?'is-lose':''}" style="--cmd-col:${sideColA};background:${winA?(typeof getMatchWinTint==='function'?getMatchWinTint(sideColA):(sideColA+'22')):(loseA?loseBgA:(sideColA+'12'))};border-color:${winA?(sideColA+'55'):(loseA?loseBdA:(sideColA+'33'))};">
                   <div class="cmd-player-meta">
-                    <div class="cmd-player-name" ${clickA}><span class="cmd-player-inline">${univLogoA}${tierA}${raceA}</span><span class="cmd-player-name__txt">${g.playerA||'?'}</span></div>
+                    <div class="cmd-player-name" ${clickA} style="display:flex;align-items:center;justify-content:center;gap:8px;text-align:center"><span class="cmd-player-inline" style="display:inline-flex;align-items:center;gap:4px;justify-content:center">${univLogoA}${tierA}${raceA}</span><span class="cmd-player-name__txt">${g.playerA||'?'}</span></div>
                   </div>
-                  ${winA?`${winMark(pca)}${pAHtml}`:pAHtml}
+                  ${winA?`${winMark(sideColA)}${pAHtml}`:pAHtml}
                 </div>
                 <div class="cmd-midbox">
                   <div class="cmd-gno">경기 ${gi+1}</div>
                   ${g.map?`<div class="cmd-gmap">${g.map}</div>`:''}
                 </div>
-                <div class="cmd-player ${winB?'is-win':''} ${loseB?'is-lose':''} is-right" style="--cmd-col:${pcb};background:${winB?(typeof getMatchWinTint==='function'?getMatchWinTint(pcb):(pcb+'22')):(loseB?'linear-gradient(180deg, rgba(148,163,184,.14), rgba(255,255,255,.96))':(pcb+'12'))};border-color:${winB?(pcb+'55'):(loseB?'rgba(148,163,184,.26)':(pcb+'33'))};">
-                  ${winB?`${pBHtml}${winMark(pcb)}`:pBHtml}
+                <div class="cmd-player ${winB?'is-win':''} ${loseB?'is-lose':''} is-right" style="--cmd-col:${sideColB};background:${winB?(typeof getMatchWinTint==='function'?getMatchWinTint(sideColB):(sideColB+'22')):(loseB?loseBgB:(sideColB+'12'))};border-color:${winB?(sideColB+'55'):(loseB?loseBdB:(sideColB+'33'))};">
+                  ${winB?`${pBHtml}${winMark(sideColB)}`:pBHtml}
                   <div class="cmd-player-meta">
-                    <div class="cmd-player-name" ${clickB}><span class="cmd-player-inline">${univLogoB}${tierB}${raceB}</span><span class="cmd-player-name__txt">${g.playerB||'?'}</span></div>
+                    <div class="cmd-player-name" ${clickB} style="display:flex;align-items:center;justify-content:center;gap:8px;text-align:center"><span class="cmd-player-inline" style="display:inline-flex;align-items:center;gap:4px;justify-content:center">${univLogoB}${tierB}${raceB}</span><span class="cmd-player-name__txt">${g.playerB||'?'}</span></div>
                   </div>
                 </div>
                 ${editBtn}
@@ -2541,8 +2576,7 @@ function compSummaryListHTML(context){
           </span>`:''}
         </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0" class="no-export">
-          <button class="btn btn-w btn-xs" style="padding:3px 10px;font-size:14px" title="메뉴"
-            class="rec-morebtn"
+          <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
             onclick="openRecActionMenu(event,{
               _btnEl:this,
               a:'${a.replace(/'/g,"\\'")}',
@@ -2553,18 +2587,17 @@ function compSummaryListHTML(context){
               mode:'comp',
               idx:${rIdx>=0?rIdx:'null'},
               key:'${key}',
-              canShare:false,
+              canShare:${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?'true':'false';})()},
               canEdit:${((rIdx>=0 || m._src==='tour') && isLoggedIn && !isSubAdmin)?'true':'false'},
               canDel:${(rIdx>=0 && isLoggedIn && !isSubAdmin)?'true':'false'},
+              shareFn:${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; if(_adm && !isLoggedIn) return 'null'; return `()=>window._openShareMatchObjCard&&window._openShareMatchObjCard(_getCompMatchObj(${listIdx},'${context}'))`;})()},
               editFn:${m._src==='tour' ? `()=>leagueEditMatch('${m._tnId}',${m._gi},${m._mi})` : 'null'},
               canMove:false
             })">⋯</button>
-          ${m._src==='tour'?adminBtn(`<button class="btn btn-o btn-xs" onclick="leagueEditMatch('${m._tnId}',${m._gi},${m._mi})">✏️ 수정</button>`):''}
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
         ${_regDet(key,rIdx>=0?{...m,_editRef:'comp:'+rIdx}:m,'comp',a,b,ca,cb,aWin,bWin, rIdx)}
-        ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; const _share=((!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="window._openShareMatchObjCard&&window._openShareMatchObjCard(_getCompMatchObj(${listIdx},'${context}'))">🎴 공유 카드</button>`:''); const _memo=(rIdx>=0&&isLoggedIn)?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''; const _note=m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''; return (_share||_memo||_note)?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">${_note}<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${_share}${_memo}</div></div>`:'';})()}
       </div>
     </div>`;
   });
@@ -2829,7 +2862,7 @@ function _getMatchDetailTeamHeaderColor(modeKey, side, fallback){
   try{
     const mode = String(modeKey||'').trim();
     const sd = (String(side||'A').toUpperCase()==='B') ? 'b' : 'a';
-    if(mode==='ck' || mode==='pro'){
+    if(mode==='ck' || mode==='pro' || mode==='tt'){
       const key = `su_md_team_hdr_${mode}_${sd}`;
       const v = String(localStorage.getItem(key)||'').trim();
       if(/^#[0-9a-fA-F]{6}$/.test(v)) return v;
@@ -2984,9 +3017,6 @@ function openHistDetailModal(key){
         const safe=(s)=>String(s||'').replace(/[<>]/g,'');
         const _icon = (name)=>{
           try{
-            const p = (typeof players!=='undefined' ? (players||[]).find(x=>x && x.name===name) : null);
-            // 크기는 CSS 변수(--su_md_logo_size)로 제어
-            if(p) return `<span class="cmd-uicon" style="border-radius:var(--su_profile_radius,50%);overflow:hidden;display:inline-flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.55);box-shadow:0 6px 16px rgba(0,0,0,.14)">${getPlayerPhotoHTML(name,'var(--su_md_logo_size,42px)','width:100%;height:100%;object-fit:cover')}</span>`;
             const url=UNIV_ICONS[name]||(univCfg.find(x=>x.name===name)||{}).icon||'';
             if(url) return `<img class="cmd-uicon" src="${toHttpsUrl(url)}" style="object-fit:contain;border-radius:var(--su_univ_logo_radius,12px);background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:7px" onerror="this.style.display='none'">`;
           }catch(e){}
@@ -2999,8 +3029,7 @@ function openHistDetailModal(key){
             const race = p.race ? `<span class="rbadge cmd-head-race r${p.race}" style="font-size:10px">${p.race}</span>` : '';
             const tierTxt = p.tier ? String(p.tier).replace(/티어$/,'') : '';
             const tier = p.tier ? `<span class="cmd-head-tier" style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'}">${tierTxt}</span>` : '';
-            const uicon = p.univ ? `<span class="cmd-head-uicon" style="background:${isLose?'rgba(148,163,184,.14)':(col+'22')};border:1px solid ${isLose?'rgba(148,163,184,.26)':(col+'44')};">${typeof gUI==='function'?gUI(p.univ,'12px'):''}</span>` : '';
-            return `<span class="cmd-team-meta">${uicon}${tier}${race}</span>`;
+            return `<span class="cmd-team-meta">${tier}${race}</span>`;
           }catch(e){
             return '';
           }
@@ -3027,9 +3056,9 @@ function openHistDetailModal(key){
           m.dataset.teamColorB = cbBase;
         }catch(e){}
         bar.innerHTML = `<div class="cmd-score">
-          <div class="cmd-team ${aWin?'is-win':''} ${loseTeamA?'is-lose':''}" style="background:${loseTeamA?'linear-gradient(180deg, rgba(148,163,184,.20), rgba(255,255,255,.92))':`linear-gradient(135deg,${ca},${ca}cc)`}">${_icon(labelA)}<span class="cmd-team-text"><span class="cmd-team-name" style="font-weight:1000">${safe(labelA)}</span>${metaA}</span></div>
+          <div class="cmd-team ${aWin?'is-win':''} ${loseTeamA?'is-lose':''}" style="background:${loseTeamA?'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))':`linear-gradient(135deg,${ca},${ca}cc)`};border-color:${loseTeamA?'rgba(203,213,225,.88)':'rgba(255,255,255,.28)'};padding:0 18px;color:${loseTeamA?'#64748b':'#fff'}"><span class="cmd-team-text" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);align-items:center;text-align:center;justify-content:center;gap:3px;max-width:calc(100% - 82px)"><span style="display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:100%">${_icon(labelA)}<span class="cmd-team-name" style="font-weight:1000">${safe(labelA)}</span></span>${metaA}</span></div>
           <div class="cmd-mid"><span style="color:${aWin?'#16a34a':bWin?'#dc2626':'#111827'}">${match.sa??''}</span><span class="cmd-colon">:</span><span style="color:${bWin?'#16a34a':aWin?'#dc2626':'#111827'}">${match.sb??''}</span></div>
-          <div class="cmd-team ${bWin?'is-win':''} ${loseTeamB?'is-lose':''}" style="background:${loseTeamB?'linear-gradient(180deg, rgba(148,163,184,.20), rgba(255,255,255,.92))':`linear-gradient(135deg,${cb},${cb}cc)`}">${_icon(labelB)}<span class="cmd-team-text"><span class="cmd-team-name" style="font-weight:1000">${safe(labelB)}</span>${metaB}</span></div>
+          <div class="cmd-team ${bWin?'is-win':''} ${loseTeamB?'is-lose':''}" style="background:${loseTeamB?'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))':`linear-gradient(135deg,${cb},${cb}cc)`};border-color:${loseTeamB?'rgba(203,213,225,.88)':'rgba(255,255,255,.28)'};padding:0 18px;color:${loseTeamB?'#64748b':'#fff'}"><span class="cmd-team-text" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);align-items:center;text-align:center;justify-content:center;gap:3px;max-width:calc(100% - 82px)"><span style="display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:100%">${_icon(labelB)}<span class="cmd-team-name" style="font-weight:1000">${safe(labelB)}</span></span>${metaB}</span></div>
         </div>`;
         bar.style.display='block';
       }else{
@@ -3181,9 +3210,26 @@ function _histProCompLeagueListHTML(){
           <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           ${stageTypeBadge}${stageBadge}
           <div class="rec-actions no-export" style="margin-left:auto">
-            <button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${aWin?1:0},${bWin?1:0},'${m.d||''}')">🎴 공유 카드</button>
-            ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="proCompEditMatch('${m._tnId||''}',${m._gi||0},${m._mi||0})">✏️ 결과</button>
-            <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${m._tnId||''}',${m._gi||0},${m._mi||0})">🗑️ 삭제</button>`:''}
+            <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
+              onclick="openRecActionMenu(event,{
+                _btnEl:this,
+                hideDetail:true,
+                a:'${(m.a||'').replace(/'/g,"\\'")}',
+                sa:${aWin?1:0},
+                b:'${(m.b||'').replace(/'/g,"\\'")}',
+                sb:${bWin?1:0},
+                d:'${m.d||''}',
+                mode:'procomp',
+                idx:0,
+                key:'',
+                canShare:true,
+                shareFn:()=>openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${aWin?1:0},${bWin?1:0},'${m.d||''}'),
+                canEdit:${isLoggedIn?'true':'false'},
+                canDel:${isLoggedIn?'true':'false'},
+                editFn:${isLoggedIn?`()=>proCompEditMatch('${m._tnId||''}',${m._gi||0},${m._mi||0})`:'null'},
+                delFn:${isLoggedIn?`()=>proCompDelMatch('${m._tnId||''}',${m._gi||0},${m._mi||0})`:'null'},
+                canMove:false
+              })">⋯</button>
           </div>
         </div>
         <div class="rec-sum-header" style="padding:5px 12px 10px">
@@ -3290,8 +3336,25 @@ function histProCompTourneyHTML(_omitBar) {
           ${stageBadge}
           ${tieBadge}
           <div class="rec-actions no-export" style="margin-left:auto">
-            <button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${m._isTie?(m._scoreA||0):(aWin?1:0)},${m._isTie?(m._scoreB||0):(bWin?1:0)},'${m.d||''}')">🎴 공유 카드</button>
-            ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="try{ if(typeof openPcStageRecModal==='function' && m._round) openPcStageRecModal('${(m._tnId||'').replace(/'/g,"\\'")}', '${(m._round||'').replace(/'/g,"\\'")}', ${m._idx||0}); else if(typeof openPcBktPasteModal==='function') openPcBktPasteModal('${(m._tnId||'').replace(/'/g,"\\'")}', ${JSON.stringify(m._ri)}, ${m._mi||0}); }catch(e){}">✏️ 기록</button>`:''}
+            <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
+              onclick="openRecActionMenu(event,{
+                _btnEl:this,
+                hideDetail:true,
+                a:'${(m.a||'').replace(/'/g,"\\'")}',
+                sa:${m._isTie?(m._scoreA||0):(aWin?1:0)},
+                b:'${(m.b||'').replace(/'/g,"\\'")}',
+                sb:${m._isTie?(m._scoreB||0):(bWin?1:0)},
+                d:'${m.d||''}',
+                mode:'procomptn',
+                idx:0,
+                key:'',
+                canShare:true,
+                shareFn:()=>openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${m._isTie?(m._scoreA||0):(aWin?1:0)},${m._isTie?(m._scoreB||0):(bWin?1:0)},'${m.d||''}'),
+                canEdit:${isLoggedIn?'true':'false'},
+                canDel:false,
+                editFn:${isLoggedIn?`()=>{ try{ if(typeof openPcStageRecModal==='function' && m._round) openPcStageRecModal('${(m._tnId||'').replace(/'/g,"\\'")}', '${(m._round||'').replace(/'/g,"\\'")}', ${m._idx||0}); else if(typeof openPcBktPasteModal==='function') openPcBktPasteModal('${(m._tnId||'').replace(/'/g,"\\'")}', ${JSON.stringify(m._ri)}, ${m._mi||0}); }catch(e){} }`:'null'},
+                canMove:false
+              })">⋯</button>
           </div>
         </div>
         <div class="rec-sum-header" style="padding:5px 12px 10px">
@@ -3360,7 +3423,24 @@ function histProCompTeamHTML(_omitBar) {
           <span style="font-weight:${aWin?900:600};color:${aWin?colA:'var(--text)'};font-size:13px">${tm.teamAName||'A팀'}</span>
           <span style="font-size:16px;font-weight:900;background:${aWin?colA:bWin?colB:'var(--border)'};color:#fff;padding:1px 10px;border-radius:6px">${tm.sa||0}:${tm.sb||0}</span>
           <span style="font-weight:${bWin?900:600};color:${bWin?colB:'var(--text)'};font-size:13px">${tm.teamBName||'B팀'}</span>
-          <button class="btn btn-p btn-xs no-export" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openProCompMatchShare('${(tm.teamAName||'A팀').replace(/'/g,"\\'")}','${(tm.teamBName||'B팀').replace(/'/g,"\\'")}',${tm.sa||0},${tm.sb||0},'${tm.d||''}')">🎴 공유 카드</button>
+          <button class="btn btn-w btn-xs rec-morebtn no-export" style="margin-left:auto;padding:3px 10px;font-size:14px" title="메뉴"
+            onclick="openRecActionMenu(event,{
+              _btnEl:this,
+              hideDetail:true,
+              a:'${(tm.teamAName||'A팀').replace(/'/g,"\\'")}',
+              sa:${tm.sa||0},
+              b:'${(tm.teamBName||'B팀').replace(/'/g,"\\'")}',
+              sb:${tm.sb||0},
+              d:'${tm.d||''}',
+              mode:'procomp-team',
+              idx:0,
+              key:'',
+              canShare:true,
+              shareFn:()=>openProCompMatchShare('${(tm.teamAName||'A팀').replace(/'/g,"\\'")}','${(tm.teamBName||'B팀').replace(/'/g,"\\'")}',${tm.sa||0},${tm.sb||0},'${tm.d||''}'),
+              canEdit:false,
+              canDel:false,
+              canMove:false
+            })">⋯</button>
         </div>
         ${games.map(g=>{
           const pw=players.find(p=>p.name===g.wName), pl=players.find(p=>p.name===g.lName);

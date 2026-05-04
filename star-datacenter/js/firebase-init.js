@@ -43,14 +43,52 @@ let _syncAgeBadgeBound = false;
 // 신호 감지/강제 동기화/배지 로직은 `js/sync/firebase-signal.js`로 분리
 
 // 초기 로드 + 신호 기반 변경 감지
-setTimeout(()=>{ _pollGithubOnce(true); _pollFirebaseSignalOnce(true); }, 150);
+function _safePollGithub(force){
+  try{
+    const fn = (typeof window!=='undefined' && typeof window._pollGithubOnce==='function')
+      ? window._pollGithubOnce
+      : (typeof _pollGithubOnce==='function' ? _pollGithubOnce : null);
+    if(typeof fn === 'function'){
+      fn(!!force);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _deferPollGithub(force, tryCount){
+  const n = Number(tryCount||0) || 0;
+  if(_safePollGithub(force)) return;
+  if(n < 20){
+    setTimeout(()=>{ _deferPollGithub(force, n+1); }, n < 5 ? 120 : 300);
+  }
+}
+function _safePollFirebaseSignal(force){
+  try{
+    const fn = (typeof window!=='undefined' && typeof window._pollFirebaseSignalOnce==='function')
+      ? window._pollFirebaseSignalOnce
+      : (typeof _pollFirebaseSignalOnce==='function' ? _pollFirebaseSignalOnce : null);
+    if(typeof fn === 'function'){
+      fn(!!force);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _deferPollFirebaseSignal(force, tryCount){
+  const n = Number(tryCount||0) || 0;
+  if(_safePollFirebaseSignal(force)) return;
+  if(n < 20){
+    setTimeout(()=>{ _deferPollFirebaseSignal(force, n+1); }, n < 5 ? 120 : 300);
+  }
+}
+setTimeout(()=>{ _deferPollGithub(true, 0); _deferPollFirebaseSignal(true, 0); }, 150);
 setInterval(()=>{
   if(document.visibilityState !== 'visible') return;
-  _pollFirebaseSignalOnce(false);
+  _deferPollFirebaseSignal(false, 0);
 }, 8000);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
-    _pollFirebaseSignalOnce(true);
+    _deferPollFirebaseSignal(true, 0);
     try{
       const fn = (typeof window!=='undefined' && typeof window._updateSyncAgeBadge==='function')
         ? window._updateSyncAgeBadge

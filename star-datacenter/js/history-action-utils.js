@@ -36,13 +36,32 @@ function openSimpleActionMenu(anchorEl, items, ev){
   if(!el) return;
   const list=Array.isArray(items)?items.filter(Boolean):[];
   if(!list.length){ closeSuCtxMenu(); return; }
-  el.innerHTML = list.map((it,i)=>`<button type="button" class="su-ctxmenu-item ${it.kind?`is-${it.kind}`:''}" data-i="${i}">
-    <span class="su-ctxmenu-item__label">${it.t||`메뉴 ${i+1}`}</span>
-    ${it.d?`<span class="su-ctxmenu-item__desc">${it.d}</span>`:''}
+  const _itemStyle = (kind)=>{
+    if(kind==='accent') return 'background:linear-gradient(180deg,rgba(124,58,237,.12),rgba(124,58,237,.05));box-shadow:inset 0 0 0 1px rgba(196,181,253,.42);';
+    if(kind==='primary') return 'background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.96));box-shadow:inset 0 0 0 1px rgba(226,232,240,.95);';
+    if(kind==='danger') return 'background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.94));';
+    return 'background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,250,252,.92));';
+  };
+  const _labelStyle = (kind)=>{
+    if(kind==='accent') return 'color:#6d28d9;';
+    if(kind==='danger') return 'color:#dc2626;';
+    return 'color:#334155;';
+  };
+  const _descStyle = (kind)=>{
+    if(kind==='accent') return 'color:#8b5cf6;';
+    if(kind==='danger') return 'color:#b91c1c;';
+    return 'color:#94a3b8;';
+  };
+  el.style.cssText='display:block;position:fixed;z-index:var(--z-dropdown);min-width:178px;max-width:min(270px,92vw);background:linear-gradient(180deg,rgba(250,251,255,.98),rgba(245,247,252,.98));border:1px solid #dfe5f1;border-radius:16px;box-shadow:0 14px 34px rgba(15,23,42,.14),0 2px 8px rgba(15,23,42,.06);padding:7px;backdrop-filter:blur(10px)';
+  el.innerHTML = list.map((it,i)=>`<button type="button" class="su-ctxmenu-item ${it.kind?`is-${it.kind}`:''}" data-i="${i}" style="width:100%;border:0;text-align:left;padding:11px 12px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:background .14s ease,color .14s ease,transform .14s ease,box-shadow .14s ease;${_itemStyle(it.kind)}">
+    <span class="su-ctxmenu-item__label" style="font-weight:900;line-height:1.25;${_labelStyle(it.kind)}">${it.t||`메뉴 ${i+1}`}</span>
+    ${it.d?`<span class="su-ctxmenu-item__desc" style="font-size:10px;font-weight:800;line-height:1.3;${_descStyle(it.kind)}">${it.d}</span>`:''}
   </button>`).join('');
   setTimeout(()=>{
     try{
       el.querySelectorAll('button[data-i]').forEach(b=>{
+        b.onmouseenter=()=>{ b.style.transform='translateY(-1px)'; b.style.boxShadow='inset 0 0 0 1px rgba(226,232,240,.98)'; };
+        b.onmouseleave=()=>{ b.style.transform='translateY(0)'; b.style.boxShadow=(b.classList.contains('is-accent')?'inset 0 0 0 1px rgba(196,181,253,.42)':(b.classList.contains('is-primary')?'inset 0 0 0 1px rgba(226,232,240,.95)':'none')); };
         b.onclick=(e)=>{
           try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
           const idx=parseInt(b.getAttribute('data-i')||'0',10)||0;
@@ -79,60 +98,20 @@ function openSimpleActionMenu(anchorEl, items, ev){
 function openRecActionMenu(ev, opts){
   try{ if(ev && ev.preventDefault) ev.preventDefault(); }catch(_){}
   try{ if(ev && ev.stopPropagation) ev.stopPropagation(); }catch(_){}
-  const el=_ensureSuCtxMenu();
-  if(!el) return;
   const o=opts||{};
   const _forcePersonal = ['ind','gj','progj'].includes(String(o.mode||''));
   const _canEdit = _forcePersonal ? true : !!o.canEdit;
   const _canDel = _forcePersonal ? true : !!o.canDel;
   const items=[];
-  items.push({t:'📂 상세 보기', d:'세트/경기 상세 열기', kind:'primary', on:()=>toggleDetail(o.key)});
-  if(o.canShare) items.push({t:'🎴 공유카드', d:'공유용 카드 생성', kind:'accent', on:()=>{ if(window._openShareFromDetReg && o.key) return window._openShareFromDetReg(o.key); }});
+  if(!o.hideDetail){
+    items.push({t:'📂 상세 보기', d:'세트/경기 상세 열기', kind:'primary', on:()=>((typeof o.detailFn==='function') ? o.detailFn() : toggleDetail(o.key))});
+  }
+  if(o.canShare) items.push({t:'🎴 공유카드', d:'공유용 카드 생성', kind:'accent', on:()=>{ if(typeof o.shareFn==='function') return o.shareFn(); if(window._openShareFromDetReg && o.key) return window._openShareFromDetReg(o.key); }});
   if(_canEdit) items.push({t:'✏️ 수정', d:'기록 내용 수정', kind:'normal', on:()=>((typeof o.editFn==='function') ? o.editFn() : openRE(o.mode,o.idx))});
   if(o.canMove) items.push({t:'↗ 이동', d:'다른 기록 분류로 이동', kind:'normal', on:()=>openMoveMatchPop(o._btnEl,o.mode,o.idx)});
   items.push({t:'📤 결과 복사', d:'점수와 결과 텍스트 복사', kind:'normal', on:()=>copyMatchResult(o.a,o.sa,o.b,o.sb,o.d,o.mode,o.idx)});
   if(_canDel) items.push({t:'🗑️ 삭제', d:'이 기록을 완전히 삭제', kind:'danger', on:()=>((typeof o.delFn==='function') ? o.delFn() : delRec(o.mode,o.idx))});
-
-  el.innerHTML = items.map((it,i)=>`<button type="button" class="su-ctxmenu-item ${it.kind?`is-${it.kind}`:''}" data-i="${i}">
-    <span class="su-ctxmenu-item__label">${it.t}</span>
-    ${it.d?`<span class="su-ctxmenu-item__desc">${it.d}</span>`:''}
-  </button>`).join('');
-  setTimeout(()=>{
-    try{
-      el.querySelectorAll('button[data-i]').forEach(b=>{
-        b.onclick=(e)=>{
-          try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
-          const idx=parseInt(b.getAttribute('data-i')||'0',10)||0;
-          try{ items[idx].on(); }catch(_){}
-          closeSuCtxMenu();
-        };
-      });
-    }catch(_){}
-  },0);
-
-  try{
-    const pad = 8;
-    const r = (o._btnEl && o._btnEl.getBoundingClientRect) ? o._btnEl.getBoundingClientRect() : null;
-    const ax = r ? r.right : (ev?.clientX||0);
-    const ay = r ? r.bottom : (ev?.clientY||0);
-    el.style.display='block';
-    el.style.visibility='hidden';
-    el.style.left = '0px';
-    el.style.top  = '0px';
-    const bw = el.offsetWidth || 180;
-    const bh = el.offsetHeight || 220;
-    let left = ax;
-    let top  = ay + 6;
-    if(left + bw + pad > window.innerWidth) left = window.innerWidth - bw - pad;
-    if(top  + bh + pad > window.innerHeight) top  = ay - bh - 6;
-    if(left < pad) left = pad;
-    if(top  < pad) top  = pad;
-    el.style.left = left + 'px';
-    el.style.top  = top + 'px';
-    el.style.visibility='visible';
-  }catch(e){
-    try{ el.style.display='block'; el.style.visibility='visible'; }catch(_){}
-  }
+  return openSimpleActionMenu(o._btnEl||null, items, ev);
 }
 
 function savePlayerMemo(name, del=false){
