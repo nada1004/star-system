@@ -173,7 +173,12 @@ function _applyCloudData(d) {
     // Firebase 집계로 교체 후 내 투표 복원
     Object.keys(voteData).forEach(k=>delete voteData[k]);
     Object.assign(voteData, d.voteAgg||{}, myVotes);
-    localStorage.setItem('su_votes', JSON.stringify(voteData));
+    try{
+      if(typeof window.__suQueueVoteDataPersist === 'function') window.__suQueueVoteDataPersist(voteData||{}, true);
+      else localStorage.setItem('su_votes', JSON.stringify(voteData));
+    }catch(e){
+      localStorage.setItem('su_votes', JSON.stringify(voteData));
+    }
   }
   // 현재 대회 선택 상태
   if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
@@ -181,19 +186,28 @@ function _applyCloudData(d) {
   // 🔧 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등) - Firebase 데이터 적용
   if(d.appSettings!==undefined){
     const s=d.appSettings;
-    if(s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
-    if(s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
-    if(s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
-    if(s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
-    if(s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
-    if(s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
-    if(s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
-    if(s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
+    const _remoteSettingsSa = Number(d.appSettingsSavedAt || s.savedAt || 0) || 0;
+    const _localSettingsSa = (()=>{ try{ return Number(localStorage.getItem('su_last_settings_save')||0) || 0; }catch(e){ return 0; } })();
+    const _skipRemoteSettings = !window._forcingSync && _localSettingsSa && (!_remoteSettingsSa || _localSettingsSa > _remoteSettingsSa);
+    if(!_skipRemoteSettings && s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
+    if(!_skipRemoteSettings && s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
+    if(!_skipRemoteSettings && s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
+    if(!_skipRemoteSettings && s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
+    if(!_skipRemoteSettings && s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
+    if(!_skipRemoteSettings && s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
+    if(!_skipRemoteSettings && s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
+    if(!_skipRemoteSettings && s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
+    if(!_skipRemoteSettings && s.femcoSettings!==undefined){
+      try{
+        if(String(s.femcoSettings||'').trim()) localStorage.setItem('b2_femco_settings_v1', String(s.femcoSettings));
+        else localStorage.removeItem('b2_femco_settings_v1');
+      }catch(e){}
+    }
     // (보강) 설정탭에서 바꾸는 su_* 설정을 통째로 동기화
     // - 사진(base64)/토큰/비밀번호 등은 제외
     try{
       const ls = s.ls || s.localStorage || null;
-      if(ls && typeof ls==='object'){
+      if(!_skipRemoteSettings && ls && typeof ls==='object'){
         // 외부탭(대전기록>외부) 데이터는 로컬이 더 최신인 경우 덮어쓰지 않음
         // - cloud쪽 timestamp가 없을 수도 있으므로(구버전 데이터), 0으로 간주하고 비교한다.
         let localExtTs = 0, cloudExtTs = 0;
@@ -209,7 +223,7 @@ function _applyCloudData(d) {
           if(!k || typeof k!=='string') return;
           if(!k.startsWith('su_')) return;
           if(k.startsWith('su_pp')) return;
-          if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') return;
+          if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash' || k==='su_secret_master_key_v1') return;
           if(k==='su_last_admin_save' || k==='su_last_save_time') return;
           // 로컬 외부탭 데이터가 더 최신이면(삭제/초기화 포함) 클라우드 값으로 덮어쓰지 않음
           if(extKeys.has(k) && localExtTs && localExtTs > cloudExtTs) return;
@@ -220,15 +234,24 @@ function _applyCloudData(d) {
     // UI 즉시 반영
     if(typeof updateFabVisibility==='function') updateFabVisibility();
     if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
-    // 프로필 모양/크기/효과 즉시 반영
-    try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
-    if(s.darkMode!==undefined){
+    try{
+      if(typeof window._applyAllRuntimeSettings === 'function') window._applyAllRuntimeSettings();
+      else{
+        if(typeof applyProfileShapeVars==='function') applyProfileShapeVars();
+        if(typeof applyUnivLogoVars==='function') applyUnivLogoVars();
+        if(typeof applyBoard2LogoVars==='function') applyBoard2LogoVars();
+        if(typeof applyResponsiveUiVars==='function') applyResponsiveUiVars();
+        if(typeof applyMatchDetailVars==='function') applyMatchDetailVars();
+        if(typeof window._applyThemeVars==='function') window._applyThemeVars();
+      }
+    }catch(e){}
+    if(!_skipRemoteSettings && s.darkMode!==undefined){
       document.body.classList.toggle('dark', s.darkMode);
       if(window._fixHdrBtns) window._fixHdrBtns();
     }
     // board2.js 변수 업데이트 및 재렌더링
-    if(s.b2LabelAlpha!==undefined) b2LabelAlpha = parseInt(s.b2LabelAlpha);
-    if(s.b2BgAlpha!==undefined) b2BgAlpha = parseInt(s.b2BgAlpha);
+    if(!_skipRemoteSettings && s.b2LabelAlpha!==undefined) b2LabelAlpha = parseInt(s.b2LabelAlpha);
+    if(!_skipRemoteSettings && s.b2BgAlpha!==undefined) b2BgAlpha = parseInt(s.b2BgAlpha);
     const b2Content=document.getElementById('b2-content');
     if(b2Content && typeof _b2UnivView==='function'){
       b2Content.innerHTML=_b2UnivView();
@@ -237,11 +260,11 @@ function _applyCloudData(d) {
 
     // 🎵 유튜브 BGM / 📺 SOOP 멀티뷰 설정 동기화
     try{
-      if(s.bgmEnabled!==undefined) localStorage.setItem('su_bgm_enabled', s.bgmEnabled ? '1' : '0');
-      if(s.bgmShuffle!==undefined) localStorage.setItem('su_bgm_shuffle', s.bgmShuffle ? '1' : '0');
-      if(s.bgmVolume!==undefined) localStorage.setItem('su_bgm_volume', String(s.bgmVolume));
-      if(s.bgmList!==undefined) localStorage.setItem('su_bgm_list', String(s.bgmList||''));
-      if(s.soopList!==undefined) localStorage.setItem('su_soop_list', String(s.soopList||''));
+      if(!_skipRemoteSettings && s.bgmEnabled!==undefined) localStorage.setItem('su_bgm_enabled', s.bgmEnabled ? '1' : '0');
+      if(!_skipRemoteSettings && s.bgmShuffle!==undefined) localStorage.setItem('su_bgm_shuffle', s.bgmShuffle ? '1' : '0');
+      if(!_skipRemoteSettings && s.bgmVolume!==undefined) localStorage.setItem('su_bgm_volume', String(s.bgmVolume));
+      if(!_skipRemoteSettings && s.bgmList!==undefined) localStorage.setItem('su_bgm_list', String(s.bgmList||''));
+      if(!_skipRemoteSettings && s.soopList!==undefined) localStorage.setItem('su_soop_list', String(s.soopList||''));
       // 버튼 즉시 반영
       if(typeof window.bgmApplySettings==='function') window.bgmApplySettings();
       if(typeof window.soopApplySettings==='function') window.soopApplySettings();
@@ -249,28 +272,34 @@ function _applyCloudData(d) {
 
     // 🧾 대전기록 > 외부 탭 데이터 동기화
     try{
-      if(s.histExtData!==undefined) localStorage.setItem('su_hist_ext_data_v1', String(s.histExtData||''));
-      if(s.histExtProxyPresets!==undefined) localStorage.setItem('su_hist_ext_proxy_presets_v1', String(s.histExtProxyPresets||''));
-      if(s.histExtProxyPresetSel!==undefined) localStorage.setItem('su_hist_ext_proxy_preset_sel_v1', String(s.histExtProxyPresetSel||''));
+      if(!_skipRemoteSettings && s.histExtData!==undefined) localStorage.setItem('su_hist_ext_data_v1', String(s.histExtData||''));
+      if(!_skipRemoteSettings && s.histExtProxyPresets!==undefined) localStorage.setItem('su_hist_ext_proxy_presets_v1', String(s.histExtProxyPresets||''));
+      if(!_skipRemoteSettings && s.histExtProxyPresetSel!==undefined) localStorage.setItem('su_hist_ext_proxy_preset_sel_v1', String(s.histExtProxyPresetSel||''));
     }catch(e){}
 
     // 🎨 디자인 모드(리뉴얼) / 🅰️ 폰트 설정 동기화
     try{
-      if(s.designV2On!==undefined) localStorage.setItem('su_design_v2', s.designV2On ? '1' : '0');
-      if(s.designV2Preset!==undefined) localStorage.setItem('su_design_v2_preset', String(s.designV2Preset||'base'));
-      if(s.designV2Bright!==undefined) localStorage.setItem('su_design_v2_bright', String(s.designV2Bright||'0'));
-      if(s.designV2Dark!==undefined) localStorage.setItem('su_design_v2_dark', String(s.designV2Dark||'0'));
-      if(s.designV2Colors!==undefined) localStorage.setItem('su_design_v2_colors', String(s.designV2Colors||'{}'));
-      if(s.designV2Effects!==undefined) localStorage.setItem('su_design_v2_effects', String(s.designV2Effects||'{}'));
-      if(s.appFontPreset!==undefined) localStorage.setItem('su_app_font_preset', String(s.appFontPreset||'noto'));
-      if(s.appFontCss!==undefined) localStorage.setItem('su_app_font_css', String(s.appFontCss||''));
-      if(s.appFontFamily!==undefined) localStorage.setItem('su_app_font_family', String(s.appFontFamily||''));
-      if(s.appFontCssText!==undefined) localStorage.setItem('su_app_font_css_text', String(s.appFontCssText||''));
-      if(s.appFontAliasMap!==undefined) localStorage.setItem('su_app_font_alias_map', String(s.appFontAliasMap||'{}'));
-      if(s.uiScalePct!==undefined) localStorage.setItem('su_ui_scale_pct', String(s.uiScalePct||'100'));
-      if(typeof window._applyAppFont==='function') window._applyAppFont();
-      if(typeof window.applyDesignV2==='function') window.applyDesignV2();
-      if(typeof window._applyUiScale==='function') window._applyUiScale();
+      if(!_skipRemoteSettings && s.designV2On!==undefined) localStorage.setItem('su_design_v2', s.designV2On ? '1' : '0');
+      if(!_skipRemoteSettings && s.designV2Preset!==undefined) localStorage.setItem('su_design_v2_preset', String(s.designV2Preset||'base'));
+      if(!_skipRemoteSettings && s.designV2Bright!==undefined) localStorage.setItem('su_design_v2_bright', String(s.designV2Bright||'0'));
+      if(!_skipRemoteSettings && s.designV2Dark!==undefined) localStorage.setItem('su_design_v2_dark', String(s.designV2Dark||'0'));
+      if(!_skipRemoteSettings && s.designV2Colors!==undefined) localStorage.setItem('su_design_v2_colors', String(s.designV2Colors||'{}'));
+      if(!_skipRemoteSettings && s.designV2Effects!==undefined) localStorage.setItem('su_design_v2_effects', String(s.designV2Effects||'{}'));
+      if(!_skipRemoteSettings && s.appFontPreset!==undefined) localStorage.setItem('su_app_font_preset', String(s.appFontPreset||'noto'));
+      if(!_skipRemoteSettings && s.appFontCss!==undefined) localStorage.setItem('su_app_font_css', String(s.appFontCss||''));
+      if(!_skipRemoteSettings && s.appFontFamily!==undefined) localStorage.setItem('su_app_font_family', String(s.appFontFamily||''));
+      if(!_skipRemoteSettings && s.appFontCssText!==undefined) localStorage.setItem('su_app_font_css_text', String(s.appFontCssText||''));
+      if(!_skipRemoteSettings && s.appFontAliasMap!==undefined) localStorage.setItem('su_app_font_alias_map', String(s.appFontAliasMap||'{}'));
+      if(!_skipRemoteSettings && s.uiScalePct!==undefined) localStorage.setItem('su_ui_scale_pct', String(s.uiScalePct||'100'));
+      if(!_skipRemoteSettings && s.uiScalePcPct!==undefined) localStorage.setItem('su_ui_scale_pc_pct', String(s.uiScalePcPct||'100'));
+      if(!_skipRemoteSettings && s.uiScaleTbPct!==undefined) localStorage.setItem('su_ui_scale_tb_pct', String(s.uiScaleTbPct||'100'));
+      if(!_skipRemoteSettings && s.uiScaleMbPct!==undefined) localStorage.setItem('su_ui_scale_mb_pct', String(s.uiScaleMbPct||'100'));
+      if(typeof window._applyAllRuntimeSettings==='function') window._applyAllRuntimeSettings();
+      else{
+        if(typeof window._applyAppFont==='function') window._applyAppFont();
+        if(typeof window.applyDesignV2==='function') window.applyDesignV2();
+        if(typeof window._applyUiScale==='function') window._applyUiScale();
+      }
     }catch(e){}
   }
   try{ window._applyingCloudData = false; }catch(e){}
@@ -283,16 +312,52 @@ function _applyCloudData(d) {
 window.onFirebaseLoad = function(data) {
   const { admin_pw: _, ...clean } = data;
   try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
-  // (버그/개선) 동일 savedAt 중복 수신(포그라운드 복귀 get + onValue 등) 시
-  // 매번 localSave/render가 반복 호출되어 끊김/버벅임이 발생할 수 있어 중복을 스킵
+  const _getSavedAt = (obj)=>{
+    try{ return Number(obj && obj.savedAt || 0) || 0; }catch(e){ return 0; }
+  };
+  const _getLocalSavedAt = ()=>{
+    try{
+      const a = Number(window._lastAdminSaveTime||0) || 0;
+      const b = Number(localStorage.getItem('su_last_admin_save')||0) || 0;
+      return Math.max(a,b);
+    }catch(e){
+      return Number(window._lastAdminSaveTime||0) || 0;
+    }
+  };
+  const _markReceiveMeta = (sa)=>{
+    try{
+      if(sa) localStorage.setItem('su_sync_last_remote_saved_at', String(sa));
+      localStorage.setItem('su_sync_last_received_at', String(Date.now()));
+    }catch(e){}
+  };
+  // 동일/오래된 원격 데이터 또는 저장 중 수신을 제어
   try{
-    const sa = clean && clean.savedAt ? Number(clean.savedAt) : 0;
-    if(!window._forcingSync && sa && window._lastAppliedSavedAt === sa){
+    const sa = _getSavedAt(clean);
+    const localSavedAt = _getLocalSavedAt();
+    const lastApplied = Number(window._lastAppliedSavedAt||0) || 0;
+    if(!window._forcingSync && window._isSaving){
+      const pendingSa = _getSavedAt(window._fbPendingData);
+      if(!window._fbPendingData || sa >= pendingSa){
+        window._fbPendingData = clean;
+      }
       const fbTs = document.getElementById('fbLastSync');
-      if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
+      if(fbTs) fbTs.textContent = '⏳ 저장 중 수신 대기';
       return;
     }
-    if(sa) window._lastAppliedSavedAt = sa;
+    if(!window._forcingSync && sa && lastApplied && sa <= lastApplied){
+      const fbTs = document.getElementById('fbLastSync');
+      if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
+      _markReceiveMeta(sa);
+      return;
+    }
+    if(!window._forcingSync && sa && localSavedAt && sa < localSavedAt){
+      console.warn('[sync] stale remote ignored', { remoteSavedAt: sa, localSavedAt });
+      try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('⏭️ 오래된 원격 데이터 무시', '#d97706'); }catch(e){}
+      _markReceiveMeta(sa);
+      return;
+    }
+    if(sa) window._lastAppliedSavedAt = Math.max(lastApplied, sa);
+    _markReceiveMeta(sa);
   }catch(e){}
   _applyCloudData(clean);
   // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
@@ -303,12 +368,14 @@ window.onFirebaseLoad = function(data) {
   if (typeof render === 'function') render();
   // 열려있는 선수/대학 상세 모달도 자동 갱신 (수정 사항 즉시 반영)
   const _openModal = document.getElementById('playerModal');
-  if (_openModal && _openModal.style.display !== 'none' && window._playerModalCurrentName) {
-    if (typeof openPlayerModal === 'function') openPlayerModal(window._playerModalCurrentName);
+  const pst = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
+  if (_openModal && _openModal.style.display !== 'none' && pst.currentName) {
+    if (typeof openPlayerModal === 'function') openPlayerModal(pst.currentName);
   }
   const _openUnivModal = document.getElementById('univModal');
-  if (_openUnivModal && _openUnivModal.style.display !== 'none' && window._univModalCurrentName) {
-    if (typeof openUnivModal === 'function') openUnivModal(window._univModalCurrentName);
+  const ust = (typeof getUnivDetailState==='function') ? getUnivDetailState() : (window.UnivDetailState||{});
+  if (_openUnivModal && _openUnivModal.style.display !== 'none' && ust.currentName) {
+    if (typeof openUnivModal === 'function') openUnivModal(ust.currentName);
   }
   const fbTs = document.getElementById('fbLastSync');
   if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
@@ -317,9 +384,10 @@ window.onFirebaseLoad = function(data) {
 const _FB_PW_DEFAULT = 'haram1019!@'; // Firebase Security Rules admin_pw 기본값
 
 // Firebase에 현재 데이터 저장 (관리자 전용)
-async function fbCloudSave() {
-  const pw = localStorage.getItem('su_fb_pw') || _FB_PW_DEFAULT;
-  if (!pw || !isLoggedIn || typeof window.fbSet !== 'function') return;
+async function fbCloudSave(opts) {
+  const includeSettings = !(opts && opts.includeSettings === false);
+  const token = (typeof suGetSecret==='function' ? suGetSecret('su_gh_token') : localStorage.getItem('su_gh_token'));
+  if (!token || !isLoggedIn || typeof window.fbSet !== 'function') return;
   const savedAt = Date.now();
   // await 이전에 설정 → race condition 방지 + 새로고침 후에도 로컬 데이터 보호
   window._lastAdminSaveTime = savedAt;
@@ -340,22 +408,27 @@ async function fbCloudSave() {
   });
 
   // 설정(localStorage)도 함께 업로드해서 다른 기기에서도 "바로" 적용되게 함
+  // 단, 일반 "경기 기록 저장"에서는 너무 무거워질 수 있어 opts.includeSettings=false 시 생략
   const _syncLs = {};
-  try{
-    for(let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if(!k || typeof k!=='string') continue;
-      if(!k.startsWith('su_')) continue;
-      if(k.startsWith('su_pp')) continue;
-      if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash') continue;
-      if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
-      const v = localStorage.getItem(k);
-      if(v==null) continue;
-      // 너무 큰 값은 제외(예: 이미지 base64 등)
-      if(String(v).length > 200000) continue;
-      _syncLs[k] = v;
-    }
-  }catch(e){}
+  if(includeSettings){
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(!k || typeof k!=='string') continue;
+        if(k !== 'b2_femco_settings_v1' && !k.startsWith('su_')) continue;
+        if(k.startsWith('su_pp')) continue;
+        if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash' || k==='su_secret_master_key_v1') continue;
+        if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
+        // 기록 저장 때마다 외부탭 원문/대형 설정까지 같이 올리면 과도하게 무거워짐
+        if(k==='su_hist_ext_data_v1' || k==='su_hist_ext_proxy_presets_v1' || k==='su_hist_ext_proxy_preset_sel_v1' || k==='su_hist_ext_last_modified') continue;
+        const v = localStorage.getItem(k);
+        if(v==null) continue;
+        // 너무 큰 값은 제외(예: 이미지 base64 등)
+        if(String(v).length > 200000) continue;
+        _syncLs[k] = v;
+      }
+    }catch(e){}
+  }
 
   const dataObj = {
     players: _pNoPhoto,
@@ -368,8 +441,12 @@ async function fbCloudSave() {
     curProComp, _ttCurComp, seasons, calScheduled,
     // 투표 집계(_my 제외하여 개인 투표 정보 보호)
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
-    // 🔧 앱 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등)
-    appSettings: {
+    savedAt
+  };
+  if(includeSettings){
+    const _appSettingsSavedAt = Number(localStorage.getItem('su_last_settings_save')||savedAt) || savedAt;
+    dataObj.appSettings = {
+      savedAt: _appSettingsSavedAt,
       fabTabs: JSON.parse(localStorage.getItem('su_fabTabs')||'{}'),
       globalImgSettings: JSON.parse(localStorage.getItem('su_b2_global_img_settings')||'{}'),
       imgSettings: JSON.parse(localStorage.getItem('su_img_settings')||'{}'),
@@ -378,51 +455,49 @@ async function fbCloudSave() {
       darkMode: localStorage.getItem('su_dark')==='1',
       b2LabelAlpha: localStorage.getItem('su_b2la')||'16',
       b2BgAlpha: localStorage.getItem('su_b2ba')||'9',
-      // 🎨 디자인 모드(리뉴얼) — 모든 기기 동기화
       designV2On: localStorage.getItem('su_design_v2')==='1',
       designV2Preset: localStorage.getItem('su_design_v2_preset')||'base',
       designV2Bright: localStorage.getItem('su_design_v2_bright')||'0',
       designV2Dark: localStorage.getItem('su_design_v2_dark')||'0',
       designV2Colors: localStorage.getItem('su_design_v2_colors')||'{}',
       designV2Effects: localStorage.getItem('su_design_v2_effects')||'{}',
-      // 🅰️ 전역 폰트 — 모든 기기 동기화
       appFontPreset: localStorage.getItem('su_app_font_preset')||'noto',
       appFontCss: localStorage.getItem('su_app_font_css')||'',
       appFontFamily: localStorage.getItem('su_app_font_family')||'',
       appFontCssText: localStorage.getItem('su_app_font_css_text')||'',
       appFontAliasMap: localStorage.getItem('su_app_font_alias_map')||'{}',
-      // 📏 전역 UI 배율(글자/아이콘)
       uiScalePct: localStorage.getItem('su_ui_scale_pct')||'100',
-      // 🎵 유튜브 BGM (설정 동기화)
+      uiScalePcPct: localStorage.getItem('su_ui_scale_pc_pct')||localStorage.getItem('su_ui_scale_pct')||'100',
+      uiScaleTbPct: localStorage.getItem('su_ui_scale_tb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',
+      uiScaleMbPct: localStorage.getItem('su_ui_scale_mb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',
       bgmEnabled: (localStorage.getItem('su_bgm_enabled') ?? '1') === '1',
       bgmShuffle: (localStorage.getItem('su_bgm_shuffle') ?? '0') === '1',
       bgmVolume: parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50,
       bgmList: localStorage.getItem('su_bgm_list') || '',
-      // 📺 SOOP 멀티뷰 (설정 동기화)
       soopList: localStorage.getItem('su_soop_list') || '',
-
-      // 🧾 대전기록 > 외부 탭 데이터 동기화
-      // - 외부 사이트에서 자동 인식/저장한 데이터가 다른 기기에서 안 보이는 문제 해결
-      // - history.js에서 su_hist_ext_data_v1 등에 저장함 (크기가 커질 수 있어 문자열 그대로 저장)
-      histExtData: localStorage.getItem('su_hist_ext_data_v1') || '',
-      histExtProxyPresets: localStorage.getItem('su_hist_ext_proxy_presets_v1') || '',
-      histExtProxyPresetSel: localStorage.getItem('su_hist_ext_proxy_preset_sel_v1') || '',
-      // localStorage 설정(문자열) 묶음
+      femcoSettings: localStorage.getItem('b2_femco_settings_v1') || '',
       ls: _syncLs
-    },
-    savedAt
-  };
+    };
+    dataObj.appSettingsSavedAt = _appSettingsSavedAt;
+  }
   // 페이로드 크기 검사
   let _fbPayloadSize = 0;
   try {
     _fbPayloadSize = JSON.stringify(dataObj).length;
     const statusEl = document.getElementById('cloudStatus');
-    if (_fbPayloadSize > 3 * 1024 * 1024) { // 3MB 초과 — Firebase 저장 실패 가능성 높음
-      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent=`⚠️ 데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB — Firebase 저장 실패 가능 (설정탭에서 base64 이미지 삭제 필요)`; }
-      console.warn('[fbCloudSave] 크기 위험:', (_fbPayloadSize/1024).toFixed(0)+'KB');
-    } else if (_fbPayloadSize > 2 * 1024 * 1024) { // 2MB 경고
-      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent=`⚠️ 데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB — 곧 저장 실패할 수 있습니다`; }
-      console.warn('[fbCloudSave] 크기 경고:', (_fbPayloadSize/1024).toFixed(0)+'KB');
+    const splitInfo = (typeof window.__suEstimateSplitStore === 'function')
+      ? window.__suEstimateSplitStore(dataObj)
+      : null;
+    const warnBytes = splitInfo && splitInfo.maxBytes ? splitInfo.maxBytes : _fbPayloadSize;
+    const warnLabel = splitInfo && splitInfo.maxBytes
+      ? `분리 저장 최대 파일 ${(warnBytes/1024/1024).toFixed(1)}MB`
+      : `데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB`;
+    if (warnBytes > 3 * 1024 * 1024) {
+      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent=`⚠️ ${warnLabel} — 저장 실패 가능`; }
+      console.warn('[fbCloudSave] 크기 위험:', (warnBytes/1024).toFixed(0)+'KB');
+    } else if (warnBytes > 2 * 1024 * 1024) {
+      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent=`⚠️ ${warnLabel} — 곧 저장 실패할 수 있습니다`; }
+      console.warn('[fbCloudSave] 크기 경고:', (warnBytes/1024).toFixed(0)+'KB');
     }
     console.log('[fbCloudSave] 페이로드 크기:', (_fbPayloadSize/1024).toFixed(0)+'KB');
   } catch(e) {}
@@ -451,11 +526,17 @@ async function fbCloudSave() {
     const compressed = LZString.compressToBase64(jsonStr);
     const payload = { _lz: compressed };
     console.log('[fbCloudSave] 원본:', (jsonStr.length/1024).toFixed(0)+'KB → 압축:', (compressed.length/1024).toFixed(0)+'KB ('+((1-compressed.length/jsonStr.length)*100).toFixed(0)+'% 절감)');
-    return window.fbSet(payload, pw);
+    return window.fbSet(payload);
   };
   try {
     await _tryFbSet(dataObj);
-    githubDataSave(dataObj).catch(e => console.warn('[githubDataSave]', e));
+    // GitHub-only 모드: window.fbSet가 이미 GitHub data.json 저장을 수행함
+    try{
+      window._lastAppliedSavedAt = Math.max(Number(window._lastAppliedSavedAt||0)||0, savedAt);
+      localStorage.setItem('su_sync_last_upload_ok_at', String(Date.now()));
+      localStorage.setItem('su_sync_last_remote_saved_at', String(savedAt));
+      if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('✅ 업로드 완료', '#16a34a');
+    }catch(e){}
   } catch(e) {
     // 에러 상세 정보 최대한 추출
     const errCode = e.code || '';
@@ -468,10 +549,10 @@ async function fbCloudSave() {
     if (statusEl) {
       const isSizeErr = fullErr.includes('exceeded') || fullErr.includes('too large') || fullErr.includes('payload') || fullErr.includes('413');
       const isAuthErr = fullErr.includes('Permission') || fullErr.includes('PERMISSION') || fullErr.includes('auth') || fullErr.includes('denied') || fullErr.includes('401') || fullErr.includes('403');
-      const hint = isSizeErr ? ' → 데이터 크기 초과' : isAuthErr ? ' → Firebase 보안 규칙 차단' : '';
+      const hint = isSizeErr ? ' → 데이터 크기 초과' : isAuthErr ? ' → GitHub 토큰/권한 문제' : '';
       const display = fullErr || '알 수 없는 오류 (콘솔 F12 확인)';
       statusEl.style.color='#dc2626';
-      statusEl.innerHTML = '❌ Firebase 저장 실패: ' + display + hint
+      statusEl.innerHTML = '❌ GitHub 저장 실패: ' + display + hint
         + ' <button onclick="this.parentElement.textContent=\'\'" style="margin-left:6px;background:none;border:1px solid #dc2626;border-radius:4px;color:#dc2626;font-size:11px;cursor:pointer;padding:1px 6px">닫기</button>';
     }
     throw e;
@@ -483,7 +564,18 @@ async function fbCloudSave() {
       window._fbPendingData = null;
       setTimeout(() => {
         // pending은 이미 admin_pw 제거된 clean 데이터
+        const pendingSa = Number(pending && pending.savedAt || 0) || 0;
+        const localSavedAt = (()=>{ try{ return Math.max(Number(window._lastAdminSaveTime||0)||0, Number(localStorage.getItem('su_last_admin_save')||0)||0); }catch(e){ return Number(window._lastAdminSaveTime||0)||0; } })();
+        const lastApplied = Number(window._lastAppliedSavedAt||0) || 0;
+        if (pendingSa && localSavedAt && pendingSa < localSavedAt) {
+          console.warn('[sync] pending stale remote ignored', { pendingSavedAt: pendingSa, localSavedAt });
+          return;
+        }
+        if (pendingSa && lastApplied && pendingSa <= lastApplied) {
+          return;
+        }
         if (typeof _applyCloudData === 'function') {
+          if(pendingSa) window._lastAppliedSavedAt = Math.max(lastApplied, pendingSa);
           _applyCloudData(pending);
           if (typeof localSave === 'function') localSave();
           if (typeof fixPoints === 'function') fixPoints();
@@ -498,7 +590,7 @@ async function fbCloudSave() {
 // GitHub data.json 자동 업로드 (관람자 수천 명 무료 처리용)
 // 설정탭에서 GitHub 토큰(su_gh_token) 설정 시 활성화
 async function githubDataSave(dataObj) {
-  const token = localStorage.getItem('su_gh_token');
+  const token = (typeof suGetSecret==='function' ? suGetSecret('su_gh_token') : localStorage.getItem('su_gh_token'));
   if (!token) return; // 토큰 미설정 시 skip
   const apiUrl = 'https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json'; // 🔧 경로 통일
   // 현재 파일 SHA 조회 (업데이트 시 필수)
@@ -530,6 +622,83 @@ function gsSetStatus(msg, color='var(--gray-l)'){
   const el=document.getElementById('cloudStatus');
   if(el){el.textContent=msg;el.style.color=color;}
 }
+try{ window.gsSetStatus = gsSetStatus; }catch(e){}
+function _fmtSyncTs(ts){
+  const n = Number(ts||0) || 0;
+  if(!n) return '기록 없음';
+  try{ return new Date(n).toLocaleString('ko-KR'); }catch(e){ return '기록 없음'; }
+}
+function _getSyncFreshnessMeta(){
+  const localLatest = Math.max(
+    Number(window._lastAdminSaveTime||0) || 0,
+    Number(localStorage.getItem('su_last_admin_save')||0) || 0,
+    Number(localStorage.getItem('su_last_save_time')||0) || 0
+  );
+  const remoteLatest = Number(localStorage.getItem('su_sync_last_remote_saved_at')||0) || 0;
+  const diff = localLatest - remoteLatest;
+  const threshold = 1500;
+  let state = 'unknown';
+  let label = '비교 정보 부족';
+  let color = 'var(--gray-l)';
+  if(localLatest && remoteLatest){
+    if(Math.abs(diff) <= threshold){
+      state = 'same';
+      label = '로컬/원격 거의 동일';
+      color = '#16a34a';
+    }else if(diff > 0){
+      state = 'local_newer';
+      label = '로컬이 더 최신';
+      color = '#d97706';
+    }else{
+      state = 'remote_newer';
+      label = '원격이 더 최신';
+      color = '#2563eb';
+    }
+  }else if(localLatest){
+    state = 'local_only';
+    label = '로컬 저장 기록만 있음';
+    color = '#d97706';
+  }else if(remoteLatest){
+    state = 'remote_only';
+    label = '원격 저장 기록만 있음';
+    color = '#2563eb';
+  }
+  return { localLatest, remoteLatest, diff, state, label, color };
+}
+function refreshCloudSyncStatus(msg, color){
+  const el=document.getElementById('cloudStatus');
+  const panel=document.getElementById('cfg-fb-sync-result');
+  const lastUploadOk = Number(localStorage.getItem('su_sync_last_upload_ok_at')||0) || 0;
+  const lastReceived = Number(localStorage.getItem('su_sync_last_received_at')||0) || 0;
+  const lastRemoteSaved = Number(localStorage.getItem('su_sync_last_remote_saved_at')||0) || 0;
+  const freshness = _getSyncFreshnessMeta();
+  const lastSignalSeen = Number(localStorage.getItem('su_sync_last_firebase_signal_at')||0) || 0;
+  const lastSignalPush = Number(localStorage.getItem('su_sync_last_firebase_signal_push_at')||0) || 0;
+  const missingMonths = (()=>{ try{ return JSON.parse(localStorage.getItem('su_sync_missing_months')||'[]')||[]; }catch(e){ return []; } })();
+  const failMsg = String(localStorage.getItem('su_sync_last_fail_msg')||'').trim();
+  const summary = `저장 ${_fmtSyncTs(lastUploadOk)} / 수신 ${_fmtSyncTs(lastReceived)}${lastRemoteSaved?` / 원격저장 ${_fmtSyncTs(lastRemoteSaved)}`:''}${lastSignalSeen?` / 신호 ${_fmtSyncTs(lastSignalSeen)}`:''}${freshness.state!=='unknown'?` / ${freshness.label}`:''}`;
+  if(el){
+    el.style.color = color || (failMsg ? '#dc2626' : 'var(--gray-l)');
+    el.textContent = msg ? `${msg} · ${summary}` : summary;
+  }
+  if(panel){
+    panel.innerHTML = `
+      <div style="display:grid;gap:6px">
+        <div><b>로컬 최신 저장:</b> ${_fmtSyncTs(freshness.localLatest)}</div>
+        <div><b>최근 업로드:</b> ${_fmtSyncTs(lastUploadOk)}</div>
+        <div><b>최근 수신:</b> ${_fmtSyncTs(lastReceived)}</div>
+        <div><b>원격 savedAt:</b> ${_fmtSyncTs(lastRemoteSaved)}</div>
+        <div><b>최신 비교:</b> <span style="color:${freshness.color};font-weight:700">${freshness.label}</span></div>
+        <div><b>보조 신호 수신:</b> ${_fmtSyncTs(lastSignalSeen)}</div>
+        <div><b>보조 신호 발행:</b> ${_fmtSyncTs(lastSignalPush)}</div>
+        <div><b>누락 월 파일:</b> ${missingMonths.length ? missingMonths.join(', ') : '없음'}</div>
+        <div><b>최근 상태:</b> ${msg || (failMsg ? '업로드 실패 기록 있음' : '대기 중')}</div>
+        ${failMsg?`<div style="color:#dc2626"><b>최근 실패:</b> ${failMsg}</div>`:''}
+      </div>`;
+  }
+}
+try{ window.refreshCloudSyncStatus = refreshCloudSyncStatus; }catch(e){}
+try{ window.fbCloudSave = fbCloudSave; }catch(e){}
 
 // ── GitHub JSON 불러오기 ───────────────────────────────────
 window.cloudLoad = async function(){
@@ -538,6 +707,9 @@ window.cloudLoad = async function(){
     const loadBtn=document.getElementById('btnCloudLoad');
     if(loadBtn){loadBtn.disabled=true;loadBtn.textContent='⏳ 불러오는 중...';}
     let d=null;
+    if(typeof window.__suFetchGithubMergedData === 'function'){
+      d = await window.__suFetchGithubMergedData();
+    }else{
     const baseUrl=GITHUB_JSON_URL;
     const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
     const urls=[
@@ -576,13 +748,14 @@ window.cloudLoad = async function(){
       const errs=(aggErr.errors||[aggErr]).map((e,i)=>`[${i+1}] ${e?.message||e}`).join('\n');
       throw new Error('데이터를 불러올 수 없습니다.\n\n원인:\n'+errs+'\n\n해결방법:\n· 인터넷 연결 확인\n· GitHub 저장소(nada1004/star-system)가 공개(Public) 상태인지 확인\n· data.json 파일이 main 브랜치에 있는지 확인');
     }
+    }
     if(!confirm('GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?')) return;
 
     // 필드명 별칭 지원 (파싱 유연성)
     _applyCloudData(d);
     console.log('[불러오기] 데이터 구조:', {players:players.length,miniM:miniM.length,univM:univM.length,comps:comps.length,ckM:ckM.length,proM:proM.length,tourneys:tourneys.length});
 
-    save();
+    localSave();
     fixPoints();
     window._compListCache={}; // 대회 목록 캐시 초기화
     window._shareAllMatchesCached=null; // 공유카드 캐시 초기화
@@ -594,9 +767,7 @@ window.cloudLoad = async function(){
     // yearOptions를 불러온 데이터에서 자동 추출
     (function(){
       const allD=[...d.miniM||[],...d.univM||[],...d.comps||[],...d.ckM||[],...d.proM||[]];
-      const years=new Set(allD.map(m=>(m.d||'').slice(0,4)).filter(y=>/^\d{4}$/.test(y)));
-      years.forEach(y=>{if(!yearOptions.includes(y))yearOptions.push(y);});
-      yearOptions.sort();
+      mergeValidYearsIntoOptions(yearOptions, allD);
     })();
     filterYear='전체'; // 연도 필터 초기화 (데이터가 다른 년도일 수 있음)
     filterMonth='전체';
@@ -646,7 +817,8 @@ function _getBoardUnivs(){
   if(!boardOrder.length) return univs;
   const ordered = [];
   const seen = new Set();
-  boardOrder.forEach(name => { const u = univs.find(x=>x.name===name); if(u&&!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
+  const uMap = typeof getAllUnivMap === 'function' ? getAllUnivMap() : new Map(univs.map(u=>[u.name,u]));
+  boardOrder.forEach(name => { const u = uMap.get(name); if(u&&!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
   univs.forEach(u => { if(!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
   return ordered;
 }
@@ -718,7 +890,170 @@ function _getBoardPlayers(univName, includeRetired=false){
 }
 
 function saveBoardPlayerOrder(){
+  try{
+    if(typeof window.__suQueueBoardPlayerOrderPersist === 'function'){
+      window.__suQueueBoardPlayerOrderPersist(boardPlayerOrder||{}, true);
+      return;
+    }
+  }catch(e){}
   localStorage.setItem('su_bpo', JSON.stringify(boardPlayerOrder));
+}
+
+const _brdBgImageMeta = {};
+let _brdBgAutoResizeBound = false;
+
+function _loadBoardBgImageMeta(url, cb){
+  try{
+    const src = toHttpsUrl(url||'');
+    if(!src){ cb && cb(null); return; }
+    if(_brdBgImageMeta[src] && _brdBgImageMeta[src].w && _brdBgImageMeta[src].h){
+      cb && cb(_brdBgImageMeta[src]);
+      return;
+    }
+    const img = new Image();
+    img.onload = function(){
+      _brdBgImageMeta[src] = { w: img.naturalWidth||0, h: img.naturalHeight||0 };
+      cb && cb(_brdBgImageMeta[src]);
+    };
+    img.onerror = function(){ cb && cb(null); };
+    img.src = src;
+  }catch(e){
+    cb && cb(null);
+  }
+}
+
+function _resolveBoardAutoFit(kind, mode, rect, meta){
+  const rawMode = String(mode||'auto');
+  if(rawMode==='cover' || rawMode==='contain' || rawMode==='fill') return rawMode;
+  const vw = window.innerWidth || 1280;
+  if(!rect || !rect.width || !rect.height){
+    if(kind==='card') return vw <= 900 ? 'contain' : 'cover';
+    if(kind==='profile') return vw <= 640 ? 'contain' : 'cover';
+    return vw <= 900 ? 'contain' : 'cover';
+  }
+  if(!meta || !meta.w || !meta.h){
+    if(kind==='profile'){
+      if(vw <= 640) return 'contain';
+      if(rect.width <= 70) return 'contain';
+      return 'cover';
+    }
+    if(kind==='card'){
+      if(vw <= 900) return 'contain';
+      if(rect.width < 120) return 'contain';
+      return 'cover';
+    }
+    if(vw <= 640) return 'contain';
+    if(rect.width < 300) return 'contain';
+    return 'cover';
+  }
+  const cardRatio = rect.width / rect.height;
+  const imgRatio = meta.w / meta.h;
+  const diff = Math.abs(Math.log(imgRatio / cardRatio));
+  if(kind==='profile'){
+    if(vw <= 640) return diff > 0.33 ? 'contain' : 'cover';
+    if(vw <= 1024) return diff > 0.3 ? 'contain' : 'cover';
+    if(imgRatio > 1.55 || imgRatio < 0.7) return 'contain';
+    return diff > 0.28 ? 'contain' : 'cover';
+  }
+  if(kind==='card'){
+    if(vw <= 640) return diff > 0.24 ? 'contain' : 'cover';
+    if(vw <= 1024) return diff > 0.28 ? 'contain' : 'cover';
+    if(imgRatio > 1.14 || imgRatio < 0.5) return 'contain';
+    return diff > 0.3 ? 'contain' : 'cover';
+  }
+  if(vw <= 640) return diff > 0.32 ? 'contain' : 'cover';
+  if(vw <= 1024) return diff > 0.3 ? 'contain' : 'cover';
+  if(rect.width < 280 || rect.height < 220) return diff > 0.24 ? 'contain' : 'cover';
+  if(imgRatio > 1.75 || imgRatio < 0.64) return 'contain';
+  return diff > 0.4 ? 'contain' : 'cover';
+}
+
+function _resolveBoardBgSizeMode(mode, rect, meta){
+  return _resolveBoardAutoFit('bg', mode, rect, meta);
+}
+
+function _resolveBoardAutoPosition(kind, fit, rect, meta){
+  if(fit !== 'cover') return 'center center';
+  const imgRatio = meta && meta.w && meta.h ? (meta.w / meta.h) : 1;
+  const boxRatio = rect && rect.width && rect.height ? (rect.width / rect.height) : 1;
+  if(!imgRatio || !boxRatio) return 'center center';
+  const portraitPressure = boxRatio / imgRatio;
+  if(kind === 'bg'){
+    if(portraitPressure > 2.1 && rect && rect.height >= 260) return 'bottom center';
+    if(portraitPressure > 1.35) return 'top center';
+    return 'center center';
+  }
+  if(kind === 'card'){
+    if(portraitPressure > 1.55) return 'top center';
+    if(portraitPressure > 1.2) return 'top center';
+    return 'center center';
+  }
+  if(kind === 'profile'){
+    if(portraitPressure > 1.45) return 'top center';
+    return 'center center';
+  }
+  return 'center center';
+}
+
+function _applyBoardBgAutoSizing(root){
+  try{
+    const scope = root || document;
+    const _collect = (selector)=>{
+      const arr = [];
+      if(scope && scope.matches && scope.matches(selector)) arr.push(scope);
+      if(scope && scope.querySelectorAll) arr.push(...scope.querySelectorAll(selector));
+      return arr;
+    };
+    const els = _collect('.brd-bg-layer[data-bg-size-mode]');
+    els.forEach(el=>{
+      const mode = el.getAttribute('data-bg-size-mode') || 'auto';
+      const cardBody = el.closest('.brd-body') || el.parentElement;
+      const rect = cardBody ? cardBody.getBoundingClientRect() : null;
+      if(mode !== 'auto'){
+        el.style.backgroundSize = mode;
+        return;
+      }
+      const src = el.getAttribute('data-bg-src') || '';
+      const apply = (meta)=>{
+        const resolved = _resolveBoardBgSizeMode(mode, rect, meta);
+        el.style.backgroundSize = resolved;
+        el.setAttribute('data-bg-size-resolved', resolved);
+      };
+      _loadBoardBgImageMeta(src, apply);
+    });
+    const imgs = _collect('.brd-fit-auto[data-fit-kind]');
+    imgs.forEach(el=>{
+      const mode = el.getAttribute('data-fit-mode') || 'auto';
+      const kind = el.getAttribute('data-fit-kind') || 'profile';
+      const rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      const apply = (meta)=>{
+        const resolved = _resolveBoardAutoFit(kind, mode, rect, meta);
+        el.style.objectFit = resolved;
+        const pos = _resolveBoardAutoPosition(kind, resolved, rect, meta);
+        el.style.objectPosition = pos;
+        el.setAttribute('data-fit-resolved', resolved);
+      };
+      const src = el.currentSrc || el.getAttribute('src') || '';
+      _loadBoardBgImageMeta(src, apply);
+    });
+  }catch(e){}
+}
+
+function _bindBoardBgAutoResize(){
+  if(_brdBgAutoResizeBound) return;
+  _brdBgAutoResizeBound = true;
+  const rerun = ()=>{
+    try{
+      const wrap = document.getElementById('board-wrap');
+      if(!wrap) return;
+      requestAnimationFrame(()=>_applyBoardBgAutoSizing(wrap));
+    }catch(e){}
+  };
+  window.addEventListener('resize', rerun);
+  window.addEventListener('orientationchange', ()=>setTimeout(rerun, 80));
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible') setTimeout(rerun, 60);
+  });
 }
 
 function rBoard(C,T){
@@ -829,6 +1164,8 @@ function rBoard(C,T){
   requestAnimationFrame(()=>{
     injectUnivIcons(C);
     initBoardDrag();
+    _bindBoardBgAutoResize();
+    _applyBoardBgAutoSizing(C);
   });
   // 팝업 닫기 이벤트 (한 번만 등록)
   if(!_brdPopupListenerAdded){
@@ -894,7 +1231,7 @@ function buildUnivBoardCard(u, forExport){
         const rTxtCard = rc.txt||p.race||'?';
         const imgBorderRadius = boardCardShape === 'square' ? '8px' : '10px';
         const imgInner = photoSrcChip
-          ? `<img src="${toHttpsUrl(photoSrcChip)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;border-radius:${imgBorderRadius}" ${forExport?'':' onerror="this.style.display=\'none\'"'}>`
+          ? `<img src="${toHttpsUrl(photoSrcChip)}" class="brd-fit-auto" data-fit-kind="card" data-fit-mode="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;border-radius:${imgBorderRadius}" onload="_applyBoardBgAutoSizing(this)" ${forExport?'':' onerror="this.style.display=\'none\'"'}>`
           + (forExport?'':`<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:none;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:${imgBorderRadius}">${rTxtCard}</div>`)
           : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,${col},${col}aa);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;border-radius:${imgBorderRadius}">${rTxtCard}</div>`;
         // 종족/티어 배지 (좌상단)
@@ -940,7 +1277,7 @@ function buildUnivBoardCard(u, forExport){
         const imgRadius = 'var(--su_profile_radius,50%)';
         return `<span style="display:inline-flex;align-items:center;gap:12px;background:${cBgE};border-radius:16px;padding:10px 18px 10px 10px;margin:5px;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBdE}">
           ${photoSrcChip
-            ?`<img src="${toHttpsUrl(photoSrcChip)}" style="width:64px;height:64px;border-radius:${imgRadius};object-fit:cover;flex-shrink:0;border:3px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)}">`
+            ?`<img src="${toHttpsUrl(photoSrcChip)}" class="brd-fit-auto" data-fit-kind="profile" data-fit-mode="auto" style="width:64px;height:64px;border-radius:${imgRadius};object-fit:cover;flex-shrink:0;border:3px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)}" onload="_applyBoardBgAutoSizing(this)">`
             :`<span style="width:64px;height:64px;border-radius:${imgRadius};background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;flex-shrink:0;border:3px solid ${hexToRgba(col,.7)}">${rTxt}</span>`}
           <span style="display:inline-flex;flex-direction:column;gap:3px;min-width:0">
             ${isMain?`<span style="font-size:11px;font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
@@ -978,7 +1315,7 @@ function buildUnivBoardCard(u, forExport){
       const tierBadgeFs=compact?'9px':'11px';
       // 사진 렌더: 사진 로드 실패 시 플레이스홀더(종족 텍스트) 표시
       const _photoEl = photoSrcChip
-        ? `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)};background:${col};color:#fff;font-size:${photoFs};font-weight:900">${rTxt}<img src="${toHttpsUrl(photoSrcChip)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--su_profile_radius,50%)" onerror="this.style.display='none'"></span>`
+        ? `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)};background:${col};color:#fff;font-size:${photoFs};font-weight:900">${rTxt}<img src="${toHttpsUrl(photoSrcChip)}" class="brd-fit-auto" data-fit-kind="profile" data-fit-mode="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--su_profile_radius,50%)" onload="_applyBoardBgAutoSizing(this)" onerror="this.style.display='none'"></span>`
         : `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`;
       return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:${chipGap};background:${cBgL};border-radius:16px;padding:${chipPad};margin:${compact?'3px':'5px'};cursor:${isLoggedIn?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(isLoggedIn){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
         ${_photoEl}
@@ -1049,7 +1386,7 @@ function buildUnivBoardCard(u, forExport){
     const hdrDrag=isLoggedIn&&!forExport?' draggable="true" ondragstart="event.stopPropagation();const card=this.closest(\'.brd-card\');const wrap=document.getElementById(\'board-wrap\');_brdDragSrc=card;card.classList.add(\'dragging\');event.dataTransfer.effectAllowed=\'move\';event.dataTransfer.setData(\'text/card\',card.dataset.univ);" ondragend="event.stopPropagation();const card=this.closest(\'.brd-card\');card.classList.remove(\'dragging\');const wrap=document.getElementById(\'board-wrap\');if(wrap){boardOrder=[...wrap.querySelectorAll(\'.brd-card\')].map(c=>c.dataset.univ);save();syncBoardOrderToUnivCfg();}wrap&&wrap.querySelectorAll(\'.brd-card\').forEach(c=>c.classList.remove(\'drag-over\'));_brdDragSrc=null;"':'';
 
     const _bgPos=u.bgImgPos||'center center';
-    const _bgSize=u.bgImgSize||'cover';
+    const _bgSize=u.bgImgSize||'auto';
     const _uNameSafe=(u.name||'').replace(/'/g,"\\'");
     const _bgPosGrid=u.bgImg?(()=>{
       const vs=['top','center','bottom'],hs=['left','center','right'];
@@ -1084,14 +1421,14 @@ function buildUnivBoardCard(u, forExport){
               <label style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer;display:flex;align-items:center;gap:2px" onclick="event.stopPropagation()" title="배경 이미지 파일 업로드">🖼️<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardBgImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uNameSafe}')"></label>
               <button onclick="event.stopPropagation();promptBoardBgImgUrl('${_uNameSafe}')" style="background:${u.bgImg&&!u.bgImg.startsWith('data:')?'rgba(99,102,241,.45)':'rgba(255,255,255,.18)'};border:1px solid ${u.bgImg&&!u.bgImg.startsWith('data:')?'rgba(165,180,252,.8)':'rgba(255,255,255,.35)'};border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="배경 이미지 URL 링크">🔗</button>
               ${u.bgImg?`<button onclick="event.stopPropagation();removeBoardBgImg('${_uNameSafe}')" style="background:rgba(239,68,68,.35);border:1px solid rgba(239,68,68,.6);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="배경 제거">🗑️</button>
-              <button onclick="event.stopPropagation();setBoardBgImgSize('${_uNameSafe}','${_bgSize==='cover'?'contain':'cover'}')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:10px;padding:0 6px;height:22px;cursor:pointer" title="${_bgSize==='cover'?'맞추기(contain)':'채우기(cover)'}">${_bgSize==='cover'?'↔맞추기':'⬛채우기'}</button>
+              <button onclick="event.stopPropagation();setBoardBgImgSize('${_uNameSafe}','${_bgSize==='cover'?'contain':(_bgSize==='contain'?'auto':'cover')}')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:10px;padding:0 6px;height:22px;cursor:pointer" title="${_bgSize==='cover'?'맞추기(contain)':(_bgSize==='contain'?'자동(auto)':'채우기(cover)')}">${_bgSize==='cover'?'↔맞추기':(_bgSize==='contain'?'🪄자동':'⬛채우기')}</button>
               ${_bgPosGrid}`:''}
             </div>`:''}
           </div>`:''}
         </div>
       </div>
       <div class="brd-sep" style="background:${hexToRgba(col,.25)}"></div>
-      <div class="brd-card-body brd-body" style="background:${u.bgImg?'transparent':toPastel(col,Math.max(0.3, 0.88 - b2BgAlpha * 0.01))};overflow:hidden;position:relative;${boardCollapsed.has(u.name)?'display:none':''}">${u.bgImg?`<div style="position:absolute;inset:0;background:url('${u.bgImg}') ${u.bgImgPos||'center center'}/${u.bgImgSize||'cover'} no-repeat;opacity:0.35;pointer-events:none;z-index:0"></div>`:''}<div style="position:relative;z-index:1;background:${u.bgImg?'rgba(255,255,255,0.75)':'transparent'};min-height:100%">${(()=>{
+      <div class="brd-card-body brd-body" style="background:${u.bgImg?'transparent':toPastel(col,Math.max(0.3, 0.88 - b2BgAlpha * 0.01))};overflow:hidden;position:relative;${boardCollapsed.has(u.name)?'display:none':''}">${u.bgImg?`<div class="brd-bg-layer" data-bg-src="${String(u.bgImg).replace(/"/g,'&quot;')}" data-bg-size-mode="${_bgSize}" style="position:absolute;inset:0;background:url('${u.bgImg}') ${u.bgImgPos||'center center'}/${_bgSize==='auto'?'cover':_bgSize} no-repeat;opacity:0.35;pointer-events:none;z-index:0"></div>`:''}<div style="position:relative;z-index:1;background:${u.bgImg?'rgba(255,255,255,0.75)':'transparent'};min-height:100%">${(()=>{
         const _memo=u.memo||'';
         const _imgs=(u.memoImgs||[]).length?u.memoImgs:(u.memoImg?[u.memoImg]:[]);
         const _uname=u.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
@@ -1554,7 +1891,7 @@ function boardTransferPlayer(playerName, fromUniv){
 function _refreshBoardCard(univName){
   const wrap = document.getElementById('board-wrap');
   if(!wrap){ render(); return; }
-  const u = getAllUnivs().find(x=>x.name===univName);
+  const u = typeof getAllUnivMap === 'function' ? getAllUnivMap().get(univName) : getAllUnivs().find(x=>x.name===univName);
   const existing = wrap.querySelector(`.brd-card[data-univ="${univName}"]`);
   // 해당 대학에 선수가 없으면 카드 제거
   if(!u || !players.some(p=>p.univ===univName)){
@@ -1834,6 +2171,12 @@ function _dlCanvasBoard(canvas, filename) {
 async function _captureAndSave(tmpDiv, w, h, filename) {
   // 모든 외부 img를 data URL로 변환 → html2canvas canvas taint 방지
   await _imgToDataUrls(tmpDiv);
+  try{
+    await new Promise(r=>setTimeout(r, 80));
+    if(typeof _applyBoardBgAutoSizing === 'function') _applyBoardBgAutoSizing(tmpDiv);
+    if(typeof _b2ApplyBgAutoSizing === 'function') _b2ApplyBgAutoSizing(tmpDiv);
+    await new Promise(r=>setTimeout(r, 80));
+  }catch(e){}
 
   // 다크모드 CSS(body.dark .brd-card filter 등)가 export에 적용되지 않도록 일시 해제
   const wasDark = document.body.classList.contains('dark');
@@ -1965,7 +2308,7 @@ async function downloadBoardSel(){
   const tmpDiv=document.createElement('div');
   try{
     if(!boardSelUniv||boardSelUniv==='전체'){alert('대학을 선택하세요.');return;}
-    const u=getAllUnivs().find(x=>x.name===boardSelUniv);
+    const u=typeof getAllUnivMap === 'function' ? getAllUnivMap().get(boardSelUniv) : getAllUnivs().find(x=>x.name===boardSelUniv);
     if(!u){alert('해당 대학을 찾을 수 없습니다.');return;}
     const boardWrap=document.getElementById('board-wrap');
     if(boardWrap){
@@ -2000,14 +2343,16 @@ async function checkFbSyncStatus(){
   if(!el)return;
   el.innerHTML='<span style="color:var(--blue)">🔄 확인 중...</span>';
 
-  // Firebase 연결 확인
+  // GitHub data.json 동기화 상태 확인
   const fbConnected=typeof window.fbSet==='function';
-  const hasPw=!!(localStorage.getItem('su_fb_pw')||(typeof _FB_PW_DEFAULT!=='undefined'&&_FB_PW_DEFAULT));
+  const hasPw=!!(typeof suGetSecret==='function' ? suGetSecret('su_gh_token') : localStorage.getItem('su_gh_token'));
   const lastSave=localStorage.getItem('su_last_save_time');
+  const lastSignal=Number(localStorage.getItem('su_sync_last_firebase_signal_at')||0) || 0;
+  const freshness=_getSyncFreshnessMeta();
+  const missingMonths=(()=>{ try{ return JSON.parse(localStorage.getItem('su_sync_missing_months')||'[]')||[]; }catch(e){ return []; } })();
   const localSize=(()=>{let t=0;for(let k in localStorage){if(k.startsWith('su_'))t+=((localStorage.getItem(k)||'').length*2);}return t;})();
   const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
-
-  // Firebase 실제 데이터 크기 확인 (onValue로 받은 마지막 스냅샷 크기)
+  // 마지막 수신 데이터 크기(호환 변수명 유지)
   const fbSize=window._lastFbDataSize||null;
 
   let rows=`
@@ -2015,15 +2360,29 @@ async function checkFbSyncStatus(){
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${fbConnected?'#f0fdf4':'#fef2f2'};border:1px solid ${fbConnected?'#bbf7d0':'#fecaca'}">
         <span style="font-size:16px">${fbConnected?'✅':'❌'}</span>
         <div>
-          <div style="font-weight:700;font-size:12px">Firebase 연결</div>
-          <div style="font-size:11px;color:var(--gray-l)">${fbConnected?'정상 연결됨':'Firebase 스크립트 미로드'}</div>
+          <div style="font-weight:700;font-size:12px">GitHub 동기화 모듈</div>
+          <div style="font-size:11px;color:var(--gray-l)">${fbConnected?'정상 연결됨':'GitHub 동기화 모듈 미로드'}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${hasPw?'#f0fdf4':'#fffbeb'};border:1px solid ${hasPw?'#bbf7d0':'#fde68a'}">
         <span style="font-size:16px">${hasPw?'🔑':'⚠️'}</span>
         <div>
-          <div style="font-weight:700;font-size:12px">쓰기 비밀번호</div>
-          <div style="font-size:11px;color:var(--gray-l)">${hasPw?'설정됨 — 저장 시 Firebase에 업로드됨':'미설정 — 저장해도 Firebase 업로드 안 됨'}</div>
+          <div style="font-weight:700;font-size:12px">GitHub 토큰</div>
+          <div style="font-size:11px;color:var(--gray-l)">${hasPw?'설정됨 — 경기 기록 저장 시 GitHub data.json 자동 저장, 설정은 다음 기록 저장 때 함께 반영':'미설정 — GitHub 자동 저장 안 됨'}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${lastSignal?'#eff6ff':'#f8fafc'};border:1px solid ${lastSignal?'#bfdbfe':'var(--border)'}">
+        <span style="font-size:16px">📡</span>
+        <div>
+          <div style="font-weight:700;font-size:12px">보조 신호 채널</div>
+          <div style="font-size:11px;color:var(--gray-l)">${lastSignal?`최근 신호 ${new Date(lastSignal).toLocaleString('ko-KR')}`:'아직 수신 기록 없음'}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${missingMonths.length?'#fff7ed':'var(--surface)'};border:1px solid ${missingMonths.length?'#fdba74':'var(--border)'}">
+        <span style="font-size:16px">${missingMonths.length?'⚠️':'🗂️'}</span>
+        <div>
+          <div style="font-weight:700;font-size:12px">월별 기록 파일</div>
+          <div style="font-size:11px;color:var(--gray-l)">${missingMonths.length?`누락: ${missingMonths.join(', ')}`:'누락 없음'}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
@@ -2033,14 +2392,25 @@ async function checkFbSyncStatus(){
           <div style="font-size:11px;color:var(--gray-l)">${lastSave?new Date(parseInt(lastSave)).toLocaleString('ko-KR'):'기록 없음'}</div>
         </div>
       </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${freshness.state==='local_newer'?'#fff7ed':freshness.state==='remote_newer'?'#eff6ff':'#f0fdf4'};border:1px solid ${freshness.state==='local_newer'?'#fdba74':freshness.state==='remote_newer'?'#bfdbfe':'#bbf7d0'}">
+        <span style="font-size:16px">${freshness.state==='local_newer'?'🖥️':freshness.state==='remote_newer'?'☁️':'🤝'}</span>
+        <div>
+          <div style="font-weight:700;font-size:12px">로컬/원격 최신 비교</div>
+          <div style="font-size:11px;color:${freshness.color}">${freshness.label}</div>
+          <div style="font-size:10px;color:var(--gray-l)">로컬 ${_fmtSyncTs(freshness.localLatest)} / 원격 ${_fmtSyncTs(freshness.remoteLatest)}</div>
+        </div>
+      </div>
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
         <span style="font-size:16px">📦</span>
         <div>
           <div style="font-weight:700;font-size:12px">로컬 데이터 크기</div>
-          <div style="font-size:11px;color:var(--gray-l)">${fmt(localSize)} ${fbSize?`/ Firebase: ${fmt(fbSize*2)}`:'(Firebase 크기 미확인)'}</div>
+          <div style="font-size:11px;color:var(--gray-l)">${fmt(localSize)} ${fbSize?`/ 동기화 데이터: ${fmt(fbSize*2)}`:'(동기화 크기 미확인)'}</div>
         </div>
       </div>
-      ${isLoggedIn&&hasPw?`<button class="btn btn-b btn-sm" onclick="(async()=>{const b=document.querySelector('#cfg-fb-sync-result button');if(b){b.disabled=true;b.textContent='⏫ 업로드 중...';}try{await fbCloudSave();localStorage.setItem('su_last_save_time',Date.now());if(b){b.textContent='✅ 완료';}}catch(e){if(b){b.textContent='❌ 실패';}}finally{if(b){b.disabled=false;}setTimeout(checkFbSyncStatus,500);};})()" style="width:100%">⬆️ 지금 Firebase에 업로드</button>`:''}
+      <div style="display:grid;gap:8px;grid-template-columns:1fr">
+        ${missingMonths.length?`<button class="btn btn-w btn-sm" onclick="(async(btn)=>{const old=btn.textContent;btn.disabled=true;btn.textContent='🔄 누락 월 재수신 중...';try{if(typeof fbRetryMissingMonths==='function') await fbRetryMissingMonths();}catch(e){console.error('[fbRetryMissingMonths]',e);}finally{btn.disabled=false;btn.textContent=old;setTimeout(checkFbSyncStatus,300);}})(this)" style="width:100%">🗂️ 누락 월 다시받기</button>`:''}
+        ${isLoggedIn&&hasPw?`<button class="btn btn-b btn-sm" onclick="(async(btn)=>{const old=btn.textContent;btn.disabled=true;btn.textContent='⏫ 업로드 중...';try{await fbCloudSave();localStorage.setItem('su_last_save_time',Date.now());btn.textContent='✅ 완료';}catch(e){btn.textContent='❌ 실패';}finally{setTimeout(()=>{btn.disabled=false;btn.textContent=old;checkFbSyncStatus();},500);}})(this)" style="width:100%">⬆️ 지금 GitHub data.json에 업로드</button>`:''}
+      </div>
     </div>`;
   el.innerHTML=rows;
 }

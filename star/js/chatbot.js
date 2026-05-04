@@ -248,7 +248,7 @@ function addMessage(role, content) {
 // 챗봇 모달 열기
 function openChatbot(mode) {
   chatbotOpen = true;
-  if (mode) chatbotMode = mode;
+  chatbotMode = (mode === 'aibot') ? 'aibot' : 'aldeungi';
   // 열 때마다 채팅 초기화
   loadChatHistory();
   renderChatHistory();
@@ -428,6 +428,23 @@ async function generateResponse(msg) {
   // AI봇 모드: server.js의 /api/aibot 프록시로 연동
   if (chatbotMode === 'aibot') {
     try{
+      // 설정에서 프록시 서버 URL을 지정하면 그쪽으로 호출(다른 기기에도 설정 동기화 가능)
+      let proxyUrl = '';
+      let apiKey = '';
+      const _isAdmin = (typeof isLoggedIn!=='undefined' && !!isLoggedIn) && !(typeof isSubAdmin!=='undefined' && !!isSubAdmin);
+      try{
+        if(window.SettingsStore && typeof window.SettingsStore.getAiCfg==='function'){
+          const cfg = window.SettingsStore.getAiCfg() || {};
+          proxyUrl = String(cfg.proxyUrl || '').trim();
+          apiKey = String(cfg.apiKey || '').trim();
+        }else{
+          const a = JSON.parse(localStorage.getItem('su_ai_cfg')||'{}');
+          proxyUrl = String(a.proxyUrl||'').trim();
+          apiKey = String(typeof suDecryptSecretValue==='function' ? suDecryptSecretValue(a.apiKey||'') : (a.apiKey||'')).trim();
+        }
+      }catch(e){}
+      proxyUrl = proxyUrl.replace(/\/+$/,'');
+
       const recent = (chatHistory||[]).slice(-14).map(m=>({
         role: m.role === 'bot' ? 'assistant' : 'user',
         content: String(m.content || '').replace(/<[^>]*>/g,'').slice(0, 4000)
@@ -435,16 +452,60 @@ async function generateResponse(msg) {
       if (!recent.length || recent[recent.length-1].role !== 'user') {
         recent.push({ role:'user', content:String(msg||'') });
       }
-      const r = await fetch('/api/aibot', {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ messages: recent })
-      });
-      const j = await r.json().catch(()=>null);
-      if(!r.ok) throw new Error((j && j.error) ? j.error : ('HTTP '+r.status));
-      return (j && j.text) ? String(j.text) : '응답이 비어있어.';
+
+      // 1) 프록시 서버 우선
+      // - 단, 프록시 실패 시 관리자 + API Key가 있으면 직접 호출로 fallback
+      if(proxyUrl){
+        try{
+          const url = proxyUrl + '/api/aibot';
+          const r = await fetch(url, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ messages: recent })
+          });
+          const j = await r.json().catch(()=>null);
+          if(!r.ok) throw new Error((j && j.error) ? j.error : ('HTTP '+r.status));
+          return (j && j.text) ? String(j.text) : '응답이 비어있어.';
+        }catch(proxyErr){
+          if(!(apiKey && _isAdmin)) throw proxyErr;
+        }
+      }
+
+      // 2) API Key 직접 호출(관리자 전용 설정)
+      if(apiKey && _isAdmin){
+        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json',
+            'Authorization': 'Bearer ' + apiKey
+          },
+          body: JSON.stringify({
+            // Groq 권장 모델(구버전 3.1 모델은 decommissioned)
+            model: 'llama-3.3-70b-versatile',
+            messages: recent,
+            temperature: 0.2,
+            max_tokens: 700
+          })
+        });
+        const j = await r.json().catch(()=>null);
+        if(!r.ok){
+          const msg = (j && (j.error?.message || j.error || j.message)) ? (j.error?.message || j.error || j.message) : ('HTTP '+r.status);
+          throw new Error(msg);
+        }
+        const text = j?.choices?.[0]?.message?.content || '';
+        return text ? String(text) : '응답이 비어있어.';
+      }
+
+      if(apiKey && !_isAdmin){
+        throw new Error('AI봇은 관리자만 사용할 수 있습니다. (관리자 로그인 필요)');
+      }
+      throw new Error('AI봇 서버 주소/키가 설정되지 않았습니다.');
     }catch(e){
-      return `❌ AI봇 호출 실패: ${e.message}\n\n서버(server.js)에 GROQ_API_KEY가 설정되어 있는지 확인해줘.`;
+      return `❌ AI봇 호출 실패: ${e.message}\n\n`+
+        `설정탭 → 'AI봇(Groq) 서버 설정'에서\n`+
+        `- (추천) 서버 주소 저장 또는\n`+
+        `- (관리자) Groq API Key 저장\n`+
+        `을 해주세요.`;
     }
   }
 
@@ -461,7 +522,7 @@ async function generateResponse(msg) {
     const tok = msg.match(/토큰\s*[:\-]\s*([A-Za-z0-9_]+)\s*$/i);
     if (tok && tok[1]) {
       if(!_alIsAdmin()) return '❌ 관리자만 동기화 토큰을 저장할 수 있어.';
-      try{ if(window.SettingsStore) window.SettingsStore.setCfg({ token: tok[1].trim() }); else localStorage.setItem('al_github_token', tok[1].trim()); }catch(e){}
+      try{ if(window.SettingsStore) window.SettingsStore.setCfg({ token: tok[1].trim() }); else if(typeof suSetSecret==='function') suSetSecret('al_github_token', tok[1].trim()); else localStorage.setItem('al_github_token', tok[1].trim()); }catch(e){}
       return '✅ (관리자) 토큰을 저장했어. 이제 "알등이 동기화 켜" 라고 하면 다른 기기와 메모가 공유돼.';
     }
     // gist id 저장
@@ -488,7 +549,7 @@ async function generateResponse(msg) {
       return '✅ 동기화를 껐어. (이 기기 local 메모는 유지돼)';
     }
     if (userMessage.includes('동기화 상태')) {
-      const cfg=(window.SettingsStore?window.SettingsStore.cfg():{enabled:localStorage.getItem('al_sync_enabled')==='1',token:(localStorage.getItem('al_github_token')||''),gistId:(localStorage.getItem('al_gist_id')||'')});
+      const cfg=(window.SettingsStore?window.SettingsStore.cfg():{enabled:localStorage.getItem('al_sync_enabled')==='1',token:(typeof suGetSecret==='function'?suGetSecret('al_github_token'):(localStorage.getItem('al_github_token')||'')),gistId:(localStorage.getItem('al_gist_id')||'')});
       return `동기화: ${cfg.enabled?'ON':'OFF'}\n토큰: ${cfg.token? '설정됨':'없음'}\nGist ID: ${cfg.gistId||'(없음)'}`;
     }
     if (userMessage.includes('메모 불러') || userMessage.includes('동기화 불러')) {

@@ -33,295 +33,295 @@ let _b2PlayersFilter = 'all'; // 'all' | 'P' | 'T' | 'Z'
 let _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' | '유스'
 let _b2SelectedPlayer = null;
 let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
+const _b2BgImageMeta = {};
+let _b2AutoFitResizeBound = false;
+let _b2AutoFitScrollTimer = null;
+let _b2DeferredImgObserver = null;
+let __suB2PreparedKey = '';
+let __suB2PreparedData = null;
 
-// 프로필 탭 이미지 조절 설정 (전역 설정 - 모든 선수 동일)
-let _b2GlobalImgSettings = JSON.parse(localStorage.getItem('su_b2_global_img_settings') || '{}');
-function _b2SaveImgSettings() {
-  localStorage.setItem('su_b2_global_img_settings', JSON.stringify(_b2GlobalImgSettings));
-  // Firebase에 설정 동기화
-  if(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn) save();
-}
-function _b2DefaultSingleImgSettings() {
-  return {
-    scale: 100,
-    brightness: 100,
-    fit: 'cover',
-    offsetX: 0,
-    offsetY: 0,
-    zoom: 100,
-    fill: 'cover',
-    posX: 0,
-    posY: 0
-  };
-}
-function _b2GetImgSettings(playerName, slot) {
-  // 전역 설정 사용 (모든 선수 동일)
-  const key = slot === 'secondary' ? 'secondary' : 'primary';
-  if (!_b2GlobalImgSettings[key]) {
-    _b2GlobalImgSettings[key] = _b2DefaultSingleImgSettings();
-  }
-  // (버그/호환) 과거 버전에서 fit 대신 fill, scale 대신 zoom 등으로 저장된 경우 보정
+function _b2IsNearViewport(el, margin){
   try{
-    const s=_b2GlobalImgSettings[key];
-    if(s && typeof s==='object'){
-      if(s.fit==null && typeof s.fill==='string') s.fit=s.fill;
-      if(s.scale==null && s.zoom!=null) s.scale=s.zoom;
-      if(s.offsetX==null && s.posX!=null) s.offsetX=s.posX;
-      if(s.offsetY==null && s.posY!=null) s.offsetY=s.posY;
-    }
+    const rect = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+    if(!rect) return true;
+    const m = Number.isFinite(margin) ? margin : 280;
+    const vh = window.innerHeight || 900;
+    return rect.bottom >= -m && rect.top <= vh + m;
   }catch(e){
-    console.warn('[_b2LoadSingleImgSettings] 레거시 설정 보정 실패:', e.message);
-  }
-  // 동기화
-  _b2GlobalImgSettings[key].zoom = _b2GlobalImgSettings[key].scale;
-  _b2GlobalImgSettings[key].fill = _b2GlobalImgSettings[key].fit;
-  _b2GlobalImgSettings[key].posX = _b2GlobalImgSettings[key].offsetX;
-  _b2GlobalImgSettings[key].posY = _b2GlobalImgSettings[key].offsetY;
-  return _b2GlobalImgSettings[key];
-}
-function _b2SetImgSetting(playerName, slot, key, val) {
-  // 호환: (playerName, key, val) 형태로도 호출 가능
-  if (val === undefined) { val = key; key = slot; slot = 'primary'; }
-  const s = _b2GetImgSettings(playerName, slot);
-  s[key] = val;
-  _b2SaveImgSettings();
-}
-window._b2ResetImgSettings = function(playerName, slot) {
-  // 전역 설정 초기화 (모든 선수 동일하게 적용)
-  if (slot === 'primary' || slot === 'secondary') {
-    _b2GlobalImgSettings[slot] = _b2DefaultSingleImgSettings();
-    _b2SaveImgSettings();
-  }
-};
-function _b2GetImgDomId(slot) {
-  return slot === 'secondary' ? 'b2-main-img-2' : 'b2-main-img-1';
-}
-function _b2GetImgControlPrefix(slot) {
-  return slot === 'secondary' ? 'b2-secondary' : 'b2-primary';
-}
-function _b2GetImgTransform(settings) {
-  return `translate(${settings.offsetX || 0}px, ${settings.offsetY || 0}px) scale(${(settings.scale || 100) / 100})`;
-}
-function _b2ApplyImgSettingsToElement(el, settings) {
-  if (!el || !settings) return;
-  el.style.objectFit = settings.fit || 'contain';
-  el.style.objectPosition = 'center';
-  el.style.filter = `brightness(${(settings.brightness || 100) / 100})`;
-  el.style.transform = _b2GetImgTransform(settings);
-}
-function _b2ApplyImgSettingsToDom(playerName, slot) {
-  _b2ApplyImgSettingsToElement(document.getElementById(_b2GetImgDomId(slot)), _b2GetImgSettings(playerName, slot));
-}
-
-// 설정 탭용 이미지 설정 함수
-function _b2CenterImageCfg(playerName, slot) {
-  // 전역 설정 사용
-  const s = _b2GetImgSettings(playerName, slot);
-  s.offsetX = 0;
-  s.offsetY = 0;
-  s.posX = 0;
-  s.posY = 0;
-  _b2SaveImgSettings();
-  if (typeof _renderCfgImgSettings === 'function') _renderCfgImgSettings(playerName);
-}
-
-// 현재 설정을 모든 선수에게 적용 (전역 설정이므로 이미 적용됨)
-function _b2ApplySettingsToAll(refPlayerName, slot) {
-  // 전역 설정은 이미 모든 선수에 적용됨
-  const settings = _b2GetImgSettings(refPlayerName, slot);
-  _b2SaveImgSettings();
-  alert(`이미지 ${slot === 'primary' ? '1' : '2'} 설정이 모든 선수에게 적용되었습니다. (크기: ${settings.scale}%, 밝기: ${settings.brightness}%, 배치: ${settings.fit})`);
-  if (typeof _renderCfgImgSettings === 'function') _renderCfgImgSettings(refPlayerName);
-}
-
-// 설정 탭용 이미지 설정 UI 렌더링 함수
-function _renderCfgImgSettings(playerName) {
-  const area = document.getElementById('cfg-img-settings-area');
-  if (!playerName) {
-    if (area) area.style.display = 'none';
-    return;
-  }
-  if (area) area.style.display = 'block';
-  
-  const player = players.find(p => p.name === playerName);
-  const hasPrimary = !!(player && player.photo);
-  const hasSecondary = !!(player && player.secondProfileFile);
-  
-  const primarySettings = _b2GetImgSettings(playerName, 'primary');
-  const secondarySettings = _b2GetImgSettings(playerName, 'secondary');
-  
-  const safeName = playerName.replace(/'/g, "\\'");
-  
-  const primaryDiv = document.getElementById('cfg-img-primary-controls');
-  const secondaryDiv = document.getElementById('cfg-img-secondary-controls');
-  
-  if (primaryDiv) {
-    primaryDiv.innerHTML = hasPrimary ? `
-      <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">크기: <span id="cfg-p-scale">${primarySettings.scale}%</span></div>
-        <input type="range" min="50" max="220" value="${primarySettings.scale}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','primary','scale',this.value);document.getElementById('cfg-p-scale').textContent=this.value+'%'">
-      </div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">밝기: <span id="cfg-p-bright">${primarySettings.brightness}%</span></div>
-        <input type="range" min="20" max="180" value="${primarySettings.brightness}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','primary','brightness',this.value);document.getElementById('cfg-p-bright').textContent=this.value+'%'">
-      </div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">배치</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap">
-          <button class="btn btn-xs ${primarySettings.fit==='cover'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','primary','fit','cover');_renderCfgImgSettings('${safeName}')">채우기</button>
-          <button class="btn btn-xs ${primarySettings.fit==='contain'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','primary','fit','contain');_renderCfgImgSettings('${safeName}')">맞춤</button>
-          <button class="btn btn-xs ${primarySettings.fit==='fill'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','primary','fit','fill');_renderCfgImgSettings('${safeName}')">늘리기</button>
-        </div>
-      </div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">위치 이동</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap">
-          <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','primary',0,-12)">↑</button>
-          <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','primary',0,12)">↓</button>
-          <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','primary',-12,0)">←</button>
-          <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','primary',12,0)">→</button>
-          <button class="btn btn-xs btn-w" onclick="_b2CenterImageCfg('${safeName}','primary')">중앙</button>
-        </div>
-      </div>
-      <div>
-        <button class="btn btn-xs btn-r" onclick="_b2ResetImgSettings('${safeName}','primary');_renderCfgImgSettings('${safeName}')">초기화</button>
-      </div>
-    ` : '<div style="color:var(--gray-l);font-size:12px">등록된 이미지 없음</div>';
-  }
-  
-  if (secondaryDiv) {
-    secondaryDiv.innerHTML = hasSecondary ? `
-      <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">크기: <span id="cfg-s-scale">${secondarySettings.scale}%</span></div>
-        <input type="range" min="50" max="220" value="${secondarySettings.scale}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','secondary','scale',this.value);document.getElementById('cfg-s-scale').textContent=this.value+'%'">
-      </div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">밝기: <span id="cfg-s-bright">${secondarySettings.brightness}%</span></div>
-        <input type="range" min="20" max="180" value="${secondarySettings.brightness}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','secondary','brightness',this.value);document.getElementById('cfg-s-bright').textContent=this.value+'%'">
-      </div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">배치</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap">
-          <button class="btn btn-xs ${secondarySettings.fit==='cover'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','secondary','fit','cover');_renderCfgImgSettings('${safeName}')">채우기</button>
-          <button class="btn btn-xs ${secondarySettings.fit==='contain'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','secondary','fit','contain');_renderCfgImgSettings('${safeName}')">맞춤</button>
-          <button class="btn btn-xs ${secondarySettings.fit==='fill'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','secondary','fit','fill');_renderCfgImgSettings('${safeName}')">늘리기</button>
-        </div>
-      </div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">위치 이동</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap">
-          <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','secondary',0,-12)">↑</button>
-          <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','secondary',0,12)">↓</button>
-          <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','secondary',-12,0)">←</button>
-          <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','secondary',12,0)">→</button>
-          <button class="btn btn-xs btn-w" onclick="_b2CenterImageCfg('${safeName}','secondary')">중앙</button>
-        </div>
-      </div>
-      <div>
-        <button class="btn btn-xs btn-r" onclick="_b2ResetImgSettings('${safeName}','secondary');_renderCfgImgSettings('${safeName}')">초기화</button>
-      </div>
-    ` : '<div style="color:var(--gray-l);font-size:12px">등록된 이미지 없음</div>';
+    return true;
   }
 }
 
-function _b2ClearSwapTimer(mainBox) {
-  if (mainBox && mainBox._swapTimer) {
-    clearTimeout(mainBox._swapTimer);
-    mainBox._swapTimer = null;
-  }
-}
-function _b2ScheduleImageSwap(playerName) {
-  const mainBox = document.getElementById('b2-players-main-box');
-  if (!mainBox) return;
-  _b2ClearSwapTimer(mainBox);
-  const img1 = document.getElementById('b2-main-img-1');
-  const img2 = document.getElementById('b2-main-img-2');
-  if (img1) img1.style.opacity = '1';
-  if (img2) img2.style.opacity = '0';
-  if (!img2) return;
-  mainBox._swapTimer = setTimeout(() => {
-    const curImg1 = document.getElementById('b2-main-img-1');
-    const curImg2 = document.getElementById('b2-main-img-2');
-    if (curImg1) curImg1.style.opacity = '0';
-    if (curImg2) curImg2.style.opacity = '1';
-  }, 1000);
-}
-window._b2RefreshImageControls = function(playerName, slot) {
-  const settings = _b2GetImgSettings(playerName, slot);
-  settings.zoom = settings.scale;
-  settings.fill = settings.fit;
-  settings.posX = settings.offsetX;
-  settings.posY = settings.offsetY;
-  const prefix = _b2GetImgControlPrefix(slot);
-  const scaleEl = document.getElementById(`${prefix}-scale-val`);
-  const brightnessEl = document.getElementById(`${prefix}-brightness-val`);
-  const offsetEl = document.getElementById(`${prefix}-offset-val`);
-  if (scaleEl) scaleEl.textContent = `${settings.scale}%`;
-  if (brightnessEl) brightnessEl.textContent = `${settings.brightness}%`;
-  if (offsetEl) offsetEl.textContent = `${settings.offsetX}px, ${settings.offsetY}px`;
-  document.querySelectorAll(`[data-b2-fit-slot="${slot}"]`).forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.fit === settings.fit);
+function _b2SchedulePostRenderEnhance(root, opts){
+  const options = Object.assign({ icons:true, fit:false, fitDelay:160 }, opts || {});
+  const scope = root || document.getElementById('b2-content') || document;
+  requestAnimationFrame(()=>{
+    try{
+      if(options.icons && typeof injectUnivIcons === 'function') injectUnivIcons(scope);
+    }catch(e){}
+    const runFit = ()=>{
+      try{ if(options.fit) _b2ApplyBgAutoSizing(scope); }catch(e){}
+    };
+    try{
+      if(options.fit){
+        if('requestIdleCallback' in window) requestIdleCallback(runFit, { timeout: options.fitDelay + 120 });
+        else setTimeout(runFit, options.fitDelay);
+      }
+    }catch(e){
+      if(options.fit) setTimeout(runFit, options.fitDelay);
+    }
   });
-  _b2ApplyImgSettingsToDom(playerName, slot);
-};
-window._b2CenterImage = function(playerName, slot) {
-  const settings = _b2GetImgSettings(playerName, slot);
-  settings.offsetX = 0;
-  settings.offsetY = 0;
-  settings.posX = 0;
-  settings.posY = 0;
-  _b2SaveImgSettings();
-  
-  // 직접 offset 값 표시 업데이트
-  const prefix = _b2GetImgControlPrefix(slot);
-  const offsetEl = document.getElementById(`${prefix}-offset-val`);
-  if (offsetEl) offsetEl.textContent = `0px, 0px`;
-  
-  // 이미지에 즉시 적용
-  _b2ApplyImgSettingsToDom(playerName, slot);
-};
-function _b2BuildImageControlGroup(playerName, slot, label, hasImage) {
-  const settings = _b2GetImgSettings(playerName, slot);
-  const safeName = (playerName || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  const prefix = _b2GetImgControlPrefix(slot);
-  const disabled = hasImage ? '' : 'disabled';
-  return `
-    <div class="b2-players-slot-card ${hasImage ? '' : 'is-disabled'}">
-      <div class="b2-players-slot-title">${label}${hasImage ? '' : ' <span>미등록</span>'}</div>
-      <div class="b2-players-img-control-group">
-        <div class="b2-players-img-label">크기 <span id="${prefix}-scale-val">${settings.scale}%</span></div>
-        <input type="range" class="b2-players-img-slider" min="50" max="220" value="${settings.scale}" ${disabled}
-          oninput="document.getElementById('${prefix}-scale-val').textContent=this.value+'%';_b2ApplyImgSettingsToDom('${safeName}','${slot}');this.dataset.pendingValue=this.value"
-          onchange="_b2UpdateImgSetting('${safeName}','${slot}','scale',this.value)">
-      </div>
-      <div class="b2-players-img-control-group">
-        <div class="b2-players-img-label">밝기 <span id="${prefix}-brightness-val">${settings.brightness}%</span></div>
-        <input type="range" class="b2-players-img-slider" min="20" max="180" value="${settings.brightness}" ${disabled}
-          oninput="document.getElementById('${prefix}-brightness-val').textContent=this.value+'%';_b2ApplyImgSettingsToDom('${safeName}','${slot}');this.dataset.pendingValue=this.value"
-          onchange="_b2UpdateImgSetting('${safeName}','${slot}','brightness',this.value)">
-      </div>
-      <div class="b2-players-img-control-group">
-        <div class="b2-players-img-label">배치</div>
-        <div class="b2-players-img-btns">
-          <button class="b2-players-img-btn ${settings.fit === 'cover' ? 'active' : ''}" data-b2-fit-slot="${slot}" data-fit="cover" ${disabled} onclick="_b2UpdateImgSetting('${safeName}','${slot}','fit','cover')">채우기</button>
-          <button class="b2-players-img-btn ${settings.fit === 'contain' ? 'active' : ''}" data-b2-fit-slot="${slot}" data-fit="contain" ${disabled} onclick="_b2UpdateImgSetting('${safeName}','${slot}','fit','contain')">맞춤</button>
-          <button class="b2-players-img-btn ${settings.fit === 'fill' ? 'active' : ''}" data-b2-fit-slot="${slot}" data-fit="fill" ${disabled} onclick="_b2UpdateImgSetting('${safeName}','${slot}','fit','fill')">늘리기</button>
-          <button class="b2-players-img-btn" ${disabled} onclick="_b2UpdateImgSetting('${safeName}','${slot}','scale',200)">2배 확대</button>
-          <button class="b2-players-img-btn" ${disabled} onclick="_b2CenterImage('${safeName}','${slot}')">중앙 정렬</button>
-        </div>
-      </div>
-      <div class="b2-players-img-control-group">
-        <div class="b2-players-img-label">위치 <span id="${prefix}-offset-val">${settings.offsetX}px, ${settings.offsetY}px</span></div>
-        <div class="b2-players-img-btns">
-          <button class="b2-players-img-btn b2-players-img-btn-sm" ${disabled} onclick="_b2MoveImg('${safeName}','${slot}',0,-12)">상</button>
-          <button class="b2-players-img-btn b2-players-img-btn-sm" ${disabled} onclick="_b2MoveImg('${safeName}','${slot}',0,12)">하</button>
-          <button class="b2-players-img-btn b2-players-img-btn-sm" ${disabled} onclick="_b2MoveImg('${safeName}','${slot}',-12,0)">좌</button>
-          <button class="b2-players-img-btn b2-players-img-btn-sm" ${disabled} onclick="_b2MoveImg('${safeName}','${slot}',12,0)">우</button>
-          <button class="b2-players-img-btn b2-players-img-btn-sm" ${disabled} onclick="_b2ResetImgSettings('${safeName}','${slot}');_b2RefreshImageControls('${safeName}','${slot}')">초기화</button>
-        </div>
-      </div>
-    </div>
-  `;
+}
+
+function _b2ScheduleDeferredImages(root){
+  const scope = root || document.getElementById('b2-content') || document;
+  try{
+    if(_b2DeferredImgObserver){ _b2DeferredImgObserver.disconnect(); _b2DeferredImgObserver = null; }
+  }catch(e){}
+  try{
+    const imgs = [...scope.querySelectorAll('img[data-b2-defer-src]:not([src])')];
+    if(!imgs.length) return;
+    if('IntersectionObserver' in window){
+      _b2DeferredImgObserver = new IntersectionObserver((entries, observer)=>{
+        entries.forEach(entry=>{
+          if(!entry.isIntersecting) return;
+          const img = entry.target;
+          try{
+            const src = img.getAttribute('data-b2-defer-src') || '';
+            if(src && !img.getAttribute('src')) img.setAttribute('src', src);
+          }catch(e){}
+          observer.unobserve(img);
+        });
+      }, { root: null, rootMargin: '360px 0px', threshold: 0.01 });
+      imgs.forEach(img=>_b2DeferredImgObserver.observe(img));
+      return;
+    }
+    imgs.slice(0, 18).forEach(img=>{
+      const src = img.getAttribute('data-b2-defer-src') || '';
+      if(src) img.setAttribute('src', src);
+    });
+  }catch(e){}
+}
+
+function _b2RenderPlayersContent(){
+  const sub = document.getElementById('b2-content');
+  if(!sub) return;
+  sub.innerHTML = _b2PlayersView();
+  _b2BindAutoFitResize();
+  _b2ScheduleDeferredImages(sub);
+  setTimeout(() => {
+    try{
+      if (_b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function') {
+        _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
+        _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
+      }
+      _b2SchedulePostRenderEnhance(sub,{icons:true,fit:true,fitDelay:140});
+    }catch(e){
+      console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
+    }
+  }, 0);
+}
+
+function _b2GetPreparedData(){
+  const _players = Array.isArray(players) ? players : [];
+  const _cfg = Array.isArray(univCfg) ? univCfg : [];
+  const _cacheKey = JSON.stringify([_players.length, _cfg.length, !!isLoggedIn]);
+  if(__suB2PreparedData && __suB2PreparedKey === _cacheKey) return __suB2PreparedData;
+
+  const _normUnivName = (u)=>String(u||'').trim();
+  const dissolvedUnivs = new Set((_cfg.filter(u => u && u.dissolved) || []).map(u => _normUnivName(u.name)));
+  const hiddenUnivs = new Set((_cfg.filter(u => u && u.hidden) || []).map(u => _normUnivName(u.name)));
+  const visibleUnivs = _b2VisUnivs().filter(u => u.name !== '무소속' && u.name);
+  const univOrderMap = new Map(_cfg.map((u, idx)=>[_normUnivName(u && u.name), idx]));
+  const visPlayers = [];
+  const membersByUniv = Object.create(null);
+
+  _players.forEach(p=>{
+    const pu = _normUnivName(p?.univ);
+    if(!pu) return;
+    if(p.hidden || p.retired || p.hideFromBoard) return;
+    if(dissolvedUnivs.has(pu) || hiddenUnivs.has(pu)) return;
+    visPlayers.push(p);
+    (membersByUniv[pu] = membersByUniv[pu] || []).push(p);
+  });
+
+  const playerUnivList = [...new Set(visPlayers.map(p => _normUnivName(p.univ)).filter(u => u && u !== '무소속'))];
+  playerUnivList.sort((a,b)=>(univOrderMap.has(a)?univOrderMap.get(a):999)-(univOrderMap.has(b)?univOrderMap.get(b):999) || a.localeCompare(b));
+
+  __suB2PreparedKey = _cacheKey;
+  __suB2PreparedData = {
+    visibleUnivs,
+    visPlayers,
+    membersByUniv,
+    playerUnivList
+  };
+  return __suB2PreparedData;
+}
+
+function _b2LoadBgImageMeta(url, cb){
+  try{
+    const src = toHttpsUrl(url||'');
+    if(!src){ cb && cb(null); return; }
+    if(_b2BgImageMeta[src] && _b2BgImageMeta[src].w && _b2BgImageMeta[src].h){
+      cb && cb(_b2BgImageMeta[src]);
+      return;
+    }
+    const img = new Image();
+    img.onload = function(){
+      _b2BgImageMeta[src] = { w: img.naturalWidth||0, h: img.naturalHeight||0 };
+      cb && cb(_b2BgImageMeta[src]);
+    };
+    img.onerror = function(){ cb && cb(null); };
+    img.src = src;
+  }catch(e){ cb && cb(null); }
+}
+
+function _b2ResolveBgAutoFit(mode, rect, meta){
+  const rawMode = String(mode||'auto');
+  if(rawMode==='cover' || rawMode==='contain' || rawMode==='fill') return rawMode;
+  const vw = window.innerWidth || 1280;
+  if(!rect || !rect.width || !rect.height) return vw <= 900 ? 'contain' : 'cover';
+  if(!meta || !meta.w || !meta.h){
+    if(vw <= 640 || rect.width < 300) return 'contain';
+    return 'cover';
+  }
+  const boxRatio = rect.width / rect.height;
+  const imgRatio = meta.w / meta.h;
+  const diff = Math.abs(Math.log(imgRatio / boxRatio));
+  if(vw <= 640) return diff > 0.32 ? 'contain' : 'cover';
+  if(vw <= 1024) return diff > 0.3 ? 'contain' : 'cover';
+  if(imgRatio > 1.78 || imgRatio < 0.64) return 'contain';
+  return diff > 0.4 ? 'contain' : 'cover';
+}
+
+function _b2ResolveImgAutoFit(kind, mode, rect, meta){
+  const rawMode = String(mode||'auto');
+  if(rawMode==='cover' || rawMode==='contain' || rawMode==='fill') return rawMode;
+  const vw = window.innerWidth || 1280;
+  if(!rect || !rect.width || !rect.height){
+    if(kind==='thumb') return vw <= 900 ? 'contain' : 'cover';
+    if(kind==='crew') return vw <= 1024 ? 'contain' : 'cover';
+    return vw <= 900 ? 'contain' : 'cover';
+  }
+  if(!meta || !meta.w || !meta.h){
+    if(vw <= 640) return 'contain';
+    if(kind==='thumb' && rect.width < 100) return 'contain';
+    return 'cover';
+  }
+  const boxRatio = rect.width / rect.height;
+  const imgRatio = meta.w / meta.h;
+  const diff = Math.abs(Math.log(imgRatio / boxRatio));
+  if(kind==='thumb'){
+    if(vw <= 640) return diff > 0.24 ? 'contain' : 'cover';
+    if(vw <= 1024) return diff > 0.22 ? 'contain' : 'cover';
+    if(imgRatio > 1.32 || imgRatio < 0.76) return 'contain';
+    return diff > 0.24 ? 'contain' : 'cover';
+  }
+  if(kind==='crew'){
+    if(vw <= 640) return diff > 0.26 ? 'contain' : 'cover';
+    if(vw <= 1024) return diff > 0.24 ? 'contain' : 'cover';
+    if(imgRatio > 1.26 || imgRatio < 0.78) return 'contain';
+    return diff > 0.27 ? 'contain' : 'cover';
+  }
+  return _b2ResolveBgAutoFit(mode, rect, meta);
+}
+
+function _b2ResolveImgAutoPosition(kind, fit, rect, meta){
+  if(fit !== 'cover') return 'center center';
+  const imgRatio = meta && meta.w && meta.h ? (meta.w / meta.h) : 1;
+  const boxRatio = rect && rect.width && rect.height ? (rect.width / rect.height) : 1;
+  if(!imgRatio || !boxRatio) return 'center center';
+  const portraitPressure = boxRatio / imgRatio;
+  if(kind === 'thumb'){
+    if(portraitPressure > 1.25) return 'top center';
+    return 'center center';
+  }
+  if(kind === 'crew'){
+    if(portraitPressure > 1.9 && rect && rect.height >= 150) return 'bottom center';
+    if(portraitPressure > 1.25) return 'top center';
+    return 'center center';
+  }
+  if(kind === 'bg'){
+    if(portraitPressure > 2.1 && rect && rect.height >= 260) return 'bottom center';
+    if(portraitPressure > 1.35) return 'top center';
+    return 'center center';
+  }
+  return 'center center';
+}
+
+function _b2ApplyBgAutoSizing(root){
+  try{
+    const scope = root || document;
+    const els = [];
+    if(scope && scope.matches && scope.matches('.b2-bg-layer[data-bg-size-mode]')) els.push(scope);
+    if(scope && scope.querySelectorAll) els.push(...scope.querySelectorAll('.b2-bg-layer[data-bg-size-mode]'));
+    els.forEach(el=>{
+      if(!_b2IsNearViewport(el, 320)) return;
+      const mode = el.getAttribute('data-bg-size-mode') || 'auto';
+      const body = el.closest('.b2-bg-host') || el.parentElement;
+      const rect = body && body.getBoundingClientRect ? body.getBoundingClientRect() : null;
+      const src = el.getAttribute('data-bg-src') || '';
+      _b2LoadBgImageMeta(src, (meta)=>{
+        try{
+          const resolved = _b2ResolveBgAutoFit(mode, rect, meta);
+          el.style.backgroundSize = resolved;
+          el.setAttribute('data-bg-size-resolved', resolved);
+        }catch(e){}
+      });
+    });
+    const imgs = [];
+    if(scope && scope.matches && scope.matches('.b2-fit-auto[data-fit-kind]')) imgs.push(scope);
+    if(scope && scope.querySelectorAll) imgs.push(...scope.querySelectorAll('.b2-fit-auto[data-fit-kind]'));
+    imgs.forEach(el=>{
+      if(!_b2IsNearViewport(el, 320)) return;
+      const mode = el.getAttribute('data-fit-mode') || 'auto';
+      const kind = el.getAttribute('data-fit-kind') || 'thumb';
+      const rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+      const src = el.currentSrc || el.getAttribute('src') || '';
+      _b2LoadBgImageMeta(src, (meta)=>{
+        try{
+          const resolved = _b2ResolveImgAutoFit(kind, mode, rect, meta);
+          el.style.objectFit = resolved;
+          const pos = _b2ResolveImgAutoPosition(kind, resolved, rect, meta);
+          el.style.objectPosition = pos;
+          el.setAttribute('data-fit-resolved', resolved);
+        }catch(e){}
+      });
+    });
+  }catch(e){}
+}
+
+function _b2BindAutoFitResize(){
+  if(_b2AutoFitResizeBound) return;
+  _b2AutoFitResizeBound = true;
+  const rerun = ()=>{
+    try{
+      const root = document.getElementById('b2-content');
+      if(!root) return;
+      requestAnimationFrame(()=>{
+        _b2ApplyBgAutoSizing(root);
+        try{
+          if(_b2View === 'players' && _b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function'){
+            _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
+            _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
+            if(typeof window._b2RefreshImageControls === 'function'){
+              window._b2RefreshImageControls(_b2SelectedPlayer.name, 'primary');
+              window._b2RefreshImageControls(_b2SelectedPlayer.name, 'secondary');
+            }
+          }
+        }catch(e){}
+      });
+    }catch(e){}
+  };
+  window.addEventListener('resize', rerun);
+  window.addEventListener('scroll', ()=>{
+    try{ if(_b2AutoFitScrollTimer) clearTimeout(_b2AutoFitScrollTimer); }catch(e){}
+    _b2AutoFitScrollTimer = setTimeout(rerun, 90);
+  }, { passive:true });
+  window.addEventListener('orientationchange', ()=>setTimeout(rerun, 80));
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible') setTimeout(rerun, 60);
+  });
 }
 
 // 대학별 현황판 색상 진하기 (0~100, %)
@@ -343,11 +343,11 @@ function _b2ToggleCard(btn, univName) {
 }
 function _b2CollapseAll() {
   _b2VisUnivs().filter(u=>u.name!=='무소속').forEach(u=>_b2Collapsed.add(u.name));
-  const s=document.getElementById('b2-content'); if(s){s.innerHTML=_b2UnivView();injectUnivIcons(s);}
+  const s=document.getElementById('b2-content'); if(s){s.innerHTML=_b2UnivView();_b2SchedulePostRenderEnhance(s,{icons:true,fit:true,fitDelay:180});}
 }
 function _b2ExpandAll() {
   _b2Collapsed.clear();
-  const s=document.getElementById('b2-content'); if(s){s.innerHTML=_b2UnivView();injectUnivIcons(s);}
+  const s=document.getElementById('b2-content'); if(s){s.innerHTML=_b2UnivView();_b2SchedulePostRenderEnhance(s,{icons:true,fit:true,fitDelay:180});}
 }
 
 const _B2_ROLE_ORDER = ['이사장','동아리 회장','총장','부총장','교수','코치','선장','동아리장','반장','총괄'];
@@ -371,8 +371,8 @@ function rBoard2(C, T) {
 
   // 대학명 정규화(공백/개행 때문에 소속된 멤버가 현황판에서 누락되는 현상 방지)
   const _normUnivName = (u)=>String(u||'').trim();
-
-  const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
+  const _prepared = _b2GetPreparedData();
+  const univList = _prepared.visibleUnivs;
 
   // 탭 버튼 스타일 헬퍼
   function _b2TabBtn(view, color, label) {
@@ -410,33 +410,15 @@ function rBoard2(C, T) {
 
   const profileTabLabel = '👤 이미지별';
   // 이미지별 필터를 상단 탭에 포함
-  const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => _normUnivName(u.name))) : new Set();
-  const hiddenUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.hidden) || []).map(u => _normUnivName(u.name))) : new Set();
-  const visPlayers = players.filter(p => {
-    const pu = _normUnivName(p?.univ);
-    return !p.hidden && !p.retired && !p.hideFromBoard &&
-      !dissolvedUnivs.has(pu) &&
-      !hiddenUnivs.has(pu);
-  });
-  const playerUnivList = [...new Set(visPlayers.map(p => _normUnivName(p.univ)).filter(u => u && u !== '무소속'))];
-  // univCfg 순서로 정렬
-  if (typeof univCfg !== 'undefined') {
-    playerUnivList.sort((a, b) => {
-      const idxA = univCfg.findIndex(u => u.name === a);
-      const idxB = univCfg.findIndex(u => u.name === b);
-      return (idxA >= 0 ? idxA : 999) - (idxB >= 0 ? idxB : 999);
-    });
-  } else {
-    playerUnivList.sort();
-  }
+  const playerUnivList = _prepared.playerUnivList;
   const _selBadge = (_b2PlayersUnivFilter && _b2PlayersUnivFilter!=='전체')
     ? `<button class="pill on" style="flex-shrink:0;white-space:nowrap;background:var(--blue);border-color:var(--blue);color:#fff"
-        onclick="_b2PlayersUnivFilter='전체';document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)">현재: ${_b2PlayersUnivFilter} ✕</button>`
+        onclick="_b2PlayersUnivFilter='전체';_b2RenderPlayersContent();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)">현재: ${_b2PlayersUnivFilter} ✕</button>`
     : '';
   const playerFilters = _b2View === 'players' ? `
     <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
     <div style="position:relative">
-      <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+      <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;_b2RenderPlayersContent();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
         <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
         ${playerUnivList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
       </select>
@@ -444,7 +426,7 @@ function rBoard2(C, T) {
     </div>
     ${_selBadge}
     <div style="position:relative">
-      <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+      <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;_b2RenderPlayersContent();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
         <option value="all" ${_b2PlayersFilter === 'all' ? 'selected' : ''}>🎮 전체 종족</option>
         <option value="P" ${_b2PlayersFilter === 'P' ? 'selected' : ''}>🔮 프로토스</option>
         <option value="T" ${_b2PlayersFilter === 'T' ? 'selected' : ''}>⚔️ 테란</option>
@@ -456,7 +438,6 @@ function rBoard2(C, T) {
   const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b', (typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')):'';
   // 우측 버튼: 펨코현황은 "전체 저장"만, 나머지는 기존 저장/기능 버튼
   const rightBtns = saveBar;
-
   const filterBar = `
     <div id="b2-nav" class="b2-nav">
       ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코스타일'):'🧩 펨코스타일'))}
@@ -475,10 +456,11 @@ function rBoard2(C, T) {
   const sub = document.getElementById('b2-content');
   if (_b2View === 'univ') {
     sub.innerHTML = _b2UnivView();
-    injectUnivIcons(sub);
+    _b2BindAutoFitResize();
+    _b2SchedulePostRenderEnhance(sub,{icons:true,fit:true,fitDelay:180});
   } else if (_b2View === 'femco') {
     sub.innerHTML = _b2FemcoView();
-    injectUnivIcons(sub);
+    _b2SchedulePostRenderEnhance(sub,{icons:true,fit:false});
     // 모바일/태블릿에서 인원이 많은 대학도 "좌측부터" 항상 보이게 (스크롤 초기값 0)
     setTimeout(()=>{
       try{
@@ -489,20 +471,9 @@ function rBoard2(C, T) {
     }, 0);
   } else if (_b2View === 'free') {
     sub.innerHTML = _b2FreeView();
-    injectUnivIcons(sub);
+    _b2SchedulePostRenderEnhance(sub,{icons:true,fit:false});
   } else if (_b2View === 'players') {
-    sub.innerHTML = _b2PlayersView();
-    // 이미지별 탭: 최초 진입 시에도 저장된 이미지 설정(크기/밝기/배치/오프셋)이 바로 적용되도록
-    setTimeout(() => {
-      try{
-        if (_b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function') {
-          _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
-          _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
-        }
-      }catch(e){
-        console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
-      }
-    }, 0);
+    _b2RenderPlayersContent();
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
     else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
@@ -518,9 +489,10 @@ function rBoard2(C, T) {
 
 /* ── 대학별 뷰 ── */
 function _b2UnivView() {
-  let univList = _b2VisUnivs().filter(u => u.name !== '무소속' && u.name);
+  const _prepared = _b2GetPreparedData();
+  let univList = _prepared.visibleUnivs;
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
-  const _allVis = players.filter(p => univList.some(u=>String(u.name||'').trim()===String(p?.univ||'').trim()) && !p.hidden && !p.retired && !p.hideFromBoard);
+  const _allVis = _prepared.visPlayers;
   const _tierCts = {}; _allVis.forEach(p=>{ const t=p.tier||'?'; _tierCts[t]=(_tierCts[t]||0)+1; });
   const statsBar = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:7px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;flex-wrap:wrap">
     <span style="font-size:12px;font-weight:800;color:var(--text2)">👥 ${_allVis.length}명</span>
@@ -536,7 +508,7 @@ function _b2UnivView() {
       console.warn('[현황판] 대학 이름이 없는 데이터가 발견되었습니다:', u);
       return;
     }
-    const members = players.filter(p => String(p?.univ||'').trim() === String(u.name||'').trim() && !p.hidden && !p.retired && !p.hideFromBoard);
+    const members = _prepared.membersByUniv[String(u.name||'').trim()] || [];
     h += _b2UnivBlock(u.name, gc(u.name), members);
   });
   h += `</div>`;
@@ -1319,12 +1291,12 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     roleGroups[r].push(p);
   });
   const _bgPos = uCfg.bgImgPos || 'center center';
-  const _bgSize = uCfg.bgImgSize || 'cover';
+  const _bgSize = uCfg.bgImgSize || 'auto';
   const _bgOpacity = ((uCfg.bgImgAlpha ?? b2BgImgAlpha) / 100).toFixed(2);
   const bgImgHtml = uCfg.bgImg
     ? forExport
-      ? `<img src="${uCfg.bgImg}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_bgSize};opacity:${_bgOpacity};pointer-events:none;z-index:0">`
-      : `<div style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize} no-repeat;opacity:${_bgOpacity};pointer-events:none;z-index:0"></div>`
+      ? `<img src="${uCfg.bgImg}" crossorigin="anonymous" class="b2-fit-auto" data-fit-kind="bg" data-fit-mode="${_bgSize}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_bgSize==='auto'?'cover':_bgSize};object-position:${_bgPos};opacity:${_bgOpacity};pointer-events:none;z-index:0" onload="_b2ApplyBgAutoSizing(this)">`
+      : `<div class="b2-bg-layer" data-bg-src="${String(uCfg.bgImg).replace(/"/g,'&quot;')}" data-bg-size-mode="${_bgSize}" style="position:absolute;inset:0;background:url('${uCfg.bgImg}') ${_bgPos}/${_bgSize==='auto'?'cover':_bgSize} no-repeat;opacity:${_bgOpacity};pointer-events:none;z-index:0"></div>`
     : '';
 
   let rows = '';
@@ -1341,7 +1313,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:7px;${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
     ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_simgs.length?'5px':'0'}">${_smemo}</div>`:''}
   </div>` : '';
-  const bodyContent = `<div style="position:relative;overflow:hidden">
+  const bodyContent = `<div class="b2-bg-host" style="position:relative;overflow:hidden">
     ${bgImgHtml}
     <div style="position:relative;z-index:1">
       <div>${rows}</div>
@@ -1423,100 +1395,6 @@ function _b2FreeView() {
   });
   h += `</div></div>`;
   return h;
-}
-
-
-/* ── 버튼 없는 이름 태그 (티어 멤버용) ── */
-function _b2NameTag(p, accentCol, showTier) {
-  const crewCol = p.crewName ? _gcCrew(p.crewName) : '';
-  const safeName = (p.name||'').replace(/'/g,"\\'");
-  return `
-    <div style="display:flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border-radius:20px;cursor:pointer;transition:background .12s"
-      onmouseover="this.style.background='${accentCol}14'"
-      onmouseout="this.style.background='transparent'">
-      <div onclick="openPlayerModal('${safeName}')" style="display:flex;align-items:center;gap:6px;flex:1">
-      ${_b2Avatar(p, crewCol||accentCol, 58)}
-      <span style="font-weight:700;font-size:18px;color:var(--text1);white-space:nowrap;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
-      ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:10px;flex-shrink:0">${p.race}</span>`:''}
-      ${showTier&&p.tier?`<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)||'#fff'};flex-shrink:0">${p.tier}</span>`:''}
-      ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
-      </div>
-    </div>`;
-}
-
-/* ── 직책 1행 표시 ── */
-function _b2PlayerRowCompact(p, accentCol) {
-  const tierCol = getTierBtnColor(p.tier||'');
-  const tierTextCol = getTierBtnTextColor(p.tier||'') || '#fff';
-  const safeName = (p.name||'').replace(/'/g,"\\'");
-  return `
-    <div style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1"
-      onmouseover="this.querySelector('.b2name').style.color='${accentCol}'"
-      onmouseout="this.querySelector('.b2name').style.color='var(--text1)'">
-      <div onclick="openPlayerModal('${safeName}')" style="display:flex;align-items:center;gap:8px;flex:1">
-      ${_b2Avatar(p, accentCol, 58)}
-      <span class="b2name" style="font-weight:700;font-size:18px;color:var(--text1);transition:color .1s;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
-      ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
-      ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:11px;flex-shrink:0">${p.race}</span>`:''}
-      <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:${tierCol};color:${tierTextCol}">${p.tier||'?'}</span>
-      </div>
-    </div>`;
-}
-
-/* ── 칩 ── */
-function _b2Chip(p, accentCol) {
-  const crewCol = p.crewName ? _gcCrew(p.crewName) : '';
-  const borderStyle = `border:1.5px solid ${accentCol}44`;
-  return `
-    <div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"
-      style="display:flex;align-items:center;gap:7px;padding:5px 13px 5px 5px;border-radius:24px;background:var(--white);${borderStyle};cursor:pointer;box-shadow:0 1px 3px #0001;transition:transform .1s,box-shadow .1s"
-      onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 10px ${accentCol}33'"
-      onmouseout="this.style.transform='';this.style.boxShadow='0 1px 3px #0001'">
-      ${_b2Avatar(p, crewCol||accentCol, 36)}
-      <span style="font-weight:700;font-size:13px;color:var(--text1);white-space:nowrap">${p.name||''}</span>
-    </div>`;
-}
-
-/* ── 아바타 ── */
-function _b2Avatar(p, col, size) {
-  const raceShort = {'T':'T','Z':'Z','P':'P','N':'?'}[p.race||'N'] || '?';
-  // 설정(현황판 칩 프로필 이미지 크기) 값을 board2에도 반영
-  const base = size || 28;
-  let mult = 1;
-  try{
-    const chipPx = parseInt(localStorage.getItem('su_bcp_size') || '26', 10);
-    mult = Math.max(0.6, Math.min(2.4, chipPx / 26));
-  }catch(e){
-    console.warn('[_b2Avatar] 아바타 크기 설정 로드 실패:', e.message);
-  }
-  const s = Math.round(base * mult);
-  const badgeSize = Math.round(s * 0.38);
-  const _rawIcon = getStatusIcon(p.name);
-  const statusHtml = getStatusIconHTML(p.name);
-  // 1시 방향(30°), 배지 중심을 원 테두리 위에 걸치게
-  const r = s / 2, br = badgeSize / 2;
-  const _bTop   = Math.round(r * 0.134 - br); // ≈ -7px (s=58 기준)
-  const _bRight = Math.round(r * 0.5   - br); // ≈  4px
-  const _isImgIcon = _rawIcon && (typeof window._siIsImg === 'function' ? window._siIsImg(_rawIcon) : false);
-  const _badgeInner = _isImgIcon
-    ? `<img src="${_rawIcon}" style="width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;object-fit:cover;opacity:.82" onerror="this.style.display='none';console.warn('[현황판] 상태 아이콘 로드 실패:', this.src)">`
-    : statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'');
-  const _badgeBg = _isImgIcon ? 'rgba(255,255,255,.72)' : 'transparent';
-  const badge = statusHtml
-    ? `<span style="position:absolute;top:${_bTop}px;right:${_bRight}px;width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;background:${_badgeBg};overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:${Math.round(badgeSize*0.82)}px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.65))">${_badgeInner}</span>`
-    : '';
-  if (p.photo) {
-    return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
-      <img src="${toHttpsUrl(p.photo)}" style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid ${col}88" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.parentNode.innerHTML=_b2AvatarFallback('${raceShort}','${col}',${s})">
-      ${badge}
-    </span>`;
-  }
-  return `<span style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,50%);background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88;position:relative">${raceShort}${badge}</span>`;
-}
-
-function _b2AvatarFallback(letter, col, size) {
-  const s = size || 28;
-  return `<span style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,50%);background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88">${letter}</span>`;
 }
 
 
@@ -1923,7 +1801,7 @@ function _crewMemberCard(name, photo, link, isSC, crewIdx, accentColor, currentC
 
   // 이미지: 카드 전체를 원형으로 꽉 채움 (aspect-ratio 1:1, 둥근 모서리)
   const imgInner = photo
-    ? '<img src="' + photo + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:inherit" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
+    ? '<img src="' + photo + '" class="b2-fit-auto" data-fit-kind="crew" data-fit-mode="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:inherit" onload="_b2ApplyBgAutoSizing(this)" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
       + '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + ',' + col + '99);border-radius:inherit;display:none;align-items:center;justify-content:center;font-size:' + (cardH*0.35|0) + 'px;font-weight:900;color:#fff">' + (name||'?')[0] + '</div>'
     : '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + ',' + col + '99);border-radius:inherit;display:flex;align-items:center;justify-content:center;font-size:' + (cardH*0.35|0) + 'px;font-weight:900;color:#fff">' + (name||'?')[0] + '</div>';
 
@@ -2107,7 +1985,7 @@ async function saveCrewImg(target, btn) {
 function _crewMemberCardStatic(name, photo, link, col, crewRole) {
   const roleTag = crewRole ? '<div style="font-size:9px;color:#ffffffbb;font-weight:700;margin-bottom:1px">' + crewRole + '</div>' : '';
   const imgInner = photo
-    ? '<img src="' + photo + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:10px 10px 0 0">'
+    ? '<img src="' + photo + '" class="b2-fit-auto" data-fit-kind="crew" data-fit-mode="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:10px 10px 0 0" onload="_b2ApplyBgAutoSizing(this)">'
     : '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + col + ',' + col + '99);display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:900;color:#fff">' + (name||'?')[0] + '</div>';
   const overlay = '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.72));border-radius:0 0 10px 10px;padding:18px 8px 8px;text-align:center">'
     + roleTag
@@ -2629,6 +2507,10 @@ function _b2PlayersView() {
   const pcHeight = layoutSettings.pcHeight || 600;
   const mobileHeight = layoutSettings.mobileHeight || 320;
   const tabletHeight = layoutSettings.tabletHeight || 400;
+  const pcMainWide = Math.min(Math.max(leftSize + 7, 60), 76);
+  const pcMainMid = Math.min(Math.max(leftSize + 5, 58), 74);
+  const pcMainNarrow = Math.min(Math.max(leftSize + 3, 56), 72);
+  const tallTabletHeight = tabletHeight + 220;
   
   let h = `
     <style>
@@ -2637,25 +2519,28 @@ function _b2PlayersView() {
         gap: 24px;
         height: calc(100vh - 140px);
         min-height: ${pcHeight}px;
+        align-items: stretch;
       }
       .b2-players-main {
-        flex: 0 0 ${leftSize}%;
+        flex: 0 0 ${pcMainNarrow}%;
         position: relative;
+        min-width: 0;
       }
+      .b2-players-grid-wrapper { min-width: 0; }
       ${autoResize ? `
       @media (min-width: 1400px) {
         .b2-players-main {
-          flex: 0 0 ${leftSize - 5}%;
+          flex: 0 0 ${pcMainWide}%;
         }
       }
       @media (min-width: 1200px) and (max-width: 1399px) {
         .b2-players-main {
-          flex: 0 0 ${leftSize - 3}%;
+          flex: 0 0 ${pcMainMid}%;
         }
       }
       @media (min-width: 1025px) and (max-width: 1199px) {
         .b2-players-main {
-          flex: 0 0 ${leftSize}%;
+          flex: 0 0 ${pcMainNarrow}%;
         }
       }
       ` : ''}
@@ -2684,24 +2569,7 @@ function _b2PlayersView() {
         transition: opacity 0.35s ease, transform 0.25s ease, filter 0.25s ease;
         will-change: transform, filter, opacity;
       }
-      /* 모바일/태블릿: 이미지 설정(줌/이동) 때문에 잘리는 문제 방지 → 자동 맞춤 */
-      @media (max-width: 1024px) {
-        .b2-players-main-image{
-          object-fit: contain !important;
-          object-position: center !important;
-          transform: translate(0,0) scale(1) !important;
-          filter: brightness(1) !important;
-        }
-      }
-      /* 태블릿(아이패드 프로 등) 대응: 폭이 1024를 넘더라도 터치 디바이스면 자동 맞춤 */
-      @media (max-width: 1366px) and (pointer: coarse) {
-        .b2-players-main-image{
-          object-fit: contain !important;
-          object-position: center !important;
-          transform: translate(0,0) scale(1) !important;
-          filter: brightness(1) !important;
-        }
-      }
+      /* 모바일/태블릿에서도 사용자가 지정한 이미지별 설정(채우기/맞춤/확대/이동/밝기)을 그대로 사용 */
       .b2-players-img-controls {
         position: absolute;
         top: 16px;
@@ -2878,21 +2746,23 @@ function _b2PlayersView() {
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
         gap: 14px;
       }
-      @media (max-width: 1024px) {
+      @media (min-width: 769px) and (max-width: 1024px) {
         .b2-players-wrapper {
           flex-direction: column;
+          gap: 16px;
           height: auto;
           min-height: auto;
         }
         .b2-players-main {
-          flex: 0 0 auto;
+          flex: none;
           width: 100%;
-          min-height: ${tabletHeight}px;
-          height: ${autoHeight ? `clamp(${tabletHeight}px, 52vh, ${tabletHeight + 220}px)` : `${tabletHeight}px`};
+          min-height: ${tallTabletHeight}px;
+          height: ${autoHeight ? `clamp(${tallTabletHeight}px, 78vh, ${pcHeight + 220}px)` : `${tallTabletHeight}px`};
         }
         .b2-players-grid-wrapper {
-          flex: 1;
-          min-height: 300px;
+          flex: none;
+          min-height: 0;
+          max-height: none;
         }
       }
       @media (max-width: 768px) {
@@ -2971,17 +2841,7 @@ function _b2PlayersView() {
         }
       }
       @media (min-width: 769px) and (max-width: 1024px) {
-        .b2-players-wrapper {
-          flex-direction: column;
-          height: auto;
-          min-height: auto;
-          gap: 14px;
-        }
         .b2-players-main {
-          flex: none;
-          width: 100%;
-          min-height: ${tabletHeight}px;
-          height: clamp(${tabletHeight}px, 55vh, ${tabletHeight + 150}px);
           order: 0;
           position: sticky;
           top: 0;
@@ -3009,8 +2869,8 @@ function _b2PlayersView() {
         .b2-players-grid-wrapper {
           flex: none;
           height: auto;
-          max-height: none;
           order: 1;
+          overflow-y: visible;
         }
         .b2-players-grid {
           grid-template-columns: repeat(3, 1fr);
@@ -3081,10 +2941,10 @@ function _b2PlayersView() {
     <div class="b2-players-main">
       <div class="b2-players-main-content" id="b2-players-main-box" style="--img-zoom:${imgSettings.zoom/100};--img-brightness:${imgSettings.brightness/100};--img-pos-x:${imgSettings.posX}px;--img-pos-y:${imgSettings.posY}px;">
         ${_b2SelectedPlayer.photo 
-          ? `<img src="${toHttpsUrl(_b2SelectedPlayer.photo)}" class="b2-players-main-image" id="b2-main-img-1" alt="${_b2SelectedPlayer.name}" onload="_b2ScheduleImageSwap('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">`
+          ? `<img src="${toHttpsUrl(_b2SelectedPlayer.photo)}" class="b2-players-main-image" id="b2-main-img-1" alt="${_b2SelectedPlayer.name}" onload="_b2ScheduleImageSwap('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}'); if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'primary'); }" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1;object-fit:${primarySettings.fit || 'cover'};object-position:${primarySettings.manualCenter ? 'center center' : 'center center'};transform:${_b2GetImgTransform(primarySettings)};filter:brightness(${(primarySettings.brightness || 100) / 100})">`
           : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
         }
-        ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;transform:translate(var(--img-pos-x,0), var(--img-pos-y,0)) scale(var(--img-zoom,1));filter:brightness(var(--img-brightness,1))">` : ''}
+        ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" onload="if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'secondary'); }" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;object-fit:${secondarySettings.fit || 'cover'};object-position:${secondarySettings.manualCenter ? 'center center' : 'center center'};transform:${_b2GetImgTransform(secondarySettings)};filter:brightness(${(secondarySettings.brightness || 100) / 100})">` : ''}
         
         ${isLoggedIn ? `
         <!-- 이미지 컨트롤 패널 -->
@@ -3134,7 +2994,7 @@ function _b2PlayersView() {
     h += `
       <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:140px;padding:12px;border-radius:12px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--white);border:2px solid transparent;box-shadow:${isActive?'0 4px 12px '+playerTheme.glow:'0 1px 3px rgba(0,0,0,0.08)'}">
         ${p.photo
-          ? `<img src="${toHttpsUrl(p.photo)}" class="b2-players-thumbnail" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:contain;display:block" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
+          ? `<img data-b2-defer-src="${toHttpsUrl(p.photo)}" loading="lazy" decoding="async" fetchpriority="low" class="b2-players-thumbnail b2-fit-auto" data-fit-kind="thumb" data-fit-mode="auto" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:contain;display:block" onload="_b2ApplyBgAutoSizing(this)" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.getAttribute('data-b2-defer-src')||this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
           <div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
           : `<div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
         }
@@ -3152,63 +3012,6 @@ function _b2PlayersView() {
 
   return h;
 }
-
-// 이미지 설정 실시간 업데이트 함수
-window._b2UpdateImgSetting = function(playerName, slot, key, val) {
-  if (val === undefined) {
-    val = key;
-    key = slot;
-    slot = 'primary';
-  }
-  const keyMap = { zoom: 'scale', fill: 'fit', posX: 'offsetX', posY: 'offsetY' };
-  key = keyMap[key] || key;
-  const s = _b2GetImgSettings(playerName, slot);
-  const numVal = parseInt(val, 10);
-  s[key] = isNaN(numVal) ? val : numVal;
-  s.zoom = s.scale;
-  s.fill = s.fit;
-  s.posX = s.offsetX;
-  s.posY = s.offsetY;
-  _b2SaveImgSettings();
-  
-  // 슬라이더/버튼 클릭 시에만 컨트롤 UI 업데이트
-  const prefix = _b2GetImgControlPrefix(slot);
-  const scaleEl = document.getElementById(`${prefix}-scale-val`);
-  const brightnessEl = document.getElementById(`${prefix}-brightness-val`);
-  const offsetEl = document.getElementById(`${prefix}-offset-val`);
-  if (scaleEl) scaleEl.textContent = `${s.scale}%`;
-  if (brightnessEl) brightnessEl.textContent = `${s.brightness}%`;
-  if (offsetEl) offsetEl.textContent = `${s.offsetX}px, ${s.offsetY}px`;
-  document.querySelectorAll(`[data-b2-fit-slot="${slot}"]`).forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.fit === s.fit);
-  });
-  
-  // 이미지에 즉시 적용
-  _b2ApplyImgSettingsToDom(playerName, slot);
-};
-
-// 이미지 위치 이동 함수
-window._b2MoveImg = function(playerName, slot, dx, dy) {
-  if (dy === undefined) {
-    dy = dx;
-    dx = slot;
-    slot = 'primary';
-  }
-  const s = _b2GetImgSettings(playerName, slot);
-  s.offsetX += dx;
-  s.offsetY += dy;
-  s.posX = s.offsetX;
-  s.posY = s.offsetY;
-  _b2SaveImgSettings();
-  
-  // 직접 offset 값 표시 업데이트
-  const prefix = _b2GetImgControlPrefix(slot);
-  const offsetEl = document.getElementById(`${prefix}-offset-val`);
-  if (offsetEl) offsetEl.textContent = `${s.offsetX}px, ${s.offsetY}px`;
-  
-  // 이미지에 즉시 적용
-  _b2ApplyImgSettingsToDom(playerName, slot);
-};
 
 function _b2UpdateMainDisplay(playerName) {
   const player = players.find(p => p.name === playerName);
@@ -3294,62 +3097,6 @@ function _b2UpdateMainDisplay(playerName) {
       thumbnail.style.boxShadow = 'none';
     }
   });
-  return;
-
-  if (mainBox) {
-    mainBox.style.setProperty('--theme-glow', theme.glow);
-    mainBox.style.setProperty('--theme-bg', theme.bg);
-    mainBox.style.setProperty('--img-zoom', imgSettings.zoom / 100);
-    mainBox.style.setProperty('--img-brightness', imgSettings.brightness / 100);
-    mainBox.style.setProperty('--img-pos-x', imgSettings.posX + 'px');
-    mainBox.style.setProperty('--img-pos-y', imgSettings.posY + 'px');
-    
-    // 기존 타이머 정리
-    if (mainBox._videoTimeout) {
-      clearTimeout(mainBox._videoTimeout);
-      mainBox._videoTimeout = null;
-    }
-    
-    const hasSecondProfile = player.secondProfileFile && player.secondProfileFile.length > 0;
-    const ext = hasSecondProfile ? player.secondProfileFile.toLowerCase().split('.').pop() : '';
-    const isGif = ext === 'gif';
-    const isVideo = ['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext);
-    const isImage = ['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(ext);
-    
-    mainBox.innerHTML = `
-      ${player.photo
-        ? `<img src="${toHttpsUrl(player.photo)}" class="b2-players-main-image" id="b2-main-img-1" alt="${player.name}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:${imgSettings.fill};object-position:center;z-index:1;opacity:1;transition:opacity 0.5s ease" onerror="console.warn('[프로필 탭] 메인 이미지 로드 실패:', this.src, '선수:', '${player.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div style="width:100%;height:100%;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
-        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
-      }
-      ${hasSecondProfile ? `<img src="${player.secondProfileFile}" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:${imgSettings.fill};object-position:center;z-index:2;opacity:0;transition:opacity 0.5s ease">` : ''}
-      <div class="b2-players-info">
-        <div class="b2-players-name">${player.name || '이름 없음'}</div>
-        <div class="b2-players-details">
-          <span class="b2-players-tier" style="background:${theme.border}">${player.tier || '?'}티어</span>
-          <span class="b2-players-race">${player.race === 'P' ? '프로토스' : player.race === 'T' ? '테란' : player.race === 'Z' ? '저그' : '종족미정'}</span>
-          ${player.univ ? (() => {
-            const uCfg = univCfg.find(x => x.name === player.univ) || {};
-            const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[player.univ] || '';
-            return iconUrl 
-              ? `<span style="display:flex;align-items:center;gap:8px"><img src="${toHttpsUrl(iconUrl)}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
-              : `<span>🏫 ${player.univ}</span>`;
-          })() : ''}
-        </div>
-        ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>` : ''}
-      </div>
-    `;
-    
-    // 1초 후 두번째 프로필 표시
-    if (hasSecondProfile) {
-      mainBox._videoTimeout = setTimeout(() => {
-        const img1 = document.getElementById('b2-main-img-1');
-        const img2 = document.getElementById('b2-main-img-2');
-        if (img1) img1.style.opacity = '0';
-        if (img2) img2.style.opacity = '1';
-      }, 1000);
-    }
-  }
   
   // 활성 카드 스타일 업데이트
   document.querySelectorAll('.b2-players-card').forEach(card => {
@@ -3458,7 +3205,7 @@ function saveB2Profile(playerName) {
   
   // base64 체크
   if (photoUrl && photoUrl.startsWith('data:')) {
-    alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 Firebase 동기화가 실패합니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
+    alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 동기화 저장이 실패할 수 있습니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
     return;
   }
   

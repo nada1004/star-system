@@ -46,6 +46,172 @@ try{
 }catch(e){}
 
 /* ══════════════════════════════════════
+   로컬 설정 변경 시각 추적
+   - 새로고침 직후 원격 설정이 늦게 도착해도, 로컬 설정이 더 최신이면 덮어쓰지 않기 위함
+══════════════════════════════════════ */
+function _markLocalSettingsChanged(){
+  try{
+    const now = String(Date.now());
+    localStorage.setItem('su_last_settings_save', now);
+    localStorage.setItem('su_last_save_time', now);
+  }catch(e){}
+}
+try{ window._markLocalSettingsChanged = _markLocalSettingsChanged; }catch(e){}
+try{
+  if(typeof window.__suTouchSettingsWrapped==='undefined'){
+    window.__suTouchSettingsWrapped = true;
+    const _origSet = Storage.prototype.setItem;
+    const _origRemove = Storage.prototype.removeItem;
+    const _settingPrefixes = [
+      'su_profile_','su_ul_','su_b2_','su_mb_','su_tb_','su_modal_','su_tab_','su_select_',
+      'su_md_','su_pd_','su_univ_recent_','su_design_','su_app_font_','su_theme_','su_hdr_',
+      'su_rc_','su_tc_','su_bgm_','su_soop_','su_top_tab_','su_btn_','su_pill_','su_avatar_',
+      'su_ym_','su_cfg_','su_ai_'
+    ];
+    const _settingExact = new Set([
+      'su_dark','su_b2la','su_b2ba','su_fabHideMobile','su_fabHidePC','su_fabTabs',
+      'su_img_settings','su_b2_global_img_settings','su_auto_outfmt','su_date_menu_style',
+      'su_share_admin_only','su_cal_chip_mode','su_bcp_shape','su_bcp_size','su_bcp_layout',
+      'su_teamMatchSize'
+    ]);
+    const _shouldTouch = (key)=>{
+      try{
+        const k = String(key||'');
+        if(k === 'b2_femco_settings_v1') return true;
+        if(!k.startsWith('su_') && !k.startsWith('cfg_')) return false;
+        if(k==='su_last_settings_save' || k==='su_last_save_time' || k==='su_last_admin_save') return false;
+        if(k==='su_gh_token' || k==='su_fb_pw' || k==='su_admin_hash' || k==='su_secret_master_key_v1') return false;
+        if(_settingExact.has(k)) return true;
+        return _settingPrefixes.some(p=>k.startsWith(p)) || k.startsWith('cfg_');
+      }catch(e){ return false; }
+    };
+    Storage.prototype.setItem = function(key, value){
+      const out = _origSet.call(this, key, value);
+      try{
+        if(this===localStorage && _shouldTouch(key) && !window._applyingCloudData && !window._isSaving && !window.__suSkipTouchLocalSettings){
+          _origSet.call(localStorage, 'su_last_settings_save', String(Date.now()));
+        }
+      }catch(e){}
+      return out;
+    };
+    Storage.prototype.removeItem = function(key){
+      const out = _origRemove.call(this, key);
+      try{
+        if(this===localStorage && _shouldTouch(key) && !window._applyingCloudData && !window._isSaving && !window.__suSkipTouchLocalSettings){
+          _origSet.call(localStorage, 'su_last_settings_save', String(Date.now()));
+        }
+      }catch(e){}
+      return out;
+    };
+  }
+}catch(e){}
+
+/* ══════════════════════════════════════
+   상세 상태 객체
+   - 기존 전역 변수와 호환되는 alias를 유지하면서
+     선수/대학 상세 상태를 공통 객체로 수렴
+══════════════════════════════════════ */
+function _suDefineWindowAlias(key, getter, setter){
+  try{
+    const desc = Object.getOwnPropertyDescriptor(window, key);
+    if(desc && desc.get && desc.set) return;
+    Object.defineProperty(window, key, {
+      configurable: true,
+      enumerable: true,
+      get: getter,
+      set: setter
+    });
+  }catch(e){}
+}
+
+function ensureDetailStateObjects(){
+  try{
+    if(!window.PlayerDetailState){
+      window.PlayerDetailState = {
+        currentName: '',
+        year: '',
+        years: [],
+        histFilter: '',
+        histFilters: [],
+        seasonFilter: '전체',
+        seasonFilters: [],
+        oppPage: 0,
+        oppSort: 'tot'
+      };
+    }
+    if(!window.UnivDetailState){
+      window.UnivDetailState = {
+        currentName: '',
+        editOpen: false
+      };
+    }
+
+    const ps = window.PlayerDetailState;
+    const us = window.UnivDetailState;
+
+    _suDefineWindowAlias('_playerModalCurrentName', ()=>ps.currentName, v=>{ ps.currentName = v || ''; });
+    _suDefineWindowAlias('_playerModalYear', ()=>ps.year, v=>{ ps.year = v || ''; });
+    _suDefineWindowAlias('_playerModalYears', ()=>ps.years, v=>{ ps.years = Array.isArray(v) ? v : []; });
+    _suDefineWindowAlias('_playerHistFilter', ()=>ps.histFilter, v=>{ ps.histFilter = v || ''; });
+    _suDefineWindowAlias('_playerHistFilters', ()=>ps.histFilters, v=>{ ps.histFilters = Array.isArray(v) ? v : []; });
+    _suDefineWindowAlias('_playerSeasonFilter', ()=>ps.seasonFilter, v=>{ ps.seasonFilter = v || '전체'; });
+    _suDefineWindowAlias('_playerSeasonFilters', ()=>ps.seasonFilters, v=>{ ps.seasonFilters = Array.isArray(v) ? v : []; });
+    _suDefineWindowAlias('_oppPage', ()=>ps.oppPage, v=>{ ps.oppPage = Number(v)||0; });
+    _suDefineWindowAlias('_oppSort', ()=>ps.oppSort, v=>{ ps.oppSort = v || 'tot'; });
+    _suDefineWindowAlias('_univModalCurrentName', ()=>us.currentName, v=>{ us.currentName = v || ''; });
+    _suDefineWindowAlias('_univEditOpen', ()=>us.editOpen, v=>{ us.editOpen = !!v; });
+  }catch(e){}
+}
+
+function getPlayerDetailState(){
+  try{
+    ensureDetailStateObjects();
+    return window.PlayerDetailState || {};
+  }catch(e){
+    return window.PlayerDetailState || {};
+  }
+}
+
+function getUnivDetailState(){
+  try{
+    ensureDetailStateObjects();
+    return window.UnivDetailState || {};
+  }catch(e){
+    return window.UnivDetailState || {};
+  }
+}
+
+function resetPlayerDetailState(){
+  const st = getPlayerDetailState();
+  st.currentName = '';
+  st.year = '';
+  st.years = [];
+  st.histFilter = '';
+  st.histFilters = [];
+  st.seasonFilter = '전체';
+  st.seasonFilters = [];
+  st.oppPage = 0;
+  st.oppSort = 'tot';
+  return st;
+}
+
+function resetUnivDetailState(){
+  const st = getUnivDetailState();
+  st.currentName = '';
+  st.editOpen = false;
+  return st;
+}
+
+try{
+  ensureDetailStateObjects();
+  window.ensureDetailStateObjects = ensureDetailStateObjects;
+  window.getPlayerDetailState = getPlayerDetailState;
+  window.getUnivDetailState = getUnivDetailState;
+  window.resetPlayerDetailState = resetPlayerDetailState;
+  window.resetUnivDetailState = resetUnivDetailState;
+}catch(e){}
+
+/* ══════════════════════════════════════
    스트리머 프로필 이미지 공통 스타일
    - 현황판 칩 프로필 이미지 설정(su_bcp_shape)을 "프로필 이미지 모양"의 기준으로도 사용
    - 인라인 스타일에서도 적용 가능하도록 CSS 변수로 노출
@@ -161,8 +327,19 @@ function applyResponsiveUiVars(){
     const tbTab = clamp(gf('su_tab_tb_scale', 0.94), 0.65, 1.10);
     const mdMb = clamp(gf('su_md_mb_btn_scale', 1.00), 0.70, 1.30);
     const mdTb = clamp(gf('su_md_tb_btn_scale', 1.00), 0.70, 1.30);
+    const pdBadgeMb = clamp(gf('su_pd_badge_scale_mb', gf('su_pd_badge_scale', 1.00)), 0.55, 1.20);
+    const pdBadgeTb = clamp(gf('su_pd_badge_scale_tb', gf('su_pd_badge_scale', 1.00)), 0.60, 1.25);
+    const univRecentMb = clamp(gf('su_univ_recent_chip_scale_mb', 1.00), 0.60, 1.20);
+    const univRecentTb = clamp(gf('su_univ_recent_chip_scale_tb', 1.00), 0.65, 1.25);
+    const selMb = clamp(gf('su_select_mb_scale', 0.92), 0.70, 1.15);
+    const selTb = clamp(gf('su_select_tb_scale', 0.96), 0.70, 1.15);
     const badge = clamp(gf('su_pd_badge_scale', 1.00), 0.70, 1.30);
     const chip = clamp(gf('su_pd_chip_scale', 1.00), 0.70, 1.30);
+    const topTabMbFont = clamp(gf('su_top_tab_font_mb_px', 10), 8, 16);
+    const topTabTbFont = clamp(gf('su_top_tab_font_tb_px', 11), 9, 18);
+    const topTabMbGap = clamp(gf('su_top_tab_gap_mb_px', 2), 0, 16);
+    const topTabMbAlign = (()=>{ try{ return (localStorage.getItem('su_top_tab_align_mb')||'start').trim(); }catch(e){ return 'start'; } })();
+    const topTabMbJustify = topTabMbAlign === 'center' ? 'center' : 'flex-start';
 
     document.documentElement.style.setProperty('--su_mb_scale', String(mb));
     document.documentElement.style.setProperty('--su_tb_scale', String(tb));
@@ -172,8 +349,18 @@ function applyResponsiveUiVars(){
     document.documentElement.style.setProperty('--su_tab_tb_scale', String(tbTab));
     document.documentElement.style.setProperty('--su_md_mb_btn_scale', String(mdMb));
     document.documentElement.style.setProperty('--su_md_tb_btn_scale', String(mdTb));
+    document.documentElement.style.setProperty('--su_pd_badge_scale_mb', String(pdBadgeMb));
+    document.documentElement.style.setProperty('--su_pd_badge_scale_tb', String(pdBadgeTb));
+    document.documentElement.style.setProperty('--su_univ_recent_chip_scale_mb', String(univRecentMb));
+    document.documentElement.style.setProperty('--su_univ_recent_chip_scale_tb', String(univRecentTb));
+    document.documentElement.style.setProperty('--su_select_mb_scale', String(selMb));
+    document.documentElement.style.setProperty('--su_select_tb_scale', String(selTb));
     document.documentElement.style.setProperty('--su_pd_badge_scale', String(badge));
     document.documentElement.style.setProperty('--su_pd_chip_scale', String(chip));
+    document.documentElement.style.setProperty('--su_top_tab_font_mb', topTabMbFont + 'px');
+    document.documentElement.style.setProperty('--su_top_tab_font_tb', topTabTbFont + 'px');
+    document.documentElement.style.setProperty('--su_top_tab_gap_mb', topTabMbGap + 'px');
+    document.documentElement.style.setProperty('--su_tabs_justify_mb', topTabMbJustify);
   }catch(e){}
 }
 try{ window.applyResponsiveUiVars = applyResponsiveUiVars; }catch(e){}
@@ -183,6 +370,86 @@ try{
     window.__suResponsiveUiResizeBound=true;
     window.addEventListener('resize', ()=>{ try{ applyResponsiveUiVars(); }catch(e){}; }, {passive:true});
   }
+}catch(e){}
+
+/* ══════════════════════════════════════
+   공통 반응형/설정 헬퍼
+══════════════════════════════════════ */
+function suGetDeviceKey(width){
+  const w = Math.max(320, Math.min(1920, width || (window.innerWidth || 1024)));
+  return w <= 768 ? 'mb' : (w <= 1024 ? 'tb' : 'pc');
+}
+function suReadNumberSetting(key, def){
+  try{
+    const v = parseFloat(localStorage.getItem(key));
+    return isNaN(v) ? def : v;
+  }catch(e){
+    return def;
+  }
+}
+function suClamp(v, min, max){
+  return Math.max(min, Math.min(max, v));
+}
+function suNormalizeImgSettings(raw){
+  const src = (raw && typeof raw === 'object') ? raw : {};
+  const by = (src.__byDevice && typeof src.__byDevice === 'object') ? src.__byDevice : {};
+  return {
+    ...src,
+    scaleMb: by.mb?.scale ?? src.scaleMb ?? src.scaleLeft ?? src.scale ?? 1,
+    scaleTb: by.tb?.scale ?? src.scaleTb ?? src.scaleRight ?? src.scale ?? 1,
+    scalePc: by.pc?.scale ?? src.scalePc ?? src.scaleRight ?? src.scale ?? 1,
+    __byDevice: {
+      mb: { ...(by.mb || {}), scale: by.mb?.scale ?? src.scaleMb ?? src.scaleLeft ?? src.scale ?? 1 },
+      tb: { ...(by.tb || {}), scale: by.tb?.scale ?? src.scaleTb ?? src.scaleRight ?? src.scale ?? 1 },
+      pc: { ...(by.pc || {}), scale: by.pc?.scale ?? src.scalePc ?? src.scaleRight ?? src.scale ?? 1 }
+    }
+  };
+}
+function suReadImgSettings(){
+  try{
+    return suNormalizeImgSettings(JSON.parse(localStorage.getItem('su_img_settings') || '{}') || {});
+  }catch(e){
+    return suNormalizeImgSettings({});
+  }
+}
+function suBuildBoard2ImgSettingsFromProfile(settings, prevRaw){
+  const base = (prevRaw && typeof prevRaw === 'object') ? prevRaw : {};
+  if(!base.__byDevice || typeof base.__byDevice !== 'object') base.__byDevice = {};
+  const mk = (scale)=>({
+    primary: { fit: settings.fill ? 'cover' : 'contain', scale: scale * 100, brightness: settings.brightness * 100, offsetX: 0, offsetY: 0, zoom: scale * 100, posX: 0, posY: 0 },
+    secondary:{ fit: settings.fill ? 'cover' : 'contain', scale: scale * 100, brightness: settings.brightness * 100, offsetX: 0, offsetY: 0, zoom: scale * 100, posX: 0, posY: 0 }
+  });
+  base.__byDevice.mb = mk(settings.scaleMb || settings.scale || 1);
+  base.__byDevice.tb = mk(settings.scaleTb || settings.scale || 1);
+  base.__byDevice.pc = mk(settings.scalePc || settings.scale || 1);
+  return base;
+}
+function suGetRecentChipMetrics(kind, width){
+  const dk = suGetDeviceKey(width);
+  if(kind === 'playerRecent'){
+    const raw = suReadNumberSetting(`su_pd_badge_scale_${dk}`, suReadNumberSetting('su_pd_badge_scale', 1));
+    const scale = suClamp(raw, dk === 'mb' ? 0.55 : (dk === 'tb' ? 0.60 : 0.70), dk === 'mb' ? 1.20 : (dk === 'tb' ? 1.25 : 1.30));
+    const base = dk === 'mb'
+      ? {px:2, fs:5.1, lh:10, rr:3}
+      : (dk === 'tb' ? {px:4, fs:7, lh:13, rr:4} : {px:5, fs:8, lh:14, rr:3});
+    return { deviceKey: dk, scale, base };
+  }
+  if(kind === 'univRecent'){
+    const raw = suReadNumberSetting(`su_univ_recent_chip_scale_${dk}`, 1);
+    const scale = suClamp(raw, dk === 'mb' ? 0.60 : (dk === 'tb' ? 0.65 : 0.70), dk === 'mb' ? 1.20 : (dk === 'tb' ? 1.25 : 1.30));
+    const base = dk === 'mb'
+      ? {date:10, chipFs:6.8, chipPx:3, chipH:12, chipR:4}
+      : (dk === 'tb' ? {date:11, chipFs:8.4, chipPx:5, chipH:15, chipR:5} : {date:12, chipFs:10, chipPx:7, chipH:18, chipR:5});
+    return { deviceKey: dk, scale, base };
+  }
+  return { deviceKey: dk, scale: 1, base: {} };
+}
+try{
+  window.suGetDeviceKey = suGetDeviceKey;
+  window.suReadImgSettings = suReadImgSettings;
+  window.suNormalizeImgSettings = suNormalizeImgSettings;
+  window.suBuildBoard2ImgSettingsFromProfile = suBuildBoard2ImgSettingsFromProfile;
+  window.suGetRecentChipMetrics = suGetRecentChipMetrics;
 }catch(e){}
 
 /* ══════════════════════════════════════
@@ -210,14 +477,38 @@ try{ window.getUnivLogoSizeStr = getUnivLogoSizeStr; }catch(e){}
 ══════════════════════════════════════ */
 function applyMatchDetailVars(){
   try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
+    const dKey = w <= 768 ? 'mb' : (w <= 1024 ? 'tb' : 'pc');
+    const getPxByDevice = (baseKey, legacyKey, def, min, max)=>{
+      const raw = localStorage.getItem(`${baseKey}_${dKey}`);
+      const legacy = localStorage.getItem(legacyKey);
+      const n = parseInt((raw ?? legacy ?? String(def)), 10);
+      return Math.max(min, Math.min(max, isNaN(n) ? def : n));
+    };
     const losePct = parseInt(localStorage.getItem('su_md_lose_gray') || '12', 10);
     const lp = Math.max(0, Math.min(30, isNaN(losePct) ? 12 : losePct));
     document.documentElement.style.setProperty('--su_md_lose_gray', String(lp/100));
 
     // 상단 대학 로고(대학 카드) 크기
-    const logoSize = parseInt(localStorage.getItem('su_md_logo_size') || '42', 10);
-    const ls = Math.max(28, Math.min(64, isNaN(logoSize) ? 42 : logoSize));
+    const ls = getPxByDevice('su_md_logo_size', 'su_md_logo_size', 42, 28, 64);
     document.documentElement.style.setProperty('--su_md_logo_size', ls + 'px');
+
+    // 상단 대학 카드 정렬/폰트
+    const align = (localStorage.getItem('su_md_head_align') || 'center').trim();
+    const justify =
+      align === 'left' ? 'flex-start' :
+      align === 'right' ? 'flex-end' : 'center';
+    const textAlign =
+      align === 'left' ? 'left' :
+      align === 'right' ? 'right' : 'center';
+    const tf = getPxByDevice('su_md_team_font', 'su_md_team_font', 16, 11, 26);
+    const ttf = getPxByDevice('su_md_title_font', 'su_md_title_font', 15, 12, 24);
+    const sf = getPxByDevice('su_md_sub_font', 'su_md_sub_font', 11, 10, 18);
+    document.documentElement.style.setProperty('--su_md_head_justify', justify);
+    document.documentElement.style.setProperty('--su_md_head_text_align', textAlign);
+    document.documentElement.style.setProperty('--su_md_team_font', tf + 'px');
+    document.documentElement.style.setProperty('--su_md_title_font', ttf + 'px');
+    document.documentElement.style.setProperty('--su_md_sub_font', sf + 'px');
 
     // ── 헤더 애니메이션/효과 설정 ──
     const fxOn = (localStorage.getItem('su_md_fx_on') ?? '1') !== '0';
@@ -283,8 +574,67 @@ function applyMatchDetailVars(){
     document.documentElement.style.setProperty('--su_md_fx_score_anim', scoreAnim);
     document.documentElement.style.setProperty('--su_md_fx_score_sparkle_anim', scoreSparkleAnim);
     document.documentElement.style.setProperty('--su_md_fx_shimmer_anim', shimmerAnim);
+    try{
+      document.documentElement.setAttribute('data-md-fx-preset', String(fxPreset||'glossy'));
+      document.documentElement.setAttribute('data-md-fx-anim', String(fxAnim||'both'));
+    }catch(_){}
   }catch(e){
     console.warn('[applyMatchDetailVars] CSS 변수 설정 실패:', e.message);
+  }
+}
+function _suNormHexColor(v, def){
+  const s = String(v||'').trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(s)) return s;
+  if(/^#[0-9a-fA-F]{3}$/.test(s)) return '#'+s.slice(1).split('').map(x=>x+x).join('');
+  return def;
+}
+function getHistButtonColorPair(kind){
+  const k = String(kind||'general').trim();
+  const defs = {
+    general: { a:'#8b5cf6', b:'#f97316' },
+    ck: { a:'#6366f1', b:'#f59e0b' },
+    pro: { a:'#06b6d4', b:'#ec4899' }
+  };
+  const base = defs[k] || defs.general;
+  try{
+    return {
+      a: _suNormHexColor(localStorage.getItem(`su_hist_btn_${k}_a`), base.a),
+      b: _suNormHexColor(localStorage.getItem(`su_hist_btn_${k}_b`), base.b)
+    };
+  }catch(e){
+    return { ...base };
+  }
+}
+function getHistButtonModeColor(mode, side){
+  const mk = String(mode||'').trim();
+  const kind = (mk==='ck')
+    ? 'ck'
+    : (mk==='pro' || mk==='progj' || mk==='procomp' || mk==='procompgj' || mk==='procompteam' || mk==='procomptn')
+      ? 'pro'
+      : 'general';
+  const pair = getHistButtonColorPair(kind);
+  return side === 'b' ? pair.b : pair.a;
+}
+try{
+  window.getHistButtonColorPair = getHistButtonColorPair;
+  window.getHistButtonModeColor = getHistButtonModeColor;
+}catch(e){}
+function _getMdDeviceKey(){
+  const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
+  return w <= 768 ? 'mb' : (w <= 1024 ? 'tb' : 'pc');
+}
+function getMatchDetailAvatarSetting(kind){
+  try{
+    const dk = _getMdDeviceKey();
+    if(kind === 'fit'){
+      const v = localStorage.getItem(`su_md_avatar_fit_${dk}`) || localStorage.getItem('su_md_avatar_fit') || 'cover';
+      return ['cover','contain'].includes(String(v).trim()) ? String(v).trim() : 'cover';
+    }
+    const raw = localStorage.getItem(`su_md_avatar_scale_${dk}`) || localStorage.getItem('su_md_avatar_scale') || '100';
+    const n = parseInt(raw, 10);
+    return Math.max(80, Math.min(200, isNaN(n) ? 100 : n));
+  }catch(e){
+    return kind === 'fit' ? 'cover' : 100;
   }
 }
 
@@ -348,6 +698,12 @@ function applyTeamGameResult(teamA, teamB, winnerSide, date, map, matchId, mode)
 try{ applyMatchDetailVars(); }catch(e){
   console.warn('[applyMatchDetailVars 초기화] 실패:', e.message);
 }
+try{
+  if(!window.__suMatchDetailVarsResizeBound){
+    window.__suMatchDetailVarsResizeBound = true;
+    window.addEventListener('resize', ()=>{ try{ applyMatchDetailVars(); }catch(e){}; }, {passive:true});
+  }
+}catch(e){}
 
 function _hexToRgbObj(hex){
   const h=String(hex||'').replace('#','').trim();
@@ -686,6 +1042,102 @@ try{ localStorage.removeItem('su_crew'); localStorage.removeItem('su_crewcfg'); 
 let BLD = {};
 let openDetails = {};
 let tierRankModeFilter = '전체';
+function _queueHistoryPersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueueHistoryPersist === 'function'){
+      window.__suQueueHistoryPersist({
+        miniM: miniM || [],
+        univM: univM || [],
+        ckM: ckM || [],
+        proM: proM || [],
+        ttM: ttM || [],
+        indM: indM || [],
+        gjM: gjM || [],
+        comps: comps || [],
+        tourneys: tourneys || [],
+        proTourneys: proTourneys || [],
+      }, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _queuePlayerHistoryPersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueuePlayerHistoryPersist === 'function'){
+      const map = {};
+      (Array.isArray(players) ? players : []).forEach(p=>{
+        const name = String(p && p.name || '').trim();
+        if(!name) return;
+        map[name] = Array.isArray(p.history) ? p.history.map(({eloAfter,...h})=>h) : [];
+      });
+      window.__suQueuePlayerHistoryPersist(map, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _queuePlayerBasePersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueuePlayerBasePersist === 'function'){
+      const list = (Array.isArray(players) ? players : []).map(p=>{
+        const c = { ...(p||{}) };
+        delete c.photo;
+        delete c.history;
+        return c;
+      });
+      window.__suQueuePlayerBasePersist(list, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _queuePlayerPhotoPersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueuePlayerPhotoPersist === 'function'){
+      const map = {};
+      (Array.isArray(players) ? players : []).forEach(p=>{
+        const name = String(p && p.name || '').trim();
+        if(!name || !p || !p.photo) return;
+        map[name] = p.photo;
+      });
+      window.__suQueuePlayerPhotoPersist(map, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _queueBoardPlayerOrderPersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueueBoardPlayerOrderPersist === 'function'){
+      const map = (typeof boardPlayerOrder === 'object' && boardPlayerOrder) ? boardPlayerOrder : {};
+      window.__suQueueBoardPlayerOrderPersist(map, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _queueVoteDataPersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueueVoteDataPersist === 'function'){
+      window.__suQueueVoteDataPersist((typeof voteData === 'object' && voteData) ? voteData : {}, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function _queueRankSnapshotPersistFromGlobals(immediate){
+  try{
+    if(typeof window.__suQueueRankSnapshotPersist === 'function'){
+      window.__suQueueRankSnapshotPersist({
+        snap: (typeof _rankSnapshot === 'object' && _rankSnapshot) ? _rankSnapshot : {},
+        date: String(typeof _rankSnapDate !== 'undefined' ? (_rankSnapDate || '') : '')
+      }, !!immediate);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
 
 // ── 선수별 상태 아이콘 시스템 ──────────────────────────────
 let playerStatusIcons = J('su_psi') || {};
@@ -834,80 +1286,73 @@ function saveCustomStatusIcon(slot, emoji){
   const k='custom'+slot;
   if(STATUS_ICON_DEFS[k]) STATUS_ICON_DEFS[k].emoji=emoji;
 }
-function getPlayerPhotoHTML(playerName, size, extraStyle){
-  size=size||'32px'; extraStyle=extraStyle||'';
-  // (요청사항) 프로필 이미지 크기 배율(전역) — 설정에서 조절
-  // - 기존 코드가 size 문자열(예: "22px")을 넘기므로, 숫자만 뽑아 배율 적용
-  let _scale=1;
-  try{
-    const v=parseFloat(localStorage.getItem('su_avatar_scale')||'1');
-    if(!isNaN(v)) _scale=Math.max(0.7, Math.min(1.6, v));
-  }catch(e){}
-  try{
-    const m=String(size).match(/^(\d+(?:\.\d+)?)px$/);
-    if(m && _scale!==1){
-      const n=parseFloat(m[1]);
-      size=(n*_scale).toFixed(2).replace(/\.00$/,'')+'px';
+const SU_MATCH_ID_MIGRATION_KEY = 'su_match_id_migrated_v1';
+function _ensureObjId(obj, key){
+  if(!obj || typeof obj !== 'object') return false;
+  if(obj[key]) return false;
+  obj[key] = genId();
+  return true;
+}
+function _ensureMatchArrayIds(arr){
+  let changed = false;
+  (Array.isArray(arr) ? arr : []).forEach(m=>{
+    if(!m || typeof m !== 'object') return;
+    if(_ensureObjId(m, '_id')) changed = true;
+  });
+  return changed;
+}
+function _ensureNestedCompetitionIds(arr){
+  let changed = false;
+  (Array.isArray(arr) ? arr : []).forEach(m=>{
+    if(!m || typeof m !== 'object') return;
+    if(_ensureObjId(m, '_id')) changed = true;
+  });
+  return changed;
+}
+function _ensureTourneyIds(list){
+  let changed = false;
+  (Array.isArray(list) ? list : []).forEach(tn=>{
+    if(!tn || typeof tn !== 'object') return;
+    if(_ensureObjId(tn, 'id')) changed = true;
+    const touchMatch = (m)=>{
+      if(!m || typeof m !== 'object') return;
+      if(_ensureObjId(m, '_id')) changed = true;
+    };
+    (Array.isArray(tn.groups) ? tn.groups : []).forEach(g=>{
+      (Array.isArray(g && g.matches) ? g.matches : []).forEach(touchMatch);
+    });
+    if(Array.isArray(tn.matches)) tn.matches.forEach(touchMatch);
+    if(tn.thirdPlace) touchMatch(tn.thirdPlace);
+    if(tn.final) touchMatch(tn.final);
+    if(Array.isArray(tn.manualMatches)) tn.manualMatches.forEach(touchMatch);
+    if(tn.matchDetails && typeof tn.matchDetails === 'object'){
+      Object.values(tn.matchDetails).forEach(touchMatch);
     }
-  }catch(e){}
-
-  // (요청사항) 경기 상세 전용 프로필 배율/채우기 설정
+  });
+  return changed;
+}
+function _ensureLegacyMatchIdsOnce(){
   try{
-    const ctx = String(window.__detailCtx||'');
-    if(ctx==='compModal' || ctx==='histModal'){
-      const mdPct = parseFloat(localStorage.getItem('su_md_avatar_scale') || '100');
-      const mdScale = Math.max(0.8, Math.min(2.0, isNaN(mdPct) ? 1 : (mdPct/100)));
-      const m2=String(size).match(/^(\d+(?:\.\d+)?)px$/);
-      if(m2 && mdScale!==1){
-        const n2=parseFloat(m2[1]);
-        size=(n2*mdScale).toFixed(2).replace(/\.00$/,'')+'px';
-      }
-    }
+    if(localStorage.getItem(SU_MATCH_ID_MIGRATION_KEY) === '1') return false;
   }catch(e){}
-  const p=players.find(x=>x.name===playerName);
-  const hasBorder=extraStyle.includes('border');
-  const bdr=hasBorder?'':'border:1.5px solid var(--border);';
-  const sz = 'calc('+size+' * var(--su_profile_scale,1))';
-  const base='display:inline-block;width:'+sz+';height:'+sz+';border-radius:var(--su_profile_radius,50%);box-shadow:var(--su_profile_fx, none);flex-shrink:0;vertical-align:middle;'+extraStyle;
-  const safeName=(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-  const clickStyle='cursor:pointer;';
-  const clickAttr='onclick="openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
-  if(!p||!p.photo){
-    const RMAP={T:{bg:'#dbeafe',col:'#1e40af'},Z:{bg:'#ede9fe',col:'#5b21b6'},P:{bg:'#fef3c7',col:'#92400e'}};
-    const rm=RMAP[p?.race]||{bg:'#e2e8f0',col:'#64748b'};
-    const txt=p?.race||'?';
-    return '<span '+clickAttr+' style="'+base+';'+bdr+'background:'+rm.bg+';color:'+rm.col+';display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:calc('+size+' * var(--su_profile_scale,1) * 0.42);'+clickStyle+'">'+txt+'</span>';
+  let changed = false;
+  changed = _ensureMatchArrayIds(miniM) || changed;
+  changed = _ensureMatchArrayIds(univM) || changed;
+  changed = _ensureMatchArrayIds(ckM) || changed;
+  changed = _ensureMatchArrayIds(proM) || changed;
+  changed = _ensureMatchArrayIds(ttM) || changed;
+  changed = _ensureMatchArrayIds(indM) || changed;
+  changed = _ensureMatchArrayIds(gjM) || changed;
+  changed = _ensureNestedCompetitionIds(comps) || changed;
+  changed = _ensureTourneyIds(tourneys) || changed;
+  try{ localStorage.setItem(SU_MATCH_ID_MIGRATION_KEY, '1'); }catch(e){}
+  if(changed){
+    try{ localSave(); }catch(e){}
   }
-  const src = toHttpsUrl(p.photo);
-  // object-fit: 기본 contain, 경기 상세에서는 설정에 따라 cover 가능
-  let fit = 'contain';
-  try{
-    const hasFit = /object-fit\s*:\s*/.test(extraStyle);
-    if(!hasFit){
-      const ctx = String(window.__detailCtx||'');
-      if(ctx==='compModal' || ctx==='histModal'){
-        // 경기 상세: 기본은 "가득 채우기(cover)" 쪽이 더 보기 좋음
-        fit = (localStorage.getItem('su_md_avatar_fit') || 'cover').trim();
-      } else {
-        fit = (localStorage.getItem('su_avatar_fit') || 'contain').trim();
-      }
-      if(!['contain','cover'].includes(fit)) fit='contain';
-    } else {
-      fit = null;
-    }
-  }catch(e){ fit='contain'; }
-  return '<img '+clickAttr+' src="'+src+'" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+bdr+clickStyle+'" onerror="this.style.display=\'none\'">';
+  return changed;
 }
-function getStatusIconHTML(name){
-  const ic=getStatusIcon(name);
-  if(!ic) return '';
-  const def=Object.values(STATUS_ICON_DEFS).find(d=>d.emoji===ic);
-  const lbl=def?def.label:ic;
-  if(_siIsImg(ic)) return `<span style="margin-left:3px;flex-shrink:0;display:inline-flex;align-items:center" title="${lbl}">${_siRender(ic,'18px')}</span>`;
-  return `<span style="font-size:13px;margin-left:3px;flex-shrink:0" title="${lbl}">${ic}</span>`;
-}
-
 function fixPoints(){
+  try{ _ensureLegacyMatchIdsOnce(); }catch(e){}
   // 구 티어명 → 새 약어 마이그레이션
   const tierMap={god:'G',king:'K',jack:'JA',joker:'J',spade:'S'};
   players.forEach(p=>{
@@ -924,13 +1369,25 @@ function localSave(){
     _lsSave('su_tiers',TIERS);
     // 사진(base64)을 su_pp로 분리해서 su_p 크기 감소
     const _pPhotoMap={};
+    const _playerBasePersisted = _queuePlayerBasePersistFromGlobals(false);
+    const _photoPersisted = _queuePlayerPhotoPersistFromGlobals(false);
+    const _playerHistPersisted = _queuePlayerHistoryPersistFromGlobals(false);
     const _pNoPhoto=players.map(p=>{
       const c={...p};
-      if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
-      // eloAfter(render.js fallback으로 재계산 가능)만 제거, time은 중복 dedup에 필요하므로 유지
+      if(p.photo){
+        if(!_photoPersisted) _pPhotoMap[p.name]=p.photo;
+        delete c.photo;
+      }
+      // eloAfter(render-player-detail.js 경로에서 재계산 가능)만 제거, time은 중복 dedup에 필요하므로 유지
       if(c.history&&c.history.length){
-        // eslint-disable-next-line no-unused-vars
-        c.history=c.history.map(({eloAfter,...h})=>h);
+        if(_playerHistPersisted){
+          delete c.history;
+        }else{
+          // eslint-disable-next-line no-unused-vars
+          c.history=c.history.map(({eloAfter,...h})=>h);
+        }
+      }else if(_playerHistPersisted){
+        delete c.history;
       }
       return c;
     });
@@ -942,32 +1399,36 @@ function localSave(){
       if(r.teamBMembers)r.teamBMembers=r.teamBMembers.map(x=>({name:x.name,univ:x.univ}));
       return r;
     });
-    _lsSave('su_pp',_pPhotoMap);
-    _lsSave('su_p',_pNoPhoto);
-    _lsSave('su_u',univCfg);
-    _lsSave('su_m',maps);
+    if(!_photoPersisted) _lsSave('su_pp',_pPhotoMap);
+    if(!_playerBasePersisted) _lsSave('su_p',_pNoPhoto);
     _lsSave('su_mAlias',userMapAlias);
-    _lsSave('su_t',tourD);
-    _lsSave('su_mm',miniM);
-    _lsSave('su_um',univM);
-    _lsSave('su_cm',comps);
-    _lsSave('su_ck',_trimM(ckM));
+    const _histPersisted = _queueHistoryPersistFromGlobals(false);
+    if(!_histPersisted){
+      _lsSave('su_u',univCfg);
+      _lsSave('su_m',maps);
+      _lsSave('su_t',tourD);
+      _lsSave('su_mm',miniM);
+      _lsSave('su_um',univM);
+      _lsSave('su_ck',_trimM(ckM));
+      _lsSave('su_pro',_trimM(proM));
+      _lsSave('su_ttm',_trimM(ttM));
+      _lsSave('su_indm',indM);
+      _lsSave('su_gjm',gjM);
+      _lsSave('su_cm',comps);
+      _lsSave('su_tn',tourneys);
+      _lsSave('su_ptn',proTourneys);
+      if(typeof boardOrder!=='undefined') _lsSave('su_boardOrder',boardOrder);
+      _lsSave('su_notices',notices);
+      _lsSave('su_seasons',seasons);
+      _lsSave('su_cal_sched',calScheduled);
+    }
+    // 대회/조편성도 IndexedDB 분리 저장 대상
     _lsSave('su_cn',compNames);
     _lsSave('su_cc',curComp);
-    _lsSave('su_pro',_trimM(proM));
-    _lsSave('su_ptn',proTourneys);
     _lsSave('su_ptc',curProComp);
-    _lsSave('su_tn',tourneys);
-    _lsSave('su_ttm',_trimM(ttM));
     _lsSave('su_ttcur',_ttCurComp);
-    _lsSave('su_indm',indM);
-    _lsSave('su_gjm',gjM);
-    if(typeof boardOrder!=='undefined') _lsSave('su_boardOrder',boardOrder);
-    if(typeof boardPlayerOrder!=='undefined') _lsSave('su_bpo',boardPlayerOrder);
+    if(typeof boardPlayerOrder!=='undefined' && !_queueBoardPlayerOrderPersistFromGlobals(false)) _lsSave('su_bpo',boardPlayerOrder);
     if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
-    _lsSave('su_notices',notices);
-    _lsSave('su_seasons',seasons);
-    _lsSave('su_cal_sched',calScheduled);
     localStorage.setItem('su_last_save_time',Date.now().toString());
     if(BLD['ck'])_lsSave('su_bld_ck',{membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]});
     if(BLD['pro'])_lsSave('su_bld_pro',{date:BLD['pro'].date||'',membersA:BLD['pro'].membersA||[],membersB:BLD['pro'].membersB||[],tierFilters:BLD['pro'].tierFilters||[],sets:BLD['pro'].sets||[]});
@@ -985,12 +1446,26 @@ function localSave(){
 // 맵·약자·상태아이콘·티어·대학 설정 변경 시 사용
 function saveCfg(){
   try{
+    try{ if(typeof window._markLocalSettingsChanged==='function') window._markLocalSettingsChanged(); }catch(e){}
     _lsSave('su_tiers',TIERS);
-    _lsSave('su_u',univCfg);
-    _lsSave('su_m',maps);
     _lsSave('su_mAlias',userMapAlias);
+    if(!_queueHistoryPersistFromGlobals(true)){
+      _lsSave('su_u',univCfg);
+      _lsSave('su_m',maps);
+      _lsSave('su_t',tourD);
+    }
     if(typeof playerStatusIcons!=='undefined') _lsSave('su_psi',playerStatusIcons);
     localStorage.setItem('su_last_save_time',Date.now().toString());
+
+    // 설정 변경은 로컬 저장만 수행
+    // 실제 GitHub 업로드는 다음 경기 기록 저장(save -> fbCloudSave) 때 appSettings와 함께 반영
+    try{
+      const statusEl = document.getElementById('cloudStatus');
+      if(statusEl){
+        statusEl.style.color='#2563eb';
+        statusEl.textContent='💾 설정 로컬 저장됨 · 다음 경기 기록 저장 때 함께 업로드';
+      }
+    }catch(e){}
   }catch(e){console.error('[saveCfg error]',e);}
 }
 // 프로필 사진만 저장 — su_pp만 갱신 (history 직렬화 없음)
@@ -998,27 +1473,187 @@ function savePhotos(){
   try{
     const _ppm={};
     players.forEach(p=>{if(p.photo)_ppm[p.name]=p.photo;});
-    _lsSave('su_pp',_ppm);
+    if(!_queuePlayerPhotoPersistFromGlobals(true)) _lsSave('su_pp',_ppm);
     localStorage.setItem('su_last_save_time',Date.now().toString());
   }catch(e){console.error('[savePhotos error]',e);}
 }
-function save(){
+const _REMOTE_SAVE_DEBOUNCE_MS = 1500;
+let _remoteCloudSaveTimer = null;
+let _remoteCloudSaveBusy = false;
+function _setPendingRemoteSave(reason, failMsg, mode){
+  try{
+    localStorage.setItem('su_sync_pending_save', '1');
+    localStorage.setItem('su_sync_pending_save_at', String(Date.now()));
+    if(reason) localStorage.setItem('su_sync_pending_save_reason', String(reason));
+    if(mode) localStorage.setItem('su_sync_pending_save_mode', String(mode));
+    if(failMsg) localStorage.setItem('su_sync_last_fail_msg', String(failMsg));
+  }catch(e){}
+  try{ if(typeof window._updateSyncNetworkBadge==='function') window._updateSyncNetworkBadge(); }catch(e){}
+}
+function _clearPendingRemoteSave(){
+  try{
+    localStorage.removeItem('su_sync_pending_save');
+    localStorage.removeItem('su_sync_pending_save_at');
+    localStorage.removeItem('su_sync_pending_save_reason');
+    localStorage.removeItem('su_sync_pending_save_mode');
+  }catch(e){}
+  try{ if(typeof window._updateSyncNetworkBadge==='function') window._updateSyncNetworkBadge(); }catch(e){}
+}
+function _setCloudStatusMsg(msg, color){
+  try{
+    if(typeof window.refreshCloudSyncStatus === 'function') window.refreshCloudSyncStatus(msg, color);
+    else{
+      const statusEl = document.getElementById('cloudStatus');
+      if(statusEl){
+        statusEl.style.color = color || '';
+        statusEl.textContent = msg;
+      }
+    }
+  }catch(e){}
+}
+function _updateSyncNetworkBadge(){
+  try{
+    const el = document.getElementById('syncNetBadge');
+    if(!el) return;
+    const online = navigator.onLine !== false;
+    const pending = localStorage.getItem('su_sync_pending_save') === '1';
+    if(!online){
+      el.textContent = '오프라인';
+      el.style.color = '#b45309';
+      el.style.borderColor = '#fbbf24';
+      el.style.background = '#fffbeb';
+    }else if(pending){
+      el.textContent = '미전송 있음';
+      el.style.color = '#b91c1c';
+      el.style.borderColor = '#fca5a5';
+      el.style.background = '#fef2f2';
+    }else{
+      el.textContent = '온라인';
+      el.style.color = 'var(--text2)';
+      el.style.borderColor = 'var(--border)';
+      el.style.background = 'var(--surface)';
+    }
+    el.title = pending ? '아직 다른 기기에 반영되지 않은 저장이 있습니다' : (online ? '네트워크 연결됨' : '오프라인 상태입니다');
+  }catch(e){}
+}
+try{ window._updateSyncNetworkBadge = _updateSyncNetworkBadge; }catch(e){}
+async function _ensureRemoteSaveReady(){
+  if(typeof window.fbCloudSave === 'function' && typeof window.fbSet === 'function') return true;
+  try{
+    if (typeof window._ensureCloudBoardLoaded === 'function') {
+      await window._ensureCloudBoardLoaded();
+    } else if (typeof window._loadScriptOnce === 'function') {
+          await window._loadScriptOnce('js/cloud-board.js?v=20260503-12');
+    }
+  }catch(e){
+    console.error('[save] cloud-board load fail', e);
+  }
+  return typeof window.fbCloudSave === 'function' && typeof window.fbSet === 'function';
+}
+async function _flushRemoteCloudSave(reason){
+  if(_remoteCloudSaveTimer){
+    clearTimeout(_remoteCloudSaveTimer);
+    _remoteCloudSaveTimer = null;
+  }
+  if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
+  if(!(typeof suGetSecret==='function' ? suGetSecret('su_gh_token') : localStorage.getItem('su_gh_token'))){
+    try{ localStorage.setItem('su_sync_last_fail_msg','GitHub 토큰 없음'); }catch(e){}
+    _setCloudStatusMsg('⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)', '#d97706');
+    return false;
+  }
+  if(navigator.onLine === false){
+    _setPendingRemoteSave(reason || 'save', '오프라인 상태', 'offline');
+    _setCloudStatusMsg('📴 오프라인 상태 — 온라인 복귀 시 자동 업로드', '#d97706');
+    return false;
+  }
+  if(_remoteCloudSaveBusy){
+    _setPendingRemoteSave(reason || 'save', '', 'queued');
+    return false;
+  }
+  _remoteCloudSaveBusy = true;
+  try{
+    const ready = await _ensureRemoteSaveReady();
+    if(!ready){
+      _setPendingRemoteSave(reason || 'save', 'GitHub 저장 모듈 미연결', 'failed');
+      _setCloudStatusMsg('❌ GitHub 저장 모듈 미연결', '#dc2626');
+      return false;
+    }
+    _setCloudStatusMsg('⏫ GitHub 저장 중...', '#2563eb');
+    await window.fbCloudSave({ includeSettings:false });
+    try{
+      const now = Date.now();
+      localStorage.setItem('su_last_save_time', String(now));
+      localStorage.setItem('su_sync_last_upload_ok_at', String(now));
+      localStorage.removeItem('su_sync_last_fail_msg');
+    }catch(e){}
+    _clearPendingRemoteSave();
+    _setCloudStatusMsg('✅ GitHub 저장됨', '#16a34a');
+    return true;
+  }catch(e){
+    _setPendingRemoteSave(reason || 'save', String((e&&e.message)||e||'GitHub 저장 실패'), 'failed');
+    _setCloudStatusMsg('❌ GitHub 저장 실패 — 복귀 시 자동 재시도', '#dc2626');
+    console.error('[fbCloudSave]',e);
+    return false;
+  }finally{
+    _remoteCloudSaveBusy = false;
+    try{
+      const pending = localStorage.getItem('su_sync_pending_save') === '1';
+      const mode = localStorage.getItem('su_sync_pending_save_mode') || '';
+      if(pending && mode === 'queued' && !_remoteCloudSaveTimer && navigator.onLine !== false){
+        _remoteCloudSaveTimer = setTimeout(()=>{ _flushRemoteCloudSave('queued-retry'); }, 250);
+      }
+      _updateSyncNetworkBadge();
+    }catch(e){}
+  }
+}
+function _scheduleRemoteCloudSave(delay, reason){
+  if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
+  if(_remoteCloudSaveTimer) clearTimeout(_remoteCloudSaveTimer);
+  _remoteCloudSaveTimer = setTimeout(()=>{ _flushRemoteCloudSave(reason || 'save'); }, Math.max(0, Number(delay||_REMOTE_SAVE_DEBOUNCE_MS)));
+  _setCloudStatusMsg('🕓 변경사항 저장 준비 중...', '#2563eb');
+  _updateSyncNetworkBadge();
+  return true;
+}
+window._retryPendingRemoteSave = function(force){
+  try{
+    const pending = localStorage.getItem('su_sync_pending_save') === '1';
+    if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
+    if(navigator.onLine === false) return false;
+    if(!force && !pending) return false;
+    return _scheduleRemoteCloudSave(force ? 120 : _REMOTE_SAVE_DEBOUNCE_MS, force ? 'forced-retry' : 'pending-retry');
+  }catch(e){
+    return false;
+  }
+};
+window.addEventListener('online', ()=>{
+  _updateSyncNetworkBadge();
+  _setCloudStatusMsg('🌐 온라인 복귀 — 저장 재시도 확인 중', '#2563eb');
+  try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(true); }catch(e){}
+});
+window.addEventListener('offline', ()=>{
+  _updateSyncNetworkBadge();
+  _setCloudStatusMsg('📴 오프라인 상태 — 로컬 저장만 유지', '#d97706');
+});
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible'){
+    _updateSyncNetworkBadge();
+    try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(false); }catch(e){}
+  }
+});
+window.addEventListener('DOMContentLoaded', ()=>{
+  _updateSyncNetworkBadge();
+  try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(false); }catch(e){}
+}, { once:true });
+async function save(){
+  try{
+    if(typeof window._invalidateTotalCaches === 'function') window._invalidateTotalCaches();
+  }catch(e){}
+  try{
+    if(typeof window._invalidateUnivListCache === 'function') window._invalidateUnivListCache();
+  }catch(e){}
   localSave();
-  const statusEl = document.getElementById('cloudStatus');
   if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
-    if (!localStorage.getItem('su_fb_pw') && typeof _FB_PW_DEFAULT === 'undefined') {
-      // 비밀번호 미설정 → Firebase 저장 안 됨 경고
-      if (statusEl) { statusEl.style.color='#d97706'; statusEl.textContent='⚠️ 로컬만 저장 (설정탭→Firebase 비밀번호 필요)'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},5000); }
-      return;
-    }
-    if (typeof fbCloudSave !== 'function' || typeof window.fbSet !== 'function') {
-      if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent='❌ Firebase 미연결'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},4000); }
-      return;
-    }
-    if (statusEl) { statusEl.style.color=''; statusEl.textContent='⏫ 저장 중...'; }
-    fbCloudSave()
-      .then(() => { if(statusEl){statusEl.style.color='#16a34a';statusEl.textContent='✅ Firebase 저장됨'; setTimeout(()=>{if(statusEl){statusEl.textContent='';statusEl.style.color='';}},3000);} })
-      .catch(e => { if(statusEl){statusEl.style.color='#dc2626';statusEl.textContent='❌ Firebase 저장 실패';} console.error('[fbCloudSave]',e); });
+    _scheduleRemoteCloudSave(_REMOTE_SAVE_DEBOUNCE_MS, 'save');
   }
 }
 
@@ -1066,10 +1701,12 @@ function updateRankSnapshot() {
     .sort((a,b) => (b.points||0)-(a.points||0) || (b.win||0)-(a.win||0));
   const snap = {};
   ranked.forEach((p,i) => { snap[p.name] = i+1; });
-  localStorage.setItem('su_rank_snap', JSON.stringify(snap));
-  localStorage.setItem('su_rank_snap_date', today);
   _rankSnapshot = snap;
   _rankSnapDate = today;
+  if(!_queueRankSnapshotPersistFromGlobals(true)){
+    localStorage.setItem('su_rank_snap', JSON.stringify(snap));
+    localStorage.setItem('su_rank_snap_date', today);
+  }
 }
 
 // 랭킹 변동 HTML 반환 (▲3 / ▼2 / NEW / -)
@@ -1141,11 +1778,111 @@ function injectUnivIcons(container){
 }
 function pC(n){return n>0?'pt-p':n<0?'pt-n':'pt-z';}
 function pS(n){return (n>0?'+':'')+n;}
+let __suAllUnivsCacheKey='';
+let __suAllUnivsCacheData=null;
+let __suPlayerUnivSetCache = Object.create(null);
+let __suAllUnivNamesCacheKey='';
+let __suAllUnivNamesCacheData=null;
+let __suAllUnivMapCacheKey='';
+let __suAllUnivMapCacheData=null;
+function _invalidateUnivListCache(){
+  __suAllUnivsCacheKey='';
+  __suAllUnivsCacheData=null;
+  __suPlayerUnivSetCache = Object.create(null);
+  __suAllUnivNamesCacheKey='';
+  __suAllUnivNamesCacheData=null;
+  __suAllUnivMapCacheKey='';
+  __suAllUnivMapCacheData=null;
+}
+window._invalidateUnivListCache = window._invalidateUnivListCache || _invalidateUnivListCache;
 function getAllUnivs(){
-  const r=[...univCfg];const s=new Set(univCfg.map(u=>u.name));
-  players.forEach(p=>{if(!s.has(p.univ)){r.push({name:p.univ,color:'#6b7280'});s.add(p.univ);}});
+  let cfgLen=0, playerLen=0, cfgNameLen=0, playerUnivLen=0;
+  const cfg=Array.isArray(univCfg)?univCfg:[];
+  const pls=Array.isArray(players)?players:[];
+  for(const u of cfg){
+    if(!u) continue;
+    cfgLen++;
+    cfgNameLen += String(u.name||'').length;
+  }
+  for(const p of pls){
+    if(!p) continue;
+    playerLen++;
+    playerUnivLen += String(p.univ||'').length;
+  }
+  const cacheKey = `${cfgLen}|${playerLen}|${cfgNameLen}|${playerUnivLen}`;
+  if(__suAllUnivsCacheData && __suAllUnivsCacheKey===cacheKey) return __suAllUnivsCacheData;
+  const r=[...cfg];const s=new Set(cfg.map(u=>u.name));
+  pls.forEach(p=>{if(!s.has(p.univ)){r.push({name:p.univ,color:'#6b7280'});s.add(p.univ);}});
   const seen=new Set();
-  return r.filter(u=>{if(seen.has(u.name))return false;seen.add(u.name);return true;});
+  __suAllUnivsCacheKey = cacheKey;
+  __suAllUnivsCacheData = r.filter(u=>{if(seen.has(u.name))return false;seen.add(u.name);return true;});
+  return __suAllUnivsCacheData;
+}
+
+function getAllUnivNames(){
+  const all = getAllUnivs();
+  const key = __suAllUnivsCacheKey;
+  if(__suAllUnivNamesCacheData && __suAllUnivNamesCacheKey === key) return __suAllUnivNamesCacheData;
+  __suAllUnivNamesCacheKey = key;
+  __suAllUnivNamesCacheData = all.map(u=>u.name);
+  return __suAllUnivNamesCacheData;
+}
+
+function getAllUnivMap(){
+  const all = getAllUnivs();
+  const key = __suAllUnivsCacheKey;
+  if(__suAllUnivMapCacheData && __suAllUnivMapCacheKey === key) return __suAllUnivMapCacheData;
+  const map = new Map();
+  all.forEach(u=>{ if(u && u.name) map.set(u.name, u); });
+  __suAllUnivMapCacheKey = key;
+  __suAllUnivMapCacheData = map;
+  return map;
+}
+
+function getPlayerUnivNameSet(opts){
+  const options = opts || {};
+  const excludeRetired = !!options.excludeRetired;
+  const excludeHidden = !!options.excludeHidden;
+  const excludeBoardHidden = !!options.excludeBoardHidden;
+  const pls = Array.isArray(players) ? players : [];
+  let count = 0, nameLen = 0, retiredCnt = 0, hiddenCnt = 0, boardHiddenCnt = 0;
+  for(const p of pls){
+    if(!p) continue;
+    count++;
+    nameLen += String(p.univ || '').length;
+    if(p.retired) retiredCnt++;
+    if(p.hidden) hiddenCnt++;
+    if(p.hideFromBoard) boardHiddenCnt++;
+  }
+  const key = `${count}|${nameLen}|${retiredCnt}|${hiddenCnt}|${boardHiddenCnt}|${excludeRetired?'1':'0'}|${excludeHidden?'1':'0'}|${excludeBoardHidden?'1':'0'}`;
+  if(__suPlayerUnivSetCache[key]) return __suPlayerUnivSetCache[key];
+  const set = new Set();
+  for(const p of pls){
+    if(!p) continue;
+    if(excludeRetired && p.retired) continue;
+    if(excludeHidden && p.hidden) continue;
+    if(excludeBoardHidden && p.hideFromBoard) continue;
+    const name = String(p.univ || '').trim();
+    if(name) set.add(name);
+  }
+  __suPlayerUnivSetCache[key] = set;
+  return set;
+}
+
+function getAllUnivsWithPlayers(opts){
+  const options = opts || {};
+  const names = getPlayerUnivNameSet({
+    excludeRetired: !!options.excludeRetired,
+    excludeHidden: !!options.excludeHidden,
+    excludeBoardHidden: !!options.excludeBoardHidden
+  });
+  return getAllUnivs().filter(u=>{
+    if(!u || !names.has(u.name)) return false;
+    if(options.excludeMuso && u.name === '무소속') return false;
+    if(options.excludeHiddenUniv && u.hidden && !isLoggedIn) return false;
+    if(options.excludeDissolved && u.dissolved) return false;
+    return true;
+  });
 }
 
 // 현황판 boardOrder → univCfg 순서 동기화 (현황판에서 이동하면 스트리머 목록도 같이 이동)
@@ -1157,11 +1894,6 @@ function syncBoardOrderToUnivCfg(){
   if(newCfg.length===univCfg.length){univCfg=newCfg;save();}
 }
 function getMembers(univ){return players.filter(p=>p.univ===univ);}
-
-function genderIcon(gender){
-  if(gender==='M')return `<span class="male-icon">♂</span>`;
-  return '';
-}
 
 /* ELO 상수 */
 const ELO_DEFAULT=1200;
@@ -1224,6 +1956,16 @@ function resolvePlayerName(rawName){
 // 전역 노출(모달/인라인 onclick에서 사용)
 try{ window.resolvePlayerName = resolvePlayerName; }catch(e){}
 
+function _normalizeStoredMode(mode){
+  const raw = String(mode||'').trim();
+  if(!raw) return '';
+  const low = raw.toLowerCase();
+  if(raw === '중장전') return '끝장전';
+  if(raw === 'CK' || raw === '대학 ck' || raw === '대학 CK' || low === '대학ck') return '대학CK';
+  if(raw === '일반' || raw === '프로리그 일반') return '프로리그';
+  if(raw === '티어대회 일반' || raw === '티어 일반') return '티어대회';
+  return raw;
+}
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
   // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
   function _findPlayer(name){
@@ -1276,8 +2018,9 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   // 경기 시점 대학 저장 (나중에 대학을 옮겨도 당시 소속 대학으로 집계)
   const wu=univW||w.univ||'';
   const lu=univL||l.univ||'';
-  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:mode||''});
-  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:mode||''});
+  const modeNorm = _normalizeStoredMode(mode);
+  w.history.unshift({date:d,time:t,result:'승',opp:l.name,oppRace:l.race,map:m,matchId:matchId||'',eloDelta:delta,eloAfter:w.elo,univ:wu,mode:modeNorm});
+  l.history.unshift({date:d,time:t,result:'패',opp:w.name,oppRace:w.race,map:m,matchId:matchId||'',eloDelta:-delta,eloAfter:l.elo,univ:lu,mode:modeNorm});
 }
 
 // (요청사항) 동률(2:2 등)도 "저장"되도록 — 무승부 기록
@@ -1322,8 +2065,9 @@ function applyDrawResult(nameA, nameB, date, map, matchId, univA, univB, mode, s
   const bu=univB||b.univ||'';
   const scoreStr = (scoreA!=null && scoreB!=null) ? `${scoreA}:${scoreB}` : '';
   // eloDelta는 null로 두어 UI에서 "-" 처리되게 함
-  a.history.unshift({date:d,time:t,result:'무',opp:b.name,oppRace:b.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:a.elo||ELO_DEFAULT,univ:au,mode:mode||'',score:scoreStr});
-  b.history.unshift({date:d,time:t,result:'무',opp:a.name,oppRace:a.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:b.elo||ELO_DEFAULT,univ:bu,mode:mode||'',score:scoreStr});
+  const modeNorm = _normalizeStoredMode(mode);
+  a.history.unshift({date:d,time:t,result:'무',opp:b.name,oppRace:b.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:a.elo||ELO_DEFAULT,univ:au,mode:modeNorm,score:scoreStr});
+  b.history.unshift({date:d,time:t,result:'무',opp:a.name,oppRace:a.race,map:m,matchId:matchId||'',eloDelta:null,eloAfter:b.elo||ELO_DEFAULT,univ:bu,mode:modeNorm,score:scoreStr});
 }
 
 function rebuildAllPlayerHistory() {
