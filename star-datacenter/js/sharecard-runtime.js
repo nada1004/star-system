@@ -34,6 +34,7 @@
   function _shareCardPrefsSignature(){
     try{
       return JSON.stringify({
+        saveTime: localStorage.getItem('su_last_save_time')||'0',
         mode: localStorage.getItem('su_sc_mode')||'campus',
         mode_ck: localStorage.getItem('su_sc_mode_ck')||'inherit',
         mode_pro: localStorage.getItem('su_sc_mode_pro')||'inherit',
