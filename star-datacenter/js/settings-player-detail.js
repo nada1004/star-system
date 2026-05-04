@@ -14,6 +14,8 @@ function _renderCfgPdSection(){
   const phbgFit=s.header_bg_fit||'contain';
   const phbgScale=s.header_bg_scale!==undefined?s.header_bg_scale:100;
   const phbgPos=s.header_bg_pos||'center center';
+  const _phbgPosX = (()=>{ const n=parseInt(s.header_bg_pos_x??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
+  const _phbgPosY = (()=>{ const n=parseInt(s.header_bg_pos_y??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
   const uds=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
   const uhbg=uds.header_bg_img||'';
   const uhbgFit=uds.header_bg_fit||'contain';
@@ -95,6 +97,22 @@ function _renderCfgPdSection(){
           ['left bottom','↙ 좌하'],['center bottom','↓ 하단'],['right bottom','↘ 우하']
         ].map(([pos,label])=>`<button class="btn btn-xs ${phbgPos===pos?'btn-b':'btn-w'}"
           onclick="_setPdHeaderBg('header_bg_pos','${pos}')">${label}</button>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">가로 미세 위치</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="range" min="0" max="100" step="1" value="${_phbgPosX}" style="flex:1;accent-color:var(--blue)" oninput="_setPdHeaderBg('header_bg_pos_x',this.value);document.getElementById('cfg-pdh-posx').textContent=this.value+'%'">
+            <span id="cfg-pdh-posx" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${_phbgPosX}%</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">세로 미세 위치</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="range" min="0" max="100" step="1" value="${_phbgPosY}" style="flex:1;accent-color:var(--blue)" oninput="_setPdHeaderBg('header_bg_pos_y',this.value);document.getElementById('cfg-pdh-posy').textContent=this.value+'%'">
+            <span id="cfg-pdh-posy" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${_phbgPosY}%</span>
+          </div>
+        </div>
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">개별 스트리머에 별도 배경을 넣지 않은 경우 기본값으로 사용됩니다.</div>
     </div>

@@ -127,6 +127,7 @@ function buildPlayerDetailHTML(p){
         wr,
         cWin: _cWin,
         cLoss: _cLoss,
+        histAll: _histAll,
         eloVal,
         eloColor,
         eloSparkHTML: _eloSparkHTML

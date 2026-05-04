@@ -162,6 +162,7 @@ function rTotal(C,T){
   }
 
   let totalShown=0;
+  const _visiblePhotoUrls = [];
   
   // University section for StarCraft streamers (exclude general)
   getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
@@ -204,6 +205,7 @@ function rTotal(C,T){
       const _pChange = typeof getRankChangeBadge==='function' ? getRankChangeBadge(p.name, _pRank) : '';
       const _pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       const _q = `${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
+      if(p.photo) _visiblePhotoUrls.push(p.photo);
       tableHTML+=`<tr data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
         ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
         <td style="text-align:center;white-space:nowrap;padding:5px 4px">
@@ -214,7 +216,7 @@ function rTotal(C,T){
         <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span style="display:inline-flex;align-items:center;gap:8px">
-            ${p.photo?`<span onclick="openPlayerModal('${_pSafe}')" title="스트리머 상세" style="width:40px;height:40px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border);background:var(--border2);font-size:11px;font-weight:900;color:#64748b;position:relative;cursor:pointer">${p.race||'?'}<img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span style="display:inline-block;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
+            ${p.photo?`<span onclick="openPlayerModal('${_pSafe}')" title="스트리머 상세" style="width:40px;height:40px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border);background:var(--border2);font-size:11px;font-weight:900;color:#64748b;position:relative;cursor:pointer">${p.race||'?'}<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span style="display:inline-block;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
             <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${_pSafe}')">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
           </span>
         </td>
@@ -245,6 +247,7 @@ function rTotal(C,T){
   tableHTML+=`</tbody></table></div>`;
 
   C.innerHTML = filterBar + tableHTML;
+  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_visiblePhotoUrls, 28); }catch(e){}
   injectUnivIcons(C);
   requestAnimationFrame(()=>injectUnivIcons(C));
   totalApplySearchFilter();
@@ -257,6 +260,7 @@ function _buildGalleryView(rankMap){
   const RACE_CLR={T:'#2563eb',Z:'#7c3aed',P:'#c2410c',N:'#64748b'};
   let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:4px 0">';
   let anyShown=false;
+  const _galleryPhotoUrls = [];
   getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
     let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general'&&!p.retired);
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
@@ -283,13 +287,14 @@ function _buildGalleryView(rankMap){
         if(lastD>=_30ago) return '#f59e0b';
         return '#9ca3af';
       })();
+      if(p.photo) _galleryPhotoUrls.push(p.photo);
       html+=`<div data-player-card="1" data-univ="${u.name}" data-q="${q.replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}"
         onclick="openPlayerModal('${_pSafe}')"
         style="position:relative;border-radius:14px;overflow:hidden;cursor:pointer;aspect-ratio:3/4;background:${clr}22;border:2px solid ${clr}44;transition:transform .15s,box-shadow .15s"
         onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 28px rgba(0,0,0,.22)'"
         onmouseleave="this.style.transform='';this.style.boxShadow=''">
         ${p.photo
-          ? `<img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
+          ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
           : ''}
         <div class="gc-placeholder" style="position:absolute;inset:0;display:${p.photo?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:${clr}15">${p.race||'?'}</div>
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 40%,rgba(0,0,0,.82) 100%)"></div>
@@ -311,6 +316,7 @@ function _buildGalleryView(rankMap){
   });
   if(!anyShown) html+=`<div style="grid-column:1/-1"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div></div></div>`;
   html+='</div>';
+  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_galleryPhotoUrls, 28); }catch(e){}
   return html;
 }
 
