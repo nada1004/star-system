@@ -686,7 +686,7 @@ window.__suFetchGithubMergedData = _fetchGithubData;
 
 // 데이터 쓰기 함수 (기존 fbSet 호환)
 // - data는 보통 { _lz: '...' } 형태로 들어옴
-window.fbSet = async function (data) {
+window.fbSet = async function (data, meta) {
   return _queueGithubSave(async ()=>{
     const full = _decodeGithubPayload(data);
     const savedAt = Number(full && full.savedAt || Date.now()) || Date.now();
@@ -696,7 +696,10 @@ window.fbSet = async function (data) {
       console.warn('[split-save] failed, fallback to legacy data.json', splitErr);
       await _saveLegacySingleFile(full);
     }
-    try{ await _pushFirebaseSignal({ savedAt, changed:['all'] }); }catch(sigErr){ console.warn('[firebase-signal] notify failed', sigErr); }
+    try{
+      const changed = Array.isArray(meta && meta.changed) && meta.changed.length ? meta.changed : ['all'];
+      await _pushFirebaseSignal({ savedAt, changed });
+    }catch(sigErr){ console.warn('[firebase-signal] notify failed', sigErr); }
   });
 };
 

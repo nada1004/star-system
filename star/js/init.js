@@ -537,45 +537,10 @@ init();
 initDark();
 
 // ─────────────────────────────────────────────────────────────
-// (요청사항) 설정 변경 → 다른 기기 "바로" 반영 보강
-// - Gist 동기화(enabled)로 저장(push)한 설정을 다른 기기가 자동으로 주기적으로 pull
-// - 토큰이 없는 기기는 읽기만(pull) 가능
+// 설정 원격 pull은 수동 실행만 유지
+// - GitHub/Firebase 동기화는 변경 신호 기반으로만 수신
+// - SettingsStore는 설정 화면의 수동 불러오기에서만 사용
 // ─────────────────────────────────────────────────────────────
-(function(){
-  if(window._settingsAutoSyncStarted) return;
-  window._settingsAutoSyncStarted = true;
-
-  const doPull = async ()=>{
-    try{
-      if(!window.SettingsStore || typeof window.SettingsStore.pull!=='function') return;
-      const c = window.SettingsStore.cfg ? window.SettingsStore.cfg() : { gistId:'' };
-      if(!c || !c.gistId) return;
-      await window.SettingsStore.pull({silent:true});
-      // 설정 팝업이 열려있고 AI 섹션이 보이면 입력값/상태 즉시 반영
-      try{
-        const m = document.getElementById('cfgModal');
-        if(m && m.style.display!=='none'){
-          const sec = document.getElementById('cfg-sec-aibot');
-          if(sec && sec.closest && sec.closest('#cfgModalBody')){
-            if(typeof window.cfgInitAiProxy==='function') window.cfgInitAiProxy();
-          }
-        }
-      }catch(e){}
-    }catch(e){}
-  };
-
-  // 첫 pull
-  setTimeout(doPull, 1200);
-  // 주기적 pull (너무 잦지 않게)
-  setInterval(doPull, 20000);
-  // 포커스/재진입 시 즉시 반영
-  try{ window.addEventListener('focus', ()=>doPull()); }catch(e){}
-  try{
-    document.addEventListener('visibilitychange', ()=>{
-      if(document.visibilityState === 'visible') doPull();
-    });
-  }catch(e){}
-})();
 
 // ─────────────────────────────────────────────────────────────
 // 전역 폰트 설정
@@ -1194,6 +1159,11 @@ try{ window._applyAllRuntimeSettings(); }catch(e){}
 
 window.__suNeedsBootstrapData = async function(){
   try{
+    if(typeof window.__suHasIndexedDBData === 'function'){
+      try{
+        if(await window.__suHasIndexedDBData()) return false;
+      }catch(e){}
+    }
     const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
     const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey);
     const hasRuntimeRecordData = [
@@ -1218,11 +1188,6 @@ window.__suNeedsBootstrapData = async function(){
       : !!(localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length > 0);
     if((hasRecordKeys || hasRuntimeRecordData || hasLocalPlayers) && hasCoreGlobals) return false;
     if(window.__suBootDataApplied && hasCoreGlobals && (hasRecordKeys || hasRuntimeRecordData || hasLocalPlayers)) return false;
-    if(typeof window.__suHasIndexedDBData === 'function'){
-      try{
-        if((await window.__suHasIndexedDBData()) && hasCoreGlobals) return false;
-      }catch(e){}
-    }
     return true;
   }catch(e){
     return true;

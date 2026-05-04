@@ -386,6 +386,9 @@ const _FB_PW_DEFAULT = 'haram1019!@'; // Firebase Security Rules admin_pw 기본
 // Firebase에 현재 데이터 저장 (관리자 전용)
 async function fbCloudSave(opts) {
   const includeSettings = !(opts && opts.includeSettings === false);
+  const signalChanged = Array.isArray(opts && opts.signalChanged) && opts.signalChanged.length
+    ? opts.signalChanged.slice(0, 12)
+    : (includeSettings ? ['matches','settings'] : ['matches']);
   const token = (typeof suGetSecret==='function' ? suGetSecret('su_gh_token') : localStorage.getItem('su_gh_token'));
   if (!token || !isLoggedIn || typeof window.fbSet !== 'function') return;
   const savedAt = Date.now();
@@ -526,7 +529,7 @@ async function fbCloudSave(opts) {
     const compressed = LZString.compressToBase64(jsonStr);
     const payload = { _lz: compressed };
     console.log('[fbCloudSave] 원본:', (jsonStr.length/1024).toFixed(0)+'KB → 압축:', (compressed.length/1024).toFixed(0)+'KB ('+((1-compressed.length/jsonStr.length)*100).toFixed(0)+'% 절감)');
-    return window.fbSet(payload);
+    return window.fbSet(payload, { changed: signalChanged });
   };
   try {
     await _tryFbSet(dataObj);

@@ -60,6 +60,22 @@ try{ window._markLocalSettingsChanged = _markLocalSettingsChanged; }catch(e){}
 try{
   if(typeof window.__suTouchSettingsWrapped==='undefined'){
     window.__suTouchSettingsWrapped = true;
+    const _markUserAction = ()=>{
+      try{ window.__suLastUserActionAt = Date.now(); }catch(e){}
+    };
+    const _hasRecentUserAction = ()=>{
+      try{
+        const ts = Number(window.__suLastUserActionAt||0) || 0;
+        return !!ts && (Date.now() - ts) < 4000;
+      }catch(e){
+        return false;
+      }
+    };
+    try{
+      ['pointerdown','keydown','input','change','touchstart'].forEach(evt=>{
+        window.addEventListener(evt, _markUserAction, { passive:true, capture:true });
+      });
+    }catch(e){}
     const _origSet = Storage.prototype.setItem;
     const _origRemove = Storage.prototype.removeItem;
     const _settingPrefixes = [
@@ -89,7 +105,14 @@ try{
       const out = _origSet.call(this, key, value);
       try{
         if(this===localStorage && _shouldTouch(key) && !window._applyingCloudData && !window._isSaving && !window.__suSkipTouchLocalSettings){
-          _origSet.call(localStorage, 'su_last_settings_save', String(Date.now()));
+          if(!_hasRecentUserAction()) return out;
+          const _ts = Date.now();
+          _origSet.call(localStorage, 'su_last_settings_save', String(_ts));
+          try{
+            window.__suPendingSettingsSync = true;
+            window.__suLastSettingsChangeAt = _ts;
+            if(typeof window.__suScheduleSettingsSync === 'function') window.__suScheduleSettingsSync('settings-touch');
+          }catch(e){}
         }
       }catch(e){}
       return out;
@@ -98,7 +121,14 @@ try{
       const out = _origRemove.call(this, key);
       try{
         if(this===localStorage && _shouldTouch(key) && !window._applyingCloudData && !window._isSaving && !window.__suSkipTouchLocalSettings){
-          _origSet.call(localStorage, 'su_last_settings_save', String(Date.now()));
+          if(!_hasRecentUserAction()) return out;
+          const _ts = Date.now();
+          _origSet.call(localStorage, 'su_last_settings_save', String(_ts));
+          try{
+            window.__suPendingSettingsSync = true;
+            window.__suLastSettingsChangeAt = _ts;
+            if(typeof window.__suScheduleSettingsSync === 'function') window.__suScheduleSettingsSync('settings-touch');
+          }catch(e){}
         }
       }catch(e){}
       return out;
@@ -1543,7 +1573,7 @@ async function _ensureRemoteSaveReady(){
     if (typeof window._ensureCloudBoardLoaded === 'function') {
       await window._ensureCloudBoardLoaded();
     } else if (typeof window._loadScriptOnce === 'function') {
-          await window._loadScriptOnce('js/cloud-board.js?v=20260503-12');
+          await window._loadScriptOnce('js/cloud-board.js?v=20260504-01');
     }
   }catch(e){
     console.error('[save] cloud-board load fail', e);
@@ -1572,6 +1602,11 @@ async function _flushRemoteCloudSave(reason){
   }
   _remoteCloudSaveBusy = true;
   try{
+    const _why = String(reason || 'save');
+    const _includeSettings = !!window.__suPendingSettingsSync || _why.startsWith('settings');
+    const _signalChanged = _includeSettings
+      ? (_why.startsWith('settings') ? ['settings'] : ['matches','settings'])
+      : ['matches'];
     const ready = await _ensureRemoteSaveReady();
     if(!ready){
       _setPendingRemoteSave(reason || 'save', 'GitHub 저장 모듈 미연결', 'failed');
@@ -1579,12 +1614,16 @@ async function _flushRemoteCloudSave(reason){
       return false;
     }
     _setCloudStatusMsg('⏫ GitHub 저장 중...', '#2563eb');
-    await window.fbCloudSave({ includeSettings:false });
+    await window.fbCloudSave({ includeSettings:_includeSettings, signalChanged:_signalChanged });
     try{
       const now = Date.now();
       localStorage.setItem('su_last_save_time', String(now));
       localStorage.setItem('su_sync_last_upload_ok_at', String(now));
       localStorage.removeItem('su_sync_last_fail_msg');
+      if(_includeSettings){
+        window.__suPendingSettingsSync = false;
+        window.__suLastSettingsSyncAt = now;
+      }
     }catch(e){}
     _clearPendingRemoteSave();
     _setCloudStatusMsg('✅ GitHub 저장됨', '#16a34a');
@@ -1614,13 +1653,25 @@ function _scheduleRemoteCloudSave(delay, reason){
   _updateSyncNetworkBadge();
   return true;
 }
+window.__suScheduleSettingsSync = function(reason){
+  try{
+    window.__suPendingSettingsSync = true;
+    return _scheduleRemoteCloudSave(_REMOTE_SAVE_DEBOUNCE_MS, `settings:${reason||'change'}`);
+  }catch(e){
+    return false;
+  }
+};
 window._retryPendingRemoteSave = function(force){
   try{
     const pending = localStorage.getItem('su_sync_pending_save') === '1';
+    const pendingReason = String(localStorage.getItem('su_sync_pending_save_reason') || '').trim();
     if(!(typeof isLoggedIn !== 'undefined' && isLoggedIn)) return false;
     if(navigator.onLine === false) return false;
     if(!force && !pending) return false;
-    return _scheduleRemoteCloudSave(force ? 120 : _REMOTE_SAVE_DEBOUNCE_MS, force ? 'forced-retry' : 'pending-retry');
+    return _scheduleRemoteCloudSave(
+      force ? 120 : _REMOTE_SAVE_DEBOUNCE_MS,
+      force ? (pendingReason || 'forced-retry') : (pendingReason || 'pending-retry')
+    );
   }catch(e){
     return false;
   }
@@ -1644,7 +1695,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   _updateSyncNetworkBadge();
   try{ if(typeof window._retryPendingRemoteSave==='function') window._retryPendingRemoteSave(false); }catch(e){}
 }, { once:true });
-async function save(){
+async function save(reason){
   try{
     if(typeof window._invalidateTotalCaches === 'function') window._invalidateTotalCaches();
   }catch(e){}
@@ -1653,7 +1704,9 @@ async function save(){
   }catch(e){}
   localSave();
   if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
-    _scheduleRemoteCloudSave(_REMOTE_SAVE_DEBOUNCE_MS, 'save');
+    const _why = String(reason || '').trim();
+    const _needsSettingsSync = !!window.__suPendingSettingsSync || _why.startsWith('settings');
+    _scheduleRemoteCloudSave(_REMOTE_SAVE_DEBOUNCE_MS, _needsSettingsSync ? (_why || 'settings:save') : 'save');
   }
 }
 

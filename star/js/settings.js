@@ -2687,8 +2687,20 @@ window.cfgSearchSettings = function(q){
 };
 
 const _CFG_ADV_OPEN_KEY = 'su_cfg_adv_open_v1';
+const _CFG_SIMPLE_MODE_KEY = 'su_cfg_simple_mode_v1';
 window.cfgToggleAdvancedSettings = function(open){
   try{ localStorage.setItem(_CFG_ADV_OPEN_KEY, open ? '1' : '0'); }catch(e){}
+  try{ render(); }catch(e){}
+};
+window.cfgToggleSimpleMode = function(on){
+  try{ localStorage.setItem(_CFG_SIMPLE_MODE_KEY, on ? '1' : '0'); }catch(e){}
+  try{
+    if(on){
+      const _simpleCats = new Set(['🧩 기본 운영','🖼️ 상세/이미지','🎨 화면/테마','💾 동기화/백업']);
+      if(!_simpleCats.has(String(window._cfgCat||''))) window._cfgCat = '🧩 기본 운영';
+      localStorage.setItem(_CFG_ADV_OPEN_KEY, '0');
+    }
+  }catch(e){}
   try{ render(); }catch(e){}
 };
 window.cfgQuickGo = function(secId, cat){
@@ -2752,6 +2764,14 @@ window.cfgCardAction = function(action){
         return cfgQuickGo('univ','🧩 기본 운영');
       case 'go-sync':
         return cfgQuickGo('sync','💾 동기화/백업');
+      case 'go-header':
+        return cfgQuickGo('hdr','🎨 화면/테마');
+      case 'go-image':
+        return cfgQuickGo('b2layout','🖼️ 상세/이미지');
+      case 'go-card':
+        return cfgQuickGo('reccard','🎨 화면/테마');
+      case 'go-paste':
+        return cfgQuickGo('paste','🧩 기본 운영');
       default:
         return;
     }
@@ -2861,11 +2881,16 @@ async function rCfg(C,T){
   const _rcMemoOn = (localStorage.getItem('su_rc_memo_on') ?? '0') === '1';
   const _avaScale = Math.round((parseFloat(localStorage.getItem('su_avatar_scale') ?? '1') || 1) * 100);
   const _advOpen = (localStorage.getItem(_CFG_ADV_OPEN_KEY) === '1') || !!window._cfgSearchQ;
+  const _simpleMode = ((localStorage.getItem(_CFG_SIMPLE_MODE_KEY) ?? '1') === '1') && !window._cfgSearchQ;
   const _hdrSyncOn = (localStorage.getItem('su_hdr_sync_theme')||'0') === '1';
   const _bgmOn = (localStorage.getItem('su_bgm_enabled') ?? '1') === '1';
   const _uiMbPctQuick = parseInt(localStorage.getItem('su_ui_scale_mb_pct')||localStorage.getItem('su_ui_scale_pct')||'100',10)||100;
   const _cfgVisibleCount = _curSecs.length;
   const _cfgCatCountMap = Object.fromEntries(_cfgCats.map(c=>[c, (_catSecs[c]||[]).length]));
+  const _cfgSimpleCats = ['🧩 기본 운영','🖼️ 상세/이미지','🎨 화면/테마','💾 동기화/백업'];
+  const _cfgBrowseCats = _simpleMode ? _cfgCats.filter(c=>_cfgSimpleCats.includes(c)) : _cfgCats;
+  const _cfgActiveCat = _cfgBrowseCats.includes(window._cfgCat) ? window._cfgCat : (_cfgBrowseCats[0] || window._cfgCat || '🧩 기본 운영');
+  if(window._cfgCat !== _cfgActiveCat) window._cfgCat = _cfgActiveCat;
   const _cfgPinnedByCat = {
     '🧩 기본 운영':['univ','tier','season','teammatch','maps','paste','notice','acct','mAlias'],
     '🖼️ 상세/이미지':['b2layout','imgsettings','pd','imgmodalsettings','matchdetail','profileshape','pdModeBadge','univlogoimg','si','siAssign'],
@@ -2875,8 +2900,8 @@ async function rCfg(C,T){
     '💾 동기화/백업':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
     '🧪 고급':['cfgmenu','selfcheck','storage']
   };
-  const _cfgPinnedOrder = _cfgPinnedByCat[window._cfgCat] || [];
-  const _cfgCurrentPinnedSecs = _cfgPinnedOrder.filter(sec=>_curSecs.includes(sec)).slice(0, 6);
+  const _cfgPinnedOrder = _cfgPinnedByCat[_cfgActiveCat] || [];
+  const _cfgCurrentPinnedSecs = _cfgPinnedOrder.filter(sec=>_curSecs.includes(sec)).slice(0, _simpleMode ? 4 : 6);
   const _cfgCurrentPinnedSet = new Set(_cfgCurrentPinnedSecs);
   const _cfgCurrentMoreSecs = _curSecs.filter(sec=>!_cfgCurrentPinnedSet.has(sec));
   const _cfgStarterCards = [
@@ -2890,9 +2915,10 @@ async function rCfg(C,T){
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
       <div>
         <div style="font-size:16px;font-weight:1000;color:var(--text)">간편 설정</div>
-        <div style="font-size:12px;color:var(--gray-l);margin-top:4px">자주 쓰는 것만 먼저 남겼습니다.</div>
+        <div style="font-size:12px;color:var(--gray-l);margin-top:4px">${_simpleMode?'자주 쓰는 것만 먼저 보이는 간단 모드입니다.':'빠른 설정과 전체 설정을 함께 보여줍니다.'}</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ${_simpleMode?'btn-b':'btn-w'} btn-sm" onclick="cfgToggleSimpleMode(${_simpleMode?'false':'true'})">${_simpleMode?'간단 모드 ON':'간단 모드 OFF'}</button>
         <button class="btn btn-w btn-sm" onclick="cfgToggleAdvancedSettings(${_advOpen?'false':'true'})">${_advOpen?'▴ 상세 접기':'▾ 상세 열기'}</button>
       </div>
     </div>
@@ -2913,6 +2939,22 @@ async function rCfg(C,T){
         <span class="cfg-quick-card-title">🏛️ 대학 관리</span>
         <span class="cfg-quick-card-desc">대학 이름, 색상, 로고를 수정합니다.</span>
       </button>
+      <button class="cfg-quick-card" onclick="cfgCardAction('go-header')">
+        <span class="cfg-quick-card-title">🧩 헤더 꾸미기</span>
+        <span class="cfg-quick-card-desc">상단 제목, 색상, 로고 분위기를 바로 바꿉니다.</span>
+      </button>
+      <button class="cfg-quick-card" onclick="cfgCardAction('go-image')">
+        <span class="cfg-quick-card-title">🖼️ 이미지탭</span>
+        <span class="cfg-quick-card-desc">이미지 탭 크기와 비율을 빠르게 맞춥니다.</span>
+      </button>
+      <button class="cfg-quick-card" onclick="cfgCardAction('go-card')">
+        <span class="cfg-quick-card-title">🧾 기록 카드</span>
+        <span class="cfg-quick-card-desc">기록 카드와 대회 카드의 스타일을 바꿉니다.</span>
+      </button>
+      <button class="cfg-quick-card" onclick="cfgCardAction('go-paste')">
+        <span class="cfg-quick-card-title">🤖 자동인식</span>
+        <span class="cfg-quick-card-desc">붙여넣기 인식이 잘 안 될 때 바로 조정합니다.</span>
+      </button>
     </div>
     <details style="margin-top:10px;border:1px dashed var(--border);border-radius:12px;padding:9px 10px;background:rgba(255,255,255,.5)">
       <summary style="cursor:pointer;list-style:none;font-size:11px;font-weight:900;color:var(--gray-l)">보조 빠른 설정</summary>
@@ -2932,12 +2974,12 @@ async function rCfg(C,T){
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div>
         <div style="font-size:15px;font-weight:1000;color:var(--text)">설정 둘러보기</div>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:3px">현재 <b style="color:var(--text)">${_catLabel(window._cfgCat)}</b> · 메뉴 ${_cfgVisibleCount}개</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:3px">현재 <b style="color:var(--text)">${_catLabel(_cfgActiveCat)}</b> · 메뉴 ${_cfgVisibleCount}개</div>
       </div>
-      <div style="font-size:10px;color:var(--gray-l);font-weight:800">${_cfgCatDesc[window._cfgCat]||'카테고리부터 고르고 필요한 메뉴만 열면 됩니다.'}</div>
+      <div style="font-size:10px;color:var(--gray-l);font-weight:800">${_simpleMode?'많이 쓰는 카테고리만 먼저 보여줍니다.':'전체 카테고리를 모두 보여줍니다.'}</div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
-      ${_cfgCats.map(c=>`<button type="button" class="cfg-cat-pill${window._cfgCat===c?' on':''}" data-cfg-cat="${esc(c)}" data-cat="${esc(c)}" style="border:1px solid ${window._cfgCat===c?'var(--blue)':'var(--border)'};background:${window._cfgCat===c?'var(--blue)':'transparent'};color:${window._cfgCat===c?'#fff':'var(--text)'};border-radius:999px;padding:6px 10px;font-size:10px;font-weight:${window._cfgCat===c?'800':'700'};cursor:pointer">${_cfgCatIcons[c]||'🗂️'} ${_catLabel(c)} <span style="opacity:${window._cfgCat===c?'.92':'.68'}">${_cfgCatCountMap[c]||0}</span></button>`).join('')}
+      ${_cfgBrowseCats.map(c=>`<button type="button" class="cfg-cat-pill${_cfgActiveCat===c?' on':''}" data-cfg-cat="${esc(c)}" data-cat="${esc(c)}" style="border:1px solid ${_cfgActiveCat===c?'var(--blue)':'var(--border)'};background:${_cfgActiveCat===c?'var(--blue)':'transparent'};color:${_cfgActiveCat===c?'#fff':'var(--text)'};border-radius:999px;padding:6px 10px;font-size:10px;font-weight:${_cfgActiveCat===c?'800':'700'};cursor:pointer">${_cfgCatIcons[c]||'🗂️'} ${_catLabel(c)} <span style="opacity:${_cfgActiveCat===c?'.92':'.68'}">${_cfgCatCountMap[c]||0}</span></button>`).join('')}
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
       ${_cfgStarterCards.map(item=>`<button type="button" data-cfg-go="${item.sec}" title="${esc(item.desc)}" style="padding:7px 10px;border:1px solid var(--border);border-radius:999px;background:var(--white);font-size:11px;font-weight:900;color:var(--text);cursor:pointer">${item.ttl}</button>`).join('')}
@@ -2952,7 +2994,7 @@ async function rCfg(C,T){
         ${!_cfgCurrentPinnedSecs.length ? `<span style="display:inline-flex;align-items:center;padding:6px 9px;border:1px dashed var(--border);border-radius:999px;font-size:10px;font-weight:800;color:var(--gray-l)">표시할 메뉴가 없습니다</span>` : ``}
       </div>
       ${_cfgCurrentMoreSecs.length ? `<details style="margin-top:8px;border:1px dashed var(--border);border-radius:12px;padding:8px 9px;background:rgba(255,255,255,.5)">
-        <summary style="cursor:pointer;list-style:none;font-size:10px;font-weight:900;color:var(--gray-l)">나머지 메뉴 보기 (${_cfgCurrentMoreSecs.length})</summary>
+        <summary style="cursor:pointer;list-style:none;font-size:10px;font-weight:900;color:var(--gray-l)">${_simpleMode?'이 카테고리의 다른 메뉴 보기':'나머지 메뉴 보기'} (${_cfgCurrentMoreSecs.length})</summary>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
           ${_cfgCurrentMoreSecs.map(sec=>`<button type="button" data-cfg-go="${sec}" style="padding:6px 9px;border:1px solid var(--border);border-radius:999px;background:var(--white);font-size:10px;font-weight:800;color:var(--text);cursor:pointer">${esc(_cfgSecTitle[sec] || sec)}</button>`).join('')}
         </div>
