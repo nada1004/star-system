@@ -110,6 +110,68 @@ function preparePlayerDetailComputedData(opts){
   };
 }
 
+function calcPlayerAffiliationRecord(player, univName, histSource){
+  const p = player || {};
+  const scopeUniv = String(univName||'').trim();
+  const hist = Array.isArray(histSource) ? histSource : (Array.isArray(p.history) ? p.history : []);
+  let w=0, l=0, d=0, pts=0;
+  hist.forEach(h=>{
+    if(String(h?.univ||'').trim() !== scopeUniv) return;
+    if(h.result==='승'){ w++; pts+=3; }
+    else if(h.result==='패'){ l++; pts-=3; }
+    else if(h.result==='무'){ d++; }
+  });
+  const tot = w + l;
+  const wr = tot ? Math.round(w / tot * 100) : 0;
+  return { w, l, d, tot, wr, pts };
+}
+
+function calcMembersAffiliationSummary(members, univName){
+  const arr = Array.isArray(members) ? members : [];
+  const byPlayer = {};
+  let wins=0, losses=0, draws=0, pts=0;
+  arr.forEach(p=>{
+    const rec = calcPlayerAffiliationRecord(p, univName, p?.history||[]);
+    const key = String(p?.name||'').trim();
+    if(key) byPlayer[key] = rec;
+    wins += rec.w;
+    losses += rec.l;
+    draws += rec.d;
+    pts += rec.pts;
+  });
+  const tot = wins + losses;
+  const wr = tot ? Math.round(wins / tot * 100) : 0;
+  return { byPlayer, wins, losses, draws, tot, wr, pts };
+}
+
+function calcPlayerAffiliationRecordsList(player, histSource){
+  const p = player || {};
+  const hist = Array.isArray(histSource) ? histSource : (Array.isArray(p.history) ? p.history : []);
+  const order = [];
+  const seen = new Set();
+  hist.forEach(h=>{
+    const u = String(h?.univ||'').trim();
+    if(!u || seen.has(u)) return;
+    seen.add(u);
+    order.push(u);
+  });
+  if(p.univ && !seen.has(String(p.univ).trim())){
+    order.unshift(String(p.univ).trim());
+  }
+  const list = order
+    .map(univ=>({ univ, ...calcPlayerAffiliationRecord(p, univ, hist) }))
+    .filter(row=>row.tot || row.d);
+  list.sort((a,b)=>{
+    if(String(a.univ)===String(p.univ||'')) return -1;
+    if(String(b.univ)===String(p.univ||'')) return 1;
+    return (b.tot - a.tot) || (b.w - a.w) || String(a.univ).localeCompare(String(b.univ), 'ko');
+  });
+  return list;
+}
+
 try{
   window.preparePlayerDetailComputedData = preparePlayerDetailComputedData;
+  window.calcPlayerAffiliationRecord = calcPlayerAffiliationRecord;
+  window.calcMembersAffiliationSummary = calcMembersAffiliationSummary;
+  window.calcPlayerAffiliationRecordsList = calcPlayerAffiliationRecordsList;
 }catch(e){}

@@ -60,7 +60,24 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
       fit = null;
     }
   }catch(e){ fit='contain'; }
-  return '<img '+clickAttr+' src="'+src+'" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+bdr+clickStyle+'" onerror="this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');">';
+  return '<img '+clickAttr+' src="'+src+'" decoding="async" fetchpriority="high" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+bdr+clickStyle+'" onerror="this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');">';
+}
+
+const _prewarmedImageUrls = new Set();
+function prewarmImageUrls(urls, limit){
+  try{
+    const arr = (Array.isArray(urls) ? urls : [urls])
+      .map(v=>toHttpsUrl(v||''))
+      .filter(Boolean);
+    const max = Math.max(1, parseInt(limit, 10) || 12);
+    arr.slice(0, max).forEach(src=>{
+      if(_prewarmedImageUrls.has(src)) return;
+      _prewarmedImageUrls.add(src);
+      const img = new Image();
+      try{ img.decoding = 'async'; }catch(e){}
+      img.src = src;
+    });
+  }catch(e){}
 }
 
 function getStatusIconHTML(name){
@@ -79,6 +96,7 @@ function genderIcon(gender){
 
 try{
   window.getPlayerPhotoHTML = getPlayerPhotoHTML;
+  window.prewarmImageUrls = prewarmImageUrls;
   window.getStatusIconHTML = getStatusIconHTML;
   window.genderIcon = genderIcon;
 }catch(e){}

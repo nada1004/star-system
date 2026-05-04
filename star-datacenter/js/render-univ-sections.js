@@ -44,6 +44,7 @@ function buildUnivHeaderCardHTML(opts){
     col='',
     members=[],
     wins=0,
+    losses=0,
     tot=0,
     pts=0,
     wr=0,
@@ -92,7 +93,7 @@ function buildUnivHeaderCardHTML(opts){
       <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px">
         <div style="background:rgba(255,255,255,.82);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:${uStatPad};text-align:center;box-shadow:0 8px 18px rgba(15,23,42,.04)">
           <div style="font-size:10px;color:var(--gray-l);margin-bottom:4px;font-weight:900;letter-spacing:.6px">개인 전적</div>
-          <div style="font-weight:1000;font-size:14px;color:#0f172a">${wins}승 ${tot-wins}패</div>
+          <div style="font-weight:1000;font-size:14px;color:#0f172a">${wins}승 ${losses}패</div>
         </div>
         <div style="background:rgba(255,255,255,.82);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:${uStatPad};text-align:center;box-shadow:0 8px 18px rgba(15,23,42,.04)">
           <div style="font-size:10px;color:var(--gray-l);margin-bottom:4px;font-weight:900;letter-spacing:.6px">개인 승률</div>
@@ -115,28 +116,31 @@ function buildUnivMembersTableHTML(opts){
   const {
     members=[],
     univName='',
-    col=''
+    col='',
+    byPlayer={}
   } = opts || {};
   if(!members.length) return '';
-  const sorted=[...members].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
+  const _recOf = (p)=>byPlayer[String(p?.name||'').trim()] || {w:0,l:0,tot:0,wr:0,pts:0};
+  const sorted=[...members].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||((_recOf(b).pts||0)-(_recOf(a).pts||0)));
   const displayList=sorted;
   let h=`<div style="font-weight:900;font-size:12px;color:${col};margin-bottom:10px;display:flex;align-items:center;gap:6px">
     <span style="display:inline-block;width:3px;height:14px;background:${col};border-radius:2px"></span>소속 스트리머 (${displayList.length}명)
   </div>`;
   h+=`<div style="border:1px solid rgba(148,163,184,.18);border-radius:14px;overflow:hidden;margin-bottom:18px;background:linear-gradient(180deg,#ffffff,#f8fafc);box-shadow:0 10px 22px rgba(15,23,42,.05)"><table style="margin:0;border:none;border-radius:0;table-layout:auto"><thead><tr><th style="text-align:center;width:1px;white-space:nowrap;padding:9px 6px;background:${col};color:#fff">직책</th><th style="text-align:center;background:${col};color:#fff">티어</th><th style="text-align:center;width:50px;background:${col};color:#fff">종족</th><th style="text-align:left;padding-left:10px;background:${col};color:#fff">이름</th><th style="text-align:center;width:40px;background:${col};color:#fff">성별</th><th style="text-align:center;width:40px;background:${col};color:#fff">승</th><th style="text-align:center;width:40px;background:${col};color:#fff">패</th><th style="text-align:center;width:52px;background:${col};color:#fff">승률</th><th style="text-align:center;width:60px;background:${col};color:#fff">포인트</th></tr></thead><tbody>`;
   displayList.forEach(p=>{
-    const tw=p.win+p.loss;
-    const twr=tw?Math.round(p.win/tw*100):0;
+    const rec=_recOf(p);
+    const tw=rec.tot||0;
+    const twr=rec.wr||0;
     h+=`<tr style="cursor:pointer" data-uds-action="open-player" data-uds-player="${escJS(p.name)}" data-uds-hover-bg="${gcHex8(p.univ,.12)}" data-uds-base-univ="${String(p.univ).replace(/"/g,'&quot;')}"
         style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">\r\n        <td style="text-align:center;padding:5px 4px;white-space:nowrap">${p.role?getRoleBadgeHTML(p.role,'10px'):''}</td>
       <td style="text-align:center">${getTierBadge(p.tier)}</td>
       <td style="text-align:center"><span class="rbadge r${p.race}">${p.race}</span></td>
       <td style="text-align:left;padding-left:10px;font-weight:600"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'32px')}<span class="clickable-name">${p.name}</span>${getStatusIconHTML(p.name)}</span></td>
       <td style="text-align:center">${genderIcon(p.gender)}</td>
-      <td style="text-align:center" class="wt">${p.win}</td>
-      <td style="text-align:center" class="lt">${p.loss}</td>
+      <td style="text-align:center" class="wt">${rec.w||0}</td>
+      <td style="text-align:center" class="lt">${rec.l||0}</td>
       <td style="text-align:center;font-weight:700;color:${twr>=50?'#16a34a':'#dc2626'}">${tw?twr+'%':'-'}</td>
-      <td style="text-align:center" class="${pC(p.points)}">${pS(p.points)}</td>
+      <td style="text-align:center" class="${pC(rec.pts||0)}">${pS(rec.pts||0)}</td>
     </tr>`;
   });
   h+=`</tbody></table></div>`;
