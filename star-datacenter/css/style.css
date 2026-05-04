@@ -110,28 +110,29 @@ body.design-v2{background:var(--bg);}
 .su-ctxmenu{
   position:fixed;
   z-index:var(--z-dropdown);
-  min-width:170px;
-  max-width:min(260px, 92vw);
-  background:var(--white);
-  border:1px solid var(--border);
-  border-radius:12px;
-  box-shadow:var(--sh3);
-  padding:6px;
+  min-width:178px;
+  max-width:min(270px, 92vw);
+  background:linear-gradient(180deg,rgba(250,251,255,.98),rgba(245,247,252,.98));
+  border:1px solid #dfe5f1;
+  border-radius:16px;
+  box-shadow:0 14px 34px rgba(15,23,42,.14), 0 2px 8px rgba(15,23,42,.06);
+  padding:7px;
+  backdrop-filter:blur(10px);
 }
 .su-ctxmenu-item{
   width:100%;
   background:transparent;
   border:0;
   text-align:left;
-  padding:10px 11px;
-  border-radius:10px;
+  padding:11px 12px;
+  border-radius:12px;
   cursor:pointer;
-  color:var(--text2);
+  color:#334155;
   font-size:12px;
   display:flex;
   flex-direction:column;
-  gap:2px;
-  transition:background .14s ease, color .14s ease, transform .14s ease;
+  gap:3px;
+  transition:background .14s ease, color .14s ease, transform .14s ease, box-shadow .14s ease;
 }
 .su-ctxmenu-item__label{
   font-weight:900;
@@ -139,30 +140,106 @@ body.design-v2{background:var(--bg);}
 }
 .su-ctxmenu-item__desc{
   font-size:10px;
-  color:var(--gray-l);
-  font-weight:700;
+  color:#94a3b8;
+  font-weight:800;
   line-height:1.3;
 }
-.su-ctxmenu-item:hover{background:var(--blue-l);color:var(--blue);transform:translateY(-1px);}
-.su-ctxmenu-item:hover .su-ctxmenu-item__desc{color:color-mix(in srgb, var(--blue) 62%, #64748b);}
+.su-ctxmenu-item:hover{
+  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(241,245,249,.92));
+  color:#1e293b;
+  transform:translateY(-1px);
+  box-shadow:inset 0 0 0 1px rgba(226,232,240,.95);
+}
+.su-ctxmenu-item:hover .su-ctxmenu-item__desc{color:#64748b;}
 .su-ctxmenu-item.is-primary{
-  background:linear-gradient(180deg,rgba(37,99,235,.08),rgba(37,99,235,.03));
+  background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.92));
+  box-shadow:inset 0 0 0 1px rgba(226,232,240,.92);
 }
 .su-ctxmenu-item.is-accent{
-  background:linear-gradient(180deg,rgba(124,58,237,.08),rgba(124,58,237,.03));
+  background:linear-gradient(180deg,rgba(124,58,237,.10),rgba(124,58,237,.04));
+  box-shadow:inset 0 0 0 1px rgba(196,181,253,.38);
+}
+.su-ctxmenu-item.is-accent .su-ctxmenu-item__label{
+  color:#6d28d9;
+}
+.su-ctxmenu-item.is-accent .su-ctxmenu-item__desc{
+  color:#8b5cf6;
+}
+.su-ctxmenu-item.is-danger{
+  background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(248,250,252,.9));
 }
 .su-ctxmenu-item.is-danger .su-ctxmenu-item__label{color:#dc2626;}
 .su-ctxmenu-item.is-danger .su-ctxmenu-item__desc{color:#b91c1c;}
 
 /* 대전기록 카드 우측 ⋯ 버튼: 터치/클릭 영역 확대 (잘 안 눌리는 문제 완화) */
 .rec-morebtn{
-  min-width:42px;
-  height:34px;
-  padding:0 12px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
+  min-width:42px !important;
+  width:42px !important;
+  height:34px !important;
+  padding:0 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
   touch-action:manipulation;
+  border-radius:10px !important;
+  border:1px solid #d7deea !important;
+  background:linear-gradient(180deg,#ffffff,#f6f8fc) !important;
+  color:#64748b !important;
+  box-shadow:0 1px 2px rgba(15,23,42,.04), inset 0 1px 0 rgba(255,255,255,.75) !important;
+  font-size:18px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+}
+.rec-morebtn:hover{
+  background:linear-gradient(180deg,#ffffff,#eef2ff) !important;
+  border-color:#c7d2fe !important;
+  color:#4f46e5 !important;
+  transform:translateY(-1px);
+}
+.rec-morebtn:active{
+  transform:translateY(0);
+}
+.comp-action-menu{
+  background:var(--white) !important;
+  border:1px solid var(--border) !important;
+  border-radius:12px !important;
+  box-shadow:var(--sh3) !important;
+  padding:6px !important;
+  min-width:170px !important;
+  max-width:min(260px, 92vw) !important;
+}
+.comp-action-menu > div{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:6px !important;
+}
+.comp-action-menu .btn{
+  width:100%;
+  min-width:0 !important;
+  justify-content:flex-start !important;
+  text-align:left !important;
+  padding:10px 11px !important;
+  border-radius:10px !important;
+  border:0 !important;
+  box-shadow:none !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+}
+.comp-action-menu .btn:hover{
+  transform:translateY(-1px);
+}
+.comp-action-menu .btn-b,
+.comp-action-menu .btn-w{
+  background:transparent !important;
+  color:var(--text2) !important;
+}
+.comp-action-menu .btn-p{
+  background:linear-gradient(180deg,rgba(124,58,237,.08),rgba(124,58,237,.03)) !important;
+  color:#6d28d9 !important;
+}
+.comp-action-menu .btn-r{
+  background:transparent !important;
+  color:#dc2626 !important;
 }
 
 .cfg-search-sug{
@@ -539,6 +616,7 @@ b,strong{font-weight:600;}
 .sharecard-modal-box{background:var(--white);border-radius:15px;padding:14px;box-shadow:var(--sh3);max-width:90vw;max-height:90vh;overflow-y:auto;position:relative;}
 .sharecard-modal-close{position:absolute;top:10px;right:12px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray-l);line-height:1;}
 .sharecard-modal-close:hover{color:var(--text);}
+.sharecard-modal-hdr{border-bottom:1px solid rgba(148,163,184,.18);padding-bottom:8px;}
 .sharecard-modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:center;}
 .sharecard-modal-actions--left{justify-content:flex-start;}
 .sharecard-preview-wrap{
@@ -558,6 +636,26 @@ b,strong{font-weight:600;}
 }
 .sharecard-stage{
   padding:6px 4px 10px;
+}
+@media (min-width: 769px){
+  .mbox,
+  .umbox,
+  #cfgModal .cfg-modal-box,
+  .sharecard-modal-box,
+  .su-modal{
+    resize: both;
+    overflow: auto;
+    min-width: 320px;
+    min-height: 160px;
+  }
+  .sharecard-modal-box{
+    min-width: 360px;
+    min-height: 260px;
+  }
+  .modal--matchdetail .mbox--matchdetail{
+    min-width: 520px;
+    min-height: 360px;
+  }
 }
 .share-card-host{
   position:relative;
@@ -973,6 +1071,16 @@ tr.is-selected td{
   align-items:center;
   justify-content:center;
   padding:14px;
+}
+#soopMultiOverlay{
+  background:transparent !important;
+  align-items:flex-start !important;
+  justify-content:flex-start !important;
+  padding:0 !important;
+  pointer-events:none;
+}
+#soopMultiOverlay .su-modal{
+  pointer-events:auto;
 }
 .su-modal{
   width:min(1100px, 100%);
