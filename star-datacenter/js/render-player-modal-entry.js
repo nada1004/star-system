@@ -44,6 +44,8 @@ function openPlayerModal(name){
 
 if(typeof window.openEPFromModal !== 'function'){
   window.openEPFromModal = function(nameArg) {
+    const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+    if(!canEdit){ alert('총관리자만 수정할 수 있습니다.'); return; }
     const st = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
     const name = nameArg || st.currentName;
     if (!name) { alert('선수 이름을 확인할 수 없습니다.'); return; }

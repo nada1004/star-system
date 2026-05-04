@@ -655,6 +655,9 @@ function applyLoginState(){
   // 대학 상세 모달 수정 버튼 — 모달이 열려 있을 때 즉시 반영
   const univEditBtnEl=document.getElementById('univEditBtn');
   if(univEditBtnEl) univEditBtnEl.style.display=(isLoggedIn && !isSubAdmin)?'inline-flex':'none';
+  // 스트리머 상세 모달 수정 버튼 — 모달이 열려 있을 때 즉시 반영
+  const playerEditBtnEl=document.getElementById('playerModalEditBtn');
+  if(playerEditBtnEl) playerEditBtnEl.style.display=(isLoggedIn && !isSubAdmin)?'inline-flex':'none';
   // 스트리머 등록/경기 기록 입력폼 — 로그인 + 스트리머 탭일 때만 표시
   const fstrip=document.getElementById('fstrip');
   if(fstrip){

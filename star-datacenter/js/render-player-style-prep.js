@@ -30,6 +30,7 @@ function preparePlayerDetailStyleData(player){
   const imgZoom=(Number(p.detailHeaderBgScale||pdStyle.header_bg_scale||pdStyle.img_zoom||100)||100) * scaleMul;
   const hasImgFillSetting = typeof imgSettings.fill === 'boolean';
   const imgFit=(p.detailHeaderBgFit||pdStyle.header_bg_fit||'').trim();
+  const imgPos=(p.detailHeaderBgPos||pdStyle.header_bg_pos||'center center').trim();
   const imgFill=imgFit || (hasImgFillSetting
     ? (imgSettings.fill ? 'cover' : 'contain')
     : ((pdStyle.img_fill!=null && pdStyle.img_fill!=='') ? pdStyle.img_fill : 'contain'));
@@ -39,7 +40,8 @@ function preparePlayerDetailStyleData(player){
   const hdrBgLayer = imgUrl ? {
     url: imgUrl,
     fit: (imgFill==='fill' ? 'fill' : imgFill==='cover' ? 'cover' : 'contain'),
-    scale: Math.max(40, Math.min(220, imgZoom||100))
+    scale: Math.max(40, Math.min(220, imgZoom||100)),
+    pos: imgPos || 'center center'
   } : null;
   const p2h=v=>Math.max(0,Math.min(255,Math.round(v*2.55))).toString(16).padStart(2,'0');
   const statsTint=pdStyle.stats_tint!==undefined?pdStyle.stats_tint:8;

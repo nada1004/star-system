@@ -50,9 +50,10 @@ function buildPlayerHeaderCardHTML(opts){
   if(!p) return '';
   const _bgSize = hdrBgLayer?.fit==='fill' ? '100% 100%' : (hdrBgLayer?.fit==='cover' ? 'cover' : 'contain');
   const _bgScale = Math.max(40, Math.min(220, Number(hdrBgLayer?.scale||100)));
+  const _bgPos = String(hdrBgLayer?.pos || 'center center').trim() || 'center center';
   return `<div style="background:linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.18);border-radius:${pmCardR+4}px;margin-bottom:16px;overflow:hidden;box-shadow:0 18px 42px rgba(15,23,42,.10)">
     <div style="background:${hdrBg};padding:${pmHdrPad};position:relative;overflow:hidden">
-      ${hdrBgLayer?.url ? `<div style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl(hdrBgLayer.url).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:center center;background-size:${_bgSize};transform:scale(${_bgScale/100});transform-origin:center center;opacity:.42;pointer-events:none"></div>` : ''}
+      ${hdrBgLayer?.url ? `<div style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl(hdrBgLayer.url).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:${_bgPos};background-size:${_bgSize};transform:scale(${_bgScale/100});transform-origin:center center;opacity:.42;pointer-events:none"></div>` : ''}
       <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(15,23,42,.10),rgba(15,23,42,.28));pointer-events:none"></div>
       <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
       <div style="position:absolute;bottom:-40px;left:5px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>

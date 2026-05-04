@@ -13,6 +13,7 @@ function _renderCfgPdSection(){
   const phbg=s.header_bg_img||'';
   const phbgFit=s.header_bg_fit||'contain';
   const phbgScale=s.header_bg_scale!==undefined?s.header_bg_scale:100;
+  const phbgPos=s.header_bg_pos||'center center';
   const uds=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
   const uhbg=uds.header_bg_img||'';
   const uhbgFit=uds.header_bg_fit||'contain';
@@ -85,6 +86,15 @@ function _renderCfgPdSection(){
             <span id="cfg-pdh-scale" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${phbgScale}%</span>
           </div>
         </div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 6px">이미지 위치</div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+        ${[
+          ['left top','↖ 좌상'],['center top','↑ 상단'],['right top','↗ 우상'],
+          ['left center','← 좌중'],['center center','• 중앙'],['right center','→ 우중'],
+          ['left bottom','↙ 좌하'],['center bottom','↓ 하단'],['right bottom','↘ 우하']
+        ].map(([pos,label])=>`<button class="btn btn-xs ${phbgPos===pos?'btn-b':'btn-w'}"
+          onclick="_setPdHeaderBg('header_bg_pos','${pos}')">${label}</button>`).join('')}
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">개별 스트리머에 별도 배경을 넣지 않은 경우 기본값으로 사용됩니다.</div>
     </div>
