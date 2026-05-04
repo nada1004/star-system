@@ -270,6 +270,13 @@ async function _fetchSplitGithubData(indexLike){
       return { ...(p || {}), history: histMap[name] || [] };
     });
   }
+  const recovered = _recoverMatchArraysFromPlayerHistory(out, monthParts);
+  out.indM = recovered.indM;
+  out.gjM = recovered.gjM;
+  const civilRecovered = _recoverCivilMiniFromPlayerHistory(out, monthParts);
+  out.miniM = civilRecovered.miniM;
+  const tierRecovered = _recoverTierGeneralFromPlayerHistory(out, monthParts);
+  out.ttM = tierRecovered.ttM;
   out.schemaVersion = GH_SPLIT_SCHEMA_VERSION;
   out._missingMonths = missingMonths;
   return out;
@@ -302,6 +309,205 @@ function _mergeMonthPartsIntoData(baseData, monthParts){
     const psa = Number(part && part.savedAt || 0) || 0;
     if(psa) out.savedAt = Math.max(Number(out.savedAt||0)||0, psa);
   });
+  return out;
+}
+function _recoverMatchArraysFromPlayerHistory(baseData, monthParts){
+  const out = _clonePlain(baseData || {}) || {};
+  if(!Array.isArray(out.indM)) out.indM = [];
+  if(!Array.isArray(out.gjM)) out.gjM = [];
+  if(out.indM.length && out.gjM.length) return out;
+  const needInd = !out.indM.length;
+  const needGj = !out.gjM.length;
+  const seenInd = new Set();
+  const seenGj = new Set();
+  (Array.isArray(monthParts) ? monthParts : []).filter(Boolean).forEach(part=>{
+    const ph = part && part.playerHistory || {};
+    Object.keys(ph).forEach(name=>{
+      (Array.isArray(ph[name]) ? ph[name] : []).forEach(h=>{
+        const mode = String(h && h.mode || '').trim();
+        const opp = String(h && h.opp || '').trim();
+        const res = String(h && h.result || '').trim();
+        if(!opp || !res) return;
+        let target = '';
+        let proLabel = false;
+        if(mode === '개인전') target = 'ind';
+        else if(mode === '끝장전') target = 'gj';
+        else if(mode === '프로리그끝장전'){ target = 'gj'; proLabel = true; }
+        else return;
+        if((target==='ind' && !needInd) || (target==='gj' && !needGj)) return;
+        let wName='', lName='';
+        if(res === '승'){ wName = name; lName = opp; }
+        else if(res === '패'){ wName = opp; lName = name; }
+        else return;
+        const d = String(h.date || h.d || '').trim();
+        const map = String(h.map || '').trim();
+        const mid = String(h.matchId || '').trim();
+        const key = mid || [target, proLabel?'pro':'normal', d, map, wName, lName].join('|');
+        if(target === 'ind'){
+          if(seenInd.has(key)) return;
+          seenInd.add(key);
+          out.indM.push({ _id: mid || key, d, wName, lName, map: map || '-' });
+          return;
+        }
+        if(seenGj.has(key)) return;
+        seenGj.add(key);
+        const rec = { _id: mid || key, d, wName, lName, map: map || '-' };
+        if(proLabel) rec._proLabel = true;
+        out.gjM.push(rec);
+      });
+    });
+  });
+  const _byDateDesc = (a,b)=>String(b && b.d || '').localeCompare(String(a && a.d || ''));
+  if(needInd) out.indM.sort(_byDateDesc);
+  if(needGj) out.gjM.sort(_byDateDesc);
+  return out;
+}
+function _recoverCivilMiniFromPlayerHistory(baseData, monthParts){
+  const out = _clonePlain(baseData || {}) || {};
+  if(!Array.isArray(out.miniM)) out.miniM = [];
+  const hasCivil = out.miniM.some(m=>m && (m.type==='civil' || (m.a==='A팀' && m.b==='B팀')));
+  if(hasCivil) return out;
+  const gameMap = new Map();
+  (Array.isArray(monthParts) ? monthParts : []).filter(Boolean).forEach(part=>{
+    const ph = part && part.playerHistory || {};
+    Object.keys(ph).forEach(name=>{
+      (Array.isArray(ph[name]) ? ph[name] : []).forEach(h=>{
+        if(String(h && h.mode || '').trim() !== '시빌워') return;
+        const matchId = String(h.matchId || '').trim();
+        if(!matchId) return;
+        const prev = gameMap.get(matchId) || { _id:matchId, d:String(h.date||'').trim(), map:String(h.map||'').trim(), p1:'', p2:'', wName:'', lName:'', univMap:{} };
+        prev.d = prev.d || String(h.date||'').trim();
+        prev.map = prev.map || String(h.map||'').trim();
+        prev.univMap[name] = String(h.univ || '').trim();
+        if(h.result === '승'){ prev.wName = name; prev.lName = String(h.opp || '').trim(); }
+        else if(h.result === '패'){ prev.wName = String(h.opp || '').trim(); prev.lName = name; }
+        prev.p1 = prev.p1 || name;
+        prev.p2 = prev.p2 || String(h.opp || '').trim();
+        gameMap.set(matchId, prev);
+      });
+    });
+  });
+  if(!gameMap.size) return out;
+  const sessions = new Map();
+  const parseParts = (matchId)=>{
+    const m = String(matchId||'').match(/^(.*)_s(\d+)_g(\d+)$/);
+    if(m) return { base:m[1], setIdx:+m[2], gameIdx:+m[3] };
+    return { base:String(matchId||''), setIdx:0, gameIdx:0 };
+  };
+  for(const rec of gameMap.values()){
+    const { base, setIdx, gameIdx } = parseParts(rec._id);
+    if(!rec.wName || !rec.lName) continue;
+    if(!sessions.has(base)) sessions.set(base, { _id:base, d:rec.d||'', games:[], players:new Map(), adj:new Map() });
+    const sess = sessions.get(base);
+    sess.d = sess.d || rec.d || '';
+    sess.games.push({ ...rec, setIdx, gameIdx });
+    [rec.wName, rec.lName].forEach(n=>{
+      if(!n) return;
+      if(!sess.players.has(n)) sess.players.set(n, { name:n, univ: String(rec.univMap && rec.univMap[n] || '') });
+      if(!sess.adj.has(n)) sess.adj.set(n, new Set());
+    });
+    sess.adj.get(rec.wName).add(rec.lName);
+    sess.adj.get(rec.lName).add(rec.wName);
+  }
+  const recovered = [];
+  for(const sess of sessions.values()){
+    const side = new Map();
+    for(const n of sess.players.keys()){
+      if(side.has(n)) continue;
+      side.set(n, 'A');
+      const q=[n];
+      while(q.length){
+        const cur=q.shift();
+        const curSide=side.get(cur);
+        (sess.adj.get(cur)||[]).forEach(nx=>{
+          if(!side.has(nx)){ side.set(nx, curSide==='A'?'B':'A'); q.push(nx); }
+        });
+      }
+    }
+    const setsMap = new Map();
+    sess.games.sort((a,b)=>(a.setIdx-b.setIdx)||(a.gameIdx-b.gameIdx));
+    sess.games.forEach(g=>{
+      const sa = side.get(g.wName)||'A';
+      const sb = side.get(g.lName)|| (sa==='A'?'B':'A');
+      const playerA = sa==='A' ? g.wName : g.lName;
+      const playerB = sa==='A' ? g.lName : g.wName;
+      const winner = sa==='A' ? 'A' : 'B';
+      if(!setsMap.has(g.setIdx)) setsMap.set(g.setIdx, { scoreA:0, scoreB:0, winner:'', games:[] });
+      const st = setsMap.get(g.setIdx);
+      if(winner==='A') st.scoreA++; else st.scoreB++;
+      st.games.push({ _id:g._id, playerA, playerB, winner, map:g.map||'-', wName:g.wName, lName:g.lName });
+    });
+    const sets = [...setsMap.entries()].sort((a,b)=>a[0]-b[0]).map(([,st])=>{
+      st.winner = st.scoreA>st.scoreB ? 'A' : (st.scoreB>st.scoreA ? 'B' : '');
+      return st;
+    });
+    const teamAMembers = [...sess.players.values()].filter(p=>(side.get(p.name)||'A')==='A');
+    const teamBMembers = [...sess.players.values()].filter(p=>(side.get(p.name)||'A')==='B');
+    const sa = sets.reduce((n,s)=>n+(s.scoreA||0),0);
+    const sb = sets.reduce((n,s)=>n+(s.scoreB||0),0);
+    recovered.push({
+      _id:sess._id, d:sess.d||'', a:'A팀', b:'B팀', sa, sb, sets,
+      type:'civil', teamAMembers, teamBMembers
+    });
+  }
+  recovered.sort((a,b)=>String(b && b.d || '').localeCompare(String(a && a.d || '')));
+  if(recovered.length) out.miniM = out.miniM.concat(recovered);
+  return out;
+}
+function _recoverTierGeneralFromPlayerHistory(baseData, monthParts){
+  const out = _clonePlain(baseData || {}) || {};
+  if(!Array.isArray(out.ttM)) out.ttM = [];
+  const existing = new Set(out.ttM.map(m=>String(m && m._id || '')).filter(Boolean));
+  const tierIdMap = new Map(((Array.isArray(out.tourneys) ? out.tourneys : [])||[])
+    .filter(t=>t && t.type==='tier' && t.id && t.name)
+    .map(t=>[String(t.id).trim(), String(t.name).trim()]));
+  const parseTierComp = (mid)=>{
+    const s = String(mid||'').trim();
+    let tid = '';
+    let m = s.match(/^pbn_([^_]+)_/);
+    if(m) tid = m[1];
+    if(!tid){
+      m = s.match(/^([a-z0-9]+)_s\d+_g\d+$/i);
+      if(m) tid = m[1];
+    }
+    return tierIdMap.get(tid) || '복구된 일반전';
+  };
+  const byId = new Map();
+  (Array.isArray(monthParts) ? monthParts : []).filter(Boolean).forEach(part=>{
+    const ph = part && part.playerHistory || {};
+    Object.keys(ph).forEach(name=>{
+      (Array.isArray(ph[name]) ? ph[name] : []).forEach(h=>{
+        if(String(h && h.mode || '').trim() !== '티어대회') return;
+        const mid = String(h.matchId || '').trim();
+        if(!mid || existing.has(mid)) return;
+        const prev = byId.get(mid) || { _id:mid, d:String(h.date||'').trim(), map:String(h.map||'').trim(), wName:'', lName:'', count:0, compName:parseTierComp(mid) };
+        prev.d = prev.d || String(h.date||'').trim();
+        prev.map = prev.map || String(h.map||'').trim();
+        prev.count += 1;
+        if(h.result === '승'){ prev.wName = name; prev.lName = String(h.opp || '').trim(); }
+        else if(h.result === '패'){ prev.wName = String(h.opp || '').trim(); prev.lName = name; }
+        byId.set(mid, prev);
+      });
+    });
+  });
+  const recovered = [];
+  byId.forEach(rec=>{
+    if(!rec.wName || !rec.lName) return;
+    recovered.push({
+      _id:rec._id,
+      d:rec.d||'',
+      a:rec.wName,
+      b:rec.lName,
+      sa:1,
+      sb:0,
+      sets:[{ scoreA:1, scoreB:0, winner:'A', games:[{ _id:rec._id, playerA:rec.wName, playerB:rec.lName, winner:'A', map:rec.map||'-', wName:rec.wName, lName:rec.lName }] }],
+      n:rec.compName||'복구된 일반전',
+      compName:rec.compName||'복구된 일반전',
+      stage:'general'
+    });
+  });
+  recovered.sort((a,b)=>String(b && b.d || '').localeCompare(String(a && a.d || '')));
+  if(recovered.length) out.ttM = out.ttM.concat(recovered);
   return out;
 }
 async function _fetchGithubData(){
@@ -408,5 +614,8 @@ window.fbUpdate = async function (patch) {
 window.__suBuildSplitStoreData = _buildSplitStoreData;
 window.__suEstimateSplitStore = _estimateSplitStore;
 window.__suFetchGithubMergedData = _fetchGithubData;
+window.__suRecoverMatchArraysFromPlayerHistory = _recoverMatchArraysFromPlayerHistory;
+window.__suRecoverCivilMiniFromPlayerHistory = _recoverCivilMiniFromPlayerHistory;
+window.__suRecoverTierGeneralFromPlayerHistory = _recoverTierGeneralFromPlayerHistory;
 try{ window._fetchGithubData = _fetchGithubData; }catch(e){}
 try{ window._pollGithubOnce = _pollGithubOnce; }catch(e){}

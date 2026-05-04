@@ -216,10 +216,16 @@ async function _pollFirebaseSignalOnce(force){
         }
       }catch(e){}
       if(sigTs > _lastSavedAt || !_lastSnapshot){
-        await _pollGithubOnce(true);
+        const fn = (typeof window!=='undefined' && typeof window._pollGithubOnce==='function')
+          ? window._pollGithubOnce
+          : (typeof _pollGithubOnce==='function' ? _pollGithubOnce : null);
+        if(typeof fn === 'function') await fn(true);
       }
     }else if(force && !_lastSnapshot){
-      await _pollGithubOnce(true);
+      const fn = (typeof window!=='undefined' && typeof window._pollGithubOnce==='function')
+        ? window._pollGithubOnce
+        : (typeof _pollGithubOnce==='function' ? _pollGithubOnce : null);
+      if(typeof fn === 'function') await fn(true);
     }
   }catch(e){}
   finally{

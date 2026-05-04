@@ -132,7 +132,7 @@ async function checkFbSyncStatus(){
         <span style="font-size:16px">${hasPw?'🔑':'⚠️'}</span>
         <div>
           <div style="font-weight:700;font-size:12px">GitHub 토큰</div>
-          <div style="font-size:11px;color:var(--gray-l)">${hasPw?'설정됨 — 저장 시 GitHub data.json에 업로드됨':'미설정 — 저장해도 GitHub 업로드 안 됨'}</div>
+          <div style="font-size:11px;color:var(--gray-l)">${hasPw?'설정됨 — 수동 버튼으로 GitHub data.json 업로드 가능':'미설정 — GitHub 업로드 불가, 로컬만 저장'}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${lastSignal?'#eff6ff':'#f8fafc'};border:1px solid ${lastSignal?'#bfdbfe':'var(--border)'}">
