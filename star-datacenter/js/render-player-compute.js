@@ -16,6 +16,7 @@ function preparePlayerDetailComputedData(opts){
       modeHist: [],
       availYears: [],
       opps: {},
+      vsUnivs: [],
       rv: {T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0},N:{w:0,l:0}},
       tot: 0,
       wr: 0,
@@ -42,6 +43,7 @@ function preparePlayerDetailComputedData(opts){
 
   const availYears=[...new Set(histAll.map(h=>(h.date||'').slice(0,4)).filter(y=>y.length===4))].sort().reverse();
   const opps={},rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0},N:{w:0,l:0}};
+  const vsUnivs = calcPlayerVsUniversityRecords(p, { year, years: st.years||[] });
   modeHist.forEach(h=>{
     if(!opps[h.opp])opps[h.opp]={w:0,l:0,race:h.oppRace};
     if(h.result==='승'){opps[h.opp].w++;if(rv[h.oppRace])rv[h.oppRace].w++;}
@@ -96,6 +98,7 @@ function preparePlayerDetailComputedData(opts){
     modeHist,
     availYears,
     opps,
+    vsUnivs,
     rv,
     tot,
     wr,
@@ -169,9 +172,73 @@ function calcPlayerAffiliationRecordsList(player, histSource){
   return list;
 }
 
+function calcPlayerVsUniversityRecords(player, opts){
+  const p = player || {};
+  const o = opts || {};
+  const year = String(o.year || '').trim();
+  const years = Array.isArray(o.years) ? o.years : [];
+  const passYear = (dateStr)=>{
+    const y = String(dateStr||'').slice(0,4);
+    if(years.length > 0) return years.includes(y);
+    if(year) return y.startsWith(year);
+    return true;
+  };
+  const map = new Map();
+  const seenGameIds = new Set();
+  const add = (univ, isWin, gameId)=>{
+    const key = String(univ||'').trim();
+    if(!key || key==='A팀' || key==='B팀') return;
+    const gid = String(gameId||'').trim();
+    if(gid){
+      if(seenGameIds.has(gid)) return;
+      seenGameIds.add(gid);
+    }
+    const row = map.get(key) || { univ:key, w:0, l:0, tot:0, wr:0 };
+    if(isWin) row.w++;
+    else row.l++;
+    row.tot = row.w + row.l;
+    row.wr = row.tot ? Math.round(row.w / row.tot * 100) : 0;
+    map.set(key, row);
+  };
+  const scanMatches = (arr, getSides, skipMatch)=>{
+    (arr||[]).forEach(m=>{
+      if(skipMatch && skipMatch(m)) return;
+      if(!passYear(m?.d||'')) return;
+      const sides = getSides ? getSides(m) : null;
+      const sideA = String(sides?.a||'').trim();
+      const sideB = String(sides?.b||'').trim();
+      if(!sideA || !sideB) return;
+      (m.sets||[]).forEach((set,setIdx)=>{
+        (set.games||[]).forEach((g,gameIdx)=>{
+          if(!g?.playerA || !g?.playerB || !g?.winner) return;
+          const isA = g.playerA===p.name;
+          const isB = g.playerB===p.name;
+          if(!isA && !isB) return;
+          const isWin = (isA && g.winner==='A') || (isB && g.winner==='B');
+          const oppUniv = isA ? sideB : sideA;
+          const gid = g._id || `${m._id||'m'}_s${setIdx}_g${gameIdx}`;
+          add(oppUniv, isWin, gid);
+        });
+      });
+    });
+  };
+
+  scanMatches((typeof miniM!=='undefined'?miniM:[]), (m)=>({a:m.a,b:m.b}), (m)=>m?.type==='civil' || (m?.a==='A팀' && m?.b==='B팀'));
+  scanMatches((typeof univM!=='undefined'?univM:[]), (m)=>({a:m.a,b:m.b}));
+  scanMatches((typeof comps!=='undefined'?comps:[]), (m)=>({a:(m.a||m.u||''),b:m.b}));
+  (typeof tourneys!=='undefined' ? (tourneys||[]) : []).filter(tn=>tn && tn.type!=='tier').forEach(tn=>{
+    scanMatches((tn.groups||[]).flatMap(grp=>grp.matches||[]), (m)=>({a:m.a,b:m.b}));
+    scanMatches(Object.values((tn.bracket||{}).matchDetails||{}), (m)=>({a:m.a,b:m.b}));
+    scanMatches(((tn.bracket||{}).manualMatches||[]), (m)=>({a:m.a,b:m.b}));
+  });
+
+  return [...map.values()].sort((a,b)=>(b.tot-a.tot)||(b.w-a.w)||String(a.univ).localeCompare(String(b.univ),'ko'));
+}
+
 try{
   window.preparePlayerDetailComputedData = preparePlayerDetailComputedData;
   window.calcPlayerAffiliationRecord = calcPlayerAffiliationRecord;
   window.calcMembersAffiliationSummary = calcMembersAffiliationSummary;
   window.calcPlayerAffiliationRecordsList = calcPlayerAffiliationRecordsList;
+  window.calcPlayerVsUniversityRecords = calcPlayerVsUniversityRecords;
 }catch(e){}

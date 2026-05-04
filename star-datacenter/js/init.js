@@ -228,6 +228,15 @@ function init(){
   if(typeof _migrateTierTourneys==='function') _migrateTierTourneys();
   // 티어대전 → 티어대회 명칭 마이그레이션
   if(typeof _migrateTierTourName==='function') _migrateTierTourName();
+  // 대학별 전적 정합성 보정: 과거 팀전 history의 잘못된 소속 대학 기록을 1회 재생성
+  try{
+    const affFixVer = '20260504-aff-univ-fix-01';
+    if(localStorage.getItem('su_hist_aff_fix_ver') !== affFixVer){
+      if(typeof _rebuildAllPlayerHistoryCore === 'function') _rebuildAllPlayerHistoryCore();
+      if(typeof localSave === 'function') localSave();
+      localStorage.setItem('su_hist_aff_fix_ver', affFixVer);
+    }
+  }catch(e){}
   // 연도 필터는 getYearOptions()가 렌더링 시 동적으로 계산하므로 별도 추출 불필요
   const ptier=document.getElementById('p-tier');
   if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');

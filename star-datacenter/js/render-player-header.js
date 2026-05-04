@@ -142,59 +142,13 @@ function buildPlayerSummaryStripHTML(opts){
     ${recent10.map(h=>`<span style="width:14px;height:14px;border-radius:50%;background:${h.result==='승'?'#16a34a':(h.result==='무'?'#a3a3a3':'#dc2626')};display:inline-block;flex-shrink:0" title="${h.result} vs ${h.opp||''}"></span>`).join('')}
     <span style="font-size:10px;color:var(--gray-l);margin-left:3px">최근${recent10.length}</span>
   </div>` : '';
-  const affList = typeof calcPlayerAffiliationRecordsList==='function'
-    ? calcPlayerAffiliationRecordsList(p, histAll)
-    : [];
-  const _affVisible = affList.slice(0, 6);
-  const _affHidden = affList.slice(6);
-  const _affSafeKey = String(p?.name||'player').replace(/[^a-zA-Z0-9가-힣_-]/g,'_');
-  if(!(streakHTML||rankHTML||formHTML||affList.length)) return '';
+  if(!(streakHTML||rankHTML||formHTML)) return '';
   return `<div style="background:linear-gradient(135deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:10px 12px 11px;margin-bottom:14px;box-shadow:0 10px 22px rgba(15,23,42,.04)">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
     ${rankHTML}
     ${streakHTML}
     ${formHTML}
     </div>
-    ${affList.length?`<div style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(148,163,184,.26)">
-      <div style="font-size:10px;font-weight:900;color:var(--gray-l);letter-spacing:.7px;margin-bottom:7px">대학별 전적</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
-        ${_affVisible.map(row=>`<div style="border:1px solid rgba(148,163,184,.16);border-radius:12px;background:${String(row.univ)===String(p.univ||'')?'rgba(219,234,254,.72)':'rgba(255,255,255,.82)'};padding:9px 10px;box-shadow:0 6px 14px rgba(15,23,42,.03)">
-          <div style="display:flex;align-items:center;gap:6px;justify-content:space-between">
-            <span class="${row.univ&&row.univ!=='무소속'?'clickable-univ':''}" data-icon-done="1"
-              ${row.univ&&row.univ!=='무소속'?`data-pph-action="open-univ" data-pph-univ="${String(row.univ).replace(/"/g,'&quot;')}"`:''}
-              style="background:${String(row.univ)===String(p.univ||'')?'#2563eb':'#f1f5f9'};color:${String(row.univ)===String(p.univ||'')?'#fff':'#0f172a'};border:1px solid ${String(row.univ)===String(p.univ||'')?'#2563eb':'rgba(148,163,184,.28)'};font-size:10px;padding:3px 8px;border-radius:999px;font-weight:800;display:inline-flex;align-items:center;gap:4px;line-height:1.2;box-shadow:none${row.univ&&row.univ!=='무소속'?';cursor:pointer':''}">${gUI(row.univ,'11px')}${row.univ}</span>
-            <span style="font-size:10px;color:var(--gray-l);font-weight:700">${row.tot?row.wr+'%':'-'}</span>
-          </div>
-          <div style="margin-top:7px;font-size:13px;font-weight:900;color:#0f172a">
-            <span style="color:${cWin}">${row.w}승</span>
-            <span style="color:var(--gray-l);margin:0 5px">/</span>
-            <span style="color:${cLoss}">${row.l}패</span>
-            ${row.d?`<span style="color:var(--gray-l);margin-left:6px">${row.d}무</span>`:''}
-          </div>
-          <div style="margin-top:4px;font-size:11px;font-weight:800;color:${row.pts>=0?cWin:cLoss}">포인트 ${row.pts>=0?'+':''}${row.pts}</div>
-        </div>`).join('')}
-      </div>
-      ${_affHidden.length?`<div id="player-aff-more-${_affSafeKey}" style="display:none;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px">
-        ${_affHidden.map(row=>`<div style="border:1px solid rgba(148,163,184,.16);border-radius:12px;background:${String(row.univ)===String(p.univ||'')?'rgba(219,234,254,.72)':'rgba(255,255,255,.82)'};padding:9px 10px;box-shadow:0 6px 14px rgba(15,23,42,.03)">
-          <div style="display:flex;align-items:center;gap:6px;justify-content:space-between">
-            <span class="${row.univ&&row.univ!=='무소속'?'clickable-univ':''}" data-icon-done="1"
-              ${row.univ&&row.univ!=='무소속'?`data-pph-action="open-univ" data-pph-univ="${String(row.univ).replace(/"/g,'&quot;')}"`:''}
-              style="background:${String(row.univ)===String(p.univ||'')?'#2563eb':'#f1f5f9'};color:${String(row.univ)===String(p.univ||'')?'#fff':'#0f172a'};border:1px solid ${String(row.univ)===String(p.univ||'')?'#2563eb':'rgba(148,163,184,.28)'};font-size:10px;padding:3px 8px;border-radius:999px;font-weight:800;display:inline-flex;align-items:center;gap:4px;line-height:1.2;box-shadow:none${row.univ&&row.univ!=='무소속'?';cursor:pointer':''}">${gUI(row.univ,'11px')}${row.univ}</span>
-            <span style="font-size:10px;color:var(--gray-l);font-weight:700">${row.tot?row.wr+'%':'-'}</span>
-          </div>
-          <div style="margin-top:7px;font-size:13px;font-weight:900;color:#0f172a">
-            <span style="color:${cWin}">${row.w}승</span>
-            <span style="color:var(--gray-l);margin:0 5px">/</span>
-            <span style="color:${cLoss}">${row.l}패</span>
-            ${row.d?`<span style="color:var(--gray-l);margin-left:6px">${row.d}무</span>`:''}
-          </div>
-          <div style="margin-top:4px;font-size:11px;font-weight:800;color:${row.pts>=0?cWin:cLoss}">포인트 ${row.pts>=0?'+':''}${row.pts}</div>
-        </div>`).join('')}
-      </div>
-      <div style="display:flex;justify-content:center;margin-top:10px">
-        <button type="button" id="player-aff-more-btn-${_affSafeKey}" class="btn btn-w btn-xs" onclick="const box=document.getElementById('player-aff-more-${_affSafeKey}'); const btn=this; const open=box&&box.style.display!=='none'; if(box) box.style.display=open?'none':'grid'; btn.textContent=open?'+ ${_affHidden.length}개 더보기':'접기';">${`+ ${_affHidden.length}개 더보기`}</button>
-      </div>`:''}
-    </div>`:''}
   </div>`;
 }
 

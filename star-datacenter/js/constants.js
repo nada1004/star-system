@@ -618,10 +618,23 @@ function getMatchDetailAvatarSetting(kind){
 // - teamA/teamB: ["영희","철수"] 형태의 선수명 배열
 // - winnerSide: 'A' 또는 'B' (A팀 승 / B팀 승)
 // - 개별 전적은 "상대팀(콤마)"를 opp로 기록 (예: "민수,영지수")
-function applyTeamGameResult(teamA, teamB, winnerSide, date, map, matchId, mode){
+function applyTeamGameResult(teamA, teamB, winnerSide, date, map, matchId, mode, opts){
   try{
-    const A = Array.isArray(teamA) ? teamA.map(s=>String(s||'').trim()).filter(Boolean) : [];
-    const B = Array.isArray(teamB) ? teamB.map(s=>String(s||'').trim()).filter(Boolean) : [];
+    const _opts = opts || {};
+    const _normMember = (x, sideUniv) => {
+      if(x && typeof x === 'object'){
+        const name = String(x.name||'').trim();
+        if(!name) return null;
+        return { name, univ: String(x.univ || sideUniv || '').trim() };
+      }
+      const name = String(x||'').trim();
+      if(!name) return null;
+      return { name, univ: String(sideUniv||'').trim() };
+    };
+    const AMembers = Array.isArray(teamA) ? teamA.map(x=>_normMember(x, _opts.sideUnivA)).filter(Boolean) : [];
+    const BMembers = Array.isArray(teamB) ? teamB.map(x=>_normMember(x, _opts.sideUnivB)).filter(Boolean) : [];
+    const A = AMembers.map(x=>x.name);
+    const B = BMembers.map(x=>x.name);
     if(A.length < 2 || B.length < 2) return;
     const _find = (name) => players.find(x=>x.name===name) || null;
     const pA = A.map(_find).filter(Boolean);
@@ -633,6 +646,8 @@ function applyTeamGameResult(teamA, teamB, winnerSide, date, map, matchId, mode)
     const mid = String(matchId||'').trim();
     const oppA = B.join(',');
     const oppB = A.join(',');
+    const univMapA = new Map(AMembers.map(x=>[x.name, x.univ]));
+    const univMapB = new Map(BMembers.map(x=>[x.name, x.univ]));
 
     // 중복 방지: 각 선수 history에 동일 matchId 있으면 중단
     const hasDup = (p) => !!(mid && (p.history||[]).some(h => h.matchId === mid));
@@ -648,7 +663,7 @@ function applyTeamGameResult(teamA, teamB, winnerSide, date, map, matchId, mode)
     const delta = calcElo(wElo, lElo);
     const t = Date.now();
 
-    const applyOne = (p, isWin, oppStr) => {
+    const applyOne = (p, isWin, oppStr, sideMap) => {
       if(!p.history) p.history=[];
       if(isWin){ p.win++; p.points+=3; }
       else { p.loss++; p.points-=3; }
@@ -661,14 +676,14 @@ function applyTeamGameResult(teamA, teamB, winnerSide, date, map, matchId, mode)
         map:m, matchId:mid,
         eloDelta: isWin ? delta : -delta,
         eloAfter: p.elo,
-        univ: p.univ||'',
+        univ: (sideMap && sideMap.get(p.name)) || p.univ || '',
         mode: mode||'',
         _team:true
       });
     };
 
-    pA.forEach(p => applyOne(p, aWin, oppA));
-    pB.forEach(p => applyOne(p, !aWin, oppB));
+    pA.forEach(p => applyOne(p, aWin, oppA, univMapA));
+    pB.forEach(p => applyOne(p, !aWin, oppB, univMapB));
   }catch(e){}
 }
 try{ applyMatchDetailVars(); }catch(e){
@@ -2154,7 +2169,7 @@ function _rebuildAllPlayerHistoryCore() {
         const univL = isCivil ? '' : (g.winner === 'A' ? (m.b || '') : (m.a || ''));
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, m.type === 'civil' ? '시빌워' : '미니대전');
+          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, m.type === 'civil' ? '시빌워' : '미니대전', { sideUnivA: m.a, sideUnivB: m.b });
         } else {
           applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, m.type === 'civil' ? '시빌워' : '미니대전');
         }
@@ -2175,7 +2190,7 @@ function _rebuildAllPlayerHistoryCore() {
         const univL = g.winner === 'A' ? m.b : m.a;
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '대학대전');
+          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '대학대전', { sideUnivA: m.a, sideUnivB: m.b });
         } else {
           applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대학대전');
         }
@@ -2194,7 +2209,7 @@ function _rebuildAllPlayerHistoryCore() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '대학CK');
+          applyTeamGameResult(m.teamAMembers || g.teamA, m.teamBMembers || g.teamB, g.winner, m.d, g.map || '-', gameId, '대학CK');
         } else {
           applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '대학CK');
         }
@@ -2213,7 +2228,7 @@ function _rebuildAllPlayerHistoryCore() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '프로리그');
+          applyTeamGameResult(m.teamAMembers || g.teamA, m.teamBMembers || g.teamB, g.winner, m.d, g.map || '-', gameId, '프로리그');
         } else {
           applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '프로리그');
         }
@@ -2232,7 +2247,7 @@ function _rebuildAllPlayerHistoryCore() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '티어대회');
+          applyTeamGameResult(m.teamAMembers || g.teamA, m.teamBMembers || g.teamB, g.winner, m.d, g.map || '-', gameId, '티어대회');
         } else {
           applyGameResult(wName, lName, m.d, g.map || '-', gameId, '', '', '티어대회');
         }
@@ -2267,7 +2282,7 @@ function _rebuildAllPlayerHistoryCore() {
         const univL = g.winner === 'A' ? m.b : m.a;
         const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
         if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '대회');
+          applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '대회', { sideUnivA: m.a, sideUnivB: m.b });
         } else {
           applyGameResult(wName, lName, m.d, g.map || '-', gameId, univW, univL, '대회');
         }
@@ -2290,7 +2305,7 @@ function _rebuildAllPlayerHistoryCore() {
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
               const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
               if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-                applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '조별리그');
+                applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '조별리그', { sideUnivA: m.a, sideUnivB: m.b });
               } else {
                 applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '조별리그');
               }
@@ -2308,7 +2323,7 @@ function _rebuildAllPlayerHistoryCore() {
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
             if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-              applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '대회');
+              applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '대회', { sideUnivA: m.a, sideUnivB: m.b });
             } else {
               applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
             }
@@ -2325,7 +2340,7 @@ function _rebuildAllPlayerHistoryCore() {
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
             if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
-              applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '대회');
+              applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '대회', { sideUnivA: m.a, sideUnivB: m.b });
             } else {
               applyGameResult(wName, lName, m.d, g.map || '', gameId, m.a || '', m.b || '', isTier ? '티어대회' : '대회');
             }

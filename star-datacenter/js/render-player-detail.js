@@ -69,6 +69,7 @@ function buildPlayerDetailHTML(p){
   const _modeHist = _computed?.modeHist || _hist;
   const _availYears = _computed?.availYears || [];
   const opps = _computed?.opps || {};
+  const vsUnivs = _computed?.vsUnivs || [];
   const rv = _computed?.rv || {T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0},N:{w:0,l:0}};
   const tot = _computed?.tot ?? (p.win+p.loss);
   const wr = _computed?.wr ?? (tot?Math.round(p.win/tot*100):0);
@@ -198,6 +199,14 @@ function buildPlayerDetailHTML(p){
 
   h += (typeof buildPlayerRaceStatsHTML==='function')
     ? buildPlayerRaceStatsHTML(_modeHist)
+    : '';
+
+  h += (typeof buildPlayerVsUnivSectionHTML==='function')
+    ? buildPlayerVsUnivSectionHTML({
+        rows: vsUnivs,
+        playerName: p.name,
+        maxVisible: 6
+      })
     : '';
 
   if(!_pdState.oppSort) _pdState.oppSort='tot';
