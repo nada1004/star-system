@@ -4,10 +4,326 @@
 let totalRaceFilter='전체'; // 스트리머 탭 종족 필터
 let totalSearch=''; // 스트리머 탭 이름 검색
 let totalHideNoRecord=false; // 전적 없는 선수 숨기기
+let totalLiteMode=(()=>{ try{ return localStorage.getItem('su_total_lite_mode')!=='0'; }catch(e){ return true; } })(); // 스트리머 탭 초경량 모드
 let _bulkEditMode=false; // 일괄 수정 모드
 let _bulkEditSelected=new Set(); // 선택된 스트리머 이름
 let _bulkEditSearch=''; // 일괄 수정(선택 모드) 검색어
 let totalViewMode='table'; // 'table' | 'gallery'
+let __suTotalPreparedKey=''; // 스트리머 탭 전처리 캐시 키
+let __suTotalPreparedData=null; // 스트리머 탭 전처리 캐시
+let __suPlayerPhotoHydrateTimer=null; // 스트리머 탭 프로필 이미지 지연 로드 타이머
+let __suPlayerPhotoObserver=null; // 스트리머 탭 프로필 이미지 IntersectionObserver
+let __suTotalRankCacheKey=''; // 스트리머 탭 전체 랭킹 캐시 키
+let __suTotalRankCacheData=null; // 스트리머 탭 전체 랭킹 캐시 데이터
+let __suRankPersistTimer=null; // 랭킹 스냅샷 지연 저장 타이머
+let __suPlayerBaseMetaCacheKey=''; // 스트리머 기본 행 메타 캐시 키
+let __suPlayerBaseMetaCacheData=null; // 스트리머 기본 행 메타 캐시 데이터
+let __suTotalRenderJobId=0; // 스트리머 테이블 청크 렌더 작업 id
+let __suTotalDecorJobId=0; // 스트리머 테이블 장식 후처리 작업 id
+const __suTotalTierOrderMap = Object.fromEntries((Array.isArray(TIERS)?TIERS:[]).map((t,i)=>[t,i]));
+const __suTotalMainRoleSet = new Set(Array.isArray(MAIN_ROLES)?MAIN_ROLES:[]);
+
+try{
+  if(!window.__suTotalDelegatedBound){
+    window.__suTotalDelegatedBound = true;
+    document.addEventListener('click', function(e){
+      try{
+        const playerEl = e.target && e.target.closest ? e.target.closest('[data-total-open-player]') : null;
+        if(playerEl){
+          const name = playerEl.getAttribute('data-total-open-player') || '';
+          if(name && typeof openPlayerModal === 'function') openPlayerModal(name);
+          return;
+        }
+        const univEl = e.target && e.target.closest ? e.target.closest('[data-total-open-univ]') : null;
+        if(univEl){
+          const univ = univEl.getAttribute('data-total-open-univ') || '';
+          if(univ && typeof openUnivModal === 'function') openUnivModal(univ);
+        }
+      }catch(err){}
+    }, true);
+  }
+}catch(e){}
+
+function _invalidateTotalCaches(){
+  __suTotalPreparedKey = '';
+  __suTotalPreparedData = null;
+  __suTotalRankCacheKey = '';
+  __suTotalRankCacheData = null;
+  __suPlayerBaseMetaCacheKey = '';
+  __suPlayerBaseMetaCacheData = null;
+}
+window._invalidateTotalCaches = window._invalidateTotalCaches || _invalidateTotalCaches;
+
+function _getTierOrderFast(tier){
+  return Object.prototype.hasOwnProperty.call(__suTotalTierOrderMap, tier) ? __suTotalTierOrderMap[tier] : 999;
+}
+
+function _isMainRoleFast(role){
+  return !!(role && __suTotalMainRoleSet.has(role));
+}
+
+function _syncTotalTableGroupVisibility(table){
+  try{
+    if(!table) return;
+    const rows = [...table.querySelectorAll('tr[data-player-row="1"]')];
+    table.querySelectorAll('tr[data-univ-header]').forEach(h=>{
+      const u = h.getAttribute('data-univ-header') || '';
+      const any = rows.some(r=>r.style.display !== 'none' && r.getAttribute('data-univ') === u);
+      h.style.display = any ? '' : 'none';
+      let cur = h.nextElementSibling;
+      while(cur && !cur.hasAttribute('data-univ-header')){
+        if(cur.classList && cur.classList.contains('tgrp')){
+          const hasVisibleAfter = rows.some(r=>{
+            if(r.style.display === 'none') return false;
+            if(r.getAttribute('data-univ') !== u) return false;
+            return cur.compareDocumentPosition(r) & Node.DOCUMENT_POSITION_FOLLOWING;
+          });
+          cur.style.display = any && hasVisibleAfter ? '' : 'none';
+        }
+        cur = cur.nextElementSibling;
+      }
+    });
+  }catch(e){}
+}
+
+function _getPreparedTotalData(){
+  const _players = Array.isArray(players) ? players : [];
+  const _cacheKey = `${_players.length}|${totalRaceFilter}|${totalHideNoRecord?'1':'0'}|${isLoggedIn?'1':'0'}`;
+  if(__suTotalPreparedData && __suTotalPreparedKey === _cacheKey) return __suTotalPreparedData;
+
+  const _visibleUnivs = getAllUnivs().filter(u=>isLoggedIn||!u.hidden);
+  const _grouped = Object.create(null);
+  const _totalByUniv = Object.create(null);
+  _players.forEach(p=>{
+    const _univName = String((p && p.univ) || '').trim();
+    if(!_univName) return;
+    _totalByUniv[_univName] = (_totalByUniv[_univName] || 0) + 1;
+    if(p.gameType === 'general') return;
+    if(totalRaceFilter !== '전체' && p.race !== totalRaceFilter) return;
+    if(totalHideNoRecord && (((p.win||0)+(p.loss||0)) <= 0)) return;
+    (_grouped[_univName] = _grouped[_univName] || []).push(p);
+  });
+
+  __suTotalPreparedKey = _cacheKey;
+  __suTotalPreparedData = {
+    visibleUnivs: _visibleUnivs,
+    grouped: _grouped,
+    totalByUniv: _totalByUniv,
+    sortedByUniv: Object.create(null),
+    galleryByUniv: Object.create(null)
+  };
+  return __suTotalPreparedData;
+}
+
+function _getPreparedTotalUniv(prepared, univName){
+  if(prepared.sortedByUniv[univName]) return prepared.sortedByUniv[univName];
+  const list = prepared.grouped[univName] || [];
+  const sorted = [...list].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||_getTierOrderFast(a.tier)-_getTierOrderFast(b.tier)||b.points-a.points);
+  const rolePl = [];
+  const normalPl = [];
+  for(const p of sorted){
+    if(_isMainRoleFast(p.role)) rolePl.push(p);
+    else normalPl.push(p);
+  }
+  const displayList = rolePl.length ? [...rolePl, null, ...normalPl] : normalPl;
+  prepared.sortedByUniv[univName] = {
+    list,
+    totalCount: prepared.totalByUniv[univName] || 0,
+    rolePl,
+    normalPl,
+    displayList
+  };
+  return prepared.sortedByUniv[univName];
+}
+
+function _getPreparedGalleryUniv(prepared, univName){
+  if(prepared.galleryByUniv[univName]) return prepared.galleryByUniv[univName];
+  const src = prepared.grouped[univName] || [];
+  const list = [];
+  for(const p of src){ if(p && !p.retired) list.push(p); }
+  const sorted = [...list].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||_getTierOrderFast(a.tier)-_getTierOrderFast(b.tier)||(b.points||0)-(a.points||0));
+  prepared.galleryByUniv[univName] = { list, sorted, totalCount:list.length };
+  return prepared.galleryByUniv[univName];
+}
+
+function _hydratePlayerPhotos(root){
+  try{
+    const scope = root || document;
+    const imgs = [...scope.querySelectorAll('img[data-photo-src]:not([src])')];
+    if(!imgs.length) return;
+    const batch = imgs.slice(0, 18);
+    batch.forEach(img=>{
+      try{
+        const src = img.getAttribute('data-photo-src') || '';
+        if(src) img.setAttribute('src', src);
+      }catch(e){}
+    });
+    if(imgs.length > batch.length){
+      __suPlayerPhotoHydrateTimer = setTimeout(()=>_hydratePlayerPhotos(scope), 35);
+    }
+  }catch(e){}
+}
+
+function _scheduleHydratePlayerPhotos(root){
+  const scope = root || document;
+  try{
+    if(__suPlayerPhotoHydrateTimer) clearTimeout(__suPlayerPhotoHydrateTimer);
+    if(__suPlayerPhotoObserver){ __suPlayerPhotoObserver.disconnect(); __suPlayerPhotoObserver = null; }
+  }catch(e){}
+  try{
+    const imgs = [...scope.querySelectorAll('img[data-photo-src]:not([src])')];
+    if(!imgs.length) return;
+    if('IntersectionObserver' in window){
+      __suPlayerPhotoObserver = new IntersectionObserver((entries, observer)=>{
+        entries.forEach(entry=>{
+          if(!entry.isIntersecting) return;
+          const img = entry.target;
+          try{
+            const src = img.getAttribute('data-photo-src') || '';
+            if(src && !img.getAttribute('src')) img.setAttribute('src', src);
+          }catch(e){}
+          observer.unobserve(img);
+        });
+      }, { root: null, rootMargin: '320px 0px', threshold: 0.01 });
+      imgs.forEach(img=>__suPlayerPhotoObserver.observe(img));
+      return;
+    }
+  }catch(e){}
+  const run = ()=>_hydratePlayerPhotos(scope);
+  try{
+    if('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 250 });
+    else __suPlayerPhotoHydrateTimer = setTimeout(run, 120);
+  }catch(e){
+    __suPlayerPhotoHydrateTimer = setTimeout(run, 120);
+  }
+}
+
+function _getPlayerBaseMetaCache(){
+  const _players = Array.isArray(players) ? players : [];
+  let count = 0, nameLen = 0, univLen = 0, roleLen = 0, histLen = 0;
+  for(const p of _players){
+    if(!p) continue;
+    count++;
+    nameLen += String(p.name||'').length;
+    univLen += String(p.univ||'').length;
+    roleLen += String(p.role||'').length;
+    histLen += Array.isArray(p.history) ? p.history.length : 0;
+  }
+  const key = `${count}|${nameLen}|${univLen}|${roleLen}|${histLen}`;
+  if(__suPlayerBaseMetaCacheData && __suPlayerBaseMetaCacheKey === key) return __suPlayerBaseMetaCacheData;
+  const cache = Object.create(null);
+  const _7ago = new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+  const _30ago = new Date(Date.now()-30*86400000).toISOString().slice(0,10);
+  for(const p of _players){
+    const keyName = String((p && p.name) || '');
+    if(!keyName) continue;
+    let lastD = '';
+    const hist = (p && Array.isArray(p.history)) ? p.history : [];
+    for(const h of hist){
+      const d = h && h.date ? h.date : '';
+      if(d > lastD) lastD = d;
+    }
+    let activityHtml = '<span style="font-size:9px;color:#9ca3af" title="전적 없음">-</span>';
+    let activityColor = '#9ca3af';
+    let activityTitle = '비활성';
+    if(lastD){
+      if(lastD>=_7ago){
+        activityHtml = `<span style="font-size:9px;font-weight:800;color:#16a34a" title="최근 활동 (7일 이내)">🟢</span>`;
+        activityColor = '#16a34a';
+        activityTitle = '최근 활동 7일 이내';
+      }else if(lastD>=_30ago){
+        activityHtml = `<span style="font-size:9px;font-weight:800;color:#f59e0b" title="활동 중 (30일 이내)">🟡</span>`;
+        activityColor = '#f59e0b';
+        activityTitle = '활동 중 30일 이내';
+      }
+    }
+    cache[keyName] = {
+      safeName: keyName.replace(/\\/g,'\\\\').replace(/'/g,"\\'"),
+      query: `${p?.name||''} ${(p?.univ||'')} ${(p?.tier||'')} ${(p?.role||'')}`.toLowerCase(),
+      queryEsc: `${`${p?.name||''} ${(p?.univ||'')} ${(p?.tier||'')} ${(p?.role||'')}`.toLowerCase().replace(/"/g,'&quot;')}`,
+      activityHtml,
+      activityColor,
+      activityTitle
+    };
+  }
+  __suPlayerBaseMetaCacheKey = key;
+  __suPlayerBaseMetaCacheData = cache;
+  return cache;
+}
+
+function _buildPlayerRowMetaGetter(rankMap){
+  const baseCache = _getPlayerBaseMetaCache();
+  const cache = Object.create(null);
+  return function(p){
+    const key = String((p && p.name) || '');
+    if(cache[key]) return cache[key];
+    const base = baseCache[key] || {
+      safeName: key.replace(/\\/g,'\\\\').replace(/'/g,"\\'"),
+      query: `${p?.name||''} ${(p?.univ||'')} ${(p?.tier||'')} ${(p?.role||'')}`.toLowerCase(),
+      queryEsc: `${`${p?.name||''} ${(p?.univ||'')} ${(p?.tier||'')} ${(p?.role||'')}`.toLowerCase().replace(/"/g,'&quot;')}`,
+      activityHtml: '<span style="font-size:9px;color:#9ca3af" title="전적 없음">-</span>',
+      activityColor: '#9ca3af',
+      activityTitle: '비활성'
+    };
+    cache[key] = {
+      ...base,
+      statusHtml: typeof getStatusIconHTML==='function' ? getStatusIconHTML(key) : '',
+      rankChangeHtml: typeof getRankChangeBadge==='function' ? getRankChangeBadge(key, rankMap[key]) : ''
+    };
+    return cache[key];
+  };
+}
+
+function _getTotalRankData(){
+  const _players = Array.isArray(players) ? players : [];
+  let activeCount = 0;
+  let sumPoints = 0;
+  let sumWins = 0;
+  const ranked = [];
+  for(const p of _players){
+    if(!p || p.retired) continue;
+    activeCount++;
+    sumPoints += Number(p.points||0);
+    sumWins += Number(p.win||0);
+    ranked.push(p);
+  }
+  const key = `${_players.length}|${activeCount}|${sumPoints}|${sumWins}`;
+  if(__suTotalRankCacheData && __suTotalRankCacheKey === key) return __suTotalRankCacheData;
+  ranked.sort((a,b)=>(b.points||0)-(a.points||0)||(b.win||0)-(a.win||0));
+  const rankMap = Object.create(null);
+  ranked.forEach((p,i)=>{ rankMap[p.name] = i + 1; });
+  __suTotalRankCacheKey = key;
+  __suTotalRankCacheData = { rankMap, ranked };
+  return __suTotalRankCacheData;
+}
+
+function _queueRankSnapshotPersist(rankMap, today){
+  try{
+    if(__suRankPersistTimer) clearTimeout(__suRankPersistTimer);
+  }catch(e){}
+  const run = ()=>{
+    try{
+      if(typeof _queueRankSnapshotPersistFromGlobals==='function'){
+        if(!_queueRankSnapshotPersistFromGlobals(true)){
+          localStorage.setItem('su_rank_snap', JSON.stringify(rankMap));
+          localStorage.setItem('su_rank_snap_date', today);
+        }
+      }else{
+        localStorage.setItem('su_rank_snap', JSON.stringify(rankMap));
+        localStorage.setItem('su_rank_snap_date', today);
+      }
+    }catch(e){}
+  };
+  try{
+    if('requestIdleCallback' in window){
+      requestIdleCallback(run, { timeout: 500 });
+    }else{
+      __suRankPersistTimer = setTimeout(run, 120);
+    }
+  }catch(e){
+    __suRankPersistTimer = setTimeout(run, 120);
+  }
+}
 
 function _parseTotalSearch(qRaw){
   const q=(qRaw||'').trim().toLowerCase();
@@ -23,6 +339,139 @@ function _parseTotalSearch(qRaw){
     else inc.push(t);
   });
   return {rf,gf,inc,exc};
+}
+
+function _warmTotalCaches(){
+  try{ _getPlayerBaseMetaCache(); }catch(e){}
+  try{ _getTotalRankData(); }catch(e){}
+}
+window._warmTotalCaches = window._warmTotalCaches || _warmTotalCaches;
+
+window.toggleTotalLiteMode = function(force){
+  try{
+    totalLiteMode = (typeof force === 'boolean') ? force : !totalLiteMode;
+    localStorage.setItem('su_total_lite_mode', totalLiteMode ? '1' : '0');
+  }catch(e){
+    totalLiteMode = (typeof force === 'boolean') ? force : !totalLiteMode;
+  }
+  try{ _bulkEditMode = false; }catch(e){}
+  render();
+};
+
+function _buildTotalUnivSectionHTML(u, _univPrepared, _rankMap, _getRowMeta, _ncols, _showBulk, _liteMode){
+  const _isHiddenUniv=isLoggedIn&&u.hidden;
+  const _univTotal=_univPrepared.totalCount;
+  const _uAttr = String(u.name||'').replace(/"/g,'&quot;');
+  const _rolePl = _univPrepared.rolePl;
+  const _normalPl = _univPrepared.normalPl;
+  const _displayList = _univPrepared.displayList;
+  const parts = [`<tbody class="su-total-univ-block"><tr class="ugrp" data-univ-header="${u.name}" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${_ncols}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <span class="clickable-univ su-total-univ-link" data-total-open-univ="${_uAttr}">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','26px'):'26px'))}${u.name}</span>
+          ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
+          ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;font-weight:700">🚫 방문자 숨김</span>`:''}
+        </div>
+        <span style="font-size:11px;color:rgba(255,255,255,.8);white-space:nowrap;font-weight:600">${_univTotal}명</span>
+      </div>
+    </td></tr>`];
+  let lt='';
+  let _inRoleSection = _rolePl.length > 0;
+  if(!_liteMode && _inRoleSection) parts.push(`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}" style="background:${(u.color||'#6366f1')}22;color:${u.color||'#6366f1'}">👑 직책자 (${_rolePl.length}명)</td></tr>`);
+  const _iterList = _liteMode ? [..._univPrepared.list].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||_getTierOrderFast(a.tier)-_getTierOrderFast(b.tier)||b.points-a.points) : _displayList;
+  for(const p of _iterList){
+    if(p===null){
+      _inRoleSection=false; lt='';
+      if(_normalPl.length) parts.push(`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}">▷ 일반 스트리머 (${_normalPl.length}명)</td></tr>`);
+      continue;
+    }
+    if(!_liteMode && !_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';parts.push(`<tr class="tgrp"><td colspan="${_ncols}">▷ ${getTierLabel(p.tier||'미정')}</td></tr>`);}
+    const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):0;
+    const _pRank = _rankMap[p.name];
+    const _meta = _getRowMeta(p);
+    const _pSafe = _meta.safeName;
+    const _pAttr = String(p.name||'').replace(/"/g,'&quot;');
+    if(_liteMode){
+      parts.push(`<tr class="su-total-row su-total-row-lite" data-player-row="1" data-univ="${u.name}" data-q="${_meta.queryEsc}" data-r="${p.race||''}" data-g="${p.gender||''}">
+        <td class="su-total-rankcell">
+          <div class="su-total-ranknum">${_pRank||'-'}</div>
+        </td>
+        <td style="text-align:center;white-space:nowrap;padding:6px 8px">${getTierBadge(p.tier)}</td>
+        <td style="text-align:center;white-space:nowrap;padding:6px 6px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
+        <td class="su-total-namecell" style="padding:6px 10px">
+          <span class="su-total-inline" style="gap:6px">${p.photo?`<span class="su-total-photo su-total-photo-lite" data-total-open-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="low" class="su-total-photo-img" onerror="this.style.display='none'"></span>`:'<span class="su-total-photo-empty su-total-photo-lite"></span>'}<span class="su-total-namewrap"><span class="clickable-name" data-total-open-player="${_pAttr}">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">휴학</span>':''}</span></span>
+        </td>
+        <td style="text-align:center;white-space:nowrap;padding:6px 10px;font-weight:800;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${p.win||0}-${p.loss||0}${(p.win+p.loss)?`<br><span style="font-size:10px;color:var(--gray-l);font-weight:700">${wr}%</span>`:''}</td>
+        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:6px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️</button>`)}</td>`:''}
+      </tr>`);
+      continue;
+    }
+    parts.push(`<tr class="su-total-row" data-player-row="1" data-univ="${u.name}" data-q="${_meta.queryEsc}" data-r="${p.race||''}" data-g="${p.gender||''}">
+        ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
+        <td class="su-total-rankcell">
+          <div class="su-total-ranknum">${_pRank||'-'}</div>
+          <div>${_meta.rankChangeHtml}</div>
+        </td>
+        <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
+        <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
+        <td class="su-total-namecell">
+          <span class="su-total-inline">
+            ${p.photo?`<span class="su-total-photo" data-total-open-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="low" class="su-total-photo-img" onerror="this.style.display='none'"></span>`:'<span class="su-total-photo-empty"></span>'}
+            <span class="su-total-namewrap">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" data-total-open-player="${_pAttr}">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${genderIcon(p.gender)}${_meta.statusHtml}</span>
+          </span>
+        </td>
+        <td class="col-hide-mobile wt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.win}</td>
+        <td class="col-hide-mobile lt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.loss}</td>
+        <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
+          ${(p.win+p.loss)?wr+'%':'-'}${(p.win+p.loss)?`<br><span style="font-size:9px;color:var(--gray-l);font-weight:400">${p.win+p.loss}전</span>`:''}
+        </td>
+        <td class="col-hide-mobile ${pC(p.points)} su-total-points">${pS(p.points)}</td>
+        <td class="col-hide-mobile su-total-elo" style="color:${(p.elo||ELO_DEFAULT)>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${p.elo||ELO_DEFAULT}</td>
+        <td class="col-hide-mobile su-total-activity">${_meta.activityHtml}</td>
+        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
+      </tr>`);
+  }
+  parts.push(`</tbody>`);
+  return parts.join('');
+}
+
+function _scheduleEnhanceTotalRows(root, rankMap){
+  const scope = root || document;
+  const decorJobId = ++__suTotalDecorJobId;
+  const rows = [...scope.querySelectorAll('tr[data-player-row="1"]')];
+  if(!rows.length) return;
+  const baseCache = _getPlayerBaseMetaCache();
+  const playerMap = Object.create(null);
+  (Array.isArray(players)?players:[]).forEach(p=>{ if(p && p.name) playerMap[p.name] = p; });
+  let idx = 0;
+  const step = ()=>{
+    if(decorJobId !== __suTotalDecorJobId || !scope.isConnected) return;
+    const end = Math.min(idx + 40, rows.length);
+    for(; idx < end; idx++){
+      const row = rows[idx];
+      const name = row.getAttribute('data-player-name') || '';
+      const p = playerMap[name];
+      const base = baseCache[name] || null;
+      const rankSlot = row.querySelector('[data-rank-change]');
+      if(rankSlot) rankSlot.innerHTML = typeof getRankChangeBadge==='function' ? getRankChangeBadge(name, rankMap[name]) : '';
+      const roleSlot = row.querySelector('[data-role-slot]');
+      if(roleSlot) roleSlot.innerHTML = p && p.role ? `${getRoleBadgeHTML(p.role,'10px')} ` : '';
+      const statusSlot = row.querySelector('[data-status-slot]');
+      if(statusSlot) statusSlot.innerHTML = typeof getStatusIconHTML==='function' ? getStatusIconHTML(name) : '';
+      const activitySlot = row.querySelector('[data-activity-slot]');
+      if(activitySlot && base) activitySlot.innerHTML = base.activityHtml;
+      const photoSlot = row.querySelector('[data-photo-slot]');
+      if(photoSlot && p && p.photo){
+        photoSlot.innerHTML = `${p.race||'?'}<img data-photo-src="${toHttpsUrl(p.photo)}" loading="lazy" decoding="async" fetchpriority="low" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'">`;
+      }
+    }
+    if(idx < rows.length){
+      requestAnimationFrame(step);
+      return;
+    }
+    _scheduleHydratePlayerPhotos(scope);
+  };
+  requestAnimationFrame(step);
 }
 
 function totalApplySearchFilter(){
@@ -43,11 +492,7 @@ function totalApplySearchFilter(){
       const okExc=exc.length===0||exc.every(t=>!hay.includes(t));
       tr.style.display=(okRace&&okGender&&okInc&&okExc)?'':'none';
     });
-    table.querySelectorAll('tr[data-univ-header]').forEach(h=>{
-      const u=h.getAttribute('data-univ-header')||'';
-      const any=rows.some(r=>r.style.display!== 'none' && r.getAttribute('data-univ')===u);
-      h.style.display=any?'':'none';
-    });
+    _syncTotalTableGroupVisibility(table);
   }
   // 갤러리 뷰
   const cont=document.getElementById('rcont');
@@ -84,54 +529,82 @@ function bulkApplySearchFilter(){
     const hay=(tr.getAttribute('data-q')||'');
     if(!hay.includes(q)) tr.style.display='none';
   });
-  table.querySelectorAll('tr[data-univ-header]').forEach(h=>{
-    const u=h.getAttribute('data-univ-header')||'';
-    const any=rows.some(r=>r.style.display!== 'none' && r.getAttribute('data-univ')===u);
-    h.style.display=any?'':'none';
-  });
+  _syncTotalTableGroupVisibility(table);
 }
 
 function rTotal(C,T){
   T.innerText='🎬 전체 스타크래프트 스트리머 리스트';
-  // 랭킹 스냅샷 업데이트 (하루 1회)
-  if(typeof updateRankSnapshot === 'function') updateRankSnapshot();
+  const _pendingInitialData = !!window.__suInitialDataPending;
   const raceOpts=['전체','T','Z','P','N'];
-  const _showBulk=isLoggedIn&&_bulkEditMode;
-  const _ncols=(isLoggedIn?11:10)+(_showBulk?1:0);
+  const _liteMode = !!totalLiteMode && totalViewMode==='table';
+  if(_liteMode && _bulkEditMode) _bulkEditMode = false;
+  const _showBulk=isLoggedIn&&_bulkEditMode&&!_liteMode;
+  const _ncols=_liteMode?(isLoggedIn?6:5):((isLoggedIn?11:10)+(_showBulk?1:0));
   // (모바일/태블릿) 검색창이 커서 버튼들이 2줄로 밀리는 문제 방지
   // - 한 줄 유지 + 가로 스크롤(드래그)로 접근
-  let filterBar=`<div class="fbar utilbar utilbar--scroll" style="margin-bottom:16px;flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+  let filterBar=`<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin-bottom:14px">
+    <div style="display:flex;flex-direction:column;gap:6px;min-width:170px;padding:10px 11px;border:1px solid #e5edf6;border-radius:15px;background:#fff;box-shadow:0 4px 14px rgba(15,23,42,.03)">
+      <div style="font-size:11px;font-weight:900;color:#334155">종족 필터</div>
+      <div class="fbar utilbar utilbar--scroll" style="margin-bottom:0;flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
-    <span style="color:var(--border2);align-self:center">│</span>
-    <input id="total-search" type="text" value="${(totalSearch||'').replace(/"/g,'&quot;')}" placeholder="🔍 이름/대학/티어/직책 + (테/저/프, 남/여) 검색..."
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:240px;padding:10px 11px;border:1px solid #e5edf6;border-radius:15px;background:#fff;box-shadow:0 4px 14px rgba(15,23,42,.03)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div style="font-size:11px;font-weight:900;color:#334155">검색과 보기</div>
+        ${totalSearch?`<button class="pill" onclick="totalSearch='';const el=document.getElementById('total-search');if(el)el.value='';render()" style="font-size:11px">검색 초기화</button>`:''}
+      </div>
+      <div class="fbar utilbar utilbar--scroll" style="margin-bottom:0;flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+        <input id="total-search" type="text" value="${(totalSearch||'').replace(/"/g,'&quot;')}" placeholder="🔍 이름/대학/티어/직책 + (테/저/프, 남/여) 검색..."
       oncompositionstart="window._tsComp=true"
       oncompositionend="window._tsComp=false;totalSearch=this.value;totalApplySearchFilter()"
       oninput="totalSearch=this.value;if(!window._tsComp)totalApplySearchFilter()"
       autocomplete="off" spellcheck="false"
-      style="padding:5px 8px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:140px;max-width:220px;flex:0 1 190px;background:var(--white);color:var(--text)">
-    <button class="pill ${totalHideNoRecord?'on':''}" style="${totalHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
-    <span style="color:var(--border2);align-self:center">│</span>
-    <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode=(totalViewMode==='gallery'?'table':'gallery');_bulkEditMode=false;render()" title="${totalViewMode==='gallery'?'목록으로 돌아가기':'갤러리 뷰'}">▦ 갤러리</button>
-    ${totalViewMode==='table'?(isLoggedIn?`<button class="pill ${_bulkEditMode?'on':''}" onclick="toggleBulkEditMode()" style="${_bulkEditMode?'background:#3b82f6;border-color:#3b82f6;color:#fff':''}">☑ 일괄 수정</button>`:''):''}
-    ${totalViewMode==='table'?(isLoggedIn?`<button class="pill" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
-    ${_showBulk&&totalViewMode==='table'?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
+      style="padding:6px 9px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:160px;max-width:260px;flex:0 1 220px;background:var(--white);color:var(--text)">
+        <button class="pill ${totalHideNoRecord?'on':''}" style="${totalHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
+        <button class="pill ${_liteMode?'on':''}" onclick="toggleTotalLiteMode()" title="${_liteMode?'상세 정보 보기':'빠른 표시 모드 켜기'}">${_liteMode?'📋 상세':'⚡ 빠른 보기'}</button>
+        <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode=(totalViewMode==='gallery'?'table':'gallery');_bulkEditMode=false;render()" title="${totalViewMode==='gallery'?'목록으로 돌아가기':'갤러리 뷰'}">${totalViewMode==='gallery'?'☷ 목록':'▦ 갤러리'}</button>
+        ${totalViewMode==='table'?(isLoggedIn?`<button class="pill ${_bulkEditMode?'on':''}" onclick="toggleBulkEditMode()" style="${_bulkEditMode?'background:#3b82f6;border-color:#3b82f6;color:#fff':''}">☑ 일괄 수정</button>`:''):''}
+        ${totalViewMode==='table'?(isLoggedIn?`<button class="pill" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
+      </div>
+    </div>
+    ${_showBulk&&totalViewMode==='table'?`<div style="display:flex;flex-direction:column;gap:6px;min-width:240px;padding:10px 11px;border:1px solid #dbeafe;border-radius:15px;background:#f8fbff;box-shadow:0 4px 14px rgba(37,99,235,.04)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div style="font-size:11px;font-weight:900;color:#1d4ed8">선택 모드</div>
+        <span style="font-size:11px;font-weight:800;color:#1d4ed8;background:#dbeafe;border:1px solid #bfdbfe;padding:4px 8px;border-radius:999px">${_bulkEditSelected.size}명 선택</span>
+      </div>
+      <div class="fbar utilbar utilbar--scroll" style="margin-bottom:0;flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+      <button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
       <button id="bulk-edit-apply-btn" onclick="openBulkEditModal()" style="padding:4px 12px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer;display:${_bulkEditSelected.size>0?'inline-flex':'none'};align-items:center;gap:4px">✏️ <span id="bulk-edit-cnt">${_bulkEditSelected.size}</span>명 수정</button>
       <input type="text" value="${(_bulkEditSearch||'').replace(/"/g,'&quot;')}" placeholder="선택 모드 내 검색..."
         oncompositionstart="window._tsComp2=true"
         oncompositionend="window._tsComp2=false;_bulkEditSearch=this.value;bulkApplySearchFilter()"
         oninput="_bulkEditSearch=this.value;if(!window._tsComp2)bulkApplySearchFilter()"
         autocomplete="off" spellcheck="false"
-        style="padding:5px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:170px;background:var(--white);color:var(--text)">`:''}
+        style="padding:5px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:170px;background:var(--white);color:var(--text)">
+      </div>
+    </div>`:''}
   </div>`;
 
-    let tableHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:fixed;width:100%"><colgroup>
+  const _preparedTotalData = _getPreparedTotalData();
+    const tableParts=[`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:fixed;width:100%" class="${_liteMode?'su-total-table-lite':''}"><colgroup>
+    ${_liteMode
+      ? `<col style="width:52px"><col style="width:78px"><col style="width:56px"><col style="width:220px"><col style="width:86px">${isLoggedIn?'<col style="width:54px">':''}`
+      : `
     ${_showBulk?'<col style="width:36px">':''}
     <col style="width:52px"><col style="width:80px"><col style="width:60px"><col style="width:220px"><col class="col-hide-mobile" style="width:50px">
     <col style="width:52px"><col style="width:52px">
     <col style="width:70px"><col style="width:80px"><col style="width:60px">
-    ${isLoggedIn?'<col style="width:70px">':''}
+    ${isLoggedIn?'<col style="width:70px">':''}`}
   </colgroup><thead><tr>
-    ${_showBulk?`<th style="text-align:center;padding:8px 4px"><input type="checkbox" id="bulk-check-all" onchange="bulkEditToggleAll(this.checked)" style="cursor:pointer"></th>`:''}
+    ${_liteMode
+      ? `<th style="text-align:center;white-space:nowrap;padding:8px 6px">순위</th>
+    <th style="text-align:center;white-space:nowrap;padding:8px 8px">티어</th>
+    <th style="text-align:center;white-space:nowrap;padding:8px 6px">종족</th>
+    <th style="text-align:left;padding:8px 10px">스트리머</th>
+    <th style="text-align:center;white-space:nowrap;padding:8px 8px">전적</th>
+    ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 6px">관리</th>':''}`
+      : `${_showBulk?`<th style="text-align:center;padding:8px 4px"><input type="checkbox" id="bulk-check-all" onchange="bulkEditToggleAll(this.checked)" style="cursor:pointer"></th>`:''}
     <th style="text-align:center;white-space:nowrap;padding:8px 6px">순위</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
@@ -142,128 +615,71 @@ function rTotal(C,T){
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">포인트</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">ELO</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">활동</th>
-    ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
-  </tr></thead><tbody>`;
+    ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}`}
+  </tr></thead>`];
 
   // 전체 순위 맵 (points 기준)
-  const _allRanked = [...players].filter(p=>!p.retired).sort((a,b)=>(b.points||0)-(a.points||0)||(b.win||0)-(a.win||0));
-  const _rankMap = {};
-  _allRanked.forEach((p,i) => { _rankMap[p.name] = i+1; });
+  const _rankData = _getTotalRankData();
+  const _rankMap = _rankData.rankMap;
+  const _getRowMeta = _buildPlayerRowMetaGetter(_rankMap);
+  // 랭킹 스냅샷은 첫 렌더 경로에서 추가 정렬을 돌리지 않고, 이미 계산한 결과를 재사용
+  try{
+    const today = new Date().toISOString().slice(0,10);
+    if(typeof _rankSnapDate!=='undefined' && _rankSnapDate !== today){
+      _rankSnapshot = {..._rankMap};
+      _rankSnapDate = today;
+      _queueRankSnapshotPersist(_rankSnapshot, today);
+    }
+  }catch(e){}
 
   // 갤러리 뷰 분기
   if(totalViewMode==='gallery'){
-    C.innerHTML=filterBar+_buildGalleryView(_rankMap);
-    injectUnivIcons(C);
-    requestAnimationFrame(()=>injectUnivIcons(C));
-    totalApplySearchFilter();
+    C.innerHTML=filterBar+_buildGalleryView(_rankMap, _getRowMeta);
+    if((totalSearch||'').trim()) totalApplySearchFilter();
     const si=C.querySelector('#total-search');
     if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
     return;
   }
 
-  let totalShown=0;
-  
-  // University section for StarCraft streamers (exclude general)
-  getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
-    const _isHiddenUniv=isLoggedIn&&u.hidden;
-    let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general');
-    if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
-    if(totalHideNoRecord) up=up.filter(p=>((p.win||0)+(p.loss||0))>0);
-    if(!up.length)return;
-    totalShown+=up.length;
-    const _univTotal=players.filter(p=>p.univ===u.name).length; // 은퇴 포함 전체 인원
-    tableHTML+=`<tr class="ugrp" data-univ-header="${u.name}" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${_ncols}">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-          <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','26px'):'26px'))}${u.name}</span>
-          ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
-          ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;font-weight:700">🚫 방문자 숨김</span>`:''}
-        </div>
-        <span style="font-size:11px;color:rgba(255,255,255,.8);white-space:nowrap;font-weight:600">${_univTotal}명</span>
-      </div>
-    </td></tr>`;
-    // 스트리머 탭: 항상 직책→티어→포인트 순 (현황판 수동 순서 무시)
-    const sorted = [...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
-    // 직책자와 일반 선수 분리
-    const _rolePl = sorted.filter(p=>p.role&&MAIN_ROLES.includes(p.role));
-    const _normalPl = sorted.filter(p=>!p.role||!MAIN_ROLES.includes(p.role));
-    const _displayList = _rolePl.length ? [..._rolePl, null, ..._normalPl] : _normalPl; // null = 구분자
-    let lt='';
-    let _inRoleSection = _rolePl.length > 0;
-    if(_inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}" style="background:${(u.color||'#6366f1')}22;color:${u.color||'#6366f1'}">👑 직책자 (${_rolePl.length}명)</td></tr>`;
-    _displayList.forEach(p=>{
-      if(p===null){
-        // 구분자 - 직책 섹션 끝, 일반 선수 시작
-        _inRoleSection=false; lt='';
-        if(_normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}">▷ 일반 스트리머 (${_normalPl.length}명)</td></tr>`;
-        return;
-      }
-      if(!_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';tableHTML+=`<tr class="tgrp"><td colspan="${_ncols}">▷ ${getTierLabel(p.tier||'미정')}</td></tr>`;}
-      const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):0;
-      const _pRank = _rankMap[p.name];
-      const _pChange = typeof getRankChangeBadge==='function' ? getRankChangeBadge(p.name, _pRank) : '';
-      const _pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      const _q = `${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
-      tableHTML+=`<tr data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
-        ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
-        <td style="text-align:center;white-space:nowrap;padding:5px 4px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);line-height:1.2">${_pRank||'-'}</div>
-          <div>${_pChange}</div>
-        </td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
-        <td style="text-align:left;padding:6px 12px;white-space:nowrap">
-          <span style="display:inline-flex;align-items:center;gap:8px">
-            ${p.photo?`<span onclick="openPlayerModal('${_pSafe}')" title="스트리머 상세" style="width:40px;height:40px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border);background:var(--border2);font-size:11px;font-weight:900;color:#64748b;position:relative;cursor:pointer">${p.race||'?'}<img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span style="display:inline-block;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
-            <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" onclick="openPlayerModal('${_pSafe}')">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
-          </span>
-        </td>
-        <td class="col-hide-mobile wt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.win}</td>
-        <td class="col-hide-mobile lt" style="text-align:center;white-space:nowrap;padding:7px 10px">${p.loss}</td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${(p.win+p.loss)===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
-          ${(p.win+p.loss)?wr+'%':'-'}${(p.win+p.loss)?`<br><span style="font-size:9px;color:var(--gray-l);font-weight:400">${p.win+p.loss}전</span>`:''}
-        </td>
-        <td class="col-hide-mobile ${pC(p.points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${pS(p.points)}</td>
-        <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:12px;color:${(p.elo||ELO_DEFAULT)>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${p.elo||ELO_DEFAULT}</td>
-        <td class="col-hide-mobile" style="text-align:center;padding:7px 4px">${(()=>{
-          const _today2=new Date().toISOString().slice(0,10);
-          const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
-          const _7ago2=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
-          const lastD=(p.history||[]).reduce((mx,h)=>h.date>mx?h.date:mx,'');
-          if(!lastD) return '<span style="font-size:9px;color:#9ca3af" title="전적 없음">-</span>';
-          if(lastD>=_7ago2) return `<span style="font-size:9px;font-weight:800;color:#16a34a" title="최근 활동 (7일 이내)">🟢</span>`;
-          if(lastD>=_30ago2) return `<span style="font-size:9px;font-weight:800;color:#f59e0b" title="활동 중 (30일 이내)">🟡</span>`;
-          return '<span style="font-size:9px;font-weight:800;color:#9ca3af" title="비활성 (30일 이상)">⚫</span>';
-        })()}</td>
-        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
-      </tr>`;
-    });
-  });
-  if(totalShown===0){
-    tableHTML+=`<tr><td colspan="${_ncols}"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어나 필터를 사용해보세요</div></div></td></tr>`;
+  if(_pendingInitialData && (!Array.isArray(players) || !players.length)){
+    C.innerHTML = filterBar + `<div class="empty-state"><div class="empty-state-icon">🔄</div><div class="empty-state-title">스트리머 데이터 불러오는 중</div><div class="empty-state-desc">초기 데이터를 적용하고 있습니다</div></div>`;
+    return;
   }
-  tableHTML+=`</tbody></table></div>`;
-
-  C.innerHTML = filterBar + tableHTML;
-  injectUnivIcons(C);
-  requestAnimationFrame(()=>injectUnivIcons(C));
-  totalApplySearchFilter();
-  bulkApplySearchFilter();
+  let hasRenderedAny = false;
+  const flushFilters = ()=>{
+    if((totalSearch||'').trim()) totalApplySearchFilter();
+    if(_bulkEditMode && (_bulkEditSearch||'').trim()) bulkApplySearchFilter();
+  };
+  const allParts = [];
+  for(const u of _preparedTotalData.visibleUnivs){
+    const _univPrepared = _getPreparedTotalUniv(_preparedTotalData, u.name);
+    if(!_univPrepared.list.length) continue;
+    hasRenderedAny = true;
+    allParts.push(_buildTotalUnivSectionHTML(u, _univPrepared, _rankMap, _getRowMeta, _ncols, _showBulk, _liteMode));
+  }
+  if(!hasRenderedAny){
+    allParts.push(`<tbody><tr><td colspan="${_ncols}"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어나 필터를 사용해보세요</div></div></td></tr></tbody>`);
+  }
+  C.innerHTML = filterBar + tableParts.join('') + allParts.join('') + `</table></div>`;
   const si=C.querySelector('#total-search');
   if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
+  flushFilters();
 }
 
-function _buildGalleryView(rankMap){
+function _buildGalleryView(rankMap, getRowMeta){
   const RACE_CLR={T:'#2563eb',Z:'#7c3aed',P:'#c2410c',N:'#64748b'};
+  if(window.__suInitialDataPending && (!Array.isArray(players) || !players.length)){
+    return `<div style="grid-column:1/-1"><div class="empty-state"><div class="empty-state-icon">🔄</div><div class="empty-state-title">스트리머 데이터 불러오는 중</div><div class="empty-state-desc">초기 데이터를 적용하고 있습니다</div></div></div>`;
+  }
+  const _preparedTotalData = _getPreparedTotalData();
   let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:4px 0">';
   let anyShown=false;
-  getAllUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
-    let up=players.filter(p=>p.univ===u.name&&p.gameType!=='general'&&!p.retired);
-    if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
-    if(totalHideNoRecord) up=up.filter(p=>((p.win||0)+(p.loss||0))>0);
+  _preparedTotalData.visibleUnivs.forEach(u=>{
+    const _galleryPrepared = _getPreparedGalleryUniv(_preparedTotalData, u.name);
+    const up = _galleryPrepared.list;
     if(!up.length) return;
     anyShown=true;
-    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    const sorted=_galleryPrepared.sorted;
     // 대학 헤더: 로고 배경이 대학색으로 보이도록(요청)
     html+=`<div data-gallery-univ-header="${u.name}" style="grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:10px 4px 4px;border-bottom:2px solid ${u.color||'#6366f1'};margin-top:6px">
       <span class="ubadge" data-icon-done="1" style="background:${u.color||'#6366f1'};display:inline-flex;align-items:center;gap:4px;font-size:12px">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','20px'):'20px'))}${u.name}</span>
@@ -272,29 +688,29 @@ function _buildGalleryView(rankMap){
     sorted.forEach(p=>{
       const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
       const clr=RACE_CLR[p.race]||'#64748b';
-      const _pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
-      const actDot=(()=>{
-        const lastD=(p.history||[]).reduce((mx,h)=>h.date>mx?h.date:mx,'');
-        if(!lastD) return '#9ca3af';
-        const _7ago=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
-        const _30ago=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
-        if(lastD>=_7ago) return '#16a34a';
-        if(lastD>=_30ago) return '#f59e0b';
-        return '#9ca3af';
-      })();
+      const _meta = typeof getRowMeta === 'function'
+        ? getRowMeta(p)
+        : {
+            safeName:(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"),
+            query:`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase(),
+            activityColor:'#9ca3af',
+            activityTitle:'비활성'
+          };
+      const _pSafe = _meta.safeName;
+      const q = _meta.query;
+      const actDot = _meta.activityColor;
       html+=`<div data-player-card="1" data-univ="${u.name}" data-q="${q.replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}"
         onclick="openPlayerModal('${_pSafe}')"
         style="position:relative;border-radius:14px;overflow:hidden;cursor:pointer;aspect-ratio:3/4;background:${clr}22;border:2px solid ${clr}44;transition:transform .15s,box-shadow .15s"
         onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 28px rgba(0,0,0,.22)'"
         onmouseleave="this.style.transform='';this.style.boxShadow=''">
         ${p.photo
-          ? `<img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
+          ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="low" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
           : ''}
         <div class="gc-placeholder" style="position:absolute;inset:0;display:${p.photo?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:${clr}15">${p.race||'?'}</div>
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 40%,rgba(0,0,0,.82) 100%)"></div>
         <div style="position:absolute;top:7px;left:8px;font-size:9px;font-weight:800;color:rgba(255,255,255,.7)">${rankMap[p.name]?'#'+rankMap[p.name]:''}</div>
-        <div style="position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:${actDot};box-shadow:0 0 4px ${actDot}" title="${actDot==='#16a34a'?'최근 활동 7일 이내':actDot==='#f59e0b'?'활동 중 30일 이내':'비활성'}"></div>
+        <div style="position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:${actDot};box-shadow:0 0 4px ${actDot}" title="${_meta.activityTitle}"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 8px 9px;text-align:left">
           <div style="font-size:12px;font-weight:800;color:#fff;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
           ${p.role?`<div style="font-size:9px;color:rgba(255,255,255,.7);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>`:''}

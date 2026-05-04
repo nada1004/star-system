@@ -26,18 +26,30 @@
     lastError: 'su_sync_last_error',
     lastRemoteMode: 'su_sync_last_remote_mode', // new|legacy|none
     lastMigrated: 'su_sync_last_migrated', // 1/0
+
+    // AI(프록시/API키) 설정
+    aiCfg: 'su_ai_cfg',
   };
 
   function cfg(){
     return {
       enabled: localStorage.getItem(LS.enabled) === '1',
-      token: (localStorage.getItem(LS.token) || '').trim(),
+      token: (typeof suGetSecret==='function' ? suGetSecret(LS.token) : (localStorage.getItem(LS.token) || '').trim()),
       gistId: (localStorage.getItem(LS.gistId) || '').trim(),
     };
   }
   function setCfg(p){
     if ('enabled' in p) localStorage.setItem(LS.enabled, p.enabled ? '1' : '0');
-    if ('token' in p) localStorage.setItem(LS.token, (p.token||'').trim());
+    if ('token' in p) {
+      const tok = (p.token||'').trim();
+      if(tok){
+        if(typeof suSetSecret==='function') suSetSecret(LS.token, tok);
+        else localStorage.setItem(LS.token, tok);
+      }else{
+        if(typeof suClearSecret==='function') suClearSecret(LS.token);
+        else localStorage.removeItem(LS.token);
+      }
+    }
     if ('gistId' in p) localStorage.setItem(LS.gistId, (p.gistId||'').trim());
   }
   function isAdmin(){
@@ -83,7 +95,15 @@
         updatedAt: null,
       }
     };
-    return { memo, ui };
+    // ai (proxy url, apiKey)
+    let ai = { proxyUrl: '', apiKey: '', updatedAt: null };
+    try{
+      const a = JSON.parse(localStorage.getItem(LS.aiCfg) || '{}');
+      ai.proxyUrl = String(a.proxyUrl || '');
+      ai.apiKey = ''; // 민감값은 원격 동기화에 포함하지 않음
+      ai.updatedAt = a.updatedAt || null;
+    }catch(e){}
+    return { memo, ui, ai };
   }
 
   function _applyLocalState(state){
@@ -104,6 +124,19 @@
         localStorage.setItem(LS.fabHidePC, fab.hidePC ? '1' : '0');
       }
     }catch(e){}
+
+    // ai
+    try{
+      if(state.ai && typeof state.ai === 'object'){
+        const cur = JSON.parse(localStorage.getItem(LS.aiCfg) || '{}');
+        const ai = {
+          proxyUrl: String(state.ai.proxyUrl || ''),
+          apiKey: String(cur.apiKey || ''),
+          updatedAt: state.ai.updatedAt || null,
+        };
+        localStorage.setItem(LS.aiCfg, JSON.stringify(ai));
+      }
+    }catch(e){}
   }
 
   function _mergeByUpdatedAt(localState, remoteState){
@@ -119,7 +152,42 @@
       out.ui = out.ui || {};
       out.ui.fab = remoteState.ui.fab;
     }
+
+    const lAiT = new Date((localState && localState.ai && localState.ai.updatedAt) || 0).getTime();
+    const rAiT = new Date((remoteState && remoteState.ai && remoteState.ai.updatedAt) || 0).getTime();
+    if (rAiT >= lAiT && remoteState && remoteState.ai) out.ai = remoteState.ai;
     return out;
+  }
+
+  // ── AI 설정 API ────────────────────────────────────────────────
+  function getAiCfg(){
+    try{
+      const a = JSON.parse(localStorage.getItem(LS.aiCfg) || '{}');
+      const rawApiKey = String(a.apiKey || '');
+      if(rawApiKey && typeof suEncryptSecretValue==='function' && !rawApiKey.startsWith('__suenc_v1__:')){
+        a.apiKey = suEncryptSecretValue(rawApiKey);
+        try{ localStorage.setItem(LS.aiCfg, JSON.stringify(a)); }catch(_){}
+      }
+      return {
+        proxyUrl: String(a.proxyUrl || ''),
+        apiKey: (typeof suDecryptSecretValue==='function' ? suDecryptSecretValue(a.apiKey || rawApiKey) : rawApiKey),
+        updatedAt: a.updatedAt || null
+      };
+    }catch(e){
+      return { proxyUrl:'', apiKey:'', updatedAt:null };
+    }
+  }
+  function setAiCfg(p){
+    const cur = getAiCfg();
+    const next = {
+      proxyUrl: ('proxyUrl' in p) ? String(p.proxyUrl||'') : cur.proxyUrl,
+      apiKey: ('apiKey' in p)
+        ? (String(p.apiKey||'') ? (typeof suEncryptSecretValue==='function' ? suEncryptSecretValue(String(p.apiKey||'')) : String(p.apiKey||'')) : '')
+        : (()=>{ try{ const raw = JSON.parse(localStorage.getItem(LS.aiCfg)||'{}'); return String(raw.apiKey||''); }catch(e){ return ''; } })(),
+      updatedAt: new Date().toISOString(),
+    };
+    try{ localStorage.setItem(LS.aiCfg, JSON.stringify(next)); }catch(e){}
+    return next;
   }
 
   function _markSync(ok, mode, migrated){
@@ -268,6 +336,7 @@
       const remoteInfo = await _getRemoteStateWithMigrationDecision();
       const remote = remoteInfo.state;
       if (!remote) { _markSync(null, 'none', false); return false; }
+
       const local = _loadLocalState();
       const merged = _mergeByUpdatedAt(local, remote);
       _applyLocalState(merged);
@@ -310,9 +379,11 @@
     const local = _loadLocalState();
     if (section === 'memo') local.memo.updatedAt = new Date().toISOString();
     if (section === 'ui.fab') { local.ui.fab.updatedAt = new Date().toISOString(); }
+    if (section === 'ai') { local.ai = local.ai || {}; local.ai.updatedAt = new Date().toISOString(); }
     if (!section) {
       local.memo.updatedAt = local.memo.updatedAt || new Date().toISOString();
       local.ui.fab.updatedAt = local.ui.fab.updatedAt || new Date().toISOString();
+      if (local.ai) local.ai.updatedAt = local.ai.updatedAt || new Date().toISOString();
     }
     let remoteState = null;
     let mode = 'none';
@@ -361,6 +432,8 @@
     getSyncStatus,
     getMemo, setMemo,
     getFab, setFab,
+    // ai
+    getAiCfg, setAiCfg,
     FILE
   };
 })();

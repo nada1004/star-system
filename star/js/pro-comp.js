@@ -315,24 +315,24 @@ function proCompLeague(tn) {
     <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">🏆 ${tn.name} <span style="font-size:12px;color:var(--gray-l);font-weight:800">(조별리그)</span></div>
   </div>`;
   if (isLoggedIn && grpList.length) {
-    h += `<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;align-items:center">
-      <span style="font-size:11px;font-weight:700;color:var(--gray-l)">경기 추가:</span>`;
+    h += `<div class="no-export grp-univ-action-row" style="margin-bottom:6px">
+      <span class="grp-univ-action-label">경기 추가:</span>`;
     grpList.forEach(({grp, gi}, idx) => {
       const gl = 'ABCDEFGHIJ'[idx] || idx;
       const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][idx%6];
       const nm = (grp.name||'').trim();
       const lbl = nm || `${gl}조`;
-      h += `<button class="btn btn-xs" style="background:${col};color:#fff;border-color:${col}" onclick="proCompAddMatch('${tn.id}',${gi})">+ ${lbl}</button>`;
+      h += `<button class="btn btn-xs grp-univ-action-btn" style="background:${col};color:#fff;border-color:${col}" onclick="proCompAddMatch('${tn.id}',${gi})">+ ${lbl}</button>`;
     });
     h += `</div>`;
-    h += `<div class="no-export" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
-      <span style="font-size:11px;font-weight:700;color:var(--gray-l)">결과 붙여넣기:</span>`;
+    h += `<div class="no-export grp-univ-action-row" style="margin-bottom:12px">
+      <span class="grp-univ-action-label">결과 붙여넣기:</span>`;
     grpList.forEach(({grp, gi}, idx) => {
       const gl = 'ABCDEFGHIJ'[idx] || idx;
       const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][idx%6];
       const nm = (grp.name||'').trim();
       const lbl = nm || `${gl}조`;
-      h += `<button class="btn btn-sm" style="border-color:${col};color:${col}" onclick="proCompOpenPasteModal('${tn.id}',${gi})">📋 ${lbl}</button>`;
+      h += `<button class="btn btn-sm grp-univ-action-btn" style="border-color:${col};color:${col}" onclick="proCompOpenPasteModal('${tn.id}',${gi})">📋 ${lbl}</button>`;
     });
     h += `</div>`;
   }
@@ -4371,7 +4371,7 @@ function _openProCompLeagueShareCard(tnId, gi, mi) {
       winner: m.winner,
       games: [{playerA:m.a||'', playerB:m.b||'', winner:m.winner, map:m.map||''}]
     }],
-    _noUnivIcon: false, _usePlayerPhoto: true, _matchType: ''  // ?�수 ?�로???�진 + ?�???�상
+    _noUnivIcon: false, _usePlayerPhoto: true, _matchType: 'pro'  // 프로리그 일반 카드 스타일 사용
   };
   window._shareMatchObj = shareObj;
   window._shareMode = 'match';

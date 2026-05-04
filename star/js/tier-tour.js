@@ -674,6 +674,7 @@ function rTierTourTab(C, T){
   _migrateTierTourneys();
   T.innerText = '🎯 티어대회';
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
+  const _pendingInitialData = !!window.__suInitialDataPending;
   const tierTourneys = (tourneys||[]).filter(t=>t.type==='tier');
   // (보강) ttM 기록의 compName/n/t 값이 누락되거나 공백이 섞여도 현재 대회로 필터링되게
   const _eqComp = (m, compName)=>{
@@ -732,6 +733,10 @@ function rTierTourTab(C, T){
     ${_ttCurComp&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="grpRenameTierTourney()" title="대회명 수정">✏️ 이름수정</button>
     <button class="btn btn-r btn-xs" onclick="grpDelTierTourney()" title="현재 티어대회 삭제">🗑️ 삭제</button>`:''}
   </div>`;
+  if(_pendingInitialData && !tierTourneys.length && !(ttM||[]).length){
+    h+=`<div style="padding:60px 20px;text-align:center;color:var(--gray-l)">🔄 티어대회 기록 불러오는 중입니다...</div>`;
+    C.innerHTML=h; return;
+  }
   if(!_allCompNames.length){
     h+=`<div style="padding:60px 20px;text-align:center;color:var(--gray-l)">생성된 티어대회가 없습니다.</div>`;
     C.innerHTML=h; return;
@@ -1517,40 +1522,20 @@ function rTierTourCfg(C,T){
     </div>
   </div>
   <div class="ssec">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <h4 style="margin:0">☁️ Firebase 실시간 동기화</h4>
-      <button id="cfg-fb-toggle" class="btn btn-w btn-xs" onclick="(function(){const c=document.getElementById('cfg-fb-body');const btn=document.getElementById('cfg-fb-toggle');if(c.style.display==='none'){c.style.display='';btn.textContent='▲ 접기';}else{c.style.display='none';btn.textContent='▼ 펼치기';}})()">▼ 펼치기</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+      <h4 style="margin:0">☁️ 동기화 관리</h4>
+      <button class="btn btn-w btn-xs" onclick="openUnifiedSyncSettings()">설정탭에서 열기 ↗</button>
     </div>
-    <div id="cfg-fb-body" style="display:none">
-    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 Firebase에 자동으로 업로드됩니다. 다른 기기에서도 실시간으로 반영됩니다.</p>
-    <div id="cfg-fb-sync-panel" style="margin-bottom:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;font-weight:700;color:var(--blue)">🔄 동기화 상태</span>
-        <button class="btn btn-w btn-xs" onclick="checkFbSyncStatus()">🔍 지금 확인</button>
+    <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:6px">동기화 설정은 한 곳에서만 관리됩니다.</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
+        실제 데이터 원본은 GitHub에 저장되고, 보조 신호 채널은 다른 기기에 새 데이터 알림을 더 빠르게 전달합니다.<br>
+        비밀번호, 토큰, 누락 월 다시받기, 전체 다시 동기화는 설정탭 <b>☁️ GitHub 동기화</b> 섹션에서만 관리합니다.
       </div>
-      <div id="cfg-fb-sync-result" style="font-size:12px;color:var(--gray-l)">확인 버튼을 눌러 상태를 확인하세요.</div>
-    </div>
-    <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">Firebase 비밀번호</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">Firebase Security Rules에서 설정한 admin_pw 값을 입력하세요. 저장 시 이 비밀번호로 쓰기 인증됩니다.</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input type="password" id="cfg-fb-pw" placeholder="Firebase 비밀번호 입력..." style="width:220px" autocomplete="new-password">
-        <button class="btn btn-b" onclick="saveFbPw()">💾 저장</button>
-        <button class="btn btn-r btn-xs" onclick="clearFbPw()">지우기</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-b btn-sm" onclick="openUnifiedSyncSettings()">☁️ 동기화 설정 열기</button>
+        <button class="btn btn-w btn-sm" onclick="(async()=>{try{if(typeof window.fbForceSync==='function') await window.fbForceSync();}catch(e){console.error(e);}})()">🔄 지금 동기화</button>
       </div>
-      <div id="fb-pw-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_fb_pw')?'✅ 비밀번호 설정됨':'미설정'}</div>
-    </div>
-    <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:8px">GitHub 토큰 (관람자 수천 명 무료 지원)</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:6px">설정 시: 저장할 때 GitHub data.json도 자동 업로드 → 관람자들이 GitHub CDN에서 데이터를 받아 Firebase 동시접속 100명 제한 없이 수천 명도 무료로 지원됩니다.</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">GitHub → Settings → Developer settings → Personal access tokens → Fine-grained token → Contents: Read and Write 권한 발급</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input type="password" id="cfg-gh-token" placeholder="ghp_xxxxxxxxxxxx" style="width:260px" autocomplete="new-password">
-        <button class="btn btn-b" onclick="saveGhToken()">💾 저장</button>
-        <button class="btn btn-r btn-xs" onclick="clearGhToken()">지우기</button>
-      </div>
-      <div id="gh-token-status" style="font-size:12px;margin-top:8px;min-height:16px;color:var(--gray-l)">${localStorage.getItem('su_gh_token')?'✅ 토큰 설정됨 (저장 시 GitHub 자동 업로드 활성)':'미설정 (관람자는 Firebase 사용 중)'}</div>
-    </div>
     </div>
   </div>
   ${_cfgD('season','🏆 시즌 관리','id="cfg-season-sec"')}
@@ -1828,6 +1813,7 @@ function rTierTourCfg(C,T){
   </details>
   ${_cfgD('imgmodalsettings','🖼️ 스트리머 상세 이미지 설정')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머 상세 모달의 이미지 크기·밝기를 설정합니다.</div>
+    <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">모바일/태블릿/PC 크기를 따로 저장합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:600">
         <input type="checkbox" id="cfg-img-fill" style="width:14px;height:14px"> 이미지 채우기 (cover) — 해제 시 맞춤 (contain)
@@ -1850,21 +1836,25 @@ function rTierTourCfg(C,T){
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <label style="font-size:12px;font-weight:700;color:var(--text2)">좌측(모바일) 크기</label>
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">모바일 크기</label>
           <span id="cfg-img-scale-left-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
         </div>
         <input type="range" id="cfg-img-scale-left" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-left-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <label style="font-size:12px;font-weight:700;color:var(--text2)">우측(PC) 크기</label>
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">태블릿 크기</label>
+          <span id="cfg-img-scale-tablet-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
+        </div>
+        <input type="range" id="cfg-img-scale-tablet" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-tablet-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <label style="font-size:12px;font-weight:700;color:var(--text2)">PC 크기</label>
           <span id="cfg-img-scale-right-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
         </div>
         <input type="range" id="cfg-img-scale-right" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-right-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
       </div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:600">
-        <input type="checkbox" id="cfg-img-use-right-scale" style="width:14px;height:14px"> 좌우 개별 크기 사용
-      </label>
       <button class="btn btn-b" onclick="saveImageSettings()" style="align-self:flex-start">💾 설정 저장</button>
     </div>
   </details>
@@ -2032,13 +2022,15 @@ function rTierTourCfg(C,T){
       `;
     }
     // 스트리머 상세 이미지 설정 초기화
-    const imgSettings=JSON.parse(localStorage.getItem('su_img_settings')||'{}');
+    const imgSettings = (typeof suReadImgSettings==='function')
+      ? suReadImgSettings()
+      : (JSON.parse(localStorage.getItem('su_img_settings')||'{}'));
     if(document.getElementById('cfg-img-fill'))document.getElementById('cfg-img-fill').checked=imgSettings.fill||false;
     if(document.getElementById('cfg-img-scale')){document.getElementById('cfg-img-scale').value=imgSettings.scale||1;document.getElementById('cfg-img-scale-val').textContent=(imgSettings.scale||1).toFixed(1)+'x';}
     if(document.getElementById('cfg-img-brightness')){document.getElementById('cfg-img-brightness').value=imgSettings.brightness||1;document.getElementById('cfg-img-brightness-val').textContent=(imgSettings.brightness||1).toFixed(1)+'x';}
-    if(document.getElementById('cfg-img-scale-left')){document.getElementById('cfg-img-scale-left').value=imgSettings.scaleLeft||1;document.getElementById('cfg-img-scale-left-val').textContent=(imgSettings.scaleLeft||1).toFixed(1)+'x';}
-    if(document.getElementById('cfg-img-scale-right')){document.getElementById('cfg-img-scale-right').value=imgSettings.scaleRight||1;document.getElementById('cfg-img-scale-right-val').textContent=(imgSettings.scaleRight||1).toFixed(1)+'x';}
-    if(document.getElementById('cfg-img-use-right-scale'))document.getElementById('cfg-img-use-right-scale').checked=imgSettings.useRightScale||false;
+    if(document.getElementById('cfg-img-scale-left')){document.getElementById('cfg-img-scale-left').value=imgSettings.scaleMb||1;document.getElementById('cfg-img-scale-left-val').textContent=(imgSettings.scaleMb||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-scale-tablet')){document.getElementById('cfg-img-scale-tablet').value=imgSettings.scaleTb||1;document.getElementById('cfg-img-scale-tablet-val').textContent=(imgSettings.scaleTb||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-scale-right')){document.getElementById('cfg-img-scale-right').value=imgSettings.scalePc||1;document.getElementById('cfg-img-scale-right-val').textContent=(imgSettings.scalePc||1).toFixed(1)+'x';}
     if(document.getElementById('cfg-img-random'))document.getElementById('cfg-img-random').checked=imgSettings.randomRotation||false;
     if(document.getElementById('cfg-img-interval'))document.getElementById('cfg-img-interval').value=imgSettings.interval||5;
     // 구현황판 밝기 설정 초기화
@@ -2054,314 +2046,18 @@ function rTierTourCfg(C,T){
     const autoResizeEl=document.getElementById('cfg-b2-auto-resize');
     if(autoResizeEl)autoResizeEl.addEventListener('change',saveB2LayoutSettings);
     // 스트리머 상세 이미지 설정 자동 저장 이벤트 리스너
-    ['cfg-img-fill','cfg-img-scale','cfg-img-brightness','cfg-img-scale-left','cfg-img-scale-right','cfg-img-random','cfg-img-interval'].forEach(id=>{
+    ['cfg-img-fill','cfg-img-scale','cfg-img-brightness','cfg-img-scale-left','cfg-img-scale-tablet','cfg-img-scale-right','cfg-img-random','cfg-img-interval'].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener('change',saveImageSettings);
     });
   },50);
   C.innerHTML=h;
   setTimeout(_refreshAliasList, 10);
-  // FAB 탭 설정 초기화
-  window.saveFabTabSetting = function(btnKey, tabId){
-    const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
-    settings[btnKey]=tabId;
-    localStorage.setItem('su_fabTabs',JSON.stringify(settings));
-    if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
-    // Firebase에 설정 동기화
-    if(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn) save();
-  };
-  window.initFabTabSettings = function(){
-    const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
-    const defaults={cal:'cal',comp:'comp',univm:'univm',ind:'ind',pro:'pro'};
-    Object.keys(defaults).forEach(key=>{
-      const el=document.getElementById('cfg-fab-'+key);
-      if(el){
-        el.value=settings[key]||defaults[key];
-      }
-    });
-    if(typeof updateFabButtonOnclick==='function')updateFabButtonOnclick();
-  };
-  window.saveFabVisibilitySettings = function(){
-    const hideMobile = document.getElementById('cfg-fab-hide-mobile')?.checked;
-    const hidePC = document.getElementById('cfg-fab-hide-pc')?.checked;
-    localStorage.setItem('su_fabHideMobile', hideMobile ? '1' : '0');
-    localStorage.setItem('su_fabHidePC', hidePC ? '1' : '0');
-    if(typeof updateFabVisibility==='function')updateFabVisibility();
-    if(typeof save==='function')save();
-  };
-  window.initFabVisibilitySettings = function(){
-    const hideMobile = localStorage.getItem('su_fabHideMobile') === '1';
-    const hidePC = localStorage.getItem('su_fabHidePC') === '1';
-    if(document.getElementById('cfg-fab-hide-mobile'))document.getElementById('cfg-fab-hide-mobile').checked = hideMobile;
-    if(document.getElementById('cfg-fab-hide-pc'))document.getElementById('cfg-fab-hide-pc').checked = hidePC;
-  };
-  setTimeout(function(){window.initFabTabSettings();window.initFabVisibilitySettings();}, 50);
+  setTimeout(function(){
+    try{ if(typeof window.initFabTabSettings==='function') window.initFabTabSettings(); }catch(e){}
+    try{ if(typeof window.initFabVisibilitySettings==='function') window.initFabVisibilitySettings(); }catch(e){}
+  }, 50);
 } // end first rCfg
-
-function renderStorageInfo(){
-  const el=document.getElementById('cfg-storage-info');
-  if(!el)return;
-  try{
-    let total=0;const rows=[];
-    for(let i=0;i<localStorage.length;i++){
-      const k=localStorage.key(i);const v=localStorage.getItem(k)||'';
-      const bytes=(k.length+v.length)*2;total+=bytes;
-      if(k.startsWith('su_'))rows.push({k,bytes});
-    }
-    rows.sort((a,b)=>b.bytes-a.bytes);
-    const limit=5*1024*1024;
-    const pct=Math.min(100,Math.round(total/limit*100));
-    const barCol=pct>=90?'#dc2626':pct>=70?'#f59e0b':'#22c55e';
-    const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
-    const LABELS={'su_p':'선수 데이터','su_pp':'선수 사진','su_mm':'미니대전','su_um':'대학대전','su_ck':'대학CK','su_pro':'프로리그','su_cm':'대회','su_tn':'토너먼트','su_mb':'회원관리','su_notices':'공지','su_psi':'상태아이콘'};
-    el.innerHTML=`
-    <div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
-        <span style="font-weight:700;color:var(--text)">${fmt(total)} / 5MB 사용</span>
-        <span style="font-weight:700;color:${barCol}">${pct}%</span>
-      </div>
-      <div style="height:10px;border-radius:5px;background:var(--border2);overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:${barCol};border-radius:5px;transition:.3s"></div>
-      </div>
-      ${pct>=70?`<div style="font-size:11px;color:${barCol};margin-top:5px;font-weight:600">${pct>=90?'⚠️ 저장 공간이 거의 가득 찼습니다! 데이터를 정리해 주세요.':'⚠️ 저장 공간이 많이 사용되고 있습니다.'}</div>`:''}
-    </div>
-    <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">항목별 사용량 (상위 10개)</div>
-    <div style="font-size:11px;line-height:1.8">
-      ${rows.slice(0,10).map(({k,bytes})=>{
-        const label=LABELS[k]||k;
-        const bpct=Math.min(100,Math.round(bytes/limit*100));
-        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-          <span style="min-width:100px;color:var(--text2)">${label}</span>
-          <div style="flex:1;height:6px;border-radius:3px;background:var(--border2);overflow:hidden"><div style="height:100%;width:${bpct}%;background:#60a5fa;border-radius:3px"></div></div>
-          <span style="min-width:55px;text-align:right;color:var(--gray-l)">${fmt(bytes)}</span>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
-}
-
-// ── 이미지탭 레이아웃 저장 함수 ──
-function saveB2LayoutSettings(){
-  const settings = {
-    autoResize: document.getElementById('cfg-b2-auto-resize')?.checked !== false,
-    leftSize: parseInt(document.getElementById('cfg-b2-left-size')?.value) || 55,
-    rightSize: parseInt(document.getElementById('cfg-b2-right-size')?.value) || 45,
-    pcHeight: parseInt(document.getElementById('cfg-b2-pc-height')?.value) || 600,
-    mobileHeight: parseInt(document.getElementById('cfg-b2-mobile-height')?.value) || 320,
-    tabletHeight: parseInt(document.getElementById('cfg-b2-tablet-height')?.value) || 400
-  };
-  localStorage.setItem('su_b2_layout', JSON.stringify(settings));
-  if(typeof save==='function')save();
-  alert('이미지탭 레이아웃이 저장되었습니다.');
-  if(typeof render === 'function') render();
-  // board2 탭이 열려있으면 다시 렌더링
-  if(typeof _b2View !== 'undefined' && document.getElementById('b2-content')) {
-    document.getElementById('b2-content').innerHTML = _b2PlayersView();
-    if(_b2SelectedPlayer) _b2UpdateMainDisplay(_b2SelectedPlayer.name);
-  }
-}
-
-// ── 구현황판 밝기 저장 함수 ──
-function saveOldDashboardBrightness(){
-  const labelAlpha = parseInt(document.getElementById('cfg-b2-label-alpha')?.value) || 16;
-  const bgAlpha = parseInt(document.getElementById('cfg-b2-bg-alpha')?.value) || 9;
-  localStorage.setItem('su_b2la', labelAlpha);
-  localStorage.setItem('su_b2ba', bgAlpha);
-  if(typeof save==='function')save();
-  alert('구현황판 밝기 설정이 저장되었습니다.');
-  if(typeof render === 'function') render();
-}
-
-// ── 이미지 설정 저장 함수 ──
-function saveImageSettings(){
-  const settings = {
-    fill: document.getElementById('cfg-img-fill')?.checked || false,
-    scale: parseFloat(document.getElementById('cfg-img-scale')?.value) || 1,
-    brightness: parseFloat(document.getElementById('cfg-img-brightness')?.value) || 1,
-    scaleLeft: parseFloat(document.getElementById('cfg-img-scale-left')?.value) || 1,
-    scaleRight: parseFloat(document.getElementById('cfg-img-scale-right')?.value) || 1,
-    useRightScale: document.getElementById('cfg-img-use-right-scale')?.checked || false,
-    randomRotation: document.getElementById('cfg-img-random')?.checked || false,
-    interval: parseInt(document.getElementById('cfg-img-interval')?.value) || 5
-  };
-  localStorage.setItem('su_img_settings', JSON.stringify(settings));
-  
-  // 이미지탭(board2)과 동기화를 위한 저장
-  const b2Settings = {
-    primary: {
-      fill: settings.fill ? 'contain' : 'cover',
-      scale: settings.scale * 100,
-      brightness: settings.brightness * 100,
-      offsetX: 0,
-      offsetY: 0,
-      zoom: settings.scale * 100,
-      posX: 0,
-      posY: 0
-    },
-    secondary: {
-      fill: settings.fill ? 'contain' : 'cover',
-      scale: settings.scale * 100,
-      brightness: settings.brightness * 100,
-      offsetX: 0,
-      offsetY: 0,
-      zoom: settings.scale * 100,
-      posX: 0,
-      posY: 0
-    }
-  };
-  localStorage.setItem('su_b2_global_img_settings', JSON.stringify(b2Settings));
-  
-  if(typeof save==='function')save();
-  alert('이미지 설정이 저장되었습니다.');
-  if(typeof render === 'function') render();
-}
-
-// ── 우클릭 이미지 조절 메뉴 ──
-// settings.js에서도 동일한 전역 식별자(_imgContextMenuEl)를 사용하고 있어
-// 중복 선언 시 tier-tour.js 전체가 SyntaxError로 로드 실패함.
-// 티어대회 전용으로 별도 변수명을 사용한다.
-let _ttImgContextMenuEl = null;
-let _ttCurrentImageTarget = null;
-
-function showImageContextMenu(e, imgElement){
-  e.preventDefault();
-  _ttCurrentImageTarget = imgElement;
-  
-  // 기존 메뉴 제거
-  if(_ttImgContextMenuEl){
-    _ttImgContextMenuEl.remove();
-  }
-  
-  const menu = document.createElement('div');
-  menu.style.cssText = `
-    position: fixed;
-    left: ${e.clientX}px;
-    top: ${e.clientY}px;
-    background: var(--white);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 8px 0;
-    min-width: 180px;
-    z-index: 10000;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  `;
-  
-  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  const currentScale = imgElement.dataset.scale || imgSettings.scale || 1;
-  const currentBrightness = imgElement.dataset.brightness || imgSettings.brightness || 1;
-  
-  menu.innerHTML = `
-    <div style="padding: 8px 16px; font-size: 12px; font-weight: 700; color: var(--text2); border-bottom: 1px solid var(--border);">
-      🖼️ 이미지 조절
-    </div>
-    <div style="padding: 8px 16px;">
-      <label style="font-size: 11px; font-weight: 600; color: var(--text3); display: block; margin-bottom: 4px;">크기: <span id="ctx-scale-val">${currentScale}x</span></label>
-      <input type="range" id="ctx-scale" min="0.5" max="3" step="0.1" value="${currentScale}" style="width: 100%;" oninput="document.getElementById('ctx-scale-val').textContent=this.value+'x'">
-    </div>
-    <div style="padding: 8px 16px;">
-      <label style="font-size: 11px; font-weight: 600; color: var(--text3); display: block; margin-bottom: 4px;">밝기: <span id="ctx-bright-val">${currentBrightness}x</span></label>
-      <input type="range" id="ctx-bright" min="0.3" max="2" step="0.1" value="${currentBrightness}" style="width: 100%;" oninput="document.getElementById('ctx-bright-val').textContent=this.value+'x'">
-    </div>
-    <div style="padding: 8px 16px; border-top: 1px solid var(--border);">
-      <button onclick="applyImageContextStyle()" style="width: 100%; padding: 6px 12px; background: var(--blue); color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor:pointer;">✅ 적용</button>
-    </div>
-  `;
-  
-  document.body.appendChild(menu);
-  _ttImgContextMenuEl = menu;
-  
-  // 메뉴 외부 클릭 시 닫기
-  setTimeout(()=>{
-    const closeMenu = (ev)=>{
-      if(!menu.contains(ev.target)){
-        menu.remove();
-        _ttImgContextMenuEl = null;
-        document.removeEventListener('click', closeMenu);
-      }
-    };
-    document.addEventListener('click', closeMenu);
-  }, 0);
-}
-
-function applyImageContextStyle(){
-  if(!_ttCurrentImageTarget) return;
-  
-  const scale = document.getElementById('ctx-scale')?.value || 1;
-  const brightness = document.getElementById('ctx-bright')?.value || 1;
-  
-  _ttCurrentImageTarget.style.transform = `scale(${scale})`;
-  _ttCurrentImageTarget.style.filter = `brightness(${brightness})`;
-  _ttCurrentImageTarget.dataset.scale = scale;
-  _ttCurrentImageTarget.dataset.brightness = brightness;
-  
-  if(_ttImgContextMenuEl){
-    _ttImgContextMenuEl.remove();
-    _ttImgContextMenuEl = null;
-  }
-}
-
-// ── 랜덤 이미지 회전 ──
-let _ttRandomRotationTimer = null;
-
-function startRandomRotation(){
-  stopRandomRotation();
-  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  if(!imgSettings.randomRotation) return;
-  
-  const interval = (imgSettings.interval || 5) * 1000;
-  
-  _ttRandomRotationTimer = setInterval(()=>{
-    rotateRandomImage();
-  }, interval);
-}
-
-function stopRandomRotation(){
-  if(_ttRandomRotationTimer){
-    clearInterval(_ttRandomRotationTimer);
-    _ttRandomRotationTimer = null;
-  }
-}
-
-function rotateRandomImage(){
-  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  if(!imgSettings.randomRotation) return;
-  
-  // 랜덤 스트리머 선택
-  if(players && players.length > 0){
-    const randomPlayer = players[Math.floor(Math.random() * players.length)];
-    
-    // 전체대학 보기
-    if(_ttCurrentTab === 'total'){
-      const imgContainer = document.querySelector('.random-image-container');
-      if(imgContainer && randomPlayer.photo){
-        imgContainer.src = toHttpsUrl(randomPlayer.photo);
-      }
-    }
-    
-    // 이미지탭(board2)
-    const b2MainImg = document.getElementById('b2-main-img-1');
-    if(b2MainImg && randomPlayer.photo && typeof _b2UpdateMainDisplay === 'function'){
-      _b2UpdateMainDisplay(randomPlayer.name);
-    }
-  }
-}
-
-// 현재 탭 추적 (settings.js에도 동일 식별자가 있어 충돌 방지)
-let _ttCurrentTab = 'total';
-
-// 탭 변경 시 회전 제어
-const _ttOriginalSw = window.sw;
-window.sw = function(tab, el){
-  _ttCurrentTab = tab;
-  if(_ttOriginalSw) _ttOriginalSw(tab, el);
-
-  const imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}');
-  if(imgSettings.randomRotation){
-    startRandomRotation();
-  } else {
-    stopRandomRotation();
-  }
-};
 
 /* ══════════════════════════════════════
    (버그픽스) 설정탭 버튼 누락 함수들
@@ -2500,7 +2196,10 @@ function _bulkSelected(keys, prefix, defaultChecked=true){
   });
 }
 function bulkChangeDate(){
-  if(!isLoggedIn) return;
+  // (QA 드라이런/호환) 일부 환경은 isLoggedIn이 top-level let 으로 선언되어 window.isLoggedIn과 분리됨
+  // - 드라이런은 window.isLoggedIn을 조작하므로 둘 다 허용
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li) return;
   const from=document.getElementById('bulk-date-from')?.value||'';
   const to=document.getElementById('bulk-date-to')?.value||'';
   if(!from||!to){ alert('변경 전/후 날짜를 입력하세요.'); return; }
@@ -2517,7 +2216,8 @@ function bulkChangeDate(){
   if(el){ el.textContent = changed?`✅ ${changed}건 변경 완료!`:'변경할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
 }
 function bulkChangeMap(){
-  if(!isLoggedIn){ alert('로그인이 필요합니다.'); return; }
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li){ alert('로그인이 필요합니다.'); return; }
   const from=(document.getElementById('bulk-map-from')?.value||'').trim();
   const to=(document.getElementById('bulk-map-to')?.value||'').trim();
   if(!from||!to){ alert('교체 전/후 맵 이름을 입력하세요.'); return; }
@@ -2567,7 +2267,8 @@ function bulkChangeMap(){
   if(el){ el.textContent = changed?`✅ ${changed}개 맵명 교체 완료!`:'교체할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
 }
 function bulkDeleteByDate(){
-  if(!isLoggedIn) return;
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li) return;
   const from=document.getElementById('bulk-del-from')?.value||'';
   const to=document.getElementById('bulk-del-to')?.value||'';
   if(!from||!to){ alert('시작/종료 날짜를 입력하세요.'); return; }
@@ -2624,7 +2325,8 @@ function deleteSeason(i){
 }
 
 function bulkChangeTier(){
-  if(!isLoggedIn) return;
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li) return;
   const fromTier=document.getElementById('bulk-tier-from')?.value||'';
   const toTier=document.getElementById('bulk-tier-to')?.value||'';
   const targetUniv=document.getElementById('bulk-tier-univ')?.value||'';
@@ -2646,7 +2348,8 @@ function bulkChangeTier(){
    경기 일괄 수정 함수들
 ══════════════════════════════════════ */
 function bulkConvertToGameScore(){
-  if(!isLoggedIn) return;
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li) return;
   const arrMap = {mini:miniM, univm:univM, ck:ckM, pro:proM, tt:ttM};
   const targets = ['mini','univm','ck','pro','tt'].filter(m=>document.getElementById('bulk-conv-chk-'+m)?.checked);
   if(!targets.length){ alert('대상을 선택하세요.'); return; }
@@ -4041,21 +3744,6 @@ window.openEP=function(name){
     </div>`;
   om('emModal');
 }
-// 스트리머 상세 모달 → 수정창 열기
-// emModal(z-index:5000) > playerModal(z-index:4000) 이므로 playerModal을 닫지 않고
-// 그 위에 emModal을 열기만 함 → cm/om 순서 경쟁조건 완전 제거
-function openEPFromModal(nameArg){
-  const name=nameArg||window._playerModalCurrentName;
-  if(!name){alert('선수 이름을 확인할 수 없습니다.');return;}
-  const p=players.find(x=>x.name===name);
-  if(!p){alert('선수 정보를 찾을 수 없습니다: '+name);return;}
-  try{
-    openEP(name);
-  }catch(e){
-    console.error('[openEP] 오류:',e);
-    alert('수정창 열기 실패: '+e.message);
-  }
-}
 function savePlayer(){
   try{
   const p=players.find(x=>x.name===editName);
@@ -4140,7 +3828,7 @@ function savePlayer(){
   const _photo=(document.getElementById('ed-photo')?.value||'').trim();
   if(_photo){
     if(_photo.startsWith('data:')){
-      alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 Firebase 동기화가 실패합니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
+      alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 동기화 저장이 실패할 수 있습니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
       return;
     }
     if(_photo.length>2000){
@@ -4626,95 +4314,6 @@ function confirmDissolve(){
   render();
   if(typeof renderBoard==='function') renderBoard();
 }
-function _refreshMapList(){
-  const listEl=document.getElementById('map-list');
-  if(!listEl){render();return;}
-  listEl.innerHTML=maps.map((m,i)=>`<div class="srow">
-    <span style="font-size:14px">📍</span>
-    <input type="text" value="${m}" style="flex:1" onblur="maps[${i}]=this.value;saveCfg();refreshSel()">
-    <button class="btn btn-r btn-xs" onclick="delMap(${i})">🗑️ 삭제</button>
-  </div>`).join('');
-  // datalist 업데이트
-  document.querySelectorAll('datalist[id^="alias"]').forEach(dl=>{
-    dl.innerHTML=maps.map(m=>`<option value="${m}">`).join('');
-  });
-  refreshSel();
-}
-function addMap(){
-  const inp=document.getElementById('nm');
-  const n=(inp?.value||'').trim();
-  if(!n)return;
-  maps.push(n);save();
-  if(inp)inp.value='';
-  _refreshMapList();
-}
-function delMap(i){maps.splice(i,1);save();_refreshMapList();}
-
-function _refreshAliasList(){
-  const listEl = document.getElementById('alias-list');
-  if(!listEl) return;
-  const entries = Object.entries(userMapAlias);
-  if(entries.length === 0){
-    listEl.innerHTML = '<div style="font-size:12px;color:var(--gray-l);padding:8px 0">아직 추가된 약자가 없습니다.</div>';
-    return;
-  }
-  listEl.innerHTML = entries.filter(([k])=>!k.endsWith('__disabled')).map(([k,v])=>`
-    <div class="srow" style="flex-wrap:wrap">
-      <code style="background:var(--blue-ll);color:var(--blue);border-radius:5px;padding:2px 10px;font-size:13px;font-weight:700;min-width:44px;text-align:center">${k}</code>
-      <span style="color:var(--gray-l)">→</span>
-      <input type="text" value="${v}" id="alias-edit-${encodeURIComponent(k)}" list="alias-edit-list-${encodeURIComponent(k)}" autocomplete="off" style="flex:1;min-width:100px;padding:2px 6px;border:1px solid var(--border2);border-radius:5px;font-size:12px" onkeydown="if(event.key==='Enter')editMapAlias(decodeURIComponent('${encodeURIComponent(k)}'),this.value)">
-      <datalist id="alias-edit-list-${encodeURIComponent(k)}">${maps.map(m=>`<option value="${m}">`).join('')}</datalist>
-      <button class="btn btn-b btn-xs" onclick="editMapAlias(decodeURIComponent('${encodeURIComponent(k)}'),document.getElementById('alias-edit-${encodeURIComponent(k)}').value)">수정</button>
-      <button class="btn btn-r btn-xs" data-ak="${encodeURIComponent(k)}" onclick="if(confirm('약자 \''+decodeURIComponent('${encodeURIComponent(k)}')+'\'를 삭제할까요?'))delMapAlias(decodeURIComponent(this.getAttribute('data-ak')))">🗑️ 삭제</button>
-    </div>`).join('') || '<div style="font-size:12px;color:var(--gray-l);padding:8px 0">아직 추가된 약자가 없습니다.</div>';
-}
-
-function editMapAlias(key, newVal){
-  newVal=(newVal||'').trim();
-  if(!newVal){alert('맵 이름을 입력하세요.');return;}
-  if(key===newVal){alert('약자와 맵 이름이 같습니다.');return;}
-  userMapAlias[key]=newVal;
-  saveCfg();
-  _refreshAliasList();
-}
-
-function addMapAlias(){
-  const key = (document.getElementById('alias-key')?.value || '').trim();
-  const val = (document.getElementById('alias-val')?.value || '').trim();
-  const msg = document.getElementById('alias-msg');
-  if(!key){ if(msg){msg.style.color='var(--red)';msg.textContent='약자를 입력하세요.';} return; }
-  if(!val){ if(msg){msg.style.color='var(--red)';msg.textContent='맵을 선택하세요.';} return; }
-  if(key===val){ if(msg){msg.style.color='var(--red)';msg.textContent='약자와 맵 이름이 같습니다.';} return; }
-  if(PASTE_MAP_ALIAS_DEFAULT[key] && PASTE_MAP_ALIAS_DEFAULT[key]!==val){
-    if(!confirm(`'${key}'는 기본 내장 약자(${PASTE_MAP_ALIAS_DEFAULT[key]})입니다.\n'${val}'으로 덮어쓸까요?`)) return;
-  }
-  userMapAlias[key]=val;
-  saveCfg();
-  if(msg){msg.style.color='var(--green)';msg.textContent=`✅ '${key}' → '${val}' 추가됨`;}
-  document.getElementById('alias-key').value='';
-  document.getElementById('alias-val').value='';
-  _refreshAliasList(); // render() 대신 목록만 부분 업데이트
-}
-
-function delMapAlias(key){
-  delete userMapAlias[key];
-  saveCfg();
-  _refreshAliasList();
-}
-
-function restoreDefaultMapAlias(encK){
-  const k=decodeURIComponent(encK);
-  delete userMapAlias[k+'__disabled'];
-  saveCfg(); render();
-}
-
-function delDefaultMapAlias(encK, encV){
-  const k=decodeURIComponent(encK), v=decodeURIComponent(encV);
-  if(!confirm(`기본 약자 '${k}' → '${v}' 를 비활성화할까요?\n(사용자 정의로 덮어쓰거나, 복원하려면 직접 추가하세요)`)) return;
-  userMapAlias[k+'__disabled']='1';
-  saveCfg(); render();
-}
-
 function _renderCfgSiList(){
   const el=document.getElementById('cfg-si-list');
   if(!el)return;
@@ -4813,10 +4412,11 @@ async function addAdminAccount(){
   const msg=document.getElementById('adm-msg');
   if(!id||!pw){msg.style.color='var(--red)';msg.textContent='아이디와 비밀번호를 모두 입력하세요.';return;}
   if(pw.length<4){msg.style.color='var(--red)';msg.textContent='비밀번호는 4자 이상이어야 합니다.';return;}
-  const h=await sha256(id+':'+pw);
   const accounts=getAdminAccounts();
-  if(accounts.some(a=>a.hash===h)){msg.style.color='var(--gold)';msg.textContent='이미 동일한 계정이 등록되어 있습니다.';return;}
-  accounts.push({hash:h,role,label:id});
+  for(const a of accounts){
+    if(await verifyAdminAccountPassword(a,id,pw)){msg.style.color='var(--gold)';msg.textContent='이미 동일한 계정이 등록되어 있습니다.';return;}
+  }
+  accounts.push(await createAdminAccountRecord(id,pw,role,id));
   localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(accounts));
   msg.style.color='var(--green)';
   const roleLabel=role==='sub-admin'?'부관리자':'관리자';
@@ -4828,23 +4428,48 @@ async function addAdminAccount(){
 
 async function clearAllAdmins(){
   if(!confirm('모든 관리자 계정을 초기화하고 기본 계정(admin99)으로 리셋하시겠습니까?\n이 작업은 되돌릴 수 없습니다.'))return;
-  const h=await sha256('admin99:99admin');
-  localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify([{hash:h,role:'admin',label:'admin99'}]));
+  const admin = await createAdminAccountRecord('admin99','99admin','admin','admin99');
+  localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify([admin]));
   alert('초기화 완료. 기본 계정(admin99 / 99admin)으로 로그인하세요.');
   doLogout();
 }
 
+function openUnifiedSyncSettings(){
+  try{
+    if(typeof sw==='function'){
+      const cfgBtn=document.querySelector('.tab.cfg') || [...document.querySelectorAll('.tab')].find(b=>String(b.getAttribute('onclick')||'').includes("'cfg'"));
+      sw('cfg', cfgBtn || document.querySelector('.tab.on') || document.querySelector('.tab'));
+    }
+  }catch(e){}
+  setTimeout(()=>{
+    try{
+      if(typeof cfgApplyCat==='function') cfgApplyCat('💾 데이터');
+    }catch(e){}
+    try{
+      if(typeof checkFbSyncStatus==='function') checkFbSyncStatus();
+    }catch(e){}
+    try{
+      const sec=document.getElementById('cfg-sec-firebase');
+      if(sec){
+        sec.open = true;
+        sec.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    }catch(e){}
+  }, 80);
+}
 function saveFbPw(){
   const pw = document.getElementById('cfg-fb-pw')?.value.trim();
   const statusEl = document.getElementById('fb-pw-status');
-  if (!pw) { if(statusEl) statusEl.textContent = '⚠️ 비밀번호를 입력하세요.'; return; }
-  localStorage.setItem('su_fb_pw', pw);
-  if (statusEl) statusEl.textContent = '✅ 비밀번호 저장됨';
+  if (!pw) { if(statusEl) statusEl.textContent = '⚠️ 보조 신호 비밀번호를 입력하세요.'; return; }
+  if(typeof suSetSecret==='function') suSetSecret('su_fb_pw', pw);
+  else localStorage.setItem('su_fb_pw', pw);
+  if (statusEl) statusEl.textContent = '✅ 보조 신호 비밀번호 저장됨';
   const input = document.getElementById('cfg-fb-pw');
   if (input) input.value = '';
 }
 function clearFbPw(){
-  localStorage.removeItem('su_fb_pw');
+  if(typeof suClearSecret==='function') suClearSecret('su_fb_pw');
+  else localStorage.removeItem('su_fb_pw');
   const statusEl = document.getElementById('fb-pw-status');
   if (statusEl) statusEl.textContent = '미설정';
 }
@@ -4852,81 +4477,17 @@ function saveGhToken(){
   const val = document.getElementById('cfg-gh-token')?.value.trim();
   const statusEl = document.getElementById('gh-token-status');
   if (!val) { if(statusEl) statusEl.textContent = '⚠️ 토큰을 입력하세요.'; return; }
-  localStorage.setItem('su_gh_token', val);
-  if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (저장 시 GitHub 자동 업로드 활성)';
+  if(typeof suSetSecret==='function') suSetSecret('su_gh_token', val);
+  else localStorage.setItem('su_gh_token', val);
+  if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (경기 기록 저장 시 자동 업로드 / 설정은 다음 기록 저장 때 반영)';
   const input = document.getElementById('cfg-gh-token');
   if(input) input.value = '';
 }
 function clearGhToken(){
-  localStorage.removeItem('su_gh_token');
+  if(typeof suClearSecret==='function') suClearSecret('su_gh_token');
+  else localStorage.removeItem('su_gh_token');
   const statusEl = document.getElementById('gh-token-status');
-  if(statusEl) statusEl.textContent = '미설정 (관람자는 Firebase 사용 중)';
-}
-
-// ─── 스트리머 상세 스타일 설정 ─────────────────────────────────────────────────
-function _renderCfgPdSection(){
-  const body=document.getElementById('cfg-pd-body');
-  if(!body) return;
-  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
-  const fs=s.font_size||'normal';
-  const cp=s.color_preset||'normal';
-  const st=s.stats_tint!==undefined?s.stats_tint:8;
-  const mt=s.mode_tint!==undefined?s.mode_tint:10;
-  const ps=s.profile_size!==undefined?s.profile_size:100;
-  const darken=s.univ_darken||{};
-  const univs=(typeof getAllUnivs==='function'?getAllUnivs():univCfg).filter(u=>u.name!=='무소속');
-  const fsBtns=['normal','large','xlarge'].map(f=>`<button class="btn btn-xs ${f===fs?'btn-b':'btn-w'}" onclick="_setPdFontSize('${f}')">${f==='normal'?'기본':f==='large'?'크게 (×1.12)':'더 크게 (×1.2)'}</button>`).join('');
-  const cpBtns=[['light','연하게'],['normal','기본'],['dark','진하게']].map(([k,l])=>`<button class="btn btn-xs ${cp===k?'btn-b':'btn-w'}" onclick="_setPdColorPreset('${k}')">${l}</button>`).join('');
-  const univRows=univs.map((u,i)=>{
-    const val=Math.round((darken[u.name]||0)*100);
-    const safe=u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <span style="width:14px;height:14px;border-radius:50%;background:${u.color};flex-shrink:0;border:1px solid rgba(0,0,0,.12)"></span>
-      <span style="font-size:12px;font-weight:600;color:var(--text2);min-width:72px;flex-shrink:0">${u.name}</span>
-      <input type="range" min="0" max="50" step="5" value="${val}" style="flex:1;accent-color:var(--blue)" oninput="_setPdUnivDarken('${safe}',this.value/100,${i})">
-      <span style="font-size:11px;color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="pd-dv-${i}">${val}%</span>
-    </div>`;
-  }).join('');
-  body.innerHTML=`
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 폰트 크기</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${fsBtns}</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">스트리머 상세 모달 전체 크기에 적용됩니다</div>
-    </div>
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🖼️ 프로필 이미지 크기</div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <input type="range" min="60" max="140" step="5" value="${ps}" style="flex:1;accent-color:var(--blue)" oninput="_setPdProfileSize(this.value);document.getElementById('pd-ps-val').textContent=this.value+'%'">
-        <span id="pd-ps-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${ps}%</span>
-      </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 크기 (기본 100%)</div>
-    </div>
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🎨 승패 색상 농도</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">${cpBtns}</div>
-      <div style="font-size:11px;color:var(--gray-l)">전적·승률·포인트·모드별 전적의 승/패/승률 색상 전체에 적용</div>
-    </div>
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📊 전적·승률 배경 색상 강도</div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <input type="range" min="0" max="30" step="2" value="${st}" style="flex:1;accent-color:var(--blue)" oninput="_setPdTint('stats',this.value);document.getElementById('pd-st-val').textContent=this.value+'%'">
-        <span id="pd-st-val" style="font-size:11px;color:var(--gray-l);min-width:28px;font-weight:700">${st}%</span>
-      </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">전적/승률/포인트/ELO 영역 배경 대학색 강도 (현재 ${st}%)</div>
-    </div>
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🃏 모드별 전적 배경 색상 강도</div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <input type="range" min="0" max="30" step="2" value="${mt}" style="flex:1;accent-color:var(--blue)" oninput="_setPdTint('mode',this.value);document.getElementById('pd-mt-val').textContent=this.value+'%'">
-        <span id="pd-mt-val" style="font-size:11px;color:var(--gray-l);min-width:28px;font-weight:700">${mt}%</span>
-      </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">모드별 전적 카드 배경 모드색 강도 (현재 ${mt}%)</div>
-    </div>
-    <div>
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">🌗 대학별 헤더 어둡기</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">밝은 색상 대학은 어둡게 조정하면 이름이 더 잘 보입니다</div>
-      ${univRows}
-    </div>`;
+  if(statusEl) statusEl.textContent = '미설정 (GitHub 업로드 비활성 / 보조 신호만 수신)';
 }
 
 function _setPdFontSize(size){

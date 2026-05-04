@@ -30,59 +30,133 @@ function closeNoticePopup(){
   }
   cm('noticePopupModal');
 }
+let _appErrorBannerEl = null;
+let _lastGlobalErrorMsg = '';
+let _lastGlobalErrorAt = 0;
+function _ensureAppErrorBanner(){
+  try{
+    if(_appErrorBannerEl && document.body.contains(_appErrorBannerEl)) return _appErrorBannerEl;
+    const el = document.createElement('div');
+    el.id = 'app-error-banner';
+    el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:99999;display:none;max-width:min(92vw,720px);width:max-content;background:#7f1d1d;color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 30px rgba(0,0,0,.24);border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.45;align-items:center;gap:10px';
+    const msg = document.createElement('div');
+    msg.id = 'app-error-banner-msg';
+    msg.style.cssText = 'font-weight:700;letter-spacing:-.2px';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = '닫기';
+    btn.style.cssText = 'border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0';
+    btn.onclick = ()=>{ try{ el.style.display='none'; }catch(e){} };
+    el.appendChild(msg);
+    el.appendChild(btn);
+    document.body.appendChild(el);
+    _appErrorBannerEl = el;
+    return el;
+  }catch(e){
+    return null;
+  }
+}
+window._showGlobalAppError = function(message, opts){
+  try{
+    const msg = String(message || '오류가 발생했습니다. 새로고침 후 다시 시도해주세요.');
+    const now = Date.now();
+    if(msg === _lastGlobalErrorMsg && (now - _lastGlobalErrorAt) < 2500) return;
+    _lastGlobalErrorMsg = msg;
+    _lastGlobalErrorAt = now;
+    const el = _ensureAppErrorBanner();
+    if(el){
+      const box = el.querySelector('#app-error-banner-msg');
+      if(box) box.textContent = msg;
+      el.style.display = 'flex';
+    }
+    try{ if(typeof showToast === 'function') showToast(msg, 3200); }catch(e){}
+    if(opts && opts.renderFallback){
+      const C = document.getElementById('rcont');
+      if(C && !String(C.innerHTML||'').trim()){
+        C.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <div class="empty-state-title">화면을 그리는 중 오류가 발생했습니다</div>
+            <div class="empty-state-desc">새로고침 후 다시 시도해주세요. 문제가 계속되면 최근 작업을 확인해주세요.</div>
+          </div>
+        `;
+      }
+    }
+  }catch(e){}
+};
+window.addEventListener('error', (event)=>{
+  try{
+    const message = (event && event.message) ? `오류가 발생했습니다: ${event.message}` : '오류가 발생했습니다. 새로고침 후 다시 시도해주세요.';
+    window._showGlobalAppError(message);
+  }catch(e){}
+});
+window.addEventListener('unhandledrejection', (event)=>{
+  try{
+    const reason = event && event.reason;
+    const detail = typeof reason === 'string'
+      ? reason
+      : (reason && reason.message) ? reason.message : '비동기 처리 중 오류가 발생했습니다.';
+    window._showGlobalAppError(`오류가 발생했습니다: ${detail}`);
+  }catch(e){}
+});
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 가로 "드래그 메뉴" 지원
 // - overflow-x:auto 인 메뉴 바를 마우스로 클릭-드래그 해서 스크롤 가능하게
-// - render() 이후 동적으로 생성되는 요소에도 적용됨 (render.js에서 호출)
+// - render() 이후 동적으로 생성되는 요소에도 적용됨 (render-core.js에서 호출)
 // ─────────────────────────────────────────────────────────────
 window.enableDragScroll = function(root){
-  const scope = root || document;
-  const bars = scope.querySelectorAll ? scope.querySelectorAll('.hist-inlinebar') : [];
-  bars.forEach(el=>{
-    if(el.dataset && el.dataset.dragScrollBound==='1') return;
-    if(el.dataset) el.dataset.dragScrollBound='1';
+  try{
+    const scope = root || document;
+    const bars = scope.querySelectorAll ? scope.querySelectorAll('.hist-inlinebar, .tabs, .fbar') : [];
+    bars.forEach(el=>{
+      if(el.dataset && el.dataset.dragScrollBound==='1') return;
+      if(el.dataset) el.dataset.dragScrollBound='1';
+      if(!el.classList.contains('hist-inlinebar')) el.style.cursor='grab';
 
-    let isDown=false, startX=0, startScroll=0, moved=false;
+      let isDown=false, startX=0, startScroll=0, moved=false;
 
-    const down = (e)=>{
-      // 마우스 좌클릭만(우클릭/휠클릭 제외)
-      if(e.pointerType==='mouse' && e.button!==0) return;
-      isDown=true;
-      moved=false;
-      startX=e.clientX;
-      startScroll=el.scrollLeft;
-      el.classList.add('dragging');
-      try{ el.setPointerCapture(e.pointerId); }catch(_){}
-    };
-    const move = (e)=>{
-      if(!isDown) return;
-      const dx = e.clientX - startX;
-      if(Math.abs(dx)>3) moved=true;
-      el.scrollLeft = startScroll - dx;
-      if(moved) e.preventDefault();
-    };
-    const up = (e)=>{
-      if(!isDown) return;
-      isDown=false;
-      el.classList.remove('dragging');
-      // 드래그로 스크롤한 경우 버튼 클릭 방지
-      el._dragMoved = moved;
-      setTimeout(()=>{ try{ el._dragMoved=false; }catch(_){} }, 0);
-      try{ el.releasePointerCapture(e.pointerId); }catch(_){}
-    };
+      const down = (e)=>{
+        const t = e.target;
+        if (t && (t.closest('button') || t.closest('input') || t.closest('select') || t.closest('textarea') || t.closest('a'))) return;
+        if(e.pointerType==='mouse' && e.button!==0) return;
+        isDown=true;
+        moved=false;
+        startX=e.clientX;
+        startScroll=el.scrollLeft;
+        if(!el.classList.contains('hist-inlinebar')) el.style.cursor='grabbing';
+        el.classList.add('dragging');
+        try{ el.setPointerCapture(e.pointerId); }catch(_){}
+      };
+      const move = (e)=>{
+        if(!isDown) return;
+        const dx = e.clientX - startX;
+        if(Math.abs(dx)>3) moved=true;
+        el.scrollLeft = startScroll - dx;
+        if(moved) e.preventDefault();
+      };
+      const up = (e)=>{
+        if(!isDown) return;
+        isDown=false;
+        el.classList.remove('dragging');
+        if(!el.classList.contains('hist-inlinebar')) el.style.cursor='grab';
+        el._dragMoved = moved;
+        setTimeout(()=>{ try{ el._dragMoved=false; }catch(_){} }, 0);
+        try{ el.releasePointerCapture(e.pointerId); }catch(_){}
+      };
 
-    el.addEventListener('pointerdown', down, {passive:true});
-    el.addEventListener('pointermove', move, {passive:false});
-    el.addEventListener('pointerup', up, {passive:true});
-    el.addEventListener('pointercancel', up, {passive:true});
-    el.addEventListener('click', (ev)=>{
-      if(el._dragMoved){
-        ev.preventDefault();
-        ev.stopPropagation();
-      }
-    }, true);
-  });
+      el.addEventListener('pointerdown', down, {passive:true});
+      el.addEventListener('pointermove', move, {passive:false});
+      el.addEventListener('pointerup', up, {passive:true});
+      el.addEventListener('pointercancel', up, {passive:true});
+      el.addEventListener('click', (ev)=>{
+        if(el._dragMoved){
+          ev.preventDefault();
+          ev.stopPropagation();
+        }
+      }, true);
+    });
+  }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -134,53 +208,317 @@ async function _seedTierTtM(){
   }
 }
 
-function init(){
-  fixPoints();
-  // 티어대회 기록(ttM) 시드가 있으면 로드(비동기) — 로컬 데이터가 비어 있을 때만
-  try{ _seedTierTtM(); }catch(e){}
-  // 전역 폰트 설정 적용
-  try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
-  // (요청사항) 버튼/필 스타일 설정 적용
-  try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
-  // 🎨 디자인 모드(리뉴얼) 적용
-  try{ if(typeof window.applyDesignV2 === 'function') window.applyDesignV2(); }catch(e){}
-  // ELO 미설정 선수에게 기본값 부여
-  if(typeof ELO_DEFAULT!=='undefined'){
-    players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
+// ─────────────────────────────────────────────────────────────
+// URL 기반 탭/서브탭 라우팅
+// ─────────────────────────────────────────────────────────────
+(function(){
+  if(window.__suUrlNavReady) return;
+  window.__suUrlNavReady = true;
+  const TABS = new Set(['total','board','board2','elboard','hist','mini','ind','gj','univm','univck','comp','tiertour','pro','stats','cal','roulette','vote','cfg']);
+  function _safeDec(v){ try{ return decodeURIComponent(String(v||'')); }catch(e){ return String(v||''); } }
+  function _subForTab(tab){
+    switch(String(tab||'')){
+      case 'hist': return String(histSub||'mini');
+      case 'stats': return String((window.statsSub||statsSub||'overview'));
+      case 'comp': return String(compSub||'league');
+      case 'mini': return String(miniSub||'input');
+      case 'ind': return String(indSub||'input');
+      case 'gj': return String(gjSub||'input');
+      case 'univm': return String(univmSub||'input');
+      case 'univck': return String(ckSub||'input');
+      case 'tiertour': return String((typeof _ttSub!=='undefined' && _ttSub) || 'records');
+      default: return '';
+    }
   }
-  // 대회(tourneys) 기록 자동 소급 반영 (미반영분만, 중복 방지 내장)
-  if(typeof syncTourneyHistory==='function') syncTourneyHistory();
-  // 티어대회 데이터 마이그레이션 (조별리그/브라켓 기록 → ttM 동기화)
-  if(typeof _migrateTierTourneys==='function') _migrateTierTourneys();
-  // 티어대전 → 티어대회 명칭 마이그레이션
-  if(typeof _migrateTierTourName==='function') _migrateTierTourName();
-  // 연도 필터는 getYearOptions()가 렌더링 시 동적으로 계산하므로 별도 추출 불필요
-  const ptier=document.getElementById('p-tier');
-  if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
-  try{refreshSel();}catch(e){}
-  initLoginHash();
-  applyLoginState();
-  render();
-  // 🎵 BGM 버튼 초기화
-  try{ if(typeof window.initBgm==='function') window.initBgm(); }catch(e){}
-  // 📺 SOOP 멀티뷰 버튼 초기화
-  try{ if(typeof window.initSoopMulti==='function') window.initSoopMulti(); }catch(e){}
+  function _setSubForTab(tab, sub){
+    const v = String(sub||'').trim();
+    if(!v) return;
+    switch(String(tab||'')){
+      case 'hist': histSub = v; break;
+      case 'stats':
+        if(typeof window.statsSub!=='undefined') window.statsSub = v;
+        try{ statsSub = v; }catch(e){}
+        try{ localStorage.setItem('su_statsSub', v); }catch(e){}
+        break;
+      case 'comp': compSub = v; break;
+      case 'mini': miniSub = v; break;
+      case 'ind': indSub = v; break;
+      case 'gj': gjSub = v; break;
+      case 'univm': univmSub = v; break;
+      case 'univck': ckSub = v; break;
+      case 'tiertour': try{ _ttSub = v; }catch(e){} break;
+    }
+  }
+  window.__suBuildNavUrl = function(){
+    const params = new URLSearchParams(window.location.search || '');
+    const tab = String((typeof curTab!=='undefined' && curTab) || 'total');
+    if(tab && tab!=='total') params.set('tab', tab); else params.delete('tab');
+    const sub = _subForTab(tab);
+    if(sub) params.set('sub', sub); else params.delete('sub');
+    if(tab==='comp' && typeof curComp!=='undefined' && String(curComp||'').trim()) params.set('compName', String(curComp||'').trim()); else params.delete('compName');
+    if(tab==='tiertour' && typeof _ttCurComp!=='undefined' && String(_ttCurComp||'').trim()) params.set('ttComp', String(_ttCurComp||'').trim()); else params.delete('ttComp');
+    const q = (tab==='stats' && String((window.statsSub||statsSub||''))==='psearch' && typeof window._psearchQ!=='undefined') ? String(window._psearchQ||'').trim() : '';
+    if(q) params.set('query', q);
+    else if(!params.get('player') && !params.get('univ')) params.delete('query');
+    const playerName = String(window.__suModalPlayerName || '').trim();
+    const univName = String(window.__suModalUnivName || '').trim();
+    const matchKey = String(window.__suOpenHistDetailKey || '').trim();
+    if(playerName) params.set('player', playerName); else params.delete('player');
+    if(univName) params.set('univ', univName); else params.delete('univ');
+    if(matchKey) params.set('match', matchKey); else params.delete('match');
+    if(tab==='hist' && typeof histPage!=='undefined'){
+      const pgKey = String(histSub||'all');
+      const p = Number(histPage[pgKey]||0) + 1;
+      if(p > 1) params.set('page', String(p)); else params.delete('page');
+    }else{
+      params.delete('page');
+    }
+    const qs = params.toString();
+    return `${window.location.pathname}${qs?`?${qs}`:''}${window.location.hash||''}`;
+  };
+  window.__suSyncUrlState = function(){
+    try{
+      if(window.__suUrlMute) return;
+      const next = window.__suBuildNavUrl();
+      const cur = `${window.location.pathname}${window.location.search}${window.location.hash||''}`;
+      if(next !== cur) window.history.replaceState({suNav:true}, '', next);
+    }catch(e){}
+  };
+  window.__suApplyUrlState = function(opts){
+    const o = opts || {};
+    try{
+      window.__suUrlMute = true;
+      const params = new URLSearchParams(window.location.search || '');
+      const tab = String(params.get('tab')||'').trim();
+      const sub = String(params.get('sub')||'').trim();
+      const compName = _safeDec(params.get('compName')||'').trim();
+      const ttComp = _safeDec(params.get('ttComp')||'').trim();
+      const q = _safeDec(params.get('query')||'').trim();
+      const playerName = _safeDec(params.get('player')||'').trim();
+      const univName = _safeDec(params.get('univ')||'').trim();
+      const matchKey = _safeDec(params.get('match')||'').trim();
+      const page = Math.max(1, parseInt(params.get('page')||'1',10)||1);
+      if(tab && TABS.has(tab)) curTab = tab;
+      if(sub) _setSubForTab(curTab, sub);
+      if(curTab==='hist' && typeof histPage!=='undefined'){
+        const pgKey = String(histSub||'all');
+        histPage[pgKey] = Math.max(0, page-1);
+      }
+      if(curTab==='comp' && compName && typeof curComp!=='undefined') curComp = compName;
+      if(curTab==='tiertour' && ttComp && typeof _ttCurComp!=='undefined') _ttCurComp = ttComp;
+      if(curTab==='stats' && String((window.statsSub||statsSub||''))==='psearch' && q && typeof window._psearchQ!=='undefined') window._psearchQ = q;
+      window.__suPendingPlayerModal = playerName || '';
+      window.__suPendingUnivModal = univName || '';
+      window.__suPendingMatchDetailKey = matchKey || '';
+      try{ openDetails = {}; }catch(e){}
+    }catch(e){} finally {
+      window.__suUrlMute = false;
+    }
+    if(o.render !== false){
+      try{ if(typeof render==='function') render(true); }catch(e){}
+    }
+  };
+  window.__suPatchRenderForUrlSync = function(){
+    try{
+      if(window.__suRenderUrlPatched || typeof window.render!=='function') return;
+      window.__suRenderUrlPatched = true;
+      const _origRender = window.render;
+      window.render = function(){
+        const r = _origRender.apply(this, arguments);
+        try{
+          if(arguments[0]===true) setTimeout(()=>window.__suSyncUrlState(), 0);
+          else requestAnimationFrame(()=>window.__suSyncUrlState());
+        }catch(e){}
+        return r;
+      };
+      try{ render = window.render; }catch(e){}
+    }catch(e){}
+  };
+  window.__suPatchModalFnsForUrl = function(){
+    try{
+      if(window.__suModalUrlPatched) return;
+      window.__suModalUrlPatched = true;
+      const _origCm = window.cm;
+      window.cm = function(id){
+        try{
+          if(id==='playerModal') window.__suModalPlayerName = '';
+          if(id==='univModal') window.__suModalUnivName = '';
+          if(id==='histDetModal') window.__suOpenHistDetailKey = '';
+        }catch(e){}
+        const r = (typeof _origCm === 'function') ? _origCm.apply(this, arguments) : undefined;
+        try{ window.__suSyncUrlState(); }catch(e){}
+        return r;
+      };
+    }catch(e){}
+  };
+  window.__suOpenPendingUrlModal = function(){
+    try{
+      const playerName = String(window.__suPendingPlayerModal||'').trim();
+      const univName = String(window.__suPendingUnivModal||'').trim();
+      const matchKey = String(window.__suPendingMatchDetailKey||'').trim();
+      window.__suPendingPlayerModal = '';
+      window.__suPendingUnivModal = '';
+      window.__suPendingMatchDetailKey = '';
+      if(playerName && typeof openPlayerModal==='function'){
+        setTimeout(()=>{ try{ openPlayerModal(playerName); }catch(e){} }, 100);
+        return;
+      }
+      if(univName && typeof openUnivModal==='function'){
+        setTimeout(()=>{ try{ openUnivModal(univName); }catch(e){} }, 100);
+        return;
+      }
+      if(matchKey && typeof openHistDetailModal==='function'){
+        setTimeout(()=>{ try{ openHistDetailModal(matchKey); }catch(e){} }, 120);
+      }
+    }catch(e){}
+  };
+  window.addEventListener('popstate', ()=>{
+    try{ window.__suApplyUrlState({ render:true }); }catch(e){}
+  });
+})();
+
+async function init(){
+  try{
+    let usedCriticalBoot = !!window.__suCriticalBootApplied;
+    try{
+      if(!usedCriticalBoot && window.__suCriticalBootData && await window.__suNeedsBootstrapData()){
+        const critical = window.__suCriticalBootData || {};
+        if(Array.isArray(critical.players) && critical.players.length){
+          if(typeof window.__suApplyImportedData === 'function'){
+            await window.__suApplyImportedData(critical, { persist:false, render:false });
+          }else{
+            players = critical.players;
+            if(Array.isArray(critical.univCfg) && critical.univCfg.length) univCfg = critical.univCfg;
+            if(Array.isArray(critical.maps) && critical.maps.length) maps = critical.maps;
+            miniM = Array.isArray(critical.miniM) ? critical.miniM : (miniM || []);
+            univM = Array.isArray(critical.univM) ? critical.univM : (univM || []);
+            ckM = Array.isArray(critical.ckM) ? critical.ckM : (ckM || []);
+            proM = Array.isArray(critical.proM) ? critical.proM : (proM || []);
+            comps = Array.isArray(critical.comps) ? critical.comps : (comps || []);
+            tourneys = Array.isArray(critical.tourneys) ? critical.tourneys : (tourneys || []);
+            ttM = Array.isArray(critical.ttM) ? critical.ttM : (ttM || []);
+            indM = Array.isArray(critical.indM) ? critical.indM : (indM || []);
+            gjM = Array.isArray(critical.gjM) ? critical.gjM : (gjM || []);
+          }
+          window.__suInitialDataPending = false;
+          window.__suCriticalBootApplied = true;
+          usedCriticalBoot = true;
+          const hasCriticalRecords = [
+            critical.miniM, critical.univM, critical.ckM, critical.proM,
+            critical.comps, critical.tourneys, critical.ttM, critical.indM, critical.gjM
+          ].some(v=>Array.isArray(v) && v.length);
+          if(hasCriticalRecords) window.__suBootDataApplied = true;
+        }
+      }
+    }catch(e){}
+    if(!usedCriticalBoot && !window.__suBootDataApplied && window.__suBootDataPromise && await window.__suNeedsBootstrapData()){
+      const bootData = await Promise.race([
+        window.__suBootDataPromise,
+        new Promise(resolve=>setTimeout(()=>resolve(null), 220))
+      ]);
+      if(bootData){
+        await window.__suApplyImportedData(bootData, { persist:false, render:false });
+      }
+    }
+  }catch(e){}
+  try{ if(typeof window.__suPatchRenderForUrlSync==='function') window.__suPatchRenderForUrlSync(); }catch(e){}
+  try{ if(typeof window.__suPatchModalFnsForUrl==='function') window.__suPatchModalFnsForUrl(); }catch(e){}
+  try{ if(typeof window.__suApplyUrlState==='function') window.__suApplyUrlState({ render:false }); }catch(e){}
+  // 첫 화면은 최대한 빨리 노출
+  render(true);
+  requestAnimationFrame(()=>{
+    try{ if(typeof window._applyAllRuntimeSettings === 'function') window._applyAllRuntimeSettings(); }catch(e){}
+  });
+  // 무거운 복원/정합 작업은 첫 화면을 먼저 그린 뒤로 미룸
+  setTimeout(async ()=>{
+    let _needsLateRender = false;
+    try{
+      if(!window.__suBootDataApplied && window.__suBootDataPromise){
+        const bootData = await window.__suBootDataPromise;
+        if(bootData){
+          await window.__suApplyImportedData(bootData, { render:false });
+          if(!(typeof curTab!=='undefined' && curTab==='total' && Array.isArray(players) && players.length)){
+            _needsLateRender = true;
+          }
+        }
+      }
+    }catch(e){}
+    try{ fixPoints(); }catch(e){}
+    try{ _seedTierTtM(); }catch(e){}
+    try{
+      if(typeof ELO_DEFAULT!=='undefined'){
+        players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
+      }
+    }catch(e){}
+    try{
+      const ptier=document.getElementById('p-tier');
+      if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
+    }catch(e){}
+    try{
+      if(!window.__suBootDataApplied && typeof window.__suHydrateHistoryFromIDB === 'function'){
+        const hydrated = await window.__suHydrateHistoryFromIDB();
+        if(hydrated) _needsLateRender = true;
+      }
+    }catch(e){
+      console.warn('[init] history idb hydrate failed', e);
+    }
+    try{ initLoginHash(); }catch(e){}
+    try{ applyLoginState(); }catch(e){}
+    try{ if(typeof syncTourneyHistory==='function') syncTourneyHistory(); }catch(e){}
+    try{ if(typeof _migrateTierTourneys==='function') _migrateTierTourneys(); }catch(e){}
+    try{ if(typeof _migrateTierTourName==='function') _migrateTierTourName(); }catch(e){}
+    try{ refreshSel(); }catch(e){}
+    try{
+      const _isTotalReady = (typeof curTab!=='undefined' && curTab==='total' && Array.isArray(players) && players.length);
+      if(_needsLateRender && !_isTotalReady && typeof render==='function') render(true);
+    }catch(e){}
+    try{ if(typeof window._applyAllRuntimeSettings === 'function') window._applyAllRuntimeSettings(); }catch(e){}
+  }, 0);
+  // (성능) 부가 기능은 idle 시 지연 로딩
+  // - BGM/멀티뷰는 초기 렌더와 무관하므로, 최초 로딩을 가볍게 유지
+  try{
+    const loadExtras = ()=>{
+      try{
+        if(typeof window._loadScriptOnce!=='function') return;
+        window._loadScriptOnce('js/yt-bgm.js?v=20260420-06').catch(()=>{});
+        window._loadScriptOnce('js/soop-multiview.js?v=20260420-10').catch(()=>{});
+        window._loadScriptOnce('js/mobile-bar.js?v=20260422-02').catch(()=>{});
+      }catch(e){}
+    };
+    if('requestIdleCallback' in window) requestIdleCallback(loadExtras, {timeout: 2500});
+    else setTimeout(loadExtras, 1200);
+  }catch(e){}
+  try{
+    const warmTotal = ()=>{
+      try{
+        if(typeof window._warmTotalCaches === 'function') window._warmTotalCaches();
+      }catch(e){}
+    };
+    if('requestIdleCallback' in window) requestIdleCallback(warmTotal, {timeout: 1200});
+    else setTimeout(warmTotal, 400);
+  }catch(e){}
+  // 초기 화면과 직접 관련 없는 모듈은 첫 렌더 뒤 지연 로딩
+  try{
+    const loadDeferredUi = ()=>{
+      try{
+        if(typeof window._ensureCloudBoardLoaded === 'function') window._ensureCloudBoardLoaded().catch(()=>{});
+        else if(typeof window._loadScriptOnce === 'function') window._loadScriptOnce('js/cloud-board.js?v=20260503-12').catch(()=>{});
+        if(typeof window._ensureBoard2Loaded === 'function') window._ensureBoard2Loaded().catch(()=>{});
+      }catch(e){}
+    };
+    if('requestIdleCallback' in window) requestIdleCallback(loadDeferredUi, {timeout: 3000});
+    else setTimeout(loadDeferredUi, 1500);
+  }catch(e){}
   setTimeout(showNoticePopup, 800);
-  // 🆕 URL 파라미터로 선수/대학 자동 오픈
+  // URL 파라미터로 검색/상세 자동 오픈
   setTimeout(()=>{
     try{
       const params = new URLSearchParams(window.location.search);
-      const playerParam = params.get('player');
-      const univParam = params.get('univ');
       const queryParam = params.get('query');
-      if(playerParam && typeof openPlayerModal==='function'){
-        openPlayerModal(decodeURIComponent(playerParam));
-      } else if(univParam && typeof openUnivModal==='function'){
-        openUnivModal(decodeURIComponent(univParam));
-      } else if(queryParam){
+      if(queryParam){
         const q = decodeURIComponent(queryParam);
         const exact = players.find(p=>p.name===q);
-        if(exact && typeof openPlayerModal==='function'){
+        if(exact && typeof openPlayerModal==='function' && !String(window.__suPendingPlayerModal||'').trim()){
           openPlayerModal(q);
         } else {
           if(typeof sw==='function') sw('stats');
@@ -191,9 +529,53 @@ function init(){
       }
     }catch(e){}
   }, 1200);
+  setTimeout(()=>{
+    try{ if(typeof window.__suOpenPendingUrlModal==='function') window.__suOpenPendingUrlModal(); }catch(e){}
+  }, 1350);
 }
 init();
 initDark();
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 설정 변경 → 다른 기기 "바로" 반영 보강
+// - Gist 동기화(enabled)로 저장(push)한 설정을 다른 기기가 자동으로 주기적으로 pull
+// - 토큰이 없는 기기는 읽기만(pull) 가능
+// ─────────────────────────────────────────────────────────────
+(function(){
+  if(window._settingsAutoSyncStarted) return;
+  window._settingsAutoSyncStarted = true;
+
+  const doPull = async ()=>{
+    try{
+      if(!window.SettingsStore || typeof window.SettingsStore.pull!=='function') return;
+      const c = window.SettingsStore.cfg ? window.SettingsStore.cfg() : { gistId:'' };
+      if(!c || !c.gistId) return;
+      await window.SettingsStore.pull({silent:true});
+      // 설정 팝업이 열려있고 AI 섹션이 보이면 입력값/상태 즉시 반영
+      try{
+        const m = document.getElementById('cfgModal');
+        if(m && m.style.display!=='none'){
+          const sec = document.getElementById('cfg-sec-aibot');
+          if(sec && sec.closest && sec.closest('#cfgModalBody')){
+            if(typeof window.cfgInitAiProxy==='function') window.cfgInitAiProxy();
+          }
+        }
+      }catch(e){}
+    }catch(e){}
+  };
+
+  // 첫 pull
+  setTimeout(doPull, 1200);
+  // 주기적 pull (너무 잦지 않게)
+  setInterval(doPull, 20000);
+  // 포커스/재진입 시 즉시 반영
+  try{ window.addEventListener('focus', ()=>doPull()); }catch(e){}
+  try{
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState === 'visible') doPull();
+    });
+  }catch(e){}
+})();
 
 // ─────────────────────────────────────────────────────────────
 // 전역 폰트 설정
@@ -531,9 +913,12 @@ function _applyUiScale(){
     else if (w <= 1024) s = 1.02;
     else s = 1.00;
     // (신규) 수동 UI 스케일(폰트 크기) — 자동값에 곱해서 전역 적용
-    // - localStorage: su_ui_scale_pct (80~140, 기본 100)
+    // - 기기별 분리: su_ui_scale_pc_pct / su_ui_scale_tb_pct / su_ui_scale_mb_pct
+    // - 구버전 호환: su_ui_scale_pct
     try{
-      const pct = parseInt(localStorage.getItem('su_ui_scale_pct')||'100',10) || 100;
+      const legacy = parseInt(localStorage.getItem('su_ui_scale_pct')||'100',10) || 100;
+      const key = w <= 768 ? 'su_ui_scale_mb_pct' : (w <= 1024 ? 'su_ui_scale_tb_pct' : 'su_ui_scale_pc_pct');
+      const pct = parseInt(localStorage.getItem(key)||String(legacy),10) || legacy;
       const mul = Math.max(80, Math.min(140, pct)) / 100;
       s = s * mul;
     }catch(e){}
@@ -715,61 +1100,228 @@ window._applyTourneyCardTheme=_applyTourneyCardTheme;
 _applyTourneyCardTheme();
 
 // ─────────────────────────────────────────────────────────────
-// 상단 탭/필터바: 스와이프/드래그로 가로 스크롤 가능하게(이동 버튼 없이도)
-// - 대상: .tabs, .fbar (overflow-x:auto 영역)
+// 설정 런타임 공용 부팅
+// - 설정탭 진입 여부와 무관하게 앱 시작 시 바로 적용되어야 하는 설정만 모음
+// - settings.js(UI)와 분리된 런타임 SSOT
 // ─────────────────────────────────────────────────────────────
-window.enableDragScroll = function(){
-  try{
-    document.querySelectorAll('.tabs, .fbar').forEach(el=>{
-      if (el.dataset.dragScrollBound === '1') return;
-      el.dataset.dragScrollBound = '1';
-      el.style.cursor = 'grab';
-      let down = false, startX = 0, startLeft = 0, moved = false;
-      const onDown = (e) => {
-        // 버튼/인풋 위에서는 드래그 시작 안 함
-        const t = e.target;
-        if (t && (t.closest('button') || t.closest('input') || t.closest('select') || t.closest('textarea'))) return;
-        down = true; moved = false;
-        startX = (e.touches ? e.touches[0].clientX : e.clientX);
-        startLeft = el.scrollLeft;
-        el.style.cursor = 'grabbing';
+try{
+  if(typeof window._cfgFemcoDefaults !== 'function'){
+    window._cfgFemcoDefaults = function(){
+      return {
+        autoLayout: 1,
+        logoSize: 150,
+        logoPos: 'top',
+        logoAttachTitle: 1,
+        headGap: 10,
+        titleSize: 28,
+        titleFont: 'system',
+        playerImgSize: 46,
+        playerImgShape: 'square',
+        rowsPerCol: 5,
+        colWidth: 170,
+        colGap: 10,
+        univGap: 18,
+        countFontSize: 12,
+        contentPadX: 16,
+        contentAlign: 'left',
+        contentOffsetX: 0,
+        univSubtitles: {},
+        subtitleSize: 12,
+        subtitleWeight: 800,
+        subtitleColor: '',
+        nameFontSize: 12,
+        roleFontSize: 10,
+        tierBadgeSize: 10,
+        tierBadgePadX: 6,
+        starSize: 15,
+        statusIconSize: 18,
+        univColorOverrides: {},
+        univBgMedia: {},
+        bgOverlay: 22,
+        logoOffsetX: 0,
+        logoOffsetY: 0,
+        titleOffsetX: 0,
+        titleOffsetY: 0,
+        titlePos: 'bottom'
       };
-      const onMove = (e) => {
-        if (!down) return;
-        const x = (e.touches ? e.touches[0].clientX : e.clientX);
-        const dx = x - startX;
-        if (Math.abs(dx) > 4) moved = true;
-        el.scrollLeft = startLeft - dx;
-        if (moved) e.preventDefault && e.preventDefault();
-      };
-      const onUp = () => { down = false; el.style.cursor = 'grab'; };
-      el.addEventListener('mousedown', onDown);
-      el.addEventListener('mousemove', onMove);
-      window.addEventListener('mouseup', onUp);
-      el.addEventListener('touchstart', onDown, {passive:true});
-      el.addEventListener('touchmove', onMove, {passive:false});
-      el.addEventListener('touchend', onUp, {passive:true});
-      // 드래그 후 클릭 오동작 방지
-      el.addEventListener('click', (e)=>{ if(moved){ e.stopPropagation(); e.preventDefault(); moved=false; } }, true);
-    });
-  }catch(e){}
+    };
+  }
+  if(typeof window._cfgFemcoLoad !== 'function'){
+    window._cfgFemcoLoad = function(){
+      try{
+        const raw = localStorage.getItem('b2_femco_settings_v1');
+        const base = (typeof window._cfgFemcoDefaults === 'function') ? window._cfgFemcoDefaults() : {};
+        if(!raw) return base;
+        const obj = JSON.parse(raw) || {};
+        return {
+          ...base,
+          ...obj,
+          univSubtitles:{...(base.univSubtitles||{}), ...(obj.univSubtitles||{})},
+          univColorOverrides:{...(base.univColorOverrides||{}), ...(obj.univColorOverrides||{})},
+          univBgMedia:{...(base.univBgMedia||{}), ...(obj.univBgMedia||{})}
+        };
+      }catch(e){
+        try{ return (typeof window._cfgFemcoDefaults === 'function') ? window._cfgFemcoDefaults() : {}; }catch(_){ return {}; }
+      }
+    };
+  }
+  if(typeof window._cfgFemcoSave !== 'function'){
+    window._cfgFemcoSave = function(obj){
+      try{ localStorage.setItem('b2_femco_settings_v1', JSON.stringify(obj||{})); }catch(e){}
+      try{ if(typeof window._markLocalSettingsChanged === 'function') window._markLocalSettingsChanged(); }catch(e){}
+      try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+    };
+  }
+}catch(e){}
+
+window._applyAllRuntimeSettings = function(){
+  try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
+  try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
+  try{ if(typeof window.applyDesignV2 === 'function') window.applyDesignV2(); }catch(e){}
+  try{ if(typeof window._applyThemeVars === 'function') window._applyThemeVars(); }catch(e){}
+  try{ if(typeof window._applyHeaderSettings === 'function') window._applyHeaderSettings(); }catch(e){}
+  try{ if(typeof window._applyUiScale === 'function') window._applyUiScale(); }catch(e){}
+  try{ if(typeof window._applyAllTabsAutoFit === 'function') window._applyAllTabsAutoFit(); }catch(e){}
+  try{ if(typeof window._applyRecCardTheme === 'function') window._applyRecCardTheme(); }catch(e){}
+  try{ if(typeof window._applyTourneyCardTheme === 'function') window._applyTourneyCardTheme(); }catch(e){}
+  try{ if(typeof applyProfileShapeVars === 'function') applyProfileShapeVars(); }catch(e){}
+  try{ if(typeof applyUnivLogoVars === 'function') applyUnivLogoVars(); }catch(e){}
+  try{ if(typeof applyBoard2LogoVars === 'function') applyBoard2LogoVars(); }catch(e){}
+  try{ if(typeof applyResponsiveUiVars === 'function') applyResponsiveUiVars(); }catch(e){}
+  try{ if(typeof applyMatchDetailVars === 'function') applyMatchDetailVars(); }catch(e){}
 };
+try{ window._applyAllRuntimeSettings(); }catch(e){}
+
+window.__suNeedsBootstrapData = async function(){
+  try{
+    const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
+    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey);
+    const hasRuntimeRecordData = [
+      (typeof miniM!=='undefined' ? miniM : window.miniM),
+      (typeof univM!=='undefined' ? univM : window.univM),
+      (typeof ckM!=='undefined' ? ckM : window.ckM),
+      (typeof proM!=='undefined' ? proM : window.proM),
+      (typeof comps!=='undefined' ? comps : window.comps),
+      (typeof tourneys!=='undefined' ? tourneys : window.tourneys),
+      (typeof ttM!=='undefined' ? ttM : window.ttM),
+      (typeof indM!=='undefined' ? indM : window.indM),
+      (typeof gjM!=='undefined' ? gjM : window.gjM)
+    ].some(v=>Array.isArray(v) && v.length > 0);
+    const hasRuntimeUnivCfg = (typeof univCfg!=='undefined' && Array.isArray(univCfg) && univCfg.length > 0)
+      || (Array.isArray(window.univCfg) && window.univCfg.length > 0);
+    const hasRuntimeMaps = (typeof maps!=='undefined' && Array.isArray(maps) && maps.length > 0)
+      || (Array.isArray(window.maps) && window.maps.length > 0);
+    const hasCoreGlobals = hasRuntimeUnivCfg && hasRuntimeMaps;
+    const localPlayers = (typeof J==='function') ? J('su_p') : null;
+    const hasLocalPlayers = Array.isArray(localPlayers)
+      ? localPlayers.length > 0
+      : !!(localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length > 0);
+    if((hasRecordKeys || hasRuntimeRecordData || hasLocalPlayers) && hasCoreGlobals) return false;
+    if(window.__suBootDataApplied && hasCoreGlobals && (hasRecordKeys || hasRuntimeRecordData || hasLocalPlayers)) return false;
+    if(typeof window.__suHasIndexedDBData === 'function'){
+      try{
+        if((await window.__suHasIndexedDBData()) && hasCoreGlobals) return false;
+      }catch(e){}
+    }
+    return true;
+  }catch(e){
+    return true;
+  }
+};
+
+window.__suApplyImportedData = async function(d, opts){
+  if(!d || typeof d !== 'object') return false;
+  const options = opts || {};
+  let next = d;
+  // LZString 압축 데이터 자동 해제
+  if(next && typeof next._lz === 'string'){
+    try{ next = JSON.parse(LZString.decompressFromBase64(next._lz)); }
+    catch(e){ console.warn('[자동 불러오기] 압축 해제 실패:', e); }
+  }
+  const _needCore = !(
+    (Array.isArray(next.univCfg) && next.univCfg.length) ||
+    (Array.isArray(next.univConfig) && next.univConfig.length) ||
+    (Array.isArray(next.universities) && next.universities.length)
+  ) || !(
+    (Array.isArray(next.maps) && next.maps.length) ||
+    (Array.isArray(next.map) && next.map.length)
+  );
+  if(_needCore){
+    const _CORE_URLS = [
+      'data/core.json',
+      'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data/core.json',
+      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data/core.json'
+    ];
+    for(const coreUrl of _CORE_URLS){
+      try{
+        const res = await fetch(coreUrl, {cache:'no-store', mode:'cors'});
+        if(!res || !res.ok) continue;
+        const core = JSON.parse(await res.text());
+        if(core && typeof core === 'object'){
+          if(!(Array.isArray(next.univCfg) && next.univCfg.length) && Array.isArray(core.univCfg) && core.univCfg.length) next.univCfg = core.univCfg;
+          if(!(Array.isArray(next.maps) && next.maps.length) && Array.isArray(core.maps) && core.maps.length) next.maps = core.maps;
+          if(!(Array.isArray(next.notices) && next.notices.length) && Array.isArray(core.notices) && core.notices.length) next.notices = core.notices;
+          break;
+        }
+      }catch(e){}
+    }
+  }
+  players  = next.players  || next.player  || [];
+  univCfg  = next.univCfg  || next.univConfig || next.universities || univCfg;
+  maps     = next.maps     || next.map     || maps;
+  tourD    = next.tourD    || next.tournamentDates || Array(15).fill('');
+  miniM    = next.miniM    || next.mini    || next.miniMatches || [];
+  univM    = next.univM    || next.univ    || next.univMatches || [];
+  comps    = next.comps    || next.comp    || next.competitions || [];
+  ckM      = next.ckM      || next.ck      || next.ckMatches   || [];
+  compNames= next.compNames|| next.competitionNames || [];
+  curComp  = next.curComp  || next.currentComp || '';
+  proM     = next.proM     || next.pro     || next.proMatches  || [];
+  tourneys = next.tourneys || next.tournaments || next.tourney || [];
+  ttM      = next.ttM      || next.tt      || [];
+  indM     = next.indM     || next.ind     || next.indMatches || [];
+  gjM      = next.gjM      || next.gj      || next.gjMatches  || [];
+  if(next.notices && next.notices.length) notices = next.notices;
+  if(next.tiers && next.tiers.length) TIERS.splice(0, TIERS.length, ...next.tiers);
+  const allD=[...miniM,...univM,...comps,...ckM,...proM];
+  mergeValidYearsIntoOptions(yearOptions, allD);
+  try{ fixPoints(); }catch(e){}
+  try{
+    if(typeof _migrateTierTourneys==='function'){
+      if(typeof _ttMigrated!=='undefined') _ttMigrated=false;
+      _migrateTierTourneys();
+    }
+  }catch(e){}
+  try{
+    if(typeof _migrateTierTourName==='function'){
+      if(typeof _tierTourNameMigrated!=='undefined') _tierTourNameMigrated=false;
+      _migrateTierTourName();
+    }
+  }catch(e){}
+  if(options.persist !== false){
+    try{ localSave(); }catch(e){}
+  }
+  try{ window.__suBootDataApplied = true; }catch(e){}
+  try{ window.__suInitialDataPending = false; }catch(e){}
+  if(options.render !== false){
+    try{ if(typeof render==='function') render(true); }catch(e){}
+  }
+  return true;
+};
+
+// ─────────────────────────────────────────────────────────────
+// 상단 탭/필터바와 기록 인라인바는 공통 `enableDragScroll()`로 처리
+// ─────────────────────────────────────────────────────────────
 // 초기 1회
 setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }catch(e){} }, 400);
 
 // ── 사이트 첫 접속 시 자동 불러오기 ──
 (async function autoLoad(){
   try{
-    // (복구) 로컬 기록이 있으면 자동 불러오기 금지 (덮어쓰기 방지)
-    const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
-    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey);
-    if(hasRecordKeys) return;
-    // su_p는 배열 또는 {v:2,p:[...]}일 수 있음
-    const localPlayers = (typeof J==='function') ? J('su_p') : null;
-    const ok = Array.isArray(localPlayers)
-      ? localPlayers.length>0
-      : (localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length>0);
-    if(ok) return;
+    if(typeof window.__suNeedsBootstrapData === 'function'){
+      const needsBootstrap = await window.__suNeedsBootstrapData();
+      if(!needsBootstrap) return;
+    }
   }catch(e){}
   console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
   // (복구) 번들에 포함된 data.json을 최우선으로 시도
@@ -780,9 +1332,15 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
   const _CDN = 'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json';
   const _PROXY = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(_RAW);
   const urls = [_LOCAL, _RAW, _CDN, _API, _PROXY];
-  gsSetStatus && gsSetStatus('🔄 데이터 불러오는 중...','var(--blue)');
+  if(typeof window.gsSetStatus === 'function') window.gsSetStatus('🔄 데이터 불러오는 중...','var(--blue)');
   let d = null;
-  for(const url of urls){
+  try{
+    if(window.__suBootDataPromise){
+      d = await window.__suBootDataPromise;
+      if(d) console.log('[자동 불러오기] 성공: boot data preload');
+    }
+  }catch(e){}
+  for(const url of (d ? [] : urls)){
     try{
       const res = await Promise.race([
         fetch(url, {cache:'no-store', mode:'cors'}),
@@ -808,50 +1366,21 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
     }catch(e){ console.log('[자동 불러오기] 실패:', url, e.message); continue; }
   }
   if(d){
-    // LZString 압축 데이터 자동 해제
-    if(d && typeof d._lz === 'string'){
-      try{ d = JSON.parse(LZString.decompressFromBase64(d._lz)); }
-      catch(e){ console.warn('[자동 불러오기] 압축 해제 실패:', e); }
-    }
     try{
-      players  = d.players  || d.player  || [];
-      univCfg  = d.univCfg  || d.univConfig || d.universities || univCfg;
-      maps     = d.maps     || d.map     || maps;
-      tourD    = d.tourD    || d.tournamentDates || Array(15).fill('');
-      miniM    = d.miniM    || d.mini    || d.miniMatches || [];
-      univM    = d.univM    || d.univ    || d.univMatches || [];
-      comps    = d.comps    || d.comp    || d.competitions || [];
-      ckM      = d.ckM      || d.ck      || d.ckMatches   || [];
-      compNames= d.compNames|| d.competitionNames || [];
-      curComp  = d.curComp  || d.currentComp || '';
-      proM     = d.proM     || d.pro     || d.proMatches  || [];
-      tourneys = d.tourneys || d.tournaments || d.tourney || [];
-      ttM      = d.ttM      || d.tt      || [];
-      if(d.notices && d.notices.length) notices = d.notices;
-      if(d.tiers && d.tiers.length) TIERS.splice(0, TIERS.length, ...d.tiers);
-      const allD=[...miniM,...univM,...comps,...ckM,...proM];
-      const years=new Set(allD.map(m=>(m.d||'').slice(0,4)).filter(y=>/^\d{4}$/.test(y)));
-      years.forEach(y=>{if(!yearOptions.includes(y))yearOptions.push(y);});
-      yearOptions.sort();
-      fixPoints();
-      // autoLoad 후 티어대회 마이그레이션 재실행 (flag 리셋 후 재호출)
-      if(typeof _migrateTierTourneys==='function'){
-        if(typeof _ttMigrated!=='undefined') _ttMigrated=false;
-        _migrateTierTourneys();
-      }
-      // autoLoad 후 티어대전→티어대회 명칭 마이그레이션 재실행
-      if(typeof _migrateTierTourName==='function'){
-        if(typeof _tierTourNameMigrated!=='undefined') _tierTourNameMigrated=false;
-        _migrateTierTourName();
-      }
-      save(); render();
-      gsSetStatus && gsSetStatus('✅ 자동 불러오기 완료 ('+new Date().toLocaleTimeString()+')','var(--green)');
+      if(window.__suBootDataApplied) return;
+      const _skipRenderForReadyTotal = (typeof curTab!=='undefined' && curTab==='total' && Array.isArray(players) && players.length);
+      await window.__suApplyImportedData(d, { render: !_skipRenderForReadyTotal });
+      try{ window.__suInitialDataPending = false; }catch(e){}
+      // 단순 부트스트랩(data.json) 적용은 조용히 처리하고, "완료" 배지는 최신 원격 동기화 경로에서만 사용
+      if(typeof window.gsSetStatus === 'function') window.gsSetStatus('','');
     }catch(e){
       console.error('[자동 불러오기] 데이터 적용 오류:', e);
-      gsSetStatus && gsSetStatus('','');
+      try{ window.__suInitialDataPending = false; }catch(e){}
+      if(typeof window.gsSetStatus === 'function') window.gsSetStatus('','');
     }
   } else {
-    gsSetStatus && gsSetStatus('','');
+    try{ window.__suInitialDataPending = false; }catch(e){}
+    if(typeof window.gsSetStatus === 'function') window.gsSetStatus('','');
     console.warn('[자동 불러오기] 모든 URL 실패');
   }
 })();

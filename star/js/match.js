@@ -147,7 +147,7 @@ function getYearOptions(){
   flat.forEach(m=>{if(m.d&&m.d.length>=4)s.add(m.d.slice(0,4));});
   // tourneys 내부 경기 날짜
   (tourneys||[]).forEach(t=>{(t.matches||[]).forEach(m=>{if(m.d&&m.d.length>=4)s.add(m.d.slice(0,4));});});
-  return [...s].filter(y=>/^\d{4}$/.test(y)).sort();
+  return [...s].filter(y=>isValidAppYear(y)).sort();
 }
 
 // 공통 연도/월 필터 UI
@@ -404,7 +404,14 @@ function recalcSet(mode,si){
   set.scoreA=a;set.scoreB=b;set.winner=a>b?'A':b>a?'B':'';
 }
 
-function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function genId(){
+  try{
+    if(globalThis.crypto && typeof crypto.randomUUID === 'function'){
+      return crypto.randomUUID().replace(/-/g,'');
+    }
+  }catch(e){}
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+}
 
 function saveMatch(mode){
   const bld=BLD[mode];if(!bld)return;
@@ -419,6 +426,10 @@ function saveMatch(mode){
     if(mode==='gj'){
       const mA=bld.membersA||[];const mB=bld.membersB||[];
       if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
+      if(typeof _gjEditingIds!=='undefined' && Array.isArray(_gjEditingIds) && _gjEditingIds.length){
+        gjM.filter(m=>_gjEditingIds.includes(m._id)).forEach(m=>_removeGjResult(m.wName,m.lName,m.d||'',m.map||'-',m.matchId||undefined));
+        gjM=gjM.filter(m=>!_gjEditingIds.includes(m._id));
+      }
       const sid=matchId;
       freeGames.forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
@@ -435,6 +446,7 @@ function saveMatch(mode){
         gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
       BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
+      if(typeof _gjEditingIds!=='undefined') _gjEditingIds=null;
       if(typeof gjSub!=='undefined') gjSub='records';
       render();
       return;
@@ -443,6 +455,10 @@ function saveMatch(mode){
       const mA=bld.membersA||[];const mB=bld.membersB||[];
       if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
       if(!freeGames.length)return alert('경기를 1게임 이상 추가하세요.');
+      if(typeof _indEditingIds!=='undefined' && Array.isArray(_indEditingIds) && _indEditingIds.length){
+        indM.filter(m=>_indEditingIds.includes(m._id)).forEach(m=>_removeIndResult(m.wName,m.lName,m.d||'',m.map||'-',m._id));
+        indM=indM.filter(m=>!_indEditingIds.includes(m._id));
+      }
       const sid=matchId;
       freeGames.forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
@@ -460,6 +476,7 @@ function saveMatch(mode){
       });
       if(typeof _indInput!=='undefined'){_indInput.playerA=mA[0]?.name||'';_indInput.playerB=mB[0]?.name||'';}
       BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
+      if(typeof _indEditingIds!=='undefined') _indEditingIds=null;
       if(typeof indSub!=='undefined') indSub='records';
       render();
       return;
@@ -558,8 +575,9 @@ function saveMatch(mode){
     // (보강) 티어대회 등 기록 저장 직후, 열려있는 스트리머 상세(최근 경기)가 즉시 갱신되지 않는 문제 대응
     try{
       const pm = document.getElementById('playerModal');
-      if(pm && pm.style.display !== 'none' && window._playerModalCurrentName && typeof window._rebuildPlayerDetail==='function'){
-        window._rebuildPlayerDetail(window._playerModalCurrentName);
+      const pst = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
+      if(pm && pm.style.display !== 'none' && pst.currentName && typeof window._rebuildPlayerDetail==='function'){
+        window._rebuildPlayerDetail(pst.currentName);
       }
     }catch(e){}
     return;
@@ -704,8 +722,9 @@ function saveMatch(mode){
   // (보강) 기록 저장 직후 열려있는 스트리머 상세 즉시 갱신
   try{
     const pm = document.getElementById('playerModal');
-    if(pm && pm.style.display !== 'none' && window._playerModalCurrentName && typeof window._rebuildPlayerDetail==='function'){
-      window._rebuildPlayerDetail(window._playerModalCurrentName);
+    const pst = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
+    if(pm && pm.style.display !== 'none' && pst.currentName && typeof window._rebuildPlayerDetail==='function'){
+      window._rebuildPlayerDetail(pst.currentName);
     }
   }catch(e){}
 }
