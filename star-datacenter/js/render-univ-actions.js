@@ -30,14 +30,22 @@ function openUnivModal(univName){
   om('univModal');
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   const editBtn=document.getElementById('univEditBtn');
-  if(editBtn) editBtn.style.display=isLoggedIn?'inline-flex':'none';
+  if(editBtn){
+    const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+    editBtn.style.display=canEdit?'inline-flex':'none';
+  }
   requestAnimationFrame(()=>{
     const btn=document.getElementById('univEditBtn');
-    if(btn) btn.style.display=isLoggedIn?'inline-flex':'none';
+    if(btn){
+      const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+      btn.style.display=canEdit?'inline-flex':'none';
+    }
   });
 }
 
 function toggleUnivEdit(){
+  const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+  if(!canEdit) return;
   const st = (typeof getUnivDetailState==='function') ? getUnivDetailState() : (window.UnivDetailState||{});
   st.editOpen=!st.editOpen;
   const btn=document.getElementById('univEditBtn');
@@ -98,6 +106,8 @@ function toggleUnivEdit(){
 }
 
 function saveUnivEdit(){
+  const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+  if(!canEdit) return;
   const st = (typeof getUnivDetailState==='function') ? getUnivDetailState() : (window.UnivDetailState||{});
   const univName=st.currentName;
   const u=univCfg.find(x=>x.name===univName);
@@ -136,7 +146,11 @@ function saveUnivEdit(){
   injectUnivIcons(document.getElementById('univModalBody'));
   st.editOpen=false;
   const btn=document.getElementById('univEditBtn');
-  if(btn){ btn.textContent='✏️ 수정'; btn.style.display=isLoggedIn?'inline-flex':'none'; }
+  if(btn){
+    const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+    btn.textContent='✏️ 수정';
+    btn.style.display=canEdit?'inline-flex':'none';
+  }
 }
 
 function navToMatch(matchId, modeLbl){

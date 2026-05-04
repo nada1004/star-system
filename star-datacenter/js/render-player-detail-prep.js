@@ -20,18 +20,22 @@ function preparePlayerHeaderDisplayData(opts){
       const imgScale = isMobile ? (imgSettings.scaleMb||imgSettings.scale||1) : (isTablet ? (imgSettings.scaleTb||imgSettings.scale||1) : (imgSettings.scalePc||imgSettings.scale||1));
       const imgBrightness=imgSettings.brightness||1;
       let imageFit = 'contain';
+      let imagePos = 'center center';
       try{
         const dk = (typeof _getMdDeviceKey === 'function') ? _getMdDeviceKey() : (isMobile ? 'mb' : (isTablet ? 'tb' : 'pc'));
         const mdFit = (localStorage.getItem(`su_md_avatar_fit_${dk}`) || localStorage.getItem('su_md_avatar_fit') || '').trim();
+        const mdPos = (localStorage.getItem(`su_md_avatar_pos_${dk}`) || localStorage.getItem('su_md_avatar_pos') || 'center center').trim();
         if(mdFit === 'cover' || mdFit === 'contain') imageFit = mdFit;
         else if(typeof imgSettings.fill === 'boolean') imageFit = imgSettings.fill ? 'cover' : 'contain';
         else imageFit = (localStorage.getItem('su_b2ImageFill') === '0' ? 'cover' : 'contain');
+        if(mdPos) imagePos = mdPos;
       }catch(e){
         imageFit = (typeof imgSettings.fill === 'boolean')
           ? (imgSettings.fill ? 'cover' : 'contain')
           : (localStorage.getItem('su_b2ImageFill') === '0' ? 'cover' : 'contain');
+        imagePos = 'center center';
       }
-      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:center;transform:scale(${imgScale});filter:brightness(${imgBrightness})" onerror="this.style.display='none'">`;
+      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:${imagePos};transform:scale(${imgScale});filter:brightness(${imgBrightness})" onerror="this.style.display='none'">`;
     }
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
     return url

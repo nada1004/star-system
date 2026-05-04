@@ -6214,6 +6214,8 @@ window.openEP=function(name){
 // emModal(z-index:5000) > playerModal(z-index:4000) 이므로 playerModal을 닫지 않고
 // 그 위에 emModal을 열기만 함 → cm/om 순서 경쟁조건 완전 제거
 function openEPFromModal(nameArg){
+  const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+  if(!canEdit){ alert('총관리자만 수정할 수 있습니다.'); return; }
   const pst = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
   const name=nameArg||pst.currentName;
   if(!name){alert('선수 이름을 확인할 수 없습니다.');return;}
@@ -6228,6 +6230,8 @@ function openEPFromModal(nameArg){
 }
 function savePlayer(){
   try{
+  const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+  if(!canEdit){ alert('총관리자만 수정할 수 있습니다.'); return; }
   const p=players.find(x=>x.name===editName);
   if(!p){alert('선수를 찾을 수 없습니다.\n현재 editName: "'+editName+'"');return;}
   const newName=(document.getElementById('ed-n')?.value||'').trim();

@@ -33,6 +33,7 @@ function _renderCfgPdSection(){
   const _mdDevLabel = _mdDevKey==='mb'?'모바일':(_mdDevKey==='tb'?'태블릿':'PC');
   const mdAvatarFit = (()=>{ try{ return (localStorage.getItem(`su_md_avatar_fit_${_mdDevKey}`)||localStorage.getItem('su_md_avatar_fit')||'contain').trim(); }catch(e){ return 'contain'; } })();
   const mdAvatarScale = (()=>{ try{ return parseInt(localStorage.getItem(`su_md_avatar_scale_${_mdDevKey}`)||localStorage.getItem('su_md_avatar_scale')||'100',10); }catch(e){ return 100; } })();
+  const mdAvatarPos = (()=>{ try{ return (localStorage.getItem(`su_md_avatar_pos_${_mdDevKey}`)||localStorage.getItem('su_md_avatar_pos')||'center center').trim(); }catch(e){ return 'center center'; } })();
   const _pdModeColorRows = _cfgBuildPdModeBadgeColorRows().rows;
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   const _shape = (()=>{ try{ return (localStorage.getItem('su_profile_shape')||localStorage.getItem('su_bcp_shape')||'circle'); }catch(e){ return 'circle'; } })();
@@ -210,6 +211,15 @@ function _renderCfgPdSection(){
         <input type="range" min="80" max="200" step="10" value="${mdAvatarScale}" style="flex:1;accent-color:var(--blue)"
           oninput="localStorage.setItem('su_md_avatar_scale_${_mdDevKey}',String(this.value));document.getElementById('cfg-md-avscale-val').textContent=this.value+'%';try{if(typeof render==='function')render();}catch(e){}">
         <span id="cfg-md-avscale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdAvatarScale}%</span>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 6px">이미지 위치</div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+        ${[
+          ['left top','↖ 좌상'],['center top','↑ 상단'],['right top','↗ 우상'],
+          ['left center','← 좌중'],['center center','• 중앙'],['right center','→ 우중'],
+          ['left bottom','↙ 좌하'],['center bottom','↓ 하단'],['right bottom','↘ 우하']
+        ].map(([pos,label])=>`<button class="btn btn-xs ${mdAvatarPos===pos?'btn-b':'btn-w'}"
+          onclick="localStorage.setItem('su_md_avatar_pos_${_mdDevKey}','${pos}');try{if(typeof render==='function')render();}catch(e){};_renderCfgPdSection()">${label}</button>`).join('')}
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">경기 상세(대회탭 포함) 프로필 이미지의 채우기/크기 배율을 조절합니다</div>
     </div>

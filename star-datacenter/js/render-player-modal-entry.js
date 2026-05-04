@@ -32,7 +32,8 @@ function openPlayerModal(name){
   injectUnivIcons(mbody);
   const editBtn=document.getElementById('playerModalEditBtn');
   if(editBtn){
-    editBtn.style.display=isLoggedIn?'inline-flex':'none';
+    const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
+    editBtn.style.display=canEdit?'inline-flex':'none';
     editBtn.dataset.playerName=name;
   }
   st.currentName=name;
