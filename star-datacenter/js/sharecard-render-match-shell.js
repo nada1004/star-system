@@ -4,17 +4,18 @@
       variant, theme, headerMatchBg, winnerColor, scMixHex, personalMetaBar,
       aWin, bWin, personalPosterSide, summaryHTML, setsHTML
     } = args || {};
+    const surfaceBg='linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05))';
     return `<div class="share-shell share-shell--match share-shell--personal" style="background:${variant.outerBg};color:${theme.text};min-width:340px;width:100%;border-radius:24px;overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 24px 52px rgba(15,23,42,.18)">
-      <div style="background:${headerMatchBg};padding:18px;position:relative;overflow:hidden">
+      <div class="share-personal-header" style="background:${headerMatchBg};padding:18px;position:relative;overflow:hidden">
         <div style="position:absolute;top:-28px;right:-10px;width:180px;height:180px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#ffffff',.72)}22;filter:blur(2px);pointer-events:none"></div>
         <div style="position:absolute;bottom:-46px;left:-12px;width:150px;height:150px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#0f172a',.40)}1f;filter:blur(2px);pointer-events:none"></div>
         <div style="position:absolute;inset:0;background:
           radial-gradient(120px 60px at 18% 20%, rgba(255,255,255,.14), transparent 60%),
           radial-gradient(140px 70px at 82% 15%, rgba(255,255,255,.10), transparent 62%);
           pointer-events:none"></div>
-        <div style="position:relative;z-index:1">
+        <div class="share-personal-surface" style="position:relative;z-index:1;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:18px;background:${surfaceBg};backdrop-filter:blur(8px)">
           ${personalMetaBar}
-          <div style="position:relative">
+          <div class="share-personal-stage" style="position:relative">
             <div class="share-personal-grid" style="display:grid;grid-template-columns:${aWin?'minmax(0,1.14fr) minmax(0,.86fr)':bWin?'minmax(0,.86fr) minmax(0,1.14fr)':'minmax(0,1fr) minmax(0,1fr)'};gap:12px;align-items:center">
               ${personalPosterSide('A')}
               ${personalPosterSide('B')}
@@ -22,7 +23,7 @@
           </div>
         </div>
       </div>
-      <div style="padding:${setsHTML?'14px 18px 16px':'12px 18px 16px'};background:linear-gradient(180deg,#ffffff,#f8fbff)">
+      <div class="share-personal-body" style="padding:${setsHTML?'14px 18px 16px':'12px 18px 16px'};background:linear-gradient(180deg,#ffffff,#f8fbff)">
         ${summaryHTML}
         ${setsHTML?`<div style="margin-bottom:2px">${setsHTML}</div>`:''}
         <div style="text-align:right;font-size:10px;color:${theme.textDim};letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>

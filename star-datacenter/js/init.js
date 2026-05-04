@@ -208,7 +208,11 @@ async function _seedTierTtM(){
   }
 }
 
-function init(){
+async function init(){
+  try{
+    if(window.MatchStore && typeof window.MatchStore.init==='function') await window.MatchStore.init();
+    if(window.PlayerStore && typeof window.PlayerStore.init==='function') await window.PlayerStore.init();
+  }catch(e){}
   fixPoints();
   // 티어대회 기록(ttM) 시드가 있으면 로드(비동기) — 로컬 데이터가 비어 있을 때만
   try{ _seedTierTtM(); }catch(e){}
@@ -918,15 +922,20 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
         return false;
       }
     })();
-    const localPlayers = (typeof J==='function') ? J('su_p') : null;
-    const hasLocalPlayers = Array.isArray(localPlayers)
-      ? localPlayers.length>0
-      : !!(localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length>0);
+    const hasPlayerIdbData = await (async()=>{
+      try{
+        if(window.PlayerStore && typeof window.PlayerStore.load==='function'){
+          const payload = await window.PlayerStore.load();
+          return !!(payload && Array.isArray(payload.players) && payload.players.length>0);
+        }
+      }catch(e){}
+      return Array.isArray(players) && players.length>0;
+    })();
     const hasRuntimePlayers = Array.isArray(players) && players.length>0;
     const hasRuntimeRecords = [miniM,univM,comps,ckM,proM,tourneys,ttM,indM,gjM].some(v=>Array.isArray(v)&&v.length>0);
     const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey) || hasMatchIdbData;
     if(hasRuntimePlayers || hasRuntimeRecords) return;
-    if(hasRecordKeys && hasLocalPlayers) return;
+    if(hasRecordKeys && hasPlayerIdbData) return;
   }catch(e){}
   console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
   const _fetchAutoJson = async (url)=>{

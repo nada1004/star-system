@@ -177,6 +177,7 @@ function calcPlayerVsUniversityRecords(player, opts){
   const o = opts || {};
   const year = String(o.year || '').trim();
   const years = Array.isArray(o.years) ? o.years : [];
+  const knownUnivs = new Set(((typeof univCfg!=='undefined' ? univCfg : (window.univCfg||[]))||[]).map(u=>String(u?.name||'').trim()).filter(Boolean));
   const passYear = (dateStr)=>{
     const y = String(dateStr||'').slice(0,4);
     if(years.length > 0) return years.includes(y);
@@ -187,7 +188,7 @@ function calcPlayerVsUniversityRecords(player, opts){
   const seenGameIds = new Set();
   const add = (univ, isWin, gameId)=>{
     const key = String(univ||'').trim();
-    if(!key || key==='A팀' || key==='B팀') return;
+    if(!key || key==='A팀' || key==='B팀' || (knownUnivs.size>0 && !knownUnivs.has(key))) return;
     const gid = String(gameId||'').trim();
     if(gid){
       if(seenGameIds.has(gid)) return;
@@ -208,6 +209,7 @@ function calcPlayerVsUniversityRecords(player, opts){
       const sideA = String(sides?.a||'').trim();
       const sideB = String(sides?.b||'').trim();
       if(!sideA || !sideB) return;
+      if((knownUnivs.size>0 && (!knownUnivs.has(sideA) || !knownUnivs.has(sideB)))) return;
       (m.sets||[]).forEach((set,setIdx)=>{
         (set.games||[]).forEach((g,gameIdx)=>{
           if(!g?.playerA || !g?.playerB || !g?.winner) return;

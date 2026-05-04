@@ -1005,11 +1005,14 @@ function _stripPlayerHistoryForSave(player){
 }
 
 let playersRaw = J('su_p')  || [];
+const _playerStoreMeta = J('su_player_store_meta_v1') || {};
+const _playerLegacyLoadEnabled = !_playerStoreMeta.migrated || _playerStoreMeta.backend==='localStorage' || !window.indexedDB;
+if(!_playerLegacyLoadEnabled) playersRaw = [];
 let players    = _unpackPlayers(playersRaw) || [];
 // 사진 분리 저장 지원: su_pp에 {이름:base64} 형태로 저장된 사진을 players에 병합
-(function(){const _pp=J('su_pp');if(_pp&&typeof _pp==='object'&&Array.isArray(players))players.forEach(p=>{if(!p.photo&&_pp[p.name])p.photo=_pp[p.name];});})();
+(function(){ if(!_playerLegacyLoadEnabled) return; const _pp=J('su_pp');if(_pp&&typeof _pp==='object'&&Array.isArray(players))players.forEach(p=>{if(!p.photo&&_pp[p.name])p.photo=_pp[p.name];});})();
 try{ window.players = players; }catch(e){}
-try{ window.playerPhotos = J('su_pp') || {}; }catch(e){}
+try{ window.playerPhotos = _playerLegacyLoadEnabled ? (J('su_pp') || {}) : {}; }catch(e){}
 let boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
 let univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
@@ -1428,13 +1431,6 @@ function fixPoints(){
 function localSave(){
   try{
     _lsSave('su_tiers',TIERS);
-    // 사진(base64)을 su_pp로 분리해서 su_p 크기 감소
-    const _pPhotoMap={};
-    const _pNoPhoto=players.map(p=>{
-      const c=_stripPlayerHistoryForSave(p);
-      if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
-      return c;
-    });
     // teamAMembers/teamBMembers에서 tier·race 제거 (표시 시 players 배열 조회)
     const _trimM=arr=>arr.map(m=>{
       if(!m.teamAMembers&&!m.teamBMembers)return m;
@@ -1443,8 +1439,6 @@ function localSave(){
       if(r.teamBMembers)r.teamBMembers=r.teamBMembers.map(x=>({name:x.name,univ:x.univ}));
       return r;
     });
-    _lsSave('su_pp',_pPhotoMap);
-    _lsSave('su_p',_pNoPhoto);
     _lsSave('su_u',univCfg);
     _lsSave('su_m',maps);
     _lsSave('su_mAlias',userMapAlias);
@@ -1467,6 +1461,22 @@ function localSave(){
       });
     }else{
       window._lastMatchStoreSavePromise = Promise.resolve(true);
+    }
+    if(window.PlayerStore && typeof window.PlayerStore.save==='function'){
+      window._lastPlayerStoreSavePromise = window.PlayerStore.save().catch(e=>{
+        console.warn('[PlayerStore.save]', e && e.message ? e.message : e);
+        return false;
+      });
+    }else{
+      const _pPhotoMap={};
+      const _pNoPhoto=players.map(p=>{
+        const c=_stripPlayerHistoryForSave(p);
+        if(p.photo){_pPhotoMap[p.name]=p.photo;delete c.photo;}
+        return c;
+      });
+      _lsSave('su_pp',_pPhotoMap);
+      _lsSave('su_p',_pNoPhoto);
+      window._lastPlayerStoreSavePromise = Promise.resolve(true);
     }
     localStorage.setItem('su_last_save_time',Date.now().toString());
     if(BLD['ck'])_lsSave('su_bld_ck',{membersA:BLD['ck'].membersA||[],membersB:BLD['ck'].membersB||[]});
@@ -1542,9 +1552,13 @@ function saveCfg(){
 // 프로필 사진만 저장 — su_pp만 갱신 (history 직렬화 없음)
 function savePhotos(){
   try{
-    const _ppm={};
-    players.forEach(p=>{if(p.photo)_ppm[p.name]=p.photo;});
-    _lsSave('su_pp',_ppm);
+    if(window.PlayerStore && typeof window.PlayerStore.save==='function'){
+      window.PlayerStore.save().catch(e=>console.warn('[PlayerStore.savePhotos]', e && e.message ? e.message : e));
+    }else{
+      const _ppm={};
+      players.forEach(p=>{if(p.photo)_ppm[p.name]=p.photo;});
+      _lsSave('su_pp',_ppm);
+    }
     localStorage.setItem('su_last_save_time',Date.now().toString());
   }catch(e){console.error('[savePhotos error]',e);}
 }

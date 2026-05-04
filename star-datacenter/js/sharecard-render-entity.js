@@ -109,17 +109,17 @@
       <div style="display:flex;align-items:flex-start;justify-content:flex-end;gap:12px;margin-bottom:14px">
         <div style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 11px;font-size:10px;font-weight:900">${p.tier||'-'}</div>
       </div>
-      <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center">
-        <div style="width:${profileW}px;height:${profileH}px;border-radius:24px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.26);overflow:hidden;box-shadow:0 14px 32px rgba(0,0,0,.24);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <div class="share-player-top" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center">
+        <div class="share-player-photo-wrap" style="width:${profileW}px;height:${profileH}px;border-radius:24px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.26);overflow:hidden;box-shadow:0 14px 32px rgba(0,0,0,.24);display:flex;align-items:center;justify-content:center;flex-shrink:0">
           ${photoUrl?`<img src="${toHttpsUrl(photoUrl)}" style="width:100%;height:100%;object-fit:cover" onerror="this.remove()">`:universityIcon?`<img src="${toHttpsUrl(universityIcon)}" style="width:${profileInner}px;height:${profileInner}px;object-fit:contain" onerror="this.remove()">`:`<span style="font-size:${Math.round(36*scp.profileScale)}px;font-weight:1000;color:#fff">${String(p.name||'?').charAt(0)}</span>`}
         </div>
-        <div style="min-width:0">
-          <div style="font-size:27px;font-weight:1000;letter-spacing:.2px;line-height:1.08;white-space:normal;word-break:keep-all">${p.name}${getStatusIconHTML(p.name)}</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px">
+        <div class="share-player-main" style="min-width:0">
+          <div class="share-player-name" style="font-size:27px;font-weight:1000;letter-spacing:.2px;line-height:1.08;white-space:normal;word-break:keep-all">${p.name}${getStatusIconHTML(p.name)}</div>
+          <div class="share-player-meta" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px">
             <span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900;display:inline-flex;align-items:center;gap:5px">${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
             <span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900">${raceLabel}</span>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px">${form||'<span style="opacity:.6;font-size:12px">기록없음</span>'}</div>
+          <div class="share-player-form" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px">${form||'<span style="opacity:.6;font-size:12px">기록없음</span>'}</div>
         </div>
         <div class="share-hero-metric" style="min-width:92px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:10px 12px;text-align:center">
           <div class="share-kicker" style="font-size:9px;letter-spacing:.8px;font-weight:900;color:rgba(255,255,255,.68)">ELO</div>
@@ -181,14 +181,14 @@
     <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
     <div style="position:absolute;left:-42px;bottom:-44px;width:150px;height:150px;border-radius:50%;background:${uCol}${Math.round(18+scp.color*32).toString(16).padStart(2,'0')};pointer-events:none"></div>
     <div class="share-surface" style="position:relative;z-index:1;border-radius:22px;padding:18px;border:1px solid rgba(255,255,255,.12);background:${glassBg};backdrop-filter:blur(${scp.surface==='glass'?'10px':'4px'})">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px">
-        <div style="display:flex;align-items:center;gap:12px;min-width:0">
-          <div style="width:78px;height:78px;border-radius:22px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.30);overflow:hidden;box-shadow:0 12px 28px rgba(0,0,0,.18)">
+      <div class="share-univ-top" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px">
+        <div class="share-univ-main" style="display:flex;align-items:center;gap:12px;min-width:0">
+          <div class="share-univ-icon-wrap" style="width:78px;height:78px;border-radius:22px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.30);overflow:hidden;box-shadow:0 12px 28px rgba(0,0,0,.18)">
             ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:52px;height:52px;object-fit:contain" onerror="this.remove()">`:gUI(u.name,'42px')}
           </div>
           <div style="min-width:0">
-            <div style="font-size:28px;font-weight:1000;line-height:1.06;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.name}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.72);font-weight:700;margin-top:5px">소속 선수 ${mem.length}명</div>
+            <div class="share-univ-name" style="font-size:28px;font-weight:1000;line-height:1.06;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.name}</div>
+            <div class="share-univ-sub" style="font-size:11px;color:rgba(255,255,255,.72);font-weight:700;margin-top:5px">소속 선수 ${mem.length}명</div>
           </div>
         </div>
         <div class="share-hero-metric" style="min-width:102px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:10px 12px;text-align:center">
@@ -216,16 +216,16 @@
       </div>
       ${aces.length?`<div style="margin-bottom:14px">
         <div style="font-size:10px;font-weight:900;letter-spacing:.8px;color:rgba(255,255,255,.72);margin-bottom:8px">ACE LINE</div>
-        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
-          ${aces.map((p,idx)=>`<div style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:10px 9px;text-align:center">
+        <div class="share-ace-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+          ${aces.map((p,idx)=>`<div class="share-ace-card" style="background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:10px 9px;text-align:center">
             <div style="font-size:9px;color:rgba(255,255,255,.58);font-weight:900;margin-bottom:6px">${idx===0?'TOP ACE':idx===1?'CORE PLAYER':'KEY MEMBER'}</div>
-            <div style="display:flex;justify-content:center;margin-bottom:7px">${getPlayerPhotoHTML(p.name,'42px')}</div>
+            <div class="share-ace-photo" style="display:flex;justify-content:center;margin-bottom:7px">${getPlayerPhotoHTML(p.name,'42px')}</div>
             <div style="font-size:12px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
             <div style="font-size:10px;color:rgba(255,255,255,.68);margin-top:3px">${p.tier||'-'} · ${pS(p.points)}</div>
           </div>`).join('')}
         </div>
       </div>`:''}
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <div class="share-member-chips" style="display:flex;gap:6px;flex-wrap:wrap">
         ${sortedMem.slice(0,10).map(p=>`<span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:800">${p.name}</span>`).join('')}
         ${mem.length>10?`<span style="opacity:.72;font-size:10px;padding:4px 8px">+${mem.length-10}명</span>`:''}
       </div>

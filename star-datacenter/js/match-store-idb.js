@@ -6,7 +6,9 @@
   const PLAYER_STORE='player_payloads';
   const PLAYER_KEY='main';
   const MATCH_META_KEY='su_match_store_meta_v1';
+  const PLAYER_META_KEY='su_player_store_meta_v1';
   const MATCH_LEGACY_KEYS=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm'];
+  const PLAYER_LEGACY_KEYS=['su_p','su_pp'];
 
   function _matchStoreDefault(){
     return {
@@ -188,6 +190,24 @@
       return _matchStoreDefault();
     }
   }
+  function _playerLegacyLoad(){
+    try{
+      const J = window.J || (k=>{ try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;} });
+      const raw = J('su_p') || [];
+      const unpack = window._unpackPlayers || (v=>Array.isArray(v)?v:((v&&typeof v==='object'&&Array.isArray(v.p))?v.p:[]));
+      const players = unpack(raw) || [];
+      const photos = J('su_pp') || {};
+      const merged = (Array.isArray(players)?players:[]).map(p=>{
+        const c={...(p||{})};
+        if(c && c.name && !c.photo && photos && photos[c.name]) c.photo=photos[c.name];
+        return c;
+      });
+      return _playerStoreNormalize({ players: merged, playerPhotos: photos });
+    }catch(e){
+      console.warn('[player-store] legacy load failed:', e.message);
+      return _playerStoreNormalize(null);
+    }
+  }
   function _legacySave(payload){
     const d=_matchStoreNormalize(payload);
     try{
@@ -207,8 +227,34 @@
       return false;
     }
   }
+  function _playerLegacySave(payload){
+    const d=_playerStoreNormalize(payload);
+    try{
+      const photoMap={...(d.playerPhotos||{})};
+      const noPhoto=(Array.isArray(d.players)?d.players:[]).map(p=>{
+        const c={...(p||{})};
+        delete c.history;
+        if(c && c.name && c.photo){
+          photoMap[c.name]=c.photo;
+          delete c.photo;
+        }
+        return c;
+      });
+      localStorage.setItem('su_p', JSON.stringify(noPhoto));
+      localStorage.setItem('su_pp', JSON.stringify(photoMap));
+      return true;
+    }catch(e){
+      console.warn('[player-store] legacy save failed:', e.message);
+      return false;
+    }
+  }
   function _clearLegacyKeys(){
     MATCH_LEGACY_KEYS.forEach(k=>{
+      try{ localStorage.removeItem(k); }catch(e){}
+    });
+  }
+  function _playerClearLegacyKeys(){
+    PLAYER_LEGACY_KEYS.forEach(k=>{
       try{ localStorage.removeItem(k); }catch(e){}
     });
   }
@@ -217,6 +263,12 @@
   }
   function _metaSave(obj){
     try{ localStorage.setItem(MATCH_META_KEY, JSON.stringify(obj||{})); }catch(e){}
+  }
+  function _playerMetaLoad(){
+    try{ return JSON.parse(localStorage.getItem(PLAYER_META_KEY)||'null')||{}; }catch(e){ return {}; }
+  }
+  function _playerMetaSave(obj){
+    try{ localStorage.setItem(PLAYER_META_KEY, JSON.stringify(obj||{})); }catch(e){}
   }
   function _openDb(){
     return new Promise((resolve,reject)=>{
@@ -369,15 +421,40 @@
     if(window._playerStoreInitPromise) return window._playerStoreInitPromise;
     window._playerStoreInitPromise = (async()=>{
       try{
+        const meta=_playerMetaLoad();
+        const useLegacyFirst = !_idbAvailable() || meta.backend==='localStorage';
+        const legacyExists = (useLegacyFirst || !meta.migrated) ? PLAYER_LEGACY_KEYS.some(k=>{
+          try{ return localStorage.getItem(k)!=null; }catch(e){ return false; }
+        }) : false;
+        if(legacyExists){
+          const legacy=_playerLegacyLoad();
+          _applyPlayersToGlobals(legacy);
+          if(_idbAvailable()){
+            try{
+              await _playerIdbSet(legacy);
+              _playerClearLegacyKeys();
+              _playerMetaSave({migrated:true, backend:'indexedDB', updatedAt:Date.now()});
+            }catch(e){
+              console.warn('[player-store] legacy migrate failed:', e.message);
+              _playerMetaSave({migrated:false, backend:'localStorage', updatedAt:Date.now()});
+            }
+          }else{
+            _playerMetaSave({migrated:false, backend:'localStorage', updatedAt:Date.now()});
+          }
+          window._playerStoreReady=true;
+          return legacy;
+        }
         const payload=await _playerIdbGet();
-        const current=_snapshotPlayersFromGlobals();
-        if(_hasAnyPlayerPayload(payload) && !_hasAnyPlayerPayload(current)){
+        if(_hasAnyPlayerPayload(payload)){
           _applyPlayersToGlobals(payload);
+          _playerClearLegacyKeys();
+          _playerMetaSave({migrated:true, backend:'indexedDB', updatedAt:Date.now()});
         }
         window._playerStoreReady=true;
-        return _hasAnyPlayerPayload(payload) ? payload : current;
+        return _hasAnyPlayerPayload(payload) ? payload : _snapshotPlayersFromGlobals();
       }catch(e){
         console.warn('[player-store] init failed:', e.message);
+        _playerMetaSave({migrated:false, backend:'localStorage', updatedAt:Date.now()});
         window._playerStoreReady=true;
         return _snapshotPlayersFromGlobals();
       }
@@ -448,8 +525,31 @@
   window.PlayerStore = window.PlayerStore || {
     init:initPlayerStore,
     load:_playerIdbGet,
-    save:async()=>_playerIdbSet(_snapshotPlayersFromGlobals()),
-    clear:_playerIdbClear,
+    save:async()=>{
+      const payload=_snapshotPlayersFromGlobals();
+      try{
+        if(_idbAvailable()){
+          const ok = await _playerIdbSet(payload);
+          if(ok){
+            _playerClearLegacyKeys();
+            _playerMetaSave({migrated:true, backend:'indexedDB', updatedAt:Date.now()});
+            return true;
+          }
+        }
+      }catch(e){
+        console.warn('[player-store] save failed:', e.message);
+      }
+      const legacyOk=_playerLegacySave(payload);
+      _playerMetaSave({migrated:false, backend:'localStorage', updatedAt:Date.now()});
+      return legacyOk;
+    },
+    clear:async()=>{
+      let idbOk=true;
+      try{ if(_idbAvailable()) await _playerIdbClear(); }catch(e){ idbOk=false; }
+      _playerClearLegacyKeys();
+      _playerMetaSave({migrated:_idbAvailable()&&idbOk, backend:(_idbAvailable()&&idbOk)?'indexedDB':'localStorage', updatedAt:Date.now()});
+      return {ok:idbOk, backend:(_idbAvailable()&&idbOk)?'indexedDB':'localStorage'};
+    },
     snapshot:_snapshotPlayersFromGlobals,
     apply:_applyPlayersToGlobals
   };

@@ -1,5 +1,10 @@
 function rCal(C,T){
   T.textContent='📅 경기 캘린더';
+  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  if(window._calFilterOpen===undefined){
+    try{ window._calFilterOpen = (localStorage.getItem('su_cal_filter_open') ?? '1') === '1'; }
+    catch(e){ window._calFilterOpen = true; }
+  }
 
   // Feature 3: 뷰 저장
   localStorage.setItem('su_cal_view', calView);
@@ -334,9 +339,16 @@ function rCal(C,T){
     {id:'sched',lbl:'📌 예정'},
   ];
   const _filterBtns = (typeof applyTabLabels==='function') ? applyTabLabels('calendar', filterBtns) : filterBtns;
-  const filterHTML=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px" class="no-export">
-    ${_filterBtns.map(f=>`<button class="pill${calTypeFilter===f.id?' on':''}" onclick="calTypeFilter='${f.id}';render()">${f.lbl}</button>`).join('')}
-  </div>`;
+  const filterToggleHTML = _enableSubFilter
+    ? `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
+        <button class="pill ${window._calFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._calFilterOpen=!window._calFilterOpen;try{localStorage.setItem('su_cal_filter_open',window._calFilterOpen?'1':'0');}catch(e){}render()">🔍 필터 ${window._calFilterOpen?'▲':'▼'}</button>
+      </div>`
+    : '';
+  const filterHTML = (_enableSubFilter ? window._calFilterOpen : true)
+    ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px" class="no-export">
+        ${_filterBtns.map(f=>`<button class="pill${calTypeFilter===f.id?' on':''}" onclick="calTypeFilter='${f.id}';render()">${f.lbl}</button>`).join('')}
+      </div>`
+    : '';
 
   C.innerHTML=`
   <div>
@@ -350,6 +362,7 @@ function rCal(C,T){
         ${isLoggedIn?`<button class="pill no-export" onclick="openCalSchedModal()">+ 예정</button>`:''}
       </div>
     </div>
+    ${filterToggleHTML}
     ${filterHTML}
     ${undatedHTML}
     <!-- 캘린더 본문 -->

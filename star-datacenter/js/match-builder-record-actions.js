@@ -3,6 +3,23 @@
 
   function openIndSessionActionPop(btn, opts){
     try{
+      if(window.HistoryActionUtils && typeof window.HistoryActionUtils.openSimpleActionMenu==='function'){
+        const _list=(Array.isArray(opts)?opts:[]).map(it=>{
+          const label=String(it?.l||it?.t||'').trim();
+          let kind='normal';
+          let desc='';
+          if(label.includes('공유카드')){ kind='accent'; desc='공유용 카드 생성'; }
+          else if(label.includes('수정')){ kind='normal'; desc='기록 내용 수정'; }
+          else if(label.includes('이동')){ kind='normal'; desc='다른 기록 분류로 이동'; }
+          else if(label.includes('삭제')){ kind='danger'; desc='이 기록을 완전히 삭제'; }
+          else if(label.includes('복사')){ kind='normal'; desc='점수와 결과 텍스트 복사'; }
+          return { t:label, d:desc, kind, on:()=>{ try{ if(typeof it?.fn==='function') it.fn(); else if(typeof it?.on==='function') it.on(); }catch(e){} } };
+        }).filter(it=>it.t);
+        window.HistoryActionUtils.openSimpleActionMenu(btn, _list);
+        return;
+      }
+    }catch(e){}
+    try{
       if(typeof _showMovePop==='function'){
         _showMovePop(btn, opts||[]);
         return;

@@ -2165,6 +2165,26 @@ window.cfgSetViewMode = function(mode){
   }catch(e){}
   try{ if(typeof curTab!=='undefined' && curTab==='cfg' && typeof render==='function') render(); }catch(e){}
 };
+window.cfgApplySimpleView = function(){
+  try{
+    const mode=(localStorage.getItem('su_cfg_view_mode')||'basic')==='advanced' ? 'advanced' : 'basic';
+    const q=String(window._cfgSearchQ||'').trim();
+    const fav=['sharecard','uisize','calui','profileshape','tablabels','matchdetail'];
+    const autoOpen=['sharecard','uisize','calui'];
+    const all=document.querySelectorAll('[data-cfg-sec]');
+    all.forEach(el=>{
+      const id=String(el.getAttribute('data-cfg-sec')||'').trim();
+      let vis=true;
+      if(mode==='basic' && !q) vis=fav.includes(id);
+      el.style.display=vis?'':'none';
+      if(el.tagName==='DETAILS'){
+        if(mode==='basic' && !q) el.open=autoOpen.includes(id);
+      }
+    });
+    const cnt=document.getElementById('cfgSearchCnt');
+    if(cnt && mode==='basic' && !q) cnt.textContent=`간단 보기 · 자주 쓰는 설정 ${fav.length}개`;
+  }catch(e){}
+};
 window.cfgFocusSearch = function(){ try{ document.getElementById('cfgSearchInp')?.focus(); }catch(e){} };
 window.cfgCollapseAll = function(){
   try{
@@ -2255,7 +2275,7 @@ window.cfgUnivOrderMove = function(i, dir){
         if(C) C.innerHTML = '<div style="padding:24px;color:var(--gray-l);text-align:center">캘린더 로딩 중...</div>';
         return;
       }
-      loader('js/calendar.js?v=20260422-01').then(()=>{
+      loader('js/calendar.js?v=20260504-02').then(()=>{
         const fn = window.rCal;
         if(typeof fn === 'function' && fn !== _lazyRCal) fn(C, T);
       }).catch((e)=>{
@@ -2274,7 +2294,7 @@ window.cfgUnivOrderMove = function(i, dir){
         return;
       }
       const ensureChart = window.ensureChartJS || (()=>loader('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'));
-      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats-core-utils.js?v=20260503-02')).then(()=>loader('js/stats-tier-rank-utils.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-renderer.js?v=20260503-01')).then(()=>loader('js/stats-tierwin-renderer.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-renderer.js?v=20260503-01')).then(()=>loader('js/stats-maprank-renderer.js?v=20260503-01')).then(()=>loader('js/stats-univmatrix-renderer.js?v=20260503-01')).then(()=>loader('js/stats-advanced-renderers.js?v=20260503-01')).then(()=>loader('js/stats-export-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-normalize.js?v=20260503-01')).then(()=>loader('js/sharecard-theme.js?v=20260503-05')).then(()=>loader('js/sharecard-team.js?v=20260504-01')).then(()=>loader('js/sharecard-runtime.js?v=20260504-02')).then(()=>loader('js/sharecard-render-entity.js?v=20260504-02')).then(()=>loader('js/sharecard-render-match-helpers.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-score.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-layout.js?v=20260503-08')).then(()=>loader('js/sharecard-render-match-shell.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-sections.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-context.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-pipeline.js?v=20260503-02')).then(()=>loader('js/sharecard-match-openers.js?v=20260503-01')).then(()=>loader('js/stats.js?v=20260503-33')).then(()=>{
+      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats-core-utils.js?v=20260503-02')).then(()=>loader('js/stats-tier-rank-utils.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-renderer.js?v=20260503-01')).then(()=>loader('js/stats-tierwin-renderer.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-renderer.js?v=20260503-01')).then(()=>loader('js/stats-maprank-renderer.js?v=20260503-01')).then(()=>loader('js/stats-univmatrix-renderer.js?v=20260503-01')).then(()=>loader('js/stats-advanced-renderers.js?v=20260503-01')).then(()=>loader('js/stats-export-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-normalize.js?v=20260503-01')).then(()=>loader('js/sharecard-theme.js?v=20260503-05')).then(()=>loader('js/sharecard-team.js?v=20260504-02')).then(()=>loader('js/sharecard-runtime.js?v=20260504-02')).then(()=>loader('js/sharecard-render-entity.js?v=20260504-03')).then(()=>loader('js/sharecard-render-match-helpers.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-score.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-layout.js?v=20260504-02')).then(()=>loader('js/sharecard-render-match-shell.js?v=20260504-01')).then(()=>loader('js/sharecard-render-match-sections.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-context.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-pipeline.js?v=20260503-02')).then(()=>loader('js/sharecard-match-openers.js?v=20260503-01')).then(()=>loader('js/stats.js?v=20260503-33')).then(()=>{
         const fn = window.rStats;
         if(typeof fn === 'function' && fn !== _lazyRStats) fn(C, T);
       }).catch((e)=>{
@@ -2694,6 +2714,8 @@ function rCfg(C,T){
     {id:'reccard', icon:'🧾', title:'기록 카드', desc:'CK/프로 버튼색 포함'},
     {id:'cfgmenu', icon:'🧭', title:'메뉴 정리', desc:'자주 쓰는 설정 정리'}
   ];
+  const _basicQuickBtns = _quickBtns.slice(0,4);
+  const _moreQuickBtns = _quickBtns.slice(4);
   const _catButtons = _cfgCats.map(c=>{
     const on=window._cfgCat===c;
     return `<button type="button" onclick="cfgApplyCat('${c}')" class="no-export" data-cat="${c}" data-cfg-cat="${c}"
@@ -2727,7 +2749,7 @@ function rCfg(C,T){
         <button class="btn ${_cfgViewMode==='basic'?'btn-b':'btn-w'} btn-xs" onclick="cfgSetViewMode('basic')">1단계 초보</button>
         <button class="btn ${_cfgViewMode==='advanced'?'btn-b':'btn-w'} btn-xs" onclick="cfgSetViewMode('advanced')">2단계 고급</button>
       </div>
-      ${_menuBtn}
+      ${_cfgViewMode==='advanced' ? _menuBtn : ''}
       ${_regBtn}
     </div>
   </div>
@@ -2735,28 +2757,44 @@ function rCfg(C,T){
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
       <div>
         <div style="font-size:13px;font-weight:900;color:var(--text2)">⚡ 1단계 초보 설정</div>
-        <div style="font-size:11px;color:var(--gray-l)">자주 쓰는 항목만 먼저 보여줍니다. 더 세밀한 메뉴는 2단계 고급에서 엽니다.</div>
+        <div style="font-size:11px;color:var(--gray-l)">지금은 자주 쓰는 설정만 간단하게 보여줍니다. 더 많은 메뉴는 2단계 고급에서 확인할 수 있습니다.</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-w btn-xs" onclick="window.cfgFocusSearch&&window.cfgFocusSearch()">🔎 설정 검색</button>
-        <button class="btn btn-w btn-xs" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()">📦 전체 접기</button>
+        <button class="btn btn-w btn-xs" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()">📦 보이는 항목 접기</button>
         <button class="btn btn-w btn-xs" onclick="window.cfgOpenFavorites&&window.cfgOpenFavorites()">⭐ 자주 쓰는 것만 열기</button>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:8px">
-      ${_quickBtns.map(x=>`<button type="button" class="btn btn-w no-export" onclick="cfgGo('${x.id}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:14px;text-align:left;background:var(--white)">
+      ${(_cfgViewMode==='basic' ? _basicQuickBtns : _quickBtns).map(x=>`<button type="button" class="btn btn-w no-export" onclick="cfgGo('${x.id}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:14px;text-align:left;background:var(--white)">
         <span style="font-size:16px;line-height:1">${x.icon}</span>
         <span style="font-size:12px;font-weight:900;color:var(--text2)">${x.title}</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:700">${x.desc}</span>
       </button>`).join('')}
     </div>
+    ${_cfgViewMode==='basic' ? `<details class="no-export" style="margin-top:10px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.7)">
+      <summary style="padding:11px 12px;cursor:pointer;font-size:12px;font-weight:900;color:var(--text2)">➕ 더 많은 빠른 이동 보기</summary>
+      <div style="padding:0 10px 10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:8px">
+        ${_moreQuickBtns.map(x=>`<button type="button" class="btn btn-w no-export" onclick="cfgGo('${x.id}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:14px;text-align:left;background:var(--white)">
+          <span style="font-size:16px;line-height:1">${x.icon}</span>
+          <span style="font-size:12px;font-weight:900;color:var(--text2)">${x.title}</span>
+          <span style="font-size:10px;color:var(--gray-l);font-weight:700">${x.desc}</span>
+        </button>`).join('')}
+      </div>
+    </details>` : ''}
   </div>
-  <div class="no-export" style="margin:0 0 14px;padding:12px;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 8px 18px rgba(15,23,42,.03)">
+  ${_cfgViewMode==='basic'
+    ? `<details class="no-export" style="margin:0 0 14px;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 8px 18px rgba(15,23,42,.03)">
+    <summary style="padding:12px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:900;color:var(--text2)">🎨 디자인 빠른 이동 <span style="font-size:11px;color:var(--gray-l);font-weight:800">필요할 때만 열기</span></summary>
+    <div style="padding:0 12px 12px">
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">현황판 디자인과 공유카드 디자인을 같은 카드형 버튼으로 바로 이동할 수 있습니다.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">`
+    : `<div class="no-export" style="margin:0 0 14px;padding:12px;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 8px 18px rgba(15,23,42,.03)">
     <div style="margin-bottom:10px">
       <div style="font-size:13px;font-weight:900;color:var(--text2)">🎨 디자인 빠른 이동</div>
       <div style="font-size:11px;color:var(--gray-l)">현황판 디자인과 공유카드 디자인을 같은 카드형 버튼으로 바로 이동할 수 있습니다.</div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">`}
       <button type="button" class="btn btn-w no-export" onclick="cfgGo('sharecard')" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;border-radius:14px;text-align:left;background:var(--white)">
         <span style="font-size:16px;line-height:1">🪪</span>
         <span style="font-size:12px;font-weight:900;color:var(--text2)">공유카드 디자인</span>
@@ -2778,7 +2816,7 @@ function rCfg(C,T){
         <span style="font-size:10px;color:var(--gray-l);font-weight:700">카드 배경/라벨 밝기 세부 조절</span>
       </button>
     </div>
-  </div>
+  ${_cfgViewMode==='basic' ? `</div></details>` : `</div>`}
   ${_cfgViewMode==='advanced' ? `<details class="no-export" open style="margin:0 0 14px;border:1px solid var(--border);border-radius:18px;background:linear-gradient(135deg,var(--surface),rgba(255,255,255,.96));box-shadow:0 10px 22px rgba(15,23,42,.04)">
     <summary style="padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:900;color:var(--text2)">🧭 2단계 고급 설정 전체 보기 <span style="font-size:11px;color:var(--gray-l);font-weight:800">카테고리별 전체 메뉴</span></summary>
     <div style="padding:0 12px 12px">
@@ -2811,7 +2849,7 @@ function rCfg(C,T){
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
       <div>
         <div style="font-size:13px;font-weight:900;color:var(--text2)">🧭 2단계 고급 설정 숨김 상태</div>
-        <div style="font-size:11px;color:var(--gray-l)">지금은 1단계 초보 보기입니다. 세부 설정이 필요하면 상단의 2단계 고급 버튼으로 전체 메뉴를 펼칠 수 있습니다.</div>
+        <div style="font-size:11px;color:var(--gray-l)">세부 설정은 숨겨져 있습니다. 필요한 경우에만 2단계 고급을 열어 전체 메뉴를 볼 수 있습니다.</div>
       </div>
       <button class="btn btn-w btn-xs" onclick="cfgSetViewMode('advanced')">2단계 고급 열기</button>
     </div>
@@ -4931,6 +4969,7 @@ ${_scfgD('notice','📢 공지 관리')}
     });
     // 카테고리 필터 적용
     if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'🧩 운영/콘텐츠', false);
+    try{ if(typeof window.cfgApplySimpleView==='function') window.cfgApplySimpleView(); }catch(e){}
     // 펨코현황 설정 초기화
     try{ if(typeof cfgFemcoInit==='function') cfgFemcoInit(); }catch(e){}
     // 자동인식 출력 포맷 미리보기 초기화
@@ -4942,6 +4981,7 @@ ${_scfgD('notice','📢 공지 관리')}
   C.innerHTML=h;
   // 최초 렌더 직후 카테고리 필터를 즉시 적용 (setTimeout 실행이 막히는 환경 대비)
   try{ if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'🧩 운영/콘텐츠', false); }catch(e){}
+  try{ if(typeof window.cfgApplySimpleView==='function') window.cfgApplySimpleView(); }catch(e){}
   // 검색어가 있으면 렌더 직후 검색 필터 적용
   try{ if(window._cfgSearchQ) window.cfgSearchSettings(window._cfgSearchQ); }catch(e){}
   // 인라인 onclick이 불발되는 환경 대비 이벤트 바인딩
