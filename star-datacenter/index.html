@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="css/style.css?v=20260502-30"><!-- /* [Z-IDX] */ -->
+<link rel="stylesheet" href="css/style.css?v=20260503-05"><!-- /* [Z-IDX] */ -->
 </head>
 <body>
 
@@ -507,6 +507,7 @@
         <div id="cmdTitle" class="cmd-title">📊 경기 상세</div>
         <div id="cmdSub" class="cmd-sub"></div>
       </div>
+      <div id="cmdHeadActions" class="cmd-head-actions no-export" style="display:flex;align-items:center;gap:8px"></div>
       <button class="cmd-close" onclick="closeCompMatchDetailModal()" aria-label="닫기">✕</button>
     </div>
     <div id="cmdScoreBar" class="cmd-scorebar" style="display:none"></div>
@@ -589,15 +590,15 @@
 
 <script src="js/config.js"></script>
 <script src="js/app-state.js"></script>
-<script src="js/match-store-idb.js?v=20260503-01"></script>
-<script src="js/constants.js?v=20260503-01"></script>
-<script src="js/constants-player-html.js?v=20260501-08"></script>
+<script src="js/match-store-idb.js?v=20260503-06"></script>
+<script src="js/constants.js?v=20260503-07"></script>
+<script src="js/constants-player-html.js?v=20260503-01"></script>
 <script src="js/unified-settings.js?v=20260425-01"></script>
 <script src="js/modal-open.js?v=20260502-02"></script>
-<script src="js/modal-drag.js?v=20260416-01"></script>
+<script src="js/modal-drag.js?v=20260504-04"></script>
 <script src="js/data.js?v=20260424-02"></script>
 <script src="js/year-utils.js?v=20260501-42"></script>
-<script src="js/auth.js?v=20260502-52"></script>
+<script src="js/auth.js?v=20260503-01"></script>
 <script src="js/settings-sync/merge.js?v=20260502-01"></script>
 <script src="js/settings-sync/gist-io.js?v=20260502-01"></script>
 <script src="js/settings-sync/signal.js?v=20260502-01"></script>
@@ -608,17 +609,21 @@
 <script src="js/settings/team-colors.js?v=20260503-01"></script>
 <script src="js/settings/sharecard.js?v=20260503-01"></script>
 <script src="js/settings/index.js?v=20260430-01"></script>
-<script src="js/tier-tour.js?v=20260502-09"></script>
+<script src="js/tier-tour.js?v=20260503-03"></script>
 <script src="js/settings/font-controls.js?v=20260502-01"></script>
 <script src="js/settings/ui-scale-controls.js?v=20260502-01"></script>
-<script src="js/settings.js?v=20260503-01"></script>
+<script src="js/settings.js?v=20260504-01"></script>
 <script src="js/settings-map-status.js?v=20260501-01"></script>
 <script src="js/settings-profile-ui.js?v=20260502-01"></script>
 <script src="js/settings-match-detail.js?v=20260501-03"></script>
-<script src="js/settings-player-detail.js?v=20260502-02"></script>
-<script src="js/competition.js?v=20260503-02"></script>
+<script src="js/settings-player-detail.js?v=20260503-02"></script>
+<script src="js/competition.js?v=20260504-04"></script>
+<script src="js/competition-detail-modal.js?v=20260504-01"></script>
+<script src="js/competition-group-records.js?v=20260504-01"></script>
+<script src="js/competition-bracket-records.js?v=20260504-01"></script>
+<script src="js/competition-bracket-editor.js?v=20260504-01"></script>
 <script src="js/history-share.js?v=20260503-01"></script>
-<script src="js/render-lazy-utils.js?v=20260503-15"></script>
+<script src="js/render-lazy-utils.js?v=20260504-01"></script>
 <script src="js/render-core.js?v=20260502-37"></script>
 <script src="js/render-nav-lazy.js?v=20260502-09"></script>
 <script src="js/render-iconify-ui.js?v=20260501-34"></script>
@@ -648,10 +653,10 @@
 <script src="js/render-match-id-prepare.js?v=20260501-36"></script>
 <script src="js/players.js?v=20260428-02"></script>
 <script src="js/vs.js?v=20260502-03"></script>
-<script src="js/history-action-utils.js?v=20260503-03"></script>
+<script src="js/history-action-utils.js?v=20260503-07"></script>
 <script src="js/history-external-utils.js?v=20260501-11"></script>
 <script src="js/history-external-ui.js?v=20260502-01"></script>
-<script src="js/history.js?v=20260503-06"></script>
+<script src="js/history.js?v=20260503-16"></script>
 <script src="js/match.js?v=20260502-03"></script>
 <script src="js/match-builder.js?v=20260503-03"></script>
 <script src="js/match-builder-core-tabs.js?v=20260503-01"></script>
@@ -674,9 +679,9 @@
 <!-- (성능) 룰렛/부가기능은 탭 진입 시 지연 로딩 (render-core.js에서 로드) -->
 <!-- (성능) vote/elboard/bgm/soop는 기능 사용 시 지연 로딩 (render-core.js/init.js) -->
 <script src="js/sync/cloud-apply.js?v=20260502-04"></script>
-<script src="js/sync/cloud-status.js?v=20260502-01"></script>
+<script src="js/sync/cloud-status.js?v=20260503-01"></script>
 <script src="js/cloud-board.js?v=20260502-05"></script>
-<script src="js/init.js?v=20260502-47"></script>
+<script src="js/init.js?v=20260503-11"></script>
 <script src="js/board2-image-utils.js?v=20260501-68"></script>
 <script src="js/board2-card-utils.js?v=20260501-10"></script>
 <script src="js/board2.js?v=20260501-68"></script>
@@ -829,9 +834,9 @@ function fabActionCfgSearch(){
   </div>
 </div>
 
-<script src="js/firebase-init.js?v=20260502-03"></script>
-<script src="js/sync/firebase-github.js?v=20260502-01"></script>
-<script src="js/sync/firebase-signal.js?v=20260502-01"></script>
+<script src="js/firebase-init.js?v=20260503-02"></script>
+<script src="js/sync/firebase-github.js?v=20260503-04"></script>
+<script src="js/sync/firebase-signal.js?v=20260503-01"></script>
 <!-- test.js 제거 (파일 없음 404 오류) -->
 
 
