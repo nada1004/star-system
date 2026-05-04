@@ -92,15 +92,17 @@ function _renderShareCardByPlayerFallback(name){
   const accentB = typeof window._scMixHex==='function' ? window._scMixHex(baseCol, scp.mode==='aurora' ? '#7c3aed' : scp.mode==='poster' ? '#111827' : '#ffffff', scp.mode==='vivid' ? .18 : scp.mode==='aurora' ? .22 : scp.mode==='poster' ? .42 : .34) : baseCol;
   const shellBg = scp.mode==='dark' ? 'linear-gradient(180deg,#020617,#0f172a)' : scp.mode==='aurora' ? `linear-gradient(160deg,${typeof window._scMixHex==='function'?window._scMixHex(baseCol,'#e0f2fe',.72):baseCol},${typeof window._scMixHex==='function'?window._scMixHex(baseCol,'#111827',.18):'#111827'})` : scp.mode==='poster' ? `linear-gradient(180deg,${typeof window._scMixHex==='function'?window._scMixHex(baseCol,'#111827',.18):baseCol},#111827)` : scp.mode==='mono' ? 'linear-gradient(180deg,#1f2937,#111827)' : `linear-gradient(180deg,${accentA},#111827)`;
   const glassBg = scp.surface==='solid' ? `linear-gradient(180deg,${accentA},${accentB})` : scp.surface==='clean' ? 'linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.10))' : 'linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))';
-  const bgCss = bgImg
-    ? `linear-gradient(135deg, rgba(15,23,42,${(bgDark/100).toFixed(2)}), rgba(15,23,42,${Math.max(0, (bgDark-12)/100).toFixed(2)})), linear-gradient(135deg, rgba(255,255,255,${(bgFade/100).toFixed(2)}), rgba(255,255,255,${Math.max(0, (bgFade-25)/100).toFixed(2)})), url('${toHttpsUrl(bgImg)}') ${bgPos}/${bgScale}% ${bgFit==='fill'?'100%':bgFit} no-repeat, linear-gradient(135deg,${col}dd,${col}88)`
-    : `linear-gradient(135deg,${col}dd,${col}88)`;
+  const surfaceBlur = bgImg ? '0px' : (scp.surface==='glass' ? '10px' : '4px');
+  const bgCss = `linear-gradient(135deg,${col}dd,${col}88)`;
+  const bgSize = bgFit==='fill' ? `${bgScale}% ${bgScale}%` : `${bgScale}%`;
   card.innerHTML=`<div style="background:${shellBg};padding:16px;border-radius:26px;color:#fff;position:relative;overflow:hidden;box-shadow:0 22px 48px rgba(15,23,42,.26);font-family:'Noto Sans KR',sans-serif">
     <div style="position:absolute;inset:0;background:${bgCss};opacity:.96"></div>
+    ${bgImg?`<div style="position:absolute;inset:0;background-image:url('${toHttpsUrl(bgImg)}');background-position:${bgPos};background-size:${bgSize};background-repeat:no-repeat;opacity:1"></div>`:''}
+    ${bgImg?`<div style="position:absolute;inset:0;background:linear-gradient(135deg, rgba(15,23,42,${(bgDark/100).toFixed(2)}), rgba(15,23,42,${Math.max(0, (bgDark-12)/100).toFixed(2)})), linear-gradient(135deg, rgba(255,255,255,${(bgFade/100).toFixed(2)}), rgba(255,255,255,${Math.max(0, (bgFade-25)/100).toFixed(2)}));pointer-events:none"></div>`:''}
     <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,${(0.08+scp.fx*0.10).toFixed(2)}),rgba(15,23,42,${(0.62+scp.fx*0.22).toFixed(2)}));pointer-events:none"></div>
     <div style="position:absolute;top:-32px;right:-28px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
     <div style="position:absolute;left:-42px;bottom:-44px;width:160px;height:160px;border-radius:50%;background:${baseCol}${Math.round(20+scp.color*30).toString(16).padStart(2,'0')};pointer-events:none"></div>
-    <div style="position:relative;z-index:1;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:18px;background:${glassBg};backdrop-filter:blur(${scp.surface==='glass'?'10px':'4px'})">
+    <div style="position:relative;z-index:1;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:18px;background:${glassBg};backdrop-filter:blur(${surfaceBlur})">
       <div style="display:flex;align-items:flex-start;justify-content:flex-end;gap:12px;margin-bottom:14px">
         <div style="background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 11px;font-size:10px;font-weight:900">${p.tier||'-'}</div>
       </div>

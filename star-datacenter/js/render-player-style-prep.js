@@ -30,7 +30,19 @@ function preparePlayerDetailStyleData(player){
   const imgZoom=(Number(p.detailHeaderBgScale||pdStyle.header_bg_scale||pdStyle.img_zoom||100)||100) * scaleMul;
   const hasImgFillSetting = typeof imgSettings.fill === 'boolean';
   const imgFit=(p.detailHeaderBgFit||pdStyle.header_bg_fit||'').trim();
-  const imgPos=(p.detailHeaderBgPos||pdStyle.header_bg_pos||'center center').trim();
+  const _posKwToPct = (raw, axis) => {
+    const s = String(raw||'').trim().toLowerCase();
+    if(axis==='x') return s.includes('left') ? 0 : (s.includes('right') ? 100 : 50);
+    return s.includes('top') ? 0 : (s.includes('bottom') ? 100 : 50);
+  };
+  const _numOr = (raw, fallback) => {
+    const n = parseInt(String(raw??'').replace('%','').trim(), 10);
+    return isNaN(n) ? fallback : Math.max(0, Math.min(100, n));
+  };
+  const _posRaw = (p.detailHeaderBgPos||pdStyle.header_bg_pos||'center center').trim();
+  const _posX = _numOr((p.detailHeaderBgPosX ?? pdStyle.header_bg_pos_x), _posKwToPct(_posRaw,'x'));
+  const _posY = _numOr((p.detailHeaderBgPosY ?? pdStyle.header_bg_pos_y), _posKwToPct(_posRaw,'y'));
+  const imgPos=`${_posX}% ${_posY}%`;
   const imgFill=imgFit || (hasImgFillSetting
     ? (imgSettings.fill ? 'cover' : 'contain')
     : ((pdStyle.img_fill!=null && pdStyle.img_fill!=='') ? pdStyle.img_fill : 'contain'));

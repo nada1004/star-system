@@ -2274,7 +2274,7 @@ window.cfgUnivOrderMove = function(i, dir){
         return;
       }
       const ensureChart = window.ensureChartJS || (()=>loader('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'));
-      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats-core-utils.js?v=20260503-02')).then(()=>loader('js/stats-tier-rank-utils.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-renderer.js?v=20260503-01')).then(()=>loader('js/stats-tierwin-renderer.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-renderer.js?v=20260503-01')).then(()=>loader('js/stats-maprank-renderer.js?v=20260503-01')).then(()=>loader('js/stats-univmatrix-renderer.js?v=20260503-01')).then(()=>loader('js/stats-advanced-renderers.js?v=20260503-01')).then(()=>loader('js/stats-export-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-normalize.js?v=20260503-01')).then(()=>loader('js/sharecard-theme.js?v=20260503-05')).then(()=>loader('js/sharecard-team.js?v=20260504-01')).then(()=>loader('js/sharecard-runtime.js?v=20260504-01')).then(()=>loader('js/sharecard-render-entity.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-helpers.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-score.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-layout.js?v=20260503-08')).then(()=>loader('js/sharecard-render-match-shell.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-sections.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-context.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-pipeline.js?v=20260503-02')).then(()=>loader('js/sharecard-match-openers.js?v=20260503-01')).then(()=>loader('js/stats.js?v=20260503-33')).then(()=>{
+      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats-core-utils.js?v=20260503-02')).then(()=>loader('js/stats-tier-rank-utils.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-renderer.js?v=20260503-01')).then(()=>loader('js/stats-tierwin-renderer.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-renderer.js?v=20260503-01')).then(()=>loader('js/stats-maprank-renderer.js?v=20260503-01')).then(()=>loader('js/stats-univmatrix-renderer.js?v=20260503-01')).then(()=>loader('js/stats-advanced-renderers.js?v=20260503-01')).then(()=>loader('js/stats-export-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-normalize.js?v=20260503-01')).then(()=>loader('js/sharecard-theme.js?v=20260503-05')).then(()=>loader('js/sharecard-team.js?v=20260504-01')).then(()=>loader('js/sharecard-runtime.js?v=20260504-02')).then(()=>loader('js/sharecard-render-entity.js?v=20260504-02')).then(()=>loader('js/sharecard-render-match-helpers.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-score.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-layout.js?v=20260503-08')).then(()=>loader('js/sharecard-render-match-shell.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-sections.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-context.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-pipeline.js?v=20260503-02')).then(()=>loader('js/sharecard-match-openers.js?v=20260503-01')).then(()=>loader('js/stats.js?v=20260503-33')).then(()=>{
         const fn = window.rStats;
         if(typeof fn === 'function' && fn !== _lazyRStats) fn(C, T);
       }).catch((e)=>{
@@ -6075,6 +6075,32 @@ window.openEP=function(name){
           </div>
         </div>
       </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 6px">이미지 위치</div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+        ${[
+          ['left top','↖ 좌상'],['center top','↑ 상단'],['right top','↗ 우상'],
+          ['left center','← 좌중'],['center center','• 중앙'],['right center','→ 우중'],
+          ['left bottom','↙ 좌하'],['center bottom','↓ 하단'],['right bottom','↘ 우하']
+        ].map(([pos,label])=>`<button type="button" data-phbg-pos="${pos}" class="btn btn-xs ${(p.detailHeaderBgPos||'center center')===pos?'btn-b':'btn-w'}"
+          onclick="document.getElementById('ed-phbg-pos').value='${pos}'; document.querySelectorAll('[data-phbg-pos]').forEach(el=>el.className='btn btn-xs btn-w'); this.className='btn btn-xs btn-b';">${label}</button>`).join('')}
+      </div>
+      <input type="hidden" id="ed-phbg-pos" value="${p.detailHeaderBgPos||'center center'}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div>
+          <label>가로 미세 위치</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="range" id="ed-phbg-posx" min="0" max="100" step="1" value="${Number(p.detailHeaderBgPosX??50)||50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-posx-val').textContent=this.value+'%'">
+            <span id="ed-phbg-posx-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.detailHeaderBgPosX??50)||50}%</span>
+          </div>
+        </div>
+        <div>
+          <label>세로 미세 위치</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="range" id="ed-phbg-posy" min="0" max="100" step="1" value="${Number(p.detailHeaderBgPosY??50)||50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-posy-val').textContent=this.value+'%'">
+            <span id="ed-phbg-posy-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.detailHeaderBgPosY??50)||50}%</span>
+          </div>
+        </div>
+      </div>
     </div>
     <div style="margin-top:14px;padding:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px">
       <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">🪪 개인 공유카드 배경</div>
@@ -6343,6 +6369,9 @@ function savePlayer(){
   const _phbg=(document.getElementById('ed-phbg')?.value||'').trim();
   const _phbgFit=(document.getElementById('ed-phbg-fit')?.value||'').trim();
   const _phbgScale=parseInt(document.getElementById('ed-phbg-scale')?.value||'100',10)||100;
+  const _phbgPos=(document.getElementById('ed-phbg-pos')?.value||'center center').trim();
+  const _phbgPosX=parseInt(document.getElementById('ed-phbg-posx')?.value||'50',10);
+  const _phbgPosY=parseInt(document.getElementById('ed-phbg-posy')?.value||'50',10);
   const _shareBg=(document.getElementById('ed-sharebg')?.value||'').trim();
   const _shareBgFit=(document.getElementById('ed-sharebg-fit')?.value||'').trim();
   const _shareBgScale=parseInt(document.getElementById('ed-sharebg-scale')?.value||'100',10)||100;
@@ -6354,6 +6383,9 @@ function savePlayer(){
   p.detailHeaderBgImg=_phbg||undefined;
   p.detailHeaderBgFit=_phbgFit||undefined;
   p.detailHeaderBgScale=_phbg ? _phbgScale : undefined;
+  p.detailHeaderBgPos=_phbg ? _phbgPos : undefined;
+  p.detailHeaderBgPosX=_phbg ? (isNaN(_phbgPosX)?50:Math.max(0,Math.min(100,_phbgPosX))) : undefined;
+  p.detailHeaderBgPosY=_phbg ? (isNaN(_phbgPosY)?50:Math.max(0,Math.min(100,_phbgPosY))) : undefined;
   p.shareCardBgImg=_shareBg||undefined;
   p.shareCardBgFit=_shareBgFit||undefined;
   p.shareCardBgScale=_shareBg ? _shareBgScale : undefined;

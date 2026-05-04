@@ -2885,11 +2885,11 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   font-size:12px !important;
   line-height:1 !important;
   padding:0 !important;
-  display:inline-flex !important;
   align-items:center !important;
   justify-content:center !important;
   box-shadow:0 2px 8px rgba(15,23,42,.05);
 }
+.detail-act-share,.detail-act-close{display:inline-flex !important;}
 .detail-act-share,.detail-act-edit,.detail-act-close{padding:0 !important;}
 @media(max-width:768px){
   #playerModal .umbox, #univModal .umbox{
