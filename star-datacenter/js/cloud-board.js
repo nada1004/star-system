@@ -1874,4 +1874,105 @@ async function downloadBoardSel(){
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 자동 동기화 (폴링) 기능 - GitHub 데이터 변경 자동 감지
+// ═══════════════════════════════════════════════════════════════
+let _autoSyncTimer = null;
+let _lastRemoteSavedAt = 0;
 
+// 원격 저장소의 savedAt 체크 (경량)
+async function _checkRemoteSavedAt() {
+  try {
+    const urls = [
+      GITHUB_JSON_URL + '?_=' + Date.now(),
+      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json?_=' + Date.now()
+    ];
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { cache: 'no-store', mode: 'cors', signal: AbortSignal.timeout(8000) });
+        if (!res.ok) continue;
+        const text = (await res.text()).replace(/^\uFEFF/, '').trim();
+        const raw = JSON.parse(text);
+        return Number(raw && raw.savedAt || 0) || 0;
+      } catch (e) { continue; }
+    }
+  } catch (e) {}
+  return 0;
+}
+
+// 자동 동기화 실행
+async function _autoSyncCheck() {
+  if (!_boardCanManage()) return; // 로그인/권한 체크
+  if (window._isSaving) return; // 현재 저장 중이면 스킵
+  
+  try {
+    const remoteAt = await _checkRemoteSavedAt();
+    if (!remoteAt) return;
+    
+    _lastRemoteSavedAt = remoteAt;
+    
+    // 로컬 저장 시간 확인
+    const localSavedAt = Math.max(
+      Number(window._lastAdminSaveTime || 0) || 0,
+      Number(localStorage.getItem('su_last_admin_save') || 0) || 0,
+      Number(window._lastAppliedSavedAt || 0) || 0
+    );
+    
+    // 원격에 더 새로운 데이터가 있으면 알림
+    if (remoteAt > localSavedAt + 3000) { // 3초 여유
+      const statusEl = document.getElementById('cloudStatus');
+      if (statusEl) {
+        statusEl.style.color = '#2563eb';
+        statusEl.innerHTML = `🔄 GitHub에 새 데이터 있음 <button onclick="window.cloudLoad()" style="margin-left:6px;padding:2px 8px;border:1px solid #2563eb;border-radius:4px;background:#eff6ff;color:#2563eb;font-size:11px;cursor:pointer">불러오기</button>`;
+      }
+      // 알림 토스트 (한 번만)
+      if (typeof showToast === 'function' && !window._autoSyncNotified) {
+        showToast('🔄 GitHub에 새 데이터가 있습니다. 불러오기 버튼을 클릭하세요.', 5000);
+        window._autoSyncNotified = true;
+        setTimeout(() => { window._autoSyncNotified = false; }, 60000); // 1분 후 재알림 가능
+      }
+    }
+  } catch (e) {
+    console.warn('[autoSync] 체크 실패:', e);
+  }
+}
+
+// 자동 동기화 시작 (10분마다 체크 - GitHub 캐싱 고려)
+function startAutoSync() {
+  if (_autoSyncTimer) clearInterval(_autoSyncTimer);
+  _autoSyncTimer = setInterval(_autoSyncCheck, 10 * 60 * 1000); // 10분
+  console.log('[autoSync] 자동 동기화 시작 (10분 간격)');
+}
+
+// 자동 동기화 중지
+function stopAutoSync() {
+  if (_autoSyncTimer) {
+    clearInterval(_autoSyncTimer);
+    _autoSyncTimer = null;
+    console.log('[autoSync] 자동 동기화 중지');
+  }
+}
+
+// 페이지 로드 후 자동 시작 (로그인 상태일 때)
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
+      startAutoSync();
+      // 첫 체크는 10초 후
+      setTimeout(_autoSyncCheck, 10000);
+    }
+  }, 2000);
+}, { once: true });
+
+// 저장 완료 후 자동 동기화 재시작
+window.addEventListener('DOMContentLoaded', () => {
+  const originalFbCloudSave = window.fbCloudSave;
+  if (originalFbCloudSave) {
+    window.fbCloudSave = async function(...args) {
+      const result = await originalFbCloudSave.apply(this, args);
+      // 저장 후 30초 뒤에 동기화 체크 (GitHub 반영 대기)
+      setTimeout(_autoSyncCheck, 30000);
+      return result;
+    };
+  }
+}, { once: true });
