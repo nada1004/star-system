@@ -88,6 +88,24 @@ function _migrateTierTourneys(){
   if(changed) save();
 }
 
+window.ensureTierTourRecords = function(){
+  try{
+    if(typeof ttM==='undefined' || !Array.isArray(ttM)) window.ttM = [];
+  }catch(e){}
+  let before = 0;
+  try{ before = Array.isArray(ttM) ? ttM.length : 0; }catch(e){}
+  try{
+    _ttMigrated = false;
+    _migrateTierTourneys();
+  }catch(e){}
+  let after = 0;
+  try{ after = Array.isArray(ttM) ? ttM.length : 0; }catch(e){}
+  try{
+    if(!after && typeof window._seedTierTtM==='function') window._seedTierTtM();
+  }catch(e){}
+  return { before, after, recovered: Math.max(0, after - before) };
+};
+
 // (원복 지원) 티어대회 토너먼트 대진표를 "프로리그 대회 대진표 방식"(tn.bracket = rounds 배열)으로 통일하기 위한 변환
 // - 실험 버전에서 tn.bracket이 {slots,winners,matchDetails} 객체로 저장된 경우가 있어
 //   proCompBracket에서는 "대진표 없음"으로 보일 수 있음.
@@ -854,9 +872,25 @@ function rTierTourTab(C, T){
     h+=_allGrp.length?recSummaryListHTML(_allGrp,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">조별리그 기록이 없습니다.<br><span style="font-size:11px">📅 조별리그 탭에서 경기 결과를 입력하세요.</span></div>';
   } else {
     // records 탭 (일반 기록)
-    const _ttFiltered=_ttCurComp
-      ? ttM.filter(m=>_eqComp(m,_ttCurComp)&&(!m.stage||m.stage==='general'))
-      : ttM.filter(m=>!m.stage||m.stage==='general');
+    const _ttGeneralBase = ttM.filter(m=>!m?.stage || m.stage==='general' || m.stage==='normal');
+    let _ttFiltered=_ttCurComp
+      ? _ttGeneralBase.filter(m=>_eqComp(m,_ttCurComp))
+      : _ttGeneralBase.slice();
+    if(_ttCurComp && !_ttFiltered.length){
+      const _orphans = _ttGeneralBase.filter(m=>!String(m?.compName||m?.n||m?.t||'').trim());
+      if(_orphans.length){
+        try{
+          _orphans.forEach(m=>{
+            if(!m) return;
+            m.compName = _ttCurComp;
+            if(!String(m.n||'').trim()) m.n = _ttCurComp;
+            if(!String(m.t||'').trim()) m.t = _ttCurComp;
+          });
+          save();
+        }catch(e){}
+        _ttFiltered = _ttGeneralBase.filter(m=>_eqComp(m,_ttCurComp));
+      }
+    }
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 일반 기록</div>`;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">일반 기록이 없습니다.</div>';
   }
@@ -942,6 +976,11 @@ function ttPlayerRankHTML(compName){
 }
 
 function rTierTour(){
+  try{
+    if((typeof ttM==='undefined' || !Array.isArray(ttM) || !ttM.length) && typeof window.ensureTierTourRecords==='function'){
+      window.ensureTierTourRecords();
+    }
+  }catch(e){}
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},
@@ -3057,6 +3096,11 @@ function ttPlayerRankHTML(compName){
 }
 
 function rTierTour(){
+  try{
+    if((typeof ttM==='undefined' || !Array.isArray(ttM) || !ttM.length) && typeof window.ensureTierTourRecords==='function'){
+      window.ensureTierTourRecords();
+    }
+  }catch(e){}
   if(!isLoggedIn && _ttSub==='input') _ttSub='records';
   const subOpts=[
     {id:'input',lbl:'📝 경기 입력',fn:`_ttSub='input';render()`},

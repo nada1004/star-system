@@ -438,10 +438,10 @@ function proCompLeague(tn) {
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
           ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
         </div>
-        <div style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
+        <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
           ${_pcard(pa, aWin)}
-          <div style="text-align:center;min-width:60px">
-            ${isDone?`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;padding:6px 12px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
+          <div class="grp-score-col" style="text-align:center;min-width:60px">
+            ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;padding:6px 12px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
               <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'패'}</span>
               <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
               <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
@@ -1500,10 +1500,10 @@ function proCompTourMatchInput(tn){
         <span style="font-size:10px;color:var(--gray-l);font-weight:800">${dLabel}</span>
         ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
       </div>
-      <div style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
+      <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
         ${_pcard(pa, m.a, aWin)}
-        <div style="text-align:center;min-width:60px">
-          ${isDone?`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;padding:6px 12px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
+        <div class="grp-score-col" style="text-align:center;min-width:60px">
+          ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;padding:6px 12px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
             <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'패'}</span>
             <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
             <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>

@@ -1502,12 +1502,13 @@ function saveCfg(){
     localStorage.setItem('su_last_save_time',Date.now().toString());
     try{ if(typeof _iconPersistState==='function') _iconPersistState(); }catch(e){}
 
-    // 설정 변경도 다른 기기에 반영되도록 GitHub data.json 부분 업데이트
+    // 설정 변경 GitHub 자동 반영은 옵션이 켜진 경우에만 수행
     try{
       const statusEl = document.getElementById('cloudStatus');
       if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
         const token = localStorage.getItem('su_gh_token') || '';
-        if (token && typeof window.fbUpdate === 'function') {
+        const autoCfgRemote = (localStorage.getItem('su_cfg_remote_auto') || '0') === '1';
+        if (token && autoCfgRemote && typeof window.fbUpdate === 'function') {
           // su_* 키 일부(큰 값/비밀 값 제외)도 함께 동기화 → 설정탭 변경이 다른 기기에 바로 적용
           const _syncLs = {};
           try{
@@ -1538,11 +1539,17 @@ function saveCfg(){
             .then(()=>{ if(statusEl){ statusEl.style.color='#16a34a'; statusEl.textContent='✅ 설정 GitHub 반영됨'; setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 2500);} })
             .catch((e)=>{ if(statusEl){ statusEl.style.color='#dc2626'; statusEl.textContent='❌ 설정 GitHub 실패'; } console.error('[fbUpdate cfg]',e); });
         } else {
-          // GitHub 토큰 미설정이면 로컬만 저장
-          if(statusEl && !token){
-            statusEl.style.color='#d97706';
-            statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)';
-            setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 4000);
+          // GitHub 토큰 미설정이거나 자동 반영 OFF면 로컬만 저장
+          if(statusEl){
+            if(!token){
+              statusEl.style.color='#d97706';
+              statusEl.textContent='⚠️ 로컬만 저장 (설정탭→GitHub 토큰 필요)';
+              setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 4000);
+            }else if(!autoCfgRemote){
+              statusEl.style.color='#64748b';
+              statusEl.textContent='💾 로컬 저장만 수행됨 (설정 자동 GitHub 저장 OFF)';
+              setTimeout(()=>{ if(statusEl){statusEl.textContent='';statusEl.style.color='';} }, 2200);
+            }
           }
         }
       }
@@ -1637,6 +1644,7 @@ function _matchSyncHash(str){
   return (h >>> 0).toString(16);
 }
 function _buildMatchSyncSignature(){
+  const _playersForSig = (Array.isArray(players)?players:[]).map(p=>_stripPlayerHistoryForSave(p));
   const payload = {
     miniM,
     univM,
@@ -1645,7 +1653,18 @@ function _buildMatchSyncSignature(){
     proM,
     ttM,
     indM,
-    gjM
+    gjM,
+    players:_playersForSig,
+    TIERS,
+    univCfg,
+    maps,
+    userMapAlias,
+    notices,
+    seasons,
+    calScheduled,
+    boardOrder:(typeof boardOrder!=='undefined' ? boardOrder : []),
+    boardPlayerOrder:(typeof boardPlayerOrder!=='undefined' ? boardPlayerOrder : []),
+    tourD
   };
   const json = JSON.stringify(payload);
   return `${json.length}:${_matchSyncHash(json)}`;
@@ -1794,10 +1813,18 @@ window.addEventListener('DOMContentLoaded', ()=>{
   }catch(e){}
 }, { once:true });
 async function save(){
+  let beforeSig = '';
+  try{ beforeSig = _primeMatchSyncSignature(false) || ''; }catch(e){}
   localSave();
   try{ await (window._lastMatchStoreSavePromise || Promise.resolve(true)); }catch(e){}
   try{
     const nextSig = _buildMatchSyncSignature();
+    if(beforeSig && beforeSig === nextSig){
+      _lastObservedMatchSyncSig = nextSig;
+      _clearPendingRemoteSave();
+      _setCloudStatusMsg('💾 로컬 저장됨 (원격 반영할 변경 없음)', '#16a34a');
+      return;
+    }
     _lastObservedMatchSyncSig = nextSig;
     localStorage.setItem(_MATCH_SYNC_SIG_KEYS.pending, nextSig);
   }catch(e){}

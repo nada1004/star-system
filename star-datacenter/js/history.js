@@ -190,6 +190,11 @@ function rHist(C,T){
       <button class="pill ${histSub==='tiertour-bkt'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='tiertour-bkt';openDetails={};render()">🏆 토너먼트 기록</button>
     </div>`;
     h+=_ttSubBar;
+    try{
+      if((typeof ttM==='undefined' || !Array.isArray(ttM) || !ttM.length) && typeof window.ensureTierTourRecords==='function'){
+        window.ensureTierTourRecords();
+      }
+    }catch(e){}
     // (요청사항) 티어대회 기록이 "사라져 보이는" 현상 방지:
     // 일부 데이터는 _proKey가 붙어도 ttM(티어대회 기록)에 포함되므로, 전체 목록에서는 제외하지 않음
     const _ttAll=(typeof ttM!=='undefined' && Array.isArray(ttM)) ? ttM : [];
@@ -199,7 +204,7 @@ function rHist(C,T){
     const _ttSrc=histSub==='tiertour-gen'?_ttGen:histSub==='tiertour-league'?_ttLeague:histSub==='tiertour-bkt'?_ttBkt:_ttAll;
     const _emptyIco=histSub==='tiertour-bkt'?'🏆':histSub==='tiertour-league'?'📅':'🎯';
     const _emptyMsg=histSub==='tiertour-bkt'?'토너먼트 기록이 없습니다':histSub==='tiertour-league'?'조별리그 기록이 없습니다':histSub==='tiertour-gen'?'일반 기록이 없습니다':'티어대회 기록이 없습니다';
-    h+=_ttSrc.length?recSummaryListHTMLFiltered(_ttSrc,'tt','hist'):`<div class="empty-state"><div class="empty-state-icon">${_emptyIco}</div><div class="empty-state-title">${_emptyMsg}</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
+    h+=_ttSrc.length?recSummaryListHTMLFiltered(_ttSrc,'tt','hist'):`<div class="empty-state"><div class="empty-state-icon">${_emptyIco}</div><div class="empty-state-title">${_emptyMsg}</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div><div style="margin-top:10px"><button class="btn btn-w btn-sm" onclick="try{window.ensureTierTourRecords&&window.ensureTierTourRecords();}catch(e){};render()">🔄 티어대회 기록 다시 불러오기</button></div></div>`;
   }
   else if(histSub==='pro') h+=recSummaryListHTML(proM,'pro','hist');
   else if(histSub==='procomp') h+=histProCompHTML();

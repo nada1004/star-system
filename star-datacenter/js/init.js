@@ -207,6 +207,57 @@ async function _seedTierTtM(){
     _ttSeedLoading = false;
   }
 }
+try{ window._seedTierTtM = _seedTierTtM; }catch(e){}
+
+let _ttGeneralRestoreLoading = false;
+async function _mergeTierGeneralRestore(){
+  try{
+    if(_ttGeneralRestoreLoading) return;
+    _ttGeneralRestoreLoading = true;
+    const res = await fetch('data/tt-general-restore.json?v=20260505-01', {cache:'no-store'});
+    if(!res || !res.ok){ _ttGeneralRestoreLoading = false; return; }
+    const arr = await res.json();
+    if(!Array.isArray(arr) || !arr.length){ _ttGeneralRestoreLoading = false; return; }
+    if(typeof ttM==='undefined' || !Array.isArray(ttM)) window.ttM = [];
+    const existingIds = new Set((ttM||[]).map(m=>String(m&&m._id||'').trim()).filter(Boolean));
+    const existingKeys = new Set((ttM||[]).map(m=>{
+      const d=String(m&&m.d||'').trim();
+      const a=String(m&&m.a||'').trim();
+      const b=String(m&&m.b||'').trim();
+      const c=String(m&&m.compName||m&&m.n||m&&m.t||'').trim();
+      const st=String(m&&m.stage||'general').trim();
+      return [d,a,b,c,st].join('|');
+    }));
+    let added = 0;
+    arr.forEach(m=>{
+      if(!m || typeof m!=='object') return;
+      if(!m.stage) m.stage='general';
+      const c = String(m.compName||m.n||m.t||'').trim();
+      const id = String(m._id||'').trim();
+      const key = [String(m.d||'').trim(), String(m.a||'').trim(), String(m.b||'').trim(), c, String(m.stage||'general').trim()].join('|');
+      if((id && existingIds.has(id)) || existingKeys.has(key)) return;
+      if(!m.compName && c) m.compName = c;
+      if(!m.n && c) m.n = c;
+      if(!m.t && c) m.t = c;
+      ttM.unshift(m);
+      if(id) existingIds.add(id);
+      existingKeys.add(key);
+      added++;
+    });
+    if(added){
+      try{ ttM.sort((a,b)=>(String(b?.d||'')).localeCompare(String(a?.d||''))); }catch(e){}
+      try{ if(typeof _ttMigrated!=='undefined') _ttMigrated=false; }catch(e){}
+      try{ if(typeof save==='function') save(); }catch(e){}
+      try{ if(typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
+      try{ if(typeof render==='function') render(); }catch(e){}
+      console.log('[티어대회 일반 기록 복구] 추가:', added, '원본:', arr.length);
+    }
+    _ttGeneralRestoreLoading = false;
+  }catch(e){
+    _ttGeneralRestoreLoading = false;
+  }
+}
+try{ window._mergeTierGeneralRestore = _mergeTierGeneralRestore; }catch(e){}
 
 async function init(){
   try{
@@ -216,6 +267,8 @@ async function init(){
   fixPoints();
   // 티어대회 기록(ttM) 시드가 있으면 로드(비동기) — 로컬 데이터가 비어 있을 때만
   try{ _seedTierTtM(); }catch(e){}
+  // 티어대회 일반 기록 복구 JSON이 있으면 누락분만 병합
+  try{ _mergeTierGeneralRestore(); }catch(e){}
   // 전역 폰트 설정 적용
   try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
   // (요청사항) 버튼/필 스타일 설정 적용
@@ -792,7 +845,7 @@ function _applyRecCardTheme(){
   const scKey='su_rc_score_scale';
   let on=true, accent='none', bg=12, hd=14, uicon=24;
   let univFontPct=110, ymScalePct=100;
-  let memoOn=false, vsAlign='left', scScale=100;
+  let memoOn=false, vsAlign='center', scScale=108;
   try{
     const v=localStorage.getItem(onKey); if(v!=null) on = v==='1';
     const a=localStorage.getItem(acKey); if(a) accent=a;
@@ -811,8 +864,8 @@ function _applyRecCardTheme(){
   univFontPct=Math.max(90,Math.min(150,univFontPct||100));
   ymScalePct=Math.max(80,Math.min(140,ymScalePct||100));
   accent = ['none','header','border','full','gradient'].includes(accent) ? accent : 'none';
-  vsAlign = ['left','center','right'].includes(vsAlign) ? vsAlign : 'left';
-  scScale = Math.max(80, Math.min(130, scScale||100));
+  vsAlign = ['left','center','right'].includes(vsAlign) ? vsAlign : 'center';
+  scScale = Math.max(80, Math.min(130, scScale||108));
   const vsJust = (vsAlign==='center')?'center':(vsAlign==='right')?'flex-end':'flex-start';
 
   try{

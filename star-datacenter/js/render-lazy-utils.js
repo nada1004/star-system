@@ -149,7 +149,7 @@ async function _ensureSettingsLoaded(){
   await _loadScriptOnce('js/settings/ui-scale-controls.js?v=20260502-01');
   await _loadScriptOnce('js/settings/team-colors.js?v=20260503-01');
   await _loadScriptOnce('js/settings/sharecard.js?v=20260503-04');
-  await _loadScriptOnce('js/settings.js?v=20260503-01');
+  await _loadScriptOnce('js/settings.js?v=20260505-02');
 }
 function _lazyGsSetStatus(msg, color='var(--gray-l)'){
   try{

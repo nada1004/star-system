@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="css/style.css?v=20260504-06"><!-- /* [Z-IDX] */ -->
+<link rel="stylesheet" href="css/style.css?v=20260505-03"><!-- /* [Z-IDX] */ -->
 </head>
 <body>
 
@@ -108,7 +108,7 @@
     <div class="hdr-title" style="pointer-events:none">스타대학 데이터 센터</div>
   </div>
   <!-- 버전 표시는 화면에서 숨김(요청사항) -->
-  <div style="margin-left:auto;display:flex;gap:6px;z-index:var(--z-base)/* [Z-IDX] */;align-items:center">
+  <div class="hdr-right" style="margin-left:auto;display:flex;gap:6px;z-index:var(--z-base)/* [Z-IDX] */;align-items:center">
     <!-- 헤더 우측 이미지(설정으로 표시) -->
     <img id="hdrRightImg" alt="" style="display:none;object-fit:contain">
     <!-- 🎵 유튜브 BGM (오디오) -->
@@ -116,7 +116,7 @@
     <!-- 📺 SOOP 멀티뷰 -->
     <button id="hdrSoopBtn" style="display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:900;cursor:pointer;z-index:var(--z-base)/* [Z-IDX] */;line-height:1">SOOP</button>
     <!-- 전체 선수 검색 -->
-    <div style="position:relative">
+    <div class="hdr-search-wrap" style="position:relative">
       <input id="globalSearch" type="text" placeholder="🔍 스트리머 검색..." oninput="onGlobalSearch(this.value)"
         style="width:160px;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-size:12px;outline:none;"
         onfocus="this.style.background='rgba(255,255,255,.25)'" onblur="this.style.background='rgba(255,255,255,.15)'">
@@ -591,7 +591,7 @@
 <script src="js/config.js"></script>
 <script src="js/app-state.js"></script>
 <script src="js/match-store-idb.js?v=20260504-01"></script>
-<script src="js/constants.js?v=20260504-03"></script>
+<script src="js/constants.js?v=20260505-02"></script>
 <script src="js/constants-player-html.js?v=20260504-01"></script>
 <script src="js/unified-settings.js?v=20260425-01"></script>
 <script src="js/modal-open.js?v=20260502-02"></script>
@@ -609,18 +609,18 @@
 <script src="js/settings/team-colors.js?v=20260503-01"></script>
 <script src="js/settings/sharecard.js?v=20260503-01"></script>
 <script src="js/settings/index.js?v=20260430-01"></script>
-<script src="js/tier-tour.js?v=20260503-03"></script>
+<script src="js/tier-tour.js?v=20260505-01"></script>
 <script src="js/settings/font-controls.js?v=20260502-01"></script>
 <script src="js/settings/ui-scale-controls.js?v=20260502-01"></script>
-<script src="js/settings.js?v=20260504-07"></script>
+<script src="js/settings.js?v=20260505-02"></script>
 <script src="js/settings-map-status.js?v=20260501-01"></script>
 <script src="js/settings-profile-ui.js?v=20260502-01"></script>
 <script src="js/settings-match-detail.js?v=20260501-03"></script>
 <script src="js/settings-player-detail.js?v=20260504-03"></script>
 <script src="js/competition.js?v=20260504-05"></script>
 <script src="js/competition-detail-modal.js?v=20260504-01"></script>
-<script src="js/competition-group-records.js?v=20260504-01"></script>
-<script src="js/competition-bracket-records.js?v=20260504-01"></script>
+<script src="js/competition-group-records.js?v=20260505-01"></script>
+<script src="js/competition-bracket-records.js?v=20260505-01"></script>
 <script src="js/competition-bracket-editor.js?v=20260504-01"></script>
 <script src="js/competition-group-editor.js?v=20260504-01"></script>
 <script src="js/history-share.js?v=20260503-01"></script>
@@ -657,7 +657,7 @@
 <script src="js/history-action-utils.js?v=20260503-07"></script>
 <script src="js/history-external-utils.js?v=20260501-11"></script>
 <script src="js/history-external-ui.js?v=20260502-01"></script>
-<script src="js/history.js?v=20260503-16"></script>
+<script src="js/history.js?v=20260504-01"></script>
 <script src="js/match.js?v=20260502-03"></script>
 <script src="js/match-builder.js?v=20260503-03"></script>
 <script src="js/match-builder-core-tabs.js?v=20260503-01"></script>
@@ -675,14 +675,14 @@
 <script src="js/match-builder-share-legacy.js?v=20260503-01"></script>
 <script src="js/match-builder-share-entry.js?v=20260503-01"></script>
 <script src="js/search.js?v=20260502-04"></script>
-<script src="js/pro-comp.js?v=20260502-15"></script>
+<script src="js/pro-comp.js?v=20260505-02"></script>
 <!-- (성능) stats/calendar는 탭 진입 시 지연 로딩 (render-core.js) -->
 <!-- (성능) 룰렛/부가기능은 탭 진입 시 지연 로딩 (render-core.js에서 로드) -->
 <!-- (성능) vote/elboard/bgm/soop는 기능 사용 시 지연 로딩 (render-core.js/init.js) -->
 <script src="js/sync/cloud-apply.js?v=20260502-04"></script>
 <script src="js/sync/cloud-status.js?v=20260503-01"></script>
 <script src="js/cloud-board.js?v=20260502-05"></script>
-<script src="js/init.js?v=20260504-02"></script>
+<script src="js/init.js?v=20260505-02"></script>
 <script src="js/board2-image-utils.js?v=20260504-01"></script>
 <script src="js/board2-card-utils.js?v=20260501-10"></script>
 <script src="js/board2.js?v=20260504-01"></script>

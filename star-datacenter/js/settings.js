@@ -401,8 +401,8 @@ window.cfgSetRecCardSettings = function(){
   const ymScalePct = parseInt(document.getElementById('cfg-ym-scale')?.value||'100',10);
   const memoOn = !!document.getElementById('cfg-rc-memo-on')?.checked;
   const ava = parseInt(document.getElementById('cfg-ava-scale')?.value||'100',10);
-  const vsAlign = (document.getElementById('cfg-rc-vs-align')?.value || 'left').trim(); // left|center|right
-  const scScale = parseInt(document.getElementById('cfg-rc-score-scale')?.value||'100',10);
+  const vsAlign = (document.getElementById('cfg-rc-vs-align')?.value || 'center').trim(); // left|center|right
+  const scScale = parseInt(document.getElementById('cfg-rc-score-scale')?.value||'108',10);
   const ckA = (document.getElementById('cfg-team-ck-a')?.value || '#2563eb').trim();
   const ckB = (document.getElementById('cfg-team-ck-b')?.value || '#6366f1').trim();
   const proA = (document.getElementById('cfg-team-pro-a')?.value || '#0f766e').trim();
@@ -418,7 +418,7 @@ window.cfgSetRecCardSettings = function(){
   try{ localStorage.setItem('su_ym_scale_pct', String(Math.max(80,Math.min(140,ymScalePct||100)))); }catch(e){}
   try{ localStorage.setItem('su_rc_memo_on', memoOn ? '1' : '0'); }catch(e){}
   try{ localStorage.setItem('su_avatar_scale', String(Math.max(70,Math.min(160,ava))/100)); }catch(e){}
-  try{ localStorage.setItem('su_rc_vs_align', ['left','center','right'].includes(vsAlign)?vsAlign:'left'); }catch(e){}
+  try{ localStorage.setItem('su_rc_vs_align', ['left','center','right'].includes(vsAlign)?vsAlign:'center'); }catch(e){}
   try{ localStorage.setItem('su_rc_score_scale', String(Math.max(80,Math.min(130,scScale)))); }catch(e){}
   try{ if(_hex(ckA)) localStorage.setItem('su_team_color_ck_a', _hex(ckA)); }catch(e){}
   try{ if(_hex(ckB)) localStorage.setItem('su_team_color_ck_b', _hex(ckB)); }catch(e){}
@@ -1981,6 +1981,7 @@ function _cfgEnsureModal(){
         if(body) body.innerHTML='';
       }catch(e){}
       try{ if(typeof cm==='function') cm('cfgModal'); else { const mm=document.getElementById('cfgModal'); if(mm) mm.style.display='none'; } }catch(e){}
+      try{ if(typeof window.cfgApplyBottomSectionsVisibility==='function') window.cfgApplyBottomSectionsVisibility(); }catch(e){}
     };
   }
   return m;
@@ -2165,6 +2166,31 @@ window.cfgSetViewMode = function(mode){
   }catch(e){}
   try{ if(typeof curTab!=='undefined' && curTab==='cfg' && typeof render==='function') render(); }catch(e){}
 };
+window.cfgSetBottomSectionsOpen = function(open){
+  try{
+    window._cfgBottomSectionsOpen = !!open;
+    localStorage.setItem('su_cfg_bottom_open', window._cfgBottomSectionsOpen ? '1' : '0');
+  }catch(e){}
+  try{ if(typeof curTab!=='undefined' && curTab==='cfg' && typeof render==='function') render(); }catch(e){}
+};
+window.cfgSetRemoteCfgAuto = function(on){
+  try{
+    localStorage.setItem('su_cfg_remote_auto', on ? '1' : '0');
+    const el = document.getElementById('cfg-remote-auto-status');
+    if(el){
+      el.style.color = on ? '#16a34a' : 'var(--gray-l)';
+      el.textContent = on ? 'ON · 설정 변경 시 GitHub에도 자동 반영' : 'OFF · 설정 변경은 로컬만 저장, 필요할 때만 수동 업로드';
+    }
+  }catch(e){}
+};
+window.cfgToggleBottomSections = function(){
+  try{
+    const cur = window._cfgBottomSectionsOpen===undefined
+      ? ((localStorage.getItem('su_cfg_bottom_open') ?? '1') === '1')
+      : !!window._cfgBottomSectionsOpen;
+    window.cfgSetBottomSectionsOpen(!cur);
+  }catch(e){}
+};
 window.cfgApplySimpleView = function(){
   try{
     const mode=(localStorage.getItem('su_cfg_view_mode')||'basic')==='advanced' ? 'advanced' : 'basic';
@@ -2183,6 +2209,21 @@ window.cfgApplySimpleView = function(){
     });
     const cnt=document.getElementById('cfgSearchCnt');
     if(cnt && mode==='basic' && !q) cnt.textContent=`간단 보기 · 자주 쓰는 설정 ${fav.length}개`;
+  }catch(e){}
+};
+window.cfgApplyBottomSectionsVisibility = function(){
+  try{
+    const mode=(localStorage.getItem('su_cfg_view_mode')||'basic')==='advanced' ? 'advanced' : 'basic';
+    const q=String(window._cfgSearchQ||'').trim();
+    if(window._cfgBottomSectionsOpen===undefined){
+      const saved=localStorage.getItem('su_cfg_bottom_open');
+      window._cfgBottomSectionsOpen = (saved==='1' || saved==='0') ? (saved==='1') : (mode==='advanced');
+    }
+    const open = q ? true : !!window._cfgBottomSectionsOpen;
+    document.querySelectorAll('[data-cfg-sec]').forEach(el=>{
+      try{ if(el.closest && el.closest('#cfgModalBody')) return; }catch(e){}
+      if(!open) el.style.display='none';
+    });
   }catch(e){}
 };
 window.cfgFocusSearch = function(){ try{ document.getElementById('cfgSearchInp')?.focus(); }catch(e){} };
@@ -2704,6 +2745,11 @@ function rCfg(C,T){
   const _rcMemoOn = (localStorage.getItem('su_rc_memo_on') ?? '0') === '1';
   const _avaScale = Math.round((parseFloat(localStorage.getItem('su_avatar_scale') ?? '1') || 1) * 100);
   const _cfgViewMode = (localStorage.getItem('su_cfg_view_mode') || 'basic') === 'advanced' ? 'advanced' : 'basic';
+  const _cfgBottomOpen = (()=>{ try{
+    const saved=localStorage.getItem('su_cfg_bottom_open');
+    if(saved==='1' || saved==='0') return saved==='1';
+  }catch(e){}
+  return _cfgViewMode==='advanced'; })();
   const _quickBtns = [
     {id:'pd', icon:'🎨', title:'스트리머 상세', desc:'배경/배지/프로필'},
     {id:'matchdetail', icon:'🎮', title:'경기 상세', desc:'헤더/프로필/색상'},
@@ -2854,6 +2900,15 @@ function rCfg(C,T){
       <button class="btn btn-w btn-xs" onclick="cfgSetViewMode('advanced')">2단계 고급 열기</button>
     </div>
   </div>`}
+  <div class="no-export" style="margin:0 0 14px;padding:12px;border:1px dashed var(--border2);border-radius:16px;background:var(--surface)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:13px;font-weight:900;color:var(--text2)">🧩 하단 세부 설정</div>
+        <div style="font-size:11px;color:var(--gray-l)">아래 긴 설정 목록은 필요할 때만 펼쳐서 볼 수 있습니다. 검색 중에는 자동으로 표시됩니다.</div>
+      </div>
+      <button class="btn btn-w btn-xs" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()">${_cfgBottomOpen?'🧩 세부 설정 접기 ▲':'🧩 세부 설정 펼치기 ▼'}</button>
+    </div>
+  </div>
 ${_scfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
     <div id="notice-list-area" style="margin-bottom:16px">
@@ -3428,14 +3483,14 @@ ${_scfgD('notice','📢 공지 관리')}
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div style="font-size:11px;color:var(--text3);font-weight:800">스코어/좌우 배치(PC)</div>
         <select id="cfg-rc-vs-align" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-          <option value="left" ${(localStorage.getItem('su_rc_vs_align')||'left')==='left'?'selected':''}>좌측</option>
-          <option value="center" ${(localStorage.getItem('su_rc_vs_align')||'left')==='center'?'selected':''}>가운데</option>
-          <option value="right" ${(localStorage.getItem('su_rc_vs_align')||'left')==='right'?'selected':''}>우측</option>
+          <option value="left" ${(localStorage.getItem('su_rc_vs_align')||'center')==='left'?'selected':''}>좌측</option>
+          <option value="center" ${(localStorage.getItem('su_rc_vs_align')||'center')==='center'?'selected':''}>가운데</option>
+          <option value="right" ${(localStorage.getItem('su_rc_vs_align')||'center')==='right'?'selected':''}>우측</option>
         </select>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--text3);font-weight:800">스코어 크기</span>
-          <input type="range" id="cfg-rc-score-scale" min="80" max="130" step="5" value="${Math.max(80,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'100',10)||100))}" oninput="document.getElementById('cfg-rc-score-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
-          <span id="cfg-rc-score-scale-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(80,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'100',10)||100))}%</span>
+          <input type="range" id="cfg-rc-score-scale" min="80" max="130" step="5" value="${Math.max(80,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'108',10)||108))}" oninput="document.getElementById('cfg-rc-score-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
+          <span id="cfg-rc-score-scale-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(80,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'108',10)||108))}%</span>
         </div>
       </div>
 
@@ -3958,6 +4013,17 @@ ${_scfgD('notice','📢 공지 관리')}
   ${_scfgD('firebase','☁️ GitHub data.json 동기화')}
     <div id="cfg-fb-body">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 GitHub <code>star-datacenter/data/</code> 폴더에 분리 저장됩니다. 다른 기기는 인덱스를 읽고 필요한 파일들을 합쳐 반영합니다.</p>
+    <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px">설정 변경 GitHub 자동 반영</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
+        기본값은 <b>OFF</b>입니다. 새로고침/초기 렌더 중 설정값이 다시 적용될 때 GitHub로 계속 저장되는 느낌을 막기 위해, 평소 설정 변경은 로컬만 저장하고 필요할 때만 수동 업로드하는 것을 권장합니다.
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input type="checkbox" ${localStorage.getItem('su_cfg_remote_auto')==='1'?'checked':''} onchange="cfgSetRemoteCfgAuto(this.checked)">
+        <span style="font-size:12px;font-weight:700;color:var(--text2)">설정 변경 시 GitHub에도 자동 반영</span>
+      </label>
+      <div id="cfg-remote-auto-status" style="font-size:11px;margin-top:8px;color:${localStorage.getItem('su_cfg_remote_auto')==='1'?'#16a34a':'var(--gray-l)'}">${localStorage.getItem('su_cfg_remote_auto')==='1'?'ON · 설정 변경 시 GitHub에도 자동 반영':'OFF · 설정 변경은 로컬만 저장, 필요할 때만 수동 업로드'}</div>
+    </div>
     <div id="cfg-fb-sync-panel" style="margin-bottom:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <span style="font-size:12px;font-weight:700;color:var(--blue)">🔄 동기화 상태</span>
@@ -4970,6 +5036,7 @@ ${_scfgD('notice','📢 공지 관리')}
     // 카테고리 필터 적용
     if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'🧩 운영/콘텐츠', false);
     try{ if(typeof window.cfgApplySimpleView==='function') window.cfgApplySimpleView(); }catch(e){}
+    try{ if(typeof window.cfgApplyBottomSectionsVisibility==='function') window.cfgApplyBottomSectionsVisibility(); }catch(e){}
     // 펨코현황 설정 초기화
     try{ if(typeof cfgFemcoInit==='function') cfgFemcoInit(); }catch(e){}
     // 자동인식 출력 포맷 미리보기 초기화
@@ -4982,6 +5049,7 @@ ${_scfgD('notice','📢 공지 관리')}
   // 최초 렌더 직후 카테고리 필터를 즉시 적용 (setTimeout 실행이 막히는 환경 대비)
   try{ if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'🧩 운영/콘텐츠', false); }catch(e){}
   try{ if(typeof window.cfgApplySimpleView==='function') window.cfgApplySimpleView(); }catch(e){}
+  try{ if(typeof window.cfgApplyBottomSectionsVisibility==='function') window.cfgApplyBottomSectionsVisibility(); }catch(e){}
   // 검색어가 있으면 렌더 직후 검색 필터 적용
   try{ if(window._cfgSearchQ) window.cfgSearchSettings(window._cfgSearchQ); }catch(e){}
   // 인라인 onclick이 불발되는 환경 대비 이벤트 바인딩
@@ -5210,7 +5278,7 @@ function renderStorageInfo(){
       ${pct>=70?`<div style="font-size:11px;color:${barCol};margin-top:5px;font-weight:600">${pct>=90?'⚠️ 저장 공간이 거의 가득 찼습니다! 데이터를 정리해 주세요.':'⚠️ 저장 공간이 많이 사용되고 있습니다.'}</div>`:''}
     </div>
     <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">항목별 사용량 (상위 10개)</div>
-    <div style="font-size:10px;color:var(--gray-l);margin-bottom:8px">참고: 경기 기록 원본과 외부탭 대용량 데이터는 현재 IndexedDB에 저장되어 아래 localStorage 사용량에는 크게 잡히지 않습니다.</div>
+      <div style="font-size:10px;color:var(--gray-l);margin-bottom:8px">기본 저장소는 <b>IndexedDB</b>이며, 아래 localStorage 사용량은 주로 설정/레거시 키 기준입니다. IndexedDB가 불가능한 환경에서만 localStorage fallback이 사용됩니다.</div>
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
       ${backendBadge('경기 기록 저장소', matchMeta.backend||'')}
       ${backendBadge('외부탭 기록 저장소', histMeta.backend||'')}
@@ -5234,7 +5302,7 @@ function renderStorageInfo(){
     </div>`:''}
     <div style="margin-bottom:10px;padding:10px;border:1px solid var(--border);background:var(--surface);border-radius:10px">
       <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px">저장소 관리</div>
-      <div style="font-size:10px;color:var(--gray-l);margin-bottom:8px">문제가 있을 때 현재 메모리 데이터를 다시 저장소에 안전하게 다시 기록합니다. 기록 삭제 기능은 설정에서 제공하지 않습니다.</div>
+      <div style="font-size:10px;color:var(--gray-l);margin-bottom:8px">기록 원본은 기본적으로 IndexedDB에 저장됩니다. 문제가 있을 때 현재 메모리 데이터를 다시 저장소에 안전하게 다시 기록합니다. 기록 삭제 기능은 설정에서 제공하지 않습니다.</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="btn btn-w btn-xs" onclick="rebuildIndexedDbStores()">IndexedDB 재빌드</button>
       </div>
