@@ -1507,7 +1507,7 @@ function saveCfg(){
       const statusEl = document.getElementById('cloudStatus');
       if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
         const token = localStorage.getItem('su_gh_token') || '';
-        const autoCfgRemote = (localStorage.getItem('su_cfg_remote_auto') || '0') === '1';
+        const autoCfgRemote = (localStorage.getItem('su_cfg_remote_auto') ?? '1') === '1';
         if (token && autoCfgRemote && typeof window.fbUpdate === 'function') {
           // su_* 키 일부(큰 값/비밀 값 제외)도 함께 동기화 → 설정탭 변경이 다른 기기에 바로 적용
           const _syncLs = {};

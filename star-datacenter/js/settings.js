@@ -2179,7 +2179,7 @@ window.cfgSetRemoteCfgAuto = function(on){
     const el = document.getElementById('cfg-remote-auto-status');
     if(el){
       el.style.color = on ? '#16a34a' : 'var(--gray-l)';
-      el.textContent = on ? 'ON · 설정 변경 시 GitHub에도 자동 반영' : 'OFF · 설정 변경은 로컬만 저장, 필요할 때만 수동 업로드';
+      el.textContent = on ? 'ON · 설정/상세 수정은 GitHub에도 반영, 새로고침만으로는 저장되지 않음' : 'OFF · 설정 변경은 로컬만 저장';
     }
   }catch(e){}
 };
@@ -4016,13 +4016,13 @@ ${_scfgD('notice','📢 공지 관리')}
     <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
       <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px">설정 변경 GitHub 자동 반영</div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
-        기본값은 <b>OFF</b>입니다. 새로고침/초기 렌더 중 설정값이 다시 적용될 때 GitHub로 계속 저장되는 느낌을 막기 위해, 평소 설정 변경은 로컬만 저장하고 필요할 때만 수동 업로드하는 것을 권장합니다.
+        기본값은 <b>ON</b>입니다. 경기 기록 저장, 경기 수정, 스트리머/대학 상세 수정, 설정탭 설정 변경은 GitHub에도 반영되고, <b>새로고침만으로는 저장되지 않게</b> 유지합니다.
       </div>
       <label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <input type="checkbox" ${localStorage.getItem('su_cfg_remote_auto')==='1'?'checked':''} onchange="cfgSetRemoteCfgAuto(this.checked)">
+        <input type="checkbox" ${(localStorage.getItem('su_cfg_remote_auto') ?? '1')==='1'?'checked':''} onchange="cfgSetRemoteCfgAuto(this.checked)">
         <span style="font-size:12px;font-weight:700;color:var(--text2)">설정 변경 시 GitHub에도 자동 반영</span>
       </label>
-      <div id="cfg-remote-auto-status" style="font-size:11px;margin-top:8px;color:${localStorage.getItem('su_cfg_remote_auto')==='1'?'#16a34a':'var(--gray-l)'}">${localStorage.getItem('su_cfg_remote_auto')==='1'?'ON · 설정 변경 시 GitHub에도 자동 반영':'OFF · 설정 변경은 로컬만 저장, 필요할 때만 수동 업로드'}</div>
+      <div id="cfg-remote-auto-status" style="font-size:11px;margin-top:8px;color:${(localStorage.getItem('su_cfg_remote_auto') ?? '1')==='1'?'#16a34a':'var(--gray-l)'}">${(localStorage.getItem('su_cfg_remote_auto') ?? '1')==='1'?'ON · 설정/상세 수정은 GitHub에도 반영, 새로고침만으로는 저장되지 않음':'OFF · 설정 변경은 로컬만 저장'}</div>
     </div>
     <div id="cfg-fb-sync-panel" style="margin-bottom:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">

@@ -23,6 +23,13 @@ function showNoticePopup(){
   window._noticePopupHideKey=todayKey;
   om('noticePopupModal');
 }
+try{
+  const _cfgRemotePolicy = localStorage.getItem('su_cfg_remote_policy_v2');
+  if(_cfgRemotePolicy !== '1'){
+    localStorage.setItem('su_cfg_remote_auto', '1');
+    localStorage.setItem('su_cfg_remote_policy_v2', '1');
+  }
+}catch(e){}
 function closeNoticePopup(){
   const chk=document.getElementById('notice-no-show-today');
   if(chk&&chk.checked&&window._noticePopupHideKey){
