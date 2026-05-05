@@ -941,20 +941,26 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   // 기존 렌더 블록을 함수로 감싸서 그룹 출력에 재사용
   function _recItemHTML(m,i){
     const isCK=(mode==='ck'||mode==='pro'||mode==='tt');
+    const isCivil=(mode==='civil'||(m.type==='civil'));
     const _sideCols = mode==='ck' ? getFixedSideColors('ck') : mode==='pro' ? getFixedSideColors('pro') : getFixedSideColors('tt');
-    const ca=isCK?_sideCols.a:gc(m.a);
-    const cb=isCK?_sideCols.b:gc(m.b);
+    // 시빌워: 같은 소속팀끼리 경기 → A팀/B팀 모두 같은 대학명 사용
+    const _civilUniv=isCivil?(m.a||m.hostUniv||m.teamA||''):'';
+    const ca=isCK?_sideCols.a:isCivil?gc(_civilUniv):gc(m.a);
+    const cb=isCK?_sideCols.b:isCivil?gc(_civilUniv):gc(m.b);
     // teamALabel/B 필드 정리: 잘못된 값({...} 포함) 필터링
     const rawLA=(m.teamALabel||'').replace(/^\$\{.*\}$/,'');
     const rawLB=(m.teamBLabel||'').replace(/^\$\{.*\}$/,'');
-    const labelA=isCK?(rawLA||'A팀'):m.a;
-    const labelB=isCK?(rawLB||'B팀'):m.b;
+    // 시빌워: A/B 라벨 모두 같은 대학으로, 또는 A팀/B팀 구분
+    const labelA=isCK?(rawLA||'A팀'):isCivil?(_civilUniv||m.a||'A팀'):m.a;
+    const labelB=isCK?(rawLB||'B팀'):isCivil?(_civilUniv||m.a||'B팀'):m.b;
     const aWin=(m.sa>m.sb);const bWin=(m.sb>m.sa);
     const key=`${context}-${mode}-${i}`;
     // 검색용 hay 데이터
-    // 대학 아이콘 (대학끼리 경기: mini/univm/comp/tour 는 상대 대학 아이콘, CK/pro/tt는 소속 대학 아이콘)
-    const iconA=(()=>{const n=isCK?'':m.a;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
-    const iconB=(()=>{const n=isCK?'':m.b;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
+    // 대학 아이콘 (대학끼리 경기: mini/univm/comp/tour 는 상대 대학 아이콘, CK/pro/tt는 소속 대학 아이콘, 시빌워는 같은 대학)
+    const _iconUnivA=isCivil?_civilUniv:(isCK?'':m.a);
+    const _iconUnivB=isCivil?_civilUniv:(isCK?'':m.b);
+    const iconA=(()=>{const n=_iconUnivA;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
+    const iconB=(()=>{const n=_iconUnivB;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     // 기본(무색)에서는 승리색 테두리도 사용하지 않음
     const _wBorderCol = (_rcThemeOn && _rcAccent==='border' && (aWin||bWin)) ? (aWin?ca:bWin?cb:'var(--border)') : 'var(--border)';
     // 승리 색 테마(대학 색) — 켜져있을 때만 적용
@@ -998,15 +1004,52 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
             })">⋯</button>
           </div>
         </div>
-        <div class="rec-sum-vs">
-          <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA?iconA.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelA}</span>
-          <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기">
-            <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span>
-            <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
-            <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span>
+        ${(() => {
+          // 팀 멤버 추출: teamAMembers/teamBMembers 있으면 사용, 없으면 sets에서 추출 (미니/대학)
+          let aMembers = m.teamAMembers || [];
+          let bMembers = m.teamBMembers || [];
+          if (!aMembers.length && !bMembers.length && m.sets) {
+            const aSet = new Set(), bSet = new Set();
+            m.sets.forEach(s => {
+              (s.games || []).forEach(g => {
+                if (g.playerA) aSet.add(g.playerA);
+                if (g.winner === 'A' && g.lName) bSet.add(g.lName);
+                else if (g.winner === 'B' && g.wName) bSet.add(g.wName);
+                if (g.playerB) bSet.add(g.playerB);
+                if (g.winner === 'B' && g.lName) aSet.add(g.lName);
+                else if (g.winner === 'A' && g.wName) aSet.add(g.wName);
+              });
+            });
+            aMembers = Array.from(aSet).map(n => ({ name: n }));
+            bMembers = Array.from(bSet).map(n => ({ name: n }));
+          }
+          const aMemJson = JSON.stringify(aMembers).replace(/"/g, "'");
+          const bMemJson = JSON.stringify(bMembers).replace(/"/g, "'");
+          const aBtnColor = ca || '#3b82f6';
+          const bBtnColor = cb || '#ef4444';
+          return `
+        <div class="rec-sum-vs" style="flex-wrap:wrap;gap:12px;align-items:center">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+            <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA?iconA.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelA}</span>
+            ${aMembers.length ? `<button class="btn btn-xs" style="font-size:11px;padding:5px 12px;border-radius:20px;background:linear-gradient(135deg,${aBtnColor}15,${aBtnColor}08);border:1.5px solid ${aBtnColor}40;color:${aBtnColor};font-weight:700;box-shadow:0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08);display:inline-flex;align-items:center;gap:5px;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${aBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
+              <span style="font-size:12px">👥</span><span>${aMembers.length}명</span>
+            </button>` : ''}
           </div>
-          <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB?iconB.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelB}</span>
-        </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기">
+              <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span>
+              <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
+              <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+            <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB?iconB.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelB}</span>
+            ${bMembers.length ? `<button class="btn btn-xs" style="font-size:11px;padding:5px 12px;border-radius:20px;background:linear-gradient(135deg,${bBtnColor}15,${bBtnColor}08);border:1.5px solid ${bBtnColor}40;color:${bBtnColor};font-weight:700;box-shadow:0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08);display:inline-flex;align-items:center;gap:5px;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${bBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})">
+              <span style="font-size:12px">👥</span><span>${bMembers.length}명</span>
+            </button>` : ''}
+          </div>
+        </div>`;
+        })()}
       </div>
       <div id="det-${key}" class="rec-detail-area">
         ${_regDet(key,{...m,_editRef:`${mode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin, i)}
@@ -2568,18 +2611,58 @@ function compSummaryListHTML(context){
       <div class="rec-sum-header">
         <span style="color:var(--text3);font-size:12px;font-weight:600;min-width:72px">${m.d||''}</span>
         <span style="font-weight:700;font-size:13px">🎖️ ${m.n||'대회'}${grpBadge}</span>
-        <div class="rec-sum-vs">
-          ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>`:''}
-          ${(a&&b)?`<div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세보기">
-            <span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa||0}</span>
-            <span style="color:var(--gray-l);font-size:14px">:</span>
-            <span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb||0}</span>
-          </div>`:''}
-          ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>`:''}
-          ${(a&&b)?`<span style="font-size:12px;font-weight:700;color:${aWin?ca:bWin?cb:'#888'}">
-            ${aWin?'▶ '+a+' 승':bWin?'▶ '+b+' 승':'무승부'}
-          </span>`:''}
-        </div>
+        ${(() => {
+          // 대회 탭 멤버 추출
+          let aMembers = m.teamAMembers || [];
+          let bMembers = m.teamBMembers || [];
+          if (!aMembers.length && !bMembers.length && m.sets) {
+            const aSet = new Set(), bSet = new Set();
+            m.sets.forEach(s => {
+              (s.games || []).forEach(g => {
+                if (g.playerA) aSet.add(g.playerA);
+                if (g.playerB) bSet.add(g.playerB);
+                if (g.winner === 'A' && g.wName) { aSet.add(g.wName); if (g.lName) bSet.add(g.lName); }
+                else if (g.winner === 'B' && g.wName) { bSet.add(g.wName); if (g.lName) aSet.add(g.lName); }
+              });
+            });
+            aMembers = Array.from(aSet).map(n => ({ name: n }));
+            bMembers = Array.from(bSet).map(n => ({ name: n }));
+          }
+          const aBtnColor = ca || '#3b82f6';
+          const bBtnColor = cb || '#ef4444';
+          const aMemJson = JSON.stringify(aMembers).replace(/"/g, "'");
+          const bMemJson = JSON.stringify(bMembers).replace(/"/g, "'");
+          // 맵 정보 추출
+          const maps = [];
+          (m.sets || []).forEach(s => {
+            (s.games || []).forEach(g => { if (g.map && !maps.includes(g.map)) maps.push(g.map); });
+          });
+          const mapStr = maps.slice(0, 2).join(', ') + (maps.length > 2 ? ` 외 ${maps.length - 2}` : '');
+          return `
+        <div class="rec-sum-vs" style="flex-wrap:wrap;gap:12px;align-items:center">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+            ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>`:''}
+            ${aMembers.length ? `<button class="btn btn-xs" style="font-size:11px;padding:5px 12px;border-radius:20px;background:linear-gradient(135deg,${aBtnColor}15,${aBtnColor}08);border:1.5px solid ${aBtnColor}40;color:${aBtnColor};font-weight:700;box-shadow:0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08);display:inline-flex;align-items:center;gap:5px;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${aBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
+              <span style="font-size:12px">👥</span><span>${aMembers.length}명</span>
+            </button>` : ''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            ${(a&&b)?`<div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세보기">
+              <span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa||0}</span>
+              <span style="color:var(--gray-l);font-size:14px">:</span>
+              <span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb||0}</span>
+            </div>`:''}
+            ${mapStr ? `<span style="font-size:10px;color:var(--gray-l);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${maps.join(', ')}">${mapStr}</span>` : ''}
+            ${aWin ? `<span style="font-size:11px;color:#16a34a;font-weight:700">${a} 승</span>` : bWin ? `<span style="font-size:11px;color:#16a34a;font-weight:700">${b} 승</span>` : ''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+            ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>`:''}
+            ${bMembers.length ? `<button class="btn btn-xs" style="font-size:11px;padding:5px 12px;border-radius:20px;background:linear-gradient(135deg,${bBtnColor}15,${bBtnColor}08);border:1.5px solid ${bBtnColor}40;color:${bBtnColor};font-weight:700;box-shadow:0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08);display:inline-flex;align-items:center;gap:5px;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${bBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})">
+              <span style="font-size:12px">👥</span><span>${bMembers.length}명</span>
+            </button>` : ''}
+          </div>
+        </div>`;
+        })()}
         <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0" class="no-export">
           <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
             onclick="openRecActionMenu(event,{
@@ -3521,4 +3604,62 @@ function histProCompGJHTML(_omitBar){
     </div>`;
   });
   return h;
+}
+
+// 팀 멤버 팝업 (프로리그, 미니, 대학, 티어, 토너먼트 등)
+function openProMembersPopup(teamLabel, teamColor, members){
+  try{
+    if(!members || !members.length) return;
+
+    // 이미 열린 모달이 있으면 닫기
+    const existing = document.getElementById('proMembersModal');
+    if(existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'proMembersModal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;';
+
+    const membersHTML = members.map(mem => {
+      const memName = typeof mem === 'string' ? mem : (mem.name || mem);
+      const p = players.find(x => x.name === memName) || {};
+      const pColor = gc(p.univ) || '#64748b';
+      return `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;">
+          <span style="cursor:pointer" onclick="document.getElementById('proMembersModal').remove();openPlayerModal('${memName.replace(/'/g,"\\'")}')">
+            ${getPlayerPhotoHTML(memName, '44px')}
+          </span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:14px;color:#1f2937;cursor:pointer" onclick="document.getElementById('proMembersModal').remove();openPlayerModal('${memName.replace(/'/g,"\\'")}')">${memName}</div>
+            <div style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              ${p.univ ? `<span class="ubadge" style="background:${pColor};font-size:10px;padding:1px 6px;">${p.univ}</span>` : ''}
+              ${p.tier ? `<span style="background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)};font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700;">${p.tier}</span>` : ''}
+              ${p.race ? `<span class="rbadge r${p.race}" style="font-size:10px;padding:1px 5px;">${p.race}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    modal.innerHTML = `
+      <div style="background:#ffffff;border-radius:16px;max-width:360px;width:90%;max-height:80vh;overflow:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="width:12px;height:12px;border-radius:50%;background:${teamColor};"></span>
+            <h3 style="margin:0;font-size:18px;font-weight:800;">${teamLabel} 참가자</h3>
+            <span style="font-size:12px;color:#6b7280;">총 ${members.length}명</span>
+          </div>
+          <button onclick="document.getElementById('proMembersModal').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;">×</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${membersHTML}
+        </div>
+        <div style="margin-top:20px;display:flex;justify-content:center;">
+          <button class="btn btn-w" onclick="document.getElementById('proMembersModal').remove()">닫기</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }catch(e){
+    console.error('[openProMembersPopup] 오류:', e);
+  }
 }
