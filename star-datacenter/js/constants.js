@@ -1569,7 +1569,7 @@ function savePhotos(){
     localStorage.setItem('su_last_save_time',Date.now().toString());
   }catch(e){console.error('[savePhotos error]',e);}
 }
-const _REMOTE_SAVE_DEBOUNCE_MS = 1500;
+const _REMOTE_SAVE_DEBOUNCE_MS = 5000; // 5초 간격으로 저장 요청 취합
 let _remoteCloudSaveTimer = null;
 let _remoteCloudSaveBusy = false;
 function _setPendingRemoteSave(reason, failMsg, mode){
@@ -1718,7 +1718,9 @@ async function _flushRemoteCloudSave(reason){
     const ready = await _ensureRemoteSaveReady();
     if(!ready){
       _setPendingRemoteSave(reason || 'save', 'GitHub 저장 모듈 미연결', 'failed');
-      _setCloudStatusMsg('❌ GitHub 저장 모듈 미연결', '#dc2626');
+      // 에러 메시지를 부드럽게 표시 (3초 후 사라짐)
+      _setCloudStatusMsg('⚠️ GitHub 연결 확인 중...', '#d97706');
+      setTimeout(() => { _setCloudStatusMsg('', ''); }, 3000);
       return false;
     }
     _setCloudStatusMsg('⏫ GitHub 저장 중...', '#2563eb');
@@ -1737,9 +1739,28 @@ async function _flushRemoteCloudSave(reason){
     _setCloudStatusMsg('✅ GitHub 저장됨', '#16a34a');
     return true;
   }catch(e){
-    _setPendingRemoteSave(reason || 'manual-save', String((e&&e.message)||e||'GitHub 저장 실패'), 'failed');
-    _setCloudStatusMsg('❌ GitHub 저장 실패 — 로컬 데이터는 유지됨', '#dc2626');
+    const errMsg = String((e&&e.message)||e||'');
+    const isRateLimit = errMsg.includes('403') || errMsg.includes('rate') || errMsg.includes('limit');
+    const isNetwork = errMsg.includes('network') || errMsg.includes('fetch') || errMsg.includes('timeout');
+    
+    if(isRateLimit){
+      _setPendingRemoteSave(reason || 'save', 'GitHub API 제한', 'retry');
+      _setCloudStatusMsg('⏳ GitHub API 제한 — 잠시 후 재시도', '#d97706');
+    }else if(isNetwork){
+      _setPendingRemoteSave(reason || 'save', '네트워크 오류', 'retry');
+      _setCloudStatusMsg('📴 네트워크 불안정 — 자동 재시도 예정', '#d97706');
+    }else{
+      _setPendingRemoteSave(reason || 'save', errMsg, 'failed');
+      _setCloudStatusMsg('⚠️ GitHub 저장 지연 — 로컬은 안전함', '#d97706');
+    }
+    
     console.error('[fbCloudSave]',e);
+    // 5초 후 자동 재시도
+    setTimeout(() => {
+      if(localStorage.getItem('su_sync_pending_save') === '1'){
+        _scheduleRemoteCloudSave(30000, 'retry');
+      }
+    }, 5000);
     return false;
   }finally{
     _remoteCloudSaveBusy = false;
