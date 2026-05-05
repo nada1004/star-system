@@ -168,6 +168,14 @@ function gjDirectSave(){
   _gjInput={date:gi.date,playerA:gi.playerA,playerB:gi.playerB,games:[]};
   save();
   gjSub='records';
+  if(_gjProMode){
+    try{ curTab='pro'; }catch(e){}
+    try{ _mergedProSub='gj'; }catch(e){}
+  }else{
+    try{ curTab='ind'; }catch(e){}
+    try{ _mergedIndSub='gj'; }catch(e){}
+  }
+  try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   render();
   setTimeout(()=>{
     if(confirm(`✅ ${gi.games.length}경기 저장 완료!\n공유카드를 열겠습니까?`)){
