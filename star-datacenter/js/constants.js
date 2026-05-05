@@ -1813,19 +1813,21 @@ window.addEventListener('DOMContentLoaded', ()=>{
   }catch(e){}
 }, { once:true });
 async function save(){
-  let beforeSig = '';
-  try{ beforeSig = _primeMatchSyncSignature(false) || ''; }catch(e){}
   localSave();
   try{ await (window._lastMatchStoreSavePromise || Promise.resolve(true)); }catch(e){}
   try{
     const nextSig = _buildMatchSyncSignature();
-    if(beforeSig && beforeSig === nextSig){
-      _lastObservedMatchSyncSig = nextSig;
+    const uploadedSig = localStorage.getItem(_MATCH_SYNC_SIG_KEYS.uploaded) || '';
+    const pendingSig = localStorage.getItem(_MATCH_SYNC_SIG_KEYS.pending) || '';
+    _lastObservedMatchSyncSig = nextSig;
+    if(uploadedSig && uploadedSig === nextSig){
+      if(pendingSig === nextSig){
+        try{ localStorage.removeItem(_MATCH_SYNC_SIG_KEYS.pending); }catch(e){}
+      }
       _clearPendingRemoteSave();
       _setCloudStatusMsg('💾 로컬 저장됨 (원격 반영할 변경 없음)', '#16a34a');
       return;
     }
-    _lastObservedMatchSyncSig = nextSig;
     localStorage.setItem(_MATCH_SYNC_SIG_KEYS.pending, nextSig);
   }catch(e){}
   const scheduled = (()=>{ try{ return _scheduleRemoteCloudSave(_REMOTE_SAVE_DEBOUNCE_MS, 'save'); }catch(e){ return false; } })();
