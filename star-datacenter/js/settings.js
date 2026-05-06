@@ -3542,15 +3542,7 @@ ${_scfgD('notice','📢 공지 관리')}
         기록 카드에서 메모 입력 기능 사용(관리자)
       </label>
       <div style="font-size:11px;color:var(--gray-l)">※ 메모가 이미 저장된 경우는 항상 표시됩니다. 이 옵션은 “입력칸”만 켜고 끕니다.</div>
-      ${(typeof window.buildSettingsTeamColorBlock==='function' ? window.<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px">
-        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">🎨 개인전 / 끝장전 카드 대학 색상 효과</div>
-        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-          <input type="checkbox" id="cfg-matchcard-univ-fx" style="width:15px;height:15px" ${(localStorage.getItem('su_matchcard_univ_fx')||'1')==='1'?'checked':''} onchange="localStorage.setItem('su_matchcard_univ_fx',this.checked?'1':'0');render()">
-          개인전 / 끝장전 카드에 대학색 그라디언트 + 이름 색상 효과 적용
-        </label>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:4px">카드 양쪽 끝에서 스트리머 이름까지 해당 대학 색상이 연하게 물드는 효과입니다.<br>미니대전·대학대전·시빌워·대학CK·티어대회·프로리그·대회·조별리그·토너먼트 등 팀경기는 위의 "승리 대학색" 설정을 사용합니다.</div>
-      </div>
-      buildSettingsTeamColorBlock() : '')}
+      ${(typeof window.buildSettingsTeamColorBlock==='function' ? window.buildSettingsTeamColorBlock() : '')}
     </div>
   </details>
   ${(()=>{ 
