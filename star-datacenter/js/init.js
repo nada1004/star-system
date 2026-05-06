@@ -1309,6 +1309,8 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
           console.warn('[자동 불러오기] core fallback 실패:', e.message);
         }
       }
+      const _prevIndM = Array.isArray(indM) ? indM : [];
+      const _prevGjM  = Array.isArray(gjM) ? gjM : [];
       players  = d.players  || d.player  || [];
       players  = _mergePlayerPhotosIntoPlayers(players, d.playerPhotos || d.pPhotoMap || d.playerPhotoMap || null);
       try{ window.players = players; }catch(e){}
@@ -1324,6 +1326,12 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
       proM     = d.proM     || d.pro     || d.proMatches  || [];
       tourneys = d.tourneys || d.tournaments || d.tourney || [];
       ttM      = d.ttM      || d.tt      || [];
+      indM     = Array.isArray(d.indM) ? d.indM : (Array.isArray(d.ind) ? d.ind : _prevIndM);
+      gjM      = Array.isArray(d.gjM) ? d.gjM : _prevGjM;
+      if((!indM || !indM.length) && _prevIndM.length) indM = _prevIndM;
+      if((!gjM || !gjM.length) && _prevGjM.length) gjM = _prevGjM;
+      try{ window.indM = indM; }catch(e){}
+      try{ window.gjM = gjM; }catch(e){}
       if((!players || !players.length) && loadedFromUrl){
         try{
           const coreFallback2 = await _fetchAutoJson(_resolveAutoUrl(loadedFromUrl, 'data/core.json'));

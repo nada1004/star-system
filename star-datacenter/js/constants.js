@@ -2544,3 +2544,98 @@ function updatePlayerHistoryFromGame(game, date, mode){
   applyGameResult(winName, loseName, date, game.map||'', game._id||'', 
                   game.univA||'', game.univB||'', mode);
 }
+
+/* ══════════════════════════════════════
+   탭 버튼 색상 커스텀 시스템
+   - localStorage: su_tab_colors_v1
+   - ctx별 탭 활성(on) 색상 커스텀
+══════════════════════════════════════ */
+const _TAB_COLOR_KEY = 'su_tab_colors_v1';
+const _TAB_COLOR_ENABLED_KEY = 'su_tab_color_enabled';
+const _TAB_COLOR_MODE_KEY = 'su_tab_color_mode';
+const _TAB_COLOR_DEFAULTS = {
+  mergedComp: {
+    comp:     { from:'#0f172a', to:'#1d4ed8', label:'일반 대회' },
+    tiertour: { from:'#4c1d95', to:'#7c3aed', label:'티어대회' }
+  },
+  mergedUniv: {
+    civil:  { from:'#7f1d1d', to:'#b91c1c', label:'시빌워' },
+    mini:   { from:'#0f172a', to:'#1d4ed8', label:'미니대전' },
+    univm:  { from:'#064e3b', to:'#059669', label:'대학대전' },
+    univck: { from:'#78350f', to:'#d97706', label:'대학CK' }
+  },
+  mergedInd: {
+    ind: { from:'#0f172a', to:'#1d4ed8', label:'개인전' },
+    gj:  { from:'#7f1d1d', to:'#dc2626', label:'끝장전' }
+  },
+  mergedPro: {
+    pro:  { from:'#14532d', to:'#16a34a', label:'프로리그 일반' },
+    gj:   { from:'#7f1d1d', to:'#dc2626', label:'프로 끝장전' },
+    comp: { from:'#0f172a', to:'#1d4ed8', label:'프로리그 대회' }
+  }
+};
+function getTabColorStyle(ctx, id){
+  try{
+    if(localStorage.getItem(_TAB_COLOR_ENABLED_KEY)==='0') return '';
+  }catch(e){}
+  let mode = 'fill';
+  try{
+    const raw = String(localStorage.getItem(_TAB_COLOR_MODE_KEY)||'fill').trim();
+    if(['fill','soft','outline','solid'].includes(raw)) mode = raw;
+  }catch(e){}
+  let from = '';
+  let to = '';
+  try{
+    const saved = JSON.parse(localStorage.getItem(_TAB_COLOR_KEY)||'{}');
+    const c = (saved[ctx]||{})[id];
+    if(c && c.from && c.to){ from = c.from; to = c.to; }
+    else if(c && c.from){ from = c.from; to = c.from; }
+  }catch(e){}
+  try{
+    const def = (_TAB_COLOR_DEFAULTS[ctx]||{})[id];
+    if(!from && def){
+      from = def.from || '';
+      to = def.to || def.from || '';
+    }
+  }catch(e){}
+  if(!from && !to) return '';
+  const main = to || from;
+  if(mode==='soft'){
+    return `background:linear-gradient(135deg,${from}18,${to}10) !important;border-color:${main}44 !important;color:${main} !important;box-shadow:0 8px 18px ${main}18 !important,inset 0 0 0 1px ${main}16 !important;`;
+  }
+  if(mode==='outline'){
+    return `background:linear-gradient(180deg,#ffffff,#f8fafc) !important;border:1.5px solid ${main}55 !important;color:${main} !important;box-shadow:0 6px 16px ${main}16 !important,inset 0 0 0 1px ${from}14 !important;`;
+  }
+  if(mode==='solid'){
+    return `background:${main} !important;border-color:${main}66 !important;color:#fff !important;box-shadow:0 12px 24px ${main}30 !important;`;
+  }
+  return `background:linear-gradient(135deg,${from},${to}) !important;border-color:${main}55 !important;color:#fff !important;box-shadow:0 12px 24px ${main}26 !important;`;
+}
+function setTabColor(ctx, id, from, to){
+  try{
+    const saved = JSON.parse(localStorage.getItem(_TAB_COLOR_KEY)||'{}');
+    if(!saved[ctx]) saved[ctx]={};
+    saved[ctx][id] = { from: String(from||''), to: String(to||'') };
+    localStorage.setItem(_TAB_COLOR_KEY, JSON.stringify(saved));
+  }catch(e){}
+}
+function resetTabColor(ctx, id){
+  try{
+    const saved = JSON.parse(localStorage.getItem(_TAB_COLOR_KEY)||'{}');
+    if(saved[ctx]) delete saved[ctx][id];
+    localStorage.setItem(_TAB_COLOR_KEY, JSON.stringify(saved));
+  }catch(e){}
+}
+function resetAllTabColors(){
+  try{ localStorage.removeItem(_TAB_COLOR_KEY); }catch(e){}
+}
+try{
+  window.getTabColorStyle = getTabColorStyle;
+  window.setTabColor = setTabColor;
+  window.resetTabColor = resetTabColor;
+  window.resetAllTabColors = resetAllTabColors;
+  window._TAB_COLOR_DEFAULTS = _TAB_COLOR_DEFAULTS;
+  window._TAB_COLOR_KEY = _TAB_COLOR_KEY;
+  window._TAB_COLOR_ENABLED_KEY = _TAB_COLOR_ENABLED_KEY;
+  window._TAB_COLOR_MODE_KEY = _TAB_COLOR_MODE_KEY;
+}catch(e){}

@@ -261,6 +261,34 @@
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
     };
+
+    window.cfgSetTabColorEnabled = function(on){
+      try{ localStorage.setItem('su_tab_color_enabled', on ? '1' : '0'); }catch(e){}
+      try{ render(); }catch(e){}
+    };
+    window.cfgSetTabColorMode = function(mode){
+      var v = String(mode||'fill');
+      if(['fill','soft','outline','solid'].indexOf(v) === -1) v = 'fill';
+      try{ localStorage.setItem('su_tab_color_mode', v); }catch(e){}
+      try{ render(); }catch(e){}
+    };
+    window.cfgSetRecSideFxEnabled = function(on){
+      try{ localStorage.setItem('su_rec_side_fx_on', on ? '1' : '0'); }catch(e){}
+      try{ render(); }catch(e){}
+    };
+    window.cfgSetRecSideFxMode = function(mode){
+      var v = String(mode||'soft');
+      if(['soft','glow','panel','line'].indexOf(v) === -1) v = 'soft';
+      try{ localStorage.setItem('su_rec_side_fx_mode', v); }catch(e){}
+      try{ render(); }catch(e){}
+    };
+    window.cfgSetRecSideFxIntensity = function(v){
+      try{
+        var n = Math.max(20, Math.min(100, parseInt(v||'68', 10) || 68));
+        localStorage.setItem('su_rec_side_fx_intensity', String(n));
+      }catch(e){}
+      try{ render(); }catch(e){}
+    };
   }
 
   function renderDesignV2Section(_scfgD){
@@ -408,4 +436,120 @@
   window.renderCfgDesignV2Section = renderDesignV2Section;
   window.renderCfgDesignV2ColorsSection = renderDesignV2ColorsSection;
   window.SettingsModules.design = { init, renderDesignV2Section, renderDesignV2ColorsSection };
+
+  /* ── 탭 버튼 색상 커스텀 섹션 ── */
+  function renderTabColorSection(_scfgD){
+    var defs = (typeof window._TAB_COLOR_DEFAULTS==='object') ? window._TAB_COLOR_DEFAULTS : {};
+    var colorKey = (typeof window._TAB_COLOR_KEY==='string') ? window._TAB_COLOR_KEY : 'su_tab_colors_v1';
+    var saved = {};
+    try{ saved = JSON.parse(localStorage.getItem(colorKey)||'{}'); }catch(e){}
+    var tabColorOn = (localStorage.getItem('su_tab_color_enabled') || '1') !== '0';
+    var tabColorMode = String(localStorage.getItem('su_tab_color_mode') || 'fill');
+    if(['fill','soft','outline','solid'].indexOf(tabColorMode) === -1) tabColorMode = 'fill';
+    var recSideFxOn = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0';
+    var recSideFxMode = String(localStorage.getItem('su_rec_side_fx_mode') || 'soft');
+    if(['soft','glow','panel','line'].indexOf(recSideFxMode) === -1) recSideFxMode = 'soft';
+    var recSideFxIntensity = Math.max(20, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68));
+
+    var groups = [
+      { ctx:'mergedUniv', title:'🏟️ 대학대전 탭' },
+      { ctx:'mergedInd',  title:'🎮 개인전/끝장전 탭' },
+      { ctx:'mergedComp', title:'🏆 대회 탭' },
+      { ctx:'mergedPro',  title:'🏅 프로리그 탭' }
+    ];
+
+    function makeRow(ctx, id, defEntry) {
+      var cur = (saved[ctx]||{})[id] || {};
+      var fromVal = cur.from || defEntry.from || '#0f172a';
+      var toVal   = cur.to   || defEntry.to   || '#1d4ed8';
+      var label   = defEntry.label || id;
+      var fromId  = 'tc-from-' + ctx + '-' + id;
+      var toId    = 'tc-to-'   + ctx + '-' + id;
+      // onchange: 직접 JS 코드 — esc 없이 작성, 따옴표만 주의
+      var onchg = "var f=document.getElementById('" + fromId + "'),t=document.getElementById('" + toId + "');if(f&&t&&typeof setTabColor=='function'){setTabColor('" + ctx + "','" + id + "',f.value,t.value);}try{if(typeof render=='function')render();}catch(ex){}";
+      var resetFn = "if(typeof resetTabColor=='function'){resetTabColor('" + ctx + "','" + id + "');}try{if(typeof render=='function')render();}catch(ex){}";
+      return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--border)">'
+        + '<div style="min-width:110px;font-size:12px;font-weight:900;color:var(--text2)">' + label + '</div>'
+        + '<div style="display:flex;align-items:center;gap:6px">'
+        + '<span style="font-size:10px;color:var(--gray-l)">시작</span>'
+        + '<input type="color" id="' + fromId + '" value="' + fromVal + '" onchange="' + onchg + '" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;padding:2px;background:none">'
+        + '<span style="font-size:10px;color:var(--gray-l)">끝</span>'
+        + '<input type="color" id="' + toId + '" value="' + toVal + '" onchange="' + onchg + '" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;padding:2px;background:none">'
+        + '</div>'
+        + '<div style="width:64px;height:24px;border-radius:8px;background:linear-gradient(135deg,' + fromVal + ',' + toVal + ');flex-shrink:0;border:1px solid rgba(0,0,0,.08)"></div>'
+        + '<button class="btn btn-w btn-xs" onclick="' + resetFn + '">초기화</button>'
+        + '</div>';
+    }
+
+    var groupsHTML = '';
+    for(var gi=0; gi<groups.length; gi++){
+      var g = groups[gi];
+      var ctxDefs = defs[g.ctx] || {};
+      var ids = Object.keys(ctxDefs);
+      if(!ids.length) continue;
+      var rowsHTML = '';
+      for(var ri=0; ri<ids.length; ri++){
+        rowsHTML += makeRow(g.ctx, ids[ri], ctxDefs[ids[ri]]);
+      }
+      groupsHTML += '<div style="padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-bottom:10px">'
+        + '<div style="font-weight:900;color:var(--text2);font-size:13px;margin-bottom:8px">' + g.title + '</div>'
+        + rowsHTML
+        + '</div>';
+    }
+
+    return _scfgD('tabcolors','🎨 탭 버튼 색상 커스텀')
+      + '<div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.6">'
+      + '미니대전/시빌워/대학대전/대회탭/프로리그 등 탭 버튼의 활성(선택) 색상을 개별 지정합니다.<br>'
+      + '<b>시작색</b>과 <b>끝색</b>으로 그라데이션을 만들며, 같은 색을 지정하면 단색이 됩니다.'
+      + '</div>'
+      + '<div style="padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);margin-bottom:12px;display:flex;flex-direction:column;gap:10px">'
+      + '  <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:900;color:var(--text2);cursor:pointer">'
+      + '    <input type="checkbox" style="width:15px;height:15px" ' + (tabColorOn?'checked':'') + ' onchange="cfgSetTabColorEnabled(this.checked)">'
+      + '    탭 컬러 사용'
+      + '  </label>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">적용 모드</div>'
+      + '    <select onchange="cfgSetTabColorMode(this.value)" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">'
+      + '      <option value="fill"' + (tabColorMode==='fill'?' selected':'') + '>풀 컬러</option>'
+      + '      <option value="soft"' + (tabColorMode==='soft'?' selected':'') + '>소프트</option>'
+      + '      <option value="outline"' + (tabColorMode==='outline'?' selected':'') + '>아웃라인</option>'
+      + '      <option value="solid"' + (tabColorMode==='solid'?' selected':'') + '>단색</option>'
+      + '    </select>'
+      + '  </div>'
+      + '  <div style="font-size:11px;color:var(--gray-l);line-height:1.6">탭 컬러를 완전히 끄거나, 진한 스타일 / 연한 스타일 / 테두리 중심 스타일로 바꿀 수 있습니다.</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
+      + '<button class="btn btn-w btn-sm" onclick="if(confirm(\'탭 버튼 색상을 모두 초기화할까요?\')){if(typeof resetAllTabColors==\'function\')resetAllTabColors();try{if(typeof render==\'function\')render();}catch(e){}}">🔄 전체 초기화</button>'
+      + '</div>'
+      + groupsHTML
+      + '<div style="margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;flex-direction:column;gap:10px">'
+      + '  <div style="font-size:13px;font-weight:900;color:var(--text2)">🪄 기록 카드 양끝 대학 색상 효과</div>'
+      + '  <div style="font-size:12px;color:var(--gray-l);line-height:1.6">미니대전 / 대학대전 / 대회 조별리그 / 토너먼트 / 프로리그 대회 기록 카드에 캡처처럼 양쪽 끝 대학 색상을 은은하게 넣습니다.</div>'
+      + '  <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:900;color:var(--text2);cursor:pointer">'
+      + '    <input type="checkbox" style="width:15px;height:15px" ' + (recSideFxOn?'checked':'') + ' onchange="cfgSetRecSideFxEnabled(this.checked)">'
+      + '    양끝 색상 효과 사용'
+      + '  </label>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">디자인 모드</div>'
+      + '    <select onchange="cfgSetRecSideFxMode(this.value)" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">'
+      + '      <option value="soft"' + (recSideFxMode==='soft'?' selected':'') + '>소프트</option>'
+      + '      <option value="glow"' + (recSideFxMode==='glow'?' selected':'') + '>글로우</option>'
+      + '      <option value="panel"' + (recSideFxMode==='panel'?' selected':'') + '>패널</option>'
+      + '      <option value="line"' + (recSideFxMode==='line'?' selected':'') + '>라인</option>'
+      + '    </select>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">강도</div>'
+      + '    <input type="range" min="20" max="100" step="5" value="' + recSideFxIntensity + '" oninput="document.getElementById(\'cfg-rec-sidefx-v\').textContent=this.value+\'%\'; cfgSetRecSideFxIntensity(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-v">' + recSideFxIntensity + '%</span></div>'
+      + '  </div>'
+      + '  <div style="border-radius:12px;border:1px solid var(--border2);overflow:hidden;background:linear-gradient(90deg, rgba(59,130,246,.18) 0%, rgba(59,130,246,.04) 12%, #ffffff 24%, #ffffff 76%, rgba(168,85,247,.04) 88%, rgba(168,85,247,.18) 100%);padding:14px 16px;display:flex;align-items:center;justify-content:center;gap:10px">'
+      + '    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#2563eb;color:#fff;font-size:11px;font-weight:800">서울대</span>'
+      + '    <span style="font-size:18px;font-weight:1000;color:var(--text)">3 : 2</span>'
+      + '    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#7c3aed;color:#fff;font-size:11px;font-weight:800">연세대</span>'
+      + '  </div>'
+      + '</div>'
+      + '</details>';
+  }
+  window.renderCfgTabColorSection = renderTabColorSection;
 })();

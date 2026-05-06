@@ -105,7 +105,7 @@ const _DEFAULT_CATSECS = {
   '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','pdModeBadge','pd','matchdetail','univlogoimg','si','siAssign'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
   // (요청사항) 모바일/태블릿 UI 크기 조절(버튼/메뉴/배지)
-  '🎨 디자인/테마':['tablabels','designv2','hdr','appfont','uisize','reccard','tourneycard','sharecard','calui'],
+  '🎨 디자인/테마':['tablabels','tabcolors','designv2','hdr','appfont','uisize','reccard','tourneycard','sharecard','calui'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','autofitall','fab'],
   '🧪 고급/점검':['cfgmenu','storage','selfcheck'],
   '💾 데이터':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
@@ -1806,15 +1806,24 @@ window.cfgFemcoReset = function(){
 // 설정 탭 버튼이 "반응 없음"처럼 보일 때를 대비한 이벤트 바인딩(인라인 onclick 불발 대비)
 let _cfgLastTapHandledAt = 0;
 let _cfgLastTapHandledKey = '';
+let _cfgPointerDownAt = 0;
+let _cfgPointerDownKey = '';
 function _cfgShouldIgnoreDuplicateTap(e, key){
   try{
     const now = Date.now();
     const type = String(e && e.type || '');
     const safeKey = String(key || '');
-    if(safeKey && _cfgLastTapHandledKey === safeKey && (now - _cfgLastTapHandledAt) < 320){
+    // pointerdown은 별도 추적 — 실제 처리(pointerup/click)와 분리
+    if(type === 'pointerdown'){
+      _cfgPointerDownAt = now;
+      _cfgPointerDownKey = safeKey;
+      return false; // pointerdown 단계에서는 차단하지 않음
+    }
+    // pointerup/click: pointerdown으로 이미 처리된 경우만 중복으로 간주
+    if(safeKey && _cfgLastTapHandledKey === safeKey && (now - _cfgLastTapHandledAt) < 400){
       return true;
     }
-    if(safeKey && (type === 'pointerdown' || type === 'pointerup' || type === 'click' || type === 'touchend')){
+    if(safeKey && (type === 'pointerup' || type === 'click' || type === 'touchend')){
       _cfgLastTapHandledAt = now;
       _cfgLastTapHandledKey = safeKey;
     }
@@ -3542,15 +3551,7 @@ ${_scfgD('notice','📢 공지 관리')}
         기록 카드에서 메모 입력 기능 사용(관리자)
       </label>
       <div style="font-size:11px;color:var(--gray-l)">※ 메모가 이미 저장된 경우는 항상 표시됩니다. 이 옵션은 “입력칸”만 켜고 끕니다.</div>
-      ${(typeof window.buildSettingsTeamColorBlock==='function' ? window.<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px">
-        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">🎨 개인전 / 끝장전 카드 대학 색상 효과</div>
-        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-          <input type="checkbox" id="cfg-matchcard-univ-fx" style="width:15px;height:15px" ${(localStorage.getItem('su_matchcard_univ_fx')||'1')==='1'?'checked':''} onchange="localStorage.setItem('su_matchcard_univ_fx',this.checked?'1':'0');render()">
-          개인전 / 끝장전 카드에 대학색 그라디언트 + 이름 색상 효과 적용
-        </label>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:4px">카드 양쪽 끝에서 스트리머 이름까지 해당 대학 색상이 연하게 물드는 효과입니다.<br>미니대전·대학대전·시빌워·대학CK·티어대회·프로리그·대회·조별리그·토너먼트 등 팀경기는 위의 "승리 대학색" 설정을 사용합니다.</div>
-      </div>
-      buildSettingsTeamColorBlock() : '')}
+      ${(typeof window.buildSettingsTeamColorBlock==='function' ? window.buildSettingsTeamColorBlock() : '')}
     </div>
   </details>
   ${(()=>{ 
@@ -3655,6 +3656,7 @@ ${_scfgD('notice','📢 공지 관리')}
   })()}
   ${(typeof window.renderCfgDesignV2Section==='function' ? window.renderCfgDesignV2Section(_scfgD) : '')}
   ${(typeof window.renderCfgDesignV2ColorsSection==='function' ? window.renderCfgDesignV2ColorsSection(_scfgD) : '')}
+  ${(typeof window.renderCfgTabColorSection==='function' ? window.renderCfgTabColorSection(_scfgD) : '')}
   ${(()=>{ 
     const p = (localStorage.getItem('su_app_font_preset') ?? 'noto');
     const css = (localStorage.getItem('su_app_font_css') ?? '');

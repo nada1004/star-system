@@ -64,8 +64,14 @@ function rBracketSchedule(tn){
       isLoggedIn?(isManual?{ t:'🗑️ 삭제', d:'수동 경기 삭제', kind:'danger', on:()=>bktDelManualMatch(tn.id,mi) }:{ t:'🗑️ 결과 삭제', d:'대진표 결과 초기화', kind:'danger', on:()=>bktClearMatchResult(tn.id,r,mi) }):null
     ].filter(Boolean);
     const _bktMenu = _bktActions.length ? _compActionMenuHTML(_bktActions) : '';
+    const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68};
+    const _fxOn=!!_fxCfg.on;
+    const _fxMode=['soft','glow','panel','line'].includes(_fxCfg.mode)?_fxCfg.mode:'soft';
+    const _fxInt=Math.max(20, Math.min(100, parseInt(_fxCfg.intensity||68,10)||68));
+    const _fxA1=Math.max(0.08, Math.min(0.36, (_fxInt/100)*0.30)).toFixed(3);
+    const _fxA2=Math.max(0.04, Math.min(0.18, ((_fxInt/100)*0.30)*0.48)).toFixed(3);
     return `<div style="margin-bottom:8px">
-      <div class="grp-match-card tc-card" style="--tc-win-rgb:${winRgb};border-left:4px solid ${isManual?'#7c3aed':'var(--blue)'};background:linear-gradient(135deg,var(--white) 0%,${isManual?'#f5f3ff':'#eff6ff'} 100%);margin-bottom:0">
+      <div class="grp-match-card tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxOn?`--rec-side-left-rgb:${_tcHexToRgbStr(ca||'#3b82f6')};--rec-side-right-rgb:${_tcHexToRgbStr(cb||'#ef4444')};--rec-side-a1:${_fxA1};--rec-side-a2:${_fxA2};`:''}border-left:4px solid ${isManual?'#7c3aed':'var(--blue)'};background:linear-gradient(135deg,var(--white) 0%,${isManual?'#f5f3ff':'#eff6ff'} 100%);margin-bottom:0">
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
           <span class="grp-badge" style="background:${isManual?'#7c3aed':'var(--blue)'};font-size:10px">${rLabel}</span>
           ${dateStr?`<span style="font-size:9px;color:var(--gray-l)">${dateStr.slice(5).replace('-','/')}</span>`:''}

@@ -365,11 +365,11 @@ function histAllHTML(){
     const cb=isCK?_sideCols.b:gc(m.b||teamB);
     const aWin=!isInd && Number(scoreA)>Number(scoreB);
     const bWin=!isInd && Number(scoreB)>Number(scoreA);
-    const modeMap={mini:'mini',univm:'univm',ck:'ck',pro:'pro',tt:'tt',tourney:'comp',procomp:'comp'};
+    const modeMap={mini:'mini',univm:'univm',ck:'ck',pro:'pro',tt:'tt',ind:'ind',gj:'gj',progj:'progj',tourney:'tourney',procomp:'procomp'};
     const mode=modeMap[type]||'comp';
     const _regIdx = (typeof idx==='number' ? idx : pageIdx);
     const _detM = _ref ? {...m, _editRef:_ref} : m;
-    h+=`<div class="rec-summary rec-mode-tierrank" data-rec-mode="tierrank" style="--rec-mode-col:${ti.col};--rec-mode-rgb:${(function(){const h=String(ti.col||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};border-left:3px solid ${ti.col}">
+    h+=`<div class="rec-summary rec-mode-tierrank${_recSideFxClass(mode)}" data-rec-mode="tierrank" style="--rec-mode-col:${ti.col};--rec-mode-rgb:${(function(){const h=String(ti.col||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};${_recSideFxStyle(mode,ca,cb)}border-left:3px solid ${ti.col}">
       <div class="rec-sum-header" style="gap:6px">
         <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:68px">
           <span style="font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:${ti.col}18;color:${ti.col};white-space:nowrap;display:inline-block">${ti.lbl}${m._teamMatchType?` <span style="background:#7c3aed;color:#fff;padding:0 4px;border-radius:3px">${m._teamMatchType.replace('v',':')+'전'}</span>`:''}</span>
@@ -459,7 +459,7 @@ function histTourneyHTML(context){
         ?`<span style="background:${m.grpColor||'#2563eb'};color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px">GROUP ${m.grpLetter||''}</span>`:'';
       const _tAwin=m.sa>m.sb,_tBwin=m.sb>m.sa;
       const _tBorderCol=_tAwin?gc(a):_tBwin?gc(b):'var(--blue-ll)';
-      h+=`<div class="rec-summary rec-mode-tourney" data-rec-mode="tourney" style="--rec-mode-col:${_tBorderCol};--rec-mode-rgb:${(function(){const h=String(_tBorderCol||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};margin-left:8px;border-left:3px solid ${_tBorderCol}">
+      h+=`<div class="rec-summary rec-mode-tourney${_recSideFxClass('tourney')}" data-rec-mode="tourney" style="--rec-mode-col:${_tBorderCol};--rec-mode-rgb:${(function(){const h=String(_tBorderCol||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};${_recSideFxStyle('tourney',ca,cb)}margin-left:8px;border-left:3px solid ${_tBorderCol}">
         <div class="rec-sum-header">
           <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           ${grpBadge}
@@ -630,6 +630,48 @@ function statCard(label,w,l,d,col){
   </div>`;
 }
 
+function _recFxHexToRgbStr(hex){
+  try{
+    const h=String(hex||'').replace('#','').trim();
+    if(h.length===3){
+      const r=parseInt(h[0]+h[0],16), g=parseInt(h[1]+h[1],16), b=parseInt(h[2]+h[2],16);
+      if([r,g,b].some(v=>isNaN(v))) return '100,116,139';
+      return `${r},${g},${b}`;
+    }
+    if(h.length>=6){
+      const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+      if([r,g,b].some(v=>isNaN(v))) return '100,116,139';
+      return `${r},${g},${b}`;
+    }
+  }catch(e){}
+  return '100,116,139';
+}
+function _getRecSideFxCfg(){
+  let on = true, mode = 'soft', intensity = 68;
+  try{ on = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0'; }catch(e){}
+  try{
+    const raw = String(localStorage.getItem('su_rec_side_fx_mode') || 'soft').trim();
+    if(['soft','glow','panel','line'].includes(raw)) mode = raw;
+  }catch(e){}
+  try{ intensity = Math.max(20, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68)); }catch(e){}
+  return { on, mode, intensity };
+}
+function _canUseRecSideFx(mode){
+  return ['ind','gj','progj','mini','civil','univm','ck','pro','tt','comp','tourney','procomp','procompgj','procomptn','procompteam'].includes(String(mode||''));
+}
+function _recSideFxClass(mode){
+  const cfg = _getRecSideFxCfg();
+  if(!cfg.on || !_canUseRecSideFx(mode)) return '';
+  return ` rec-sidefx rec-sidefx--${cfg.mode}`;
+}
+function _recSideFxStyle(mode, leftHex, rightHex){
+  const cfg = _getRecSideFxCfg();
+  if(!cfg.on || !_canUseRecSideFx(mode) || !leftHex || !rightHex) return '';
+  const a1 = Math.max(0.08, Math.min(0.36, (cfg.intensity / 100) * 0.30));
+  const a2 = Math.max(0.04, Math.min(0.18, a1 * 0.48));
+  return `--rec-side-left-rgb:${_recFxHexToRgbStr(leftHex)};--rec-side-right-rgb:${_recFxHexToRgbStr(rightHex)};--rec-side-a1:${a1.toFixed(3)};--rec-side-a2:${a2.toFixed(3)};`;
+}
+
 function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   if(!arr.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
@@ -685,7 +727,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
     };
     const _mc = MODE_COL[mode] || '#64748b';
     const _rgb = (hex)=>{const h=String(hex||'').replace('#',''); if(h.length!==6) return '100,116,139'; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `${r},${g},${b}`;};
-    h+=`<div class="rec-summary rec-mode-${mode}" data-rec-mode="${mode}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgb(_mc)}">
+    h+=`<div class="rec-summary rec-mode-${mode}${_recSideFxClass(mode)}" data-rec-mode="${mode}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgb(_mc)};${_recSideFxStyle(mode,ca,cb)}">
       <div class="rec-sum-header rec-sum-header--stack">
         <div class="rec-topline">
           <div class="rec-meta-row">
@@ -976,7 +1018,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     };
     const _mc = MODE_COL[mode] || '#64748b';
     const _rgbM = _hexToRgbStr(_mc);
-    return `<div class="rec-summary rec-mode-${mode}${_themeCls}" data-rec-mode="${mode}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgbM};${_themeStyle}border-left:3px solid ${_wBorderCol}">
+    return `<div class="rec-summary rec-mode-${mode}${_themeCls}${_recSideFxClass(mode)}" data-rec-mode="${mode}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgbM};${_themeStyle}${_recSideFxStyle(mode,ca,cb)}border-left:3px solid ${_wBorderCol}">
       <div class="rec-sum-header rec-sum-header--stack">
         <div class="rec-topline">
           <div class="rec-meta-row">
@@ -2607,7 +2649,7 @@ function compSummaryListHTML(context){
     // GROUP 배지 (tourneys 경기)
     const grpBadge=m._src==='tour'
       ?`<span style="background:${m.grpColor};color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px;margin-left:6px">GROUP ${m.grpLetter}</span>`:'';
-    h+=`<div class="rec-summary rec-mode-comp" data-rec-mode="comp" style="--rec-mode-col:#3b82f6;--rec-mode-rgb:59,130,246">
+    h+=`<div class="rec-summary rec-mode-comp${_recSideFxClass('comp')}" data-rec-mode="comp" style="--rec-mode-col:#3b82f6;--rec-mode-rgb:59,130,246;${_recSideFxStyle('comp',ca,cb)}">
       <div class="rec-sum-header">
         <span style="color:var(--text3);font-size:12px;font-weight:600;min-width:72px">${m.d||''}</span>
         <span style="font-weight:700;font-size:13px">🎖️ ${m.n||'대회'}${grpBadge}</span>
@@ -3293,7 +3335,7 @@ function _histProCompLeagueListHTML(){
       const stageTypeBadge = m._stage==='조별리그'
         ? `<span style="background:#e0f2fe;color:#0891b2;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">조별리그</span>`
         : `<span style="background:#fef3c7;color:#b45309;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">대진표</span>`;
-      h += `<div class="rec-summary rec-mode-procomptn" data-rec-mode="procomptn" style="--rec-mode-col:${m._stageColor};--rec-mode-rgb:${(function(){const h=String(m._stageColor||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};margin-left:8px;border-left:3px solid ${m._stageColor}">
+      h += `<div class="rec-summary rec-mode-procomptn${_recSideFxClass('procomptn')}" data-rec-mode="procomptn" style="--rec-mode-col:${m._stageColor};--rec-mode-rgb:${(function(){const h=String(m._stageColor||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};${_recSideFxStyle('procomptn',gc(m.a),gc(m.b))}margin-left:8px;border-left:3px solid ${m._stageColor}">
         <div style="padding:5px 12px 0;display:flex;align-items:center;gap:6px">
           <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           ${stageTypeBadge}${stageBadge}
@@ -3417,7 +3459,7 @@ function histProCompTourneyHTML(_omitBar) {
       const aWin=m.winner==='A', bWin=m.winner==='B';
       const stageBadge=`<span style="background:${m._stageColor};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap">${m._stageDetail}</span>`;
       const tieBadge = m._isTie ? `<span style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;white-space:nowrap">⚖️ ${m._scoreA||0}:${m._scoreB||0}</span>` : '';
-      h+=`<div class="rec-summary rec-mode-procomptn" data-rec-mode="procomptn" style="--rec-mode-col:${m._stageColor};--rec-mode-rgb:${(function(){const h=String(m._stageColor||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};margin-left:8px;border-left:3px solid ${m._stageColor}">
+      h+=`<div class="rec-summary rec-mode-procomptn${_recSideFxClass('procomptn')}" data-rec-mode="procomptn" style="--rec-mode-col:${m._stageColor};--rec-mode-rgb:${(function(){const h=String(m._stageColor||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};${_recSideFxStyle('procomptn',gc(m.a),gc(m.b))}margin-left:8px;border-left:3px solid ${m._stageColor}">
         <div style="padding:5px 12px 0;display:flex;align-items:center;gap:6px">
           <span style="color:var(--text3);font-size:11px;font-weight:600;flex-shrink:0">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           <span style="background:#f5f3ff;color:#7c3aed;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">토너먼트</span>
@@ -3504,7 +3546,7 @@ function histProCompTeamHTML(_omitBar) {
     tms.forEach(tm=>{
       const aWin=tm.sa>tm.sb, bWin=tm.sb>tm.sa;
       const games=(tm.games||[]).filter(g=>g.wName&&g.lName);
-      h+=`<div style="border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px">
+      h+=`<div class="rec-summary${_recSideFxClass('procompteam')}" data-rec-mode="procompteam" style="border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px;${_recSideFxStyle('procompteam',colA,colB)}">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
           <span style="font-size:12px;font-weight:600;color:var(--text3)">${tm.d||'날짜 미정'}</span>
           <span style="background:#e0f2fe;color:#0284c7;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">팀전</span>
@@ -3533,7 +3575,7 @@ function histProCompTeamHTML(_omitBar) {
         ${games.map(g=>{
           const pw=players.find(p=>p.name===g.wName), pl=players.find(p=>p.name===g.lName);
           const sideWin=g._sideW==='A'?tm.teamAName||'A팀':tm.teamBName||'B팀';
-          return `<div class="rec-summary rec-mode-procompteam" data-rec-mode="procompteam" style="--rec-mode-col:${g._sideW==='A'?colA:colB};--rec-mode-rgb:${(function(){const c=(g._sideW==='A'?colA:colB);const h=String(c||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};margin-left:4px;border-left:3px solid ${g._sideW==='A'?colA:colB}">
+          return `<div class="rec-summary rec-mode-procompteam${_recSideFxClass('procompteam')}" data-rec-mode="procompteam" style="--rec-mode-col:${g._sideW==='A'?colA:colB};--rec-mode-rgb:${(function(){const c=(g._sideW==='A'?colA:colB);const h=String(c||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};${_recSideFxStyle('procompteam',colA,colB)}margin-left:4px;border-left:3px solid ${g._sideW==='A'?colA:colB}">
             <div class="rec-sum-header">
               <span style="background:${g._sideW==='A'?colA:colB};color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${sideWin}</span>
               <div class="rec-sum-vs" style="flex:1">
@@ -3584,7 +3626,9 @@ function histProCompGJHTML(_omitBar){
     const p2w=(sess.games||[]).filter(g=>g.winner===sess.b).length;
     const winner=p1w>p2w?sess.a:p2w>p1w?sess.b:'';
     const _sid = String(sess._id||'').replace(/'/g,"\\'");
-    h+=`<div style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
+    const _pcgjColA=gc(sess.a||'');
+    const _pcgjColB=gc(sess.b||'');
+    h+=`<div class="rec-summary${_recSideFxClass('procompgj')}" data-rec-mode="procompgj" style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;${_recSideFxStyle('procompgj',_pcgjColA,_pcgjColB)}">
       <div style="background:var(--bg2);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer" onclick="openMatchDetailByMatchId('${_sid}','프로리그대회끝장전')">
         <span style="font-size:12px;font-weight:600;color:var(--text3)">${sess.d||'날짜 미정'}</span>
         <span style="font-size:11px;background:#0891b2;color:#fff;padding:1px 8px;border-radius:4px;font-weight:700">🎖️ ${sess.tnName||''}</span>

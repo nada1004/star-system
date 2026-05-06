@@ -3,9 +3,13 @@ var _mergedUnivSub = 'mini';  // 대학대전 서브탭: 'civil' | 'mini' | 'uni
 var _mergedCompSub = 'comp';  // 대회 서브탭: 'comp' | 'tiertour'
 var _mergedProSub  = 'pro';   // 프로리그 서브탭: 'pro' | 'gj' | 'comp'
 
-function _mergedSubBar(tabs, curSub, setFn) {
+function _mergedSubBar(tabs, curSub, setFn, ctx) {
   return `<div class="fbar utilbar utilbar--scroll merged-subbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-    ${tabs.map(t=>`<button class="pill ${curSub===t.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${setFn}='${t.id}';render()">${t.lbl}</button>`).join('')}
+    ${tabs.map(t=>{
+      const isOn = curSub===t.id;
+      const colorStyle = (isOn && ctx && typeof getTabColorStyle==='function') ? getTabColorStyle(ctx, t.id) : '';
+      return `<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap;${colorStyle}" onclick="${setFn}='${t.id}';render()">${t.lbl}</button>`;
+    }).join('')}
   </div>`;
 }
 
@@ -15,11 +19,17 @@ function rMergedInd(C, T) {
     : [{id:'ind',lbl:'🎮 개인전'},{id:'gj',lbl:'⚔️ 끝장전'}];
   const bar = _mergedSubBar(
     tabs,
-    _mergedIndSub, '_mergedIndSub'
+    _mergedIndSub, '_mergedIndSub', 'mergedInd'
   );
   const sub = document.createElement('div');
-  if(_mergedIndSub==='ind') { if(typeof rInd==='function') rInd(sub,T); }
-  else                       { if(typeof rGJ==='function')  rGJ(sub,T);  }
+  if(_mergedIndSub==='ind') {
+    try{ if(typeof indSub!=='undefined' && indSub==='input') indSub='records'; }catch(e){}
+    if(typeof rInd==='function') rInd(sub,T);
+  }
+  else {
+    try{ if(typeof gjSub!=='undefined' && gjSub==='input') gjSub='records'; }catch(e){}
+    if(typeof rGJ==='function')  rGJ(sub,T);
+  }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
@@ -30,7 +40,7 @@ function rMergedUnivM(C, T) {
     : [{id:'civil',lbl:'⚔️ 시빌워'},{id:'mini',lbl:'⚡ 미니대전'},{id:'univm',lbl:'🏟️ 대학대전'},{id:'univck',lbl:'🤝 대학CK'}];
   const bar = _mergedSubBar(
     tabs,
-    _mergedUnivSub, '_mergedUnivSub'
+    _mergedUnivSub, '_mergedUnivSub', 'mergedUniv'
   );
   const sub = document.createElement('div');
   if(_mergedUnivSub==='civil')       { miniType='civil';  if(typeof rMini==='function')  rMini(sub,T); }
@@ -47,7 +57,7 @@ function rMergedComp(C, T) {
     : [{id:'comp',lbl:'🎖️ 일반 대회'},{id:'tiertour',lbl:'🎯 티어대회'}];
   const bar = _mergedSubBar(
     tabs,
-    _mergedCompSub, '_mergedCompSub'
+    _mergedCompSub, '_mergedCompSub', 'mergedComp'
   );
   const sub = document.createElement('div');
   if(_mergedCompSub==='comp') {
@@ -67,11 +77,14 @@ function rMergedPro(C, T) {
     : [{id:'pro',lbl:'🏅 프로리그'},{id:'gj',lbl:'⚔️ 프로 끝장전'},{id:'comp',lbl:'🏆 프로리그 대회'}];
   const bar = _mergedSubBar(
     tabs,
-    _mergedProSub, '_mergedProSub'
+    _mergedProSub, '_mergedProSub', 'mergedPro'
   );
   const sub = document.createElement('div');
   if(_mergedProSub==='pro')       { if(typeof rPro==='function')     rPro(sub,T); }
-  else if(_mergedProSub==='gj')   { if(typeof rGJ==='function')      rGJ(sub,T,true,true); }
+  else if(_mergedProSub==='gj')   {
+    try{ if(typeof gjSub!=='undefined' && gjSub==='input') gjSub='records'; }catch(e){}
+    if(typeof rGJ==='function') rGJ(sub,T,true,true);
+  }
   else                            { if(typeof rProComp==='function') rProComp(sub,T); }
   C.innerHTML = bar;
   C.appendChild(sub);

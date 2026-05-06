@@ -267,10 +267,21 @@ window._applyTabLinkFromUrl = function(){
     if(!validTabs.has(tab)) return false;
 
     if(tab === 'hist' && sub) histSub = sub;
-    else if(tab === 'ind' && sub && ['ind','gj'].includes(sub)) _mergedIndSub = sub;
+    else if(tab === 'ind' && sub && ['ind','gj'].includes(sub)){
+      _mergedIndSub = sub;
+      try{
+        if(sub === 'ind' && typeof indSub!=='undefined' && indSub==='input') indSub='records';
+        if(sub === 'gj' && typeof gjSub!=='undefined' && gjSub==='input') gjSub='records';
+      }catch(e){}
+    }
     else if(tab === 'mini' && sub && ['civil','mini','univm','univck'].includes(sub)) _mergedUnivSub = sub;
     else if(tab === 'comp' && sub && ['comp','tiertour'].includes(sub)) _mergedCompSub = sub;
-    else if(tab === 'pro' && sub && ['pro','gj','comp'].includes(sub)) _mergedProSub = sub;
+    else if(tab === 'pro' && sub && ['pro','gj','comp'].includes(sub)){
+      _mergedProSub = sub;
+      try{
+        if(sub === 'gj' && typeof gjSub!=='undefined' && gjSub==='input') gjSub='records';
+      }catch(e){}
+    }
     else if(tab === 'stats' && sub) window.statsSub = sub;
 
     curTab = tab;

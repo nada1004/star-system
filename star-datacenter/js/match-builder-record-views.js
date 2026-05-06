@@ -2,8 +2,83 @@
    Match Builder Record Views
 ══════════════════════════════════════ */
 
+function _safeHeadToHeadSideFx(leftHex, rightHex){
+  try{
+    if(typeof _getRecSideFxCfg!=='function') return '';
+    const cfg = _getRecSideFxCfg();
+    if(!cfg || !cfg.on) return '';
+    const mode = ['soft','glow','panel','line'].includes(cfg.mode) ? cfg.mode : 'soft';
+    const intensity = Math.max(20, Math.min(100, parseInt(cfg.intensity||68,10)||68));
+    const a1 = Math.max(0.08, Math.min(0.34, (intensity/100) * 0.28));
+    const a2 = Math.max(0.03, Math.min(0.16, a1 * 0.42));
+    const lr = (typeof _recFxHexToRgbStr==='function') ? _recFxHexToRgbStr(leftHex||'#3b82f6') : '59,130,246';
+    const rr = (typeof _recFxHexToRgbStr==='function') ? _recFxHexToRgbStr(rightHex||'#ef4444') : '239,68,68';
+    if(mode==='line'){
+      return `background:
+        linear-gradient(180deg, rgba(${lr},${a1.toFixed(3)}), rgba(${lr},${a2.toFixed(3)})) left center / 8px 100% no-repeat,
+        linear-gradient(180deg, rgba(${rr},${a1.toFixed(3)}), rgba(${rr},${a2.toFixed(3)})) right center / 8px 100% no-repeat,
+        var(--white);`;
+    }
+    if(mode==='glow'){
+      return `background:
+        linear-gradient(90deg, rgba(${lr},${a2.toFixed(3)}) 0%, rgba(${lr},0) 24%, rgba(${rr},0) 76%, rgba(${rr},${a2.toFixed(3)}) 100%),
+        var(--white);
+        box-shadow: inset 26px 0 34px rgba(${lr},${a1.toFixed(3)}), inset -26px 0 34px rgba(${rr},${a1.toFixed(3)});`;
+    }
+    if(mode==='panel'){
+      return `background:
+        linear-gradient(90deg, rgba(${lr},${a1.toFixed(3)}) 0%, rgba(${lr},${a2.toFixed(3)}) 13%, rgba(${lr},0) 28%, rgba(${rr},0) 72%, rgba(${rr},${a2.toFixed(3)}) 87%, rgba(${rr},${a1.toFixed(3)}) 100%),
+        var(--white);`;
+    }
+    return `background:
+      linear-gradient(90deg, rgba(${lr},${a1.toFixed(3)}) 0%, rgba(${lr},${a2.toFixed(3)}) 10%, rgba(${lr},0) 22%, rgba(${rr},0) 78%, rgba(${rr},${a2.toFixed(3)}) 90%, rgba(${rr},${a1.toFixed(3)}) 100%),
+      var(--white);`;
+  }catch(e){
+    return '';
+  }
+}
+
+function _rememberStableIndGj(kind, arr){
+  try{
+    if(!Array.isArray(arr) || !arr.length) return;
+    const key = kind === 'gj' ? '__lastGoodGjM' : '__lastGoodIndM';
+    window[key] = arr.slice();
+  }catch(e){}
+}
+function _restoreStableIndGj(kind){
+  try{
+    if(kind === 'ind'){
+      if(Array.isArray(indM) && indM.length){
+        _rememberStableIndGj('ind', indM);
+        return;
+      }
+      const fromMem = Array.isArray(window.__lastGoodIndM) ? window.__lastGoodIndM : [];
+      const fromLs = (typeof J==='function' ? (J('su_indm') || []) : []);
+      const next = fromMem.length ? fromMem : (Array.isArray(fromLs) ? fromLs : []);
+      if(Array.isArray(next) && next.length){
+        indM = next.slice();
+        try{ window.indM = indM; }catch(e){}
+      }
+      return;
+    }
+    if(Array.isArray(gjM) && gjM.length){
+      _rememberStableIndGj('gj', gjM);
+      return;
+    }
+    const fromMem = Array.isArray(window.__lastGoodGjM) ? window.__lastGoodGjM : [];
+    const fromLs = (typeof J==='function' ? (J('su_gjm') || []) : []);
+    const next = fromMem.length ? fromMem : (Array.isArray(fromLs) ? fromLs : []);
+    if(Array.isArray(next) && next.length){
+      gjM = next.slice();
+      try{ window.gjM = gjM; }catch(e){}
+    }
+  }catch(e){}
+}
+
 function indRecordsHTML(){
+  _restoreStableIndGj('ind');
   if(!indM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+  _rememberStableIndGj('ind', indM);
   const sessions=[];
   const sidPairMap=new Map();
   let lastKey=null, lastSess=null;
@@ -127,19 +202,14 @@ function indRecordsHTML(){
     const p2col=p2univ?gc(p2univ):'#1D9E75';
     const p1photoLg=getPlayerPhotoHTML(s.p1,'38px');
     const p2photoLg=getPlayerPhotoHTML(s.p2,'38px');
-    const _indUnivFx = (localStorage.getItem('su_matchcard_univ_fx')||'1')==='1';
-    const _p1Hex=p1col||'#378ADD'; const _p2Hex=p2col||'#1D9E75';
-    const _indCardBg=_indUnivFx?`linear-gradient(90deg,${_p1Hex}18 0%,transparent 38%,transparent 62%,${_p2Hex}18 100%)`:'var(--white)';
-    const _indCardBorder=_indUnivFx?`1px solid ${p1wins>p2wins?_p1Hex:p2wins>p1wins?_p2Hex:'var(--border)'}44`:'1px solid var(--border)';
-    const _p1NameColor=_indUnivFx?_p1Hex:'var(--text1)';
-    const _p2NameColor=_indUnivFx?_p2Hex:'var(--text1)';
-    h+=`<div style="${_indCardBorder};border-radius:12px;margin-bottom:8px;overflow:hidden;background:${_indCardBg}">
+    const _indWrapFx = _safeHeadToHeadSideFx(p1col, p2col);
+    h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_indWrapFx||'background:var(--white);'}">
       <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px 14px;gap:8px;cursor:pointer" onclick="openIndSessionPopup('${_indSessKey}')">${bulkCbInd}
         <div style="display:flex;flex-direction:column;gap:4px">
           <div style="display:flex;align-items:center;gap:8px">
             ${p1photoLg}
             <div>
-              <div style="font-size:15px;font-weight:700;cursor:pointer;color:${_p1NameColor}" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p1)}')">${s.p1}</div>
+              <div style="font-size:15px;font-weight:700;cursor:pointer;color:var(--text1)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p1)}')">${s.p1}</div>
               <div style="font-size:11px;color:var(--gray-l)">${p1univ}${p1race&&p1race!=='N'?` · ${p1race}`:''}</div>
             </div>
           </div>
@@ -151,7 +221,7 @@ function indRecordsHTML(){
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
           <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
             <div style="text-align:right">
-              <div style="font-size:15px;font-weight:700;cursor:pointer;color:${_p2NameColor}" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p2)}')">${s.p2}</div>
+              <div style="font-size:15px;font-weight:700;cursor:pointer;color:var(--text1)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p2)}')">${s.p2}</div>
               <div style="font-size:11px;color:var(--gray-l)">${p2univ}${p2race&&p2race!=='N'?` · ${p2race}`:''}</div>
             </div>
             ${p2photoLg}
@@ -162,7 +232,7 @@ function indRecordsHTML(){
         <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#E6F1FB;color:#185FA5">개인전</span>
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
-        ${winner?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:${_indUnivFx?(winner===s.p1?_p1Hex+'22':'#dcfce7'):'#dcfce7'};color:${_indUnivFx?(winner===s.p1?_p1Hex:'#166534'):'#166534'}">${winner} 승</span>`:'<span style="margin-left:auto"></span>'}
+        ${winner?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:#dcfce7;color:#166534">${winner} 승</span>`:'<span style="margin-left:auto"></span>'}
         <span onclick="event.stopPropagation()">${actionBtn}</span>
       </div>
     </div>`;
@@ -181,9 +251,11 @@ function indRecordsHTML(){
 }
 
 function gjRecordsHTML(proOnly){
+  _restoreStableIndGj('gj');
   window._gjSessCache = window._gjSessCache || {};
   const _gjSrc=proOnly?gjM.filter(m=>m._proLabel):gjM.filter(m=>!m._proLabel);
   if(!_gjSrc.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+  _rememberStableIndGj('gj', gjM);
   const sessions=[];
   const sidPairMap=new Map();
   let lastKey=null, lastSess=null;
@@ -313,20 +385,14 @@ function gjRecordsHTML(proOnly){
     const gj_typeColor=proOnly?'#085041':'#993C1D';
     const gj_p1photoLg=getPlayerPhotoHTML(s.p1,'38px');
     const gj_p2photoLg=getPlayerPhotoHTML(s.p2,'38px');
-    const _gjUnivFx = (localStorage.getItem('su_matchcard_univ_fx')||'1')==='1';
-    const _gjP1Hex=gj_p1univ?gc(gj_p1univ)||'#378ADD':'#378ADD';
-    const _gjP2Hex=gj_p2univ?gc(gj_p2univ)||'#1D9E75':'#1D9E75';
-    const _gjCardBg=_gjUnivFx?`linear-gradient(90deg,${_gjP1Hex}18 0%,transparent 38%,transparent 62%,${_gjP2Hex}18 100%)`:'var(--white)';
-    const _gjCardBorder=_gjUnivFx?`1px solid ${p1wins>p2wins?_gjP1Hex:p2wins>p1wins?_gjP2Hex:'var(--border)'}44`:'1px solid var(--border)';
-    const _gjP1NameColor=_gjUnivFx?_gjP1Hex:'var(--text1)';
-    const _gjP2NameColor=_gjUnivFx?_gjP2Hex:'var(--text1)';
-    h+=`<div style="${_gjCardBorder};border-radius:12px;margin-bottom:8px;overflow:hidden;background:${_gjCardBg}">
+    const _gjWrapFx = _safeHeadToHeadSideFx(gj_p1univ?gc(gj_p1univ):'#378ADD', gj_p2univ?gc(gj_p2univ):'#1D9E75');
+    h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_gjWrapFx||'background:var(--white);'}">
       <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px 14px;gap:8px;cursor:pointer" onclick="openGJSessionPopup('${_sessKey}')">${bulkCbGj}
         <div style="display:flex;flex-direction:column;gap:4px">
           <div style="display:flex;align-items:center;gap:8px">
             ${gj_p1photoLg}
             <div>
-              <div style="font-size:15px;font-weight:700;cursor:pointer;color:${_gjP1NameColor}" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p1)}')">${s.p1}</div>
+              <div style="font-size:15px;font-weight:700;cursor:pointer;color:var(--text1)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p1)}')">${s.p1}</div>
               <div style="font-size:11px;color:var(--gray-l)">${gj_p1univ}${gj_p1race&&gj_p1race!=='N'?` · ${gj_p1race}`:''}</div>
             </div>
           </div>
@@ -338,7 +404,7 @@ function gjRecordsHTML(proOnly){
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
           <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
             <div style="text-align:right">
-              <div style="font-size:15px;font-weight:700;cursor:pointer;color:${_gjP2NameColor}" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p2)}')">${s.p2}</div>
+              <div style="font-size:15px;font-weight:700;cursor:pointer;color:var(--text1)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p2)}')">${s.p2}</div>
               <div style="font-size:11px;color:var(--gray-l)">${gj_p2univ}${gj_p2race&&gj_p2race!=='N'?` · ${gj_p2race}`:''}</div>
             </div>
             ${gj_p2photoLg}
@@ -349,7 +415,7 @@ function gjRecordsHTML(proOnly){
         <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${gj_typeBg};color:${gj_typeColor}">${gj_typeLabel}</span>
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
-        ${winner?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:${_gjUnivFx?(winner===s.p1?_gjP1Hex+'22':'#dcfce7'):'#dcfce7'};color:${_gjUnivFx?(winner===s.p1?_gjP1Hex:'#166534'):'#166634'}">${winner} 승</span>`:'<span style="margin-left:auto"></span>'}
+        ${winner?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:#dcfce7;color:#166534">${winner} 승</span>`:'<span style="margin-left:auto"></span>'}
         <span onclick="event.stopPropagation()">${actionBtn}</span>
       </div>
     </div>`;
