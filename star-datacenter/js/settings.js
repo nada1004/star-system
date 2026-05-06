@@ -3433,6 +3433,14 @@ ${_scfgD('notice','📢 공지 관리')}
       <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
       <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
     </div>
+    <div style="margin-top:14px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px">
+      <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:6px">☁️ GitHub에 업로드 저장</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">현재 데이터를 GitHub 저장소에 즉시 업로드합니다. GitHub 토큰이 설정되어 있어야 합니다.</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-b btn-sm" onclick="cfgUploadToGitHub()" id="cfg-gh-upload-btn">📤 GitHub에 저장</button>
+        <span id="cfg-gh-upload-status" style="font-size:11px;color:var(--gray-l)"></span>
+      </div>
+    </div>
   </details>
   ${_scfgD('selfcheck','🧪 설정 기능 점검')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">설정 화면에서 버튼/토글이 “눌러도 안되는” 경우, 핸들러(함수) 누락이 원인일 수 있습니다.</div>
@@ -5333,6 +5341,36 @@ function renderStorageInfo(){
     </div>`;
   }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
 }
+
+window.cfgUploadToGitHub = async function(){
+  const btn = document.getElementById('cfg-gh-upload-btn');
+  const st  = document.getElementById('cfg-gh-upload-status');
+  const token = localStorage.getItem('su_gh_token');
+  if(!token){
+    if(st) st.textContent = '❌ GitHub 토큰이 설정되어 있지 않습니다. (설정 > 동기화 탭 확인)';
+    try{ if(typeof showToast==='function') showToast('❌ GitHub 토큰 없음'); }catch(e){}
+    return;
+  }
+  if(btn){ btn.disabled=true; btn.textContent='⏳ 업로드 중...'; }
+  if(st)  st.textContent = '업로드 중...';
+  try{
+    // fbSet / window.__suBuildSplitStoreData 활용
+    if(typeof window.fbSet === 'function'){
+      const data = (typeof window.save === 'function') ? window.save(true) : null;
+      await window.fbSet(data);
+    } else {
+      throw new Error('GitHub 저장 함수를 찾을 수 없습니다. (fbSet)');
+    }
+    if(st) st.textContent = '✅ GitHub 업로드 완료! (' + new Date().toLocaleTimeString('ko-KR') + ')';
+    try{ if(typeof showToast==='function') showToast('✅ GitHub에 저장 완료'); }catch(e){}
+  }catch(e){
+    if(st) st.textContent = '❌ 실패: ' + e.message;
+    try{ if(typeof showToast==='function') showToast('❌ GitHub 저장 실패: ' + e.message); }catch(_){}
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='📤 GitHub에 저장'; }
+  }
+};
+
 function cleanupLegacyMatchStorageKeys(){
   const keys=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm','su_hist_ext_data_v1'];
   let removed=0;
