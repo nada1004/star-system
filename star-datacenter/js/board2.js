@@ -2300,13 +2300,17 @@ async function saveGameImg(btn) {
 ════════════════════════════════════════ */
 
 // 프로필 탭에서 선택한 선수 이름 저장/로드
-const savedSelectedPlayerName = localStorage.getItem('su_b2SelectedPlayer');
-if (savedSelectedPlayerName) {
-  const savedPlayer = players.find(p => p.name === savedSelectedPlayerName);
-  if (savedPlayer && !savedPlayer.hidden && !savedPlayer.retired) {
-    _b2SelectedPlayer = savedPlayer;
+// 이미지별 탭 진입 시 매번 랜덤 선수 선택 (새로고침해도 매번 다른 선수)
+localStorage.removeItem('su_b2SelectedPlayer'); // 저장된 이전 선수 초기화
+(function(){
+  // photo가 있는 선수 우선, 없으면 전체에서 랜덤
+  const all = players.filter(p => p && !p.hidden && !p.retired && !p.hideFromBoard);
+  const withPhoto = all.filter(p => p.photo || (window.playerPhotos && window.playerPhotos[p.name]));
+  const pool = withPhoto.length ? withPhoto : all;
+  if (pool.length) {
+    _b2SelectedPlayer = pool[Math.floor(Math.random() * pool.length)];
   }
-}
+})();
 
 function _b2PlayersView() {
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
@@ -2332,13 +2336,11 @@ function _b2PlayersView() {
     </div>`;
   }
 
-  // 기본 선택 선수
-  // - _b2SelectedPlayer가 null이면 첫 번째 선수로 초기화
-  // - 필터 변경으로 현재 선택 선수가 목록에서 사라지면 첫 번째 선수로 대체
-  if (!_b2SelectedPlayer) {
-    _b2SelectedPlayer = tierFilteredPlayers[0];
-  } else if (!tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
-    _b2SelectedPlayer = tierFilteredPlayers[0];
+  // 기본 선택 선수: 없거나 현재 필터 목록에 없으면 랜덤으로 선택
+  if (!_b2SelectedPlayer || !tierFilteredPlayers.find(p => p.name === _b2SelectedPlayer.name)) {
+    const withPhoto2 = tierFilteredPlayers.filter(p => p.photo || (window.playerPhotos && window.playerPhotos[p.name]));
+    const pool2 = withPhoto2.length ? withPhoto2 : tierFilteredPlayers;
+    _b2SelectedPlayer = pool2[Math.floor(Math.random() * pool2.length)];
   }
 
   // 대학 목록 (필터용) - dissolved 대학 제외
@@ -2936,7 +2938,7 @@ function _b2UpdateMainDisplay(playerName) {
   }catch(e){}
   
   _b2SelectedPlayer = player;
-  localStorage.setItem('su_b2SelectedPlayer', playerName);
+  // localStorage 저장 제거 - 새로고침 시 랜덤 선수 선택을 위해
   
   const hexToRgba=(h,a)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;};
   const univColor = gc(player.univ) || '#6366f1';

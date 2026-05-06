@@ -26,6 +26,7 @@ async function fbCloudSave(opts) {
   const _pNoPhoto = (players||[]).map(p=>{
     const c={...p};
     if(c.photo){ _pPhotoMap[c.name]=c.photo; delete c.photo; }
+
     if(c.history && c.history.length){
       // eslint-disable-next-line no-unused-vars
       c.history = c.history.map(({eloAfter,...h})=>h);
@@ -69,6 +70,9 @@ async function fbCloudSave(opts) {
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
     savedAt
   };
+  // photo 맵을 window에 노출하고 로컬 캐시에도 반영 (새로고침 후에도 사진 유지)
+  window.playerPhotos = _pPhotoMap;
+  Object.entries(_pPhotoMap).forEach(([name,url])=>{ _brdPhotoCacheSet(name, url); });
   if(includeSettings){
     dataObj.appSettings = {
       fabTabs: JSON.parse(localStorage.getItem('su_fabTabs')||'{}'),
@@ -334,6 +338,25 @@ window.cloudLoad = async function(){
 
 
 /* ════ 현황판 탭 rBoard ════ */
+// 현황판 전용 photo 캐시: setBrdPhoto 저장 시 갱신, 렌더링 시 참조
+var _brdPhotoCache = (function(){
+  try{
+    const raw = localStorage.getItem('su_brd_photo_cache');
+    return raw ? JSON.parse(raw) : {};
+  }catch(e){ return {}; }
+})();
+function _brdPhotoCacheSet(name, url){
+  if(url) _brdPhotoCache[name]=url;
+  else delete _brdPhotoCache[name];
+  try{ localStorage.setItem('su_brd_photo_cache', JSON.stringify(_brdPhotoCache)); }catch(e){}
+}
+function _getBrdPhoto(p){
+  return p.photo
+    || (window.playerPhotos && window.playerPhotos[p.name])
+    || _brdPhotoCache[p.name]
+    || '';
+}
+
 let boardSelUniv='전체';
 let boardCompactMode=false; // 소형 칩 보기
 let boardGridCols=1; // 1열/2열 보기
@@ -759,7 +782,7 @@ function buildUnivBoardCard(u, forExport){
       const isMain=p.role&&MAIN_ROLES.includes(p.role);
       const rCol=ROLE_COLORS[p.role]||'';
       const rIcon=ROLE_ICONS[p.role]||'';
-      const photoSrcChip = p.photo||'';
+      const photoSrcChip = _getBrdPhoto(p);
       // ── 포토카드 뷰 (화면 + 이미지저장 공통) ──
       if (boardCardView) {
         const rcBg = rc.col || col;
@@ -793,7 +816,7 @@ function buildUnivBoardCard(u, forExport){
         const totalInUnivCard=sorted.length;
         const clickFnCard=_boardCanManage()
           ? `openBrdPlayerPopupFromChip(event,'${pNameSafeCard}','${u.name}',${chipIdx??0},${totalInUnivCard})`
-          : `openPlayerModal('${pNameSafeCard}')`;
+          : `openRandomPlayerModal()`;
         return `<div class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${_boardCanManage()?' draggable="true"':''}`
           + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};cursor:pointer;transition:box-shadow .15s,transform .15s"`
           + ` onmouseover="this.style.boxShadow='0 6px 20px ${hexToRgba(col,.5)}';this.style.transform='translateY(-3px)'"`
@@ -832,7 +855,7 @@ function buildUnivBoardCard(u, forExport){
       // 관리자는 이동/직책 팝업, 비관리자는 스트리머 상세
       const clickFn=_boardCanManage()
         ? `openBrdPlayerPopupFromChip(event,'${pNameSafe}','${u.name}',${chipIdx??0},${totalInUniv})`
-        : `openPlayerModal('${pNameSafe}')`;
+        : `openRandomPlayerModal()`;
 
       // 티어 고정 색상 (칩)
       const chipTierCol = p.tier ? (getTierBtnColor(p.tier) || col) : '#9ca3af';
@@ -1047,6 +1070,14 @@ function _closeBrdPopup(e){
   }
 }
 // 중앙화된 팝업 닫기 - 딤 오버레이 포함 항상 정리
+// 현황판 칩 클릭 시 랜덤 스트리머 상세 열기
+function openRandomPlayerModal(){
+  const eligible = (window.players||[]).filter(p=>p&&p.name&&!p.hidden&&!p.retired);
+  if(!eligible.length) return;
+  const pick = eligible[Math.floor(Math.random()*eligible.length)];
+  openPlayerModal(pick.name);
+}
+
 function _brdClose(){
   if(_brdPopup){ _brdPopup.remove(); _brdPopup=null; }
   const dim=document.getElementById('brd-popup-dim');
@@ -1055,7 +1086,7 @@ function _brdClose(){
 
 // 칩 전용 팝업 (무소속 등 칩 레이아웃) - 위/아래 이동 대신 대학이동 위주
 function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
-  if(!_boardCanManage()){ openPlayerModal(playerName); return; }
+  if(!_boardCanManage()){ openRandomPlayerModal(); return; }
   e.stopPropagation();
   _brdClose();
   const allUnivs = _getBoardUnivs();
@@ -1173,8 +1204,8 @@ function boardTransferPlayerFromChip(playerName, fromUniv){
 
 
 function openBrdPlayerPopup(e, playerName, univName, idx, total){
-  // 비관리자는 팝업 없이 스트리머 상세 바로 열기
-  if(!_boardCanManage()){ openPlayerModal(playerName); return; }
+  // 비관리자는 팝업 없이 랜덤 스트리머 상세 열기
+  if(!_boardCanManage()){ openRandomPlayerModal(); return; }
 
   e.stopPropagation();
   _brdClose();
@@ -1318,6 +1349,7 @@ function setBrdPhoto(playerName, url){
   if(!p)return;
   const trimmed=url.trim();
   if(trimmed) p.photo=trimmed; else delete p.photo;
+  _brdPhotoCacheSet(playerName, trimmed); // 캐시 갱신
   save();
   _refreshBoardCard(p.univ);
   _brdToast(trimmed?'🖼️ 프로필 이미지 저장 완료':'🗑️ 프로필 이미지 삭제');
