@@ -127,19 +127,13 @@ function indRecordsHTML(){
     const p2col=p2univ?gc(p2univ):'#1D9E75';
     const p1photoLg=getPlayerPhotoHTML(s.p1,'38px');
     const p2photoLg=getPlayerPhotoHTML(s.p2,'38px');
-    const _indUnivFx = (localStorage.getItem('su_matchcard_univ_fx')||'1')==='1';
-    const _p1Hex=p1col||'#378ADD'; const _p2Hex=p2col||'#1D9E75';
-    const _indCardBg=_indUnivFx?`linear-gradient(90deg,${_p1Hex}18 0%,transparent 38%,transparent 62%,${_p2Hex}18 100%)`:'var(--white)';
-    const _indCardBorder=_indUnivFx?`1px solid ${p1wins>p2wins?_p1Hex:p2wins>p1wins?_p2Hex:'var(--border)'}44`:'1px solid var(--border)';
-    const _p1NameColor=_indUnivFx?_p1Hex:'var(--text1)';
-    const _p2NameColor=_indUnivFx?_p2Hex:'var(--text1)';
-    h+=`<div style="${_indCardBorder};border-radius:12px;margin-bottom:8px;overflow:hidden;background:${_indCardBg}">
+    h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;background:var(--white)">
       <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px 14px;gap:8px;cursor:pointer" onclick="openIndSessionPopup('${_indSessKey}')">${bulkCbInd}
         <div style="display:flex;flex-direction:column;gap:4px">
           <div style="display:flex;align-items:center;gap:8px">
             ${p1photoLg}
             <div>
-              <div style="font-size:15px;font-weight:700;cursor:pointer;color:${_p1NameColor}" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p1)}')">${s.p1}</div>
+              <div style="font-size:15px;font-weight:700;cursor:pointer;color:var(--text1)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p1)}')">${s.p1}</div>
               <div style="font-size:11px;color:var(--gray-l)">${p1univ}${p1race&&p1race!=='N'?` · ${p1race}`:''}</div>
             </div>
           </div>
@@ -151,7 +145,7 @@ function indRecordsHTML(){
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
           <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
             <div style="text-align:right">
-              <div style="font-size:15px;font-weight:700;cursor:pointer;color:${_p2NameColor}" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p2)}')">${s.p2}</div>
+              <div style="font-size:15px;font-weight:700;cursor:pointer;color:var(--text1)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p2)}')">${s.p2}</div>
               <div style="font-size:11px;color:var(--gray-l)">${p2univ}${p2race&&p2race!=='N'?` · ${p2race}`:''}</div>
             </div>
             ${p2photoLg}
@@ -162,7 +156,7 @@ function indRecordsHTML(){
         <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#E6F1FB;color:#185FA5">개인전</span>
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
-        ${winner?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:${_indUnivFx?(winner===s.p1?_p1Hex+'22':'#dcfce7'):'#dcfce7'};color:${_indUnivFx?(winner===s.p1?_p1Hex:'#166534'):'#166534'}">${winner} 승</span>`:'<span style="margin-left:auto"></span>'}
+        ${winner?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:#dcfce7;color:#166534">${winner} 승</span>`:'<span style="margin-left:auto"></span>'}
         <span onclick="event.stopPropagation()">${actionBtn}</span>
       </div>
     </div>`;
@@ -313,20 +307,13 @@ function gjRecordsHTML(proOnly){
     const gj_typeColor=proOnly?'#085041':'#993C1D';
     const gj_p1photoLg=getPlayerPhotoHTML(s.p1,'38px');
     const gj_p2photoLg=getPlayerPhotoHTML(s.p2,'38px');
-    const _gjUnivFx = (localStorage.getItem('su_matchcard_univ_fx')||'1')==='1';
-    const _gjP1Hex=gj_p1univ?gc(gj_p1univ)||'#378ADD':'#378ADD';
-    const _gjP2Hex=gj_p2univ?gc(gj_p2univ)||'#1D9E75':'#1D9E75';
-    const _gjCardBg=_gjUnivFx?`linear-gradient(90deg,${_gjP1Hex}18 0%,transparent 38%,transparent 62%,${_gjP2Hex}18 100%)`:'var(--white)';
-    const _gjCardBorder=_gjUnivFx?`1px solid ${p1wins>p2wins?_gjP1Hex:p2wins>p1wins?_gjP2Hex:'var(--border)'}44`:'1px solid var(--border)';
-    const _gjP1NameColor=_gjUnivFx?_gjP1Hex:'var(--text1)';
-    const _gjP2NameColor=_gjUnivFx?_gjP2Hex:'var(--text1)';
-    h+=`<div style="${_gjCardBorder};border-radius:12px;margin-bottom:8px;overflow:hidden;background:${_gjCardBg}">
+    h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;background:var(--white)">
       <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px 14px;gap:8px;cursor:pointer" onclick="openGJSessionPopup('${_sessKey}')">${bulkCbGj}
         <div style="display:flex;flex-direction:column;gap:4px">
           <div style="display:flex;align-items:center;gap:8px">
             ${gj_p1photoLg}
             <div>
-              <div style="font-size:15px;font-weight:700;cursor:pointer;color:${_gjP1NameColor}" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p1)}')">${s.p1}</div>
+              <div style="font-size:15px;font-weight:700;cursor:pointer;color:var(--text1)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p1)}')">${s.p1}</div>
               <div style="font-size:11px;color:var(--gray-l)">${gj_p1univ}${gj_p1race&&gj_p1race!=='N'?` · ${gj_p1race}`:''}</div>
             </div>
           </div>
@@ -338,7 +325,7 @@ function gjRecordsHTML(proOnly){
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
           <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
             <div style="text-align:right">
-              <div style="font-size:15px;font-weight:700;cursor:pointer;color:${_gjP2NameColor}" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p2)}')">${s.p2}</div>
+              <div style="font-size:15px;font-weight:700;cursor:pointer;color:var(--text1)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p2)}')">${s.p2}</div>
               <div style="font-size:11px;color:var(--gray-l)">${gj_p2univ}${gj_p2race&&gj_p2race!=='N'?` · ${gj_p2race}`:''}</div>
             </div>
             ${gj_p2photoLg}
@@ -349,7 +336,7 @@ function gjRecordsHTML(proOnly){
         <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${gj_typeBg};color:${gj_typeColor}">${gj_typeLabel}</span>
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
-        ${winner?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:${_gjUnivFx?(winner===s.p1?_gjP1Hex+'22':'#dcfce7'):'#dcfce7'};color:${_gjUnivFx?(winner===s.p1?_gjP1Hex:'#166534'):'#166634'}">${winner} 승</span>`:'<span style="margin-left:auto"></span>'}
+        ${winner?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:#dcfce7;color:#166534">${winner} 승</span>`:'<span style="margin-left:auto"></span>'}
         <span onclick="event.stopPropagation()">${actionBtn}</span>
       </div>
     </div>`;
