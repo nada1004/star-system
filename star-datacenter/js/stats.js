@@ -1201,7 +1201,21 @@ function statsAwardHTML(){
   const monthsAll=_statsLatestActiveMonths('');
   const inter=monthsF.filter(x=>monthsM.includes(x));
   const baseMonths = inter.length ? inter : monthsAll;
-  const ym=baseMonths[0] || (()=>{const now=new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;})();
+  // ✅ 전역 날짜 필터가 있으면 그 달을 우선 사용 (사용자가 2월/4월로 바꾸면 여기서 따라감)
+  function _pickedYmFromGlobalFilter(){
+    try{
+      const f = String(_statsDateFrom||'').trim();
+      const t = String(_statsDateTo||'').trim();
+      const toIso = (v)=> (typeof window._toIsoDateStr==='function') ? window._toIsoDateStr(v) : String(v||'').trim();
+      const fy = f ? toIso(f).slice(0,7) : '';
+      const ty = t ? toIso(t).slice(0,7) : '';
+      if(/^\d{4}-\d{2}$/.test(fy) && /^\d{4}-\d{2}$/.test(ty) && fy===ty) return fy;
+      if(/^\d{4}-\d{2}$/.test(fy)) return fy;
+      if(/^\d{4}-\d{2}$/.test(ty)) return ty;
+    }catch(e){}
+    return '';
+  }
+  const ym=_pickedYmFromGlobalFilter() || baseMonths[0] || (()=>{const now=new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;})();
   const prevYm=baseMonths[1] || (function(cur){ const [yy,mm]=String(cur).split('-').map(Number); if(!yy||!mm) return ''; return mm===1?`${yy-1}-12`:`${yy}-${String(mm-1).padStart(2,'0')}`; })(ym);
 
   function calcMonth(ym2, gender){
