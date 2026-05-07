@@ -1707,8 +1707,8 @@ body.rc-theme-on .rec-summary img.rec-uicon{
       rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
       rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a2,.09))) 100%);
   box-shadow:
-    inset 24px 0 30px rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.20)),
-    inset -24px 0 30px rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.20));
+    inset var(--rec-side-glow-inset,24px) 0 var(--rec-side-glow-blur,30px) rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.20)),
+    inset calc(var(--rec-side-glow-inset,24px) * -1) 0 var(--rec-side-glow-blur,30px) rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.20));
 }
 .rec-summary.rec-sidefx.rec-sidefx--panel::after,
 .grp-match-card.grp-sidefx.grp-sidefx--panel::after{
@@ -1716,8 +1716,10 @@ body.rc-theme-on .rec-summary img.rec-uicon{
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.20))) 0%,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) var(--rec-fx-len2,10%),
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.16)) var(--rec-fx-len3,20%),
       rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
       rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.16)) var(--rec-fx-len3-r,80%),
       rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) var(--rec-fx-len2-r,90%),
       rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 100%);
 }
@@ -1726,10 +1728,47 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   background:
     linear-gradient(180deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.24)),
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.10))) left center / 8px 100% no-repeat,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.10))) left center / var(--rec-side-line-w,8px) 100% no-repeat,
     linear-gradient(180deg,
       rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.24)),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.10))) right center / 8px 100% no-repeat;
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.10))) right center / var(--rec-side-line-w,8px) 100% no-repeat;
+}
+.rec-summary.rec-sidefx.rec-sidefx--ribbon::after,
+.grp-match-card.grp-sidefx.grp-sidefx--ribbon::after{
+  background:
+    linear-gradient(90deg,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.20))) 0,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.10)) var(--rec-side-band,14px),
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) calc(var(--rec-side-band,14px) * 1.8),
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) calc(100% - (var(--rec-side-band,14px) * 1.8)),
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.10)) calc(100% - var(--rec-side-band,14px)),
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 100%);
+}
+.rec-summary.rec-sidefx.rec-sidefx--frame::after,
+.grp-match-card.grp-sidefx.grp-sidefx--frame::after{
+  background:
+    linear-gradient(90deg,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.18)) 0%,
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.18)) 100%);
+  box-shadow:
+    inset var(--rec-side-frame,3px) 0 0 rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,.34)),
+    inset calc(var(--rec-side-frame,3px) * -1) 0 0 rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,.34)),
+    inset 0 var(--rec-side-frame,3px) 0 rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-a2,.10) * .65)),
+    inset 0 calc(var(--rec-side-frame,3px) * -1) 0 rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-a2,.10) * .65));
+}
+.rec-summary.rec-sidefx.rec-sidefx--spotlight::after,
+.grp-match-card.grp-sidefx.grp-sidefx--spotlight::after{
+  background:
+    radial-gradient(circle at left center,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.22))) 0,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.08)) calc(var(--rec-side-spot,56px) * .42),
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-side-spot,56px)),
+    radial-gradient(circle at right center,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.22))) 0,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.08)) calc(var(--rec-side-spot,56px) * .42),
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-side-spot,56px));
 }
 .rec-summary.rec-mode-ind .rec-sum-score,
 .rec-summary.rec-mode-gj .rec-sum-score,

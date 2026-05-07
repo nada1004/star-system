@@ -680,17 +680,54 @@ function _recFxHexToRgbStr(hex){
   }catch(e){}
   return '100,116,139';
 }
+const _REC_SIDE_FX_MODES = ['soft','glow','panel','line','ribbon','frame','spotlight'];
 function _getRecSideFxCfg(){
-  let on = true, mode = 'soft', intensity = 68, length = 25, tail = 28;
+  let on = true, mode = 'soft', intensity = 68, length = 25, tail = 28, softness = 52, edge = 8;
   try{ on = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0'; }catch(e){}
   try{
     const raw = String(localStorage.getItem('su_rec_side_fx_mode') || 'soft').trim();
-    if(['soft','glow','panel','line'].includes(raw)) mode = raw;
+    if(_REC_SIDE_FX_MODES.includes(raw)) mode = raw;
   }catch(e){}
-  try{ intensity = Math.max(20, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68)); }catch(e){}
-  try{ length = Math.max(10, Math.min(60, parseInt(localStorage.getItem('su_rec_side_fx_length') || '25', 10) || 25)); }catch(e){}
-  try{ tail = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_tail') || '28', 10) || 28)); }catch(e){}
-  return { on, mode, intensity, length, tail };
+  try{ intensity = Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68)); }catch(e){}
+  try{ length = Math.max(4, Math.min(80, parseInt(localStorage.getItem('su_rec_side_fx_length') || '25', 10) || 25)); }catch(e){}
+  try{ tail = Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_tail') || '28', 10) || 28)); }catch(e){}
+  try{ softness = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_softness') || '52', 10) || 52)); }catch(e){}
+  try{ edge = Math.max(2, Math.min(24, parseInt(localStorage.getItem('su_rec_side_fx_edge') || '8', 10) || 8)); }catch(e){}
+  return { on, mode, intensity, length, tail, softness, edge };
+}
+function _buildRecSideFxMetrics(cfg){
+  const c = cfg || _getRecSideFxCfg();
+  const mode = _REC_SIDE_FX_MODES.includes(String(c.mode||'')) ? String(c.mode) : 'soft';
+  const intensity = Math.max(0, Math.min(140, parseInt(c.intensity||68,10) || 68));
+  const length = Math.max(4, Math.min(80, parseInt(c.length||25,10) || 25));
+  const tail = Math.max(0, Math.min(140, parseInt(c.tail||28,10) || 28));
+  const softness = Math.max(0, Math.min(100, parseInt(c.softness||52,10) || 52));
+  const edge = Math.max(2, Math.min(24, parseInt(c.edge||8,10) || 8));
+  const lengthFactor = (length - 4) / 76;
+  const intensityFactor = intensity / 100;
+  const softnessFactor = softness / 100;
+  const tailFactor = tail / 100;
+  const blend = Math.max(0, Math.min(1.4, intensityFactor * 0.62 + lengthFactor * 0.38));
+  const a1 = Math.max(0.04, Math.min(0.52, 0.045 + blend * 0.20));
+  const a2 = Math.max(0.018, Math.min(0.30, a1 * (0.22 + softnessFactor * 0.82)));
+  const aEdge = Math.max(0.08, Math.min(0.84, a1 + (tailFactor * 0.26) + (edge / 220)));
+  const len = length;
+  const len2 = Math.max(2, Math.min(96, Math.round(len * (0.24 + softnessFactor * 0.42))));
+  const len3 = Math.max(len2 + 1, Math.min(98, Math.round(len * (0.55 + softnessFactor * 0.25))));
+  const lenR = 100 - len;
+  const len2R = 100 - len2;
+  const len3R = 100 - len3;
+  const lineW = edge;
+  const glowInset = Math.max(12, Math.round(10 + lineW * 1.5 + length * 0.22));
+  const glowBlur = Math.max(18, Math.round(18 + lineW * 2.2 + length * 0.38));
+  const bandW = Math.max(lineW + 4, Math.round(length * 0.35));
+  const spotSize = Math.max(24, Math.round(22 + lineW * 1.8 + length * 0.9));
+  const frameW = Math.max(1, Math.round(lineW * 0.42));
+  return { mode, intensity, length, tail, softness, edge, a1, a2, aEdge, len, len2, len3, lenR, len2R, len3R, lineW, glowInset, glowBlur, bandW, spotSize, frameW };
+}
+function _recSideFxVarStyle(leftHex, rightHex, cfg){
+  const m = _buildRecSideFxMetrics(cfg);
+  return `--rec-side-left-rgb:${_recFxHexToRgbStr(leftHex)};--rec-side-right-rgb:${_recFxHexToRgbStr(rightHex)};--rec-side-a1:${m.a1.toFixed(3)};--rec-side-a2:${m.a2.toFixed(3)};--rec-side-ae:${m.aEdge.toFixed(3)};--rec-fx-len:${m.len}%;--rec-fx-len2:${m.len2}%;--rec-fx-len3:${m.len3}%;--rec-fx-len-r:${m.lenR}%;--rec-fx-len2-r:${m.len2R}%;--rec-fx-len3-r:${m.len3R}%;--rec-side-line-w:${m.lineW}px;--rec-side-glow-inset:${m.glowInset}px;--rec-side-glow-blur:${m.glowBlur}px;--rec-side-band:${m.bandW}px;--rec-side-spot:${m.spotSize}px;--rec-side-frame:${m.frameW}px;`;
 }
 function _canUseRecSideFx(mode){
   return ['ind','gj','progj','mini','civil','univm','ck','pro','tt','comp','tourney','procomp','procompgj','procomptn','procompteam'].includes(String(mode||''));
@@ -703,16 +740,7 @@ function _recSideFxClass(mode){
 function _recSideFxStyle(mode, leftHex, rightHex){
   const cfg = _getRecSideFxCfg();
   if(!cfg.on || !_canUseRecSideFx(mode) || !leftHex || !rightHex) return '';
-  // 효과 길이(10~60)에 따라 색 진하기도 비례하여 증가 (길이 0.4 + 강도 0.6 가중 합산)
-  // length=10 → lengthFactor≈0.0, length=60 → lengthFactor≈1.0
-  const lengthFactor = (cfg.length - 10) / 50;
-  const intensityFactor = cfg.intensity / 100;
-  // 두 요소를 60:40으로 합산 (강도가 주, 길이가 보조)
-  const combinedFactor = intensityFactor * 0.6 + lengthFactor * 0.4;
-  const a1 = Math.max(0.06, Math.min(0.42, combinedFactor * 0.36));
-  const a2 = Math.max(0.03, Math.min(0.20, a1 * 0.48));
-  const aEdge = Math.max(0.10, Math.min(0.70, a1 + (cfg.tail/100)*0.34));
-  return `--rec-side-left-rgb:${_recFxHexToRgbStr(leftHex)};--rec-side-right-rgb:${_recFxHexToRgbStr(rightHex)};--rec-side-a1:${a1.toFixed(3)};--rec-side-a2:${a2.toFixed(3)};--rec-side-ae:${aEdge.toFixed(3)};`;
+  return _recSideFxVarStyle(leftHex, rightHex, cfg);
 }
 
 function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){

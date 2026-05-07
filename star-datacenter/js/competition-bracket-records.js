@@ -66,16 +66,11 @@ function rBracketSchedule(tn){
     const _bktMenu = _bktActions.length ? _compActionMenuHTML(_bktActions) : '';
     const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
     const _fxOn=!!_fxCfg.on;
-    const _fxMode=['soft','glow','panel','line'].includes(_fxCfg.mode)?_fxCfg.mode:'soft';
-    const _fxInt=Math.max(20, Math.min(100, parseInt(_fxCfg.intensity||68,10)||68));
-    const _fxLen=Math.max(10, Math.min(60, parseInt(_fxCfg.length||25,10)||25));
-    const _fxTail=Math.max(0, Math.min(100, parseInt(_fxCfg.tail||28,10)||28));
-    const _fxCombined=(_fxInt/100)*0.6 + ((_fxLen-10)/50)*0.4;
-    const _fxA1=Math.max(0.06, Math.min(0.42, _fxCombined*0.36)).toFixed(3);
-    const _fxA2=Math.max(0.03, Math.min(0.20, _fxCombined*0.36*0.48)).toFixed(3);
-    const _fxAe=Math.max(0.10, Math.min(0.70, parseFloat(_fxA1) + (_fxTail/100)*0.34)).toFixed(3);
+    const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
+    const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
+    const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
     return `<div style="margin-bottom:8px">
-      <div class="grp-match-card tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxOn?`--rec-side-left-rgb:${_tcHexToRgbStr(ca||'#3b82f6')};--rec-side-right-rgb:${_tcHexToRgbStr(cb||'#ef4444')};--rec-side-a1:${_fxA1};--rec-side-a2:${_fxA2};--rec-side-ae:${_fxAe};`:''}border-left:4px solid ${isManual?'#7c3aed':'var(--blue)'};background:linear-gradient(135deg,var(--white) 0%,${isManual?'#f5f3ff':'#eff6ff'} 100%);margin-bottom:0">
+      <div class="grp-match-card tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}border-left:4px solid ${isManual?'#7c3aed':'var(--blue)'};background:linear-gradient(135deg,var(--white) 0%,${isManual?'#f5f3ff':'#eff6ff'} 100%);margin-bottom:0">
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
           <span class="grp-badge" style="background:${isManual?'#7c3aed':'var(--blue)'};font-size:10px">${rLabel}</span>
           ${dateStr?`<span style="font-size:9px;color:var(--gray-l)">${dateStr.slice(5).replace('-','/')}</span>`:''}

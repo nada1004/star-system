@@ -7,32 +7,53 @@ function _safeHeadToHeadSideFx(leftHex, rightHex){
     if(typeof _getRecSideFxCfg!=='function') return '';
     const cfg = _getRecSideFxCfg();
     if(!cfg || !cfg.on) return '';
-    const mode = ['soft','glow','panel','line'].includes(cfg.mode) ? cfg.mode : 'soft';
-    const intensity = Math.max(20, Math.min(100, parseInt(cfg.intensity||68,10)||68));
-    const lenPct = Math.max(10, Math.min(60, parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
-    const tail = Math.max(0, Math.min(100, parseInt((cfg&&cfg.tail)||28,10)||28));
-    const a1 = Math.max(0.08, Math.min(0.34, (intensity/100) * 0.28));
-    const a2 = Math.max(0.03, Math.min(0.16, a1 * 0.42));
-    const ae = Math.max(a1, Math.min(0.70, a1 + (tail/100)*0.34));
+    const fx = (typeof _buildRecSideFxMetrics==='function') ? _buildRecSideFxMetrics(cfg) : null;
+    const mode = fx ? fx.mode : 'soft';
+    const a1 = fx ? fx.a1 : 0.18;
+    const a2 = fx ? fx.a2 : 0.08;
+    const ae = fx ? fx.aEdge : 0.28;
     const lr = (typeof _recFxHexToRgbStr==='function') ? _recFxHexToRgbStr(leftHex||'#3b82f6') : '59,130,246';
     const rr = (typeof _recFxHexToRgbStr==='function') ? _recFxHexToRgbStr(rightHex||'#ef4444') : '239,68,68';
-    const L1 = lenPct, L2 = Math.round(lenPct*0.45), L3 = Math.round(lenPct*0.85);
-    const R1 = 100-lenPct, R2 = 100-Math.round(lenPct*0.45), R3 = 100-Math.round(lenPct*0.85);
+    const L1 = fx ? fx.len : 25, L2 = fx ? fx.len2 : 11, L3 = fx ? fx.len3 : 18;
+    const R1 = fx ? fx.lenR : 75, R2 = fx ? fx.len2R : 89, R3 = fx ? fx.len3R : 82;
+    const lineW = fx ? fx.lineW : 8;
+    const glowInset = fx ? fx.glowInset : 26;
+    const glowBlur = fx ? fx.glowBlur : 34;
+    const bandW = fx ? fx.bandW : 14;
+    const frameW = fx ? fx.frameW : 3;
+    const spot = fx ? fx.spotSize : 56;
     if(mode==='line'){
       return `background:
-        linear-gradient(180deg, rgba(${lr},${a1.toFixed(3)}), rgba(${lr},${a2.toFixed(3)})) left center / 8px 100% no-repeat,
-        linear-gradient(180deg, rgba(${rr},${a1.toFixed(3)}), rgba(${rr},${a2.toFixed(3)})) right center / 8px 100% no-repeat,
+        linear-gradient(180deg, rgba(${lr},${a1.toFixed(3)}), rgba(${lr},${a2.toFixed(3)})) left center / ${lineW}px 100% no-repeat,
+        linear-gradient(180deg, rgba(${rr},${a1.toFixed(3)}), rgba(${rr},${a2.toFixed(3)})) right center / ${lineW}px 100% no-repeat,
         var(--white);`;
     }
     if(mode==='glow'){
       return `background:
         linear-gradient(90deg, rgba(${lr},${ae.toFixed(3)}) 0%, rgba(${lr},0) ${L1}%, rgba(${rr},0) ${R1}%, rgba(${rr},${ae.toFixed(3)}) 100%),
         var(--white);
-        box-shadow: inset 26px 0 34px rgba(${lr},${a1.toFixed(3)}), inset -26px 0 34px rgba(${rr},${a1.toFixed(3)});`;
+        box-shadow: inset ${glowInset}px 0 ${glowBlur}px rgba(${lr},${a1.toFixed(3)}), inset -${glowInset}px 0 ${glowBlur}px rgba(${rr},${a1.toFixed(3)});`;
     }
     if(mode==='panel'){
       return `background:
-        linear-gradient(90deg, rgba(${lr},${ae.toFixed(3)}) 0%, rgba(${lr},${a2.toFixed(3)}) ${L2}%, rgba(${lr},0) ${L1}%, rgba(${rr},0) ${R1}%, rgba(${rr},${a2.toFixed(3)}) ${R2}%, rgba(${rr},${ae.toFixed(3)}) 100%),
+        linear-gradient(90deg, rgba(${lr},${ae.toFixed(3)}) 0%, rgba(${lr},${a2.toFixed(3)}) ${L2}%, rgba(${lr},${a1.toFixed(3)}) ${L3}%, rgba(${lr},0) ${L1}%, rgba(${rr},0) ${R1}%, rgba(${rr},${a1.toFixed(3)}) ${R3}%, rgba(${rr},${a2.toFixed(3)}) ${R2}%, rgba(${rr},${ae.toFixed(3)}) 100%),
+        var(--white);`;
+    }
+    if(mode==='ribbon'){
+      return `background:
+        linear-gradient(90deg, rgba(${lr},${ae.toFixed(3)}) 0, rgba(${lr},${a2.toFixed(3)}) ${bandW}px, rgba(${lr},0) ${Math.round(bandW*1.8)}px, rgba(${rr},0) calc(100% - ${Math.round(bandW*1.8)}px), rgba(${rr},${a2.toFixed(3)}) calc(100% - ${bandW}px), rgba(${rr},${ae.toFixed(3)}) 100%),
+        var(--white);`;
+    }
+    if(mode==='frame'){
+      return `background:
+        linear-gradient(90deg, rgba(${lr},${a1.toFixed(3)}) 0%, rgba(${lr},0) ${L1}%, rgba(${rr},0) ${R1}%, rgba(${rr},${a1.toFixed(3)}) 100%),
+        var(--white);
+        box-shadow: inset ${frameW}px 0 0 rgba(${lr},${ae.toFixed(3)}), inset -${frameW}px 0 0 rgba(${rr},${ae.toFixed(3)}), inset 0 ${frameW}px 0 rgba(${lr},${a2.toFixed(3)}), inset 0 -${frameW}px 0 rgba(${rr},${a2.toFixed(3)});`;
+    }
+    if(mode==='spotlight'){
+      return `background:
+        radial-gradient(circle at left center, rgba(${lr},${ae.toFixed(3)}) 0, rgba(${lr},${a2.toFixed(3)}) ${Math.round(spot*0.42)}px, rgba(${lr},0) ${spot}px),
+        radial-gradient(circle at right center, rgba(${rr},${ae.toFixed(3)}) 0, rgba(${rr},${a2.toFixed(3)}) ${Math.round(spot*0.42)}px, rgba(${rr},0) ${spot}px),
         var(--white);`;
     }
     return `background:

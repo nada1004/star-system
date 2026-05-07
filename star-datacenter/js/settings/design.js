@@ -292,20 +292,20 @@
     };
     window.cfgSetRecSideFxMode = function(mode){
       var v = String(mode||'soft');
-      if(['soft','glow','panel','line'].indexOf(v) === -1) v = 'soft';
+      if(['soft','glow','panel','line','ribbon','frame','spotlight'].indexOf(v) === -1) v = 'soft';
       try{ localStorage.setItem('su_rec_side_fx_mode', v); }catch(e){}
       try{ render(); }catch(e){}
     };
     window.cfgSetRecSideFxIntensity = function(v){
       try{
-        var n = Math.max(20, Math.min(100, parseInt(v||'68', 10) || 68));
+        var n = Math.max(0, Math.min(140, parseInt(v||'68', 10) || 68));
         localStorage.setItem('su_rec_side_fx_intensity', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
     };
     window.cfgSetRecSideFxLength = function(v){
       try{
-        var n = Math.max(10, Math.min(60, parseInt(v||'25', 10) || 25));
+        var n = Math.max(4, Math.min(80, parseInt(v||'25', 10) || 25));
         localStorage.setItem('su_rec_side_fx_length', String(n));
         window.applyRecSideFxLengthVar && window.applyRecSideFxLengthVar(n);
       }catch(e){}
@@ -313,21 +313,40 @@
     };
     window.cfgSetRecSideFxTail = function(v){
       try{
-        var n = Math.max(0, Math.min(100, parseInt(v||'28', 10) || 28));
+        var n = Math.max(0, Math.min(140, parseInt(v||'28', 10) || 28));
         localStorage.setItem('su_rec_side_fx_tail', String(n));
+      }catch(e){}
+      try{ render(); }catch(e){}
+    };
+    window.cfgSetRecSideFxSoftness = function(v){
+      try{
+        var n = Math.max(0, Math.min(100, parseInt(v||'52', 10) || 52));
+        localStorage.setItem('su_rec_side_fx_softness', String(n));
+      }catch(e){}
+      try{ render(); }catch(e){}
+    };
+    window.cfgSetRecSideFxEdge = function(v){
+      try{
+        var n = Math.max(2, Math.min(24, parseInt(v||'8', 10) || 8));
+        localStorage.setItem('su_rec_side_fx_edge', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
     };
     window.applyRecSideFxLengthVar = function(n){
       try{
-        var len = Math.max(10, Math.min(60, parseInt(n||'25',10)||25));
-        var len2 = Math.round(len * 0.45);
+        var len = Math.max(4, Math.min(80, parseInt(n||'25',10)||25));
+        var softness = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_softness')||'52',10)||52));
+        var len2 = Math.max(2, Math.min(96, Math.round(len * (0.24 + (softness/100) * 0.42))));
+        var len3 = Math.max(len2 + 1, Math.min(98, Math.round(len * (0.55 + (softness/100) * 0.25))));
         var lenR = 100 - len;
         var len2R = 100 - len2;
+        var len3R = 100 - len3;
         document.documentElement.style.setProperty('--rec-fx-len', len + '%');
         document.documentElement.style.setProperty('--rec-fx-len2', len2 + '%');
+        document.documentElement.style.setProperty('--rec-fx-len3', len3 + '%');
         document.documentElement.style.setProperty('--rec-fx-len-r', lenR + '%');
         document.documentElement.style.setProperty('--rec-fx-len2-r', len2R + '%');
+        document.documentElement.style.setProperty('--rec-fx-len3-r', len3R + '%');
       }catch(e){}
     };
   }
@@ -491,10 +510,16 @@
     var tabColorTail = Math.max(0, Math.min(60, parseInt(localStorage.getItem('su_tab_color_tail') || '22', 10) || 22));
     var recSideFxOn = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0';
     var recSideFxMode = String(localStorage.getItem('su_rec_side_fx_mode') || 'soft');
-    if(['soft','glow','panel','line'].indexOf(recSideFxMode) === -1) recSideFxMode = 'soft';
-    var recSideFxIntensity = Math.max(20, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68));
-    var recSideFxLength = Math.max(10, Math.min(60, parseInt(localStorage.getItem('su_rec_side_fx_length') || '25', 10) || 25));
-    var recSideFxTail = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_tail') || '28', 10) || 28));
+    if(['soft','glow','panel','line','ribbon','frame','spotlight'].indexOf(recSideFxMode) === -1) recSideFxMode = 'soft';
+    var recSideFxIntensity = Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68));
+    var recSideFxLength = Math.max(4, Math.min(80, parseInt(localStorage.getItem('su_rec_side_fx_length') || '25', 10) || 25));
+    var recSideFxTail = Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_tail') || '28', 10) || 28));
+    var recSideFxSoftness = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_softness') || '52', 10) || 52));
+    var recSideFxEdge = Math.max(2, Math.min(24, parseInt(localStorage.getItem('su_rec_side_fx_edge') || '8', 10) || 8));
+    var _previewCfg = { mode:recSideFxMode, intensity:recSideFxIntensity, length:recSideFxLength, tail:recSideFxTail, softness:recSideFxSoftness, edge:recSideFxEdge };
+    var _previewVars = (typeof _recSideFxVarStyle==='function')
+      ? _recSideFxVarStyle('#2563eb', '#7c3aed', _previewCfg)
+      : '';
 
     var groups = [
       { ctx:'mergedUniv', title:'🏟️ 대학대전 탭' },
@@ -594,28 +619,42 @@
       + '      <option value="glow"' + (recSideFxMode==='glow'?' selected':'') + '>글로우</option>'
       + '      <option value="panel"' + (recSideFxMode==='panel'?' selected':'') + '>패널</option>'
       + '      <option value="line"' + (recSideFxMode==='line'?' selected':'') + '>라인</option>'
+      + '      <option value="ribbon"' + (recSideFxMode==='ribbon'?' selected':'') + '>리본</option>'
+      + '      <option value="frame"' + (recSideFxMode==='frame'?' selected':'') + '>프레임</option>'
+      + '      <option value="spotlight"' + (recSideFxMode==='spotlight'?' selected':'') + '>스포트라이트</option>'
       + '    </select>'
       + '  </div>'
       + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
       + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">강도</div>'
-      + '    <input type="range" min="20" max="100" step="5" value="' + recSideFxIntensity + '" oninput="document.getElementById(\'cfg-rec-sidefx-v\').textContent=this.value+\'%\'; cfgSetRecSideFxIntensity(this.value)" style="flex:1;min-width:160px">'
+      + '    <input type="range" min="0" max="140" step="1" value="' + recSideFxIntensity + '" oninput="document.getElementById(\'cfg-rec-sidefx-v\').textContent=this.value+\'%\'; cfgSetRecSideFxIntensity(this.value)" style="flex:1;min-width:160px">'
       + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-v">' + recSideFxIntensity + '%</span></div>'
       + '  </div>'
       + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
       + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">효과 길이 <span style="font-weight:400;color:var(--gray-l);font-size:10px">(길수록 진해짐)</span></div>'
-      + '    <input type="range" min="10" max="60" step="5" value="' + recSideFxLength + '" oninput="document.getElementById(\'cfg-rec-sidefx-len-v\').textContent=this.value+\'%\'; cfgSetRecSideFxLength(this.value)" style="flex:1;min-width:160px">'
+      + '    <input type="range" min="4" max="80" step="1" value="' + recSideFxLength + '" oninput="document.getElementById(\'cfg-rec-sidefx-len-v\').textContent=this.value+\'%\'; cfgSetRecSideFxLength(this.value)" style="flex:1;min-width:160px">'
       + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-len-v">' + recSideFxLength + '%</span></div>'
       + '  </div>'
       + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">번짐/부드러움</div>'
+      + '    <input type="range" min="0" max="100" step="1" value="' + recSideFxSoftness + '" oninput="document.getElementById(\'cfg-rec-sidefx-soft-v\').textContent=this.value+\'%\'; cfgSetRecSideFxSoftness(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-soft-v">' + recSideFxSoftness + '%</span></div>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">끝선 폭</div>'
+      + '    <input type="range" min="2" max="24" step="1" value="' + recSideFxEdge + '" oninput="document.getElementById(\'cfg-rec-sidefx-edge-v\').textContent=this.value+\'px\'; cfgSetRecSideFxEdge(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-edge-v">' + recSideFxEdge + 'px</span></div>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
       + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">양끝 끝 강조</div>'
-      + '    <input type="range" min="0" max="100" step="5" value="' + recSideFxTail + '" oninput="document.getElementById(\'cfg-rec-sidefx-tail-v\').textContent=this.value+\'%\'; cfgSetRecSideFxTail(this.value)" style="flex:1;min-width:160px">'
+      + '    <input type="range" min="0" max="140" step="1" value="' + recSideFxTail + '" oninput="document.getElementById(\'cfg-rec-sidefx-tail-v\').textContent=this.value+\'%\'; cfgSetRecSideFxTail(this.value)" style="flex:1;min-width:160px">'
       + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-tail-v">' + recSideFxTail + '%</span></div>'
       + '  </div>'
-      + '  <div class="rec-sidefx rec-sidefx--' + (recSideFxMode||'soft') + '" style="--rec-side-left-rgb:59,130,246;--rec-side-right-rgb:168,85,247;--rec-side-a1:' + Math.max(0.06,Math.min(0.42,(((recSideFxIntensity/100)*0.6)+((recSideFxLength-10)/50)*0.4)*0.36)).toFixed(3) + ';--rec-side-a2:' + Math.max(0.03,Math.min(0.20,(((recSideFxIntensity/100)*0.6)+((recSideFxLength-10)/50)*0.4)*0.36*0.48)).toFixed(3) + ';--rec-side-ae:' + Math.max(0.10,Math.min(0.52,((((recSideFxIntensity/100)*0.6)+((recSideFxLength-10)/50)*0.4)*0.36) + (recSideFxTail/100)*0.20)).toFixed(3) + ';border-radius:12px;border:1px solid var(--border2);overflow:hidden;background:#ffffff;padding:14px 16px;display:flex;align-items:center;justify-content:center;gap:10px">'
+      + '  <div class="rec-sidefx rec-sidefx--' + (recSideFxMode||'soft') + '" style="' + _previewVars + 'border-radius:12px;border:1px solid var(--border2);overflow:hidden;background:#ffffff;padding:14px 16px;display:flex;align-items:center;justify-content:center;gap:10px">'
       + '    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#2563eb;color:#fff;font-size:11px;font-weight:800">서울대</span>'
       + '    <span style="font-size:18px;font-weight:1000;color:var(--text)">3 : 2</span>'
       + '    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#7c3aed;color:#fff;font-size:11px;font-weight:800">연세대</span>'
       + '  </div>'
+      + '  <div style="font-size:11px;color:var(--gray-l);line-height:1.6">이제 슬라이더가 1단위로 조절되고, 번짐/끝선 폭까지 따로 조정할 수 있습니다. 리본/프레임/스포트라이트 모드도 추가했습니다.</div>'
       + '</div>'
       + '</details>';
   }
@@ -623,13 +662,13 @@
 
   // 페이지 로드 시 기록 카드 양끝 효과 길이 CSS variable 초기 적용
   try{
-    var _initLen = Math.max(10, Math.min(60, parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
+    var _initLen = Math.max(4, Math.min(80, parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
     if(window.applyRecSideFxLengthVar) window.applyRecSideFxLengthVar(_initLen);
     else {
       // 함수가 아직 안 정의된 경우 DOMContentLoaded 후 적용
       document.addEventListener('DOMContentLoaded', function(){
         try{
-          var n = Math.max(10, Math.min(60, parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
+          var n = Math.max(4, Math.min(80, parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
           if(window.applyRecSideFxLengthVar) window.applyRecSideFxLengthVar(n);
         }catch(e){}
       });
