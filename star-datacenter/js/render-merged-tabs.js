@@ -23,11 +23,9 @@ function rMergedInd(C, T) {
   );
   const sub = document.createElement('div');
   if(_mergedIndSub==='ind') {
-    try{ if(typeof indSub!=='undefined' && indSub==='input') indSub='records'; }catch(e){}
     if(typeof rInd==='function') rInd(sub,T);
   }
   else {
-    try{ if(typeof gjSub!=='undefined' && gjSub==='input') gjSub='records'; }catch(e){}
     if(typeof rGJ==='function')  rGJ(sub,T);
   }
   C.innerHTML = bar;
@@ -82,7 +80,6 @@ function rMergedPro(C, T) {
   const sub = document.createElement('div');
   if(_mergedProSub==='pro')       { if(typeof rPro==='function')     rPro(sub,T); }
   else if(_mergedProSub==='gj')   {
-    try{ if(typeof gjSub!=='undefined' && gjSub==='input') gjSub='records'; }catch(e){}
     if(typeof rGJ==='function') rGJ(sub,T,true,true);
   }
   else                            { if(typeof rProComp==='function') rProComp(sub,T); }
