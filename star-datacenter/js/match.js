@@ -446,6 +446,16 @@ function saveMatch(mode){
       });
       BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
       if(typeof gjSub!=='undefined') gjSub='records';
+      try{
+        if(bld._proLabel){
+          curTab='pro';
+          if(typeof _mergedProSub!=='undefined') _mergedProSub='gj';
+        }else{
+          curTab='ind';
+          if(typeof _mergedIndSub!=='undefined') _mergedIndSub='gj';
+        }
+      }catch(e){}
+      try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
       render();
       return;
     }
@@ -608,6 +618,16 @@ function saveMatch(mode){
     });
     BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
     if(typeof gjSub!=='undefined') gjSub='records';
+    try{
+      if(bld._proLabel){
+        curTab='pro';
+        if(typeof _mergedProSub!=='undefined') _mergedProSub='gj';
+      }else{
+        curTab='ind';
+        if(typeof _mergedIndSub!=='undefined') _mergedIndSub='gj';
+      }
+    }catch(e){}
+    try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
     render();
     return;
   }

@@ -1455,6 +1455,7 @@ function proCompTourMatchInput(tn){
     return `${n}강`;
   };
   const _bracketItems = [];
+  let _stageRecSortSeq = 0;
   try{
     if (tn && Array.isArray(tn.bracket)) {
       tn.bracket.forEach((rnd, ri)=>{
@@ -1472,7 +1473,8 @@ function proCompTourMatchInput(tn){
                 src:'bkt',
                 ri, mi,
                 key: `${baseId}_${gi}`,
-                _dateKey: d || ''
+                _dateKey: d || '',
+                _sortSeq: _stageRecSortSeq++
               });
             });
           } else if (m.winner) {
@@ -1481,7 +1483,8 @@ function proCompTourMatchInput(tn){
               src:'bkt',
               ri, mi,
               key: baseId,
-              _dateKey: d || ''
+              _dateKey: d || '',
+              _sortSeq: _stageRecSortSeq++
             });
           }
         });
@@ -1489,10 +1492,17 @@ function proCompTourMatchInput(tn){
     }
   }catch(e){}
 
-  const _stageList = (tn.stageRecords[round]||[]).map((m,i)=>({m, src:'stage', idx:i, key:(m&&m._id)||`stage_${i}`, _dateKey:(m&&m.d)||''}));
+  const _stageList = (tn.stageRecords[round]||[]).map((m,i)=>({
+    m,
+    src:'stage',
+    idx:i,
+    key:(m&&m._id)||`stage_${i}`,
+    _dateKey:(m&&m.d)||'',
+    _sortSeq: _stageRecSortSeq + i
+  }));
 
   const sorted = [..._bracketItems, ..._stageList]
-    .sort((a,b)=>(b._dateKey||'').localeCompare(a._dateKey||'')||String(b.key).localeCompare(String(a.key)));
+    .sort((a,b)=>(b._dateKey||'').localeCompare(a._dateKey||'')||((a._sortSeq??0)-(b._sortSeq??0))||String(a.key).localeCompare(String(b.key)));
 
   const card = (item, displayNo)=>{
     const m = item.m;
