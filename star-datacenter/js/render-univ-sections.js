@@ -54,63 +54,90 @@ function buildUnivHeaderCardHTML(opts){
     isTablet=false,
     logoSizeEff='46px'
   } = opts || {};
-  const uHdrPad = isMobile ? '14px 14px' : (isTablet ? '16px 18px' : '20px 24px');
-  const uHdrR = isMobile ? 14 : 16;
-  const uNameFs = isMobile ? 17 : (isTablet ? 18 : 20);
+  const uNameFs = isMobile ? 18 : (isTablet ? 20 : 22);
   const uSubFs = isMobile ? 11 : 12;
-  const uStatPad = isMobile ? '8px 6px' : '10px 8px';
-  const dissolvedBadge = (()=>{ const u=univCfg.find(u=>u.name===univName); return u?.dissolved?`<span style="font-size:12px;font-weight:700;background:rgba(0,0,0,.3);color:#fca5a5;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:middle">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''; })();
+  const dissolvedBadge = (()=>{ const u=univCfg.find(u=>u.name===univName); return u?.dissolved?`<span style="font-size:11px;font-weight:700;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:middle">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''; })();
   const _bgSize = hdrBgLayer?.fit==='fill' ? '100% 100%' : (hdrBgLayer?.fit==='cover' ? 'cover' : 'contain');
   const _bgScale = Math.max(40, Math.min(220, Number(hdrBgLayer?.scale||100)));
-  const topNames = [...members].sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,3).map(m=>m.name);
-  return `<div style="background:linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.18);border-radius:${uHdrR+4}px;padding:0;margin-bottom:16px;color:#fff;position:relative;overflow:hidden;box-shadow:0 18px 42px rgba(15,23,42,.10)">
-    <div style="background:${hdrBg||`linear-gradient(135deg,${col},${col}cc)`};padding:${uHdrPad};position:relative;overflow:hidden">
-      ${hdrBgLayer?.url ? `<div style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl(hdrBgLayer.url).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:center center;background-size:${_bgSize};transform:scale(${_bgScale/100});transform-origin:center center;opacity:.34;pointer-events:none"></div>` : ''}
-      <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(15,23,42,.08),rgba(15,23,42,.20));pointer-events:none"></div>
-      <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none"></div>
-      <div style="position:absolute;bottom:-30px;right:40px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
-      <div style="position:absolute;right:14px;bottom:10px;font-size:56px;line-height:1;opacity:.08">🎓</div>
-      <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;position:relative">
-        <div style="width:calc(var(--su_univ_logo_box_detail,72px) * var(--su_univ_detail_scale,1));height:calc(var(--su_univ_logo_box_detail,72px) * var(--su_univ_detail_scale,1));border-radius:calc(var(--su_univ_logo_radius,18px) + 4px);background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:38px;border:2px solid rgba(255,255,255,.35);flex-shrink:0;overflow:hidden;box-shadow:0 8px 22px rgba(0,0,0,.16)">
+  const topNames = [...members].sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,3);
+  const winPct = tot ? wr : 0;
+  const winBarW = Math.max(0,Math.min(100,winPct));
+  const _hexToRgb = h => { const m=String(h||'').match(/^#([0-9a-f]{6})$/i); if(!m)return '59,130,246'; const n=parseInt(m[1],16); return `${(n>>16)&255},${(n>>8)&255},${n&255}`; };
+  const colRgb = _hexToRgb(col);
+  const ptColor = pts>0?'#4ade80':pts<0?'#f87171':'rgba(255,255,255,.85)';
+  const wrColor = winPct>=60?'#4ade80':winPct>=50?'#86efac':winPct>=40?'#fcd34d':'#f87171';
+  const bgLayerHTML = hdrBgLayer?.url ? `<div style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl(hdrBgLayer.url).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:center center;background-size:${_bgSize};transform:scale(${_bgScale/100});transform-origin:center center;opacity:.28;pointer-events:none"></div>` : '';
+  return `<div style="border-radius:20px;overflow:hidden;margin-bottom:20px;box-shadow:0 20px 48px rgba(${colRgb},.20),0 4px 16px rgba(15,23,42,.10);">
+    <div style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${isMobile?'18px 16px':'22px 26px'};position:relative;overflow:hidden;min-height:${isMobile?'140px':'155px'}">
+      ${bgLayerHTML}
+      <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
+      <div style="position:absolute;bottom:-50px;left:20%;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(0,0,0,.06) 0%,rgba(0,0,0,.24) 100%);pointer-events:none"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:48px;background:linear-gradient(transparent,rgba(0,0,0,.18));pointer-events:none"></div>
+      <div style="position:relative;display:flex;align-items:flex-start;gap:${isMobile?'14px':'18px'}">
+        <div style="width:calc(var(--su_univ_logo_box_detail,76px)*var(--su_univ_detail_scale,1));height:calc(var(--su_univ_logo_box_detail,76px)*var(--su_univ_detail_scale,1));flex-shrink:0;border-radius:calc(var(--su_univ_logo_radius,18px)+6px);background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.22),0 0 0 3px rgba(255,255,255,.45)">
           ${gUI(univName,logoSizeEff)}
         </div>
-        <div style="min-width:0">
-          <div style="font-size:10px;font-weight:900;letter-spacing:.8px;color:rgba(255,255,255,.76);margin-bottom:6px">UNIVERSITY PROFILE</div>
-          <div style="font-size:${uNameFs+2}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.18)">
-            ${univName}
-            ${dissolvedBadge}
+        <div style="min-width:0;flex:1;padding-top:4px">
+          <div style="font-size:9px;font-weight:900;letter-spacing:2px;color:rgba(255,255,255,.62);text-transform:uppercase;margin-bottom:4px">UNIVERSITY</div>
+          <div style="font-size:${uNameFs}px;font-weight:900;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.3);line-height:1.2;margin-bottom:6px">${univName}${dissolvedBadge}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:${uSubFs}px;color:rgba(255,255,255,.75);font-weight:600">👥 ${members.length}명</span>
+            <span style="width:1px;height:12px;background:rgba(255,255,255,.3)"></span>
+            <span style="font-size:${uSubFs}px;color:rgba(255,255,255,.75);font-weight:600">${wins}승 ${losses}패</span>
+            ${tot?`<span style="width:1px;height:12px;background:rgba(255,255,255,.3)"></span><span style="font-size:${uSubFs}px;color:${wrColor};font-weight:800">승률 ${winPct}%</span>`:''}
           </div>
-          <div style="font-size:${uSubFs}px;color:rgba(255,255,255,.78);margin-top:4px">소속 스트리머 ${members.length}명</div>
-          ${topNames.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${topNames.map(n=>`<span style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900;color:#fff;backdrop-filter:blur(6px)">${n}</span>`).join('')}</div>`:''}
+          <div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:6px 14px;">
+            <span style="font-size:10px;color:rgba(255,255,255,.65);font-weight:700">SCORE</span>
+            <span style="font-size:20px;font-weight:900;color:${ptColor};line-height:1">${pts>0?'+':''}${pts}</span>
+          </div>
         </div>
-        <div style="min-width:120px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:16px;padding:10px 12px;text-align:center;backdrop-filter:blur(10px)">
-          <div style="font-size:10px;letter-spacing:.8px;font-weight:900;color:rgba(255,255,255,.74)">TEAM SCORE</div>
-          <div style="font-size:28px;line-height:1.05;font-weight:1000;color:${pts>0?'#fef08a':'#fff'};margin-top:5px">${pts>0?'+':''}${pts}</div>
-        </div>
+        ${!isMobile&&topNames.length?`<div style="flex-shrink:0;display:flex;flex-direction:column;gap:4px">
+          ${topNames.map((p,i)=>`<div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:5px 10px;">
+            <span style="font-size:9px;font-weight:900;color:rgba(255,255,255,.5);min-width:14px">${['🥇','🥈','🥉'][i]||''}</span>
+            ${getPlayerPhotoHTML(p.name,'22px')}
+            <span style="font-size:11px;font-weight:800;color:#fff;white-space:nowrap">${p.name}</span>
+            <span style="font-size:10px;color:${ptColor};font-weight:700">${p.points>0?'+':''}${p.points}pt</span>
+          </div>`).join('')}
+        </div>`:''}
       </div>
     </div>
-    <div style="padding:14px;background:linear-gradient(180deg,#ffffff,${col}10)">
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px">
-        <div style="background:rgba(255,255,255,.82);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:${uStatPad};text-align:center;box-shadow:0 8px 18px rgba(15,23,42,.04)">
-          <div style="font-size:10px;color:var(--gray-l);margin-bottom:4px;font-weight:900;letter-spacing:.6px">개인 전적</div>
-          <div style="font-weight:1000;font-size:14px;color:#0f172a">${wins}승 ${losses}패</div>
+    <div style="background:var(--white,#fff);padding:${isMobile?'14px 16px':'16px 26px'}">
+      ${tot?`<div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11px;font-weight:800;color:var(--text3,#475569);letter-spacing:.4px">개인 승률</span>
+          <span style="font-size:13px;font-weight:900;color:${col}">${winPct}%</span>
         </div>
-        <div style="background:rgba(255,255,255,.82);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:${uStatPad};text-align:center;box-shadow:0 8px 18px rgba(15,23,42,.04)">
-          <div style="font-size:10px;color:var(--gray-l);margin-bottom:4px;font-weight:900;letter-spacing:.6px">개인 승률</div>
-          <div style="font-weight:1000;font-size:16px;color:${wr>=50?'#16a34a':'#dc2626'}">${tot?wr+'%':'-'}</div>
+        <div style="height:8px;background:${col}20;border-radius:99px;overflow:hidden;position:relative">
+          <div style="position:absolute;left:0;top:0;height:100%;width:${winBarW}%;background:linear-gradient(90deg,${col}cc,${col});border-radius:99px;transition:.6s ease"></div>
         </div>
-        <div style="background:rgba(255,255,255,.82);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:${uStatPad};text-align:center;box-shadow:0 8px 18px rgba(15,23,42,.04)">
-          <div style="font-size:10px;color:var(--gray-l);margin-bottom:4px;font-weight:900;letter-spacing:.6px">총 포인트</div>
-          <div style="font-weight:1000;font-size:15px;color:${pts>0?'#16a34a':pts<0?'#dc2626':'#0f172a'}">${pts>0?'+':''}${pts}</div>
+      </div>`:''}
+      <div style="display:grid;grid-template-columns:repeat(${isMobile?'2':'4'},1fr);gap:${isMobile?'8px':'10px'}">
+        <div style="background:${col}0d;border:1.5px solid ${col}28;border-radius:14px;padding:${isMobile?'10px 8px':'12px 10px'};text-align:center;position:relative;overflow:hidden">
+          <div style="position:absolute;top:-8px;right:-8px;font-size:28px;opacity:.07">⚔️</div>
+          <div style="font-size:9px;color:var(--gray-l,#94a3b8);margin-bottom:5px;font-weight:800;letter-spacing:.8px">개인전적</div>
+          <div style="font-weight:900;font-size:${isMobile?'13px':'15px'};color:var(--text,#1e293b)">${wins}<span style="color:var(--green,#16a34a)">승</span> ${losses}<span style="color:var(--red,#dc2626)">패</span></div>
         </div>
-        <div style="background:rgba(255,255,255,.82);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:${uStatPad};text-align:center;box-shadow:0 8px 18px rgba(15,23,42,.04)">
-          <div style="font-size:10px;color:var(--gray-l);margin-bottom:4px;font-weight:900;letter-spacing:.6px">선수 수</div>
-          <div style="font-weight:1000;font-size:16px;color:#0f172a">${members.length}명</div>
+        <div style="background:${col}0d;border:1.5px solid ${col}28;border-radius:14px;padding:${isMobile?'10px 8px':'12px 10px'};text-align:center;position:relative;overflow:hidden">
+          <div style="position:absolute;top:-8px;right:-8px;font-size:28px;opacity:.07">📈</div>
+          <div style="font-size:9px;color:var(--gray-l,#94a3b8);margin-bottom:5px;font-weight:800;letter-spacing:.8px">승률</div>
+          <div style="font-weight:900;font-size:${isMobile?'16px':'18px'};color:${tot?wrColor:'var(--gray-l)'}">${tot?winPct+'%':'-'}</div>
+        </div>
+        <div style="background:${col}0d;border:1.5px solid ${col}28;border-radius:14px;padding:${isMobile?'10px 8px':'12px 10px'};text-align:center;position:relative;overflow:hidden">
+          <div style="position:absolute;top:-8px;right:-8px;font-size:28px;opacity:.07">🏆</div>
+          <div style="font-size:9px;color:var(--gray-l,#94a3b8);margin-bottom:5px;font-weight:800;letter-spacing:.8px">총 포인트</div>
+          <div style="font-weight:900;font-size:${isMobile?'15px':'17px'};color:${pts>0?'#16a34a':pts<0?'#dc2626':'var(--text,#1e293b)'}">${pts>0?'+':''}${pts}</div>
+        </div>
+        <div style="background:${col}0d;border:1.5px solid ${col}28;border-radius:14px;padding:${isMobile?'10px 8px':'12px 10px'};text-align:center;position:relative;overflow:hidden">
+          <div style="position:absolute;top:-8px;right:-8px;font-size:28px;opacity:.07">👥</div>
+          <div style="font-size:9px;color:var(--gray-l,#94a3b8);margin-bottom:5px;font-weight:800;letter-spacing:.8px">선수 수</div>
+          <div style="font-weight:900;font-size:${isMobile?'16px':'18px'};color:var(--text,#1e293b)">${members.length}<span style="font-size:11px;font-weight:600;color:var(--gray-l)">명</span></div>
         </div>
       </div>
     </div>
   </div>`;
 }
+
 
 function buildUnivMembersTableHTML(opts){
   const {

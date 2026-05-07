@@ -293,8 +293,8 @@ window._applyTabLinkFromUrl = function(){
 
 function sw(t,el){
   try{
-    if(t==='cfg' && (!(typeof isLoggedIn!=='undefined' && isLoggedIn) || (typeof isSubAdmin!=='undefined' && isSubAdmin))){
-      if(typeof showToast==='function') showToast('설정탭은 총관리자만 접근할 수 있습니다.');
+    if(t==='cfg' && !(typeof isLoggedIn!=='undefined' && isLoggedIn)){
+      if(typeof showToast==='function') showToast('설정탭은 관리자만 접근할 수 있습니다.');
       return;
     }
   }catch(e){}

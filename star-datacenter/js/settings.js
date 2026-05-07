@@ -424,6 +424,14 @@ window.cfgSetRecCardSettings = function(){
   try{ if(_hex(ckB)) localStorage.setItem('su_team_color_ck_b', _hex(ckB)); }catch(e){}
   try{ if(_hex(proA)) localStorage.setItem('su_team_color_pro_a', _hex(proA)); }catch(e){}
   try{ if(_hex(proB)) localStorage.setItem('su_team_color_pro_b', _hex(proB)); }catch(e){}
+  try{
+    const rcAvaSize = parseInt(document.getElementById('cfg-rc-avatar-size')?.value||'38',10);
+    localStorage.setItem('su_rec_avatar_size', String(Math.max(20,Math.min(80,rcAvaSize))));
+  }catch(e){}
+  try{
+    const rcAvaFit = document.getElementById('cfg-rc-avatar-fit')?.value || 'contain';
+    localStorage.setItem('su_rec_avatar_fit', ['contain','cover'].includes(rcAvaFit)?rcAvaFit:'contain');
+  }catch(e){}
   try{ if(typeof window.cfgSyncTeamColorPreview==='function') window.cfgSyncTeamColorPreview(); }catch(e){}
 
   // 즉시 반영 (init.js 미로드/순서 이슈 대비: 여기서도 직접 적용)
@@ -2160,6 +2168,9 @@ function _cfgApplyCat(cat, autoGo=true){
 // 함수를 window 객체에 할당 (인라인 onclick에서 사용)
 window._cfgGo = _cfgGo;
 window._cfgApplyCat = _cfgApplyCat;
+// (버그수정) render-nav-lazy.js에서 _lazyCfgGo를 참조하지만 미정의 상태.
+// cfgGo로 위임하는 alias 추가.
+window._lazyCfgGo = function(secId){ return _cfgGo(secId); };
 // 인라인 onclick에서 try/catch로 에러를 숨기지 않기 위해 단순 래퍼 제공
 window.cfgGo = function(secId){ return _cfgGo(secId); };
 // (요청사항) 카테고리 클릭 시 해당 카테고리 "메뉴만" 보여주고 자동으로 모달을 띄우지 않음
@@ -2180,7 +2191,8 @@ window.cfgSetBottomSectionsOpen = function(open){
     window._cfgBottomSectionsOpen = !!open;
     localStorage.setItem('su_cfg_bottom_open', window._cfgBottomSectionsOpen ? '1' : '0');
   }catch(e){}
-  try{ if(typeof curTab!=='undefined' && curTab==='cfg' && typeof render==='function') render(); }catch(e){}
+  // DOM 직접 조작으로 즉시 접기/펼치기 (전체 재렌더링 없이)
+  try{ if(typeof window.cfgApplyBottomSectionsVisibility==='function') window.cfgApplyBottomSectionsVisibility(); }catch(e){}
 };
 window.cfgSetRemoteCfgAuto = function(on){
   try{
@@ -2229,10 +2241,24 @@ window.cfgApplyBottomSectionsVisibility = function(){
       window._cfgBottomSectionsOpen = (saved==='1' || saved==='0') ? (saved==='1') : (mode==='advanced');
     }
     const open = q ? true : !!window._cfgBottomSectionsOpen;
-    document.querySelectorAll('[data-cfg-sec]').forEach(el=>{
-      try{ if(el.closest && el.closest('#cfgModalBody')) return; }catch(e){}
-      if(!open) el.style.display='none';
-    });
+    if(!open){
+      // 접기: 현재 카테고리만이 아니라 모든 하단 세부 섹션을 숨김
+      document.querySelectorAll('[data-cfg-sec]').forEach(el=>{
+        try{ if(el.closest && el.closest('#cfgModalBody')) return; }catch(e){}
+        el.style.display='none';
+      });
+    } else {
+      // 펼치기: 모든 세부 섹션을 다시 표시
+      document.querySelectorAll('[data-cfg-sec]').forEach(el=>{
+        try{ if(el.closest && el.closest('#cfgModalBody')) return; }catch(e){}
+        if(el.style.display==='none') el.style.display='';
+      });
+    }
+    // 버튼 텍스트 업데이트
+    try{
+      const btn = document.querySelector('[onclick*="cfgToggleBottomSections"]');
+      if(btn) btn.textContent = open ? '🧩 세부 설정 접기 ▲' : '🧩 세부 설정 펼치기 ▼';
+    }catch(e){}
   }catch(e){}
 };
 window.cfgFocusSearch = function(){ try{ document.getElementById('cfgSearchInp')?.focus(); }catch(e){} };
@@ -2752,6 +2778,9 @@ function rCfg(C,T){
   const _rcUnivFont = parseInt(localStorage.getItem('su_rc_univ_font_pct') ?? '110',10) || 110;
   const _ymScale = parseInt(localStorage.getItem('su_ym_scale_pct') ?? '100',10) || 100;
   const _rcMemoOn = (localStorage.getItem('su_rc_memo_on') ?? '0') === '1';
+  const _sfxOn = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0';
+  const _sfxMode = localStorage.getItem('su_rec_side_fx_mode') || 'soft';
+  const _sfxInt = Math.max(20,Math.min(100,parseInt(localStorage.getItem('su_rec_side_fx_intensity')||'68',10)||68));
   const _avaScale = Math.round((parseFloat(localStorage.getItem('su_avatar_scale') ?? '1') || 1) * 100);
   const _cfgViewMode = (localStorage.getItem('su_cfg_view_mode') || 'basic') === 'advanced' ? 'advanced' : 'basic';
   const _cfgBottomOpen = (()=>{ try{
@@ -3551,6 +3580,51 @@ ${_scfgD('notice','📢 공지 관리')}
         기록 카드에서 메모 입력 기능 사용(관리자)
       </label>
       <div style="font-size:11px;color:var(--gray-l)">※ 메모가 이미 저장된 경우는 항상 표시됩니다. 이 옵션은 “입력칸”만 켜고 끕니다.</div>
+      
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">🖼️ 기록 카드 프로필 이미지 설정</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">
+          <div>
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">프로필 이미지 크기 <span id="cfg-rc-avatar-size-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_rec_avatar_size')||'38',10);}catch(e){return 38;}})()}px</span></div>
+            <input type="range" id="cfg-rc-avatar-size" min="20" max="80" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_rec_avatar_size')||'38',10);}catch(e){return 38;}})()}" oninput="document.getElementById('cfg-rc-avatar-size-v').textContent=this.value+'px'" onchange="cfgSetRecCardSettings()" style="width:100%">
+            <div style="font-size:10px;color:var(--gray-l);margin-top:2px">기록 카드 내 프로필 이미지 지름 (px)</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">이미지 맞춤 방식</div>
+            <select id="cfg-rc-avatar-fit" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;width:100%">
+              <option value="contain" ${(localStorage.getItem('su_rec_avatar_fit')||'contain')==='contain'?'selected':''}>맞춤(contain)</option>
+              <option value="cover" ${(localStorage.getItem('su_rec_avatar_fit')||'contain')==='cover'?'selected':''}>채우기(cover)</option>
+            </select>
+            <div style="font-size:10px;color:var(--gray-l);margin-top:4px"><b>맞춤</b>: 이미지 전체 보임 · <b>채우기</b>: 원형 꽉 채움</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 전역 배율(위 슬라이더)과 별개로 기록 카드만 따로 설정됩니다.</div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">🎨 기록 카드 양쪽 끝 색상 효과</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">기록 카드 좌우 끝에 A·B팀 대학 색상 그라디언트를 표시합니다.</div>
+        <div style="font-size:11px;color:#475569;margin-bottom:8px"><b>대학CK</b> / <b>프로리그 일반</b>의 양쪽 끝 색상은 바로 아래 나오는 <b>팀 버튼 색상</b> 블록에서 바꿉니다.</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+            <input type="checkbox" id="cfg-sidefx-on" style="width:15px;height:15px" ${_sfxOn?'checked':''} onchange="(window.cfgSetRecSideFxEnabled||function(){})(this.checked)">
+            색상 효과 사용
+          </label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--text3);font-weight:800">효과 종류</div>
+            <select id="cfg-sidefx-mode" onchange="(window.cfgSetRecSideFxMode||function(){})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+              <option value="soft" ${_sfxMode==='soft'?'selected':''}>소프트 (기본)</option>
+              <option value="glow" ${_sfxMode==='glow'?'selected':''}>글로우 (발광)</option>
+              <option value="panel" ${_sfxMode==='panel'?'selected':''}>패널 (선명)</option>
+              <option value="line" ${_sfxMode==='line'?'selected':''}>라인 (세로 바)</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">색상 강도 <span id="cfg-sidefx-int-v" style="font-weight:400;color:var(--gray-l)">${_sfxInt}</span></div>
+            <input type="range" id="cfg-sidefx-int" min="20" max="100" step="4" value="${_sfxInt}" oninput="document.getElementById('cfg-sidefx-int-v').textContent=this.value" onchange="(window.cfgSetRecSideFxIntensity||function(){})(this.value)" style="width:100%;max-width:260px">
+          </div>
+        </div>
+      </div>
       ${(typeof window.buildSettingsTeamColorBlock==='function' ? window.buildSettingsTeamColorBlock() : '')}
     </div>
   </details>
@@ -5122,6 +5196,19 @@ ${_scfgD('notice','📢 공지 관리')}
     try{ window.cfgInitAiProxy && window.cfgInitAiProxy(); }catch(e){}
   }, 50);
 } // end first rCfg
+window.rCfg = rCfg;
+// reCfg: 설정탭 내용만 다시 렌더링 (render() 전체 호출 없이)
+function reCfg(){
+  try{
+    if(typeof curTab!=='undefined' && curTab!=='cfg') return;
+    const C=document.getElementById('rcont');
+    const T=document.getElementById('rtitle');
+    if(!C||!T) return;
+    rCfg(C,T);
+  }catch(e){}
+}
+window.reCfg = reCfg;
+
 
 // ── 설정/메모 동기화(GitHub Gist) 상태 패널 ──
 window.cfgRenderGistSyncStatus = function(){

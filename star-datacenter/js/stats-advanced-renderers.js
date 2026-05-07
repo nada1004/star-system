@@ -82,13 +82,45 @@
     let lx=pad.l; races.forEach(race=>{ ctx.fillStyle=race.color; ctx.fillRect(lx,H-12,12,8); ctx.fillStyle='#475569'; ctx.font='10px sans-serif'; ctx.textAlign='left'; ctx.fillText(race.label,lx+16,H-4); lx+=60; });
   }
 
+  function _statsKillerCandidates(){
+    return (window.players||[]).filter(p=>_statsAllHistLocal(p).length>0)
+      .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko'));
+  }
+  function _statsAllHistLocal(p){
+    return Array.isArray(p&&p.history) ? p.history.filter(Boolean) : [];
+  }
+  function _isAceLikeSet(set){
+    const tag = String(set?.name || set?.title || set?.label || set?.type || '').toLowerCase();
+    return !!(set && (set.ace || set.isAce || tag.includes('ace') || tag.includes('에이스') || tag.includes('결정전') || tag.includes('타이브레이커')));
+  }
+  function applyKillerSearch(q){
+    const raw=String(q||'').trim();
+    if(!raw) return false;
+    const cands=_statsKillerCandidates();
+    const exact=cands.find(p=>String(p.name||'').trim()===raw);
+    const partial=cands.filter(p=>String(p.name||'').toLowerCase().includes(raw.toLowerCase()));
+    const hit=exact || (partial.length ? partial[0] : null);
+    if(!hit) return false;
+    window._killerSelPlayer=hit.name;
+    render();
+    return true;
+  }
+  function syncKillerSelection(name){
+    const raw=String(name||'').trim();
+    if(!raw) return false;
+    window._killerSelPlayer=raw;
+    const sel=document.getElementById('killer-player-select'); if(sel) sel.value=raw;
+    render();
+    return true;
+  }
+
   function statsKillerHTML(){
-    const playersWithHistory=(window.players||[]).filter(p=>(p.history||[]).length>0);
+    const playersWithHistory=_statsKillerCandidates();
     if(!window._killerSelPlayer&&playersWithHistory.length) window._killerSelPlayer=playersWithHistory[0].name;
     function calcKiller(targetName){
       const target=window.statsP(targetName); if(!target)return{killers:[],victims:[]};
       const oppMap={};
-      window.statsNonProHist(target).forEach(h=>{ if(!h.opp)return; if(!oppMap[h.opp])oppMap[h.opp]={w:0,l:0}; if(h.result==='승')oppMap[h.opp].w++; else oppMap[h.opp].l++; });
+      _statsAllHistLocal(target).forEach(h=>{ if(!h.opp)return; if(!oppMap[h.opp])oppMap[h.opp]={w:0,l:0}; if(h.result==='승')oppMap[h.opp].w++; else oppMap[h.opp].l++; });
       const entries=Object.entries(oppMap).map(([name,s])=>{ const opp=window.statsP(name); return{name,w:s.w,l:s.l,tot:s.w+s.l,winRate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,univ:opp?.univ||'',elo:opp?.elo||1200}; }).filter(e=>e.tot>=1);
       const killers=entries.filter(e=>e.l>0).sort((a,b)=>{ const aLR=a.l/(a.w+a.l), bLR=b.l/(b.w+b.l); return bLR-aLR||b.l-a.l; }).slice(0,10);
       const victims=entries.filter(e=>e.w>0).sort((a,b)=>{ const aWR=a.w/(a.w+a.l), bWR=b.w/(b.w+b.l); return bWR-aWR||b.w-a.w; }).slice(0,10);
@@ -101,7 +133,7 @@
       const col=window.gc(e.univ); const myW=isKiller?e.l:e.w, myL=isKiller?e.w:e.l; const myRate=e.tot?Math.round(myW/e.tot*100):0;
       return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="openPlayerModal('${e.name}')">${window.getPlayerPhotoHTML(e.name,'28px')}<span style="font-weight:800;font-size:13px;color:var(--blue);min-width:65px">${e.name}${window.getStatusIconHTML(e.name)}</span><span style="font-size:11px;color:${col};font-weight:700;min-width:55px">${e.univ}</span><div style="flex:1;background:var(--border2);border-radius:20px;height:10px;overflow:hidden"><div style="width:${myRate}%;background:${isKiller?'var(--red)':'var(--green)'};height:100%;border-radius:20px"></div></div><span style="font-weight:800;font-size:12px;color:${isKiller?'var(--red)':'var(--green)'};white-space:nowrap;min-width:52px">${myRate}% (${myW}W${myL}L)</span><span style="font-size:10px;color:var(--gray-l)">${e.tot}경기</span></div>`;
     }
-    return`<div style="display:flex;flex-direction:column;gap:14px"><div class="ssec"><h4 style="margin-bottom:12px">🗡️ 킬러 & 피해자 선수</h4><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span style="font-size:12px;font-weight:600;color:var(--text3)">선수 선택:</span><select style="padding:6px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600" onchange="window._killerSelPlayer=this.value;render()">${playersWithHistory.sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>`<option value="${p.name}"${window._killerSelPlayer===p.name?' selected':''}>${p.name} (${p.univ})</option>`).join('')}</select>${target?`<span class="ubadge" style="background:${tColor}">${target.univ}</span><span style="font-size:12px;color:var(--gray-l)">${target.win||0}승 ${target.loss||0}패</span>`:''}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap"><div><div style="font-weight:800;font-size:14px;color:var(--red);margin-bottom:8px;padding:8px 12px;background:#fef2f2;border-radius:8px;border-left:4px solid var(--red)">💀 나를 가장 많이 이긴 선수 (천적)</div><div style="display:flex;flex-direction:column;gap:4px">${killers.length?killers.map(e=>oppRow(e,true)).join(''):'<p style="color:var(--gray-l);padding:16px;text-align:center">천적 없음 👑</p>'}</div></div><div><div style="font-weight:800;font-size:14px;color:var(--green);margin-bottom:8px;padding:8px 12px;background:#f0fdf4;border-radius:8px;border-left:4px solid var(--green)">🏆 내가 가장 많이 이긴 선수 (피해자)</div><div style="display:flex;flex-direction:column;gap:4px">${victims.length?victims.map(e=>oppRow(e,false)).join(''):'<p style="color:var(--gray-l);padding:16px;text-align:center">피해자 없음</p>'}</div></div></div></div></div>`;
+    return`<div style="display:flex;flex-direction:column;gap:14px"><div class="ssec"><h4 style="margin-bottom:12px">🗡️ 킬러 & 피해자 선수</h4><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span style="font-size:12px;font-weight:600;color:var(--text3)">선수 선택:</span><select id="killer-player-select" style="padding:6px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;min-width:220px" onchange="syncKillerSelection(this.value)">${playersWithHistory.map(p=>`<option value="${p.name}"${window._killerSelPlayer===p.name?' selected':''}>${p.name} (${p.univ})</option>`).join('')}</select>${target?`<span class="ubadge" style="background:${tColor}">${target.univ}</span><span style="font-size:12px;color:var(--gray-l)">${target.win||0}승 ${target.loss||0}패</span>`:''}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap"><div><div style="font-weight:800;font-size:14px;color:var(--red);margin-bottom:8px;padding:8px 12px;background:#fef2f2;border-radius:8px;border-left:4px solid var(--red)">💀 나를 가장 많이 이긴 선수 (천적)</div><div style="display:flex;flex-direction:column;gap:4px">${killers.length?killers.map(e=>oppRow(e,true)).join(''):'<p style="color:var(--gray-l);padding:16px;text-align:center">천적 없음 👑</p>'}</div></div><div><div style="font-weight:800;font-size:14px;color:var(--green);margin-bottom:8px;padding:8px 12px;background:#f0fdf4;border-radius:8px;border-left:4px solid var(--green)">🏆 내가 가장 많이 이긴 선수 (피해자)</div><div style="display:flex;flex-direction:column;gap:4px">${victims.length?victims.map(e=>oppRow(e,false)).join(''):'<p style="color:var(--gray-l);padding:16px;text-align:center">피해자 없음</p>'}</div></div></div></div></div>`;
   }
 
   function statsSeasonalHTML(){
@@ -122,8 +154,8 @@
 
   function statsClutchHTML(){
     const aceStats={};
-    const allMatchSets=window.statsFilterMatches([...(window.miniM||[]),...(window.univM||[]),...(window.ckM||[]),...(window.comps||[]),...(window.proM||[])]);
-    allMatchSets.forEach(m=>(m.sets||[]).forEach(set=>{ if(!set.ace)return; (set.games||[]).forEach(g=>{ if(!g.playerA||!g.playerB||!g.winner)return; const wName=g.winner==='A'?g.playerA:g.playerB; const lName=g.winner==='A'?g.playerB:g.playerA; if(!aceStats[wName])aceStats[wName]={w:0,l:0}; if(!aceStats[lName])aceStats[lName]={w:0,l:0}; aceStats[wName].w++; aceStats[lName].l++; }); }));
+    const allMatchSets=[...(window.miniM||[]),...(window.univM||[]),...(window.ckM||[]),...(window.comps||[]),...(window.proM||[]),...(window.ttM||[])];
+    allMatchSets.forEach(m=>(m.sets||[]).forEach(set=>{ if(!_isAceLikeSet(set))return; (set.games||[]).forEach(g=>{ if(!g.playerA||!g.playerB||!g.winner)return; const wName=g.winner==='A'?g.playerA:g.playerB; const lName=g.winner==='A'?g.playerB:g.playerA; if(!aceStats[wName])aceStats[wName]={w:0,l:0}; if(!aceStats[lName])aceStats[lName]={w:0,l:0}; aceStats[wName].w++; aceStats[lName].l++; }); }));
     const aceList=Object.entries(aceStats).map(([name,s])=>{ const p=window.statsP(name); if(!p)return null; const tot=s.w+s.l; const rate=tot?Math.round(s.w/tot*100):0; return{name,w:s.w,l:s.l,tot,rate,univ:p.univ,tier:p.tier,elo:p.elo||1200,totalGames:(p.win||0)+(p.loss||0),clutchRatio:tot>0?(s.w/tot-0.5)*2:0}; }).filter(Boolean).filter(e=>e.tot>=1).sort((a,b)=>b.rate-a.rate||b.tot-a.tot);
     const topClutch=aceList.slice(0,15);
     const worstClutch=[...aceList].filter(e=>e.tot>=2).sort((a,b)=>a.rate-b.rate||b.tot-a.tot).slice(0,10);
@@ -181,6 +213,8 @@
   window._calcRaceTrendData = _calcRaceTrendData;
   window.statsRaceTrendHTML = statsRaceTrendHTML;
   window.initRaceTrendChart = initRaceTrendChart;
+  window.applyKillerSearch = applyKillerSearch;
+  window.syncKillerSelection = syncKillerSelection;
   window.statsKillerHTML = statsKillerHTML;
   window.statsSeasonalHTML = statsSeasonalHTML;
   window.statsClutchHTML = statsClutchHTML;

@@ -9,10 +9,15 @@ function _safeHeadToHeadSideFx(leftHex, rightHex){
     if(!cfg || !cfg.on) return '';
     const mode = ['soft','glow','panel','line'].includes(cfg.mode) ? cfg.mode : 'soft';
     const intensity = Math.max(20, Math.min(100, parseInt(cfg.intensity||68,10)||68));
+    const lenPct = Math.max(10, Math.min(60, parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
+    const tail = Math.max(0, Math.min(100, parseInt((cfg&&cfg.tail)||28,10)||28));
     const a1 = Math.max(0.08, Math.min(0.34, (intensity/100) * 0.28));
     const a2 = Math.max(0.03, Math.min(0.16, a1 * 0.42));
+    const ae = Math.max(a1, Math.min(0.70, a1 + (tail/100)*0.34));
     const lr = (typeof _recFxHexToRgbStr==='function') ? _recFxHexToRgbStr(leftHex||'#3b82f6') : '59,130,246';
     const rr = (typeof _recFxHexToRgbStr==='function') ? _recFxHexToRgbStr(rightHex||'#ef4444') : '239,68,68';
+    const L1 = lenPct, L2 = Math.round(lenPct*0.45), L3 = Math.round(lenPct*0.85);
+    const R1 = 100-lenPct, R2 = 100-Math.round(lenPct*0.45), R3 = 100-Math.round(lenPct*0.85);
     if(mode==='line'){
       return `background:
         linear-gradient(180deg, rgba(${lr},${a1.toFixed(3)}), rgba(${lr},${a2.toFixed(3)})) left center / 8px 100% no-repeat,
@@ -21,17 +26,17 @@ function _safeHeadToHeadSideFx(leftHex, rightHex){
     }
     if(mode==='glow'){
       return `background:
-        linear-gradient(90deg, rgba(${lr},${a2.toFixed(3)}) 0%, rgba(${lr},0) 24%, rgba(${rr},0) 76%, rgba(${rr},${a2.toFixed(3)}) 100%),
+        linear-gradient(90deg, rgba(${lr},${ae.toFixed(3)}) 0%, rgba(${lr},0) ${L1}%, rgba(${rr},0) ${R1}%, rgba(${rr},${ae.toFixed(3)}) 100%),
         var(--white);
         box-shadow: inset 26px 0 34px rgba(${lr},${a1.toFixed(3)}), inset -26px 0 34px rgba(${rr},${a1.toFixed(3)});`;
     }
     if(mode==='panel'){
       return `background:
-        linear-gradient(90deg, rgba(${lr},${a1.toFixed(3)}) 0%, rgba(${lr},${a2.toFixed(3)}) 13%, rgba(${lr},0) 28%, rgba(${rr},0) 72%, rgba(${rr},${a2.toFixed(3)}) 87%, rgba(${rr},${a1.toFixed(3)}) 100%),
+        linear-gradient(90deg, rgba(${lr},${ae.toFixed(3)}) 0%, rgba(${lr},${a2.toFixed(3)}) ${L2}%, rgba(${lr},0) ${L1}%, rgba(${rr},0) ${R1}%, rgba(${rr},${a2.toFixed(3)}) ${R2}%, rgba(${rr},${ae.toFixed(3)}) 100%),
         var(--white);`;
     }
     return `background:
-      linear-gradient(90deg, rgba(${lr},${a1.toFixed(3)}) 0%, rgba(${lr},${a2.toFixed(3)}) 10%, rgba(${lr},0) 22%, rgba(${rr},0) 78%, rgba(${rr},${a2.toFixed(3)}) 90%, rgba(${rr},${a1.toFixed(3)}) 100%),
+      linear-gradient(90deg, rgba(${lr},${ae.toFixed(3)}) 0%, rgba(${lr},${a2.toFixed(3)}) ${L2}%, rgba(${lr},0) ${L1}%, rgba(${rr},0) ${R1}%, rgba(${rr},${a2.toFixed(3)}) ${R2}%, rgba(${rr},${ae.toFixed(3)}) 100%),
       var(--white);`;
   }catch(e){
     return '';
@@ -200,8 +205,11 @@ function indRecordsHTML(){
     const p2race=players.find(x=>x.name===s.p2)?.race||'';
     const p1col=p1univ?gc(p1univ):'#378ADD';
     const p2col=p2univ?gc(p2univ):'#1D9E75';
-    const p1photoLg=getPlayerPhotoHTML(s.p1,'38px');
-    const p2photoLg=getPlayerPhotoHTML(s.p2,'38px');
+    const _rcAvaSize=(()=>{try{const n=parseInt(localStorage.getItem('su_rec_avatar_size')||'38',10);return (n>=20&&n<=80)?n+'px':'38px';}catch(e){return '38px';}})();
+    window.__detailCtx='recCard';
+    const p1photoLg=getPlayerPhotoHTML(s.p1,_rcAvaSize);
+    const p2photoLg=getPlayerPhotoHTML(s.p2,_rcAvaSize);
+    try{delete window.__detailCtx;}catch(e){}
     const _indWrapFx = _safeHeadToHeadSideFx(p1col, p2col);
     h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_indWrapFx||'background:var(--white);'}">
       <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px 14px;gap:8px;cursor:pointer" onclick="openIndSessionPopup('${_indSessKey}')">${bulkCbInd}
@@ -383,8 +391,11 @@ function gjRecordsHTML(proOnly){
     const gj_typeLabel=proOnly?'프로리그 끝장전':'끝장전';
     const gj_typeBg=proOnly?'#E1F5EE':'#FAECE7';
     const gj_typeColor=proOnly?'#085041':'#993C1D';
-    const gj_p1photoLg=getPlayerPhotoHTML(s.p1,'38px');
-    const gj_p2photoLg=getPlayerPhotoHTML(s.p2,'38px');
+    const _rcAvaSizeGj=(()=>{try{const n=parseInt(localStorage.getItem('su_rec_avatar_size')||'38',10);return (n>=20&&n<=80)?n+'px':'38px';}catch(e){return '38px';}})();
+    window.__detailCtx='recCard';
+    const gj_p1photoLg=getPlayerPhotoHTML(s.p1,_rcAvaSizeGj);
+    const gj_p2photoLg=getPlayerPhotoHTML(s.p2,_rcAvaSizeGj);
+    try{delete window.__detailCtx;}catch(e){}
     const _gjWrapFx = _safeHeadToHeadSideFx(gj_p1univ?gc(gj_p1univ):'#378ADD', gj_p2univ?gc(gj_p2univ):'#1D9E75');
     h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_gjWrapFx||'background:var(--white);'}">
       <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px 14px;gap:8px;cursor:pointer" onclick="openGJSessionPopup('${_sessKey}')">${bulkCbGj}

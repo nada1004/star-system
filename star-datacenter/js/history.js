@@ -528,12 +528,14 @@ function rHistUnivStat(){
   if(typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('hist-univ');
   }
-  h+=`<div style="margin-bottom:16px;" class="no-export"><select onchange="histUniv=this.value;openDetails={};render()" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--fg);font-size:14px;cursor:pointer;">`;
+  h+=`<div style="margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;" class="no-export">
+    <span style="font-size:13px;font-weight:900;color:var(--text2);white-space:nowrap">🏛️ 대학 선택</span>
+    <select onchange="histUniv=this.value;openDetails={};render()" style="flex:1;min-width:140px;max-width:260px;padding:8px 32px 8px 12px;border-radius:12px;border:1.5px solid var(--border2);background:var(--card);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;transition:border-color .15s,box-shadow .15s;" onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(37,99,235,0.12)'" onblur="this.style.borderColor='';this.style.boxShadow=''">`;
   allU.forEach(u=>{
     h+=`<option value="${u.name}"${histUniv===u.name?' selected':''}>${u.name}</option>`;
   });
   h+=`</select></div>`;
-  if(!histUniv) return h+`<div style="padding:40px;text-align:center;color:var(--gray-l)">대학을 선택하세요.</div>`;
+  if(!histUniv) return h+`<div style="padding:60px 20px;text-align:center;"><div style="font-size:40px;margin-bottom:12px">🏛️</div><div style="font-size:15px;font-weight:800;color:var(--text2);margin-bottom:6px">대학을 선택하세요</div><div style="font-size:13px;color:var(--gray-l)">위 드롭다운에서 조회할 대학을 골라주세요.</div></div>`;
   const col=gc(histUniv);
   const myMini=miniM.filter(m=>(m.a===histUniv||m.b===histUniv)&&(!passDateFilter||passDateFilter(m.d||'')));
   const myUnivM=univM.filter(m=>(m.a===histUniv||m.b===histUniv)&&(!passDateFilter||passDateFilter(m.d||'')));
@@ -587,33 +589,55 @@ function rHistUnivStat(){
   myComp.forEach(m=>{const a=m.a||m.u||'';addOpp(a,m.b,m.sa>m.sb);addOpp(m.b,a,m.sb>m.sa);});
   myTourney.forEach(m=>{addOpp(m.a,m.b,m.sa>m.sb);addOpp(m.b,m.a,m.sb>m.sa);});
 
-  h+=`<div style="background:${col}0d;border:2px solid ${col}44;border-radius:12px;padding:16px 20px;margin-bottom:20px;">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <span class="ubadge clickable-univ" style="background:${col};font-size:14px;padding:5px 16px" onclick="openUnivModal('${histUniv}')">${histUniv}</span>
-      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px;color:${col}">대전 통합 성적</span>
+  // 총합 계산
+  const totalW=sm.w+su.w+sc.w+st.w+ckW;
+  const totalL=sm.l+su.l+sc.l+st.l+ckL;
+  const totalD=sm.d+su.d+sc.d+st.d;
+  const totalAll=totalW+totalL+totalD;
+  const totalWR=totalAll?Math.round(totalW/totalAll*100):0;
+
+  h+=`<div style="background:linear-gradient(135deg,${col}18 0%,${col}08 100%);border:2px solid ${col}55;border-radius:16px;padding:20px 22px;margin-bottom:22px;position:relative;overflow:hidden;">
+    <div style="position:absolute;right:-18px;top:-18px;width:90px;height:90px;border-radius:50%;background:${col}12;pointer-events:none"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+      <span class="ubadge clickable-univ" style="background:${col};font-size:15px;padding:6px 18px;border-radius:999px;box-shadow:0 2px 8px ${col}55;font-weight:900;letter-spacing:.3px" onclick="openUnivModal('${histUniv}')">${histUniv}</span>
+      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:17px;color:${col};letter-spacing:-.3px">대전 통합 성적</span>
+      <span style="margin-left:auto;background:${col};color:#fff;border-radius:999px;padding:4px 14px;font-size:13px;font-weight:800;box-shadow:0 1px 6px ${col}55">${totalAll}경기 · ${totalWR}%</span>
     </div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;">
       ${statCard('⚡ 미니대전',sm.w,sm.l,sm.d,col)}
       ${statCard('🏟️ 대학대전',su.w,su.l,su.d,col)}
       ${statCard('🎖️ 대회',sc.w,sc.l,sc.d,col)}
       ${st.total>0?statCard('🏆 조별대회',st.w,st.l,st.d,col):''}
-      ${statCard('🤝 대학CK (게임)',ckW,ckL,0,col)}
+      ${statCard('🤝 대학CK',ckW,ckL,0,col)}
     </div>
   </div>`;
 
   // 상대 대학별 전적표
   const oppList=Object.entries(oppStats).filter(([,s])=>s.w+s.l>0).sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l));
   if(oppList.length){
-    h+=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #ede9fe">🆚 상대 대학 대전 전적</div>`;
-    h+=`<table style="margin-bottom:20px"><thead><tr><th>상대 대학</th><th>승</th><th>패</th><th>승률</th></tr></thead><tbody>`;
+    h+=`<div class="hist-univ-opp-header" style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:linear-gradient(135deg,${col}10,${col}05);border-radius:14px;border:1.5px solid ${col}22;">
+      <span style="font-size:20px;line-height:1">🆚</span>
+      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:${col};letter-spacing:-.2px">상대 대학 대전 전적</span>
+      <span style="margin-left:auto;background:${col}22;color:${col};border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800">${oppList.length}개 대학</span>
+    </div>`;
+    h+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-bottom:20px;">`;
     oppList.forEach(([opp,s])=>{
       const ot=s.w+s.l;const ow=ot?Math.round(s.w/ot*100):0;const oc=gc(opp);
-      h+=`<tr><td><span class="ubadge clickable-univ" style="background:${oc}" onclick="openUnivModal('${opp}')">${opp}</span></td>
-        <td class="wt" style="font-weight:800;font-size:14px">${s.w}</td>
-        <td class="lt" style="font-weight:800;font-size:14px">${s.l}</td>
-        <td style="font-weight:700;color:${ow>=50?'var(--green)':'var(--red)'}">${ot?ow+'%':'-'}</td></tr>`;
+      const barW=Math.round(s.w/ot*100);
+      h+=`<div style="background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:box-shadow .15s" onclick="openUnivModal('${opp}')">
+        <span class="ubadge" style="background:${oc};font-size:12px;padding:3px 10px;border-radius:999px;flex-shrink:0;min-width:60px;text-align:center">${opp}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:800"><span style="color:var(--green)">${s.w}승</span> <span style="color:var(--red)">${s.l}패</span></span>
+            <span style="font-size:12px;font-weight:800;color:${ow>=50?'var(--green)':'var(--red)'}">${ow}%</span>
+          </div>
+          <div style="height:5px;background:var(--border);border-radius:99px;overflow:hidden">
+            <div style="height:100%;width:${barW}%;background:${ow>=50?'var(--green)':'var(--red)'};border-radius:99px;transition:width .3s"></div>
+          </div>
+        </div>
+      </div>`;
     });
-    h+=`</tbody></table>`;
+    h+=`</div>`;
   }
 
   const totalMatches=myMini.length+myUnivM.length+myCK.length+myComp.length+myTourney.length;
@@ -623,10 +647,20 @@ function rHistUnivStat(){
 
 function statCard(label,w,l,d,col){
   const tot=w+l+d;const wr=tot?Math.round(w/tot*100):0;
-  return `<div style="background:var(--white);border:1.5px solid ${col}33;border-radius:12px;padding:12px 14px;min-width:110px;text-align:center;flex:1;border-top:3px solid ${col}">
-    <div style="font-size:10px;font-weight:700;color:${col};margin-bottom:7px;letter-spacing:.3px">${label}</div>
-    <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;margin-bottom:4px"><span class="wt">${w}승</span> <span class="lt">${l}패</span>${d?` <span style="color:var(--gray-l);font-size:14px">${d}무</span>`:''}</div>
-    <div style="font-size:12px;font-weight:800;color:${wr>=50?'#16a34a':'#dc2626'}">${tot?wr+'%':'-'}</div>
+  const arc=wr/100;
+  const r=20;const circ=2*Math.PI*r;const dash=circ*arc;const gap=circ-dash;
+  return `<div style="background:var(--card);border:1.5px solid ${col}33;border-radius:14px;padding:14px 12px;text-align:center;position:relative;overflow:hidden;border-top:3px solid ${col}">
+    <div style="position:absolute;inset:0;background:${col}06;pointer-events:none"></div>
+    <div style="font-size:11px;font-weight:800;color:${col};margin-bottom:8px;letter-spacing:.4px;white-space:nowrap">${label}</div>
+    ${tot>0?`<div style="position:relative;display:inline-block;margin-bottom:6px">
+      <svg width="52" height="52" viewBox="0 0 52 52" style="transform:rotate(-90deg)">
+        <circle cx="26" cy="26" r="${r}" fill="none" stroke="${col}20" stroke-width="5"/>
+        <circle cx="26" cy="26" r="${r}" fill="none" stroke="${col}" stroke-width="5" stroke-dasharray="${dash.toFixed(1)} ${gap.toFixed(1)}" stroke-linecap="round"/>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:${col}">${wr}%</div>
+    </div>`:'<div style="height:52px;display:flex;align-items:center;justify-content:center;color:var(--gray-l);font-size:12px">-</div>'}
+    <div style="font-family:\'Noto Sans KR\',sans-serif;font-weight:900;font-size:13px"><span style="color:var(--green)">${w}승</span> <span style="color:var(--red)">${l}패</span>${d?` <span style="color:var(--gray-l);font-size:11px">${d}무</span>`:''}</div>
+    <div style="font-size:10px;color:var(--gray-l);margin-top:3px">${tot}경기</div>
   </div>`;
 }
 
@@ -647,14 +681,16 @@ function _recFxHexToRgbStr(hex){
   return '100,116,139';
 }
 function _getRecSideFxCfg(){
-  let on = true, mode = 'soft', intensity = 68;
+  let on = true, mode = 'soft', intensity = 68, length = 25, tail = 28;
   try{ on = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0'; }catch(e){}
   try{
     const raw = String(localStorage.getItem('su_rec_side_fx_mode') || 'soft').trim();
     if(['soft','glow','panel','line'].includes(raw)) mode = raw;
   }catch(e){}
   try{ intensity = Math.max(20, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68)); }catch(e){}
-  return { on, mode, intensity };
+  try{ length = Math.max(10, Math.min(60, parseInt(localStorage.getItem('su_rec_side_fx_length') || '25', 10) || 25)); }catch(e){}
+  try{ tail = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_tail') || '28', 10) || 28)); }catch(e){}
+  return { on, mode, intensity, length, tail };
 }
 function _canUseRecSideFx(mode){
   return ['ind','gj','progj','mini','civil','univm','ck','pro','tt','comp','tourney','procomp','procompgj','procomptn','procompteam'].includes(String(mode||''));
@@ -667,9 +703,16 @@ function _recSideFxClass(mode){
 function _recSideFxStyle(mode, leftHex, rightHex){
   const cfg = _getRecSideFxCfg();
   if(!cfg.on || !_canUseRecSideFx(mode) || !leftHex || !rightHex) return '';
-  const a1 = Math.max(0.08, Math.min(0.36, (cfg.intensity / 100) * 0.30));
-  const a2 = Math.max(0.04, Math.min(0.18, a1 * 0.48));
-  return `--rec-side-left-rgb:${_recFxHexToRgbStr(leftHex)};--rec-side-right-rgb:${_recFxHexToRgbStr(rightHex)};--rec-side-a1:${a1.toFixed(3)};--rec-side-a2:${a2.toFixed(3)};`;
+  // 효과 길이(10~60)에 따라 색 진하기도 비례하여 증가 (길이 0.4 + 강도 0.6 가중 합산)
+  // length=10 → lengthFactor≈0.0, length=60 → lengthFactor≈1.0
+  const lengthFactor = (cfg.length - 10) / 50;
+  const intensityFactor = cfg.intensity / 100;
+  // 두 요소를 60:40으로 합산 (강도가 주, 길이가 보조)
+  const combinedFactor = intensityFactor * 0.6 + lengthFactor * 0.4;
+  const a1 = Math.max(0.06, Math.min(0.42, combinedFactor * 0.36));
+  const a2 = Math.max(0.03, Math.min(0.20, a1 * 0.48));
+  const aEdge = Math.max(0.10, Math.min(0.70, a1 + (cfg.tail/100)*0.34));
+  return `--rec-side-left-rgb:${_recFxHexToRgbStr(leftHex)};--rec-side-right-rgb:${_recFxHexToRgbStr(rightHex)};--rec-side-a1:${a1.toFixed(3)};--rec-side-a2:${a2.toFixed(3)};--rec-side-ae:${aEdge.toFixed(3)};`;
 }
 
 function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){

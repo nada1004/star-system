@@ -34,36 +34,74 @@ function buildUnivRecentMatchesHTML(opts){
     isTablet=false
   } = opts || {};
   if(!myMatches.length) return '';
-  const urMeta = (typeof suGetRecentChipMetrics==='function')
-    ? suGetRecentChipMetrics('univRecent', window.innerWidth)
-    : { deviceKey:(window.innerWidth<=768?'mb':(window.innerWidth<=1024?'tb':'pc')), scale:1, base:{date:12, chipFs:10, chipPx:7, chipH:18, chipR:5} };
-  const urDevKey = urMeta.deviceKey;
-  const urScale = urMeta.scale;
-  const urBase = urMeta.base;
-  const urChipStyle = (bg, color)=>`background:${bg};color:${color};padding:0 ${(urBase.chipPx*urScale).toFixed(2)}px;border-radius:${(urBase.chipR*urScale).toFixed(2)}px;font-size:${(urBase.chipFs*urScale).toFixed(2)}px;font-weight:800;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;line-height:${(urBase.chipH*urScale).toFixed(2)}px;height:${(urBase.chipH*urScale).toFixed(2)}px;letter-spacing:0;min-width:${(urBase.chipH*2.4*urScale).toFixed(2)}px`;
-  let h=`<div style="font-weight:900;font-size:12px;color:#d97706;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-    <span style="display:inline-block;width:3px;height:14px;background:#d97706;border-radius:2px"></span>최근 대전 기록
-  </div>`;
-  h+=`<div style="border:1px solid rgba(148,163,184,.18);border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#ffffff,#f8fafc);box-shadow:0 10px 22px rgba(15,23,42,.05)">`;
-  h+=`<table style="margin:0;border:none;border-radius:0;table-layout:fixed;width:100%"><thead><tr><th style="width:${urDevKey==='mb'?'78px':(urDevKey==='tb'?'92px':'104px')};text-align:center">날짜</th><th style="width:${urDevKey==='mb'?'62px':(urDevKey==='tb'?'78px':'92px')};text-align:center">종류</th><th style="text-align:center">상대</th><th style="width:${urDevKey==='mb'?'64px':(urDevKey==='tb'?'72px':'84px')};text-align:center">결과</th></tr></thead><tbody>`;
-  myMatches.slice(0,10).forEach(m=>{
-    const isA=m.a===univName;
-    const opp=isA?m.b:m.a;
-    const myS=isA?m.sa:m.sb;
-    const oppS=isA?m.sb:m.sa;
-    const win=myS>oppS;
-    const oc=gc(opp);
-    const modeBg=m.mode==='미니대전'?'#2563eb':'#7c3aed';
-    h+=`<tr>
-      <td style="color:var(--text3);font-size:${urBase.date}px;font-weight:700;text-align:center;vertical-align:middle">${m.d||''}</td>
-      <td style="text-align:center;vertical-align:middle"><span style="${urChipStyle(modeBg,'#fff')}">${m.mode}</span></td>
-      <td style="text-align:center;vertical-align:middle"><span class="ubadge clickable-univ" data-ur-action="open-univ" data-ur-univ="${opp.replace(/"/g,'&quot;')}" style="${urChipStyle(oc,'#fff')};min-width:${(urBase.chipH*2.9*urScale).toFixed(2)}px;box-shadow:none;border:0">${opp}</span></td>
-      <td style="text-align:center;vertical-align:middle">${win?`<span style="${urChipStyle('#dcfce7','#16a34a')};border:1px solid #bbf7d0">${myS}:${oppS} 승</span>`:`<span style="${urChipStyle('#fee2e2','#dc2626')};border:1px solid #fecaca">${myS}:${oppS} 패</span>`}</td>
-    </tr>`;
+  const _col = gc(univName) || '#2563eb';
+  const _hexToRgb = h => { const m=String(h||'').match(/^#([0-9a-f]{6})$/i); if(!m)return '59,130,246'; const n=parseInt(m[1],16); return `${(n>>16)&255},${(n>>8)&255},${n&255}`; };
+  const colRgb = _hexToRgb(_col);
+  const days=['일','월','화','수','목','금','토'];
+  const fmtD = (d) => { if(!d) return ''; try{ const dt=new Date(d+'T00:00:00'); return `${dt.getMonth()+1}/${dt.getDate()}(${days[dt.getDay()]})`; }catch(e){ return d; } };
+  const modeColor = (mode) => {
+    if(!mode) return '#64748b';
+    if(mode.includes('미니')) return '#2563eb';
+    if(mode.includes('대학')) return '#7c3aed';
+    if(mode.includes('프로')) return '#0891b2';
+    return '#64748b';
+  };
+  const recent = myMatches.slice(0,10);
+  let h = `<div style="margin-bottom:18px">
+    <div style="font-weight:900;font-size:13px;color:${_col};margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <span style="display:inline-block;width:3px;height:16px;background:${_col};border-radius:2px"></span>
+      최근 대전 기록
+      <span style="font-size:11px;font-weight:600;color:var(--gray-l,#94a3b8)">${recent.length}경기</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">`;
+  recent.forEach((m, idx) => {
+    const isA = m.a === univName;
+    const opp = isA ? m.b : m.a;
+    const myS = isA ? m.sa : m.sb;
+    const oppS = isA ? m.sb : m.sa;
+    const win = myS > oppS;
+    const draw = myS === oppS;
+    const oc = gc(opp) || '#888';
+    const ocRgb = _hexToRgb(oc);
+    const mc = modeColor(m.mode||'');
+    h += `<div style="background:var(--white,#fff);border:1px solid var(--border,#e2e8f0);border-radius:14px;padding:${isMobile?'10px 12px':'12px 16px'};display:flex;align-items:center;gap:${isMobile?'8px':'12px'};box-shadow:0 2px 8px rgba(${colRgb},.06);transition:box-shadow .2s;position:relative;overflow:hidden">
+      <!-- 왼쪽 결과 색상 바 -->
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${win?'#16a34a':draw?'#d97706':'#dc2626'};border-radius:2px 0 0 2px"></div>
+      <!-- 날짜 -->
+      <div style="padding-left:4px;min-width:${isMobile?'52px':'62px'};text-align:center;flex-shrink:0">
+        <div style="font-size:${isMobile?'10px':'11px'};font-weight:800;color:var(--text3,#475569)">${fmtD(m.d)}</div>
+      </div>
+      <!-- 종류 배지 -->
+      <div style="flex-shrink:0">
+        <span style="display:inline-block;background:${mc};color:#fff;font-size:${isMobile?'9px':'10px'};font-weight:800;padding:3px ${isMobile?'7px':'9px'};border-radius:8px;white-space:nowrap;letter-spacing:.2px">${m.mode||'대전'}</span>
+      </div>
+      <!-- 우리팀 -->
+      <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0;justify-content:flex-end">
+        <span style="font-weight:900;font-size:${isMobile?'12px':'13px'};color:${_col};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${univName}</span>
+        ${gUI(univName,'14px')}
+      </div>
+      <!-- 스코어 중앙 -->
+      <div style="flex-shrink:0;text-align:center;min-width:${isMobile?'54px':'64px'}">
+        <div style="font-size:${isMobile?'16px':'18px'};font-weight:900;line-height:1;letter-spacing:1px">
+          <span style="color:${win?'#16a34a':'var(--text,#1e293b)'}">${myS}</span>
+          <span style="color:var(--gray-l,#94a3b8);font-size:12px;margin:0 2px">:</span>
+          <span style="color:${!win&&!draw?'#16a34a':'var(--text,#1e293b)'}">${oppS}</span>
+        </div>
+        <div style="margin-top:3px">
+          <span style="font-size:9px;font-weight:900;padding:2px 7px;border-radius:6px;${win?'background:#dcfce7;color:#16a34a':draw?'background:#fef9c3;color:#d97706':'background:#fee2e2;color:#dc2626'}">${win?'승':draw?'무':'패'}</span>
+        </div>
+      </div>
+      <!-- 상대팀 -->
+      <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0;justify-content:flex-start">
+        ${gUI(opp,'14px')}
+        <span style="font-weight:900;font-size:${isMobile?'12px':'13px'};color:${oc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" data-ur-action="open-univ" data-ur-univ="${opp.replace(/"/g,'&quot;')}">${opp}</span>
+      </div>
+    </div>`;
   });
-  h+=`</tbody></table></div>`;
+  h += `</div></div>`;
   return h;
 }
+
 
 function buildUnivAceCardsHTML(opts){
   const {

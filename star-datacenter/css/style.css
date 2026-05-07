@@ -1681,25 +1681,31 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   pointer-events:none;
   z-index:0;
 }
+/* grp-sidefx 사용 시 오른쪽 바는 box-shadow로 대체 (::after가 그라디언트로 재사용되므로) */
+.grp-match-card.grp-sidefx{
+  box-shadow:
+    0 10px 24px rgba(15,23,42,.06),
+    inset -6px 0 0 rgba(var(--rec-side-right-rgb,168,85,247),0.85);
+}
 .rec-summary.rec-sidefx.rec-sidefx--soft::after,
 .grp-match-card.grp-sidefx.grp-sidefx--soft::after{
   background:
     linear-gradient(90deg,
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.20)) 0%,
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) 10%,
-      rgba(var(--rec-side-left-rgb,59,130,246), 0) 22%,
-      rgba(var(--rec-side-right-rgb,168,85,247), 0) 78%,
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) 90%,
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.20)) 100%);
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.20))) 0%,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) var(--rec-fx-len2,10%),
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) var(--rec-fx-len2-r,90%),
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 100%);
 }
 .rec-summary.rec-sidefx.rec-sidefx--glow::after,
 .grp-match-card.grp-sidefx.grp-sidefx--glow::after{
   background:
     linear-gradient(90deg,
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) 0%,
-      rgba(var(--rec-side-left-rgb,59,130,246), 0) 26%,
-      rgba(var(--rec-side-right-rgb,168,85,247), 0) 74%,
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) 100%);
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a2,.09))) 0%,
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a2,.09))) 100%);
   box-shadow:
     inset 24px 0 30px rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.20)),
     inset -24px 0 30px rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.20));
@@ -1708,12 +1714,12 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 .grp-match-card.grp-sidefx.grp-sidefx--panel::after{
   background:
     linear-gradient(90deg,
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.20)) 0%,
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) 14%,
-      rgba(var(--rec-side-left-rgb,59,130,246), 0) 28%,
-      rgba(var(--rec-side-right-rgb,168,85,247), 0) 72%,
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) 86%,
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.20)) 100%);
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.20))) 0%,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) var(--rec-fx-len2,10%),
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) var(--rec-fx-len2-r,90%),
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 100%);
 }
 .rec-summary.rec-sidefx.rec-sidefx--line::after,
 .grp-match-card.grp-sidefx.grp-sidefx--line::after{
@@ -1769,13 +1775,37 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   border-radius:16px;
   box-shadow:0 10px 24px rgba(15,23,42,.06);
 }
+/* 왼쪽 A팀 대학 색상 세로 바 */
 .grp-match-card::before{
   content:'';
   position:absolute;
   left:0; top:0; bottom:0;
-  width:5px;
-  background:linear-gradient(180deg,#7c3aed,#3b82f6);
-  opacity:.9;
+  width:6px;
+  background:linear-gradient(180deg, rgba(var(--rec-side-left-rgb,59,130,246),1), rgba(var(--rec-side-left-rgb,59,130,246),.7));
+  opacity:1;
+  z-index:2;
+  border-radius:0 2px 2px 0;
+  transition:background .3s;
+}
+/* 오른쪽 B팀 대학 색상 세로 바 */
+.grp-match-card::after{
+  content:'';
+  position:absolute;
+  right:0; top:0; bottom:0;
+  width:6px;
+  background:linear-gradient(180deg, rgba(var(--rec-side-right-rgb,168,85,247),1), rgba(var(--rec-side-right-rgb,168,85,247),.7));
+  opacity:1;
+  z-index:2;
+  border-radius:2px 0 0 2px;
+  pointer-events:none;
+  transition:background .3s;
+}
+/* sidefx가 없을 때도 기본 팀 색상 바 보이도록 */
+.grp-match-card:not(.grp-sidefx)::before{
+  background:linear-gradient(180deg,rgba(var(--rec-side-left-rgb,59,130,246),0.9),rgba(var(--rec-side-left-rgb,59,130,246),0.5));
+}
+.grp-match-card:not(.grp-sidefx)::after{
+  background:linear-gradient(180deg,rgba(var(--rec-side-right-rgb,168,85,247),0.9),rgba(var(--rec-side-right-rgb,168,85,247),0.5));
 }
 .grp-match-card .grp-match-vs{
   font-size:14px;
@@ -1852,11 +1882,9 @@ body.rc-theme-on:not(.rc-accent-header):not(.rc-accent-border):not(.rc-accent-fu
   min-width:108px;
 }
 
-/* (설정) 기록 카드 스코어/배치 (PC 전용) */
-@media (min-width: 769px){
-  .rec-sum-vs{justify-content: var(--rc-vs-justify, center);}
-  .rec-sum-score{transform: scale(var(--rc-score-scale, 1)); transform-origin: center;}
-}
+/* (설정) 기록 카드 스코어/배치 */
+.rec-sum-vs{justify-content: var(--rc-vs-justify, center);}
+.rec-sum-score{transform: scale(var(--rc-score-scale, 1)); transform-origin: center;}
 .rec-detail-area{
   border-top:none;
   padding:0;
@@ -2748,6 +2776,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   }
   .rec-sum-vs{
     gap:6px !important;
+    justify-content: var(--rc-vs-justify, center) !important;
   }
   .rec-sum-vs .ubadge{
     min-height:32px;
@@ -3593,7 +3622,7 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .rec-header { padding: 8px 10px; gap: 5px; flex-wrap: wrap; }
   .rec-sum-header { flex-wrap: wrap !important; gap: 4px !important; padding: 8px 10px !important; }
   .rec-sum-score { font-size: 18px !important; padding: 4px 12px !important; }
-  .rec-sum-vs { flex-wrap: wrap !important; gap: 5px !important; }
+  .rec-sum-vs { flex-wrap: wrap !important; gap: 5px !important; justify-content: var(--rc-vs-justify, center) !important; }
   .rec-summary { min-height: 44px; border-radius: 10px; }
   .sort-bar { padding: 6px 10px !important; }
   .rec-detail-area { padding: 6px 8px !important; }
@@ -6074,3 +6103,200 @@ body.dark .b2-players-img-btn:disabled {
 .modal--bulkedit{ z-index: var(--z-modal-2); }
 .modal--em .mbtns .btn,
 .modal--bulkedit .mbtns .btn{ flex:1; }
+
+/* ══════════════════════════════════════════════════════════
+   🎨 대전기록탭 · 통계탭 · 대학별 기록 디자인 개선
+   v2026-05-07
+══════════════════════════════════════════════════════════ */
+
+/* ── 대전기록 상단 그룹 탭바 ── */
+.hist-topbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 2px 6px;
+  margin-bottom: 4px;
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  background: var(--bg);
+}
+.hist-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-width: 0;
+}
+.hist-topbar-left::-webkit-scrollbar { display: none; }
+
+/* 그룹 pill 버튼 강화 */
+.hist-topbar-left .pill {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1.5px solid var(--border2);
+  background: var(--white);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
+}
+.hist-topbar-left .pill.on {
+  background: linear-gradient(135deg, #0f172a, #2563eb 60%, #3b82f6);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
+}
+.hist-topbar-left .pill:not(.on):hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #2563eb;
+}
+
+/* ── 대전기록 하위 탭 필터 영역 ── */
+.hist-subtab-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 6px 0 2px;
+  margin-bottom: 6px;
+}
+.hist-subtab-bar::-webkit-scrollbar { display: none; }
+
+/* ── 통계탭 그룹/뷰 pill 강화 ── */
+.fbar .pill {
+  position: relative;
+  overflow: hidden;
+}
+.fbar .pill.on::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.12);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* ── 통계탭 섹션 헤더 강화 ── */
+.ssec h3, .stats-sec-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+  letter-spacing: -0.3px;
+}
+
+/* ── 통계탭 카드 일관성 ── */
+.stats-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+.stats-card:hover {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+/* ── 대학별 기록 - statCard 개선 ── */
+/* statCard div들 (history.js에서 인라인 스타일로 생성됨) */
+/* 통계 박스 상단 섹션 강화 */
+#rcont [style*="border-radius:16px"][style*="gradient"] {
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.07) !important;
+}
+
+/* 대학별 기록 - 상대 대학 카드 hover */
+#rcont [onclick*="openUnivModal"]:hover {
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10) !important;
+  transform: translateY(-1px);
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+
+/* ── 대학별 기록 select 드롭다운 개선 ── */
+#rcont select[onchange*="histUniv"] {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px !important;
+  font-weight: 700 !important;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+#rcont select[onchange*="histUniv"]:focus {
+  outline: none;
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* ── 통계탭 - 핵심/심화 뷰 토글 강화 ── */
+.fbar .pill[onclick*="_statsViewMode='core'"].on,
+.fbar .pill[onclick*="_statsViewMode='advanced'"].on {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb) !important;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.32) !important;
+}
+
+/* ── 대전기록/통계 필터 박스 ── */
+.hist-filter-box, [style*="background:#eff6ff"],
+[style*="background:var(--surface)"][style*="border:1px solid"][style*="border-radius:8px"] {
+  border-radius: 12px !important;
+}
+
+/* ── 모바일 반응성 ── */
+@media (max-width: 768px) {
+  .hist-topbar {
+    padding: 8px 0 4px;
+    gap: 4px;
+  }
+  .hist-topbar-left .pill {
+    padding: 5px 11px;
+    font-size: 11px;
+  }
+}
+
+/* ── 대학 ubadge 일관성 강화 ── */
+.ubadge.clickable-univ {
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.ubadge.clickable-univ:hover {
+  opacity: 0.88;
+  transform: scale(1.04);
+}
+
+/* ── 대학별 기록 승률 바 애니메이션 ── */
+@keyframes barFill {
+  from { width: 0 !important; }
+  to   { width: var(--bar-w); }
+}
+
+/* ── statCard 섹션 구분선 ── */
+.hist-univ-opp-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(0,0,0,0.06);
+}

@@ -411,6 +411,8 @@ function proCompLeague(tn) {
     byDate[date].forEach(m => {
       const pa = players.find(p=>p.name===m.a);
       const pb = players.find(p=>p.name===m.b);
+      const ca = (typeof gc==='function' ? gc(m.a||'')||'#3b82f6' : '#3b82f6');
+      const cb = (typeof gc==='function' ? gc(m.b||'')||'#ef4444' : '#ef4444');
       const isDone = !!m.winner;
       const aWin = isDone && m.winner==='A';
       const bWin = isDone && m.winner==='B';
@@ -432,19 +434,23 @@ function proCompLeague(tn) {
           <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:center">${_rb(p)}${_tb(p)}</div>
         </div>`;
       };
-      const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68};
+      const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
       const _fxOn=!!_fxCfg.on;
       const _fxMode=['soft','glow','panel','line'].includes(_fxCfg.mode)?_fxCfg.mode:'soft';
       const _fxInt=Math.max(20, Math.min(100, parseInt(_fxCfg.intensity||68,10)||68));
-      const _fxA1=Math.max(0.08, Math.min(0.36, (_fxInt/100)*0.30)).toFixed(3);
-      const _fxA2=Math.max(0.04, Math.min(0.18, ((_fxInt/100)*0.30)*0.48)).toFixed(3);
+      const _fxLen=Math.max(10, Math.min(60, parseInt(_fxCfg.length||25,10)||25));
+      const _fxTail=Math.max(0, Math.min(100, parseInt(_fxCfg.tail||28,10)||28));
+      const _fxCombined=(_fxInt/100)*0.6 + ((_fxLen-10)/50)*0.4;
+      const _fxA1=Math.max(0.06, Math.min(0.42, _fxCombined*0.36)).toFixed(3);
+      const _fxA2=Math.max(0.03, Math.min(0.20, _fxCombined*0.36*0.48)).toFixed(3);
+      const _fxAe=Math.max(0.10, Math.min(0.70, parseFloat(_fxA1) + (_fxTail/100)*0.34)).toFixed(3);
       const _cardActions = [
         isDone ? (()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; return (!_adm||isLoggedIn) ? { t:'🎴 공유카드', d:'공유용 카드 생성', kind:'accent', on:()=>_openProCompLeagueShareCard(tn.id,m.grpIdx,m.matchNum-1) } : null;})() : null,
         isLoggedIn ? { t:'✏️ 결과 수정', d:'경기 결과와 세트 수정', kind:'normal', on:()=>proCompEditMatch(tn.id,m.grpIdx,m.matchNum-1) } : null,
         isLoggedIn ? { t:'🗑️ 결과 삭제', d:'이 경기 기록 삭제', kind:'danger', on:()=>proCompDelMatch(tn.id,m.grpIdx,m.matchNum-1) } : null
       ].filter(Boolean);
       const _cardMenu = _cardActions.length ? _compActionMenuHTML(_cardActions) : '';
-      h += `<div class="grp-match-card tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxOn?`--rec-side-left-rgb:${_tcHexToRgbStr(ca||'#3b82f6')};--rec-side-right-rgb:${_tcHexToRgbStr(cb||'#ef4444')};--rec-side-a1:${_fxA1};--rec-side-a2:${_fxA2};`:''}background:linear-gradient(135deg,var(--white) 0%,var(--blue-l) 100%);border:1.5px solid ${m.grpColor}22;border-left:4px solid ${m.grpColor};box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:8px">
+      h += `<div class="grp-match-card tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxOn?`--rec-side-left-rgb:${_tcHexToRgbStr(ca||'#3b82f6')};--rec-side-right-rgb:${_tcHexToRgbStr(cb||'#ef4444')};--rec-side-a1:${_fxA1};--rec-side-a2:${_fxA2};--rec-side-ae:${_fxAe};`:''}background:linear-gradient(135deg,var(--white) 0%,var(--blue-l) 100%);border:1.5px solid ${m.grpColor}22;border-left:4px solid ${m.grpColor};box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:8px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">${m.grpName?m.grpName:`GROUP ${m.grpLetter}`}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
@@ -573,14 +579,18 @@ function proCompTeamSection(tn) {
     const aWin = tm.sa > tm.sb, bWin = tm.sb > tm.sa;
     const games = tm.games||[];
     const colA='#2563eb', colB='#dc2626';
-    const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68};
+    const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
     const _fxOn=!!_fxCfg.on;
     const _fxMode=['soft','glow','panel','line'].includes(_fxCfg.mode)?_fxCfg.mode:'soft';
     const _fxInt=Math.max(20, Math.min(100, parseInt(_fxCfg.intensity||68,10)||68));
-    const _fxA1=Math.max(0.08, Math.min(0.36, (_fxInt/100)*0.30)).toFixed(3);
-    const _fxA2=Math.max(0.04, Math.min(0.18, ((_fxInt/100)*0.30)*0.48)).toFixed(3);
+    const _fxLen=Math.max(10, Math.min(60, parseInt(_fxCfg.length||25,10)||25));
+    const _fxTail=Math.max(0, Math.min(100, parseInt(_fxCfg.tail||28,10)||28));
+    const _fxCombined=(_fxInt/100)*0.6 + ((_fxLen-10)/50)*0.4;
+    const _fxA1=Math.max(0.06, Math.min(0.42, _fxCombined*0.36)).toFixed(3);
+    const _fxA2=Math.max(0.03, Math.min(0.20, _fxCombined*0.36*0.48)).toFixed(3);
+    const _fxAe=Math.max(0.10, Math.min(0.70, parseFloat(_fxA1) + (_fxTail/100)*0.34)).toFixed(3);
     const _fxCls = (_fxOn && typeof _recSideFxClass==='function') ? _recSideFxClass('procompteam') : '';
-    h += `<div class="rec-summary${_fxCls}" data-rec-mode="procompteam" style="border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;${_fxOn?`--rec-side-left-rgb:${_tcHexToRgbStr(colA)};--rec-side-right-rgb:${_tcHexToRgbStr(colB)};--rec-side-a1:${_fxA1};--rec-side-a2:${_fxA2};`:''}">
+    h += `<div class="rec-summary${_fxCls}" data-rec-mode="procompteam" style="border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;${_fxOn?`--rec-side-left-rgb:${_tcHexToRgbStr(colA)};--rec-side-right-rgb:${_tcHexToRgbStr(colB)};--rec-side-a1:${_fxA1};--rec-side-a2:${_fxA2};--rec-side-ae:${_fxAe};`:''}">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
         <span style="font-size:12px;font-weight:600;color:var(--text3);flex-shrink:0">${tm.d||'날짜 미정'}</span>
         <div style="display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap">
@@ -1510,13 +1520,19 @@ function proCompTourMatchInput(tn){
       </div>`;
     };
     const dLabel = (m.d||'') ? (m.d||'').slice(2).replace(/-/g,'/') : '미정';
-    const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68};
+    const ca = (typeof gc==='function' ? gc(m.a||'')||'#3b82f6' : '#3b82f6');
+    const cb = (typeof gc==='function' ? gc(m.b||'')||'#ef4444' : '#ef4444');
+    const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
     const _fxOn=!!_fxCfg.on;
     const _fxMode=['soft','glow','panel','line'].includes(_fxCfg.mode)?_fxCfg.mode:'soft';
     const _fxInt=Math.max(20, Math.min(100, parseInt(_fxCfg.intensity||68,10)||68));
-    const _fxA1=Math.max(0.08, Math.min(0.36, (_fxInt/100)*0.30)).toFixed(3);
-    const _fxA2=Math.max(0.04, Math.min(0.18, ((_fxInt/100)*0.30)*0.48)).toFixed(3);
-    return `<div class="grp-match-card tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxOn?`--rec-side-left-rgb:${_tcHexToRgbStr(ca||'#3b82f6')};--rec-side-right-rgb:${_tcHexToRgbStr(cb||'#ef4444')};--rec-side-a1:${_fxA1};--rec-side-a2:${_fxA2};`:''}background:linear-gradient(135deg,var(--white) 0%,#f5f3ff 100%);border:1.5px solid ${col}22;border-left:4px solid ${col};box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:8px">
+    const _fxLen=Math.max(10, Math.min(60, parseInt(_fxCfg.length||25,10)||25));
+    const _fxTail=Math.max(0, Math.min(100, parseInt(_fxCfg.tail||28,10)||28));
+    const _fxCombined=(_fxInt/100)*0.6 + ((_fxLen-10)/50)*0.4;
+    const _fxA1=Math.max(0.06, Math.min(0.42, _fxCombined*0.36)).toFixed(3);
+    const _fxA2=Math.max(0.03, Math.min(0.20, _fxCombined*0.36*0.48)).toFixed(3);
+    const _fxAe=Math.max(0.10, Math.min(0.70, parseFloat(_fxA1) + (_fxTail/100)*0.34)).toFixed(3);
+    return `<div class="grp-match-card tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxOn?`--rec-side-left-rgb:${_tcHexToRgbStr(ca||'#3b82f6')};--rec-side-right-rgb:${_tcHexToRgbStr(cb||'#ef4444')};--rec-side-a1:${_fxA1};--rec-side-a2:${_fxA2};--rec-side-ae:${_fxAe};`:''}background:linear-gradient(135deg,var(--white) 0%,#f5f3ff 100%);border:1.5px solid ${col}22;border-left:4px solid ${col};box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:8px">
       <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:70px">
         <span class="grp-badge" style="background:linear-gradient(135deg,${col},${col}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${col}55">${round}</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:600">${displayNo}경기</span>
@@ -5014,16 +5030,20 @@ function proCompGJSection(tn) {
     const p1w = (sess.games||[]).filter(g=>g.winner===sess.a).length;
     const p2w = (sess.games||[]).filter(g=>g.winner===sess.b).length;
     const winner = p1w>p2w?sess.a:p2w>p1w?sess.b:'';
-    const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68};
+    const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
     const _fxOn=!!_fxCfg.on;
     const _fxMode=['soft','glow','panel','line'].includes(_fxCfg.mode)?_fxCfg.mode:'soft';
     const _fxInt=Math.max(20, Math.min(100, parseInt(_fxCfg.intensity||68,10)||68));
-    const _fxA1=Math.max(0.08, Math.min(0.36, (_fxInt/100)*0.30)).toFixed(3);
-    const _fxA2=Math.max(0.04, Math.min(0.18, ((_fxInt/100)*0.30)*0.48)).toFixed(3);
+    const _fxLen=Math.max(10, Math.min(60, parseInt(_fxCfg.length||25,10)||25));
+    const _fxTail=Math.max(0, Math.min(100, parseInt(_fxCfg.tail||28,10)||28));
+    const _fxCombined=(_fxInt/100)*0.6 + ((_fxLen-10)/50)*0.4;
+    const _fxA1=Math.max(0.06, Math.min(0.42, _fxCombined*0.36)).toFixed(3);
+    const _fxA2=Math.max(0.03, Math.min(0.20, _fxCombined*0.36*0.48)).toFixed(3);
+    const _fxAe=Math.max(0.10, Math.min(0.70, parseFloat(_fxA1) + (_fxTail/100)*0.34)).toFixed(3);
     const _ca = gc(sess.a||'') || '#2563eb';
     const _cb = gc(sess.b||'') || '#dc2626';
     const _fxCls = (_fxOn && typeof _recSideFxClass==='function') ? _recSideFxClass('procompgj') : '';
-    h += `<div class="rec-summary${_fxCls}" data-rec-mode="procompgj" style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;${_fxOn?`--rec-side-left-rgb:${_tcHexToRgbStr(_ca)};--rec-side-right-rgb:${_tcHexToRgbStr(_cb)};--rec-side-a1:${_fxA1};--rec-side-a2:${_fxA2};`:''}">
+    h += `<div class="rec-summary${_fxCls}" data-rec-mode="procompgj" style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;${_fxOn?`--rec-side-left-rgb:${_tcHexToRgbStr(_ca)};--rec-side-right-rgb:${_tcHexToRgbStr(_cb)};--rec-side-a1:${_fxA1};--rec-side-a2:${_fxA2};--rec-side-ae:${_fxAe};`:''}">
       <div style="background:var(--bg2);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span style="font-size:12px;font-weight:600;color:var(--text3)">${sess.d||'날짜 미정'}</span>
         <span style="font-weight:700;color:var(--blue);cursor:pointer" onclick="openPlayerModal('${(sess.a||'').replace(/'/g,"\\'")}')">${sess.a||'?'}</span>

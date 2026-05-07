@@ -37,7 +37,7 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
   const base='display:inline-block;width:'+sz+';height:'+sz+';border-radius:var(--su_profile_radius,50%);box-shadow:var(--su_profile_fx, none);flex-shrink:0;vertical-align:middle;'+extraStyle;
   const safeName=(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const clickStyle='cursor:pointer;';
-  const clickAttr='onclick="openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
+  const clickAttr='onclick="event.stopPropagation();openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
   if(!p||!p.photo){
     const RMAP={T:{bg:'#dbeafe',col:'#1e40af'},Z:{bg:'#ede9fe',col:'#5b21b6'},P:{bg:'#fef3c7',col:'#92400e'}};
     const rm=RMAP[p?.race]||{bg:'#e2e8f0',col:'#64748b'};
@@ -52,6 +52,9 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
       const ctx = String(window.__detailCtx||'');
       if(ctx==='compModal' || ctx==='histModal'){
         fit = getMatchDetailAvatarSetting('fit');
+      } else if(ctx==='recCard'){
+        fit = (localStorage.getItem('su_rec_avatar_fit') || localStorage.getItem('su_avatar_fit') || 'contain').trim();
+        if(!['contain','cover'].includes(fit)) fit='contain';
       } else {
         fit = (localStorage.getItem('su_avatar_fit') || 'contain').trim();
       }

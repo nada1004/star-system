@@ -32,6 +32,21 @@ let _statsDateFrom='', _statsDateTo='', _statsMinGames=3, _statsLastN=0;
 let _statsRankTier = (function(){
   try{ return (localStorage.getItem('su_statsRankTier') || '4티어').trim() || '4티어'; }catch(e){ return '4티어'; }
 })();
+try{ if(!window._statsRankTier) window._statsRankTier = _statsRankTier; }catch(e){}
+function _statsNormGender(v){
+  const s=String(v||'').trim().toUpperCase();
+  if(s==='F' || s==='여' || s==='여자' || s==='W' || s==='FEMALE') return 'F';
+  if(s==='M' || s==='남' || s==='남자' || s==='MALE') return 'M';
+  return '';
+}
+function _statsAllHist(p){
+  return Array.isArray(p&&p.history) ? p.history.filter(Boolean) : [];
+}
+function _statsLatestActiveMonths(gender){
+  const g=_statsNormGender(gender);
+  const months=[...new Set((players||[]).filter(p=>!g || _statsNormGender(p.gender)===g).flatMap(p=>_statsAllHist(p).map(h=>String(h&&h.date||'').slice(0,7)).filter(v=>/^\d{4}-\d{2}$/.test(v))))].sort((a,b)=>b.localeCompare(a));
+  return months;
+}
 
 function rStats(C,T){
   T.textContent='📊 통계';
@@ -182,8 +197,12 @@ function rStats(C,T){
   </div>`;
   } // end if(_statsFilterOpen)
   // 캐시 가능한 순수 탭 (선택 상태 없음): 데이터 변경 시에만 재계산
-  const _CACHEABLE=['overview','records','killer','clutch','streakhist','period','mismatch','heatmap','tierwin','tiermatch','maprank','univmatrix','univmatrix2','seasonal','award'];
-  function _cached(sub, fn){ const c=_scGet(sub); return c||_scSet(sub,fn()); }
+  const _CACHEABLE=['overview','records','streakhist','period','mismatch','heatmap','univmatrix'];
+  function _cached(sub, fn){
+    if(!_CACHEABLE.includes(sub)) return fn();
+    const c=_scGet(sub);
+    return c || _scSet(sub, fn());
+  }
   if(window.statsSub==='overview')    h+=_cached('overview', statsOverviewHTML);
   else if(window.statsSub==='tierRank')h+=statsTierRankHTML();   // 티어 선택/상세 열림 상태 있음
   else if(window.statsSub==='starsystem'){
@@ -192,6 +211,8 @@ function rStats(C,T){
       h+=`<div class="ssec"><div style="color:#dc2626;font-weight:900;margin-bottom:6px">스타시스템 렌더 오류</div><div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;color:var(--gray-l)">${String(e)}</div></div>`;
       try{ console.error(e); }catch(_){}
     }
+  const sel=document.getElementById('growth-player-select');
+  if(sel) sel.value=_growthSel;
   }
   else if(window.statsSub==='elo')    h+=statsEloHTML();         // 선수 선택 상태 있음
   else if(window.statsSub==='growth') h+=statsGrowthHTML();      // 선수 선택 상태 있음
@@ -249,7 +270,8 @@ try{ window.renderShareCardByPlayer = renderShareCardByPlayer; }catch(e){}
 // 티어 랭킹 helper는 `stats-tier-rank-utils.js`로 분리
 
 function statsTierRankHTML(){
-  const tier = _statsRankTier;
+  const tier = (window._statsRankTier || _statsRankTier || '4티어');
+  _statsRankTier = tier;
   const tierBtns = (TIERS||[]).filter(t=>t && t!=='미정');
 
   // 선수 리스트(티어)
@@ -865,13 +887,27 @@ function statsOverviewHTML(){
    2. ELO 랭킹 변동 그래프
 ══════════════════════════════════════ */
 let _eloSelPlayer='';
+function applyEloSearch(q, forceExact){
+  const raw=String(q||'').trim();
+  if(!raw) return false;
+  const cands=(players||[]).filter(p=>_statsAllHist(p).length>0);
+  const exact=cands.find(p=>String(p.name||'').trim()===raw);
+  const partial=cands.filter(p=>String(p.name||'').toLowerCase().includes(raw.toLowerCase()));
+  const hit=exact || ((!forceExact && partial.length) ? partial[0] : null);
+  if(!hit) return false;
+  _eloSelPlayer=hit.name;
+  const inp=document.getElementById('elo-search-input'); if(inp) inp.value=hit.name;
+  const drop=document.getElementById('elo-search-drop'); if(drop) drop.style.display='none';
+  initEloChart();
+  return true;
+}
 function eloSearchFilter(q){
   const d=document.getElementById('elo-search-drop');if(!d)return;
   const items=d.querySelectorAll('.sitem');
   items.forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});
 }
 function statsEloHTML(){
-  const allWithHist=players.filter(p=>p.history&&p.history.length>0)
+  const allWithHist=players.filter(p=>_statsAllHist(p).length>0)
     .sort((a,b)=>(b.elo||ELO_DEFAULT)-(a.elo||ELO_DEFAULT));
   const top20=allWithHist.slice(0,30);
   if(!_eloSelPlayer&&allWithHist.length)_eloSelPlayer=allWithHist[0].name;
@@ -880,20 +916,9 @@ function statsEloHTML(){
   <div class="ssec" id="stats-elo-sec">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📈 ELO 랭킹 변동 그래프</h4>
-      <div style="position:relative">
-        <input id="elo-search-input" type="text" placeholder="🔍 스트리머 검색..."
-          value="${_eloSelPlayer}"
-          style="font-size:12px;padding:5px 10px;border:1px solid var(--border2);border-radius:8px;width:200px"
-          oninput="eloSearchFilter(this.value)"
-          onfocus="document.getElementById('elo-search-drop').style.display='block'"
-          onblur="setTimeout(()=>{const d=document.getElementById('elo-search-drop');if(d)d.style.display='none'},200)"
-          onkeydown="if(event.key==='Enter'){const q=this.value.trim();const m=players.filter(p=>p.history&&p.history.length>0&&p.name.includes(q));if(m.length===1){_eloSelPlayer=m[0].name;this.value=m[0].name;document.getElementById('elo-search-drop').style.display='none';initEloChart();}else if(q&&m.length>0){_eloSelPlayer=m[0].name;this.value=m[0].name;document.getElementById('elo-search-drop').style.display='none';initEloChart();}}">
-        <div id="elo-search-drop" style="display:none;position:absolute;top:34px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:260px;box-shadow:var(--sh2)">
-          ${allWithHist.map(p=>`<div class="sitem" onmousedown="_eloSelPlayer='${p.name.replace(/'/g,"\'")}';document.getElementById('elo-search-input').value='${p.name.replace(/'/g,"\'")}';document.getElementById('elo-search-drop').style.display='none';initEloChart()">
-            <b>${p.name}</b> <span style="color:${gc(p.univ)};font-size:11px">${p.univ}</span> <span style="color:var(--gray-l);font-size:10px">ELO ${p.elo||1200}</span>
-          </div>`).join('')}
-        </div>
-      </div>
+      <select id="elo-player-select" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px" onchange="_eloSelPlayer=this.value;initEloChart()">
+        ${allWithHist.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${p.name}"${_eloSelPlayer===p.name?' selected':''}>${p.name} · ${p.univ} · ELO ${p.elo||1200}</option>`).join('')}
+      </select>
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-elo-sec','elo_ranking')">📷 이미지 저장</button>
     </div>
     <canvas id="eloChart" style="width:100%;max-height:300px"></canvas>
@@ -926,9 +951,10 @@ function initEloChart(){
   const canvas=document.getElementById('eloChart');
   if(!canvas)return;
   const p=statsP(_eloSelPlayer);
-  if(!p||!p.history||!p.history.length){canvas.style.display='none';return;}
+  const histAll = p ? _statsAllHist(p) : [];
+  if(!p||!histAll.length){canvas.style.display='none';return;}
   canvas.style.display='block';
-  const hist=[...statsNonProHist(p)].reverse();
+  const hist=[...histAll].sort((a,b)=>(String(a.date||'')).localeCompare(String(b.date||'')));
   // ELO 재구성: eloAfter 필드 사용
   const pts=[];let elo=ELO_DEFAULT;
   hist.forEach((h,i)=>{
@@ -987,9 +1013,9 @@ function initEloChart(){
   // 제목
   ctx.fillStyle='#1e293b';ctx.font='bold 13px sans-serif';ctx.textAlign='left';
   ctx.fillText(`${p.name} ELO 변동 (현재: ${p.elo||1200})`,pad.l,14);
-  // 검색 인풋 동기화
-  const inp=document.getElementById('elo-search-input');
-  if(inp)inp.value=_eloSelPlayer;
+  // 드롭다운 동기화
+  const sel=document.getElementById('elo-player-select');
+  if(sel) sel.value=_eloSelPlayer;
   // 호버 툴팁
   let _eloTip=document.getElementById('eloChartTip');
   if(!_eloTip){
@@ -1018,32 +1044,51 @@ function initEloChart(){
    3. 선수 성장 곡선
 ══════════════════════════════════════ */
 let _growthSel='';
+function _statsGrowthCandidates(){
+  return (players||[]).filter(p=>{
+    try{ return _statsAllHist(p).length >= 2; }catch(e){ return (p.history||[]).length >= 2; }
+  }).sort((a,b)=>{
+    const ah=_statsAllHist(a).length, bh=_statsAllHist(b).length;
+    return bh-ah || String(a.name||'').localeCompare(String(b.name||''),'ko');
+  });
+}
 function growthSearchFilter(q){
   const d=document.getElementById('growth-search-drop');if(!d)return;
-  d.querySelectorAll('.sitem').forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});
+  const qq=String(q||'').trim().toLowerCase();
+  let first=null, visible=0;
+  d.querySelectorAll('.sitem').forEach(el=>{
+    const ok=!qq || el.textContent.toLowerCase().includes(qq);
+    el.style.display=ok?'':'none';
+    if(ok){ visible++; if(!first) first=el; }
+  });
+  const empty=document.getElementById('growth-search-empty');
+  if(empty) empty.style.display = visible ? 'none' : 'block';
+  return {first,visible};
+}
+function applyGrowthSearch(q, forceExact){
+  const cands=_statsGrowthCandidates();
+  const raw=String(q||'').trim();
+  if(!raw) return false;
+  const exact=cands.find(p=>String(p.name||'').trim()===raw);
+  const partial=cands.filter(p=>String(p.name||'').toLowerCase().includes(raw.toLowerCase()));
+  const hit=exact || ((!forceExact && partial.length) ? partial[0] : null);
+  if(!hit) return false;
+  _growthSel=hit.name;
+  const inp=document.getElementById('growth-search-input'); if(inp) inp.value=hit.name;
+  const drop=document.getElementById('growth-search-drop'); if(drop) drop.style.display='none';
+  initGrowthChart();
+  return true;
 }
 function statsGrowthHTML(){
-  const cands=players.filter(p=>p.history&&p.history.length>=2)
-    .sort((a,b)=>b.history.length-a.history.length);
+  const cands=_statsGrowthCandidates();
   if(!_growthSel&&cands.length)_growthSel=cands[0].name;
   const selP=statsP(_growthSel);
   return`<div class="ssec" id="stats-growth-sec">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📊 스트리머 성장 곡선</h4>
-      <div style="position:relative">
-        <input id="growth-search-input" type="text" placeholder="🔍 스트리머 검색..."
-          value="${_growthSel}"
-          style="font-size:12px;padding:5px 10px;border:1px solid var(--border2);border-radius:8px;width:200px"
-          oninput="growthSearchFilter(this.value)"
-          onfocus="document.getElementById('growth-search-drop').style.display='block'"
-          onblur="setTimeout(()=>{const d=document.getElementById('growth-search-drop');if(d)d.style.display='none'},200)"
-          onkeydown="if(event.key==='Enter'){const q=this.value.trim();const m=players.filter(p=>p.history&&p.history.length>=2&&p.name.includes(q));if(m.length>0){_growthSel=m[0].name;this.value=m[0].name;document.getElementById('growth-search-drop').style.display='none';initGrowthChart();}}">
-        <div id="growth-search-drop" style="display:none;position:absolute;top:34px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:260px;box-shadow:var(--sh2)">
-          ${cands.map(p=>`<div class="sitem" onmousedown="_growthSel='${p.name.replace(/'/g,"\'")}';document.getElementById('growth-search-input').value='${p.name.replace(/'/g,"\'")}';document.getElementById('growth-search-drop').style.display='none';initGrowthChart()">
-            <b>${p.name}</b> <span style="color:${gc(p.univ)};font-size:11px">${p.univ}</span> <span style="color:var(--gray-l);font-size:10px">${p.history.length}경기</span>
-          </div>`).join('')}
-        </div>
-      </div>
+      <select id="growth-player-select" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px" onchange="_growthSel=this.value;initGrowthChart()">
+        ${cands.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${p.name}"${_growthSel===p.name?' selected':''}>${p.name} · ${p.univ} · ${(_statsAllHist(p)||[]).length}경기</option>`).join('')}
+      </select>
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-growth-sec','growth_chart')">📷 이미지 저장</button>
     </div>
     <canvas id="growthChart" style="width:100%;max-height:300px"></canvas>
@@ -1054,8 +1099,13 @@ function initGrowthChart(){
   const canvas=document.getElementById('growthChart');
   if(!canvas)return;
   const p=statsP(_growthSel);
-  const histF = p ? statsNonProHist(p) : [];
-  if(!p||!p.history||histF.length<2){canvas.style.display='none';return;}
+  const histF = p ? _statsAllHist(p) : [];
+  const info=document.getElementById('growthInfo');
+  if(!p||histF.length<2){
+    canvas.style.display='none';
+    if(info) info.innerHTML = `<div style="padding:16px 18px;border:1px dashed var(--border2);border-radius:12px;color:var(--gray-l);font-size:12px">선택한 스트리머의 경기 기록이 2경기 이상 있어야 성장 곡선을 표시할 수 있습니다.</div>`;
+    return;
+  }
   const hist=[...histF].reverse();
   // 누적 승률 계산
   const pts=[];let w=0,total=0;
@@ -1103,7 +1153,6 @@ function initGrowthChart(){
   ctx.fillStyle='#1e293b';ctx.font='bold 13px sans-serif';ctx.textAlign='left';
   ctx.fillText(`${p.name} 누적 승률 추이`,pad.l,14);
   // 인포
-  const info=document.getElementById('growthInfo');
   if(info){
     const last=pts[pts.length-1];
     const early=pts.slice(0,Math.ceil(pts.length/3));
@@ -1128,32 +1177,38 @@ function initGrowthChart(){
         <div style="font-size:11px;color:var(--gray-l)">경기 기록</div>
       </div>`;
   }
-  const inp2=document.getElementById('growth-search-input');
-  if(inp2)inp2.value=_growthSel;
+  const sel=document.getElementById('growth-player-select');
+  if(sel) sel.value=_growthSel;
 }
 
 /* ══════════════════════════════════════
    4. 이달의 선수
 ══════════════════════════════════════ */
 function statsAwardHTML(){
-  const now=new Date();
-  const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const prevYm=now.getMonth()===0
-    ?`${now.getFullYear()-1}-12`
-    :`${now.getFullYear()}-${String(now.getMonth()).padStart(2,'0')}`;
-  const proIds=statsProMatchIds();
-  function calcMonth(ym2){
+  const monthsF=_statsLatestActiveMonths('F');
+  const monthsM=_statsLatestActiveMonths('M');
+  const monthsAll=_statsLatestActiveMonths('');
+  const inter=monthsF.filter(x=>monthsM.includes(x));
+  const baseMonths = inter.length ? inter : monthsAll;
+  const ym=baseMonths[0] || (()=>{const now=new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;})();
+  const prevYm=baseMonths[1] || (function(cur){ const [yy,mm]=String(cur).split('-').map(Number); if(!yy||!mm) return ''; return mm===1?`${yy-1}-12`:`${yy}-${String(mm-1).padStart(2,'0')}`; })(ym);
+
+  function calcMonth(ym2, gender){
+    const g=_statsNormGender(gender);
     return players.map(p=>{
-      // 프로리그 제외한 히스토리만 필터링
-      const mh=statsNonProHist(p).filter(h=>(h.date||'').startsWith(ym2));
+      if(g && _statsNormGender(p.gender)!==g) return null;
+      const mh=_statsAllHist(p).filter(h=>(h.date||'').startsWith(ym2));
       const w=mh.filter(h=>h.result==='승').length;
       const l=mh.filter(h=>h.result==='패').length;
       const tot=w+l;
       return{...p,mw:w,ml:l,mt:tot,mrate:tot?Math.round(w/tot*100):0};
-    }).filter(p=>p.mt>0).sort((a,b)=>b.mw-a.mw||b.mrate-a.mrate);
+    }).filter(Boolean).filter(p=>p.mt>0).sort((a,b)=>b.mw-a.mw||b.mrate-a.mrate);
   }
-  const curList=calcMonth(ym);
-  const prevList=calcMonth(prevYm);
+  const curListF=calcMonth(ym,'F');
+  const curListM=calcMonth(ym,'M');
+  const prevListF=calcMonth(prevYm,'F');
+  const prevListM=calcMonth(prevYm,'M');
+  const curList=[...(curListF||[]), ...(curListM||[])];
   const [y,m]=ym.split('-');
   const [py,pm]=prevYm.split('-');
   function awardCard(title,p,extra='',color='#2563eb'){
@@ -1185,12 +1240,16 @@ function statsAwardHTML(){
       ${extra?`<div style="margin-top:8px;font-size:11px;color:${color};font-weight:600">${extra}</div>`:''}
     </div>`;
   }
-  const mostWin=curList[0]||null;
-  const highRate=curList.filter(p=>p.mt>=_statsMinGames).sort((a,b)=>b.mrate-a.mrate)[0]||null;
-  const mostActive=[...curList].sort((a,b)=>b.mt-a.mt)[0]||null;
-  const prevTop=prevList[0];
-  // 전월 대비 맵 {name: {mw, mrate}}
-  const prevMap=Object.fromEntries(prevList.map(p=>[p.name,p]));
+  function pickAwards(list){
+    const top3=[...(list||[])].sort((a,b)=>b.mw-a.mw||b.mrate-a.mrate||b.mt-a.mt).slice(0,3);
+    return { top3 };
+  }
+  const aF=pickAwards(curListF);
+  const aM=pickAwards(curListM);
+  const pF=pickAwards(prevListF);
+  const pM=pickAwards(prevListM);
+  // 전월 대비(표시용)는 남녀 합산(전체 기준)으로 계산
+  const prevMap=Object.fromEntries([...(prevListF||[]), ...(prevListM||[])].map(p=>[p.name,p]));
   function trendBadge(p){
     const pp=prevMap[p.name];
     if(!pp)return`<span style="font-size:10px;color:var(--gray-l)">신규</span>`;
@@ -1205,18 +1264,32 @@ function statsAwardHTML(){
       <h4 style="margin:0">🏆 이달의 스트리머 <span style="font-size:12px;color:var(--gray-l);font-weight:400">${y}년 ${m}월</span> <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
       <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-award-sec','award')">📷 이미지 저장</button>
     </div>
+    <div style="font-weight:900;font-size:12px;color:#db2777;margin:6px 0 8px">👩 여자</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
-      ${awardCard('👑 이달 최다승',mostWin,'이번 달 가장 많은 승리!','#d97706')}
-      ${awardCard(`🎯 이달 최고 승률`,highRate,`(${_statsMinGames}경기 이상)`,'#16a34a')}
-      ${awardCard('⚡ 이달 최다 경기',mostActive,'가장 활발하게 뛰었어요','#7c3aed')}
+      ${awardCard('🥇 1위',aF.top3[0]||null,'이번달 승수 1위','#db2777')}
+      ${awardCard('🥈 2위',aF.top3[1]||null,'이번달 승수 2위','#db2777')}
+      ${awardCard('🥉 3위',aF.top3[2]||null,'이번달 승수 3위','#db2777')}
+    </div>
+    <div style="font-weight:900;font-size:12px;color:#2563eb;margin:14px 0 8px">👨 남자</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      ${awardCard('🥇 1위',aM.top3[0]||null,'이번달 승수 1위','#2563eb')}
+      ${awardCard('🥈 2위',aM.top3[1]||null,'이번달 승수 2위','#2563eb')}
+      ${awardCard('🥉 3위',aM.top3[2]||null,'이번달 승수 3위','#2563eb')}
     </div>
   </div>
   <div class="ssec">
     <h4 style="margin-bottom:14px">📅 지난달 TOP <span style="font-size:12px;color:var(--gray-l);font-weight:400">${py}년 ${pm}월</span></h4>
+    <div style="font-weight:900;font-size:12px;color:#db2777;margin:6px 0 8px">👩 여자</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
-      ${awardCard('🥇 지난달 1위',prevTop,'','#2563eb')}
-      ${prevList[1]?awardCard('🥈 지난달 2위',prevList[1],'','#64748b'):''}
-      ${prevList[2]?awardCard('🥉 지난달 3위',prevList[2],'','#92400e'):''}
+      ${awardCard('🥇 1위',pF.top3[0]||null,'','#db2777')}
+      ${awardCard('🥈 2위',pF.top3[1]||null,'','#db2777')}
+      ${awardCard('🥉 3위',pF.top3[2]||null,'','#db2777')}
+    </div>
+    <div style="font-weight:900;font-size:12px;color:#2563eb;margin:14px 0 8px">👨 남자</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      ${awardCard('🥇 1위',pM.top3[0]||null,'','#2563eb')}
+      ${awardCard('🥈 2위',pM.top3[1]||null,'','#2563eb')}
+      ${awardCard('🥉 3위',pM.top3[2]||null,'','#2563eb')}
     </div>
   </div>
   <div class="ssec">

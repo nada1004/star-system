@@ -128,13 +128,17 @@ function rCompLeague(tn){
       const bMemJson = JSON.stringify(bMembers).replace(/"/g, "'");
       const aBtnColor = ca || '#3b82f6';
       const bBtnColor = cb || '#ef4444';
-      const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68};
+      const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
       const _fxOn=!!_fxCfg.on;
       const _fxMode=['soft','glow','panel','line'].includes(_fxCfg.mode)?_fxCfg.mode:'soft';
       const _fxInt=Math.max(20, Math.min(100, parseInt(_fxCfg.intensity||68,10)||68));
-      const _fxA1=Math.max(0.08, Math.min(0.36, (_fxInt/100)*0.30)).toFixed(3);
-      const _fxA2=Math.max(0.04, Math.min(0.18, ((_fxInt/100)*0.30)*0.48)).toFixed(3);
-      h+=`<div class="grp-match-card tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxOn?`--rec-side-left-rgb:${_tcHexToRgbStr(ca||'#3b82f6')};--rec-side-right-rgb:${_tcHexToRgbStr(cb||'#ef4444')};--rec-side-a1:${_fxA1};--rec-side-a2:${_fxA2};`:''}background:linear-gradient(135deg,var(--white) 0%,var(--blue-l) 100%);border:1.5px solid ${m.grpColor}22;border-left:4px solid ${m.grpColor};box-shadow:0 2px 12px rgba(0,0,0,.06);">
+      const _fxLen=Math.max(10, Math.min(60, parseInt(_fxCfg.length||25,10)||25));
+      const _fxTail=Math.max(0, Math.min(100, parseInt(_fxCfg.tail||28,10)||28));
+      const _fxCombined=(_fxInt/100)*0.6 + ((_fxLen-10)/50)*0.4;
+      const _fxA1=Math.max(0.06, Math.min(0.42, _fxCombined*0.36)).toFixed(3);
+      const _fxA2=Math.max(0.03, Math.min(0.20, _fxCombined*0.36*0.48)).toFixed(3);
+      const _fxAe=Math.max(0.10, Math.min(0.70, parseFloat(_fxA1) + (_fxTail/100)*0.34)).toFixed(3);
+      h+=`<div class="grp-match-card tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxOn?`--rec-side-left-rgb:${_tcHexToRgbStr(ca||'#3b82f6')};--rec-side-right-rgb:${_tcHexToRgbStr(cb||'#ef4444')};--rec-side-a1:${_fxA1};--rec-side-a2:${_fxA2};--rec-side-ae:${_fxAe};`:''}background:linear-gradient(135deg,var(--white) 0%,var(--blue-l) 100%);border:1.5px solid ${m.grpColor}22;border-left:4px solid ${m.grpColor};box-shadow:0 2px 12px rgba(0,0,0,.06);">
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">GROUP ${m.grpLetter}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>

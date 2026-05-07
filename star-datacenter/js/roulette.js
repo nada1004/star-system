@@ -672,8 +672,8 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
       <button onclick="_gcToggleInput()" id="gc-input-toggle" style="width:100%;padding:7px 12px;font-size:${fs}px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;background:var(--white);color:var(--text3);cursor:pointer;transition:.1s;margin-bottom:${Math.round(pad*0.5)}px;text-align:left">${_gcInputOpen?'📝 입력 접기 ▲':'📝 입력 펼치기 ▼'}</button>
       <div id="gc-input-body" style="display:${_gcInputOpen?'block':'none'}">
         ${inputBodyInner}
+        ${ldItemsAlways}
       </div>
-      ${ldItemsAlways}
       ${gcResultHTML}
     </div>
     ${rightPanelHTML}

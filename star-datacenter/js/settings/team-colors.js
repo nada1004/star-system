@@ -46,11 +46,11 @@
     const proB = getColor('su_team_color_pro_b', '#4f46e5');
     return `
       <div style="margin-bottom:10px;padding:12px 14px;border:1.5px solid #93c5fd;border-radius:12px;background:linear-gradient(135deg,#eff6ff,#eef2ff);box-shadow:0 8px 18px rgba(37,99,235,.08)">
-        <div style="font-size:13px;font-weight:1000;color:#1e3a8a;margin-bottom:4px">🎯 경기 상세 상단 팀 버튼 색상은 여기서 바꿉니다</div>
-        <div style="font-size:11px;color:#475569;line-height:1.6">바로 아래의 <b>대학CK 팀 버튼 색상</b>, <b>프로리그 팀 버튼 색상</b> 컬러피커가 경기 상세 상단 팀 버튼과 관련 공유카드에 공통 적용됩니다.</div>
+        <div style="font-size:13px;font-weight:1000;color:#1e3a8a;margin-bottom:4px">🎯 프로리그 일반 / 대학CK 색상은 여기서 바꿉니다</div>
+        <div style="font-size:11px;color:#475569;line-height:1.6">바로 아래의 <b>대학CK 팀 버튼 색상</b>, <b>프로리그 일반 팀 버튼 색상</b> 컬러피커가 경기 상세 상단 팀 버튼뿐 아니라 <b>기록 카드 양쪽 끝 색상</b>에도 공통 적용됩니다.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
           <button class="btn btn-w btn-xs no-export" onclick="try{document.getElementById('cfg-team-ck-a')?.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}" style="border-color:#93c5fd">🤝 대학CK 색상으로 이동</button>
-          <button class="btn btn-w btn-xs no-export" onclick="try{document.getElementById('cfg-team-pro-a')?.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}" style="border-color:#c4b5fd">🏅 프로리그 색상으로 이동</button>
+          <button class="btn btn-w btn-xs no-export" onclick="try{document.getElementById('cfg-team-pro-a')?.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}" style="border-color:#c4b5fd">🏅 프로리그 일반 색상으로 이동</button>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:12px;border:2px solid #c7d2fe;border-radius:14px;background:linear-gradient(180deg,#ffffff,#f8fbff);box-shadow:0 10px 24px rgba(79,70,229,.06)">
@@ -70,7 +70,7 @@
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
-          <div style="font-size:13px;font-weight:1000;color:#312e81">🏅 프로리그 팀 버튼 색상</div>
+          <div style="font-size:13px;font-weight:1000;color:#312e81">🏅 프로리그 일반 팀 버튼 색상</div>
           <label style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;color:var(--text2)">
             <span>A팀</span>
             <input type="color" id="cfg-team-pro-a" value="${proA}" oninput="cfgSyncTeamColorPreview()" onchange="cfgSetRecCardSettings()" style="width:42px;height:30px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer">
@@ -83,7 +83,7 @@
             <div id="cfg-team-pro-prev-a" style="min-height:36px;border-radius:10px;border:1px solid ${proA};background:${proA};color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(15,23,42,.10)">A팀 ${proA}</div>
             <div id="cfg-team-pro-prev-b" style="min-height:36px;border-radius:10px;border:1px solid ${proB};background:${proB};color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(15,23,42,.10)">B팀 ${proB}</div>
           </div>
-          <div style="font-size:11px;color:var(--gray-l)">경기 상세 상단 팀 버튼, 기록 카드, 관련 공유카드에 공통 적용됩니다.</div>
+          <div style="font-size:11px;color:var(--gray-l)">경기 상세 상단 팀 버튼, 기록 카드 양쪽 끝 색상, 관련 공유카드에 공통 적용됩니다.</div>
         </div>
       </div>
     `;

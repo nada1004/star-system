@@ -272,6 +272,20 @@
       try{ localStorage.setItem('su_tab_color_mode', v); }catch(e){}
       try{ render(); }catch(e){}
     };
+    window.cfgSetTabColorLength = function(v){
+      try{
+        var n = Math.max(20, Math.min(90, parseInt(v||'48', 10) || 48));
+        localStorage.setItem('su_tab_color_length', String(n));
+      }catch(e){}
+      try{ render(); }catch(e){}
+    };
+    window.cfgSetTabColorTail = function(v){
+      try{
+        var n = Math.max(0, Math.min(60, parseInt(v||'22', 10) || 22));
+        localStorage.setItem('su_tab_color_tail', String(n));
+      }catch(e){}
+      try{ render(); }catch(e){}
+    };
     window.cfgSetRecSideFxEnabled = function(on){
       try{ localStorage.setItem('su_rec_side_fx_on', on ? '1' : '0'); }catch(e){}
       try{ render(); }catch(e){}
@@ -288,6 +302,33 @@
         localStorage.setItem('su_rec_side_fx_intensity', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+    };
+    window.cfgSetRecSideFxLength = function(v){
+      try{
+        var n = Math.max(10, Math.min(60, parseInt(v||'25', 10) || 25));
+        localStorage.setItem('su_rec_side_fx_length', String(n));
+        window.applyRecSideFxLengthVar && window.applyRecSideFxLengthVar(n);
+      }catch(e){}
+      try{ render(); }catch(e){}
+    };
+    window.cfgSetRecSideFxTail = function(v){
+      try{
+        var n = Math.max(0, Math.min(100, parseInt(v||'28', 10) || 28));
+        localStorage.setItem('su_rec_side_fx_tail', String(n));
+      }catch(e){}
+      try{ render(); }catch(e){}
+    };
+    window.applyRecSideFxLengthVar = function(n){
+      try{
+        var len = Math.max(10, Math.min(60, parseInt(n||'25',10)||25));
+        var len2 = Math.round(len * 0.45);
+        var lenR = 100 - len;
+        var len2R = 100 - len2;
+        document.documentElement.style.setProperty('--rec-fx-len', len + '%');
+        document.documentElement.style.setProperty('--rec-fx-len2', len2 + '%');
+        document.documentElement.style.setProperty('--rec-fx-len-r', lenR + '%');
+        document.documentElement.style.setProperty('--rec-fx-len2-r', len2R + '%');
+      }catch(e){}
     };
   }
 
@@ -446,10 +487,14 @@
     var tabColorOn = (localStorage.getItem('su_tab_color_enabled') || '1') !== '0';
     var tabColorMode = String(localStorage.getItem('su_tab_color_mode') || 'fill');
     if(['fill','soft','outline','solid'].indexOf(tabColorMode) === -1) tabColorMode = 'fill';
+    var tabColorLength = Math.max(20, Math.min(90, parseInt(localStorage.getItem('su_tab_color_length') || '48', 10) || 48));
+    var tabColorTail = Math.max(0, Math.min(60, parseInt(localStorage.getItem('su_tab_color_tail') || '22', 10) || 22));
     var recSideFxOn = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0';
     var recSideFxMode = String(localStorage.getItem('su_rec_side_fx_mode') || 'soft');
     if(['soft','glow','panel','line'].indexOf(recSideFxMode) === -1) recSideFxMode = 'soft';
     var recSideFxIntensity = Math.max(20, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68));
+    var recSideFxLength = Math.max(10, Math.min(60, parseInt(localStorage.getItem('su_rec_side_fx_length') || '25', 10) || 25));
+    var recSideFxTail = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_tail') || '28', 10) || 28));
 
     var groups = [
       { ctx:'mergedUniv', title:'🏟️ 대학대전 탭' },
@@ -516,6 +561,19 @@
       + '      <option value="solid"' + (tabColorMode==='solid'?' selected':'') + '>단색</option>'
       + '    </select>'
       + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">효과 길이</div>'
+      + '    <input type="range" min="20" max="90" step="5" value="' + tabColorLength + '" oninput="document.getElementById(\'cfg-tabcolor-len-v\').textContent=this.value+\'%\'; cfgSetTabColorLength(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-tabcolor-len-v">' + tabColorLength + '%</span></div>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">하단 끝 진해짐</div>'
+      + '    <input type="range" min="0" max="60" step="5" value="' + tabColorTail + '" oninput="document.getElementById(\'cfg-tabcolor-tail-v\').textContent=this.value+\'%\'; cfgSetTabColorTail(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-tabcolor-tail-v">' + tabColorTail + '%</span></div>'
+      + '  </div>'
+      + '  <div style="border-radius:10px;border:1px solid var(--border2);padding:10px 12px;background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 42%, rgba(15,23,42,' + Math.max(0, Math.min(0.18, tabColorTail/100*0.18)).toFixed(3) + ') 84%, rgba(15,23,42,' + Math.max(0, Math.min(0.28, tabColorTail/100*0.32)).toFixed(3) + ') 100%), linear-gradient(135deg, #0f172a 0%, #2563eb ' + tabColorLength + '%, #2563eb ' + Math.min(96, tabColorLength+18) + '%, #1d4ed8 100%);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center">'
+      + '    탭 컬러 미리보기'
+      + '  </div>'
       + '  <div style="font-size:11px;color:var(--gray-l);line-height:1.6">탭 컬러를 완전히 끄거나, 진한 스타일 / 연한 스타일 / 테두리 중심 스타일로 바꿀 수 있습니다.</div>'
       + '</div>'
       + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
@@ -543,7 +601,17 @@
       + '    <input type="range" min="20" max="100" step="5" value="' + recSideFxIntensity + '" oninput="document.getElementById(\'cfg-rec-sidefx-v\').textContent=this.value+\'%\'; cfgSetRecSideFxIntensity(this.value)" style="flex:1;min-width:160px">'
       + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-v">' + recSideFxIntensity + '%</span></div>'
       + '  </div>'
-      + '  <div style="border-radius:12px;border:1px solid var(--border2);overflow:hidden;background:linear-gradient(90deg, rgba(59,130,246,.18) 0%, rgba(59,130,246,.04) 12%, #ffffff 24%, #ffffff 76%, rgba(168,85,247,.04) 88%, rgba(168,85,247,.18) 100%);padding:14px 16px;display:flex;align-items:center;justify-content:center;gap:10px">'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">효과 길이 <span style="font-weight:400;color:var(--gray-l);font-size:10px">(길수록 진해짐)</span></div>'
+      + '    <input type="range" min="10" max="60" step="5" value="' + recSideFxLength + '" oninput="document.getElementById(\'cfg-rec-sidefx-len-v\').textContent=this.value+\'%\'; cfgSetRecSideFxLength(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-len-v">' + recSideFxLength + '%</span></div>'
+      + '  </div>'
+      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">양끝 끝 강조</div>'
+      + '    <input type="range" min="0" max="100" step="5" value="' + recSideFxTail + '" oninput="document.getElementById(\'cfg-rec-sidefx-tail-v\').textContent=this.value+\'%\'; cfgSetRecSideFxTail(this.value)" style="flex:1;min-width:160px">'
+      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-tail-v">' + recSideFxTail + '%</span></div>'
+      + '  </div>'
+      + '  <div class="rec-sidefx rec-sidefx--' + (recSideFxMode||'soft') + '" style="--rec-side-left-rgb:59,130,246;--rec-side-right-rgb:168,85,247;--rec-side-a1:' + Math.max(0.06,Math.min(0.42,(((recSideFxIntensity/100)*0.6)+((recSideFxLength-10)/50)*0.4)*0.36)).toFixed(3) + ';--rec-side-a2:' + Math.max(0.03,Math.min(0.20,(((recSideFxIntensity/100)*0.6)+((recSideFxLength-10)/50)*0.4)*0.36*0.48)).toFixed(3) + ';--rec-side-ae:' + Math.max(0.10,Math.min(0.52,((((recSideFxIntensity/100)*0.6)+((recSideFxLength-10)/50)*0.4)*0.36) + (recSideFxTail/100)*0.20)).toFixed(3) + ';border-radius:12px;border:1px solid var(--border2);overflow:hidden;background:#ffffff;padding:14px 16px;display:flex;align-items:center;justify-content:center;gap:10px">'
       + '    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#2563eb;color:#fff;font-size:11px;font-weight:800">서울대</span>'
       + '    <span style="font-size:18px;font-weight:1000;color:var(--text)">3 : 2</span>'
       + '    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#7c3aed;color:#fff;font-size:11px;font-weight:800">연세대</span>'
@@ -552,4 +620,19 @@
       + '</details>';
   }
   window.renderCfgTabColorSection = renderTabColorSection;
+
+  // 페이지 로드 시 기록 카드 양끝 효과 길이 CSS variable 초기 적용
+  try{
+    var _initLen = Math.max(10, Math.min(60, parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
+    if(window.applyRecSideFxLengthVar) window.applyRecSideFxLengthVar(_initLen);
+    else {
+      // 함수가 아직 안 정의된 경우 DOMContentLoaded 후 적용
+      document.addEventListener('DOMContentLoaded', function(){
+        try{
+          var n = Math.max(10, Math.min(60, parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
+          if(window.applyRecSideFxLengthVar) window.applyRecSideFxLengthVar(n);
+        }catch(e){}
+      });
+    }
+  }catch(e){}
 })();

@@ -140,16 +140,16 @@ async function _ensureVoteLoaded(){
 }
 async function _ensureCloudBoardLoaded(){
   await window.ensureHtml2Canvas();
-  await _loadScriptOnce('js/sync/cloud-apply.js?v=20260502-03');
-  await _loadScriptOnce('js/sync/cloud-status.js?v=20260502-01');
-  await _loadScriptOnce('js/cloud-board.js?v=20260502-03');
+  await _loadScriptOnce('js/sync/cloud-apply.js?v=20260502-04');
+  await _loadScriptOnce('js/sync/cloud-status.js?v=20260503-01');
+  await _loadScriptOnce('js/cloud-board.js?v=20260502-05');
 }
 async function _ensureSettingsLoaded(){
   await _loadScriptOnce('js/settings/font-controls.js?v=20260502-01');
   await _loadScriptOnce('js/settings/ui-scale-controls.js?v=20260502-01');
   await _loadScriptOnce('js/settings/team-colors.js?v=20260503-01');
-  await _loadScriptOnce('js/settings/sharecard.js?v=20260503-04');
-  await _loadScriptOnce('js/settings.js?v=20260505-02');
+  await _loadScriptOnce('js/settings/sharecard.js?v=20260503-01');
+  await _loadScriptOnce('js/settings.js?v=20260505-03');
 }
 function _lazyGsSetStatus(msg, color='var(--gray-l)'){
   try{
@@ -201,7 +201,8 @@ function _lazyRCfg(C, T){
       await _ensureSettingsLoaded();
       const fn = window.rCfg;
       if(typeof fn === 'function' && fn !== _lazyRCfg) fn(C, T);
-      else render(true);
+      // else: 무한루프 방지 - settings 로드 후에도 rCfg 없으면 에러 표시
+      else if(C) C.innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">설정 로딩 실패</div><div class="empty-state-desc">새로고침(F5) 후 다시 시도해주세요.</div></div>';
     }catch(e){
       console.error('[lazy] settings load fail', e);
       try{
@@ -231,7 +232,7 @@ function _lazyReCfg(){
       await _ensureSettingsLoaded();
       const fn = window.reCfg;
       if(typeof fn === 'function' && fn !== _lazyReCfg) fn();
-      else render(true);
+      // else: settings 로드 후에도 reCfg 없으면 무시 (무한루프 방지)
     }catch(e){
       console.error('[lazy] reCfg load fail', e);
     }
