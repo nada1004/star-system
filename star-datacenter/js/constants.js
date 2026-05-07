@@ -2102,6 +2102,38 @@ function _normalizeStoredMode(mode){
   if(raw === '티어대회 일반' || raw === '티어 일반') return '티어대회';
   return raw;
 }
+
+// 날짜 문자열을 YYYY-MM-DD로 최대한 정규화한다.
+// - 통계/정렬/월별 집계를 위해 "YYYY-MM" prefix가 안정적으로 나오게 하는 목적
+// - 파싱 불가한 값은 원본(trim) 반환
+function _toIsoDateStr(input){
+  const s = String(input ?? '').trim();
+  if(!s) return new Date().toISOString().slice(0,10);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(!m) m = s.match(/^(\d{4})[./](\d{1,2})[./](\d{1,2})$/);
+  if(!m) m = s.match(/^(\d{4})\s*(?:년)?\s*(\d{1,2})\s*(?:월)?\s*(\d{1,2})\s*(?:일)?$/);
+  if(m){
+    const yy = Number(m[1]), mm = Number(m[2]), dd = Number(m[3]);
+    if(yy>=1990 && mm>=1 && mm<=12 && dd>=1 && dd<=31){
+      return `${yy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+    }
+  }
+  // 최후: Date 파서 시도 (예: "2026-4-1", "2026/4/1 00:00" 등)
+  try{
+    const d = new Date(s);
+    if(!isNaN(d.getTime())){
+      const yy = d.getFullYear();
+      const mm = d.getMonth()+1;
+      const dd = d.getDate();
+      if(yy>=1990 && mm>=1 && mm<=12 && dd>=1 && dd<=31){
+        return `${yy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+      }
+    }
+  }catch(e){}
+  return s;
+}
+try{ window._toIsoDateStr = _toIsoDateStr; }catch(e){}
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
   // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
   function _findPlayer(name){
@@ -2131,7 +2163,7 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
   // - matchId가 있으면 matchId가 곧 고유키(게임 단위)라고 가정하고 matchId만으로 중복 판단
   //   (티어대회/대학CK 등에서 같은 날짜/같은 맵/같은 상대가 여러 번 나올 수 있어 date+map+opp로 막으면 누락됨)
   // - matchId가 없을 때만 date+map+opp로 중복 방지
-  const d=date||new Date().toISOString().slice(0,10);
+  const d=_toIsoDateStr(date||'');
   const m=map||'-';
   // matchId 기반 체크
   const wDupMatch = matchId ? (w.history||[]).find(h=>h.matchId===matchId) : null;
@@ -2184,7 +2216,7 @@ function applyDrawResult(nameA, nameB, date, map, matchId, univA, univB, mode, s
   if(!a||!b||a===b) return;
   if(!a.history)a.history=[];
   if(!b.history)b.history=[];
-  const d=date||new Date().toISOString().slice(0,10);
+  const d=_toIsoDateStr(date||'');
   const m=map||'-';
   // 중복 체크: matchId가 있으면 matchId만으로 판단(게임 단위 중복 허용 방지)
   const aDup = matchId ? (a.history||[]).find(h=>h.matchId===matchId) : null;

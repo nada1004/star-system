@@ -42,9 +42,20 @@ function _statsNormGender(v){
 function _statsAllHist(p){
   return Array.isArray(p&&p.history) ? p.history.filter(Boolean) : [];
 }
+function _statsYmFromDateStr(v){
+  try{
+    const iso = (typeof window._toIsoDateStr === 'function') ? window._toIsoDateStr(v) : String(v||'').trim();
+    const ym = String(iso||'').slice(0,7);
+    return /^\d{4}-\d{2}$/.test(ym) ? ym : '';
+  }catch(e){
+    return '';
+  }
+}
 function _statsLatestActiveMonths(gender){
   const g=_statsNormGender(gender);
-  const months=[...new Set((players||[]).filter(p=>!g || _statsNormGender(p.gender)===g).flatMap(p=>_statsAllHist(p).map(h=>String(h&&h.date||'').slice(0,7)).filter(v=>/^\d{4}-\d{2}$/.test(v))))].sort((a,b)=>b.localeCompare(a));
+  const months=[...new Set((players||[]).filter(p=>!g || _statsNormGender(p.gender)===g)
+    .flatMap(p=>_statsAllHist(p).map(h=>_statsYmFromDateStr(h&&h.date)).filter(Boolean))
+  )].sort((a,b)=>b.localeCompare(a));
   return months;
 }
 
@@ -1197,7 +1208,7 @@ function statsAwardHTML(){
     const g=_statsNormGender(gender);
     return players.map(p=>{
       if(g && _statsNormGender(p.gender)!==g) return null;
-      const mh=_statsAllHist(p).filter(h=>(h.date||'').startsWith(ym2));
+      const mh=_statsAllHist(p).filter(h=>_statsYmFromDateStr(h&&h.date)===ym2);
       const w=mh.filter(h=>h.result==='승').length;
       const l=mh.filter(h=>h.result==='패').length;
       const tot=w+l;
