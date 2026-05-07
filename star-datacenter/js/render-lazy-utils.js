@@ -19,12 +19,28 @@ function _loadScriptOnce(src){
         }
       }catch(e){}
       const p = new Promise((res, rej)=>{
-        const s=document.createElement('script');
-        s.src=src;
-        s.async=true;
-        s.onload=()=>{ window._lazy.loaded[src]=true; res(true); };
-        s.onerror=()=>{ rej(new Error('load fail: '+src)); };
-        document.head.appendChild(s);
+        const _try = (u, retrying)=>{
+          const s=document.createElement('script');
+          s.src=u;
+          s.async=true;
+          s.onload=()=>{
+            try{ window._lazy.loaded[src]=true; }catch(e){}
+            try{ window._lazy.loaded[u]=true; }catch(e){}
+            res(true);
+          };
+          s.onerror=()=>{
+            // 일부 호스팅/환경에서 쿼리스트링(?)이 붙은 로컬 경로 로드가 실패하는 케이스가 있어 1회만 재시도
+            if(!retrying && typeof u==='string' && u.includes('?')){
+              try{
+                const base = u.split('?')[0];
+                if(base && base !== u) return _try(base, true);
+              }catch(e){}
+            }
+            rej(new Error('load fail: '+u));
+          };
+          document.head.appendChild(s);
+        };
+        _try(src, false);
       });
       window._lazy.loading[src]=p;
       p.then(resolve).catch(reject);
