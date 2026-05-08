@@ -3737,9 +3737,9 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     padding: 6px 12px !important; font-size: 13px !important;
   }
   .hdr-search-wrap.open .hdr-search-icon { display: none; }
-  /* (요청사항) 모바일 상단 다크/로그인 버튼이 너무 커 보이는 문제 */
-  #darkToggleBtn { padding: 0 !important; width: 30px; height: 30px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-  .hdr-login-btn { padding: 0 !important; width: 30px; height: 30px; border-radius: 50%; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  /* (모바일) 상단 다크/로그인 버튼 더 컴팩트 */
+  #darkToggleBtn { padding: 0 !important; width: 26px; height: 26px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+  .hdr-login-btn { padding: 0 !important; width: 26px; height: 26px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; }
   #hdrLoginStatus { display: none !important; }
   .hdr-right{gap:6px;min-height:36px;}
   #hdrBgmBtn,#hdrSoopBtn{min-width:36px !important;height:36px !important;padding:0 10px !important;}
@@ -3784,8 +3784,11 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .tbadge { padding: 2px 5px !important; font-size: 9px !important; }
   /* 불필요한 컬럼 숨기기 */
   .col-hide-mobile { display: none !important; }
-  .tab-cont { overflow-x: hidden; }
-  .tab-cont > div { overflow-x: hidden; }
+  /* 상단 메뉴(탭/필터) 스와이프 스크롤 방해 제거 */
+  .tab-cont { overflow-x: visible; }
+  .tab-cont > div { overflow-x: visible; }
+  .tabs{ overscroll-behavior-x:contain; }
+
 
   /* ── 섹션 카드 ── */
   .ssec { padding: 12px 10px; margin-bottom: 10px; border-radius: 10px; }
@@ -3913,18 +3916,23 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   }
   .grp-match-card.match-card-v3 .grp-match-main{
     width:100% !important;
-    flex-direction:column !important;
-    align-items:stretch !important;
+    flex-direction:row !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
     justify-content:flex-start !important;
-    gap:8px !important;
+    gap:10px !important;
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
   }
+  .grp-match-card.match-card-v3 .grp-match-main::-webkit-scrollbar{display:none;}
   .grp-match-card.match-card-v3 .grp-team-col{
-    min-width:0 !important;
-    width:100% !important;
+    min-width:140px !important;
+    width:auto !important;
   }
   .grp-match-card.match-card-v3 .grp-team-chip{
-    width:100% !important;
-    justify-content:flex-start !important;
+    width:auto !important;
+    justify-content:center !important;
     padding:9px 12px !important;
     border-radius:14px !important;
   }
@@ -3932,8 +3940,8 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     font-size:13px !important;
   }
   .grp-match-card.match-card-v3 .grp-score-col{
-    min-width:0 !important;
-    width:100% !important;
+    min-width:76px !important;
+    width:auto !important;
   }
   .grp-match-card.match-card-v3 .grp-match-score{
     border-radius:14px !important;

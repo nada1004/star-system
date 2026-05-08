@@ -125,7 +125,12 @@ window.enableDragScroll = function(root){
 
       const down = (e)=>{
         const t = e.target;
-        if (t && (t.closest('button') || t.closest('input') || t.closest('select') || t.closest('textarea') || t.closest('a'))) return;
+        // (모바일 개선) 버튼 위에서 스와이프할 때도 가로 스크롤이 되게 허용
+        // - 마우스에서는 클릭 방해가 커서 기존처럼 차단
+        // - 터치/펜에서는 드래그 스크롤을 허용하고, 이동한 경우 click을 차단하는 기존 로직으로 처리
+        if (t && (t.closest('button') || t.closest('input') || t.closest('select') || t.closest('textarea') || t.closest('a'))){
+          if(e.pointerType==='mouse') return;
+        }
         if(e.pointerType==='mouse' && e.button!==0) return;
         isDown=true;
         moved=false;
