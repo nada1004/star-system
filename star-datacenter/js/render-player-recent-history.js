@@ -58,8 +58,8 @@ function buildPlayerRecentHistoryRowHTML(opts){
   })();
   const editBtnHTML=canEdit
     ? `<td class="no-export" style="text-align:center;white-space:nowrap">
-        <button class="btn btn-w btn-xs" data-ph-action="hist-edit-one" data-ph-name="${escJS(pName)}" data-ph-index="${hi}"${srcAttrs} title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
-        <button class="btn btn-r btn-xs" data-ph-action="hist-delete-one" data-ph-name="${escJS(pName)}" data-ph-index="${hi}"${srcAttrs} title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
+        <button class="btn btn-w btn-xs" data-ph-action="hist-edit-one" data-ph-name="${escJS(pName)}" data-ph-index="${hi}"${_editableSourceAttrs} title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
+        <button class="btn btn-r btn-xs" data-ph-action="hist-delete-one" data-ph-name="${escJS(pName)}" data-ph-index="${hi}"${_editableSourceAttrs} title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
       </td>`
     : (isLoggedIn?'<td class="no-export"></td>':'');
   const modeLbl=_pdNormalizeRecentModeLabel(hh.mode);
