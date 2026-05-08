@@ -42,6 +42,37 @@ function _statsNormGender(v){
 function _statsAllHist(p){
   return Array.isArray(p&&p.history) ? p.history.filter(Boolean) : [];
 }
+function _statsSyncFilterToWindow(){
+  try{
+    window._statsDateFrom = _statsDateFrom || '';
+    window._statsDateTo   = _statsDateTo || '';
+    window._statsMinGames = Number(_statsMinGames||0) || 0;
+    window._statsLastN    = Number(_statsLastN||0) || 0;
+  }catch(e){}
+}
+function _statsHasAnyHistory(){
+  try{ return (players||[]).some(p=>_statsAllHist(p).length>0); }catch(e){ return false; }
+}
+function _statsHasAnyMatchData(){
+  try{
+    const arrs=[miniM,univM,ckM,comps,proM,ttM,gjM,indM,tourneys,proTourneys];
+    return arrs.some(a=>Array.isArray(a) && a.length>0);
+  }catch(e){ return false; }
+}
+function _statsEnsureHistoryReady(){
+  try{
+    if(window.__stats_hist_ready) return;
+    // 이미 history가 있으면 OK
+    if(_statsHasAnyHistory()){ window.__stats_hist_ready = true; return; }
+    // 경기 데이터가 없으면 생성할 것도 없음
+    if(!_statsHasAnyMatchData()) return;
+    // 자동 재생성(무확인/무알림) — 통계 탭 기능을 살리기 위한 안전장치
+    if(typeof _rebuildAllPlayerHistoryCore === 'function'){
+      _rebuildAllPlayerHistoryCore();
+      window.__stats_hist_ready = true;
+    }
+  }catch(e){}
+}
 function _statsYmFromDateStr(v){
   try{
     const iso = (typeof window._toIsoDateStr === 'function') ? window._toIsoDateStr(v) : String(v||'').trim();
@@ -61,6 +92,10 @@ function _statsLatestActiveMonths(gender){
 
 function rStats(C,T){
   T.textContent='📊 통계';
+  // 전역 유틸(stats-core-utils.js)이 window._statsDateFrom 등을 참조하므로 항상 동기화
+  _statsSyncFilterToWindow();
+  // history가 비어있으면 통계가 전부 비어 보이므로 자동 재생성 시도
+  _statsEnsureHistoryReady();
   const _coreIds = new Set(['overview','tierRank','award','radar','univwinbar','period','psearch','sharecard']);
   window._statsViewMode = window._statsViewMode || (_coreIds.has(window.statsSub||'overview') ? 'core' : 'advanced');
   // (A안) 하위 탭 + 전역필터를 '필터'로 접기/펼치기
@@ -187,6 +222,12 @@ function rStats(C,T){
         ~
         <input type="date" value="${_statsDateTo}" onchange="_statsDateTo=this.value;render()" style="font-size:11px;padding:2px 5px;border:1px solid var(--border2);border-radius:5px">
       </label>
+      <label style="font-size:11px;display:flex;align-items:center;gap:4px;white-space:nowrap" title="월만 선택하면 해당 월의 1일~말일로 자동 설정합니다">
+        🗓️ 월
+        <input type="month" value="${(_statsDateFrom||_statsDateTo)?(String((_statsDateFrom||_statsDateTo)).slice(0,7)):''}"
+          onchange="try{const v=this.value||'';if(!v){_statsDateFrom='';_statsDateTo='';render();return;}const a=v.split('-');const yy=+a[0],mm=+a[1];const last=new Date(yy,mm,0).getDate();_statsDateFrom=v+'-01';_statsDateTo=v+'-'+String(last).padStart(2,'0');render();}catch(e){render();}"
+          style="font-size:11px;padding:2px 5px;border:1px solid var(--border2);border-radius:5px;width:120px">
+      </label>
       <label style="font-size:11px;display:flex;align-items:center;gap:4px;white-space:nowrap" title="이 경기 수 미만인 스트리머는 승률 집계에서 제외됩니다">
         🎮 최소경기
         <input type="number" min="1" max="99" value="${_statsMinGames}" onchange="_statsMinGames=Math.max(1,parseInt(this.value)||1);render()" style="width:50px;font-size:11px;padding:2px 5px;border:1px solid var(--border2);border-radius:5px">
@@ -214,41 +255,41 @@ function rStats(C,T){
     const c=_scGet(sub);
     return c || _scSet(sub, fn());
   }
-  if(window.statsSub==='overview')    h+=_cached('overview', statsOverviewHTML);
-  else if(window.statsSub==='tierRank')h+=statsTierRankHTML();   // 티어 선택/상세 열림 상태 있음
-  else if(window.statsSub==='starsystem'){
-    try{ h+=statsStarSystemHTML(); }
+  function _safeRender(fn, title){
+    try{ return fn(); }
     catch(e){
-      h+=`<div class="ssec"><div style="color:#dc2626;font-weight:900;margin-bottom:6px">스타시스템 렌더 오류</div><div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;color:var(--gray-l)">${String(e)}</div></div>`;
-      try{ console.error(e); }catch(_){}
+      try{ console.error('[stats tab error]', title, e); }catch(_){}
+      return `<div class="ssec"><div style="color:#dc2626;font-weight:900;margin-bottom:6px">${escHTML(title||'통계')} 렌더 오류</div><div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;color:var(--gray-l)">${escHTML(String(e&&e.stack||e))}</div></div>`;
     }
-  const sel=document.getElementById('growth-player-select');
-  if(sel) sel.value=_growthSel;
   }
-  else if(window.statsSub==='elo')    h+=statsEloHTML();         // 선수 선택 상태 있음
-  else if(window.statsSub==='growth') h+=statsGrowthHTML();      // 선수 선택 상태 있음
-  else if(window.statsSub==='award')  h+=_cached('award', statsAwardHTML);
-  else if(window.statsSub==='records')h+=_cached('records', statsRecordsHTML);
-  else if(window.statsSub==='radar')  h+=statsRadarHTML();       // 차트 초기화 필요
-  else if(window.statsSub==='period') h+=_cached('period', statsPeriodAnalysisHTML);
-  else if(window.statsSub==='mismatch')h+=_cached('mismatch', statsMismatchHTML);
-  else if(window.statsSub==='heatmap')  h+=_cached('heatmap', statsHeatmapHTML);
-  else if(window.statsSub==='tierwin')  h+=_cached('tierwin', statsTierWinHTML);
-  else if(window.statsSub==='maprank')  h+=_cached('maprank', statsMapRankHTML);
-  else if(window.statsSub==='univmatrix')h+=_cached('univmatrix', statsUnivMatrixHTML);
-  else if(window.statsSub==='racetrend')h+=statsRaceTrendHTML(); // 차트 초기화 필요
-  else if(window.statsSub==='csvexport')h+=statsCsvExportHTML();
-  else if(window.statsSub==='psearch')   h+=statsPlayerSearchHTML();
-  else if(window.statsSub==='sharecard')h+=statsShareCardHTML();
-  else if(window.statsSub==='advsearch')h+=statsAdvSearchHTML(); // 검색 필터 상태 있음
-  else if(window.statsSub==='killer')   h+=_cached('killer', statsKillerHTML);
-  else if(window.statsSub==='seasonal') h+=_cached('seasonal', statsSeasonalHTML);
-  else if(window.statsSub==='clutch')   h+=_cached('clutch', statsClutchHTML);
-  else if(window.statsSub==='streakhist')h+=_cached('streakhist', statsStreakHistHTML);
-  else if(window.statsSub==='tiermatch') h+=_cached('tiermatch', statsTierMatchHTML);
-  else if(window.statsSub==='univmatrix2')h+=_cached('univmatrix2', statsUnivMatrix2HTML);
-  else if(window.statsSub==='playervs')  h+=statsPlayerVsHTML();
-  else if(window.statsSub==='univwinbar') h+=statsUnivWinBarHTML();
+
+  if(window.statsSub==='overview')    h+=_safeRender(()=>_cached('overview', statsOverviewHTML), '종합');
+  else if(window.statsSub==='tierRank')h+=_safeRender(statsTierRankHTML, '티어 랭킹');
+  else if(window.statsSub==='starsystem')h+=_safeRender(statsStarSystemHTML, '스타시스템');
+  else if(window.statsSub==='elo')    h+=_safeRender(statsEloHTML, 'ELO 그래프');
+  else if(window.statsSub==='growth') h+=_safeRender(statsGrowthHTML, '성장 곡선');
+  else if(window.statsSub==='award')  h+=_safeRender(()=>_cached('award', statsAwardHTML), '이달의 스트리머');
+  else if(window.statsSub==='records')h+=_safeRender(()=>_cached('records', statsRecordsHTML), '최다 기록');
+  else if(window.statsSub==='radar')  h+=_safeRender(statsRadarHTML, '대학 레이더');
+  else if(window.statsSub==='period') h+=_safeRender(()=>_cached('period', statsPeriodAnalysisHTML), '주간/월간 분석');
+  else if(window.statsSub==='mismatch')h+=_safeRender(()=>_cached('mismatch', statsMismatchHTML), '미스매치');
+  else if(window.statsSub==='heatmap')  h+=_safeRender(()=>_cached('heatmap', statsHeatmapHTML), '활동 히트맵');
+  else if(window.statsSub==='tierwin')  h+=_safeRender(()=>_cached('tierwin', statsTierWinHTML), '티어별 승률(개인)');
+  else if(window.statsSub==='maprank')  h+=_safeRender(()=>_cached('maprank', statsMapRankHTML), '맵별 특화');
+  else if(window.statsSub==='univmatrix')h+=_safeRender(()=>_cached('univmatrix', statsUnivMatrixHTML), '대학 매트릭스');
+  else if(window.statsSub==='racetrend')h+=_safeRender(statsRaceTrendHTML, '종족 트렌드');
+  else if(window.statsSub==='csvexport')h+=_safeRender(statsCsvExportHTML, 'CSV 내보내기');
+  else if(window.statsSub==='psearch')   h+=_safeRender(statsPlayerSearchHTML, '스트리머 검색');
+  else if(window.statsSub==='sharecard')h+=_safeRender(statsShareCardHTML, '공유 카드');
+  else if(window.statsSub==='advsearch')h+=_safeRender(statsAdvSearchHTML, '고급 검색');
+  else if(window.statsSub==='killer')   h+=_safeRender(()=>_cached('killer', statsKillerHTML), '킬러/피해자');
+  else if(window.statsSub==='seasonal') h+=_safeRender(()=>_cached('seasonal', statsSeasonalHTML), '요일/시즌 승률');
+  else if(window.statsSub==='clutch')   h+=_safeRender(()=>_cached('clutch', statsClutchHTML), '클러치 지수');
+  else if(window.statsSub==='streakhist')h+=_safeRender(()=>_cached('streakhist', statsStreakHistHTML), '연속 기록 히스토리');
+  else if(window.statsSub==='tiermatch') h+=_safeRender(()=>_cached('tiermatch', statsTierMatchHTML), '티어별 승률(팀전)');
+  else if(window.statsSub==='univmatrix2')h+=_safeRender(()=>_cached('univmatrix2', statsUnivMatrix2HTML), '대학 매트릭스+');
+  else if(window.statsSub==='playervs')  h+=_safeRender(statsPlayerVsHTML, '스트리머 비교');
+  else if(window.statsSub==='univwinbar') h+=_safeRender(statsUnivWinBarHTML, '대학별 승률');
   C.innerHTML=h;
   // 서브탭별 후처리
   if(window.statsSub==='elo')         initEloChart();
@@ -898,6 +939,23 @@ function statsOverviewHTML(){
    2. ELO 랭킹 변동 그래프
 ══════════════════════════════════════ */
 let _eloSelPlayer='';
+function _statsRebuildHistoryCtaHTML(){
+  // history가 비어있으면 통계 대부분이 "스트리머 없음"으로 보임 → 사용자에게 재생성 버튼 제공
+  if(_statsHasAnyHistory()) return '';
+  if(!_statsHasAnyMatchData()) return `<div style="padding:16px 18px;border:1px dashed var(--border2);border-radius:12px;color:var(--gray-l);font-size:12px">아직 저장된 경기 데이터가 없습니다.</div>`;
+  return `
+    <div style="padding:14px 16px;border:1px solid #fde68a;background:#fffbeb;border-radius:12px;display:flex;flex-direction:column;gap:8px">
+      <div style="font-weight:900;color:#92400e">⚠️ 스트리머 경기 기록(history)이 비어 있습니다</div>
+      <div style="font-size:12px;color:#a16207;line-height:1.6">
+        통계 탭(ELO/성장/킬러/클러치/연속기록 등)은 <b>스트리머별 history</b>를 기준으로 집계합니다.<br>
+        현재는 경기 데이터는 있는데 history가 아직 재생성되지 않아 "스트리머 없음"으로 보입니다.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-b btn-sm" onclick="try{if(typeof _rebuildAllPlayerHistoryCore==='function'){_rebuildAllPlayerHistoryCore();window.__stats_hist_ready=true;}render();}catch(e){alert(String(e));}">🛠️ 스트리머 기록 재생성</button>
+      </div>
+    </div>
+  `;
+}
 function applyEloSearch(q, forceExact){
   const raw=String(q||'').trim();
   if(!raw) return false;
@@ -918,6 +976,8 @@ function eloSearchFilter(q){
   items.forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});
 }
 function statsEloHTML(){
+  const cta=_statsRebuildHistoryCtaHTML();
+  if(cta) return `<div class="ssec">${cta}</div>`;
   const allWithHist=players.filter(p=>_statsAllHist(p).length>0)
     .sort((a,b)=>(b.elo||ELO_DEFAULT)-(a.elo||ELO_DEFAULT));
   const top20=allWithHist.slice(0,30);
@@ -1091,6 +1151,8 @@ function applyGrowthSearch(q, forceExact){
   return true;
 }
 function statsGrowthHTML(){
+  const cta=_statsRebuildHistoryCtaHTML();
+  if(cta) return `<div class="ssec">${cta}</div>`;
   const cands=_statsGrowthCandidates();
   if(!_growthSel&&cands.length)_growthSel=cands[0].name;
   const selP=statsP(_growthSel);
@@ -1199,24 +1261,22 @@ function statsAwardHTML(){
   const monthsF=_statsLatestActiveMonths('F');
   const monthsM=_statsLatestActiveMonths('M');
   const monthsAll=_statsLatestActiveMonths('');
-  const inter=monthsF.filter(x=>monthsM.includes(x));
-  const baseMonths = inter.length ? inter : monthsAll;
-  // ✅ 전역 날짜 필터가 있으면 그 달을 우선 사용 (사용자가 2월/4월로 바꾸면 여기서 따라감)
-  function _pickedYmFromGlobalFilter(){
-    try{
-      const f = String(_statsDateFrom||'').trim();
-      const t = String(_statsDateTo||'').trim();
-      const toIso = (v)=> (typeof window._toIsoDateStr==='function') ? window._toIsoDateStr(v) : String(v||'').trim();
-      const fy = f ? toIso(f).slice(0,7) : '';
-      const ty = t ? toIso(t).slice(0,7) : '';
-      if(/^\d{4}-\d{2}$/.test(fy) && /^\d{4}-\d{2}$/.test(ty) && fy===ty) return fy;
-      if(/^\d{4}-\d{2}$/.test(fy)) return fy;
-      if(/^\d{4}-\d{2}$/.test(ty)) return ty;
-    }catch(e){}
-    return '';
-  }
-  const ym=_pickedYmFromGlobalFilter() || baseMonths[0] || (()=>{const now=new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;})();
-  const prevYm=baseMonths[1] || (function(cur){ const [yy,mm]=String(cur).split('-').map(Number); if(!yy||!mm) return ''; return mm===1?`${yy-1}-12`:`${yy}-${String(mm-1).padStart(2,'0')}`; })(ym);
+  // ✅ 월 선택 UI 제거 요청 반영:
+  // - 이 섹션은 전역 필터(기간/올해/최근3개월/월 입력)를 우선 반영
+  // - 전역 필터가 없으면 "가장 최근 월" 자동 선택
+  const ym=monthsAll[0] || (()=>{const now=new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;})();
+  const prevYm=(function(cur){ const [yy,mm]=String(cur).split('-').map(Number); if(!yy||!mm) return ''; return mm===1?`${yy-1}-12`:`${yy}-${String(mm-1).padStart(2,'0')}`; })(ym);
+
+  // ✅ 전역 필터(올해/이번달/최근3개월/최소경기 등)도 "이달의 스트리머"에서 동작하게:
+  // - 날짜 From/To가 설정되어 있으면 해당 기간으로 집계
+  // - 없으면 월(YYYY-MM)로 집계
+  const _toIso = (v)=> (typeof window._toIsoDateStr==='function') ? window._toIsoDateStr(v) : String(v||'').trim();
+  const _gfFrom = String(_statsDateFrom||'').trim();
+  const _gfTo = String(_statsDateTo||'').trim();
+  const _rangeFrom = _gfFrom ? _toIso(_gfFrom) : (_gfTo ? _toIso(_gfTo) : '');
+  const _rangeTo = _gfTo ? _toIso(_gfTo) : (_gfFrom ? _toIso(_gfFrom) : '');
+  const _useRange = !!(_rangeFrom || _rangeTo);
+  const _rangeLabel = _useRange ? `${_rangeFrom||'-'} ~ ${_rangeTo||'-'}` : '';
 
   function calcMonth(ym2, gender){
     const g=_statsNormGender(gender);
@@ -1227,10 +1287,35 @@ function statsAwardHTML(){
       const l=mh.filter(h=>h.result==='패').length;
       const tot=w+l;
       return{...p,mw:w,ml:l,mt:tot,mrate:tot?Math.round(w/tot*100):0};
-    }).filter(Boolean).filter(p=>p.mt>0).sort((a,b)=>b.mw-a.mw||b.mrate-a.mrate);
+    })
+    .filter(Boolean)
+    .filter(p=>p.mt>=Math.max(1, Number(_statsMinGames||0)||0))
+    .sort((a,b)=>b.mw-a.mw||b.mrate-a.mrate);
   }
-  const curListF=calcMonth(ym,'F');
-  const curListM=calcMonth(ym,'M');
+  function calcRange(fromIso, toIso, gender){
+    const g=_statsNormGender(gender);
+    const from = String(fromIso||'').trim();
+    const to = String(toIso||'').trim();
+    return players.map(p=>{
+      if(g && _statsNormGender(p.gender)!==g) return null;
+      const mh=_statsAllHist(p).filter(h=>{
+        const d = _toIso(h && h.date);
+        if(!d || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
+        if(from && d < from) return false;
+        if(to && d > to) return false;
+        return true;
+      });
+      const w=mh.filter(h=>h.result==='승').length;
+      const l=mh.filter(h=>h.result==='패').length;
+      const tot=w+l;
+      return{...p,mw:w,ml:l,mt:tot,mrate:tot?Math.round(w/tot*100):0};
+    })
+    .filter(Boolean)
+    .filter(p=>p.mt>=Math.max(1, Number(_statsMinGames||0)||0))
+    .sort((a,b)=>b.mw-a.mw||b.mrate-a.mrate);
+  }
+  const curListF=_useRange ? calcRange(_rangeFrom,_rangeTo,'F') : calcMonth(ym,'F');
+  const curListM=_useRange ? calcRange(_rangeFrom,_rangeTo,'M') : calcMonth(ym,'M');
   const prevListF=calcMonth(prevYm,'F');
   const prevListM=calcMonth(prevYm,'M');
   const curList=[...(curListF||[]), ...(curListM||[])];
@@ -1286,8 +1371,20 @@ function statsAwardHTML(){
   return`<div style="display:flex;flex-direction:column;gap:20px">
   <div class="ssec" id="stats-award-sec">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <h4 style="margin:0">🏆 이달의 스트리머 <span style="font-size:12px;color:var(--gray-l);font-weight:400">${y}년 ${m}월</span> <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <h4 style="margin:0">🏆 이달의 스트리머 ${
+          _useRange
+            ? `<span style="font-size:12px;color:var(--gray-l);font-weight:400">${_rangeLabel}</span>`
+            : `<span style="font-size:12px;color:var(--gray-l);font-weight:400">${y}년 ${m}월</span>`
+        } <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
+      </div>
       <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-award-sec','award')">📷 이미지 저장</button>
+    </div>
+    <div style="font-size:11px;color:var(--gray-l);margin:-6px 0 10px;line-height:1.5">
+      ${_useRange
+        ? `※ 현재는 전역 필터(올해/최근3개월/기간 From~To)로 집계 중입니다. <b>최소경기</b>도 반영됩니다.`
+        : `※ 기본은 <b>월 단위</b> 자동 집계이며, 전역 필터(올해/최근3개월/월 입력/기간)를 사용하면 해당 기간 집계로 자동 전환됩니다.`
+      }
     </div>
     <div style="font-weight:900;font-size:12px;color:#db2777;margin:6px 0 8px">👩 여자</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
