@@ -221,17 +221,19 @@
         }
         return `<div style="width:${teamLogoBox}px;height:${teamLogoBox}px;border-radius:16px;background:${panelBg};margin:${teamHeaderLayout==='stack'?'0 auto 8px':'0'};display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden;color:#fff;font-weight:1000;font-size:${Math.round(22*scp.logoSize)}px">${side}</div>`;
       };
-      const teamMiniMemberCell = (side, mem, idx)=>{
+      const teamMiniMemberCell = (side, mem, idx, sz)=>{
         const p = hydratePlayer(mem&&mem.name, mem);
         const rgb = side==='A' ? caRgb : cbRgb;
         const name = String((p && p.name) || '').trim() || `${idx+1}번`;
         const race = String((p && p.race) || '').trim();
         const univ = String((p && p.univ) || '').trim();
         let icon = '';
+        const size = Math.max(28, Math.min(60, parseInt(sz||46,10)||46));
+        const logoSz = Math.max(16, Math.round(size * 0.52));
         if(p && p.photo){
-          icon = `<div style="position:relative;width:46px;height:46px"><img src="${toHttpsUrl(p.photo)}" style="width:46px;height:46px;border-radius:999px;object-fit:cover;border:2px solid rgba(255,255,255,.68);box-shadow:0 5px 16px rgba(0,0,0,.24)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:46px;height:46px;border-radius:999px;background:rgba(${rgb},.22);align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden">${univIconHTML(univ,'24px')}</div>${race ? `<span class="rbadge r${race}" style="position:absolute;right:-3px;bottom:-3px;font-size:8px;padding:0 5px;line-height:14px;box-shadow:0 3px 10px rgba(0,0,0,.22)">${race}</span>` : ''}</div>`;
+          icon = `<div style="position:relative;width:${size}px;height:${size}px"><img src="${toHttpsUrl(p.photo)}" style="width:${size}px;height:${size}px;border-radius:999px;object-fit:cover;border:2px solid rgba(255,255,255,.68);box-shadow:0 5px 16px rgba(0,0,0,.24)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:${size}px;height:${size}px;border-radius:999px;background:rgba(${rgb},.22);align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden">${univIconHTML(univ,logoSz+'px')}</div>${race ? `<span class="rbadge r${race}" style="position:absolute;right:-3px;bottom:-3px;font-size:8px;padding:0 5px;line-height:14px;box-shadow:0 3px 10px rgba(0,0,0,.22)">${race}</span>` : ''}</div>`;
         }else{
-          icon = `<div style="position:relative;width:46px;height:46px"><div style="width:46px;height:46px;border-radius:999px;background:rgba(${rgb},.22);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;box-shadow:0 5px 16px rgba(0,0,0,.18)">${univ ? univIconHTML(univ,'24px') : `<span style="color:#fff;font-weight:1000;font-size:15px">${name.slice(0,1)}</span>`}</div>${race ? `<span class="rbadge r${race}" style="position:absolute;right:-3px;bottom:-3px;font-size:8px;padding:0 5px;line-height:14px;box-shadow:0 3px 10px rgba(0,0,0,.22)">${race}</span>` : ''}</div>`;
+          icon = `<div style="position:relative;width:${size}px;height:${size}px"><div style="width:${size}px;height:${size}px;border-radius:999px;background:rgba(${rgb},.22);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;box-shadow:0 5px 16px rgba(0,0,0,.18)">${univ ? univIconHTML(univ,logoSz+'px') : `<span style="color:#fff;font-weight:1000;font-size:${Math.max(12,Math.round(size*0.33))}px">${name.slice(0,1)}</span>`}</div>${race ? `<span class="rbadge r${race}" style="position:absolute;right:-3px;bottom:-3px;font-size:8px;padding:0 5px;line-height:14px;box-shadow:0 3px 10px rgba(0,0,0,.22)">${race}</span>` : ''}</div>`;
         }
         return `<div style="min-width:0;padding:2px 1px;border-radius:14px;background:transparent;display:flex;flex-direction:column;align-items:center;gap:0">
           <div style="display:flex;align-items:center;justify-content:center">${icon}</div>
@@ -239,10 +241,14 @@
       };
       const teamRosterPanel = (side, win)=>{
         const rgb = side==='A' ? caRgb : cbRgb;
-        const arr = (side==='A' ? membersA : membersB).slice(0, 6);
+        const arr = (side==='A' ? membersA : membersB) || [];
+        // 인원이 많아도 전부 보이도록: 인원 수에 따라 아이콘 크기/열 수 자동 조정
+        const n = arr.length;
+        const cols = n>18?6:n>12?5:n>8?4:3;
+        const iconSz = n>18?30:n>12?34:n>8?38:46;
         return `<div style="flex:1;min-width:0;padding:6px 6px 5px;border-radius:18px;background:${win?`rgba(${rgb},.18)`:'rgba(255,255,255,.10)'};border:1px solid ${win?'rgba(255,255,255,.34)':'rgba(255,255,255,.14)'};box-shadow:${win?'0 10px 24px rgba(0,0,0,.14)':'none'}">
-          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
-            ${arr.map((mem,idx)=>teamMiniMemberCell(side, mem, idx)).join('')}
+          <div style="display:grid;grid-template-columns:repeat(${cols},minmax(0,1fr));gap:6px">
+            ${arr.map((mem,idx)=>teamMiniMemberCell(side, mem, idx, iconSz)).join('')}
           </div>
         </div>`;
       };

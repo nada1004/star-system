@@ -3827,7 +3827,9 @@ function openProMembersPopup(teamLabel, teamColor, members){
 
     const modal = document.createElement('div');
     modal.id = 'proMembersModal';
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;';
+    // modal-drag.js가 인식하도록 class 부여 (PC에서 헤더 드래그 이동)
+    modal.className = 'modal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
 
     const membersHTML = members.map(mem => {
       const memName = typeof mem === 'string' ? mem : (mem.name || mem);
@@ -3851,21 +3853,24 @@ function openProMembersPopup(teamLabel, teamColor, members){
     }).join('');
 
     modal.innerHTML = `
-      <div style="background:#ffffff;border-radius:16px;max-width:360px;width:90%;max-height:80vh;overflow:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="width:12px;height:12px;border-radius:50%;background:${teamColor};"></span>
-            <h3 style="margin:0;font-size:18px;font-weight:800;">${teamLabel} 참가자</h3>
-            <span style="font-size:12px;color:#6b7280;">총 ${members.length}명</span>
+      <div class="mbox" style="background:#ffffff;border-radius:16px;max-width:420px;width:100%;max-height:80vh;overflow:auto;padding:18px 18px 16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <div class="mtitle" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:move;user-select:none">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+            <span style="width:12px;height:12px;border-radius:50%;background:${teamColor};flex-shrink:0"></span>
+            <div style="min-width:0">
+              <div style="margin:0;font-size:16px;font-weight:900;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${teamLabel} 참가자</div>
+              <div style="font-size:12px;color:#6b7280;margin-top:2px">총 ${members.length}명</div>
+            </div>
           </div>
-          <button onclick="document.getElementById('proMembersModal').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;">×</button>
+          <button onclick="document.getElementById('proMembersModal').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;line-height:1">×</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;">
           ${membersHTML}
         </div>
-        <div style="margin-top:20px;display:flex;justify-content:center;">
+        <div style="margin-top:14px;display:flex;justify-content:center;">
           <button class="btn btn-w" onclick="document.getElementById('proMembersModal').remove()">닫기</button>
         </div>
+        <div style="margin-top:10px;font-size:11px;color:#94a3b8;text-align:center">※ PC에서는 상단 제목을 드래그해서 창을 이동할 수 있습니다.</div>
       </div>
     `;
     document.body.appendChild(modal);

@@ -78,7 +78,7 @@ async function _ensureStatsLoaded(){
   await window.ensureChartJS();
   await _loadScriptOnce('js/sharecard-normalize.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-theme.js?v=20260503-05');
-  await _loadScriptOnce('js/sharecard-team.js?v=20260504-02');
+  await _loadScriptOnce('js/sharecard-team.js?v=20260508-01');
   await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
   await _loadScriptOnce('js/stats-tier-rank-utils.js?v=20260503-01');
   await _loadScriptOnce('js/stats-heatmap-utils.js?v=20260503-01');
@@ -117,7 +117,7 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-normalize.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-theme.js?v=20260503-05');
-  await _loadScriptOnce('js/sharecard-team.js?v=20260504-02');
+  await _loadScriptOnce('js/sharecard-team.js?v=20260508-01');
   await _loadScriptOnce('js/sharecard-runtime.js?v=20260504-02');
   await _loadScriptOnce('js/sharecard-render-entity.js?v=20260504-03');
   await _loadScriptOnce('js/sharecard-render-match-helpers.js?v=20260503-01');

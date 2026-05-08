@@ -117,6 +117,44 @@ function _findProTourStageRecordByMeta(meta){
   }
 }
 
+function _findProTourGroupMatchByMeta(meta){
+  try{
+    if(!meta || meta.sourceType !== 'proTourGrp') return null;
+    const tn = (typeof proTourneys!=='undefined' ? proTourneys : []).find(t=>String(t&&t.id||'')===String(meta.tnId||''));
+    if(!tn) return null;
+    const gi = Number(meta.grpIdx);
+    const mi = Number(meta.matchIdx);
+    if(!Number.isFinite(gi) || !Number.isFinite(mi)) return null;
+    const grp = (tn.groups||[])[gi];
+    if(!grp) return null;
+    const arr = grp.matches || [];
+    const rec = arr[mi];
+    if(!rec) return null;
+    return { tn, grp, arr, gi, mi, rec };
+  }catch(e){
+    return null;
+  }
+}
+
+function _findTourGroupMatchByMeta(meta){
+  try{
+    if(!meta || meta.sourceType !== 'tourGrp') return null;
+    const tn = (typeof tourneys!=='undefined' ? tourneys : []).find(t=>String(t&&t.id||'')===String(meta.tnId||''));
+    if(!tn) return null;
+    const gi = Number(meta.grpIdx);
+    const mi = Number(meta.matchIdx);
+    if(!Number.isFinite(gi) || !Number.isFinite(mi)) return null;
+    const grp = (tn.groups||[])[gi];
+    if(!grp) return null;
+    const arr = grp.matches || [];
+    const rec = arr[mi];
+    if(!rec) return null;
+    return { tn, grp, arr, gi, mi, rec };
+  }catch(e){
+    return null;
+  }
+}
+
 function deletePlayerRecentEditableSource(playerName, meta){
   if(!isLoggedIn || !meta) return;
   if(meta.sourceType === 'proTourStage'){
@@ -139,16 +177,83 @@ function deletePlayerRecentEditableSource(playerName, meta){
     }
     refreshPlayerModalIfOpen();
   }
+  else if(meta.sourceType === 'proTourGrp'){
+    const found=_findProTourGroupMatchByMeta(meta);
+    if(!found || !found.rec) return;
+    if(!_guardRecentEdit(found.rec.d||'')) return;
+    if(!confirm('이 경기 기록을 삭제할까요?')) return;
+    try{
+      if(typeof window.proCompDelMatch === 'function'){
+        window.proCompDelMatch(found.tn.id, found.gi, found.mi);
+      }else{
+        found.arr.splice(found.mi,1);
+        save(); render();
+      }
+    }catch(e){
+      alert('삭제 실패: '+(e&&e.message?e.message:e));
+      return;
+    }
+    refreshPlayerModalIfOpen();
+  }
+  else if(meta.sourceType === 'tourGrp'){
+    const found=_findTourGroupMatchByMeta(meta);
+    if(!found || !found.rec) return;
+    if(!_guardRecentEdit(found.rec.d||'')) return;
+    if(!confirm('이 경기 기록을 삭제할까요?')) return;
+    try{
+      if(typeof window.grpDelMatch === 'function'){
+        window.grpDelMatch(found.tn.id, found.gi, found.mi);
+      }else{
+        found.arr.splice(found.mi,1);
+        save(); render();
+      }
+    }catch(e){
+      alert('삭제 실패: '+(e&&e.message?e.message:e));
+      return;
+    }
+    refreshPlayerModalIfOpen();
+  }
+  else if(meta.sourceType === 'tourBkt'){
+    const tnId = meta.tnId || '';
+    const r = Number(meta.rnd);
+    const mi = Number(meta.mi);
+    if(!tnId || !Number.isFinite(r) || !Number.isFinite(mi)) return;
+    if(!_guardRecentEdit(meta.d||'')) {
+      // date가 없으면 차단이 과할 수 있어, 실제 기록을 찾아서 날짜로 재검증
+      try{
+        const tn = (typeof tourneys!=='undefined'?tourneys:[]).find(t=>String(t&&t.id||'')===String(tnId));
+        const det = tn && tn.bracket && tn.bracket.matchDetails && tn.bracket.matchDetails[`${r}-${mi}`];
+        if(det && !_guardRecentEdit(det.d||'')) return;
+      }catch(e){ return; }
+    }
+    if(!confirm('이 경기 결과를 삭제할까요?')) return;
+    try{
+      if(typeof window.bktClearMatchResult === 'function'){
+        window.bktClearMatchResult(tnId, r, mi);
+      }else{
+        const tn = (typeof tourneys!=='undefined'?tourneys:[]).find(t=>String(t&&t.id||'')===String(tnId));
+        if(tn && tn.bracket && tn.bracket.matchDetails && tn.bracket.matchDetails[`${r}-${mi}`]){
+          const det = tn.bracket.matchDetails[`${r}-${mi}`];
+          det.sa=null; det.sb=null; det.sets=[]; det.winner='';
+          save(); render();
+        }
+      }
+    }catch(e){
+      alert('삭제 실패: '+(e&&e.message?e.message:e));
+      return;
+    }
+    refreshPlayerModalIfOpen();
+  }
 }
 
 function openPlayerRecentEditableSourceEdit(playerName, meta){
   if(!isLoggedIn || !meta) return;
-  if(meta.sourceType !== 'proTourStage') return;
-  const found = _findProTourStageRecordByMeta(meta);
-  if(!found || !found.rec) return;
-  const rec = found.rec;
-  if(!_guardRecentEdit(rec.d||'')) return;
-  const selfIsA = rec.a === playerName;
+  if(meta.sourceType === 'proTourStage'){
+    const found = _findProTourStageRecordByMeta(meta);
+    if(!found || !found.rec) return;
+    const rec = found.rec;
+    if(!_guardRecentEdit(rec.d||'')) return;
+    const selfIsA = rec.a === playerName;
   const currentOpp = selfIsA ? rec.b : rec.a;
   const currentResult = ((selfIsA && rec.winner==='A') || (!selfIsA && rec.winner==='B')) ? '승' : '패';
   const mapOpts=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
@@ -212,7 +317,45 @@ function openPlayerRecentEditableSourceEdit(playerName, meta){
       }
     };
   }
-  om('reModal');
+    om('reModal');
+    return;
+  }
+  if(meta.sourceType === 'proTourGrp'){
+    const found=_findProTourGroupMatchByMeta(meta);
+    if(!found || !found.rec) return;
+    if(!_guardRecentEdit(found.rec.d||'')) return;
+    if(typeof window.proCompEditMatch === 'function'){
+      window.proCompEditMatch(found.tn.id, found.gi, found.mi);
+    }
+    return;
+  }
+  if(meta.sourceType === 'tourGrp'){
+    const found=_findTourGroupMatchByMeta(meta);
+    if(!found || !found.rec) return;
+    if(!_guardRecentEdit(found.rec.d||'')) return;
+    if(typeof window.leagueEditMatch === 'function'){
+      window.leagueEditMatch(found.tn.id, found.gi, found.mi);
+    }
+    return;
+  }
+  if(meta.sourceType === 'tourBkt'){
+    const tnId=meta.tnId||'';
+    const r=Number(meta.rnd);
+    const mi=Number(meta.mi);
+    if(!tnId || !Number.isFinite(r) || !Number.isFinite(mi)) return;
+    // 날짜 가드(가능하면 실제 기록에서)
+    try{
+      const tn=(typeof tourneys!=='undefined'?tourneys:[]).find(t=>String(t&&t.id||'')===String(tnId));
+      const det=tn && tn.bracket && tn.bracket.matchDetails && tn.bracket.matchDetails[`${r}-${mi}`];
+      if(det && !_guardRecentEdit(det.d||'')) return;
+    }catch(e){}
+    const teamA = meta.teamA || '';
+    const teamB = meta.teamB || '';
+    if(typeof window.openBracketMatchModal === 'function'){
+      window.openBracketMatchModal(tnId, r, mi, teamA, teamB);
+    }
+    return;
+  }
 }
 
 function deletePlayerHist(playerName, histIdx){

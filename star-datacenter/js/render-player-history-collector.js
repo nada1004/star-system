@@ -256,8 +256,8 @@ function collectPlayerExtraHistoryData(opts){
 
   const tourMatches=[];
   (typeof proTourneys!=='undefined'?proTourneys:[]).forEach(tn=>{
-    (tn.groups||[]).forEach(grp=>{
-      (grp.matches||[]).forEach(m=>{
+    (tn.groups||[]).forEach((grp,gi)=>{
+      (grp.matches||[]).forEach((m,mi)=>{
         const mid=m._id||`protour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
         if(existingMatchIds.has(mid))return;
         if(m.a!==p.name&&m.b!==p.name)return;
@@ -266,7 +266,18 @@ function collectPlayerExtraHistoryData(opts){
         const ln=wn===m.a?m.b:m.a;
         const opp=wn===p.name?ln:wn;
         const oppP=players.find(x=>x.name===opp);
-        tourMatches.push(_attachHistElo({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',matchId:mid,mode:'프로리그대회',_readOnly:true}));
+        // 프로리그 대회 조별리그는 pro-comp.js에서 수정/삭제 가능 → editableSource로 연결
+        tourMatches.push(_attachHistElo({
+          date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',
+          matchId:mid,mode:'프로리그대회',
+          _readOnly:true,
+          _editableSource:true,
+          _sourceType:'proTourGrp',
+          _sourceTnId:tn.id||'',
+          _sourceGrpIdx:gi,
+          _sourceMatchIdx:mi,
+          _sourceId:mid
+        }));
       });
     });
     const _stageRounds = ['64강','32강','16강','8강','4강','결승'];
@@ -314,8 +325,8 @@ function collectPlayerExtraHistoryData(opts){
   });
 
   (typeof tourneys!=='undefined'?tourneys:[]).forEach(tn=>{
-    (tn.groups||[]).forEach(grp=>{
-      (grp.matches||[]).forEach(m=>{
+    (tn.groups||[]).forEach((grp,gi)=>{
+      (grp.matches||[]).forEach((m,mi)=>{
         const mid=m._id||`tour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
         if(existingMatchIds.has(mid))return;
         (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
@@ -329,13 +340,24 @@ function collectPlayerExtraHistoryData(opts){
             h.matchId===mid || (h.date===m.d && h.map===(g.map||'-') && h.opp===opp)
           );
           if(!isDupInHist){
-            tourMatches.push(_attachHistElo({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:mid,mode:tn.type==='tier'?'티어대회':'조별리그',_readOnly:true}));
+            // 일반 대회/티어대회 조별리그는 competition.js에서 수정/삭제 가능 → editableSource로 연결
+            tourMatches.push(_attachHistElo({
+              date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',
+              matchId:mid,mode:tn.type==='tier'?'티어대회':'조별리그',
+              _readOnly:true,
+              _editableSource:true,
+              _sourceType:'tourGrp',
+              _sourceTnId:tn.id||'',
+              _sourceGrpIdx:gi,
+              _sourceMatchIdx:mi,
+              _sourceId:mid
+            }));
           }
         });});
       });
     });
-    Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
-      const mid=m._id||`tour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
+    Object.entries((tn.bracket||{}).matchDetails||{}).forEach(([k,m])=>{
+      const mid=m? (m._id||`tour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`) : (`tour_${tn.id||''}_${k}`);
       if(existingMatchIds.has(mid))return;
       (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
@@ -348,7 +370,25 @@ function collectPlayerExtraHistoryData(opts){
           h.matchId===mid || (h.date===m.d && h.map===(g.map||'-') && h.opp===opp)
         );
         if(!isDupInHist){
-          tourMatches.push(_attachHistElo({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:mid,mode:tn.type==='tier'?'티어대회':'대회',_readOnly:true}));
+          let rr=null, mm=null;
+          try{
+            const parts=String(k||'').split('-');
+            if(parts.length===2){ rr=parseInt(parts[0],10); mm=parseInt(parts[1],10); if(isNaN(rr)) rr=null; if(isNaN(mm)) mm=null; }
+          }catch(e){}
+          // 일반 대회/티어대회 토너먼트는 competition.js에서 수정/삭제 가능 → editableSource로 연결
+          tourMatches.push(_attachHistElo({
+            date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',
+            matchId:mid,mode:tn.type==='tier'?'티어대회':'대회',
+            _readOnly:true,
+            _editableSource:true,
+            _sourceType:'tourBkt',
+            _sourceTnId:tn.id||'',
+            _sourceRnd:rr,
+            _sourceMi:mm,
+            _sourceTeamA:m.a||'',
+            _sourceTeamB:m.b||'',
+            _sourceId:mid
+          }));
         }
       });});
     });
