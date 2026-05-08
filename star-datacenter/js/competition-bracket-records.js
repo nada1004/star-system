@@ -97,7 +97,7 @@ function rBracketSchedule(tn){
               const aBtnColor = ca || '#3b82f6';
               const aMemJson = JSON.stringify(aMembers).replace(/"/g, "'");
               return aMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${aBtnColor};" onclick="event.stopPropagation();openProMembersPopup('${teamA.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
-              <span style="font-size:12px">👥</span><span>${aMembers.length}명</span>
+              <span class="mem-ico">👥</span><span>${aMembers.length}명</span>
             </button>` : '';
             })()}
           </div>
@@ -125,7 +125,7 @@ function rBracketSchedule(tn){
               const bBtnColor = cb || '#ef4444';
               const bMemJson = JSON.stringify(bMembers).replace(/"/g, "'");
               return bMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${bBtnColor};" onclick="event.stopPropagation();openProMembersPopup('${teamB.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})">
-              <span style="font-size:12px">👥</span><span>${bMembers.length}명</span>
+              <span class="mem-ico">👥</span><span>${bMembers.length}명</span>
             </button>` : '';
             })()}
           </div>
