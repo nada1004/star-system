@@ -152,7 +152,9 @@ function _h2hPlayerBgPanel(pName, isWin, isLose){
   const loseFx = isLose ? 'filter:grayscale(1);opacity:.78;' : '';
   const txtCol = isLose ? 'rgba(255,255,255,.78)' : '#fff';
   const txtCol2 = isLose ? 'rgba(255,255,255,.60)' : 'rgba(255,255,255,.86)';
-  return `<div ${click} style="position:relative;overflow:hidden;border-radius:16px;min-height:${size}px;min-width:${Math.max(150,Math.round(size*1.05))}px;flex:1;border:2px solid ${isWin?'#16a34a':'rgba(148,163,184,.35)'};box-shadow:${isWin?'0 14px 30px rgba(34,197,94,.16)':'0 10px 24px rgba(15,23,42,.08)'};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${isLose?'filter:grayscale(1);opacity:.88;':''}">
+  const isMb = _h2hIsMobile();
+  const minW = isMb ? 0 : Math.max(150,Math.round(size*1.05));
+  return `<div ${click} style="position:relative;overflow:hidden;border-radius:16px;min-height:${size}px;min-width:${minW}px;width:100%;flex:1;border:2px solid ${isWin?'#16a34a':'rgba(148,163,184,.35)'};box-shadow:${isWin?'0 14px 30px rgba(34,197,94,.16)':'0 10px 24px rgba(15,23,42,.08)'};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${isLose?'filter:grayscale(1);opacity:.88;':''}">
     <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.30) 55%, rgba(15,23,42,.78) 100%)"></div>
     ${!p.photo?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(28,Math.round(size*0.30))}px;font-weight:1000;color:rgba(255,255,255,.16)">${initial}</div>`:''}
     <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;z-index:1;${loseFx}">

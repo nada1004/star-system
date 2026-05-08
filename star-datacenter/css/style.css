@@ -3585,15 +3585,17 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     padding: 6px 12px !important; font-size: 13px !important;
   }
   .hdr-search-wrap.open .hdr-search-icon { display: none; }
-  #darkToggleBtn { padding: 0 !important; width: 36px; height: 36px; border-radius: 50%; font-size: 16px; display: flex; align-items: center; justify-content: center; }
-  .hdr-login-btn { padding: 0 !important; width: 36px; height: 36px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  /* (요청사항) 모바일 상단 다크/로그인 버튼이 너무 커 보이는 문제 */
+  #darkToggleBtn { padding: 0 !important; width: 30px; height: 30px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .hdr-login-btn { padding: 0 !important; width: 30px; height: 30px; border-radius: 50%; font-size: 13px; display: flex; align-items: center; justify-content: center; }
   #hdrLoginStatus { display: none !important; }
   .hdr-right{gap:6px;min-height:36px;}
   #hdrBgmBtn,#hdrSoopBtn{min-width:36px !important;height:36px !important;padding:0 10px !important;}
 
   /* ── 탭 메뉴 ── */
   .tabs { padding: 4px 6px; gap: 2px; scroll-padding: 6px; }
-  .tab { padding: 7px 10px; font-size: 10px; border-radius: 8px; white-space: nowrap; min-height: 36px; display: flex; align-items: center; touch-action: manipulation; }
+  /* (요청사항) 모바일 상단 탭 메뉴가 손가락 스와이프로 안 밀리는 이슈 대응 */
+  .tab { padding: 7px 10px; font-size: 10px; border-radius: 8px; white-space: nowrap; min-height: 36px; display: flex; align-items: center; touch-action: pan-x; }
   
   /* ── 현황판 탭 하위 메뉴 ── */
   #b2-nav {
