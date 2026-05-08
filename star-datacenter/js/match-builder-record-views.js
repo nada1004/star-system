@@ -172,7 +172,8 @@ function _h2hPlayerBgPanel(pName, isWin, isLose){
   // (요청사항) 브라우저(가로폭) 환경에 맞춰 자동으로 줄어들 수 있게
   // - PC에서도 설정값(sizeW)이 너무 크면, 칼럼 폭(100%)을 넘지 않도록 clamp(min()) 처리
   const wCss = isMb
-    ? 'width:100%;flex:1 1 0;min-width:0;'
+    // 모바일은 좌/우 패널 + 중앙 스코어를 "한 줄"로 유지하기 위해 vw 기반 제한
+    ? `width:min(46vw, ${Math.max(96,sizeW)}px);max-width:46vw;flex:0 1 auto;min-width:0;`
     : `width:min(100%, ${Math.max(120,sizeW)}px);flex:1 1 0;min-width:0;`;
   return `<div ${click} style="position:relative;overflow:hidden;border-radius:16px;height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${isWin?'#16a34a':'rgba(148,163,184,.35)'};box-shadow:${isWin?'0 14px 30px rgba(34,197,94,.16)':'0 10px 24px rgba(15,23,42,.08)'};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${isLose?'filter:grayscale(1);opacity:.88;':''}">
     <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.30) 55%, rgba(15,23,42,.78) 100%)"></div>
@@ -314,17 +315,19 @@ function indRecordsHTML(){
     const p2bg=_h2hPlayerBgPanel(s.p2, winner===s.p2, winner && winner!==s.p2);
     const _indWrapFx = _safeHeadToHeadSideFx(p1col, p2col);
     const _isMb = _h2hIsMobile();
-    const _narrow = _isMb && (window.innerWidth <= 420);
-    const _gridCols = _indBulkOn ? 'auto 1fr auto 1fr' : (_narrow ? '1fr' : '1fr auto 1fr');
+    // 모바일에서도 한 줄(좌 패널 / 스코어 / 우 패널) 유지. 좁으면 가로 스크롤로 대응
+    const _gridCols = _indBulkOn ? 'auto 1fr auto 1fr' : '1fr auto 1fr';
     const _pad = _isMb ? '10px 10px' : '14px 14px';
     const _gap = _isMb ? '8px' : '10px';
     const _scoreFs = _isMb ? 26 : 32;
     const _dashFs = _isMb ? 16 : 18;
+    const _rowScroll = _isMb ? 'overflow-x:auto;-webkit-overflow-scrolling:touch;' : '';
+    const _scorePad = _isMb ? 'padding:0 6px;' : 'padding:0 10px;';
     h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_indWrapFx||'background:var(--white);'}">
-      <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:${_pad};gap:${_gap};cursor:pointer" onclick="openIndSessionPopup('${_indSessKey}')">
+      <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:${_pad};gap:${_gap};cursor:pointer;${_rowScroll}" onclick="openIndSessionPopup('${_indSessKey}')">
         ${bulkCbInd||''}
         <div style="display:flex;align-items:center;justify-content:flex-end;width:100%">${p1bg}</div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;${_narrow?'width:100%;padding:2px 0;':'padding:0 10px;'}flex-shrink:0">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;${_scorePad}flex-shrink:0">
           <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-1.6px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:${_dashFs}px;color:var(--gray-l);margin:0 3px">-</span>${p2wins}</div>
           ${winner?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap">${winner} 승</div>`:''}
         </div>
@@ -489,17 +492,18 @@ function gjRecordsHTML(proOnly){
     const gj_p2bg=_h2hPlayerBgPanel(s.p2, winner===s.p2, winner && winner!==s.p2);
     const _gjWrapFx = _safeHeadToHeadSideFx(gj_p1univ?gc(gj_p1univ):'#378ADD', gj_p2univ?gc(gj_p2univ):'#1D9E75');
     const _isMb = _h2hIsMobile();
-    const _narrow = _isMb && (window.innerWidth <= 420);
-    const _gridCols = _gjBulkOn ? 'auto 1fr auto 1fr' : (_narrow ? '1fr' : '1fr auto 1fr');
+    const _gridCols = _gjBulkOn ? 'auto 1fr auto 1fr' : '1fr auto 1fr';
     const _pad = _isMb ? '10px 10px' : '14px 14px';
     const _gap = _isMb ? '8px' : '10px';
     const _scoreFs = _isMb ? 26 : 32;
     const _dashFs = _isMb ? 16 : 18;
+    const _rowScroll = _isMb ? 'overflow-x:auto;-webkit-overflow-scrolling:touch;' : '';
+    const _scorePad = _isMb ? 'padding:0 6px;' : 'padding:0 10px;';
     h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_gjWrapFx||'background:var(--white);'}">
-      <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:${_pad};gap:${_gap};cursor:pointer" onclick="openGJSessionPopup('${_sessKey}')">
+      <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:${_pad};gap:${_gap};cursor:pointer;${_rowScroll}" onclick="openGJSessionPopup('${_sessKey}')">
         ${bulkCbGj||''}
         <div style="display:flex;align-items:center;justify-content:flex-end;width:100%">${gj_p1bg}</div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;${_narrow?'width:100%;padding:2px 0;':'padding:0 10px;'}flex-shrink:0">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;${_scorePad}flex-shrink:0">
           <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-1.6px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:${_dashFs}px;color:var(--gray-l);margin:0 3px">-</span>${p2wins}</div>
           ${winner?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap">${winner} 승</div>`:''}
         </div>
