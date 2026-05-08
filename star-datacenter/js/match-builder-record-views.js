@@ -101,6 +101,68 @@ function _restoreStableIndGj(kind){
   }catch(e){}
 }
 
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 개인전/끝장전/프로리그끝장전: 선수 패널을 "프로필 배경 + 오버레이 텍스트" 형태로
+// - 설정탭에서 su_h2h_panel_pc / su_h2h_panel_mb / su_h2h_panel_fit 로 저장
+// ─────────────────────────────────────────────────────────────
+function _h2hIsMobile(){ try{ return window.innerWidth <= 768; }catch(e){ return false; } }
+function _h2hReadInt(key, def, min, max){
+  try{ const v=parseInt(localStorage.getItem(key)||'',10); if(Number.isFinite(v)) return Math.max(min,Math.min(max,v)); }catch(e){}
+  return Math.max(min,Math.min(max,def));
+}
+function _h2hPanelSize(){
+  const pc=_h2hReadInt('su_h2h_panel_pc', 150, 110, 230);
+  const mb=_h2hReadInt('su_h2h_panel_mb', 126, 96, 210);
+  return _h2hIsMobile()?mb:pc;
+}
+function _h2hPanelFit(){
+  try{
+    const v=String(localStorage.getItem('su_h2h_panel_fit')||'cover').trim();
+    return (v==='contain'||v==='cover'||v==='fill')?v:'cover';
+  }catch(e){ return 'cover'; }
+}
+function _h2hPlayerBgPos(name){
+  try{
+    const raw = localStorage.getItem('su_h2h_player_bgpos') || '';
+    if(!raw) return 'center';
+    const map = JSON.parse(raw) || {};
+    const it = map[String(name||'').trim()];
+    if(!it) return 'center';
+    const x = Number(it.x), y = Number(it.y);
+    if(!Number.isFinite(x) || !Number.isFinite(y)) return 'center';
+    const xx = Math.max(0, Math.min(100, x));
+    const yy = Math.max(0, Math.min(100, y));
+    return `${xx}% ${yy}%`;
+  }catch(e){
+    return 'center';
+  }
+}
+function _h2hPlayerBgPanel(pName, isWin, isLose){
+  const p=players.find(x=>x.name===pName)||{};
+  const size=_h2hPanelSize();
+  const fit=_h2hPanelFit();
+  const bgSize=(fit==='fill')?'100% 100%':(fit==='contain'?'contain':'cover');
+  const bgImg=p.photo?`background-image:url('${toHttpsUrl(p.photo)}');`:'';
+  const bgPos=_h2hPlayerBgPos(pName);
+  const initial=(pName||'미').slice(0,1);
+  const tier=p.tier?getTierBadge(p.tier):'';
+  const race=(p.race&&p.race!=='N')?`<span class="rbadge r${p.race}" style="transform:scale(.92);transform-origin:center">${p.race}</span>`:'';
+  const univ = p.univ||'';
+  const click = pName?`onclick="event.stopPropagation();openPlayerModal('${escJS(pName)}')"`:'';
+  const loseFx = isLose ? 'filter:grayscale(1);opacity:.78;' : '';
+  const txtCol = isLose ? 'rgba(255,255,255,.78)' : '#fff';
+  const txtCol2 = isLose ? 'rgba(255,255,255,.60)' : 'rgba(255,255,255,.86)';
+  return `<div ${click} style="position:relative;overflow:hidden;border-radius:16px;min-height:${size}px;min-width:${Math.max(150,Math.round(size*1.05))}px;flex:1;border:2px solid ${isWin?'#16a34a':'rgba(148,163,184,.35)'};box-shadow:${isWin?'0 14px 30px rgba(34,197,94,.16)':'0 10px 24px rgba(15,23,42,.08)'};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${isLose?'filter:grayscale(1);opacity:.88;':''}">
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.30) 55%, rgba(15,23,42,.78) 100%)"></div>
+    ${!p.photo?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(28,Math.round(size*0.30))}px;font-weight:1000;color:rgba(255,255,255,.16)">${initial}</div>`:''}
+    <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;z-index:1;${loseFx}">
+      <div style="font-weight:1000;font-size:16px;line-height:1.1;color:${txtCol};text-shadow:0 2px 10px rgba(0,0,0,.45)">${pName||'미정'}</div>
+      <div style="font-size:11px;font-weight:800;color:${txtCol2};text-shadow:0 2px 10px rgba(0,0,0,.35)">${univ}</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;align-items:center">${race}${tier?`<span style="transform:scale(.92);transform-origin:center">${tier}</span>`:''}</div>
+    </div>
+  </div>`;
+}
+
 function indRecordsHTML(){
   _restoreStableIndGj('ind');
   if(!indM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
@@ -226,36 +288,19 @@ function indRecordsHTML(){
     const p2race=players.find(x=>x.name===s.p2)?.race||'';
     const p1col=p1univ?gc(p1univ):'#378ADD';
     const p2col=p2univ?gc(p2univ):'#1D9E75';
-    const _rcAvaSize=(()=>{try{const n=parseInt(localStorage.getItem('su_rec_avatar_size')||'38',10);return (n>=20&&n<=80)?n+'px':'38px';}catch(e){return '38px';}})();
-    window.__detailCtx='recCard';
-    const p1photoLg=getPlayerPhotoHTML(s.p1,_rcAvaSize);
-    const p2photoLg=getPlayerPhotoHTML(s.p2,_rcAvaSize);
-    try{delete window.__detailCtx;}catch(e){}
+    const p1bg=_h2hPlayerBgPanel(s.p1, winner===s.p1, winner && winner!==s.p1);
+    const p2bg=_h2hPlayerBgPanel(s.p2, winner===s.p2, winner && winner!==s.p2);
     const _indWrapFx = _safeHeadToHeadSideFx(p1col, p2col);
+    const _gridCols = _indBulkOn ? 'auto 1fr auto 1fr' : '1fr auto 1fr';
     h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_indWrapFx||'background:var(--white);'}">
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px 14px;gap:8px;cursor:pointer" onclick="openIndSessionPopup('${_indSessKey}')">${bulkCbInd}
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <div style="display:flex;align-items:center;gap:8px">
-            ${p1photoLg}
-            <div>
-              <div style="font-size:15px;font-weight:700;cursor:pointer;color:var(--text1)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p1)}')">${s.p1}</div>
-              <div style="font-size:11px;color:var(--gray-l)">${p1univ}${p1race&&p1race!=='N'?` · ${p1race}`:''}</div>
-            </div>
-          </div>
-        </div>
+      <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:14px 14px;gap:10px;cursor:pointer" onclick="openIndSessionPopup('${_indSessKey}')">
+        ${bulkCbInd||''}
+        <div style="display:flex;align-items:center">${p1bg}</div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 10px;flex-shrink:0">
           <div style="font-size:32px;font-weight:700;letter-spacing:-2px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:18px;color:var(--gray-l);margin:0 3px">-</span>${p2wins}</div>
           ${winner?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap">${winner} 승</div>`:''}
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-          <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
-            <div style="text-align:right">
-              <div style="font-size:15px;font-weight:700;cursor:pointer;color:var(--text1)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p2)}')">${s.p2}</div>
-              <div style="font-size:11px;color:var(--gray-l)">${p2univ}${p2race&&p2race!=='N'?` · ${p2race}`:''}</div>
-            </div>
-            ${p2photoLg}
-          </div>
-        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end">${p2bg}</div>
       </div>
       <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg2)">
         <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>
@@ -412,36 +457,19 @@ function gjRecordsHTML(proOnly){
     const gj_typeLabel=proOnly?'프로리그 끝장전':'끝장전';
     const gj_typeBg=proOnly?'#E1F5EE':'#FAECE7';
     const gj_typeColor=proOnly?'#085041':'#993C1D';
-    const _rcAvaSizeGj=(()=>{try{const n=parseInt(localStorage.getItem('su_rec_avatar_size')||'38',10);return (n>=20&&n<=80)?n+'px':'38px';}catch(e){return '38px';}})();
-    window.__detailCtx='recCard';
-    const gj_p1photoLg=getPlayerPhotoHTML(s.p1,_rcAvaSizeGj);
-    const gj_p2photoLg=getPlayerPhotoHTML(s.p2,_rcAvaSizeGj);
-    try{delete window.__detailCtx;}catch(e){}
+    const gj_p1bg=_h2hPlayerBgPanel(s.p1, winner===s.p1, winner && winner!==s.p1);
+    const gj_p2bg=_h2hPlayerBgPanel(s.p2, winner===s.p2, winner && winner!==s.p2);
     const _gjWrapFx = _safeHeadToHeadSideFx(gj_p1univ?gc(gj_p1univ):'#378ADD', gj_p2univ?gc(gj_p2univ):'#1D9E75');
+    const _gridCols = _gjBulkOn ? 'auto 1fr auto 1fr' : '1fr auto 1fr';
     h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_gjWrapFx||'background:var(--white);'}">
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px 14px;gap:8px;cursor:pointer" onclick="openGJSessionPopup('${_sessKey}')">${bulkCbGj}
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <div style="display:flex;align-items:center;gap:8px">
-            ${gj_p1photoLg}
-            <div>
-              <div style="font-size:15px;font-weight:700;cursor:pointer;color:var(--text1)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p1)}')">${s.p1}</div>
-              <div style="font-size:11px;color:var(--gray-l)">${gj_p1univ}${gj_p1race&&gj_p1race!=='N'?` · ${gj_p1race}`:''}</div>
-            </div>
-          </div>
-        </div>
+      <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:14px 14px;gap:10px;cursor:pointer" onclick="openGJSessionPopup('${_sessKey}')">
+        ${bulkCbGj||''}
+        <div style="display:flex;align-items:center">${gj_p1bg}</div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 10px;flex-shrink:0">
           <div style="font-size:32px;font-weight:700;letter-spacing:-2px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:18px;color:var(--gray-l);margin:0 3px">-</span>${p2wins}</div>
           ${winner?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap">${winner} 승</div>`:''}
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-          <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
-            <div style="text-align:right">
-              <div style="font-size:15px;font-weight:700;cursor:pointer;color:var(--text1)" onclick="event.stopPropagation();openPlayerModal('${escJS(s.p2)}')">${s.p2}</div>
-              <div style="font-size:11px;color:var(--gray-l)">${gj_p2univ}${gj_p2race&&gj_p2race!=='N'?` · ${gj_p2race}`:''}</div>
-            </div>
-            ${gj_p2photoLg}
-          </div>
-        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end">${gj_p2bg}</div>
       </div>
       <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg2)">
         <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>

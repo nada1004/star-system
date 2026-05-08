@@ -102,7 +102,7 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','paste'],
   // (요청사항) "최근 경기 종목(종류) 배지" 색상은 별도 메뉴로 분리
-  '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','pdModeBadge','pd','matchdetail','univlogoimg','si','siAssign'],
+  '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','pdModeBadge','pd','matchdetail','univlogoimg','si','siAssign','procompcard','h2hpanel'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
   // (요청사항) 모바일/태블릿 UI 크기 조절(버튼/메뉴/배지)
   '🎨 디자인/테마':['tablabels','tabcolors','designv2','hdr','appfont','uisize','reccard','tourneycard','sharecard','calui'],
@@ -463,6 +463,393 @@ window.cfgSetRecCardSettings = function(){
   }catch(e){}
   try{ if(typeof window._applyRecCardTheme === 'function') window._applyRecCardTheme(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 미니대전/대학대전/대학CK/티어대회/프로리그/대회: 대학(팀) 버튼 크기(참여자 버튼은 유지)
+// - CSS 변수: --rc-match-btn-scale
+// - localStorage: su_match_btn_scale_pc, su_match_btn_scale_mb  (단위: %)
+// ─────────────────────────────────────────────────────────────
+window.applyMatchBtnScale = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth||1024));
+    const isMobile = w <= 768;
+    const key = isMobile ? 'su_match_btn_scale_mb' : 'su_match_btn_scale_pc';
+    const pct = parseInt(localStorage.getItem(key) || (isMobile?'100':'100'), 10);
+    const v = Math.max(80, Math.min(150, isNaN(pct)?100:pct)) / 100;
+    document.documentElement.style.setProperty('--rc-match-btn-scale', String(v));
+  }catch(e){}
+};
+window.cfgSetMatchBtnScaleSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-mbtn-pc')?.value||'100',10) || 100;
+    const mb = parseInt(document.getElementById('cfg-mbtn-mb')?.value||'100',10) || 100;
+    localStorage.setItem('su_match_btn_scale_pc', String(Math.max(80,Math.min(150,pc))));
+    localStorage.setItem('su_match_btn_scale_mb', String(Math.max(80,Math.min(150,mb))));
+  }catch(e){}
+  try{ window.applyMatchBtnScale && window.applyMatchBtnScale(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+try{
+  if(!window._matchBtnScaleBound){
+    window._matchBtnScaleBound = true;
+    window.addEventListener('resize', ()=>{ try{ window.applyMatchBtnScale && window.applyMatchBtnScale(); }catch(e){} }, {passive:true});
+  }
+}catch(e){}
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 프로리그 대회(프로리그탭) 조별리그/대진표 기록 카드: 프로필 크기 PC/모바일 분리
+// ─────────────────────────────────────────────────────────────
+window.cfgSetProCompAvatarSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-procomp-ava-pc')?.value||'52',10) || 52;
+    const mb = parseInt(document.getElementById('cfg-procomp-ava-mb')?.value||'40',10) || 40;
+    const fit = String(document.getElementById('cfg-procomp-ava-fit')?.value||'cover').trim();
+    localStorage.setItem('su_procomp_avatar_pc', String(Math.max(28,Math.min(84,pc))));
+    localStorage.setItem('su_procomp_avatar_mb', String(Math.max(24,Math.min(72,mb))));
+    localStorage.setItem('su_procomp_avatar_fit', (fit==='contain'||fit==='cover'||fit==='fill') ? fit : 'cover');
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+// 개인전/끝장전/프로리그끝장전 선수 패널(프로필 배경 카드) 설정
+window.cfgSetH2HPanelSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-h2h-panel-pc')?.value||'150',10) || 150;
+    const mb = parseInt(document.getElementById('cfg-h2h-panel-mb')?.value||'126',10) || 126;
+    const fit = String(document.getElementById('cfg-h2h-panel-fit')?.value||'cover').trim();
+    localStorage.setItem('su_h2h_panel_pc', String(Math.max(110,Math.min(230,pc))));
+    localStorage.setItem('su_h2h_panel_mb', String(Math.max(96,Math.min(210,mb))));
+    localStorage.setItem('su_h2h_panel_fit', (fit==='contain'||fit==='cover'||fit==='fill') ? fit : 'cover');
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+// 개인/끝장전: 스트리머별 프로필 배경 위치(object-position) 저장
+function _cfgH2HBgPosLoadAll(){
+  try{ return JSON.parse(localStorage.getItem('su_h2h_player_bgpos')||'{}')||{}; }catch(e){ return {}; }
+}
+function _cfgH2HBgPosSaveAll(map){
+  try{ localStorage.setItem('su_h2h_player_bgpos', JSON.stringify(map||{})); }catch(e){}
+}
+window.cfgH2HBgPosLoad = function(){
+  try{
+    const name=String(document.getElementById('cfg-h2h-bgpos-name')?.value||'').trim();
+    const map=_cfgH2HBgPosLoadAll();
+    const it=map[name]||{x:50,y:50};
+    const x=Math.max(0,Math.min(100,Number(it.x))); const y=Math.max(0,Math.min(100,Number(it.y)));
+    const xi=document.getElementById('cfg-h2h-bgpos-x');
+    const yi=document.getElementById('cfg-h2h-bgpos-y');
+    if(xi){ xi.value=String(Number.isFinite(x)?x:50); document.getElementById('cfg-h2h-bgpos-xv').textContent=xi.value+'%'; }
+    if(yi){ yi.value=String(Number.isFinite(y)?y:50); document.getElementById('cfg-h2h-bgpos-yv').textContent=yi.value+'%'; }
+  }catch(e){}
+};
+window.cfgH2HBgPosSave = function(){
+  try{
+    const name=String(document.getElementById('cfg-h2h-bgpos-name')?.value||'').trim();
+    if(!name){ alert('스트리머 이름을 입력하세요.'); return; }
+    const x=parseInt(document.getElementById('cfg-h2h-bgpos-x')?.value||'50',10) || 50;
+    const y=parseInt(document.getElementById('cfg-h2h-bgpos-y')?.value||'50',10) || 50;
+    const map=_cfgH2HBgPosLoadAll();
+    map[name]={x:Math.max(0,Math.min(100,x)), y:Math.max(0,Math.min(100,y))};
+    _cfgH2HBgPosSaveAll(map);
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+window.cfgH2HBgPosReset = function(){
+  try{
+    const name=String(document.getElementById('cfg-h2h-bgpos-name')?.value||'').trim();
+    if(!name) return;
+    const map=_cfgH2HBgPosLoadAll();
+    delete map[name];
+    _cfgH2HBgPosSaveAll(map);
+  }catch(e){}
+  try{ window.cfgH2HBgPosLoad && window.cfgH2HBgPosLoad(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// 스트리머 상세 수정창(openEP)용: 개인/끝장전 배경 위치(드래그)
+// ─────────────────────────────────────────────────────────────
+function _edH2HPosLoadAll(){
+  try{ return JSON.parse(localStorage.getItem('su_h2h_player_bgpos')||'{}')||{}; }catch(e){ return {}; }
+}
+function _edH2HPosSaveAll(map){
+  try{ localStorage.setItem('su_h2h_player_bgpos', JSON.stringify(map||{})); }catch(e){}
+}
+window.edH2HPosSyncFromInputs = function(){
+  try{
+    const xEl=document.getElementById('ed-h2hpos-x');
+    const yEl=document.getElementById('ed-h2hpos-y');
+    const x=parseInt(xEl?.value||'50',10) || 50;
+    const y=parseInt(yEl?.value||'50',10) || 50;
+    const prev=document.getElementById('ed-h2hpos-prev');
+    if(prev) prev.style.backgroundPosition = `${Math.max(0,Math.min(100,x))}% ${Math.max(0,Math.min(100,y))}%`;
+    const xv=document.getElementById('ed-h2hpos-xv'); if(xv) xv.textContent=`${Math.max(0,Math.min(100,x))}%`;
+    const yv=document.getElementById('ed-h2hpos-yv'); if(yv) yv.textContent=`${Math.max(0,Math.min(100,y))}%`;
+    const del=document.getElementById('ed-h2hpos-del'); if(del) del.value='0';
+  }catch(e){}
+};
+window.edH2HPosCenter = function(){
+  try{
+    const xEl=document.getElementById('ed-h2hpos-x');
+    const yEl=document.getElementById('ed-h2hpos-y');
+    if(xEl) xEl.value='50';
+    if(yEl) yEl.value='50';
+    window.edH2HPosSyncFromInputs && window.edH2HPosSyncFromInputs();
+  }catch(e){}
+};
+window.edH2HPosDelete = function(){
+  try{
+    const del=document.getElementById('ed-h2hpos-del'); if(del) del.value='1';
+    const msg=document.getElementById('ed-h2hpos-msg'); if(msg){ msg.style.display='none'; }
+    alert('이 스트리머의 얼굴 위치 보정값을 삭제합니다. (기본 center로 표시)');
+  }catch(e){}
+};
+window.edH2HPosSave = function(){
+  try{
+    const name=String(document.getElementById('ed-n')?.value||editName||'').trim();
+    if(!name){ alert('스트리머 이름을 확인할 수 없습니다.'); return; }
+    const x=parseInt(document.getElementById('ed-h2hpos-x')?.value||'50',10) || 50;
+    const y=parseInt(document.getElementById('ed-h2hpos-y')?.value||'50',10) || 50;
+    const map=_edH2HPosLoadAll();
+    map[name]={x:Math.max(0,Math.min(100,x)), y:Math.max(0,Math.min(100,y))};
+    _edH2HPosSaveAll(map);
+    const del=document.getElementById('ed-h2hpos-del'); if(del) del.value='0';
+    const msg=document.getElementById('ed-h2hpos-msg');
+    if(msg){ msg.style.display='block'; setTimeout(()=>{ try{ msg.style.display='none'; }catch(e){} }, 1200); }
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+window.edBindH2HPosDrag = function(){
+  try{
+    const prev=document.getElementById('ed-h2hpos-prev');
+    if(!prev || prev._dragBound) return;
+    prev._dragBound = true;
+    const applyFromEvent = (ev)=>{
+      const r = prev.getBoundingClientRect();
+      const cx = (ev.clientX - r.left) / Math.max(1, r.width);
+      const cy = (ev.clientY - r.top) / Math.max(1, r.height);
+      const x = Math.max(0, Math.min(100, Math.round(cx*100)));
+      const y = Math.max(0, Math.min(100, Math.round(cy*100)));
+      const xEl=document.getElementById('ed-h2hpos-x');
+      const yEl=document.getElementById('ed-h2hpos-y');
+      if(xEl) xEl.value=String(x);
+      if(yEl) yEl.value=String(y);
+      window.edH2HPosSyncFromInputs && window.edH2HPosSyncFromInputs();
+    };
+    prev.addEventListener('pointerdown', (ev)=>{
+      try{ prev.setPointerCapture(ev.pointerId); }catch(e){}
+      applyFromEvent(ev);
+      const onMove=(e)=>applyFromEvent(e);
+      const onUp=(e)=>{
+        try{ prev.removeEventListener('pointermove', onMove); }catch(_){}
+        try{ prev.removeEventListener('pointerup', onUp); }catch(_){}
+        try{ prev.removeEventListener('pointercancel', onUp); }catch(_){}
+      };
+      prev.addEventListener('pointermove', onMove);
+      prev.addEventListener('pointerup', onUp);
+      prev.addEventListener('pointercancel', onUp);
+    });
+  }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// 스트리머 상세 수정창(openEP)용: 프로필 사진1/2 object-position 드래그 보정
+// 저장 필드: players[].photoPosX/photoPosY, photo2PosX/photo2PosY
+// ─────────────────────────────────────────────────────────────
+function _edClamp01(n){ return Math.max(0, Math.min(100, n)); }
+window.edP1PosSyncFromInputs = function(){
+  try{
+    const x=parseInt(document.getElementById('ed-p1pos-x')?.value||'50',10) || 50;
+    const y=parseInt(document.getElementById('ed-p1pos-y')?.value||'50',10) || 50;
+    const img=document.getElementById('ed-p1pos-img');
+    if(img) img.style.objectPosition = `${_edClamp01(x)}% ${_edClamp01(y)}%`;
+    const xv=document.getElementById('ed-p1pos-xv'); if(xv) xv.textContent=`${_edClamp01(x)}%`;
+    const yv=document.getElementById('ed-p1pos-yv'); if(yv) yv.textContent=`${_edClamp01(y)}%`;
+    const del=document.getElementById('ed-p1pos-del'); if(del) del.value='0';
+  }catch(e){}
+};
+window.edP1PosCenter = function(){
+  try{
+    const xEl=document.getElementById('ed-p1pos-x'); if(xEl) xEl.value='50';
+    const yEl=document.getElementById('ed-p1pos-y'); if(yEl) yEl.value='50';
+    window.edP1PosSyncFromInputs && window.edP1PosSyncFromInputs();
+  }catch(e){}
+};
+window.edP1PosDelete = function(){
+  try{
+    const del=document.getElementById('ed-p1pos-del'); if(del) del.value='1';
+    alert('프로필 사진 1 위치 보정값을 삭제합니다. (기본 center)');
+  }catch(e){}
+};
+window.edBindP1PosDrag = function(){
+  try{
+    const prev=document.getElementById('ed-p1pos-prev');
+    if(!prev || prev._dragBound) return;
+    prev._dragBound=true;
+    const apply=(ev)=>{
+      const r=prev.getBoundingClientRect();
+      const cx=(ev.clientX-r.left)/Math.max(1,r.width);
+      const cy=(ev.clientY-r.top)/Math.max(1,r.height);
+      const x=_edClamp01(Math.round(cx*100));
+      const y=_edClamp01(Math.round(cy*100));
+      const xEl=document.getElementById('ed-p1pos-x'); if(xEl) xEl.value=String(x);
+      const yEl=document.getElementById('ed-p1pos-y'); if(yEl) yEl.value=String(y);
+      window.edP1PosSyncFromInputs && window.edP1PosSyncFromInputs();
+    };
+    prev.addEventListener('pointerdown',(ev)=>{
+      try{ prev.setPointerCapture(ev.pointerId); }catch(e){}
+      apply(ev);
+      const mv=(e)=>apply(e);
+      const up=()=>{ try{prev.removeEventListener('pointermove',mv);}catch(_){}
+        try{prev.removeEventListener('pointerup',up);}catch(_){}
+        try{prev.removeEventListener('pointercancel',up);}catch(_){}
+      };
+      prev.addEventListener('pointermove',mv);
+      prev.addEventListener('pointerup',up);
+      prev.addEventListener('pointercancel',up);
+    });
+  }catch(e){}
+};
+
+window.edP2PosSyncFromInputs = function(){
+  try{
+    const x=parseInt(document.getElementById('ed-p2pos-x')?.value||'50',10) || 50;
+    const y=parseInt(document.getElementById('ed-p2pos-y')?.value||'50',10) || 50;
+    const img=document.getElementById('ed-p2pos-img');
+    if(img) img.style.objectPosition = `${_edClamp01(x)}% ${_edClamp01(y)}%`;
+    const xv=document.getElementById('ed-p2pos-xv'); if(xv) xv.textContent=`${_edClamp01(x)}%`;
+    const yv=document.getElementById('ed-p2pos-yv'); if(yv) yv.textContent=`${_edClamp01(y)}%`;
+    const del=document.getElementById('ed-p2pos-del'); if(del) del.value='0';
+  }catch(e){}
+};
+window.edP2PosCenter = function(){
+  try{
+    const xEl=document.getElementById('ed-p2pos-x'); if(xEl) xEl.value='50';
+    const yEl=document.getElementById('ed-p2pos-y'); if(yEl) yEl.value='50';
+    window.edP2PosSyncFromInputs && window.edP2PosSyncFromInputs();
+  }catch(e){}
+};
+window.edP2PosDelete = function(){
+  try{
+    const del=document.getElementById('ed-p2pos-del'); if(del) del.value='1';
+    alert('프로필 사진 2 위치 보정값을 삭제합니다. (기본 center)');
+  }catch(e){}
+};
+window.edBindP2PosDrag = function(){
+  try{
+    const prev=document.getElementById('ed-p2pos-prev');
+    if(!prev || prev._dragBound) return;
+    prev._dragBound=true;
+    const apply=(ev)=>{
+      const r=prev.getBoundingClientRect();
+      const cx=(ev.clientX-r.left)/Math.max(1,r.width);
+      const cy=(ev.clientY-r.top)/Math.max(1,r.height);
+      const x=_edClamp01(Math.round(cx*100));
+      const y=_edClamp01(Math.round(cy*100));
+      const xEl=document.getElementById('ed-p2pos-x'); if(xEl) xEl.value=String(x);
+      const yEl=document.getElementById('ed-p2pos-y'); if(yEl) yEl.value=String(y);
+      window.edP2PosSyncFromInputs && window.edP2PosSyncFromInputs();
+    };
+    prev.addEventListener('pointerdown',(ev)=>{
+      try{ prev.setPointerCapture(ev.pointerId); }catch(e){}
+      apply(ev);
+      const mv=(e)=>apply(e);
+      const up=()=>{ try{prev.removeEventListener('pointermove',mv);}catch(_){}
+        try{prev.removeEventListener('pointerup',up);}catch(_){}
+        try{prev.removeEventListener('pointercancel',up);}catch(_){}
+      };
+      prev.addEventListener('pointermove',mv);
+      prev.addEventListener('pointerup',up);
+      prev.addEventListener('pointercancel',up);
+    });
+  }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// 스트리머 상세 수정창(openEP)용: 헤더 배경 드래그 보정
+// ─────────────────────────────────────────────────────────────
+function _edPhbgResolveFit(){
+  try{
+    const v=String(document.getElementById('ed-phbg-fit')?.value||'').trim();
+    if(v==='contain'||v==='cover'||v==='fill') return v;
+    // "설정값 따름"일 때는 설정탭 기본값 추정
+    const pdStyle=JSON.parse(localStorage.getItem('su_pd_style')||'{}')||{};
+    const imgSettings=(typeof suReadImgSettings==='function')
+      ? suReadImgSettings()
+      : (JSON.parse(localStorage.getItem('su_img_settings')||'{}')||{});
+    const hasFill = typeof imgSettings.fill === 'boolean';
+    if(hasFill) return imgSettings.fill ? 'cover' : 'contain';
+    const legacy=String(pdStyle.header_bg_fit||pdStyle.img_fill||'contain').trim();
+    return (legacy==='cover'||legacy==='fill') ? legacy : 'contain';
+  }catch(e){ return 'contain'; }
+}
+window.edPhbgSyncFromInputs = function(){
+  try{
+    const wrap=document.getElementById('ed-phbg-prev');
+    let bg=document.getElementById('ed-phbg-prev-bg');
+    if(!wrap) return;
+    const url=String(document.getElementById('ed-phbg')?.value||'').trim();
+    const fit=_edPhbgResolveFit();
+    const size = (fit==='fill') ? '100% 100%' : (fit==='cover' ? 'cover' : 'contain');
+    const scale = Math.max(40, Math.min(220, parseInt(document.getElementById('ed-phbg-scale')?.value||'100',10) || 100));
+    const x = Math.max(0, Math.min(100, parseInt(document.getElementById('ed-phbg-posx')?.value||'50',10) || 50));
+    const y = Math.max(0, Math.min(100, parseInt(document.getElementById('ed-phbg-posy')?.value||'50',10) || 50));
+    if(!bg){
+      bg=document.createElement('div');
+      bg.id='ed-phbg-prev-bg';
+      bg.style.position='absolute';
+      bg.style.inset='-8%';
+      bg.style.pointerEvents='none';
+      wrap.prepend(bg);
+    }
+    if(!url){
+      bg.style.backgroundImage='none';
+      bg.style.opacity='0';
+      return;
+    }
+    bg.style.opacity='.85';
+    bg.style.backgroundImage=`url('${toHttpsUrl(url).replace(/'/g,'%27')}')`;
+    bg.style.backgroundRepeat='no-repeat';
+    bg.style.backgroundPosition=`${x}% ${y}%`;
+    bg.style.backgroundSize=size;
+    bg.style.transform=`scale(${scale/100})`;
+    bg.style.transformOrigin='center center';
+  }catch(e){}
+};
+window.edBindPhbgDrag = function(){
+  try{
+    const wrap=document.getElementById('ed-phbg-prev');
+    if(!wrap || wrap._dragBound) return;
+    wrap._dragBound=true;
+    const apply=(ev)=>{
+      const r=wrap.getBoundingClientRect();
+      const cx=(ev.clientX-r.left)/Math.max(1,r.width);
+      const cy=(ev.clientY-r.top)/Math.max(1,r.height);
+      const x=Math.max(0,Math.min(100,Math.round(cx*100)));
+      const y=Math.max(0,Math.min(100,Math.round(cy*100)));
+      const xEl=document.getElementById('ed-phbg-posx'); if(xEl) xEl.value=String(x);
+      const yEl=document.getElementById('ed-phbg-posy'); if(yEl) yEl.value=String(y);
+      const xv=document.getElementById('ed-phbg-posx-val'); if(xv) xv.textContent=`${x}%`;
+      const yv=document.getElementById('ed-phbg-posy-val'); if(yv) yv.textContent=`${y}%`;
+      try{ document.getElementById('ed-phbg-pos').value='custom'; }catch(_){}
+      try{ document.querySelectorAll('[data-phbg-pos]').forEach(el=>el.className='btn btn-xs btn-w'); }catch(_){}
+      window.edPhbgSyncFromInputs && window.edPhbgSyncFromInputs();
+    };
+    wrap.addEventListener('pointerdown',(ev)=>{
+      try{ wrap.setPointerCapture(ev.pointerId); }catch(e){}
+      apply(ev);
+      const mv=(e)=>apply(e);
+      const up=()=>{ try{wrap.removeEventListener('pointermove',mv);}catch(_){}
+        try{wrap.removeEventListener('pointerup',up);}catch(_){}
+        try{wrap.removeEventListener('pointercancel',up);}catch(_){}
+      };
+      wrap.addEventListener('pointermove',mv);
+      wrap.addEventListener('pointerup',up);
+      wrap.addEventListener('pointercancel',up);
+    });
+  }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -3532,6 +3919,25 @@ ${_scfgD('notice','📢 공지 관리')}
         </div>
       </div>
 
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">대학/팀 버튼 크기</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-mbtn-pc" min="80" max="150" step="5"
+            value="${Math.max(80,Math.min(150,parseInt(localStorage.getItem('su_match_btn_scale_pc')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-mbtn-pc-v').textContent=this.value+'%'" onchange="cfgSetMatchBtnScaleSettings()" style="width:140px">
+          <span id="cfg-mbtn-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(80,Math.min(150,parseInt(localStorage.getItem('su_match_btn_scale_pc')||'100',10)||100))}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-mbtn-mb" min="80" max="150" step="5"
+            value="${Math.max(80,Math.min(150,parseInt(localStorage.getItem('su_match_btn_scale_mb')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-mbtn-mb-v').textContent=this.value+'%'" onchange="cfgSetMatchBtnScaleSettings()" style="width:140px">
+          <span id="cfg-mbtn-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(80,Math.min(150,parseInt(localStorage.getItem('su_match_btn_scale_mb')||'100',10)||100))}%</span>
+        </div>
+        <span style="font-size:11px;color:var(--gray-l)">※ 미니/대학대전/대학CK/티어대회/프로리그/대회에 적용 (참여자 버튼은 유지)</span>
+      </div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
           <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">카드 배경 색상 강도</div>
@@ -3702,6 +4108,100 @@ ${_scfgD('notice','📢 공지 관리')}
           <input type="range" id="cfg-tc-line-a" min="25" max="100" step="5" value="${Math.max(25,Math.min(100,_tcLa))}" oninput="document.getElementById('cfg-tc-la-v').textContent=this.value+'%'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
           <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-la-v">${Math.max(25,Math.min(100,_tcLa))}%</span></div>
         </div>
+      </div>
+    </div>
+  </details>`;
+  })()}
+  ${(()=>{ 
+    const pc = parseInt(localStorage.getItem('su_h2h_panel_pc')||'150',10)||150;
+    const mb = parseInt(localStorage.getItem('su_h2h_panel_mb')||'126',10)||126;
+    const fit = (localStorage.getItem('su_h2h_panel_fit')||'cover');
+    return _scfgD('h2hpanel','🎮 개인/끝장전 카드') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대전기록 탭의 개인전/끝장전/프로리그 끝장전 카드에서 선수 패널(프로필 배경 카드) 크기와 이미지 맞춤을 설정합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:90px">이미지 맞춤</div>
+        <select id="cfg-h2h-panel-fit" onchange="cfgSetH2HPanelSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="contain" ${fit==='contain'?'selected':''}>맞춤(contain)</option>
+          <option value="cover" ${fit!=='contain'&&fit!=='fill'?'selected':''}>채우기(cover)</option>
+          <option value="fill" ${fit==='fill'?'selected':''}>늘리기(fill)</option>
+        </select>
+        <span style="font-size:11px;color:var(--gray-l)">※ 추천: 채우기(cover)</span>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC</div>
+        <input type="range" id="cfg-h2h-panel-pc" min="110" max="230" step="2" value="${Math.max(110,Math.min(230,pc))}"
+          oninput="document.getElementById('cfg-h2h-panel-pc-v').textContent=this.value+'px'"
+          onchange="cfgSetH2HPanelSettings()" style="width:100%">
+        <div id="cfg-h2h-panel-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(110,Math.min(230,pc))}px</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
+        <input type="range" id="cfg-h2h-panel-mb" min="96" max="210" step="2" value="${Math.max(96,Math.min(210,mb))}"
+          oninput="document.getElementById('cfg-h2h-panel-mb-v').textContent=this.value+'px'"
+          onchange="cfgSetH2HPanelSettings()" style="width:100%">
+        <div id="cfg-h2h-panel-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(96,Math.min(210,mb))}px</div>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6">※ 값 변경 후 자동으로 재렌더링됩니다.</div>
+
+      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+      <div style="font-size:12px;font-weight:900;color:var(--text2)">스트리머별 얼굴 위치 보정(채우기/늘리기 모드에서)</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
+        채우기(cover)에서 얼굴이 잘리는 경우, 스트리머별로 배경 위치(가로/세로 %)를 저장할 수 있습니다.
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input id="cfg-h2h-bgpos-name" placeholder="스트리머 이름" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;font-weight:900;min-width:180px">
+        <button class="btn btn-w btn-xs" onclick="cfgH2HBgPosLoad()" style="padding:6px 10px">불러오기</button>
+        <button class="btn btn-b btn-xs" onclick="cfgH2HBgPosSave()" style="padding:6px 10px">저장</button>
+        <button class="btn btn-w btn-xs" onclick="cfgH2HBgPosReset()" style="padding:6px 10px">초기화</button>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">가로(X)</div>
+        <input type="range" id="cfg-h2h-bgpos-x" min="0" max="100" step="1" value="50"
+          oninput="document.getElementById('cfg-h2h-bgpos-xv').textContent=this.value+'%'" style="width:100%">
+        <div id="cfg-h2h-bgpos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">50%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">세로(Y)</div>
+        <input type="range" id="cfg-h2h-bgpos-y" min="0" max="100" step="1" value="50"
+          oninput="document.getElementById('cfg-h2h-bgpos-yv').textContent=this.value+'%'" style="width:100%">
+        <div id="cfg-h2h-bgpos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">50%</div>
+      </div>
+    </div>
+  </details>`;
+  })()}
+  ${(()=>{ 
+    const pc = parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52;
+    const mb = parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40;
+    const fit = (localStorage.getItem('su_procomp_avatar_fit')||'cover');
+    return _scfgD('procompcard','⭐ 프로리그 대회 카드(프로리그탭)') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">프로리그탭 → 프로리그 대회 → 조별리그/대진표 기록 카드에서 선수(스트리머) 프로필 크기를 조절합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:90px">이미지 맞춤</div>
+        <select id="cfg-procomp-ava-fit" onchange="cfgSetProCompAvatarSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <option value="contain" ${fit==='contain'?'selected':''}>맞춤(contain)</option>
+          <option value="cover" ${fit!=='contain'&&fit!=='fill'?'selected':''}>채우기(cover)</option>
+          <option value="fill" ${fit==='fill'?'selected':''}>늘리기(fill)</option>
+        </select>
+        <span style="font-size:11px;color:var(--gray-l)">※ 추천: 채우기(cover)</span>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC</div>
+        <input type="range" id="cfg-procomp-ava-pc" min="28" max="84" step="2" value="${Math.max(28,Math.min(84,pc))}"
+          oninput="document.getElementById('cfg-procomp-ava-pc-v').textContent=this.value+'px'"
+          onchange="cfgSetProCompAvatarSettings()" style="width:100%">
+        <div id="cfg-procomp-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(28,Math.min(84,pc))}px</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
+        <input type="range" id="cfg-procomp-ava-mb" min="24" max="72" step="2" value="${Math.max(24,Math.min(72,mb))}"
+          oninput="document.getElementById('cfg-procomp-ava-mb-v').textContent=this.value+'px'"
+          onchange="cfgSetProCompAvatarSettings()" style="width:100%">
+        <div id="cfg-procomp-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(24,Math.min(72,mb))}px</div>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
+        ※ 값 변경 후 자동으로 재렌더링됩니다. 카드가 너무 커지면 크기를 조금 낮춰주세요.
       </div>
     </div>
   </details>`;
@@ -6225,6 +6725,17 @@ function bulkAddPlayers(){
 window.openEP=function(name){
   editName=name;const p=players.find(x=>x.name===name);
   if(!p) return;
+  // 개인/끝장전 배경형 선수 카드: 스트리머별 배경 위치 저장값
+  const _h2hPosMap = (()=>{ try{ return JSON.parse(localStorage.getItem('su_h2h_player_bgpos')||'{}')||{}; }catch(e){ return {}; } })();
+  const _h2hPos = _h2hPosMap[p.name] || { x:50, y:50 };
+  const _h2hX = (()=>{ const n=parseInt(_h2hPos.x??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
+  const _h2hY = (()=>{ const n=parseInt(_h2hPos.y??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
+  const _h2hFit = (()=>{ try{ return (localStorage.getItem('su_h2h_panel_fit')||'cover').trim(); }catch(e){ return 'cover'; } })();
+  const _h2hBgSize = _h2hFit==='fill' ? '100% 100%' : (_h2hFit==='contain' ? 'contain' : 'cover');
+  const _p1X = (()=>{ const n=parseInt(p.photoPosX??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
+  const _p1Y = (()=>{ const n=parseInt(p.photoPosY??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
+  const _p2X = (()=>{ const n=parseInt(p.photo2PosX??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
+  const _p2Y = (()=>{ const n=parseInt(p.photo2PosY??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
   document.getElementById('emBody').innerHTML=`
     <label>스트리머 이름</label><input type="text" id="ed-n" value="${p.name}">
     <label>티어</label><select id="ed-t">${TIERS.map(t=>`<option value="${t}"${p.tier===t?' selected':''}>${getTierLabel(t)}</option>`).join('')}</select>
@@ -6249,9 +6760,106 @@ window.openEP=function(name){
       </span>
     </div>
     <div id="ed-photo-warn" style="font-size:10px;color:${p.photo&&p.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:-6px">${p.photo&&p.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
+
+    <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-weight:900;font-size:12px;color:var(--text2);margin-bottom:6px">🖼 프로필 사진 1 — 얼굴 위치(자르기 보정)</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
+        (채우기/cover 사용 시) 얼굴이 잘리면 아래 미리보기에서 <b>드래그</b>하거나 X/Y로 위치를 보정할 수 있습니다.
+      </div>
+      <input type="hidden" id="ed-p1pos-del" value="0">
+      <div id="ed-p1pos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none">
+        ${p.photo?`<img id="ed-p1pos-img" src="${toHttpsUrl(p.photo).replace(/\"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${_p1X}% ${_p1Y}%;transform:scale(1.02)" onerror="this.style.display='none'">`:''}
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
+        <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
+        <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">가로(X)</div>
+        <input type="range" id="ed-p1pos-x" min="0" max="100" step="1" value="${_p1X}" oninput="edP1PosSyncFromInputs()" style="width:100%">
+        <div id="ed-p1pos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${_p1X}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">세로(Y)</div>
+        <input type="range" id="ed-p1pos-y" min="0" max="100" step="1" value="${_p1Y}" oninput="edP1PosSyncFromInputs()" style="width:100%">
+        <div id="ed-p1pos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${_p1Y}%</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">
+        <button type="button" class="btn btn-w btn-xs" onclick="edP1PosCenter()">센터(50/50)</button>
+        <button type="button" class="btn btn-w btn-xs" onclick="edP1PosDelete()">삭제(기본)</button>
+      </div>
+    </div>
+
+    <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-weight:900;font-size:12px;color:var(--text2);margin-bottom:6px">🎯 개인/끝장전 카드 — 얼굴 위치(배경)</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
+        채우기(cover)에서 얼굴이 잘리는 경우, 아래 미리보기에서 <b>드래그</b>하거나 X/Y로 위치를 보정할 수 있습니다. (개인전/끝장전/프로리그 끝장전 적용)
+      </div>
+      <input type="hidden" id="ed-h2hpos-del" value="0">
+      <div id="ed-h2hpos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:${p.photo?`url('${toHttpsUrl(p.photo)}')`:'linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10))'};background-size:${_h2hBgSize};background-position:${_h2hX}% ${_h2hY}%;background-repeat:no-repeat;touch-action:none;user-select:none">
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.32) 60%, rgba(15,23,42,.78) 100%)"></div>
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
+        <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
+        <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 12px;z-index:1;text-align:center">
+          <div style="font-weight:1000;font-size:16px;line-height:1.1;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.45)">${p.name}</div>
+          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.86);text-shadow:0 2px 10px rgba(0,0,0,.35)">${p.univ||''}</div>
+          <div style="margin-top:4px;display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap">
+            ${(p.race&&p.race!=='N')?`<span class="rbadge r${p.race}" style="transform:scale(.92);transform-origin:center">${p.race}</span>`:''}
+            ${p.tier?`<span style="transform:scale(.92);transform-origin:center">${getTierBadge(p.tier)}</span>`:''}
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">가로(X)</div>
+        <input type="range" id="ed-h2hpos-x" min="0" max="100" step="1" value="${_h2hX}"
+          oninput="edH2HPosSyncFromInputs()" style="width:100%">
+        <div id="ed-h2hpos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${_h2hX}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">세로(Y)</div>
+        <input type="range" id="ed-h2hpos-y" min="0" max="100" step="1" value="${_h2hY}"
+          oninput="edH2HPosSyncFromInputs()" style="width:100%">
+        <div id="ed-h2hpos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${_h2hY}%</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">
+        <button type="button" class="btn btn-w btn-xs" onclick="edH2HPosCenter()">센터(50/50)</button>
+        <button type="button" class="btn btn-w btn-xs" onclick="edH2HPosDelete()">삭제(기본)</button>
+        <button type="button" class="btn btn-b btn-xs" onclick="edH2HPosSave()">저장</button>
+      </div>
+      <div id="ed-h2hpos-msg" style="display:none;margin-top:6px;font-size:11px;color:var(--green);font-weight:900;text-align:right">저장됨!</div>
+    </div>
+
     <label>🖼 프로필 이미지 2 <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(모바일/교체용 · 1초 후 자동 전환)</span></label>
     <input type="text" id="ed-photo2" value="${p.secondProfileFile||''}" placeholder="https://... 이미지 URL 입력" style="width:100%">
     <div style="font-size:10px;color:var(--gray-l);margin-top:-6px">현황판 등에서 보조 프로필 이미지로 사용됩니다.</div>
+
+    <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-weight:900;font-size:12px;color:var(--text2);margin-bottom:6px">🖼 프로필 사진 2 — 얼굴 위치(자르기 보정)</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">프로필 2도 필요하면 위치를 저장할 수 있습니다.</div>
+      <input type="hidden" id="ed-p2pos-del" value="0">
+      <div id="ed-p2pos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none">
+        ${p.secondProfileFile?`<img id="ed-p2pos-img" src="${toHttpsUrl(p.secondProfileFile).replace(/\"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${_p2X}% ${_p2Y}%;transform:scale(1.02)" onerror="this.style.display='none'">`:''}
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
+        <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
+        <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">가로(X)</div>
+        <input type="range" id="ed-p2pos-x" min="0" max="100" step="1" value="${_p2X}" oninput="edP2PosSyncFromInputs()" style="width:100%">
+        <div id="ed-p2pos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${_p2X}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">세로(Y)</div>
+        <input type="range" id="ed-p2pos-y" min="0" max="100" step="1" value="${_p2Y}" oninput="edP2PosSyncFromInputs()" style="width:100%">
+        <div id="ed-p2pos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${_p2Y}%</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">
+        <button type="button" class="btn btn-w btn-xs" onclick="edP2PosCenter()">센터(50/50)</button>
+        <button type="button" class="btn btn-w btn-xs" onclick="edP2PosDelete()">삭제(기본)</button>
+      </div>
+    </div>
     <label>🏠 방송국 홈 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(홈 아이콘 클릭 시 이동)</span></label>
     <div style="display:flex;gap:8px;align-items:center">
       <input type="text" id="ed-channel" value="${p.channelUrl||''}" placeholder="https://chzzk.naver.com/... 또는 https://twitch.tv/..." style="flex:1">
@@ -6262,10 +6870,19 @@ window.openEP=function(name){
       <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">🖼 스트리머 상세 헤더 배경</div>
       <label>배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 설정탭 기본값 사용)</span></label>
       <input type="text" id="ed-phbg" value="${p.detailHeaderBgImg||''}" placeholder="https://... 이미지 URL">
+      <div id="ed-phbg-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);margin-top:10px;background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none">
+        ${(p.detailHeaderBgImg||'').trim()?`<div id="ed-phbg-prev-bg" style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl((p.detailHeaderBgImg||'').trim()).replace(/'/g,'%27')}');background-repeat:no-repeat;background-position:${Number(p.detailHeaderBgPosX??50)||50}% ${Number(p.detailHeaderBgPosY??50)||50}%;background-size:${(p.detailHeaderBgFit||'')==='fill'?'100% 100%':((p.detailHeaderBgFit||'')==='cover'?'cover':'contain')};transform:scale(${Math.max(40,Math.min(220,Number(p.detailHeaderBgScale||100)||100))/100});transform-origin:center center;opacity:.85;pointer-events:none"></div>`:''}
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%);pointer-events:none"></div>
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
+        <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
+        <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
+        <div style="position:absolute;left:10px;top:10px;z-index:1;font-size:11px;font-weight:900;color:rgba(255,255,255,.82);text-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none">드래그로 위치 조정</div>
+        ${!(p.detailHeaderBgImg||'').trim()?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:rgba(15,23,42,.55)">URL을 입력하면 미리보기가 표시됩니다</div>`:''}
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
         <div>
           <label>표시 방식</label>
-          <select id="ed-phbg-fit">
+          <select id="ed-phbg-fit" onchange="edPhbgSyncFromInputs()">
             <option value=""${!p.detailHeaderBgFit?' selected':''}>설정값 따름</option>
             <option value="contain"${p.detailHeaderBgFit==='contain'?' selected':''}>맞춤</option>
             <option value="cover"${p.detailHeaderBgFit==='cover'?' selected':''}>채우기</option>
@@ -6275,7 +6892,7 @@ window.openEP=function(name){
         <div>
           <label>크기 조절</label>
           <div style="display:flex;align-items:center;gap:8px">
-            <input type="range" id="ed-phbg-scale" min="40" max="220" step="5" value="${Number(p.detailHeaderBgScale||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-scale-val').textContent=this.value+'%'">
+            <input type="range" id="ed-phbg-scale" min="40" max="220" step="5" value="${Number(p.detailHeaderBgScale||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-scale-val').textContent=this.value+'%'; edPhbgSyncFromInputs()">
             <span id="ed-phbg-scale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.detailHeaderBgScale||100)||100}%</span>
           </div>
         </div>
@@ -6294,14 +6911,14 @@ window.openEP=function(name){
         <div>
           <label>가로 미세 위치</label>
           <div style="display:flex;align-items:center;gap:8px">
-            <input type="range" id="ed-phbg-posx" min="0" max="100" step="1" value="${Number(p.detailHeaderBgPosX??50)||50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-posx-val').textContent=this.value+'%'">
+            <input type="range" id="ed-phbg-posx" min="0" max="100" step="1" value="${Number(p.detailHeaderBgPosX??50)||50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-posx-val').textContent=this.value+'%'; edPhbgSyncFromInputs()">
             <span id="ed-phbg-posx-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.detailHeaderBgPosX??50)||50}%</span>
           </div>
         </div>
         <div>
           <label>세로 미세 위치</label>
           <div style="display:flex;align-items:center;gap:8px">
-            <input type="range" id="ed-phbg-posy" min="0" max="100" step="1" value="${Number(p.detailHeaderBgPosY??50)||50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-posy-val').textContent=this.value+'%'">
+            <input type="range" id="ed-phbg-posy" min="0" max="100" step="1" value="${Number(p.detailHeaderBgPosY??50)||50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-posy-val').textContent=this.value+'%'; edPhbgSyncFromInputs()">
             <span id="ed-phbg-posy-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.detailHeaderBgPosY??50)||50}%</span>
           </div>
         </div>
@@ -6440,6 +7057,13 @@ window.openEP=function(name){
       <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:12px;border:1px solid #fde68a;border-radius:6px;padding:8px;background:#fff;resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
     </div>`;
   om('emModal');
+  try{ setTimeout(()=>{ 
+    if(typeof edBindH2HPosDrag==='function') edBindH2HPosDrag(); 
+    if(typeof edBindP1PosDrag==='function') edBindP1PosDrag();
+    if(typeof edBindP2PosDrag==='function') edBindP2PosDrag();
+    if(typeof edPhbgSyncFromInputs==='function') edPhbgSyncFromInputs();
+    if(typeof edBindPhbgDrag==='function') edBindPhbgDrag();
+  }, 0); }catch(e){}
 }
 // 스트리머 상세 모달 → 수정창 열기
 // emModal(z-index:5000) > playerModal(z-index:4000) 이므로 playerModal을 닫지 않고
@@ -6532,6 +7156,14 @@ function savePlayer(){
         });
       });
     });
+
+    // 개인/끝장전 배경 위치 보정값도 이름 변경 반영
+    try{
+      const m = JSON.parse(localStorage.getItem('su_h2h_player_bgpos')||'{}')||{};
+      if(m[oldName] && !m[newName]) m[newName]=m[oldName];
+      if(m[oldName]) delete m[oldName];
+      localStorage.setItem('su_h2h_player_bgpos', JSON.stringify(m));
+    }catch(e){}
   }
 
   p.name=newName;
@@ -6553,6 +7185,36 @@ function savePlayer(){
     }
   }
   p.photo=_photo||undefined;
+
+  // 프로필 사진 1 object-position 보정 저장
+  try{
+    const del = (document.getElementById('ed-p1pos-del')?.value||'0') === '1';
+    const x = parseInt(document.getElementById('ed-p1pos-x')?.value||'50',10);
+    const y = parseInt(document.getElementById('ed-p1pos-y')?.value||'50',10);
+    if(del || !p.photo){
+      delete p.photoPosX; delete p.photoPosY;
+    }else if(Number.isFinite(x) && Number.isFinite(y)){
+      const xx=Math.max(0,Math.min(100,x)), yy=Math.max(0,Math.min(100,y));
+      if(xx===50 && yy===50){ delete p.photoPosX; delete p.photoPosY; }
+      else { p.photoPosX=xx; p.photoPosY=yy; }
+    }
+  }catch(e){}
+
+  // 개인/끝장전 카드 얼굴 위치 보정 (수정창에서 저장한 값 적용)
+  try{
+    const del = (document.getElementById('ed-h2hpos-del')?.value||'0') === '1';
+    const map = JSON.parse(localStorage.getItem('su_h2h_player_bgpos')||'{}')||{};
+    if(del){
+      delete map[p.name];
+    }else{
+      const x = parseInt(document.getElementById('ed-h2hpos-x')?.value||'50',10);
+      const y = parseInt(document.getElementById('ed-h2hpos-y')?.value||'50',10);
+      if(Number.isFinite(x) && Number.isFinite(y)){
+        map[p.name] = { x: Math.max(0,Math.min(100,x)), y: Math.max(0,Math.min(100,y)) };
+      }
+    }
+    localStorage.setItem('su_h2h_player_bgpos', JSON.stringify(map));
+  }catch(e){}
   const _win=document.getElementById('ed-win');
   const _loss=document.getElementById('ed-loss');
   const _pts=document.getElementById('ed-pts');
@@ -6585,6 +7247,20 @@ function savePlayer(){
   const _shareBgPosX=(document.getElementById('ed-sharebg-posx')?.value||'center').trim();
   const _shareBgPosY=(document.getElementById('ed-sharebg-posy')?.value||'center').trim();
   p.secondProfileFile=_photo2||undefined;
+
+  // 프로필 사진 2 object-position 보정 저장
+  try{
+    const del = (document.getElementById('ed-p2pos-del')?.value||'0') === '1';
+    const x = parseInt(document.getElementById('ed-p2pos-x')?.value||'50',10);
+    const y = parseInt(document.getElementById('ed-p2pos-y')?.value||'50',10);
+    if(del || !p.secondProfileFile){
+      delete p.photo2PosX; delete p.photo2PosY;
+    }else if(Number.isFinite(x) && Number.isFinite(y)){
+      const xx=Math.max(0,Math.min(100,x)), yy=Math.max(0,Math.min(100,y));
+      if(xx===50 && yy===50){ delete p.photo2PosX; delete p.photo2PosY; }
+      else { p.photo2PosX=xx; p.photo2PosY=yy; }
+    }
+  }catch(e){}
   p.detailHeaderBgImg=_phbg||undefined;
   p.detailHeaderBgFit=_phbgFit||undefined;
   p.detailHeaderBgScale=_phbg ? _phbgScale : undefined;

@@ -132,6 +132,35 @@ let proCompMatchState = {tnId:null, gi:null, mi:null};
 let proCompBktState = {tnId:null, rnd:null, mi:null, playerA:'', playerB:''};
 
 // ─────────────────────────────────────────────────────────────
+// (요청사항) 프로리그 대회 카드(조별리그/대진표 기록) 프로필 크기: PC/모바일 별도 설정
+// - 설정탭에서 su_procomp_avatar_pc / su_procomp_avatar_mb 로 저장
+// ─────────────────────────────────────────────────────────────
+function _pcReadIntLS(key, def, min, max){
+  try{
+    const v=parseInt(localStorage.getItem(key)||'',10);
+    if(Number.isFinite(v)) return Math.max(min, Math.min(max, v));
+  }catch(e){}
+  return Math.max(min, Math.min(max, def));
+}
+function _pcIsMobile(){
+  try{ return window.innerWidth <= 768; }catch(e){ return false; }
+}
+function proCompGetAvatarPx(){
+  const pc = _pcReadIntLS('su_procomp_avatar_pc', 52, 28, 84);
+  const mb = _pcReadIntLS('su_procomp_avatar_mb', 40, 24, 72);
+  return _pcIsMobile() ? mb : pc;
+}
+
+function proCompGetAvatarFit(){
+  try{
+    const v = String(localStorage.getItem('su_procomp_avatar_fit')||'cover').trim();
+    return (v==='contain' || v==='cover' || v==='fill') ? v : 'cover';
+  }catch(e){
+    return 'cover';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
 // (요청사항) 프로리그 대회 "조별리그"에서는 스테이지(16강/8강/4강/결승) 개념 삭제
 // - 기록/순위 탭은 조별리그만 다룸
 // - 토너먼트(대진표) 입력/결과는 "🗂️ 대진표 / 📝 입력"에서만 진행
@@ -425,13 +454,30 @@ function proCompLeague(tn) {
         const isLose = isDone && !isWin;
         const canClick = !!(p && p.name);
         const clickAttr = canClick ? `onclick="openPlayerModal('${escJS(p.name)}')" title="상세 보기"` : '';
-        const photo = p&&p.photo?`<img ${clickAttr} src="${toHttpsUrl(p.photo)}" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${isWin?'#16a34a':'var(--border)'};${isLose?'filter:grayscale(1);opacity:.58;':''};cursor:${canClick?'pointer':'default'}" onerror="this.style.display='none'">`
-          : `<div ${clickAttr} style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;${isLose?'opacity:.58;filter:grayscale(1);':''};cursor:${canClick?'pointer':'default'}">👤</div>`;
-        return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;border-radius:12px;background:${isWin?'linear-gradient(135deg,#dcfce7,#bbf7d0)':isDone?'#f8fafc':'var(--blue-l)'};border:2px solid ${isWin?'#16a34a':'var(--border)'};min-width:100px;${isLose?'opacity:.9;':''}">
-          ${photo}
-          <span style="font-weight:${isWin?'900':'600'};font-size:13px;color:${isWin?'#16a34a':isLose?'#94a3b8':'var(--text)'};margin-top:2px;cursor:${p?'pointer':'default'}" onclick="${p?`openPlayerModal('${escJS(p.name)}')`:''}">${p?p.name:'미정'}</span>
-          ${_univ(p)}
-          <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:center">${_rb(p)}${_tb(p)}</div>
+        const av = (typeof proCompGetAvatarPx==='function') ? proCompGetAvatarPx() : 52;
+        const fit = (typeof proCompGetAvatarFit==='function') ? proCompGetAvatarFit() : 'cover';
+        const bgSize = (fit==='fill') ? '100% 100%' : (fit==='contain' ? 'contain' : 'cover');
+        const minW = Math.max(128, av + 90);
+        const minH = Math.max(128, av + 86);
+        const bgImg = (p && p.photo) ? `background-image:url('${toHttpsUrl(p.photo)}');` : '';
+        const bgFallback = (!p || !p.photo)
+          ? `background:linear-gradient(135deg,${isWin?'#16a34a':'#64748b'}33,${isWin?'#16a34a':'#64748b'}11);`
+          : '';
+        const name = p ? (p.name||'') : '';
+        const initial = (name||'미').slice(0,1);
+        return `<div ${clickAttr} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:10px 10px 12px;border-radius:14px;min-width:${minW}px;min-height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
+          <div style="position:absolute;inset:0;background:${p&&p.photo
+            ? `linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.28) 50%, rgba(15,23,42,.72) 100%)`
+            : `linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.18))`
+          }"></div>
+          ${(!p||!p.photo)?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(26,Math.round(minH*0.28))}px;font-weight:1000;color:rgba(15,23,42,.20)">${initial}</div>`:''}
+          <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;width:100%">
+            <div style="font-weight:1000;font-size:16px;line-height:1.1;color:${p&&p.photo?'#fff':(isWin?'#16a34a':'#0f172a')};text-shadow:${p&&p.photo?'0 2px 10px rgba(0,0,0,.45)':'none'}">${name||'미정'}</div>
+            <div style="font-size:11px;font-weight:800;color:${p&&p.photo?'rgba(255,255,255,.85)':'#64748b'};text-shadow:${p&&p.photo?'0 2px 10px rgba(0,0,0,.35)':'none'}">${p?.univ||''}</div>
+            <div style="display:flex;gap:4px;align-items:center;justify-content:center;flex-wrap:wrap">
+              ${_rb(p)}${_tb(p)}
+            </div>
+          </div>
         </div>`;
       };
       const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
@@ -459,6 +505,7 @@ function proCompLeague(tn) {
               <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
               <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
             </div>
+            ${m.map?`<div style="font-size:10px;color:var(--gray-l);margin-top:4px">🗺️ ${m.map}</div>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor}">VS</div>`}
           </div>
           ${_pcard(pb, bWin)}
@@ -1510,13 +1557,29 @@ function proCompTourMatchInput(tn){
       const isLose = isDone && !isWin;
       const canClick = !!name;
       const photoClick = canClick ? `onclick="openPlayerModal('${escJS(name)}')" title="상세 보기"` : '';
-      const photo = p&&p.photo?`<img ${photoClick} src="${toHttpsUrl(p.photo)}" style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${isWin?'#16a34a':'var(--border)'};${isLose?'filter:grayscale(1);opacity:.58;':''};cursor:${canClick?'pointer':'default'}" onerror="this.style.display='none'">`
-        : `<div ${photoClick} style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:${isLose?'#cbd5e1':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:${isLose?'#64748b':'inherit'};${isLose?'opacity:.7;':''};cursor:${canClick?'pointer':'default'}">👤</div>`;
-      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;border-radius:12px;background:${isWin?'linear-gradient(135deg,#dcfce7,#bbf7d0)':isDone?'#f8fafc':'var(--blue-l)'};border:2px solid ${isWin?'#16a34a':'var(--border)'};min-width:100px;${isLose?'opacity:.9;':''}">
-        ${photo}
-        <span style="font-weight:${isWin?'900':'600'};font-size:13px;color:${isWin?'#16a34a':isLose?'#94a3b8':'var(--text)'};margin-top:2px;cursor:${canClick?'pointer':'default'};text-decoration:${canClick?'underline dotted':'none'}" onclick="${canClick?`openPlayerModal('${escJS(name)}')`:''}">${name||'미정'}</span>
-        ${_univ(p)}
-        <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:center">${_rb(p)}${_tb(p)}</div>
+      const av = (typeof proCompGetAvatarPx==='function') ? proCompGetAvatarPx() : 52;
+      const fit = (typeof proCompGetAvatarFit==='function') ? proCompGetAvatarFit() : 'cover';
+      const bgSize = (fit==='fill') ? '100% 100%' : (fit==='contain' ? 'contain' : 'cover');
+      const minW = Math.max(128, av + 90);
+      const minH = Math.max(128, av + 86);
+      const bgImg = (p && p.photo) ? `background-image:url('${toHttpsUrl(p.photo)}');` : '';
+      const bgFallback = (!p || !p.photo)
+        ? `background:linear-gradient(135deg,${isWin?'#16a34a':'#64748b'}33,${isWin?'#16a34a':'#64748b'}11);`
+        : '';
+      const initial = (name||'미').slice(0,1);
+      return `<div ${photoClick} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:10px 10px 12px;border-radius:14px;min-width:${minW}px;min-height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
+        <div style="position:absolute;inset:0;background:${p&&p.photo
+          ? `linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.28) 50%, rgba(15,23,42,.72) 100%)`
+          : `linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.18))`
+        }"></div>
+        ${(!p||!p.photo)?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(26,Math.round(minH*0.28))}px;font-weight:1000;color:rgba(15,23,42,.20)">${initial}</div>`:''}
+        <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;width:100%">
+          <div style="font-weight:1000;font-size:16px;line-height:1.1;color:${p&&p.photo?'#fff':(isWin?'#16a34a':'#0f172a')};text-shadow:${p&&p.photo?'0 2px 10px rgba(0,0,0,.45)':'none'}">${name||'미정'}</div>
+          <div style="font-size:11px;font-weight:800;color:${p&&p.photo?'rgba(255,255,255,.85)':'#64748b'};text-shadow:${p&&p.photo?'0 2px 10px rgba(0,0,0,.35)':'none'}">${p?.univ||''}</div>
+          <div style="display:flex;gap:4px;align-items:center;justify-content:center;flex-wrap:wrap">
+            ${_rb(p)}${_tb(p)}
+          </div>
+        </div>
       </div>`;
     };
     const dLabel = (m.d||'') ? (m.d||'').slice(2).replace(/-/g,'/') : '미정';
@@ -1542,7 +1605,7 @@ function proCompTourMatchInput(tn){
             <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
             <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
           </div>
-          <div style="font-size:10px;font-weight:700;color:#16a34a;margin-top:4px">${aWin?m.a+' 승':bWin?m.b+' 승':'결과없음'}</div>
+          
           ${m.map?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">🗺️ ${m.map}</div>`:''}
           ${m.note?`<div style="font-size:10px;color:#94a3b8;margin-top:2px;max-width:180px;line-height:1.45;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
           `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${col}">VS</div>`}

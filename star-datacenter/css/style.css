@@ -1626,6 +1626,22 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   pointer-events:auto;
   margin-left:auto;
 }
+/* (요청사항) 대학/스코어는 강조하고, 참여자(👥) 같은 보조 버튼은 더 작고 정렬되게 */
+.rec-actions--inline .btn-xs{
+  font-size:11px !important;
+  padding:3px 9px !important;
+  border-radius:999px !important;
+  line-height:1.1 !important;
+}
+.rec-actions--inline .rec-morebtn{
+  font-size:14px !important;
+  padding:3px 10px !important;
+  border-radius:10px !important;
+}
+
+/* (요청사항) 경기 카드의 대학/팀(ubadge) 버튼 크기: 설정탭 슬라이더로 조절
+   - history.js 등에서 ubadge에 인라인 font-size/padding이 있어도 확실히 적용되도록 !important 사용
+   - transform scale은 레이아웃이 안 바뀌어서 스코어/참여자 정렬이 깨질 수 있어 사용하지 않음 */
 .rec-summary:hover .rec-actions,.rec-summary.detail-open .rec-actions{opacity:1;pointer-events:auto;}
 /* 상세 영역: 열릴 때 컬러 상단 테두리로 연결감 */
 .rec-detail-area.open{border-top:none !important;}
@@ -1651,12 +1667,18 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   box-shadow:0 14px 28px rgba(15,23,42,.09), inset 0 1px 0 rgba(255,255,255,.78);
 }
 .rec-sum-vs .ubadge{
-  min-height:38px;
-  padding:7px 13px;
-  border-radius:12px;
-  font-size:13px;
-  font-weight:800;
+  min-height:calc(38px * var(--rc-match-btn-scale,1)) !important;
+  padding:calc(7px * var(--rc-match-btn-scale,1)) calc(13px * var(--rc-match-btn-scale,1)) !important;
+  border-radius:calc(12px * var(--rc-match-btn-scale,1)) !important;
+  font-size:calc(13px * var(--rc-match-btn-scale,1)) !important;
+  font-weight:800 !important;
   box-shadow:0 8px 18px rgba(15,23,42,.10);
+  line-height:1.05 !important;
+  gap:calc(4px * var(--rc-match-btn-scale,1)) !important;
+}
+.rec-sum-vs .ubadge img{
+  width:calc(18px * var(--rc-match-btn-scale,1)) !important;
+  height:calc(18px * var(--rc-match-btn-scale,1)) !important;
 }
 .rec-summary[data-rec-mode]{
   position:relative;

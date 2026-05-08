@@ -46,6 +46,7 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
   }
   const src = toHttpsUrl(p.photo);
   let fit = 'contain';
+  let pos = null;
   try{
     const hasFit = /object-fit\s*:\s*/.test(extraStyle);
     if(!hasFit){
@@ -63,7 +64,19 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
       fit = null;
     }
   }catch(e){ fit='contain'; }
-  return '<img '+clickAttr+' src="'+src+'" decoding="async" fetchpriority="high" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+bdr+clickStyle+'" onerror="this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');">';
+  try{
+    const hasPos = /object-position\s*:\s*/.test(extraStyle);
+    if(!hasPos && p){
+      const x = Number(p.photoPosX);
+      const y = Number(p.photoPosY);
+      if(Number.isFinite(x) && Number.isFinite(y)){
+        const xx = Math.max(0, Math.min(100, x));
+        const yy = Math.max(0, Math.min(100, y));
+        pos = `${xx}% ${yy}%`;
+      }
+    }
+  }catch(e){}
+  return '<img '+clickAttr+' src="'+src+'" decoding="async" fetchpriority="high" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+(pos?('object-position:'+pos+';'):'')+bdr+clickStyle+'" onerror="this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');">';
 }
 
 const _prewarmedImageUrls = new Set();
