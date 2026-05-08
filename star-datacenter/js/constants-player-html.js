@@ -66,7 +66,8 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
   }catch(e){ fit='contain'; }
   try{
     const hasPos = /object-position\s*:\s*/.test(extraStyle);
-    if(!hasPos && p){
+    const use = (p && p.photoPosUse !== false); // 기본: 사용(하위호환)
+    if(!hasPos && p && use){
       const x = Number(p.photoPosX);
       const y = Number(p.photoPosY);
       if(Number.isFinite(x) && Number.isFinite(y)){

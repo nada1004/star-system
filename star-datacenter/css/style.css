@@ -3,6 +3,12 @@
   --blue:#2563eb;--blue-d:#1d4ed8;--blue-l:#eff6ff;--blue-ll:#dbeafe;
   --gold:#d97706;--gold-bg:#fffbeb;--gold-b:#fde68a;
   --green:#16a34a;--red:#dc2626;--gray:#64748b;--gray-l:#9ca3af;
+  /* (요청사항) 전 탭 스코어 색상 통일 */
+  --score-win:#16a34a;
+  --score-win-2:#22c55e;
+  --score-lose:#dc2626;
+  --score-lose-2:#fb7185;
+  --score-neutral:var(--text);
   --text:#1a202c;--text2:#374151;--text3:#6b7280;
   --god:#7c3aed;--king:#2563eb;--jack:#1e3a8a;--joker:#2040a8;--spade:#2d52c8;--youth:#10b981;
   /* 통일된 그림자 3단계 */
@@ -822,9 +828,22 @@ b,strong{font-weight:600;}
   font-size:11px;
 }
 .grp-match-card.match-card-v3 .grp-team-chip{
-  padding:10px 14px !important;
-  border-radius:16px !important;
+  padding:calc(10px * var(--tc-team-btn-scale,1)) calc(14px * var(--tc-team-btn-scale,1)) !important;
+  border-radius:calc(16px * var(--tc-team-btn-scale,1)) !important;
   box-shadow:0 10px 20px rgba(15,23,42,.12);
+  border:1.5px solid rgba(255,255,255,.20);
+  position:relative;
+  gap:calc(7px * var(--tc-team-btn-scale,1)) !important;
+  min-width:0 !important;
+}
+.grp-match-card.match-card-v3 .grp-team-chip::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  background:linear-gradient(135deg, rgba(255,255,255,.16), rgba(255,255,255,0) 55%, rgba(0,0,0,.10));
+  pointer-events:none;
+  mix-blend-mode:soft-light;
 }
 .grp-match-card.match-card-v3 .grp-match-score{
   border-radius:18px;
@@ -832,6 +851,13 @@ b,strong{font-weight:600;}
 }
 .grp-match-vs{font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--gray-l);}
 .grp-match-score{font-family:'Noto Sans KR',sans-serif;font-weight:1000;font-size:22px;letter-spacing:1px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(239,246,255,.92));border:1.5px solid rgba(148,163,184,.22);border-radius:16px;padding:7px 16px;box-shadow:0 12px 24px rgba(15,23,42,.08);}
+.grp-match-score span{
+  font-weight:1000;
+  text-shadow:0 1px 8px rgba(15,23,42,.12);
+}
+.grp-match-score span + span + span{
+  text-shadow:0 1px 8px rgba(15,23,42,.12);
+}
 .grp-section-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
 .grp-badge{display:inline-block;padding:4px 14px;border-radius:20px;color:#fff;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;letter-spacing:.5px;}
 /* 티어 필터 */
@@ -1259,10 +1285,54 @@ body.dark .hist-ctrl-group{
 /* ── Youth: 병아리 컨셉 민트·연두 파스텔 ── */
 .tbadge-youth{background:linear-gradient(135deg,#a7f3d0,#6ee7b7);color:#065f46;box-shadow:0 1px 5px rgba(110,231,183,.45);border:1px solid rgba(167,243,208,.5);}
 .tbadge-default{background:linear-gradient(135deg,#94a3b8,#64748b);color:#fff;}
-.wt{color:var(--green);font-weight:600;}
-.lt{color:var(--red);font-weight:600;}
-.pt-p{color:#16a34a;font-weight:700;}
-.pt-n{color:#dc2626;font-weight:700;}
+.wt{
+  color:var(--score-win);
+  font-weight:900;
+  background:linear-gradient(180deg,var(--score-win-2),var(--score-win));
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 1px 10px rgba(34,197,94,.18);
+}
+.lt{
+  color:var(--score-lose);
+  font-weight:900;
+  background:linear-gradient(180deg,var(--score-lose-2),var(--score-lose));
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 1px 10px rgba(239,68,68,.16);
+}
+.grp-match-score span[style*="#16a34a"],
+.grp-match-score span[style*="#22c55e"],
+.rec-sum-score span[style*="#16a34a"],
+.rec-sum-score span[style*="#22c55e"],
+.md-score span[style*="#16a34a"],
+.md-score span[style*="#22c55e"]{
+  color:var(--score-win) !important;
+  font-weight:900 !important;
+  background:linear-gradient(180deg,var(--score-win-2),var(--score-win)) !important;
+  -webkit-background-clip:text !important;
+  background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+  text-shadow:0 1px 10px rgba(34,197,94,.18) !important;
+}
+.grp-match-score span[style*="#dc2626"],
+.grp-match-score span[style*="#ef4444"],
+.rec-sum-score span[style*="#dc2626"],
+.rec-sum-score span[style*="#ef4444"],
+.md-score span[style*="#dc2626"],
+.md-score span[style*="#ef4444"]{
+  color:var(--score-lose) !important;
+  font-weight:900 !important;
+  background:linear-gradient(180deg,var(--score-lose-2),var(--score-lose)) !important;
+  -webkit-background-clip:text !important;
+  background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+  text-shadow:0 1px 10px rgba(239,68,68,.16) !important;
+}
+.pt-p{color:var(--score-win);font-weight:800;}
+.pt-n{color:var(--score-lose);font-weight:800;}
 .pt-z{color:#94a3b8;font-weight:400;}
 .fbar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
 .fbar strong{color:var(--gray-l);font-size:11px;font-weight:500;}
@@ -1483,17 +1553,17 @@ body.dark .hist-ctrl-group{
 .win-btn.lose-sel{background:var(--red);color:#fff;border-color:var(--red);}
 .score-board{display:flex;align-items:center;gap:12px;padding:12px 18px;background:linear-gradient(135deg,rgba(15,23,42,.04),rgba(37,99,235,.10),rgba(255,255,255,.92));border:1px solid rgba(148,163,184,.20);border-radius:18px;margin-bottom:12px;flex-wrap:wrap;box-shadow:0 14px 28px rgba(15,23,42,.08);}
 .score-num{font-family:'Noto Sans KR',sans-serif;font-weight:1000;font-size:30px;letter-spacing:-.03em;}
-.rec-summary{background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden;transition:box-shadow var(--tr),transform var(--tr),border-left-width var(--tr);min-height:48px;}
+.rec-summary{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;transition:box-shadow var(--tr),transform var(--tr),border-left-width var(--tr);min-height:46px;}
 .rec-summary:empty{display:none!important;}
 .rec-summary:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08);transform:translateY(-1px);}
 .rec-summary.detail-open{border-left-width:4px!important;box-shadow:0 2px 12px rgba(37,99,235,.13)!important;}
-.rec-sum-header{padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.rec-sum-header{padding:9px 12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
 .rec-sum-header--stack{
   display:flex;
   flex-direction:column;
   align-items:stretch;
-  gap:10px;
-  padding:12px 14px;
+  gap:8px;
+  padding:10px 12px;
 }
 .rec-topline{
   display:flex;
@@ -1515,10 +1585,10 @@ body.dark .hist-ctrl-group{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-height:28px;
-  padding:4px 10px;
+  min-height:26px;
+  padding:3px 9px;
   border-radius:999px;
-  font-size:11px;
+  font-size:10px;
   font-weight:900;
   letter-spacing:-.1px;
 }
@@ -1654,14 +1724,14 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 .rec-sum-score{
   font-family:'Noto Sans KR',sans-serif;
   font-weight:1000;
-  font-size:23px;
+  font-size:21px;
   display:flex;
   align-items:center;
   gap:7px;
   background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(239,246,255,.92));
   border:1.5px solid rgba(148,163,184,.22);
-  border-radius:16px;
-  padding:7px 18px;
+  border-radius:14px;
+  padding:6px 16px;
   white-space:nowrap;
   flex-shrink:0;
   box-shadow:0 14px 28px rgba(15,23,42,.09), inset 0 1px 0 rgba(255,255,255,.78);
@@ -1707,6 +1777,17 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   background:linear-gradient(135deg, rgba(var(--rec-mode-rgb,100,116,139),.10), transparent 62%);
   pointer-events:none;
 }
+
+/* (버그픽스) "배경 효과 OFF"인데도 남는 모드 틴트/바 제거 */
+body.rc-bgfx-off .rec-summary[data-rec-mode]::before{
+  display:none !important;
+}
+body.rc-bgfx-off .rec-summary[data-rec-mode] .rec-sum-header{
+  background:transparent !important;
+}
+body.rc-bgfx-off .rec-summary[data-rec-mode] .rec-sum-score::after{
+  display:none !important;
+}
 .rec-summary.rec-sidefx,
 .grp-match-card.grp-sidefx{
   isolation:isolate;
@@ -1715,6 +1796,10 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 .grp-match-card.grp-sidefx > *{
   position:relative;
   z-index:1;
+}
+.rec-summary.rec-sidefx:hover::after,
+.grp-match-card.grp-sidefx:hover::after{
+  filter:saturate(1.25) contrast(1.06);
 }
 .rec-summary.rec-sidefx::after,
 .grp-match-card.grp-sidefx::after{
@@ -1814,6 +1899,37 @@ body.rc-theme-on .rec-summary img.rec-uicon{
       rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.08)) calc(var(--rec-side-spot,56px) * .42),
       rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-side-spot,56px));
 }
+
+/* (요청사항) 추가 효과: 페이드(은은) */
+.rec-summary.rec-sidefx.rec-sidefx--fade::after,
+.grp-match-card.grp-sidefx.grp-sidefx--fade::after{
+  background:
+    linear-gradient(90deg,
+      rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-ae,var(--rec-side-a1,.20)) * .55)) 0%,
+      rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-a2,.09) * .55)) var(--rec-fx-len2,10%),
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
+      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-a2,.09) * .55)) var(--rec-fx-len2-r,90%),
+      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-ae,var(--rec-side-a1,.20)) * .55)) 100%);
+}
+
+/* (요청사항) 추가 효과: 더블라인(세로 2줄) */
+.rec-summary.rec-sidefx.rec-sidefx--double::after,
+.grp-match-card.grp-sidefx.grp-sidefx--double::after{
+  background:
+    linear-gradient(180deg,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,.26)),
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.10))) left center / var(--rec-side-line-w,8px) 100% no-repeat,
+    linear-gradient(180deg,
+      rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-ae,.26) * .75)),
+      rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-a2,.10) * .75))) left calc(var(--rec-side-line-w,8px) * 1.6) center / calc(var(--rec-side-line-w,8px) * .42) 100% no-repeat,
+    linear-gradient(180deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,.26)),
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.10))) right center / var(--rec-side-line-w,8px) 100% no-repeat,
+    linear-gradient(180deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-ae,.26) * .75)),
+      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-a2,.10) * .75))) right calc(var(--rec-side-line-w,8px) * 1.6) center / calc(var(--rec-side-line-w,8px) * .42) 100% no-repeat;
+}
 .rec-summary.rec-mode-ind .rec-sum-score,
 .rec-summary.rec-mode-gj .rec-sum-score,
 .rec-summary.rec-mode-progj .rec-sum-score{
@@ -1900,15 +2016,50 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   align-items:center;
 }
 .grp-team-chip{
-  min-height:48px;
-  min-width:124px;
-  padding:12px 18px !important;
-  border-radius:14px !important;
+  min-height:calc(46px * var(--tc-team-btn-scale,1));
+  min-width:0;
+  max-width:100%;
+  padding:calc(10px * var(--tc-team-btn-scale,1)) calc(16px * var(--tc-team-btn-scale,1)) !important;
+  border-radius:calc(14px * var(--tc-team-btn-scale,1)) !important;
   box-shadow:0 12px 24px rgba(15,23,42,.14);
+  gap:calc(7px * var(--tc-team-btn-scale,1)) !important;
 }
 .grp-team-chip span{
-  font-size:15px !important;
+  font-size:calc(14px * var(--tc-team-btn-scale,1)) !important;
   letter-spacing:-.01em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:150px;
+}
+.grp-team-chip img.tc-uicon{
+  width:calc(var(--tc-uicon) * var(--tc-team-btn-scale,1)) !important;
+  height:calc(var(--tc-uicon) * var(--tc-team-btn-scale,1)) !important;
+}
+
+/* 대회탭 참가자(👥) 버튼 컴팩트 */
+.grp-mem-btn{
+  --mem-col:#2563eb;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:10px;
+  padding:4px 10px;
+  border-radius:999px;
+  background:linear-gradient(135deg,
+    color-mix(in srgb, var(--mem-col) 14%, #ffffff 86%),
+    color-mix(in srgb, var(--mem-col) 6%, #ffffff 94%));
+  border:1px solid color-mix(in srgb, var(--mem-col) 35%, transparent);
+  color:var(--mem-col);
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 2px 8px color-mix(in srgb, var(--mem-col) 18%, transparent);
+  transition:transform var(--tr), box-shadow var(--tr), filter var(--tr);
+}
+.grp-mem-btn:hover{
+  transform:translateY(-1px);
+  filter:saturate(1.1);
+  box-shadow:0 6px 14px color-mix(in srgb, var(--mem-col) 22%, transparent);
 }
 .grp-score-col{
   min-width:92px !important;
@@ -2855,9 +3006,10 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
     justify-content: var(--rc-vs-justify, center) !important;
   }
   .rec-sum-vs .ubadge{
-    min-height:32px;
-    padding:5px 9px;
-    font-size:11px;
+    /* 모바일에서도 '대학/팀 버튼 크기' 설정값 반영 */
+    min-height:calc(32px * var(--rc-match-btn-scale,1)) !important;
+    padding:calc(5px * var(--rc-match-btn-scale,1)) calc(9px * var(--rc-match-btn-scale,1)) !important;
+    font-size:calc(11px * var(--rc-match-btn-scale,1)) !important;
   }
   .sharecard-preview-wrap{
     padding:10px;
@@ -3746,6 +3898,48 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 
   /* ── 조별리그 ── */
   .grp-match-card { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
+  /* (요청사항) 대회탭 조별/토너 기록 카드: 모바일에서 더 컴팩트 + 정렬 */
+  .grp-match-card.match-card-v3{
+    padding:10px 12px !important;
+    gap:10px !important;
+    border-radius:16px !important;
+  }
+  .grp-match-card.match-card-v3 > div:first-child{
+    min-width:0 !important;
+    width:100% !important;
+    flex-direction:row !important;
+    justify-content:space-between !important;
+    align-items:center !important;
+  }
+  .grp-match-card.match-card-v3 .grp-match-main{
+    width:100% !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    justify-content:flex-start !important;
+    gap:8px !important;
+  }
+  .grp-match-card.match-card-v3 .grp-team-col{
+    min-width:0 !important;
+    width:100% !important;
+  }
+  .grp-match-card.match-card-v3 .grp-team-chip{
+    width:100% !important;
+    justify-content:flex-start !important;
+    padding:9px 12px !important;
+    border-radius:14px !important;
+  }
+  .grp-match-card.match-card-v3 .grp-team-chip span{
+    font-size:13px !important;
+  }
+  .grp-match-card.match-card-v3 .grp-score-col{
+    min-width:0 !important;
+    width:100% !important;
+  }
+  .grp-match-card.match-card-v3 .grp-match-score{
+    border-radius:14px !important;
+    padding:6px 14px !important;
+    font-size:16px !important;
+  }
   .grp-rank-table th, .grp-rank-table td { padding: 6px 5px; font-size: 11px; }
 
   /* ── 현황판 ── */

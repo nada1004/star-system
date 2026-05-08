@@ -85,6 +85,8 @@ function _renderImpl(){
   }
   try{ window._applyRecCardTheme && window._applyRecCardTheme(); }catch(e){}
   try{ window.applyMatchBtnScale && window.applyMatchBtnScale(); }catch(e){}
+  try{ window.applyTourneyTeamBtnScale && window.applyTourneyTeamBtnScale(); }catch(e){}
+  try{ window.applyScoreColors && window.applyScoreColors(); }catch(e){}
   try{ window._applyTourneyCardTheme && window._applyTourneyCardTheme(); }catch(e){}
   try{ window._applyHeaderSettings && window._applyHeaderSettings(); }catch(e){}
   injectUnivIcons(C);

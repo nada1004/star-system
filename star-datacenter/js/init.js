@@ -853,8 +853,11 @@ function _applyRecCardTheme(){
   let on=true, accent='none', bg=12, hd=14, uicon=24;
   let univFontPct=110, ymScalePct=100;
   let memoOn=false, vsAlign='center', scScale=108;
+  // (요청사항) 배경 효과 완전 OFF 감지(승리 배경 + 양끝 효과 모두 OFF)
+  let sideFxOn = true;
   try{
     const v=localStorage.getItem(onKey); if(v!=null) on = v==='1';
+    const sfx=localStorage.getItem('su_rec_side_fx_on'); if(sfx!=null) sideFxOn = sfx!=='0';
     const a=localStorage.getItem(acKey); if(a) accent=a;
     const b=parseInt(localStorage.getItem(bgKey)||'',10); if(!isNaN(b)) bg=b;
     const h=parseInt(localStorage.getItem(hdKey)||'',10); if(!isNaN(h)) hd=h;
@@ -882,6 +885,8 @@ function _applyRecCardTheme(){
       document.body.classList.toggle('rc-accent-border', !!on && accent==='border');
       document.body.classList.toggle('rc-accent-full', !!on && accent==='full');
       document.body.classList.toggle('rc-accent-gradient', !!on && accent==='gradient');
+      // 배경 효과(모드 컬러/헤더 틴트 포함) 완전 OFF 시, 잔색 제거용 클래스
+      document.body.classList.toggle('rc-bgfx-off', (!on && !sideFxOn));
     }
     document.documentElement.style.setProperty('--rc-bg-a', String(bg/100));
     document.documentElement.style.setProperty('--rc-hd-a', String(hd/100));

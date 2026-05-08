@@ -35,6 +35,16 @@ function preparePlayerHeaderDisplayData(opts){
           : (localStorage.getItem('su_b2ImageFill') === '0' ? 'cover' : 'contain');
         imagePos = 'center center';
       }
+      // (요청사항) 스트리머별 프로필 사진 1 얼굴 위치 보정값이 있으면 스트리머 상세(헤더 프로필 사진)에 우선 적용
+      try{
+        const use = (p.photoPosUse !== false); // 기본: 사용(하위호환)
+        const x = Number(p.photoPosX), y = Number(p.photoPosY);
+        if(use && Number.isFinite(x) && Number.isFinite(y)){
+          const xx = Math.max(0, Math.min(100, x));
+          const yy = Math.max(0, Math.min(100, y));
+          imagePos = `${xx}% ${yy}%`;
+        }
+      }catch(e){}
       return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:${imagePos};transform:scale(${imgScale});filter:brightness(${imgBrightness})" onerror="this.style.display='none'">`;
     }
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';

@@ -115,6 +115,17 @@ function _h2hPanelSize(){
   const mb=_h2hReadInt('su_h2h_panel_mb', 126, 96, 210);
   return _h2hIsMobile()?mb:pc;
 }
+function _h2hPanelMul(axis){
+  const isMb=_h2hIsMobile();
+  // axis: 'w' | 'h'
+  const key = axis==='w'
+    ? (isMb?'su_h2h_panel_wmul_mb':'su_h2h_panel_wmul_pc')
+    : (isMb?'su_h2h_panel_hmul_mb':'su_h2h_panel_hmul_pc');
+  const def = axis==='w' ? (isMb?100:105) : 100;
+  // 10%까지 허용(요청사항)
+  const pct = _h2hReadInt(key, def, 10, 300);
+  return pct / 100;
+}
 function _h2hPanelFit(){
   try{
     const v=String(localStorage.getItem('su_h2h_panel_fit')||'cover').trim();
@@ -139,7 +150,9 @@ function _h2hPlayerBgPos(name){
 }
 function _h2hPlayerBgPanel(pName, isWin, isLose){
   const p=players.find(x=>x.name===pName)||{};
-  const size=_h2hPanelSize();
+  const base=_h2hPanelSize();
+  const sizeH=Math.round(base * _h2hPanelMul('h'));
+  const sizeW=Math.round(base * _h2hPanelMul('w'));
   const fit=_h2hPanelFit();
   const bgSize=(fit==='fill')?'100% 100%':(fit==='contain'?'contain':'cover');
   const bgImg=p.photo?`background-image:url('${toHttpsUrl(p.photo)}');`:'';
@@ -153,10 +166,17 @@ function _h2hPlayerBgPanel(pName, isWin, isLose){
   const txtCol = isLose ? 'rgba(255,255,255,.78)' : '#fff';
   const txtCol2 = isLose ? 'rgba(255,255,255,.60)' : 'rgba(255,255,255,.86)';
   const isMb = _h2hIsMobile();
-  const minW = isMb ? 0 : Math.max(150,Math.round(size*1.05));
-  return `<div ${click} style="position:relative;overflow:hidden;border-radius:16px;min-height:${size}px;min-width:${minW}px;width:100%;flex:1;border:2px solid ${isWin?'#16a34a':'rgba(148,163,184,.35)'};box-shadow:${isWin?'0 14px 30px rgba(34,197,94,.16)':'0 10px 24px rgba(15,23,42,.08)'};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${isLose?'filter:grayscale(1);opacity:.88;':''}">
+  // (요청사항) 좌우/상하 폭이 "확실히" 바뀌게:
+  // - PC: width를 지정하되 max-width:100%로 오버플로 방지
+  // - 모바일: 1열이므로 width 100% 유지, height 위주로 변경
+  // (요청사항) 브라우저(가로폭) 환경에 맞춰 자동으로 줄어들 수 있게
+  // - PC에서도 설정값(sizeW)이 너무 크면, 칼럼 폭(100%)을 넘지 않도록 clamp(min()) 처리
+  const wCss = isMb
+    ? 'width:100%;flex:1 1 0;min-width:0;'
+    : `width:min(100%, ${Math.max(120,sizeW)}px);flex:1 1 0;min-width:0;`;
+  return `<div ${click} style="position:relative;overflow:hidden;border-radius:16px;height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${isWin?'#16a34a':'rgba(148,163,184,.35)'};box-shadow:${isWin?'0 14px 30px rgba(34,197,94,.16)':'0 10px 24px rgba(15,23,42,.08)'};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${isLose?'filter:grayscale(1);opacity:.88;':''}">
     <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.30) 55%, rgba(15,23,42,.78) 100%)"></div>
-    ${!p.photo?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(28,Math.round(size*0.30))}px;font-weight:1000;color:rgba(255,255,255,.16)">${initial}</div>`:''}
+    ${!p.photo?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(28,Math.round(base*0.30))}px;font-weight:1000;color:rgba(255,255,255,.16)">${initial}</div>`:''}
     <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;z-index:1;${loseFx}">
       <div style="font-weight:1000;font-size:16px;line-height:1.1;color:${txtCol};text-shadow:0 2px 10px rgba(0,0,0,.45)">${pName||'미정'}</div>
       <div style="font-size:11px;font-weight:800;color:${txtCol2};text-shadow:0 2px 10px rgba(0,0,0,.35)">${univ}</div>
@@ -293,18 +313,24 @@ function indRecordsHTML(){
     const p1bg=_h2hPlayerBgPanel(s.p1, winner===s.p1, winner && winner!==s.p1);
     const p2bg=_h2hPlayerBgPanel(s.p2, winner===s.p2, winner && winner!==s.p2);
     const _indWrapFx = _safeHeadToHeadSideFx(p1col, p2col);
-    const _gridCols = _indBulkOn ? 'auto 1fr auto 1fr' : '1fr auto 1fr';
+    const _isMb = _h2hIsMobile();
+    const _narrow = _isMb && (window.innerWidth <= 420);
+    const _gridCols = _indBulkOn ? 'auto 1fr auto 1fr' : (_narrow ? '1fr' : '1fr auto 1fr');
+    const _pad = _isMb ? '10px 10px' : '14px 14px';
+    const _gap = _isMb ? '8px' : '10px';
+    const _scoreFs = _isMb ? 26 : 32;
+    const _dashFs = _isMb ? 16 : 18;
     h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_indWrapFx||'background:var(--white);'}">
-      <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:14px 14px;gap:10px;cursor:pointer" onclick="openIndSessionPopup('${_indSessKey}')">
+      <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:${_pad};gap:${_gap};cursor:pointer" onclick="openIndSessionPopup('${_indSessKey}')">
         ${bulkCbInd||''}
-        <div style="display:flex;align-items:center">${p1bg}</div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 10px;flex-shrink:0">
-          <div style="font-size:32px;font-weight:700;letter-spacing:-2px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:18px;color:var(--gray-l);margin:0 3px">-</span>${p2wins}</div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;width:100%">${p1bg}</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;${_narrow?'width:100%;padding:2px 0;':'padding:0 10px;'}flex-shrink:0">
+          <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-1.6px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:${_dashFs}px;color:var(--gray-l);margin:0 3px">-</span>${p2wins}</div>
           ${winner?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap">${winner} 승</div>`:''}
         </div>
-        <div style="display:flex;align-items:center;justify-content:flex-end">${p2bg}</div>
+        <div style="display:flex;align-items:center;justify-content:flex-start;width:100%">${p2bg}</div>
       </div>
-      <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg2)">
+      <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:${_isMb?'7px 10px':'8px 14px'};background:var(--bg2);flex-wrap:wrap">
         <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#E6F1FB;color:#185FA5">개인전</span>
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
@@ -462,18 +488,24 @@ function gjRecordsHTML(proOnly){
     const gj_p1bg=_h2hPlayerBgPanel(s.p1, winner===s.p1, winner && winner!==s.p1);
     const gj_p2bg=_h2hPlayerBgPanel(s.p2, winner===s.p2, winner && winner!==s.p2);
     const _gjWrapFx = _safeHeadToHeadSideFx(gj_p1univ?gc(gj_p1univ):'#378ADD', gj_p2univ?gc(gj_p2univ):'#1D9E75');
-    const _gridCols = _gjBulkOn ? 'auto 1fr auto 1fr' : '1fr auto 1fr';
+    const _isMb = _h2hIsMobile();
+    const _narrow = _isMb && (window.innerWidth <= 420);
+    const _gridCols = _gjBulkOn ? 'auto 1fr auto 1fr' : (_narrow ? '1fr' : '1fr auto 1fr');
+    const _pad = _isMb ? '10px 10px' : '14px 14px';
+    const _gap = _isMb ? '8px' : '10px';
+    const _scoreFs = _isMb ? 26 : 32;
+    const _dashFs = _isMb ? 16 : 18;
     h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_gjWrapFx||'background:var(--white);'}">
-      <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:14px 14px;gap:10px;cursor:pointer" onclick="openGJSessionPopup('${_sessKey}')">
+      <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:${_pad};gap:${_gap};cursor:pointer" onclick="openGJSessionPopup('${_sessKey}')">
         ${bulkCbGj||''}
-        <div style="display:flex;align-items:center">${gj_p1bg}</div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 10px;flex-shrink:0">
-          <div style="font-size:32px;font-weight:700;letter-spacing:-2px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:18px;color:var(--gray-l);margin:0 3px">-</span>${p2wins}</div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;width:100%">${gj_p1bg}</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;${_narrow?'width:100%;padding:2px 0;':'padding:0 10px;'}flex-shrink:0">
+          <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-1.6px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:${_dashFs}px;color:var(--gray-l);margin:0 3px">-</span>${p2wins}</div>
           ${winner?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap">${winner} 승</div>`:''}
         </div>
-        <div style="display:flex;align-items:center;justify-content:flex-end">${gj_p2bg}</div>
+        <div style="display:flex;align-items:center;justify-content:flex-start;width:100%">${gj_p2bg}</div>
       </div>
-      <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg2)">
+      <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:${_isMb?'7px 10px':'8px 14px'};background:var(--bg2);flex-wrap:wrap">
         <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${gj_typeBg};color:${gj_typeColor}">${gj_typeLabel}</span>
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>

@@ -368,8 +368,8 @@
         <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:90px">테마 프리셋</div>
         <select id="cfg-designv2-preset" onchange="cfgSetDesignV2Preset(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
           <option value="base" ${preset==='base'?'selected':''}>기본</option>
-          <option value="nada" ${preset==='nada'?'selected':''}>🌑 Nada Dark</option>
-          <option value="nadalight" ${preset==='nadalight'?'selected':''}>🌤️ Nada Light</option>
+          <option value="nada" ${preset==='nada'?'selected':''}>🌑 나다 다크</option>
+          <option value="nadalight" ${preset==='nadalight'?'selected':''}>🌤️ 나다 라이트</option>
           <option value="spring" ${preset==='spring'?'selected':''}>🌸 봄</option>
           <option value="summer" ${preset==='summer'?'selected':''}>🏖️ 여름</option>
           <option value="autumn" ${preset==='autumn'?'selected':''}>🍁 가을</option>
@@ -510,7 +510,7 @@
     var tabColorTail = Math.max(0, Math.min(60, parseInt(localStorage.getItem('su_tab_color_tail') || '22', 10) || 22));
     var recSideFxOn = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0';
     var recSideFxMode = String(localStorage.getItem('su_rec_side_fx_mode') || 'soft');
-    if(['soft','glow','panel','line','ribbon','frame','spotlight'].indexOf(recSideFxMode) === -1) recSideFxMode = 'soft';
+    if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double'].indexOf(recSideFxMode) === -1) recSideFxMode = 'soft';
     var recSideFxIntensity = Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68));
     var recSideFxLength = Math.max(4, Math.min(80, parseInt(localStorage.getItem('su_rec_side_fx_length') || '25', 10) || 25));
     var recSideFxTail = Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_tail') || '28', 10) || 28));
@@ -607,54 +607,10 @@
       + groupsHTML
       + '<div style="margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;flex-direction:column;gap:10px">'
       + '  <div style="font-size:13px;font-weight:900;color:var(--text2)">🪄 기록 카드 양끝 대학 색상 효과</div>'
-      + '  <div style="font-size:12px;color:var(--gray-l);line-height:1.6">미니대전 / 대학대전 / 대회 조별리그 / 토너먼트 / 프로리그 대회 기록 카드에 캡처처럼 양쪽 끝 대학 색상을 은은하게 넣습니다.</div>'
-      + '  <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:900;color:var(--text2);cursor:pointer">'
-      + '    <input type="checkbox" style="width:15px;height:15px" ' + (recSideFxOn?'checked':'') + ' onchange="cfgSetRecSideFxEnabled(this.checked)">'
-      + '    양끝 색상 효과 사용'
-      + '  </label>'
-      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">디자인 모드</div>'
-      + '    <select onchange="cfgSetRecSideFxMode(this.value)" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">'
-      + '      <option value="soft"' + (recSideFxMode==='soft'?' selected':'') + '>소프트</option>'
-      + '      <option value="glow"' + (recSideFxMode==='glow'?' selected':'') + '>글로우</option>'
-      + '      <option value="panel"' + (recSideFxMode==='panel'?' selected':'') + '>패널</option>'
-      + '      <option value="line"' + (recSideFxMode==='line'?' selected':'') + '>라인</option>'
-      + '      <option value="ribbon"' + (recSideFxMode==='ribbon'?' selected':'') + '>리본</option>'
-      + '      <option value="frame"' + (recSideFxMode==='frame'?' selected':'') + '>프레임</option>'
-      + '      <option value="spotlight"' + (recSideFxMode==='spotlight'?' selected':'') + '>스포트라이트</option>'
-      + '    </select>'
+      + '  <div style="font-size:12px;color:var(--gray-l);line-height:1.6">이 설정은 <b>기록 카드(기록탭) 스타일</b>로 이동/통합되었습니다.</div>'
+      + '  <div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + '    <button class="btn btn-w btn-sm" onclick="try{cfgGo(\'reccard\');}catch(e){}">🧾 기록 카드 설정 열기</button>'
       + '  </div>'
-      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">강도</div>'
-      + '    <input type="range" min="0" max="140" step="1" value="' + recSideFxIntensity + '" oninput="document.getElementById(\'cfg-rec-sidefx-v\').textContent=this.value+\'%\'; cfgSetRecSideFxIntensity(this.value)" style="flex:1;min-width:160px">'
-      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-v">' + recSideFxIntensity + '%</span></div>'
-      + '  </div>'
-      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">효과 길이 <span style="font-weight:400;color:var(--gray-l);font-size:10px">(길수록 진해짐)</span></div>'
-      + '    <input type="range" min="4" max="80" step="1" value="' + recSideFxLength + '" oninput="document.getElementById(\'cfg-rec-sidefx-len-v\').textContent=this.value+\'%\'; cfgSetRecSideFxLength(this.value)" style="flex:1;min-width:160px">'
-      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-len-v">' + recSideFxLength + '%</span></div>'
-      + '  </div>'
-      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">번짐/부드러움</div>'
-      + '    <input type="range" min="0" max="100" step="1" value="' + recSideFxSoftness + '" oninput="document.getElementById(\'cfg-rec-sidefx-soft-v\').textContent=this.value+\'%\'; cfgSetRecSideFxSoftness(this.value)" style="flex:1;min-width:160px">'
-      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-soft-v">' + recSideFxSoftness + '%</span></div>'
-      + '  </div>'
-      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">끝선 폭</div>'
-      + '    <input type="range" min="2" max="24" step="1" value="' + recSideFxEdge + '" oninput="document.getElementById(\'cfg-rec-sidefx-edge-v\').textContent=this.value+\'px\'; cfgSetRecSideFxEdge(this.value)" style="flex:1;min-width:160px">'
-      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-edge-v">' + recSideFxEdge + 'px</span></div>'
-      + '  </div>'
-      + '  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-      + '    <div style="font-size:11px;color:var(--text3);font-weight:900;min-width:84px">양끝 끝 강조</div>'
-      + '    <input type="range" min="0" max="140" step="1" value="' + recSideFxTail + '" oninput="document.getElementById(\'cfg-rec-sidefx-tail-v\').textContent=this.value+\'%\'; cfgSetRecSideFxTail(this.value)" style="flex:1;min-width:160px">'
-      + '    <div style="font-size:11px;color:var(--gray-l);font-weight:900;width:46px;text-align:right"><span id="cfg-rec-sidefx-tail-v">' + recSideFxTail + '%</span></div>'
-      + '  </div>'
-      + '  <div class="rec-sidefx rec-sidefx--' + (recSideFxMode||'soft') + '" style="' + _previewVars + 'border-radius:12px;border:1px solid var(--border2);overflow:hidden;background:#ffffff;padding:14px 16px;display:flex;align-items:center;justify-content:center;gap:10px">'
-      + '    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#2563eb;color:#fff;font-size:11px;font-weight:800">서울대</span>'
-      + '    <span style="font-size:18px;font-weight:1000;color:var(--text)">3 : 2</span>'
-      + '    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#7c3aed;color:#fff;font-size:11px;font-weight:800">연세대</span>'
-      + '  </div>'
-      + '  <div style="font-size:11px;color:var(--gray-l);line-height:1.6">이제 슬라이더가 1단위로 조절되고, 번짐/끝선 폭까지 따로 조정할 수 있습니다. 리본/프레임/스포트라이트 모드도 추가했습니다.</div>'
       + '</div>'
       + '</details>';
   }

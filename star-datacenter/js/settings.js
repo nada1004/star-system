@@ -97,18 +97,18 @@ function _scfgToggle(id,el){
 // ─────────────────────────────────────────────────────────────
 const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 
-// (통합 v1) "탭별"이 아니라 "주제별"로 기본 카테고리를 재구성
-// - 기존 키/로직은 유지하고, 메뉴/동선만 통합해서 찾기 쉽게 만든다.
+// (통합 v2) 설정 카테고리를 더 "공격적으로" 재배치/통합
+// - 카드/스코어 관련 설정을 한 곳에서 찾을 수 있게 정리
+// - UI(탭/버튼/폰트/모바일크기)와 자동화(멀티뷰/BGM/붙여넣기)를 분리
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','paste'],
-  // (요청사항) "최근 경기 종목(종류) 배지" 색상은 별도 메뉴로 분리
-  '🖼️ 이미지/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','pdModeBadge','pd','matchdetail','univlogoimg','si','siAssign','procompcard','h2hpanel'],
+  '🖼️ 스트리머/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','univlogoimg','si','siAssign','pdModeBadge','pd','matchdetail'],
+  '🧾 카드/기록':['reccard','tourneycard','procompcard','h2hpanel','sharecard','calui'],
+  '🎨 UI/테마':['designv2','hdr','appfont','uisize','uibtn','uifilter','tablabels','tabcolors','autofitall'],
+  '🧠 자동화/도구':['bgm','soopmv','pasteRoute','fab'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
-  // (요청사항) 모바일/태블릿 UI 크기 조절(버튼/메뉴/배지)
-  '🎨 디자인/테마':['tablabels','tabcolors','designv2','hdr','appfont','uisize','reccard','tourneycard','sharecard','calui'],
-  '🧠 자동화/도구':['bgm','soopmv','pasteRoute','autofitall','fab'],
-  '🧪 고급/점검':['cfgmenu','storage','selfcheck'],
-  '💾 데이터':['sync','firebase','bulkdate','bulkmap','bulktier','bulkdel','bulkconv']
+  '💾 데이터':['sync','firebase','storage','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
+  '🧪 점검/고급':['cfgmenu','selfcheck']
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -498,6 +498,108 @@ try{
 }catch(e){}
 
 // ─────────────────────────────────────────────────────────────
+// (요청사항) 대회탭(조별/토너) 대학(팀) 버튼 크기
+// - CSS 변수: --tc-team-btn-scale
+// - localStorage: su_tc_team_btn_scale_pc, su_tc_team_btn_scale_mb  (단위: %)
+// ─────────────────────────────────────────────────────────────
+window.applyTourneyTeamBtnScale = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth||1024));
+    const isMobile = w <= 768;
+    const key = isMobile ? 'su_tc_team_btn_scale_mb' : 'su_tc_team_btn_scale_pc';
+    const pct = parseInt(localStorage.getItem(key) || '100', 10);
+    const v = Math.max(70, Math.min(150, isNaN(pct)?100:pct)) / 100;
+    document.documentElement.style.setProperty('--tc-team-btn-scale', String(v));
+  }catch(e){}
+};
+window.cfgSetTourneyTeamBtnScaleSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-tc-team-pc')?.value||'100',10) || 100;
+    const mb = parseInt(document.getElementById('cfg-tc-team-mb')?.value||'100',10) || 100;
+    localStorage.setItem('su_tc_team_btn_scale_pc', String(Math.max(70,Math.min(150,pc))));
+    localStorage.setItem('su_tc_team_btn_scale_mb', String(Math.max(70,Math.min(150,mb))));
+  }catch(e){}
+  try{ window.applyTourneyTeamBtnScale && window.applyTourneyTeamBtnScale(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+try{
+  if(!window._tcTeamBtnScaleBound){
+    window._tcTeamBtnScaleBound = true;
+    window.addEventListener('resize', ()=>{ try{ window.applyTourneyTeamBtnScale && window.applyTourneyTeamBtnScale(); }catch(e){} }, {passive:true});
+  }
+}catch(e){}
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 스코어 숫자 색상(승/패) 공통 설정
+// - CSS 변수: --score-win/--score-lose (+ 그라데이션 상단색은 자동 생성)
+// - localStorage: su_score_win, su_score_lose (hex)
+// ─────────────────────────────────────────────────────────────
+function _hexToRgb_(hex){
+  const h=String(hex||'').trim().replace('#','');
+  if(h.length!==6) return null;
+  const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+  if(!Number.isFinite(r)||!Number.isFinite(g)||!Number.isFinite(b)) return null;
+  return {r,g,b};
+}
+function _mixRgb_(a,b,t){
+  t=Math.max(0,Math.min(1,Number(t)||0));
+  const r=Math.round(a.r+(b.r-a.r)*t);
+  const g=Math.round(a.g+(b.g-a.g)*t);
+  const b2=Math.round(a.b+(b.b-a.b)*t);
+  return {r,g,b:b2};
+}
+function _rgbToHex_(c){
+  const to=(n)=>String(Math.max(0,Math.min(255,n|0)).toString(16)).padStart(2,'0');
+  return '#'+to(c.r)+to(c.g)+to(c.b);
+}
+window.applyScoreColors = function(){
+  try{
+    const win=String(localStorage.getItem('su_score_win')||'#16a34a').trim();
+    const lose=String(localStorage.getItem('su_score_lose')||'#dc2626').trim();
+    const wr=_hexToRgb_(win)||{r:22,g:163,b:74};
+    const lr=_hexToRgb_(lose)||{r:220,g:38,b:38};
+    const w2=_mixRgb_(wr,{r:255,g:255,b:255},0.18);
+    const l2=_mixRgb_(lr,{r:255,g:255,b:255},0.20);
+    document.documentElement.style.setProperty('--score-win', _rgbToHex_(wr));
+    document.documentElement.style.setProperty('--score-win-2', _rgbToHex_(w2));
+    document.documentElement.style.setProperty('--score-lose', _rgbToHex_(lr));
+    document.documentElement.style.setProperty('--score-lose-2', _rgbToHex_(l2));
+  }catch(e){}
+};
+window.cfgSetScoreColors = function(){
+  try{
+    const w=String(document.getElementById('cfg-score-win')?.value||'#16a34a').trim();
+    const l=String(document.getElementById('cfg-score-lose')?.value||'#dc2626').trim();
+    if(/^#[0-9a-fA-F]{6}$/.test(w)) localStorage.setItem('su_score_win', w);
+    if(/^#[0-9a-fA-F]{6}$/.test(l)) localStorage.setItem('su_score_lose', l);
+  }catch(e){}
+  try{ window.applyScoreColors && window.applyScoreColors(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 기록 카드 배경 효과 전체 ON/OFF (승리색 배경 + 양끝 효과)
+// - 별도 저장키 없이 su_rc_theme_on / su_rec_side_fx_on 를 동시에 조절
+// ─────────────────────────────────────────────────────────────
+window.cfgSetRecBgFxAll = function(on){
+  try{ localStorage.setItem('su_rc_theme_on', on ? '1' : '0'); }catch(e){}
+  try{ localStorage.setItem('su_rec_side_fx_on', on ? '1' : '0'); }catch(e){}
+  try{
+    const rc=document.getElementById('cfg-rc-theme-on');
+    if(rc) rc.checked = !!on;
+  }catch(e){}
+  try{
+    const sfx=document.getElementById('cfg-sidefx-on');
+    if(sfx) sfx.checked = !!on;
+  }catch(e){}
+  // 사이드FX는 history.js의 setter가 변수를 같이 갱신하므로 가능하면 호출
+  try{ if(typeof window.cfgSetRecSideFxEnabled==='function') window.cfgSetRecSideFxEnabled(!!on); }catch(e){}
+  try{ if(typeof window.cfgSetRecCardSettings==='function') window.cfgSetRecCardSettings(); }catch(e){}
+  try{ if(typeof window._applyRecCardTheme==='function') window._applyRecCardTheme(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+// ─────────────────────────────────────────────────────────────
 // (요청사항) 프로리그 대회(프로리그탭) 조별리그/대진표 기록 카드: 프로필 크기 PC/모바일 분리
 // ─────────────────────────────────────────────────────────────
 window.cfgSetProCompAvatarSettings = function(){
@@ -518,9 +620,18 @@ window.cfgSetH2HPanelSettings = function(){
     const pc = parseInt(document.getElementById('cfg-h2h-panel-pc')?.value||'150',10) || 150;
     const mb = parseInt(document.getElementById('cfg-h2h-panel-mb')?.value||'126',10) || 126;
     const fit = String(document.getElementById('cfg-h2h-panel-fit')?.value||'cover').trim();
+    const wpc = parseInt(document.getElementById('cfg-h2h-w-pc')?.value||'105',10) || 105;
+    const hpc = parseInt(document.getElementById('cfg-h2h-h-pc')?.value||'100',10) || 100;
+    const wmb = parseInt(document.getElementById('cfg-h2h-w-mb')?.value||'100',10) || 100;
+    const hmb = parseInt(document.getElementById('cfg-h2h-h-mb')?.value||'100',10) || 100;
     localStorage.setItem('su_h2h_panel_pc', String(Math.max(110,Math.min(230,pc))));
     localStorage.setItem('su_h2h_panel_mb', String(Math.max(96,Math.min(210,mb))));
     localStorage.setItem('su_h2h_panel_fit', (fit==='contain'||fit==='cover'||fit==='fill') ? fit : 'cover');
+    // 10%까지 허용(요청사항) + 더 넓게(스코어 앞까지) 쓸 수 있게 최대 300%
+    localStorage.setItem('su_h2h_panel_wmul_pc', String(Math.max(10,Math.min(300,wpc))));
+    localStorage.setItem('su_h2h_panel_hmul_pc', String(Math.max(10,Math.min(300,hpc))));
+    localStorage.setItem('su_h2h_panel_wmul_mb', String(Math.max(10,Math.min(300,wmb))));
+    localStorage.setItem('su_h2h_panel_hmul_mb', String(Math.max(10,Math.min(300,hmb))));
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
 };
@@ -1817,11 +1928,14 @@ function _cfgMenuNormalize(layout){
     '게임 운영':'🧩 운영/콘텐츠',
     '콘텐츠 관리':'🧩 운영/콘텐츠',
     '현황판 관리':'🧩 현황판/펨코',
-    '이미지 관리':'🖼️ 이미지/프로필',
-    '🎨 스타일/테마':'🎨 디자인/테마',
-    '🧪 고급/실험실':'🧪 고급/점검',
+    '이미지 관리':'🖼️ 스트리머/프로필',
+    '🖼️ 이미지/프로필':'🖼️ 스트리머/프로필',
+    '🎨 스타일/테마':'🎨 UI/테마',
+    '🎨 디자인/테마':'🎨 UI/테마',
+    '🧪 고급/실험실':'🧪 점검/고급',
+    '🧪 고급/점검':'🧪 점검/고급',
     '데이터 관리':'💾 데이터',
-    '시스템 설정':'🎨 디자인/테마',
+    '시스템 설정':'🎨 UI/테마',
   };
   catOrder = catOrder.map(c => oldToNewCat[c] || c).filter((v,i,a)=>a.indexOf(v)===i);
   // 기본 카테고리 누락 시 추가
@@ -3109,7 +3223,17 @@ function rCfg(C,T){
   }
   if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='🧩 운영/콘텐츠';
   const _cfgCats=(window._cfgCatOrder && Array.isArray(window._cfgCatOrder) ? window._cfgCatOrder : Object.keys(_catSecs||{}));
-  const _cfgCatIcons={'🧩 운영/콘텐츠':'🧩','🖼️ 이미지/프로필':'🖼️','🧩 현황판/펨코':'🧩','🎨 디자인/테마':'🎨','🧠 자동화/도구':'🧠','🧪 고급/점검':'🧪','💾 데이터':'💾','기타':'🗂️'};
+  const _cfgCatIcons={
+    '🧩 운영/콘텐츠':'🧩',
+    '🖼️ 스트리머/프로필':'🖼️',
+    '🧾 카드/기록':'🧾',
+    '🎨 UI/테마':'🎨',
+    '🧠 자동화/도구':'🧠',
+    '🧩 현황판/펨코':'🧩',
+    '💾 데이터':'💾',
+    '🧪 점검/고급':'🧪',
+    '기타':'🗂️'
+  };
   // 카테고리명 자체에 이모지가 들어있는 경우(🎨 스타일/테마, 🧪 고급/실험실) 아이콘이 2번 보이는 문제 방지
   const _catLabel = (c)=>{
     const s=String(c||'');
@@ -3117,12 +3241,13 @@ function rCfg(C,T){
   };
   const _cfgCatDesc={
     '🧩 운영/콘텐츠':'공지/티어/시즌/대학/맵/자동인식',
-    '🖼️ 이미지/프로필':'이미지탭/스트리머 상세/경기 상세(팝업)',
-    '🧩 현황판/펨코':'신현황판/펨코스타일/순서/칩/밝기/배경',
-    '🎨 디자인/테마':'디자인모드/헤더/폰트/카드/캘린더',
-    '🧠 자동화/도구':'BGM/멀티뷰/붙여넣기 분리/자동 맞춤',
-    '🧪 고급/점검':'메뉴정리/저장소/설정 점검',
-    '💾 데이터':'동기화/백업/일괄 작업'
+    '🖼️ 스트리머/프로필':'이미지탭/스트리머 상세/경기 상세(팝업)/상태아이콘',
+    '🧾 카드/기록':'기록카드/대회카드/프로리그/개인·끝장전',
+    '🎨 UI/테마':'탭/버튼/필터/폰트/모바일크기/테마',
+    '🧠 자동화/도구':'배경음악(BGM)/SOOP 멀티뷰/붙여넣기 분리/FAB',
+    '🧩 현황판/펨코':'현황판/펨코스타일/순서/칩/밝기/배경',
+    '💾 데이터':'동기화/백업/일괄 작업',
+    '🧪 점검/고급':'메뉴정리/설정 점검',
   };
   const _cfgSecTitle={
     notice:'📢 공지', tier:'🎯 티어/점수', season:'🗓️ 시즌', teammatch:'🏟️ 팀경기', acct:'🔐 계정',
@@ -3136,11 +3261,11 @@ function rCfg(C,T){
     tablabels:'🏷️ 탭 이름(라벨) 설정',
     uisize:'📱 모바일/태블릿 UI 크기',
     siAssign:'🎭 스트리머별 상태 아이콘 지정',
-    cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', sharecard:'🪪 공유카드 디자인', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
-    bgm:'🎵 유튜브 BGM', soopmv:'📺 SOOP 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
+    cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', h2hpanel:'🎮 개인전/끝장전(프로리그 끝장전) 카드', sharecard:'🪪 공유카드 디자인', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
+    bgm:'🎵 유튜브 배경음악(BGM)', soopmv:'📺 SOOP(숲) 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
-    fab:'📱 FAB', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
-    sync:'🔄 동기화', firebase:'☁️ GitHub 동기화', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
+    fab:'📱 플로팅(FAB)', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
+    sync:'🔄 동기화', firebase:'☁️ GitHub(깃허브) 동기화', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   // 사용자 지정 섹션명 적용
   try{
@@ -3168,6 +3293,8 @@ function rCfg(C,T){
   const _sfxOn = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0';
   const _sfxMode = localStorage.getItem('su_rec_side_fx_mode') || 'soft';
   const _sfxInt = Math.max(20,Math.min(100,parseInt(localStorage.getItem('su_rec_side_fx_intensity')||'68',10)||68));
+  const _sfxLen = Math.max(4,Math.min(80,parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
+  const _sfxTail = Math.max(0,Math.min(140,parseInt(localStorage.getItem('su_rec_side_fx_tail')||'28',10)||28));
   const _avaScale = Math.round((parseFloat(localStorage.getItem('su_avatar_scale') ?? '1') || 1) * 100);
   const _cfgViewMode = (localStorage.getItem('su_cfg_view_mode') || 'basic') === 'advanced' ? 'advanced' : 'basic';
   const _cfgBottomOpen = (()=>{ try{
@@ -3665,7 +3792,7 @@ ${_scfgD('notice','📢 공지 관리')}
     const vol = parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50;
     const sh = (localStorage.getItem('su_bgm_shuffle') ?? '0') === '1';
     const list = (localStorage.getItem('su_bgm_list') || '').trim();
-    return _scfgD('bgm','🎵 유튜브 BGM') + `
+    return _scfgD('bgm','🎵 유튜브 배경음악(BGM)') + `
       <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
         상단 검색바 왼쪽의 ▶/⏸ 버튼으로 재생/일시정지합니다. (모바일은 첫 재생 시 사용자 터치가 필요할 수 있습니다)
       </div>
@@ -3695,7 +3822,7 @@ ${_scfgD('notice','📢 공지 관리')}
   })()}
   ${(()=>{ 
     const list = (localStorage.getItem('su_soop_list') || '').trim();
-    return _scfgD('soopmv','📺 SOOP 멀티뷰') + `
+    return _scfgD('soopmv','📺 SOOP(숲) 멀티뷰') + `
       <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px;line-height:1.6">
         상단에 <b>SOOP</b> 버튼이 생기며, 버튼을 누르면 <b>2분할 멀티뷰</b> 팝업이 열립니다.<br>
         (주소가 1개도 없으면 버튼은 숨겨집니다)
@@ -3892,6 +4019,10 @@ ${_scfgD('notice','📢 공지 관리')}
         <input type="checkbox" id="cfg-rc-theme-on" style="width:15px;height:15px" ${_rcOn?'checked':''} onchange="cfgSetRecCardSettings()">
         승리 대학색을 카드 배경/헤더에 연하게 적용
       </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+        <input type="checkbox" id="cfg-rc-bgfx-all" style="width:15px;height:15px" ${(_rcOn && _sfxOn)?'checked':''} onchange="cfgSetRecBgFxAll(this.checked)">
+        기록 카드 배경 효과 전체 사용 (배경/양끝 효과)
+      </label>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div style="font-size:11px;color:var(--text3);font-weight:800">디자인 모드</div>
@@ -3920,7 +4051,23 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">대학/팀 버튼 크기</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">스코어 숫자 색상(공통)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">승</span>
+          <input type="color" id="cfg-score-win" value="${(()=>{try{return (localStorage.getItem('su_score_win')||'#16a34a');}catch(e){return '#16a34a';}})()}" onchange="cfgSetScoreColors()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px;background:none">
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">패</span>
+          <input type="color" id="cfg-score-lose" value="${(()=>{try{return (localStorage.getItem('su_score_lose')||'#dc2626');}catch(e){return '#dc2626';}})()}" onchange="cfgSetScoreColors()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px;background:none">
+        </div>
+        <div style="flex:1;min-width:180px;max-width:280px;border:1px solid var(--border2);border-radius:12px;padding:8px 12px;background:var(--white);display:flex;align-items:center;justify-content:center;gap:10px">
+          <span class="wt" style="font-size:18px">3</span><span style="color:var(--gray-l);font-weight:900">:</span><span class="lt" style="font-size:18px">2</span>
+        </div>
+        <span style="font-size:11px;color:var(--gray-l)">대회탭 조별/토너, 프로리그 대회, 기록탭 스코어에 공통 적용</span>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">대학/팀 버튼 크기(기록탭/프로리그/티어대회 등)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-mbtn-pc" min="80" max="150" step="5"
@@ -3935,7 +4082,7 @@ ${_scfgD('notice','📢 공지 관리')}
             oninput="document.getElementById('cfg-mbtn-mb-v').textContent=this.value+'%'" onchange="cfgSetMatchBtnScaleSettings()" style="width:140px">
           <span id="cfg-mbtn-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(80,Math.min(150,parseInt(localStorage.getItem('su_match_btn_scale_mb')||'100',10)||100))}%</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ 미니/대학대전/대학CK/티어대회/프로리그/대회에 적용 (참여자 버튼은 유지)</span>
+        <span style="font-size:11px;color:var(--gray-l)">※ 미니/시빌워/대학대전/대학CK/티어대회/프로리그/일반 기록카드에 적용 (대회탭 조별/토너는 아래 “대회 카드”에서 별도)</span>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
@@ -4023,11 +4170,24 @@ ${_scfgD('notice','📢 공지 관리')}
               <option value="glow" ${_sfxMode==='glow'?'selected':''}>글로우 (발광)</option>
               <option value="panel" ${_sfxMode==='panel'?'selected':''}>패널 (선명)</option>
               <option value="line" ${_sfxMode==='line'?'selected':''}>라인 (세로 바)</option>
+              <option value="ribbon" ${_sfxMode==='ribbon'?'selected':''}>리본</option>
+              <option value="frame" ${_sfxMode==='frame'?'selected':''}>프레임</option>
+              <option value="spotlight" ${_sfxMode==='spotlight'?'selected':''}>스포트라이트</option>
+              <option value="fade" ${_sfxMode==='fade'?'selected':''}>페이드(은은)</option>
+              <option value="double" ${_sfxMode==='double'?'selected':''}>더블라인</option>
             </select>
           </div>
           <div>
             <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">색상 강도 <span id="cfg-sidefx-int-v" style="font-weight:400;color:var(--gray-l)">${_sfxInt}</span></div>
             <input type="range" id="cfg-sidefx-int" min="20" max="100" step="4" value="${_sfxInt}" oninput="document.getElementById('cfg-sidefx-int-v').textContent=this.value" onchange="(window.cfgSetRecSideFxIntensity||function(){})(this.value)" style="width:100%;max-width:260px">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 효과 길이 <span id="cfg-sidefx-len-v" style="font-weight:400;color:var(--gray-l)">${_sfxLen}%</span></div>
+            <input type="range" id="cfg-sidefx-len" min="4" max="80" step="2" value="${_sfxLen}" oninput="document.getElementById('cfg-sidefx-len-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxLength||function(){})(this.value)" style="width:100%;max-width:260px">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 끝 진하기 <span id="cfg-sidefx-tail-v" style="font-weight:400;color:var(--gray-l)">${_sfxTail}%</span></div>
+            <input type="range" id="cfg-sidefx-tail" min="0" max="140" step="4" value="${_sfxTail}" oninput="document.getElementById('cfg-sidefx-tail-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxTail||function(){})(this.value)" style="width:100%;max-width:260px">
           </div>
         </div>
       </div>
@@ -4097,6 +4257,25 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-ic-v">${Math.max(24,Math.min(48,_tcIc))}px</span></div>
       </div>
 
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">대학 버튼 크기(대회탭)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-tc-team-pc" min="70" max="150" step="5"
+            value="${Math.max(70,Math.min(150,parseInt(localStorage.getItem('su_tc_team_btn_scale_pc')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-tc-team-pc-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnScaleSettings()" style="width:140px">
+          <span id="cfg-tc-team-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(70,Math.min(150,parseInt(localStorage.getItem('su_tc_team_btn_scale_pc')||'100',10)||100))}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-tc-team-mb" min="70" max="150" step="5"
+            value="${Math.max(70,Math.min(150,parseInt(localStorage.getItem('su_tc_team_btn_scale_mb')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-tc-team-mb-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnScaleSettings()" style="width:140px">
+          <span id="cfg-tc-team-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(70,Math.min(150,parseInt(localStorage.getItem('su_tc_team_btn_scale_mb')||'100',10)||100))}%</span>
+        </div>
+        <span style="font-size:11px;color:var(--gray-l)">※ 조별리그/토너 기록 카드의 대학 버튼에 적용</span>
+      </div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
           <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">브라켓 연결선 두께</div>
@@ -4116,7 +4295,7 @@ ${_scfgD('notice','📢 공지 관리')}
     const pc = parseInt(localStorage.getItem('su_h2h_panel_pc')||'150',10)||150;
     const mb = parseInt(localStorage.getItem('su_h2h_panel_mb')||'126',10)||126;
     const fit = (localStorage.getItem('su_h2h_panel_fit')||'cover');
-    return _scfgD('h2hpanel','🎮 개인/끝장전 카드') + `
+    return _scfgD('h2hpanel','🎮 개인전/끝장전(프로리그 끝장전) 카드') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대전기록 탭의 개인전/끝장전/프로리그 끝장전 카드에서 선수 패널(프로필 배경 카드) 크기와 이미지 맞춤을 설정합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
@@ -4141,6 +4320,31 @@ ${_scfgD('notice','📢 공지 관리')}
           oninput="document.getElementById('cfg-h2h-panel-mb-v').textContent=this.value+'px'"
           onchange="cfgSetH2HPanelSettings()" style="width:100%">
         <div id="cfg-h2h-panel-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(96,Math.min(210,mb))}px</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC 좌우</div>
+        <input type="range" id="cfg-h2h-w-pc" min="10" max="300" step="2" value="${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_wmul_pc')||'105',10)||105));}catch(e){return 105;}})()}"
+          oninput="document.getElementById('cfg-h2h-w-pc-v').textContent=this.value+'%'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
+        <div id="cfg-h2h-w-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_wmul_pc')||'105',10)||105));}catch(e){return 105;}})()}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC 상하</div>
+        <input type="range" id="cfg-h2h-h-pc" min="10" max="300" step="2" value="${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_hmul_pc')||'100',10)||100));}catch(e){return 100;}})()}"
+          oninput="document.getElementById('cfg-h2h-h-pc-v').textContent=this.value+'%'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
+        <div id="cfg-h2h-h-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_hmul_pc')||'100',10)||100));}catch(e){return 100;}})()}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일 좌우</div>
+        <input type="range" id="cfg-h2h-w-mb" min="10" max="300" step="2" value="${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_wmul_mb')||'100',10)||100));}catch(e){return 100;}})()}"
+          oninput="document.getElementById('cfg-h2h-w-mb-v').textContent=this.value+'%'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
+        <div id="cfg-h2h-w-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_wmul_mb')||'100',10)||100));}catch(e){return 100;}})()}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일 상하</div>
+        <input type="range" id="cfg-h2h-h-mb" min="10" max="300" step="2" value="${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_hmul_mb')||'100',10)||100));}catch(e){return 100;}})()}"
+          oninput="document.getElementById('cfg-h2h-h-mb-v').textContent=this.value+'%'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
+        <div id="cfg-h2h-h-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_hmul_mb')||'100',10)||100));}catch(e){return 100;}})()}%</div>
       </div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6">※ 값 변경 후 자동으로 재렌더링됩니다.</div>
 
@@ -4594,7 +4798,7 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
   </details>`;
   })()}
-  ${_scfgD('firebase','☁️ GitHub data.json 동기화')}
+  ${_scfgD('firebase','☁️ GitHub(깃허브) data.json 동기화')}
     <div id="cfg-fb-body">
     <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">관리자가 데이터를 저장할 때 GitHub <code>star-datacenter/data/</code> 폴더에 분리 저장됩니다. 다른 기기는 인덱스를 읽고 필요한 파일들을 합쳐 반영합니다.</p>
     <div style="margin-bottom:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
@@ -5377,7 +5581,7 @@ ${_scfgD('notice','📢 공지 관리')}
   ${_scfgD('pd','🎨 스트리머 상세 스타일 설정')}
     <div id="cfg-pd-body"></div>
   </details>
-  ${_scfgD('fab','🔘 FAB 버튼 탭 설정')}
+  ${_scfgD('fab','🔘 플로팅(FAB) 버튼 탭 설정')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">하단 FAB 버튼 클릭 시 이동할 탭을 설정합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
@@ -6736,6 +6940,8 @@ window.openEP=function(name){
   const _p1Y = (()=>{ const n=parseInt(p.photoPosY??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
   const _p2X = (()=>{ const n=parseInt(p.photo2PosX??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
   const _p2Y = (()=>{ const n=parseInt(p.photo2PosY??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
+  const _p1Use = (p.photoPosUse !== false);
+  const _p2Use = (p.photo2PosUse !== false);
   document.getElementById('emBody').innerHTML=`
     <label>스트리머 이름</label><input type="text" id="ed-n" value="${p.name}">
     <label>티어</label><select id="ed-t">${TIERS.map(t=>`<option value="${t}"${p.tier===t?' selected':''}>${getTierLabel(t)}</option>`).join('')}</select>
@@ -6766,8 +6972,12 @@ window.openEP=function(name){
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
         (채우기/cover 사용 시) 얼굴이 잘리면 아래 미리보기에서 <b>드래그</b>하거나 X/Y로 위치를 보정할 수 있습니다.
       </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:900;color:var(--text3);margin:-2px 0 10px">
+        <input type="checkbox" id="ed-p1pos-use" ${_p1Use?'checked':''} onchange="document.getElementById('ed-p1pos-prev').style.opacity=this.checked?1:.55">
+        이 보정 적용(체크 해제 시 기존 설정 사용)
+      </label>
       <input type="hidden" id="ed-p1pos-del" value="0">
-      <div id="ed-p1pos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none">
+      <div id="ed-p1pos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${_p1Use?1:.55}">
         ${p.photo?`<img id="ed-p1pos-img" src="${toHttpsUrl(p.photo).replace(/\"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${_p1X}% ${_p1Y}%;transform:scale(1.02)" onerror="this.style.display='none'">`:''}
         <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
         <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
@@ -6837,8 +7047,12 @@ window.openEP=function(name){
     <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="font-weight:900;font-size:12px;color:var(--text2);margin-bottom:6px">🖼 프로필 사진 2 — 얼굴 위치(자르기 보정)</div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">프로필 2도 필요하면 위치를 저장할 수 있습니다.</div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:900;color:var(--text3);margin:-2px 0 10px">
+        <input type="checkbox" id="ed-p2pos-use" ${_p2Use?'checked':''} onchange="document.getElementById('ed-p2pos-prev').style.opacity=this.checked?1:.55">
+        이 보정 적용(체크 해제 시 기존 설정 사용)
+      </label>
       <input type="hidden" id="ed-p2pos-del" value="0">
-      <div id="ed-p2pos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none">
+      <div id="ed-p2pos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${_p2Use?1:.55}">
         ${p.secondProfileFile?`<img id="ed-p2pos-img" src="${toHttpsUrl(p.secondProfileFile).replace(/\"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${_p2X}% ${_p2Y}%;transform:scale(1.02)" onerror="this.style.display='none'">`:''}
         <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
         <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
@@ -7188,9 +7402,12 @@ function savePlayer(){
 
   // 프로필 사진 1 object-position 보정 저장
   try{
+    const use = !!document.getElementById('ed-p1pos-use')?.checked;
     const del = (document.getElementById('ed-p1pos-del')?.value||'0') === '1';
     const x = parseInt(document.getElementById('ed-p1pos-x')?.value||'50',10);
     const y = parseInt(document.getElementById('ed-p1pos-y')?.value||'50',10);
+    // 체크 해제 시: 기존 설정(기본값) 사용
+    p.photoPosUse = use;
     if(del || !p.photo){
       delete p.photoPosX; delete p.photoPosY;
     }else if(Number.isFinite(x) && Number.isFinite(y)){
@@ -7250,9 +7467,11 @@ function savePlayer(){
 
   // 프로필 사진 2 object-position 보정 저장
   try{
+    const use = !!document.getElementById('ed-p2pos-use')?.checked;
     const del = (document.getElementById('ed-p2pos-del')?.value||'0') === '1';
     const x = parseInt(document.getElementById('ed-p2pos-x')?.value||'50',10);
     const y = parseInt(document.getElementById('ed-p2pos-y')?.value||'50',10);
+    p.photo2PosUse = use;
     if(del || !p.secondProfileFile){
       delete p.photo2PosX; delete p.photo2PosY;
     }else if(Number.isFinite(x) && Number.isFinite(y)){
