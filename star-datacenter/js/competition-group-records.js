@@ -133,7 +133,7 @@ function rCompLeague(tn){
       const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
       const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
       const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
-      h+=`<div class="grp-match-card tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:linear-gradient(135deg,var(--white) 0%,var(--blue-l) 100%);border:1.5px solid ${m.grpColor}22;border-left:4px solid ${m.grpColor};box-shadow:0 2px 12px rgba(0,0,0,.06);">
+      h+=`<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${m.grpColor};">
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">GROUP ${m.grpLetter}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>

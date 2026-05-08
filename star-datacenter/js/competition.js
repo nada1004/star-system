@@ -670,6 +670,8 @@ function rCompTourDynamic(tn){
     const aSc=detDone?det.sa:null, bSc=detDone?det.sb:null;
     const _winCol = winner ? (winner===a?.univ?aC:winner===b?.univ?bC:'#64748b') : '#64748b';
     const _winRgb = _tcHexToRgbStr(_winCol);
+    // (요청사항) 대진표(브라켓) 카드에는 양끝 색상 효과를 적용하지 않음
+    // - 토너먼트 "경기 기록" 카드(기록 리스트)에서만 적용
     return `<div class="tc-card" style="--tc-win-rgb:${_winRgb};background:var(--white);border:1.5px solid ${isDone?aC+'66':'var(--border)'};border-radius:8px;overflow:hidden;width:185px;flex-shrink:0;box-shadow:0 1px 6px rgba(0,0,0,.07)">
       ${teamRow(a,aWin,bWin,rnd,mi,'a',aSc,detDone)}
       <div style="height:1px;background:var(--border)"></div>

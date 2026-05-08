@@ -459,18 +459,27 @@ function histTourneyHTML(context){
         ?`<span style="background:${m.grpColor||'#2563eb'};color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px">GROUP ${m.grpLetter||''}</span>`:'';
       const _tAwin=m.sa>m.sb,_tBwin=m.sb>m.sa;
       const _tBorderCol=_tAwin?gc(a):_tBwin?gc(b):'var(--blue-ll)';
+      const _ab = (typeof _collectMatchTeamMembersAB === 'function') ? _collectMatchTeamMembersAB(m) : {a:[], b:[]};
+      const _aMemJson = JSON.stringify((_ab.a||[])).replace(/"/g,"'");
+      const _bMemJson = JSON.stringify((_ab.b||[])).replace(/"/g,"'");
       h+=`<div class="rec-summary rec-mode-tourney${_recSideFxClass('tourney')}" data-rec-mode="tourney" style="--rec-mode-col:${_tBorderCol};--rec-mode-rgb:${(function(){const h=String(_tBorderCol||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};${_recSideFxStyle('tourney',ca,cb)}margin-left:8px;border-left:3px solid ${_tBorderCol}">
         <div class="rec-sum-header">
           <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           ${grpBadge}
           <div class="rec-sum-vs">
-            ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>`:''}
+            ${a?`<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>
+              ${(_ab.a||[]).length?`<button class="btn btn-xs" style="font-size:11px;padding:3px 10px;border-radius:999px;background:${ca}12;border:1px solid ${ca}40;color:${ca};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}', '${ca}', ${_aMemJson})">👥 ${(_ab.a||[]).length}명</button>`:''}
+            </div>`:''}
             ${(a&&b)?`<div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기">
               <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa||0}</span>
               <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
               <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb||0}</span>
             </div>`:''}
-            ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>`:''}
+            ${b?`<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>
+              ${(_ab.b||[]).length?`<button class="btn btn-xs" style="font-size:11px;padding:3px 10px;border-radius:999px;background:${cb}12;border:1px solid ${cb}40;color:${cb};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\\'")}', '${cb}', ${_bMemJson})">👥 ${(_ab.b||[]).length}명</button>`:''}
+            </div>`:''}
             ${(a&&b)?(aWin||bWin)?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${aWin?ca:cb}18;color:${aWin?ca:cb};border:1px solid ${aWin?ca:cb}33;white-space:nowrap;flex-shrink:0">🏆 ${aWin?a:b}</span>`:`<span style="font-size:10px;color:var(--gray-l)">무승부</span>`:''}
 
           </div>
@@ -743,6 +752,65 @@ function _recSideFxStyle(mode, leftHex, rightHex){
   return _recSideFxVarStyle(leftHex, rightHex, cfg);
 }
 
+// 경기(세트/게임)에서 "참여자"를 최대한 수집 (팀 구분 없이 전체 인원)
+function _collectMatchParticipantsAny(m){
+  try{
+    const set = new Set();
+    const add = (v)=>{
+      if(!v) return;
+      String(v).split(',').map(s=>s.trim()).filter(Boolean).forEach(x=>set.add(x));
+    };
+    // 사전 저장된 멤버
+    (m?.teamAMembers||[]).forEach(x=>add(typeof x==='string'?x:(x?.name||x)));
+    (m?.teamBMembers||[]).forEach(x=>add(typeof x==='string'?x:(x?.name||x)));
+    // 세트/게임
+    (m?.sets||[]).forEach(s=>{
+      (s?.games||[]).forEach(g=>{
+        add(g?.playerA); add(g?.playerB);
+        add(g?.wName); add(g?.lName);
+        add(g?.a1); add(g?.a2); add(g?.b1); add(g?.b2);
+      });
+    });
+    return Array.from(set).map(name=>({name}));
+  }catch(e){
+    return [];
+  }
+}
+
+// 경기 데이터에서 A/B 팀 멤버를 최대한 수집 (조별리그/토너먼트/티어대회 팀전 등)
+function _collectMatchTeamMembersAB(m){
+  try{
+    const aSet=new Set(), bSet=new Set();
+    const addSet=(set,v)=>{
+      if(!v) return;
+      String(v).split(',').map(s=>s.trim()).filter(Boolean).forEach(x=>set.add(x));
+    };
+    // 1) 저장된 멤버 우선
+    (m?.teamAMembers||[]).forEach(x=>addSet(aSet, typeof x==='string'?x:(x?.name||x)));
+    (m?.teamBMembers||[]).forEach(x=>addSet(bSet, typeof x==='string'?x:(x?.name||x)));
+    // 2) sets.games 기반 수집
+    (m?.sets||[]).forEach(s=>{
+      (s?.games||[]).forEach(g=>{
+        // 팀전 편집기에서 a1/a2/b1/b2 쓰는 케이스
+        addSet(aSet, g?.a1); addSet(aSet, g?.a2);
+        addSet(bSet, g?.b1); addSet(bSet, g?.b2);
+        // 일반적으로 playerA=왼쪽, playerB=오른쪽
+        addSet(aSet, g?.playerA);
+        addSet(bSet, g?.playerB);
+        // 일부 데이터는 a/b 키를 쓸 수 있음
+        addSet(aSet, g?.a);
+        addSet(bSet, g?.b);
+      });
+    });
+    return {
+      a: Array.from(aSet).map(name=>({name})),
+      b: Array.from(bSet).map(name=>({name})),
+    };
+  }catch(e){
+    return {a:[], b:[]};
+  }
+}
+
 function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   if(!arr.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
@@ -798,6 +866,12 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
     };
     const _mc = MODE_COL[mode] || '#64748b';
     const _rgb = (hex)=>{const h=String(hex||'').replace('#',''); if(h.length!==6) return '100,116,139'; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `${r},${g},${b}`;};
+    const _pms=_collectMatchParticipantsAny(m);
+    const _pmJson=JSON.stringify(_pms).replace(/"/g,"'");
+    const _pmCol=(aWin?ca:bWin?cb:(ca||cb||'#64748b'));
+    const _ab=_collectMatchTeamMembersAB(m);
+    const _aMemJson=JSON.stringify(_ab.a||[]).replace(/"/g,"'");
+    const _bMemJson=JSON.stringify(_ab.b||[]).replace(/"/g,"'");
     h+=`<div class="rec-summary rec-mode-${mode}${_recSideFxClass(mode)}" data-rec-mode="${mode}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgb(_mc)};${_recSideFxStyle(mode,ca,cb)}">
       <div class="rec-sum-header rec-sum-header--stack">
         <div class="rec-topline">
@@ -807,6 +881,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
             ${(m.n&&mode!=='comp')?`<span class="rec-meta-chip rec-meta-chip--note">${m.n}</span>`:''}
           </div>
           <div class="rec-actions rec-actions--inline no-export">
+            ${(_pms.length && mode!=='tt')?`<button class="btn btn-w btn-xs" style="padding:3px 10px" onclick="event.stopPropagation();openProMembersPopup('참여자', '${_pmCol}', ${_pmJson})">👥 ${_pms.length}</button>`:''}
             <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
               onclick="openRecActionMenu(event,{
                 _btnEl:this,
@@ -826,9 +901,15 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
           </div>
         </div>
         <div class="rec-sum-vs">
-          <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.a}')">${(()=>{const n=isCK?'':m.a;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelA}</span>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.a}')">${(()=>{const n=isCK?'':m.a;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelA}</span>
+            ${(_ab.a||[]).length?`<button class="btn btn-xs" style="font-size:11px;padding:3px 10px;border-radius:999px;background:${ca}12;border:1px solid ${ca}40;color:${ca};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\\'")}', '${ca}', ${_aMemJson})">👥 ${(_ab.a||[]).length}명</button>`:''}
+          </div>
           <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px">:</span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>
-          <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.b}')">${(()=>{const n=isCK?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelB}</span>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.b}')">${(()=>{const n=isCK?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelB}</span>
+            ${(_ab.b||[]).length?`<button class="btn btn-xs" style="font-size:11px;padding:3px 10px;border-radius:999px;background:${cb}12;border:1px solid ${cb}40;color:${cb};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${_bMemJson})">👥 ${(_ab.b||[]).length}명</button>`:''}
+          </div>
           <span class="rec-victor-chip" style="--rec-victor-col:${myWin?col:(aWin?ca:bWin?cb:'#888')};color:${myWin?col:'#888'}">${myWin?'▶ '+filterUniv+' 승':aWin?'▶ '+labelA+' 승':bWin?'▶ '+labelB+' 승':'무승부'}</span>
         </div>
       </div>
@@ -2720,26 +2801,40 @@ function compSummaryListHTML(context){
     // GROUP 배지 (tourneys 경기)
     const grpBadge=m._src==='tour'
       ?`<span style="background:${m.grpColor};color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px;margin-left:6px">GROUP ${m.grpLetter}</span>`:'';
+    const _pms=_collectMatchParticipantsAny(m);
+    const _pmJson=JSON.stringify(_pms).replace(/"/g,"'");
+    const _pmCol=(aWin?ca:bWin?cb:(ca||cb||'#64748b'));
     h+=`<div class="rec-summary rec-mode-comp${_recSideFxClass('comp')}" data-rec-mode="comp" style="--rec-mode-col:#3b82f6;--rec-mode-rgb:59,130,246;${_recSideFxStyle('comp',ca,cb)}">
       <div class="rec-sum-header">
         <span style="color:var(--text3);font-size:12px;font-weight:600;min-width:72px">${m.d||''}</span>
         <span style="font-weight:700;font-size:13px">🎖️ ${m.n||'대회'}${grpBadge}</span>
+        ${_pms.length?`<button class="btn btn-w btn-xs" style="margin-left:8px" onclick="event.stopPropagation();openProMembersPopup('참여자', '${_pmCol}', ${_pmJson})">👥 참여자 ${_pms.length}</button>`:''}
         ${(() => {
-          // 대회 탭 멤버 추출
+          // 대회 탭 멤버 추출 (가능한 모든 포맷 대응)
           let aMembers = m.teamAMembers || [];
           let bMembers = m.teamBMembers || [];
           if (!aMembers.length && !bMembers.length && m.sets) {
             const aSet = new Set(), bSet = new Set();
             m.sets.forEach(s => {
               (s.games || []).forEach(g => {
-                if (g.playerA) aSet.add(g.playerA);
-                if (g.playerB) bSet.add(g.playerB);
+                if (g.playerA) String(g.playerA).split(',').map(x=>x.trim()).filter(Boolean).forEach(x=>aSet.add(x));
+                if (g.playerB) String(g.playerB).split(',').map(x=>x.trim()).filter(Boolean).forEach(x=>bSet.add(x));
+                if (g.a1) aSet.add(String(g.a1).trim());
+                if (g.a2) aSet.add(String(g.a2).trim());
+                if (g.b1) bSet.add(String(g.b1).trim());
+                if (g.b2) bSet.add(String(g.b2).trim());
                 if (g.winner === 'A' && g.wName) { aSet.add(g.wName); if (g.lName) bSet.add(g.lName); }
                 else if (g.winner === 'B' && g.wName) { bSet.add(g.wName); if (g.lName) aSet.add(g.lName); }
               });
             });
             aMembers = Array.from(aSet).map(n => ({ name: n }));
             bMembers = Array.from(bSet).map(n => ({ name: n }));
+          }
+          // 그래도 비어있으면 공통 유틸로 한 번 더 시도
+          if((!aMembers.length && !bMembers.length) && typeof _collectMatchTeamMembersAB === 'function'){
+            const ab = _collectMatchTeamMembersAB(m);
+            aMembers = ab.a || [];
+            bMembers = ab.b || [];
           }
           const aBtnColor = ca || '#3b82f6';
           const bBtnColor = cb || '#ef4444';

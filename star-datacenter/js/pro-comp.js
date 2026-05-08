@@ -445,7 +445,7 @@ function proCompLeague(tn) {
         isLoggedIn ? { t:'🗑️ 결과 삭제', d:'이 경기 기록 삭제', kind:'danger', on:()=>proCompDelMatch(tn.id,m.grpIdx,m.matchNum-1) } : null
       ].filter(Boolean);
       const _cardMenu = _cardActions.length ? _compActionMenuHTML(_cardActions) : '';
-      h += `<div class="grp-match-card tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:linear-gradient(135deg,var(--white) 0%,var(--blue-l) 100%);border:1.5px solid ${m.grpColor}22;border-left:4px solid ${m.grpColor};box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:8px">
+      h += `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${m.grpColor};margin-bottom:8px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">${m.grpName?m.grpName:`GROUP ${m.grpLetter}`}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
@@ -1527,7 +1527,7 @@ function proCompTourMatchInput(tn){
     const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
     const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
     const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
-    return `<div class="grp-match-card tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:linear-gradient(135deg,var(--white) 0%,#f5f3ff 100%);border:1.5px solid ${col}22;border-left:4px solid ${col};box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:8px">
+    return `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${col};margin-bottom:8px">
       <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:70px">
         <span class="grp-badge" style="background:linear-gradient(135deg,${col},${col}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${col}55">${round}</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:600">${displayNo}경기</span>
