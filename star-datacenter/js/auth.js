@@ -1007,30 +1007,33 @@ function toggleHdrSearch(){
     onGlobalSearch('');
   }
 }
-/* 모바일에서 다크 버튼, 로그인 버튼 텍스트 처리 */
+/* 상단(헤더) 다크/로그인 버튼: 아이콘 전용 + 크기 최소화 */
 (function(){
-  function fixHdrBtnsForMobile(){
-    if(window.innerWidth <= 768){
-      const dk = document.getElementById('darkToggleBtn');
-      if(dk) dk.innerHTML = dk.textContent.includes('다크') ? '🌙' : '☀️';
-      const li = document.getElementById('hdrLoginBtn');
-      if(li) li.innerHTML = '🔐';
-      const lo = document.getElementById('hdrLogoutBtn');
-      if(lo) lo.innerHTML = '🔓';
-    } else {
-      const dk = document.getElementById('darkToggleBtn');
-      const isDark = document.body.classList.contains('dark');
-      if(dk) dk.innerHTML = isDark ? '☀️ 라이트' : '🌙 다크';
-      const li = document.getElementById('hdrLoginBtn');
-      if(li) li.innerHTML = '🔐 로그인하기';
-      const lo = document.getElementById('hdrLogoutBtn');
-      if(lo) lo.innerHTML = '🔓 로그아웃';
+  function fixHdrBtns(){
+    const dk = document.getElementById('darkToggleBtn');
+    const isDark = document.body.classList.contains('dark');
+    if(dk){
+      dk.innerHTML = isDark ? '☀️' : '🌙';
+      dk.setAttribute('title', isDark ? '라이트 모드' : '다크 모드');
+      dk.setAttribute('aria-label', isDark ? '라이트 모드로 전환' : '다크 모드로 전환');
+    }
+    const li = document.getElementById('hdrLoginBtn');
+    if(li){
+      li.innerHTML = '🔐';
+      li.setAttribute('title', '로그인');
+      li.setAttribute('aria-label', '로그인');
+    }
+    const lo = document.getElementById('hdrLogoutBtn');
+    if(lo){
+      lo.innerHTML = '🔓';
+      lo.setAttribute('title', '로그아웃');
+      lo.setAttribute('aria-label', '로그아웃');
     }
   }
-  window.addEventListener('resize', fixHdrBtnsForMobile);
-  document.addEventListener('DOMContentLoaded', fixHdrBtnsForMobile);
-  setTimeout(fixHdrBtnsForMobile, 100);
-  window._fixHdrBtns = fixHdrBtnsForMobile;
+  window.addEventListener('resize', fixHdrBtns);
+  document.addEventListener('DOMContentLoaded', fixHdrBtns);
+  setTimeout(fixHdrBtns, 100);
+  window._fixHdrBtns = fixHdrBtns;
 })();
 
 function toggleDark(){

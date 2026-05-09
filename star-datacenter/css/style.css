@@ -635,8 +635,8 @@ b,strong{font-weight:600;}
 #hdrLogoutBtn,
 #hdrBgmBtn,
 #hdrSoopBtn{
-  min-height:36px;
-  height:36px;
+  min-height:28px;
+  height:28px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -644,14 +644,21 @@ b,strong{font-weight:600;}
   white-space:nowrap;
 }
 #darkToggleBtn{
-  min-width:74px;
-  font-weight:700 !important;
+  width:28px;
+  min-width:28px;
+  padding:0 !important;
+  border-radius:999px !important;
+  font-weight:900 !important;
+  line-height:1;
 }
 #hdrLoginBtn,
 #hdrLogoutBtn{
-  min-width:96px;
-  padding:0 14px !important;
-  font-weight:700;
+  width:28px;
+  min-width:28px;
+  padding:0 !important;
+  border-radius:999px !important;
+  font-weight:900;
+  line-height:1;
 }
 #hdrBgmBtn,
 #hdrSoopBtn{
@@ -2044,8 +2051,8 @@ body.rc-bgfx-off .rec-summary[data-rec-mode] .rec-sum-score::after{
   display:inline-flex;
   align-items:center;
   gap:4px;
-  font-size:9px;
-  padding:3px 8px;
+  font-size:8px;
+  padding:2px 6px;
   border-radius:999px;
   background:linear-gradient(135deg,
     color-mix(in srgb, var(--mem-col) 14%, #ffffff 86%),
@@ -2057,7 +2064,7 @@ body.rc-bgfx-off .rec-summary[data-rec-mode] .rec-sum-score::after{
   box-shadow:0 2px 8px color-mix(in srgb, var(--mem-col) 18%, transparent);
   transition:transform var(--tr), box-shadow var(--tr), filter var(--tr);
 }
-.grp-mem-btn .mem-ico{font-size:11px;line-height:1;}
+.grp-mem-btn .mem-ico{font-size:10px;line-height:1;}
 .grp-mem-btn:hover{
   transform:translateY(-1px);
   filter:saturate(1.1);
@@ -3658,7 +3665,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 .umbox{background:var(--white);margin:3% auto;padding:24px;width:700px;max-width:90vw;border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--sh3);max-height:88vh;overflow-y:auto;}
 .login-box input{width:100%;padding:10px 14px;border:1px solid var(--border2);border-radius:8px;font-size:13px;margin-bottom:10px;display:block;}
 .login-box input:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.1);}
-.hdr-login-btn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);padding:4px 13px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;z-index:1;transition:.15s;}
+.hdr-login-btn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);padding:0 !important;width:28px;height:28px;border-radius:999px;font-size:12px;font-weight:900;cursor:pointer;z-index:1;transition:.15s;display:inline-flex;align-items:center;justify-content:center;line-height:1;}
 .hdr-login-btn:hover{background:rgba(255,255,255,.28);}
 .locked{opacity:.38;pointer-events:none;cursor:not-allowed;}
 
@@ -3740,8 +3747,8 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   }
   .hdr-search-wrap.open .hdr-search-icon { display: none; }
   /* (모바일) 상단 다크/로그인 버튼 더 컴팩트 */
-  #darkToggleBtn { padding: 0 !important; width: 24px; height: 24px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; line-height:1; }
-  .hdr-login-btn { padding: 0 !important; width: 24px; height: 24px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; line-height:1; }
+  #darkToggleBtn { padding: 0 !important; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; display: flex; align-items: center; justify-content: center; line-height:1; }
+  .hdr-login-btn { padding: 0 !important; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; display: flex; align-items: center; justify-content: center; line-height:1; }
   #hdrLoginStatus { display: none !important; }
   .hdr-right{gap:6px;min-height:36px;}
   #hdrBgmBtn,#hdrSoopBtn{min-width:36px !important;height:36px !important;padding:0 10px !important;}
@@ -3923,33 +3930,33 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     flex-wrap:nowrap !important;
     align-items:center !important;
     justify-content:flex-start !important;
-    gap:10px !important;
+    gap:8px !important;
     overflow-x:auto !important;
     -webkit-overflow-scrolling:touch;
     scrollbar-width:none;
   }
   .grp-match-card.match-card-v3 .grp-match-main::-webkit-scrollbar{display:none;}
   .grp-match-card.match-card-v3 .grp-team-col{
-    min-width:140px !important;
+    min-width:110px !important;
     width:auto !important;
   }
   .grp-match-card.match-card-v3 .grp-team-chip{
     width:auto !important;
     justify-content:center !important;
-    padding:9px 12px !important;
+    padding:7px 9px !important;
     border-radius:14px !important;
   }
   .grp-match-card.match-card-v3 .grp-team-chip span{
-    font-size:13px !important;
+    font-size:12px !important;
   }
   .grp-match-card.match-card-v3 .grp-score-col{
-    min-width:76px !important;
+    min-width:66px !important;
     width:auto !important;
   }
   .grp-match-card.match-card-v3 .grp-match-score{
     border-radius:14px !important;
-    padding:6px 14px !important;
-    font-size:16px !important;
+    padding:5px 12px !important;
+    font-size:15px !important;
   }
   .grp-rank-table th, .grp-rank-table td { padding: 6px 5px; font-size: 11px; }
 
