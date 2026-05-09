@@ -508,7 +508,8 @@ window.applyTourneyTeamBtnScale = function(){
     const isMobile = w <= 768;
     const key = isMobile ? 'su_tc_team_btn_scale_mb' : 'su_tc_team_btn_scale_pc';
     const pct = parseInt(localStorage.getItem(key) || '100', 10);
-    const v = Math.max(70, Math.min(150, isNaN(pct)?100:pct)) / 100;
+    // 아주 작게~아주 크게
+    const v = Math.max(40, Math.min(220, isNaN(pct)?100:pct)) / 100;
     document.documentElement.style.setProperty('--tc-team-btn-scale', String(v));
   }catch(e){}
 };
@@ -516,8 +517,8 @@ window.cfgSetTourneyTeamBtnScaleSettings = function(){
   try{
     const pc = parseInt(document.getElementById('cfg-tc-team-pc')?.value||'100',10) || 100;
     const mb = parseInt(document.getElementById('cfg-tc-team-mb')?.value||'100',10) || 100;
-    localStorage.setItem('su_tc_team_btn_scale_pc', String(Math.max(70,Math.min(150,pc))));
-    localStorage.setItem('su_tc_team_btn_scale_mb', String(Math.max(70,Math.min(150,mb))));
+    localStorage.setItem('su_tc_team_btn_scale_pc', String(Math.max(40,Math.min(220,pc))));
+    localStorage.setItem('su_tc_team_btn_scale_mb', String(Math.max(40,Math.min(220,mb))));
   }catch(e){}
   try{ window.applyTourneyTeamBtnScale && window.applyTourneyTeamBtnScale(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
@@ -526,6 +527,78 @@ try{
   if(!window._tcTeamBtnScaleBound){
     window._tcTeamBtnScaleBound = true;
     window.addEventListener('resize', ()=>{ try{ window.applyTourneyTeamBtnScale && window.applyTourneyTeamBtnScale(); }catch(e){} }, {passive:true});
+  }
+}catch(e){}
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 대회탭 대학 버튼: 폰트/로고 아이콘 크기 개별 조절
+// - CSS 변수: --tc-team-font-scale, --tc-team-icon-scale
+// - localStorage: su_tc_team_font_scale_pc/mb, su_tc_team_icon_scale_pc/mb (단위:%)
+// ─────────────────────────────────────────────────────────────
+window.applyTourneyTeamBtnDetailScale = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth||1024));
+    const isMobile = w <= 768;
+    const fKey = isMobile ? 'su_tc_team_font_scale_mb' : 'su_tc_team_font_scale_pc';
+    const iKey = isMobile ? 'su_tc_team_icon_scale_mb' : 'su_tc_team_icon_scale_pc';
+    const fp = parseInt(localStorage.getItem(fKey) || '100', 10);
+    const ip = parseInt(localStorage.getItem(iKey) || '100', 10);
+    const fv = Math.max(40, Math.min(240, isNaN(fp)?100:fp)) / 100;
+    const iv = Math.max(40, Math.min(240, isNaN(ip)?100:ip)) / 100;
+    document.documentElement.style.setProperty('--tc-team-font-scale', String(fv));
+    document.documentElement.style.setProperty('--tc-team-icon-scale', String(iv));
+  }catch(e){}
+};
+window.cfgSetTourneyTeamBtnDetailScaleSettings = function(){
+  try{
+    const fpc = parseInt(document.getElementById('cfg-tc-team-font-pc')?.value||'100',10) || 100;
+    const fmb = parseInt(document.getElementById('cfg-tc-team-font-mb')?.value||'100',10) || 100;
+    const ipc = parseInt(document.getElementById('cfg-tc-team-ico-pc')?.value||'100',10) || 100;
+    const imb = parseInt(document.getElementById('cfg-tc-team-ico-mb')?.value||'100',10) || 100;
+    localStorage.setItem('su_tc_team_font_scale_pc', String(Math.max(40,Math.min(240,fpc))));
+    localStorage.setItem('su_tc_team_font_scale_mb', String(Math.max(40,Math.min(240,fmb))));
+    localStorage.setItem('su_tc_team_icon_scale_pc', String(Math.max(40,Math.min(240,ipc))));
+    localStorage.setItem('su_tc_team_icon_scale_mb', String(Math.max(40,Math.min(240,imb))));
+  }catch(e){}
+  try{ window.applyTourneyTeamBtnDetailScale && window.applyTourneyTeamBtnDetailScale(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+try{
+  if(!window._tcTeamBtnDetailScaleBound){
+    window._tcTeamBtnDetailScaleBound = true;
+    window.addEventListener('resize', ()=>{ try{ window.applyTourneyTeamBtnDetailScale && window.applyTourneyTeamBtnDetailScale(); }catch(e){} }, {passive:true});
+  }
+}catch(e){}
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 대회탭 참가자(👥) 버튼 크기 조절
+// - CSS 변수: --tc-mem-btn-scale
+// - localStorage: su_tc_mem_btn_scale_pc/mb (단위:%)
+// ─────────────────────────────────────────────────────────────
+window.applyTourneyMemBtnScale = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth||1024));
+    const isMobile = w <= 768;
+    const key = isMobile ? 'su_tc_mem_btn_scale_mb' : 'su_tc_mem_btn_scale_pc';
+    const pct = parseInt(localStorage.getItem(key) || '100', 10);
+    const v = Math.max(40, Math.min(240, isNaN(pct)?100:pct)) / 100;
+    document.documentElement.style.setProperty('--tc-mem-btn-scale', String(v));
+  }catch(e){}
+};
+window.cfgSetTourneyMemBtnScaleSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-tc-mem-pc')?.value||'100',10) || 100;
+    const mb = parseInt(document.getElementById('cfg-tc-mem-mb')?.value||'100',10) || 100;
+    localStorage.setItem('su_tc_mem_btn_scale_pc', String(Math.max(40,Math.min(240,pc))));
+    localStorage.setItem('su_tc_mem_btn_scale_mb', String(Math.max(40,Math.min(240,mb))));
+  }catch(e){}
+  try{ window.applyTourneyMemBtnScale && window.applyTourneyMemBtnScale(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+try{
+  if(!window._tcMemBtnScaleBound){
+    window._tcMemBtnScaleBound = true;
+    window.addEventListener('resize', ()=>{ try{ window.applyTourneyMemBtnScale && window.applyTourneyMemBtnScale(); }catch(e){} }, {passive:true});
   }
 }catch(e){}
 
@@ -4261,19 +4334,74 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="font-size:11px;color:var(--text3);font-weight:800">대학 버튼 크기(대회탭)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
-          <input type="range" id="cfg-tc-team-pc" min="70" max="150" step="5"
-            value="${Math.max(70,Math.min(150,parseInt(localStorage.getItem('su_tc_team_btn_scale_pc')||'100',10)||100))}"
+          <input type="range" id="cfg-tc-team-pc" min="40" max="220" step="5"
+            value="${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_tc_team_btn_scale_pc')||'100',10)||100))}"
             oninput="document.getElementById('cfg-tc-team-pc-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnScaleSettings()" style="width:140px">
-          <span id="cfg-tc-team-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(70,Math.min(150,parseInt(localStorage.getItem('su_tc_team_btn_scale_pc')||'100',10)||100))}%</span>
+          <span id="cfg-tc-team-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_tc_team_btn_scale_pc')||'100',10)||100))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
-          <input type="range" id="cfg-tc-team-mb" min="70" max="150" step="5"
-            value="${Math.max(70,Math.min(150,parseInt(localStorage.getItem('su_tc_team_btn_scale_mb')||'100',10)||100))}"
+          <input type="range" id="cfg-tc-team-mb" min="40" max="220" step="5"
+            value="${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_tc_team_btn_scale_mb')||'100',10)||100))}"
             oninput="document.getElementById('cfg-tc-team-mb-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnScaleSettings()" style="width:140px">
-          <span id="cfg-tc-team-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(70,Math.min(150,parseInt(localStorage.getItem('su_tc_team_btn_scale_mb')||'100',10)||100))}%</span>
+          <span id="cfg-tc-team-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_tc_team_btn_scale_mb')||'100',10)||100))}%</span>
         </div>
         <span style="font-size:11px;color:var(--gray-l)">※ 조별리그/토너 기록 카드의 대학 버튼에 적용</span>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">대학 버튼 폰트 크기(대회탭)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-tc-team-font-pc" min="40" max="240" step="5"
+            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_font_scale_pc')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-tc-team-font-pc-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnDetailScaleSettings()" style="width:140px">
+          <span id="cfg-tc-team-font-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_font_scale_pc')||'100',10)||100))}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-tc-team-font-mb" min="40" max="240" step="5"
+            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_font_scale_mb')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-tc-team-font-mb-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnDetailScaleSettings()" style="width:140px">
+          <span id="cfg-tc-team-font-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_font_scale_mb')||'100',10)||100))}%</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">대학 로고(아이콘) 크기(대회탭)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-tc-team-ico-pc" min="40" max="240" step="5"
+            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_icon_scale_pc')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-tc-team-ico-pc-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnDetailScaleSettings()" style="width:140px">
+          <span id="cfg-tc-team-ico-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_icon_scale_pc')||'100',10)||100))}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-tc-team-ico-mb" min="40" max="240" step="5"
+            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_icon_scale_mb')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-tc-team-ico-mb-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnDetailScaleSettings()" style="width:140px">
+          <span id="cfg-tc-team-ico-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_icon_scale_mb')||'100',10)||100))}%</span>
+        </div>
+        <span style="font-size:11px;color:var(--gray-l)">※ 위 “대학 로고 크기(대회 카드)”는 기본값(px), 여기서는 버튼 안 아이콘만 추가 배율</span>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">참가자(👥) 버튼 크기(대회탭)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-tc-mem-pc" min="40" max="240" step="5"
+            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_mem_btn_scale_pc')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-tc-mem-pc-v').textContent=this.value+'%'" onchange="cfgSetTourneyMemBtnScaleSettings()" style="width:140px">
+          <span id="cfg-tc-mem-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_mem_btn_scale_pc')||'100',10)||100))}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-tc-mem-mb" min="40" max="240" step="5"
+            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_mem_btn_scale_mb')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-tc-mem-mb-v').textContent=this.value+'%'" onchange="cfgSetTourneyMemBtnScaleSettings()" style="width:140px">
+          <span id="cfg-tc-mem-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_mem_btn_scale_mb')||'100',10)||100))}%</span>
+        </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
