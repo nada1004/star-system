@@ -793,6 +793,10 @@ window.cfgSetH2HPanelSettings = function(){
     const hpc = parseInt(document.getElementById('cfg-h2h-h-pc')?.value||'100',10) || 100;
     const wmb = parseInt(document.getElementById('cfg-h2h-w-mb')?.value||'100',10) || 100;
     const hmb = parseInt(document.getElementById('cfg-h2h-h-mb')?.value||'100',10) || 100;
+    const gpc = parseInt(document.getElementById('cfg-h2h-gap-pc')?.value||'10',10);
+    const gmb = parseInt(document.getElementById('cfg-h2h-gap-mb')?.value||'8',10);
+    const spc = parseInt(document.getElementById('cfg-h2h-scorepad-pc')?.value||'10',10);
+    const smb = parseInt(document.getElementById('cfg-h2h-scorepad-mb')?.value||'6',10);
     localStorage.setItem('su_h2h_panel_pc', String(Math.max(110,Math.min(230,pc))));
     localStorage.setItem('su_h2h_panel_mb', String(Math.max(96,Math.min(210,mb))));
     localStorage.setItem('su_h2h_panel_fit', (fit==='contain'||fit==='cover'||fit==='fill') ? fit : 'cover');
@@ -801,6 +805,11 @@ window.cfgSetH2HPanelSettings = function(){
     localStorage.setItem('su_h2h_panel_hmul_pc', String(Math.max(10,Math.min(300,hpc))));
     localStorage.setItem('su_h2h_panel_wmul_mb', String(Math.max(10,Math.min(300,wmb))));
     localStorage.setItem('su_h2h_panel_hmul_mb', String(Math.max(10,Math.min(300,hmb))));
+    // 스코어 ↔ 선수패널 간격 + 스코어 좌우 여백
+    localStorage.setItem('su_h2h_score_gap_pc', String(Math.max(0,Math.min(50,isNaN(gpc)?10:gpc))));
+    localStorage.setItem('su_h2h_score_gap_mb', String(Math.max(0,Math.min(50,isNaN(gmb)?8:gmb))));
+    localStorage.setItem('su_h2h_score_pad_pc', String(Math.max(0,Math.min(24,isNaN(spc)?10:spc))));
+    localStorage.setItem('su_h2h_score_pad_mb', String(Math.max(0,Math.min(24,isNaN(smb)?6:smb))));
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
 };
@@ -4575,6 +4584,10 @@ ${_scfgD('notice','📢 공지 관리')}
     const pc = parseInt(localStorage.getItem('su_h2h_panel_pc')||'150',10)||150;
     const mb = parseInt(localStorage.getItem('su_h2h_panel_mb')||'126',10)||126;
     const fit = (localStorage.getItem('su_h2h_panel_fit')||'cover');
+    const gpc = parseInt(localStorage.getItem('su_h2h_score_gap_pc')||'10',10)||10;
+    const gmb = parseInt(localStorage.getItem('su_h2h_score_gap_mb')||'8',10)||8;
+    const spc = parseInt(localStorage.getItem('su_h2h_score_pad_pc')||'10',10)||10;
+    const smb = parseInt(localStorage.getItem('su_h2h_score_pad_mb')||'6',10)||6;
     return _scfgD('h2hpanel','🎮 개인전/끝장전(프로리그 끝장전) 카드') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대전기록 탭의 개인전/끝장전/프로리그 끝장전 카드에서 선수 패널(프로필 배경 카드) 크기와 이미지 맞춤을 설정합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
@@ -4600,6 +4613,32 @@ ${_scfgD('notice','📢 공지 관리')}
           oninput="document.getElementById('cfg-h2h-panel-mb-v').textContent=this.value+'px'"
           onchange="cfgSetH2HPanelSettings()" style="width:100%">
         <div id="cfg-h2h-panel-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(96,Math.min(210,mb))}px</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC 간격</div>
+        <input type="range" id="cfg-h2h-gap-pc" min="0" max="50" step="1" value="${Math.max(0,Math.min(50,gpc))}"
+          oninput="document.getElementById('cfg-h2h-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
+        <div id="cfg-h2h-gap-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(50,gpc))}px</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일 간격</div>
+        <input type="range" id="cfg-h2h-gap-mb" min="0" max="50" step="1" value="${Math.max(0,Math.min(50,gmb))}"
+          oninput="document.getElementById('cfg-h2h-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
+        <div id="cfg-h2h-gap-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(50,gmb))}px</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC 스코어 여백</div>
+        <input type="range" id="cfg-h2h-scorepad-pc" min="0" max="24" step="1" value="${Math.max(0,Math.min(24,spc))}"
+          oninput="document.getElementById('cfg-h2h-scorepad-pc-v').textContent=this.value+'px'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
+        <div id="cfg-h2h-scorepad-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(24,spc))}px</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일 스코어 여백</div>
+        <input type="range" id="cfg-h2h-scorepad-mb" min="0" max="24" step="1" value="${Math.max(0,Math.min(24,smb))}"
+          oninput="document.getElementById('cfg-h2h-scorepad-mb-v').textContent=this.value+'px'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
+        <div id="cfg-h2h-scorepad-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(24,smb))}px</div>
       </div>
 
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">

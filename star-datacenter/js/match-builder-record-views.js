@@ -132,6 +132,18 @@ function _h2hPanelFit(){
     return (v==='contain'||v==='cover'||v==='fill')?v:'cover';
   }catch(e){ return 'cover'; }
 }
+function _h2hScoreGapPx(){
+  const isMb=_h2hIsMobile();
+  const def=isMb?8:10;
+  const v=_h2hReadInt(isMb?'su_h2h_score_gap_mb':'su_h2h_score_gap_pc', def, 0, 50);
+  return v;
+}
+function _h2hScorePadPx(){
+  const isMb=_h2hIsMobile();
+  const def=isMb?6:10;
+  const v=_h2hReadInt(isMb?'su_h2h_score_pad_mb':'su_h2h_score_pad_pc', def, 0, 24);
+  return v;
+}
 function _h2hPlayerBgPos(name){
   try{
     const raw = localStorage.getItem('su_h2h_player_bgpos') || '';
@@ -320,11 +332,11 @@ function indRecordsHTML(){
     // 모바일에서도 한 줄(좌 패널 / 스코어 / 우 패널) 유지. 좁으면 가로 스크롤로 대응
     const _gridCols = _indBulkOn ? 'auto 1fr auto 1fr' : '1fr auto 1fr';
     const _pad = _isMb ? '10px 10px' : '14px 14px';
-    const _gap = _isMb ? '8px' : '10px';
+    const _gap = _h2hScoreGapPx() + 'px';
     const _scoreFs = _isMb ? 26 : 32;
     const _dashFs = _isMb ? 16 : 18;
     const _rowScroll = _isMb ? 'overflow-x:auto;-webkit-overflow-scrolling:touch;' : '';
-    const _scorePad = _isMb ? 'padding:0 6px;' : 'padding:0 10px;';
+    const _scorePad = `padding:0 ${_h2hScorePadPx()}px;`;
     h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_indWrapFx||'background:var(--white);'}">
       <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:${_pad};gap:${_gap};cursor:pointer;${_rowScroll}" onclick="openIndSessionPopup('${_indSessKey}')">
         ${bulkCbInd||''}
@@ -496,11 +508,11 @@ function gjRecordsHTML(proOnly){
     const _isMb = _h2hIsMobile();
     const _gridCols = _gjBulkOn ? 'auto 1fr auto 1fr' : '1fr auto 1fr';
     const _pad = _isMb ? '10px 10px' : '14px 14px';
-    const _gap = _isMb ? '8px' : '10px';
+    const _gap = _h2hScoreGapPx() + 'px';
     const _scoreFs = _isMb ? 26 : 32;
     const _dashFs = _isMb ? 16 : 18;
     const _rowScroll = _isMb ? 'overflow-x:auto;-webkit-overflow-scrolling:touch;' : '';
-    const _scorePad = _isMb ? 'padding:0 6px;' : 'padding:0 10px;';
+    const _scorePad = `padding:0 ${_h2hScorePadPx()}px;`;
     h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_gjWrapFx||'background:var(--white);'}">
       <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:${_pad};gap:${_gap};cursor:pointer;${_rowScroll}" onclick="openGJSessionPopup('${_sessKey}')">
         ${bulkCbGj||''}
