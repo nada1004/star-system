@@ -5,6 +5,63 @@
   window.__createSettingsStoreMerge = function(ctx){
     const { LS } = ctx;
 
+    // (동기화 대상) 로컬 설정 키 수집
+    // - 목적: "기기별 설정(localStorage)"를 다른 기기에도 반영
+    // - 보안: 토큰/비밀번호/키 등 민감값 및 대용량 데이터(경기 기록/캐시)는 제외
+    function _isSyncablePrefKey(k){
+      k = String(k||'');
+      if(!k) return false;
+      // 펨코스타일/선택 대학
+      if(k === 'b2_femco_settings_v1') return true;
+      if(k === 'cfg_femco_univ') return true;
+
+      // 기본: su_ 설정 키
+      if(!k.startsWith('su_')) return false;
+
+      // 민감/보안
+      if(k.includes('token') || k.includes('_pw') || k.endsWith('_pw') || k.includes('apiKey') || k.includes('api_key')) return false;
+      if(k === 'su_gh_token' || k === 'su_fb_pw' || k === LS.token || k === LS.gistId || k === LS.enabled) return false;
+      if(k === LS.aiCfg) return false; // AI 설정은 ai 섹션으로 별도 동기화
+
+      // 동기화/상태/로그류
+      if(k.startsWith('su_sync_')) return false;
+      if(k === 'su_cfg_open' || k === 'su_cfg_menu_layout_v1') return true; // UX 성향이 강해 동기화 허용
+
+      // 대용량 데이터(기록/캐시/스토어)
+      const denyPrefix = [
+        'su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm',
+        'su_hist_ext_','su_match_store_','su_match_store_meta_','su_hist_ext_meta_','su_sharecard_cache_'
+      ];
+      for(const p of denyPrefix){ if(k.startsWith(p)) return false; }
+
+      return true;
+    }
+    function _collectPrefs(){
+      const kv = {};
+      try{
+        for(let i=0;i<localStorage.length;i++){
+          const k = localStorage.key(i);
+          if(!_isSyncablePrefKey(k)) continue;
+          const v = localStorage.getItem(k);
+          // 너무 큰 값은 제외(안전)
+          if(v && v.length > 120000) continue;
+          kv[k] = v;
+        }
+      }catch(e){}
+      return kv;
+    }
+    function _applyPrefs(kv){
+      if(!kv || typeof kv !== 'object') return;
+      try{
+        Object.keys(kv).forEach(k=>{
+          if(!_isSyncablePrefKey(k)) return;
+          const v = kv[k];
+          if(v === null || typeof v === 'undefined') return;
+          try{ localStorage.setItem(k, String(v)); }catch(e){}
+        });
+      }catch(e){}
+    }
+
     function _loadLocalState(){
       let memo = { last: '', updatedAt: null };
       try{
@@ -28,41 +85,11 @@
         ai.apiKey = String(a.apiKey || '');
         ai.updatedAt = a.updatedAt || null;
       }catch(e){}
-
-      // design v2 설정 로드
-      const design = {
-        enabled: localStorage.getItem('su_design_v2') === '1',
-        preset: localStorage.getItem('su_design_v2_preset') || 'base',
-        bright: parseInt(localStorage.getItem('su_design_v2_bright') || '0', 10) || 0,
-        dark: parseInt(localStorage.getItem('su_design_v2_dark') || '0', 10) || 0,
-        colors: JSON.parse(localStorage.getItem('su_design_v2_colors') || '{}'),
-        effects: JSON.parse(localStorage.getItem('su_design_v2_effects') || '{}'),
-        updatedAt: null,
+      const prefs = {
+        kv: _collectPrefs(),
+        updatedAt: localStorage.getItem(LS.prefsUpdatedAt) || null,
       };
-
-      // tab color 설정 로드
-      const tabColor = {
-        enabled: localStorage.getItem('su_tab_color_enabled') !== '0',
-        mode: localStorage.getItem('su_tab_color_mode') || 'fill',
-        length: Math.max(20, Math.min(90, parseInt(localStorage.getItem('su_tab_color_length') || '48', 10) || 48)),
-        tail: Math.max(0, Math.min(60, parseInt(localStorage.getItem('su_tab_color_tail') || '22', 10) || 22)),
-        colors: JSON.parse(localStorage.getItem('su_tab_colors_v1') || '{}'),
-        updatedAt: null,
-      };
-
-      // rec side fx 설정 로드
-      const recCard = {
-        enabled: localStorage.getItem('su_rec_side_fx_on') !== '0',
-        mode: localStorage.getItem('su_rec_side_fx_mode') || 'soft',
-        intensity: Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68)),
-        length: Math.max(4, Math.min(80, parseInt(localStorage.getItem('su_rec_side_fx_length') || '25', 10) || 25)),
-        tail: Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_tail') || '28', 10) || 28)),
-        softness: Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_rec_side_fx_softness') || '52', 10) || 52)),
-        edge: Math.max(2, Math.min(24, parseInt(localStorage.getItem('su_rec_side_fx_edge') || '8', 10) || 8)),
-        updatedAt: null,
-      };
-
-      return { memo, ui, ai, design, tabColor, recCard };
+      return { memo, ui, ai, prefs };
     }
 
     function _applyLocalState(state){
@@ -93,44 +120,14 @@
         }
       }catch(e){}
 
-      // design v2 설정 적용
-      if(state.design && typeof state.design === 'object'){
-        try{
-          localStorage.setItem('su_design_v2', state.design.enabled ? '1' : '0');
-          localStorage.setItem('su_design_v2_preset', String(state.design.preset || 'base'));
-          localStorage.setItem('su_design_v2_bright', String(state.design.bright || 0));
-          localStorage.setItem('su_design_v2_dark', String(state.design.dark || 0));
-          if(state.design.colors) localStorage.setItem('su_design_v2_colors', JSON.stringify(state.design.colors));
-          if(state.design.effects) localStorage.setItem('su_design_v2_effects', JSON.stringify(state.design.effects));
-          if(typeof window.applyDesignV2 === 'function') window.applyDesignV2();
-        }catch(e){}
-      }
-
-      // tab color 설정 적용
-      if(state.tabColor && typeof state.tabColor === 'object'){
-        try{
-          localStorage.setItem('su_tab_color_enabled', state.tabColor.enabled ? '1' : '0');
-          localStorage.setItem('su_tab_color_mode', String(state.tabColor.mode || 'fill'));
-          localStorage.setItem('su_tab_color_length', String(state.tabColor.length || 48));
-          localStorage.setItem('su_tab_color_tail', String(state.tabColor.tail || 22));
-          if(state.tabColor.colors) localStorage.setItem('su_tab_colors_v1', JSON.stringify(state.tabColor.colors));
-          if(typeof window.applyTabColor === 'function') window.applyTabColor();
-        }catch(e){}
-      }
-
-      // rec card 설정 적용
-      if(state.recCard && typeof state.recCard === 'object'){
-        try{
-          localStorage.setItem('su_rec_side_fx_on', state.recCard.enabled ? '1' : '0');
-          localStorage.setItem('su_rec_side_fx_mode', String(state.recCard.mode || 'soft'));
-          localStorage.setItem('su_rec_side_fx_intensity', String(state.recCard.intensity || 68));
-          localStorage.setItem('su_rec_side_fx_length', String(state.recCard.length || 25));
-          localStorage.setItem('su_rec_side_fx_tail', String(state.recCard.tail || 28));
-          localStorage.setItem('su_rec_side_fx_softness', String(state.recCard.softness || 52));
-          localStorage.setItem('su_rec_side_fx_edge', String(state.recCard.edge || 8));
-          if(typeof window.applyRecSideFx === 'function') window.applyRecSideFx();
-        }catch(e){}
-      }
+      try{
+        if(state.prefs && typeof state.prefs === 'object'){
+          _applyPrefs(state.prefs.kv || {});
+          if(state.prefs.updatedAt){
+            localStorage.setItem(LS.prefsUpdatedAt, String(state.prefs.updatedAt));
+          }
+        }
+      }catch(e){}
     }
 
     function _mergeByUpdatedAt(localState, remoteState){
@@ -150,21 +147,9 @@
       const rAiT = new Date((remoteState && remoteState.ai && remoteState.ai.updatedAt) || 0).getTime();
       if (rAiT >= lAiT && remoteState && remoteState.ai) out.ai = remoteState.ai;
 
-      // design 설정 병합
-      const lDesignT = new Date((localState && localState.design && localState.design.updatedAt) || 0).getTime();
-      const rDesignT = new Date((remoteState && remoteState.design && remoteState.design.updatedAt) || 0).getTime();
-      if (rDesignT >= lDesignT && remoteState && remoteState.design) out.design = remoteState.design;
-
-      // tab color 설정 병합
-      const lTabColorT = new Date((localState && localState.tabColor && localState.tabColor.updatedAt) || 0).getTime();
-      const rTabColorT = new Date((remoteState && remoteState.tabColor && remoteState.tabColor.updatedAt) || 0).getTime();
-      if (rTabColorT >= lTabColorT && remoteState && remoteState.tabColor) out.tabColor = remoteState.tabColor;
-
-      // rec card 설정 병합
-      const lRecCardT = new Date((localState && localState.recCard && localState.recCard.updatedAt) || 0).getTime();
-      const rRecCardT = new Date((remoteState && remoteState.recCard && remoteState.recCard.updatedAt) || 0).getTime();
-      if (rRecCardT >= lRecCardT && remoteState && remoteState.recCard) out.recCard = remoteState.recCard;
-
+      const lPrefsT = new Date((localState && localState.prefs && localState.prefs.updatedAt) || 0).getTime();
+      const rPrefsT = new Date((remoteState && remoteState.prefs && remoteState.prefs.updatedAt) || 0).getTime();
+      if (rPrefsT >= lPrefsT && remoteState && remoteState.prefs) out.prefs = remoteState.prefs;
       return out;
     }
 
@@ -219,7 +204,8 @@
       getMemo,
       setMemo,
       getFab,
-      setFab
+      setFab,
+      _isSyncablePrefKey
     };
   };
 })();

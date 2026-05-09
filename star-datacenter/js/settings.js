@@ -2592,6 +2592,41 @@ function _bindCfgHandlers(){
   try{ document.addEventListener('pointerdown', _cfgHandleCfgClick, true); }catch(e){}
   try{ window.addEventListener('pointerup', _cfgHandleCfgClick, true); }catch(e){}
   try{ document.addEventListener('click', _cfgHandleCfgClick, true); }catch(e){}
+
+  // (요청사항) 설정 변경 → 다른 기기 반영(동기화 ON + 자동 저장 ON일 때)
+  // - settings 모달 내부에서 발생하는 input/change를 감지해 prefs 변경을 기록
+  // - 펨코스타일(슬라이더 oninput)도 여기로 같이 잡힘
+  try{
+    const _touch = (ev)=>{
+      try{
+        if(typeof curTab!=='undefined' && curTab!=='cfg') return;
+        const t = ev && ev.target;
+        if(!t) return;
+        // 토큰/비밀번호 입력 등은 자동 저장 제외
+        const id = String(t.id||'');
+        if(id.startsWith('cfg-gist-') || id.startsWith('cfg-gh-') || id.startsWith('cfg-fb-')) return;
+        if(t.type==='password') return;
+        // 설정 영역의 입력만
+        if(!id.startsWith('cfg-') && !(t.closest && t.closest('#cfgModalBody'))) return;
+        if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync();
+      }catch(e){}
+    };
+    document.addEventListener('input', _touch, true);
+    document.addEventListener('change', _touch, true);
+    document.addEventListener('click', (ev)=>{
+      try{
+        if(typeof curTab!=='undefined' && curTab!=='cfg') return;
+        const t = ev && ev.target;
+        if(!t) return;
+        if(t.tagName==='BUTTON' || (t.closest && t.closest('button'))){
+          const btn = t.tagName==='BUTTON'?t:(t.closest('button'));
+          const id = String(btn && btn.id || '');
+          if(id.startsWith('cfg-gist-') || id.startsWith('cfg-gh-') || id.startsWith('cfg-fb-')) return;
+          if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync();
+        }
+      }catch(e){}
+    }, true);
+  }catch(e){}
 }
 function _scfgD(id,title,extra){
   // (요청사항) 펼치기 UI 대신 "팝업으로 열기" UX: 기본은 항상 닫힘
@@ -5373,6 +5408,9 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
           <button class="btn btn-w btn-sm" onclick="cfgGistSyncPull()">⬇️ 원격 불러오기</button>
           ${(!isSubAdmin?`<button class="btn btn-b btn-sm" onclick="cfgGistSyncPush()">⬆️ 원격 저장</button>`:'')}
+          ${(!isSubAdmin?`<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text2);cursor:pointer;margin-left:6px">
+            <input id="cfg-gist-auto-push" type="checkbox" ${(window.SettingsStore && window.SettingsStore.getPrefsAutoPush && window.SettingsStore.getPrefsAutoPush())?'checked':''}
+              onchange="cfgGistSyncSetAutoPush(this.checked)"> 설정 변경 시 자동 저장</label>`:'')}
           <span id="cfg-gist-sync-msg" style="font-size:11px;color:var(--gray-l)"></span>
         </div>
       </div>
@@ -6282,6 +6320,27 @@ window.cfgGistSyncSaveCfg = function(){
     alert('저장 실패: '+e.message);
   }
   try{ window.cfgRenderGistSyncStatus(); }catch(e){}
+};
+
+// (요청사항) 설정 변경 자동 저장(원격/Gist) 토글
+window.cfgGistSyncSetAutoPush = function(on){
+  try{
+    if(!window.SettingsStore) return;
+    if(!window.SettingsStore.isAdmin()) return;
+    window.SettingsStore.setPrefsAutoPush(!!on);
+    const msg=document.getElementById('cfg-gist-sync-msg');
+    if(msg) msg.textContent = on ? '✅ 자동 저장 ON' : '자동 저장 OFF';
+  }catch(e){}
+  try{ window.cfgRenderGistSyncStatus(); }catch(e){}
+};
+
+// 설정 UI에서 변경이 발생했을 때 "prefs" 동기화 타임스탬프 갱신 + (옵션) 자동 저장
+window.cfgTouchPrefsSync = function(){
+  try{
+    if(window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function'){
+      window.SettingsStore.markPrefsChanged();
+    }
+  }catch(e){}
 };
 
 window.cfgGistSyncPull = async function(){

@@ -276,6 +276,13 @@ async function init(){
     if(window.MatchStore && typeof window.MatchStore.init==='function') await window.MatchStore.init();
     if(window.PlayerStore && typeof window.PlayerStore.init==='function') await window.PlayerStore.init();
   }catch(e){}
+  // (요청사항) 다른 기기에서 저장된 "설정(Gist)"이 있으면 시작 시 반영
+  // - 새 신호가 있을 때만 pull 됨
+  try{
+    if(window.SettingsStore && typeof window.SettingsStore.pullOnSignal==='function'){
+      await window.SettingsStore.pullOnSignal({ silent:true });
+    }
+  }catch(e){}
   fixPoints();
   // 티어대회 기록(ttM) 시드가 있으면 로드(비동기) — 로컬 데이터가 비어 있을 때만
   try{ _seedTierTtM(); }catch(e){}
@@ -321,6 +328,20 @@ async function init(){
   applyLoginState();
   try{ if(typeof window._applyTabLinkFromUrl==='function') window._applyTabLinkFromUrl(); }catch(e){}
   render();
+  // (요청사항) 주기적으로 설정 신호 확인(다른 기기 변경 반영)
+  try{
+    if(!window._settingsAutoPullTimer && window.SettingsStore && typeof window.SettingsStore.pullOnSignal==='function'){
+      window._settingsAutoPullTimer = setInterval(()=>{
+        try{
+          window.SettingsStore.pullOnSignal({ silent:true, returnInfo:true }).then(info=>{
+            try{
+              if(info && info.ok && !info.skipped && typeof render==='function') render();
+            }catch(e){}
+          }).catch(()=>{});
+        }catch(e){}
+      }, 15000);
+    }
+  }catch(e){}
   try{ setTimeout(()=>{ if(typeof window._applyDeepLinkFromUrl==='function') window._applyDeepLinkFromUrl(); }, 80); }catch(e){}
   // (성능) 부가 기능은 idle 시 지연 로딩
   // - BGM/멀티뷰는 초기 렌더와 무관하므로, 최초 로딩을 가볍게 유지

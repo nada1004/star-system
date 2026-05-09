@@ -32,6 +32,10 @@
 
     // AI(프록시/API키) 설정
     aiCfg: 'su_ai_cfg',
+
+    // (추가) 기기별 설정(로컬 설정) 동기화
+    prefsUpdatedAt: 'su_sync_prefs_updated_at',
+    prefsAutoPush: 'su_sync_prefs_auto_push', // 1/0
   };
   const SETTINGS_SIGNAL_DB_URL = 'https://stardata1004-default-rtdb.firebaseio.com';
   const SETTINGS_SIGNAL_PATH = 'syncSignals/star-datacenter-settings';
@@ -68,7 +72,8 @@
     getMemo,
     setMemo,
     getFab,
-    setFab
+    setFab,
+    _isSyncablePrefKey
   } = _mergeMod;
   const _gistMod = window.__createSettingsStoreGist ? window.__createSettingsStoreGist({ FILE, LEGACY, LS, cfg, setCfg, isAdmin, _loadLocalState }) : {};
   const {
@@ -172,7 +177,7 @@
   const pullOnSignal = createPullOnSignal ? createPullOnSignal({ pull }) : async function(){ return false; };
 
   async function push(section){
-    // section: 'memo' | 'ui.fab' | 'design' | 'tabColor' | 'recCard' | 'ai' | undefined(전체)
+    // section: 'memo' | 'ui.fab' | 'ai' | 'prefs' | undefined(전체)
     if (!isAdmin()) throw new Error('관리자만 저장할 수 있습니다.');
     const c = cfg();
     if (!c.token) throw new Error('동기화를 위해 GitHub 토큰(gist 권한)이 필요합니다.');
@@ -183,16 +188,19 @@
     if (section === 'memo') local.memo.updatedAt = new Date().toISOString();
     if (section === 'ui.fab') { local.ui.fab.updatedAt = new Date().toISOString(); }
     if (section === 'ai') { local.ai = local.ai || {}; local.ai.updatedAt = new Date().toISOString(); }
-    if (section === 'design') { local.design = local.design || {}; local.design.updatedAt = new Date().toISOString(); }
-    if (section === 'tabColor') { local.tabColor = local.tabColor || {}; local.tabColor.updatedAt = new Date().toISOString(); }
-    if (section === 'recCard') { local.recCard = local.recCard || {}; local.recCard.updatedAt = new Date().toISOString(); }
+    if (section === 'prefs') {
+      local.prefs = local.prefs || {};
+      local.prefs.updatedAt = new Date().toISOString();
+      try{ localStorage.setItem(LS.prefsUpdatedAt, String(local.prefs.updatedAt)); }catch(e){}
+    }
     if (!section) {
       local.memo.updatedAt = local.memo.updatedAt || new Date().toISOString();
       local.ui.fab.updatedAt = local.ui.fab.updatedAt || new Date().toISOString();
       if (local.ai) local.ai.updatedAt = local.ai.updatedAt || new Date().toISOString();
-      if (local.design) local.design.updatedAt = local.design.updatedAt || new Date().toISOString();
-      if (local.tabColor) local.tabColor.updatedAt = local.tabColor.updatedAt || new Date().toISOString();
-      if (local.recCard) local.recCard.updatedAt = local.recCard.updatedAt || new Date().toISOString();
+      if (local.prefs) {
+        local.prefs.updatedAt = local.prefs.updatedAt || new Date().toISOString();
+        try{ localStorage.setItem(LS.prefsUpdatedAt, String(local.prefs.updatedAt)); }catch(e){}
+      }
     }
     let remoteState = null;
     let mode = 'none';
@@ -218,6 +226,35 @@
     return true;
   }
 
+  // (요청사항) 설정 변경 시 자동 원격 저장(디바운스)
+  function _prefsAutoEnabled(){
+    try{ return localStorage.getItem(LS.prefsAutoPush) === '1'; }catch(e){ return false; }
+  }
+  function setPrefsAutoPush(on){
+    try{ localStorage.setItem(LS.prefsAutoPush, on ? '1' : '0'); }catch(e){}
+  }
+  function getPrefsAutoPush(){
+    return _prefsAutoEnabled();
+  }
+  function markPrefsChanged(){
+    try{ localStorage.setItem(LS.prefsUpdatedAt, new Date().toISOString()); }catch(e){}
+    try{ maybeAutoPushPrefs(); }catch(e){}
+  }
+  function maybeAutoPushPrefs(){
+    try{
+      if(!window.SettingsStore) return;
+      const c = cfg();
+      if(!c.enabled) return;         // 동기화 OFF면 자동 저장 안 함
+      if(!_prefsAutoEnabled()) return;
+      if(!isAdmin()) return;
+      if(!c.token) return;           // 토큰 없으면 자동 저장 불가
+      clearTimeout(window._prefsAutoPushT);
+      window._prefsAutoPushT = setTimeout(async ()=>{
+        try{ await push('prefs'); }catch(e){}
+      }, 1200);
+    }catch(e){}
+  }
+
   window.SettingsStore = {
     cfg, setCfg, isAdmin,
     ensureGist, pull, pullOnSignal, push,
@@ -236,6 +273,12 @@
     getFab, setFab,
     // ai
     getAiCfg, setAiCfg,
+    // prefs
+    markPrefsChanged,
+    maybeAutoPushPrefs,
+    setPrefsAutoPush,
+    getPrefsAutoPush,
+    _isSyncablePrefKey,
     FILE
   };
 })();
