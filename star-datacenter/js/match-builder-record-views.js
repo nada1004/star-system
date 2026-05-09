@@ -169,12 +169,14 @@ function _h2hPlayerBgPanel(pName, isWin, isLose){
   // (요청사항) 좌우/상하 폭이 "확실히" 바뀌게:
   // - PC: width를 지정하되 max-width:100%로 오버플로 방지
   // - 모바일: 1열이므로 width 100% 유지, height 위주로 변경
-  // (요청사항) 브라우저(가로폭) 환경에 맞춰 자동으로 줄어들 수 있게
-  // - PC에서도 설정값(sizeW)이 너무 크면, 칼럼 폭(100%)을 넘지 않도록 clamp(min()) 처리
+  // (버그픽스) 좌우폭 조절이 "작동 안 하는 것처럼" 보이는 문제:
+  // - flex:1 1 0 상태에서는 width가 기대대로 반영되지 않는 경우가 있어
+  //   flex-basis를 auto로 두고 width를 우선 적용하도록 조정
+  // - 모바일은 화면폭에 맞춰 자동으로 줄어들어야 하므로 vw 상한을 두되,
+  //   최소폭은 10% 설정이 실제로 체감되게 너무 크게 고정하지 않음
   const wCss = isMb
-    // 모바일은 좌/우 패널 + 중앙 스코어를 "한 줄"로 유지하기 위해 vw 기반 제한
-    ? `width:min(46vw, ${Math.max(96,sizeW)}px);max-width:46vw;flex:0 1 auto;min-width:0;`
-    : `width:min(100%, ${Math.max(120,sizeW)}px);flex:1 1 0;min-width:0;`;
+    ? `width:min(60vw, ${Math.max(40,sizeW)}px);max-width:60vw;flex:0 1 auto;min-width:0;`
+    : `width:min(100%, ${Math.max(80,sizeW)}px);flex:0 1 auto;min-width:0;`;
   return `<div ${click} style="position:relative;overflow:hidden;border-radius:16px;height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${isWin?'#16a34a':'rgba(148,163,184,.35)'};box-shadow:${isWin?'0 14px 30px rgba(34,197,94,.16)':'0 10px 24px rgba(15,23,42,.08)'};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${isLose?'filter:grayscale(1);opacity:.88;':''}">
     <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.30) 55%, rgba(15,23,42,.78) 100%)"></div>
     ${!p.photo?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(28,Math.round(base*0.30))}px;font-weight:1000;color:rgba(255,255,255,.16)">${initial}</div>`:''}
