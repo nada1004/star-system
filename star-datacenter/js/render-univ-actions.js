@@ -53,6 +53,18 @@ function toggleUnivEdit(){
     if(btn) btn.textContent='✕ 닫기';
     const univName=st.currentName;
     const u=univCfg.find(x=>x.name===univName)||{};
+    // 펨코스타일 배경(대학별)
+    const fem = (function(){
+      try{
+        const s = (window._cfgFemcoLoad ? window._cfgFemcoLoad() : (JSON.parse(localStorage.getItem('b2_femco_settings_v1')||'{}')||{}));
+        const raw = (s && s.univBgMedia && s.univBgMedia[univName]) || '';
+        const d = { url:'', alpha:30 };
+        if(!raw) return d;
+        if(typeof raw === 'string') return { ...d, url: raw };
+        if(typeof raw === 'object') return { ...d, url: (raw.url||''), alpha: (raw.alpha==null?30:raw.alpha) };
+        return d;
+      }catch(e){ return { url:'', alpha:30 }; }
+    })();
     const editHTML=`<div id="univ-edit-panel" style="background:var(--surface);border:1.5px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:16px">
       <div style="font-weight:800;font-size:13px;color:var(--blue);margin-bottom:12px">✏️ 대학 정보 수정</div>
       <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대학 이름</label>
@@ -91,6 +103,22 @@ function toggleUnivEdit(){
           </div>
         </div>
       </div>
+      <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
+        <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">🧩 펨코스타일 배경 이미지/영상</div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">배경 링크(URL) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(펨코스타일 대학 카드 배경)</span></label>
+        <input type="text" id="ue-femco-bg-url" value="${(fem.url||'').replace(/\"/g,'&quot;')}" placeholder="https://... (jpg/png/gif/webp/mp4/유튜브/트위치)" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;box-sizing:border-box">
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">투명도</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" id="ue-femco-bg-alpha" min="0" max="100" step="1" value="${Math.max(0,Math.min(100,parseInt(fem.alpha||30,10)||30))}" style="flex:1;accent-color:var(--blue)"
+            oninput="document.getElementById('ue-femco-bg-alpha-val').textContent=this.value+'%'">
+          <span id="ue-femco-bg-alpha-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Math.max(0,Math.min(100,parseInt(fem.alpha||30,10)||30))}%</span>
+        </div>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:8px;line-height:1.45">
+          • 이미지/GIF: 대학 카드 배경으로 적용<br>
+          • MP4/WEBM: “배경영상” 버튼 표시(클릭 재생)<br>
+          • 유튜브/트위치: “배경링크” 버튼 표시(새창)
+        </div>
+      </div>
       <div style="display:flex;gap:6px">
         <button class="btn btn-b" style="flex:1" data-ua-action="save-edit">💾 저장</button>
         <button class="btn btn-w" data-ua-action="cancel-edit">취소</button>
@@ -118,6 +146,8 @@ function saveUnivEdit(){
   const newHdrBg=(document.getElementById('ue-hbg')?.value||'').trim();
   const newHdrFit=(document.getElementById('ue-hbg-fit')?.value||'').trim();
   const newHdrScale=parseInt(document.getElementById('ue-hbg-scale')?.value||'100',10)||100;
+  const femcoBgUrl=(document.getElementById('ue-femco-bg-url')?.value||'').trim();
+  const femcoBgAlpha=parseInt(document.getElementById('ue-femco-bg-alpha')?.value||'30',10);
   if(!newName){alert('이름을 입력하세요.');return;}
   if(newName!==univName){
     players.forEach(p=>{if(p.univ===univName)p.univ=newName;});
@@ -139,6 +169,24 @@ function saveUnivEdit(){
   if(newHdrBg) u.detailHeaderBgImg=newHdrBg; else delete u.detailHeaderBgImg;
   if(newHdrFit) u.detailHeaderBgFit=newHdrFit; else delete u.detailHeaderBgFit;
   if(newHdrBg) u.detailHeaderBgScale=newHdrScale; else delete u.detailHeaderBgScale;
+  // 펨코스타일 배경(대학별): b2_femco_settings_v1.univBgMedia[대학명]
+  try{
+    const load = window._cfgFemcoLoad ? window._cfgFemcoLoad : ()=>{ try{return JSON.parse(localStorage.getItem('b2_femco_settings_v1')||'{}')||{};}catch(e){return {}; } };
+    const save = window._cfgFemcoSave ? window._cfgFemcoSave : (obj)=>{ try{ localStorage.setItem('b2_femco_settings_v1', JSON.stringify(obj||{})); }catch(e){} };
+    const s = load();
+    s.univBgMedia = s.univBgMedia || {};
+    const nm = newName || univName;
+    if(!femcoBgUrl){
+      delete s.univBgMedia[nm];
+    }else{
+      const prev = s.univBgMedia[nm];
+      const base = (prev && typeof prev==='object') ? prev : (prev && typeof prev==='string' ? {url:prev} : {});
+      s.univBgMedia[nm] = { ...base, url:femcoBgUrl, alpha: Math.max(0,Math.min(100,isNaN(femcoBgAlpha)?30:femcoBgAlpha)) };
+    }
+    save(s);
+    // (기기 동기화) prefs 변경으로 기록 + (옵션) 자동 저장
+    try{ if(window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function') window.SettingsStore.markPrefsChanged(); }catch(e){}
+  }catch(e){}
   save();render();
   st.currentName=newName;
   document.getElementById('univModalTitle').innerHTML=`<span class="detail-main">🎓 ${newName}</span>`;
