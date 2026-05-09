@@ -1706,10 +1706,27 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 }
 /* (요청사항) 대학/스코어는 강조하고, 참여자(👥) 같은 보조 버튼은 더 작고 정렬되게 */
 .rec-actions--inline .btn-xs{
-  font-size:11px !important;
-  padding:3px 9px !important;
+  font-size:calc(11px * var(--rc-mem-btn-scale,1)) !important;
+  padding:calc(3px * var(--rc-mem-btn-scale,1)) calc(9px * var(--rc-mem-btn-scale,1)) !important;
   border-radius:999px !important;
   line-height:1.1 !important;
+}
+
+/* (요청사항) 기록탭 참가자(👥) 버튼: 인라인 스타일을 이김(!important) + 스케일 지원 */
+.rc-mem-btn{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:calc(5px * var(--rc-mem-btn-scale,1)) !important;
+  font-size:calc(11px * var(--rc-mem-btn-scale,1)) !important;
+  padding:calc(5px * var(--rc-mem-btn-scale,1)) calc(12px * var(--rc-mem-btn-scale,1)) !important;
+  border-radius:999px !important;
+  line-height:1.1 !important;
+  min-height:unset !important;
+}
+.rc-mem-btn .mem-ico{
+  font-size:calc(12px * var(--rc-mem-btn-scale,1)) !important;
+  line-height:1 !important;
 }
 .rec-actions--inline .rec-morebtn{
   font-size:14px !important;
@@ -1728,7 +1745,7 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 .rec-detail-area.open::before{display:none !important;content:none !important;}
 /* 모바일: 액션 항상 표시 */
 @media(max-width:768px){.rec-actions{opacity:1!important;pointer-events:auto!important;}}
-.rec-sum-vs{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;}
+.rec-sum-vs{display:flex;align-items:center;gap:var(--rc-vs-gap,12px);flex:1;flex-wrap:wrap;}
 .rec-sum-score{
   font-family:'Noto Sans KR',sans-serif;
   font-weight:1000;
@@ -2016,6 +2033,10 @@ body.rc-bgfx-off .rec-summary[data-rec-mode] .rec-sum-score::after{
   align-items:center;
   margin-top:-7px;
   min-height:56px;
+}
+/* (요청사항) 대회탭 대학 ↔ 스코어 간격 */
+.grp-match-card.match-card-v3 .grp-match-main{
+  gap:var(--tc-vs-gap,12px) !important;
 }
 .grp-team-col,
 .grp-score-col{
@@ -3011,7 +3032,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
     margin-left:0;
   }
   .rec-sum-vs{
-    gap:6px !important;
+    gap:var(--rc-vs-gap,8px) !important;
     justify-content: var(--rc-vs-justify, center) !important;
   }
   .rec-sum-vs .ubadge{
@@ -3865,7 +3886,7 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .rec-header { padding: 8px 10px; gap: 5px; flex-wrap: wrap; }
   .rec-sum-header { flex-wrap: wrap !important; gap: 4px !important; padding: 8px 10px !important; }
   .rec-sum-score { font-size: 18px !important; padding: 4px 12px !important; }
-  .rec-sum-vs { flex-wrap: wrap !important; gap: 5px !important; justify-content: var(--rc-vs-justify, center) !important; }
+  .rec-sum-vs { flex-wrap: wrap !important; gap: var(--rc-vs-gap,8px) !important; justify-content: var(--rc-vs-justify, center) !important; }
   .rec-summary { min-height: 44px; border-radius: 10px; }
   .sort-bar { padding: 6px 10px !important; }
   .rec-detail-area { padding: 6px 8px !important; }
@@ -3930,7 +3951,7 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     flex-wrap:nowrap !important;
     align-items:center !important;
     justify-content:flex-start !important;
-    gap:8px !important;
+    gap:var(--tc-vs-gap,8px) !important;
     overflow-x:auto !important;
     -webkit-overflow-scrolling:touch;
     scrollbar-width:none;

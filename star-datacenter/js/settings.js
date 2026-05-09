@@ -498,6 +498,70 @@ try{
 }catch(e){}
 
 // ─────────────────────────────────────────────────────────────
+// (요청사항) 기록 카드 참가자(👥) 버튼 크기(미니/시빌워/대학대전/대학CK/티어대회/프로리그/대회 등 기록탭)
+// - CSS 변수: --rc-mem-btn-scale
+// - localStorage: su_rc_mem_btn_scale_pc, su_rc_mem_btn_scale_mb (단위:%)
+// ─────────────────────────────────────────────────────────────
+window.applyRecMemBtnScale = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth||1024));
+    const isMobile = w <= 768;
+    const key = isMobile ? 'su_rc_mem_btn_scale_mb' : 'su_rc_mem_btn_scale_pc';
+    const pct = parseInt(localStorage.getItem(key) || '100', 10);
+    const v = Math.max(40, Math.min(240, isNaN(pct)?100:pct)) / 100;
+    document.documentElement.style.setProperty('--rc-mem-btn-scale', String(v));
+  }catch(e){}
+};
+window.cfgSetRecMemBtnScaleSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-rc-mem-pc')?.value||'100',10) || 100;
+    const mb = parseInt(document.getElementById('cfg-rc-mem-mb')?.value||'100',10) || 100;
+    localStorage.setItem('su_rc_mem_btn_scale_pc', String(Math.max(40,Math.min(240,pc))));
+    localStorage.setItem('su_rc_mem_btn_scale_mb', String(Math.max(40,Math.min(240,mb))));
+  }catch(e){}
+  try{ window.applyRecMemBtnScale && window.applyRecMemBtnScale(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+try{
+  if(!window._rcMemBtnScaleBound){
+    window._rcMemBtnScaleBound = true;
+    window.addEventListener('resize', ()=>{ try{ window.applyRecMemBtnScale && window.applyRecMemBtnScale(); }catch(e){} }, {passive:true});
+  }
+}catch(e){}
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 기록 카드: 스코어 ↔ 대학 버튼 간격
+// - CSS 변수: --rc-vs-gap (px)
+// - localStorage: su_rc_vs_gap_pc, su_rc_vs_gap_mb (단위:px)
+// ─────────────────────────────────────────────────────────────
+window.applyRecVsGap = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth||1024));
+    const isMobile = w <= 768;
+    const key = isMobile ? 'su_rc_vs_gap_mb' : 'su_rc_vs_gap_pc';
+    const px = parseInt(localStorage.getItem(key) || (isMobile?'8':'12'), 10);
+    const v = Math.max(0, Math.min(30, isNaN(px)?(isMobile?8:12):px));
+    document.documentElement.style.setProperty('--rc-vs-gap', v+'px');
+  }catch(e){}
+};
+window.cfgSetRecVsGapSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-rc-gap-pc')?.value||'12',10);
+    const mb = parseInt(document.getElementById('cfg-rc-gap-mb')?.value||'8',10);
+    localStorage.setItem('su_rc_vs_gap_pc', String(Math.max(0,Math.min(30,isNaN(pc)?12:pc))));
+    localStorage.setItem('su_rc_vs_gap_mb', String(Math.max(0,Math.min(30,isNaN(mb)?8:mb))));
+  }catch(e){}
+  try{ window.applyRecVsGap && window.applyRecVsGap(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+try{
+  if(!window._rcVsGapBound){
+    window._rcVsGapBound = true;
+    window.addEventListener('resize', ()=>{ try{ window.applyRecVsGap && window.applyRecVsGap(); }catch(e){} }, {passive:true});
+  }
+}catch(e){}
+
+// ─────────────────────────────────────────────────────────────
 // (요청사항) 대회탭(조별/토너) 대학(팀) 버튼 크기
 // - CSS 변수: --tc-team-btn-scale
 // - localStorage: su_tc_team_btn_scale_pc, su_tc_team_btn_scale_mb  (단위: %)
@@ -599,6 +663,38 @@ try{
   if(!window._tcMemBtnScaleBound){
     window._tcMemBtnScaleBound = true;
     window.addEventListener('resize', ()=>{ try{ window.applyTourneyMemBtnScale && window.applyTourneyMemBtnScale(); }catch(e){} }, {passive:true});
+  }
+}catch(e){}
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 대회탭(조별/토너) 스코어 ↔ 대학 버튼 간격
+// - CSS 변수: --tc-vs-gap (px)
+// - localStorage: su_tc_vs_gap_pc, su_tc_vs_gap_mb (단위:px)
+// ─────────────────────────────────────────────────────────────
+window.applyTourneyVsGap = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth||1024));
+    const isMobile = w <= 768;
+    const key = isMobile ? 'su_tc_vs_gap_mb' : 'su_tc_vs_gap_pc';
+    const px = parseInt(localStorage.getItem(key) || (isMobile?'8':'12'), 10);
+    const v = Math.max(0, Math.min(36, isNaN(px)?(isMobile?8:12):px));
+    document.documentElement.style.setProperty('--tc-vs-gap', v+'px');
+  }catch(e){}
+};
+window.cfgSetTourneyVsGapSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-tc-gap-pc')?.value||'12',10);
+    const mb = parseInt(document.getElementById('cfg-tc-gap-mb')?.value||'8',10);
+    localStorage.setItem('su_tc_vs_gap_pc', String(Math.max(0,Math.min(36,isNaN(pc)?12:pc))));
+    localStorage.setItem('su_tc_vs_gap_mb', String(Math.max(0,Math.min(36,isNaN(mb)?8:mb))));
+  }catch(e){}
+  try{ window.applyTourneyVsGap && window.applyTourneyVsGap(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+try{
+  if(!window._tcVsGapBound){
+    window._tcVsGapBound = true;
+    window.addEventListener('resize', ()=>{ try{ window.applyTourneyVsGap && window.applyTourneyVsGap(); }catch(e){} }, {passive:true});
   }
 }catch(e){}
 
@@ -4158,6 +4254,44 @@ ${_scfgD('notice','📢 공지 관리')}
         <span style="font-size:11px;color:var(--gray-l)">※ 미니/시빌워/대학대전/대학CK/티어대회/프로리그/일반 기록카드에 적용 (대회탭 조별/토너는 아래 “대회 카드”에서 별도)</span>
       </div>
 
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">참가자(👥) 버튼 크기(기록탭)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-rc-mem-pc" min="40" max="240" step="5"
+            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_pc')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-rc-mem-pc-v').textContent=this.value+'%'" onchange="cfgSetRecMemBtnScaleSettings()" style="width:140px">
+          <span id="cfg-rc-mem-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_pc')||'100',10)||100))}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-rc-mem-mb" min="40" max="240" step="5"
+            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_mb')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-rc-mem-mb-v').textContent=this.value+'%'" onchange="cfgSetRecMemBtnScaleSettings()" style="width:140px">
+          <span id="cfg-rc-mem-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_mb')||'100',10)||100))}%</span>
+        </div>
+        <span style="font-size:11px;color:var(--gray-l)">※ 미니/시빌워/대학대전/대학CK/티어대회/프로리그/대회(기록탭) 참가자 버튼에 적용</span>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(기록탭)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-rc-gap-pc" min="0" max="30" step="1"
+            value="${Math.max(0,Math.min(30,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}"
+            oninput="document.getElementById('cfg-rc-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetRecVsGapSettings()" style="width:140px">
+          <span id="cfg-rc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(30,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}px</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-rc-gap-mb" min="0" max="30" step="1"
+            value="${Math.max(0,Math.min(30,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}"
+            oninput="document.getElementById('cfg-rc-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetRecVsGapSettings()" style="width:140px">
+          <span id="cfg-rc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(30,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}px</span>
+        </div>
+        <span style="font-size:11px;color:var(--gray-l)">※ “스코어 - 대학버튼” 좌우 간격</span>
+      </div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
           <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">카드 배경 색상 강도</div>
@@ -4401,6 +4535,24 @@ ${_scfgD('notice','📢 공지 관리')}
             value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_mem_btn_scale_mb')||'100',10)||100))}"
             oninput="document.getElementById('cfg-tc-mem-mb-v').textContent=this.value+'%'" onchange="cfgSetTourneyMemBtnScaleSettings()" style="width:140px">
           <span id="cfg-tc-mem-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_mem_btn_scale_mb')||'100',10)||100))}%</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(대회탭)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-tc-gap-pc" min="0" max="36" step="1"
+            value="${Math.max(0,Math.min(36,parseInt(localStorage.getItem('su_tc_vs_gap_pc')||'12',10)||12))}"
+            oninput="document.getElementById('cfg-tc-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetTourneyVsGapSettings()" style="width:140px">
+          <span id="cfg-tc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(36,parseInt(localStorage.getItem('su_tc_vs_gap_pc')||'12',10)||12))}px</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-tc-gap-mb" min="0" max="36" step="1"
+            value="${Math.max(0,Math.min(36,parseInt(localStorage.getItem('su_tc_vs_gap_mb')||'8',10)||8))}"
+            oninput="document.getElementById('cfg-tc-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetTourneyVsGapSettings()" style="width:140px">
+          <span id="cfg-tc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(36,parseInt(localStorage.getItem('su_tc_vs_gap_mb')||'8',10)||8))}px</span>
         </div>
       </div>
 
