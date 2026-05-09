@@ -184,6 +184,8 @@
       try{ localStorage.setItem('su_design_v2', on?'1':'0'); }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(!!on); }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('design'); }catch(e){}
     };
     window.cfgSetDesignV2Preset = function(v){
       try{ localStorage.setItem('su_design_v2_preset', String(v||'base')); }catch(e){}
@@ -197,6 +199,8 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('design'); }catch(e){}
     };
     window.cfgSetDesignV2Bright = function(v){
       try{
@@ -205,6 +209,8 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('design'); }catch(e){}
     };
     window.cfgSetDesignV2Dark = function(v){
       try{
@@ -213,6 +219,8 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('design'); }catch(e){}
     };
     window.cfgApplyDesignV2TonePreset = function(key){
       const k = String(key||'base');
@@ -239,6 +247,8 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('design'); }catch(e){}
     };
     window.cfgResetDesignV2Colors = function(){
       try{
@@ -249,6 +259,8 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('design'); }catch(e){}
     };
     window.cfgSetDesignV2Effect = function(effectName, value){
       try{
@@ -260,17 +272,23 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('design'); }catch(e){}
     };
 
     window.cfgSetTabColorEnabled = function(on){
       try{ localStorage.setItem('su_tab_color_enabled', on ? '1' : '0'); }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('tabColor'); }catch(e){}
     };
     window.cfgSetTabColorMode = function(mode){
       var v = String(mode||'fill');
       if(['fill','soft','outline','solid'].indexOf(v) === -1) v = 'fill';
       try{ localStorage.setItem('su_tab_color_mode', v); }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('tabColor'); }catch(e){}
     };
     window.cfgSetTabColorLength = function(v){
       try{
@@ -278,6 +296,8 @@
         localStorage.setItem('su_tab_color_length', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('tabColor'); }catch(e){}
     };
     window.cfgSetTabColorTail = function(v){
       try{
@@ -285,16 +305,22 @@
         localStorage.setItem('su_tab_color_tail', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('tabColor'); }catch(e){}
     };
     window.cfgSetRecSideFxEnabled = function(on){
       try{ localStorage.setItem('su_rec_side_fx_on', on ? '1' : '0'); }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('recCard'); }catch(e){}
     };
     window.cfgSetRecSideFxMode = function(mode){
       var v = String(mode||'soft');
       if(['soft','glow','panel','line','ribbon','frame','spotlight'].indexOf(v) === -1) v = 'soft';
       try{ localStorage.setItem('su_rec_side_fx_mode', v); }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('recCard'); }catch(e){}
     };
     window.cfgSetRecSideFxIntensity = function(v){
       try{
@@ -302,6 +328,8 @@
         localStorage.setItem('su_rec_side_fx_intensity', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('recCard'); }catch(e){}
     };
     window.cfgSetRecSideFxLength = function(v){
       try{
@@ -310,6 +338,8 @@
         window.applyRecSideFxLengthVar && window.applyRecSideFxLengthVar(n);
       }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('recCard'); }catch(e){}
     };
     window.cfgSetRecSideFxTail = function(v){
       try{
@@ -317,6 +347,8 @@
         localStorage.setItem('su_rec_side_fx_tail', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('recCard'); }catch(e){}
     };
     window.cfgSetRecSideFxSoftness = function(v){
       try{
@@ -324,6 +356,8 @@
         localStorage.setItem('su_rec_side_fx_softness', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('recCard'); }catch(e){}
     };
     window.cfgSetRecSideFxEdge = function(v){
       try{
@@ -331,6 +365,8 @@
         localStorage.setItem('su_rec_side_fx_edge', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+      // 자동 GitHub 동기화
+      try{ if(window.SettingsStore && window.SettingsStore.push) window.SettingsStore.push('recCard'); }catch(e){}
     };
     window.applyRecSideFxLengthVar = function(n){
       try{

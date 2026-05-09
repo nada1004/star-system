@@ -172,7 +172,7 @@
   const pullOnSignal = createPullOnSignal ? createPullOnSignal({ pull }) : async function(){ return false; };
 
   async function push(section){
-    // section: 'memo' | 'ui.fab' | undefined(전체)
+    // section: 'memo' | 'ui.fab' | 'design' | 'tabColor' | 'recCard' | 'ai' | undefined(전체)
     if (!isAdmin()) throw new Error('관리자만 저장할 수 있습니다.');
     const c = cfg();
     if (!c.token) throw new Error('동기화를 위해 GitHub 토큰(gist 권한)이 필요합니다.');
@@ -183,10 +183,16 @@
     if (section === 'memo') local.memo.updatedAt = new Date().toISOString();
     if (section === 'ui.fab') { local.ui.fab.updatedAt = new Date().toISOString(); }
     if (section === 'ai') { local.ai = local.ai || {}; local.ai.updatedAt = new Date().toISOString(); }
+    if (section === 'design') { local.design = local.design || {}; local.design.updatedAt = new Date().toISOString(); }
+    if (section === 'tabColor') { local.tabColor = local.tabColor || {}; local.tabColor.updatedAt = new Date().toISOString(); }
+    if (section === 'recCard') { local.recCard = local.recCard || {}; local.recCard.updatedAt = new Date().toISOString(); }
     if (!section) {
       local.memo.updatedAt = local.memo.updatedAt || new Date().toISOString();
       local.ui.fab.updatedAt = local.ui.fab.updatedAt || new Date().toISOString();
       if (local.ai) local.ai.updatedAt = local.ai.updatedAt || new Date().toISOString();
+      if (local.design) local.design.updatedAt = local.design.updatedAt || new Date().toISOString();
+      if (local.tabColor) local.tabColor.updatedAt = local.tabColor.updatedAt || new Date().toISOString();
+      if (local.recCard) local.recCard.updatedAt = local.recCard.updatedAt || new Date().toISOString();
     }
     let remoteState = null;
     let mode = 'none';
