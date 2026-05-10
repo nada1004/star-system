@@ -304,13 +304,13 @@ function sw(t,el){
   if(t==='gj') gjSub='records';
   if(t==='univck') ckSub='records';
   if(t==='univm') univmSub='records';
-  if(t==='ind')      _mergedIndSub='ind';
+  if(t==='ind')      _mergedIndSub = _mergedIndSub || 'ind';
   if(t==='gj')       _mergedIndSub='gj';
   if(t==='univm'||t==='mini') { _mergedUnivSub = _mergedUnivSub || 'mini'; miniType='mini'; }
   if(t==='univck')   _mergedUnivSub='univck';
-  if(t==='comp')     _mergedCompSub='comp';
+  if(t==='comp')     _mergedCompSub = _mergedCompSub || 'comp';
   if(t==='tiertour') _mergedCompSub='tiertour';
-  if(t==='pro') { _mergedProSub='pro'; }
+  if(t==='pro') { _mergedProSub = _mergedProSub || 'pro'; }
   if(t==='hist') histSub = histSub || 'mini';
   if(window._recQ){
     const tabModeMap={mini:'mini',univck:'ck',univm:'univm',comp:'comp',pro:'pro',ind:'ind'};

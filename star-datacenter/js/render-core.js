@@ -16,12 +16,12 @@ function _renderImpl(){
   switch(curTab){
     case 'total':   if(typeof rTotal==='function')   rTotal(C,T);   else C.innerHTML='<div class="empty-state">전체 순위를 불러올 수 없습니다.</div>'; break;
     case 'tier':    if(typeof rTier==='function')    rTier(C,T);    else C.innerHTML='<div class="empty-state">티어 순위표를 불러올 수 없습니다.</div>'; break;
-    case 'hist':    if(typeof rHist==='function')    rHist(C,T);    break;
+    case 'hist':    if(typeof rHist==='function')    rHist(C,T);    else C.innerHTML='<div class="empty-state">대전 기록을 불러올 수 없습니다.</div>'; break;
     case 'ind': case 'gj':               rMergedInd(C,T);   break;
     case 'mini': case 'univm': case 'univck': rMergedUnivM(C,T); break;
     case 'comp': case 'tiertour':        rMergedComp(C,T);  break;
     case 'pro':     rMergedPro(C,T);     break;
-    case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     break;
+    case 'cfg':     if(typeof rCfg==='function')     rCfg(C,T);     else C.innerHTML='<div class="empty-state">설정을 불러올 수 없습니다.</div>'; break;
     case 'stats':
       if(typeof rStats==='function'){
         if(typeof Chart==='undefined'){ window.ensureChartJS().then(()=>render(true)).catch(()=>rStats(C,T)); return; }

@@ -24,9 +24,11 @@ function rMergedInd(C, T) {
   const sub = document.createElement('div');
   if(_mergedIndSub==='ind') {
     if(typeof rInd==='function') rInd(sub,T);
+    else sub.innerHTML='<div class="empty-state">개인전 모듈을 불러올 수 없습니다.</div>';
   }
   else {
     if(typeof rGJ==='function')  rGJ(sub,T);
+    else sub.innerHTML='<div class="empty-state">끝장전 모듈을 불러올 수 없습니다.</div>';
   }
   C.innerHTML = bar;
   C.appendChild(sub);
@@ -41,10 +43,10 @@ function rMergedUnivM(C, T) {
     _mergedUnivSub, '_mergedUnivSub', 'mergedUniv'
   );
   const sub = document.createElement('div');
-  if(_mergedUnivSub==='civil')       { miniType='civil';  if(typeof rMini==='function')  rMini(sub,T); }
-  else if(_mergedUnivSub==='mini')   { miniType='mini';   if(typeof rMini==='function')  rMini(sub,T); }
-  else if(_mergedUnivSub==='univck') { if(typeof rCK==='function')    rCK(sub,T);   }
-  else                                { if(typeof rUnivM==='function') rUnivM(sub,T); }
+  if(_mergedUnivSub==='civil')       { miniType='civil';  if(typeof rMini==='function')  rMini(sub,T);  else sub.innerHTML='<div class="empty-state">시빌워 모듈을 불러올 수 없습니다.</div>'; }
+  else if(_mergedUnivSub==='mini')   { miniType='mini';   if(typeof rMini==='function')  rMini(sub,T);  else sub.innerHTML='<div class="empty-state">미니대전 모듈을 불러올 수 없습니다.</div>'; }
+  else if(_mergedUnivSub==='univck') { if(typeof rCK==='function')    rCK(sub,T);    else sub.innerHTML='<div class="empty-state">대학CK 모듈을 불러올 수 없습니다.</div>'; }
+  else                                { if(typeof rUnivM==='function') rUnivM(sub,T); else sub.innerHTML='<div class="empty-state">대학대전 모듈을 불러올 수 없습니다.</div>'; }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
@@ -78,11 +80,12 @@ function rMergedPro(C, T) {
     _mergedProSub, '_mergedProSub', 'mergedPro'
   );
   const sub = document.createElement('div');
-  if(_mergedProSub==='pro')       { if(typeof rPro==='function')     rPro(sub,T); }
+  if(_mergedProSub==='pro')       { if(typeof rPro==='function')     rPro(sub,T);     else sub.innerHTML='<div class="empty-state">프로리그 모듈을 불러올 수 없습니다.</div>'; }
   else if(_mergedProSub==='gj')   {
     if(typeof rGJ==='function') rGJ(sub,T,true,true);
+    else sub.innerHTML='<div class="empty-state">프로 끝장전 모듈을 불러올 수 없습니다.</div>';
   }
-  else                            { if(typeof rProComp==='function') rProComp(sub,T); }
+  else                            { if(typeof rProComp==='function') rProComp(sub,T); else sub.innerHTML='<div class="empty-state">프로리그 대회 모듈을 불러올 수 없습니다.</div>'; }
   C.innerHTML = bar;
   C.appendChild(sub);
 }
