@@ -1294,22 +1294,17 @@ body.dark .hist-ctrl-group{
 .tbadge-youth{background:linear-gradient(135deg,#a7f3d0,#6ee7b7);color:#065f46;box-shadow:0 1px 5px rgba(110,231,183,.45);border:1px solid rgba(167,243,208,.5);}
 .tbadge-default{background:linear-gradient(135deg,#94a3b8,#64748b);color:#fff;}
 .wt{
+  /* (버그픽스/요청) 그라데이션 텍스트(-webkit-text-fill-color:transparent)로 인해
+     일부 모바일에서 리페인트(드래그) 전까지 승/패 숫자가 안 보이는 문제가 발생.
+     → 승/패는 일반 색상 텍스트로 고정 */
   color:var(--score-win);
   font-weight:900;
-  background:linear-gradient(180deg,var(--score-win-2),var(--score-win));
-  -webkit-background-clip:text;
-  background-clip:text;
-  -webkit-text-fill-color:transparent;
-  text-shadow:0 1px 10px rgba(34,197,94,.18);
+  text-shadow:0 1px 10px rgba(34,197,94,.12);
 }
 .lt{
   color:var(--score-lose);
   font-weight:900;
-  background:linear-gradient(180deg,var(--score-lose-2),var(--score-lose));
-  -webkit-background-clip:text;
-  background-clip:text;
-  -webkit-text-fill-color:transparent;
-  text-shadow:0 1px 10px rgba(239,68,68,.16);
+  text-shadow:0 1px 10px rgba(239,68,68,.10);
 }
 .grp-match-score span[style*="#16a34a"],
 .grp-match-score span[style*="#22c55e"],
@@ -1319,11 +1314,7 @@ body.dark .hist-ctrl-group{
 .md-score span[style*="#22c55e"]{
   color:var(--score-win) !important;
   font-weight:900 !important;
-  background:linear-gradient(180deg,var(--score-win-2),var(--score-win)) !important;
-  -webkit-background-clip:text !important;
-  background-clip:text !important;
-  -webkit-text-fill-color:transparent !important;
-  text-shadow:0 1px 10px rgba(34,197,94,.18) !important;
+  text-shadow:0 1px 10px rgba(34,197,94,.12) !important;
 }
 .grp-match-score span[style*="#dc2626"],
 .grp-match-score span[style*="#ef4444"],
@@ -1333,11 +1324,7 @@ body.dark .hist-ctrl-group{
 .md-score span[style*="#ef4444"]{
   color:var(--score-lose) !important;
   font-weight:900 !important;
-  background:linear-gradient(180deg,var(--score-lose-2),var(--score-lose)) !important;
-  -webkit-background-clip:text !important;
-  background-clip:text !important;
-  -webkit-text-fill-color:transparent !important;
-  text-shadow:0 1px 10px rgba(239,68,68,.16) !important;
+  text-shadow:0 1px 10px rgba(239,68,68,.10) !important;
 }
 .pt-p{color:var(--score-win);font-weight:800;}
 .pt-n{color:var(--score-lose);font-weight:800;}
