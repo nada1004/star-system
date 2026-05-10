@@ -1,6 +1,69 @@
 /* ══════════════════════════════════════
    CONSTANTS - 티어 순서: god > king > jack > joker > spade > 0티어 > 1티어 ...
 ══════════════════════════════════════ */
+// 데이터 버전 관리 - 캐시 무효화용 (데이터 구조 변경 시 버전 증가)
+const DATA_VERSION = 1;
+
+// 캐시 관리 함수
+function _checkDataVersion(){
+  try{
+    // 세션 스토리지에 체크 완료 플래그가 있으면 스킵
+    if(sessionStorage.getItem('su_version_checked') === 'true') return;
+    
+    const savedVer = Number(localStorage.getItem('su_data_version')) || 0;
+    if(savedVer !== DATA_VERSION){
+      console.log('[Cache] 데이터 버전 변경됨:', savedVer, '->', DATA_VERSION, '- 캐시 초기화');
+      _clearCacheByVersionChange();
+    }else{
+      // 버전이 같으면 체크 완료 플래그 설정
+      sessionStorage.setItem('su_version_checked', 'true');
+    }
+  }catch(e){
+    console.error('[Cache] 버전 확인 실패:', e);
+  }
+}
+
+function _clearCacheByVersionChange(){
+  try{
+    // 먼저 새 버전을 저장하여 무한 루프 방지
+    localStorage.setItem('su_data_version', String(DATA_VERSION));
+    
+    const cacheKeys = ['su_tiers', 'su_u', 'su_m', 'su_t', 'su_cn', 'su_cc', 'su_ptc', 'su_ttcur', 'su_boardOrder', 'su_bpo', 'su_notices', 'su_seasons', 'su_cal_sched'];
+    cacheKeys.forEach(key => {
+      try{ localStorage.removeItem(key); }catch(e){}
+    });
+    console.log('[Cache] 캐시 초기화 완료');
+    location.reload();
+  }catch(e){
+    console.error('[Cache] 캐시 초기화 실패:', e);
+  }
+}
+
+window.clearAppCache = function(){
+  if(!confirm('앱 캐시를 초기화하시겠습니까?\n\n⚠️ 저장된 모든 데이터가 삭제됩니다.')) return;
+  try{
+    localStorage.clear();
+    console.log('[Cache] 전체 캐시 삭제 완료');
+    location.reload();
+  }catch(e){
+    alert('캐시 삭제 실패: ' + e.message);
+  }
+};
+
+window.clearSpecificCache = function(keys){
+  if(!Array.isArray(keys)) keys = [keys];
+  try{
+    keys.forEach(key => {
+      try{ localStorage.removeItem(key); }catch(e){}
+    });
+    console.log('[Cache] 특정 캐시 삭제 완료:', keys);
+    return true;
+  }catch(e){
+    console.error('[Cache] 특정 캐시 삭제 실패:', e);
+    return false;
+  }
+};
+
 let TIERS = (()=>{const t=J('su_tiers')||['G','K','JA','J','S','0티어','1티어','2티어','3티어','4티어','5티어','6티어','7티어','8티어','유스'];if(!t.includes('미정'))t.push('미정');return t;})();
 const RACES=['T','Z','P','N'];
 const RNAME={T:'테란',Z:'저그',P:'프로토스',N:'종족미정'};
@@ -1431,6 +1494,8 @@ function fixPoints(){
 function localSave(){
   try{
     _lsSave('su_tiers',TIERS);
+    // 데이터 버전 관리 - 캐시 무효화용
+    _lsSave('su_data_version', DATA_VERSION || 1);
     // teamAMembers/teamBMembers에서 tier·race 제거 (표시 시 players 배열 조회)
     const _trimM=arr=>arr.map(m=>{
       if(!m.teamAMembers&&!m.teamBMembers)return m;
@@ -1569,7 +1634,7 @@ function savePhotos(){
     localStorage.setItem('su_last_save_time',Date.now().toString());
   }catch(e){console.error('[savePhotos error]',e);}
 }
-const _REMOTE_SAVE_DEBOUNCE_MS = 5000; // 5초 간격으로 저장 요청 취합
+const _REMOTE_SAVE_DEBOUNCE_MS = 1000; // 1초 간격으로 저장 요청 취합 (즉시 동기화를 위해 감소)
 let _remoteCloudSaveTimer = null;
 let _remoteCloudSaveBusy = false;
 function _setPendingRemoteSave(reason, failMsg, mode){
@@ -1822,6 +1887,9 @@ document.addEventListener('visibilitychange', ()=>{
 });
 window.addEventListener('DOMContentLoaded', ()=>{
   _updateSyncNetworkBadge();
+}, { once:true });
+window.addEventListener('DOMContentLoaded', ()=>{
+  _checkDataVersion();
 }, { once:true });
 window.addEventListener('DOMContentLoaded', ()=>{
   try{

@@ -244,6 +244,72 @@ function deletePlayerRecentEditableSource(playerName, meta){
     }
     refreshPlayerModalIfOpen();
   }
+  else if(meta.sourceType === 'proTourGj'){
+    const tnId=meta.tnId||'';
+    const gjIdx=Number(meta.gjIdx);
+    if(!tnId || !Number.isFinite(gjIdx)) return;
+    try{
+      const tn=(typeof proTourneys!=='undefined'?proTourneys:[]).find(t=>String(t&&t.id||'')===String(tnId));
+      const gm=tn && tn.gjMatches && tn.gjMatches[gjIdx];
+      if(gm && !_guardRecentEdit(gm.d||'')) return;
+    }catch(e){}
+    if(!confirm('이 경기 기록을 삭제할까요?')) return;
+    try{
+      const tn=(typeof proTourneys!=='undefined'?proTourneys:[]).find(t=>String(t&&t.id||'')===String(tnId));
+      if(tn && tn.gjMatches){
+        const m=tn.gjMatches[gjIdx];
+        if(m && m._id && typeof _revertProMatch === 'function') try{ _revertProMatch(m._id); }catch(e){}
+        tn.gjMatches.splice(gjIdx,1);
+        save(); render();
+      }
+    }catch(e){
+      alert('삭제 실패: '+(e&&e.message?e.message:e));
+      return;
+    }
+    refreshPlayerModalIfOpen();
+  }
+  else if(meta.sourceType === 'ind'){
+    const idx=Number(meta.idx);
+    if(!Number.isFinite(idx)) return;
+    try{
+      const m=(typeof indM!=='undefined'?indM:[])[idx];
+      if(m && !_guardRecentEdit(m.d||'')) return;
+    }catch(e){}
+    if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.')) return;
+    try{
+      const m=(typeof indM!=='undefined'?indM:[])[idx];
+      if(m){
+        if(m._id && typeof _revertProMatch === 'function') try{ _revertProMatch(m._id); }catch(e){}
+        indM.splice(idx,1);
+        save(); render();
+      }
+    }catch(e){
+      alert('삭제 실패: '+(e&&e.message?e.message:e));
+      return;
+    }
+    refreshPlayerModalIfOpen();
+  }
+  else if(meta.sourceType === 'gj'){
+    const idx=Number(meta.idx);
+    if(!Number.isFinite(idx)) return;
+    try{
+      const m=(typeof gjM!=='undefined'?gjM:[])[idx];
+      if(m && !_guardRecentEdit(m.d||'')) return;
+    }catch(e){}
+    if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.')) return;
+    try{
+      const m=(typeof gjM!=='undefined'?gjM:[])[idx];
+      if(m){
+        if(m._id && typeof _revertProMatch === 'function') try{ _revertProMatch(m._id); }catch(e){}
+        gjM.splice(idx,1);
+        save(); render();
+      }
+    }catch(e){
+      alert('삭제 실패: '+(e&&e.message?e.message:e));
+      return;
+    }
+    refreshPlayerModalIfOpen();
+  }
 }
 
 function openPlayerRecentEditableSourceEdit(playerName, meta){
@@ -353,6 +419,53 @@ function openPlayerRecentEditableSourceEdit(playerName, meta){
     const teamB = meta.teamB || '';
     if(typeof window.openBracketMatchModal === 'function'){
       window.openBracketMatchModal(tnId, r, mi, teamA, teamB);
+    }
+    return;
+  }
+  if(meta.sourceType === 'proTourGj'){
+    const tnId=meta.tnId||'';
+    const gjIdx=Number(meta.gjIdx);
+    if(!tnId || !Number.isFinite(gjIdx)) return;
+    // 날짜 가드(가능하면 실제 기록에서)
+    try{
+      const tn=(typeof proTourneys!=='undefined'?proTourneys:[]).find(t=>String(t&&t.id||'')===String(tnId));
+      const gm=tn && tn.gjMatches && tn.gjMatches[gjIdx];
+      if(gm && !_guardRecentEdit(gm.d||'')) return;
+    }catch(e){}
+    // 프로리그 끝장전은 pro-comp.js의 GJ 섹션에서 수정 가능
+    if(typeof window.proCompSub === 'function' && typeof window.render === 'function'){
+      window.proCompSub='gj';
+      window.render();
+    }
+    return;
+  }
+  if(meta.sourceType === 'ind'){
+    const idx=Number(meta.idx);
+    if(!Number.isFinite(idx)) return;
+    try{
+      const m=(typeof indM!=='undefined'?indM:[])[idx];
+      if(m && !_guardRecentEdit(m.d||'')) return;
+    }catch(e){}
+    // 개인전은 tier-tour.js의 editRow 함수로 수정
+    if(typeof window.editRow === 'function'){
+      window.reMode='ind';
+      window.reIdx=idx;
+      window.editRow('ind',idx);
+    }
+    return;
+  }
+  if(meta.sourceType === 'gj'){
+    const idx=Number(meta.idx);
+    if(!Number.isFinite(idx)) return;
+    try{
+      const m=(typeof gjM!=='undefined'?gjM:[])[idx];
+      if(m && !_guardRecentEdit(m.d||'')) return;
+    }catch(e){}
+    // 끝장전은 tier-tour.js의 editRow 함수로 수정
+    if(typeof window.editRow === 'function'){
+      window.reMode='gj';
+      window.reIdx=idx;
+      window.editRow('gj',idx);
     }
     return;
   }

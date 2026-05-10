@@ -44,7 +44,7 @@ function buildPlayerRecentHistoryRowHTML(opts){
   const _editableSourceAttrs = (()=>{
     if(!(hh && hh._editableSource)) return '';
     const st = hh._sourceType || '';
-    const base = ` data-ph-source-type="${escAttr(st)}" data-ph-source-tn-id="${escAttr(hh._sourceTnId||'')}" data-ph-source-id="${escAttr(hh._sourceId||hh.matchId||'')}" data-ph-source-date="${escAttr(hh.date||'')}"`;
+    const base = ` data-ph-source-type="${escAttr(st)}" data-ph-source-tn-id="${escAttr(hh._sourceTnId||'')}" data-ph-source-id="${escAttr(hh._sourceId||hh.matchId||'')}" data-ph-source-date="${escAttr(hh._sourceDate||hh.date||'')}"`;
     if(st === 'proTourStage'){
       return base + ` data-ph-source-round="${escAttr(hh._sourceRound||'')}"`;
     }
@@ -53,6 +53,12 @@ function buildPlayerRecentHistoryRowHTML(opts){
     }
     if(st === 'tourBkt'){
       return base + ` data-ph-source-rnd="${escAttr(hh._sourceRnd)}" data-ph-source-mi="${escAttr(hh._sourceMi)}" data-ph-source-team-a="${escAttr(hh._sourceTeamA||'')}" data-ph-source-team-b="${escAttr(hh._sourceTeamB||'')}"`;
+    }
+    if(st === 'proTourGj'){
+      return base + ` data-ph-source-gj-idx="${escAttr(hh._sourceGjIdx)}"`;
+    }
+    if(st === 'ind' || st === 'gj'){
+      return base + ` data-ph-source-idx="${escAttr(hh._sourceIdx)}"`;
     }
     return base;
   })();
@@ -187,6 +193,7 @@ function _bindPlayerRecentHistoryDelegatedEvents(){
     if(action === 'hist-edit-one'){
       e.preventDefault();
       const sourceType = el.getAttribute('data-ph-source-type') || '';
+      console.log('[hist-edit-one] sourceType:', sourceType, 'name:', name);
       if(sourceType){
         if(typeof openPlayerRecentEditableSourceEdit === 'function'){
           openPlayerRecentEditableSourceEdit(name, {
@@ -200,10 +207,15 @@ function _bindPlayerRecentHistoryDelegatedEvents(){
             teamA: el.getAttribute('data-ph-source-team-a') || '',
             teamB: el.getAttribute('data-ph-source-team-b') || '',
             d: el.getAttribute('data-ph-source-date') || '',
-            sourceId: el.getAttribute('data-ph-source-id') || ''
+            sourceId: el.getAttribute('data-ph-source-id') || '',
+            gjIdx: el.getAttribute('data-ph-source-gj-idx'),
+            idx: el.getAttribute('data-ph-source-idx')
           });
         }
-      }else if(typeof openPlayerHistEdit === 'function') openPlayerHistEdit(name, Number(el.getAttribute('data-ph-index') || -1));
+      }else{
+        console.log('[hist-edit-one] No sourceType, calling openPlayerHistEdit');
+        if(typeof openPlayerHistEdit === 'function') openPlayerHistEdit(name, Number(el.getAttribute('data-ph-index') || -1));
+      }
       return;
     }
     if(action === 'hist-delete-one'){
@@ -222,7 +234,9 @@ function _bindPlayerRecentHistoryDelegatedEvents(){
             teamA: el.getAttribute('data-ph-source-team-a') || '',
             teamB: el.getAttribute('data-ph-source-team-b') || '',
             d: el.getAttribute('data-ph-source-date') || '',
-            sourceId: el.getAttribute('data-ph-source-id') || ''
+            sourceId: el.getAttribute('data-ph-source-id') || '',
+            gjIdx: el.getAttribute('data-ph-source-gj-idx'),
+            idx: el.getAttribute('data-ph-source-idx')
           });
         }
       }else if(typeof deletePlayerHist === 'function') deletePlayerHist(name, Number(el.getAttribute('data-ph-index') || -1));

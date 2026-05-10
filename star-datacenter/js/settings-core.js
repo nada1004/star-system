@@ -3168,12 +3168,14 @@ window.cfgRunFullQaDryRun = function(){
     const lsKeys = ['su_psi','su_psi_expiry','su_tt_paste_stage','su_pd_badge_scale','su_pd_chip_scale','su_mb_scale','su_tb_scale'];
     lsKeys.forEach(k=>{ try{ backupLs[k] = localStorage.getItem(k); }catch(e){} });
 
-    // save/render 스텁(실제 저장 금지) — 전역 교체 대신 로컬 카운터로 처리
+    // save/render 스텁(실제 저장 금지) — 로컬 카운터로만 처리, 전역 교체 안 함
+    // (버그픽스) window.save를 전역 교체하면 finally 복원 실패 시 실제 저장이 안 되는 심각한 버그 가능
+    // — 로컬 변수 saveCnt/renderCnt만 사용하고 window.save/render는 건드리지 않음
     let saveCnt=0, renderCnt=0;
-    const _stubSave = ()=>{ saveCnt++; };
-    const _stubRender = ()=>{ renderCnt++; };
-    window.save = _stubSave;
-    window.render = _stubRender;
+    const _origSave = (typeof save === 'function') ? save : (()=>{});
+    const _origRender = (typeof render === 'function') ? render : (()=>{});
+    window.save = ()=>{ saveCnt++; };
+    window.render = ()=>{ renderCnt++; };
 
     // 더미 데이터 세팅
     const _dmMini = [{ d:'2026-04-01', map:'투혼II', sets:[{scoreA:1,scoreB:0,games:[{playerA:'A',playerB:'B',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];

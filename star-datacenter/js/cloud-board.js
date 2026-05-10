@@ -1961,18 +1961,34 @@ async function _autoSyncCheck() {
       Number(window._lastAppliedSavedAt || 0) || 0
     );
     
-    // 원격에 더 새로운 데이터가 있으면 알림
+    // 원격에 더 새로운 데이터가 있으면 자동으로 불러오기
     if (remoteAt > localSavedAt + 3000) { // 3초 여유
-      const statusEl = document.getElementById('cloudStatus');
-      if (statusEl) {
-        statusEl.style.color = '#2563eb';
-        statusEl.innerHTML = `🔄 GitHub에 새 데이터 있음 <button onclick="window.cloudLoad()" style="margin-left:6px;padding:2px 8px;border:1px solid #2563eb;border-radius:4px;background:#eff6ff;color:#2563eb;font-size:11px;cursor:pointer">불러오기</button>`;
-      }
-      // 알림 토스트 (한 번만)
-      if (typeof showToast === 'function' && !window._autoSyncNotified) {
-        showToast('🔄 GitHub에 새 데이터가 있습니다. 불러오기 버튼을 클릭하세요.', 5000);
-        window._autoSyncNotified = true;
-        setTimeout(() => { window._autoSyncNotified = false; }, 60000); // 1분 후 재알림 가능
+      console.log('[autoSync] 원격에 새 데이터 감지 - 자동 동기화 시작');
+      
+      // 자동으로 데이터 불러오기
+      if (typeof window.cloudLoad === 'function') {
+        try {
+          await window.cloudLoad();
+          console.log('[autoSync] 자동 동기화 완료');
+          
+          // 캐시 갱신을 위해 데이터 버전 증가
+          const currentVer = Number(localStorage.getItem('su_data_version')) || 0;
+          localStorage.setItem('su_data_version', String(currentVer + 1));
+          
+          // 알림 토스트
+          if (typeof showToast === 'function') {
+            showToast('✅ 다른 기기의 변경 사항이 자동으로 동기화되었습니다.', 3000);
+          }
+        } catch (e) {
+          console.error('[autoSync] 자동 동기화 실패:', e);
+          
+          // 실패 시 수동 불러오기 버튼 표시
+          const statusEl = document.getElementById('cloudStatus');
+          if (statusEl) {
+            statusEl.style.color = '#2563eb';
+            statusEl.innerHTML = `🔄 GitHub에 새 데이터 있음 <button onclick="window.cloudLoad()" style="margin-left:6px;padding:2px 8px;border:1px solid #2563eb;border-radius:4px;background:#eff6ff;color:#2563eb;font-size:11px;cursor:pointer">불러오기</button>`;
+          }
+        }
       }
     }
   } catch (e) {
@@ -1980,11 +1996,11 @@ async function _autoSyncCheck() {
   }
 }
 
-// 자동 동기화 시작 (10분마다 체크 - GitHub 캐싱 고려)
+// 자동 동기화 시작 (2분마다 체크 - 빠른 동기화를 위해 감소)
 function startAutoSync() {
   if (_autoSyncTimer) clearInterval(_autoSyncTimer);
-  _autoSyncTimer = setInterval(_autoSyncCheck, 10 * 60 * 1000); // 10분
-  console.log('[autoSync] 자동 동기화 시작 (10분 간격)');
+  _autoSyncTimer = setInterval(_autoSyncCheck, 2 * 60 * 1000); // 2분
+  console.log('[autoSync] 자동 동기화 시작 (2분 간격)');
 }
 
 // 자동 동기화 중지

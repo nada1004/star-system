@@ -97,13 +97,15 @@ function collectPlayerExtraHistoryData(opts){
     const pair=[p.name, opp].filter(Boolean).sort().join('|');
     const mm = m._proLabel ? 'ind_pro' : 'ind';
     if(d && opp && histNoResSet.has(`${d}|${map}|${pair}|${mm}`)) return null;
+    const idx=(typeof indM!=='undefined'?indM:[]).indexOf(m);
     return _attachHistElo({
       date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
       opp:m.wName===p.name?m.lName:m.wName,
       oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
       map:normMap(m.map||'-'),matchId,mode:m._proLabel?'프로리그':'개인전',
       _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`,
-      _id:matchId
+      _id:matchId,
+      _editableSource:true,_sourceType:'ind',_sourceIdx:idx,_sourceId:matchId,_sourceDate:m.d||''
     });
   }).filter(Boolean);
 
@@ -115,13 +117,15 @@ function collectPlayerExtraHistoryData(opts){
     const pair=[p.name, opp].filter(Boolean).sort().join('|');
     const mm = m._proLabel ? 'gj_pro' : 'gj';
     if(d && opp && histNoResSet.has(`${d}|${map}|${pair}|${mm}`)) return null;
+    const idx=(typeof gjM!=='undefined'?gjM:[]).indexOf(m);
     return _attachHistElo({
       date:m.d||'',time:0,result:m.wName===p.name?'승':'패',
       opp:m.wName===p.name?m.lName:m.wName,
       oppRace:(players.find(x=>x.name===(m.wName===p.name?m.lName:m.wName))||{}).race||'',
       map:normMap(m.map||'-'),matchId,mode:m._proLabel?'프로리그끝장전':'끝장전',
       _dupKey:`${m.d||''}|${m.map||''}|${[m.wName,m.lName].sort().join('|')}`,
-      _id:matchId
+      _id:matchId,
+      _editableSource:true,_sourceType:'gj',_sourceIdx:idx,_sourceId:matchId,_sourceDate:m.d||''
     });
   }).filter(Boolean);
 
@@ -320,7 +324,8 @@ function collectPlayerExtraHistoryData(opts){
       const ln=wn===m.a?m.b:m.a;
       const opp=wn===p.name?ln:wn;
       const oppP=players.find(x=>x.name===opp);
-      tourMatches.push(_attachHistElo({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',matchId:mid,mode:'프로리그끝장전',_readOnly:true}));
+      const gjIdx=(tn.gjMatches||[]).indexOf(m);
+      tourMatches.push(_attachHistElo({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',matchId:mid,mode:'프로리그끝장전',_readOnly:true,_editableSource:true,_sourceType:'proTourGj',_sourceTnId:tn.id||'',_sourceGjIdx:gjIdx,_sourceId:mid,_sourceDate:m.d||''}));
     });
   });
 
