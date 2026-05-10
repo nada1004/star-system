@@ -551,12 +551,7 @@ function calShowDay(ds){
 function swNav(t,el){
   document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('on'));
   if(el) el.classList.add('on');
-  if(t==='comp'){compSub='league';leagueFilterDate='';leagueFilterGrp='';grpRankFilter='';}
-  if(t==='mini')miniSub='records';
-  if(t==='univck')ckSub='records';
-  if(t==='univm')univmSub='records';
-  if(t==='pro')proSub='records';
-  if(t==='hist')histSub='mini';
+  // 탭 상태 초기화는 sw() 내부에서 처리하므로 여기서는 중복 정의하지 않음
   let found=false;
   document.querySelectorAll('.tab').forEach(b=>{
     const oc=b.getAttribute('onclick')||'';

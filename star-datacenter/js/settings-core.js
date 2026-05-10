@@ -105,7 +105,7 @@ const _DEFAULT_CATSECS = {
   '🖼️ 스트리머/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','univlogoimg','si','siAssign','pdModeBadge','pd','matchdetail'],
   '🧾 카드/기록':['reccard','tourneycard','procompcard','h2hpanel','sharecard','calui'],
   '🎨 UI/테마':['designv2','hdr','appfont','uisize','uibtn','uifilter','tablabels','tabcolors','autofitall'],
-  '🧠 자동화/도구':['bgm','soopmv','pasteRoute','fab','aibot'],
+  '🧠 자동화/도구':['bgm','soopmv','pasteRoute','fab'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
   '💾 데이터':['sync','firebase','storage','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
   '🧪 점검/고급':['cfgmenu','selfcheck']
@@ -1344,13 +1344,6 @@ window.cfgSetCalendarUiSettings = function(){
   const shareAdminOnly = !!document.getElementById('cfg-share-adminonly')?.checked;
   try{ localStorage.setItem('su_cal_chip_mode', (chipMode==='total'?'total':'types')); }catch(e){}
   try{ localStorage.setItem('su_share_admin_only', shareAdminOnly ? '1' : '0'); }catch(e){}
-  // 공유버튼 즉시 적용: 현재 DOM에 있는 .share-btn 요소를 isLoggedIn 상태에 따라 토글
-  try{
-    const loggedIn = (typeof isLoggedIn !== 'undefined') ? isLoggedIn : false;
-    document.querySelectorAll('.share-btn, [data-share-btn], .btn-share').forEach(el=>{
-      el.style.display = (shareAdminOnly && !loggedIn) ? 'none' : '';
-    });
-  }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
 };
 
@@ -3165,7 +3158,7 @@ window.cfgRunFullQaDryRun = function(){
     try{ backup._lex_tourneys = (typeof tourneys!=='undefined') ? tourneys : undefined; }catch(e){}
     try{ backup._lex_maps  = (typeof maps!=='undefined') ? maps : undefined; }catch(e){}
     try{ backup._lex_players = (typeof players!=='undefined') ? players : undefined; }catch(e){}
-    // save/render 백업
+    // save/render 백업 (window 교체 없이 로컬 스텁으로 안전하게 처리)
     backup.save = window.save;
     backup.render = window.render;
     // document.getElementById 백업
@@ -3175,10 +3168,12 @@ window.cfgRunFullQaDryRun = function(){
     const lsKeys = ['su_psi','su_psi_expiry','su_tt_paste_stage','su_pd_badge_scale','su_pd_chip_scale','su_mb_scale','su_tb_scale'];
     lsKeys.forEach(k=>{ try{ backupLs[k] = localStorage.getItem(k); }catch(e){} });
 
-    // save/render 스텁(실제 저장 금지)
+    // save/render 스텁(실제 저장 금지) — 전역 교체 대신 로컬 카운터로 처리
     let saveCnt=0, renderCnt=0;
-    window.save = ()=>{ saveCnt++; };
-    window.render = ()=>{ renderCnt++; };
+    const _stubSave = ()=>{ saveCnt++; };
+    const _stubRender = ()=>{ renderCnt++; };
+    window.save = _stubSave;
+    window.render = _stubRender;
 
     // 더미 데이터 세팅
     const _dmMini = [{ d:'2026-04-01', map:'투혼II', sets:[{scoreA:1,scoreB:0,games:[{playerA:'A',playerB:'B',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];
@@ -3307,8 +3302,8 @@ window.cfgRunFullQaDryRun = function(){
     try{
       if(backup.getEl) document.getElementById = backup.getEl;
       if(typeof backup.confirm === 'function') window.confirm = backup.confirm;
-      if(backup.save) window.save = backup.save;
-      if(backup.render) window.render = backup.render;
+      if(backup.save !== undefined) window.save = backup.save;
+      if(backup.render !== undefined) window.render = backup.render;
       if(typeof backup.isLoggedIn !== 'undefined') window.isLoggedIn = backup.isLoggedIn;
       try{ if(typeof backup.isLoggedInLex !== 'undefined' && typeof isLoggedIn !== 'undefined') isLoggedIn = backup.isLoggedInLex; }catch(e){}
       Object.keys(backup).forEach(k=>{

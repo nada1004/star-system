@@ -14,8 +14,8 @@ function _renderImpl(){
   window._compListCache={};
   window._histTourneyCache={};
   switch(curTab){
-    case 'total':   if(typeof rTotal==='function')   rTotal(C,T);   break;
-    case 'tier':    if(typeof rTier==='function')    rTier(C,T);    break;
+    case 'total':   if(typeof rTotal==='function')   rTotal(C,T);   else C.innerHTML='<div class="empty-state">전체 순위를 불러올 수 없습니다.</div>'; break;
+    case 'tier':    if(typeof rTier==='function')    rTier(C,T);    else C.innerHTML='<div class="empty-state">티어 순위표를 불러올 수 없습니다.</div>'; break;
     case 'hist':    if(typeof rHist==='function')    rHist(C,T);    break;
     case 'ind': case 'gj':               rMergedInd(C,T);   break;
     case 'mini': case 'univm': case 'univck': rMergedUnivM(C,T); break;
@@ -72,7 +72,7 @@ function _renderImpl(){
         (async()=>{ try{ await _ensureCloudBoardLoaded(); render(true); }catch(e){ console.error('[lazy] board load fail', e); } })();
       }
       break;
-    case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  break;
+    case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  else C.innerHTML='<div class="empty-state">현황판을 불러올 수 없습니다.</div>'; break;
     case 'elboard':
       if(typeof rElboard==='function'){
         rElboard(C,T);

@@ -293,7 +293,7 @@ window._applyTabLinkFromUrl = function(){
 
 function sw(t,el){
   try{
-    if(t==='cfg' && !(typeof isLoggedIn!=='undefined' && isLoggedIn)){
+    if(t==='cfg' && !window.isLoggedIn){
       if(typeof showToast==='function') showToast('설정탭은 관리자만 접근할 수 있습니다.');
       return;
     }
@@ -306,12 +306,12 @@ function sw(t,el){
   if(t==='univm') univmSub='records';
   if(t==='ind')      _mergedIndSub='ind';
   if(t==='gj')       _mergedIndSub='gj';
-  if(t==='univm'||t==='mini') { _mergedUnivSub='mini'; miniType='mini'; }
+  if(t==='univm'||t==='mini') { _mergedUnivSub = _mergedUnivSub || 'mini'; miniType='mini'; }
   if(t==='univck')   _mergedUnivSub='univck';
   if(t==='comp')     _mergedCompSub='comp';
   if(t==='tiertour') _mergedCompSub='tiertour';
   if(t==='pro') { _mergedProSub='pro'; }
-  if(t==='hist') histSub='mini';
+  if(t==='hist') histSub = histSub || 'mini';
   if(window._recQ){
     const tabModeMap={mini:'mini',univck:'ck',univm:'univm',comp:'comp',pro:'pro',ind:'ind'};
     const m=tabModeMap[t];

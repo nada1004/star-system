@@ -1824,7 +1824,7 @@ ${_scfgD('notice','📢 공지 관리')}
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">⚙️ 기본 팀 규모</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${['1v1','2v2','3v3','4v4'].map(t=>`<button class="pill ${(localStorage.getItem('su_teamMatchSize')||'1v1')===t?'on':''}" id="cfg-tm-${t.replace(':','')}" onclick="localStorage.setItem('su_teamMatchSize','${t}');document.querySelectorAll('[id^=cfg-tm-]').forEach(b=>b.classList.remove('on'));this.classList.add('on');try{if(typeof render==='function')render();}catch(e){}">${t}전</button>`).join('')}
+          ${['1v1','2v2','3v3','4v4'].map(t=>`<button class="pill ${(localStorage.getItem('su_teamMatchSize')||'1v1')===t?'on':''}" id="cfg-tm-${t.replace(':','')}" onclick="localStorage.setItem('su_teamMatchSize','${t}');document.querySelectorAll('[id^=cfg-tm-]').forEach(b=>b.classList.remove('on'));this.classList.add('on')">${t}전</button>`).join('')}
         </div>
         <div style="font-size:11px;color:var(--gray-l);margin-top:6px">경기 입력 모달에서 사용할 기본 팀 규모 (기본: 1v1)</div>
       </div>
@@ -2451,62 +2451,53 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
     <div style="font-size:11px;color:var(--gray-l);margin-top:6px;padding:0 2px">※ 스트리머 상세 모달 이미지 설정은 아래 별도 항목에서 설정</div>
   </details>
-  ${(()=>{
-    const _ims=(typeof suReadImgSettings==='function')?suReadImgSettings():(JSON.parse(localStorage.getItem('su_img_settings')||'{}')||{});
-    const _imFill=_ims.fill||false;
-    const _imSc=parseFloat(_ims.scale||1).toFixed(1);
-    const _imBr=parseFloat(_ims.brightness||1).toFixed(1);
-    const _imScMb=parseFloat(_ims.scaleMb||1).toFixed(1);
-    const _imScTb=parseFloat(_ims.scaleTb||1).toFixed(1);
-    const _imScPc=parseFloat(_ims.scalePc||1).toFixed(1);
-    return _scfgD('imgmodalsettings','🖼️ 스트리머 상세 이미지 설정')+`
+  ${_scfgD('imgmodalsettings','🖼️ 스트리머 상세 이미지 설정')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머 상세 모달의 이미지 크기·밝기를 설정합니다.</div>
     <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">모바일/태블릿/PC 크기를 따로 저장합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:600">
-        <input type="checkbox" id="cfg-img-fill" style="width:14px;height:14px" ${_imFill?'checked':''}> 이미지 채우기 (cover) — 해제 시 맞춤 (contain)
+        <input type="checkbox" id="cfg-img-fill" style="width:14px;height:14px"> 이미지 채우기 (cover) — 해제 시 맞춤 (contain)
       </label>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
           <label style="font-size:12px;font-weight:700;color:var(--text2)">기본 크기</label>
-          <span id="cfg-img-scale-val" style="font-size:12px;font-weight:700;color:var(--blue)">${_imSc}x</span>
+          <span id="cfg-img-scale-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
         </div>
-        <input type="range" id="cfg-img-scale" min="0.5" max="2" step="0.1" value="${_imSc}" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+        <input type="range" id="cfg-img-scale" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>0.5x</span><span>2.0x</span></div>
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
           <label style="font-size:12px;font-weight:700;color:var(--text2)">기본 밝기</label>
-          <span id="cfg-img-brightness-val" style="font-size:12px;font-weight:700;color:var(--blue)">${_imBr}x</span>
+          <span id="cfg-img-brightness-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
         </div>
-        <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="${_imBr}" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-brightness-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+        <input type="range" id="cfg-img-brightness" min="0.3" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-brightness-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);margin-top:2px"><span>0.3x</span><span>2.0x</span></div>
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
           <label style="font-size:12px;font-weight:700;color:var(--text2)">모바일 크기</label>
-          <span id="cfg-img-scale-left-val" style="font-size:12px;font-weight:700;color:var(--blue)">${_imScMb}x</span>
+          <span id="cfg-img-scale-left-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
         </div>
-        <input type="range" id="cfg-img-scale-left" min="0.5" max="2" step="0.1" value="${_imScMb}" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-left-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+        <input type="range" id="cfg-img-scale-left" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-left-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
           <label style="font-size:12px;font-weight:700;color:var(--text2)">태블릿 크기</label>
-          <span id="cfg-img-scale-tablet-val" style="font-size:12px;font-weight:700;color:var(--blue)">${_imScTb}x</span>
+          <span id="cfg-img-scale-tablet-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
         </div>
-        <input type="range" id="cfg-img-scale-tablet" min="0.5" max="2" step="0.1" value="${_imScTb}" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-tablet-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+        <input type="range" id="cfg-img-scale-tablet" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-tablet-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
           <label style="font-size:12px;font-weight:700;color:var(--text2)">PC 크기</label>
-          <span id="cfg-img-scale-right-val" style="font-size:12px;font-weight:700;color:var(--blue)">${_imScPc}x</span>
+          <span id="cfg-img-scale-right-val" style="font-size:12px;font-weight:700;color:var(--blue)">1.0x</span>
         </div>
-        <input type="range" id="cfg-img-scale-right" min="0.5" max="2" step="0.1" value="${_imScPc}" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-right-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+        <input type="range" id="cfg-img-scale-right" min="0.5" max="2" step="0.1" value="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-img-scale-right-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
       </div>
       <button class="btn btn-b" onclick="saveImageSettings()" style="align-self:flex-start">💾 설정 저장</button>
     </div>
-  </details>`;
-  })()}
+  </details>
   ${(typeof window.renderCfgProfileShapeCard==='function' ? window.renderCfgProfileShapeCard(_scfgD) : '')}
   ${_scfgD('matchdetail','🎮 경기 상세(팝업) 설정')}
     <div id="cfg-md-body"></div>
@@ -2727,7 +2718,18 @@ ${_scfgD('notice','📢 공지 관리')}
     if(document.getElementById('cfg-b2-auto-height'))document.getElementById('cfg-b2-auto-height').checked=b2Layout.autoHeight!==false;
     // 이미지탭 이미지 설정 (board2 전역 설정) 렌더링
     _ensureB2ImgSettingsWrap();
-    // 스트리머 상세 이미지 설정: 초기값은 렌더링 시 인라인으로 처리됨 (imgmodalsettings 섹션)
+    // 스트리머 상세 이미지 설정 초기화
+    const imgSettings = (typeof suReadImgSettings==='function')
+      ? suReadImgSettings()
+      : (JSON.parse(localStorage.getItem('su_img_settings')||'{}'));
+    if(document.getElementById('cfg-img-fill'))document.getElementById('cfg-img-fill').checked=imgSettings.fill||false;
+    if(document.getElementById('cfg-img-scale')){document.getElementById('cfg-img-scale').value=imgSettings.scale||1;document.getElementById('cfg-img-scale-val').textContent=(imgSettings.scale||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-brightness')){document.getElementById('cfg-img-brightness').value=imgSettings.brightness||1;document.getElementById('cfg-img-brightness-val').textContent=(imgSettings.brightness||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-scale-left')){document.getElementById('cfg-img-scale-left').value=imgSettings.scaleMb||1;document.getElementById('cfg-img-scale-left-val').textContent=(imgSettings.scaleMb||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-scale-tablet')){document.getElementById('cfg-img-scale-tablet').value=imgSettings.scaleTb||1;document.getElementById('cfg-img-scale-tablet-val').textContent=(imgSettings.scaleTb||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-scale-right')){document.getElementById('cfg-img-scale-right').value=imgSettings.scalePc||1;document.getElementById('cfg-img-scale-right-val').textContent=(imgSettings.scalePc||1).toFixed(1)+'x';}
+    if(document.getElementById('cfg-img-random'))document.getElementById('cfg-img-random').checked=imgSettings.randomRotation||false;
+    if(document.getElementById('cfg-img-interval'))document.getElementById('cfg-img-interval').value=imgSettings.interval||5;
     // 구현황판 밝기 설정 초기화
     const b2LabelAlpha=parseInt(localStorage.getItem('su_b2la')||'16');
     const b2BgAlpha=parseInt(localStorage.getItem('su_b2ba')||'9');

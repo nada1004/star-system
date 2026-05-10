@@ -317,14 +317,12 @@ function _setPdFontSize(size){
   s.font_size=size;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   _renderCfgPdSection();
-  try{_refreshOpenDetailModals();}catch(e){}
   _pdTouchPrefs();
 }
 function _setPdProfileSize(val){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.profile_size=parseInt(val)||100;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
-  try{_refreshOpenDetailModals();}catch(e){}
   _pdTouchPrefs();
 }
 function _setPdColorPreset(cp){
@@ -332,7 +330,6 @@ function _setPdColorPreset(cp){
   s.color_preset=cp;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   _renderCfgPdSection();
-  try{_refreshOpenDetailModals();}catch(e){}
   _pdTouchPrefs();
 }
 function _refreshOpenDetailModals(){
@@ -381,7 +378,6 @@ function _setPdTint(type,val){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s[type+'_tint']=parseInt(val)||0;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
-  try{_refreshOpenDetailModals();}catch(e){}
   _pdTouchPrefs();
 }
 function _setPdUnivDarken(univ,val,idx){
@@ -391,28 +387,24 @@ function _setPdUnivDarken(univ,val,idx){
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   const el=document.getElementById('pd-dv-'+idx);
   if(el) el.textContent=Math.round(val*100)+'%';
-  try{_refreshOpenDetailModals();}catch(e){}
   _pdTouchPrefs();
 }
 function _setPdCloseOnBadge(checked){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.close_on_badge=!!checked;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
-  try{_refreshOpenDetailModals();}catch(e){}
   _pdTouchPrefs();
 }
 function _setPdCloseOnMatchPlayer(checked){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.close_on_match_player=!!checked;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
-  try{_refreshOpenDetailModals();}catch(e){}
   _pdTouchPrefs();
 }
 function _setPdHeaderClickClose(checked){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.header_click_close=!!checked;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
-  try{_refreshOpenDetailModals();}catch(e){}
   _pdTouchPrefs();
 }
 function cfgPdSetModeBadgeColor(mode, color){
