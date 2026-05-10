@@ -91,12 +91,106 @@
     }catch(e){}
   };
 
+  // ✅ 기록 카드(⋯)의 "수정"은 상세 팝업이 아니라 "경기 수정(입력) 화면"으로 진입해야 함
+  // - 개인전/끝장전/프로리그 끝장전 공통
+  // - 기존 기록 세션의 games를 BLD[mode].freeGames로 변환해 입력 UI에 프리필
+  function _buildFreeGamesFromSession(sess, A, B){
+    const games = Array.isArray(sess?.games) ? sess.games : [];
+    return games.map(g=>{
+      const w = g?.wName || '';
+      const winner = (w === A) ? 'A' : (w === B) ? 'B' : '';
+      return {
+        playerA: A,
+        playerB: B,
+        winner,
+        map: g?.map || ''
+      };
+    }).filter(g=>g.winner);
+  }
+
+  window.openIndSessionEdit = window.openIndSessionEdit || function(sessKey){
+    try{
+      const s = (window._indSessCache||{})[sessKey];
+      if(!s || !Array.isArray(s.games) || !s.games.length) return;
+      const A = s.p1 || 'A';
+      const B = s.p2 || 'B';
+      const sid = (s.games.find(g=>g && g.sid)?.sid) || (s.games[0]? (s.games[0].sid||s.games[0]._id) : '') || '';
+      const ids = Array.isArray(s.ids) ? s.ids.slice() : s.games.map(g=>g?g._id:undefined).filter(Boolean);
+      const freeGames = _buildFreeGamesFromSession(s, A, B);
+      const aObj = (window.players||[]).find(p=>p.name===A) || {};
+      const bObj = (window.players||[]).find(p=>p.name===B) || {};
+      const memA = {name:A,univ:aObj.univ||'',race:aObj.race||'',tier:aObj.tier||'',gender:aObj.gender||''};
+      const memB = {name:B,univ:bObj.univ||'',race:bObj.race||'',tier:bObj.tier||'',gender:bObj.gender||''};
+      window.BLD = window.BLD || {};
+      window.BLD['ind'] = {
+        date: s.d || '',
+        membersA: [memA],
+        membersB: [memB],
+        sets: [],
+        noSetMode: true,
+        freeGames,
+        _editCtx: { mode:'ind', sessKey, sid, ids }
+      };
+      // 탭 이동
+      try{ window.curTab = 'ind'; }catch(e){}
+      try{ if(typeof window._mergedIndSub!=='undefined') window._mergedIndSub = 'ind'; }catch(e){}
+      try{ if(typeof window.indSub!=='undefined') window.indSub = 'input'; }catch(e){}
+      try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
+      if(typeof window.render==='function') window.render();
+    }catch(e){}
+  };
+
+  window.openGJSessionEdit = window.openGJSessionEdit || function(sessKey){
+    try{
+      const s = (window._gjSessCache||{})[sessKey];
+      if(!s || !Array.isArray(s.games) || !s.games.length) return;
+      const A = s.p1 || 'A';
+      const B = s.p2 || 'B';
+      const proOnly = !!(s._proOnly || s._proLabel || s.games.find(g=>g && g._proLabel));
+      const sid = (s.games.find(g=>g && g.sid)?.sid) || (s.games[0]? (s.games[0].sid||s.games[0]._id) : '') || '';
+      const ids = Array.isArray(s.ids) ? s.ids.slice() : s.games.map(g=>g?g._id:undefined).filter(Boolean);
+      const freeGames = _buildFreeGamesFromSession(s, A, B);
+      const aObj = (window.players||[]).find(p=>p.name===A) || {};
+      const bObj = (window.players||[]).find(p=>p.name===B) || {};
+      const memA = {name:A,univ:aObj.univ||'',race:aObj.race||'',tier:aObj.tier||'',gender:aObj.gender||''};
+      const memB = {name:B,univ:bObj.univ||'',race:bObj.race||'',tier:bObj.tier||'',gender:bObj.gender||''};
+      window.BLD = window.BLD || {};
+      window.BLD['gj'] = {
+        date: s.d || '',
+        membersA: [memA],
+        membersB: [memB],
+        sets: [],
+        noSetMode: true,
+        freeGames,
+        _proLabel: proOnly,
+        _editCtx: { mode:'gj', sessKey, sid, ids, proOnly }
+      };
+
+      // 탭 이동 (프로 끝장전이면 프로리그 탭의 "프로 끝장전"으로)
+      try{
+        if(proOnly){
+          window.curTab = 'pro';
+          if(typeof window._mergedProSub!=='undefined') window._mergedProSub = 'gj';
+        }else{
+          window.curTab = 'ind';
+          if(typeof window._mergedIndSub!=='undefined') window._mergedIndSub = 'gj';
+        }
+      }catch(e){}
+      try{ if(typeof window.gjSub!=='undefined') window.gjSub = 'input'; }catch(e){}
+      try{ window._gjProMode = proOnly; }catch(e){}
+      try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
+      if(typeof window.render==='function') window.render();
+    }catch(e){}
+  };
+
   try{
     window.openIndSessionActionPop = openIndSessionActionPop;
     window.MatchBuilderModules.recordActions = {
       openIndSessionActionPop,
       openIndSessionPopup: window.openIndSessionPopup,
-      openGJSessionPopup: window.openGJSessionPopup
+      openGJSessionPopup: window.openGJSessionPopup,
+      openIndSessionEdit: window.openIndSessionEdit,
+      openGJSessionEdit: window.openGJSessionEdit
     };
   }catch(e){}
 })();

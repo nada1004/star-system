@@ -33,7 +33,11 @@ function _clearCacheByVersionChange(){
       try{ localStorage.removeItem(key); }catch(e){}
     });
     console.log('[Cache] 캐시 초기화 완료');
-    location.reload();
+    // (요청) 버전 변경 시 강제 새로고침은 하지 않음
+    // - 일부 환경에서 localStorage/sessionStorage 반영 타이밍 문제로 "계속 새로고침"처럼 느껴질 수 있음
+    // - 대신 이번 세션에서는 체크 완료로 표시하고, 사용자에게 필요 시 수동 새로고침을 안내
+    try{ sessionStorage.setItem('su_version_checked', 'true'); }catch(e){}
+    try{ if(typeof showToast==='function') showToast('캐시 초기화 완료. 필요 시 새로고침(F5) 해주세요.'); }catch(e){}
   }catch(e){
     console.error('[Cache] 캐시 초기화 실패:', e);
   }

@@ -1011,17 +1011,39 @@ function rTier(C,T){
   const hasTypeSet=window._tierTypeSet&&window._tierTypeSet.size>0;
   const extraHeader=hasTypeSet?(window._tierTypeSet.size===1?modeHeaders[[...window._tierTypeSet][0]]||'합산':'합산'):modeHeaders[tierRankMode]||'포인트';
 
-  let h=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:auto;width:100%"><thead><tr>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">순위</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">대학</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
-    <th style="text-align:left;padding:8px 12px">스트리머</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">승</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">패</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">${extraHeader}</th>
-  </tr></thead><tbody>`;
+  // (복구/개선)
+  // 1) ELO / 활동 / 관리 컬럼 복구
+  // 2) 표가 컨테이너 폭(100%)으로 늘어나며 컬럼이 양쪽으로 벌어져 보이는 현상 완화:
+  //    table width를 max-content로 두고 가운데 정렬 (넘치면 가로 스크롤)
+  // 3) 승/패 숫자: 일부 모바일에서 그라데이션 텍스트(.wt/.lt) 리페인트 이슈가 있어 일반 색상 텍스트로 고정
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  const _isMb = (typeof window !== 'undefined' && window.innerWidth <= 768);
+  const _pad = _isMb ? '6px 8px' : '8px 10px';
+  const _padName = _isMb ? '6px 10px' : '8px 12px';
+  const _today2=new Date().toISOString().slice(0,10);
+  const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
+  const _7ago2=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
+
+  const _wrapStyle = `overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%`;
+  const _tableStyle = _isMb
+    ? `table-layout:auto;width:max-content;max-width:100%` // 모바일: 컴팩트(가능하면 가로 스크롤 최소화)
+    : `table-layout:auto;width:100%;min-width:1120px;max-width:1600px;margin:0 auto`; // PC: 좌우 폭 넓게
+
+  let h=`<div style="${_wrapStyle}">
+    <table style="${_tableStyle}"><thead><tr>
+      <th style="text-align:center;white-space:nowrap;padding:${_pad}">순위</th>
+      <th style="text-align:center;white-space:nowrap;padding:${_pad}">티어</th>
+      <th style="text-align:center;white-space:nowrap;padding:${_pad}">대학</th>
+      <th style="text-align:center;white-space:nowrap;padding:${_pad}">종족</th>
+      <th style="text-align:left;white-space:nowrap;padding:${_padName}">스트리머</th>
+      <th style="text-align:center;white-space:nowrap;padding:${_pad}">승</th>
+      <th style="text-align:center;white-space:nowrap;padding:${_pad}">패</th>
+      <th style="text-align:center;white-space:nowrap;padding:${_pad}">승률</th>
+      <th style="text-align:center;white-space:nowrap;padding:${_pad}">${extraHeader}</th>
+      <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">ELO</th>
+      <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">활동</th>
+      ${_li?`<th class="no-export col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">관리</th>`:''}
+    </tr></thead><tbody>`;
   const _canGoHist = (()=>{
     const pick = hasTypeSet && window._tierTypeSet.size===1 ? [...window._tierTypeSet][0] : (!hasTypeSet ? tierRankMode : '');
     return pick && pick.endsWith('_win') || pick && pick.endsWith('_loss');
@@ -1053,16 +1075,38 @@ function rTier(C,T){
     const _pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const _modePick = hasTypeSet && window._tierTypeSet.size===1 ? [...window._tierTypeSet][0] : (!hasTypeSet ? tierRankMode : '');
     const _clickHist = (_canGoHist && _modePick) ? `onclick="tierRankGoHist('${_modePick}','${_pSafe}')"` : '';
+    const _lastD=(p.history||[]).reduce((mx,h)=>h.date>mx?h.date:mx,'');
+    const _actHTML = (()=>{
+      if(!_lastD) return '<span style="font-size:10px;color:#9ca3af" title="전적 없음">-</span>';
+      if(_lastD>=_7ago2) return `<span style="font-size:10px;font-weight:900;color:#16a34a" title="최근 활동 (7일 이내)">🟢</span>`;
+      if(_lastD>=_30ago2) return `<span style="font-size:10px;font-weight:900;color:#f59e0b" title="활동 중 (30일 이내)">🟡</span>`;
+      return '<span style="font-size:10px;font-weight:900;color:#9ca3af" title="비활성 (30일 이상)">⚫</span>';
+    })();
+    const _elo = (p.elo||ELO_DEFAULT);
     h+=`<tr style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">
-      <td style="text-align:center;white-space:nowrap;padding:7px 10px">${rnkHTML}</td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="ubadge clickable-univ" data-icon-done="1" style="background:${col};display:inline-flex;align-items:center;gap:6px;font-size:13px" onclick="openUnivModal('${p.univ}')">${univIconHTML}${p.univ}</span></td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}">${p.race}</span></td>
-      <td style="text-align:left;padding:7px 12px;font-weight:700;white-space:nowrap;font-size:14px"><span style="display:inline-flex;align-items:center;gap:6px">${getPlayerPhotoHTML(p.name,'40px')}<span class="clickable-name" onclick="openPlayerModal('${_pSafe}')">${p.name}</span>${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span></td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="lt">${p.loss}</td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
-      <td style="text-align:center;white-space:nowrap;padding:7px 10px;${_canGoHist?'cursor:pointer;text-decoration:underline dotted':''}" ${_clickHist} title="${_canGoHist?'대전기록탭에서 보기':''}">${extraVal}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad}">${rnkHTML}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad}">${getTierBadge(p.tier)}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad}">
+        <span class="ubadge clickable-univ" data-icon-done="1"
+          style="background:${col};display:inline-flex;align-items:center;gap:6px;font-size:${_isMb?11:13}px;max-width:${_isMb?90:120}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+          onclick="openUnivModal('${p.univ}')"
+        >${univIconHTML}${p.univ}</span>
+      </td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad}"><span class="rbadge r${p.race}">${p.race}</span></td>
+      <td style="text-align:left;white-space:nowrap;padding:${_padName};font-weight:700;min-width:0">
+        <span style="display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:${_isMb?170:260}px">
+          ${getPlayerPhotoHTML(p.name,_isMb?'34px':'40px')}
+          <span class="clickable-name" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="openPlayerModal('${_pSafe}')">${p.name}</span>
+          <span style="flex-shrink:0">${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
+        </span>
+      </td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--score-win)">${p.win}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--score-lose)">${p.loss}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad};${_canGoHist?'cursor:pointer;text-decoration:underline dotted':''}" ${_clickHist} title="${_canGoHist?'대전기록탭에서 보기':''}">${extraVal}</td>
+      <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${_elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${_elo}</td>
+      <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${_actHTML}</td>
+      ${_li?`<td class="no-export col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
     </tr>`;
   });
   h+=`</tbody></table></div>`;

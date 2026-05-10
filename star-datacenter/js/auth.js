@@ -620,6 +620,10 @@ function applyLoginState(){
     }
   }
   if(isLoggedIn) _touchSessionActivity(false);
+  // (중요) 일부 모듈(render-nav-lazy 등)은 window.isLoggedIn을 참조함.
+  // auth.js는 top-level let isLoggedIn을 사용하므로 둘을 항상 동기화한다.
+  try{ window.isLoggedIn = !!isLoggedIn; }catch(e){}
+  try{ window.isSubAdmin = !!isSubAdmin; }catch(e){}
   // 헤더 버튼 표시
   document.getElementById('hdrLoginBtn').style.display=isLoggedIn?'none':'';
   document.getElementById('hdrLogoutBtn').style.display=isLoggedIn?'':'none';

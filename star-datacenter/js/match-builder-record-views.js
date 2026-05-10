@@ -322,7 +322,7 @@ function indRecordsHTML(){
     // (버그픽스) 비로그인자에게는 공유카드만 표시, 수정/삭제/이동은 관리자(로그인)만 볼 수 있음
     actionOpts.push(`{l:'📷 공유카드',fn:()=>openIndShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}',JSON.stringify(${idsJson}))}`);
     if(isLoggedIn){
-      actionOpts.push(`{l:'✏️ 수정',fn:()=>openIndSessionPopup('${_indSessKey}')}`);
+      actionOpts.push(`{l:'✏️ 수정',fn:()=>openIndSessionEdit('${_indSessKey}')}`);
       actionOpts.push(`{l:'↗ 이동',fn:()=>{window._pendingMoveIds=${idsJson};openMoveIndPop(document.getElementById('_indActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}')||document.body,window._pendingMoveIds,'ind');}}`);
       actionOpts.push(`{l:'🗑 삭제',fn:()=>deleteIndSession(${idsJson})}`);
     }
@@ -496,7 +496,7 @@ function gjRecordsHTML(proOnly){
     // (버그픽스) 비로그인자에게는 공유카드만 표시, 수정/삭제/이동은 관리자(로그인)만 볼 수 있음
     gjActionOpts.push(`{l:'🎴 공유카드',fn:()=>openGJShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}',{proOnly:${proOnly?'true':'false'}})}`);
     if(isLoggedIn){
-      gjActionOpts.push(`{l:'✏️ 수정',fn:()=>openGJSessionPopup('${_gjSessKey}')}`);
+      gjActionOpts.push(`{l:'✏️ 수정',fn:()=>openGJSessionEdit('${_gjSessKey}')}`);
       gjActionOpts.push(`{l:'↗ 이동',fn:()=>{window._pendingMoveIds=${idsJson};openMoveIndPop(document.getElementById('${_gjActionBtnId}')||document.body,window._pendingMoveIds,'${_gjMoveCtx}');}}`);
       gjActionOpts.push(`{l:'🗑 삭제',fn:()=>deleteGjSession(${idsJson})}`);
     }

@@ -211,10 +211,12 @@ function setBuilderHTML(bld, mode){
   bld.sets.forEach(s=>{if(s.winner==='A')scoreA++;else if(s.winner==='B')scoreB++;});
   let h='';
   function _renderSaveBar(){
+    const _isEdit = !!(bld && bld._editCtx && (mode==='ind' || mode==='gj'));
+    const _saveLbl = _isEdit ? '✅ 수정 저장' : '✅ 저장';
     return `<div class="mb-savebar" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
       <div style="font-size:11px;color:var(--gray-l);font-weight:700">저장 전 스코어와 세트 구성을 마지막으로 확인하세요.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-g" onclick="saveMatch('${mode}')">✅ 저장</button>
+        <button class="btn btn-g" onclick="saveMatch('${mode}')">${_saveLbl}</button>
         <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">🔄 초기화</button>
       </div>
     </div>`;
@@ -427,9 +429,15 @@ function saveMatch(mode){
     const matchId=genId();
 
     if(mode==='gj'){
+      const _edit = (bld && bld._editCtx && bld._editCtx.mode==='gj') ? bld._editCtx : null;
+      if(_edit && Array.isArray(_edit.ids) && _edit.ids.length){
+        const _idSet = new Set(_edit.ids.map(x=>String(x)));
+        try{ gjM = (gjM||[]).filter(m=>!_idSet.has(String(m?._id||''))); }catch(e){}
+        try{ window.gjM = gjM; }catch(e){}
+      }
       const mA=bld.membersA||[];const mB=bld.membersB||[];
       if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
-      const sid=matchId;
+      const sid=_edit?.sid || matchId;
       freeGames.forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
@@ -444,7 +452,10 @@ function saveMatch(mode){
         }
         gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
-      BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
+      BLD[mode]=null;
+      // 수정 저장 시에는 history/포인트/elo를 전체 재구성해서 잔존/중복을 방지
+      if(_edit){ try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){} }
+      if(typeof fixPoints==='function')fixPoints();save();
       if(typeof gjSub!=='undefined') gjSub='records';
       try{
         if(bld._proLabel){
@@ -460,10 +471,16 @@ function saveMatch(mode){
       return;
     }
     if(mode==='ind'){
+      const _edit = (bld && bld._editCtx && bld._editCtx.mode==='ind') ? bld._editCtx : null;
+      if(_edit && Array.isArray(_edit.ids) && _edit.ids.length){
+        const _idSet = new Set(_edit.ids.map(x=>String(x)));
+        try{ indM = (indM||[]).filter(m=>!_idSet.has(String(m?._id||''))); }catch(e){}
+        try{ window.indM = indM; }catch(e){}
+      }
       const mA=bld.membersA||[];const mB=bld.membersB||[];
       if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
       if(!freeGames.length)return alert('경기를 1게임 이상 추가하세요.');
-      const sid=matchId;
+      const sid=_edit?.sid || matchId;
       freeGames.forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
@@ -479,7 +496,9 @@ function saveMatch(mode){
         if(typeof indM!=='undefined')indM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||''});
       });
       if(typeof _indInput!=='undefined'){_indInput.playerA=mA[0]?.name||'';_indInput.playerB=mB[0]?.name||'';}
-      BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
+      BLD[mode]=null;
+      if(_edit){ try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){} }
+      if(typeof fixPoints==='function')fixPoints();save();
       if(typeof indSub!=='undefined') indSub='records';
       render();
       return;
@@ -599,7 +618,13 @@ function saveMatch(mode){
   if(mode==='gj'){
     const mA=bld.membersA||[];const mB=bld.membersB||[];
     if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
-    const sid=matchId;
+    const _edit = (bld && bld._editCtx && bld._editCtx.mode==='gj') ? bld._editCtx : null;
+    if(_edit && Array.isArray(_edit.ids) && _edit.ids.length){
+      const _idSet = new Set(_edit.ids.map(x=>String(x)));
+      try{ gjM = (gjM||[]).filter(m=>!_idSet.has(String(m?._id||''))); }catch(e){}
+      try{ window.gjM = gjM; }catch(e){}
+    }
+    const sid=_edit?.sid || matchId;
     setsSnap.forEach((set, setIdx)=>{
       (set.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
@@ -616,7 +641,9 @@ function saveMatch(mode){
         gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
     });
-    BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
+    BLD[mode]=null;
+    if(_edit){ try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){} }
+    if(typeof fixPoints==='function')fixPoints();save();
     if(typeof gjSub!=='undefined') gjSub='records';
     try{
       if(bld._proLabel){
