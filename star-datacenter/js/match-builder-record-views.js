@@ -66,9 +66,12 @@ function _safeHeadToHeadSideFx(leftHex, rightHex){
 
 function _rememberStableIndGj(kind, arr){
   try{
-    if(!Array.isArray(arr) || !arr.length) return;
+    // (버그픽스) 빈 배열도 캐시에 저장 — 삭제 후 전부 비었을 때 캐시가 갱신되지 않아 복원되던 문제 수정
+    if(!Array.isArray(arr)) return;
     const key = kind === 'gj' ? '__lastGoodGjM' : '__lastGoodIndM';
     window[key] = arr.slice();
+    // 유효한 삭제/변경 상태임을 플래그로 기록 (restore가 덮어쓰지 못하도록)
+    window['__indGjCacheSet_' + kind] = true;
   }catch(e){}
 }
 function _restoreStableIndGj(kind){
@@ -78,6 +81,9 @@ function _restoreStableIndGj(kind){
         _rememberStableIndGj('ind', indM);
         return;
       }
+      // (버그픽스) 삭제로 인해 indM이 빈 배열이 된 경우에는 복원하지 않음
+      // — 캐시가 이미 갱신된 상태(삭제 후)라면 복원을 건너뜀
+      if(window.__indGjCacheSet_ind) return;
       const fromMem = Array.isArray(window.__lastGoodIndM) ? window.__lastGoodIndM : [];
       const fromLs = (typeof J==='function' ? (J('su_indm') || []) : []);
       const next = fromMem.length ? fromMem : (Array.isArray(fromLs) ? fromLs : []);
@@ -91,6 +97,8 @@ function _restoreStableIndGj(kind){
       _rememberStableIndGj('gj', gjM);
       return;
     }
+    // (버그픽스) 삭제로 인해 gjM이 빈 배열이 된 경우에는 복원하지 않음
+    if(window.__indGjCacheSet_gj) return;
     const fromMem = Array.isArray(window.__lastGoodGjM) ? window.__lastGoodGjM : [];
     const fromLs = (typeof J==='function' ? (J('su_gjm') || []) : []);
     const next = fromMem.length ? fromMem : (Array.isArray(fromLs) ? fromLs : []);
@@ -305,17 +313,19 @@ function indRecordsHTML(){
     const p2wins=s.games.filter(m=>m.wName===s.p2).length;
     const winner=p1wins>p2wins?s.p1:(p2wins>p1wins?s.p2:'');
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
-    const _sIdsJson=JSON.stringify(s.ids).replace(/"/g,"'");
     const _indSessKey = ('inds_' + String(s.key||`${s.d||''}|${s.p1||''}|${s.p2||''}`).replace(/[^\w\-]/g,'_')).slice(0,120);
     window._indSessCache = window._indSessCache || {};
     window._indSessCache[_indSessKey] = {...s};
     const actionOpts = [];
-    actionOpts.push(`{l:'📷 공유카드',fn:()=>openIndShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}','${_sIdsJson}')}`);
-    actionOpts.push(`{l:'✏️ 수정',fn:()=>openIndSessionPopup('${_indSessKey}')}`);
+    // (중요) onclick 속성 안에 큰따옴표(")가 들어가면 HTML 파싱이 깨져 SyntaxError가 발생할 수 있음.
+    // ids 배열(예: ['id1','id2'])을 그대로 넣고, 런타임에 JSON.stringify로 문자열로 변환해서 전달한다.
+    // (버그픽스) 비로그인자에게는 공유카드만 표시, 수정/삭제/이동은 관리자(로그인)만 볼 수 있음
+    actionOpts.push(`{l:'📷 공유카드',fn:()=>openIndShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}',JSON.stringify(${idsJson}))}`);
     if(isLoggedIn){
+      actionOpts.push(`{l:'✏️ 수정',fn:()=>openIndSessionPopup('${_indSessKey}')}`);
       actionOpts.push(`{l:'↗ 이동',fn:()=>{window._pendingMoveIds=${idsJson};openMoveIndPop(document.getElementById('_indActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}')||document.body,window._pendingMoveIds,'ind');}}`);
+      actionOpts.push(`{l:'🗑 삭제',fn:()=>deleteIndSession(${idsJson})}`);
     }
-    actionOpts.push(`{l:'🗑 삭제',fn:()=>deleteIndSession(${idsJson})}`);
     const _indActionBtnId = `_indActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}`;
     const actionBtn=`<button id="${_indActionBtnId}" class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openIndSessionActionPop(this,[${actionOpts.join(',')}])">⋯</button>`;
     const bulkCbInd=_indBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="ind" data-bids="${idsJson}" onchange="_indBulkCountUpdate('ind')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
@@ -483,12 +493,13 @@ function gjRecordsHTML(proOnly){
     const _gjActionBtnId = `_gjActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}`;
     const _gjSessKey = ('gjs_' + String((s.games.find(x=>x && x.sid)?.sid) || s.key || `${s.d||''}|${s.p1||''}|${s.p2||''}`).replace(/[^\w\-]/g,'_')).slice(0,120);
     const gjActionOpts = [];
+    // (버그픽스) 비로그인자에게는 공유카드만 표시, 수정/삭제/이동은 관리자(로그인)만 볼 수 있음
     gjActionOpts.push(`{l:'🎴 공유카드',fn:()=>openGJShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}',{proOnly:${proOnly?'true':'false'}})}`);
-    gjActionOpts.push(`{l:'✏️ 수정',fn:()=>openGJSessionPopup('${_gjSessKey}')}`);
     if(isLoggedIn){
+      gjActionOpts.push(`{l:'✏️ 수정',fn:()=>openGJSessionPopup('${_gjSessKey}')}`);
       gjActionOpts.push(`{l:'↗ 이동',fn:()=>{window._pendingMoveIds=${idsJson};openMoveIndPop(document.getElementById('${_gjActionBtnId}')||document.body,window._pendingMoveIds,'${_gjMoveCtx}');}}`);
+      gjActionOpts.push(`{l:'🗑 삭제',fn:()=>deleteGjSession(${idsJson})}`);
     }
-    gjActionOpts.push(`{l:'🗑 삭제',fn:()=>deleteGjSession(${idsJson})}`);
     const actionBtn=`<button id="${_gjActionBtnId}" class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openIndSessionActionPop(this,[${gjActionOpts.join(',')}])">⋯</button>`;
     const bulkCbGj=_gjBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_gjBulkKey}" data-bids="${idsJson}" onchange="_indBulkCountUpdate('${_gjBulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
     const _sidRaw = (s.games.find(x=>x && x.sid)?.sid) || s.key || `${s.d||''}|${s.p1||''}|${s.p2||''}`;

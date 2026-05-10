@@ -745,6 +745,17 @@ function delPlayer(){
 }
 
 function openRE(mode,idx){
+  // alias/필터 모드 보정
+  mode = (mode==='individual') ? 'ind' : mode;
+  // progj는 gjM 내 _proLabel=true 항목만 필터링된 인덱스일 수 있어 실제 인덱스로 매핑
+  if(mode==='progj'){
+    try{
+      const pool = (Array.isArray(gjM)?gjM.filter(x=>!!x._proLabel):[]);
+      const tgt = pool[idx] || null;
+      const realIdx = tgt ? gjM.indexOf(tgt) : -1;
+      if(realIdx>=0) idx = realIdx;
+    }catch(e){}
+  }
   reMode=mode;reIdx=idx;const allU=getAllUnivs();
   let body='',tit='';
   if(mode==='mini'){
@@ -825,6 +836,12 @@ function openRE(mode,idx){
       <label>A조 세트 승</label><input type="number" id="re-sa" value="${m.sa||0}">
       <label>B조 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
       <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
+  } else if(mode==='progj'){
+    const m=gjM[idx];tit='🏅 프로리그 끝장전 수정';
+    body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
+      <label>승자</label><input type="text" id="re-gj-w" value="${m.wName||''}">
+      <label>패자</label><input type="text" id="re-gj-l" value="${m.lName||''}">
+      <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">`;
   } else if(mode==='gj'){
     const m=gjM[idx];tit='⚔️ 끝장전 수정';
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
@@ -910,6 +927,12 @@ function saveRow(){
     const m=ckM[reIdx];m.d=d;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+  } else if(reMode==='progj'){
+    const m=gjM[reIdx];m.d=d;
+    m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;
+    m.lName=document.getElementById('re-gj-l')?.value.trim()||m.lName;
+    m.map=document.getElementById('re-gj-map')?.value.trim()||m.map;
+    m._proLabel=true;
   } else if(reMode==='gj'){
     const m=gjM[reIdx];m.d=d;
     m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;

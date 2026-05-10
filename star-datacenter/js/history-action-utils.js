@@ -99,14 +99,16 @@ function openRecActionMenu(ev, opts){
   try{ if(ev && ev.preventDefault) ev.preventDefault(); }catch(_){}
   try{ if(ev && ev.stopPropagation) ev.stopPropagation(); }catch(_){}
   const o=opts||{};
-  const _forcePersonal = ['ind','gj','progj'].includes(String(o.mode||''));
+  // 개인전 표기(alias)까지 포함해서 개인전/끝장전 계열은 항상 수정/삭제(그리고 가능하면 공유) 메뉴를 노출
+  const _forcePersonal = ['ind','gj','progj','individual'].includes(String(o.mode||''));
+  const _canShare = (o.canShare!==undefined && o.canShare!==null) ? !!o.canShare : (_forcePersonal ? true : false);
   const _canEdit = _forcePersonal ? true : !!o.canEdit;
   const _canDel = _forcePersonal ? true : !!o.canDel;
   const items=[];
   if(!o.hideDetail){
     items.push({t:'📂 상세 보기', d:'세트/경기 상세 열기', kind:'primary', on:()=>((typeof o.detailFn==='function') ? o.detailFn() : toggleDetail(o.key))});
   }
-  if(o.canShare) items.push({t:'🎴 공유카드', d:'공유용 카드 생성', kind:'accent', on:()=>{ if(typeof o.shareFn==='function') return o.shareFn(); if(window._openShareFromDetReg && o.key) return window._openShareFromDetReg(o.key); }});
+  if(_canShare) items.push({t:'🎴 공유카드', d:'공유용 카드 생성', kind:'accent', on:()=>{ if(typeof o.shareFn==='function') return o.shareFn(); if(window._openShareFromDetReg && o.key) return window._openShareFromDetReg(o.key); }});
   if(_canEdit) items.push({t:'✏️ 수정', d:'기록 내용 수정', kind:'normal', on:()=>((typeof o.editFn==='function') ? o.editFn() : openRE(o.mode,o.idx))});
   if(o.canMove) items.push({t:'↗ 이동', d:'다른 기록 분류로 이동', kind:'normal', on:()=>openMoveMatchPop(o._btnEl,o.mode,o.idx)});
   items.push({t:'📤 결과 복사', d:'점수와 결과 텍스트 복사', kind:'normal', on:()=>copyMatchResult(o.a,o.sa,o.b,o.sb,o.d,o.mode,o.idx)});

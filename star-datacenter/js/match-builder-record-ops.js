@@ -24,10 +24,19 @@ function _removeIndResult(wName, lName, date, map, matchId){
 }
 
 function deleteIndSession(ids){
-  if(!confirm(`${ids.length}경기를 삭제하시겠습니까?`))return;
+  if(!confirm(`${ids.length}경기를 삭제하시겠습니까?\n\n⚠️ 선수 성적에서 차감됩니다.`))return;
   indM.filter(m=>ids.includes(m._id)).forEach(m=>_removeIndResult(m.wName,m.lName,m.d||'',m.map||'-',m._id));
   indM=indM.filter(m=>!ids.includes(m._id));
+  // (버그픽스) 전역 window.indM 동기화 + 캐시 강제 갱신
+  // — _restoreStableIndGj가 삭제 후 렌더 시 이전 캐시로 복원하는 문제 방지
+  try{ window.indM = indM; }catch(e){}
+  try{ window.__lastGoodIndM = indM.slice(); window.__indGjCacheSet_ind = true; }catch(e){}
+  // (버그픽스) 과거 데이터 중 일부는 history의 matchId가 sid 등으로 저장돼 있어
+  // 개별 제거 로직으로는 "스트리머 상세 최근 경기"에 남는 경우가 있음.
+  // → 현재 데이터(indM/gjM 등) 기준으로 history를 재구성해서 완전히 동기화.
+  try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){}
   save();render();
+  try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
 }
 
 function moveIndSession(idsArr, srcMode, destMode, _batch=false){
@@ -105,7 +114,9 @@ function bulkDeleteInd(bulkKey){
   if(bulkKey==='ind') indM=indM.filter(m=>!keep.has(m._id));
   else gjM=gjM.filter(m=>!keep.has(m._id));
   if(typeof _bulkModes!=='undefined') _bulkModes[bulkKey]=false;
+  try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){}
   save();render();
+  try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
 }
 
 function openMoveIndPop(btn, idsArr, srcMode){
@@ -124,8 +135,16 @@ function openMoveIndPop(btn, idsArr, srcMode){
 }
 
 function deleteGjSession(idsArr){
-  gjM.filter(m=>idsArr.includes(m._id)).forEach(m=>_removeGjResult(m.wName,m.lName,m.d||'',m.map||'-',m.matchId||undefined));
-  gjM=gjM.filter(m=>!idsArr.includes(m._id));save();render();
+  if(!confirm(`${idsArr.length}경기를 삭제하시겠습니까?\n\n⚠️ 선수 성적에서 차감됩니다.`))return;
+  gjM.filter(m=>idsArr.includes(m._id)).forEach(m=>_removeGjResult(m.wName,m.lName,m.d||'',m.map||'-',m._id||m.matchId||undefined));
+  gjM=gjM.filter(m=>!idsArr.includes(m._id));
+  // (버그픽스) 전역 window.gjM 동기화 + 캐시 강제 갱신
+  // — _restoreStableIndGj가 삭제 후 렌더 시 이전 캐시로 복원하는 문제 방지
+  try{ window.gjM = gjM; }catch(e){}
+  try{ window.__lastGoodGjM = gjM.slice(); window.__indGjCacheSet_gj = true; }catch(e){}
+  try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){}
+  save();render();
+  try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
 }
 
 function bulkEditGjDate(idsJson, curDate){

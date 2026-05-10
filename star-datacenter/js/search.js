@@ -3186,17 +3186,40 @@ function pasteApply() {
     const _idDup = { count: 0, dup: [] };
     Object.entries(_indDateGroups).sort(([a],[b])=>b.localeCompare(a)).forEach(([d,group])=>{
       const indSid = genId();
+      // (요청사항) 개인전 자동인식 저장 시 입력 내용 중복은 "그냥 등록/중복 제거" 선택
       const gameSet = new Set();
-      const dedupedGames = group.filter(r => {
+      const dupRows = [];
+      group.forEach(r=>{
         const key = `${r.wPlayer.name}|${r.lPlayer.name}|${r.map||'-'}`;
-        if (gameSet.has(key)) {
-          _idDup.count++;
-          _idDup.dup.push({ w: r.wPlayer.name, l: r.lPlayer.name, m: r.map });
-          return false;
-        }
-        gameSet.add(key);
-        return true;
+        if(gameSet.has(key)) dupRows.push({ w:r.wPlayer.name, l:r.lPlayer.name, m:r.map||'' });
+        else gameSet.add(key);
       });
+      let dedupedGames = group;
+      if(dupRows.length){
+        const sample = dupRows.slice(0,5).map(x=>{
+          const mm = (x && x.m) ? String(x.m).trim() : '';
+          return String(x.w||'') + ' vs ' + String(x.l||'') + (mm ? (' ('+mm+')') : '');
+        }).join('\n');
+        const extra = (dupRows.length>5) ? ('\n... 외 ' + (dupRows.length-5) + '건') : '';
+        const okAll = confirm(
+          '⚠️ 입력 내용에 중복 경기 ' + dupRows.length + '건이 있습니다.\n'
+          + sample + extra
+          + '\n\n그래도 중복 포함해서 모두 저장할까요?\n(확인=모두 저장 / 취소=중복 제거 후 저장)'
+        );
+        if(!okAll){
+          const gameSet2 = new Set();
+          dedupedGames = group.filter(r => {
+            const key = `${r.wPlayer.name}|${r.lPlayer.name}|${r.map||'-'}`;
+            if (gameSet2.has(key)) {
+              _idDup.count++;
+              _idDup.dup.push({ w: r.wPlayer.name, l: r.lPlayer.name, m: r.map });
+              return false;
+            }
+            gameSet2.add(key);
+            return true;
+          });
+        }
+      }
       dedupedGames.forEach(r => {
         r._id = genId();
         if(!r._isTeam) applyGameResult(r.wPlayer.name, r.lPlayer.name, d, r.map || '-', r._id, '', '', _pasteModeLabel);
@@ -3204,7 +3227,10 @@ function pasteApply() {
       const games = dedupedGames.map(r => ({ _id: r._id, sid: indSid, d, wName: r.wPlayer.name, lName: r.lPlayer.name, map: r.map && r.map !== '-' ? r.map : '', ...(r._lineMemo ? { memo: r._lineMemo } : {}) }));
       if(games.length) indM.unshift(...games);
     });
-    if (_idDup.count > 0) alert(`개인전 중복 ${_idDup.count}건 제거됨 (중복: ${_idDup.dup.map(x=>`${x.w} vs ${x.l}`).join(', ')})`);
+    if (_idDup.count > 0){
+      const list = (_idDup.dup||[]).map(x=>String(x.w||'')+' vs '+String(x.l||'')).join(', ');
+      alert('개인전 중복 ' + _idDup.count + '건 제거됨 (중복: ' + list + ')');
+    }
   } else if (mode === 'gj') {
     const _gjPro = !!window._gjProPaste;
     // _lineDate 있으면 날짜별 다른 sid로 분리 저장

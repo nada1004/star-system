@@ -612,6 +612,46 @@ function openMoveMatchPop(btn,srcMode,srcIdx){
 
 function delRec(mode,i){
   if(!confirm('삭제하시겠습니까?\n\n⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.'))return;
+  // 개인전/끝장전/프로 끝장전은 기존 delRec 로직(팀 대전 revertMatchRecord)과 구조가 달라서
+  // 별도 삭제 처리 필요 (요청사항: 삭제가 안됨 해결)
+  const _m = String(mode||'');
+  if(_m==='ind' || _m==='individual'){
+    const m = (typeof indM!=='undefined' && indM) ? indM[i] : null;
+    if(!m) return;
+    try{ if(typeof _removeIndResult==='function') _removeIndResult(m.wName,m.lName,m.d||'',m.map||'-',m._id); }catch(e){}
+    try{ indM.splice(i,1); }catch(e){}
+    // (버그픽스) 전역 window.indM 동기화 + 캐시 강제 갱신
+    // — _restoreStableIndGj가 삭제 후 render 시 이전 캐시로 복원하는 문제 방지
+    try{ window.indM = indM; }catch(e){}
+    try{ window.__lastGoodIndM = indM.slice(); window.__indGjCacheSet_ind = true; }catch(e){}
+    try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){}
+    save();render();
+    try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
+    return;
+  }
+  if(_m==='gj' || _m==='progj'){
+    try{
+      const isPro = (_m==='progj');
+      const pool = (typeof gjM!=='undefined' && Array.isArray(gjM))
+        ? gjM.filter(x=>isPro ? !!x._proLabel : !x._proLabel)
+        : [];
+      const tgt = pool[i] || null;
+      if(!tgt) return;
+      const gi = (typeof gjM!=='undefined' && Array.isArray(gjM)) ? gjM.indexOf(tgt) : -1;
+      if(gi>=0){
+        try{ if(typeof _removeGjResult==='function') _removeGjResult(tgt.wName,tgt.lName,tgt.d||'',tgt.map||'-',tgt._id||tgt.matchId||undefined); }catch(e){}
+        gjM.splice(gi,1);
+      }
+    }catch(e){}
+    // (버그픽스) 전역 window.gjM 동기화 + 캐시 강제 갱신
+    // — _restoreStableIndGj가 삭제 후 render 시 이전 캐시로 복원하는 문제 방지
+    try{ window.gjM = gjM; }catch(e){}
+    try{ window.__lastGoodGjM = gjM.slice(); window.__indGjCacheSet_gj = true; }catch(e){}
+    try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){}
+    save();render();
+    try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
+    return;
+  }
   let matchObj=null;
   if(mode==='mini')     { matchObj=miniM[i];  miniM.splice(i,1); }
   else if(mode==='univm'){ matchObj=univM[i];  univM.splice(i,1); }

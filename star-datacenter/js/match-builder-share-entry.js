@@ -2,7 +2,11 @@
   window.MatchBuilderModules = window.MatchBuilderModules || {};
 
   function openIndShareCard(p1, p2, p1wins, p2wins, date, winner, idsJson) {
-    const ids = idsJson ? JSON.parse(idsJson.replace(/'/g,'"')) : null;
+    const ids = idsJson ? (()=>{
+      try{ return JSON.parse(idsJson); }catch(e){}
+      try{ return JSON.parse(String(idsJson).replace(/'/g,'"')); }catch(e){}
+      return null;
+    })() : null;
     const games = ids
       ? indM.filter(m => ids.includes(m._id))
       : indM.filter(m => {

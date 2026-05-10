@@ -150,6 +150,22 @@ function gjDirectSave(){
   const gi=_gjInput;
   if(!gi.playerA||!gi.playerB){alert('스트리머 두 명을 선택하세요.');return;}
   if(!gi.games.length){alert('경기 결과를 1경기 이상 입력하세요.');return;}
+  // 🔧 저장 시점에 "현재 탭 컨텍스트" 기준으로 프로리그 끝장전 여부를 확정
+  // - 전역 _gjProMode가 탭 전환 타이밍/렌더 순서에 따라 뒤바뀌는 경우가 있어,
+  //   개인전 끝장전이 프로리그 끝장전으로 저장되거나(또는 그 반대) 저장 후 탭이 잘못 이동되는 문제가 발생할 수 있음
+  let _proMode = !!_gjProMode;
+  try{
+    if(typeof curTab!=='undefined'){
+      if(curTab==='pro'){
+        // 프로리그 탭 > 프로 끝장전 하위탭
+        if(typeof _mergedProSub==='undefined' || _mergedProSub==='gj') _proMode = true;
+      }else if(curTab==='ind' || curTab==='gj'){
+        // 개인전/끝장전 탭
+        _proMode = false;
+      }
+    }
+  }catch(e){}
+  _gjProMode = _proMode;
   const sid=genId();
   const dateVal=gi.date||new Date().toISOString().slice(0,10);
   const newGames=gi.games.map(w=>({
@@ -157,10 +173,11 @@ function gjDirectSave(){
     wName:w==='A'?gi.playerA:gi.playerB,
     lName:w==='A'?gi.playerB:gi.playerA,
     map:'',
-    ...(_gjProMode?{_proLabel:true}:{})
+    ...(_proMode?{_proLabel:true}:{})
   }));
   newGames.forEach(m=>{
-    applyGameResult(m.wName,m.lName,dateVal,'',sid,'','',_gjProMode?'프로리그끝장전':'끝장전');
+    // 게임 단위로 고유 matchId를 부여해야 history/중복체크/삭제가 정상 동작함
+    applyGameResult(m.wName,m.lName,dateVal,'',m._id,'','',_proMode?'프로리그끝장전':'끝장전');
   });
   gjM.unshift(...newGames);
   const p1w=gi.games.filter(g=>g==='A').length, p2w=gi.games.filter(g=>g==='B').length;
@@ -168,7 +185,7 @@ function gjDirectSave(){
   _gjInput={date:gi.date,playerA:gi.playerA,playerB:gi.playerB,games:[]};
   save();
   gjSub='records';
-  if(_gjProMode){
+  if(_proMode){
     try{ curTab='pro'; }catch(e){}
     try{ _mergedProSub='gj'; }catch(e){}
   }else{
@@ -177,9 +194,10 @@ function gjDirectSave(){
   }
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   render();
+  try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
   setTimeout(()=>{
     if(confirm(`✅ ${gi.games.length}경기 저장 완료!\n공유카드를 열겠습니까?`)){
-      openGJShareCard(gi.playerA,gi.playerB,p1w,p2w,dateVal,winner,{proOnly:_gjProMode});
+      openGJShareCard(gi.playerA,gi.playerB,p1w,p2w,dateVal,winner,{proOnly:_proMode});
     }
   },200);
 }

@@ -38,14 +38,17 @@ function _removeGjResult(wName, lName, date, map, matchId){
   if(!w.history)w.history=[];
   if(!l.history)l.history=[];
   const nm=v=>(!v||v==='-')?'-':v;
-  const wi=matchId
-    ? w.history.findIndex(h=>h.matchId===matchId)
-    : w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&(date===''||h.date===date)&&nm(h.map)===nm(map));
+  // matchId 우선, 없으면(또는 못 찾으면) 날짜/상대/맵 기반으로 최대한 제거
+  let wi = -1;
+  if(matchId) wi = w.history.findIndex(h=>h.matchId===matchId);
+  if(wi<0) wi = w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&(date===''||h.date===date)&&nm(h.map)===nm(map));
+  if(wi<0) wi = w.history.findIndex(h=>h.result==='승'&&h.opp===lName&&(date===''||h.date===date)); // 맵 누락/불일치 fallback
   let delta=0;
   if(wi>=0){delta=w.history[wi].eloDelta||0;w.history.splice(wi,1);}
-  const li=matchId
-    ? l.history.findIndex(h=>h.matchId===matchId)
-    : l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&(date===''||h.date===date)&&nm(h.map)===nm(map));
+  let li = -1;
+  if(matchId) li = l.history.findIndex(h=>h.matchId===matchId);
+  if(li<0) li = l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&(date===''||h.date===date)&&nm(h.map)===nm(map));
+  if(li<0) li = l.history.findIndex(h=>h.result==='패'&&h.opp===wName&&(date===''||h.date===date));
   if(li>=0)l.history.splice(li,1);
   if(wi>=0||li>=0){
     if(w.win>0)w.win--;if(l.loss>0)l.loss--;
@@ -56,12 +59,17 @@ function _removeGjResult(wName, lName, date, map, matchId){
 
 function deleteGjGame(idx){
   const m=gjM[idx];if(!m)return;
-  _removeGjResult(m.wName,m.lName,m.d||'',m.map||'-',m.matchId||undefined);
-  gjM.splice(idx,1);save();render();
+  _removeGjResult(m.wName,m.lName,m.d||'',m.map||'-',m._id||m.matchId||undefined);
+  gjM.splice(idx,1);
+  try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){}
+  save();render();
+  try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
 }
 
 function rGJ(C,T,proOnly,proInput){
-  const _newProMode=!!(proOnly&&proInput);
+  // proOnly=true면 "프로리그 끝장전" 컨텍스트로 간주
+  // (기존) proOnly && proInput 일 때만 pro 모드로 잡혀 탭 전환/저장 시 모드가 뒤바뀌는 문제가 발생할 수 있음
+  const _newProMode=!!proOnly;
   if(_newProMode!==_gjProMode){_gjInput={date:'',playerA:'',playerB:'',games:[]};BLD['gj']=null;}
   _gjProMode=_newProMode;
   T.innerText=proOnly?'🏅 프로리그 끝장전':'⚔️ 끝장전';
