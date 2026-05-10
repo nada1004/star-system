@@ -60,6 +60,21 @@ let _whHistory    = [];
 try { _whHistory = JSON.parse(localStorage.getItem('su_wh_hist') || '[]'); } catch(e) {}
 let _whStats      = {};
 try { _whStats    = JSON.parse(localStorage.getItem('su_wh_stats') || '{}'); } catch(e) {}
+let _whInputCache = localStorage.getItem('su_wh_input') || '';
+// MiscStore에서 비동기 로드 (IDB 우선)
+(async function _whLoadFromIdb(){
+  try{
+    if(typeof MiscStore === 'undefined') return;
+    const speed = await MiscStore.get('su_wh_speed');
+    if(speed != null) _whSpinDur = _WH_SPEED_DUR[+speed] ?? 3500;
+    const hist = await MiscStore.get('su_wh_hist');
+    if(Array.isArray(hist)) _whHistory = hist;
+    const stats = await MiscStore.get('su_wh_stats');
+    if(stats && typeof stats === 'object') _whStats = stats;
+    const inp = await MiscStore.get('su_wh_input');
+    if(typeof inp === 'string') _whInputCache = inp;
+  }catch(e){}
+})();
 
 // ─── 가중치 파서 ("이름*2" 지원) ─────────────────────────────────────────────
 function _whParseWeightedCSV(text){
@@ -108,7 +123,7 @@ function _whInit() {
 
 // ─── 렌더 ────────────────────────────────────────────────────────────────────
 function _whRender(root) {
-  const savedInput = localStorage.getItem('su_wh_input') || '';
+  const savedInput = (_whInputCache || '');
   const speedIdx   = _WH_SPEED_DUR.indexOf(_whSpinDur);
   const sIdx       = speedIdx >= 0 ? speedIdx : 2;
   const parsed = _whParseWeightedCSV(savedInput);
@@ -185,7 +200,7 @@ function _whDraw(angle) {
   const cv = document.getElementById('wh-canvas');
   if (!cv) return;
   const ctx = cv.getContext('2d');
-  const raw = (document.getElementById('wh-input')||{}).value || (localStorage.getItem('su_wh_input') || '');
+  const raw = (document.getElementById('wh-input')||{}).value || ((_whInputCache || ''));
   const parsed = _whParseWeightedCSV(raw);
   const entries = parsed.entries;
   const totalW = parsed.total || 0;
@@ -233,7 +248,7 @@ function _whDraw(angle) {
 
 // ─── 스핀 ────────────────────────────────────────────────────────────────────
 function _whSpin() {
-  const raw = (document.getElementById('wh-input')||{}).value || (localStorage.getItem('su_wh_input') || '');
+  const raw = (document.getElementById('wh-input')||{}).value || ((_whInputCache || ''));
   const parsed = _whParseWeightedCSV(raw);
   const entries = parsed.entries;
   const totalW = parsed.total || 0;
@@ -325,8 +340,7 @@ function _whAddHistory(name) {
   _whHistory.unshift({ name: name, time: time });
   if (_whHistory.length > 20) _whHistory = _whHistory.slice(0, 20);
   _whStats[name] = (_whStats[name] || 0) + 1;
-  try { localStorage.setItem('su_wh_hist', JSON.stringify(_whHistory)); } catch(e){}
-  try { localStorage.setItem('su_wh_stats', JSON.stringify(_whStats)); } catch(e){}
+  try { if(typeof MiscStore!=='undefined'){ MiscStore.set('su_wh_hist', _whHistory); MiscStore.set('su_wh_stats', _whStats); } else { localStorage.setItem('su_wh_hist', JSON.stringify(_whHistory)); localStorage.setItem('su_wh_stats', JSON.stringify(_whStats)); } } catch(e){}
   // 히스토리 박스 갱신
   const root = document.getElementById('wh-root');
   if (root) {
@@ -341,7 +355,7 @@ function _whAddHistory(name) {
 function _whClearHistory() {
   if (!_whHistory.length || !confirm('기록을 모두 삭제할까요?')) return;
   _whHistory = []; _whStats = {};
-  localStorage.removeItem('su_wh_hist'); localStorage.removeItem('su_wh_stats');
+  try{ if(typeof MiscStore!=='undefined'){ MiscStore.delete('su_wh_hist'); MiscStore.delete('su_wh_stats'); } else { localStorage.removeItem('su_wh_hist'); localStorage.removeItem('su_wh_stats'); } }catch(e){}
   const root = document.getElementById('wh-root');
   if (root) { const hbox = root.querySelector('.wh-hist-box'); if (hbox) hbox.remove(); }
 }
@@ -350,7 +364,7 @@ function _whClearHistory() {
 function _whRefreshChips(){
   const box = document.querySelector('#wh-root .wh-chipbox');
   if(!box) return;
-  const raw = (document.getElementById('wh-input')||{}).value || (localStorage.getItem('su_wh_input') || '');
+  const raw = (document.getElementById('wh-input')||{}).value || ((_whInputCache || ''));
   const parsed = _whParseWeightedCSV(raw);
   box.innerHTML = (parsed.entries.map(function(it){
     const nmRaw = (it.name||'');
@@ -361,7 +375,8 @@ function _whRefreshChips(){
 }
 
 function _whOnInput(val, ev) {
-  try { localStorage.setItem('su_wh_input', val); } catch(e) {}
+  _whInputCache = val;
+  try { if(typeof MiscStore!=='undefined') MiscStore.set('su_wh_input', val); else localStorage.setItem('su_wh_input', val); } catch(e) {}
   // (IME 한글 입력) 조합 중에는 DOM 변경을 최소화
   if(ev && ev.isComposing) return;
   _whRefreshChips();
@@ -370,11 +385,11 @@ function _whOnInput(val, ev) {
 function _whShuffleInput() {
   if (_whSpinning) return;
   const inp = document.getElementById('wh-input');
-  const raw = inp ? inp.value : (localStorage.getItem('su_wh_input') || '');
+  const raw = inp ? inp.value : ((_whInputCache || ''));
   const tokens = raw.split(',').map(function(v){return v.trim();}).filter(Boolean);
   const arr = tokens;
   for (var i = arr.length-1; i > 0; i--) { var j = Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
-  if (inp) { inp.value = arr.join(', '); localStorage.setItem('su_wh_input', inp.value); }
+  if (inp) { inp.value = arr.join(', '); try{ if(typeof MiscStore!=='undefined') MiscStore.set('su_wh_input', inp.value); else localStorage.setItem('su_wh_input', inp.value); }catch(e){} }
   _whOnInput(inp.value);
 }
 function _whUpdateSpeed(val) {
@@ -382,7 +397,7 @@ function _whUpdateSpeed(val) {
   _whSpinDur = _WH_SPEED_DUR[idx];
   const lbl = document.getElementById('wh-speed-lbl');
   if (lbl) lbl.textContent = _WH_SPEED_LBLS[idx];
-  try { localStorage.setItem('su_wh_speed', idx); } catch(e) {}
+  try { if(typeof MiscStore!=='undefined') MiscStore.set('su_wh_speed', idx); else localStorage.setItem('su_wh_speed', idx); } catch(e) {}
 }
 
 // ─── 사운드 ────────────────────────────────────────────────────────────────────

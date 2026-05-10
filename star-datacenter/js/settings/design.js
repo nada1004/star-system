@@ -180,10 +180,16 @@
       }catch(e){}
     };
 
+    // 디자인/탭/효과 설정 변경 후 원격 동기화 트리거 헬퍼
+    function _touchPrefs(){
+      try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
+    }
+
     window.cfgSetDesignV2 = function(on){
       try{ localStorage.setItem('su_design_v2', on?'1':'0'); }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(!!on); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetDesignV2Preset = function(v){
       try{ localStorage.setItem('su_design_v2_preset', String(v||'base')); }catch(e){}
@@ -197,6 +203,7 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetDesignV2Bright = function(v){
       try{
@@ -205,6 +212,7 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetDesignV2Dark = function(v){
       try{
@@ -213,6 +221,7 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgApplyDesignV2TonePreset = function(key){
       const k = String(key||'base');
@@ -228,6 +237,7 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetDesignV2Color = function(varName, value){
       try{
@@ -239,6 +249,7 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgResetDesignV2Colors = function(){
       try{
@@ -249,6 +260,7 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetDesignV2Effect = function(effectName, value){
       try{
@@ -260,17 +272,20 @@
       }catch(e){}
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
 
     window.cfgSetTabColorEnabled = function(on){
       try{ localStorage.setItem('su_tab_color_enabled', on ? '1' : '0'); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetTabColorMode = function(mode){
       var v = String(mode||'fill');
       if(['fill','soft','outline','solid'].indexOf(v) === -1) v = 'fill';
       try{ localStorage.setItem('su_tab_color_mode', v); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetTabColorLength = function(v){
       try{
@@ -278,6 +293,7 @@
         localStorage.setItem('su_tab_color_length', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetTabColorTail = function(v){
       try{
@@ -285,16 +301,19 @@
         localStorage.setItem('su_tab_color_tail', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetRecSideFxEnabled = function(on){
       try{ localStorage.setItem('su_rec_side_fx_on', on ? '1' : '0'); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetRecSideFxMode = function(mode){
       var v = String(mode||'soft');
       if(['soft','glow','panel','line','ribbon','frame','spotlight'].indexOf(v) === -1) v = 'soft';
       try{ localStorage.setItem('su_rec_side_fx_mode', v); }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetRecSideFxIntensity = function(v){
       try{
@@ -302,6 +321,7 @@
         localStorage.setItem('su_rec_side_fx_intensity', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetRecSideFxLength = function(v){
       try{
@@ -310,6 +330,7 @@
         window.applyRecSideFxLengthVar && window.applyRecSideFxLengthVar(n);
       }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetRecSideFxTail = function(v){
       try{
@@ -317,6 +338,7 @@
         localStorage.setItem('su_rec_side_fx_tail', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetRecSideFxSoftness = function(v){
       try{
@@ -324,6 +346,7 @@
         localStorage.setItem('su_rec_side_fx_softness', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.cfgSetRecSideFxEdge = function(v){
       try{
@@ -331,6 +354,7 @@
         localStorage.setItem('su_rec_side_fx_edge', String(n));
       }catch(e){}
       try{ render(); }catch(e){}
+      _touchPrefs();
     };
     window.applyRecSideFxLengthVar = function(n){
       try{

@@ -94,6 +94,18 @@ let _gcHistory = {
   map:    JSON.parse(localStorage.getItem('su_gc_hist_m')||'[]'),
   ladder: JSON.parse(localStorage.getItem('su_gc_hist_l')||'[]')
 };
+// MiscStore에서 비동기 로드 (IDB 우선)
+(async function _gcLoadFromIdb(){
+  try{
+    if(typeof MiscStore==='undefined') return;
+    const p = await MiscStore.get('su_gc_hist_p');
+    if(Array.isArray(p)) _gcHistory.player = p;
+    const m = await MiscStore.get('su_gc_hist_m');
+    if(Array.isArray(m)) _gcHistory.map = m;
+    const l = await MiscStore.get('su_gc_hist_l');
+    if(Array.isArray(l)) _gcHistory.ladder = l;
+  }catch(e){}
+})();
 
 // ─────────────────────────────────────────────────────────────
 // 🎁 뽑기(5×5) — 룰렛 탭 내 서브탭
@@ -901,7 +913,7 @@ function _gcSpin() {
       const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
       _gcHistory[histKey].push({ name: displayName, time: timeStr });
       if (_gcHistory[histKey].length > 30) _gcHistory[histKey] = _gcHistory[histKey].slice(-30);
-      localStorage.setItem(`su_gc_hist_${histKey==='player'?'p':'m'}`, JSON.stringify(_gcHistory[histKey]));
+      try{ const _hk=histKey==='player'?'p':'m'; if(typeof MiscStore!=='undefined') MiscStore.set(`su_gc_hist_${_hk}`, _gcHistory[histKey]); else localStorage.setItem(`su_gc_hist_${_hk}`, JSON.stringify(_gcHistory[histKey])); }catch(e){}
       _gcRefreshHistory();
 
       const resultCard = document.getElementById('gc-result-card');
@@ -953,7 +965,7 @@ function _gcRefreshHistory() {
 function _gcClearHistory() {
   const key = _gcTab === 'player' ? 'player' : 'map';
   _gcHistory[key] = [];
-  localStorage.removeItem(`su_gc_hist_${key==='player'?'p':'m'}`);
+  try{ const _hk=key==='player'?'p':'m'; if(typeof MiscStore!=='undefined') MiscStore.delete(`su_gc_hist_${_hk}`); else localStorage.removeItem(`su_gc_hist_${_hk}`); }catch(e){}
   _gcRefreshHistory();
 }
 
@@ -1285,7 +1297,7 @@ function _ldAnimate(nameIdx) {
       const timeStr = String(now2.getHours()).padStart(2,'0') + ':' + String(now2.getMinutes()).padStart(2,'0');
       _gcHistory.ladder.push({ name: resName, item: resItem, time: timeStr });
       if (_gcHistory.ladder.length > 30) _gcHistory.ladder = _gcHistory.ladder.slice(-30);
-      localStorage.setItem('su_gc_hist_l', JSON.stringify(_gcHistory.ladder));
+      try{ if(typeof MiscStore!=='undefined') MiscStore.set('su_gc_hist_l', _gcHistory.ladder); else localStorage.setItem('su_gc_hist_l', JSON.stringify(_gcHistory.ladder)); }catch(e){}
       _ldRefreshHistory();
 
       // 효과음
@@ -1335,7 +1347,7 @@ function _ldRefreshHistory() {
 
 function _ldClearHistory() {
   _gcHistory.ladder = [];
-  localStorage.removeItem('su_gc_hist_l');
+  try{ if(typeof MiscStore!=='undefined') MiscStore.delete('su_gc_hist_l'); else localStorage.removeItem('su_gc_hist_l'); }catch(e){}
   _ldRefreshHistory();
 }
 

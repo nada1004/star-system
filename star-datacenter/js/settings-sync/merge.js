@@ -29,9 +29,11 @@
 
       // 대용량 데이터(기록/캐시/스토어)
       const denyPrefix = [
-        'su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm',
+        'su_mm','su_um','su_cm','su_ck','su_ptn','su_tn','su_ttm','su_indm','su_gjm',
         'su_hist_ext_','su_match_store_','su_match_store_meta_','su_hist_ext_meta_','su_sharecard_cache_'
       ];
+      // su_pro 자체(프로리그 대용량 데이터)는 제외, su_profile_/su_procomp_ 등 설정키는 허용
+      if(k === 'su_pro') return false;
       for(const p of denyPrefix){ if(k.startsWith(p)) return false; }
 
       return true;

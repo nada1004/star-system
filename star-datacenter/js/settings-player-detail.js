@@ -309,22 +309,31 @@ function _renderCfgPdSection(){
     </div>`;
 }
 
+function _pdTouchPrefs(){
+  try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
+}
 function _setPdFontSize(size){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.font_size=size;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   _renderCfgPdSection();
+  try{_refreshOpenDetailModals();}catch(e){}
+  _pdTouchPrefs();
 }
 function _setPdProfileSize(val){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.profile_size=parseInt(val)||100;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
+  try{_refreshOpenDetailModals();}catch(e){}
+  _pdTouchPrefs();
 }
 function _setPdColorPreset(cp){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.color_preset=cp;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   _renderCfgPdSection();
+  try{_refreshOpenDetailModals();}catch(e){}
+  _pdTouchPrefs();
 }
 function _refreshOpenDetailModals(){
   try{
@@ -346,6 +355,7 @@ function _setPdHeaderBg(key,val){
   else s[key]=String(val||'').trim();
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   try{ _refreshOpenDetailModals(); }catch(e){}
+  _pdTouchPrefs();
 }
 function _setUdHeaderBg(key,val){
   const s=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
@@ -353,6 +363,7 @@ function _setUdHeaderBg(key,val){
   else s[key]=String(val||'').trim();
   localStorage.setItem('su_ud_style',JSON.stringify(s));
   try{ _refreshOpenDetailModals(); }catch(e){}
+  _pdTouchPrefs();
 }
 function _setMdTeamHeaderColor(mode, side, val){
   const modeKey = String(mode||'').trim();
@@ -364,11 +375,14 @@ function _setMdTeamHeaderColor(mode, side, val){
   try{ if(typeof _applyOpenHistDetailTeamHeaderColors==='function') _applyOpenHistDetailTeamHeaderColors(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
   try{ _renderCfgPdSection(); }catch(e){}
+  _pdTouchPrefs();
 }
 function _setPdTint(type,val){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s[type+'_tint']=parseInt(val)||0;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
+  try{_refreshOpenDetailModals();}catch(e){}
+  _pdTouchPrefs();
 }
 function _setPdUnivDarken(univ,val,idx){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
@@ -377,21 +391,29 @@ function _setPdUnivDarken(univ,val,idx){
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   const el=document.getElementById('pd-dv-'+idx);
   if(el) el.textContent=Math.round(val*100)+'%';
+  try{_refreshOpenDetailModals();}catch(e){}
+  _pdTouchPrefs();
 }
 function _setPdCloseOnBadge(checked){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.close_on_badge=!!checked;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
+  try{_refreshOpenDetailModals();}catch(e){}
+  _pdTouchPrefs();
 }
 function _setPdCloseOnMatchPlayer(checked){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.close_on_match_player=!!checked;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
+  try{_refreshOpenDetailModals();}catch(e){}
+  _pdTouchPrefs();
 }
 function _setPdHeaderClickClose(checked){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.header_click_close=!!checked;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
+  try{_refreshOpenDetailModals();}catch(e){}
+  _pdTouchPrefs();
 }
 function cfgPdSetModeBadgeColor(mode, color){
   try{

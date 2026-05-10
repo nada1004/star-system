@@ -228,7 +228,11 @@
 
   // (요청사항) 설정 변경 시 자동 원격 저장(디바운스)
   function _prefsAutoEnabled(){
-    try{ return localStorage.getItem(LS.prefsAutoPush) === '1'; }catch(e){ return false; }
+    // 기본값 true: 명시적으로 '0'으로 꺼야만 비활성화
+    try{
+      const v = localStorage.getItem(LS.prefsAutoPush);
+      return v === null ? true : v === '1';
+    }catch(e){ return true; }
   }
   function setPrefsAutoPush(on){
     try{ localStorage.setItem(LS.prefsAutoPush, on ? '1' : '0'); }catch(e){}

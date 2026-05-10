@@ -345,10 +345,21 @@ var _brdPhotoCache = (function(){
     return raw ? JSON.parse(raw) : {};
   }catch(e){ return {}; }
 })();
+// MiscStore에서 비동기 로드 (IDB 우선)
+(async function _brdPhotoCacheLoadFromIdb(){
+  try{
+    if(typeof MiscStore==='undefined') return;
+    const v = await MiscStore.get('su_brd_photo_cache');
+    if(v && typeof v === 'object') _brdPhotoCache = v;
+  }catch(e){}
+})();
 function _brdPhotoCacheSet(name, url){
   if(url) _brdPhotoCache[name]=url;
   else delete _brdPhotoCache[name];
-  try{ localStorage.setItem('su_brd_photo_cache', JSON.stringify(_brdPhotoCache)); }catch(e){}
+  try{
+    if(typeof MiscStore!=='undefined') MiscStore.set('su_brd_photo_cache', _brdPhotoCache);
+    else localStorage.setItem('su_brd_photo_cache', JSON.stringify(_brdPhotoCache));
+  }catch(e){}
 }
 function _getBrdPhoto(p){
   return p.photo

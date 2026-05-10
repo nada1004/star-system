@@ -1,14 +1,22 @@
 (function(){
   const MATCH_DB_NAME='star_datacenter_matches';
-  const MATCH_DB_VER=3;
+  const MATCH_DB_VER=4;
   const MATCH_STORE='match_payloads';
   const MATCH_KEY='main';
   const PLAYER_STORE='player_payloads';
   const PLAYER_KEY='main';
+  const MISC_STORE='misc_payloads';
   const MATCH_META_KEY='su_match_store_meta_v1';
   const PLAYER_META_KEY='su_player_store_meta_v1';
   const MATCH_LEGACY_KEYS=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm'];
   const PLAYER_LEGACY_KEYS=['su_p','su_pp'];
+  // misc store에서 관리하는 localStorage 레거시 키 목록
+  const MISC_LEGACY_KEYS=[
+    'su_wh_hist','su_wh_stats','su_wh_input','su_wh_speed',
+    'su_dr_hist','su_dr_n',
+    'su_gc_hist_p','su_gc_hist_m','su_gc_hist_l',
+    'su_brd_photo_cache'
+  ];
 
   function _matchStoreDefault(){
     return {
@@ -279,6 +287,7 @@
           const db=ev.target.result;
           if(!db.objectStoreNames.contains(MATCH_STORE)) db.createObjectStore(MATCH_STORE);
           if(!db.objectStoreNames.contains(PLAYER_STORE)) db.createObjectStore(PLAYER_STORE);
+          if(!db.objectStoreNames.contains(MISC_STORE)) db.createObjectStore(MISC_STORE);
         };
         req.onsuccess=()=>resolve(req.result);
         req.onerror=()=>reject(req.error||new Error('indexedDB open failed'));
@@ -361,6 +370,59 @@
         tx.onerror=()=>reject(tx.error||new Error('player indexedDB delete failed'));
       }catch(e){ reject(e); }
     });
+  }
+
+  // ── misc store helpers ──────────────────────────────────────────
+  async function _miscIdbGet(key){
+    const db=await _openDb();
+    if(!db || !db.objectStoreNames.contains(MISC_STORE)) return undefined;
+    return await new Promise((resolve,reject)=>{
+      try{
+        const tx=db.transaction(MISC_STORE,'readonly');
+        const req=tx.objectStore(MISC_STORE).get(key);
+        req.onsuccess=()=>resolve(req.result);
+        tx.onerror=()=>reject(tx.error||new Error('misc indexedDB get failed'));
+      }catch(e){ reject(e); }
+    });
+  }
+  async function _miscIdbSet(key, value){
+    const db=await _openDb();
+    if(!db || !db.objectStoreNames.contains(MISC_STORE)) return false;
+    return await new Promise((resolve,reject)=>{
+      try{
+        const tx=db.transaction(MISC_STORE,'readwrite');
+        tx.objectStore(MISC_STORE).put(value, key);
+        tx.oncomplete=()=>resolve(true);
+        tx.onerror=()=>reject(tx.error||new Error('misc indexedDB set failed'));
+      }catch(e){ reject(e); }
+    });
+  }
+  async function _miscIdbDelete(key){
+    const db=await _openDb();
+    if(!db || !db.objectStoreNames.contains(MISC_STORE)) return false;
+    return await new Promise((resolve,reject)=>{
+      try{
+        const tx=db.transaction(MISC_STORE,'readwrite');
+        tx.objectStore(MISC_STORE).delete(key);
+        tx.oncomplete=()=>resolve(true);
+        tx.onerror=()=>reject(tx.error||new Error('misc indexedDB delete failed'));
+      }catch(e){ reject(e); }
+    });
+  }
+  // 레거시 localStorage 키를 misc IDB로 마이그레이션 (최초 1회)
+  async function _miscMigrateLegacy(){
+    try{
+      for(const k of MISC_LEGACY_KEYS){
+        try{
+          const raw=localStorage.getItem(k);
+          if(raw==null) continue;
+          let val;
+          try{ val=JSON.parse(raw); }catch(e){ val=raw; }
+          await _miscIdbSet(k, val);
+          localStorage.removeItem(k);
+        }catch(e){}
+      }
+    }catch(e){}
   }
 
   window._matchStoreReady = window._matchStoreReady || false;
@@ -553,4 +615,52 @@
     snapshot:_snapshotPlayersFromGlobals,
     apply:_applyPlayersToGlobals
   };
+
+  // ── MiscStore 공개 API ──────────────────────────────────────────
+  // get/set/delete: 기존 localStorage처럼 key-value로 사용,
+  //   단 값은 JSON 직렬화 없이 그대로 저장/반환 (객체/배열/문자열 모두 OK)
+  // fallback: IDB 불가 시 localStorage 사용
+  window.MiscStore = window.MiscStore || {
+    get: async function(key, fallback){
+      try{
+        if(_idbAvailable()){
+          const v = await _miscIdbGet(key);
+          if(v !== undefined) return v;
+        }
+      }catch(e){}
+      // localStorage fallback
+      try{
+        const raw = localStorage.getItem(key);
+        if(raw == null) return (fallback !== undefined ? fallback : undefined);
+        try{ return JSON.parse(raw); }catch(e){ return raw; }
+      }catch(e){ return (fallback !== undefined ? fallback : undefined); }
+    },
+    set: async function(key, value){
+      try{
+        if(_idbAvailable()){
+          await _miscIdbSet(key, value);
+          // IDB 성공 시 LS 레거시 제거
+          try{ localStorage.removeItem(key); }catch(e){}
+          return true;
+        }
+      }catch(e){}
+      // localStorage fallback
+      try{
+        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        return true;
+      }catch(e){ return false; }
+    },
+    delete: async function(key){
+      try{ if(_idbAvailable()) await _miscIdbDelete(key); }catch(e){}
+      try{ localStorage.removeItem(key); }catch(e){}
+    },
+    // 레거시 localStorage → IDB 마이그레이션 (앱 init 시 한 번 호출)
+    migrateLegacy: _miscMigrateLegacy,
+    available: _idbAvailable
+  };
+
+  // 앱 로드 시 misc 레거시 마이그레이션 자동 실행
+  if(_idbAvailable()){
+    setTimeout(()=>{ _miscMigrateLegacy().catch(()=>{}); }, 500);
+  }
 })();
