@@ -1971,10 +1971,6 @@ async function _autoSyncCheck() {
           await window.cloudLoad();
           console.log('[autoSync] 자동 동기화 완료');
           
-          // 캐시 갱신을 위해 데이터 버전 증가
-          const currentVer = Number(localStorage.getItem('su_data_version')) || 0;
-          localStorage.setItem('su_data_version', String(currentVer + 1));
-          
           // 알림 토스트
           if (typeof showToast === 'function') {
             showToast('✅ 다른 기기의 변경 사항이 자동으로 동기화되었습니다.', 3000);

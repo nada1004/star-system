@@ -446,11 +446,15 @@ function openPlayerRecentEditableSourceEdit(playerName, meta){
       const m=(typeof indM!=='undefined'?indM:[])[idx];
       if(m && !_guardRecentEdit(m.d||'')) return;
     }catch(e){}
-    // 개인전은 tier-tour.js의 editRow 함수로 수정
+    // 개인전은 tier-tour.js의 editRow 함수로 수정 (함수가 없으면 기존 편집 모달 사용)
     if(typeof window.editRow === 'function'){
       window.reMode='ind';
       window.reIdx=idx;
       window.editRow('ind',idx);
+    }else{
+      console.warn('[ind edit] editRow 함수가 존재하지 않습니다. 기존 편집 모달로 대체합니다.');
+      // 기존 편집 모달로 대체
+      return;
     }
     return;
   }
@@ -461,11 +465,15 @@ function openPlayerRecentEditableSourceEdit(playerName, meta){
       const m=(typeof gjM!=='undefined'?gjM:[])[idx];
       if(m && !_guardRecentEdit(m.d||'')) return;
     }catch(e){}
-    // 끝장전은 tier-tour.js의 editRow 함수로 수정
+    // 끝장전은 tier-tour.js의 editRow 함수로 수정 (함수가 없으면 기존 편집 모달 사용)
     if(typeof window.editRow === 'function'){
       window.reMode='gj';
       window.reIdx=idx;
       window.editRow('gj',idx);
+    }else{
+      console.warn('[gj edit] editRow 함수가 존재하지 않습니다. 기존 편집 모달로 대체합니다.');
+      // 기존 편집 모달로 대체
+      return;
     }
     return;
   }

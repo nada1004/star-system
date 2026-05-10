@@ -193,7 +193,6 @@ function _bindPlayerRecentHistoryDelegatedEvents(){
     if(action === 'hist-edit-one'){
       e.preventDefault();
       const sourceType = el.getAttribute('data-ph-source-type') || '';
-      console.log('[hist-edit-one] sourceType:', sourceType, 'name:', name);
       if(sourceType){
         if(typeof openPlayerRecentEditableSourceEdit === 'function'){
           openPlayerRecentEditableSourceEdit(name, {
@@ -212,10 +211,7 @@ function _bindPlayerRecentHistoryDelegatedEvents(){
             idx: el.getAttribute('data-ph-source-idx')
           });
         }
-      }else{
-        console.log('[hist-edit-one] No sourceType, calling openPlayerHistEdit');
-        if(typeof openPlayerHistEdit === 'function') openPlayerHistEdit(name, Number(el.getAttribute('data-ph-index') || -1));
-      }
+      }else if(typeof openPlayerHistEdit === 'function') openPlayerHistEdit(name, Number(el.getAttribute('data-ph-index') || -1));
       return;
     }
     if(action === 'hist-delete-one'){
