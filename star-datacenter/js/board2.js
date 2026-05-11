@@ -350,9 +350,11 @@ function rBoard2(C, T) {
     injectUnivIcons(sub);
     _b2BindAutoFitResize();
     setTimeout(() => { try{ _b2ApplyBgAutoSizing(sub); }catch(e){} }, 0);
+    setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 220); }catch(e){} }, 80);
   } else if (_b2View === 'femco') {
     sub.innerHTML = _b2FemcoView();
     injectUnivIcons(sub);
+    setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 260); }catch(e){} }, 80);
     // 모바일/태블릿에서 인원이 많은 대학도 "좌측부터" 항상 보이게 (스크롤 초기값 0)
     setTimeout(()=>{
       try{
@@ -364,6 +366,7 @@ function rBoard2(C, T) {
   } else if (_b2View === 'free') {
     sub.innerHTML = _b2FreeView();
     injectUnivIcons(sub);
+    setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 180); }catch(e){} }, 80);
   } else if (_b2View === 'players') {
     sub.innerHTML = _b2PlayersView();
     _b2BindAutoFitResize();
@@ -379,6 +382,7 @@ function rBoard2(C, T) {
         console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
       }
     }, 0);
+    setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 200); }catch(e){} }, 120);
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
     else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';

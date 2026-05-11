@@ -446,6 +446,13 @@ async function saveCurrentView(){
   const oldBtnHtml = btn ? btn.innerHTML : '';
   if(btn){ btn.disabled = true; btn.innerHTML = '⏳ 저장중'; }
 
+  const _setToast = (text) => {
+    try{
+      const t = document.getElementById('_save-toast');
+      if(t) t.innerHTML = text;
+    }catch(e){}
+  };
+
   const tmpDiv = document.createElement('div');
   const capRect = cap.getBoundingClientRect();
   const capW = Math.max(320, Math.round(capRect.width || cap.scrollWidth || 900));
@@ -459,6 +466,7 @@ async function saveCurrentView(){
 
   try{
     if(typeof _showSaveLoading === 'function') _showSaveLoading();
+    _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 준비 중...');
     try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     if(typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
 
@@ -468,19 +476,28 @@ async function saveCurrentView(){
     }catch(e){}
     await new Promise(r=>setTimeout(r, 120));
 
-    await _imgToDataUrls(tmpDiv);
-
     const wasDark = document.body.classList.contains('dark');
     if(wasDark) document.body.classList.remove('dark');
     try{
       const w = Math.max(320, tmpDiv.scrollWidth || capW);
       const h = Math.max(200, tmpDiv.scrollHeight || capH);
-      const MAX_DIM = 16000;
-      const safeScale = Math.max(1, Math.min(2, Math.floor(MAX_DIM / Math.max(w, h))));
+      const tabNames = {total:'스트리머',board2:'현황판',tier:'티어순위',mini:'미니대전',univm:'대학대전',univck:'대학CK',comp:'대회',pro:'프로리그',hist:'대전기록',stats:'통계',cal:'캘린더'};
+      const fname = `스타대학_${tabNames[window.curTab]||window.curTab||'화면'}_${new Date().toISOString().slice(0,10)}.png`;
+
+      const imgs = tmpDiv.querySelectorAll('img').length;
+      if(imgs){
+        _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 (0/'+imgs+')');
+      }
+      await _imgToDataUrls(tmpDiv, 12000, (done, total)=>{
+        _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 ('+done+'/'+total+')');
+      });
+      _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 캡처 중...');
+      try{ await _waitForImages(tmpDiv, 1500); }catch(e){}
+
       const canvas = await html2canvas(tmpDiv, {
         backgroundColor: '#ffffff',
-        scale: safeScale,
-        useCORS: false,
+        scale: 1,
+        useCORS: true,
         allowTaint: false,
         logging: false,
         imageTimeout: 20000,
@@ -492,20 +509,8 @@ async function saveCurrentView(){
       });
       if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
 
-      const pad = 40;
-      const out = document.createElement('canvas');
-      out.width = canvas.width + pad * 2;
-      out.height = canvas.height + pad * 2;
-      const ctx = out.getContext('2d');
-      ctx.fillStyle = '#f1f5f9';
-      ctx.fillRect(0, 0, out.width, out.height);
-      ctx.drawImage(canvas, pad, pad);
-
-      const tabNames = {total:'스트리머',board2:'현황판',tier:'티어순위',mini:'미니대전',univm:'대학대전',univck:'대학CK',comp:'대회',pro:'프로리그',hist:'대전기록',stats:'통계',cal:'캘린더'};
-      const fname = `스타대학_${tabNames[window.curTab]||window.curTab||'화면'}_${new Date().toISOString().slice(0,10)}.png`;
-
-      if (typeof window._saveCanvasImage === 'function') await window._saveCanvasImage(out, fname, 'png');
-      else await _dlCanvasBoard(out, fname);
+      _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 저장 중...');
+      await _dlCanvasBoard(canvas, fname);
     }finally{
       if(wasDark) document.body.classList.add('dark');
     }
@@ -1740,59 +1745,248 @@ function initBoardPlayerDrag(body){
   });
 }
 
-// ── 외부 img를 data URL로 변환 (CORS 지원 이미지만, 실패/타임아웃 시 숨김) ──
-async function _imgToDataUrls(container, timeoutMs=4000) {
+// ── 외부 img를 data URL로 변환 (가능한 것만 변환, 실패/타임아웃 시 원본 유지) ──
+const _imgDataUrlCache = (window._imgDataUrlCache = window._imgDataUrlCache || {});
+const _imgDataUrlInflight = (window._imgDataUrlInflight = window._imgDataUrlInflight || {});
+const _imgDataUrlCacheOrder = (window._imgDataUrlCacheOrder = window._imgDataUrlCacheOrder || []);
+async function _imgToDataUrls(container, timeoutMs=12000, onProgress) {
   const imgs = [...container.querySelectorAll('img')];
-  await Promise.all(imgs.map(img => new Promise(resolve => {
-    const src = img.getAttribute('src') || '';
-    // data URL / blob URL은 이미 안전
-    if (!src || src.startsWith('data:') || src.startsWith('blob:')) { resolve(); return; }
-    const _hide = () => { img.style.display = 'none'; img.removeAttribute('src'); };
-    // 전체 타임아웃: 직접+프록시 합산 timeoutMs 내에 완료 안되면 숨김 처리
-    let _resolved = false;
-    const _resolve = () => { if(!_resolved){ _resolved=true; resolve(); } };
-    const _timer = setTimeout(() => { _hide(); _resolve(); }, timeoutMs);
-    const loader = new Image();
-    loader.crossOrigin = 'anonymous';
-    loader.onload = () => {
-      clearTimeout(_timer);
-      // naturalWidth/Height이 0이면 drawImage 자체가 에러 상태 유발 → 즉시 숨김
-      if (loader.naturalWidth > 0 && loader.naturalHeight > 0) {
-        try {
-          const cv = document.createElement('canvas');
-          cv.width  = loader.naturalWidth;
-          cv.height = loader.naturalHeight;
-          const ctx2d = cv.getContext('2d');
-          ctx2d.drawImage(loader, 0, 0);
-          img.src = cv.toDataURL('image/png'); // 성공: data URL로 교체
-        } catch { _hide(); }
-      } else { _hide(); }
-      _resolve();
-    };
-    loader.onerror = () => {
-      // CORS 프록시로 재시도 (Discord CDN 등 CORS 미지원 이미지 대응)
-      const proxy = 'https://images.weserv.nl/?url=' + encodeURIComponent(src) + '&n=-1';
-      const fb = new Image();
-      fb.crossOrigin = 'anonymous';
-      fb.onload = () => {
-        clearTimeout(_timer);
-        if (fb.naturalWidth > 0 && fb.naturalHeight > 0) {
-          try {
-            const cv2 = document.createElement('canvas');
-            cv2.width = fb.naturalWidth; cv2.height = fb.naturalHeight;
-            const ctx2d2 = cv2.getContext('2d');
-            ctx2d2.drawImage(fb, 0, 0);
-            img.src = cv2.toDataURL('image/png');
-          } catch { _hide(); }
-        } else { _hide(); }
-        _resolve();
+  const maxConcurrent = 14;
+  let idx = 0;
+  let doneCount = 0;
+
+  const stripProto = (u) => String(u||'').replace(/^https?:\/\//i, '');
+  const withCacheBust = (u) => {
+    const s = String(u||'');
+    return s + (s.includes('?') ? '&' : '?') + '_x=' + Date.now();
+  };
+
+  async function convertOne(img){
+    return await new Promise(resolve => {
+      let src0 = img.getAttribute('src') || '';
+      if (!src0 || src0.startsWith('data:') || src0.startsWith('blob:')) { resolve(); return; }
+      try{
+        if(typeof toHttpsUrl === 'function'){
+          const s2 = toHttpsUrl(src0);
+          if(s2 && s2 !== src0){
+            src0 = s2;
+            try{ img.setAttribute('src', s2); }catch(e){}
+          }
+        }
+      }catch(e){}
+
+      try{
+        const cached = _imgDataUrlCache[src0];
+        if(cached && typeof cached === 'string' && cached.startsWith('data:image/')){
+          img.src = cached;
+          resolve();
+          return;
+        }
+      }catch(e){}
+
+      let done = false;
+      const finish = () => { if(!done){ done=true; resolve(); } };
+      const t = setTimeout(() => { finish(); }, timeoutMs);
+
+      const tryUrls = [];
+      tryUrls.push(withCacheBust(src0));
+      tryUrls.push('https://images.weserv.nl/?url=' + encodeURIComponent(stripProto(src0)) + '&n=-1&cb=' + Date.now());
+      tryUrls.push('https://corsproxy.io/?' + encodeURIComponent(src0));
+
+      let attempt = 0;
+      const tryLoad = () => {
+        if(done) return;
+        const url = tryUrls[attempt++];
+        if(!url){ clearTimeout(t); finish(); return; }
+
+        const loader = new Image();
+        loader.crossOrigin = 'anonymous';
+        loader.onload = () => {
+          if(done) return;
+          if (!loader.naturalWidth || !loader.naturalHeight) { tryLoad(); return; }
+          try{
+            const cv = document.createElement('canvas');
+            cv.width  = loader.naturalWidth;
+            cv.height = loader.naturalHeight;
+            const ctx2d = cv.getContext('2d');
+            ctx2d.drawImage(loader, 0, 0);
+            const dataUrl = cv.toDataURL('image/png');
+            if(!dataUrl || dataUrl === 'data:,') { tryLoad(); return; }
+            img.src = dataUrl;
+            try{
+              if(!_imgDataUrlCache[src0]) _imgDataUrlCacheOrder.push(src0);
+              _imgDataUrlCache[src0] = dataUrl;
+              if(_imgDataUrlCacheOrder.length > 500){
+                const drop = _imgDataUrlCacheOrder.shift();
+                if(drop) delete _imgDataUrlCache[drop];
+              }
+            }catch(e){}
+            clearTimeout(t);
+            finish();
+          }catch(e){
+            tryLoad();
+          }
+        };
+        loader.onerror = () => { tryLoad(); };
+        loader.src = url;
       };
-      fb.onerror = () => { clearTimeout(_timer); _hide(); _resolve(); };
-      fb.src = proxy;
+
+      tryLoad();
+    });
+  }
+
+  async function worker(){
+    while(true){
+      const i = idx++;
+      if(i >= imgs.length) break;
+      try{ await convertOne(imgs[i]); }catch(e){}
+      doneCount++;
+      if(typeof onProgress === 'function'){
+        try{ onProgress(doneCount, imgs.length); }catch(e){}
+      }
+    }
+  }
+
+  const workers = Array.from({length: Math.min(maxConcurrent, imgs.length)}, () => worker());
+  await Promise.all(workers);
+}
+
+async function _precacheImgDataUrl(src0, timeoutMs){
+  const key = String(src0||'');
+  if(!key) return false;
+  if(_imgDataUrlCache[key] && String(_imgDataUrlCache[key]).startsWith('data:image/')) return true;
+  if(_imgDataUrlInflight[key]) return await _imgDataUrlInflight[key];
+
+  const stripProto = (u) => String(u||'').replace(/^https?:\/\//i, '');
+  const withCacheBust = (u) => {
+    const s = String(u||'');
+    return s + (s.includes('?') ? '&' : '?') + '_x=' + Date.now();
+  };
+
+  const p = new Promise((resolve) => {
+    let src = key;
+    try{
+      if(typeof toHttpsUrl === 'function'){
+        const s2 = toHttpsUrl(src);
+        if(s2) src = s2;
+      }
+    }catch(e){}
+
+    if(_imgDataUrlCache[src] && String(_imgDataUrlCache[src]).startsWith('data:image/')){ resolve(true); return; }
+
+    const tryUrls = [];
+    tryUrls.push(withCacheBust(src));
+    tryUrls.push('https://images.weserv.nl/?url=' + encodeURIComponent(stripProto(src)) + '&n=-1&cb=' + Date.now());
+    tryUrls.push('https://corsproxy.io/?' + encodeURIComponent(src));
+
+    let attempt = 0;
+    let done = false;
+    const finish = (ok) => { if(!done){ done = true; resolve(!!ok); } };
+    const t = setTimeout(() => finish(false), Math.max(1200, timeoutMs||8000));
+
+    const tryLoad = () => {
+      if(done) return;
+      const url = tryUrls[attempt++];
+      if(!url){ clearTimeout(t); finish(false); return; }
+      const loader = new Image();
+      loader.crossOrigin = 'anonymous';
+      loader.onload = () => {
+        if(done) return;
+        if(!loader.naturalWidth || !loader.naturalHeight){ tryLoad(); return; }
+        try{
+          const cv = document.createElement('canvas');
+          cv.width = loader.naturalWidth;
+          cv.height = loader.naturalHeight;
+          const ctx = cv.getContext('2d');
+          ctx.drawImage(loader, 0, 0);
+          const dataUrl = cv.toDataURL('image/png');
+          if(!dataUrl || dataUrl === 'data:,'){ tryLoad(); return; }
+          try{
+            if(!_imgDataUrlCache[src]) _imgDataUrlCacheOrder.push(src);
+            _imgDataUrlCache[src] = dataUrl;
+            if(_imgDataUrlCacheOrder.length > 500){
+              const drop = _imgDataUrlCacheOrder.shift();
+              if(drop) delete _imgDataUrlCache[drop];
+            }
+          }catch(e){}
+          clearTimeout(t);
+          finish(true);
+        }catch(e){
+          tryLoad();
+        }
+      };
+      loader.onerror = () => { tryLoad(); };
+      loader.src = url;
     };
-    // 캐시 우회: 쿼리스트링 추가로 CORS 헤더 포함 재요청 강제
-    loader.src = src + (src.includes('?') ? '&_x=' : '?_x=') + Date.now();
-  })));
+
+    tryLoad();
+  }).finally(()=>{ try{ delete _imgDataUrlInflight[key]; }catch(e){} });
+
+  _imgDataUrlInflight[key] = p;
+  return await p;
+}
+
+window._precacheVisibleImages = window._precacheVisibleImages || function(container, limit){
+  try{
+    if(!container || !container.querySelectorAll) return;
+    const max = Math.max(1, parseInt(limit, 10) || 160);
+    const urls = [];
+    const seen = new Set();
+    container.querySelectorAll('img[src]').forEach(img=>{
+      const src = img.getAttribute('src') || '';
+      if(!src || src.startsWith('data:') || src.startsWith('blob:')) return;
+      let s = src;
+      try{ if(typeof toHttpsUrl === 'function') s = toHttpsUrl(s) || s; }catch(e){}
+      if(seen.has(s)) return;
+      seen.add(s);
+      if(_imgDataUrlCache[s] && String(_imgDataUrlCache[s]).startsWith('data:image/')) return;
+      urls.push(s);
+    });
+    if(!urls.length) return;
+    const list = urls.slice(0, max);
+    const run = async () => {
+      const conc = 4;
+      let i = 0;
+      const worker = async () => {
+        while(true){
+          const k = i++;
+          if(k >= list.length) break;
+          try{ await _precacheImgDataUrl(list[k], 8000); }catch(e){}
+        }
+      };
+      await Promise.all(Array.from({length: Math.min(conc, list.length)}, () => worker()));
+    };
+    if('requestIdleCallback' in window){
+      try{ window.requestIdleCallback(()=>{ run(); }, {timeout: 1200}); }catch(e){ setTimeout(()=>{ run(); }, 60); }
+    } else {
+      setTimeout(()=>{ run(); }, 60);
+    }
+  }catch(e){}
+};
+
+async function _waitForImages(container, timeoutMs){
+  const ms = Math.max(300, parseInt(timeoutMs, 10) || 900);
+  const imgs = container ? [...container.querySelectorAll('img[src]')] : [];
+  if(!imgs.length) return true;
+  const tasks = imgs.map(img=>{
+    try{
+      if(img.complete && img.naturalWidth > 0) return Promise.resolve(true);
+      if(typeof img.decode === 'function'){
+        return img.decode().then(()=>true).catch(()=>false);
+      }
+    }catch(e){}
+    return new Promise(resolve=>{
+      let done = false;
+      const fin = (ok)=>{ if(done) return; done=true; resolve(!!ok); };
+      try{
+        img.addEventListener('load', ()=>fin(true), {once:true});
+        img.addEventListener('error', ()=>fin(false), {once:true});
+      }catch(e){ fin(false); }
+      setTimeout(()=>fin(false), ms);
+    });
+  });
+  await Promise.race([Promise.allSettled(tasks), new Promise(r=>setTimeout(r, ms))]);
+  return true;
 }
 
 // ── canvas → PNG 다운로드 (toBlob+ObjectURL 방식: 대용량 PNG에 안정적) ──
@@ -1838,8 +2032,6 @@ async function _dlCanvasBoard(canvas, filename) {
 async function _captureAndSave(tmpDiv, w, h, filename) {
   try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
   if (typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
-  // 모든 외부 img를 data URL로 변환 → html2canvas canvas taint 방지
-  await _imgToDataUrls(tmpDiv);
   try{
     await new Promise(r=>setTimeout(r, 80));
     if(typeof _applyBoardBgAutoSizing === 'function') _applyBoardBgAutoSizing(tmpDiv);
@@ -1847,16 +2039,28 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
     await new Promise(r=>setTimeout(r, 80));
   }catch(e){}
 
+  try{
+    const imgs = tmpDiv.querySelectorAll('img').length;
+    const t = document.getElementById('_save-toast');
+    if(imgs && t) t.innerHTML = '<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 (0/'+imgs+')';
+  }catch(e){}
+  await _imgToDataUrls(tmpDiv, 12000, (done, total)=>{
+    try{
+      const t = document.getElementById('_save-toast');
+      if(t) t.innerHTML = '<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 ('+done+'/'+total+')';
+    }catch(e){}
+  });
+
   // 다크모드 CSS(body.dark .brd-card filter 등)가 export에 적용되지 않도록 일시 해제
   const wasDark = document.body.classList.contains('dark');
   if (wasDark) document.body.classList.remove('dark');
 
   try {
-    // 브라우저 canvas 최대 크기(~16384px) 초과 방지 → 동적 scale 계산
-    const MAX_DIM = 16000;
-    const safeScale = Math.max(1, Math.min(2, Math.floor(MAX_DIM / Math.max(w, h))));
+    const t = document.getElementById('_save-toast');
+    if(t) t.innerHTML = '<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 캡처 중...';
+    try{ await _waitForImages(tmpDiv, 1500); }catch(e){}
     const canvas = await html2canvas(tmpDiv, {
-      scale: safeScale, useCORS: false, allowTaint: false,
+      scale: 1, useCORS: true, allowTaint: false,
       backgroundColor: '#f0f2f5', logging: false,
       imageTimeout: 20000,
       width: w, height: h,
@@ -1896,23 +2100,16 @@ async function downloadBoardAll(){
     document.body.appendChild(tmpDiv);
     await new Promise(r=>setTimeout(r,300));
 
-    await _imgToDataUrls(tmpDiv,3000);
-    tmpDiv.querySelectorAll('img').forEach(im=>{
-      const s=im.getAttribute('src')||'';
-      if(!s||(!s.startsWith('data:')&&!s.startsWith('blob:')))im.parentNode&&im.parentNode.removeChild(im);
-    });
+    await _imgToDataUrls(tmpDiv, 12000);
 
     const wasDark=document.body.classList.contains('dark');
     if(wasDark)document.body.classList.remove('dark');
     try{
       const w=tmpDiv.scrollWidth||bw;
       const h=Math.max(tmpDiv.scrollHeight,tmpDiv.offsetHeight,200);
-      // 브라우저 canvas 최대 크기(~16384px) 초과 방지 → 동적 scale 계산
-      const MAX_DIM=16000;
-      const safeScale=Math.max(1,Math.min(2,Math.floor(MAX_DIM/Math.max(w,h))));
       const canvas=await html2canvas(tmpDiv,{
-        scale:safeScale,useCORS:false,allowTaint:false,
-        backgroundColor:'#f0f2f5',logging:false,imageTimeout:5000,
+        scale:1,useCORS:true,allowTaint:false,
+        backgroundColor:'#f0f2f5',logging:false,imageTimeout:20000,
         width:w,height:h,windowWidth:w+200,windowHeight:h+200
       });
       if(!canvas||canvas.width===0||canvas.height===0)throw new Error('캔버스 생성 실패');
