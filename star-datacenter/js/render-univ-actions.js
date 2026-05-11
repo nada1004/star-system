@@ -104,6 +104,85 @@ function toggleUnivEdit(){
         </div>
       </div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
+        <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">📋 스트리머탭 대학 헤더 설정</div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">헤더 배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 기본 그라데이션)</span></label>
+        <input type="text" id="ue-streamer-hbg" value="${u.streamerHeaderBgImg||''}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;box-sizing:border-box">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">이미지 크기</label>
+            <select id="ue-streamer-hbg-size" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px">
+              <option value="cover"${(!u.streamerHeaderBgSize||u.streamerHeaderBgSize==='cover')?' selected':''}>꽉 차게 (cover)</option>
+              <option value="contain"${u.streamerHeaderBgSize==='contain'?' selected':''}>맞추기 (contain)</option>
+              <option value="auto"${u.streamerHeaderBgSize==='auto'?' selected':''}>자동 (auto)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">이미지 위치</label>
+            <select id="ue-streamer-hbg-pos" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px">
+              <option value="center center"${(!u.streamerHeaderBgPos||u.streamerHeaderBgPos==='center center')?' selected':''}>중앙</option>
+              <option value="top center"${u.streamerHeaderBgPos==='top center'?' selected':''}>상단 중앙</option>
+              <option value="bottom center"${u.streamerHeaderBgPos==='bottom center'?' selected':''}>하단 중앙</option>
+              <option value="left center"${u.streamerHeaderBgPos==='left center'?' selected':''}>왼쪽 중앙</option>
+              <option value="right center"${u.streamerHeaderBgPos==='right center'?' selected':''}>오른쪽 중앙</option>
+            </select>
+          </div>
+        </div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">이미지 투명도</label>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <input type="range" id="ue-streamer-hbg-opacity" min="0" max="100" step="5" value="${Number(u.streamerHeaderBgOpacity||30)||30}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-streamer-hbg-opacity-val').textContent=this.value+'%'">
+          <span id="ue-streamer-hbg-opacity-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(u.streamerHeaderBgOpacity||30)||30}%</span>
+        </div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">그라데이션 스타일</label>
+        <select id="ue-streamer-hbg-gradient" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;margin-bottom:10px">
+          <option value=""${!u.streamerHeaderGradient?' selected':''}>설정탭 기본값</option>
+          <option value="solid"${u.streamerHeaderGradient==='solid'?' selected':''}>단색</option>
+          <option value="left-to-right"${u.streamerHeaderGradient==='left-to-right'?' selected':''}>왼쪽→오른쪽</option>
+          <option value="left-to-both"${u.streamerHeaderGradient==='left-to-both'?' selected':''}>왼쪽→양쪽</option>
+          <option value="top-to-bottom"${u.streamerHeaderGradient==='top-to-bottom'?' selected':''}>상단→하단</option>
+          <option value="both-to-center"${u.streamerHeaderGradient==='both-to-center'?' selected':''}>양쪽→중앙</option>
+        </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">효과 길이</label>
+            <select id="ue-streamer-hbg-len" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px">
+              <option value=""${!u.streamerHeaderGradientLen?' selected':''}>설정탭 기본값</option>
+              <option value="30"${u.streamerHeaderGradientLen==='30'?' selected':''}>30% (짧게)</option>
+              <option value="50"${u.streamerHeaderGradientLen==='50'?' selected':''}>50%</option>
+              <option value="70"${u.streamerHeaderGradientLen==='70'?' selected':''}>70% (보통)</option>
+              <option value="100"${u.streamerHeaderGradientLen==='100'?' selected':''}>100% (길게)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">효과 색상</label>
+            <input type="color" id="ue-streamer-hbg-color" value="${u.streamerHeaderGradientColor||'#ffffff'}" style="width:100%;height:32px;padding:2px;border-radius:6px;border:1px solid var(--border2);cursor:pointer">
+          </div>
+        </div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">커스텀 텍스트</label>
+        <input type="text" id="ue-streamer-text" value="${u.streamerHeaderText||''}" placeholder="헤더에 표시할 텍스트" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;box-sizing:border-box">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">텍스트 크기</label>
+            <select id="ue-streamer-text-size" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px">
+              <option value="10"${(!u.streamerHeaderTextSize||u.streamerHeaderTextSize==='10')?' selected':''}>10px</option>
+              <option value="12"${u.streamerHeaderTextSize==='12'?' selected':''}>12px</option>
+              <option value="14"${u.streamerHeaderTextSize==='14'?' selected':''}>14px</option>
+              <option value="16"${u.streamerHeaderTextSize==='16'?' selected':''}>16px</option>
+              <option value="20"${u.streamerHeaderTextSize==='20'?' selected':''}>20px</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">텍스트 색상</label>
+            <input type="color" id="ue-streamer-text-color" value="${u.streamerHeaderTextColor||'#ffffff'}" style="width:100%;height:32px;padding:2px;border-radius:6px;border:1px solid var(--border2);cursor:pointer">
+          </div>
+        </div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">텍스트 위치</label>
+        <select id="ue-streamer-text-pos" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px">
+          <option value="left"${(!u.streamerHeaderTextPos||u.streamerHeaderTextPos==='left')?' selected':''}>좌측 (대학 이름 옆)</option>
+          <option value="center"${u.streamerHeaderTextPos==='center'?' selected':''}>중앙</option>
+          <option value="right"${u.streamerHeaderTextPos==='right'?' selected':''}>우측 (기본)</option>
+        </select>
+      </div>
+      <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
         <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">🧩 펨코스타일 배경 이미지/영상</div>
         <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">배경 링크(URL) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(펨코스타일 대학 카드 배경)</span></label>
         <input type="text" id="ue-femco-bg-url" value="${(fem.url||'').replace(/\"/g,'&quot;')}" placeholder="https://... (jpg/png/gif/webp/mp4/유튜브/트위치)" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;box-sizing:border-box">
@@ -169,6 +248,29 @@ function saveUnivEdit(){
   if(newHdrBg) u.detailHeaderBgImg=newHdrBg; else delete u.detailHeaderBgImg;
   if(newHdrFit) u.detailHeaderBgFit=newHdrFit; else delete u.detailHeaderBgFit;
   if(newHdrBg) u.detailHeaderBgScale=newHdrScale; else delete u.detailHeaderBgScale;
+  // 스트리머탭 대학 헤더 설정(대학별)
+  const streamerHdrBg=(document.getElementById('ue-streamer-hbg')?.value||'').trim();
+  const streamerHdrSize=(document.getElementById('ue-streamer-hbg-size')?.value||'').trim();
+  const streamerHdrPos=(document.getElementById('ue-streamer-hbg-pos')?.value||'').trim();
+  const streamerHdrOpacity=parseInt(document.getElementById('ue-streamer-hbg-opacity')?.value||'30',10);
+  const streamerHdrGradient=(document.getElementById('ue-streamer-hbg-gradient')?.value||'').trim();
+  const streamerHdrGradientLen=(document.getElementById('ue-streamer-hbg-len')?.value||'').trim();
+  const streamerHdrGradientColor=(document.getElementById('ue-streamer-hbg-color')?.value||'').trim();
+  const streamerText=(document.getElementById('ue-streamer-text')?.value||'').trim();
+  const streamerTextSize=(document.getElementById('ue-streamer-text-size')?.value||'').trim();
+  const streamerTextColor=(document.getElementById('ue-streamer-text-color')?.value||'').trim();
+  const streamerTextPos=(document.getElementById('ue-streamer-text-pos')?.value||'').trim();
+  if(streamerHdrBg) u.streamerHeaderBgImg=streamerHdrBg; else delete u.streamerHeaderBgImg;
+  if(streamerHdrSize) u.streamerHeaderBgSize=streamerHdrSize; else delete u.streamerHeaderBgSize;
+  if(streamerHdrPos) u.streamerHeaderBgPos=streamerHdrPos; else delete u.streamerHeaderBgPos;
+  if(streamerHdrBg) u.streamerHeaderBgOpacity=Math.max(0,Math.min(100,streamerHdrOpacity)); else delete u.streamerHeaderBgOpacity;
+  if(streamerHdrGradient) u.streamerHeaderGradient=streamerHdrGradient; else delete u.streamerHeaderGradient;
+  if(streamerHdrGradientLen) u.streamerHeaderGradientLen=streamerHdrGradientLen; else delete u.streamerHeaderGradientLen;
+  if(streamerHdrGradientColor && streamerHdrGradientColor!=='#ffffff') u.streamerHeaderGradientColor=streamerHdrGradientColor; else delete u.streamerHeaderGradientColor;
+  if(streamerText) u.streamerHeaderText=streamerText; else delete u.streamerHeaderText;
+  if(streamerText) u.streamerHeaderTextSize=streamerTextSize; else delete u.streamerHeaderTextSize;
+  if(streamerText) u.streamerHeaderTextColor=streamerTextColor; else delete u.streamerHeaderTextColor;
+  if(streamerText) u.streamerHeaderTextPos=streamerTextPos||'right'; else delete u.streamerHeaderTextPos;
   // 펨코스타일 배경(대학별): b2_femco_settings_v1.univBgMedia[대학명]
   try{
     const load = window._cfgFemcoLoad ? window._cfgFemcoLoad : ()=>{ try{return JSON.parse(localStorage.getItem('b2_femco_settings_v1')||'{}')||{};}catch(e){return {}; } };

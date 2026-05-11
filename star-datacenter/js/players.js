@@ -173,14 +173,81 @@ function rTotal(C,T){
     if(!up.length)return;
     totalShown+=up.length;
     const _univTotal=players.filter(p=>p.univ===u.name).length; // 은퇴 포함 전체 인원
-    tableHTML+=`<tr class="ugrp" data-univ-header="${u.name}" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${_ncols}">
+    // 대학별 헤더 배경 설정 적용
+    const _hdrBgImg = u.streamerHeaderBgImg || '';
+    const _hdrBgSize = u.streamerHeaderBgSize || 'cover';
+    const _hdrBgPos = u.streamerHeaderBgPos || 'center center';
+    const _hdrBgOpacity = Math.max(0, Math.min(100, parseInt(u.streamerHeaderBgOpacity, 10) || 30)) / 100;
+    const _hdrGradient = u.streamerHeaderGradient || '';
+    const _hdrText = u.streamerHeaderText || '';
+    const _hdrTextSize = u.streamerHeaderTextSize || '12';
+    const _hdrTextColor = u.streamerHeaderTextColor || 'rgba(255,255,255,0.8)';
+    const _hdrTextPos = u.streamerHeaderTextPos || localStorage.getItem('su_univ_header_text_pos') || 'right';
+    // 그라데이션 스타일 결정
+    let _gradientStyle = '';
+    if (_hdrGradient || (!_hdrBgImg && !_hdrGradient)) {
+      const gMode = _hdrGradient || (localStorage.getItem('su_univ_header_gradient') || 'left-to-right');
+      // 대학별 설정 우선, 없으면 전역 설정 사용
+      const gLen = Math.max(20, Math.min(100, parseInt(u.streamerHeaderGradientLen || localStorage.getItem('su_univ_header_gradient_length') || '70', 10) || 70));
+      const gColorRaw = u.streamerHeaderGradientColor || localStorage.getItem('su_univ_header_gradient_color') || '#ffffff';
+      const gColor = (gColorRaw && gColorRaw !== '#ffffff') ? gColorRaw : u.color;
+      const gMix = `${gColor} ${gLen}%, transparent`;
+      switch(gMode){
+        case 'solid':
+          _gradientStyle = u.color;
+          break;
+        case 'left-to-right':
+          _gradientStyle = `linear-gradient(90deg, ${u.color}, color-mix(in srgb, ${gMix}))`;
+          break;
+        case 'left-to-both':
+          _gradientStyle = `linear-gradient(90deg, ${u.color} 0%, ${u.color} ${Math.round(gLen/2)}%, color-mix(in srgb, ${u.color} ${gLen}%, transparent) 100%)`;
+          break;
+        case 'top-to-bottom':
+          _gradientStyle = `linear-gradient(180deg, ${u.color}, color-mix(in srgb, ${gMix}))`;
+          break;
+        case 'both-to-center':
+          _gradientStyle = `linear-gradient(90deg, color-mix(in srgb, ${u.color} ${Math.round(100-gLen)}%, transparent) 0%, ${u.color} 50%, color-mix(in srgb, ${u.color} ${Math.round(100-gLen)}%, transparent) 100%)`;
+          break;
+        default:
+          _gradientStyle = `linear-gradient(90deg, ${u.color}, color-mix(in srgb, ${gMix}))`;
+      }
+    }
+    // 배경 이미지가 있으면 그라데이션과 함께 적용
+    let _tdBgStyle = _gradientStyle || u.color;
+    let _tdBgSize = 'auto';
+    let _tdBgPos = 'center center';
+    if (_hdrBgImg) {
+      // 이미지가 있으면 그라데이션 위에 이미지 오버레이
+      _tdBgStyle = `linear-gradient(rgba(0,0,0,${1 - _hdrBgOpacity}), rgba(0,0,0,${1 - _hdrBgOpacity})), url('${_hdrBgImg.replace(/'/g, "\\'")}'), ${_gradientStyle || u.color}`;
+      _tdBgSize = `${_hdrBgSize}, ${_hdrBgSize}, auto`;
+      _tdBgPos = `${_hdrBgPos}, ${_hdrBgPos}, center center`;
+    }
+    // 커스텀 텍스트 스타일
+    const _textStyle = _hdrText ? `position:relative;` : '';
+    // 텍스트 위치에 따른 스타일 결정
+    let _textHtml = '';
+    if (_hdrText) {
+      const _textBaseStyle = `font-size:${_hdrTextSize}px;color:${_hdrTextColor};font-weight:900;white-space:nowrap;`;
+      if (_hdrTextPos === 'left') {
+        _textHtml = `<span style="${_textBaseStyle}margin-right:8px;">${_hdrText}</span>`;
+      } else if (_hdrTextPos === 'center') {
+        _textHtml = `<span style="${_textBaseStyle}position:absolute;left:50%;transform:translateX(-50%);">${_hdrText}</span>`;
+      } else {
+        // right (default)
+        _textHtml = `<span style="${_textBaseStyle}margin-left:auto;">${_hdrText}</span>`;
+      }
+    }
+    tableHTML+=`<tr class="ugrp" data-univ-header="${u.name}" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${_ncols}" style="${_textStyle}background:${_tdBgStyle};background-size:${_tdBgSize};background-position:${_tdBgPos};background-repeat:no-repeat;position:relative;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
         <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-          <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','26px'):'26px'))}${u.name}</span>
+          ${_hdrTextPos === 'left' ? _textHtml : ''}
+          <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="background:${u.color};color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;font-weight:700">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','26px'):'26px'))}${u.name}</span>
           ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
           ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;font-weight:700">🚫 방문자 숨김</span>`:''}
         </div>
+        ${_hdrTextPos === 'center' ? _textHtml : ''}
         <span style="font-size:11px;color:rgba(255,255,255,.8);white-space:nowrap;font-weight:600">${_univTotal}명</span>
+        ${_hdrTextPos === 'right' ? _textHtml : ''}
       </div>
     </td></tr>`;
     // 스트리머 탭: 항상 직책→티어→포인트 순 (현황판 수동 순서 무시)
@@ -268,10 +335,74 @@ function _buildGalleryView(rankMap){
     if(!up.length) return;
     anyShown=true;
     const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
-    // 대학 헤더: 로고 배경이 대학색으로 보이도록(요청)
-    html+=`<div data-gallery-univ-header="${u.name}" style="grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:10px 4px 4px;border-bottom:2px solid ${u.color||'#6366f1'};margin-top:6px">
-      <span class="ubadge" data-icon-done="1" style="background:${u.color||'#6366f1'};display:inline-flex;align-items:center;gap:4px;font-size:12px">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','20px'):'20px'))}${u.name}</span>
-      <span style="font-size:11px;color:var(--gray-l);font-weight:600">${up.length}명</span>
+    // 대학 헤더: 대학별 설정 적용
+    const _gHdrBgImg = u.streamerHeaderBgImg || '';
+    const _gHdrBgSize = u.streamerHeaderBgSize || 'cover';
+    const _gHdrBgPos = u.streamerHeaderBgPos || 'center center';
+    const _gHdrBgOpacity = Math.max(0, Math.min(100, parseInt(u.streamerHeaderBgOpacity, 10) || 30)) / 100;
+    const _gHdrGradient = u.streamerHeaderGradient || '';
+    const _gHdrText = u.streamerHeaderText || '';
+    const _gHdrTextSize = u.streamerHeaderTextSize || '12';
+    const _gHdrTextColor = u.streamerHeaderTextColor || 'rgba(255,255,255,0.85)';
+    const _gHdrTextPos = u.streamerHeaderTextPos || localStorage.getItem('su_univ_header_text_pos') || 'right';
+    // 그라데이션 스타일 결정
+    let _gGradientStyle = '';
+    if (_gHdrGradient || (!_gHdrBgImg && !_gHdrGradient)) {
+      const gMode = _gHdrGradient || (localStorage.getItem('su_univ_header_gradient') || 'left-to-right');
+      // 대학별 설정 우선, 없으면 전역 설정 사용
+      const gLen = Math.max(20, Math.min(100, parseInt(u.streamerHeaderGradientLen || localStorage.getItem('su_univ_header_gradient_length') || '70', 10) || 70));
+      const gColorRaw = u.streamerHeaderGradientColor || localStorage.getItem('su_univ_header_gradient_color') || '#ffffff';
+      const gColor = (gColorRaw && gColorRaw !== '#ffffff') ? gColorRaw : (u.color || '#6366f1');
+      const gMix = `${gColor} ${gLen}%, transparent`;
+      switch(gMode){
+        case 'solid':
+          _gGradientStyle = u.color || '#6366f1';
+          break;
+        case 'left-to-right':
+          _gGradientStyle = `linear-gradient(90deg, ${u.color || '#6366f1'}, color-mix(in srgb, ${gMix}))`;
+          break;
+        case 'left-to-both':
+          _gGradientStyle = `linear-gradient(90deg, ${u.color || '#6366f1'} 0%, ${u.color || '#6366f1'} ${Math.round(gLen/2)}%, color-mix(in srgb, ${u.color || '#6366f1'} ${gLen}%, transparent) 100%)`;
+          break;
+        case 'top-to-bottom':
+          _gGradientStyle = `linear-gradient(180deg, ${u.color || '#6366f1'}, color-mix(in srgb, ${gMix}))`;
+          break;
+        case 'both-to-center':
+          _gGradientStyle = `linear-gradient(90deg, color-mix(in srgb, ${u.color || '#6366f1'} ${Math.round(100-gLen)}%, transparent) 0%, ${u.color || '#6366f1'} 50%, color-mix(in srgb, ${u.color || '#6366f1'} ${Math.round(100-gLen)}%, transparent) 100%)`;
+          break;
+        default:
+          _gGradientStyle = `linear-gradient(90deg, ${u.color || '#6366f1'}, color-mix(in srgb, ${gMix}))`;
+      }
+    }
+    // 배경 이미지가 있으면 그라데이션과 함께 적용
+    let _gFinalBgStyle = _gGradientStyle || (u.color || '#6366f1');
+    let _gFinalBgSize = 'auto';
+    let _gFinalBgPos = 'center center';
+    if (_gHdrBgImg) {
+      // 이미지가 있으면 그라데이션 위에 이미지 오버레이 (오버레이 블렌딩 사용)
+      _gFinalBgStyle = `linear-gradient(rgba(0,0,0,${1 - _gHdrBgOpacity}), rgba(0,0,0,${1 - _gHdrBgOpacity})), url('${_gHdrBgImg.replace(/'/g, "\\'")}'), ${_gGradientStyle || (u.color || '#6366f1')}`;
+      _gFinalBgSize = `${_gHdrBgSize}, ${_gHdrBgSize}, auto`;
+      _gFinalBgPos = `${_gHdrBgPos}, ${_gHdrBgPos}, center center`;
+    }
+    // 텍스트 위치에 따른 스타일 결정
+    let _gTextHtml = '';
+    if (_gHdrText) {
+      const _gTextBaseStyle = `font-size:${_gHdrTextSize}px;color:${_gHdrTextColor};font-weight:900;white-space:nowrap;`;
+      if (_gHdrTextPos === 'left') {
+        _gTextHtml = `<span style="${_gTextBaseStyle}margin-right:8px;">${_gHdrText}</span>`;
+      } else if (_gHdrTextPos === 'center') {
+        _gTextHtml = `<span style="${_gTextBaseStyle}position:absolute;left:50%;transform:translateX(-50%);">${_gHdrText}</span>`;
+      } else {
+        // right (default)
+        _gTextHtml = `<span style="${_gTextBaseStyle}margin-left:auto;">${_gHdrText}</span>`;
+      }
+    }
+    html+=`<div data-gallery-univ-header="${u.name}" style="grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:10px 12px 10px;background:${_gFinalBgStyle};background-size:${_gFinalBgSize};background-position:${_gFinalBgPos};background-repeat:no-repeat;border-radius:12px;margin-top:6px;position:relative;">
+      ${_gHdrTextPos === 'left' ? _gTextHtml : ''}
+      <span class="ubadge" data-icon-done="1" style="background:rgba(255,255,255,.2);color:#fff;display:inline-flex;align-items:center;gap:4px;font-size:12px">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','20px'):'20px'))}${u.name}</span>
+      ${_gHdrTextPos === 'center' ? _gTextHtml : ''}
+      <span style="font-size:11px;color:rgba(255,255,255,.85);font-weight:600">${up.length}명</span>
+      ${_gHdrTextPos === 'right' ? _gTextHtml : ''}
     </div>`;
     sorted.forEach(p=>{
       const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;

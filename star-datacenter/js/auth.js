@@ -625,8 +625,26 @@ function applyLoginState(){
   try{ window.isLoggedIn = !!isLoggedIn; }catch(e){}
   try{ window.isSubAdmin = !!isSubAdmin; }catch(e){}
   // 헤더 버튼 표시
-  document.getElementById('hdrLoginBtn').style.display=isLoggedIn?'none':'';
-  document.getElementById('hdrLogoutBtn').style.display=isLoggedIn?'':'none';
+  // 단일 아이콘 버튼으로 통합 — 로그인 상태에 따라 아이콘/title 교체
+  try{
+    const _authBtn = document.getElementById('hdrAuthBtn');
+    if(_authBtn){
+      const _ico = _authBtn.querySelector('.hdr-auth-ico');
+      if(isLoggedIn){
+        if(_ico) _ico.textContent = '🔓';
+        _authBtn.title = '로그아웃';
+        _authBtn.setAttribute('aria-label','로그아웃');
+        _authBtn.classList.add('hdr-auth-btn--logged');
+      } else {
+        if(_ico) _ico.textContent = '🔐';
+        _authBtn.title = '로그인';
+        _authBtn.setAttribute('aria-label','로그인');
+        _authBtn.classList.remove('hdr-auth-btn--logged');
+      }
+    }
+  }catch(e){}
+  try{ const _l=document.getElementById('hdrLoginBtn'); if(_l) _l.style.display=isLoggedIn?'none':''; }catch(e){}
+  try{ const _o=document.getElementById('hdrLogoutBtn'); if(_o) _o.style.display=isLoggedIn?'':'none'; }catch(e){}
   document.getElementById('hdrLoginStatus').style.display=isLoggedIn?'':'none';
   try{
     const st=document.getElementById('hdrLoginStatus');

@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="css/style.css?v=20260509-04"><!-- /* [Z-IDX] */ -->
+<link rel="stylesheet" href="css/style.css?v=20260511-ui3"><!-- /* [Z-IDX] */ -->
 </head>
 <body>
 
@@ -124,9 +124,8 @@
     </div>
     <span id="hdrLoginStatus" style="color:rgba(255,255,255,.7);font-size:11px;display:none">✅ 관리자</span>
 
-    <button id="darkToggleBtn" onclick="toggleDark()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;z-index:var(--z-base)/* [Z-IDX] */" aria-pressed="false" aria-label="다크 모드 전환"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="currentColor"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"/></svg></span>다크</button><!-- [A11Y] -->
-    <button id="hdrLoginBtn" class="hdr-login-btn" onclick="om('loginModal')">🔐 로그인하기</button>
-    <button id="hdrLogoutBtn" class="hdr-login-btn" style="display:none;background:rgba(220,38,38,.4);border-color:rgba(220,38,38,.5)" onclick="doLogout()">🔓 로그아웃</button>
+    <button id="darkToggleBtn" onclick="toggleDark()" class="hdr-icon-btn" aria-pressed="false" aria-label="다크 모드 전환" title="다크모드 전환"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"/></svg></button><!-- [A11Y] -->
+    <button id="hdrAuthBtn" class="hdr-icon-btn hdr-auth-btn" onclick="window.isLoggedIn?doLogout():om('loginModal')" aria-label="로그인/로그아웃" title="로그인"><span class="hdr-auth-ico">🔐</span></button>
   </div>
 </div>
 
@@ -613,6 +612,7 @@
 <script src="js/settings/font-controls.js?v=20260502-01"></script>
 <script src="js/settings/ui-scale-controls.js?v=20260502-01"></script>
 <script src="js/settings-core.js?v=20260510-01"></script>
+<script src="js/settings.js?v=20260511-01"></script>
 <script src="js/settings-render.js?v=20260510-01"></script>
 <script src="js/settings-data-ops.js?v=20260510-01"></script>
 <script src="js/settings-crud.js?v=20260510-02"></script>

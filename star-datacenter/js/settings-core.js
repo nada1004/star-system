@@ -102,7 +102,7 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 // - UI(탭/버튼/폰트/모바일크기)와 자동화(멀티뷰/BGM/붙여넣기)를 분리
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','paste'],
-  '🖼️ 스트리머/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','univlogoimg','si','siAssign','pdModeBadge','pd','matchdetail'],
+  '🖼️ 스트리머/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','univlogoimg','si','siAssign','pdModeBadge','pd','matchdetail','streamerheader'],
   '🧾 카드/기록':['reccard','tourneycard','procompcard','h2hpanel','sharecard','calui'],
   '🎨 UI/테마':['designv2','hdr','appfont','uisize','uibtn','uifilter','tablabels','tabcolors','autofitall'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','fab'],

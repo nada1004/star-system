@@ -102,7 +102,7 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 // - UI(탭/버튼/폰트/모바일크기)와 자동화(멀티뷰/BGM/붙여넣기)를 분리
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','paste'],
-  '🖼️ 스트리머/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','univlogoimg','si','siAssign','pdModeBadge','pd','matchdetail'],
+  '🖼️ 스트리머/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','univlogoimg','si','siAssign','pdModeBadge','pd','matchdetail','streamerheader'],
   '🧾 카드/기록':['reccard','tourneycard','procompcard','h2hpanel','sharecard','calui'],
   '🎨 UI/테마':['designv2','hdr','appfont','uisize','uibtn','uifilter','tablabels','tabcolors','autofitall'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','fab'],
@@ -848,14 +848,197 @@ window.cfgH2HBgPosSave = function(){
 window.cfgH2HBgPosReset = function(){
   try{
     const name=String(document.getElementById('cfg-h2h-bgpos-name')?.value||'').trim();
-    if(!name) return;
+    if(!name){ alert('스트리머 이름을 입력하세요.'); return; }
     const map=_cfgH2HBgPosLoadAll();
     delete map[name];
     _cfgH2HBgPosSaveAll(map);
+    const xi=document.getElementById('cfg-h2h-bgpos-x');
+    const yi=document.getElementById('cfg-h2h-bgpos-y');
+    if(xi){ xi.value='50'; document.getElementById('cfg-h2h-bgpos-xv').textContent='50%'; }
+    if(yi){ yi.value='50'; document.getElementById('cfg-h2h-bgpos-yv').textContent='50%'; }
   }catch(e){}
-  try{ window.cfgH2HBgPosLoad && window.cfgH2HBgPosLoad(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
 };
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 스트리머탭 대학 헤더 그라데이션 스타일
+// - CSS 변수: --univ-header-bg
+// - localStorage: su_univ_header_gradient
+// - 옵션: solid, left-to-right, left-to-both, top-to-bottom, both-to-center
+// ─────────────────────────────────────────────────────────────
+window.applyUnivHeaderGradient = function(){
+  try{
+    const mode = localStorage.getItem('su_univ_header_gradient') || 'left-to-right';
+    let gradient = '';
+    switch(mode){
+      case 'solid':
+        gradient = 'var(--c,#2563eb)';
+        break;
+      case 'left-to-right':
+        gradient = 'linear-gradient(90deg, var(--c,#2563eb), color-mix(in srgb, var(--c,#2563eb) 70%, transparent))';
+        break;
+      case 'left-to-both':
+        gradient = 'linear-gradient(90deg, var(--c,#2563eb) 0%, var(--c,#2563eb) 30%, color-mix(in srgb, var(--c,#2563eb) 50%, transparent) 100%)';
+        break;
+      case 'top-to-bottom':
+        gradient = 'linear-gradient(180deg, var(--c,#2563eb), color-mix(in srgb, var(--c,#2563eb) 70%, transparent))';
+        break;
+      case 'both-to-center':
+        gradient = 'linear-gradient(90deg, color-mix(in srgb, var(--c,#2563eb) 50%, transparent) 0%, var(--c,#2563eb) 50%, color-mix(in srgb, var(--c,#2563eb) 50%, transparent) 100%)';
+        break;
+      default:
+        gradient = 'linear-gradient(90deg, var(--c,#2563eb), color-mix(in srgb, var(--c,#2563eb) 70%, transparent))';
+    }
+    document.documentElement.style.setProperty('--univ-header-bg', gradient);
+  }catch(e){}
+};
+window.cfgSetUnivHeaderGradient = function(mode){
+  try{
+    const validModes = ['solid', 'left-to-right', 'left-to-both', 'top-to-bottom', 'both-to-center'];
+    const m = validModes.includes(mode) ? mode : 'left-to-right';
+    localStorage.setItem('su_univ_header_gradient', m);
+  }catch(e){}
+  try{ window.applyUnivHeaderGradient && window.applyUnivHeaderGradient(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+try{
+  window.applyUnivHeaderGradient && window.applyUnivHeaderGradient();
+}catch(e){}
+
+// ─────────────────────────────────────────────────────────────
+// (요청사항) 스트리머탭 대학 헤더 배경 이미지/텍스트 설정
+// - CSS 변수: --univ-header-bg-image, --univ-header-bg-size, --univ-header-bg-position, --univ-header-bg-opacity
+// - CSS 변수: --univ-header-text, --univ-header-text-size, --univ-header-text-color, --univ-header-text-top, --univ-header-text-right
+// - localStorage: su_univ_header_bg_image, su_univ_header_bg_size, su_univ_header_bg_position, su_univ_header_bg_opacity
+// - localStorage: su_univ_header_text, su_univ_header_text_size, su_univ_header_text_color, su_univ_header_text_top, su_univ_header_text_right
+// ─────────────────────────────────────────────────────────────
+window.applyUnivHeaderBgImage = function(){
+  try{
+    const imageUrl = localStorage.getItem('su_univ_header_bg_image') || '';
+    const bgSize = localStorage.getItem('su_univ_header_bg_size') || 'cover';
+    const bgPosition = localStorage.getItem('su_univ_header_bg_position') || 'center center';
+    const opacity = Math.max(0, Math.min(100, parseInt(localStorage.getItem('su_univ_header_bg_opacity') || '0', 10))) / 100;
+    
+    document.documentElement.style.setProperty('--univ-header-bg-image', imageUrl ? `url('${imageUrl}')` : 'none');
+    document.documentElement.style.setProperty('--univ-header-bg-size', bgSize);
+    document.documentElement.style.setProperty('--univ-header-bg-position', bgPosition);
+    document.documentElement.style.setProperty('--univ-header-bg-opacity', String(opacity));
+  }catch(e){}
+};
+window.applyUnivHeaderText = function(){
+  try{
+    const text = localStorage.getItem('su_univ_header_text') || '';
+    const fontSize = Math.max(8, Math.min(32, parseInt(localStorage.getItem('su_univ_header_text_size') || '12', 10))) + 'px';
+    const textColor = localStorage.getItem('su_univ_header_text_color') || 'rgba(255,255,255,0.8)';
+    const textTop = localStorage.getItem('su_univ_header_text_top') || '50%';
+    const textRight = localStorage.getItem('su_univ_header_text_right') || '10px';
+    const textYTransform = textTop === '50%' ? '-50%' : '0';
+    
+    document.documentElement.style.setProperty('--univ-header-text', text ? `'${text.replace(/'/g, "\\'")}'` : "''");
+    document.documentElement.style.setProperty('--univ-header-text-size', fontSize);
+    document.documentElement.style.setProperty('--univ-header-text-color', textColor);
+    document.documentElement.style.setProperty('--univ-header-text-top', textTop);
+    document.documentElement.style.setProperty('--univ-header-text-right', textRight);
+    document.documentElement.style.setProperty('--univ-header-text-y-transform', textYTransform);
+  }catch(e){}
+};
+window.cfgSetUnivHeaderBgImage = function(url){
+  try{
+    localStorage.setItem('su_univ_header_bg_image', url || '');
+  }catch(e){}
+  try{ window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage(); }catch(e){}
+};
+window.cfgSetUnivHeaderBgSize = function(size){
+  try{
+    const validSizes = ['cover', 'contain', 'auto', '100% 100%', '50% 50%'];
+    const s = validSizes.includes(size) ? size : 'cover';
+    localStorage.setItem('su_univ_header_bg_size', s);
+  }catch(e){}
+  try{ window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage(); }catch(e){}
+};
+window.cfgSetUnivHeaderBgPosition = function(pos){
+  try{
+    const validPositions = ['center center', 'top center', 'bottom center', 'left center', 'right center', 'top left', 'top right', 'bottom left', 'bottom right'];
+    const p = validPositions.includes(pos) ? pos : 'center center';
+    localStorage.setItem('su_univ_header_bg_position', p);
+  }catch(e){}
+  try{ window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage(); }catch(e){}
+};
+window.cfgSetUnivHeaderBgOpacity = function(opacity){
+  try{
+    const n = Math.max(0, Math.min(100, parseInt(opacity || '0', 10) || 0));
+    localStorage.setItem('su_univ_header_bg_opacity', String(n));
+  }catch(e){}
+  try{ window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage(); }catch(e){}
+};
+window.cfgSetUnivHeaderText = function(text){
+  try{
+    localStorage.setItem('su_univ_header_text', text || '');
+  }catch(e){}
+  try{ window.applyUnivHeaderText && window.applyUnivHeaderText(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+window.cfgSetUnivHeaderTextSize = function(size){
+  try{
+    const n = Math.max(8, Math.min(32, parseInt(size || '12', 10) || 12));
+    localStorage.setItem('su_univ_header_text_size', String(n));
+  }catch(e){}
+  try{ window.applyUnivHeaderText && window.applyUnivHeaderText(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+window.cfgSetUnivHeaderTextColor = function(color){
+  try{
+    localStorage.setItem('su_univ_header_text_color', color || 'rgba(255,255,255,0.8)');
+  }catch(e){}
+  try{ window.applyUnivHeaderText && window.applyUnivHeaderText(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+window.cfgSetUnivHeaderTextTop = function(top){
+  try{
+    const validTops = ['0%', '25%', '50%', '75%', '100%'];
+    const t = validTops.includes(top) ? top : '50%';
+    localStorage.setItem('su_univ_header_text_top', t);
+  }catch(e){}
+  try{ window.applyUnivHeaderText && window.applyUnivHeaderText(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+window.cfgSetUnivHeaderTextRight = function(right){
+  try{
+    const n = Math.max(0, Math.min(50, parseInt(right || '10', 10) || 10));
+    localStorage.setItem('su_univ_header_text_right', String(n) + 'px');
+  }catch(e){}
+  try{ window.applyUnivHeaderText && window.applyUnivHeaderText(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+window.cfgSetUnivHeaderTextPos = function(pos){
+  try{
+    const validPos = ['left', 'center', 'right'];
+    const p = validPos.includes(pos) ? pos : 'right';
+    localStorage.setItem('su_univ_header_text_pos', p);
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+window.cfgSetUnivHeaderGradientLength = function(len){
+  try{
+    const n = Math.max(20, Math.min(100, parseInt(len || '70', 10) || 70));
+    localStorage.setItem('su_univ_header_gradient_length', String(n));
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+window.cfgSetUnivHeaderGradientColor = function(color){
+  try{
+    localStorage.setItem('su_univ_header_gradient_color', String(color || '#ffffff'));
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+try{
+  window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage();
+  window.applyUnivHeaderText && window.applyUnivHeaderText();
+}catch(e){}
+
+function renderIfPossible(){
+  try{ if(typeof render==='function') render(); }catch(e){}
+}
 
 // ─────────────────────────────────────────────────────────────
 // 스트리머 상세 수정창(openEP)용: 개인/끝장전 배경 위치(드래그)
@@ -3469,6 +3652,7 @@ function rCfg(C,T){
     profileshape:'🖼️ 프로필 이미지 모양',
     pdModeBadge:'🎨 최근 경기 종목 배지 색상',
     pd:'🎨 스트리머 상세 스타일', matchdetail:'🎮 경기 상세(팝업)',
+    streamerheader:'🎓 스트리머탭 대학 헤더',
     univlogoimg:'🏫 대학 로고 이미지(URL)',
     b2femco:'🧩 펨코스타일', femcoorder:'🔀 펨코스타일 스타대학 순서', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
     tablabels:'🏷️ 탭 이름(라벨) 설정',
