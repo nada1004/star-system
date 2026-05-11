@@ -1110,15 +1110,15 @@ function rTier(C,T){
   {
     // ── 2행: 대학 (스크롤) ──
     fh+=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;padding-bottom:2px">`;
-    fh+=`<button class="pill ${fUniv==='전체'?'on':''}" style="flex-shrink:0" onclick="sf('전체','${fTier}')">전체</button>`;
-    allU.forEach(u=>{fh+=`<button class="pill ${fUniv===u.name?'on':''}" style="flex-shrink:0;${fUniv===u.name?`background:${u.color};border-color:${u.color};color:#fff`:''}" onclick="sf('${u.name}','${fTier}')">${u.name}</button>`;});
+    fh+=`<button class="pill ${fUniv==='전체'?'on':''}" style="flex-shrink:0" onclick="fUniv='전체';fTier='${fTier}';render()">전체</button>`;
+    allU.forEach(u=>{fh+=`<button class="pill ${fUniv===u.name?'on':''}" style="flex-shrink:0;${fUniv===u.name?`background:${u.color};border-color:${u.color};color:#fff`:''}" onclick="fUniv='${u.name}';fTier='${fTier}';render()">${u.name}</button>`;});
     fh+=`</div>`;
     // ── 3행: 티어 (스크롤) ──
     fh+=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;padding-bottom:2px">`;
-    fh+=`<button class="pill ${fTier==='전체'?'on':''}" style="flex-shrink:0" onclick="sf('${fUniv}','전체')">전체</button>`;
+    fh+=`<button class="pill ${fTier==='전체'?'on':''}" style="flex-shrink:0" onclick="fUniv='${fUniv}';fTier='전체';render()">전체</button>`;
     TIERS.forEach(t=>{
       const _bc=getTierBtnColor(t),_bt=getTierBtnTextColor(t),_sel=fTier===t;
-      fh+=`<button class="pill" style="flex-shrink:0;border-color:${_bc};border-width:${_sel?'2':'1'}px;${_sel?`background:${_bc};color:${_bt};font-weight:700;`:'color:'+_bc+';'}" onclick="sf('${fUniv}','${t}')">${getTierPillLabel(t)}</button>`;
+      fh+=`<button class="pill" style="flex-shrink:0;border-color:${_bc};border-width:${_sel?'2':'1'}px;${_sel?`background:${_bc};color:${_bt};font-weight:700;`:'color:'+_bc+';'}" onclick="fUniv='${fUniv}';fTier='${t}';render()">${getTierPillLabel(t)}</button>`;
     });
     fh+=`</div>`;
     // ── 4행: 종족 + 옵션 (flex-wrap) ──
@@ -1430,12 +1430,15 @@ function rTier(C,T){
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">승</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">패</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
+    <th style="text-align:center;white-space:nowrap;padding:8px 10px">ELO</th>
+    <th style="text-align:center;white-space:nowrap;padding:8px 8px">활동</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">${extraHeader}</th>
   </tr></thead><tbody>`;
   const _canGoHist = (()=>{
     const pick = hasTypeSet && window._tierTypeSet.size===1 ? [...window._tierTypeSet][0] : (!hasTypeSet ? tierRankMode : '');
     return pick && pick.endsWith('_win') || pick && pick.endsWith('_loss');
   })();
+  const _tierBaseCache=_getPlayerBaseMetaCache();
   list.forEach((p,i)=>{
     const col=gc(p.univ);const tot=p.win+p.loss;const wr=tot?Math.round(p.win/tot*100):0;
     let rnkHTML;
@@ -1463,6 +1466,12 @@ function rTier(C,T){
     const _pSafe=(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const _modePick = hasTypeSet && window._tierTypeSet.size===1 ? [...window._tierTypeSet][0] : (!hasTypeSet ? tierRankMode : '');
     const _clickHist = (_canGoHist && _modePick) ? `onclick="tierRankGoHist('${_modePick}','${_pSafe}')"` : '';
+    // ELO
+    const _elo=p.elo||ELO_DEFAULT;
+    const _eloColor=_elo>=1400?'#7c3aed':_elo>=1300?'var(--gold)':_elo>=1200?'var(--green)':'var(--red)';
+    const _eloHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:800;font-size:13px;color:${_eloColor}">${_elo}</span>`;
+    // 활동
+    const _pmeta=_tierBaseCache[p.name]||{activityHtml:'<span style="font-size:9px;color:#9ca3af">-</span>',activityTitle:'비활성'};
     h+=`<tr style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${rnkHTML}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
@@ -1472,6 +1481,8 @@ function rTier(C,T){
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="wt">${p.win}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px" class="lt">${p.loss}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
+      <td style="text-align:center;white-space:nowrap;padding:7px 10px">${_eloHTML}</td>
+      <td style="text-align:center;white-space:nowrap;padding:7px 8px" title="${_pmeta.activityTitle}">${_pmeta.activityHtml}</td>
       <td style="text-align:center;white-space:nowrap;padding:7px 10px;${_canGoHist?'cursor:pointer;text-decoration:underline dotted':''}" ${_clickHist} title="${_canGoHist?'대전기록탭에서 보기':''}">${extraVal}</td>
     </tr>`;
   });
