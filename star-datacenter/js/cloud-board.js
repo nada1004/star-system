@@ -438,8 +438,84 @@ function _updateBoardSaveLabel(){
 }
 
 // 하단 이미지저장 버튼: 현재 보이는 화면을 그대로 캡처 (현황판 전체/개별 저장은 현황판 탭 내 버튼 사용)
-function saveCurrentView(){
-  if(typeof doJpg==='function') doJpg();
+async function saveCurrentView(){
+  const cap = document.getElementById('cap');
+  if(!cap){ alert('캡처할 영역이 없습니다.'); return; }
+
+  const btn = document.getElementById('btn-img-save');
+  const oldBtnHtml = btn ? btn.innerHTML : '';
+  if(btn){ btn.disabled = true; btn.innerHTML = '⏳ 저장중'; }
+
+  const tmpDiv = document.createElement('div');
+  const capRect = cap.getBoundingClientRect();
+  const capW = Math.max(320, Math.round(capRect.width || cap.scrollWidth || 900));
+  const capH = Math.max(200, Math.round(cap.scrollHeight || cap.offsetHeight || capRect.height || 600));
+
+  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;width:${capW}px;min-height:${capH}px;background:#ffffff;padding:24px;box-sizing:border-box;`;
+  tmpDiv.innerHTML = cap.innerHTML;
+  tmpDiv.querySelectorAll('.no-export').forEach(el=>el.remove());
+
+  document.body.appendChild(tmpDiv);
+
+  try{
+    if(typeof _showSaveLoading === 'function') _showSaveLoading();
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
+    if(typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
+
+    try{
+      if(typeof _applyBoardBgAutoSizing === 'function') _applyBoardBgAutoSizing(tmpDiv);
+      if(typeof _b2ApplyBgAutoSizing === 'function') _b2ApplyBgAutoSizing(tmpDiv);
+    }catch(e){}
+    await new Promise(r=>setTimeout(r, 120));
+
+    await _imgToDataUrls(tmpDiv);
+
+    const wasDark = document.body.classList.contains('dark');
+    if(wasDark) document.body.classList.remove('dark');
+    try{
+      const w = Math.max(320, tmpDiv.scrollWidth || capW);
+      const h = Math.max(200, tmpDiv.scrollHeight || capH);
+      const MAX_DIM = 16000;
+      const safeScale = Math.max(1, Math.min(2, Math.floor(MAX_DIM / Math.max(w, h))));
+      const canvas = await html2canvas(tmpDiv, {
+        backgroundColor: '#ffffff',
+        scale: safeScale,
+        useCORS: false,
+        allowTaint: false,
+        logging: false,
+        imageTimeout: 20000,
+        width: w,
+        height: h,
+        windowWidth: w + 100,
+        windowHeight: h + 100,
+        x: 0, y: 0, scrollX: 0, scrollY: 0
+      });
+      if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
+
+      const pad = 40;
+      const out = document.createElement('canvas');
+      out.width = canvas.width + pad * 2;
+      out.height = canvas.height + pad * 2;
+      const ctx = out.getContext('2d');
+      ctx.fillStyle = '#f1f5f9';
+      ctx.fillRect(0, 0, out.width, out.height);
+      ctx.drawImage(canvas, pad, pad);
+
+      const tabNames = {total:'스트리머',board2:'현황판',tier:'티어순위',mini:'미니대전',univm:'대학대전',univck:'대학CK',comp:'대회',pro:'프로리그',hist:'대전기록',stats:'통계',cal:'캘린더'};
+      const fname = `스타대학_${tabNames[window.curTab]||window.curTab||'화면'}_${new Date().toISOString().slice(0,10)}.png`;
+
+      if (typeof window._saveCanvasImage === 'function') await window._saveCanvasImage(out, fname, 'png');
+      else await _dlCanvasBoard(out, fname);
+    }finally{
+      if(wasDark) document.body.classList.add('dark');
+    }
+  }catch(e){
+    alert('이미지 저장 오류: ' + (e && e.message ? e.message : String(e||'오류')));
+  }finally{
+    if(tmpDiv.parentNode) document.body.removeChild(tmpDiv);
+    if(typeof _hideSaveLoading === 'function') _hideSaveLoading();
+    if(btn){ btn.disabled = false; btn.innerHTML = oldBtnHtml; }
+  }
 }
 
 
@@ -1720,35 +1796,48 @@ async function _imgToDataUrls(container, timeoutMs=4000) {
 }
 
 // ── canvas → PNG 다운로드 (toBlob+ObjectURL 방식: 대용량 PNG에 안정적) ──
-function _dlCanvasBoard(canvas, filename) {
+async function _dlCanvasBoard(canvas, filename) {
   if (!canvas || canvas.width === 0 || canvas.height === 0) {
     alert('이미지 생성 실패: 캔버스가 비어있습니다. 다시 시도해주세요.');
-    return;
+    return false;
   }
   const pngName = filename.replace(/\.jpg$/i, '.png');
-  canvas.toBlob(blob => {
-    if (!blob) {
-      // 폴백: toDataURL 방식
-      try {
-        const dataUrl = canvas.toDataURL('image/png');
-        if (!dataUrl || dataUrl === 'data:,') { alert('이미지 저장 실패: 빈 이미지입니다.'); return; }
+  if (typeof window._saveCanvasImage === 'function') {
+    await window._saveCanvasImage(canvas, pngName, 'png');
+    return true;
+  }
+  return await new Promise((resolve) => {
+    try{
+      canvas.toBlob(blob => {
+        if (!blob) {
+          try {
+            const dataUrl = canvas.toDataURL('image/png');
+            if (!dataUrl || dataUrl === 'data:,') { alert('이미지 저장 실패: 빈 이미지입니다.'); resolve(false); return; }
+            const a = document.createElement('a');
+            a.href = dataUrl; a.download = pngName;
+            document.body.appendChild(a); a.click();
+            setTimeout(() => document.body.removeChild(a), 300);
+            resolve(true);
+          } catch(e) { alert('이미지 저장 실패: ' + e.message); resolve(false); }
+          return;
+        }
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = dataUrl; a.download = pngName;
+        a.href = url; a.download = pngName;
         document.body.appendChild(a); a.click();
-        setTimeout(() => document.body.removeChild(a), 300);
-      } catch(e) { alert('이미지 저장 실패: ' + e.message); }
-      return;
+        setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 500);
+        resolve(true);
+      }, 'image/png');
+    }catch(e){
+      resolve(false);
     }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = pngName;
-    document.body.appendChild(a); a.click();
-    setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 500);
-  }, 'image/png');
+  });
 }
 
 // ── html2canvas 캡처 후 저장 ──────────────────────────────────────
 async function _captureAndSave(tmpDiv, w, h, filename) {
+  try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
+  if (typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
   // 모든 외부 img를 data URL로 변환 → html2canvas canvas taint 방지
   await _imgToDataUrls(tmpDiv);
   try{
@@ -1775,7 +1864,7 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
       x: 0, y: 0, scrollX: 0, scrollY: 0
     });
     if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
-    _dlCanvasBoard(canvas, filename);
+    await _dlCanvasBoard(canvas, filename);
   } finally {
     // 다크모드 클래스 복원
     if (wasDark) document.body.classList.add('dark');
@@ -1788,6 +1877,8 @@ async function downloadBoardAll(){
   if(btn){btn.disabled=true;btn._ot=btn.textContent;btn.textContent='⏳...';}
   const tmpDiv=document.createElement('div');
   try{
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
+    if (typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
     const boardWrap=document.getElementById('board-wrap');
     if(!boardWrap||!boardWrap.children.length){alert('표시 중인 현황판이 없습니다.');return;}
     const bw=boardWrap.scrollWidth||900;
@@ -1825,7 +1916,7 @@ async function downloadBoardAll(){
         width:w,height:h,windowWidth:w+200,windowHeight:h+200
       });
       if(!canvas||canvas.width===0||canvas.height===0)throw new Error('캔버스 생성 실패');
-      _dlCanvasBoard(canvas,'현황판_전체저장.png');
+      await _dlCanvasBoard(canvas,'현황판_전체저장.png');
     }finally{if(wasDark)document.body.classList.add('dark');}
   }catch(e){alert('다운로드 실패: '+e.message);}
   finally{
