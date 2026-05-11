@@ -1948,6 +1948,18 @@ let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView=lo
 let calTypeFilter='all';
 let voteData=JSON.parse(localStorage.getItem('su_votes')||'{}');
 let fUniv='전체', fTier='전체';
+// (버그픽스) 티어 순위표 탭에서 대학/티어 필터 버튼이 sf()를 호출하는데,
+// sf가 특정 모듈(vote.js)에만 정의되어 있으면 로딩 순서에 따라 ReferenceError가 발생할 수 있음.
+// → 공용으로 window.sf를 제공 (기존 정의가 있으면 유지)
+try{
+  if(typeof window.sf !== 'function'){
+    window.sf = function(u, t){
+      try{ fUniv = u; }catch(e){ window.fUniv = u; }
+      try{ fTier = t; }catch(e){ window.fTier = t; }
+      try{ if(typeof render==='function') render(); }catch(e){}
+    };
+  }
+}catch(e){}
 var miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='mini';
 var miniType='mini'; // 'mini' | 'civil'
 var histUniv='';
