@@ -2154,7 +2154,15 @@ async function _dlCanvasBoard(canvas, filename) {
             }
             showInWindow(dataUrl, false);
             resolve(true);
-          } catch(e) { alert('이미지 저장 실패: ' + e.message); resolve(false); }
+          } catch(e) {
+            const msg = (e && e.message) ? e.message : String(e||'오류');
+            if (/insecure|security/i.test(msg)) {
+              alert('이미지 저장 실패: 보안 정책(CORS)으로 인해 캔버스를 저장할 수 없습니다.\n\n외부 이미지(프로필/로고/배경)가 포함되어 있으면 저장이 차단될 수 있습니다.');
+            } else {
+              alert('이미지 저장 실패: ' + msg);
+            }
+            resolve(false);
+          }
           return;
         }
         const url = URL.createObjectURL(blob);
@@ -2173,6 +2181,12 @@ async function _dlCanvasBoard(canvas, filename) {
         resolve(true);
       }, 'image/png');
     }catch(e){
+      const msg = (e && e.message) ? e.message : String(e||'오류');
+      if (/insecure|security/i.test(msg)) {
+        alert('이미지 저장 실패: 보안 정책(CORS)으로 인해 캔버스를 저장할 수 없습니다.\n\n외부 이미지(프로필/로고/배경)가 포함되어 있으면 저장이 차단될 수 있습니다.');
+      } else {
+        alert('이미지 저장 실패: ' + msg);
+      }
       resolve(false);
     }
   });
@@ -2264,30 +2278,26 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
     const isFirefox = /firefox/i.test(navigator.userAgent);
     
     const attempts = [
-      { useCORS: false, allowTaint: true, foreignObjectRendering: true, onclone: makeOnClone(false) },
-      { useCORS: false, allowTaint: true, foreignObjectRendering: false, onclone: makeOnClone(true), ignoreElements: (el)=> el && el.tagName && el.tagName.toLowerCase() === 'svg' },
-      // Waterfox/Firefox 특별 처리
+      { useCORS: true, allowTaint: false, foreignObjectRendering: false, onclone: makeOnClone(false) },
+      { useCORS: true, allowTaint: false, foreignObjectRendering: true, onclone: makeOnClone(false) },
+      { useCORS: true, allowTaint: false, foreignObjectRendering: false, onclone: makeOnClone(true), ignoreElements: (el)=> el && el.tagName && el.tagName.toLowerCase() === 'svg' },
       ...(isWaterfox || isFirefox ? [
-        { useCORS: true, allowTaint: false, foreignObjectRendering: false, onclone: makeOnClone(true), 
+        { useCORS: true, allowTaint: false, foreignObjectRendering: false, onclone: makeOnClone(true),
           ignoreElements: (el)=> {
             if (!el || !el.tagName) return false;
             const tag = el.tagName.toLowerCase();
-            // 배경 이미지가 있는 요소 제거
-            if (tag === 'div' && el.style && el.style.backgroundImage && el.style.backgroundImage.includes('url(')) {
-              return true;
-            }
-            // SVG 제거
             if (tag === 'svg') return true;
-            // 외부 이미지 제거
-            if (tag === 'img' && el.src && el.src.includes('://') && !el.src.includes(window.location.hostname)) {
+            if (tag === 'img') {
+              try{
+                const src = String(el.getAttribute('src') || el.src || '');
+                if(src && src.includes('://') && !src.includes(window.location.hostname) && !src.startsWith('data:')) return true;
+              }catch(e){}
+            }
+            if (el.style && el.style.backgroundImage && String(el.style.backgroundImage).includes('url(') && !String(el.style.backgroundImage).includes('data:image/')) {
               return true;
             }
             return false;
           }
-        },
-        { useCORS: false, allowTaint: true, foreignObjectRendering: false, onclone: makeOnClone(false), 
-          imageTimeout: 3000, // 더 짧은 타임아웃
-          removeContainer: true // 컨테이너 즉시 제거
         }
       ] : [])
     ];
@@ -2313,7 +2323,32 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
     }
     if(lastErr) throw new Error(_captureErrText(lastErr));
     if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
-    await _dlCanvasBoard(canvas, filename);
+    let ok = await _dlCanvasBoard(canvas, filename);
+    if(!ok){
+      // "The operation is insecure."(Firefox) 등 CORS/보안 이슈로 저장 실패하면,
+      // 외부 리소스를 제거한 안전 캡처로 1회 재시도
+      try{
+        tmpDiv.querySelectorAll('img').forEach(img => {
+          try{
+            const src = String(img.getAttribute('src') || img.src || '');
+            if(!src) return;
+            const host = String(window.location.hostname||'');
+            const safe = src.startsWith('data:') || src.startsWith('blob:') || (host && src.includes(host));
+            if(!safe) img.style.display = 'none';
+          }catch(e){}
+        });
+        tmpDiv.querySelectorAll('[style*="background-image"]').forEach(el => {
+          try{
+            const bi = String(el.style && el.style.backgroundImage ? el.style.backgroundImage : '');
+            if(bi && bi.includes('url(') && !bi.includes('data:image/')) el.style.backgroundImage = 'none';
+          }catch(e){}
+        });
+      }catch(e){}
+      const canvas2 = await html2canvas(tmpDiv, { ...baseOpts, useCORS: true, allowTaint: false, foreignObjectRendering: false, onclone: makeOnClone(true) });
+      if (!canvas2 || canvas2.width === 0 || canvas2.height === 0) throw new Error('캔버스 생성 실패');
+      ok = await _dlCanvasBoard(canvas2, filename);
+      if(!ok) throw new Error('이미지 저장 실패');
+    }
   } finally {
     // 다크모드 클래스 복원
     if (wasDark) document.body.classList.add('dark');
