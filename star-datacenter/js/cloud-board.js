@@ -2296,9 +2296,16 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
     const t = document.getElementById('_save-toast');
     if(t) t.innerHTML = '<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 캡처 중...';
     try{ await _waitForImages(tmpDiv, 1500); }catch(e){}
+    const bg = (() => {
+      try{
+        const c = window.getComputedStyle ? getComputedStyle(tmpDiv).backgroundColor : '';
+        if (c && c !== 'transparent' && c !== 'rgba(0, 0, 0, 0)') return c;
+      }catch(e){}
+      return '#f0f2f5';
+    })();
     const canvas = await html2canvas(tmpDiv, {
       scale: 1, useCORS: true, allowTaint: false,
-      backgroundColor: '#f0f2f5', logging: false,
+      backgroundColor: bg, logging: false,
       imageTimeout: 20000,
       width: w, height: h,
       windowWidth: w + 100, windowHeight: h + 100,

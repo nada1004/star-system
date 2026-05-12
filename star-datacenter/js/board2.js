@@ -1117,6 +1117,10 @@ async function _saveB2FemcoInternal(){
     console.warn('[saveB2FemcoAllImg] 대학 아이콘 주입 실패:', e.message);
   }
 
+  try{
+    tmpDiv.querySelectorAll('div[style*="background-image:url"], .b2-bg-layer').forEach(el => el.remove());
+  }catch(e){}
+
   // 강력한 이미지 전처리 적용
   if (typeof window._preprocessImagesForCapture === 'function') {
     const problemCount = window._preprocessImagesForCapture(tmpDiv);
@@ -1179,6 +1183,29 @@ async function _saveB2FemcoInternal(){
     
     console.log(`[펨코] fallback 처리: ${problematicImages.length}개의 문제 이미지`);
   }
+
+  try{
+    const svgs = tmpDiv.querySelectorAll('svg');
+    svgs.forEach(svg => {
+      const placeholder = document.createElement('span');
+      const wAttr = parseInt(svg.getAttribute('width') || '', 10);
+      const hAttr = parseInt(svg.getAttribute('height') || '', 10);
+      const wStyle = parseInt(String(svg.style && svg.style.width ? svg.style.width : '').replace('px',''), 10);
+      const hStyle = parseInt(String(svg.style && svg.style.height ? svg.style.height : '').replace('px',''), 10);
+      const w = (!isNaN(wAttr) && wAttr > 0) ? wAttr : (!isNaN(wStyle) && wStyle > 0) ? wStyle : 16;
+      const h = (!isNaN(hAttr) && hAttr > 0) ? hAttr : (!isNaN(hStyle) && hStyle > 0) ? hStyle : 16;
+      placeholder.style.cssText = `display:inline-block;width:${w}px;height:${h}px;vertical-align:middle;`;
+      if (w >= 22 && h >= 22) {
+        placeholder.textContent = '🏫';
+        placeholder.style.display = 'inline-flex';
+        placeholder.style.alignItems = 'center';
+        placeholder.style.justifyContent = 'center';
+        placeholder.style.fontSize = Math.max(12, Math.min(24, Math.round(Math.min(w, h) * 0.62))) + 'px';
+        placeholder.style.opacity = '0.86';
+      }
+      svg.replaceWith(placeholder);
+    });
+  }catch(e){}
 
   const h = tmpDiv.scrollHeight + 32;
   const w = tmpDiv.scrollWidth;

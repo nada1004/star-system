@@ -690,7 +690,7 @@
 <script src="js/sync/cloud-status.js?v=20260503-01"></script>
 <!-- html2canvas 라이브러리 직접 로드 (ensureHtml2Canvas와 동일 버전으로 통일) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="js/cloud-board.js?v=20260502-05"></script>
+<script src="js/cloud-board.js?v=20260512-01"></script>
 <script>
 // 즉시 saveCurrentView 함수 구현으로 오류 방지
 window.saveCurrentView = async function() {
@@ -866,106 +866,54 @@ window._preprocessImagesForCapture = function(element) {
   return problematicImages.length;
 };
 
-// 펨코스타일탭 이미지 저장을 위한 _captureAndSave 함수 구현
+// 펨코스타일탭 이미지 저장: cloud-board.js의 _captureAndSave(이미지 변환 포함)를 우선 사용
+const __captureAndSaveCore = window._captureAndSave;
 window._captureAndSave = async function(tmpDiv, w, h, filename) {
-  console.log('[HTML] _captureAndSave 즉시 실행');
-  
+  if (typeof __captureAndSaveCore === 'function') {
+    try{
+      return await __captureAndSaveCore(tmpDiv, w, h, filename);
+    }catch(e){
+      const msg = (e && e.message) ? e.message : String(e||'오류');
+      if (msg.includes("can't access property \"type\"") || msg.includes("can't access property 'type'")) {
+        throw new Error('이미지 저장 오류: SVG/아이콘 렌더링 중 오류가 발생했습니다.');
+      }
+      throw e;
+    }
+  }
+
   try {
     try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
-    // html2canvas 로드 확인
-    if (typeof html2canvas !== 'function') {
-      throw new Error('html2canvas를 불러오지 못했습니다.');
-    }
-    
-    // 강력한 이미지 전처리
-    const problemCount = window._preprocessImagesForCapture(tmpDiv);
-    
-    // 이미지 로드 대기
-    await new Promise(resolve => {
-      const images = tmpDiv.querySelectorAll('img');
-      let loadedCount = 0;
-      const totalImages = images.length;
-      
-      if (totalImages === 0) {
-        resolve();
-        return;
-      }
-      
-      images.forEach(img => {
-        if (img.complete) {
-          loadedCount++;
-        } else {
-          img.onload = () => {
-            loadedCount++;
-            if (loadedCount === totalImages) {
-              setTimeout(resolve, 500); // 추가 대기 시간
-            }
-          };
-          img.onerror = () => {
-            loadedCount++;
-            if (loadedCount === totalImages) {
-              setTimeout(resolve, 500);
-            }
-          };
-        }
-      });
-      
-      if (loadedCount === totalImages) {
-        setTimeout(resolve, 500);
-      }
-    });
-    
-    // 다크모드 처리
+    if (typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
+    if (typeof window._preprocessImagesForCapture === 'function') window._preprocessImagesForCapture(tmpDiv);
+
     const wasDark = document.body.classList.contains('dark');
     if (wasDark) document.body.classList.remove('dark');
-    
-    try {
+    try{
+      const bg = (() => {
+        try{
+          const c = window.getComputedStyle ? getComputedStyle(tmpDiv).backgroundColor : '';
+          if (c && c !== 'transparent' && c !== 'rgba(0, 0, 0, 0)') return c;
+        }catch(e){}
+        return '#ffffff';
+      })();
       const canvas = await html2canvas(tmpDiv, {
-        backgroundColor: '#ffffff',
+        backgroundColor: bg,
         scale: 1,
         useCORS: true,
         allowTaint: false,
         logging: false,
-        imageTimeout: 2000,  // 더 짧은 타임아웃
+        imageTimeout: 8000,
         width: w,
         height: h,
         windowWidth: w + 20,
         windowHeight: h + 20,
         x: 0, y: 0, scrollX: 0, scrollY: 0,
-        foreignObjectRendering: false,
-        // 강력한 클론 처리
-        onclone: function(clonedDoc) {
-          try {
-            try{
-              if(clonedDoc && clonedDoc.adoptedStyleSheets && clonedDoc.adoptedStyleSheets.length){
-                try{ clonedDoc.adoptedStyleSheets = []; }catch(e){}
-              }
-            }catch(e){}
-            // 클론된 문서에서도 이미지 문제 처리
-            const clonedImages = clonedDoc.querySelectorAll('img');
-            clonedImages.forEach(img => {
-              if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
-                img.style.display = 'none';
-              }
-              // 추가 안전장치
-              img.onerror = function() {
-                this.style.display = 'none';
-              };
-            });
-          } catch (e) {
-            console.warn('[HTML] 클론 처리 중 오류:', e);
-          }
-        }
+        foreignObjectRendering: false
       });
-      
-      if (!canvas || canvas.width === 0 || canvas.height === 0) {
-        throw new Error('캔버스 생성 실패');
-      }
-      
-      // 다운로드 구현 (대용량/브라우저 호환성)
-      if(typeof window._saveCanvasImage === 'function'){
+      if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
+      if (typeof window._saveCanvasImage === 'function') {
         await window._saveCanvasImage(canvas, filename, 'png');
-      }else{
+      } else {
         const dataUrl = canvas.toDataURL('image/png');
         const a = document.createElement('a');
         a.href = dataUrl;
@@ -974,29 +922,19 @@ window._captureAndSave = async function(tmpDiv, w, h, filename) {
         a.click();
         document.body.removeChild(a);
       }
-      
-    } finally {
+    }finally{
       if (wasDark) document.body.classList.add('dark');
     }
   } catch (e) {
-    console.error('[HTML] _captureAndSave 오류:', e);
-    // 특정 오류 메시지 처리
-    let errorMessage = '이미지 저장 오류: ';
-    if (e.message && e.message.includes("can't access property 'type'")) {
-      errorMessage += '이미지 처리 중 오류가 발생했습니다. 페이지를 새로고친 후 다시 시도해주세요.';
-    } else if (e.message && e.message.includes('html2canvas')) {
-      errorMessage += '화면 캡처 라이브러리 오류가 발생했습니다.';
-    } else {
-      errorMessage += (e && e.message ? e.message : String(e||'오류'));
-    }
-    throw new Error(errorMessage);
+    const msg = (e && e.message) ? e.message : String(e||'오류');
+    throw new Error('이미지 저장 오류: ' + msg);
   }
 };
 </script>
 <script src="js/init.js?v=20260509-01"></script>
 <script src="js/board2-image-utils.js?v=20260504-01"></script>
 <script src="js/board2-card-utils.js?v=20260501-10"></script>
-<script src="js/board2.js?v=20260504-01"></script>
+<script src="js/board2.js?v=20260512-01"></script>
 <!-- (성능) 챗봇은 열 때 지연 로딩 (render-core.js) -->
 <script src="js/mobile-bar.js?v=20260507-01"></script>
 
