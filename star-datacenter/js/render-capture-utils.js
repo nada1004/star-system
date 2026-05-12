@@ -30,7 +30,8 @@ async function capturePlayerModal(){
     _showSaveLoading();
     try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(body);
-    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
+    try{ if(typeof _waitForImages==='function') await _waitForImages(body,1500); }catch(e){}
+    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:15000});
     await _saveCanvasImage(canvas,`${st.currentName||'player'}_stat.png`,'png');
   }catch(e){alert('이미지 저장 오류: '+e.message);}
   finally{_hideSaveLoading();}
@@ -44,7 +45,8 @@ async function captureUnivModal(){
     _showSaveLoading();
     try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(body);
-    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
+    try{ if(typeof _waitForImages==='function') await _waitForImages(body,1500); }catch(e){}
+    const canvas=await html2canvas(body,{backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:15000});
     await _saveCanvasImage(canvas,`${title?title.innerText.replace('🏛️ ',''):'univ'}_대학정보.png`,'png');
   }catch(e){alert('이미지 저장 오류: '+e.message);}
   finally{_hideSaveLoading();}
@@ -57,7 +59,8 @@ async function captureDetail(id, filename){
     _showSaveLoading();
     try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     await _imgToDataUrls(el);
-    const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:false,allowTaint:false});
+    try{ if(typeof _waitForImages==='function') await _waitForImages(el,1500); }catch(e){}
+    const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,logging:false,imageTimeout:15000});
     await _saveCanvasImage(canvas,`경기상세_${filename}.png`,'png');
   }catch(e){alert('이미지 저장 오류: '+e.message);}
   finally{_hideSaveLoading();}
