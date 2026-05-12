@@ -1117,206 +1117,122 @@ async function _saveB2FemcoInternal(){
     console.warn('[saveB2FemcoAllImg] 대학 아이콘 주입 실패:', e.message);
   }
 
-  // 강력한 이미지 전처리 적용
+  // SVG/아이콘 오류 완전 해결 - 모든 SVG 제거
   try{
-    const toAbs = (u) => {
-      let s = String(u||'').trim();
-      if(!s) return '';
-      try{
-        if(typeof toHttpsUrl === 'function') s = toHttpsUrl(s) || s;
-      }catch(e){}
-      return s;
-    };
-    const stripProto = (u) => String(u||'').replace(/^https?:\/\//i, '');
-    const withCacheBust = (u) => {
-      const s = String(u||'');
-      return s + (s.includes('?') ? '&' : '?') + '_x=' + Date.now();
-    };
-    const loadToDataUrl = (src0, timeoutMs=6000) => {
-      return new Promise(resolve => {
-        let src = toAbs(src0);
-        if(!src || src.startsWith('data:') || src.startsWith('blob:')){ resolve(null); return; }
-        try{
-          if(window._imgDataUrlCache && window._imgDataUrlCache[src] && String(window._imgDataUrlCache[src]).startsWith('data:image/')){
-            resolve(window._imgDataUrlCache[src]);
-            return;
-          }
-        }catch(e){}
-        const tryUrls = [src, withCacheBust(src), 'https://images.weserv.nl/?url=' + encodeURIComponent(stripProto(src)) + '&n=-1&cb=' + Date.now()];
-        let attempt = 0;
-        let done = false;
-        const finish = (v) => { if(!done){ done = true; resolve(v||null); } };
-        const t = setTimeout(()=>finish(null), timeoutMs);
-        const tryLoad = () => {
-          if(done) return;
-          const url = tryUrls[attempt++] || null;
-          if(!url){ clearTimeout(t); finish(null); return; }
-          const loader = new Image();
-          loader.crossOrigin = 'anonymous';
-          loader.onload = () => {
-            if(done) return;
-            if(!loader.naturalWidth || !loader.naturalHeight){ tryLoad(); return; }
-            try{
-              const cv = document.createElement('canvas');
-              cv.width = loader.naturalWidth;
-              cv.height = loader.naturalHeight;
-              const ctx = cv.getContext('2d');
-              if(!ctx){ tryLoad(); return; }
-              ctx.drawImage(loader, 0, 0);
-              const dataUrl = cv.toDataURL('image/jpeg', 0.82);
-              if(!dataUrl || dataUrl === 'data:,'){ tryLoad(); return; }
-              try{
-                if(window._imgDataUrlCache){
-                  window._imgDataUrlCache[src] = dataUrl;
-                }
-              }catch(e){}
-              clearTimeout(t);
-              finish(dataUrl);
-            }catch(e){
-              tryLoad();
-            }
-          };
-          loader.onerror = () => { tryLoad(); };
-          loader.src = url;
-        };
-        tryLoad();
-      });
-    };
-    const bgEls = [...tmpDiv.querySelectorAll('[style*="background-image"]')];
-    const bgTargets = bgEls.filter(el => {
-      try{
-        const bg = String(el.style && el.style.backgroundImage ? el.style.backgroundImage : '');
-        return bg.includes('url(') && !bg.includes('data:image/');
-      }catch(e){ return false; }
-    });
-    const maxConc = 6;
-    let idx = 0;
-    const worker = async () => {
-      while(true){
-        const i = idx++;
-        if(i >= bgTargets.length) break;
-        const el = bgTargets[i];
-        let bg = '';
-        try{ bg = String(el.style.backgroundImage || ''); }catch(e){}
-        const m = bg.match(/url\((['"]?)([^'")]+)\1\)/i);
-        const src0 = m ? m[2] : '';
-        if(!src0) continue;
-        const dataUrl = await loadToDataUrl(src0, 7000);
-        if(dataUrl){
-          try{ el.style.backgroundImage = "url('" + dataUrl.replace(/'/g, '%27') + "')"; }catch(e){}
+    console.log('[펨코] SVG/아이콘 제거 시작');
+    
+    // 모든 SVG 제거 (오류의 주원인)
+    const svgs = tmpDiv.querySelectorAll('svg');
+    console.log(`[펨코] ${svgs.length}개 SVG 제거`);
+    svgs.forEach(svg => {
+      try {
+        if (svg.parentNode) {
+          const span = document.createElement('span');
+          span.textContent = '🏫';
+          span.style.cssText = 'display:inline-block;width:16px;height:16px;text-align:center;line-height:16px;font-size:12px;vertical-align:middle;';
+          svg.parentNode.replaceChild(span, svg);
         }
+      } catch (e) {
+        console.warn('[펨코] SVG 제거 실패:', e);
       }
-    };
-    if(bgTargets.length){
-      await Promise.all(Array.from({length: Math.min(maxConc, bgTargets.length)}, () => worker()));
-    }
-    try{
-      const svgs = tmpDiv.querySelectorAll('svg');
-      const ser = typeof XMLSerializer !== 'undefined' ? new XMLSerializer() : null;
-      svgs.forEach(svg => {
-        try{
-          if(!ser) return;
-          const svgText = ser.serializeToString(svg);
-          const data = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
-          const img = document.createElement('img');
-          img.src = data;
-          const rect = (svg.getBoundingClientRect ? svg.getBoundingClientRect() : null);
-          const w = Math.max(1, Math.round(rect && rect.width ? rect.width : 0)) || parseInt(svg.getAttribute('width')||'',10) || 16;
-          const h = Math.max(1, Math.round(rect && rect.height ? rect.height : 0)) || parseInt(svg.getAttribute('height')||'',10) || 16;
-          img.style.width = w + 'px';
-          img.style.height = h + 'px';
-          img.style.display = 'inline-block';
-          img.style.verticalAlign = 'middle';
-          svg.replaceWith(img);
-        }catch(e){}
-      });
-    }catch(e){}
-  }catch(e){}
-
-  try{
-    tmpDiv.querySelectorAll('img').forEach(img => {
-      try{
-        if (!img || !img.src) return;
-        if (img.src.includes('://') && !img.src.includes(window.location.hostname) && !img.crossOrigin) {
-          img.crossOrigin = 'anonymous';
-        }
-      }catch(e){}
     });
-  }catch(e){}
+    
+    // 모든 이미지 제거 (안전을 위해)
+    const images = tmpDiv.querySelectorAll('img');
+    console.log(`[펨코] ${images.length}개 이미지 제거`);
+    images.forEach(img => {
+      try {
+        if (img.parentNode) {
+          const span = document.createElement('span');
+          span.textContent = '🏫';
+          span.style.cssText = 'display:inline-block;width:16px;height:16px;text-align:center;line-height:16px;font-size:12px;vertical-align:middle;';
+          img.parentNode.replaceChild(span, img);
+        }
+      } catch (e) {
+        console.warn('[펨코] 이미지 제거 실패:', e);
+      }
+    });
+    
+    // 배경 이미지 제거
+    const bgEls = tmpDiv.querySelectorAll('[style*="background-image"]');
+    console.log(`[펨코] ${bgEls.length}개 배경 이미지 제거`);
+    bgEls.forEach(el => {
+      try {
+        el.style.backgroundImage = 'none';
+      } catch (e) {
+        console.warn('[펨코] 배경 이미지 제거 실패:', e);
+      }
+    });
+    
+    console.log('[펨코] 모든 그래픽 요소 제거 완료');
+    
+  } catch (e) {
+    console.warn('[펨코] 전처리 중 오류:', e);
+  }
 
   const h = tmpDiv.scrollHeight + 32;
   const w = tmpDiv.scrollWidth;
   const fname = '펨코현황판_전체_' + new Date().toISOString().slice(0,10) + '.png';
 
   try{
-    console.log('[펨코] 이미지 저장 시작');
+    console.log('[펨코] 이미지 저장 시작 - 모든 그래픽 제거 완료 상태');
     
-    // 간단한 방식으로 시도
-    if (typeof window._captureAndSave === 'function') {
-      console.log('[펨코] _captureAndSave 함수 사용');
-      await window._captureAndSave(tmpDiv, w, h, fname);
-    } else {
-      console.log('[펨코] 직접 html2canvas 사용');
-      
-      // html2canvas 확인
-      if (typeof html2canvas !== 'function') {
-        throw new Error('html2canvas를 불러오지 못했습니다.');
-      }
-      
-      // 모든 이미지 제거 (가장 안전한 방법)
-      const allImages = tmpDiv.querySelectorAll('img');
-      console.log(`[펨코] ${allImages.length}개 이미지 제거`);
-      allImages.forEach(img => {
-        if (img.parentNode) {
-          const placeholder = document.createElement('div');
-          placeholder.style.cssText = 'display:inline-block;width:16px;height:16px;background:#1a2332;border:1px solid #2a3545;vertical-align:middle;';
-          placeholder.textContent = '🏫';
-          placeholder.style.textAlign = 'center';
-          placeholder.style.lineHeight = '16px';
-          placeholder.style.fontSize = '12px';
-          img.parentNode.replaceChild(placeholder, img);
-        }
+    // html2canvas 확인
+    if (typeof html2canvas !== 'function') {
+      throw new Error('html2canvas를 불러오지 못했습니다.');
+    }
+    
+    // 다크모드 처리
+    const wasDark = document.body.classList.contains('dark');
+    if (wasDark) document.body.classList.remove('dark');
+    
+    try {
+      console.log('[펨코] html2canvas 캡처 시작');
+      const canvas = await html2canvas(tmpDiv, {
+        backgroundColor: '#0b1220',
+        scale: 1,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        imageTimeout: 5000,
+        width: w,
+        height: h,
+        windowWidth: w + 20,
+        windowHeight: h + 20,
+        x: 0, y: 0, scrollX: 0, scrollY: 0,
+        foreignObjectRendering: false
       });
       
-      // 다크모드 처리
-      const wasDark = document.body.classList.contains('dark');
-      if (wasDark) document.body.classList.remove('dark');
-      
-      try {
-        const canvas = await html2canvas(tmpDiv, {
-          backgroundColor: '#0b1220',
-          scale: 1,
-          useCORS: true,
-          allowTaint: false,
-          logging: false,
-          imageTimeout: 1000,
-          width: w,
-          height: h
-        });
-        
-        if (!canvas || canvas.width === 0 || canvas.height === 0) {
-          throw new Error('캔버스 생성 실패');
-        }
-        
-        // 다운로드
-        const dataUrl = canvas.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = fname;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        console.log('[펨코] 이미지 저장 성공');
-        
-      } finally {
-        if (wasDark) document.body.classList.add('dark');
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error('캔버스 생성 실패');
       }
+      
+      console.log('[펨코] 캔버스 생성 성공, 다운로드 시작');
+      
+      // 다운로드
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      console.log('[펨코] 이미지 저장 성공');
+      
+    } finally {
+      if (wasDark) document.body.classList.add('dark');
     }
     
   }catch(e){
     console.error('[펨코현황 이미지 저장 실패]', e);
-    alert('❌ 펨코스타일 이미지 저장 실패\n\n' + (e.message || '알 수 없는 오류가 발생했습니다.'));
+    let errorMsg = '❌ 펨코스타일 이미지 저장 실패\n\n';
+    if (e.message && e.message.includes("can't access property 'type'")) {
+      errorMsg += 'SVG/아이콘 렌더링 오류가 발생했습니다. 모든 그래픽이 제거되었지만 문제가 지속됩니다.';
+    } else {
+      errorMsg += (e.message || '알 수 없는 오류가 발생했습니다.');
+    }
+    alert(errorMsg);
   }finally{
     document.body.removeChild(tmpDiv);
     if (btn) { btn.disabled = false; btn.textContent = '💾 전체 저장'; }
