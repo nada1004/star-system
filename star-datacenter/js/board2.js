@@ -1185,67 +1185,74 @@ async function _saveB2FemcoInternal(){
   const fname = '펨코현황판_전체_' + new Date().toISOString().slice(0,10) + '.png';
 
   try{
-    // 직접 html2canvas 사용으로 오류 방지
-    if (typeof html2canvas !== 'function') {
-      throw new Error('html2canvas를 불러오지 못했습니다.');
-    }
+    console.log('[펨코] 이미지 저장 시작');
     
-    // 다크모드 처리
-    const wasDark = document.body.classList.contains('dark');
-    if (wasDark) document.body.classList.remove('dark');
-    
-    try {
-      const canvas = await html2canvas(tmpDiv, {
-        backgroundColor: '#0b1220',  // 펨코스타일 배경색
-        scale: 1,
-        useCORS: true,
-        allowTaint: false,
-        logging: false,
-        imageTimeout: 2000,  // 더 짧은 타임아웃
-        width: w,
-        height: h,
-        windowWidth: w + 20,
-        windowHeight: h + 20,
-        x: 0, y: 0, scrollX: 0, scrollY: 0,
-        onclone: function(clonedDoc) {
-          // 클론된 문서에서도 이미지 문제 처리
-          const clonedImages = clonedDoc.querySelectorAll('img');
-          clonedImages.forEach(img => {
-            if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
-              img.style.display = 'none';
-            }
-          });
+    // 간단한 방식으로 시도
+    if (typeof window._captureAndSave === 'function') {
+      console.log('[펨코] _captureAndSave 함수 사용');
+      await window._captureAndSave(tmpDiv, w, h, fname);
+    } else {
+      console.log('[펨코] 직접 html2canvas 사용');
+      
+      // html2canvas 확인
+      if (typeof html2canvas !== 'function') {
+        throw new Error('html2canvas를 불러오지 못했습니다.');
+      }
+      
+      // 모든 이미지 제거 (가장 안전한 방법)
+      const allImages = tmpDiv.querySelectorAll('img');
+      console.log(`[펨코] ${allImages.length}개 이미지 제거`);
+      allImages.forEach(img => {
+        if (img.parentNode) {
+          const placeholder = document.createElement('div');
+          placeholder.style.cssText = 'display:inline-block;width:16px;height:16px;background:#1a2332;border:1px solid #2a3545;vertical-align:middle;';
+          placeholder.textContent = '🏫';
+          placeholder.style.textAlign = 'center';
+          placeholder.style.lineHeight = '16px';
+          placeholder.style.fontSize = '12px';
+          img.parentNode.replaceChild(placeholder, img);
         }
       });
       
-      if (!canvas || canvas.width === 0 || canvas.height === 0) {
-        throw new Error('캔버스 생성 실패');
+      // 다크모드 처리
+      const wasDark = document.body.classList.contains('dark');
+      if (wasDark) document.body.classList.remove('dark');
+      
+      try {
+        const canvas = await html2canvas(tmpDiv, {
+          backgroundColor: '#0b1220',
+          scale: 1,
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          imageTimeout: 1000,
+          width: w,
+          height: h
+        });
+        
+        if (!canvas || canvas.width === 0 || canvas.height === 0) {
+          throw new Error('캔버스 생성 실패');
+        }
+        
+        // 다운로드
+        const dataUrl = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = fname;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        console.log('[펨코] 이미지 저장 성공');
+        
+      } finally {
+        if (wasDark) document.body.classList.add('dark');
       }
-      
-      // 다운로드 구현
-      const dataUrl = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = fname;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-    } finally {
-      if (wasDark) document.body.classList.add('dark');
     }
+    
   }catch(e){
     console.error('[펨코현황 이미지 저장 실패]', e);
-    // 특정 오류 메시지 처리
-    let errorMessage = '❌ 이미지 저장 실패\n\n';
-    if (e.message && e.message.includes("can't access property 'type'")) {
-      errorMessage += '이미지 처리 중 오류가 발생했습니다. 페이지를 새로고친 후 다시 시도해주세요.';
-    } else if (e.message && e.message.includes('html2canvas')) {
-      errorMessage += '화면 캡처 라이브러리 로드에 실패했습니다.';
-    } else {
-      errorMessage += (e.message || '알 수 없는 오류가 발생했습니다.');
-    }
-    alert(errorMessage);
+    alert('❌ 펨코스타일 이미지 저장 실패\n\n' + (e.message || '알 수 없는 오류가 발생했습니다.'));
   }finally{
     document.body.removeChild(tmpDiv);
     if (btn) { btn.disabled = false; btn.textContent = '💾 전체 저장'; }
