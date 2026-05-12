@@ -2048,6 +2048,33 @@ async function _dlCanvasBoard(canvas, filename) {
     return false;
   }
   const pngName = filename.replace(/\.jpg$/i, '.png');
+  const showOverlay = (src) => {
+    try{
+      const old = document.getElementById('__img_save_overlay');
+      if(old) old.remove();
+      const ov = document.createElement('div');
+      ov.id = '__img_save_overlay';
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;';
+      const safeName = String(pngName||'image.png').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      ov.innerHTML = `
+        <div style="width:min(980px,96vw);max-height:92vh;background:#0b1220;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 60px rgba(0,0,0,.45);display:flex;flex-direction:column">
+          <div style="display:flex;gap:10px;align-items:center;padding:12px 14px;background:rgba(15,23,42,.92);color:#fff">
+            <div style="font-weight:900;font-size:13px">이미지 저장</div>
+            <div style="font-size:12px;opacity:.8">자동 다운로드가 막혔습니다. PC는 우클릭 저장 / 모바일은 길게 눌러 저장</div>
+            <a href="${src}" download="${safeName}" style="margin-left:auto;text-decoration:none;color:#fff;background:#2563eb;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 10px;font-weight:900;font-size:12px">다운로드</a>
+            <button id="__img_save_overlay_close" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;border-radius:10px;padding:6px 10px;font-weight:900;cursor:pointer;font-size:12px">닫기</button>
+          </div>
+          <div style="padding:12px;overflow:auto;background:#111">
+            <img src="${src}" style="max-width:100%;display:block;margin:0 auto;border-radius:12px;background:#111">
+          </div>
+        </div>
+      `;
+      ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.remove(); });
+      document.body.appendChild(ov);
+      const btn = document.getElementById('__img_save_overlay_close');
+      if(btn) btn.onclick = ()=>ov.remove();
+    }catch(e){}
+  };
   const preWin = (() => {
     try{
       const w = window.__captureDlWin;
@@ -2102,7 +2129,9 @@ async function _dlCanvasBoard(canvas, filename) {
             if (!dataUrl || dataUrl === 'data:,') { alert('이미지 저장 실패: 빈 이미지입니다.'); resolve(false); return; }
             const ok = tryDownload(dataUrl);
             if(!ok && !preWin){
-              try{ window.open(dataUrl, '_blank', 'noopener'); }catch(e){}
+              let w = null;
+              try{ w = window.open(dataUrl, '_blank', 'noopener'); }catch(e){}
+              if(!w) showOverlay(dataUrl);
             }
             showInWindow(dataUrl, false);
             resolve(true);
@@ -2112,7 +2141,9 @@ async function _dlCanvasBoard(canvas, filename) {
         const url = URL.createObjectURL(blob);
         const ok = tryDownload(url);
         if(!ok && !preWin){
-          try{ window.open(url, '_blank', 'noopener'); }catch(e){}
+          let w = null;
+          try{ w = window.open(url, '_blank', 'noopener'); }catch(e){}
+          if(!w) showOverlay(url);
         }
         if(preWin){
           showInWindow(url, true);
