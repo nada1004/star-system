@@ -1101,6 +1101,26 @@ async function _saveB2FemcoInternal(){
   const btnSel = '[onclick="saveB2FemcoAllImg()"]';
   const btn = document.querySelector(btnSel);
   if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+  try{
+    const a = document.createElement('a');
+    const supportsDownload = ('download' in a);
+    const ua = String(navigator.userAgent||'');
+    const isIOS = /iPad|iPhone|iPod/i.test(ua);
+    const isInApp = /KAKAOTALK|Instagram|FBAN|FBAV|NAVER|Whale|Line/i.test(ua);
+    if(!supportsDownload || isIOS || isInApp){
+      const w = window.open('', '_blank');
+      if(w){
+        try{
+          w.document.write('<html><head><meta charset="utf-8"><title>이미지 생성 중...</title></head>'
+            + '<body style="margin:0;font-family:sans-serif;background:#111;color:#fff;padding:14px">'
+            + '펨코스타일 이미지 생성 중입니다... 잠시만 기다려주세요.'
+            + '</body></html>');
+          w.document.close();
+        }catch(e){}
+        window.__captureDlWin = w;
+      }
+    }
+  }catch(e){}
 
   const tmpDiv = document.createElement('div');
   // 현재 펨코현황과 동일한 스타일로 전체를 1장으로 캡처

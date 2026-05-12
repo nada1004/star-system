@@ -468,6 +468,26 @@ window.saveCurrentView = async function saveCurrentView(){
     if(typeof _showSaveLoading === 'function') _showSaveLoading();
     _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 준비 중...');
     try{
+      const a = document.createElement('a');
+      const supportsDownload = ('download' in a);
+      const ua = String(navigator.userAgent||'');
+      const isIOS = /iPad|iPhone|iPod/i.test(ua);
+      const isInApp = /KAKAOTALK|Instagram|FBAN|FBAV|NAVER|Whale|Line/i.test(ua);
+      if(!supportsDownload || isIOS || isInApp){
+        const w = window.open('', '_blank');
+        if(w){
+          try{
+            w.document.write('<html><head><meta charset="utf-8"><title>이미지 생성 중...</title></head>'
+              + '<body style="margin:0;font-family:sans-serif;background:#111;color:#fff;padding:14px">'
+              + '이미지 생성 중입니다... 잠시만 기다려주세요.'
+              + '</body></html>');
+            w.document.close();
+          }catch(e){}
+          window.__captureDlWin = w;
+        }
+      }
+    }catch(e){}
+    try{
       if(typeof _applyBoardBgAutoSizing === 'function') _applyBoardBgAutoSizing(tmpDiv);
       if(typeof _b2ApplyBgAutoSizing === 'function') _b2ApplyBgAutoSizing(tmpDiv);
     }catch(e){}
@@ -2028,10 +2048,51 @@ async function _dlCanvasBoard(canvas, filename) {
     return false;
   }
   const pngName = filename.replace(/\.jpg$/i, '.png');
-  if (typeof window._saveCanvasImage === 'function') {
+  const preWin = (() => {
+    try{
+      const w = window.__captureDlWin;
+      if(w && !w.closed) return w;
+    }catch(e){}
+    return null;
+  })();
+  try{ window.__captureDlWin = null; }catch(e){}
+
+  if (!preWin && typeof window._saveCanvasImage === 'function') {
     await window._saveCanvasImage(canvas, pngName, 'png');
     return true;
   }
+
+  const showInWindow = (src, isBlobUrl) => {
+    if(!preWin) return;
+    try{
+      if(isBlobUrl){
+        try{ preWin.location.href = src; }catch(e){}
+        return;
+      }
+      preWin.document.open();
+      preWin.document.write('<html><head><meta charset="utf-8"><title>이미지 저장</title></head>'
+        + '<body style="margin:0;background:#111;color:#fff;font-family:sans-serif">'
+        + '<div style="padding:12px;font-size:13px">이미지가 자동 다운로드되지 않으면, 아래 이미지를 길게 눌러 저장하세요.</div>'
+        + '<img src="' + src + '" style="max-width:100%;display:block;margin:0 auto">'
+        + '</body></html>');
+      preWin.document.close();
+    }catch(e){}
+  };
+
+  const tryDownload = (href) => {
+    try{
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = pngName;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { try{ document.body.removeChild(a); }catch(e){} }, 300);
+      return true;
+    }catch(e){
+      return false;
+    }
+  };
+
   return await new Promise((resolve) => {
     try{
       canvas.toBlob(blob => {
@@ -2039,19 +2100,26 @@ async function _dlCanvasBoard(canvas, filename) {
           try {
             const dataUrl = canvas.toDataURL('image/png');
             if (!dataUrl || dataUrl === 'data:,') { alert('이미지 저장 실패: 빈 이미지입니다.'); resolve(false); return; }
-            const a = document.createElement('a');
-            a.href = dataUrl; a.download = pngName;
-            document.body.appendChild(a); a.click();
-            setTimeout(() => document.body.removeChild(a), 300);
+            const ok = tryDownload(dataUrl);
+            if(!ok && !preWin){
+              try{ window.open(dataUrl, '_blank', 'noopener'); }catch(e){}
+            }
+            showInWindow(dataUrl, false);
             resolve(true);
           } catch(e) { alert('이미지 저장 실패: ' + e.message); resolve(false); }
           return;
         }
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = pngName;
-        document.body.appendChild(a); a.click();
-        setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 500);
+        const ok = tryDownload(url);
+        if(!ok && !preWin){
+          try{ window.open(url, '_blank', 'noopener'); }catch(e){}
+        }
+        if(preWin){
+          showInWindow(url, true);
+          setTimeout(() => { try{ URL.revokeObjectURL(url); }catch(e){} }, 120000);
+        }else{
+          setTimeout(() => { try{ URL.revokeObjectURL(url); }catch(e){} }, 800);
+        }
         resolve(true);
       }, 'image/png');
     }catch(e){
