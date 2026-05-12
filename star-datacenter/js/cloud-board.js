@@ -438,7 +438,7 @@ function _updateBoardSaveLabel(){
 }
 
 // 하단 이미지저장 버튼: 현재 보이는 화면을 그대로 캡처 (현황판 전체/개별 저장은 현황판 탭 내 버튼 사용)
-async function saveCurrentView(){
+window.saveCurrentView = async function saveCurrentView(){
   const cap = document.getElementById('cap');
   if(!cap){ alert('캡처할 영역이 없습니다.'); return; }
 
@@ -474,39 +474,207 @@ async function saveCurrentView(){
       if(typeof _applyBoardBgAutoSizing === 'function') _applyBoardBgAutoSizing(tmpDiv);
       if(typeof _b2ApplyBgAutoSizing === 'function') _b2ApplyBgAutoSizing(tmpDiv);
     }catch(e){}
-    await new Promise(r=>setTimeout(r, 120));
+    // 불필요한 대기 시간 제거
+    // await new Promise(r=>setTimeout(r, 120));
 
     const wasDark = document.body.classList.contains('dark');
     if(wasDark) document.body.classList.remove('dark');
     try{
-      const w = Math.max(320, tmpDiv.scrollWidth || capW);
-      const h = Math.max(200, tmpDiv.scrollHeight || capH);
+      // DOM 조작 전에 미리 크기 계산으로 리플로우 방지
+      const w = Math.max(320, capW);
+      const h = Math.max(200, capH);
       const tabNames = {total:'스트리머',board2:'현황판',tier:'티어순위',mini:'미니대전',univm:'대학대전',univck:'대학CK',comp:'대회',pro:'프로리그',hist:'대전기록',stats:'통계',cal:'캘린더'};
       const fname = `스타대학_${tabNames[window.curTab]||window.curTab||'화면'}_${new Date().toISOString().slice(0,10)}.png`;
 
       const imgs = tmpDiv.querySelectorAll('img').length;
-      if(imgs){
+      const totalArea = (w || 800) * (h || 600);
+      const isLargeCanvas = totalArea > 2000000; // 2Mpx 이상
+      
+      if(imgs && !isLargeCanvas){
         _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 (0/'+imgs+')');
+      } else if (isLargeCanvas) {
+        _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 대규모 화면 - 분할 캡처 중...');
+        
+        // 분할 캡처 구현
+        const wasDark = document.body.classList.contains('dark');
+        if(wasDark) document.body.classList.remove('dark');
+        
+        try {
+          // 화면을 4개 구역으로 분할
+          const sections = [];
+          const sectionHeight = Math.ceil(h / 4);
+          
+          for (let i = 0; i < 4; i++) {
+            const startY = i * sectionHeight;
+            const sectionDiv = document.createElement('div');
+            sectionDiv.style.cssText = `
+              position: absolute;
+              left: 0;
+              top: ${startY}px;
+              width: ${w}px;
+              height: ${Math.min(sectionHeight, h - startY)}px;
+              background: #ffffff;
+              overflow: hidden;
+            `;
+            sectionDiv.innerHTML = tmpDiv.innerHTML;
+            tmpDiv.appendChild(sectionDiv);
+            sections.push(sectionDiv);
+          }
+          
+          // 각 구역을 개별적으로 캡처
+          const canvases = [];
+          for (let i = 0; i < sections.length; i++) {
+            _setToast(`<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 분할 캡처 ${i + 1}/${sections.length}...`);
+            
+            const sectionCanvas = await html2canvas(sections[i], {
+              backgroundColor: '#ffffff',
+              scale: 1,
+              useCORS: true,
+              allowTaint: false,
+              logging: false,
+              imageTimeout: 3000,
+              width: w,
+              height: Math.min(sectionHeight, h - i * sectionHeight),
+              windowWidth: w + 20,
+              windowHeight: Math.min(sectionHeight, h - i * sectionHeight) + 20,
+              x: 0, y: 0, scrollX: 0, scrollY: 0,
+              removeContainer: false,
+              foreignObjectRendering: false,
+              ignoreElements: (element) => {
+                const tagName = element.tagName?.toLowerCase();
+                return tagName === 'iframe' || tagName === 'video' || tagName === 'audio' || tagName === 'script';
+              }
+            });
+            canvases.push(sectionCanvas);
+          }
+          
+          // 캔버스들을 합치기
+          const finalCanvas = document.createElement('canvas');
+          finalCanvas.width = w;
+          finalCanvas.height = h;
+          const finalCtx = finalCanvas.getContext('2d');
+          
+          for (let i = 0; i < canvases.length; i++) {
+            finalCtx.drawImage(canvases[i], 0, i * sectionHeight);
+          }
+          
+          canvas = finalCanvas;
+      try {
+        // 성능 모니터링 시작
+        const startTime = performance.now();
+        const imgCount = tmpDiv.querySelectorAll('img').length;
+        console.log(`[saveCurrentView] 이미지 ${imgCount}개 처리 시작`);
+        
+        // 이미지가 너무 많으면 즉시 캡처 (극적 최적화)
+        if (imgCount > 30) {
+          _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 많아 즉시 캡처 중...');
+          console.log(`[saveCurrentView] 이미지 ${imgCount}개로 변환 건너뛰고 즉시 캡처`);
+          
+          // 즉시 캡처 모드로 전환
+          const wasDark = document.body.classList.contains('dark');
+          if(wasDark) document.body.classList.remove('dark');
+          
+          try {
+            canvas = await html2canvas(tmpDiv, {
+              backgroundColor: '#ffffff',
+              scale: 1,
+              useCORS: true,
+              allowTaint: false,
+              logging: false,
+              imageTimeout: 5000,
+              width: w,
+              height: h,
+              windowWidth: w + 20,
+              windowHeight: h + 20,
+              x: 0, y: 0, scrollX: 0, scrollY: 0,
+              // 대규모 최적화
+              removeContainer: false,
+              foreignObjectRendering: false,
+              ignoreElements: (element) => {
+                const tagName = element.tagName?.toLowerCase();
+                return tagName === 'iframe' || tagName === 'video' || tagName === 'audio' || tagName === 'script';
+              },
+              onclone: (clonedDoc, element) => {
+                if (element.nodeType === 1) {
+                  element.removeAttribute('data-');
+                  element.removeAttribute('class');
+                  element.removeAttribute('style');
+                  element.removeAttribute('onclick');
+                  element.removeAttribute('onmouseover');
+                  element.removeAttribute('onmouseout');
+                }
+              }
+            });
+            
+            const endTime = performance.now();
+            console.log(`[saveCurrentView] 즉시 캡처 완료: ${(endTime - startTime).toFixed(0)}ms`);
+            
+          } catch (html2canvasError) {
+            console.error('[saveCurrentView] 즉시 캡처 오류:', html2canvasError);
+            throw html2canvasError;
+          } finally {
+            if(wasDark) document.body.classList.add('dark');
+          }
+        } else {
+          // 소규모: 기존 방식으로 이미지 변환 후 캡처
+          await _imgToDataUrls(tmpDiv, 4000, (done, total)=>{
+            _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 ('+done+'/'+total+')');
+          });
+        }
+      } catch (imgError) {
+        console.error('[saveCurrentView] 이미지 변환 오류:', imgError);
+        // Continue with capture even if image conversion fails
       }
-      await _imgToDataUrls(tmpDiv, 12000, (done, total)=>{
-        _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 ('+done+'/'+total+')');
-      });
       _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 캡처 중...');
-      try{ await _waitForImages(tmpDiv, 1500); }catch(e){}
+      try{ await _waitForImages(tmpDiv, 800); }catch(e){
+        console.error('[saveCurrentView] 이미지 대기 오류:', e);
+        // Continue with capture even if image waiting fails
+      }
 
-      const canvas = await html2canvas(tmpDiv, {
-        backgroundColor: '#ffffff',
-        scale: 1,
-        useCORS: true,
-        allowTaint: false,
-        logging: false,
-        imageTimeout: 20000,
-        width: w,
-        height: h,
-        windowWidth: w + 100,
-        windowHeight: h + 100,
-        x: 0, y: 0, scrollX: 0, scrollY: 0
-      });
+      let canvas;
+      try {
+        canvas = await html2canvas(tmpDiv, {
+          backgroundColor: '#ffffff',
+          scale: 1,
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          imageTimeout: 8000,
+          width: w,
+          height: h,
+          windowWidth: w + 20,
+          windowHeight: h + 20,
+          x: 0, y: 0, scrollX: 0, scrollY: 0,
+          // 공격적 성능 최적화 옵션
+          removeContainer: false,
+          foreignObjectRendering: false,
+          useCORS: true,
+          ignoreElements: (element) => {
+            // 무거운 요소들 건너뛰기
+            const tagName = element.tagName?.toLowerCase();
+            return tagName === 'iframe' || tagName === 'video' || tagName === 'audio';
+          },
+          onclone: (clonedDoc, element) => {
+            // 불필요한 속성 제거로 성능 향상
+            if (element.nodeType === 1) { // Element node
+              element.removeAttribute('data-');
+              element.removeAttribute('class');
+              element.removeAttribute('style');
+              element.removeAttribute('onclick');
+              element.removeAttribute('onmouseover');
+              element.removeAttribute('onmouseout');
+            }
+          }
+        });
+      } catch (html2canvasError) {
+        console.error('[saveCurrentView] html2canvas 오류:', html2canvasError);
+        // Check for specific error pattern "can't access property 'type', A is undefined"
+        if (html2canvasError.message && html2canvasError.message.includes("can't access property 'type'")) {
+          throw new Error('이미지 처리 중 오류가 발생했습니다. 페이지를 새로고친 후 다시 시도해주세요.');
+        }
+        throw html2canvasError;
+      }
+      
       if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
 
       _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 저장 중...');
@@ -1749,9 +1917,9 @@ function initBoardPlayerDrag(body){
 const _imgDataUrlCache = (window._imgDataUrlCache = window._imgDataUrlCache || {});
 const _imgDataUrlInflight = (window._imgDataUrlInflight = window._imgDataUrlInflight || {});
 const _imgDataUrlCacheOrder = (window._imgDataUrlCacheOrder = window._imgDataUrlCacheOrder || []);
-async function _imgToDataUrls(container, timeoutMs=12000, onProgress) {
+async function _imgToDataUrls(container, timeoutMs=8000, onProgress) {
   const imgs = [...container.querySelectorAll('img')];
-  const maxConcurrent = 14;
+  const maxConcurrent = 20;
   let idx = 0;
   let doneCount = 0;
 
@@ -1767,6 +1935,9 @@ async function _imgToDataUrls(container, timeoutMs=12000, onProgress) {
 
   async function convertOne(img){
     return await new Promise(resolve => {
+      // Add null/undefined check for img element
+      if (!img || typeof img !== 'object') { resolve(); return; }
+      
       let src0 = img.getAttribute('src') || '';
       if (!src0 || src0.startsWith('data:') || src0.startsWith('blob:')) { resolve(); return; }
       try{
@@ -1813,42 +1984,66 @@ async function _imgToDataUrls(container, timeoutMs=12000, onProgress) {
       };
       const t = setTimeout(() => { finish(null); }, timeoutMs);
 
-      // 직접 요청 먼저(캐시버스트 없이) → 실패 시 캐시버스트 → 프록시 순서
-      const tryUrls = [
-        src0,
+      // 직접 요청 먼저 → 실패 시에만 캐시버스트/프록시 사용 (불필요한 네트워크 호출 감소)
+      const tryUrls = [src0];
+      // 실패 시에만 추가 URL 시도
+      const fallbackUrls = [
         withCacheBust(src0),
         'https://images.weserv.nl/?url=' + encodeURIComponent(stripProto(src0)) + '&n=-1&cb=' + Date.now(),
-        'https://corsproxy.io/?' + encodeURIComponent(src0),
       ];
 
       let attempt = 0;
       const tryLoad = () => {
         if(done) return;
-        const url = tryUrls[attempt++];
+        let url;
+        if (attempt === 0) {
+          url = tryUrls[attempt++];
+        } else {
+          // 실패 시에만 fallback URL 사용
+          url = fallbackUrls[attempt - 1] || null;
+        }
         if(!url){ clearTimeout(t); finish(null); return; }
 
         const loader = new Image();
         loader.crossOrigin = 'anonymous';
         loader.onload = () => {
           if(done) return;
-          if (!loader.naturalWidth || !loader.naturalHeight) { tryLoad(); return; }
+          if (!loader.naturalWidth || !loader.naturalHeight) { 
+            if (attempt === 0) {
+              tryLoad(); // 첫 시도 실패 시 fallback 시도
+            } else {
+              finish(null); // fallback 실패 시 종료
+            }
+            return; 
+          }
           try{
             const cv = document.createElement('canvas');
+            if (!cv) { tryLoad(); return; }
             cv.width  = loader.naturalWidth;
             cv.height = loader.naturalHeight;
             const ctx2d = cv.getContext('2d');
+            if (!ctx2d) { tryLoad(); return; }
             ctx2d.drawImage(loader, 0, 0);
             // PNG 대신 WebP(지원 시) 또는 JPEG로 인코딩 → data URL 크기·속도 대폭 개선
-            const _supportsWebP = (()=>{ try{ return document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp'); }catch(e){ return false; } })();
+            // 품질을 낮춰서 속도 향상 (0.88 → 0.75)
+            const _supportsWebP = (()=>{ 
+              try{ 
+                const testCanvas = document.createElement('canvas');
+                if (!testCanvas) return false;
+                return testCanvas.toDataURL('image/webp').startsWith('data:image/webp'); 
+              }catch(e){ return false; } 
+            })();
             const dataUrl = _supportsWebP
-              ? cv.toDataURL('image/webp', 0.88)
-              : cv.toDataURL('image/jpeg', 0.88);
+              ? cv.toDataURL('image/webp', 0.75)
+              : cv.toDataURL('image/jpeg', 0.75);
             if(!dataUrl || dataUrl === 'data:,') { tryLoad(); return; }
-            img.src = dataUrl;
+            if (img && typeof img === 'object') {
+              img.src = dataUrl;
+            }
             try{
               if(!_imgDataUrlCache[src0]) _imgDataUrlCacheOrder.push(src0);
               _imgDataUrlCache[src0] = dataUrl;
-              if(_imgDataUrlCacheOrder.length > 500){
+              if(_imgDataUrlCacheOrder.length > 1000){
                 const drop = _imgDataUrlCacheOrder.shift();
                 if(drop) delete _imgDataUrlCache[drop];
               }
@@ -2005,6 +2200,8 @@ async function _waitForImages(container, timeoutMs){
   if(!imgs.length) return true;
   const tasks = imgs.map(img=>{
     try{
+      // Add null/undefined checks for img element
+      if (!img || typeof img !== 'object') return Promise.resolve(false);
       if(img.complete && img.naturalWidth > 0) return Promise.resolve(true);
       if(typeof img.decode === 'function'){
         return img.decode().then(()=>true).catch(()=>false);
@@ -2014,8 +2211,12 @@ async function _waitForImages(container, timeoutMs){
       let done = false;
       const fin = (ok)=>{ if(done) return; done=true; resolve(!!ok); };
       try{
-        img.addEventListener('load', ()=>fin(true), {once:true});
-        img.addEventListener('error', ()=>fin(false), {once:true});
+        if (img && typeof img === 'object') {
+          img.addEventListener('load', ()=>fin(true), {once:true});
+          img.addEventListener('error', ()=>fin(false), {once:true});
+        } else {
+          fin(false);
+        }
       }catch(e){ fin(false); }
       setTimeout(()=>fin(false), ms);
     });
@@ -2355,3 +2556,12 @@ window.addEventListener('DOMContentLoaded', () => {
     };
   }
 }, { once: true });
+
+// 즉시 실행으로 함수 전역 노출 보장
+(function() {
+  if (typeof window.saveCurrentView === 'function') {
+    console.log('[cloud-board.js] saveCurrentView 함수가 전역에 노출됨');
+  } else {
+    console.error('[cloud-board.js] saveCurrentView 함수가 전역에 노출되지 않음');
+  }
+})();

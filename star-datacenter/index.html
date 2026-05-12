@@ -182,7 +182,7 @@
 <!-- 하단 액션 버튼 바 -->
 <input type="file" id="fi" style="display:none" onchange="doFile(this)">
 <div id="actionBar" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--surface);border-top:1px solid var(--border);flex-wrap:wrap;">
-  <button class="btn btn-b" id="btn-img-save" onclick="saveCurrentView()" style="display:flex;align-items:center;gap:5px;"><span>📷</span> <span id="btn-img-save-label">이미지저장</span></button>
+  <button class="btn btn-b" id="btn-img-save" onclick="if(typeof window.saveCurrentView === 'function') window.saveCurrentView(); else alert('이미지 저장 기능 로딩 중입니다. 잠시 후 다시 시도해주세요.');" style="display:flex;align-items:center;gap:5px;"><span>📷</span> <span id="btn-img-save-label">이미지저장</span></button>
 
   <button id="btnExportVis" class="btn btn-w" onclick="doExport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📤</span> 데이터 내보내기</button>
   <button id="btnImportVis" class="btn btn-w" onclick="doImport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📁</span> 데이터 가져오기</button>
@@ -688,7 +688,157 @@
 <!-- (성능) vote/elboard/bgm/soop는 기능 사용 시 지연 로딩 (render-core.js/init.js) -->
 <script src="js/sync/cloud-apply.js?v=20260502-04"></script>
 <script src="js/sync/cloud-status.js?v=20260503-01"></script>
+<!-- html2canvas 라이브러리 직접 로드 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="js/cloud-board.js?v=20260502-05"></script>
+<script>
+// 즉시 saveCurrentView 함수 구현으로 오류 방지
+window.saveCurrentView = async function() {
+  console.log('[HTML] saveCurrentView 즉시 실행');
+  
+  const cap = document.getElementById('cap');
+  if(!cap){ 
+    alert('캡처할 영역이 없습니다.'); 
+    return; 
+  }
+
+  const btn = document.getElementById('btn-img-save');
+  const oldBtnHtml = btn ? btn.innerHTML : '';
+  if(btn){ 
+    btn.disabled = true; 
+    btn.innerHTML = '⏳ 저장중'; 
+  }
+
+  const _setToast = (text) => {
+    try{
+      const t = document.getElementById('_save-toast');
+      if(t) t.innerHTML = text;
+    }catch(e){}
+  };
+
+  const tmpDiv = document.createElement('div');
+  const capRect = cap.getBoundingClientRect();
+  const capW = Math.max(320, Math.round(capRect.width || cap.scrollWidth || 900));
+  const capH = Math.max(200, Math.round(cap.scrollHeight || cap.offsetHeight || capRect.height || 600));
+
+  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;width:${capW}px;min-height:${capH}px;background:#ffffff;padding:24px;box-sizing:border-box;`;
+  tmpDiv.innerHTML = cap.innerHTML;
+  tmpDiv.querySelectorAll('.no-export').forEach(el=>el.remove());
+
+  document.body.appendChild(tmpDiv);
+
+  try{
+    _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 저장 준비 중...');
+    
+    const w = Math.max(320, tmpDiv.scrollWidth || capW);
+    const h = Math.max(200, tmpDiv.scrollHeight || capH);
+    const tabNames = {total:'스트리머',board2:'현황판',tier:'티어순위',mini:'미니대전',univm:'대학대전',univck:'대학CK',comp:'대회',pro:'프로리그',hist:'대전기록',stats:'통계',cal:'캘린더'};
+    const fname = `스타대학_${tabNames[window.curTab]||window.curTab||'화면'}_${new Date().toISOString().slice(0,10)}.png`;
+
+    const wasDark = document.body.classList.contains('dark');
+    if(wasDark) document.body.classList.remove('dark');
+    
+    try{
+      // html2canvas 로드 확인
+      if(typeof html2canvas !== 'function') {
+        throw new Error('html2canvas를 불러오지 못했습니다.');
+      }
+      
+      _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 캡처 중...');
+      
+      const canvas = await html2canvas(tmpDiv, {
+        backgroundColor: '#ffffff',
+        scale: 1,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        imageTimeout: 5000,
+        width: w,
+        height: h,
+        windowWidth: w + 20,
+        windowHeight: h + 20,
+        x: 0, y: 0, scrollX: 0, scrollY: 0
+      });
+      
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error('캔버스 생성 실패');
+      }
+
+      _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 저장 중...');
+      
+      // 다운로드 구현
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+    }finally{
+      if(wasDark) document.body.classList.add('dark');
+    }
+  }catch(e){
+    alert('이미지 저장 오류: ' + (e && e.message ? e.message : String(e||'오류')));
+  }finally{
+    if(tmpDiv.parentNode) document.body.removeChild(tmpDiv);
+    if(btn){ 
+      btn.disabled = false; 
+      btn.innerHTML = oldBtnHtml; 
+    }
+  }
+};
+
+// 펨코스타일탭 이미지 저장을 위한 _captureAndSave 함수 구현
+window._captureAndSave = async function(tmpDiv, w, h, filename) {
+  console.log('[HTML] _captureAndSave 즉시 실행');
+  
+  try {
+    // html2canvas 로드 확인
+    if (typeof html2canvas !== 'function') {
+      throw new Error('html2canvas를 불러오지 못했습니다.');
+    }
+    
+    // 다크모드 처리
+    const wasDark = document.body.classList.contains('dark');
+    if (wasDark) document.body.classList.remove('dark');
+    
+    try {
+      const canvas = await html2canvas(tmpDiv, {
+        backgroundColor: '#ffffff',
+        scale: 1,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        imageTimeout: 5000,
+        width: w,
+        height: h,
+        windowWidth: w + 20,
+        windowHeight: h + 20,
+        x: 0, y: 0, scrollX: 0, scrollY: 0
+      });
+      
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error('캔버스 생성 실패');
+      }
+      
+      // 다운로드 구현
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+    } finally {
+      if (wasDark) document.body.classList.add('dark');
+    }
+  } catch (e) {
+    throw new Error('이미지 저장 오류: ' + (e && e.message ? e.message : String(e||'오류')));
+  }
+};
+</script>
 <script src="js/init.js?v=20260509-01"></script>
 <script src="js/board2-image-utils.js?v=20260504-01"></script>
 <script src="js/board2-card-utils.js?v=20260501-10"></script>
