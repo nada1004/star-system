@@ -799,6 +799,34 @@ window._captureAndSave = async function(tmpDiv, w, h, filename) {
       throw new Error('html2canvas를 불러오지 못했습니다.');
     }
     
+    // 이미지 전처리 - 문제 이미지 필터링
+    const images = tmpDiv.querySelectorAll('img');
+    const problematicImages = [];
+    
+    images.forEach((img, index) => {
+      // src가 없거나 비정상적인 이미지 필터링
+      if (!img.src || img.src === '' || img.src.startsWith('data:') && img.src.length < 100) {
+        problematicImages.push(img);
+      }
+      // 로드되지 않은 이미지 필터링
+      else if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
+        problematicImages.push(img);
+      }
+      // CORS 문제 가능성이 있는 외부 이미지 필터링
+      else if (img.src.includes('://') && !img.src.includes(window.location.hostname) && !img.crossOrigin) {
+        img.crossOrigin = 'anonymous';
+      }
+    });
+    
+    // 문제 이미지 제거 또는 대체
+    problematicImages.forEach(img => {
+      if (img.parentNode) {
+        const placeholder = document.createElement('div');
+        placeholder.style.cssText = 'display:inline-block;width:20px;height:20px;background:#f0f0f0;border:1px solid #ddd;';
+        img.parentNode.replaceChild(placeholder, img);
+      }
+    });
+    
     // 다크모드 처리
     const wasDark = document.body.classList.contains('dark');
     if (wasDark) document.body.classList.remove('dark');
@@ -810,12 +838,22 @@ window._captureAndSave = async function(tmpDiv, w, h, filename) {
         useCORS: true,
         allowTaint: false,
         logging: false,
-        imageTimeout: 5000,
+        imageTimeout: 3000,  // 타임아웃 감소
         width: w,
         height: h,
         windowWidth: w + 20,
         windowHeight: h + 20,
-        x: 0, y: 0, scrollX: 0, scrollY: 0
+        x: 0, y: 0, scrollX: 0, scrollY: 0,
+        // 추가 옵션으로 오류 방지
+        onclone: function(clonedDoc) {
+          // 클론된 문서에서도 이미지 문제 처리
+          const clonedImages = clonedDoc.querySelectorAll('img');
+          clonedImages.forEach(img => {
+            if (!img.complete || img.naturalWidth === 0) {
+              img.style.display = 'none';
+            }
+          });
+        }
       });
       
       if (!canvas || canvas.width === 0 || canvas.height === 0) {
@@ -835,7 +873,14 @@ window._captureAndSave = async function(tmpDiv, w, h, filename) {
       if (wasDark) document.body.classList.add('dark');
     }
   } catch (e) {
-    throw new Error('이미지 저장 오류: ' + (e && e.message ? e.message : String(e||'오류')));
+    // 특정 오류 메시지 처리
+    let errorMessage = '이미지 저장 오류: ';
+    if (e.message && e.message.includes("can't access property 'type'")) {
+      errorMessage += '이미지 처리 중 오류가 발생했습니다. 페이지를 새로고친 후 다시 시도해주세요.';
+    } else {
+      errorMessage += (e && e.message ? e.message : String(e||'오류'));
+    }
+    throw new Error(errorMessage);
   }
 };
 </script>
