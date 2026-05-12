@@ -467,9 +467,6 @@ window.saveCurrentView = async function saveCurrentView(){
   try{
     if(typeof _showSaveLoading === 'function') _showSaveLoading();
     _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 준비 중...');
-    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
-    if(typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
-
     try{
       if(typeof _applyBoardBgAutoSizing === 'function') _applyBoardBgAutoSizing(tmpDiv);
       if(typeof _b2ApplyBgAutoSizing === 'function') _b2ApplyBgAutoSizing(tmpDiv);
@@ -480,42 +477,7 @@ window.saveCurrentView = async function saveCurrentView(){
     const tabNames = {total:'스트리머',board2:'현황판',tier:'티어순위',mini:'미니대전',univm:'대학대전',univck:'대학CK',comp:'대회',pro:'프로리그',hist:'대전기록',stats:'통계',cal:'캘린더'};
     const fname = `스타대학_${tabNames[window.curTab]||window.curTab||'화면'}_${new Date().toISOString().slice(0,10)}.png`;
 
-    const imgs = tmpDiv.querySelectorAll('img').length;
-    if(imgs){
-      _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 (0/'+imgs+')');
-    }
-    try{
-      await _imgToDataUrls(tmpDiv, 12000, (done, total)=>{
-        _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 ('+done+'/'+total+')');
-      });
-    }catch(e){}
-
-    _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 캡처 중...');
-    try{ await _waitForImages(tmpDiv, 1500); }catch(e){}
-
-    const wasDark = document.body.classList.contains('dark');
-    if(wasDark) document.body.classList.remove('dark');
-    try{
-      const canvas = await html2canvas(tmpDiv, {
-        backgroundColor: '#ffffff',
-        scale: 1,
-        useCORS: true,
-        allowTaint: false,
-        logging: false,
-        imageTimeout: 20000,
-        width: w,
-        height: h,
-        windowWidth: w + 100,
-        windowHeight: h + 100,
-        x: 0, y: 0, scrollX: 0, scrollY: 0,
-        foreignObjectRendering: false
-      });
-      if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
-      _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 저장 중...');
-      await _dlCanvasBoard(canvas, fname);
-    }finally{
-      if(wasDark) document.body.classList.add('dark');
-    }
+    await _captureAndSave(tmpDiv, w, h, fname);
   }catch(e){
     alert('이미지 저장 오류: ' + (e && e.message ? e.message : String(e||'오류')));
   }finally{
@@ -2146,6 +2108,17 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
         }catch(e){}
         if(!aggressive) return;
         try{ clonedDoc.querySelectorAll('svg').forEach(el => el.remove()); }catch(e){}
+        try{
+          clonedDoc.querySelectorAll('img').forEach(img => {
+            try{
+              const src = String(img.getAttribute('src') || img.src || '');
+              if(!src) return;
+              if(src.includes('data:image/svg+xml') || /\.svg(\?|#|$)/i.test(src)){
+                img.style.display = 'none';
+              }
+            }catch(e){}
+          });
+        }catch(e){}
         try{
           clonedDoc.querySelectorAll('[style*="background-image"]').forEach(el => {
             try{

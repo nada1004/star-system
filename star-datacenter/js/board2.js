@@ -1228,6 +1228,55 @@ async function _saveB2FemcoInternal(){
       }
     }catch(e){}
 
+    // 2.5) IMG(data:image/svg+xml) → PNG dataURL로 래스터화 (html2canvas SVG 파서 크래시 회피)
+    try{
+      const svgImgs = [...tmpDiv.querySelectorAll('img')].filter(img => {
+        try{
+          const src = String(img.getAttribute('src') || img.src || '');
+          return src.includes('data:image/svg+xml');
+        }catch(e){ return false; }
+      });
+      const maxConc2 = 4;
+      let idx2 = 0;
+      const worker2 = async () => {
+        while(true){
+          const i = idx2++;
+          if(i >= svgImgs.length) break;
+          const img = svgImgs[i];
+          let src = '';
+          try{ src = String(img.getAttribute('src') || img.src || ''); }catch(e){}
+          if(!src) continue;
+          try{
+            const loader = new Image();
+            loader.crossOrigin = 'anonymous';
+            const p = new Promise((resolve) => {
+              let done = false;
+              const fin = (ok)=>{ if(done) return; done = true; resolve(!!ok); };
+              loader.onload = ()=>fin(true);
+              loader.onerror = ()=>fin(false);
+              setTimeout(()=>fin(false), 2500);
+            });
+            loader.src = src;
+            const ok = await p;
+            if(!ok || !loader.naturalWidth || !loader.naturalHeight) continue;
+            const cv = document.createElement('canvas');
+            cv.width = loader.naturalWidth;
+            cv.height = loader.naturalHeight;
+            const ctx = cv.getContext('2d');
+            if(!ctx) continue;
+            ctx.drawImage(loader, 0, 0);
+            const png = cv.toDataURL('image/png');
+            if(!png || png === 'data:,') continue;
+            img.setAttribute('src', png);
+            img.src = png;
+          }catch(e){}
+        }
+      };
+      if(svgImgs.length){
+        await Promise.all(Array.from({length: Math.min(maxConc2, svgImgs.length)}, () => worker2()));
+      }
+    }catch(e){}
+
     // 3) IMG들 dataURL 인라인화 (프로필/대학로고 유지)
     try{
       if (typeof _imgToDataUrls === 'function') {
