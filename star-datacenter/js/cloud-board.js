@@ -1756,10 +1756,14 @@ async function _imgToDataUrls(container, timeoutMs=12000, onProgress) {
   let doneCount = 0;
 
   const stripProto = (u) => String(u||'').replace(/^https?:\/\//i, '');
+  // 캐시버스트는 직접 요청 실패 후 재시도 때만 사용 (브라우저 HTTP 캐시 보존)
   const withCacheBust = (u) => {
     const s = String(u||'');
     return s + (s.includes('?') ? '&' : '?') + '_x=' + Date.now();
   };
+
+  // 동일 URL 중복 변환 방지: inflight Promise 공유
+  const _inflight = {};
 
   async function convertOne(img){
     return await new Promise(resolve => {
@@ -1775,6 +1779,7 @@ async function _imgToDataUrls(container, timeoutMs=12000, onProgress) {
         }
       }catch(e){}
 
+      // 1) 세션 캐시 히트 → 즉시 반환
       try{
         const cached = _imgDataUrlCache[src0];
         if(cached && typeof cached === 'string' && cached.startsWith('data:image/')){
@@ -1784,20 +1789,43 @@ async function _imgToDataUrls(container, timeoutMs=12000, onProgress) {
         }
       }catch(e){}
 
-      let done = false;
-      const finish = () => { if(!done){ done=true; resolve(); } };
-      const t = setTimeout(() => { finish(); }, timeoutMs);
+      // 2) 동일 URL을 다른 worker가 이미 변환 중이면 그 결과를 기다림 (중복 네트워크 요청 방지)
+      if(_inflight[src0]){
+        _inflight[src0].then(dataUrl => {
+          if(dataUrl) try{ img.src = dataUrl; }catch(e){}
+          resolve();
+        }).catch(()=>resolve());
+        return;
+      }
 
-      const tryUrls = [];
-      tryUrls.push(withCacheBust(src0));
-      tryUrls.push('https://images.weserv.nl/?url=' + encodeURIComponent(stripProto(src0)) + '&n=-1&cb=' + Date.now());
-      tryUrls.push('https://corsproxy.io/?' + encodeURIComponent(src0));
+      let done = false;
+      let inflightResolve;
+      const inflightPromise = new Promise(r => { inflightResolve = r; });
+      _inflight[src0] = inflightPromise;
+
+      const finish = (dataUrl) => {
+        if(!done){
+          done = true;
+          try{ inflightResolve(dataUrl||null); }catch(e){}
+          try{ delete _inflight[src0]; }catch(e){}
+          resolve();
+        }
+      };
+      const t = setTimeout(() => { finish(null); }, timeoutMs);
+
+      // 직접 요청 먼저(캐시버스트 없이) → 실패 시 캐시버스트 → 프록시 순서
+      const tryUrls = [
+        src0,
+        withCacheBust(src0),
+        'https://images.weserv.nl/?url=' + encodeURIComponent(stripProto(src0)) + '&n=-1&cb=' + Date.now(),
+        'https://corsproxy.io/?' + encodeURIComponent(src0),
+      ];
 
       let attempt = 0;
       const tryLoad = () => {
         if(done) return;
         const url = tryUrls[attempt++];
-        if(!url){ clearTimeout(t); finish(); return; }
+        if(!url){ clearTimeout(t); finish(null); return; }
 
         const loader = new Image();
         loader.crossOrigin = 'anonymous';
@@ -1810,7 +1838,11 @@ async function _imgToDataUrls(container, timeoutMs=12000, onProgress) {
             cv.height = loader.naturalHeight;
             const ctx2d = cv.getContext('2d');
             ctx2d.drawImage(loader, 0, 0);
-            const dataUrl = cv.toDataURL('image/png');
+            // PNG 대신 WebP(지원 시) 또는 JPEG로 인코딩 → data URL 크기·속도 대폭 개선
+            const _supportsWebP = (()=>{ try{ return document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp'); }catch(e){ return false; } })();
+            const dataUrl = _supportsWebP
+              ? cv.toDataURL('image/webp', 0.88)
+              : cv.toDataURL('image/jpeg', 0.88);
             if(!dataUrl || dataUrl === 'data:,') { tryLoad(); return; }
             img.src = dataUrl;
             try{
@@ -1822,7 +1854,7 @@ async function _imgToDataUrls(container, timeoutMs=12000, onProgress) {
               }
             }catch(e){}
             clearTimeout(t);
-            finish();
+            finish(dataUrl);
           }catch(e){
             tryLoad();
           }
@@ -1899,7 +1931,10 @@ async function _precacheImgDataUrl(src0, timeoutMs){
           cv.height = loader.naturalHeight;
           const ctx = cv.getContext('2d');
           ctx.drawImage(loader, 0, 0);
-          const dataUrl = cv.toDataURL('image/png');
+          const _supportsWebP = (()=>{ try{ return document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp'); }catch(e){ return false; } })();
+          const dataUrl = _supportsWebP
+            ? cv.toDataURL('image/webp', 0.88)
+            : cv.toDataURL('image/jpeg', 0.88);
           if(!dataUrl || dataUrl === 'data:,'){ tryLoad(); return; }
           try{
             if(!_imgDataUrlCache[src]) _imgDataUrlCacheOrder.push(src);
@@ -2033,10 +2068,11 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
   try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
   if (typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
   try{
-    await new Promise(r=>setTimeout(r, 80));
+    // 레이아웃 강제 flush: 고정 80ms×2 대신 rAF 2프레임으로 최소 대기
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     if(typeof _applyBoardBgAutoSizing === 'function') _applyBoardBgAutoSizing(tmpDiv);
     if(typeof _b2ApplyBgAutoSizing === 'function') _b2ApplyBgAutoSizing(tmpDiv);
-    await new Promise(r=>setTimeout(r, 80));
+    await new Promise(r => requestAnimationFrame(r));
   }catch(e){}
 
   try{
@@ -2098,7 +2134,7 @@ async function downloadBoardAll(){
       if(uObj&&uObj.hidden)card.remove();
     });
     document.body.appendChild(tmpDiv);
-    await new Promise(r=>setTimeout(r,300));
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
     await _imgToDataUrls(tmpDiv, 12000);
 
@@ -2193,7 +2229,7 @@ async function downloadBoardSel(){
     tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el=>el.remove());
     document.body.appendChild(tmpDiv);
     injectUnivIcons(tmpDiv);
-    await new Promise(r=>setTimeout(r,400));
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     void tmpDiv.getBoundingClientRect();
     const selW = tmpDiv.offsetWidth || 900;
     const selH = Math.max(tmpDiv.scrollHeight, tmpDiv.offsetHeight, 100);

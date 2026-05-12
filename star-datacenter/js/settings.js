@@ -540,7 +540,7 @@ window.applyRecVsGap = function(){
     const isMobile = w <= 768;
     const key = isMobile ? 'su_rc_vs_gap_mb' : 'su_rc_vs_gap_pc';
     const px = parseInt(localStorage.getItem(key) || (isMobile?'8':'12'), 10);
-    const v = Math.max(0, Math.min(30, isNaN(px)?(isMobile?8:12):px));
+    const v = Math.max(0, Math.min(120, isNaN(px)?(isMobile?8:12):px));
     document.documentElement.style.setProperty('--rc-vs-gap', v+'px');
   }catch(e){}
 };
@@ -548,8 +548,8 @@ window.cfgSetRecVsGapSettings = function(){
   try{
     const pc = parseInt(document.getElementById('cfg-rc-gap-pc')?.value||'12',10);
     const mb = parseInt(document.getElementById('cfg-rc-gap-mb')?.value||'8',10);
-    localStorage.setItem('su_rc_vs_gap_pc', String(Math.max(0,Math.min(30,isNaN(pc)?12:pc))));
-    localStorage.setItem('su_rc_vs_gap_mb', String(Math.max(0,Math.min(30,isNaN(mb)?8:mb))));
+    localStorage.setItem('su_rc_vs_gap_pc', String(Math.max(0,Math.min(120,isNaN(pc)?12:pc))));
+    localStorage.setItem('su_rc_vs_gap_mb', String(Math.max(0,Math.min(120,isNaN(mb)?8:mb))));
   }catch(e){}
   try{ window.applyRecVsGap && window.applyRecVsGap(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
@@ -677,7 +677,7 @@ window.applyTourneyVsGap = function(){
     const isMobile = w <= 768;
     const key = isMobile ? 'su_tc_vs_gap_mb' : 'su_tc_vs_gap_pc';
     const px = parseInt(localStorage.getItem(key) || (isMobile?'8':'12'), 10);
-    const v = Math.max(0, Math.min(36, isNaN(px)?(isMobile?8:12):px));
+    const v = Math.max(0, Math.min(120, isNaN(px)?(isMobile?8:12):px));
     document.documentElement.style.setProperty('--tc-vs-gap', v+'px');
   }catch(e){}
 };
@@ -685,8 +685,8 @@ window.cfgSetTourneyVsGapSettings = function(){
   try{
     const pc = parseInt(document.getElementById('cfg-tc-gap-pc')?.value||'12',10);
     const mb = parseInt(document.getElementById('cfg-tc-gap-mb')?.value||'8',10);
-    localStorage.setItem('su_tc_vs_gap_pc', String(Math.max(0,Math.min(36,isNaN(pc)?12:pc))));
-    localStorage.setItem('su_tc_vs_gap_mb', String(Math.max(0,Math.min(36,isNaN(mb)?8:mb))));
+    localStorage.setItem('su_tc_vs_gap_pc', String(Math.max(0,Math.min(120,isNaN(pc)?12:pc))));
+    localStorage.setItem('su_tc_vs_gap_mb', String(Math.max(0,Math.min(120,isNaN(mb)?8:mb))));
   }catch(e){}
   try{ window.applyTourneyVsGap && window.applyTourneyVsGap(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
@@ -4505,17 +4505,17 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="font-size:11px;color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(기록탭)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
-          <input type="range" id="cfg-rc-gap-pc" min="0" max="30" step="1"
-            value="${Math.max(0,Math.min(30,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}"
+          <input type="range" id="cfg-rc-gap-pc" min="0" max="120" step="2"
+            value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}"
             oninput="document.getElementById('cfg-rc-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetRecVsGapSettings()" style="width:140px">
-          <span id="cfg-rc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(30,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}px</span>
+          <span id="cfg-rc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}px</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
-          <input type="range" id="cfg-rc-gap-mb" min="0" max="30" step="1"
-            value="${Math.max(0,Math.min(30,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}"
+          <input type="range" id="cfg-rc-gap-mb" min="0" max="120" step="2"
+            value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}"
             oninput="document.getElementById('cfg-rc-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetRecVsGapSettings()" style="width:140px">
-          <span id="cfg-rc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(30,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}px</span>
+          <span id="cfg-rc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}px</span>
         </div>
         <span style="font-size:11px;color:var(--gray-l)">※ “스코어 - 대학버튼” 좌우 간격</span>
       </div>
@@ -4770,17 +4770,17 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="font-size:11px;color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(대회탭)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
-          <input type="range" id="cfg-tc-gap-pc" min="0" max="36" step="1"
-            value="${Math.max(0,Math.min(36,parseInt(localStorage.getItem('su_tc_vs_gap_pc')||'12',10)||12))}"
+          <input type="range" id="cfg-tc-gap-pc" min="0" max="120" step="2"
+            value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_tc_vs_gap_pc')||'12',10)||12))}"
             oninput="document.getElementById('cfg-tc-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetTourneyVsGapSettings()" style="width:140px">
-          <span id="cfg-tc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(36,parseInt(localStorage.getItem('su_tc_vs_gap_pc')||'12',10)||12))}px</span>
+          <span id="cfg-tc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_tc_vs_gap_pc')||'12',10)||12))}px</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
-          <input type="range" id="cfg-tc-gap-mb" min="0" max="36" step="1"
-            value="${Math.max(0,Math.min(36,parseInt(localStorage.getItem('su_tc_vs_gap_mb')||'8',10)||8))}"
+          <input type="range" id="cfg-tc-gap-mb" min="0" max="120" step="2"
+            value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_tc_vs_gap_mb')||'8',10)||8))}"
             oninput="document.getElementById('cfg-tc-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetTourneyVsGapSettings()" style="width:140px">
-          <span id="cfg-tc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(36,parseInt(localStorage.getItem('su_tc_vs_gap_mb')||'8',10)||8))}px</span>
+          <span id="cfg-tc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_tc_vs_gap_mb')||'8',10)||8))}px</span>
         </div>
       </div>
 

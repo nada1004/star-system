@@ -1,0 +1,681 @@
+/* ══════════════════════════════════════════════════════════════
+   Star DataCenter — UI/UX 전면 개선 패치 v2.0
+   대상: 경기 기록카드 / 팀버튼 / 참여자버튼 / 조별리그 / 토너먼트 /
+         개인전 / 끝장전 / 프로리그 / 미니대전 / 대학대전 / 티어대회
+   ══════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════
+   0. 디자인 토큰 확장
+   ════════════════════════════ */
+:root {
+  --card-radius: 20px;
+  --card-radius-sm: 14px;
+  --card-shadow: 0 2px 12px rgba(15,23,42,.06), 0 8px 32px rgba(15,23,42,.04);
+  --card-shadow-hover: 0 12px 40px rgba(15,23,42,.13), 0 4px 12px rgba(15,23,42,.06);
+  --chip-radius: 14px;
+  --chip-shadow: 0 8px 22px rgba(15,23,42,.14);
+  --mem-btn-h: 34px;
+  --team-btn-min-w: 130px;
+  --badge-font: 10px;
+  --win-green: #16a34a;
+  --win-green-glow: rgba(22,163,74,.18);
+  --lose-gray: rgba(100,116,139,.55);
+  --score-font: 28px;
+  --card-border: 1px solid rgba(148,163,184,.18);
+  --tr-fast: 0.15s cubic-bezier(.4,0,.2,1);
+  --tr-med: 0.22s cubic-bezier(.4,0,.2,1);
+}
+
+/* ════════════════════════════
+   1. 경기 기록카드 공통 (match-card-v3)
+   ════════════════════════════ */
+
+/* 기본 카드 — 더 풍성한 그림자 + 뚜렷한 border */
+.grp-match-card {
+  border-radius: var(--card-radius) !important;
+  border: var(--card-border) !important;
+  box-shadow: var(--card-shadow) !important;
+  background: var(--white) !important;
+  padding: 14px 18px !important;
+  margin-bottom: 10px !important;
+  transition: box-shadow var(--tr-med), transform var(--tr-med) !important;
+}
+.grp-match-card:hover {
+  box-shadow: var(--card-shadow-hover) !important;
+  transform: translateY(-3px) !important;
+}
+
+/* match-card-v3 강화 */
+.grp-match-card.match-card-v3 {
+  border-radius: var(--card-radius) !important;
+  padding: 16px 20px !important;
+  gap: 16px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  background: linear-gradient(145deg, #ffffff, #f8faff) !important;
+  border-left-width: 5px !important;
+  box-shadow:
+    0 2px 12px rgba(15,23,42,.05),
+    0 8px 28px rgba(15,23,42,.06),
+    inset 0 1px 0 rgba(255,255,255,.9) !important;
+}
+.grp-match-card.match-card-v3::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(135deg, rgba(255,255,255,.7) 0%, transparent 60%) !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+.grp-match-card.match-card-v3 > * {
+  position: relative !important;
+  z-index: 1 !important;
+}
+.grp-match-card.match-card-v3:hover {
+  box-shadow:
+    0 16px 48px rgba(15,23,42,.12),
+    0 4px 14px rgba(15,23,42,.06),
+    inset 0 1px 0 rgba(255,255,255,.95) !important;
+  transform: translateY(-4px) !important;
+}
+
+/* ════════════════════════════
+   2. GROUP / 라운드 뱃지
+   ════════════════════════════ */
+.grp-badge {
+  border-radius: 999px !important;
+  padding: 5px 14px !important;
+  font-size: var(--badge-font) !important;
+  font-weight: 900 !important;
+  letter-spacing: .8px !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 3px 12px rgba(0,0,0,.22) !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,.28) !important;
+  white-space: nowrap !important;
+}
+
+/* ════════════════════════════
+   3. 팀 칩 (grp-team-chip) — 크고 이쁘게
+   ════════════════════════════ */
+.grp-team-chip {
+  min-width: var(--team-btn-min-w) !important;
+  padding: 12px 18px !important;
+  border-radius: var(--chip-radius) !important;
+  gap: 8px !important;
+  box-shadow: var(--chip-shadow) !important;
+  border: 1.5px solid rgba(255,255,255,.3) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+  transition: transform var(--tr-fast), box-shadow var(--tr-fast) !important;
+  backdrop-filter: saturate(1.1) !important;
+}
+/* 광택 오버레이 */
+.grp-team-chip::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0; left: 0; right: 0 !important;
+  height: 50% !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.22), transparent) !important;
+  pointer-events: none !important;
+  border-radius: inherit !important;
+  z-index: 1 !important;
+}
+.grp-team-chip span {
+  position: relative !important;
+  z-index: 2 !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  letter-spacing: -.02em !important;
+  text-shadow: 0 2px 8px rgba(0,0,0,.3) !important;
+}
+.grp-team-chip img.tc-uicon {
+  position: relative !important;
+  z-index: 2 !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18) !important;
+  object-fit: contain !important;
+}
+.grp-team-chip:hover {
+  transform: translateY(-3px) scale(1.03) !important;
+  box-shadow: 0 16px 36px rgba(15,23,42,.26) !important;
+}
+.grp-team-chip:active {
+  transform: scale(.97) !important;
+}
+
+/* 패배팀 칩 — 흑백+투명 처리 */
+.grp-team-chip[style*="opacity:.55"],
+.grp-team-chip[style*="opacity: .55"] {
+  box-shadow: 0 4px 12px rgba(15,23,42,.07) !important;
+}
+
+/* ════════════════════════════
+   4. 참여자(멤버) 버튼 — 팀 칩 아래, 크고 예쁘게
+   ════════════════════════════ */
+.grp-mem-btn {
+  --mem-col: #2563eb;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  min-height: var(--mem-btn-h) !important;
+  padding: 6px 14px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: -.01em !important;
+  cursor: pointer !important;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--mem-col) 16%, #ffffff 84%),
+    color-mix(in srgb, var(--mem-col) 8%, #ffffff 92%)
+  ) !important;
+  border: 1.5px solid color-mix(in srgb, var(--mem-col) 38%, transparent) !important;
+  color: var(--mem-col) !important;
+  box-shadow:
+    0 3px 10px color-mix(in srgb, var(--mem-col) 20%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.8) !important;
+  transition: transform var(--tr-fast), box-shadow var(--tr-fast), filter var(--tr-fast) !important;
+  white-space: nowrap !important;
+}
+.grp-mem-btn .mem-ico {
+  font-size: 13px !important;
+  line-height: 1 !important;
+}
+.grp-mem-btn:hover {
+  transform: translateY(-2px) !important;
+  filter: saturate(1.15) brightness(1.03) !important;
+  box-shadow:
+    0 8px 20px color-mix(in srgb, var(--mem-col) 28%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.9) !important;
+}
+.grp-mem-btn:active {
+  transform: scale(.96) !important;
+}
+
+/* 팀 컬럼 — 칩과 멤버버튼 사이 간격 */
+.grp-team-col {
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+/* ════════════════════════════
+   5. 스코어 박스
+   ════════════════════════════ */
+.grp-match-score {
+  font-size: var(--score-font) !important;
+  font-weight: 1000 !important;
+  letter-spacing: -1px !important;
+  background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(240,249,255,.94)) !important;
+  border: 1.5px solid rgba(148,163,184,.2) !important;
+  border-radius: 20px !important;
+  padding: 10px 20px !important;
+  box-shadow:
+    0 8px 24px rgba(15,23,42,.08),
+    inset 0 1px 0 rgba(255,255,255,.95),
+    inset 0 -1px 0 rgba(148,163,184,.12) !important;
+}
+.grp-match-score .wt {
+  color: var(--win-green) !important;
+  text-shadow: 0 2px 10px var(--win-green-glow) !important;
+}
+.grp-match-score .lt {
+  color: #94a3b8 !important;
+  opacity: .8 !important;
+}
+.grp-score-col {
+  min-width: 96px !important;
+  align-self: center !important;
+}
+.grp-score-col .grp-match-score {
+  justify-content: center !important;
+  font-size: 26px !important;
+  padding: 10px 20px !important;
+}
+
+/* ════════════════════════════
+   6. 개인전 / 끝장전 / 프로리그끝장전 카드
+   ════════════════════════════ */
+
+/* 개인전/끝장전 기록 래퍼 */
+div[style*="border-radius:12px"][style*="overflow:hidden"]:has(.wt),
+div[style*="border-radius:12px"][style*="overflow:hidden"] {
+  border-radius: 18px !important;
+  box-shadow: var(--card-shadow) !important;
+  transition: box-shadow var(--tr-med), transform var(--tr-med) !important;
+  margin-bottom: 10px !important;
+}
+div[style*="border-radius:12px"][style*="overflow:hidden"]:hover {
+  box-shadow: var(--card-shadow-hover) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* 개인전 하단 바 (날짜, 배지, 액션) */
+div[style*="border-top:1px solid var(--border)"][style*="background:var(--bg2)"] {
+  border-radius: 0 0 18px 18px !important;
+  padding: 8px 16px !important;
+  background: linear-gradient(180deg, var(--bg2), rgba(248,250,252,.95)) !important;
+}
+
+/* 개인전 배지 (개인전 / 끝장전 / 프로리그끝장전) */
+span[style*="background:#E6F1FB"][style*="color:#185FA5"] {
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 2px 8px rgba(24,95,165,.15) !important;
+  letter-spacing: .3px !important;
+}
+
+/* 승자 뱃지 */
+span[style*="background:#dcfce7"][style*="color:#166534"] {
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 2px 8px rgba(22,163,74,.18) !important;
+  letter-spacing: .3px !important;
+}
+
+/* H2H 선수 패널 카드 */
+div[style*="position:relative"][style*="overflow:hidden"][style*="border-radius:16px"][style*="cursor:pointer"] {
+  border-radius: 18px !important;
+  transition: transform var(--tr-fast), box-shadow var(--tr-fast) !important;
+}
+div[style*="position:relative"][style*="overflow:hidden"][style*="border-radius:16px"][style*="cursor:pointer"]:hover {
+  transform: scale(1.02) !important;
+  box-shadow: 0 14px 36px rgba(15,23,42,.18) !important;
+}
+
+/* ════════════════════════════
+   7. 프로리그 / 티어대회 / 조별리그 공통 개선
+   ════════════════════════════ */
+
+/* 날짜 헤더 섹션 */
+div[style*="border-left:4px solid #2563eb"][style*="border-radius:0 8px 8px 0"] {
+  border-left-width: 5px !important;
+  border-radius: 0 12px 12px 0 !important;
+  padding: 10px 18px !important;
+  background: linear-gradient(90deg, rgba(37,99,235,.1), rgba(37,99,235,.03), transparent) !important;
+  font-size: 13.5px !important;
+  letter-spacing: -.01em !important;
+  box-shadow: 0 2px 10px rgba(37,99,235,.07) !important;
+}
+
+/* 진행률 바 */
+div[style*="height:8px"][style*="background:var(--border)"][style*="border-radius:4px"] {
+  height: 10px !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+  background: rgba(148,163,184,.18) !important;
+}
+div[style*="height:100%"][style*="border-radius:4px"][style*="transition:.3s"] {
+  border-radius: 999px !important;
+  box-shadow: 0 1px 6px currentColor !important;
+  transition: width .5s cubic-bezier(.4,0,.2,1) !important;
+}
+
+/* ════════════════════════════
+   8. Pill 버튼 전반 개선 (날짜/라운드 필터 등)
+   ════════════════════════════ */
+.pill {
+  border-radius: 999px !important;
+  font-weight: 800 !important;
+  letter-spacing: -.01em !important;
+  box-shadow: 0 2px 10px rgba(15,23,42,.06), inset 0 1px 0 rgba(255,255,255,.8) !important;
+  transition: transform var(--tr-fast), box-shadow var(--tr-fast), background var(--tr-fast), color var(--tr-fast) !important;
+}
+.pill:hover {
+  box-shadow: 0 6px 18px rgba(37,99,235,.14), inset 0 1px 0 rgba(255,255,255,.9) !important;
+  transform: translateY(-1px) !important;
+}
+.pill.on {
+  background: linear-gradient(135deg, #0f172a 0%, #1e40af 50%, #3b82f6 100%) !important;
+  box-shadow: 0 6px 22px rgba(37,99,235,.28), inset 0 1px 0 rgba(255,255,255,.18) !important;
+  letter-spacing: .01em !important;
+}
+
+/* ════════════════════════════
+   9. 날짜 필터 카드 (asl 모드)
+   ════════════════════════════ */
+button[style*="border-radius:12px"][style*="min-width:170px"] {
+  border-radius: 16px !important;
+  box-shadow: 0 2px 10px rgba(15,23,42,.06) !important;
+  transition: box-shadow var(--tr-fast), transform var(--tr-fast), border-color var(--tr-fast) !important;
+}
+button[style*="border-radius:12px"][style*="min-width:170px"]:hover {
+  box-shadow: 0 6px 20px rgba(15,23,42,.1) !important;
+  transform: translateY(-2px) !important;
+}
+button[style*="border-radius:12px"][style*="min-width:92px"] {
+  border-radius: 14px !important;
+}
+
+/* ════════════════════════════
+   10. 조별리그 순위표 개선
+   ════════════════════════════ */
+.grp-rank-table {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 20px rgba(15,23,42,.08) !important;
+  border: var(--card-border) !important;
+}
+.grp-rank-table th {
+  background: linear-gradient(135deg, #0f172a, #1d4ed8 60%, #3b82f6) !important;
+  padding: 11px 14px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: .5px !important;
+  color: #dbeafe !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,.3) !important;
+}
+.grp-rank-table td {
+  padding: 10px 14px !important;
+  transition: background var(--tr-fast) !important;
+  font-size: 13px !important;
+}
+.grp-rank-table tr:hover td {
+  background: rgba(239,246,255,.6) !important;
+}
+/* 1위 강조 */
+.grp-rank-table tr:nth-child(2) td:first-child {
+  font-weight: 900 !important;
+  color: #2563eb !important;
+}
+
+/* ════════════════════════════
+   11. 프로리그 경기 카드 (.tc-card, rec-summary 등)
+   ════════════════════════════ */
+.tc-card {
+  border-radius: var(--card-radius) !important;
+  box-shadow: var(--card-shadow) !important;
+  transition: box-shadow var(--tr-med), transform var(--tr-med) !important;
+}
+.tc-card:hover {
+  box-shadow: var(--card-shadow-hover) !important;
+  transform: translateY(-3px) !important;
+}
+
+/* rec-summary 카드 */
+.rec-summary {
+  border-radius: var(--card-radius) !important;
+  box-shadow: var(--card-shadow) !important;
+  overflow: hidden !important;
+  transition: box-shadow var(--tr-med), transform var(--tr-med) !important;
+  margin-bottom: 10px !important;
+}
+.rec-summary:hover {
+  box-shadow: var(--card-shadow-hover) !important;
+  transform: translateY(-3px) !important;
+}
+.rec-sum-header {
+  border-radius: var(--card-radius) var(--card-radius) 0 0 !important;
+}
+
+/* rec-card / mb-card */
+.rec-card, .mb-card {
+  border-radius: var(--card-radius) !important;
+  box-shadow: var(--card-shadow) !important;
+  transition: box-shadow var(--tr-med), transform var(--tr-med) !important;
+  margin-bottom: 10px !important;
+}
+.rec-card:hover, .mb-card:hover {
+  box-shadow: var(--card-shadow-hover) !important;
+  transform: translateY(-3px) !important;
+}
+
+/* ════════════════════════════
+   12. 미니대전 / 대학대전 / 대학CK 탭 강조
+   ════════════════════════════ */
+/* 서브탭 pill 강화 - 이미 .pill 위에서 처리 */
+.merged-subbar .pill {
+  border-radius: 999px !important;
+  min-height: 30px !important;
+  box-shadow: 0 2px 8px rgba(15,23,42,.05) !important;
+}
+.merged-subbar .pill.on {
+  background: linear-gradient(135deg, #0f172a, #1e40af 55%, #3b82f6) !important;
+  box-shadow: 0 4px 16px rgba(37,99,235,.28) !important;
+}
+
+/* ════════════════════════════
+   13. 진행중/예정 상태 뱃지
+   ════════════════════════════ */
+/* 예정 뱃지 */
+span[style*="color:var(--gray-l)"][style*="border:1px solid var(--border)"][style*="border-radius:10px"] {
+  border-radius: 999px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  padding: 3px 10px !important;
+  background: var(--surface) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06) !important;
+}
+
+/* ════════════════════════════
+   14. 액션 메뉴 버튼 (⋯)
+   ════════════════════════════ */
+.btn.btn-w.btn-xs[style*="font-size:16px"] {
+  border-radius: 999px !important;
+  width: 30px !important;
+  height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  font-size: 18px !important;
+  box-shadow: 0 2px 8px rgba(15,23,42,.07) !important;
+  transition: background var(--tr-fast), box-shadow var(--tr-fast) !important;
+}
+.btn.btn-w.btn-xs[style*="font-size:16px"]:hover {
+  background: var(--blue-l) !important;
+  box-shadow: 0 4px 14px rgba(37,99,235,.12) !important;
+}
+
+/* ════════════════════════════
+   15. 공유카드 / 결과입력 액션 메뉴 아이템
+   ════════════════════════════ */
+.comp-action-btn {
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  padding: 7px 14px !important;
+  transition: transform var(--tr-fast), box-shadow var(--tr-fast) !important;
+  box-shadow: 0 2px 8px rgba(15,23,42,.07) !important;
+}
+.comp-action-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(15,23,42,.1) !important;
+}
+
+/* ════════════════════════════
+   16. 스코어 클릭 가능 박스 강화
+   ════════════════════════════ */
+.score-click {
+  cursor: pointer !important;
+  transition: transform var(--tr-fast), box-shadow var(--tr-fast) !important;
+  border-radius: 18px !important;
+}
+.score-click:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 10px 28px rgba(15,23,42,.1) !important;
+}
+
+/* ════════════════════════════
+   17. 조별 VS 텍스트 강조
+   ════════════════════════════ */
+div[style*="font-size:22px"][style*="font-weight:900"][style*="VS"] {
+  font-size: 24px !important;
+  letter-spacing: .05em !important;
+  text-shadow: 0 2px 8px rgba(37,99,235,.2) !important;
+  filter: drop-shadow(0 0 8px rgba(37,99,235,.15)) !important;
+}
+
+/* ════════════════════════════
+   18. 다크모드 보완
+   ════════════════════════════ */
+body.dark .grp-match-card {
+  background: linear-gradient(145deg, #1a2540, #1e2d47) !important;
+  border-color: rgba(96,165,250,.12) !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,.2), 0 8px 32px rgba(0,0,0,.16) !important;
+}
+body.dark .grp-match-card:hover {
+  box-shadow: 0 14px 42px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.2) !important;
+}
+body.dark .grp-match-card.match-card-v3 {
+  background: linear-gradient(145deg, #1a2540, #1e2d47) !important;
+}
+body.dark .grp-match-card.match-card-v3::before {
+  background: linear-gradient(135deg, rgba(255,255,255,.04) 0%, transparent 60%) !important;
+}
+body.dark .grp-team-chip {
+  box-shadow: 0 8px 24px rgba(0,0,0,.28) !important;
+}
+body.dark .grp-match-score {
+  background: linear-gradient(145deg, #1e2d47, #172135) !important;
+  border-color: rgba(96,165,250,.2) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+body.dark .grp-mem-btn {
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--mem-col) 22%, #1e2d47 78%),
+    color-mix(in srgb, var(--mem-col) 12%, #172135 88%)
+  ) !important;
+  border-color: color-mix(in srgb, var(--mem-col) 40%, transparent) !important;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--mem-col) 28%, transparent) !important;
+}
+body.dark .rec-summary,
+body.dark .rec-card,
+body.dark .mb-card,
+body.dark .tc-card {
+  box-shadow: 0 2px 12px rgba(0,0,0,.2), 0 8px 28px rgba(0,0,0,.16) !important;
+}
+body.dark .pill {
+  background: linear-gradient(180deg, rgba(30,45,71,.95), rgba(23,33,53,.88)) !important;
+  border-color: rgba(96,165,250,.16) !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.05) !important;
+  color: var(--text2) !important;
+}
+body.dark .pill:hover {
+  border-color: rgba(96,165,250,.35) !important;
+  color: #93c5fd !important;
+}
+body.dark .pill.on {
+  background: linear-gradient(135deg, #1e3a8a, #1d4ed8 55%, #3b82f6) !important;
+  border-color: rgba(96,165,250,.35) !important;
+  color: #fff !important;
+}
+
+/* ════════════════════════════
+   19. 모바일 반응형 보완
+   ════════════════════════════ */
+@media (max-width: 768px) {
+  :root {
+    --card-radius: 16px;
+    --chip-radius: 12px;
+    --team-btn-min-w: 100px;
+    --mem-btn-h: 30px;
+    --score-font: 24px;
+  }
+
+  .grp-match-card {
+    padding: 12px 14px !important;
+    border-radius: var(--card-radius) !important;
+    margin-bottom: 8px !important;
+  }
+  .grp-match-card:hover,
+  .grp-match-card.match-card-v3:hover,
+  .tc-card:hover,
+  .rec-card:hover,
+  .mb-card:hover,
+  .rec-summary:hover {
+    transform: none !important;
+  }
+  .grp-team-chip {
+    min-width: var(--team-btn-min-w) !important;
+    padding: 10px 14px !important;
+  }
+  .grp-team-chip span {
+    font-size: 13px !important;
+  }
+  .grp-mem-btn {
+    font-size: 10px !important;
+    padding: 5px 11px !important;
+    min-height: var(--mem-btn-h) !important;
+  }
+  .grp-match-score {
+    font-size: 22px !important;
+    padding: 8px 14px !important;
+  }
+  .grp-score-col .grp-match-score {
+    font-size: 22px !important;
+  }
+  .grp-badge {
+    font-size: 9px !important;
+    padding: 4px 10px !important;
+  }
+}
+
+/* ════════════════════════════
+   20. 스크롤바 꾸미기 (날짜 필터 가로 스크롤)
+   ════════════════════════════ */
+.merged-subbar::-webkit-scrollbar,
+div[style*="overflow-x:auto"]::-webkit-scrollbar {
+  height: 4px !important;
+}
+div[style*="overflow-x:auto"]::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+div[style*="overflow-x:auto"]::-webkit-scrollbar-thumb {
+  background: rgba(148,163,184,.3) !important;
+  border-radius: 999px !important;
+}
+
+/* ════════════════════════════
+   21. 대회 대진표 토너먼트 카드 강화
+   ════════════════════════════ */
+/* 토너먼트 라운드 구분선 헤더 */
+div[style*="border-bottom:2px solid"][style*="font-weight:900"][style*="font-size:15px"] {
+  font-size: 15px !important;
+  letter-spacing: -.01em !important;
+}
+
+/* 결승/준결승 뱃지 색상 강화 */
+.grp-badge[style*="background:var(--blue)"] {
+  background: linear-gradient(135deg, #1e40af, #3b82f6) !important;
+}
+.grp-badge[style*="background:#7c3aed"] {
+  background: linear-gradient(135deg, #5b21b6, #7c3aed) !important;
+}
+
+/* ════════════════════════════
+   22. 애니메이션 — 카드 등장
+   ════════════════════════════ */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.grp-match-card,
+.rec-summary,
+.rec-card,
+.mb-card {
+  animation: cardIn .28s cubic-bezier(.4,0,.2,1) both !important;
+}
+
+/* ════════════════════════════
+   23. 프린트/캡처 모드 — 그림자 제거
+   ════════════════════════════ */
+@media print {
+  .grp-match-card,
+  .rec-summary,
+  .rec-card,
+  .mb-card,
+  .tc-card {
+    box-shadow: none !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}
