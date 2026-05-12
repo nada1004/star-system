@@ -474,209 +474,43 @@ window.saveCurrentView = async function saveCurrentView(){
       if(typeof _applyBoardBgAutoSizing === 'function') _applyBoardBgAutoSizing(tmpDiv);
       if(typeof _b2ApplyBgAutoSizing === 'function') _b2ApplyBgAutoSizing(tmpDiv);
     }catch(e){}
-    // 불필요한 대기 시간 제거
-    // await new Promise(r=>setTimeout(r, 120));
+
+    const w = Math.max(320, tmpDiv.scrollWidth || capW);
+    const h = Math.max(200, tmpDiv.scrollHeight || capH);
+    const tabNames = {total:'스트리머',board2:'현황판',tier:'티어순위',mini:'미니대전',univm:'대학대전',univck:'대학CK',comp:'대회',pro:'프로리그',hist:'대전기록',stats:'통계',cal:'캘린더'};
+    const fname = `스타대학_${tabNames[window.curTab]||window.curTab||'화면'}_${new Date().toISOString().slice(0,10)}.png`;
+
+    const imgs = tmpDiv.querySelectorAll('img').length;
+    if(imgs){
+      _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 (0/'+imgs+')');
+    }
+    try{
+      await _imgToDataUrls(tmpDiv, 12000, (done, total)=>{
+        _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 ('+done+'/'+total+')');
+      });
+    }catch(e){}
+
+    _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 캡처 중...');
+    try{ await _waitForImages(tmpDiv, 1500); }catch(e){}
 
     const wasDark = document.body.classList.contains('dark');
     if(wasDark) document.body.classList.remove('dark');
     try{
-      // DOM 조작 전에 미리 크기 계산으로 리플로우 방지
-      const w = Math.max(320, capW);
-      const h = Math.max(200, capH);
-      const tabNames = {total:'스트리머',board2:'현황판',tier:'티어순위',mini:'미니대전',univm:'대학대전',univck:'대학CK',comp:'대회',pro:'프로리그',hist:'대전기록',stats:'통계',cal:'캘린더'};
-      const fname = `스타대학_${tabNames[window.curTab]||window.curTab||'화면'}_${new Date().toISOString().slice(0,10)}.png`;
-
-      const imgs = tmpDiv.querySelectorAll('img').length;
-      const totalArea = (w || 800) * (h || 600);
-      const isLargeCanvas = totalArea > 2000000; // 2Mpx 이상
-      
-      if(imgs && !isLargeCanvas){
-        _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 (0/'+imgs+')');
-      } else if (isLargeCanvas) {
-        _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 대규모 화면 - 분할 캡처 중...');
-        
-        // 분할 캡처 구현
-        const wasDark = document.body.classList.contains('dark');
-        if(wasDark) document.body.classList.remove('dark');
-        
-        try {
-          // 화면을 4개 구역으로 분할
-          const sections = [];
-          const sectionHeight = Math.ceil(h / 4);
-          
-          for (let i = 0; i < 4; i++) {
-            const startY = i * sectionHeight;
-            const sectionDiv = document.createElement('div');
-            sectionDiv.style.cssText = `
-              position: absolute;
-              left: 0;
-              top: ${startY}px;
-              width: ${w}px;
-              height: ${Math.min(sectionHeight, h - startY)}px;
-              background: #ffffff;
-              overflow: hidden;
-            `;
-            sectionDiv.innerHTML = tmpDiv.innerHTML;
-            tmpDiv.appendChild(sectionDiv);
-            sections.push(sectionDiv);
-          }
-          
-          // 각 구역을 개별적으로 캡처
-          const canvases = [];
-          for (let i = 0; i < sections.length; i++) {
-            _setToast(`<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 분할 캡처 ${i + 1}/${sections.length}...`);
-            
-            const sectionCanvas = await html2canvas(sections[i], {
-              backgroundColor: '#ffffff',
-              scale: 1,
-              useCORS: true,
-              allowTaint: false,
-              logging: false,
-              imageTimeout: 3000,
-              width: w,
-              height: Math.min(sectionHeight, h - i * sectionHeight),
-              windowWidth: w + 20,
-              windowHeight: Math.min(sectionHeight, h - i * sectionHeight) + 20,
-              x: 0, y: 0, scrollX: 0, scrollY: 0,
-              removeContainer: false,
-              foreignObjectRendering: false,
-              ignoreElements: (element) => {
-                const tagName = element.tagName?.toLowerCase();
-                return tagName === 'iframe' || tagName === 'video' || tagName === 'audio' || tagName === 'script';
-              }
-            });
-            canvases.push(sectionCanvas);
-          }
-          
-          // 캔버스들을 합치기
-          const finalCanvas = document.createElement('canvas');
-          finalCanvas.width = w;
-          finalCanvas.height = h;
-          const finalCtx = finalCanvas.getContext('2d');
-          
-          for (let i = 0; i < canvases.length; i++) {
-            finalCtx.drawImage(canvases[i], 0, i * sectionHeight);
-          }
-          
-          canvas = finalCanvas;
-      try {
-        // 성능 모니터링 시작
-        const startTime = performance.now();
-        const imgCount = tmpDiv.querySelectorAll('img').length;
-        console.log(`[saveCurrentView] 이미지 ${imgCount}개 처리 시작`);
-        
-        // 이미지가 너무 많으면 즉시 캡처 (극적 최적화)
-        if (imgCount > 30) {
-          _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 많아 즉시 캡처 중...');
-          console.log(`[saveCurrentView] 이미지 ${imgCount}개로 변환 건너뛰고 즉시 캡처`);
-          
-          // 즉시 캡처 모드로 전환
-          const wasDark = document.body.classList.contains('dark');
-          if(wasDark) document.body.classList.remove('dark');
-          
-          try {
-            canvas = await html2canvas(tmpDiv, {
-              backgroundColor: '#ffffff',
-              scale: 1,
-              useCORS: true,
-              allowTaint: false,
-              logging: false,
-              imageTimeout: 5000,
-              width: w,
-              height: h,
-              windowWidth: w + 20,
-              windowHeight: h + 20,
-              x: 0, y: 0, scrollX: 0, scrollY: 0,
-              // 대규모 최적화
-              removeContainer: false,
-              foreignObjectRendering: false,
-              ignoreElements: (element) => {
-                const tagName = element.tagName?.toLowerCase();
-                return tagName === 'iframe' || tagName === 'video' || tagName === 'audio' || tagName === 'script';
-              },
-              onclone: (clonedDoc, element) => {
-                if (element.nodeType === 1) {
-                  element.removeAttribute('data-');
-                  element.removeAttribute('class');
-                  element.removeAttribute('style');
-                  element.removeAttribute('onclick');
-                  element.removeAttribute('onmouseover');
-                  element.removeAttribute('onmouseout');
-                }
-              }
-            });
-            
-            const endTime = performance.now();
-            console.log(`[saveCurrentView] 즉시 캡처 완료: ${(endTime - startTime).toFixed(0)}ms`);
-            
-          } catch (html2canvasError) {
-            console.error('[saveCurrentView] 즉시 캡처 오류:', html2canvasError);
-            throw html2canvasError;
-          } finally {
-            if(wasDark) document.body.classList.add('dark');
-          }
-        } else {
-          // 소규모: 기존 방식으로 이미지 변환 후 캡처
-          await _imgToDataUrls(tmpDiv, 4000, (done, total)=>{
-            _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 ('+done+'/'+total+')');
-          });
-        }
-      } catch (imgError) {
-        console.error('[saveCurrentView] 이미지 변환 오류:', imgError);
-        // Continue with capture even if image conversion fails
-      }
-      _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 캡처 중...');
-      try{ await _waitForImages(tmpDiv, 800); }catch(e){
-        console.error('[saveCurrentView] 이미지 대기 오류:', e);
-        // Continue with capture even if image waiting fails
-      }
-
-      let canvas;
-      try {
-        canvas = await html2canvas(tmpDiv, {
-          backgroundColor: '#ffffff',
-          scale: 1,
-          useCORS: true,
-          allowTaint: false,
-          logging: false,
-          imageTimeout: 8000,
-          width: w,
-          height: h,
-          windowWidth: w + 20,
-          windowHeight: h + 20,
-          x: 0, y: 0, scrollX: 0, scrollY: 0,
-          // 공격적 성능 최적화 옵션
-          removeContainer: false,
-          foreignObjectRendering: false,
-          useCORS: true,
-          ignoreElements: (element) => {
-            // 무거운 요소들 건너뛰기
-            const tagName = element.tagName?.toLowerCase();
-            return tagName === 'iframe' || tagName === 'video' || tagName === 'audio';
-          },
-          onclone: (clonedDoc, element) => {
-            // 불필요한 속성 제거로 성능 향상
-            if (element.nodeType === 1) { // Element node
-              element.removeAttribute('data-');
-              element.removeAttribute('class');
-              element.removeAttribute('style');
-              element.removeAttribute('onclick');
-              element.removeAttribute('onmouseover');
-              element.removeAttribute('onmouseout');
-            }
-          }
-        });
-      } catch (html2canvasError) {
-        console.error('[saveCurrentView] html2canvas 오류:', html2canvasError);
-        // Check for specific error pattern "can't access property 'type', A is undefined"
-        if (html2canvasError.message && html2canvasError.message.includes("can't access property 'type'")) {
-          throw new Error('이미지 처리 중 오류가 발생했습니다. 페이지를 새로고친 후 다시 시도해주세요.');
-        }
-        throw html2canvasError;
-      }
-      
+      const canvas = await html2canvas(tmpDiv, {
+        backgroundColor: '#ffffff',
+        scale: 1,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        imageTimeout: 20000,
+        width: w,
+        height: h,
+        windowWidth: w + 100,
+        windowHeight: h + 100,
+        x: 0, y: 0, scrollX: 0, scrollY: 0,
+        foreignObjectRendering: false
+      });
       if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
-
       _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 저장 중...');
       await _dlCanvasBoard(canvas, fname);
     }finally{

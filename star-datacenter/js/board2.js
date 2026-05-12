@@ -1117,93 +1117,130 @@ async function _saveB2FemcoInternal(){
     console.warn('[saveB2FemcoAllImg] 대학 아이콘 주입 실패:', e.message);
   }
 
+  // 강력한 이미지 전처리 적용
   try{
-    tmpDiv.querySelectorAll('div[style*="background-image:url"], .b2-bg-layer').forEach(el => el.remove());
+    const toAbs = (u) => {
+      let s = String(u||'').trim();
+      if(!s) return '';
+      try{
+        if(typeof toHttpsUrl === 'function') s = toHttpsUrl(s) || s;
+      }catch(e){}
+      return s;
+    };
+    const stripProto = (u) => String(u||'').replace(/^https?:\/\//i, '');
+    const withCacheBust = (u) => {
+      const s = String(u||'');
+      return s + (s.includes('?') ? '&' : '?') + '_x=' + Date.now();
+    };
+    const loadToDataUrl = (src0, timeoutMs=6000) => {
+      return new Promise(resolve => {
+        let src = toAbs(src0);
+        if(!src || src.startsWith('data:') || src.startsWith('blob:')){ resolve(null); return; }
+        try{
+          if(window._imgDataUrlCache && window._imgDataUrlCache[src] && String(window._imgDataUrlCache[src]).startsWith('data:image/')){
+            resolve(window._imgDataUrlCache[src]);
+            return;
+          }
+        }catch(e){}
+        const tryUrls = [src, withCacheBust(src), 'https://images.weserv.nl/?url=' + encodeURIComponent(stripProto(src)) + '&n=-1&cb=' + Date.now()];
+        let attempt = 0;
+        let done = false;
+        const finish = (v) => { if(!done){ done = true; resolve(v||null); } };
+        const t = setTimeout(()=>finish(null), timeoutMs);
+        const tryLoad = () => {
+          if(done) return;
+          const url = tryUrls[attempt++] || null;
+          if(!url){ clearTimeout(t); finish(null); return; }
+          const loader = new Image();
+          loader.crossOrigin = 'anonymous';
+          loader.onload = () => {
+            if(done) return;
+            if(!loader.naturalWidth || !loader.naturalHeight){ tryLoad(); return; }
+            try{
+              const cv = document.createElement('canvas');
+              cv.width = loader.naturalWidth;
+              cv.height = loader.naturalHeight;
+              const ctx = cv.getContext('2d');
+              if(!ctx){ tryLoad(); return; }
+              ctx.drawImage(loader, 0, 0);
+              const dataUrl = cv.toDataURL('image/jpeg', 0.82);
+              if(!dataUrl || dataUrl === 'data:,'){ tryLoad(); return; }
+              try{
+                if(window._imgDataUrlCache){
+                  window._imgDataUrlCache[src] = dataUrl;
+                }
+              }catch(e){}
+              clearTimeout(t);
+              finish(dataUrl);
+            }catch(e){
+              tryLoad();
+            }
+          };
+          loader.onerror = () => { tryLoad(); };
+          loader.src = url;
+        };
+        tryLoad();
+      });
+    };
+    const bgEls = [...tmpDiv.querySelectorAll('[style*="background-image"]')];
+    const bgTargets = bgEls.filter(el => {
+      try{
+        const bg = String(el.style && el.style.backgroundImage ? el.style.backgroundImage : '');
+        return bg.includes('url(') && !bg.includes('data:image/');
+      }catch(e){ return false; }
+    });
+    const maxConc = 6;
+    let idx = 0;
+    const worker = async () => {
+      while(true){
+        const i = idx++;
+        if(i >= bgTargets.length) break;
+        const el = bgTargets[i];
+        let bg = '';
+        try{ bg = String(el.style.backgroundImage || ''); }catch(e){}
+        const m = bg.match(/url\((['"]?)([^'")]+)\1\)/i);
+        const src0 = m ? m[2] : '';
+        if(!src0) continue;
+        const dataUrl = await loadToDataUrl(src0, 7000);
+        if(dataUrl){
+          try{ el.style.backgroundImage = "url('" + dataUrl.replace(/'/g, '%27') + "')"; }catch(e){}
+        }
+      }
+    };
+    if(bgTargets.length){
+      await Promise.all(Array.from({length: Math.min(maxConc, bgTargets.length)}, () => worker()));
+    }
+    try{
+      const svgs = tmpDiv.querySelectorAll('svg');
+      const ser = typeof XMLSerializer !== 'undefined' ? new XMLSerializer() : null;
+      svgs.forEach(svg => {
+        try{
+          if(!ser) return;
+          const svgText = ser.serializeToString(svg);
+          const data = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+          const img = document.createElement('img');
+          img.src = data;
+          const rect = (svg.getBoundingClientRect ? svg.getBoundingClientRect() : null);
+          const w = Math.max(1, Math.round(rect && rect.width ? rect.width : 0)) || parseInt(svg.getAttribute('width')||'',10) || 16;
+          const h = Math.max(1, Math.round(rect && rect.height ? rect.height : 0)) || parseInt(svg.getAttribute('height')||'',10) || 16;
+          img.style.width = w + 'px';
+          img.style.height = h + 'px';
+          img.style.display = 'inline-block';
+          img.style.verticalAlign = 'middle';
+          svg.replaceWith(img);
+        }catch(e){}
+      });
+    }catch(e){}
   }catch(e){}
 
-  // 강력한 이미지 전처리 적용
-  if (typeof window._preprocessImagesForCapture === 'function') {
-    const problemCount = window._preprocessImagesForCapture(tmpDiv);
-    console.log(`[펨코] ${problemCount}개의 문제 이미지 처리 완료`);
-  } else {
-    // fallback 전처리
-    const images = tmpDiv.querySelectorAll('img');
-    const problematicImages = [];
-    
-    images.forEach((img, index) => {
-      try {
-        // 모든 종류의 문제 이미지 필터링
-        if (!img.src || img.src === '' || (img.src.startsWith('data:') && img.src.length < 100)) {
-          problematicImages.push(img);
-          return;
-        }
-        
-        // 로드 상태 확인
-        if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
-          problematicImages.push(img);
-          return;
-        }
-        
-        // 손상된 이미지 감지
-        if (img.naturalWidth < 1 || img.naturalHeight < 1 || img.naturalWidth > 10000 || img.naturalHeight > 10000) {
-          problematicImages.push(img);
-          return;
-        }
-        
-        // CORS 처리
+  try{
+    tmpDiv.querySelectorAll('img').forEach(img => {
+      try{
+        if (!img || !img.src) return;
         if (img.src.includes('://') && !img.src.includes(window.location.hostname) && !img.crossOrigin) {
           img.crossOrigin = 'anonymous';
         }
-        
-        // 펨코스타일 특정 이미지 추가 검증
-        if (img.src.includes('femco') || img.src.includes('univ')) {
-          if (img.naturalWidth < 16 || img.naturalHeight < 16) {
-            problematicImages.push(img);
-          }
-        }
-        
-      } catch (e) {
-        console.warn('[펨코] 이미지 처리 중 오류:', e, img.src);
-        problematicImages.push(img);
-      }
-    });
-    
-    // 문제 이미지 제거
-    problematicImages.forEach(img => {
-      try {
-        if (img.parentNode) {
-          const placeholder = document.createElement('div');
-          placeholder.style.cssText = 'display:inline-block;width:16px;height:16px;background:#1a2332;border:1px solid #2a3545;vertical-align:middle;';
-          img.parentNode.replaceChild(placeholder, img);
-        }
-      } catch (e) {
-        console.warn('[펨코] 이미지 대체 실패:', e);
-      }
-    });
-    
-    console.log(`[펨코] fallback 처리: ${problematicImages.length}개의 문제 이미지`);
-  }
-
-  try{
-    const svgs = tmpDiv.querySelectorAll('svg');
-    svgs.forEach(svg => {
-      const placeholder = document.createElement('span');
-      const wAttr = parseInt(svg.getAttribute('width') || '', 10);
-      const hAttr = parseInt(svg.getAttribute('height') || '', 10);
-      const wStyle = parseInt(String(svg.style && svg.style.width ? svg.style.width : '').replace('px',''), 10);
-      const hStyle = parseInt(String(svg.style && svg.style.height ? svg.style.height : '').replace('px',''), 10);
-      const w = (!isNaN(wAttr) && wAttr > 0) ? wAttr : (!isNaN(wStyle) && wStyle > 0) ? wStyle : 16;
-      const h = (!isNaN(hAttr) && hAttr > 0) ? hAttr : (!isNaN(hStyle) && hStyle > 0) ? hStyle : 16;
-      placeholder.style.cssText = `display:inline-block;width:${w}px;height:${h}px;vertical-align:middle;`;
-      if (w >= 22 && h >= 22) {
-        placeholder.textContent = '🏫';
-        placeholder.style.display = 'inline-flex';
-        placeholder.style.alignItems = 'center';
-        placeholder.style.justifyContent = 'center';
-        placeholder.style.fontSize = Math.max(12, Math.min(24, Math.round(Math.min(w, h) * 0.62))) + 'px';
-        placeholder.style.opacity = '0.86';
-      }
-      svg.replaceWith(placeholder);
+      }catch(e){}
     });
   }catch(e){}
 
