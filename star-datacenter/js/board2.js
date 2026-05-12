@@ -1117,40 +1117,68 @@ async function _saveB2FemcoInternal(){
     console.warn('[saveB2FemcoAllImg] 대학 아이콘 주입 실패:', e.message);
   }
 
-  // 이미지 전처리 - 펨코스타일 특화
-  const images = tmpDiv.querySelectorAll('img');
-  const problematicImages = [];
-  
-  images.forEach((img, index) => {
-    // src가 없거나 비정상적인 이미지 필터링
-    if (!img.src || img.src === '' || (img.src.startsWith('data:') && img.src.length < 100)) {
-      problematicImages.push(img);
-    }
-    // 로드되지 않은 이미지 필터링
-    else if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
-      problematicImages.push(img);
-    }
-    // CORS 문제 가능성이 있는 외부 이미지 필터링
-    else if (img.src.includes('://') && !img.src.includes(window.location.hostname) && !img.crossOrigin) {
-      img.crossOrigin = 'anonymous';
-    }
-    // 펨코스타일 특정 이미지 문제 처리
-    else if (img.src.includes('femco') || img.src.includes('univ')) {
-      // 대학 로고나 펨코 관련 이미지는 추가 검증
-      if (img.naturalWidth < 16 || img.naturalHeight < 16) {
+  // 강력한 이미지 전처리 적용
+  if (typeof window._preprocessImagesForCapture === 'function') {
+    const problemCount = window._preprocessImagesForCapture(tmpDiv);
+    console.log(`[펨코] ${problemCount}개의 문제 이미지 처리 완료`);
+  } else {
+    // fallback 전처리
+    const images = tmpDiv.querySelectorAll('img');
+    const problematicImages = [];
+    
+    images.forEach((img, index) => {
+      try {
+        // 모든 종류의 문제 이미지 필터링
+        if (!img.src || img.src === '' || (img.src.startsWith('data:') && img.src.length < 100)) {
+          problematicImages.push(img);
+          return;
+        }
+        
+        // 로드 상태 확인
+        if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
+          problematicImages.push(img);
+          return;
+        }
+        
+        // 손상된 이미지 감지
+        if (img.naturalWidth < 1 || img.naturalHeight < 1 || img.naturalWidth > 10000 || img.naturalHeight > 10000) {
+          problematicImages.push(img);
+          return;
+        }
+        
+        // CORS 처리
+        if (img.src.includes('://') && !img.src.includes(window.location.hostname) && !img.crossOrigin) {
+          img.crossOrigin = 'anonymous';
+        }
+        
+        // 펨코스타일 특정 이미지 추가 검증
+        if (img.src.includes('femco') || img.src.includes('univ')) {
+          if (img.naturalWidth < 16 || img.naturalHeight < 16) {
+            problematicImages.push(img);
+          }
+        }
+        
+      } catch (e) {
+        console.warn('[펨코] 이미지 처리 중 오류:', e, img.src);
         problematicImages.push(img);
       }
-    }
-  });
-  
-  // 문제 이미지 제거 또는 대체
-  problematicImages.forEach(img => {
-    if (img.parentNode) {
-      const placeholder = document.createElement('div');
-      placeholder.style.cssText = 'display:inline-block;width:16px;height:16px;background:#1a2332;border:1px solid #2a3545;';
-      img.parentNode.replaceChild(placeholder, img);
-    }
-  });
+    });
+    
+    // 문제 이미지 제거
+    problematicImages.forEach(img => {
+      try {
+        if (img.parentNode) {
+          const placeholder = document.createElement('div');
+          placeholder.style.cssText = 'display:inline-block;width:16px;height:16px;background:#1a2332;border:1px solid #2a3545;vertical-align:middle;';
+          img.parentNode.replaceChild(placeholder, img);
+        }
+      } catch (e) {
+        console.warn('[펨코] 이미지 대체 실패:', e);
+      }
+    });
+    
+    console.log(`[펨코] fallback 처리: ${problematicImages.length}개의 문제 이미지`);
+  }
 
   const h = tmpDiv.scrollHeight + 32;
   const w = tmpDiv.scrollWidth;
