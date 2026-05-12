@@ -1117,16 +1117,107 @@ async function _saveB2FemcoInternal(){
     console.warn('[saveB2FemcoAllImg] 대학 아이콘 주입 실패:', e.message);
   }
 
+  // 이미지 전처리 - 펨코스타일 특화
+  const images = tmpDiv.querySelectorAll('img');
+  const problematicImages = [];
+  
+  images.forEach((img, index) => {
+    // src가 없거나 비정상적인 이미지 필터링
+    if (!img.src || img.src === '' || (img.src.startsWith('data:') && img.src.length < 100)) {
+      problematicImages.push(img);
+    }
+    // 로드되지 않은 이미지 필터링
+    else if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
+      problematicImages.push(img);
+    }
+    // CORS 문제 가능성이 있는 외부 이미지 필터링
+    else if (img.src.includes('://') && !img.src.includes(window.location.hostname) && !img.crossOrigin) {
+      img.crossOrigin = 'anonymous';
+    }
+    // 펨코스타일 특정 이미지 문제 처리
+    else if (img.src.includes('femco') || img.src.includes('univ')) {
+      // 대학 로고나 펨코 관련 이미지는 추가 검증
+      if (img.naturalWidth < 16 || img.naturalHeight < 16) {
+        problematicImages.push(img);
+      }
+    }
+  });
+  
+  // 문제 이미지 제거 또는 대체
+  problematicImages.forEach(img => {
+    if (img.parentNode) {
+      const placeholder = document.createElement('div');
+      placeholder.style.cssText = 'display:inline-block;width:16px;height:16px;background:#1a2332;border:1px solid #2a3545;';
+      img.parentNode.replaceChild(placeholder, img);
+    }
+  });
+
   const h = tmpDiv.scrollHeight + 32;
   const w = tmpDiv.scrollWidth;
   const fname = '펨코현황판_전체_' + new Date().toISOString().slice(0,10) + '.png';
 
   try{
-    if (typeof _captureAndSave !== 'function') throw new Error('이미지 저장 기능을 불러오지 못했습니다.');
-    await _captureAndSave(tmpDiv, w, h, fname);
+    // 직접 html2canvas 사용으로 오류 방지
+    if (typeof html2canvas !== 'function') {
+      throw new Error('html2canvas를 불러오지 못했습니다.');
+    }
+    
+    // 다크모드 처리
+    const wasDark = document.body.classList.contains('dark');
+    if (wasDark) document.body.classList.remove('dark');
+    
+    try {
+      const canvas = await html2canvas(tmpDiv, {
+        backgroundColor: '#0b1220',  // 펨코스타일 배경색
+        scale: 1,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        imageTimeout: 2000,  // 더 짧은 타임아웃
+        width: w,
+        height: h,
+        windowWidth: w + 20,
+        windowHeight: h + 20,
+        x: 0, y: 0, scrollX: 0, scrollY: 0,
+        onclone: function(clonedDoc) {
+          // 클론된 문서에서도 이미지 문제 처리
+          const clonedImages = clonedDoc.querySelectorAll('img');
+          clonedImages.forEach(img => {
+            if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
+              img.style.display = 'none';
+            }
+          });
+        }
+      });
+      
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error('캔버스 생성 실패');
+      }
+      
+      // 다운로드 구현
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+    } finally {
+      if (wasDark) document.body.classList.add('dark');
+    }
   }catch(e){
     console.error('[펨코현황 이미지 저장 실패]', e);
-    alert('❌ 이미지 저장 실패\n\n' + (e.message || '알 수 없는 오류가 발생했습니다.'));
+    // 특정 오류 메시지 처리
+    let errorMessage = '❌ 이미지 저장 실패\n\n';
+    if (e.message && e.message.includes("can't access property 'type'")) {
+      errorMessage += '이미지 처리 중 오류가 발생했습니다. 페이지를 새로고친 후 다시 시도해주세요.';
+    } else if (e.message && e.message.includes('html2canvas')) {
+      errorMessage += '화면 캡처 라이브러리 로드에 실패했습니다.';
+    } else {
+      errorMessage += (e.message || '알 수 없는 오류가 발생했습니다.');
+    }
+    alert(errorMessage);
   }finally{
     document.body.removeChild(tmpDiv);
     if (btn) { btn.disabled = false; btn.textContent = '💾 전체 저장'; }
