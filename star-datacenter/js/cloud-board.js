@@ -2137,14 +2137,61 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
       }catch(e){}
       return '#f0f2f5';
     })();
-    const canvas = await html2canvas(tmpDiv, {
-      scale: 1, useCORS: true, allowTaint: false,
-      backgroundColor: bg, logging: false,
+    const makeOnClone = (aggressive) => {
+      return function(clonedDoc){
+        try{
+          if(clonedDoc && clonedDoc.adoptedStyleSheets && clonedDoc.adoptedStyleSheets.length){
+            try{ clonedDoc.adoptedStyleSheets = []; }catch(e){}
+          }
+        }catch(e){}
+        if(!aggressive) return;
+        try{ clonedDoc.querySelectorAll('svg').forEach(el => el.remove()); }catch(e){}
+        try{
+          clonedDoc.querySelectorAll('[style*="background-image"]').forEach(el => {
+            try{
+              const bi = String(el.style && el.style.backgroundImage ? el.style.backgroundImage : '');
+              if(bi && bi.includes('url(') && !bi.includes('data:image/')) el.style.backgroundImage = 'none';
+            }catch(e){}
+          });
+        }catch(e){}
+      };
+    };
+
+    const baseOpts = {
+      scale: 1,
+      backgroundColor: bg,
+      logging: false,
       imageTimeout: 20000,
-      width: w, height: h,
-      windowWidth: w + 100, windowHeight: h + 100,
+      width: w,
+      height: h,
+      windowWidth: w + 100,
+      windowHeight: h + 100,
       x: 0, y: 0, scrollX: 0, scrollY: 0
-    });
+    };
+
+    const attempts = [
+      { useCORS: true, allowTaint: false, foreignObjectRendering: false, onclone: makeOnClone(false) },
+      { useCORS: false, allowTaint: true, foreignObjectRendering: true,  onclone: makeOnClone(false) },
+      { useCORS: false, allowTaint: true, foreignObjectRendering: false, onclone: makeOnClone(true), ignoreElements: (el)=> el && el.tagName && el.tagName.toLowerCase() === 'svg' }
+    ];
+
+    let canvas = null;
+    let lastErr = null;
+    for(const opt of attempts){
+      try{
+        canvas = await html2canvas(tmpDiv, { ...baseOpts, ...opt });
+        if (canvas && canvas.width > 0 && canvas.height > 0) { lastErr = null; break; }
+        lastErr = new Error('캔버스 생성 실패');
+      }catch(e){
+        lastErr = e;
+        const msg = (e && e.message) ? e.message : String(e||'');
+        if(msg.includes("can't access property \"type\"") || msg.includes("can't access property 'type'")){
+          continue;
+        }
+        break;
+      }
+    }
+    if(lastErr) throw lastErr;
     if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
     await _dlCanvasBoard(canvas, filename);
   } finally {

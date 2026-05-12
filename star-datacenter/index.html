@@ -690,7 +690,7 @@
 <script src="js/sync/cloud-status.js?v=20260503-01"></script>
 <!-- html2canvas 라이브러리 직접 로드 (ensureHtml2Canvas와 동일 버전으로 통일) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="js/cloud-board.js?v=20260512-02"></script>
+<script src="js/cloud-board.js?v=20260512-03"></script>
 <script>
 // 즉시 saveCurrentView 함수 구현으로 오류 방지
 window.saveCurrentView = async function() {
@@ -866,70 +866,7 @@ window._preprocessImagesForCapture = function(element) {
   return problematicImages.length;
 };
 
-// 펨코스타일탭 이미지 저장: cloud-board.js의 _captureAndSave(이미지 변환 포함)를 우선 사용
-const __captureAndSaveCore = window._captureAndSave;
-window._captureAndSave = async function(tmpDiv, w, h, filename) {
-  if (typeof __captureAndSaveCore === 'function') {
-    try{
-      return await __captureAndSaveCore(tmpDiv, w, h, filename);
-    }catch(e){
-      const msg = (e && e.message) ? e.message : String(e||'오류');
-      if (msg.includes("can't access property \"type\"") || msg.includes("can't access property 'type'")) {
-        throw new Error('이미지 저장 오류: SVG/아이콘 렌더링 중 오류가 발생했습니다.');
-      }
-      throw e;
-    }
-  }
-
-  try {
-    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
-    if (typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
-    if (typeof window._preprocessImagesForCapture === 'function') window._preprocessImagesForCapture(tmpDiv);
-
-    const wasDark = document.body.classList.contains('dark');
-    if (wasDark) document.body.classList.remove('dark');
-    try{
-      const bg = (() => {
-        try{
-          const c = window.getComputedStyle ? getComputedStyle(tmpDiv).backgroundColor : '';
-          if (c && c !== 'transparent' && c !== 'rgba(0, 0, 0, 0)') return c;
-        }catch(e){}
-        return '#ffffff';
-      })();
-      const canvas = await html2canvas(tmpDiv, {
-        backgroundColor: bg,
-        scale: 1,
-        useCORS: true,
-        allowTaint: false,
-        logging: false,
-        imageTimeout: 8000,
-        width: w,
-        height: h,
-        windowWidth: w + 20,
-        windowHeight: h + 20,
-        x: 0, y: 0, scrollX: 0, scrollY: 0,
-        foreignObjectRendering: false
-      });
-      if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
-      if (typeof window._saveCanvasImage === 'function') {
-        await window._saveCanvasImage(canvas, filename, 'png');
-      } else {
-        const dataUrl = canvas.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
-    }finally{
-      if (wasDark) document.body.classList.add('dark');
-    }
-  } catch (e) {
-    const msg = (e && e.message) ? e.message : String(e||'오류');
-    throw new Error('이미지 저장 오류: ' + msg);
-  }
-};
+try{}catch(e){}
 </script>
 <script src="js/init.js?v=20260509-01"></script>
 <script src="js/board2-image-utils.js?v=20260504-01"></script>
