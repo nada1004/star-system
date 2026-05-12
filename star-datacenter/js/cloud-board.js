@@ -437,6 +437,25 @@ function _updateBoardSaveLabel(){
   if(brdLbl) brdLbl.textContent = text;
 }
 
+function _captureErrText(e){
+  try{
+    if(!e) return '알 수 없는 오류';
+    if (typeof e === 'string') return e;
+    if (e instanceof Error) return e.message || String(e);
+    if (typeof Event !== 'undefined' && e instanceof Event) {
+      const t = e && e.type ? e.type : 'event';
+      return '이벤트 오류(' + t + ')';
+    }
+    if (e && typeof e === 'object') {
+      if (typeof e.message === 'string' && e.message) return e.message;
+      if (typeof e.type === 'string' && e.type) return '이벤트 오류(' + e.type + ')';
+    }
+    return String(e);
+  }catch(_e){
+    return '알 수 없는 오류';
+  }
+}
+
 // 하단 이미지저장 버튼: 현재 보이는 화면을 그대로 캡처 (현황판 전체/개별 저장은 현황판 탭 내 버튼 사용)
 window.saveCurrentView = async function saveCurrentView(){
   const cap = document.getElementById('cap');
@@ -499,7 +518,7 @@ window.saveCurrentView = async function saveCurrentView(){
 
     await _captureAndSave(tmpDiv, w, h, fname);
   }catch(e){
-    alert('이미지 저장 오류: ' + (e && e.message ? e.message : String(e||'오류')));
+    alert('이미지 저장 오류: ' + _captureErrText(e));
   }finally{
     if(tmpDiv.parentNode) document.body.removeChild(tmpDiv);
     if(typeof _hideSaveLoading === 'function') _hideSaveLoading();
@@ -2241,10 +2260,36 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
       x: 0, y: 0, scrollX: 0, scrollY: 0
     };
 
+    const isWaterfox = /waterfox/i.test(navigator.userAgent);
+    const isFirefox = /firefox/i.test(navigator.userAgent);
+    
     const attempts = [
-      { useCORS: true, allowTaint: false, foreignObjectRendering: false, onclone: makeOnClone(false) },
-      { useCORS: false, allowTaint: true, foreignObjectRendering: true,  onclone: makeOnClone(false) },
-      { useCORS: false, allowTaint: true, foreignObjectRendering: false, onclone: makeOnClone(true), ignoreElements: (el)=> el && el.tagName && el.tagName.toLowerCase() === 'svg' }
+      { useCORS: false, allowTaint: true, foreignObjectRendering: true, onclone: makeOnClone(false) },
+      { useCORS: false, allowTaint: true, foreignObjectRendering: false, onclone: makeOnClone(true), ignoreElements: (el)=> el && el.tagName && el.tagName.toLowerCase() === 'svg' },
+      // Waterfox/Firefox 특별 처리
+      ...(isWaterfox || isFirefox ? [
+        { useCORS: true, allowTaint: false, foreignObjectRendering: false, onclone: makeOnClone(true), 
+          ignoreElements: (el)=> {
+            if (!el || !el.tagName) return false;
+            const tag = el.tagName.toLowerCase();
+            // 배경 이미지가 있는 요소 제거
+            if (tag === 'div' && el.style && el.style.backgroundImage && el.style.backgroundImage.includes('url(')) {
+              return true;
+            }
+            // SVG 제거
+            if (tag === 'svg') return true;
+            // 외부 이미지 제거
+            if (tag === 'img' && el.src && el.src.includes('://') && !el.src.includes(window.location.hostname)) {
+              return true;
+            }
+            return false;
+          }
+        },
+        { useCORS: false, allowTaint: true, foreignObjectRendering: false, onclone: makeOnClone(false), 
+          imageTimeout: 3000, // 더 짧은 타임아웃
+          removeContainer: true // 컨테이너 즉시 제거
+        }
+      ] : [])
     ];
 
     let canvas = null;
@@ -2256,14 +2301,17 @@ async function _captureAndSave(tmpDiv, w, h, filename) {
         lastErr = new Error('캔버스 생성 실패');
       }catch(e){
         lastErr = e;
-        const msg = (e && e.message) ? e.message : String(e||'');
+        const msg = _captureErrText(e);
         if(msg.includes("can't access property \"type\"") || msg.includes("can't access property 'type'")){
+          continue;
+        }
+        if(msg === '[object Event]' || msg.startsWith('이벤트 오류(')){
           continue;
         }
         break;
       }
     }
-    if(lastErr) throw lastErr;
+    if(lastErr) throw new Error(_captureErrText(lastErr));
     if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
     await _dlCanvasBoard(canvas, filename);
   } finally {

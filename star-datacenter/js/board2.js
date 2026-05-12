@@ -782,7 +782,7 @@ function _b2FemcoView() {
     const iconUrl = uCfg.icon || uCfg.img || '';
     const logoHtml = iconUrl
       ? `<img src="${toHttpsUrl(iconUrl)}" style="width:${_uLogo}px;height:${_uLogo}px;object-fit:contain" onerror="this.style.display='none'">`
-      : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:${Math.round(_uLogo*0.62)}px;height:${Math.round(_uLogo*0.62)}px;opacity:.75"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>`;
+      : `<span style="display:inline-flex;align-items:center;justify-content:center;width:${Math.round(_uLogo*0.62)}px;height:${Math.round(_uLogo*0.62)}px;opacity:.85;font-size:${Math.round(_uLogo*0.48)}px;line-height:1">🏫</span>`;
 
     // 인원 카운트 규칙:
     // - 이사장 인원
@@ -906,8 +906,10 @@ function _b2FemcoView() {
     const _bgRepeat = ['no-repeat','repeat','repeat-x','repeat-y'].includes(_bgCfg.repeat) ? _bgCfg.repeat : 'no-repeat';
 
     const _bgLayer = (_bgIsImage && _bgUrl)
-      ? `<div style="position:absolute;inset:0;background-image:url('${_bgUrl.replace(/'/g,"%27")}');background-repeat:${_bgRepeat};background-size:${_bgSize};background-position:${_bgPos};opacity:${_bgAlpha.toFixed(3)};pointer-events:none;z-index:0"></div>`
-      : '';
+      ? `<img src="${toHttpsUrl(_bgUrl).replace(/"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_bgSize};object-position:${_bgPos};opacity:${_bgAlpha.toFixed(3)};pointer-events:none;z-index:0" onerror="this.style.display='none'">`
+      : (_bgIsVideo || _bgIsEmbed)
+        ? `<div style="position:absolute;inset:0;background-image:url('${_bgUrl.replace(/'/g,"%27")}');background-repeat:${_bgRepeat};background-size:${_bgSize};background-position:${_bgPos};opacity:${_bgAlpha.toFixed(3)};pointer-events:none;z-index:0"></div>`
+        : '';
     const _ovLayer = (_bgIsImage && _bgUrl && BG_OVERLAY>0)
       ? `<div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(2,6,23,${OV_TOP.toFixed(3)}), rgba(2,6,23,${OV_BOT.toFixed(3)}));pointer-events:none;z-index:1"></div>`
       : '';
@@ -1137,177 +1139,15 @@ async function _saveB2FemcoInternal(){
     console.warn('[saveB2FemcoAllImg] 대학 아이콘 주입 실패:', e.message);
   }
 
-  // 캡처 품질 우선: 이미지/배경/SVG를 가능한 범위에서 dataURL로 인라인 처리
   try{
-    const stripProto = (u) => String(u||'').replace(/^https?:\/\//i, '');
-    const withCacheBust = (u) => {
-      const s = String(u||'');
-      return s + (s.includes('?') ? '&' : '?') + '_x=' + Date.now();
-    };
-    const loadToDataUrl = (src0, timeoutMs=7000) => {
-      return new Promise(resolve => {
-        let src = String(src0||'').trim();
-        if(!src || src.startsWith('data:') || src.startsWith('blob:')){ resolve(null); return; }
-        try{
-          if(typeof toHttpsUrl === 'function') src = toHttpsUrl(src) || src;
-        }catch(e){}
-        try{
-          if(window._imgDataUrlCache && window._imgDataUrlCache[src] && String(window._imgDataUrlCache[src]).startsWith('data:image/')){
-            resolve(window._imgDataUrlCache[src]);
-            return;
-          }
-        }catch(e){}
-        const tryUrls = [src, withCacheBust(src), 'https://images.weserv.nl/?url=' + encodeURIComponent(stripProto(src)) + '&n=-1&cb=' + Date.now()];
-        let attempt = 0;
-        let done = false;
-        const finish = (v) => { if(!done){ done=true; resolve(v||null); } };
-        const t = setTimeout(()=>finish(null), timeoutMs);
-        const tryLoad = () => {
-          if(done) return;
-          const url = tryUrls[attempt++] || null;
-          if(!url){ clearTimeout(t); finish(null); return; }
-          const loader = new Image();
-          loader.crossOrigin = 'anonymous';
-          loader.onload = () => {
-            if(done) return;
-            if(!loader.naturalWidth || !loader.naturalHeight){ tryLoad(); return; }
-            try{
-              const cv = document.createElement('canvas');
-              cv.width = loader.naturalWidth;
-              cv.height = loader.naturalHeight;
-              const ctx = cv.getContext('2d');
-              if(!ctx){ tryLoad(); return; }
-              ctx.drawImage(loader, 0, 0);
-              const dataUrl = cv.toDataURL('image/jpeg', 0.88);
-              if(!dataUrl || dataUrl === 'data:,'){ tryLoad(); return; }
-              try{ if(window._imgDataUrlCache) window._imgDataUrlCache[src] = dataUrl; }catch(e){}
-              clearTimeout(t);
-              finish(dataUrl);
-            }catch(e){
-              tryLoad();
-            }
-          };
-          loader.onerror = () => { tryLoad(); };
-          loader.src = url;
-        };
-        tryLoad();
-      });
-    };
-
-    // 1) background-image 인라인화 (대학 배경 로고 유지)
-    const bgEls = [...tmpDiv.querySelectorAll('[style*="background-image"]')];
-    const targets = bgEls.filter(el => {
-      try{
-        const bi = String(el.style && el.style.backgroundImage ? el.style.backgroundImage : '');
-        return bi.includes('url(') && !bi.includes('data:image/');
-      }catch(e){ return false; }
-    });
-    let idx = 0;
-    const maxConc = 6;
-    const worker = async () => {
-      while(true){
-        const i = idx++;
-        if(i >= targets.length) break;
-        const el = targets[i];
-        let bi = '';
-        try{ bi = String(el.style.backgroundImage || ''); }catch(e){}
-        const m = bi.match(/url\((['"]?)([^'")]+)\1\)/i);
-        const src0 = m ? m[2] : '';
-        if(!src0) continue;
-        const dataUrl = await loadToDataUrl(src0, 9000);
-        if(dataUrl){
-          try{ el.style.backgroundImage = "url('" + dataUrl.replace(/'/g, '%27') + "')"; }catch(e){}
-        }
-      }
-    };
-    if(targets.length){
-      await Promise.all(Array.from({length: Math.min(maxConc, targets.length)}, () => worker()));
+    if (typeof _imgToDataUrls === 'function') {
+      await _imgToDataUrls(tmpDiv, 12000);
     }
-
-    // 2) SVG → IMG(data:image/svg+xml) 변환 (로고/아이콘 유지 + html2canvas 오류 회피)
-    try{
-      const ser = (typeof XMLSerializer !== 'undefined') ? new XMLSerializer() : null;
-      if(ser){
-        tmpDiv.querySelectorAll('svg').forEach(svg => {
-          try{
-            const svgText = ser.serializeToString(svg);
-            const data = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
-            const img = document.createElement('img');
-            img.src = data;
-            const wAttr = parseInt(svg.getAttribute('width')||'', 10);
-            const hAttr = parseInt(svg.getAttribute('height')||'', 10);
-            const w = (!isNaN(wAttr) && wAttr > 0) ? wAttr : 16;
-            const h = (!isNaN(hAttr) && hAttr > 0) ? hAttr : 16;
-            img.style.width = w + 'px';
-            img.style.height = h + 'px';
-            img.style.display = 'inline-block';
-            img.style.verticalAlign = 'middle';
-            svg.replaceWith(img);
-          }catch(e){}
-        });
-      }
-    }catch(e){}
-
-    // 2.5) IMG(data:image/svg+xml) → PNG dataURL로 래스터화 (html2canvas SVG 파서 크래시 회피)
-    try{
-      const svgImgs = [...tmpDiv.querySelectorAll('img')].filter(img => {
-        try{
-          const src = String(img.getAttribute('src') || img.src || '');
-          return src.includes('data:image/svg+xml');
-        }catch(e){ return false; }
-      });
-      const maxConc2 = 4;
-      let idx2 = 0;
-      const worker2 = async () => {
-        while(true){
-          const i = idx2++;
-          if(i >= svgImgs.length) break;
-          const img = svgImgs[i];
-          let src = '';
-          try{ src = String(img.getAttribute('src') || img.src || ''); }catch(e){}
-          if(!src) continue;
-          try{
-            const loader = new Image();
-            loader.crossOrigin = 'anonymous';
-            const p = new Promise((resolve) => {
-              let done = false;
-              const fin = (ok)=>{ if(done) return; done = true; resolve(!!ok); };
-              loader.onload = ()=>fin(true);
-              loader.onerror = ()=>fin(false);
-              setTimeout(()=>fin(false), 2500);
-            });
-            loader.src = src;
-            const ok = await p;
-            if(!ok || !loader.naturalWidth || !loader.naturalHeight) continue;
-            const cv = document.createElement('canvas');
-            cv.width = loader.naturalWidth;
-            cv.height = loader.naturalHeight;
-            const ctx = cv.getContext('2d');
-            if(!ctx) continue;
-            ctx.drawImage(loader, 0, 0);
-            const png = cv.toDataURL('image/png');
-            if(!png || png === 'data:,') continue;
-            img.setAttribute('src', png);
-            img.src = png;
-          }catch(e){}
-        }
-      };
-      if(svgImgs.length){
-        await Promise.all(Array.from({length: Math.min(maxConc2, svgImgs.length)}, () => worker2()));
-      }
-    }catch(e){}
-
-    // 3) IMG들 dataURL 인라인화 (프로필/대학로고 유지)
-    try{
-      if (typeof _imgToDataUrls === 'function') {
-        await _imgToDataUrls(tmpDiv, 12000);
-      }
-    }catch(e){}
-    try{
-      if (typeof _waitForImages === 'function') {
-        await _waitForImages(tmpDiv, 1500);
-      }
-    }catch(e){}
+  }catch(e){}
+  try{
+    if (typeof _waitForImages === 'function') {
+      await _waitForImages(tmpDiv, 1500);
+    }
   }catch(e){}
 
   const h = tmpDiv.scrollHeight + 32;
