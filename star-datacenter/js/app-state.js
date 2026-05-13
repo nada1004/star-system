@@ -54,7 +54,7 @@ window.App.state = {
   histSub: 'race',
   histSub2: 'mini',
   statsSub: 'u',
-  compSub: 'overview',
+  compSub: 'league',
 
   // ─── 1v1 Comparison
   vsNameA: '',

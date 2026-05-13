@@ -978,6 +978,93 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
 
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:900;color:var(--text2)">👤 기록 카드 양쪽 끝 참여자 프로필</span>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2);margin-left:auto">
+            <input type="checkbox" id="cfg-rec-side-panel-on" style="width:15px;height:15px"
+              ${(()=>{ try{ return (localStorage.getItem('su_rec_side_panel_on')??'1') !== '0' ? 'checked' : ''; }catch(e){ return 'checked'; } })()}
+              onchange="(window.cfgSetRecSidePanelSettings||function(){})()">
+            표시 사용
+          </label>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">기록 카드(미니대전·대학대전·대학CK·티어대회·프로리그 일반·일반 등) 및 대회탭(조별리그·토너먼트) 좌우에 각 팀 참여자 이미지를 표시합니다. 승리팀은 이긴 선수, 패배팀은 진 선수를 랜덤 표시합니다. 이미지가 없으면 패널을 표시하지 않습니다.</div>
+
+        <!-- 표시 타입: 프로필 이미지 / 대학 로고 -->
+        <div style="margin-bottom:12px;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px">🖼️ 표시 타입</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${(()=>{const cur=(()=>{try{return localStorage.getItem('su_rsp_image_type')||'profile';}catch(e){return 'profile';}})();return[['profile','👤 선수 프로필 이미지'],['logo','🏫 대학 로고']].map(([v,l])=>`<button class="btn btn-sm ${cur===v?'btn-b':'btn-w'}" onclick="(window.cfgSetRspImageType||function(){})(this.dataset.v);document.querySelectorAll('[data-rsptype]').forEach(b=>{b.classList.remove('btn-b');b.classList.add('btn-w')});this.classList.remove('btn-w');this.classList.add('btn-b')" data-rsptype="${v}" data-v="${v}">${l}</button>`).join('');})()}
+          </div>
+          <div style="font-size:10px;color:var(--gray-l);margin-top:6px">대학 로고 선택 시: 대학 아이콘 설정에 등록된 로고를 표시합니다.</div>
+        </div>
+
+        <!-- 대회탭 포함 여부 -->
+        <div style="margin-bottom:12px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:700;color:var(--text2)">
+            <input type="checkbox" id="cfg-rsp-comp-on" style="width:14px;height:14px"
+              ${(()=>{ try{ return (localStorage.getItem('su_rsp_comp_on')??'1') !== '0' ? 'checked' : ''; }catch(e){ return 'checked'; } })()}
+              onchange="(window.cfgSetRspCompOn||function(){})()">
+            🏆 대회탭 조별리그·토너먼트에도 표시
+          </label>
+        </div>
+
+        <!-- 이미지 크기 -->
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">📐 이미지 크기 <span id="cfg-rsp-size-v" style="font-weight:400;color:var(--gray-l)">${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_size')||'72',10); }catch(e){ return 72; } })()}px</span></div>
+          <input type="range" min="40" max="160" step="4" value="${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_size')||'72',10); }catch(e){ return 72; } })()}" style="width:100%;max-width:260px;accent-color:var(--blue)" oninput="document.getElementById('cfg-rsp-size-v').textContent=this.value+'px'" onchange="(window.cfgSetRspSize||function(){})(this.value)">
+        </div>
+
+        <!-- 패널 너비 -->
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">↔️ 패널 너비 <span id="cfg-rsp-width-v" style="font-weight:400;color:var(--gray-l)">${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_width')||'90',10); }catch(e){ return 90; } })()}px</span></div>
+          <input type="range" min="60" max="180" step="4" value="${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_width')||'90',10); }catch(e){ return 90; } })()}" style="width:100%;max-width:260px;accent-color:var(--blue)" oninput="document.getElementById('cfg-rsp-width-v').textContent=this.value+'px'" onchange="(window.cfgSetRspWidth||function(){})(this.value)">
+        </div>
+
+        <!-- 이미지 세로 위치 -->
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">📍 이미지 세로 위치</div>
+          <div style="display:flex;gap:6px" id="cfg-rsp-valign-row">
+            ${['top','center','bottom'].map(v=>{const cur=(()=>{try{return localStorage.getItem('su_rsp_valign')||'center';}catch(e){return 'center';}})();const labelMap={top:'⬆ 위',center:'가운데',bottom:'⬇ 아래'};return `<button class="btn btn-xs ${cur===v?'btn-b':'btn-w'}" onclick="(window.cfgSetRspValign||function(){})(this.dataset.v);document.getElementById('cfg-rsp-valign-row').querySelectorAll('button').forEach(b=>{b.classList.remove('btn-b');b.classList.add('btn-w')});this.classList.remove('btn-w');this.classList.add('btn-b')" data-v="${v}">${labelMap[v]}</button>`;}).join('')}
+          </div>
+        </div>
+
+        <!-- 이미지 수평 이동 -->
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">↔️ 이미지 수평 이동 <span id="cfg-rsp-hoffset-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{const v=parseInt(localStorage.getItem('su_rsp_hoffset')||'0',10);return(v>0?'+':'')+v+'px';}catch(e){return '0px';}})()}</span></div>
+          <input type="range" min="-200" max="200" step="4"
+            value="${(()=>{try{return parseInt(localStorage.getItem('su_rsp_hoffset')||'0',10);}catch(e){return 0;}})()}"
+            style="width:100%;max-width:260px;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-rsp-hoffset-v').textContent=(parseFloat(this.value)>0?'+':'')+parseInt(this.value)+'px'"
+            onchange="(window.cfgSetRspHoffset||function(){})(this.value)">
+          <div style="font-size:10px;color:var(--gray-l);margin-top:3px">양수(+): 좌우 이미지가 스코어 방향(안쪽)으로 이동 &nbsp;|&nbsp; 음수(-): 카드 바깥쪽으로 이동</div>
+        </div>
+
+        <!-- 네모 박스(배경/테두리) 표시 -->
+        <div style="margin-bottom:10px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:700;color:var(--text2)">
+            <input type="checkbox" id="cfg-rsp-show-box" style="width:14px;height:14px"
+              ${(()=>{try{return (localStorage.getItem('su_rsp_show_box')||'0')!=='0'?'checked':'';}catch(e){return '';}})()}
+              onchange="(window.cfgSetRspShowBox||function(){})(this.checked)">
+            🔲 패널 배경·테두리 표시 (기본 OFF = 이미지만 표시)
+          </label>
+        </div>
+
+        <!-- 밝기 -->
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">☀️ 밝기 <span id="cfg-rsp-br-v" style="font-weight:400;color:var(--gray-l)">${(()=>{ try{ return parseFloat(localStorage.getItem('su_rsp_brightness')||'1.0').toFixed(1); }catch(e){ return '1.0'; } })()}x</span></div>
+          <input type="range" min="0.3" max="2.0" step="0.1" value="${(()=>{ try{ return parseFloat(localStorage.getItem('su_rsp_brightness')||'1.0'); }catch(e){ return 1.0; } })()}" style="width:100%;max-width:260px;accent-color:var(--blue)" oninput="document.getElementById('cfg-rsp-br-v').textContent=parseFloat(this.value).toFixed(1)+'x'" onchange="(window.cfgSetRspBrightness||function(){})(this.value)">
+        </div>
+
+        <!-- 이미지 효과 -->
+        <div style="margin-bottom:4px">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">✨ 이미지 효과(필터)</div>
+          <select onchange="(window.cfgSetRspEffect||function(){})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:700;width:100%;max-width:200px">
+            ${[['none','없음(기본)'],['sepia','세피아'],['warm','따뜻한 톤'],['cool','차가운 톤'],['vivid','선명하게'],['dark','어둡게'],['mono','흑백']].map(([v,l])=>{const cur=(()=>{try{return localStorage.getItem('su_rsp_effect')||'none';}catch(e){return 'none';}})();return `<option value="${v}" ${cur===v?'selected':''}>${l}</option>`;}).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">🎨 기록 카드 양쪽 끝 색상 효과</div>
         <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">기록 카드 좌우 끝에 A·B팀 대학 색상 그라디언트를 표시합니다.</div>
         <div style="font-size:11px;color:#475569;margin-bottom:8px"><b>대학CK</b> / <b>프로리그 일반</b>의 양쪽 끝 색상은 바로 아래 나오는 <b>팀 버튼 색상</b> 블록에서 바꿉니다.</div>

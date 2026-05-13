@@ -913,6 +913,8 @@ b,strong{font-weight:600;}
 .tab.on{background:linear-gradient(135deg,#0f172a,#1d4ed8 58%,#3b82f6);color:#fff;font-weight:900;border-color:rgba(59,130,246,.32);box-shadow:0 14px 30px rgba(37,99,235,0.25);}
 .tab.cfg{background:transparent;}
 .tab.cfg.on{background:#334155;color:#fff;}
+/* 설정탭: 비로그인 기본 숨김 (auth.js applyLoginState에서 인라인으로 show/hide) */
+#tabCfg{display:none;}
 
 /* ══════════════════════════════════════
    반응형(모바일/태블릿) 자동 크기 조정
@@ -1548,7 +1550,7 @@ body.dark .hist-ctrl-group{
 .win-btn.lose-sel{background:var(--red);color:#fff;border-color:var(--red);}
 .score-board{display:flex;align-items:center;gap:12px;padding:12px 18px;background:linear-gradient(135deg,rgba(15,23,42,.04),rgba(37,99,235,.10),rgba(255,255,255,.92));border:1px solid rgba(148,163,184,.20);border-radius:18px;margin-bottom:12px;flex-wrap:wrap;box-shadow:0 14px 28px rgba(15,23,42,.08);}
 .score-num{font-family:'Noto Sans KR',sans-serif;font-weight:1000;font-size:30px;letter-spacing:-.03em;}
-.rec-summary{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;transition:box-shadow var(--tr),transform var(--tr),border-left-width var(--tr);min-height:46px;}
+.rec-summary{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:visible;transition:box-shadow var(--tr),transform var(--tr),border-left-width var(--tr);min-height:46px;}
 .rec-summary:empty{display:none!important;}
 .rec-summary:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08);transform:translateY(-1px);}
 .rec-summary.detail-open{border-left-width:4px!important;box-shadow:0 2px 12px rgba(37,99,235,.13)!important;}
@@ -1732,6 +1734,58 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 .rec-detail-area.open::before{display:none !important;content:none !important;}
 /* 모바일: 액션 항상 표시 */
 @media(max-width:768px){.rec-actions{opacity:1!important;pointer-events:auto!important;}}
+/* ── 경기 기록카드 양쪽 끝 참여자 프로필 패널 ── */
+.rec-sum-vs-outer{display:flex;align-items:stretch;flex:1;overflow:visible;}
+.rec-sum-vs-outer > .rec-sum-vs{flex:1;padding:4px 6px;}
+.rec-side-profiles{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;padding:6px 8px;
+  flex-shrink:0;
+  overflow:visible;
+  transition:background .2s,filter .25s;
+  cursor:default;
+}
+/* 네모 박스 없음 모드: 배경/테두리 완전 제거 */
+.rec-side-profiles.rsp-no-box{
+  background:transparent!important;
+  outline:none!important;
+  padding:4px 4px;
+}
+/* 이미지 버튼 완전 숨김 */
+.rec-side-profiles button,
+.rec-side-profiles .rsp-btn,
+.rec-side-profiles [class*="img-btn"],
+.rec-side-profiles [class*="photo-btn"]{
+  display:none!important;
+}
+.rsp-inner{
+  display:flex;align-items:center;justify-content:center;
+  line-height:0;width:100%;overflow:visible;
+}
+.rsp-inner > div{
+  transition:filter .25s,box-shadow .25s;
+}
+.rsp-inner > div > img,
+.rsp-inner > div > span{
+  display:block!important;
+  width:100%!important;height:100%!important;
+  object-fit:cover!important;
+}
+.rec-side-profiles:hover .rsp-inner > div{
+  filter:none!important;
+  box-shadow:0 6px 24px rgba(0,0,0,.22)!important;
+}
+.rec-side-profiles--win .rsp-inner > div{
+  border:2.5px solid rgba(255,255,255,.35);
+}
+.rec-side-profiles--lose .rsp-inner > div{
+  border:1.5px solid rgba(148,163,184,.2);
+}
+/* no-box 모드에서는 이미지 테두리도 제거 */
+.rec-side-profiles.rsp-no-box .rsp-inner > div{
+  border:none!important;
+}
+/* ── */
 .rec-sum-vs{display:flex;align-items:center;gap:var(--rc-vs-gap,12px);flex:1;flex-wrap:wrap;}
 .rec-sum-score{
   font-family:'Noto Sans KR',sans-serif;
@@ -6420,9 +6474,18 @@ body.dark .b2-players-img-btn:disabled {
   color:#dc2626;
   font-size:13px;
   margin-top:8px;
-  min-height:20px;
+  min-height:0;
   margin-bottom:0;
   line-height:1.4;
+  background:transparent;
+  border:none;
+  padding:0;
+}
+.modal--login__err:not(:empty){
+  background:#fef2f2;
+  border:1px solid #fecaca;
+  border-radius:8px;
+  padding:6px 10px;
 }
 .modal--login__cancel{
   margin-top:8px;
@@ -7544,10 +7607,16 @@ body.dark .tabs-arrow:hover { background: rgba(30,58,138,0.35) !important; color
   font-size: 12px !important;
   margin-top: 6px !important;
   font-weight: 700 !important;
-  background: #fef2f2 !important;
   border-radius: 8px !important;
-  padding: 6px 10px !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  min-height: 0 !important;
+}
+.modal--login__err:not(:empty) {
+  background: #fef2f2 !important;
   border: 1px solid #fecaca !important;
+  padding: 6px 10px !important;
 }
 .modal--login__cancel {
   color: #94a3b8 !important;

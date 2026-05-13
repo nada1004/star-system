@@ -2900,8 +2900,7 @@ function _b2PlayersView() {
         }
         ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" decoding="async" fetchpriority="high" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" onload="if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'secondary'); }" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;object-fit:${secondarySettings.fit || 'cover'};object-position:${secondarySettings.manualCenter ? 'center center' : 'center center'};transform:${_b2GetImgTransform(secondarySettings)};filter:brightness(${(secondarySettings.brightness || 100) / 100})">` : ''}
         
-        ${isLoggedIn ? `
-        <!-- 이미지 컨트롤 패널 -->
+        <!-- 이미지 컨트롤 패널 (모든 사용자 접근 가능) -->
         <div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
           <div class="b2-players-controls-title">🎨 이미지 설정</div>
           ${_b2BuildImageControlGroup(safeName, 'primary', '첫번째 이미지', hasPrimary)}
@@ -2910,7 +2909,6 @@ function _b2PlayersView() {
         
         <!-- 컨트롤 패널 토글 버튼 -->
         <button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>
-        ` : ''}
         
         <div class="b2-players-info">
           <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
@@ -3008,8 +3006,7 @@ function _b2UpdateMainDisplay(playerName) {
       }
       ${hasSecondProfile ? `<img src="${player.secondProfileFile}" decoding="async" fetchpriority="high" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0">` : ''}
       
-      ${isLoggedIn ? `
-      <!-- 이미지 컨트롤 패널 -->
+      <!-- 이미지 컨트롤 패널 (모든 사용자 접근 가능) -->
       <div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
         <div class="b2-players-controls-title">🎨 이미지 설정</div>
         ${_b2BuildImageControlGroup(safeName, 'primary', '첫번째 이미지', hasPrimary)}
@@ -3018,7 +3015,6 @@ function _b2UpdateMainDisplay(playerName) {
       
       <!-- 컨트롤 패널 토글 버튼 -->
       <button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>
-      ` : ''}
       
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
