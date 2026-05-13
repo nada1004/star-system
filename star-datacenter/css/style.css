@@ -6777,7 +6777,7 @@ body.dark .b2-players-img-btn:disabled {
 .rec-summary.rec-mode-tourney .rec-sum-header--stack .rec-sum-vs,
 .rec-summary.rec-mode-comp .rec-sum-header--stack .rec-sum-vs {
   justify-content: center;
-  gap: 14px;
+  gap: var(--rc-vs-gap, 14px);
   padding: 4px 0 6px;
 }
 
