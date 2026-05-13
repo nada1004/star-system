@@ -1800,10 +1800,20 @@ body.rc-bgfx-off .rec-summary[data-rec-mode] .rec-sum-header{
 body.rc-bgfx-off .rec-summary[data-rec-mode] .rec-sum-score::after{
   display:none !important;
 }
+body.rc-bgfx-off .rec-summary.rec-mode-mini .rec-sum-score,
+body.rc-bgfx-off .rec-summary.rec-mode-civil .rec-sum-score,
+body.rc-bgfx-off .rec-summary.rec-mode-univm .rec-sum-score,
+body.rc-bgfx-off .rec-summary.rec-mode-ck .rec-sum-score,
+body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
+  background: var(--white) !important;
+  border-color: var(--border2) !important;
+  box-shadow: none !important;
+}
 .rec-summary.rec-sidefx,
 .grp-match-card.grp-sidefx{
   isolation:isolate;
 }
+.rec-summary.rec-sidefx > *,
 .rec-summary.rec-sidefx > *,
 .grp-match-card.grp-sidefx > *{
   position:relative;
