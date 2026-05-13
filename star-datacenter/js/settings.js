@@ -476,7 +476,7 @@ window.applyMatchBtnScale = function(){
     const isMobile = w <= 768;
     const key = isMobile ? 'su_match_btn_scale_mb' : 'su_match_btn_scale_pc';
     const pct = parseInt(localStorage.getItem(key) || (isMobile?'100':'100'), 10);
-    const v = Math.max(80, Math.min(150, isNaN(pct)?100:pct)) / 100;
+    const v = Math.max(40, Math.min(220, isNaN(pct)?100:pct)) / 100;
     document.documentElement.style.setProperty('--rc-match-btn-scale', String(v));
   }catch(e){}
 };
@@ -484,8 +484,8 @@ window.cfgSetMatchBtnScaleSettings = function(){
   try{
     const pc = parseInt(document.getElementById('cfg-mbtn-pc')?.value||'100',10) || 100;
     const mb = parseInt(document.getElementById('cfg-mbtn-mb')?.value||'100',10) || 100;
-    localStorage.setItem('su_match_btn_scale_pc', String(Math.max(80,Math.min(150,pc))));
-    localStorage.setItem('su_match_btn_scale_mb', String(Math.max(80,Math.min(150,mb))));
+    localStorage.setItem('su_match_btn_scale_pc', String(Math.max(40,Math.min(220,pc))));
+    localStorage.setItem('su_match_btn_scale_mb', String(Math.max(40,Math.min(220,mb))));
   }catch(e){}
   try{ window.applyMatchBtnScale && window.applyMatchBtnScale(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
@@ -806,8 +806,8 @@ window.cfgSetH2HPanelSettings = function(){
     localStorage.setItem('su_h2h_panel_wmul_mb', String(Math.max(10,Math.min(300,wmb))));
     localStorage.setItem('su_h2h_panel_hmul_mb', String(Math.max(10,Math.min(300,hmb))));
     // 스코어 ↔ 선수패널 간격 + 스코어 좌우 여백
-    localStorage.setItem('su_h2h_score_gap_pc', String(Math.max(0,Math.min(50,isNaN(gpc)?10:gpc))));
-    localStorage.setItem('su_h2h_score_gap_mb', String(Math.max(0,Math.min(50,isNaN(gmb)?8:gmb))));
+    localStorage.setItem('su_h2h_score_gap_pc', String(Math.max(0,Math.min(120,isNaN(gpc)?10:gpc))));
+    localStorage.setItem('su_h2h_score_gap_mb', String(Math.max(0,Math.min(120,isNaN(gmb)?8:gmb))));
     localStorage.setItem('su_h2h_score_pad_pc', String(Math.max(0,Math.min(24,isNaN(spc)?10:spc))));
     localStorage.setItem('su_h2h_score_pad_mb', String(Math.max(0,Math.min(24,isNaN(smb)?6:smb))));
   }catch(e){}

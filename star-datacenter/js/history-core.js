@@ -173,7 +173,7 @@ function rHist(C,T){
     return;
   }
   if(histSub==='all') h+=histAllHTML();
-  else if(histSub==='civil') h+=recSummaryListHTML(miniM.filter(m=>m.type==='civil'||(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
+  else if(histSub==='civil') h+=recSummaryListHTML(miniM.filter(m=>m.type==='civil'||(m.a==='A팀'&&m.b==='B팀')),'civil','hist');
   else if(histSub==='mini') h+=recSummaryListHTML(miniM.filter(m=>m.type!=='civil'&&!(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
   else if(histSub==='ind') h+=typeof indRecordsHTML==='function'?indRecordsHTML():'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
   else if(histSub==='gj') h+=typeof gjRecordsHTML==='function'?gjRecordsHTML(false):'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
@@ -1166,9 +1166,10 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const _themeStyle = (_rcThemeOn && _winCol) ? `--rc-win-rgb:${_rgb};--rc-win-col:${_winCol};` : '';
 
     const MODE_COL = {
-      ind:'#2563eb', gj:'#dc2626', mini:'#7c3aed', civil:'#a855f7',
+      ind:'#2563eb', gj:'#d97706', progj:'#b91c1c',
+      mini:'#7c3aed', civil:'#b91c1c',
       univm:'#16a34a', ck:'#f59e0b', pro:'#0ea5e9', tt:'#10b981',
-      comp:'#3b82f6', tourney:'#7c3aed', procomptn:'#7c3aed', procompteam:'#2563eb'
+      comp:'#3b82f6', tourney:'#2563eb', procomp:'#0891b2', procomptn:'#0891b2', procompteam:'#0891b2', procompgj:'#b91c1c'
     };
     const _mc = MODE_COL[mode] || '#64748b';
     const _rgbM = _hexToRgbStr(_mc);
@@ -2055,9 +2056,13 @@ window.openMatchDetailFromHistory = function(selfName, oppName, date, map, modeL
         _collectFromSetsArr(typeof univM!=='undefined'?univM:[], out);
         if(_openGroupedSetPopup(out.games, 'univm')) return true;
       }
-      if(lbl==='미니대전' || lbl==='시빌워'){
-        _collectFromSetsArr(typeof miniM!=='undefined'?miniM:[], out);
+      if(lbl==='미니대전'){
+        _collectFromSetsArr(typeof miniM!=='undefined'?miniM.filter(m=>m&&m.type!=='civil'&&!(m.a==='A팀'&&m.b==='B팀')):[], out);
         if(_openGroupedSetPopup(out.games, 'mini')) return true;
+      }
+      if(lbl==='시빌워'){
+        _collectFromSetsArr(typeof miniM!=='undefined'?miniM.filter(m=>m&&(m.type==='civil'||(m.a==='A팀'&&m.b==='B팀'))):[], out);
+        if(_openGroupedSetPopup(out.games, 'civil')) return true;
       }
       if(lbl==='조별리그' || lbl==='대회' || lbl==='토너먼트' || lbl.indexOf('프로리그대회')!==-1 || lbl.indexOf('프로리그 대회')!==-1){
         _collectFromSetsArr(typeof comps!=='undefined'?comps:[], out);
@@ -2074,7 +2079,8 @@ window.openMatchDetailFromHistory = function(selfName, oppName, date, map, modeL
       if(!label) return [];
       if(label==='대학CK') return ['ck'];
       if(label==='대학대전') return ['univm'];
-      if(label==='미니대전' || label==='시빌워') return ['mini'];
+      if(label==='미니대전') return ['mini'];
+      if(label==='시빌워') return ['civil'];
       if(label==='프로리그') return ['pro'];
       if(label.indexOf('티어대회') !== -1) return ['tt','tourney']; // 티어대회 토너먼트가 tourneys에 들어있는 케이스 대응
       if(label.indexOf('끝장전') !== -1) return ['gj','procompgj'];
@@ -2491,4 +2497,3 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
   h+=`</div>`;
   return h;
 }
-

@@ -855,17 +855,17 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="font-size:11px;color:var(--text3);font-weight:800">대학/팀 버튼 크기(기록탭/프로리그/티어대회 등)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
-          <input type="range" id="cfg-mbtn-pc" min="80" max="150" step="5"
-            value="${Math.max(80,Math.min(150,parseInt(localStorage.getItem('su_match_btn_scale_pc')||'100',10)||100))}"
+          <input type="range" id="cfg-mbtn-pc" min="40" max="220" step="5"
+            value="${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_pc')||'100',10)||100))}"
             oninput="document.getElementById('cfg-mbtn-pc-v').textContent=this.value+'%'" onchange="cfgSetMatchBtnScaleSettings()" style="width:140px">
-          <span id="cfg-mbtn-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(80,Math.min(150,parseInt(localStorage.getItem('su_match_btn_scale_pc')||'100',10)||100))}%</span>
+          <span id="cfg-mbtn-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_pc')||'100',10)||100))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
-          <input type="range" id="cfg-mbtn-mb" min="80" max="150" step="5"
-            value="${Math.max(80,Math.min(150,parseInt(localStorage.getItem('su_match_btn_scale_mb')||'100',10)||100))}"
+          <input type="range" id="cfg-mbtn-mb" min="40" max="220" step="5"
+            value="${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_mb')||'100',10)||100))}"
             oninput="document.getElementById('cfg-mbtn-mb-v').textContent=this.value+'%'" onchange="cfgSetMatchBtnScaleSettings()" style="width:140px">
-          <span id="cfg-mbtn-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(80,Math.min(150,parseInt(localStorage.getItem('su_match_btn_scale_mb')||'100',10)||100))}%</span>
+          <span id="cfg-mbtn-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_mb')||'100',10)||100))}%</span>
         </div>
         <span style="font-size:11px;color:var(--gray-l)">※ 미니/시빌워/대학대전/대학CK/티어대회/프로리그/일반 기록카드에 적용 (대회탭 조별/토너는 아래 “대회 카드”에서 별도)</span>
       </div>
@@ -893,17 +893,17 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="font-size:11px;color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(기록탭)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
-          <input type="range" id="cfg-rc-gap-pc" min="0" max="30" step="1"
-            value="${Math.max(0,Math.min(30,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}"
+          <input type="range" id="cfg-rc-gap-pc" min="0" max="120" step="1"
+            value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}"
             oninput="document.getElementById('cfg-rc-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetRecVsGapSettings()" style="width:140px">
-          <span id="cfg-rc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(30,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}px</span>
+          <span id="cfg-rc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}px</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
-          <input type="range" id="cfg-rc-gap-mb" min="0" max="30" step="1"
-            value="${Math.max(0,Math.min(30,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}"
+          <input type="range" id="cfg-rc-gap-mb" min="0" max="120" step="1"
+            value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}"
             oninput="document.getElementById('cfg-rc-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetRecVsGapSettings()" style="width:140px">
-          <span id="cfg-rc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(30,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}px</span>
+          <span id="cfg-rc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}px</span>
         </div>
         <span style="font-size:11px;color:var(--gray-l)">※ “스코어 - 대학버튼” 좌우 간격</span>
       </div>
@@ -1158,17 +1158,17 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="font-size:11px;color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(대회탭)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
-          <input type="range" id="cfg-tc-gap-pc" min="0" max="36" step="1"
-            value="${Math.max(0,Math.min(36,parseInt(localStorage.getItem('su_tc_vs_gap_pc')||'12',10)||12))}"
+        <input type="range" id="cfg-tc-gap-pc" min="0" max="120" step="1"
+            value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_tc_vs_gap_pc')||'12',10)||12))}"
             oninput="document.getElementById('cfg-tc-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetTourneyVsGapSettings()" style="width:140px">
-          <span id="cfg-tc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(36,parseInt(localStorage.getItem('su_tc_vs_gap_pc')||'12',10)||12))}px</span>
+          <span id="cfg-tc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_tc_vs_gap_pc')||'12',10)||12))}px</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
-          <input type="range" id="cfg-tc-gap-mb" min="0" max="36" step="1"
-            value="${Math.max(0,Math.min(36,parseInt(localStorage.getItem('su_tc_vs_gap_mb')||'8',10)||8))}"
+          <input type="range" id="cfg-tc-gap-mb" min="0" max="120" step="1"
+            value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_tc_vs_gap_mb')||'8',10)||8))}"
             oninput="document.getElementById('cfg-tc-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetTourneyVsGapSettings()" style="width:140px">
-          <span id="cfg-tc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(36,parseInt(localStorage.getItem('su_tc_vs_gap_mb')||'8',10)||8))}px</span>
+          <span id="cfg-tc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_tc_vs_gap_mb')||'8',10)||8))}px</span>
         </div>
       </div>
 
@@ -1224,15 +1224,15 @@ ${_scfgD('notice','📢 공지 관리')}
 
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">PC 간격</div>
-        <input type="range" id="cfg-h2h-gap-pc" min="0" max="50" step="1" value="${Math.max(0,Math.min(50,gpc))}"
+        <input type="range" id="cfg-h2h-gap-pc" min="0" max="120" step="1" value="${Math.max(0,Math.min(120,gpc))}"
           oninput="document.getElementById('cfg-h2h-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
-        <div id="cfg-h2h-gap-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(50,gpc))}px</div>
+        <div id="cfg-h2h-gap-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(120,gpc))}px</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일 간격</div>
-        <input type="range" id="cfg-h2h-gap-mb" min="0" max="50" step="1" value="${Math.max(0,Math.min(50,gmb))}"
+        <input type="range" id="cfg-h2h-gap-mb" min="0" max="120" step="1" value="${Math.max(0,Math.min(120,gmb))}"
           oninput="document.getElementById('cfg-h2h-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
-        <div id="cfg-h2h-gap-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(50,gmb))}px</div>
+        <div id="cfg-h2h-gap-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(120,gmb))}px</div>
       </div>
 
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">

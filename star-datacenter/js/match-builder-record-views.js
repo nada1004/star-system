@@ -143,7 +143,7 @@ function _h2hPanelFit(){
 function _h2hScoreGapPx(){
   const isMb=_h2hIsMobile();
   const def=isMb?8:10;
-  const v=_h2hReadInt(isMb?'su_h2h_score_gap_mb':'su_h2h_score_gap_pc', def, 0, 50);
+  const v=_h2hReadInt(isMb?'su_h2h_score_gap_mb':'su_h2h_score_gap_pc', def, 0, 120);
   return v;
 }
 function _h2hScorePadPx(){

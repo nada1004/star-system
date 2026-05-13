@@ -540,7 +540,7 @@ window.applyRecVsGap = function(){
     const isMobile = w <= 768;
     const key = isMobile ? 'su_rc_vs_gap_mb' : 'su_rc_vs_gap_pc';
     const px = parseInt(localStorage.getItem(key) || (isMobile?'8':'12'), 10);
-    const v = Math.max(0, Math.min(30, isNaN(px)?(isMobile?8:12):px));
+    const v = Math.max(0, Math.min(120, isNaN(px)?(isMobile?8:12):px));
     document.documentElement.style.setProperty('--rc-vs-gap', v+'px');
   }catch(e){}
 };
@@ -548,8 +548,8 @@ window.cfgSetRecVsGapSettings = function(){
   try{
     const pc = parseInt(document.getElementById('cfg-rc-gap-pc')?.value||'12',10);
     const mb = parseInt(document.getElementById('cfg-rc-gap-mb')?.value||'8',10);
-    localStorage.setItem('su_rc_vs_gap_pc', String(Math.max(0,Math.min(30,isNaN(pc)?12:pc))));
-    localStorage.setItem('su_rc_vs_gap_mb', String(Math.max(0,Math.min(30,isNaN(mb)?8:mb))));
+    localStorage.setItem('su_rc_vs_gap_pc', String(Math.max(0,Math.min(120,isNaN(pc)?12:pc))));
+    localStorage.setItem('su_rc_vs_gap_mb', String(Math.max(0,Math.min(120,isNaN(mb)?8:mb))));
   }catch(e){}
   try{ window.applyRecVsGap && window.applyRecVsGap(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
@@ -677,7 +677,7 @@ window.applyTourneyVsGap = function(){
     const isMobile = w <= 768;
     const key = isMobile ? 'su_tc_vs_gap_mb' : 'su_tc_vs_gap_pc';
     const px = parseInt(localStorage.getItem(key) || (isMobile?'8':'12'), 10);
-    const v = Math.max(0, Math.min(36, isNaN(px)?(isMobile?8:12):px));
+    const v = Math.max(0, Math.min(120, isNaN(px)?(isMobile?8:12):px));
     document.documentElement.style.setProperty('--tc-vs-gap', v+'px');
   }catch(e){}
 };
@@ -685,8 +685,8 @@ window.cfgSetTourneyVsGapSettings = function(){
   try{
     const pc = parseInt(document.getElementById('cfg-tc-gap-pc')?.value||'12',10);
     const mb = parseInt(document.getElementById('cfg-tc-gap-mb')?.value||'8',10);
-    localStorage.setItem('su_tc_vs_gap_pc', String(Math.max(0,Math.min(36,isNaN(pc)?12:pc))));
-    localStorage.setItem('su_tc_vs_gap_mb', String(Math.max(0,Math.min(36,isNaN(mb)?8:mb))));
+    localStorage.setItem('su_tc_vs_gap_pc', String(Math.max(0,Math.min(120,isNaN(pc)?12:pc))));
+    localStorage.setItem('su_tc_vs_gap_mb', String(Math.max(0,Math.min(120,isNaN(mb)?8:mb))));
   }catch(e){}
   try{ window.applyTourneyVsGap && window.applyTourneyVsGap(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
@@ -806,8 +806,8 @@ window.cfgSetH2HPanelSettings = function(){
     localStorage.setItem('su_h2h_panel_wmul_mb', String(Math.max(10,Math.min(300,wmb))));
     localStorage.setItem('su_h2h_panel_hmul_mb', String(Math.max(10,Math.min(300,hmb))));
     // 스코어 ↔ 선수패널 간격 + 스코어 좌우 여백
-    localStorage.setItem('su_h2h_score_gap_pc', String(Math.max(0,Math.min(50,isNaN(gpc)?10:gpc))));
-    localStorage.setItem('su_h2h_score_gap_mb', String(Math.max(0,Math.min(50,isNaN(gmb)?8:gmb))));
+    localStorage.setItem('su_h2h_score_gap_pc', String(Math.max(0,Math.min(120,isNaN(gpc)?10:gpc))));
+    localStorage.setItem('su_h2h_score_gap_mb', String(Math.max(0,Math.min(120,isNaN(gmb)?8:gmb))));
     localStorage.setItem('su_h2h_score_pad_pc', String(Math.max(0,Math.min(24,isNaN(spc)?10:spc))));
     localStorage.setItem('su_h2h_score_pad_mb', String(Math.max(0,Math.min(24,isNaN(smb)?6:smb))));
   }catch(e){}
