@@ -4052,6 +4052,45 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     padding:6px 4px !important;
     gap:4px !important;
   }
+  /* (요청사항) 대회탭 조별리그/토너먼트 경기 기록 카드: 모바일에서 1줄(프로필-팀A-스코어-팀B-프로필) 형태로 정렬 */
+  .grp-match-card.match-card-v3.has-side-panels{
+    display:grid !important;
+    grid-template-columns:auto 1fr auto;
+    grid-template-areas:
+      "meta meta menu"
+      "left main right";
+    align-items:center !important;
+    gap:6px !important;
+    padding:8px 8px !important;
+  }
+  .grp-match-card.match-card-v3.has-side-panels > :first-child{
+    grid-area:meta;
+    width:auto !important;
+    flex-direction:row !important;
+    justify-content:flex-start !important;
+    gap:8px !important;
+  }
+  .grp-match-card.match-card-v3.has-side-panels > .rec-side-profiles:first-of-type{ grid-area:left; }
+  .grp-match-card.match-card-v3.has-side-panels > .grp-match-main{ grid-area:main; width:auto !important; }
+  .grp-match-card.match-card-v3.has-side-panels > .rec-side-profiles:last-of-type{ grid-area:right; }
+  .grp-match-card.match-card-v3.has-side-panels > .no-export{ grid-area:menu; justify-self:end; }
+  .grp-match-card.match-card-v3.has-side-panels .grp-match-main{
+    flex-wrap:nowrap !important;
+    overflow:hidden !important;
+    justify-content:center !important;
+    gap:8px !important;
+  }
+  .grp-match-card.match-card-v3.has-side-panels .grp-team-col{ min-width:0 !important; }
+  .grp-match-card.match-card-v3.has-side-panels .grp-team-chip{ padding:6px 8px !important; }
+  .grp-match-card.match-card-v3.has-side-panels .grp-team-chip span{ max-width:110px !important; }
+  .grp-match-card.match-card-v3.has-side-panels .grp-mem-btn{
+    display:inline-flex !important;
+    margin-top:2px !important;
+    font-size:9px !important;
+    padding:2px 6px !important;
+    white-space:nowrap;
+  }
+
   .grp-match-card.has-side-panels > .rec-side-profiles{
     max-width:56px !important;
     min-width:0 !important;
@@ -4072,14 +4111,14 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     gap:10px !important;
     border-radius:16px !important;
   }
-  .grp-match-card.match-card-v3 > div:first-child{
+  .grp-match-card.match-card-v3:not(.has-side-panels) > div:first-child{
     min-width:0 !important;
     width:100% !important;
     flex-direction:row !important;
     justify-content:space-between !important;
     align-items:center !important;
   }
-  .grp-match-card.match-card-v3 .grp-match-main{
+  .grp-match-card.match-card-v3:not(.has-side-panels) .grp-match-main{
     width:100% !important;
     flex-direction:row !important;
     flex-wrap:nowrap !important;
