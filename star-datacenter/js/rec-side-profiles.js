@@ -209,6 +209,64 @@
      col: 팀 컬러
      isLeft: 왼쪽 패널인지
   */
+
+  /* ── 프로필 이미지 컨테이너 HTML 생성 헬퍼 ── */
+  function _buildImgBox(raw, sizePx, radius, shadow, filterStr, isWinTeam, playerWon, col, pName, isLeft){
+    var isCircle = (radius==='50%'||radius==='999px'||radius==='9999px'||parseInt(radius,10)>=50);
+
+    // 팀 컬러 링
+    var ringSize  = (playerWon && isWinTeam) ? 3 : 1.5;
+    var ringColor = (playerWon && isWinTeam) ? col : 'rgba(148,163,184,0.25)';
+
+    // 글로우 (팀 컬러 기반)
+    var glowBase = (playerWon && isWinTeam)
+      ? '0 4px 16px '+col+'55, 0 0 0 '+(ringSize+1)+'px '+col+'33'
+      : shadow;
+    var glowPeak = (playerWon && isWinTeam)
+      ? '0 6px 28px '+col+'88, 0 0 0 '+(ringSize+2)+'px '+col+'55'
+      : '0 6px 20px rgba(0,0,0,.22)';
+
+    // 왕관 배지
+    var crownBadge = (playerWon && isWinTeam)
+      ? '<div class="rsp-crown">👑</div>'
+      : '';
+
+    // 이름 레이블 — textContent로 XSS 방지
+    var nameLblColor = (playerWon && isWinTeam) ? col : 'var(--gray-l)';
+    var nameLblGlow  = (playerWon && isWinTeam) ? '0 0 8px '+col+'77' : 'none';
+    var shortName = pName ? (pName.length>6 ? pName.slice(0,6)+'…' : pName) : '';
+    var nameLbl = shortName
+      ? '<div class="rsp-namelbl" style="color:'+nameLblColor+';text-shadow:'+nameLblGlow+';">'+shortName.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'
+      : '';
+
+    // 박스 크기: 링 + 여백 포함
+    var boxW = sizePx + ringSize*2 + 6;
+    var boxStyle = ''
+      +'position:relative;display:flex;align-items:center;justify-content:center;'
+      +'width:'+boxW+'px;height:'+boxW+'px;'
+      +'flex-shrink:0;'
+      +'--rsp-glow-base:'+glowBase+';'
+      +'--rsp-glow-peak:'+glowPeak+';';
+
+    var innerStyle = ''
+      +'width:'+sizePx+'px;height:'+sizePx+'px;'
+      +'border-radius:'+(isCircle?'50%':radius)+';'
+      +'overflow:hidden;'
+      +'display:flex;align-items:center;justify-content:center;'
+      +'border:'+ringSize+'px solid '+ringColor+';'
+      +'box-shadow:'+glowBase+';'
+      +'filter:'+filterStr+';'
+      +'background:#e2e8f0;';
+
+    return '<div class="rsp-imgbox'+(playerWon&&isWinTeam?' rsp-imgbox--win':'')+(isCircle?' rsp-imgbox--circle':'')+'" style="'+boxStyle+'">'
+      + crownBadge
+      + '<div class="rsp-imginner" style="'+innerStyle+'">'
+      + raw
+      + '</div>'
+      + '</div>'
+      + nameLbl;
+  }
+
   function _panel(players, isWinTeam, col, isLeft, matchIdx){
     if(!players || !players.length) return '';
 
@@ -241,7 +299,8 @@
         raw = getPlayerPhotoHTML(pName, sizePx+'px','');
         window.__detailCtx = prev;
         if(!raw) continue;
-        // 이미지도 이니셜도 모두 표시 (사진 없으면 이니셜 뱃지 표시)
+        // 실제 사진(<img 태그)이 없으면 패널에 포함하지 않음 (이니셜 뱃지만 있는 경우 빈 박스 방지)
+        if(raw.indexOf('<img') === -1) continue;
       }
       validPlayers.push({name:pName, isWinner:pEntry.isWinner, raw:raw});
     }
@@ -261,14 +320,13 @@
       var shadow = (isWinTeam&&playerWon)
         ?(showBox?'0 4px 18px '+_rgba(col,0.38):'0 4px 16px '+_rgba(col,0.32))
         :(showBox?'0 2px 8px rgba(0,0,0,0.10)':'0 2px 8px rgba(0,0,0,0.12)');
-      return '<div class="rec-side-profiles'+(isWinTeam?' rec-side-profiles--win':' rec-side-profiles--lose')+(showBox?'':' rsp-no-box')+'" style="'
+      var _imgBox = _buildImgBox(vp.raw, sizePx, radius, shadow, filterStr, isWinTeam, playerWon, col, vp.name, isLeft);
+      return '<div class="rec-side-profiles rsp-styled'+(isWinTeam?' rec-side-profiles--win':' rec-side-profiles--lose')+(showBox?'':' rsp-no-box')+'" style="'
         +'background:'+panelBg+';outline:1px solid '+panelBrd+';'
         +'min-width:'+widthPx+'px;max-width:'+widthPx+'px;overflow:visible;'
         +'align-items:center;justify-content:'+jc+';">'
         +'<div class="rsp-inner" style="display:flex;align-items:'+jc+';justify-content:center;width:100%;overflow:visible;'+translateStyle+'">'
-        +'<div style="width:'+sizePx+'px;height:'+sizePx+'px;border-radius:'+radius+';overflow:hidden;flex-shrink:0;'
-        +'box-shadow:'+shadow+';filter:'+filterStr+';display:flex;align-items:center;justify-content:center;">'
-        +vp.raw+'</div></div></div>';
+        +_imgBox+'</div></div>';
     }
 
     // 슬라이드쇼: 여러 명 — data-rsp-slot으로 전역 동기화
@@ -282,15 +340,14 @@
         :(showBox?'0 2px 8px rgba(0,0,0,0.10)':'0 2px 8px rgba(0,0,0,0.12)');
       // 초기 표시: slot=0이면 0번, slot>0이면 모두 none (전역틱 applyTick이 교정)
       var initDisplay = (si === 0) ? 'flex' : 'none';
+      var _sBox = _buildImgBox(vp2.raw, sizePx, radius, sh2, fs2, isWinTeam, pw2, col, vp2.name, isLeft);
       slides += '<div class="rsp-slide" style="'
         +'display:'+initDisplay+';align-items:'+jc+';justify-content:center;width:100%;">'
-        +'<div style="width:'+sizePx+'px;height:'+sizePx+'px;border-radius:'+radius+';overflow:hidden;flex-shrink:0;'
-        +'box-shadow:'+sh2+';filter:'+fs2+';display:flex;align-items:center;justify-content:center;">'
-        +vp2.raw+'</div></div>';
+        +_sBox+'</div>';
     }
 
     var slot = (parseInt(matchIdx||0,10)||0);
-    return '<div id="'+uid+'" class="rec-side-profiles'+(isWinTeam?' rec-side-profiles--win':' rec-side-profiles--lose')+(showBox?'':' rsp-no-box')+'" data-rsp-slides="1" data-rsp-slot="'+slot+'" style="'
+    return '<div id="'+uid+'" class="rec-side-profiles rsp-styled'+(isWinTeam?' rec-side-profiles--win':' rec-side-profiles--lose')+(showBox?'':' rsp-no-box')+'" data-rsp-slides="1" data-rsp-slot="'+slot+'" style="'
       +'background:'+panelBg+';outline:1px solid '+panelBrd+';'
       +'min-width:'+widthPx+'px;max-width:'+widthPx+'px;overflow:visible;'
       +'align-items:center;justify-content:'+jc+';">'
