@@ -913,8 +913,9 @@ b,strong{font-weight:600;}
 .tab.on{background:linear-gradient(135deg,#0f172a,#1d4ed8 58%,#3b82f6);color:#fff;font-weight:900;border-color:rgba(59,130,246,.32);box-shadow:0 14px 30px rgba(37,99,235,0.25);}
 .tab.cfg{background:transparent;}
 .tab.cfg.on{background:#334155;color:#fff;}
-/* 설정탭: 비로그인 기본 숨김 (auth.js applyLoginState에서 인라인으로 show/hide) */
-#tabCfg{display:none;}
+/* 설정탭: 비로그인 기본 숨김 - !important로 강제, JS inline style(display:flex)로만 표시 가능 */
+#tabCfg{display:none !important;}
+#tabCfg[style*="flex"]{display:flex !important;}
 
 /* ══════════════════════════════════════
    반응형(모바일/태블릿) 자동 크기 조정
@@ -3974,6 +3975,16 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .rec-sum-vs { flex-wrap: wrap !important; gap: var(--rc-vs-gap,8px) !important; justify-content: var(--rc-vs-justify, center) !important; }
   .rec-summary { min-height: 44px; border-radius: 10px; }
   .sort-bar { padding: 6px 10px !important; }
+  /* 모바일: 프로필 패널 양쪽 자동 축소 - 한 줄 유지 */
+  .rec-sum-vs-outer { flex-wrap: nowrap !important; align-items: stretch; overflow: hidden; }
+  .rec-side-profiles { min-width: 0 !important; max-width: 64px !important; flex-shrink: 1 !important; padding: 4px 2px !important; }
+  .rec-side-profiles.rsp-no-box { max-width: 60px !important; padding: 2px 0 !important; }
+  .rsp-inner { overflow: hidden; }
+  .rsp-inner > div { max-width: 100%; overflow: hidden; }
+  .rsp-inner > div > img { max-width: 100%; height: auto !important; object-fit: cover !important; }
+  /* 참여자 버튼: 모바일에서 팀 배지 아래 자연스럽게 배치 */
+  .rc-mem-btn { font-size: 10px !important; padding: 2px 6px !important; white-space: nowrap; }
+  .rec-sum-vs > div { min-width: 0; }
   .rec-detail-area { padding: 6px 8px !important; }
   /* 경기 상세 게임 행: 모바일에서 사진 작게, 텍스트 압축 */
   .rec-detail-area strong { font-size: 12px !important; }
@@ -4972,6 +4983,9 @@ body.design-v2 .scard:hover{
   /* iOS 자동확대 방지: input/select font-size 16px 이상 */
   input, select, textarea { font-size: 16px !important; }
   .mbox input, .mbox select, .umbox input, .umbox select { font-size: 16px !important; }
+  /* 480px 이하: 프로필 패널 더 작게 - 중앙 vs 영역 보호 */
+  .rec-side-profiles { max-width: 46px !important; padding: 2px 0 !important; }
+  .rec-side-profiles.rsp-no-box { max-width: 42px !important; }
 }
 
 

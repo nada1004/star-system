@@ -525,6 +525,24 @@ let isLoggedIn=localStorage.getItem('su_session')==='1';
 let isSubAdmin=localStorage.getItem('su_session_role')==='sub-admin';
 window._authInitPromise = null;
 
+// ── 설정 탭 즉시 가시성 적용 (applyLoginState 호출 전 깜박임 방지) ──
+// auth.js 로드 시점에 isLoggedIn/isSubAdmin 값을 기반으로 즉시 display를 결정한다.
+// _syncSessionStateAtBoot()가 만료 세션을 지웠을 경우 isLoggedIn도 함께 보정한다.
+(function _earlyApplyCfgTab(){
+  try{
+    // 세션이 실제로 유효한지 재확인 (만료된 세션이 남아있을 경우 대비)
+    if(isLoggedIn && _isSessionExpired()){
+      isLoggedIn = false;
+      isSubAdmin = false;
+    }
+    const _el = document.getElementById('tabCfg');
+    if(_el) _el.style.display = (isLoggedIn && !isSubAdmin) ? 'flex' : 'none';
+  }catch(e){
+    // 오류 시 안전하게 숨김
+    try{ const _el=document.getElementById('tabCfg'); if(_el) _el.style.display='none'; }catch(_){}
+  }
+})();
+
 async function doLogin(){
   try{ if(window._authInitPromise) await window._authInitPromise; else await pullAdminAccountsRemote(true); }catch(e){}
   const id=document.getElementById('li-id').value.trim();
@@ -662,8 +680,9 @@ function applyLoginState(){
     el.classList.toggle('locked',!isLoggedIn);
   });
   // 관리자 전용 탭 (설정) - 총관리자만 표시/접근
+  // display:'' 대신 display:'flex'로 명시 → CSS #tabCfg{display:none}에 의해 덮이지 않도록
   const _cfgTab=document.getElementById('tabCfg');
-  if(_cfgTab) _cfgTab.style.display=(isLoggedIn && !isSubAdmin)?'':'none';
+  if(_cfgTab) _cfgTab.style.display=(isLoggedIn && !isSubAdmin)?'flex':'none';
   if((!isLoggedIn || isSubAdmin) && curTab==='cfg'){
     curTab='total';
   }
