@@ -289,8 +289,8 @@
         +vp2.raw+'</div></div>';
     }
 
-    // data-rsp-slot: 전역 틱 기준 이 패널의 오프셋 (경기 순서 * 경기당 참여자 수)
-    return '<div id="'+uid+'" class="rec-side-profiles'+(isWinTeam?' rec-side-profiles--win':' rec-side-profiles--lose')+(showBox?'':' rsp-no-box')+'" data-rsp-slides="1" data-rsp-slot="'+(matchIdx||0)+'" style="'
+    var slot = (parseInt(matchIdx||0,10)||0);
+    return '<div id="'+uid+'" class="rec-side-profiles'+(isWinTeam?' rec-side-profiles--win':' rec-side-profiles--lose')+(showBox?'':' rsp-no-box')+'" data-rsp-slides="1" data-rsp-slot="'+slot+'" style="'
       +'background:'+panelBg+';outline:1px solid '+panelBrd+';'
       +'min-width:'+widthPx+'px;max-width:'+widthPx+'px;overflow:visible;'
       +'align-items:center;justify-content:'+jc+';">'
@@ -379,10 +379,7 @@
 
       // 프로필 모드: matchData sets에서 승패별 선수 분리 수집
       var buildPlayers = function(side, isWinSide){
-        var split = {winNames:[], loseNames:[]};
-        if(matchData && matchData.sets && matchData.sets.length){
-          split = _getWinLoseNamesSplit(matchData, side, isWinSide);
-        }
+        var split = _getWinLoseNamesSplit(matchData, side, isWinSide);
         var univName = (side === 'a') ? teamA : teamB;
 
         // 유니브 필터링

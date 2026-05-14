@@ -2108,6 +2108,11 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
   pointer-events:none;
   transition:background .3s;
 }
+/* (요청사항) 대회탭 조별리그/토너 기록 카드: 우측 보라색 세로 바 제거 */
+.grp-match-card.match-card-v3:not(.grp-sidefx)::after{
+  display:none !important;
+  content:none !important;
+}
 .grp-match-card .grp-match-vs{
   font-size:14px;
   letter-spacing:-.01em;

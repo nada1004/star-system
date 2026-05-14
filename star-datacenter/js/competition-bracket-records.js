@@ -59,6 +59,27 @@ function rBracketSchedule(tn){
     const dateStr=detail?.d||'';
     const winCol=(aWin||bWin)?(aWin?ca:cb):'#64748b';
     const winRgb=_tcHexToRgbStr(winCol);
+    let aMembers = [];
+    let bMembers = [];
+    if (detail?.sets) {
+      const aSet = new Set();
+      const bSet = new Set();
+      detail.sets.forEach(s => {
+        (s.games || []).forEach(g => {
+          if (g.playerA) aSet.add(g.playerA);
+          if (g.playerB) bSet.add(g.playerB);
+          if (g.winner === 'A' && g.wName) aSet.add(g.wName);
+          if (g.winner === 'B' && g.wName) bSet.add(g.wName);
+        });
+      });
+      aMembers = Array.from(aSet).map(n => ({ name: n }));
+      bMembers = Array.from(bSet).map(n => ({ name: n }));
+    }
+    const _sideAB = {a:aMembers||[], b:bMembers||[]};
+    const _sideM = Object.assign({}, detail||{}, {a:(teamA||''), b:(teamB||''), teamAMembers:(aMembers||[]), teamBMembers:(bMembers||[])});
+    const _bktSide=(typeof window._buildRecSideProfilePanel==='function')
+      ? window._buildRecSideProfilePanel(_sideM, _sideAB, aWin, bWin, ca, cb)
+      : {left:'', right:''};
     const _bktActions = [
       isLoggedIn?{ t:'✏️ 결과 입력', d:'대진표 경기 결과 입력', kind:'normal', on:()=>openBracketMatchModal(tn.id,r,mi,teamA,teamB) }:null,
       isLoggedIn?{ t:'📋 붙여넣기', d:'결과 텍스트 빠르게 입력', kind:'accent', on:()=>{ bracketMatchState={tnId:tn.id,rnd:r,mi:mi,teamA:teamA,teamB:teamB}; openBktPasteModal(); } }:null,
@@ -72,37 +93,20 @@ function rBracketSchedule(tn){
     const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
     const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
     return `<div style="margin-bottom:8px">
-      <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}border-left:4px solid ${isManual?'#7c3aed':'var(--blue)'};background:var(--white);margin-bottom:0">
+      <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_bktSide.left||_bktSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_fxVars}border-left:4px solid ${isManual?'#7c3aed':'var(--blue)'};background:var(--white);margin-bottom:0">
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
           <span class="grp-badge" style="background:${isManual?'#7c3aed':'var(--blue)'};font-size:10px">${rLabel}</span>
           ${dateStr?`<span style="font-size:9px;color:var(--gray-l)">${dateStr.slice(5).replace('-','/')}</span>`:''}
           ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px">예정</span>`:''}
         </div>
+        ${_bktSide.left||''}
         <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:var(--tc-vs-gap,12px);justify-content:center;flex-wrap:wrap">
           <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
             <div class="grp-team-chip" style="--chip-col:${ca||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.26);cursor:${teamA?'pointer':'default'};${(isDone && bWin)?'opacity:.55;filter:saturate(0.65) grayscale(.15)':''}" onclick="${teamA?`openUnivModal('${String(teamA).replace(/'/g,"\\'")}')`:''}">
               ${(()=>{const url=teamA?(UNIV_ICONS[teamA]||(univCfg.find(x=>x.name===teamA)||{}).icon||''):'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0" onerror="this.style.display='none'">`:'';})()}
               <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${teamA||'미정'}</span>
             </div>
-            ${(()=>{
-              // 토너먼트 멤버 추출
-              let aMembers = [];
-              if (detail?.sets) {
-                const aSet = new Set();
-                detail.sets.forEach(s => {
-                  (s.games || []).forEach(g => {
-                    if (g.playerA) aSet.add(g.playerA);
-                    if (g.winner === 'A' && g.wName) aSet.add(g.wName);
-                  });
-                });
-                aMembers = Array.from(aSet).map(n => ({ name: n }));
-              }
-              const aBtnColor = ca || '#3b82f6';
-              const aMemJson = JSON.stringify(aMembers).replace(/"/g, "'");
-              return aMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${aBtnColor};" onclick="event.stopPropagation();openProMembersPopup('${teamA.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
-              <span class="mem-ico">👥</span><span>${aMembers.length}명</span>
-            </button>` : '';
-            })()}
+            ${(()=>{const aBtnColor = ca || '#3b82f6'; const aMemJson = JSON.stringify(aMembers).replace(/"/g, "'"); return aMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${aBtnColor};" onclick="event.stopPropagation();openProMembersPopup('${teamA.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})"><span class="mem-ico">👥</span><span>${aMembers.length}명</span></button>` : '';})()}
           </div>
           <div class="grp-score-col" style="text-align:center;min-width:80px">
             ${isDone?`<div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px" onclick="openCompMatchDetailModal('${tn.id}',null,${mi},${r},${isManual})"><span class="${aWin?'wt':bWin?'lt':''}">${sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span class="${bWin?'wt':aWin?'lt':''}">${sb}</span></div>
@@ -113,28 +117,11 @@ function rBracketSchedule(tn){
               ${(()=>{const url=teamB?(UNIV_ICONS[teamB]||(univCfg.find(x=>x.name===teamB)||{}).icon||''):'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0" onerror="this.style.display='none'">`:'';})()}
               <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${teamB||'미정'}</span>
             </div>
-            ${(()=>{
-              // 토너먼트 멤버 추출
-              let bMembers = [];
-              if (detail?.sets) {
-                const bSet = new Set();
-                detail.sets.forEach(s => {
-                  (s.games || []).forEach(g => {
-                    if (g.playerB) bSet.add(g.playerB);
-                    if (g.winner === 'B' && g.wName) bSet.add(g.wName);
-                  });
-                });
-                bMembers = Array.from(bSet).map(n => ({ name: n }));
-              }
-              const bBtnColor = cb || '#ef4444';
-              const bMemJson = JSON.stringify(bMembers).replace(/"/g, "'");
-              return bMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${bBtnColor};" onclick="event.stopPropagation();openProMembersPopup('${teamB.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})">
-              <span class="mem-ico">👥</span><span>${bMembers.length}명</span>
-            </button>` : '';
-            })()}
+            ${(()=>{const bBtnColor = cb || '#ef4444'; const bMemJson = JSON.stringify(bMembers).replace(/"/g, "'"); return bMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${bBtnColor};" onclick="event.stopPropagation();openProMembersPopup('${teamB.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})"><span class="mem-ico">👥</span><span>${bMembers.length}명</span></button>` : '';})()}
           </div>
         </div>
-        ${_bktMenu?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">${_bktMenu}</div>`:''}
+        ${_bktSide.right||''}
+        ${_bktMenu?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px;padding-right:6px">${_bktMenu}</div>`:''}
       </div>
     </div>`;
   }

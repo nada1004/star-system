@@ -135,8 +135,10 @@ function rCompLeague(tn){
       const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
       const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
       const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
-      const _compSide=(typeof window._buildCompSidePanel==='function')
-        ? window._buildCompSidePanel(m.a||'',m.b||'',aWin,bWin,ca,cb,{...m, matchNum: m._globalSlot+1})
+      const _sideAB = {a:aMembers||[], b:bMembers||[]};
+      const _sideM = {...m, a:(m.a||''), b:(m.b||''), teamAMembers:(aMembers||[]), teamBMembers:(bMembers||[])};
+      const _compSide=(typeof window._buildRecSideProfilePanel==='function')
+        ? window._buildRecSideProfilePanel(_sideM, _sideAB, aWin, bWin, ca, cb)
         : {left:'',right:''};
       h+=`<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_compSide.left||_compSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${m.grpColor};">
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:72px;flex-shrink:0">
@@ -170,7 +172,7 @@ function rCompLeague(tn){
           </div>
         </div>
         ${_compSide.right||''}
-        ${_leagueMenu?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">${_leagueMenu}</div>`:''}
+        ${_leagueMenu?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px;padding-right:6px">${_leagueMenu}</div>`:''}
       </div>`;
     });
     h+=`</div>`;
