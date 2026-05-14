@@ -12,6 +12,8 @@ function rCompLeague(tn){
     });
   });
   allMatches.sort((a,b)=>leagueSortDir==='asc'?(a.d||'9999').localeCompare(b.d||'9999'):(b.d||'').localeCompare(a.d||''));
+  // 전역 순환용 슬롯 인덱스 부여 (정렬 후 순서 기준, 0-based)
+  allMatches.forEach((m,i)=>{ m._globalSlot = i; });
   const dates=[...new Set(allMatches.map(m=>m.d).filter(Boolean))].sort();
   const _totalM=allMatches.length, _doneM=allMatches.filter(m=>m.sa!=null&&m.sb!=null).length;
   const _pct=_totalM?Math.round(_doneM/_totalM*100):0;
@@ -133,17 +135,16 @@ function rCompLeague(tn){
       const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
       const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
       const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
-      /* 양쪽 프로필/로고 패널 */
       const _compSide=(typeof window._buildCompSidePanel==='function')
-        ? window._buildCompSidePanel(m.a||'',m.b||'',aWin,bWin,ca,cb,m)
+        ? window._buildCompSidePanel(m.a||'',m.b||'',aWin,bWin,ca,cb,{...m, matchNum: m._globalSlot+1})
         : {left:'',right:''};
       h+=`<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_compSide.left||_compSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${m.grpColor};">
-        ${_compSide.left}
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:72px;flex-shrink:0">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">GROUP ${m.grpLetter}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
           ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
         </div>
+        ${_compSide.left||''}
         <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:var(--tc-vs-gap,12px);justify-content:center;flex-wrap:wrap">
           <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
             <div class="grp-team-chip" style="--chip-col:${ca||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;cursor:pointer;transition:.15s;border:1px solid rgba(255,255,255,.26);${(isDone && bWin)?'opacity:.55;filter:saturate(0.65) grayscale(.15)':''}" onclick="openUnivModal('${m.a||''}')">
@@ -168,8 +169,8 @@ function rCompLeague(tn){
             </button>` : ''}
           </div>
         </div>
+        ${_compSide.right||''}
         ${_leagueMenu?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px">${_leagueMenu}</div>`:''}
-        ${_compSide.right}
       </div>`;
     });
     h+=`</div>`;

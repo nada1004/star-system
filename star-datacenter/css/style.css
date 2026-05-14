@@ -1750,7 +1750,7 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 .rec-side-profiles.rsp-no-box{
   background:transparent!important;
   outline:none!important;
-  padding:4px 4px;
+  padding:0!important;
 }
 /* 이미지 버튼 완전 숨김 */
 .rec-side-profiles button,
@@ -2121,6 +2121,17 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
 /* (요청사항) 대회탭 대학 ↔ 스코어 간격 */
 .grp-match-card.match-card-v3 .grp-match-main{
   gap:var(--tc-vs-gap,12px) !important;
+}
+/* 사이드 프로필 패널이 있는 카드: 줄바꿈 금지, 패널 고정 */
+.grp-match-card.has-side-panels{
+  flex-wrap:nowrap !important;
+  align-items:stretch !important;
+  padding-left:4px !important;
+  padding-right:4px !important;
+}
+.grp-match-card.has-side-panels > .rec-side-profiles{
+  flex-shrink:0 !important;
+  align-self:stretch !important;
 }
 .grp-team-col,
 .grp-score-col{
@@ -4028,6 +4039,28 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 
   /* ── 조별리그 ── */
   .grp-match-card { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
+  /* 사이드 패널 있는 카드: 모바일도 가로 유지 */
+  .grp-match-card.has-side-panels{
+    flex-direction:row !important;
+    flex-wrap:nowrap !important;
+    align-items:stretch !important;
+    padding:6px 4px !important;
+    gap:4px !important;
+  }
+  .grp-match-card.has-side-panels > .rec-side-profiles{
+    max-width:56px !important;
+    min-width:0 !important;
+    flex-shrink:1 !important;
+    overflow:hidden !important;
+  }
+  .grp-match-card.has-side-panels > .rec-side-profiles .rsp-inner > div{
+    max-width:100% !important;
+  }
+  .grp-match-card.has-side-panels > .rec-side-profiles img,
+  .grp-match-card.has-side-panels > .rec-side-profiles span{
+    max-width:100% !important;
+    height:auto !important;
+  }
   /* (요청사항) 대회탭 조별/토너 기록 카드: 모바일에서 더 컴팩트 + 정렬 */
   .grp-match-card.match-card-v3{
     padding:10px 12px !important;

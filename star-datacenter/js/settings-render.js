@@ -1039,6 +1039,76 @@ ${_scfgD('notice','📢 공지 관리')}
           <div style="font-size:10px;color:var(--gray-l);margin-top:3px">양수(+): 좌우 이미지가 스코어 방향(안쪽)으로 이동 &nbsp;|&nbsp; 음수(-): 카드 바깥쪽으로 이동</div>
         </div>
 
+        <!-- 슬라이드쇼 -->
+        <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:800;color:var(--text2);margin-bottom:8px">
+            <input type="checkbox" id="cfg-rsp-rotate-on" style="width:14px;height:14px"
+              ${(()=>{try{return (localStorage.getItem('su_rsp_rotate_on')??'1')!=='0'?'checked':'';}catch(e){return 'checked';}})()}
+              onchange="(window.cfgSetRspRotateOn||function(){})()">
+            🔄 참여자 슬라이드쇼 (자동 전환)
+          </label>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">⏱ 전환 주기 <span id="cfg-rsp-rotate-sec-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_rsp_rotate_sec')||'5',10);}catch(e){return 5;}})()}초</span></div>
+          <input type="range" min="1" max="60" step="1"
+            value="${(()=>{try{return parseInt(localStorage.getItem('su_rsp_rotate_sec')||'5',10);}catch(e){return 5;}})()}"
+            style="width:100%;max-width:260px;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-rsp-rotate-sec-v').textContent=this.value+'초'"
+            onchange="(window.cfgSetRspRotateSec||function(){})(this.value)">
+        </div>
+
+        <!-- 연한색(Opacity) 조절: 승리팀의 진 선수 -->
+        <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
+          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">🏆 승리팀 패널 – 진 선수 연한 회색 조절</div>
+          <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">승리팀에서 개인전을 진 선수의 투명도·흑백을 조절합니다.</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-wtlo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_opacity')||'0.65').toFixed(2);}catch(e){return '0.65';}})()}</span></div>
+          <input type="range" min="0.1" max="1.0" step="0.05"
+            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_opacity')||'0.50');}catch(e){return 0.50;}})()}"
+            style="width:100%;max-width:260px;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-rsp-wtlo-v').textContent=parseFloat(this.value).toFixed(2)"
+            onchange="(window.cfgSetRspWinTeamLoseOpacity||function(){})(this.value)">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">흑백(Grayscale) <span id="cfg-rsp-wtlg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_gray')||'0.35').toFixed(2);}catch(e){return '0.35';}})()}</span></div>
+          <input type="range" min="0" max="1.0" step="0.05"
+            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_gray')||'0.70');}catch(e){return 0.70;}})()}"
+            style="width:100%;max-width:260px;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-rsp-wtlg-v').textContent=parseFloat(this.value).toFixed(2)"
+            onchange="(window.cfgSetRspWinTeamLoseGray||function(){})(this.value)">
+        </div>
+
+        <!-- 밝기 조절: 패배팀의 이긴 선수 -->
+        <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
+          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">💪 패배팀 패널 – 이긴 선수 밝기 조절</div>
+          <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">패배팀에서 개인전을 이긴 선수입니다. 팀은 졌지만 개인전은 이겼으므로 약간만 연하게 표시됩니다.</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-ltwo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_opacity')||'0.80').toFixed(2);}catch(e){return '0.80';}})()}</span></div>
+          <input type="range" min="0.1" max="1.0" step="0.05"
+            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_opacity')||'0.80');}catch(e){return 0.80;}})()}"
+            style="width:100%;max-width:260px;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-rsp-ltwo-v').textContent=parseFloat(this.value).toFixed(2)"
+            onchange="(window.cfgSetRspLoseTeamWinOpacity||function(){})(this.value)">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">흑백(Grayscale) <span id="cfg-rsp-ltwg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_gray')||'0.15').toFixed(2);}catch(e){return '0.15';}})()}</span></div>
+          <input type="range" min="0" max="1.0" step="0.05"
+            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_gray')||'0.15');}catch(e){return 0.15;}})()}"
+            style="width:100%;max-width:260px;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-rsp-ltwg-v').textContent=parseFloat(this.value).toFixed(2)"
+            onchange="(window.cfgSetRspLoseTeamWinGray||function(){})(this.value)">
+        </div>
+
+        <!-- 연한색(Opacity) 조절: 패배팀의 진 선수 -->
+        <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
+          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">💔 패배팀 패널 – 진 선수 연한색 조절</div>
+          <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">패배팀에서 개인전까지 진 선수(전패)의 투명도·흑백을 조절합니다.</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-ltlo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_opacity')||'0.45').toFixed(2);}catch(e){return '0.45';}})()}</span></div>
+          <input type="range" min="0.1" max="1.0" step="0.05"
+            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_opacity')||'0.45');}catch(e){return 0.45;}})()}"
+            style="width:100%;max-width:260px;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-rsp-ltlo-v').textContent=parseFloat(this.value).toFixed(2)"
+            onchange="(window.cfgSetRspLoseTeamLoseOpacity||function(){})(this.value)">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">흑백(Grayscale) <span id="cfg-rsp-ltlg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_gray')||'0.75').toFixed(2);}catch(e){return '0.75';}})()}</span></div>
+          <input type="range" min="0" max="1.0" step="0.05"
+            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_gray')||'0.75');}catch(e){return 0.75;}})()}"
+            style="width:100%;max-width:260px;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-rsp-ltlg-v').textContent=parseFloat(this.value).toFixed(2)"
+            onchange="(window.cfgSetRspLoseTeamLoseGray||function(){})(this.value)">
+        </div>
+
         <!-- 네모 박스(배경/테두리) 표시 -->
         <div style="margin-bottom:10px">
           <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:700;color:var(--text2)">
