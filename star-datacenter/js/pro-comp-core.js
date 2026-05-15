@@ -267,7 +267,7 @@ function rProComp(C, T) {
       {id:'grprank', lbl:'📊 순위'},
       // (요청사항) 대진표(보기) 탭 + 대진표 기록(입력) 탭 모두 제공
       {id:'tour', lbl:'🗂️ 대진표'},
-      {id:'tourmatch', lbl:'🗂️ 대진표 기록'},
+      {id:'tourmatch', lbl:'📋 대진표 기록'},
       {id:'team', lbl:'🤝 팀전'},
       {id:'gj', lbl:'🔥 중장전'},
       {id:'stats', lbl:'📈 통계'},
@@ -291,7 +291,11 @@ function rProComp(C, T) {
 
     if (proCompSub === 'league') h += proCompLeague(tn);
     else if (proCompSub === 'grprank') h += proCompGrpRank(tn);
-    else if (proCompSub === 'tour') h += proCompBracket(tn);
+    else if (proCompSub === 'tour') {
+      h += proCompBracket(tn);
+      const _tourRec = proCompTourMatchInput(tn);
+      if (_tourRec) h += `<div style="margin-top:18px;padding-top:14px;border-top:2px solid var(--border)">${_tourRec}</div>`;
+    }
     else if (proCompSub === 'tourmatch') h += proCompTourMatchInput(tn);
     else if (proCompSub === 'team') h += proCompTeamSection(tn);
     else if (proCompSub === 'gj') h += proCompGJSection(tn);
@@ -485,13 +489,14 @@ function proCompLeague(tn) {
       const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
       const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
       const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
+      const _sideRgbVars=(typeof _tcHexToRgbStr==='function')?`--rec-side-left-rgb:${_tcHexToRgbStr(ca||'#3b82f6')};--rec-side-right-rgb:${_tcHexToRgbStr(cb||'#ef4444')};`:'';
       const _cardActions = [
         isDone ? (()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; return (!_adm||isLoggedIn) ? { t:'🎴 공유카드', d:'공유용 카드 생성', kind:'accent', on:()=>_openProCompLeagueShareCard(tn.id,m.grpIdx,m.matchNum-1) } : null;})() : null,
         isLoggedIn ? { t:'✏️ 결과 수정', d:'경기 결과와 세트 수정', kind:'normal', on:()=>proCompEditMatch(tn.id,m.grpIdx,m.matchNum-1) } : null,
         isLoggedIn ? { t:'🗑️ 결과 삭제', d:'이 경기 기록 삭제', kind:'danger', on:()=>proCompDelMatch(tn.id,m.grpIdx,m.matchNum-1) } : null
       ].filter(Boolean);
       const _cardMenu = _cardActions.length ? _compActionMenuHTML(_cardActions) : '';
-      h += `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${m.grpColor};margin-bottom:8px">
+      h += `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${_fxOn?(ca||m.grpColor):m.grpColor};${_fxOn?`border-right:4px solid ${cb||m.grpColor};`:''};margin-bottom:8px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">${m.grpName?m.grpName:`GROUP ${m.grpLetter}`}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
@@ -1590,7 +1595,9 @@ function proCompTourMatchInput(tn){
     const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
     const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
     const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
-    return `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${col};margin-bottom:8px">
+    const _hexRgb2=(h)=>{const s=String(h||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
+    const _sideRgbVars2=`--rec-side-left-rgb:${_hexRgb2(ca||'#3b82f6')};--rec-side-right-rgb:${_hexRgb2(cb||'#ef4444')};`;
+    return `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars2}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${_fxOn?(ca||col):col};${_fxOn?`border-right:4px solid ${cb||col};`:''};margin-bottom:8px">
       <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:70px">
         <span class="grp-badge" style="background:linear-gradient(135deg,${col},${col}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${col}55">${round}</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:600">${displayNo}경기</span>

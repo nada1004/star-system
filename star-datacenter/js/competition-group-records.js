@@ -135,12 +135,14 @@ function rCompLeague(tn){
       const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
       const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
       const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
+      const _hexRgb=(h)=>{const s=String(h||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
+      const _sideRgbVars=`--rec-side-left-rgb:${_hexRgb(ca||'#3b82f6')};--rec-side-right-rgb:${_hexRgb(cb||'#ef4444')};`;
       const _sideAB = {a:aMembers||[], b:bMembers||[]};
       const _sideM = {...m, a:(m.a||''), b:(m.b||''), teamAMembers:(aMembers||[]), teamBMembers:(bMembers||[])};
       const _compSide=(typeof window._buildRecSideProfilePanel==='function')
         ? window._buildRecSideProfilePanel(_sideM, _sideAB, aWin, bWin, ca, cb)
         : {left:'',right:''};
-      h+=`<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_compSide.left||_compSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${m.grpColor};">
+      h+=`<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_compSide.left||_compSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${_fxOn?(ca||m.grpColor):m.grpColor};${_fxOn?`border-right:4px solid ${cb||m.grpColor};`:''};">
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:72px;flex-shrink:0">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">GROUP ${m.grpLetter}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>

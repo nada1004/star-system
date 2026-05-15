@@ -306,12 +306,14 @@
     window.cfgSetRecSideFxEnabled = function(on){
       try{ localStorage.setItem('su_rec_side_fx_on', on ? '1' : '0'); }catch(e){}
       try{ render(); }catch(e){}
+      try{ _updateSideFxPreview(); }catch(e){}
       _touchPrefs();
     };
     window.cfgSetRecSideFxMode = function(mode){
       var v = String(mode||'soft');
-      if(['soft','glow','panel','line','ribbon','frame','spotlight'].indexOf(v) === -1) v = 'soft';
+      if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double'].indexOf(v) === -1) v = 'soft';
       try{ localStorage.setItem('su_rec_side_fx_mode', v); }catch(e){}
+      try{ _updateSideFxPreview(); }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
     };
@@ -355,6 +357,23 @@
       }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+    };
+    window._updateSideFxPreview = function(){
+      try{
+        var prev = document.getElementById('cfg-sidefx-preview');
+        if(!prev) return;
+        var mode = localStorage.getItem('su_rec_side_fx_mode')||'soft';
+        var allModes = ['soft','glow','panel','line','ribbon','frame','spotlight','fade','double'];
+        allModes.forEach(function(m){ prev.classList.remove('grp-sidefx--'+m); });
+        prev.classList.add('grp-sidefx--'+mode);
+        if(typeof _recSideFxVarStyle==='function'){
+          var vars = _recSideFxVarStyle('#2563eb','#a855f7', typeof _getRecSideFxCfg==='function'?_getRecSideFxCfg():{});
+          var existing = prev.getAttribute('style')||'';
+          // CSS 변수만 업데이트
+          var baseStyle = existing.replace(/--rec-[^;]+;/g,'');
+          prev.setAttribute('style', baseStyle + vars);
+        }
+      }catch(e){}
     };
     window.applyRecSideFxLengthVar = function(n){
       try{

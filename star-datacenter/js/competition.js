@@ -105,7 +105,7 @@ function rComp(C,T){
       {id:'league',lbl:'📅 조별리그 일정'},
       {id:'grprank',lbl:'📊 조별 순위'},
       {id:'tour',lbl:'🗂️ 대진표'},
-      {id:'tourschedule',lbl:'📋 토너먼트'},
+      {id:'tourschedule',lbl:'📋 대진표 기록'},
       {id:'comprank',lbl:'🏅 개인 순위'},
       ...(isLoggedIn?[{id:'grpedit',lbl:'🏗️ 조편성 관리'}]:[]),
     ];
@@ -134,7 +134,13 @@ function rComp(C,T){
 
   if(compSub==='league') h+=rCompLeague(tn);
   else if(compSub==='grprank') h+=rCompGrpRankFull(tn);
-  else if(compSub==='tour') h+=tn?rCompTourDynamic(tn):'';
+  else if(compSub==='tour'){
+    h+=tn?rCompTourDynamic(tn):'';
+    if(tn){
+      const _bktSched=typeof rBracketSchedule==='function'?rBracketSchedule(tn):'';
+      if(_bktSched) h+=`<div style="margin-top:18px;padding-top:14px;border-top:2px solid var(--border)">${_bktSched}</div>`;
+    }
+  }
   else if(compSub==='tourschedule') h+=tn?rBracketSchedule(tn):'';
   else if(compSub==='comprank') h+=rCompPlayerRank(tn);
   else if(compSub==='grpedit'){
@@ -670,9 +676,16 @@ function rCompTourDynamic(tn){
     const aSc=detDone?det.sa:null, bSc=detDone?det.sb:null;
     const _winCol = winner ? (winner===a?.univ?aC:winner===b?.univ?bC:'#64748b') : '#64748b';
     const _winRgb = _tcHexToRgbStr(_winCol);
-    // (요청사항) 대진표(브라켓) 카드에는 양끝 색상 효과를 적용하지 않음
-    // - 토너먼트 "경기 기록" 카드(기록 리스트)에서만 적용
-    return `<div class="tc-card" style="--tc-win-rgb:${_winRgb};background:var(--white);border:1.5px solid ${isDone?aC+'66':'var(--border)'};border-radius:8px;overflow:hidden;width:185px;flex-shrink:0;box-shadow:0 1px 6px rgba(0,0,0,.07)">
+    // 대진표(브라켓) 카드에도 양끝 색상 효과 적용
+    const _bktFxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
+    const _bktFxOn=!!_bktFxCfg.on;
+    const _bktFxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_bktFxCfg):null;
+    const _bktFxMode=_bktFxMetrics?_bktFxMetrics.mode:'soft';
+    const _bktFxVars=(_bktFxOn&&a?.univ&&b?.univ&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(aC,bC,_bktFxCfg):'';
+    const _hexRgb=(h)=>{const s=String(h||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
+    const _bktSideRgbVars=`--rec-side-left-rgb:${_hexRgb(aC)};--rec-side-right-rgb:${_hexRgb(bC)};`;
+    const _bktFxCls=(_bktFxOn&&a?.univ&&b?.univ)?` grp-sidefx grp-sidefx--${_bktFxMode}`:'';
+    return `<div class="tc-card${_bktFxCls}" style="--tc-win-rgb:${_winRgb};${_bktSideRgbVars}${_bktFxVars}background:var(--white);border:1.5px solid ${isDone?aC+'66':'var(--border)'};border-radius:8px;overflow:hidden;width:185px;flex-shrink:0;box-shadow:0 1px 6px rgba(0,0,0,.07)">
       ${teamRow(a,aWin,bWin,rnd,mi,'a',aSc,detDone)}
       <div style="height:1px;background:var(--border)"></div>
       ${teamRow(b,bWin,aWin,rnd,mi,'b',bSc,detDone)}

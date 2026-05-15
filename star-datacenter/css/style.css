@@ -1551,7 +1551,7 @@ body.dark .hist-ctrl-group{
 .win-btn.lose-sel{background:var(--red);color:#fff;border-color:var(--red);}
 .score-board{display:flex;align-items:center;gap:12px;padding:12px 18px;background:linear-gradient(135deg,rgba(15,23,42,.04),rgba(37,99,235,.10),rgba(255,255,255,.92));border:1px solid rgba(148,163,184,.20);border-radius:18px;margin-bottom:12px;flex-wrap:wrap;box-shadow:0 14px 28px rgba(15,23,42,.08);}
 .score-num{font-family:'Noto Sans KR',sans-serif;font-weight:1000;font-size:30px;letter-spacing:-.03em;}
-.rec-summary{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:visible;transition:box-shadow var(--tr),transform var(--tr),border-left-width var(--tr);min-height:46px;}
+.rec-summary{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;position:relative;transition:box-shadow var(--tr),transform var(--tr),border-left-width var(--tr);min-height:46px;}
 .rec-summary:empty{display:none!important;}
 .rec-summary:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08);transform:translateY(-1px);}
 .rec-summary.detail-open{border-left-width:4px!important;box-shadow:0 2px 12px rgba(37,99,235,.13)!important;}
@@ -1738,19 +1738,22 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 /* ── 경기 기록카드 양쪽 끝 참여자 프로필 패널 ── */
 .rec-sum-vs-outer{display:flex;align-items:stretch;flex:1;overflow:visible;}
 .rec-sum-vs-outer > .rec-sum-vs{flex:1;padding:4px 6px;}
+/* ════════════════════════════════════════════
+   프로필 사이드 패널 — 리디자인 v2
+   ════════════════════════════════════════════ */
 .rec-side-profiles{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:5px;padding:6px 8px;
+  gap:4px;padding:6px 6px;
   flex-shrink:0;
   overflow:visible;
-  transition:background .2s,filter .25s;
+  transition:background .2s;
   cursor:default;
+  position:relative;
 }
-/* 네모 박스 없음 모드: 배경/테두리 완전 제거 */
 .rec-side-profiles.rsp-no-box{
   background:transparent!important;
   outline:none!important;
-  padding:0!important;
+  padding:2px 4px!important;
 }
 /* 이미지 버튼 완전 숨김 */
 .rec-side-profiles button,
@@ -1759,32 +1762,112 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 .rec-side-profiles [class*="photo-btn"]{
   display:none!important;
 }
+
+/* ── rsp-inner : 슬라이드쇼 컬럼 컨테이너 ── */
 .rsp-inner{
   display:flex;align-items:center;justify-content:center;
   line-height:0;width:100%;overflow:visible;
 }
-.rsp-inner > div{
-  transition:filter .25s,box-shadow .25s;
-}
+.rsp-inner > div{ transition:filter .3s,box-shadow .3s; }
 .rsp-inner > div > img,
 .rsp-inner > div > span{
   display:block!important;
   width:100%!important;height:100%!important;
   object-fit:cover!important;
 }
-.rec-side-profiles:hover .rsp-inner > div{
+
+/* ── 이미지 박스 래퍼 ── */
+.rsp-imgbox{
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;overflow:visible;
+  position:relative;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1), filter .3s;
+}
+.rsp-imgbox:hover{
+  transform:scale(1.10) translateY(-2px)!important;
+  z-index:10;
+}
+.rsp-imgbox--win{
+  /* 승자: 위아래 부드러운 플로팅 */
+  animation:rspFloat 3.2s ease-in-out infinite;
+}
+.rsp-imgbox--circle .rsp-imginner{
+  border-radius:50%!important;
+}
+/* 승자 글로우 펄스 */
+.rsp-imgbox--win .rsp-imginner{
+  animation:rspGlow 2.5s ease-in-out infinite;
+}
+@keyframes rspFloat{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-4px); }
+}
+@keyframes rspGlow{
+  0%,100%{ box-shadow:var(--rsp-glow-base, 0 4px 16px rgba(0,0,0,.18)); }
+  50%{ box-shadow:var(--rsp-glow-peak, 0 6px 24px rgba(0,0,0,.28)); }
+}
+
+/* ── 이미지 내부 div ── */
+.rsp-imginner{
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:#f1f5f9;
+  transition:border-color .3s, box-shadow .3s, filter .3s;
+}
+.rsp-imginner img,
+.rsp-imginner span{
+  display:block!important;
+  width:100%!important;height:100%!important;
+  object-fit:cover!important;
+}
+
+/* ── 왕관 배지 ── */
+.rsp-crown{
+  pointer-events:none;
+  animation:rspCrownBounce 2s ease-in-out infinite;
+}
+@keyframes rspCrownBounce{
+  0%,100%{ transform:translateX(-50%) translateY(0) rotate(-8deg); }
+  50%{ transform:translateX(-50%) translateY(-3px) rotate(8deg); }
+}
+
+/* ── 이름 레이블 ── */
+.rsp-namelbl{
+  font-size:9px;font-weight:700;
+  text-align:center;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+  max-width:72px;
+  margin-top:3px;
+  line-height:1.2;
+  letter-spacing:.3px;
+}
+
+/* ── 슬라이드 전환 페이드 ── */
+.rsp-slide{
+  transition:opacity .4s ease;
+}
+
+/* ── 패자 패널: 약하게 흐리게 ── */
+.rec-side-profiles--lose .rsp-imgbox:not(:hover){
+  opacity:.7;
+  filter:saturate(0.5) brightness(0.9);
+}
+.rec-side-profiles--lose .rsp-imgbox:hover{
+  opacity:1;
+  filter:none;
+}
+
+/* ── hover 시 패자도 선명 ── */
+.rec-side-profiles:hover .rsp-imgbox{
+  opacity:1!important;
   filter:none!important;
-  box-shadow:0 6px 24px rgba(0,0,0,.22)!important;
 }
-.rec-side-profiles--win .rsp-inner > div{
-  border:2.5px solid rgba(255,255,255,.35);
-}
-.rec-side-profiles--lose .rsp-inner > div{
-  border:1.5px solid rgba(148,163,184,.2);
-}
-/* no-box 모드에서는 이미지 테두리도 제거 */
-.rec-side-profiles.rsp-no-box .rsp-inner > div{
+
+/* no-box에서 링 제거 */
+.rec-side-profiles.rsp-no-box .rsp-imginner{
   border:none!important;
+  box-shadow:none!important;
+  background:transparent!important;
 }
 /* ── */
 .rec-sum-vs{display:flex;align-items:center;gap:var(--rc-vs-gap,12px);flex:1;flex-wrap:wrap;}
@@ -1868,36 +1951,52 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
   box-shadow: none !important;
 }
 .rec-summary.rec-sidefx,
-.grp-match-card.grp-sidefx{
+.grp-match-card.grp-sidefx,
+.tc-card.grp-sidefx{
   isolation:isolate;
+  position:relative;
+  overflow:hidden;
 }
 .rec-summary.rec-sidefx > *,
 .rec-summary.rec-sidefx > *,
-.grp-match-card.grp-sidefx > *{
+.grp-match-card.grp-sidefx > *,
+.tc-card.grp-sidefx > *{
   position:relative;
   z-index:1;
 }
 .rec-summary.rec-sidefx:hover::after,
-.grp-match-card.grp-sidefx:hover::after{
+.grp-match-card.grp-sidefx:hover::after,
+.tc-card.grp-sidefx:hover::after{
   filter:saturate(1.25) contrast(1.06);
 }
 .rec-summary.rec-sidefx::after,
-.grp-match-card.grp-sidefx::after{
+.grp-match-card.grp-sidefx::after,
+.tc-card.grp-sidefx::after{
   content:'';
   position:absolute;
   inset:0;
   pointer-events:none;
   z-index:0;
 }
-/* grp-sidefx 사용 시 오른쪽 바는 box-shadow로 대체 (::after가 그라디언트로 재사용되므로) */
-.grp-match-card.grp-sidefx{
+/* 양쪽 끝 컬러 바: rec-summary / grp-match-card / tc-card 모두 box-shadow inset으로 처리 */
+/* sidefx 활성 시 border-left 색상 제거 (inset shadow가 대신함) */
+.rec-summary.rec-sidefx{
+  border-left-color: transparent !important;
+  box-shadow:
+    var(--sh1, 0 2px 8px rgba(15,23,42,.06)),
+    inset var(--rec-side-line-w,8px) 0 0 rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,.55)),
+    inset calc(var(--rec-side-line-w,8px) * -1) 0 0 rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,.55));
+}
+.grp-match-card.grp-sidefx,
+.tc-card.grp-sidefx{
   box-shadow:
     0 10px 24px rgba(15,23,42,.06),
-    inset var(--rec-side-line-w,8px) 0 0 rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,.22)),
-    inset calc(var(--rec-side-line-w,8px) * -1) 0 0 rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,.22));
+    inset var(--rec-side-line-w,8px) 0 0 rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,.55)),
+    inset calc(var(--rec-side-line-w,8px) * -1) 0 0 rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,.55));
 }
 .rec-summary.rec-sidefx.rec-sidefx--soft::after,
-.grp-match-card.grp-sidefx.grp-sidefx--soft::after{
+.grp-match-card.grp-sidefx.grp-sidefx--soft::after,
+.tc-card.grp-sidefx.grp-sidefx--soft::after{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.20))) 0%,
@@ -1908,7 +2007,8 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
       rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 100%);
 }
 .rec-summary.rec-sidefx.rec-sidefx--glow::after,
-.grp-match-card.grp-sidefx.grp-sidefx--glow::after{
+.grp-match-card.grp-sidefx.grp-sidefx--glow::after,
+.tc-card.grp-sidefx.grp-sidefx--glow::after{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a2,.09))) 0%,
@@ -1920,7 +2020,8 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
     inset calc(var(--rec-side-glow-inset,24px) * -1) 0 var(--rec-side-glow-blur,30px) rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.20));
 }
 .rec-summary.rec-sidefx.rec-sidefx--panel::after,
-.grp-match-card.grp-sidefx.grp-sidefx--panel::after{
+.grp-match-card.grp-sidefx.grp-sidefx--panel::after,
+.tc-card.grp-sidefx.grp-sidefx--panel::after{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.20))) 0%,
@@ -1933,7 +2034,8 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
       rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 100%);
 }
 .rec-summary.rec-sidefx.rec-sidefx--line::after,
-.grp-match-card.grp-sidefx.grp-sidefx--line::after{
+.grp-match-card.grp-sidefx.grp-sidefx--line::after,
+.tc-card.grp-sidefx.grp-sidefx--line::after{
   background:
     linear-gradient(180deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.24)),
@@ -1943,7 +2045,8 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
       rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.10))) right center / var(--rec-side-line-w,8px) 100% no-repeat;
 }
 .rec-summary.rec-sidefx.rec-sidefx--ribbon::after,
-.grp-match-card.grp-sidefx.grp-sidefx--ribbon::after{
+.grp-match-card.grp-sidefx.grp-sidefx--ribbon::after,
+.tc-card.grp-sidefx.grp-sidefx--ribbon::after{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.20))) 0,
@@ -1954,7 +2057,8 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
       rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 100%);
 }
 .rec-summary.rec-sidefx.rec-sidefx--frame::after,
-.grp-match-card.grp-sidefx.grp-sidefx--frame::after{
+.grp-match-card.grp-sidefx.grp-sidefx--frame::after,
+.tc-card.grp-sidefx.grp-sidefx--frame::after{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.18)) 0%,
@@ -1968,7 +2072,8 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
     inset 0 calc(var(--rec-side-frame,3px) * -1) 0 rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-a2,.10) * .65));
 }
 .rec-summary.rec-sidefx.rec-sidefx--spotlight::after,
-.grp-match-card.grp-sidefx.grp-sidefx--spotlight::after{
+.grp-match-card.grp-sidefx.grp-sidefx--spotlight::after,
+.tc-card.grp-sidefx.grp-sidefx--spotlight::after{
   background:
     radial-gradient(circle at left center,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.22))) 0,
@@ -1982,7 +2087,8 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
 
 /* (요청사항) 추가 효과: 페이드(은은) */
 .rec-summary.rec-sidefx.rec-sidefx--fade::after,
-.grp-match-card.grp-sidefx.grp-sidefx--fade::after{
+.grp-match-card.grp-sidefx.grp-sidefx--fade::after,
+.tc-card.grp-sidefx.grp-sidefx--fade::after{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-ae,var(--rec-side-a1,.20)) * .55)) 0%,
@@ -1995,7 +2101,8 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
 
 /* (요청사항) 추가 효과: 더블라인(세로 2줄) */
 .rec-summary.rec-sidefx.rec-sidefx--double::after,
-.grp-match-card.grp-sidefx.grp-sidefx--double::after{
+.grp-match-card.grp-sidefx.grp-sidefx--double::after,
+.tc-card.grp-sidefx.grp-sidefx--double::after{
   background:
     linear-gradient(180deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,.26)),
@@ -2108,10 +2215,12 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
   pointer-events:none;
   transition:background .3s;
 }
-/* (요청사항) 대회탭 조별리그/토너 기록 카드: 우측 보라색 세로 바 제거 */
+/* 대회탭 조별리그/토너 기록 카드: 우측 B팀 컬러 세로 바 표시 (오른쪽 6px) */
 .grp-match-card.match-card-v3:not(.grp-sidefx)::after{
-  display:none !important;
-  content:none !important;
+  display:block;
+  content:'';
+  width:6px;
+  border-radius:2px 0 0 2px;
 }
 .grp-match-card .grp-match-vs{
   font-size:14px;
@@ -3993,9 +4102,13 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .sort-bar { padding: 6px 10px !important; }
   /* 모바일: 프로필 패널 양쪽 자동 축소 - 한 줄 유지 */
   .rec-sum-vs-outer { flex-wrap: nowrap !important; align-items: stretch; overflow: hidden; }
-  .rec-side-profiles { min-width: 0 !important; max-width: 64px !important; flex-shrink: 1 !important; padding: 4px 2px !important; }
-  .rec-side-profiles.rsp-no-box { max-width: 60px !important; padding: 2px 0 !important; }
-  .rsp-inner { overflow: hidden; }
+  .rec-side-profiles { min-width: 0 !important; max-width: 64px !important; flex-shrink: 1 !important; padding: 2px 3px !important; }
+  .rec-side-profiles.rsp-no-box { max-width: 60px !important; padding: 1px 2px !important; }
+  .rsp-inner { overflow: visible; }
+  .rsp-imgbox { transform: none !important; }
+  .rsp-imgbox--win { animation: rspFloat 3.2s ease-in-out infinite; }
+  .rsp-crown { font-size: 11px !important; top: -7px !important; }
+  .rsp-namelbl { display: none !important; }
   .rsp-inner > div { max-width: 100%; overflow: hidden; }
   .rsp-inner > div > img { max-width: 100%; height: auto !important; object-fit: cover !important; }
   /* 참여자 버튼: 모바일에서 팀 배지 아래 자연스럽게 배치 */
@@ -7040,9 +7153,6 @@ body.dark .rec-victor-chip--crown {
 }
 
 /* ─── 미니대전 카드 ─── */
-.rec-summary.rec-mode-mini {
-  border-left: 4px solid var(--rc-mini-col) !important;
-}
 .rec-summary.rec-mode-mini .rec-datechip {
   background: #4c1d95;
 }
@@ -7056,9 +7166,6 @@ body.dark .rec-victor-chip--crown {
   width: 4px;
 }
 /* 시빌워 */
-.rec-summary.rec-mode-civil {
-  border-left: 4px solid var(--rc-civil-col) !important;
-}
 .rec-summary.rec-mode-civil .rec-datechip { background: #7f1d1d; }
 .rec-summary.rec-mode-civil .rec-sum-score {
   background: linear-gradient(135deg, rgba(185,28,28,.09) 0%, rgba(255,255,255,.98) 65%);
@@ -7071,9 +7178,6 @@ body.dark .rec-victor-chip--crown {
 }
 
 /* ─── 대학대전 카드 ─── */
-.rec-summary.rec-mode-univm {
-  border-left: 4px solid var(--rc-univm-col) !important;
-}
 .rec-summary.rec-mode-univm .rec-datechip { background: #14532d; }
 .rec-summary.rec-mode-univm .rec-sum-score {
   background: linear-gradient(135deg, rgba(22,163,74,.09) 0%, rgba(255,255,255,.98) 65%);
@@ -7086,9 +7190,6 @@ body.dark .rec-victor-chip--crown {
 }
 
 /* ─── 대학CK 카드 ─── */
-.rec-summary.rec-mode-ck {
-  border-left: 4px solid var(--rc-ck-col) !important;
-}
 .rec-summary.rec-mode-ck .rec-datechip { background: #78350f; }
 .rec-summary.rec-mode-ck .rec-sum-score {
   background: linear-gradient(135deg, rgba(245,158,11,.10) 0%, rgba(255,255,255,.98) 65%);
@@ -7101,9 +7202,6 @@ body.dark .rec-victor-chip--crown {
 }
 
 /* ─── 프로리그 카드 ─── */
-.rec-summary.rec-mode-pro {
-  border-left: 4px solid var(--rc-pro-col) !important;
-}
 .rec-summary.rec-mode-pro .rec-datechip { background: #0c4a6e; }
 .rec-summary.rec-mode-pro .rec-sum-score {
   background: linear-gradient(135deg, rgba(14,165,233,.09) 0%, rgba(255,255,255,.98) 65%);
@@ -7754,14 +7852,12 @@ body.dark .modal--login__cancel:hover { color: #94a3b8 !important; }
 
 /* 미니대전 - 보랏빛 프리미엄 */
 .rec-summary.rec-mode-mini {
-  border: 1px solid rgba(124,58,237,0.18) !important;
-  border-left: 5px solid var(--rc-mini-col, #7c3aed) !important;
-  background: linear-gradient(145deg, rgba(124,58,237,0.03) 0%, rgba(255,255,255,1) 60%) !important;
+  border: 1px solid var(--border2) !important;
+  background: var(--white) !important;
 }
 .rec-summary.rec-mode-mini:hover {
   box-shadow: 0 10px 32px rgba(124,58,237,0.14), 0 2px 8px rgba(124,58,237,0.08) !important;
   transform: translateY(-3px) !important;
-  border-color: rgba(124,58,237,0.32) !important;
 }
 .rec-summary.rec-mode-mini .rec-datechip {
   background: linear-gradient(135deg, #4c1d95, #7c3aed) !important;
@@ -7775,9 +7871,8 @@ body.dark .modal--login__cancel:hover { color: #94a3b8 !important; }
 
 /* 시빌워 */
 .rec-summary.rec-mode-civil {
-  border: 1px solid rgba(185,28,28,0.18) !important;
-  border-left: 5px solid var(--rc-civil-col, #b91c1c) !important;
-  background: linear-gradient(145deg, rgba(185,28,28,0.03) 0%, rgba(255,255,255,1) 60%) !important;
+  border: 1px solid var(--border2) !important;
+  background: var(--white) !important;
 }
 .rec-summary.rec-mode-civil:hover {
   box-shadow: 0 10px 32px rgba(185,28,28,0.14), 0 2px 8px rgba(185,28,28,0.08) !important;
@@ -7795,14 +7890,12 @@ body.dark .modal--login__cancel:hover { color: #94a3b8 !important; }
 
 /* 대학대전 - 에메랄드 그린 */
 .rec-summary.rec-mode-univm {
-  border: 1px solid rgba(22,163,74,0.18) !important;
-  border-left: 5px solid var(--rc-univm-col, #16a34a) !important;
-  background: linear-gradient(145deg, rgba(22,163,74,0.03) 0%, rgba(255,255,255,1) 60%) !important;
+  border: 1px solid var(--border2) !important;
+  background: var(--white) !important;
 }
 .rec-summary.rec-mode-univm:hover {
   box-shadow: 0 10px 32px rgba(22,163,74,0.14), 0 2px 8px rgba(22,163,74,0.08) !important;
   transform: translateY(-3px) !important;
-  border-color: rgba(22,163,74,0.32) !important;
 }
 .rec-summary.rec-mode-univm .rec-datechip {
   background: linear-gradient(135deg, #14532d, #16a34a) !important;
@@ -7816,9 +7909,8 @@ body.dark .modal--login__cancel:hover { color: #94a3b8 !important; }
 
 /* 대학CK - 앰버 골드 */
 .rec-summary.rec-mode-ck {
-  border: 1px solid rgba(245,158,11,0.22) !important;
-  border-left: 5px solid var(--rc-ck-col, #f59e0b) !important;
-  background: linear-gradient(145deg, rgba(245,158,11,0.04) 0%, rgba(255,255,255,1) 60%) !important;
+  border: 1px solid var(--border2) !important;
+  background: var(--white) !important;
 }
 .rec-summary.rec-mode-ck:hover {
   box-shadow: 0 10px 32px rgba(245,158,11,0.16), 0 2px 8px rgba(245,158,11,0.10) !important;
@@ -7841,14 +7933,12 @@ body.dark .modal--login__cancel:hover { color: #94a3b8 !important; }
 
 /* 프로리그 - 스카이 블루 */
 .rec-summary.rec-mode-pro {
-  border: 1px solid rgba(14,165,233,0.18) !important;
-  border-left: 5px solid var(--rc-pro-col, #0ea5e9) !important;
-  background: linear-gradient(145deg, rgba(14,165,233,0.03) 0%, rgba(255,255,255,1) 60%) !important;
+  border: 1px solid var(--border2) !important;
+  background: var(--white) !important;
 }
 .rec-summary.rec-mode-pro:hover {
   box-shadow: 0 10px 32px rgba(14,165,233,0.16), 0 2px 8px rgba(14,165,233,0.08) !important;
   transform: translateY(-3px) !important;
-  border-color: rgba(14,165,233,0.32) !important;
 }
 .rec-summary.rec-mode-pro .rec-datechip {
   background: linear-gradient(135deg, #0c4a6e, #0284c7) !important;
@@ -8344,9 +8434,8 @@ body.dark .tt-section-header__count { background: rgba(52,211,153,0.14) !importa
 ════════════════════════════════════ */
 
 body.dark .rec-summary.rec-mode-mini {
-  background: linear-gradient(145deg, rgba(124,58,237,0.08) 0%, rgba(15,23,42,0.95) 60%) !important;
-  border-color: rgba(124,58,237,0.22) !important;
-  border-left-color: #7c3aed !important;
+  background: var(--bg2, #0f172a) !important;
+  border-color: var(--border2) !important;
 }
 body.dark .rec-summary.rec-mode-mini .rec-sum-score {
   background: linear-gradient(135deg, rgba(124,58,237,0.16), rgba(15,23,42,0.80)) !important;
@@ -8354,9 +8443,8 @@ body.dark .rec-summary.rec-mode-mini .rec-sum-score {
 }
 
 body.dark .rec-summary.rec-mode-univm {
-  background: linear-gradient(145deg, rgba(22,163,74,0.08) 0%, rgba(15,23,42,0.95) 60%) !important;
-  border-color: rgba(22,163,74,0.22) !important;
-  border-left-color: #16a34a !important;
+  background: var(--bg2, #0f172a) !important;
+  border-color: var(--border2) !important;
 }
 body.dark .rec-summary.rec-mode-univm .rec-sum-score {
   background: linear-gradient(135deg, rgba(22,163,74,0.16), rgba(5,46,22,0.80)) !important;
@@ -8364,9 +8452,8 @@ body.dark .rec-summary.rec-mode-univm .rec-sum-score {
 }
 
 body.dark .rec-summary.rec-mode-ck {
-  background: linear-gradient(145deg, rgba(245,158,11,0.08) 0%, rgba(15,23,42,0.95) 60%) !important;
-  border-color: rgba(245,158,11,0.22) !important;
-  border-left-color: #f59e0b !important;
+  background: var(--bg2, #0f172a) !important;
+  border-color: var(--border2) !important;
 }
 body.dark .rec-summary.rec-mode-ck .rec-sum-score {
   background: linear-gradient(135deg, rgba(245,158,11,0.16), rgba(69,26,3,0.80)) !important;
@@ -8374,9 +8461,8 @@ body.dark .rec-summary.rec-mode-ck .rec-sum-score {
 }
 
 body.dark .rec-summary.rec-mode-pro {
-  background: linear-gradient(145deg, rgba(14,165,233,0.08) 0%, rgba(15,23,42,0.95) 60%) !important;
-  border-color: rgba(14,165,233,0.22) !important;
-  border-left-color: #0ea5e9 !important;
+  background: var(--bg2, #0f172a) !important;
+  border-color: var(--border2) !important;
 }
 body.dark .rec-summary.rec-mode-pro .rec-sum-score {
   background: linear-gradient(135deg, rgba(14,165,233,0.16), rgba(8,47,73,0.80)) !important;
@@ -8754,21 +8840,21 @@ span[style*="background:#E6F1FB"] {
   overflow: hidden !important;
 }
 
-/* ─── 전체통합 탭: 타입별 라벨 칩 ─── */
-.rec-mode-mini { border-left: 4px solid var(--rc-mini-col, #7c3aed) !important; }
-.rec-mode-civil{ border-left: 4px solid var(--rc-civil-col, #b91c1c) !important; }
-.rec-mode-univm{ border-left: 4px solid var(--rc-univm-col, #16a34a) !important; }
-.rec-mode-ck   { border-left: 4px solid var(--rc-ck-col, #f59e0b) !important; }
-.rec-mode-pro  { border-left: 4px solid var(--rc-pro-col, #0ea5e9) !important; }
-.rec-mode-ind  { border-left: 4px solid #2563eb !important; }
-.rec-mode-gj   { border-left: 4px solid #d97706 !important; }
-.rec-mode-progj{ border-left: 4px solid #b91c1c !important; }
-.rec-mode-tt   { border-left: 4px solid #10b981 !important; }
-.rec-mode-comp { border-left: 4px solid #3b82f6 !important; }
-.rec-mode-tourney { border-left: 4px solid #2563eb !important; }
-.rec-mode-procomp,
-.rec-mode-procomptn,
-.rec-mode-procompteam { border-left: 4px solid #0891b2 !important; }
+/* ─── 전체통합 탭: 타입별 라벨 칩 (rec-summary 제외) ─── */
+:not(.rec-summary).rec-mode-mini { border-left: 4px solid var(--rc-mini-col, #7c3aed) !important; }
+:not(.rec-summary).rec-mode-civil{ border-left: 4px solid var(--rc-civil-col, #b91c1c) !important; }
+:not(.rec-summary).rec-mode-univm{ border-left: 4px solid var(--rc-univm-col, #16a34a) !important; }
+:not(.rec-summary).rec-mode-ck   { border-left: 4px solid var(--rc-ck-col, #f59e0b) !important; }
+:not(.rec-summary).rec-mode-pro  { border-left: 4px solid var(--rc-pro-col, #0ea5e9) !important; }
+:not(.rec-summary).rec-mode-ind  { border-left: 4px solid #2563eb !important; }
+:not(.rec-summary).rec-mode-gj   { border-left: 4px solid #d97706 !important; }
+:not(.rec-summary).rec-mode-progj{ border-left: 4px solid #b91c1c !important; }
+:not(.rec-summary).rec-mode-tt   { border-left: 4px solid #10b981 !important; }
+:not(.rec-summary).rec-mode-comp { border-left: 4px solid #3b82f6 !important; }
+:not(.rec-summary).rec-mode-tourney { border-left: 4px solid #2563eb !important; }
+:not(.rec-summary).rec-mode-procomp,
+:not(.rec-summary).rec-mode-procomptn,
+:not(.rec-summary).rec-mode-procompteam { border-left: 4px solid #0891b2 !important; }
 
 /* ─── 다크모드 기록 카드 ─── */
 body.dark .rec-summary {

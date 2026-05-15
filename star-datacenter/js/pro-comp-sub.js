@@ -695,7 +695,7 @@ function proCompGJSection(tn) {
     const _cb = gc(sess.b||'') || '#dc2626';
     const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(_ca,_cb,_fxCfg):'';
     const _fxCls = (_fxOn && typeof _recSideFxClass==='function') ? _recSideFxClass('procompgj') : '';
-    h += `<div class="rec-summary${_fxCls}" data-rec-mode="procompgj" style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;${_fxVars}">
+    h += `<div class="rec-summary${_fxCls}" data-rec-mode="procompgj" style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;${_fxVars}${_fxOn?`border-left:3px solid ${_ca};border-right:3px solid ${_cb};`:''}">
       <div style="background:var(--bg2);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span style="font-size:12px;font-weight:600;color:var(--text3)">${sess.d||'날짜 미정'}</span>
         <span style="font-weight:700;color:var(--blue);cursor:pointer" onclick="openPlayerModal('${(sess.a||'').replace(/'/g,"\\'")}')">${sess.a||'?'}</span>
