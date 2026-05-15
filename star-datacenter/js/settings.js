@@ -947,6 +947,7 @@ window.cfgSetUnivHeaderBgImage = function(url){
     localStorage.setItem('su_univ_header_bg_image', url || '');
   }catch(e){}
   try{ window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage(); }catch(e){}
+  try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
 };
 window.cfgSetUnivHeaderBgSize = function(size){
   try{
@@ -955,6 +956,7 @@ window.cfgSetUnivHeaderBgSize = function(size){
     localStorage.setItem('su_univ_header_bg_size', s);
   }catch(e){}
   try{ window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage(); }catch(e){}
+  try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
 };
 window.cfgSetUnivHeaderBgPosition = function(pos){
   try{
@@ -963,6 +965,7 @@ window.cfgSetUnivHeaderBgPosition = function(pos){
     localStorage.setItem('su_univ_header_bg_position', p);
   }catch(e){}
   try{ window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage(); }catch(e){}
+  try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
 };
 window.cfgSetUnivHeaderBgOpacity = function(opacity){
   try{
@@ -970,6 +973,7 @@ window.cfgSetUnivHeaderBgOpacity = function(opacity){
     localStorage.setItem('su_univ_header_bg_opacity', String(n));
   }catch(e){}
   try{ window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage(); }catch(e){}
+  try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
 };
 window.cfgSetUnivHeaderText = function(text){
   try{
