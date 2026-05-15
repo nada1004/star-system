@@ -189,10 +189,53 @@ function buildPlayerOppTableHTML(opts){
   </div>`;
 }
 
+function buildPlayerVsUnivSectionHTML(opts){
+  const {
+    rows=[],
+    playerName='',
+    maxVisible=6
+  } = opts || {};
+  if(!Array.isArray(rows) || !rows.length) return '';
+  const safeKey = String(playerName||'player').replace(/[^a-zA-Z0-9가-힣_-]/g,'_');
+  const visible = rows.slice(0, maxVisible);
+  const hidden = rows.slice(maxVisible);
+  const card = (row)=>`
+    <div style="border:1px solid rgba(148,163,184,.16);border-radius:12px;background:rgba(255,255,255,.88);padding:9px 10px;box-shadow:0 6px 14px rgba(15,23,42,.03)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <span class="${row.univ&&row.univ!=='무소속'?'clickable-univ':''}" data-icon-done="1"
+          ${row.univ&&row.univ!=='무소속'?`onclick="openUnivModal('${(typeof escJS==='function'?escJS(row.univ):String(row.univ).replace(/'/g,"\\'"))}')"`:''}
+          style="background:#f8fafc;color:#0f172a;border:1px solid rgba(148,163,184,.28);font-size:10px;padding:3px 8px;border-radius:999px;font-weight:800;display:inline-flex;align-items:center;gap:4px;line-height:1.2;box-shadow:none${row.univ&&row.univ!=='무소속'?';cursor:pointer':''}">${gUI(row.univ,'11px')}${row.univ}</span>
+        <span style="font-size:10px;color:var(--gray-l);font-weight:700">${row.tot?row.wr+'%':'-'}</span>
+      </div>
+      <div style="margin-top:7px;font-size:13px;font-weight:900;color:#0f172a">
+        <span style="color:#16a34a">${row.w}승</span>
+        <span style="color:var(--gray-l);margin:0 5px">/</span>
+        <span style="color:#dc2626">${row.l}패</span>
+      </div>
+      <div style="margin-top:4px;font-size:11px;color:var(--gray-l);font-weight:700">${row.tot}전</div>
+    </div>`;
+  return `<div style="margin-bottom:14px">
+    <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+      <span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>
+      대학별 전적 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(${rows.length}개 대학 · 미니대전/대학대전/대회 기준)</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
+      ${visible.map(card).join('')}
+    </div>
+    ${hidden.length?`<div id="player-vs-univ-more-${safeKey}" style="display:none;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px">
+      ${hidden.map(card).join('')}
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:10px">
+      <button type="button" class="btn btn-w btn-xs" onclick="const box=document.getElementById('player-vs-univ-more-${safeKey}'); const open=box&&box.style.display!=='none'; if(box) box.style.display=open?'none':'grid'; this.textContent=open?'+ ${hidden.length}개 더보기':'접기';">${`+ ${hidden.length}개 더보기`}</button>
+    </div>`:''}
+  </div>`;
+}
+
 try{
   _bindPlayerOppDelegatedEvents();
   window._playerOppSetSort = _playerOppSetSort;
   window.buildPlayerModeStatsHTML = buildPlayerModeStatsHTML;
   window.buildPlayerRaceStatsHTML = buildPlayerRaceStatsHTML;
+  window.buildPlayerVsUnivSectionHTML = buildPlayerVsUnivSectionHTML;
   window.buildPlayerOppTableHTML = buildPlayerOppTableHTML;
 }catch(e){}

@@ -62,8 +62,8 @@ const tournamentMatches = [
 function initChatbot() {
   loadChatHistory();
   renderChatHistory();
-  // 원격 설정(메모 포함) pull (가능하면)
-  try{ if(window.SettingsStore) window.SettingsStore.pull({silent:true}); }catch(e){}
+  // 원격 설정(메모 포함)은 설정 변경 신호가 있을 때만 pull
+  try{ if(window.SettingsStore && typeof window.SettingsStore.pullOnSignal==='function') window.SettingsStore.pullOnSignal({silent:true}); }catch(e){}
   // 로컬 memo 객체 최신화
   try{
     if(window.SettingsStore){
@@ -440,7 +440,7 @@ async function generateResponse(msg) {
         }else{
           const a = JSON.parse(localStorage.getItem('su_ai_cfg')||'{}');
           proxyUrl = String(a.proxyUrl||'').trim();
-          apiKey = String(typeof suDecryptSecretValue==='function' ? suDecryptSecretValue(a.apiKey||'') : (a.apiKey||'')).trim();
+          apiKey = String(a.apiKey||'').trim();
         }
       }catch(e){}
       proxyUrl = proxyUrl.replace(/\/+$/,'');
@@ -522,7 +522,7 @@ async function generateResponse(msg) {
     const tok = msg.match(/토큰\s*[:\-]\s*([A-Za-z0-9_]+)\s*$/i);
     if (tok && tok[1]) {
       if(!_alIsAdmin()) return '❌ 관리자만 동기화 토큰을 저장할 수 있어.';
-      try{ if(window.SettingsStore) window.SettingsStore.setCfg({ token: tok[1].trim() }); else if(typeof suSetSecret==='function') suSetSecret('al_github_token', tok[1].trim()); else localStorage.setItem('al_github_token', tok[1].trim()); }catch(e){}
+      try{ if(window.SettingsStore) window.SettingsStore.setCfg({ token: tok[1].trim() }); else localStorage.setItem('al_github_token', tok[1].trim()); }catch(e){}
       return '✅ (관리자) 토큰을 저장했어. 이제 "알등이 동기화 켜" 라고 하면 다른 기기와 메모가 공유돼.';
     }
     // gist id 저장
@@ -549,7 +549,7 @@ async function generateResponse(msg) {
       return '✅ 동기화를 껐어. (이 기기 local 메모는 유지돼)';
     }
     if (userMessage.includes('동기화 상태')) {
-      const cfg=(window.SettingsStore?window.SettingsStore.cfg():{enabled:localStorage.getItem('al_sync_enabled')==='1',token:(typeof suGetSecret==='function'?suGetSecret('al_github_token'):(localStorage.getItem('al_github_token')||'')),gistId:(localStorage.getItem('al_gist_id')||'')});
+      const cfg=(window.SettingsStore?window.SettingsStore.cfg():{enabled:localStorage.getItem('al_sync_enabled')==='1',token:(localStorage.getItem('al_github_token')||''),gistId:(localStorage.getItem('al_gist_id')||'')});
       return `동기화: ${cfg.enabled?'ON':'OFF'}\n토큰: ${cfg.token? '설정됨':'없음'}\nGist ID: ${cfg.gistId||'(없음)'}`;
     }
     if (userMessage.includes('메모 불러') || userMessage.includes('동기화 불러')) {

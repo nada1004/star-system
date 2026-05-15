@@ -1,29 +1,20 @@
-/* match-builder-ck.js: extracted from match-builder.js */
 /* ══════════════════════════════════════
-   대학CK
+   Match Builder CK
 ══════════════════════════════════════ */
+
 function rCK(C,T){
   T.innerText='🤝 대학CK';
-  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
-  if(window._ckFilterOpen===undefined) window._ckFilterOpen=_lockOpen;
-  if(_lockOpen) window._ckFilterOpen=true;
   if(!isLoggedIn && ckSub==='input') ckSub='records';
-  const subOpts=[{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`}];
+  const subOpts=(typeof applyTabLabels==='function')
+    ? applyTabLabels('ck', [{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`}])
+    : [{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`}];
   let h='';
-  if(_enableSubFilter && !_lockOpen){
-    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
-      <button class="pill ${window._ckFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._ckFilterOpen=!window._ckFilterOpen;render()">🔍 필터 ${window._ckFilterOpen?'▲':'▼'}</button>
-    </div>`;
-  }
-  if(!_enableSubFilter || window._ckFilterOpen){
-    const extra = (ckSub!=='input' && typeof buildYearMonthFilterControls==='function')
-      ? (buildYearMonthFilterControls('ck', true)
-        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
-      : '';
-    h+=typeof stabsInline==='function' ? stabsInline(ckSub, subOpts, extra) : stabs(ckSub, subOpts) + (extra?`<div>${extra}</div>`:'');
-  }
+  const extra = (ckSub!=='input' && typeof buildYearMonthFilterControls==='function')
+    ? (buildYearMonthFilterControls('ck', true)
+      + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+    : '';
+  h+=_buildMatchSubtabShell(ckSub, subOpts, '_ckFilterOpen', extra);
   if(ckSub==='input'&&isLoggedIn){
     if(!BLD['ck']){const saved=J('su_bld_ck')||{};BLD['ck']={date:'',membersA:saved.membersA||[],membersB:saved.membersB||[],sets:[]};}
     h+=buildCKInputHTML();
@@ -34,28 +25,25 @@ function rCK(C,T){
 }
 
 function buildCKInputHTML(){
-  const bld=BLD['ck'];const allUNames=getAllUnivNames();
-  const uO=`<option value="">대학 선택</option>`+allUNames.map(n=>`<option value="${n}">${n}</option>`).join('');
+  const bld=BLD['ck'];const allU=getAllUnivs();
+  const uO=`<option value="">대학 선택</option>`+allU.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
   const mA=bld.membersA||[];const mB=bld.membersB||[];
-  let h=`<div class="match-builder"><h3>🤝 대학CK 입력</h3>
-    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openCKPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
-    <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">
+  const actionBar = _mbActionBar([
+    `<button class="btn btn-p btn-sm mb-mini-btn" onclick="openCKPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`
+  ], '');
+  let h = _mbSectionCard('① 기본 정보', `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['ck'].date=this.value">
-    </div>
-
-    <!-- 선수 검색으로 빠른 팀 짜기 -->
-    <div style="background:var(--blue-l);border:1px solid var(--blue-ll);border-radius:10px;padding:12px 14px;margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">🔍 스트리머 검색으로 빠른 팀 짜기 <span style="font-weight:400;color:var(--gray-l)">(이름·대학 검색 후 A팀/B팀 배정)</span></div>
+    </div>`) + _mbSectionCard('② 스트리머 검색으로 빠른 팀 짜기', `
       <div style="position:relative;display:flex;gap:6px;align-items:center">
         <input type="text" id="ck-search-input" placeholder="스트리머/대학/별명 검색..." 
           style="flex:1;padding:8px 12px;border:1.5px solid var(--blue);border-radius:8px;font-size:13px"
           oninput="ckSearchPlayer()">
       </div>
       <div id="ck-search-results" style="display:none;margin-top:6px;background:var(--white);border:1px solid var(--border2);border-radius:8px;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1)"></div>
-    </div>
-
-    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+    `, '(이름·대학 검색 후 A팀/B팀 배정)') + _mbSectionCard('③ 팀 구성', `
+    <div class="mb-split">
       <div class="ck-panel">
         <h4>🔵 팀 A 구성 (${mA.length}명)</h4>
         <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
@@ -74,8 +62,8 @@ function buildCKInputHTML(){
         </div>
         <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['ck'].membersB.splice(${i},1);BLD['ck'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">멤버를 추가하세요</span>'}</div>
       </div>
-    </div>`;
-  h+=setBuilderHTML(bld,'ck');h+=`</div>`;return h;
+    </div>`) + _mbSectionCard('④ 경기 결과 입력', `${setBuilderHTML(bld,'ck')}`);
+  return _mbFrame('🤝 대학CK 입력', actionBar, h, '');
 }
 
 function ckSearchPlayer(){
@@ -87,11 +75,9 @@ function ckSearchPlayer(){
   const q=(aliasName||q0).toLowerCase();
   if(!q){res.style.display='none';res.innerHTML='';return;}
   const bld=BLD['ck']||{};
-  const already=[...(bld.membersA||[]),...(bld.membersB||[])].map(m=>m.name);
   let results=players.filter(p=>
     (p.name.toLowerCase().includes(q)||(p.univ||'').toLowerCase().includes(q)||(p.tier||'').toLowerCase().includes(q)||(p.race||'').toLowerCase().includes(q))
   ).slice(0,20);
-  // 별명 매칭 시 해당 선수는 최상단 고정 표시
   if(aliasName){
     const ap=players.find(p=>p.name===aliasName);
     if(ap){
@@ -130,11 +116,9 @@ function ckAddBySearch(team, name){
   const pObj=players.find(p=>p.name===name)||{};
   arr.push({name,univ:pObj.univ||'',race:pObj.race||'',tier:pObj.tier||''});
   BLD['ck'].sets=[];
-  // 검색 결과 새로고침
   ckSearchPlayer();
   render();
 }
-
 
 function ckFilterPlayers(team){
   const univSel=document.getElementById(`ck-${team.toLowerCase()}-univ`);
@@ -161,7 +145,6 @@ function ckRankHTML(){
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['ck']||'rate';
   const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['ck']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['ck']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['ck']='l';render()">패순</button></div>`;
-  // 개인 순위
   const pS2={};
   ckM.forEach(m=>{
     (m.sets||[]).forEach(set=>{
@@ -204,4 +187,3 @@ function ckRankHTML(){
   h+=`</tbody></table>`+_pageNav_ck;
   return h;
 }
-

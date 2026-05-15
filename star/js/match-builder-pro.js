@@ -1,35 +1,28 @@
-/* match-builder-pro.js: extracted from match-builder.js */
 /* ══════════════════════════════════════
-   프로리그 (대학CK 방식)
+   Match Builder Pro League
 ══════════════════════════════════════ */
+
 var proSub='records';
 
 function rPro(C,T){
   T.innerText='🏅 프로리그';
-  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
-  if(window._proFilterOpen===undefined) window._proFilterOpen=_lockOpen;
-  if(_lockOpen) window._proFilterOpen=true;
   if(!isLoggedIn && proSub==='input') proSub='records';
-  const subOpts=[
+  const subOpts=(typeof applyTabLabels==='function') ? applyTabLabels('pro', [
+    {id:'input',lbl:'📝 경기 입력',fn:`proSub='input';render()`},
+    {id:'rank',lbl:'🏆 순위',fn:`proSub='rank';render()`},
+    {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`}
+  ]) : [
     {id:'input',lbl:'📝 경기 입력',fn:`proSub='input';render()`},
     {id:'rank',lbl:'🏆 순위',fn:`proSub='rank';render()`},
     {id:'records',lbl:'📋 기록',fn:`proSub='records';openDetails={};render()`}
   ];
   let h='';
-  if(_enableSubFilter && !_lockOpen){
-    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
-      <button class="pill ${window._proFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._proFilterOpen=!window._proFilterOpen;render()">🔍 필터 ${window._proFilterOpen?'▲':'▼'}</button>
-    </div>`;
-  }
-  if(!_enableSubFilter || window._proFilterOpen){
-    const extra = (proSub!=='input' && typeof buildYearMonthFilterControls==='function')
-      ? (buildYearMonthFilterControls('pro', true)
-        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
-      : '';
-    h+=typeof stabsInline==='function' ? stabsInline(proSub, subOpts, extra) : stabs(proSub, subOpts) + (extra?`<div>${extra}</div>`:'');
-  }
+  const extra = (proSub!=='input' && typeof buildYearMonthFilterControls==='function')
+    ? (buildYearMonthFilterControls('pro', true)
+      + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+    : '';
+  h+=_buildMatchSubtabShell(proSub, subOpts, '_proFilterOpen', extra);
   if(proSub==='input'&&isLoggedIn){
     if(!BLD['pro']){const _sv=J('su_bld_pro')||{};BLD['pro']={date:_sv.date||'',membersA:_sv.membersA||[],membersB:_sv.membersB||[],tierFilters:_sv.tierFilters||[],sets:_sv.sets||[]};}
     h+=buildProInputHTML();
@@ -44,41 +37,33 @@ function rPro(C,T){
 function buildProInputHTML(){
   const bld=BLD['pro'];
   const mA=bld.membersA||[];const mB=bld.membersB||[];
-  // 프로리그는 god~1티어까지만 허용
   const PRO_TIERS=['G','K','JA','J','S','0티어','1티어'];
   if(!bld.tierFilters)bld.tierFilters=[];
   const tf=bld.tierFilters;
-  // god~1티어 선수 (클릭 목록: 기본 남자, 이미 팀에 추가된 여성은 포함)
   const allAddedNames=new Set([...(bld.membersA||[]),...(bld.membersB||[])].map(m=>m.name));
   const eligible=players.filter(p=>
     PRO_TIERS.includes(p.tier) &&
     (tf.length===0||tf.includes(p.tier)) &&
-    (p.gender==='M' || allAddedNames.has(p.name)) // 여자는 이미 추가된 경우만 목록에 표시
+    (p.gender==='M' || allAddedNames.has(p.name))
   ).sort((a,b)=>{
     const ti=t=>PRO_TIERS.indexOf(t);
     return ti(a.tier)-ti(b.tier)||(a.name||'').localeCompare(b.name||'');
   });
 
-  let h=`<div class="match-builder"><h3>🏅 프로리그 입력</h3>
-    <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openProPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트 붙여넣기 지원</span></div>
-    <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+  const actionBar = _mbActionBar([
+    `<button class="btn btn-p btn-sm mb-mini-btn" onclick="openProPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`
+  ], '');
+  let h = _mbSectionCard('① 기본 정보', `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['pro'].date=this.value">
-    </div>
-
-    <!-- ① 참가 티어 선택 -->
-    <div style="background:var(--blue-l);border:1px solid var(--blue-ll);border-radius:10px;padding:10px 14px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">① 참가 티어 <span style="font-weight:400;color:var(--gray-l)">(복수 선택 · god~1티어 · 검색으로 여성 선수도 추가 가능)</span></div>
+    </div>`) + _mbSectionCard('② 참가 티어', `
       <div style="display:flex;gap:5px;flex-wrap:wrap">
         <button class="tier-filter-btn ${tf.length===0?'on':''}" onclick="BLD['pro'].tierFilters=[];BLD['pro'].membersA=[];BLD['pro'].membersB=[];BLD['pro'].sets=[];render()">전체</button>
         ${PRO_TIERS.map(t=>{const _bg=getTierBtnColor(t),_tc=getTierBtnTextColor(t),_on=tf.includes(t);return`<button class="tier-filter-btn ${_on?'on':''}" style="${_on?`background:${_bg};color:${_tc};border-color:${_bg}`:''}" onclick="proToggleTier('${t}')">${getTierLabel(t)}</button>`;}).join('')}
       </div>
       <div style="font-size:11px;color:var(--blue);margin-top:6px">대상 스트리머: <strong>${eligible.length}명</strong></div>
-    </div>
-
-    <!-- ② 스트리머 클릭 → 팀 배정 -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">② 스트리머 클릭 → 팀 배정 <span style="font-weight:400;color:var(--gray-l);font-size:11px">(A팀 / B팀 버튼으로 추가)</span></div>
+    `, '(복수 선택 · god~1티어 · 검색으로 여성 선수도 추가 가능)') + _mbSectionCard('③ 스트리머 클릭 → 팀 배정', `
       <div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;max-height:220px;overflow-y:auto">
         ${eligible.length===0
           ?'<span style="color:var(--gray-l);font-size:12px">티어를 선택하면 스트리머 목록이 표시됩니다</span>'
@@ -97,10 +82,8 @@ function buildProInputHTML(){
             }).join('')
         }
       </div>
-    </div>
-
-    <!-- ③ 팀 구성 확인 + 검색 추가 -->
-    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+    `, '(A팀 / B팀 버튼으로 추가)') + _mbSectionCard('④ 팀 구성 확인 + 검색 추가', `
+    <div class="mb-split">
       <div class="ck-panel">
         <h4>🔵 팀 A (${mA.length}명)</h4>
         <div style="display:flex;gap:6px;margin-bottom:6px">
@@ -117,8 +100,8 @@ function buildProInputHTML(){
         <div id="pro-b-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:var(--white);margin-bottom:6px"></div>
         <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['pro'].membersB.splice(${i},1);BLD['pro'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">스트리머 없음</span>'}</div>
       </div>
-    </div>`;
-  h+=setBuilderHTML(bld,'pro');h+=`</div>`;return h;
+    </div>`) + _mbSectionCard('⑤ 경기 결과 입력', `${setBuilderHTML(bld,'pro')}`);
+  return _mbFrame('🏅 프로리그 입력', actionBar, h, '');
 }
 
 function proSearchPlayer(team){
@@ -133,14 +116,12 @@ function proSearchPlayer(team){
   const bld=BLD['pro']||{};
   const tf=bld.tierFilters||[];
   const already=[...(bld.membersA||[]),...(bld.membersB||[])].map(m=>m.name);
-  // 검색 시에는 gender 제한 없음 (혼성 경기 지원) - 여자 선수는 티어 무관하게 검색 가능
   let results=players.filter(p=>
     (PRO_TIERS.includes(p.tier) || p.gender==='F') &&
     (tf.length===0||tf.includes(p.tier)||p.gender==='F') &&
     !already.includes(p.name) &&
     (p.name.toLowerCase().includes(q)||(p.memo||'').toLowerCase().includes(q)||(p.univ||'').toLowerCase().includes(q)||(p.tier||'').toLowerCase().includes(q))
   ).slice(0,20);
-  // 별명 매칭 시 해당 선수는 최상단 고정 표시
   if(aliasName){
     const ap=players.find(p=>p.name===aliasName);
     if(ap && !already.includes(ap.name)){
@@ -165,7 +146,6 @@ function proSearchPlayer(team){
   dropEl.style.display='block';
 }
 
-// (요청사항) 팀 검색 입력에서 Enter 시: 별명/정확매칭이면 즉시 추가
 function proAddByQuery(team){
   const searchEl=document.getElementById(`pro-${team.toLowerCase()}-search`);
   if(!searchEl) return;
@@ -180,7 +160,6 @@ function proAddByQuery(team){
     searchEl.value='';
     return;
   }
-  // 하나만 남는 검색 결과면 그걸 추가
   const PRO_TIERS=['G','K','JA','J','S','0티어','1티어'];
   const tf=bld.tierFilters||[];
   const q=name.toLowerCase();
@@ -234,7 +213,6 @@ function proFilterPlayers(team){
   if(!univSel||!playerSel)return;
   const univ=univSel.value;
   const bld=BLD['pro']||{};const tf=(bld.tierFilters||[]);
-  // 티어 필터 적용 (다중선택: 비어있으면 전체)
   const mems=univ?players.filter(p=>p.univ===univ&&p.gender==='M'&&(tf.length===0||tf.includes(p.tier))):[];
   playerSel.innerHTML=mems.length?`<option value="">멤버 선택</option>`+mems.map(p=>`<option value="${p.name}">${p.name} [${p.tier||'-'}/${p.race||'-'}]</option>`).join(''):`<option value="">멤버 없음</option>`;
 }
@@ -253,7 +231,6 @@ function proAddMember(team){
 
 function proTeamResultsHTML(){
   if(!proM||!proM.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
-  // 팀 매치 결과 집계
   const teamSt={};
   proM.forEach(m=>{
     const a=m.teamALabel||'A팀'; const b=m.teamBLabel||'B팀';
@@ -264,7 +241,6 @@ function proTeamResultsHTML(){
     else if(sb>sa)teamSt[key].bW++;
     else if(sa>0||sb>0)teamSt[key].draw++;
   });
-  // 맵 통계
   const mapSt={};
   proM.forEach(m=>{
     (m.sets||[]).forEach(set=>{
@@ -277,7 +253,6 @@ function proTeamResultsHTML(){
   });
   const mapArr=Object.entries(mapSt).sort((a,b)=>b[1].total-a[1].total);
   let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:14px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">⚔️ 팀전 결과 집계</div>`;
-  // 팀 대결 기록 테이블
   const pairs=Object.values(teamSt);
   if(pairs.length){
     h+=`<div style="margin-bottom:20px;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
@@ -313,7 +288,6 @@ function proTeamResultsHTML(){
     });
     h+=`</tbody></table></div>`;
   }
-  // 경기별 팀전 결과 타임라인
   const sorted=[...proM].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   h+=`<div style="margin-bottom:20px;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
     <div style="padding:10px 16px;background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;font-weight:900;font-size:13px">📋 경기별 팀전 결과 (${proM.length}경기)</div>
@@ -339,7 +313,6 @@ function proTeamResultsHTML(){
     </div>`;
   });
   h+=`</div></div>`;
-  // 맵 통계
   if(mapArr.length){
     const total=mapArr.reduce((s,[,v])=>s+v.total,0);
     h+=`<div style="margin-bottom:20px;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
@@ -359,7 +332,6 @@ function proTeamResultsHTML(){
 }
 
 function proRankHTML(){
-  // 선수별 프로리그 승/패 집계
   const pStats={};
   proM.forEach(m=>{
     (m.sets||[]).forEach(set=>{
@@ -419,4 +391,3 @@ function proRankHTML(){
 </div>`:'';
   return h+`</tbody></table>`+_pageNav;
 }
-

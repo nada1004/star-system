@@ -758,7 +758,4 @@
   window.addEventListener('pagehide', ()=>{
     try{ window.__suFlushHistoryPersistNow(); }catch(e){}
   });
-  window.addEventListener('beforeunload', ()=>{
-    try{ window.__suFlushHistoryPersistNow(); }catch(e){}
-  });
 })();
