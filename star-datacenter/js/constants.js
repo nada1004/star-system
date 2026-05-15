@@ -2349,10 +2349,21 @@ function _rebuildAllPlayerHistoryCore() {
   });
 
   let count = 0;
+  function _ensureMid(m, prefix, idx){
+    let id = String((m && (m._id || m.sid || m.id)) || '').trim();
+    if(!id){
+      const d = _toIsoDateStr(m && m.d || '');
+      const a = String(m && (m.a || m.wName || '') || '').replace(/\s+/g,'').slice(0,16);
+      const b = String(m && (m.b || m.lName || '') || '').replace(/\s+/g,'').slice(0,16);
+      id = `${prefix}:${d}:${a}:${b}:${idx}`;
+    }
+    try{ if(m) m._id = id; }catch(e){}
+    return id;
+  }
 
   // 2. miniM에서 복구
-  (miniM || []).forEach(m => {
-    if(!m._id) return;
+  (miniM || []).forEach((m, mi) => {
+    const mid = _ensureMid(m, 'mini', mi);
     (m.sets || []).forEach((set, setIdx) => {
       (set.games || []).forEach((g, gameIdx) => {
         if(!g.playerA || !g.playerB || !g.winner) return;
@@ -2363,7 +2374,7 @@ function _rebuildAllPlayerHistoryCore() {
         const isCivil = (m.type === 'civil') || (m.a === 'A팀' && m.b === 'B팀');
         const univW = isCivil ? '' : (g.winner === 'A' ? (m.a || '') : (m.b || ''));
         const univL = isCivil ? '' : (g.winner === 'A' ? (m.b || '') : (m.a || ''));
-        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || g.sid || `${mid}_s${setIdx}_g${gameIdx}`;
         if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
           applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, m.type === 'civil' ? '시빌워' : '미니대전', { sideUnivA: m.a, sideUnivB: m.b });
         } else {
@@ -2375,8 +2386,8 @@ function _rebuildAllPlayerHistoryCore() {
   });
 
   // 3. univM에서 복구
-  (univM || []).forEach(m => {
-    if(!m._id) return;
+  (univM || []).forEach((m, mi) => {
+    const mid = _ensureMid(m, 'univ', mi);
     (m.sets || []).forEach((set, setIdx) => {
       (set.games || []).forEach((g, gameIdx) => {
         if(!g.playerA || !g.playerB || !g.winner) return;
@@ -2384,7 +2395,7 @@ function _rebuildAllPlayerHistoryCore() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? m.a : m.b;
         const univL = g.winner === 'A' ? m.b : m.a;
-        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || g.sid || `${mid}_s${setIdx}_g${gameIdx}`;
         if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
           applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '대학대전', { sideUnivA: m.a, sideUnivB: m.b });
         } else {
@@ -2396,14 +2407,14 @@ function _rebuildAllPlayerHistoryCore() {
   });
 
   // 4. ckM에서 복구
-  (ckM || []).forEach(m => {
-    if(!m._id) return;
+  (ckM || []).forEach((m, mi) => {
+    const mid = _ensureMid(m, 'ck', mi);
     (m.sets || []).forEach((set, setIdx) => {
       (set.games || []).forEach((g, gameIdx) => {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || g.sid || `${mid}_s${setIdx}_g${gameIdx}`;
         if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
           applyTeamGameResult(m.teamAMembers || g.teamA, m.teamBMembers || g.teamB, g.winner, m.d, g.map || '-', gameId, '대학CK');
         } else {
@@ -2415,14 +2426,14 @@ function _rebuildAllPlayerHistoryCore() {
   });
 
   // 5. proM에서 복구
-  (proM || []).forEach(m => {
-    if(!m._id) return;
+  (proM || []).forEach((m, mi) => {
+    const mid = _ensureMid(m, 'pro', mi);
     (m.sets || []).forEach((set, setIdx) => {
       (set.games || []).forEach((g, gameIdx) => {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || g.sid || `${mid}_s${setIdx}_g${gameIdx}`;
         if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
           applyTeamGameResult(m.teamAMembers || g.teamA, m.teamBMembers || g.teamB, g.winner, m.d, g.map || '-', gameId, '프로리그');
         } else {
@@ -2434,14 +2445,14 @@ function _rebuildAllPlayerHistoryCore() {
   });
 
   // 6. ttM에서 복구
-  (ttM || []).forEach(m => {
-    if(!m._id) return;
+  (ttM || []).forEach((m, mi) => {
+    const mid = _ensureMid(m, 'tt', mi);
     (m.sets || []).forEach((set, setIdx) => {
       (set.games || []).forEach((g, gameIdx) => {
         if(!g.playerA || !g.playerB || !g.winner) return;
         const wName = g.winner === 'A' ? g.playerA : g.playerB;
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
-        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || g.sid || `${mid}_s${setIdx}_g${gameIdx}`;
         if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
           applyTeamGameResult(m.teamAMembers || g.teamA, m.teamBMembers || g.teamB, g.winner, m.d, g.map || '-', gameId, '티어대회');
         } else {
@@ -2467,8 +2478,8 @@ function _rebuildAllPlayerHistoryCore() {
   });
 
   // 9. comps에서 복구
-  (comps || []).forEach(m => {
-    if(!m._id) return;
+  (comps || []).forEach((m, mi) => {
+    const mid = _ensureMid(m, 'comp', mi);
     (m.sets || []).forEach((set, setIdx) => {
       (set.games || []).forEach((g, gameIdx) => {
         if(!g.playerA || !g.playerB || !g.winner) return;
@@ -2476,7 +2487,7 @@ function _rebuildAllPlayerHistoryCore() {
         const lName = g.winner === 'A' ? g.playerB : g.playerA;
         const univW = g.winner === 'A' ? m.a : m.b;
         const univL = g.winner === 'A' ? m.b : m.a;
-        const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+        const gameId = g._id || g.sid || `${mid}_s${setIdx}_g${gameIdx}`;
         if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
           applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, '대회', { sideUnivA: m.a, sideUnivB: m.b });
         } else {
@@ -2489,17 +2500,17 @@ function _rebuildAllPlayerHistoryCore() {
 
   // 10. tourneys에서 복구
   if (typeof tourneys !== 'undefined') {
-    tourneys.forEach(tn => {
+    tourneys.forEach((tn, tnIdx) => {
       const isTier = tn.type === 'tier';
       (tn.groups || []).forEach(grp => {
-        (grp.matches || []).forEach(m => {
-          if (!m._id) return;
+        (grp.matches || []).forEach((m, mi) => {
+          const mid = _ensureMid(m, `tourG${tnIdx}`, mi);
           (m.sets || []).forEach((set, setIdx) => {
             (set.games || []).forEach((g, gameIdx) => {
               if (!g.playerA || !g.playerB || !g.winner) return;
               const wName = g.winner === 'A' ? g.playerA : g.playerB;
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+              const gameId = g._id || g.sid || `${mid}_s${setIdx}_g${gameIdx}`;
               if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
                 applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '조별리그', { sideUnivA: m.a, sideUnivB: m.b });
               } else {
@@ -2510,14 +2521,14 @@ function _rebuildAllPlayerHistoryCore() {
           });
         });
       });
-      Object.values((tn.bracket || {}).matchDetails || {}).forEach(m => {
-        if (!m._id) return;
+      Object.values((tn.bracket || {}).matchDetails || {}).forEach((m, mi) => {
+        const mid = _ensureMid(m, `tourB${tnIdx}`, mi);
         (m.sets || []).forEach((set, setIdx) => {
           (set.games || []).forEach((g, gameIdx) => {
             if (!g.playerA || !g.playerB || !g.winner) return;
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+            const gameId = g._id || g.sid || `${mid}_s${setIdx}_g${gameIdx}`;
             if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
               applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '대회', { sideUnivA: m.a, sideUnivB: m.b });
             } else {
@@ -2527,14 +2538,14 @@ function _rebuildAllPlayerHistoryCore() {
           });
         });
       });
-      ((tn.bracket || {}).manualMatches || []).forEach(m => {
-        if (!m._id) return;
+      ((tn.bracket || {}).manualMatches || []).forEach((m, mi) => {
+        const mid = _ensureMid(m, `tourM${tnIdx}`, mi);
         (m.sets || []).forEach((set, setIdx) => {
           (set.games || []).forEach((g, gameIdx) => {
             if (!g.playerA || !g.playerB || !g.winner) return;
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+            const gameId = g._id || g.sid || `${mid}_s${setIdx}_g${gameIdx}`;
             if(g._isTeam && typeof applyTeamGameResult==='function' && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
               applyTeamGameResult(g.teamA, g.teamB, g.winner, m.d, g.map || '-', gameId, isTier ? '티어대회' : '대회', { sideUnivA: m.a, sideUnivB: m.b });
             } else {
@@ -2549,16 +2560,16 @@ function _rebuildAllPlayerHistoryCore() {
 
   // 11. proTourneys에서 복구
   if (typeof proTourneys !== 'undefined') {
-    proTourneys.forEach(tn => {
+    proTourneys.forEach((tn, tnIdx) => {
       (tn.groups || []).forEach(grp => {
         (grp.matches || []).forEach((m, matchIdx) => {
-          if (!m._id) return;
+          const mid = _ensureMid(m, `pTG${tnIdx}`, matchIdx);
           (m.sets || []).forEach((set, setIdx) => {
             (set.games || []).forEach((g, gameIdx) => {
               if (!g.playerA || !g.playerB || !g.winner) return;
               const wName = g.winner === 'A' ? g.playerA : g.playerB;
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+              const gameId = g._id || g.sid || `${mid}_s${setIdx}_g${gameIdx}`;
               applyGameResult(wName, lName, m.d || '', g.map || '', gameId, '', '', '프로리그대회');
               count++;
             });
@@ -2567,36 +2578,39 @@ function _rebuildAllPlayerHistoryCore() {
       });
       (tn.bracket || []).forEach((rnd, rndIdx) => {
         rnd.forEach((m, matchIdx) => {
-          if (!m || !m._id) return;
+          if (!m) return;
+          const mid = _ensureMid(m, `pTB${tnIdx}_${rndIdx}`, matchIdx);
           (m.sets || []).forEach((set, setIdx) => {
             (set.games || []).forEach((g, gameIdx) => {
               if (!g.playerA || !g.playerB || !g.winner) return;
               const wName = g.winner === 'A' ? g.playerA : g.playerB;
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
-              const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
+              const gameId = g._id || g.sid || `${mid}_s${setIdx}_g${gameIdx}`;
               applyGameResult(wName, lName, m.d || '', g.map || '', gameId, '', '', '프로리그대회');
               count++;
             });
           });
         });
       });
-      if (tn.thirdPlace && tn.thirdPlace._id) {
+      if (tn.thirdPlace) {
         const tp = tn.thirdPlace;
+        const tpid = _ensureMid(tp, `pT3${tnIdx}`, 0);
         (tp.sets || []).forEach((set, setIdx) => {
           (set.games || []).forEach((g, gameIdx) => {
             if (!g.playerA || !g.playerB || !g.winner) return;
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            const gameId = g._id || `${tp._id}_s${setIdx}_g${gameIdx}`;
+            const gameId = g._id || g.sid || `${tpid}_s${setIdx}_g${gameIdx}`;
             applyGameResult(wName, lName, tp.d || '', g.map || '', gameId, '', '', '프로리그대회');
             count++;
           });
         });
       }
       (tn.teamMatches || []).forEach((tm, tmIdx) => {
+        const tmid = _ensureMid(tm, `pTTM${tnIdx}`, tmIdx);
         (tm.games || []).forEach((g, gameIdx) => {
           if (!g.wName || !g.lName) return;
-          const gameId = tm._id ? `${tm._id}_g${gameIdx}` : genId();
+          const gameId = g._id || g.sid || `${tmid}_g${gameIdx}`;
           applyGameResult(g.wName, g.lName, tm.d || '', g.map || '', gameId, '', '', '프로리그대회');
           count++;
         });
