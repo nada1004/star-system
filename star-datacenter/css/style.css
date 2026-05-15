@@ -1871,6 +1871,29 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 }
 /* ── */
 .rec-sum-vs{display:flex;align-items:center;gap:var(--rc-vs-gap,12px);flex:1;flex-wrap:wrap;}
+.rec-sum-vs-outer{gap:6px;}
+
+@media(max-width:1100px){
+  .rec-sum-vs-outer{gap:6px;flex-wrap:nowrap;}
+  .rec-sum-vs-outer > .rec-side-profiles{
+    max-width:64px !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+    padding:2px 3px !important;
+  }
+  .rec-sum-vs-outer > .rec-side-profiles .rsp-inner{transform:none !important;}
+  .rec-sum-vs-outer > .rec-side-profiles .rsp-imgbox:hover{transform:none !important;}
+  .grp-match-card.has-side-panels > .rec-side-profiles{
+    max-width:72px !important;
+    overflow:hidden !important;
+  }
+  .grp-match-card.has-side-panels > .rec-side-profiles .rsp-inner{transform:none !important;}
+  .grp-match-card.has-side-panels > .rec-side-profiles .rsp-imgbox:hover{transform:none !important;}
+  .grp-match-card.match-card-v3.has-side-panels .grp-match-main{
+    flex-wrap:nowrap !important;
+    overflow:hidden !important;
+  }
+}
 .rec-sum-score{
   font-family:'Noto Sans KR',sans-serif;
   font-weight:1000;

@@ -52,7 +52,7 @@
   border-left-width: 5px !important;
   box-shadow: 0 1px 4px rgba(15,23,42,.04), 0 6px 24px rgba(15,23,42,.07), inset 0 1px 0 rgba(255,255,255,.95) !important;
 }
-.grp-match-card.match-card-v3::after {
+.grp-match-card.match-card-v3:not(.grp-sidefx)::after {
   content: '' !important;
   position: absolute !important;
   inset: 0 !important;

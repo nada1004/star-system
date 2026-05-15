@@ -816,8 +816,8 @@ function rTier(C,T){
   ].filter(Boolean).length;
 
   // ── 1행: 필터(좌측) + 보기 모드 + (우측) 티어표 ──
-  let fh=`<div style="display:flex;gap:8px;align-items:center">`;
-  fh+=`<div class="fbar" style="flex:1;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px">`;
+  let fh=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
+  fh+=`<div class="fbar" style="flex:1 1 420px;min-width:0;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px">`;
   fh+=`<button class="pill ${window._tierFilterOpen||_activeFilters>0?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierFilterOpen=!window._tierFilterOpen;render()">🔍 필터${_activeFilters>0?` (${_activeFilters})`:''} ${window._tierFilterOpen?'▲':'▼'}</button>`;
   modes.forEach(m=>{
     const on=tierRankMode===m.id&&_curModeNoFilter;
@@ -833,7 +833,7 @@ function rTier(C,T){
     {id:'tier-group', icon:'🎖️', title:'티어별 그룹'},
   ];
   if(!window._tierViewMode) window._tierViewMode = (()=>{try{return localStorage.getItem('su_tier_view_mode')||'table';}catch(e){return 'table';}})();
-  fh+=`<div style="display:flex;gap:3px;flex-shrink:0">`;
+  fh+=`<div style="display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">`;
   _viewModes.forEach(vm=>{
     const on=window._tierViewMode===vm.id;
     fh+=`<button title="${vm.title}" onclick="window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()" style="padding:5px 8px;border-radius:7px;border:1.5px solid ${on?'var(--blue)':'var(--border2)'};background:${on?'#eff6ff':'var(--white)'};color:${on?'var(--blue)':'var(--text3)'};font-size:13px;cursor:pointer;line-height:1">${vm.icon}</button>`;

@@ -684,8 +684,8 @@ function rCompTourDynamic(tn){
     const _bktFxVars=(_bktFxOn&&a?.univ&&b?.univ&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(aC,bC,_bktFxCfg):'';
     const _hexRgb=(h)=>{const s=String(h||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
     const _bktSideRgbVars=`--rec-side-left-rgb:${_hexRgb(aC)};--rec-side-right-rgb:${_hexRgb(bC)};`;
-    const _bktFxCls=(_bktFxOn&&a?.univ&&b?.univ)?` grp-sidefx grp-sidefx--${_bktFxMode}`:'';
-    return `<div class="tc-card${_bktFxCls}" style="--tc-win-rgb:${_winRgb};${_bktSideRgbVars}${_bktFxVars}background:var(--white);border:1.5px solid ${isDone?aC+'66':'var(--border)'};border-radius:8px;overflow:hidden;width:185px;flex-shrink:0;box-shadow:0 1px 6px rgba(0,0,0,.07)">
+    const _bktFxCls=(_bktFxOn&&a?.univ&&b?.univ)?` grp-match-card grp-sidefx grp-sidefx--${_bktFxMode}`:'';
+    return `<div class="grp-match-card tc-card${_bktFxCls}" style="--tc-win-rgb:${_winRgb};${_bktSideRgbVars}${_bktFxVars}background:var(--white);border:1.5px solid ${isDone?aC+'66':'var(--border)'};border-radius:8px;overflow:hidden;width:185px;flex-shrink:0;box-shadow:0 1px 6px rgba(0,0,0,.07)">
       ${teamRow(a,aWin,bWin,rnd,mi,'a',aSc,detDone)}
       <div style="height:1px;background:var(--border)"></div>
       ${teamRow(b,bWin,aWin,rnd,mi,'b',bSc,detDone)}
