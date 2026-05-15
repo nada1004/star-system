@@ -43,6 +43,7 @@ function rCfg(C,T){
     streamerheader:'🎓 스트리머탭 대학 헤더',
     univlogoimg:'🏫 대학 로고 이미지(URL)',
     b2femco:'🧩 펨코스타일', femcoorder:'🔀 펨코스타일 스타대학 순서', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
+    'b2designmode':'🎨 현황판 디자인 모드',
     tablabels:'🏷️ 탭 이름(라벨) 설정',
     uisize:'📱 모바일/태블릿 UI 크기',
     siAssign:'🎭 스트리머별 상태 아이콘 지정',
@@ -184,6 +185,10 @@ function rCfg(C,T){
         <span style="font-size:16px;line-height:1">🪪</span>
         <span style="font-size:12px;font-weight:900;color:var(--text2)">공유카드 디자인</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:700">모드, 색상, 승자 배경, 타입별 오버라이드</span>
+      </button>
+      <button type="button" class="btn btn-w no-export" onclick="cfgGo('b2designmode')" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;border-radius:14px;text-align:left;background:var(--white)">
+        <span style="font-size:13px;font-weight:900">🎨 현황판 디자인 모드</span>
+        <span style="font-size:11px;color:var(--gray-l)">신현황판·펨코·무소속 스타일</span>
       </button>
       <button type="button" class="btn btn-w no-export" onclick="cfgGo('boardchip')" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;border-radius:14px;text-align:left;background:var(--white)">
         <span style="font-size:16px;line-height:1">🏷️</span>
@@ -2796,6 +2801,82 @@ ${_scfgD('notice','📢 공지 관리')}
           <input type="checkbox" id="cfg-fab-hide-pc" onchange="saveFabVisibilitySettings()" style="width:22px;height:22px;accent-color:var(--blue);flex-shrink:0">
           <div style="font-size:13px;font-weight:800;color:var(--text2)">PC에서 숨기기</div>
         </label>
+      </div>
+    </div>
+  </details>
+  ${_scfgD('b2designmode','🎨 현황판 디자인 모드')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">신현황판, 펨코스타일, 무소속 각각의 카드 디자인 모드를 설정합니다. 저장 즉시 반영됩니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:20px">
+
+      <!-- 신현황판 (대학별) 디자인 모드 -->
+      <div>
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">🏫 신현황판 (대학별) 카드 스타일</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px">
+          ${(function(){
+            const _cur = (()=>{ try{ return localStorage.getItem('su_b2_univ_style')||'default'; }catch(e){ return 'default'; } })();
+            return [
+              {v:'default',  icon:'🃏', t:'기본',     d:'기존 단색 헤더+연한 배경'},
+              {v:'glass',    icon:'🔮', t:'유리',     d:'반투명 글래스모피즘'},
+              {v:'minimal',  icon:'➖', t:'미니멀',   d:'테두리만, 배경 흰색'},
+              {v:'dark',     icon:'🌑', t:'다크',     d:'딥 다크 배경'},
+              {v:'gradient', icon:'🌈', t:'그라디언트',d:'헤더 그라디언트'},
+              {v:'neon',     icon:'💡', t:'네온',     d:'형광 테두리+발광 효과'},
+              {v:'sharp',    icon:'▬',  t:'샤프',     d:'직각+왼쪽 굵은 선'},
+            ].map(s=>`<button type="button" onclick="localStorage.setItem('su_b2_univ_style','${s.v}');render()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 12px;border-radius:10px;border:2px solid ${_cur===s.v?'var(--blue)':'var(--border2)'};background:${_cur===s.v?'#eff6ff':'var(--white)'};cursor:pointer;min-width:82px">
+              <span style="font-size:20px">${s.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:${_cur===s.v?'var(--blue)':'var(--text2)'}">${s.t}</span>
+              <span style="font-size:10px;color:var(--gray-l);text-align:center;line-height:1.3">${s.d}</span>
+            </button>`).join('');
+          })()}
+        </div>
+      </div>
+
+      <!-- 펨코스타일 디자인 모드 -->
+      <div style="border-top:1px dashed var(--border2);padding-top:16px">
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">🧩 펨코스타일 카드 스타일</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px">
+          ${(function(){
+            const _cur = (()=>{ try{ return localStorage.getItem('su_b2_femco_style')||'default'; }catch(e){ return 'default'; } })();
+            return [
+              {v:'default',  icon:'🎴', t:'기본',     d:'기존 라운드 카드'},
+              {v:'shadow3d', icon:'🏔️', t:'3D 그림자', d:'두꺼운 아래 그림자'},
+              {v:'outlined', icon:'⬜', t:'아웃라인',  d:'반투명 테두리 강조'},
+              {v:'glass',    icon:'🔮', t:'유리',     d:'글래스 블러 효과'},
+              {v:'neon',     icon:'💡', t:'네온',     d:'형광 테두리 발광'},
+              {v:'sharp',    icon:'▬',  t:'샤프',     d:'직각+왼쪽 굵은 선'},
+              {v:'minimal',  icon:'➖', t:'미니멀',   d:'패딩 축소, 하단 선만'},
+            ].map(s=>`<button type="button" onclick="localStorage.setItem('su_b2_femco_style','${s.v}');render()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 12px;border-radius:10px;border:2px solid ${_cur===s.v?'var(--blue)':'var(--border2)'};background:${_cur===s.v?'#eff6ff':'var(--white)'};cursor:pointer;min-width:82px">
+              <span style="font-size:20px">${s.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:${_cur===s.v?'var(--blue)':'var(--text2)'}">${s.t}</span>
+              <span style="font-size:10px;color:var(--gray-l);text-align:center;line-height:1.3">${s.d}</span>
+            </button>`).join('');
+          })()}
+        </div>
+      </div>
+
+      <!-- 무소속 디자인 모드 -->
+      <div style="border-top:1px dashed var(--border2);padding-top:16px">
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">🚶 무소속 레이아웃 모드</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px">
+          ${(function(){
+            const _cur = (()=>{ try{ return localStorage.getItem('su_b2_free_style')||'default'; }catch(e){ return 'default'; } })();
+            return [
+              {v:'default',  icon:'📋', t:'기본',     d:'기존 라벨+칩 리스트'},
+              {v:'card',     icon:'🃏', t:'카드별',   d:'티어별 분리 카드'},
+              {v:'grid',     icon:'🔲', t:'그리드',   d:'전원 카드 그리드'},
+              {v:'timeline', icon:'📅', t:'타임라인', d:'왼쪽 점선 타임라인'},
+              {v:'compact',  icon:'📝', t:'컴팩트',   d:'초밀도 한 줄 리스트'},
+            ].map(s=>`<button type="button" onclick="localStorage.setItem('su_b2_free_style','${s.v}');render()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 12px;border-radius:10px;border:2px solid ${_cur===s.v?'var(--blue)':'var(--border2)'};background:${_cur===s.v?'#eff6ff':'var(--white)'};cursor:pointer;min-width:82px">
+              <span style="font-size:20px">${s.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:${_cur===s.v?'var(--blue)':'var(--text2)'}">${s.t}</span>
+              <span style="font-size:10px;color:var(--gray-l);text-align:center;line-height:1.3">${s.d}</span>
+            </button>`).join('');
+          })()}
+        </div>
+      </div>
+
+      <div style="font-size:11px;color:var(--gray-l);border-top:1px solid var(--border2);padding-top:8px">
+        💡 신현황판·무소속은 <b>현황판 탭 → 대학별/무소속</b>에서 즉시 확인할 수 있습니다.
       </div>
     </div>
   </details>
