@@ -52,13 +52,27 @@ const _DR_EVENTS    = [
 let _drSt     = null;
 let _drAnimId = null;
 let _drAC     = null;
+let _drNameCache = localStorage.getItem('su_dr_n') || '';
+let _drHistCache = [];
+try { _drHistCache = JSON.parse(localStorage.getItem('su_dr_hist') || '[]'); } catch(e) {}
+// MiscStore에서 비동기 로드 (IDB 우선)
+(async function _drLoadFromIdb(){
+  try{
+    if(typeof MiscStore==='undefined') return;
+    const n = await MiscStore.get('su_dr_n');
+    if(typeof n === 'string') _drNameCache = n;
+    const h = await MiscStore.get('su_dr_hist');
+    if(Array.isArray(h)) _drHistCache = h;
+  }catch(e){}
+})();
 
 // ─── 이력 관리 ───────────────────────────────────────────────────────────────
 function _drGetHistory() {
-  try { return JSON.parse(localStorage.getItem('su_dr_hist') || '[]'); } catch(e) { return []; }
+  return _drHistCache;
 }
 function _drSaveHistory(hist) {
-  localStorage.setItem('su_dr_hist', JSON.stringify(hist.slice(0, 15)));
+  _drHistCache = hist.slice(0,15);
+  try{ if(typeof MiscStore!=='undefined') MiscStore.set('su_dr_hist', _drHistCache); else localStorage.setItem('su_dr_hist', JSON.stringify(_drHistCache)); }catch(e){}
 }
 function _drToggleHistDetail(idx) {
   const el = document.getElementById('dr-hist-d-' + idx);
@@ -66,9 +80,9 @@ function _drToggleHistDetail(idx) {
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 function _drClearHistory() {
-  localStorage.removeItem('su_dr_hist');
+  try{ if(typeof MiscStore!=='undefined') MiscStore.delete('su_dr_hist'); else localStorage.removeItem('su_dr_hist'); }catch(e){}
   const root = document.getElementById('dr-root');
-  if (root) _drRenderSetup(root, localStorage.getItem('su_dr_n') || '');
+  if (root) _drRenderSetup(root, _drNameCache);
 }
 function _drRenderHistory() {
   const hist = _drGetHistory();
@@ -103,7 +117,7 @@ function _drRenderHistory() {
 function _drInit() {
   const root = document.getElementById('dr-root');
   if (!root) return;
-  const saved = localStorage.getItem('su_dr_n') || '';
+  const saved = _drNameCache;
   if (_drSt && (_drSt.running || _drSt.finished)) {
     _drRenderRace(root);
   } else {
@@ -137,13 +151,14 @@ function _drRenderSetup(root, saved) {
 }
 
 function _drSaveNames(val) {
-  localStorage.setItem('su_dr_n', val);
+  _drNameCache = val;
+  try{ if(typeof MiscStore!=='undefined') MiscStore.set('su_dr_n', val); else localStorage.setItem('su_dr_n', val); }catch(e){}
 }
 
 // ─── 경주 시작 ───────────────────────────────────────────────────────────────
 function _drBeginRace() {
   const ta  = document.getElementById('dr-names-ta');
-  const raw = ta ? ta.value : (localStorage.getItem('su_dr_n') || '');
+  const raw = ta ? ta.value : (_drNameCache);
   const names = raw.split(',').map(function(v){ return v.trim(); }).filter(function(v){ return v; });
   if (names.length < 2)  { alert('참가자를 2명 이상 입력해 주세요.'); return; }
   if (names.length > 12) { alert('최대 12명까지 가능합니다.'); return; }
@@ -535,7 +550,7 @@ function _drResetRace() {
   _drSt = null;
 
   var root = document.getElementById('dr-root');
-  if (root) _drRenderSetup(root, localStorage.getItem('su_dr_n') || '');
+  if (root) _drRenderSetup(root, _drNameCache);
 }
 
 // ─── 오디오 ──────────────────────────────────────────────────────────────────

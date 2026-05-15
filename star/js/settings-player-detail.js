@@ -10,16 +10,33 @@ function _renderCfgPdSection(){
   const st=s.stats_tint!==undefined?s.stats_tint:8;
   const mt=s.mode_tint!==undefined?s.mode_tint:10;
   const ps=s.profile_size!==undefined?s.profile_size:100;
+  const phbg=s.header_bg_img||'';
+  const phbgFit=s.header_bg_fit||'contain';
+  const phbgScale=s.header_bg_scale!==undefined?s.header_bg_scale:100;
+  const phbgPos=s.header_bg_pos||'center center';
+  const _phbgPosX = (()=>{ const n=parseInt(s.header_bg_pos_x??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
+  const _phbgPosY = (()=>{ const n=parseInt(s.header_bg_pos_y??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
+  const uds=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
+  const uhbg=uds.header_bg_img||'';
+  const uhbgFit=uds.header_bg_fit||'contain';
+  const uhbgScale=uds.header_bg_scale!==undefined?uds.header_bg_scale:100;
   const closeOnBadge=s.close_on_badge!==undefined?s.close_on_badge:true;
   const closeOnMatchPlayer=s.close_on_match_player!==undefined?s.close_on_match_player:true;
   const headerClickClose=s.header_click_close!==undefined?s.header_click_close:true;
   const mdWinTint = (()=>{ try{ return parseInt(localStorage.getItem('su_md_win_tint')||'13',10);}catch(e){return 13;} })();
   const mdLoseGray = (()=>{ try{ return parseInt(localStorage.getItem('su_md_lose_gray')||'12',10);}catch(e){return 12;} })();
   const mdLogoSize = (()=>{ try{ return parseInt(localStorage.getItem('su_md_logo_size')||'42',10);}catch(e){return 42;} })();
+  const mdCkA = (()=>{ try{ return (localStorage.getItem('su_md_team_hdr_ck_a')||'#2563eb').trim(); }catch(e){ return '#2563eb'; } })();
+  const mdCkB = (()=>{ try{ return (localStorage.getItem('su_md_team_hdr_ck_b')||'#dc2626').trim(); }catch(e){ return '#dc2626'; } })();
+  const mdTtA = (()=>{ try{ return (localStorage.getItem('su_md_team_hdr_tt_a')||'#7c3aed').trim(); }catch(e){ return '#7c3aed'; } })();
+  const mdTtB = (()=>{ try{ return (localStorage.getItem('su_md_team_hdr_tt_b')||'#0ea5e9').trim(); }catch(e){ return '#0ea5e9'; } })();
+  const mdProA = (()=>{ try{ return (localStorage.getItem('su_md_team_hdr_pro_a')||'#2563eb').trim(); }catch(e){ return '#2563eb'; } })();
+  const mdProB = (()=>{ try{ return (localStorage.getItem('su_md_team_hdr_pro_b')||'#dc2626').trim(); }catch(e){ return '#dc2626'; } })();
   const _mdDevKey = (()=>{ const w=Math.max(320, Math.min(1920, window.innerWidth||1024)); return w<=768?'mb':(w<=1024?'tb':'pc'); })();
   const _mdDevLabel = _mdDevKey==='mb'?'모바일':(_mdDevKey==='tb'?'태블릿':'PC');
   const mdAvatarFit = (()=>{ try{ return (localStorage.getItem(`su_md_avatar_fit_${_mdDevKey}`)||localStorage.getItem('su_md_avatar_fit')||'contain').trim(); }catch(e){ return 'contain'; } })();
   const mdAvatarScale = (()=>{ try{ return parseInt(localStorage.getItem(`su_md_avatar_scale_${_mdDevKey}`)||localStorage.getItem('su_md_avatar_scale')||'100',10); }catch(e){ return 100; } })();
+  const mdAvatarPos = (()=>{ try{ return (localStorage.getItem(`su_md_avatar_pos_${_mdDevKey}`)||localStorage.getItem('su_md_avatar_pos')||'center center').trim(); }catch(e){ return 'center center'; } })();
   const _pdModeColorRows = _cfgBuildPdModeBadgeColorRows().rows;
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
   const _shape = (()=>{ try{ return (localStorage.getItem('su_profile_shape')||localStorage.getItem('su_bcp_shape')||'circle'); }catch(e){ return 'circle'; } })();
@@ -51,6 +68,75 @@ function _renderCfgPdSection(){
         <span id="pd-ps-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${ps}%</span>
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 크기 (기본 100%)</div>
+    </div>
+    <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🖼 스트리머 상세 헤더 기본 배경</div>
+      <input type="text" value="${phbg}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px" oninput="_setPdHeaderBg('header_bg_img',this.value)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">표시 방식</div>
+          <select style="width:100%" onchange="_setPdHeaderBg('header_bg_fit',this.value)">
+            <option value="contain"${phbgFit==='contain'?' selected':''}>맞춤</option>
+            <option value="cover"${phbgFit==='cover'?' selected':''}>채우기</option>
+            <option value="fill"${phbgFit==='fill'?' selected':''}>늘리기</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">크기 조절</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="range" min="40" max="220" step="5" value="${phbgScale}" style="flex:1;accent-color:var(--blue)" oninput="_setPdHeaderBg('header_bg_scale',this.value);document.getElementById('cfg-pdh-scale').textContent=this.value+'%'">
+            <span id="cfg-pdh-scale" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${phbgScale}%</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 6px">이미지 위치</div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+        ${[
+          ['left top','↖ 좌상'],['center top','↑ 상단'],['right top','↗ 우상'],
+          ['left center','← 좌중'],['center center','• 중앙'],['right center','→ 우중'],
+          ['left bottom','↙ 좌하'],['center bottom','↓ 하단'],['right bottom','↘ 우하']
+        ].map(([pos,label])=>`<button class="btn btn-xs ${phbgPos===pos?'btn-b':'btn-w'}"
+          onclick="_setPdHeaderBg('header_bg_pos','${pos}')">${label}</button>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">가로 미세 위치</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="range" min="0" max="100" step="1" value="${_phbgPosX}" style="flex:1;accent-color:var(--blue)" oninput="_setPdHeaderBg('header_bg_pos_x',this.value);document.getElementById('cfg-pdh-posx').textContent=this.value+'%'">
+            <span id="cfg-pdh-posx" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${_phbgPosX}%</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">세로 미세 위치</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="range" min="0" max="100" step="1" value="${_phbgPosY}" style="flex:1;accent-color:var(--blue)" oninput="_setPdHeaderBg('header_bg_pos_y',this.value);document.getElementById('cfg-pdh-posy').textContent=this.value+'%'">
+            <span id="cfg-pdh-posy" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${_phbgPosY}%</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">개별 스트리머에 별도 배경을 넣지 않은 경우 기본값으로 사용됩니다.</div>
+    </div>
+    <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🏫 대학 상세 헤더 기본 배경</div>
+      <input type="text" value="${uhbg}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px" oninput="_setUdHeaderBg('header_bg_img',this.value)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">표시 방식</div>
+          <select style="width:100%" onchange="_setUdHeaderBg('header_bg_fit',this.value)">
+            <option value="contain"${uhbgFit==='contain'?' selected':''}>맞춤</option>
+            <option value="cover"${uhbgFit==='cover'?' selected':''}>채우기</option>
+            <option value="fill"${uhbgFit==='fill'?' selected':''}>늘리기</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">크기 조절</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="range" min="40" max="220" step="5" value="${uhbgScale}" style="flex:1;accent-color:var(--blue)" oninput="_setUdHeaderBg('header_bg_scale',this.value);document.getElementById('cfg-udh-scale').textContent=this.value+'%'">
+            <span id="cfg-udh-scale" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${uhbgScale}%</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">개별 대학에 별도 배경을 넣지 않은 경우 기본값으로 사용됩니다.</div>
     </div>
     <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📐 프로필 이미지 모양 (전역)</div>
@@ -91,6 +177,54 @@ function _renderCfgPdSection(){
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">경기 상세 팝업 상단(대학 카드) 로고 크기를 조절합니다</div>
     </div>
+    <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🎨 경기 상세 팀 헤더 색상</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">대학CK / 티어대회 / 프로리그 경기 상세 상단의 A팀·B팀 색상을 기본 대학색 대신 고정 색으로 덮어쓸 수 있습니다.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--white)">
+          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:8px">🤝 대학CK</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">A팀</label>
+            <input type="color" value="${mdCkA}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('ck','a',this.value)">
+            <input type="text" value="${mdCkA}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('ck','a',this.value)">
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">B팀</label>
+            <input type="color" value="${mdCkB}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('ck','b',this.value)">
+            <input type="text" value="${mdCkB}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('ck','b',this.value)">
+          </div>
+        </div>
+        <div style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--white)">
+          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:8px">🎯 티어대회</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">A팀</label>
+            <input type="color" value="${mdTtA}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('tt','a',this.value)">
+            <input type="text" value="${mdTtA}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('tt','a',this.value)">
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">B팀</label>
+            <input type="color" value="${mdTtB}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('tt','b',this.value)">
+            <input type="text" value="${mdTtB}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('tt','b',this.value)">
+          </div>
+        </div>
+        <div style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--white)">
+          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:8px">🏅 프로리그</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">A팀</label>
+            <input type="color" value="${mdProA}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('pro','a',this.value)">
+            <input type="text" value="${mdProA}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('pro','a',this.value)">
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">B팀</label>
+            <input type="color" value="${mdProB}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('pro','b',this.value)">
+            <input type="text" value="${mdProB}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('pro','b',this.value)">
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-w btn-xs" onclick="['su_md_team_hdr_ck_a','su_md_team_hdr_ck_b','su_md_team_hdr_tt_a','su_md_team_hdr_tt_b','su_md_team_hdr_pro_a','su_md_team_hdr_pro_b'].forEach(k=>localStorage.removeItem(k));try{ if(typeof _applyOpenHistDetailTeamHeaderColors==='function') _applyOpenHistDetailTeamHeaderColors(); }catch(e){}; _renderCfgPdSection(); try{ if(typeof render==='function') render(); }catch(e){}">🔄 기본값으로 초기화</button>
+      </div>
+    </div>
     <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🖼️ 경기 상세 프로필 이미지</div>
       <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">현재 기기: <b>${_mdDevLabel}</b></div>
@@ -105,6 +239,15 @@ function _renderCfgPdSection(){
         <input type="range" min="80" max="200" step="10" value="${mdAvatarScale}" style="flex:1;accent-color:var(--blue)"
           oninput="localStorage.setItem('su_md_avatar_scale_${_mdDevKey}',String(this.value));document.getElementById('cfg-md-avscale-val').textContent=this.value+'%';try{if(typeof render==='function')render();}catch(e){}">
         <span id="cfg-md-avscale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdAvatarScale}%</span>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 6px">이미지 위치</div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+        ${[
+          ['left top','↖ 좌상'],['center top','↑ 상단'],['right top','↗ 우상'],
+          ['left center','← 좌중'],['center center','• 중앙'],['right center','→ 우중'],
+          ['left bottom','↙ 좌하'],['center bottom','↓ 하단'],['right bottom','↘ 우하']
+        ].map(([pos,label])=>`<button class="btn btn-xs ${mdAvatarPos===pos?'btn-b':'btn-w'}"
+          onclick="localStorage.setItem('su_md_avatar_pos_${_mdDevKey}','${pos}');try{if(typeof render==='function')render();}catch(e){};_renderCfgPdSection()">${label}</button>`).join('')}
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">경기 상세(대회탭 포함) 프로필 이미지의 채우기/크기 배율을 조절합니다</div>
     </div>
@@ -166,27 +309,76 @@ function _renderCfgPdSection(){
     </div>`;
 }
 
+function _pdTouchPrefs(){
+  try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
+}
 function _setPdFontSize(size){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.font_size=size;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   _renderCfgPdSection();
+  _pdTouchPrefs();
 }
 function _setPdProfileSize(val){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.profile_size=parseInt(val)||100;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _pdTouchPrefs();
 }
 function _setPdColorPreset(cp){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.color_preset=cp;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   _renderCfgPdSection();
+  _pdTouchPrefs();
+}
+function _refreshOpenDetailModals(){
+  try{
+    const pst = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : null;
+    if(pst?.currentName && document.getElementById('playerModal') && getComputedStyle(document.getElementById('playerModal')).display !== 'none'){
+      if(typeof openPlayerModal==='function') openPlayerModal(pst.currentName);
+    }
+  }catch(e){}
+  try{
+    const ust = (typeof getUnivDetailState==='function') ? getUnivDetailState() : null;
+    if(ust?.currentName && document.getElementById('univModal') && getComputedStyle(document.getElementById('univModal')).display !== 'none'){
+      if(typeof openUnivModal==='function') openUnivModal(ust.currentName);
+    }
+  }catch(e){}
+}
+function _setPdHeaderBg(key,val){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  if(key==='header_bg_scale') s[key]=parseInt(val,10)||100;
+  else s[key]=String(val||'').trim();
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  try{ _refreshOpenDetailModals(); }catch(e){}
+  _pdTouchPrefs();
+}
+function _setUdHeaderBg(key,val){
+  const s=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
+  if(key==='header_bg_scale') s[key]=parseInt(val,10)||100;
+  else s[key]=String(val||'').trim();
+  localStorage.setItem('su_ud_style',JSON.stringify(s));
+  try{ _refreshOpenDetailModals(); }catch(e){}
+  _pdTouchPrefs();
+}
+function _setMdTeamHeaderColor(mode, side, val){
+  const modeKey = String(mode||'').trim();
+  const sideKey = (String(side||'a').toLowerCase()==='b') ? 'b' : 'a';
+  const raw = String(val||'').trim();
+  const key = `su_md_team_hdr_${modeKey}_${sideKey}`;
+  if(/^#[0-9a-fA-F]{6}$/.test(raw)) localStorage.setItem(key, raw);
+  else localStorage.removeItem(key);
+  try{ if(typeof _applyOpenHistDetailTeamHeaderColors==='function') _applyOpenHistDetailTeamHeaderColors(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+  try{ _renderCfgPdSection(); }catch(e){}
+  _pdTouchPrefs();
 }
 function _setPdTint(type,val){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s[type+'_tint']=parseInt(val)||0;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _pdTouchPrefs();
 }
 function _setPdUnivDarken(univ,val,idx){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
@@ -195,21 +387,25 @@ function _setPdUnivDarken(univ,val,idx){
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   const el=document.getElementById('pd-dv-'+idx);
   if(el) el.textContent=Math.round(val*100)+'%';
+  _pdTouchPrefs();
 }
 function _setPdCloseOnBadge(checked){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.close_on_badge=!!checked;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _pdTouchPrefs();
 }
 function _setPdCloseOnMatchPlayer(checked){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.close_on_match_player=!!checked;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _pdTouchPrefs();
 }
 function _setPdHeaderClickClose(checked){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.header_click_close=!!checked;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _pdTouchPrefs();
 }
 function cfgPdSetModeBadgeColor(mode, color){
   try{
@@ -256,4 +452,7 @@ try{
   };
   window._renderCfgPdSection = _renderCfgPdSection;
   window._setGlobalProfileShape = _setGlobalProfileShape;
+  window._setPdHeaderBg = _setPdHeaderBg;
+  window._setUdHeaderBg = _setUdHeaderBg;
+  window._setMdTeamHeaderColor = _setMdTeamHeaderColor;
 }catch(e){}

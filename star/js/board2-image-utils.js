@@ -14,6 +14,13 @@ function _b2FlushImgSettingsSave(){
   _b2ImgSettingsSavePending = false;
   if(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn) save();
 }
+function _b2CancelImgSettingsSave(){
+  if(_b2ImgSettingsSaveTimer){
+    clearTimeout(_b2ImgSettingsSaveTimer);
+    _b2ImgSettingsSaveTimer = null;
+  }
+  _b2ImgSettingsSavePending = false;
+}
 function _b2ScheduleImgSettingsSave(){
   if(!(typeof save==='function' && typeof isLoggedIn!=='undefined' && isLoggedIn)) return;
   _b2ImgSettingsSavePending = true;
@@ -23,11 +30,12 @@ function _b2ScheduleImgSettingsSave(){
   }, 800);
 }
 try{ window._b2FlushImgSettingsSave = _b2FlushImgSettingsSave; }catch(e){}
+try{ window._b2CancelImgSettingsSave = _b2CancelImgSettingsSave; }catch(e){}
 try{
   document.addEventListener('visibilitychange', ()=>{
-    if(document.visibilityState === 'hidden') _b2FlushImgSettingsSave();
+    if(document.visibilityState === 'hidden') _b2CancelImgSettingsSave();
   });
-  window.addEventListener('beforeunload', _b2FlushImgSettingsSave);
+  window.addEventListener('beforeunload', _b2CancelImgSettingsSave);
 }catch(e){}
 function _b2DeviceKey(){
   const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));

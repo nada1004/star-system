@@ -120,7 +120,7 @@ function raceSummaryHTML(){
    공통 세트 빌더
 ══════════════════════════════════════ */
 function stabs(current, opts){
-  return `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">${opts.map(o=>{
+  return `<div class="fbar merged-subbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">${opts.map(o=>{
     if(o.id==='input'&&!isLoggedIn) return '';
     return `<button class="pill ${current===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}">${o.lbl}</button>`;
   }).join('')}</div>`;
@@ -133,7 +133,7 @@ function stabsInline(current, opts, extraHTML=''){
     return `<button class="pill ${current===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}">${o.lbl}</button>`;
   }).join('');
   const extra = extraHTML ? `<span class="hist-inline-sep"></span><div class="hist-ctrl-group">${extraHTML}</div>` : '';
-  return `<div class="hist-inlinebar no-export">${btns}${extra}</div>`;
+  return `<div class="hist-inlinebar merged-subbar no-export">${btns}${extra}</div>`;
 }
 
 // 모든 데이터에서 연도를 자동 추출
@@ -210,6 +210,17 @@ function setBuilderHTML(bld, mode){
   let scoreA=0,scoreB=0;
   bld.sets.forEach(s=>{if(s.winner==='A')scoreA++;else if(s.winner==='B')scoreB++;});
   let h='';
+  function _renderSaveBar(){
+    const _isEdit = !!(bld && bld._editCtx && (mode==='ind' || mode==='gj'));
+    const _saveLbl = _isEdit ? '✅ 수정 저장' : '✅ 저장';
+    return `<div class="mb-savebar" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+      <div style="font-size:11px;color:var(--gray-l);font-weight:700">저장 전 스코어와 세트 구성을 마지막으로 확인하세요.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-g" onclick="saveMatch('${mode}')">${_saveLbl}</button>
+        <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">🔄 초기화</button>
+      </div>
+    </div>`;
+  }
   // CK 모드에서는 날짜를 buildCKInputHTML에서만 표시 (중복 방지)
   if(!isCK){
   h+=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
@@ -328,10 +339,7 @@ function setBuilderHTML(bld, mode){
         </div>`;
       });
       h+=`<button class="btn btn-w btn-sm" style="margin-bottom:10px" onclick="BLD['${mode}'].freeGames=BLD['${mode}'].freeGames||[];BLD['${mode}'].freeGames.push({playerA:'${mode==='gj'?_gjDefA:''}',playerB:'${mode==='gj'?_gjDefB:''}',winner:'',map:''});render()">+ 경기 추가</button>`;
-      h+=`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-g" onclick="saveMatch('${mode}')">✅ 저장</button>
-        <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">🔄 초기화</button>
-      </div>`;
+      h+=_renderSaveBar();
     } else {
       h+=`<div class="score-board">
         <span style="font-weight:700">${mode==='gj'?_gjLabelA:(isCK?'팀A ('+mA.map(m=>m.name).join(',')+')':(teamA||'팀A'))}</span>
@@ -389,10 +397,7 @@ function setBuilderHTML(bld, mode){
         const nLabel=bld.sets.length===2?'🎯 에이스전 추가':`${bld.sets.length+1}세트 추가`;
         h+=`<button class="btn btn-b" style="margin-right:8px;margin-top:4px" onclick="BLD['${mode}'].sets.push({games:[],scoreA:0,scoreB:0,winner:''});render()">+ ${nLabel}</button>`;
       }
-      h+=`<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-g" onclick="saveMatch('${mode}')">✅ 저장</button>
-        <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">🔄 초기화</button>
-      </div>`;
+      h+=_renderSaveBar();
     }
   }
   return h;
@@ -424,13 +429,15 @@ function saveMatch(mode){
     const matchId=genId();
 
     if(mode==='gj'){
+      const _edit = (bld && bld._editCtx && bld._editCtx.mode==='gj') ? bld._editCtx : null;
+      if(_edit && Array.isArray(_edit.ids) && _edit.ids.length){
+        const _idSet = new Set(_edit.ids.map(x=>String(x)));
+        try{ gjM = (gjM||[]).filter(m=>!_idSet.has(String(m?._id||''))); }catch(e){}
+        try{ window.gjM = gjM; }catch(e){}
+      }
       const mA=bld.membersA||[];const mB=bld.membersB||[];
       if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
-      if(typeof _gjEditingIds!=='undefined' && Array.isArray(_gjEditingIds) && _gjEditingIds.length){
-        gjM.filter(m=>_gjEditingIds.includes(m._id)).forEach(m=>_removeGjResult(m.wName,m.lName,m.d||'',m.map||'-',m.matchId||undefined));
-        gjM=gjM.filter(m=>!_gjEditingIds.includes(m._id));
-      }
-      const sid=matchId;
+      const sid=_edit?.sid || matchId;
       freeGames.forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
@@ -445,21 +452,35 @@ function saveMatch(mode){
         }
         gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
-      BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
-      if(typeof _gjEditingIds!=='undefined') _gjEditingIds=null;
+      BLD[mode]=null;
+      // 수정 저장 시에는 history/포인트/elo를 전체 재구성해서 잔존/중복을 방지
+      if(_edit){ try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){} }
+      if(typeof fixPoints==='function')fixPoints();save();
       if(typeof gjSub!=='undefined') gjSub='records';
+      try{
+        if(bld._proLabel){
+          curTab='pro';
+          if(typeof _mergedProSub!=='undefined') _mergedProSub='gj';
+        }else{
+          curTab='ind';
+          if(typeof _mergedIndSub!=='undefined') _mergedIndSub='gj';
+        }
+      }catch(e){}
+      try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
       render();
       return;
     }
     if(mode==='ind'){
+      const _edit = (bld && bld._editCtx && bld._editCtx.mode==='ind') ? bld._editCtx : null;
+      if(_edit && Array.isArray(_edit.ids) && _edit.ids.length){
+        const _idSet = new Set(_edit.ids.map(x=>String(x)));
+        try{ indM = (indM||[]).filter(m=>!_idSet.has(String(m?._id||''))); }catch(e){}
+        try{ window.indM = indM; }catch(e){}
+      }
       const mA=bld.membersA||[];const mB=bld.membersB||[];
       if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
       if(!freeGames.length)return alert('경기를 1게임 이상 추가하세요.');
-      if(typeof _indEditingIds!=='undefined' && Array.isArray(_indEditingIds) && _indEditingIds.length){
-        indM.filter(m=>_indEditingIds.includes(m._id)).forEach(m=>_removeIndResult(m.wName,m.lName,m.d||'',m.map||'-',m._id));
-        indM=indM.filter(m=>!_indEditingIds.includes(m._id));
-      }
-      const sid=matchId;
+      const sid=_edit?.sid || matchId;
       freeGames.forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wName=g.winner==='A'?g.playerA:g.playerB;
@@ -475,8 +496,9 @@ function saveMatch(mode){
         if(typeof indM!=='undefined')indM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||''});
       });
       if(typeof _indInput!=='undefined'){_indInput.playerA=mA[0]?.name||'';_indInput.playerB=mB[0]?.name||'';}
-      BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
-      if(typeof _indEditingIds!=='undefined') _indEditingIds=null;
+      BLD[mode]=null;
+      if(_edit){ try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){} }
+      if(typeof fixPoints==='function')fixPoints();save();
       if(typeof indSub!=='undefined') indSub='records';
       render();
       return;
@@ -596,7 +618,13 @@ function saveMatch(mode){
   if(mode==='gj'){
     const mA=bld.membersA||[];const mB=bld.membersB||[];
     if(!mA.length||!mB.length)return alert('스트리머를 선택하세요.');
-    const sid=matchId;
+    const _edit = (bld && bld._editCtx && bld._editCtx.mode==='gj') ? bld._editCtx : null;
+    if(_edit && Array.isArray(_edit.ids) && _edit.ids.length){
+      const _idSet = new Set(_edit.ids.map(x=>String(x)));
+      try{ gjM = (gjM||[]).filter(m=>!_idSet.has(String(m?._id||''))); }catch(e){}
+      try{ window.gjM = gjM; }catch(e){}
+    }
+    const sid=_edit?.sid || matchId;
     setsSnap.forEach((set, setIdx)=>{
       (set.games||[]).forEach((g, gameIdx)=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
@@ -613,8 +641,20 @@ function saveMatch(mode){
         gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
       });
     });
-    BLD[mode]=null;if(typeof fixPoints==='function')fixPoints();save();
+    BLD[mode]=null;
+    if(_edit){ try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){} }
+    if(typeof fixPoints==='function')fixPoints();save();
     if(typeof gjSub!=='undefined') gjSub='records';
+    try{
+      if(bld._proLabel){
+        curTab='pro';
+        if(typeof _mergedProSub!=='undefined') _mergedProSub='gj';
+      }else{
+        curTab='ind';
+        if(typeof _mergedIndSub!=='undefined') _mergedIndSub='gj';
+      }
+    }catch(e){}
+    try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
     render();
     return;
   }

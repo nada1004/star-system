@@ -1,42 +1,32 @@
-/* match-builder-mini.js: extracted from match-builder.js */
 /* ══════════════════════════════════════
-   미니대전
+   Match Builder Mini
 ══════════════════════════════════════ */
+
 function rMini(C,T){
   T.innerText = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
-  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
-  if(window._miniFilterOpen===undefined) window._miniFilterOpen=_lockOpen;
-  if(_lockOpen) window._miniFilterOpen=true;
   if(!isLoggedIn && miniSub==='input') miniSub='records';
   if(miniType==='civil' && miniSub==='rank') miniSub='records';
   const subOpts = miniType==='civil'
     ? [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}]
     : [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`miniSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}];
+  const _miniCtx = miniType==='civil' ? 'mini' : 'mini';
+  const _miniSubOpts = (typeof applyTabLabels==='function') ? applyTabLabels(_miniCtx, subOpts) : subOpts;
   let h='';
-  if(_enableSubFilter && !_lockOpen){
-    h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
-      <button class="pill ${window._miniFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._miniFilterOpen=!window._miniFilterOpen;render()">🔍 필터 ${window._miniFilterOpen?'▲':'▼'}</button>
-    </div>`;
-  }
-  if(!_enableSubFilter || window._miniFilterOpen){
-    const extra = (miniSub!=='input' && typeof buildYearMonthFilterControls==='function')
-      ? (buildYearMonthFilterControls('mini', true)
-        + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-        + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
-      : '';
-    h+=typeof stabsInline==='function' ? stabsInline(miniSub, subOpts, extra) : stabs(miniSub, subOpts) + (extra?`<div>${extra}</div>`:'');
-  }
+  const extra = (miniSub!=='input' && typeof buildYearMonthFilterControls==='function')
+    ? (buildYearMonthFilterControls('mini', true)
+      + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
+      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+    : '';
+  h+=_buildMatchSubtabShell(miniSub, _miniSubOpts, '_miniFilterOpen', extra);
   const label = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
   const _miniTypeFilter = m=>(m.type||'mini')===miniType;
   const filteredMini = miniM.filter(_miniTypeFilter);
   if(miniSub==='input'&&isLoggedIn){
     if(!BLD['mini'])BLD['mini']={date:'',title:'',teamA:'',teamB:'',sets:[]};
-    h+=`<div class="match-builder"><h3>${label} 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openMiniPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button><span style="font-size:11px;color:var(--gray-l);margin-left:8px">텍스트/이미지 OCR 지원</span></div>${setBuilderHTML(BLD['mini'],'mini')}</div>`;
+    h+=`<div class="match-builder"><h3>${label} 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openMiniPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button></div>${setBuilderHTML(BLD['mini'],'mini')}</div>`;
   } else if(miniSub==='rank'){
     h+=miniRankHTML(filteredMini);
   } else {
-    // miniM 전체(원본 인덱스 보존) + extraFilter로 타입 분리 → 공유카드 인덱스 오류 방지
     h+=recSummaryListHTML(miniM,'mini','tab',_miniTypeFilter);
   }
   C.innerHTML=h;
@@ -66,7 +56,6 @@ function miniRankHTML(data){
     h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn}</tr>`;
   });
   h+=`</tbody></table>`;
-  // 개인 순위 (sets.games 집계 — wName/lName 및 playerA/playerB/winner 형식 모두 지원)
   if(!window._rankSort)window._rankSort={};
   const msk=window._rankSort['mini']||'rate';
   const msortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${msk==='rate'?'on':''}" onclick="window._rankSort['mini']='rate';render()">승률순</button><button class="sort-btn ${msk==='w'?'on':''}" onclick="window._rankSort['mini']='w';render()">승순</button><button class="sort-btn ${msk==='l'?'on':''}" onclick="window._rankSort['mini']='l';render()">패순</button></div>`;
@@ -115,4 +104,3 @@ function miniRankHTML(data){
   h+=_pageNav_mini;
   return h;
 }
-

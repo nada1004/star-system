@@ -233,3 +233,15 @@ function syncAllHistoryBtn(){
     alert('동기화 중 오류가 발생했습니다. 콘솔을 확인해주세요.');
   }
 }
+
+// settings.js / tier-tour.js 에서 사용 (기존 호환)
+// - alert 없이 "추가 반영된 기록 수"만 반환
+function syncAllHistory(){
+  const a = (typeof syncTourneyHistory==='function') ? syncTourneyHistory() : 0;
+  const b = (typeof syncIndHistory==='function') ? syncIndHistory() : 0;
+  const n = (a||0) + (b||0);
+  try{ if(n>0){ save && save(); } }catch(e){}
+  return n;
+}
+
+try{ window.syncAllHistory = syncAllHistory; }catch(e){}

@@ -1,7 +1,10 @@
 function rCal(C,T){
   T.textContent='📅 경기 캘린더';
-  if(typeof window.calWeekOffset!=='number') window.calWeekOffset=0;
-  if(typeof window.calDayDate!=='string') window.calDayDate='';
+  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  if(window._calFilterOpen===undefined){
+    try{ window._calFilterOpen = (localStorage.getItem('su_cal_filter_open') ?? '1') === '1'; }
+    catch(e){ window._calFilterOpen = true; }
+  }
 
   // Feature 3: 뷰 저장
   localStorage.setItem('su_cal_view', calView);
@@ -119,8 +122,8 @@ function rCal(C,T){
   function dateStr(y,m,d){return `${y}-${pad(m+1)}-${pad(d)}`;}
   const todayStr=dateStr(today.getFullYear(),today.getMonth(),today.getDate());
   const weekStart=new Date(today);
-  weekStart.setDate(today.getDate()-today.getDay()+window.calWeekOffset*7);
-  if(!window.calDayDate) window.calDayDate=todayStr;
+  weekStart.setDate(today.getDate()-today.getDay()+calWeekOffset*7);
+  if(!calDayDate) calDayDate=todayStr;
 
   let calHTML='';
   let navHTML='';
@@ -196,10 +199,10 @@ function rCal(C,T){
     const ws=new Date(weekStart), we=new Date(weekStart);
     we.setDate(we.getDate()+6);
     navHTML=`
-      <button class="btn btn-w btn-sm" onclick="window.calWeekOffset--;render()">◀ 이전 주</button>
+      <button class="btn btn-w btn-sm" onclick="calWeekOffset--;render()">◀ 이전 주</button>
       <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;min-width:130px;text-align:center">${ws.getMonth()+1}/${ws.getDate()} ~ ${we.getMonth()+1}/${we.getDate()}</span>
-      <button class="btn btn-w btn-sm" onclick="window.calWeekOffset++;render()">다음 주 ▶</button>
-      <button class="btn btn-w btn-sm" onclick="window.calWeekOffset=0;render()">이번 주</button>`;
+      <button class="btn btn-w btn-sm" onclick="calWeekOffset++;render()">다음 주 ▶</button>
+      <button class="btn btn-w btn-sm" onclick="calWeekOffset=0;render()">이번 주</button>`;
 
     let rows='';
     for(let i=0;i<7;i++){
@@ -209,7 +212,7 @@ function rCal(C,T){
       const isToday=ds===todayStr;
       const chips=calCellChips(ds,matches);
       rows+=`<div style="display:flex;gap:12px;padding:10px 14px;background:${isToday?'var(--blue-l)':'var(--white)'};border:1px solid ${isToday?'var(--blue)':'var(--border)'};border-radius:8px;margin-bottom:6px;align-items:flex-start;cursor:${matches.length?'pointer':'default'}"
-        ${matches.length?`onclick="window.calDayDate='${ds}';calView='day';render()"`:''}>
+        ${matches.length?`onclick="calDayDate='${ds}';calView='day';render()"`:''}>
         <div style="min-width:48px;text-align:center">
           <div style="font-size:10px;color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--gray-l)'};font-weight:700">${weeks[i]}</div>
           <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:20px;color:${isToday?'var(--blue)':'var(--text)'}">${d.getDate()}</div>
@@ -295,7 +298,7 @@ function rCal(C,T){
             <span class="ubadge${bWin&&hasResult?'':hasResult?' loser':''}" style="background:${cb}">${tB}</span>
             <span style="font-size:11px;color:var(--gray-l)">${hasResult?(aWin?`▶ ${tA} 승`:bWin?`▶ ${tB} 승`:'무'):'결과 미입력'}</span>
             <div style="margin-left:auto;display:flex;gap:6px;align-items:center" class="no-export">
-              ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" onclick="openRCalMatchShareCard('${calDayDate}',${mi})">🎴 공유</button>`:'';})()}
+              ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openRCalMatchShareCard('${calDayDate}',${mi})">🎴 공유 카드</button>`:'';})()}
               <button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">📂 상세</button>
             </div>
           </div>
@@ -335,9 +338,17 @@ function rCal(C,T){
     {id:'comp', lbl:'🎖️ 대회'},
     {id:'sched',lbl:'📌 예정'},
   ];
-  const filterHTML=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px" class="no-export">
-    ${filterBtns.map(f=>`<button class="pill${calTypeFilter===f.id?' on':''}" onclick="calTypeFilter='${f.id}';render()">${f.lbl}</button>`).join('')}
-  </div>`;
+  const _filterBtns = (typeof applyTabLabels==='function') ? applyTabLabels('calendar', filterBtns) : filterBtns;
+  const filterToggleHTML = _enableSubFilter
+    ? `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">
+        <button class="pill ${window._calFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._calFilterOpen=!window._calFilterOpen;try{localStorage.setItem('su_cal_filter_open',window._calFilterOpen?'1':'0');}catch(e){}render()">🔍 필터 ${window._calFilterOpen?'▲':'▼'}</button>
+      </div>`
+    : '';
+  const filterHTML = (_enableSubFilter ? window._calFilterOpen : true)
+    ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px" class="no-export">
+        ${_filterBtns.map(f=>`<button class="pill${calTypeFilter===f.id?' on':''}" onclick="calTypeFilter='${f.id}';render()">${f.lbl}</button>`).join('')}
+      </div>`
+    : '';
 
   C.innerHTML=`
   <div>
@@ -346,11 +357,12 @@ function rCal(C,T){
       ${navHTML}
       <div style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
         <button class="pill ${calView==='month'?'on':''}" onclick="calView='month';render()">월간</button>
-        <button class="pill ${calView==='week'?'on':''}" onclick="window.calWeekOffset=0;calView='week';render()">주간</button>
-        <button class="pill ${calView==='day'?'on':''}" onclick="window.calDayDate='${todayStr}';calView='day';render()">일간</button>
+        <button class="pill ${calView==='week'?'on':''}" onclick="calWeekOffset=0;calView='week';render()">주간</button>
+        <button class="pill ${calView==='day'?'on':''}" onclick="calDayDate='${todayStr}';calView='day';render()">일간</button>
         ${isLoggedIn?`<button class="pill no-export" onclick="openCalSchedModal()">+ 예정</button>`:''}
       </div>
     </div>
+    ${filterToggleHTML}
     ${filterHTML}
     ${undatedHTML}
     <!-- 캘린더 본문 -->
@@ -509,8 +521,8 @@ function calShowDay(ds){
       +'</div>'
       +'<div id="det-'+detKey+'" style="display:none;padding:10px 14px;background:var(--surface);border-top:1px solid var(--border)">'
       +detHTML
-      +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
-      +'<button class="btn btn-p btn-xs no-export" onclick="openCalMatchShareCardByCache(\''+ds+'\','+mi+');event.stopPropagation()">🎴 공유 카드</button>'
+      +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">'
+      +'<button class="btn btn-p btn-xs no-export" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openCalMatchShareCardByCache(\''+ds+'\','+mi+');event.stopPropagation()">🎴 공유 카드</button>'
       +'</div>'
       +'</div>'
       +'</div>';
@@ -539,12 +551,7 @@ function calShowDay(ds){
 function swNav(t,el){
   document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('on'));
   if(el) el.classList.add('on');
-  if(t==='comp'){compSub='league';leagueFilterDate='';leagueFilterGrp='';grpRankFilter='';}
-  if(t==='mini')miniSub='records';
-  if(t==='univck')ckSub='records';
-  if(t==='univm')univmSub='records';
-  if(t==='pro')proSub='records';
-  if(t==='hist')histSub='mini';
+  // 탭 상태 초기화는 sw() 내부에서 처리하므로 여기서는 중복 정의하지 않음
   let found=false;
   document.querySelectorAll('.tab').forEach(b=>{
     const oc=b.getAttribute('onclick')||'';

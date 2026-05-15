@@ -4,393 +4,16 @@
 ══════════════════════════════════════ */
 const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data.json';
 
-/* ══════════════════════════════════════
-   Firebase 연동 (실시간 동기화)
-══════════════════════════════════════ */
-// 클라우드 데이터를 전역 변수에 반영 (cloudLoad + onFirebaseLoad 공통)
-// 🔧 Firebase 배열→객체 변환 대응 헬퍼
-// Firebase Realtime DB는 배열을 {0:...,1:...,2:...} 객체로 저장할 수 있음
-// 수신 시 객체면 배열로 변환, null 슬롯 제거
-function _fbArr(val, fallback) {
-  if(!val) return fallback||[];
-  if(Array.isArray(val)) return val;
-  // 숫자 키 객체 → 배열 변환 (null 슬롯 제거)
-  if(typeof val === 'object') {
-    return Object.keys(val)
-      .sort((a,b)=>Number(a)-Number(b))
-      .map(k=>val[k])
-      .filter(v=>v!=null);
-  }
-  return fallback||[];
-}
-
-function _decompressCloudData(d) {
-  if (d && typeof d._lz === 'string') {
-    try {
-      const json = LZString.decompressFromBase64(d._lz);
-      return JSON.parse(json);
-    } catch(e) { console.warn('[_decompressCloudData] 압축 해제 실패:', e); }
-  }
-  return d;
-}
-
-function _applyCloudData(d) {
-  d = _decompressCloudData(d);
-  // (동기화) 클라우드 적용 중에는 로컬 설정 변경 감지(자동 업로드)를 막는다
-  try{ window._applyingCloudData = true; }catch(e){}
-  // 🔧 Firebase는 빈 배열을 키 자체를 삭제해버림
-  // savedAt이 있으면 완전한 데이터 → 없는 키는 빈 배열/기본값으로 처리
-  const _has = (key) => d[key] !== undefined && d[key] !== null;
-  const _hasOrEmpty = (key) => d.savedAt !== undefined; // savedAt 있으면 완전한 데이터로 간주
-
-  // players
-  {
-    const v = d.players||d.player;
-    if(v !== undefined) {
-      players=_fbArr(v, []);
-      players.forEach(p=>{ if(p.history) p.history=_fbArr(p.history, []); });
-      // photo 복원 (players에 photo가 없고, playerPhotos 맵이 있으면 주입)
-      try{
-        const pm = d.playerPhotos || d.pPhotoMap || d.playerPhotoMap || null;
-        if(pm){
-          players.forEach(p=>{ if(p && p.name && !p.photo && pm[p.name]) p.photo = pm[p.name]; });
-        }
-      }catch(e){}
-    }
-  }
-  if(_has('univCfg')||_has('univConfig')||_has('universities')) univCfg=_fbArr(d.univCfg||d.univConfig||d.universities, univCfg);
-  if(_has('maps')) maps=_fbArr(d.maps||d.map, maps);
-  if(_has('tourD')) tourD=_fbArr(d.tourD||d.tournamentDates, Array(15).fill(''));
-
-  // 🔧 배열 필드: 키가 없어도 savedAt 있으면 빈 배열로 처리 (Firebase 빈 배열 삭제 대응)
-  {
-    const v = d.miniM||d.mini||d.miniMatches;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('miniM') ? [] : null);
-    if(arr !== null){ miniM=arr; miniM.forEach(m=>{ if(m.sets)m.sets=_fbArr(m.sets,[]); m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);}); }); }
-  }
-  {
-    const v = d.univM||d.univ||d.univMatches;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('univM') ? [] : null);
-    if(arr !== null){ univM=arr; univM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
-  }
-  {
-    const v = d.comps||d.comp||d.competitions;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('comps') ? [] : null);
-    if(arr !== null) comps=arr;
-  }
-  {
-    const v = d.ckM||d.ck||d.ckMatches;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ckM') ? [] : null);
-    if(arr !== null){ ckM=arr; ckM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
-  }
-  if(_has('compNames')) compNames=_fbArr(d.compNames||d.competitionNames, []);
-  if(_has('curComp')||d.savedAt) curComp=d.curComp||d.currentComp||'';
-  {
-    const v = d.proM||d.pro||d.proMatches;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('proM') ? [] : null);
-    if(arr !== null){ proM=arr; proM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
-  }
-  {
-    const v = d.proTourneys;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('proTourneys') ? [] : null);
-    if(arr !== null) proTourneys=arr;
-  }
-  {
-    const v = d.tourneys||d.tournaments||d.tourney;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('tourneys') ? [] : null);
-    if(arr !== null){
-      tourneys=arr;
-      tourneys.forEach(tn=>{
-        tn.groups=_fbArr(tn.groups,[]);
-        tn.groups.forEach(g=>{
-          g.univs=_fbArr(g.univs,[]);
-          g.matches=_fbArr(g.matches,[]);
-          g.matches.forEach(m=>{m.sets=_fbArr(m.sets,[]);});
-        });
-      });
-    }
-  }
-  {
-  }
-  // ttM (티어대회 기록)
-  {
-    const v = d.ttM||d.tiertour||d.tierTourM;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ttM') ? [] : null);
-    if(arr !== null){
-      ttM = arr;
-      // 중첩 구조 보정
-      try{
-        (ttM||[]).forEach(m=>{
-          if(m.sets) m.sets=_fbArr(m.sets,[]);
-          (m.sets||[]).forEach(s=>{ if(s.games) s.games=_fbArr(s.games,[]); });
-        });
-      }catch(e){}
-      // 티어대회 마이그레이션 캐시 갱신
-      try{ if(typeof _ttMigrated!=='undefined') _ttMigrated=false; }catch(e){}
-    }
-  }
-  {
-    const v = d.indM||d.ind;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('indM') ? [] : null);
-    if(arr !== null) indM=arr;
-  }
-  {
-    const v = d.gjM;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('gjM') ? [] : null);
-    if(arr !== null) gjM=arr;
-  }
-  if(d.tiers&&d.tiers.length&&typeof TIERS!=='undefined'){TIERS.splice(0,TIERS.length,...d.tiers);}
-  // 현황판 선수 순서 (Object.assign 대신 완전 교체 — 삭제된 키도 반영)
-  if(d.boardPlayerOrder!==undefined&&typeof boardPlayerOrder!=='undefined'){
-    Object.keys(boardPlayerOrder).forEach(k=>delete boardPlayerOrder[k]);
-    Object.assign(boardPlayerOrder, d.boardPlayerOrder||{});
-    if(typeof saveBoardPlayerOrder==='function') saveBoardPlayerOrder();
-  }
-  // 현황판 대학 순서
-  if(d.boardOrder!==undefined&&typeof boardOrder!=='undefined') boardOrder=d.boardOrder;
-  // 맵 약자
-  if(d.userMapAlias!==undefined&&typeof userMapAlias!=='undefined') userMapAlias=d.userMapAlias;
-  // 선수 상태 아이콘
-  if(d.playerStatusIcons!==undefined&&typeof playerStatusIcons!=='undefined'){
-    Object.keys(playerStatusIcons).forEach(k=>delete playerStatusIcons[k]);
-    Object.assign(playerStatusIcons, d.playerStatusIcons||{});
-    localStorage.setItem('su_psi', JSON.stringify(playerStatusIcons));
-  }
-  // 공지사항
-  if(d.notices!==undefined&&typeof notices!=='undefined') notices=d.notices;
-  // (요청사항) 보라크루 기능 삭제: crew/crewCfg 수신 적용 제거
-  // 🆕 시즌
-  if(d.seasons!==undefined&&typeof seasons!=='undefined') seasons=_fbArr(d.seasons,[]);
-  // 🆕 캘린더 예정 경기
-  if(d.calScheduled!==undefined&&typeof calScheduled!=='undefined'){
-    calScheduled=_fbArr(d.calScheduled,[]);
-    window._calScheduled=calScheduled; // calendar.js 호환
-  }
-  // 🆕 투표 집계 수신 (내 투표_my는 로컬 유지)
-  if(d.voteAgg!==undefined&&typeof voteData!=='undefined'){
-    const myVotes={};
-    Object.entries(voteData||{}).forEach(([k,v])=>{ if(k.endsWith('_my')) myVotes[k]=v; });
-    // Firebase 집계로 교체 후 내 투표 복원
-    Object.keys(voteData).forEach(k=>delete voteData[k]);
-    Object.assign(voteData, d.voteAgg||{}, myVotes);
-    try{
-      if(typeof window.__suQueueVoteDataPersist === 'function') window.__suQueueVoteDataPersist(voteData||{}, true);
-      else localStorage.setItem('su_votes', JSON.stringify(voteData));
-    }catch(e){
-      localStorage.setItem('su_votes', JSON.stringify(voteData));
-    }
-  }
-  // 현재 대회 선택 상태
-  if(d.curProComp!==undefined&&typeof curProComp!=='undefined') curProComp=d.curProComp;
-  if(d._ttCurComp!==undefined&&typeof _ttCurComp!=='undefined') _ttCurComp=d._ttCurComp;
-  // 🔧 설정 동기화 (FAB 버튼, 이미지 설정, 다크모드 등) - Firebase 데이터 적용
-  if(d.appSettings!==undefined){
-    const s=d.appSettings;
-    const _remoteSettingsSa = Number(d.appSettingsSavedAt || s.savedAt || 0) || 0;
-    const _localSettingsSa = (()=>{ try{ return Number(localStorage.getItem('su_last_settings_save')||0) || 0; }catch(e){ return 0; } })();
-    const _skipRemoteSettings = !window._forcingSync && _localSettingsSa && (!_remoteSettingsSa || _localSettingsSa > _remoteSettingsSa);
-    if(!_skipRemoteSettings && s.fabTabs) localStorage.setItem('su_fabTabs', JSON.stringify(s.fabTabs));
-    if(!_skipRemoteSettings && s.globalImgSettings) localStorage.setItem('su_b2_global_img_settings', JSON.stringify(s.globalImgSettings));
-    if(!_skipRemoteSettings && s.imgSettings) localStorage.setItem('su_img_settings', JSON.stringify(s.imgSettings));
-    if(!_skipRemoteSettings && s.fabHideMobile!==undefined) localStorage.setItem('su_fabHideMobile', s.fabHideMobile?'1':'0');
-    if(!_skipRemoteSettings && s.fabHidePC!==undefined) localStorage.setItem('su_fabHidePC', s.fabHidePC?'1':'0');
-    if(!_skipRemoteSettings && s.darkMode!==undefined) localStorage.setItem('su_dark', s.darkMode?'1':'0');
-    if(!_skipRemoteSettings && s.b2LabelAlpha!==undefined) localStorage.setItem('su_b2la', s.b2LabelAlpha);
-    if(!_skipRemoteSettings && s.b2BgAlpha!==undefined) localStorage.setItem('su_b2ba', s.b2BgAlpha);
-    if(!_skipRemoteSettings && s.femcoSettings!==undefined){
-      try{
-        if(String(s.femcoSettings||'').trim()) localStorage.setItem('b2_femco_settings_v1', String(s.femcoSettings));
-        else localStorage.removeItem('b2_femco_settings_v1');
-      }catch(e){}
-    }
-    // (보강) 설정탭에서 바꾸는 su_* 설정을 통째로 동기화
-    // - 사진(base64)/토큰/비밀번호 등은 제외
-    try{
-      const ls = s.ls || s.localStorage || null;
-      if(!_skipRemoteSettings && ls && typeof ls==='object'){
-        // 외부탭(대전기록>외부) 데이터는 로컬이 더 최신인 경우 덮어쓰지 않음
-        // - cloud쪽 timestamp가 없을 수도 있으므로(구버전 데이터), 0으로 간주하고 비교한다.
-        let localExtTs = 0, cloudExtTs = 0;
-        try{ localExtTs = Number(localStorage.getItem('su_hist_ext_last_modified')||0) || 0; }catch(e){}
-        try{ cloudExtTs = Number(ls.su_hist_ext_last_modified||0) || 0; }catch(e){}
-        const extKeys = new Set([
-          'su_hist_ext_data_v1',
-          'su_hist_ext_proxy_presets_v1',
-          'su_hist_ext_proxy_preset_sel_v1',
-          'su_hist_ext_last_modified'
-        ]);
-        Object.entries(ls).forEach(([k,v])=>{
-          if(!k || typeof k!=='string') return;
-          if(!k.startsWith('su_')) return;
-          if(k.startsWith('su_pp')) return;
-          if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash' || k==='su_secret_master_key_v1') return;
-          if(k==='su_last_admin_save' || k==='su_last_save_time') return;
-          // 로컬 외부탭 데이터가 더 최신이면(삭제/초기화 포함) 클라우드 값으로 덮어쓰지 않음
-          if(extKeys.has(k) && localExtTs && localExtTs > cloudExtTs) return;
-          try{ localStorage.setItem(k, String(v)); }catch(e){}
-        });
-      }
-    }catch(e){}
-    // UI 즉시 반영
-    if(typeof updateFabVisibility==='function') updateFabVisibility();
-    if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
-    try{
-      if(typeof window._applyAllRuntimeSettings === 'function') window._applyAllRuntimeSettings();
-      else{
-        if(typeof applyProfileShapeVars==='function') applyProfileShapeVars();
-        if(typeof applyUnivLogoVars==='function') applyUnivLogoVars();
-        if(typeof applyBoard2LogoVars==='function') applyBoard2LogoVars();
-        if(typeof applyResponsiveUiVars==='function') applyResponsiveUiVars();
-        if(typeof applyMatchDetailVars==='function') applyMatchDetailVars();
-        if(typeof window._applyThemeVars==='function') window._applyThemeVars();
-      }
-    }catch(e){}
-    if(!_skipRemoteSettings && s.darkMode!==undefined){
-      document.body.classList.toggle('dark', s.darkMode);
-      if(window._fixHdrBtns) window._fixHdrBtns();
-    }
-    // board2.js 변수 업데이트 및 재렌더링
-    if(!_skipRemoteSettings && s.b2LabelAlpha!==undefined) b2LabelAlpha = parseInt(s.b2LabelAlpha);
-    if(!_skipRemoteSettings && s.b2BgAlpha!==undefined) b2BgAlpha = parseInt(s.b2BgAlpha);
-    const b2Content=document.getElementById('b2-content');
-    if(b2Content && typeof _b2UnivView==='function'){
-      b2Content.innerHTML=_b2UnivView();
-      if(typeof injectUnivIcons==='function') injectUnivIcons(b2Content);
-    }
-
-    // 🎵 유튜브 BGM / 📺 SOOP 멀티뷰 설정 동기화
-    try{
-      if(!_skipRemoteSettings && s.bgmEnabled!==undefined) localStorage.setItem('su_bgm_enabled', s.bgmEnabled ? '1' : '0');
-      if(!_skipRemoteSettings && s.bgmShuffle!==undefined) localStorage.setItem('su_bgm_shuffle', s.bgmShuffle ? '1' : '0');
-      if(!_skipRemoteSettings && s.bgmVolume!==undefined) localStorage.setItem('su_bgm_volume', String(s.bgmVolume));
-      if(!_skipRemoteSettings && s.bgmList!==undefined) localStorage.setItem('su_bgm_list', String(s.bgmList||''));
-      if(!_skipRemoteSettings && s.soopList!==undefined) localStorage.setItem('su_soop_list', String(s.soopList||''));
-      // 버튼 즉시 반영
-      if(typeof window.bgmApplySettings==='function') window.bgmApplySettings();
-      if(typeof window.soopApplySettings==='function') window.soopApplySettings();
-    }catch(e){}
-
-    // 🧾 대전기록 > 외부 탭 데이터 동기화
-    try{
-      if(!_skipRemoteSettings && s.histExtData!==undefined) localStorage.setItem('su_hist_ext_data_v1', String(s.histExtData||''));
-      if(!_skipRemoteSettings && s.histExtProxyPresets!==undefined) localStorage.setItem('su_hist_ext_proxy_presets_v1', String(s.histExtProxyPresets||''));
-      if(!_skipRemoteSettings && s.histExtProxyPresetSel!==undefined) localStorage.setItem('su_hist_ext_proxy_preset_sel_v1', String(s.histExtProxyPresetSel||''));
-    }catch(e){}
-
-    // 🎨 디자인 모드(리뉴얼) / 🅰️ 폰트 설정 동기화
-    try{
-      if(!_skipRemoteSettings && s.designV2On!==undefined) localStorage.setItem('su_design_v2', s.designV2On ? '1' : '0');
-      if(!_skipRemoteSettings && s.designV2Preset!==undefined) localStorage.setItem('su_design_v2_preset', String(s.designV2Preset||'base'));
-      if(!_skipRemoteSettings && s.designV2Bright!==undefined) localStorage.setItem('su_design_v2_bright', String(s.designV2Bright||'0'));
-      if(!_skipRemoteSettings && s.designV2Dark!==undefined) localStorage.setItem('su_design_v2_dark', String(s.designV2Dark||'0'));
-      if(!_skipRemoteSettings && s.designV2Colors!==undefined) localStorage.setItem('su_design_v2_colors', String(s.designV2Colors||'{}'));
-      if(!_skipRemoteSettings && s.designV2Effects!==undefined) localStorage.setItem('su_design_v2_effects', String(s.designV2Effects||'{}'));
-      if(!_skipRemoteSettings && s.appFontPreset!==undefined) localStorage.setItem('su_app_font_preset', String(s.appFontPreset||'noto'));
-      if(!_skipRemoteSettings && s.appFontCss!==undefined) localStorage.setItem('su_app_font_css', String(s.appFontCss||''));
-      if(!_skipRemoteSettings && s.appFontFamily!==undefined) localStorage.setItem('su_app_font_family', String(s.appFontFamily||''));
-      if(!_skipRemoteSettings && s.appFontCssText!==undefined) localStorage.setItem('su_app_font_css_text', String(s.appFontCssText||''));
-      if(!_skipRemoteSettings && s.appFontAliasMap!==undefined) localStorage.setItem('su_app_font_alias_map', String(s.appFontAliasMap||'{}'));
-      if(!_skipRemoteSettings && s.uiScalePct!==undefined) localStorage.setItem('su_ui_scale_pct', String(s.uiScalePct||'100'));
-      if(!_skipRemoteSettings && s.uiScalePcPct!==undefined) localStorage.setItem('su_ui_scale_pc_pct', String(s.uiScalePcPct||'100'));
-      if(!_skipRemoteSettings && s.uiScaleTbPct!==undefined) localStorage.setItem('su_ui_scale_tb_pct', String(s.uiScaleTbPct||'100'));
-      if(!_skipRemoteSettings && s.uiScaleMbPct!==undefined) localStorage.setItem('su_ui_scale_mb_pct', String(s.uiScaleMbPct||'100'));
-      if(typeof window._applyAllRuntimeSettings==='function') window._applyAllRuntimeSettings();
-      else{
-        if(typeof window._applyAppFont==='function') window._applyAppFont();
-        if(typeof window.applyDesignV2==='function') window.applyDesignV2();
-        if(typeof window._applyUiScale==='function') window._applyUiScale();
-      }
-    }catch(e){}
-  }
-  try{ window._applyingCloudData = false; }catch(e){}
-}
-
-// Firebase 실시간 수신 콜백 (firebase-init.js 에서 호출)
-// - 비관리자: 항상 실시간 업데이트 적용 + 재렌더링
-// - 관리자 + 로컬 데이터 있음: 스킵 (관리자는 자신이 저장한 데이터를 권위 있는 소스로 사용)
-// - 로컬 데이터 없음 (첫 접속): 항상 적용
-window.onFirebaseLoad = function(data) {
-  const { admin_pw: _, ...clean } = data;
-  try{window._lastFbDataSize=JSON.stringify(data).length;window._lastFbLoadTime=Date.now();}catch(e){}
-  const _getSavedAt = (obj)=>{
-    try{ return Number(obj && obj.savedAt || 0) || 0; }catch(e){ return 0; }
-  };
-  const _getLocalSavedAt = ()=>{
-    try{
-      const a = Number(window._lastAdminSaveTime||0) || 0;
-      const b = Number(localStorage.getItem('su_last_admin_save')||0) || 0;
-      return Math.max(a,b);
-    }catch(e){
-      return Number(window._lastAdminSaveTime||0) || 0;
-    }
-  };
-  const _markReceiveMeta = (sa)=>{
-    try{
-      if(sa) localStorage.setItem('su_sync_last_remote_saved_at', String(sa));
-      localStorage.setItem('su_sync_last_received_at', String(Date.now()));
-    }catch(e){}
-  };
-  // 동일/오래된 원격 데이터 또는 저장 중 수신을 제어
-  try{
-    const sa = _getSavedAt(clean);
-    const localSavedAt = _getLocalSavedAt();
-    const lastApplied = Number(window._lastAppliedSavedAt||0) || 0;
-    if(!window._forcingSync && window._isSaving){
-      const pendingSa = _getSavedAt(window._fbPendingData);
-      if(!window._fbPendingData || sa >= pendingSa){
-        window._fbPendingData = clean;
-      }
-      const fbTs = document.getElementById('fbLastSync');
-      if(fbTs) fbTs.textContent = '⏳ 저장 중 수신 대기';
-      return;
-    }
-    if(!window._forcingSync && sa && lastApplied && sa <= lastApplied){
-      const fbTs = document.getElementById('fbLastSync');
-      if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
-      _markReceiveMeta(sa);
-      return;
-    }
-    if(!window._forcingSync && sa && localSavedAt && sa < localSavedAt){
-      console.warn('[sync] stale remote ignored', { remoteSavedAt: sa, localSavedAt });
-      try{ if(typeof window.refreshCloudSyncStatus==='function') window.refreshCloudSyncStatus('⏭️ 오래된 원격 데이터 무시', '#d97706'); }catch(e){}
-      _markReceiveMeta(sa);
-      return;
-    }
-    if(sa) window._lastAppliedSavedAt = Math.max(lastApplied, sa);
-    _markReceiveMeta(sa);
-  }catch(e){}
-  _applyCloudData(clean);
-  // 🔧 수정: 수신 후 su_last_admin_save 갱신 제거
-  // (savedAt 비교 로직 제거로 인해 불필요, 오히려 자기 에코 방어 타이밍 오염 가능)
-  if (typeof localSave === 'function') localSave();
-  if (typeof fixPoints === 'function') fixPoints();
-  window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
-  if (typeof render === 'function') render();
-  // 열려있는 선수/대학 상세 모달도 자동 갱신 (수정 사항 즉시 반영)
-  const _openModal = document.getElementById('playerModal');
-  const pst = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
-  if (_openModal && _openModal.style.display !== 'none' && pst.currentName) {
-    if (typeof openPlayerModal === 'function') openPlayerModal(pst.currentName);
-  }
-  const _openUnivModal = document.getElementById('univModal');
-  const ust = (typeof getUnivDetailState==='function') ? getUnivDetailState() : (window.UnivDetailState||{});
-  if (_openUnivModal && _openUnivModal.style.display !== 'none' && ust.currentName) {
-    if (typeof openUnivModal === 'function') openUnivModal(ust.currentName);
-  }
-  const fbTs = document.getElementById('fbLastSync');
-  if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
-};
-
 const _FB_PW_DEFAULT = 'haram1019!@'; // Firebase Security Rules admin_pw 기본값
+function _boardCanManage(){
+  try{ return !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin); }catch(e){ return false; }
+}
 
 // Firebase에 현재 데이터 저장 (관리자 전용)
 async function fbCloudSave(opts) {
   const includeSettings = !(opts && opts.includeSettings === false);
-  const signalChanged = Array.isArray(opts && opts.signalChanged) && opts.signalChanged.length
-    ? opts.signalChanged.slice(0, 12)
-    : (includeSettings ? ['matches','settings'] : ['matches']);
-  const token = (typeof suGetSecret==='function' ? suGetSecret('su_gh_token') : localStorage.getItem('su_gh_token'));
-  if (!token || !isLoggedIn || typeof window.fbSet !== 'function') return;
+  const token = localStorage.getItem('su_gh_token');
+  if (!token || !_boardCanManage() || typeof window.fbSet !== 'function') return;
   const savedAt = Date.now();
   // await 이전에 설정 → race condition 방지 + 새로고침 후에도 로컬 데이터 보호
   window._lastAdminSaveTime = savedAt;
@@ -403,6 +26,7 @@ async function fbCloudSave(opts) {
   const _pNoPhoto = (players||[]).map(p=>{
     const c={...p};
     if(c.photo){ _pPhotoMap[c.name]=c.photo; delete c.photo; }
+
     if(c.history && c.history.length){
       // eslint-disable-next-line no-unused-vars
       c.history = c.history.map(({eloAfter,...h})=>h);
@@ -418,9 +42,9 @@ async function fbCloudSave(opts) {
       for(let i=0;i<localStorage.length;i++){
         const k = localStorage.key(i);
         if(!k || typeof k!=='string') continue;
-        if(k !== 'b2_femco_settings_v1' && !k.startsWith('su_')) continue;
+        if(!k.startsWith('su_')) continue;
         if(k.startsWith('su_pp')) continue;
-        if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash' || k==='su_secret_master_key_v1') continue;
+        if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash' || k==='su_admin_hashes') continue;
         if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
         // 기록 저장 때마다 외부탭 원문/대형 설정까지 같이 올리면 과도하게 무거워짐
         if(k==='su_hist_ext_data_v1' || k==='su_hist_ext_proxy_presets_v1' || k==='su_hist_ext_proxy_preset_sel_v1' || k==='su_hist_ext_last_modified') continue;
@@ -446,10 +70,11 @@ async function fbCloudSave(opts) {
     voteAgg: (()=>{ const agg={}; Object.entries(voteData||{}).forEach(([k,v])=>{ if(!k.endsWith('_my')&&v&&typeof v==='object') agg[k]=v; }); return agg; })(),
     savedAt
   };
+  // photo 맵을 window에 노출하고 로컬 캐시에도 반영 (새로고침 후에도 사진 유지)
+  window.playerPhotos = _pPhotoMap;
+  Object.entries(_pPhotoMap).forEach(([name,url])=>{ _brdPhotoCacheSet(name, url); });
   if(includeSettings){
-    const _appSettingsSavedAt = Number(localStorage.getItem('su_last_settings_save')||savedAt) || savedAt;
     dataObj.appSettings = {
-      savedAt: _appSettingsSavedAt,
       fabTabs: JSON.parse(localStorage.getItem('su_fabTabs')||'{}'),
       globalImgSettings: JSON.parse(localStorage.getItem('su_b2_global_img_settings')||'{}'),
       imgSettings: JSON.parse(localStorage.getItem('su_img_settings')||'{}'),
@@ -478,10 +103,8 @@ async function fbCloudSave(opts) {
       bgmVolume: parseInt(localStorage.getItem('su_bgm_volume')||'50',10) || 50,
       bgmList: localStorage.getItem('su_bgm_list') || '',
       soopList: localStorage.getItem('su_soop_list') || '',
-      femcoSettings: localStorage.getItem('b2_femco_settings_v1') || '',
       ls: _syncLs
     };
-    dataObj.appSettingsSavedAt = _appSettingsSavedAt;
   }
   // 페이로드 크기 검사
   let _fbPayloadSize = 0;
@@ -529,7 +152,7 @@ async function fbCloudSave(opts) {
     const compressed = LZString.compressToBase64(jsonStr);
     const payload = { _lz: compressed };
     console.log('[fbCloudSave] 원본:', (jsonStr.length/1024).toFixed(0)+'KB → 압축:', (compressed.length/1024).toFixed(0)+'KB ('+((1-compressed.length/jsonStr.length)*100).toFixed(0)+'% 절감)');
-    return window.fbSet(payload, { changed: signalChanged });
+    return window.fbSet(payload);
   };
   try {
     await _tryFbSet(dataObj);
@@ -581,6 +204,7 @@ async function fbCloudSave(opts) {
           if(pendingSa) window._lastAppliedSavedAt = Math.max(lastApplied, pendingSa);
           _applyCloudData(pending);
           if (typeof localSave === 'function') localSave();
+          try{ if(typeof window._primeMatchSyncSignature === 'function') window._primeMatchSyncSignature(true); }catch(e){}
           if (typeof fixPoints === 'function') fixPoints();
           window._compListCache = {}; window._shareAllMatchesCached = null; window._histTourneyCache = {};
           if (typeof render === 'function') render();
@@ -593,7 +217,7 @@ async function fbCloudSave(opts) {
 // GitHub data.json 자동 업로드 (관람자 수천 명 무료 처리용)
 // 설정탭에서 GitHub 토큰(su_gh_token) 설정 시 활성화
 async function githubDataSave(dataObj) {
-  const token = (typeof suGetSecret==='function' ? suGetSecret('su_gh_token') : localStorage.getItem('su_gh_token'));
+  const token = localStorage.getItem('su_gh_token');
   if (!token) return; // 토큰 미설정 시 skip
   const apiUrl = 'https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json'; // 🔧 경로 통일
   // 현재 파일 SHA 조회 (업데이트 시 필수)
@@ -621,86 +245,6 @@ async function githubDataSave(dataObj) {
 }
 
 
-function gsSetStatus(msg, color='var(--gray-l)'){
-  const el=document.getElementById('cloudStatus');
-  if(el){el.textContent=msg;el.style.color=color;}
-}
-try{ window.gsSetStatus = gsSetStatus; }catch(e){}
-function _fmtSyncTs(ts){
-  const n = Number(ts||0) || 0;
-  if(!n) return '기록 없음';
-  try{ return new Date(n).toLocaleString('ko-KR'); }catch(e){ return '기록 없음'; }
-}
-function _getSyncFreshnessMeta(){
-  const localLatest = Math.max(
-    Number(window._lastAdminSaveTime||0) || 0,
-    Number(localStorage.getItem('su_last_admin_save')||0) || 0,
-    Number(localStorage.getItem('su_last_save_time')||0) || 0
-  );
-  const remoteLatest = Number(localStorage.getItem('su_sync_last_remote_saved_at')||0) || 0;
-  const diff = localLatest - remoteLatest;
-  const threshold = 1500;
-  let state = 'unknown';
-  let label = '비교 정보 부족';
-  let color = 'var(--gray-l)';
-  if(localLatest && remoteLatest){
-    if(Math.abs(diff) <= threshold){
-      state = 'same';
-      label = '로컬/원격 거의 동일';
-      color = '#16a34a';
-    }else if(diff > 0){
-      state = 'local_newer';
-      label = '로컬이 더 최신';
-      color = '#d97706';
-    }else{
-      state = 'remote_newer';
-      label = '원격이 더 최신';
-      color = '#2563eb';
-    }
-  }else if(localLatest){
-    state = 'local_only';
-    label = '로컬 저장 기록만 있음';
-    color = '#d97706';
-  }else if(remoteLatest){
-    state = 'remote_only';
-    label = '원격 저장 기록만 있음';
-    color = '#2563eb';
-  }
-  return { localLatest, remoteLatest, diff, state, label, color };
-}
-function refreshCloudSyncStatus(msg, color){
-  const el=document.getElementById('cloudStatus');
-  const panel=document.getElementById('cfg-fb-sync-result');
-  const lastUploadOk = Number(localStorage.getItem('su_sync_last_upload_ok_at')||0) || 0;
-  const lastReceived = Number(localStorage.getItem('su_sync_last_received_at')||0) || 0;
-  const lastRemoteSaved = Number(localStorage.getItem('su_sync_last_remote_saved_at')||0) || 0;
-  const freshness = _getSyncFreshnessMeta();
-  const lastSignalSeen = Number(localStorage.getItem('su_sync_last_firebase_signal_at')||0) || 0;
-  const lastSignalPush = Number(localStorage.getItem('su_sync_last_firebase_signal_push_at')||0) || 0;
-  const missingMonths = (()=>{ try{ return JSON.parse(localStorage.getItem('su_sync_missing_months')||'[]')||[]; }catch(e){ return []; } })();
-  const failMsg = String(localStorage.getItem('su_sync_last_fail_msg')||'').trim();
-  const summary = `저장 ${_fmtSyncTs(lastUploadOk)} / 수신 ${_fmtSyncTs(lastReceived)}${lastRemoteSaved?` / 원격저장 ${_fmtSyncTs(lastRemoteSaved)}`:''}${lastSignalSeen?` / 신호 ${_fmtSyncTs(lastSignalSeen)}`:''}${freshness.state!=='unknown'?` / ${freshness.label}`:''}`;
-  if(el){
-    el.style.color = color || (failMsg ? '#dc2626' : 'var(--gray-l)');
-    el.textContent = msg ? `${msg} · ${summary}` : summary;
-  }
-  if(panel){
-    panel.innerHTML = `
-      <div style="display:grid;gap:6px">
-        <div><b>로컬 최신 저장:</b> ${_fmtSyncTs(freshness.localLatest)}</div>
-        <div><b>최근 업로드:</b> ${_fmtSyncTs(lastUploadOk)}</div>
-        <div><b>최근 수신:</b> ${_fmtSyncTs(lastReceived)}</div>
-        <div><b>원격 savedAt:</b> ${_fmtSyncTs(lastRemoteSaved)}</div>
-        <div><b>최신 비교:</b> <span style="color:${freshness.color};font-weight:700">${freshness.label}</span></div>
-        <div><b>보조 신호 수신:</b> ${_fmtSyncTs(lastSignalSeen)}</div>
-        <div><b>보조 신호 발행:</b> ${_fmtSyncTs(lastSignalPush)}</div>
-        <div><b>누락 월 파일:</b> ${missingMonths.length ? missingMonths.join(', ') : '없음'}</div>
-        <div><b>최근 상태:</b> ${msg || (failMsg ? '업로드 실패 기록 있음' : '대기 중')}</div>
-        ${failMsg?`<div style="color:#dc2626"><b>최근 실패:</b> ${failMsg}</div>`:''}
-      </div>`;
-  }
-}
-try{ window.refreshCloudSyncStatus = refreshCloudSyncStatus; }catch(e){}
 try{ window.fbCloudSave = fbCloudSave; }catch(e){}
 
 // ── GitHub JSON 불러오기 ───────────────────────────────────
@@ -794,6 +338,36 @@ window.cloudLoad = async function(){
 
 
 /* ════ 현황판 탭 rBoard ════ */
+// 현황판 전용 photo 캐시: setBrdPhoto 저장 시 갱신, 렌더링 시 참조
+var _brdPhotoCache = (function(){
+  try{
+    const raw = localStorage.getItem('su_brd_photo_cache');
+    return raw ? JSON.parse(raw) : {};
+  }catch(e){ return {}; }
+})();
+// MiscStore에서 비동기 로드 (IDB 우선)
+(async function _brdPhotoCacheLoadFromIdb(){
+  try{
+    if(typeof MiscStore==='undefined') return;
+    const v = await MiscStore.get('su_brd_photo_cache');
+    if(v && typeof v === 'object') _brdPhotoCache = v;
+  }catch(e){}
+})();
+function _brdPhotoCacheSet(name, url){
+  if(url) _brdPhotoCache[name]=url;
+  else delete _brdPhotoCache[name];
+  try{
+    if(typeof MiscStore!=='undefined') MiscStore.set('su_brd_photo_cache', _brdPhotoCache);
+    else localStorage.setItem('su_brd_photo_cache', JSON.stringify(_brdPhotoCache));
+  }catch(e){}
+}
+function _getBrdPhoto(p){
+  return p.photo
+    || (window.playerPhotos && window.playerPhotos[p.name])
+    || _brdPhotoCache[p.name]
+    || '';
+}
+
 let boardSelUniv='전체';
 let boardCompactMode=false; // 소형 칩 보기
 let boardGridCols=1; // 1열/2열 보기
@@ -820,8 +394,7 @@ function _getBoardUnivs(){
   if(!boardOrder.length) return univs;
   const ordered = [];
   const seen = new Set();
-  const uMap = typeof getAllUnivMap === 'function' ? getAllUnivMap() : new Map(univs.map(u=>[u.name,u]));
-  boardOrder.forEach(name => { const u = uMap.get(name); if(u&&!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
+  boardOrder.forEach(name => { const u = univs.find(x=>x.name===name); if(u&&!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
   univs.forEach(u => { if(!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
   return ordered;
 }
@@ -864,9 +437,93 @@ function _updateBoardSaveLabel(){
   if(brdLbl) brdLbl.textContent = text;
 }
 
+function _captureErrText(e){
+  try{
+    if(!e) return '알 수 없는 오류';
+    if (typeof e === 'string') return e;
+    if (e instanceof Error) return e.message || String(e);
+    if (typeof Event !== 'undefined' && e instanceof Event) {
+      const t = e && e.type ? e.type : 'event';
+      return '이벤트 오류(' + t + ')';
+    }
+    if (e && typeof e === 'object') {
+      if (typeof e.message === 'string' && e.message) return e.message;
+      if (typeof e.type === 'string' && e.type) return '이벤트 오류(' + e.type + ')';
+    }
+    return String(e);
+  }catch(_e){
+    return '알 수 없는 오류';
+  }
+}
+
 // 하단 이미지저장 버튼: 현재 보이는 화면을 그대로 캡처 (현황판 전체/개별 저장은 현황판 탭 내 버튼 사용)
-function saveCurrentView(){
-  if(typeof doJpg==='function') doJpg();
+window.saveCurrentView = async function saveCurrentView(){
+  const cap = document.getElementById('cap');
+  if(!cap){ alert('캡처할 영역이 없습니다.'); return; }
+
+  const btn = document.getElementById('btn-img-save');
+  const oldBtnHtml = btn ? btn.innerHTML : '';
+  if(btn){ btn.disabled = true; btn.innerHTML = '⏳ 저장중'; }
+
+  const _setToast = (text) => {
+    try{
+      const t = document.getElementById('_save-toast');
+      if(t) t.innerHTML = text;
+    }catch(e){}
+  };
+
+  const tmpDiv = document.createElement('div');
+  const capRect = cap.getBoundingClientRect();
+  const capW = Math.max(320, Math.round(capRect.width || cap.scrollWidth || 900));
+  const capH = Math.max(200, Math.round(cap.scrollHeight || cap.offsetHeight || capRect.height || 600));
+
+  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;width:${capW}px;min-height:${capH}px;background:#ffffff;padding:24px;box-sizing:border-box;`;
+  tmpDiv.innerHTML = cap.innerHTML;
+  tmpDiv.querySelectorAll('.no-export').forEach(el=>el.remove());
+
+  document.body.appendChild(tmpDiv);
+
+  try{
+    if(typeof _showSaveLoading === 'function') _showSaveLoading();
+    _setToast('<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 준비 중...');
+    try{
+      const a = document.createElement('a');
+      const supportsDownload = ('download' in a);
+      const ua = String(navigator.userAgent||'');
+      const isIOS = /iPad|iPhone|iPod/i.test(ua);
+      const isInApp = /KAKAOTALK|Instagram|FBAN|FBAV|NAVER|Whale|Line/i.test(ua);
+      if(!supportsDownload || isIOS || isInApp){
+        const w = window.open('', '_blank');
+        if(w){
+          try{
+            w.document.write('<html><head><meta charset="utf-8"><title>이미지 생성 중...</title></head>'
+              + '<body style="margin:0;font-family:sans-serif;background:#111;color:#fff;padding:14px">'
+              + '이미지 생성 중입니다... 잠시만 기다려주세요.'
+              + '</body></html>');
+            w.document.close();
+          }catch(e){}
+          window.__captureDlWin = w;
+        }
+      }
+    }catch(e){}
+    try{
+      if(typeof _applyBoardBgAutoSizing === 'function') _applyBoardBgAutoSizing(tmpDiv);
+      if(typeof _b2ApplyBgAutoSizing === 'function') _b2ApplyBgAutoSizing(tmpDiv);
+    }catch(e){}
+
+    const w = Math.max(320, tmpDiv.scrollWidth || capW);
+    const h = Math.max(200, tmpDiv.scrollHeight || capH);
+    const tabNames = {total:'스트리머',board2:'현황판',tier:'티어순위',mini:'미니대전',univm:'대학대전',univck:'대학CK',comp:'대회',pro:'프로리그',hist:'대전기록',stats:'통계',cal:'캘린더'};
+    const fname = `스타대학_${tabNames[window.curTab]||window.curTab||'화면'}_${new Date().toISOString().slice(0,10)}.png`;
+
+    await _captureAndSave(tmpDiv, w, h, fname);
+  }catch(e){
+    alert('이미지 저장 오류: ' + _captureErrText(e));
+  }finally{
+    if(tmpDiv.parentNode) document.body.removeChild(tmpDiv);
+    if(typeof _hideSaveLoading === 'function') _hideSaveLoading();
+    if(btn){ btn.disabled = false; btn.innerHTML = oldBtnHtml; }
+  }
 }
 
 
@@ -893,12 +550,6 @@ function _getBoardPlayers(univName, includeRetired=false){
 }
 
 function saveBoardPlayerOrder(){
-  try{
-    if(typeof window.__suQueueBoardPlayerOrderPersist === 'function'){
-      window.__suQueueBoardPlayerOrderPersist(boardPlayerOrder||{}, true);
-      return;
-    }
-  }catch(e){}
   localStorage.setItem('su_bpo', JSON.stringify(boardPlayerOrder));
 }
 
@@ -1062,7 +713,8 @@ function _bindBoardBgAutoResize(){
 function rBoard(C,T){
   T.textContent='📊 현황판';
   const univs=_getBoardUnivs();
-  const visUnivs=(isLoggedIn?univs:univs.filter(u=>!u.hidden)).filter(u=>!u.dissolved);
+  const _canManage=_boardCanManage();
+  const visUnivs=(_canManage?univs:univs.filter(u=>!u.hidden)).filter(u=>!u.dissolved);
   if(!univs.length){C.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">등록된 선수가 없습니다.</div>';return;}
   // 칩 이미지 크기에 따라 행 레이아웃도 함께 스케일 (이미지만 커지고 레이아웃은 고정되는 현상 방지)
   const _bcpScale = Math.max(0.7, Math.min(1.8, (boardChipLayoutScale||100) / 100));
@@ -1136,7 +788,7 @@ function rBoard(C,T){
       <div style="position:relative">
         <select id="board-univ-sel" onchange="boardSelUniv=this.value;_updateBoardSaveLabel();render();if(boardSelUniv!=='전체'){setTimeout(()=>{const c=document.querySelector(\`.brd-card[data-univ='\${boardSelUniv}']\`);if(c)c.scrollIntoView({behavior:'smooth',block:'center'});},120);}" style="appearance:none;-webkit-appearance:none;padding:6px 28px 6px 12px;border-radius:9px;border:1.5px solid var(--border2);font-size:12px;font-weight:700;color:var(--text);background:var(--surface);cursor:pointer;outline:none;min-width:120px;">
           <option value="전체">🏫 전체 보기</option>
-          ${visUnivs.map(u=>`<option value="${u.name}"${boardSelUniv===u.name?' selected':''}>${u.name}${isLoggedIn&&u.hidden?' (숨김)':''}</option>`).join('')}
+          ${visUnivs.map(u=>`<option value="${u.name}"${boardSelUniv===u.name?' selected':''}>${u.name}${_canManage&&u.hidden?' (숨김)':''}</option>`).join('')}
         </select>
         <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
@@ -1155,7 +807,7 @@ function rBoard(C,T){
       </div>
     </div>
     ${_brdStatsHtml}
-    <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${isLoggedIn?`🖱️ 헤더 드래그·◀▶ = 대학순서 &nbsp;|&nbsp; 스트리머 드래그/클릭 = 순서·대학이동 &nbsp;<button onclick="sw('cfg')" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:2px 9px;font-size:11px;cursor:pointer;color:var(--text2);font-weight:600">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</span>
+    <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${_canManage?`🖱️ 헤더 드래그·◀▶ = 대학순서 &nbsp;|&nbsp; 스트리머 드래그/클릭 = 순서·대학이동 &nbsp;<button onclick="openCfgHome()" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:2px 9px;font-size:11px;cursor:pointer;color:var(--text2);font-weight:600">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</span>
   </div>
   <div id="board-wrap" style="display:grid;grid-template-columns:${boardGridCols===2?'repeat(2,1fr)':'1fr'};gap:14px;align-items:start">`;
   const targets=boardSelUniv==='전체'?visUnivs:visUnivs.filter(u=>u.name===boardSelUniv);
@@ -1225,7 +877,7 @@ function buildUnivBoardCard(u, forExport){
       const isMain=p.role&&MAIN_ROLES.includes(p.role);
       const rCol=ROLE_COLORS[p.role]||'';
       const rIcon=ROLE_ICONS[p.role]||'';
-      const photoSrcChip = p.photo||'';
+      const photoSrcChip = _getBrdPhoto(p);
       // ── 포토카드 뷰 (화면 + 이미지저장 공통) ──
       if (boardCardView) {
         const rcBg = rc.col || col;
@@ -1257,15 +909,15 @@ function buildUnivBoardCard(u, forExport){
         }
         const pNameSafeCard=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
         const totalInUnivCard=sorted.length;
-        const clickFnCard=isLoggedIn
+        const clickFnCard=_boardCanManage()
           ? `openBrdPlayerPopupFromChip(event,'${pNameSafeCard}','${u.name}',${chipIdx??0},${totalInUnivCard})`
-          : `openPlayerModal('${pNameSafeCard}')`;
-        return `<div class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''}`
+          : `openRandomPlayerModal()`;
+        return `<div class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${_boardCanManage()?' draggable="true"':''}`
           + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};cursor:pointer;transition:box-shadow .15s,transform .15s"`
           + ` onmouseover="this.style.boxShadow='0 6px 20px ${hexToRgba(col,.5)}';this.style.transform='translateY(-3px)'"`
           + ` onmouseout="this.style.boxShadow='';this.style.transform=''"`
           + ` onclick="event.stopPropagation();${clickFnCard}"`
-          + ` ondragstart="if(isLoggedIn){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">`
+          + ` ondragstart="if(_boardCanManage()){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">`
           + cardInner + `</div>`;
       }
 
@@ -1296,9 +948,9 @@ function buildUnivBoardCard(u, forExport){
       const pNameSafe=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
       const totalInUniv=sorted.length;
       // 관리자는 이동/직책 팝업, 비관리자는 스트리머 상세
-      const clickFn=isLoggedIn
+      const clickFn=_boardCanManage()
         ? `openBrdPlayerPopupFromChip(event,'${pNameSafe}','${u.name}',${chipIdx??0},${totalInUniv})`
-        : `openPlayerModal('${pNameSafe}')`;
+        : `openRandomPlayerModal()`;
 
       // 티어 고정 색상 (칩)
       const chipTierCol = p.tier ? (getTierBtnColor(p.tier) || col) : '#9ca3af';
@@ -1320,7 +972,7 @@ function buildUnivBoardCard(u, forExport){
       const _photoEl = photoSrcChip
         ? `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)};background:${col};color:#fff;font-size:${photoFs};font-weight:900">${rTxt}<img src="${toHttpsUrl(photoSrcChip)}" class="brd-fit-auto" data-fit-kind="profile" data-fit-mode="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--su_profile_radius,50%)" onload="_applyBoardBgAutoSizing(this)" onerror="this.style.display='none'"></span>`
         : `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`;
-      return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${isLoggedIn?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:${chipGap};background:${cBgL};border-radius:16px;padding:${chipPad};margin:${compact?'3px':'5px'};cursor:${isLoggedIn?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(isLoggedIn){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
+      return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${_boardCanManage()?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:${chipGap};background:${cBgL};border-radius:16px;padding:${chipPad};margin:${compact?'3px':'5px'};cursor:${_boardCanManage()?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(_boardCanManage()){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
         ${_photoEl}
         <span style="display:inline-flex;flex-direction:column;gap:${compact?'2px':'3px'};min-width:0">
           ${isMain&&!compact?`<span style="font-size:11px;font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
@@ -1386,7 +1038,7 @@ function buildUnivBoardCard(u, forExport){
       allRows = roleSection + tierRows;
     }
 
-    const hdrDrag=isLoggedIn&&!forExport?' draggable="true" ondragstart="event.stopPropagation();const card=this.closest(\'.brd-card\');const wrap=document.getElementById(\'board-wrap\');_brdDragSrc=card;card.classList.add(\'dragging\');event.dataTransfer.effectAllowed=\'move\';event.dataTransfer.setData(\'text/card\',card.dataset.univ);" ondragend="event.stopPropagation();const card=this.closest(\'.brd-card\');card.classList.remove(\'dragging\');const wrap=document.getElementById(\'board-wrap\');if(wrap){boardOrder=[...wrap.querySelectorAll(\'.brd-card\')].map(c=>c.dataset.univ);save();syncBoardOrderToUnivCfg();}wrap&&wrap.querySelectorAll(\'.brd-card\').forEach(c=>c.classList.remove(\'drag-over\'));_brdDragSrc=null;"':'';
+    const hdrDrag=_boardCanManage()&&!forExport?' draggable="true" ondragstart="event.stopPropagation();const card=this.closest(\'.brd-card\');const wrap=document.getElementById(\'board-wrap\');_brdDragSrc=card;card.classList.add(\'dragging\');event.dataTransfer.effectAllowed=\'move\';event.dataTransfer.setData(\'text/card\',card.dataset.univ);" ondragend="event.stopPropagation();const card=this.closest(\'.brd-card\');card.classList.remove(\'dragging\');const wrap=document.getElementById(\'board-wrap\');if(wrap){boardOrder=[...wrap.querySelectorAll(\'.brd-card\')].map(c=>c.dataset.univ);save();syncBoardOrderToUnivCfg();}wrap&&wrap.querySelectorAll(\'.brd-card\').forEach(c=>c.classList.remove(\'drag-over\'));_brdDragSrc=null;"':'';
 
     const _bgPos=u.bgImgPos||'center center';
     const _bgSize=u.bgImgSize||'auto';
@@ -1396,7 +1048,7 @@ function buildUnivBoardCard(u, forExport){
       return `<div onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:1px" title="배경 위치">${vs.map(v=>`<div style="display:flex;gap:1px">${hs.map(h=>{const p=`${v} ${h}`,a=_bgPos===p;return`<button onclick="event.stopPropagation();setBoardBgImgPos('${_uNameSafe}','${p}')" style="width:10px;height:10px;border-radius:2px;border:1px solid ${a?'rgba(255,255,255,.9)':'rgba(255,255,255,.3)'};background:${a?'rgba(255,255,255,.6)':'rgba(255,255,255,.15)'};cursor:pointer;padding:0" title="${p}"></button>`;}).join('')}</div>`).join('')}</div>`;
     })():'';
     return `<div class="brd-card" data-univ="${u.name}" style="position:relative;--brd-col:${toPastel(col,Math.min(1, Math.max(0.35, 0.95 - b2BgAlpha * 0.01) + 0.08))};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
-      <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${isLoggedIn&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
+      <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${_boardCanManage()&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
         <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
           <div style="width:var(--su_univ_logo_box,46px);height:var(--su_univ_logo_box,46px);border-radius:var(--su_univ_logo_radius,13px);background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="대학 상세 보기">
             ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,34px);height:var(--su_univ_logo_size,34px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
@@ -1406,13 +1058,13 @@ function buildUnivBoardCard(u, forExport){
               <button class="brd-univ-name-btn" style="color:#fff!important;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.25);font-size:18px;display:inline-flex;align-items:center;gap:7px;flex-shrink:0" ${forExport?'':(`onclick="event.stopPropagation();toggleBoardUniv('${(u.name||'').replace(/'/g,"\\'")}')"`)}>
                 ${(u.name||'')}${(!forExport&&(boardSelUniv||'')===u.name)?`<span style="background:rgba(255,255,255,.95);color:${col};border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.2);flex-shrink:0">✓</span>`:''}</button>
               ${(u.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(u.championships||0)}</span>`:''}
-              ${isLoggedIn&&!forExport?`<input type="text" placeholder="📌 메모..." value="${(u.memo2||'').replace(/"/g,'&quot;')}" style="margin-left:4px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:2px 8px;font-size:12px;color:#fff;outline:none;font-family:inherit;min-width:60px;width:200px;max-width:45%;flex:0 1 auto" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="setBoardMemo2('${(u.name||'').replace(/'/g,"\\'")}',this.value)" onblur="setBoardMemo2('${(u.name||'').replace(/'/g,"\\'")}',this.value)">`:(u.memo2?`<span style="margin-left:4px;font-size:12px;color:rgba(255,255,255,.92);font-weight:600;background:rgba(255,255,255,.15);border-radius:6px;padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;max-width:45%">${u.memo2}</span>`:'')}
+              ${_boardCanManage()&&!forExport?`<input type="text" placeholder="📌 메모..." value="${(u.memo2||'').replace(/"/g,'&quot;')}" style="margin-left:4px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:2px 8px;font-size:12px;color:#fff;outline:none;font-family:inherit;min-width:60px;width:200px;max-width:45%;flex:0 1 auto" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="setBoardMemo2('${(u.name||'').replace(/'/g,"\\'")}',this.value)" onblur="setBoardMemo2('${(u.name||'').replace(/'/g,"\\'")}',this.value)">`:(u.memo2?`<span style="margin-left:4px;font-size:12px;color:rgba(255,255,255,.92);font-weight:600;background:rgba(255,255,255,.15);border-radius:6px;padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;max-width:45%">${u.memo2}</span>`:'')}
             </div>
             <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:3px;display:flex;align-items:center;gap:5px">${cnt}명 <button class="brd-collapse-btn no-export" onclick="event.stopPropagation();_brdCollapseToggle('${(u.name||'').replace(/'/g,"\\'")}')"
-              style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:4px;color:#fff;font-size:10px;padding:0 5px;height:16px;cursor:pointer;line-height:1;font-weight:700">${boardCollapsed.has(u.name)?'▶':'▼'}</button>${u.dissolved?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px;color:#fca5a5">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}${isLoggedIn&&u.hidden?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px">🚫 방문자 숨김</span>`:''}</div>
+              style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:4px;color:#fff;font-size:10px;padding:0 5px;height:16px;cursor:pointer;line-height:1;font-weight:700">${boardCollapsed.has(u.name)?'▶':'▼'}</button>${u.dissolved?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px;color:#fca5a5">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}${_boardCanManage()&&u.hidden?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px">🚫 방문자 숨김</span>`:''}</div>
           </div>
           ${!forExport?`<div class="no-export" style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
-            ${isLoggedIn?`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end">
+            ${_boardCanManage()?`<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end">
 {{ ... }
               <button onclick="event.stopPropagation();boardCardMove('${u.name}','left')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="왼쪽 이동">◀</button>
               <button onclick="event.stopPropagation();boardCardMove('${u.name}','right')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="오른쪽 이동">▶</button>
@@ -1438,7 +1090,7 @@ function buildUnivBoardCard(u, forExport){
         const panelStyle=`border-radius:10px;padding:8px;background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(0,0,0,.1)`;
         // 사이드 패널 (PC only, .brd-side-panel 클래스로 모바일 숨김)
         let sidePanelHtml='';
-        if(isLoggedIn&&!forExport){
+        if(_boardCanManage()&&!forExport){
           const imgList=_imgs.map((src,i)=>`<div style="position:relative;margin-bottom:5px">
             <img src="${src}" style="width:100%;border-radius:7px;display:block" onerror="this.style.display='none'">
             <button onclick="event.stopPropagation();removeBoardMemoImg('${_uname}',${i})" style="position:absolute;top:3px;right:3px;font-size:9px;background:rgba(239,68,68,.75);border:none;border-radius:4px;padding:1px 5px;color:#fff;cursor:pointer">✕</button>
@@ -1459,7 +1111,7 @@ function buildUnivBoardCard(u, forExport){
         const _bnote=u.bMemo||'';
         const _bimgs=(u.bMemoImgs||[]).concat(u.bMemoImg?[u.bMemoImg]:[]);
         let bottomHtml='';
-        if(isLoggedIn&&!forExport){
+        if(_boardCanManage()&&!forExport){
           const imgList=_bimgs.map((src,i)=>`<div style="display:inline-flex;flex-direction:column;gap:3px;margin-right:6px;vertical-align:top">
             <img src="${src}" class="brd-bottom-section-img" style="max-width:130px;max-height:110px;object-fit:contain;border-radius:8px;display:block" onerror="this.style.display='none'">
             <button onclick="event.stopPropagation();removeBoardNoteImg('${_uname}',${i})" style="font-size:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:5px;padding:2px 6px;color:#dc2626;cursor:pointer">🗑️ 삭제</button>
@@ -1513,6 +1165,14 @@ function _closeBrdPopup(e){
   }
 }
 // 중앙화된 팝업 닫기 - 딤 오버레이 포함 항상 정리
+// 현황판 칩 클릭 시 랜덤 스트리머 상세 열기
+function openRandomPlayerModal(){
+  const eligible = (window.players||[]).filter(p=>p&&p.name&&!p.hidden&&!p.retired);
+  if(!eligible.length) return;
+  const pick = eligible[Math.floor(Math.random()*eligible.length)];
+  openPlayerModal(pick.name);
+}
+
 function _brdClose(){
   if(_brdPopup){ _brdPopup.remove(); _brdPopup=null; }
   const dim=document.getElementById('brd-popup-dim');
@@ -1521,7 +1181,7 @@ function _brdClose(){
 
 // 칩 전용 팝업 (무소속 등 칩 레이아웃) - 위/아래 이동 대신 대학이동 위주
 function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
-  if(!isLoggedIn){ openPlayerModal(playerName); return; }
+  if(!_boardCanManage()){ openRandomPlayerModal(); return; }
   e.stopPropagation();
   _brdClose();
   const allUnivs = _getBoardUnivs();
@@ -1618,7 +1278,7 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
 }
 
 function boardTransferPlayerFromChip(playerName, fromUniv){
-  if(!isLoggedIn){ alert('관리자만 이동할 수 있습니다.'); return; }
+  if(!_boardCanManage()){ alert('총관리자만 이동할 수 있습니다.'); return; }
   const sel = document.getElementById('brd-chip-univ-target');
   const toUniv = sel?.value;
   if(!toUniv || toUniv===fromUniv){ alert('이동할 대학을 선택하세요.'); return; }
@@ -1639,8 +1299,8 @@ function boardTransferPlayerFromChip(playerName, fromUniv){
 
 
 function openBrdPlayerPopup(e, playerName, univName, idx, total){
-  // 비관리자는 팝업 없이 스트리머 상세 바로 열기
-  if(!isLoggedIn){ openPlayerModal(playerName); return; }
+  // 비관리자는 팝업 없이 랜덤 스트리머 상세 열기
+  if(!_boardCanManage()){ openRandomPlayerModal(); return; }
 
   e.stopPropagation();
   _brdClose();
@@ -1784,6 +1444,7 @@ function setBrdPhoto(playerName, url){
   if(!p)return;
   const trimmed=url.trim();
   if(trimmed) p.photo=trimmed; else delete p.photo;
+  _brdPhotoCacheSet(playerName, trimmed); // 캐시 갱신
   save();
   _refreshBoardCard(p.univ);
   _brdToast(trimmed?'🖼️ 프로필 이미지 저장 완료':'🗑️ 프로필 이미지 삭제');
@@ -1827,7 +1488,7 @@ function setBrdStatusIcon(btn, playerName, iconId){
 }
 
 function boardMovePlayer(playerName, univName, dir){
-  if(!isLoggedIn) return;
+  if(!_boardCanManage()) return;
   _brdClose();
   const sorted = _getBoardPlayers(univName);
   const idx = sorted.findIndex(p=>p.name===playerName);
@@ -1851,7 +1512,7 @@ function boardMovePlayer(playerName, univName, dir){
 }
 
 function boardTransferPlayer(playerName, fromUniv){
-  if(!isLoggedIn){ alert('관리자만 이동할 수 있습니다.'); return; }
+  if(!_boardCanManage()){ alert('총관리자만 이동할 수 있습니다.'); return; }
   const sel = document.getElementById('brd-univ-target');
   const toUniv = sel?.value;
   if(!toUniv || toUniv===fromUniv){ alert('이동할 대학을 선택하세요.'); return; }
@@ -1894,7 +1555,7 @@ function boardTransferPlayer(playerName, fromUniv){
 function _refreshBoardCard(univName){
   const wrap = document.getElementById('board-wrap');
   if(!wrap){ render(); return; }
-  const u = typeof getAllUnivMap === 'function' ? getAllUnivMap().get(univName) : getAllUnivs().find(x=>x.name===univName);
+  const u = getAllUnivs().find(x=>x.name===univName);
   const existing = wrap.querySelector(`.brd-card[data-univ="${univName}"]`);
   // 해당 대학에 선수가 없으면 카드 제거
   if(!u || !players.some(p=>p.univ===univName)){
@@ -1915,12 +1576,12 @@ function _refreshBoardCard(univName){
   // 새 카드에 드래그 이벤트 재등록
   initBoardDragCard(newCard, wrap);
   // 플레이어 행 드래그 재등록 (관리자만)
-  if(isLoggedIn) newCard.querySelectorAll('.brd-body').forEach(body=>initBoardPlayerDrag(body));
+  if(_boardCanManage()) newCard.querySelectorAll('.brd-body').forEach(body=>initBoardPlayerDrag(body));
 }
 
 /* ── 카드 클릭 순서 이동 ── */
 function boardCardMove(univName, dir){
-  if(!isLoggedIn) return;
+  if(!_boardCanManage()) return;
   const wrap = document.getElementById('board-wrap');
   if(!wrap) return;
   const cards = [...wrap.querySelectorAll('.brd-card')];
@@ -1949,7 +1610,7 @@ function initBoardDrag(){
   if(!wrap)return;
   wrap.querySelectorAll('.brd-card').forEach(card=>initBoardDragCard(card, wrap));
   // 플레이어 행 드래그: 관리자만
-  if(isLoggedIn) wrap.querySelectorAll('.brd-body').forEach(body=>initBoardPlayerDrag(body));
+  if(_boardCanManage()) wrap.querySelectorAll('.brd-body').forEach(body=>initBoardPlayerDrag(body));
 }
 
 let _brdDragSrc = null;
@@ -1985,7 +1646,7 @@ function initBoardDragCard(card, wrap){
 
 /* ── 플레이어 행 드래그 앤 드롭 (스트리머 네모박스 순서 변경 + 대학 간 이동) ── */
 function initBoardPlayerDrag(body){
-  if(!isLoggedIn) return; // 관리자만
+  if(!_boardCanManage()) return; // 총관리자만
 
   const getUnivName = ()=> body.closest('.brd-card')?.dataset?.univ || '';
 
@@ -2087,118 +1748,607 @@ function initBoardPlayerDrag(body){
   });
 }
 
-// ── 외부 img를 data URL로 변환 (CORS 지원 이미지만, 실패/타임아웃 시 숨김) ──
-async function _imgToDataUrls(container, timeoutMs=4000) {
+// ── 외부 img를 data URL로 변환 (가능한 것만 변환, 실패/타임아웃 시 원본 유지) ──
+const _imgDataUrlCache = (window._imgDataUrlCache = window._imgDataUrlCache || {});
+const _imgDataUrlInflight = (window._imgDataUrlInflight = window._imgDataUrlInflight || {});
+const _imgDataUrlCacheOrder = (window._imgDataUrlCacheOrder = window._imgDataUrlCacheOrder || []);
+async function _imgToDataUrls(container, timeoutMs=8000, onProgress) {
   const imgs = [...container.querySelectorAll('img')];
-  await Promise.all(imgs.map(img => new Promise(resolve => {
-    const src = img.getAttribute('src') || '';
-    // data URL / blob URL은 이미 안전
-    if (!src || src.startsWith('data:') || src.startsWith('blob:')) { resolve(); return; }
-    const _hide = () => { img.style.display = 'none'; img.removeAttribute('src'); };
-    // 전체 타임아웃: 직접+프록시 합산 timeoutMs 내에 완료 안되면 숨김 처리
-    let _resolved = false;
-    const _resolve = () => { if(!_resolved){ _resolved=true; resolve(); } };
-    const _timer = setTimeout(() => { _hide(); _resolve(); }, timeoutMs);
-    const loader = new Image();
-    loader.crossOrigin = 'anonymous';
-    loader.onload = () => {
-      clearTimeout(_timer);
-      // naturalWidth/Height이 0이면 drawImage 자체가 에러 상태 유발 → 즉시 숨김
-      if (loader.naturalWidth > 0 && loader.naturalHeight > 0) {
-        try {
-          const cv = document.createElement('canvas');
-          cv.width  = loader.naturalWidth;
-          cv.height = loader.naturalHeight;
-          const ctx2d = cv.getContext('2d');
-          ctx2d.drawImage(loader, 0, 0);
-          img.src = cv.toDataURL('image/png'); // 성공: data URL로 교체
-        } catch { _hide(); }
-      } else { _hide(); }
-      _resolve();
-    };
-    loader.onerror = () => {
-      // CORS 프록시로 재시도 (Discord CDN 등 CORS 미지원 이미지 대응)
-      const proxy = 'https://images.weserv.nl/?url=' + encodeURIComponent(src) + '&n=-1';
-      const fb = new Image();
-      fb.crossOrigin = 'anonymous';
-      fb.onload = () => {
-        clearTimeout(_timer);
-        if (fb.naturalWidth > 0 && fb.naturalHeight > 0) {
-          try {
-            const cv2 = document.createElement('canvas');
-            cv2.width = fb.naturalWidth; cv2.height = fb.naturalHeight;
-            const ctx2d2 = cv2.getContext('2d');
-            ctx2d2.drawImage(fb, 0, 0);
-            img.src = cv2.toDataURL('image/png');
-          } catch { _hide(); }
-        } else { _hide(); }
-        _resolve();
+  const maxConcurrent = 20;
+  let idx = 0;
+  let doneCount = 0;
+
+  const stripProto = (u) => String(u||'').replace(/^https?:\/\//i, '');
+  // 캐시버스트는 직접 요청 실패 후 재시도 때만 사용 (브라우저 HTTP 캐시 보존)
+  const withCacheBust = (u) => {
+    const s = String(u||'');
+    return s + (s.includes('?') ? '&' : '?') + '_x=' + Date.now();
+  };
+
+  // 동일 URL 중복 변환 방지: inflight Promise 공유
+  const _inflight = {};
+
+  async function convertOne(img){
+    return await new Promise(resolve => {
+      // Add null/undefined check for img element
+      if (!img || typeof img !== 'object') { resolve(); return; }
+      
+      let src0 = img.getAttribute('src') || '';
+      if (!src0 || src0.startsWith('data:') || src0.startsWith('blob:')) { resolve(); return; }
+      try{
+        if(typeof toHttpsUrl === 'function'){
+          const s2 = toHttpsUrl(src0);
+          if(s2 && s2 !== src0){
+            src0 = s2;
+            try{ img.setAttribute('src', s2); }catch(e){}
+          }
+        }
+      }catch(e){}
+
+      // 1) 세션 캐시 히트 → 즉시 반환
+      try{
+        const cached = _imgDataUrlCache[src0];
+        if(cached && typeof cached === 'string' && cached.startsWith('data:image/')){
+          img.src = cached;
+          resolve();
+          return;
+        }
+      }catch(e){}
+
+      // 2) 동일 URL을 다른 worker가 이미 변환 중이면 그 결과를 기다림 (중복 네트워크 요청 방지)
+      if(_inflight[src0]){
+        _inflight[src0].then(dataUrl => {
+          if(dataUrl) try{ img.src = dataUrl; }catch(e){}
+          resolve();
+        }).catch(()=>resolve());
+        return;
+      }
+
+      let done = false;
+      let inflightResolve;
+      const inflightPromise = new Promise(r => { inflightResolve = r; });
+      _inflight[src0] = inflightPromise;
+
+      const finish = (dataUrl) => {
+        if(!done){
+          done = true;
+          try{ inflightResolve(dataUrl||null); }catch(e){}
+          try{ delete _inflight[src0]; }catch(e){}
+          resolve();
+        }
       };
-      fb.onerror = () => { clearTimeout(_timer); _hide(); _resolve(); };
-      fb.src = proxy;
+      const t = setTimeout(() => { finish(null); }, timeoutMs);
+
+      // 직접 요청 먼저 → 실패 시에만 캐시버스트/프록시 사용 (불필요한 네트워크 호출 감소)
+      const tryUrls = [src0];
+      // 실패 시에만 추가 URL 시도
+      const fallbackUrls = [
+        withCacheBust(src0),
+        'https://images.weserv.nl/?url=' + encodeURIComponent(stripProto(src0)) + '&n=-1&cb=' + Date.now(),
+      ];
+
+      let attempt = 0;
+      const tryLoad = () => {
+        if(done) return;
+        let url;
+        if (attempt === 0) {
+          url = tryUrls[attempt++];
+        } else {
+          // 실패 시에만 fallback URL 사용
+          url = fallbackUrls[attempt - 1] || null;
+        }
+        if(!url){ clearTimeout(t); finish(null); return; }
+
+        const loader = new Image();
+        loader.crossOrigin = 'anonymous';
+        loader.onload = () => {
+          if(done) return;
+          if (!loader.naturalWidth || !loader.naturalHeight) { 
+            if (attempt === 0) {
+              tryLoad(); // 첫 시도 실패 시 fallback 시도
+            } else {
+              finish(null); // fallback 실패 시 종료
+            }
+            return; 
+          }
+          try{
+            const cv = document.createElement('canvas');
+            if (!cv) { tryLoad(); return; }
+            cv.width  = loader.naturalWidth;
+            cv.height = loader.naturalHeight;
+            const ctx2d = cv.getContext('2d');
+            if (!ctx2d) { tryLoad(); return; }
+            ctx2d.drawImage(loader, 0, 0);
+            // PNG 대신 WebP(지원 시) 또는 JPEG로 인코딩 → data URL 크기·속도 대폭 개선
+            // 품질을 낮춰서 속도 향상 (0.88 → 0.75)
+            const _supportsWebP = (()=>{ 
+              try{ 
+                const testCanvas = document.createElement('canvas');
+                if (!testCanvas) return false;
+                return testCanvas.toDataURL('image/webp').startsWith('data:image/webp'); 
+              }catch(e){ return false; } 
+            })();
+            const dataUrl = _supportsWebP
+              ? cv.toDataURL('image/webp', 0.75)
+              : cv.toDataURL('image/jpeg', 0.75);
+            if(!dataUrl || dataUrl === 'data:,') { tryLoad(); return; }
+            if (img && typeof img === 'object') {
+              img.src = dataUrl;
+            }
+            try{
+              if(!_imgDataUrlCache[src0]) _imgDataUrlCacheOrder.push(src0);
+              _imgDataUrlCache[src0] = dataUrl;
+              if(_imgDataUrlCacheOrder.length > 1000){
+                const drop = _imgDataUrlCacheOrder.shift();
+                if(drop) delete _imgDataUrlCache[drop];
+              }
+            }catch(e){}
+            clearTimeout(t);
+            finish(dataUrl);
+          }catch(e){
+            tryLoad();
+          }
+        };
+        loader.onerror = () => { tryLoad(); };
+        loader.src = url;
+      };
+
+      tryLoad();
+    });
+  }
+
+  async function worker(){
+    while(true){
+      const i = idx++;
+      if(i >= imgs.length) break;
+      try{ await convertOne(imgs[i]); }catch(e){}
+      doneCount++;
+      if(typeof onProgress === 'function'){
+        try{ onProgress(doneCount, imgs.length); }catch(e){}
+      }
+    }
+  }
+
+  const workers = Array.from({length: Math.min(maxConcurrent, imgs.length)}, () => worker());
+  await Promise.all(workers);
+}
+
+async function _precacheImgDataUrl(src0, timeoutMs){
+  const key = String(src0||'');
+  if(!key) return false;
+  if(_imgDataUrlCache[key] && String(_imgDataUrlCache[key]).startsWith('data:image/')) return true;
+  if(_imgDataUrlInflight[key]) return await _imgDataUrlInflight[key];
+
+  const stripProto = (u) => String(u||'').replace(/^https?:\/\//i, '');
+  const withCacheBust = (u) => {
+    const s = String(u||'');
+    return s + (s.includes('?') ? '&' : '?') + '_x=' + Date.now();
+  };
+
+  const p = new Promise((resolve) => {
+    let src = key;
+    try{
+      if(typeof toHttpsUrl === 'function'){
+        const s2 = toHttpsUrl(src);
+        if(s2) src = s2;
+      }
+    }catch(e){}
+
+    if(_imgDataUrlCache[src] && String(_imgDataUrlCache[src]).startsWith('data:image/')){ resolve(true); return; }
+
+    const tryUrls = [];
+    tryUrls.push(withCacheBust(src));
+    tryUrls.push('https://images.weserv.nl/?url=' + encodeURIComponent(stripProto(src)) + '&n=-1&cb=' + Date.now());
+    tryUrls.push('https://corsproxy.io/?' + encodeURIComponent(src));
+
+    let attempt = 0;
+    let done = false;
+    const finish = (ok) => { if(!done){ done = true; resolve(!!ok); } };
+    const t = setTimeout(() => finish(false), Math.max(1200, timeoutMs||8000));
+
+    const tryLoad = () => {
+      if(done) return;
+      const url = tryUrls[attempt++];
+      if(!url){ clearTimeout(t); finish(false); return; }
+      const loader = new Image();
+      loader.crossOrigin = 'anonymous';
+      loader.onload = () => {
+        if(done) return;
+        if(!loader.naturalWidth || !loader.naturalHeight){ tryLoad(); return; }
+        try{
+          const cv = document.createElement('canvas');
+          cv.width = loader.naturalWidth;
+          cv.height = loader.naturalHeight;
+          const ctx = cv.getContext('2d');
+          ctx.drawImage(loader, 0, 0);
+          const _supportsWebP = (()=>{ try{ return document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp'); }catch(e){ return false; } })();
+          const dataUrl = _supportsWebP
+            ? cv.toDataURL('image/webp', 0.88)
+            : cv.toDataURL('image/jpeg', 0.88);
+          if(!dataUrl || dataUrl === 'data:,'){ tryLoad(); return; }
+          try{
+            if(!_imgDataUrlCache[src]) _imgDataUrlCacheOrder.push(src);
+            _imgDataUrlCache[src] = dataUrl;
+            if(_imgDataUrlCacheOrder.length > 500){
+              const drop = _imgDataUrlCacheOrder.shift();
+              if(drop) delete _imgDataUrlCache[drop];
+            }
+          }catch(e){}
+          clearTimeout(t);
+          finish(true);
+        }catch(e){
+          tryLoad();
+        }
+      };
+      loader.onerror = () => { tryLoad(); };
+      loader.src = url;
     };
-    // 캐시 우회: 쿼리스트링 추가로 CORS 헤더 포함 재요청 강제
-    loader.src = src + (src.includes('?') ? '&_x=' : '?_x=') + Date.now();
-  })));
+
+    tryLoad();
+  }).finally(()=>{ try{ delete _imgDataUrlInflight[key]; }catch(e){} });
+
+  _imgDataUrlInflight[key] = p;
+  return await p;
+}
+
+window._precacheVisibleImages = window._precacheVisibleImages || function(container, limit){
+  try{
+    if(!container || !container.querySelectorAll) return;
+    const max = Math.max(1, parseInt(limit, 10) || 160);
+    const urls = [];
+    const seen = new Set();
+    container.querySelectorAll('img[src]').forEach(img=>{
+      const src = img.getAttribute('src') || '';
+      if(!src || src.startsWith('data:') || src.startsWith('blob:')) return;
+      let s = src;
+      try{ if(typeof toHttpsUrl === 'function') s = toHttpsUrl(s) || s; }catch(e){}
+      if(seen.has(s)) return;
+      seen.add(s);
+      if(_imgDataUrlCache[s] && String(_imgDataUrlCache[s]).startsWith('data:image/')) return;
+      urls.push(s);
+    });
+    if(!urls.length) return;
+    const list = urls.slice(0, max);
+    const run = async () => {
+      const conc = 4;
+      let i = 0;
+      const worker = async () => {
+        while(true){
+          const k = i++;
+          if(k >= list.length) break;
+          try{ await _precacheImgDataUrl(list[k], 8000); }catch(e){}
+        }
+      };
+      await Promise.all(Array.from({length: Math.min(conc, list.length)}, () => worker()));
+    };
+    if('requestIdleCallback' in window){
+      try{ window.requestIdleCallback(()=>{ run(); }, {timeout: 1200}); }catch(e){ setTimeout(()=>{ run(); }, 60); }
+    } else {
+      setTimeout(()=>{ run(); }, 60);
+    }
+  }catch(e){}
+};
+
+async function _waitForImages(container, timeoutMs){
+  const ms = Math.max(300, parseInt(timeoutMs, 10) || 900);
+  const imgs = container ? [...container.querySelectorAll('img[src]')] : [];
+  if(!imgs.length) return true;
+  const tasks = imgs.map(img=>{
+    try{
+      // Add null/undefined checks for img element
+      if (!img || typeof img !== 'object') return Promise.resolve(false);
+      if(img.complete && img.naturalWidth > 0) return Promise.resolve(true);
+      if(typeof img.decode === 'function'){
+        return img.decode().then(()=>true).catch(()=>false);
+      }
+    }catch(e){}
+    return new Promise(resolve=>{
+      let done = false;
+      const fin = (ok)=>{ if(done) return; done=true; resolve(!!ok); };
+      try{
+        if (img && typeof img === 'object') {
+          img.addEventListener('load', ()=>fin(true), {once:true});
+          img.addEventListener('error', ()=>fin(false), {once:true});
+        } else {
+          fin(false);
+        }
+      }catch(e){ fin(false); }
+      setTimeout(()=>fin(false), ms);
+    });
+  });
+  await Promise.race([Promise.allSettled(tasks), new Promise(r=>setTimeout(r, ms))]);
+  return true;
 }
 
 // ── canvas → PNG 다운로드 (toBlob+ObjectURL 방식: 대용량 PNG에 안정적) ──
-function _dlCanvasBoard(canvas, filename) {
+async function _dlCanvasBoard(canvas, filename) {
   if (!canvas || canvas.width === 0 || canvas.height === 0) {
     alert('이미지 생성 실패: 캔버스가 비어있습니다. 다시 시도해주세요.');
-    return;
+    return false;
   }
   const pngName = filename.replace(/\.jpg$/i, '.png');
-  canvas.toBlob(blob => {
-    if (!blob) {
-      // 폴백: toDataURL 방식
-      try {
-        const dataUrl = canvas.toDataURL('image/png');
-        if (!dataUrl || dataUrl === 'data:,') { alert('이미지 저장 실패: 빈 이미지입니다.'); return; }
-        const a = document.createElement('a');
-        a.href = dataUrl; a.download = pngName;
-        document.body.appendChild(a); a.click();
-        setTimeout(() => document.body.removeChild(a), 300);
-      } catch(e) { alert('이미지 저장 실패: ' + e.message); }
-      return;
+  const showOverlay = (src) => {
+    try{
+      const old = document.getElementById('__img_save_overlay');
+      if(old) old.remove();
+      const ov = document.createElement('div');
+      ov.id = '__img_save_overlay';
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;';
+      const safeName = String(pngName||'image.png').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      ov.innerHTML = `
+        <div style="width:min(980px,96vw);max-height:92vh;background:#0b1220;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 60px rgba(0,0,0,.45);display:flex;flex-direction:column">
+          <div style="display:flex;gap:10px;align-items:center;padding:12px 14px;background:rgba(15,23,42,.92);color:#fff">
+            <div style="font-weight:900;font-size:13px">이미지 저장</div>
+            <div style="font-size:12px;opacity:.8">자동 다운로드가 막혔습니다. PC는 우클릭 저장 / 모바일은 길게 눌러 저장</div>
+            <a href="${src}" download="${safeName}" style="margin-left:auto;text-decoration:none;color:#fff;background:#2563eb;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 10px;font-weight:900;font-size:12px">다운로드</a>
+            <button id="__img_save_overlay_close" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;border-radius:10px;padding:6px 10px;font-weight:900;cursor:pointer;font-size:12px">닫기</button>
+          </div>
+          <div style="padding:12px;overflow:auto;background:#111">
+            <img src="${src}" style="max-width:100%;display:block;margin:0 auto;border-radius:12px;background:#111">
+          </div>
+        </div>
+      `;
+      ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.remove(); });
+      document.body.appendChild(ov);
+      const btn = document.getElementById('__img_save_overlay_close');
+      if(btn) btn.onclick = ()=>ov.remove();
+    }catch(e){}
+  };
+  const preWin = (() => {
+    try{
+      const w = window.__captureDlWin;
+      if(w && !w.closed) return w;
+    }catch(e){}
+    return null;
+  })();
+  try{ window.__captureDlWin = null; }catch(e){}
+
+  if (!preWin && typeof window._saveCanvasImage === 'function') {
+    await window._saveCanvasImage(canvas, pngName, 'png');
+    return true;
+  }
+
+  const showInWindow = (src, isBlobUrl) => {
+    if(!preWin) return;
+    try{
+      if(isBlobUrl){
+        try{ preWin.location.href = src; }catch(e){}
+        return;
+      }
+      preWin.document.open();
+      preWin.document.write('<html><head><meta charset="utf-8"><title>이미지 저장</title></head>'
+        + '<body style="margin:0;background:#111;color:#fff;font-family:sans-serif">'
+        + '<div style="padding:12px;font-size:13px">이미지가 자동 다운로드되지 않으면, 아래 이미지를 길게 눌러 저장하세요.</div>'
+        + '<img src="' + src + '" style="max-width:100%;display:block;margin:0 auto">'
+        + '</body></html>');
+      preWin.document.close();
+    }catch(e){}
+  };
+
+  const tryDownload = (href) => {
+    try{
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = pngName;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { try{ document.body.removeChild(a); }catch(e){} }, 300);
+      return true;
+    }catch(e){
+      return false;
     }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = pngName;
-    document.body.appendChild(a); a.click();
-    setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 500);
-  }, 'image/png');
+  };
+
+  return await new Promise((resolve) => {
+    try{
+      canvas.toBlob(blob => {
+        if (!blob) {
+          try {
+            const dataUrl = canvas.toDataURL('image/png');
+            if (!dataUrl || dataUrl === 'data:,') { alert('이미지 저장 실패: 빈 이미지입니다.'); resolve(false); return; }
+            const ok = tryDownload(dataUrl);
+            if(!ok && !preWin){
+              let w = null;
+              try{ w = window.open(dataUrl, '_blank', 'noopener'); }catch(e){}
+              if(!w) showOverlay(dataUrl);
+            }
+            showInWindow(dataUrl, false);
+            resolve(true);
+          } catch(e) {
+            const msg = (e && e.message) ? e.message : String(e||'오류');
+            if (/insecure|security/i.test(msg)) {
+              alert('이미지 저장 실패: 보안 정책(CORS)으로 인해 캔버스를 저장할 수 없습니다.\n\n외부 이미지(프로필/로고/배경)가 포함되어 있으면 저장이 차단될 수 있습니다.');
+            } else {
+              alert('이미지 저장 실패: ' + msg);
+            }
+            resolve(false);
+          }
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const ok = tryDownload(url);
+        if(!ok && !preWin){
+          let w = null;
+          try{ w = window.open(url, '_blank', 'noopener'); }catch(e){}
+          if(!w) showOverlay(url);
+        }
+        if(preWin){
+          showInWindow(url, true);
+          setTimeout(() => { try{ URL.revokeObjectURL(url); }catch(e){} }, 120000);
+        }else{
+          setTimeout(() => { try{ URL.revokeObjectURL(url); }catch(e){} }, 800);
+        }
+        resolve(true);
+      }, 'image/png');
+    }catch(e){
+      const msg = (e && e.message) ? e.message : String(e||'오류');
+      if (/insecure|security/i.test(msg)) {
+        alert('이미지 저장 실패: 보안 정책(CORS)으로 인해 캔버스를 저장할 수 없습니다.\n\n외부 이미지(프로필/로고/배경)가 포함되어 있으면 저장이 차단될 수 있습니다.');
+      } else {
+        alert('이미지 저장 실패: ' + msg);
+      }
+      resolve(false);
+    }
+  });
 }
 
 // ── html2canvas 캡처 후 저장 ──────────────────────────────────────
 async function _captureAndSave(tmpDiv, w, h, filename) {
-  // 모든 외부 img를 data URL로 변환 → html2canvas canvas taint 방지
-  await _imgToDataUrls(tmpDiv);
+  try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
+  if (typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
   try{
-    await new Promise(r=>setTimeout(r, 80));
+    // 레이아웃 강제 flush: 고정 80ms×2 대신 rAF 2프레임으로 최소 대기
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     if(typeof _applyBoardBgAutoSizing === 'function') _applyBoardBgAutoSizing(tmpDiv);
     if(typeof _b2ApplyBgAutoSizing === 'function') _b2ApplyBgAutoSizing(tmpDiv);
-    await new Promise(r=>setTimeout(r, 80));
+    await new Promise(r => requestAnimationFrame(r));
   }catch(e){}
+
+  try{
+    const imgs = tmpDiv.querySelectorAll('img').length;
+    const t = document.getElementById('_save-toast');
+    if(imgs && t) t.innerHTML = '<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 (0/'+imgs+')';
+  }catch(e){}
+  await _imgToDataUrls(tmpDiv, 12000, (done, total)=>{
+    try{
+      const t = document.getElementById('_save-toast');
+      if(t) t.innerHTML = '<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 이미지 변환 ('+done+'/'+total+')';
+    }catch(e){}
+  });
 
   // 다크모드 CSS(body.dark .brd-card filter 등)가 export에 적용되지 않도록 일시 해제
   const wasDark = document.body.classList.contains('dark');
   if (wasDark) document.body.classList.remove('dark');
 
   try {
-    // 브라우저 canvas 최대 크기(~16384px) 초과 방지 → 동적 scale 계산
-    const MAX_DIM = 16000;
-    const safeScale = Math.max(1, Math.min(2, Math.floor(MAX_DIM / Math.max(w, h))));
-    const canvas = await html2canvas(tmpDiv, {
-      scale: safeScale, useCORS: false, allowTaint: false,
-      backgroundColor: '#f0f2f5', logging: false,
+    const t = document.getElementById('_save-toast');
+    if(t) t.innerHTML = '<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 캡처 중...';
+    try{ await _waitForImages(tmpDiv, 1500); }catch(e){}
+    const bg = (() => {
+      try{
+        const c = window.getComputedStyle ? getComputedStyle(tmpDiv).backgroundColor : '';
+        if (c && c !== 'transparent' && c !== 'rgba(0, 0, 0, 0)') return c;
+      }catch(e){}
+      return '#f0f2f5';
+    })();
+    const makeOnClone = (aggressive) => {
+      return function(clonedDoc){
+        try{
+          if(clonedDoc && clonedDoc.adoptedStyleSheets && clonedDoc.adoptedStyleSheets.length){
+            try{ clonedDoc.adoptedStyleSheets = []; }catch(e){}
+          }
+        }catch(e){}
+        if(!aggressive) return;
+        try{ clonedDoc.querySelectorAll('svg').forEach(el => el.remove()); }catch(e){}
+        try{
+          clonedDoc.querySelectorAll('img').forEach(img => {
+            try{
+              const src = String(img.getAttribute('src') || img.src || '');
+              if(!src) return;
+              if(src.includes('data:image/svg+xml') || /\.svg(\?|#|$)/i.test(src)){
+                img.style.display = 'none';
+              }
+            }catch(e){}
+          });
+        }catch(e){}
+        try{
+          clonedDoc.querySelectorAll('[style*="background-image"]').forEach(el => {
+            try{
+              const bi = String(el.style && el.style.backgroundImage ? el.style.backgroundImage : '');
+              if(bi && bi.includes('url(') && !bi.includes('data:image/')) el.style.backgroundImage = 'none';
+            }catch(e){}
+          });
+        }catch(e){}
+      };
+    };
+
+    const baseOpts = {
+      scale: 1,
+      backgroundColor: bg,
+      logging: false,
       imageTimeout: 20000,
-      width: w, height: h,
-      windowWidth: w + 100, windowHeight: h + 100,
+      width: w,
+      height: h,
+      windowWidth: w + 100,
+      windowHeight: h + 100,
       x: 0, y: 0, scrollX: 0, scrollY: 0
-    });
+    };
+
+    const isWaterfox = /waterfox/i.test(navigator.userAgent);
+    const isFirefox = /firefox/i.test(navigator.userAgent);
+    
+    const attempts = [
+      { useCORS: true, allowTaint: false, foreignObjectRendering: false, onclone: makeOnClone(false) },
+      { useCORS: true, allowTaint: false, foreignObjectRendering: true, onclone: makeOnClone(false) },
+      { useCORS: true, allowTaint: false, foreignObjectRendering: false, onclone: makeOnClone(true), ignoreElements: (el)=> el && el.tagName && el.tagName.toLowerCase() === 'svg' },
+      ...(isWaterfox || isFirefox ? [
+        { useCORS: true, allowTaint: false, foreignObjectRendering: false, onclone: makeOnClone(true),
+          ignoreElements: (el)=> {
+            if (!el || !el.tagName) return false;
+            const tag = el.tagName.toLowerCase();
+            if (tag === 'svg') return true;
+            if (tag === 'img') {
+              try{
+                const src = String(el.getAttribute('src') || el.src || '');
+                if(src && src.includes('://') && !src.includes(window.location.hostname) && !src.startsWith('data:')) return true;
+              }catch(e){}
+            }
+            if (el.style && el.style.backgroundImage && String(el.style.backgroundImage).includes('url(') && !String(el.style.backgroundImage).includes('data:image/')) {
+              return true;
+            }
+            return false;
+          }
+        }
+      ] : [])
+    ];
+
+    let canvas = null;
+    let lastErr = null;
+    for(const opt of attempts){
+      try{
+        canvas = await html2canvas(tmpDiv, { ...baseOpts, ...opt });
+        if (canvas && canvas.width > 0 && canvas.height > 0) { lastErr = null; break; }
+        lastErr = new Error('캔버스 생성 실패');
+      }catch(e){
+        lastErr = e;
+        const msg = _captureErrText(e);
+        if(msg.includes("can't access property \"type\"") || msg.includes("can't access property 'type'")){
+          continue;
+        }
+        if(msg === '[object Event]' || msg.startsWith('이벤트 오류(')){
+          continue;
+        }
+        break;
+      }
+    }
+    if(lastErr) throw new Error(_captureErrText(lastErr));
     if (!canvas || canvas.width === 0 || canvas.height === 0) throw new Error('캔버스 생성 실패');
-    _dlCanvasBoard(canvas, filename);
+    let ok = await _dlCanvasBoard(canvas, filename);
+    if(!ok){
+      // "The operation is insecure."(Firefox) 등 CORS/보안 이슈로 저장 실패하면,
+      // 외부 리소스를 제거한 안전 캡처로 1회 재시도
+      try{
+        tmpDiv.querySelectorAll('img').forEach(img => {
+          try{
+            const src = String(img.getAttribute('src') || img.src || '');
+            if(!src) return;
+            const host = String(window.location.hostname||'');
+            const safe = src.startsWith('data:') || src.startsWith('blob:') || (host && src.includes(host));
+            if(!safe) img.style.display = 'none';
+          }catch(e){}
+        });
+        tmpDiv.querySelectorAll('[style*="background-image"]').forEach(el => {
+          try{
+            const bi = String(el.style && el.style.backgroundImage ? el.style.backgroundImage : '');
+            if(bi && bi.includes('url(') && !bi.includes('data:image/')) el.style.backgroundImage = 'none';
+          }catch(e){}
+        });
+      }catch(e){}
+      const canvas2 = await html2canvas(tmpDiv, { ...baseOpts, useCORS: true, allowTaint: false, foreignObjectRendering: false, onclone: makeOnClone(true) });
+      if (!canvas2 || canvas2.width === 0 || canvas2.height === 0) throw new Error('캔버스 생성 실패');
+      ok = await _dlCanvasBoard(canvas2, filename);
+      if(!ok) throw new Error('이미지 저장 실패');
+    }
   } finally {
     // 다크모드 클래스 복원
     if (wasDark) document.body.classList.add('dark');
@@ -2211,6 +2361,8 @@ async function downloadBoardAll(){
   if(btn){btn.disabled=true;btn._ot=btn.textContent;btn.textContent='⏳...';}
   const tmpDiv=document.createElement('div');
   try{
+    try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
+    if (typeof html2canvas !== 'function') throw new Error('html2canvas를 불러오지 못했습니다.');
     const boardWrap=document.getElementById('board-wrap');
     if(!boardWrap||!boardWrap.children.length){alert('표시 중인 현황판이 없습니다.');return;}
     const bw=boardWrap.scrollWidth||900;
@@ -2226,29 +2378,22 @@ async function downloadBoardAll(){
       if(uObj&&uObj.hidden)card.remove();
     });
     document.body.appendChild(tmpDiv);
-    await new Promise(r=>setTimeout(r,300));
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-    await _imgToDataUrls(tmpDiv,3000);
-    tmpDiv.querySelectorAll('img').forEach(im=>{
-      const s=im.getAttribute('src')||'';
-      if(!s||(!s.startsWith('data:')&&!s.startsWith('blob:')))im.parentNode&&im.parentNode.removeChild(im);
-    });
+    await _imgToDataUrls(tmpDiv, 12000);
 
     const wasDark=document.body.classList.contains('dark');
     if(wasDark)document.body.classList.remove('dark');
     try{
       const w=tmpDiv.scrollWidth||bw;
       const h=Math.max(tmpDiv.scrollHeight,tmpDiv.offsetHeight,200);
-      // 브라우저 canvas 최대 크기(~16384px) 초과 방지 → 동적 scale 계산
-      const MAX_DIM=16000;
-      const safeScale=Math.max(1,Math.min(2,Math.floor(MAX_DIM/Math.max(w,h))));
       const canvas=await html2canvas(tmpDiv,{
-        scale:safeScale,useCORS:false,allowTaint:false,
-        backgroundColor:'#f0f2f5',logging:false,imageTimeout:5000,
+        scale:1,useCORS:true,allowTaint:false,
+        backgroundColor:'#f0f2f5',logging:false,imageTimeout:20000,
         width:w,height:h,windowWidth:w+200,windowHeight:h+200
       });
       if(!canvas||canvas.width===0||canvas.height===0)throw new Error('캔버스 생성 실패');
-      _dlCanvasBoard(canvas,'현황판_전체저장.png');
+      await _dlCanvasBoard(canvas,'현황판_전체저장.png');
     }finally{if(wasDark)document.body.classList.add('dark');}
   }catch(e){alert('다운로드 실패: '+e.message);}
   finally{
@@ -2311,7 +2456,7 @@ async function downloadBoardSel(){
   const tmpDiv=document.createElement('div');
   try{
     if(!boardSelUniv||boardSelUniv==='전체'){alert('대학을 선택하세요.');return;}
-    const u=typeof getAllUnivMap === 'function' ? getAllUnivMap().get(boardSelUniv) : getAllUnivs().find(x=>x.name===boardSelUniv);
+    const u=getAllUnivs().find(x=>x.name===boardSelUniv);
     if(!u){alert('해당 대학을 찾을 수 없습니다.');return;}
     const boardWrap=document.getElementById('board-wrap');
     if(boardWrap){
@@ -2328,7 +2473,7 @@ async function downloadBoardSel(){
     tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el=>el.remove());
     document.body.appendChild(tmpDiv);
     injectUnivIcons(tmpDiv);
-    await new Promise(r=>setTimeout(r,400));
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     void tmpDiv.getBoundingClientRect();
     const selW = tmpDiv.offsetWidth || 900;
     const selH = Math.max(tmpDiv.scrollHeight, tmpDiv.offsetHeight, 100);
@@ -2340,80 +2485,126 @@ async function downloadBoardSel(){
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 자동 동기화 (폴링) 기능 - GitHub 데이터 변경 자동 감지
+// ═══════════════════════════════════════════════════════════════
+let _autoSyncTimer = null;
+let _lastRemoteSavedAt = 0;
 
-async function checkFbSyncStatus(){
-  const el=document.getElementById('cfg-fb-sync-result');
-  if(!el)return;
-  el.innerHTML='<span style="color:var(--blue)">🔄 확인 중...</span>';
-
-  // GitHub data.json 동기화 상태 확인
-  const fbConnected=typeof window.fbSet==='function';
-  const hasPw=!!(typeof suGetSecret==='function' ? suGetSecret('su_gh_token') : localStorage.getItem('su_gh_token'));
-  const lastSave=localStorage.getItem('su_last_save_time');
-  const lastSignal=Number(localStorage.getItem('su_sync_last_firebase_signal_at')||0) || 0;
-  const freshness=_getSyncFreshnessMeta();
-  const missingMonths=(()=>{ try{ return JSON.parse(localStorage.getItem('su_sync_missing_months')||'[]')||[]; }catch(e){ return []; } })();
-  const localSize=(()=>{let t=0;for(let k in localStorage){if(k.startsWith('su_'))t+=((localStorage.getItem(k)||'').length*2);}return t;})();
-  const fmt=b=>b>=1024*1024?(b/1024/1024).toFixed(2)+'MB':b>=1024?(b/1024).toFixed(1)+'KB':b+'B';
-  // 마지막 수신 데이터 크기(호환 변수명 유지)
-  const fbSize=window._lastFbDataSize||null;
-
-  let rows=`
-    <div style="display:grid;gap:8px">
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${fbConnected?'#f0fdf4':'#fef2f2'};border:1px solid ${fbConnected?'#bbf7d0':'#fecaca'}">
-        <span style="font-size:16px">${fbConnected?'✅':'❌'}</span>
-        <div>
-          <div style="font-weight:700;font-size:12px">GitHub 동기화 모듈</div>
-          <div style="font-size:11px;color:var(--gray-l)">${fbConnected?'정상 연결됨':'GitHub 동기화 모듈 미로드'}</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${hasPw?'#f0fdf4':'#fffbeb'};border:1px solid ${hasPw?'#bbf7d0':'#fde68a'}">
-        <span style="font-size:16px">${hasPw?'🔑':'⚠️'}</span>
-        <div>
-          <div style="font-weight:700;font-size:12px">GitHub 토큰</div>
-          <div style="font-size:11px;color:var(--gray-l)">${hasPw?'설정됨 — 경기 기록 저장 시 GitHub data.json 자동 저장, 설정은 다음 기록 저장 때 함께 반영':'미설정 — GitHub 자동 저장 안 됨'}</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${lastSignal?'#eff6ff':'#f8fafc'};border:1px solid ${lastSignal?'#bfdbfe':'var(--border)'}">
-        <span style="font-size:16px">📡</span>
-        <div>
-          <div style="font-weight:700;font-size:12px">보조 신호 채널</div>
-          <div style="font-size:11px;color:var(--gray-l)">${lastSignal?`최근 신호 ${new Date(lastSignal).toLocaleString('ko-KR')}`:'아직 수신 기록 없음'}</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${missingMonths.length?'#fff7ed':'var(--surface)'};border:1px solid ${missingMonths.length?'#fdba74':'var(--border)'}">
-        <span style="font-size:16px">${missingMonths.length?'⚠️':'🗂️'}</span>
-        <div>
-          <div style="font-weight:700;font-size:12px">월별 기록 파일</div>
-          <div style="font-size:11px;color:var(--gray-l)">${missingMonths.length?`누락: ${missingMonths.join(', ')}`:'누락 없음'}</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
-        <span style="font-size:16px">💾</span>
-        <div>
-          <div style="font-weight:700;font-size:12px">마지막 저장</div>
-          <div style="font-size:11px;color:var(--gray-l)">${lastSave?new Date(parseInt(lastSave)).toLocaleString('ko-KR'):'기록 없음'}</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:${freshness.state==='local_newer'?'#fff7ed':freshness.state==='remote_newer'?'#eff6ff':'#f0fdf4'};border:1px solid ${freshness.state==='local_newer'?'#fdba74':freshness.state==='remote_newer'?'#bfdbfe':'#bbf7d0'}">
-        <span style="font-size:16px">${freshness.state==='local_newer'?'🖥️':freshness.state==='remote_newer'?'☁️':'🤝'}</span>
-        <div>
-          <div style="font-weight:700;font-size:12px">로컬/원격 최신 비교</div>
-          <div style="font-size:11px;color:${freshness.color}">${freshness.label}</div>
-          <div style="font-size:10px;color:var(--gray-l)">로컬 ${_fmtSyncTs(freshness.localLatest)} / 원격 ${_fmtSyncTs(freshness.remoteLatest)}</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
-        <span style="font-size:16px">📦</span>
-        <div>
-          <div style="font-weight:700;font-size:12px">로컬 데이터 크기</div>
-          <div style="font-size:11px;color:var(--gray-l)">${fmt(localSize)} ${fbSize?`/ 동기화 데이터: ${fmt(fbSize*2)}`:'(동기화 크기 미확인)'}</div>
-        </div>
-      </div>
-      <div style="display:grid;gap:8px;grid-template-columns:1fr">
-        ${missingMonths.length?`<button class="btn btn-w btn-sm" onclick="(async(btn)=>{const old=btn.textContent;btn.disabled=true;btn.textContent='🔄 누락 월 재수신 중...';try{if(typeof fbRetryMissingMonths==='function') await fbRetryMissingMonths();}catch(e){console.error('[fbRetryMissingMonths]',e);}finally{btn.disabled=false;btn.textContent=old;setTimeout(checkFbSyncStatus,300);}})(this)" style="width:100%">🗂️ 누락 월 다시받기</button>`:''}
-        ${isLoggedIn&&hasPw?`<button class="btn btn-b btn-sm" onclick="(async(btn)=>{const old=btn.textContent;btn.disabled=true;btn.textContent='⏫ 업로드 중...';try{await fbCloudSave();localStorage.setItem('su_last_save_time',Date.now());btn.textContent='✅ 완료';}catch(e){btn.textContent='❌ 실패';}finally{setTimeout(()=>{btn.disabled=false;btn.textContent=old;checkFbSyncStatus();},500);}})(this)" style="width:100%">⬆️ 지금 GitHub data.json에 업로드</button>`:''}
-      </div>
-    </div>`;
-  el.innerHTML=rows;
+// 원격 저장소의 savedAt 체크 (경량)
+async function _checkRemoteSavedAt() {
+  try {
+    const urls = [
+      GITHUB_JSON_URL + '?_=' + Date.now(),
+      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json?_=' + Date.now()
+    ];
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { cache: 'no-store', mode: 'cors', signal: AbortSignal.timeout(8000) });
+        if (!res.ok) continue;
+        const text = (await res.text()).replace(/^\uFEFF/, '').trim();
+        const raw = JSON.parse(text);
+        return Number(raw && raw.savedAt || 0) || 0;
+      } catch (e) { continue; }
+    }
+  } catch (e) {}
+  return 0;
 }
+
+// 자동 동기화 실행
+async function _autoSyncCheck() {
+  if (!_boardCanManage()) return; // 로그인/권한 체크
+  if (window._isSaving) return; // 현재 저장 중이면 스킵
+  
+  try {
+    const remoteAt = await _checkRemoteSavedAt();
+    if (!remoteAt) return;
+    
+    _lastRemoteSavedAt = remoteAt;
+    
+    // 로컬 저장 시간 확인
+    const localSavedAt = Math.max(
+      Number(window._lastAdminSaveTime || 0) || 0,
+      Number(localStorage.getItem('su_last_admin_save') || 0) || 0,
+      Number(window._lastAppliedSavedAt || 0) || 0
+    );
+    
+    // 원격에 더 새로운 데이터가 있으면 자동으로 불러오기
+    if (remoteAt > localSavedAt + 3000) { // 3초 여유
+      console.log('[autoSync] 원격에 새 데이터 감지 - 자동 동기화 시작');
+      
+      // 자동으로 데이터 불러오기
+      if (typeof window.cloudLoad === 'function') {
+        try {
+          await window.cloudLoad();
+          console.log('[autoSync] 자동 동기화 완료');
+          
+          // 알림 토스트
+          if (typeof showToast === 'function') {
+            showToast('✅ 다른 기기의 변경 사항이 자동으로 동기화되었습니다.', 3000);
+          }
+        } catch (e) {
+          console.error('[autoSync] 자동 동기화 실패:', e);
+          
+          // 실패 시 수동 불러오기 버튼 표시
+          const statusEl = document.getElementById('cloudStatus');
+          if (statusEl) {
+            statusEl.style.color = '#2563eb';
+            statusEl.innerHTML = `🔄 GitHub에 새 데이터 있음 <button onclick="window.cloudLoad()" style="margin-left:6px;padding:2px 8px;border:1px solid #2563eb;border-radius:4px;background:#eff6ff;color:#2563eb;font-size:11px;cursor:pointer">불러오기</button>`;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[autoSync] 체크 실패:', e);
+  }
+}
+
+// 자동 동기화 시작 (2분마다 체크 - 빠른 동기화를 위해 감소)
+function startAutoSync() {
+  if (_autoSyncTimer) clearInterval(_autoSyncTimer);
+  _autoSyncTimer = setInterval(_autoSyncCheck, 2 * 60 * 1000); // 2분
+  console.log('[autoSync] 자동 동기화 시작 (2분 간격)');
+}
+
+// 자동 동기화 중지
+function stopAutoSync() {
+  if (_autoSyncTimer) {
+    clearInterval(_autoSyncTimer);
+    _autoSyncTimer = null;
+    console.log('[autoSync] 자동 동기화 중지');
+  }
+}
+
+// 페이지 로드 후 자동 시작 (로그인 상태일 때)
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
+      startAutoSync();
+      // 첫 체크는 10초 후
+      setTimeout(_autoSyncCheck, 10000);
+    }
+  }, 2000);
+}, { once: true });
+
+// 저장 완료 후 자동 동기화 재시작
+window.addEventListener('DOMContentLoaded', () => {
+  const originalFbCloudSave = window.fbCloudSave;
+  if (originalFbCloudSave) {
+    window.fbCloudSave = async function(...args) {
+      const result = await originalFbCloudSave.apply(this, args);
+      // 저장 후 30초 뒤에 동기화 체크 (GitHub 반영 대기)
+      setTimeout(_autoSyncCheck, 30000);
+      return result;
+    };
+  }
+}, { once: true });
+
+// 즉시 실행으로 함수 전역 노출 보장
+(function() {
+  if (typeof window.saveCurrentView === 'function') {
+    console.log('[cloud-board.js] saveCurrentView 함수가 전역에 노출됨');
+  } else {
+    console.error('[cloud-board.js] saveCurrentView 함수가 전역에 노출되지 않음');
+  }
+})();

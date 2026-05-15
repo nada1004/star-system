@@ -14,17 +14,14 @@ function prepareUnivDetailComputedData(opts){
   (univM||[]).forEach(m=>{addOpp(m.a,m.b,m.sa>m.sb);addOpp(m.b,m.a,m.sb>m.sa);});
   (comps||[]).forEach(m=>{const a=m.a||m.u||'';addOpp(a,m.b,m.sa>m.sb);addOpp(m.b,a,m.sb>m.sa);});
 
-  let wins=0, tot=0;
-  players.forEach(p=>{
-    (p.history||[]).forEach(h=>{
-      if((h.univ||p.univ)===univName){
-        tot++;
-        if(h.result==='승') wins++;
-      }
-    });
-  });
-  const pts=(members||[]).reduce((s,p)=>s+p.points,0);
-  const wr=tot?Math.round(wins/tot*100):0;
+  const scoped = (typeof calcMembersAffiliationSummary==='function')
+    ? calcMembersAffiliationSummary(members, univName)
+    : { byPlayer:{}, wins:0, losses:0, draws:0, tot:0, wr:0, pts:0 };
+  const wins = scoped.wins || 0;
+  const losses = scoped.losses || 0;
+  const tot = scoped.tot || 0;
+  const pts = scoped.pts || 0;
+  const wr = scoped.wr || 0;
 
   const myMatches=[
     ...(miniM||[]).filter(m=>m.a===univName||m.b===univName).map(m=>({...m,mode:'미니대전'})),
@@ -33,7 +30,9 @@ function prepareUnivDetailComputedData(opts){
 
   return {
     oppStats,
+    byPlayer: scoped.byPlayer || {},
     wins,
+    losses,
     tot,
     pts,
     wr,

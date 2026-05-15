@@ -1,15 +1,19 @@
 ﻿/* ══ 드래그 이동 가능한 모달 (PC 전용) ══ */
 (function(){
   const isMobile = () => window.innerWidth <= 768;
+  const HANDLE_SELECTOR = '.mtitle, .detail-modal-head, .su-modal-hd, .sharecard-modal-hdr, .modal--dissolve__header, #notice-popup-header, .modal--login__title, .cmd-head, .cfg-modal-hdr';
+  const BOX_SELECTOR = '.su-modal, .sharecard-modal-box, .cfg-modal-box, .mbox, .umbox';
+  const MODAL_SELECTOR = '.su-modal-overlay, .sharecard-modal-overlay, .cfg-modal, .modal';
 
   document.addEventListener('mousedown', function(e){
     if(isMobile()) return; // 모바일에서는 드래그 비활성
 
-    const title = e.target.closest('.mtitle');
+    try{ if(e.target && e.target.closest && e.target.closest('button, input, textarea, select, label, a')) return; }catch(_){}
+    const title = e.target.closest(HANDLE_SELECTOR);
     if(!title) return;
-    const box = title.closest('.mbox, .umbox');
+    const box = title.closest(BOX_SELECTOR);
     if(!box) return;
-    const modal = box.closest('.modal');
+    const modal = box.closest(MODAL_SELECTOR);
     if(!modal) return;
 
     // 드래그 여부 추적 (드래그 후 mouseup 직후 발생하는 click으로 닫히는 것 방지)
@@ -18,24 +22,27 @@
     const downY = e.clientY;
 
     // 처음 드래그 시 absolute 위치로 전환
-    if(box.style.position !== 'absolute'){
+    const computedPos = window.getComputedStyle(box).position;
+    if(computedPos !== 'absolute' && computedPos !== 'fixed'){
       const rect = box.getBoundingClientRect();
       box.style.position = 'absolute';
       box.style.margin = '0';
       box.style.left = rect.left + 'px';
       box.style.top = rect.top + 'px';
-      modal.style.alignItems = 'flex-start';
-      modal.style.justifyContent = 'flex-start';
+      if(modal && modal.style){
+        modal.style.alignItems = 'flex-start';
+        modal.style.justifyContent = 'flex-start';
+      }
     }
 
     const startX = e.clientX - box.offsetLeft;
     const startY = e.clientY - box.offsetTop;
     function onMove(ev){
       if(Math.abs(ev.clientX-downX)>4 || Math.abs(ev.clientY-downY)>4) moved = true;
-      const maxL = window.innerWidth - box.offsetWidth;
-      const maxT = window.innerHeight - 40;
-      box.style.left = Math.min(maxL, Math.max(0, ev.clientX - startX)) + 'px';
-      box.style.top  = Math.min(maxT, Math.max(0, ev.clientY - startY)) + 'px';
+      const maxL = window.innerWidth - box.offsetWidth - 6;
+      const maxT = window.innerHeight - box.offsetHeight - 6;
+      box.style.left = Math.min(maxL, Math.max(6, ev.clientX - startX)) + 'px';
+      box.style.top  = Math.min(maxT, Math.max(6, ev.clientY - startY)) + 'px';
     }
     function onUp(){
       document.removeEventListener('mousemove', onMove);
@@ -51,21 +58,16 @@
     e.preventDefault();
   });
 
-  // (설정) 팝업 헤더 클릭 시 닫기
+  // 드래그 핸들 클릭은 닫기 동작으로 연결하지 않음
   document.addEventListener('click', function(e){
-    const title = e.target.closest && e.target.closest('.mtitle');
-    if(title){
-      // 드래그로 인한 click이면 무시
-      try{ if(title.dataset.dragMoved==='1') return; }catch(_){}
-      let s={};
-      try{ s=JSON.parse(localStorage.getItem('su_pd_style')||'{}')||{}; }catch(_){}
-      if(s.header_click_close===false) return;
-      const modal = title.closest('.modal');
-      if(modal && !modal.dataset.noClose){
-        if(typeof window.cm === 'function' && modal.id) window.cm(modal.id);
-        else modal.style.display='none';
+    try{
+      if(e.target && e.target.closest && e.target.closest('button, input, textarea, select, label, a, [role="button"], .detail-act, .cmd-hbtn, .cmd-close')){
+        return;
       }
-      // (중요) 일부 브라우저/구조에서 헤더 클릭이 다른 토글(접기/펼치기)을 유발할 수 있어 차단
+    }catch(_){}
+    const title = e.target.closest && e.target.closest(HANDLE_SELECTOR);
+    if(title){
+      try{ if(title.dataset.dragMoved==='1') return; }catch(_){}
       try{ e.preventDefault(); }catch(_){}
       try{ e.stopPropagation(); }catch(_){}
       return;
@@ -85,8 +87,13 @@
   window.om = function(id){
     const el = document.getElementById(id);
     if(el){
-      const box = el.querySelector('.mbox, .umbox');
-      if(box){ box.style.position=''; box.style.left=''; box.style.top=''; box.style.margin=''; }
+      const box = el.querySelector(BOX_SELECTOR);
+      if(box){
+        box.style.position='';
+        box.style.left='';
+        box.style.top='';
+        box.style.margin='';
+      }
       el.style.alignItems=''; el.style.justifyContent='';
     }
     if(typeof origOm === 'function') origOm(id);

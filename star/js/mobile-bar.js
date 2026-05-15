@@ -126,7 +126,7 @@ function _fabGo(tabId){
     setTimeout(function(){window.scrollTo({top:0,behavior:'smooth'});},80);
   } else if(typeof sw==='function'){
     // 직접 호출 fallback
-    sw(tabId, {classList:{add:function(){},remove:function(){}}});
+    sw(tabId);
   }
 }
 function updateFabButtonOnclick(){
@@ -227,4 +227,75 @@ document.addEventListener('click',function(e){
   document.addEventListener('touchend',function(){
     if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;_lpEl=null;}
   },{passive:true});
+})();
+
+/* ══════════════════════════════════════
+   📱 상단 탭 터치 지연 해소 (300ms delay fix)
+   - 모바일에서 onclick은 ~300ms 지연이 있음
+   - touchstart로 즉시 반응하도록 처리
+══════════════════════════════════════ */
+(function(){
+  var _touchTabActive = false;
+  var _touchTabTimer = null;
+
+  function _onTabTouchStart(e){
+    var tab = e.target.closest('.tab');
+    if(!tab) return;
+    // 멀티터치 무시
+    if(e.touches && e.touches.length > 1) return;
+    _touchTabActive = true;
+    // touchstart에서 즉시 sw() 호출
+    try{
+      var oc = tab.getAttribute('onclick') || '';
+      if(oc && typeof eval !== 'undefined'){
+        // onclick에서 함수명/인자 추출 후 직접 호출
+        var m = oc.match(/sw\(['"]([^'"]+)['"]\s*(?:,\s*this)?\)/);
+        if(m && typeof sw === 'function'){
+          e.preventDefault(); // click 이벤트 중복 방지
+          sw(m[1], tab);
+        }
+      }
+    }catch(err){}
+    // 300ms 후 플래그 해제
+    if(_touchTabTimer) clearTimeout(_touchTabTimer);
+    _touchTabTimer = setTimeout(function(){ _touchTabActive = false; }, 400);
+  }
+
+  // 바텀 네비 (swNav) 즉시 반응
+  function _onBnavTouchStart(e){
+    var btn = e.target.closest('.bnav-item');
+    if(!btn) return;
+    if(e.touches && e.touches.length > 1) return;
+    try{
+      var oc = btn.getAttribute('onclick') || '';
+      var m = oc.match(/swNav\(['"]([^'"]+)['"]\s*,\s*this\)/);
+      if(m && typeof swNav === 'function'){
+        e.preventDefault();
+        swNav(m[1], btn);
+      }
+    }catch(err){}
+  }
+
+  // .tabs 컨테이너에 touchstart 바인딩 (이벤트 위임)
+  function _bindTabTouch(){
+    var tabs = document.querySelector('.tabs');
+    if(tabs && !tabs._touchTabBound){
+      tabs.addEventListener('touchstart', _onTabTouchStart, {passive: false});
+      tabs._touchTabBound = true;
+    }
+    var bnav = document.getElementById('bottomNav');
+    if(bnav && !bnav._touchNavBound){
+      bnav.addEventListener('touchstart', _onBnavTouchStart, {passive: false});
+      bnav._touchNavBound = true;
+    }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _bindTabTouch);
+  } else {
+    _bindTabTouch();
+  }
+  // tabs가 나중에 생성될 경우 대비
+  setTimeout(_bindTabTouch, 500);
+  setTimeout(_bindTabTouch, 1500);
 })();

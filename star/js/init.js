@@ -23,6 +23,13 @@ function showNoticePopup(){
   window._noticePopupHideKey=todayKey;
   om('noticePopupModal');
 }
+try{
+  const _cfgRemotePolicy = localStorage.getItem('su_cfg_remote_policy_v2');
+  if(_cfgRemotePolicy !== '1'){
+    localStorage.setItem('su_cfg_remote_auto', '1');
+    localStorage.setItem('su_cfg_remote_policy_v2', '1');
+  }
+}catch(e){}
 function closeNoticePopup(){
   const chk=document.getElementById('notice-no-show-today');
   if(chk&&chk.checked&&window._noticePopupHideKey){
@@ -118,7 +125,12 @@ window.enableDragScroll = function(root){
 
       const down = (e)=>{
         const t = e.target;
-        if (t && (t.closest('button') || t.closest('input') || t.closest('select') || t.closest('textarea') || t.closest('a'))) return;
+        // (모바일 개선) 버튼 위에서 스와이프할 때도 가로 스크롤이 되게 허용
+        // - 마우스에서는 클릭 방해가 커서 기존처럼 차단
+        // - 터치/펜에서는 드래그 스크롤을 허용하고, 이동한 경우 click을 차단하는 기존 로직으로 처리
+        if (t && (t.closest('button') || t.closest('input') || t.closest('select') || t.closest('textarea') || t.closest('a'))){
+          if(e.pointerType==='mouse') return;
+        }
         if(e.pointerType==='mouse' && e.button!==0) return;
         isDown=true;
         moved=false;
@@ -207,273 +219,130 @@ async function _seedTierTtM(){
     _ttSeedLoading = false;
   }
 }
+try{ window._seedTierTtM = _seedTierTtM; }catch(e){}
 
-// ─────────────────────────────────────────────────────────────
-// URL 기반 탭/서브탭 라우팅
-// ─────────────────────────────────────────────────────────────
-(function(){
-  if(window.__suUrlNavReady) return;
-  window.__suUrlNavReady = true;
-  const TABS = new Set(['total','board','board2','elboard','hist','mini','ind','gj','univm','univck','comp','tiertour','pro','stats','cal','roulette','vote','cfg']);
-  function _safeDec(v){ try{ return decodeURIComponent(String(v||'')); }catch(e){ return String(v||''); } }
-  function _subForTab(tab){
-    switch(String(tab||'')){
-      case 'hist': return String(histSub||'mini');
-      case 'stats': return String((window.statsSub||statsSub||'overview'));
-      case 'comp': return String(compSub||'league');
-      case 'mini': return String(miniSub||'input');
-      case 'ind': return String(indSub||'input');
-      case 'gj': return String(gjSub||'input');
-      case 'univm': return String(univmSub||'input');
-      case 'univck': return String(ckSub||'input');
-      case 'tiertour': return String((typeof _ttSub!=='undefined' && _ttSub) || 'records');
-      default: return '';
+let _ttGeneralRestoreLoading = false;
+async function _mergeTierGeneralRestore(){
+  try{
+    if(_ttGeneralRestoreLoading) return;
+    _ttGeneralRestoreLoading = true;
+    const res = await fetch('data/tt-general-restore.json?v=20260505-01', {cache:'no-store'});
+    if(!res || !res.ok){ _ttGeneralRestoreLoading = false; return; }
+    const arr = await res.json();
+    if(!Array.isArray(arr) || !arr.length){ _ttGeneralRestoreLoading = false; return; }
+    if(typeof ttM==='undefined' || !Array.isArray(ttM)) window.ttM = [];
+    const existingIds = new Set((ttM||[]).map(m=>String(m&&m._id||'').trim()).filter(Boolean));
+    const existingKeys = new Set((ttM||[]).map(m=>{
+      const d=String(m&&m.d||'').trim();
+      const a=String(m&&m.a||'').trim();
+      const b=String(m&&m.b||'').trim();
+      const c=String(m&&m.compName||m&&m.n||m&&m.t||'').trim();
+      const st=String(m&&m.stage||'general').trim();
+      return [d,a,b,c,st].join('|');
+    }));
+    let added = 0;
+    arr.forEach(m=>{
+      if(!m || typeof m!=='object') return;
+      if(!m.stage) m.stage='general';
+      const c = String(m.compName||m.n||m.t||'').trim();
+      const id = String(m._id||'').trim();
+      const key = [String(m.d||'').trim(), String(m.a||'').trim(), String(m.b||'').trim(), c, String(m.stage||'general').trim()].join('|');
+      if((id && existingIds.has(id)) || existingKeys.has(key)) return;
+      if(!m.compName && c) m.compName = c;
+      if(!m.n && c) m.n = c;
+      if(!m.t && c) m.t = c;
+      ttM.unshift(m);
+      if(id) existingIds.add(id);
+      existingKeys.add(key);
+      added++;
+    });
+    if(added){
+      try{ ttM.sort((a,b)=>(String(b?.d||'')).localeCompare(String(a?.d||''))); }catch(e){}
+      try{ if(typeof _ttMigrated!=='undefined') _ttMigrated=false; }catch(e){}
+      try{ if(typeof save==='function') save(); }catch(e){}
+      try{ if(typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
+      try{ if(typeof render==='function') render(); }catch(e){}
+      console.log('[티어대회 일반 기록 복구] 추가:', added, '원본:', arr.length);
     }
+    _ttGeneralRestoreLoading = false;
+  }catch(e){
+    _ttGeneralRestoreLoading = false;
   }
-  function _setSubForTab(tab, sub){
-    const v = String(sub||'').trim();
-    if(!v) return;
-    switch(String(tab||'')){
-      case 'hist': histSub = v; break;
-      case 'stats':
-        if(typeof window.statsSub!=='undefined') window.statsSub = v;
-        try{ statsSub = v; }catch(e){}
-        try{ localStorage.setItem('su_statsSub', v); }catch(e){}
-        break;
-      case 'comp': compSub = v; break;
-      case 'mini': miniSub = v; break;
-      case 'ind': indSub = v; break;
-      case 'gj': gjSub = v; break;
-      case 'univm': univmSub = v; break;
-      case 'univck': ckSub = v; break;
-      case 'tiertour': try{ _ttSub = v; }catch(e){} break;
-    }
-  }
-  window.__suBuildNavUrl = function(){
-    const params = new URLSearchParams(window.location.search || '');
-    const tab = String((typeof curTab!=='undefined' && curTab) || 'total');
-    if(tab && tab!=='total') params.set('tab', tab); else params.delete('tab');
-    const sub = _subForTab(tab);
-    if(sub) params.set('sub', sub); else params.delete('sub');
-    if(tab==='comp' && typeof curComp!=='undefined' && String(curComp||'').trim()) params.set('compName', String(curComp||'').trim()); else params.delete('compName');
-    if(tab==='tiertour' && typeof _ttCurComp!=='undefined' && String(_ttCurComp||'').trim()) params.set('ttComp', String(_ttCurComp||'').trim()); else params.delete('ttComp');
-    const q = (tab==='stats' && String((window.statsSub||statsSub||''))==='psearch' && typeof window._psearchQ!=='undefined') ? String(window._psearchQ||'').trim() : '';
-    if(q) params.set('query', q);
-    else if(!params.get('player') && !params.get('univ')) params.delete('query');
-    const playerName = String(window.__suModalPlayerName || '').trim();
-    const univName = String(window.__suModalUnivName || '').trim();
-    const matchKey = String(window.__suOpenHistDetailKey || '').trim();
-    if(playerName) params.set('player', playerName); else params.delete('player');
-    if(univName) params.set('univ', univName); else params.delete('univ');
-    if(matchKey) params.set('match', matchKey); else params.delete('match');
-    if(tab==='hist' && typeof histPage!=='undefined'){
-      const pgKey = String(histSub||'all');
-      const p = Number(histPage[pgKey]||0) + 1;
-      if(p > 1) params.set('page', String(p)); else params.delete('page');
-    }else{
-      params.delete('page');
-    }
-    const qs = params.toString();
-    return `${window.location.pathname}${qs?`?${qs}`:''}${window.location.hash||''}`;
-  };
-  window.__suSyncUrlState = function(){
-    try{
-      if(window.__suUrlMute) return;
-      const next = window.__suBuildNavUrl();
-      const cur = `${window.location.pathname}${window.location.search}${window.location.hash||''}`;
-      if(next !== cur) window.history.replaceState({suNav:true}, '', next);
-    }catch(e){}
-  };
-  window.__suApplyUrlState = function(opts){
-    const o = opts || {};
-    try{
-      window.__suUrlMute = true;
-      const params = new URLSearchParams(window.location.search || '');
-      const tab = String(params.get('tab')||'').trim();
-      const sub = String(params.get('sub')||'').trim();
-      const compName = _safeDec(params.get('compName')||'').trim();
-      const ttComp = _safeDec(params.get('ttComp')||'').trim();
-      const q = _safeDec(params.get('query')||'').trim();
-      const playerName = _safeDec(params.get('player')||'').trim();
-      const univName = _safeDec(params.get('univ')||'').trim();
-      const matchKey = _safeDec(params.get('match')||'').trim();
-      const page = Math.max(1, parseInt(params.get('page')||'1',10)||1);
-      if(tab && TABS.has(tab)) curTab = tab;
-      if(sub) _setSubForTab(curTab, sub);
-      if(curTab==='hist' && typeof histPage!=='undefined'){
-        const pgKey = String(histSub||'all');
-        histPage[pgKey] = Math.max(0, page-1);
-      }
-      if(curTab==='comp' && compName && typeof curComp!=='undefined') curComp = compName;
-      if(curTab==='tiertour' && ttComp && typeof _ttCurComp!=='undefined') _ttCurComp = ttComp;
-      if(curTab==='stats' && String((window.statsSub||statsSub||''))==='psearch' && q && typeof window._psearchQ!=='undefined') window._psearchQ = q;
-      window.__suPendingPlayerModal = playerName || '';
-      window.__suPendingUnivModal = univName || '';
-      window.__suPendingMatchDetailKey = matchKey || '';
-      try{ openDetails = {}; }catch(e){}
-    }catch(e){} finally {
-      window.__suUrlMute = false;
-    }
-    if(o.render !== false){
-      try{ if(typeof render==='function') render(true); }catch(e){}
-    }
-  };
-  window.__suPatchRenderForUrlSync = function(){
-    try{
-      if(window.__suRenderUrlPatched || typeof window.render!=='function') return;
-      window.__suRenderUrlPatched = true;
-      const _origRender = window.render;
-      window.render = function(){
-        const r = _origRender.apply(this, arguments);
-        try{
-          if(arguments[0]===true) setTimeout(()=>window.__suSyncUrlState(), 0);
-          else requestAnimationFrame(()=>window.__suSyncUrlState());
-        }catch(e){}
-        return r;
-      };
-      try{ render = window.render; }catch(e){}
-    }catch(e){}
-  };
-  window.__suPatchModalFnsForUrl = function(){
-    try{
-      if(window.__suModalUrlPatched) return;
-      window.__suModalUrlPatched = true;
-      const _origCm = window.cm;
-      window.cm = function(id){
-        try{
-          if(id==='playerModal') window.__suModalPlayerName = '';
-          if(id==='univModal') window.__suModalUnivName = '';
-          if(id==='histDetModal') window.__suOpenHistDetailKey = '';
-        }catch(e){}
-        const r = (typeof _origCm === 'function') ? _origCm.apply(this, arguments) : undefined;
-        try{ window.__suSyncUrlState(); }catch(e){}
-        return r;
-      };
-    }catch(e){}
-  };
-  window.__suOpenPendingUrlModal = function(){
-    try{
-      const playerName = String(window.__suPendingPlayerModal||'').trim();
-      const univName = String(window.__suPendingUnivModal||'').trim();
-      const matchKey = String(window.__suPendingMatchDetailKey||'').trim();
-      window.__suPendingPlayerModal = '';
-      window.__suPendingUnivModal = '';
-      window.__suPendingMatchDetailKey = '';
-      if(playerName && typeof openPlayerModal==='function'){
-        setTimeout(()=>{ try{ openPlayerModal(playerName); }catch(e){} }, 100);
-        return;
-      }
-      if(univName && typeof openUnivModal==='function'){
-        setTimeout(()=>{ try{ openUnivModal(univName); }catch(e){} }, 100);
-        return;
-      }
-      if(matchKey && typeof openHistDetailModal==='function'){
-        setTimeout(()=>{ try{ openHistDetailModal(matchKey); }catch(e){} }, 120);
-      }
-    }catch(e){}
-  };
-  window.addEventListener('popstate', ()=>{
-    try{ window.__suApplyUrlState({ render:true }); }catch(e){}
-  });
-})();
+}
+try{ window._mergeTierGeneralRestore = _mergeTierGeneralRestore; }catch(e){}
 
 async function init(){
   try{
-    let usedCriticalBoot = !!window.__suCriticalBootApplied;
-    try{
-      if(!usedCriticalBoot && window.__suCriticalBootData && await window.__suNeedsBootstrapData()){
-        const critical = window.__suCriticalBootData || {};
-        if(Array.isArray(critical.players) && critical.players.length){
-          if(typeof window.__suApplyImportedData === 'function'){
-            await window.__suApplyImportedData(critical, { persist:false, render:false });
-          }else{
-            players = critical.players;
-            if(Array.isArray(critical.univCfg) && critical.univCfg.length) univCfg = critical.univCfg;
-            if(Array.isArray(critical.maps) && critical.maps.length) maps = critical.maps;
-            miniM = Array.isArray(critical.miniM) ? critical.miniM : (miniM || []);
-            univM = Array.isArray(critical.univM) ? critical.univM : (univM || []);
-            ckM = Array.isArray(critical.ckM) ? critical.ckM : (ckM || []);
-            proM = Array.isArray(critical.proM) ? critical.proM : (proM || []);
-            comps = Array.isArray(critical.comps) ? critical.comps : (comps || []);
-            tourneys = Array.isArray(critical.tourneys) ? critical.tourneys : (tourneys || []);
-            ttM = Array.isArray(critical.ttM) ? critical.ttM : (ttM || []);
-            indM = Array.isArray(critical.indM) ? critical.indM : (indM || []);
-            gjM = Array.isArray(critical.gjM) ? critical.gjM : (gjM || []);
-          }
-          window.__suInitialDataPending = false;
-          window.__suCriticalBootApplied = true;
-          usedCriticalBoot = true;
-          const hasCriticalRecords = [
-            critical.miniM, critical.univM, critical.ckM, critical.proM,
-            critical.comps, critical.tourneys, critical.ttM, critical.indM, critical.gjM
-          ].some(v=>Array.isArray(v) && v.length);
-          if(hasCriticalRecords) window.__suBootDataApplied = true;
-        }
-      }
-    }catch(e){}
-    if(!usedCriticalBoot && !window.__suBootDataApplied && window.__suBootDataPromise && await window.__suNeedsBootstrapData()){
-      const bootData = await Promise.race([
-        window.__suBootDataPromise,
-        new Promise(resolve=>setTimeout(()=>resolve(null), 220))
-      ]);
-      if(bootData){
-        await window.__suApplyImportedData(bootData, { persist:false, render:false });
-      }
+    if(window.MatchStore && typeof window.MatchStore.init==='function') await window.MatchStore.init();
+    if(window.PlayerStore && typeof window.PlayerStore.init==='function') await window.PlayerStore.init();
+  }catch(e){}
+  // (요청사항) 다른 기기에서 저장된 "설정(Gist)"이 있으면 시작 시 반영
+  // - 새 신호가 있을 때만 pull 됨
+  try{
+    if(window.SettingsStore && typeof window.SettingsStore.pullOnSignal==='function'){
+      await window.SettingsStore.pullOnSignal({ silent:true });
     }
   }catch(e){}
-  try{ if(typeof window.__suPatchRenderForUrlSync==='function') window.__suPatchRenderForUrlSync(); }catch(e){}
-  try{ if(typeof window.__suPatchModalFnsForUrl==='function') window.__suPatchModalFnsForUrl(); }catch(e){}
-  try{ if(typeof window.__suApplyUrlState==='function') window.__suApplyUrlState({ render:false }); }catch(e){}
-  // 첫 화면은 최대한 빨리 노출
-  render(true);
-  requestAnimationFrame(()=>{
-    try{ if(typeof window._applyAllRuntimeSettings === 'function') window._applyAllRuntimeSettings(); }catch(e){}
-  });
-  // 무거운 복원/정합 작업은 첫 화면을 먼저 그린 뒤로 미룸
-  setTimeout(async ()=>{
-    let _needsLateRender = false;
-    try{
-      if(!window.__suBootDataApplied && window.__suBootDataPromise){
-        const bootData = await window.__suBootDataPromise;
-        if(bootData){
-          await window.__suApplyImportedData(bootData, { render:false });
-          if(!(typeof curTab!=='undefined' && curTab==='total' && Array.isArray(players) && players.length)){
-            _needsLateRender = true;
-          }
-        }
-      }
-    }catch(e){}
-    try{ fixPoints(); }catch(e){}
-    try{ _seedTierTtM(); }catch(e){}
-    try{
-      if(typeof ELO_DEFAULT!=='undefined'){
-        players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
-      }
-    }catch(e){}
-    try{
-      const ptier=document.getElementById('p-tier');
-      if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
-    }catch(e){}
-    try{
-      if(!window.__suBootDataApplied && typeof window.__suHydrateHistoryFromIDB === 'function'){
-        const hydrated = await window.__suHydrateHistoryFromIDB();
-        if(hydrated) _needsLateRender = true;
-      }
-    }catch(e){
-      console.warn('[init] history idb hydrate failed', e);
+  fixPoints();
+  // 티어대회 기록(ttM) 시드가 있으면 로드(비동기) — 로컬 데이터가 비어 있을 때만
+  try{ _seedTierTtM(); }catch(e){}
+  // 티어대회 일반 기록 복구 JSON이 있으면 누락분만 병합
+  try{ _mergeTierGeneralRestore(); }catch(e){}
+  // 전역 폰트 설정 적용
+  try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
+  // (요청사항) 버튼/필 스타일 설정 적용
+  try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
+  // 🎨 디자인 모드(리뉴얼) 적용
+  try{ if(typeof window.applyDesignV2 === 'function') window.applyDesignV2(); }catch(e){}
+  // ELO 미설정 선수에게 기본값 부여
+  if(typeof ELO_DEFAULT!=='undefined'){
+    players.forEach(p=>{ if(p.elo===undefined||p.elo===null) p.elo=ELO_DEFAULT; });
+  }
+  // 대회(tourneys) 기록 자동 소급 반영 (미반영분만, 중복 방지 내장)
+  if(typeof syncTourneyHistory==='function') syncTourneyHistory();
+  // 티어대회 데이터 마이그레이션 (조별리그/브라켓 기록 → ttM 동기화)
+  if(typeof _migrateTierTourneys==='function') _migrateTierTourneys();
+  // 티어대전 → 티어대회 명칭 마이그레이션
+  if(typeof _migrateTierTourName==='function') _migrateTierTourName();
+  // 대학별 전적 정합성 보정: 과거 팀전 history의 잘못된 소속 대학 기록을 1회 재생성
+  try{
+    const affFixVer = '20260504-aff-univ-fix-01';
+    if(localStorage.getItem('su_hist_aff_fix_ver') !== affFixVer){
+      if(typeof _rebuildAllPlayerHistoryCore === 'function') _rebuildAllPlayerHistoryCore();
+      if(typeof localSave === 'function') localSave();
+      localStorage.setItem('su_hist_aff_fix_ver', affFixVer);
     }
-    try{ initLoginHash(); }catch(e){}
-    try{ applyLoginState(); }catch(e){}
-    try{ if(typeof syncTourneyHistory==='function') syncTourneyHistory(); }catch(e){}
-    try{ if(typeof _migrateTierTourneys==='function') _migrateTierTourneys(); }catch(e){}
-    try{ if(typeof _migrateTierTourName==='function') _migrateTierTourName(); }catch(e){}
-    try{ refreshSel(); }catch(e){}
-    try{
-      const _isTotalReady = (typeof curTab!=='undefined' && curTab==='total' && Array.isArray(players) && players.length);
-      if(_needsLateRender && !_isTotalReady && typeof render==='function') render(true);
-    }catch(e){}
-    try{ if(typeof window._applyAllRuntimeSettings === 'function') window._applyAllRuntimeSettings(); }catch(e){}
-  }, 0);
+  }catch(e){}
+  // 연도 필터는 getYearOptions()가 렌더링 시 동적으로 계산하므로 별도 추출 불필요
+  const ptier=document.getElementById('p-tier');
+  if(ptier) ptier.innerHTML=TIERS.map(t=>`<option value="${t}">${getTierLabel(t)}</option>`).join('');
+  try{refreshSel();}catch(e){}
+  try{
+    window._authInitPromise = (async()=>{
+      await initLoginHash();
+      if(typeof window.refreshSessionAuthority === 'function'){
+        await window.refreshSessionAuthority(true);
+      }
+    })();
+  }catch(e){ try{ initLoginHash(); }catch(_){} }
+  applyLoginState();
+  try{ if(typeof window._applyTabLinkFromUrl==='function') window._applyTabLinkFromUrl(); }catch(e){}
+  render();
+  // (요청사항) 주기적으로 설정 신호 확인(다른 기기 변경 반영)
+  try{
+    if(!window._settingsAutoPullTimer && window.SettingsStore && typeof window.SettingsStore.pullOnSignal==='function'){
+      window._settingsAutoPullTimer = setInterval(()=>{
+        try{
+          window.SettingsStore.pullOnSignal({ silent:true, returnInfo:true }).then(info=>{
+            try{
+              if(info && info.ok && !info.skipped && typeof render==='function') render();
+            }catch(e){}
+          }).catch(()=>{});
+        }catch(e){}
+      }, 15000);
+    }
+  }catch(e){}
+  try{ setTimeout(()=>{ if(typeof window._applyDeepLinkFromUrl==='function') window._applyDeepLinkFromUrl(); }, 80); }catch(e){}
   // (성능) 부가 기능은 idle 시 지연 로딩
   // - BGM/멀티뷰는 초기 렌더와 무관하므로, 최초 로딩을 가볍게 유지
   try{
@@ -481,44 +350,28 @@ async function init(){
       try{
         if(typeof window._loadScriptOnce!=='function') return;
         window._loadScriptOnce('js/yt-bgm.js?v=20260420-06').catch(()=>{});
-        window._loadScriptOnce('js/soop-multiview.js?v=20260420-10').catch(()=>{});
-        window._loadScriptOnce('js/mobile-bar.js?v=20260422-02').catch(()=>{});
+        window._loadScriptOnce('js/soop-multiview.js?v=20260504-02').catch(()=>{});
       }catch(e){}
     };
     if('requestIdleCallback' in window) requestIdleCallback(loadExtras, {timeout: 2500});
     else setTimeout(loadExtras, 1200);
   }catch(e){}
-  try{
-    const warmTotal = ()=>{
-      try{
-        if(typeof window._warmTotalCaches === 'function') window._warmTotalCaches();
-      }catch(e){}
-    };
-    if('requestIdleCallback' in window) requestIdleCallback(warmTotal, {timeout: 1200});
-    else setTimeout(warmTotal, 400);
-  }catch(e){}
-  // 초기 화면과 직접 관련 없는 모듈은 첫 렌더 뒤 지연 로딩
-  try{
-    const loadDeferredUi = ()=>{
-      try{
-        if(typeof window._ensureCloudBoardLoaded === 'function') window._ensureCloudBoardLoaded().catch(()=>{});
-        else if(typeof window._loadScriptOnce === 'function') window._loadScriptOnce('js/cloud-board.js?v=20260503-12').catch(()=>{});
-        if(typeof window._ensureBoard2Loaded === 'function') window._ensureBoard2Loaded().catch(()=>{});
-      }catch(e){}
-    };
-    if('requestIdleCallback' in window) requestIdleCallback(loadDeferredUi, {timeout: 3000});
-    else setTimeout(loadDeferredUi, 1500);
-  }catch(e){}
   setTimeout(showNoticePopup, 800);
-  // URL 파라미터로 검색/상세 자동 오픈
+  // 🆕 URL 파라미터로 선수/대학 자동 오픈
   setTimeout(()=>{
     try{
       const params = new URLSearchParams(window.location.search);
+      const playerParam = params.get('player');
+      const univParam = params.get('univ');
       const queryParam = params.get('query');
-      if(queryParam){
+      if(playerParam && typeof openPlayerModal==='function'){
+        openPlayerModal(decodeURIComponent(playerParam));
+      } else if(univParam && typeof openUnivModal==='function'){
+        openUnivModal(decodeURIComponent(univParam));
+      } else if(queryParam){
         const q = decodeURIComponent(queryParam);
         const exact = players.find(p=>p.name===q);
-        if(exact && typeof openPlayerModal==='function' && !String(window.__suPendingPlayerModal||'').trim()){
+        if(exact && typeof openPlayerModal==='function'){
           openPlayerModal(q);
         } else {
           if(typeof sw==='function') sw('stats');
@@ -529,18 +382,56 @@ async function init(){
       }
     }catch(e){}
   }, 1200);
-  setTimeout(()=>{
-    try{ if(typeof window.__suOpenPendingUrlModal==='function') window.__suOpenPendingUrlModal(); }catch(e){}
-  }, 1350);
 }
 init();
 initDark();
 
 // ─────────────────────────────────────────────────────────────
-// 설정 원격 pull은 수동 실행만 유지
-// - GitHub/Firebase 동기화는 변경 신호 기반으로만 수신
-// - SettingsStore는 설정 화면의 수동 불러오기에서만 사용
+// (요청사항) 설정 변경 → 다른 기기 "바로" 반영 보강
+// - 설정 변경 신호가 있을 때만 원격 설정 pull
+// - 토큰이 없는 기기도 신호를 보고 읽기만 가능
 // ─────────────────────────────────────────────────────────────
+(function(){
+  if(window._settingsAutoSyncStarted) return;
+  window._settingsAutoSyncStarted = true;
+
+  const doPull = async ()=>{
+    try{
+      if(!window.SettingsStore || typeof window.SettingsStore.pullOnSignal!=='function') return;
+      const c = window.SettingsStore.cfg ? window.SettingsStore.cfg() : { gistId:'' };
+      if(!c || !c.gistId) return;
+      const info = await window.SettingsStore.pullOnSignal({silent:true, returnInfo:true});
+      if(!info || info.skipped) return;
+      try{
+        if(typeof window.refreshSessionAuthority === 'function'){
+          await window.refreshSessionAuthority(true);
+        }
+      }catch(e){}
+      // 설정 팝업이 열려있고 AI 섹션이 보이면 입력값/상태 즉시 반영
+      try{
+        const m = document.getElementById('cfgModal');
+        if(m && m.style.display!=='none'){
+          const sec = document.getElementById('cfg-sec-aibot');
+          if(sec && sec.closest && sec.closest('#cfgModalBody')){
+            if(typeof window.cfgInitAiProxy==='function') window.cfgInitAiProxy();
+          }
+        }
+      }catch(e){}
+    }catch(e){}
+  };
+
+  // 첫 신호 확인
+  setTimeout(doPull, 1200);
+  // 설정 변경 신호 확인
+  setInterval(doPull, 8000);
+  // 포커스/재진입 시 신호 확인
+  try{ window.addEventListener('focus', ()=>doPull()); }catch(e){}
+  try{
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState === 'visible') doPull();
+    });
+  }catch(e){}
+})();
 
 // ─────────────────────────────────────────────────────────────
 // 전역 폰트 설정
@@ -624,8 +515,19 @@ window._applyAppFont = function(){
   const finalFamWithEmoji = `${emojiFam}, ${finalFam}`;
   try{ document.documentElement.style.setProperty('--app-font', finalFamWithEmoji); }catch(e){}
 };
+window._applyAppFontScale = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth || 1024));
+    const legacy = parseInt(localStorage.getItem('su_app_font_scale_pct')||'100',10) || 100;
+    const key = w <= 768 ? 'su_app_font_scale_mb_pct' : (w <= 1024 ? 'su_app_font_scale_tb_pct' : 'su_app_font_scale_pc_pct');
+    const pct = parseInt(localStorage.getItem(key)||String(legacy),10) || legacy;
+    const mul = Math.max(85, Math.min(130, pct)) / 100;
+    document.documentElement.style.setProperty('--fontS', String(mul));
+  }catch(e){}
+};
 // 초기 1회 적용(렌더 전후 모두 대응)
 try{ window._applyAppFont(); }catch(e){}
+try{ window._applyAppFontScale(); }catch(e){}
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 버튼/필(탭/필터) 스타일 전역 설정
@@ -889,6 +791,7 @@ function _applyUiScale(){
     }catch(e){}
     document.documentElement.style.setProperty('--uiS', String(s));
   }catch(e){}
+  try{ if(typeof window._applyAppFontScale === 'function') window._applyAppFontScale(); }catch(e){}
 }
 window.addEventListener('resize', ()=>{ _applyUiScale(); }, {passive:true});
 // 설정에서 즉시 반영할 수 있도록 노출
@@ -975,9 +878,12 @@ function _applyRecCardTheme(){
   const scKey='su_rc_score_scale';
   let on=true, accent='none', bg=12, hd=14, uicon=24;
   let univFontPct=110, ymScalePct=100;
-  let memoOn=false, vsAlign='left', scScale=100;
+  let memoOn=false, vsAlign='center', scScale=108;
+  // (요청사항) 배경 효과 완전 OFF 감지(승리 배경 + 양끝 효과 모두 OFF)
+  let sideFxOn = true;
   try{
     const v=localStorage.getItem(onKey); if(v!=null) on = v==='1';
+    const sfx=localStorage.getItem('su_rec_side_fx_on'); if(sfx!=null) sideFxOn = sfx!=='0';
     const a=localStorage.getItem(acKey); if(a) accent=a;
     const b=parseInt(localStorage.getItem(bgKey)||'',10); if(!isNaN(b)) bg=b;
     const h=parseInt(localStorage.getItem(hdKey)||'',10); if(!isNaN(h)) hd=h;
@@ -994,8 +900,8 @@ function _applyRecCardTheme(){
   univFontPct=Math.max(90,Math.min(150,univFontPct||100));
   ymScalePct=Math.max(80,Math.min(140,ymScalePct||100));
   accent = ['none','header','border','full','gradient'].includes(accent) ? accent : 'none';
-  vsAlign = ['left','center','right'].includes(vsAlign) ? vsAlign : 'left';
-  scScale = Math.max(80, Math.min(130, scScale||100));
+  vsAlign = ['left','center','right'].includes(vsAlign) ? vsAlign : 'center';
+  scScale = Math.max(80, Math.min(130, scScale||108));
   const vsJust = (vsAlign==='center')?'center':(vsAlign==='right')?'flex-end':'flex-start';
 
   try{
@@ -1005,6 +911,8 @@ function _applyRecCardTheme(){
       document.body.classList.toggle('rc-accent-border', !!on && accent==='border');
       document.body.classList.toggle('rc-accent-full', !!on && accent==='full');
       document.body.classList.toggle('rc-accent-gradient', !!on && accent==='gradient');
+      // 배경 효과(모드 컬러/헤더 틴트 포함) 완전 OFF 시, 잔색 제거용 클래스
+      document.body.classList.toggle('rc-bgfx-off', (!on && !sideFxOn));
     }
     document.documentElement.style.setProperty('--rc-bg-a', String(bg/100));
     document.documentElement.style.setProperty('--rc-hd-a', String(hd/100));
@@ -1065,216 +973,6 @@ window._applyTourneyCardTheme=_applyTourneyCardTheme;
 _applyTourneyCardTheme();
 
 // ─────────────────────────────────────────────────────────────
-// 설정 런타임 공용 부팅
-// - 설정탭 진입 여부와 무관하게 앱 시작 시 바로 적용되어야 하는 설정만 모음
-// - settings.js(UI)와 분리된 런타임 SSOT
-// ─────────────────────────────────────────────────────────────
-try{
-  if(typeof window._cfgFemcoDefaults !== 'function'){
-    window._cfgFemcoDefaults = function(){
-      return {
-        autoLayout: 1,
-        logoSize: 150,
-        logoPos: 'top',
-        logoAttachTitle: 1,
-        headGap: 10,
-        titleSize: 28,
-        titleFont: 'system',
-        playerImgSize: 46,
-        playerImgShape: 'square',
-        rowsPerCol: 5,
-        colWidth: 170,
-        colGap: 10,
-        univGap: 18,
-        countFontSize: 12,
-        contentPadX: 16,
-        contentAlign: 'left',
-        contentOffsetX: 0,
-        univSubtitles: {},
-        subtitleSize: 12,
-        subtitleWeight: 800,
-        subtitleColor: '',
-        nameFontSize: 12,
-        roleFontSize: 10,
-        tierBadgeSize: 10,
-        tierBadgePadX: 6,
-        starSize: 15,
-        statusIconSize: 18,
-        univColorOverrides: {},
-        univBgMedia: {},
-        bgOverlay: 22,
-        logoOffsetX: 0,
-        logoOffsetY: 0,
-        titleOffsetX: 0,
-        titleOffsetY: 0,
-        titlePos: 'bottom'
-      };
-    };
-  }
-  if(typeof window._cfgFemcoLoad !== 'function'){
-    window._cfgFemcoLoad = function(){
-      try{
-        const raw = localStorage.getItem('b2_femco_settings_v1');
-        const base = (typeof window._cfgFemcoDefaults === 'function') ? window._cfgFemcoDefaults() : {};
-        if(!raw) return base;
-        const obj = JSON.parse(raw) || {};
-        return {
-          ...base,
-          ...obj,
-          univSubtitles:{...(base.univSubtitles||{}), ...(obj.univSubtitles||{})},
-          univColorOverrides:{...(base.univColorOverrides||{}), ...(obj.univColorOverrides||{})},
-          univBgMedia:{...(base.univBgMedia||{}), ...(obj.univBgMedia||{})}
-        };
-      }catch(e){
-        try{ return (typeof window._cfgFemcoDefaults === 'function') ? window._cfgFemcoDefaults() : {}; }catch(_){ return {}; }
-      }
-    };
-  }
-  if(typeof window._cfgFemcoSave !== 'function'){
-    window._cfgFemcoSave = function(obj){
-      try{ localStorage.setItem('b2_femco_settings_v1', JSON.stringify(obj||{})); }catch(e){}
-      try{ if(typeof window._markLocalSettingsChanged === 'function') window._markLocalSettingsChanged(); }catch(e){}
-      try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
-    };
-  }
-}catch(e){}
-
-window._applyAllRuntimeSettings = function(){
-  try{ if(typeof window._applyAppFont === 'function') window._applyAppFont(); }catch(e){}
-  try{ if(typeof window._applyUiBtnStyle === 'function') window._applyUiBtnStyle(); }catch(e){}
-  try{ if(typeof window.applyDesignV2 === 'function') window.applyDesignV2(); }catch(e){}
-  try{ if(typeof window._applyThemeVars === 'function') window._applyThemeVars(); }catch(e){}
-  try{ if(typeof window._applyHeaderSettings === 'function') window._applyHeaderSettings(); }catch(e){}
-  try{ if(typeof window._applyUiScale === 'function') window._applyUiScale(); }catch(e){}
-  try{ if(typeof window._applyAllTabsAutoFit === 'function') window._applyAllTabsAutoFit(); }catch(e){}
-  try{ if(typeof window._applyRecCardTheme === 'function') window._applyRecCardTheme(); }catch(e){}
-  try{ if(typeof window._applyTourneyCardTheme === 'function') window._applyTourneyCardTheme(); }catch(e){}
-  try{ if(typeof applyProfileShapeVars === 'function') applyProfileShapeVars(); }catch(e){}
-  try{ if(typeof applyUnivLogoVars === 'function') applyUnivLogoVars(); }catch(e){}
-  try{ if(typeof applyBoard2LogoVars === 'function') applyBoard2LogoVars(); }catch(e){}
-  try{ if(typeof applyResponsiveUiVars === 'function') applyResponsiveUiVars(); }catch(e){}
-  try{ if(typeof applyMatchDetailVars === 'function') applyMatchDetailVars(); }catch(e){}
-};
-try{ window._applyAllRuntimeSettings(); }catch(e){}
-
-window.__suNeedsBootstrapData = async function(){
-  try{
-    if(typeof window.__suHasIndexedDBData === 'function'){
-      try{
-        if(await window.__suHasIndexedDBData()) return false;
-      }catch(e){}
-    }
-    const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
-    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey);
-    const hasRuntimeRecordData = [
-      (typeof miniM!=='undefined' ? miniM : window.miniM),
-      (typeof univM!=='undefined' ? univM : window.univM),
-      (typeof ckM!=='undefined' ? ckM : window.ckM),
-      (typeof proM!=='undefined' ? proM : window.proM),
-      (typeof comps!=='undefined' ? comps : window.comps),
-      (typeof tourneys!=='undefined' ? tourneys : window.tourneys),
-      (typeof ttM!=='undefined' ? ttM : window.ttM),
-      (typeof indM!=='undefined' ? indM : window.indM),
-      (typeof gjM!=='undefined' ? gjM : window.gjM)
-    ].some(v=>Array.isArray(v) && v.length > 0);
-    const hasRuntimeUnivCfg = (typeof univCfg!=='undefined' && Array.isArray(univCfg) && univCfg.length > 0)
-      || (Array.isArray(window.univCfg) && window.univCfg.length > 0);
-    const hasRuntimeMaps = (typeof maps!=='undefined' && Array.isArray(maps) && maps.length > 0)
-      || (Array.isArray(window.maps) && window.maps.length > 0);
-    const hasCoreGlobals = hasRuntimeUnivCfg && hasRuntimeMaps;
-    const localPlayers = (typeof J==='function') ? J('su_p') : null;
-    const hasLocalPlayers = Array.isArray(localPlayers)
-      ? localPlayers.length > 0
-      : !!(localPlayers && typeof localPlayers==='object' && Array.isArray(localPlayers.p) && localPlayers.p.length > 0);
-    if((hasRecordKeys || hasRuntimeRecordData || hasLocalPlayers) && hasCoreGlobals) return false;
-    if(window.__suBootDataApplied && hasCoreGlobals && (hasRecordKeys || hasRuntimeRecordData || hasLocalPlayers)) return false;
-    return true;
-  }catch(e){
-    return true;
-  }
-};
-
-window.__suApplyImportedData = async function(d, opts){
-  if(!d || typeof d !== 'object') return false;
-  const options = opts || {};
-  let next = d;
-  // LZString 압축 데이터 자동 해제
-  if(next && typeof next._lz === 'string'){
-    try{ next = JSON.parse(LZString.decompressFromBase64(next._lz)); }
-    catch(e){ console.warn('[자동 불러오기] 압축 해제 실패:', e); }
-  }
-  const _needCore = !(
-    (Array.isArray(next.univCfg) && next.univCfg.length) ||
-    (Array.isArray(next.univConfig) && next.univConfig.length) ||
-    (Array.isArray(next.universities) && next.universities.length)
-  ) || !(
-    (Array.isArray(next.maps) && next.maps.length) ||
-    (Array.isArray(next.map) && next.map.length)
-  );
-  if(_needCore){
-    const _CORE_URLS = [
-      'data/core.json',
-      'https://raw.githubusercontent.com/nada1004/star-system/main/star-datacenter/data/core.json',
-      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data/core.json'
-    ];
-    for(const coreUrl of _CORE_URLS){
-      try{
-        const res = await fetch(coreUrl, {cache:'no-store', mode:'cors'});
-        if(!res || !res.ok) continue;
-        const core = JSON.parse(await res.text());
-        if(core && typeof core === 'object'){
-          if(!(Array.isArray(next.univCfg) && next.univCfg.length) && Array.isArray(core.univCfg) && core.univCfg.length) next.univCfg = core.univCfg;
-          if(!(Array.isArray(next.maps) && next.maps.length) && Array.isArray(core.maps) && core.maps.length) next.maps = core.maps;
-          if(!(Array.isArray(next.notices) && next.notices.length) && Array.isArray(core.notices) && core.notices.length) next.notices = core.notices;
-          break;
-        }
-      }catch(e){}
-    }
-  }
-  players  = next.players  || next.player  || [];
-  univCfg  = next.univCfg  || next.univConfig || next.universities || univCfg;
-  maps     = next.maps     || next.map     || maps;
-  tourD    = next.tourD    || next.tournamentDates || Array(15).fill('');
-  miniM    = next.miniM    || next.mini    || next.miniMatches || [];
-  univM    = next.univM    || next.univ    || next.univMatches || [];
-  comps    = next.comps    || next.comp    || next.competitions || [];
-  ckM      = next.ckM      || next.ck      || next.ckMatches   || [];
-  compNames= next.compNames|| next.competitionNames || [];
-  curComp  = next.curComp  || next.currentComp || '';
-  proM     = next.proM     || next.pro     || next.proMatches  || [];
-  tourneys = next.tourneys || next.tournaments || next.tourney || [];
-  ttM      = next.ttM      || next.tt      || [];
-  indM     = next.indM     || next.ind     || next.indMatches || [];
-  gjM      = next.gjM      || next.gj      || next.gjMatches  || [];
-  if(next.notices && next.notices.length) notices = next.notices;
-  if(next.tiers && next.tiers.length) TIERS.splice(0, TIERS.length, ...next.tiers);
-  const allD=[...miniM,...univM,...comps,...ckM,...proM];
-  mergeValidYearsIntoOptions(yearOptions, allD);
-  try{ fixPoints(); }catch(e){}
-  try{
-    if(typeof _migrateTierTourneys==='function'){
-      if(typeof _ttMigrated!=='undefined') _ttMigrated=false;
-      _migrateTierTourneys();
-    }
-  }catch(e){}
-  try{
-    if(typeof _migrateTierTourName==='function'){
-      if(typeof _tierTourNameMigrated!=='undefined') _tierTourNameMigrated=false;
-      _migrateTierTourName();
-    }
-  }catch(e){}
-  if(options.persist !== false){
-    try{ localSave(); }catch(e){}
-  }
-  try{ window.__suBootDataApplied = true; }catch(e){}
-  try{ window.__suInitialDataPending = false; }catch(e){}
-  if(options.render !== false){
-    try{ if(typeof render==='function') render(true); }catch(e){}
-  }
-  return true;
-};
-
-// ─────────────────────────────────────────────────────────────
 // 상단 탭/필터바와 기록 인라인바는 공통 `enableDragScroll()`로 처리
 // ─────────────────────────────────────────────────────────────
 // 초기 1회
@@ -1283,12 +981,331 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
 // ── 사이트 첫 접속 시 자동 불러오기 ──
 (async function autoLoad(){
   try{
-    if(typeof window.__suNeedsBootstrapData === 'function'){
-      const needsBootstrap = await window.__suNeedsBootstrapData();
-      if(!needsBootstrap) return;
-    }
+    try{
+      if(window.MatchStore && typeof window.MatchStore.init==='function') await window.MatchStore.init();
+      if(window.PlayerStore && typeof window.PlayerStore.init==='function') await window.PlayerStore.init();
+    }catch(e){}
+    // (복구) 로컬 기록이 있으면 자동 불러오기 금지 (덮어쓰기 방지)
+    const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
+    const hasAnyRecordPayload = (payload)=>{
+      if(!payload || typeof payload!=='object') return false;
+      return ['miniM','univM','comps','ckM','proM','proTourneys','tourneys','ttM','indM','gjM']
+        .some(k=>Array.isArray(payload[k]) && payload[k].length>0);
+    };
+    const hasMatchIdbData = await (async()=>{
+      try{
+        if(!window.indexedDB) return false;
+        const db = await new Promise((resolve,reject)=>{
+          const req = indexedDB.open('star_datacenter_matches', 1);
+          req.onupgradeneeded = ()=>resolve(req.result);
+          req.onsuccess = ()=>resolve(req.result);
+          req.onerror = ()=>reject(req.error||new Error('indexedDB open failed'));
+        });
+        if(!db || !db.objectStoreNames.contains('match_payloads')) return false;
+        const payload = await new Promise((resolve,reject)=>{
+          const tx = db.transaction('match_payloads','readonly');
+          const req = tx.objectStore('match_payloads').get('main');
+          req.onsuccess = ()=>resolve(req.result||null);
+          req.onerror = ()=>reject(req.error||new Error('indexedDB get failed'));
+        });
+        return hasAnyRecordPayload(payload);
+      }catch(e){
+        return false;
+      }
+    })();
+    const hasPlayerIdbData = await (async()=>{
+      try{
+        if(window.PlayerStore && typeof window.PlayerStore.load==='function'){
+          const payload = await window.PlayerStore.load();
+          return !!(payload && Array.isArray(payload.players) && payload.players.length>0);
+        }
+      }catch(e){}
+      return Array.isArray(players) && players.length>0;
+    })();
+    const hasRuntimePlayers = Array.isArray(players) && players.length>0;
+    const hasRuntimeRecords = [miniM,univM,comps,ckM,proM,tourneys,ttM,indM,gjM].some(v=>Array.isArray(v)&&v.length>0);
+    const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey) || hasMatchIdbData;
+    if(hasRuntimePlayers || hasRuntimeRecords) return;
+    if(hasRecordKeys && hasPlayerIdbData) return;
   }catch(e){}
   console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
+  const _fetchAutoJson = async (url)=>{
+    const res = await Promise.race([
+      fetch(url, {cache:'no-store', mode:'cors'}),
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))
+    ]);
+    if(!res || !res.ok) throw new Error(`fetch failed: ${url}`);
+    const text = await res.text();
+    if(!text || !text.trim()) throw new Error(`empty response: ${url}`);
+    let raw = JSON.parse(text);
+    if(raw && raw.content && raw.encoding==='base64'){
+      const b64 = raw.content.replace(/\s/g,'');
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+      raw = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+    }
+    if(raw && typeof raw._lz === 'string'){
+      raw = JSON.parse(LZString.decompressFromBase64(raw._lz));
+    }
+    return raw;
+  };
+  const _resolveAutoUrl = (baseUrl, rel)=>{
+    try{
+      let next = String(rel || '').trim();
+      next = next.replace(/^\.?\//,'');
+      next = next.replace(/^star-datacenter\//,'');
+      return new URL(next, new URL(baseUrl, location.href)).toString();
+    }
+    catch(e){ return String(rel || ''); }
+  };
+  const _recoverMatchArraysFromPlayerHistoryLocal = (baseData, monthParts)=>{
+    const out = {...(baseData||{})};
+    if(!Array.isArray(out.indM)) out.indM = [];
+    if(!Array.isArray(out.gjM)) out.gjM = [];
+    const needInd = !out.indM.length;
+    const needGj = !out.gjM.length;
+    if(!needInd && !needGj) return out;
+    const seenInd = new Set();
+    const seenGj = new Set();
+    (Array.isArray(monthParts)?monthParts:[]).filter(Boolean).forEach(part=>{
+      const ph = part && part.playerHistory || {};
+      Object.keys(ph).forEach(name=>{
+        (Array.isArray(ph[name]) ? ph[name] : []).forEach(h=>{
+          const mode = String(h && h.mode || '').trim();
+          const opp = String(h && h.opp || '').trim();
+          const res = String(h && h.result || '').trim();
+          if(!opp || !res) return;
+          let target = '';
+          let proLabel = false;
+          if(mode === '개인전') target = 'ind';
+          else if(mode === '끝장전') target = 'gj';
+          else if(mode === '프로리그끝장전'){ target = 'gj'; proLabel = true; }
+          else return;
+          if((target==='ind' && !needInd) || (target==='gj' && !needGj)) return;
+          let wName='', lName='';
+          if(res === '승'){ wName = name; lName = opp; }
+          else if(res === '패'){ wName = opp; lName = name; }
+          else return;
+          const d = String(h.date || h.d || '').trim();
+          const map = String(h.map || '').trim();
+          const mid = String(h.matchId || '').trim();
+          const key = mid || [target, proLabel?'pro':'normal', d, map, wName, lName].join('|');
+          if(target === 'ind'){
+            if(seenInd.has(key)) return;
+            seenInd.add(key);
+            out.indM.push({ _id: mid || key, d, wName, lName, map: map || '-' });
+            return;
+          }
+          if(seenGj.has(key)) return;
+          seenGj.add(key);
+          const rec = { _id: mid || key, d, wName, lName, map: map || '-' };
+          if(proLabel) rec._proLabel = true;
+          out.gjM.push(rec);
+        });
+      });
+    });
+    const _byDateDesc = (a,b)=>String(b && b.d || '').localeCompare(String(a && a.d || ''));
+    if(needInd) out.indM.sort(_byDateDesc);
+    if(needGj) out.gjM.sort(_byDateDesc);
+    return out;
+  };
+  const _recoverCivilMiniFromPlayerHistoryLocal = (baseData, monthParts)=>{
+    const out = {...(baseData||{})};
+    if(!Array.isArray(out.miniM)) out.miniM = [];
+    const hasCivil = out.miniM.some(m=>m && (m.type==='civil' || (m.a==='A팀' && m.b==='B팀')));
+    if(hasCivil) return out;
+    const gameMap = new Map();
+    (Array.isArray(monthParts)?monthParts:[]).filter(Boolean).forEach(part=>{
+      const ph = part && part.playerHistory || {};
+      Object.keys(ph).forEach(name=>{
+        (Array.isArray(ph[name]) ? ph[name] : []).forEach(h=>{
+          if(String(h && h.mode || '').trim() !== '시빌워') return;
+          const matchId = String(h.matchId || '').trim();
+          if(!matchId) return;
+          const prev = gameMap.get(matchId) || { _id:matchId, d:String(h.date||'').trim(), map:String(h.map||'').trim(), wName:'', lName:'', univMap:{} };
+          prev.d = prev.d || String(h.date||'').trim();
+          prev.map = prev.map || String(h.map||'').trim();
+          prev.univMap[name] = String(h.univ || '').trim();
+          if(h.result === '승'){ prev.wName = name; prev.lName = String(h.opp || '').trim(); }
+          else if(h.result === '패'){ prev.wName = String(h.opp || '').trim(); prev.lName = name; }
+          gameMap.set(matchId, prev);
+        });
+      });
+    });
+    if(!gameMap.size) return out;
+    const sessions = new Map();
+    const parseParts = (matchId)=>{
+      const m = String(matchId||'').match(/^(.*)_s(\d+)_g(\d+)$/);
+      if(m) return { base:m[1], setIdx:+m[2], gameIdx:+m[3] };
+      return { base:String(matchId||''), setIdx:0, gameIdx:0 };
+    };
+    for(const rec of gameMap.values()){
+      const { base, setIdx, gameIdx } = parseParts(rec._id);
+      if(!rec.wName || !rec.lName) continue;
+      if(!sessions.has(base)) sessions.set(base, { _id:base, d:rec.d||'', games:[], players:new Map(), adj:new Map() });
+      const sess = sessions.get(base);
+      sess.d = sess.d || rec.d || '';
+      sess.games.push({ ...rec, setIdx, gameIdx });
+      [rec.wName, rec.lName].forEach(n=>{
+        if(!n) return;
+        if(!sess.players.has(n)) sess.players.set(n, { name:n, univ:String(rec.univMap && rec.univMap[n] || '') });
+        if(!sess.adj.has(n)) sess.adj.set(n, new Set());
+      });
+      sess.adj.get(rec.wName).add(rec.lName);
+      sess.adj.get(rec.lName).add(rec.wName);
+    }
+    const recovered = [];
+    for(const sess of sessions.values()){
+      const side = new Map();
+      for(const n of sess.players.keys()){
+        if(side.has(n)) continue;
+        side.set(n, 'A');
+        const q=[n];
+        while(q.length){
+          const cur=q.shift();
+          const curSide=side.get(cur);
+          (sess.adj.get(cur)||[]).forEach(nx=>{
+            if(!side.has(nx)){ side.set(nx, curSide==='A'?'B':'A'); q.push(nx); }
+          });
+        }
+      }
+      const setsMap = new Map();
+      sess.games.sort((a,b)=>(a.setIdx-b.setIdx)||(a.gameIdx-b.gameIdx));
+      sess.games.forEach(g=>{
+        const sA = side.get(g.wName)||'A';
+        const playerA = sA==='A' ? g.wName : g.lName;
+        const playerB = sA==='A' ? g.lName : g.wName;
+        const winner = sA==='A' ? 'A' : 'B';
+        if(!setsMap.has(g.setIdx)) setsMap.set(g.setIdx, { scoreA:0, scoreB:0, winner:'', games:[] });
+        const st = setsMap.get(g.setIdx);
+        if(winner==='A') st.scoreA++; else st.scoreB++;
+        st.games.push({ _id:g._id, playerA, playerB, winner, map:g.map||'-', wName:g.wName, lName:g.lName });
+      });
+      const sets = [...setsMap.entries()].sort((a,b)=>a[0]-b[0]).map(([,st])=>{
+        st.winner = st.scoreA>st.scoreB ? 'A' : (st.scoreB>st.scoreA ? 'B' : '');
+        return st;
+      });
+      const teamAMembers = [...sess.players.values()].filter(p=>(side.get(p.name)||'A')==='A');
+      const teamBMembers = [...sess.players.values()].filter(p=>(side.get(p.name)||'A')==='B');
+      const sa = sets.reduce((n,s)=>n+(s.scoreA||0),0);
+      const sb = sets.reduce((n,s)=>n+(s.scoreB||0),0);
+      recovered.push({ _id:sess._id, d:sess.d||'', a:'A팀', b:'B팀', sa, sb, sets, type:'civil', teamAMembers, teamBMembers });
+    }
+    recovered.sort((a,b)=>String(b && b.d || '').localeCompare(String(a && a.d || '')));
+    if(recovered.length) out.miniM = out.miniM.concat(recovered);
+    return out;
+  };
+  const _recoverTierGeneralFromPlayerHistoryLocal = (baseData, monthParts)=>{
+    const out = {...(baseData||{})};
+    if(!Array.isArray(out.ttM)) out.ttM = [];
+    const existing = new Set(out.ttM.map(m=>String(m && m._id || '')).filter(Boolean));
+    const tierIdMap = new Map(((Array.isArray(out.tourneys) ? out.tourneys : [])||[])
+      .filter(t=>t && t.type==='tier' && t.id && t.name)
+      .map(t=>[String(t.id).trim(), String(t.name).trim()]));
+    const parseTierComp = (mid)=>{
+      const s = String(mid||'').trim();
+      let tid = '';
+      let m = s.match(/^pbn_([^_]+)_/);
+      if(m) tid = m[1];
+      if(!tid){
+        m = s.match(/^([a-z0-9]+)_s\d+_g\d+$/i);
+        if(m) tid = m[1];
+      }
+      return tierIdMap.get(tid) || '복구된 일반전';
+    };
+    const byId = new Map();
+    (Array.isArray(monthParts)?monthParts:[]).filter(Boolean).forEach(part=>{
+      const ph = part && part.playerHistory || {};
+      Object.keys(ph).forEach(name=>{
+        (Array.isArray(ph[name]) ? ph[name] : []).forEach(h=>{
+          if(String(h && h.mode || '').trim() !== '티어대회') return;
+          const mid = String(h.matchId || '').trim();
+          if(!mid || existing.has(mid)) return;
+          const prev = byId.get(mid) || { _id:mid, d:String(h.date||'').trim(), map:String(h.map||'').trim(), wName:'', lName:'', compName:parseTierComp(mid) };
+          prev.d = prev.d || String(h.date||'').trim();
+          prev.map = prev.map || String(h.map||'').trim();
+          if(h.result === '승'){ prev.wName = name; prev.lName = String(h.opp || '').trim(); }
+          else if(h.result === '패'){ prev.wName = String(h.opp || '').trim(); prev.lName = name; }
+          byId.set(mid, prev);
+        });
+      });
+    });
+    const recovered = [];
+    byId.forEach(rec=>{
+      if(!rec.wName || !rec.lName) return;
+      recovered.push({
+        _id:rec._id, d:rec.d||'', a:rec.wName, b:rec.lName, sa:1, sb:0,
+        sets:[{ scoreA:1, scoreB:0, winner:'A', games:[{ _id:rec._id, playerA:rec.wName, playerB:rec.lName, winner:'A', map:rec.map||'-', wName:rec.wName, lName:rec.lName }] }],
+        n:rec.compName||'복구된 일반전', compName:rec.compName||'복구된 일반전', stage:'general'
+      });
+    });
+    recovered.sort((a,b)=>String(b && b.d || '').localeCompare(String(a && a.d || '')));
+    if(recovered.length) out.ttM = out.ttM.concat(recovered);
+    return out;
+  };
+  const _mergePlayerPhotosIntoPlayers = (arr, photoMap)=>{
+    if(!Array.isArray(arr) || !photoMap || typeof photoMap!=='object') return arr;
+    arr.forEach(p=>{
+      if(p && p.name && !p.photo && photoMap[p.name]) p.photo = photoMap[p.name];
+    });
+    try{ window.playerPhotos = photoMap; }catch(e){}
+    return arr;
+  };
+  const _mergeSplitStoreData = async (seed, seedUrl)=>{
+    let idx = seed;
+    if(seed && seed.indexPath){
+      try{ idx = await _fetchAutoJson(_resolveAutoUrl(seedUrl, seed.indexPath)); }
+      catch(e){ idx = seed; }
+    }
+    if(!(idx && (idx.splitStore || idx.corePath || idx.historyMonths))) return seed;
+    const coreUrl = _resolveAutoUrl(seedUrl, idx.corePath || 'data/core.json');
+    const historyDirUrl = _resolveAutoUrl(seedUrl, String(idx.historyDir || 'data/history/').replace(/\/?$/, '/'));
+    const core = await _fetchAutoJson(coreUrl);
+    const merged = {...core};
+    const monthParts = [];
+    const histKeys = ['miniM','univM','comps','ckM','proM','ttM','indM','gjM'];
+    histKeys.forEach(k=>{ merged[k] = Array.isArray(core[k]) ? [...core[k]] : []; });
+    const months = Array.isArray(idx.historyMonths) ? idx.historyMonths : [];
+    for(const month of months){
+      try{
+        const monthUrl = _resolveAutoUrl(historyDirUrl, `${month}.json`);
+        const part = await _fetchAutoJson(monthUrl);
+        monthParts.push(part);
+        histKeys.forEach(k=>{
+          if(Array.isArray(part[k]) && part[k].length) merged[k].push(...part[k]);
+        });
+        if(Array.isArray(part.histExtItems) && part.histExtItems.length){
+          merged.histExtItems = (Array.isArray(merged.histExtItems) ? merged.histExtItems : []).concat(part.histExtItems);
+        }
+      }catch(e){
+        console.warn('[자동 불러오기] 월별 데이터 로드 실패:', month, e.message);
+      }
+    }
+    try{
+      const recoverFn = (typeof window.__suRecoverMatchArraysFromPlayerHistory === 'function')
+        ? window.__suRecoverMatchArraysFromPlayerHistory
+        : _recoverMatchArraysFromPlayerHistoryLocal;
+      const recovered = recoverFn(merged, monthParts);
+      if(recovered){
+        if(Array.isArray(recovered.indM)) merged.indM = recovered.indM;
+        if(Array.isArray(recovered.gjM)) merged.gjM = recovered.gjM;
+      }
+      const recoverCivilFn = (typeof window.__suRecoverCivilMiniFromPlayerHistory === 'function')
+        ? window.__suRecoverCivilMiniFromPlayerHistory
+        : _recoverCivilMiniFromPlayerHistoryLocal;
+      const recoveredCivil = recoverCivilFn(merged, monthParts);
+      if(recoveredCivil && Array.isArray(recoveredCivil.miniM)) merged.miniM = recoveredCivil.miniM;
+      const recoverTierFn = (typeof window.__suRecoverTierGeneralFromPlayerHistory === 'function')
+        ? window.__suRecoverTierGeneralFromPlayerHistory
+        : _recoverTierGeneralFromPlayerHistoryLocal;
+      const recoveredTier = recoverTierFn(merged, monthParts);
+      if(recoveredTier && Array.isArray(recoveredTier.ttM)) merged.ttM = recoveredTier.ttM;
+    }catch(e){
+      console.warn('[자동 불러오기] playerHistory match 복구 실패:', e.message);
+    }
+    return merged;
+  };
   // (복구) 번들에 포함된 data.json을 최우선으로 시도
   const _LOCAL = 'data.json';
   // (수정) 실제 경로: star-datacenter/data.json
@@ -1299,52 +1316,123 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
   const urls = [_LOCAL, _RAW, _CDN, _API, _PROXY];
   if(typeof window.gsSetStatus === 'function') window.gsSetStatus('🔄 데이터 불러오는 중...','var(--blue)');
   let d = null;
-  try{
-    if(window.__suBootDataPromise){
-      d = await window.__suBootDataPromise;
-      if(d) console.log('[자동 불러오기] 성공: boot data preload');
-    }
-  }catch(e){}
-  for(const url of (d ? [] : urls)){
+  let loadedFromUrl = '';
+  for(const url of urls){
     try{
-      const res = await Promise.race([
-        fetch(url, {cache:'no-store', mode:'cors'}),
-        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),10000))
-      ]);
-      if(!res || !res.ok) continue;
-      const text = await res.text();
-      if(!text || !text.trim()) continue;
-      let raw;
-      try{ raw = JSON.parse(text); }catch(e){ continue; }
-      if(raw && raw.content && raw.encoding==='base64'){
-        try{
-          const b64 = raw.content.replace(/\s/g,'');
-          const bin = atob(b64);
-          const bytes = new Uint8Array(bin.length);
-          for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-          d = JSON.parse(new TextDecoder('utf-8').decode(bytes));
-        }catch(e){ continue; }
-      } else {
-        d = raw;
-      }
-      if(d){ console.log('[자동 불러오기] 성공:', url); break; }
+      d = await _fetchAutoJson(url);
+      d = await _mergeSplitStoreData(d, url);
+      if(d){ loadedFromUrl = url; console.log('[자동 불러오기] 성공:', url); break; }
     }catch(e){ console.log('[자동 불러오기] 실패:', url, e.message); continue; }
   }
   if(d){
     try{
-      if(window.__suBootDataApplied) return;
-      const _skipRenderForReadyTotal = (typeof curTab!=='undefined' && curTab==='total' && Array.isArray(players) && players.length);
-      await window.__suApplyImportedData(d, { render: !_skipRenderForReadyTotal });
-      try{ window.__suInitialDataPending = false; }catch(e){}
-      // 단순 부트스트랩(data.json) 적용은 조용히 처리하고, "완료" 배지는 최신 원격 동기화 경로에서만 사용
-      if(typeof window.gsSetStatus === 'function') window.gsSetStatus('','');
+      const hasPlayers = Array.isArray(d.players) ? d.players.length>0 : (Array.isArray(d.player) ? d.player.length>0 : false);
+      if(!hasPlayers && loadedFromUrl){
+        try{
+          const coreFallback = await _fetchAutoJson(_resolveAutoUrl(loadedFromUrl, 'data/core.json'));
+          if(Array.isArray(coreFallback.players) && coreFallback.players.length) d.players = coreFallback.players;
+          if(!d.playerPhotos && coreFallback.playerPhotos) d.playerPhotos = coreFallback.playerPhotos;
+          if(!d.univCfg && coreFallback.univCfg) d.univCfg = coreFallback.univCfg;
+          if(!d.maps && coreFallback.maps) d.maps = coreFallback.maps;
+          if(!d.tourD && coreFallback.tourD) d.tourD = coreFallback.tourD;
+          if(!d.tourneys && coreFallback.tourneys) d.tourneys = coreFallback.tourneys;
+        }catch(e){
+          console.warn('[자동 불러오기] core fallback 실패:', e.message);
+        }
+      }
+      const _prevIndM = Array.isArray(indM) ? indM : [];
+      const _prevGjM  = Array.isArray(gjM) ? gjM : [];
+      players  = d.players  || d.player  || [];
+      players  = _mergePlayerPhotosIntoPlayers(players, d.playerPhotos || d.pPhotoMap || d.playerPhotoMap || null);
+      try{ window.players = players; }catch(e){}
+      univCfg  = d.univCfg  || d.univConfig || d.universities || univCfg;
+      maps     = d.maps     || d.map     || maps;
+      tourD    = d.tourD    || d.tournamentDates || Array(15).fill('');
+      miniM    = d.miniM    || d.mini    || d.miniMatches || [];
+      univM    = d.univM    || d.univ    || d.univMatches || [];
+      comps    = d.comps    || d.comp    || d.competitions || [];
+      ckM      = d.ckM      || d.ck      || d.ckMatches   || [];
+      compNames= d.compNames|| d.competitionNames || [];
+      curComp  = d.curComp  || d.currentComp || '';
+      proM     = d.proM     || d.pro     || d.proMatches  || [];
+      tourneys = d.tourneys || d.tournaments || d.tourney || [];
+      ttM      = d.ttM      || d.tt      || [];
+      indM     = Array.isArray(d.indM) ? d.indM : (Array.isArray(d.ind) ? d.ind : _prevIndM);
+      gjM      = Array.isArray(d.gjM) ? d.gjM : _prevGjM;
+      if((!indM || !indM.length) && _prevIndM.length) indM = _prevIndM;
+      if((!gjM || !gjM.length) && _prevGjM.length) gjM = _prevGjM;
+      try{ window.indM = indM; }catch(e){}
+      try{ window.gjM = gjM; }catch(e){}
+      if((!players || !players.length) && loadedFromUrl){
+        try{
+          const coreFallback2 = await _fetchAutoJson(_resolveAutoUrl(loadedFromUrl, 'data/core.json'));
+          if(Array.isArray(coreFallback2.players) && coreFallback2.players.length) players = coreFallback2.players;
+          players = _mergePlayerPhotosIntoPlayers(players, coreFallback2.playerPhotos || null);
+          try{ window.players = players; }catch(e){}
+        }catch(e){}
+      }
+      if(((!players || !players.length) || (!gjM || !gjM.length) || (!indM || !indM.length)) && loadedFromUrl){
+        try{
+          const idxFallback = await _fetchAutoJson(_resolveAutoUrl(loadedFromUrl, 'data/index.json'));
+          const coreFallback3 = await _fetchAutoJson(_resolveAutoUrl(loadedFromUrl, String(idxFallback.corePath || 'data/core.json')));
+          const historyDir = String(idxFallback.historyDir || 'data/history/').replace(/\/?$/, '/');
+          const monthParts = [];
+          for(const month of (Array.isArray(idxFallback.historyMonths) ? idxFallback.historyMonths : [])){
+            try{ monthParts.push(await _fetchAutoJson(_resolveAutoUrl(loadedFromUrl, `${historyDir}${month}.json`))); }catch(e){}
+          }
+          const repaired = _recoverMatchArraysFromPlayerHistoryLocal({
+            ...coreFallback3,
+            miniM, univM, comps, ckM, proM, ttM, indM, gjM
+          }, monthParts);
+          const repairedCivil = _recoverCivilMiniFromPlayerHistoryLocal({
+            ...coreFallback3,
+            miniM, univM, comps, ckM, proM, ttM, indM, gjM
+          }, monthParts);
+          const repairedTier = _recoverTierGeneralFromPlayerHistoryLocal({
+            ...coreFallback3,
+            miniM, univM, comps, ckM, proM, ttM, indM, gjM
+          }, monthParts);
+          if((!players || !players.length) && Array.isArray(coreFallback3.players) && coreFallback3.players.length) players = coreFallback3.players;
+          players = _mergePlayerPhotosIntoPlayers(players, coreFallback3.playerPhotos || null);
+          try{ window.players = players; }catch(e){}
+          if((!indM || !indM.length) && Array.isArray(repaired.indM) && repaired.indM.length) indM = repaired.indM;
+          if((!gjM || !gjM.length) && Array.isArray(repaired.gjM) && repaired.gjM.length) gjM = repaired.gjM;
+          if(Array.isArray(repairedCivil.miniM) && repairedCivil.miniM.length > (Array.isArray(miniM)?miniM.length:0)) miniM = repairedCivil.miniM;
+          if(Array.isArray(repairedTier.ttM) && repairedTier.ttM.length > (Array.isArray(ttM)?ttM.length:0)) ttM = repairedTier.ttM;
+        }catch(e){
+          console.warn('[자동 불러오기] split-store rescue 실패:', e.message);
+        }
+      }
+      if(!players || !players.length){
+        try{
+          const coreDirect = await _fetchAutoJson('data/core.json');
+          if(Array.isArray(coreDirect.players) && coreDirect.players.length) players = coreDirect.players;
+          players = _mergePlayerPhotosIntoPlayers(players, coreDirect.playerPhotos || null);
+          try{ window.players = players; }catch(e){}
+        }catch(e){}
+      }
+      if(d.notices && d.notices.length) notices = d.notices;
+      if(d.tiers && d.tiers.length) TIERS.splice(0, TIERS.length, ...d.tiers);
+      const allD=[...miniM,...univM,...comps,...ckM,...proM];
+      mergeValidYearsIntoOptions(yearOptions, allD);
+      fixPoints();
+      // autoLoad 후 티어대회 마이그레이션 재실행 (flag 리셋 후 재호출)
+      if(typeof _migrateTierTourneys==='function'){
+        if(typeof _ttMigrated!=='undefined') _ttMigrated=false;
+        _migrateTierTourneys();
+      }
+      // autoLoad 후 티어대전→티어대회 명칭 마이그레이션 재실행
+      if(typeof _migrateTierTourName==='function'){
+        if(typeof _tierTourNameMigrated!=='undefined') _tierTourNameMigrated=false;
+        _migrateTierTourName();
+      }
+      localSave(); render();
+      if(typeof window.gsSetStatus === 'function') window.gsSetStatus('✅ 자동 불러오기 완료 ('+new Date().toLocaleTimeString()+')','var(--green)');
     }catch(e){
       console.error('[자동 불러오기] 데이터 적용 오류:', e);
-      try{ window.__suInitialDataPending = false; }catch(e){}
       if(typeof window.gsSetStatus === 'function') window.gsSetStatus('','');
     }
   } else {
-    try{ window.__suInitialDataPending = false; }catch(e){}
     if(typeof window.gsSetStatus === 'function') window.gsSetStatus('','');
     console.warn('[자동 불러오기] 모든 URL 실패');
   }
