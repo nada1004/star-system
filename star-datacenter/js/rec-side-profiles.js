@@ -299,7 +299,8 @@
         raw = getPlayerPhotoHTML(pName, sizePx+'px','');
         window.__detailCtx = prev;
         if(!raw) continue;
-        // 이미지도 이니셜도 모두 표시 (사진 없으면 이니셜 뱃지 표시)
+        // 실제 사진(<img 태그)이 없으면 패널에 포함하지 않음 (이니셜 뱃지만 있는 경우 빈 박스 방지)
+        if(raw.indexOf('<img') === -1) continue;
       }
       validPlayers.push({name:pName, isWinner:pEntry.isWinner, raw:raw});
     }
