@@ -301,8 +301,24 @@ function applyProfileShapeVars(){
     // (보강) 전역 프로필 모양은 su_profile_shape를 우선 사용하고,
     // 없으면 과거 호환으로 su_bcp_shape(현황판 칩 모양)를 사용
     const shape = localStorage.getItem('su_profile_shape') || localStorage.getItem('su_bcp_shape') || 'circle';
-    const radius = (shape === 'square') ? '8px' : '50%';
+    const _shapeRadius = {
+      circle: '50%',
+      square: '6px',
+      rounded: '22%',
+      diamond: '50%',
+      hexagon: '50%',
+      shield: '50% 50% 45% 45% / 60% 60% 40% 40%'
+    };
+    const radius = _shapeRadius[shape] || '50%';
     document.documentElement.style.setProperty('--su_profile_radius', radius);
+    // 특수 모양(diamond/hexagon/shield)은 clip-path로 처리
+    const _shapeClip = {
+      diamond: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+      hexagon: 'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)',
+      shield: 'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)'
+    };
+    const clipPath = _shapeClip[shape] || 'none';
+    document.documentElement.style.setProperty('--su_profile_clip', clipPath);
 
     // (추가) 기기별 프로필 이미지 크기 배율
     // - PC/태블릿/모바일 각각 %로 저장

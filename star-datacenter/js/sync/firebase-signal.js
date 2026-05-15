@@ -96,16 +96,13 @@ function _deliver(data) {
     if(sa){
       _lastSavedAt = sa;
       localStorage.setItem('su_sync_last_remote_saved_at', String(sa));
+      if(_toastPendingSignalTs && sa >= _toastPendingSignalTs){
+        _toastSync('✅ 다른 기기 데이터가 반영되었습니다', 2200);
+        _toastPendingSignalTs = 0;
+      }
     }
     localStorage.setItem('su_sync_last_received_at', String(Date.now()));
     _updateSyncAgeBadge();
-  }catch(e){}
-  try{
-    const sa = Number(data && data.savedAt || 0) || 0;
-    if(_toastPendingSignalTs && sa && sa >= _toastPendingSignalTs){
-      _toastSync('✅ 다른 기기 데이터가 반영되었습니다', 2200);
-      _toastPendingSignalTs = 0;
-    }
   }catch(e){}
   try{
     const miss = Array.isArray(data && data._missingMonths) ? data._missingMonths.filter(Boolean) : [];
@@ -215,17 +212,13 @@ async function _pollFirebaseSignalOnce(force){
           window.refreshCloudSyncStatus('📡 보조 신호 감지 — GitHub 확인 중', '#2563eb');
         }
       }catch(e){}
-      if(sigTs > _lastSavedAt || !_lastSnapshot){
-        const fn = (typeof window!=='undefined' && typeof window._pollGithubOnce==='function')
-          ? window._pollGithubOnce
-          : (typeof _pollGithubOnce==='function' ? _pollGithubOnce : null);
-        if(typeof fn === 'function') await fn(true);
-      }
+      const _ghPoll = (typeof window._pollGithubOnce==='function')
+        ? window._pollGithubOnce : (typeof _pollGithubOnce==='function' ? _pollGithubOnce : null);
+      if((sigTs > _lastSavedAt || !_lastSnapshot) && typeof _ghPoll==='function') await _ghPoll(true);
     }else if(force && !_lastSnapshot){
-      const fn = (typeof window!=='undefined' && typeof window._pollGithubOnce==='function')
-        ? window._pollGithubOnce
-        : (typeof _pollGithubOnce==='function' ? _pollGithubOnce : null);
-      if(typeof fn === 'function') await fn(true);
+      const _ghPoll = (typeof window._pollGithubOnce==='function')
+        ? window._pollGithubOnce : (typeof _pollGithubOnce==='function' ? _pollGithubOnce : null);
+      if(typeof _ghPoll==='function') await _ghPoll(true);
     }
   }catch(e){}
   finally{

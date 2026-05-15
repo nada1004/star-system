@@ -4610,6 +4610,11 @@ ${_scfgD('notice','📢 공지 관리')}
               <option value="spotlight" ${_sfxMode==='spotlight'?'selected':''}>스포트라이트</option>
               <option value="fade" ${_sfxMode==='fade'?'selected':''}>페이드(은은)</option>
               <option value="double" ${_sfxMode==='double'?'selected':''}>더블라인</option>
+              <option value="neon" ${_sfxMode==='neon'?'selected':''}>✨ 네온 (외곽 발광)</option>
+              <option value="wave" ${_sfxMode==='wave'?'selected':''}>🌊 웨이브 (물결)</option>
+              <option value="prism" ${_sfxMode==='prism'?'selected':''}>🔷 프리즘 (교차 블렌드)</option>
+              <option value="vignette" ${_sfxMode==='vignette'?'selected':''}>🌑 비네트 (원형 번짐)</option>
+              <option value="pulse" ${_sfxMode==='pulse'?'selected':''}>💓 펄스 (깜빡이는 바)</option>
             </select>
           </div>
           <div>
@@ -4617,8 +4622,9 @@ ${_scfgD('notice','📢 공지 관리')}
             <input type="range" id="cfg-sidefx-int" min="20" max="100" step="4" value="${_sfxInt}" oninput="document.getElementById('cfg-sidefx-int-v').textContent=this.value" onchange="(window.cfgSetRecSideFxIntensity||function(){})(this.value)" style="width:100%;max-width:260px">
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 효과 길이 <span id="cfg-sidefx-len-v" style="font-weight:400;color:var(--gray-l)">${_sfxLen}%</span></div>
-            <input type="range" id="cfg-sidefx-len" min="4" max="80" step="2" value="${_sfxLen}" oninput="document.getElementById('cfg-sidefx-len-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxLength||function(){})(this.value)" style="width:100%;max-width:260px">
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 효과 길이 <span id="cfg-sidefx-len-v" style="font-weight:400;color:var(--gray-l)">${_sfxLen}%</span> <span style="font-size:10px;color:var(--gray-l);font-weight:600">${_sfxLen>=46?'(스코어까지 도달 🎯)':_sfxLen>=36?'(넓게)':_sfxLen>=22?'(보통)':'(좁게)'}</span></div>
+            <input type="range" id="cfg-sidefx-len" min="4" max="50" step="2" value="${Math.min(50,_sfxLen)}" oninput="document.getElementById('cfg-sidefx-len-v').textContent=this.value+'%';document.getElementById('cfg-sidefx-len-hint').textContent=this.value>=46?'(스코어까지 도달 🎯)':this.value>=36?'(넓게)':this.value>=22?'(보통)':'(좁게)'" onchange="(window.cfgSetRecSideFxLength||function(){})(this.value)" style="width:100%;max-width:260px">
+            <div style="font-size:10px;color:var(--blue);font-weight:700;margin-top:2px"><span id="cfg-sidefx-len-hint">${_sfxLen>=46?'(스코어까지 도달 🎯)':_sfxLen>=36?'(넓게)':_sfxLen>=22?'(보통)':'(좁게)'}</span> — 50%로 올리면 양쪽 효과가 스코어 영역까지 연결됩니다</div>
           </div>
           <div>
             <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 끝 진하기 <span id="cfg-sidefx-tail-v" style="font-weight:400;color:var(--gray-l)">${_sfxTail}%</span></div>
@@ -4626,8 +4632,43 @@ ${_scfgD('notice','📢 공지 관리')}
           </div>
         </div>
       </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">🎨 팀 버튼(대학/팀명) 디자인</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">기록 카드의 대학/팀명 버튼 모양을 바꿉니다.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px;margin-bottom:10px">
+          ${[
+            {v:'solid', label:'솔리드', desc:'기본 채움형', icon:'🟦'},
+            {v:'pill', label:'알약형', desc:'둥글고 그림자', icon:'💊'},
+            {v:'badge', label:'배지형', desc:'각지고 심플', icon:'🏷️'},
+            {v:'gradient', label:'그라디언트', desc:'색상 깊이감', icon:'🎨'},
+            {v:'chip-xl', label:'큰 칩형', desc:'크고 굵게', icon:'⬛'},
+            {v:'neon', label:'네온 아웃라인', desc:'어두운 테두리', icon:'✨'},
+            {v:'outline', label:'아웃라인', desc:'테두리만', icon:'⬜'},
+            {v:'flat', label:'플랫', desc:'그림자 없음', icon:'▭'},
+          ].map(s=>{const sel=(localStorage.getItem('su_rc_team_btn_style')||'solid')===s.v; return `<button type="button" onclick="cfgSetTeamBtnStyle('${s.v}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:12px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer"><span style="font-size:14px">${s.icon}</span><span style="font-size:11px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'}">${s.label}</span><span style="font-size:9px;color:var(--gray-l);font-weight:700">${s.desc}</span></button>`;}).join('')}
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">🔷 팀 버튼 모양 (기록 카드)</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">경기 기록 카드의 팀 버튼 외곽선 모양을 바꿉니다.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-bottom:10px">
+          ${[
+            {v:'default', label:'기본',      desc:'부드러운 라운드', icon:'🟦'},
+            {v:'pill',    label:'알약형',    desc:'완전 둥글게',    icon:'💊'},
+            {v:'square',  label:'각진형',    desc:'직각 모서리',    icon:'⬛'},
+            {v:'sharp',   label:'한쪽 뾰족', desc:'비대칭 라운드',  icon:'▷'},
+            {v:'diamond', label:'기울임',    desc:'사선 스큐',      icon:'♦️'},
+            {v:'tag',     label:'꼬리표형',  desc:'삼각 꼬리',      icon:'🏷️'},
+            {v:'hex',     label:'육각형',    desc:'헥사곤 클립',    icon:'⬡'},
+          ].map(s=>{const sel=(localStorage.getItem('su_rc_team_chip_shape')||'default')===s.v; return \`<button type="button" onclick="cfgSetTeamChipShape('\${s.v}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:12px;border:\${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:\${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer"><span style="font-size:14px">\${s.icon}</span><span style="font-size:11px;font-weight:900;color:\${sel?'var(--blue)':'var(--text2)'}">\${s.label}</span><span style="font-size:9px;color:var(--gray-l);font-weight:700">\${s.desc}</span></button>\`;}).join('')}
+        </div>
+      </div>
+
       ${(typeof window.buildSettingsTeamColorBlock==='function' ? window.buildSettingsTeamColorBlock() : '')}
     </div>
+
   </details>
   ${(()=>{ 
     const _tcOn = (localStorage.getItem('su_tc_theme_on') ?? '0') === '1';
@@ -5206,6 +5247,84 @@ ${_scfgD('notice','📢 공지 관리')}
         <button class="btn btn-w btn-sm" onclick="cfgResetUiBtnStyleSettings()">초기화</button>
         <span style="font-size:11px;color:var(--gray-l)">※ 모바일에서는 터치 편의 때문에 최소 높이가 유지될 수 있습니다.</span>
       </div>
+
+      <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white);margin-bottom:10px">
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:4px">🗂️ 상단 탭 스타일</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">상단 네비게이션 탭의 모양을 바꿉니다.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:7px;margin-bottom:10px">
+          ${[
+            {v:'default',  icon:'🔵', label:'기본',    desc:'그라디언트'},
+            {v:'pill',     icon:'💊', label:'알약형',  desc:'완전 둥글게'},
+            {v:'flat',     icon:'◻️', label:'플랫',   desc:'납작 단색'},
+            {v:'ghost',    icon:'👻', label:'고스트',  desc:'선택 시 테두리'},
+            {v:'underline',icon:'▁', label:'밑줄형',  desc:'하단 라인'},
+            {v:'glass',    icon:'🪟', label:'글래스',  desc:'반투명 블러'},
+            {v:'neon',     icon:'✨', label:'네온',    desc:'어둠 속 빛'},
+            {v:'retro',    icon:'🕹️', label:'레트로',  desc:'입체 그림자'},
+            {v:'bold',     icon:'⚡', label:'볼드',    desc:'굵고 강렬'},
+          ].map(t=>{
+            const cur=localStorage.getItem('su_tab_style')||'default';
+            const sel=cur===t.v;
+            return \`<button type="button" onclick="cfgSetTabStyle('\${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:\${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:\${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
+              <span style="font-size:18px;line-height:1">\${t.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:\${sel?'var(--blue)':'var(--text2)'};line-height:1.2">\${t.label}</span>
+              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">\${t.desc}</span>
+            </button>\`;
+          }).join('')}
+        </div>
+      </div>
+
+      <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white);margin-bottom:10px">
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:4px">🏷️ 하위메뉴 버튼 스타일</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">각 탭의 모드/필터 버튼(pill 형태) 모양을 바꿉니다.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:7px;margin-bottom:10px">
+          ${[
+            {v:'default', icon:'🔵', label:'기본',    desc:'둥근 기본형'},
+            {v:'pill',    icon:'💊', label:'알약형',  desc:'더 둥글게'},
+            {v:'square',  icon:'⬛', label:'각진형',  desc:'직각 모서리'},
+            {v:'tag',     icon:'🏷️', label:'꼬리표',  desc:'비대칭 라운드'},
+            {v:'neon',    icon:'✨', label:'네온',    desc:'글로우 효과'},
+            {v:'ghost',   icon:'👻', label:'고스트',  desc:'테두리만'},
+            {v:'bold',    icon:'⚡', label:'볼드',    desc:'굵은 테두리'},
+            {v:'badge',   icon:'🎖️', label:'배지형',  desc:'각진 배지'},
+          ].map(t=>{
+            const cur=localStorage.getItem('su_submenu_btn_style')||'default';
+            const sel=cur===t.v;
+            return \`<button type="button" onclick="cfgSetSubmenuBtnStyle('\${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:\${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:\${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
+              <span style="font-size:18px;line-height:1">\${t.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:\${sel?'var(--blue)':'var(--text2)'};line-height:1.2">\${t.label}</span>
+              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">\${t.desc}</span>
+            </button>\`;
+          }).join('')}
+        </div>
+      </div>
+
+      <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:4px">🎨 버튼 모양 테마</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">버튼 전체의 시각적 스타일을 한번에 바꿉니다.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:7px;margin-bottom:12px">
+          ${[
+            {v:'default', icon:'🔵', label:'기본', desc:'그라디언트 입체'},
+            {v:'flat', icon:'◻️', label:'플랫', desc:'그림자 없이 납작'},
+            {v:'outline', icon:'⬜', label:'아웃라인', desc:'테두리만'},
+            {v:'pill', icon:'💊', label:'알약형', desc:'모두 원형'},
+            {v:'soft', icon:'🌸', label:'소프트', desc:'파스텔 부드럽게'},
+            {v:'glass', icon:'🪟', label:'글래스', desc:'반투명 유리'},
+            {v:'retro', icon:'🕹️', label:'레트로', desc:'입체 하단 테두리'},
+            {v:'neon', icon:'✨', label:'네온', desc:'어둠 속 발광'},
+            {v:'brutal', icon:'⚡', label:'브루탈', desc:'굵은 검정 테두리'},
+          ].map(t=>{
+            const cur=localStorage.getItem('su_btn_theme')||'default';
+            const sel=cur===t.v;
+            return `<button type="button" onclick="cfgSetBtnTheme('${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
+              <span style="font-size:18px;line-height:1">${t.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'};line-height:1.2">${t.label}</span>
+              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">${t.desc}</span>
+            </button>`;
+          }).join('')}
+        </div>
+      </div>
+
       <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
         <div style="font-size:11px;color:var(--text3);font-weight:900;margin-bottom:8px">미리보기</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
@@ -5216,11 +5335,16 @@ ${_scfgD('notice','📢 공지 관리')}
           <button class="btn btn-w btn-sm">SM</button>
           <button class="btn btn-w btn-xs">XS</button>
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
           <button class="pill on">필 ON</button>
           <button class="pill">필 OFF</button>
           <button class="sort-btn on">정렬 ON</button>
           <button class="sort-btn">정렬</button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <button class="tab on" style="pointer-events:none">탭 선택됨</button>
+          <button class="tab" style="pointer-events:none">탭 기본</button>
+          <button class="tab" style="pointer-events:none">탭3</button>
         </div>
       </div>
     </div>

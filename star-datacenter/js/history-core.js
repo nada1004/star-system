@@ -697,7 +697,7 @@ function _recFxHexToRgbStr(hex){
 }
 // 기록 카드 양쪽 끝 색상 효과 모드
 // - 기존 모드 + 요청사항: 효과 1~2개 추가(fade/double)
-const _REC_SIDE_FX_MODES = ['soft','glow','panel','line','ribbon','frame','spotlight','fade','double'];
+const _REC_SIDE_FX_MODES = ['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse'];
 function _getRecSideFxCfg(){
   let on = true, mode = 'soft', intensity = 68, length = 25, tail = 28, softness = 52, edge = 8;
   try{ on = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0'; }catch(e){}

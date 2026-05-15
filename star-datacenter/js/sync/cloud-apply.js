@@ -101,11 +101,8 @@ function _pcMergeStageRecordArrays(remoteArr, localArr){
   const keyFn = (m, i)=> (m && (m._id || `${m.a||''}|${m.b||''}|${m.d||''}|${m.map||''}|${m.winner||''}`)) || i;
   return _pcMergeById(remoteArr, localArr, keyFn);
 }
-
-function _pcMergeGroupMatches(remoteArr, localArr){
-  const keyFn = (m, i)=> (m && (m._id || `${m.a||''}|${m.b||''}|${m.d||''}|${m.map||''}|${m.winner||''}`)) || i;
-  return _pcMergeById(remoteArr, localArr, keyFn);
-}
+// _pcMergeGroupMatches: keyFn 동일 → alias
+const _pcMergeGroupMatches = _pcMergeStageRecordArrays;
 
 function _pcMergeBracket(remoteBracket, localBracket){
   const rB = _fbArr(remoteBracket, []);
@@ -266,7 +263,6 @@ function _applyCloudData(d) {
   d = _decompressCloudData(d);
   try{ window._applyingCloudData = true; }catch(e){}
   const _has = (key) => d[key] !== undefined && d[key] !== null;
-  const _hasOrEmpty = (key) => d.savedAt !== undefined;
 
   {
     const v = d.players||d.player;
@@ -287,34 +283,34 @@ function _applyCloudData(d) {
 
   {
     const v = d.miniM||d.mini||d.miniMatches;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('miniM') ? [] : null);
+    const arr = v ? _fbArr(v,[]) : (_has('miniM') ? [] : null);
     if(arr !== null){ miniM=_mergeRecordCollection(arr, _fbArr(typeof miniM!=='undefined'?miniM:[],[])); miniM.forEach(m=>{ if(m.sets)m.sets=_fbArr(m.sets,[]); m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);}); }); }
   }
   {
     const v = d.univM||d.univ||d.univMatches;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('univM') ? [] : null);
+    const arr = v ? _fbArr(v,[]) : (_has('univM') ? [] : null);
     if(arr !== null){ univM=_mergeRecordCollection(arr, _fbArr(typeof univM!=='undefined'?univM:[],[])); univM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
   }
   {
     const v = d.comps||d.comp||d.competitions;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('comps') ? [] : null);
+    const arr = v ? _fbArr(v,[]) : (_has('comps') ? [] : null);
     if(arr !== null) comps=_mergeRecordCollection(arr, _fbArr(typeof comps!=='undefined'?comps:[],[]));
   }
   {
     const v = d.ckM||d.ck||d.ckMatches;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ckM') ? [] : null);
+    const arr = v ? _fbArr(v,[]) : (_has('ckM') ? [] : null);
     if(arr !== null){ ckM=_mergeRecordCollection(arr, _fbArr(typeof ckM!=='undefined'?ckM:[],[])); ckM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
   }
   if(_has('compNames')) compNames=_fbArr(d.compNames||d.competitionNames, []);
   if(_has('curComp')||d.savedAt) curComp=d.curComp||d.currentComp||'';
   {
     const v = d.proM||d.pro||d.proMatches;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('proM') ? [] : null);
+    const arr = v ? _fbArr(v,[]) : (_has('proM') ? [] : null);
     if(arr !== null){ proM=_mergeRecordCollection(arr, _fbArr(typeof proM!=='undefined'?proM:[],[])); proM.forEach(m=>{if(m.sets)m.sets=_fbArr(m.sets,[]);if(m.teamAMembers)m.teamAMembers=_fbArr(m.teamAMembers,[]);if(m.teamBMembers)m.teamBMembers=_fbArr(m.teamBMembers,[]);m.sets&&m.sets.forEach(s=>{if(s.games)s.games=_fbArr(s.games,[]);});}); }
   }
   {
     const v = d.proTourneys;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('proTourneys') ? [] : null);
+    const arr = v ? _fbArr(v,[]) : (_has('proTourneys') ? [] : null);
     if(arr !== null){
       const localProTourneys = _fbArr(typeof proTourneys!=='undefined' ? proTourneys : [], []);
       proTourneys = _mergeProTourneysRemoteWithLocal(arr, localProTourneys);
@@ -322,7 +318,7 @@ function _applyCloudData(d) {
   }
   {
     const v = d.tourneys||d.tournaments||d.tourney;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('tourneys') ? [] : null);
+    const arr = v ? _fbArr(v,[]) : (_has('tourneys') ? [] : null);
     if(arr !== null){
       tourneys=_mergeTourneysRemoteWithLocal(arr, _fbArr(typeof tourneys!=='undefined'?tourneys:[],[]));
       tourneys.forEach(tn=>{
@@ -336,10 +332,8 @@ function _applyCloudData(d) {
     }
   }
   {
-  }
-  {
     const v = d.ttM||d.tiertour||d.tierTourM;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('ttM') ? [] : null);
+    const arr = v ? _fbArr(v,[]) : (_has('ttM') ? [] : null);
     if(arr !== null){
       ttM = _mergeRecordCollection(arr, _fbArr(typeof ttM!=='undefined'?ttM:[],[]));
       try{
@@ -353,12 +347,12 @@ function _applyCloudData(d) {
   }
   {
     const v = d.indM||d.ind;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('indM') ? [] : null);
+    const arr = v ? _fbArr(v,[]) : (_has('indM') ? [] : null);
     if(arr !== null) indM=_mergeRecordCollection(arr, _fbArr(typeof indM!=='undefined'?indM:[],[]));
   }
   {
     const v = d.gjM;
-    const arr = v ? _fbArr(v,[]) : (_hasOrEmpty('gjM') ? [] : null);
+    const arr = v ? _fbArr(v,[]) : (_has('gjM') ? [] : null);
     if(arr !== null) gjM=_mergeRecordCollection(arr, _fbArr(typeof gjM!=='undefined'?gjM:[],[]));
   }
   if(d.tiers&&d.tiers.length&&typeof TIERS!=='undefined'){TIERS.splice(0,TIERS.length,...d.tiers);}
@@ -514,9 +508,9 @@ window.onFirebaseLoad = function(data) {
       return;
     }
     if(!window._forcingSync && sa && lastApplied && sa <= lastApplied){
+      _markReceiveMeta(sa);
       const fbTs = document.getElementById('fbLastSync');
       if(fbTs) fbTs.textContent = '🔄 ' + new Date().toLocaleTimeString('ko-KR');
-      _markReceiveMeta(sa);
       return;
     }
     if(!window._forcingSync && sa && localSavedAt && sa < localSavedAt){

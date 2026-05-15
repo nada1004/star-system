@@ -311,7 +311,7 @@
     };
     window.cfgSetRecSideFxMode = function(mode){
       var v = String(mode||'soft');
-      if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double'].indexOf(v) === -1) v = 'soft';
+      if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse'].indexOf(v) === -1) v = 'soft';
       try{ localStorage.setItem('su_rec_side_fx_mode', v); }catch(e){}
       try{ _updateSideFxPreview(); }catch(e){}
       try{ render(); }catch(e){}
@@ -363,7 +363,7 @@
         var prev = document.getElementById('cfg-sidefx-preview');
         if(!prev) return;
         var mode = localStorage.getItem('su_rec_side_fx_mode')||'soft';
-        var allModes = ['soft','glow','panel','line','ribbon','frame','spotlight','fade','double'];
+        var allModes = ['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse'];
         allModes.forEach(function(m){ prev.classList.remove('grp-sidefx--'+m); });
         prev.classList.add('grp-sidefx--'+mode);
         if(typeof _recSideFxVarStyle==='function'){
@@ -375,6 +375,92 @@
         }
       }catch(e){}
     };
+    // ── 팀 버튼 스타일 ──
+    var _TEAM_BTN_STYLES = ['solid','pill','badge','gradient','chip-xl','neon','outline','flat'];
+    window.cfgSetTeamBtnStyle = function(style){
+      var v = _TEAM_BTN_STYLES.indexOf(String(style)) !== -1 ? String(style) : 'solid';
+      try{ localStorage.setItem('su_rc_team_btn_style', v); }catch(e){}
+      _TEAM_BTN_STYLES.forEach(function(s){ document.body.classList.remove('team-btn--'+s); });
+      if(v !== 'solid') document.body.classList.add('team-btn--'+v);
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    // 페이지 로드 시 저장된 팀 버튼 스타일 즉시 적용
+    (function(){
+      try{
+        var v = localStorage.getItem('su_rc_team_btn_style') || 'solid';
+        if(v && v !== 'solid') document.body.classList.add('team-btn--'+v);
+      }catch(e){}
+    })();
+
+    // ── 상단 탭 스타일 테마 ──
+    var _TAB_STYLES = ['default','pill','flat','ghost','underline','glass','neon','retro','bold'];
+    window.cfgSetTabStyle = function(style){
+      var v = _TAB_STYLES.indexOf(String(style)) !== -1 ? String(style) : 'default';
+      try{ localStorage.setItem('su_tab_style', v); }catch(e){}
+      _TAB_STYLES.forEach(function(s){ document.body.classList.remove('tab-style--'+s); });
+      if(v !== 'default') document.body.classList.add('tab-style--'+v);
+      _touchPrefs();
+    };
+    (function(){
+      try{
+        var v = localStorage.getItem('su_tab_style') || 'default';
+        if(v && v !== 'default') document.body.classList.add('tab-style--'+v);
+      }catch(e){}
+    })();
+
+    // ── 하위메뉴 버튼(.pill/.sort-btn) 스타일 테마 ──
+    var _SUBMENU_BTN_STYLES = ['default','pill','square','tag','neon','ghost','bold','badge'];
+    window.cfgSetSubmenuBtnStyle = function(style){
+      var v = _SUBMENU_BTN_STYLES.indexOf(String(style)) !== -1 ? String(style) : 'default';
+      try{ localStorage.setItem('su_submenu_btn_style', v); }catch(e){}
+      _SUBMENU_BTN_STYLES.forEach(function(s){ document.body.classList.remove('submenu-btn--'+s); });
+      if(v !== 'default') document.body.classList.add('submenu-btn--'+v);
+      _touchPrefs();
+    };
+    (function(){
+      try{
+        var v = localStorage.getItem('su_submenu_btn_style') || 'default';
+        if(v && v !== 'default') document.body.classList.add('submenu-btn--'+v);
+      }catch(e){}
+    })();
+
+    // ── 팀 칩 모양 (경기 기록 카드) ──
+    var _TEAM_CHIP_SHAPES = ['default','pill','square','sharp','diamond','tag','hex'];
+    window.cfgSetTeamChipShape = function(shape){
+      var v = _TEAM_CHIP_SHAPES.indexOf(String(shape)) !== -1 ? String(shape) : 'default';
+      try{ localStorage.setItem('su_rc_team_chip_shape', v); }catch(e){}
+      _TEAM_CHIP_SHAPES.forEach(function(s){ document.body.classList.remove('team-chip--'+s); });
+      if(v !== 'default') document.body.classList.add('team-chip--'+v);
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    // 페이지 로드 시 팀 칩 모양 즉시 적용
+    (function(){
+      try{
+        var v = localStorage.getItem('su_rc_team_chip_shape') || 'default';
+        if(v && v !== 'default') document.body.classList.add('team-chip--'+v);
+      }catch(e){}
+    })();
+
+    // ── 버튼 모양 테마 ──
+    var _BTN_THEMES = ['default','flat','outline','pill','soft','glass','retro','neon','brutal'];
+    window.cfgSetBtnTheme = function(theme){
+      var v = _BTN_THEMES.indexOf(String(theme)) !== -1 ? String(theme) : 'default';
+      try{ localStorage.setItem('su_btn_theme', v); }catch(e){}
+      _BTN_THEMES.forEach(function(t){ document.body.classList.remove('btn-theme--'+t); });
+      if(v !== 'default') document.body.classList.add('btn-theme--'+v);
+      try{ render(); }catch(e){}
+      _touchPrefs();
+    };
+    // 페이지 로드 시 저장된 버튼 테마 즉시 적용
+    (function(){
+      try{
+        var v = localStorage.getItem('su_btn_theme') || 'default';
+        if(v && v !== 'default') document.body.classList.add('btn-theme--'+v);
+      }catch(e){}
+    })();
+
     window.applyRecSideFxLengthVar = function(n){
       try{
         var len = Math.max(4, Math.min(80, parseInt(n||'25',10)||25));
@@ -764,6 +850,23 @@
       + '</details>';
   }
   window.renderCfgStreamerHeaderSection = renderStreamerHeaderSection;
+
+  // ── 기록 카드 모양(shape) ──
+  var _RC_CARD_SHAPES = ['default','compact','wide','minimal','timeline','card3d','glass','sharp','bubble'];
+  window.cfgSetRecCardShape = function(shape){
+    var v = _RC_CARD_SHAPES.indexOf(String(shape)) !== -1 ? String(shape) : 'default';
+    try{ localStorage.setItem('su_rc_card_shape', v); }catch(e){}
+    _RC_CARD_SHAPES.forEach(function(s){ document.body.classList.remove('rc-shape--'+s); });
+    if(v !== 'default') document.body.classList.add('rc-shape--'+v);
+    _touchPrefs();
+  };
+  // 페이지 로드 시 저장된 카드 모양 즉시 적용
+  (function(){
+    try{
+      var v = localStorage.getItem('su_rc_card_shape') || 'default';
+      if(v && v !== 'default') document.body.classList.add('rc-shape--'+v);
+    }catch(e){}
+  })();
 
   // 페이지 로드 시 기록 카드 양끝 효과 길이 CSS variable 초기 적용
   try{

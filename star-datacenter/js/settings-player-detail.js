@@ -435,7 +435,8 @@ function cfgPdResetModeBadgeColors(){
 function _setGlobalProfileShape(shape){
   const _prevCfgSec = window._cfgModalSecId || '';
   try{
-    const v = (shape==='square') ? 'square' : 'circle';
+    const _PROFILE_SHAPES = ['circle','square','rounded','diamond','hexagon','shield'];
+    const v = _PROFILE_SHAPES.includes(shape) ? shape : 'circle';
     localStorage.setItem('su_profile_shape', v);
     try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
   }catch(e){}

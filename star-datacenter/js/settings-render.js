@@ -47,6 +47,7 @@ function rCfg(C,T){
     uisize:'📱 모바일/태블릿 UI 크기',
     siAssign:'🎭 스트리머별 상태 아이콘 지정',
     cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', h2hpanel:'🎮 개인전/끝장전(프로리그 끝장전) 카드', sharecard:'🪪 공유카드 디자인', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
+    'tierrank-view':'📊 티어 순위표 보기 방식',
     bgm:'🎵 유튜브 배경음악(BGM)', soopmv:'📺 SOOP(숲) 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
     fab:'📱 플로팅(FAB)', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
@@ -95,6 +96,7 @@ function rCfg(C,T){
     {id:'tablabels', icon:'🏷️', title:'탭 이름', desc:'상단/하위 메뉴명'},
     {id:'hdr', icon:'🧩', title:'헤더 바', desc:'제목/아이콘/배경'},
     {id:'reccard', icon:'🧾', title:'기록 카드', desc:'CK/프로 버튼색 포함'},
+    {id:'tierrank-view', icon:'📊', title:'티어 순위표', desc:'테이블/카드/포디움'},
     {id:'cfgmenu', icon:'🧭', title:'메뉴 정리', desc:'자주 쓰는 설정 정리'}
   ];
   const _basicQuickBtns = _quickBtns.slice(0,4);
@@ -797,6 +799,36 @@ ${_scfgD('notice','📢 공지 관리')}
       <div style="font-size:12px;color:var(--gray-l)">로딩 중...</div>
     </div>
   </details>
+  ${_scfgD('tierrank-view','📊 티어 순위표 보기 방식')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머탭 → 티어 순위표의 기본 뷰 방식을 설정합니다. 순위표 상단 아이콘 버튼으로도 즉시 전환할 수 있습니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:8px">기본 뷰 선택</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${(function(){
+            const _cur = localStorage.getItem('su_tier_view_mode') || 'table';
+            return [
+              {id:'table',      icon:'📋', title:'테이블',        desc:'기존 테이블 형식. 모든 정보 한눈에'},
+              {id:'card',       icon:'🃏', title:'카드 그리드',   desc:'프로필 카드 그리드. 한 눈에 보기 좋음'},
+              {id:'podium',     icon:'🏆', title:'포디움',        desc:'1-2-3위 시상대 + 나머지 리스트'},
+              {id:'compact',    icon:'📝', title:'컴팩트 리스트', desc:'한 줄로 밀도 높게. 많은 인원 빠르게'},
+              {id:'tier-group', icon:'🎖️', title:'티어별 그룹',   desc:'티어 단위로 묶어 카드 표시'},
+            ].map(v=>`<button type="button"
+              onclick="localStorage.setItem('su_tier_view_mode','${v.id}');if(!window._tierViewMode||1){window._tierViewMode='${v.id}';}try{render();}catch(e){}"
+              style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;border-radius:10px;border:2px solid ${_cur===v.id?'var(--blue)':'var(--border2)'};background:${_cur===v.id?'#eff6ff':'var(--white)'};cursor:pointer;min-width:90px;transition:border-color .15s"
+            >
+              <span style="font-size:20px">${v.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:${_cur===v.id?'var(--blue)':'var(--text2)'}">${v.title}</span>
+              <span style="font-size:10px;color:var(--gray-l);text-align:center;line-height:1.3">${v.desc}</span>
+            </button>`).join('');
+          })()}
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);border-top:1px solid var(--border2);padding-top:8px">
+        💡 순위표 상단 우측의 <b>📋 🃏 🏆 📝 🎖️</b> 아이콘 버튼으로도 즉시 전환됩니다.
+      </div>
+    </div>
+  </details>
   ${_scfgD('reccard','🧾 기록 카드(기록탭) 스타일')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">개인전/끝장전/미니/프로리그/대회 기록 목록에 쓰이는 “기록 카드” 스타일입니다. (대회탭 조별리그 일정 카드는 별도 설정)</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
@@ -819,6 +851,32 @@ ${_scfgD('notice','📢 공지 관리')}
           <option value="gradient" ${_rcAccent==='gradient'?'selected':''}>그라디언트 헤더</option>
         </select>
         <span style="font-size:11px;color:var(--gray-l)">※ 체크를 끄면 무조건 무색</span>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          ${(function(){
+            const _curShape = localStorage.getItem('su_rc_card_shape') || 'default';
+            const _shapes = [
+              {v:'default',  l:'기본',     icon:'🃏', desc:'기본 둥근 카드'},
+              {v:'compact',  l:'컴팩트',   icon:'📋', desc:'패딩 축소, 밀도 높게'},
+              {v:'wide',     l:'와이드',   icon:'🖼️', desc:'넓고 여유로운 카드'},
+              {v:'minimal',  l:'미니멀',   icon:'➖', desc:'테두리 없음, 구분선만'},
+              {v:'timeline', l:'타임라인', icon:'📅', desc:'왼쪽 색선 강조'},
+              {v:'card3d',   l:'3D 카드',  icon:'🎴', desc:'입체 그림자 효과'},
+              {v:'glass',    l:'유리',     icon:'🔮', desc:'반투명 유리 효과'},
+              {v:'sharp',    l:'각진',     icon:'▬',  desc:'직각 카드'},
+              {v:'bubble',   l:'버블',     icon:'💬', desc:'크고 둥근 버블형'},
+            ];
+            return _shapes.map(s=>`<button type="button"
+              onclick="if(typeof cfgSetRecCardShape==='function')cfgSetRecCardShape('${s.v}');try{render();}catch(e){}"
+              title="${s.desc}"
+              style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${_curShape===s.v?'var(--blue)':'var(--border2)'};background:${_curShape===s.v?'#eff6ff':'var(--white)'};color:${_curShape===s.v?'var(--blue)':'var(--text2)'}"
+            >${s.icon} ${s.l}</button>`).join('');
+          })()}
+        </div>
+        <span style="font-size:11px;color:var(--gray-l)">카드 레이아웃/모양을 변경합니다</span>
       </div>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1028,7 +1086,7 @@ ${_scfgD('notice','📢 공지 관리')}
           </div>
         </div>
 
-        <!-- 이미지 수평 이동 -->
+        <!-- 이미지 수평/수직 이동 -->
         <div style="margin-bottom:10px">
           <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">↔️ 이미지 수평 이동 <span id="cfg-rsp-hoffset-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{const v=parseInt(localStorage.getItem('su_rsp_hoffset')||'0',10);return(v>0?'+':'')+v+'px';}catch(e){return '0px';}})()}</span></div>
           <input type="range" min="-200" max="200" step="4"
@@ -1037,6 +1095,15 @@ ${_scfgD('notice','📢 공지 관리')}
             oninput="document.getElementById('cfg-rsp-hoffset-v').textContent=(parseFloat(this.value)>0?'+':'')+parseInt(this.value)+'px'"
             onchange="(window.cfgSetRspHoffset||function(){})(this.value)">
           <div style="font-size:10px;color:var(--gray-l);margin-top:3px">양수(+): 좌우 이미지가 스코어 방향(안쪽)으로 이동 &nbsp;|&nbsp; 음수(-): 카드 바깥쪽으로 이동</div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">↕️ 이미지 수직 이동 <span id="cfg-rsp-voffset-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{const v=parseInt(localStorage.getItem('su_rsp_voffset')||'0',10);return(v>0?'+':'')+v+'px';}catch(e){return '0px';}})()}</span></div>
+          <input type="range" min="-200" max="200" step="4"
+            value="${(()=>{try{return parseInt(localStorage.getItem('su_rsp_voffset')||'0',10);}catch(e){return 0;}})()}"
+            style="width:100%;max-width:260px;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-rsp-voffset-v').textContent=(parseFloat(this.value)>0?'+':'')+parseInt(this.value)+'px'"
+            onchange="(window.cfgSetRspVoffset||function(){})(this.value)">
+          <div style="font-size:10px;color:var(--gray-l);margin-top:3px">양수(+): 이미지가 아래로 이동 &nbsp;|&nbsp; 음수(-): 위로 이동</div>
         </div>
 
         <!-- 슬라이드쇼 -->

@@ -927,6 +927,24 @@ function _applyRecCardTheme(){
 window._applyRecCardTheme=_applyRecCardTheme;
 _applyRecCardTheme();
 
+// 팀 버튼 스타일 초기 적용
+(function(){
+  try{
+    var TEAM_BTN_STYLES=['solid','pill','badge','gradient','chip-xl','neon','outline','flat'];
+    var v=localStorage.getItem('su_rc_team_btn_style')||'solid';
+    if(v&&v!=='solid'&&TEAM_BTN_STYLES.indexOf(v)!==-1) document.body.classList.add('team-btn--'+v);
+  }catch(e){}
+})();
+
+// 버튼 모양 테마 초기 적용
+(function(){
+  try{
+    var BTN_THEMES=['default','flat','outline','pill','soft','glass','retro','neon','brutal'];
+    var v=localStorage.getItem('su_btn_theme')||'default';
+    if(v&&v!=='default'&&BTN_THEMES.indexOf(v)!==-1) document.body.classList.add('btn-theme--'+v);
+  }catch(e){}
+})();
+
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 대회탭 카드(조별리그 일정 등) 테마/디자인 모드
 // ─────────────────────────────────────────────────────────────

@@ -6,6 +6,7 @@
    - su_rsp_size         : 이미지 크기 (px)
    - su_rsp_valign       : 이미지 세로 위치 (top | center | bottom)
    - su_rsp_hoffset      : 이미지 수평 이동 (px, -200~+200, 양수=카드 중앙 방향)
+   - su_rsp_voffset      : 이미지 수직 이동 (px, -200~+200, 양수=아래쪽)
    - su_rsp_brightness   : 밝기
    - su_rsp_effect       : 필터 효과
    - su_rsp_width        : 패널 너비 (px)
@@ -279,6 +280,7 @@
     var imageType = _getImageType();
     var rawOffset = Math.max(-200,Math.min(200,parseInt(_cfg('su_rsp_hoffset','0'),10)||0));
     var hoffset   = isLeft ? rawOffset : -rawOffset;
+    var voffset   = Math.max(-200,Math.min(200,parseInt(_cfg('su_rsp_voffset','0'),10)||0));
     var showBox   = (_cfg('su_rsp_show_box','0')!=='0');
     var rotateOn  = _isRotateOn();
     var rotateSec = _getRotateSec();
@@ -306,7 +308,10 @@
     if(!validPlayers.length) return '';
 
     var jc = valign==='top'?'flex-start':valign==='bottom'?'flex-end':'center';
-    var translateStyle = hoffset!==0?'transform:translateX('+hoffset+'px);':'';
+    var _tx = hoffset!==0?'translateX('+hoffset+'px)':'';
+    var _ty = voffset!==0?'translateY('+voffset+'px)':'';
+    var _tf = [_tx,_ty].filter(Boolean).join(' ');
+    var translateStyle = _tf?'transform:'+_tf+';':'';
     var panelBg  = showBox?(isWinTeam?_rgba(col,0.12):'rgba(148,163,184,0.07)'):'transparent';
     var panelBrd = showBox?(isWinTeam?_rgba(col,0.30):'rgba(148,163,184,0.18)'):'transparent';
     var uid = 'rsp'+Math.random().toString(36).slice(2,9);
@@ -525,6 +530,10 @@
 
   window.cfgSetRspHoffset = function(v){
     try{ localStorage.setItem('su_rsp_hoffset', String(parseInt(v,10)||0)); if(typeof render==='function') render(); }catch(e){}
+  };
+
+  window.cfgSetRspVoffset = function(v){
+    try{ localStorage.setItem('su_rsp_voffset', String(parseInt(v,10)||0)); if(typeof render==='function') render(); }catch(e){}
   };
 
   window.cfgSetRspShowBox = function(on){

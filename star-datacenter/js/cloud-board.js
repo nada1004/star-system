@@ -746,8 +746,8 @@ function rBoard(C,T){
     .brd-row{display:flex;align-items:center;gap:${_bcpGap}px;padding:${_bcpPadY}px ${_bcpPadX}px;border-radius:9px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.7);transition:background .12s,box-shadow .12s;}
     .brd-row:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);}
     .brd-row-btn{cursor:pointer;flex:1;display:flex;align-items:center;gap:7px;background:none;border:none;padding:0;font-family:'Noto Sans KR',sans-serif;min-width:0;}
-    .brd-photo{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;background:rgba(0,0,0,.08);border:1.5px solid rgba(255,255,255,.7);}
-    .brd-photo-placeholder{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;background:rgba(255,255,255,.4);border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:${Math.round(12*_bcpScale)}px;color:rgba(0,0,0,.35);}
+    .brd-photo{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);object-fit:cover;flex-shrink:0;background:rgba(0,0,0,.08);border:1.5px solid rgba(255,255,255,.7);}
+    .brd-photo-placeholder{width:${boardChipPhotoSize}px;height:${boardChipPhotoSize}px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);flex-shrink:0;background:rgba(255,255,255,.4);border:1.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:${Math.round(12*_bcpScale)}px;color:rgba(0,0,0,.35);}
     .brd-race{font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;flex-shrink:0;letter-spacing:.3px;}
     .brd-name{font-weight:700;font-size:${_bcpNameFs}px;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;text-align:left;}
     .brd-role-main{font-size:${_bcpRoleFs}px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap;flex-shrink:0;border:1px solid;}
@@ -2538,7 +2538,6 @@ async function _autoSyncCheck() {
         try {
           await window.cloudLoad();
           console.log('[autoSync] 자동 동기화 완료');
-          
           // 알림 토스트
           if (typeof showToast === 'function') {
             showToast('✅ 다른 기기의 변경 사항이 자동으로 동기화되었습니다.', 3000);
@@ -2560,11 +2559,18 @@ async function _autoSyncCheck() {
   }
 }
 
-// 자동 동기화 시작 (2분마다 체크 - 빠른 동기화를 위해 감소)
+// 탭 복귀/포커스 시 즉시 동기화 체크
+(function(){
+  const _onVisible = ()=>{ try{ if(typeof _autoSyncCheck==='function') _autoSyncCheck(); }catch(e){} };
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') _onVisible(); });
+  window.addEventListener('focus', _onVisible);
+})();
+
+// 자동 동기화 시작 (30초마다 체크)
 function startAutoSync() {
   if (_autoSyncTimer) clearInterval(_autoSyncTimer);
-  _autoSyncTimer = setInterval(_autoSyncCheck, 2 * 60 * 1000); // 2분
-  console.log('[autoSync] 자동 동기화 시작 (2분 간격)');
+  _autoSyncTimer = setInterval(_autoSyncCheck, 30 * 1000); // 30초
+  console.log('[autoSync] 자동 동기화 시작 (30초 간격)');
 }
 
 // 자동 동기화 중지
@@ -2576,35 +2582,24 @@ function stopAutoSync() {
   }
 }
 
-// 페이지 로드 후 자동 시작 (로그인 상태일 때)
+// 페이지 로드 후 자동 시작 + 저장 완료 후 재시작 (통합)
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     if (typeof isLoggedIn !== 'undefined' && isLoggedIn) {
       startAutoSync();
-      // 첫 체크는 10초 후
-      setTimeout(_autoSyncCheck, 10000);
+      setTimeout(_autoSyncCheck, 5000);
+    }
+    // 저장 완료 후 30초 뒤 동기화 체크 (GitHub 반영 대기)
+    const _origSave = window.fbCloudSave;
+    if (_origSave) {
+      window.fbCloudSave = async function(...args) {
+        const result = await _origSave.apply(this, args);
+        setTimeout(_autoSyncCheck, 30000);
+        return result;
+      };
     }
   }, 2000);
 }, { once: true });
 
-// 저장 완료 후 자동 동기화 재시작
-window.addEventListener('DOMContentLoaded', () => {
-  const originalFbCloudSave = window.fbCloudSave;
-  if (originalFbCloudSave) {
-    window.fbCloudSave = async function(...args) {
-      const result = await originalFbCloudSave.apply(this, args);
-      // 저장 후 30초 뒤에 동기화 체크 (GitHub 반영 대기)
-      setTimeout(_autoSyncCheck, 30000);
-      return result;
-    };
-  }
-}, { once: true });
-
-// 즉시 실행으로 함수 전역 노출 보장
 (function() {
-  if (typeof window.saveCurrentView === 'function') {
-    console.log('[cloud-board.js] saveCurrentView 함수가 전역에 노출됨');
-  } else {
-    console.error('[cloud-board.js] saveCurrentView 함수가 전역에 노출되지 않음');
-  }
 })();

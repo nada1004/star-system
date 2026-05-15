@@ -34,7 +34,7 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
   const hasBorder=extraStyle.includes('border');
   const bdr=hasBorder?'':'border:1.5px solid var(--border);';
   const sz = 'calc('+size+' * var(--su_profile_scale,1))';
-  const base='display:inline-block;width:'+sz+';height:'+sz+';border-radius:var(--su_profile_radius,50%);box-shadow:var(--su_profile_fx, none);flex-shrink:0;vertical-align:middle;'+extraStyle;
+  const base='display:inline-block;width:'+sz+';height:'+sz+';border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);box-shadow:var(--su_profile_fx, none);flex-shrink:0;vertical-align:middle;'+extraStyle;
   const safeName=(playerName||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const clickStyle='cursor:pointer;';
   const clickAttr='onclick="event.stopPropagation();openPlayerModal(\''+safeName+'\')" title="스트리머 상세"';
