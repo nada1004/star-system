@@ -68,7 +68,7 @@ function rCfg(C,T){
   const _regBtn = (!isSubAdmin ? `<button class="btn btn-b no-export" onclick="openB2PlayerCreateModal()" style="padding:6px 10px;border-radius:14px;font-size:11px;font-weight:900;white-space:nowrap;flex-shrink:0">🎬 스트리머 등록</button>` : ``);
   const _menuBtn = `<button class="btn btn-w no-export" onclick="cfgGo('cfgmenu')" style="padding:6px 10px;border-radius:14px;font-size:11px;font-weight:900;white-space:nowrap;flex-shrink:0" title="설정 하위 메뉴 이름 변경/정리">🧭 메뉴정리</button>`;
   const _afOn = (localStorage.getItem('su_af_alltabs_v1') === '1');
-  const _rcOn = (localStorage.getItem('su_rc_theme_on') ?? '1') === '1';
+  const _rcOn = (localStorage.getItem('su_rc_theme_on') ?? '0') === '1';
   const _rcAccent = (localStorage.getItem('su_rc_accent_mode') ?? 'none');
   const _rcBg = parseInt(localStorage.getItem('su_rc_bg_alpha') ?? '12',10) || 12;
   const _rcHd = parseInt(localStorage.getItem('su_rc_hd_alpha') ?? '14',10) || 14;

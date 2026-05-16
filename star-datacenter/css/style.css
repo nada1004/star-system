@@ -1554,7 +1554,7 @@ body.dark .hist-ctrl-group{
 .rec-summary{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;position:relative;transition:box-shadow var(--tr),transform var(--tr),border-left-width var(--tr);min-height:46px;}
 .rec-summary:empty{display:none!important;}
 .rec-summary:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08);transform:translateY(-1px);}
-.rec-summary.detail-open{border-left-width:4px!important;box-shadow:0 2px 12px rgba(37,99,235,.13)!important;}
+.rec-summary.detail-open{border-left-width:1px!important;box-shadow:0 2px 12px rgba(37,99,235,.13)!important;}
 .rec-sum-header{padding:9px 12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
 .rec-sum-header--stack{
   display:flex;
@@ -1928,27 +1928,17 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   overflow:hidden;
 }
 .rec-summary[data-rec-mode]::before{
-  content:'';
-  position:absolute;
-  inset:0 auto 0 0;
-  width:5px;
-  background:linear-gradient(180deg,var(--rec-mode-col,#64748b),color-mix(in srgb, var(--rec-mode-col,#64748b) 40%, #ffffff));
-  opacity:.95;
+  display:none;
 }
 .rec-summary[data-rec-mode] .rec-sum-header{
   position:relative;
-  background:linear-gradient(180deg, rgba(var(--rec-mode-rgb,100,116,139),.08), rgba(var(--rec-mode-rgb,100,116,139),.03) 52%, transparent);
+  background:transparent;
 }
 .rec-summary[data-rec-mode] .rec-sum-score{
   position:relative;
 }
 .rec-summary[data-rec-mode] .rec-sum-score::after{
-  content:'';
-  position:absolute;
-  inset:1px;
-  border-radius:14px;
-  background:linear-gradient(135deg, rgba(var(--rec-mode-rgb,100,116,139),.10), transparent 62%);
-  pointer-events:none;
+  display:none;
 }
 
 /* (버그픽스) "배경 효과 OFF"인데도 남는 모드 틴트/바 제거 */
@@ -2023,11 +2013,12 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.20))) 0%,
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) var(--rec-fx-len2,10%),
-      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
-      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) var(--rec-fx-len2-r,90%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 100%);
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) 55%,
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) 100%) left center / var(--rec-fx-len,22%) 100% no-repeat,
+    linear-gradient(270deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 0%,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) 55%,
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) 100%) right center / var(--rec-fx-len,22%) 100% no-repeat;
 }
 .rec-summary.rec-sidefx.rec-sidefx--glow::after,
 .grp-match-card.grp-sidefx.grp-sidefx--glow::after,
@@ -2035,9 +2026,10 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a2,.09))) 0%,
-      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
-      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a2,.09))) 100%);
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) 100%) left center / var(--rec-fx-len,22%) 100% no-repeat,
+    linear-gradient(270deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a2,.09))) 0%,
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) 100%) right center / var(--rec-fx-len,22%) 100% no-repeat;
   box-shadow:
     inset var(--rec-side-glow-inset,24px) 0 var(--rec-side-glow-blur,30px) rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.20)),
     inset calc(var(--rec-side-glow-inset,24px) * -1) 0 var(--rec-side-glow-blur,30px) rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.20));
@@ -2048,13 +2040,14 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.20))) 0%,
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) var(--rec-fx-len2,10%),
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.16)) var(--rec-fx-len3,20%),
-      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
-      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.16)) var(--rec-fx-len3-r,80%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) var(--rec-fx-len2-r,90%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 100%);
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) 38%,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.16)) 68%,
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) 100%) left center / var(--rec-fx-len,22%) 100% no-repeat,
+    linear-gradient(270deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 0%,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) 38%,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.16)) 68%,
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) 100%) right center / var(--rec-fx-len,22%) 100% no-repeat;
 }
 .rec-summary.rec-sidefx.rec-sidefx--line::after,
 .grp-match-card.grp-sidefx.grp-sidefx--line::after,
@@ -2074,10 +2067,11 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.20))) 0,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.10)) var(--rec-side-band,14px),
-      rgba(var(--rec-side-left-rgb,59,130,246), 0) calc(var(--rec-side-band,14px) * 1.8),
-      rgba(var(--rec-side-right-rgb,168,85,247), 0) calc(100% - (var(--rec-side-band,14px) * 1.8)),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.10)) calc(100% - var(--rec-side-band,14px)),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 100%);
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) calc(var(--rec-side-band,14px) * 1.8)) left center / calc(var(--rec-side-band,14px) * 2.2) 100% no-repeat,
+    linear-gradient(270deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 0,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.10)) var(--rec-side-band,14px),
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) calc(var(--rec-side-band,14px) * 1.8)) right center / calc(var(--rec-side-band,14px) * 2.2) 100% no-repeat;
 }
 .rec-summary.rec-sidefx.rec-sidefx--frame::after,
 .grp-match-card.grp-sidefx.grp-sidefx--frame::after,
@@ -2085,9 +2079,10 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.18)) 0%,
-      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
-      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.18)) 100%);
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) 100%) left center / var(--rec-fx-len,22%) 100% no-repeat,
+    linear-gradient(270deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.18)) 0%,
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) 100%) right center / var(--rec-fx-len,22%) 100% no-repeat;
   box-shadow:
     inset var(--rec-side-frame,3px) 0 0 rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,.34)),
     inset calc(var(--rec-side-frame,3px) * -1) 0 0 rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,.34)),
@@ -2115,11 +2110,12 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-ae,var(--rec-side-a1,.20)) * .55)) 0%,
-      rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-a2,.09) * .55)) var(--rec-fx-len2,10%),
-      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
-      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
-      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-a2,.09) * .55)) var(--rec-fx-len2-r,90%),
-      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-ae,var(--rec-side-a1,.20)) * .55)) 100%);
+      rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-a2,.09) * .55)) 55%,
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) 100%) left center / var(--rec-fx-len,22%) 100% no-repeat,
+    linear-gradient(270deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-ae,var(--rec-side-a1,.20)) * .55)) 0%,
+      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-a2,.09) * .55)) 55%,
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) 100%) right center / var(--rec-fx-len,22%) 100% no-repeat;
 }
 
 /* (요청사항) 추가 효과: 더블라인(세로 2줄) */
@@ -2147,11 +2143,12 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-ae,.45) * 1.2)) 0%,
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.12)) var(--rec-fx-len2,10%),
-      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
-      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.12)) var(--rec-fx-len2-r,90%),
-      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-ae,.45) * 1.2)) 100%);
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.12)) 55%,
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) 100%) left center / var(--rec-fx-len,22%) 100% no-repeat,
+    linear-gradient(270deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-ae,.45) * 1.2)) 0%,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.12)) 55%,
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) 100%) right center / var(--rec-fx-len,22%) 100% no-repeat;
   box-shadow:
     inset var(--rec-side-line-w,8px) 0 calc(var(--rec-side-glow-blur,30px) * 1.4) rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-a1,.20) * 1.6)),
     inset calc(var(--rec-side-line-w,8px) * -1) 0 calc(var(--rec-side-glow-blur,30px) * 1.4) rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-a1,.20) * 1.6));
@@ -2172,13 +2169,14 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
   background:
     linear-gradient(90deg,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.20))) 0%,
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.06)) var(--rec-fx-len3,20%),
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.14)) calc(var(--rec-fx-len3,20%) + 4%),
-      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
-      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.14)) calc(var(--rec-fx-len3-r,80%) - 4%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.06)) var(--rec-fx-len3-r,80%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 100%);
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.06)) 38%,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a1,.14)) 68%,
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) 100%) left center / var(--rec-fx-len,22%) 100% no-repeat,
+    linear-gradient(270deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 0%,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.06)) 38%,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a1,.14)) 68%,
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) 100%) right center / var(--rec-fx-len,22%) 100% no-repeat;
   animation: recSideFxWave 2.8s ease-in-out infinite alternate;
 }
 @keyframes recSideFxWave{
@@ -10109,22 +10107,12 @@ body.rc-shape--minimal .rec-datechip {
 body.rc-shape--timeline .rec-summary {
   border-radius: 0 12px 12px 0;
   margin-bottom: 6px;
-  border-left-width: 5px !important;
-  margin-left: 12px;
+  border-left-width: 1px !important;
+  margin-left: 0;
   box-shadow: 2px 2px 8px rgba(0,0,0,.06);
 }
 body.rc-shape--timeline .rec-summary::before {
-  content: '';
-  position: absolute;
-  left: -18px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--rec-mode-col, #64748b);
-  box-shadow: 0 0 0 3px rgba(var(--rec-mode-rgb,100,116,139),.18);
-  z-index: 2;
+  display: none;
 }
 body.rc-shape--timeline .rec-sum-header--stack { padding: 9px 14px; }
 

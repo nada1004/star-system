@@ -1,6 +1,70 @@
 (function(){
   window.SettingsModules = window.SettingsModules || {};
 
+  function _cfgPickAnyPlayerName(){
+    try{
+      const arr = (typeof window.players!=='undefined' && Array.isArray(window.players)) ? window.players : [];
+      for(const p of arr){
+        const n = String(p?.name||'').trim();
+        if(n) return n;
+      }
+    }catch(e){}
+    return '';
+  }
+
+  function _cfgRerenderOpenShareCard(opts){
+    opts = opts || {};
+    const forceOpen = !!opts.forceOpen;
+    const overlay = document.getElementById('sharecard-overlay');
+    if(!overlay && !forceOpen) return;
+
+    const run = ()=>{
+      try{
+        if(window._shareMode==='match' && window._shareMatchObj && typeof window.renderShareCardByMatchObj==='function'){
+          window.renderShareCardByMatchObj(window._shareMatchObj);
+          return;
+        }
+        if(window._shareMode==='univ' && window._shareUnivSearch && typeof window.renderShareCardByUniv==='function'){
+          window.renderShareCardByUniv(window._shareUnivSearch);
+          return;
+        }
+        if(window._shareMode==='player' && window._sharePlayerSearch && typeof window.renderShareCardByPlayer==='function'){
+          window.renderShareCardByPlayer(window._sharePlayerSearch);
+          return;
+        }
+        const any = _cfgPickAnyPlayerName();
+        if(any && typeof window.renderShareCardByPlayer==='function'){
+          window._shareMode='player';
+          window._sharePlayerSearch=any;
+          window.renderShareCardByPlayer(any);
+          return;
+        }
+        const card=document.getElementById('share-card');
+        if(card) card.innerHTML='<div style="padding:40px;text-align:center;color:var(--gray-l)">미리보기용 데이터가 없습니다</div>';
+      }catch(e){}
+    };
+
+    Promise.resolve(typeof window._ensureShareCardRuntime==='function' ? window._ensureShareCardRuntime() : null)
+      .then(()=>{
+        if(!document.getElementById('sharecard-overlay') && forceOpen){
+          try{
+            const any = _cfgPickAnyPlayerName();
+            if(any){
+              window._shareMode='player';
+              window._sharePlayerSearch=any;
+            }
+            if(typeof window.openShareCardModal==='function') window.openShareCardModal();
+          }catch(e){}
+        }
+      })
+      .then(()=>{
+        try{
+          if(typeof window._shareCardDeferRender==='function') window._shareCardDeferRender(run);
+          else setTimeout(run,0);
+        }catch(e){}
+      });
+  }
+
   window.cfgSetShareCardSettings = function(){
     const mode = (document.getElementById('cfg-sc-mode')?.value || 'campus').trim();
     const color = parseInt(document.getElementById('cfg-sc-color')?.value||'72',10);
@@ -33,12 +97,14 @@
     try{ localStorage.setItem('su_sc_logo_size', String(Math.max(70,Math.min(150,logoSize)))); }catch(e){}
     try{ localStorage.setItem('su_sc_logo_fit', ['contain','cover','fill','zoom'].includes(logoFit)?logoFit:'contain'); }catch(e){}
     try{ if(typeof render === 'function') render(); }catch(e){}
+    _cfgRerenderOpenShareCard();
   };
 
   window.cfgPreviewShareCardMode = function(mode){
     const el=document.getElementById('cfg-sc-mode');
     if(el) el.value = ['campus','vivid','soft','dark','minimal','aurora','poster','mono'].includes(mode)?mode:'campus';
     window.cfgSetShareCardSettings && window.cfgSetShareCardSettings();
+    _cfgRerenderOpenShareCard({ forceOpen:true });
   };
 
   window.buildShareCardSettingsSection = function(_scfgD){

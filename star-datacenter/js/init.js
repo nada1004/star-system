@@ -876,7 +876,7 @@ function _applyRecCardTheme(){
   const memoKey='su_rc_memo_on';
   const vsKey='su_rc_vs_align';
   const scKey='su_rc_score_scale';
-  let on=true, accent='none', bg=12, hd=14, uicon=24;
+  let on=false, accent='none', bg=12, hd=14, uicon=24;
   let univFontPct=110, ymScalePct=100;
   let memoOn=false, vsAlign='center', scScale=108;
   // (요청사항) 배경 효과 완전 OFF 감지(승리 배경 + 양끝 효과 모두 OFF)

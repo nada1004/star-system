@@ -8,6 +8,10 @@
     }[m]));
   }
 
+  function _touchPrefs(){
+    try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
+  }
+
   function init(){
     window.applyDesignV2 = function(forceOn){
       try{
@@ -179,11 +183,6 @@
         }catch(e){}
       }catch(e){}
     };
-
-    // 디자인/탭/효과 설정 변경 후 원격 동기화 트리거 헬퍼
-    function _touchPrefs(){
-      try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
-    }
 
     window.cfgSetDesignV2 = function(on){
       try{ localStorage.setItem('su_design_v2', on?'1':'0'); }catch(e){}
