@@ -3271,7 +3271,7 @@ window.cfgUnivOrderMove = function(i, dir){
         return;
       }
       const ensureChart = window.ensureChartJS || (()=>loader('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'));
-      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats-core-utils.js?v=20260503-02')).then(()=>loader('js/stats-tier-rank-utils.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-renderer.js?v=20260503-01')).then(()=>loader('js/stats-tierwin-renderer.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-renderer.js?v=20260503-01')).then(()=>loader('js/stats-maprank-renderer.js?v=20260503-01')).then(()=>loader('js/stats-univmatrix-renderer.js?v=20260503-01')).then(()=>loader('js/stats-advanced-renderers.js?v=20260503-01')).then(()=>loader('js/stats-export-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-normalize.js?v=20260503-01')).then(()=>loader('js/sharecard-theme.js?v=20260503-05')).then(()=>loader('js/sharecard-team.js?v=20260508-01')).then(()=>loader('js/sharecard-runtime.js?v=20260504-02')).then(()=>loader('js/sharecard-render-entity.js?v=20260504-03')).then(()=>loader('js/sharecard-render-match-helpers.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-score.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-layout.js?v=20260504-02')).then(()=>loader('js/sharecard-render-match-shell.js?v=20260504-01')).then(()=>loader('js/sharecard-render-match-sections.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-context.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-pipeline.js?v=20260503-02')).then(()=>loader('js/sharecard-match-openers.js?v=20260503-01')).then(()=>loader('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-01'))).then(()=>{
+      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats-core-utils.js?v=20260503-02')).then(()=>loader('js/stats-tier-rank-utils.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-renderer.js?v=20260503-01')).then(()=>loader('js/stats-tierwin-renderer.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-renderer.js?v=20260503-01')).then(()=>loader('js/stats-maprank-renderer.js?v=20260503-01')).then(()=>loader('js/stats-univmatrix-renderer.js?v=20260503-01')).then(()=>loader('js/stats-advanced-renderers.js?v=20260503-01')).then(()=>loader('js/stats-export-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-normalize.js?v=20260503-01')).then(()=>loader('js/sharecard-theme.js?v=20260503-05')).then(()=>loader('js/sharecard-team.js?v=20260508-01')).then(()=>loader('js/sharecard-runtime.js?v=20260504-02')).then(()=>loader('js/sharecard-render-entity.js?v=20260504-03')).then(()=>loader('js/sharecard-render-match-helpers.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-score.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-layout.js?v=20260504-02')).then(()=>loader('js/sharecard-render-match-shell.js?v=20260504-01')).then(()=>loader('js/sharecard-render-match-sections.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-context.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-pipeline.js?v=20260503-02')).then(()=>loader('js/sharecard-match-openers.js?v=20260503-01')).then(()=>loader('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-03'))).then(()=>{
         const fn = window.rStats;
         if(typeof fn === 'function' && fn !== _lazyRStats) fn(C, T);
       }).catch((e)=>{
@@ -4421,8 +4421,8 @@ ${_scfgD('notice','📢 공지 관리')}
         승리 대학색을 카드 배경/헤더에 연하게 적용
       </label>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" id="cfg-rc-bgfx-all" style="width:15px;height:15px" ${(_rcOn && _sfxOn)?'checked':''} onchange="cfgSetRecBgFxAll(this.checked)">
-        기록 카드 배경 효과 전체 사용 (배경/양끝 효과)
+        <input type="checkbox" id="cfg-rc-sidefx-on" style="width:15px;height:15px" ${_sfxOn?'checked':''} onchange="(window.cfgSetRecSideFxEnabled||function(){})(this.checked);try{const s=document.getElementById('cfg-sidefx-on');if(s)s.checked=this.checked;}catch(e){}">
+        기록 카드 양끝 대학 색상 효과 사용
       </label>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -4666,7 +4666,7 @@ ${_scfgD('notice','📢 공지 관리')}
             {v:'diamond', label:'기울임',    desc:'사선 스큐',      icon:'♦️'},
             {v:'tag',     label:'꼬리표형',  desc:'삼각 꼬리',      icon:'🏷️'},
             {v:'hex',     label:'육각형',    desc:'헥사곤 클립',    icon:'⬡'},
-          ].map(s=>{const sel=(localStorage.getItem('su_rc_team_chip_shape')||'default')===s.v; return \`<button type="button" onclick="cfgSetTeamChipShape('\${s.v}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:12px;border:\${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:\${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer"><span style="font-size:14px">\${s.icon}</span><span style="font-size:11px;font-weight:900;color:\${sel?'var(--blue)':'var(--text2)'}">\${s.label}</span><span style="font-size:9px;color:var(--gray-l);font-weight:700">\${s.desc}</span></button>\`;}).join('')}
+          ].map(s=>{const sel=(localStorage.getItem('su_rc_team_chip_shape')||'default')===s.v; return `<button type="button" onclick="cfgSetTeamChipShape('${s.v}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:12px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer"><span style="font-size:14px">${s.icon}</span><span style="font-size:11px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'}">${s.label}</span><span style="font-size:9px;color:var(--gray-l);font-weight:700">${s.desc}</span></button>`;}).join('')}
         </div>
       </div>
 
@@ -5269,11 +5269,11 @@ ${_scfgD('notice','📢 공지 관리')}
           ].map(t=>{
             const cur=localStorage.getItem('su_tab_style')||'default';
             const sel=cur===t.v;
-            return \`<button type="button" onclick="cfgSetTabStyle('\${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:\${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:\${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
-              <span style="font-size:18px;line-height:1">\${t.icon}</span>
-              <span style="font-size:11px;font-weight:900;color:\${sel?'var(--blue)':'var(--text2)'};line-height:1.2">\${t.label}</span>
-              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">\${t.desc}</span>
-            </button>\`;
+            return `<button type="button" onclick="cfgSetTabStyle('${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
+              <span style="font-size:18px;line-height:1">${t.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'};line-height:1.2">${t.label}</span>
+              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">${t.desc}</span>
+            </button>`;
           }).join('')}
         </div>
       </div>
@@ -5294,11 +5294,11 @@ ${_scfgD('notice','📢 공지 관리')}
           ].map(t=>{
             const cur=localStorage.getItem('su_submenu_btn_style')||'default';
             const sel=cur===t.v;
-            return \`<button type="button" onclick="cfgSetSubmenuBtnStyle('\${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:\${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:\${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
-              <span style="font-size:18px;line-height:1">\${t.icon}</span>
-              <span style="font-size:11px;font-weight:900;color:\${sel?'var(--blue)':'var(--text2)'};line-height:1.2">\${t.label}</span>
-              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">\${t.desc}</span>
-            </button>\`;
+            return `<button type="button" onclick="cfgSetSubmenuBtnStyle('${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
+              <span style="font-size:18px;line-height:1">${t.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'};line-height:1.2">${t.label}</span>
+              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">${t.desc}</span>
+            </button>`;
           }).join('')}
         </div>
       </div>

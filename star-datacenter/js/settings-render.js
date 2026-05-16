@@ -837,8 +837,8 @@ ${_scfgD('notice','📢 공지 관리')}
         승리 대학색을 카드 배경/헤더에 연하게 적용
       </label>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" id="cfg-rc-bgfx-all" style="width:15px;height:15px" ${(_rcOn && _sfxOn)?'checked':''} onchange="cfgSetRecBgFxAll(this.checked)">
-        기록 카드 배경 효과 전체 사용 (배경/양끝 효과)
+        <input type="checkbox" id="cfg-rc-sidefx-on" style="width:15px;height:15px" ${_sfxOn?'checked':''} onchange="(window.cfgSetRecSideFxEnabled||function(){})(this.checked);try{const s=document.getElementById('cfg-sidefx-on');if(s)s.checked=this.checked;}catch(e){}">
+        기록 카드 양끝 대학 색상 효과 사용
       </label>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
