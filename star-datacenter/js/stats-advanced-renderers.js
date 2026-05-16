@@ -166,7 +166,28 @@
 
   function statsStreakHistHTML(){
     const allStreaks=[];
-    (window.players||[]).forEach(p=>{ const hist=[...(p.history||[])].sort((a,b)=>(a.date||'').localeCompare(b.date||'')); if(!hist.length)return; let cur=0, curType='', startDate='', endDate=''; hist.forEach((h,i)=>{ if(h.result===curType){ cur++;endDate=h.date||endDate; }else{ if(cur>=3){ allStreaks.push({name:p.name,univ:p.univ,type:curType,n:cur,start:startDate,end:endDate,elo:p.elo||1200}); } cur=1;curType=h.result;startDate=h.date||'';endDate=h.date||''; } if(i===hist.length-1&&cur>=3){ allStreaks.push({name:p.name,univ:p.univ,type:curType,n:cur,start:startDate,end:endDate,elo:p.elo||1200,current:true}); } }); });
+    (window.players||[]).forEach(p=>{
+      const hist=[...window.statsNonProHist(p)].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+      if(!hist.length) return;
+      let cur=0, curType='', startDate='', endDate='';
+      hist.forEach((h,i)=>{
+        if(h.result===curType){
+          cur++;
+          endDate=h.date||endDate;
+        }else{
+          if(cur>=3){
+            allStreaks.push({name:p.name,univ:p.univ,type:curType,n:cur,start:startDate,end:endDate,elo:p.elo||1200});
+          }
+          cur=1;
+          curType=h.result;
+          startDate=h.date||'';
+          endDate=h.date||'';
+        }
+        if(i===hist.length-1&&cur>=3){
+          allStreaks.push({name:p.name,univ:p.univ,type:curType,n:cur,start:startDate,end:endDate,elo:p.elo||1200,current:true});
+        }
+      });
+    });
     const winStreaks=allStreaks.filter(s=>s.type==='승').sort((a,b)=>b.n-a.n).slice(0,15);
     const loseStreaks=allStreaks.filter(s=>s.type==='패').sort((a,b)=>b.n-a.n).slice(0,15);
     function streakRow(s,i){ const col=window.gc(s.univ); const isWin=s.type==='승'; const badge=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`; return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer;${s.current?'border-color:'+( isWin?'#16a34a':'#dc2626')+';box-shadow:0 0 0 2px '+(isWin?'#dcfce7':'#fee2e2'):''}" onclick="openPlayerModal('${s.name}')"><span style="min-width:24px;font-size:15px">${badge}</span><span style="font-weight:900;font-size:20px;color:${isWin?'var(--green)':'var(--red)'};min-width:48px">${s.n}</span><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:13px">${s.name} <span style="font-size:10px;color:${col};font-weight:600">${s.univ}</span>${s.current?`<span style="font-size:10px;background:${isWin?'#dcfce7':'#fee2e2'};color:${isWin?'#16a34a':'#dc2626'};padding:1px 6px;border-radius:4px;font-weight:700;margin-left:4px">진행중</span>`:''}</div><div style="font-size:10px;color:var(--gray-l)">${s.start}${s.end&&s.end!==s.start?' ~ '+s.end:''}</div></div><span style="font-weight:800;font-size:13px;color:${isWin?'var(--green)':'var(--red)'};white-space:nowrap">연${isWin?'승':'패'}</span></div>`; }

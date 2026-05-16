@@ -204,9 +204,6 @@ let b2FreeBgAlpha     = J('su_b2fba')  ?? 25; // 무소속 배경 진하기 (기
 let b2FreeTierBgAlpha = J('su_b2ftba') ?? 15; // 무소속 티어 우측 배경 진하기 (기본 15%)
 let b2ProfileBgAlpha  = J('su_b2pba') ?? 10; // 프로필 탭 배경 밝기 (기본 10%)
 function _b2AlphaHex(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); }
-function _b2GetFemcoStyle(){ try{ return localStorage.getItem('su_b2_femco_style')||'default'; }catch(e){ return 'default'; } }
-function _b2GetUnivStyle(){ try{ return localStorage.getItem('su_b2_univ_style')||'default'; }catch(e){ return 'default'; } }
-function _b2GetFreeStyle(){ try{ return localStorage.getItem('su_b2_free_style')||'default'; }catch(e){ return 'default'; } }
 
 function _b2ToggleCard(btn, univName) {
   if (_b2Collapsed.has(univName)) _b2Collapsed.delete(univName); else _b2Collapsed.add(univName);
@@ -703,8 +700,6 @@ function _b2FemcoView() {
       .b2-femco-wrap{display:flex;flex-direction:column;gap:${univGap}px}
       .b2-femco-univ{border-radius:16px;overflow:hidden;box-shadow:0 2px 22px rgba(0,0,0,.12);transition:background-color .35s ease, box-shadow .35s ease, transform .2s ease}
       .b2-femco-univ:hover{transform:translateY(-1px);box-shadow:0 6px 26px rgba(0,0,0,.18)}
-      /* ── 펨코 디자인 모드 ── */
-      ${(()=>{ const _fm=_b2GetFemcoStyle(); return _fm==='glass'?'.b2-femco-univ{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1.5px solid rgba(255,255,255,.45)!important;box-shadow:0 8px 32px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.5)}.b2-femco-head{background:rgba(255,255,255,.12)!important}.b2-femco-body{background:rgba(255,255,255,.07)!important}':_fm==='shadow3d'?'.b2-femco-univ{box-shadow:0 8px 0 rgba(0,0,0,.15),0 4px 28px rgba(0,0,0,.14)!important;transform:translateY(-2px)}.b2-femco-univ:hover{transform:translateY(-4px)!important;box-shadow:0 12px 0 rgba(0,0,0,.13),0 8px 36px rgba(0,0,0,.18)!important}':_fm==='outlined'?'.b2-femco-univ{box-shadow:none!important;border:2.5px solid rgba(255,255,255,.35)!important;border-radius:20px}.b2-femco-head{border-bottom:2px solid rgba(255,255,255,.25)!important}.b2-femco-body{border-top:none}':_fm==='neon'?'.b2-femco-univ{border-radius:12px!important;border:2px solid rgba(255,255,255,.6)!important;box-shadow:0 0 24px rgba(255,255,255,.2),0 0 6px rgba(255,255,255,.3)!important}.b2-femco-univ:hover{box-shadow:0 0 40px rgba(255,255,255,.35),0 0 10px rgba(255,255,255,.4)!important}':_fm==='sharp'?'.b2-femco-univ{border-radius:0!important;border-left:6px solid rgba(255,255,255,.5)!important}.b2-femco-head{border-radius:0!important}.b2-femco-glabel{border-radius:0!important}.b2-femco-pill{border-radius:3px!important}':_fm==='minimal'?'.b2-femco-univ{box-shadow:none!important;border-radius:8px!important;border-bottom:3px solid rgba(255,255,255,.4)!important}.b2-femco-head{padding:10px 14px 8px!important}.b2-femco-body{padding:8px 10px 12px!important}':''; })()}
       .b2-femco-head{padding:16px 16px 12px;text-align:center;position:relative}
       .b2-femco-headrow{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
       .b2-femco-headcol{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${headGap}px}
@@ -1220,33 +1215,12 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
 
   // 새 레이아웃: 왼쪽 라벨 열(대학색) + 오른쪽 스트리머 열(연한 배경)
   // hasSide 시 padding-right:190px → border-bottom 선이 사이드 패널 영역까지 이어짐
-
-  // ── 신현황판 디자인 모드 ── (_tableRow보다 먼저 선언)
-  const _b2US = (()=>{ try{ return localStorage.getItem('su_b2_univ_style')||'default'; }catch(e){ return 'default'; } })();
-
-  // 모드별 스타일 파라미터
-  const _usStyles = {
-    default:   { wr:'border-radius:14px;overflow:hidden;box-shadow:0 2px 16px '+col+'30',  hd:'background:'+col+';padding:10px 16px',                               body:'background:'+lightCol+';',   label:'background:'+labelCol+'!important;', border:'1px solid '+col+'44' },
-    glass:     { wr:'border-radius:18px;overflow:hidden;box-shadow:0 4px 28px '+col+'28;backdrop-filter:blur(8px);border:1.5px solid '+col+'44',                      hd:'background:'+col+'cc;padding:10px 16px;backdrop-filter:blur(6px)',         body:'background:rgba(255,255,255,.45);backdrop-filter:blur(6px);',   label:'background:'+col+'22!important;', border:'1px solid '+col+'33' },
-    minimal:   { wr:'border-radius:10px;overflow:hidden;border:1.5px solid '+col+'55;box-shadow:none',                                                                 hd:'background:transparent;padding:8px 14px;border-bottom:2px solid '+col,     body:'background:var(--white);',              label:'background:var(--surface)!important;', border:'1px solid var(--border2)' },
-    dark:      { wr:'border-radius:14px;overflow:hidden;box-shadow:0 4px 22px rgba(0,0,0,.35)',                                                                         hd:'background:#1e293b;padding:10px 16px;border-bottom:3px solid '+col,         body:'background:#0f172a;',               label:'background:#1e293b!important;',  border:'1px solid #334155' },
-    gradient:  { wr:'border-radius:16px;overflow:hidden;box-shadow:0 4px 24px '+col+'35',                                                                               hd:'background:linear-gradient(135deg,'+col+','+col+'bb);padding:12px 16px', body:'background:linear-gradient(180deg,'+col+'12,transparent);',  label:'background:'+col+'28!important;', border:'1px solid '+col+'33' },
-    neon:      { wr:'border-radius:12px;overflow:hidden;border:2px solid '+col+';box-shadow:0 0 18px '+col+'88,0 0 4px '+col+'44',                                     hd:'background:#0f172a;padding:10px 16px;border-bottom:2px solid '+col,          body:'background:#0d1117;',               label:'background:#1e293b!important;',  border:'1px solid '+col+'66' },
-    sharp:     { wr:'border-radius:0;overflow:hidden;border-left:5px solid '+col+';box-shadow:3px 3px 0 '+col+'44',                                                     hd:'background:'+col+';padding:8px 14px',                                        body:'background:var(--white);',              label:'background:var(--surface)!important;', border:'1px solid var(--border)' },
-  };
-  const _uss = _usStyles[_b2US] || _usStyles.default;
-  const _usDarkText = ['dark','neon'].includes(_b2US);
-  const _usTextCol = _usDarkText ? (col||'#60a5fa') : textCol;
-  const _usTitleCol = _usDarkText ? '#f1f5f9' : textCol;
-  const _usSubCol   = _usDarkText ? '#94a3b8'  : textCol+'bb';
-  const _usMemo2Col = _usDarkText ? '#94a3b8'  : textCol+'bb';
-
   const _tableRow = (label, isRole, chips) => `
-    <div style="display:flex;align-items:stretch;border-bottom:${_uss.border}${hasSide?';padding-right:190px':''}">
-      <div style="${_uss.label}min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
-        <span style="font-size:11px;font-weight:800;color:${_usDarkText?col:''+col};text-align:center;line-height:1.3;word-break:keep-all">${label}</span>
+    <div style="display:flex;align-items:stretch;border-bottom:1px solid ${col}44${hasSide?';padding-right:190px':''}">
+      <div style="background:${labelCol}!important;min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
+        <span style="font-size:11px;font-weight:800;color:${col};text-align:center;line-height:1.3;word-break:keep-all">${label}</span>
       </div>
-      <div style="flex:1;${_uss.body}padding:7px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+      <div style="flex:1;background:${lightCol};padding:7px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
         ${chips}
       </div>
     </div>`;
@@ -1300,8 +1274,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   </div>` : '';
 
   return `
-    <div data-b2card="${univName.replace(/"/g,'&quot;')}" style="${_uss.wr}">
-      <div style="${_uss.hd}">
+    <div data-b2card="${univName.replace(/"/g,'&quot;')}" style="border-radius:14px;overflow:hidden;box-shadow:0 2px 16px ${col}30">
+      <div style="background:${col};padding:10px 16px">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
           ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,36px);height:var(--su_univ_logo_size,36px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
           <span style="font-weight:900;font-size:15px;color:${textCol};flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
@@ -1342,114 +1316,6 @@ function _b2FreeView() {
   );
 
   const defCol = '#64748b';
-  const _b2FS = (()=>{ try{ return localStorage.getItem('su_b2_free_style')||'default'; }catch(e){ return 'default'; } })();
-
-  // ── CARD 모드: 대학별 카드처럼 분리 렌더 ──
-  if (_b2FS === 'card') {
-    const allGroups = [];
-    roledFree.forEach(p => allGroups.push({ label: p.role||'직책', isRole:true, members:[p] }));
-    orderedTierKeys.forEach(tier => {
-      const group = [...(tierGroups[tier]||[])].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-      const tc = getTierBtnColor(tier)||defCol;
-      allGroups.push({ label:tier, isRole:false, members:group, col:tc });
-    });
-    let h2 = `<div style="display:flex;flex-direction:column;gap:8px">
-      <div style="background:${defCol};border-radius:12px 12px 0 0;padding:10px 16px;display:flex;align-items:center;gap:8px">
-        <span style="font-weight:900;font-size:15px;color:#fff">🚶 무소속</span>
-        <span style="margin-left:auto;background:#fff2;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">${freeMembers.length}명</span>
-      </div>`;
-    allGroups.forEach(g => {
-      const gc2 = g.col||defCol;
-      h2 += `<div style="border-radius:12px;overflow:hidden;border:1.5px solid ${gc2}44;box-shadow:0 2px 8px ${gc2}22">
-        <div style="background:${gc2}18;padding:7px 12px;border-bottom:2px solid ${gc2}44;display:flex;align-items:center;gap:6px">
-          <span style="font-size:12px;font-weight:900;color:${gc2}">${g.label}</span>
-          <span style="font-size:11px;color:var(--gray-l)">${g.members.length}명</span>
-        </div>
-        <div style="padding:8px 10px;display:flex;flex-wrap:wrap;gap:5px">
-          ${g.members.map(p=>_b2NameTag(p, gc2, !g.isRole)).join('')}
-        </div>
-      </div>`;
-    });
-    h2 += `</div>`;
-    return h2;
-  }
-
-  // ── GRID 모드: 전원 카드 그리드 ──
-  if (_b2FS === 'grid') {
-    let h2 = `<div style="background:${defCol};border-radius:12px 12px 0 0;padding:10px 16px;display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <span style="font-weight:900;font-size:15px;color:#fff">🚶 무소속</span>
-      <span style="margin-left:auto;background:#fff2;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">${freeMembers.length}명</span>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">`;
-    const _allFree = [...roledFree, ...orderedTierKeys.flatMap(t=>(tierGroups[t]||[]).sort((a,b)=>(a.name||'').localeCompare(b.name||'')))];
-    _allFree.forEach(p => {
-      const pc = getTierBtnColor(p.tier||'')||defCol;
-      const ps = (p.name||'').replace(/'/g,"\'");
-      h2 += `<div onclick="openPlayerModal('${ps}')" style="cursor:pointer;background:var(--white);border:1.5px solid ${pc}44;border-top:3px solid ${pc};border-radius:10px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:5px;transition:box-shadow .13s" onmouseover="this.style.boxShadow='0 5px 18px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='none'">
-        ${_b2Avatar(p, pc, 46)}
-        <span style="font-weight:800;font-size:12px;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name||''}</span>
-        ${p.tier?`<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:${pc};color:${getTierBtnTextColor(p.tier)||'#fff'}">${p.tier}</span>`:''}
-        ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:9px">${p.race}</span>`:''}
-      </div>`;
-    });
-    h2 += `</div>`;
-    return h2;
-  }
-
-  // ── TIMELINE 모드: 왼쪽 점선 타임라인 ──
-  if (_b2FS === 'timeline') {
-    let h2 = `<div style="position:relative;padding-left:28px">
-      <div style="position:absolute;left:10px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,${defCol}88,${defCol}22)"></div>
-      <div style="background:${defCol};border-radius:10px;padding:8px 14px;display:inline-flex;align-items:center;gap:8px;margin-bottom:14px">
-        <span style="font-weight:900;font-size:14px;color:#fff">🚶 무소속 ${freeMembers.length}명</span>
-      </div>`;
-    const _allGroups2 = [];
-    roledFree.forEach(p => _allGroups2.push({ label:p.role||'직책', col:defCol, members:[p], isRole:true }));
-    orderedTierKeys.forEach(tier => {
-      const gc3 = getTierBtnColor(tier)||defCol;
-      _allGroups2.push({ label:tier, col:gc3, members:(tierGroups[tier]||[]).sort((a,b)=>(a.name||'').localeCompare(b.name||'')), isRole:false });
-    });
-    _allGroups2.forEach(g => {
-      h2 += `<div style="position:relative;margin-bottom:10px">
-        <div style="position:absolute;left:-22px;top:12px;width:10px;height:10px;border-radius:50%;background:${g.col};box-shadow:0 0 0 3px ${g.col}33"></div>
-        <div style="border-radius:0 10px 10px 10px;border:1.5px solid ${g.col}44;border-left:3px solid ${g.col};overflow:hidden">
-          <div style="background:${g.col}18;padding:5px 12px;border-bottom:1px solid ${g.col}33">
-            <span style="font-size:12px;font-weight:900;color:${g.col}">${g.label} · ${g.members.length}명</span>
-          </div>
-          <div style="padding:7px 10px;display:flex;flex-wrap:wrap;gap:5px">
-            ${g.members.map(p=>_b2NameTag(p,g.col,!g.isRole)).join('')}
-          </div>
-        </div>
-      </div>`;
-    });
-    h2 += `</div>`;
-    return h2;
-  }
-
-  // ── COMPACT 모드: 초밀도 한 줄 리스트 ──
-  if (_b2FS === 'compact') {
-    const _allFreeC = [...roledFree, ...orderedTierKeys.flatMap(t=>(tierGroups[t]||[]).sort((a,b)=>(a.name||'').localeCompare(b.name||'')))];
-    let h2 = `<div style="border-radius:12px;overflow:hidden;border:1.5px solid ${defCol}44">
-      <div style="background:${defCol};padding:8px 14px;display:flex;align-items:center;gap:8px">
-        <span style="font-weight:900;font-size:14px;color:#fff">🚶 무소속</span>
-        <span style="margin-left:auto;background:#fff2;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px">${freeMembers.length}명</span>
-      </div>`;
-    _allFreeC.forEach(p => {
-      const pc = getTierBtnColor(p.tier||'')||defCol;
-      const ps = (p.name||'').replace(/'/g,"\'");
-      h2 += `<div onclick="openPlayerModal('${ps}')" style="cursor:pointer;display:flex;align-items:center;gap:7px;padding:5px 12px;border-bottom:1px solid var(--border);background:var(--white)" onmouseover="this.style.background='${defCol}0a'" onmouseout="this.style.background='var(--white)'">
-        ${_b2Avatar(p, pc, 28)}
-        <span style="font-weight:700;font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name||''}</span>
-        ${p.tier?`<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:${pc};color:${getTierBtnTextColor(p.tier)||'#fff'}">${p.tier}</span>`:''}
-        ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:9px">${p.race}</span>`:''}
-        ${p.role?`<span style="font-size:10px;color:var(--gray-l)">${p.role}</span>`:''}
-      </div>`;
-    });
-    h2 += `</div>`;
-    return h2;
-  }
-
-  // ── DEFAULT ──
   let h = `<div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 14px #0002">
     <div style="background:${defCol};padding:10px 16px;display:flex;align-items:center;gap:8px">
       <span style="font-weight:900;font-size:15px;color:#fff">🚶 무소속</span>
@@ -1460,6 +1326,7 @@ function _b2FreeView() {
   const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:stretch">${labelEl}<div style="flex:1;padding:2px 4px">${contentEl}</div></div></div>`;
   const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)}!important;border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
 
+  // 직책 그룹
   roledFree.forEach(p => {
     h += _frow(_fl(p.role||'', true), _b2PlayerRow(p, defCol));
   });

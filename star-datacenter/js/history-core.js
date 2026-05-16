@@ -758,8 +758,7 @@ function _recSideFxStyle(mode, leftHex, rightHex){
   const cfg = _getRecSideFxCfg();
   if(!cfg.on || !_canUseRecSideFx(mode) || !leftHex || !rightHex) return '';
   const vars = _recSideFxVarStyle(leftHex, rightHex, cfg);
-  // border 인라인으로 직접 적용 (z-index/::after 우회, 항상 보임)
-  return vars + `border-left:3px solid ${leftHex};border-right:3px solid ${rightHex};`;
+  return vars;
 }
 
 // 경기(세트/게임)에서 "참여자"를 최대한 수집 (팀 구분 없이 전체 인원)
@@ -1173,13 +1172,8 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const _iconUnivB=isCivil?_civilUniv:(isCK?'':m.b);
     const iconA=(()=>{const n=_iconUnivA;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const iconB=(()=>{const n=_iconUnivB;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
-    // 기본(무색)에서는 승리색 테두리도 사용하지 않음
-    const _wBorderCol = (_rcThemeOn && _rcAccent==='border' && (aWin||bWin)) ? (aWin?ca:bWin?cb:'var(--border)') : 'var(--border)';
-    // 승리 색 테마(대학 색) — 켜져있을 때만 적용
-    const _winCol = (aWin||bWin) ? (aWin?ca:cb) : '';
-    const _rgb = _hexToRgbStr(_winCol);
-    const _themeCls = (_rcThemeOn && _winCol && _rcAccent!=='none') ? ` rc-theme rc-accent-${_rcAccent}` : '';
-    const _themeStyle = (_rcThemeOn && _winCol) ? `--rc-win-rgb:${_rgb};--rc-win-col:${_winCol};` : '';
+    const _themeCls = '';
+    const _themeStyle = '';
 
     const MODE_COL = {
       ind:'#2563eb', gj:'#d97706', progj:'#b91c1c',
@@ -1189,7 +1183,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     };
     const _mc = MODE_COL[mode] || '#64748b';
     const _rgbM = _hexToRgbStr(_mc);
-    return `<div class="rec-summary rec-mode-${mode}${_themeCls}${_recSideFxClass(mode)}" data-rec-mode="${mode}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgbM};${_themeStyle}${_recSideFxStyle(mode,ca,cb)}border-left:3px solid ${_wBorderCol}">
+    return `<div class="rec-summary rec-mode-${mode}${_themeCls}${_recSideFxClass(mode)}" data-rec-mode="${mode}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgbM};${_themeStyle}${_recSideFxStyle(mode,ca,cb)}">
       <div class="rec-sum-header rec-sum-header--stack">
         <div class="rec-topline">
           <div class="rec-meta-row">

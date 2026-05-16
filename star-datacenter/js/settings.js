@@ -3271,7 +3271,7 @@ window.cfgUnivOrderMove = function(i, dir){
         return;
       }
       const ensureChart = window.ensureChartJS || (()=>loader('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'));
-      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats-core-utils.js?v=20260503-02')).then(()=>loader('js/stats-tier-rank-utils.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-renderer.js?v=20260503-01')).then(()=>loader('js/stats-tierwin-renderer.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-renderer.js?v=20260503-01')).then(()=>loader('js/stats-maprank-renderer.js?v=20260503-01')).then(()=>loader('js/stats-univmatrix-renderer.js?v=20260503-01')).then(()=>loader('js/stats-advanced-renderers.js?v=20260503-01')).then(()=>loader('js/stats-export-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-normalize.js?v=20260503-01')).then(()=>loader('js/sharecard-theme.js?v=20260503-05')).then(()=>loader('js/sharecard-team.js?v=20260508-01')).then(()=>loader('js/sharecard-runtime.js?v=20260504-02')).then(()=>loader('js/sharecard-render-entity.js?v=20260504-03')).then(()=>loader('js/sharecard-render-match-helpers.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-score.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-layout.js?v=20260504-02')).then(()=>loader('js/sharecard-render-match-shell.js?v=20260504-01')).then(()=>loader('js/sharecard-render-match-sections.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-context.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-pipeline.js?v=20260503-02')).then(()=>loader('js/sharecard-match-openers.js?v=20260503-01')).then(()=>loader('js/stats.js?v=20260503-33')).then(()=>{
+      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats-core-utils.js?v=20260503-02')).then(()=>loader('js/stats-tier-rank-utils.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-renderer.js?v=20260503-01')).then(()=>loader('js/stats-tierwin-renderer.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-renderer.js?v=20260503-01')).then(()=>loader('js/stats-maprank-renderer.js?v=20260503-01')).then(()=>loader('js/stats-univmatrix-renderer.js?v=20260503-01')).then(()=>loader('js/stats-advanced-renderers.js?v=20260503-01')).then(()=>loader('js/stats-export-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-normalize.js?v=20260503-01')).then(()=>loader('js/sharecard-theme.js?v=20260503-05')).then(()=>loader('js/sharecard-team.js?v=20260508-01')).then(()=>loader('js/sharecard-runtime.js?v=20260504-02')).then(()=>loader('js/sharecard-render-entity.js?v=20260504-03')).then(()=>loader('js/sharecard-render-match-helpers.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-score.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-layout.js?v=20260504-02')).then(()=>loader('js/sharecard-render-match-shell.js?v=20260504-01')).then(()=>loader('js/sharecard-render-match-sections.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-context.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-pipeline.js?v=20260503-02')).then(()=>loader('js/sharecard-match-openers.js?v=20260503-01')).then(()=>loader('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-03'))).then(()=>{
         const fn = window.rStats;
         if(typeof fn === 'function' && fn !== _lazyRStats) fn(C, T);
       }).catch((e)=>{
@@ -4591,6 +4591,50 @@ ${_scfgD('notice','📢 공지 관리')}
           </div>
         </div>
         <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 전역 배율(위 슬라이더)과 별개로 기록 카드만 따로 설정됩니다.</div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">🎨 기록 카드 양쪽 끝 색상 효과</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">기록 카드 좌우 끝에 A·B팀 대학 색상 그라디언트를 표시합니다.</div>
+        <div style="font-size:11px;color:#475569;margin-bottom:8px"><b>대학CK</b> / <b>프로리그 일반</b>의 양쪽 끝 색상은 바로 아래 나오는 <b>팀 버튼 색상</b> 블록에서 바꿉니다.</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+            <input type="checkbox" id="cfg-sidefx-on" style="width:15px;height:15px" ${_sfxOn?'checked':''} onchange="(window.cfgSetRecSideFxEnabled||function(){})(this.checked)">
+            색상 효과 사용
+          </label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="font-size:11px;color:var(--text3);font-weight:800">효과 종류</div>
+            <select id="cfg-sidefx-mode" onchange="(window.cfgSetRecSideFxMode||function(){})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+              <option value="soft" ${_sfxMode==='soft'?'selected':''}>소프트 (기본)</option>
+              <option value="glow" ${_sfxMode==='glow'?'selected':''}>글로우 (발광)</option>
+              <option value="panel" ${_sfxMode==='panel'?'selected':''}>패널 (선명)</option>
+              <option value="line" ${_sfxMode==='line'?'selected':''}>라인 (세로 바)</option>
+              <option value="ribbon" ${_sfxMode==='ribbon'?'selected':''}>리본</option>
+              <option value="frame" ${_sfxMode==='frame'?'selected':''}>프레임</option>
+              <option value="spotlight" ${_sfxMode==='spotlight'?'selected':''}>스포트라이트</option>
+              <option value="fade" ${_sfxMode==='fade'?'selected':''}>페이드(은은)</option>
+              <option value="double" ${_sfxMode==='double'?'selected':''}>더블라인</option>
+              <option value="neon" ${_sfxMode==='neon'?'selected':''}>✨ 네온 (외곽 발광)</option>
+              <option value="wave" ${_sfxMode==='wave'?'selected':''}>🌊 웨이브 (물결)</option>
+              <option value="prism" ${_sfxMode==='prism'?'selected':''}>🔷 프리즘 (교차 블렌드)</option>
+              <option value="vignette" ${_sfxMode==='vignette'?'selected':''}>🌑 비네트 (원형 번짐)</option>
+              <option value="pulse" ${_sfxMode==='pulse'?'selected':''}>💓 펄스 (깜빡이는 바)</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">색상 강도 <span id="cfg-sidefx-int-v" style="font-weight:400;color:var(--gray-l)">${_sfxInt}</span></div>
+            <input type="range" id="cfg-sidefx-int" min="20" max="100" step="4" value="${_sfxInt}" oninput="document.getElementById('cfg-sidefx-int-v').textContent=this.value" onchange="(window.cfgSetRecSideFxIntensity||function(){})(this.value)" style="width:100%;max-width:260px">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 효과 길이 <span id="cfg-sidefx-len-v" style="font-weight:400;color:var(--gray-l)">${_sfxLen}%</span> <span style="font-size:10px;color:var(--gray-l);font-weight:600">${_sfxLen>=46?'(스코어까지 도달 🎯)':_sfxLen>=36?'(넓게)':_sfxLen>=22?'(보통)':'(좁게)'}</span></div>
+            <input type="range" id="cfg-sidefx-len" min="4" max="50" step="2" value="${Math.min(50,_sfxLen)}" oninput="document.getElementById('cfg-sidefx-len-v').textContent=this.value+'%';document.getElementById('cfg-sidefx-len-hint').textContent=this.value>=46?'(스코어까지 도달 🎯)':this.value>=36?'(넓게)':this.value>=22?'(보통)':'(좁게)'" onchange="(window.cfgSetRecSideFxLength||function(){})(this.value)" style="width:100%;max-width:260px">
+            <div style="font-size:10px;color:var(--blue);font-weight:700;margin-top:2px"><span id="cfg-sidefx-len-hint">${_sfxLen>=46?'(스코어까지 도달 🎯)':_sfxLen>=36?'(넓게)':_sfxLen>=22?'(보통)':'(좁게)'}</span> — 50%로 올리면 양쪽 효과가 스코어 영역까지 연결됩니다</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 끝 진하기 <span id="cfg-sidefx-tail-v" style="font-weight:400;color:var(--gray-l)">${_sfxTail}%</span></div>
+            <input type="range" id="cfg-sidefx-tail" min="0" max="140" step="4" value="${_sfxTail}" oninput="document.getElementById('cfg-sidefx-tail-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxTail||function(){})(this.value)" style="width:100%;max-width:260px">
+          </div>
+        </div>
       </div>
 
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">

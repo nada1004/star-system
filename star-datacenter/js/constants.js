@@ -2,7 +2,8 @@
    CONSTANTS - 티어 순서: god > king > jack > joker > spade > 0티어 > 1티어 ...
 ══════════════════════════════════════ */
 // 데이터 버전 관리 - 캐시 무효화용 (데이터 구조 변경 시 버전 증가)
-const DATA_VERSION = 1;
+const DATA_VERSION = 2;
+try{ window.SU_STATS_JS_V = window.SU_STATS_JS_V || '20260516-03'; }catch(e){}
 
 // 캐시 관리 함수
 function _checkDataVersion(){
@@ -22,16 +23,24 @@ function _checkDataVersion(){
     console.error('[Cache] 버전 확인 실패:', e);
   }
 }
+try{ _checkDataVersion(); }catch(e){}
 
 function _clearCacheByVersionChange(){
   try{
     // 먼저 새 버전을 저장하여 무한 루프 방지
     localStorage.setItem('su_data_version', String(DATA_VERSION));
     
-    const cacheKeys = ['su_tiers', 'su_u', 'su_m', 'su_t', 'su_cn', 'su_cc', 'su_ptc', 'su_ttcur', 'su_boardOrder', 'su_bpo', 'su_notices', 'su_seasons', 'su_cal_sched'];
+    const cacheKeys = [
+      'su_tiers', 'su_u', 'su_m', 'su_t', 'su_cn', 'su_cc', 'su_ptc', 'su_ttcur', 'su_boardOrder', 'su_bpo', 'su_notices', 'su_seasons', 'su_cal_sched',
+      'su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm','su_p','su_pp','su_last_save_time'
+    ];
     cacheKeys.forEach(key => {
       try{ localStorage.removeItem(key); }catch(e){}
     });
+    try{ localStorage.setItem('su_force_autoload', '1'); }catch(e){}
+    try{ sessionStorage.setItem('su_force_autoload', '1'); }catch(e){}
+    try{ if(window.MatchStore && typeof window.MatchStore.clear === 'function') window.MatchStore.clear(); }catch(e){}
+    try{ if(window.PlayerStore && typeof window.PlayerStore.clear === 'function') window.PlayerStore.clear(); }catch(e){}
     console.log('[Cache] 캐시 초기화 완료');
     // (요청) 버전 변경 시 강제 새로고침은 하지 않음
     // - 일부 환경에서 localStorage/sessionStorage 반영 타이밍 문제로 "계속 새로고침"처럼 느껴질 수 있음
@@ -1962,6 +1971,7 @@ function getHistPageSize(){return window.innerWidth<=768?HIST_PAGE_SIZE_MOBILE:H
 const PLAYER_HIST_PAGE_SIZE=10; // REQ4: 스트리머 상세 10개 이상일 때 페이지네이션
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView=localStorage.getItem('su_cal_view')||'month';
 let calTypeFilter='all';
+let calWeekOffset=0, calDayDate='';
 let voteData=JSON.parse(localStorage.getItem('su_votes')||'{}');
 let fUniv='전체', fTier='전체';
 // (버그픽스) 티어 순위표 탭에서 대학/티어 필터 버튼이 sf()를 호출하는데,

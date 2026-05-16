@@ -5,16 +5,33 @@ window._lazy = window._lazy || {loaded:{}, loading:{}};
 function _loadScriptOnce(src){
   return new Promise((resolve, reject)=>{
     try{
-      if(window._lazy.loaded[src]) return resolve(true);
-      if(window._lazy.loading[src]) return window._lazy.loading[src].then(resolve).catch(reject);
+      const _canonKey = (u)=>{
+        try{
+          const url = new URL(u, window.location.href);
+          const isSameOrigin = url.origin === window.location.origin;
+          if(!isSameOrigin) return url.href;
+          if(!String(url.pathname||'').toLowerCase().endsWith('.js')) return url.href;
+          return url.origin + url.pathname;
+        }catch(e){
+          return String(u||'');
+        }
+      };
+      const key = _canonKey(src);
+      if(window._lazy.loaded[src] || window._lazy.loaded[key]) return resolve(true);
+      if(window._lazy.loading[src] || window._lazy.loading[key]) return (window._lazy.loading[src] || window._lazy.loading[key]).then(resolve).catch(reject);
       try{
         const resolvedSrc = new URL(src, window.location.href).href;
+        const resolvedKey = _canonKey(resolvedSrc);
         const existing = [...document.scripts].find(s => {
-          try{ return new URL(s.src, window.location.href).href === resolvedSrc; }
+          try{
+            const ex = new URL(s.src, window.location.href).href;
+            return ex === resolvedSrc || _canonKey(ex) === resolvedKey;
+          }
           catch(e){ return false; }
         });
         if(existing){
           window._lazy.loaded[src]=true;
+          window._lazy.loaded[key]=true;
           return resolve(true);
         }
       }catch(e){}
@@ -26,6 +43,8 @@ function _loadScriptOnce(src){
           s.onload=()=>{
             try{ window._lazy.loaded[src]=true; }catch(e){}
             try{ window._lazy.loaded[u]=true; }catch(e){}
+            try{ window._lazy.loaded[key]=true; }catch(e){}
+            try{ window._lazy.loaded[_canonKey(u)]=true; }catch(e){}
             res(true);
           };
           s.onerror=()=>{
@@ -43,6 +62,7 @@ function _loadScriptOnce(src){
         _try(src, false);
       });
       window._lazy.loading[src]=p;
+      window._lazy.loading[key]=p;
       p.then(resolve).catch(reject);
     }catch(e){ reject(e); }
   });
@@ -101,7 +121,7 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260503-02');
   await _loadScriptOnce('js/sharecard-match-openers.js?v=20260503-01');
-  await _loadScriptOnce('js/stats.js?v=20260503-33');
+  await _loadScriptOnce('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-03'));
 }
 window._ensureShareCardRuntime = window._ensureShareCardRuntime || async function(){
   await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
@@ -129,7 +149,7 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260503-02');
   await _loadScriptOnce('js/sharecard-match-openers.js?v=20260503-01');
-  await _loadScriptOnce('js/stats.js?v=20260503-33');
+  await _loadScriptOnce('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-03'));
 };
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260504-02');

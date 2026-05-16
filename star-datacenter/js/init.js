@@ -1003,6 +1003,15 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
       if(window.MatchStore && typeof window.MatchStore.init==='function') await window.MatchStore.init();
       if(window.PlayerStore && typeof window.PlayerStore.init==='function') await window.PlayerStore.init();
     }catch(e){}
+    let _forceAutoLoad = false;
+    try{ _forceAutoLoad = (localStorage.getItem('su_force_autoload') === '1'); }catch(e){}
+    try{ _forceAutoLoad = _forceAutoLoad || (sessionStorage.getItem('su_force_autoload') === '1'); }catch(e){}
+    if(_forceAutoLoad){
+      try{ localStorage.removeItem('su_force_autoload'); }catch(e){}
+      try{ sessionStorage.removeItem('su_force_autoload'); }catch(e){}
+      try{ if(window.MatchStore && typeof window.MatchStore.clear==='function') await window.MatchStore.clear(); }catch(e){}
+      try{ if(window.PlayerStore && typeof window.PlayerStore.clear==='function') await window.PlayerStore.clear(); }catch(e){}
+    }
     // (복구) 로컬 기록이 있으면 자동 불러오기 금지 (덮어쓰기 방지)
     const hasAnyLocalKey = (k)=>{ try{ const v=localStorage.getItem(k); return !!(v && v.length>2); }catch(e){ return false; } };
     const hasAnyRecordPayload = (payload)=>{
@@ -1043,8 +1052,10 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
     const hasRuntimePlayers = Array.isArray(players) && players.length>0;
     const hasRuntimeRecords = [miniM,univM,comps,ckM,proM,tourneys,ttM,indM,gjM].some(v=>Array.isArray(v)&&v.length>0);
     const hasRecordKeys = ['su_mm','su_um','su_ck','su_pro','su_cm','su_tn','su_ttm','su_indm','su_gjm'].some(hasAnyLocalKey) || hasMatchIdbData;
-    if(hasRuntimePlayers || hasRuntimeRecords) return;
-    if(hasRecordKeys && hasPlayerIdbData) return;
+    if(!_forceAutoLoad){
+      if(hasRuntimePlayers || hasRuntimeRecords) return;
+      if(hasRecordKeys && hasPlayerIdbData) return;
+    }
   }catch(e){}
   console.log('[자동 불러오기] 로컬 데이터 없음 → GitHub 자동 로드');
   const _fetchAutoJson = async (url)=>{
@@ -1431,6 +1442,16 @@ setTimeout(()=>{ try{ window.enableDragScroll && window.enableDragScroll(); }cat
       }
       if(d.notices && d.notices.length) notices = d.notices;
       if(d.tiers && d.tiers.length) TIERS.splice(0, TIERS.length, ...d.tiers);
+      try{
+        if(typeof _rebuildAllPlayerHistoryCore === 'function'){
+          _rebuildAllPlayerHistoryCore();
+          try{ window.__stats_hist_ready = true; }catch(e){}
+        }else{
+          try{ window.__stats_hist_ready = false; }catch(e){}
+        }
+      }catch(e){
+        try{ window.__stats_hist_ready = false; }catch(e){}
+      }
       const allD=[...miniM,...univM,...comps,...ckM,...proM];
       mergeValidYearsIntoOptions(yearOptions, allD);
       fixPoints();

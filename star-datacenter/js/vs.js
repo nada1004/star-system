@@ -185,136 +185,51 @@ function _vsRenderResult(){
   }
   const streakAbs=Math.abs(streak);
 
-  // 배경 설정 로드
-  const _vsBgType   = (()=>{ try{ return localStorage.getItem('su_vs_bg_type')||'default'; }catch(e){ return 'default'; } })();
-  const _vsBgColor1 = (()=>{ try{ return localStorage.getItem('su_vs_bg_color1')||'#0f172a'; }catch(e){ return '#0f172a'; } })();
-  const _vsBgColor2 = (()=>{ try{ return localStorage.getItem('su_vs_bg_color2')||'#1e293b'; }catch(e){ return '#1e293b'; } })();
-  const _vsBgImg    = (()=>{ try{ return localStorage.getItem('su_vs_bg_img')||''; }catch(e){ return ''; } })();
-  const _vsBgOverlay= (()=>{ try{ return parseFloat(localStorage.getItem('su_vs_bg_overlay')||'0.55'); }catch(e){ return 0.55; } })();
-
-  let _heroBg = '';
-  if(_vsBgType==='solid'){
-    _heroBg = `background:${_vsBgColor1};`;
-  } else if(_vsBgType==='gradient'){
-    _heroBg = `background:linear-gradient(135deg,${_vsBgColor1},${_vsBgColor2});`;
-  } else if(_vsBgType==='team'){
-    _heroBg = `background:linear-gradient(90deg,${colA}cc 0%,${colA}44 35%,${colB}44 65%,${colB}cc 100%);`;
-  } else if(_vsBgType==='image'&&_vsBgImg){
-    _heroBg = `background:url('${_vsBgImg}') center/cover no-repeat;`;
-  } else {
-    _heroBg = `background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);`;
-  }
-
-  const raceLabel = r => r==='T'?'TERRAN':r==='Z'?'ZERG':r==='P'?'PROTOSS':'';
-
   r.innerHTML=`<div class="vs-box" id="vs-result-card">
-
-    <!-- ★ 그래픽 매치업 헤더 카드 -->
-    <div id="vs-hero-card" style="${_heroBg}border-radius:12px;overflow:hidden;margin-bottom:16px;position:relative;">
-      ${(_vsBgType==='image'&&_vsBgImg)?`<div style="position:absolute;inset:0;background:rgba(0,0,0,${_vsBgOverlay});"></div>`:''}
-
-      <!-- 상단 타이틀 바 -->
-      <div style="position:relative;z-index:1;text-align:center;padding:10px 0 6px;font-size:10px;font-weight:700;letter-spacing:3px;color:rgba(255,255,255,0.5);border-bottom:1px solid rgba(255,255,255,0.08);">
-        STARCRAFT · 1:1 MATCH RECORD
+    <!-- 상단 헤더: 두 선수 정보 -->
+    <div style="display:flex;align-items:stretch;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <!-- A 선수 카드 -->
+      <div style="flex:1;min-width:130px;background:${colA}18;border:2px solid ${colA}44;border-radius:10px;padding:12px;text-align:center">
+        <div style="width:44px;height:44px;border-radius:10px;background:${colA};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff">${vsNameA[0]}</div>
+        <div style="font-weight:800;font-size:13px;color:var(--text)">${vsNameA}</div>
+        ${pA?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">${pA.univ}</div>`:''}
+        ${pA?getTierBadge(pA.tier):''}
+        ${aLeading?'<div style="margin-top:6px;font-size:10px;font-weight:800;color:'+colA+'">🏆 우세</div>':''}
       </div>
-
-      <!-- 메인 영역 -->
-      <div style="position:relative;z-index:1;display:flex;align-items:stretch;min-height:180px;">
-
-        <!-- A 선수 -->
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding:16px 10px 12px;gap:8px;">
-          ${pA&&pA.photo
-            ? `<img src="${toHttpsUrl(pA.photo)}" style="width:90px;height:90px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:3px solid ${colA};flex-shrink:0;" onerror="this.outerHTML='<div style=\\'width:90px;height:90px;border-radius:50%;background:${colA};display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;color:#fff;\\'>${vsNameA[0]}</div>'">`
-            : `<div style="width:90px;height:90px;border-radius:50%;background:${colA};display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;color:#fff;">${vsNameA[0]}</div>`
-          }
-          <div style="text-align:center;">
-            <div style="font-weight:900;font-size:20px;color:#fff;letter-spacing:1px;">${vsNameA}</div>
-            ${pA?`<div style="font-size:10px;font-weight:700;letter-spacing:2px;color:${colA};margin-top:2px;">${raceLabel(pA.race)}</div>`:''}
-            ${pA?`<div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px;">${pA.univ}</div>`:''}
-          </div>
-          ${aLeading?`<div style="font-size:10px;font-weight:800;color:${colA};background:${colA}33;border:1px solid ${colA}66;border-radius:20px;padding:2px 10px;">🏆 우세</div>`:''}
+      <!-- 중앙 스코어 -->
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;min-width:80px">
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px;letter-spacing:.5px">전체 전적</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:34px;color:${aLeading?colA:'var(--text3)'}">${aWins}</span>
+          <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:var(--gray-l)">:</span>
+          <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:34px;color:${bLeading?colB:'var(--text3)'}">${bWins}</span>
         </div>
-
-        <!-- 중앙 VS + 전적 -->
-        <div style="width:160px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;gap:4px;">
-          <div style="font-weight:900;font-size:42px;color:rgba(255,255,255,0.15);line-height:1;letter-spacing:-2px;">VS</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:-4px;">
-            <span style="font-weight:900;font-size:36px;color:${aLeading?colA:'rgba(255,255,255,0.9)'};">${aWins}</span>
-            <span style="font-weight:900;font-size:20px;color:rgba(255,255,255,0.3);">:</span>
-            <span style="font-weight:900;font-size:36px;color:${bLeading?colB:'rgba(255,255,255,0.9)'};">${bWins}</span>
-          </div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1px;">총 ${total}게임</div>
-          ${streakAbs>=2?`<div style="margin-top:4px;font-size:10px;font-weight:700;color:#fff;background:${streakName===vsNameA?colA:colB}99;border-radius:20px;padding:2px 10px;">${streakName} ${streakAbs}연승</div>`:''}
-        </div>
-
-        <!-- B 선수 -->
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding:16px 10px 12px;gap:8px;">
-          ${pB&&pB.photo
-            ? `<img src="${toHttpsUrl(pB.photo)}" style="width:90px;height:90px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:3px solid ${colB};flex-shrink:0;" onerror="this.outerHTML='<div style=\\'width:90px;height:90px;border-radius:50%;background:${colB};display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;color:#fff;\\'>${vsNameB[0]}</div>'">`
-            : `<div style="width:90px;height:90px;border-radius:50%;background:${colB};display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;color:#fff;">${vsNameB[0]}</div>`
-          }
-          <div style="text-align:center;">
-            <div style="font-weight:900;font-size:20px;color:#fff;letter-spacing:1px;">${vsNameB}</div>
-            ${pB?`<div style="font-size:10px;font-weight:700;letter-spacing:2px;color:${colB};margin-top:2px;">${raceLabel(pB.race)}</div>`:''}
-            ${pB?`<div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px;">${pB.univ}</div>`:''}
-          </div>
-          ${bLeading?`<div style="font-size:10px;font-weight:800;color:${colB};background:${colB}33;border:1px solid ${colB}66;border-radius:20px;padding:2px 10px;">🏆 우세</div>`:''}
-        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">총 ${total}게임</div>
+        ${streakAbs>=2?`<div style="margin-top:6px;font-size:10px;font-weight:700;color:${aWins>bWins?colA:colB};background:${aWins>bWins?colA+'18':colB+'18'};border-radius:20px;padding:2px 8px">${streakName} ${streakAbs}연승</div>`:''}
       </div>
-
-      <!-- 승률 바 (하단) -->
-      ${total>0?`
-      <div style="position:relative;z-index:1;padding:0 16px 14px;">
-        <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-bottom:5px;">
-          <span style="color:${colA};">${vsNameA} ${aRate}%</span>
-          <span style="color:rgba(255,255,255,0.4);">상대 전적 승률</span>
-          <span style="color:${colB};">${bRate}% ${vsNameB}</span>
-        </div>
-        <div style="height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;display:flex;">
-          <div style="background:${colA};width:${aRate}%;height:100%;border-radius:3px 0 0 3px;transition:.6s ease;"></div>
-          <div style="background:${colB};width:${bRate}%;height:100%;border-radius:0 3px 3px 0;margin-left:auto;transition:.6s ease;"></div>
-        </div>
-      </div>`:''}
-    </div>
-
-    <!-- 배경 설정 토글 버튼 -->
-    <div style="margin-bottom:14px;" class="no-export">
-      <button class="btn btn-w btn-sm" onclick="(()=>{ const b=document.getElementById('vs-bg-settings'); if(b) b.style.display=b.style.display==='none'?'block':'none'; })()">🎨 카드 배경 설정</button>
-    </div>
-    <!-- 배경 설정 패널 -->
-    <div id="vs-bg-settings" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;font-size:12px;" class="no-export">
-      <div style="font-weight:800;color:var(--text2);margin-bottom:10px;">🎨 매치업 카드 배경</div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <!-- 배경 타입 -->
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${[['default','기본 다크'],['solid','단색'],['gradient','그라디언트'],['team','대학 컬러'],['image','이미지 URL']].map(([v,l])=>`
-            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-weight:700;color:var(--text);">
-              <input type="radio" name="vs-bg-type" value="${v}" ${_vsBgType===v?'checked':''} onchange="(()=>{ try{localStorage.setItem('su_vs_bg_type','${v}');}catch(e){} const p=document.getElementById('vs-bg-color-row'); const q=document.getElementById('vs-bg-grad-row'); const u=document.getElementById('vs-bg-url-row'); if(p)p.style.display=['solid','gradient'].includes('${v}')?'flex':'none'; if(q)q.style.display='${v}'==='gradient'?'flex':'none'; if(u)u.style.display='${v}'==='image'?'flex':'none'; _vsRenderResult(); })()"> ${l}
-            </label>`).join('')}
-        </div>
-        <!-- 색상 1 -->
-        <div id="vs-bg-color-row" style="display:${['solid','gradient'].includes(_vsBgType)?'flex':'none'};align-items:center;gap:8px;">
-          <span style="color:var(--text3);font-weight:700;">색상 1</span>
-          <input type="color" value="${_vsBgColor1}" oninput="try{localStorage.setItem('su_vs_bg_color1',this.value);}catch(e){}" onchange="_vsRenderResult()" style="width:36px;height:28px;border:none;cursor:pointer;border-radius:4px;">
-          <span id="vs-bg-grad-row" style="display:${_vsBgType==='gradient'?'flex':'none'};align-items:center;gap:8px;">
-            <span style="color:var(--text3);font-weight:700;">색상 2</span>
-            <input type="color" value="${_vsBgColor2}" oninput="try{localStorage.setItem('su_vs_bg_color2',this.value);}catch(e){}" onchange="_vsRenderResult()" style="width:36px;height:28px;border:none;cursor:pointer;border-radius:4px;">
-          </span>
-        </div>
-        <!-- 이미지 URL -->
-        <div id="vs-bg-url-row" style="display:${_vsBgType==='image'?'flex':'none'};align-items:center;gap:8px;flex-wrap:wrap;">
-          <span style="color:var(--text3);font-weight:700;">이미지 URL</span>
-          <input type="text" placeholder="https://..." value="${_vsBgImg}" oninput="try{localStorage.setItem('su_vs_bg_img',this.value);}catch(e){}" onchange="_vsRenderResult()" style="flex:1;min-width:200px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;background:var(--white);color:var(--text);">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="color:var(--text3);font-weight:700;">오버레이</span>
-            <input type="range" min="0" max="0.9" step="0.05" value="${_vsBgOverlay}" oninput="document.getElementById('vs-bg-ov-v').textContent=parseFloat(this.value).toFixed(2);try{localStorage.setItem('su_vs_bg_overlay',this.value);}catch(e){}" onchange="_vsRenderResult()" style="width:80px;">
-            <span id="vs-bg-ov-v" style="color:var(--text3);font-weight:700;">${_vsBgOverlay.toFixed(2)}</span>
-          </div>
-        </div>
+      <!-- B 선수 카드 -->
+      <div style="flex:1;min-width:130px;background:${colB}18;border:2px solid ${colB}44;border-radius:10px;padding:12px;text-align:center">
+        <div style="width:44px;height:44px;border-radius:10px;background:${colB};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff">${vsNameB[0]}</div>
+        <div style="font-weight:800;font-size:13px;color:var(--text)">${vsNameB}</div>
+        ${pB?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">${pB.univ}</div>`:''}
+        ${pB?getTierBadge(pB.tier):''}
+        ${bLeading?'<div style="margin-top:6px;font-size:10px;font-weight:800;color:'+colB+'">🏆 우세</div>':''}
       </div>
     </div>
 
     ${total===0?`<div style="padding:24px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:8px;font-size:13px">두 선수 간 직접 대결 기록이 없습니다.</div>`:`
+    <!-- 승률 바 -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:5px">
+        <span style="color:${colA}">${vsNameA} ${aRate}%</span>
+        <span style="color:${colB}">${bRate}% ${vsNameB}</span>
+      </div>
+      <div class="vs-bar-wrap">
+        <div class="vs-bar-a" style="width:${aRate}%"></div>
+        <div class="vs-bar-b" style="width:${bRate}%"></div>
+      </div>
+    </div>
+
     <!-- 액션 버튼 -->
     <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap" class="no-export">
       <button class="btn btn-p btn-sm" style="min-width:108px;display:inline-flex;align-items:center;justify-content:center" onclick="openVsShareCard()">🎴 공유 카드</button>
