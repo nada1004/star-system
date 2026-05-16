@@ -734,13 +734,7 @@
       + '<button class="btn btn-w btn-sm" onclick="if(confirm(\'탭 버튼 색상을 모두 초기화할까요?\')){if(typeof resetAllTabColors==\'function\')resetAllTabColors();try{if(typeof render==\'function\')render();}catch(e){}}">🔄 전체 초기화</button>'
       + '</div>'
       + groupsHTML
-      + '<div style="margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;flex-direction:column;gap:10px">'
-      + '  <div style="font-size:13px;font-weight:900;color:var(--text2)">🪄 기록 카드 양끝 대학 색상 효과</div>'
-      + '  <div style="font-size:12px;color:var(--gray-l);line-height:1.6">이 설정은 <b>기록 카드(기록탭) 스타일</b>에 포함되어 있습니다.</div>'
-      + '  <div style="display:flex;gap:8px;flex-wrap:wrap">'
-      + '    <button class="btn btn-w btn-sm" onclick="try{cfgGo(\'reccard\');}catch(e){}">🧾 기록 카드 설정 열기</button>'
-      + '  </div>'
-      + '</div>'
+
       + '<div style="margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;flex-direction:column;gap:10px">'
       + '  <div style="font-size:13px;font-weight:900;color:var(--text2)">🎓 스트리머탭 대학 헤더 설정</div>'
       + '  <div style="font-size:12px;color:var(--gray-l);line-height:1.6">스트리머탭 대학 헤더의 그라데이션, 배경 이미지, 커스텀 텍스트를 설정합니다.</div>'

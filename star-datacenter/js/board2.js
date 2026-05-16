@@ -1220,6 +1220,27 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
 
   // 새 레이아웃: 왼쪽 라벨 열(대학색) + 오른쪽 스트리머 열(연한 배경)
   // hasSide 시 padding-right:190px → border-bottom 선이 사이드 패널 영역까지 이어짐
+
+  // ── 신현황판 디자인 모드 ── (_tableRow보다 먼저 선언)
+  const _b2US = (()=>{ try{ return localStorage.getItem('su_b2_univ_style')||'default'; }catch(e){ return 'default'; } })();
+
+  // 모드별 스타일 파라미터
+  const _usStyles = {
+    default:   { wr:'border-radius:14px;overflow:hidden;box-shadow:0 2px 16px '+col+'30',  hd:'background:'+col+';padding:10px 16px',                               body:'background:'+lightCol+';',   label:'background:'+labelCol+'!important;', border:'1px solid '+col+'44' },
+    glass:     { wr:'border-radius:18px;overflow:hidden;box-shadow:0 4px 28px '+col+'28;backdrop-filter:blur(8px);border:1.5px solid '+col+'44',                      hd:'background:'+col+'cc;padding:10px 16px;backdrop-filter:blur(6px)',         body:'background:rgba(255,255,255,.45);backdrop-filter:blur(6px);',   label:'background:'+col+'22!important;', border:'1px solid '+col+'33' },
+    minimal:   { wr:'border-radius:10px;overflow:hidden;border:1.5px solid '+col+'55;box-shadow:none',                                                                 hd:'background:transparent;padding:8px 14px;border-bottom:2px solid '+col,     body:'background:var(--white);',              label:'background:var(--surface)!important;', border:'1px solid var(--border2)' },
+    dark:      { wr:'border-radius:14px;overflow:hidden;box-shadow:0 4px 22px rgba(0,0,0,.35)',                                                                         hd:'background:#1e293b;padding:10px 16px;border-bottom:3px solid '+col,         body:'background:#0f172a;',               label:'background:#1e293b!important;',  border:'1px solid #334155' },
+    gradient:  { wr:'border-radius:16px;overflow:hidden;box-shadow:0 4px 24px '+col+'35',                                                                               hd:'background:linear-gradient(135deg,'+col+','+col+'bb);padding:12px 16px', body:'background:linear-gradient(180deg,'+col+'12,transparent);',  label:'background:'+col+'28!important;', border:'1px solid '+col+'33' },
+    neon:      { wr:'border-radius:12px;overflow:hidden;border:2px solid '+col+';box-shadow:0 0 18px '+col+'88,0 0 4px '+col+'44',                                     hd:'background:#0f172a;padding:10px 16px;border-bottom:2px solid '+col,          body:'background:#0d1117;',               label:'background:#1e293b!important;',  border:'1px solid '+col+'66' },
+    sharp:     { wr:'border-radius:0;overflow:hidden;border-left:5px solid '+col+';box-shadow:3px 3px 0 '+col+'44',                                                     hd:'background:'+col+';padding:8px 14px',                                        body:'background:var(--white);',              label:'background:var(--surface)!important;', border:'1px solid var(--border)' },
+  };
+  const _uss = _usStyles[_b2US] || _usStyles.default;
+  const _usDarkText = ['dark','neon'].includes(_b2US);
+  const _usTextCol = _usDarkText ? (col||'#60a5fa') : textCol;
+  const _usTitleCol = _usDarkText ? '#f1f5f9' : textCol;
+  const _usSubCol   = _usDarkText ? '#94a3b8'  : textCol+'bb';
+  const _usMemo2Col = _usDarkText ? '#94a3b8'  : textCol+'bb';
+
   const _tableRow = (label, isRole, chips) => `
     <div style="display:flex;align-items:stretch;border-bottom:${_uss.border}${hasSide?';padding-right:190px':''}">
       <div style="${_uss.label}min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
@@ -1277,26 +1298,6 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${_bnote?'6px':'0'}">${_bimgHtmls}</div>`:''}
     ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
   </div>` : '';
-
-  // ── 신현황판 디자인 모드 ──
-  const _b2US = (()=>{ try{ return localStorage.getItem('su_b2_univ_style')||'default'; }catch(e){ return 'default'; } })();
-
-  // 모드별 스타일 파라미터
-  const _usStyles = {
-    default:   { wr:'border-radius:14px;overflow:hidden;box-shadow:0 2px 16px '+col+'30',  hd:'background:'+col+';padding:10px 16px',                               body:'background:'+lightCol+';',   label:'background:'+labelCol+'!important;', border:'1px solid '+col+'44' },
-    glass:     { wr:'border-radius:18px;overflow:hidden;box-shadow:0 4px 28px '+col+'28;backdrop-filter:blur(8px);border:1.5px solid '+col+'44',                      hd:'background:'+col+'cc;padding:10px 16px;backdrop-filter:blur(6px)',         body:'background:rgba(255,255,255,.45);backdrop-filter:blur(6px);',   label:'background:'+col+'22!important;', border:'1px solid '+col+'33' },
-    minimal:   { wr:'border-radius:10px;overflow:hidden;border:1.5px solid '+col+'55;box-shadow:none',                                                                 hd:'background:transparent;padding:8px 14px;border-bottom:2px solid '+col,     body:'background:var(--white);',              label:'background:var(--surface)!important;', border:'1px solid var(--border2)' },
-    dark:      { wr:'border-radius:14px;overflow:hidden;box-shadow:0 4px 22px rgba(0,0,0,.35)',                                                                         hd:'background:#1e293b;padding:10px 16px;border-bottom:3px solid '+col,         body:'background:#0f172a;',               label:'background:#1e293b!important;',  border:'1px solid #334155' },
-    gradient:  { wr:'border-radius:16px;overflow:hidden;box-shadow:0 4px 24px '+col+'35',                                                                               hd:'background:linear-gradient(135deg,'+col+','+col+'bb);padding:12px 16px', body:'background:linear-gradient(180deg,'+col+'12,transparent);',  label:'background:'+col+'28!important;', border:'1px solid '+col+'33' },
-    neon:      { wr:'border-radius:12px;overflow:hidden;border:2px solid '+col+';box-shadow:0 0 18px '+col+'88,0 0 4px '+col+'44',                                     hd:'background:#0f172a;padding:10px 16px;border-bottom:2px solid '+col,          body:'background:#0d1117;',               label:'background:#1e293b!important;',  border:'1px solid '+col+'66' },
-    sharp:     { wr:'border-radius:0;overflow:hidden;border-left:5px solid '+col+';box-shadow:3px 3px 0 '+col+'44',                                                     hd:'background:'+col+';padding:8px 14px',                                        body:'background:var(--white);',              label:'background:var(--surface)!important;', border:'1px solid var(--border)' },
-  };
-  const _uss = _usStyles[_b2US] || _usStyles.default;
-  const _usDarkText = ['dark','neon'].includes(_b2US);
-  const _usTextCol = _usDarkText ? (col||'#60a5fa') : textCol;
-  const _usTitleCol = _usDarkText ? '#f1f5f9' : textCol;
-  const _usSubCol   = _usDarkText ? '#94a3b8'  : textCol+'bb';
-  const _usMemo2Col = _usDarkText ? '#94a3b8'  : textCol+'bb';
 
   return `
     <div data-b2card="${univName.replace(/"/g,'&quot;')}" style="${_uss.wr}">

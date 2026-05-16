@@ -1206,48 +1206,6 @@ ${_scfgD('notice','📢 공지 관리')}
         </div>
       </div>
 
-      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">🎨 기록 카드 양쪽 끝 색상 효과</div>
-        <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">기록 카드 좌우 끝에 A·B팀 대학 색상 그라디언트를 표시합니다. 대전기록탭·대회탭(조별리그 일정·대진표 기록·프로리그 조별리그·대진표) 기록 카드 전체에 적용됩니다.</div>
-        <div style="font-size:11px;color:#475569;margin-bottom:8px"><b>대학CK</b> / <b>프로리그 일반</b>의 양쪽 끝 색상은 바로 아래 나오는 <b>팀 버튼 색상</b> 블록에서 바꿉니다.</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-            <input type="checkbox" id="cfg-sidefx-on" style="width:15px;height:15px" ${_sfxOn?'checked':''} onchange="(window.cfgSetRecSideFxEnabled||function(){})(this.checked)">
-            색상 효과 사용
-          </label>
-          ${_sfxOn ? `<div id="cfg-sidefx-preview" class="grp-match-card grp-sidefx grp-sidefx--${_sfxMode}" style="${(()=>{try{if(typeof _recSideFxVarStyle==='function')return _recSideFxVarStyle('#2563eb','#a855f7',{mode:_sfxMode,intensity:_sfxInt,length:_sfxLen,tail:_sfxTail,softness:52,edge:8});}catch(e){}return '';})()}--rec-side-left-rgb:37,99,235;--rec-side-right-rgb:168,85,247;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:10px;background:var(--white);margin:0;">
-            <span style="position:relative;z-index:1;font-size:11px;font-weight:900;color:#2563eb">🔵 A팀</span>
-            <span style="position:relative;z-index:1;font-size:11px;color:var(--gray-l);font-weight:700">미리보기</span>
-            <span style="position:relative;z-index:1;font-size:11px;font-weight:900;color:#a855f7">B팀 🟣</span>
-          </div>` : ''}
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <div style="font-size:11px;color:var(--text3);font-weight:800">효과 종류</div>
-            <select id="cfg-sidefx-mode" onchange="(window.cfgSetRecSideFxMode||function(){})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-              <option value="soft" ${_sfxMode==='soft'?'selected':''}>소프트 (기본)</option>
-              <option value="glow" ${_sfxMode==='glow'?'selected':''}>글로우 (발광)</option>
-              <option value="panel" ${_sfxMode==='panel'?'selected':''}>패널 (선명)</option>
-              <option value="line" ${_sfxMode==='line'?'selected':''}>라인 (세로 바)</option>
-              <option value="ribbon" ${_sfxMode==='ribbon'?'selected':''}>리본</option>
-              <option value="frame" ${_sfxMode==='frame'?'selected':''}>프레임</option>
-              <option value="spotlight" ${_sfxMode==='spotlight'?'selected':''}>스포트라이트</option>
-              <option value="fade" ${_sfxMode==='fade'?'selected':''}>페이드(은은)</option>
-              <option value="double" ${_sfxMode==='double'?'selected':''}>더블라인</option>
-            </select>
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">색상 강도 <span id="cfg-sidefx-int-v" style="font-weight:400;color:var(--gray-l)">${_sfxInt}</span></div>
-            <input type="range" id="cfg-sidefx-int" min="20" max="100" step="4" value="${_sfxInt}" oninput="document.getElementById('cfg-sidefx-int-v').textContent=this.value" onchange="(window.cfgSetRecSideFxIntensity||function(){})(this.value)" style="width:100%;max-width:260px">
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 효과 길이 <span id="cfg-sidefx-len-v" style="font-weight:400;color:var(--gray-l)">${_sfxLen}%</span></div>
-            <input type="range" id="cfg-sidefx-len" min="4" max="80" step="2" value="${_sfxLen}" oninput="document.getElementById('cfg-sidefx-len-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxLength||function(){})(this.value)" style="width:100%;max-width:260px">
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 끝 진하기 <span id="cfg-sidefx-tail-v" style="font-weight:400;color:var(--gray-l)">${_sfxTail}%</span></div>
-            <input type="range" id="cfg-sidefx-tail" min="0" max="140" step="4" value="${_sfxTail}" oninput="document.getElementById('cfg-sidefx-tail-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxTail||function(){})(this.value)" style="width:100%;max-width:260px">
-          </div>
-        </div>
-      </div>
       ${(typeof window.buildSettingsTeamColorBlock==='function' ? window.buildSettingsTeamColorBlock() : '')}
     </div>
   </details>
