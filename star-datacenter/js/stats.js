@@ -24,7 +24,7 @@ if (typeof window.escHTML !== 'function') {
   };
 }
 // ⚠️ top-level function escHTML()는 window에 바인딩되어 무한재귀가 날 수 있으므로 const로만 참조
-const escHTML = (s) => window.escHTML(s);
+var escHTML = window.escHTML;
 
 /* ─── 전역 필터 상태 ─── */
 var _statsDateFrom='', _statsDateTo='', _statsMinGames=3, _statsLastN=0;
