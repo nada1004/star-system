@@ -1,6 +1,10 @@
 (function(){
   window.SettingsModules = window.SettingsModules || {};
 
+  window._touchPrefs = window._touchPrefs || function(){
+    try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
+  };
+
   function escMaybe(v){
     if(typeof window.esc === 'function') return window.esc(v);
     return String(v ?? '').replace(/[&<>"']/g, m => ({
@@ -181,9 +185,7 @@
     };
 
     // 디자인/탭/효과 설정 변경 후 원격 동기화 트리거 헬퍼
-    function _touchPrefs(){
-      try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
-    }
+    function _touchPrefs(){ try{ window._touchPrefs(); }catch(e){} }
 
     window.cfgSetDesignV2 = function(on){
       try{ localStorage.setItem('su_design_v2', on?'1':'0'); }catch(e){}
