@@ -1941,6 +1941,9 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   position:relative;
   background:linear-gradient(180deg, rgba(var(--rec-mode-rgb,100,116,139),.08), rgba(var(--rec-mode-rgb,100,116,139),.03) 52%, transparent);
 }
+.rec-summary[data-rec-mode] .rec-sum-header{
+  background:transparent !important;
+}
 .rec-summary[data-rec-mode] .rec-sum-score{
   position:relative;
 }
@@ -2008,6 +2011,7 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
   inset:0;
   pointer-events:none;
   z-index:0;
+  border-radius: inherit;
 }
 /* 양쪽 끝 컬러 바: rec-summary / grp-match-card / tc-card 모두 box-shadow inset으로 처리 */
 /* sidefx 활성 시 border-left 색상 제거 (inset shadow가 대신함) */
@@ -2030,12 +2034,13 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
 .tc-card.grp-sidefx.grp-sidefx--soft::after{
   background:
     linear-gradient(90deg,
-      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.20))) 0%,
+      rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-ae,var(--rec-side-a1,.20)) * .78)) 0%,
       rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) var(--rec-fx-len2,10%),
-      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%),
-      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len-r,78%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) var(--rec-fx-len2-r,90%),
-      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.20))) 100%);
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) var(--rec-fx-len,22%)),
+    linear-gradient(270deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-ae,var(--rec-side-a1,.20)) * .78)) 0%,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) var(--rec-fx-len2,10%),
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) var(--rec-fx-len,22%));
 }
 .rec-summary.rec-sidefx.rec-sidefx--glow::after,
 .grp-match-card.grp-sidefx.grp-sidefx--glow::after,
@@ -2237,6 +2242,54 @@ body.rc-bgfx-off .rec-summary.rec-mode-pro .rec-sum-score{
 @keyframes recSideFxPulse{
   0%,100%{ opacity:.65; }
   50%{ opacity:1; }
+}
+.rec-summary.rec-sidefx.rec-sidefx--sheen::after,
+.grp-match-card.grp-sidefx.grp-sidefx--sheen::after,
+.tc-card.grp-sidefx.grp-sidefx--sheen::after{
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-a2,.09) * 1.05)) 0 8px,
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) 8px 18px) left center / var(--rec-fx-len,22%) 100% no-repeat,
+    repeating-linear-gradient(225deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-a2,.09) * 1.05)) 0 8px,
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) 8px 18px) right center / var(--rec-fx-len,22%) 100% no-repeat;
+}
+.rec-summary.rec-sidefx.rec-sidefx--aurora::after,
+.grp-match-card.grp-sidefx.grp-sidefx--aurora::after,
+.tc-card.grp-sidefx.grp-sidefx--aurora::after{
+  background:
+    radial-gradient(ellipse 140% 90% at 0% 50%,
+      rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-ae,var(--rec-side-a1,.22)) * .95)) 0%,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) 42%,
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) 76%) left center / var(--rec-fx-len,22%) 100% no-repeat,
+    radial-gradient(ellipse 140% 90% at 100% 50%,
+      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-ae,var(--rec-side-a1,.22)) * .95)) 0%,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) 42%,
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) 76%) right center / var(--rec-fx-len,22%) 100% no-repeat;
+}
+.rec-summary.rec-sidefx.rec-sidefx--slant::after,
+.grp-match-card.grp-sidefx.grp-sidefx--slant::after,
+.tc-card.grp-sidefx.grp-sidefx--slant::after{
+  background:
+    linear-gradient(120deg,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-ae,var(--rec-side-a1,.22))) 0%,
+      rgba(var(--rec-side-left-rgb,59,130,246), var(--rec-side-a2,.09)) 36%,
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) 72%) left center / var(--rec-fx-len,22%) 100% no-repeat,
+    linear-gradient(240deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-ae,var(--rec-side-a1,.22))) 0%,
+      rgba(var(--rec-side-right-rgb,168,85,247), var(--rec-side-a2,.09)) 36%,
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) 72%) right center / var(--rec-fx-len,22%) 100% no-repeat;
+}
+.rec-summary.rec-sidefx.rec-sidefx--steps::after,
+.grp-match-card.grp-sidefx.grp-sidefx--steps::after,
+.tc-card.grp-sidefx.grp-sidefx--steps::after{
+  background:
+    repeating-linear-gradient(180deg,
+      rgba(var(--rec-side-left-rgb,59,130,246), calc(var(--rec-side-ae,var(--rec-side-a1,.22)) * .95)) 0 14px,
+      rgba(var(--rec-side-left-rgb,59,130,246), 0) 14px 32px) left center / calc(var(--rec-side-line-w,8px) * 1.6) 100% repeat-y,
+    repeating-linear-gradient(180deg,
+      rgba(var(--rec-side-right-rgb,168,85,247), calc(var(--rec-side-ae,var(--rec-side-a1,.22)) * .95)) 0 14px,
+      rgba(var(--rec-side-right-rgb,168,85,247), 0) 14px 32px) right center / calc(var(--rec-side-line-w,8px) * 1.6) 100% repeat-y;
 }
 
 /* ══════════════════════════════════════

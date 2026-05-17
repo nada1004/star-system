@@ -313,7 +313,7 @@
     };
     window.cfgSetRecSideFxMode = function(mode){
       var v = String(mode||'soft');
-      if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse'].indexOf(v) === -1) v = 'soft';
+      if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps'].indexOf(v) === -1) v = 'soft';
       try{ localStorage.setItem('su_rec_side_fx_mode', v); }catch(e){}
       try{ _updateSideFxPreview(); }catch(e){}
       try{ render(); }catch(e){}
@@ -365,7 +365,7 @@
         var prev = document.getElementById('cfg-sidefx-preview');
         if(!prev) return;
         var mode = localStorage.getItem('su_rec_side_fx_mode')||'soft';
-        var allModes = ['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse'];
+        var allModes = ['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps'];
         allModes.forEach(function(m){ prev.classList.remove('grp-sidefx--'+m); });
         prev.classList.add('grp-sidefx--'+mode);
         if(typeof _recSideFxVarStyle==='function'){
@@ -641,7 +641,7 @@
     var tabColorTail = Math.max(0, Math.min(60, parseInt(localStorage.getItem('su_tab_color_tail') || '22', 10) || 22));
     var recSideFxOn = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0';
     var recSideFxMode = String(localStorage.getItem('su_rec_side_fx_mode') || 'soft');
-    if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double'].indexOf(recSideFxMode) === -1) recSideFxMode = 'soft';
+    if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps'].indexOf(recSideFxMode) === -1) recSideFxMode = 'soft';
     var recSideFxIntensity = Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68));
     var recSideFxLength = Math.max(4, Math.min(80, parseInt(localStorage.getItem('su_rec_side_fx_length') || '25', 10) || 25));
     var recSideFxTail = Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_tail') || '28', 10) || 28));

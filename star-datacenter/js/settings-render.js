@@ -81,6 +81,8 @@ function rCfg(C,T){
   const _sfxInt = Math.max(20,Math.min(100,parseInt(localStorage.getItem('su_rec_side_fx_intensity')||'68',10)||68));
   const _sfxLen = Math.max(4,Math.min(80,parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
   const _sfxTail = Math.max(0,Math.min(140,parseInt(localStorage.getItem('su_rec_side_fx_tail')||'28',10)||28));
+  const _sfxSoft = Math.max(0,Math.min(100,parseInt(localStorage.getItem('su_rec_side_fx_softness')||'52',10)||52));
+  const _sfxEdge = Math.max(2,Math.min(24,parseInt(localStorage.getItem('su_rec_side_fx_edge')||'8',10)||8));
   const _avaScale = Math.round((parseFloat(localStorage.getItem('su_avatar_scale') ?? '1') || 1) * 100);
   const _cfgViewMode = (localStorage.getItem('su_cfg_view_mode') || 'basic') === 'advanced' ? 'advanced' : 'basic';
   const _cfgBottomOpen = (()=>{ try{
@@ -1210,7 +1212,7 @@ ${_scfgD('notice','📢 공지 관리')}
             <input type="checkbox" id="cfg-sidefx-on" style="width:15px;height:15px" ${_sfxOn?'checked':''} onchange="(window.cfgSetRecSideFxEnabled||function(){})(this.checked)">
             색상 효과 사용
           </label>
-          ${_sfxOn ? `<div id="cfg-sidefx-preview" class="grp-match-card grp-sidefx grp-sidefx--${_sfxMode}" style="${(()=>{try{if(typeof _recSideFxVarStyle==='function')return _recSideFxVarStyle('#2563eb','#a855f7',{mode:_sfxMode,intensity:_sfxInt,length:_sfxLen,tail:_sfxTail,softness:52,edge:8});}catch(e){}return '';})()}--rec-side-left-rgb:37,99,235;--rec-side-right-rgb:168,85,247;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:10px;background:var(--white);margin:0;">
+          ${_sfxOn ? `<div id="cfg-sidefx-preview" class="grp-match-card grp-sidefx grp-sidefx--${_sfxMode}" style="${(()=>{try{if(typeof _recSideFxVarStyle==='function')return _recSideFxVarStyle('#2563eb','#a855f7',{mode:_sfxMode,intensity:_sfxInt,length:_sfxLen,tail:_sfxTail,softness:_sfxSoft,edge:_sfxEdge});}catch(e){}return '';})()}--rec-side-left-rgb:37,99,235;--rec-side-right-rgb:168,85,247;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:10px;background:var(--white);margin:0;">
             <span style="position:relative;z-index:1;font-size:11px;font-weight:900;color:#2563eb">🔵 A팀</span>
             <span style="position:relative;z-index:1;font-size:11px;color:var(--gray-l);font-weight:700">미리보기</span>
             <span style="position:relative;z-index:1;font-size:11px;font-weight:900;color:#a855f7">B팀 🟣</span>
@@ -1227,6 +1229,15 @@ ${_scfgD('notice','📢 공지 관리')}
               <option value="spotlight" ${_sfxMode==='spotlight'?'selected':''}>스포트라이트</option>
               <option value="fade" ${_sfxMode==='fade'?'selected':''}>페이드(은은)</option>
               <option value="double" ${_sfxMode==='double'?'selected':''}>더블라인</option>
+              <option value="neon" ${_sfxMode==='neon'?'selected':''}>네온</option>
+              <option value="wave" ${_sfxMode==='wave'?'selected':''}>웨이브</option>
+              <option value="prism" ${_sfxMode==='prism'?'selected':''}>프리즘</option>
+              <option value="vignette" ${_sfxMode==='vignette'?'selected':''}>비네트</option>
+              <option value="pulse" ${_sfxMode==='pulse'?'selected':''}>펄스</option>
+              <option value="sheen" ${_sfxMode==='sheen'?'selected':''}>실크(사선)</option>
+              <option value="aurora" ${_sfxMode==='aurora'?'selected':''}>오로라</option>
+              <option value="slant" ${_sfxMode==='slant'?'selected':''}>슬랜트</option>
+              <option value="steps" ${_sfxMode==='steps'?'selected':''}>스텝</option>
             </select>
           </div>
           <div>
@@ -1240,6 +1251,10 @@ ${_scfgD('notice','📢 공지 관리')}
           <div>
             <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 끝 진하기 <span id="cfg-sidefx-tail-v" style="font-weight:400;color:var(--gray-l)">${_sfxTail}%</span></div>
             <input type="range" id="cfg-sidefx-tail" min="0" max="140" step="4" value="${_sfxTail}" oninput="document.getElementById('cfg-sidefx-tail-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxTail||function(){})(this.value)" style="width:100%;max-width:260px">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">연해지는 정도(부드러움) <span id="cfg-sidefx-soft-v" style="font-weight:400;color:var(--gray-l)">${_sfxSoft}%</span></div>
+            <input type="range" id="cfg-sidefx-soft" min="0" max="100" step="4" value="${_sfxSoft}" oninput="document.getElementById('cfg-sidefx-soft-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxSoftness||function(){})(this.value)" style="width:100%;max-width:260px">
           </div>
         </div>
       </div>
