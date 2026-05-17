@@ -302,34 +302,7 @@
         ${_slideTotalFrames>1?`<div style="display:flex;justify-content:center;gap:5px;margin-top:6px;margin-bottom:2px">
           ${Array.from({length:_slideTotalFrames},(_,i)=>`<span style="width:7px;height:7px;border-radius:50%;background:${i===_curDotIdx?'rgba(30,41,59,.72)':'rgba(148,163,184,.38)'};transition:background .3s;display:inline-block"></span>`).join('')}
         </div>`:''}
-        <script>
-        (function(){
-          try{
-            const key=${JSON.stringify(_slideKey)};
-            const total=${_slideTotalFrames};
-            if(total<=1)return;
-            if(window.__sharecardSlideTimers&&window.__sharecardSlideTimers[key]){
-              clearInterval(window.__sharecardSlideTimers[key]);
-            }
-            window.__sharecardSlideTimers=window.__sharecardSlideTimers||{};
-            window.__sharecardSlideTimers[key]=setInterval(function(){
-              try{
-                if(!document.getElementById('sharecard-overlay')){
-                  clearInterval(window.__sharecardSlideTimers[key]);
-                  delete window.__sharecardSlideTimers[key];
-                  return;
-                }
-                window.__sharecardSlideIdx=window.__sharecardSlideIdx||{};
-                const cur=Number(window.__sharecardSlideIdx[key]||0);
-                window.__sharecardSlideIdx[key]=(cur+1)%total;
-                if(window._shareMatchObj&&typeof renderShareCardByMatchObj==='function'){
-                  renderShareCardByMatchObj(window._shareMatchObj);
-                }
-              }catch(e){}
-            },5000);
-          }catch(e){}
-        })();
-        <\/script>
+        <span class="sc-slide-init-marker" data-sc-slide-key="${_slideKey}" data-sc-slide-total="${_slideTotalFrames}" style="display:none"></span>
       </div>`;
       const rosterHTML = `<div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin-bottom:${(ctx.setsHTML?'12':'0')}px">
         ${teamRosterPanel('A', aWin)}

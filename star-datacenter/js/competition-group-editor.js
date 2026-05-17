@@ -63,7 +63,11 @@ function grpOpenMatchModal(tn,gi,mi){
       </div>
     </div>
     <div id="gm-sets"></div>
-    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
+    <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;background:#fef9ee;border:1px solid #f59e0b44;border-radius:8px;padding:8px 12px">
+      <span style="font-size:11px;font-weight:700;color:#f59e0b;white-space:nowrap">🎙️ 캐스터/스트리머</span>
+      <input type="text" id="gm-caster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)" style="flex:1;min-width:0;padding:5px 9px;border:1px solid var(--border2);border-radius:7px;font-size:12px">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;padding-bottom:0;flex-wrap:wrap;align-items:center">
       <button class="btn btn-b btn-sm" onclick="grpAddSet()">+ 1세트</button>
       <button class="btn btn-w btn-sm" onclick="grpAddSet2()">+ 2세트</button>
       <button class="btn btn-w btn-sm" onclick="grpAddSet3()">🎯 에이스전</button>
@@ -228,6 +232,8 @@ function grpSaveMatch(){
   m.d=document.getElementById('gm-date')?.value||'';
   m.a=document.getElementById('gm-a')?.value||'';
   m.b=document.getElementById('gm-b')?.value||'';
+  const _grpCaster=(document.getElementById('gm-caster')?.value??'').trim();
+  if(_grpCaster) m.caster=_grpCaster; else delete m.caster;
   if(!m.a||!m.b){alert('두 팀을 선택하세요.');return;}
   const matchId=m._id||genId();
   if(m._id)revertMatchRecord({...m,_id:matchId});

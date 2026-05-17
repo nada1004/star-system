@@ -1,4 +1,38 @@
 (function(){
+  function _shareCardInitSlideTimers(card){
+    // innerHTML에 삽입된 <script>는 브라우저에서 실행되지 않으므로
+    // 렌더 후 이 함수를 호출해 슬라이드 타이머를 직접 시작한다
+    try{
+      const markers = (card||document.getElementById('share-card'))?.querySelectorAll?.('.sc-slide-init-marker');
+      if(!markers||!markers.length)return;
+      markers.forEach(marker=>{
+        try{
+          const key = marker.getAttribute('data-sc-slide-key');
+          const total = parseInt(marker.getAttribute('data-sc-slide-total')||'1',10);
+          if(!key||total<=1)return;
+          window.__sharecardSlideTimers = window.__sharecardSlideTimers||{};
+          if(window.__sharecardSlideTimers[key]) clearInterval(window.__sharecardSlideTimers[key]);
+          window.__sharecardSlideTimers[key]=setInterval(function(){
+            try{
+              if(!document.getElementById('sharecard-overlay')){
+                clearInterval(window.__sharecardSlideTimers[key]);
+                delete window.__sharecardSlideTimers[key];
+                return;
+              }
+              window.__sharecardSlideIdx=window.__sharecardSlideIdx||{};
+              const cur=Number(window.__sharecardSlideIdx[key]||0);
+              window.__sharecardSlideIdx[key]=(cur+1)%total;
+              if(window._shareMatchObj&&typeof renderShareCardByMatchObj==='function'){
+                renderShareCardByMatchObj(window._shareMatchObj);
+              }
+            }catch(e){}
+          },5000);
+        }catch(e){}
+      });
+    }catch(e){}
+  }
+  window._shareCardInitSlideTimers = _shareCardInitSlideTimers;
+
   function _shareCardSkeletonHTML(){
     return `<div style="position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(180deg,#f8fafc,#eef2ff);padding:16px;min-height:240px">
     <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.62) 50%,rgba(255,255,255,0) 100%);transform:translateX(-100%);animation:shareSkeletonSlide 1.15s infinite"></div>

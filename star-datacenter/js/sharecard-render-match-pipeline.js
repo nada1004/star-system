@@ -29,7 +29,7 @@
           buildVariant:({matchObj, theme, winnerColor, scp, variantKey})=>(
             (typeof window._buildShareCardVariant==='function')
               ? window._buildShareCardVariant({matchObj, theme, winnerColor, scp, variantKey})
-              : { outerBg:theme.bodyBg, headerBg:theme.headerBg, setBg:theme.divider, setBorder:theme.divider, chipBg:'rgba(255,255,255,.18)', chipBd:'rgba(255,255,255,.3)', hero:'🎮 매치', tone:'스타대학 데이터 센터' }
+              : { outerBg:theme.bodyBg, headerBg:theme.headerBg, setBg:theme.divider, setBorder:theme.divider, chipBg:'rgba(255,255,255,.18)', chipBd:'rgba(255,255,255,.3)', hero:'🎮 매치', tone:'' }
           )
         })
       : {};
@@ -91,6 +91,8 @@
     const finalHtml = personalPosterHTML || html;
     if(typeof window._shareCardRenderCached==='function') window._shareCardRenderCached(card, cacheKey, ()=>finalHtml);
     else card.innerHTML=finalHtml;
+    // (버그픽스) innerHTML 내 <script>는 브라우저에서 실행되지 않으므로 렌더 후 타이머 직접 시작
+    try{ if(typeof window._shareCardInitSlideTimers==='function') window._shareCardInitSlideTimers(card); }catch(e){}
   }
 
   window._renderShareMatchCardPipeline = renderShareMatchCardPipeline;

@@ -150,7 +150,6 @@
           <div style="height:100%;width:${ratePct}%;background:linear-gradient(90deg,${col},#ffffff);border-radius:999px"></div>
         </div>
       </div>`:''}
-      <div style="margin-top:14px;text-align:right;font-size:9px;color:rgba(255,255,255,.36);font-weight:800;letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
     </div>
   </div>`;
     if(typeof window._shareCardRenderCached==='function') window._shareCardRenderCached(card, _cacheKey, ()=>_html);
@@ -229,7 +228,6 @@
         ${sortedMem.slice(0,10).map(p=>`<span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:800">${p.name}</span>`).join('')}
         ${mem.length>10?`<span style="opacity:.72;font-size:10px;padding:4px 8px">+${mem.length-10}명</span>`:''}
       </div>
-      <div style="margin-top:14px;text-align:right;font-size:9px;color:rgba(255,255,255,.36);font-weight:800;letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
     </div>
   </div>`;
     if(typeof window._shareCardRenderCached==='function') window._shareCardRenderCached(card, _cacheKey, ()=>_html);

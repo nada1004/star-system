@@ -31,7 +31,8 @@ function rMini(C,T){
   } else if(miniSub==='rank'){
     h+=miniRankHTML(filteredMini);
   } else {
-    h+=recSummaryListHTML(miniM,'mini','tab',_miniTypeFilter);
+    // (수정) 시빌워는 'civil' 모드로 전달해 날짜 버튼 색상이 시빌워 색상(빨강)으로 표시되게 함
+    h+=recSummaryListHTML(miniM, miniType==='civil'?'civil':'mini', 'tab', _miniTypeFilter);
   }
   C.innerHTML=h;
 }

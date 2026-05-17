@@ -26,7 +26,7 @@
       <div class="share-personal-body" style="padding:${setsHTML?'14px 18px 16px':'12px 18px 16px'};background:linear-gradient(180deg,#ffffff,#f8fbff)">
         ${summaryHTML}
         ${setsHTML?`<div style="margin-bottom:2px">${setsHTML}</div>`:''}
-        <div style="text-align:right;font-size:10px;color:${theme.textDim};letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
+        
       </div>
     </div>`;
   }
@@ -71,7 +71,7 @@
         ${summaryHTML}
         ${teamRosterHTML}
         ${setsHTML?`<div style="margin-bottom:2px">${setsHTML}</div>`:''}
-        <div style="text-align:right;font-size:10px;color:${theme.textDim};letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
+        
       </div>
     </div>`;
   }

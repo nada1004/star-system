@@ -765,7 +765,7 @@ function _buildMemberEditHTML(members, side, label){
   const dlOpts = allNames.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">`).join('');
   return `
   <datalist id="${datalistId}">${dlOpts}</datalist>
-  <div style="margin-top:10px;padding:10px;background:var(--surface-alt,#f8fafc);border:1px solid var(--border);border-radius:10px">
+  <div style="padding:10px;background:var(--surface-alt,#f8fafc);border:1px solid var(--border);border-radius:10px">
     <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">${label} 참가자</div>
     <div id="re-mem-list-${side}">${rows}</div>
     <button type="button" onclick="_reMemAdd('${side}')"
@@ -812,6 +812,8 @@ function _reReadMembers(side, originalMembers){
 function openRE(mode,idx){
   // alias/필터 모드 보정
   mode = (mode==='individual') ? 'ind' : mode;
+  // civil(시빌워)은 mini 배열 공유
+  if(mode==='civil') mode = 'mini';
   // progj는 gjM 내 _proLabel=true 항목만 필터링된 인덱스일 수 있어 실제 인덱스로 매핑
   if(mode==='progj'){
     try{
@@ -838,8 +840,9 @@ function openRE(mode,idx){
       <label>팀 B 대학</label><select id="re-b">${allU.map(u=>`<option value="${u.name}"${m.b===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
       <label>팀 B 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb}">
       ${mSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${m.sets.filter(s=>s.winner==='A').length} / B ${m.sets.filter(s=>s.winner==='B').length} | 게임 수: A ${mSetsA} / B ${mSetsB}</div>`:''}
-      ${_buildMemberEditHTML(_miniMemA,'A','A팀')}
-      ${_buildMemberEditHTML(_miniMemB,'B','B팀')}`;
+      ${(_miniMemA.length||_miniMemB.length)?_buildMemberEditHTML(_miniMemA,'A','A팀'):''}
+      ${(_miniMemA.length||_miniMemB.length)?_buildMemberEditHTML(_miniMemB,'B','B팀'):''}
+      <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)">`;
   } else if(mode==='univm'){
     const m=univM[idx];tit='🏟️ 대학대전 수정';
     const uSetsA=m.sets?m.sets.reduce((s,st)=>s+(st.scoreA||0),0):null;
@@ -856,7 +859,8 @@ function openRE(mode,idx){
       <label>B 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb}">
       ${uSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${m.sets.filter(s=>s.winner==='A').length} / B ${m.sets.filter(s=>s.winner==='B').length} | 게임 수: A ${uSetsA} / B ${uSetsB}</div>`:''}
       ${_buildMemberEditHTML(_univMemA,'A','A팀')}
-      ${_buildMemberEditHTML(_univMemB,'B','B팀')}`;
+      ${_buildMemberEditHTML(_univMemB,'B','B팀')}
+      <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)">`;
   
   } else if(mode==='comp'){
     const c=comps[idx];tit='🎖️ 대회 수정';
@@ -865,7 +869,8 @@ function openRE(mode,idx){
       <label>대학 A</label><select id="re-a">${allU.map(u=>`<option value="${u.name}"${(c.a||c.u)===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
       <label>A 세트 승</label><input type="number" id="re-sa" value="${c.sa||0}">
       <label>대학 B</label><select id="re-b">${allU.map(u=>`<option value="${u.name}"${c.b===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
-      <label>B 세트 승</label><input type="number" id="re-sb" value="${c.sb||0}">`;
+      <label>B 세트 승</label><input type="number" id="re-sb" value="${c.sb||0}">
+      <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${c.caster||''}" placeholder="방송 스트리머 이름 (선택)">`;
   } else if(mode==='pro'){
     const m=proM[idx];tit='🏅 프로리그 수정';
     const mA=m.teamAMembers||[];const mB=m.teamBMembers||[];
@@ -886,6 +891,7 @@ function openRE(mode,idx){
       ${pSetsGA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${pSetsWA} / B ${pSetsWB} | 게임 수: A ${pSetsGA} / B ${pSetsGB}</div>`:''}
       ${_buildMemberEditHTML(mA,'A','A팀')}
       ${_buildMemberEditHTML(mB,'B','B팀')}
+      <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)">
       <div style="margin-top:6px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   } else if(mode==='tt'){
     const m=ttM[idx];tit='🎯 티어대회 수정';
@@ -906,6 +912,7 @@ function openRE(mode,idx){
       ${ttGA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${ttWA} / B ${ttWB} | 게임 수: A ${ttGA} / B ${ttGB}</div>`:''}
       ${_buildMemberEditHTML(_ttMemA,'A','A팀')}
       ${_buildMemberEditHTML(_ttMemB,'B','B팀')}
+      <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)">
       <div style="margin-top:6px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   } else if(mode==='ck'){
     const m=ckM[idx];tit='🤝 대학CK 수정';
@@ -915,28 +922,37 @@ function openRE(mode,idx){
       <label>B조 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
       ${_buildMemberEditHTML(_ckMemA,'A','A팀')}
       ${_buildMemberEditHTML(_ckMemB,'B','B팀')}
+      <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)">
       <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   } else if(mode==='progj'){
     const m=gjM[idx];tit='🏅 프로리그 끝장전 수정';
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>승자</label><input type="text" id="re-gj-w" value="${m.wName||''}">
       <label>패자</label><input type="text" id="re-gj-l" value="${m.lName||''}">
-      <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">`;
+      <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">
+      <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)">`;
   } else if(mode==='gj'){
     const m=gjM[idx];tit='⚔️ 끝장전 수정';
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>승자</label><input type="text" id="re-gj-w" value="${m.wName||''}">
       <label>패자</label><input type="text" id="re-gj-l" value="${m.lName||''}">
-      <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">`;
+      <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">
+      <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)">`;
   } else if(mode==='ind'){
     const m=indM[idx];tit='🎮 개인전 수정';
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>승자</label><input type="text" id="re-gj-w" value="${m.wName||''}">
       <label>패자</label><input type="text" id="re-gj-l" value="${m.lName||''}">
-      <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">`;
+      <label>맵</label><input type="text" id="re-gj-map" value="${m.map||''}">
+      <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)">`;
   }
   document.getElementById('reTitle').innerText=tit;
-  document.getElementById('reBody').innerHTML=body;om('reModal');
+  document.getElementById('reBody').innerHTML=body;
+  // 헤더 색상 모드별 적용
+  const _reHeadEl = document.getElementById('reModal-title');
+  const _reHeadColor = {mini:'#7c3aed',univm:'#16a34a',ck:'#f59e0b',pro:'#0ea5e9',tt:'#10b981',comp:'#2563eb',gj:'#dc2626',progj:'#dc2626',ind:'#2563eb'}[reMode]||'#2563eb';
+  if(_reHeadEl) _reHeadEl.style.background=`linear-gradient(135deg,${_reHeadColor}15,${_reHeadColor}07,#f8fafc)`;
+  om('reModal');
 }
 function saveRow(){
   const d=document.getElementById('re-d')?.value||'';
@@ -1048,6 +1064,12 @@ function saveRow(){
     m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;
     m.lName=document.getElementById('re-gj-l')?.value.trim()||m.lName;
     m.map=document.getElementById('re-gj-map')?.value.trim()||m.map;
+  }
+  // 🎙️ 캐스터/스트리머 저장 (모든 mode 공통)
+  const _reCaster = (document.getElementById('re-caster')?.value ?? '').trim();
+  const _reArr = reMode==='mini'?miniM:reMode==='univm'?univM:reMode==='comp'?comps:reMode==='ck'?ckM:reMode==='pro'?proM:reMode==='tt'?ttM:reMode==='progj'?gjM:reMode==='gj'?gjM:reMode==='ind'?indM:null;
+  if(_reArr && _reArr[reIdx]) {
+    if(_reCaster) _reArr[reIdx].caster = _reCaster; else delete _reArr[reIdx].caster;
   }
   save();render();cm('reModal');
 }

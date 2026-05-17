@@ -3149,6 +3149,37 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 .su-form-modal--compact .btn{
   min-width:84px;
 }
+/* reModal / gameEditModal: reBody 내 label+input/select 자동 su-field-row 스타일 */
+#reBody label{
+  display:block;
+  font-size:11px;
+  font-weight:900;
+  color:var(--text2);
+  margin:10px 0 4px;
+  padding-left:2px;
+}
+#reBody label:first-child{ margin-top:0; }
+#reBody input[type="text"],
+#reBody input[type="number"],
+#reBody input[type="date"],
+#reBody select{
+  width:100%;
+  padding:9px 12px;
+  border:1.5px solid rgba(148,163,184,.25);
+  border-radius:10px;
+  font-size:13px;
+  background:linear-gradient(180deg,#fff,#f8fafc);
+  color:var(--text);
+  box-sizing:border-box;
+  transition:border-color .15s;
+}
+#reBody input:focus,#reBody select:focus{
+  outline:none;
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
+#reBody > div{ margin-top:4px; }
+
 .modal--matchdetail .cmd-detail .set-row > div:not(:first-child){
   margin-top:10px;
   padding-top:10px;
@@ -10190,3 +10221,22 @@ body.rc-shape--bubble .rec-summary:hover {
   transform: translateY(-2px) scale(1.005);
 }
 body.rc-shape--bubble .rec-datechip { border-radius: 12px !important; }
+
+/* ── 대회 경기 입력 팝업: 저장/취소 버튼 아래 여백 제거 ── */
+#grpMatchModal{
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+}
+#grpMatchModal .umbox {
+  padding-bottom: 0 !important;
+  height:auto;
+  max-height:88vh;
+  overflow-y:auto;
+}
+
+/* ── 수정 팝업: A/B팀 참가자 섹션 아래 불필요 여백 제거 ── */
+#reBody > div[style*="margin-top:10px"],
+#reBody > div[style*="margin-top: 10px"] {
+  margin-top: 6px !important;
+}

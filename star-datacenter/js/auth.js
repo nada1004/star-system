@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════
+﻿﻿/* ══════════════════════════════════════
    로그인 시스템
 ══════════════════════════════════════ */
 // SHA-256 암호화 (crypto.subtle 미지원 환경(file:// 등) 폴백 포함)
@@ -868,77 +868,115 @@ function refreshSel(){
   const mmap=document.getElementById('m-map');
   if(mmap) mmap.innerHTML=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
 }
+// ── 경기 수정 모달 상태 ──
+window._gemCtx = null;
+
 function openGameEditModal(editRef, si, gi){
   const [mode, idxStr]=editRef.split(':');
   const idx=parseInt(idxStr);
-  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='comp'?comps:null;
+  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='tt'?ttM:mode==='comp'?comps:null;
   if(!arr)return;
   const m=arr[idx];if(!m)return;
   const set=m.sets&&m.sets[si];if(!set)return;
   const g=set.games&&set.games[gi];if(!g)return;
 
-  // 해당 경기에 뛴 팀 멤버만 추출
+  // 상태 저장
+  window._gemCtx = { editRef, si, gi };
+
+  // 팀 멤버 추출
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
   let teamANames=[], teamBNames=[];
   if(isCKmode){
     teamANames=(m.teamAMembers||[]).map(x=>x.name);
     teamBNames=(m.teamBMembers||[]).map(x=>x.name);
   } else {
-    // mini/univm: 같은 대학 선수들
     const univA=m.a||''; const univB=m.b||'';
     teamANames=players.filter(p=>p.univ===univA).map(p=>p.name).sort();
     teamBNames=players.filter(p=>p.univ===univB).map(p=>p.name).sort();
   }
 
-  const mapOpts=maps.map(mp=>`<option value="${mp}"${g.map===mp?' selected':''}>${mp}</option>`).join('');
-  const modal=document.createElement('div');
-  modal.className='modal modal--gameedit';modal.style.display='flex';
-  // (요청사항) 저장/취소 버튼 아래 여백 최소화
-  modal.innerHTML=`<div class="mbox su-form-modal su-form-modal--compact" style="max-width:460px;padding-bottom:12px">
-    <div class="su-form-modal__head">
-      <div class="mtitle">✏️ 경기 수정</div>
-      <div class="su-form-modal__sub">${si===2?'에이스전':(si+1)+'세트'} · 경기${gi+1}</div>
-    </div>
-    <div class="su-form-modal__body">
-      <div class="su-field-row">
-        <label class="su-field-label" style="color:#2563eb">🔵 A팀 선수</label>
-        <select id="gem-pA" style="flex:1">
-          <option value="">—선택—</option>
-          ${teamANames.map(n=>`<option value="${n}"${g.playerA===n?' selected':''}>${n}</option>`).join('')}
-        </select>
-      </div>
-      <div class="su-field-row">
-        <label class="su-field-label" style="color:#dc2626">🔴 B팀 선수</label>
-        <select id="gem-pB" style="flex:1">
-          <option value="">—선택—</option>
-          ${teamBNames.map(n=>`<option value="${n}"${g.playerB===n?' selected':''}>${n}</option>`).join('')}
-        </select>
-      </div>
-      <div class="su-field-row">
-        <label class="su-field-label">승자</label>
-        <select id="gem-winner" style="flex:1">
-          <option value="">(미정)</option>
-          <option value="A"${g.winner==='A'?' selected':''}>🔵 A팀 승</option>
-          <option value="B"${g.winner==='B'?' selected':''}>🔴 B팀 승</option>
-        </select>
-      </div>
-      <div class="su-field-row">
-        <label class="su-field-label">맵</label>
-        <select id="gem-map" style="flex:1"><option value="">맵 없음</option>${mapOpts}</select>
-      </div>
-    </div>
-    <div class="su-form-modal__foot">
-      <button class="btn btn-w btn-sm" onclick="this.closest('.modal').remove()">취소</button>
-      <button class="btn btn-g btn-sm" onclick="saveGameEdit('${editRef}',${si},${gi},this)">✅ 저장</button>
-    </div>
-  </div>`;
-  document.body.appendChild(modal);
+  // 모드별 색상·이름
+  const _modeColor = {mini:'#7c3aed',univm:'#16a34a',ck:'#f59e0b',pro:'#0ea5e9',tt:'#10b981',comp:'#2563eb'}[mode]||'#2563eb';
+  const _modeName  = {mini:'⚡ 미니대전',univm:'🏟️ 대학대전',ck:'🤝 대학CK',pro:'🏅 프로리그',tt:'🎯 티어대회',comp:'🎖️ 조별리그'}[mode]||'경기';
+  const _setLabel  = si===2 ? '🎯 에이스전' : (si+1)+'세트';
+
+  // 승자 버튼용 선수 이름
+  const _nameA = g.playerA || 'A팀';
+  const _nameB = g.playerB || 'B팀';
+
+  // 선수 선택 드롭다운 생성
+  function _pSelect(id, names, current, color, label){
+    const inList = !current || names.includes(current);
+    const opts = '<option value="">— 선택 —</option>' +
+      names.map(n=>'<option value="'+n+'"'+(current===n?' selected':'')+'>'+n+'</option>').join('') +
+      (!inList && current ? '<option value="'+current+'" selected>'+current+' (현재)</option>' : '');
+    return '<div class="su-field-row" style="border-left:3px solid '+color+';border-radius:0 14px 14px 0"><label class="su-field-label" style="color:'+color+'">'+label+'</label><select id="'+id+'" style="flex:1;min-width:0">'+opts+'</select></div>';
+  }
+
+  const mapOpts=maps.map(mp=>'<option value="'+mp+'"'+( g.map===mp?' selected':'')+'>'+mp+'</option>').join('');
+
+  // 헤더 색상
+  const head = document.getElementById('gem-head');
+  if(head) head.style.background = 'linear-gradient(135deg, '+_modeColor+'18, '+_modeColor+'08, #f8fafc)';
+
+  document.getElementById('gem-title').textContent = '✏️ 경기 수정 — '+_modeName;
+  document.getElementById('gem-sub').textContent   = _setLabel+' · '+(gi+1)+'번 경기'+(m.caster?' · 🎙️ '+m.caster:'');
+
+  const winA_style = g.winner==='A'
+    ? 'border:2px solid #2563eb;background:#2563eb;color:#fff;'
+    : 'border:2px solid rgba(148,163,184,.3);background:var(--white);color:var(--text2);';
+  const winB_style = g.winner==='B'
+    ? 'border:2px solid #dc2626;background:#dc2626;color:#fff;'
+    : 'border:2px solid rgba(148,163,184,.3);background:var(--white);color:var(--text2);';
+
+  document.getElementById('gem-body').innerHTML =
+    _pSelect('gem-pA', teamANames, g.playerA, '#2563eb', '🔵 A팀 선수') +
+    _pSelect('gem-pB', teamBNames, g.playerB, '#dc2626', '🔴 B팀 선수') +
+    '<div class="su-field-row" style="border-left:3px solid #16a34a;border-radius:0 14px 14px 0">' +
+    '<label class="su-field-label" style="color:#16a34a">🏆 승자</label>' +
+    '<div style="display:flex;gap:8px;flex:1">' +
+    '<button type="button" id="gem-win-A" onclick="gemSetWinner('+"\'A\'"+')" style="flex:1;padding:8px 0;border-radius:10px;'+winA_style+'font-weight:800;font-size:12px;cursor:pointer;transition:all .15s">🔵 '+ _nameA +' 승</button>' +
+    '<button type="button" id="gem-win-B" onclick="gemSetWinner('+"\'B\'"+')" style="flex:1;padding:8px 0;border-radius:10px;'+winB_style+'font-weight:800;font-size:12px;cursor:pointer;transition:all .15s">🔴 '+ _nameB +' 승</button>' +
+    '</div><input type="hidden" id="gem-winner" value="' + (g.winner||'')+'"></div>' +
+    '<div class="su-field-row"><label class="su-field-label">🗺️ 맵</label><select id="gem-map" style="flex:1;min-width:0"><option value="">맵 없음</option>'+mapOpts+'</select></div>' +
+    '<div class="su-field-row" style="border-left:3px solid #f59e0b;border-radius:0 14px 14px 0">' +
+    '<label class="su-field-label" style="color:#f59e0b">🎙️ 캐스터/스트리머</label>' +
+    '<input type="text" id="gem-caster" value="'+(m.caster||'')+'" placeholder="방송 스트리머 이름 (선택)" style="flex:1;min-width:0;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px">' +
+    '</div>';
+
+  om('gameEditModal');
+}
+
+function gemSetWinner(side){
+  document.getElementById('gem-winner').value = side;
+  const btnA = document.getElementById('gem-win-A');
+  const btnB = document.getElementById('gem-win-B');
+  const pA = document.getElementById('gem-pA');
+  const pB = document.getElementById('gem-pB');
+  const nameA = (pA && pA.value) || 'A팀';
+  const nameB = (pB && pB.value) || 'B팀';
+  if(btnA){
+    btnA.style.cssText = 'flex:1;padding:8px 0;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;transition:all .15s;' +
+      (side==='A' ? 'border:2px solid #2563eb;background:#2563eb;color:#fff;' : 'border:2px solid rgba(148,163,184,.3);background:var(--white);color:var(--text2);');
+    btnA.textContent = '🔵 '+nameA+' 승';
+  }
+  if(btnB){
+    btnB.style.cssText = 'flex:1;padding:8px 0;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;transition:all .15s;' +
+      (side==='B' ? 'border:2px solid #dc2626;background:#dc2626;color:#fff;' : 'border:2px solid rgba(148,163,184,.3);background:var(--white);color:var(--text2);');
+    btnB.textContent = '🔴 '+nameB+' 승';
+  }
+}
+
+function saveGameEditModal(){
+  const ctx = window._gemCtx;
+  if(!ctx) return;
+  saveGameEdit(ctx.editRef, ctx.si, ctx.gi, document.getElementById('gem-save-btn'));
 }
 
 function saveGameEdit(editRef, si, gi, btn){
   const [mode, idxStr]=editRef.split(':');
   const idx=parseInt(idxStr);
-  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='comp'?comps:null;
+  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='tt'?ttM:mode==='comp'?comps:null;
   if(!arr)return;
   const m=arr[idx];if(!m)return;
   const set=m.sets&&m.sets[si];if(!set)return;
@@ -975,7 +1013,10 @@ function saveGameEdit(editRef, si, gi, btn){
   const newPB=document.getElementById('gem-pB').value||g.playerB;
   const newWinner=document.getElementById('gem-winner').value||g.winner;
   const newMap=document.getElementById('gem-map').value||g.map;
+  const newCaster=(document.getElementById('gem-caster')?.value??'').trim();
   g.playerA=newPA; g.playerB=newPB; g.winner=newWinner; g.map=newMap;
+  // 경기(match) 레벨 캐스터/스트리머 저장
+  if(newCaster) m.caster=newCaster; else delete m.caster;
 
   // pro 외 모드: 새 결과 선수 history에 반영
   if(mode!=='pro' && newPA && newPB && newWinner){
@@ -996,7 +1037,8 @@ function saveGameEdit(editRef, si, gi, btn){
   (m.sets||[]).forEach(s=>{if(s.winner==='A')tA++;else if(s.winner==='B')tB++;});
   m.sa=tA;m.sb=tB;
   save();
-  btn.closest('.modal').remove();
+  // 전용 모달이면 cm()으로 닫기, 레거시(동적 생성) 모달이면 remove()
+  try{ if(document.getElementById('gameEditModal')) cm('gameEditModal'); else if(btn&&btn.closest) btn.closest('.modal').remove(); }catch(e){ try{ cm('gameEditModal'); }catch(_){} }
   render();
   // (보강) 티어대회 경기 수정 후 최근 경기 누락 방지
   try{ if(mode==='tt' && typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}

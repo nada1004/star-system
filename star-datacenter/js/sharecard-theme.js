@@ -114,7 +114,7 @@
       'tt-league':{ outerBg:'linear-gradient(180deg,#faf5ff,#f0fdf4)', headerBg:'linear-gradient(135deg,#4c1d95 0%,#7c3aed 44%,#047857 100%)', setBg:'rgba(16,185,129,.08)', setBorder:'rgba(124,58,237,.16)', chipBg:'rgba(255,255,255,.16)', chipBd:'rgba(255,255,255,.24)', hero:'🎯 티어대회 조별리그', tone:'그룹 스테이지 · 티어 리그' },
       comp:{ outerBg:'linear-gradient(180deg,#fff7ed,#faf5ff)', headerBg:'linear-gradient(135deg,#7c2d12 0%,#d97706 44%,#7c3aed 100%)', setBg:'rgba(249,115,22,.08)', setBorder:'rgba(217,119,6,.16)', chipBg:'rgba(255,255,255,.17)', chipBd:'rgba(255,255,255,.26)', hero:'🏆 대회', tone:'이벤트 · 토너먼트 포스터' },
       'procomp-bkt':{ outerBg:'linear-gradient(180deg,#fff7ed,#faf5ff)', headerBg:'linear-gradient(135deg,#92400e 0%,#d97706 44%,#4c1d95 100%)', setBg:'rgba(217,119,6,.08)', setBorder:'rgba(146,64,14,.16)', chipBg:'rgba(255,255,255,.17)', chipBd:'rgba(255,255,255,.26)', hero:'🗂️ 프로리그 대회', tone:'브라켓 · 결선 라운드' },
-      default:{ outerBg:theme.bodyBg, headerBg:theme.headerBg, setBg:theme.divider, setBorder:theme.divider, chipBg:'rgba(255,255,255,.18)', chipBd:'rgba(255,255,255,.3)', hero:'🎮 매치', tone:'스타대학 데이터 센터' }
+      default:{ outerBg:theme.bodyBg, headerBg:theme.headerBg, setBg:theme.divider, setBorder:theme.divider, chipBg:'rgba(255,255,255,.18)', chipBd:'rgba(255,255,255,.3)', hero:'🎮 매치', tone:'' }
     };
     let variant = _variantMap[variantKey] || _variantMap.default;
     const _dominantKeys=['mini','univm','civil','tt-league','comp','procomp-bkt','tt','ck','default'];

@@ -2718,7 +2718,7 @@ const _TAB_COLOR_DEFAULTS = {
   },
   mergedUniv: {
     civil:  { from:'#7f1d1d', to:'#b91c1c', label:'시빌워' },
-    mini:   { from:'#0f172a', to:'#1d4ed8', label:'미니대전' },
+    mini:   { from:'#3b0764', to:'#7c3aed', label:'미니대전' },
     univm:  { from:'#064e3b', to:'#059669', label:'대학대전' },
     univck: { from:'#78350f', to:'#d97706', label:'대학CK' }
   },

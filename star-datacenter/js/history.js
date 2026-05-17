@@ -888,6 +888,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
             <span class="rec-datechip">${m.d||''}</span>
             ${m.t?`<span class="rec-meta-chip">${m.t}</span>`:''}
             ${(m.n&&mode!=='comp')?`<span class="rec-meta-chip rec-meta-chip--note">${m.n}</span>`:''}
+            ${m.caster?`<span class="rec-meta-chip" style="background:#fef3c7;color:#92400e;border:1px solid #f59e0b55">🎙️ ${m.caster}</span>`:''}
           </div>
           <div class="rec-actions rec-actions--inline no-export">
             ${(_pms.length && mode!=='tt')?`<button class="btn btn-w btn-xs rc-mem-btn" onclick="event.stopPropagation();openProMembersPopup('참여자', '${_pmCol}', ${_pmJson})">👥 ${_pms.length}</button>`:''}
@@ -3883,7 +3884,6 @@ function openProMembersPopup(teamLabel, teamColor, members){
         <div style="margin-top:14px;display:flex;justify-content:center;">
           <button class="btn btn-w" onclick="document.getElementById('proMembersModal').remove()">닫기</button>
         </div>
-        <div style="margin-top:10px;font-size:11px;color:#94a3b8;text-align:center">※ PC에서는 상단 제목을 드래그해서 창을 이동할 수 있습니다.</div>
       </div>
     `;
     document.body.appendChild(modal);

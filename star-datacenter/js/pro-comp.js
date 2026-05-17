@@ -2778,10 +2778,12 @@ function _bktEditSave() {
   const aV = aInfo.name || aRaw;
   const bV = bInfo.name || bRaw;
   const dV = document.getElementById('_bktEditD')?.value || '';
+  const casterV = (document.getElementById('_bktEditCaster')?.value||'').trim();
   const bktId = `pbn_${_bktEditTnId}_${_bktEditRi}_${_bktEditMi}`;
   const tieId = `${bktId}_tie`;
   if (m.winner) _revertProMatch(bktId);
   m.a = aV; m.b = bV; m.d = dV;
+  if(casterV) m.caster=casterV; else delete m.caster;
   // (보완) 사용자 혼동 방지: 스코어 입력칸을 채웠는데 [적용]을 안 눌러도 저장 시 반영
   try{
     const sAEl = document.getElementById('_bktEditScoreA');
@@ -2878,6 +2880,10 @@ function proCompBktEditPlayers(tnId, ri, mi) {
     <div style="margin-bottom:10px">
       <label style="font-size:11px;font-weight:700;color:var(--text3)">날짜</label>
       <input id="_bktEditD" type="date" value="${m.d||''}" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
+    </div>
+    <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;background:#fef9ee;border:1px solid #f59e0b44;border-radius:8px;padding:8px 12px">
+      <label style="font-size:11px;font-weight:700;color:#f59e0b;white-space:nowrap">🎙️ 캐스터/스트리머</label>
+      <input type="text" id="_bktEditCaster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)" style="flex:1;min-width:0;padding:5px 9px;border:1px solid var(--border);border-radius:7px;font-size:12px">
     </div>
     <div style="margin-bottom:10px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">⚖️ 스코어로 빠른 입력 (2:2 / 3:3 등)</div>

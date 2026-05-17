@@ -838,6 +838,7 @@ function _collectMatchTeamMembersAB(m){
 function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   if(!arr.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
+  const _editMode = (mode==='civil') ? 'mini' : mode;
   // (정렬 보강) 티어대회 등 filtered 목록도 "입력 순서"가 아니라 날짜 기준으로 정렬
   // - 사용자가 과거 날짜 경기를 나중에 저장하면 unshift 때문에 최신순이 깨질 수 있음
   const _normDateSort = (d)=>{
@@ -907,6 +908,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
             <span class="rec-datechip">${m.d||''}</span>
             ${m.t?`<span class="rec-meta-chip">${m.t}</span>`:''}
             ${(m.n&&mode!=='comp')?`<span class="rec-meta-chip rec-meta-chip--note">${m.n}</span>`:''}
+            ${m.caster?`<span class="rec-meta-chip" style="background:#fef3c7;color:#92400e;border:1px solid #f59e0b55">🎙️ ${m.caster}</span>`:''}
           </div>
           <div class="rec-actions rec-actions--inline no-export">
             ${(_pms.length && mode!=='tt')?`<button class="btn btn-w btn-xs rc-mem-btn" onclick="event.stopPropagation();openProMembersPopup('참여자', '${_pmCol}', ${_pmJson})">👥 ${_pms.length}</button>`:''}
@@ -946,7 +948,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
         </div>
       </div>
       <div id="det-${key}" class="rec-detail-area">
-        ${_regDet(key,{...m,_editRef:`${mode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin, i)}
+        ${_regDet(key,{...m,_editRef:`${_editMode}:${i}`},mode,labelA,labelB,ca,cb,aWin,bWin, i)}
       </div>
     </div>`;
   }
@@ -968,6 +970,8 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
 
 function recSummaryListHTML(arr, mode, context, extraFilter){
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
+  // civil 모드는 mini 배열을 공유하므로 editRef/저장 시 'mini' 키 사용
+  const _editMode = (mode==='civil') ? 'mini' : mode;
   // 날짜 정규화(정렬용): 2026-4-2 같이 0이 빠진 날짜가 있으면 문자열 정렬이 깨질 수 있음
   const _normDateSort = (d)=>{
     const s = String(d||'').trim();
@@ -1013,6 +1017,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   // (filter()는 같은 객체 참조를 반환하므로 indexOf로 정확한 원본 인덱스 확인 가능)
   const _srcArr=(()=>{
     if(mode==='mini') return miniM;
+    if(mode==='civil') return miniM; // 시빌워는 miniM 배열 공유
     if(mode==='univm') return univM;
     if(mode==='ck') return ckM;
     if(mode==='pro') return proM;
@@ -1242,7 +1247,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
               canShare:${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?'true':'false';})()},
               canEdit:${(isLoggedIn && !isSubAdmin)?'true':'false'},
               canDel:${(isLoggedIn && !isSubAdmin)?'true':'false'},
-              canMove:${(isLoggedIn && (mode==='mini'||mode==='univm'))?'true':'false'}
+              canMove:${(isLoggedIn && (mode==='mini'||mode==='civil'||mode==='univm'))?'true':'false'}
             })">⋯</button>
           </div>
         </div>
@@ -1302,7 +1307,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         })()}
       </div>
       <div id="det-${key}" class="rec-detail-area">
-        ${_regDet(key,{...m,_editRef:`${mode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin, i)}
+        ${_regDet(key,{...m,_editRef:`${_editMode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin, i)}
         ${(()=>{const _note=m.memo?`<div class="rec-note-box">📝 ${m.memo}</div>`:''; const _memo=isLoggedIn&&_rcMemoOn?`<div class="fbar merged-subbar no-export rec-detail-footer__actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">🗑️ 삭제</button>`:''}</div>`:''; return (_note||_memo)?`<div class="rec-detail-footer">${_note}${_memo}</div>`:'';})()}
       </div>
     </div>`;

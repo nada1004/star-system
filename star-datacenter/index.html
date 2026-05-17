@@ -316,15 +316,17 @@
 
 <!-- 기록 수정 모달 -->
 <div id="reModal" class="modal modal--re no-export" style="z-index:var(--z-modal-2)/* [Z-IDX] */" data-no-close="1" role="dialog" aria-modal="true" aria-labelledby="reModal-title"><!-- [A11Y] -->
-  <!-- (요청사항) 저장/취소 버튼 아래 여백 최소화 -->
-  <div class="mbox" style="padding-bottom:12px">
-    <div id="reModal-title"><!-- [A11Y] -->
-      <div class="mtitle" id="reTitle">수정</div>
+  <div class="mbox su-form-modal" style="max-width:500px;width:96vw;padding:0">
+    <div class="su-form-modal__head" id="reModal-title"><!-- [A11Y] -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div class="mtitle" id="reTitle" style="margin-bottom:0">수정</div>
+        <button class="btn btn-w btn-sm" onclick="cm('reModal')" aria-label="닫기" style="flex-shrink:0">✕</button>
+      </div>
     </div><!-- [A11Y] -->
-    <div id="reBody"></div>
-    <div class="mbtns">
-      <button class="btn btn-b" style="flex:1" onclick="saveRow()">저장</button>
-      <button class="btn btn-w" style="flex:1" onclick="cm('reModal')">취소</button>
+    <div class="su-form-modal__body" id="reBody" style="gap:10px"></div>
+    <div class="su-form-modal__foot">
+      <button class="btn btn-w btn-sm" style="min-width:80px" onclick="cm('reModal')">취소</button>
+      <button class="btn btn-b btn-sm" style="min-width:100px" onclick="saveRow()">✅ 저장</button>
     </div>
   </div>
 </div>
@@ -370,12 +372,32 @@
 
 <!-- 조편성 경기 입력 모달 -->
 <div id="grpMatchModal" class="modal no-export">
-  <div class="umbox" style="width:780px">
+  <div class="umbox" style="width:780px;padding-bottom:0">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div class="mtitle" id="grpMatchTitle" style="margin-bottom:0">경기 입력</div>
       <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')" aria-label="닫기">✕ 닫기</button><!-- [A11Y] -->
     </div>
     <div id="grpMatchBody"></div>
+  </div>
+</div>
+
+<!-- 경기 수정 모달 (미니/대학/시빌워/CK 공용) -->
+<div id="gameEditModal" class="modal modal--gameedit no-export" style="z-index:var(--z-modal-3)" data-no-close="1" role="dialog" aria-modal="true" aria-labelledby="gem-title">
+  <div class="mbox su-form-modal" style="max-width:480px;width:96vw;padding:0">
+    <div class="su-form-modal__head" id="gem-head">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div>
+          <div class="mtitle" id="gem-title" style="margin-bottom:0">✏️ 경기 수정</div>
+          <div class="su-form-modal__sub" id="gem-sub"></div>
+        </div>
+        <button class="btn btn-w btn-sm" onclick="cm('gameEditModal')" aria-label="닫기" style="flex-shrink:0">✕</button>
+      </div>
+    </div>
+    <div class="su-form-modal__body" id="gem-body" style="gap:10px"></div>
+    <div class="su-form-modal__foot" id="gem-foot">
+      <button class="btn btn-w btn-sm" style="min-width:80px" onclick="cm('gameEditModal')">취소</button>
+      <button class="btn btn-g btn-sm" id="gem-save-btn" style="min-width:100px" onclick="saveGameEditModal()">✅ 저장</button>
+    </div>
   </div>
 </div>
 

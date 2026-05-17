@@ -118,8 +118,8 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/sharecard-render-match-shell.js?v=20260504-01');
   await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260503-02');
   await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260503-02');
+  await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260517-01');
+  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260517-01');
   await _loadScriptOnce('js/sharecard-match-openers.js?v=20260503-01');
   await _loadScriptOnce('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-01'));
 }
@@ -146,8 +146,8 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/sharecard-render-match-shell.js?v=20260504-01');
   await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260503-02');
   await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260503-02');
+  await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260517-01');
+  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260517-01');
   await _loadScriptOnce('js/sharecard-match-openers.js?v=20260503-01');
   await _loadScriptOnce('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-01'));
 };
