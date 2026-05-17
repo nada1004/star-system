@@ -5,9 +5,14 @@
 function rMini(C,T){
   T.innerText = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
   if(!isLoggedIn && miniSub==='input') miniSub='records';
+  if(miniType==='civil' && miniSub==='rank') miniSub='records';
+  // 시빌워/미니대전 서브탭에 id를 부여해 _getTabPillOnStyle에서 색상 자동 적용
+  const _modeId = miniType==='civil' ? 'civil' : 'mini';
   const subOpts = miniType==='civil'
-    ? [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`miniSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}]
+    ? [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}]
     : [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`miniSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}];
+  // 활성 탭 색상을 위해 서브탭 id를 mode로 매핑
+  subOpts.forEach(o=>{ if(!o.color) o.color=typeof _getTabPillOnStyle==='function'?_getTabPillOnStyle(_modeId, true):''; });
   const _miniCtx = miniType==='civil' ? 'mini' : 'mini';
   const _miniSubOpts = (typeof applyTabLabels==='function') ? applyTabLabels(_miniCtx, subOpts) : subOpts;
   let h='';
@@ -16,7 +21,7 @@ function rMini(C,T){
       + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
       + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
     : '';
-  h+=_buildMatchSubtabShell(miniSub, _miniSubOpts, '_miniFilterOpen', extra);
+  h+=_buildMatchSubtabShell(miniSub, _miniSubOpts, '_miniFilterOpen', extra, miniType==='civil'?'civil':'mini');
   const label = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
   const _miniTypeFilter = m=>(m.type||'mini')===miniType;
   const filteredMini = miniM.filter(_miniTypeFilter);
@@ -33,7 +38,6 @@ function rMini(C,T){
 
 function miniRankHTML(data){
   data=data||miniM.filter(m=>(m.type||'mini')==='mini');
-  if(typeof passDateFilter==='function')data=data.filter(m=>passDateFilter(m.d||''));
   const sc={};
   getAllUnivs().forEach(u=>{sc[u.name]={w:0,l:0,pts:0,total:0};});
   data.forEach(m=>{

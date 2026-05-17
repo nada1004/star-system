@@ -12,7 +12,7 @@ function rUnivM(C,T){
   const extra = (univmSub!=='input' && typeof buildYearMonthFilterControls==='function')
     ? (buildYearMonthFilterControls('univm', true))
     : '';
-  h+=_buildMatchSubtabShell(univmSub, subOpts, '_univmFilterOpen', extra);
+  h+=_buildMatchSubtabShell(univmSub, subOpts, '_univmFilterOpen', extra, 'univm');
   if(univmSub==='input'&&isLoggedIn){
     if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};
     h+=_mbFrame('🏟️ 대학대전 입력', _mbActionBar([`<button class="btn btn-p btn-sm mb-mini-btn" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`], ''), _mbSectionCard('대학대전 입력', `${setBuilderHTML(BLD['univm'],'univm')}`), '');

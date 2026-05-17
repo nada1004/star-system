@@ -68,7 +68,7 @@ function rCfg(C,T){
   const _regBtn = (!isSubAdmin ? `<button class="btn btn-b no-export" onclick="openB2PlayerCreateModal()" style="padding:6px 10px;border-radius:14px;font-size:11px;font-weight:900;white-space:nowrap;flex-shrink:0">🎬 스트리머 등록</button>` : ``);
   const _menuBtn = `<button class="btn btn-w no-export" onclick="cfgGo('cfgmenu')" style="padding:6px 10px;border-radius:14px;font-size:11px;font-weight:900;white-space:nowrap;flex-shrink:0" title="설정 하위 메뉴 이름 변경/정리">🧭 메뉴정리</button>`;
   const _afOn = (localStorage.getItem('su_af_alltabs_v1') === '1');
-  const _rcOn = (localStorage.getItem('su_rc_theme_on') ?? '0') === '1';
+  const _rcOn = (localStorage.getItem('su_rc_theme_on') ?? '1') === '1';
   const _rcAccent = (localStorage.getItem('su_rc_accent_mode') ?? 'none');
   const _rcBg = parseInt(localStorage.getItem('su_rc_bg_alpha') ?? '12',10) || 12;
   const _rcHd = parseInt(localStorage.getItem('su_rc_hd_alpha') ?? '14',10) || 14;
@@ -837,8 +837,8 @@ ${_scfgD('notice','📢 공지 관리')}
         승리 대학색을 카드 배경/헤더에 연하게 적용
       </label>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" id="cfg-rc-sidefx-on" style="width:15px;height:15px" ${_sfxOn?'checked':''} onchange="(window.cfgSetRecSideFxEnabled||function(){})(this.checked);try{const s=document.getElementById('cfg-sidefx-on');if(s)s.checked=this.checked;}catch(e){}">
-        기록 카드 양끝 대학 색상 효과 사용
+        <input type="checkbox" id="cfg-rc-bgfx-all" style="width:15px;height:15px" ${(_rcOn && _sfxOn)?'checked':''} onchange="cfgSetRecBgFxAll(this.checked)">
+        기록 카드 배경 효과 전체 사용 (배경/양끝 효과)
       </label>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">

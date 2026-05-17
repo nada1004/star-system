@@ -744,6 +744,71 @@ function delPlayer(){
   cm('playerModal');
 }
 
+// ── 참가자(스트리머) 수정 UI 헬퍼 ──────────────────────────────────────
+// 팀 경기(mini/civil/univm/ck/pro/tt)에서 A팀/B팀 멤버를 수정하는 섹션 HTML 반환
+function _buildMemberEditHTML(members, side, label){
+  const allNames = (typeof players !== 'undefined' && Array.isArray(players))
+    ? players.map(p=>p.name).filter(Boolean).sort((a,b)=>a.localeCompare(b,'ko'))
+    : [];
+  const datalistId = `re-member-dl-${side}`;
+  const rows = (Array.isArray(members) && members.length > 0)
+    ? members.map((mb,i)=>{
+        const n = String(mb&&mb.name||'').trim();
+        return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px" id="re-mem-row-${side}-${i}">
+          <input type="text" list="${datalistId}" id="re-mem-${side}-${i}" value="${n.replace(/"/g,'&quot;')}" placeholder="스트리머 이름"
+            style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text1)">
+          <button type="button" onclick="_reMemDel('${side}',${i})"
+            style="padding:4px 8px;border-radius:8px;border:1px solid #fca5a5;background:#fff1f2;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">✕</button>
+        </div>`;
+      }).join('')
+    : `<div style="font-size:12px;color:var(--gray-l);padding:4px 0">참가자 없음</div>`;
+  const dlOpts = allNames.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">`).join('');
+  return `
+  <datalist id="${datalistId}">${dlOpts}</datalist>
+  <div style="margin-top:10px;padding:10px;background:var(--surface-alt,#f8fafc);border:1px solid var(--border);border-radius:10px">
+    <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">${label} 참가자</div>
+    <div id="re-mem-list-${side}">${rows}</div>
+    <button type="button" onclick="_reMemAdd('${side}')"
+      style="margin-top:4px;padding:5px 12px;border-radius:8px;border:1.5px dashed var(--blue,#2563eb);background:transparent;color:var(--blue,#2563eb);font-size:12px;font-weight:700;cursor:pointer;width:100%">+ 참가자 추가</button>
+  </div>`;
+}
+window._reMemDel = function(side, i){
+  const el = document.getElementById(`re-mem-row-${side}-${i}`);
+  if(el) el.remove();
+};
+window._reMemAdd = function(side){
+  const list = document.getElementById(`re-mem-list-${side}`);
+  if(!list) return;
+  const allNames = (typeof players !== 'undefined' && Array.isArray(players))
+    ? players.map(p=>p.name).filter(Boolean).sort((a,b)=>a.localeCompare(b,'ko')) : [];
+  const datalistId = `re-member-dl-${side}`;
+  const idx = list.querySelectorAll('[id^="re-mem-row-"]').length;
+  const div = document.createElement('div');
+  div.id = `re-mem-row-${side}-${idx}`;
+  div.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:4px';
+  div.innerHTML = `<input type="text" list="${datalistId}" id="re-mem-${side}-${idx}" value="" placeholder="스트리머 이름"
+    style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text1)">
+    <button type="button" onclick="_reMemDel('${side}',${idx})"
+      style="padding:4px 8px;border-radius:8px;border:1px solid #fca5a5;background:#fff1f2;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">✕</button>`;
+  list.appendChild(div);
+};
+// 멤버 편집 결과를 읽어 배열로 반환
+function _reReadMembers(side, originalMembers){
+  const list = document.getElementById(`re-mem-list-${side}`);
+  if(!list) return originalMembers || [];
+  const inputs = list.querySelectorAll(`input[id^="re-mem-${side}-"]`);
+  const result = [];
+  inputs.forEach(inp=>{
+    const n = String(inp.value||'').trim();
+    if(!n) return;
+    const orig = (originalMembers||[]).find(m=>m&&m.name===n) || {};
+    const pObj = (typeof players !== 'undefined' && Array.isArray(players)) ? (players.find(p=>p.name===n)||{}) : {};
+    result.push({ name:n, univ:orig.univ||pObj.univ||'', race:orig.race||pObj.race||'', tier:orig.tier||pObj.tier||'', gender:orig.gender||pObj.gender||'' });
+  });
+  return result;
+}
+// ── /참가자 수정 UI 헬퍼 ────────────────────────────────────────────────
+
 function openRE(mode,idx){
   // alias/필터 모드 보정
   mode = (mode==='individual') ? 'ind' : mode;
@@ -762,6 +827,7 @@ function openRE(mode,idx){
     const m=miniM[idx];tit='⚡ 미니대전 수정';
     const mSetsA=m.sets?m.sets.reduce((s,st)=>s+(st.scoreA||0),0):null;
     const mSetsB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
+    const _miniMemA = m.teamAMembers||[]; const _miniMemB = m.teamBMembers||[];
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d}">
       <label>팀 A 대학</label><select id="re-a">${allU.map(u=>`<option value="${u.name}"${m.a===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
       <label>팀 A 점수 (sa)</label>
@@ -771,11 +837,14 @@ function openRE(mode,idx){
       </div>
       <label>팀 B 대학</label><select id="re-b">${allU.map(u=>`<option value="${u.name}"${m.b===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
       <label>팀 B 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb}">
-      ${mSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${m.sets.filter(s=>s.winner==='A').length} / B ${m.sets.filter(s=>s.winner==='B').length} | 게임 수: A ${mSetsA} / B ${mSetsB}</div>`:''}`;
+      ${mSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${m.sets.filter(s=>s.winner==='A').length} / B ${m.sets.filter(s=>s.winner==='B').length} | 게임 수: A ${mSetsA} / B ${mSetsB}</div>`:''}
+      ${_buildMemberEditHTML(_miniMemA,'A','A팀')}
+      ${_buildMemberEditHTML(_miniMemB,'B','B팀')}`;
   } else if(mode==='univm'){
     const m=univM[idx];tit='🏟️ 대학대전 수정';
     const uSetsA=m.sets?m.sets.reduce((s,st)=>s+(st.scoreA||0),0):null;
     const uSetsB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
+    const _univMemA = m.teamAMembers||[]; const _univMemB = m.teamBMembers||[];
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d}">
       <label>팀 A</label><select id="re-a">${allU.map(u=>`<option value="${u.name}"${m.a===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
       <label>A 점수 (sa)</label>
@@ -785,7 +854,10 @@ function openRE(mode,idx){
       </div>
       <label>팀 B</label><select id="re-b">${allU.map(u=>`<option value="${u.name}"${m.b===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
       <label>B 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb}">
-      ${uSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${m.sets.filter(s=>s.winner==='A').length} / B ${m.sets.filter(s=>s.winner==='B').length} | 게임 수: A ${uSetsA} / B ${uSetsB}</div>`:''}`;
+      ${uSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${m.sets.filter(s=>s.winner==='A').length} / B ${m.sets.filter(s=>s.winner==='B').length} | 게임 수: A ${uSetsA} / B ${uSetsB}</div>`:''}
+      ${_buildMemberEditHTML(_univMemA,'A','A팀')}
+      ${_buildMemberEditHTML(_univMemB,'B','B팀')}`;
+  
   } else if(mode==='comp'){
     const c=comps[idx];tit='🎖️ 대회 수정';
     body=`<label>날짜</label><input type="date" id="re-d" value="${c.d}">
@@ -812,6 +884,8 @@ function openRE(mode,idx){
       <label>B팀 레이블</label><input type="text" id="re-tlb" value="${m.teamBLabel||''}">
       <label>B팀 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb||0}">
       ${pSetsGA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${pSetsWA} / B ${pSetsWB} | 게임 수: A ${pSetsGA} / B ${pSetsGB}</div>`:''}
+      ${_buildMemberEditHTML(mA,'A','A팀')}
+      ${_buildMemberEditHTML(mB,'B','B팀')}
       <div style="margin-top:6px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   } else if(mode==='tt'){
     const m=ttM[idx];tit='🎯 티어대회 수정';
@@ -819,6 +893,7 @@ function openRE(mode,idx){
     const ttGB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
     const ttWA=m.sets?m.sets.filter(s=>s.winner==='A').length:null;
     const ttWB=m.sets?m.sets.filter(s=>s.winner==='B').length:null;
+    const _ttMemA = m.teamAMembers||[]; const _ttMemB = m.teamBMembers||[];
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>대회명 (기록 분류 기준)</label><input type="text" id="re-ttcomp" value="${m.compName||m.n||m.t||''}">
       <label>A팀 점수 (sa)</label>
@@ -829,12 +904,17 @@ function openRE(mode,idx){
       </div>
       <label>B팀 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb||0}">
       ${ttGA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${ttWA} / B ${ttWB} | 게임 수: A ${ttGA} / B ${ttGB}</div>`:''}
+      ${_buildMemberEditHTML(_ttMemA,'A','A팀')}
+      ${_buildMemberEditHTML(_ttMemB,'B','B팀')}
       <div style="margin-top:6px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   } else if(mode==='ck'){
     const m=ckM[idx];tit='🤝 대학CK 수정';
+    const _ckMemA = m.teamAMembers||[]; const _ckMemB = m.teamBMembers||[];
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>A조 세트 승</label><input type="number" id="re-sa" value="${m.sa||0}">
       <label>B조 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
+      ${_buildMemberEditHTML(_ckMemA,'A','A팀')}
+      ${_buildMemberEditHTML(_ckMemB,'B','B팀')}
       <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   } else if(mode==='progj'){
     const m=gjM[idx];tit='🏅 프로리그 끝장전 수정';
@@ -866,6 +946,11 @@ function saveRow(){
     miniM[reIdx].b=document.getElementById('re-b')?.value||miniM[reIdx].b;
     miniM[reIdx].sa=parseInt(document.getElementById('re-sa').value)||0;
     miniM[reIdx].sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 참가자 수정 저장
+    const _newMemA = _reReadMembers('A', miniM[reIdx].teamAMembers);
+    const _newMemB = _reReadMembers('B', miniM[reIdx].teamBMembers);
+    if(_newMemA.length) miniM[reIdx].teamAMembers = _newMemA;
+    if(_newMemB.length) miniM[reIdx].teamBMembers = _newMemB;
     // miniM에 _id가 없으면 생성
     if(!miniM[reIdx]._id)miniM[reIdx]._id=genId();
     // 선수 history 업데이트
@@ -879,6 +964,11 @@ function saveRow(){
     const m=univM[reIdx];m.d=d;m.a=document.getElementById('re-a').value;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.b=document.getElementById('re-b').value;m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 참가자 수정 저장
+    const _newMemA = _reReadMembers('A', m.teamAMembers);
+    const _newMemB = _reReadMembers('B', m.teamBMembers);
+    if(_newMemA.length) m.teamAMembers = _newMemA;
+    if(_newMemB.length) m.teamBMembers = _newMemB;
     // univM에 _id가 없으면 생성
     if(!m._id)m._id=genId();
     // 선수 history 업데이트
@@ -899,6 +989,11 @@ function saveRow(){
     m.teamBLabel=document.getElementById('re-tlb')?.value||m.teamBLabel;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 참가자 수정 저장
+    const _newMemA = _reReadMembers('A', m.teamAMembers);
+    const _newMemB = _reReadMembers('B', m.teamBMembers);
+    if(_newMemA.length) m.teamAMembers = _newMemA;
+    if(_newMemB.length) m.teamBMembers = _newMemB;
     // proM에 _id가 없으면 생성
     if(!m._id)m._id=genId();
     // 선수 history 업데이트
@@ -914,6 +1009,11 @@ function saveRow(){
     if(ttn!==undefined){m.compName=ttn;m.n=ttn;m.t=ttn;}
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 참가자 수정 저장
+    const _newMemA = _reReadMembers('A', m.teamAMembers);
+    const _newMemB = _reReadMembers('B', m.teamBMembers);
+    if(_newMemA.length) m.teamAMembers = _newMemA;
+    if(_newMemB.length) m.teamBMembers = _newMemB;
     // ttM에 _id가 없으면 생성 (기록 탭에서 표시되도록)
     if(!m._id)m._id=genId();
     // 선수 history 업데이트
@@ -927,6 +1027,11 @@ function saveRow(){
     const m=ckM[reIdx];m.d=d;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
+    // 참가자 수정 저장
+    const _newMemA = _reReadMembers('A', m.teamAMembers);
+    const _newMemB = _reReadMembers('B', m.teamBMembers);
+    if(_newMemA.length) m.teamAMembers = _newMemA;
+    if(_newMemB.length) m.teamBMembers = _newMemB;
   } else if(reMode==='progj'){
     const m=gjM[reIdx];m.d=d;
     m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;

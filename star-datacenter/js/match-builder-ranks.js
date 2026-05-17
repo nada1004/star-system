@@ -69,8 +69,7 @@ function indRankHTML(){
 function gjRankHTML(proOnly){
   const sc={};
   const vs={};
-  const _gjSrcBase=proOnly?gjM.filter(m=>m._proLabel):gjM.filter(m=>!m._proLabel);
-  const _gjSrc=typeof passDateFilter==='function'?_gjSrcBase.filter(m=>passDateFilter(m.d||'')):_gjSrcBase;
+  const _gjSrc=proOnly?gjM.filter(m=>m._proLabel):gjM.filter(m=>!m._proLabel);
   _gjSrc.forEach(m=>{
     if(!sc[m.wName])sc[m.wName]={w:0,l:0};
     if(!sc[m.lName])sc[m.lName]={w:0,l:0};

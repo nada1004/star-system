@@ -173,7 +173,13 @@
 
   function openShareCardModal(){
     const existing=document.getElementById('sharecard-overlay');
-    if(existing)existing.remove();
+    if(existing){
+      // 이전 슬라이드쇼 타이머 정리
+      try{ if(window.__sharecardSlideTimers){ Object.values(window.__sharecardSlideTimers).forEach(t=>clearInterval(t)); window.__sharecardSlideTimers={}; } }catch(e){}
+      // 슬라이드 인덱스 초기화 (새 카드는 1경기부터 시작)
+      try{ window.__sharecardSlideIdx={}; }catch(e){}
+      existing.remove();
+    }
 
     const overlay=document.createElement('div');
     overlay.id='sharecard-overlay';

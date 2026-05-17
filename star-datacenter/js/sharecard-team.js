@@ -81,20 +81,15 @@
       };
       const membersA = buildMembers('A');
       const membersB = buildMembers('B');
-      const pickRandom = (arr, key)=>{
+      // 슬라이드쇼: 1경기부터 순서대로 5초마다 순환 (랜덤 아님)
+      const _slideKey = String(m?._id||m?.d||'share');
+      window.__sharecardSlideIdx = window.__sharecardSlideIdx || {};
+      if(window.__sharecardSlideIdx[_slideKey] === undefined) window.__sharecardSlideIdx[_slideKey] = 0;
+      const pickSequential = (arr, key)=>{
         if(!Array.isArray(arr) || !arr.length) return null;
         if(arr.length===1) return arr[0] || null;
-        const last = window.__sharecardRepPickState[key] || '';
-        const pool = arr.filter(x=>String(x?.name||'').trim() !== last);
-        const src = pool.length ? pool : arr;
-        window.__sharecardRepPickRot = window.__sharecardRepPickRot || {};
-        const rot = Number(window.__sharecardRepPickRot[key] || 0);
-        const seed = (Date.now() + Math.floor(Math.random()*997)) % src.length;
-        const idx = src.length > 1 ? ((rot + seed) % src.length) : 0;
-        const chosen = src[idx] || src[0] || null;
-        window.__sharecardRepPickState[key] = String(chosen?.name||'').trim();
-        window.__sharecardRepPickRot[key] = rot + 1;
-        return chosen;
+        const seqIdx = window.__sharecardSlideIdx[key] % arr.length;
+        return arr[seqIdx] || arr[0] || null;
       };
       const preA = null;
       const preB = null;
@@ -104,7 +99,7 @@
         const arr = side==='A' ? membersA : membersB;
         if(!arr.length) return null;
         const photoArr = arr.filter(x=>x && x.photo);
-        return pickRandom(photoArr.length ? photoArr : arr, `${String(m?._id||m?.d||'share')}:${side}`);
+        return pickSequential(photoArr.length ? photoArr : arr, _slideKey);
       };
       const repNote = (side)=>{
         const rep = pickRep(side);
@@ -293,11 +288,48 @@
           </div>
         </div>`;
       };
-      const headerHTML = `<div style="position:relative">
+      // 슬라이드쇼 최대 인원 수 (A팀/B팀 중 큰 쪽)
+      const _slideMaxA = (() => { const arr = membersA.filter(x=>x&&x.photo); return (arr.length ? arr : membersA).length; })();
+      const _slideMaxB = (() => { const arr = membersB.filter(x=>x&&x.photo); return (arr.length ? arr : membersB).length; })();
+      const _slideTotalFrames = Math.max(_slideMaxA, _slideMaxB, 1);
+      const _slideId = 'scSlide_' + _slideKey.replace(/[^a-zA-Z0-9]/g,'_');
+      const _curDotIdx = _slideTotalFrames > 1 ? (window.__sharecardSlideIdx[_slideKey] % _slideTotalFrames) : 0;
+      const headerHTML = `<div id="${_slideId}" style="position:relative">
         <div class="share-personal-grid" style="display:grid;grid-template-columns:${aWin?'minmax(0,1.14fr) minmax(0,.86fr)':bWin?'minmax(0,.86fr) minmax(0,1.14fr)':'minmax(0,1fr) minmax(0,1fr)'};gap:12px;align-items:center;margin-bottom:12px">
           ${teamPosterSide('A')}
           ${teamPosterSide('B')}
         </div>
+        ${_slideTotalFrames>1?`<div style="display:flex;justify-content:center;gap:5px;margin-top:6px;margin-bottom:2px">
+          ${Array.from({length:_slideTotalFrames},(_,i)=>`<span style="width:7px;height:7px;border-radius:50%;background:${i===_curDotIdx?'rgba(30,41,59,.72)':'rgba(148,163,184,.38)'};transition:background .3s;display:inline-block"></span>`).join('')}
+        </div>`:''}
+        <script>
+        (function(){
+          try{
+            const key=${JSON.stringify(_slideKey)};
+            const total=${_slideTotalFrames};
+            if(total<=1)return;
+            if(window.__sharecardSlideTimers&&window.__sharecardSlideTimers[key]){
+              clearInterval(window.__sharecardSlideTimers[key]);
+            }
+            window.__sharecardSlideTimers=window.__sharecardSlideTimers||{};
+            window.__sharecardSlideTimers[key]=setInterval(function(){
+              try{
+                if(!document.getElementById('sharecard-overlay')){
+                  clearInterval(window.__sharecardSlideTimers[key]);
+                  delete window.__sharecardSlideTimers[key];
+                  return;
+                }
+                window.__sharecardSlideIdx=window.__sharecardSlideIdx||{};
+                const cur=Number(window.__sharecardSlideIdx[key]||0);
+                window.__sharecardSlideIdx[key]=(cur+1)%total;
+                if(window._shareMatchObj&&typeof renderShareCardByMatchObj==='function'){
+                  renderShareCardByMatchObj(window._shareMatchObj);
+                }
+              }catch(e){}
+            },5000);
+          }catch(e){}
+        })();
+        <\/script>
       </div>`;
       const rosterHTML = `<div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin-bottom:${(ctx.setsHTML?'12':'0')}px">
         ${teamRosterPanel('A', aWin)}

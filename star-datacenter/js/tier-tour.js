@@ -830,11 +830,6 @@ function rTierTourTab(C, T){
     }
     const _allBkt=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='bkt').sort((a,b)=>(b.d||'').localeCompare(a.d||''));
     if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🏆 ${_ttCurComp} 토너먼트 기록</div>`;
-    h+=`<div class="no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-      ${typeof buildYearMonthFilterControls==='function'?buildYearMonthFilterControls('tt',true):''}
-      <button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>
-      <button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>
-    </div>`;
     if(isLoggedIn && _curTierTn){
       h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:-2px 0 12px">
         <button class="btn btn-p btn-sm" onclick="openTierBktPasteModal('${_curTierTn.id}')">📋 경기 결과 붙여넣기(자동인식)</button>
@@ -874,11 +869,6 @@ function rTierTourTab(C, T){
     }
     const _allGrp=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='league').sort((a,b)=>(b.d||'').localeCompare(a.d||''));
     if(_ttCurComp) h+=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#16a34a;font-weight:700">📅 ${_ttCurComp} 조별리그 기록</div>`;
-    h+=`<div class="no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-      ${typeof buildYearMonthFilterControls==='function'?buildYearMonthFilterControls('tt',true):''}
-      <button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>
-      <button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>
-    </div>`;
     h+=_allGrp.length?recSummaryListHTML(_allGrp,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">조별리그 기록이 없습니다.<br><span style="font-size:11px">📅 조별리그 탭에서 경기 결과를 입력하세요.</span></div>';
   } else {
     // records 탭 (일반 기록)
@@ -3194,6 +3184,39 @@ function openRE(mode,idx){
     const ttWA=m.sets?m.sets.filter(s=>s.winner==='A').length:null;
     const ttWB=m.sets?m.sets.filter(s=>s.winner==='B').length:null;
     const ttDefMode = (m.scoreMode||'') ? String(m.scoreMode) : ((ttWA!=null && ttWA+ttWB>1) ? 'set' : 'game');
+    // ── 참가자 수정 UI 생성 ──
+    const _ttAllPNames = (window.players||players||[]).map(p=>p&&p.name).filter(Boolean).sort();
+    const _ttMembA = Array.isArray(m.teamAMembers) ? m.teamAMembers : [];
+    const _ttMembB = Array.isArray(m.teamBMembers) ? m.teamBMembers : [];
+    const _ttSetsArr = Array.isArray(m.sets) ? m.sets : [];
+    // 경기 기록에서 참가자 이름 수집
+    const _ttNamesFromGames = (side) => {
+      const seen = new Set();
+      _ttSetsArr.forEach(s=>(s.games||[]).forEach(g=>{
+        const n = side==='A' ? (g.playerA||'') : (g.playerB||'');
+        if(n) seen.add(n);
+      }));
+      return [...seen];
+    };
+    const _ttBuildMembRow = (side) => {
+      const membArr = side==='A' ? _ttMembA : _ttMembB;
+      const fromGames = _ttNamesFromGames(side);
+      const existingNames = membArr.map(mb=>String((mb&&mb.name)||'').trim()).filter(Boolean);
+      // 멤버 배열 우선, 없으면 경기기록에서 추출
+      const allNames = existingNames.length ? existingNames : fromGames;
+      if(!allNames.length) return '<div style="font-size:11px;color:var(--gray-l)">참가자 없음</div>';
+      const prefix = side==='A' ? 're_tt_ma' : 're_tt_mb';
+      const pOpts = _ttAllPNames.map(n=>`<option value="${n}">${n}</option>`).join('');
+      return allNames.map((name,ni)=>
+        `<div style="display:flex;gap:6px;align-items:center;margin-bottom:5px">
+          <span style="font-size:11px;color:var(--gray-l);min-width:18px">${ni+1}.</span>
+          <select id="${prefix}_${ni}" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border);font-size:12px">
+            <option value="">-- 선택 --</option>
+            ${_ttAllPNames.map(pn=>`<option value="${pn}"${pn===name?' selected':''}>${pn}</option>`).join('')}
+          </select>
+        </div>`
+      ).join('');
+    };
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
       <label>대회명 (기록 분류 기준)</label><input type="text" id="re-ttcomp" value="${m.compName||m.n||m.t||''}">
       <label>점수 방식</label>
@@ -3211,6 +3234,14 @@ function openRE(mode,idx){
       </div>
       <label>B팀 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb||0}">
       ${ttGA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${ttWA} / B ${ttWB} | 게임 수: A ${ttGA} / B ${ttGB}</div>`:''}
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+        <div style="font-weight:800;font-size:12px;color:var(--blue);margin-bottom:8px">👤 A팀 참가자 수정</div>
+        <div id="re-tt-membA">${_ttBuildMembRow('A')}</div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="font-weight:800;font-size:12px;color:#ef4444;margin-bottom:8px">👤 B팀 참가자 수정</div>
+        <div id="re-tt-membB">${_ttBuildMembRow('B')}</div>
+      </div>
       <div style="margin-top:6px;font-size:11px;color:var(--gray-l)">※ 세트별 개인 경기는 기록 상세보기에서 수정하세요.</div>`;
   } else if(mode==='ck'){
     const m=ckM[idx];tit='🤝 대학CK 수정';
@@ -3310,6 +3341,27 @@ function saveRow(){
     try{ const sm=document.getElementById('re-scoremode')?.value; if(sm) m.scoreMode=sm; }catch(e){}
     // ttM에 _id가 없으면 생성 (기록 탭에서 표시되도록)
     if(!m._id)m._id=genId();
+    // ── 참가자 수정 반영 ──
+    try{
+      const _readMembSide = (prefix, origArr)=>{
+        const origNames = (Array.isArray(origArr)?origArr:[]).map(mb=>String((mb&&mb.name)||'').trim()).filter(Boolean);
+        if(!origNames.length) return origArr;
+        const result = [];
+        origNames.forEach((name,ni)=>{
+          const sel = document.getElementById(`${prefix}_${ni}`);
+          const newName = sel ? (sel.value||'').trim() : name;
+          if(newName){
+            const pObj = (window.players||players||[]).find(p=>p&&p.name===newName)||{};
+            result.push({name:newName, univ:pObj.univ||'', race:pObj.race||'', tier:pObj.tier||''});
+          }
+        });
+        return result.length ? result : origArr;
+      };
+      const newMembA = _readMembSide('re_tt_ma', m.teamAMembers||[]);
+      const newMembB = _readMembSide('re_tt_mb', m.teamBMembers||[]);
+      if(newMembA.length) m.teamAMembers = newMembA;
+      if(newMembB.length) m.teamBMembers = newMembB;
+    }catch(e){}
     // 선수 history 업데이트
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(game=>{

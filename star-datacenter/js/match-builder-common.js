@@ -123,11 +123,16 @@ function _mbResolveAliasQuery(q){
   return '';
 }
 
-function _buildMatchSubtabShell(currentSub, subOpts, filterStateKey, extraHTML){
+function _buildMatchSubtabShell(currentSub, subOpts, filterStateKey, extraHTML, modeId){
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
   const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
   if(window[filterStateKey]===undefined) window[filterStateKey]=_lockOpen;
   if(_lockOpen) window[filterStateKey]=true;
+  // 모드별 색상 주입 (id가 없는 opts의 경우 modeId 색상으로 통일)
+  if(modeId && typeof _getTabPillOnStyle==='function'){
+    const _modeStyle = _getTabPillOnStyle(modeId, true);
+    if(_modeStyle) subOpts = subOpts.map(o=>o.color?o:{...o, color:_modeStyle});
+  }
   let h='';
   if(_enableSubFilter && !_lockOpen){
     h+=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px;align-items:center">

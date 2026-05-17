@@ -20,7 +20,7 @@ function rInd(C,T){
       + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
       + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
     : '';
-  h+=_buildMatchSubtabShell(indSub, subOpts, '_indFilterOpen', extra);
+  h+=_buildMatchSubtabShell(indSub, subOpts, '_indFilterOpen', extra, 'ind');
   if(indSub==='input'&&isLoggedIn){
     h+=indInputHTML();
   } else if(indSub==='rank'){
@@ -86,7 +86,7 @@ function rGJ(C,T,proOnly,proInput){
       + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
       + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
     : '';
-  h+=_buildMatchSubtabShell(gjSub, _gjSubOpts, '_gjFilterOpen', extra);
+  h+=_buildMatchSubtabShell(gjSub, _gjSubOpts, '_gjFilterOpen', extra, proOnly?'progj':'gj');
   if(gjSub==='input'&&isLoggedIn&&showInput){
     h+=gjInputHTML();
   } else if(gjSub==='rank'){

@@ -99,10 +99,23 @@ function rHist(C,T){
     // (요청사항) "우측 끝 고정"이 아니라, 하위메뉴 버튼 "바로 우측"에
     // 연도/월 + 최신/오래된순이 이어서 붙어야 함 (한 줄 드래그 메뉴)
     const _hasCtrl = needDateFilter && (typeof buildYearMonthFilterControls==='function');
+    // 탭별 활성(on) 색상: 시빌워는 빨간색, 미니대전은 보라색, 대학대전은 초록색 등
+    const _TAB_PILL_COL = {
+      civil:{bg:'linear-gradient(135deg,#7f1d1d,#b91c1c 60%,#ef4444)',bd:'rgba(239,68,68,.30)',shadow:'rgba(185,28,28,.28)'},
+      mini: {bg:'linear-gradient(135deg,#3b0764,#7c3aed 58%,#a78bfa)',bd:'rgba(167,139,250,.30)',shadow:'rgba(124,58,237,.24)'},
+      univm:{bg:'linear-gradient(135deg,#14532d,#16a34a 58%,#4ade80)',bd:'rgba(74,222,128,.30)', shadow:'rgba(22,163,74,.24)'},
+      ck:   {bg:'linear-gradient(135deg,#78350f,#f59e0b 58%,#fcd34d)',bd:'rgba(252,211,77,.30)', shadow:'rgba(245,158,11,.24)'},
+      pro:  {bg:'linear-gradient(135deg,#075985,#0ea5e9 58%,#7dd3fc)',bd:'rgba(125,211,252,.30)',shadow:'rgba(14,165,233,.24)'},
+      tt:   {bg:'linear-gradient(135deg,#064e3b,#10b981 58%,#6ee7b7)',bd:'rgba(110,231,183,.30)',shadow:'rgba(16,185,129,.24)'},
+      gj:   {bg:'linear-gradient(135deg,#78350f,#d97706 58%,#fbbf24)',bd:'rgba(251,191,36,.30)', shadow:'rgba(217,119,6,.24)'},
+      progj:{bg:'linear-gradient(135deg,#7f1d1d,#b91c1c 58%,#ef4444)',bd:'rgba(239,68,68,.30)', shadow:'rgba(185,28,28,.24)'},
+    };
     h+=`<div class="hist-inlinebar no-export">`;
     grpTabs.forEach(t=>{
       const isOn=histSub===t.id;
-      h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${t.id}';openDetails={};render()">${t.disp||t.lbl}</button>`;
+      const _tc = _TAB_PILL_COL[t.id];
+      const _onStyle = (isOn && _tc) ? `background:${_tc.bg};border-color:${_tc.bd};box-shadow:0 12px 26px ${_tc.shadow};color:#fff;font-weight:800;` : '';
+      h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap;${_onStyle}" onclick="histSub='${t.id}';openDetails={};render()">${t.disp||t.lbl}</button>`;
     });
     if(_hasCtrl){
       h+=`<span class="hist-inline-sep"></span>`;
@@ -183,11 +196,13 @@ function rHist(C,T){
   else if(histSub==='comp') h+=compSummaryListHTML('hist');
   else if(histSub==='tourney') h+=histTourneyHTML('hist');
   else if(histSub==='tiertour'||histSub==='tiertour-gen'||histSub==='tiertour-league'||histSub==='tiertour-bkt'){
+    // 티어대회 하위탭 색상: 에메랄드/초록 계열
+    const _ttOnStyle=(active)=>active?'background:linear-gradient(135deg,#064e3b,#10b981 58%,#6ee7b7);border-color:rgba(110,231,183,.30);box-shadow:0 12px 26px rgba(16,185,129,.24);color:#fff;font-weight:800;':'';
     const _ttSubBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
-      <button class="pill ${histSub==='tiertour'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='tiertour';openDetails={};render()">📋 전체</button>
-      <button class="pill ${histSub==='tiertour-gen'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='tiertour-gen';openDetails={};render()">📝 일반</button>
-      <button class="pill ${histSub==='tiertour-league'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='tiertour-league';openDetails={};render()">📅 조별리그</button>
-      <button class="pill ${histSub==='tiertour-bkt'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='tiertour-bkt';openDetails={};render()">🏆 토너먼트 기록</button>
+      <button class="pill ${histSub==='tiertour'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_ttOnStyle(histSub==='tiertour')}" onclick="histSub='tiertour';openDetails={};render()">📋 전체</button>
+      <button class="pill ${histSub==='tiertour-gen'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_ttOnStyle(histSub==='tiertour-gen')}" onclick="histSub='tiertour-gen';openDetails={};render()">📝 일반</button>
+      <button class="pill ${histSub==='tiertour-league'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_ttOnStyle(histSub==='tiertour-league')}" onclick="histSub='tiertour-league';openDetails={};render()">📅 조별리그</button>
+      <button class="pill ${histSub==='tiertour-bkt'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_ttOnStyle(histSub==='tiertour-bkt')}" onclick="histSub='tiertour-bkt';openDetails={};render()">🏆 토너먼트 기록</button>
     </div>`;
     h+=_ttSubBar;
     try{
@@ -1074,6 +1089,26 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const _dateMenuHTML = (()=>{
     if(_dateMenuStyle!=='asl' || !_allDates.length) return '';
     const daysS=['일','월','화','수','목','금','토'];
+    // 모드별 날짜 버튼 색상 (시빌워는 시빌워 색상 사용)
+    const _DATE_BTN_COL = {
+      civil:'#b91c1c', progj:'#b91c1c',
+      mini:'#7c3aed', univm:'#16a34a', ck:'#f59e0b', pro:'#0ea5e9',
+      tt:'#10b981', comp:'#3b82f6', tourney:'#2563eb',
+      ind:'#2563eb', gj:'#d97706',
+      procomp:'#0891b2'
+    };
+    const _dateBtnCol = _DATE_BTN_COL[mode] || 'var(--blue)';
+    const _dateBtnBg  = (()=>{
+      // 각 모드 색상의 연한 배경
+      const _colBgMap = {
+        civil:'#fff1f2', progj:'#fff1f2',
+        mini:'#f5f3ff', univm:'#f0fdf4', ck:'#fffbeb', pro:'#e0f2fe',
+        tt:'#ecfdf5', comp:'#eff6ff', tourney:'#eff6ff',
+        ind:'#eff6ff', gj:'#fffbeb',
+        procomp:'#ecfeff'
+      };
+      return _colBgMap[mode] || '#eff6ff';
+    })();
     const _mini = (m)=>{
       const isCK=(mode==='ck'||mode==='pro'||mode==='tt');
       const a=isCK?(String(m.teamALabel||'A팀').replace(/^\$\{.*\}$/,'')||'A팀'):(m.a||'');
@@ -1093,8 +1128,8 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     let h=`<div class="no-export" style="margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
       <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">`;
     const _onAll = !_pickedDate;
-    h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','');histPage['${mode}']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
-        <div style="font-weight:1000;font-size:12px;color:${_onAll?'var(--blue)':'var(--text2)'}">전체</div>
+    h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','');histPage['${mode}']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?_dateBtnCol:'var(--border)'};background:${_onAll?_dateBtnBg:'var(--surface)'};cursor:pointer;text-align:left">
+        <div style="font-weight:1000;font-size:12px;color:${_onAll?_dateBtnCol:'var(--text2)'}">전체</div>
         <div style="margin-top:6px;font-size:10px;color:var(--gray-l)">날짜 필터 해제</div>
       </button>`;
     _allDates.forEach(d0=>{
@@ -1107,9 +1142,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       const prev=ms?`<div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">${ms}</div>`:'';
       const on=(_pickedDate===d0);
       const cnt=_baseFiltered.filter(x=>String(x.m.d||'').trim()===d0).length;
-      h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','${d0}');histPage['${mode}']=0;render()" style="flex-shrink:0;text-align:left;min-width:150px;max-width:240px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
+      h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','${d0}');histPage['${mode}']=0;render()" style="flex-shrink:0;text-align:left;min-width:150px;max-width:240px;padding:10px 12px;border-radius:12px;border:1px solid ${on?_dateBtnCol:'var(--border)'};background:${on?_dateBtnBg:'var(--surface)'};cursor:pointer">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-weight:1000;font-size:12px;color:${on?'var(--blue)':'var(--text2)'}">${label}</span>
+          <span style="font-weight:1000;font-size:12px;color:${on?_dateBtnCol:'var(--text2)'}">${label}</span>
           <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${cnt?`기록 ${cnt}`:''}</span>
         </div>
         ${prev}
@@ -1172,10 +1207,8 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const _iconUnivB=isCivil?_civilUniv:(isCK?'':m.b);
     const iconA=(()=>{const n=_iconUnivA;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
     const iconB=(()=>{const n=_iconUnivB;const u=univCfg.find(x=>x.name===n)||{};const url=UNIV_ICONS[n]||u.icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0;vertical-align:middle" onerror="this.style.display='none'">`:''})();
-    const _winCol = (aWin||bWin) ? (aWin?ca:cb) : '';
-    const _rgb = _hexToRgbStr(_winCol);
-    const _themeCls = (_rcThemeOn && _winCol && _rcAccent!=='none') ? ` rc-theme rc-accent-${_rcAccent}` : '';
-    const _themeStyle = (_rcThemeOn && _winCol) ? `--rc-win-rgb:${_rgb};--rc-win-col:${_winCol};` : '';
+    const _themeCls = '';
+    const _themeStyle = '';
 
     const MODE_COL = {
       ind:'#2563eb', gj:'#d97706', progj:'#b91c1c',

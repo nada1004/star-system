@@ -761,14 +761,6 @@ window.cfgSetRecBgFxAll = function(on){
     const sfx=document.getElementById('cfg-sidefx-on');
     if(sfx) sfx.checked = !!on;
   }catch(e){}
-  try{
-    const sfx2=document.getElementById('cfg-rc-sidefx-on');
-    if(sfx2) sfx2.checked = !!on;
-  }catch(e){}
-  try{
-    const all=document.getElementById('cfg-rc-bgfx-all');
-    if(all) all.checked = !!on;
-  }catch(e){}
   // 사이드FX는 history.js의 setter가 변수를 같이 갱신하므로 가능하면 호출
   try{ if(typeof window.cfgSetRecSideFxEnabled==='function') window.cfgSetRecSideFxEnabled(!!on); }catch(e){}
   try{ if(typeof window.cfgSetRecCardSettings==='function') window.cfgSetRecCardSettings(); }catch(e){}
@@ -3093,7 +3085,7 @@ window.cfgUnivOrderMove = function(i, dir){
         return;
       }
       const ensureChart = window.ensureChartJS || (()=>loader('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'));
-      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats-core-utils.js?v=20260503-02')).then(()=>loader('js/stats-tier-rank-utils.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-renderer.js?v=20260503-01')).then(()=>loader('js/stats-tierwin-renderer.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-renderer.js?v=20260503-01')).then(()=>loader('js/stats-maprank-renderer.js?v=20260503-01')).then(()=>loader('js/stats-univmatrix-renderer.js?v=20260503-01')).then(()=>loader('js/stats-advanced-renderers.js?v=20260503-01')).then(()=>loader('js/stats-export-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-normalize.js?v=20260503-01')).then(()=>loader('js/sharecard-theme.js?v=20260503-05')).then(()=>loader('js/sharecard-team.js?v=20260508-01')).then(()=>loader('js/sharecard-runtime.js?v=20260504-02')).then(()=>loader('js/sharecard-render-entity.js?v=20260504-03')).then(()=>loader('js/sharecard-render-match-helpers.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-score.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-layout.js?v=20260504-02')).then(()=>loader('js/sharecard-render-match-shell.js?v=20260504-01')).then(()=>loader('js/sharecard-render-match-sections.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-context.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-pipeline.js?v=20260503-02')).then(()=>loader('js/sharecard-match-openers.js?v=20260503-01')).then(()=>loader('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-03'))).then(()=>{
+      Promise.resolve().then(()=>ensureChart()).then(()=>loader('js/stats-core-utils.js?v=20260503-02')).then(()=>loader('js/stats-tier-rank-utils.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-utils.js?v=20260503-01')).then(()=>loader('js/stats-period-renderer.js?v=20260503-01')).then(()=>loader('js/stats-tierwin-renderer.js?v=20260503-01')).then(()=>loader('js/stats-heatmap-renderer.js?v=20260503-01')).then(()=>loader('js/stats-maprank-renderer.js?v=20260503-01')).then(()=>loader('js/stats-univmatrix-renderer.js?v=20260503-01')).then(()=>loader('js/stats-advanced-renderers.js?v=20260503-01')).then(()=>loader('js/stats-export-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-normalize.js?v=20260503-01')).then(()=>loader('js/sharecard-theme.js?v=20260503-05')).then(()=>loader('js/sharecard-team.js?v=20260517-01')).then(()=>loader('js/sharecard-runtime.js?v=20260517-01')).then(()=>loader('js/sharecard-render-entity.js?v=20260504-03')).then(()=>loader('js/sharecard-render-match-helpers.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-score.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-layout.js?v=20260504-02')).then(()=>loader('js/sharecard-render-match-shell.js?v=20260504-01')).then(()=>loader('js/sharecard-render-match-sections.js?v=20260503-02')).then(()=>loader('js/sharecard-render-match-context.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-utils.js?v=20260503-01')).then(()=>loader('js/sharecard-render-match-pipeline.js?v=20260503-02')).then(()=>loader('js/sharecard-match-openers.js?v=20260503-01')).then(()=>loader('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-01'))).then(()=>{
         const fn = window.rStats;
         if(typeof fn === 'function' && fn !== _lazyRStats) fn(C, T);
       }).catch((e)=>{

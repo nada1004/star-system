@@ -982,11 +982,13 @@ function histProCompHTML() {
   // 조별리그 / 토너먼트 / 팀전 / 중장전
   if(!window._histProCompSub) window._histProCompSub='league'; // league | tourney | team | gj
   const sub = window._histProCompSub;
+  // 프로리그 대회 하위탭 색상: 청록(teal) 계열
+  const _pcOn=(id)=>sub===id?'background:linear-gradient(135deg,#075985,#0891b2 58%,#38bdf8);border-color:rgba(56,189,248,.30);box-shadow:0 12px 26px rgba(8,145,178,.24);color:#fff;font-weight:800;':'';
   const _pcSubBar=`<div class="fbar merged-subbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-    <button class="pill ${sub==='league'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histProCompSub='league';render()">📅 조별리그</button>
-    <button class="pill ${sub==='tourney'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histProCompSub='tourney';render()">🗂️ 토너먼트</button>
-    <button class="pill ${sub==='team'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histProCompSub='team';render()">🤝 팀전</button>
-    <button class="pill ${sub==='gj'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histProCompSub='gj';render()">⚔️ 중장전</button>
+    <button class="pill ${sub==='league'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_pcOn('league')}" onclick="window._histProCompSub='league';render()">📅 조별리그</button>
+    <button class="pill ${sub==='tourney'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_pcOn('tourney')}" onclick="window._histProCompSub='tourney';render()">🗂️ 토너먼트</button>
+    <button class="pill ${sub==='team'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_pcOn('team')}" onclick="window._histProCompSub='team';render()">🤝 팀전</button>
+    <button class="pill ${sub==='gj'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_pcOn('gj')}" onclick="window._histProCompSub='gj';render()">⚔️ 중장전</button>
   </div>`;
   let inner = '';
   if(sub==='league') inner = _histProCompLeagueListHTML();

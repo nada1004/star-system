@@ -98,7 +98,7 @@ async function _ensureStatsLoaded(){
   await window.ensureChartJS();
   await _loadScriptOnce('js/sharecard-normalize.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-theme.js?v=20260503-05');
-  await _loadScriptOnce('js/sharecard-team.js?v=20260508-01');
+  await _loadScriptOnce('js/sharecard-team.js?v=20260517-01');
   await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
   await _loadScriptOnce('js/stats-tier-rank-utils.js?v=20260503-01');
   await _loadScriptOnce('js/stats-heatmap-utils.js?v=20260503-01');
@@ -110,7 +110,7 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/stats-univmatrix-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260503-01');
   await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-runtime.js?v=20260504-02');
+  await _loadScriptOnce('js/sharecard-runtime.js?v=20260517-01');
   await _loadScriptOnce('js/sharecard-render-entity.js?v=20260504-03');
   await _loadScriptOnce('js/sharecard-render-match-helpers.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260503-01');
@@ -121,7 +121,7 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260503-02');
   await _loadScriptOnce('js/sharecard-match-openers.js?v=20260503-01');
-  await _loadScriptOnce('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-03'));
+  await _loadScriptOnce('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-01'));
 }
 window._ensureShareCardRuntime = window._ensureShareCardRuntime || async function(){
   await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
@@ -137,8 +137,8 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-normalize.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-theme.js?v=20260503-05');
-  await _loadScriptOnce('js/sharecard-team.js?v=20260508-01');
-  await _loadScriptOnce('js/sharecard-runtime.js?v=20260504-02');
+  await _loadScriptOnce('js/sharecard-team.js?v=20260517-01');
+  await _loadScriptOnce('js/sharecard-runtime.js?v=20260517-01');
   await _loadScriptOnce('js/sharecard-render-entity.js?v=20260504-03');
   await _loadScriptOnce('js/sharecard-render-match-helpers.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260503-01');
@@ -149,7 +149,7 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260503-02');
   await _loadScriptOnce('js/sharecard-match-openers.js?v=20260503-01');
-  await _loadScriptOnce('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-03'));
+  await _loadScriptOnce('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-01'));
 };
 async function _ensureCalendarLoaded(){
   await _loadScriptOnce('js/calendar.js?v=20260504-02');

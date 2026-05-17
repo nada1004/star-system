@@ -122,7 +122,9 @@ function raceSummaryHTML(){
 function stabs(current, opts){
   return `<div class="fbar merged-subbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">${opts.map(o=>{
     if(o.id==='input'&&!isLoggedIn) return '';
-    return `<button class="pill ${current===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}">${o.lbl}</button>`;
+    const _isOn=current===o.id;
+    const _col=o.color||(typeof _getTabPillOnStyle==='function'?_getTabPillOnStyle(o.id,_isOn):'');
+    return `<button class="pill ${_isOn?'on':''}" style="flex-shrink:0;white-space:nowrap;${_isOn&&_col?_col:''}" onclick="${o.fn}">${o.lbl}</button>`;
   }).join('')}</div>`;
 }
 
@@ -130,10 +132,28 @@ function stabs(current, opts){
 function stabsInline(current, opts, extraHTML=''){
   const btns = opts.map(o=>{
     if(o.id==='input'&&!isLoggedIn) return '';
-    return `<button class="pill ${current===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="${o.fn}">${o.lbl}</button>`;
+    const _isOn=current===o.id;
+    const _col=o.color||(typeof _getTabPillOnStyle==='function'?_getTabPillOnStyle(o.id,_isOn):'');
+    return `<button class="pill ${_isOn?'on':''}" style="flex-shrink:0;white-space:nowrap;${_isOn&&_col?_col:''}" onclick="${o.fn}">${o.lbl}</button>`;
   }).join('');
   const extra = extraHTML ? `<span class="hist-inline-sep"></span><div class="hist-ctrl-group">${extraHTML}</div>` : '';
   return `<div class="hist-inlinebar merged-subbar no-export">${btns}${extra}</div>`;
+}
+
+// 탭 ID → pill on 스타일 반환 (시빌워/미니대전 등 탭별 고유 색상)
+function _getTabPillOnStyle(id, isOn){
+  if(!isOn) return '';
+  const _MAP={
+    civil:'background:linear-gradient(135deg,#7f1d1d,#b91c1c 60%,#ef4444);border-color:rgba(239,68,68,.30);box-shadow:0 12px 26px rgba(185,28,28,.28);color:#fff;font-weight:800;',
+    mini: 'background:linear-gradient(135deg,#3b0764,#7c3aed 58%,#a78bfa);border-color:rgba(167,139,250,.30);box-shadow:0 12px 26px rgba(124,58,237,.24);color:#fff;font-weight:800;',
+    univm:'background:linear-gradient(135deg,#14532d,#16a34a 58%,#4ade80);border-color:rgba(74,222,128,.30);box-shadow:0 12px 26px rgba(22,163,74,.24);color:#fff;font-weight:800;',
+    ck:   'background:linear-gradient(135deg,#78350f,#f59e0b 58%,#fcd34d);border-color:rgba(252,211,77,.30);box-shadow:0 12px 26px rgba(245,158,11,.24);color:#fff;font-weight:800;',
+    pro:  'background:linear-gradient(135deg,#075985,#0ea5e9 58%,#7dd3fc);border-color:rgba(125,211,252,.30);box-shadow:0 12px 26px rgba(14,165,233,.24);color:#fff;font-weight:800;',
+    tt:   'background:linear-gradient(135deg,#064e3b,#10b981 58%,#6ee7b7);border-color:rgba(110,231,183,.30);box-shadow:0 12px 26px rgba(16,185,129,.24);color:#fff;font-weight:800;',
+    gj:   'background:linear-gradient(135deg,#78350f,#d97706 58%,#fbbf24);border-color:rgba(251,191,36,.30);box-shadow:0 12px 26px rgba(217,119,6,.24);color:#fff;font-weight:800;',
+    progj:'background:linear-gradient(135deg,#7f1d1d,#b91c1c 58%,#ef4444);border-color:rgba(239,68,68,.30);box-shadow:0 12px 26px rgba(185,28,28,.24);color:#fff;font-weight:800;',
+  };
+  return _MAP[id]||'';
 }
 
 // 모든 데이터에서 연도를 자동 추출
