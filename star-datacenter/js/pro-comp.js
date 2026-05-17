@@ -621,7 +621,9 @@ function proCompTeamSection(tn) {
     h += `<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-title">팀전 기록이 없습니다</div><div class="empty-state-desc">팀을 구성하고 경기 결과를 기록할 수 있습니다</div></div>`;
     return h;
   }
-  tms.forEach((tm, tmi) => {
+  // 최신순 정렬 (원본 인덱스 유지)
+  const _tmsWithIdx = tms.map((tm,i)=>({tm,tmi:i})).sort((a,b)=>(b.tm.d||'').localeCompare(a.tm.d||''));
+  _tmsWithIdx.forEach(({tm, tmi}) => {
     const aWin = tm.sa > tm.sb, bWin = tm.sb > tm.sa;
     const games = tm.games||[];
     const colA='#2563eb', colB='#dc2626';
@@ -5087,8 +5089,10 @@ function proCompGJSection(tn) {
     h += `<div class="empty-state"><div class="empty-state-icon">📢</div><div class="empty-state-title">중장전 기록이 없습니다</div><div class="empty-state-desc">위에서 경기를 추가해보세요</div></div>`;
     return h;
   }
-  tn.gjMatches.slice().reverse().forEach((sess, ri) => {
-    const si = tn.gjMatches.length - 1 - ri;
+  // 최신순 날짜 정렬 (원본 인덱스 si 보존)
+  const _gjSorted = tn.gjMatches.map((sess,i)=>({sess,si:i})).sort((a,b)=>(b.sess.d||'').localeCompare(a.sess.d||''));
+  _gjSorted.forEach(({sess, si}) => {
+    const ri = tn.gjMatches.length - 1 - si; // 하위 호환용 (삭제 시 si 사용)
     const p1w = (sess.games||[]).filter(g=>g.winner===sess.a).length;
     const p2w = (sess.games||[]).filter(g=>g.winner===sess.b).length;
     const winner = p1w>p2w?sess.a:p2w>p1w?sess.b:'';

@@ -68,8 +68,8 @@ function rBracketSchedule(tn){
         (s.games || []).forEach(g => {
           if (g.playerA) aSet.add(g.playerA);
           if (g.playerB) bSet.add(g.playerB);
-          if (g.winner === 'A' && g.wName) aSet.add(g.wName);
-          if (g.winner === 'B' && g.wName) bSet.add(g.wName);
+          if (g.winner === 'A' && g.wName) { aSet.add(g.wName); if (g.lName) bSet.add(g.lName); }
+          else if (g.winner === 'B' && g.wName) { bSet.add(g.wName); if (g.lName) aSet.add(g.lName); }
         });
       });
       aMembers = Array.from(aSet).map(n => ({ name: n }));
@@ -133,7 +133,14 @@ function rBracketSchedule(tn){
   const _availRounds=['전체',..._roundOrder.filter(r=>_roundSet.has(r))];
   _roundSet.forEach(r=>{if(!_roundOrder.includes(r)&&r!=='전체')_availRounds.push(r);});
 
-  const _filtered=bktSchedRound==='전체'?matches:matches.filter(m=>m.rLabel===bktSchedRound);
+  // 날짜 목록 수집 (완료된 경기 기준)
+  const _bktDates=[...new Set(matches.filter(m=>m.isDone&&m.detail?.d).map(m=>m.detail.d))].sort();
+  if(!window._bktFilterDate)window._bktFilterDate='';
+  const _filtered=(()=>{
+    let r=bktSchedRound==='전체'?matches:matches.filter(m=>m.rLabel===bktSchedRound);
+    if(window._bktFilterDate)r=r.filter(m=>m.detail?.d===window._bktFilterDate);
+    return r;
+  })();
   const done=_filtered.filter(m=>m.isDone);
   const pending=_filtered.filter(m=>!m.isDone);
   const _sortedDone=bktSchedSortDir==='asc'?done.slice().sort((a,b)=>(a.detail?.d||'').localeCompare(b.detail?.d||'')):done.slice().sort((a,b)=>(b.detail?.d||'').localeCompare(a.detail?.d||''));
@@ -155,6 +162,7 @@ function rBracketSchedule(tn){
       </div>
     </div>
     ${(()=>{if(_availRounds.length<=2)return '';const _pillsHtml=_availRounds.map(rv=>{const _ri=rLabelToR[rv];const _delR=_ri?_ri.r:-1;const _delC=_ri?_ri.matchCount:0;const _delBtn=isLoggedIn&&rv!=='전체'?`<button onclick="bktDelRound('${tn.id}',${_delR},${_delC},'${rv}')" style="padding:2px 5px;border-radius:4px;border:1px solid #f87171;background:#fef2f2;color:#ef4444;font-size:9px;cursor:pointer;line-height:1" title="${rv} 라운드 초기화">\u2715</button>`:'';return `<span style="display:inline-flex;align-items:center;gap:2px"><button class="pill ${bktSchedRound===rv?'on':''}" onclick="bktSchedRound='${rv}';render()">${rv}</button>${_delBtn}</span>`;}).join('');return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${_pillsHtml}</div>`;})()}
+    ${_bktDates.length>1?`<div class="ym-filter-controls compact no-export" style="margin-bottom:10px"><select class="ym-sel" onchange="window._bktFilterDate=this.value;render()"><option value="">전체 날짜</option>${_bktDates.map(d=>{const dt=new Date(d+'T00:00:00');const days=['일','월','화','수','목','금','토'];return `<option value="${d}"${window._bktFilterDate===d?' selected':''}>` +`${dt.getMonth()+1}/${dt.getDate()}(${days[dt.getDay()]})`+'</option>'}).join('')}</select></div>`:''}
     `;
 
   if(!pending.filter(m=>m.teamA||m.teamB).length&&!done.length){

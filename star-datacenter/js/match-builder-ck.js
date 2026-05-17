@@ -145,13 +145,36 @@ function ckRankHTML(){
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['ck']||'rate';
   const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['ck']='rate';render()">승률순</button><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['ck']='w';render()">승순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['ck']='l';render()">패순</button></div>`;
+  const _ckFiltered=typeof passDateFilter==='function'?ckM.filter(m=>passDateFilter(m.d||'')):ckM;
+  const sc2={};
+  getAllUnivs().forEach(u=>{sc2[u.name]={w:0,l:0,pts:0,total:0};});
+  _ckFiltered.forEach(m=>{
+    if(!sc2[m.a])sc2[m.a]={w:0,l:0,pts:0,total:0};if(!sc2[m.b])sc2[m.b]={w:0,l:0,pts:0,total:0};
+    sc2[m.a].total++;sc2[m.b].total++;
+    if(m.sa>m.sb){sc2[m.a].w++;sc2[m.a].pts+=3;sc2[m.b].l++;sc2[m.b].pts-=3;}
+    else if(m.sb>m.sa){sc2[m.b].w++;sc2[m.b].pts+=3;sc2[m.a].l++;sc2[m.a].pts-=3;}
+  });
+  const sorted2=Object.entries(sc2).filter(([name,s])=>s.total>0&&name!=='무소속').sort((a,b)=>b[1].pts-a[1].pts||b[1].w-a[1].w);
+  const delCol2=isLoggedIn?`<th class="no-export" style="width:36px"></th>`:'';
+  let hUniv=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏆 대학CK 대학별 순위</div>`
+  +`<table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>포인트</th>${delCol2}</tr></thead><tbody>`;
+  if(!sorted2.length)hUniv+=`<tr><td colspan="${isLoggedIn?6:5}" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
+  sorted2.forEach(([name,s],i)=>{
+    const col=gc(name);let rnkH;
+    if(i===0)rnkH=`<span class="rk1">1등</span>`;else if(i===1)rnkH=`<span class="rk2">2등</span>`;else if(i===2)rnkH=`<span class="rk3">3등</span>`;else rnkH=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
+    const sn=name.replace(/'/g,"\\'");
+    const delBtn2=isLoggedIn?`<td class="no-export"><button onclick="deleteUnivFromRank('${sn}','ck')" style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;color:#dc2626;font-size:11px;cursor:pointer" title="이 대학 CK 기록 삭제">🗑</button></td>`:'';
+    hUniv+=`<tr><td style="text-align:left">${rnkH}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn2}</tr>`;
+  });
+  hUniv+=`</tbody></table>`;
   const pS2={};
-  ckM.forEach(m=>{
+  _ckFiltered.forEach(m=>{
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(g=>{
-        if(!g.playerA||!g.playerB||!g.winner)return;
-        const wn=g.winner==='A'?g.playerA:g.playerB;
-        const ln=g.winner==='A'?g.playerB:g.playerA;
+        let wn,ln;
+        if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
+        else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
+        else return;
         if(!pS2[wn])pS2[wn]={w:0,l:0};
         if(!pS2[ln])pS2[ln]={w:0,l:0};
         pS2[wn].w++;pS2[ln].l++;
@@ -160,7 +183,7 @@ function ckRankHTML(){
   });
   const pEntries=Object.entries(pS2).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}));
   pEntries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
-  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏅 대학CK 개인 순위</div>${sortBar}`;
+  let h=hUniv+`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏅 대학CK 개인 순위</div>${sortBar}`;
   if(!pEntries.length){h+=`<div style="padding:20px;text-align:center;color:var(--gray-l)">개인 기록 없음</div>`;return h;}
   if(!window._rankPage)window._rankPage={};
   const _PK_ck='ck_ind';

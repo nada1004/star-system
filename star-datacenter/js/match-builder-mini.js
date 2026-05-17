@@ -5,9 +5,8 @@
 function rMini(C,T){
   T.innerText = miniType==='civil' ? '⚔️ 시빌워' : '⚡ 미니대전';
   if(!isLoggedIn && miniSub==='input') miniSub='records';
-  if(miniType==='civil' && miniSub==='rank') miniSub='records';
   const subOpts = miniType==='civil'
-    ? [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}]
+    ? [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`miniSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}]
     : [{id:'input',lbl:'📝 경기 입력',fn:`miniSub='input';render()`},{id:'rank',lbl:'🏆 순위',fn:`miniSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`miniSub='records';openDetails={};render()`}];
   const _miniCtx = miniType==='civil' ? 'mini' : 'mini';
   const _miniSubOpts = (typeof applyTabLabels==='function') ? applyTabLabels(_miniCtx, subOpts) : subOpts;
@@ -34,6 +33,7 @@ function rMini(C,T){
 
 function miniRankHTML(data){
   data=data||miniM.filter(m=>(m.type||'mini')==='mini');
+  if(typeof passDateFilter==='function')data=data.filter(m=>passDateFilter(m.d||''));
   const sc={};
   getAllUnivs().forEach(u=>{sc[u.name]={w:0,l:0,pts:0,total:0};});
   data.forEach(m=>{

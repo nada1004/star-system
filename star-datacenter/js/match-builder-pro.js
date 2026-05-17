@@ -231,8 +231,9 @@ function proAddMember(team){
 
 function proTeamResultsHTML(){
   if(!proM||!proM.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+  const _proDateFiltered=typeof passDateFilter==='function'?proM.filter(m=>passDateFilter(m.d||'')):proM;
   const teamSt={};
-  proM.forEach(m=>{
+  _proDateFiltered.forEach(m=>{
     const a=m.teamALabel||'A팀'; const b=m.teamBLabel||'B팀';
     const key=[a,b].sort().join('|||');
     if(!teamSt[key])teamSt[key]={a,b,aW:0,bW:0,draw:0};
@@ -242,7 +243,7 @@ function proTeamResultsHTML(){
     else if(sa>0||sb>0)teamSt[key].draw++;
   });
   const mapSt={};
-  proM.forEach(m=>{
+  _proDateFiltered.forEach(m=>{
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(g=>{
         if(!g.map)return;
@@ -288,9 +289,9 @@ function proTeamResultsHTML(){
     });
     h+=`</tbody></table></div>`;
   }
-  const sorted=[...proM].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  const sorted=[..._proDateFiltered].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   h+=`<div style="margin-bottom:20px;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
-    <div style="padding:10px 16px;background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;font-weight:900;font-size:13px">📋 경기별 팀전 결과 (${proM.length}경기)</div>
+    <div style="padding:10px 16px;background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;font-weight:900;font-size:13px">📋 경기별 팀전 결과 (${_proDateFiltered.length}경기)</div>
     <div style="padding:8px 0">`;
   sorted.forEach(m=>{
     const a=m.teamALabel||'A팀'; const b=m.teamBLabel||'B팀';
@@ -332,8 +333,9 @@ function proTeamResultsHTML(){
 }
 
 function proRankHTML(){
+  const _proFiltered=typeof passDateFilter==='function'?proM.filter(m=>passDateFilter(m.d||'')):proM;
   const pStats={};
-  proM.forEach(m=>{
+  _proFiltered.forEach(m=>{
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
