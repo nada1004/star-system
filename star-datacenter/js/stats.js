@@ -23,8 +23,9 @@ if (typeof window.escHTML !== 'function') {
       .replace(/'/g,'&#39;');
   };
 }
-// ⚠️ top-level function escHTML()는 window에 바인딩되어 무한재귀가 날 수 있으므로 const로만 참조
-var escHTML = (s) => window.escHTML(s);
+// ⚠️ var escHTML은 전역(window.escHTML)을 덮어써서 무한재귀를 일으키므로
+// 반드시 const/let으로 선언해 window 프로퍼티를 오염시키지 않아야 함
+const escHTML = (s) => window.escHTML(s);
 
 /* ─── 전역 필터 상태 ─── */
 var _statsDateFrom='', _statsDateTo='', _statsMinGames=3, _statsLastN=0;
