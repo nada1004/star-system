@@ -182,7 +182,9 @@ function _renderCfgMatchDetailSection(){
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <button class="btn btn-xs ${mdAvatarFit==='cover'?'btn-b':'btn-w'}"
           onclick="localStorage.setItem('su_md_avatar_fit_${_mdDevKey}','cover');try{if(typeof render==='function')render();}catch(e){};_renderCfgMatchDetailSection()">가득 채우기</button>
-        <button class="btn btn-xs ${mdAvatarFit!=='cover'?'btn-b':'btn-w'}"
+        <button class="btn btn-xs ${mdAvatarFit==='fill'?'btn-b':'btn-w'}"
+          onclick="localStorage.setItem('su_md_avatar_fit_${_mdDevKey}','fill');try{if(typeof render==='function')render();}catch(e){};_renderCfgMatchDetailSection()">늘리기</button>
+        <button class="btn btn-xs ${mdAvatarFit==='contain'?'btn-b':'btn-w'}"
           onclick="localStorage.setItem('su_md_avatar_fit_${_mdDevKey}','contain');try{if(typeof render==='function')render();}catch(e){};_renderCfgMatchDetailSection()">원본 비율</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center">

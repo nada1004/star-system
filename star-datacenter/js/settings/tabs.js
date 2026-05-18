@@ -1,6 +1,18 @@
 (function(){
   window.SettingsModules = window.SettingsModules || {};
 
+  // (개선) _scfgD 중복 정의 방지 - 이미 전역에 정의되어 있으면 재정의 안 함
+  // settings-core.js에서 이미 정의되었으므로 tabs.js에서는 참조만 함
+  const _scfgD = window._scfgD || function(id, title, extra){
+    const isOpen = false;
+    return `<div class="cfg-anchor" data-cfg-anchor="${id}"></div><details id="cfg-sec-${id}" class="ssec" data-cfg-sec="${id}" ${isOpen?'open':''} ontoggle="_scfgToggle('${id}',this)"${extra?' '+extra:''}>
+      <summary class="cfg-sec-summary" style="list-style:none;outline:none;-webkit-appearance:none">
+        <h4>${title}</h4>
+        <span class="cfg-sec-right">열기 ›</span>
+      </summary>`;
+  };
+  window._scfgD = _scfgD;
+
   function escMaybe(v){
     if(typeof window.esc === 'function') return window.esc(v);
     return String(v ?? '').replace(/[&<>"']/g, m => ({

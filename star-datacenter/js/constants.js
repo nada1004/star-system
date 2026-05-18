@@ -696,7 +696,8 @@ function getMatchDetailAvatarSetting(kind){
     const dk = _getMdDeviceKey();
     if(kind === 'fit'){
       const v = localStorage.getItem(`su_md_avatar_fit_${dk}`) || localStorage.getItem('su_md_avatar_fit') || 'cover';
-      return ['cover','contain'].includes(String(v).trim()) ? String(v).trim() : 'cover';
+      // fill(늘리기) 옵션도 지원 - fill은 '100% 100%'로 렌더링됨
+      return ['cover','contain','fill'].includes(String(v).trim()) ? String(v).trim() : 'cover';
     }
     const raw = localStorage.getItem(`su_md_avatar_scale_${dk}`) || localStorage.getItem('su_md_avatar_scale') || '100';
     const n = parseInt(raw, 10);

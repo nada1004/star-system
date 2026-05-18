@@ -584,7 +584,7 @@ function rCompTourDynamic(tn){
   const br=getBracket(tn);
   const allU=getAllUnivs();
   const tnId=tn.id;
-  const BASE_H=130; // px per R0 match slot
+  const BASE_H=165; // px per R0 match slot (카드 겹침 방지를 위해 130→165로 증가)
 
   // Build rounds data
   const rounds=[];

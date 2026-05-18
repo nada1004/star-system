@@ -25,7 +25,12 @@ function preparePlayerHeaderDisplayData(opts){
         const dk = (typeof _getMdDeviceKey === 'function') ? _getMdDeviceKey() : (isMobile ? 'mb' : (isTablet ? 'tb' : 'pc'));
         const mdFit = (localStorage.getItem(`su_md_avatar_fit_${dk}`) || localStorage.getItem('su_md_avatar_fit') || '').trim();
         const mdPos = (localStorage.getItem(`su_md_avatar_pos_${dk}`) || localStorage.getItem('su_md_avatar_pos') || 'center center').trim();
-        if(mdFit === 'cover' || mdFit === 'contain') imageFit = mdFit;
+        // fill(늘리기)은 100% 100%로 적용 (object-fit: fill은拉伸变形이므로 background-size 방식 사용)
+        if(mdFit === 'fill') {
+          imageFit = '100% 100%';
+        } else if(mdFit === 'cover' || mdFit === 'contain') {
+          imageFit = mdFit;
+        }
         else if(typeof imgSettings.fill === 'boolean') imageFit = imgSettings.fill ? 'cover' : 'contain';
         else imageFit = (localStorage.getItem('su_b2ImageFill') === '0' ? 'cover' : 'contain');
         if(mdPos) imagePos = mdPos;
