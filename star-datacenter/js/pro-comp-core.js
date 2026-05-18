@@ -274,7 +274,10 @@ function rProComp(C, T) {
       ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 관리'}]:[]),
     ];
     const _subOpts = (typeof applyTabLabels==='function') ? applyTabLabels('procomp', subOpts) : subOpts;
-    if (!_subOpts.find(o=>o.id===proCompSub)) proCompSub = 'league';
+    if (!_subOpts.find(o=>o.id===proCompSub)) {
+      proCompSub = 'league';
+      localStorage.setItem('su_procomp_sub', proCompSub); // [BUGFIX-3] 폴백 시 localStorage 저장
+    }
     h += `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
       ${_subOpts.map(o=>`<button class="pill ${proCompSub===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="proCompSub='${o.id}';render()">${o.lbl}</button>`).join('')}
     </div>`;

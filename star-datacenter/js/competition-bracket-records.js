@@ -15,7 +15,7 @@ function rBracketSchedule(tn){
   let n = firstSize;
   while(n>1){ n = Math.ceil(n/2); totalRounds++; }
   if(totalRounds===0) totalRounds=1;
-  const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강',6:'64강',7:'128강',8:'256강'};
+  const roundLabels={1:'결승',2:'4강',3:'8강',4:'16강',5:'32강',6:'64강',7:'128강',8:'256강'};
 
   const rLabelToR={};
   const matches=[];
@@ -128,7 +128,7 @@ function rBracketSchedule(tn){
     </div>`;
   }
 
-  const _roundOrder=['결승','준결승','4강','8강','16강','32강','64강'];
+  const _roundOrder=['결승','4강','8강','16강','32강','64강'];
   const _roundSet=new Set(matches.map(m=>m.rLabel));
   const _availRounds=['전체',..._roundOrder.filter(r=>_roundSet.has(r))];
   _roundSet.forEach(r=>{if(!_roundOrder.includes(r)&&r!=='전체')_availRounds.push(r);});
@@ -154,7 +154,7 @@ function rBracketSchedule(tn){
         <button class="pill ${bktSchedSortDir==='asc'?'on':''}" onclick="bktSchedSortDir='asc';render()">오래된순</button>
       </div>
     </div>
-    ${(()=>{if(_availRounds.length<=2)return '';const _pillsHtml=_availRounds.map(rv=>{const _ri=rLabelToR[rv];const _delR=_ri?_ri.r:-1;const _delC=_ri?_ri.matchCount:0;const _delBtn=isLoggedIn&&rv!=='전체'?`<button onclick="bktDelRound('${tn.id}',${_delR},${_delC},'${rv}')" style="padding:2px 5px;border-radius:4px;border:1px solid #f87171;background:#fef2f2;color:#ef4444;font-size:9px;cursor:pointer;line-height:1" title="${rv} 라운드 초기화">\u2715</button>`:'';return `<span style="display:inline-flex;align-items:center;gap:2px"><button class="pill ${bktSchedRound===rv?'on':''}" onclick="bktSchedRound='${rv}';render()">${rv}</button>${_delBtn}</span>`;}).join('');return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${_pillsHtml}</div>`;})()}
+    ${(()=>{if(_availRounds.length<=2)return '';const _pillsHtml=_availRounds.map(rv=>{const _ri=rLabelToR[rv];const _delR=_ri?_ri.r:-1;const _delC=_ri?_ri.matchCount:0;const _delBtn=isLoggedIn&&rv!=='전체'?`<button onclick="bktDelRound('${tn.id}',${_delR},${_delC},'${rv}')" style="padding:6px 10px;border-radius:4px;border:1px solid #f87171;background:#fef2f2;color:#ef4444;font-size:10px;cursor:pointer;line-height:1;min-height:32px;min-width:32px" title="${rv} 라운드 초기화">\u2715</button>`:'';return `<span style="display:inline-flex;align-items:center;gap:2px"><button class="pill ${bktSchedRound===rv?'on':''}" onclick="bktSchedRound='${rv}';render()">${rv}</button>${_delBtn}</span>`;}).join('');return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${_pillsHtml}</div>`;})()}
     `;
 
   if(!pending.filter(m=>m.teamA||m.teamB).length&&!done.length){
@@ -218,8 +218,14 @@ function bktDelManualMatch(tnId,idx){
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   const br=getBracket(tn);
   if(br.manualMatches&&br.manualMatches[idx]){
-    revertMatchRecord(br.manualMatches[idx]);
-    br.manualMatches.splice(idx,1);
+    const target=br.manualMatches[idx];
+    revertMatchRecord(target);
+    // _id가 있으면 _id 기준으로, 없으면 인덱스로 삭제
+    if(target._id){
+      br.manualMatches=br.manualMatches.filter(m=>m._id!==target._id);
+    } else {
+      br.manualMatches.splice(idx,1);
+    }
   }
   save();render();
 }

@@ -799,6 +799,10 @@ function rTierTourTab(C, T){
       h+= (typeof proCompBracket==='function') ? proCompBracket(_curTierTn) : _noTnMsg;
     } else h+=_noTnMsg;
   } else if(_ttSub==='bktrecords'){
+    // [BUGFIX-HIGH-2] _ttCurComp 미선택 시 안내 메시지 표시
+    if(!_ttCurComp){
+      h+=`<div style="padding:40px;text-align:center;color:var(--gray-l);font-size:14px">📋 대회를 먼저 선택하세요.</div>`;
+    } else {
     const _bktRecs=ttM.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='bkt');
     // 브라켓 matchDetails에서 아직 ttM에 없는 경기도 포함
     const _bktIds=new Set(_bktRecs.map(m=>m._id));
@@ -837,6 +841,7 @@ function rTierTourTab(C, T){
       </div>`;
     }
     h+=_allBkt.length?recSummaryListHTML(_allBkt,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">토너먼트 기록이 없습니다.<br><span style="font-size:11px">🗂️ 토너먼트 탭에서 경기 결과를 입력하세요.</span></div>';
+    } // end guard: _ttCurComp 선택된 경우
   } else if(_ttSub==='grpedit'){
     if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
     // grpSub='list'은 rGrpEditInner의 '← 목록' 버튼에서 발생 → 기록 탭으로 전환

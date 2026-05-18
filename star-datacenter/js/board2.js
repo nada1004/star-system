@@ -400,7 +400,14 @@ function rBoard2(C, T) {
 function _b2UnivView() {
   let univList = _b2VisUnivs().filter(u => u.name !== '무소속' && u.name);
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
-  const _allVis = players.filter(p => univList.some(u=>String(u.name||'').trim()===String(p?.univ||'').trim()) && !p.hidden && !p.retired && !p.hideFromBoard);
+  // [FIX-UNIV-1] dissolved 대학 선수 제외 공통 필터
+  const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved).map(u=>String(u.name||'').trim()));
+  const _memberFilter = (univName) => players.filter(p =>
+    String(p?.univ||'').trim() === String(univName||'').trim()
+    && !p.hidden && !p.retired && !p.hideFromBoard
+    && !_dissSet.has(String(p?.univ||'').trim())
+  );
+  const _allVis = players.filter(p => univList.some(u=>String(u.name||'').trim()===String(p?.univ||'').trim()) && !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet.has(String(p?.univ||'').trim()));
   const _tierCts = {}; _allVis.forEach(p=>{ const t=p.tier||'?'; _tierCts[t]=(_tierCts[t]||0)+1; });
   const statsBar = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:7px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;flex-wrap:wrap">
     <span style="font-size:12px;font-weight:800;color:var(--text2)">👥 ${_allVis.length}명</span>
@@ -416,7 +423,7 @@ function _b2UnivView() {
       console.warn('[현황판] 대학 이름이 없는 데이터가 발견되었습니다:', u);
       return;
     }
-    const members = players.filter(p => String(p?.univ||'').trim() === String(u.name||'').trim() && !p.hidden && !p.retired && !p.hideFromBoard);
+    const members = _memberFilter(u.name); // [FIX-UNIV-1] 공통 필터 사용
     h += _b2UnivBlock(u.name, gc(u.name), members);
   });
   h += `</div>`;
@@ -452,8 +459,8 @@ function _b2FemcoView() {
   // 펨코현황 관련 설정 UI는 "설정 탭 > 이미지 관리 > 펨코현황"에서만 제공합니다.
 
   // 배경 미디어 열기(영상은 모달, 유튜브/트위치는 새창)
-  if (typeof window._b2FemcoOpenBgMedia !== 'function') {
-    window._b2FemcoOpenBgMedia = function(univName, url){
+  // [FIX-FEMCO-3] 매 렌더마다 최신 설정 캡처하도록 항상 재할당
+  window._b2FemcoOpenBgMedia = function(univName, url){
       const u = String(univName||'');
       const link = String(url||'').trim();
       if(!link) return;
@@ -491,8 +498,7 @@ function _b2FemcoView() {
       `;
       ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.remove(); });
       document.body.appendChild(ov);
-    };
-  }
+  };
 
   // (요청사항) 무소속도 배경 설정/표시 가능
   const univList = _b2VisUnivs().filter(u => u.name);
@@ -506,13 +512,19 @@ function _b2FemcoView() {
       return (ia >= 0 ? ia : 999) - (ib >= 0 ? ib : 999);
     });
   } else {
-    univList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    univList.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko', {sensitivity:'base'}));
   }
 
   // 표시 대상 선수(현황판 기준과 동일하게 숨김/은퇴/현황판숨김 제외)
+  // [FIX-FEMCO-4] membersByUniv 수집 시 dissolved 선수 제외
+  const _femcoDissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved).map(u=>String(u.name||'').trim()));
   const membersByUniv = {};
   univList.forEach(u => {
-    membersByUniv[u.name] = players.filter(p => String(p?.univ||'').trim() === String(u.name||'').trim() && !p.hidden && !p.retired && !p.hideFromBoard);
+    membersByUniv[u.name] = players.filter(p =>
+      String(p?.univ||'').trim() === String(u.name||'').trim()
+      && !p.hidden && !p.retired && !p.hideFromBoard
+      && !_femcoDissSet.has(String(p?.univ||'').trim())
+    );
   });
 
   // 공통 로고 크기(기본)
@@ -521,7 +533,7 @@ function _b2FemcoView() {
   const LOGO_OFF_Y = Math.max(-120, Math.min(120, parseInt(femcoSettings.logoOffsetY ?? 0, 10) || 0));
   const TITLE_OFF_X = Math.max(-120, Math.min(120, parseInt(femcoSettings.titleOffsetX ?? 0, 10) || 0));
   const TITLE_OFF_Y = Math.max(-120, Math.min(120, parseInt(femcoSettings.titleOffsetY ?? 0, 10) || 0));
-  const BG_OVERLAY = Math.max(0, Math.min(70, parseInt(femcoSettings.bgOverlay ?? 22, 10) || 0));
+  const BG_OVERLAY = Math.max(0, Math.min(70, parseInt(femcoSettings.bgOverlay ?? 0, 10))); // [FIX-FEMCO-1] bgOverlay=0 올바르게 처리
   const OV_TOP = (BG_OVERLAY/70) * 0.22; // 0 → 0.22
   const OV_BOT = (BG_OVERLAY/70) * 0.52; // 0 → 0.52
   const titleSize = Math.max(16, Math.min(44, parseInt(femcoSettings.titleSize || 28, 10) || 28));
@@ -538,7 +550,7 @@ function _b2FemcoView() {
   const contentOffsetX = Math.max(-40, Math.min(40, parseInt(femcoSettings.contentOffsetX || 0, 10) || 0));
   const headGap = Math.max(0, Math.min(80, parseInt(femcoSettings.headGap || 10, 10) || 10));
   const autoLayout = !(femcoSettings.autoLayout === 0 || femcoSettings.autoLayout === false);
-  const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 1200;
+  const vw = (typeof window !== 'undefined') ? (document.documentElement.clientWidth || window.innerWidth || 1280) : 1280; // [FIX-VW] clientWidth 우선, fallback 통일
 
   const _padL = Math.max(0, Math.min(80, contentPadX + contentOffsetX));
   const _padR = Math.max(0, Math.min(80, contentPadX - contentOffsetX));
@@ -670,7 +682,9 @@ function _b2FemcoView() {
       const _rawIcon = getStatusIcon(p.name);
       const statusHtml = getStatusIconHTML(p.name);
       const s = playerImgSize;
-      const badgeSize = Math.max(10, Math.min(36, parseInt(femcoSettings.statusIconSize || 0, 10) || Math.round(s * 0.38)));
+      // [FIX-FEMCO-2] statusIconSize=0이면 아이콘 숨김
+      const _rawIconSize = parseInt(femcoSettings.statusIconSize ?? 18, 10);
+      const badgeSize = _rawIconSize === 0 ? 0 : Math.max(10, Math.min(36, _rawIconSize || Math.round(s * 0.38)));
       const _isImgIcon = _rawIcon && (typeof _siIsImg === 'function' ? _siIsImg(_rawIcon) : false);
       const _badgeInner = _isImgIcon
         ? `<img src="${_rawIcon}" style="width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;object-fit:cover;opacity:.86" onerror="this.style.display='none'">`
@@ -800,7 +814,7 @@ function _b2FemcoView() {
       // 같은 직급 내에서는 티어→이름
       const ta = tierRank(a), tb = tierRank(b);
       if (ta !== tb) return ta - tb;
-      return (a.name || '').localeCompare(b.name || '');
+      return (a.name || '').localeCompare(b.name || '', 'ko', {sensitivity:'base'});
     });
 
     const _subTxt = ((femcoSettings.univSubtitles||{})[univName] || '').trim();
@@ -1249,7 +1263,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   });
   orderedTierKeys.forEach(tier => {
     const group = tierGroups[tier];
-    group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    group.sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ko', {sensitivity:'base'}));
     rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
   });
   const sidePanelHtml = hasSide ? `<div style="position:absolute;top:0;right:0;width:190px;bottom:0;background:${lightCol};padding:8px;box-sizing:border-box;overflow:hidden">
@@ -1295,9 +1309,11 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
 
 /* ── 무소속 뷰 ── */
 function _b2FreeView() {
+  // [FIX-FREE-1] dissolved 대학 선수 제외
+  const _freeDissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved).map(u=>String(u.name||'').trim()));
   const freeMembers = players.filter(p => {
     const pu = String(p?.univ||'').trim();
-    return (!pu || pu === '무소속') && !p.hidden && !p.retired && !p.hideFromBoard;
+    return (!pu || pu === '무소속') && !p.hidden && !p.retired && !p.hideFromBoard && !_freeDissSet.has(pu);
   });
   if (!freeMembers.length) return `<div style="text-align:center;color:var(--text3);padding:40px">무소속 멤버가 없습니다</div>`;
 
@@ -1332,7 +1348,7 @@ function _b2FreeView() {
   });
   orderedTierKeys.forEach(tier => {
     const group = tierGroups[tier];
-    group.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    group.sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ko', {sensitivity:'base'}));
     const col = getTierBtnColor(tier);
     h += _frow(_fl(tier, false), `<div style="display:flex;flex-wrap:wrap;gap:5px;padding:2px 0">${group.map(p => _b2NameTag(p, col, false)).join('')}</div>`);
   });
@@ -2432,7 +2448,7 @@ function _b2PlayersView() {
       if (aTierNum !== bTierNum) return aTierNum - bTierNum;
 
       // 티어도 같은 경우 이름 순
-      return (a.name || '').localeCompare(b.name || '');
+      return (a.name || '').localeCompare(b.name || '', 'ko', {sensitivity:'base'});
     });
   }
 
@@ -2900,15 +2916,15 @@ function _b2PlayersView() {
         }
         ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" decoding="async" fetchpriority="high" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" onload="if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'secondary'); }" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;object-fit:${secondarySettings.fit || 'cover'};object-position:${secondarySettings.manualCenter ? 'center center' : 'center center'};transform:${_b2GetImgTransform(secondarySettings)};filter:brightness(${(secondarySettings.brightness || 100) / 100})">` : ''}
         
-        <!-- 이미지 컨트롤 패널 (모든 사용자 접근 가능) -->
-        <div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
+        <!-- 이미지 컨트롤 패널 - 관리자(로그인)만 렌더 [BUGFIX-IMG-SETTINGS] -->
+        ${isLoggedIn ? `<div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
           <div class="b2-players-controls-title">🎨 이미지 설정</div>
           ${_b2BuildImageControlGroup(safeName, 'primary', '첫번째 이미지', hasPrimary)}
           ${_b2BuildImageControlGroup(safeName, 'secondary', '두번째 이미지', hasSecondary)}
-        </div>
+        </div>` : ''}
         
-        <!-- 컨트롤 패널 토글 버튼 -->
-        <button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>
+        <!-- 컨트롤 패널 토글 버튼 - 관리자(로그인 사용자)만 표시 [BUGFIX-IMG-SETTINGS] -->
+        ${isLoggedIn ? `<button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>` : ''}
         
         <div class="b2-players-info">
           <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
@@ -3007,14 +3023,15 @@ function _b2UpdateMainDisplay(playerName) {
       ${hasSecondProfile ? `<img src="${player.secondProfileFile}" decoding="async" fetchpriority="high" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0">` : ''}
       
       <!-- 이미지 컨트롤 패널 (모든 사용자 접근 가능) -->
-      <div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
+      <!-- 이미지 컨트롤 패널 - 관리자(로그인)만 렌더 [BUGFIX-IMG-SETTINGS] -->
+      ${isLoggedIn ? `<div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
         <div class="b2-players-controls-title">🎨 이미지 설정</div>
         ${_b2BuildImageControlGroup(safeName, 'primary', '첫번째 이미지', hasPrimary)}
         ${_b2BuildImageControlGroup(safeName, 'secondary', '두번째 이미지', hasSecondary)}
-      </div>
+      </div>` : ''}
       
-      <!-- 컨트롤 패널 토글 버튼 -->
-      <button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>
+      <!-- 컨트롤 패널 토글 버튼 - 관리자(로그인 사용자)만 표시 [BUGFIX-IMG-SETTINGS] -->
+      ${isLoggedIn ? `<button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>` : ''}
       
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>

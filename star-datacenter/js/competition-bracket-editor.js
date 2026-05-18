@@ -34,7 +34,7 @@ function openBracketMatchModal(tnId,rnd,mi,teamA,teamB){
     rLabel=m.rndLabel||'토너먼트 경기';
   } else {
     const totalRounds=(()=>{const _ng=(tn.groups&&tn.groups.length>=2)?tn.groups.length:0;const _pc=Math.floor(_ng/2)*2;let _nr1=_pc>0?_pc:4;if(_ng%2===1)_nr1++;let r=0,x=_nr1*2;while(x>1){x=Math.ceil(x/2);r++;}return r||1;})();
-    const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강'};
+    const roundLabels={1:'결승',2:'4강',3:'8강',4:'16강',5:'32강',6:'64강',7:'128강',8:'256강'};
     rLabel=roundLabels[totalRounds-rnd]||((totalRounds-rnd)+'강');
   }
   const isTierBkt=tn&&tn.type==='tier';
@@ -77,8 +77,8 @@ function openBracketMatchModal(tnId,rnd,mi,teamA,teamB){
       <button class="btn btn-w btn-sm" onclick="bktAddSet3()">🎯 에이스전</button>
       <button class="btn btn-p btn-sm" onclick="openBktPasteModal()">📋 붙여넣기</button>
       <select id="gm-match-mode" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;font-weight:700" title="경기방식">
-        <option value="set">세트제</option>
-        <option value="game">게임수 합산</option>
+        <option value="set"${(m.mode||'set')==='set'?' selected':''}>세트제</option>
+        <option value="game"${m.mode==='game'?' selected':''}>게임수 합산</option>
       </select>
       <button class="btn btn-g btn-sm" style="margin-left:auto" onclick="bktSaveMatch()">✅ 저장</button>
       <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')">취소</button>
@@ -191,6 +191,7 @@ function bktSaveMatch(){
   const _bktCaster=(document.getElementById('gm-caster')?.value??'').trim();
   if(_bktCaster) m.caster=_bktCaster; else delete m.caster;
   if(!m.a||!m.b){alert('두 팀을 선택하세요.');return;}
+  if(m.a===m.b){alert('같은 팀은 선택할 수 없습니다.');return;}
   if(rnd===-1){
     const rl=document.getElementById('gm-rndlabel');
     if(rl)m.rndLabel=rl.value.trim()||'토너먼트 경기';
@@ -206,6 +207,7 @@ function bktSaveMatch(){
     if(set.winner==='A')sa++;else if(set.winner==='B')sb++;
   });
   const _bktMode = document.getElementById('gm-match-mode')?.value||'set';
+  m.mode = _bktMode;
   if(_bktMode==='game'){
     sa=(m.sets||[]).reduce((s,st)=>s+(st.scoreA||0),0);
     sb=(m.sets||[]).reduce((s,st)=>s+(st.scoreB||0),0);

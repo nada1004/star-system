@@ -73,8 +73,8 @@ function grpOpenMatchModal(tn,gi,mi){
       <button class="btn btn-w btn-sm" onclick="grpAddSet3()">🎯 에이스전</button>
       <button class="btn btn-p btn-sm" onclick="openGrpPasteModal()">📋 자동인식</button>
       <select id="gm-match-mode" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;font-weight:700" title="경기방식">
-        <option value="set">세트제</option>
-        <option value="game">게임수 합산</option>
+        <option value="set"${(m.mode||'set')==='set'?' selected':''}>세트제</option>
+        <option value="game"${m.mode==='game'?' selected':''}>게임수 합산</option>
       </select>
       <button class="btn btn-g btn-sm" style="margin-left:auto" onclick="grpSaveMatch()">✅ 저장</button>
       <button class="btn btn-w btn-sm" onclick="cm('grpMatchModal')">취소</button>
@@ -235,6 +235,7 @@ function grpSaveMatch(){
   const _grpCaster=(document.getElementById('gm-caster')?.value??'').trim();
   if(_grpCaster) m.caster=_grpCaster; else delete m.caster;
   if(!m.a||!m.b){alert('두 팀을 선택하세요.');return;}
+  if(m.a===m.b){alert('같은 팀은 선택할 수 없습니다.');return;}
   const matchId=m._id||genId();
   if(m._id)revertMatchRecord({...m,_id:matchId});
   m._id=matchId;
@@ -246,6 +247,7 @@ function grpSaveMatch(){
     if(set.winner==='A')sa++;else if(set.winner==='B')sb++;
   });
   const _grpMode = document.getElementById('gm-match-mode')?.value||'set';
+  m.mode = _grpMode;
   if(_grpMode==='game'){
     sa=(m.sets||[]).reduce((s,st)=>s+(st.scoreA||0),0);
     sb=(m.sets||[]).reduce((s,st)=>s+(st.scoreB||0),0);

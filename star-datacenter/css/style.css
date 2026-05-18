@@ -1549,6 +1549,8 @@ body.dark .hist-ctrl-group{
 .win-btn:hover{border-color:var(--blue);}
 .win-btn.win-sel{background:var(--green);color:#fff;border-color:var(--green);}
 .win-btn.lose-sel{background:var(--red);color:#fff;border-color:var(--red);}
+body.dark .win-btn{background:#1e293b;border-color:#3a4f6a;color:#e2e8f0;}
+body.dark .win-btn:hover{border-color:rgba(96,165,250,.45);color:#93c5fd;}
 .score-board{display:flex;align-items:center;gap:12px;padding:12px 18px;background:linear-gradient(135deg,rgba(15,23,42,.04),rgba(37,99,235,.10),rgba(255,255,255,.92));border:1px solid rgba(148,163,184,.20);border-radius:18px;margin-bottom:12px;flex-wrap:wrap;box-shadow:0 14px 28px rgba(15,23,42,.08);}
 .score-num{font-family:'Noto Sans KR',sans-serif;font-weight:1000;font-size:30px;letter-spacing:-.03em;}
 .rec-summary{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;position:relative;transition:box-shadow var(--tr),transform var(--tr),border-left-width var(--tr);min-height:46px;}
@@ -5723,6 +5725,7 @@ body.dark {
   --gold:#fbbf24;--gold-bg:#2d2000;--gold-b:#78500a;
   --green:#4ade80;--red:#f87171;--gray:#94a3b8;--gray-l:#64748b;
   --text:#e2e8f0;--text2:#cbd5e1;--text3:#94a3b8;
+  --tc-line-rgb:59,130,246;--tc-line-a:0.50;
   background:#0f172a!important;color:#e2e8f0!important;
 }
 body.dark select{
@@ -5874,7 +5877,7 @@ body.dark .pill:hover{
   box-shadow:0 6px 20px rgba(0,0,0,.28);
 }
 body.dark .pill.on{
-  background:linear-gradient(135deg,#1d4ed8,#2563eb,#3b82f6);
+  background:linear-gradient(135deg,#1e3a8a,#1d4ed8,#2563eb);
   border-color:rgba(96,165,250,.45);
   color:#fff;
 }
@@ -6031,24 +6034,7 @@ body.dark table tr[style*="border-left"]{border-left-color:inherit;}
 body.dark tr[style*="border-left"]{border-left-color:inherit;}
 body.dark table tr[style*="background"]{filter:brightness(.65) saturate(.9);}
 body.dark table tr[style*="background"]:hover{filter:brightness(.78) saturate(1.0);}
-/* 필터 pill 다크 */
-body.dark .pill{
-  background:linear-gradient(180deg, rgba(30,41,59,.92), rgba(22,32,50,.92))!important;
-  border-color:#2d3f55!important;
-  color:#cbd5e1!important;
-  box-shadow:0 1px 6px rgba(0,0,0,.22)!important;
-}
-body.dark .pill:hover{
-  background:linear-gradient(180deg, rgba(30,58,95,.95), rgba(30,41,59,.95))!important;
-  border-color:rgba(96,165,250,.45)!important;
-  color:#93c5fd!important;
-  box-shadow:0 6px 20px rgba(0,0,0,.28)!important;
-}
-body.dark .pill.on{
-  background:linear-gradient(135deg,#1d4ed8,#2563eb,#3b82f6)!important;
-  border-color:rgba(96,165,250,.45)!important;
-  color:#fff!important;
-}
+/* 필터 pill 다크 — 중복 선언 통합(line 5876 블록을 정본으로 사용) */
 
 body.dark .ym-filter-controls .ym-lbl{color:#94a3b8;}
 body.dark .ym-filter-controls .ym-sel{
@@ -10298,4 +10284,33 @@ body.rc-shape--bubble .rec-datechip { border-radius: 12px !important; }
 #reBody > div[style*="margin-top:10px"],
 #reBody > div[style*="margin-top: 10px"] {
   margin-top: 6px !important;
+}
+
+/* ── 대회탭 버그 수정 패치 (v21-fixed) ── */
+
+/* Bug CSS-2: 다크모드 sidefx 오버레이 과도한 밝기 완화 */
+body.dark .grp-match-card.grp-sidefx::after,
+body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
+
+/* Bug CSS-5: 브라켓 가로 스크롤 페이드 힌트 */
+.bracket-scroll-wrap { position: relative; }
+.bracket-scroll-wrap::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 40px;
+  background: linear-gradient(90deg, transparent, var(--white));
+  pointer-events: none;
+}
+
+/* Bug CSS-4: 모바일 경기 입력 모달 저장바 sticky */
+@media (max-width: 768px) {
+  #grpMatchModal .umbox > div:last-child {
+    position: sticky;
+    bottom: 0;
+    background: var(--white);
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    z-index: 10;
+  }
 }

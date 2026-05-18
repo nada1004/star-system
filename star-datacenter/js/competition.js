@@ -67,16 +67,19 @@ function rComp(C,T){
   const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
   if(window._compFilterOpen===undefined) window._compFilterOpen=_lockOpen;
   if(_lockOpen) window._compFilterOpen=true;
-  if(!isLoggedIn && compSub==='grpedit') compSub='league';
+  // [BUGFIX-HIGH-4] 비로그인 시 grpedit 진입 차단 - URL 파라미터/외부링크 직접 진입도 포함
+  if(!isLoggedIn && (compSub==='grpedit' || (new URLSearchParams(location.search).get('csub')==='grpedit'))) compSub='league';
 
-  // tier 타입 대회가 curComp에 선택되어 있으면 초기화
-  if(curComp && tourneys.find(t=>t.name===curComp&&t.type==='tier')) curComp='';
+  // tier 타입 대회가 curComp에 선택되어 있으면 curComp와 compSub 함께 초기화 [BUGFIX-1]
+  if(curComp && tourneys.find(t=>t.name===curComp&&t.type==='tier')){
+    curComp=''; compSub='league';
+  }
   const tn=getCurrentTourney();
   const tnType=tn?tn.type||'league':'league'; // 'league' or 'tier'
 
   let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:10px">
     <span style="font-weight:700;color:var(--gold);white-space:nowrap">🎖️ 대회 선택:</span>
-    <select style="flex:1;max-width:220px;font-weight:700" onchange="curComp=this.value;leagueFilterDate='';leagueFilterGrp='';grpRankFilter='';save();render()">
+    <select style="flex:1;max-width:220px;font-weight:700" onchange="curComp=this.value;leagueFilterDate='';leagueFilterGrp='';grpRankFilter='';bktSchedRound='전체';bktSchedSortDir='desc';save();render()">
       <option value="">— 대회를 선택하세요 —</option>
       ${tourneys.filter(t=>t.type!=='tier').map(t=>{
         const _grpDates=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m.d));
@@ -136,10 +139,7 @@ function rComp(C,T){
   else if(compSub==='grprank') h+=rCompGrpRankFull(tn);
   else if(compSub==='tour'){
     h+=tn?rCompTourDynamic(tn):'';
-    if(tn){
-      const _bktSched=typeof rBracketSchedule==='function'?rBracketSchedule(tn):'';
-      if(_bktSched) h+=`<div style="margin-top:18px;padding-top:14px;border-top:2px solid var(--border)">${_bktSched}</div>`;
-    }
+    // [BUGFIX-2] rBracketSchedule은 tourschedule 탭에서만 렌더 - 중복 렌더 제거
   }
   else if(compSub==='tourschedule') h+=tn?rBracketSchedule(tn):'';
   else if(compSub==='comprank') h+=rCompPlayerRank(tn);
@@ -489,7 +489,14 @@ function rTierBracketDynamic(tn){
       </div>`;
     }
     h += `</div></div>`;
-    if(ri < totalRounds-1) h += `<div style="width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;color:#cbd5e1;font-weight:900;align-self:center;padding-top:36px">➔</div>`;
+    if(ri < totalRounds-1){
+      // 각 매치 행마다 ➔를 배치해 연결 관계 명확히 표시
+      h += `<div style="display:flex;flex-direction:column;width:28px;flex-shrink:0;padding-top:36px">`;
+      for(let _ai=0;_ai<matchCount;_ai++){
+        h += `<div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:16px;color:#cbd5e1;font-weight:900;min-height:${gap+80}px">➔</div>`;
+      }
+      h += `</div>`;
+    }
     h += `</div>`;
   }
   h += `</div></div>`;
@@ -580,7 +587,7 @@ function rCompTourDynamic(tn){
   {let n=numTeams;while(n>1){n=Math.ceil(n/2);totalRounds++;}}
   if(!totalRounds)totalRounds=1;
 
-  const roundLabels={1:'결승',2:'준결승',3:'8강',4:'16강',5:'32강'};
+  const roundLabels={1:'결승',2:'4강',3:'8강',4:'16강',5:'32강',6:'64강',7:'128강',8:'256강'};
   const br=getBracket(tn);
   const allU=getAllUnivs();
   const tnId=tn.id;
@@ -754,8 +761,8 @@ function rCompTourDynamic(tn){
         }
       }
       if(matchCount%2===1){
-        // 홀수 매치: 직선 연결
-        bracketHTML+=`<div style="height:${unitH}px;display:flex;align-items:center">
+        // 홀수 매치: 직선 연결 (높이를 unitH*2로 맞춰 다음 라운드와 정렬)
+        bracketHTML+=`<div style="height:${unitH*2}px;display:flex;align-items:center">
           <div style="width:100%;border-top:${CL}"></div>
         </div>`;
       }
