@@ -1,6 +1,19 @@
-/* ══════════════════════════════════════
-   선수 CRUD
-══════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   settings-crud.js  —  스트리머 데이터 CRUD 및 설정 수정
+   ────────────────────────────────────────────────────────
+   §1  선수(스트리머) CRUD     — addPlayer / bulkAddPlayers / openEP / savePlayer / delPlayer
+   §2  openEP 헬퍼            — _savePhotoPos / 포지션 변수 초기화
+   §3  모달 → 수정창 진입     — openEPFromModal
+   §4  경기 기록 수정         — openRE / saveRow / _buildMemberEditHTML
+   §5  대학 CRUD              — addUniv / delUniv / renameUnivAcrossData
+   §6  티어 테마              — cfgTierTheme*
+   §7  색상 유틸              — cfgNormHex / cfgPickColorHex
+   §8  관리자 계정            — addAdminAccount / clearAllAdmins
+   §9  인증 토큰              — saveFbPw / saveGhToken
+════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   §1  선수(스트리머) CRUD
+════════════════════════════════════════════════════════ */
 // 등록 타입 변경 시 폼 필드 동적 표시/숨김
 function onRegTypeChange() {
   const type = document.getElementById('p-reg-type')?.value || 'starcraft';
@@ -105,29 +118,18 @@ function bulkAddPlayers(){
 window.openEP=function(name){
   editName=name;const p=players.find(x=>x.name===name);
   if(!p) return;
-  const _p1X = (()=>{ const n=parseInt(p.photoPosX??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
-  const _p1Y = (()=>{ const n=parseInt(p.photoPosY??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
-  const _p2X = (()=>{ const n=parseInt(p.photo2PosX??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
-  const _p2Y = (()=>{ const n=parseInt(p.photo2PosY??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
-  const _p1Use = (p.photoPosUse !== false);
-  const _p2Use = (p.photo2PosUse !== false);
-  const _scX = (()=>{ const n=parseInt(p.shareCardPhotoPosX??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
-  const _scY = (()=>{ const n=parseInt(p.shareCardPhotoPosY??'22',10); return isNaN(n)?22:Math.max(0,Math.min(100,n)); })();
-  const _scUse = (p.shareCardPhotoPosUse !== false);
-  const _p3X = (()=>{ const n=parseInt(p.photo3PosX??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
-  const _p3Y = (()=>{ const n=parseInt(p.photo3PosY??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
-  const _p4X = (()=>{ const n=parseInt(p.photo4PosX??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
-  const _p4Y = (()=>{ const n=parseInt(p.photo4PosY??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
-  const _p5X = (()=>{ const n=parseInt(p.photo5PosX??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
-  const _p5Y = (()=>{ const n=parseInt(p.photo5PosY??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
-  const _p3Use = (p.photo3PosUse !== false);
-  const _p4Use = (p.photo4PosUse !== false);
-  const _p5Use = (p.photo5PosUse !== false);
-  const _dClamp = (v, d)=>{ const n=parseFloat(v); return isNaN(n)?d:Math.max(0.2, Math.min(60, n)); };
-  const _d23 = _dClamp(p.photoDelay23 ?? 1, 1);
-  const _d34 = _dClamp(p.photoDelay34 ?? 1, 1);
-  const _d45 = _dClamp(p.photoDelay45 ?? 1, 1);
-  const _d51 = _dClamp(p.photoDelay51 ?? 1, 1);
+  // 포지션 보정값 초기화 헬퍼 (undefined/NaN 처리 + 범위 클램프)
+  const _pct  = (v, d) => { const n = parseInt(v ?? d, 10); return isNaN(n) ? d : Math.max(0, Math.min(100, n)); };
+  const _dly  = (v)    => { const n = parseFloat(v ?? 1);  return isNaN(n) ? 1 : Math.max(0.2, Math.min(60, n)); };
+  const _use  = (v)    => v !== false;
+
+  const _p1X = _pct(p.photoPosX, 50),         _p1Y = _pct(p.photoPosY, 50),         _p1Use = _use(p.photoPosUse);
+  const _p2X = _pct(p.photo2PosX, 50),        _p2Y = _pct(p.photo2PosY, 50),        _p2Use = _use(p.photo2PosUse);
+  const _p3X = _pct(p.photo3PosX, 50),        _p3Y = _pct(p.photo3PosY, 50),        _p3Use = _use(p.photo3PosUse);
+  const _p4X = _pct(p.photo4PosX, 50),        _p4Y = _pct(p.photo4PosY, 50),        _p4Use = _use(p.photo4PosUse);
+  const _p5X = _pct(p.photo5PosX, 50),        _p5Y = _pct(p.photo5PosY, 50),        _p5Use = _use(p.photo5PosUse);
+  const _scX = _pct(p.shareCardPhotoPosX, 50), _scY = _pct(p.shareCardPhotoPosY, 22), _scUse = _use(p.shareCardPhotoPosUse);
+  const _d23 = _dly(p.photoDelay23), _d34 = _dly(p.photoDelay34), _d45 = _dly(p.photoDelay45), _d51 = _dly(p.photoDelay51);
   document.getElementById('emBody').innerHTML=`
     <label>스트리머 이름</label><input type="text" id="ed-n" value="${p.name}">
     <label>티어</label><select id="ed-t">${TIERS.map(t=>`<option value="${t}"${p.tier===t?' selected':''}>${getTierLabel(t)}</option>`).join('')}</select>
@@ -150,17 +152,6 @@ window.openEP=function(name){
       ${p.channelUrl?`<a href="${p.channelUrl}" target="_blank" style="font-size:18px;text-decoration:none" title="방송국 바로가기">🏠</a>`:''}
     </div>
     <div style="font-size:10px;color:var(--gray-l);margin-top:-6px">치지직/트위치/유튜브 등 방송국 주소. 스트리머 상세에서 홈 아이콘으로 이동됩니다.</div>
-        <label>🖼 프로필 사진 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(현황판 카드에 표시 · 비워두면 기본 아이콘)</span></label>
-    <div style="display:flex;gap:8px;align-items:center">
-      <input type="text" id="ed-photo" value="${p.photo||''}" placeholder="https://... 이미지 URL 입력" style="flex:1" oninput="(function(el){const v=el.value.trim();const img=document.getElementById('ed-photo-preview');const warn=document.getElementById('ed-photo-warn');if(v&&v.startsWith('data:')){el.style.borderColor='#dc2626';if(warn){warn.style.color='#dc2626';warn.textContent='❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용';}}else{el.style.borderColor='';if(warn){warn.textContent='이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.';warn.style.color='var(--gray-l)';}}const wrap=document.getElementById('ed-photo-preview-wrap');if(v&&!v.startsWith('data:')){img.src=v;img.style.display='block';if(wrap)wrap.style.display='inline-block';}else{if(wrap)wrap.style.display='none';}})(this)">
-      <span id="ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${p.photo&&!p.photo.startsWith('data:')?'inline-block':'none'}">
-        <img id="ed-photo-preview" src="${p.photo&&!p.photo.startsWith('data:')?toHttpsUrl(p.photo):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none';const w=document.getElementById('ed-photo-warn');if(w){w.style.color='#d97706';w.textContent='⚠️ 이미지를 불러올 수 없습니다. 다른 도메인에서 차단됐거나 URL이 잘못됐을 수 있습니다.';}">
-      </span>
-    </div>
-    <div id="ed-photo-warn" style="font-size:10px;color:${p.photo&&p.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:-6px">${p.photo&&p.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
-
-    <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-weight:900;font-size:12px;color:var(--text2);margin-bottom:6px">🖼 프로필 사진 1 — 얼굴 위치(자르기 보정)</div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
         (채우기/cover 사용 시) 얼굴이 잘리면 아래 미리보기에서 <b>드래그</b>하거나 X/Y로 위치를 보정할 수 있습니다.
       </div>
@@ -598,7 +589,9 @@ window.openEP=function(name){
     if(typeof edBindPhbgDrag==='function') edBindPhbgDrag();
   }, 0); }catch(e){}
 }
-// 스트리머 상세 모달 → 수정창 열기
+/* ════════════════════════════════════════════════════════
+   §3  모달 → 수정창 진입 / 저장
+════════════════════════════════════════════════════════ */
 // emModal(z-index:5000) > playerModal(z-index:4000) 이므로 playerModal을 닫지 않고
 // 그 위에 emModal을 열기만 함 → cm/om 순서 경쟁조건 완전 제거
 function openEPFromModal(nameArg){
@@ -616,6 +609,35 @@ function openEPFromModal(nameArg){
     alert('수정창 열기 실패: '+e.message);
   }
 }
+/* ════════════════════════════════════════════════════════
+   §2  openEP (스트리머 수정창) 헬퍼
+════════════════════════════════════════════════════════ */
+// 스트리머 수정창(openEP) 포지션 저장 헬퍼
+// savePlayer 내에서 각 이미지 위치 보정값을 p 객체에 기록한다.
+// prefix   : 'p1pos' | 'p2pos' | 'p3pos' | 'p4pos' | 'p5pos' | 'cardpos'
+// fileKey  : p 객체에서 이미지 URL을 읽는 프로퍼티명 (예: 'photo', 'secondProfileFile')
+// posXKey  : p 객체에 저장할 X 프로퍼티명 (예: 'photoPosX')
+// posYKey  : p 객체에 저장할 Y 프로퍼티명 (예: 'photoPosY')
+// useKey   : p 객체에 저장할 사용 여부 프로퍼티명 (예: 'photoPosUse')
+// defX/defY: 기본(센터) 값 — 기본값과 동일하면 저장하지 않음(용량 절약)
+function _savePhotoPos(p, prefix, fileKey, posXKey, posYKey, useKey, defX, defY) {
+  try {
+    const use = !!document.getElementById(`ed-${prefix}-use`)?.checked;
+    const del = (document.getElementById(`ed-${prefix}-del`)?.value || '0') === '1';
+    const x   = parseInt(document.getElementById(`ed-${prefix}-x`)?.value || String(defX), 10);
+    const y   = parseInt(document.getElementById(`ed-${prefix}-y`)?.value || String(defY), 10);
+    p[useKey] = use;
+    if (del || !p[fileKey]) {
+      delete p[posXKey]; delete p[posYKey];
+    } else if (Number.isFinite(x) && Number.isFinite(y)) {
+      const xx = Math.max(0, Math.min(100, x));
+      const yy = Math.max(0, Math.min(100, y));
+      if (xx === defX && yy === defY) { delete p[posXKey]; delete p[posYKey]; }
+      else { p[posXKey] = xx; p[posYKey] = yy; }
+    }
+  } catch (e) { /* 위치 보정 저장 실패는 치명적이지 않음 */ }
+}
+
 function savePlayer(){
   try{
   const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
@@ -712,153 +734,69 @@ function savePlayer(){
   }
   p.photo=_photo||undefined;
 
-  // 프로필 사진 1 object-position 보정 저장
-  try{
-    const use = !!document.getElementById('ed-p1pos-use')?.checked;
-    const del = (document.getElementById('ed-p1pos-del')?.value||'0') === '1';
-    const x = parseInt(document.getElementById('ed-p1pos-x')?.value||'50',10);
-    const y = parseInt(document.getElementById('ed-p1pos-y')?.value||'50',10);
-    // 체크 해제 시: 기존 설정(기본값) 사용
-    p.photoPosUse = use;
-    if(del || !p.photo){
-      delete p.photoPosX; delete p.photoPosY;
-    }else if(Number.isFinite(x) && Number.isFinite(y)){
-      const xx=Math.max(0,Math.min(100,x)), yy=Math.max(0,Math.min(100,y));
-      if(xx===50 && yy===50){ delete p.photoPosX; delete p.photoPosY; }
-      else { p.photoPosX=xx; p.photoPosY=yy; }
-    }
-  }catch(e){}
+  // 프로필 사진 1~5 / 카드 얼굴 위치 보정 저장
+  _savePhotoPos(p, 'p1pos', 'photo', 'photoPosX', 'photoPosY', 'photoPosUse', 50, 50);
 
-  const _win=document.getElementById('ed-win');
-  const _loss=document.getElementById('ed-loss');
-  const _pts=document.getElementById('ed-pts');
-  if(_win)p.win=parseInt(_win.value)||0;
-  if(_loss)p.loss=parseInt(_loss.value)||0;
-  if(_pts)p.points=parseInt(_pts.value)||0;
-  p.retired=document.getElementById('ed-retired')?.checked||false;
-  if(!p.retired)p.retired=undefined;
-  p.inactive=document.getElementById('ed-inactive')?.checked||false;
-  if(!p.inactive)p.inactive=undefined;
-  p.hideFromBoard=document.getElementById('ed-hide-board')?.checked||false;
-  if(!p.hideFromBoard)p.hideFromBoard=undefined;
-  // (요청사항) 크루 소속 항목 제거 (기존 값 유지)
-  const _memo=(document.getElementById('ed-memo')?.value||'').trim();
-  p.memo=_memo||undefined;
-  const _channel=(document.getElementById('ed-channel')?.value||'').trim();
-  p.channelUrl=_channel||undefined;
-  const _photo2=(document.getElementById('ed-photo2')?.value||'').trim();
-  const _photo3=(document.getElementById('ed-photo3')?.value||'').trim();
-  const _photo4=(document.getElementById('ed-photo4')?.value||'').trim();
-  const _photo5=(document.getElementById('ed-photo5')?.value||'').trim();
-  const _cardPhoto=(document.getElementById('ed-card-photo')?.value||'').trim();
-  const _phbg=(document.getElementById('ed-phbg')?.value||'').trim();
-  const _phbgFit=(document.getElementById('ed-phbg-fit')?.value||'').trim();
-  const _phbgScale=parseInt(document.getElementById('ed-phbg-scale')?.value||'100',10)||100;
-  const _phbgPos=(document.getElementById('ed-phbg-pos')?.value||'center center').trim();
-  const _phbgPosX=parseInt(document.getElementById('ed-phbg-posx')?.value||'50',10);
-  const _phbgPosY=parseInt(document.getElementById('ed-phbg-posy')?.value||'50',10);
-  const _shareBg=(document.getElementById('ed-sharebg')?.value||'').trim();
-  const _shareBgFit=(document.getElementById('ed-sharebg-fit')?.value||'').trim();
-  const _shareBgScale=parseInt(document.getElementById('ed-sharebg-scale')?.value||'100',10)||100;
-  const _shareBgDark=parseInt(document.getElementById('ed-sharebg-dark')?.value||'18',10)||0;
-  const _shareBgFade=parseInt(document.getElementById('ed-sharebg-fade')?.value||'0',10)||0;
-  const _shareBgPosX=(document.getElementById('ed-sharebg-posx')?.value||'center').trim();
-  const _shareBgPosY=(document.getElementById('ed-sharebg-posy')?.value||'center').trim();
-  p.secondProfileFile=_photo2||undefined;
-  p.profileFile3=_photo3||undefined;
-  p.profileFile4=_photo4||undefined;
-  p.profileFile5=_photo5||undefined;
-  p.shareCardPhoto=_cardPhoto||undefined;
+  // 승패/포인트 직접 조정
+  const _getIntVal = (id, fallback) => { const el = document.getElementById(id); return el ? (parseInt(el.value) || 0) : fallback; };
+  p.win    = _getIntVal('ed-win',  p.win);
+  p.loss   = _getIntVal('ed-loss', p.loss);
+  p.points = _getIntVal('ed-pts',  p.points);
+  // boolean 플래그 — false면 undefined로 저장(불필요한 키 제거)
+  const _flag = (id) => document.getElementById(id)?.checked || undefined;
+  p.retired      = _flag('ed-retired');
+  p.inactive     = _flag('ed-inactive');
+  p.hideFromBoard = _flag('ed-hide-board');
+  // 텍스트 필드 일괄 읽기
+  const _strVal = (id) => (document.getElementById(id)?.value || '').trim() || undefined;
+  const _intVal  = (id, def) => parseInt(document.getElementById(id)?.value || String(def), 10) || def;
 
-  try{
-    const clamp = (v)=>{
-      const n = parseFloat(v);
-      if(isNaN(n)) return 1;
-      return Math.max(0.2, Math.min(60, n));
+  p.memo            = _strVal('ed-memo');
+  p.channelUrl      = _strVal('ed-channel');
+
+  // 이미지 URL (비어 있으면 undefined)
+  p.secondProfileFile = _strVal('ed-photo2');
+  p.profileFile3      = _strVal('ed-photo3');
+  p.profileFile4      = _strVal('ed-photo4');
+  p.profileFile5      = _strVal('ed-photo5');
+  p.shareCardPhoto    = _strVal('ed-card-photo');
+
+  // 헤더 배경 설정
+  const _phbg      = _strVal('ed-phbg') || '';
+  const _phbgFit   = _strVal('ed-phbg-fit') || '';
+  const _phbgScale = _intVal('ed-phbg-scale', 100);
+  const _phbgPos   = (document.getElementById('ed-phbg-pos')?.value || 'center center').trim();
+  const _phbgPosX  = _intVal('ed-phbg-posx', 50);
+  const _phbgPosY  = _intVal('ed-phbg-posy', 50);
+
+  // 공유카드 배경 설정
+  const _shareBg     = _strVal('ed-sharebg') || '';
+  const _shareBgFit  = _strVal('ed-sharebg-fit') || '';
+  const _shareBgScale = _intVal('ed-sharebg-scale', 100);
+  const _shareBgDark  = _intVal('ed-sharebg-dark', 18);
+  const _shareBgFade  = _intVal('ed-sharebg-fade', 0);
+  const _shareBgPosX  = (document.getElementById('ed-sharebg-posx')?.value || 'center').trim();
+  const _shareBgPosY  = (document.getElementById('ed-sharebg-posy')?.value || 'center').trim();
+
+
+  try {
+    // 이미지 전환 딜레이 저장 (기본값 1초와 같으면 키 삭제해 용량 절약)
+    const _clampDelay = (v) => { const n = parseFloat(v); return isNaN(n) ? 1 : Math.max(0.2, Math.min(60, n)); };
+    const _setDelay = (key, elId) => {
+      const v = _clampDelay(document.getElementById(elId)?.value || '1');
+      if (v === 1) delete p[key]; else p[key] = v;
     };
-    const d23 = clamp(document.getElementById('ed-delay-23')?.value||'1');
-    const d34 = clamp(document.getElementById('ed-delay-34')?.value||'1');
-    const d45 = clamp(document.getElementById('ed-delay-45')?.value||'1');
-    const d51 = clamp(document.getElementById('ed-delay-51')?.value||'1');
-    if(d23===1) delete p.photoDelay23; else p.photoDelay23 = d23;
-    if(d34===1) delete p.photoDelay34; else p.photoDelay34 = d34;
-    if(d45===1) delete p.photoDelay45; else p.photoDelay45 = d45;
-    if(d51===1) delete p.photoDelay51; else p.photoDelay51 = d51;
-  }catch(e){}
+    _setDelay('photoDelay23', 'ed-delay-23');
+    _setDelay('photoDelay34', 'ed-delay-34');
+    _setDelay('photoDelay45', 'ed-delay-45');
+    _setDelay('photoDelay51', 'ed-delay-51');
+  } catch (e) { /* 딜레이 저장 실패는 치명적이지 않음 */ }
 
-  try{
-    const use = !!document.getElementById('ed-cardpos-use')?.checked;
-    const del = (document.getElementById('ed-cardpos-del')?.value||'0') === '1';
-    const x = parseInt(document.getElementById('ed-cardpos-x')?.value||'50',10);
-    const y = parseInt(document.getElementById('ed-cardpos-y')?.value||'22',10);
-    p.shareCardPhotoPosUse = use;
-    if(del || !p.shareCardPhoto){
-      delete p.shareCardPhotoPosX; delete p.shareCardPhotoPosY;
-    }else if(Number.isFinite(x) && Number.isFinite(y)){
-      const xx=Math.max(0,Math.min(100,x)), yy=Math.max(0,Math.min(100,y));
-      if(xx===50 && yy===22){ delete p.shareCardPhotoPosX; delete p.shareCardPhotoPosY; }
-      else { p.shareCardPhotoPosX=xx; p.shareCardPhotoPosY=yy; }
-    }
-  }catch(e){}
-
-  // 프로필 사진 2 object-position 보정 저장
-  try{
-    const use = !!document.getElementById('ed-p2pos-use')?.checked;
-    const del = (document.getElementById('ed-p2pos-del')?.value||'0') === '1';
-    const x = parseInt(document.getElementById('ed-p2pos-x')?.value||'50',10);
-    const y = parseInt(document.getElementById('ed-p2pos-y')?.value||'50',10);
-    p.photo2PosUse = use;
-    if(del || !p.secondProfileFile){
-      delete p.photo2PosX; delete p.photo2PosY;
-    }else if(Number.isFinite(x) && Number.isFinite(y)){
-      const xx=Math.max(0,Math.min(100,x)), yy=Math.max(0,Math.min(100,y));
-      if(xx===50 && yy===50){ delete p.photo2PosX; delete p.photo2PosY; }
-      else { p.photo2PosX=xx; p.photo2PosY=yy; }
-    }
-  }catch(e){}
-
-  try{
-    const use = !!document.getElementById('ed-p3pos-use')?.checked;
-    const del = (document.getElementById('ed-p3pos-del')?.value||'0') === '1';
-    const x = parseInt(document.getElementById('ed-p3pos-x')?.value||'50',10);
-    const y = parseInt(document.getElementById('ed-p3pos-y')?.value||'50',10);
-    p.photo3PosUse = use;
-    if(del || !p.profileFile3){
-      delete p.photo3PosX; delete p.photo3PosY;
-    }else if(Number.isFinite(x) && Number.isFinite(y)){
-      const xx=Math.max(0,Math.min(100,x)), yy=Math.max(0,Math.min(100,y));
-      if(xx===50 && yy===50){ delete p.photo3PosX; delete p.photo3PosY; }
-      else { p.photo3PosX=xx; p.photo3PosY=yy; }
-    }
-  }catch(e){}
-  try{
-    const use = !!document.getElementById('ed-p4pos-use')?.checked;
-    const del = (document.getElementById('ed-p4pos-del')?.value||'0') === '1';
-    const x = parseInt(document.getElementById('ed-p4pos-x')?.value||'50',10);
-    const y = parseInt(document.getElementById('ed-p4pos-y')?.value||'50',10);
-    p.photo4PosUse = use;
-    if(del || !p.profileFile4){
-      delete p.photo4PosX; delete p.photo4PosY;
-    }else if(Number.isFinite(x) && Number.isFinite(y)){
-      const xx=Math.max(0,Math.min(100,x)), yy=Math.max(0,Math.min(100,y));
-      if(xx===50 && yy===50){ delete p.photo4PosX; delete p.photo4PosY; }
-      else { p.photo4PosX=xx; p.photo4PosY=yy; }
-    }
-  }catch(e){}
-  try{
-    const use = !!document.getElementById('ed-p5pos-use')?.checked;
-    const del = (document.getElementById('ed-p5pos-del')?.value||'0') === '1';
-    const x = parseInt(document.getElementById('ed-p5pos-x')?.value||'50',10);
-    const y = parseInt(document.getElementById('ed-p5pos-y')?.value||'50',10);
-    p.photo5PosUse = use;
-    if(del || !p.profileFile5){
-      delete p.photo5PosX; delete p.photo5PosY;
-    }else if(Number.isFinite(x) && Number.isFinite(y)){
-      const xx=Math.max(0,Math.min(100,x)), yy=Math.max(0,Math.min(100,y));
-      if(xx===50 && yy===50){ delete p.photo5PosX; delete p.photo5PosY; }
-      else { p.photo5PosX=xx; p.photo5PosY=yy; }
-    }
-  }catch(e){}
+  _savePhotoPos(p, 'cardpos', 'shareCardPhoto', 'shareCardPhotoPosX', 'shareCardPhotoPosY', 'shareCardPhotoPosUse', 50, 22);
+  _savePhotoPos(p, 'p2pos', 'secondProfileFile', 'photo2PosX', 'photo2PosY', 'photo2PosUse', 50, 50);
+  _savePhotoPos(p, 'p3pos', 'profileFile3',      'photo3PosX', 'photo3PosY', 'photo3PosUse', 50, 50);
+  _savePhotoPos(p, 'p4pos', 'profileFile4',      'photo4PosX', 'photo4PosY', 'photo4PosUse', 50, 50);
+  _savePhotoPos(p, 'p5pos', 'profileFile5',      'photo5PosX', 'photo5PosY', 'photo5PosUse', 50, 50);
   p.detailHeaderBgImg=_phbg||undefined;
   p.detailHeaderBgFit=_phbgFit||undefined;
   p.detailHeaderBgScale=_phbg ? _phbgScale : undefined;
@@ -1068,7 +1006,9 @@ window.edCardPosCenter = function(){ _edPosCenter('cardpos', 50, 22); };
 window.edCardPosDelete = function(){ _edPosDelete('cardpos', '개인/끝장전 카드 얼굴 위치 보정값을 삭제합니다. (기본 center 22%)'); };
 window.edBindCardPosDrag = function(){ _edBindPosDrag('cardpos', 50, 22); };
 
-// ── 참가자(스트리머) 수정 UI 헬퍼 ──────────────────────────────────────
+/* ════════════════════════════════════════════════════════
+   §4  경기 기록 수정 (openRE / saveRow)
+════════════════════════════════════════════════════════ */
 // 팀 경기(mini/civil/univm/ck/pro/tt)에서 A팀/B팀 멤버를 수정하는 섹션 HTML 반환
 function _buildMemberEditHTML(members, side, label){
   const allNames = (typeof players !== 'undefined' && Array.isArray(players))
@@ -1391,13 +1331,18 @@ function saveRow(){
   }
   // 🎙️ 캐스터/스트리머 저장 (모든 mode 공통)
   const _reCaster = (document.getElementById('re-caster')?.value ?? '').trim();
-  const _reArr = reMode==='mini'?miniM:reMode==='univm'?univM:reMode==='comp'?comps:reMode==='ck'?ckM:reMode==='pro'?proM:reMode==='tt'?ttM:reMode==='progj'?gjM:reMode==='gj'?gjM:reMode==='ind'?indM:null;
+  // mode → 데이터 배열 매핑 (캐스터/스트리머 공통 저장)
+  const _RE_ARR_MAP = { mini: miniM, univm: univM, comp: comps, ck: ckM, pro: proM, tt: ttM, progj: gjM, gj: gjM, ind: indM };
+  const _reArr = _RE_ARR_MAP[reMode] ?? null;
   if(_reArr && _reArr[reIdx]) {
     if(_reCaster) _reArr[reIdx].caster = _reCaster; else delete _reArr[reIdx].caster;
   }
   save();render();cm('reModal');
 }
 
+/* ════════════════════════════════════════════════════════
+   §5  대학 CRUD 및 데이터 일관성
+════════════════════════════════════════════════════════ */
 function renameUnivAcrossData(oldName,newName){
   oldName=(oldName||'').trim();
   newName=(newName||'').trim();
@@ -1535,7 +1480,9 @@ function delTier(t){
   document.getElementById('p-tier').innerHTML=TIERS.map(t2=>`<option value="${t2}">${getTierLabel(t2)}</option>`).join('');
 }
 
-// ── 티어 색상/밝기/이모지 커스텀 ──
+/* ════════════════════════════════════════════════════════
+   §6  티어 테마 커스텀
+════════════════════════════════════════════════════════ */
 function cfgTierThemeSetBri(pct){
   if(typeof setTierTheme!=='function') return;
   const v=(parseInt(pct,10)||100)/100;
@@ -1580,7 +1527,9 @@ function cfgTierThemeReset(){
   if(typeof reCfg==='function') reCfg();
 }
 
-// ── 색상 입력/스포이드 공용 유틸 ──
+/* ════════════════════════════════════════════════════════
+   §7  색상 유틸 (스포이드 / hex 정규화)
+════════════════════════════════════════════════════════ */
 function cfgNormHex(v){
   const s=String(v||'').trim();
   if(!s) return null;
@@ -1633,6 +1582,9 @@ async function cfgTierThemePickColor(tier){
   if(c) cfgTierThemeSetColor(tier,c);
 }
 
+/* ════════════════════════════════════════════════════════
+   §8  관리자 계정 관리
+════════════════════════════════════════════════════════ */
 async function addAdminAccount(){
   const id=document.getElementById('adm-id').value.trim();
   const pw=document.getElementById('adm-pw').value;
@@ -1685,6 +1637,9 @@ async function clearAllAdmins(){
   alert('초기화 완료. 원격 관리자 계정 목록이 비워졌습니다.');
 }
 
+/* ════════════════════════════════════════════════════════
+   §9  인증 토큰 / 비밀번호 저장
+════════════════════════════════════════════════════════ */
 function saveFbPw(){
   const pw = document.getElementById('cfg-fb-pw')?.value.trim();
   const statusEl = document.getElementById('fb-pw-status');

@@ -356,13 +356,13 @@ function rBoard2(C, T) {
     injectUnivIcons(sub);
     setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 260); }catch(e){} }, 80);
     // 모바일/태블릿에서 인원이 많은 대학도 "좌측부터" 항상 보이게 (스크롤 초기값 0)
-    setTimeout(()=>{
-      try{
-        sub.querySelectorAll('.b2-femco-grid').forEach(g=>{ g.scrollLeft = 0; });
-      }catch(e){
-        console.warn('[rBoard] 펨코 그리드 스크롤 초기화 실패:', e.message);
-      }
-    }, 0);
+        requestAnimationFrame(() => {
+          try{
+            sub.querySelectorAll('.b2-femco-grid').forEach(g=>{ g.scrollLeft = 0; });
+          }catch(e){
+            console.warn('[rBoard] 펨코 그리드 스크롤 초기화 실패:', e.message);
+          }
+        });
   } else if (_b2View === 'free') {
     sub.innerHTML = _b2FreeView();
     injectUnivIcons(sub);
@@ -957,9 +957,9 @@ function _b2FemcoView() {
                     <div class="b2-femco-tier">
                       <span class="b2-femco-tierbadge" style="background:${tierBg};color:${tierFg}">${tier}</span>
                     </div>
-                    <div class="b2-femco-role">${roleLabel || ''}</div>
+                    ${roleLabel ? `<div class="b2-femco-role">${roleLabel}</div>` : ''}
                     <div class="b2-femco-name">${p.name || ''}</div>
-                    <div><span class="b2-femco-race-pill" style="color:${rcol};border-color:${rcol}88;background:rgba(255,255,255,.92);box-shadow:0 1px 2px rgba(0,0,0,.18)">${raceLabel(p)}</span></div>
+                    <div><span class="b2-femco-race-pill" style="color:${rcol};border-color:${rcol}88;background:${textCol==='#ffffff'?'rgba(0,0,0,.28)':'rgba(255,255,255,.92)'};box-shadow:0 1px 2px rgba(0,0,0,.18)">${raceLabel(p)}</span></div>
                   </div>
                 </div>
               `;
