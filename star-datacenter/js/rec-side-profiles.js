@@ -276,25 +276,6 @@
     var brightness= _cfg('su_rsp_brightness','1.0');
     var effect    = _cfg('su_rsp_effect','none');
     var widthPx   = Math.max(60, Math.min(180, parseInt(_cfg('su_rsp_width','90'),10)||90));
-    // ── 모바일 반응형: 화면 너비에 따라 패널·이미지 크기 자동 축소 ──
-    (function(){
-      try{
-        var vw = window.innerWidth || 390;
-        if(vw <= 480){
-          // 초소형: 패널 56px, 이미지 38px
-          widthPx = Math.min(widthPx, 56);
-          sizePx  = Math.min(sizePx, 38);
-        } else if(vw <= 600){
-          // 소형: 패널 64px, 이미지 44px
-          widthPx = Math.min(widthPx, 64);
-          sizePx  = Math.min(sizePx, 44);
-        } else if(vw <= 768){
-          // 중형: 패널 72px, 이미지 50px
-          widthPx = Math.min(widthPx, 72);
-          sizePx  = Math.min(sizePx, 50);
-        }
-      }catch(e){}
-    })();
     var radius    = _cfg('su_profile_radius','6px')||'6px';
     var imageType = _getImageType();
     var rawOffset = Math.max(-200,Math.min(200,parseInt(_cfg('su_rsp_hoffset','0'),10)||0));
