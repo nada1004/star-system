@@ -510,9 +510,23 @@ function bulkMoveTeam(bulkKey,destMode){
 function bulkDeleteRecs(bulkKey){
   const cbs=[...document.querySelectorAll(`.bulk-cb[data-bkey="${bulkKey}"]:checked`)];
   if(!cbs.length){alert('선택된 경기가 없습니다.');return;}
-  const indices=cbs.map(cb=>parseInt(cb.dataset.bidx)).sort((a,b)=>b-a);
-  if(!confirm(indices.length+'개 경기를 삭제하시겠습니까?\n\n⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.'))return;
   const arr=bulkKey==='univm'?univM:bulkKey==='ck'?ckM:bulkKey==='pro'?proM:bulkKey==='tt'?ttM:miniM;
+  const resolved = [];
+  cbs.forEach(cb=>{
+    const idx = parseInt(cb.dataset.bidx,10);
+    if(isFinite(idx) && idx>=0 && idx<arr.length && arr[idx]){ resolved.push(idx); return; }
+    const mid = String(cb.dataset.bmid||'').trim();
+    if(mid){
+      const found = arr.findIndex(x=>{
+        const id = x && (x._id || x.sid || x.matchId);
+        return id && String(id) === mid;
+      });
+      if(found>=0) resolved.push(found);
+    }
+  });
+  const indices = [...new Set(resolved)].sort((a,b)=>b-a);
+  if(!indices.length){alert('선택된 경기가 없습니다.');return;}
+  if(!confirm(indices.length+'개 경기를 삭제하시겠습니까?\n\n⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.'))return;
   const deletedIds=new Set();
   indices.forEach(idx=>{
     const matchObj=arr[idx];
@@ -610,7 +624,7 @@ function openMoveMatchPop(btn,srcMode,srcIdx){
   _showMovePop(btn,opts);
 }
 
-function delRec(mode,i){
+function delRec(mode,i,matchId){
   if(!confirm('삭제하시겠습니까?\n\n⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.'))return;
   // 개인전/끝장전/프로 끝장전은 기존 delRec 로직(팀 대전 revertMatchRecord)과 구조가 달라서
   // 별도 삭제 처리 필요 (요청사항: 삭제가 안됨 해결)
@@ -653,12 +667,46 @@ function delRec(mode,i){
     return;
   }
   let matchObj=null;
-  if(mode==='mini')     { matchObj=miniM[i];  miniM.splice(i,1); }
-  else if(mode==='univm'){ matchObj=univM[i];  univM.splice(i,1); }
-  else if(mode==='comp') { matchObj=comps[i];  comps.splice(i,1); }
-  else if(mode==='ck')   { matchObj=ckM[i];    ckM.splice(i,1);   }
-  else if(mode==='pro')  { matchObj=proM[i];   proM.splice(i,1);  }
-  else if(mode==='tt')   { matchObj=ttM[i];    ttM.splice(i,1);   }
+  const _mid = String(matchId||'').trim();
+  const _pickById = (arr)=>{
+    if(!Array.isArray(arr) || !_mid) return -1;
+    const idx = arr.findIndex(x=>{
+      const id = x && (x._id || x.sid || x.matchId);
+      return id && String(id) === _mid;
+    });
+    return idx;
+  };
+  const _safeIndex = (arr, idxHint)=>{
+    const idx = Number(idxHint);
+    if(Array.isArray(arr) && isFinite(idx) && idx>=0 && idx<arr.length && arr[idx]) return idx;
+    const byId = _pickById(arr);
+    if(byId>=0) return byId;
+    return -1;
+  };
+  if(mode==='mini' || mode==='civil'){
+    const idx = _safeIndex(miniM, i);
+    if(idx>=0){ matchObj=miniM[idx]; miniM.splice(idx,1); }
+  }
+  else if(mode==='univm'){
+    const idx = _safeIndex(univM, i);
+    if(idx>=0){ matchObj=univM[idx]; univM.splice(idx,1); }
+  }
+  else if(mode==='comp'){
+    const idx = _safeIndex(comps, i);
+    if(idx>=0){ matchObj=comps[idx]; comps.splice(idx,1); }
+  }
+  else if(mode==='ck'){
+    const idx = _safeIndex(ckM, i);
+    if(idx>=0){ matchObj=ckM[idx]; ckM.splice(idx,1); }
+  }
+  else if(mode==='pro'){
+    const idx = _safeIndex(proM, i);
+    if(idx>=0){ matchObj=proM[idx]; proM.splice(idx,1); }
+  }
+  else if(mode==='tt'){
+    const idx = _safeIndex(ttM, i);
+    if(idx>=0){ matchObj=ttM[idx]; ttM.splice(idx,1); }
+  }
   if(matchObj) {
     revertMatchRecord(matchObj);
     if(mode==='tt' && matchObj._id) {

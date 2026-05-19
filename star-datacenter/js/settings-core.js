@@ -29,6 +29,12 @@ function _renderB2ImgSettingsWrap(){
     if(!wrap) return false;
     if(typeof _b2BuildImageControlGroup !== 'function') return false;
     const _shuffle = (localStorage.getItem('su_b2_profile_shuffle') ?? '1') === '1';
+    const _selName = (localStorage.getItem('su_b2_swap_delay_player') || '').trim();
+    const _opts = (Array.isArray(window.players) ? window.players : [])
+      .map(p=>String(p&&p.name||'').trim()).filter(Boolean)
+      .sort((a,b)=>a.localeCompare(b,'ko'))
+      .map(n=>`<option value="${esc(n)}"${n===_selName?' selected':''}>${esc(n)}</option>`)
+      .join('');
     wrap.innerHTML=`
       <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">이미지 1 (기본 이미지)</div>
       ${_b2BuildImageControlGroup('','primary','이미지 1',true)}
@@ -40,12 +46,102 @@ function _renderB2ImgSettingsWrap(){
         이미지탭(프로필) 목록 랜덤(셔플)
       </label>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ PC 좌/우 및 대학 필터에서도 적용됩니다(보기 재미용)</div>
+      <hr style="border:none;border-top:1px dashed var(--border2);margin:14px 0">
+      <div style="font-weight:900;font-size:12px;color:var(--text2);margin-bottom:10px">전환 시간(선수별)</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <select id="cfg-b2-delay-player" style="flex:1;min-width:180px" onchange="localStorage.setItem('su_b2_swap_delay_player',this.value||''); if(typeof _cfgB2RenderSwapDelay==='function') _cfgB2RenderSwapDelay(this.value||'');">
+          <option value="">선수 선택</option>
+          ${_opts}
+        </select>
+        <button class="btn btn-xs btn-w" onclick="localStorage.setItem('su_b2_swap_delay_player',''); const sel=document.getElementById('cfg-b2-delay-player'); if(sel) sel.value=''; if(typeof _cfgB2RenderSwapDelay==='function') _cfgB2RenderSwapDelay('');">초기화</button>
+      </div>
+      <div id="cfg-b2-delay-area" style="padding:12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px">
+        <div style="font-size:12px;color:var(--gray-l)">선수를 선택하면 이미지 2→3, 3→4, 4→5 전환 시간을 설정할 수 있습니다.</div>
+      </div>
     `;
+    try{ if(typeof window._cfgB2RenderSwapDelay==='function') window._cfgB2RenderSwapDelay(_selName); }catch(e){}
     return true;
   }catch(e){
     return false;
   }
 }
+
+window._cfgB2RenderSwapDelay = function(playerName){
+  try{
+    const area = document.getElementById('cfg-b2-delay-area');
+    if(!area) return;
+    const name = String(playerName||'').trim();
+    if(!name){
+      area.innerHTML = `<div style="font-size:12px;color:var(--gray-l)">선수를 선택하면 이미지 2→3, 3→4, 4→5 전환 시간을 설정할 수 있습니다.</div>`;
+      return;
+    }
+    const p = (Array.isArray(window.players)?window.players:[]).find(x=>x && x.name===name);
+    if(!p){
+      area.innerHTML = `<div style="font-size:12px;color:var(--gray-l)">선수를 찾을 수 없습니다.</div>`;
+      return;
+    }
+    const clamp = (v)=>{
+      const n = parseFloat(v);
+      if(isNaN(n)) return 1;
+      return Math.max(0.2, Math.min(60, n));
+    };
+    const d23 = clamp(p.photoDelay23 ?? 1);
+    const d34 = clamp(p.photoDelay34 ?? 1);
+    const d45 = clamp(p.photoDelay45 ?? 1);
+    const d51 = clamp(p.photoDelay51 ?? 1);
+    const safe = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    area.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">2 → 3 (초)</div>
+          <input type="number" min="0.2" max="60" step="0.1" value="${d23}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">3 → 4 (초)</div>
+          <input type="number" min="0.2" max="60" step="0.1" value="${d34}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">4 → 5 (초)</div>
+          <input type="number" min="0.2" max="60" step="0.1" value="${d45}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">5 → 1 (초)</div>
+          <input type="number" min="0.2" max="60" step="0.1" value="${d51}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:8px">값은 즉시 저장됩니다. 기본값(1초)은 저장하지 않습니다.</div>
+    `;
+  }catch(e){}
+};
+window._cfgB2SaveSwapDelay = function(playerName){
+  try{
+    const area = document.getElementById('cfg-b2-delay-area');
+    if(!area) return;
+    const name = String(playerName||'').trim();
+    const p = (Array.isArray(window.players)?window.players:[]).find(x=>x && x.name===name);
+    if(!p) return;
+    const inputs = area.querySelectorAll('input[type="number"]');
+    if(!inputs || inputs.length < 4) return;
+    const clamp = (v)=>{
+      const n = parseFloat(v);
+      if(isNaN(n)) return 1;
+      return Math.max(0.2, Math.min(60, n));
+    };
+    const d23 = clamp(inputs[0].value);
+    const d34 = clamp(inputs[1].value);
+    const d45 = clamp(inputs[2].value);
+    const d51 = clamp(inputs[3].value);
+    if(d23===1) delete p.photoDelay23; else p.photoDelay23 = d23;
+    if(d34===1) delete p.photoDelay34; else p.photoDelay34 = d34;
+    if(d45===1) delete p.photoDelay45; else p.photoDelay45 = d45;
+    if(d51===1) delete p.photoDelay51; else p.photoDelay51 = d51;
+    if(typeof window.save === 'function') window.save();
+    try{
+      const cur = window._b2SelectedPlayer && window._b2SelectedPlayer.name;
+      if(cur === name && typeof window._b2ScheduleImageSwap === 'function') window._b2ScheduleImageSwap(name);
+    }catch(e){}
+  }catch(e){}
+};
 function _ensureB2ImgSettingsWrap(retry){
   if(_renderB2ImgSettingsWrap()) return;
   if(retry === false) return;

@@ -2656,7 +2656,7 @@ function _b2PlayersView() {
         right: 0;
         padding: 30px;
         background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-        z-index: 2;
+        z-index: 12;
       }
       .b2-players-name {
         font-size: 36px;
@@ -2897,6 +2897,21 @@ function _b2PlayersView() {
   const safeName = (_b2SelectedPlayer.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   const hasPrimary = !!_b2SelectedPlayer.photo;
   const hasSecondary = !!_b2SelectedPlayer.secondProfileFile;
+  const _b2PosPct = (useFlag, x, y)=>{
+    try{
+      if(useFlag === false) return 'center center';
+      const xx = Number(x), yy = Number(y);
+      if(!Number.isFinite(xx) || !Number.isFinite(yy)) return 'center center';
+      const cx = Math.max(0, Math.min(100, xx));
+      const cy = Math.max(0, Math.min(100, yy));
+      return `${cx}% ${cy}%`;
+    }catch(e){
+      return 'center center';
+    }
+  };
+  const _p3pos = _b2PosPct(_b2SelectedPlayer.photo3PosUse, _b2SelectedPlayer.photo3PosX, _b2SelectedPlayer.photo3PosY);
+  const _p4pos = _b2PosPct(_b2SelectedPlayer.photo4PosUse, _b2SelectedPlayer.photo4PosX, _b2SelectedPlayer.photo4PosY);
+  const _p5pos = _b2PosPct(_b2SelectedPlayer.photo5PosUse, _b2SelectedPlayer.photo5PosX, _b2SelectedPlayer.photo5PosY);
   try{
     if(typeof prewarmImageUrls==='function'){
       prewarmImageUrls([
@@ -2906,15 +2921,63 @@ function _b2PlayersView() {
       ], 24);
     }
   }catch(e){}
+
+  const _b2IsVideoUrl = (u)=>{
+    const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+    return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
+  };
+  const _b2MainMediaHTML = (slot, rawUrl, opt)=>{
+    const url = String(rawUrl||'').trim();
+    if(!url) return '';
+    const src = toHttpsUrl(url);
+    const isVid = _b2IsVideoUrl(url);
+    const z = opt && opt.z != null ? opt.z : slot;
+    const opacity = opt && opt.opacity != null ? opt.opacity : (slot===1?1:0);
+    const style = opt && opt.style ? opt.style : '';
+    const onLoadJs = opt && opt.onLoadJs ? String(opt.onLoadJs) : '';
+    const evAttr = onLoadJs ? (isVid ? 'onloadedmetadata' : 'onload') : '';
+    const evPart = onLoadJs ? ` ${evAttr}="${onLoadJs}"` : '';
+    const common = `class="b2-players-main-image" id="b2-main-img-${slot}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:${z};opacity:${opacity};pointer-events:none;${style}"`;
+    if(isVid){
+      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart}></video>`;
+    }
+    return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart}>`;
+  };
+  const _b2NameEsc = _b2SelectedPlayer.name.replace(/'/g,"\\'");
+  const _slot1 = _b2SelectedPlayer.photo
+    ? _b2MainMediaHTML(1, _b2SelectedPlayer.photo, {
+      z: 1,
+      opacity: 1,
+      onLoadJs: `_b2ScheduleImageSwap('${_b2NameEsc}'); if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2NameEsc}', 'primary'); }`,
+      style: `object-fit:${primarySettings.fit || 'cover'};object-position:center center;transform:${_b2GetImgTransform(primarySettings)};filter:brightness(${(primarySettings.brightness || 100) / 100});`
+    })
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`;
+  const _slot2 = _b2SelectedPlayer.secondProfileFile
+    ? _b2MainMediaHTML(2, _b2SelectedPlayer.secondProfileFile, {
+      z: 2,
+      opacity: 0,
+      onLoadJs: `if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2NameEsc}', 'secondary'); }`,
+      style: `object-fit:${secondarySettings.fit || 'cover'};object-position:center center;transform:${_b2GetImgTransform(secondarySettings)};filter:brightness(${(secondarySettings.brightness || 100) / 100});transition:opacity 0.4s ease;`
+    })
+    : '';
+  const _slot3 = _b2SelectedPlayer.profileFile3
+    ? _b2MainMediaHTML(3, _b2SelectedPlayer.profileFile3, { z:3, opacity:0, style:`object-fit:cover;object-position:${_p3pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot4 = _b2SelectedPlayer.profileFile4
+    ? _b2MainMediaHTML(4, _b2SelectedPlayer.profileFile4, { z:4, opacity:0, style:`object-fit:cover;object-position:${_p4pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot5 = _b2SelectedPlayer.profileFile5
+    ? _b2MainMediaHTML(5, _b2SelectedPlayer.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
+    : '';
   
   h += `
     <div class="b2-players-main">
       <div class="b2-players-main-content" id="b2-players-main-box" style="--img-zoom:${imgSettings.zoom/100};--img-brightness:${imgSettings.brightness/100};--img-pos-x:${imgSettings.posX}px;--img-pos-y:${imgSettings.posY}px;">
-        ${_b2SelectedPlayer.photo 
-          ? `<img src="${toHttpsUrl(_b2SelectedPlayer.photo)}" decoding="async" fetchpriority="high" class="b2-players-main-image" id="b2-main-img-1" alt="${_b2SelectedPlayer.name}" onload="_b2ScheduleImageSwap('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}'); if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'primary'); }" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1;object-fit:${primarySettings.fit || 'cover'};object-position:${primarySettings.manualCenter ? 'center center' : 'center center'};transform:${_b2GetImgTransform(primarySettings)};filter:brightness(${(primarySettings.brightness || 100) / 100})">`
-          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`
-        }
-        ${_b2SelectedPlayer.secondProfileFile ? `<img src="${_b2SelectedPlayer.secondProfileFile}" decoding="async" fetchpriority="high" class="b2-players-main-image" id="b2-main-img-2" alt="${_b2SelectedPlayer.name} 2" onload="if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2SelectedPlayer.name.replace(/'/g,"\\'")}', 'secondary'); }" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0;object-fit:${secondarySettings.fit || 'cover'};object-position:${secondarySettings.manualCenter ? 'center center' : 'center center'};transform:${_b2GetImgTransform(secondarySettings)};filter:brightness(${(secondarySettings.brightness || 100) / 100})">` : ''}
+        ${_slot1}
+        ${_slot2}
+        ${_slot3}
+        ${_slot4}
+        ${_slot5}
         
         <!-- 이미지 컨트롤 패널 - 관리자(로그인)만 렌더 [BUGFIX-IMG-SETTINGS] -->
         ${isLoggedIn ? `<div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
@@ -3001,6 +3064,58 @@ function _b2UpdateMainDisplay(playerName) {
     bg: hexToRgba(univColor, bgAlpha),
     border: univColor
   };
+  const _b2PosPct = (useFlag, x, y)=>{
+    try{
+      if(useFlag === false) return 'center center';
+      const xx = Number(x), yy = Number(y);
+      if(!Number.isFinite(xx) || !Number.isFinite(yy)) return 'center center';
+      const cx = Math.max(0, Math.min(100, xx));
+      const cy = Math.max(0, Math.min(100, yy));
+      return `${cx}% ${cy}%`;
+    }catch(e){
+      return 'center center';
+    }
+  };
+  const _p3pos = _b2PosPct(player.photo3PosUse, player.photo3PosX, player.photo3PosY);
+  const _p4pos = _b2PosPct(player.photo4PosUse, player.photo4PosX, player.photo4PosY);
+  const _p5pos = _b2PosPct(player.photo5PosUse, player.photo5PosX, player.photo5PosY);
+  const _b2IsVideoUrl = (u)=>{
+    const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+    return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
+  };
+  const _b2MainMediaHTML = (slot, rawUrl, opt)=>{
+    const url = String(rawUrl||'').trim();
+    if(!url) return '';
+    const src = toHttpsUrl(url);
+    const isVid = _b2IsVideoUrl(url);
+    const z = opt && opt.z != null ? opt.z : slot;
+    const opacity = opt && opt.opacity != null ? opt.opacity : (slot===1?1:0);
+    const style = opt && opt.style ? opt.style : '';
+    const onLoadJs = opt && opt.onLoadJs ? String(opt.onLoadJs) : '';
+    const evAttr = onLoadJs ? (isVid ? 'onloadedmetadata' : 'onload') : '';
+    const evPart = onLoadJs ? ` ${evAttr}="${onLoadJs}"` : '';
+    const common = `class="b2-players-main-image" id="b2-main-img-${slot}" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:${z};opacity:${opacity};pointer-events:none;${style}"`;
+    if(isVid){
+      return `<video ${common} src="${src}" preload="metadata" muted playsinline${evPart}></video>`;
+    }
+    return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart}>`;
+  };
+  const _nameEsc = player.name.replace(/'/g,"\\'");
+  const _slot1 = player.photo
+    ? _b2MainMediaHTML(1, player.photo, { z:1, opacity:1, onLoadJs:`_b2ScheduleImageSwap('${_nameEsc}')`, style:'' })
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`;
+  const _slot2 = player.secondProfileFile
+    ? _b2MainMediaHTML(2, player.secondProfileFile, { z:2, opacity:0, style:`object-fit:cover;transition:opacity 0.4s ease;` })
+    : '';
+  const _slot3 = player.profileFile3
+    ? _b2MainMediaHTML(3, player.profileFile3, { z:3, opacity:0, style:`object-fit:cover;object-position:${_p3pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot4 = player.profileFile4
+    ? _b2MainMediaHTML(4, player.profileFile4, { z:4, opacity:0, style:`object-fit:cover;object-position:${_p4pos};transition:opacity 0.4s ease;` })
+    : '';
+  const _slot5 = player.profileFile5
+    ? _b2MainMediaHTML(5, player.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
+    : '';
   
   // 메인 디스플레이 업데이트
   const mainBox = document.getElementById('b2-players-main-box');
@@ -3016,11 +3131,11 @@ function _b2UpdateMainDisplay(playerName) {
   if (mainBox) {
     _b2ClearSwapTimer(mainBox);
     mainBox.innerHTML = `
-      ${player.photo
-        ? `<img src="${toHttpsUrl(player.photo)}" decoding="async" fetchpriority="high" class="b2-players-main-image" id="b2-main-img-1" alt="${player.name}" onload="_b2ScheduleImageSwap('${player.name.replace(/'/g, "\\'")}')" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:1;opacity:1" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`
-      }
-      ${hasSecondProfile ? `<img src="${player.secondProfileFile}" decoding="async" fetchpriority="high" class="b2-players-main-image" id="b2-main-img-2" alt="${player.name} 2" style="position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;z-index:2;opacity:0">` : ''}
+      ${_slot1}
+      ${_slot2}
+      ${_slot3}
+      ${_slot4}
+      ${_slot5}
       
       <!-- 이미지 컨트롤 패널 (모든 사용자 접근 가능) -->
       <!-- 이미지 컨트롤 패널 - 관리자(로그인)만 렌더 [BUGFIX-IMG-SETTINGS] -->
@@ -3094,6 +3209,15 @@ function _b2UpdateMainDisplay(playerName) {
 function openB2ProfileEditModal(playerName) {
   const player = players.find(p => p.name === playerName);
   if (!player) return;
+  const clampDelay = (v)=>{
+    const n = parseFloat(v);
+    if(isNaN(n)) return 1;
+    return Math.max(0.2, Math.min(60, n));
+  };
+  const d23 = clampDelay(player.photoDelay23 ?? 1);
+  const d34 = clampDelay(player.photoDelay34 ?? 1);
+  const d45 = clampDelay(player.photoDelay45 ?? 1);
+  const d51 = clampDelay(player.photoDelay51 ?? 1);
 
   const modal = document.createElement('div');
   modal.id = 'b2-profile-edit-modal';
@@ -3124,6 +3248,41 @@ function openB2ProfileEditModal(playerName) {
         <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 2 (모바일/교체용) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(1초 후 자동 교체)</span></label>
         <input type="text" id="b2-ed-second-profile" value="${player.secondProfileFile||''}" placeholder="https://... 이미지 URL 입력" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
         <div style="font-size:10px;color:var(--gray-l);margin-top:4px">스트리머 선택 후 1초 뒤 이 이미지로 자동 전환됩니다.</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 3 (순환용)</label>
+        <input type="text" id="b2-ed-photo3" value="${player.profileFile3||''}" placeholder="https://... (gif/mp4 가능)" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 4 (순환용)</label>
+        <input type="text" id="b2-ed-photo4" value="${player.profileFile4||''}" placeholder="https://... (gif/mp4 가능)" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 5 (순환용)</label>
+        <input type="text" id="b2-ed-photo5" value="${player.profileFile5||''}" placeholder="https://... (gif/mp4 가능)" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">이미지별 탭에서 2→3→4→5(→1) 순서로 전환됩니다.</div>
+      </div>
+      <div style="margin-top:10px;margin-bottom:16px;padding:12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px">
+        <div style="font-size:13px;font-weight:800;color:var(--text2);margin-bottom:10px">전환 시간(초)</div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">2 → 3</div>
+            <input type="number" id="b2-ed-delay-23" min="0.2" max="60" step="0.1" value="${d23}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">3 → 4</div>
+            <input type="number" id="b2-ed-delay-34" min="0.2" max="60" step="0.1" value="${d34}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">4 → 5</div>
+            <input type="number" id="b2-ed-delay-45" min="0.2" max="60" step="0.1" value="${d45}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">5 → 1</div>
+            <input type="number" id="b2-ed-delay-51" min="0.2" max="60" step="0.1" value="${d51}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:10px">※ 1 → 2는 항상 1초, 1/2만 있으면 2에서 멈춥니다. mp4는 끝까지 재생 후 이동합니다.</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:20px">
         <button onclick="document.getElementById('b2-profile-edit-modal').remove()" style="flex:1;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer">취소</button>
@@ -3174,15 +3333,34 @@ function saveB2Profile(playerName) {
   
   const photoUrl = (document.getElementById('b2-ed-photo')?.value || '').trim();
   const secondProfileUrl = (document.getElementById('b2-ed-second-profile')?.value || '').trim();
+  const thirdProfileUrl = (document.getElementById('b2-ed-photo3')?.value || '').trim();
+  const fourthProfileUrl = (document.getElementById('b2-ed-photo4')?.value || '').trim();
+  const fifthProfileUrl = (document.getElementById('b2-ed-photo5')?.value || '').trim();
+  const clampDelay = (v)=>{
+    const n = parseFloat(v);
+    if(isNaN(n)) return 1;
+    return Math.max(0.2, Math.min(60, n));
+  };
+  const d23 = clampDelay(document.getElementById('b2-ed-delay-23')?.value || '1');
+  const d34 = clampDelay(document.getElementById('b2-ed-delay-34')?.value || '1');
+  const d45 = clampDelay(document.getElementById('b2-ed-delay-45')?.value || '1');
+  const d51 = clampDelay(document.getElementById('b2-ed-delay-51')?.value || '1');
   
-  // base64 체크
-  if (photoUrl && photoUrl.startsWith('data:')) {
+  const anyBase64 = [photoUrl, secondProfileUrl, thirdProfileUrl, fourthProfileUrl, fifthProfileUrl].some(u=>u && u.startsWith('data:'));
+  if (anyBase64) {
     alert('❌ 프로필 사진에 base64 이미지(data:...)를 직접 붙여넣으면 동기화 저장이 실패할 수 있습니다.\n\n이미지를 imgur.com, Discord 등에 업로드한 후 URL을 사용하세요.');
     return;
   }
   
   player.photo = photoUrl || undefined;
   player.secondProfileFile = secondProfileUrl || undefined;
+  player.profileFile3 = thirdProfileUrl || undefined;
+  player.profileFile4 = fourthProfileUrl || undefined;
+  player.profileFile5 = fifthProfileUrl || undefined;
+  if(d23 === 1) delete player.photoDelay23; else player.photoDelay23 = d23;
+  if(d34 === 1) delete player.photoDelay34; else player.photoDelay34 = d34;
+  if(d45 === 1) delete player.photoDelay45; else player.photoDelay45 = d45;
+  if(d51 === 1) delete player.photoDelay51; else player.photoDelay51 = d51;
   
   save();
   render();

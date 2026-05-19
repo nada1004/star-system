@@ -85,7 +85,20 @@
     const bgSize = bgFit==='fill' ? `${bgScale}% ${bgScale}%` : `${bgScale}%`;
     const ptsColor=pts>0?'#4ade80':pts<0?'#f87171':'rgba(255,255,255,.8)';
     const ratePct=tot?rate:0;
-    const photoUrl = p.photo || '';
+    const photoUrl = p.shareCardPhoto || p.photo || ''; // shareCardPhoto 전용 이미지 우선
+    const photoPos = (()=>{
+      try{
+        if(p && p.shareCardPhotoPosUse === false) return '';
+        const x = Number(p && p.shareCardPhotoPosX);
+        const y = Number(p && p.shareCardPhotoPosY);
+        if(!Number.isFinite(x) || !Number.isFinite(y)) return '';
+        const xx = Math.max(0, Math.min(100, x));
+        const yy = Math.max(0, Math.min(100, y));
+        return `${xx}% ${yy}%`;
+      }catch(e){
+        return '';
+      }
+    })();
     const universityIcon = UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
     const scp=_getShareCardPrefs('player');
     const baseCol=_scHexNorm(col||'#64748b');
@@ -111,7 +124,7 @@
       </div>
       <div class="share-player-top" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center">
         <div class="share-player-photo-wrap" style="width:${profileW}px;height:${profileH}px;border-radius:24px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.26);overflow:hidden;box-shadow:0 14px 32px rgba(0,0,0,.24);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          ${photoUrl?`<img src="${toHttpsUrl(photoUrl)}" style="width:100%;height:100%;object-fit:cover" onerror="this.remove()">`:universityIcon?`<img src="${toHttpsUrl(universityIcon)}" style="width:${profileInner}px;height:${profileInner}px;object-fit:contain" onerror="this.remove()">`:`<span style="font-size:${Math.round(36*scp.profileScale)}px;font-weight:1000;color:#fff">${String(p.name||'?').charAt(0)}</span>`}
+          ${photoUrl?`<img src="${toHttpsUrl(photoUrl)}" style="width:100%;height:100%;object-fit:cover;${photoPos?`object-position:${photoPos};`:''}" onerror="this.remove()">`:universityIcon?`<img src="${toHttpsUrl(universityIcon)}" style="width:${profileInner}px;height:${profileInner}px;object-fit:contain" onerror="this.remove()">`:`<span style="font-size:${Math.round(36*scp.profileScale)}px;font-weight:1000;color:#fff">${String(p.name||'?').charAt(0)}</span>`}
         </div>
         <div class="share-player-main" style="min-width:0">
           <div class="share-player-name" style="font-size:27px;font-weight:1000;letter-spacing:.2px;line-height:1.08;white-space:normal;word-break:keep-all">${p.name}${getStatusIconHTML(p.name)}</div>

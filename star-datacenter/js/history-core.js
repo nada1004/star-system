@@ -915,6 +915,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
             <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
               onclick="openRecActionMenu(event,{
                 _btnEl:this,
+                mid:'${String(m._id||m.sid||'').replace(/'/g,"\\'")}',
                 a:'${(m.a||'').replace(/'/g,"\\'")}',
                 sa:${m.sa||0},
                 b:'${(m.b||'').replace(/'/g,"\\'")}',
@@ -1227,7 +1228,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       <div class="rec-sum-header rec-sum-header--stack">
         <div class="rec-topline">
           <div class="rec-meta-row">
-            ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
+            ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" data-bmid="${String(m._id||m.sid||'')}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
             <span class="rec-datechip">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
             ${m.fmt>0?`<span class="rec-meta-chip rec-meta-chip--note">${m.fmt}:${m.fmt}</span>`:''}
             ${aWin||bWin?`<span class="rec-victor-chip rec-victor-chip--crown" style="--rec-victor-col:${aWin?ca:cb};color:${aWin?ca:cb}">🏆 ${aWin?labelA:labelB}</span>`:`<span class="rec-meta-chip">무승부</span>`}
@@ -1236,6 +1237,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
           <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
             onclick="openRecActionMenu(event,{
               _btnEl:this,
+              mid:'${String(m._id||m.sid||'').replace(/'/g,"\\'")}',
               a:'${(m.a||'').replace(/'/g,"\\'")}',
               sa:${m.sa||0},
               b:'${(m.b||'').replace(/'/g,"\\'")}',

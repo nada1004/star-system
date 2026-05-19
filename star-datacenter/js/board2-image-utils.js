@@ -342,22 +342,221 @@ function _b2ClearSwapTimer(mainBox) {
     clearTimeout(mainBox._swapTimer);
     mainBox._swapTimer = null;
   }
+  if (mainBox) mainBox._swapIdx = 0;
 }
 function _b2ScheduleImageSwap(playerName) {
   const mainBox = document.getElementById('b2-players-main-box');
   if (!mainBox) return;
   _b2ClearSwapTimer(mainBox);
-  const img1 = document.getElementById('b2-main-img-1');
-  const img2 = document.getElementById('b2-main-img-2');
-  if (img1) img1.style.opacity = '1';
-  if (img2) img2.style.opacity = '0';
-  if (!img2) return;
-  mainBox._swapTimer = setTimeout(() => {
-    const curImg1 = document.getElementById('b2-main-img-1');
-    const curImg2 = document.getElementById('b2-main-img-2');
-    if (curImg1) curImg1.style.opacity = '0';
-    if (curImg2) curImg2.style.opacity = '1';
-  }, 1000);
+  // 현재 선수의 이미지 목록 수집 (photo + profileFile2~5)
+  const p = (typeof players !== 'undefined') ? players.find(x => x.name === playerName) : null;
+  const imgList = p ? [
+    {slot:1, url:p.photo},
+    {slot:2, url:p.secondProfileFile},
+    {slot:3, url:p.profileFile3},
+    {slot:4, url:p.profileFile4},
+    {slot:5, url:p.profileFile5}
+  ].filter(x=>x && x.url) : [];
+  const clampSec = (v, d)=>{
+    const n = parseFloat(v);
+    if(isNaN(n)) return d;
+    return Math.max(0.2, Math.min(60, n));
+  };
+  const getEl = (slot)=>document.getElementById('b2-main-img-' + slot);
+  const isVideo = (el)=>!!(el && el.tagName === 'VIDEO');
+  const applyMediaForSlot = (slot)=>{
+    try{
+      const el = getEl(slot);
+      if(!isVideo(el)) return { handled:false };
+      try{ el.loop = false; }catch(e){}
+      try{ el.muted = true; }catch(e){}
+      try{ el.playsInline = true; }catch(e){}
+      try{ el.currentTime = 0; }catch(e){}
+      try{ el.__b2SwapDone = false; }catch(e){}
+      try{
+        const p = el.play && el.play();
+        if(p && typeof p.catch === 'function') p.catch(()=>{});
+      }catch(e){}
+      return { handled:true, el };
+    }catch(e){
+      return { handled:false };
+    }
+  };
+  const delayMs = (fromSlot, toSlot)=>{
+    try{
+      if(!p) return 1000;
+      if(fromSlot===2 && toSlot===3) return Math.round(clampSec(p.photoDelay23 ?? 1, 1) * 1000);
+      if(fromSlot===3 && toSlot===4) return Math.round(clampSec(p.photoDelay34 ?? 1, 1) * 1000);
+      if(fromSlot===4 && toSlot===5) return Math.round(clampSec(p.photoDelay45 ?? 1, 1) * 1000);
+      if(fromSlot===5 && toSlot===1) return Math.round(clampSec(p.photoDelay51 ?? 1, 1) * 1000);
+    }catch(e){}
+    return 1000;
+  };
+  // 이미지 1장 이하면 전환 없음
+  if (imgList.length < 2) {
+    const showSlot = (imgList[0] && imgList[0].slot) ? imgList[0].slot : 1;
+    for (let slot = 1; slot <= 5; slot++) {
+      const el = document.getElementById('b2-main-img-' + slot);
+      if (el) el.style.opacity = (slot === showSlot) ? '1' : '0';
+    }
+    return;
+  }
+  // 모든 이미지 초기화: 첫 번째 이미지(slot 기준)만 보이게
+  const firstSlot = imgList[0].slot;
+  for (let slot = 1; slot <= 5; slot++) {
+    const el = document.getElementById('b2-main-img-' + slot);
+    if (el) el.style.opacity = (slot === firstSlot) ? '1' : '0';
+  }
+  // 순환 인덱스 (0 = img1)
+  mainBox._swapIdx = 0;
+  const totalImgs = imgList.length;
+  const stopAtSecond = (totalImgs === 2 && imgList[0] && imgList[1] && imgList[0].slot === 1 && imgList[1].slot === 2);
+  // 첫 이미지가 비디오면 즉시 재생
+  applyMediaForSlot(firstSlot);
+  function doSwap() {
+    const prev = mainBox._swapIdx;
+    mainBox._swapIdx = (prev + 1) % totalImgs;
+    const cur = mainBox._swapIdx;
+    const curSlot = imgList[cur] ? imgList[cur].slot : 1;
+    for (let slot = 1; slot <= 5; slot++) {
+      const el = document.getElementById('b2-main-img-' + slot);
+      if (el) el.style.opacity = (slot === curSlot) ? '1' : '0';
+    }
+    // 숨긴 비디오는 정지(재생 중이면 클릭 막힘/리소스 사용 방지)
+    try{
+      for(let i=0;i<totalImgs;i++){
+        const s = imgList[i] ? imgList[i].slot : 1;
+        const el = getEl(s);
+        if(isVideo(el) && s !== curSlot){
+          try{ el.onended = null; }catch(e){}
+          try{ el.pause && el.pause(); }catch(e){}
+          try{ el.__b2SwapDone = false; }catch(e){}
+        }
+      }
+    }catch(e){}
+
+    // 이미지가 1/2만 있으면: 1초 후 2로 전환하고 "2에서 멈춤"
+    if(stopAtSecond && cur === 1){
+      applyMediaForSlot(curSlot);
+      if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
+      mainBox._swapTimer = null;
+      try{
+        const el1 = getEl(1);
+        if(isVideo(el1)){
+          try{ el1.onended = null; }catch(e){}
+          try{ el1.onloadedmetadata = null; }catch(e){}
+          try{ el1.pause && el1.pause(); }catch(e){}
+          try{ el1.__b2SwapDone = false; }catch(e){}
+        }
+      }catch(e){}
+      return;
+    }
+
+    // 다음 전환 예약(현재→다음 기준)
+    if (mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
+    const next = (cur + 1) % totalImgs;
+    const fromSlot = imgList[cur] ? imgList[cur].slot : 1;
+    const toSlot = imgList[next] ? imgList[next].slot : 1;
+
+    const media = applyMediaForSlot(curSlot);
+    if(media.handled && media.el){
+      try{
+        const el = media.el;
+        const dur = Number(el.duration);
+        if(Number.isFinite(dur) && dur > 0){
+          try{ el.__b2SwapDone = false; }catch(e){}
+          el.onended = ()=>{
+            try{
+              if(el.__b2SwapDone) return;
+              el.__b2SwapDone = true;
+            }catch(e){}
+            try{ if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer); }catch(e){}
+            try{ doSwap(); }catch(e){}
+          };
+          const remain = Math.max(0.2, dur - Number(el.currentTime||0));
+          mainBox._swapTimer = setTimeout(()=>{
+            try{
+              if(el.__b2SwapDone) return;
+              el.__b2SwapDone = true;
+            }catch(e){}
+            doSwap();
+          }, Math.round(remain * 1000) + 180);
+          return;
+        }
+        // duration을 아직 모르면: 메타데이터 로딩 후 "끝까지 재생 후 이동"으로 재예약.
+        // 메타데이터가 늦어도 타이머가 먼저 발화해 넘어가 버리는 문제를 막기 위해,
+        // 여기서는 매우 긴 fallback(60초)을 걸고, metadata가 오면 즉시 재예약한다.
+        try{ el.__b2SwapDone = false; }catch(e){}
+        try{
+          el.onended = ()=>{
+            try{
+              if(el.__b2SwapDone) return;
+              el.__b2SwapDone = true;
+            }catch(e){}
+            try{ if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer); }catch(e){}
+            try{ doSwap(); }catch(e){}
+          };
+        }catch(e){}
+        try{
+          el.onloadedmetadata = ()=>{
+            try{
+              const d = Number(el.duration);
+              if(!(Number.isFinite(d) && d > 0)) return;
+              if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
+              mainBox._swapTimer = setTimeout(()=>{
+                try{
+                  if(el.__b2SwapDone) return;
+                  el.__b2SwapDone = true;
+                }catch(e){}
+                doSwap();
+              }, Math.round(d * 1000) + 180);
+            }catch(e){}
+          };
+        }catch(e){}
+        mainBox._swapTimer = setTimeout(doSwap, 60000);
+        return;
+      }catch(e){}
+    }
+    mainBox._swapTimer = setTimeout(doSwap, delayMs(fromSlot, toSlot));
+  }
+  let firstDelay = (imgList[0] && imgList[1]) ? delayMs(imgList[0].slot, imgList[1].slot) : 1000;
+  try{
+    const el = getEl(firstSlot);
+    if(isVideo(el) && !stopAtSecond){
+      const dur = Number(el.duration);
+      if(Number.isFinite(dur) && dur > 0){
+        firstDelay = Math.round(dur * 1000) + 180;
+      }else{
+        firstDelay = 60000;
+        el.onloadedmetadata = ()=>{
+          try{
+            const d = Number(el.duration);
+            if(Number.isFinite(d) && d > 0){
+              if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
+              try{ el.__b2SwapDone = false; }catch(e){}
+              mainBox._swapTimer = setTimeout(()=>{
+                try{
+                  if(el.__b2SwapDone) return;
+                  el.__b2SwapDone = true;
+                }catch(e){}
+                doSwap();
+              }, Math.round(d * 1000) + 180);
+            }
+          }catch(e){}
+        };
+      }
+      try{ el.__b2SwapDone = false; }catch(e){}
+      el.onended = ()=>{
+        try{
+          if(el.__b2SwapDone) return;
+          el.__b2SwapDone = true;
+        }catch(e){}
+        try{ if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer); }catch(e){}
+        try{ doSwap(); }catch(e){}
+      };
+    }
+  }catch(e){}
+  mainBox._swapTimer = setTimeout(doSwap, firstDelay);
 }
 window._b2RefreshImageControls = function(playerName, slot) {
   const settings = _b2GetImgSettings(playerName, slot);

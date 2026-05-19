@@ -112,7 +112,7 @@ function openRecActionMenu(ev, opts){
   if(_canEdit) items.push({t:'✏️ 수정', d:'기록 내용 수정', kind:'normal', on:()=>((typeof o.editFn==='function') ? o.editFn() : openRE(o.mode,o.idx))});
   if(o.canMove) items.push({t:'↗ 이동', d:'다른 기록 분류로 이동', kind:'normal', on:()=>openMoveMatchPop(o._btnEl,o.mode,o.idx)});
   items.push({t:'📤 결과 복사', d:'점수와 결과 텍스트 복사', kind:'normal', on:()=>copyMatchResult(o.a,o.sa,o.b,o.sb,o.d,o.mode,o.idx)});
-  if(_canDel) items.push({t:'🗑️ 삭제', d:'이 기록을 완전히 삭제', kind:'danger', on:()=>((typeof o.delFn==='function') ? o.delFn() : delRec(o.mode,o.idx))});
+  if(_canDel) items.push({t:'🗑️ 삭제', d:'이 기록을 완전히 삭제', kind:'danger', on:()=>((typeof o.delFn==='function') ? o.delFn() : delRec(o.mode,o.idx,o.mid||o.matchId||o._id||''))});
   return openSimpleActionMenu(o._btnEl||null, items, ev);
 }
 
