@@ -4553,6 +4553,37 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     padding:5px 12px !important;
     font-size:15px !important;
   }
+  /* (요청사항) 모바일: 팀버튼+스코어 한줄 레이아웃 강제 */
+  .grp-match-card.match-card-v3 .grp-match-main{
+    flex-wrap:nowrap !important;
+    overflow-x:auto !important;
+    justify-content:center !important;
+    align-items:flex-start !important;
+    gap:6px !important;
+  }
+  .grp-match-card.match-card-v3 .grp-team-col{
+    flex-shrink:0 !important;
+    min-width:0 !important;
+    width:auto !important;
+    align-items:center !important;
+  }
+  .grp-match-card.match-card-v3 .grp-score-col{
+    flex-shrink:0 !important;
+    min-width:56px !important;
+  }
+  /* (요청사항) 팀버튼 아래 참여자 버튼 표시 */
+  .grp-match-card.match-card-v3 .grp-mem-btn{
+    display:inline-flex !important;
+    margin-top:4px;
+    font-size:10px !important;
+    padding:3px 8px !important;
+    min-height:22px !important;
+  }
+  /* tc-uicon 모바일 축소 */
+  .grp-match-card.match-card-v3 .tc-uicon{
+    width:16px !important;
+    height:16px !important;
+  }
   .grp-rank-table th, .grp-rank-table td { padding: 6px 5px; font-size: 11px; }
 
   /* ── 현황판 ── */

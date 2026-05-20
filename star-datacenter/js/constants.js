@@ -389,15 +389,36 @@ try{
 ══════════════════════════════════════ */
 function applyUnivLogoVars(){
   try{
-    const shape = localStorage.getItem('su_ul_shape') || 'circle'; // circle|square
+    const shape = localStorage.getItem('su_ul_shape') || 'circle'; // circle|square|rounded|squircle|hexagon|shield|pentagon|star|diamond|blob|leaf|octagon
     const size  = parseInt(localStorage.getItem('su_ul_size') || '34', 10);
     const box   = parseInt(localStorage.getItem('su_ul_box')  || '46', 10);
     // 대학 상세(대학 모달) 전용 크기 (없으면 기본 크기 사용)
     const dSize = parseInt(localStorage.getItem('su_ul_size_detail') || String(size), 10);
     const dBox  = parseInt(localStorage.getItem('su_ul_box_detail')  || String(box), 10);
-    const radius = (shape === 'square') ? '10px' : '50%';
+    // (요청사항) 대학 로고/팀버튼 이미지 모양 다양화
+    const _ulRadiusMap = {
+      circle:'50%', square:'10px', rounded:'22%', squircle:'28%',
+      hexagon:'50%', shield:'50%', pentagon:'50%', star:'50%',
+      diamond:'50%', blob:'40% 60% 55% 45% / 45% 55% 60% 40%',
+      leaf:'50%', octagon:'50%', heart:'50% 50% 50% 50%/60% 60% 40% 40%'
+    };
+    const _ulClipMap = {
+      hexagon:'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)',
+      shield:'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)',
+      pentagon:'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)',
+      star:'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)',
+      diamond:'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+      leaf:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)',
+      octagon:'polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%)'
+    };
+    const radius = _ulRadiusMap[shape] || '50%';
+    const ulClip = _ulClipMap[shape] || 'none';
     document.documentElement.style.setProperty('--su_univ_logo_radius', radius);
+    document.documentElement.style.setProperty('--su_univ_logo_clip', ulClip);
     document.documentElement.style.setProperty('--su_univ_logo_size', size + 'px');
+    // tc-uicon (팀버튼 내 대학 로고) 모양도 같이 적용
+    document.documentElement.style.setProperty('--su_tc_uicon_radius', radius);
+    document.documentElement.style.setProperty('--su_tc_uicon_clip', ulClip);
     document.documentElement.style.setProperty('--su_univ_logo_box', box + 'px');
     // 대학 상세(모달)용
     document.documentElement.style.setProperty('--su_univ_logo_size_detail', dSize + 'px');

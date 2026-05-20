@@ -50,7 +50,25 @@ function preparePlayerHeaderDisplayData(opts){
           imagePos = `${xx}% ${yy}%`;
         }
       }catch(e){}
-      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${imageFit};object-position:${imagePos};transform:scale(${imgScale});filter:brightness(${imgBrightness})" onerror="this.style.display='none'">`;
+      // (요청사항) 프로필 이미지를 선택한 모양에 맞게 꽉 채우기
+      const _profShape=(()=>{try{return localStorage.getItem('su_profile_shape')||'circle';}catch(e){return 'circle';}})();
+      const _profClipMap={
+        diamond:'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+        hexagon:'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)',
+        shield:'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)',
+        pentagon:'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)',
+        star:'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)',
+        leaf:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)',
+        triangle:'polygon(50% 0%, 0% 100%, 100% 100%)',
+        octagon:'polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%)',
+        cross:'polygon(33% 0%,67% 0%,67% 33%,100% 33%,100% 67%,67% 67%,67% 100%,33% 100%,33% 67%,0% 67%,0% 33%,33% 33%)',
+        parallelogram:'polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)',
+        arrow:'polygon(0% 0%,75% 0%,100% 50%,75% 100%,0% 100%,25% 50%)'
+      };
+      const _profClipInline=_profClipMap[_profShape]?`clip-path:${_profClipMap[_profShape]};`:'';
+      // 모양이 cover가 아닐 경우 강제 cover 적용 (꽉 채워야 모양이 깔끔함)
+      const _finalFit=(imageFit==='contain'&&_profShape!=='circle'&&_profShape!=='square'&&_profShape!=='rounded')?'cover':imageFit;
+      return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_finalFit};object-position:${imagePos};transform:scale(${imgScale});filter:brightness(${imgBrightness});${_profClipInline}" onerror="this.style.display='none'">`;
     }
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
     return url

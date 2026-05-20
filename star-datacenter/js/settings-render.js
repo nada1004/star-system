@@ -2857,12 +2857,33 @@ ${_scfgD('notice','📢 공지 관리')}
       <div style="border-top:1px dashed var(--border2);padding-top:12px">
         <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:10px">🏫 대학 로고 설정</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-          <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:120px">프로필(로고) 모양</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn ${(()=>{try{return (localStorage.getItem('su_ul_shape')||'circle')==='circle'?'btn-b':'btn-w';}catch(e){return 'btn-b';}})()}"
-              onclick="localStorage.setItem('su_ul_shape','circle');if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();render()">⭕ 원형</button>
-            <button class="btn ${(()=>{try{return (localStorage.getItem('su_ul_shape')||'circle')==='square'?'btn-b':'btn-w';}catch(e){return 'btn-w';}})()}"
-              onclick="localStorage.setItem('su_ul_shape','square');if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();render()">⬛ 네모</button>
+          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📐 프로필(로고) 모양</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:7px">
+            ${(()=>{
+              const _ulShapes=[
+                {v:'circle',label:'원형',icon:'⭕',preview:'border-radius:50%'},
+                {v:'square',label:'네모',icon:'⬛',preview:'border-radius:6px'},
+                {v:'rounded',label:'둥근 네모',icon:'🟦',preview:'border-radius:22%'},
+                {v:'squircle',label:'스쿼클',icon:'🔷',preview:'border-radius:28%'},
+                {v:'hexagon',label:'육각형',icon:'⬡',preview:'border-radius:50%;clip-path:polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)'},
+                {v:'shield',label:'방패형',icon:'🛡️',preview:'border-radius:8px 8px 0 0;clip-path:polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)'},
+                {v:'pentagon',label:'오각형',icon:'⭐',preview:'border-radius:50%;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)'},
+                {v:'diamond',label:'다이아몬드',icon:'♦️',preview:'border-radius:50%;clip-path:polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)'},
+                {v:'star',label:'별모양',icon:'🌟',preview:'border-radius:50%;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)'},
+                {v:'blob',label:'블롭',icon:'🫧',preview:'border-radius:40% 60% 55% 45% / 45% 55% 60% 40%'},
+                {v:'leaf',label:'리프',icon:'🍃',preview:'border-radius:50%;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%)'},
+                {v:'octagon',label:'팔각형',icon:'🔷',preview:'border-radius:50%;clip-path:polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%)'},
+                {v:'heart',label:'하트',icon:'❤️',preview:'border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(-45deg)'},
+              ];
+              const _ulCur=(()=>{try{return localStorage.getItem('su_ul_shape')||'circle';}catch(e){return 'circle';}})();
+              return _ulShapes.map(s=>{
+                const sel=_ulCur===s.v;
+                return \`<button type="button" onclick="localStorage.setItem('su_ul_shape','${s.v}');if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();render()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 6px;border-radius:10px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 2px #2563eb22':'none'}">
+                  <div style="width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#a855f7);${s.preview};flex-shrink:0"></div>
+                  <span style="font-size:10px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'};text-align:center;line-height:1.2">${s.label}</span>
+                </button>\`;
+              }).join('');
+            })()}
           </div>
         </div>
         <div style="margin-bottom:10px">
