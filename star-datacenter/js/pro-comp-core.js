@@ -1252,8 +1252,8 @@ function proCompBracket(tn) {
           ${showScore?`<span style="font-size:11px;font-weight:900;color:${bWin?col:'#94a3b8'};flex-shrink:0">${scoreB}</span>`:''}
           ${bWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
-        <!-- 날짜/맵/동률 -->
-        ${(m.map||m.d)?`<div style="padding:3px 12px;font-size:11px;font-weight:600;color:var(--text3);background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px;flex-wrap:wrap">${m.d?`<span>🗓️ ${m.d.slice(2).replace(/-/g,'.')}</span>`:''}${m.map?`<span>🗺️ ${m.map}</span>`:''}</div>`:''}
+        <!-- 맵 -->
+        ${m.map?`<div style="padding:3px 12px;font-size:11px;font-weight:600;color:var(--text3);background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px;flex-wrap:wrap"><span>🗺️ ${m.map}</span></div>`:''}
         ${m.note?`<div style="padding:4px 12px;font-size:10px;color:#64748b;background:#f8fafc;border-top:1px solid #f1f5f9;line-height:1.5;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
         ${isTieSaved?`<div style="padding:3px 12px;font-size:11px;font-weight:900;color:#b45309;background:#fffbeb;border-top:1px solid #f1f5f9;display:flex;gap:8px;align-items:center">
           <span>⚖️ 동률 저장</span><span style="margin-left:auto">${scoreA}:${scoreB}</span>
@@ -1485,9 +1485,7 @@ function proCompTourMatchInput(tn){
   const round = _pcNormalizeStageRound(window._pcStageRecRound);
   window._pcStageRecRound = round;
 
-  const roundBtns = `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:10px 0 0">
-    ${_PC_STAGE_ROUNDS.map(r=>`<button class="pill ${round===r?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._pcStageRecRound='${r}';render()">${r}</button>`).join('')}
-  </div>`;
+  const roundBtns = '';
 
   // ── (요청사항) "대진표에서 기록"한 내용도 이 탭에 자동 반영되도록: 브라켓에서 게임 단위로 수집
   const _getBracketRoundLabel = (tn, ri)=>{
@@ -1505,7 +1503,7 @@ function proCompTourMatchInput(tn){
     if (tn && Array.isArray(tn.bracket)) {
       tn.bracket.forEach((rnd, ri)=>{
         const lbl = _getBracketRoundLabel(tn, ri);
-        if (lbl !== round) return;
+        // 모든 라운드 표시 (round 필터 제거)
         (rnd||[]).forEach((m, mi)=>{
           if (!m || !m.a || !m.b) return;
           const baseId = `pbn_${tn.id}_${ri}_${mi}`;
@@ -1514,7 +1512,7 @@ function proCompTourMatchInput(tn){
             m._games.forEach((g, gi)=>{
               if (!g || !g.winner) return;
               _bracketItems.push({
-                m:{a:m.a,b:m.b,winner:g.winner,d,map:g.map||m.map||'', _id:`${baseId}_s0_g${gi}`},
+                m:{a:m.a,b:m.b,winner:g.winner,d,map:g.map||m.map||'', _id:`${baseId}_s0_g${gi}`, _roundLabel:lbl},
                 src:'bkt',
                 ri, mi,
                 key: `${baseId}_${gi}`,
@@ -1524,7 +1522,7 @@ function proCompTourMatchInput(tn){
             });
           } else if (m.winner) {
             _bracketItems.push({
-              m:{a:m.a,b:m.b,winner:m.winner,d,map:m.map||'', _id:`${baseId}_s0_g0`},
+              m:{a:m.a,b:m.b,winner:m.winner,d,map:m.map||'', _id:`${baseId}_s0_g0`, _roundLabel:lbl},
               src:'bkt',
               ri, mi,
               key: baseId,
@@ -1537,26 +1535,35 @@ function proCompTourMatchInput(tn){
     }
   }catch(e){}
 
-  const _stageList = (tn.stageRecords[round]||[]).map((m,i)=>({
-    m,
-    src:'stage',
-    idx:i,
-    key:(m&&m._id)||`stage_${i}`,
-    _dateKey:(m&&m.d)||'',
-    _sortSeq: _stageRecSortSeq + i
-  }));
+  // 모든 라운드의 stageRecords 수집
+  const _stageList = [];
+  const _PC_ALL_ROUNDS = Object.keys(tn.stageRecords||{});
+  _PC_ALL_ROUNDS.forEach(rndKey => {
+    (tn.stageRecords[rndKey]||[]).forEach((m,i) => {
+      _stageList.push({
+        m: {...m, _roundLabel: rndKey},
+        src:'stage',
+        idx:i,
+        key:(m&&m._id)||`stage_${rndKey}_${i}`,
+        _dateKey:(m&&m.d)||'',
+        _sortSeq: _stageRecSortSeq++,
+        _rnd: rndKey
+      });
+    });
+  });
 
   const sorted = [..._bracketItems, ..._stageList]
     .sort((a,b)=>(b._dateKey||'').localeCompare(a._dateKey||'')||((a._sortSeq??0)-(b._sortSeq??0))||String(a.key).localeCompare(String(b.key)));
 
   const card = (item, displayNo)=>{
     const m = item.m;
+    const _cardRound = item._rnd || m._roundLabel || round;
     const pa = players.find(p=>p.name===m.a);
     const pb = players.find(p=>p.name===m.b);
     const isDone = !!m.winner;
     const aWin = isDone && m.winner==='A';
     const bWin = isDone && m.winner==='B';
-    const col = round==='결승'?'#f59e0b':round==='4강'?'#7c3aed':round==='8강'?'#dc2626':'#2563eb';
+    const col = _cardRound==='결승'?'#f59e0b':_cardRound==='4강'?'#7c3aed':_cardRound==='8강'?'#dc2626':'#2563eb';
     const winRgb = _tcHexToRgbStr(col);
     const _tb = p => p&&p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${p.tier}</span>`:'';
     const _rb = p => p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 4px">${p.race}</span>`:'';
@@ -1603,9 +1610,8 @@ function proCompTourMatchInput(tn){
     const _sideRgbVars2=`--rec-side-left-rgb:${_hexRgb2(ca||'#3b82f6')};--rec-side-right-rgb:${_hexRgb2(cb||'#ef4444')};`;
     return `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars2}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?col:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?col:cb};margin-bottom:8px">
       <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:70px">
-        <span class="grp-badge" style="background:linear-gradient(135deg,${col},${col}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${col}55">${round}</span>
+        <span class="grp-badge" style="background:linear-gradient(135deg,${col},${col}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${col}55">${_cardRound}</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:600">${displayNo}경기</span>
-        <span style="font-size:10px;color:var(--gray-l);font-weight:800">${dLabel}</span>
         ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
       </div>
       <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
@@ -1624,22 +1630,52 @@ function proCompTourMatchInput(tn){
         ${_pcard(pb, m.b, bWin)}
       </div>
       <div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-        <button class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openPcStageActionMenu(this,'${tn.id}','${round}',${item.src==='stage'?item.idx:-1},'${item.src}',${item.ri??-1},${item.mi??-1})">⋯</button>
+        <button class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openPcStageActionMenu(this,'${tn.id}','${_cardRound}',${item.src==='stage'?item.idx:-1},'${item.src}',${item.ri??-1},${item.mi??-1})">⋯</button>
       </div>
     </div>`;
   };
 
-  const listHTML = sorted.length
-    ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">${sorted.map((it,idx)=>card(it, idx+1)).join('')}</div>`
-    : `<div style="margin-top:10px;font-size:12px;color:var(--gray-l)">등록된 기록이 없습니다.</div>`;
+  // 날짜별 그룹화하여 날짜 헤더 카드 추가
+  let listHTML;
+  if (!sorted.length) {
+    listHTML = `<div style="margin-top:10px;font-size:12px;color:var(--gray-l)">등록된 기록이 없습니다.</div>`;
+  } else {
+    const _tByDate = {};
+    sorted.forEach((it, idx) => {
+      const k = it._dateKey || '날짜 미정';
+      if (!_tByDate[k]) _tByDate[k] = [];
+      _tByDate[k].push({it, idx});
+    });
+    const _tDayKeys = Object.keys(_tByDate).sort((a,b) => b.localeCompare(a));
+    const _tDayLabels = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+    let _tNo = 0;
+    let _tHtml = '';
+    _tDayKeys.forEach(dk => {
+      let _tDkLabel = dk;
+      if (dk !== '날짜 미정') {
+        const dt = new Date(dk + 'T00:00:00');
+        _tDkLabel = `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_tDayLabels[dt.getDay()]}`;
+      }
+      _tHtml += `<div style="margin-bottom:22px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_tDkLabel}</div></div>`;
+      _tByDate[dk].forEach(({it}) => {
+        _tHtml += card(it, ++_tNo);
+      });
+      _tHtml += `</div>`;
+    });
+    listHTML = `<div style="margin-top:10px;display:flex;flex-direction:column;gap:0">${_tHtml}</div>`;
+  }
 
   return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <div style="font-weight:900;color:#1d4ed8">🗂️ 대진표 기록(토너먼트 기록)</div>
       <div style="font-size:12px;color:var(--gray-l)">대진표 작성이 아니라, 라운드별 경기 결과를 기록합니다 (64강/32강/16강/8강/4강/결승)</div>
       <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
-        ${isLoggedIn?`<button class="btn btn-b btn-sm" onclick="openPcStageRecModal('${tn.id}','${round}',-1)">+ 경기 추가</button>
-        <button class="btn btn-p btn-sm" onclick="openPcStageBulkPasteModal('${tn.id}','${round}')">📋 ${round} 결과 붙여넣기</button>`:''}
+        ${isLoggedIn?`<button class="btn btn-b btn-sm" onclick="openPcStageRecModal('${tn.id}','결승',-1)">+ 결승 추가</button>
+        <button class="btn btn-b btn-sm" onclick="openPcStageRecModal('${tn.id}','4강',-1)">+ 4강 추가</button>
+        <button class="btn btn-b btn-sm" onclick="openPcStageRecModal('${tn.id}','8강',-1)">+ 8강 추가</button>
+        <button class="btn btn-p btn-sm" onclick="openPcStageBulkPasteModal('${tn.id}','결승')">📋 결승 붙여넣기</button>
+        <button class="btn btn-p btn-sm" onclick="openPcStageBulkPasteModal('${tn.id}','4강')">📋 4강 붙여넣기</button>
+        <button class="btn btn-p btn-sm" onclick="openPcStageBulkPasteModal('${tn.id}','8강')">📋 8강 붙여넣기</button>`:''}
       </div>
     </div>
     ${roundBtns}

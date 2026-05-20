@@ -11095,18 +11095,28 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
 
 @media (max-width: 768px) {
   :root {
-    --tc-score-scale: 0.75;
-    --rc-score-scale: 0.82;
+    --tc-score-scale: 0.62;
+    --rc-score-scale: 0.72;
+    --tc-mem-btn-scale: 0.82;
+    --rc-mem-btn-scale: 0.82;
   }
   .grp-match-score {
-    padding: 5px 12px !important;
+    padding: 4px 9px !important;
+    font-size: 14px !important;
   }
   .grp-score-col .grp-match-score {
-    min-width: 72px !important;
+    min-width: 56px !important;
+    font-size: 14px !important;
   }
+  .grp-mem-btn {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    gap: 3px !important;
+  }
+  .grp-mem-btn .mem-ico { font-size: 9px !important; }
   .rec-sum-score {
-    padding: 4px 12px !important;
-    gap: 5px !important;
+    padding: 3px 9px !important;
+    gap: 4px !important;
   }
 }
 

@@ -98,7 +98,10 @@
     diamond:'50%', hexagon:'50%',
     shield:'50% 50% 45% 45% / 60% 60% 40% 40%',
     star:'50%', pentagon:'50%', blob:'40% 60% 55% 45% / 45% 55% 60% 40%',
-    squircle:'28%', leaf:'50% 0% 50% 0%'
+    squircle:'28%', leaf:'50% 0% 50% 0%',
+    triangle:'0', octagon:'50%', cross:'0',
+    heart:'50% 50% 50% 50%/60% 60% 40% 40%',
+    parallelogram:'0', arrow:'0'
   };
   var _SHAPE_CLIP_MAP = {
     diamond:'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
@@ -106,7 +109,12 @@
     shield:'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)',
     star:'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)',
     pentagon:'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)',
-    leaf:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)'
+    leaf:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)',
+    triangle:'polygon(50% 0%, 0% 100%, 100% 100%)',
+    octagon:'polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%)',
+    cross:'polygon(33% 0%,67% 0%,67% 33%,100% 33%,100% 67%,67% 67%,67% 100%,33% 100%,33% 67%,0% 67%,0% 33%,33% 33%)',
+    parallelogram:'polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)',
+    arrow:'polygon(0% 0%,75% 0%,100% 50%,75% 100%,0% 100%,25% 50%)'
   };
   function _getProfileShape(){
     try{ return localStorage.getItem('su_profile_shape') || localStorage.getItem('su_bcp_shape') || 'circle'; }

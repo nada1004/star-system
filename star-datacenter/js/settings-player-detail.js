@@ -437,13 +437,17 @@ function cfgPdResetModeBadgeColors(){
 function _setGlobalProfileShape(shape){
   const _prevCfgSec = window._cfgModalSecId || '';
   try{
-    const _PROFILE_SHAPES = ['circle','square','rounded','diamond','hexagon','shield'];
-    const v = _PROFILE_SHAPES.includes(shape) ? shape : 'circle';
+    const _PROFILE_SHAPES = [
+      'circle','square','rounded','squircle','diamond','hexagon','shield',
+      'pentagon','star','blob','leaf','triangle','octagon','cross','heart',
+      'parallelogram','arrow'
+    ];
+    const v = _PROFILE_SHAPES.includes(shape) ? shape : shape || 'circle';
     localStorage.setItem('su_profile_shape', v);
     try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
   }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
-  try{ if(_prevCfgSec==='profileshape' && typeof window._renderCfgProfileShapeSection==='function') window._renderCfgProfileShapeSection(); }catch(e){}
+  try{ if(typeof window._renderCfgProfileShapeSection==='function') window._renderCfgProfileShapeSection(); }catch(e){}
   try{ if(typeof _renderCfgPdSection==='function') _renderCfgPdSection(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
 }

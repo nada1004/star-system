@@ -100,15 +100,13 @@ function rBracketSchedule(tn){
     const _bktDateLabel  = dateStr ? dateStr.slice(5).replace('-','/') : '';
     return `<div class="grp-match-wrap">
       <div class="grp-card-meta-bar no-export">
-        <span class="grp-meta-group" style="background:${isManual?'#7c3aed':'var(--blue)'};color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px">${rLabel}${!isDone?' · 예정':''}</span>
-        ${_bktWinnerName?`<span class="grp-meta-winner" style="background:${_bktWinnerCol}">🏆 ${_bktWinnerName}</span>`:''}
+        <span class="grp-meta-group" style="background:${isManual?'#7c3aed':'var(--blue)'};color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px">${!isDone?'예정':''}</span>
         <span class="grp-meta-spacer"></span>
-        ${_bktMenu?`<span class="grp-meta-menu">${_bktMenu}</span>`:''}
+        ${_bktMenu?`<span class="grp-meta-menu" style="margin-left:auto">${_bktMenu}</span>`:''}
       </div>
       <div style="margin-bottom:0">
       <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_bktSide.left||_bktSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}border-left:4px solid ${_fxOn?(ca||'#3b82f6'):(isManual?'#7c3aed':'var(--blue)')};${_fxOn?`border-right:4px solid ${cb||'#ef4444'};`:''};background:var(--white);margin-bottom:0">
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
-          <span class="grp-badge" style="background:${isManual?'#7c3aed':'var(--blue)'};font-size:10px">${rLabel}</span>
           ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px">예정</span>`:''}
         </div>
         ${_bktSide.left||''}

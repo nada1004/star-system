@@ -147,15 +147,13 @@ function rCompLeague(tn){
       const _grpDateLabel  = m.d ? m.d.slice(2).replace(/-/g,'/') : '';
       h+=`<div class="grp-match-wrap">
         <div class="grp-card-meta-bar no-export">
-          <span class="grp-meta-group" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}44">GROUP ${m.grpLetter} · ${m.matchNum}경기</span>
-          ${_grpWinnerName?`<span class="grp-meta-winner" style="background:${_grpWinnerCol}">🏆 ${_grpWinnerName}</span>`:''}
+          <span class="grp-meta-group" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}44">GROUP ${m.grpLetter}</span>
+          
           <span class="grp-meta-spacer"></span>
           ${_leagueMenu?`<span class="grp-meta-menu">${_leagueMenu}</span>`:''}
         </div>
         `+`<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_compSide.left||_compSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${_fxOn?(ca||m.grpColor):m.grpColor};${_fxOn?`border-right:4px solid ${cb||m.grpColor};`:''};">
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:72px;flex-shrink:0">
-          <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">GROUP ${m.grpLetter}</span>
-          <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
           ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
         </div>
         ${_compSide.left||''}

@@ -353,7 +353,6 @@ function indRecordsHTML(){
         <div style="display:flex;align-items:center;justify-content:flex-end;width:100%">${p1bg}</div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;${_scorePad}flex-shrink:0">
           <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-1.6px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:${_dashFs}px;color:var(--text2);font-weight:900;margin:0 5px;opacity:0.8">:</span>${p2wins}</div>
-          ${winner?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap">${winner} 승</div>`:''}
         </div>
         <div style="display:flex;align-items:center;justify-content:flex-start;width:100%">${p2bg}</div>
       </div>
@@ -361,7 +360,7 @@ function indRecordsHTML(){
         <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#E6F1FB;color:#185FA5">개인전</span>
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
-        ${winner?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:#dcfce7;color:#166534">${winner} 승</span>`:'<span style="margin-left:auto"></span>'}
+        <span style="margin-left:auto"></span>
         <span onclick="event.stopPropagation()">${actionBtn}</span>
       </div>
     </div>`;
@@ -530,7 +529,6 @@ function gjRecordsHTML(proOnly){
         <div style="display:flex;align-items:center;justify-content:flex-end;width:100%">${gj_p1bg}</div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;${_scorePad}flex-shrink:0">
           <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-1.6px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:${_dashFs}px;color:var(--text2);font-weight:900;margin:0 5px;opacity:0.8">:</span>${p2wins}</div>
-          ${winner?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap">${winner} 승</div>`:''}
         </div>
         <div style="display:flex;align-items:center;justify-content:flex-start;width:100%">${gj_p2bg}</div>
       </div>
@@ -538,7 +536,7 @@ function gjRecordsHTML(proOnly){
         <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${gj_typeBg};color:${gj_typeColor}">${gj_typeLabel}</span>
         <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
-        ${winner?`<span style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:#dcfce7;color:#166534">${winner} 승</span>`:'<span style="margin-left:auto"></span>'}
+        <span style="margin-left:auto"></span>
         <span onclick="event.stopPropagation()">${actionBtn}</span>
       </div>
     </div>`;
