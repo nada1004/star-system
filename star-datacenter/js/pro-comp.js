@@ -505,9 +505,9 @@ function proCompLeague(tn) {
           ${_pcard(pa, aWin)}
           <div class="grp-score-col" style="text-align:center;min-width:60px">
             ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;padding:6px 12px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
-              <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?1:0}</span>
+              <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'패'}</span>
               <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
-              <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?1:0}</span>
+              <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
             </div>
             ${m.map?`<div style="font-size:10px;color:var(--gray-l);margin-top:4px">🗺️ ${m.map}</div>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor}">VS</div>`}
@@ -1605,9 +1605,9 @@ function proCompTourMatchInput(tn){
         ${_pcard(pa, m.a, aWin)}
         <div class="grp-score-col" style="text-align:center;min-width:60px">
           ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;padding:6px 12px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
-            <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?1:0}</span>
+            <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'패'}</span>
             <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
-            <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?1:0}</span>
+            <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
           </div>
           
           ${m.map?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">🗺️ ${m.map}</div>`:''}
