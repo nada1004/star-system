@@ -669,51 +669,146 @@ body.dark .grp-match-card.match-card-v3 .grp-match-score .wt {
   }
 }
 
-/* ── [D] 조별리그 경기카드 — 모바일 최적화 ── */
+/* ── [D-1] 조별리그 경기카드 — 모바일 레이아웃 최적화 ── */
 @media (max-width: 768px) {
-  /* 조별리그 경기카드 전체 */
+  /* 조별리그 경기카드 전체 - flex 레이아웃 조정 */
   .grp-match-card {
     padding: 8px 10px !important;
     border-radius: 12px !important;
-    gap: 6px !important;
+    gap: 8px !important;
     margin-bottom: 6px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
   }
 
-  /* 조별리그 스코어 (1:0) 표시 박스 */
-  .grp-match-score {
-    font-size: 15px !important;
-    padding: 5px 9px !important;
-    border-radius: 8px !important;
-    min-width: 52px !important;
+  /* 프로필 사이드 패널 - 모바일에서 좌측으로 이동 */
+  .grp-match-card .rec-side-profiles {
+    order: 1 !important;
+    padding: 0 !important;
+    gap: 4px !important;
   }
 
-  /* GROUP 뱃지 */
+  /* CONTENT 영역 - 프로필 뒤 */
+  .grp-match-content {
+    order: 2 !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  /* 헤더 영역 - GROUP/라운드 배지 */
+  .grp-match-header {
+    order: 1 !important;
+    gap: 4px !important;
+  }
+
   .grp-badge {
     font-size: 9px !important;
     padding: 3px 8px !important;
     border-radius: 12px !important;
   }
 
-  /* 스코어 컬럼 최소 너비 축소 */
-  .grp-score-col {
-    min-width: 48px !important;
-  }
-
-  /* 조별리그 맵 표시 */
-  .grp-score-col > div[style*="font-size:10px"] {
-    font-size: 9px !important;
-  }
-
-  /* 경기 메인 레이아웃 */
+  /* 메인 경기 영역 - 팀/스코어/팀 */
   .grp-match-main {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    order: 2 !important;
+    width: 100% !important;
+  }
+
+  /* 팀 컬럼 */
+  .grp-team-col {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 3px !important;
+    min-width: 70px !important;
+  }
+
+  /* 팀 칩 - 모바일 크기 */
+  .grp-team-chip {
+    min-width: 70px !important;
+    padding: 8px 10px !important;
+  }
+
+  .grp-team-chip span {
+    font-size: 12px !important;
+  }
+
+  .grp-team-chip img.tc-uicon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* 참여자 버튼 - 팀 아래 배치 */
+  .grp-mem-btn {
+    font-size: 9px !important;
+    padding: 2px 7px !important;
+    height: 20px !important;
+  }
+
+  .grp-mem-btn .mem-ico {
+    font-size: 10px !important;
+  }
+
+  /* 스코어 컬럼 */
+  .grp-score-col {
+    min-width: 50px !important;
+  }
+
+  .grp-match-score {
+    font-size: 16px !important;
+    padding: 5px 10px !important;
+    border-radius: 8px !important;
+  }
+
+  /* 액션 메뉴 - 모바일에서 우측 */
+  .grp-match-card > div[style*="flex-direction:column"][style*="gap:4px"] {
+    order: 3 !important;
+    align-self: flex-start !important;
+    margin-left: auto !important;
+  }
+}
+
+/* ── [D-2] 480px 이하 초소형 화면 ── */
+@media (max-width: 480px) {
+  .grp-match-card {
+    padding: 6px 8px !important;
     gap: 6px !important;
   }
 
-  /* match-card-v3 스코어 박스 */
-  .grp-match-card.match-card-v3 .grp-match-score {
-    font-size: 16px !important;
-    padding: 5px 10px !important;
-    border-radius: 9px !important;
+  .grp-team-chip {
+    min-width: 60px !important;
+    padding: 6px 8px !important;
+  }
+
+  .grp-team-chip span {
+    font-size: 11px !important;
+  }
+
+  .grp-match-score {
+    font-size: 14px !important;
+    padding: 4px 8px !important;
+  }
+
+  .grp-score-col {
+    min-width: 44px !important;
+  }
+
+  .grp-match-card .rec-side-profiles {
+    gap: 3px !important;
+  }
+
+  .grp-mem-btn {
+    font-size: 8px !important;
+    padding: 2px 5px !important;
+    height: 18px !important;
   }
 }
 
