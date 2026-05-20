@@ -888,10 +888,11 @@ ${_scfgD('notice','📢 공지 관리')}
           <option value="center" ${(localStorage.getItem('su_rc_vs_align')||'center')==='center'?'selected':''}>가운데</option>
           <option value="right" ${(localStorage.getItem('su_rc_vs_align')||'center')==='right'?'selected':''}>우측</option>
         </select>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--text3);font-weight:800">스코어 크기</span>
-          <input type="range" id="cfg-rc-score-scale" min="80" max="130" step="5" value="${Math.max(80,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'108',10)||108))}" oninput="document.getElementById('cfg-rc-score-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
-          <span id="cfg-rc-score-scale-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(80,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'108',10)||108))}%</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text3);font-weight:800">스코어 크기(기록탭·대학전·프로리그·티어)</span>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">공통(PC/모바일)</span>
+          <input type="range" id="cfg-rc-score-scale" min="50" max="130" step="5" value="${(()=>{try{return Math.max(50,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'88',10)||88));}catch(e){return 88;}})(  )}" oninput="document.getElementById('cfg-rc-score-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
+          <span id="cfg-rc-score-scale-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${(()=>{try{return Math.max(50,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'88',10)||88));}catch(e){return 88;}})(  )}%</span>
         </div>
       </div>
 
@@ -1399,6 +1400,25 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">스코어 크기(대회탭 조별/토너)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-tc-score-pc" min="50" max="150" step="5"
+            value="${(()=>{try{return Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10)||82));}catch(e){return 82;}})(  )}"
+            oninput="document.getElementById('cfg-tc-score-pc-v').textContent=this.value+'%'" onchange="cfgSetTcScoreScale()" style="width:140px">
+          <span id="cfg-tc-score-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${(()=>{try{return Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10)||82));}catch(e){return 82;}})(  )}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-tc-score-mb" min="50" max="150" step="5"
+            value="${(()=>{try{return Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10)||75));}catch(e){return 75;}})(  )}"
+            oninput="document.getElementById('cfg-tc-score-mb-v').textContent=this.value+'%'" onchange="cfgSetTcScoreScale()" style="width:140px">
+          <span id="cfg-tc-score-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${(()=>{try{return Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10)||75));}catch(e){return 75;}})(  )}%</span>
+        </div>
+        <span style="font-size:11px;color:var(--gray-l)">※ 대회탭 조별리그/토너 기록카드 스코어 크기</span>
+      </div>
+
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <div style="font-size:11px;color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(대회탭)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>

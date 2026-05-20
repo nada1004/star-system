@@ -498,7 +498,7 @@ window.cfgSetRecCardSettings = function(){
   const memoOn = !!document.getElementById('cfg-rc-memo-on')?.checked;
   const ava = parseInt(document.getElementById('cfg-ava-scale')?.value||'100',10);
   const vsAlign = (document.getElementById('cfg-rc-vs-align')?.value || 'center').trim(); // left|center|right
-  const scScale = parseInt(document.getElementById('cfg-rc-score-scale')?.value||'108',10);
+  const scScale = parseInt(document.getElementById('cfg-rc-score-scale')?.value||'88',10);
   const ckA = (document.getElementById('cfg-team-ck-a')?.value || '#2563eb').trim();
   const ckB = (document.getElementById('cfg-team-ck-b')?.value || '#6366f1').trim();
   const proA = (document.getElementById('cfg-team-pro-a')?.value || '#0f766e').trim();
@@ -515,7 +515,7 @@ window.cfgSetRecCardSettings = function(){
   try{ localStorage.setItem('su_rc_memo_on', memoOn ? '1' : '0'); }catch(e){}
   try{ localStorage.setItem('su_avatar_scale', String(Math.max(70,Math.min(160,ava))/100)); }catch(e){}
   try{ localStorage.setItem('su_rc_vs_align', ['left','center','right'].includes(vsAlign)?vsAlign:'center'); }catch(e){}
-  try{ localStorage.setItem('su_rc_score_scale', String(Math.max(80,Math.min(130,scScale)))); }catch(e){}
+  try{ localStorage.setItem('su_rc_score_scale', String(Math.max(50,Math.min(130,scScale)))); }catch(e){}
   try{ if(_hex(ckA)) localStorage.setItem('su_team_color_ck_a', _hex(ckA)); }catch(e){}
   try{ if(_hex(ckB)) localStorage.setItem('su_team_color_ck_b', _hex(ckB)); }catch(e){}
   try{ if(_hex(proA)) localStorage.setItem('su_team_color_pro_a', _hex(proA)); }catch(e){}
@@ -539,7 +539,7 @@ window.cfgSetRecCardSettings = function(){
     const _ys=Math.max(80,Math.min(140,ymScalePct||100));
     const _accent=['none','header','border','full','gradient'].includes(accent)?accent:'none';
     const _va=['left','center','right'].includes(vsAlign)?vsAlign:'left';
-    const _ss=Math.max(80,Math.min(130,scScale||100));
+    const _ss=Math.max(50,Math.min(130,scScale||88));
     const _vsJust=(_va==='center')?'center':(_va==='right')?'flex-end':'flex-start';
     if(document.body){
       document.body.classList.toggle('rc-theme-on', !!on);
@@ -559,6 +559,35 @@ window.cfgSetRecCardSettings = function(){
   }catch(e){}
   try{ if(typeof window._applyRecCardTheme === 'function') window._applyRecCardTheme(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+};
+
+
+// ─────────────────────────────────────────────────────────────
+// 대회탭 스코어 크기 설정 (TC Score Scale)
+// - CSS 변수: --tc-score-scale (PC/모바일 구분)
+// - localStorage: su_tc_score_scale_pc / su_tc_score_scale_mb
+// ─────────────────────────────────────────────────────────────
+window.cfgSetTcScoreScale = function(){
+  const pc = parseInt(document.getElementById('cfg-tc-score-pc')?.value||'82',10);
+  const mb = parseInt(document.getElementById('cfg-tc-score-mb')?.value||'75',10);
+  try{ localStorage.setItem('su_tc_score_scale_pc', String(Math.max(50,Math.min(150,pc)))); }catch(e){}
+  try{ localStorage.setItem('su_tc_score_scale_mb', String(Math.max(50,Math.min(150,mb)))); }catch(e){}
+  try{
+    const isMb = window.innerWidth <= 768;
+    const val = isMb ? Math.max(50,Math.min(150,mb)) : Math.max(50,Math.min(150,pc));
+    document.documentElement.style.setProperty('--tc-score-scale', String(val/100));
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+window._applyTcScoreScale = function(){
+  try{
+    const isMb = window.innerWidth <= 768;
+    const pcV = parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10);
+    const mbV = parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10);
+    const val = isMb ? Math.max(50,Math.min(150,mbV)) : Math.max(50,Math.min(150,pcV));
+    document.documentElement.style.setProperty('--tc-score-scale', String(val/100));
+  }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────

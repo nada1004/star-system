@@ -365,7 +365,7 @@ function compSummaryListHTML(context){
           <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
             ${(a&&b)?`<div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세보기">
               <span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa||0}</span>
-              <span style="color:var(--gray-l);font-size:14px">:</span>
+              <span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 4px;opacity:0.8">:</span>
               <span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb||0}</span>
             </div>`:''}
             ${mapStr ? `<span style="font-size:10px;color:var(--gray-l);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${maps.join(', ')}">${mapStr}</span>` : ''}

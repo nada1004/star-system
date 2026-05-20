@@ -927,6 +927,35 @@ function _applyRecCardTheme(){
 window._applyRecCardTheme=_applyRecCardTheme;
 _applyRecCardTheme();
 
+// 대회탭 스코어 크기 초기 적용
+(function(){
+  try{
+    var isMb = window.innerWidth <= 768;
+    var pcV = parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10);
+    var mbV = parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10);
+    var val = isMb ? Math.max(50,Math.min(150,mbV)) : Math.max(50,Math.min(150,pcV));
+    document.documentElement.style.setProperty('--tc-score-scale', String(val/100));
+    // 기록탭 스코어도 초기 적용
+    var rcSc = parseInt(localStorage.getItem('su_rc_score_scale')||'88',10);
+    document.documentElement.style.setProperty('--rc-score-scale', String(rcSc/100));
+  }catch(e){}
+})();
+
+// 창 크기 변경 시 tc-score-scale 재적용
+(function(){
+  try{
+    window.addEventListener('resize', function(){
+      try{
+        var isMb2 = window.innerWidth <= 768;
+        var pcV2 = parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10);
+        var mbV2 = parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10);
+        var val2 = isMb2 ? Math.max(50,Math.min(150,mbV2)) : Math.max(50,Math.min(150,pcV2));
+        document.documentElement.style.setProperty('--tc-score-scale', String(val2/100));
+      }catch(e){}
+    }, {passive:true});
+  }catch(e){}
+})();
+
 // 팀 버튼 스타일 초기 적용
 (function(){
   try{

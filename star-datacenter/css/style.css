@@ -10953,3 +10953,164 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
     background: rgba(255,255,255,.06) !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   대회탭 경기 기록카드 - 모바일 카드 외부 메타 표시 영역
+   (날짜 + 승리자 표시 + 점3개 버튼을 카드 밖 상단에)
+═══════════════════════════════════════════════════════ */
+
+/* 경기 카드를 감싸는 래퍼 */
+.grp-match-wrap {
+  margin-bottom: 10px;
+}
+
+/* 카드 외부 메타 바 (모바일 전용) */
+.grp-card-meta-bar {
+  display: none; /* PC에서는 숨김 */
+}
+
+@media (max-width: 768px) {
+  .grp-card-meta-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px 0 8px;
+    margin-bottom: 3px;
+  }
+
+  .grp-card-meta-bar .grp-meta-date {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gray-l);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 7px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .grp-card-meta-bar .grp-meta-winner {
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 2px 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    color: #fff;
+    letter-spacing: 0.3px;
+  }
+
+  .grp-card-meta-bar .grp-meta-spacer {
+    flex: 1;
+  }
+
+  .grp-card-meta-bar .grp-meta-menu {
+    flex-shrink: 0;
+  }
+
+  /* 모바일에서는 카드 내부의 날짜 + 메뉴 버튼 숨기기 */
+  .grp-match-card .grp-inner-date { display: none !important; }
+  .grp-match-card .grp-inner-menu { display: none !important; }
+
+  /* 모바일에서 카드 내 점3개 메뉴 숨기기 (카드 밖으로 이동했으므로) */
+  .grp-match-wrap .grp-match-card > .no-export:last-child {
+    display: none !important;
+  }
+
+  /* 모바일 참가자(👥) 버튼 크기 축소 - 대회탭 */
+  .grp-mem-btn {
+    font-size: calc(7px * var(--tc-mem-btn-scale, 1)) !important;
+    padding: calc(1px * var(--tc-mem-btn-scale, 1)) calc(4px * var(--tc-mem-btn-scale, 1)) !important;
+    min-height: 18px !important;
+    gap: 2px !important;
+    border-radius: 5px !important;
+  }
+  .grp-mem-btn .mem-ico {
+    font-size: calc(8px * var(--tc-mem-btn-scale, 1)) !important;
+  }
+}
+
+/* ── 스코어 : 구분자 가시성 개선 ── */
+/* grp-match-score (대회탭 조별/토너) */
+.grp-match-score {
+  font-size: calc(18px * var(--tc-score-scale, 1)) !important;
+}
+.grp-score-col .grp-match-score {
+  font-size: calc(20px * var(--tc-score-scale, 1)) !important;
+}
+
+/* : 구분자 - 더 굵고 뚜렷하게 */
+.grp-match-score span[style*="var(--gray-l)"],
+.grp-match-score .score-sep {
+  color: var(--text3) !important;
+  font-weight: 900 !important;
+  font-size: 0.72em !important;
+  opacity: 0.75 !important;
+  margin: 0 4px !important;
+}
+
+/* rec-sum-score (기록탭/프로리그/대학전/티어대회) */
+.rec-sum-score {
+  font-size: calc(18px * var(--rc-score-scale, 1)) !important;
+}
+/* : 구분자 in rec-sum-score */
+.rec-sum-score span[style*="var(--gray-l)"],
+.rec-sum-score .score-sep {
+  color: var(--text3) !important;
+  font-weight: 900 !important;
+  font-size: 0.68em !important;
+  opacity: 0.75 !important;
+}
+
+/* 대회탭 스코어 크기 CSS 변수 기본값 설정 */
+:root {
+  --tc-score-scale: 0.82;
+  --rc-score-scale: 0.88;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --tc-score-scale: 0.75;
+    --rc-score-scale: 0.82;
+  }
+  .grp-match-score {
+    padding: 5px 12px !important;
+  }
+  .grp-score-col .grp-match-score {
+    min-width: 72px !important;
+  }
+  .rec-sum-score {
+    padding: 4px 12px !important;
+    gap: 5px !important;
+  }
+}
+
+/* 다크모드 대회탭 카드 외부 메타바 */
+body.dark .grp-card-meta-bar .grp-meta-date {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.1);
+  color: rgba(255,255,255,.5);
+}
+
+/* 모바일: grp-match-wrap 내 카드 내부 날짜/메뉴 숨기기 */
+@media (max-width: 768px) {
+  .grp-match-wrap .grp-inner-date { display: none !important; }
+  .grp-match-wrap .grp-inner-menu { display: none !important; }
+  /* bracket-records 카드 내부의 no-export 메뉴도 숨기기 (메타바로 이동) */
+  .grp-match-wrap .grp-match-card > .no-export { display: none !important; }
+
+  /* 메타바가 없을 때도 카드가 깔끔하게 보이도록 */
+  .grp-match-wrap {
+    margin-bottom: 8px;
+  }
+
+  /* 모바일 카드 compact: 내부 좌측 badge 열 축소 */
+  .grp-match-wrap .grp-match-card > div:first-child {
+    min-width: 56px !important;
+  }
+  .grp-match-wrap .grp-match-card .grp-badge {
+    font-size: 9px !important;
+    padding: 3px 8px !important;
+  }
+}

@@ -402,7 +402,7 @@ window.cfgSetRecCardSettings = function(){
   const memoOn = !!document.getElementById('cfg-rc-memo-on')?.checked;
   const ava = parseInt(document.getElementById('cfg-ava-scale')?.value||'100',10);
   const vsAlign = (document.getElementById('cfg-rc-vs-align')?.value || 'center').trim(); // left|center|right
-  const scScale = parseInt(document.getElementById('cfg-rc-score-scale')?.value||'108',10);
+  const scScale = parseInt(document.getElementById('cfg-rc-score-scale')?.value||'88',10);
   const ckA = (document.getElementById('cfg-team-ck-a')?.value || '#2563eb').trim();
   const ckB = (document.getElementById('cfg-team-ck-b')?.value || '#6366f1').trim();
   const proA = (document.getElementById('cfg-team-pro-a')?.value || '#0f766e').trim();
@@ -419,7 +419,7 @@ window.cfgSetRecCardSettings = function(){
   try{ localStorage.setItem('su_rc_memo_on', memoOn ? '1' : '0'); }catch(e){}
   try{ localStorage.setItem('su_avatar_scale', String(Math.max(70,Math.min(160,ava))/100)); }catch(e){}
   try{ localStorage.setItem('su_rc_vs_align', ['left','center','right'].includes(vsAlign)?vsAlign:'center'); }catch(e){}
-  try{ localStorage.setItem('su_rc_score_scale', String(Math.max(80,Math.min(130,scScale)))); }catch(e){}
+  try{ localStorage.setItem('su_rc_score_scale', String(Math.max(50,Math.min(130,scScale)))); }catch(e){}
   try{ if(_hex(ckA)) localStorage.setItem('su_team_color_ck_a', _hex(ckA)); }catch(e){}
   try{ if(_hex(ckB)) localStorage.setItem('su_team_color_ck_b', _hex(ckB)); }catch(e){}
   try{ if(_hex(proA)) localStorage.setItem('su_team_color_pro_a', _hex(proA)); }catch(e){}
@@ -443,7 +443,7 @@ window.cfgSetRecCardSettings = function(){
     const _ys=Math.max(80,Math.min(140,ymScalePct||100));
     const _accent=['none','header','border','full','gradient'].includes(accent)?accent:'none';
     const _va=['left','center','right'].includes(vsAlign)?vsAlign:'left';
-    const _ss=Math.max(80,Math.min(130,scScale||100));
+    const _ss=Math.max(50,Math.min(130,scScale||88));
     const _vsJust=(_va==='center')?'center':(_va==='right')?'flex-end':'flex-start';
     if(document.body){
       document.body.classList.toggle('rc-theme-on', !!on);
@@ -691,6 +691,21 @@ window.cfgSetTourneyVsGapSettings = function(){
   try{ window.applyTourneyVsGap && window.applyTourneyVsGap(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
 };
+
+// 대회탭 스코어 크기 설정 (TC Score Scale)
+window.cfgSetTcScoreScale = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-tc-score-pc')?.value||'82',10);
+    const mb = parseInt(document.getElementById('cfg-tc-score-mb')?.value||'75',10);
+    localStorage.setItem('su_tc_score_scale_pc', String(Math.max(50,Math.min(150,pc))));
+    localStorage.setItem('su_tc_score_scale_mb', String(Math.max(50,Math.min(150,mb))));
+    const isMb = window.innerWidth <= 768;
+    const val = isMb ? Math.max(50,Math.min(150,mb)) : Math.max(50,Math.min(150,pc));
+    document.documentElement.style.setProperty('--tc-score-scale', String(val/100));
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
 try{
   if(!window._tcVsGapBound){
     window._tcVsGapBound = true;
@@ -4446,8 +4461,8 @@ ${_scfgD('notice','📢 공지 관리')}
         </select>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--text3);font-weight:800">스코어 크기</span>
-          <input type="range" id="cfg-rc-score-scale" min="80" max="130" step="5" value="${Math.max(80,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'108',10)||108))}" oninput="document.getElementById('cfg-rc-score-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
-          <span id="cfg-rc-score-scale-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(80,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'108',10)||108))}%</span>
+          <input type="range" id="cfg-rc-score-scale" min="50" max="130" step="5" value="${Math.max(50,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'88',10)||88))}" oninput="document.getElementById('cfg-rc-score-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
+          <span id="cfg-rc-score-scale-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(50,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'88',10)||88))}%</span>
         </div>
       </div>
 
@@ -4812,6 +4827,25 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">스코어 크기(대회탭 조별/토너)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-tc-score-pc" min="50" max="150" step="5"
+            value="${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10)||82))}"
+            oninput="document.getElementById('cfg-tc-score-pc-v').textContent=this.value+'%'" onchange="cfgSetTcScoreScale()" style="width:140px">
+          <span id="cfg-tc-score-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10)||82)}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-tc-score-mb" min="50" max="150" step="5"
+            value="${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10)||75))}"
+            oninput="document.getElementById('cfg-tc-score-mb-v').textContent=this.value+'%'" onchange="cfgSetTcScoreScale()" style="width:140px">
+          <span id="cfg-tc-score-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10)||75)}%</span>
+        </div>
+        <span style="font-size:11px;color:var(--gray-l)">※ 대회탭 조별리그/토너 기록카드 스코어 크기</span>
+      </div>
+
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <div style="font-size:11px;color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(대회탭)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>

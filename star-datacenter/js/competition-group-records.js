@@ -142,7 +142,17 @@ function rCompLeague(tn){
       const _compSide=(typeof window._buildRecSideProfilePanel==='function')
         ? window._buildRecSideProfilePanel(_sideM, _sideAB, aWin, bWin, ca, cb)
         : {left:'',right:''};
-      h+=`<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_compSide.left||_compSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${_fxOn?(ca||m.grpColor):m.grpColor};${_fxOn?`border-right:4px solid ${cb||m.grpColor};`:''};">
+      const _grpWinnerName = isDone ? (aWin ? (m.a||'') : bWin ? (m.b||'') : '') : '';
+      const _grpWinnerCol  = isDone ? (aWin ? ca : bWin ? cb : '') : '';
+      const _grpDateLabel  = m.d ? m.d.slice(2).replace(/-/g,'/') : '';
+      h+=`<div class="grp-match-wrap">
+        <div class="grp-card-meta-bar no-export">
+          ${_grpDateLabel?`<span class="grp-meta-date">📅 ${_grpDateLabel}</span>`:''}
+          ${_grpWinnerName?`<span class="grp-meta-winner" style="background:${_grpWinnerCol}">🏆 ${_grpWinnerName}</span>`:''}
+          <span class="grp-meta-spacer"></span>
+          ${_leagueMenu?`<span class="grp-meta-menu">${_leagueMenu}</span>`:''}
+        </div>
+        `+`<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_compSide.left||_compSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${_fxOn?(ca||m.grpColor):m.grpColor};${_fxOn?`border-right:4px solid ${cb||m.grpColor};`:''};">
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:72px;flex-shrink:0">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">GROUP ${m.grpLetter}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
@@ -160,7 +170,7 @@ function rCompLeague(tn){
             </button>` : ''}
           </div>
           <div class="grp-score-col" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:80px">
-            ${isDone?`<div class="grp-match-score score-click" onclick="openCompMatchDetailModal('${tn.id}',${m.grpIdx},${m.matchNum-1})"><span class="${aWin?'wt':bWin?'lt':''}">${m.sa}</span><span style="color:var(--gray-l);font-size:14px;margin:0 3px">:</span><span class="${bWin?'wt':aWin?'lt':''}">${m.sb}</span></div>
+            ${isDone?`<div class="grp-match-score score-click" onclick="openCompMatchDetailModal('${tn.id}',${m.grpIdx},${m.matchNum-1})"><span class="${aWin?'wt':bWin?'lt':''}">${m.sa}</span><span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span><span class="${bWin?'wt':aWin?'lt':''}">${m.sb}</span></div>
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor};text-shadow:0 1px 8px ${m.grpColor}44">VS</div>`}
           </div>
           <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
@@ -174,8 +184,8 @@ function rCompLeague(tn){
           </div>
         </div>
         ${_compSide.right||''}
-        ${_leagueMenu?`<div class="no-export" style="display:flex;flex-direction:column;gap:4px;padding-right:6px">${_leagueMenu}</div>`:''}
-      </div>`;
+        <div class="grp-inner-menu no-export" style="display:flex;flex-direction:column;gap:4px;padding-right:6px">${_leagueMenu}</div>
+      </div></div>`;
     });
     h+=`</div>`;
   });
