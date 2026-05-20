@@ -4382,25 +4382,74 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
 
   /* ── 대전 카드 ── */
   .rec-header { padding: 8px 10px; gap: 5px; flex-wrap: wrap; }
-  .rec-sum-header { flex-wrap: wrap !important; gap: 4px !important; padding: 8px 10px !important; }
+  /* ── 대전기록 카드 헤더: 날짜 좌측 상단 고정 ── */
+  .rec-sum-header { flex-wrap: wrap !important; gap: 4px !important; padding: 6px 10px !important; }
+  .rec-sum-header--stack { gap: 4px !important; padding: 6px 10px !important; }
+  /* topline(날짜+메뉴행)을 항상 위쪽에 */
+  .rec-topline { flex-wrap: nowrap !important; align-items: center !important; gap: 6px !important; }
+  .rec-meta-row { flex-wrap: nowrap !important; overflow: hidden !important; gap: 4px !important; }
+  .rec-datechip { font-size: 9px !important; padding: 2px 7px !important; min-height: 20px !important; flex-shrink: 0; }
+
+  /* ── 대전기록 카드 본문: 프로필-팀-스코어-팀-프로필 한 줄 ── */
   .rec-sum-score { font-size: 18px !important; padding: 4px 12px !important; }
-  .rec-sum-vs { flex-wrap: wrap !important; gap: var(--rc-vs-gap,8px) !important; justify-content: var(--rc-vs-justify, center) !important; }
+  .rec-sum-vs {
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden;
+  }
+  /* 팀 컬럼(배지+참여자버튼): column 방향, 가운데 정렬 */
+  .rec-sum-vs > div {
+    min-width: 0;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 3px !important;
+  }
+  /* 팀 배지 텍스트 줄임 */
+  .rec-sum-vs .ubadge { max-width: 90px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-size: 10px !important; padding: 3px 6px !important; }
+  /* 참여자 버튼: 팀 배지 바로 아래 */
+  .rec-sum-vs .rc-mem-btn { font-size: 9px !important; padding: 1px 5px !important; white-space: nowrap; margin-top: 0 !important; }
+  /* 스코어 컬럼 flex-shrink 0 */
+  .rec-sum-vs .rec-sum-score { flex-shrink: 0 !important; }
+
   .rec-summary { min-height: 44px; border-radius: 10px; }
   .sort-bar { padding: 6px 10px !important; }
-  /* 모바일: 프로필 패널 양쪽 자동 축소 - 한 줄 유지 */
-  .rec-sum-vs-outer { flex-wrap: nowrap !important; align-items: stretch; overflow: hidden; }
-  .rec-side-profiles { min-width: 0 !important; max-width: 64px !important; flex-shrink: 1 !important; padding: 2px 3px !important; }
-  .rec-side-profiles.rsp-no-box { max-width: 60px !important; padding: 1px 2px !important; }
-  .rsp-inner { overflow: visible; }
-  .rsp-imgbox { transform: none !important; }
-  .rsp-imgbox--win { animation: rspFloat 3.2s ease-in-out infinite; }
-  .rsp-crown { font-size: 11px !important; top: -7px !important; }
-  .rsp-namelbl { display: none !important; }
-  .rsp-inner > div { max-width: 100%; overflow: hidden; }
+
+  /* ── 모바일: 프로필 패널 양쪽 자동 축소 - 한 줄 유지 ── */
+  .rec-sum-vs-outer { flex-wrap: nowrap !important; align-items: center !important; overflow: hidden; }
+  .rec-side-profiles {
+    min-width: 0 !important;
+    max-width: 56px !important;
+    flex-shrink: 1 !important;
+    padding: 2px 3px !important;
+    /* 우측 패널 정렬 수정: 항상 세로 가운데 */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .rec-side-profiles.rsp-no-box { max-width: 52px !important; padding: 1px 2px !important; }
+  .rsp-inner {
+    overflow: visible;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+  }
+  .rsp-inner > div { max-width: 100%; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
   .rsp-inner > div > img { max-width: 100%; height: auto !important; object-fit: cover !important; }
-  /* 참여자 버튼: 모바일에서 팀 배지 아래 자연스럽게 배치 */
+  .rsp-imgbox { transform: none !important; }
+
+  /* ── 모바일: 승리자 별(플로팅) 애니메이션 제거 ── */
+  .rsp-imgbox--win { animation: none !important; }
+  .rsp-imgbox--win .rsp-imginner { animation: none !important; }
+  .rsp-crown { display: none !important; }
+
+  .rsp-namelbl { display: none !important; }
   .rc-mem-btn { font-size: 10px !important; padding: 2px 6px !important; white-space: nowrap; }
-  .rec-sum-vs > div { min-width: 0; }
   .rec-detail-area { padding: 6px 8px !important; }
   /* 경기 상세 게임 행: 모바일에서 사진 작게, 텍스트 압축 */
   .rec-detail-area strong { font-size: 12px !important; }
@@ -4551,6 +4600,79 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     border-radius:14px !important;
     padding:5px 12px !important;
     font-size:15px !important;
+  }
+  /* ── 대회탭 경기 카드: 한줄(프로필-팀-스코어-팀-프로필) + 참여자 버튼 팀 아래 ── */
+  /* 날짜 좌측 상단: grp-match-card 컨테이너(position:relative)에 absolute 날짜 유지, padding-top 최소화 */
+  .grp-match-card.match-card-v3 {
+    padding-top: 24px !important; /* 날짜 absolute 공간 확보 */
+    padding-bottom: 8px !important;
+  }
+  /* grp-match-meta 제거(숨김) - 날짜는 absolute로 이미 표시됨 */
+  .grp-match-card.match-card-v3 .grp-match-meta {
+    display: none !important;
+  }
+  /* 메인 영역: 프로필-팀A-스코어-팀B-프로필 한 줄 */
+  .grp-match-card.match-card-v3 .grp-match-main {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    overflow: hidden !important;
+    width: 100% !important;
+  }
+  /* 팀 컬럼: 팀 배지 + 참여자 버튼 세로 정렬 */
+  .grp-match-card.match-card-v3 .grp-team-col {
+    min-width: 0 !important;
+    width: auto !important;
+    flex: 1 !important;
+    max-width: 40% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+  /* 팀 배지: 크기 축소 */
+  .grp-match-card.match-card-v3 .grp-team-chip {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 6px 7px !important;
+    border-radius: 10px !important;
+    gap: 4px !important;
+  }
+  .grp-match-card.match-card-v3 .grp-team-chip span { font-size: 11px !important; }
+  .grp-match-card.match-card-v3 .grp-team-chip img.tc-uicon { width: 18px !important; height: 18px !important; }
+  /* 참여자 버튼: 팀 배지 바로 아래 */
+  .grp-match-card.match-card-v3 .grp-mem-btn {
+    display: inline-flex !important;
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    white-space: nowrap;
+    min-height: unset !important;
+    height: auto !important;
+  }
+  /* 스코어 컬럼: 고정 너비, 가운데 */
+  .grp-match-card.match-card-v3 .grp-score-col {
+    min-width: 52px !important;
+    width: 52px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .grp-match-card.match-card-v3 .grp-match-score {
+    border-radius: 10px !important;
+    padding: 4px 8px !important;
+    font-size: 14px !important;
+  }
+  /* 사이드 프로필 패널 가운데 정렬 수정 */
+  .grp-match-card.match-card-v3.has-side-panels > .rec-side-profiles {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    max-width: 48px !important;
+    flex-shrink: 0 !important;
   }
   .grp-rank-table th, .grp-rank-table td { padding: 6px 5px; font-size: 11px; }
 
