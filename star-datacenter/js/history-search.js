@@ -245,12 +245,39 @@ function getTourneyMatches(){
     });
     // 브라켓 경기 (matchDetails)
     const br=tn.bracket||{};
+    const _maxR = (()=>{
+      try{
+        const keys = []
+          .concat(Object.keys(br.matchDetails||{}))
+          .concat(Object.keys(br.winners||{}))
+          .concat(Object.keys(br.slots||{}));
+        let mx = -1;
+        keys.forEach(k=>{
+          const m = String(k||'').match(/^(\d+)-(\d+)/);
+          if(!m) return;
+          const r = parseInt(m[1],10);
+          if(Number.isFinite(r)) mx = Math.max(mx, r);
+        });
+        return mx;
+      }catch(e){
+        return -1;
+      }
+    })();
+    const _totalRounds = Math.max(1, _maxR + 1);
+    const _roundLabels = {1:'결승',2:'4강',3:'8강',4:'16강',5:'32강',6:'64강',7:'128강',8:'256강'};
+    const _rndLabelOf = (r)=>{
+      const rNum = _totalRounds - (Number.isFinite(r) ? r : 0);
+      return _roundLabels[rNum] || `${Math.pow(2, rNum)}강`;
+    };
     Object.entries(br.matchDetails||{}).forEach(([key,m])=>{
       if(!m||!m.a||!m.b||m.sa==null||m.sb==null)return;
+      const parts=String(key||'').split('-');
+      const r=parseInt(parts[0],10);
       result.push({
         _src:'tour_bracket',_tnId:tn.id,_bktKey:key,
         d:m.d||'',n:tn.name,a:m.a,b:m.b,
         sa:m.sa,sb:m.sb,sets:m.sets||[],
+        rndLabel:_rndLabelOf(r),
         grpName:'토너먼트',grpLetter:'T',grpColor:'#2563eb'
       });
     });
@@ -268,6 +295,7 @@ function getTourneyMatches(){
         _src:'tour_bracket',_tnId:tn.id,_bktKey:key,
         d:(det&&det.d)||'',n:tn.name,a,b,
         sa:winner===a?1:0,sb:winner===b?1:0,sets:[],
+        rndLabel:_rndLabelOf(r),
         grpName:'토너먼트',grpLetter:'T',grpColor:'#2563eb'
       });
     });
