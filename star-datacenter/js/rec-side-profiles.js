@@ -228,9 +228,7 @@
       : '0 6px 20px rgba(0,0,0,.22)';
 
     // 왕관 배지
-    var crownBadge = (playerWon && isWinTeam)
-      ? '<div class="rsp-crown">👑</div>'
-      : '';
+    var crownBadge = '';
 
     // 이름 레이블 — textContent로 XSS 방지
     var nameLblColor = (playerWon && isWinTeam) ? col : 'var(--gray-l)';

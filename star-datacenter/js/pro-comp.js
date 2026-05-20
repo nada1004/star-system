@@ -495,7 +495,7 @@ function proCompLeague(tn) {
         isLoggedIn ? { t:'🗑️ 결과 삭제', d:'이 경기 기록 삭제', kind:'danger', on:()=>proCompDelMatch(tn.id,m.grpIdx,m.matchNum-1) } : null
       ].filter(Boolean);
       const _cardMenu = _cardActions.length ? _compActionMenuHTML(_cardActions) : '';
-      h += `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${m.grpColor};margin-bottom:8px">
+      h += `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?m.grpColor:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?m.grpColor:cb};margin-bottom:8px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">${m.grpName?m.grpName:`GROUP ${m.grpLetter}`}</span>
           <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
@@ -1202,7 +1202,6 @@ function proCompBracket(tn) {
         <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:.5px">${champion}</div>
         ${isTierTourney ? (cp?.tier?`<div style="font-size:11px;color:rgba(255,255,255,.7)">${cp.tier}${cp.race?' · '+cp.race:''}</div>`:'') : (cp?.univ?`<div style="font-size:11px;color:rgba(255,255,255,.7)">${cp.univ}${cp.race?' · '+cp.race:''}</div>`:'')}
       </div>
-      <div style="margin-left:auto;font-size:32px">👑</div>
     </div>`;
   }
 
@@ -1594,7 +1593,7 @@ function proCompTourMatchInput(tn){
     const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
     const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
     const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
-    return `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${col};margin-bottom:8px">
+    return `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?col:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?col:cb};margin-bottom:8px">
       <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:70px">
         <span class="grp-badge" style="background:linear-gradient(135deg,${col},${col}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${col}55">${round}</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:600">${displayNo}경기</span>
@@ -5121,9 +5120,9 @@ function proCompGJSection(tn) {
         const aWin=g.winner===sess.a;
         return `<tr>
           <td style="font-size:11px;color:var(--gray-l)">${gi+1}게임</td>
-          <td style="font-weight:${aWin?'900':'400'};color:${aWin?'var(--blue)':'#aaa'}">${aWin?'👑 '+sess.a:sess.a}</td>
+          <td style="font-weight:${aWin?'900':'400'};color:${aWin?'var(--blue)':'#aaa'}">${sess.a}</td>
           <td style="color:var(--gray-l);text-align:center">vs</td>
-          <td style="font-weight:${!aWin?'900':'400'};color:${!aWin?'var(--blue)':'#aaa'}">${!aWin?'👑 '+sess.b:sess.b}</td>
+          <td style="font-weight:${!aWin?'900':'400'};color:${!aWin?'var(--blue)':'#aaa'}">${sess.b}</td>
           <td style="font-size:11px;color:var(--gray-l)">${g.map||''}</td>
         </tr>`;
       }).join('')}
