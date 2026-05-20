@@ -4429,19 +4429,23 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
+    overflow: hidden !important;
   }
   .rec-side-profiles.rsp-no-box { max-width: 52px !important; padding: 1px 2px !important; }
   .rsp-inner {
-    overflow: visible;
+    overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
     width: 100% !important;
   }
+  /* 모바일 카드에서 스트리머 정보 레이블 숨김 (공간 부족으로 위로 튀어나오는 문제 방지) */
+  .rec-sum-vs-outer .rsp-info-label,
+  .grp-match-card .rsp-info-label { display: none !important; }
   .rsp-inner > div { max-width: 100%; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
   .rsp-inner > div > img { max-width: 100%; height: auto !important; object-fit: cover !important; }
-  .rsp-imgbox { transform: none !important; }
+  .rsp-imgbox { transform: none !important; overflow: hidden; }
 
   /* ── 모바일: 승리자 별(플로팅) 애니메이션 제거 ── */
   .rsp-imgbox--win { animation: none !important; }
@@ -4606,6 +4610,11 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .grp-match-card.match-card-v3 {
     padding-top: 24px !important; /* 날짜 absolute 공간 확보 */
     padding-bottom: 8px !important;
+  }
+  /* wrapper div: overflow visible 보장 (날짜 absolute가 카드 위로 튀어나오지 않도록) */
+  .grp-match-card.match-card-v3 {
+    position: relative !important;
+    overflow: visible !important;
   }
   /* grp-match-meta 제거(숨김) - 날짜는 absolute로 이미 표시됨 */
   .grp-match-card.match-card-v3 .grp-match-meta {
@@ -11604,4 +11613,259 @@ body.dark .rsp-info-race--P { background: #3b1f5e; color: #d8b4fe; }
   .grp-match-card.match-card-v3 > .no-export {
     flex-shrink: 0 !important;
   }
+}
+
+/* ═══════════════════════════════════════════════════
+   ★ MOBILE UX FIXES - 2026-05-20
+   1. 경기 기록카드 승자 칩: 세로→가로 텍스트 강제 수평
+   2. 날짜 칩: 아주 작게 + 우측 상단 이동
+   3. 사이드 프로필 이미지: 카드 끝 간격 맞춤 + 겹침 제거
+   4. 대회탭 토너먼트 일정: 프로필-팀버튼-스코어-팀버튼-프로필 1행
+   ═══════════════════════════════════════════════════ */
+
+/* ── 1. 승자 칩 강제 가로 표시 (PC + 모바일) ── */
+.rec-victor-chip,
+.rec-victor-chip--crown {
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+}
+
+/* ── 2. 날짜 칩: 작게 + 우측 상단 배치 ── */
+/* rec-topline 내 날짜는 flex-end로 밀고 작게 표시 */
+.rec-meta-row .rec-datechip {
+  font-size: 9px !important;
+  padding: 1px 6px !important;
+  min-height: 18px !important;
+  letter-spacing: 0 !important;
+  opacity: 0.72;
+  order: -1;
+}
+
+/* rec-topline 우측 상단으로 날짜 이동 */
+.rec-topline {
+  align-items: flex-start !important;
+}
+.rec-meta-row {
+  flex: 1;
+}
+
+/* 날짜 칩을 rec-meta-row 맨 끝(오른쪽)으로 */
+.rec-topline .rec-datechip {
+  margin-left: auto;
+  font-size: 9px !important;
+  padding: 1px 5px !important;
+  min-height: 16px !important;
+  opacity: 0.65;
+  flex-shrink: 0;
+  order: 99;
+}
+
+/* ── 3. 사이드 프로필 이미지: 카드 끝 간격 맞춤 + 겹침 제거 ── */
+/* rec-summary에서 overflow:visible 허용해서 프로필 잘림 방지 */
+.rec-summary.has-side-panels,
+.rec-summary:has(.rec-side-profiles) {
+  overflow: visible !important;
+}
+/* rec-sum-vs-outer 안 프로필이 카드 바깥으로 나가지 않게 */
+.rec-sum-vs-outer {
+  overflow: visible;
+  align-items: stretch;
+}
+/* 프로필 패널이 카드 경계 안에 있도록 */
+.rec-sum-vs-outer > .rec-side-profiles {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  /* ── 모바일 2. 날짜 칩 더 작게 ── */
+  .rec-meta-row .rec-datechip,
+  .rec-topline .rec-datechip {
+    font-size: 8px !important;
+    padding: 1px 5px !important;
+    min-height: 15px !important;
+    opacity: 0.6;
+  }
+
+  /* ── 모바일 3. 프로필 패널 카드 끝 간격 동일하게 ── */
+  .rec-sum-vs-outer > .rec-side-profiles:first-child {
+    margin-left: 0 !important;
+    padding-left: 4px !important;
+    padding-right: 2px !important;
+  }
+  .rec-sum-vs-outer > .rec-side-profiles:last-child {
+    margin-right: 0 !important;
+    padding-right: 4px !important;
+    padding-left: 2px !important;
+  }
+
+  /* 프로필 이미지가 카드에 겹치지 않도록 z-index와 경계 처리 */
+  .rec-summary {
+    overflow: hidden !important;
+    position: relative;
+  }
+  .rec-sum-vs-outer {
+    overflow: hidden;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .rec-sum-vs-outer > .rec-side-profiles {
+    max-width: 52px !important;
+    min-width: 36px !important;
+    flex-shrink: 1 !important;
+    padding: 4px 2px !important;
+    overflow: hidden !important;
+  }
+  .rec-sum-vs-outer > .rec-side-profiles .rsp-imgbox {
+    overflow: hidden !important;
+  }
+  .rec-sum-vs-outer > .rec-side-profiles .rsp-imgbox:hover {
+    transform: none !important;
+  }
+  .rec-sum-vs-outer > .rec-side-profiles .rsp-imginner {
+    max-width: 100% !important;
+  }
+
+  /* ── 모바일 4. 대회탭 토너먼트/조별리그 일정 카드
+        프로필이미지 | 팀버튼 스코어 팀버튼 | 프로필이미지
+        팀버튼 아래에 참여자버튼 1행 정렬 ── */
+  .grp-match-card.match-card-v3 {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    grid-template-areas:
+      "meta meta menu"
+      "left main right" !important;
+    align-items: center !important;
+    padding: 8px 6px !important;
+    gap: 4px 6px !important;
+    flex-wrap: nowrap !important;
+  }
+  /* 날짜 위치 표시(absolute) → 그리드 내 meta 영역에 통합 */
+  .grp-match-card.match-card-v3 > [style*="position:absolute"],
+  .grp-match-card.match-card-v3 > span[style*="position:absolute"] {
+    position: static !important;
+    grid-area: meta !important;
+    font-size: 8px !important;
+    color: var(--gray-l) !important;
+    justify-self: start !important;
+    margin: 0 !important;
+    padding: 0 4px !important;
+  }
+  /* 첫 번째 자식(meta/배지 영역) */
+  .grp-match-card.match-card-v3 > div:first-of-type:not(.grp-match-main):not(.rec-side-profiles):not(.no-export) {
+    grid-area: meta !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+  /* 왼쪽 프로필 */
+  .grp-match-card.match-card-v3 > .rec-side-profiles:first-of-type {
+    grid-area: left !important;
+    max-width: 44px !important;
+    min-width: 28px !important;
+    padding: 2px 2px !important;
+    overflow: hidden !important;
+    flex-shrink: 1 !important;
+  }
+  /* 메인(팀A 스코어 팀B) */
+  .grp-match-card.match-card-v3 > .grp-match-main {
+    grid-area: main !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+  /* 오른쪽 프로필 */
+  .grp-match-card.match-card-v3 > .rec-side-profiles:last-of-type {
+    grid-area: right !important;
+    max-width: 44px !important;
+    min-width: 28px !important;
+    padding: 2px 2px !important;
+    overflow: hidden !important;
+    flex-shrink: 1 !important;
+  }
+  /* 메뉴 버튼 */
+  .grp-match-card.match-card-v3 > .no-export:last-child {
+    grid-area: menu !important;
+    justify-self: end !important;
+    align-self: start !important;
+  }
+
+  /* 팀 칩: 프로필 이미지 + 팀명 가로 정렬, 참여자버튼 팀 아래 */
+  .grp-match-card.match-card-v3 .grp-team-col {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    max-width: 120px !important;
+  }
+  .grp-match-card.match-card-v3 .grp-team-chip {
+    padding: 6px 8px !important;
+    border-radius: 10px !important;
+    gap: 4px !important;
+    width: 100% !important;
+    justify-content: center !important;
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+  .grp-match-card.match-card-v3 .grp-team-chip span {
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 80px !important;
+  }
+  /* 팀 아이콘(프로필 이미지)이 팀 버튼 안에 가로로 */
+  .grp-match-card.match-card-v3 .tc-uicon {
+    width: 22px !important;
+    height: 22px !important;
+    flex-shrink: 0 !important;
+  }
+  /* 참여자 버튼: 팀 버튼 바로 아래 */
+  .grp-match-card.match-card-v3 .grp-mem-btn {
+    font-size: 9px !important;
+    padding: 2px 7px !important;
+    display: inline-flex !important;
+    margin-top: 2px !important;
+    white-space: nowrap !important;
+  }
+  /* 스코어 영역 */
+  .grp-match-card.match-card-v3 .grp-score-col {
+    min-width: 54px !important;
+    flex-shrink: 0 !important;
+  }
+  .grp-match-card.match-card-v3 .grp-match-score {
+    font-size: 15px !important;
+    padding: 4px 8px !important;
+    white-space: nowrap !important;
+  }
+  /* has-side-panels 없는 경우에도 동일 적용 */
+  .grp-match-card.match-card-v3:not(.has-side-panels) {
+    display: grid !important;
+    grid-template-columns: auto 1fr !important;
+    grid-template-areas:
+      "meta menu"
+      "main main" !important;
+  }
+  .grp-match-card.match-card-v3:not(.has-side-panels) > .grp-match-main {
+    grid-area: main !important;
+  }
+}
+
+/* ── 승자 칩 행 안에서 flex-wrap 방지 ── */
+.rec-meta-row {
+  flex-wrap: wrap;
+}
+.rec-meta-row .rec-victor-chip {
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
