@@ -227,6 +227,11 @@
       ? '0 6px 28px '+col+'88, 0 0 0 '+(ringSize+2)+'px '+col+'55'
       : '0 6px 20px rgba(0,0,0,.22)';
 
+    // 왕관 배지
+    var crownBadge = (playerWon && isWinTeam)
+      ? '<div class="rsp-crown">👑</div>'
+      : '';
+
     // 이름 레이블 — textContent로 XSS 방지
     var nameLblColor = (playerWon && isWinTeam) ? col : 'var(--gray-l)';
     var nameLblGlow  = (playerWon && isWinTeam) ? '0 0 8px '+col+'77' : 'none';
@@ -255,6 +260,7 @@
       +'background:#e2e8f0;';
 
     return '<div class="rsp-imgbox'+(playerWon&&isWinTeam?' rsp-imgbox--win':'')+(isCircle?' rsp-imgbox--circle':'')+'" style="'+boxStyle+'">'
+      + crownBadge
       + '<div class="rsp-imginner" style="'+innerStyle+'">'
       + raw
       + '</div>'
