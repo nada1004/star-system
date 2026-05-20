@@ -537,13 +537,9 @@ window._authInitPromise = null;
     }
     const _el = document.getElementById('tabCfg');
     if(_el) _el.style.display = (isLoggedIn && !isSubAdmin) ? 'flex' : 'none';
-    // 스트리머 등록 폼도 즉시 숨김 (비로그인 시 새로고침할 때 잠깐 보이는 현상 방지)
-    const _fstrip = document.getElementById('fstrip');
-    if(_fstrip) _fstrip.style.display = (isLoggedIn && !isSubAdmin) ? 'block' : 'none';
   }catch(e){
     // 오류 시 안전하게 숨김
     try{ const _el=document.getElementById('tabCfg'); if(_el) _el.style.display='none'; }catch(_){}
-    try{ const _fs=document.getElementById('fstrip'); if(_fs) _fs.style.display='none'; }catch(_){}
   }
 })();
 

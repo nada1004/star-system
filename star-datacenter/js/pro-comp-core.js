@@ -146,8 +146,8 @@ function _pcIsMobile(){
   try{ return window.innerWidth <= 768; }catch(e){ return false; }
 }
 function proCompGetAvatarPx(){
-  const pc = _pcReadIntLS('su_procomp_avatar_pc', 88, 28, 200);
-  const mb = _pcReadIntLS('su_procomp_avatar_mb', 68, 24, 160);
+  const pc = _pcReadIntLS('su_procomp_avatar_pc', 52, 28, 84);
+  const mb = _pcReadIntLS('su_procomp_avatar_mb', 40, 24, 72);
   return _pcIsMobile() ? mb : pc;
 }
 
@@ -447,9 +447,8 @@ function proCompLeague(tn) {
     byDate[date].forEach(m => {
       const pa = players.find(p=>p.name===m.a);
       const pb = players.find(p=>p.name===m.b);
-      const _gcByUniv=(name,p)=>{const _u=p&&p.univ?gc(p.univ):'';return(_u&&_u!=='#6b7280')?_u:gc(name||'');};
-      const ca = (typeof gc==='function' ? _gcByUniv(m.a,players.find(p=>p.name===m.a)) : '#3b82f6');
-      const cb = (typeof gc==='function' ? _gcByUniv(m.b,players.find(p=>p.name===m.b)) : '#ef4444');
+      const ca = (typeof gc==='function' ? gc(m.a||'')||'#3b82f6' : '#3b82f6');
+      const cb = (typeof gc==='function' ? gc(m.b||'')||'#ef4444' : '#ef4444');
       const isDone = !!m.winner;
       const aWin = isDone && m.winner==='A';
       const bWin = isDone && m.winner==='B';
@@ -465,8 +464,8 @@ function proCompLeague(tn) {
         const av = (typeof proCompGetAvatarPx==='function') ? proCompGetAvatarPx() : 52;
         const fit = (typeof proCompGetAvatarFit==='function') ? proCompGetAvatarFit() : 'cover';
         const bgSize = (fit==='fill') ? '100% 100%' : (fit==='contain' ? 'contain' : 'cover');
-        const minW = Math.max(148, av + 60);
-        const minH = Math.max(180, av + 80);
+        const minW = Math.max(128, av + 90);
+        const minH = Math.max(128, av + 86);
         const bgImg = (p && p.photo) ? `background-image:url('${toHttpsUrl(p.photo)}');` : '';
         const bgFallback = (!p || !p.photo)
           ? `background:linear-gradient(135deg,${isWin?'#16a34a':'#64748b'}33,${isWin?'#16a34a':'#64748b'}11);`
@@ -500,13 +499,10 @@ function proCompLeague(tn) {
         isLoggedIn ? { t:'🗑️ 결과 삭제', d:'이 경기 기록 삭제', kind:'danger', on:()=>proCompDelMatch(tn.id,m.grpIdx,m.matchNum-1) } : null
       ].filter(Boolean);
       const _cardMenu = _cardActions.length ? _compActionMenuHTML(_cardActions) : '';
-      h += `<div style="position:relative">
-        <div style="position:absolute;top:0;left:0;z-index:2;display:flex;align-items:center;gap:5px;padding:6px 10px;pointer-events:none">
-          <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">${m.grpName?m.grpName:`GROUP ${m.grpLetter}`}</span>
-          <span style="font-size:10px;color:var(--gray-l);font-weight:700">${m.matchNum}경기</span>
-        </div>
-      <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?m.grpColor:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?m.grpColor:cb};margin-bottom:8px;padding-top:30px">
+      h += `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${_fxOn?(ca||m.grpColor):m.grpColor};${_fxOn?`border-right:4px solid ${cb||m.grpColor};`:''};margin-bottom:8px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px">
+          <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">${m.grpName?m.grpName:`GROUP ${m.grpLetter}`}</span>
+          <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
           ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
         </div>
         <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
@@ -526,7 +522,7 @@ function proCompLeague(tn) {
           ${isDone?``:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor}">VS</div>`}
           ${_cardMenu}
         </div>
-      </div></div>`;
+      </div>`;
     });
     h += `</div>`;
   });
@@ -1210,6 +1206,7 @@ function proCompBracket(tn) {
         <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:.5px">${champion}</div>
         ${isTierTourney ? (cp?.tier?`<div style="font-size:11px;color:rgba(255,255,255,.7)">${cp.tier}${cp.race?' · '+cp.race:''}</div>`:'') : (cp?.univ?`<div style="font-size:11px;color:rgba(255,255,255,.7)">${cp.univ}${cp.race?' · '+cp.race:''}</div>`:'')}
       </div>
+      <div style="margin-left:auto;font-size:32px">👑</div>
     </div>`;
   }
 
@@ -1571,8 +1568,8 @@ function proCompTourMatchInput(tn){
       const av = (typeof proCompGetAvatarPx==='function') ? proCompGetAvatarPx() : 52;
       const fit = (typeof proCompGetAvatarFit==='function') ? proCompGetAvatarFit() : 'cover';
       const bgSize = (fit==='fill') ? '100% 100%' : (fit==='contain' ? 'contain' : 'cover');
-      const minW = Math.max(148, av + 60);
-      const minH = Math.max(180, av + 80);
+      const minW = Math.max(128, av + 90);
+      const minH = Math.max(128, av + 86);
       const bgImg = (p && p.photo) ? `background-image:url('${toHttpsUrl(p.photo)}');` : '';
       const bgFallback = (!p || !p.photo)
         ? `background:linear-gradient(135deg,${isWin?'#16a34a':'#64748b'}33,${isWin?'#16a34a':'#64748b'}11);`
@@ -1594,9 +1591,8 @@ function proCompTourMatchInput(tn){
       </div>`;
     };
     const dLabel = (m.d||'') ? (m.d||'').slice(2).replace(/-/g,'/') : '미정';
-    const _gcByUniv2=(name,p)=>{const _u=p&&p.univ?gc(p.univ):'';return(_u&&_u!=='#6b7280')?_u:gc(name||'');};
-    const ca = (typeof gc==='function' ? _gcByUniv2(m.a,players.find(p=>p.name===m.a)) : '#3b82f6');
-    const cb = (typeof gc==='function' ? _gcByUniv2(m.b,players.find(p=>p.name===m.b)) : '#ef4444');
+    const ca = (typeof gc==='function' ? gc(m.a||'')||'#3b82f6' : '#3b82f6');
+    const cb = (typeof gc==='function' ? gc(m.b||'')||'#ef4444' : '#ef4444');
     const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
     const _fxOn=!!_fxCfg.on;
     const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
@@ -1604,11 +1600,11 @@ function proCompTourMatchInput(tn){
     const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
     const _hexRgb2=(h)=>{const s=String(h||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
     const _sideRgbVars2=`--rec-side-left-rgb:${_hexRgb2(ca||'#3b82f6')};--rec-side-right-rgb:${_hexRgb2(cb||'#ef4444')};`;
-    return `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars2}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?col:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?col:cb};margin-bottom:8px">
+    return `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars2}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${_fxOn?(ca||col):col};${_fxOn?`border-right:4px solid ${cb||col};`:''};margin-bottom:8px">
       <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:70px">
-        <span style="font-size:10px;color:var(--gray-l);font-weight:700">${dLabel}</span>
         <span class="grp-badge" style="background:linear-gradient(135deg,${col},${col}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${col}55">${round}</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:600">${displayNo}경기</span>
+        <span style="font-size:10px;color:var(--gray-l);font-weight:800">${dLabel}</span>
         ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
       </div>
       <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">

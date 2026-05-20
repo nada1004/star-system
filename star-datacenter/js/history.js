@@ -3515,9 +3515,7 @@ function _histProCompLeagueListHTML(){
       const stageTypeBadge = m._stage==='조별리그'
         ? `<span class="stage-type-badge-league">조별리그</span>`
         : `<span class="stage-type-badge-bracket">대진표</span>`;
-      const _gcFx=(p,name,stageCol)=>{const u=p&&p.univ?gc(p.univ):gc(name||'');return(u&&u!=='#6b7280')?u:stageCol;};
-      const _caFx=_gcFx(pa,m.a,m._stageColor); const _cbFx=_gcFx(pb,m.b,m._stageColor);
-      h += `<div class="rec-summary rec-mode-procomptn${_recSideFxClass('procomptn')}" data-rec-mode="procomptn" style="--rec-mode-col:${m._stageColor};--rec-mode-rgb:${(function(){const h=String(m._stageColor||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};${_recSideFxStyle('procomptn',_caFx,_cbFx)}margin-left:8px;border-left:4px solid ${(_caFx&&_caFx!=='#6b7280')?_caFx:m._stageColor};border-right:4px solid ${(_cbFx&&_cbFx!=='#6b7280')?_cbFx:m._stageColor}">
+      h += `<div class="rec-summary rec-mode-procomptn${_recSideFxClass('procomptn')}" data-rec-mode="procomptn" style="--rec-mode-col:${m._stageColor};--rec-mode-rgb:${(function(){const h=String(m._stageColor||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};${_recSideFxStyle('procomptn',gc(m.a),gc(m.b))}margin-left:8px;border-left:4px solid ${m._stageColor}">
         <div class="procomp-card-meta">
           <span class="rec-datechip" style="background:${m._stageColor}">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           ${stageTypeBadge}${stageBadge}
@@ -3639,9 +3637,7 @@ function histProCompTourneyHTML(_omitBar) {
       const aWin=m.winner==='A', bWin=m.winner==='B';
       const stageBadge=`<span class="stage-badge" style="background:${m._stageColor}">${m._stageDetail}</span>`;
       const tieBadge = m._isTie ? `<span style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;white-space:nowrap">⚖️ ${m._scoreA||0}:${m._scoreB||0}</span>` : '';
-      const _gcFx2=(p,name,stageCol)=>{const u=p&&p.univ?gc(p.univ):gc(name||'');return(u&&u!=='#6b7280')?u:stageCol;};
-      const _caFx2=_gcFx2(pa,m.a,m._stageColor); const _cbFx2=_gcFx2(pb,m.b,m._stageColor);
-      h+=`<div class="rec-summary rec-mode-procomptn${_recSideFxClass('procomptn')}" data-rec-mode="procomptn" style="--rec-mode-col:${m._stageColor};--rec-mode-rgb:${(function(){const h=String(m._stageColor||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};${_recSideFxStyle('procomptn',_caFx2,_cbFx2)}margin-left:8px;border-left:4px solid ${(_caFx2&&_caFx2!=='#6b7280')?_caFx2:m._stageColor};border-right:4px solid ${(_cbFx2&&_cbFx2!=='#6b7280')?_cbFx2:m._stageColor}">
+      h+=`<div class="rec-summary rec-mode-procomptn${_recSideFxClass('procomptn')}" data-rec-mode="procomptn" style="--rec-mode-col:${m._stageColor};--rec-mode-rgb:${(function(){const h=String(m._stageColor||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};${_recSideFxStyle('procomptn',gc(m.a),gc(m.b))}margin-left:8px;border-left:4px solid ${m._stageColor}">
         <div class="procomp-card-meta">
           <span class="rec-datechip" style="background:${m._stageColor}">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
           <span class="stage-type-badge-bracket" style="background:#f5f3ff;color:#7c3aed">토너먼트</span>
