@@ -1397,7 +1397,7 @@ function histProCompGJHTML(_omitBar){
         <span style="font-size:12px;font-weight:600;color:var(--text3)">${sess.d||'날짜 미정'}</span>
         <span style="font-size:11px;background:#0891b2;color:#fff;padding:1px 8px;border-radius:4px;font-weight:700">🎖️ ${sess.tnName||''}</span>
         <span style="font-weight:700;color:var(--blue);cursor:pointer" onclick="event.stopPropagation();openPlayerModal(decodeURIComponent('${encodeURIComponent(sess.a||'')}'))">${sess.a||'?'}</span>
-        <span class="score-click" style="font-weight:1000;color:var(--blue);text-decoration:underline;text-underline-offset:3px;text-decoration-style:dotted">${p1w} - ${p2w}</span>
+        <span class="score-click" style="font-weight:1000;color:var(--blue);text-decoration:underline;text-underline-offset:3px;text-decoration-style:dotted">${p1w} : ${p2w}</span>
         <span style="font-weight:700;cursor:pointer" onclick="event.stopPropagation();openPlayerModal(decodeURIComponent('${encodeURIComponent(sess.b||'')}'))">${sess.b||'?'}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${(sess.games||[]).length}게임</span>

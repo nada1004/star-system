@@ -179,20 +179,20 @@ body.design-v2{background:var(--bg);}
 
 /* 대전기록 카드 우측 ⋯ 버튼: 터치/클릭 영역 확대 (잘 안 눌리는 문제 완화) */
 .rec-morebtn{
-  min-width:42px !important;
-  width:42px !important;
-  height:34px !important;
+  min-width:36px !important;
+  width:36px !important;
+  height:30px !important;
   padding:0 !important;
   display:inline-flex !important;
   align-items:center !important;
   justify-content:center !important;
   touch-action:manipulation;
-  border-radius:10px !important;
+  border-radius:9px !important;
   border:1px solid #d7deea !important;
   background:linear-gradient(180deg,#ffffff,#f6f8fc) !important;
   color:#64748b !important;
   box-shadow:0 1px 2px rgba(15,23,42,.04), inset 0 1px 0 rgba(255,255,255,.75) !important;
-  font-size:18px !important;
+  font-size:16px !important;
   font-weight:900 !important;
   line-height:1 !important;
 }
@@ -1825,6 +1825,7 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 
 /* ── 왕관 배지 ── */
 .rsp-crown{
+  display:none !important;
   pointer-events:none;
   animation:rspCrownBounce 2s ease-in-out infinite;
 }
@@ -4383,7 +4384,7 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   /* ── 대전 카드 ── */
   .rec-header { padding: 8px 10px; gap: 5px; flex-wrap: wrap; }
   .rec-sum-header { flex-wrap: wrap !important; gap: 4px !important; padding: 8px 10px !important; }
-  .rec-sum-score { font-size: 18px !important; padding: 4px 12px !important; }
+  .rec-sum-score { font-size: 15px !important; padding: 3px 9px !important; }
   .rec-sum-vs { flex-wrap: wrap !important; gap: var(--rc-vs-gap,8px) !important; justify-content: var(--rc-vs-justify, center) !important; }
   .rec-summary { min-height: 44px; border-radius: 10px; }
   .sort-bar { padding: 6px 10px !important; }
@@ -4399,7 +4400,7 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .rsp-inner > div { max-width: 100%; overflow: hidden; }
   .rsp-inner > div > img { max-width: 100%; height: auto !important; object-fit: cover !important; }
   /* 참여자 버튼: 모바일에서 팀 배지 아래 자연스럽게 배치 */
-  .rc-mem-btn { font-size: 10px !important; padding: 2px 6px !important; white-space: nowrap; }
+  .rc-mem-btn { font-size: 9px !important; padding: 2px 5px !important; white-space: nowrap; }
   .rec-sum-vs > div { min-width: 0; }
   .rec-detail-area { padding: 6px 8px !important; }
   /* 경기 상세 게임 행: 모바일에서 사진 작게, 텍스트 압축 */
@@ -4486,8 +4487,8 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .grp-match-card.match-card-v3.has-side-panels .grp-mem-btn{
     display:inline-flex !important;
     margin-top:2px !important;
-    font-size:9px !important;
-    padding:2px 6px !important;
+    font-size:8px !important;
+    padding:2px 5px !important;
     white-space:nowrap;
   }
 
@@ -10871,8 +10872,8 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
     gap: 6px !important;
   }
   .rec-sum-score {
-    font-size: 16px !important;
-    padding: 3px 10px !important;
+    font-size: 14px !important;
+    padding: 2px 8px !important;
     border-radius: 8px !important;
   }
 
@@ -10888,18 +10889,25 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
     min-width: 58px !important;
   }
   .grp-match-score {
-    font-size: 14px !important;
-    padding: 4px 10px !important;
-    border-radius: 10px !important;
+    font-size: 12px !important;
+    padding: 3px 8px !important;
+    border-radius: 9px !important;
   }
 
   /* 3-8. 더보기 버튼 */
   .rec-morebtn {
-    min-height: 40px !important;
-    font-size: 12px !important;
-    border-radius: 10px !important;
-    margin-top: 6px !important;
+    min-width: 30px !important;
+    width: 30px !important;
+    height: 26px !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+    margin: 0 !important;
   }
+  .rec-summary .rec-sum-header{ position:relative; }
+  .rec-summary .rec-topline{ padding-right: 38px !important; }
+  .rec-summary .rec-morebtn{ position:absolute !important; top:6px !important; right:8px !important; }
+  .rec-summary, .grp-match-card{ --su_profile_radius: 50%; }
+  .rec-summary[data-rec-mode="procompgj"] .score-click{ font-size: 13px !important; }
 
   /* 3-9. 개인전/끝장전 — 선수 이름 행 */
   .rec-detail-area {
@@ -10945,4 +10953,3 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
     background: rgba(255,255,255,.06) !important;
   }
 }
-

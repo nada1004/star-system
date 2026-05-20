@@ -352,7 +352,7 @@ function indRecordsHTML(){
         ${bulkCbInd||''}
         <div style="display:flex;align-items:center;justify-content:flex-end;width:100%">${p1bg}</div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;${_scorePad}flex-shrink:0">
-          <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-1.6px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:${_dashFs}px;color:var(--gray-l);margin:0 3px">-</span>${p2wins}</div>
+          <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-1.6px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:${_dashFs}px;color:var(--gray-l);margin:0 3px">:</span>${p2wins}</div>
           ${winner?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap">${winner} 승</div>`:''}
         </div>
         <div style="display:flex;align-items:center;justify-content:flex-start;width:100%">${p2bg}</div>
@@ -529,7 +529,7 @@ function gjRecordsHTML(proOnly){
         ${bulkCbGj||''}
         <div style="display:flex;align-items:center;justify-content:flex-end;width:100%">${gj_p1bg}</div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;${_scorePad}flex-shrink:0">
-          <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-1.6px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:${_dashFs}px;color:var(--gray-l);margin:0 3px">-</span>${p2wins}</div>
+          <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-1.6px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:${_dashFs}px;color:var(--gray-l);margin:0 3px">:</span>${p2wins}</div>
           ${winner?`<div style="font-size:10px;color:var(--gray-l);white-space:nowrap">${winner} 승</div>`:''}
         </div>
         <div style="display:flex;align-items:center;justify-content:flex-start;width:100%">${gj_p2bg}</div>

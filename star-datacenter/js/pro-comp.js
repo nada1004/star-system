@@ -1202,7 +1202,6 @@ function proCompBracket(tn) {
         <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:.5px">${champion}</div>
         ${isTierTourney ? (cp?.tier?`<div style="font-size:11px;color:rgba(255,255,255,.7)">${cp.tier}${cp.race?' · '+cp.race:''}</div>`:'') : (cp?.univ?`<div style="font-size:11px;color:rgba(255,255,255,.7)">${cp.univ}${cp.race?' · '+cp.race:''}</div>`:'')}
       </div>
-      <div style="margin-left:auto;font-size:32px">👑</div>
     </div>`;
   }
 
@@ -5110,7 +5109,7 @@ function proCompGJSection(tn) {
       <div style="background:var(--bg2);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span style="font-size:12px;font-weight:600;color:var(--text3)">${sess.d||'날짜 미정'}</span>
         <span style="font-weight:700;color:var(--blue);cursor:pointer" onclick="openPlayerModal('${(sess.a||'').replace(/'/g,"\\'")}')">${sess.a||'?'}</span>
-        <span style="font-weight:900;color:var(--blue)">${p1w} - ${p2w}</span>
+        <span style="font-weight:900;color:var(--blue)">${p1w} : ${p2w}</span>
         <span style="font-weight:700;cursor:pointer" onclick="openPlayerModal('${(sess.b||'').replace(/'/g,"\\'")}')">${sess.b||'?'}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${(sess.games||[]).length}게임</span>
@@ -5121,9 +5120,9 @@ function proCompGJSection(tn) {
         const aWin=g.winner===sess.a;
         return `<tr>
           <td style="font-size:11px;color:var(--gray-l)">${gi+1}게임</td>
-          <td style="font-weight:${aWin?'900':'400'};color:${aWin?'var(--blue)':'#aaa'}">${aWin?'👑 '+sess.a:sess.a}</td>
+          <td style="font-weight:${aWin?'900':'400'};color:${aWin?'var(--blue)':'#aaa'}">${sess.a}</td>
           <td style="color:var(--gray-l);text-align:center">vs</td>
-          <td style="font-weight:${!aWin?'900':'400'};color:${!aWin?'var(--blue)':'#aaa'}">${!aWin?'👑 '+sess.b:sess.b}</td>
+          <td style="font-weight:${!aWin?'900':'400'};color:${!aWin?'var(--blue)':'#aaa'}">${sess.b}</td>
           <td style="font-size:11px;color:var(--gray-l)">${g.map||''}</td>
         </tr>`;
       }).join('')}

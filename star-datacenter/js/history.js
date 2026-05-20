@@ -384,7 +384,6 @@ function histAllHTML(){
             <span style="color:${Number(scoreB)>Number(scoreA)?'#16a34a':Number(scoreA)>Number(scoreB)?'#dc2626':'var(--text)'}">${scoreB}</span>
           </div>`}
         <span style="font-weight:800;font-size:13px;color:${winner===teamB?'#16a34a':'var(--text)'};flex:1;min-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">${teamB}</span>
-        ${winner&&!isInd?`<span class="rec-victor-chip rec-victor-chip--crown" style="--rec-victor-col:${winCol};color:${winCol}">🏆 ${winner}</span>`:''}
       </div>
       <div id="det-${key}" class="rec-detail-area">
         ${isInd
@@ -468,7 +467,6 @@ function histTourneyHTML(context){
             <div class="rec-meta-row">
               <span class="rec-datechip">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
               ${grpBadge?`<span class="grp-badge-pill" style="background:${m.grpColor||'#2563eb'}">${grpBadge.replace(/<[^>]*>/g,'')}</span>`:''}
-              ${(aWin||bWin)?`<span class="rec-victor-chip rec-victor-chip--crown" style="--rec-victor-col:${aWin?ca:cb};color:${aWin?ca:cb}">🏆 ${aWin?a:b}</span>`:`<span class="rec-meta-chip">무승부</span>`}
             </div>
             <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
             <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
@@ -3813,7 +3811,7 @@ function histProCompGJHTML(_omitBar){
         <span style="font-size:12px;font-weight:600;color:var(--text3)">${sess.d||'날짜 미정'}</span>
         <span style="font-size:11px;background:#0891b2;color:#fff;padding:1px 8px;border-radius:4px;font-weight:700">🎖️ ${sess.tnName||''}</span>
         <span style="font-weight:700;color:var(--blue);cursor:pointer" onclick="event.stopPropagation();openPlayerModal(decodeURIComponent('${encodeURIComponent(sess.a||'')}'))">${sess.a||'?'}</span>
-        <span class="score-click" style="font-weight:1000;color:var(--blue);text-decoration:underline;text-underline-offset:3px;text-decoration-style:dotted">${p1w} - ${p2w}</span>
+        <span class="score-click" style="font-weight:1000;color:var(--blue);text-decoration:underline;text-underline-offset:3px;text-decoration-style:dotted">${p1w} : ${p2w}</span>
         <span style="font-weight:700;cursor:pointer" onclick="event.stopPropagation();openPlayerModal(decodeURIComponent('${encodeURIComponent(sess.b||'')}'))">${sess.b||'?'}</span>
         ${winner?`<span style="font-size:11px;color:#16a34a;font-weight:700">(${winner} 승)</span>`:''}
         <span style="font-size:11px;color:var(--gray-l)">${(sess.games||[]).length}게임</span>

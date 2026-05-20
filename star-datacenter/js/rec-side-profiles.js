@@ -197,7 +197,7 @@
         if(found) url = found.icon || '';
       }
       if(!url) return '';
-      var radius = _cfg('su_profile_radius', '6px') || '6px';
+      var radius = _cfg('su_profile_radius', '50%') || '50%';
       return '<img src="' + (typeof toHttpsUrl==='function'?toHttpsUrl(url):url) + '"'
            + ' style="width:'+sizePx+'px;height:'+sizePx+'px;object-fit:contain;border-radius:'+radius+';display:block;"'
            + ' onerror="this.closest(\'.rec-side-profiles\')&&(this.closest(\'.rec-side-profiles\').style.display=\'none\')">';
@@ -227,11 +227,6 @@
       ? '0 6px 28px '+col+'88, 0 0 0 '+(ringSize+2)+'px '+col+'55'
       : '0 6px 20px rgba(0,0,0,.22)';
 
-    // 왕관 배지
-    var crownBadge = (playerWon && isWinTeam)
-      ? '<div class="rsp-crown">👑</div>'
-      : '';
-
     // 이름 레이블 — textContent로 XSS 방지
     var nameLblColor = (playerWon && isWinTeam) ? col : 'var(--gray-l)';
     var nameLblGlow  = (playerWon && isWinTeam) ? '0 0 8px '+col+'77' : 'none';
@@ -260,7 +255,6 @@
       +'background:#e2e8f0;';
 
     return '<div class="rsp-imgbox'+(playerWon&&isWinTeam?' rsp-imgbox--win':'')+(isCircle?' rsp-imgbox--circle':'')+'" style="'+boxStyle+'">'
-      + crownBadge
       + '<div class="rsp-imginner" style="'+innerStyle+'">'
       + raw
       + '</div>'
@@ -276,7 +270,7 @@
     var brightness= _cfg('su_rsp_brightness','1.0');
     var effect    = _cfg('su_rsp_effect','none');
     var widthPx   = Math.max(60, Math.min(180, parseInt(_cfg('su_rsp_width','90'),10)||90));
-    var radius    = _cfg('su_profile_radius','6px')||'6px';
+    var radius    = _cfg('su_profile_radius','50%')||'50%';
     var imageType = _getImageType();
     var rawOffset = Math.max(-200,Math.min(200,parseInt(_cfg('su_rsp_hoffset','0'),10)||0));
     var hoffset   = isLeft ? rawOffset : -rawOffset;

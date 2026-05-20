@@ -814,7 +814,6 @@ function rCompTourDynamic(tn){
         <div style="font-size:10px;color:rgba(255,255,255,.8);font-weight:700;letter-spacing:.5px">🏆 TOURNAMENT CHAMPION</div>
         <div style="font-size:20px;font-weight:900;color:#fff">${finalWinner}</div>
       </div>
-      <div style="margin-left:auto;font-size:32px">👑</div>
     </div>`:''}
     ${sizeHTML}
     ${grpSummary}
@@ -1010,5 +1009,4 @@ function rGrpEditInner(){
 /* ══════════════════════════════════════
    브라켓 경기 상세 입력
 ══════════════════════════════════════ */
-
 
