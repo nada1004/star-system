@@ -240,6 +240,24 @@
       ? '<div class="rsp-namelbl" style="color:'+nameLblColor+';text-shadow:'+nameLblGlow+';">'+shortName.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'
       : '';
 
+    // 모바일용 스트리머 정보 레이블 (이름/종족/티어) — CSS에서 768px 이하만 표시
+    var infoLbl = '';
+    if(pName){
+      try{
+        var _p = Array.isArray(window.players) ? window.players.find(function(x){ return x.name === pName; }) : null;
+        var _race = _p ? (_p.race || '') : '';
+        var _tier = _p ? (_p.tier || '') : '';
+        var _raceMap = {T:'테란',Z:'저그',P:'프로토스',N:'미정'};
+        var _raceName = _raceMap[_race] || _race;
+        var _dispN = pName.length > 5 ? pName.slice(0,5)+'…' : pName;
+        var _raceCls = _race ? 'rsp-info-race rsp-info-race--'+_race : 'rsp-info-race rsp-info-race--N';
+        var _raceHtml = _raceName ? '<span class="'+_raceCls+'">'+_raceName+'</span>' : '';
+        var _tierHtml = _tier ? '<span class="rsp-info-tier">'+_tier.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span>' : '';
+        var _subHtml  = (_raceHtml||_tierHtml) ? '<div class="rsp-info-sub">'+_raceHtml+_tierHtml+'</div>' : '';
+        infoLbl = '<div class="rsp-info-label"><div class="rsp-info-name">'+_dispN.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'+_subHtml+'</div>';
+      }catch(e){ infoLbl = ''; }
+    }
+
     // 박스 크기: 링 + 여백 포함
     var boxW = sizePx + ringSize*2 + 6;
     var boxStyle = ''
@@ -265,7 +283,8 @@
       + raw
       + '</div>'
       + '</div>'
-      + nameLbl;
+      + nameLbl
+      + infoLbl;
   }
 
   function _panel(players, isWinTeam, col, isLeft, matchIdx){
