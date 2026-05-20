@@ -19,7 +19,7 @@ function preparePlayerHeaderDisplayData(opts){
         : (JSON.parse(localStorage.getItem('su_img_settings')||'{}'));
       const imgScale = isMobile ? (imgSettings.scaleMb||imgSettings.scale||1) : (isTablet ? (imgSettings.scaleTb||imgSettings.scale||1) : (imgSettings.scalePc||imgSettings.scale||1));
       const imgBrightness=imgSettings.brightness||1;
-      let imageFit = 'contain';
+      let imageFit = 'cover'; // 스트리머 상세 팝업은 기본 cover(꽉 채움)
       let imagePos = 'center center';
       try{
         const dk = (typeof _getMdDeviceKey === 'function') ? _getMdDeviceKey() : (isMobile ? 'mb' : (isTablet ? 'tb' : 'pc'));

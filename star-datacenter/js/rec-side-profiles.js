@@ -92,6 +92,33 @@
     catch(e){ return def; }
   }
 
+  /* ── 프로필 모양 → border-radius / clip-path 계산 ── */
+  var _SHAPE_RADIUS_MAP = {
+    circle:'50%', square:'6px', rounded:'22%',
+    diamond:'50%', hexagon:'50%',
+    shield:'50% 50% 45% 45% / 60% 60% 40% 40%',
+    star:'50%', pentagon:'50%', blob:'40% 60% 55% 45% / 45% 55% 60% 40%',
+    squircle:'28%', leaf:'50% 0% 50% 0%'
+  };
+  var _SHAPE_CLIP_MAP = {
+    diamond:'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+    hexagon:'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)',
+    shield:'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)',
+    star:'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)',
+    pentagon:'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)',
+    leaf:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)'
+  };
+  function _getProfileShape(){
+    try{ return localStorage.getItem('su_profile_shape') || localStorage.getItem('su_bcp_shape') || 'circle'; }
+    catch(e){ return 'circle'; }
+  }
+  function _getProfileRadius(){
+    return _SHAPE_RADIUS_MAP[_getProfileShape()] || '50%';
+  }
+  function _getProfileClip(){
+    return _SHAPE_CLIP_MAP[_getProfileShape()] || 'none';
+  }
+
   /* ── 승/패 선수 분리 수집 (양쪽 구분) ──
      반환: { winNames: [], loseNames: [] }
   */
@@ -197,10 +224,11 @@
         if(found) url = found.icon || '';
       }
       if(!url) return '';
-      var radius = _cfg('su_profile_radius', '50%') || '50%';
+      var radius = _getProfileRadius();
+      var clip = _getProfileClip();
       return '<img src="' + (typeof toHttpsUrl==='function'?toHttpsUrl(url):url) + '"'
-           + ' style="width:'+sizePx+'px;height:'+sizePx+'px;object-fit:contain;border-radius:'+radius+';display:block;"'
-           + ' onerror="this.closest(\'.rec-side-profiles\')&&(this.closest(\'.rec-side-profiles\').style.display=\'none\')">';
+           + ' style="width:'+sizePx+'px;height:'+sizePx+'px;object-fit:contain;border-radius:'+radius+';'+(clip!=='none'?'clip-path:'+clip+';':'')+';display:block;"'
+           + ' onerror="this.closest(\'.rec-side-profiles\')&&(this.closest(\'.rec-side-profiles\').style.display=\'none\')">' ;
     }catch(e){ return ''; }
   }
 
@@ -244,9 +272,11 @@
       +'--rsp-glow-base:'+glowBase+';'
       +'--rsp-glow-peak:'+glowPeak+';';
 
+    var _clipVal = (typeof _getProfileClip==='function') ? _getProfileClip() : 'none';
     var innerStyle = ''
       +'width:'+sizePx+'px;height:'+sizePx+'px;'
       +'border-radius:'+(isCircle?'50%':radius)+';'
+      +(_clipVal!=='none'?'clip-path:'+_clipVal+';':'')
       +'overflow:hidden;'
       +'display:flex;align-items:center;justify-content:center;'
       +'border:'+ringSize+'px solid '+ringColor+';'
@@ -270,7 +300,8 @@
     var brightness= _cfg('su_rsp_brightness','1.0');
     var effect    = _cfg('su_rsp_effect','none');
     var widthPx   = Math.max(60, Math.min(180, parseInt(_cfg('su_rsp_width','90'),10)||90));
-    var radius    = _cfg('su_profile_radius','50%')||'50%';
+    var radius    = _getProfileRadius();
+    var profileClip = _getProfileClip();
     var imageType = _getImageType();
     var rawOffset = Math.max(-200,Math.min(200,parseInt(_cfg('su_rsp_hoffset','0'),10)||0));
     var hoffset   = isLeft ? rawOffset : -rawOffset;

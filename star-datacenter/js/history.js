@@ -455,9 +455,10 @@ function histTourneyHTML(context){
       const key=`${context}-tourney-${idx}`;
       const rIdx=(m._src==='comps')?m._origIdx:-1;
       const grpBadge=m._src==='tour'
-        ?`<span style="background:${m.grpColor||'#2563eb'};color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px">GROUP ${m.grpLetter||''}</span>`:'';
+        ?`<span class="grp-meta-group" style="background:linear-gradient(135deg,${m.grpColor||'#2563eb'},${m.grpColor||'#2563eb'}cc);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor||'#2563eb'}44">GROUP ${m.grpLetter||''} · ${m.matchNum||''}경기</span>`:'';
+      const _rndBadge=m.rndLabel?`<span style="background:var(--blue);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px">${m.rndLabel}</span>`:'';
       const _tAwin=m.sa>m.sb,_tBwin=m.sb>m.sa;
-      const _tBorderCol=_tAwin?gc(a):_tBwin?gc(b):'var(--blue-ll)';
+      const _tBorderCol=m._src==='tour'?(m.grpColor||'#2563eb'):(_tAwin?gc(a):_tBwin?gc(b):'var(--blue-ll)');
       const _ab = (typeof _collectMatchTeamMembersAB === 'function') ? _collectMatchTeamMembersAB(m) : {a:[], b:[]};
       const _aMemJson = JSON.stringify((_ab.a||[])).replace(/"/g,"'");
       const _bMemJson = JSON.stringify((_ab.b||[])).replace(/"/g,"'");
@@ -465,8 +466,9 @@ function histTourneyHTML(context){
         <div class="rec-sum-header rec-sum-header--stack">
           <div class="rec-topline">
             <div class="rec-meta-row">
+              ${grpBadge}
+              ${_rndBadge}
               <span class="rec-datechip">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
-              ${grpBadge?`<span class="grp-badge-pill" style="background:${m.grpColor||'#2563eb'}">${grpBadge.replace(/<[^>]*>/g,'')}</span>`:''}
             </div>
             <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
             <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
@@ -883,7 +885,6 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
       <div class="rec-sum-header rec-sum-header--stack">
         <div class="rec-topline">
           <div class="rec-meta-row">
-            <span class="rec-datechip">${m.d||''}</span>
             ${m.t?`<span class="rec-meta-chip">${m.t}</span>`:''}
             ${(m.n&&mode!=='comp')?`<span class="rec-meta-chip rec-meta-chip--note">${m.n}</span>`:''}
             ${m.caster?`<span class="rec-meta-chip" style="background:#fef3c7;color:#92400e;border:1px solid #f59e0b55">🎙️ ${m.caster}</span>`:''}
@@ -941,7 +942,21 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
       return (x._origIdx||0) - (y._origIdx||0);
     });
   }catch(e){}
-  list.forEach(x=>_renderItem(x.m));
+  // 날짜별 그룹화 렌더
+  const _daysF=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  const _byDateF={};
+  list.forEach(x=>{const k=_normDateSort(x.m?.d||'')||'날짜 미정';if(!_byDateF[k])_byDateF[k]=[];_byDateF[k].push(x.m);});
+  const _dateKeysF=Object.keys(_byDateF).sort((a,b)=>{
+    const dir=(typeof recSortDir!=='undefined'&&recSortDir==='asc')?'asc':'desc';
+    return dir==='asc'?a.localeCompare(b):b.localeCompare(a);
+  });
+  _dateKeysF.forEach(dk=>{
+    let _dkLabel=dk;
+    if(dk!=='날짜 미정'&&dk.match(/^\d{4}-\d{2}-\d{2}$/)){const dt=new Date(dk+'T00:00:00');_dkLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_daysF[dt.getDay()]}`;}
+    h+=`<div style="margin-bottom:22px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
+    _byDateF[dk].forEach(m=>_renderItem(m));
+    h+=`</div>`;
+  });
   if(!_filtered) return `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   return h;
 }
@@ -1187,7 +1202,6 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         <div class="rec-topline">
           <div class="rec-meta-row">
             ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
-            <span class="rec-datechip">${m.d?m.d.slice(2).replace(/-/g,'/'):''}</span>
             ${m.fmt>0?`<span class="rec-meta-chip rec-meta-chip--note">${m.fmt}:${m.fmt}</span>`:''}
             ${aWin||bWin?`<span class="rec-victor-chip rec-victor-chip--crown" style="--rec-victor-col:${aWin?ca:cb};color:${aWin?ca:cb}">🏆 ${aWin?labelA:labelB}</span>`:`<span class="rec-meta-chip">무승부</span>`}
           </div>
@@ -1264,9 +1278,19 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     </div>`;
   }
 
-  // (요청사항) 기록탭 상단 ‘이전/승패 요약’ 제거 → 그냥 리스트로만 출력
+  // 날짜별 그룹화 렌더
+  const _days=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  const _byDate={};
+  paged.forEach(({m,i})=>{const k=_normDateSort(m.d||'')||'날짜 미정';if(!_byDate[k])_byDate[k]=[];_byDate[k].push({m,i});});
+  const _dateKeys=Object.keys(_byDate).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
   let h=sortBar+`<div id="rec-list-${mode}">`;
-  paged.forEach(({m,i})=>{ h+=_recItemHTML(m,i); });
+  _dateKeys.forEach(dk=>{
+    let _dkLabel=dk;
+    if(dk!=='날짜 미정'&&dk.match(/^\d{4}-\d{2}-\d{2}$/)){const dt=new Date(dk+'T00:00:00');_dkLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_days[dt.getDay()]}`;}
+    h+=`<div style="margin-bottom:22px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
+    _byDate[dk].forEach(({m,i})=>{ h+=_recItemHTML(m,i); });
+    h+=`</div>`;
+  });
 
   // ── 페이지 컨트롤 ──
   if(totalItems>getHistPageSize()){

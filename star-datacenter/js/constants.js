@@ -311,12 +311,11 @@ function applyProfileShapeVars(){
     // 없으면 과거 호환으로 su_bcp_shape(현황판 칩 모양)를 사용
     const shape = localStorage.getItem('su_profile_shape') || localStorage.getItem('su_bcp_shape') || 'circle';
     const _shapeRadius = {
-      circle: '50%',
-      square: '6px',
-      rounded: '22%',
-      diamond: '50%',
-      hexagon: '50%',
-      shield: '50% 50% 45% 45% / 60% 60% 40% 40%'
+      circle: '50%', square: '6px', rounded: '22%', squircle: '28%',
+      diamond: '50%', hexagon: '50%', shield: '50% 50% 45% 45% / 60% 60% 40% 40%',
+      pentagon: '50%', star: '50%',
+      blob: '40% 60% 55% 45% / 45% 55% 60% 40%',
+      leaf: '50%'
     };
     const radius = _shapeRadius[shape] || '50%';
     document.documentElement.style.setProperty('--su_profile_radius', radius);
@@ -324,7 +323,10 @@ function applyProfileShapeVars(){
     const _shapeClip = {
       diamond: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
       hexagon: 'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)',
-      shield: 'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)'
+      shield: 'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)',
+      pentagon: 'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)',
+      star: 'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)',
+      leaf: 'polygon(50% 0%,100% 50%,50% 100%,0% 50%)'
     };
     const clipPath = _shapeClip[shape] || 'none';
     document.documentElement.style.setProperty('--su_profile_clip', clipPath);
@@ -345,7 +347,18 @@ function applyProfileShapeVars(){
     if(fx==='shadow') shadow = '0 6px 16px rgba(0,0,0,.18)';
     if(fx==='ring') shadow = '0 0 0 2px rgba(255,255,255,.85)';
     if(fx==='both') shadow = '0 0 0 2px rgba(255,255,255,.85), 0 6px 16px rgba(0,0,0,.18)';
+    if(fx==='glow') shadow = '0 0 0 2px rgba(255,255,255,.6), 0 0 12px 4px rgba(255,255,255,.4)';
+    if(fx==='glow-color') shadow = '0 0 0 2px rgba(99,102,241,.8), 0 0 16px 6px rgba(99,102,241,.45)';
+    if(fx==='blur-edge') shadow = '0 0 0 0 transparent';
     document.documentElement.style.setProperty('--su_profile_fx', shadow);
+    // CSS filter 효과
+    let filterFx = 'none';
+    if(fx==='vintage') filterFx = 'sepia(.35) contrast(1.1) brightness(1.05) saturate(1.2)';
+    if(fx==='sepia') filterFx = 'sepia(.8) contrast(1.05)';
+    if(fx==='grayscale') filterFx = 'grayscale(1)';
+    if(fx==='invert') filterFx = 'invert(1)';
+    if(fx==='blur-edge') filterFx = 'drop-shadow(0 0 6px rgba(0,0,0,.3))';
+    document.documentElement.style.setProperty('--su_profile_filter_fx', filterFx);
   }catch(e){
     console.warn('[applyProfileShapeVars] CSS 변수 설정 실패:', e.message);
   }

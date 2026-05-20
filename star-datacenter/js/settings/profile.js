@@ -11,12 +11,17 @@
   }
 
   const _SHAPE_OPTIONS = [
-    { v:'circle',  label:'원형',      icon:'⭕', desc:'기본 원형',    radius:'50%',   clip:'none',                                                               preview:'border-radius:50%' },
-    { v:'square',  label:'네모',      icon:'⬛', desc:'각진 사각형',  radius:'6px',   clip:'none',                                                               preview:'border-radius:6px' },
-    { v:'rounded', label:'둥근 네모', icon:'🟦', desc:'부드러운 모서리', radius:'22%', clip:'none',                                                              preview:'border-radius:22%' },
-    { v:'diamond', label:'다이아몬드',icon:'♦️', desc:'마름모형',     radius:'50%',   clip:'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',                        preview:'border-radius:50%;clip-path:polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' },
-    { v:'hexagon', label:'육각형',    icon:'⬡', desc:'벌집 모양',    radius:'50%',   clip:'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)',preview:'border-radius:50%;clip-path:polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)' },
-    { v:'shield',  label:'방패형',    icon:'🛡', desc:'방패 실루엣',  radius:'50%',   clip:'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)',                preview:'border-radius:8px 8px 0 0;clip-path:polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)' },
+    { v:'circle',   label:'원형',     icon:'⭕', desc:'기본 원형',       radius:'50%',  clip:'none',                                                                             preview:'border-radius:50%' },
+    { v:'square',   label:'네모',     icon:'⬛', desc:'각진 사각형',      radius:'6px',  clip:'none',                                                                             preview:'border-radius:6px' },
+    { v:'rounded',  label:'둥근 네모',icon:'🟦', desc:'부드러운 모서리',  radius:'22%',  clip:'none',                                                                             preview:'border-radius:22%' },
+    { v:'squircle', label:'스쿼클',   icon:'🔷', desc:'부드러운 사각원',  radius:'28%',  clip:'none',                                                                             preview:'border-radius:28%' },
+    { v:'diamond',  label:'다이아몬드',icon:'♦️',desc:'마름모형',         radius:'50%',  clip:'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',                                     preview:'border-radius:50%;clip-path:polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' },
+    { v:'hexagon',  label:'육각형',   icon:'⬡', desc:'벌집 모양',        radius:'50%',  clip:'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)',            preview:'border-radius:50%;clip-path:polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)' },
+    { v:'shield',   label:'방패형',   icon:'🛡', desc:'방패 실루엣',      radius:'50%',  clip:'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)',                             preview:'border-radius:8px 8px 0 0;clip-path:polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)' },
+    { v:'pentagon', label:'오각형',   icon:'⭐', desc:'오각형',           radius:'50%',  clip:'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)',                              preview:'border-radius:50%;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)' },
+    { v:'star',     label:'별모양',   icon:'🌟', desc:'5각 별',           radius:'50%',  clip:'polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)', preview:'border-radius:50%;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)' },
+    { v:'blob',     label:'블롭',     icon:'🫧', desc:'물방울 느낌',      radius:'40% 60% 55% 45% / 45% 55% 60% 40%', clip:'none',                                              preview:'border-radius:40% 60% 55% 45% / 45% 55% 60% 40%' },
+    { v:'leaf',     label:'리프',     icon:'🍃', desc:'나뭇잎 모양',      radius:'50%',  clip:'polygon(50% 0%,100% 50%,50% 100%,0% 50%)',                                        preview:'border-radius:50%;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%)' },
   ];
 
   function renderProfileShapeSection(){
@@ -31,7 +36,7 @@
     body.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:16px">
         <div>
-          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">📐 모양 (6가지)</div>
+          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">📐 모양 (11가지)</div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px">
             ${_SHAPE_OPTIONS.map(s=>{
               const sel = shape===s.v;
@@ -72,7 +77,7 @@
         <div>
           <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">✨ 효과</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${[['none','없음'],['shadow','그림자'],['ring','링'],['both','링+그림자']].map(([k,l])=>`<button class="btn btn-xs ${(fx===k)?'btn-b':'btn-w'}" onclick="localStorage.setItem('su_profile_fx','${k}');try{applyProfileShapeVars();}catch(e){};try{render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};try{window._renderCfgProfileShapeSection&&window._renderCfgProfileShapeSection();}catch(e){}">${l}</button>`).join('')}
+            ${[['none','없음'],['shadow','그림자'],['ring','링'],['both','링+그림자'],['glow','글로우'],['glow-color','컬러 글로우'],['blur-edge','외곽 블러'],['vintage','빈티지'],['sepia','세피아'],['grayscale','흑백'],['invert','반전']].map(([k,l])=>`<button class="btn btn-xs ${(fx===k)?'btn-b':'btn-w'}" onclick="localStorage.setItem('su_profile_fx','${k}');try{applyProfileShapeVars();}catch(e){};try{render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};try{window._renderCfgProfileShapeSection&&window._renderCfgProfileShapeSection();}catch(e){}">${l}</button>`).join('')}
           </div>
           <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 효과는 프로필 이미지(사진/플레이스홀더)에 공통 적용됩니다</div>
         </div>

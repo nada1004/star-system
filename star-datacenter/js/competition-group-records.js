@@ -147,7 +147,7 @@ function rCompLeague(tn){
       const _grpDateLabel  = m.d ? m.d.slice(2).replace(/-/g,'/') : '';
       h+=`<div class="grp-match-wrap">
         <div class="grp-card-meta-bar no-export">
-          ${_grpDateLabel?`<span class="grp-meta-date">📅 ${_grpDateLabel}</span>`:''}
+          <span class="grp-meta-group" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}44">GROUP ${m.grpLetter} · ${m.matchNum}경기</span>
           ${_grpWinnerName?`<span class="grp-meta-winner" style="background:${_grpWinnerCol}">🏆 ${_grpWinnerName}</span>`:''}
           <span class="grp-meta-spacer"></span>
           ${_leagueMenu?`<span class="grp-meta-menu">${_leagueMenu}</span>`:''}
@@ -184,7 +184,6 @@ function rCompLeague(tn){
           </div>
         </div>
         ${_compSide.right||''}
-        <div class="grp-inner-menu no-export" style="display:flex;flex-direction:column;gap:4px;padding-right:6px">${_leagueMenu}</div>
       </div></div>`;
     });
     h+=`</div>`;
