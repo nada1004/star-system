@@ -539,9 +539,9 @@ function proCompLeague(tn) {
       const _sideRgbVars=(typeof _tcHexToRgbStr==='function')?`--rec-side-left-rgb:${_tcHexToRgbStr(ca||'#3b82f6')};--rec-side-right-rgb:${_tcHexToRgbStr(cb||'#ef4444')};`:'';
       const _isMob = (typeof window!=='undefined' && window.matchMedia && window.matchMedia('(max-width:768px)').matches);
       const _sc = (typeof proCompGetScoreScale==='function') ? proCompGetScoreScale() : 1;
-      const _scoreFont = Math.round((_isMob?14:18) * _sc);
-      const _scorePy = Math.round((_isMob?4:6) * _sc);
-      const _scorePx = Math.round((_isMob?9:12) * _sc);
+      const _scoreFont = Math.round((_isMob?13:18) * _sc);
+      const _scorePy = Math.round((_isMob?3:6) * _sc);
+      const _scorePx = Math.round((_isMob?7:12) * _sc);
       const _scoreSep = _isMob ? 10 : 12;
       const _cardActions = [
         isDone ? (()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; return (!_adm||isLoggedIn) ? { t:'🎴 공유카드', d:'공유용 카드 생성', kind:'accent', on:()=>_openProCompLeagueShareCard(tn.id,m.grpIdx,m.matchNum-1) } : null;})() : null,
@@ -1685,9 +1685,9 @@ function proCompTourMatchInput(tn){
     const _menuBtn = `<button class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openPcStageActionMenu(this,'${tn.id}','${_cardRound}',${item.src==='stage'?item.idx:-1},'${item.src}',${item.ri??-1},${item.mi??-1})">⋯</button>`;
     const _isMob = (typeof window!=='undefined' && window.matchMedia && window.matchMedia('(max-width:768px)').matches);
     const _sc = (typeof proCompGetScoreScale==='function') ? proCompGetScoreScale() : 1;
-    const _scoreFont = Math.round((_isMob?14:18) * _sc);
-    const _scorePy = Math.round((_isMob?4:6) * _sc);
-    const _scorePx = Math.round((_isMob?9:12) * _sc);
+    const _scoreFont = Math.round((_isMob?13:18) * _sc);
+    const _scorePy = Math.round((_isMob?3:6) * _sc);
+    const _scorePx = Math.round((_isMob?7:12) * _sc);
     const _scoreSep = _isMob ? 10 : 12;
     return `<div class="grp-match-wrap">
       <div class="grp-card-meta-bar no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">

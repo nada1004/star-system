@@ -107,6 +107,45 @@ window.addEventListener('unhandledrejection', (event)=>{
   }catch(e){}
 });
 
+// 설정 변경을 다른 기기에 자동 반영하기 위한 로컬스토리지 변경 감지(동기화 enabled + 관리자+토큰이면 자동 push)
+try{
+  if(!window._suLsSyncHooked){
+    window._suLsSyncHooked = true;
+    const _origSet = localStorage.setItem ? localStorage.setItem.bind(localStorage) : null;
+    const _origRem = localStorage.removeItem ? localStorage.removeItem.bind(localStorage) : null;
+    let _lsGuard = false;
+    const _isSyncKey = (k)=>{
+      if(!k || typeof k!=='string') return false;
+      if(k === 'su_sync_prefs_updated_at') return false;
+      if(k === 'su_sync_last_pull' || k === 'su_sync_last_push' || k === 'su_sync_last_error') return false;
+      if(k === 'al_github_token' || k === 'su_gh_token' || k === 'su_fb_pw' || k === 'su_admin_hash' || k === 'su_admin_hashes') return false;
+      return k.startsWith('su_') || k.startsWith('cfg_') || k.startsWith('al_');
+    };
+    const _touch = ()=>{
+      if(_lsGuard) return;
+      _lsGuard = true;
+      try{
+        if(window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function'){
+          window.SettingsStore.markPrefsChanged();
+        }
+      }catch(e){}
+      _lsGuard = false;
+    };
+    if(_origSet){
+      localStorage.setItem = function(k,v){
+        _origSet(String(k), String(v));
+        try{ if(_isSyncKey(k)) _touch(); }catch(e){}
+      };
+    }
+    if(_origRem){
+      localStorage.removeItem = function(k){
+        _origRem(String(k));
+        try{ if(_isSyncKey(k)) _touch(); }catch(e){}
+      };
+    }
+  }
+}catch(e){}
+
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 가로 "드래그 메뉴" 지원
 // - overflow-x:auto 인 메뉴 바를 마우스로 클릭-드래그 해서 스크롤 가능하게
@@ -275,6 +314,15 @@ async function init(){
   try{
     if(window.MatchStore && typeof window.MatchStore.init==='function') await window.MatchStore.init();
     if(window.PlayerStore && typeof window.PlayerStore.init==='function') await window.PlayerStore.init();
+  }catch(e){}
+  // (요청사항) 설정탭이 막혀있는 기기에서도 "링크 1회 방문"으로 동기화 페어링 가능
+  try{
+    const params = new URLSearchParams(window.location.search);
+    const gid = String(params.get('gist')||params.get('gid')||'').trim();
+    if(gid && window.SettingsStore && typeof window.SettingsStore.setCfg==='function'){
+      window.SettingsStore.setCfg({ gistId: gid, enabled: true });
+      try{ await window.SettingsStore.pull({ silent:true, force:true }); }catch(e){}
+    }
   }catch(e){}
   // (요청사항) 다른 기기에서 저장된 "설정(Gist)"이 있으면 시작 시 반영
   // - 새 신호가 있을 때만 pull 됨
