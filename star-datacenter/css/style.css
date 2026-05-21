@@ -4500,6 +4500,20 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     position:relative !important;
     z-index:1 !important;
   }
+  /* (요청사항) 모바일: 대회/대진표 기록 카드에서 프로필이 팀버튼/참여자 버튼을 가리지 않게 더 작게 */
+  .grp-match-card.has-side-panels > .rec-side-profiles .rsp-namelbl{ display:none !important; }
+  .grp-match-card.has-side-panels > .rec-side-profiles .rsp-imgbox{
+    width:52px !important;
+    height:52px !important;
+    max-width:52px !important;
+    max-height:52px !important;
+  }
+  .grp-match-card.has-side-panels > .rec-side-profiles .rsp-imginner{
+    width:46px !important;
+    height:46px !important;
+    max-width:46px !important;
+    max-height:46px !important;
+  }
   .grp-match-card.has-side-panels > .rec-side-profiles .rsp-inner > div{
     max-width:100% !important;
   }
@@ -4553,6 +4567,10 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     border-radius:14px !important;
     padding:5px 12px !important;
     font-size:15px !important;
+  }
+  .grp-match-card.match-card-v3.has-side-panels .grp-match-score{
+    padding:4px 10px !important;
+    font-size:13px !important;
   }
   /* (요청사항) 모바일: 팀버튼+스코어 한줄 레이아웃 강제 */
   .grp-match-card.match-card-v3 .grp-match-main{
