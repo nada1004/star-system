@@ -1894,7 +1894,10 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   .grp-match-card.has-side-panels > .rec-side-profiles .rsp-imgbox:hover{transform:none !important;}
   .grp-match-card.match-card-v3.has-side-panels .grp-match-main{
     flex-wrap:nowrap !important;
-    overflow:hidden !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
   }
 }
 .rec-sum-score{
@@ -4456,7 +4459,7 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   /* (요청사항) 대회탭 조별리그/토너먼트 경기 기록 카드: 모바일에서 1줄(프로필-팀A-스코어-팀B-프로필) 형태로 정렬 */
   .grp-match-card.match-card-v3.has-side-panels{
     display:grid !important;
-    grid-template-columns:auto 1fr auto;
+    grid-template-columns:minmax(56px,88px) minmax(0,1fr) minmax(56px,88px);
     grid-template-areas: "left main right";
     align-items:center !important;
     gap:6px !important;
@@ -4468,7 +4471,10 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .grp-match-card.match-card-v3.has-side-panels > .rec-side-profiles:last-of-type{ grid-area:right; }
   .grp-match-card.match-card-v3.has-side-panels .grp-match-main{
     flex-wrap:nowrap !important;
-    overflow:hidden !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
     justify-content:center !important;
     gap:8px !important;
   }
@@ -10939,7 +10945,6 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
   .rec-summary .rec-sum-header{ position:relative; }
   .rec-summary .rec-topline{ padding-right: 38px !important; }
   .rec-summary .rec-morebtn{ position:absolute !important; top:6px !important; right:8px !important; }
-  .rec-summary, .grp-match-card{ --su_profile_radius: 50%; }
   .rec-summary[data-rec-mode="procompgj"] .score-click{ font-size: 13px !important; }
 
   /* 3-9. 개인전/끝장전 — 선수 이름 행 */
