@@ -74,6 +74,8 @@ function indDirectSave(){
   save();
   indSub='records';
   render();
+  // (요청사항) 경기 기록 저장 후 GitHub에도 자동 저장
+  setTimeout(()=>{ try{ if(typeof window._autoSaveToGitHub==='function') window._autoSaveToGitHub('개인전 기록 저장'); }catch(e){} }, 400);
 }
 
 function _gjCanInput(){
@@ -195,6 +197,8 @@ function gjDirectSave(){
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   render();
   try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
+  // (요청사항) 경기 기록 저장 후 GitHub에도 자동 저장
+  setTimeout(()=>{ try{ if(typeof window._autoSaveToGitHub==='function') window._autoSaveToGitHub('끝장전 기록 저장'); }catch(e){} }, 400);
   setTimeout(()=>{
     if(confirm(`✅ ${gi.games.length}경기 저장 완료!\n공유카드를 열겠습니까?`)){
       openGJShareCard(gi.playerA,gi.playerB,p1w,p2w,dateVal,winner,{proOnly:_proMode});

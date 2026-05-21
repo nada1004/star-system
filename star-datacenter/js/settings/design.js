@@ -192,6 +192,7 @@
       try{ window.applyDesignV2 && window.applyDesignV2(!!on); }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetDesignV2Preset = function(v){
       try{ localStorage.setItem('su_design_v2_preset', String(v||'base')); }catch(e){}
@@ -206,6 +207,7 @@
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetDesignV2Bright = function(v){
       try{
@@ -215,6 +217,7 @@
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetDesignV2Dark = function(v){
       try{
@@ -224,6 +227,7 @@
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgApplyDesignV2TonePreset = function(key){
       const k = String(key||'base');
@@ -240,6 +244,7 @@
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetDesignV2Color = function(varName, value){
       try{
@@ -252,6 +257,7 @@
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgResetDesignV2Colors = function(){
       try{
@@ -263,6 +269,7 @@
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetDesignV2Effect = function(effectName, value){
       try{
@@ -275,12 +282,14 @@
       try{ window.applyDesignV2 && window.applyDesignV2(); }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
 
     window.cfgSetTabColorEnabled = function(on){
       try{ localStorage.setItem('su_tab_color_enabled', on ? '1' : '0'); }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetTabColorMode = function(mode){
       var v = String(mode||'fill');
@@ -288,6 +297,7 @@
       try{ localStorage.setItem('su_tab_color_mode', v); }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetTabColorLength = function(v){
       try{
@@ -296,6 +306,7 @@
       }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetTabColorTail = function(v){
       try{
@@ -304,12 +315,14 @@
       }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetRecSideFxEnabled = function(on){
       try{ localStorage.setItem('su_rec_side_fx_on', on ? '1' : '0'); }catch(e){}
       try{ render(); }catch(e){}
       try{ _updateSideFxPreview(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetRecSideFxMode = function(mode){
       var v = String(mode||'soft');
@@ -318,6 +331,7 @@
       try{ _updateSideFxPreview(); }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetRecSideFxIntensity = function(v){
       try{
@@ -326,6 +340,7 @@
       }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetRecSideFxLength = function(v){
       try{
@@ -335,6 +350,7 @@
       }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetRecSideFxTail = function(v){
       try{
@@ -343,6 +359,7 @@
       }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetRecSideFxSoftness = function(v){
       try{
@@ -351,6 +368,7 @@
       }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window.cfgSetRecSideFxEdge = function(v){
       try{
@@ -359,6 +377,7 @@
       }catch(e){}
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     window._updateSideFxPreview = function(){
       try{
@@ -386,6 +405,7 @@
       if(v !== 'solid') document.body.classList.add('team-btn--'+v);
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     // 페이지 로드 시 저장된 팀 버튼 스타일 즉시 적용
     (function(){
@@ -403,6 +423,7 @@
       _TAB_STYLES.forEach(function(s){ document.body.classList.remove('tab-style--'+s); });
       if(v !== 'default') document.body.classList.add('tab-style--'+v);
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     (function(){
       try{
@@ -419,6 +440,7 @@
       _SUBMENU_BTN_STYLES.forEach(function(s){ document.body.classList.remove('submenu-btn--'+s); });
       if(v !== 'default') document.body.classList.add('submenu-btn--'+v);
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     (function(){
       try{
@@ -436,6 +458,7 @@
       if(v !== 'default') document.body.classList.add('team-chip--'+v);
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     // 페이지 로드 시 팀 칩 모양 즉시 적용
     (function(){
@@ -454,6 +477,7 @@
       if(v !== 'default') document.body.classList.add('btn-theme--'+v);
       try{ render(); }catch(e){}
       _touchPrefs();
+      try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
     };
     // 페이지 로드 시 저장된 버튼 테마 즉시 적용
     (function(){

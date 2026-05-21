@@ -385,7 +385,17 @@ function rBoard2(C, T) {
     setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 200); }catch(e){} }, 120);
   } else if (_b2View === 'old') {
     if (typeof rBoard === 'function') rBoard(sub, T);
-    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
+    else {
+      // rBoard가 아직 로드되지 않았을 수 있으므로 재시도
+      sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)"><div style="font-size:14px;margin-bottom:8px">⏳ 구현황판 로딩 중...</div></div>';
+      setTimeout(()=>{
+        if(typeof rBoard === 'function'){
+          rBoard(sub, T);
+        } else {
+          sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)"><div style="font-size:14px;margin-bottom:8px">⚠️ 구현황판을 불러올 수 없습니다.</div><div style="font-size:12px">cloud-board.js 로드를 확인해주세요.</div></div>';
+        }
+      }, 600);
+    }
   }
   } catch(e) {
     console.error('[rBoard2] 오류:', e);

@@ -290,6 +290,10 @@ function saveUnivEdit(){
     try{ if(window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function') window.SettingsStore.markPrefsChanged(); }catch(e){}
   }catch(e){}
   save();render();
+  // (요청사항) 대학 정보 수정 후 GitHub에도 자동 저장
+  setTimeout(()=>{
+    try{ if(typeof window._autoSaveToGitHub === 'function') window._autoSaveToGitHub('대학 정보 수정'); }catch(e){}
+  }, 300);
   st.currentName=newName;
   document.getElementById('univModalTitle').innerHTML=`<span class="detail-main">🎓 ${newName}</span>`;
   document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(newName);

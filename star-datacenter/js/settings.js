@@ -474,6 +474,7 @@ window.cfgSetAutoFitAllTabs = function(on){
   try{ localStorage.setItem(_AF_ALLTABS_KEY, on ? '1' : '0'); }catch(e){}
   try{ if(typeof window._applyAllTabsAutoFit === 'function') window._applyAllTabsAutoFit(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -564,6 +565,9 @@ window.cfgSetRecCardSettings = function(){
   try{ if(typeof window._applyRecCardTheme === 'function') window._applyRecCardTheme(); }catch(e){}
   try{ window.applyRecLayoutScale && window.applyRecLayoutScale(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
+  // (요청사항) 설정 변경 → 다른 기기에도 자동 반영
+  try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
 };
 
 window.applyRecLayoutScale = function(){
@@ -607,6 +611,7 @@ window.cfgSetMatchBtnScaleSettings = function(){
   }catch(e){}
   try{ window.applyMatchBtnScale && window.applyMatchBtnScale(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 try{
   if(!window._matchBtnScaleBound){
@@ -639,6 +644,7 @@ window.cfgSetRecMemBtnScaleSettings = function(){
   }catch(e){}
   try{ window.applyRecMemBtnScale && window.applyRecMemBtnScale(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 try{
   if(!window._rcMemBtnScaleBound){
@@ -671,6 +677,7 @@ window.cfgSetRecVsGapSettings = function(){
   }catch(e){}
   try{ window.applyRecVsGap && window.applyRecVsGap(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 try{
   if(!window._rcVsGapBound){
@@ -704,6 +711,7 @@ window.cfgSetTourneyTeamBtnScaleSettings = function(){
   }catch(e){}
   try{ window.applyTourneyTeamBtnScale && window.applyTourneyTeamBtnScale(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 try{
   if(!window._tcTeamBtnScaleBound){
@@ -744,6 +752,7 @@ window.cfgSetTourneyTeamBtnDetailScaleSettings = function(){
   }catch(e){}
   try{ window.applyTourneyTeamBtnDetailScale && window.applyTourneyTeamBtnDetailScale(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 try{
   if(!window._tcTeamBtnDetailScaleBound){
@@ -776,6 +785,7 @@ window.cfgSetTourneyMemBtnScaleSettings = function(){
   }catch(e){}
   try{ window.applyTourneyMemBtnScale && window.applyTourneyMemBtnScale(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 try{
   if(!window._tcMemBtnScaleBound){
@@ -808,6 +818,7 @@ window.cfgSetTourneyVsGapSettings = function(){
   }catch(e){}
   try{ window.applyTourneyVsGap && window.applyTourneyVsGap(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // 대회탭 스코어 크기 설정 (TC Score Scale)
@@ -822,6 +833,7 @@ window.cfgSetTcScoreScale = function(){
     document.documentElement.style.setProperty('--tc-score-scale', String(val/100));
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 window._applyTcScoreScale = function(){
@@ -887,6 +899,7 @@ window.cfgSetScoreColors = function(){
   }catch(e){}
   try{ window.applyScoreColors && window.applyScoreColors(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -909,6 +922,7 @@ window.cfgSetRecBgFxAll = function(on){
   try{ if(typeof window.cfgSetRecCardSettings==='function') window.cfgSetRecCardSettings(); }catch(e){}
   try{ if(typeof window._applyRecCardTheme==='function') window._applyRecCardTheme(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 window.cfgSetProCompAvatarSettings = function(){
@@ -921,6 +935,7 @@ window.cfgSetProCompAvatarSettings = function(){
     localStorage.setItem('su_procomp_avatar_fit', (fit==='contain'||fit==='cover'||fit==='fill') ? fit : 'cover');
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 window.cfgSetProCompScoreSettings = function(){
@@ -931,6 +946,7 @@ window.cfgSetProCompScoreSettings = function(){
     localStorage.setItem('su_procomp_score_scale_mb', String(Math.max(60,Math.min(160,mb))));
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 window.cfgSetProCompLayoutSettings = function(){
@@ -941,6 +957,7 @@ window.cfgSetProCompLayoutSettings = function(){
     localStorage.setItem('su_procomp_layout_scale_mb', String(Math.max(60,Math.min(120,mb))));
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // 개인전/끝장전/프로리그끝장전 선수 패널(프로필 배경 카드) 설정
@@ -972,6 +989,7 @@ window.cfgSetH2HPanelSettings = function(){
     localStorage.setItem('su_h2h_score_pad_mb', String(Math.max(0,Math.min(24,isNaN(smb)?6:smb))));
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // 개인/끝장전: 스트리머별 프로필 배경 위치(object-position) 저장
@@ -1060,6 +1078,7 @@ window.cfgSetUnivHeaderGradient = function(mode){
   }catch(e){}
   try{ window.applyUnivHeaderGradient && window.applyUnivHeaderGradient(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 try{
   window.applyUnivHeaderGradient && window.applyUnivHeaderGradient();
@@ -1105,6 +1124,7 @@ window.applyUnivHeaderText = function(){
 window.cfgSetUnivHeaderBgImage = function(url){
   try{
     localStorage.setItem('su_univ_header_bg_image', url || '');
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
   }catch(e){}
   try{ window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage(); }catch(e){}
   try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
@@ -1114,6 +1134,7 @@ window.cfgSetUnivHeaderBgSize = function(size){
     const validSizes = ['cover', 'contain', 'auto', '100% 100%', '50% 50%'];
     const s = validSizes.includes(size) ? size : 'cover';
     localStorage.setItem('su_univ_header_bg_size', s);
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
   }catch(e){}
   try{ window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage(); }catch(e){}
   try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
@@ -1123,6 +1144,7 @@ window.cfgSetUnivHeaderBgPosition = function(pos){
     const validPositions = ['center center', 'top center', 'bottom center', 'left center', 'right center', 'top left', 'top right', 'bottom left', 'bottom right'];
     const p = validPositions.includes(pos) ? pos : 'center center';
     localStorage.setItem('su_univ_header_bg_position', p);
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
   }catch(e){}
   try{ window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage(); }catch(e){}
   try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
@@ -1131,6 +1153,7 @@ window.cfgSetUnivHeaderBgOpacity = function(opacity){
   try{
     const n = Math.max(0, Math.min(100, parseInt(opacity || '0', 10) || 0));
     localStorage.setItem('su_univ_header_bg_opacity', String(n));
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
   }catch(e){}
   try{ window.applyUnivHeaderBgImage && window.applyUnivHeaderBgImage(); }catch(e){}
   try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
@@ -1141,6 +1164,7 @@ window.cfgSetUnivHeaderText = function(text){
   }catch(e){}
   try{ window.applyUnivHeaderText && window.applyUnivHeaderText(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 window.cfgSetUnivHeaderTextSize = function(size){
   try{
@@ -1149,6 +1173,7 @@ window.cfgSetUnivHeaderTextSize = function(size){
   }catch(e){}
   try{ window.applyUnivHeaderText && window.applyUnivHeaderText(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 window.cfgSetUnivHeaderTextColor = function(color){
   try{
@@ -1156,6 +1181,7 @@ window.cfgSetUnivHeaderTextColor = function(color){
   }catch(e){}
   try{ window.applyUnivHeaderText && window.applyUnivHeaderText(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 window.cfgSetUnivHeaderTextTop = function(top){
   try{
@@ -1165,6 +1191,7 @@ window.cfgSetUnivHeaderTextTop = function(top){
   }catch(e){}
   try{ window.applyUnivHeaderText && window.applyUnivHeaderText(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 window.cfgSetUnivHeaderTextRight = function(right){
   try{
@@ -1173,6 +1200,7 @@ window.cfgSetUnivHeaderTextRight = function(right){
   }catch(e){}
   try{ window.applyUnivHeaderText && window.applyUnivHeaderText(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 window.cfgSetUnivHeaderTextPos = function(pos){
   try{
@@ -1181,6 +1209,7 @@ window.cfgSetUnivHeaderTextPos = function(pos){
     localStorage.setItem('su_univ_header_text_pos', p);
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 window.cfgSetUnivHeaderGradientLength = function(len){
   try{
@@ -1188,6 +1217,7 @@ window.cfgSetUnivHeaderGradientLength = function(len){
     localStorage.setItem('su_univ_header_gradient_length', String(n));
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 window.cfgSetUnivHeaderGradientColor = function(color){
   try{
@@ -1202,6 +1232,7 @@ try{
 
 function renderIfPossible(){
   try{ if(typeof render==='function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1529,6 +1560,7 @@ window.cfgSetTourneyCardSettings = function(){
   }catch(e){}
   try{ if(typeof window._applyTourneyCardTheme === 'function') window._applyTourneyCardTheme(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -1732,6 +1764,7 @@ window.cfgSetHeaderSettings = function(){
   try{ localStorage.setItem('su_hdr_sync_theme', sync?'1':'0'); }catch(e){}
   try{ if(typeof window._applyHeaderSettings === 'function') window._applyHeaderSettings(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
+  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -8398,6 +8431,12 @@ function savePlayer(){
       if(_p) openPlayerModal(_savedName);
     },100);
   }
+  // (요청사항) 스트리머 정보 수정 후 GitHub에도 자동 저장 (토큰 있을 때만)
+  setTimeout(()=>{
+    try{
+      if(typeof window._autoSaveToGitHub === 'function') window._autoSaveToGitHub('스트리머 정보 수정');
+    }catch(e){}
+  }, 300);
   }catch(e){
     console.error('[savePlayer] 오류:',e);
     alert('저장 중 오류가 발생했습니다:\n'+e.message+'\n\nF12 콘솔에서 자세한 내용을 확인하세요.');
@@ -8959,15 +8998,35 @@ function saveGhToken(){
   const val = document.getElementById('cfg-gh-token')?.value.trim();
   const statusEl = document.getElementById('gh-token-status');
   if (!val) { if(statusEl) statusEl.textContent = '⚠️ 토큰을 입력하세요.'; return; }
+  // su_gh_token: GitHub 데이터 저장용
   localStorage.setItem('su_gh_token', val);
-  if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (저장 시 GitHub 자동 업로드 활성)';
+  // al_github_token: Gist 설정 동기화용 — 같은 토큰으로 통합 (두 번 입력 불필요)
+  try{
+    if(window.SettingsStore && typeof window.SettingsStore.setCfg === 'function'){
+      window.SettingsStore.setCfg({ token: val });
+    } else {
+      localStorage.setItem('al_github_token', val);
+    }
+  }catch(e){}
+  if(statusEl) statusEl.textContent = '✅ 토큰 저장됨 (GitHub 자동 저장 + 다른 기기 동기화 모두 활성)';
   const input = document.getElementById('cfg-gh-token');
   if(input) input.value = '';
+  // Gist 동기화 상태 UI도 갱신
+  try{ if(typeof window.cfgRenderGistSyncStatus==='function') window.cfgRenderGistSyncStatus(); }catch(e){}
 }
 function clearGhToken(){
   localStorage.removeItem('su_gh_token');
+  // Gist 동기화 토큰도 함께 제거
+  try{
+    if(window.SettingsStore && typeof window.SettingsStore.setCfg === 'function'){
+      window.SettingsStore.setCfg({ token: '' });
+    } else {
+      localStorage.removeItem('al_github_token');
+    }
+  }catch(e){}
   const statusEl = document.getElementById('gh-token-status');
   if(statusEl) statusEl.textContent = '미설정 (GitHub 업로드 비활성 / 보조 신호만 수신)';
+  try{ if(typeof window.cfgRenderGistSyncStatus==='function') window.cfgRenderGistSyncStatus(); }catch(e){}
 }
 
 /* ==========================================

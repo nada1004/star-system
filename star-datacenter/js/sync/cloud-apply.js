@@ -419,6 +419,10 @@ function _applyCloudData(d) {
     if(typeof updateFabVisibility==='function') updateFabVisibility();
     if(typeof updateFabButtonOnclick==='function') updateFabButtonOnclick();
     try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
+    // 🌐 클라우드에서 설정 복원 후 헤더/테마/스케일 CSS 변수 즉시 재적용
+    try{ if(typeof window._applyHeaderSettings==='function') window._applyHeaderSettings(); }catch(e){}
+    try{ if(typeof window._applyRecCardTheme==='function') window._applyRecCardTheme(); }catch(e){}
+    try{ if(typeof window._applyAllTabsAutoFit==='function') window._applyAllTabsAutoFit(); }catch(e){}
     if(s.darkMode!==undefined){
       document.body.classList.toggle('dark', s.darkMode);
       if(window._fixHdrBtns) window._fixHdrBtns();

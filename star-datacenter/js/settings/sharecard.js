@@ -33,6 +33,7 @@
     try{ localStorage.setItem('su_sc_logo_size', String(Math.max(70,Math.min(150,logoSize)))); }catch(e){}
     try{ localStorage.setItem('su_sc_logo_fit', ['contain','cover','fill','zoom'].includes(logoFit)?logoFit:'contain'); }catch(e){}
     try{ if(typeof render === 'function') render(); }catch(e){}
+    try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
   };
 
   window.cfgPreviewShareCardMode = function(mode){

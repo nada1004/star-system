@@ -93,7 +93,16 @@ window._showGlobalAppError = function(message, opts){
 };
 window.addEventListener('error', (event)=>{
   try{
-    const message = (event && event.message) ? `오류가 발생했습니다: ${event.message}` : '오류가 발생했습니다. 새로고침 후 다시 시도해주세요.';
+    // 크로스 오리진 스크립트(CDN 등)에서 발생하는 "Script error."는 필터링
+    // (보안상 메시지/스택이 노출되지 않는 외부 스크립트 오류)
+    const msg = (event && event.message) ? String(event.message) : '';
+    if(!msg || msg === 'Script error.' || msg === 'Script error') return;
+    // 외부 CDN 소스에서 온 오류도 무시 (filename이 외부 도메인인 경우)
+    const src = (event && event.filename) ? String(event.filename) : '';
+    if(src && !src.includes(location.hostname) && src.startsWith('http') && !src.includes('localhost') && !src.includes('127.0.0.1')){
+      return;
+    }
+    const message = `오류가 발생했습니다: ${msg}`;
     window._showGlobalAppError(message);
   }catch(e){}
 });
