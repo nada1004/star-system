@@ -1184,17 +1184,20 @@ function proCompBracket(tn) {
   const rounds = tn.bracket;
   const _pc = name => players.find(x=>x.name===name)||null;
   const isTierTourney = tn.type === 'tier';
+  const _ls = (typeof proCompGetLayoutScale==='function') ? proCompGetLayoutScale() : 1;
+  const _s = (n, min)=>Math.max(min||0, Math.round(n*_ls));
   const _photo = (name, isWin, isDone, col) => {
     const p=_pc(name);
     const isLose = !!isDone && !isWin;
-    if (!name||name==='TBD') return `<div style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#94a3b8">?</div>`;
+    const sz = _s(36, 22);
+    if (!name||name==='TBD') return `<div style="width:${sz}px;height:${sz}px;border-radius:var(--su_profile_radius,50%);background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:${_s(14,11)}px;color:#94a3b8">?</div>`;
     const ring = isWin?`box-shadow:0 0 0 2px ${col},0 0 0 4px ${col}33`:`border:2px solid #e2e8f0`;
     const safe = String(name).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const click = `onclick="openPlayerModal('${safe}')"`;
     const pointer = `cursor:pointer;`;
     return p&&p.photo
-      ?`<img ${click} src="${toHttpsUrl(p.photo)}" style="${pointer}width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;${ring};${isLose?'filter:grayscale(1);opacity:.58;':''}" onerror="this.style.display='none'">`
-      :`<div ${click} style="${pointer}width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:${isLose?'#cbd5e1':col};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:${isLose?'#64748b':'#fff'};${ring};${isLose?'opacity:.7;':''}">${name[0]}</div>`;
+      ?`<img ${click} src="${toHttpsUrl(p.photo)}" style="${pointer}width:${sz}px;height:${sz}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;${ring};${isLose?'filter:grayscale(1);opacity:.58;':''}" onerror="this.style.display='none'">`
+      :`<div ${click} style="${pointer}width:${sz}px;height:${sz}px;border-radius:var(--su_profile_radius,50%);background:${isLose?'#cbd5e1':col};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:${_s(13,11)}px;font-weight:900;color:${isLose?'#64748b':'#fff'};${ring};${isLose?'opacity:.7;':''}">${name[0]}</div>`;
   };
   const _info = name => {
     const p=_pc(name); if(!p) return '';
@@ -1229,9 +1232,10 @@ function proCompBracket(tn) {
   const champion = finalMatch?.winner==='A'?finalMatch.a:finalMatch?.winner==='B'?finalMatch.b:null;
   if (champion) {
     const cp = _pc(champion);
-    const cpPhoto = cp?.photo?`<img src="${toHttpsUrl(cp.photo)}" style="width:52px;height:52px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:3px solid rgba(255,255,255,.8)" onerror="this.outerHTML=''">`:
-      `<div style="width:52px;height:52px;border-radius:var(--su_profile_radius,50%);background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">${champion[0]}</div>`;
-    h += `<div style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(217,119,6,.35)">
+    const cpSz = _s(52, 34);
+    const cpPhoto = cp?.photo?`<img src="${toHttpsUrl(cp.photo)}" style="width:${cpSz}px;height:${cpSz}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:3px solid rgba(255,255,255,.8)" onerror="this.outerHTML=''">`:
+      `<div style="width:${cpSz}px;height:${cpSz}px;border-radius:var(--su_profile_radius,50%);background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:${_s(22,16)}px;font-weight:900;color:#fff">${champion[0]}</div>`;
+    h += `<div style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:${_s(14,10)}px ${_s(20,14)}px;margin-bottom:${_s(16,12)}px;display:flex;align-items:center;gap:${_s(14,10)}px;box-shadow:0 4px 20px rgba(217,119,6,.35)">
       ${cpPhoto}
       <div>
         <div style="font-size:10px;color:rgba(255,255,255,.8);font-weight:700;letter-spacing:.5px">FINAL CHAMPION</div>
@@ -1245,10 +1249,10 @@ function proCompBracket(tn) {
   rounds.forEach((rnd, ri) => {
     const lbl=rndLabel(ri), col=rndColor(ri), bg=rndBg(ri);
     const isLast=ri===rounds.length-1;
-    const gap=ri===0?8:(Math.pow(2,ri)*60+8);
+    const gap=ri===0?_s(8,6):(Math.pow(2,ri)*_s(60,40)+_s(8,6));
     h += `<div style="display:flex;align-items:center">
-      <div style="min-width:${isLast?220:200}px;flex-shrink:0">
-        <div style="text-align:center;font-size:12px;font-weight:900;color:#fff;margin-bottom:10px;padding:7px 10px;background:${bg};border-radius:10px;box-shadow:0 3px 8px ${col}44;letter-spacing:.5px">${lbl}</div>
+      <div style="min-width:${isLast?_s(220,160):_s(200,150)}px;flex-shrink:0">
+        <div style="text-align:center;font-size:12px;font-weight:900;color:#fff;margin-bottom:${_s(10,8)}px;padding:${_s(7,6)}px ${_s(10,8)}px;background:${bg};border-radius:10px;box-shadow:0 3px 8px ${col}44;letter-spacing:.5px">${lbl}</div>
         <div style="display:flex;flex-direction:column;gap:${gap}px">`;
     rnd.forEach((m, mi) => {
       const aWin=m.winner==='A', bWin=m.winner==='B', isDone=!!m.winner;
@@ -1264,7 +1268,7 @@ function proCompBracket(tn) {
       const showScore=(isDone||isTieSaved) && hasGames && m._games.length>1;
       h += `<div style="border-radius:12px;overflow:hidden;background:var(--white);box-shadow:${isDone?`0 4px 16px ${col}28,0 1px 4px rgba(0,0,0,.08)`:isLast?`0 2px 12px rgba(0,0,0,.1)`:'0 1px 6px rgba(0,0,0,.07)'};border:${isLast&&isDone?`2px solid ${col}66`:isDone?`1.5px solid ${col}44`:'1.5px solid #e2e8f0'}">
         <!-- A 선수 -->
-        <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${aWin?col+'18':aTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${aWin?`border-left:3px solid ${col}`:''};${!isDone||aWin?'':'opacity:.55'}">
+        <div style="padding:${_s(9,7)}px ${_s(12,10)}px;border-bottom:1px solid #f1f5f9;background:${aWin?col+'18':aTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:${_s(8,6)}px;${aWin?`border-left:3px solid ${col}`:''};${!isDone||aWin?'':'opacity:.55'}">
           ${_photo(m.a, aWin, isDone, col)}
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;font-weight:${aWin?'800':aTBD?'400':'550'};color:${aWin?col:aTBD?'#94a3b8':isDone?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.a&&!aTBD?'pointer':'default'}" onclick="${m.a&&!aTBD?`openPlayerModal('${(m.a||'').replace(/'/g,"\\'")}')`:''}">${m.a||'TBD'}</div>
@@ -1274,7 +1278,7 @@ function proCompBracket(tn) {
           ${aWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
         <!-- B 선수 -->
-        <div style="padding:9px 12px;background:${bWin?col+'18':bTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${bWin?`border-left:3px solid ${col}`:''};${!isDone||bWin?'':'opacity:.55'}">
+        <div style="padding:${_s(9,7)}px ${_s(12,10)}px;background:${bWin?col+'18':bTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:${_s(8,6)}px;${bWin?`border-left:3px solid ${col}`:''};${!isDone||bWin?'':'opacity:.55'}">
           ${_photo(m.b, bWin, isDone, col)}
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;font-weight:${bWin?'800':bTBD?'400':'550'};color:${bWin?col:bTBD?'#94a3b8':isDone?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.b&&!bTBD?'pointer':'default'}" onclick="${m.b&&!bTBD?`openPlayerModal('${(m.b||'').replace(/'/g,"\\'")}')`:''}">${m.b||'TBD'}</div>
@@ -1284,15 +1288,15 @@ function proCompBracket(tn) {
           ${bWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
         <!-- 맵 -->
-        ${m.map?`<div style="padding:3px 12px;font-size:11px;font-weight:600;color:var(--text3);background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px;flex-wrap:wrap"><span>🗺️ ${m.map}</span></div>`:''}
-        ${m.note?`<div style="padding:4px 12px;font-size:10px;color:#64748b;background:#f8fafc;border-top:1px solid #f1f5f9;line-height:1.5;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
-        ${isTieSaved?`<div style="padding:3px 12px;font-size:11px;font-weight:900;color:#b45309;background:#fffbeb;border-top:1px solid #f1f5f9;display:flex;gap:8px;align-items:center">
+        ${m.map?`<div style="padding:${_s(3,3)}px ${_s(12,10)}px;font-size:11px;font-weight:600;color:var(--text3);background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:${_s(8,6)}px;flex-wrap:wrap"><span>🗺️ ${m.map}</span></div>`:''}
+        ${m.note?`<div style="padding:${_s(4,4)}px ${_s(12,10)}px;font-size:10px;color:#64748b;background:#f8fafc;border-top:1px solid #f1f5f9;line-height:1.5;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
+        ${isTieSaved?`<div style="padding:${_s(3,3)}px ${_s(12,10)}px;font-size:11px;font-weight:900;color:#b45309;background:#fffbeb;border-top:1px solid #f1f5f9;display:flex;gap:${_s(8,6)}px;align-items:center">
           <span>⚖️ 동률 저장</span><span style="margin-left:auto">${scoreA}:${scoreB}</span>
         </div>`:''}
         <!-- 게임 상세 -->
-        ${hasGames?`<div style="padding:3px 12px 4px;font-size:9px;background:#f8fafc;border-top:1px solid #f1f5f9;color:#64748b;line-height:1.9">${m._games.map((g,gi)=>`<span style="margin-right:8px">${gi+1}G·<b style="color:${g.winner==='A'?col:'#dc2626'}">${g.winner==='A'?m.a||'A':m.b||'B'}</b>${g.map?` <span style="color:#94a3b8">${g.map}</span>`:''}</span>`).join('')}</div>`:''}
+        ${hasGames?`<div style="padding:${_s(3,3)}px ${_s(12,10)}px ${_s(4,4)}px;font-size:9px;background:#f8fafc;border-top:1px solid #f1f5f9;color:#64748b;line-height:1.9">${m._games.map((g,gi)=>`<span style="margin-right:${_s(8,6)}px">${gi+1}G·<b style="color:${g.winner==='A'?col:'#dc2626'}">${g.winner==='A'?m.a||'A':m.b||'B'}</b>${g.map?` <span style="color:#94a3b8">${g.map}</span>`:''}</span>`).join('')}</div>`:''}
         <!-- 옵션 버튼 -->
-        <div style="padding:5px 8px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:3px;flex-wrap:wrap">
+        <div style="padding:${_s(5,5)}px ${_s(8,7)}px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:${_s(3,3)}px;flex-wrap:wrap">
           ${isDone?(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs no-export" style="min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})">🎴 공유 카드</button>`:'';})():''}
           ${isLoggedIn?`${hasBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,5)} 승</button>
             <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,5)} 승</button>`:''}
@@ -1305,7 +1309,7 @@ function proCompBracket(tn) {
     });
     h += `</div></div>`;
     // 라운드 간 화살표 커넥터
-    if (ri < rounds.length-1) h += `<div style="width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;color:#cbd5e1;font-weight:900;align-self:center;padding-top:36px">➔</div>`;
+    if (ri < rounds.length-1) h += `<div style="width:${_s(28,22)}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:${_s(18,14)}px;color:#cbd5e1;font-weight:900;align-self:center;padding-top:${_s(36,26)}px">➔</div>`;
     h += `</div>`;
   });
   h += `</div></div>`;
