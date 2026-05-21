@@ -580,3 +580,50 @@ body.dark .grp-match-card.match-card-v3 .grp-match-score .wt {
     transform: none !important;
   }
 }
+
+/* ── PC 스코어 크기 절반 축소 (min-width: 769px) ── */
+@media (min-width: 769px) {
+  /* 기록 카드 스코어 (기본 21px → 11px) */
+  .rec-sum-score {
+    font-size: 11px !important;
+    padding: 3px 9px !important;
+    border-radius: 8px !important;
+    gap: 4px !important;
+  }
+  /* design-v2 스코어 (22px → 11px) */
+  body.design-v2 .rec-sum-score {
+    font-size: 11px !important;
+    padding: 3px 9px !important;
+  }
+  /* 개인전/끝장전/프로끝장전 스코어 (24px → 12px) */
+  .rec-summary.rec-mode-ind .rec-sum-score,
+  .rec-summary.rec-mode-gj .rec-sum-score,
+  .rec-summary.rec-mode-progj .rec-sum-score {
+    font-size: 12px !important;
+  }
+  /* 조별리그/대진표 스코어 (22px → 11px) */
+  .grp-match-score {
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+    border-radius: 10px !important;
+  }
+  /* 조별리그 스코어 컬럼 (24px → 12px) */
+  .grp-score-col .grp-match-score {
+    font-size: 12px !important;
+    padding: 4px 10px !important;
+  }
+  /* match-card-v3 대진표 스코어 */
+  .grp-match-card.match-card-v3 .grp-match-score {
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+  }
+  /* 팀전 스코어 span (20px → 10px) */
+  .grp-match-card span[style*="font-size:20px"][style*="font-weight:900"],
+  .grp-match-score-team {
+    font-size: 10px !important;
+  }
+  /* history.js 인라인 스코어 (18px → 9px) */
+  .grp-match-score[style*="font-size:18px"] {
+    font-size: 9px !important;
+  }
+}

@@ -443,39 +443,20 @@ function histTourneyHTML(context){
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return false;
     return typeof passDateFilter!=='function'||passDateFilter(m.d||'');
   });
-  const _normDateSort = (d)=>{
-    const s = String(d||'').trim();
-    if(!s) return '';
-    const m = s.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
-    if(m){
-      const y=m[1];
-      const mo=String(parseInt(m[2],10)).padStart(2,'0');
-      const da=String(parseInt(m[3],10)).padStart(2,'0');
-      return `${y}-${mo}-${da}`;
-    }
-    return s;
-  };
-  allItems.sort((a,b)=>recSortDir==='asc'?_normDateSort(a.d||'').localeCompare(_normDateSort(b.d||'')):_normDateSort(b.d||'').localeCompare(_normDateSort(a.d||'')));
+  allItems.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
+  const sortBar=``;
+  // 대회명별로 그룹화
   const groups={};
   allItems.forEach((m,idx)=>{
     const compName=m.n||m.compName||'기타 대회';
     if(!groups[compName]) groups[compName]=[];
     groups[compName].push({m,idx});
   });
-  const _days=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
-  const _dateHdr=(dk)=>{
-    if(dk!=='날짜 미정' && dk.match(/^\d{4}-\d{2}-\d{2}$/)){
-      const dt=new Date(dk+'T00:00:00');
-      return `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_days[dt.getDay()]}`;
-    }
-    return dk;
-  };
 
-  let h=``;
+  let h=sortBar;
   Object.entries(groups).forEach(([compName,items])=>{
-    const _rangeDates=items.map(x=>_normDateSort(x.m?.d||'')).filter(Boolean).sort();
-    const startDate=_rangeDates[0]||'';
-    const endDate=_rangeDates[_rangeDates.length-1]||'';
+    const startDate=items[items.length-1]?.m?.d||'';
+    const endDate=items[0]?.m?.d||'';
     const dateRange=startDate===endDate?startDate:(startDate&&endDate?`${startDate} ~ ${endDate}`:'');
     h+=`<div style="background:linear-gradient(135deg,var(--blue-l) 0%,var(--white) 100%);border:1.5px solid var(--blue-ll);border-left:4px solid var(--blue);border-radius:12px;padding:12px 16px;margin:14px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:16px">🎖️</span>
@@ -483,92 +464,72 @@ function histTourneyHTML(context){
       ${dateRange?`<span style="font-size:11px;color:var(--gray-l)">${dateRange}</span>`:''}
       <span style="font-size:11px;font-weight:700;color:var(--blue);background:var(--blue-ll);border-radius:20px;padding:2px 10px;margin-left:auto">${items.length}경기</span>
     </div>`;
-
-    const byDate={};
     items.forEach(({m,idx})=>{
-      const k=_normDateSort(m?.d||'')||'날짜 미정';
-      if(!byDate[k]) byDate[k]=[];
-      byDate[k].push({m,idx});
-    });
-    Object.keys(byDate).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a)).forEach(dk=>{
-      h+=`<div style="margin-bottom:22px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dateHdr(dk)}</div></div>`;
-
-      byDate[dk].forEach(({m,idx})=>{
-        const a=m.a||'',b=m.b||'';
-        const ca=gc(a),cb=gc(b);
-        const aWin=m.sa>m.sb,bWin=m.sb>m.sa;
-        const key=`${context}-tourney-${idx}`;
-        const rIdx=(m._src==='comps')?m._origIdx:-1;
-        const grpBadge=m._src==='tour'
-          ?`<span class="grp-meta-group" style="background:linear-gradient(135deg,${m.grpColor||'#2563eb'},${m.grpColor||'#2563eb'}cc);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor||'#2563eb'}44">GROUP ${m.grpLetter||''} · ${m.matchNum||''}경기</span>`:'';
-        const _rndBadge=m.rndLabel?`<span style="background:var(--blue);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px">${m.rndLabel}</span>`:'';
-        const _ab = (typeof _collectMatchTeamMembersAB === 'function') ? _collectMatchTeamMembersAB(m) : {a:[], b:[]};
-        const _aMemJson = JSON.stringify((_ab.a||[])).replace(/"/g,"'");
-        const _bMemJson = JSON.stringify((_ab.b||[])).replace(/"/g,"'");
-        const _tcWinRgb=(c)=>{const s=String(c||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
-        const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft'};
-        const _fxOn=!!_fxCfg.on;
-        const _fxMode=_fxCfg.mode||'soft';
-        const _fxVarsStr=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
-        const _sideRgbVars=`--rec-side-left-rgb:${_tcWinRgb(ca||'#3b82f6')};--rec-side-right-rgb:${_tcWinRgb(cb||'#ef4444')};`;
-        const _winRgb=aWin?_tcWinRgb(ca):bWin?_tcWinRgb(cb):'100,116,139';
-        const _borderLeft=_fxOn?(ca||'#3b82f6'):(aWin?ca:bWin?cb:'var(--blue-ll)');
-        const _sidePanel=(typeof window._buildRecSideProfilePanel==='function')?window._buildRecSideProfilePanel(m,_ab,aWin,bWin,ca,cb):{left:'',right:''};
-        const _hasSide=!!(_sidePanel.left||_sidePanel.right);
-        const _admShare=(localStorage.getItem('su_share_admin_only')||'0')==='1';
-        const _shareFn = (_admShare && !isLoggedIn)
-          ? 'null'
-          : `()=>window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(${idx},'${String(context||'').replace(/'/g,"\\'")}'))`;
-        const _tnSafe = String(m._tnId||'').replace(/'/g,"\\'");
-        const _editFn = (m._src==='tour')
-          ? `()=>leagueEditMatch('${_tnSafe}',${m._gi},${m._mi})`
-          : 'null';
-        const _menuBtn=`<button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴" onclick="event.stopPropagation();openRecActionMenu(event,{_btnEl:this,a:'${(m.a||'').replace(/'/g,"\\'")}',sa:${m.sa||0},b:'${(m.b||'').replace(/'/g,"\\'")}',sb:${m.sb||0},d:'${m.d||''}',mode:'comp',idx:${rIdx>=0?rIdx:0},key:'${key}',canShare:${(!_admShare||isLoggedIn)?'true':'false'},shareFn:${_shareFn},canEdit:${((rIdx>=0||m._src==='tour')&&isLoggedIn&&!isSubAdmin)?'true':'false'},canDel:${(rIdx>=0&&isLoggedIn&&!isSubAdmin)?'true':'false'},editFn:${_editFn},canMove:false})">⋯</button>`;
-        const _univIconA=(()=>{const url=a?(typeof UNIV_ICONS!=='undefined'?UNIV_ICONS[a]:''):'';const cfg=(typeof univCfg!=='undefined'?univCfg:[]).find(x=>x.name===a)||{};const u=url||(cfg.icon||'');return u?`<img class="tc-uicon" src="${typeof toHttpsUrl==='function'?toHttpsUrl(u):u}" style="width:var(--tc-uicon,22px);height:var(--tc-uicon,22px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0" onerror="this.style.display='none'">`:'';})();
-        const _univIconB=(()=>{const url=b?(typeof UNIV_ICONS!=='undefined'?UNIV_ICONS[b]:''):'';const cfg=(typeof univCfg!=='undefined'?univCfg:[]).find(x=>x.name===b)||{};const u=url||(cfg.icon||'');return u?`<img class="tc-uicon" src="${typeof toHttpsUrl==='function'?toHttpsUrl(u):u}" style="width:var(--tc-uicon,22px);height:var(--tc-uicon,22px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0" onerror="this.style.display='none'">`:'';})();
-
-        h+=`<div class="grp-match-wrap">
-          <div class="grp-card-meta-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
-            ${grpBadge}
-            ${_rndBadge}
-            <span style="flex:1"></span>
-            <span class="no-export">${_menuBtn}</span>
-          </div>
-          <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${_hasSide?' has-side-panels':''}" style="--tc-win-rgb:${_winRgb};${_sideRgbVars}${_fxVarsStr}border-left:4px solid ${_borderLeft};${_fxOn?`border-right:4px solid ${cb||'#ef4444'};`:''};background:var(--white);margin-bottom:0;cursor:pointer" onclick="toggleDetail('${key}')">
-            ${_sidePanel.left||''}
-            <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:var(--tc-vs-gap,12px);justify-content:center;flex-wrap:wrap">
-              <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
-                <div class="grp-team-chip" style="--chip-col:${ca||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.26);cursor:pointer" onclick="event.stopPropagation();openUnivModal('${a}')">
-                  ${_univIconA}
-                  <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${a||'미정'}</span>
-                </div>
-                ${(_ab.a||[]).length?`<button class="grp-mem-btn" style="--mem-col:${ca||'#3b82f6'};" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}','${ca}',${_aMemJson})"><span class="mem-ico">👥</span><span>${(_ab.a||[]).length}명</span></button>`:''}
-              </div>
-              <div class="grp-score-col" style="text-align:center;min-width:80px">
-                <div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px" onclick="event.stopPropagation();toggleDetail('${key}')">
-                  <span>${m.sa||0}</span>
-                  <span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span>
-                  <span>${m.sb||0}</span>
-                </div>
-              </div>
-              <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
-                <div class="grp-team-chip" style="--chip-col:${cb||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.26);cursor:pointer" onclick="event.stopPropagation();openUnivModal('${b}')">
-                  ${_univIconB}
-                  <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${b||'미정'}</span>
-                </div>
-                ${(_ab.b||[]).length?`<button class="grp-mem-btn" style="--mem-col:${cb||'#ef4444'};" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\\'")}','${cb}',${_bMemJson})"><span class="mem-ico">👥</span><span>${(_ab.b||[]).length}명</span></button>`:''}
-              </div>
+      const a=m.a||'',b=m.b||'';
+      const ca=gc(a),cb=gc(b);
+      const aWin=m.sa>m.sb,bWin=m.sb>m.sa;
+      const key=`${context}-tourney-${idx}`;
+      const rIdx=(m._src==='comps')?m._origIdx:-1;
+      const grpBadge=m._src==='tour'
+        ?`<span style="background:${m.grpColor||'#2563eb'};color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px">GROUP ${m.grpLetter||''}</span>`:'';
+      const _tAwin=m.sa>m.sb,_tBwin=m.sb>m.sa;
+      const _tBorderCol=_tAwin?gc(a):_tBwin?gc(b):'var(--blue-ll)';
+      const _ab = (typeof _collectMatchTeamMembersAB === 'function') ? _collectMatchTeamMembersAB(m) : {a:[], b:[]};
+      const _aMemJson = JSON.stringify((_ab.a||[])).replace(/"/g,"'");
+      const _bMemJson = JSON.stringify((_ab.b||[])).replace(/"/g,"'");
+      const _compSidePanel = (typeof window._buildRecSideProfilePanel === 'function')
+        ? window._buildRecSideProfilePanel(m, _ab, aWin, bWin, ca, cb)
+        : {left:'', right:''};
+      h+=`<div class="rec-summary rec-mode-tourney${_recSideFxClass('tourney')}" data-rec-mode="tourney" style="--rec-mode-col:${_tBorderCol};--rec-mode-rgb:${(function(){const h=String(_tBorderCol||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};${_recSideFxStyle('tourney',ca,cb)}margin-left:8px;border-left:3px solid ${_tBorderCol}">
+        <div class="rec-sum-header">
+          <span style="color:var(--text3);font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">${m.d?m.d.slice(2).replace(/-/g,'/'):'미정'}</span>
+          ${grpBadge}
+          <div class="rec-sum-vs-outer">
+            ${_compSidePanel.left}
+            <div class="rec-sum-vs">
+              ${a?`<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+                <span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>
+                ${(_ab.a||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${ca}12;border:1px solid ${ca}40;color:${ca};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}', '${ca}', ${_aMemJson})">👥 ${(_ab.a||[]).length}명</button>`:''}
+              </div>`:''}
+              ${(a&&b)?`<div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기">
+                <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa||0}</span>
+                <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
+                <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb||0}</span>
+              </div>`:''}
+              ${b?`<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+                <span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>
+                ${(_ab.b||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${cb}12;border:1px solid ${cb}40;color:${cb};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\\'")}', '${cb}', ${_bMemJson})">👥 ${(_ab.b||[]).length}명</button>`:''}
+              </div>`:''}
+              ${(a&&b)?(aWin||bWin)?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${aWin?ca:cb}18;color:${aWin?ca:cb};border:1px solid ${aWin?ca:cb}33;white-space:nowrap;flex-shrink:0">🏆 ${aWin?a:b}</span>`:`<span style="font-size:10px;color:var(--gray-l)">무승부</span>`:''}
             </div>
-            ${_sidePanel.right||''}
+            ${_compSidePanel.right}
           </div>
-          <div id="det-${key}" class="rec-detail-area">
-            ${_regDet(key,{...m,_editRef:rIdx>=0?'comp:'+rIdx:''},'comp',a,b,ca,cb,aWin,bWin,rIdx)}
-            ${(()=>{const _memo=(rIdx>=0&&isLoggedIn)?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''; const _note=m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''; return (_memo||_note)?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">${_note}<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${_memo}</div></div>`:'';})()}
+          <div style="margin-left:auto;display:flex;gap:5px;align-items:center" class="no-export">
+            <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
+              onclick="openRecActionMenu(event,{
+                _btnEl:this,
+                a:'${(m.a||'').replace(/'/g,"\\'")}',
+                sa:${m.sa||0},
+                b:'${(m.b||'').replace(/'/g,"\\'")}',
+                sb:${m.sb||0},
+                d:'${m.d||''}',
+                mode:'comp',
+                idx:${rIdx>=0?rIdx:0},
+                key:'${key}',
+                canShare:${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?'true':'false';})()},
+                shareFn:${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; if(_adm && !isLoggedIn) return 'null'; return `()=>window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(${idx},'${context}'))`;})()},
+                canEdit:${((rIdx>=0 || m._src==='tour') && isLoggedIn && !isSubAdmin)?'true':'false'},
+                canDel:${(rIdx>=0 && isLoggedIn && !isSubAdmin)?'true':'false'},
+                editFn:${m._src==='tour' ? `()=>leagueEditMatch('${m._tnId}',${m._gi},${m._mi})` : 'null'},
+                canMove:false
+              })">⋯</button>
           </div>
-        </div>`;
-      });
-
-      h+=`</div>`;
+        </div>
+        <div id="det-${key}" class="rec-detail-area">
+        ${_regDet(key,{...m,_editRef:rIdx>=0?'comp:'+rIdx:''},  'comp',a,b,ca,cb,aWin,bWin, rIdx)}
+          ${(()=>{const _memo=(rIdx>=0&&isLoggedIn)?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''; const _note=m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''; return (_memo||_note)?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">${_note}<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${_memo}</div></div>`:'';})()}
+        </div>
+      </div>`;
     });
   });
   return h;
@@ -981,6 +942,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
               <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.b}')">${(()=>{const n=isCK?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelB}</span>
               ${(_ab.b||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${cb}12;border:1px solid ${cb}40;color:${cb};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${_bMemJson})">👥 ${(_ab.b||[]).length}명</button>`:''}
             </div>
+            <span class="rec-victor-chip" style="--rec-victor-col:${myWin?col:(aWin?ca:bWin?cb:'#888')};color:${myWin?col:'#888'}">${myWin?'▶ '+filterUniv+' 승':aWin?'▶ '+labelA+' 승':bWin?'▶ '+labelB+' 승':'무승부'}</span>
           </div>
           ${_sidePanelHTML.right}
         </div>
@@ -1281,6 +1243,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
           <div class="rec-meta-row">
             ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" data-bmid="${String(m._id||m.sid||'')}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
             ${m.fmt>0?`<span class="rec-meta-chip rec-meta-chip--note">${m.fmt}:${m.fmt}</span>`:''}
+            ${aWin||bWin?`<span class="rec-victor-chip rec-victor-chip--crown" style="--rec-victor-col:${aWin?ca:cb};color:${aWin?ca:cb}">🏆 ${aWin?labelA:labelB}</span>`:`<span class="rec-meta-chip">무승부</span>`}
           </div>
           <div class="rec-actions no-export rec-actions--inline">
           <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"

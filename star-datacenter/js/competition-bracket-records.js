@@ -185,7 +185,7 @@ function rBracketSchedule(tn){
       _bktDayKeys.forEach(dk=>{
         let _bktDkLabel=dk;
         if(dk!=='날짜 미정'){const dt=new Date(dk+'T00:00:00');_bktDkLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_bktDays[dt.getDay()]}`;}
-        h+=`<div style="margin-bottom:22px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-radius:0 8px 8px 0">📅 ${_bktDkLabel}</div></div>`;
+        h+=`<div style="margin-bottom:22px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_bktDkLabel}</div></div>`;
         _bktByDate[dk].forEach(mc=>{h+=matchCard(mc);});
         h+=`</div>`;
       });

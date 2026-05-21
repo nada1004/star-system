@@ -29,6 +29,12 @@ function _renderB2ImgSettingsWrap(){
     if(!wrap) return false;
     if(typeof _b2BuildImageControlGroup !== 'function') return false;
     const _shuffle = (localStorage.getItem('su_b2_profile_shuffle') ?? '1') === '1';
+    const _selName = (localStorage.getItem('su_b2_swap_delay_player') || '').trim();
+    const _opts = (Array.isArray(window.players) ? window.players : [])
+      .map(p=>String(p&&p.name||'').trim()).filter(Boolean)
+      .sort((a,b)=>a.localeCompare(b,'ko'))
+      .map(n=>`<option value="${esc(n)}"${n===_selName?' selected':''}>${esc(n)}</option>`)
+      .join('');
     wrap.innerHTML=`
       <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">이미지 1 (기본 이미지)</div>
       ${_b2BuildImageControlGroup('','primary','이미지 1',true)}
@@ -40,12 +46,94 @@ function _renderB2ImgSettingsWrap(){
         이미지탭(프로필) 목록 랜덤(셔플)
       </label>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ PC 좌/우 및 대학 필터에서도 적용됩니다(보기 재미용)</div>
+      <hr style="border:none;border-top:1px dashed var(--border2);margin:14px 0">
+      <div style="font-weight:900;font-size:12px;color:var(--text2);margin-bottom:10px">전환 시간(선수별)</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <select id="cfg-b2-delay-player" style="flex:1;min-width:180px" onchange="localStorage.setItem('su_b2_swap_delay_player',this.value||''); if(typeof _cfgB2RenderSwapDelay==='function') _cfgB2RenderSwapDelay(this.value||'');">
+          <option value="">선수 선택</option>
+          ${_opts}
+        </select>
+        <button class="btn btn-xs btn-w" onclick="localStorage.setItem('su_b2_swap_delay_player',''); const sel=document.getElementById('cfg-b2-delay-player'); if(sel) sel.value=''; if(typeof _cfgB2RenderSwapDelay==='function') _cfgB2RenderSwapDelay('');">초기화</button>
+      </div>
+      <div id="cfg-b2-delay-area" style="padding:12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px">
+        <div style="font-size:12px;color:var(--gray-l)">선수를 선택하면 이미지 2→3, 3→4, 4→5 전환 시간을 설정할 수 있습니다.</div>
+      </div>
     `;
+    try{ if(typeof window._cfgB2RenderSwapDelay==='function') window._cfgB2RenderSwapDelay(_selName); }catch(e){}
     return true;
   }catch(e){
     return false;
   }
 }
+
+window._cfgB2RenderSwapDelay = function(playerName){
+  try{
+    const area = document.getElementById('cfg-b2-delay-area');
+    if(!area) return;
+    const name = String(playerName||'').trim();
+    if(!name){
+      area.innerHTML = `<div style="font-size:12px;color:var(--gray-l)">선수를 선택하면 이미지 2→3, 3→4, 4→5 전환 시간을 설정할 수 있습니다.</div>`;
+      return;
+    }
+    const p = (Array.isArray(window.players)?window.players:[]).find(x=>x && x.name===name);
+    if(!p){
+      area.innerHTML = `<div style="font-size:12px;color:var(--gray-l)">선수를 찾을 수 없습니다.</div>`;
+      return;
+    }
+    const clamp = (v)=>{ const n = parseFloat(v); if(isNaN(n)) return 1; return Math.max(0.2, Math.min(60, n)); };
+    const d23 = clamp(p.photoDelay23 ?? 1);
+    const d34 = clamp(p.photoDelay34 ?? 1);
+    const d45 = clamp(p.photoDelay45 ?? 1);
+    const d51 = clamp(p.photoDelay51 ?? 1);
+    const safe = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    area.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">2 → 3 (초)</div>
+          <input type="number" min="0.2" max="60" step="0.1" value="${d23}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">3 → 4 (초)</div>
+          <input type="number" min="0.2" max="60" step="0.1" value="${d34}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">4 → 5 (초)</div>
+          <input type="number" min="0.2" max="60" step="0.1" value="${d45}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">5 → 1 (초)</div>
+          <input type="number" min="0.2" max="60" step="0.1" value="${d51}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:8px">값은 즉시 저장됩니다. 기본값(1초)은 저장하지 않습니다.</div>
+    `;
+  }catch(e){}
+};
+window._cfgB2SaveSwapDelay = function(playerName){
+  try{
+    const area = document.getElementById('cfg-b2-delay-area');
+    if(!area) return;
+    const name = String(playerName||'').trim();
+    const p = (Array.isArray(window.players)?window.players:[]).find(x=>x && x.name===name);
+    if(!p) return;
+    const inputs = area.querySelectorAll('input[type="number"]');
+    if(!inputs || inputs.length < 4) return;
+    const clamp = (v)=>{ const n = parseFloat(v); if(isNaN(n)) return 1; return Math.max(0.2, Math.min(60, n)); };
+    const d23 = clamp(inputs[0].value);
+    const d34 = clamp(inputs[1].value);
+    const d45 = clamp(inputs[2].value);
+    const d51 = clamp(inputs[3].value);
+    if(d23===1) delete p.photoDelay23; else p.photoDelay23 = d23;
+    if(d34===1) delete p.photoDelay34; else p.photoDelay34 = d34;
+    if(d45===1) delete p.photoDelay45; else p.photoDelay45 = d45;
+    if(d51===1) delete p.photoDelay51; else p.photoDelay51 = d51;
+    if(typeof window.save === 'function') window.save();
+    try{
+      const cur = window._b2SelectedPlayer && window._b2SelectedPlayer.name;
+      if(cur === name && typeof window._b2ScheduleImageSwap === 'function') window._b2ScheduleImageSwap(name);
+    }catch(e){}
+  }catch(e){}
+};
 function _ensureB2ImgSettingsWrap(retry){
   if(_renderB2ImgSettingsWrap()) return;
   if(retry === false) return;
@@ -704,6 +792,16 @@ window.cfgSetTcScoreScale = function(){
     document.documentElement.style.setProperty('--tc-score-scale', String(val/100));
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+window._applyTcScoreScale = function(){
+  try{
+    const isMb = window.innerWidth <= 768;
+    const pcV = parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10);
+    const mbV = parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10);
+    const val = isMb ? Math.max(50,Math.min(150,mbV)) : Math.max(50,Math.min(150,pcV));
+    document.documentElement.style.setProperty('--tc-score-scale', String(val/100));
+  }catch(e){}
 };
 
 try{
@@ -2360,13 +2458,16 @@ let _catSecs = (() => {
   const norm = _cfgMenuNormalize(raw || {});
   try{ window._cfgCatOrder = norm.catOrder; }catch(e){}
   // catSecs만 rCfg/_cfgApplyCat에서 사용
-  return norm.catSecs;
+  const cs = norm.catSecs;
+  try{ window._catSecs = cs; }catch(e){}
+  return cs;
 })();
 
 function _cfgMenuApplyAndRerender(layout){
   const norm = _cfgMenuNormalize(layout || {});
   _cfgMenuSave(norm);
   _catSecs = norm.catSecs;
+  try{ window._catSecs = _catSecs; }catch(e){}
   try{ window._cfgCatOrder = norm.catOrder; }catch(e){}
   try{
     if(!Object.keys(_catSecs).includes(window._cfgCat)){
@@ -4681,7 +4782,7 @@ ${_scfgD('notice','📢 공지 관리')}
             {v:'diamond', label:'기울임',    desc:'사선 스큐',      icon:'♦️'},
             {v:'tag',     label:'꼬리표형',  desc:'삼각 꼬리',      icon:'🏷️'},
             {v:'hex',     label:'육각형',    desc:'헥사곤 클립',    icon:'⬡'},
-          ].map(s=>{const sel=(localStorage.getItem('su_rc_team_chip_shape')||'default')===s.v; return \`<button type="button" onclick="cfgSetTeamChipShape('\${s.v}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:12px;border:\${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:\${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer"><span style="font-size:14px">\${s.icon}</span><span style="font-size:11px;font-weight:900;color:\${sel?'var(--blue)':'var(--text2)'}">\${s.label}</span><span style="font-size:9px;color:var(--gray-l);font-weight:700">\${s.desc}</span></button>\`;}).join('')}
+          ].map(s=>{const sel=(localStorage.getItem('su_rc_team_chip_shape')||'default')===s.v; return `<button type="button" onclick="cfgSetTeamChipShape('${s.v}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:12px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer"><span style="font-size:14px">${s.icon}</span><span style="font-size:11px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'}">${s.label}</span><span style="font-size:9px;color:var(--gray-l);font-weight:700">${s.desc}</span></button>`;}).join('')}
         </div>
       </div>
 
@@ -4833,14 +4934,14 @@ ${_scfgD('notice','📢 공지 관리')}
           <input type="range" id="cfg-tc-score-pc" min="50" max="150" step="5"
             value="${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10)||82))}"
             oninput="document.getElementById('cfg-tc-score-pc-v').textContent=this.value+'%'" onchange="cfgSetTcScoreScale()" style="width:140px">
-          <span id="cfg-tc-score-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10)||82)}%</span>
+          <span id="cfg-tc-score-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10)||82))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
           <input type="range" id="cfg-tc-score-mb" min="50" max="150" step="5"
             value="${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10)||75))}"
             oninput="document.getElementById('cfg-tc-score-mb-v').textContent=this.value+'%'" onchange="cfgSetTcScoreScale()" style="width:140px">
-          <span id="cfg-tc-score-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10)||75)}%</span>
+          <span id="cfg-tc-score-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10)||75))}%</span>
         </div>
         <span style="font-size:11px;color:var(--gray-l)">※ 대회탭 조별리그/토너 기록카드 스코어 크기</span>
       </div>
@@ -5303,11 +5404,11 @@ ${_scfgD('notice','📢 공지 관리')}
           ].map(t=>{
             const cur=localStorage.getItem('su_tab_style')||'default';
             const sel=cur===t.v;
-            return \`<button type="button" onclick="cfgSetTabStyle('\${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:\${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:\${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
-              <span style="font-size:18px;line-height:1">\${t.icon}</span>
-              <span style="font-size:11px;font-weight:900;color:\${sel?'var(--blue)':'var(--text2)'};line-height:1.2">\${t.label}</span>
-              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">\${t.desc}</span>
-            </button>\`;
+            return `<button type="button" onclick="cfgSetTabStyle('${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
+              <span style="font-size:18px;line-height:1">${t.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'};line-height:1.2">${t.label}</span>
+              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">${t.desc}</span>
+            </button>`;
           }).join('')}
         </div>
       </div>
@@ -5328,11 +5429,11 @@ ${_scfgD('notice','📢 공지 관리')}
           ].map(t=>{
             const cur=localStorage.getItem('su_submenu_btn_style')||'default';
             const sel=cur===t.v;
-            return \`<button type="button" onclick="cfgSetSubmenuBtnStyle('\${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:\${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:\${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
-              <span style="font-size:18px;line-height:1">\${t.icon}</span>
-              <span style="font-size:11px;font-weight:900;color:\${sel?'var(--blue)':'var(--text2)'};line-height:1.2">\${t.label}</span>
-              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">\${t.desc}</span>
-            </button>\`;
+            return `<button type="button" onclick="cfgSetSubmenuBtnStyle('${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
+              <span style="font-size:18px;line-height:1">${t.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'};line-height:1.2">${t.label}</span>
+              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">${t.desc}</span>
+            </button>`;
           }).join('')}
         </div>
       </div>

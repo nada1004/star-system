@@ -6,6 +6,7 @@ function rCfg(C,T){
     return;
   }
   if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='🧩 운영/콘텐츠';
+  const _catSecs = window._catSecs || {};
   const _cfgCats=(window._cfgCatOrder && Array.isArray(window._cfgCatOrder) ? window._cfgCatOrder : Object.keys(_catSecs||{}));
   const _cfgCatIcons={
     '🧩 운영/콘텐츠':'🧩',
