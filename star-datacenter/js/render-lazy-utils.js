@@ -180,14 +180,6 @@ async function _ensureCloudBoardLoaded(){
   await _loadScriptOnce('js/sync/cloud-status.js?v=20260503-01');
   await _loadScriptOnce('js/cloud-board.js?v=20260502-05');
 }
-async function _ensureBoard2Loaded(){
-  // board2.js는 cloud-board.js에 의존함
-  await _ensureCloudBoardLoaded();
-  await window.ensureHtml2Canvas();
-  await _loadScriptOnce('js/board2-image-utils.js?v=20260504-01');
-  await _loadScriptOnce('js/board2-card-utils.js?v=20260501-10');
-  await _loadScriptOnce('js/board2.js?v=20260521-v31');
-}
 async function _ensureSettingsLoaded(){
   await _loadScriptOnce('js/settings/font-controls.js?v=20260502-01');
   await _loadScriptOnce('js/settings/ui-scale-controls.js?v=20260502-01');

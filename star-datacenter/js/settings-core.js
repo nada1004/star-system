@@ -4,28 +4,6 @@
 ══════════════════════════════════════ */
 
 // ─────────────────────────────────────────────────────────────
-// 🌐 설정 변경 → Firebase 동기화 헬퍼 (디바운스 1.5초)
-// 설정탭의 모든 cfgSet* 함수가 이를 호출해 다른 기기에 즉시 반영됨
-// ─────────────────────────────────────────────────────────────
-(function(){
-  let _cfgSyncTimer = null;
-  window._cfgSyncSettings = function(){
-    try{
-      if(_cfgSyncTimer) clearTimeout(_cfgSyncTimer);
-      _cfgSyncTimer = setTimeout(function(){
-        _cfgSyncTimer = null;
-        try{
-          // saveCfg는 appSettings.ls를 포함한 설정 전체를 Firebase에 동기화함
-          if(typeof saveCfg === 'function' && typeof isLoggedIn !== 'undefined' && isLoggedIn){
-            saveCfg();
-          }
-        }catch(e){}
-      }, 1500);
-    }catch(e){}
-  };
-})();
-
-// ─────────────────────────────────────────────────────────────
 // HTML escape (설정 화면 템플릿 문자열 안전 처리)
 // ─────────────────────────────────────────────────────────────
 function esc(s){
@@ -504,7 +482,6 @@ window.cfgSetAutoFitAllTabs = function(on){
   try{ localStorage.setItem(_AF_ALLTABS_KEY, on ? '1' : '0'); }catch(e){}
   try{ if(typeof window._applyAllTabsAutoFit === 'function') window._applyAllTabsAutoFit(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -582,7 +559,6 @@ window.cfgSetRecCardSettings = function(){
   }catch(e){}
   try{ if(typeof window._applyRecCardTheme === 'function') window._applyRecCardTheme(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 
@@ -638,7 +614,6 @@ window.cfgSetMatchBtnScaleSettings = function(){
   }catch(e){}
   try{ window.applyMatchBtnScale && window.applyMatchBtnScale(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 try{
   if(!window._matchBtnScaleBound){
@@ -736,8 +711,6 @@ window.cfgSetTourneyTeamBtnScaleSettings = function(){
   }catch(e){}
   try{ window.applyTourneyTeamBtnScale && window.applyTourneyTeamBtnScale(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 try{
   if(!window._tcTeamBtnScaleBound){
@@ -810,7 +783,6 @@ window.cfgSetTourneyMemBtnScaleSettings = function(){
   }catch(e){}
   try{ window.applyTourneyMemBtnScale && window.applyTourneyMemBtnScale(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 try{
   if(!window._tcMemBtnScaleBound){
@@ -897,7 +869,6 @@ window.cfgSetScoreColors = function(){
   }catch(e){}
   try{ window.applyScoreColors && window.applyScoreColors(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -920,7 +891,6 @@ window.cfgSetRecBgFxAll = function(on){
   try{ if(typeof window.cfgSetRecCardSettings==='function') window.cfgSetRecCardSettings(); }catch(e){}
   try{ if(typeof window._applyRecCardTheme==='function') window._applyRecCardTheme(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -967,7 +937,6 @@ window.cfgSetH2HPanelSettings = function(){
     localStorage.setItem('su_h2h_score_pad_mb', String(Math.max(0,Math.min(24,isNaN(smb)?6:smb))));
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // 개인/끝장전: 스트리머별 프로필 배경 위치(object-position) 저장
@@ -1338,7 +1307,6 @@ window.cfgSetTourneyCardSettings = function(){
   }catch(e){}
   try{ if(typeof window._applyTourneyCardTheme === 'function') window._applyTourneyCardTheme(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -1368,7 +1336,6 @@ window.cfgSetShareCardSettings = window.cfgSetShareCardSettings || function(){
   try{ localStorage.setItem('su_sc_logo_size', String(Math.max(70,Math.min(150,logoSize)))); }catch(e){}
   try{ localStorage.setItem('su_sc_logo_fit', ['contain','cover','fill','zoom'].includes(logoFit)?logoFit:'contain'); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 window.cfgSyncTeamColorPreview = window.cfgSyncTeamColorPreview || function(){
   try{
@@ -1457,7 +1424,6 @@ window.cfgSetShareCardOverrides = function(){
     }catch(e){}
   });
   try{ if(typeof render === 'function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -1544,10 +1510,6 @@ window.cfgSetHeaderSettings = function(){
   try{ localStorage.setItem('su_hdr_sync_theme', sync?'1':'0'); }catch(e){}
   try{ if(typeof window._applyHeaderSettings === 'function') window._applyHeaderSettings(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
-  // 🌐 다른 기기에도 즉시 반영 (설정 포함 Firebase 동기화)
-  try{ if(typeof save === 'function') save(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -1878,7 +1840,6 @@ window.cfgSetUiFilterMenuSettings = function(){
     try{ window._compFilterOpen=true; }catch(e){}
   }
   try{ if(typeof render==='function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 window.cfgResetUiFilterMenuSettings = function(){
   try{ localStorage.removeItem('su_filter_lock_open'); }catch(e){}

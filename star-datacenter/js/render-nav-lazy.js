@@ -444,33 +444,3 @@ window.renderShareCardByMatchObj = window.renderShareCardByMatchObj || _lazyRend
 window.rStats = window.rStats || _lazyRStats;
 window.rCal   = window.rCal   || _lazyRCal;
 window.checkFbSyncStatus = window.checkFbSyncStatus || _lazyCheckFbSyncStatus;
-
-// swNav 지연 로딩 폴백: calendar.js가 로드되기 전에 바텀 네비를 클릭해도 작동하도록
-if (typeof swNav === 'undefined') {
-  window.swNav = function(t, el) {
-    // calendar.js가 이미 로드된 경우 위임
-    if (typeof swNav !== window.swNav && typeof window.__swNavReal === 'function') {
-      return window.__swNavReal(t, el);
-    }
-    // 폴백: sw() 직접 호출
-    document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('on'));
-    if (el) el.classList.add('on');
-    let found = false;
-    document.querySelectorAll('.tab').forEach(b => {
-      const oc = b.getAttribute('onclick') || '';
-      if (oc.includes("'" + t + "'")) { sw(t, b); found = true; }
-    });
-    if (!found) {
-      curTab = t; openDetails = {};
-      document.querySelectorAll('.bnav-item').forEach(b => {
-        const oc = b.getAttribute('onclick') || '';
-        b.classList.toggle('on', oc.includes("'" + t + "'"));
-      });
-      const fstrip = document.getElementById('fstrip');
-      if (fstrip) fstrip.style.display = (t === 'total' && isLoggedIn) ? 'block' : 'none';
-      const C = document.getElementById('rcont');
-      if (C) C.innerHTML = '';
-      render();
-    }
-  };
-}

@@ -72,14 +72,7 @@ function _renderImpl(){
         (async()=>{ try{ await _ensureCloudBoardLoaded(); render(true); }catch(e){ console.error('[lazy] board load fail', e); } })();
       }
       break;
-    case 'board2':
-      if(typeof rBoard2==='function'){
-        rBoard2(C,T);
-      }else{
-        _lazyLoadingView(T,C,'현황판','현황판 모듈을 불러오는 중...');
-        (async()=>{ try{ await _ensureBoard2Loaded(); render(true); }catch(e){ console.error('[lazy] board2 load fail', e); C.innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">현황판 로딩 실패</div><div class="empty-state-desc">'+e.message+'</div></div>'; } })();
-      }
-      break;
+    case 'board2':  if(typeof rBoard2==='function')  rBoard2(C,T);  else C.innerHTML='<div class="empty-state">현황판을 불러올 수 없습니다.</div>'; break;
     case 'elboard':
       if(typeof rElboard==='function'){
         rElboard(C,T);

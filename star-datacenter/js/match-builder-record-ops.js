@@ -37,7 +37,6 @@ function deleteIndSession(ids){
   try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){}
   save();render();
   try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
-  setTimeout(()=>{ try{ if(typeof window._autoSaveToGitHub==='function') window._autoSaveToGitHub('경기 기록 삭제'); }catch(e){} }, 400);
 }
 
 function moveIndSession(idsArr, srcMode, destMode, _batch=false){

@@ -125,7 +125,6 @@ window.cfgSetAppFontAlias = function(fontFamily, alias){
   else delete map[k];
   try{ localStorage.setItem('su_app_font_alias_map', JSON.stringify(map)); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 window.cfgRenderAppFontAliasEditor = function(){
   const wrap = document.getElementById('cfg-appfont-alias-wrap');

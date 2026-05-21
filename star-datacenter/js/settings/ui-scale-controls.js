@@ -20,7 +20,6 @@ window.cfgSetUiBtnStyleSettings = function(){
     const c=document.getElementById('cfg-pillr-v'); if(c) c.textContent=pr+'px';
   }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
-  try{ if(typeof window._cfgSyncSettings==='function') window._cfgSyncSettings(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
