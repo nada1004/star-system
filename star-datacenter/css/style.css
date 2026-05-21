@@ -2680,7 +2680,7 @@ body.rc-theme-on:not(.rc-accent-header):not(.rc-accent-border):not(.rc-accent-fu
 
 /* (설정) 기록 카드 스코어/배치 */
 .rec-sum-vs{justify-content: var(--rc-vs-justify, center);}
-.rec-sum-score{transform: scale(var(--rc-score-scale, 1)); transform-origin: center;}
+.rec-sum-score{transform:none !important; transform-origin: center;}
 .rec-detail-area{
   border-top:none;
   padding:0;
@@ -11198,10 +11198,10 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
 /* ── 스코어 : 구분자 가시성 개선 ── */
 /* grp-match-score (대회탭 조별/토너) */
 .grp-match-score {
-  font-size: calc(18px * var(--tc-score-scale, 1)) !important;
+  font-size: calc(14px * var(--tc-score-scale, 1)) !important;
 }
 .grp-score-col .grp-match-score {
-  font-size: calc(20px * var(--tc-score-scale, 1)) !important;
+  font-size: calc(15px * var(--tc-score-scale, 1)) !important;
 }
 
 /* : 구분자 - 더 굵고 뚜렷하게 */
@@ -11216,7 +11216,7 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
 
 /* rec-sum-score (기록탭/프로리그/대학전/티어대회) */
 .rec-sum-score {
-  font-size: calc(18px * var(--rc-score-scale, 1)) !important;
+  font-size: calc(14px * var(--rc-score-scale, 1)) !important;
 }
 /* : 구분자 in rec-sum-score */
 .rec-sum-score span[style*="var(--gray-l)"],
@@ -11241,12 +11241,12 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
     --rc-mem-btn-scale: 0.82;
   }
   .grp-match-score {
-    padding: 4px 9px !important;
-    font-size: 14px !important;
+    padding: 2px 6px !important;
+    font-size: 10px !important;
   }
   .grp-score-col .grp-match-score {
-    min-width: 56px !important;
-    font-size: 14px !important;
+    min-width: 46px !important;
+    font-size: 10px !important;
   }
   .grp-mem-btn {
     font-size: 9px !important;
@@ -11255,8 +11255,8 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
   }
   .grp-mem-btn .mem-ico { font-size: 9px !important; }
   .rec-sum-score {
-    padding: 3px 9px !important;
-    gap: 4px !important;
+    padding: 1px 6px !important;
+    gap: 3px !important;
   }
 }
 
