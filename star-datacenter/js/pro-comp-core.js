@@ -160,6 +160,28 @@ function proCompGetAvatarFit(){
   }
 }
 
+function proCompGetScoreScale(){
+  try{
+    const pc = _pcReadIntLS('su_procomp_score_scale_pc', 100, 60, 160);
+    const mb = _pcReadIntLS('su_procomp_score_scale_mb', 100, 60, 160);
+    const pct = _pcIsMobile() ? mb : pc;
+    return Math.max(0.6, Math.min(1.6, (pct||100)/100));
+  }catch(e){
+    return 1;
+  }
+}
+
+function proCompGetLayoutScale(){
+  try{
+    const pc = _pcReadIntLS('su_procomp_layout_scale_pc', 100, 60, 120);
+    const mb = _pcReadIntLS('su_procomp_layout_scale_mb', 100, 60, 120);
+    const pct = _pcIsMobile() ? mb : pc;
+    return Math.max(0.6, Math.min(1.2, (pct||100)/100));
+  }catch(e){
+    return 1;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 프로리그 대회 "조별리그"에서는 스테이지(16강/8강/4강/결승) 개념 삭제
 // - 기록/순위 탭은 조별리그만 다룸
@@ -447,6 +469,12 @@ function proCompLeague(tn) {
     byDate[date].forEach(m => {
       const pa = players.find(p=>p.name===m.a);
       const pb = players.find(p=>p.name===m.b);
+      const _ls = (typeof proCompGetLayoutScale==='function') ? proCompGetLayoutScale() : 1;
+      const _mainGap = Math.max(6, Math.round(10*_ls));
+      const _mainPadT = Math.max(8, Math.round(10*_ls));
+      const _mainPadX = Math.max(10, Math.round(12*_ls));
+      const _mainPadB = Math.max(10, Math.round(12*_ls));
+      const _scoreMinW = Math.max(48, Math.round(60*_ls));
       const _gcByUniv=(name,p)=>{const _u=p&&p.univ?gc(p.univ):'';return(_u&&_u!=='#6b7280')?_u:gc(name||'');};
       const ca = (typeof gc==='function' ? _gcByUniv(m.a,players.find(p=>p.name===m.a)) : '#3b82f6');
       const cb = (typeof gc==='function' ? _gcByUniv(m.b,players.find(p=>p.name===m.b)) : '#ef4444');
@@ -462,18 +490,33 @@ function proCompLeague(tn) {
         const isLose = isDone && !isWin;
         const canClick = !!(p && p.name);
         const clickAttr = canClick ? `onclick="openPlayerModal('${escJS(p.name)}')" title="상세 보기"` : '';
+        const _isMob = (typeof window!=='undefined' && window.matchMedia && window.matchMedia('(max-width:768px)').matches);
         const av = (typeof proCompGetAvatarPx==='function') ? proCompGetAvatarPx() : 52;
         const fit = (typeof proCompGetAvatarFit==='function') ? proCompGetAvatarFit() : 'cover';
         const bgSize = (fit==='fill') ? '100% 100%' : (fit==='contain' ? 'contain' : 'cover');
-        const minW = Math.max(148, av + 60);
-        const minH = Math.max(180, av + 80);
+        if(_isMob){
+          const sz = Math.max(36, Math.round(av * _ls));
+          const ring = isWin
+            ? 'box-shadow:0 0 0 2px rgba(34,197,94,.55),0 10px 22px rgba(15,23,42,.14);'
+            : 'box-shadow:0 10px 22px rgba(15,23,42,.10);';
+          const photo = (p && p.photo) ? toHttpsUrl(p.photo) : '';
+          const initial = (p && p.name ? p.name : '미').slice(0,1);
+          return `<div ${clickAttr} style="width:${sz}px;height:${sz}px;flex-shrink:0;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;${ring}${isLose?'opacity:.85;filter:grayscale(1);':''}">
+            ${photo?`<img src="${photo}" style="width:100%;height:100%;object-fit:${fit};display:block" onerror="this.style.display='none'">`:`<span style="font-size:${Math.max(14,Math.round(sz*0.42))}px;font-weight:1000;color:#94a3b8">${initial}</span>`}
+          </div>`;
+        }
+        const minW = Math.round(Math.max(148, av + 60) * _ls);
+        const minH = Math.round(Math.max(180, av + 80) * _ls);
+        const padT = Math.max(6, Math.round(10*_ls));
+        const padX = Math.max(6, Math.round(10*_ls));
+        const padB = Math.max(8, Math.round(12*_ls));
         const bgImg = (p && p.photo) ? `background-image:url('${toHttpsUrl(p.photo)}');` : '';
         const bgFallback = (!p || !p.photo)
           ? `background:linear-gradient(135deg,${isWin?'#16a34a':'#64748b'}33,${isWin?'#16a34a':'#64748b'}11);`
           : '';
         const name = p ? (p.name||'') : '';
         const initial = (name||'미').slice(0,1);
-        return `<div ${clickAttr} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:10px 10px 12px;border-radius:14px;min-width:${minW}px;min-height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
+        return `<div ${clickAttr} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:${padT}px ${padX}px ${padB}px;border-radius:14px;width:${minW}px;height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
           <div style="position:absolute;inset:0;background:${p&&p.photo
             ? `linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.28) 50%, rgba(15,23,42,.72) 100%)`
             : `linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.18))`
@@ -494,34 +537,40 @@ function proCompLeague(tn) {
       const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
       const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
       const _sideRgbVars=(typeof _tcHexToRgbStr==='function')?`--rec-side-left-rgb:${_tcHexToRgbStr(ca||'#3b82f6')};--rec-side-right-rgb:${_tcHexToRgbStr(cb||'#ef4444')};`:'';
+      const _isMob = (typeof window!=='undefined' && window.matchMedia && window.matchMedia('(max-width:768px)').matches);
+      const _sc = (typeof proCompGetScoreScale==='function') ? proCompGetScoreScale() : 1;
+      const _scoreFont = Math.round((_isMob?14:18) * _sc);
+      const _scorePy = Math.round((_isMob?4:6) * _sc);
+      const _scorePx = Math.round((_isMob?9:12) * _sc);
+      const _scoreSep = _isMob ? 10 : 12;
       const _cardActions = [
         isDone ? (()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1'; return (!_adm||isLoggedIn) ? { t:'🎴 공유카드', d:'공유용 카드 생성', kind:'accent', on:()=>_openProCompLeagueShareCard(tn.id,m.grpIdx,m.matchNum-1) } : null;})() : null,
         isLoggedIn ? { t:'✏️ 결과 수정', d:'경기 결과와 세트 수정', kind:'normal', on:()=>proCompEditMatch(tn.id,m.grpIdx,m.matchNum-1) } : null,
         isLoggedIn ? { t:'🗑️ 결과 삭제', d:'이 경기 기록 삭제', kind:'danger', on:()=>proCompDelMatch(tn.id,m.grpIdx,m.matchNum-1) } : null
       ].filter(Boolean);
       const _cardMenu = _cardActions.length ? _compActionMenuHTML(_cardActions) : '';
-      h += `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?m.grpColor:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?m.grpColor:cb};margin-bottom:8px">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px">
+      h += `<div class="grp-match-wrap">
+        <div class="grp-card-meta-bar no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">${m.grpName?m.grpName:`GROUP ${m.grpLetter}`}</span>
-          <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
+          <span style="font-size:10px;color:var(--gray-l);font-weight:700">${m.matchNum}경기</span>
           ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
+          <span style="flex:1"></span>
+          <span class="grp-meta-menu">${_cardMenu}</span>
         </div>
-        <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
+        <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?m.grpColor:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?m.grpColor:cb}">
+        <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:${_mainGap}px;justify-content:center;flex-wrap:wrap;padding:${_mainPadT}px ${_mainPadX}px ${_mainPadB}px">
           ${_pcard(pa, aWin)}
-          <div class="grp-score-col" style="text-align:center;min-width:60px">
-            ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;padding:6px 12px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
+          <div class="grp-score-col" style="text-align:center;min-width:${_scoreMinW}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+            ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:${_scoreFont}px;padding:${_scorePy}px ${_scorePx}px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
               <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'패'}</span>
-              <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
+              <span style="color:var(--gray-l);font-size:${_scoreSep}px;margin:0 2px">:</span>
               <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
             </div>
-            ${m.map?`<div style="font-size:10px;color:var(--gray-l);margin-top:4px">🗺️ ${m.map}</div>`:''}
+            ${m.map?`<div style="font-size:${_isMob?9:10}px;color:var(--gray-l);max-width:${_isMob?150:190}px;line-height:1.25;word-break:break-word">🗺️ ${m.map}</div>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor}">VS</div>`}
           </div>
           ${_pcard(pb, bWin)}
         </div>
-        <div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-          ${isDone?``:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor}">VS</div>`}
-          ${_cardMenu}
         </div>
       </div>`;
     });
@@ -1153,17 +1202,20 @@ function proCompBracket(tn) {
   const rounds = tn.bracket;
   const _pc = name => players.find(x=>x.name===name)||null;
   const isTierTourney = tn.type === 'tier';
+  const _ls = (typeof proCompGetLayoutScale==='function') ? proCompGetLayoutScale() : 1;
+  const _s = (n, min)=>Math.max(min||0, Math.round(n*_ls));
   const _photo = (name, isWin, isDone, col) => {
     const p=_pc(name);
     const isLose = !!isDone && !isWin;
-    if (!name||name==='TBD') return `<div style="width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#94a3b8">?</div>`;
+    const sz = _s(36, 22);
+    if (!name||name==='TBD') return `<div style="width:${sz}px;height:${sz}px;border-radius:var(--su_profile_radius,50%);background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:${_s(14,11)}px;color:#94a3b8">?</div>`;
     const ring = isWin?`box-shadow:0 0 0 2px ${col},0 0 0 4px ${col}33`:`border:2px solid #e2e8f0`;
     const safe = String(name).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const click = `onclick="openPlayerModal('${safe}')"`;
     const pointer = `cursor:pointer;`;
     return p&&p.photo
-      ?`<img ${click} src="${toHttpsUrl(p.photo)}" style="${pointer}width:36px;height:36px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;${ring};${isLose?'filter:grayscale(1);opacity:.58;':''}" onerror="this.style.display='none'">`
-      :`<div ${click} style="${pointer}width:36px;height:36px;border-radius:var(--su_profile_radius,50%);background:${isLose?'#cbd5e1':col};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:${isLose?'#64748b':'#fff'};${ring};${isLose?'opacity:.7;':''}">${name[0]}</div>`;
+      ?`<img ${click} src="${toHttpsUrl(p.photo)}" style="${pointer}width:${sz}px;height:${sz}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;${ring};${isLose?'filter:grayscale(1);opacity:.58;':''}" onerror="this.style.display='none'">`
+      :`<div ${click} style="${pointer}width:${sz}px;height:${sz}px;border-radius:var(--su_profile_radius,50%);background:${isLose?'#cbd5e1':col};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:${_s(13,11)}px;font-weight:900;color:${isLose?'#64748b':'#fff'};${ring};${isLose?'opacity:.7;':''}">${name[0]}</div>`;
   };
   const _info = name => {
     const p=_pc(name); if(!p) return '';
@@ -1198,9 +1250,10 @@ function proCompBracket(tn) {
   const champion = finalMatch?.winner==='A'?finalMatch.a:finalMatch?.winner==='B'?finalMatch.b:null;
   if (champion) {
     const cp = _pc(champion);
-    const cpPhoto = cp?.photo?`<img src="${toHttpsUrl(cp.photo)}" style="width:52px;height:52px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:3px solid rgba(255,255,255,.8)" onerror="this.outerHTML=''">`:
-      `<div style="width:52px;height:52px;border-radius:var(--su_profile_radius,50%);background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">${champion[0]}</div>`;
-    h += `<div style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(217,119,6,.35)">
+    const cpSz = _s(52, 34);
+    const cpPhoto = cp?.photo?`<img src="${toHttpsUrl(cp.photo)}" style="width:${cpSz}px;height:${cpSz}px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:3px solid rgba(255,255,255,.8)" onerror="this.outerHTML=''">`:
+      `<div style="width:${cpSz}px;height:${cpSz}px;border-radius:var(--su_profile_radius,50%);background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:${_s(22,16)}px;font-weight:900;color:#fff">${champion[0]}</div>`;
+    h += `<div style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:${_s(14,10)}px ${_s(20,14)}px;margin-bottom:${_s(16,12)}px;display:flex;align-items:center;gap:${_s(14,10)}px;box-shadow:0 4px 20px rgba(217,119,6,.35)">
       ${cpPhoto}
       <div>
         <div style="font-size:10px;color:rgba(255,255,255,.8);font-weight:700;letter-spacing:.5px">FINAL CHAMPION</div>
@@ -1214,10 +1267,10 @@ function proCompBracket(tn) {
   rounds.forEach((rnd, ri) => {
     const lbl=rndLabel(ri), col=rndColor(ri), bg=rndBg(ri);
     const isLast=ri===rounds.length-1;
-    const gap=ri===0?8:(Math.pow(2,ri)*60+8);
+    const gap=ri===0?_s(8,6):(Math.pow(2,ri)*_s(60,40)+_s(8,6));
     h += `<div style="display:flex;align-items:center">
-      <div style="min-width:${isLast?220:200}px;flex-shrink:0">
-        <div style="text-align:center;font-size:12px;font-weight:900;color:#fff;margin-bottom:10px;padding:7px 10px;background:${bg};border-radius:10px;box-shadow:0 3px 8px ${col}44;letter-spacing:.5px">${lbl}</div>
+      <div style="min-width:${isLast?_s(220,160):_s(200,150)}px;flex-shrink:0">
+        <div style="text-align:center;font-size:12px;font-weight:900;color:#fff;margin-bottom:${_s(10,8)}px;padding:${_s(7,6)}px ${_s(10,8)}px;background:${bg};border-radius:10px;box-shadow:0 3px 8px ${col}44;letter-spacing:.5px">${lbl}</div>
         <div style="display:flex;flex-direction:column;gap:${gap}px">`;
     rnd.forEach((m, mi) => {
       const aWin=m.winner==='A', bWin=m.winner==='B', isDone=!!m.winner;
@@ -1233,7 +1286,7 @@ function proCompBracket(tn) {
       const showScore=(isDone||isTieSaved) && hasGames && m._games.length>1;
       h += `<div style="border-radius:12px;overflow:hidden;background:var(--white);box-shadow:${isDone?`0 4px 16px ${col}28,0 1px 4px rgba(0,0,0,.08)`:isLast?`0 2px 12px rgba(0,0,0,.1)`:'0 1px 6px rgba(0,0,0,.07)'};border:${isLast&&isDone?`2px solid ${col}66`:isDone?`1.5px solid ${col}44`:'1.5px solid #e2e8f0'}">
         <!-- A 선수 -->
-        <div style="padding:9px 12px;border-bottom:1px solid #f1f5f9;background:${aWin?col+'18':aTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${aWin?`border-left:3px solid ${col}`:''};${!isDone||aWin?'':'opacity:.55'}">
+        <div style="padding:${_s(9,7)}px ${_s(12,10)}px;border-bottom:1px solid #f1f5f9;background:${aWin?col+'18':aTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:${_s(8,6)}px;${aWin?`border-left:3px solid ${col}`:''};${!isDone||aWin?'':'opacity:.55'}">
           ${_photo(m.a, aWin, isDone, col)}
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;font-weight:${aWin?'800':aTBD?'400':'550'};color:${aWin?col:aTBD?'#94a3b8':isDone?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.a&&!aTBD?'pointer':'default'}" onclick="${m.a&&!aTBD?`openPlayerModal('${(m.a||'').replace(/'/g,"\\'")}')`:''}">${m.a||'TBD'}</div>
@@ -1243,7 +1296,7 @@ function proCompBracket(tn) {
           ${aWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
         <!-- B 선수 -->
-        <div style="padding:9px 12px;background:${bWin?col+'18':bTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:8px;${bWin?`border-left:3px solid ${col}`:''};${!isDone||bWin?'':'opacity:.55'}">
+        <div style="padding:${_s(9,7)}px ${_s(12,10)}px;background:${bWin?col+'18':bTBD?'#f8fafc':'#fff'};display:flex;align-items:center;gap:${_s(8,6)}px;${bWin?`border-left:3px solid ${col}`:''};${!isDone||bWin?'':'opacity:.55'}">
           ${_photo(m.b, bWin, isDone, col)}
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;font-weight:${bWin?'800':bTBD?'400':'550'};color:${bWin?col:bTBD?'#94a3b8':isDone?'#94a3b8':'#374151'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:${m.b&&!bTBD?'pointer':'default'}" onclick="${m.b&&!bTBD?`openPlayerModal('${(m.b||'').replace(/'/g,"\\'")}')`:''}">${m.b||'TBD'}</div>
@@ -1253,15 +1306,15 @@ function proCompBracket(tn) {
           ${bWin?`<span style="font-size:9px;font-weight:900;color:#fff;background:${col};padding:2px 7px;border-radius:6px;flex-shrink:0">WIN</span>`:''}
         </div>
         <!-- 맵 -->
-        ${m.map?`<div style="padding:3px 12px;font-size:11px;font-weight:600;color:var(--text3);background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:8px;flex-wrap:wrap"><span>🗺️ ${m.map}</span></div>`:''}
-        ${m.note?`<div style="padding:4px 12px;font-size:10px;color:#64748b;background:#f8fafc;border-top:1px solid #f1f5f9;line-height:1.5;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
-        ${isTieSaved?`<div style="padding:3px 12px;font-size:11px;font-weight:900;color:#b45309;background:#fffbeb;border-top:1px solid #f1f5f9;display:flex;gap:8px;align-items:center">
+        ${m.map?`<div style="padding:${_s(3,3)}px ${_s(12,10)}px;font-size:11px;font-weight:600;color:var(--text3);background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:${_s(8,6)}px;flex-wrap:wrap"><span>🗺️ ${m.map}</span></div>`:''}
+        ${m.note?`<div style="padding:${_s(4,4)}px ${_s(12,10)}px;font-size:10px;color:#64748b;background:#f8fafc;border-top:1px solid #f1f5f9;line-height:1.5;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
+        ${isTieSaved?`<div style="padding:${_s(3,3)}px ${_s(12,10)}px;font-size:11px;font-weight:900;color:#b45309;background:#fffbeb;border-top:1px solid #f1f5f9;display:flex;gap:${_s(8,6)}px;align-items:center">
           <span>⚖️ 동률 저장</span><span style="margin-left:auto">${scoreA}:${scoreB}</span>
         </div>`:''}
         <!-- 게임 상세 -->
-        ${hasGames?`<div style="padding:3px 12px 4px;font-size:9px;background:#f8fafc;border-top:1px solid #f1f5f9;color:#64748b;line-height:1.9">${m._games.map((g,gi)=>`<span style="margin-right:8px">${gi+1}G·<b style="color:${g.winner==='A'?col:'#dc2626'}">${g.winner==='A'?m.a||'A':m.b||'B'}</b>${g.map?` <span style="color:#94a3b8">${g.map}</span>`:''}</span>`).join('')}</div>`:''}
+        ${hasGames?`<div style="padding:${_s(3,3)}px ${_s(12,10)}px ${_s(4,4)}px;font-size:9px;background:#f8fafc;border-top:1px solid #f1f5f9;color:#64748b;line-height:1.9">${m._games.map((g,gi)=>`<span style="margin-right:${_s(8,6)}px">${gi+1}G·<b style="color:${g.winner==='A'?col:'#dc2626'}">${g.winner==='A'?m.a||'A':m.b||'B'}</b>${g.map?` <span style="color:#94a3b8">${g.map}</span>`:''}</span>`).join('')}</div>`:''}
         <!-- 옵션 버튼 -->
-        <div style="padding:5px 8px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:3px;flex-wrap:wrap">
+        <div style="padding:${_s(5,5)}px ${_s(8,7)}px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;gap:${_s(3,3)}px;flex-wrap:wrap">
           ${isDone?(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs no-export" style="min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="_openProCompBktShareCard('${tn.id}',${ri},${mi})">🎴 공유 카드</button>`:'';})():''}
           ${isLoggedIn?`${hasBoth?`<button class="btn btn-xs" style="flex:1;font-size:9px;${aWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'A')">${(m.a||'A').slice(0,5)} 승</button>
             <button class="btn btn-xs" style="flex:1;font-size:9px;${bWin?`background:${col};color:#fff;border-color:${col}`:''}" onclick="proCompSetBktWinner('${tn.id}',${ri},${mi},'B')">${(m.b||'B').slice(0,5)} 승</button>`:''}
@@ -1274,7 +1327,7 @@ function proCompBracket(tn) {
     });
     h += `</div></div>`;
     // 라운드 간 화살표 커넥터
-    if (ri < rounds.length-1) h += `<div style="width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;color:#cbd5e1;font-weight:900;align-self:center;padding-top:36px">➔</div>`;
+    if (ri < rounds.length-1) h += `<div style="width:${_s(28,22)}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:${_s(18,14)}px;color:#cbd5e1;font-weight:900;align-self:center;padding-top:${_s(36,26)}px">➔</div>`;
     h += `</div>`;
   });
   h += `</div></div>`;
@@ -1560,6 +1613,12 @@ function proCompTourMatchInput(tn){
     const _cardRound = item._rnd || m._roundLabel || round;
     const pa = players.find(p=>p.name===m.a);
     const pb = players.find(p=>p.name===m.b);
+    const _ls = (typeof proCompGetLayoutScale==='function') ? proCompGetLayoutScale() : 1;
+    const _mainGap = Math.max(6, Math.round(10*_ls));
+    const _mainPadT = Math.max(8, Math.round(10*_ls));
+    const _mainPadX = Math.max(10, Math.round(12*_ls));
+    const _mainPadB = Math.max(10, Math.round(12*_ls));
+    const _scoreMinW = Math.max(48, Math.round(60*_ls));
     const isDone = !!m.winner;
     const aWin = isDone && m.winner==='A';
     const bWin = isDone && m.winner==='B';
@@ -1572,17 +1631,32 @@ function proCompTourMatchInput(tn){
       const isLose = isDone && !isWin;
       const canClick = !!name;
       const photoClick = canClick ? `onclick="openPlayerModal('${escJS(name)}')" title="상세 보기"` : '';
+      const _isMob = (typeof window!=='undefined' && window.matchMedia && window.matchMedia('(max-width:768px)').matches);
       const av = (typeof proCompGetAvatarPx==='function') ? proCompGetAvatarPx() : 52;
       const fit = (typeof proCompGetAvatarFit==='function') ? proCompGetAvatarFit() : 'cover';
       const bgSize = (fit==='fill') ? '100% 100%' : (fit==='contain' ? 'contain' : 'cover');
-      const minW = Math.max(148, av + 60);
-      const minH = Math.max(180, av + 80);
+      if(_isMob){
+        const sz = Math.max(36, Math.round(av * _ls));
+        const ring = isWin
+          ? 'box-shadow:0 0 0 2px rgba(34,197,94,.55),0 10px 22px rgba(15,23,42,.14);'
+          : 'box-shadow:0 10px 22px rgba(15,23,42,.10);';
+        const photo = (p && p.photo) ? toHttpsUrl(p.photo) : '';
+        const initial = (name||'미').slice(0,1);
+        return `<div ${photoClick} style="width:${sz}px;height:${sz}px;flex-shrink:0;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;${ring}${isLose?'opacity:.85;filter:grayscale(1);':''}">
+          ${photo?`<img src="${photo}" style="width:100%;height:100%;object-fit:${fit};display:block" onerror="this.style.display='none'">`:`<span style="font-size:${Math.max(14,Math.round(sz*0.42))}px;font-weight:1000;color:#94a3b8">${initial}</span>`}
+        </div>`;
+      }
+      const minW = Math.round(Math.max(148, av + 60) * _ls);
+      const minH = Math.round(Math.max(180, av + 80) * _ls);
+      const padT = Math.max(6, Math.round(10*_ls));
+      const padX = Math.max(6, Math.round(10*_ls));
+      const padB = Math.max(8, Math.round(12*_ls));
       const bgImg = (p && p.photo) ? `background-image:url('${toHttpsUrl(p.photo)}');` : '';
       const bgFallback = (!p || !p.photo)
         ? `background:linear-gradient(135deg,${isWin?'#16a34a':'#64748b'}33,${isWin?'#16a34a':'#64748b'}11);`
         : '';
       const initial = (name||'미').slice(0,1);
-      return `<div ${photoClick} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:10px 10px 12px;border-radius:14px;min-width:${minW}px;min-height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
+      return `<div ${photoClick} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:${padT}px ${padX}px ${padB}px;border-radius:14px;width:${minW}px;height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
         <div style="position:absolute;inset:0;background:${p&&p.photo
           ? `linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.28) 50%, rgba(15,23,42,.72) 100%)`
           : `linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.18))`
@@ -1608,29 +1682,37 @@ function proCompTourMatchInput(tn){
     const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
     const _hexRgb2=(h)=>{const s=String(h||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
     const _sideRgbVars2=`--rec-side-left-rgb:${_hexRgb2(ca||'#3b82f6')};--rec-side-right-rgb:${_hexRgb2(cb||'#ef4444')};`;
-    return `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars2}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?col:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?col:cb};margin-bottom:8px">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:70px">
+    const _menuBtn = `<button class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openPcStageActionMenu(this,'${tn.id}','${_cardRound}',${item.src==='stage'?item.idx:-1},'${item.src}',${item.ri??-1},${item.mi??-1})">⋯</button>`;
+    const _isMob = (typeof window!=='undefined' && window.matchMedia && window.matchMedia('(max-width:768px)').matches);
+    const _sc = (typeof proCompGetScoreScale==='function') ? proCompGetScoreScale() : 1;
+    const _scoreFont = Math.round((_isMob?14:18) * _sc);
+    const _scorePy = Math.round((_isMob?4:6) * _sc);
+    const _scorePx = Math.round((_isMob?9:12) * _sc);
+    const _scoreSep = _isMob ? 10 : 12;
+    return `<div class="grp-match-wrap">
+      <div class="grp-card-meta-bar no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
         <span class="grp-badge" style="background:linear-gradient(135deg,${col},${col}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${col}55">${_cardRound}</span>
-        <span style="font-size:10px;color:var(--gray-l);font-weight:600">${displayNo}경기</span>
+        <span style="font-size:10px;color:var(--gray-l);font-weight:700">${displayNo}경기</span>
         ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
+        <span style="flex:1"></span>
+        ${_menuBtn}
       </div>
-      <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
+      <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars2}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?col:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?col:cb}">
+      <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:${_mainGap}px;justify-content:center;flex-wrap:wrap;padding:${_mainPadT}px ${_mainPadX}px ${_mainPadB}px">
         ${_pcard(pa, m.a, aWin)}
-        <div class="grp-score-col" style="text-align:center;min-width:60px">
-          ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;padding:6px 12px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
+        <div class="grp-score-col" style="text-align:center;min-width:${_scoreMinW}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+          ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:${_scoreFont}px;padding:${_scorePy}px ${_scorePx}px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
             <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'패'}</span>
-            <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
+            <span style="color:var(--gray-l);font-size:${_scoreSep}px;margin:0 2px">:</span>
             <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
           </div>
           
-          ${m.map?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">🗺️ ${m.map}</div>`:''}
-          ${m.note?`<div style="font-size:10px;color:#94a3b8;margin-top:2px;max-width:180px;line-height:1.45;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
+          ${m.map?`<div style="font-size:${_isMob?9:10}px;color:var(--gray-l);max-width:${_isMob?150:190}px;line-height:1.25;word-break:break-word">🗺️ ${m.map}</div>`:''}
+          ${m.note?`<div style="font-size:${_isMob?9:10}px;color:#94a3b8;max-width:${_isMob?150:190}px;line-height:1.45;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
           `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${col}">VS</div>`}
         </div>
         ${_pcard(pb, m.b, bWin)}
       </div>
-      <div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-        <button class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openPcStageActionMenu(this,'${tn.id}','${_cardRound}',${item.src==='stage'?item.idx:-1},'${item.src}',${item.ri??-1},${item.mi??-1})">⋯</button>
       </div>
     </div>`;
   };
@@ -1682,4 +1764,3 @@ function proCompTourMatchInput(tn){
     ${listHTML}
   </div>`;
 }
-

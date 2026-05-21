@@ -29,6 +29,12 @@ function _renderB2ImgSettingsWrap(){
     if(!wrap) return false;
     if(typeof _b2BuildImageControlGroup !== 'function') return false;
     const _shuffle = (localStorage.getItem('su_b2_profile_shuffle') ?? '1') === '1';
+    const _selName = (localStorage.getItem('su_b2_swap_delay_player') || '').trim();
+    const _opts = (Array.isArray(window.players) ? window.players : [])
+      .map(p=>String(p&&p.name||'').trim()).filter(Boolean)
+      .sort((a,b)=>a.localeCompare(b,'ko'))
+      .map(n=>`<option value="${esc(n)}"${n===_selName?' selected':''}>${esc(n)}</option>`)
+      .join('');
     wrap.innerHTML=`
       <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">이미지 1 (기본 이미지)</div>
       ${_b2BuildImageControlGroup('','primary','이미지 1',true)}
@@ -40,12 +46,94 @@ function _renderB2ImgSettingsWrap(){
         이미지탭(프로필) 목록 랜덤(셔플)
       </label>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ PC 좌/우 및 대학 필터에서도 적용됩니다(보기 재미용)</div>
+      <hr style="border:none;border-top:1px dashed var(--border2);margin:14px 0">
+      <div style="font-weight:900;font-size:12px;color:var(--text2);margin-bottom:10px">전환 시간(선수별)</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <select id="cfg-b2-delay-player" style="flex:1;min-width:180px" onchange="localStorage.setItem('su_b2_swap_delay_player',this.value||''); if(typeof _cfgB2RenderSwapDelay==='function') _cfgB2RenderSwapDelay(this.value||'');">
+          <option value="">선수 선택</option>
+          ${_opts}
+        </select>
+        <button class="btn btn-xs btn-w" onclick="localStorage.setItem('su_b2_swap_delay_player',''); const sel=document.getElementById('cfg-b2-delay-player'); if(sel) sel.value=''; if(typeof _cfgB2RenderSwapDelay==='function') _cfgB2RenderSwapDelay('');">초기화</button>
+      </div>
+      <div id="cfg-b2-delay-area" style="padding:12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px">
+        <div style="font-size:12px;color:var(--gray-l)">선수를 선택하면 이미지 2→3, 3→4, 4→5 전환 시간을 설정할 수 있습니다.</div>
+      </div>
     `;
+    try{ if(typeof window._cfgB2RenderSwapDelay==='function') window._cfgB2RenderSwapDelay(_selName); }catch(e){}
     return true;
   }catch(e){
     return false;
   }
 }
+
+window._cfgB2RenderSwapDelay = function(playerName){
+  try{
+    const area = document.getElementById('cfg-b2-delay-area');
+    if(!area) return;
+    const name = String(playerName||'').trim();
+    if(!name){
+      area.innerHTML = `<div style="font-size:12px;color:var(--gray-l)">선수를 선택하면 이미지 2→3, 3→4, 4→5 전환 시간을 설정할 수 있습니다.</div>`;
+      return;
+    }
+    const p = (Array.isArray(window.players)?window.players:[]).find(x=>x && x.name===name);
+    if(!p){
+      area.innerHTML = `<div style="font-size:12px;color:var(--gray-l)">선수를 찾을 수 없습니다.</div>`;
+      return;
+    }
+    const clamp = (v)=>{ const n = parseFloat(v); if(isNaN(n)) return 1; return Math.max(0.2, Math.min(60, n)); };
+    const d23 = clamp(p.photoDelay23 ?? 1);
+    const d34 = clamp(p.photoDelay34 ?? 1);
+    const d45 = clamp(p.photoDelay45 ?? 1);
+    const d51 = clamp(p.photoDelay51 ?? 1);
+    const safe = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    area.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">2 → 3 (초)</div>
+          <input type="number" min="0.2" max="60" step="0.1" value="${d23}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">3 → 4 (초)</div>
+          <input type="number" min="0.2" max="60" step="0.1" value="${d34}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">4 → 5 (초)</div>
+          <input type="number" min="0.2" max="60" step="0.1" value="${d45}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">5 → 1 (초)</div>
+          <input type="number" min="0.2" max="60" step="0.1" value="${d51}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:8px">값은 즉시 저장됩니다. 기본값(1초)은 저장하지 않습니다.</div>
+    `;
+  }catch(e){}
+};
+window._cfgB2SaveSwapDelay = function(playerName){
+  try{
+    const area = document.getElementById('cfg-b2-delay-area');
+    if(!area) return;
+    const name = String(playerName||'').trim();
+    const p = (Array.isArray(window.players)?window.players:[]).find(x=>x && x.name===name);
+    if(!p) return;
+    const inputs = area.querySelectorAll('input[type="number"]');
+    if(!inputs || inputs.length < 4) return;
+    const clamp = (v)=>{ const n = parseFloat(v); if(isNaN(n)) return 1; return Math.max(0.2, Math.min(60, n)); };
+    const d23 = clamp(inputs[0].value);
+    const d34 = clamp(inputs[1].value);
+    const d45 = clamp(inputs[2].value);
+    const d51 = clamp(inputs[3].value);
+    if(d23===1) delete p.photoDelay23; else p.photoDelay23 = d23;
+    if(d34===1) delete p.photoDelay34; else p.photoDelay34 = d34;
+    if(d45===1) delete p.photoDelay45; else p.photoDelay45 = d45;
+    if(d51===1) delete p.photoDelay51; else p.photoDelay51 = d51;
+    if(typeof window.save === 'function') window.save();
+    try{
+      const cur = window._b2SelectedPlayer && window._b2SelectedPlayer.name;
+      if(cur === name && typeof window._b2ScheduleImageSwap === 'function') window._b2ScheduleImageSwap(name);
+    }catch(e){}
+  }catch(e){}
+};
 function _ensureB2ImgSettingsWrap(retry){
   if(_renderB2ImgSettingsWrap()) return;
   if(retry === false) return;
@@ -403,6 +491,8 @@ window.cfgSetRecCardSettings = function(){
   const ava = parseInt(document.getElementById('cfg-ava-scale')?.value||'100',10);
   const vsAlign = (document.getElementById('cfg-rc-vs-align')?.value || 'center').trim(); // left|center|right
   const scScale = parseInt(document.getElementById('cfg-rc-score-scale')?.value||'88',10);
+  const lpcEl = document.getElementById('cfg-rc-layout-pc');
+  const lmbEl = document.getElementById('cfg-rc-layout-mb');
   const ckA = (document.getElementById('cfg-team-ck-a')?.value || '#2563eb').trim();
   const ckB = (document.getElementById('cfg-team-ck-b')?.value || '#6366f1').trim();
   const proA = (document.getElementById('cfg-team-pro-a')?.value || '#0f766e').trim();
@@ -420,6 +510,16 @@ window.cfgSetRecCardSettings = function(){
   try{ localStorage.setItem('su_avatar_scale', String(Math.max(70,Math.min(160,ava))/100)); }catch(e){}
   try{ localStorage.setItem('su_rc_vs_align', ['left','center','right'].includes(vsAlign)?vsAlign:'center'); }catch(e){}
   try{ localStorage.setItem('su_rc_score_scale', String(Math.max(50,Math.min(130,scScale)))); }catch(e){}
+  try{
+    if(lpcEl){
+      const v = parseInt(lpcEl.value||'100',10) || 100;
+      localStorage.setItem('su_rc_layout_scale_pc', String(Math.max(60,Math.min(120,v))));
+    }
+    if(lmbEl){
+      const v = parseInt(lmbEl.value||'100',10) || 100;
+      localStorage.setItem('su_rc_layout_scale_mb', String(Math.max(60,Math.min(120,v))));
+    }
+  }catch(e){}
   try{ if(_hex(ckA)) localStorage.setItem('su_team_color_ck_a', _hex(ckA)); }catch(e){}
   try{ if(_hex(ckB)) localStorage.setItem('su_team_color_ck_b', _hex(ckB)); }catch(e){}
   try{ if(_hex(proA)) localStorage.setItem('su_team_color_pro_a', _hex(proA)); }catch(e){}
@@ -462,8 +562,26 @@ window.cfgSetRecCardSettings = function(){
     document.documentElement.style.setProperty('--rc-score-scale', String(_ss/100));
   }catch(e){}
   try{ if(typeof window._applyRecCardTheme === 'function') window._applyRecCardTheme(); }catch(e){}
+  try{ window.applyRecLayoutScale && window.applyRecLayoutScale(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
 };
+
+window.applyRecLayoutScale = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth||1024));
+    const isMobile = w <= 768;
+    const key = isMobile ? 'su_rc_layout_scale_mb' : 'su_rc_layout_scale_pc';
+    const pct = parseInt(localStorage.getItem(key) || '100', 10);
+    const v = Math.max(60, Math.min(120, isNaN(pct)?100:pct)) / 100;
+    document.documentElement.style.setProperty('--rc-layout-scale', String(v));
+  }catch(e){}
+};
+try{
+  if(!window._recLayoutScaleBound){
+    window._recLayoutScaleBound = true;
+    window.addEventListener('resize', ()=>{ try{ window.applyRecLayoutScale && window.applyRecLayoutScale(); }catch(e){} }, {passive:true});
+  }
+}catch(e){}
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 미니대전/대학대전/대학CK/티어대회/프로리그/대회: 대학(팀) 버튼 크기(참여자 버튼은 유지)
@@ -706,6 +824,16 @@ window.cfgSetTcScoreScale = function(){
   try{ if(typeof render==='function') render(); }catch(e){}
 };
 
+window._applyTcScoreScale = function(){
+  try{
+    const isMb = window.innerWidth <= 768;
+    const pcV = parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10);
+    const mbV = parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10);
+    const val = isMb ? Math.max(50,Math.min(150,mbV)) : Math.max(50,Math.min(150,pcV));
+    document.documentElement.style.setProperty('--tc-score-scale', String(val/100));
+  }catch(e){}
+};
+
 try{
   if(!window._tcVsGapBound){
     window._tcVsGapBound = true;
@@ -783,17 +911,34 @@ window.cfgSetRecBgFxAll = function(on){
   try{ if(typeof render==='function') render(); }catch(e){}
 };
 
-// ─────────────────────────────────────────────────────────────
-// (요청사항) 프로리그 대회(프로리그탭) 조별리그/대진표 기록 카드: 프로필 크기 PC/모바일 분리
-// ─────────────────────────────────────────────────────────────
 window.cfgSetProCompAvatarSettings = function(){
   try{
     const pc = parseInt(document.getElementById('cfg-procomp-ava-pc')?.value||'52',10) || 52;
     const mb = parseInt(document.getElementById('cfg-procomp-ava-mb')?.value||'40',10) || 40;
     const fit = String(document.getElementById('cfg-procomp-ava-fit')?.value||'cover').trim();
-    localStorage.setItem('su_procomp_avatar_pc', String(Math.max(28,Math.min(84,pc))));
-    localStorage.setItem('su_procomp_avatar_mb', String(Math.max(24,Math.min(72,mb))));
+    localStorage.setItem('su_procomp_avatar_pc', String(Math.max(28,Math.min(200,pc))));
+    localStorage.setItem('su_procomp_avatar_mb', String(Math.max(24,Math.min(160,mb))));
     localStorage.setItem('su_procomp_avatar_fit', (fit==='contain'||fit==='cover'||fit==='fill') ? fit : 'cover');
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+window.cfgSetProCompScoreSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-procomp-score-pc')?.value||'100',10) || 100;
+    const mb = parseInt(document.getElementById('cfg-procomp-score-mb')?.value||'100',10) || 100;
+    localStorage.setItem('su_procomp_score_scale_pc', String(Math.max(60,Math.min(160,pc))));
+    localStorage.setItem('su_procomp_score_scale_mb', String(Math.max(60,Math.min(160,mb))));
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+window.cfgSetProCompLayoutSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-procomp-layout-pc')?.value||'100',10) || 100;
+    const mb = parseInt(document.getElementById('cfg-procomp-layout-mb')?.value||'100',10) || 100;
+    localStorage.setItem('su_procomp_layout_scale_pc', String(Math.max(60,Math.min(120,pc))));
+    localStorage.setItem('su_procomp_layout_scale_mb', String(Math.max(60,Math.min(120,mb))));
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
 };
@@ -1887,6 +2032,7 @@ window.cfgImportSettingsCode = function(){
     });
   }catch(e){}
   try{ if(typeof window._applyHeaderSettings==='function') window._applyHeaderSettings(); }catch(e){}
+  try{ if(typeof window.applyProfileShapeVars==='function') window.applyProfileShapeVars(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
   alert('✅ 적용 완료');
 };
@@ -2360,13 +2506,16 @@ let _catSecs = (() => {
   const norm = _cfgMenuNormalize(raw || {});
   try{ window._cfgCatOrder = norm.catOrder; }catch(e){}
   // catSecs만 rCfg/_cfgApplyCat에서 사용
-  return norm.catSecs;
+  const cs = norm.catSecs;
+  try{ window._catSecs = cs; }catch(e){}
+  return cs;
 })();
 
 function _cfgMenuApplyAndRerender(layout){
   const norm = _cfgMenuNormalize(layout || {});
   _cfgMenuSave(norm);
   _catSecs = norm.catSecs;
+  try{ window._catSecs = _catSecs; }catch(e){}
   try{ window._cfgCatOrder = norm.catOrder; }catch(e){}
   try{
     if(!Object.keys(_catSecs).includes(window._cfgCat)){
@@ -4681,7 +4830,7 @@ ${_scfgD('notice','📢 공지 관리')}
             {v:'diamond', label:'기울임',    desc:'사선 스큐',      icon:'♦️'},
             {v:'tag',     label:'꼬리표형',  desc:'삼각 꼬리',      icon:'🏷️'},
             {v:'hex',     label:'육각형',    desc:'헥사곤 클립',    icon:'⬡'},
-          ].map(s=>{const sel=(localStorage.getItem('su_rc_team_chip_shape')||'default')===s.v; return \`<button type="button" onclick="cfgSetTeamChipShape('\${s.v}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:12px;border:\${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:\${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer"><span style="font-size:14px">\${s.icon}</span><span style="font-size:11px;font-weight:900;color:\${sel?'var(--blue)':'var(--text2)'}">\${s.label}</span><span style="font-size:9px;color:var(--gray-l);font-weight:700">\${s.desc}</span></button>\`;}).join('')}
+          ].map(s=>{const sel=(localStorage.getItem('su_rc_team_chip_shape')||'default')===s.v; return `<button type="button" onclick="cfgSetTeamChipShape('${s.v}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:12px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer"><span style="font-size:14px">${s.icon}</span><span style="font-size:11px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'}">${s.label}</span><span style="font-size:9px;color:var(--gray-l);font-weight:700">${s.desc}</span></button>`;}).join('')}
         </div>
       </div>
 
@@ -4833,14 +4982,14 @@ ${_scfgD('notice','📢 공지 관리')}
           <input type="range" id="cfg-tc-score-pc" min="50" max="150" step="5"
             value="${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10)||82))}"
             oninput="document.getElementById('cfg-tc-score-pc-v').textContent=this.value+'%'" onchange="cfgSetTcScoreScale()" style="width:140px">
-          <span id="cfg-tc-score-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10)||82)}%</span>
+          <span id="cfg-tc-score-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10)||82))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
           <input type="range" id="cfg-tc-score-mb" min="50" max="150" step="5"
             value="${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10)||75))}"
             oninput="document.getElementById('cfg-tc-score-mb-v').textContent=this.value+'%'" onchange="cfgSetTcScoreScale()" style="width:140px">
-          <span id="cfg-tc-score-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10)||75)}%</span>
+          <span id="cfg-tc-score-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10)||75))}%</span>
         </div>
         <span style="font-size:11px;color:var(--gray-l)">※ 대회탭 조별리그/토너 기록카드 스코어 크기</span>
       </div>
@@ -4995,6 +5144,8 @@ ${_scfgD('notice','📢 공지 관리')}
     const pc = parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52;
     const mb = parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40;
     const fit = (localStorage.getItem('su_procomp_avatar_fit')||'cover');
+    const scPc = parseInt(localStorage.getItem('su_procomp_score_scale_pc')||'100',10)||100;
+    const scMb = parseInt(localStorage.getItem('su_procomp_score_scale_mb')||'100',10)||100;
     return _scfgD('procompcard','⭐ 프로리그 대회 카드(프로리그탭)') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">프로리그탭 → 프로리그 대회 → 조별리그/대진표 기록 카드에서 선수(스트리머) 프로필 크기를 조절합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
@@ -5009,21 +5160,37 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">PC</div>
-        <input type="range" id="cfg-procomp-ava-pc" min="28" max="84" step="2" value="${Math.max(28,Math.min(84,pc))}"
+        <input type="range" id="cfg-procomp-ava-pc" min="28" max="200" step="2" value="${Math.max(28,Math.min(200,pc))}"
           oninput="document.getElementById('cfg-procomp-ava-pc-v').textContent=this.value+'px'"
           onchange="cfgSetProCompAvatarSettings()" style="width:100%">
-        <div id="cfg-procomp-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(28,Math.min(84,pc))}px</div>
+        <div id="cfg-procomp-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(28,Math.min(200,pc))}px</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
-        <input type="range" id="cfg-procomp-ava-mb" min="24" max="72" step="2" value="${Math.max(24,Math.min(72,mb))}"
+        <input type="range" id="cfg-procomp-ava-mb" min="24" max="160" step="2" value="${Math.max(24,Math.min(160,mb))}"
           oninput="document.getElementById('cfg-procomp-ava-mb-v').textContent=this.value+'px'"
           onchange="cfgSetProCompAvatarSettings()" style="width:100%">
-        <div id="cfg-procomp-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(24,Math.min(72,mb))}px</div>
+        <div id="cfg-procomp-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(24,Math.min(160,mb))}px</div>
       </div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
         ※ 값 변경 후 자동으로 재렌더링됩니다. 카드가 너무 커지면 크기를 조금 낮춰주세요.
       </div>
+
+      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+      <div style="font-size:12px;font-weight:900;color:var(--text2)">스코어 버튼 크기</div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC</div>
+        <input type="range" id="cfg-procomp-score-pc" min="60" max="160" step="5" value="${Math.max(60,Math.min(160,scPc))}"
+          oninput="document.getElementById('cfg-procomp-score-pc-v').textContent=this.value+'%'" onchange="cfgSetProCompScoreSettings()" style="width:100%">
+        <div id="cfg-procomp-score-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(160,scPc))}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
+        <input type="range" id="cfg-procomp-score-mb" min="60" max="160" step="5" value="${Math.max(60,Math.min(160,scMb))}"
+          oninput="document.getElementById('cfg-procomp-score-mb-v').textContent=this.value+'%'" onchange="cfgSetProCompScoreSettings()" style="width:100%">
+        <div id="cfg-procomp-score-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(160,scMb))}%</div>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l)">※ 프로리그 대회 카드의 스코어 영역 크기에 적용됩니다.</div>
     </div>
   </details>`;
   })()}
@@ -5303,11 +5470,11 @@ ${_scfgD('notice','📢 공지 관리')}
           ].map(t=>{
             const cur=localStorage.getItem('su_tab_style')||'default';
             const sel=cur===t.v;
-            return \`<button type="button" onclick="cfgSetTabStyle('\${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:\${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:\${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
-              <span style="font-size:18px;line-height:1">\${t.icon}</span>
-              <span style="font-size:11px;font-weight:900;color:\${sel?'var(--blue)':'var(--text2)'};line-height:1.2">\${t.label}</span>
-              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">\${t.desc}</span>
-            </button>\`;
+            return `<button type="button" onclick="cfgSetTabStyle('${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
+              <span style="font-size:18px;line-height:1">${t.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'};line-height:1.2">${t.label}</span>
+              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">${t.desc}</span>
+            </button>`;
           }).join('')}
         </div>
       </div>
@@ -5328,11 +5495,11 @@ ${_scfgD('notice','📢 공지 관리')}
           ].map(t=>{
             const cur=localStorage.getItem('su_submenu_btn_style')||'default';
             const sel=cur===t.v;
-            return \`<button type="button" onclick="cfgSetSubmenuBtnStyle('\${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:\${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:\${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
-              <span style="font-size:18px;line-height:1">\${t.icon}</span>
-              <span style="font-size:11px;font-weight:900;color:\${sel?'var(--blue)':'var(--text2)'};line-height:1.2">\${t.label}</span>
-              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">\${t.desc}</span>
-            </button>\`;
+            return `<button type="button" onclick="cfgSetSubmenuBtnStyle('${t.v}')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:12px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--surface)'};cursor:pointer;text-align:center">
+              <span style="font-size:18px;line-height:1">${t.icon}</span>
+              <span style="font-size:11px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'};line-height:1.2">${t.label}</span>
+              <span style="font-size:9px;color:var(--gray-l);font-weight:700;line-height:1.3">${t.desc}</span>
+            </button>`;
           }).join('')}
         </div>
       </div>
@@ -6969,16 +7136,18 @@ function saveImageSettings(){
 
 // ── 우클릭 이미지 조절 메뉴 ──
 // tier-tour.js 등 다른 스크립트와 전역 식별자 충돌 방지
-let _settingsImgContextMenuEl = null;
-let _currentImageTarget = null;
+try{
+  if(typeof window._settingsImgContextMenuEl === 'undefined') window._settingsImgContextMenuEl = null;
+  if(typeof window._currentImageTarget === 'undefined') window._currentImageTarget = null;
+}catch(e){}
 
 function showImageContextMenu(e, imgElement){
   e.preventDefault();
-  _currentImageTarget = imgElement;
+  window._currentImageTarget = imgElement;
   
   // 기존 메뉴 제거
-  if(_settingsImgContextMenuEl){
-    _settingsImgContextMenuEl.remove();
+  if(window._settingsImgContextMenuEl){
+    window._settingsImgContextMenuEl.remove();
   }
   
   const menu = document.createElement('div');
@@ -7017,14 +7186,14 @@ function showImageContextMenu(e, imgElement){
   `;
   
   document.body.appendChild(menu);
-  _settingsImgContextMenuEl = menu;
+  window._settingsImgContextMenuEl = menu;
   
   // 메뉴 외부 클릭 시 닫기
   setTimeout(()=>{
     const closeMenu = (ev)=>{
       if(!menu.contains(ev.target)){
         menu.remove();
-        _settingsImgContextMenuEl = null;
+        window._settingsImgContextMenuEl = null;
         document.removeEventListener('click', closeMenu);
       }
     };
@@ -7033,24 +7202,24 @@ function showImageContextMenu(e, imgElement){
 }
 
 function applyImageContextStyle(){
-  if(!_currentImageTarget) return;
+  if(!window._currentImageTarget) return;
   
   const scale = document.getElementById('ctx-scale')?.value || 1;
   const brightness = document.getElementById('ctx-bright')?.value || 1;
   
-  _currentImageTarget.style.transform = `scale(${scale})`;
-  _currentImageTarget.style.filter = `brightness(${brightness})`;
-  _currentImageTarget.dataset.scale = scale;
-  _currentImageTarget.dataset.brightness = brightness;
+  window._currentImageTarget.style.transform = `scale(${scale})`;
+  window._currentImageTarget.style.filter = `brightness(${brightness})`;
+  window._currentImageTarget.dataset.scale = scale;
+  window._currentImageTarget.dataset.brightness = brightness;
   
-  if(_settingsImgContextMenuEl){
-    _settingsImgContextMenuEl.remove();
-    _settingsImgContextMenuEl = null;
+  if(window._settingsImgContextMenuEl){
+    window._settingsImgContextMenuEl.remove();
+    window._settingsImgContextMenuEl = null;
   }
 }
 
 // ── 랜덤 이미지 회전 ──
-let _randomRotationTimer = null;
+try{ if(typeof window._randomRotationTimer === 'undefined') window._randomRotationTimer = null; }catch(e){}
 
 function startRandomRotation(){
   stopRandomRotation();
@@ -7059,15 +7228,15 @@ function startRandomRotation(){
   
   const interval = (imgSettings.interval || 5) * 1000;
   
-  _randomRotationTimer = setInterval(()=>{
+  window._randomRotationTimer = setInterval(()=>{
     rotateRandomImage();
   }, interval);
 }
 
 function stopRandomRotation(){
-  if(_randomRotationTimer){
-    clearInterval(_randomRotationTimer);
-    _randomRotationTimer = null;
+  if(window._randomRotationTimer){
+    clearInterval(window._randomRotationTimer);
+    window._randomRotationTimer = null;
   }
 }
 
@@ -7080,7 +7249,7 @@ function rotateRandomImage(){
     const randomPlayer = players[Math.floor(Math.random() * players.length)];
     
     // 전체대학 보기
-    if(currentTab === 'total'){
+    if((window._settingsCurrentTab||'total') === 'total'){
       const imgContainer = document.querySelector('.random-image-container');
       if(imgContainer && randomPlayer.photo){
         imgContainer.src = toHttpsUrl(randomPlayer.photo);
@@ -7096,13 +7265,13 @@ function rotateRandomImage(){
 }
 
 // 현재 탭 추적
-let currentTab = 'total';
+try{ if(typeof window._settingsCurrentTab !== 'string') window._settingsCurrentTab = 'total'; }catch(e){}
 
 // 탭 변경 시 회전 제어
 if(!window.__swWrappedForSettings){
   const originalSw = window.sw;
   window.sw = function(tab, el){
-    currentTab = tab;
+    try{ window._settingsCurrentTab = tab; }catch(e){}
     const ret = originalSw ? originalSw.apply(this, arguments) : undefined;
     let imgSettings = {};
     try{
@@ -8558,22 +8727,22 @@ function renameUnivAcrossData(oldName,newName){
 
 function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();}
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
-let _univDragSrc=-1;
-function _univDragStart(e,i){_univDragSrc=i;e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
+try{ if(typeof window._univDragSrc !== 'number') window._univDragSrc = -1; }catch(e){}
+function _univDragStart(e,i){try{ window._univDragSrc=i; }catch(_){} e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
 function _univDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';return false;}
 function _univDrop(e,i){
   e.stopPropagation();
-  if(_univDragSrc===i)return false;
-  const moved=univCfg.splice(_univDragSrc,1)[0];
+  if((window._univDragSrc??-1)===i)return false;
+  const moved=univCfg.splice((window._univDragSrc??-1),1)[0];
   univCfg.splice(i,0,moved);
   save();render();
   return false;
 }
 function _univDragEnd(e){e.currentTarget.style.opacity='1';}
 
-let _dissolveIdx = -1;
+try{ if(typeof window._dissolveIdx !== 'number') window._dissolveIdx = -1; }catch(e){}
 function openDissolveModal(i){
-  _dissolveIdx = i;
+  window._dissolveIdx = i;
   const u = univCfg[i];
   document.getElementById('dissolve-title').textContent = `"${u.name}" 해체 처리`;
   const today = new Date().toISOString().slice(0,10);
@@ -8584,8 +8753,8 @@ function openDissolveModal(i){
   om('dissolveModal');
 }
 function confirmDissolve(){
-  if(_dissolveIdx < 0) return;
-  const u = univCfg[_dissolveIdx];
+  if((window._dissolveIdx??-1) < 0) return;
+  const u = univCfg[window._dissolveIdx];
   const date = document.getElementById('dissolve-date').value || new Date().toISOString().slice(0,10);
   const movePlayers = document.getElementById('dissolve-move-players').checked;
   u.dissolved = true;
@@ -8805,4 +8974,4 @@ function clearGhToken(){
 /* ==========================================
    STATISTICS TAB
 ========================================== */
-let statsSub='overview';
+try{ window.statsSub = window.statsSub || 'overview'; }catch(e){}
