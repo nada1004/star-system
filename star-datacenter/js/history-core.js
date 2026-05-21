@@ -434,30 +434,48 @@ function histAllHTML(){
    대전 기록 > 대회 탭: 미니대전처럼 보이는 대회 경기 기록
 ══════════════════════════════════════ */
 function histTourneyHTML(context){
-  const tourItems=(typeof getTourneyMatches==='function') ? getTourneyMatches() : [];
-  const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx,a:(m.a||m.u||''),b:(m.b||'')}));
+  // tourneys(조편성 대회) + comps(기존 대회) 합산
+  const tourItems=getTourneyMatches();
+  const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
   const allItems=[...tourItems,...compItems].filter(m=>{
     if(!m.a||!m.b) return false;
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return false;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return false;
     return typeof passDateFilter!=='function'||passDateFilter(m.d||'');
   });
-  allItems.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
-  const sortBar=``;
-  if(!allItems.length){
-    return sortBar+`<div class="empty-state"><div class="empty-state-icon">🎖️</div><div class="empty-state-title">대회 기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
-  }
+  const _normDateSort = (d)=>{
+    const s = String(d||'').trim();
+    if(!s) return '';
+    const m = s.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+    if(m){
+      const y=m[1];
+      const mo=String(parseInt(m[2],10)).padStart(2,'0');
+      const da=String(parseInt(m[3],10)).padStart(2,'0');
+      return `${y}-${mo}-${da}`;
+    }
+    return s;
+  };
+  allItems.sort((a,b)=>recSortDir==='asc'?_normDateSort(a.d||'').localeCompare(_normDateSort(b.d||'')):_normDateSort(b.d||'').localeCompare(_normDateSort(a.d||'')));
   const groups={};
   allItems.forEach((m,idx)=>{
     const compName=m.n||m.compName||'기타 대회';
     if(!groups[compName]) groups[compName]=[];
     groups[compName].push({m,idx});
   });
+  const _days=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  const _dateHdr=(dk)=>{
+    if(dk!=='날짜 미정' && dk.match(/^\d{4}-\d{2}-\d{2}$/)){
+      const dt=new Date(dk+'T00:00:00');
+      return `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_days[dt.getDay()]}`;
+    }
+    return dk;
+  };
 
-  let h=sortBar;
+  let h=``;
   Object.entries(groups).forEach(([compName,items])=>{
-    const startDate=items[items.length-1]?.m?.d||'';
-    const endDate=items[0]?.m?.d||'';
+    const _rangeDates=items.map(x=>_normDateSort(x.m?.d||'')).filter(Boolean).sort();
+    const startDate=_rangeDates[0]||'';
+    const endDate=_rangeDates[_rangeDates.length-1]||'';
     const dateRange=startDate===endDate?startDate:(startDate&&endDate?`${startDate} ~ ${endDate}`:'');
     h+=`<div style="background:linear-gradient(135deg,var(--blue-l) 0%,var(--white) 100%);border:1.5px solid var(--blue-ll);border-left:4px solid var(--blue);border-radius:12px;padding:12px 16px;margin:14px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:16px">🎖️</span>
@@ -468,97 +486,83 @@ function histTourneyHTML(context){
 
     const byDate={};
     items.forEach(({m,idx})=>{
-      const k=m.d||'날짜 미정';
+      const k=_normDateSort(m?.d||'')||'날짜 미정';
       if(!byDate[k]) byDate[k]=[];
       byDate[k].push({m,idx});
     });
-    const days=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
-    Object.keys(byDate).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a)).forEach(date=>{
-      let dateLabel=date;
-      if(date!=='날짜 미정'){
-        const dt=new Date(date+'T00:00:00');
-        dateLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${days[dt.getDay()]}`;
-      }
-      h+=`<div style="margin-bottom:22px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${dateLabel}</div>
-        </div>`;
+    Object.keys(byDate).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a)).forEach(dk=>{
+      h+=`<div style="margin-bottom:22px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dateHdr(dk)}</div></div>`;
 
-      byDate[date].forEach(({m,idx})=>{
+      byDate[dk].forEach(({m,idx})=>{
         const a=m.a||'',b=m.b||'';
         const ca=gc(a),cb=gc(b);
-        const isDone=(m.sa!=null&&m.sb!=null);
-        const aWin=isDone&&m.sa>m.sb;
-        const bWin=isDone&&m.sb>m.sa;
+        const aWin=m.sa>m.sb,bWin=m.sb>m.sa;
         const key=`${context}-tourney-${idx}`;
         const rIdx=(m._src==='comps')?m._origIdx:-1;
-
         const grpBadge=m._src==='tour'
-          ?`<span class="grp-meta-group" style="background:linear-gradient(135deg,${m.grpColor||'#2563eb'},${m.grpColor||'#2563eb'}cc);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor||'#2563eb'}44">GROUP ${m.grpLetter||''}</span>`:'';
-        const _rndBadge=m.rndLabel?`<span style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;font-size:10px;font-weight:900;padding:2px 10px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px rgba(37,99,235,.30)">${m.rndLabel}</span>`:'';
-
+          ?`<span class="grp-meta-group" style="background:linear-gradient(135deg,${m.grpColor||'#2563eb'},${m.grpColor||'#2563eb'}cc);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor||'#2563eb'}44">GROUP ${m.grpLetter||''} · ${m.matchNum||''}경기</span>`:'';
+        const _rndBadge=m.rndLabel?`<span style="background:var(--blue);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px">${m.rndLabel}</span>`:'';
         const _ab = (typeof _collectMatchTeamMembersAB === 'function') ? _collectMatchTeamMembersAB(m) : {a:[], b:[]};
-        const aMembers=_ab.a||[];
-        const bMembers=_ab.b||[];
-        const aMemJson=JSON.stringify(aMembers).replace(/"/g,"'");
-        const bMemJson=JSON.stringify(bMembers).replace(/"/g,"'");
-
-        const _sideAB={a:aMembers,b:bMembers};
-        const _sideM={...m,a,b,teamAMembers:aMembers,teamBMembers:bMembers};
-        const _sidePanel=(typeof window._buildRecSideProfilePanel==='function')
-          ? window._buildRecSideProfilePanel(_sideM, _sideAB, aWin, bWin, ca, cb)
-          : {left:'', right:''};
-        const _hasSide=!!((_sidePanel.left||'')||(_sidePanel.right||''));
-
-        const _menuActions=[
-          isLoggedIn&&(rIdx>=0||m._src==='tour'||m._src==='tour_bracket'||m._src==='tour_manual')?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>m._src==='tour'?leagueEditMatch(m._tnId,m._gi,m._mi):null}:null,
-          {t:'🎴 공유카드',d:'공유용 카드 생성',kind:'accent',on:()=>window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(idx,context))},
-          isLoggedIn&&rIdx>=0&&!isSubAdmin?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>null}:null
-        ].filter(Boolean);
-        const _menuBtn=(_menuActions.length&&typeof _compActionMenuHTML==='function')?_compActionMenuHTML(_menuActions):'';
-
-        const _hexRgb=(h)=>{const s=String(h||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
-        const _sideRgbVars=`--rec-side-left-rgb:${_hexRgb(ca||'#3b82f6')};--rec-side-right-rgb:${_hexRgb(cb||'#ef4444')};`;
-        const _winCol=(aWin||bWin)?(aWin?ca:cb):'#64748b';
-        const _winRgb=_hexRgb(_winCol);
-        const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
+        const _aMemJson = JSON.stringify((_ab.a||[])).replace(/"/g,"'");
+        const _bMemJson = JSON.stringify((_ab.b||[])).replace(/"/g,"'");
+        const _tcWinRgb=(c)=>{const s=String(c||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
+        const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft'};
         const _fxOn=!!_fxCfg.on;
-        const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
-        const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
-        const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
+        const _fxMode=_fxCfg.mode||'soft';
+        const _fxVarsStr=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
+        const _sideRgbVars=`--rec-side-left-rgb:${_tcWinRgb(ca||'#3b82f6')};--rec-side-right-rgb:${_tcWinRgb(cb||'#ef4444')};`;
+        const _winRgb=aWin?_tcWinRgb(ca):bWin?_tcWinRgb(cb):'100,116,139';
+        const _borderLeft=_fxOn?(ca||'#3b82f6'):(aWin?ca:bWin?cb:'var(--blue-ll)');
+        const _sidePanel=(typeof window._buildRecSideProfilePanel==='function')?window._buildRecSideProfilePanel(m,_ab,aWin,bWin,ca,cb):{left:'',right:''};
+        const _hasSide=!!(_sidePanel.left||_sidePanel.right);
+        const _admShare=(localStorage.getItem('su_share_admin_only')||'0')==='1';
+        const _shareFn = (_admShare && !isLoggedIn)
+          ? 'null'
+          : `()=>window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(${idx},'${String(context||'').replace(/'/g,"\\'")}'))`;
+        const _tnSafe = String(m._tnId||'').replace(/'/g,"\\'");
+        const _editFn = (m._src==='tour')
+          ? `()=>leagueEditMatch('${_tnSafe}',${m._gi},${m._mi})`
+          : 'null';
+        const _menuBtn=`<button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴" onclick="event.stopPropagation();openRecActionMenu(event,{_btnEl:this,a:'${(m.a||'').replace(/'/g,"\\'")}',sa:${m.sa||0},b:'${(m.b||'').replace(/'/g,"\\'")}',sb:${m.sb||0},d:'${m.d||''}',mode:'comp',idx:${rIdx>=0?rIdx:0},key:'${key}',canShare:${(!_admShare||isLoggedIn)?'true':'false'},shareFn:${_shareFn},canEdit:${((rIdx>=0||m._src==='tour')&&isLoggedIn&&!isSubAdmin)?'true':'false'},canDel:${(rIdx>=0&&isLoggedIn&&!isSubAdmin)?'true':'false'},editFn:${_editFn},canMove:false})">⋯</button>`;
+        const _univIconA=(()=>{const url=a?(typeof UNIV_ICONS!=='undefined'?UNIV_ICONS[a]:''):'';const cfg=(typeof univCfg!=='undefined'?univCfg:[]).find(x=>x.name===a)||{};const u=url||(cfg.icon||'');return u?`<img class="tc-uicon" src="${typeof toHttpsUrl==='function'?toHttpsUrl(u):u}" style="width:var(--tc-uicon,22px);height:var(--tc-uicon,22px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0" onerror="this.style.display='none'">`:'';})();
+        const _univIconB=(()=>{const url=b?(typeof UNIV_ICONS!=='undefined'?UNIV_ICONS[b]:''):'';const cfg=(typeof univCfg!=='undefined'?univCfg:[]).find(x=>x.name===b)||{};const u=url||(cfg.icon||'');return u?`<img class="tc-uicon" src="${typeof toHttpsUrl==='function'?toHttpsUrl(u):u}" style="width:var(--tc-uicon,22px);height:var(--tc-uicon,22px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0" onerror="this.style.display='none'">`:'';})();
 
         h+=`<div class="grp-match-wrap">
           <div class="grp-card-meta-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
             ${grpBadge}
             ${_rndBadge}
-            <span class="grp-meta-spacer" style="flex:1"></span>
-            ${_menuBtn?`<span class="grp-meta-menu">${_menuBtn}</span>`:''}
+            <span style="flex:1"></span>
+            <span class="no-export">${_menuBtn}</span>
           </div>
-          <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${_hasSide?' has-side-panels':''}" style="--tc-win-rgb:${_winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${ca||'var(--blue)'};border-right:4px solid ${cb||'var(--blue)'};border-radius:22px;box-shadow:0 14px 32px rgba(15,23,42,.06);cursor:pointer" onclick="toggleDetail('${key}')">
+          <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${_hasSide?' has-side-panels':''}" style="--tc-win-rgb:${_winRgb};${_sideRgbVars}${_fxVarsStr}border-left:4px solid ${_borderLeft};${_fxOn?`border-right:4px solid ${cb||'#ef4444'};`:''};background:var(--white);margin-bottom:0;cursor:pointer" onclick="toggleDetail('${key}')">
             ${_sidePanel.left||''}
             <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:var(--tc-vs-gap,12px);justify-content:center;flex-wrap:wrap">
               <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
                 <div class="grp-team-chip" style="--chip-col:${ca||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.26);cursor:pointer" onclick="event.stopPropagation();openUnivModal('${a}')">
-                  ${(()=>{const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[a])||((typeof univCfg!=='undefined'&&Array.isArray(univCfg))?((univCfg.find(x=>x.name===a)||{}).icon||''):'');return url?`<img class="tc-uicon" src="${typeof toHttpsUrl==='function'?toHttpsUrl(url):url}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:'';})()}
-                  <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${a||'—'}</span>
+                  ${_univIconA}
+                  <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${a||'미정'}</span>
                 </div>
-                ${aMembers.length?`<button class="grp-mem-btn" style="--mem-col:${ca||'#3b82f6'};" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}','${ca}',${aMemJson})"><span class="mem-ico">👥</span><span>${aMembers.length}명</span></button>`:''}
+                ${(_ab.a||[]).length?`<button class="grp-mem-btn" style="--mem-col:${ca||'#3b82f6'};" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}','${ca}',${_aMemJson})"><span class="mem-ico">👥</span><span>${(_ab.a||[]).length}명</span></button>`:''}
               </div>
-              <div class="grp-score-col" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:80px">
-                <div class="grp-match-score score-click"><span class="">${m.sa||0}</span><span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span><span class="">${m.sb||0}</span></div>
+              <div class="grp-score-col" style="text-align:center;min-width:80px">
+                <div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px" onclick="event.stopPropagation();toggleDetail('${key}')">
+                  <span>${m.sa||0}</span>
+                  <span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span>
+                  <span>${m.sb||0}</span>
+                </div>
               </div>
               <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
                 <div class="grp-team-chip" style="--chip-col:${cb||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.26);cursor:pointer" onclick="event.stopPropagation();openUnivModal('${b}')">
-                  ${(()=>{const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[b])||((typeof univCfg!=='undefined'&&Array.isArray(univCfg))?((univCfg.find(x=>x.name===b)||{}).icon||''):'');return url?`<img class="tc-uicon" src="${typeof toHttpsUrl==='function'?toHttpsUrl(url):url}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:'';})()}
-                  <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${b||'—'}</span>
+                  ${_univIconB}
+                  <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${b||'미정'}</span>
                 </div>
-                ${bMembers.length?`<button class="grp-mem-btn" style="--mem-col:${cb||'#ef4444'};" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\\'")}','${cb}',${bMemJson})"><span class="mem-ico">👥</span><span>${bMembers.length}명</span></button>`:''}
+                ${(_ab.b||[]).length?`<button class="grp-mem-btn" style="--mem-col:${cb||'#ef4444'};" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\\'")}','${cb}',${_bMemJson})"><span class="mem-ico">👥</span><span>${(_ab.b||[]).length}명</span></button>`:''}
               </div>
             </div>
             ${_sidePanel.right||''}
           </div>
           <div id="det-${key}" class="rec-detail-area">
-            ${_regDet(key,{...m,_editRef:rIdx>=0?'comp:'+rIdx:''},  'comp',a,b,ca,cb,aWin,bWin, rIdx)}
+            ${_regDet(key,{...m,_editRef:rIdx>=0?'comp:'+rIdx:''},'comp',a,b,ca,cb,aWin,bWin,rIdx)}
             ${(()=>{const _memo=(rIdx>=0&&isLoggedIn)?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''; const _note=m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''; return (_memo||_note)?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">${_note}<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${_memo}</div></div>`:'';})()}
           </div>
         </div>`;
@@ -977,7 +981,6 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
               <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.b}')">${(()=>{const n=isCK?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelB}</span>
               ${(_ab.b||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${cb}12;border:1px solid ${cb}40;color:${cb};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${_bMemJson})">👥 ${(_ab.b||[]).length}명</button>`:''}
             </div>
-            <span class="rec-victor-chip" style="--rec-victor-col:${myWin?col:(aWin?ca:bWin?cb:'#888')};color:${myWin?col:'#888'}">${myWin?'▶ '+filterUniv+' 승':aWin?'▶ '+labelA+' 승':bWin?'▶ '+labelB+' 승':'무승부'}</span>
           </div>
           ${_sidePanelHTML.right}
         </div>
@@ -1278,7 +1281,6 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
           <div class="rec-meta-row">
             ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" data-bmid="${String(m._id||m.sid||'')}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
             ${m.fmt>0?`<span class="rec-meta-chip rec-meta-chip--note">${m.fmt}:${m.fmt}</span>`:''}
-            ${aWin||bWin?`<span class="rec-victor-chip rec-victor-chip--crown" style="--rec-victor-col:${aWin?ca:cb};color:${aWin?ca:cb}">🏆 ${aWin?labelA:labelB}</span>`:`<span class="rec-meta-chip">무승부</span>`}
           </div>
           <div class="rec-actions no-export rec-actions--inline">
           <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"

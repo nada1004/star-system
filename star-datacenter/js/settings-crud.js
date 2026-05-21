@@ -1415,13 +1415,13 @@ function renameUnivAcrossData(oldName,newName){
 
 function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();}
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
-try{ if(typeof window._univDragSrc !== 'number') window._univDragSrc = -1; }catch(e){}
-function _univDragStart(e,i){try{ window._univDragSrc=i; }catch(_){} e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
+let _univDragSrc=-1;
+function _univDragStart(e,i){_univDragSrc=i;e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
 function _univDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';return false;}
 function _univDrop(e,i){
   e.stopPropagation();
-  if((window._univDragSrc??-1)===i)return false;
-  const moved=univCfg.splice((window._univDragSrc??-1),1)[0];
+  if(_univDragSrc===i)return false;
+  const moved=univCfg.splice(_univDragSrc,1)[0];
   univCfg.splice(i,0,moved);
   save();render();
   return false;
@@ -1430,7 +1430,7 @@ function _univDragEnd(e){e.currentTarget.style.opacity='1';}
 
 let _dissolveIdx = -1;
 function openDissolveModal(i){
-  try{ window._dissolveIdx = i; }catch(e){ _dissolveIdx = i; }
+  _dissolveIdx = i;
   const u = univCfg[i];
   document.getElementById('dissolve-title').textContent = `"${u.name}" 해체 처리`;
   const today = new Date().toISOString().slice(0,10);
@@ -1441,9 +1441,8 @@ function openDissolveModal(i){
   om('dissolveModal');
 }
 function confirmDissolve(){
-  const idx = (typeof window._dissolveIdx === 'number') ? window._dissolveIdx : _dissolveIdx;
-  if(idx < 0) return;
-  const u = univCfg[idx];
+  if(_dissolveIdx < 0) return;
+  const u = univCfg[_dissolveIdx];
   const date = document.getElementById('dissolve-date').value || new Date().toISOString().slice(0,10);
   const movePlayers = document.getElementById('dissolve-move-players').checked;
   u.dissolved = true;
@@ -1673,4 +1672,4 @@ function clearGhToken(){
 /* ==========================================
    STATISTICS TAB
 ========================================== */
-try{ window.statsSub = window.statsSub || 'overview'; }catch(e){}
+let statsSub='overview';

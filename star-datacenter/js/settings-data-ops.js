@@ -352,18 +352,16 @@ function saveImageSettings(){
 
 // ── 우클릭 이미지 조절 메뉴 ──
 // tier-tour.js 등 다른 스크립트와 전역 식별자 충돌 방지
-try{
-  if(typeof window._settingsImgContextMenuEl === 'undefined') window._settingsImgContextMenuEl = null;
-  if(typeof window._currentImageTarget === 'undefined') window._currentImageTarget = null;
-}catch(e){}
+let _settingsImgContextMenuEl = null;
+let _currentImageTarget = null;
 
 function showImageContextMenu(e, imgElement){
   e.preventDefault();
-  window._currentImageTarget = imgElement;
+  _currentImageTarget = imgElement;
   
   // 기존 메뉴 제거
-  if(window._settingsImgContextMenuEl){
-    window._settingsImgContextMenuEl.remove();
+  if(_settingsImgContextMenuEl){
+    _settingsImgContextMenuEl.remove();
   }
   
   const menu = document.createElement('div');
@@ -402,14 +400,14 @@ function showImageContextMenu(e, imgElement){
   `;
   
   document.body.appendChild(menu);
-  window._settingsImgContextMenuEl = menu;
+  _settingsImgContextMenuEl = menu;
   
   // 메뉴 외부 클릭 시 닫기
   setTimeout(()=>{
     const closeMenu = (ev)=>{
       if(!menu.contains(ev.target)){
         menu.remove();
-        window._settingsImgContextMenuEl = null;
+        _settingsImgContextMenuEl = null;
         document.removeEventListener('click', closeMenu);
       }
     };
@@ -418,24 +416,24 @@ function showImageContextMenu(e, imgElement){
 }
 
 function applyImageContextStyle(){
-  if(!window._currentImageTarget) return;
+  if(!_currentImageTarget) return;
   
   const scale = document.getElementById('ctx-scale')?.value || 1;
   const brightness = document.getElementById('ctx-bright')?.value || 1;
   
-  window._currentImageTarget.style.transform = `scale(${scale})`;
-  window._currentImageTarget.style.filter = `brightness(${brightness})`;
-  window._currentImageTarget.dataset.scale = scale;
-  window._currentImageTarget.dataset.brightness = brightness;
+  _currentImageTarget.style.transform = `scale(${scale})`;
+  _currentImageTarget.style.filter = `brightness(${brightness})`;
+  _currentImageTarget.dataset.scale = scale;
+  _currentImageTarget.dataset.brightness = brightness;
   
-  if(window._settingsImgContextMenuEl){
-    window._settingsImgContextMenuEl.remove();
-    window._settingsImgContextMenuEl = null;
+  if(_settingsImgContextMenuEl){
+    _settingsImgContextMenuEl.remove();
+    _settingsImgContextMenuEl = null;
   }
 }
 
 // ── 랜덤 이미지 회전 ──
-try{ if(typeof window._randomRotationTimer === 'undefined') window._randomRotationTimer = null; }catch(e){}
+let _randomRotationTimer = null;
 
 function startRandomRotation(){
   stopRandomRotation();
@@ -444,15 +442,15 @@ function startRandomRotation(){
   
   const interval = (imgSettings.interval || 5) * 1000;
   
-  window._randomRotationTimer = setInterval(()=>{
+  _randomRotationTimer = setInterval(()=>{
     rotateRandomImage();
   }, interval);
 }
 
 function stopRandomRotation(){
-  if(window._randomRotationTimer){
-    clearInterval(window._randomRotationTimer);
-    window._randomRotationTimer = null;
+  if(_randomRotationTimer){
+    clearInterval(_randomRotationTimer);
+    _randomRotationTimer = null;
   }
 }
 
@@ -465,7 +463,7 @@ function rotateRandomImage(){
     const randomPlayer = players[Math.floor(Math.random() * players.length)];
     
     // 전체대학 보기
-    if((window._settingsCurrentTab||'total') === 'total'){
+    if(currentTab === 'total'){
       const imgContainer = document.querySelector('.random-image-container');
       if(imgContainer && randomPlayer.photo){
         imgContainer.src = toHttpsUrl(randomPlayer.photo);
@@ -481,13 +479,13 @@ function rotateRandomImage(){
 }
 
 // 현재 탭 추적
-try{ if(typeof window._settingsCurrentTab !== 'string') window._settingsCurrentTab = 'total'; }catch(e){}
+let currentTab = 'total';
 
 // 탭 변경 시 회전 제어
 if(!window.__swWrappedForSettings){
   const originalSw = window.sw;
   window.sw = function(tab, el){
-    try{ window._settingsCurrentTab = tab; }catch(e){}
+    currentTab = tab;
     const ret = originalSw ? originalSw.apply(this, arguments) : undefined;
     let imgSettings = {};
     try{
@@ -930,3 +928,4 @@ function promptBoardNoteImgUrl(univName){
   if(!trimmed){showToast('URL을 입력해주세요.');return;}
   addBoardNoteImg(univName,trimmed);
 }
+

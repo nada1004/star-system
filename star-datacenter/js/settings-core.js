@@ -2283,16 +2283,13 @@ let _catSecs = (() => {
   const norm = _cfgMenuNormalize(raw || {});
   try{ window._cfgCatOrder = norm.catOrder; }catch(e){}
   // catSecs만 rCfg/_cfgApplyCat에서 사용
-  const cs = norm.catSecs;
-  try{ window._catSecs = cs; }catch(e){}
-  return cs;
+  return norm.catSecs;
 })();
 
 function _cfgMenuApplyAndRerender(layout){
   const norm = _cfgMenuNormalize(layout || {});
   _cfgMenuSave(norm);
   _catSecs = norm.catSecs;
-  try{ window._catSecs = _catSecs; }catch(e){}
   try{ window._cfgCatOrder = norm.catOrder; }catch(e){}
   try{
     if(!Object.keys(_catSecs).includes(window._cfgCat)){

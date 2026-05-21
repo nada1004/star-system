@@ -6,7 +6,6 @@ function rCfg(C,T){
     return;
   }
   if(!window._cfgCat || window._cfgCat==='전체') window._cfgCat='🧩 운영/콘텐츠';
-  const _catSecs = window._catSecs || {};
   const _cfgCats=(window._cfgCatOrder && Array.isArray(window._cfgCatOrder) ? window._cfgCatOrder : Object.keys(_catSecs||{}));
   const _cfgCatIcons={
     '🧩 운영/콘텐츠':'🧩',
@@ -898,25 +897,6 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">레이아웃 크기(기록 카드)</div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
-          <input type="range" id="cfg-rc-layout-pc" min="60" max="120" step="5"
-            value="${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_pc')||'100',10)||100))}"
-            oninput="document.getElementById('cfg-rc-layout-pc-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
-          <span id="cfg-rc-layout-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_pc')||'100',10)||100))}%</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
-          <input type="range" id="cfg-rc-layout-mb" min="60" max="120" step="5"
-            value="${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_mb')||'100',10)||100))}"
-            oninput="document.getElementById('cfg-rc-layout-mb-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
-          <span id="cfg-rc-layout-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_mb')||'100',10)||100))}%</span>
-        </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ 카드 여백/칩/스코어 박스 등 전반을 함께 줄입니다</span>
-      </div>
-
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <div style="font-size:11px;color:var(--text3);font-weight:800">스코어 숫자 색상(공통)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">승</span>
@@ -1588,10 +1568,6 @@ ${_scfgD('notice','📢 공지 관리')}
     const pc = parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52;
     const mb = parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40;
     const fit = (localStorage.getItem('su_procomp_avatar_fit')||'cover');
-    const spc = parseInt(localStorage.getItem('su_procomp_score_scale_pc')||'100',10)||100;
-    const smb = parseInt(localStorage.getItem('su_procomp_score_scale_mb')||'100',10)||100;
-    const lpc = parseInt(localStorage.getItem('su_procomp_layout_scale_pc')||'100',10)||100;
-    const lmb = parseInt(localStorage.getItem('su_procomp_layout_scale_mb')||'100',10)||100;
     return _scfgD('procompcard','⭐ 프로리그 대회 카드(프로리그탭)') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">프로리그탭 → 프로리그 대회 → 조별리그/대진표 기록 카드에서 선수(스트리머) 프로필 크기를 조절합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
@@ -1606,46 +1582,20 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">PC</div>
-        <input type="range" id="cfg-procomp-ava-pc" min="28" max="200" step="2" value="${Math.max(28,Math.min(200,pc))}"
+        <input type="range" id="cfg-procomp-ava-pc" min="28" max="84" step="2" value="${Math.max(28,Math.min(84,pc))}"
           oninput="document.getElementById('cfg-procomp-ava-pc-v').textContent=this.value+'px'"
           onchange="cfgSetProCompAvatarSettings()" style="width:100%">
-        <div id="cfg-procomp-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(28,Math.min(200,pc))}px</div>
+        <div id="cfg-procomp-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(28,Math.min(84,pc))}px</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
-        <input type="range" id="cfg-procomp-ava-mb" min="24" max="160" step="2" value="${Math.max(24,Math.min(160,mb))}"
+        <input type="range" id="cfg-procomp-ava-mb" min="24" max="72" step="2" value="${Math.max(24,Math.min(72,mb))}"
           oninput="document.getElementById('cfg-procomp-ava-mb-v').textContent=this.value+'px'"
           onchange="cfgSetProCompAvatarSettings()" style="width:100%">
-        <div id="cfg-procomp-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(24,Math.min(160,mb))}px</div>
-      </div>
-      <div style="height:1px;background:var(--border);margin:2px 0"></div>
-      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">스코어(PC)</div>
-        <input type="range" id="cfg-procomp-score-pc" min="60" max="160" step="5" value="${Math.max(60,Math.min(160,spc))}"
-          oninput="document.getElementById('cfg-procomp-score-pc-v').textContent=this.value+'%'" onchange="cfgSetProCompScoreSettings()" style="width:100%">
-        <div id="cfg-procomp-score-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(160,spc))}%</div>
-      </div>
-      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">스코어(모바일)</div>
-        <input type="range" id="cfg-procomp-score-mb" min="60" max="160" step="5" value="${Math.max(60,Math.min(160,smb))}"
-          oninput="document.getElementById('cfg-procomp-score-mb-v').textContent=this.value+'%'" onchange="cfgSetProCompScoreSettings()" style="width:100%">
-        <div id="cfg-procomp-score-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(160,smb))}%</div>
-      </div>
-      <div style="height:1px;background:var(--border);margin:2px 0"></div>
-      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">레이아웃(PC)</div>
-        <input type="range" id="cfg-procomp-layout-pc" min="60" max="120" step="5" value="${Math.max(60,Math.min(120,lpc))}"
-          oninput="document.getElementById('cfg-procomp-layout-pc-v').textContent=this.value+'%'" onchange="cfgSetProCompLayoutSettings()" style="width:100%">
-        <div id="cfg-procomp-layout-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(120,lpc))}%</div>
-      </div>
-      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">레이아웃(모바일)</div>
-        <input type="range" id="cfg-procomp-layout-mb" min="60" max="120" step="5" value="${Math.max(60,Math.min(120,lmb))}"
-          oninput="document.getElementById('cfg-procomp-layout-mb-v').textContent=this.value+'%'" onchange="cfgSetProCompLayoutSettings()" style="width:100%">
-        <div id="cfg-procomp-layout-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(120,lmb))}%</div>
+        <div id="cfg-procomp-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(24,Math.min(72,mb))}px</div>
       </div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
-        ※ 값 변경 후 자동으로 재렌더링됩니다. 레이아웃은 카드 전체 여백/크기(프로필 카드 포함)를 함께 줄입니다.
+        ※ 값 변경 후 자동으로 재렌더링됩니다. 카드가 너무 커지면 크기를 조금 낮춰주세요.
       </div>
     </div>
   </details>`;
@@ -2928,10 +2878,10 @@ ${_scfgD('notice','📢 공지 관리')}
               const _ulCur=(()=>{try{return localStorage.getItem('su_ul_shape')||'circle';}catch(e){return 'circle';}})();
               return _ulShapes.map(s=>{
                 const sel=_ulCur===s.v;
-                return `<button type="button" onclick="localStorage.setItem('su_ul_shape','${s.v}');if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();render()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 6px;border-radius:10px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 2px #2563eb22':'none'}">
+                return \`<button type="button" onclick="localStorage.setItem('su_ul_shape','${s.v}');if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();render()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 6px;border-radius:10px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 2px #2563eb22':'none'}">
                   <div style="width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#a855f7);${s.preview};flex-shrink:0"></div>
                   <span style="font-size:10px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'};text-align:center;line-height:1.2">${s.label}</span>
-                </button>`;
+                </button>\`;
               }).join('');
             })()}
           </div>

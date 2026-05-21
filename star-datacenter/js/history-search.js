@@ -228,27 +228,6 @@ function getTourneyMatches(){
   const result=[];
   if(!Array.isArray(tourneys))return result;
   (tourneys||[]).forEach(tn=>{
-    const br = tn.bracket || {};
-    const _bktFirstSize = (typeof _bktComputeBracketSize === 'function')
-      ? _bktComputeBracketSize(tn)
-      : (Number(br.size)||0) || 8;
-    let _bktTotalRounds = 0;
-    let _n = Math.max(2, _bktFirstSize);
-    while(_n > 1){ _n = Math.ceil(_n/2); _bktTotalRounds++; }
-    if(_bktTotalRounds <= 0) _bktTotalRounds = 1;
-    const _bktRoundLabels = {1:'결승',2:'4강',3:'8강',4:'16강',5:'32강',6:'64강',7:'128강',8:'256강'};
-    const _bktRndLabel = (key)=>{
-      try{
-        const parts = String(key||'').split('-');
-        const r = parseInt(parts[0], 10);
-        if(Number.isNaN(r) || r < 0) return '';
-        const rNum = _bktTotalRounds - r;
-        return _bktRoundLabels[rNum] || (Math.pow(2, rNum) + '강');
-      }catch(e){
-        return '';
-      }
-    };
-
     // 조별리그 경기
     (tn.groups||[]).forEach((grp,gi)=>{
       const gl='ABCDEFGHIJ'[gi]||String(gi);
@@ -265,13 +244,40 @@ function getTourneyMatches(){
       });
     });
     // 브라켓 경기 (matchDetails)
+    const br=tn.bracket||{};
+    const _maxR = (()=>{
+      try{
+        const keys = []
+          .concat(Object.keys(br.matchDetails||{}))
+          .concat(Object.keys(br.winners||{}))
+          .concat(Object.keys(br.slots||{}));
+        let mx = -1;
+        keys.forEach(k=>{
+          const m = String(k||'').match(/^(\d+)-(\d+)/);
+          if(!m) return;
+          const r = parseInt(m[1],10);
+          if(Number.isFinite(r)) mx = Math.max(mx, r);
+        });
+        return mx;
+      }catch(e){
+        return -1;
+      }
+    })();
+    const _totalRounds = Math.max(1, _maxR + 1);
+    const _roundLabels = {1:'결승',2:'4강',3:'8강',4:'16강',5:'32강',6:'64강',7:'128강',8:'256강'};
+    const _rndLabelOf = (r)=>{
+      const rNum = _totalRounds - (Number.isFinite(r) ? r : 0);
+      return _roundLabels[rNum] || `${Math.pow(2, rNum)}강`;
+    };
     Object.entries(br.matchDetails||{}).forEach(([key,m])=>{
       if(!m||!m.a||!m.b||m.sa==null||m.sb==null)return;
+      const parts=String(key||'').split('-');
+      const r=parseInt(parts[0],10);
       result.push({
         _src:'tour_bracket',_tnId:tn.id,_bktKey:key,
         d:m.d||'',n:tn.name,a:m.a,b:m.b,
         sa:m.sa,sb:m.sb,sets:m.sets||[],
-        rndLabel:_bktRndLabel(key),
+        rndLabel:_rndLabelOf(r),
         grpName:'토너먼트',grpLetter:'T',grpColor:'#2563eb'
       });
     });
@@ -289,7 +295,7 @@ function getTourneyMatches(){
         _src:'tour_bracket',_tnId:tn.id,_bktKey:key,
         d:(det&&det.d)||'',n:tn.name,a,b,
         sa:winner===a?1:0,sb:winner===b?1:0,sets:[],
-        rndLabel:_bktRndLabel(key),
+        rndLabel:_rndLabelOf(r),
         grpName:'토너먼트',grpLetter:'T',grpColor:'#2563eb'
       });
     });
@@ -300,8 +306,7 @@ function getTourneyMatches(){
         _src:'tour_manual',_tnId:tn.id,_manualIdx:idx,
         d:m.d||'',n:tn.name,a:m.a,b:m.b,
         sa:m.sa,sb:m.sb,sets:m.sets||[],
-        rndLabel:m.rndLabel||'',
-        grpName:'토너먼트',grpLetter:'T',grpColor:'#7c3aed'
+        grpName:m.rndLabel||'토너먼트',grpLetter:'T',grpColor:'#7c3aed'
       });
     });
   });
@@ -1103,9 +1108,7 @@ function _histProCompLeagueListHTML(){
 
   const _tb = p => p&&p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb = p => p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _avaPx = (()=>{ try{ const pc=parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52; const mb=parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40; const isMb=window.innerWidth<=768; return Math.max(18, Math.min(160, isMb?mb:pc)); }catch(e){ return 22; } })();
-  const _avaFit = (()=>{ try{ const v=String(localStorage.getItem('su_procomp_avatar_fit')||'cover').trim(); return (v==='contain'||v==='cover'||v==='fill')?v:'cover'; }catch(e){ return 'cover'; } })();
-  const _photo = (name)=>{ try{ return (typeof getPlayerPhotoHTML==='function') ? getPlayerPhotoHTML(name, _avaPx+'px', `margin-right:3px;object-fit:${_avaFit};vertical-align:middle;`) : ''; }catch(e){ return ''; } };
+  const _photo = p => p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')" onerror="this.style.display='none'">`:'';
 
   h += sortBar;
   Object.entries(groups).forEach(([tnName, items]) => {
@@ -1115,8 +1118,8 @@ function _histProCompLeagueListHTML(){
       <span style="font-size:11px;font-weight:700;color:#0891b2;background:#e0f2fe;border-radius:20px;padding:2px 10px;margin-left:auto">${items.length}경기</span>
     </div>`;
     items.forEach(m => {
-      const pa = players.find(p=>String(p.name||'').trim()===String(m.a||'').trim());
-      const pb = players.find(p=>String(p.name||'').trim()===String(m.b||'').trim());
+      const pa = players.find(p=>p.name===m.a);
+      const pb = players.find(p=>p.name===m.b);
       const aWin = m.winner==='A';
       const bWin = m.winner==='B';
       // 스테이지 배지 (조별리그 GROUP A / 준결승 / 결승 등)
@@ -1154,7 +1157,7 @@ function _histProCompLeagueListHTML(){
         <div class="rec-sum-header" style="padding:5px 12px 10px">
           <div class="rec-sum-vs" style="flex:1">
             <div style="display:flex;align-items:center;gap:4px;${aWin?'':'opacity:.7'}">
-              ${_photo(m.a)}
+              ${_photo(pa)}
               <span style="font-weight:${aWin?'800':'500'};font-size:13px;color:${aWin?'#16a34a':'var(--text)'};cursor:pointer;text-decoration:underline dotted" onclick="openPlayerModal('${escJS(m.a)}')">${m.a}</span>
               ${_rb(pa)}${_tb(pa)}
               ${pa&&pa.univ?`<span style="font-size:10px;color:var(--gray-l)">${pa.univ}</span>`:''}
@@ -1162,7 +1165,7 @@ function _histProCompLeagueListHTML(){
             </div>
             <span style="font-size:11px;color:var(--gray-l);font-weight:700;flex-shrink:0">vs</span>
             <div style="display:flex;align-items:center;gap:4px;${bWin?'':'opacity:.7'}">
-              ${_photo(m.b)}
+              ${_photo(pb)}
               <span style="font-weight:${bWin?'800':'500'};font-size:13px;color:${bWin?'#16a34a':'var(--text)'};cursor:pointer;text-decoration:underline dotted" onclick="openPlayerModal('${escJS(m.b)}')">${m.b}</span>
               ${_rb(pb)}${_tb(pb)}
               ${pb&&pb.univ?`<span style="font-size:10px;color:var(--gray-l)">${pb.univ}</span>`:''}
@@ -1235,9 +1238,7 @@ function histProCompTourneyHTML(_omitBar) {
   allItems.forEach(m=>{if(!groups[m._tnName])groups[m._tnName]=[];groups[m._tnName].push(m);});
   const _tb=p=>p&&p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _avaPx = (()=>{ try{ const pc=parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52; const mb=parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40; const isMb=window.innerWidth<=768; return Math.max(18, Math.min(160, isMb?mb:pc)); }catch(e){ return 22; } })();
-  const _avaFit = (()=>{ try{ const v=String(localStorage.getItem('su_procomp_avatar_fit')||'cover').trim(); return (v==='contain'||v==='cover'||v==='fill')?v:'cover'; }catch(e){ return 'cover'; } })();
-  const _photo = (name)=>{ try{ return (typeof getPlayerPhotoHTML==='function') ? getPlayerPhotoHTML(name, _avaPx+'px', `margin-right:3px;object-fit:${_avaFit};vertical-align:middle;`) : ''; }catch(e){ return ''; } };
+  const _photo=p=>p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')" onerror="this.style.display='none'">`:'';
   let h=_pcSubBar2+sortBar;
   Object.entries(groups).forEach(([tnName,items])=>{
     h+=`<div style="background:linear-gradient(135deg,#f5f3ff 0%,var(--white) 100%);border:1.5px solid #ddd6fe;border-left:4px solid #7c3aed;border-radius:12px;padding:12px 16px;margin:14px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1246,8 +1247,7 @@ function histProCompTourneyHTML(_omitBar) {
       <span style="font-size:11px;font-weight:700;color:#7c3aed;background:#f5f3ff;border-radius:20px;padding:2px 10px;margin-left:auto">${items.length}경기</span>
     </div>`;
     items.forEach(m=>{
-      const pa=players.find(p=>String(p.name||'').trim()===String(m.a||'').trim());
-      const pb=players.find(p=>String(p.name||'').trim()===String(m.b||'').trim());
+      const pa=players.find(p=>p.name===m.a), pb=players.find(p=>p.name===m.b);
       const aWin=m.winner==='A', bWin=m.winner==='B';
       const stageBadge=`<span style="background:${m._stageColor};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap">${m._stageDetail}</span>`;
       const tieBadge = m._isTie ? `<span style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;white-space:nowrap">⚖️ ${m._scoreA||0}:${m._scoreB||0}</span>` : '';
@@ -1281,12 +1281,12 @@ function histProCompTourneyHTML(_omitBar) {
         <div class="rec-sum-header" style="padding:5px 12px 10px">
           <div class="rec-sum-vs" style="flex:1">
             <div style="display:flex;align-items:center;gap:4px;${(aWin||m._isTie)?'':'opacity:.7'}">
-              ${_photo(m.a)}<span style="font-weight:${aWin?'800':m._isTie?'800':'500'};font-size:13px;color:${aWin?'#16a34a':m._isTie?'#b45309':'var(--text)'}">${m.a}</span>
+              ${_photo(pa)}<span style="font-weight:${aWin?'800':m._isTie?'800':'500'};font-size:13px;color:${aWin?'#16a34a':m._isTie?'#b45309':'var(--text)'}">${m.a}</span>
               ${_rb(pa)}${_tb(pa)}
             </div>
             <span style="font-size:11px;color:var(--gray-l);font-weight:700;flex-shrink:0">vs</span>
             <div style="display:flex;align-items:center;gap:4px;${(bWin||m._isTie)?'':'opacity:.7'}">
-              ${_photo(m.b)}<span style="font-weight:${bWin?'800':m._isTie?'800':'500'};font-size:13px;color:${bWin?'#16a34a':m._isTie?'#b45309':'var(--text)'}">${m.b}</span>
+              ${_photo(pb)}<span style="font-weight:${bWin?'800':m._isTie?'800':'500'};font-size:13px;color:${bWin?'#16a34a':m._isTie?'#b45309':'var(--text)'}">${m.b}</span>
               ${_rb(pb)}${_tb(pb)}
             </div>
             ${m.map?`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0">📍${m.map}</span>`:''}
@@ -1320,9 +1320,7 @@ function histProCompTeamHTML(_omitBar) {
   if (!tmList.length) return sortBar+`<div class="empty-state"><div class="empty-state-icon">🤝</div><div class="empty-state-title">팀전 기록이 없습니다</div><div class="empty-state-desc">프로리그 대회 팀전 결과를 입력하면 여기에 표시됩니다</div></div>`;
   const _tb=p=>p&&p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _avaPx = (()=>{ try{ const pc=parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52; const mb=parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40; const isMb=window.innerWidth<=768; return Math.max(18, Math.min(160, isMb?mb:pc)); }catch(e){ return 22; } })();
-  const _avaFit = (()=>{ try{ const v=String(localStorage.getItem('su_procomp_avatar_fit')||'cover').trim(); return (v==='contain'||v==='cover'||v==='fill')?v:'cover'; }catch(e){ return 'cover'; } })();
-  const _photo = (name)=>{ try{ return (typeof getPlayerPhotoHTML==='function') ? getPlayerPhotoHTML(name, _avaPx+'px', `margin-right:3px;object-fit:${_avaFit};vertical-align:middle;`) : ''; }catch(e){ return ''; } };
+  const _photo=p=>p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')" onerror="this.style.display='none'">`:'';
   const _proSideCols = getFixedSideColors('pro');
   const colA=_proSideCols.a, colB=_proSideCols.b;
   let h=sortBar;
@@ -1373,14 +1371,14 @@ function histProCompTeamHTML(_omitBar) {
               <span style="background:${g._sideW==='A'?colA:colB};color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${sideWin}</span>
               <div class="rec-sum-vs" style="flex:1">
                 <div style="display:flex;align-items:center;gap:4px">
-                  ${_photo(g.wName)}<span style="font-weight:800;font-size:13px;color:#16a34a">${g.wName}</span>
+                  ${_photo(pw)}<span style="font-weight:800;font-size:13px;color:#16a34a">${g.wName}</span>
                   ${_rb(pw)}${_tb(pw)}
                   ${pw&&pw.univ?`<span style="font-size:10px;color:var(--gray-l)">${pw.univ}</span>`:''}
                   <span style="font-size:10px;font-weight:800;color:#16a34a;margin-left:2px">WIN</span>
                 </div>
                 <span style="font-size:11px;color:var(--gray-l);font-weight:700;flex-shrink:0">vs</span>
                 <div style="display:flex;align-items:center;gap:4px;opacity:.7">
-                  ${_photo(g.lName)}<span style="font-weight:500;font-size:13px;color:var(--text)">${g.lName}</span>
+                  ${_photo(pl)}<span style="font-weight:500;font-size:13px;color:var(--text)">${g.lName}</span>
                   ${_rb(pl)}${_tb(pl)}
                   ${pl&&pl.univ?`<span style="font-size:10px;color:var(--gray-l)">${pl.univ}</span>`:''}
                 </div>
