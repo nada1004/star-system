@@ -4471,14 +4471,16 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .grp-match-card.match-card-v3.has-side-panels > .grp-match-main{ grid-area:main; width:auto !important; position:relative !important; z-index:2 !important; }
   .grp-match-card.match-card-v3.has-side-panels > .rec-side-profiles:last-of-type{ grid-area:right; }
   .grp-match-card.match-card-v3.has-side-panels .grp-match-main{
-    flex-wrap:wrap !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:center !important;
+    justify-items:center !important;
     overflow:visible !important;
-    justify-content:center !important;
-    gap:8px !important;
+    gap:6px !important;
   }
   .grp-match-card.match-card-v3.has-side-panels .grp-team-col{ min-width:0 !important; }
-  .grp-match-card.match-card-v3.has-side-panels .grp-team-chip{ padding:6px 8px !important; }
-  .grp-match-card.match-card-v3.has-side-panels .grp-team-chip span{ max-width:110px !important; }
+  .grp-match-card.match-card-v3.has-side-panels .grp-team-chip{ padding:5px 7px !important; }
+  .grp-match-card.match-card-v3.has-side-panels .grp-team-chip span{ font-size:11px !important; max-width:86px !important; }
   .grp-match-card.match-card-v3.has-side-panels .grp-mem-btn{
     display:inline-flex !important;
     margin-top:2px !important;
@@ -4496,6 +4498,9 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     pointer-events:none !important;
     position:relative !important;
     z-index:1 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
   }
   .grp-match-card.has-side-panels > .rec-side-profiles .rsp-namelbl{ display:none !important; }
   .grp-match-card.has-side-panels > .rec-side-profiles .rsp-imgbox{
@@ -4565,8 +4570,8 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     font-size:15px !important;
   }
   .grp-match-card.match-card-v3.has-side-panels .grp-match-score{
-    padding:4px 10px !important;
-    font-size:13px !important;
+    padding:3px 9px !important;
+    font-size:12px !important;
   }
   /* (요청사항) 모바일: 팀버튼+스코어 한줄 레이아웃 강제 */
   .grp-match-card.match-card-v3 .grp-match-main{
