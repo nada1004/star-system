@@ -1896,11 +1896,8 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   .grp-match-card.has-side-panels > .rec-side-profiles .rsp-inner{transform:none !important;}
   .grp-match-card.has-side-panels > .rec-side-profiles .rsp-imgbox:hover{transform:none !important;}
   .grp-match-card.match-card-v3.has-side-panels .grp-match-main{
-    flex-wrap:nowrap !important;
-    overflow-x:auto !important;
-    overflow-y:hidden !important;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
+    flex-wrap:wrap !important;
+    overflow:visible !important;
   }
 }
 .rec-sum-score{
@@ -4459,27 +4456,23 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     padding:6px 4px !important;
     gap:4px !important;
   }
-  /* (요청사항) 대회탭 조별리그/토너먼트 경기 기록 카드: 모바일에서 1줄(프로필-팀A-스코어-팀B-프로필) 형태로 정렬 */
   .grp-match-card.match-card-v3.has-side-panels{
     display:grid !important;
-    grid-template-columns:minmax(56px,88px) minmax(0,1fr) minmax(56px,88px);
+    grid-template-columns:64px minmax(0,1fr) 64px;
     grid-template-areas: "left main right";
     align-items:center !important;
     gap:6px !important;
     padding:8px 8px !important;
     position:relative !important;
-    overflow:hidden !important;
+    overflow:visible !important;
   }
   .grp-match-card.match-card-v3.has-side-panels > .grp-match-leftpad{ display:none !important; }
   .grp-match-card.match-card-v3.has-side-panels > .rec-side-profiles:first-of-type{ grid-area:left; }
   .grp-match-card.match-card-v3.has-side-panels > .grp-match-main{ grid-area:main; width:auto !important; position:relative !important; z-index:2 !important; }
   .grp-match-card.match-card-v3.has-side-panels > .rec-side-profiles:last-of-type{ grid-area:right; }
   .grp-match-card.match-card-v3.has-side-panels .grp-match-main{
-    flex-wrap:nowrap !important;
-    overflow-x:auto !important;
-    overflow-y:hidden !important;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
+    flex-wrap:wrap !important;
+    overflow:visible !important;
     justify-content:center !important;
     gap:8px !important;
   }
@@ -4504,7 +4497,6 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     position:relative !important;
     z-index:1 !important;
   }
-  /* (요청사항) 모바일: 대회/대진표 기록 카드에서 프로필이 팀버튼/참여자 버튼을 가리지 않게 더 작게 */
   .grp-match-card.has-side-panels > .rec-side-profiles .rsp-namelbl{ display:none !important; }
   .grp-match-card.has-side-panels > .rec-side-profiles .rsp-imgbox{
     width:52px !important;
