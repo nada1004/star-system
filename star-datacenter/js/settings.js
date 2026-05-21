@@ -7070,16 +7070,18 @@ function saveImageSettings(){
 
 // ── 우클릭 이미지 조절 메뉴 ──
 // tier-tour.js 등 다른 스크립트와 전역 식별자 충돌 방지
-let _settingsImgContextMenuEl = null;
-let _currentImageTarget = null;
+try{
+  if(typeof window._settingsImgContextMenuEl === 'undefined') window._settingsImgContextMenuEl = null;
+  if(typeof window._currentImageTarget === 'undefined') window._currentImageTarget = null;
+}catch(e){}
 
 function showImageContextMenu(e, imgElement){
   e.preventDefault();
-  _currentImageTarget = imgElement;
+  window._currentImageTarget = imgElement;
   
   // 기존 메뉴 제거
-  if(_settingsImgContextMenuEl){
-    _settingsImgContextMenuEl.remove();
+  if(window._settingsImgContextMenuEl){
+    window._settingsImgContextMenuEl.remove();
   }
   
   const menu = document.createElement('div');
@@ -7118,14 +7120,14 @@ function showImageContextMenu(e, imgElement){
   `;
   
   document.body.appendChild(menu);
-  _settingsImgContextMenuEl = menu;
+  window._settingsImgContextMenuEl = menu;
   
   // 메뉴 외부 클릭 시 닫기
   setTimeout(()=>{
     const closeMenu = (ev)=>{
       if(!menu.contains(ev.target)){
         menu.remove();
-        _settingsImgContextMenuEl = null;
+        window._settingsImgContextMenuEl = null;
         document.removeEventListener('click', closeMenu);
       }
     };
@@ -7134,24 +7136,24 @@ function showImageContextMenu(e, imgElement){
 }
 
 function applyImageContextStyle(){
-  if(!_currentImageTarget) return;
+  if(!window._currentImageTarget) return;
   
   const scale = document.getElementById('ctx-scale')?.value || 1;
   const brightness = document.getElementById('ctx-bright')?.value || 1;
   
-  _currentImageTarget.style.transform = `scale(${scale})`;
-  _currentImageTarget.style.filter = `brightness(${brightness})`;
-  _currentImageTarget.dataset.scale = scale;
-  _currentImageTarget.dataset.brightness = brightness;
+  window._currentImageTarget.style.transform = `scale(${scale})`;
+  window._currentImageTarget.style.filter = `brightness(${brightness})`;
+  window._currentImageTarget.dataset.scale = scale;
+  window._currentImageTarget.dataset.brightness = brightness;
   
-  if(_settingsImgContextMenuEl){
-    _settingsImgContextMenuEl.remove();
-    _settingsImgContextMenuEl = null;
+  if(window._settingsImgContextMenuEl){
+    window._settingsImgContextMenuEl.remove();
+    window._settingsImgContextMenuEl = null;
   }
 }
 
 // ── 랜덤 이미지 회전 ──
-let _randomRotationTimer = null;
+try{ if(typeof window._randomRotationTimer === 'undefined') window._randomRotationTimer = null; }catch(e){}
 
 function startRandomRotation(){
   stopRandomRotation();
@@ -7160,15 +7162,15 @@ function startRandomRotation(){
   
   const interval = (imgSettings.interval || 5) * 1000;
   
-  _randomRotationTimer = setInterval(()=>{
+  window._randomRotationTimer = setInterval(()=>{
     rotateRandomImage();
   }, interval);
 }
 
 function stopRandomRotation(){
-  if(_randomRotationTimer){
-    clearInterval(_randomRotationTimer);
-    _randomRotationTimer = null;
+  if(window._randomRotationTimer){
+    clearInterval(window._randomRotationTimer);
+    window._randomRotationTimer = null;
   }
 }
 
@@ -8659,22 +8661,22 @@ function renameUnivAcrossData(oldName,newName){
 
 function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();}
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
-let _univDragSrc=-1;
-function _univDragStart(e,i){_univDragSrc=i;e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
+try{ if(typeof window._univDragSrc !== 'number') window._univDragSrc = -1; }catch(e){}
+function _univDragStart(e,i){try{ window._univDragSrc=i; }catch(_){} e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
 function _univDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';return false;}
 function _univDrop(e,i){
   e.stopPropagation();
-  if(_univDragSrc===i)return false;
-  const moved=univCfg.splice(_univDragSrc,1)[0];
+  if((window._univDragSrc??-1)===i)return false;
+  const moved=univCfg.splice((window._univDragSrc??-1),1)[0];
   univCfg.splice(i,0,moved);
   save();render();
   return false;
 }
 function _univDragEnd(e){e.currentTarget.style.opacity='1';}
 
-let _dissolveIdx = -1;
+try{ if(typeof window._dissolveIdx !== 'number') window._dissolveIdx = -1; }catch(e){}
 function openDissolveModal(i){
-  _dissolveIdx = i;
+  window._dissolveIdx = i;
   const u = univCfg[i];
   document.getElementById('dissolve-title').textContent = `"${u.name}" 해체 처리`;
   const today = new Date().toISOString().slice(0,10);
@@ -8685,8 +8687,8 @@ function openDissolveModal(i){
   om('dissolveModal');
 }
 function confirmDissolve(){
-  if(_dissolveIdx < 0) return;
-  const u = univCfg[_dissolveIdx];
+  if((window._dissolveIdx??-1) < 0) return;
+  const u = univCfg[window._dissolveIdx];
   const date = document.getElementById('dissolve-date').value || new Date().toISOString().slice(0,10);
   const movePlayers = document.getElementById('dissolve-move-players').checked;
   u.dissolved = true;

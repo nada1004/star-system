@@ -107,7 +107,7 @@ function rBracketSchedule(tn){
       </div>
       <div style="margin-bottom:0">
       <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_bktSide.left||_bktSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}border-left:4px solid ${_fxOn?(ca||'#3b82f6'):(isManual?'#7c3aed':'var(--blue)')};${_fxOn?`border-right:4px solid ${cb||'#ef4444'};`:''};background:var(--white);margin-bottom:0">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
+        <div class="grp-match-leftpad" style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
           ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px">예정</span>`:''}
         </div>
         ${_bktSide.left||''}

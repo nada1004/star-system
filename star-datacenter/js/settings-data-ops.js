@@ -352,16 +352,18 @@ function saveImageSettings(){
 
 // ── 우클릭 이미지 조절 메뉴 ──
 // tier-tour.js 등 다른 스크립트와 전역 식별자 충돌 방지
-let _settingsImgContextMenuEl = null;
-let _currentImageTarget = null;
+try{
+  if(typeof window._settingsImgContextMenuEl === 'undefined') window._settingsImgContextMenuEl = null;
+  if(typeof window._currentImageTarget === 'undefined') window._currentImageTarget = null;
+}catch(e){}
 
 function showImageContextMenu(e, imgElement){
   e.preventDefault();
-  _currentImageTarget = imgElement;
+  window._currentImageTarget = imgElement;
   
   // 기존 메뉴 제거
-  if(_settingsImgContextMenuEl){
-    _settingsImgContextMenuEl.remove();
+  if(window._settingsImgContextMenuEl){
+    window._settingsImgContextMenuEl.remove();
   }
   
   const menu = document.createElement('div');
@@ -400,14 +402,14 @@ function showImageContextMenu(e, imgElement){
   `;
   
   document.body.appendChild(menu);
-  _settingsImgContextMenuEl = menu;
+  window._settingsImgContextMenuEl = menu;
   
   // 메뉴 외부 클릭 시 닫기
   setTimeout(()=>{
     const closeMenu = (ev)=>{
       if(!menu.contains(ev.target)){
         menu.remove();
-        _settingsImgContextMenuEl = null;
+        window._settingsImgContextMenuEl = null;
         document.removeEventListener('click', closeMenu);
       }
     };
@@ -416,24 +418,24 @@ function showImageContextMenu(e, imgElement){
 }
 
 function applyImageContextStyle(){
-  if(!_currentImageTarget) return;
+  if(!window._currentImageTarget) return;
   
   const scale = document.getElementById('ctx-scale')?.value || 1;
   const brightness = document.getElementById('ctx-bright')?.value || 1;
   
-  _currentImageTarget.style.transform = `scale(${scale})`;
-  _currentImageTarget.style.filter = `brightness(${brightness})`;
-  _currentImageTarget.dataset.scale = scale;
-  _currentImageTarget.dataset.brightness = brightness;
+  window._currentImageTarget.style.transform = `scale(${scale})`;
+  window._currentImageTarget.style.filter = `brightness(${brightness})`;
+  window._currentImageTarget.dataset.scale = scale;
+  window._currentImageTarget.dataset.brightness = brightness;
   
-  if(_settingsImgContextMenuEl){
-    _settingsImgContextMenuEl.remove();
-    _settingsImgContextMenuEl = null;
+  if(window._settingsImgContextMenuEl){
+    window._settingsImgContextMenuEl.remove();
+    window._settingsImgContextMenuEl = null;
   }
 }
 
 // ── 랜덤 이미지 회전 ──
-let _randomRotationTimer = null;
+try{ if(typeof window._randomRotationTimer === 'undefined') window._randomRotationTimer = null; }catch(e){}
 
 function startRandomRotation(){
   stopRandomRotation();
@@ -442,15 +444,15 @@ function startRandomRotation(){
   
   const interval = (imgSettings.interval || 5) * 1000;
   
-  _randomRotationTimer = setInterval(()=>{
+  window._randomRotationTimer = setInterval(()=>{
     rotateRandomImage();
   }, interval);
 }
 
 function stopRandomRotation(){
-  if(_randomRotationTimer){
-    clearInterval(_randomRotationTimer);
-    _randomRotationTimer = null;
+  if(window._randomRotationTimer){
+    clearInterval(window._randomRotationTimer);
+    window._randomRotationTimer = null;
   }
 }
 
@@ -928,4 +930,3 @@ function promptBoardNoteImgUrl(univName){
   if(!trimmed){showToast('URL을 입력해주세요.');return;}
   addBoardNoteImg(univName,trimmed);
 }
-

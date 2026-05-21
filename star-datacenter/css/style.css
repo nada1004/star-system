@@ -4457,24 +4457,15 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .grp-match-card.match-card-v3.has-side-panels{
     display:grid !important;
     grid-template-columns:auto 1fr auto;
-    grid-template-areas:
-      "meta meta menu"
-      "left main right";
+    grid-template-areas: "left main right";
     align-items:center !important;
     gap:6px !important;
     padding:8px 8px !important;
   }
-  .grp-match-card.match-card-v3.has-side-panels > :first-child{
-    grid-area:meta;
-    width:auto !important;
-    flex-direction:row !important;
-    justify-content:flex-start !important;
-    gap:8px !important;
-  }
+  .grp-match-card.match-card-v3.has-side-panels > .grp-match-leftpad{ display:none !important; }
   .grp-match-card.match-card-v3.has-side-panels > .rec-side-profiles:first-of-type{ grid-area:left; }
   .grp-match-card.match-card-v3.has-side-panels > .grp-match-main{ grid-area:main; width:auto !important; }
   .grp-match-card.match-card-v3.has-side-panels > .rec-side-profiles:last-of-type{ grid-area:right; }
-  .grp-match-card.match-card-v3.has-side-panels > .no-export{ grid-area:menu; justify-self:end; }
   .grp-match-card.match-card-v3.has-side-panels .grp-match-main{
     flex-wrap:nowrap !important;
     overflow:hidden !important;
