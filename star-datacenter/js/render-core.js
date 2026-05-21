@@ -84,6 +84,7 @@ function _renderImpl(){
     default: break;
   }
   try{ window._applyRecCardTheme && window._applyRecCardTheme(); }catch(e){}
+  try{ window.applyRecLayoutScale && window.applyRecLayoutScale(); }catch(e){}
   try{ window.applyMatchBtnScale && window.applyMatchBtnScale(); }catch(e){}
   try{ window.applyRecMemBtnScale && window.applyRecMemBtnScale(); }catch(e){}
   try{ window.applyRecVsGap && window.applyRecVsGap(); }catch(e){}

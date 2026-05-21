@@ -491,6 +491,8 @@ window.cfgSetRecCardSettings = function(){
   const ava = parseInt(document.getElementById('cfg-ava-scale')?.value||'100',10);
   const vsAlign = (document.getElementById('cfg-rc-vs-align')?.value || 'center').trim(); // left|center|right
   const scScale = parseInt(document.getElementById('cfg-rc-score-scale')?.value||'88',10);
+  const lpcEl = document.getElementById('cfg-rc-layout-pc');
+  const lmbEl = document.getElementById('cfg-rc-layout-mb');
   const ckA = (document.getElementById('cfg-team-ck-a')?.value || '#2563eb').trim();
   const ckB = (document.getElementById('cfg-team-ck-b')?.value || '#6366f1').trim();
   const proA = (document.getElementById('cfg-team-pro-a')?.value || '#0f766e').trim();
@@ -508,6 +510,16 @@ window.cfgSetRecCardSettings = function(){
   try{ localStorage.setItem('su_avatar_scale', String(Math.max(70,Math.min(160,ava))/100)); }catch(e){}
   try{ localStorage.setItem('su_rc_vs_align', ['left','center','right'].includes(vsAlign)?vsAlign:'center'); }catch(e){}
   try{ localStorage.setItem('su_rc_score_scale', String(Math.max(50,Math.min(130,scScale)))); }catch(e){}
+  try{
+    if(lpcEl){
+      const v = parseInt(lpcEl.value||'100',10) || 100;
+      localStorage.setItem('su_rc_layout_scale_pc', String(Math.max(60,Math.min(120,v))));
+    }
+    if(lmbEl){
+      const v = parseInt(lmbEl.value||'100',10) || 100;
+      localStorage.setItem('su_rc_layout_scale_mb', String(Math.max(60,Math.min(120,v))));
+    }
+  }catch(e){}
   try{ if(_hex(ckA)) localStorage.setItem('su_team_color_ck_a', _hex(ckA)); }catch(e){}
   try{ if(_hex(ckB)) localStorage.setItem('su_team_color_ck_b', _hex(ckB)); }catch(e){}
   try{ if(_hex(proA)) localStorage.setItem('su_team_color_pro_a', _hex(proA)); }catch(e){}
@@ -550,8 +562,26 @@ window.cfgSetRecCardSettings = function(){
     document.documentElement.style.setProperty('--rc-score-scale', String(_ss/100));
   }catch(e){}
   try{ if(typeof window._applyRecCardTheme === 'function') window._applyRecCardTheme(); }catch(e){}
+  try{ window.applyRecLayoutScale && window.applyRecLayoutScale(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
 };
+
+window.applyRecLayoutScale = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth||1024));
+    const isMobile = w <= 768;
+    const key = isMobile ? 'su_rc_layout_scale_mb' : 'su_rc_layout_scale_pc';
+    const pct = parseInt(localStorage.getItem(key) || '100', 10);
+    const v = Math.max(60, Math.min(120, isNaN(pct)?100:pct)) / 100;
+    document.documentElement.style.setProperty('--rc-layout-scale', String(v));
+  }catch(e){}
+};
+try{
+  if(!window._recLayoutScaleBound){
+    window._recLayoutScaleBound = true;
+    window.addEventListener('resize', ()=>{ try{ window.applyRecLayoutScale && window.applyRecLayoutScale(); }catch(e){} }, {passive:true});
+  }
+}catch(e){}
 
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 미니대전/대학대전/대학CK/티어대회/프로리그/대회: 대학(팀) 버튼 크기(참여자 버튼은 유지)

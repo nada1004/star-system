@@ -898,6 +898,25 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">레이아웃 크기(기록 카드)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-rc-layout-pc" min="60" max="120" step="5"
+            value="${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_pc')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-rc-layout-pc-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
+          <span id="cfg-rc-layout-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_pc')||'100',10)||100))}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-rc-layout-mb" min="60" max="120" step="5"
+            value="${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_mb')||'100',10)||100))}"
+            oninput="document.getElementById('cfg-rc-layout-mb-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
+          <span id="cfg-rc-layout-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_mb')||'100',10)||100))}%</span>
+        </div>
+        <span style="font-size:11px;color:var(--gray-l)">※ 카드 여백/칩/스코어 박스 등 전반을 함께 줄입니다</span>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <div style="font-size:11px;color:var(--text3);font-weight:800">스코어 숫자 색상(공통)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">승</span>
