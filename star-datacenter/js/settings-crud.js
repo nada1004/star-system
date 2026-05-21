@@ -1673,4 +1673,4 @@ function clearGhToken(){
 /* ==========================================
    STATISTICS TAB
 ========================================== */
-let statsSub='overview';
+try{ window.statsSub = window.statsSub || 'overview'; }catch(e){}

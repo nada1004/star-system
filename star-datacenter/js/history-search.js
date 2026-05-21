@@ -228,6 +228,27 @@ function getTourneyMatches(){
   const result=[];
   if(!Array.isArray(tourneys))return result;
   (tourneys||[]).forEach(tn=>{
+    const br = tn.bracket || {};
+    const _bktFirstSize = (typeof _bktComputeBracketSize === 'function')
+      ? _bktComputeBracketSize(tn)
+      : (Number(br.size)||0) || 8;
+    let _bktTotalRounds = 0;
+    let _n = Math.max(2, _bktFirstSize);
+    while(_n > 1){ _n = Math.ceil(_n/2); _bktTotalRounds++; }
+    if(_bktTotalRounds <= 0) _bktTotalRounds = 1;
+    const _bktRoundLabels = {1:'결승',2:'4강',3:'8강',4:'16강',5:'32강',6:'64강',7:'128강',8:'256강'};
+    const _bktRndLabel = (key)=>{
+      try{
+        const parts = String(key||'').split('-');
+        const r = parseInt(parts[0], 10);
+        if(Number.isNaN(r) || r < 0) return '';
+        const rNum = _bktTotalRounds - r;
+        return _bktRoundLabels[rNum] || (Math.pow(2, rNum) + '강');
+      }catch(e){
+        return '';
+      }
+    };
+
     // 조별리그 경기
     (tn.groups||[]).forEach((grp,gi)=>{
       const gl='ABCDEFGHIJ'[gi]||String(gi);
@@ -244,13 +265,13 @@ function getTourneyMatches(){
       });
     });
     // 브라켓 경기 (matchDetails)
-    const br=tn.bracket||{};
     Object.entries(br.matchDetails||{}).forEach(([key,m])=>{
       if(!m||!m.a||!m.b||m.sa==null||m.sb==null)return;
       result.push({
         _src:'tour_bracket',_tnId:tn.id,_bktKey:key,
         d:m.d||'',n:tn.name,a:m.a,b:m.b,
         sa:m.sa,sb:m.sb,sets:m.sets||[],
+        rndLabel:_bktRndLabel(key),
         grpName:'토너먼트',grpLetter:'T',grpColor:'#2563eb'
       });
     });
@@ -268,6 +289,7 @@ function getTourneyMatches(){
         _src:'tour_bracket',_tnId:tn.id,_bktKey:key,
         d:(det&&det.d)||'',n:tn.name,a,b,
         sa:winner===a?1:0,sb:winner===b?1:0,sets:[],
+        rndLabel:_bktRndLabel(key),
         grpName:'토너먼트',grpLetter:'T',grpColor:'#2563eb'
       });
     });
@@ -278,7 +300,8 @@ function getTourneyMatches(){
         _src:'tour_manual',_tnId:tn.id,_manualIdx:idx,
         d:m.d||'',n:tn.name,a:m.a,b:m.b,
         sa:m.sa,sb:m.sb,sets:m.sets||[],
-        grpName:m.rndLabel||'토너먼트',grpLetter:'T',grpColor:'#7c3aed'
+        rndLabel:m.rndLabel||'',
+        grpName:'토너먼트',grpLetter:'T',grpColor:'#7c3aed'
       });
     });
   });
@@ -1090,8 +1113,8 @@ function _histProCompLeagueListHTML(){
       <span style="font-size:11px;font-weight:700;color:#0891b2;background:#e0f2fe;border-radius:20px;padding:2px 10px;margin-left:auto">${items.length}경기</span>
     </div>`;
     items.forEach(m => {
-      const pa = players.find(p=>p.name===m.a);
-      const pb = players.find(p=>p.name===m.b);
+      const pa = players.find(p=>String(p.name||'').trim()===String(m.a||'').trim());
+      const pb = players.find(p=>String(p.name||'').trim()===String(m.b||'').trim());
       const aWin = m.winner==='A';
       const bWin = m.winner==='B';
       // 스테이지 배지 (조별리그 GROUP A / 준결승 / 결승 등)
@@ -1219,7 +1242,8 @@ function histProCompTourneyHTML(_omitBar) {
       <span style="font-size:11px;font-weight:700;color:#7c3aed;background:#f5f3ff;border-radius:20px;padding:2px 10px;margin-left:auto">${items.length}경기</span>
     </div>`;
     items.forEach(m=>{
-      const pa=players.find(p=>p.name===m.a), pb=players.find(p=>p.name===m.b);
+      const pa=players.find(p=>String(p.name||'').trim()===String(m.a||'').trim());
+      const pb=players.find(p=>String(p.name||'').trim()===String(m.b||'').trim());
       const aWin=m.winner==='A', bWin=m.winner==='B';
       const stageBadge=`<span style="background:${m._stageColor};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap">${m._stageDetail}</span>`;
       const tieBadge = m._isTie ? `<span style="background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;white-space:nowrap">⚖️ ${m._scoreA||0}:${m._scoreB||0}</span>` : '';

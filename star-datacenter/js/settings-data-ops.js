@@ -465,7 +465,7 @@ function rotateRandomImage(){
     const randomPlayer = players[Math.floor(Math.random() * players.length)];
     
     // 전체대학 보기
-    if(currentTab === 'total'){
+    if((window._settingsCurrentTab||'total') === 'total'){
       const imgContainer = document.querySelector('.random-image-container');
       if(imgContainer && randomPlayer.photo){
         imgContainer.src = toHttpsUrl(randomPlayer.photo);
@@ -481,13 +481,13 @@ function rotateRandomImage(){
 }
 
 // 현재 탭 추적
-let currentTab = 'total';
+try{ if(typeof window._settingsCurrentTab !== 'string') window._settingsCurrentTab = 'total'; }catch(e){}
 
 // 탭 변경 시 회전 제어
 if(!window.__swWrappedForSettings){
   const originalSw = window.sw;
   window.sw = function(tab, el){
-    currentTab = tab;
+    try{ window._settingsCurrentTab = tab; }catch(e){}
     const ret = originalSw ? originalSw.apply(this, arguments) : undefined;
     let imgSettings = {};
     try{
