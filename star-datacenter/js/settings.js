@@ -881,17 +881,24 @@ window.cfgSetRecBgFxAll = function(on){
   try{ if(typeof render==='function') render(); }catch(e){}
 };
 
-// ─────────────────────────────────────────────────────────────
-// (요청사항) 프로리그 대회(프로리그탭) 조별리그/대진표 기록 카드: 프로필 크기 PC/모바일 분리
-// ─────────────────────────────────────────────────────────────
 window.cfgSetProCompAvatarSettings = function(){
   try{
     const pc = parseInt(document.getElementById('cfg-procomp-ava-pc')?.value||'52',10) || 52;
     const mb = parseInt(document.getElementById('cfg-procomp-ava-mb')?.value||'40',10) || 40;
     const fit = String(document.getElementById('cfg-procomp-ava-fit')?.value||'cover').trim();
-    localStorage.setItem('su_procomp_avatar_pc', String(Math.max(28,Math.min(84,pc))));
-    localStorage.setItem('su_procomp_avatar_mb', String(Math.max(24,Math.min(72,mb))));
+    localStorage.setItem('su_procomp_avatar_pc', String(Math.max(28,Math.min(200,pc))));
+    localStorage.setItem('su_procomp_avatar_mb', String(Math.max(24,Math.min(160,mb))));
     localStorage.setItem('su_procomp_avatar_fit', (fit==='contain'||fit==='cover'||fit==='fill') ? fit : 'cover');
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
+window.cfgSetProCompScoreSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-procomp-score-pc')?.value||'100',10) || 100;
+    const mb = parseInt(document.getElementById('cfg-procomp-score-mb')?.value||'100',10) || 100;
+    localStorage.setItem('su_procomp_score_scale_pc', String(Math.max(60,Math.min(160,pc))));
+    localStorage.setItem('su_procomp_score_scale_mb', String(Math.max(60,Math.min(160,mb))));
   }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
 };
@@ -5096,6 +5103,8 @@ ${_scfgD('notice','📢 공지 관리')}
     const pc = parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52;
     const mb = parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40;
     const fit = (localStorage.getItem('su_procomp_avatar_fit')||'cover');
+    const scPc = parseInt(localStorage.getItem('su_procomp_score_scale_pc')||'100',10)||100;
+    const scMb = parseInt(localStorage.getItem('su_procomp_score_scale_mb')||'100',10)||100;
     return _scfgD('procompcard','⭐ 프로리그 대회 카드(프로리그탭)') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">프로리그탭 → 프로리그 대회 → 조별리그/대진표 기록 카드에서 선수(스트리머) 프로필 크기를 조절합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
@@ -5110,21 +5119,37 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">PC</div>
-        <input type="range" id="cfg-procomp-ava-pc" min="28" max="84" step="2" value="${Math.max(28,Math.min(84,pc))}"
+        <input type="range" id="cfg-procomp-ava-pc" min="28" max="200" step="2" value="${Math.max(28,Math.min(200,pc))}"
           oninput="document.getElementById('cfg-procomp-ava-pc-v').textContent=this.value+'px'"
           onchange="cfgSetProCompAvatarSettings()" style="width:100%">
-        <div id="cfg-procomp-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(28,Math.min(84,pc))}px</div>
+        <div id="cfg-procomp-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(28,Math.min(200,pc))}px</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
-        <input type="range" id="cfg-procomp-ava-mb" min="24" max="72" step="2" value="${Math.max(24,Math.min(72,mb))}"
+        <input type="range" id="cfg-procomp-ava-mb" min="24" max="160" step="2" value="${Math.max(24,Math.min(160,mb))}"
           oninput="document.getElementById('cfg-procomp-ava-mb-v').textContent=this.value+'px'"
           onchange="cfgSetProCompAvatarSettings()" style="width:100%">
-        <div id="cfg-procomp-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(24,Math.min(72,mb))}px</div>
+        <div id="cfg-procomp-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(24,Math.min(160,mb))}px</div>
       </div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
         ※ 값 변경 후 자동으로 재렌더링됩니다. 카드가 너무 커지면 크기를 조금 낮춰주세요.
       </div>
+
+      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+      <div style="font-size:12px;font-weight:900;color:var(--text2)">스코어 버튼 크기</div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC</div>
+        <input type="range" id="cfg-procomp-score-pc" min="60" max="160" step="5" value="${Math.max(60,Math.min(160,scPc))}"
+          oninput="document.getElementById('cfg-procomp-score-pc-v').textContent=this.value+'%'" onchange="cfgSetProCompScoreSettings()" style="width:100%">
+        <div id="cfg-procomp-score-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(160,scPc))}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
+        <input type="range" id="cfg-procomp-score-mb" min="60" max="160" step="5" value="${Math.max(60,Math.min(160,scMb))}"
+          oninput="document.getElementById('cfg-procomp-score-mb-v').textContent=this.value+'%'" onchange="cfgSetProCompScoreSettings()" style="width:100%">
+        <div id="cfg-procomp-score-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(160,scMb))}%</div>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l)">※ 프로리그 대회 카드의 스코어 영역 크기에 적용됩니다.</div>
     </div>
   </details>`;
   })()}

@@ -160,6 +160,17 @@ function proCompGetAvatarFit(){
   }
 }
 
+function proCompGetScoreScale(){
+  try{
+    const pc = _pcReadIntLS('su_procomp_score_scale_pc', 100, 60, 160);
+    const mb = _pcReadIntLS('su_procomp_score_scale_mb', 100, 60, 160);
+    const pct = _pcIsMobile() ? mb : pc;
+    return Math.max(0.6, Math.min(1.6, (pct||100)/100));
+  }catch(e){
+    return 1;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 프로리그 대회 "조별리그"에서는 스테이지(16강/8강/4강/결승) 개념 삭제
 // - 기록/순위 탭은 조별리그만 다룸
@@ -473,7 +484,7 @@ function proCompLeague(tn) {
           : '';
         const name = p ? (p.name||'') : '';
         const initial = (name||'미').slice(0,1);
-        return `<div ${clickAttr} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:10px 10px 12px;border-radius:14px;min-width:${minW}px;min-height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
+        return `<div ${clickAttr} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:10px 10px 12px;border-radius:14px;width:${minW}px;height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
           <div style="position:absolute;inset:0;background:${p&&p.photo
             ? `linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.28) 50%, rgba(15,23,42,.72) 100%)`
             : `linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.18))`
@@ -500,28 +511,28 @@ function proCompLeague(tn) {
         isLoggedIn ? { t:'🗑️ 결과 삭제', d:'이 경기 기록 삭제', kind:'danger', on:()=>proCompDelMatch(tn.id,m.grpIdx,m.matchNum-1) } : null
       ].filter(Boolean);
       const _cardMenu = _cardActions.length ? _compActionMenuHTML(_cardActions) : '';
-      h += `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?m.grpColor:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?m.grpColor:cb};margin-bottom:8px">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px">
+      h += `<div class="grp-match-wrap">
+        <div class="grp-card-meta-bar no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
           <span class="grp-badge" style="background:linear-gradient(135deg,${m.grpColor},${m.grpColor}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor}55">${m.grpName?m.grpName:`GROUP ${m.grpLetter}`}</span>
-          <span style="font-size:10px;color:var(--gray-l);font-weight:600">${m.matchNum}경기</span>
+          <span style="font-size:10px;color:var(--gray-l);font-weight:700">${m.matchNum}경기</span>
           ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
+          <span style="flex:1"></span>
+          <span class="grp-meta-menu">${_cardMenu}</span>
         </div>
-        <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
+        <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?m.grpColor:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?m.grpColor:cb}">
+        <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;padding:10px 12px 12px">
           ${_pcard(pa, aWin)}
-          <div class="grp-score-col" style="text-align:center;min-width:60px">
-            ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;padding:6px 12px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
+          <div class="grp-score-col" style="text-align:center;min-width:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+            ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:${Math.round(18*proCompGetScoreScale())}px;padding:${Math.round(6*proCompGetScoreScale())}px ${Math.round(12*proCompGetScoreScale())}px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
               <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'패'}</span>
               <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
               <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
             </div>
-            ${m.map?`<div style="font-size:10px;color:var(--gray-l);margin-top:4px">🗺️ ${m.map}</div>`:''}
+            ${m.map?`<div style="font-size:10px;color:var(--gray-l);max-width:190px;line-height:1.25;word-break:break-word">🗺️ ${m.map}</div>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor}">VS</div>`}
           </div>
           ${_pcard(pb, bWin)}
         </div>
-        <div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-          ${isDone?``:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor}">VS</div>`}
-          ${_cardMenu}
         </div>
       </div>`;
     });
@@ -1582,7 +1593,7 @@ function proCompTourMatchInput(tn){
         ? `background:linear-gradient(135deg,${isWin?'#16a34a':'#64748b'}33,${isWin?'#16a34a':'#64748b'}11);`
         : '';
       const initial = (name||'미').slice(0,1);
-      return `<div ${photoClick} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:10px 10px 12px;border-radius:14px;min-width:${minW}px;min-height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
+      return `<div ${photoClick} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:10px 10px 12px;border-radius:14px;width:${minW}px;height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
         <div style="position:absolute;inset:0;background:${p&&p.photo
           ? `linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.28) 50%, rgba(15,23,42,.72) 100%)`
           : `linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.18))`
@@ -1608,29 +1619,31 @@ function proCompTourMatchInput(tn){
     const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
     const _hexRgb2=(h)=>{const s=String(h||'').replace('#','');if(s.length===6){const r=parseInt(s.slice(0,2),16),g=parseInt(s.slice(2,4),16),b=parseInt(s.slice(4,6),16);if(![r,g,b].some(isNaN))return r+','+g+','+b;}return'100,116,139';};
     const _sideRgbVars2=`--rec-side-left-rgb:${_hexRgb2(ca||'#3b82f6')};--rec-side-right-rgb:${_hexRgb2(cb||'#ef4444')};`;
-    return `<div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars2}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?col:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?col:cb};margin-bottom:8px">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:70px">
+    const _menuBtn = `<button class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openPcStageActionMenu(this,'${tn.id}','${_cardRound}',${item.src==='stage'?item.idx:-1},'${item.src}',${item.ri??-1},${item.mi??-1})">⋯</button>`;
+    return `<div class="grp-match-wrap">
+      <div class="grp-card-meta-bar no-export" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
         <span class="grp-badge" style="background:linear-gradient(135deg,${col},${col}cc);font-size:10px;letter-spacing:.5px;box-shadow:0 2px 6px ${col}55">${_cardRound}</span>
-        <span style="font-size:10px;color:var(--gray-l);font-weight:600">${displayNo}경기</span>
+        <span style="font-size:10px;color:var(--gray-l);font-weight:700">${displayNo}경기</span>
         ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border)">예정</span>`:''}
+        <span style="flex:1"></span>
+        ${_menuBtn}
       </div>
-      <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
+      <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars2}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?col:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?col:cb}">
+      <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;padding:10px 12px 12px">
         ${_pcard(pa, m.a, aWin)}
-        <div class="grp-score-col" style="text-align:center;min-width:60px">
-          ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;padding:6px 12px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
+        <div class="grp-score-col" style="text-align:center;min-width:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+          ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:${Math.round(18*proCompGetScoreScale())}px;padding:${Math.round(6*proCompGetScoreScale())}px ${Math.round(12*proCompGetScoreScale())}px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
             <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'패'}</span>
             <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
             <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
           </div>
           
-          ${m.map?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">🗺️ ${m.map}</div>`:''}
-          ${m.note?`<div style="font-size:10px;color:#94a3b8;margin-top:2px;max-width:180px;line-height:1.45;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
+          ${m.map?`<div style="font-size:10px;color:var(--gray-l);max-width:190px;line-height:1.25;word-break:break-word">🗺️ ${m.map}</div>`:''}
+          ${m.note?`<div style="font-size:10px;color:#94a3b8;max-width:190px;line-height:1.45;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
           `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${col}">VS</div>`}
         </div>
         ${_pcard(pb, m.b, bWin)}
       </div>
-      <div class="no-export" style="display:flex;flex-direction:column;gap:4px">
-        <button class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openPcStageActionMenu(this,'${tn.id}','${_cardRound}',${item.src==='stage'?item.idx:-1},'${item.src}',${item.ri??-1},${item.mi??-1})">⋯</button>
       </div>
     </div>`;
   };
@@ -1682,4 +1695,3 @@ function proCompTourMatchInput(tn){
     ${listHTML}
   </div>`;
 }
-

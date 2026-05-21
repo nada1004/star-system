@@ -4487,7 +4487,8 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     max-width:88px !important;
     min-width:0 !important;
     flex-shrink:0 !important;
-    overflow:visible !important;
+    overflow:hidden !important;
+    pointer-events:none !important;
   }
   .grp-match-card.has-side-panels > .rec-side-profiles .rsp-inner > div{
     max-width:100% !important;
@@ -4495,7 +4496,6 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .grp-match-card.has-side-panels > .rec-side-profiles img,
   .grp-match-card.has-side-panels > .rec-side-profiles span{
     max-width:100% !important;
-    height:auto !important;
   }
   /* (요청사항) 대회탭 조별/토너 기록 카드: 모바일에서 더 컴팩트 + 정렬 */
   .grp-match-card.match-card-v3{

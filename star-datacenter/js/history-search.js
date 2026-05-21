@@ -1103,7 +1103,9 @@ function _histProCompLeagueListHTML(){
 
   const _tb = p => p&&p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb = p => p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _photo = p => p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')" onerror="this.style.display='none'">`:'';
+  const _avaPx = (()=>{ try{ const pc=parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52; const mb=parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40; const isMb=window.innerWidth<=768; return Math.max(18, Math.min(160, isMb?mb:pc)); }catch(e){ return 22; } })();
+  const _avaFit = (()=>{ try{ const v=String(localStorage.getItem('su_procomp_avatar_fit')||'cover').trim(); return (v==='contain'||v==='cover'||v==='fill')?v:'cover'; }catch(e){ return 'cover'; } })();
+  const _photo = (name)=>{ try{ return (typeof getPlayerPhotoHTML==='function') ? getPlayerPhotoHTML(name, _avaPx+'px', `margin-right:3px;object-fit:${_avaFit};vertical-align:middle;`) : ''; }catch(e){ return ''; } };
 
   h += sortBar;
   Object.entries(groups).forEach(([tnName, items]) => {
@@ -1152,7 +1154,7 @@ function _histProCompLeagueListHTML(){
         <div class="rec-sum-header" style="padding:5px 12px 10px">
           <div class="rec-sum-vs" style="flex:1">
             <div style="display:flex;align-items:center;gap:4px;${aWin?'':'opacity:.7'}">
-              ${_photo(pa)}
+              ${_photo(m.a)}
               <span style="font-weight:${aWin?'800':'500'};font-size:13px;color:${aWin?'#16a34a':'var(--text)'};cursor:pointer;text-decoration:underline dotted" onclick="openPlayerModal('${escJS(m.a)}')">${m.a}</span>
               ${_rb(pa)}${_tb(pa)}
               ${pa&&pa.univ?`<span style="font-size:10px;color:var(--gray-l)">${pa.univ}</span>`:''}
@@ -1160,7 +1162,7 @@ function _histProCompLeagueListHTML(){
             </div>
             <span style="font-size:11px;color:var(--gray-l);font-weight:700;flex-shrink:0">vs</span>
             <div style="display:flex;align-items:center;gap:4px;${bWin?'':'opacity:.7'}">
-              ${_photo(pb)}
+              ${_photo(m.b)}
               <span style="font-weight:${bWin?'800':'500'};font-size:13px;color:${bWin?'#16a34a':'var(--text)'};cursor:pointer;text-decoration:underline dotted" onclick="openPlayerModal('${escJS(m.b)}')">${m.b}</span>
               ${_rb(pb)}${_tb(pb)}
               ${pb&&pb.univ?`<span style="font-size:10px;color:var(--gray-l)">${pb.univ}</span>`:''}
@@ -1233,7 +1235,9 @@ function histProCompTourneyHTML(_omitBar) {
   allItems.forEach(m=>{if(!groups[m._tnName])groups[m._tnName]=[];groups[m._tnName].push(m);});
   const _tb=p=>p&&p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _photo=p=>p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')" onerror="this.style.display='none'">`:'';
+  const _avaPx = (()=>{ try{ const pc=parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52; const mb=parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40; const isMb=window.innerWidth<=768; return Math.max(18, Math.min(160, isMb?mb:pc)); }catch(e){ return 22; } })();
+  const _avaFit = (()=>{ try{ const v=String(localStorage.getItem('su_procomp_avatar_fit')||'cover').trim(); return (v==='contain'||v==='cover'||v==='fill')?v:'cover'; }catch(e){ return 'cover'; } })();
+  const _photo = (name)=>{ try{ return (typeof getPlayerPhotoHTML==='function') ? getPlayerPhotoHTML(name, _avaPx+'px', `margin-right:3px;object-fit:${_avaFit};vertical-align:middle;`) : ''; }catch(e){ return ''; } };
   let h=_pcSubBar2+sortBar;
   Object.entries(groups).forEach(([tnName,items])=>{
     h+=`<div style="background:linear-gradient(135deg,#f5f3ff 0%,var(--white) 100%);border:1.5px solid #ddd6fe;border-left:4px solid #7c3aed;border-radius:12px;padding:12px 16px;margin:14px 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1277,12 +1281,12 @@ function histProCompTourneyHTML(_omitBar) {
         <div class="rec-sum-header" style="padding:5px 12px 10px">
           <div class="rec-sum-vs" style="flex:1">
             <div style="display:flex;align-items:center;gap:4px;${(aWin||m._isTie)?'':'opacity:.7'}">
-              ${_photo(pa)}<span style="font-weight:${aWin?'800':m._isTie?'800':'500'};font-size:13px;color:${aWin?'#16a34a':m._isTie?'#b45309':'var(--text)'}">${m.a}</span>
+              ${_photo(m.a)}<span style="font-weight:${aWin?'800':m._isTie?'800':'500'};font-size:13px;color:${aWin?'#16a34a':m._isTie?'#b45309':'var(--text)'}">${m.a}</span>
               ${_rb(pa)}${_tb(pa)}
             </div>
             <span style="font-size:11px;color:var(--gray-l);font-weight:700;flex-shrink:0">vs</span>
             <div style="display:flex;align-items:center;gap:4px;${(bWin||m._isTie)?'':'opacity:.7'}">
-              ${_photo(pb)}<span style="font-weight:${bWin?'800':m._isTie?'800':'500'};font-size:13px;color:${bWin?'#16a34a':m._isTie?'#b45309':'var(--text)'}">${m.b}</span>
+              ${_photo(m.b)}<span style="font-weight:${bWin?'800':m._isTie?'800':'500'};font-size:13px;color:${bWin?'#16a34a':m._isTie?'#b45309':'var(--text)'}">${m.b}</span>
               ${_rb(pb)}${_tb(pb)}
             </div>
             ${m.map?`<span style="font-size:10px;color:var(--gray-l);flex-shrink:0">📍${m.map}</span>`:''}
@@ -1316,7 +1320,9 @@ function histProCompTeamHTML(_omitBar) {
   if (!tmList.length) return sortBar+`<div class="empty-state"><div class="empty-state-icon">🤝</div><div class="empty-state-title">팀전 기록이 없습니다</div><div class="empty-state-desc">프로리그 대회 팀전 결과를 입력하면 여기에 표시됩니다</div></div>`;
   const _tb=p=>p&&p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _photo=p=>p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')" onerror="this.style.display='none'">`:'';
+  const _avaPx = (()=>{ try{ const pc=parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52; const mb=parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40; const isMb=window.innerWidth<=768; return Math.max(18, Math.min(160, isMb?mb:pc)); }catch(e){ return 22; } })();
+  const _avaFit = (()=>{ try{ const v=String(localStorage.getItem('su_procomp_avatar_fit')||'cover').trim(); return (v==='contain'||v==='cover'||v==='fill')?v:'cover'; }catch(e){ return 'cover'; } })();
+  const _photo = (name)=>{ try{ return (typeof getPlayerPhotoHTML==='function') ? getPlayerPhotoHTML(name, _avaPx+'px', `margin-right:3px;object-fit:${_avaFit};vertical-align:middle;`) : ''; }catch(e){ return ''; } };
   const _proSideCols = getFixedSideColors('pro');
   const colA=_proSideCols.a, colB=_proSideCols.b;
   let h=sortBar;
@@ -1367,14 +1373,14 @@ function histProCompTeamHTML(_omitBar) {
               <span style="background:${g._sideW==='A'?colA:colB};color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px">${sideWin}</span>
               <div class="rec-sum-vs" style="flex:1">
                 <div style="display:flex;align-items:center;gap:4px">
-                  ${_photo(pw)}<span style="font-weight:800;font-size:13px;color:#16a34a">${g.wName}</span>
+                  ${_photo(g.wName)}<span style="font-weight:800;font-size:13px;color:#16a34a">${g.wName}</span>
                   ${_rb(pw)}${_tb(pw)}
                   ${pw&&pw.univ?`<span style="font-size:10px;color:var(--gray-l)">${pw.univ}</span>`:''}
                   <span style="font-size:10px;font-weight:800;color:#16a34a;margin-left:2px">WIN</span>
                 </div>
                 <span style="font-size:11px;color:var(--gray-l);font-weight:700;flex-shrink:0">vs</span>
                 <div style="display:flex;align-items:center;gap:4px;opacity:.7">
-                  ${_photo(pl)}<span style="font-weight:500;font-size:13px;color:var(--text)">${g.lName}</span>
+                  ${_photo(g.lName)}<span style="font-weight:500;font-size:13px;color:var(--text)">${g.lName}</span>
                   ${_rb(pl)}${_tb(pl)}
                   ${pl&&pl.univ?`<span style="font-size:10px;color:var(--gray-l)">${pl.univ}</span>`:''}
                 </div>
