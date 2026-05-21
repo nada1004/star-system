@@ -2879,10 +2879,10 @@ ${_scfgD('notice','📢 공지 관리')}
               const _ulCur=(()=>{try{return localStorage.getItem('su_ul_shape')||'circle';}catch(e){return 'circle';}})();
               return _ulShapes.map(s=>{
                 const sel=_ulCur===s.v;
-                return \`<button type="button" onclick="localStorage.setItem('su_ul_shape','${s.v}');if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();render()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 6px;border-radius:10px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 2px #2563eb22':'none'}">
+                return `<button type="button" onclick="localStorage.setItem('su_ul_shape','${s.v}');if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();render()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 6px;border-radius:10px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 2px #2563eb22':'none'}">
                   <div style="width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#a855f7);${s.preview};flex-shrink:0"></div>
                   <span style="font-size:10px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'};text-align:center;line-height:1.2">${s.label}</span>
-                </button>\`;
+                </button>`;
               }).join('');
             })()}
           </div>
