@@ -521,6 +521,11 @@ function histTourneyHTML(context){
         const _sideRgbVars=`--rec-side-left-rgb:${_hexRgb(ca||'#3b82f6')};--rec-side-right-rgb:${_hexRgb(cb||'#ef4444')};`;
         const _winCol=(aWin||bWin)?(aWin?ca:cb):'#64748b';
         const _winRgb=_hexRgb(_winCol);
+        const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
+        const _fxOn=!!_fxCfg.on;
+        const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
+        const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
+        const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(ca||'#3b82f6',cb||'#ef4444',_fxCfg):'';
 
         h+=`<div class="grp-match-wrap">
           <div class="grp-card-meta-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
@@ -529,7 +534,7 @@ function histTourneyHTML(context){
             <span class="grp-meta-spacer" style="flex:1"></span>
             ${_menuBtn?`<span class="grp-meta-menu">${_menuBtn}</span>`:''}
           </div>
-          <div class="grp-match-card match-card-v3 tc-card${_hasSide?' has-side-panels':''}" style="--tc-win-rgb:${_winRgb};${_sideRgbVars}background:var(--white);border:1px solid var(--border);border-radius:22px;box-shadow:0 14px 32px rgba(15,23,42,.06);cursor:pointer" onclick="toggleDetail('${key}')">
+          <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${_hasSide?' has-side-panels':''}" style="--tc-win-rgb:${_winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${ca||'var(--blue)'};border-right:4px solid ${cb||'var(--blue)'};border-radius:22px;box-shadow:0 14px 32px rgba(15,23,42,.06);cursor:pointer" onclick="toggleDetail('${key}')">
             ${_sidePanel.left||''}
             <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:var(--tc-vs-gap,12px);justify-content:center;flex-wrap:wrap">
               <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
