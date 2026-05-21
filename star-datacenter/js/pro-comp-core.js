@@ -171,6 +171,17 @@ function proCompGetScoreScale(){
   }
 }
 
+function proCompGetLayoutScale(){
+  try{
+    const pc = _pcReadIntLS('su_procomp_layout_scale_pc', 100, 60, 120);
+    const mb = _pcReadIntLS('su_procomp_layout_scale_mb', 100, 60, 120);
+    const pct = _pcIsMobile() ? mb : pc;
+    return Math.max(0.6, Math.min(1.2, (pct||100)/100));
+  }catch(e){
+    return 1;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 프로리그 대회 "조별리그"에서는 스테이지(16강/8강/4강/결승) 개념 삭제
 // - 기록/순위 탭은 조별리그만 다룸
@@ -458,6 +469,12 @@ function proCompLeague(tn) {
     byDate[date].forEach(m => {
       const pa = players.find(p=>p.name===m.a);
       const pb = players.find(p=>p.name===m.b);
+      const _ls = (typeof proCompGetLayoutScale==='function') ? proCompGetLayoutScale() : 1;
+      const _mainGap = Math.max(6, Math.round(10*_ls));
+      const _mainPadT = Math.max(8, Math.round(10*_ls));
+      const _mainPadX = Math.max(10, Math.round(12*_ls));
+      const _mainPadB = Math.max(10, Math.round(12*_ls));
+      const _scoreMinW = Math.max(48, Math.round(60*_ls));
       const _gcByUniv=(name,p)=>{const _u=p&&p.univ?gc(p.univ):'';return(_u&&_u!=='#6b7280')?_u:gc(name||'');};
       const ca = (typeof gc==='function' ? _gcByUniv(m.a,players.find(p=>p.name===m.a)) : '#3b82f6');
       const cb = (typeof gc==='function' ? _gcByUniv(m.b,players.find(p=>p.name===m.b)) : '#ef4444');
@@ -476,15 +493,18 @@ function proCompLeague(tn) {
         const av = (typeof proCompGetAvatarPx==='function') ? proCompGetAvatarPx() : 52;
         const fit = (typeof proCompGetAvatarFit==='function') ? proCompGetAvatarFit() : 'cover';
         const bgSize = (fit==='fill') ? '100% 100%' : (fit==='contain' ? 'contain' : 'cover');
-        const minW = Math.max(148, av + 60);
-        const minH = Math.max(180, av + 80);
+        const minW = Math.round(Math.max(148, av + 60) * _ls);
+        const minH = Math.round(Math.max(180, av + 80) * _ls);
+        const padT = Math.max(6, Math.round(10*_ls));
+        const padX = Math.max(6, Math.round(10*_ls));
+        const padB = Math.max(8, Math.round(12*_ls));
         const bgImg = (p && p.photo) ? `background-image:url('${toHttpsUrl(p.photo)}');` : '';
         const bgFallback = (!p || !p.photo)
           ? `background:linear-gradient(135deg,${isWin?'#16a34a':'#64748b'}33,${isWin?'#16a34a':'#64748b'}11);`
           : '';
         const name = p ? (p.name||'') : '';
         const initial = (name||'미').slice(0,1);
-        return `<div ${clickAttr} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:10px 10px 12px;border-radius:14px;width:${minW}px;height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
+        return `<div ${clickAttr} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:${padT}px ${padX}px ${padB}px;border-radius:14px;width:${minW}px;height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
           <div style="position:absolute;inset:0;background:${p&&p.photo
             ? `linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.28) 50%, rgba(15,23,42,.72) 100%)`
             : `linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.18))`
@@ -520,9 +540,9 @@ function proCompLeague(tn) {
           <span class="grp-meta-menu">${_cardMenu}</span>
         </div>
         <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?m.grpColor:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?m.grpColor:cb}">
-        <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;padding:10px 12px 12px">
+        <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:${_mainGap}px;justify-content:center;flex-wrap:wrap;padding:${_mainPadT}px ${_mainPadX}px ${_mainPadB}px">
           ${_pcard(pa, aWin)}
-          <div class="grp-score-col" style="text-align:center;min-width:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+          <div class="grp-score-col" style="text-align:center;min-width:${_scoreMinW}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
             ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:${Math.round(18*proCompGetScoreScale())}px;padding:${Math.round(6*proCompGetScoreScale())}px ${Math.round(12*proCompGetScoreScale())}px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
               <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'패'}</span>
               <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>
@@ -1571,6 +1591,12 @@ function proCompTourMatchInput(tn){
     const _cardRound = item._rnd || m._roundLabel || round;
     const pa = players.find(p=>p.name===m.a);
     const pb = players.find(p=>p.name===m.b);
+    const _ls = (typeof proCompGetLayoutScale==='function') ? proCompGetLayoutScale() : 1;
+    const _mainGap = Math.max(6, Math.round(10*_ls));
+    const _mainPadT = Math.max(8, Math.round(10*_ls));
+    const _mainPadX = Math.max(10, Math.round(12*_ls));
+    const _mainPadB = Math.max(10, Math.round(12*_ls));
+    const _scoreMinW = Math.max(48, Math.round(60*_ls));
     const isDone = !!m.winner;
     const aWin = isDone && m.winner==='A';
     const bWin = isDone && m.winner==='B';
@@ -1586,14 +1612,17 @@ function proCompTourMatchInput(tn){
       const av = (typeof proCompGetAvatarPx==='function') ? proCompGetAvatarPx() : 52;
       const fit = (typeof proCompGetAvatarFit==='function') ? proCompGetAvatarFit() : 'cover';
       const bgSize = (fit==='fill') ? '100% 100%' : (fit==='contain' ? 'contain' : 'cover');
-      const minW = Math.max(148, av + 60);
-      const minH = Math.max(180, av + 80);
+      const minW = Math.round(Math.max(148, av + 60) * _ls);
+      const minH = Math.round(Math.max(180, av + 80) * _ls);
+      const padT = Math.max(6, Math.round(10*_ls));
+      const padX = Math.max(6, Math.round(10*_ls));
+      const padB = Math.max(8, Math.round(12*_ls));
       const bgImg = (p && p.photo) ? `background-image:url('${toHttpsUrl(p.photo)}');` : '';
       const bgFallback = (!p || !p.photo)
         ? `background:linear-gradient(135deg,${isWin?'#16a34a':'#64748b'}33,${isWin?'#16a34a':'#64748b'}11);`
         : '';
       const initial = (name||'미').slice(0,1);
-      return `<div ${photoClick} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:10px 10px 12px;border-radius:14px;width:${minW}px;height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
+      return `<div ${photoClick} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:${padT}px ${padX}px ${padB}px;border-radius:14px;width:${minW}px;height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
         <div style="position:absolute;inset:0;background:${p&&p.photo
           ? `linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.28) 50%, rgba(15,23,42,.72) 100%)`
           : `linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.18))`
@@ -1629,9 +1658,9 @@ function proCompTourMatchInput(tn){
         ${_menuBtn}
       </div>
       <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars2}${_fxVars}background:var(--white);border:1px solid var(--border);border-left:4px solid ${(!ca||ca==='#6b7280')?col:ca};border-right:4px solid ${(!cb||cb==='#6b7280')?col:cb}">
-      <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;padding:10px 12px 12px">
+      <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:${_mainGap}px;justify-content:center;flex-wrap:wrap;padding:${_mainPadT}px ${_mainPadX}px ${_mainPadB}px">
         ${_pcard(pa, m.a, aWin)}
-        <div class="grp-score-col" style="text-align:center;min-width:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+        <div class="grp-score-col" style="text-align:center;min-width:${_scoreMinW}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
           ${isDone?`<div class="grp-match-score" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:${Math.round(18*proCompGetScoreScale())}px;padding:${Math.round(6*proCompGetScoreScale())}px ${Math.round(12*proCompGetScoreScale())}px;background:var(--white);border-radius:10px;border:1.5px solid var(--border)">
             <span style="color:${aWin?'#16a34a':'var(--text3)'}">${aWin?'WIN':'패'}</span>
             <span style="color:var(--gray-l);font-size:12px;margin:0 2px">:</span>

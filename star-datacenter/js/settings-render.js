@@ -1569,6 +1569,10 @@ ${_scfgD('notice','📢 공지 관리')}
     const pc = parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52;
     const mb = parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40;
     const fit = (localStorage.getItem('su_procomp_avatar_fit')||'cover');
+    const spc = parseInt(localStorage.getItem('su_procomp_score_scale_pc')||'100',10)||100;
+    const smb = parseInt(localStorage.getItem('su_procomp_score_scale_mb')||'100',10)||100;
+    const lpc = parseInt(localStorage.getItem('su_procomp_layout_scale_pc')||'100',10)||100;
+    const lmb = parseInt(localStorage.getItem('su_procomp_layout_scale_mb')||'100',10)||100;
     return _scfgD('procompcard','⭐ 프로리그 대회 카드(프로리그탭)') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">프로리그탭 → 프로리그 대회 → 조별리그/대진표 기록 카드에서 선수(스트리머) 프로필 크기를 조절합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
@@ -1583,20 +1587,46 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">PC</div>
-        <input type="range" id="cfg-procomp-ava-pc" min="28" max="84" step="2" value="${Math.max(28,Math.min(84,pc))}"
+        <input type="range" id="cfg-procomp-ava-pc" min="28" max="200" step="2" value="${Math.max(28,Math.min(200,pc))}"
           oninput="document.getElementById('cfg-procomp-ava-pc-v').textContent=this.value+'px'"
           onchange="cfgSetProCompAvatarSettings()" style="width:100%">
-        <div id="cfg-procomp-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(28,Math.min(84,pc))}px</div>
+        <div id="cfg-procomp-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(28,Math.min(200,pc))}px</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
-        <input type="range" id="cfg-procomp-ava-mb" min="24" max="72" step="2" value="${Math.max(24,Math.min(72,mb))}"
+        <input type="range" id="cfg-procomp-ava-mb" min="24" max="160" step="2" value="${Math.max(24,Math.min(160,mb))}"
           oninput="document.getElementById('cfg-procomp-ava-mb-v').textContent=this.value+'px'"
           onchange="cfgSetProCompAvatarSettings()" style="width:100%">
-        <div id="cfg-procomp-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(24,Math.min(72,mb))}px</div>
+        <div id="cfg-procomp-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(24,Math.min(160,mb))}px</div>
+      </div>
+      <div style="height:1px;background:var(--border);margin:2px 0"></div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">스코어(PC)</div>
+        <input type="range" id="cfg-procomp-score-pc" min="60" max="160" step="5" value="${Math.max(60,Math.min(160,spc))}"
+          oninput="document.getElementById('cfg-procomp-score-pc-v').textContent=this.value+'%'" onchange="cfgSetProCompScoreSettings()" style="width:100%">
+        <div id="cfg-procomp-score-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(160,spc))}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">스코어(모바일)</div>
+        <input type="range" id="cfg-procomp-score-mb" min="60" max="160" step="5" value="${Math.max(60,Math.min(160,smb))}"
+          oninput="document.getElementById('cfg-procomp-score-mb-v').textContent=this.value+'%'" onchange="cfgSetProCompScoreSettings()" style="width:100%">
+        <div id="cfg-procomp-score-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(160,smb))}%</div>
+      </div>
+      <div style="height:1px;background:var(--border);margin:2px 0"></div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">레이아웃(PC)</div>
+        <input type="range" id="cfg-procomp-layout-pc" min="60" max="120" step="5" value="${Math.max(60,Math.min(120,lpc))}"
+          oninput="document.getElementById('cfg-procomp-layout-pc-v').textContent=this.value+'%'" onchange="cfgSetProCompLayoutSettings()" style="width:100%">
+        <div id="cfg-procomp-layout-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(120,lpc))}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">레이아웃(모바일)</div>
+        <input type="range" id="cfg-procomp-layout-mb" min="60" max="120" step="5" value="${Math.max(60,Math.min(120,lmb))}"
+          oninput="document.getElementById('cfg-procomp-layout-mb-v').textContent=this.value+'%'" onchange="cfgSetProCompLayoutSettings()" style="width:100%">
+        <div id="cfg-procomp-layout-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(120,lmb))}%</div>
       </div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
-        ※ 값 변경 후 자동으로 재렌더링됩니다. 카드가 너무 커지면 크기를 조금 낮춰주세요.
+        ※ 값 변경 후 자동으로 재렌더링됩니다. 레이아웃은 카드 전체 여백/크기(프로필 카드 포함)를 함께 줄입니다.
       </div>
     </div>
   </details>`;

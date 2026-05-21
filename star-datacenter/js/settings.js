@@ -903,6 +903,16 @@ window.cfgSetProCompScoreSettings = function(){
   try{ if(typeof render==='function') render(); }catch(e){}
 };
 
+window.cfgSetProCompLayoutSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-procomp-layout-pc')?.value||'100',10) || 100;
+    const mb = parseInt(document.getElementById('cfg-procomp-layout-mb')?.value||'100',10) || 100;
+    localStorage.setItem('su_procomp_layout_scale_pc', String(Math.max(60,Math.min(120,pc))));
+    localStorage.setItem('su_procomp_layout_scale_mb', String(Math.max(60,Math.min(120,mb))));
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+
 // 개인전/끝장전/프로리그끝장전 선수 패널(프로필 배경 카드) 설정
 window.cfgSetH2HPanelSettings = function(){
   try{
