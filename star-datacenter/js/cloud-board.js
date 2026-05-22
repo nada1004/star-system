@@ -109,7 +109,7 @@ async function fbCloudSave(opts) {
       ls: _syncLs
     };
   }
-  // 페이로드 크기 검사
+  // 페이로드 크기 검사 (압축 후 실제 전송 크기 기준)
   let _fbPayloadSize = 0;
   try {
     _fbPayloadSize = JSON.stringify(dataObj).length;
@@ -117,10 +117,19 @@ async function fbCloudSave(opts) {
     const splitInfo = (typeof window.__suEstimateSplitStore === 'function')
       ? window.__suEstimateSplitStore(dataObj)
       : null;
-    const warnBytes = splitInfo && splitInfo.maxBytes ? splitInfo.maxBytes : _fbPayloadSize;
-    const warnLabel = splitInfo && splitInfo.maxBytes
-      ? `분리 저장 최대 파일 ${(warnBytes/1024/1024).toFixed(1)}MB`
-      : `데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB`;
+    // (버그픽스) 경고 기준을 압축 후 크기로 변경 — LZString 압축 시 평균 40~60% 절감되므로
+    // 원본 크기로 비교하면 불필요한 "저장 실패 가능" 경고가 표시됨
+    let warnBytes;
+    let warnLabel;
+    if(splitInfo && splitInfo.maxBytes){
+      warnBytes = splitInfo.maxBytes;
+      warnLabel = `분리 저장 최대 파일 ${(warnBytes/1024/1024).toFixed(1)}MB`;
+    } else {
+      // 압축률 추정: LZString은 보통 원본의 45~55% 수준
+      const compressedEstimate = Math.round(_fbPayloadSize * 0.5);
+      warnBytes = compressedEstimate;
+      warnLabel = `데이터 ${(_fbPayloadSize/1024/1024).toFixed(1)}MB (압축 후 약 ${(compressedEstimate/1024/1024).toFixed(1)}MB)`;
+    }
     if (warnBytes > 3 * 1024 * 1024) {
       if (statusEl) { statusEl.style.color='#dc2626'; statusEl.textContent=`⚠️ ${warnLabel} — 저장 실패 가능`; }
       console.warn('[fbCloudSave] 크기 위험:', (warnBytes/1024).toFixed(0)+'KB');

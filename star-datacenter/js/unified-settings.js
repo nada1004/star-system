@@ -30,7 +30,9 @@
     'su_p','su_pp','su_t','su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm',
     'su_rank_snap','su_cal_sched','su_votes','su_notices','su_seasons',
     // 빌더 편집 상태는 크기가 커질 수 있고, 백업 대상으로 우선순위 낮음
-    'su_bld_ck','su_bld_pro'
+    'su_bld_ck','su_bld_pro',
+    // UI 전용 상태 키: 섹션 열고 닫을 때마다 변경되므로 스냅샷에서 제외
+    'su_cfg_open','su_cfg_bottom_open','su_cfg_view_mode'
   ]);
   const _MAX_VAL_LEN = 12000; // 12KB 이상이면 스냅샷에서 제외 (설정 스냅샷 용도)
 
@@ -64,7 +66,7 @@
       const v = JSON.parse(localStorage.getItem(SNAP_KEY)||'null');
       if(v && typeof v==='object') return v;
     }catch(e){}
-    return {v:1, updatedAt:0, cats:{images:{}, matchdetail:{}, cards:{}, ui:{}, board:{}, automation:{}, calendar:{}, misc:{}}};
+    return {v:2, updatedAt:0, cats:{images:{}, matchdetail:{}, cards:{}, ui:{}, board:{}, automation:{}, calendar:{}, misc:{}}};
   }
 
   function _saveSnap(s){
@@ -78,7 +80,7 @@
   }
 
   function _rebuildFromLocalStorage(){
-    const snap = {v:1, updatedAt:_now(), cats:{images:{}, matchdetail:{}, cards:{}, ui:{}, board:{}, automation:{}, calendar:{}, misc:{}}};
+    const snap = {v:2, updatedAt:_now(), cats:{images:{}, matchdetail:{}, cards:{}, ui:{}, board:{}, automation:{}, calendar:{}, misc:{}}};
     try{
       for(let i=0;i<localStorage.length;i++){
         const k = localStorage.key(i);
@@ -141,8 +143,22 @@
       if(!cats) throw new Error('invalid format');
       const flat = Object.values(cats).flatMap(obj => Object.entries(obj||{}));
       if(!confirm(`통합 설정을 적용할까요?\n총 ${flat.length}개의 su_* 키를 덮어씁니다.`)) return false;
-      flat.forEach(([k,v])=>{ try{ localStorage.setItem(k, v); }catch(e){} });
+      // (버그픽스) import 중 각 setItem이 클라우드 트리거를 반복 발생시키는 문제 방지
+      // _inSync=true로 래퍼를 우회하고, 완료 후 단 한 번만 스냅샷 재구축 + 클라우드 트리거
+      _inSync = true;
+      try{
+        flat.forEach(([k,v])=>{ try{ _origSet(k, v); }catch(e){} });
+      }finally{
+        _inSync = false;
+      }
       _rebuildFromLocalStorage();
+      // 임포트 완료 후 클라우드 동기화 1회 예약
+      try{
+        clearTimeout(_cloudDebounceT);
+        _cloudDebounceT = setTimeout(function(){
+          try{ if(typeof window._scheduleCloudAppSettingsSave === 'function') window._scheduleCloudAppSettingsSave(); }catch(e){}
+        }, 600);
+      }catch(e){}
       try{ if(typeof render==='function') render(); }catch(e){}
       return true;
     }catch(e){

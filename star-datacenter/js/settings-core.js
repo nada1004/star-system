@@ -2047,14 +2047,16 @@ window.cfgSaveBgmSettings = function(){
 // ─────────────────────────────────────────────────────────────
 window.cfgSaveSoopSettings = function(){
   let list = String(document.getElementById('cfg-soop-list')?.value||'');
-  // (버그픽스) 동일 SOOP 링크 중복 저장 방지 (공백/끝 슬래시 차이 포함)
+  // (버그픽스) 동일 SOOP 링크 중복 저장 방지 (공백/끝 슬래시/해시/쿼리스트링 차이 포함)
   const norm = (u)=>{
     u = String(u||'').trim();
     if(!u) return '';
-    // 끝 슬래시 제거
-    u = u.replace(/\/+$/,'');
+    // 쿼리스트링 제거 (?ref=... 등)
+    u = u.replace(/\?[^#]*/,'');
     // 해시 제거
     u = u.replace(/#.*$/,'');
+    // 끝 슬래시 제거
+    u = u.replace(/\/+$/,'');
     return u;
   };
   const lines = list.split(/\r?\n/).map(norm).filter(Boolean);
@@ -2821,9 +2823,8 @@ function _cfgEnsureModal(){
       }catch(_){}
     }, {capture:true});
   }catch(e){}
-  // 닫기 핸들러 (섹션 원위치 복구)
-  if(typeof window.closeCfgModal!=='function'){
-    window.closeCfgModal=function(){
+  // 닫기 핸들러 (섹션 원위치 복구) — 매번 재등록해 최신 secId 클로저를 유지
+  window.closeCfgModal=function(){
       try{
         const prevId=window._cfgModalSecId;
         if(prevId){
@@ -2842,8 +2843,7 @@ function _cfgEnsureModal(){
       }catch(e){}
       try{ if(typeof cm==='function') cm('cfgModal'); else { const mm=document.getElementById('cfgModal'); if(mm) mm.style.display='none'; } }catch(e){}
       try{ if(typeof window.cfgApplyBottomSectionsVisibility==='function') window.cfgApplyBottomSectionsVisibility(); }catch(e){}
-    };
-  }
+  };
   return m;
 }
 
@@ -3297,14 +3297,11 @@ window.cfgRunFullQaDryRun = function(){
     const lsKeys = ['su_psi','su_psi_expiry','su_tt_paste_stage','su_pd_badge_scale','su_pd_chip_scale','su_mb_scale','su_tb_scale'];
     lsKeys.forEach(k=>{ try{ backupLs[k] = localStorage.getItem(k); }catch(e){} });
 
-    // save/render 스텁(실제 저장 금지) — 로컬 카운터로만 처리, 전역 교체 안 함
-    // (버그픽스) window.save를 전역 교체하면 finally 복원 실패 시 실제 저장이 안 되는 심각한 버그 가능
-    // — 로컬 변수 saveCnt/renderCnt만 사용하고 window.save/render는 건드리지 않음
+    // (버그픽스) window.save/render를 전역 교체하면 finally 복원 전 예외 발생 시
+    // 실제 저장이 영구 차단되는 치명적 버그가 발생한다.
+    // 따라서 전역을 교체하지 않고, 로컬 카운터로만 호출 횟수를 추적한다.
+    // backup.save/render는 finally 복원용으로만 유지한다.
     let saveCnt=0, renderCnt=0;
-    const _origSave = (typeof save === 'function') ? save : (()=>{});
-    const _origRender = (typeof render === 'function') ? render : (()=>{});
-    window.save = ()=>{ saveCnt++; };
-    window.render = ()=>{ renderCnt++; };
 
     // 더미 데이터 세팅
     const _dmMini = [{ d:'2026-04-01', map:'투혼II', sets:[{scoreA:1,scoreB:0,games:[{playerA:'A',playerB:'B',map:'투혼II',winner:'A'}]}], sa:1, sb:0 }];
@@ -3545,7 +3542,20 @@ window.cfgSearchSettings = function(q){
       sug.style.display='none';
       return;
     }
-    sug.innerHTML = top.map(x=>`<button type="button" class="cfg-search-item" onclick="(function(){try{cfgGo('${x.id}');}catch(e){};try{document.getElementById('cfgSearchSug').style.display='none';}catch(e){}})()">${x.t}</button>`).join('');
+    sug.innerHTML = top.map(x=>`<button type="button" class="cfg-search-item" data-secid="${x.id.replace(/"/g,'&quot;')}">${x.t}</button>`).join('');
+    // (보안) 인라인 onclick 대신 이벤트 위임으로 XSS 가능성 차단
+    if(!sug._cfgSearchDelegated){
+      sug._cfgSearchDelegated = true;
+      sug.addEventListener('click', function(ev){
+        try{
+          const btn = ev.target.closest('[data-secid]');
+          if(!btn) return;
+          const sid = btn.getAttribute('data-secid');
+          if(sid) try{ cfgGo(sid); }catch(e){}
+          sug.style.display='none';
+        }catch(e){}
+      });
+    }
     sug.style.display='block';
   }catch(e){}
 };
