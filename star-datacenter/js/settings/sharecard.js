@@ -33,7 +33,10 @@
     try{ localStorage.setItem('su_sc_logo_size', String(Math.max(70,Math.min(150,logoSize)))); }catch(e){}
     try{ localStorage.setItem('su_sc_logo_fit', ['contain','cover','fill','zoom'].includes(logoFit)?logoFit:'contain'); }catch(e){}
     try{ if(typeof render === 'function') render(); }catch(e){}
-    try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){} = function(mode){
+    try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
+  };
+
+  window.cfgPreviewShareCardMode = function(mode){
     const el=document.getElementById('cfg-sc-mode');
     if(el) el.value = ['campus','vivid','soft','dark','minimal','aurora','poster','mono'].includes(mode)?mode:'campus';
     window.cfgSetShareCardSettings && window.cfgSetShareCardSettings();
