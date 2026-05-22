@@ -447,6 +447,7 @@ function _setGlobalProfileShape(shape){
     try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
   }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ window.SettingsStore && typeof window.SettingsStore.markPrefsChanged==='function' && window.SettingsStore.markPrefsChanged(); }catch(e){}
   try{ if(typeof window._renderCfgProfileShapeSection==='function') window._renderCfgProfileShapeSection(); }catch(e){}
   try{ if(typeof _renderCfgPdSection==='function') _renderCfgPdSection(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
