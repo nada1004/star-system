@@ -469,6 +469,11 @@ function _applyCloudData(d) {
       if(typeof window.applyDesignV2==='function') window.applyDesignV2();
       if(typeof window._applyUiScale==='function') window._applyUiScale();
     }catch(e){}
+    // 펨코스타일 설정 복원 (su_ 접두사 없어서 ls에 미포함 → 별도 처리)
+    try{
+      if(s.femcoSettings != null) localStorage.setItem('b2_femco_settings_v1', String(s.femcoSettings));
+      if(s.femcoUniv != null) localStorage.setItem('cfg_femco_univ', String(s.femcoUniv));
+    }catch(e){}
   }
   try{ window._applyingCloudData = false; }catch(e){}
 }

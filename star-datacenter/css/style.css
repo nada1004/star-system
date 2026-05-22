@@ -1743,7 +1743,10 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 @media(max-width:768px){
   .rec-summary.rec-mode-mini .rec-sum-vs-outer,
   .rec-summary.rec-mode-civil .rec-sum-vs-outer,
-  .rec-summary.rec-mode-univm .rec-sum-vs-outer{
+  .rec-summary.rec-mode-univm .rec-sum-vs-outer,
+  .rec-summary.rec-mode-ck .rec-sum-vs-outer,
+  .rec-summary.rec-mode-pro .rec-sum-vs-outer,
+  .rec-summary.rec-mode-tt .rec-sum-vs-outer{
     display:grid !important;
     grid-template-columns:56px minmax(0,1fr) 56px;
     align-items:center !important;
@@ -1751,7 +1754,10 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   }
   .rec-summary.rec-mode-mini .rec-side-profiles,
   .rec-summary.rec-mode-civil .rec-side-profiles,
-  .rec-summary.rec-mode-univm .rec-side-profiles{
+  .rec-summary.rec-mode-univm .rec-side-profiles,
+  .rec-summary.rec-mode-ck .rec-side-profiles,
+  .rec-summary.rec-mode-pro .rec-side-profiles,
+  .rec-summary.rec-mode-tt .rec-side-profiles{
     width:56px !important;
     min-width:56px !important;
     max-width:56px !important;
@@ -1760,19 +1766,28 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   }
   .rec-summary.rec-mode-mini .rec-side-profiles .rsp-imgbox,
   .rec-summary.rec-mode-civil .rec-side-profiles .rsp-imgbox,
-  .rec-summary.rec-mode-univm .rec-side-profiles .rsp-imgbox{
+  .rec-summary.rec-mode-univm .rec-side-profiles .rsp-imgbox,
+  .rec-summary.rec-mode-ck .rec-side-profiles .rsp-imgbox,
+  .rec-summary.rec-mode-pro .rec-side-profiles .rsp-imgbox,
+  .rec-summary.rec-mode-tt .rec-side-profiles .rsp-imgbox{
     width:46px !important;
     height:46px !important;
   }
   .rec-summary.rec-mode-mini .rec-side-profiles .rsp-imginner,
   .rec-summary.rec-mode-civil .rec-side-profiles .rsp-imginner,
-  .rec-summary.rec-mode-univm .rec-side-profiles .rsp-imginner{
+  .rec-summary.rec-mode-univm .rec-side-profiles .rsp-imginner,
+  .rec-summary.rec-mode-ck .rec-side-profiles .rsp-imginner,
+  .rec-summary.rec-mode-pro .rec-side-profiles .rsp-imginner,
+  .rec-summary.rec-mode-tt .rec-side-profiles .rsp-imginner{
     width:42px !important;
     height:42px !important;
   }
   .rec-summary.rec-mode-mini .rec-sum-vs,
   .rec-summary.rec-mode-civil .rec-sum-vs,
-  .rec-summary.rec-mode-univm .rec-sum-vs{
+  .rec-summary.rec-mode-univm .rec-sum-vs,
+  .rec-summary.rec-mode-ck .rec-sum-vs,
+  .rec-summary.rec-mode-pro .rec-sum-vs,
+  .rec-summary.rec-mode-tt .rec-sum-vs{
     display:grid !important;
     grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
     align-items:center !important;
@@ -1784,14 +1799,23 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   }
   .rec-summary.rec-mode-mini .rec-sum-vs > div:first-child,
   .rec-summary.rec-mode-civil .rec-sum-vs > div:first-child,
-  .rec-summary.rec-mode-univm .rec-sum-vs > div:first-child{ justify-self:start !important; }
+  .rec-summary.rec-mode-univm .rec-sum-vs > div:first-child,
+  .rec-summary.rec-mode-ck .rec-sum-vs > div:first-child,
+  .rec-summary.rec-mode-pro .rec-sum-vs > div:first-child,
+  .rec-summary.rec-mode-tt .rec-sum-vs > div:first-child{ justify-self:start !important; }
   .rec-summary.rec-mode-mini .rec-sum-vs > div:last-child,
   .rec-summary.rec-mode-civil .rec-sum-vs > div:last-child,
-  .rec-summary.rec-mode-univm .rec-sum-vs > div:last-child{ justify-self:end !important; }
+  .rec-summary.rec-mode-univm .rec-sum-vs > div:last-child,
+  .rec-summary.rec-mode-ck .rec-sum-vs > div:last-child,
+  .rec-summary.rec-mode-pro .rec-sum-vs > div:last-child,
+  .rec-summary.rec-mode-tt .rec-sum-vs > div:last-child{ justify-self:end !important; }
 
   .rec-summary.rec-mode-mini .rec-sum-score,
   .rec-summary.rec-mode-civil .rec-sum-score,
-  .rec-summary.rec-mode-univm .rec-sum-score{
+  .rec-summary.rec-mode-univm .rec-sum-score,
+  .rec-summary.rec-mode-ck .rec-sum-score,
+  .rec-summary.rec-mode-pro .rec-sum-score,
+  .rec-summary.rec-mode-tt .rec-sum-score{
     font-size:14px !important;
     padding:3px 10px !important;
     border-radius:14px !important;
@@ -1799,12 +1823,18 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   }
   .rec-summary.rec-mode-mini .rec-sum-score span[style*="font-size:12px"],
   .rec-summary.rec-mode-civil .rec-sum-score span[style*="font-size:12px"],
-  .rec-summary.rec-mode-univm .rec-sum-score span[style*="font-size:12px"]{
+  .rec-summary.rec-mode-univm .rec-sum-score span[style*="font-size:12px"],
+  .rec-summary.rec-mode-ck .rec-sum-score span[style*="font-size:12px"],
+  .rec-summary.rec-mode-pro .rec-sum-score span[style*="font-size:12px"],
+  .rec-summary.rec-mode-tt .rec-sum-score span[style*="font-size:12px"]{
     font-size:11px !important;
   }
   .rec-summary.rec-mode-mini .rec-sum-vs .ubadge,
   .rec-summary.rec-mode-civil .rec-sum-vs .ubadge,
-  .rec-summary.rec-mode-univm .rec-sum-vs .ubadge{
+  .rec-summary.rec-mode-univm .rec-sum-vs .ubadge,
+  .rec-summary.rec-mode-ck .rec-sum-vs .ubadge,
+  .rec-summary.rec-mode-pro .rec-sum-vs .ubadge,
+  .rec-summary.rec-mode-tt .rec-sum-vs .ubadge{
     font-size:11px !important;
     padding:5px 8px !important;
     border-radius:14px !important;
@@ -1815,7 +1845,10 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   }
   .rec-summary.rec-mode-mini .rc-mem-btn,
   .rec-summary.rec-mode-civil .rc-mem-btn,
-  .rec-summary.rec-mode-univm .rc-mem-btn{
+  .rec-summary.rec-mode-univm .rc-mem-btn,
+  .rec-summary.rec-mode-ck .rc-mem-btn,
+  .rec-summary.rec-mode-pro .rc-mem-btn,
+  .rec-summary.rec-mode-tt .rc-mem-btn{
     font-size:9px !important;
     padding:3px 7px !important;
   }

@@ -151,16 +151,62 @@
     }
   };
 
+  // ── 클라우드 자동 동기화: su_* 설정 키 변경 시 GitHub에 자동 반영 ──
+  // 대용량/경기기록/보안/상태 키는 제외하고, 순수 "설정" 키만 트리거
+  const _CLOUD_EXCLUDE_EXACT = new Set([
+    'su_p','su_pp','su_t','su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm',
+    'su_rank_snap','su_cal_sched','su_votes','su_notices','su_seasons',
+    'su_bld_ck','su_bld_pro',
+    'su_unified_settings_v1','su_unified_settings_migrated_v2',
+    'su_gh_token','su_fb_pw','su_admin_hash','su_admin_hashes',
+    'su_last_admin_save','su_last_save_time','su_admin_hashes_updated_at',
+  ]);
+  const _CLOUD_EXCLUDE_PREFIX = [
+    'su_sync_','su_match_store_','su_sharecard_cache_',
+    'su_hist_ext_','su_hist_ext_meta_',
+  ];
+  // UI 전용 상태 키 (너무 자주 바뀌어서 클라우드 저장 불필요)
+  const _CLOUD_EXCLUDE_UI_STATE = new Set([
+    'su_cfg_open','su_cfg_bottom_open','su_cfg_view_mode',
+  ]);
+
+  let _cloudDebounceT = null;
+  function _maybeScheduleCloud(k){
+    try{
+      if(_inSync) return;
+      if(!k || typeof k!=='string') return;
+      if(!k.startsWith('su_') && k!=='b2_femco_settings_v1' && k!=='cfg_femco_univ') return;
+      if(_CLOUD_EXCLUDE_EXACT.has(k)) return;
+      if(_CLOUD_EXCLUDE_UI_STATE.has(k)) return;
+      for(const p of _CLOUD_EXCLUDE_PREFIX){ if(k.startsWith(p)) return; }
+      // 디바운스: 연속 변경 시 마지막 변경 후 600ms에 한 번만 실행
+      clearTimeout(_cloudDebounceT);
+      _cloudDebounceT = setTimeout(function(){
+        try{
+          if(typeof window._scheduleCloudAppSettingsSave === 'function'){
+            window._scheduleCloudAppSettingsSave();
+          }
+        }catch(e){}
+      }, 600);
+    }catch(e){}
+  }
+
   // install wrappers
   try{
     localStorage.setItem = function(k, v){
       const r = _origSet(k, v);
-      if(!_inSync) _upsert(String(k), String(v));
+      if(!_inSync){
+        _upsert(String(k), String(v));
+        _maybeScheduleCloud(String(k));
+      }
       return r;
     };
     localStorage.removeItem = function(k){
       const r = _origRem(k);
-      if(!_inSync) _del(String(k));
+      if(!_inSync){
+        _del(String(k));
+        _maybeScheduleCloud(String(k));
+      }
       return r;
     };
     localStorage.clear = function(){

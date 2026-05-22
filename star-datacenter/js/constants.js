@@ -1656,6 +1656,10 @@ function saveCfg(){
               if(k.startsWith('su_pp')) continue;
               if(k==='su_fb_pw' || k==='su_gh_token' || k==='su_admin_hash' || k==='su_admin_hashes') continue;
               if(k==='su_last_admin_save' || k==='su_last_save_time') continue;
+              // 대용량/캐시 키 제외 (fbCloudSave와 일치)
+              if(k==='su_hist_ext_data_v1' || k==='su_hist_ext_proxy_presets_v1' || k==='su_hist_ext_proxy_preset_sel_v1' || k==='su_hist_ext_last_modified') continue;
+              if(k==='su_unified_settings_v1' || k==='su_unified_settings_migrated_v2') continue;
+              if(k.startsWith('su_match_store_') || k.startsWith('su_sharecard_cache_') || k.startsWith('su_hist_ext_meta_')) continue;
               const v = localStorage.getItem(k);
               if(v==null) continue;
               if(String(v).length > 200000) continue;
@@ -1861,7 +1865,7 @@ async function _flushRemoteCloudSave(reason){
       return false;
     }
     _setCloudStatusMsg('⏫ GitHub 저장 중...', '#2563eb');
-    await window.fbCloudSave({ includeSettings:false });
+    await window.fbCloudSave({ includeSettings:true });
     try{
       const now = Date.now();
       const uploadedSig = localStorage.getItem(_MATCH_SYNC_SIG_KEYS.pending) || _buildMatchSyncSignature();
