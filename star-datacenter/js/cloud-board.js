@@ -395,6 +395,7 @@ function saveBoardChipPhotoSettings(){
   localStorage.setItem('su_bcp_shape', boardChipPhotoShape);
   localStorage.setItem('su_bcp_size', String(boardChipPhotoSize));
   localStorage.setItem('su_bcp_layout', String(boardChipLayoutScale||100));
+  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
   // 스트리머 프로필 이미지 공통 CSS 변수 동기화
   try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
 }

@@ -48,6 +48,7 @@ window.cfgSetUiScalePct = function(device, v){
   try{ if(typeof window._applyUiScale==='function') window._applyUiScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
 };
 window.cfgResetUiScalePct = function(){
   try{
@@ -62,6 +63,7 @@ window.cfgResetUiScalePct = function(){
   try{ if(typeof window._applyUiScale==='function') window._applyUiScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
 };
 window.cfgSetTopTabUiSettings = function(){
   try{
@@ -76,6 +78,7 @@ window.cfgSetTopTabUiSettings = function(){
   try{ if(typeof window._centerActiveTopTab==='function') window._centerActiveTopTab(false); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
 };
 window.cfgResetTopTabUiSettings = function(){
   try{
@@ -94,6 +97,7 @@ window.cfgResetTopTabUiSettings = function(){
   try{ if(typeof window._centerActiveTopTab==='function') window._centerActiveTopTab(false); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
 };
 window.cfgResetUiBtnStyleSettings = function(){
   try{ localStorage.removeItem('su_btn_scale_pct'); }catch(e){}

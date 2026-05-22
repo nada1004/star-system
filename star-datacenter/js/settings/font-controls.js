@@ -29,6 +29,7 @@ window.cfgSetAppFontSettings = function(){
   try{ if(typeof window._applyAppFontScale === 'function') window._applyAppFontScale(); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -57,6 +58,7 @@ window.cfgSetAppFontScalePct = function(device, v){
   try{ if(typeof window._applyAppFontScale==='function') window._applyAppFontScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
 };
 window.cfgResetAppFontScalePct = function(){
   try{
@@ -71,6 +73,7 @@ window.cfgResetAppFontScalePct = function(){
   try{ if(typeof window._applyAppFontScale==='function') window._applyAppFontScale(); else window.dispatchEvent(new Event('resize')); }catch(e){}
   try{ if(typeof render === 'function') render(); }catch(e){}
   try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
 };
 
 // 설정 화면 렌더 후 자동으로 커스텀 폰트 프리셋 목록 갱신

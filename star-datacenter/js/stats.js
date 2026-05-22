@@ -558,10 +558,12 @@ function statsTierRankHTML(){
 window.starSystemSetEnabled = function(on){
   const v = on ? '1' : '0';
   try{ localStorage.setItem('su_starSystem_enabled', v); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
   render();
 };
 window.starSystemSetKeywords = function(v){
   try{ localStorage.setItem('su_starSystem_keywords', String(v||'')); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
   render();
 };
 function _ssKeywords(){

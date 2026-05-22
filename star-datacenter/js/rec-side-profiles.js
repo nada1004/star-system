@@ -522,31 +522,32 @@
       var on = !!(document.getElementById('cfg-rec-side-panel-on')||{}).checked;
       localStorage.setItem('su_rec_side_panel_on', on ? '1' : '0');
       if(typeof render === 'function') render();
+    try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
     }catch(e){}
   };
 
   window.cfgSetRspSize = function(v){
-    try{ localStorage.setItem('su_rsp_size', String(parseInt(v,10)||72)); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_size', String(parseInt(v,10)||72)); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspWidth = function(v){
-    try{ localStorage.setItem('su_rsp_width', String(parseInt(v,10)||90)); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_width', String(parseInt(v,10)||90)); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspValign = function(v){
-    try{ localStorage.setItem('su_rsp_valign', v||'center'); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_valign', v||'center'); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspBrightness = function(v){
-    try{ localStorage.setItem('su_rsp_brightness', String(parseFloat(v)||1.0)); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_brightness', String(parseFloat(v)||1.0)); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspEffect = function(v){
-    try{ localStorage.setItem('su_rsp_effect', v||'none'); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_effect', v||'none'); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspImageType = function(v){
-    try{ localStorage.setItem('su_rsp_image_type', v||'profile'); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_image_type', v||'profile'); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspCompOn = function(){
@@ -554,23 +555,24 @@
       var on = !!(document.getElementById('cfg-rsp-comp-on')||{}).checked;
       localStorage.setItem('su_rsp_comp_on', on ? '1' : '0');
       if(typeof render === 'function') render();
+    try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
     }catch(e){}
   };
 
   window.cfgSetRspHalign = function(v){
-    try{ localStorage.setItem('su_rsp_halign', v||'center'); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_halign', v||'center'); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspHoffset = function(v){
-    try{ localStorage.setItem('su_rsp_hoffset', String(parseInt(v,10)||0)); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_hoffset', String(parseInt(v,10)||0)); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspVoffset = function(v){
-    try{ localStorage.setItem('su_rsp_voffset', String(parseInt(v,10)||0)); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_voffset', String(parseInt(v,10)||0)); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspShowBox = function(on){
-    try{ localStorage.setItem('su_rsp_show_box', on ? '1' : '0'); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_show_box', on ? '1' : '0'); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspRotateOn = function(){
@@ -578,35 +580,36 @@
       var on = !!(document.getElementById('cfg-rsp-rotate-on')||{}).checked;
       localStorage.setItem('su_rsp_rotate_on', on ? '1' : '0');
       if(typeof render === 'function') render();
+    try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
     }catch(e){}
   };
 
   window.cfgSetRspRotateSec = function(v){
-    try{ localStorage.setItem('su_rsp_rotate_sec', String(Math.max(1,Math.min(60,parseInt(v,10)||5)))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_rotate_sec', String(Math.max(1,Math.min(60,parseInt(v,10)||5)))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspWinTeamLoseOpacity = function(v){
-    try{ localStorage.setItem('su_rsp_winteam_lose_opacity', String(Math.max(0.1,Math.min(1.0,parseFloat(v)||0.65)).toFixed(2))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_winteam_lose_opacity', String(Math.max(0.1,Math.min(1.0,parseFloat(v)||0.65)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspWinTeamLoseGray = function(v){
-    try{ localStorage.setItem('su_rsp_winteam_lose_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.35)).toFixed(2))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_winteam_lose_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.35)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspLoseTeamWinOpacity = function(v){
-    try{ localStorage.setItem('su_rsp_loseteam_win_opacity', String(Math.max(0.1,Math.min(1.0,parseFloat(v)||0.80)).toFixed(2))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_loseteam_win_opacity', String(Math.max(0.1,Math.min(1.0,parseFloat(v)||0.80)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspLoseTeamWinGray = function(v){
-    try{ localStorage.setItem('su_rsp_loseteam_win_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.15)).toFixed(2))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_loseteam_win_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.15)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspLoseTeamLoseOpacity = function(v){
-    try{ localStorage.setItem('su_rsp_loseteam_lose_opacity', String(Math.max(0.1,Math.min(1.0,parseFloat(v)||0.45)).toFixed(2))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_loseteam_lose_opacity', String(Math.max(0.1,Math.min(1.0,parseFloat(v)||0.45)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspLoseTeamLoseGray = function(v){
-    try{ localStorage.setItem('su_rsp_loseteam_lose_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.75)).toFixed(2))); if(typeof render==='function') render(); }catch(e){}
+    try{ localStorage.setItem('su_rsp_loseteam_lose_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.75)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
 })();
