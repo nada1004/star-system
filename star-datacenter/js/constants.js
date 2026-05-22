@@ -393,8 +393,10 @@ function applyUnivLogoVars(){
     const size  = parseInt(localStorage.getItem('su_ul_size') || '34', 10);
     const box   = parseInt(localStorage.getItem('su_ul_box')  || '46', 10);
     // 대학 상세(대학 모달) 전용 크기 (없으면 기본 크기 사용)
-    const dSize = parseInt(localStorage.getItem('su_ul_size_detail') || String(size), 10);
-    const dBox  = parseInt(localStorage.getItem('su_ul_box_detail')  || String(box), 10);
+    const dSizeRaw = parseInt(localStorage.getItem('su_ul_size_detail') || '70', 10);
+    const dBoxRaw  = parseInt(localStorage.getItem('su_ul_box_detail')  || '92', 10);
+    const dSize = Math.max(70, Math.min(140, isNaN(dSizeRaw) ? 70 : dSizeRaw));
+    const dBox  = Math.max(92, Math.min(180, isNaN(dBoxRaw) ? 92 : dBoxRaw));
     // (요청사항) 대학 로고/팀버튼 이미지 모양 다양화
     const _ulRadiusMap = {
       circle:'50%', square:'10px', rounded:'22%', squircle:'28%',
