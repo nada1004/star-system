@@ -1537,11 +1537,11 @@ function _pcBktBuildFromPasteApplyLogic(savable, tn){
 function proCompTourMatchInput(tn){
   if(!tn) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">대회를 선택하세요.</div>`;
   _pcEnsureStageRecords(tn);
-  if(!window._pcStageRecRound) window._pcStageRecRound='16강';
-  const round = _pcNormalizeStageRound(window._pcStageRecRound);
-  window._pcStageRecRound = round;
-
-  const roundBtns = '';
+  const _roundList = (typeof _PC_STAGE_ROUNDS !== 'undefined' && Array.isArray(_PC_STAGE_ROUNDS)) ? _PC_STAGE_ROUNDS : ['64강','32강','16강','8강','4강','결승'];
+  const _defaultRound = '16강';
+  const _viewRound0 = String(window._pcStageRecRound||'').trim();
+  const viewRound = (_viewRound0==='ALL' || _roundList.includes(_viewRound0)) ? _viewRound0 : _defaultRound;
+  window._pcStageRecRound = viewRound;
 
   // ── (요청사항) "대진표에서 기록"한 내용도 이 탭에 자동 반영되도록: 브라켓에서 게임 단위로 수집
   const _getBracketRoundLabel = (tn, ri)=>{
@@ -1611,9 +1611,25 @@ function proCompTourMatchInput(tn){
   const sorted = [..._bracketItems, ..._stageList]
     .sort((a,b)=>(b._dateKey||'').localeCompare(a._dateKey||'')||((a._sortSeq??0)-(b._sortSeq??0))||String(a.key).localeCompare(String(b.key)));
 
+  const _getItemRound = (it)=> String(it?._rnd || it?.m?._roundLabel || '').trim();
+  const _filtered = (viewRound === 'ALL') ? sorted : sorted.filter(it => _getItemRound(it) === viewRound);
+  const _counts = (() => {
+    const c = { ALL: sorted.length };
+    _roundList.forEach(r => { c[r] = 0; });
+    sorted.forEach(it => {
+      const r = _getItemRound(it);
+      if (r && (r in c)) c[r] += 1;
+    });
+    return c;
+  })();
+  const roundBtns = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+    <button class="btn ${viewRound==='ALL'?'btn-b':'btn-w'} btn-xs" onclick="window._pcStageRecRound='ALL';render()">전체 <span style="opacity:.8">(${_counts.ALL||0})</span></button>
+    ${_roundList.map(r=>`<button class="btn ${viewRound===r?'btn-b':'btn-w'} btn-xs" onclick="window._pcStageRecRound='${r}';render()">${r} <span style="opacity:.8">(${_counts[r]||0})</span></button>`).join('')}
+  </div>`;
+
   const card = (item, displayNo)=>{
     const m = item.m;
-    const _cardRound = item._rnd || m._roundLabel || round;
+    const _cardRound = item._rnd || m._roundLabel || _defaultRound;
     const pa = players.find(p=>p.name===m.a);
     const pb = players.find(p=>p.name===m.b);
     const _ls = (typeof proCompGetLayoutScale==='function') ? proCompGetLayoutScale() : 1;
@@ -1725,11 +1741,11 @@ function proCompTourMatchInput(tn){
 
   // 날짜별 그룹화하여 날짜 헤더 카드 추가
   let listHTML;
-  if (!sorted.length) {
+  if (!_filtered.length) {
     listHTML = `<div style="margin-top:10px;font-size:12px;color:var(--gray-l)">등록된 기록이 없습니다.</div>`;
   } else {
     const _tByDate = {};
-    sorted.forEach((it, idx) => {
+    _filtered.forEach((it, idx) => {
       const k = it._dateKey || '날짜 미정';
       if (!_tByDate[k]) _tByDate[k] = [];
       _tByDate[k].push({it, idx});
