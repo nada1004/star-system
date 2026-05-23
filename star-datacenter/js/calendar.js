@@ -565,7 +565,7 @@ function swNav(t,el){
       b.classList.toggle('on',oc.includes("'"+t+"'"));
     });
     const fstrip=document.getElementById('fstrip');
-    if(fstrip) fstrip.style.display=(t==='total'&&isLoggedIn)?'block':'none';
+    if(fstrip) fstrip.style.display=(t==='total'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin))?'block':'none';
     const C=document.getElementById('rcont');
     if(C) C.innerHTML='';
     render();

@@ -6,7 +6,7 @@ window._centerActiveTopTab = function(smooth){
     if(!tabs) return;
     const mode = (localStorage.getItem('su_top_tab_align_mb')||'start').trim();
     if(window.innerWidth <= 768 && mode === 'center'){
-      on.scrollIntoView({ behavior: smooth===false ? 'auto' : 'smooth', inline:'center', block:'nearest' });
+      on.scrollIntoView({ behavior: 'auto', inline:'center', block:'nearest' });
     }
   }catch(e){}
 };
@@ -330,9 +330,7 @@ function sw(t,el){
     b.classList.toggle('on',oc.includes("'"+t+"'"));
   });
   const _fs=document.getElementById('fstrip');
-  if(_fs)_fs.style.display=(t==='total'&&isLoggedIn)?'block':'none';
-  const C=document.getElementById('rcont');
-  if(C) C.innerHTML='';
+  if(_fs)_fs.style.display=(t==='total'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin))?'block':'none';
   render();
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('push'); }catch(e){}
   try{ setTimeout(()=>{ if(typeof window._centerActiveTopTab==='function') window._centerActiveTopTab(); }, 30); }catch(e){}

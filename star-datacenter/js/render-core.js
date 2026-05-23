@@ -96,14 +96,12 @@ function _renderImpl(){
   try{ window._applyTourneyCardTheme && window._applyTourneyCardTheme(); }catch(e){}
   try{ window._applyHeaderSettings && window._applyHeaderSettings(); }catch(e){}
   injectUnivIcons(C);
-  try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
   requestAnimationFrame(()=>{
     C.querySelectorAll('.rec-summary').forEach(el=>{
       const header=el.querySelector('.rec-sum-header');
       if(!header||header.innerText.trim()==='')el.remove();
     });
     injectUnivIcons(C);
-    try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
     const _restoreFocus=()=>{
       if(window._searchFocusId){
         const el=document.getElementById(window._searchFocusId);
@@ -123,7 +121,7 @@ function _renderImpl(){
     requestAnimationFrame(()=>{
       _restoreFocus();
       try{ window.enableDragScroll && window.enableDragScroll(); }catch(e){}
-      try{ window.iconifyUI && window.iconifyUI(document.body); }catch(e){}
+      try{ window.iconifyUI && window.iconifyUI(C); }catch(e){}
       try{
         document.querySelectorAll('#rcont table input[type="checkbox"]').forEach(cb=>{
           cb.onchange = function(){

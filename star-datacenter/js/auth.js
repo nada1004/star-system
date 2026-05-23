@@ -490,6 +490,8 @@ function _touchSessionActivity(force){
 function _syncSessionStateAtBoot(){
   try{
     if(_isSessionExpired()) _clearSessionStorage();
+    // 명시적 로그아웃 플래그가 있으면 세션 완전 정리
+    if(localStorage.getItem('su_explicit_logout')==='1') _clearSessionStorage();
   }catch(e){}
 }
 function _getLoginFailInfo(){
