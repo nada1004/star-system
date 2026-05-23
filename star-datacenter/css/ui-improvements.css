@@ -627,3 +627,56 @@ body.dark .grp-match-card.match-card-v3 .grp-match-score .wt {
     font-size: 9px !important;
   }
 }
+
+/* ════════════════════════════
+   rc-mem-btn: hover는 마우스 환경에서만 (모바일 터치 고착 버그 방지)
+   ════════════════════════════ */
+@media (hover: hover) and (pointer: fine) {
+  .rc-mem-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.08) !important;
+  }
+}
+.rc-mem-btn {
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+/* ════════════════════════════
+   날짜 그룹 헤더 sticky (모바일)
+   ════════════════════════════ */
+@media (max-width: 768px) {
+  .rec-date-header {
+    position: sticky;
+    top: 48px;
+    z-index: 20;
+    background: var(--color-background-primary, #fff);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    margin-left: -4px;
+    margin-right: -4px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+  body.dark .rec-date-header {
+    background: rgba(18, 24, 38, 0.95);
+  }
+
+  /* 상세영역 세트 헤더 가독성 */
+  .rec-detail-area .cmd-set-head {
+    font-size: 12px !important;
+    padding: 7px 10px !important;
+    gap: 6px !important;
+  }
+
+  /* 페이지네이션 모바일 간략화 */
+  .rec-pager-full { display: none !important; }
+  .rec-pager-simple { display: flex !important; }
+}
+.rec-pager-simple { display: none; }
+
+/* rec-sum-header 전체를 탭 가능하도록 커서 pointer */
+@media (max-width: 768px) {
+  .rec-sum-header.rec-sum-header--stack {
+    cursor: pointer;
+  }
+}

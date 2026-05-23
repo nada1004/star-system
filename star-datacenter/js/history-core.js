@@ -937,7 +937,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
       ? window._buildRecSideProfilePanel(m, _ab, aWin, bWin, ca, cb)
       : {left:'', right:''};
     h+=`<div class="rec-summary rec-mode-${mode}${_recSideFxClass(mode)}" data-rec-mode="${mode}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgb(_mc)};${_recSideFxStyle(mode,ca,cb)}">
-      <div class="rec-sum-header rec-sum-header--stack">
+      <div class="rec-sum-header rec-sum-header--stack" onclick="(function(e){if(e.target.closest('button,a,[data-player-link],[onclick]:not(.rec-sum-header)'))return;toggleDetail('${key}');})(event)">
         <div class="rec-topline">
           <div class="rec-meta-row">
             ${m.t?`<span class="rec-meta-chip">${m.t}</span>`:''}
@@ -977,7 +977,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
               <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.b}')">${(()=>{const n=isCK?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelB}</span>
               ${(_ab.b||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${cb}12;border:1px solid ${cb}40;color:${cb};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${_bMemJson})">👥 ${(_ab.b||[]).length}명</button>`:''}
             </div>
-            <span class="rec-victor-chip" style="--rec-victor-col:${myWin?col:(aWin?ca:bWin?cb:'#888')};color:${myWin?col:'#888'}">${myWin?'▶ '+filterUniv+' 승':aWin?'▶ '+labelA+' 승':bWin?'▶ '+labelB+' 승':'무승부'}</span>
+
           </div>
           ${_sidePanelHTML.right}
         </div>
@@ -1009,7 +1009,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   _dateKeysF.forEach(dk=>{
     let _dkLabel=dk;
     if(dk!=='날짜 미정'&&dk.match(/^\d{4}-\d{2}-\d{2}$/)){const dt=new Date(dk+'T00:00:00');_dkLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_daysF[dt.getDay()]}`;}
-    h+=`<div style="margin-bottom:22px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
+    h+=`<div style="margin-bottom:22px"><div class="rec-date-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
     _byDateF[dk].forEach(m=>_renderItem(m));
     h+=`</div>`;
   });
@@ -1278,7 +1278,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
           <div class="rec-meta-row">
             ${_bulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_bulkKey}" data-bidx="${i}" data-bmid="${String(m._id||m.sid||'')}" onchange="_bulkCountUpdate('${_bulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:''}
             ${m.fmt>0?`<span class="rec-meta-chip rec-meta-chip--note">${m.fmt}:${m.fmt}</span>`:''}
-            ${aWin||bWin?`<span class="rec-victor-chip rec-victor-chip--crown" style="--rec-victor-col:${aWin?ca:cb};color:${aWin?ca:cb}">🏆 ${aWin?labelA:labelB}</span>`:`<span class="rec-meta-chip">무승부</span>`}
+
           </div>
           <div class="rec-actions no-export rec-actions--inline">
           <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
@@ -1333,7 +1333,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
           <div class="rec-sum-vs" style="flex-wrap:wrap;align-items:center">
             <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
               <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA?iconA.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelA}</span>
-              ${aMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${aBtnColor}15,${aBtnColor}08);border:1.5px solid ${aBtnColor}40;color:${aBtnColor};font-weight:700;box-shadow:0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${aBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
+              ${aMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${aBtnColor}15,${aBtnColor}08);border:1.5px solid ${aBtnColor}40;color:${aBtnColor};font-weight:700;box-shadow:0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
                 <span class="mem-ico">👥</span><span>${aMembers.length}명</span>
               </button>` : ''}
             </div>
@@ -1346,7 +1346,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
             </div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
               <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB?iconB.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelB}</span>
-              ${bMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${bBtnColor}15,${bBtnColor}08);border:1.5px solid ${bBtnColor}40;color:${bBtnColor};font-weight:700;box-shadow:0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${bBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})">
+              ${bMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${bBtnColor}15,${bBtnColor}08);border:1.5px solid ${bBtnColor}40;color:${bBtnColor};font-weight:700;box-shadow:0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})">
                 <span class="mem-ico">👥</span><span>${bMembers.length}명</span>
               </button>` : ''}
             </div>
@@ -1371,7 +1371,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   _dateKeys.forEach(dk=>{
     let _dkLabel=dk;
     if(dk!=='날짜 미정'&&dk.match(/^\d{4}-\d{2}-\d{2}$/)){const dt=new Date(dk+'T00:00:00');_dkLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_days[dt.getDay()]}`;}
-    h+=`<div style="margin-bottom:22px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
+    h+=`<div style="margin-bottom:22px"><div class="rec-date-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
     _byDate[dk].forEach(({m,i})=>{ h+=_recItemHTML(m,i); });
     h+=`</div>`;
   });
@@ -1382,12 +1382,16 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     let pager=`<div class="no-export" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:16px 0;flex-wrap:wrap">`;
     pager+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['${pageKey}']=0;render()" ${curPage===0?'disabled':''}>«</button>`;
     pager+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['${pageKey}']=Math.max(0,${curPage}-1);render()" ${curPage===0?'disabled':''}>‹</button>`;
-    // 페이지 번호 버튼 (최대 7개)
+    // PC: 페이지 번호 버튼 (최대 7개) - rec-pager-full
+    pager+=`<span class="rec-pager-full" style="display:contents">`;
     let startP=Math.max(0,curPage-3);let endP=Math.min(pages-1,startP+6);
     if(endP-startP<6)startP=Math.max(0,endP-6);
     for(let p=startP;p<=endP;p++){
       pager+=`<button class="btn ${p===curPage?'btn-b':'btn-w'} btn-xs" style="min-width:32px" onclick="histPage['${pageKey}']=${p};render()">${p+1}</button>`;
     }
+    pager+=`</span>`;
+    // 모바일: 현재 페이지/전체페이지 표시
+    pager+=`<span class="rec-pager-simple" style="font-size:13px;font-weight:500;color:var(--text);min-width:60px;text-align:center">${curPage+1} / ${pages}</span>`;
     pager+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['${pageKey}']=Math.min(${pages-1},${curPage}+1);render()" ${curPage===pages-1?'disabled':''}>›</button>`;
     pager+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['${pageKey}']=${pages-1};render()" ${curPage===pages-1?'disabled':''}>»</button>`;
     pager+=`<span style="font-size:11px;color:var(--text3);margin-left:6px">${curPage+1} / ${pages}</span>`;
@@ -2461,7 +2465,6 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     const memoStr=m.memo?`<div style="font-size:11px;color:var(--gray-l);margin-top:4px">📝 ${m.memo}</div>`:'';
     return `<div class="cmd-single-summary">
       <div class="cmd-single-summary__row">
-        <span class="cmd-pill-win" style="background:${wc};color:#fff">WIN</span>
         <span class="cmd-single-name">${m.wName||''}</span>${rW}${uW}
         <span class="cmd-single-vs">vs</span>
         <span class="cmd-single-name cmd-single-name--lose">${m.lName||''}</span>${rL}${uL}
@@ -2487,7 +2490,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
           <span class="${setBWin?'wt':setAWin?'lt':'pt-z'}">${swB}</span>
         </span>
         <span class="ubadge${setBWin?'':' loser'}" style="background:${setBWin?cb:`linear-gradient(135deg, ${typeof getMatchWinTint==='function'?getMatchWinTint(cb):cb+'18'}, rgba(255,255,255,.92))`};color:${setBWin?'#fff':'#334155'};border-color:${setBWin?cb:cb+'33'};font-size:10px">${labelB}</span>
-        ${setAWin?`<span style="font-size:10px;font-weight:700;color:${ca}">▶ ${labelA} 승</span>`:setBWin?`<span style="font-size:10px;font-weight:700;color:${cb}">▶ ${labelB} 승</span>`:''}
+
       </div>`;
     if(set.games&&set.games.length){
       set.games.forEach((g,gi)=>{
@@ -2547,14 +2550,14 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
                   <div class="cmd-player-meta">
                     <div class="cmd-player-name" ${clickA} style="display:flex;align-items:center;justify-content:center;gap:8px;text-align:center"><span class="cmd-player-inline" style="display:inline-flex;align-items:center;gap:4px;justify-content:center">${univLogoA}${tierA}${raceA}</span><span class="cmd-player-name__txt">${g.playerA||'?'}</span></div>
                   </div>
-                  ${winA?`${winMark(sideColA)}${pAHtml}`:pAHtml}
+                  ${pAHtml}
                 </div>
                 <div class="cmd-midbox">
                   <div class="cmd-gno">경기 ${gi+1}</div>
                   ${g.map?`<div class="cmd-gmap">${g.map}</div>`:''}
                 </div>
                 <div class="cmd-player ${winB?'is-win':''} ${loseB?'is-lose':''} is-right" style="--cmd-col:${sideColB};background:${winB?(typeof getMatchWinTint==='function'?getMatchWinTint(sideColB):(sideColB+'22')):(loseB?loseBgB:(sideColB+'12'))};border-color:${winB?(sideColB+'55'):(loseB?loseBdB:(sideColB+'33'))};">
-                  ${winB?`${pBHtml}${winMark(sideColB)}`:pBHtml}
+                  ${pBHtml}
                   <div class="cmd-player-meta">
                     <div class="cmd-player-name" ${clickB} style="display:flex;align-items:center;justify-content:center;gap:8px;text-align:center"><span class="cmd-player-inline" style="display:inline-flex;align-items:center;gap:4px;justify-content:center">${univLogoB}${tierB}${raceB}</span><span class="cmd-player-name__txt">${g.playerB||'?'}</span></div>
                   </div>
@@ -2582,7 +2585,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
                 <span style="color:var(--gray-l);font-size:11px;min-width:40px;font-weight:700;flex-shrink:0;text-align:center">경기${gi+1}</span>
                 <!-- 좌측 선수: [WIN] [티어 종족 이름] [사진] -->
                 <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winA?pca+'18':(loseA?'linear-gradient(180deg, rgba(148,163,184,.14), rgba(255,255,255,.96))':pca+'12')};border:${winA?'1.5px solid '+pca+'55':(loseA?'1px solid rgba(148,163,184,.26)':'1px solid '+pca+'33')};min-width:0;${loserStyleA}">
-                  ${winA ? winBadge(pca) : ''}
+
                   <div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:4px;overflow:hidden">
                     ${univLogoA}${tierA}${raceA}
                     <strong style="font-size:13px;color:var(--text);white-space:nowrap;${nameStyleA}" ${clickA}>${g.playerA||'?'}</strong>
@@ -2597,7 +2600,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
                     ${univLogoB}${tierB}${raceB}
                     <strong style="font-size:13px;color:var(--text);white-space:nowrap;${nameStyleB}" ${clickB}>${g.playerB||'?'}</strong>
                   </div>
-                  ${winB ? winBadge(pcb) : ''}
+
                 </div>
                 ${editBtn}
               </div>

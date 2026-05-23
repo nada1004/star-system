@@ -501,8 +501,11 @@ function proCompLeague(tn) {
             : 'box-shadow:0 10px 22px rgba(15,23,42,.10);';
           const photo = (p && p.photo) ? toHttpsUrl(p.photo) : '';
           const initial = (p && p.name ? p.name : '미').slice(0,1);
-          return `<div ${clickAttr} style="width:${sz}px;height:${sz}px;flex-shrink:0;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;${ring}${isLose?'opacity:.85;filter:grayscale(1);':''}">
-            ${photo?`<img src="${photo}" style="width:100%;height:100%;object-fit:${fit};display:block" onerror="this.style.display='none'">`:`<span style="font-size:${Math.max(14,Math.round(sz*0.42))}px;font-weight:1000;color:#94a3b8">${initial}</span>`}
+          return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:80px;flex-shrink:0">
+            <div ${clickAttr} style="width:${sz}px;height:${sz}px;flex-shrink:0;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;${ring}${isLose?'opacity:.85;filter:grayscale(1);':''}">
+              ${photo?`<img src="${photo}" style="width:100%;height:100%;object-fit:${fit};display:block" onerror="this.style.display='none'">`:`<span style="font-size:${Math.max(14,Math.round(sz*0.42))}px;font-weight:1000;color:#94a3b8">${initial}</span>`}
+            </div>
+            ${p&&p.name?`<div style="font-size:9px;font-weight:800;color:${isLose?'var(--text3)':'var(--text)'};max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center">${p.name}</div>`:''}
           </div>`;
         }
         const minW = Math.round(Math.max(148, av + 60) * _ls);
@@ -566,7 +569,7 @@ function proCompLeague(tn) {
               <span style="color:var(--gray-l);font-size:${_scoreSep}px;margin:0 2px">:</span>
               <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
             </div>
-            ${m.map?`<div style="font-size:${_isMob?9:10}px;color:var(--gray-l);max-width:${_isMob?150:190}px;line-height:1.25;word-break:break-word">🗺️ ${m.map}</div>`:''}
+            ${m.map?`<div style="font-size:${_isMob?9:10}px;color:var(--gray-l);max-width:${_isMob?120:190}px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🗺️ ${m.map}</div>`:''}
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${m.grpColor}">VS</div>`}
           </div>
           ${_pcard(pb, bWin)}
@@ -1642,8 +1645,11 @@ function proCompTourMatchInput(tn){
           : 'box-shadow:0 10px 22px rgba(15,23,42,.10);';
         const photo = (p && p.photo) ? toHttpsUrl(p.photo) : '';
         const initial = (name||'미').slice(0,1);
-        return `<div ${photoClick} style="width:${sz}px;height:${sz}px;flex-shrink:0;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;${ring}${isLose?'opacity:.85;filter:grayscale(1);':''}">
-          ${photo?`<img src="${photo}" style="width:100%;height:100%;object-fit:${fit};display:block" onerror="this.style.display='none'">`:`<span style="font-size:${Math.max(14,Math.round(sz*0.42))}px;font-weight:1000;color:#94a3b8">${initial}</span>`}
+        return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:80px;flex-shrink:0">
+          <div ${photoClick} style="width:${sz}px;height:${sz}px;flex-shrink:0;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;${ring}${isLose?'opacity:.85;filter:grayscale(1);':''}">
+            ${photo?`<img src="${photo}" style="width:100%;height:100%;object-fit:${fit};display:block" onerror="this.style.display='none'">`:`<span style="font-size:${Math.max(14,Math.round(sz*0.42))}px;font-weight:1000;color:#94a3b8">${initial}</span>`}
+          </div>
+          ${name?`<div style="font-size:9px;font-weight:800;color:${isLose?'var(--text3)':'var(--text)'};max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center">${name}</div>`:''}
         </div>`;
       }
       const minW = Math.round(Math.max(148, av + 60) * _ls);
@@ -1707,7 +1713,7 @@ function proCompTourMatchInput(tn){
             <span style="color:${bWin?'#16a34a':'var(--text3)'}">${bWin?'WIN':'패'}</span>
           </div>
           
-          ${m.map?`<div style="font-size:${_isMob?9:10}px;color:var(--gray-l);max-width:${_isMob?150:190}px;line-height:1.25;word-break:break-word">🗺️ ${m.map}</div>`:''}
+          ${m.map?`<div style="font-size:${_isMob?9:10}px;color:var(--gray-l);max-width:${_isMob?120:190}px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🗺️ ${m.map}</div>`:''}
           ${m.note?`<div style="font-size:${_isMob?9:10}px;color:#94a3b8;max-width:${_isMob?150:190}px;line-height:1.45;word-break:break-word">📝 ${String(m.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
           `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:${col}">VS</div>`}
         </div>

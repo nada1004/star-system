@@ -1272,6 +1272,10 @@ body.dark .hist-ctrl-group{
   font-weight:900;
 }
 .ubadge.loser{opacity:0.32;filter:grayscale(100%);box-shadow:none;}
+/* 모바일: 패배팀 배지 opacity 완화 (0.32 → 0.55) — 소형 화면·저밝기에서 식별 가능하도록 */
+@media(max-width:768px){
+  .ubadge.loser{opacity:0.55 !important;filter:grayscale(60%) !important;}
+}
 .tbadge{display:inline-flex;align-items:center;justify-content:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.3px;white-space:nowrap;flex-shrink:0;vertical-align:middle;line-height:1.4;}
 /* ── 특별 티어: God·King·Jack·Joker·Spade 각각 차별화 ── */
 /* God: 퍼플 - 최고 등급 */
@@ -1614,6 +1618,15 @@ body.dark .win-btn:hover{border-color:rgba(96,165,250,.45);color:#93c5fd;}
 }
 .rec-victor-chip--crown{
   font-weight:1000;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 768px) {
+  .rec-victor-chip--crown {
+    max-width: 140px !important;
+  }
 }
 
 /* (요청사항) 승리 대학색 테마(기록 카드) */
@@ -3226,6 +3239,19 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   border-radius:14px;
   box-shadow:0 10px 24px rgba(15,23,42,.06);
 }
+@media (max-width: 768px) {
+  .cmd-single-summary__row {
+    display: grid !important;
+    grid-template:
+      "win nameA raceA" auto
+      "vs  nameB raceB" auto
+      / auto 1fr auto !important;
+    gap: 4px 8px !important;
+    align-items: center !important;
+  }
+  .cmd-pill-win { grid-area: win; }
+  .cmd-single-vs { grid-area: vs; text-align: center; }
+}
 .cmd-single-summary__memo{
   margin-top:8px;
 }
@@ -3246,7 +3272,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   color:var(--text);
 }
 .cmd-single-name--lose{
-  color:#475569;
+  color:var(--text3);
 }
 .cmd-single-vs{
   font-size:11px;
@@ -4505,8 +4531,8 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   .rec-sum-vs { flex-wrap: wrap !important; gap: var(--rc-vs-gap,8px) !important; justify-content: var(--rc-vs-justify, center) !important; }
   .rec-summary { min-height: 44px; border-radius: 10px; }
   .sort-bar { padding: 6px 10px !important; }
-  /* 모바일: 프로필 패널 양쪽 자동 축소 - 한 줄 유지 */
-  .rec-sum-vs-outer { flex-wrap: nowrap !important; align-items: stretch; overflow: hidden; }
+  /* 모바일: 프로필 패널 양쪽 자동 축소 - 한 줄 유지 + 스크롤 페이드 */
+  .rec-sum-vs-outer { flex-wrap: nowrap !important; align-items: stretch; overflow: hidden; -webkit-mask-image: linear-gradient(to right, black 88%, transparent 100%); mask-image: linear-gradient(to right, black 88%, transparent 100%); }
   .rec-side-profiles { min-width: 0 !important; max-width: 64px !important; flex-shrink: 1 !important; padding: 2px 3px !important; }
   .rec-side-profiles.rsp-no-box { max-width: 60px !important; padding: 1px 2px !important; }
   .rsp-inner { overflow: visible; }
@@ -4587,6 +4613,8 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     min-height:98px !important;
   }
   .grp-match-card.match-card-v3.has-side-panels > .grp-match-leftpad{ display:none !important; }
+  /* 모바일 전체에서 leftpad 숨김 - 경기번호는 meta-bar에 있음 */
+  .grp-match-card.match-card-v3 > .grp-match-leftpad{ display:none !important; }
   .grp-match-card.match-card-v3.has-side-panels > .rec-side-profiles:first-of-type{ grid-area:left; }
   .grp-match-card.match-card-v3.has-side-panels > .grp-match-main{ grid-area:main; width:auto !important; position:relative !important; z-index:2 !important; }
   .grp-match-card.match-card-v3.has-side-panels > .rec-side-profiles:last-of-type{ grid-area:right; }
@@ -4696,14 +4724,18 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     font-size:10px !important;
   }
   .grp-match-card.match-card-v3 .grp-score-col{ min-width:54px !important; }
-  /* (요청사항) 모바일: 팀버튼+스코어 한줄 레이아웃 강제 */
+  /* (요청사항) 모바일: 팀버튼+스코어 한줄 레이아웃 강제 + 스크롤 페이드 */
   .grp-match-card.match-card-v3 .grp-match-main{
     flex-wrap:nowrap !important;
     overflow-x:auto !important;
     justify-content:center !important;
     align-items:flex-start !important;
     gap:6px !important;
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%) !important;
+    mask-image: linear-gradient(to right, black 85%, transparent 100%) !important;
+    scrollbar-width: none !important;
   }
+  .grp-match-card.match-card-v3 .grp-match-main::-webkit-scrollbar { display: none !important; }
   .grp-match-card.match-card-v3 .grp-team-col{
     flex-shrink:0 !important;
     min-width:0 !important;
@@ -4768,12 +4800,17 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     padding: 6px 8px !important;
     font-size: 11px !important;
   }
-  /* 게임 행 - 좌우 나란히 → 세로 스택 */
+  /* 게임 행 - grid로 vs 중앙 고정 */
   .rec-detail-area > div[style*="display:flex"] {
-    flex-wrap: wrap !important;
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) 24px minmax(0,1fr) !important;
+    align-items: center !important;
+    flex-wrap: unset !important;
   }
   /* 팀 배지 overflow 방지 */
-  .ubadge { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ubadge { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* rec-summary 내부 ubadge는 조금 더 넉넉하게 */
+  .rec-sum-vs .ubadge { max-width: 100px; }
   /* 현황판 이동 팝업 - 모바일에서 하단 시트 */
   .brd-move-popup {
     position: fixed !important;
@@ -5635,9 +5672,9 @@ body.design-v2 .scard:hover{
   /* iOS 자동확대 방지: input/select font-size 16px 이상 */
   input, select, textarea { font-size: 16px !important; }
   .mbox input, .mbox select, .umbox input, .umbox select { font-size: 16px !important; }
-  /* 480px 이하: 프로필 패널 더 작게 - 중앙 vs 영역 보호 */
-  .rec-side-profiles { max-width: 46px !important; padding: 2px 0 !important; }
-  .rec-side-profiles.rsp-no-box { max-width: 42px !important; }
+  /* 480px 이하: 프로필 패널 48px 고정 - 이미지 잘림 방지 */
+  .rec-side-profiles { max-width: 48px !important; padding: 2px 1px !important; }
+  .rec-side-profiles.rsp-no-box { max-width: 48px !important; }
 }
 
 
@@ -11050,6 +11087,11 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
   .rec-victor-chip {
     font-size: 10px !important;
     padding: 2px 8px !important;
+    /* 모바일: 승자 칩 배경 진하게 — 일반 칩과 구분 강화 */
+    background: color-mix(in srgb, var(--rec-victor-col, #64748b) 20%, #fff) !important;
+    border-color: color-mix(in srgb, var(--rec-victor-col, #64748b) 40%, #cbd5e1) !important;
+    color: color-mix(in srgb, var(--rec-victor-col, #64748b) 85%, #000) !important;
+    font-weight: 900 !important;
   }
 
   /* 3-6. VS 영역 */
@@ -11057,8 +11099,9 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
     gap: 6px !important;
   }
   .rec-sum-score {
-    font-size: 14px !important;
-    padding: 2px 8px !important;
+    font-size: 18px !important;
+    font-weight: 900 !important;
+    padding: 2px 10px !important;
     border-radius: 8px !important;
   }
 
@@ -11079,18 +11122,22 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
     border-radius: 9px !important;
   }
 
-  /* 3-8. 더보기 버튼 */
+  /* 3-8. 더보기 버튼 — 터치 영역 최소 40×40px 보장 */
   .rec-morebtn {
-    min-width: 30px !important;
-    width: 30px !important;
-    height: 26px !important;
-    font-size: 14px !important;
-    border-radius: 8px !important;
+    min-width: 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 16px !important;
+    border-radius: 10px !important;
     margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
   }
   .rec-summary .rec-sum-header{ position:relative; }
-  .rec-summary .rec-topline{ padding-right: 38px !important; }
-  .rec-summary .rec-morebtn{ position:absolute !important; top:6px !important; right:8px !important; }
+  .rec-summary .rec-topline{ padding-right: 48px !important; }
+  .rec-summary .rec-morebtn{ position:absolute !important; top:4px !important; right:6px !important; }
   .rec-summary[data-rec-mode="procompgj"] .score-click{ font-size: 13px !important; }
 
   /* 3-9. 개인전/끝장전 — 선수 이름 행 */
@@ -11215,16 +11262,35 @@ body.dark .tc-card.grp-sidefx::after { opacity: 0.55; }
     display: none !important;
   }
 
-  /* 모바일 참가자(👥) 버튼 크기 축소 - 대회탭 */
+  /* 모바일 참가자(👥) 버튼 - 최소 터치 영역 36px 보장 */
   .grp-mem-btn {
     font-size: calc(7px * var(--tc-mem-btn-scale, 1)) !important;
-    padding: calc(1px * var(--tc-mem-btn-scale, 1)) calc(4px * var(--tc-mem-btn-scale, 1)) !important;
-    min-height: 18px !important;
-    gap: 2px !important;
+    padding: calc(6px * var(--tc-mem-btn-scale, 1)) calc(12px * var(--tc-mem-btn-scale, 1)) !important;
+    min-height: 36px !important;
+    gap: 4px !important;
     border-radius: 5px !important;
+    touch-action: manipulation !important;
+    position: relative !important;
+  }
+  /* ::before로 터치 영역 추가 확장 */
+  .grp-mem-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: -6px -4px !important;
   }
   .grp-mem-btn .mem-ico {
     font-size: calc(8px * var(--tc-mem-btn-scale, 1)) !important;
+  }
+}
+
+/* ── 예정 경기 VS 텍스트 모바일 축소 ── */
+@media (max-width: 768px) {
+  .grp-vs-text {
+    font-size: 14px !important;
+    padding: 3px 8px !important;
+    background: var(--surface) !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border) !important;
   }
 }
 

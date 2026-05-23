@@ -6,7 +6,7 @@ function buildUnivDetailHTML(univName){
   const _isMobile = _style?.isMobile || false;
   const _isTablet = _style?.isTablet || false;
   const members = _style?.members || getMembers(univName);
-  const _logoSizeEff = _style?.logoSizeEff || 'var(--su_univ_logo_size_detail,70px)';
+  const _logoSizeEff = _style?.logoSizeEff || 'var(--su_univ_logo_size_detail,46px)';
   const _hdrBg = _style?.hdrBg || `linear-gradient(135deg,${col},${col}cc)`;
   const _hdrBgLayer = _style?.hdrBgLayer || null;
   const _univComputed = (typeof prepareUnivDetailComputedData==='function')

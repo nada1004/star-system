@@ -335,6 +335,10 @@ function indRecordsHTML(){
     const p2race=players.find(x=>x.name===s.p2)?.race||'';
     const p1col=p1univ?gc(p1univ):'#378ADD';
     const p2col=p2univ?gc(p2univ):'#1D9E75';
+    const _indP1Win = p1wins > p2wins;
+    const _indP2Win = p2wins > p1wins;
+    const _indScoreColP1 = _indP1Win ? (p1col||'#16a34a') : _indP2Win ? '#94a3b8' : 'var(--text2)';
+    const _indScoreColP2 = _indP2Win ? (p2col||'#16a34a') : _indP1Win ? '#94a3b8' : 'var(--text2)';
     const p1bg=_h2hPlayerBgPanel(s.p1, winner===s.p1, winner && winner!==s.p1);
     const p2bg=_h2hPlayerBgPanel(s.p2, winner===s.p2, winner && winner!==s.p2);
     const _indWrapFx = _safeHeadToHeadSideFx(p1col, p2col);
@@ -351,8 +355,13 @@ function indRecordsHTML(){
       <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:${_pad};gap:${_gap};cursor:pointer;${_rowScroll}" onclick="openIndSessionPopup('${_indSessKey}')">
         ${bulkCbInd||''}
         <div style="display:flex;align-items:center;justify-content:flex-end;width:100%">${p1bg}</div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;${_scorePad}flex-shrink:0">
-          <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-1.6px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:${_dashFs}px;color:var(--text2);font-weight:900;margin:0 5px;opacity:0.8">:</span>${p2wins}</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;${_scorePad}flex-shrink:0">
+          <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-2px;line-height:1;display:flex;align-items:center;gap:0">
+            <span style="color:${_indScoreColP1};transition:color .15s;text-shadow:${_indP1Win?'0 1px 8px '+p1col+'55':''}">${p1wins}</span>
+            <span style="font-size:${_dashFs}px;color:#64748b;font-weight:900;margin:0 6px">:</span>
+            <span style="color:${_indScoreColP2};transition:color .15s;text-shadow:${_indP2Win?'0 1px 8px '+p2col+'55':''}">${p2wins}</span>
+          </div>
+          ${(_indP1Win||_indP2Win)?`<div style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:99px;background:${_indP1Win?p1col:p2col};color:#fff;white-space:nowrap;letter-spacing:.3px;box-shadow:0 1px 6px ${_indP1Win?p1col:p2col}55">${_indP1Win?s.p1:s.p2} 승</div>`:''}
         </div>
         <div style="display:flex;align-items:center;justify-content:flex-start;width:100%">${p2bg}</div>
       </div>
@@ -509,6 +518,12 @@ function gjRecordsHTML(proOnly){
     const gj_p2univ=players.find(x=>x.name===s.p2)?.univ||'';
     const gj_p1race=players.find(x=>x.name===s.p1)?.race||'';
     const gj_p2race=players.find(x=>x.name===s.p2)?.race||'';
+    const _gjP1Win = p1wins > p2wins;
+    const _gjP2Win = p2wins > p1wins;
+    const _gjP1Col = gj_p1univ?gc(gj_p1univ):'#378ADD';
+    const _gjP2Col = gj_p2univ?gc(gj_p2univ):'#1D9E75';
+    const _gjScoreColP1 = _gjP1Win ? (_gjP1Col||'#16a34a') : _gjP2Win ? '#94a3b8' : 'var(--text2)';
+    const _gjScoreColP2 = _gjP2Win ? (_gjP2Col||'#16a34a') : _gjP1Win ? '#94a3b8' : 'var(--text2)';
     const gj_typeLabel=proOnly?'프로리그 끝장전':'끝장전';
     const gj_typeBg=proOnly?'#E1F5EE':'#FAECE7';
     const gj_typeColor=proOnly?'#085041':'#993C1D';
@@ -527,8 +542,13 @@ function gjRecordsHTML(proOnly){
       <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:${_pad};gap:${_gap};cursor:pointer;${_rowScroll}" onclick="openGJSessionPopup('${_sessKey}')">
         ${bulkCbGj||''}
         <div style="display:flex;align-items:center;justify-content:flex-end;width:100%">${gj_p1bg}</div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;${_scorePad}flex-shrink:0">
-          <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-1.6px;line-height:1;color:var(--text1)">${p1wins}<span style="font-size:${_dashFs}px;color:var(--text2);font-weight:900;margin:0 5px;opacity:0.8">:</span>${p2wins}</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;${_scorePad}flex-shrink:0">
+          <div style="font-size:${_scoreFs}px;font-weight:900;letter-spacing:-2px;line-height:1;display:flex;align-items:center;gap:0">
+            <span style="color:${_gjScoreColP1};transition:color .15s;text-shadow:${_gjP1Win?'0 1px 8px '+_gjP1Col+'55':''}">${p1wins}</span>
+            <span style="font-size:${_dashFs}px;color:#64748b;font-weight:900;margin:0 6px">:</span>
+            <span style="color:${_gjScoreColP2};transition:color .15s;text-shadow:${_gjP2Win?'0 1px 8px '+_gjP2Col+'55':''}">${p2wins}</span>
+          </div>
+          ${(_gjP1Win||_gjP2Win)?`<div style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:99px;background:${_gjP1Win?_gjP1Col:_gjP2Col};color:#fff;white-space:nowrap;letter-spacing:.3px;box-shadow:0 1px 6px ${_gjP1Win?_gjP1Col:_gjP2Col}55">${_gjP1Win?s.p1:s.p2} 승</div>`:''}
         </div>
         <div style="display:flex;align-items:center;justify-content:flex-start;width:100%">${gj_p2bg}</div>
       </div>
