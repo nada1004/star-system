@@ -28,6 +28,14 @@
     { v:'heart',     label:'하트',      icon:'❤️', desc:'하트 모양',          radius:'50% 50% 50% 50%/60% 60% 40% 40%', clip:'none',                                                            preview:'border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(-45deg)' },
     { v:'parallelogram', label:'평행사변형', icon:'▱', desc:'기울어진 사각형', radius:'0', clip:'polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)',                                                   preview:'clip-path:polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)' },
     { v:'arrow',     label:'화살표',    icon:'➤',  desc:'오른쪽 화살표',      radius:'0',    clip:'polygon(0% 0%,75% 0%,100% 50%,75% 100%,0% 100%,25% 50%)',                                   preview:'clip-path:polygon(0% 0%,75% 0%,100% 50%,75% 100%,0% 100%,25% 50%)' },
+    { v:'rounded-top', label:'반원탑',  icon:'🔼', desc:'위만 둥근 반원형',   radius:'50% 50% 10% 10% / 70% 70% 10% 10%', clip:'none',                                                         preview:'border-radius:50% 50% 10% 10% / 70% 70% 10% 10%' },
+    { v:'cloud',     label:'구름',      icon:'☁️', desc:'구름 실루엣',         radius:'50%',  clip:'polygon(8% 60%,5% 45%,12% 32%,22% 26%,30% 10%,45% 4%,60% 10%,72% 5%,85% 14%,92% 28%,96% 43%,90% 58%,78% 66%,62% 70%,40% 70%,22% 66%)',  preview:'border-radius:50%;clip-path:polygon(8% 60%,5% 45%,12% 32%,22% 26%,30% 10%,45% 4%,60% 10%,72% 5%,85% 14%,92% 28%,96% 43%,90% 58%,78% 66%,62% 70%,40% 70%,22% 66%)' },
+    { v:'arch',      label:'아치',      icon:'🏛️', desc:'상단 아치형',         radius:'50% 50% 8px 8px / 60% 60% 8px 8px', clip:'none',                                                         preview:'border-radius:50% 50% 8px 8px / 60% 60% 8px 8px' },
+    { v:'badge',     label:'뱃지',      icon:'🎖️', desc:'뱃지 오각형',         radius:'0',    clip:'polygon(50% 0%,95% 15%,100% 55%,75% 92%,25% 92%,0% 55%,5% 15%)',                            preview:'clip-path:polygon(50% 0%,95% 15%,100% 55%,75% 92%,25% 92%,0% 55%,5% 15%)' },
+    { v:'chevron',   label:'쉐브론',    icon:'🔰', desc:'쉐브론 화살표형',     radius:'0',    clip:'polygon(0% 0%,85% 0%,100% 50%,85% 100%,0% 100%,15% 50%)',                                   preview:'clip-path:polygon(0% 0%,85% 0%,100% 50%,85% 100%,0% 100%,15% 50%)' },
+    { v:'clover',    label:'클로버',    icon:'🍀', desc:'4잎 클로버형',        radius:'50%',  clip:'polygon(50% 20%,58% 35%,75% 25%,65% 42%,82% 48%,65% 55%,75% 72%,58% 62%,50% 80%,42% 62%,25% 72%,35% 55%,18% 48%,35% 42%,25% 25%,42% 35%)', preview:'border-radius:50%;clip-path:polygon(50% 20%,58% 35%,75% 25%,65% 42%,82% 48%,65% 55%,75% 72%,58% 62%,50% 80%,42% 62%,25% 72%,35% 55%,18% 48%,35% 42%,25% 25%,42% 35%)' },
+    { v:'gem',       label:'젬스톤',    icon:'💎', desc:'보석 커팅',           radius:'0',    clip:'polygon(50% 0%,85% 20%,100% 55%,75% 100%,25% 100%,0% 55%,15% 20%)',                         preview:'clip-path:polygon(50% 0%,85% 20%,100% 55%,75% 100%,25% 100%,0% 55%,15% 20%)' },
+    { v:'flag',      label:'깃발',      icon:'🚩', desc:'깃발 삼각형',         radius:'0',    clip:'polygon(0% 0%,100% 0%,75% 50%,100% 100%,0% 100%)',                                           preview:'clip-path:polygon(0% 0%,100% 0%,75% 50%,100% 100%,0% 100%)' },
   ];
 
   function renderProfileShapeSection(){
@@ -42,7 +50,7 @@
     body.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:16px">
         <div>
-          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">📐 모양 (17가지)</div>
+          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">📐 모양 (27가지)</div>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px">
             ${_SHAPE_OPTIONS.map(s=>{
               const sel = shape===s.v;

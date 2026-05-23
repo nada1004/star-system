@@ -313,7 +313,7 @@
     };
     window.cfgSetRecSideFxMode = function(mode){
       var v = String(mode||'soft');
-      if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps'].indexOf(v) === -1) v = 'soft';
+      if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps','laser','diamond-cut','halo','confetti','circuit','ink','fire','ice','dust','ember','mirror','bars','bracket','corner','diagonal','scanline','sweep','shimmer'].indexOf(v) === -1) v = 'soft';
       try{ localStorage.setItem('su_rec_side_fx_mode', v); }catch(e){}
       try{ _updateSideFxPreview(); }catch(e){}
       try{ render(); }catch(e){}
@@ -428,7 +428,7 @@
     })();
 
     // ── 팀 칩 모양 (경기 기록 카드) ──
-    var _TEAM_CHIP_SHAPES = ['default','pill','square','sharp','diamond','tag','hex'];
+    var _TEAM_CHIP_SHAPES = ['default','pill','square','sharp','diamond','tag','hex','arch','ribbon','badge','round-left','slash','gem','bubble','double','wave'];
     window.cfgSetTeamChipShape = function(shape){
       var v = _TEAM_CHIP_SHAPES.indexOf(String(shape)) !== -1 ? String(shape) : 'default';
       try{ localStorage.setItem('su_rc_team_chip_shape', v); }catch(e){}
@@ -854,7 +854,7 @@
   window.renderCfgStreamerHeaderSection = renderStreamerHeaderSection;
 
   // ── 기록 카드 모양(shape) ──
-  var _RC_CARD_SHAPES = ['default','compact','wide','minimal','timeline','card3d','glass','sharp','bubble'];
+  var _RC_CARD_SHAPES = ['default','compact','wide','minimal','timeline','card3d','glass','sharp','bubble','neon','floating','retro','ticket','frosted','stripe','pill','bold-border','shadow-left','gradient-bg'];
   window.cfgSetRecCardShape = function(shape){
     var v = _RC_CARD_SHAPES.indexOf(String(shape)) !== -1 ? String(shape) : 'default';
     try{ localStorage.setItem('su_rc_card_shape', v); }catch(e){}

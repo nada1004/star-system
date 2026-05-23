@@ -318,7 +318,10 @@ function applyProfileShapeVars(){
       leaf: '50%',
       triangle: '0', octagon: '50%', cross: '0',
       heart: '50% 50% 50% 50%/60% 60% 40% 40%',
-      parallelogram: '0', arrow: '0'
+      parallelogram: '0', arrow: '0',
+      'rounded-top': '50% 50% 10% 10% / 70% 70% 10% 10%',
+      cloud: '50%', arch: '50% 50% 8px 8px / 60% 60% 8px 8px',
+      badge: '0', chevron: '0', clover: '50%', gem: '0', flag: '0'
     };
     const radius = _shapeRadius[shape] || '50%';
     document.documentElement.style.setProperty('--su_profile_radius', radius);
@@ -334,7 +337,13 @@ function applyProfileShapeVars(){
       octagon: 'polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%)',
       cross: 'polygon(33% 0%,67% 0%,67% 33%,100% 33%,100% 67%,67% 67%,67% 100%,33% 100%,33% 67%,0% 67%,0% 33%,33% 33%)',
       parallelogram: 'polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)',
-      arrow: 'polygon(0% 0%,75% 0%,100% 50%,75% 100%,0% 100%,25% 50%)'
+      arrow: 'polygon(0% 0%,75% 0%,100% 50%,75% 100%,0% 100%,25% 50%)',
+      cloud: 'polygon(8% 60%,5% 45%,12% 32%,22% 26%,30% 10%,45% 4%,60% 10%,72% 5%,85% 14%,92% 28%,96% 43%,90% 58%,78% 66%,62% 70%,40% 70%,22% 66%)',
+      badge: 'polygon(50% 0%,95% 15%,100% 55%,75% 92%,25% 92%,0% 55%,5% 15%)',
+      chevron: 'polygon(0% 0%,85% 0%,100% 50%,85% 100%,0% 100%,15% 50%)',
+      clover: 'polygon(50% 20%,58% 35%,75% 25%,65% 42%,82% 48%,65% 55%,75% 72%,58% 62%,50% 80%,42% 62%,25% 72%,35% 55%,18% 48%,35% 42%,25% 25%,42% 35%)',
+      gem: 'polygon(50% 0%,85% 20%,100% 55%,75% 100%,25% 100%,0% 55%,15% 20%)',
+      flag: 'polygon(0% 0%,100% 0%,75% 50%,100% 100%,0% 100%)'
     };
     const clipPath = _shapeClip[shape] || 'none';
     document.documentElement.style.setProperty('--su_profile_clip', clipPath);

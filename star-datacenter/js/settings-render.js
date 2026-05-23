@@ -862,15 +862,25 @@ ${_scfgD('notice','📢 공지 관리')}
           ${(function(){
             const _curShape = localStorage.getItem('su_rc_card_shape') || 'default';
             const _shapes = [
-              {v:'default',  l:'기본',     icon:'🃏', desc:'기본 둥근 카드'},
-              {v:'compact',  l:'컴팩트',   icon:'📋', desc:'패딩 축소, 밀도 높게'},
-              {v:'wide',     l:'와이드',   icon:'🖼️', desc:'넓고 여유로운 카드'},
-              {v:'minimal',  l:'미니멀',   icon:'➖', desc:'테두리 없음, 구분선만'},
-              {v:'timeline', l:'타임라인', icon:'📅', desc:'왼쪽 색선 강조'},
-              {v:'card3d',   l:'3D 카드',  icon:'🎴', desc:'입체 그림자 효과'},
-              {v:'glass',    l:'유리',     icon:'🔮', desc:'반투명 유리 효과'},
-              {v:'sharp',    l:'각진',     icon:'▬',  desc:'직각 카드'},
-              {v:'bubble',   l:'버블',     icon:'💬', desc:'크고 둥근 버블형'},
+              {v:'default',       l:'기본',      icon:'🃏', desc:'기본 둥근 카드'},
+              {v:'compact',       l:'컴팩트',    icon:'📋', desc:'패딩 축소, 밀도 높게'},
+              {v:'wide',          l:'와이드',    icon:'🖼️', desc:'넓고 여유로운 카드'},
+              {v:'minimal',       l:'미니멀',    icon:'➖', desc:'테두리 없음, 구분선만'},
+              {v:'timeline',      l:'타임라인',  icon:'📅', desc:'왼쪽 색선 강조'},
+              {v:'card3d',        l:'3D 카드',   icon:'🎴', desc:'입체 그림자 효과'},
+              {v:'glass',         l:'유리',      icon:'🔮', desc:'반투명 유리 효과'},
+              {v:'sharp',         l:'각진',      icon:'▬',  desc:'직각 카드'},
+              {v:'bubble',        l:'버블',      icon:'💬', desc:'크고 둥근 버블형'},
+              {v:'neon',          l:'네온',      icon:'⚡', desc:'네온 발광 테두리'},
+              {v:'floating',      l:'플로팅',    icon:'🎈', desc:'둥실 떠오르는 그림자'},
+              {v:'retro',         l:'레트로',    icon:'🕹️', desc:'복고풍 진한 테두리'},
+              {v:'ticket',        l:'티켓',      icon:'🎟️', desc:'점선 티켓 스타일'},
+              {v:'frosted',       l:'프로스트',  icon:'❄️', desc:'세련된 frosted glass'},
+              {v:'stripe',        l:'스트라이프', icon:'🟦', desc:'왼쪽 컬러 스트라이프'},
+              {v:'pill',          l:'알약형',    icon:'💊', desc:'완전 둥근 알약 카드'},
+              {v:'bold-border',   l:'굵은선',    icon:'🖊️', desc:'컬러 두꺼운 테두리'},
+              {v:'shadow-left',   l:'사이드 쉐도우', icon:'🌗', desc:'측면 강조 그림자'},
+              {v:'gradient-bg',   l:'그라데이션', icon:'🌈', desc:'모드 컬러 그라데이션 배경'},
             ];
             return _shapes.map(s=>`<button type="button"
               onclick="if(typeof cfgSetRecCardShape==='function')cfgSetRecCardShape('${s.v}');try{render();}catch(e){}"
@@ -1241,6 +1251,7 @@ ${_scfgD('notice','📢 공지 관리')}
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <div style="font-size:11px;color:var(--text3);font-weight:800">효과 종류</div>
             <select id="cfg-sidefx-mode" onchange="(window.cfgSetRecSideFxMode||function(){})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+              <optgroup label="── 기본 ──">
               <option value="soft" ${_sfxMode==='soft'?'selected':''}>소프트 (기본)</option>
               <option value="glow" ${_sfxMode==='glow'?'selected':''}>글로우 (발광)</option>
               <option value="panel" ${_sfxMode==='panel'?'selected':''}>패널 (선명)</option>
@@ -1248,17 +1259,44 @@ ${_scfgD('notice','📢 공지 관리')}
               <option value="ribbon" ${_sfxMode==='ribbon'?'selected':''}>리본</option>
               <option value="frame" ${_sfxMode==='frame'?'selected':''}>프레임</option>
               <option value="spotlight" ${_sfxMode==='spotlight'?'selected':''}>스포트라이트</option>
-              <option value="fade" ${_sfxMode==='fade'?'selected':''}>페이드(은은)</option>
+              <option value="fade" ${_sfxMode==='fade'?'selected':''}>페이드 (은은)</option>
               <option value="double" ${_sfxMode==='double'?'selected':''}>더블라인</option>
               <option value="neon" ${_sfxMode==='neon'?'selected':''}>네온</option>
               <option value="wave" ${_sfxMode==='wave'?'selected':''}>웨이브</option>
               <option value="prism" ${_sfxMode==='prism'?'selected':''}>프리즘</option>
               <option value="vignette" ${_sfxMode==='vignette'?'selected':''}>비네트</option>
               <option value="pulse" ${_sfxMode==='pulse'?'selected':''}>펄스</option>
-              <option value="sheen" ${_sfxMode==='sheen'?'selected':''}>실크(사선)</option>
+              <option value="sheen" ${_sfxMode==='sheen'?'selected':''}>실크 (사선)</option>
               <option value="aurora" ${_sfxMode==='aurora'?'selected':''}>오로라</option>
               <option value="slant" ${_sfxMode==='slant'?'selected':''}>슬랜트</option>
               <option value="steps" ${_sfxMode==='steps'?'selected':''}>스텝</option>
+              </optgroup>
+              <optgroup label="── 발광/빔 ──">
+              <option value="laser" ${_sfxMode==='laser'?'selected':''}>레이저</option>
+              <option value="halo" ${_sfxMode==='halo'?'selected':''}>헤일로 (고리 발광)</option>
+              <option value="ember" ${_sfxMode==='ember'?'selected':''}>엠버 (잔불)</option>
+              <option value="shimmer" ${_sfxMode==='shimmer'?'selected':''}>시머 (반짝 광택)</option>
+              <option value="sweep" ${_sfxMode==='sweep'?'selected':''}>스윕 (방사 호)</option>
+              </optgroup>
+              <optgroup label="── 자연/온도 ──">
+              <option value="fire" ${_sfxMode==='fire'?'selected':''}>파이어 (불꽃)</option>
+              <option value="ice" ${_sfxMode==='ice'?'selected':''}>아이스 (냉기)</option>
+              <option value="ink" ${_sfxMode==='ink'?'selected':''}>잉크 (먹물 번짐)</option>
+              <option value="dust" ${_sfxMode==='dust'?'selected':''}>더스트 (먼지 입자)</option>
+              </optgroup>
+              <optgroup label="── 선/패턴 ──">
+              <option value="bars" ${_sfxMode==='bars'?'selected':''}>바 (복수 세로 바)</option>
+              <option value="bracket" ${_sfxMode==='bracket'?'selected':''}>브라켓 [ ]</option>
+              <option value="corner" ${_sfxMode==='corner'?'selected':''}>코너 (L자 모서리)</option>
+              <option value="diagonal" ${_sfxMode==='diagonal'?'selected':''}>다이아고날 (사선)</option>
+              <option value="scanline" ${_sfxMode==='scanline'?'selected':''}>스캔라인 (CRT)</option>
+              <option value="circuit" ${_sfxMode==='circuit'?'selected':''}>서킷 (회로 패턴)</option>
+              <option value="confetti" ${_sfxMode==='confetti'?'selected':''}>컨페티 (점 패턴)</option>
+              </optgroup>
+              <optgroup label="── 구조/반사 ──">
+              <option value="diamond-cut" ${_sfxMode==='diamond-cut'?'selected':''}>다이아몬드 커트</option>
+              <option value="mirror" ${_sfxMode==='mirror'?'selected':''}>미러 (좌우 반사)</option>
+              </optgroup>
             </select>
           </div>
           <div>

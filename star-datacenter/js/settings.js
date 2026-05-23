@@ -4769,6 +4769,7 @@ ${_scfgD('notice','📢 공지 관리')}
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <div style="font-size:11px;color:var(--text3);font-weight:800">효과 종류</div>
             <select id="cfg-sidefx-mode" onchange="(window.cfgSetRecSideFxMode||function(){})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+              <optgroup label="── 기본 ──">
               <option value="soft" ${_sfxMode==='soft'?'selected':''}>소프트 (기본)</option>
               <option value="glow" ${_sfxMode==='glow'?'selected':''}>글로우 (발광)</option>
               <option value="panel" ${_sfxMode==='panel'?'selected':''}>패널 (선명)</option>
@@ -4776,13 +4777,44 @@ ${_scfgD('notice','📢 공지 관리')}
               <option value="ribbon" ${_sfxMode==='ribbon'?'selected':''}>리본</option>
               <option value="frame" ${_sfxMode==='frame'?'selected':''}>프레임</option>
               <option value="spotlight" ${_sfxMode==='spotlight'?'selected':''}>스포트라이트</option>
-              <option value="fade" ${_sfxMode==='fade'?'selected':''}>페이드(은은)</option>
+              <option value="fade" ${_sfxMode==='fade'?'selected':''}>페이드 (은은)</option>
               <option value="double" ${_sfxMode==='double'?'selected':''}>더블라인</option>
               <option value="neon" ${_sfxMode==='neon'?'selected':''}>✨ 네온 (외곽 발광)</option>
               <option value="wave" ${_sfxMode==='wave'?'selected':''}>🌊 웨이브 (물결)</option>
               <option value="prism" ${_sfxMode==='prism'?'selected':''}>🔷 프리즘 (교차 블렌드)</option>
               <option value="vignette" ${_sfxMode==='vignette'?'selected':''}>🌑 비네트 (원형 번짐)</option>
               <option value="pulse" ${_sfxMode==='pulse'?'selected':''}>💓 펄스 (깜빡이는 바)</option>
+              <option value="sheen" ${_sfxMode==='sheen'?'selected':''}>실크 (사선)</option>
+              <option value="aurora" ${_sfxMode==='aurora'?'selected':''}>오로라</option>
+              <option value="slant" ${_sfxMode==='slant'?'selected':''}>슬랜트</option>
+              <option value="steps" ${_sfxMode==='steps'?'selected':''}>스텝</option>
+              </optgroup>
+              <optgroup label="── 발광/빔 ──">
+              <option value="laser" ${_sfxMode==='laser'?'selected':''}>⚡ 레이저</option>
+              <option value="halo" ${_sfxMode==='halo'?'selected':''}>🌟 헤일로 (고리 발광)</option>
+              <option value="ember" ${_sfxMode==='ember'?'selected':''}>🔥 엠버 (잔불)</option>
+              <option value="shimmer" ${_sfxMode==='shimmer'?'selected':''}>💫 시머 (반짝 광택)</option>
+              <option value="sweep" ${_sfxMode==='sweep'?'selected':''}>🌀 스윕 (방사 호)</option>
+              </optgroup>
+              <optgroup label="── 자연/온도 ──">
+              <option value="fire" ${_sfxMode==='fire'?'selected':''}>🔥 파이어 (불꽃)</option>
+              <option value="ice" ${_sfxMode==='ice'?'selected':''}>❄️ 아이스 (냉기)</option>
+              <option value="ink" ${_sfxMode==='ink'?'selected':''}>🖋 잉크 (먹물 번짐)</option>
+              <option value="dust" ${_sfxMode==='dust'?'selected':''}>✨ 더스트 (먼지 입자)</option>
+              </optgroup>
+              <optgroup label="── 선/패턴 ──">
+              <option value="bars" ${_sfxMode==='bars'?'selected':''}>☰ 바 (복수 세로 바)</option>
+              <option value="bracket" ${_sfxMode==='bracket'?'selected':''}>[ ] 브라켓</option>
+              <option value="corner" ${_sfxMode==='corner'?'selected':''}>⌐ 코너 (L자 모서리)</option>
+              <option value="diagonal" ${_sfxMode==='diagonal'?'selected':''}>⧸ 다이아고날 (사선)</option>
+              <option value="scanline" ${_sfxMode==='scanline'?'selected':''}>📺 스캔라인 (CRT)</option>
+              <option value="circuit" ${_sfxMode==='circuit'?'selected':''}>🔌 서킷 (회로 패턴)</option>
+              <option value="confetti" ${_sfxMode==='confetti'?'selected':''}>🎊 컨페티 (점 패턴)</option>
+              </optgroup>
+              <optgroup label="── 구조/반사 ──">
+              <option value="diamond-cut" ${_sfxMode==='diamond-cut'?'selected':''}>💎 다이아몬드 커트</option>
+              <option value="mirror" ${_sfxMode==='mirror'?'selected':''}>🪞 미러 (좌우 반사)</option>
+              </optgroup>
             </select>
           </div>
           <div>
@@ -4830,6 +4862,15 @@ ${_scfgD('notice','📢 공지 관리')}
             {v:'diamond', label:'기울임',    desc:'사선 스큐',      icon:'♦️'},
             {v:'tag',     label:'꼬리표형',  desc:'삼각 꼬리',      icon:'🏷️'},
             {v:'hex',     label:'육각형',    desc:'헥사곤 클립',    icon:'⬡'},
+            {v:'arch',    label:'아치형',    desc:'위가 둥근 아치',  icon:'🏛️'},
+            {v:'ribbon',  label:'리본형',    desc:'양쪽 꺾인 리본', icon:'🎀'},
+            {v:'badge',   label:'뱃지형',    desc:'전통 배지',      icon:'🎖️'},
+            {v:'round-left', label:'왼쪽 원형', desc:'왼쪽만 둥글게', icon:'◁'},
+            {v:'slash',   label:'슬래시',    desc:'오른쪽 사선',    icon:'⧸'},
+            {v:'gem',     label:'젬형',      desc:'보석 커팅',      icon:'💎'},
+            {v:'bubble',  label:'말풍선',    desc:'말풍선 꼬리',    icon:'💬'},
+            {v:'double',  label:'이중선',    desc:'이중 테두리',    icon:'⊞'},
+            {v:'wave',    label:'웨이브',    desc:'물결 상단',      icon:'〰️'},
           ].map(s=>{const sel=(localStorage.getItem('su_rc_team_chip_shape')||'default')===s.v; return `<button type="button" onclick="cfgSetTeamChipShape('${s.v}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:12px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer"><span style="font-size:14px">${s.icon}</span><span style="font-size:11px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'}">${s.label}</span><span style="font-size:9px;color:var(--gray-l);font-weight:700">${s.desc}</span></button>`;}).join('')}
         </div>
       </div>

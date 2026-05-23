@@ -521,8 +521,8 @@ function _recordLoginFailure(){
   return { count: nextCount, lockUntil };
 }
 _syncSessionStateAtBoot();
-let isLoggedIn=localStorage.getItem('su_session')==='1';
-let isSubAdmin=localStorage.getItem('su_session_role')==='sub-admin';
+let isLoggedIn=localStorage.getItem('su_session')==='1' && localStorage.getItem('su_explicit_logout')!=='1';
+let isSubAdmin=isLoggedIn && localStorage.getItem('su_session_role')==='sub-admin';
 window._authInitPromise = null;
 
 // ── 설정 탭 즉시 가시성 적용 (applyLoginState 호출 전 깜박임 방지) ──
@@ -588,6 +588,7 @@ async function doLogin(){
     isLoggedIn=true;
     isSubAdmin=(found.role==='sub-admin');
     const now = Date.now();
+    try{ localStorage.removeItem('su_explicit_logout'); }catch(e){}
     localStorage.setItem('su_session','1');
     localStorage.setItem('su_session_role',found.role||'admin');
     _setSessionIdentity(found.idHash || await sha256(_normAdminId(id)));
@@ -615,6 +616,7 @@ async function doLogin(){
 function doLogout(){
   isLoggedIn=false;
   isSubAdmin=false;
+  try{ localStorage.setItem('su_explicit_logout','1'); }catch(e){}
   _clearSessionStorage();
   if(['member','cfg'].includes(curTab)){curTab='total';document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.querySelector('.tab').classList.add('on');}
   if(['grpedit','input'].includes(compSub)) compSub='league';
