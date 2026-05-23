@@ -4724,16 +4724,18 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     font-size:10px !important;
   }
   .grp-match-card.match-card-v3 .grp-score-col{ min-width:54px !important; }
-  /* (요청사항) 모바일: 팀버튼+스코어 한줄 레이아웃 강제 + 스크롤 페이드 */
+  /* 모바일: 팀버튼+스코어 한줄 레이아웃 강제 — fade 제거(버튼 짤림 방지) */
   .grp-match-card.match-card-v3 .grp-match-main{
     flex-wrap:nowrap !important;
     overflow-x:auto !important;
     justify-content:center !important;
     align-items:flex-start !important;
     gap:6px !important;
-    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%) !important;
-    mask-image: linear-gradient(to right, black 85%, transparent 100%) !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
     scrollbar-width: none !important;
+    padding-left: var(--rec-side-line-w, 8px) !important;
+    padding-right: var(--rec-side-line-w, 8px) !important;
   }
   .grp-match-card.match-card-v3 .grp-match-main::-webkit-scrollbar { display: none !important; }
   .grp-match-card.match-card-v3 .grp-team-col{
@@ -4747,6 +4749,14 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
     min-width:56px !important;
   }
   /* (요청사항) 팀버튼 아래 참여자 버튼 표시 */
+  /* sidefx overflow:hidden이 모바일 팀버튼 스크롤을 막지 않도록 재정의 */
+  .grp-match-card.grp-sidefx{
+    overflow: visible !important;
+  }
+  .grp-match-card.grp-sidefx::after{
+    border-radius: inherit;
+    pointer-events: none;
+  }
   .grp-match-card.match-card-v3 .grp-mem-btn{
     display:inline-flex !important;
     margin-top:4px;
