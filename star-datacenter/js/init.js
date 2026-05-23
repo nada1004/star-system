@@ -372,6 +372,10 @@ async function init(){
         await window.refreshSessionAuthority(true);
       }
     })();
+    // 비동기 인증 완료 후 로그인 상태 재적용 (계정 검증 결과 UI 반영)
+    window._authInitPromise.then(()=>{
+      try{ applyLoginState(); }catch(e){}
+    }).catch(()=>{});
   }catch(e){ try{ initLoginHash(); }catch(_){} }
   applyLoginState();
   try{ if(typeof window._applyTabLinkFromUrl==='function') window._applyTabLinkFromUrl(); }catch(e){}
