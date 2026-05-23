@@ -1758,12 +1758,8 @@ function proCompTourMatchInput(tn){
       <div style="font-weight:900;color:#1d4ed8">🗂️ 대진표 기록(토너먼트 기록)</div>
       <div style="font-size:12px;color:var(--gray-l)">대진표 작성이 아니라, 라운드별 경기 결과를 기록합니다 (64강/32강/16강/8강/4강/결승)</div>
       <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
-        ${isLoggedIn?`<button class="btn btn-b btn-sm" onclick="openPcStageRecModal('${tn.id}','결승',-1)">+ 결승 추가</button>
-        <button class="btn btn-b btn-sm" onclick="openPcStageRecModal('${tn.id}','4강',-1)">+ 4강 추가</button>
-        <button class="btn btn-b btn-sm" onclick="openPcStageRecModal('${tn.id}','8강',-1)">+ 8강 추가</button>
-        <button class="btn btn-p btn-sm" onclick="openPcStageBulkPasteModal('${tn.id}','결승')">📋 결승 붙여넣기</button>
-        <button class="btn btn-p btn-sm" onclick="openPcStageBulkPasteModal('${tn.id}','4강')">📋 4강 붙여넣기</button>
-        <button class="btn btn-p btn-sm" onclick="openPcStageBulkPasteModal('${tn.id}','8강')">📋 8강 붙여넣기</button>`:''}
+        ${isLoggedIn?`<button class="btn btn-b btn-sm" onclick="openPcStageAddMenu(this,'${tn.id}')">+ 대진표 추가</button>
+        <button class="btn btn-p btn-sm" onclick="openPcStagePasteMenu(this,'${tn.id}')">📋 붙여넣기(자동인식)</button>`:''}
       </div>
     </div>
     ${roundBtns}

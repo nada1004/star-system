@@ -122,6 +122,39 @@ window.openPcStageActionMenu = function(btnEl, tnId, round, idx, src, ri, mi){
   }catch(e){}
 };
 
+window.openPcStageAddMenu = function(btnEl, tnId){
+  try{
+    const rounds = (typeof _PC_STAGE_ROUNDS !== 'undefined' && Array.isArray(_PC_STAGE_ROUNDS)) ? _PC_STAGE_ROUNDS : ['64강','32강','16강','8강','4강','결승'];
+    const items = rounds.map(r => ({ t:`+ ${r} 추가`, on:()=>openPcStageRecModal(tnId, r, -1) }));
+    if(window.HistoryActionUtils && typeof window.HistoryActionUtils.openSimpleActionMenu==='function'){
+      window.HistoryActionUtils.openSimpleActionMenu(btnEl, items);
+      return;
+    }
+    const pick = prompt(`라운드를 선택하세요:\n${rounds.map((r,i)=>`${i+1}. ${r}`).join('\n')}`, '3');
+    const idx = parseInt(String(pick||''), 10);
+    if(!idx || idx<1 || idx>rounds.length) return;
+    openPcStageRecModal(tnId, rounds[idx-1], -1);
+  }catch(e){}
+};
+
+window.openPcStagePasteMenu = function(btnEl, tnId){
+  try{
+    const rounds = (typeof _PC_STAGE_ROUNDS !== 'undefined' && Array.isArray(_PC_STAGE_ROUNDS)) ? _PC_STAGE_ROUNDS : ['64강','32강','16강','8강','4강','결승'];
+    const items = [{ t:'📋 전체 라운드', on:()=>openPcStageBulkPasteModal(tnId, 'ALL') }]
+      .concat(rounds.map(r => ({ t:`📋 ${r}`, on:()=>openPcStageBulkPasteModal(tnId, r) })));
+    if(window.HistoryActionUtils && typeof window.HistoryActionUtils.openSimpleActionMenu==='function'){
+      window.HistoryActionUtils.openSimpleActionMenu(btnEl, items);
+      return;
+    }
+    const menu = ['전체 라운드', ...rounds];
+    const pick = prompt(`붙여넣기 라운드를 선택하세요:\n${menu.map((r,i)=>`${i+1}. ${r}`).join('\n')}`, '1');
+    const idx = parseInt(String(pick||''), 10);
+    if(!idx || idx<1 || idx>menu.length) return;
+    const sel = menu[idx-1];
+    openPcStageBulkPasteModal(tnId, sel==='전체 라운드' ? 'ALL' : sel);
+  }catch(e){}
+};
+
 window.openPcStageRecShareCard = function(tnId, round, idx){
   const tn=_findTourneyById(tnId);
   if(!tn || !tn.stageRecords) return;
@@ -178,6 +211,12 @@ function _pcStageBuildBulkResults(text, defaultDate){
   const raw = String(text||'').trim();
   if(!raw) return [];
   const out = [];
+  const _extractRound0 = (s)=>{
+    const m = String(s||'').match(/(64강|32강|16강|8강|4강|결승|준결승)/);
+    if(!m) return '';
+    const v = (m[1] === '준결승') ? '4강' : m[1];
+    try{ return (typeof _pcNormalizeStageRound === 'function') ? _pcNormalizeStageRound(v) : v; }catch(e){ return v; }
+  };
   const lines = (typeof splitPasteLines === 'function')
     ? splitPasteLines(raw)
     : raw.split(/\r?\n/).map(v=>v.trim()).filter(Boolean);
@@ -191,6 +230,7 @@ function _pcStageBuildBulkResults(text, defaultDate){
     let lineForParse = trimmed;
     let lineDate = String(defaultDate||'');
     let lineNote = '';
+    let lineRound = _extractRound0(trimmed);
     let directTsv = null;
     try{
       const cols = trimmed.split('\t').map(x=>x.trim());
@@ -200,6 +240,7 @@ function _pcStageBuildBulkResults(text, defaultDate){
         const rawL = String(cols[2]||'').trim();
         const rawMap = String(cols[3]||'').trim() || '-';
         lineNote = cols.slice(4).filter(Boolean).join(' · ');
+        if(!lineRound) lineRound = _extractRound0(lineNote);
         if(rawW && rawL){
           const wName = _pcStageResolveAliasName(rawW);
           const lName = _pcStageResolveAliasName(rawL);
@@ -211,6 +252,7 @@ function _pcStageBuildBulkResults(text, defaultDate){
             lName,
             map: rawMap,
             note: lineNote,
+            round: lineRound || '',
             wPlayer: wMatch.player || null,
             lPlayer: lMatch.player || null,
             wCandidates: wMatch.candidates || [],
@@ -228,6 +270,7 @@ function _pcStageBuildBulkResults(text, defaultDate){
       return;
     }
 
+    if(!lineRound) lineRound = _extractRound0(lineForParse);
     let parsed = null;
     try{
       if(typeof parsePasteLine === 'function') parsed = parsePasteLine(lineForParse);
@@ -245,6 +288,7 @@ function _pcStageBuildBulkResults(text, defaultDate){
           lName,
           map: parsed.map || '-',
           note: lineNote || '',
+          round: lineRound || '',
           wPlayer: wMatch.player || null,
           lPlayer: lMatch.player || null,
           wCandidates: wMatch.candidates || [],
@@ -270,6 +314,7 @@ function _pcStageBuildBulkResults(text, defaultDate){
       lName,
       map,
       note: lineNote || '',
+      round: lineRound || '',
       wPlayer: wMatch.player || null,
       lPlayer: lMatch.player || null,
       wCandidates: wMatch.candidates || [],
@@ -290,7 +335,8 @@ function _pcStageParseBulkEntries(text, defaultDate){
       wName: r.wPlayer.name,
       lName: r.lPlayer.name,
       map: r.map || '-',
-      note: r.note || ''
+      note: r.note || '',
+      round: String(r.round||'').trim()
     }));
 }
 
@@ -301,6 +347,7 @@ function pcStageBulkPreview(tnId, round){
   const saveBtn = document.getElementById('_pcStageBulkApplyBtn');
   const baseDate = (document.getElementById('_pcStageBulkDate')?.value || '').trim() || new Date().toISOString().slice(0,10);
   if(!previewEl) return;
+  const isAll = String(round||'').toUpperCase() === 'ALL';
   if(!raw){
     previewEl.innerHTML = '';
     if(badge) badge.style.display = 'none';
@@ -309,6 +356,10 @@ function pcStageBulkPreview(tnId, round){
     return;
   }
   const results = _pcStageBuildBulkResults(raw, baseDate);
+  if(isAll){
+    const defRound = String(document.getElementById('_pcStageBulkRoundDefault')?.value || '16강').trim() || '16강';
+    results.forEach(r => { if(r && !String(r.round||'').trim()) r.round = defRound; });
+  }
   const prev = window._pcStageBulkResults || [];
   if(prev && prev.length === results.length){
     results.forEach((r, i)=>{
@@ -317,6 +368,7 @@ function pcStageBulkPreview(tnId, round){
       if (p.wPlayer && !r.wPlayer) { r.wPlayer = p.wPlayer; r.wCandidates = p.wCandidates; r.wSimilar = p.wSimilar; }
       if (p.lPlayer && !r.lPlayer) { r.lPlayer = p.lPlayer; r.lCandidates = p.lCandidates; r.lSimilar = p.lSimilar; }
       if (p.map && p.map !== '-') r.map = p.map;
+      if (String(p.round||'').trim() && !String(r.round||'').trim()) r.round = p.round;
     });
   }
   window._pcStageBulkResults = results;
@@ -330,8 +382,11 @@ function _renderPcStageBulkPreview(tnId, round){
   const saveBtn = document.getElementById('_pcStageBulkApplyBtn');
   const warnEl = document.getElementById('_pcStageBulkWarn');
   if(!previewEl) return;
-  const savable = results.filter(r => r.wPlayer && r.lPlayer);
-  const unresolved = results.filter(r => !(r.wPlayer && r.lPlayer));
+  const isAll = String(round||'').toUpperCase() === 'ALL';
+  const stageRounds = (typeof _PC_STAGE_ROUNDS !== 'undefined' && Array.isArray(_PC_STAGE_ROUNDS)) ? _PC_STAGE_ROUNDS : ['64강','32강','16강','8강','4강','결승'];
+  const _isValidRound = (v)=> stageRounds.includes(String(v||'').trim());
+  const savable = results.filter(r => r && r.wPlayer && r.lPlayer && (!isAll || _isValidRound(r.round)));
+  const unresolved = results.filter(r => !(r && r.wPlayer && r.lPlayer) || (isAll && !_isValidRound(r.round)));
   if(badge){
     badge.style.display = results.length ? 'inline' : 'none';
     badge.textContent = `✅ ${savable.length}/${results.length}건 인식`;
@@ -353,6 +408,7 @@ function _renderPcStageBulkPreview(tnId, round){
   };
   let h = `<div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:11px">
     <thead><tr style="background:var(--surface)">
+      ${isAll?`<th style="padding:5px 6px;text-align:left;font-weight:700;color:var(--text3)">라운드</th>`:''}
       <th style="padding:5px 8px;text-align:left;font-weight:700;color:var(--text3)">승자</th>
       <th style="padding:5px 3px;width:28px"></th>
       <th style="padding:5px 8px;text-align:left;font-weight:700;color:var(--text3)">패자</th>
@@ -365,6 +421,8 @@ function _renderPcStageBulkPreview(tnId, round){
     const wOk = !!r.wPlayer, lOk = !!r.lPlayer, ok = wOk && lOk;
     const wAmbig = !wOk && (r.wCandidates||[]).length > 1;
     const lAmbig = !lOk && (r.lCandidates||[]).length > 1;
+    const rOk = !isAll || _isValidRound(r.round);
+    const okAll = ok && rOk;
     const wCell = buildCell(i, wOk, wAmbig, r.wPlayer, r.wName, r.wCandidates, r.wSimilar, 'w');
     const lCell = buildCell(i, lOk, lAmbig, r.lPlayer, r.lName, r.lCandidates, r.lSimilar, 'l');
     const mapOpts = `<option value="-">-</option>` + allMaps.map(m=>`<option value="${m}" ${m===r.map?'selected':''}>${m}</option>`).join('') + `<option value="__c__">직접입력</option>`;
@@ -374,12 +432,20 @@ function _renderPcStageBulkPreview(tnId, round){
       ? `<div style="max-width:220px;font-size:10px;line-height:1.5;color:var(--gray-l);white-space:normal;word-break:break-word">${String(r.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
       : `<span style="font-size:10px;color:#cbd5e1">-</span>`;
     const flipBtn = `<button onclick="pcStageBulkFlip(${i},${JSON.stringify(tnId)},${JSON.stringify(round)})" title="승패 교체" style="padding:2px 5px;border-radius:4px;border:1px solid #ddd6fe;background:#f5f3ff;font-size:12px;cursor:pointer">⇄</button>`;
-    const status = ok
+    const status = okAll
       ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:1px 4px;border-radius:6px">✓</span>`
       : (wAmbig||lAmbig)
         ? `<span style="background:#fef9c3;color:#b45309;border:1px solid #fcd34d;font-size:10px;font-weight:700;padding:1px 4px;border-radius:6px">?</span>`
         : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:1px 4px;border-radius:6px">✗</span>`;
-    h += `<tr style="background:${ok?'#f8faff':(wAmbig||lAmbig)?'#fffbeb':'#fff8f8'};border-bottom:1px solid #f0f0f0">
+    const roundSel = isAll
+      ? (() => {
+          const cur = String(r.round||'').trim();
+          const opts = stageRounds.map(rr => `<option value="${rr}" ${rr===cur?'selected':''}>${rr}</option>`).join('');
+          return `<select onchange="window._pcStageBulkResults[${i}].round=this.value;_renderPcStageBulkPreview(${JSON.stringify(tnId)},${JSON.stringify(round)})" style="width:70px;border:1px solid var(--border2);border-radius:5px;padding:2px 3px;font-size:10px;font-weight:800">${opts}</select>`;
+        })()
+      : '';
+    h += `<tr style="background:${okAll?'#f8faff':(wAmbig||lAmbig)?'#fffbeb':'#fff8f8'};border-bottom:1px solid #f0f0f0">
+      ${isAll?`<td style="padding:5px 5px">${roundSel}</td>`:''}
       <td style="padding:5px 6px">${wCell}</td>
       <td style="padding:5px 3px;text-align:center">${flipBtn}</td>
       <td style="padding:5px 6px">${lCell}</td>
@@ -415,14 +481,23 @@ window.pcStageBulkFlip = function(i, tnId, round){
 
 window.openPcStageBulkPasteModal = function(tnId, round){
   const tn=_findTourneyById(tnId); if(!tn) return;
-  const r = _pcNormalizeStageRound(round);
+  const isAll = String(round||'').toUpperCase() === 'ALL';
+  const r = isAll ? 'ALL' : _pcNormalizeStageRound(round);
   const today = new Date().toISOString().slice(0,10);
   const modal=document.createElement('div');
   modal.id='_pcStageBulkPaste';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  const stageRounds = (typeof _PC_STAGE_ROUNDS !== 'undefined' && Array.isArray(_PC_STAGE_ROUNDS)) ? _PC_STAGE_ROUNDS : ['64강','32강','16강','8강','4강','결승'];
+  const roundDefaultSel = isAll
+    ? `<label style="font-size:12px;font-weight:700;color:var(--text2)">🏷️ 기본 라운드</label>
+      <select id="_pcStageBulkRoundDefault" onchange="pcStageBulkPreview('${tnId}','${r}')" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;font-weight:800">
+        ${stageRounds.map(rr=>`<option value="${rr}" ${rr==='16강'?'selected':''}>${rr}</option>`).join('')}
+      </select>
+      <div style="font-size:11px;color:var(--gray-l)">줄에 라운드(예: 64강)가 없으면 이 값으로 저장됩니다.</div>`
+    : '';
   modal.innerHTML=`<div class="umbox" style="width:780px;max-width:97vw;max-height:92vh;overflow:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="mtitle" style="margin-bottom:0">🏅 프로리그 대회 ${r} 경기 결과 붙여넣기</div>
+      <div class="mtitle" style="margin-bottom:0">🏅 프로리그 대회 ${isAll?'전체 라운드':r} 경기 결과 붙여넣기</div>
       <div style="display:flex;gap:6px;align-items:center">
         <span id="_pcStageBulkBadge" style="display:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0"></span>
         <button class="btn btn-w btn-sm" onclick="document.getElementById('_pcStageBulkPaste')?.remove()">✕ 닫기</button>
@@ -434,6 +509,7 @@ window.openPcStageBulkPasteModal = function(tnId, round){
         형식 A: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">승자이름 패자이름 [맵]</span><br>
         형식 B: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">[맵] 홍길동T (승) vs (패) 이순신Z</span><br>
         형식 C: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">2026-05-02[TAB]승자[TAB]패자[TAB]맵</span><br>
+        ${isAll?`<div style="margin-top:6px;font-size:11px;color:#6d28d9">💡 한 번에 여러 라운드를 넣으려면 줄에 라운드를 포함하세요. 예: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">64강 홍길동 임꺽정 투혼</span> / <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">결승 홍길동 이순신 투혼</span></div>`:''}
         <span style="color:#7c3aed;font-size:11px">💡 일반 경기 결과 자동인식과 같은 방식으로 선수/맵을 인식하고, 애매하면 아래 미리보기에서 직접 선택할 수 있습니다.</span>
       </div>
     </details>
@@ -441,6 +517,7 @@ window.openPcStageBulkPasteModal = function(tnId, round){
       <label style="font-size:12px;font-weight:700;color:var(--text2)">📅 기본 날짜</label>
       <input type="date" id="_pcStageBulkDate" value="${today}" onchange="pcStageBulkPreview('${tnId}','${r}')" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
       <div style="font-size:11px;color:var(--gray-l)">줄마다 날짜가 없으면 이 날짜로 저장됩니다.</div>
+      ${roundDefaultSel}
     </div>
     <div style="position:relative">
       <textarea id="_pcStageBulkText" oninput="pcStageBulkPreview('${tnId}','${r}')" style="width:100%;min-height:160px;font-size:13px;border:1.5px solid #ddd6fe;border-radius:10px;padding:12px 36px 12px 12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box" placeholder="예)&#10;[실피드] 홍길동T (승) vs (패) 임꺽정Z&#10;또는&#10;홍길동 임꺽정 투혼&#10;또는&#10;2026-05-02\t홍길동\t임꺽정\t투혼"></textarea>
@@ -465,17 +542,29 @@ window.openPcStageBulkPasteModal = function(tnId, round){
 window.pcApplyStageBulkPaste = function(tnId, round){
   const tn=_findTourneyById(tnId); if(!tn) return;
   _pcEnsureStageRecords(tn);
-  const r = _pcNormalizeStageRound(round);
+  const isAll = String(round||'').toUpperCase() === 'ALL';
+  const stageRounds = (typeof _PC_STAGE_ROUNDS !== 'undefined' && Array.isArray(_PC_STAGE_ROUNDS)) ? _PC_STAGE_ROUNDS : ['64강','32강','16강','8강','4강','결승'];
+  const _normRound = (v)=>{
+    const s = String(v||'').trim();
+    if(stageRounds.includes(s)) return s;
+    try{
+      const n = (typeof _pcNormalizeStageRound === 'function') ? _pcNormalizeStageRound(s) : s;
+      return stageRounds.includes(n) ? n : '';
+    }catch(e){ return ''; }
+  };
+  const r = isAll ? '' : _pcNormalizeStageRound(round);
   const text=(document.getElementById('_pcStageBulkText')?.value||'').trim();
   if(!text) return;
   const d = (document.getElementById('_pcStageBulkDate')?.value || '').trim() || new Date().toISOString().slice(0,10);
+  const defRound = isAll ? _normRound(document.getElementById('_pcStageBulkRoundDefault')?.value || '16강') : '';
   const previewList = Array.isArray(window._pcStageBulkResults) ? window._pcStageBulkResults : [];
   const entries = (previewList.length ? previewList.filter(x=>x && x.wPlayer && x.lPlayer).map(x=>({
     d: x.d || d,
     wName: x.wPlayer.name,
     lName: x.lPlayer.name,
     map: x.map || '-',
-    note: x.note || ''
+    note: x.note || '',
+    round: String(x.round||'').trim()
   })) : _pcStageParseBulkEntries(text, d));
   if(!entries.length){
     alert('인식된 경기 결과가 없습니다.\n일반 경기 결과 자동인식 형식이나 "승자 패자 맵" 형식으로 입력해주세요.');
@@ -488,9 +577,11 @@ window.pcApplyStageBulkPaste = function(tnId, round){
     const map = entry.map || '-';
     const note = entry.note || '';
     const recDate = entry.d || d;
+    const rr = isAll ? (_normRound(entry.round) || defRound) : r;
+    if(isAll && !rr) return;
     const a=wName, b=lName, winner='A';
-    const mid=`ptr_${tnId}_${r}_${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}`;
-    tn.stageRecords[r].push({a,b,winner,d:recDate,map,note,_id:mid});
+    const mid=`ptr_${tnId}_${rr}_${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}`;
+    tn.stageRecords[rr].push({a,b,winner,d:recDate,map,note,_id:mid});
     try{ applyGameResult(wName, lName, recDate, map, mid, '', '', '프로리그대회'); }catch(e){}
     added++;
   });
@@ -2766,4 +2857,3 @@ function proCompSaveBktBatch(tnId) {
   if (applied > 0) alert(`${applied}경기의 결과가 반영되었습니다.`);
   else alert('일치하는 경기를 찾지 못했습니다. 이름을 확인해주세요.');
 }
-
