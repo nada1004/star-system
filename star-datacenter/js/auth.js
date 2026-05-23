@@ -383,6 +383,8 @@ function _getSessionAccountFromCache(){
 }
 function _syncSessionRoleFromAccount(acct){
   if(!acct) return false;
+  // su_session 키가 없으면 로그인 상태로 올리지 않음 (원천 차단)
+  if(localStorage.getItem('su_session') !== '1') return false;
   const role=(acct.role==='sub-admin')?'sub-admin':'admin';
   isLoggedIn=true;
   isSubAdmin=(role==='sub-admin');
@@ -460,6 +462,12 @@ async function refreshSessionAuthority(forcePull){
     return true;
   }catch(e){
     console.warn('[refreshSessionAuthority] failed:', e.message);
+    // 예외 발생 시 세션 쿠키가 없으면 로그인 상태 강제 해제
+    if(localStorage.getItem('su_session') !== '1'){
+      isLoggedIn = false;
+      isSubAdmin = false;
+      return false;
+    }
     return !!_getSessionAccountFromCache();
   }
 }
@@ -632,13 +640,19 @@ function applyLoginState(){
     _clearSessionStorage();
   }
   if(isLoggedIn){
-    const acct = _getSessionAccountFromCache();
-    if(!acct){
+    // su_session 키가 없으면 즉시 해제 (드라이런 등 외부에서 isLoggedIn=true로 오염된 경우 방어)
+    if(localStorage.getItem('su_session') !== '1'){
       isLoggedIn = false;
       isSubAdmin = false;
-      _clearSessionStorage();
-    }else{
-      _syncSessionRoleFromAccount(acct);
+    } else {
+      const acct = _getSessionAccountFromCache();
+      if(!acct){
+        isLoggedIn = false;
+        isSubAdmin = false;
+        _clearSessionStorage();
+      }else{
+        _syncSessionRoleFromAccount(acct);
+      }
     }
   }
   if(isLoggedIn) _touchSessionActivity(false);
