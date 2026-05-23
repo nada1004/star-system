@@ -238,6 +238,8 @@ document.addEventListener('click',function(e){
   var _touchTabActive = false;
   var _touchTabTimer = null;
 
+  var _lastSwTab = '';
+  var _lastSwAt = 0;
   function _onTabTouchStart(e){
     var tab = e.target.closest('.tab');
     if(!tab) return;
@@ -247,12 +249,17 @@ document.addEventListener('click',function(e){
     // touchstart에서 즉시 sw() 호출
     try{
       var oc = tab.getAttribute('onclick') || '';
-      if(oc && typeof eval !== 'undefined'){
-        // onclick에서 함수명/인자 추출 후 직접 호출
+      if(oc && typeof sw === 'function'){
         var m = oc.match(/sw\(['"]([^'"]+)['"]\s*(?:,\s*this)?\)/);
-        if(m && typeof sw === 'function'){
+        if(m){
+          var tabId = m[1];
+          var now = Date.now();
+          // 동일 탭 500ms 내 중복 호출 방지
+          if(tabId === _lastSwTab && now - _lastSwAt < 500) return;
+          _lastSwTab = tabId;
+          _lastSwAt = now;
           e.preventDefault(); // click 이벤트 중복 방지
-          sw(m[1], tab);
+          sw(tabId, tab);
         }
       }
     }catch(err){}
@@ -262,6 +269,8 @@ document.addEventListener('click',function(e){
   }
 
   // 바텀 네비 (swNav) 즉시 반응
+  var _lastSwNavTab = '';
+  var _lastSwNavAt = 0;
   function _onBnavTouchStart(e){
     var btn = e.target.closest('.bnav-item');
     if(!btn) return;
@@ -270,8 +279,13 @@ document.addEventListener('click',function(e){
       var oc = btn.getAttribute('onclick') || '';
       var m = oc.match(/swNav\(['"]([^'"]+)['"]\s*,\s*this\)/);
       if(m && typeof swNav === 'function'){
+        var tabId = m[1];
+        var now = Date.now();
+        if(tabId === _lastSwNavTab && now - _lastSwNavAt < 500) return;
+        _lastSwNavTab = tabId;
+        _lastSwNavAt = now;
         e.preventDefault();
-        swNav(m[1], btn);
+        swNav(tabId, btn);
       }
     }catch(err){}
   }

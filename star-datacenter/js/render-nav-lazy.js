@@ -293,7 +293,10 @@ window._applyTabLinkFromUrl = function(){
 
 function sw(t,el){
   try{
-    if(t==='cfg' && !window.isLoggedIn){
+    // window.isLoggedIn과 lexical isLoggedIn 둘 다 확인 (불일치 방어)
+    const _swIsLoggedIn = !!(window.isLoggedIn) && !!(typeof isLoggedIn !== 'undefined' && isLoggedIn)
+                       && localStorage.getItem('su_session') === '1';
+    if(t==='cfg' && !_swIsLoggedIn){
       if(typeof showToast==='function') showToast('설정탭은 관리자만 접근할 수 있습니다.');
       return;
     }

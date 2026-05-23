@@ -223,6 +223,11 @@ function _cleanupLegacyAdminArtifacts(){
         _clearSessionStorage();
         isLoggedIn = false;
         isSubAdmin = false;
+      } else if(localStorage.getItem('su_session') !== '1'){
+        // su_session 키 없이 id_hash만 남아있는 케이스: 로그인 상태 강제 해제
+        isLoggedIn = false;
+        isSubAdmin = false;
+        try{ window.isLoggedIn = false; window.isSubAdmin = false; }catch(e){}
       }
     }
   }catch(e){}
@@ -533,6 +538,8 @@ function _recordLoginFailure(){
 _syncSessionStateAtBoot();
 let isLoggedIn=localStorage.getItem('su_session')==='1' && localStorage.getItem('su_explicit_logout')!=='1';
 let isSubAdmin=isLoggedIn && localStorage.getItem('su_session_role')==='sub-admin';
+// 로드 즉시 window에도 동기화 (applyLoginState 호출 전에 sw() 등이 window.isLoggedIn 참조하는 경우 대비)
+try{ window.isLoggedIn = isLoggedIn; window.isSubAdmin = isSubAdmin; }catch(e){}
 window._authInitPromise = null;
 
 // ── 설정 탭 즉시 가시성 적용 (applyLoginState 호출 전 깜박임 방지) ──
