@@ -700,9 +700,9 @@ function proCompGJSection(tn) {
         <span style="font-size:12px;font-weight:600;color:var(--text3)">${sess.d||'날짜 미정'}</span>
         <span style="font-weight:700;color:var(--blue);cursor:pointer" onclick="openPlayerModal('${(sess.a||'').replace(/'/g,"\\'")}')">${sess.a||'?'}</span>
         <span style="display:inline-flex;align-items:center;gap:4px;font-weight:900">
-          <span style="color:${p1w>p2w?(gc(sess.a||'')||'#2563eb'):p2w>p1w?'#94a3b8':'var(--text2)';font-size:16px">${p1w}</span>
+          <span style="color:${p1w>p2w?(gc(sess.a||'')||'#2563eb'):p2w>p1w?'#94a3b8':'var(--text2)'};font-size:16px">${p1w}</span>
           <span style="color:#64748b;font-size:14px;font-weight:900">:</span>
-          <span style="color:${p2w>p1w?(gc(sess.b||'')||'#2563eb'):p1w>p2w?'#94a3b8':'var(--text2)';font-size:16px">${p2w}</span>
+          <span style="color:${p2w>p1w?(gc(sess.b||'')||'#2563eb'):p1w>p2w?'#94a3b8':'var(--text2)'};font-size:16px">${p2w}</span>
         </span>
         <span style="font-weight:700;cursor:pointer" onclick="openPlayerModal('${(sess.b||'').replace(/'/g,"\\'")}')">${sess.b||'?'}</span>
         ${winner?`<span style="font-size:10px;font-weight:800;padding:2px 9px;border-radius:99px;background:${gc(winner)||'#16a34a'};color:#fff;margin-left:2px">${winner} 승</span>`:''}
