@@ -155,14 +155,21 @@ function gjDirectSave(){
   //   개인전 끝장전이 프로리그 끝장전으로 저장되거나(또는 그 반대) 저장 후 탭이 잘못 이동되는 문제가 발생할 수 있음
   let _proMode = !!_gjProMode;
   try{
-    if(typeof curTab!=='undefined'){
-      if(curTab==='pro'){
-        // 프로리그 탭 > 프로 끝장전 하위탭
-        if(typeof _mergedProSub==='undefined' || _mergedProSub==='gj') _proMode = true;
-      }else if(curTab==='ind' || curTab==='gj'){
-        // 개인전/끝장전 탭
-        _proMode = false;
-      }
+    const _detectMainTab = ()=>{
+      try{
+        const btn = document && document.querySelector ? document.querySelector('.tabs .tab.on') : null;
+        const oc = btn && btn.getAttribute ? (btn.getAttribute('onclick')||'') : '';
+        if(/sw\(['"]pro['"]/.test(oc)) return 'pro';
+        if(/sw\(['"]ind['"]/.test(oc)) return 'ind';
+        if(/sw\(['"]gj['"]/.test(oc)) return 'gj';
+      }catch(e){}
+      try{ return String((typeof curTab!=='undefined' && curTab) ? curTab : '').trim(); }catch(e){ return ''; }
+    };
+    const _tab = _detectMainTab();
+    if(_tab==='pro'){
+      _proMode = (typeof _mergedProSub!=='undefined') ? (_mergedProSub==='gj') : true;
+    }else if(_tab==='ind' || _tab==='gj'){
+      _proMode = false;
     }
   }catch(e){}
   _gjProMode = _proMode;
