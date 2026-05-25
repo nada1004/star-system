@@ -27,7 +27,16 @@ function grpDelMatch(tnId,gi,mi){
   if(!confirm('경기를 삭제하시겠습니까?\n⚠️ 선수 개인 전적도 롤백됩니다.'))return;
   const tn=tourneys.find(t=>t.id===tnId);if(!tn)return;
   if(!tn.groups||!tn.groups[gi]||!tn.groups[gi].matches||!tn.groups[gi].matches[mi])return;
-  revertMatchRecord(tn.groups[gi].matches[mi]);
+  const m=tn.groups[gi].matches[mi];
+  revertMatchRecord(m);
+  // [BUGFIX] 티어대회 조별리그 경기 삭제 시 ttM에서도 해당 _id 제거
+  // revertMatchRecord()가 ttM 정리를 시도하지만 _id 없는 케이스 보완
+  try{
+    if(tn.type==='tier' && m._id && typeof ttM!=='undefined' && Array.isArray(ttM)){
+      const idx=ttM.findIndex(x=>x && x._id===m._id);
+      if(idx>=0) ttM.splice(idx,1);
+    }
+  }catch(e){}
   tn.groups[gi].matches.splice(mi,1);save();render();
 }
 

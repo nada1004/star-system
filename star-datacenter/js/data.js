@@ -67,8 +67,9 @@ function revertMatchRecord(matchObj){
           let idx=-1;
           if(gameMatchId) idx=w.history.findIndex(h=>h && h.matchId===gameMatchId && h.result==='승' && h.opp===lName);
           if(idx<0 && mid) idx=w.history.findIndex(h=>h && h.matchId===mid && h.result==='승' && h.opp===lName);
-          if(idx<0) idx=w.history.findIndex(h=>h && h.result==='승' && h.opp===lName && h.date===mdate);
-          if(idx<0) idx=w.history.findIndex(h=>h && h.result==='승' && h.opp===lName);
+          if(idx<0 && mdate) idx=w.history.findIndex(h=>h && h.result==='승' && h.opp===lName && h.date===mdate);
+          // [BUGFIX] 날짜·ID 없는 최후 fallback 제거 — 다른 날 경기를 잘못 롤백하는 문제 방지
+          // 과거: if(idx<0) idx=w.history.findIndex(h=>h && h.result==='승' && h.opp===lName);
           if(idx>=0){
             const hr=w.history[idx]||{};
             w.win=Math.max(0,(w.win||0)-1);
@@ -82,8 +83,8 @@ function revertMatchRecord(matchObj){
           let idx=-1;
           if(gameMatchId) idx=l.history.findIndex(h=>h && h.matchId===gameMatchId && h.result==='패' && h.opp===wName);
           if(idx<0 && mid) idx=l.history.findIndex(h=>h && h.matchId===mid && h.result==='패' && h.opp===wName);
-          if(idx<0) idx=l.history.findIndex(h=>h && h.result==='패' && h.opp===wName && h.date===mdate);
-          if(idx<0) idx=l.history.findIndex(h=>h && h.result==='패' && h.opp===wName);
+          if(idx<0 && mdate) idx=l.history.findIndex(h=>h && h.result==='패' && h.opp===wName && h.date===mdate);
+          // [BUGFIX] 날짜·ID 없는 최후 fallback 제거
           if(idx>=0){
             const hr=l.history[idx]||{};
             l.loss=Math.max(0,(l.loss||0)-1);
