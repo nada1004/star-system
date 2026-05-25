@@ -38,12 +38,15 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
       if(isDone){
         const sa = m.sa ?? '';
         const sb = m.sb ?? '';
-        const aBg = aWin ? (ca || '#64748b') : 'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))';
-        const bBg = bWin ? (cb || '#64748b') : 'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))';
-        const aBd = aWin ? _compMenuTint(ca || '#64748b', .46) : 'rgba(203,213,225,.88)';
-        const bBd = bWin ? _compMenuTint(cb || '#64748b', .46) : 'rgba(203,213,225,.88)';
-        const aFg = aWin ? '#ffffff' : '#1f2937';
-        const bFg = bWin ? '#ffffff' : '#1f2937';
+        // ✅ 수정: 패배팀만 회색 처리 (동점/무승부 시 양쪽 모두 컬러 유지)
+        const loseA = isDone && bWin;
+        const loseB = isDone && aWin;
+        const aBg = loseA ? 'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))' : (ca || '#64748b');
+        const bBg = loseB ? 'linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))' : (cb || '#64748b');
+        const aBd = loseA ? 'rgba(203,213,225,.88)' : _compMenuTint(ca || '#64748b', .46);
+        const bBd = loseB ? 'rgba(203,213,225,.88)' : _compMenuTint(cb || '#64748b', .46);
+        const aFg = loseA ? '#1f2937' : '#ffffff';
+        const bFg = loseB ? '#1f2937' : '#ffffff';
         const uicon = (team)=>{
           try{
             const cfgList = Array.isArray(window.univCfg) && window.univCfg.length

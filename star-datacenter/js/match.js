@@ -659,15 +659,7 @@ function saveMatch(mode){
     if(_edit){ try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){} }
     if(typeof fixPoints==='function')fixPoints();save();
     if(typeof gjSub!=='undefined') gjSub='records';
-    try{
-      if(bld._proLabel){
-        curTab='pro';
-        if(typeof _mergedProSub!=='undefined') _mergedProSub='gj';
-      }else{
-        curTab='ind';
-        if(typeof _mergedIndSub!=='undefined') _mergedIndSub='gj';
-      }
-    }catch(e){}
+    // ✅ 수정: 세트 방식 저장 후 탭 이동 제거 - 현재 탭 그대로 유지
     try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
     render();
     return;
