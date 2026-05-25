@@ -1,17 +1,25 @@
 /* ─── 캐시 (save() → su_last_save_time 변경 시 자동 무효화) ─── */
 var _sCacheTime='', _sCache={}, _sCacheFilterKey='';
+// [FIX-12] 탭 재진입 시 캐시 강제 무효화 플래그.
+// sw('stats') 등 탭 진입 시 window._statsTabEntered=true 로 설정하면
+// 다음 _scGet 호출에서 캐시를 버린다. 필터 변경 전 stale 데이터 방지.
 function _scGet(sub){
   const t=localStorage.getItem('su_last_save_time')||'0';
   const fk=`${_statsDateFrom}|${_statsDateTo}|${_statsMinGames}|${_statsLastN}`;
-  if(t!==_sCacheTime||fk!==_sCacheFilterKey){_sCache={};_sCacheTime=t;_sCacheFilterKey=fk;}
+  if(t!==_sCacheTime||fk!==_sCacheFilterKey||window._statsTabEntered){
+    _sCache={};_sCacheTime=t;_sCacheFilterKey=fk;
+    window._statsTabEntered=false; // 플래그 소비
+  }
   return _sCache[sub]||null;
 }
 function _scSet(sub,html){ _sCache[sub]=html; return html; }
 
 // ─────────────────────────────────────────────────────────────
-// (안전) HTML escape 헬퍼
-// - 일부 화면(스타시스템/랭킹)에서 escHTML 사용
-// - 기존 전역 escHTML이 없을 때 ReferenceError 방지
+// [FIX-11] HTML escape 헬퍼
+// 이상적으로는 constants.js 또는 별도 utils.js 상단에 한 번만 정의해야 함.
+// 현재는 각 탭 JS마다 동일 패턴 반복 → 추후 utils.js로 통합 예정.
+// window.escHTML: 전역 공유 (constants.js에서 최초 정의 시 이 블록은 스킵됨)
+// const escHTML: 파일 스코프 로컬 shadow (window.escHTML로 위임, 무한재귀 방지)
 // ─────────────────────────────────────────────────────────────
 if (typeof window.escHTML !== 'function') {
   window.escHTML = function(s){
@@ -23,8 +31,7 @@ if (typeof window.escHTML !== 'function') {
       .replace(/'/g,'&#39;');
   };
 }
-// ⚠️ var escHTML은 전역(window.escHTML)을 덮어써서 무한재귀를 일으키므로
-// 반드시 const/let으로 선언해 window 프로퍼티를 오염시키지 않아야 함
+// 파일 스코프 로컬 shadow: var 선언 금지 (window.escHTML 오염 → 무한재귀 위험)
 const escHTML = (s) => window.escHTML(s);
 
 /* ─── 전역 필터 상태 ─── */

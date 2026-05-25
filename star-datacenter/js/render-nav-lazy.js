@@ -291,36 +291,46 @@ window._applyTabLinkFromUrl = function(){
   }
 };
 
+// [FIX-14] 탭별 onEnter 초기화 로직을 TAB_ENTER 맵으로 분리.
+// 탭 추가 시 sw() 함수 본문을 건드리지 않고 이 맵에만 항목 추가.
+const _TAB_ENTER = {
+  comp:     () => { compSub='league'; leagueFilterDate=''; leagueFilterGrp=''; grpRankFilter=''; },
+  mini:     () => { miniSub='records'; _mergedUnivSub = _mergedUnivSub || 'mini'; miniType='mini'; },
+  ind:      () => { indSub='records'; _mergedIndSub = _mergedIndSub || 'ind'; },
+  gj:       () => { gjSub='records'; _mergedIndSub = 'gj'; },
+  univck:   () => { ckSub='records'; _mergedUnivSub = 'univck'; },
+  univm:    () => { univmSub='records'; _mergedUnivSub = _mergedUnivSub || 'mini'; miniType='mini'; },
+  tiertour: () => { _mergedCompSub = 'tiertour'; },
+  pro:      () => { _mergedProSub = _mergedProSub || 'pro'; }, // 재진입 시 마지막 탭 기억
+  hist:     () => { histSub = histSub || 'race'; }, // [FIX-5]
+  stats:    () => { window._statsTabEntered = true; }, // [FIX-12]
+  total:    () => { totalSearch = ''; },
+};
+// comp/tiertour는 _mergedCompSub도 초기화
+_TAB_ENTER._compFallback = () => { _mergedCompSub = _mergedCompSub || 'comp'; };
+
 function sw(t,el){
   try{
-    // window.isLoggedIn과 lexical isLoggedIn 둘 다 확인 (불일치 방어)
-    const _swIsLoggedIn = !!(window.isLoggedIn) && !!(typeof isLoggedIn !== 'undefined' && isLoggedIn)
-                       && localStorage.getItem('su_session') === '1';
+    // [FIX-4] 인증 체크 단일화: getIsLoggedIn() 헬퍼 사용 (auth.js)
+    const _swIsLoggedIn = typeof window.getIsLoggedIn === 'function'
+      ? window.getIsLoggedIn()
+      : !!(window.isLoggedIn) && localStorage.getItem('su_session') === '1';
     if(t==='cfg' && !_swIsLoggedIn){
       if(typeof showToast==='function') showToast('설정탭은 관리자만 접근할 수 있습니다.');
       return;
     }
   }catch(e){}
-  if(t==='comp') { compSub='league'; leagueFilterDate=''; leagueFilterGrp=''; grpRankFilter=''; }
-  if(t==='mini') miniSub='records';
-  if(t==='ind') indSub='records';
-  if(t==='gj') gjSub='records';
-  if(t==='univck') ckSub='records';
-  if(t==='univm') univmSub='records';
-  if(t==='ind')      _mergedIndSub = _mergedIndSub || 'ind';
-  if(t==='gj')       _mergedIndSub='gj';
-  if(t==='univm'||t==='mini') { _mergedUnivSub = _mergedUnivSub || 'mini'; miniType='mini'; }
-  if(t==='univck')   _mergedUnivSub='univck';
-  if(t==='comp')     _mergedCompSub = _mergedCompSub || 'comp';
-  if(t==='tiertour') _mergedCompSub='tiertour';
-  if(t==='pro') { _mergedProSub = _mergedProSub || 'pro'; } // 의도: 이전 선택한 프로리그 하위탭 유지 (재진입 시 마지막 탭 기억)
-  if(t==='hist') histSub = histSub || 'mini';
+
+  // [FIX-14] TAB_ENTER 맵 실행
+  try{ if(_TAB_ENTER[t]) _TAB_ENTER[t](); }catch(e){}
+  // comp 탭은 tiertour가 아닐 때만 _mergedCompSub 기본값 세팅
+  if(t==='comp') try{ _TAB_ENTER._compFallback(); }catch(e){}
+
   if(window._recQ){
     const tabModeMap={mini:'mini',univck:'ck',univm:'univm',comp:'comp',pro:'pro',ind:'ind'};
     const m=tabModeMap[t];
     if(m)window._recQ[m]='';
   }
-  if(t==='total')totalSearch='';
   curTab=t;openDetails={};
   const tabs = [...document.querySelectorAll('.tab')];
   const resolvedEl = (typeof window._resolveTopTabEl === 'function')
@@ -334,6 +344,9 @@ function sw(t,el){
   });
   const _fs=document.getElementById('fstrip');
   if(_fs)_fs.style.display=(t==='total'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin))?'block':'none';
+  // [FIX-6] 탭 전환 시 CSS scale/theme 재적용 (render-core.js의 매번 호출 제거에 대응)
+  try{ window._resetScaleSettingsFlag && window._resetScaleSettingsFlag(); }catch(e){}
+  try{ window._applyScaleSettings && window._applyScaleSettings(); }catch(e){}
   render();
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('push'); }catch(e){}
   try{ setTimeout(()=>{ if(typeof window._centerActiveTopTab==='function') window._centerActiveTopTab(); }, 30); }catch(e){}

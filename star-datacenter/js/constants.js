@@ -1,6 +1,32 @@
 /* ══════════════════════════════════════
    CONSTANTS - 티어 순서: god > king > jack > joker > spade > 0티어 > 1티어 ...
 ══════════════════════════════════════ */
+
+// [FIX-18] J()와 _lsSave()를 파일 최상단으로 이동.
+// 기존 위치: 1088줄 (function 호이스팅으로 동작은 했으나 정의를 찾으려면 1000줄 스크롤 필요)
+// localStorage JSON/LZString 로드 헬퍼 — 파일 전체에서 사용
+function J(k){
+  try{
+    const v=localStorage.getItem(k);
+    if(!v)return null;
+    if(typeof LZString!=='undefined'){
+      try{return JSON.parse(v);}catch{
+        const d=LZString.decompressFromUTF16(v);
+        return d?JSON.parse(d):null;
+      }
+    }
+    return JSON.parse(v);
+  }catch{return null;}
+}
+function _lsSave(k,obj){
+  const s=JSON.stringify(obj);
+  if(typeof LZString!=='undefined'){
+    localStorage.setItem(k,LZString.compressToUTF16(s));
+  }else{
+    localStorage.setItem(k,s);
+  }
+}
+
 // 데이터 버전 관리 - 캐시 무효화용 (데이터 구조 변경 시 버전 증가)
 const DATA_VERSION = 2;
 try{ window.SU_STATS_JS_V = window.SU_STATS_JS_V || '20260516-01'; }catch(e){}
@@ -1084,29 +1110,8 @@ function getRoleBadgeHTML(role, size='11px'){
 
 /* ══════════════════════════════════════
    DATA LOAD
+   [FIX-18] J()와 _lsSave()는 파일 최상단으로 이동됨. 이 섹션에서는 제거.
 ══════════════════════════════════════ */
-function J(k){
-  try{
-    const v=localStorage.getItem(k);
-    if(!v)return null;
-    // LZ-String 압축 여부 자동 감지: 압축된 데이터는 JSON으로 파싱 불가
-    if(typeof LZString!=='undefined'){
-      try{return JSON.parse(v);}catch{
-        const d=LZString.decompressFromUTF16(v);
-        return d?JSON.parse(d):null;
-      }
-    }
-    return JSON.parse(v);
-  }catch{return null;}
-}
-function _lsSave(k,obj){
-  const s=JSON.stringify(obj);
-  if(typeof LZString!=='undefined'){
-    localStorage.setItem(k,LZString.compressToUTF16(s));
-  }else{
-    localStorage.setItem(k,s);
-  }
-}
 
 // (복구/호환) su_p가 {v:2,p:[...],d:{...}} 형태여도 정상 동작하도록 unpack
 function _unpackPlayers(raw){
@@ -2042,7 +2047,9 @@ try{
     };
   }
 }catch(e){}
-var miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='mini';
+// [FIX-1] histSub 초기값 'mini' → 'race' 로 통일 (app-state.js와 일치)
+// 진실 공급원: 이 var 선언. app-state.js의 App.state는 읽히지 않으므로 제거 대상.
+var miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='race';
 var miniType='mini'; // 'mini' | 'civil'
 var histUniv='';
 var recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순

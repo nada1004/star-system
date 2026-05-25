@@ -75,16 +75,23 @@ function rHist(C,T){
     const isOn=curTab.grp===g;
     const firstId=tabDefs.find(t=>t.grp===g).id;
     const gLbl=(typeof getTabLabel==='function') ? getTabLabel('historyGroup', g, g) : g;
-    h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${firstId}';openDetails={};render()">${gLbl}</button>`;
+    // [FIX-9] XSS 방지: onclick 인라인에서 data-hsub 속성 + 이벤트 위임으로 교체
+    const safeId = String(firstId).replace(/[^a-zA-Z0-9_\-]/g,'');
+    const safeLbl = typeof window.escHTML==='function' ? window.escHTML(gLbl) : gLbl.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    h+=`<button class="pill hist-grp-btn ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" data-hsub="${safeId}">${safeLbl}</button>`;
     // '외부' 우측에 '외부2' 버튼 노출(관리자 전용)
     if(g==='외부' && tabDefs.some(t=>t.id==='ext2')){
       const isOn2=(histSub==='ext2');
-      h+=`<button class="pill ${isOn2?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='ext2';openDetails={};render()">${(typeof getTabLabel==='function') ? getTabLabel('history','ext2','외부2') : '외부2'}</button>`;
+      const lbl2 = (typeof getTabLabel==='function') ? getTabLabel('history','ext2','외부2') : '외부2';
+      const safeLbl2 = typeof window.escHTML==='function' ? window.escHTML(lbl2) : lbl2.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      h+=`<button class="pill hist-grp-btn ${isOn2?'on':''}" style="flex-shrink:0;white-space:nowrap" data-hsub="ext2">${safeLbl2}</button>`;
     }
     // '외부' 우측에 '외부3' 버튼 노출(관리자 전용)
     if(g==='외부' && tabDefs.some(t=>t.id==='ext3')){
       const isOn3=(histSub==='ext3');
-      h+=`<button class="pill ${isOn3?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='ext3';openDetails={};render()">${(typeof getTabLabel==='function') ? getTabLabel('history','ext3','외부3') : '외부3'}</button>`;
+      const lbl3 = (typeof getTabLabel==='function') ? getTabLabel('history','ext3','외부3') : '외부3';
+      const safeLbl3 = typeof window.escHTML==='function' ? window.escHTML(lbl3) : lbl3.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      h+=`<button class="pill hist-grp-btn ${isOn3?'on':''}" style="flex-shrink:0;white-space:nowrap" data-hsub="ext3">${safeLbl3}</button>`;
     }
   });
   h+=`  </div>`;
@@ -210,6 +217,13 @@ function rHist(C,T){
   else if(histSub==='procomp') h+=histProCompHTML();
   else if(histSub==='psearch') h+=histPlayerSearchHTML();
   C.innerHTML=h;
+  // [FIX-9] 이벤트 위임: .hist-grp-btn 클릭 → data-hsub 읽어 histSub 설정
+  C.querySelectorAll('.hist-grp-btn[data-hsub]').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      const sub = this.dataset.hsub;
+      if(sub){ histSub=sub; openDetails={}; render(); }
+    });
+  });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -3433,8 +3447,10 @@ function openHistDetailModal(key){
         const cbBase=_resolvePlayerCol(labelB, reg.cb||'#64748b');
         const ca=_getMatchDetailTeamHeaderColor(modeKey, 'A', caBase);
         const cb=_getMatchDetailTeamHeaderColor(modeKey, 'B', cbBase);
-        const loseTeamA = isDone && !aWin && !!(match.sa!=null || match.sb!=null);
-        const loseTeamB = isDone && !bWin && !!(match.sa!=null || match.sb!=null);
+        // ✅ 수정: 명확한 패배 조건 (상대팀이 이긴 경우만 회색)
+        // 무승부(동점)나 0:0 시에는 양쪽 모두 컬러 유지
+        const loseTeamA = isDone && bWin;
+        const loseTeamB = isDone && aWin;
         const metaA = _playerMeta(labelA, caBase, loseTeamA);
         const metaB = _playerMeta(labelB, cbBase, loseTeamB);
         try{

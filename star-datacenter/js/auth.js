@@ -1228,3 +1228,17 @@ function initDark(){
   // 초기화 후 버튼 텍스트 설정 (모바일/PC 자동 대응)
   setTimeout(()=>{ if(window._fixHdrBtns) window._fixHdrBtns(); }, 50);
 }
+
+/* ── [FIX-3] 인증 상태 단일 진실 공급원 헬퍼 ──
+   render-nav-lazy.js의 sw()와 다른 모든 파일에서
+   window.isLoggedIn / lexical isLoggedIn / localStorage 3중 체크 대신
+   이 함수 하나만 사용한다.
+*/
+window.getIsLoggedIn = function(){
+  try{
+    if(localStorage.getItem('su_session') !== '1') return false;
+    return !!(typeof isLoggedIn !== 'undefined' ? isLoggedIn : window.isLoggedIn);
+  }catch(e){
+    return false;
+  }
+};

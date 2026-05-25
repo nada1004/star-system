@@ -7308,79 +7308,8 @@ function rotateRandomImage(){
 // 현재 탭 추적
 try{ if(typeof window._settingsCurrentTab !== 'string') window._settingsCurrentTab = 'total'; }catch(e){}
 
-// 탭 변경 시 회전 제어
-if(!window.__swWrappedForSettings){
-  const originalSw = window.sw;
-  window.sw = function(tab, el){
-    try{ window._settingsCurrentTab = tab; }catch(e){}
-    const ret = originalSw ? originalSw.apply(this, arguments) : undefined;
-    let imgSettings = {};
-    try{
-      imgSettings = JSON.parse(localStorage.getItem('su_img_settings')||'{}') || {};
-    }catch(e){
-      imgSettings = {};
-    }
-    try{
-      if(imgSettings.randomRotation){
-        startRandomRotation();
-      } else {
-        stopRandomRotation();
-      }
-    }catch(e){}
-    return ret;
-  };
-  window._cfgSecDescMap={
-    notice:'팝업 공지와 공지 노출 관리',
-    tier:'점수, 티어 기준, 랭킹 규칙',
-    season:'시즌 구간과 기간 관리',
-    teammatch:'팀전/대학전 경기 규칙',
-    acct:'관리자 계정과 접근 설정',
-    univ:'대학 정보와 기본 색상',
-    maps:'맵 목록과 표시명 관리',
-    mAlias:'맵 별칭/약자 자동 인식',
-    si:'상태 아이콘 목록 관리',
-    paste:'붙여넣기 자동 인식 규칙',
-    b2layout:'이미지 탭 레이아웃 조절',
-    imgsettings:'이미지 탭 이미지 표시 설정',
-    imgmodalsettings:'스트리머 상세 이미지 설정',
-    profileshape:'프로필 모양/반경/표시 방식',
-    pdModeBadge:'최근 경기 종목 배지 색상',
-    pd:'스트리머 상세 카드 디자인',
-    matchdetail:'경기 상세 팝업 디자인',
-    univlogoimg:'대학 로고 URL과 로고 자산',
-    b2femco:'펨코/신현황판 표시 방식',
-    femcoorder:'현황판 대학 순서 정렬',
-    boardchip:'현황판 프로필/로고/칩 크기',
-    oldbright:'현황판 밝기/배경 톤',
-    boardbg:'현황판 배경 이미지와 라벨 배경',
-    tablabels:'메인/서브 탭 이름 변경',
-    uisize:'PC/태블릿/모바일 UI 크기',
-    siAssign:'스트리머별 상태 아이콘 지정',
-    cfgmenu:'설정 하위 메뉴 이름/순서 정리',
-    autofitall:'화면별 자동 맞춤',
-    reccard:'기록 카드 스타일',
-    tourneycard:'대회 카드 스타일',
-    sharecard:'공유카드 모드/색상/프로필 크기',
-    calui:'캘린더 날짜칩/공유 버튼',
-    appfont:'전역 폰트와 크기',
-    bgm:'유튜브 BGM 관리',
-    soopmv:'SOOP 멀티뷰',
-    pasteRoute:'붙여넣기 분기 자동화',
-    designv2:'전역 디자인 모드',
-    hdr:'헤더 상단바 디자인',
-    fab:'플로팅 버튼 구성',
-    storage:'저장소/백업 확인',
-    selfcheck:'설정 진단과 점검',
-    sync:'동기화 기본 설정',
-    firebase:'GitHub 동기화',
-    bulkdate:'날짜 일괄 수정',
-    bulkmap:'맵 일괄 수정',
-    bulktier:'티어 일괄 수정',
-    bulkdel:'기록 일괄 삭제',
-    bulkconv:'기록 형식 변환'
-  };
-  window.__swWrappedForSettings = true;
-}
+// [FIX-2] sw() 원숭이패치 중복 제거: settings-data-ops.js에서만 패치하므로 이 블록은 삭제.
+// _cfgSecDescMap은 settings-data-ops.js의 패치 블록 안에 이미 정의되어 있음.
 
 function bulkChangeTier(){
   if(!isLoggedIn) return;

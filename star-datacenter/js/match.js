@@ -441,7 +441,9 @@ function genId(){
 function saveMatch(mode){
   const bld=BLD[mode];if(!bld)return;
   const isCK=(mode==='ck'||mode==='tt');const isComp=(mode==='comp');
-  const _modeLabel=mode==='mini'?((typeof miniType!=='undefined'&&miniType==='civil')?'시빌워':'미니대전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',comp:'조별리그',gj:(bld._proLabel?'프로리그끝장전':'끝장전'),ind:'개인전'}[mode]||'';
+  // ✅ 수정: gj 모드 레이블은 curTab 기준으로 결정 (BLD._proLabel은 openGJSessionEdit 등 외부 코드에 의해 오염될 수 있음)
+  const _gjIsProMode = (mode==='gj') ? (typeof curTab!=='undefined' ? curTab==='pro' : !!(bld._proLabel)) : false;
+  const _modeLabel=mode==='mini'?((typeof miniType!=='undefined'&&miniType==='civil')?'시빌워':'미니대전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',comp:'조별리그',gj:(_gjIsProMode?'프로리그끝장전':'끝장전'),ind:'개인전'}[mode]||'';
   // 세트 없는 방식 처리
   if(bld.noSetMode){
     const freeGames=bld.freeGames||[];
@@ -470,22 +472,14 @@ function saveMatch(mode){
           const tb = [g.b1, g.b2].filter(Boolean);
           applyTeamGameResult(ta, tb, g.winner||'', date, g.map||'-', gameId, _modeLabel);
         }
-        gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
+        gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(_gjIsProMode?{_proLabel:true}:{})});
       });
       BLD[mode]=null;
       // 수정 저장 시에는 history/포인트/elo를 전체 재구성해서 잔존/중복을 방지
       if(_edit){ try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){} }
       if(typeof fixPoints==='function')fixPoints();save();
       if(typeof gjSub!=='undefined') gjSub='records';
-      try{
-        if(bld._proLabel){
-          curTab='pro';
-          if(typeof _mergedProSub!=='undefined') _mergedProSub='gj';
-        }else{
-          curTab='ind';
-          if(typeof _mergedIndSub!=='undefined') _mergedIndSub='gj';
-        }
-      }catch(e){}
+      // ✅ 수정: 저장 후 탭 이동 제거 - 현재 탭(개인전/프로리그) 그대로 유지
       try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
       render();
       return;
@@ -658,7 +652,7 @@ function saveMatch(mode){
           const tb = [g.b1, g.b2].filter(Boolean);
           applyTeamGameResult(ta, tb, g.winner||'', date, g.map||'-', gameId, _modeLabel);
         }
-        gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(bld._proLabel?{_proLabel:true}:{})});
+        gjM.unshift({_id:gameId,sid,d:date,wName,lName,map:g.map||'',matchId:sid,...(_gjIsProMode?{_proLabel:true}:{})});
       });
     });
     BLD[mode]=null;

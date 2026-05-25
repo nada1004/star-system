@@ -19,15 +19,16 @@ function rCal(C,T){
     window._calRawDateMatchMap=null;
     window._calMatchCacheTime=_calT;
   }
+  // [FIX-10] _markCalType: 원본 객체 변경 금지 → spread로 래퍼 객체 생성.
+  // 기존 Object.defineProperty(m, ...) 는 miniM/univM 등 공유 배열의 원본을 변경하므로
+  // 다른 탭에서 의도치 않은 열거 동작을 유발할 수 있다.
   function _markCalType(arr, type, mode){
     return (arr||[]).map(m=>{
-      try{
-        if(m && typeof m === 'object'){
-          Object.defineProperty(m, '__calType', { value:type, writable:true, configurable:true, enumerable:false });
-          Object.defineProperty(m, '__calMode', { value:(mode||type), writable:true, configurable:true, enumerable:false });
-        }
-      }catch(e){}
-      return m;
+      if(!m || typeof m !== 'object') return m;
+      return Object.assign(Object.create(Object.getPrototypeOf(m)), m, {
+        __calType: type,
+        __calMode: mode || type
+      });
     });
   }
   if(!window._calMatchCache) window._calMatchCache=[

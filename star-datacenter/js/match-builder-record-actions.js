@@ -166,19 +166,10 @@
         _editCtx: { mode:'gj', sessKey, sid, ids, proOnly }
       };
 
-      // 탭 이동 (프로 끝장전이면 프로리그 탭의 "프로 끝장전"으로)
-      try{
-        if(proOnly){
-          window.curTab = 'pro';
-          if(typeof window._mergedProSub!=='undefined') window._mergedProSub = 'gj';
-        }else{
-          window.curTab = 'ind';
-          if(typeof window._mergedIndSub!=='undefined') window._mergedIndSub = 'gj';
-        }
-      }catch(e){}
-      try{ if(typeof window.gjSub!=='undefined') window.gjSub = 'input'; }catch(e){}
+      // ✅ 수정: 프로리그 끝장전 기록 수정 시 탭 이동하지 않음
+      // (openGJSessionEdit은 상세팝업이 이미 열려있거나, ⋯ 메뉴의 "수정" 버튼에서 호출)
+      // curTab/tab 상태 변경 없이 render만 호출해 팝업이 최신 BLD['gj']를 반영하게 함
       try{ window._gjProMode = proOnly; }catch(e){}
-      try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
       if(typeof window.render==='function') window.render();
     }catch(e){}
   };

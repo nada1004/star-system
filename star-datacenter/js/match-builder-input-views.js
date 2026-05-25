@@ -100,10 +100,13 @@ function gjInputHTML(){
   if(pA&&pB){
     const paMem={name:pA,univ:pAObj.univ||'',race:pAObj.race||'',tier:pAObj.tier||'',gender:pAObj.gender||''};
     const pbMem={name:pB,univ:pBObj.univ||'',race:pBObj.race||'',tier:pBObj.tier||'',gender:pBObj.gender||''};
+    // ✅ 수정: _proLabel은 _gjProMode가 아닌 curTab 기준으로 결정
+    // _gjProMode는 rGJ 호출 순서/타이밍에 따라 오염될 수 있어 신뢰하지 않음
+    const _curIsProMode = (typeof curTab!=='undefined') ? curTab==='pro' : !!_gjProMode;
     if(!BLD['gj'] || !BLD['gj'].membersA || !BLD['gj'].membersB || BLD['gj'].membersA[0]?.name!==pA || BLD['gj'].membersB[0]?.name!==pB){
-      BLD['gj']={date:gi.date||today,membersA:[paMem],membersB:[pbMem],sets:[],noSetMode:true,freeGames:[],_proLabel:!!_gjProMode};
+      BLD['gj']={date:gi.date||today,membersA:[paMem],membersB:[pbMem],sets:[],noSetMode:true,freeGames:[],_proLabel:_curIsProMode};
     } else {
-      if(BLD['gj']._proLabel!==!!_gjProMode) BLD['gj']._proLabel=!!_gjProMode;
+      if(BLD['gj']._proLabel!==_curIsProMode) BLD['gj']._proLabel=_curIsProMode;
       if(gi.date && BLD['gj'].date!==gi.date) BLD['gj'].date=gi.date;
       if(!gi.date && !BLD['gj'].date) BLD['gj'].date=today;
     }
@@ -155,21 +158,15 @@ function gjDirectSave(){
   //   개인전 끝장전이 프로리그 끝장전으로 저장되거나(또는 그 반대) 저장 후 탭이 잘못 이동되는 문제가 발생할 수 있음
   let _proMode = !!_gjProMode;
   try{
-    const _detectMainTab = ()=>{
-      try{
-        const btn = document && document.querySelector ? document.querySelector('.tabs .tab.on') : null;
-        const oc = btn && btn.getAttribute ? (btn.getAttribute('onclick')||'') : '';
-        if(/sw\(['"]pro['"]/.test(oc)) return 'pro';
-        if(/sw\(['"]ind['"]/.test(oc)) return 'ind';
-        if(/sw\(['"]gj['"]/.test(oc)) return 'gj';
-      }catch(e){}
-      try{ return String((typeof curTab!=='undefined' && curTab) ? curTab : '').trim(); }catch(e){ return ''; }
-    };
-    const _tab = _detectMainTab();
-    if(_tab==='pro'){
-      _proMode = (typeof _mergedProSub!=='undefined') ? (_mergedProSub==='gj') : true;
-    }else if(_tab==='ind' || _tab==='gj'){
-      _proMode = false;
+    if(typeof curTab!=='undefined'){
+      if(curTab==='pro'){
+        // 프로리그 탭이면 항상 프로 끝장전으로 저장
+        // (_mergedProSub 값에 관계없이 프로탭에서 입력한 끝장전은 프로 끝장전임)
+        _proMode = true;
+      }else if(curTab==='ind' || curTab==='gj'){
+        // 개인전/끝장전 탭이면 항상 일반 끝장전으로 저장
+        _proMode = false;
+      }
     }
   }catch(e){}
   _gjProMode = _proMode;
@@ -192,13 +189,8 @@ function gjDirectSave(){
   _gjInput={date:gi.date,playerA:gi.playerA,playerB:gi.playerB,games:[]};
   save();
   gjSub='records';
-  if(_proMode){
-    try{ curTab='pro'; }catch(e){}
-    try{ _mergedProSub='gj'; }catch(e){}
-  }else{
-    try{ curTab='ind'; }catch(e){}
-    try{ _mergedIndSub='gj'; }catch(e){}
-  }
+  // ✅ 수정: 저장 후 탭 이동 제거 - 현재 탭(개인전/프로리그) 그대로 유지
+  // saveMatch('gj')와 달리 gjDirectSave는 간이 입력 경로로, 현재 위치를 바꾸지 않음
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   render();
   try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}

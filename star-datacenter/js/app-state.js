@@ -1,6 +1,15 @@
 /* ══════════════════════════════════════
    App 전역 상태 네임스페이스
-   모든 전역 변수를 App.state 객체로 통합
+   ⚠️  [FIX-15] 현황 및 방향:
+   현재 실제 렌더링에서 사용되는 상태는 constants.js의 var 전역변수(histSub, miniSub 등)이며,
+   이 App.state 객체는 선언만 되고 아무 코드도 읽지 않는 "데드 코드"입니다.
+   
+   두 가지 선택지:
+   1) App.state를 완전히 제거하고 constants.js var를 진실 공급원으로 유지 (현재 추천)
+   2) 모든 코드가 App.state를 읽고 쓰도록 전환 (대규모 리팩터, 추후 과제)
+   
+   현재 이 파일은 하위 호환성을 위해 유지하되,
+   실제 상태값 변경은 constants.js var를 통해서만 이루어짐.
    로드 순서: constants.js → config.js → app-state.js
 ══════════════════════════════════════ */
 
@@ -8,7 +17,7 @@ if (!window.App) {
   window.App = {};
 }
 
-// 상태 관리 객체
+// 상태 관리 객체 (⚠️ 현재 렌더링에서 직접 읽히지 않음 — constants.js var가 진실 공급원)
 window.App.state = {
   // ─── Core Data (constants.js에서 초기화됨)
   players: [],
