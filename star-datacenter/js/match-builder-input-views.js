@@ -103,10 +103,19 @@ function gjInputHTML(){
     // ✅ 수정: _proLabel은 _gjProMode가 아닌 curTab 기준으로 결정
     // _gjProMode는 rGJ 호출 순서/타이밍에 따라 오염될 수 있어 신뢰하지 않음
     const _curIsProMode = (typeof curTab!=='undefined') ? curTab==='pro' : !!_gjProMode;
-    if(!BLD['gj'] || !BLD['gj'].membersA || !BLD['gj'].membersB || BLD['gj'].membersA[0]?.name!==pA || BLD['gj'].membersB[0]?.name!==pB){
+    // ✅ 수정: 아래 조건 중 하나라도 해당하면 BLD['gj']를 새로 생성
+    //   1) BLD['gj']가 없거나 선수가 다른 경우 (기존)
+    //   2) _editCtx가 남아있는 경우 — openGJSessionEdit 후 탭 이동 시 오염된 수정 컨텍스트 제거
+    //   3) _proLabel이 현재 탭 모드와 다른 경우 — 프로탭→개인전탭 이동 시 잔류 proLabel 제거
+    const _bldGj = BLD['gj'];
+    const _needsReset = !_bldGj
+      || !_bldGj.membersA || !_bldGj.membersB
+      || _bldGj.membersA[0]?.name !== pA || _bldGj.membersB[0]?.name !== pB
+      || !!_bldGj._editCtx          // 수정 컨텍스트 잔류 시 새로 생성
+      || !!_bldGj._proLabel !== _curIsProMode; // proLabel 불일치 시 새로 생성
+    if(_needsReset){
       BLD['gj']={date:gi.date||today,membersA:[paMem],membersB:[pbMem],sets:[],noSetMode:true,freeGames:[],_proLabel:_curIsProMode};
     } else {
-      if(BLD['gj']._proLabel!==_curIsProMode) BLD['gj']._proLabel=_curIsProMode;
       if(gi.date && BLD['gj'].date!==gi.date) BLD['gj'].date=gi.date;
       if(!gi.date && !BLD['gj'].date) BLD['gj'].date=today;
     }

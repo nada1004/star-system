@@ -5276,6 +5276,7 @@ function proCompGJSave(tnId) {
     applyGameResult(win, loss, d, g.map||'', matchId, '', '', '프로리그대회끝장전');
   });
   _pcgjGames=[]; _pcgjA=''; _pcgjB='';
+  proCompSub = 'gj'; // ✅ 저장 후 탭 유지 (render() 내 리셋 방지)
   save(); render();
 }
 
