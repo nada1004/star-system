@@ -3516,9 +3516,24 @@ function pasteApply() {
 
   // 저장 형식에 따라 해당 탭으로 자동 이동
   if(!_fromHistExt){
-    const tabMap = { mini:'mini', univm:'univm', pro:'pro', comp:'comp', ck:'univck', ind:'ind', gj:'gj' };
-    if (tabMap[mode]) {
-      if(typeof window._goTopTab === 'function') window._goTopTab(tabMap[mode]);
+    // ✅ 수정: gj 모드는 _gjProPaste 플래그에 따라 이동 대상 탭을 분기
+    // - _gjProPaste=true: 프로리그 탭(_mergedProSub='gj')으로 이동 → sw('pro') 호출 전 서브탭 설정
+    // - _gjProPaste=false: 개인전 탭(_mergedIndSub='gj')으로 이동 → sw('gj') 호출
+    if (mode === 'gj') {
+      if (!!window._gjProPaste) {
+        // 프로리그 끝장전 저장 후 → 프로리그 탭의 끝장전 서브탭으로 이동
+        try{ if(typeof window._mergedProSub !== 'undefined') window._mergedProSub = 'gj'; }catch(e){}
+        try{ if(typeof window.gjSub !== 'undefined') window.gjSub = 'records'; }catch(e){}
+        if(typeof window._goTopTab === 'function') window._goTopTab('pro');
+      } else {
+        // 일반 끝장전 저장 후 → 개인전 탭의 끝장전 서브탭으로 이동
+        if(typeof window._goTopTab === 'function') window._goTopTab('gj');
+      }
+    } else {
+      const tabMap = { mini:'mini', univm:'univm', pro:'pro', comp:'comp', ck:'univck', ind:'ind' };
+      if (tabMap[mode]) {
+        if(typeof window._goTopTab === 'function') window._goTopTab(tabMap[mode]);
+      }
     }
   }
   try{ window._pasteFromHistExt = false; }catch(e){}
@@ -4061,6 +4076,7 @@ function openIndPasteModal() {
 function openGJPasteModal() {
   openPasteModal();
   window._forcedPasteMode = 'gj';
+  window._gjProPaste = false; // ✅ 끝장전 탭에서 호출 시 프로리그 끝장전 플래그 초기화
   const sel = document.getElementById('paste-mode');
   const lbl = document.getElementById('paste-mode-label');
   if (sel) { sel.value = 'ind'; sel.style.display = 'none'; onPasteModeChange('ind'); }

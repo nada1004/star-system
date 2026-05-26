@@ -166,10 +166,21 @@
         _editCtx: { mode:'gj', sessKey, sid, ids, proOnly }
       };
 
-      // ✅ 수정: 프로리그 끝장전 기록 수정 시 탭 이동하지 않음
-      // (openGJSessionEdit은 상세팝업이 이미 열려있거나, ⋯ 메뉴의 "수정" 버튼에서 호출)
-      // curTab/tab 상태 변경 없이 render만 호출해 팝업이 최신 BLD['gj']를 반영하게 함
+      // ✅ 수정: 끝장전 수정 시 proOnly 여부에 따라 올바른 탭으로 이동
+      // - proOnly=true: 프로리그 탭(curTab='pro', _mergedProSub='gj')으로 이동
+      // - proOnly=false: 개인전 탭(curTab='ind', _mergedIndSub='gj')으로 이동
+      // 이렇게 해야 saveMatch('gj')에서 curTab 기반 _gjIsProMode 판단이 정확하게 동작함
       try{ window._gjProMode = proOnly; }catch(e){}
+      if(proOnly){
+        try{ window.curTab = 'pro'; }catch(e){}
+        try{ if(typeof window._mergedProSub!=='undefined') window._mergedProSub = 'gj'; }catch(e){}
+        try{ if(typeof window.gjSub!=='undefined') window.gjSub = 'input'; }catch(e){}
+      } else {
+        try{ window.curTab = 'ind'; }catch(e){}
+        try{ if(typeof window._mergedIndSub!=='undefined') window._mergedIndSub = 'gj'; }catch(e){}
+        try{ if(typeof window.gjSub!=='undefined') window.gjSub = 'input'; }catch(e){}
+      }
+      try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
       if(typeof window.render==='function') window.render();
     }catch(e){}
   };

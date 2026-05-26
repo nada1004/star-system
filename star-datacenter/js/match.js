@@ -442,9 +442,13 @@ function saveMatch(mode){
   const bld=BLD[mode];if(!bld)return;
   const isCK=(mode==='ck'||mode==='tt');const isComp=(mode==='comp');
   // ✅ 수정: gj 모드 레이블은 curTab 기준으로 결정
-  // curTab이 undefined인 폴백도 bld._proLabel 대신 _editCtx.proOnly를 우선 참조
-  // (bld._proLabel은 openGJSessionEdit 등 외부 코드에 의해 오염될 수 있음)
-  const _gjIsProMode = (mode==='gj') ? (typeof curTab!=='undefined' ? curTab==='pro' : !!(bld._editCtx?.proOnly)) : false;
+  // curTab이 'pro'이면 프로리그 끝장전, 'ind'/'gj'이면 일반 끝장전
+  // curTab이 undefined인 경우 _editCtx.proOnly → bld._proLabel → _gjProMode 순서로 fallback
+  const _gjIsProMode = (mode==='gj') ? (
+    typeof curTab!=='undefined'
+      ? curTab==='pro'
+      : !!(bld._editCtx?.proOnly ?? bld._proLabel ?? (typeof _gjProMode!=='undefined' ? _gjProMode : false))
+  ) : false;
   const _modeLabel=mode==='mini'?((typeof miniType!=='undefined'&&miniType==='civil')?'시빌워':'미니대전'):{univm:'대학대전',ck:'대학CK',pro:'프로리그',tt:'티어대회',comp:'조별리그',gj:(_gjIsProMode?'프로리그끝장전':'끝장전'),ind:'개인전'}[mode]||'';
   // 세트 없는 방식 처리
   if(bld.noSetMode){
