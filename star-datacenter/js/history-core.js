@@ -126,8 +126,8 @@ function rHist(C,T){
       h+=`<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';window._ttPageMap=window._ttPageMap||{};window._ttPageMap['tiertour-gen']=0;render()">오래된순 ↑</button>`;
       h+=_histBulkBtnTop;
       h+=`</div>`;
-      h+=`</div>`;
     }
+    h+=`</div>`;
   }
   if(histSub==='vs'){
     h+=vsSearchHTML();
