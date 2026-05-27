@@ -854,7 +854,7 @@
   window.renderCfgStreamerHeaderSection = renderStreamerHeaderSection;
 
   // ── 기록 카드 모양(shape) ──
-  var _RC_CARD_SHAPES = ['default','compact','wide','minimal','timeline','card3d','glass','sharp','bubble','neon','floating','retro','ticket','frosted','stripe','pill','bold-border','shadow-left','gradient-bg','soft-round','bevel','cut-corner','double','deep','underline','inset','paper','topline','split-bg'];
+  var _RC_CARD_SHAPES = ['default','compact','wide','minimal','timeline','card3d','glass','sharp','bubble','neon','floating','retro','ticket','frosted','stripe','pill','bold-border','shadow-left','gradient-bg','soft-round','bevel','cut-corner','double','deep','underline','inset','paper','topline','split-bg','comic','terminal','notch','wave','tag','ribbon','badge','hex','slant','stamp','scallop','tab','bracket','shield','bookmark','hourglass','zigzag','burst','cloud'];
   window.cfgSetRecCardShape = function(shape){
     var v = _RC_CARD_SHAPES.indexOf(String(shape)) !== -1 ? String(shape) : 'default';
     try{ localStorage.setItem('su_rc_card_shape', v); }catch(e){}
