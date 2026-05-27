@@ -6,8 +6,8 @@ function rCK(C,T){
   T.innerText='🤝 대학CK';
   if(!isLoggedIn && ckSub==='input') ckSub='records';
   const subOpts=(typeof applyTabLabels==='function')
-    ? applyTabLabels('ck', [{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`}])
-    : [{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`}];
+    ? applyTabLabels('ck', [{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`}])
+    : [{id:'input',lbl:'📝 경기 입력',fn:`ckSub='input';render()`},{id:'rank',lbl:'🏅 순위',fn:`ckSub='rank';render()`},{id:'records',lbl:'📋 기록',fn:`ckSub='records';openDetails={};render()`}];
   let h='';
   const extra = (ckSub!=='input' && typeof buildYearMonthFilterControls==='function')
     ? (buildYearMonthFilterControls('ck', true)

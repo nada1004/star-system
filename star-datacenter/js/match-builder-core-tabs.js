@@ -68,9 +68,12 @@ function deleteGjGame(idx){
 
 function rGJ(C,T,proOnly,proInput){
   // proOnly=true면 "프로리그 끝장전" 컨텍스트로 간주
-  // (기존) proOnly && proInput 일 때만 pro 모드로 잡혀 탭 전환/저장 시 모드가 뒤바뀌는 문제가 발생할 수 있음
+  // ✅ 버그픽스: 수정 모드(_editCtx)일 때는 proMode 전환 시 BLD/_gjInput 초기화를 건너뜀
+  //   - openGJSessionEdit → curTab 변경 → rGJ 재호출 순서에서
+  //     _newProMode !== _gjProMode 조건으로 BLD가 null이 되어 수정 데이터가 날아가는 문제 방지
   const _newProMode=!!proOnly;
-  if(_newProMode!==_gjProMode){_gjInput={date:'',playerA:'',playerB:'',games:[]};BLD['gj']=null;}
+  const _hasEditCtxNow = !!(window.BLD && window.BLD['gj'] && window.BLD['gj']._editCtx);
+  if(_newProMode!==_gjProMode && !_hasEditCtxNow){_gjInput={date:'',playerA:'',playerB:'',games:[]};BLD['gj']=null;}
   _gjProMode=_newProMode;
   T.innerText=proOnly?'🏅 프로리그 끝장전':'⚔️ 끝장전';
   if(!isLoggedIn && gjSub==='input') gjSub='records';

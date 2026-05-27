@@ -270,8 +270,11 @@ window._applyTabLinkFromUrl = function(){
     else if(tab === 'ind' && sub && ['ind','gj'].includes(sub)){
       _mergedIndSub = sub;
       try{
-        if(sub === 'ind' && typeof indSub!=='undefined' && indSub==='input') indSub='records';
-        if(sub === 'gj' && typeof gjSub!=='undefined' && gjSub==='input') gjSub='records';
+        // ✅ 버그픽스: 수정 모드(_editCtx)일 때는 input 탭을 records로 강제 전환하지 않음
+        const _indEditCtx = !!(window.BLD && window.BLD['ind'] && window.BLD['ind']._editCtx);
+        const _gjEditCtx = !!(window.BLD && window.BLD['gj'] && window.BLD['gj']._editCtx);
+        if(sub === 'ind' && typeof indSub!=='undefined' && indSub==='input' && !_indEditCtx) indSub='records';
+        if(sub === 'gj' && typeof gjSub!=='undefined' && gjSub==='input' && !_gjEditCtx) gjSub='records';
       }catch(e){}
     }
     else if(tab === 'mini' && sub && ['civil','mini','univm','univck'].includes(sub)) _mergedUnivSub = sub;
@@ -279,7 +282,9 @@ window._applyTabLinkFromUrl = function(){
     else if(tab === 'pro' && sub && ['pro','gj','comp'].includes(sub)){
       _mergedProSub = sub;
       try{
-        if(sub === 'gj' && typeof gjSub!=='undefined' && gjSub==='input') gjSub='records';
+        // ✅ 버그픽스: 수정 모드(_editCtx)일 때는 input 탭을 records로 강제 전환하지 않음
+        const _gjEditCtx = !!(window.BLD && window.BLD['gj'] && window.BLD['gj']._editCtx);
+        if(sub === 'gj' && typeof gjSub!=='undefined' && gjSub==='input' && !_gjEditCtx) gjSub='records';
       }catch(e){}
     }
     else if(tab === 'stats' && sub) window.statsSub = sub;

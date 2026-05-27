@@ -499,7 +499,9 @@ function gjRecordsHTML(proOnly){
     const idsJson=JSON.stringify(s.ids).replace(/"/g,"'");
     const _gjMoveCtx=proOnly?'pro_gj':'gj';
     const _gjActionBtnId = `_gjActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}`;
-    const _gjSessKey = ('gjs_' + String((s.games.find(x=>x && x.sid)?.sid) || s.key || `${s.d||''}|${s.p1||''}|${s.p2||''}`).replace(/[^\w\-]/g,'_')).slice(0,120);
+    // ✅ 버그픽스: 캐시 저장 키와 수정 버튼에 전달하는 키를 동일하게 생성
+    const _sidRaw = (s.games.find(x=>x && x.sid)?.sid) || s.key || `${s.d||''}|${s.p1||''}|${s.p2||''}`;
+    const _gjSessKey = ('gjs_' + String(_sidRaw).replace(/[^\w\-]/g,'_')).slice(0,120);
     const gjActionOpts = [];
     // (버그픽스) 비로그인자에게는 공유카드만 표시, 수정/삭제/이동은 관리자(로그인)만 볼 수 있음
     gjActionOpts.push(`{l:'🎴 공유카드',fn:()=>openGJShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}',{proOnly:${proOnly?'true':'false'}})}`);
@@ -510,9 +512,8 @@ function gjRecordsHTML(proOnly){
     }
     const actionBtn=`<button id="${_gjActionBtnId}" class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openIndSessionActionPop(this,[${gjActionOpts.join(',')}])">⋯</button>`;
     const bulkCbGj=_gjBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="${_gjBulkKey}" data-bids="${idsJson}" onchange="_indBulkCountUpdate('${_gjBulkKey}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
-    const _sidRaw = (s.games.find(x=>x && x.sid)?.sid) || s.key || `${s.d||''}|${s.p1||''}|${s.p2||''}`;
-    const _sessKey = ('gjs_' + String(_sidRaw).replace(/[^\w\-]/g,'_')).slice(0,120);
-    window._gjSessCache[_sessKey] = {...s, _proOnly: !!proOnly};
+    // ✅ 버그픽스: _gjSessKey와 동일한 키로 캐시 저장 (수정 버튼과 일치)
+    window._gjSessCache[_gjSessKey] = {...s, _proOnly: !!proOnly};
 
     const gj_p1univ=players.find(x=>x.name===s.p1)?.univ||'';
     const gj_p2univ=players.find(x=>x.name===s.p2)?.univ||'';
@@ -539,7 +540,7 @@ function gjRecordsHTML(proOnly){
     const _rowScroll = _isMb ? 'overflow-x:auto;-webkit-overflow-scrolling:touch;' : '';
     const _scorePad = `padding:0 ${_h2hScorePadPx()}px;`;
     h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_gjWrapFx||'background:var(--white);'}">
-      <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:${_pad};gap:${_gap};cursor:pointer;${_rowScroll}" onclick="openGJSessionPopup('${_sessKey}')">
+      <div style="display:grid;grid-template-columns:${_gridCols};align-items:center;padding:${_pad};gap:${_gap};cursor:pointer;${_rowScroll}" onclick="openGJSessionPopup('${_gjSessKey}')">
         ${bulkCbGj||''}
         <div style="display:flex;align-items:center;justify-content:flex-end;width:100%">${gj_p1bg}</div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px;${_scorePad}flex-shrink:0">

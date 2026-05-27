@@ -204,12 +204,16 @@ function buildYearMonthFilter(section){
 function setFilterYear(y, section){
   filterYear=y;
   openDetails={};
+  window._ttPageMap=window._ttPageMap||{};
+  window._ttPageMap['tiertour-gen']=0;
   render();
 }
 
 function setFilterMonth(m, section){
   filterMonth=m;
   openDetails={};
+  window._ttPageMap=window._ttPageMap||{};
+  window._ttPageMap['tiertour-gen']=0;
   render();
 }
 
@@ -485,6 +489,8 @@ function saveMatch(mode){
       if(_edit){ try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){} }
       if(typeof fixPoints==='function')fixPoints();save();
       if(typeof gjSub!=='undefined') gjSub='records';
+      // 수정 완료 후 _gjInput 초기화하여 다음 신규 입력 시 깨끗한 상태 보장
+      try{ if(typeof window._gjInput!=='undefined') window._gjInput={date:'',playerA:'',playerB:'',games:[]}; }catch(e){}
       // ✅ 수정: 저장 후 탭 이동 제거 - 현재 탭(개인전/프로리그) 그대로 유지
       try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
       render();

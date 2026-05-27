@@ -122,20 +122,8 @@ function rHist(C,T){
       h+=`<div class="hist-ctrl-group">`;
       // (요청사항) 메뉴 버튼 우측: 연/월 → 그 우측에 최신/오래된순
       h+=buildYearMonthFilterControls('hist', true);
-      h+=`<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`;
-      h+=`<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`;
-      h+=_histBulkBtnTop;
-      h+=`</div>`;
-    }
-    h+=`</div>`;
-  } else {
-    // 하위메뉴가 없는 그룹이라도(예: 버튼 1개 그룹) 필요한 경우 상단에 컨트롤을 한 줄로 제공
-    if((_enableSubFilter?window._histFilterOpen:true) && needDateFilter && (typeof buildYearMonthFilterControls==='function')){
-      h+=`<div class="hist-inlinebar no-export">`;
-      h+=`<div class="hist-ctrl-group">`;
-      h+=buildYearMonthFilterControls('hist', true);
-      h+=`<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`;
-      h+=`<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`;
+      h+=`<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';window._ttPageMap=window._ttPageMap||{};window._ttPageMap['tiertour-gen']=0;render()">최신순 ↓</button>`;
+      h+=`<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';window._ttPageMap=window._ttPageMap||{};window._ttPageMap['tiertour-gen']=0;render()">오래된순 ↑</button>`;
       h+=_histBulkBtnTop;
       h+=`</div>`;
       h+=`</div>`;
@@ -200,7 +188,7 @@ function rHist(C,T){
     const _ttOnStyle=(active)=>active?'background:linear-gradient(135deg,#064e3b,#10b981 58%,#6ee7b7);border-color:rgba(110,231,183,.30);box-shadow:0 12px 26px rgba(16,185,129,.24);color:#fff;font-weight:800;':'';
     const _ttSubBar=`<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
       <button class="pill ${histSub==='tiertour'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_ttOnStyle(histSub==='tiertour')}" onclick="histSub='tiertour';openDetails={};render()">📋 전체</button>
-      <button class="pill ${histSub==='tiertour-gen'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_ttOnStyle(histSub==='tiertour-gen')}" onclick="histSub='tiertour-gen';openDetails={};render()">📝 일반</button>
+      <button class="pill ${histSub==='tiertour-gen'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_ttOnStyle(histSub==='tiertour-gen')}" onclick="histSub='tiertour-gen';openDetails={};window._ttPageMap=window._ttPageMap||{};window._ttPageMap['tiertour-gen']=0;render()">📝 일반</button>
       <button class="pill ${histSub==='tiertour-league'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_ttOnStyle(histSub==='tiertour-league')}" onclick="histSub='tiertour-league';openDetails={};render()">📅 조별리그</button>
       <button class="pill ${histSub==='tiertour-bkt'?'on':''}" style="flex-shrink:0;white-space:nowrap;${_ttOnStyle(histSub==='tiertour-bkt')}" onclick="histSub='tiertour-bkt';openDetails={};render()">🏆 토너먼트 기록</button>
     </div>`;
@@ -219,7 +207,9 @@ function rHist(C,T){
     const _ttSrc=histSub==='tiertour-gen'?_ttGen:histSub==='tiertour-league'?_ttLeague:histSub==='tiertour-bkt'?_ttBkt:_ttAll;
     const _emptyIco=histSub==='tiertour-bkt'?'🏆':histSub==='tiertour-league'?'📅':'🎯';
     const _emptyMsg=histSub==='tiertour-bkt'?'토너먼트 기록이 없습니다':histSub==='tiertour-league'?'조별리그 기록이 없습니다':histSub==='tiertour-gen'?'일반 기록이 없습니다':'티어대회 기록이 없습니다';
-    h+=_ttSrc.length?recSummaryListHTMLFiltered(_ttSrc,'tt','hist'):`<div class="empty-state"><div class="empty-state-icon">${_emptyIco}</div><div class="empty-state-title">${_emptyMsg}</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div><div style="margin-top:10px"><button class="btn btn-w btn-sm" onclick="try{window.ensureTierTourRecords&&window.ensureTierTourRecords();}catch(e){};render()">🔄 티어대회 기록 다시 불러오기</button></div></div>`;
+    // tiertour-gen 전용 페이지네이션 (20개 단위)
+    const _ttPageOpts = histSub==='tiertour-gen' ? {pageSize:20, pageKey:'tiertour-gen'} : null;
+    h+=_ttSrc.length?recSummaryListHTMLFiltered(_ttSrc,'tt','hist',undefined,_ttPageOpts):`<div class="empty-state"><div class="empty-state-icon">${_emptyIco}</div><div class="empty-state-title">${_emptyMsg}</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div><div style="margin-top:10px"><button class="btn btn-w btn-sm" onclick="try{window.ensureTierTourRecords&&window.ensureTierTourRecords();}catch(e){};render()">🔄 티어대회 기록 다시 불러오기</button></div></div>`;
   }
   else if(histSub==='pro') h+=recSummaryListHTML(proM,'pro','hist');
   else if(histSub==='procomp') h+=histProCompHTML();
@@ -870,7 +860,7 @@ function _collectMatchTeamMembersAB(m){
   }
 }
 
-function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
+function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
   if(!arr.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
   const _editMode = (mode==='civil') ? 'mini' : mode;
@@ -998,6 +988,10 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
       return (x._origIdx||0) - (y._origIdx||0);
     });
   }catch(e){}
+  // 페이지네이션 설정
+  const _pgSize = (pageOpts && pageOpts.pageSize) ? pageOpts.pageSize : 0; // 0=비활성
+  const _pgKey  = (pageOpts && pageOpts.pageKey)  ? pageOpts.pageKey  : null;
+
   // 날짜별 그룹화 렌더
   const _daysF=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
   const _byDateF={};
@@ -1006,13 +1000,80 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
     const dir=(typeof recSortDir!=='undefined'&&recSortDir==='asc')?'asc':'desc';
     return dir==='asc'?a.localeCompare(b):b.localeCompare(a);
   });
-  _dateKeysF.forEach(dk=>{
-    let _dkLabel=dk;
-    if(dk!=='날짜 미정'&&dk.match(/^\d{4}-\d{2}-\d{2}$/)){const dt=new Date(dk+'T00:00:00');_dkLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_daysF[dt.getDay()]}`;}
-    h+=`<div style="margin-bottom:22px"><div class="rec-date-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
-    _byDateF[dk].forEach(m=>_renderItem(m));
-    h+=`</div>`;
-  });
+
+  if(_pgSize > 0 && _pgKey) {
+    // ── 페이지네이션 모드 ──
+    // list(평탄화된 경기 배열)를 페이지 단위로 자르고, 날짜 헤더를 붙여 렌더
+    const _curPage = (window._ttPageMap && window._ttPageMap[_pgKey] != null) ? window._ttPageMap[_pgKey] : 0;
+    const _totalItems = list.length;
+    const _totalPages = Math.ceil(_totalItems / _pgSize);
+    const _safePage = Math.min(_curPage, Math.max(0, _totalPages - 1));
+    const _sliced = list.slice(_safePage * _pgSize, (_safePage + 1) * _pgSize);
+
+    // 슬라이스된 항목을 날짜 기준으로 재그룹화
+    const _byDatePage = {};
+    _sliced.forEach(x => {
+      const k = _normDateSort(x.m?.d || '') || '날짜 미정';
+      if (!_byDatePage[k]) _byDatePage[k] = [];
+      _byDatePage[k].push(x.m);
+    });
+    const _dkPage = Object.keys(_byDatePage).sort((a, b) => {
+      const dir = (typeof recSortDir !== 'undefined' && recSortDir === 'asc') ? 'asc' : 'desc';
+      return dir === 'asc' ? a.localeCompare(b) : b.localeCompare(a);
+    });
+    _dkPage.forEach(dk => {
+      let _dkLabel = dk;
+      if (dk !== '날짜 미정' && dk.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const dt = new Date(dk + 'T00:00:00');
+        _dkLabel = `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_daysF[dt.getDay()]}`;
+      }
+      h += `<div style="margin-bottom:22px"><div class="rec-date-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
+      _byDatePage[dk].forEach(m => _renderItem(m));
+      h += `</div>`;
+    });
+
+    // 페이지네이션 UI
+    if (_totalPages > 1) {
+      const _pgStart = _safePage * _pgSize + 1;
+      const _pgEnd   = Math.min((_safePage + 1) * _pgSize, _totalItems);
+      const _btnBase = `style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 10px;border-radius:8px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s"`;
+      const _btnOn   = `background:linear-gradient(135deg,#064e3b,#10b981);border-color:#10b981;color:#fff;box-shadow:0 4px 12px rgba(16,185,129,.30)`;
+      const _btnOff  = `background:var(--card,#fff);border-color:var(--border,#e2e8f0);color:var(--text,#334155)`;
+      const _btnDis  = `background:var(--card,#fff);border-color:var(--border,#e2e8f0);color:var(--gray-l,#94a3b8);cursor:not-allowed;opacity:0.5`;
+
+      let _pgBtns = '';
+      // 이전 버튼
+      _pgBtns += `<button ${_btnBase} style="${_safePage===0?_btnDis:_btnOff}" onclick="if(${_safePage}>0){window._ttPageMap=window._ttPageMap||{};window._ttPageMap['${_pgKey}']=${_safePage}-1;render()}" ${_safePage===0?'disabled':''}>◀</button>`;
+      // 페이지 번호 버튼 (최대 5개 슬라이딩 윈도우)
+      const _winSize = 5;
+      let _pgFrom = Math.max(0, _safePage - Math.floor(_winSize/2));
+      let _pgTo   = Math.min(_totalPages - 1, _pgFrom + _winSize - 1);
+      if (_pgTo - _pgFrom < _winSize - 1) _pgFrom = Math.max(0, _pgTo - _winSize + 1);
+      if (_pgFrom > 0) _pgBtns += `<button ${_btnBase} style="${_btnOff}" onclick="window._ttPageMap=window._ttPageMap||{};window._ttPageMap['${_pgKey}']=0;render()">1</button><span style="color:var(--gray-l,#94a3b8);padding:0 2px">…</span>`;
+      for (let _pi = _pgFrom; _pi <= _pgTo; _pi++) {
+        const _isOn = _pi === _safePage;
+        _pgBtns += `<button ${_btnBase} style="${_isOn?_btnOn:_btnOff}" onclick="window._ttPageMap=window._ttPageMap||{};window._ttPageMap['${_pgKey}']=${_pi};render()">${_pi+1}</button>`;
+      }
+      if (_pgTo < _totalPages - 1) _pgBtns += `<span style="color:var(--gray-l,#94a3b8);padding:0 2px">…</span><button ${_btnBase} style="${_btnOff}" onclick="window._ttPageMap=window._ttPageMap||{};window._ttPageMap['${_pgKey}']=${_totalPages-1};render()">${_totalPages}</button>`;
+      // 다음 버튼
+      _pgBtns += `<button ${_btnBase} style="${_safePage===_totalPages-1?_btnDis:_btnOff}" onclick="if(${_safePage}<${_totalPages-1}){window._ttPageMap=window._ttPageMap||{};window._ttPageMap['${_pgKey}']=${_safePage}+1;render()}" ${_safePage===_totalPages-1?'disabled':''}>▶</button>`;
+
+      h += `<div class="no-export" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 0 24px">
+        <div style="font-size:12px;color:var(--text2,#64748b);font-weight:600">${_totalItems}개 중 ${_pgStart}–${_pgEnd}번째 · 총 ${_totalPages}페이지</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center">${_pgBtns}</div>
+      </div>`;
+    }
+  } else {
+    // ── 기존 전체 표시 모드 ──
+    _dateKeysF.forEach(dk=>{
+      let _dkLabel=dk;
+      if(dk!=='날짜 미정'&&dk.match(/^\d{4}-\d{2}-\d{2}$/)){const dt=new Date(dk+'T00:00:00');_dkLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_daysF[dt.getDay()]}`;}
+      h+=`<div style="margin-bottom:22px"><div class="rec-date-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
+      _byDateF[dk].forEach(m=>_renderItem(m));
+      h+=`</div>`;
+    });
+  }
+
   if(!_filtered) return `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   return h;
 }

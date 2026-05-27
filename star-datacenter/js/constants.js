@@ -1191,7 +1191,7 @@ let notices    = J('su_notices') || [];
 // (요청사항) 보라크루 기능 삭제: 기존 저장 키 정리
 try{ localStorage.removeItem('su_crew'); localStorage.removeItem('su_crewcfg'); }catch(e){}
 
-let BLD = {};
+var BLD = {}; // ✅ var로 선언해야 window.BLD와 동일 객체로 IIFE 내부에서도 접근 가능
 let openDetails = {};
 let tierRankModeFilter = '전체';
 

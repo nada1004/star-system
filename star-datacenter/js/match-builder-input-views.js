@@ -12,13 +12,19 @@ function indInputHTML(){
   if(pA&&pB){
     const paMem={name:pA,univ:pAObj.univ||'',race:pAObj.race||'',tier:pAObj.tier||'',gender:pAObj.gender||''};
     const pbMem={name:pB,univ:pBObj.univ||'',race:pBObj.race||'',tier:pBObj.tier||'',gender:pBObj.gender||''};
-    if(!BLD['ind']||!BLD['ind'].membersA||!BLD['ind'].membersB||BLD['ind'].membersA[0]?.name!==pA||BLD['ind'].membersB[0]?.name!==pB){
+    // _editCtx가 있으면 수정 모드 — 이미 BLD에 올바른 데이터가 세팅되어 있으므로 리셋하지 않음
+    const _hasEditCtx = !!(BLD['ind'] && BLD['ind']._editCtx);
+    if(!_hasEditCtx && (!BLD['ind']||!BLD['ind'].membersA||!BLD['ind'].membersB||BLD['ind'].membersA[0]?.name!==pA||BLD['ind'].membersB[0]?.name!==pB)){
       BLD['ind']={date:gi.date||today,membersA:[paMem],membersB:[pbMem],sets:[],noSetMode:true,freeGames:[]};
-    } else {
+    } else if(!_hasEditCtx) {
       if(gi.date&&BLD['ind'].date!==gi.date)BLD['ind'].date=gi.date;
       if(!gi.date&&!BLD['ind'].date)BLD['ind'].date=today;
+    } else {
+      // 수정 모드: 날짜만 동기화
+      if(gi.date&&BLD['ind']&&BLD['ind'].date!==gi.date)BLD['ind'].date=gi.date;
     }
-  } else {
+  } else if(!(BLD['ind'] && BLD['ind']._editCtx)) {
+    // 수정 모드가 아닌 경우에만 null 처리
     BLD['ind']=null;
   }
   const actionBar = _mbActionBar([
@@ -108,11 +114,17 @@ function gjInputHTML(){
     //   2) _editCtx가 남아있는 경우 — openGJSessionEdit 후 탭 이동 시 오염된 수정 컨텍스트 제거
     //   3) _proLabel이 현재 탭 모드와 다른 경우 — 프로탭→개인전탭 이동 시 잔류 proLabel 제거
     const _bldGj = BLD['gj'];
-    const _needsReset = !_bldGj
+    // ✅ 수정: _editCtx가 있으면 수정 모드 — BLD를 절대 리셋하지 않음
+    //   - openGJSessionEdit로 설정된 수정 컨텍스트(_editCtx)가 있을 때 리셋하면 수정 데이터가 날아가는 버그
+    //   - _editCtx가 있으면 이미 올바른 데이터가 세팅된 상태이므로 리셋하지 않음
+    //   - _proLabel 불일치 조건도 _editCtx가 있을 때는 무시해야 함
+    const _hasEditCtxGj = !!(_bldGj && _bldGj._editCtx);
+    const _needsReset = !_hasEditCtxGj && (
+      !_bldGj
       || !_bldGj.membersA || !_bldGj.membersB
       || _bldGj.membersA[0]?.name !== pA || _bldGj.membersB[0]?.name !== pB
-      || !!_bldGj._editCtx          // 수정 컨텍스트 잔류 시 새로 생성
-      || !!_bldGj._proLabel !== _curIsProMode; // proLabel 불일치 시 새로 생성
+      || !!_bldGj._proLabel !== _curIsProMode // proLabel 불일치 시 새로 생성 (수정 모드 아닐 때만)
+    );
     if(_needsReset){
       BLD['gj']={date:gi.date||today,membersA:[paMem],membersB:[pbMem],sets:[],noSetMode:true,freeGames:[],_proLabel:_curIsProMode};
     } else {

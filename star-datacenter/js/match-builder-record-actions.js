@@ -131,6 +131,8 @@
         freeGames,
         _editCtx: { mode:'ind', sessKey, sid, ids }
       };
+      // indInputHTML이 _indInput.playerA/B 기준으로 BLD를 리셋하지 않도록 동기화
+      try{ if(typeof window._indInput!=='undefined'){ window._indInput.playerA=A; window._indInput.playerB=B; window._indInput.date=s.d||''; } }catch(e){}
       // 탭 이동
       try{ window.curTab = 'ind'; }catch(e){}
       try{ if(typeof window._mergedIndSub!=='undefined') window._mergedIndSub = 'ind'; }catch(e){}
@@ -165,6 +167,9 @@
         _proLabel: proOnly,
         _editCtx: { mode:'gj', sessKey, sid, ids, proOnly }
       };
+
+      // gjInputHTML이 _gjInput.playerA/B 기준으로 BLD를 리셋하지 않도록 동기화
+      try{ if(typeof window._gjInput!=='undefined'){ window._gjInput.playerA=A; window._gjInput.playerB=B; window._gjInput.date=s.d||''; } }catch(e){}
 
       // ✅ 수정: 끝장전 수정 시 proOnly 여부에 따라 올바른 탭으로 이동
       // - proOnly=true: 프로리그 탭(curTab='pro', _mergedProSub='gj')으로 이동
