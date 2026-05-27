@@ -1519,6 +1519,33 @@ ${_scfgD('notice','📢 공지 관리')}
     const smb = parseInt(localStorage.getItem('su_h2h_score_pad_mb')||'6',10)||6;
     return _scfgD('h2hpanel','🎮 개인전/끝장전(프로리그 끝장전) 카드') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대전기록 탭의 개인전/끝장전/프로리그 끝장전 카드에서 선수 패널(프로필 배경 카드) 크기와 이미지 맞춤을 설정합니다.</div>
+
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--blue);border-radius:12px;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:900;color:var(--blue);margin-bottom:10px">🃏 카드 디자인 모드</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">개인전/끝장전/프로리그 끝장전 기록카드의 전체 레이아웃 스타일을 선택합니다.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${(()=>{
+          const _cur = localStorage.getItem('su_h2h_card_mode')||'panel';
+          const _modes = [
+            {v:'panel',   icon:'🎴', l:'패널형',   desc:'프로필 배경사진 패널'},
+            {v:'banner',  icon:'🖼️', l:'배너형',   desc:'좌우 배경 분할 배너'},
+            {v:'minimal', icon:'➖', l:'미니멀',   desc:'아바타+텍스트, 깔끔'},
+            {v:'photo',   icon:'📸', l:'사진전체', desc:'전면 배경사진 오버레이'},
+            {v:'classic', icon:'📋', l:'클래식',   desc:'텍스트 위주 심플'},
+          ];
+          return _modes.map(m=>`<button type="button"
+            onclick="localStorage.setItem('su_h2h_card_mode','${m.v}');try{render();}catch(e){}" 
+            title="${m.desc}"
+            style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border-radius:10px;font-size:11px;font-weight:900;cursor:pointer;border:2px solid ${_cur===m.v?'var(--blue)':'var(--border2)'};background:${_cur===m.v?'#eff6ff':'var(--white)'};color:${_cur===m.v?'var(--blue)':'var(--text2)'};min-width:72px;transition:all .15s">
+            <span style="font-size:18px">${m.icon}</span>
+            <span>${m.l}</span>
+            <span style="font-size:9px;font-weight:700;color:${_cur===m.v?'var(--blue)':'var(--gray-l)'}">${m.desc}</span>
+          </button>`).join('');
+        })()}
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 패널형·배너형·사진전체 모드는 아래 이미지 설정이 함께 적용됩니다.</div>
+    </div>
+
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:90px">이미지 맞춤</div>
