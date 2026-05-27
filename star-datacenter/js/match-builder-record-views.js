@@ -227,7 +227,7 @@ function _h2hBannerCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
   const sc1 = win1 ? p1col : win2 ? '#94a3b8' : 'var(--text2)';
   const sc2 = win2 ? p2col : win1 ? '#94a3b8' : 'var(--text2)';
   const fs = isMb ? 26 : 32;
-  return `<div style="display:grid;grid-template-columns:1fr auto 1fr;height:${h}px;position:relative;overflow:hidden;border-radius:12px 12px 0 0">
+  return `<div style="display:grid;grid-template-columns:1fr auto 1fr;height:${h}px;position:relative;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
     <div style="background-image:${p1bg};background-size:cover;background-position:${p1pos};position:relative;${!p1.photo?`background:linear-gradient(135deg,${p1col}33,${p1col}11);`:''}${!win1&&win2?'filter:grayscale(.7);opacity:.7;':''}">
       <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,23,42,.12),rgba(15,23,42,.5))"></div>
       <div style="position:absolute;bottom:8px;left:10px;right:0">
@@ -303,7 +303,7 @@ function _h2hPhotoFullCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
   const sc2 = win2 ? '#fff' : 'rgba(255,255,255,.55)';
   const p1Shadow = win1 ? `0 0 0 3px ${p1col},0 0 0 5px rgba(255,255,255,.5)` : 'none';
   const p2Shadow = win2 ? `0 0 0 3px ${p2col},0 0 0 5px rgba(255,255,255,.5)` : 'none';
-  return `<div style="position:relative;height:${h}px;overflow:hidden;border-radius:12px 12px 0 0">
+  return `<div style="position:relative;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
     <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr">
       <div style="${p1.photo?`background-image:url('${toHttpsUrl(p1.photo)}');background-size:cover;background-position:${p1pos};`:`background:linear-gradient(135deg,${p1col}66,${p1col}22);`}${!win1&&win2?'filter:grayscale(.65);opacity:.75;':''}"></div>
       <div style="${p2.photo?`background-image:url('${toHttpsUrl(p2.photo)}');background-size:cover;background-position:${p2pos};`:`background:linear-gradient(225deg,${p2col}66,${p2col}22);`}${!win2&&win1?'filter:grayscale(.65);opacity:.75;':''}"></div>
@@ -354,12 +354,379 @@ function _h2hClassicCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
   </div>`;
 }
 
+function _h2hStackCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
+  const p1 = players.find(x=>x.name===s.p1)||{};
+  const p2 = players.find(x=>x.name===s.p2)||{};
+  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
+  const topPad = isMb ? 10 : 14;
+  const fs = isMb ? 28 : 34;
+  const av = (pName, col)=>{
+    const p = players.find(x=>x.name===pName)||{};
+    const sz = isMb ? 34 : 40;
+    if(p.photo) return `<img src="${toHttpsUrl(p.photo)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;border:2px solid ${col};flex-shrink:0">`;
+    return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${col}22;border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?14:16}px;color:${col};flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
+  };
+  return `<div style="padding:${topPad}px ${topPad}px ${topPad-2}px;display:flex;flex-direction:column;gap:${isMb?10:12}px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        ${av(s.p1, p1col)}
+        <div style="min-width:0">
+          <div style="font-weight:1000;font-size:${isMb?14:16}px;color:${win1?p1col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
+          <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p1.univ||''}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0;font-size:${fs}px;font-weight:1000;letter-spacing:-2px;line-height:1">
+        <span style="color:${win1?p1col:(win2?'#94a3b8':'var(--text2)')}">${p1wins}</span>
+        <span style="font-size:${isMb?15:18}px;color:#94a3b8;font-weight:900;margin:0 6px">:</span>
+        <span style="color:${win2?p2col:(win1?'#94a3b8':'var(--text2)')}">${p2wins}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;justify-content:flex-end">
+        <div style="min-width:0;text-align:right">
+          <div style="font-weight:1000;font-size:${isMb?14:16}px;color:${win2?p2col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
+          <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p2.univ||''}</div>
+        </div>
+        ${av(s.p2, p2col)}
+      </div>
+    </div>
+    ${(win1||win2)?`<div style="display:flex;justify-content:center"><span style="font-size:9px;font-weight:900;padding:2px 10px;border-radius:999px;background:${win1?p1col:p2col}22;color:${win1?p1col:p2col};border:1px solid ${win1?p1col:p2col}44;white-space:nowrap">${win1?s.p1:s.p2} 승</span></div>`:''}
+  </div>`;
+}
+
+function _h2hDuoToneCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
+  const p1 = players.find(x=>x.name===s.p1)||{};
+  const p2 = players.find(x=>x.name===s.p2)||{};
+  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
+  const h = isMb ? 92 : 104;
+  const av = (pName)=>{
+    const p = players.find(x=>x.name===pName)||{};
+    const sz = isMb ? 30 : 34;
+    if(p.photo) return `<img src="${toHttpsUrl(p.photo)}" style="width:${sz}px;height:${sz}px;border-radius:12px;object-fit:cover;border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 14px rgba(0,0,0,.18)">`;
+    return `<div style="width:${sz}px;height:${sz}px;border-radius:12px;background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?13:14}px;color:#fff">${(pName||'?').slice(0,1)}</div>`;
+  };
+  return `<div style="display:grid;grid-template-columns:1fr auto 1fr;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
+    <div style="background:linear-gradient(135deg,${p1col},${p1col}aa);display:flex;flex-direction:column;justify-content:center;padding:${isMb?'10px 10px':'12px 14px'};${!win1&&win2?'filter:grayscale(.65);opacity:.78;':''}">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        ${av(s.p1)}
+        <div style="min-width:0">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.75);font-weight:800">${p1.univ||''}</div>
+        </div>
+      </div>
+      ${win1?`<div style="margin-top:6px;font-size:9px;font-weight:900;color:#fff;opacity:.95">👑 승</div>`:''}
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--white);min-width:${isMb?76:90}px">
+      <div style="font-size:${isMb?26:32}px;font-weight:1000;letter-spacing:-2px;line-height:1;display:flex;align-items:center">
+        <span style="color:${win1?p1col:(win2?'#94a3b8':'var(--text2)')}">${p1wins}</span>
+        <span style="font-size:${isMb?14:16}px;color:#94a3b8;font-weight:900;margin:0 5px">:</span>
+        <span style="color:${win2?p2col:(win1?'#94a3b8':'var(--text2)')}">${p2wins}</span>
+      </div>
+      <div style="font-size:9px;color:#94a3b8;font-weight:900;letter-spacing:1px">VS</div>
+    </div>
+    <div style="background:linear-gradient(225deg,${p2col},${p2col}aa);display:flex;flex-direction:column;justify-content:center;padding:${isMb?'10px 10px':'12px 14px'};align-items:flex-end;text-align:right;${!win2&&win1?'filter:grayscale(.65);opacity:.78;':''}">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;justify-content:flex-end">
+        <div style="min-width:0">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.75);font-weight:800">${p2.univ||''}</div>
+        </div>
+        ${av(s.p2)}
+      </div>
+      ${win2?`<div style="margin-top:6px;font-size:9px;font-weight:900;color:#fff;opacity:.95">👑 승</div>`:''}
+    </div>
+  </div>`;
+}
+
+function _h2hSplitCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
+  const p1 = players.find(x=>x.name===s.p1)||{};
+  const p2 = players.find(x=>x.name===s.p2)||{};
+  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
+  const h = isMb ? 88 : 100;
+  const pad = isMb ? 10 : 12;
+  const av = (pName, col)=>{
+    const p = players.find(x=>x.name===pName)||{};
+    const sz = isMb ? 28 : 32;
+    if(p.photo) return `<img src="${toHttpsUrl(p.photo)}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.55);flex-shrink:0">`;
+    return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?12:13}px;color:#fff;flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
+  };
+  return `<div style="display:grid;grid-template-columns:1fr auto 1fr;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
+    <div style="background:linear-gradient(135deg,${p1col}66,${p1col}18);display:flex;align-items:center;gap:10px;padding:${pad}px;${!win1&&win2?'filter:grayscale(.65);opacity:.82;':''}">
+      ${av(s.p1, p1col)}
+      <div style="min-width:0">
+        <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
+        <div style="font-size:10px;color:rgba(15,23,42,.62);font-weight:800">${p1.univ||''}</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--white);min-width:${isMb?74:86}px">
+      <div style="font-size:${isMb?24:30}px;font-weight:1000;letter-spacing:-2px;line-height:1;display:flex;align-items:center">
+        <span style="color:${win1?p1col:(win2?'#94a3b8':'var(--text2)')}">${p1wins}</span>
+        <span style="font-size:${isMb?14:16}px;color:#94a3b8;font-weight:900;margin:0 5px">:</span>
+        <span style="color:${win2?p2col:(win1?'#94a3b8':'var(--text2)')}">${p2wins}</span>
+      </div>
+      <div style="font-size:9px;color:#94a3b8;font-weight:900;letter-spacing:1px">VS</div>
+    </div>
+    <div style="background:linear-gradient(225deg,${p2col}66,${p2col}18);display:flex;align-items:center;gap:10px;padding:${pad}px;justify-content:flex-end;text-align:right;${!win2&&win1?'filter:grayscale(.65);opacity:.82;':''}">
+      <div style="min-width:0">
+        <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
+        <div style="font-size:10px;color:rgba(15,23,42,.62);font-weight:800">${p2.univ||''}</div>
+      </div>
+      ${av(s.p2, p2col)}
+    </div>
+  </div>`;
+}
+
+function _h2hGlassCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
+  const p1 = players.find(x=>x.name===s.p1)||{};
+  const p2 = players.find(x=>x.name===s.p2)||{};
+  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
+  const h = isMb ? 104 : 120;
+  const p1pos = _h2hPlayerBgPos(s.p1);
+  const p2pos = _h2hPlayerBgPos(s.p2);
+  const bg1 = p1.photo ? `url('${toHttpsUrl(p1.photo)}')` : '';
+  const bg2 = p2.photo ? `url('${toHttpsUrl(p2.photo)}')` : '';
+  const sc1 = win1 ? p1col : win2 ? '#94a3b8' : 'var(--text2)';
+  const sc2 = win2 ? p2col : win1 ? '#94a3b8' : 'var(--text2)';
+  return `<div style="position:relative;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
+    <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr">
+      <div style="${bg1?`background-image:${bg1};background-size:cover;background-position:${p1pos};`:`background:linear-gradient(135deg,${p1col}66,${p1col}22);`}filter:blur(10px) saturate(1.15);transform:scale(1.06);"></div>
+      <div style="${bg2?`background-image:${bg2};background-size:cover;background-position:${p2pos};`:`background:linear-gradient(225deg,${p2col}66,${p2col}22);`}filter:blur(10px) saturate(1.15);transform:scale(1.06);"></div>
+    </div>
+    <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,23,42,.55),rgba(15,23,42,.10),rgba(15,23,42,.55))"></div>
+    <div style="position:absolute;inset:${isMb?'10px 10px 12px':'12px 14px 14px'};border-radius:16px;background:rgba(255,255,255,.62);backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);border:1px solid rgba(255,255,255,.55);box-shadow:0 12px 28px rgba(15,23,42,.16);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:${isMb?'10px 12px':'12px 16px'}">
+      <div style="min-width:0;display:flex;flex-direction:column;gap:3px">
+        <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win1?p1col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
+        <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p1.univ||''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">
+        <div style="font-size:${isMb?26:32}px;font-weight:1000;letter-spacing:-2px;line-height:1">
+          <span style="color:${sc1}">${p1wins}</span>
+          <span style="font-size:${isMb?14:16}px;color:#94a3b8;font-weight:900;margin:0 6px">:</span>
+          <span style="color:${sc2}">${p2wins}</span>
+        </div>
+        ${(win1||win2)?`<div style="font-size:8px;font-weight:900;padding:1px 8px;border-radius:999px;background:${win1?p1col:p2col}22;color:${win1?p1col:p2col};border:1px solid ${win1?p1col:p2col}33;white-space:nowrap">${win1?s.p1:s.p2} 승</div>`:''}
+      </div>
+      <div style="min-width:0;display:flex;flex-direction:column;gap:3px;text-align:right;align-items:flex-end">
+        <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win2?p2col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
+        <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p2.univ||''}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function _h2hPillCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
+  const p1 = players.find(x=>x.name===s.p1)||{};
+  const p2 = players.find(x=>x.name===s.p2)||{};
+  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
+  const av = (pName, col)=>{
+    const p = players.find(x=>x.name===pName)||{};
+    const sz = isMb ? 26 : 30;
+    if(p.photo) return `<img src="${toHttpsUrl(p.photo)}" style="width:${sz}px;height:${sz}px;border-radius:999px;object-fit:cover;border:2px solid ${col};flex-shrink:0">`;
+    return `<div style="width:${sz}px;height:${sz}px;border-radius:999px;background:${col}22;border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?12:13}px;color:${col};flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
+  };
+  return `<div style="padding:${isMb?'12px 12px 14px':'14px 14px 16px'}">
+    <div style="border-radius:999px;border:1.5px solid var(--border);background:linear-gradient(90deg,${p1col}12,rgba(255,255,255,.92),${p2col}12);box-shadow:0 10px 24px rgba(15,23,42,.08);display:flex;align-items:center;gap:10px;padding:${isMb?'10px 12px':'12px 14px'}">
+      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+        ${av(s.p1, p1col)}
+        <div style="min-width:0">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win1?p1col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
+          <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p1.univ||''}</div>
+        </div>
+      </div>
+      <div style="flex-shrink:0;display:flex;align-items:center;gap:0;font-size:${isMb?24:30}px;font-weight:1000;letter-spacing:-2px;line-height:1">
+        <span style="color:${win1?p1col:(win2?'#94a3b8':'var(--text2)')}">${p1wins}</span>
+        <span style="font-size:${isMb?14:16}px;color:#94a3b8;font-weight:900;margin:0 5px">:</span>
+        <span style="color:${win2?p2col:(win1?'#94a3b8':'var(--text2)')}">${p2wins}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;justify-content:flex-end">
+        <div style="min-width:0;text-align:right">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win2?p2col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
+          <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p2.univ||''}</div>
+        </div>
+        ${av(s.p2, p2col)}
+      </div>
+    </div>
+  </div>`;
+}
+
+function _h2hScoreBarCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
+  const p1 = players.find(x=>x.name===s.p1)||{};
+  const p2 = players.find(x=>x.name===s.p2)||{};
+  const tot = (p1wins||0) + (p2wins||0);
+  const p1r = tot ? Math.round((p1wins / tot) * 100) : 50;
+  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
+  const hPad = isMb ? 12 : 14;
+  return `<div style="padding:${hPad}px ${hPad}px ${hPad-2}px;display:flex;flex-direction:column;gap:${isMb?10:12}px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="min-width:0">
+        <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win1?p1col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
+        <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p1.univ||''}</div>
+      </div>
+      <div style="flex-shrink:0;display:flex;align-items:center;gap:0;font-size:${isMb?24:30}px;font-weight:1000;letter-spacing:-2px;line-height:1">
+        <span style="color:${win1?p1col:(win2?'#94a3b8':'var(--text2)')}">${p1wins}</span>
+        <span style="font-size:${isMb?14:16}px;color:#94a3b8;font-weight:900;margin:0 5px">:</span>
+        <span style="color:${win2?p2col:(win1?'#94a3b8':'var(--text2)')}">${p2wins}</span>
+      </div>
+      <div style="min-width:0;text-align:right">
+        <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win2?p2col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
+        <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p2.univ||''}</div>
+      </div>
+    </div>
+    <div style="height:8px;border-radius:999px;background:var(--border);overflow:hidden;display:flex">
+      <div style="width:${p1r}%;background:${p1col};"></div>
+      <div style="width:${100-p1r}%;background:${p2col};"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-l);font-weight:900">
+      <span style="color:${p1col}">${p1r}%</span>
+      <span style="color:${p2col}">${100-p1r}%</span>
+    </div>
+  </div>`;
+}
+
+function _h2hOutlineCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
+  const p1 = players.find(x=>x.name===s.p1)||{};
+  const p2 = players.find(x=>x.name===s.p2)||{};
+  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
+  const pad = isMb ? 12 : 14;
+  const chip = (txt, col, on)=>`<span style="display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:12px;border:2px solid ${col}66;background:${on?col+'14':'transparent'};min-width:0">
+    ${getPlayerPhotoHTML?getPlayerPhotoHTML(txt, isMb?'22px':'26px'):''}
+    <span style="font-weight:1000;font-size:${isMb?13:15}px;color:${on?col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${txt}</span>
+  </span>`;
+  return `<div style="padding:${pad}px ${pad}px ${pad-2}px;position:relative">
+    <div style="position:absolute;left:50%;top:${isMb?14:18}px;transform:translateX(-50%);font-size:${isMb?34:40}px;font-weight:1000;color:rgba(148,163,184,.18);letter-spacing:2px;pointer-events:none">VS</div>
+    <div style="display:flex;align-items:center;gap:${isMb?10:14}px;flex-wrap:wrap;justify-content:space-between">
+      <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:140px">
+        ${chip(s.p1, p1col, win1)}
+        <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-left:6px">${p1.univ||''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0;font-size:${isMb?24:30}px;font-weight:1000;letter-spacing:-2px;line-height:1;flex-shrink:0">
+        <span style="color:${win1?p1col:(win2?'#94a3b8':'var(--text2)')}">${p1wins}</span>
+        <span style="font-size:${isMb?14:16}px;color:#94a3b8;font-weight:900;margin:0 6px">:</span>
+        <span style="color:${win2?p2col:(win1?'#94a3b8':'var(--text2)')}">${p2wins}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:140px;align-items:flex-end">
+        ${chip(s.p2, p2col, win2)}
+        <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-right:6px">${p2.univ||''}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function _h2hRibbonCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
+  const p1 = players.find(x=>x.name===s.p1)||{};
+  const p2 = players.find(x=>x.name===s.p2)||{};
+  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
+  const w = (win1||win2) ? (win1?p1col:p2col) : '#64748b';
+  const pad = isMb ? 12 : 14;
+  return `<div style="position:relative;overflow:hidden">
+    <div style="position:absolute;left:-50px;top:12px;width:180px;height:28px;background:${w};transform:rotate(-18deg);box-shadow:0 8px 18px ${w}44;opacity:${(win1||win2)?0.92:0.45}"></div>
+    <div style="padding:${pad}px ${pad}px ${pad-2}px;display:flex;flex-direction:column;gap:${isMb?10:12}px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="min-width:0">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win1?p1col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
+          <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p1.univ||''}</div>
+        </div>
+        <div style="flex-shrink:0;display:flex;align-items:center;gap:0;font-size:${isMb?24:30}px;font-weight:1000;letter-spacing:-2px;line-height:1">
+          <span style="color:${win1?p1col:(win2?'#94a3b8':'var(--text2)')}">${p1wins}</span>
+          <span style="font-size:${isMb?14:16}px;color:#94a3b8;font-weight:900;margin:0 6px">:</span>
+          <span style="color:${win2?p2col:(win1?'#94a3b8':'var(--text2)')}">${p2wins}</span>
+        </div>
+        <div style="min-width:0;text-align:right">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win2?p2col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
+          <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p2.univ||''}</div>
+        </div>
+      </div>
+      ${(win1||win2)?`<div style="display:flex;justify-content:flex-end"><span style="font-size:9px;font-weight:900;padding:2px 10px;border-radius:999px;background:${w};color:#fff;white-space:nowrap;box-shadow:0 1px 8px ${w}55">${win1?s.p1:s.p2} 승</span></div>`:''}
+    </div>
+  </div>`;
+}
+
+function _h2hGridCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
+  const p1 = players.find(x=>x.name===s.p1)||{};
+  const p2 = players.find(x=>x.name===s.p2)||{};
+  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
+  const pad = isMb ? 12 : 14;
+  const av = (pName, col)=>{
+    const p = players.find(x=>x.name===pName)||{};
+    const sz = isMb ? 34 : 40;
+    if(p.photo) return `<img src="${toHttpsUrl(p.photo)}" style="width:${sz}px;height:${sz}px;border-radius:14px;object-fit:cover;border:2px solid ${col};flex-shrink:0">`;
+    return `<div style="width:${sz}px;height:${sz}px;border-radius:14px;background:${col}22;border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?14:16}px;color:${col};flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
+  };
+  return `<div style="padding:${pad}px ${pad}px ${pad-2}px">
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:${isMb?10:14}px;align-items:center">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        ${av(s.p1, p1col)}
+        <div style="min-width:0">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win1?p1col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
+          <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p1.univ||''}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0">
+        <div style="font-size:${isMb?24:30}px;font-weight:1000;letter-spacing:-2px;line-height:1">
+          <span style="color:${win1?p1col:(win2?'#94a3b8':'var(--text2)')}">${p1wins}</span>
+          <span style="font-size:${isMb?14:16}px;color:#94a3b8;font-weight:900;margin:0 6px">:</span>
+          <span style="color:${win2?p2col:(win1?'#94a3b8':'var(--text2)')}">${p2wins}</span>
+        </div>
+        ${(win1||win2)?`<span style="font-size:8px;font-weight:900;padding:1px 8px;border-radius:999px;background:${win1?p1col:p2col}22;color:${win1?p1col:p2col};border:1px solid ${win1?p1col:p2col}33;white-space:nowrap">${win1?s.p1:s.p2} 승</span>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;justify-content:flex-end;text-align:right">
+        <div style="min-width:0">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win2?p2col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
+          <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p2.univ||''}</div>
+        </div>
+        ${av(s.p2, p2col)}
+      </div>
+    </div>
+  </div>`;
+}
+
+function _h2hPosterCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
+  const p1 = players.find(x=>x.name===s.p1)||{};
+  const p2 = players.find(x=>x.name===s.p2)||{};
+  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
+  const h = isMb ? 126 : 148;
+  const p1pos = _h2hPlayerBgPos(s.p1);
+  const p2pos = _h2hPlayerBgPos(s.p2);
+  const bg = (p1.photo || p2.photo)
+    ? `linear-gradient(90deg, ${p1col}55, rgba(15,23,42,.22), ${p2col}55), url('${toHttpsUrl(p1.photo||p2.photo)}')`
+    : `linear-gradient(90deg, ${p1col}66, rgba(255,255,255,.15), ${p2col}66)`;
+  return `<div style="position:relative;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
+    <div style="position:absolute;inset:0;background-image:${bg};background-size:cover;background-position:${p1.photo?p1pos:p2pos};filter:blur(2px) saturate(1.1);transform:scale(1.02)"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,.35),rgba(15,23,42,.60))"></div>
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:${isMb?'12px':'16px'}">
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:${isMb?10:14}px;align-items:center;width:100%;max-width:${isMb?'520px':'720px'}">
+        <div style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:${isMb?'10px 10px':'12px 14px'};backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 10px 24px rgba(0,0,0,.18)">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.72);font-weight:800">${p1.univ||''}</div>
+          ${win1?`<div style="margin-top:6px;font-size:9px;font-weight:900;color:${p1col}">👑 승</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="font-size:${isMb?30:38}px;font-weight:1000;color:#fff;letter-spacing:-2px;line-height:1;text-shadow:0 2px 16px rgba(0,0,0,.55)">${p1wins}<span style="font-size:${isMb?16:20}px;color:rgba(255,255,255,.55);margin:0 6px">:</span>${p2wins}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.55);font-weight:900;letter-spacing:2px">VS</div>
+        </div>
+        <div style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:${isMb?'10px 10px':'12px 14px'};backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 10px 24px rgba(0,0,0,.18);text-align:right">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.72);font-weight:800">${p2.univ||''}</div>
+          ${win2?`<div style="margin-top:6px;font-size:9px;font-weight:900;color:${p2col}">👑 승</div>`:''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
 // 카드 모드별 본문 렌더링 디스패처
 function _h2hCardBody(mode, s, p1wins, p2wins, winner, p1col, p2col, gridCols, isMb, scorePad, scoreGap, bulkCb, p1bgPanel, p2bgPanel, scoreColP1, scoreColP2){
   if(mode === 'banner') return _h2hBannerCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
   if(mode === 'minimal') return _h2hMinimalCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
   if(mode === 'photo') return _h2hPhotoFullCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
   if(mode === 'classic') return _h2hClassicCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
+  if(mode === 'stack') return _h2hStackCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
+  if(mode === 'duotone') return _h2hDuoToneCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
+  if(mode === 'split') return _h2hSplitCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
+  if(mode === 'glass') return _h2hGlassCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
+  if(mode === 'pill') return _h2hPillCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
+  if(mode === 'bar') return _h2hScoreBarCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
+  if(mode === 'outline') return _h2hOutlineCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
+  if(mode === 'ribbon') return _h2hRibbonCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
+  if(mode === 'grid') return _h2hGridCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
+  if(mode === 'poster') return _h2hPosterCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
   // 기본: panel 모드
   const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
   const scoreFs = isMb ? 26 : 32, dashFs = isMb ? 16 : 18;
@@ -519,7 +886,7 @@ function indRecordsHTML(){
     const _scorePad = _h2hScorePadPx();
     const _indCardMode = _h2hCardMode();
     const _bodyHTML = _h2hCardBody(_indCardMode, s, p1wins, p2wins, winner, p1col, p2col, _gridCols, _isMb, _scorePad, _gap, bulkCbInd, p1bg, p2bg, _indScoreColP1, _indScoreColP2);
-    h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_indWrapFx||'background:var(--white);'}">
+    h+=`<div class="h2h-rec-card" style="border:var(--h2h-card-border,1px solid var(--border));border-bottom:var(--h2h-card-border-bottom,none);border-radius:var(--h2h-card-radius,12px);margin-bottom:var(--h2h-card-gap,8px);overflow:hidden;box-shadow:var(--h2h-card-shadow,none);${_indWrapFx||'background:var(--white);'}">
       <div style="cursor:pointer" onclick="openIndSessionPopup('${_indSessKey}')">${_bodyHTML}</div>
       <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:${_isMb?'7px 10px':'8px 14px'};background:var(--bg2);flex-wrap:wrap">
         <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>
@@ -693,7 +1060,7 @@ function gjRecordsHTML(proOnly){
     const _scorePad = _h2hScorePadPx();
     const _gjCardMode = _h2hCardMode();
     const _gjBodyHTML = _h2hCardBody(_gjCardMode, s, p1wins, p2wins, winner, _gjP1Col, _gjP2Col, _gridCols, _isMb, _scorePad, _gap, bulkCbGj, gj_p1bg, gj_p2bg, _gjScoreColP1, _gjScoreColP2);
-    h+=`<div style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;${_gjWrapFx||'background:var(--white);'}">
+    h+=`<div class="h2h-rec-card" style="border:var(--h2h-card-border,1px solid var(--border));border-bottom:var(--h2h-card-border-bottom,none);border-radius:var(--h2h-card-radius,12px);margin-bottom:var(--h2h-card-gap,8px);overflow:hidden;box-shadow:var(--h2h-card-shadow,none);${_gjWrapFx||'background:var(--white);'}">
       <div style="cursor:pointer" onclick="openGJSessionPopup('${_gjSessKey}')">${_gjBodyHTML}</div>
       <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:${_isMb?'7px 10px':'8px 14px'};background:var(--bg2);flex-wrap:wrap">
         <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>

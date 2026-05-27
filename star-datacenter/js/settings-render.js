@@ -885,6 +885,16 @@ ${_scfgD('notice','📢 공지 관리')}
               {v:'bold-border',   l:'굵은선',    icon:'🖊️', desc:'컬러 두꺼운 테두리'},
               {v:'shadow-left',   l:'사이드 쉐도우', icon:'🌗', desc:'측면 강조 그림자'},
               {v:'gradient-bg',   l:'그라데이션', icon:'🌈', desc:'모드 컬러 그라데이션 배경'},
+              {v:'soft-round',    l:'소프트',    icon:'🫧', desc:'더 둥글고 부드러운 카드'},
+              {v:'bevel',         l:'베벨',      icon:'🔻', desc:'대각 모서리 베벨 느낌'},
+              {v:'cut-corner',    l:'컷코너',    icon:'✂️', desc:'모서리 컷(clip-path)'},
+              {v:'double',        l:'이중선',    icon:'🧷', desc:'테두리 이중 라인'},
+              {v:'deep',          l:'딥쉐도우',  icon:'🕳️', desc:'깊은 그림자 강조'},
+              {v:'underline',     l:'언더라인',  icon:'📏', desc:'하단 컬러 라인'},
+              {v:'inset',         l:'인셋',      icon:'🧊', desc:'안쪽 테두리(inset)'},
+              {v:'paper',         l:'페이퍼',    icon:'📄', desc:'종이 텍스처 느낌'},
+              {v:'topline',       l:'탑라인',    icon:'⬆️', desc:'상단 컬러 바'},
+              {v:'split-bg',      l:'스플릿BG',  icon:'🌓', desc:'좌측 컬러 틴트 분할'},
             ];
             return _shapes.map(s=>`<button type="button"
               onclick="if(typeof cfgSetRecCardShape==='function')cfgSetRecCardShape('${s.v}');try{render();}catch(e){}"
@@ -1565,6 +1575,16 @@ ${_scfgD('notice','📢 공지 관리')}
             {v:'minimal', icon:'➖', l:'미니멀',   desc:'아바타+텍스트, 깔끔'},
             {v:'photo',   icon:'📸', l:'사진전체', desc:'전면 배경사진 오버레이'},
             {v:'classic', icon:'📋', l:'클래식',   desc:'텍스트 위주 심플'},
+            {v:'stack',   icon:'🧱', l:'스택',     desc:'상단 라인+중앙 스코어'},
+            {v:'duotone', icon:'🎨', l:'듀오톤',   desc:'양쪽 컬러 패널'},
+            {v:'split',   icon:'🌓', l:'스플릿',   desc:'연한 컬러 분할'},
+            {v:'glass',   icon:'🫧', l:'글래스',   desc:'유리 패널(블러)'},
+            {v:'pill',    icon:'💊', l:'필',       desc:'캡슐형 배너'},
+            {v:'bar',     icon:'📊', l:'바',       desc:'승률 바 표시'},
+            {v:'outline', icon:'🧩', l:'아웃라인', desc:'테두리 카드'},
+            {v:'ribbon',  icon:'🎀', l:'리본',     desc:'승리 리본 강조'},
+            {v:'grid',    icon:'🔲', l:'그리드',   desc:'아바타 그리드'},
+            {v:'poster',  icon:'🎬', l:'포스터',   desc:'시네마틱 오버레이'},
           ];
           return _modes.map(m=>`<button type="button"
             onclick="localStorage.setItem('su_h2h_card_mode','${m.v}');try{render();}catch(e){}" 
