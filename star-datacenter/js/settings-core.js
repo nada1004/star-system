@@ -199,7 +199,7 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','paste'],
   '🖼️ 스트리머/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','univlogoimg','si','siAssign','pdModeBadge','pd','matchdetail','streamerheader'],
-  '🧾 카드/기록':['reccard','tourneycard','procompcard','h2hpanel','sharecard','calui'],
+  '🧾 카드/기록':['reccard','tourneycard','procompcard','h2hpanel','minicard','civilcard','univckcard','univmcard','tiertourcard','tiertourleaguecard','tiertourbrackcard','procompleaguecard','procompteamcard','procompgjcard','sharecard','calui'],
   '🎨 UI/테마':['designv2','hdr','appfont','uisize','uibtn','uifilter','tablabels','tabcolors','autofitall'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','fab'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],

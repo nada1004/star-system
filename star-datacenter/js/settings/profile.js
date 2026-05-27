@@ -36,6 +36,16 @@
     { v:'clover',    label:'클로버',    icon:'🍀', desc:'4잎 클로버형',        radius:'50%',  clip:'polygon(50% 20%,58% 35%,75% 25%,65% 42%,82% 48%,65% 55%,75% 72%,58% 62%,50% 80%,42% 62%,25% 72%,35% 55%,18% 48%,35% 42%,25% 25%,42% 35%)', preview:'border-radius:50%;clip-path:polygon(50% 20%,58% 35%,75% 25%,65% 42%,82% 48%,65% 55%,75% 72%,58% 62%,50% 80%,42% 62%,25% 72%,35% 55%,18% 48%,35% 42%,25% 25%,42% 35%)' },
     { v:'gem',       label:'젬스톤',    icon:'💎', desc:'보석 커팅',           radius:'0',    clip:'polygon(50% 0%,85% 20%,100% 55%,75% 100%,25% 100%,0% 55%,15% 20%)',                         preview:'clip-path:polygon(50% 0%,85% 20%,100% 55%,75% 100%,25% 100%,0% 55%,15% 20%)' },
     { v:'flag',      label:'깃발',      icon:'🚩', desc:'깃발 삼각형',         radius:'0',    clip:'polygon(0% 0%,100% 0%,75% 50%,100% 100%,0% 100%)',                                           preview:'clip-path:polygon(0% 0%,100% 0%,75% 50%,100% 100%,0% 100%)' },
+    { v:'pill',      label:'알약형',    icon:'💊', desc:'좌우 완전 타원',       radius:'50%',  clip:'none',                                                                                       preview:'border-radius:50px' },
+    { v:'stadium',   label:'스타디움',  icon:'🏟️', desc:'좌우 둥근 직사각형',  radius:'50%',  clip:'none',                                                                                       preview:'border-radius:40% 40% 40% 40% / 60% 60% 60% 60%' },
+    { v:'teardrop',  label:'물방울',    icon:'💧', desc:'아래 뾰족 물방울',     radius:'50% 50% 50% 50% / 60% 60% 40% 40%', clip:'none',                                                         preview:'border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;transform:rotate(45deg)' },
+    { v:'moon',      label:'초승달',    icon:'🌙', desc:'초승달 모양',          radius:'50%',  clip:'ellipse(50% 50% at 65% 50%)',                                                                preview:'border-radius:50%;clip-path:ellipse(50% 50% at 65% 50%)' },
+    { v:'tv',        label:'TV 화면',   icon:'📺', desc:'모서리 곡선 직사각형', radius:'14%',  clip:'none',                                                                                       preview:'border-radius:14%' },
+    { v:'flower',    label:'꽃잎',      icon:'🌸', desc:'6잎 꽃 모양',          radius:'50%',  clip:'polygon(50% 5%,61% 29%,84% 20%,74% 44%,98% 50%,74% 56%,84% 80%,61% 71%,50% 95%,39% 71%,16% 80%,26% 56%,2% 50%,26% 44%,16% 20%,39% 29%)', preview:'border-radius:50%;clip-path:polygon(50% 5%,61% 29%,84% 20%,74% 44%,98% 50%,74% 56%,84% 80%,61% 71%,50% 95%,39% 71%,16% 80%,26% 56%,2% 50%,26% 44%,16% 20%,39% 29%)' },
+    { v:'pac',       label:'팩맨',      icon:'🟡', desc:'팩맨 모양',            radius:'50%',  clip:'polygon(100% 35%,55% 50%,100% 65%,100% 100%,0% 100%,0% 0%,100% 0%)',                        preview:'border-radius:50%;clip-path:polygon(100% 35%,55% 50%,100% 65%,100% 100%,0% 100%,0% 0%,100% 0%)' },
+    { v:'ring-cut',  label:'도넛컷',    icon:'⭕', desc:'외곽 링 느낌',          radius:'50%',  clip:'none',                                                                                       preview:'border-radius:50%;outline:4px solid currentColor;outline-offset:-4px' },
+    { v:'kite',      label:'연(연풍)',   icon:'🪁', desc:'마름모 세로',           radius:'0',    clip:'polygon(50% 0%,100% 40%,50% 100%,0% 40%)',                                                   preview:'clip-path:polygon(50% 0%,100% 40%,50% 100%,0% 40%)' },
+    { v:'notch',     label:'노치',       icon:'📱', desc:'상단 노치 사각형',      radius:'8px',  clip:'polygon(25% 0%,75% 0%,75% 12%,100% 12%,100% 100%,0% 100%,0% 12%,25% 12%)',                  preview:'border-radius:8px;clip-path:polygon(25% 0%,75% 0%,75% 12%,100% 12%,100% 100%,0% 100%,0% 12%,25% 12%)' },
   ];
 
   function renderProfileShapeSection(){
@@ -50,7 +60,7 @@
     body.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:16px">
         <div>
-          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">📐 모양 (27가지)</div>
+          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">📐 모양 (37가지)</div>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px">
             ${_SHAPE_OPTIONS.map(s=>{
               const sel = shape===s.v;

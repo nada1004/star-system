@@ -2028,7 +2028,13 @@ let histPage={mini:0, ck:0, univm:0, comp:0, pro:0, tiertour:0, tt:0, ind:0, gj:
 let playerHistPage=0; // 스트리머 상세 페이지 상태
 const HIST_PAGE_SIZE=20;
 const HIST_PAGE_SIZE_MOBILE=10;
-function getHistPageSize(){return window.innerWidth<=768?HIST_PAGE_SIZE_MOBILE:HIST_PAGE_SIZE;}
+function getHistPageSize(){
+  try{
+    const custom = parseInt(localStorage.getItem('su_hist_page_size')||'0',10)||0;
+    if(custom>=5 && custom<=200) return custom;
+  }catch(e){}
+  return window.innerWidth<=768?HIST_PAGE_SIZE_MOBILE:HIST_PAGE_SIZE;
+}
 const PLAYER_HIST_PAGE_SIZE=10; // REQ4: 스트리머 상세 10개 이상일 때 페이지네이션
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calView=localStorage.getItem('su_cal_view')||'month';
 let calTypeFilter='all';
