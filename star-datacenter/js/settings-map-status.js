@@ -1,5 +1,7 @@
 /* ══════════════════════════════════════
    설정 분리: 맵/약자/상태 아이콘
+   _cfgRefreshSiRow / _renderCfgSiList 권위 소스 (SINGLE SOURCE)
+   WARNING fix: tier-tour.js의 중복 정의 제거됨
 ══════════════════════════════════════ */
 function _refreshMapList(){
   const listEl=document.getElementById('map-list');

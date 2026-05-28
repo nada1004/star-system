@@ -1,5 +1,7 @@
 /* ════════════════════════════════════════════════════════
    settings-crud.js  —  스트리머 데이터 CRUD 및 설정 수정
+   addPlayer / addTier / addUniv / _univDrag* 권위 소스 (SINGLE SOURCE)
+   WARNING fix: settings.js / tier-tour.js의 중복 정의 제거됨
    ────────────────────────────────────────────────────────
    §1  선수(스트리머) CRUD     — addPlayer / bulkAddPlayers / openEP / savePlayer / delPlayer
    §2  openEP 헬퍼            — _savePhotoPos / 포지션 변수 초기화
@@ -1220,6 +1222,10 @@ function openRE(mode,idx){
 }
 function saveRow(){
   const d=document.getElementById('re-d')?.value||'';
+  // (버그픽스) reIdx가 범위 밖이거나 해당 배열 항목이 없으면 조기 종료
+  const _RE_ARR_GUARD = { mini: miniM, univm: univM, comp: comps, ck: ckM, pro: proM, tt: ttM, progj: gjM, gj: gjM, ind: indM };
+  const _guardArr = _RE_ARR_GUARD[reMode];
+  if(_guardArr && (reIdx < 0 || reIdx >= _guardArr.length || !_guardArr[reIdx])){ console.warn('[saveRow] invalid reIdx or missing item', reMode, reIdx); return; }
   if(reMode==='mini'){
     miniM[reIdx].d=d;
     miniM[reIdx].a=document.getElementById('re-a')?.value||miniM[reIdx].a;
@@ -1314,20 +1320,23 @@ function saveRow(){
     if(_newMemB.length) m.teamBMembers = _newMemB;
   } else if(reMode==='progj'){
     const m=gjM[reIdx];m.d=d;
-    m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;
-    m.lName=document.getElementById('re-gj-l')?.value.trim()||m.lName;
-    m.map=document.getElementById('re-gj-map')?.value.trim()||m.map;
+    const _gjw=document.getElementById('re-gj-w')?.value.trim(); if(_gjw!==undefined&&_gjw!=='') m.wName=_gjw; else if(document.getElementById('re-gj-w')) m.wName=_gjw||m.wName;
+    const _gjl=document.getElementById('re-gj-l')?.value.trim(); if(_gjl!==undefined&&_gjl!=='') m.lName=_gjl; else if(document.getElementById('re-gj-l')) m.lName=_gjl||m.lName;
+    // (버그픽스) 맵을 빈 문자열로 지울 수 있도록: 입력란이 존재하면 무조건 그 값 사용
+    const _gjmapEl=document.getElementById('re-gj-map'); if(_gjmapEl) m.map=_gjmapEl.value.trim();
     m._proLabel=true;
   } else if(reMode==='gj'){
     const m=gjM[reIdx];m.d=d;
-    m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;
-    m.lName=document.getElementById('re-gj-l')?.value.trim()||m.lName;
-    m.map=document.getElementById('re-gj-map')?.value.trim()||m.map;
+    const _gjw=document.getElementById('re-gj-w')?.value.trim(); if(_gjw) m.wName=_gjw;
+    const _gjl=document.getElementById('re-gj-l')?.value.trim(); if(_gjl) m.lName=_gjl;
+    // (버그픽스) 맵을 빈 문자열로 지울 수 있도록: 입력란이 존재하면 무조건 그 값 사용
+    const _gjmapEl=document.getElementById('re-gj-map'); if(_gjmapEl) m.map=_gjmapEl.value.trim();
   } else if(reMode==='ind'){
     const m=indM[reIdx];m.d=d;
-    m.wName=document.getElementById('re-gj-w')?.value.trim()||m.wName;
-    m.lName=document.getElementById('re-gj-l')?.value.trim()||m.lName;
-    m.map=document.getElementById('re-gj-map')?.value.trim()||m.map;
+    const _gjw=document.getElementById('re-gj-w')?.value.trim(); if(_gjw) m.wName=_gjw;
+    const _gjl=document.getElementById('re-gj-l')?.value.trim(); if(_gjl) m.lName=_gjl;
+    // (버그픽스) 맵을 빈 문자열로 지울 수 있도록: 입력란이 존재하면 무조건 그 값 사용
+    const _gjmapEl=document.getElementById('re-gj-map'); if(_gjmapEl) m.map=_gjmapEl.value.trim();
   }
   // 🎙️ 캐스터/스트리머 저장 (모든 mode 공통)
   const _reCaster = (document.getElementById('re-caster')?.value ?? '').trim();

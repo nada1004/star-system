@@ -1,3 +1,4 @@
+/* LEGACY - DO NOT LOAD - 분리된 파일로 대체됨. index.html에 추가하지 마세요. */
 // ── 검색바 실시간 DOM 필터링 (render() 없이 한글 IME 호환) ──────────────────
 function recFilterInPlace(mode, query) {
   const q = (query || '').toLowerCase().trim();
@@ -362,7 +363,8 @@ function findPlayerByPartialName(namePart) {
   // 메모 토큰 분리: 공백/쉼표뿐 아니라 ":" "/" "()" "[]" 등도 구분자로 처리
   const _memoTokens = (memoNorm) => {
     return String(memoNorm||'')
-      .split(/[\s,，;|\/\\\r\n:\(\)\[\]\{\}<>]+/)
+      .split(/[\s,，;|\/\
+:\(\)\[\]\{\}<>]+/)
       .map(m=>m.trim())
       .filter(Boolean);
   };
@@ -539,7 +541,8 @@ function findPlayerByPartialName(namePart) {
 function splitPasteLines(raw) {
   if (!raw) return [];
   // 줄바꿈 1차 분리
-  const lines = raw.split(/\r?\n/);
+  const lines = raw.split(/?
+/);
   const result = [];
   lines.forEach(line => {
     line = line.trim();
@@ -607,11 +610,19 @@ function splitPasteLines(raw) {
 
 /**
  * 새 형식 (Format D) 파싱:
- * N경기 - N티어\n패배!\n이름T\nVS\n이름Z\n승리!\n맵: 맵이름\n경기일 기준...
+ * N경기 - N티어
+패배!
+이름T
+VS
+이름Z
+승리!
+맵: 맵이름
+경기일 기준...
  */
 function parseFormatD_blocks(raw) {
   const results = [];
-  const lines = raw.split(/\r?\n/).map(l=>l.trim());
+  const lines = raw.split(/?
+/).map(l=>l.trim());
   // 빈 줄 제외 없이 인덱스로 처리
   let i=0;
   const nonEmpty = lines.filter(l=>l); // 빈줄 제외 배열
@@ -636,7 +647,8 @@ function parseFormatD_blocks(raw) {
       name += arr[nextIdx];
       nextIdx++;
     }
-    // 또 다음 줄이 선픽/후픽이면 붙임 (이름P\n선픽 형태)
+    // 또 다음 줄이 선픽/후픽이면 붙임 (이름P
+선픽 형태)
     if(nextIdx < arr.length && /^(선픽|후픽)$/.test(arr[nextIdx])){
       name += arr[nextIdx];
       nextIdx++;
@@ -714,7 +726,17 @@ function parseFormatD_blocks(raw) {
     }
 
     // ── 패턴 B: 승리!/패배! → (·구분자) → 이름 → VS → 이름 → 승리!/패배! → 맵 ──
-    // 예: 승리!\n·\n패배!\n비재희\nZ\nVS\n엄보리\nP\n맵: 실피드\n최근 90일...\n6경기-2티어
+    // 예: 승리!
+·
+패배!
+비재희
+Z
+VS
+엄보리
+P
+맵: 실피드
+최근 90일...
+6경기-2티어
     if(isResultLine(line)){
       let result1=line; ni++;
       // '·' 같은 구분자 스킵
@@ -792,7 +814,7 @@ function parsePasteLine(line) {
   // (요청사항) "1경기" 번호를 미리 추출해 보관 (후속 prefix 제거로 사라지지 않게)
   // - 예: "1경기 [실피] 도재욱P (패) vs (승) 임홍규Z"
   let _gameNum = null;
-  const _gm = line.match(/^\s*(\d+)\s*경기\b/);
+  const _gm = line.match(/^\s*(\d+)\s*경기/);
   if (_gm) _gameNum = parseInt(_gm[1]);
 
   // 앞쪽 번호/기호 제거
@@ -835,7 +857,7 @@ function parsePasteLine(line) {
   // - ⭕ = 승 / ❌ = 패 (반대도 지원)
   // - 앞쪽 [맵] 표기 지원, 뒤쪽 [맵] 표기도 지원
   // - 종족(T/Z/P/N) 표기는 입력에 있어도 applyGameResult에서 처리 가능하지만, 여기서도 일부 정규화
-  if (/\bvs\b/i.test(line)) {
+  if (/vs/i.test(line)) {
     const WIN_MARKS  = ['✅', '⭕', '☑', '🔵', '🟢', '🟦', '○'];
     const LOSE_MARKS = ['❌', '✖', '⬜', '🔴', '🟥', '●'];
     const ALL_MARKS  = [...WIN_MARKS, ...LOSE_MARKS];
@@ -1423,7 +1445,7 @@ function parseSetSeparator(line) {
 
   // 패턴 6: "1세트 2경기 ..." 처럼 세트 번호가 문장 앞에 붙는 경우도 세트 헤더로 인식
   // (기존에는 '1세트' 단독 줄만 인식해서, 같은 줄에 경기 정보가 있으면 세트가 항상 1로 보일 수 있었음)
-  const m6 = t.match(/^(\d+)\s*(?:세트|셋|set)\b/i);
+  const m6 = t.match(/^(\d+)\s*(?:세트|셋|set)/i);
   if (m6) return parseInt(m6[1]);
 
   return null;
@@ -1447,7 +1469,13 @@ function pastePreview() {
   if (!previewEl) return;
   if (!raw) { previewEl.innerHTML = ''; if(applyBtn) applyBtn.style.display='none'; return; }
 
-  // ── 형식 D 우선 감지: 패배!/승리! 형식 (N경기 - N티어\n패배!\n이름\nVS\n이름\n승리!\n맵: ...) ──
+  // ── 형식 D 우선 감지: 패배!/승리! 형식 (N경기 - N티어
+패배!
+이름
+VS
+이름
+승리!
+맵: ...) ──
   if (raw.includes('패배!') || raw.includes('승리!')) {
     const dResults = parseFormatD_blocks(raw);
     if (dResults.length > 0) {
@@ -1571,8 +1599,8 @@ function pastePreview() {
       const _restLine = (_isoDateM[3] || '').trim();
       if (_restLine) {
         // 탭 구분 TSV 형식: 날짜가 이미 추출됐으므로 나머지 컬럼만 파싱
-        if (_restLine.includes('\t')) {
-          const _tc = _restLine.split('\t');
+        if (_restLine.includes('	')) {
+          const _tc = _restLine.split('	');
           const _tEx = s => {
             const t = (s||'').trim();
             // "이광용(P)" 형태
@@ -1585,8 +1613,8 @@ function pastePreview() {
           };
 
           // ── 1인칭 TSV: 기준 선수 설정 시 ──
-          // 형식: 상대(종족)\t맵\t±점수\t...\t스코어
-          // 예)  유민.(P)\t써킷\t+14.0\t\t3/2
+          // 형식: 상대(종족)	맵	±점수	...	스코어
+          // 예)  유민.(P)	써킷	+14.0		3/2
           const _refPlayer = document.getElementById('paste-ref-player')?.value?.trim();
           if (_refPlayer && _tc.length >= 3) {
             const _scoreStr = (_tc[2] || '').trim();
@@ -1606,7 +1634,7 @@ function pastePreview() {
             }
           }
 
-          // ── 2인칭 TSV: 선수1(종족)\t선수2(종족)\t맵\t승/패(ELO)\t[타입] ──
+          // ── 2인칭 TSV: 선수1(종족)	선수2(종족)	맵	승/패(ELO)	[타입] ──
           const _tRes = (_tc[3] || '').trim();
           const _tIsW = _tRes.startsWith('승'), _tIsL = _tRes.startsWith('패');
           if (_tc.length >= 4 && (_tIsW || _tIsL) && _tc[0] && _tc[1]) {
@@ -1628,8 +1656,8 @@ function pastePreview() {
             return;
           }
 
-          // ── (요청사항) 대회 토너먼트 TSV: 선수1(종족)\t선수2(종족)\t맵\tELO변동\t단판/3판... \t메모... ──
-          // 예) 2026-04-17\t이광용P\t김성민P\t네오 실피드\t16.7\t단판\tE-SCORE...
+          // ── (요청사항) 대회 토너먼트 TSV: 선수1(종족)	선수2(종족)	맵	ELO변동	단판/3판... 	메모... ──
+          // 예) 2026-04-17	이광용P	김성민P	네오 실피드	16.7	단판	E-SCORE...
           // 규칙: ELO가 +면 선수1 승, -면 선수2 승 (숫자 없으면 선수1 승으로 가정)
           if (_tc.length >= 4 && _tc[0] && _tc[1] && _tc[2]) {
             const p1 = _tEx(_tc[0]);
@@ -1820,9 +1848,9 @@ function pastePreview() {
     }
 
     // ── 형식 G: 탭 구분 ELO 형식 ──
-    // 날짜\t선수1(종족)\t선수2(종족)\t맵\t승(+N)/패(-N)\t유형\t...
-    if (trimmed.includes('\t')) {
-      const cols = trimmed.split('\t');
+    // 날짜	선수1(종족)	선수2(종족)	맵	승(+N)/패(-N)	유형	...
+    if (trimmed.includes('	')) {
+      const cols = trimmed.split('	');
       const _tsvDate = cols[0] && /^\d{4}-\d{2}-\d{2}$/.test(cols[0].trim()) ? cols[0].trim() : null;
       const _tsvResult = cols[4] ? cols[4].trim() : '';
       const _tsvIsWin  = _tsvResult.startsWith('승');
@@ -2609,7 +2637,8 @@ function pasteSelectPlayer(idx, role, name) {
     const alias = originalName.trim();
     if (alias && alias !== p.name) {
       const existingMemo = (p.memo || '').trim();
-      const memoTokens = existingMemo ? existingMemo.split(/[\s,\n]+/).map(s=>s.trim()).filter(Boolean) : [];
+      const memoTokens = existingMemo ? existingMemo.split(/[\s,
+]+/).map(s=>s.trim()).filter(Boolean) : [];
       if (!memoTokens.includes(alias)) {
         p.memo = memoTokens.length ? existingMemo + ' ' + alias : alias;
         save();
@@ -2745,8 +2774,13 @@ function _confirmDupBeforeSave(toAdd){
   const total = entries.reduce((s,x)=>s+x.count,0);
   if (total <= 0) return true;
   const nm = (k) => ({ ind:'개인전', gj:'끝장전', mini:'미니대전', univm:'대학대전', ck:'대학CK', tt:'티어대회', comp:'대회', pro:'프로리그' }[k] || k);
-  const detail = entries.map(x => `- ${nm(x.k)}: ${x.count}건`).join('\n');
-  return confirm(`⚠️ 이미 저장된 중복 경기가 ${total}건 있습니다.\n${detail}\n\n그래도 저장할까요?\n(확인=저장 / 취소=중단)`);
+  const detail = entries.map(x => `- ${nm(x.k)}: ${x.count}건`).join('
+');
+  return confirm(`⚠️ 이미 저장된 중복 경기가 ${total}건 있습니다.
+${detail}
+
+그래도 저장할까요?
+(확인=저장 / 취소=중단)`);
 }
 
 function pasteApply() {
@@ -2793,7 +2827,8 @@ function pasteApply() {
       window._grpPasteApplyLogic = _grpPasteApplyLogic;
     }
     if (typeof window._grpPasteApplyLogic !== 'function') {
-      alert('일괄 입력 저장 모듈이 로드되지 않았습니다.\n페이지 새로고침 후 다시 시도해주세요.');
+      alert('일괄 입력 저장 모듈이 로드되지 않았습니다.
+페이지 새로고침 후 다시 시도해주세요.');
       return;
     }
 
@@ -2815,7 +2850,10 @@ function pasteApply() {
 
   // 팀전(2:2 등) 라인은 1:1 전적 모드(개인전/끝장전/미니대전)에서 저장할 수 없음
   if (savable.some(r => r._isTeam) && ['individual','ind','gj','mini'].includes(mode)) {
-    alert('⛔ 팀전(2:2) 자동인식 라인이 포함되어 있습니다.\n개인전/끝장전/미니대전 모드에서는 팀전 저장이 지원되지 않습니다.\n\n대학CK/티어대회/프로리그/대학대전/대회 모드로 저장해주세요.');
+    alert('⛔ 팀전(2:2) 자동인식 라인이 포함되어 있습니다.
+개인전/끝장전/미니대전 모드에서는 팀전 저장이 지원되지 않습니다.
+
+대학CK/티어대회/프로리그/대학대전/대회 모드로 저장해주세요.');
     return;
   }
 
@@ -2829,7 +2867,8 @@ function pasteApply() {
     const raw = String(localStorage.getItem('su_paste_route_rules')||'').trim();
     if(!raw) return [];
     const out=[];
-    raw.split(/\r?\n/).map(l=>l.trim()).filter(l=>l && !l.startsWith('#')).forEach(line=>{
+    raw.split(/?
+/).map(l=>l.trim()).filter(l=>l && !l.startsWith('#')).forEach(line=>{
       const parts = line.split('=>').map(s=>s.trim());
       if(parts.length<2) return;
       const pat = parts[0];
@@ -3052,7 +3091,8 @@ function pasteApply() {
     save();
     const _tot = savable.length;
     const _iC=_mixGroups.ind.length, _gC=_mixGroups.gj.length, _mC=_mixGroups.mini.length;
-    alert(`✅ 혼합 저장 완료\n개인전 ${_iC}건 / 끝장전 ${_gC}건 / 미니대전 ${_mC}건 (총 ${_tot}건)`);
+    alert(`✅ 혼합 저장 완료
+개인전 ${_iC}건 / 끝장전 ${_gC}건 / 미니대전 ${_mC}건 (총 ${_tot}건)`);
     cm('pasteModal');
     // 외부탭(📎/외부2/외부3)에서 넘어온 경우: 저장 후 화면이 리셋(새로고침)되지 않게 render를 생략
     if(!_fromHistExt){
@@ -3199,12 +3239,18 @@ function pasteApply() {
         const sample = dupRows.slice(0,5).map(x=>{
           const mm = (x && x.m) ? String(x.m).trim() : '';
           return String(x.w||'') + ' vs ' + String(x.l||'') + (mm ? (' ('+mm+')') : '');
-        }).join('\n');
-        const extra = (dupRows.length>5) ? ('\n... 외 ' + (dupRows.length-5) + '건') : '';
+        }).join('
+');
+        const extra = (dupRows.length>5) ? ('
+... 외 ' + (dupRows.length-5) + '건') : '';
         const okAll = confirm(
-          '⚠️ 입력 내용에 중복 경기 ' + dupRows.length + '건이 있습니다.\n'
+          '⚠️ 입력 내용에 중복 경기 ' + dupRows.length + '건이 있습니다.
+'
           + sample + extra
-          + '\n\n그래도 중복 포함해서 모두 저장할까요?\n(확인=모두 저장 / 취소=중복 제거 후 저장)'
+          + '
+
+그래도 중복 포함해서 모두 저장할까요?
+(확인=모두 저장 / 취소=중복 제거 후 저장)'
         );
         if(!okAll){
           const gameSet2 = new Set();
@@ -3549,7 +3595,9 @@ function pasteApply() {
 }
 
 function cleanupIndGjDuplicates(){
-  if(!confirm('4월 1일부터 현재까지의 개인전/끝장전/프로리그 끝장전 중복 데이터를 제거하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) return;
+  if(!confirm('4월 1일부터 현재까지의 개인전/끝장전/프로리그 끝장전 중복 데이터를 제거하시겠습니까?
+
+이 작업은 되돌릴 수 없습니다.')) return;
   
   const _normMap = s => resolveMapName((s||'').trim()) || (s||'').trim();
   const startDate = '2024-04-01';
@@ -3617,11 +3665,16 @@ function cleanupIndGjDuplicates(){
   
   save();
   render();
-  alert(`✅ 중복 제거 완료 (4월 1일 ~ ${today})\n개인전: ${indRemoved}건 제거\n끝장전: ${gjRemoved}건 제거`);
+  alert(`✅ 중복 제거 완료 (4월 1일 ~ ${today})
+개인전: ${indRemoved}건 제거
+끝장전: ${gjRemoved}건 제거`);
 }
 
 function clearAllIndRecords(){
-  if(!confirm('개인전 기록 전체를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.\n관련 선수들의 개인 전적 히스토리도 함께 정리됩니다.')) return;
+  if(!confirm('개인전 기록 전체를 삭제하시겠습니까?
+
+이 작업은 되돌릴 수 없습니다.
+관련 선수들의 개인 전적 히스토리도 함께 정리됩니다.')) return;
 
   let indRemoved = 0;
 
@@ -3646,7 +3699,12 @@ function clearAllIndRecords(){
 }
 
 function recalculateAllELO(){
-  if(!confirm('모든 선수의 ELO를 처음부터 다시 계산하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.\n- 모든 ELO가 기본값으로 초기화됩니다\n- 승/패/포인트가 재계산됩니다\n- 모든 기록이 날짜순으로 다시 적용됩니다')) return;
+  if(!confirm('모든 선수의 ELO를 처음부터 다시 계산하시겠습니까?
+
+이 작업은 되돌릴 수 없습니다.
+- 모든 ELO가 기본값으로 초기화됩니다
+- 승/패/포인트가 재계산됩니다
+- 모든 기록이 날짜순으로 다시 적용됩니다')) return;
 
   // 기존 기록 백업
   const backupHistory = {};
@@ -3844,7 +3902,9 @@ function recalculateAllELO(){
 
   save();
   render();
-  alert(`✅ ELO 재계산 완료\n총 ${appliedCount}경기 재계산\n${restoredCount}건 백업 복구`);
+  alert(`✅ ELO 재계산 완료
+총 ${appliedCount}경기 재계산
+${restoredCount}건 백업 복구`);
 }
 
 function onPasteModeChange(val) {
@@ -3868,7 +3928,8 @@ function onPasteModeChange(val) {
       dl.innerHTML = players.flatMap(p => {
         const opts = [`<option value="${(p.name||'').replace(/"/g,'&quot;')}">`];
         if (p.memo) {
-          p.memo.split(/[\s,，\n]+/).map(m=>m.trim()).filter(m=>m&&m!==p.name&&m.length>=2)
+          p.memo.split(/[\s,，
+]+/).map(m=>m.trim()).filter(m=>m&&m!==p.name&&m.length>=2)
             .forEach(alias => opts.push(`<option value="${alias.replace(/"/g,'&quot;')}">`));
         }
         return opts;
@@ -4021,8 +4082,8 @@ function openPasteModal() {
 }
 
 /* ── 미니대전 전용 붙여넣기 ── */
-function openMiniPasteModal() {
-  window._miniPasteType = (typeof miniType !== 'undefined' ? miniType : 'mini');
+function openMiniPasteModal(miniType) {
+  window._miniPasteType = (miniType && typeof miniType === 'string') ? miniType : 'mini';
   openPasteModal();
   window._forcedPasteMode = 'mini';
   const sel = document.getElementById('paste-mode');
@@ -4064,7 +4125,8 @@ function openIndPasteModal() {
     dl.innerHTML = players.flatMap(p => {
       const opts = [`<option value="${(p.name||'').replace(/"/g,'&quot;')}">`];
       if (p.memo) {
-        p.memo.split(/[\s,，\n]+/).map(m=>m.trim()).filter(m=>m&&m!==p.name&&m.length>=2)
+        p.memo.split(/[\s,，
+]+/).map(m=>m.trim()).filter(m=>m&&m!==p.name&&m.length>=2)
           .forEach(alias => opts.push(`<option value="${alias.replace(/"/g,'&quot;')}">`));
       }
       return opts;
@@ -4185,7 +4247,9 @@ function setProFormat(n) {
 function insertProMatchSep() {
   const ta = document.getElementById('pro-paste-input');
   if (!ta) return;
-  const sep = '\n===경기구분===\n';
+  const sep = '
+===경기구분===
+';
   const pos = ta.selectionStart;
   ta.value = ta.value.slice(0, pos) + sep + ta.value.slice(pos);
   ta.selectionStart = ta.selectionEnd = pos + sep.length;
@@ -4614,7 +4678,8 @@ function renderProPreview(results) {
       // 별칭 자동 저장
       const origName = role==='w' ? r.winName : r.loseName;
       if (origName && origName !== p.name) {
-        const memos = (p.memo||'').split(/[\s,\n]+/).map(s=>s.trim()).filter(Boolean);
+        const memos = (p.memo||'').split(/[\s,
+]+/).map(s=>s.trim()).filter(Boolean);
         if (!memos.includes(origName)) {
           p.memo = memos.length ? p.memo + ' ' + origName : origName;
           save();

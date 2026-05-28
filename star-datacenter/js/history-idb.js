@@ -1,3 +1,4 @@
+/* LEGACY - NOT LOADED — 레거시 파일. index.html에서 로드되지 않습니다. */
 /* ══════════════════════════════════════
    IndexedDB 1차 도입
    - 경기 기록/대회/사진/기초 데이터 localStorage → IndexedDB로 분리

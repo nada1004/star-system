@@ -1,3 +1,4 @@
+/* LEGACY - DO NOT LOAD - 분리된 파일로 대체됨. index.html에 추가하지 마세요. */
 function rHist(C,T){
   T.innerText='📅 대전 기록';
   // (A안) 하위 탭/기간 필터를 접기/펼치기
@@ -532,7 +533,7 @@ function histTourneyHTML(context){
                 ${_univIconA}
                 <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${a||'미정'}</span>
               </div>
-              ${(_ab.a||[]).length?`<button class="grp-mem-btn" style="--mem-col:${ca||'#3b82f6'};" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}','${ca}',${_aMemJson})"><span class="mem-ico">👥</span><span>${(_ab.a||[]).length}명</span></button>`:''}
+              ${(_ab.a||[]).length?`<button class="grp-mem-btn" style="--mem-col:${ca||'#3b82f6'};" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\'")}','${ca}',${_aMemJson})"><span class="mem-ico">👥</span><span>${(_ab.a||[]).length}명</span></button>`:''}
             </div>
             <div class="grp-score-col" style="text-align:center;min-width:80px">
               <div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px" onclick="event.stopPropagation();toggleDetail('${key}')">
@@ -546,7 +547,7 @@ function histTourneyHTML(context){
                 ${_univIconB}
                 <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${b||'미정'}</span>
               </div>
-              ${(_ab.b||[]).length?`<button class="grp-mem-btn" style="--mem-col:${cb||'#ef4444'};" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\\'")}','${cb}',${_bMemJson})"><span class="mem-ico">👥</span><span>${(_ab.b||[]).length}명</span></button>`:''}
+              ${(_ab.b||[]).length?`<button class="grp-mem-btn" style="--mem-col:${cb||'#ef4444'};" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\'")}','${cb}',${_bMemJson})"><span class="mem-ico">👥</span><span>${(_ab.b||[]).length}명</span></button>`:''}
             </div>
           </div>
           ${_sidePanel.right||''}
@@ -940,9 +941,9 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
             <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
               onclick="openRecActionMenu(event,{
                 _btnEl:this,
-                a:'${(m.a||'').replace(/'/g,"\\'")}',
+                a:'${(m.a||'').replace(/'/g,"\'")}',
                 sa:${m.sa||0},
-                b:'${(m.b||'').replace(/'/g,"\\'")}',
+                b:'${(m.b||'').replace(/'/g,"\'")}',
                 sb:${m.sb||0},
                 d:'${m.d||''}',
                 mode:'${mode}',
@@ -960,12 +961,12 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
           <div class="rec-sum-vs">
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
               <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.a}')">${(()=>{const n=isCK?'':m.a;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelA}</span>
-              ${(_ab.a||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${ca}12;border:1px solid ${ca}40;color:${ca};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\\'")}', '${ca}', ${_aMemJson})">👥 ${(_ab.a||[]).length}명</button>`:''}
+              ${(_ab.a||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${ca}12;border:1px solid ${ca}40;color:${ca};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\'")}', '${ca}', ${_aMemJson})">👥 ${(_ab.a||[]).length}명</button>`:''}
             </div>
             <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span class="score-sep" style="color:var(--text2);font-size:0.7em;font-weight:900;margin:0 4px;opacity:0.78">:</span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
               <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.b}')">${(()=>{const n=isCK?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelB}</span>
-              ${(_ab.b||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${cb}12;border:1px solid ${cb}40;color:${cb};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${_bMemJson})">👥 ${(_ab.b||[]).length}명</button>`:''}
+              ${(_ab.b||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${cb}12;border:1px solid ${cb}40;color:${cb};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\'")}', '${cb}', ${_bMemJson})">👥 ${(_ab.b||[]).length}명</button>`:''}
             </div>
             <span class="rec-victor-chip" style="--rec-victor-col:${myWin?col:(aWin?ca:bWin?cb:'#888')};color:${myWin?col:'#888'}">${myWin?'▶ '+filterUniv+' 승':aWin?'▶ '+labelA+' 승':bWin?'▶ '+labelB+' 승':'무승부'}</span>
           </div>
@@ -1255,9 +1256,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
           <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
             onclick="openRecActionMenu(event,{
               _btnEl:this,
-              a:'${(m.a||'').replace(/'/g,"\\'")}',
+              a:'${(m.a||'').replace(/'/g,"\'")}',
               sa:${m.sa||0},
-              b:'${(m.b||'').replace(/'/g,"\\'")}',
+              b:'${(m.b||'').replace(/'/g,"\'")}',
               sb:${m.sb||0},
               d:'${m.d||''}',
               mode:'${mode}',
@@ -1297,7 +1298,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         <div class="rec-sum-vs" style="flex-wrap:wrap;align-items:center">
           <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
             <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA?iconA.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelA}</span>
-            ${aMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${aBtnColor}15,${aBtnColor}08);border:1.5px solid ${aBtnColor}40;color:${aBtnColor};font-weight:700;box-shadow:0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${aBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
+            ${aMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${aBtnColor}15,${aBtnColor}08);border:1.5px solid ${aBtnColor}40;color:${aBtnColor};font-weight:700;box-shadow:0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${aBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\'")}', '${ca}', ${aMemJson})">
               <span class="mem-ico">👥</span><span>${aMembers.length}명</span>
             </button>` : ''}
           </div>
@@ -1310,7 +1311,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
             <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB?iconB.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelB}</span>
-            ${bMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${bBtnColor}15,${bBtnColor}08);border:1.5px solid ${bBtnColor}40;color:${bBtnColor};font-weight:700;box-shadow:0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${bBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})">
+            ${bMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${bBtnColor}15,${bBtnColor}08);border:1.5px solid ${bBtnColor}40;color:${bBtnColor};font-weight:700;box-shadow:0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${bBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\'")}', '${cb}', ${bMemJson})">
               <span class="mem-ico">👥</span><span>${bMembers.length}명</span>
             </button>` : ''}
           </div>
@@ -1474,7 +1475,7 @@ function _buildMatchIndex(){
     const t = String(s||'').trim();
     if(!t) return '';
     // 허용: YYYY-MM-DD, YYYY-M-D, YYYY.MM.DD, YYYY/MM/DD, YYYYMMDD
-    const m = t.match(/(20\\d{2})\\D?(\\d{1,2})\\D?(\\d{1,2})/);
+    const m = t.match(/(20\d{2})\D?(\d{1,2})\D?(\d{1,2})/);
     if(!m) return t;
     const y = m[1];
     const mo = String(m[2]).padStart(2,'0');
@@ -1954,7 +1955,7 @@ window.openMatchDetailFromHistory = function(selfName, oppName, date, map, modeL
     const _normDate = (s) => {
       const t = String(s||'').trim();
       if(!t) return '';
-      const m = t.match(/(20\\d{2})\\D?(\\d{1,2})\\D?(\\d{1,2})/);
+      const m = t.match(/(20\d{2})\D?(\d{1,2})\D?(\d{1,2})/);
       if(!m) return t;
       const y=m[1], mo=String(m[2]).padStart(2,'0'), da=String(m[3]).padStart(2,'0');
       return `${y}-${mo}-${da}`;
@@ -2459,8 +2460,8 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         const winBgA=(typeof getMatchWinTint==='function'?getMatchWinTint(pca):(pca+'22'));
         const winBgB=(typeof getMatchWinTint==='function'?getMatchWinTint(pcb):(pcb+'22'));
         const winBorderA=pca+'88'; const winBorderB=pcb+'88';
-        const _pASafe=(g.playerA||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        const _pBSafe=(g.playerB||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const _pASafe=(g.playerA||'').replace(/\/g,'\\').replace(/'/g,"\'");
+        const _pBSafe=(g.playerB||'').replace(/\/g,'\\').replace(/'/g,"\'");
         // (설정) 경기 결과 팝업( histDetModal )에서 스트리머 클릭 시 팝업 닫기 여부
         const clickA=g.playerA?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } })();setTimeout(()=>openPlayerModal('${_pASafe}'),80)" data-player-link="1"`:''
         const clickB=g.playerB?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } })();setTimeout(()=>openPlayerModal('${_pBSafe}'),80)" data-player-link="1"`:''
@@ -2596,7 +2597,7 @@ function _histPSearchResultsHTML(q){
     const losses=filteredHist.length-wins;
     const wr=filteredHist.length?Math.round(wins/filteredHist.length*100):0;
     h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">
-      <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\'")}')">
         <span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>
         <span style="font-weight:800;font-size:15px;color:var(--text)">${p.name}</span>
         <span style="font-size:12px;color:var(--gray-l)">${p.univ||''}</span>
@@ -2618,7 +2619,7 @@ function _histPSearchResultsHTML(q){
         <td style="color:var(--text3);font-size:12px;font-weight:600;white-space:nowrap">${hh.date||''}</td>
         <td><span style="background:${mc};color:#fff;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${hh.mode||''}</span></td>
         <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">LOSE</span>`}</td>
-        <td style="cursor:pointer;font-weight:700" onclick="openPlayerModal('${(hh.opp||'').replace(/'/g,"\\'")}')"><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:3px;background:${oppCol};display:inline-block;flex-shrink:0"></span><span style="color:var(--blue)">${hh.opp||''}</span></span></td>
+        <td style="cursor:pointer;font-weight:700" onclick="openPlayerModal('${(hh.opp||'').replace(/'/g,"\'")}')"><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:3px;background:${oppCol};display:inline-block;flex-shrink:0"></span><span style="color:var(--blue)">${hh.opp||''}</span></span></td>
         <td><span class="rbadge r${hh.oppRace}" style="font-size:10px">${hh.oppRace||''}</span></td>
         <td style="color:var(--gray-l);font-size:11px">${hh.map&&hh.map!=='-'?hh.map:''}</td>
         <td>${eloStr}</td>
@@ -2955,7 +2956,7 @@ function compSummaryListHTML(context){
         <div class="rec-sum-vs" style="flex-wrap:wrap;align-items:center">
           <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
             ${a?`<span class="ubadge${aWin?'':' loser'} clickable-univ" style="background:${ca}" onclick="openUnivModal('${a}')">${a}</span>`:''}
-            ${aMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${aBtnColor}15,${aBtnColor}08);border:1.5px solid ${aBtnColor}40;color:${aBtnColor};font-weight:700;box-shadow:0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${aBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
+            ${aMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${aBtnColor}15,${aBtnColor}08);border:1.5px solid ${aBtnColor}40;color:${aBtnColor};font-weight:700;box-shadow:0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${aBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\'")}', '${ca}', ${aMemJson})">
               <span class="mem-ico">👥</span><span>${aMembers.length}명</span>
             </button>` : ''}
           </div>
@@ -2970,7 +2971,7 @@ function compSummaryListHTML(context){
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
             ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>`:''}
-            ${bMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${bBtnColor}15,${bBtnColor}08);border:1.5px solid ${bBtnColor}40;color:${bBtnColor};font-weight:700;box-shadow:0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${bBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})">
+            ${bMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${bBtnColor}15,${bBtnColor}08);border:1.5px solid ${bBtnColor}40;color:${bBtnColor};font-weight:700;box-shadow:0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px ${bBtnColor}30,0 2px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08)'" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\'")}', '${cb}', ${bMemJson})">
               <span class="mem-ico">👥</span><span>${bMembers.length}명</span>
             </button>` : ''}
           </div>
@@ -2980,9 +2981,9 @@ function compSummaryListHTML(context){
           <button class="btn btn-w btn-xs rec-morebtn" style="padding:3px 10px;font-size:14px" title="메뉴"
             onclick="openRecActionMenu(event,{
               _btnEl:this,
-              a:'${a.replace(/'/g,"\\'")}',
+              a:'${a.replace(/'/g,"\'")}',
               sa:${m.sa||0},
-              b:'${b.replace(/'/g,"\\'")}',
+              b:'${b.replace(/'/g,"\'")}',
               sb:${m.sb||0},
               d:'${m.d||''}',
               mode:'comp',
@@ -3108,7 +3109,9 @@ function bulkDeleteRecs(bulkKey){
   const cbs=[...document.querySelectorAll(`.bulk-cb[data-bkey="${bulkKey}"]:checked`)];
   if(!cbs.length){alert('선택된 경기가 없습니다.');return;}
   const indices=cbs.map(cb=>parseInt(cb.dataset.bidx)).sort((a,b)=>b-a);
-  if(!confirm(indices.length+'개 경기를 삭제하시겠습니까?\n\n⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.'))return;
+  if(!confirm(indices.length+'개 경기를 삭제하시겠습니까?
+
+⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.'))return;
   const arr=bulkKey==='univm'?univM:bulkKey==='ck'?ckM:bulkKey==='pro'?proM:bulkKey==='tt'?ttM:miniM;
   const deletedIds=new Set();
   indices.forEach(idx=>{
@@ -3208,7 +3211,9 @@ function openMoveMatchPop(btn,srcMode,srcIdx){
 }
 
 function delRec(mode,i){
-  if(!confirm('삭제하시겠습니까?\n\n⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.'))return;
+  if(!confirm('삭제하시겠습니까?
+
+⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.'))return;
   let matchObj=null;
   if(mode==='mini')     { matchObj=miniM[i];  miniM.splice(i,1); }
   else if(mode==='univm'){ matchObj=univM[i];  univM.splice(i,1); }
@@ -3617,16 +3622,16 @@ function _histProCompLeagueListHTML(){
               onclick="openRecActionMenu(event,{
                 _btnEl:this,
                 hideDetail:true,
-                a:'${(m.a||'').replace(/'/g,"\\'")}',
+                a:'${(m.a||'').replace(/'/g,"\'")}',
                 sa:${aWin?1:0},
-                b:'${(m.b||'').replace(/'/g,"\\'")}',
+                b:'${(m.b||'').replace(/'/g,"\'")}',
                 sb:${bWin?1:0},
                 d:'${m.d||''}',
                 mode:'procomp',
                 idx:0,
                 key:'',
                 canShare:true,
-                shareFn:()=>openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${aWin?1:0},${bWin?1:0},'${m.d||''}'),
+                shareFn:()=>openProCompMatchShare('${(m.a||'').replace(/'/g,"\'")}','${(m.b||'').replace(/'/g,"\'")}',${aWin?1:0},${bWin?1:0},'${m.d||''}'),
                 canEdit:${isLoggedIn?'true':'false'},
                 canDel:${isLoggedIn?'true':'false'},
                 editFn:${isLoggedIn?`()=>proCompEditMatch('${m._tnId||''}',${m._gi||0},${m._mi||0})`:'null'},
@@ -3741,19 +3746,19 @@ function histProCompTourneyHTML(_omitBar) {
               onclick="openRecActionMenu(event,{
                 _btnEl:this,
                 hideDetail:true,
-                a:'${(m.a||'').replace(/'/g,"\\'")}',
+                a:'${(m.a||'').replace(/'/g,"\'")}',
                 sa:${m._isTie?(m._scoreA||0):(aWin?1:0)},
-                b:'${(m.b||'').replace(/'/g,"\\'")}',
+                b:'${(m.b||'').replace(/'/g,"\'")}',
                 sb:${m._isTie?(m._scoreB||0):(bWin?1:0)},
                 d:'${m.d||''}',
                 mode:'procomptn',
                 idx:0,
                 key:'',
                 canShare:true,
-                shareFn:()=>openProCompMatchShare('${(m.a||'').replace(/'/g,"\\'")}','${(m.b||'').replace(/'/g,"\\'")}',${m._isTie?(m._scoreA||0):(aWin?1:0)},${m._isTie?(m._scoreB||0):(bWin?1:0)},'${m.d||''}'),
+                shareFn:()=>openProCompMatchShare('${(m.a||'').replace(/'/g,"\'")}','${(m.b||'').replace(/'/g,"\'")}',${m._isTie?(m._scoreA||0):(aWin?1:0)},${m._isTie?(m._scoreB||0):(bWin?1:0)},'${m.d||''}'),
                 canEdit:${isLoggedIn?'true':'false'},
                 canDel:false,
-                editFn:${isLoggedIn?`()=>{ try{ if(typeof openPcStageRecModal==='function' && m._round) openPcStageRecModal('${(m._tnId||'').replace(/'/g,"\\'")}', '${(m._round||'').replace(/'/g,"\\'")}', ${m._idx||0}); else if(typeof openPcBktPasteModal==='function') openPcBktPasteModal('${(m._tnId||'').replace(/'/g,"\\'")}', ${JSON.stringify(m._ri)}, ${m._mi||0}); }catch(e){} }`:'null'},
+                editFn:${isLoggedIn?`()=>{ try{ if(typeof openPcStageRecModal==='function' && m._round) openPcStageRecModal('${(m._tnId||'').replace(/'/g,"\'")}', '${(m._round||'').replace(/'/g,"\'")}', ${m._idx||0}); else if(typeof openPcBktPasteModal==='function') openPcBktPasteModal('${(m._tnId||'').replace(/'/g,"\'")}', ${JSON.stringify(m._ri)}, ${m._mi||0}); }catch(e){} }`:'null'},
                 canMove:false
               })">⋯</button>
           </div>
@@ -3830,16 +3835,16 @@ function histProCompTeamHTML(_omitBar) {
             onclick="openRecActionMenu(event,{
               _btnEl:this,
               hideDetail:true,
-              a:'${(tm.teamAName||'A팀').replace(/'/g,"\\'")}',
+              a:'${(tm.teamAName||'A팀').replace(/'/g,"\'")}',
               sa:${tm.sa||0},
-              b:'${(tm.teamBName||'B팀').replace(/'/g,"\\'")}',
+              b:'${(tm.teamBName||'B팀').replace(/'/g,"\'")}',
               sb:${tm.sb||0},
               d:'${tm.d||''}',
               mode:'procomp-team',
               idx:0,
               key:'',
               canShare:true,
-              shareFn:()=>openProCompMatchShare('${(tm.teamAName||'A팀').replace(/'/g,"\\'")}','${(tm.teamBName||'B팀').replace(/'/g,"\\'")}',${tm.sa||0},${tm.sb||0},'${tm.d||''}'),
+              shareFn:()=>openProCompMatchShare('${(tm.teamAName||'A팀').replace(/'/g,"\'")}','${(tm.teamBName||'B팀').replace(/'/g,"\'")}',${tm.sa||0},${tm.sb||0},'${tm.d||''}'),
               canEdit:false,
               canDel:false,
               canMove:false
@@ -3898,7 +3903,7 @@ function histProCompGJHTML(_omitBar){
     const p1w=(sess.games||[]).filter(g=>g.winner===sess.a).length;
     const p2w=(sess.games||[]).filter(g=>g.winner===sess.b).length;
     const winner=p1w>p2w?sess.a:p2w>p1w?sess.b:'';
-    const _sid = String(sess._id||'').replace(/'/g,"\\'");
+    const _sid = String(sess._id||'').replace(/'/g,"\'");
     const _pcgjColA=gc(sess.a||'');
     const _pcgjColB=gc(sess.b||'');
     h+=`<div class="rec-summary${_recSideFxClass('procompgj')}" data-rec-mode="procompgj" style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;${_recSideFxStyle('procompgj',_pcgjColA,_pcgjColB)}">
@@ -3944,11 +3949,11 @@ function openProMembersPopup(teamLabel, teamColor, members){
       const pColor = gc(p.univ) || '#64748b';
       return `
         <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;">
-          <span style="cursor:pointer" onclick="document.getElementById('proMembersModal').remove();openPlayerModal('${memName.replace(/'/g,"\\'")}')">
+          <span style="cursor:pointer" onclick="document.getElementById('proMembersModal').remove();openPlayerModal('${memName.replace(/'/g,"\'")}')">
             ${getPlayerPhotoHTML(memName, '44px')}
           </span>
           <div style="flex:1;min-width:0;">
-            <div style="font-weight:700;font-size:14px;color:#1f2937;cursor:pointer" onclick="document.getElementById('proMembersModal').remove();openPlayerModal('${memName.replace(/'/g,"\\'")}')">${memName}</div>
+            <div style="font-weight:700;font-size:14px;color:#1f2937;cursor:pointer" onclick="document.getElementById('proMembersModal').remove();openPlayerModal('${memName.replace(/'/g,"\'")}')">${memName}</div>
             <div style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
               ${p.univ ? `<span class="ubadge" style="background:${pColor};font-size:10px;padding:1px 6px;">${p.univ}</span>` : ''}
               ${p.tier ? `<span style="background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)};font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700;">${p.tier}</span>` : ''}

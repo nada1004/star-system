@@ -1,3 +1,4 @@
+/* LAZY-LOADED — index.html에서 직접 로드되지 않음. 동적으로 필요시 로드 필요. */
 // ─── 가챠 룰렛 시스템 ─────────────────────────────────────────────────────
 function rRoulette(C, T) {
   T.textContent = '🎰 룰렛';
@@ -540,7 +541,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 
   const mapBadges = (!isLadder && !isPlayer) ? (maps||[]).map(m => {
     const active = activeItems.includes(m);
-    return `<span onclick="_gcToggleMap('${m.replace(/'/g,"\\'").replace(/"/g,'\\"')}',this)" data-map="${m.replace(/"/g,'&quot;')}"
+    return `<span onclick="_gcToggleMap('${m.replace(/'/g,"\'").replace(/"/g,'\"')}',this)" data-map="${m.replace(/"/g,'&quot;')}"
       style="cursor:pointer;padding:5px 12px;border-radius:14px;font-size:${fs}px;font-weight:700;border:2px solid ${active?'#FF4B6E':'var(--border)'};background:${active?'#FFF0F3':'var(--surface)'};color:${active?'#FF4B6E':'var(--text2)'};transition:.1s;user-select:none">${m}</span>`;
   }).join('') : '';
 
@@ -1356,4 +1357,3 @@ function _mbInit() {
   if (!root) return;
   root.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">마블 룰렛 기능은 현재 개발 중입니다.</div>';
 }
-

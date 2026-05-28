@@ -153,6 +153,7 @@ function rComp(C,T){
 }
 
 // 승리 색(대학색) → "r,g,b" 변환 (대회 카드 테마용)
+// NOTE: pro-comp-core.js에 동일 함수 존재 (각 파일 독립성을 위해 로컬 복사본 유지)
 function _tcHexToRgbStr(hex){
   const h=String(hex||'').replace('#','').trim();
   if(h.length===3){

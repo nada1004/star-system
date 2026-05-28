@@ -536,7 +536,19 @@ function _recordLoginFailure(){
   return { count: nextCount, lockUntil };
 }
 _syncSessionStateAtBoot();
-let isLoggedIn=localStorage.getItem('su_session')==='1' && localStorage.getItem('su_explicit_logout')!=='1';
+// [FIX] _syncSessionStateAtBoot() 이후 su_session 재확인 + 만료 세션도 거부
+let isLoggedIn=(function(){
+  if(localStorage.getItem('su_session')!=='1') return false;
+  if(localStorage.getItem('su_explicit_logout')==='1') return false;
+  // 세션 최종 활동시각 확인: 한 번도 활동 기록이 없으면(= loginAt도 없으면) 거짓
+  const _lastSeen = Math.max(
+    Number(localStorage.getItem('su_session_last_active_at')||0)||0,
+    Number(localStorage.getItem('su_session_login_at')||0)||0
+  );
+  if(!_lastSeen) return false;  // 활동기록 없는 고아 세션 → 자동 로그인 차단
+  if((Date.now() - _lastSeen) > SESSION_MAX_AGE_MS){ _clearSessionStorage(); return false; }
+  return true;
+})();
 let isSubAdmin=isLoggedIn && localStorage.getItem('su_session_role')==='sub-admin';
 // 로드 즉시 window에도 동기화 (applyLoginState 호출 전에 sw() 등이 window.isLoggedIn 참조하는 경우 대비)
 try{ window.isLoggedIn = isLoggedIn; window.isSubAdmin = isSubAdmin; }catch(e){}

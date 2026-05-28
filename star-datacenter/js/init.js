@@ -93,7 +93,10 @@ window._showGlobalAppError = function(message, opts){
 };
 window.addEventListener('error', (event)=>{
   try{
-    const message = (event && event.message) ? `오류가 발생했습니다: ${event.message}` : '오류가 발생했습니다. 새로고침 후 다시 시도해주세요.';
+    const msg = (event && event.message) ? String(event.message) : '';
+    // "Script error."는 cross-origin 스크립트의 CORS 보안 메시지 — 실제 오류 내용이 없으므로 무시
+    if(!msg || msg === 'Script error.' || msg === 'Script error') return;
+    const message = `오류가 발생했습니다: ${msg}`;
     window._showGlobalAppError(message);
   }catch(e){}
 });

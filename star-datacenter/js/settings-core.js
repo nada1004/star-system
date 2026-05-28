@@ -1,3 +1,4 @@
+/* LEGACY - DO NOT LOAD - 분리된 파일로 대체됨. index.html에 추가하지 마세요. */
 /* ══════════════════════════════════════
    ⚙️ settings.js — 설정 탭 전용
    tier-tour.js에서 분리됨. 이 파일의 버그가 티어대회 탭에 영향을 주지 않습니다.
@@ -89,7 +90,7 @@ window._cfgB2RenderSwapDelay = function(playerName){
     const d34 = clamp(p.photoDelay34 ?? 1);
     const d45 = clamp(p.photoDelay45 ?? 1);
     const d51 = clamp(p.photoDelay51 ?? 1);
-    const safe = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const safe = name.replace(/\/g,'\\').replace(/'/g,"\'");
     area.innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
         <div>
@@ -1800,7 +1801,8 @@ window.cfgImportSettingsCode = function(){
     return alert('코드 해석 실패: 형식이 올바르지 않습니다.');
   }
   if(!obj || typeof obj!=='object') return alert('코드 해석 실패');
-  if(!confirm('이 코드를 현재 기기에 적용할까요?\n(현재 설정은 덮어씁니다)')) return;
+  if(!confirm('이 코드를 현재 기기에 적용할까요?
+(현재 설정은 덮어씁니다)')) return;
   try{
     Object.keys(obj).forEach(k=>{
       if(!( /^su_/.test(k) || /^cfg_/.test(k) )) return;
@@ -1936,7 +1938,8 @@ window.cfgPasteConvertRun = function(){
   if(!inp || !out) return;
   const raw = String(inp.value||'').trim();
   if(!raw){ out.textContent=''; return; }
-  const lines = raw.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const lines = raw.split(/?
+/).map(l=>l.trim()).filter(Boolean);
   const mapFix = (m)=>{
     const s = String(m||'').trim();
     if(!s) return '-';
@@ -1985,7 +1988,7 @@ window.cfgPasteConvertRun = function(){
     const pick = (s)=>{
       s = s.replace(/\s+/g,' ').trim();
       // 불필요 점수/주석 제거
-      s = s.replace(/\b\d+\/\d+\b.*$/,'').trim();
+      s = s.replace(/\d+\/\d+.*$/,'').trim();
       // (승)/(패) + 이름
       let m = s.match(/^\((승|패)\)\s*(.+)$/);
       if(m) return {res:m[1], name:m[2].trim().replace(/\((승|패)\)/g,'').trim()};
@@ -2021,8 +2024,11 @@ window.cfgPasteConvertRun = function(){
     }
     const wR = raceOf(g.win), lR = raceOf(g.lose);
     return `${g.win}(${wR}) ✅ 🆚️ ⬜ ${g.lose}(${lR}) [${g.map}]`;
-  }).filter(Boolean).join('\n');
-  const tail = `\n\n[최종 결과] ${A}(${raceOf(A)}) ${aW} : ${bW} ${B}(${raceOf(B)})`;
+  }).filter(Boolean).join('
+');
+  const tail = `
+
+[최종 결과] ${A}(${raceOf(A)}) ${aW} : ${bW} ${B}(${raceOf(B)})`;
   out.textContent = body + tail;
 };
 
@@ -2059,9 +2065,11 @@ window.cfgSaveSoopSettings = function(){
     u = u.replace(/\/+$/,'');
     return u;
   };
-  const lines = list.split(/\r?\n/).map(norm).filter(Boolean);
+  const lines = list.split(/?
+/).map(norm).filter(Boolean);
   const uniq = [...new Set(lines)];
-  list = uniq.join('\n').trim();
+  list = uniq.join('
+').trim();
   try{
     const ta = document.getElementById('cfg-soop-list');
     if(ta) ta.value = list;
@@ -2173,7 +2181,8 @@ window.cfgRunSettingsSelfCheck = function(){
   try{
     const JS_KEYWORDS = new Set(['if','for','while','function','typeof','new','return','let','const','var','switch','case','do','break','continue','try','catch','finally','throw','class','extends','super','static','async','await','yield','import','export','default','from','as','delete','in','instanceof','of','void','undefined','null','true','false','this','arguments','eval','isNaN','parseInt','parseFloat','encodeURIComponent','decodeURIComponent']);
     const secs = Array.from(document.querySelectorAll('[data-cfg-sec]'));
-    const html = secs.map(el=>el.outerHTML).join('\n');
+    const html = secs.map(el=>el.outerHTML).join('
+');
     const re = /(?:onclick|onchange|oninput)=\"\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
     const called = new Set();
     let m;
@@ -2202,13 +2211,13 @@ window.cfgRunSettingsSelfCheck = function(){
       let html = '';
       if(missing.length > 0){
         html += `<div style="font-size:12px;color:#dc2626;font-weight:1000;margin-bottom:8px">⚠️ settings.js 핸들러 누락 ${missing.length}개</div>
-                 <div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;margin-bottom:12px">${missing.join('\\n')}</div>`;
+                 <div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;margin-bottom:12px">${missing.join('\n')}</div>`;
       }
       if(Object.keys(tabMissing).length > 0){
         html += `<div style="font-size:12px;color:#ea580c;font-weight:1000;margin-bottom:6px">⚠️ 탭 렌더러 누락</div>
                  <div style="font-family:ui-monospace,monospace;font-size:11px;white-space:pre-wrap;line-height:1.6">`;
         for(const [tab, funcs] of Object.entries(tabMissing)){
-          html += `${tab}: ${funcs.join(', ')}\\n`;
+          html += `${tab}: ${funcs.join(', ')}\n`;
         }
         html += `</div>`;
       }

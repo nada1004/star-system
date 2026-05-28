@@ -226,6 +226,64 @@ function rHist(C,T){
 
 
 /* ══════════════════════════════════════
+   대전 기록 > 전체 통합 탭 — 수정 버튼 헬퍼
+   ind/gj 타입: 세션 캐시에서 sessKey를 찾아 인라인 수정 모달(맵 수정 포함)로 연결
+   세션 캐시에 없으면 단건 openRE 폴백
+══════════════════════════════════════ */
+function _openAllTabIndEdit(type, m, regIdx){
+  try{
+    // 1) 세션 캐시에서 이 게임(m._id 또는 m.sid)이 속한 세션 키 탐색
+    const cacheKey = (type==='gj'||type==='progj') ? 'gj' : 'ind';
+    const cache = cacheKey==='gj' ? (window._gjSessCache||{}) : (window._indSessCache||{});
+    const gameId = m._id || '';
+    const gameSid = m.sid || '';
+    let foundSessKey = null;
+
+    if(gameId || gameSid){
+      for(const [sk, sess] of Object.entries(cache)){
+        const games = Array.isArray(sess?.games) ? sess.games : [];
+        const hit = games.some(g=>
+          (gameId && (g._id===gameId || g.sid===gameId)) ||
+          (gameSid && (g.sid===gameSid || g._id===gameSid))
+        );
+        if(hit){ foundSessKey=sk; break; }
+      }
+    }
+
+    // 2) p1/p2 + date 기반 세션 키도 시도 (캐시 키 생성 방식과 동일하게)
+    if(!foundSessKey){
+      const p1 = m.wName||''; const p2 = m.lName||''; const dd = m.d||'';
+      const guessKey = ('inds_' + `${dd}|${p1}|${p2}`.replace(/[^\w\-]/g,'_')).slice(0,120);
+      const guessKeyGJ = ('gjs_' + `${dd}|${p1}|${p2}`.replace(/[^\w\-]/g,'_')).slice(0,120);
+      if(cache[guessKey]) foundSessKey=guessKey;
+      else if(cache[guessKeyGJ]) foundSessKey=guessKeyGJ;
+      // 역순(p2 vs p1)도 시도
+      if(!foundSessKey){
+        const guessKeyR = ('inds_' + `${dd}|${p2}|${p1}`.replace(/[^\w\-]/g,'_')).slice(0,120);
+        const guessKeyGJR = ('gjs_' + `${dd}|${p2}|${p1}`.replace(/[^\w\-]/g,'_')).slice(0,120);
+        if(cache[guessKeyR]) foundSessKey=guessKeyR;
+        else if(cache[guessKeyGJR]) foundSessKey=guessKeyGJR;
+      }
+      // 전체 캐시에서 p1/p2/date 일치 세션 탐색
+      if(!foundSessKey){
+        for(const [sk, sess] of Object.entries(cache)){
+          if(sess.d===dd && ((sess.p1===p1&&sess.p2===p2)||(sess.p1===p2&&sess.p2===p1))){
+            foundSessKey=sk; break;
+          }
+        }
+      }
+    }
+
+    if(foundSessKey){
+      if(cacheKey==='gj' && typeof openGJSessionEdit==='function'){ openGJSessionEdit(foundSessKey); return; }
+      if(cacheKey==='ind' && typeof openIndSessionEdit==='function'){ openIndSessionEdit(foundSessKey); return; }
+    }
+  }catch(e){}
+  // 폴백: 단건 openRE
+  if(typeof openRE==='function') openRE(type, regIdx);
+}
+
+/* ══════════════════════════════════════
    대전 기록 > 전체 통합 탭
 ══════════════════════════════════════ */
 function histAllHTML(){
@@ -326,17 +384,57 @@ function histAllHTML(){
     {id:'tourney',lbl:'🎖️ 대회'},
     {id:'procomp',lbl:'🏅 프로리그대회'},
   ].filter(t=>t.id==='전체'||_typeCountMap[t.id]>0);
+
+  // ── 맵 필터 ──
+  // allItems에서 맵 목록 추출 (sets.games 포함)
+  const _getItemMaps = ({m}) => {
+    const found = new Set();
+    // 단일 맵 필드
+    if(m.map && m.map !== '-') found.add(m.map);
+    // sets → games 맵
+    (m.sets||[]).forEach(s => {
+      if(s.map && s.map !== '-') found.add(s.map);
+      (s.games||[]).forEach(g => { if(g.map && g.map !== '-') found.add(g.map); });
+    });
+    return found;
+  };
+  const _allMapSet = new Set();
+  _typeFiltered.forEach(item => _getItemMaps(item).forEach(mp => _allMapSet.add(mp)));
+  const _allMapList = [..._allMapSet].sort((a,b)=>a.localeCompare(b,'ko'));
+  // 맵 필터 상태
+  if(!window._recMapFilter) window._recMapFilter='전체';
+  // 현재 선택 맵이 목록에 없으면 초기화
+  if(window._recMapFilter !== '전체' && !_allMapSet.has(window._recMapFilter)) window._recMapFilter='전체';
+  // 맵 필터 적용
+  const _mapFiltered = (window._recMapFilter === '전체') ? _typeFiltered
+    : _typeFiltered.filter(item => _getItemMaps(item).has(window._recMapFilter));
+  // 맵별 경기 수
+  const _mapCountMap = {};
+  _typeFiltered.forEach(item => _getItemMaps(item).forEach(mp => { _mapCountMap[mp]=(_mapCountMap[mp]||0)+1; }));
+
   // 페이지네이션
   const pageSize=getHistPageSize();
   if(histPage['all']===undefined) histPage['all']=0;
-  const totalPages=Math.ceil(_typeFiltered.length/pageSize)||1;
+  const totalPages=Math.ceil(_mapFiltered.length/pageSize)||1;
   if(histPage['all']>=totalPages) histPage['all']=Math.max(0,totalPages-1);
   const curPage=histPage['all'];
-  const paged=_typeFiltered.length>pageSize?_typeFiltered.slice(curPage*pageSize,(curPage+1)*pageSize):_typeFiltered;
+  const paged=_mapFiltered.length>pageSize?_mapFiltered.slice(curPage*pageSize,(curPage+1)*pageSize):_mapFiltered;
 
   let h=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
-    ${_typeButtons.map(t=>`<button class="pill ${window._recTypeFilter===t.id?'on':''}" onclick="window._recTypeFilter='${t.id}';histPage['all']=0;render()">${t.lbl}${t.id!=='전체'&&_typeCountMap[t.id]?` <span style="font-size:10px;opacity:.7">(${_typeCountMap[t.id]})</span>`:''}</button>`).join('')}
+    ${_typeButtons.map(t=>`<button class="pill ${window._recTypeFilter===t.id?'on':''}" onclick="window._recTypeFilter='${t.id}';window._recMapFilter='전체';histPage['all']=0;render()">${t.lbl}${t.id!=='전체'&&_typeCountMap[t.id]?` <span style="font-size:10px;opacity:.7">(${_typeCountMap[t.id]})</span>`:''}</button>`).join('')}
   </div>`;
+  // 맵 필터 바 (맵이 2개 이상일 때만 표시)
+  if(_allMapList.length >= 2){
+    h+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center">`;
+    h+=`<span style="font-size:11px;color:var(--gray-l);white-space:nowrap;flex-shrink:0">🗺️ 맵</span>`;
+    h+=`<button class="pill ${window._recMapFilter==='전체'?'on':''}" style="font-size:11px" onclick="window._recMapFilter='전체';histPage['all']=0;render()">전체</button>`;
+    _allMapList.forEach(mp=>{
+      const cnt=_mapCountMap[mp]||0;
+      const isOn=window._recMapFilter===mp;
+      h+=`<button class="pill ${isOn?'on':''}" style="font-size:11px" onclick="window._recMapFilter='${mp.replace(/'/g,"\\'")}';histPage['all']=0;render()">${mp}<span style="font-size:10px;opacity:.65;margin-left:3px">${cnt}</span></button>`;
+    });
+    h+=`</div>`;
+  }
 
   if(!paged.length){
     h+=`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div></div>`;
@@ -389,7 +487,14 @@ function histAllHTML(){
             <span style="color:${Number(scoreB)>Number(scoreA)?'#16a34a':Number(scoreA)>Number(scoreB)?'#dc2626':'var(--text)'}">${scoreB}</span>
           </div>`}
         <span style="font-weight:800;font-size:13px;color:${winner===teamB?'#16a34a':'var(--text)'};flex:1;min-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">${teamB}</span>
-        ${winner&&!isInd?'':''}
+        ${(()=>{
+          if(!(typeof isLoggedIn!=='undefined'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin)&&_regIdx>=0&&type!=='tourney'&&type!=='procomp')) return '';
+          if(type==='ind'||type==='gj'||type==='progj'){
+            const _minfo=JSON.stringify({_id:m._id||'',sid:m.sid||'',d:m.d||'',wName:m.wName||'',lName:m.lName||''}).replace(/"/g,"'");
+            return `<button class="btn btn-o btn-xs no-export" style="flex-shrink:0;margin-left:2px;padding:2px 8px;font-size:11px" onclick="event.stopPropagation();_openAllTabIndEdit('${type}',${_minfo},${_regIdx})">✏️ 수정</button>`;
+          }
+          return `<button class="btn btn-o btn-xs no-export" style="flex-shrink:0;margin-left:2px;padding:2px 8px;font-size:11px" onclick="event.stopPropagation();openRE('${mode}',${_regIdx})">✏️ 수정</button>`;
+        })()}
       </div>
       <div id="det-${key}" class="rec-detail-area">
         ${isInd
@@ -409,8 +514,8 @@ function histAllHTML(){
     </div>`;
   });
 
-  // 페이지 네비게이션
-  if(_typeFiltered.length>pageSize){
+  // 페이지 네비게이션 (버그픽스: 맵 필터 적용 후 실제 항목 수 기준으로 표시)
+  if(_mapFiltered.length>pageSize){
     h+=`<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
       <button class="btn btn-sm" ${curPage===0?'disabled':''} onclick="histPage['all']=${curPage-1};render()">← 이전</button>
       <span style="font-size:12px;color:var(--gray-l)">${curPage+1} / ${totalPages}</span>

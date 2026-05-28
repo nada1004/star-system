@@ -1,3 +1,7 @@
+// ══════════════════════════════════════════════════════════
+// settings-render.js — rCfg / reCfg 권위 소스 (SINGLE SOURCE)
+// CRITICAL fix: settings.js의 중복 정의 제거됨. 이 파일만 rCfg/reCfg를 정의합니다.
+// ══════════════════════════════════════════════════════════
 function rCfg(C,T){
   T.innerText='⚙️ 설정';
   if(!isLoggedIn){

@@ -45,8 +45,10 @@ function buildPlayerHeaderCardHTML(opts){
     histAll=[],
     eloVal=1000,
     eloColor='#16a34a',
-    eloSparkHTML=''
+    eloSparkHTML='',
+    isMobile=false
   } = opts || {};
+  const _isMobile = isMobile || (typeof window!=='undefined' && window.innerWidth<=768);
   const p = player;
   if(!p) return '';
   const _bgSize = hdrBgLayer?.fit==='fill' ? '100% 100%' : (hdrBgLayer?.fit==='cover' ? 'cover' : 'contain');
@@ -59,6 +61,35 @@ function buildPlayerHeaderCardHTML(opts){
       <div style="position:absolute;top:-25px;right:-25px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none"></div>
       <div style="position:absolute;bottom:-40px;left:5px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
       <div style="position:absolute;right:16px;bottom:12px;font-size:52px;line-height:1;opacity:.08;pointer-events:none">👤</div>
+      ${_isMobile ? `
+      <div style="display:flex;flex-direction:column;gap:10px;position:relative">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:${pmPhotoSz+12}px;height:${pmPhotoSz+12}px;border-radius:var(--su_profile_radius,${pmPhotoR+4}px);clip-path:var(--su_profile_clip,none);background:rgba(255,255,255,.16);border:2.5px solid rgba(255,255,255,.42);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:var(--su_profile_fx, 0 8px 24px rgba(0,0,0,.18));backdrop-filter:blur(8px)">${photoHTML}</div>
+          <div style="min-width:0;flex:1">
+            <div style="font-size:9px;font-weight:900;letter-spacing:.8px;color:rgba(255,255,255,.72);margin-bottom:4px">STREAMER PROFILE</div>
+            <div style="font-size:${pmNameFs+3}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all">${p.name}${genderIcon(p.gender)}</div>
+            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px">
+              ${p.role?getRoleBadgeHTML(p.role,'10px'):''}
+              ${p.tier?`<span style="background:rgba(255,255,255,.20);border:1.5px solid rgba(255,255,255,.34);border-radius:999px;padding:2px 8px;font-size:10px;font-weight:900;color:#fff">${getTierLabel(p.tier)||p.tier}</span>`:''}
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px">
+              <span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
+                ${p.univ&&p.univ!=='무소속'?`data-pph-action="open-univ" data-pph-univ="${String(p.univ).replace(/"/g,'&quot;')}"`:''}
+                style="background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.32);font-size:10px;padding:2px 8px;display:inline-flex;align-items:center;gap:3px;border-radius:999px;font-weight:800;backdrop-filter:blur(6px)${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}"
+                >${gUI(p.univ,'11px')}${p.univ||'무소속'}</span>
+              <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.32);border-radius:999px;padding:2px 7px;font-size:10px;font-weight:800;color:#fff;backdrop-filter:blur(6px)">${p.race||''} ${RNAME[p.race]||''}</span>
+              ${channelHTML}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <div style="flex:1;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.24);border-radius:12px;padding:7px 10px;text-align:center;backdrop-filter:blur(8px)">
+            <div style="font-size:8px;letter-spacing:.7px;font-weight:900;color:rgba(255,255,255,.74)">ELO RATING</div>
+            <div style="font-size:22px;font-weight:1000;color:#fff;line-height:1.1;margin-top:2px">${eloVal}</div>
+          </div>
+          ${eloSparkHTML?`<div style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:6px 8px;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center">${eloSparkHTML}</div>`:''}
+        </div>
+      </div>` : `
       <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;position:relative">
         <div style="width:${pmPhotoSz+12}px;height:${pmPhotoSz+12}px;border-radius:var(--su_profile_radius,${pmPhotoR+4}px);clip-path:var(--su_profile_clip,none);background:rgba(255,255,255,.16);border:2.5px solid rgba(255,255,255,.42);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:var(--su_profile_fx, 0 8px 24px rgba(0,0,0,.18));backdrop-filter:blur(8px)">${photoHTML}</div>
         <div style="min-width:0">
@@ -84,7 +115,7 @@ function buildPlayerHeaderCardHTML(opts){
           </div>
           ${eloSparkHTML?`<div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:6px 8px;backdrop-filter:blur(8px)">${eloSparkHTML}</div>`:''}
         </div>
-      </div>
+      </div>`}
     </div>
     <div style="padding:14px;background:linear-gradient(180deg,#ffffff,${col}${p2h(statsTint)})">
       <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px">

@@ -2056,6 +2056,9 @@ try{
 // [FIX-1] histSub 초기값 'mini' → 'race' 로 통일 (app-state.js와 일치)
 // 진실 공급원: 이 var 선언. app-state.js의 App.state는 읽히지 않으므로 제거 대상.
 var miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='race';
+// WARNING fix: 암묵적 전역 방지 — 엄격 모드에서 접근 순서 문제 예방
+window.histSub = window.histSub || histSub;
+// histSub 변경 시 window.histSub도 동기화하려면 app-state.js의 App.state로 이전 권장
 var miniType='mini'; // 'mini' | 'civil'
 var histUniv='';
 var recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순

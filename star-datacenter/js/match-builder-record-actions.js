@@ -156,7 +156,7 @@
           const ids = Array.isArray(s.ids) ? s.ids.slice() : s.games.map(g=>g?g._id:undefined).filter(Boolean);
           const sid = (s.games.find(g=>g&&g.sid)?.sid) || (s.games[0]?.sid||s.games[0]?._id) || '';
           if(!games.length){ alert('경기 결과가 없습니다.'); return; }
-          // 기존 레코드 삭제 후 재저장
+          // 기존 레코드 삭제 후 재저장 (silent=true: confirm없이 즉시 삭제, save/render는 뒤에서 한번만)
           if(cacheKey==='ind'){
             if(typeof deleteIndSession==='function') deleteIndSession(ids, true);
             const newSid = sid || (typeof genId==='function' ? genId() : Date.now()+'');
@@ -166,7 +166,8 @@
               wName: g.wName, lName: g.lName, map: g.map||''
             }));
             if(Array.isArray(window.indM)){
-              newGames.forEach(g=>{ try{ if(typeof applyGameResult==='function') applyGameResult(g.wName,g.lName,newDate,'',g._id,'','','개인전'); }catch(e){} });
+              // (버그픽스) g.map을 applyGameResult에 전달해야 선수 history에 맵이 기록됨
+              newGames.forEach(g=>{ try{ if(typeof applyGameResult==='function') applyGameResult(g.wName,g.lName,newDate,g.map||'',g._id,'','','개인전'); }catch(e){} });
               window.indM.unshift(...newGames);
               if(typeof save==='function') save();
             }
@@ -180,13 +181,17 @@
               _proLabel: proOnly ? true : undefined
             }));
             if(Array.isArray(window.gjM)){
-              newGames.forEach(g=>{ try{ if(typeof applyGameResult==='function') applyGameResult(g.wName,g.lName,newDate,'',g._id,'','',proOnly?'프로리그 끝장전':'끝장전'); }catch(e){} });
+              // (버그픽스) g.map을 applyGameResult에 전달해야 선수 history에 맵이 기록됨
+              newGames.forEach(g=>{ try{ if(typeof applyGameResult==='function') applyGameResult(g.wName,g.lName,newDate,g.map||'',g._id,'','',proOnly?'프로리그 끝장전':'끝장전'); }catch(e){} });
               window.gjM.unshift(...newGames);
               if(typeof save==='function') save();
             }
           }
+          // (버그픽스) 저장 후 선수 history 완전 동기화 + 선수 모달 갱신
+          try{ if(typeof _rebuildAllPlayerHistoryCore==='function') _rebuildAllPlayerHistoryCore(); }catch(e){}
           modal.remove();
           try{ if(typeof render==='function') render(); }catch(e){}
+          try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
         }catch(e){ alert('저장 중 오류: '+e.message); }
       };
       window._iem_close = function(){ modal.remove(); };
