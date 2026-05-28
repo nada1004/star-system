@@ -1,10 +1,11 @@
 // 플레이어 모달용 이미지 프리로드 캐시
 const _pmImgCache = new Map();
+
+// 이미지 URL들을 미리 로드하고, 모두 완료(또는 타임아웃)되면 resolve
 function _prewarmPlayerModalImages(p){
   try{
     const urls = [];
     if(p.photo) urls.push(typeof toHttpsUrl==='function' ? toHttpsUrl(p.photo) : p.photo);
-    // 배경 이미지
     try{
       const pdStyle = JSON.parse(localStorage.getItem('su_pd_style')||'{}');
       const isMobile = window.innerWidth<=768;
@@ -12,29 +13,42 @@ function _prewarmPlayerModalImages(p){
       const bgImg = (p.detailHeaderBgImg||pdStyle.header_bg_img||imgUrlLegacy||'').trim();
       if(bgImg) urls.push(typeof toHttpsUrl==='function' ? toHttpsUrl(bgImg) : bgImg);
     }catch(e){}
-    urls.filter(Boolean).forEach(src=>{
-      if(_pmImgCache.has(src)) return;
-      const img = new Image();
-      img.decoding = 'async';
-      img.fetchPriority = 'high';
-      img.src = src;
-      _pmImgCache.set(src, img);
-      // 캐시 크기 관리 (최대 40개)
-      if(_pmImgCache.size > 40){
-        const firstKey = _pmImgCache.keys().next().value;
-        _pmImgCache.delete(firstKey);
-      }
+
+    const filtered = urls.filter(Boolean);
+    if(!filtered.length) return Promise.resolve();
+
+    const promises = filtered.map(src => {
+      // 이미 캐시에 있고 완료된 이미지면 즉시 resolve
+      const cached = _pmImgCache.get(src);
+      if(cached && cached.complete && cached.naturalWidth > 0) return Promise.resolve();
+
+      return new Promise(resolve => {
+        const img = new Image();
+        img.decoding = 'async';
+        img.fetchPriority = 'high';
+        const done = () => resolve();
+        img.onload = done;
+        img.onerror = done;
+        img.src = src;
+        _pmImgCache.set(src, img);
+        if(_pmImgCache.size > 40){
+          const firstKey = _pmImgCache.keys().next().value;
+          _pmImgCache.delete(firstKey);
+        }
+      });
     });
-  }catch(e){}
+
+    // 최대 400ms 대기 (그 이후엔 그냥 표시)
+    return Promise.race([
+      Promise.all(promises),
+      new Promise(r => setTimeout(r, 400))
+    ]);
+  }catch(e){
+    return Promise.resolve();
+  }
 }
 
-function openPlayerModal(name){
-  const p=players.find(x=>x.name===name);
-  if(!p)return;
-
-  // 모달 열기 전에 이미지 미리 로드 시작
-  _prewarmPlayerModalImages(p);
-
+function _doOpenPlayerModal(name, p){
   try{
     const pm = document.getElementById('playerModal');
     if(pm){
@@ -74,6 +88,18 @@ function openPlayerModal(name){
   om('playerModal');
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   setTimeout(()=>initPEloChart(name),60);
+}
+
+function openPlayerModal(name){
+  const p=players.find(x=>x.name===name);
+  if(!p)return;
+
+  // 이미지를 미리 로드한 뒤 모달 오픈 (최대 400ms 대기, 캐시 히트 시 즉시)
+  _prewarmPlayerModalImages(p).then(()=>{
+    _doOpenPlayerModal(name, p);
+  }).catch(()=>{
+    _doOpenPlayerModal(name, p);
+  });
 }
 
 if(typeof window.openEPFromModal !== 'function'){
