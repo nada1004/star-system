@@ -344,6 +344,20 @@ function rBoard2(C, T) {
 
   C.innerHTML = filterBar;
 
+  // 현황판 공통: 뷰 렌더 전에 화면에 표시될 플레이어 사진을 미리 로드
+  const _b2PrewarmViewImages = () => {
+    try {
+      if (typeof prewarmImageUrls !== 'function') return;
+      const _dissSet2 = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
+      const photoUrls = players
+        .filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet2.has(String(p?.univ||'').trim()) && p.photo)
+        .map(p => p.photo)
+        .filter(Boolean);
+      prewarmImageUrls(photoUrls, 80);
+    } catch(e) {}
+  };
+  _b2PrewarmViewImages();
+
   const sub = document.getElementById('b2-content');
   if (_b2View === 'univ') {
     sub.innerHTML = _b2UnivView();
@@ -702,7 +716,7 @@ function _b2FemcoView() {
 
     if (img) {
       return `<span style="position:relative;display:block;width:100%;height:100%">
-        <img src="${img}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;border:2px solid ${border};background:rgba(255,255,255,.25)" onerror="this.closest('span').outerHTML='<div style=&quot;position:relative;width:100%;height:100%;border-radius:inherit;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}&quot;>${letter}</div>'">
+        <img src="${img}" decoding="async" fetchpriority="high" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;border:2px solid ${border};background:rgba(255,255,255,.25)" onerror="this.closest('span').outerHTML='<div style=&quot;position:relative;width:100%;height:100%;border-radius:inherit;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}&quot;>${letter}</div>'">
         ${badge}
       </span>`;
     }
