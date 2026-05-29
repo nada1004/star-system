@@ -869,48 +869,52 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
           ${(function(){
             const _curShape = localStorage.getItem('su_rc_card_shape') || 'default';
-            const _shapes = [
+            const _all = [
               {v:'default',       l:'기본',      icon:'🃏', desc:'기본 둥근 카드'},
               {v:'compact',       l:'컴팩트',    icon:'📋', desc:'패딩 축소, 밀도 높게'},
               {v:'wide',          l:'와이드',    icon:'🖼️', desc:'넓고 여유로운 카드'},
               {v:'minimal',       l:'미니멀',    icon:'➖', desc:'테두리 없음, 구분선만'},
               {v:'timeline',      l:'타임라인',  icon:'📅', desc:'왼쪽 색선 강조'},
-              {v:'card3d',        l:'3D 카드',   icon:'🎴', desc:'입체 그림자 효과'},
+
               {v:'glass',         l:'유리',      icon:'🔮', desc:'반투명 유리 효과'},
-              {v:'sharp',         l:'각진',      icon:'▬',  desc:'직각 카드'},
-              {v:'bubble',        l:'버블',      icon:'💬', desc:'크고 둥근 버블형'},
-              {v:'neon',          l:'네온',      icon:'⚡', desc:'네온 발광 테두리'},
-              {v:'floating',      l:'플로팅',    icon:'🎈', desc:'둥실 떠오르는 그림자'},
-              {v:'retro',         l:'레트로',    icon:'🕹️', desc:'복고풍 진한 테두리'},
-              {v:'ticket',        l:'티켓',      icon:'🎟️', desc:'점선 티켓 스타일'},
               {v:'frosted',       l:'프로스트',  icon:'❄️', desc:'세련된 frosted glass'},
-              {v:'stripe',        l:'스트라이프', icon:'🟦', desc:'왼쪽 컬러 스트라이프'},
-              {v:'pill',          l:'알약형',    icon:'💊', desc:'완전 둥근 알약 카드'},
-              {v:'bold-border',   l:'굵은선',    icon:'🖊️', desc:'컬러 두꺼운 테두리'},
-              {v:'shadow-left',   l:'사이드 쉐도우', icon:'🌗', desc:'측면 강조 그림자'},
-              {v:'gradient-bg',   l:'그라데이션', icon:'🌈', desc:'모드 컬러 그라데이션 배경'},
+              {v:'floating',      l:'플로팅',    icon:'🎈', desc:'둥실 떠오르는 그림자'},
               {v:'soft-round',    l:'소프트',    icon:'🫧', desc:'더 둥글고 부드러운 카드'},
-              {v:'bevel',         l:'베벨',      icon:'🔻', desc:'대각 모서리 베벨 느낌'},
-              {v:'cut-corner',    l:'컷코너',    icon:'✂️', desc:'모서리 컷(clip-path)'},
-              {v:'double',        l:'이중선',    icon:'🧷', desc:'테두리 이중 라인'},
               {v:'deep',          l:'딥쉐도우',  icon:'🕳️', desc:'깊은 그림자 강조'},
-              {v:'underline',     l:'언더라인',  icon:'📏', desc:'하단 컬러 라인'},
+
+              {v:'card3d',        l:'3D 카드',   icon:'🎴', desc:'입체 그림자 효과'},
+              {v:'neon',          l:'네온',      icon:'⚡', desc:'네온 발광 테두리'},
+              {v:'stripe',        l:'스트라이프', icon:'🟦', desc:'왼쪽 컬러 스트라이프'},
+              {v:'gradient-bg',   l:'그라데이션', icon:'🌈', desc:'모드 컬러 그라데이션 배경'},
+              {v:'shadow-left',   l:'사이드 쉐도우', icon:'🌗', desc:'측면 강조 그림자'},
               {v:'inset',         l:'인셋',      icon:'🧊', desc:'안쪽 테두리(inset)'},
-              {v:'paper',         l:'페이퍼',    icon:'📄', desc:'종이 텍스처 느낌'},
               {v:'topline',       l:'탑라인',    icon:'⬆️', desc:'상단 컬러 바'},
               {v:'split-bg',      l:'스플릿BG',  icon:'🌓', desc:'좌측 컬러 틴트 분할'},
-              {v:'comic',         l:'코믹',      icon:'💥', desc:'굵은 테두리+툰 느낌'},
+              {v:'underline',     l:'언더라인',  icon:'📏', desc:'하단 컬러 라인'},
+
+              {v:'retro',         l:'레트로',    icon:'🕹️', desc:'복고풍 진한 테두리'},
+              {v:'paper',         l:'페이퍼',    icon:'📄', desc:'종이 텍스처 느낌'},
               {v:'terminal',      l:'터미널',    icon:'⌨️', desc:'모노톤 콘솔 스타일'},
+              {v:'double',        l:'이중선',    icon:'🧷', desc:'테두리 이중 라인'},
+              {v:'bold-border',   l:'굵은선',    icon:'🖊️', desc:'컬러 두꺼운 테두리'},
+              {v:'comic',         l:'코믹',      icon:'💥', desc:'굵은 테두리+툰 느낌'},
+              {v:'bubble',        l:'버블',      icon:'💬', desc:'크고 둥근 버블형'},
+              {v:'pill',          l:'알약형',    icon:'💊', desc:'완전 둥근 알약 카드'},
+
+              {v:'sharp',         l:'각진',      icon:'▬',  desc:'직각 카드'},
+              {v:'bevel',         l:'베벨',      icon:'🔻', desc:'대각 모서리 베벨 느낌'},
+              {v:'cut-corner',    l:'컷코너',    icon:'✂️', desc:'모서리 컷(clip-path)'},
               {v:'notch',         l:'노치',      icon:'🧩', desc:'노치 코너 카드'},
-              {v:'wave',          l:'웨이브',    icon:'🌊', desc:'물결형 실루엣'},
+              {v:'ticket',        l:'티켓',      icon:'🎟️', desc:'점선 티켓 스타일'},
+              {v:'stamp',         l:'스탬프',    icon:'📮', desc:'점선+스탬프 느낌'},
+              {v:'scallop',       l:'스캘럽',    icon:'🪡', desc:'톱니/스캘럽 가장자리'},
+              {v:'tab',           l:'탭',        icon:'🔖', desc:'상단 탭이 있는 카드'},
               {v:'tag',           l:'태그',      icon:'🏷️', desc:'꼬리표(tag) 모양'},
               {v:'ribbon',        l:'리본',      icon:'🎗️', desc:'양쪽 리본 컷'},
               {v:'badge',         l:'배지',      icon:'🏅', desc:'옥타곤 배지형'},
               {v:'hex',           l:'육각',      icon:'⬢',  desc:'육각형 클립'},
               {v:'slant',         l:'사선',      icon:'⟋',  desc:'사선(평행사변형)'},
-              {v:'stamp',         l:'스탬프',    icon:'📮', desc:'점선+스탬프 느낌'},
-              {v:'scallop',       l:'스캘럽',    icon:'🪡', desc:'톱니/스캘럽 가장자리'},
-              {v:'tab',           l:'탭',        icon:'🔖', desc:'상단 탭이 있는 카드'},
+              {v:'wave',          l:'웨이브',    icon:'🌊', desc:'물결형 실루엣'},
               {v:'bracket',       l:'브라켓',    icon:'⟦⟧', desc:'중앙 홈(브라켓) 형태'},
               {v:'shield',        l:'실드',      icon:'🛡️', desc:'하단 뾰족(방패)'},
               {v:'bookmark',      l:'북마크',    icon:'🔻', desc:'하단 접힌 북마크'},
@@ -919,11 +923,31 @@ ${_scfgD('notice','📢 공지 관리')}
               {v:'burst',         l:'버스트',    icon:'💢', desc:'가시/스파이크 형태'},
               {v:'cloud',         l:'클라우드',  icon:'☁️', desc:'둥근 물결(구름)'},
             ];
-            return _shapes.map(s=>`<button type="button"
+            const byV = Object.create(null);
+            _all.forEach(s=>{ byV[s.v]=s; });
+
+            const groups = [
+              {t:'기본/레이아웃', keys:['default','compact','wide','minimal','timeline']},
+              {t:'세련/모던', keys:['glass','frosted','floating','soft-round','deep']},
+              {t:'포인트/효과', keys:['card3d','neon','stripe','gradient-bg','shadow-left','inset','topline','split-bg','underline']},
+              {t:'귀엽/레트로', keys:['bubble','comic','retro','paper','terminal','double','bold-border','pill']},
+              {t:'특수 실루엣', keys:['sharp','bevel','cut-corner','notch','ticket','stamp','scallop','tab','tag','ribbon','badge','hex','slant','wave','bracket','shield','bookmark','hourglass','zigzag','burst','cloud']},
+            ];
+
+            const btn = (s)=>`<button type="button"
               onclick="if(typeof cfgSetRecCardShape==='function')cfgSetRecCardShape('${s.v}');try{render();}catch(e){}"
               title="${s.desc}"
               style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${_curShape===s.v?'var(--blue)':'var(--border2)'};background:${_curShape===s.v?'#eff6ff':'var(--white)'};color:${_curShape===s.v?'var(--blue)':'var(--text2)'}"
-            >${s.icon} ${s.l}</button>`).join('');
+            >${s.icon} ${s.l}</button>`;
+
+            return groups.map(g=>{
+              const items = g.keys.map(k=>byV[k]).filter(Boolean);
+              if(!items.length) return '';
+              return `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:2px 0">
+                <span style="padding:3px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--border);font-size:10px;font-weight:900;color:var(--text3)">${g.t}</span>
+                ${items.map(btn).join('')}
+              </div>`;
+            }).join('');
           })()}
         </div>
         <span style="font-size:11px;color:var(--gray-l)">카드 레이아웃/모양을 변경합니다</span>

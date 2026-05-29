@@ -131,7 +131,7 @@ window.openEP=function(name){
   const _p4X = _pct(p.photo4PosX, 50),        _p4Y = _pct(p.photo4PosY, 50),        _p4Use = _use(p.photo4PosUse);
   const _p5X = _pct(p.photo5PosX, 50),        _p5Y = _pct(p.photo5PosY, 50),        _p5Use = _use(p.photo5PosUse);
   const _scX = _pct(p.shareCardPhotoPosX, 50), _scY = _pct(p.shareCardPhotoPosY, 22), _scUse = _use(p.shareCardPhotoPosUse);
-  const _d23 = _dly(p.photoDelay23), _d34 = _dly(p.photoDelay34), _d45 = _dly(p.photoDelay45), _d51 = _dly(p.photoDelay51);
+  const _d12 = _dly(p.photoDelay12), _d23 = _dly(p.photoDelay23), _d34 = _dly(p.photoDelay34), _d45 = _dly(p.photoDelay45), _d51 = _dly(p.photoDelay51);
   document.getElementById('emBody').innerHTML=`
     <label>스트리머 이름</label><input type="text" id="ed-n" value="${p.name}">
     <label>티어</label><select id="ed-t">${TIERS.map(t=>`<option value="${t}"${p.tier===t?' selected':''}>${getTierLabel(t)}</option>`).join('')}</select>
@@ -199,7 +199,7 @@ window.openEP=function(name){
         <div id="ed-photo-warn" style="font-size:10px;color:${p.photo&&p.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-left:44px">${p.photo&&p.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 1은 현황판 카드에도 사용됩니다.'}</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;font-weight:700;color:var(--text3);min-width:36px">이미지 2</span>
-          <input type="text" id="ed-photo2" value="${p.secondProfileFile||''}" placeholder="https://... 1초 후 전환" style="flex:1">
+          <input type="text" id="ed-photo2" value="${p.secondProfileFile||''}" placeholder="https://... (전환 시간 설정 가능)" style="flex:1">
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;font-weight:700;color:var(--text3);min-width:36px">이미지 3</span>
@@ -218,6 +218,10 @@ window.openEP=function(name){
         <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">전환 시간(초)</div>
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
           <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">1 → 2</div>
+            <input type="number" id="ed-delay-12" min="0.2" max="60" step="0.1" value="${_d12}" style="width:100%">
+          </div>
+          <div>
             <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">2 → 3</div>
             <input type="number" id="ed-delay-23" min="0.2" max="60" step="0.1" value="${_d23}" style="width:100%">
           </div>
@@ -230,11 +234,11 @@ window.openEP=function(name){
             <input type="number" id="ed-delay-45" min="0.2" max="60" step="0.1" value="${_d45}" style="width:100%">
           </div>
           <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">5 → 1</div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">마지막 → 1</div>
             <input type="number" id="ed-delay-51" min="0.2" max="60" step="0.1" value="${_d51}" style="width:100%">
           </div>
         </div>
-        <div style="font-size:10px;color:var(--gray-l);margin-top:6px">※ 다음 이미지가 존재할 때만 해당 구간 시간 설정이 적용됩니다.</div>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:6px">※ 1/2만 있으면 2에서 멈춥니다. (2에서 계속 표시)</div>
       </div>
     </div>
 
@@ -788,6 +792,7 @@ function savePlayer(){
       const v = _clampDelay(document.getElementById(elId)?.value || '1');
       if (v === 1) delete p[key]; else p[key] = v;
     };
+    _setDelay('photoDelay12', 'ed-delay-12');
     _setDelay('photoDelay23', 'ed-delay-23');
     _setDelay('photoDelay34', 'ed-delay-34');
     _setDelay('photoDelay45', 'ed-delay-45');

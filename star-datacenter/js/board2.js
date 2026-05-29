@@ -3228,6 +3228,7 @@ function openB2ProfileEditModal(playerName) {
     if(isNaN(n)) return 1;
     return Math.max(0.2, Math.min(60, n));
   };
+  const d12 = clampDelay(player.photoDelay12 ?? 1);
   const d23 = clampDelay(player.photoDelay23 ?? 1);
   const d34 = clampDelay(player.photoDelay34 ?? 1);
   const d45 = clampDelay(player.photoDelay45 ?? 1);
@@ -3259,9 +3260,9 @@ function openB2ProfileEditModal(playerName) {
         <div id="b2-ed-photo-warn" style="font-size:10px;color:${player.photo&&player.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:4px">${player.photo&&player.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
       </div>
       <div style="margin-bottom:16px">
-        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 2 (모바일/교체용) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(1초 후 자동 교체)</span></label>
+        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 2 (모바일/교체용) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(설정한 시간 후 자동 교체)</span></label>
         <input type="text" id="b2-ed-second-profile" value="${player.secondProfileFile||''}" placeholder="https://... 이미지 URL 입력" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">스트리머 선택 후 1초 뒤 이 이미지로 자동 전환됩니다.</div>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">스트리머 선택 후 설정한 시간 뒤 이 이미지로 자동 전환됩니다.</div>
       </div>
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 3 (순환용)</label>
@@ -3280,6 +3281,10 @@ function openB2ProfileEditModal(playerName) {
         <div style="font-size:13px;font-weight:800;color:var(--text2);margin-bottom:10px">전환 시간(초)</div>
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
           <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">1 → 2</div>
+            <input type="number" id="b2-ed-delay-12" min="0.2" max="60" step="0.1" value="${d12}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          </div>
+          <div>
             <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">2 → 3</div>
             <input type="number" id="b2-ed-delay-23" min="0.2" max="60" step="0.1" value="${d23}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
           </div>
@@ -3292,11 +3297,11 @@ function openB2ProfileEditModal(playerName) {
             <input type="number" id="b2-ed-delay-45" min="0.2" max="60" step="0.1" value="${d45}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
           </div>
           <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">5 → 1</div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">마지막 → 1</div>
             <input type="number" id="b2-ed-delay-51" min="0.2" max="60" step="0.1" value="${d51}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
           </div>
         </div>
-        <div style="font-size:10px;color:var(--gray-l);margin-top:10px">※ 1 → 2는 항상 1초, 1/2만 있으면 2에서 멈춥니다. mp4는 끝까지 재생 후 이동합니다.</div>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:10px">※ 1/2만 있으면 2에서 멈춥니다. mp4는 끝까지 재생 후 이동합니다.</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:20px">
         <button onclick="document.getElementById('b2-profile-edit-modal').remove()" style="flex:1;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer">취소</button>
@@ -3355,6 +3360,7 @@ function saveB2Profile(playerName) {
     if(isNaN(n)) return 1;
     return Math.max(0.2, Math.min(60, n));
   };
+  const d12 = clampDelay(document.getElementById('b2-ed-delay-12')?.value || '1');
   const d23 = clampDelay(document.getElementById('b2-ed-delay-23')?.value || '1');
   const d34 = clampDelay(document.getElementById('b2-ed-delay-34')?.value || '1');
   const d45 = clampDelay(document.getElementById('b2-ed-delay-45')?.value || '1');
@@ -3371,6 +3377,7 @@ function saveB2Profile(playerName) {
   player.profileFile3 = thirdProfileUrl || undefined;
   player.profileFile4 = fourthProfileUrl || undefined;
   player.profileFile5 = fifthProfileUrl || undefined;
+  if(d12 === 1) delete player.photoDelay12; else player.photoDelay12 = d12;
   if(d23 === 1) delete player.photoDelay23; else player.photoDelay23 = d23;
   if(d34 === 1) delete player.photoDelay34; else player.photoDelay34 = d34;
   if(d45 === 1) delete player.photoDelay45; else player.photoDelay45 = d45;

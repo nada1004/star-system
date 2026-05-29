@@ -10388,8 +10388,7 @@ body.submenu-btn--badge .tier-filter-btn {
   --h2h-card-shadow: none;
 }
 
-body[class*="rc-shape--"] .grp-match-card,
-body[class*="rc-shape--"] .tc-card{
+body[class*="rc-shape--"] :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   border-radius: var(--tc-shape-radius, 12px) !important;
   box-shadow: var(--tc-shape-shadow, none) !important;
   overflow: hidden;
@@ -10443,124 +10442,101 @@ body.rc-shape--zigzag{ --tc-shape-radius: 0px; --tc-shape-shadow: 0 14px 28px rg
 body.rc-shape--burst{ --tc-shape-radius: 0px; --tc-shape-shadow: 0 18px 38px rgba(15,23,42,.14); }
 body.rc-shape--cloud{ --tc-shape-radius: 0px; --tc-shape-shadow: 0 14px 28px rgba(15,23,42,.12); }
 
-body.rc-shape--double .grp-match-card,
-body.rc-shape--double .tc-card{
+body.rc-shape--double :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   outline: 2px solid rgba(148,163,184,.22);
   outline-offset: 2px;
 }
 
-body.rc-shape--underline .grp-match-card,
-body.rc-shape--underline .tc-card{
+body.rc-shape--underline :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   box-shadow: var(--tc-shape-shadow, none), inset 0 -4px 0 rgba(148,163,184,.22) !important;
 }
 
-body.rc-shape--comic .grp-match-card,
-body.rc-shape--comic .tc-card{
+body.rc-shape--comic :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   outline: 3px solid rgba(15,23,42,.75);
   outline-offset: 0px;
 }
 
-body.rc-shape--ticket .grp-match-card,
-body.rc-shape--ticket .tc-card{
+body.rc-shape--ticket :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   border-style: dashed !important;
   border-width: 1.5px !important;
   clip-path: polygon(0% 0%, 100% 0%, 100% calc(50% - 14px), calc(100% - 10px) calc(50% - 12px), calc(100% - 10px) calc(50% + 12px), 100% calc(50% + 14px), 100% 100%, 0% 100%, 0% calc(50% + 14px), 10px calc(50% + 12px), 10px calc(50% - 12px), 0% calc(50% - 14px));
 }
 
-body.rc-shape--cut-corner .grp-match-card,
-body.rc-shape--cut-corner .tc-card{
+body.rc-shape--cut-corner :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 0%, calc(100% - 14px) 0%, 100% 14px, 100% 100%, 14px 100%, 0% calc(100% - 14px));
 }
 
-body.rc-shape--notch .grp-match-card,
-body.rc-shape--notch .tc-card{
+body.rc-shape--notch :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 0%, calc(100% - 14px) 0%, 100% 14px, 100% 100%, 14px 100%, 0% calc(100% - 14px));
 }
 
-body.rc-shape--wave .grp-match-card,
-body.rc-shape--wave .tc-card{
+body.rc-shape--wave :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 10%, 7% 0%, 18% 6%, 30% 0%, 42% 6%, 54% 0%, 66% 6%, 78% 0%, 90% 6%, 100% 0%, 100% 90%, 93% 100%, 82% 94%, 70% 100%, 58% 94%, 46% 100%, 34% 94%, 22% 100%, 10% 94%, 0% 100%);
 }
 
-body.rc-shape--tag .grp-match-card,
-body.rc-shape--tag .tc-card{
+body.rc-shape--tag :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 0%, 92% 0%, 100% 50%, 92% 100%, 0% 100%, 6% 50%);
 }
 
-body.rc-shape--ribbon .grp-match-card,
-body.rc-shape--ribbon .tc-card{
+body.rc-shape--ribbon :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 0%, 100% 0%, 94% 50%, 100% 100%, 0% 100%, 6% 50%);
 }
 
-body.rc-shape--badge .grp-match-card,
-body.rc-shape--badge .tc-card{
+body.rc-shape--badge :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(8% 0%,92% 0%,100% 20%,100% 80%,92% 100%,8% 100%,0% 80%,0% 20%);
 }
 
-body.rc-shape--hex .grp-match-card,
-body.rc-shape--hex .tc-card{
+body.rc-shape--hex :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(8% 0%,92% 0%,100% 50%,92% 100%,8% 100%,0% 50%);
 }
 
-body.rc-shape--slant .grp-match-card,
-body.rc-shape--slant .tc-card{
+body.rc-shape--slant :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%);
 }
 
-body.rc-shape--stamp .grp-match-card,
-body.rc-shape--stamp .tc-card{
+body.rc-shape--stamp :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   border-style: dashed !important;
   border-width: 2px !important;
   clip-path: polygon(0% 6%, 6% 0%, 94% 0%, 100% 6%, 100% 94%, 94% 100%, 6% 100%, 0% 94%);
 }
 
-body.rc-shape--scallop .grp-match-card,
-body.rc-shape--scallop .tc-card{
+body.rc-shape--scallop :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 10%, 5% 0%, 15% 10%, 25% 0%, 35% 10%, 45% 0%, 55% 10%, 65% 0%, 75% 10%, 85% 0%, 95% 10%, 100% 0%, 100% 90%, 95% 100%, 85% 90%, 75% 100%, 65% 90%, 55% 100%, 45% 90%, 35% 100%, 25% 90%, 15% 100%, 5% 90%, 0% 100%);
 }
 
-body.rc-shape--bracket .grp-match-card,
-body.rc-shape--bracket .tc-card{
+body.rc-shape--bracket :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 0%, 100% 0%, 100% 40%, 92% 50%, 100% 60%, 100% 100%, 0% 100%, 0% 60%, 8% 50%, 0% 40%);
 }
 
-body.rc-shape--shield .grp-match-card,
-body.rc-shape--shield .tc-card{
+body.rc-shape--shield :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 0%, 100% 0%, 100% 78%, 50% 100%, 0% 78%);
 }
 
-body.rc-shape--bookmark .grp-match-card,
-body.rc-shape--bookmark .tc-card{
+body.rc-shape--bookmark :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 82%, 0% 100%);
 }
 
-body.rc-shape--hourglass .grp-match-card,
-body.rc-shape--hourglass .tc-card{
+body.rc-shape--hourglass :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 0%, 100% 0%, 85% 50%, 100% 100%, 0% 100%, 15% 50%);
 }
 
-body.rc-shape--zigzag .grp-match-card,
-body.rc-shape--zigzag .tc-card{
+body.rc-shape--zigzag :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 12%, 10% 0%, 20% 12%, 30% 0%, 40% 12%, 50% 0%, 60% 12%, 70% 0%, 80% 12%, 90% 0%, 100% 12%, 100% 88%, 90% 100%, 80% 88%, 70% 100%, 60% 88%, 50% 100%, 40% 88%, 30% 100%, 20% 88%, 10% 100%, 0% 88%);
 }
 
-body.rc-shape--burst .grp-match-card,
-body.rc-shape--burst .tc-card{
+body.rc-shape--burst :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 20%, 8% 0%, 20% 8%, 30% 0%, 40% 8%, 50% 0%, 60% 8%, 70% 0%, 80% 8%, 92% 0%, 100% 20%, 92% 40%, 100% 60%, 92% 80%, 80% 92%, 70% 100%, 60% 92%, 50% 100%, 40% 92%, 30% 100%, 20% 92%, 8% 100%, 0% 80%, 8% 60%, 0% 40%);
 }
 
-body.rc-shape--cloud .grp-match-card,
-body.rc-shape--cloud .tc-card{
+body.rc-shape--cloud :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   clip-path: polygon(0% 22%, 10% 6%, 28% 0%, 40% 10%, 58% 0%, 74% 6%, 90% 0%, 100% 22%, 100% 78%, 90% 100%, 74% 94%, 58% 100%, 40% 90%, 28% 100%, 10% 94%, 0% 78%);
 }
 
-body.rc-shape--tab .grp-match-card,
-body.rc-shape--tab .tc-card{
+body.rc-shape--tab :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card){
   overflow: visible !important;
   position: relative;
 }
-body.rc-shape--tab .grp-match-card::before,
-body.rc-shape--tab .tc-card::before{
+body.rc-shape--tab :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card)::before{
   content:'';
   position:absolute;
   left:18px;
@@ -10573,8 +10549,7 @@ body.rc-shape--tab .tc-card::before{
   background: var(--white);
   box-shadow: 0 10px 18px rgba(15,23,42,.10);
 }
-body.dark.rc-shape--tab .grp-match-card::before,
-body.dark.rc-shape--tab .tc-card::before{
+body.dark.rc-shape--tab :is(.grp-match-card,.tc-card,.rec-summary,.rec-card,.mb-card)::before{
   background: rgba(15,23,42,.86);
   border-color: rgba(255,255,255,.12);
 }

@@ -385,10 +385,12 @@ function _b2ScheduleImageSwap(playerName) {
   const delayMs = (fromSlot, toSlot)=>{
     try{
       if(!p) return 1000;
-      if(fromSlot===2 && toSlot===3) return Math.round(clampSec(p.photoDelay23 ?? 1, 1) * 1000);
-      if(fromSlot===3 && toSlot===4) return Math.round(clampSec(p.photoDelay34 ?? 1, 1) * 1000);
-      if(fromSlot===4 && toSlot===5) return Math.round(clampSec(p.photoDelay45 ?? 1, 1) * 1000);
-      if(fromSlot===5 && toSlot===1) return Math.round(clampSec(p.photoDelay51 ?? 1, 1) * 1000);
+      if(toSlot===1) return Math.round(clampSec(p.photoDelay51 ?? 1, 1) * 1000);
+      if(fromSlot===1) return Math.round(clampSec(p.photoDelay12 ?? 1, 1) * 1000);
+      if(fromSlot===2) return Math.round(clampSec(p.photoDelay23 ?? 1, 1) * 1000);
+      if(fromSlot===3) return Math.round(clampSec(p.photoDelay34 ?? 1, 1) * 1000);
+      if(fromSlot===4) return Math.round(clampSec(p.photoDelay45 ?? 1, 1) * 1000);
+      if(fromSlot===5) return Math.round(clampSec(p.photoDelay51 ?? 1, 1) * 1000);
     }catch(e){}
     return 1000;
   };
