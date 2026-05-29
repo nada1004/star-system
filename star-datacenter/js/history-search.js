@@ -773,6 +773,21 @@ function _ensureHistDetailModal(){
   return m;
 }
 
+window._refreshOpenHistDetailAfterEdit = function(editedMode, editedIdx){
+  try{
+    const st = window._lastHistDetailState || null;
+    if(!st || !st.key) return;
+    if(String(st.mode||'') !== String(editedMode||'')) return;
+    if(Number(st.idx) !== Number(editedIdx)) return;
+    const arrMap = { mini: miniM, univm: univM, ck: ckM, pro: proM, tt: ttM, comp: comps, ind: indM, gj: gjM, progj: gjM };
+    const src = arrMap[String(editedMode||'')] || null;
+    if(src && src[editedIdx] && window._detReg && window._detReg[st.key]){
+      window._detReg[st.key].m = src[editedIdx];
+    }
+    if(typeof openHistDetailModal === 'function') openHistDetailModal(st.key);
+  }catch(e){}
+};
+
 function _getMatchDetailTeamHeaderColor(modeKey, side, fallback){
   try{
     const mode = String(modeKey||'').trim();
@@ -820,6 +835,15 @@ function openHistDetailModal(key){
   const match=reg.m;
   const idx = (reg.idx!==undefined && reg.idx!==null) ? reg.idx : null;
   const modeKey = reg.mode || '';
+  try{
+    const mode = String(modeKey||'').trim();
+    const modeForEdit = (mode==='civil') ? 'mini' : mode;
+    const canEdit = !!(typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin) && idx!=null;
+    const editable = ['mini','univm','ck','pro','tt','comp'].includes(modeForEdit);
+    if(canEdit && editable && match && !match._editRef){
+      match._editRef = `${modeForEdit}:${idx}`;
+    }
+  }catch(e){}
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   const _resolveOriginalShareSource = ()=> typeof window._resolveHistoryShareSource==='function'
     ? window._resolveHistoryShareSource(match, modeKey, idx)

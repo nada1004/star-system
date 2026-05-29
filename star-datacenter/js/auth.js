@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿/* ══════════════════════════════════════
+﻿﻿﻿﻿﻿/* ══════════════════════════════════════
    로그인 시스템
 ══════════════════════════════════════ */
 // SHA-256 암호화 (crypto.subtle 미지원 환경(file:// 등) 폴백 포함)
@@ -1077,6 +1077,7 @@ function saveGameEdit(editRef, si, gi, btn){
   // 전용 모달이면 cm()으로 닫기, 레거시(동적 생성) 모달이면 remove()
   try{ if(document.getElementById('gameEditModal')) cm('gameEditModal'); else if(btn&&btn.closest) btn.closest('.modal').remove(); }catch(e){ try{ cm('gameEditModal'); }catch(_){} }
   render();
+  try{ if(typeof window._refreshOpenHistDetailAfterEdit==='function') window._refreshOpenHistDetailAfterEdit(mode, idx); }catch(e){}
   // (보강) 티어대회 경기 수정 후 최근 경기 누락 방지
   try{ if(mode==='tt' && typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
   try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}

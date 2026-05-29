@@ -1351,7 +1351,7 @@ function saveRow(){
   if(_reArr && _reArr[reIdx]) {
     if(_reCaster) _reArr[reIdx].caster = _reCaster; else delete _reArr[reIdx].caster;
   }
-  save();render();cm('reModal');
+  save();render();cm('reModal');try{ if(typeof window._refreshOpenHistDetailAfterEdit==='function') window._refreshOpenHistDetailAfterEdit(reMode, reIdx); }catch(e){}
 }
 
 /* ════════════════════════════════════════════════════════
