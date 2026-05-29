@@ -88,9 +88,9 @@ function _lazyLoadingView(T, C, title, desc){
 
 async function _ensureRouletteLoaded(){
   const scripts=[
-    'js/roulette.js?v=20260424-08',
+    'js/wheel.js?v=20260529-01',
     'js/duck-race.js?v=20260424-04',
-    'js/wheel.js?v=20260416-08',
+    'js/roulette.js?v=20260529-01',
   ];
   for(const src of scripts) await _loadScriptOnce(src);
 }

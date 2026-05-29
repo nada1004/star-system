@@ -141,7 +141,7 @@ function _whRender(root) {
     + '<div class="wh-chipbox">' + (parsed.entries.map(function(it){
         const nmRaw = (it.name||'');
         const nmDisp = nmRaw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        const nmJs = nmRaw.replace(/\/g,'\\').replace(/'/g,"\'");
+        const nmJs = nmRaw.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         return '<span class="wh-chip">' + nmDisp + '<button class="wh-chip-x" onclick="_whRemoveOne(\'' + nmJs + '\')">✕</button></span>';
       }).join('') || '') + '</div>'
     // 캔버스 + 버튼
@@ -370,7 +370,7 @@ function _whRefreshChips(){
   box.innerHTML = (parsed.entries.map(function(it){
     const nmRaw = (it.name||'');
     const nmDisp = nmRaw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const nmJs = nmRaw.replace(/\/g,'\\').replace(/'/g,"\'");
+    const nmJs = nmRaw.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     return '<span class="wh-chip">' + nmDisp + '<button class="wh-chip-x" onclick="_whRemoveOne(\'' + nmJs + '\')">✕</button></span>';
   }).join('') || '');
 }

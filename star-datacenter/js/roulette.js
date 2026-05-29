@@ -40,11 +40,11 @@ function rRoulette(C, T) {
         if (el) el.value = localStorage.getItem('su_ppg_prize_' + k) || '';
       }
     })();
-    if (_gcTab === 'ladder') { setTimeout(_ldInit, 60); }
-    else if (_gcTab === 'duck') { setTimeout(_drInit, 60); }
-    else if (_gcTab === 'wheel') { setTimeout(_whInit, 60); }
-    else if (_gcTab === 'ppopgi') { setTimeout(_ppgInit, 60); }
-    else { setTimeout(_gcSetup, 60); }
+    if (_gcTab === 'ladder') { setTimeout(()=>{ try{ if(typeof _ldInit==='function') _ldInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'duck') { setTimeout(()=>{ try{ if(typeof _drInit==='function') _drInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'wheel') { setTimeout(()=>{ try{ if(typeof _whInit==='function') _whInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'ppopgi') { setTimeout(()=>{ try{ if(typeof _ppgInit==='function') _ppgInit(); }catch(e){} }, 60); }
+    else { setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60); }
     return;
   }
 
@@ -64,15 +64,15 @@ function rRoulette(C, T) {
     }
   })();
   if (_gcTab === 'ladder') {
-    setTimeout(_ldInit, 60);
+    setTimeout(()=>{ try{ if(typeof _ldInit==='function') _ldInit(); }catch(e){} }, 60);
   } else if (_gcTab === 'duck') {
-    setTimeout(_drInit, 60);
+    setTimeout(()=>{ try{ if(typeof _drInit==='function') _drInit(); }catch(e){} }, 60);
   } else if (_gcTab === 'wheel') {
-    setTimeout(_whInit, 60);
+    setTimeout(()=>{ try{ if(typeof _whInit==='function') _whInit(); }catch(e){} }, 60);
   } else if (_gcTab === 'ppopgi') {
-    setTimeout(_ppgInit, 60);
+    setTimeout(()=>{ try{ if(typeof _ppgInit==='function') _ppgInit(); }catch(e){} }, 60);
   } else {
-    setTimeout(_gcSetup, 60);
+    setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }
   // (요청사항) 확률(%) 표시는 제거
 }
@@ -699,25 +699,25 @@ function _gcSwitchTab(tab) {
   if (tab === 'new') tab = 'player';
   if (_gcTab === 'duck' && tab !== 'duck' && typeof _drCleanup === 'function') _drCleanup();
   if (_gcTab === 'ladder' && tab !== 'ladder') {
-    if (_ldAnimId2) { cancelAnimationFrame(_ldAnimId2); _ldAnimId2 = null; }
-    _ldAnimating = false;
+    if (typeof _ldAnimId2 !== 'undefined' && _ldAnimId2) { cancelAnimationFrame(_ldAnimId2); _ldAnimId2 = null; }
+    if (typeof _ldAnimating !== 'undefined') _ldAnimating = false;
   }
   if (_gcTab === 'wheel' && tab !== 'wheel') {
-    if (_whAnimId) { cancelAnimationFrame(_whAnimId); _whAnimId = null; }
-    _whSpinning = false;
+    if (typeof _whAnimId !== 'undefined' && _whAnimId) { cancelAnimationFrame(_whAnimId); _whAnimId = null; }
+    if (typeof _whSpinning !== 'undefined') _whSpinning = false;
   }
   _gcTab = tab;
   render();
   if (tab === 'ladder') {
-    setTimeout(_ldInit, 60);
+    setTimeout(()=>{ try{ if(typeof _ldInit==='function') _ldInit(); }catch(e){} }, 60);
   } else if (tab === 'duck') {
-    setTimeout(_drInit, 60);
+    setTimeout(()=>{ try{ if(typeof _drInit==='function') _drInit(); }catch(e){} }, 60);
   } else if (tab === 'wheel') {
-    setTimeout(_whInit, 60);
+    setTimeout(()=>{ try{ if(typeof _whInit==='function') _whInit(); }catch(e){} }, 60);
   } else if (tab === 'ppopgi') {
-    setTimeout(_ppgInit, 60);
+    setTimeout(()=>{ try{ if(typeof _ppgInit==='function') _ppgInit(); }catch(e){} }, 60);
   } else {
-    setTimeout(_gcSetup, 60);
+    setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }
 }
 
