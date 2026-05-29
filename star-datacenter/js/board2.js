@@ -390,7 +390,7 @@ function rBoard2(C, T) {
       prewarmImageUrls(photoUrls, 80);
     } catch(e) {}
   };
-  _b2PrewarmViewImages();
+  setTimeout(() => { try{ _b2PrewarmViewImages(); }catch(e){} }, 120);
 
   const sub = document.getElementById('b2-content');
   if(sub) sub.innerHTML = `<div style="padding:26px 14px;color:var(--text3);font-size:12px;font-weight:700">로딩 중...</div>`;
@@ -474,12 +474,17 @@ function _b2UnivView() {
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">표시할 대학이 없습니다</div>`;
   // [FIX-UNIV-1] dissolved 대학 선수 제외 공통 필터
   const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved).map(u=>String(u.name||'').trim()));
-  const _memberFilter = (univName) => players.filter(p =>
-    String(p?.univ||'').trim() === String(univName||'').trim()
-    && !p.hidden && !p.retired && !p.hideFromBoard
-    && !_dissSet.has(String(p?.univ||'').trim())
-  );
-  const _allVis = players.filter(p => univList.some(u=>String(u.name||'').trim()===String(p?.univ||'').trim()) && !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet.has(String(p?.univ||'').trim()));
+  const _univNameSet = new Set(univList.map(u=>String(u&&u.name||'').trim()).filter(Boolean));
+  const membersByUniv = {};
+  const _allVis = [];
+  (players||[]).forEach(p=>{
+    const pu = String(p?.univ||'').trim();
+    if(!_univNameSet.has(pu)) return;
+    if(p.hidden || p.retired || p.hideFromBoard) return;
+    if(_dissSet.has(pu)) return;
+    _allVis.push(p);
+    (membersByUniv[pu] || (membersByUniv[pu]=[])).push(p);
+  });
   const _tierCts = {}; _allVis.forEach(p=>{ const t=p.tier||'?'; _tierCts[t]=(_tierCts[t]||0)+1; });
   const statsBar = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:7px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;flex-wrap:wrap">
     <span style="font-size:12px;font-weight:800;color:var(--text2)">👥 ${_allVis.length}명</span>
@@ -495,7 +500,7 @@ function _b2UnivView() {
       console.warn('[현황판] 대학 이름이 없는 데이터가 발견되었습니다:', u);
       return;
     }
-    const members = _memberFilter(u.name); // [FIX-UNIV-1] 공통 필터 사용
+    const members = membersByUniv[String(u.name||'').trim()] || [];
     h += _b2UnivBlock(u.name, gc(u.name), members);
   });
   h += `</div>`;
@@ -3799,10 +3804,12 @@ function _b2RadarView() {
     members.forEach(p=>{
       const seen = { mini:false, univm:false, ck:false, tt:false, comp:false };
       _hist(p).forEach(h=>{
-        const r2 = String(h && h.result || '').trim();
-        if(r2 === '승') wins++;
-        else if(r2 === '패') losses++;
         const k = _modeKey(h && h.mode);
+        if(k && (k in part)){
+          const r2 = String(h && h.result || '').trim();
+          if(r2 === '승') wins++;
+          else if(r2 === '패') losses++;
+        }
         if(k && k in seen) seen[k] = true;
         if(!k || !(k in part)) return;
       });
