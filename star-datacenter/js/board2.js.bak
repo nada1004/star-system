@@ -3,21 +3,6 @@
    (구현황판 통합 포함)
 ══════════════════════════════════════ */
 
-/* innerHTML로 삽입된 <script> 태그는 브라우저가 자동 실행하지 않으므로
-   이 헬퍼로 추출해서 수동으로 실행합니다. */
-function _b2InjectAndRunScripts(container) {
-  const scripts = container.querySelectorAll('script');
-  scripts.forEach(oldScript => {
-    const newScript = document.createElement('script');
-    if (oldScript.src) {
-      newScript.src = oldScript.src;
-    } else {
-      newScript.textContent = oldScript.textContent;
-    }
-    oldScript.parentNode.replaceChild(newScript, oldScript);
-  });
-}
-
 // (안정성) 일부 배포/캐시 상황에서 constants.js가 먼저 로드되지 않으면
 // 상태 아이콘 헬퍼가 없어 오류가 날 수 있어, 최소 폴백을 준비합니다.
 if (typeof window._siIsImg !== 'function') {
@@ -269,7 +254,7 @@ function rBoard2(C, T) {
   }
 
   // 잘못된 뷰 리셋 (삭제된 탭 or 로그인 필요 탭)
-  if (_b2View === 'game' || _b2View === 'crew' || _b2View === 'activity' || _b2View === 'race' || _b2View === 'tierview') _b2View = 'univ';
+  if (_b2View === 'game' || _b2View === 'crew') _b2View = 'univ';
   if (_b2View === 'old' && !isLoggedIn) _b2View = 'univ';
 
   // 저장/초기화 바
@@ -341,32 +326,33 @@ function rBoard2(C, T) {
     </div>
   ` : '';
   const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b', (typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')):'';
+  const raceBtn = _b2TabBtn('race','#8b5cf6', (typeof getTabLabel==='function'?getTabLabel('board2','race','🏁 종족별'):'🏁 종족별'));
+  const tierViewBtn = _b2TabBtn('tierview','#f59e0b', (typeof getTabLabel==='function'?getTabLabel('board2','tierview','🏆 티어별'):'🏆 티어별'));
   const summaryBtn = _b2TabBtn('summary','#10b981', (typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약'));
   const compareBtn = _b2TabBtn('compare','#ef4444', (typeof getTabLabel==='function'?getTabLabel('board2','compare','⚔️ 대학비교'):'⚔️ 대학비교'));
-  const rankingBtn = _b2TabBtn('ranking','#f97316', (typeof getTabLabel==='function'?getTabLabel('board2','ranking','🥇 랭킹'):'🥇 랭킹'));
-  const radarBtn   = _b2TabBtn('radar',  '#a855f7', (typeof getTabLabel==='function'?getTabLabel('board2','radar',  '🕸️ 레이더'):'🕸️ 레이더'));
   const heatmapBtn = _b2TabBtn('heatmap','#db2777', (typeof getTabLabel==='function'?getTabLabel('board2','heatmap','🗺️ 히트맵'):'🗺️ 히트맵'));
   const bubbleBtn  = _b2TabBtn('bubble','#0891b2',  (typeof getTabLabel==='function'?getTabLabel('board2','bubble','🌐 버블맵'):'🌐 버블맵'));
+  const activityBtn = _b2TabBtn('activity','#ea580c', (typeof getTabLabel==='function'?getTabLabel('board2','activity','📡 활동현황'):'📡 활동현황'));
   // 우측 버튼: 펨코현황은 "전체 저장"만, 나머지는 기존 저장/기능 버튼
   const rightBtns = saveBar;
 
   const filterBar = `
     <style>
-      #b2-nav.b2-nav-new { flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-      #b2-nav.b2-nav-new::-webkit-scrollbar { display:none; }
+      #b2-nav.b2-nav-new { flex-wrap:wrap; }
     </style>
     <div id="b2-nav" class="b2-nav b2-nav-new">
-      <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;flex:1">
         ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코'))}
         ${_b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별'))}
-        ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
-        ${_b2TabBtn('players','var(--purple)', (typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel))}
+        ${raceBtn}
+        ${tierViewBtn}
         ${heatmapBtn}
         ${bubbleBtn}
+        ${activityBtn}
+        ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
+        ${_b2TabBtn('players','var(--purple)', (typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel))}
         <span style="width:1px;height:20px;background:var(--border2);display:inline-block;flex-shrink:0"></span>
         ${summaryBtn}
-        ${rankingBtn}
-        ${radarBtn}
         ${compareBtn}
         ${oldBtn}
       </div>
@@ -393,72 +379,67 @@ function rBoard2(C, T) {
   _b2PrewarmViewImages();
 
   const sub = document.getElementById('b2-content');
-  if(sub) sub.innerHTML = `<div style="padding:26px 14px;color:var(--text3);font-size:12px;font-weight:700">로딩 중...</div>`;
-  const _renderSub = () => {
-    const sub = document.getElementById('b2-content');
-    if(!sub) return;
-    const _known = new Set(['univ','femco','free','players','summary','ranking','radar','compare','heatmap','bubble','old']);
-    if(!_known.has(String(_b2View||''))) _b2View = 'univ';
-    if (_b2View === 'univ') {
-      sub.innerHTML = _b2UnivView();
-      injectUnivIcons(sub);
-      _b2BindAutoFitResize();
-      setTimeout(() => { try{ _b2ApplyBgAutoSizing(sub); }catch(e){} }, 0);
-      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 220); }catch(e){} }, 80);
-    } else if (_b2View === 'femco') {
-      sub.innerHTML = _b2FemcoView();
-      injectUnivIcons(sub);
-      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 260); }catch(e){} }, 80);
-      requestAnimationFrame(() => {
-        try{
-          sub.querySelectorAll('.b2-femco-grid').forEach(g=>{ g.scrollLeft = 0; });
-        }catch(e){
-          console.warn('[rBoard] 펨코 그리드 스크롤 초기화 실패:', e.message);
-        }
-      });
-    } else if (_b2View === 'free') {
-      sub.innerHTML = _b2FreeView();
-      injectUnivIcons(sub);
-      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 180); }catch(e){} }, 80);
-    } else if (_b2View === 'players') {
-      sub.innerHTML = _b2PlayersView();
-      _b2BindAutoFitResize();
-      setTimeout(() => {
-        try{
-          if (_b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function') {
-            _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
-            _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
+  if (_b2View === 'univ') {
+    sub.innerHTML = _b2UnivView();
+    injectUnivIcons(sub);
+    _b2BindAutoFitResize();
+    setTimeout(() => { try{ _b2ApplyBgAutoSizing(sub); }catch(e){} }, 0);
+    setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 220); }catch(e){} }, 80);
+  } else if (_b2View === 'femco') {
+    sub.innerHTML = _b2FemcoView();
+    injectUnivIcons(sub);
+    setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 260); }catch(e){} }, 80);
+    // 모바일/태블릿에서 인원이 많은 대학도 "좌측부터" 항상 보이게 (스크롤 초기값 0)
+        requestAnimationFrame(() => {
+          try{
+            sub.querySelectorAll('.b2-femco-grid').forEach(g=>{ g.scrollLeft = 0; });
+          }catch(e){
+            console.warn('[rBoard] 펨코 그리드 스크롤 초기화 실패:', e.message);
           }
-          _b2ApplyBgAutoSizing(sub);
-        }catch(e){
-          console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
+        });
+  } else if (_b2View === 'free') {
+    sub.innerHTML = _b2FreeView();
+    injectUnivIcons(sub);
+    setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 180); }catch(e){} }, 80);
+  } else if (_b2View === 'players') {
+    sub.innerHTML = _b2PlayersView();
+    _b2BindAutoFitResize();
+    // 이미지별 탭: 최초 진입 시에도 저장된 이미지 설정(크기/밝기/배치/오프셋)이 바로 적용되도록
+    setTimeout(() => {
+      try{
+        if (_b2SelectedPlayer && typeof _b2ApplyImgSettingsToDom === 'function') {
+          _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'primary');
+          _b2ApplyImgSettingsToDom(_b2SelectedPlayer.name, 'secondary');
         }
-      }, 0);
-      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 200); }catch(e){} }, 120);
-    } else if (_b2View === 'summary') {
-      sub.innerHTML = _b2SummaryView();
-      injectUnivIcons && injectUnivIcons(sub);
-    } else if (_b2View === 'ranking') {
-      sub.innerHTML = _b2RankingView();
-      injectUnivIcons && injectUnivIcons(sub);
-    } else if (_b2View === 'radar') {
-      sub.innerHTML = _b2RadarView();
-      _b2InjectAndRunScripts(sub);
-    } else if (_b2View === 'compare') {
-      sub.innerHTML = _b2CompareView();
-      injectUnivIcons && injectUnivIcons(sub);
-    } else if (_b2View === 'heatmap') {
-      sub.innerHTML = _b2HeatmapView();
-      _b2InjectAndRunScripts(sub);
-    } else if (_b2View === 'bubble') {
-      sub.innerHTML = _b2BubbleView();
-      _b2InjectAndRunScripts(sub);
-    } else if (_b2View === 'old') {
-      if (typeof rBoard === 'function') rBoard(sub, T);
-      else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
-    }
-  };
-  setTimeout(() => { try{ _renderSub(); }catch(e){} }, 0);
+        _b2ApplyBgAutoSizing(sub);
+      }catch(e){
+        console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
+      }
+    }, 0);
+    setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 200); }catch(e){} }, 120);
+  } else if (_b2View === 'race') {
+    sub.innerHTML = _b2RaceView();
+    injectUnivIcons && injectUnivIcons(sub);
+  } else if (_b2View === 'tierview') {
+    sub.innerHTML = _b2TierView();
+    injectUnivIcons && injectUnivIcons(sub);
+  } else if (_b2View === 'summary') {
+    sub.innerHTML = _b2SummaryView();
+    injectUnivIcons && injectUnivIcons(sub);
+  } else if (_b2View === 'compare') {
+    sub.innerHTML = _b2CompareView();
+    injectUnivIcons && injectUnivIcons(sub);
+  } else if (_b2View === 'activity') {
+    sub.innerHTML = _b2ActivityView();
+    injectUnivIcons && injectUnivIcons(sub);
+  } else if (_b2View === 'heatmap') {
+    sub.innerHTML = _b2HeatmapView();
+  } else if (_b2View === 'bubble') {
+    sub.innerHTML = _b2BubbleView();
+  } else if (_b2View === 'old') {
+    if (typeof rBoard === 'function') rBoard(sub, T);
+    else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
+  }
   } catch(e) {
     console.error('[rBoard2] 오류:', e);
     C.innerHTML = `<div style="padding:40px;text-align:center;color:#dc2626">
@@ -3634,407 +3615,6 @@ function _b2TierView() {
 }
 
 /* ══════════════════════════════════════
-   🥇 랭킹 뷰 — 대학별 종합 랭킹 리더보드
-══════════════════════════════════════ */
-function _b2RankingView() {
-  const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
-  const tieredVis = players.filter(p =>
-    !p.hidden && !p.retired && !p.hideFromBoard &&
-    !_dissSet.has(String(p?.univ||'').trim()) &&
-    !_B2_ROLE_ORDER.includes(p.role||'')
-  );
-  const univList = _b2VisUnivs ? _b2VisUnivs().filter(u=>u.name && u.name!=='무소속') : [];
-
-  const TIERS_LOCAL = typeof TIERS !== 'undefined' ? TIERS : [];
-
-  // 티어 점수: 순위가 높을수록 높은 점수
-  const tierScore = (tier) => {
-    const idx = TIERS_LOCAL.indexOf(tier);
-    if (idx < 0) return 0;
-    return Math.max(0, (TIERS_LOCAL.length - idx) * 10);
-  };
-
-  const univStats = univList.map(u => {
-    const members = tieredVis.filter(p => String(p?.univ||'').trim() === u.name);
-    if (!members.length) return null;
-    const score = members.reduce((s, p) => s + tierScore(p.tier||''), 0);
-    const topMember = members.slice().sort((a,b) => {
-      const ia = TIERS_LOCAL.indexOf(a.tier||''), ib = TIERS_LOCAL.indexOf(b.tier||'');
-      return (ia>=0?ia:999)-(ib>=0?ib:999);
-    })[0];
-    const topTier = topMember?.tier || '없음';
-    const topTierCol = typeof getTierBtnColor==='function' ? getTierBtnColor(topTier) : '#64748b';
-    const topTierTc = typeof getTierBtnTextColor==='function' ? (getTierBtnTextColor(topTier)||'#fff') : '#fff';
-    const races = {P:0,T:0,Z:0};
-    members.forEach(p => { if(p.race in races) races[p.race]++; });
-    const dominantRace = Object.entries(races).sort((a,b)=>b[1]-a[1])[0]?.[0] || '?';
-    const raceEmoji = {P:'🔮',T:'⚔️',Z:'🦎','?':'❓'}[dominantRace] || '❓';
-    return { name: u.name, color: gc(u.name)||'#64748b', count: members.length, score, topTier, topTierCol, topTierTc, races, dominantRace, raceEmoji };
-  }).filter(Boolean).sort((a,b) => b.score - a.score || b.count - a.count);
-
-  const maxScore = univStats[0]?.score || 1;
-  const medals = ['🥇','🥈','🥉'];
-
-  let h = `<style>
-    .b2rk-wrap { }
-    .b2rk-row { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:14px; margin-bottom:6px; border:1.5px solid var(--border2); background:var(--white); transition:transform .12s,box-shadow .12s; cursor:default; position:relative; overflow:hidden; }
-    .b2rk-row:hover { transform:translateY(-2px); box-shadow:0 6px 24px #0002; }
-    .b2rk-rank { font-size:22px; min-width:36px; text-align:center; font-weight:900; }
-    .b2rk-name { font-size:14px; font-weight:900; min-width:64px; }
-    .b2rk-bar-wrap { flex:1; height:14px; border-radius:7px; background:var(--border2); overflow:hidden; }
-    .b2rk-bar { height:100%; border-radius:7px; transition:width .8s ease; }
-    .b2rk-score { font-size:13px; font-weight:900; min-width:40px; text-align:right; }
-    .b2rk-badges { display:flex; gap:4px; flex-shrink:0; flex-wrap:wrap; align-items:center; }
-    .b2rk-glow { position:absolute;inset:0;opacity:.05;pointer-events:none; }
-    .b2rk-filter { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
-    .b2rk-filter-btn { padding:5px 12px; border-radius:20px; border:1.5px solid var(--border2); background:var(--surface); font-size:11px; font-weight:700; color:var(--text2); cursor:pointer; transition:all .12s; }
-    .b2rk-filter-btn.on { background:var(--text1); color:var(--white); border-color:var(--text1); }
-  </style>`;
-
-  h += `<div style="margin-bottom:14px;padding:12px 16px;background:linear-gradient(135deg,#f97316,#fb923c);border-radius:14px;display:flex;align-items:center;gap:10px">
-    <span style="font-size:24px">🏆</span>
-    <div>
-      <div style="font-size:15px;font-weight:900;color:#fff">대학별 티어 종합 랭킹</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.8)">티어별 점수 합산 · 상위 티어일수록 높은 점수</div>
-    </div>
-    <div style="margin-left:auto;text-align:right">
-      <div style="font-size:20px;font-weight:900;color:#fff">${univStats.length}</div>
-      <div style="font-size:10px;color:rgba(255,255,255,.8)">대학 참가</div>
-    </div>
-  </div>`;
-
-  h += `<div class="b2rk-wrap">`;
-  univStats.forEach((u, i) => {
-    const rank = i + 1;
-    const rankDisplay = medals[i] || `<span style="font-size:14px;font-weight:900;color:var(--text3)">${rank}</span>`;
-    const barW = Math.round(u.score / maxScore * 100);
-    const isTop3 = i < 3;
-    const topBorder = isTop3 ? `border-color:${u.color}66;` : '';
-    const topBg = isTop3 ? `background:${u.color}08;` : '';
-
-    h += `<div class="b2rk-row" style="${topBorder}${topBg}">
-      <div class="b2rk-glow" style="background:radial-gradient(ellipse at 0% 50%,${u.color},transparent 60%)"></div>
-      <div class="b2rk-rank">${rankDisplay}</div>
-      <div class="b2rk-name" style="color:${u.color}">${u.name}</div>
-      <div class="b2rk-bar-wrap">
-        <div class="b2rk-bar" style="width:${barW}%;background:linear-gradient(90deg,${u.color},${u.color}88)"></div>
-      </div>
-      <div class="b2rk-score" style="color:${u.color}">${u.score}pt</div>
-      <div class="b2rk-badges">
-        <span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:${u.topTierCol};color:${u.topTierTc}">TOP ${u.topTier}</span>
-        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:var(--surface);color:var(--text2)">${u.raceEmoji} ${u.count}명</span>
-      </div>
-    </div>`;
-  });
-  h += `</div>
-
-  <div style="margin-top:12px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--border2)">
-    <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">📌 점수 계산 기준</div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px">
-      ${TIERS_LOCAL.filter(t=>tieredVis.some(p=>p.tier===t)).map(t=>{
-        const col = typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
-        const tc = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
-        const score = tierScore(t);
-        return `<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:${col};color:${tc}">${t} = ${score}pt</span>`;
-      }).join('')}
-    </div>
-  </div>`;
-
-  return h;
-}
-
-/* ══════════════════════════════════════
-   🕸️ 레이더 뷰 — 대학별 다차원 레이더 차트
-══════════════════════════════════════ */
-function _b2RadarView() {
-  const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
-  const tieredVis = players.filter(p =>
-    !p.hidden && !p.retired && !p.hideFromBoard &&
-    !_dissSet.has(String(p?.univ||'').trim()) &&
-    !_B2_ROLE_ORDER.includes(p.role||'')
-  );
-  const univList = _b2VisUnivs ? _b2VisUnivs().filter(u=>u.name && u.name!=='무소속') : [];
-  const TIERS_LOCAL = typeof TIERS !== 'undefined' ? TIERS : [];
-
-  try{
-    const sig = (function(){
-      try{
-        const arrs=[miniM,univM,ckM,proM,ttM,comps,tourneys,proTourneys,indM,gjM];
-        return arrs.map(a=>Array.isArray(a)?a.length:0).join('|');
-      }catch(e){
-        return '';
-      }
-    })();
-    if(typeof window.__b2_radar_hist_sig === 'undefined') window.__b2_radar_hist_sig = '';
-    if(window.__b2_radar_hist_sig !== sig && typeof _rebuildAllPlayerHistoryCore === 'function'){
-      _rebuildAllPlayerHistoryCore();
-      window.__b2_radar_hist_sig = sig;
-    }
-  }catch(e){}
-
-  const tierScore = (tier) => {
-    const idx = TIERS_LOCAL.indexOf(tier);
-    return idx >= 0 ? Math.max(0, TIERS_LOCAL.length - idx) : 0;
-  };
-
-  const _hist = (p) => Array.isArray(p && p.history) ? p.history : [];
-  const _modeKey = (modeLabel) => {
-    const m = String(modeLabel||'').trim();
-    if(m === '미니대전' || m === '시빌워') return 'mini';
-    if(m === '대학대전') return 'univm';
-    if(m === '대학CK') return 'ck';
-    if(m.startsWith('프로리그')) return 'pro';
-    if(m.startsWith('티어대회')) return 'tt';
-    if(m === '대회' || m === '조별리그' || m === '토너먼트' || m === '조별대회' || m.includes('대회') || m.includes('조별') || m.includes('토너')) return 'comp';
-    return '';
-  };
-
-  const univStats = univList.map(u => {
-    const members = tieredVis.filter(p => String(p?.univ||'').trim() === u.name);
-    if (!members.length) return null;
-    const total = members.length;
-    const avgScore = members.reduce((s,p)=>s+tierScore(p.tier||''),0) / total;
-    const part = { mini:0, univm:0, ck:0, tt:0, comp:0 };
-    let wins = 0, losses = 0;
-    members.forEach(p=>{
-      const seen = { mini:false, univm:false, ck:false, tt:false, comp:false };
-      _hist(p).forEach(h=>{
-        const r2 = String(h && h.result || '').trim();
-        if(r2 === '승') wins++;
-        else if(r2 === '패') losses++;
-        const k = _modeKey(h && h.mode);
-        if(k && k in seen) seen[k] = true;
-        if(!k || !(k in part)) return;
-      });
-      Object.keys(seen).forEach(k=>{ if(seen[k]) part[k]++; });
-    });
-    return {
-      name: u.name,
-      color: gc(u.name)||'#64748b',
-      total,
-      avgScore,
-      wins,
-      losses,
-      partMini: part.mini / total,
-      partUnivm: part.univm / total,
-      partCk: part.ck / total,
-      partTt: part.tt / total,
-      partComp: part.comp / total
-    };
-  }).filter(Boolean).sort((a,b) => b.total - a.total).slice(0, 12);
-
-  const maxTotal = Math.max(...univStats.map(u=>u.total), 1);
-  const maxAvg = Math.max(...univStats.map(u=>u.avgScore), 1);
-  const maxWins = Math.max(...univStats.map(u=>u.wins||0), 1);
-  const maxLosses = Math.max(...univStats.map(u=>u.losses||0), 1);
-
-  const AXES = ['인원','평균티어','승','패','미니','대학대전','대학CK','티어대회','일반대회'];
-  const AXES_DESC = ['활동 선수 수(직책 제외)','티어 점수 평균','승리 수(종합)','패배 수(종합)','참가율(1+경기)','참가율(1+경기)','참가율(1+경기)','참가율(1+경기)','참가율(1+경기)'];
-  const N = AXES.length;
-
-  const getVals = (u) => [
-    u.total / maxTotal,
-    u.avgScore / maxAvg,
-    (u.wins||0) / maxWins,
-    (u.losses||0) / maxLosses,
-    u.partMini,
-    u.partUnivm,
-    u.partCk,
-    u.partTt,
-    u.partComp,
-  ];
-
-  const univDataJson = JSON.stringify(univStats.map(u => ({
-    name: u.name, color: u.color, total: u.total,
-    vals: getVals(u)
-  })));
-  const axesJson = JSON.stringify(AXES);
-  const axesDescJson = JSON.stringify(AXES_DESC);
-  const uid = 'rdr_' + Math.random().toString(36).slice(2,8);
-
-  return `<style>
-    #${uid}-wrap { position:relative; }
-    #${uid}-sel { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
-    .${uid}-chip { padding:5px 12px; border-radius:20px; border:1.5px solid var(--border2); background:var(--surface); font-size:11px; font-weight:700; color:var(--text2); cursor:pointer; transition:all .12s; }
-    .${uid}-chip.on { color:#fff; border-color:transparent; }
-    .${uid}-chip:hover:not(.on) { border-color:var(--text2); }
-    #${uid}-canvas { display:block; max-width:520px; margin:0 auto; }
-    #${uid}-legend { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; justify-content:center; }
-  </style>
-  <div id="${uid}-wrap">
-    <div style="margin-bottom:12px;padding:10px 14px;background:linear-gradient(135deg,#a855f7,#9333ea);border-radius:12px;display:flex;align-items:center;gap:8px">
-      <span style="font-size:20px">🕸️</span>
-      <div>
-        <div style="font-size:13px;font-weight:900;color:#fff">대학별 다차원 레이더</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.8)">인원·평균티어·승/패·참가율 비교 · 최대 3개 선택</div>
-      </div>
-    </div>
-    <div style="margin:-4px 0 12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:12px">
-      <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:6px">축(꼭지점) 설명</div>
-      <div style="font-size:12px;color:var(--text3);line-height:1.55">
-        승/패: (미니/대학대전/대학CK/티어대회/일반대회) 기록 기준 · 참가율: 해당 종목 1경기 이상 뛴 선수 비율<br>
-        인원·평균티어는 대학들 중 최대값 기준으로 0~1 정규화 표시
-      </div>
-    </div>
-    <div id="${uid}-sel"></div>
-    <canvas id="${uid}-canvas" width="520" height="480"></canvas>
-    <div id="${uid}-legend"></div>
-  </div>
-  <script>
-  (function(){
-    const UNIVS = ${univDataJson};
-    const AXES = ${axesJson};
-    const AXES_DESC = ${axesDescJson};
-    const N = AXES.length;
-    const canvas = document.getElementById('${uid}-canvas');
-    const selEl = document.getElementById('${uid}-sel');
-    const legendEl = document.getElementById('${uid}-legend');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const _rootStyle = (function(){ try{ return getComputedStyle(document.documentElement); }catch(e){ return null; } })();
-    const _cssVar = (k, fallback) => {
-      try{
-        const v = _rootStyle ? String(_rootStyle.getPropertyValue(k)||'').trim() : '';
-        return v || fallback;
-      }catch(e){
-        return fallback;
-      }
-    };
-    const TEXT2 = _cssVar('--text2', '#475569');
-    const TEXT3 = _cssVar('--text3', '#64748b');
-    let selected = [];
-
-    // Build chips
-    UNIVS.forEach(u => {
-      const chip = document.createElement('button');
-      chip.className = '${uid}-chip' + (selected.includes(u.name)?' on':'');
-      chip.textContent = u.name;
-      chip.style.background = selected.includes(u.name) ? u.color : '';
-      chip.onclick = () => {
-        if (selected.includes(u.name)) {
-          selected = selected.filter(n=>n!==u.name);
-        } else {
-          if (selected.length >= 3) selected.shift();
-          selected.push(u.name);
-        }
-        document.querySelectorAll('.${uid}-chip').forEach(c => {
-          const un = UNIVS.find(u2=>u2.name===c.textContent);
-          const isOn = selected.includes(c.textContent);
-          c.classList.toggle('on', isOn);
-          c.style.background = isOn && un ? un.color : '';
-        });
-        draw();
-      };
-      selEl.appendChild(chip);
-    });
-
-    const W = 520, H = 480, cx = 260, cy = 240, R = 160;
-    const angle = (i) => (Math.PI * 2 * i / N) - Math.PI / 2;
-
-    function radarPoint(val, i) {
-      const a = angle(i);
-      return { x: cx + Math.cos(a) * R * val, y: cy + Math.sin(a) * R * val };
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
-
-      // Background rings
-      const ringCount = 5;
-      for (let r = 1; r <= ringCount; r++) {
-        const ratio = r / ringCount;
-        ctx.beginPath();
-        for (let i = 0; i < N; i++) {
-          const {x,y} = radarPoint(ratio, i);
-          i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-        }
-        ctx.closePath();
-        ctx.strokeStyle = 'rgba(100,116,139,0.18)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        if (r === ringCount) {
-          ctx.fillStyle = 'rgba(100,116,139,0.04)';
-          ctx.fill();
-        }
-      }
-
-      // Axis lines + labels
-      for (let i = 0; i < N; i++) {
-        const {x,y} = radarPoint(1, i);
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(x, y);
-        ctx.strokeStyle = 'rgba(100,116,139,0.25)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // Label (2줄)
-        const la = angle(i);
-        const lx = cx + Math.cos(la) * (R + 22);
-        const ly = cy + Math.sin(la) * (R + 22);
-        ctx.fillStyle = TEXT2;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.font = '900 12px sans-serif';
-        ctx.fillText(AXES[i], lx, ly - 7);
-        ctx.font = '700 10px sans-serif';
-        ctx.fillStyle = TEXT3;
-        ctx.fillText((AXES_DESC && AXES_DESC[i]) ? AXES_DESC[i] : '', lx, ly + 7);
-      }
-
-      // Data polygons
-      const activeUnivs = UNIVS.filter(u => selected.includes(u.name));
-      if(activeUnivs.length === 0){
-        legendEl.innerHTML = '<div style="text-align:center;font-size:12px;font-weight:900;color:' + TEXT3 + ';padding:6px 0">대학을 선택하면 그래프가 표시됩니다</div>';
-        ctx.fillStyle = TEXT3;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.font = '900 14px sans-serif';
-        ctx.fillText('대학을 선택하세요', cx, cy);
-        return;
-      }
-      activeUnivs.forEach(u => {
-        ctx.beginPath();
-        u.vals.forEach((v, i) => {
-          const {x,y} = radarPoint(Math.max(0.01, v), i);
-          i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-        });
-        ctx.closePath();
-        ctx.fillStyle = u.color + '30';
-        ctx.fill();
-        ctx.strokeStyle = u.color;
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-
-        // Dots
-        u.vals.forEach((v, i) => {
-          const {x,y} = radarPoint(Math.max(0.01, v), i);
-          ctx.beginPath();
-          ctx.arc(x, y, 5, 0, Math.PI * 2);
-          ctx.fillStyle = u.color;
-          ctx.fill();
-          ctx.strokeStyle = '#fff';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        });
-      });
-
-      // Legend
-      legendEl.innerHTML = activeUnivs.map(u =>
-        \`<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:var(--text2)">
-          <span style="width:14px;height:14px;border-radius:50%;background:\${u.color};display:inline-block;border:2px solid #fff;box-shadow:0 1px 4px \${u.color}66"></span>
-          <span style="color:\${u.color}">\${u.name}</span>
-          <span style="color:var(--text3);font-weight:500">\${u.total}명</span>
-        </div>\`
-      ).join('');
-    }
-
-    draw();
-  })();
-  </script>`;
-}
-
-/* ══════════════════════════════════════
    📊 요약 통계 뷰 - 인터랙티브 대시보드
 ══════════════════════════════════════ */
 function _b2SummaryView() {
@@ -4064,175 +3644,109 @@ function _b2SummaryView() {
   const maxCount = univStats.length > 0 ? univStats[0].count : 1;
 
   const orderedTiers = (typeof TIERS !== 'undefined' ? TIERS : []).filter(t=>tierCts[t]);
-  const total3 = raceCts.P + raceCts.T + raceCts.Z || 1;
-
-  // SVG donut chart for race ratio
-  const donutRings = () => {
-    const size = 110, cx = 55, cy = 55, r = 38, stroke = 18;
-    const total = raceCts.P + raceCts.T + raceCts.Z || 1;
-    const segs = [
-      {val: raceCts.P, col: '#7c3aed', label: 'P'},
-      {val: raceCts.T, col: '#0284c7', label: 'T'},
-      {val: raceCts.Z, col: '#059669', label: 'Z'},
-    ].filter(s => s.val > 0);
-    const circ = 2 * Math.PI * r;
-    let offset = 0;
-    const paths = segs.map(s => {
-      const dash = (s.val / total) * circ;
-      const el = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.col}" stroke-width="${stroke}"
-        stroke-dasharray="${dash.toFixed(2)} ${circ.toFixed(2)}"
-        stroke-dashoffset="${(-offset).toFixed(2)}"
-        transform="rotate(-90 ${cx} ${cy})" style="transition:stroke-dasharray .8s ease"/>`;
-      offset += dash;
-      return el;
-    });
-    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border2)" stroke-width="${stroke}"/>
-      ${paths.join('')}
-      <text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="18" font-weight="900" fill="var(--text1)">${tieredVis.length}</text>
-      <text x="${cx}" y="${cy+10}" text-anchor="middle" font-size="9" font-weight="600" fill="var(--text3)">선수</text>
-    </svg>`;
-  };
+  const tierBarColors = orderedTiers.map(t => typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b');
 
   let h = `<style>
-    .b2s-grid6 { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:16px; }
-    @media(max-width:700px){ .b2s-grid6{ grid-template-columns:repeat(3,1fr); } }
-    @media(max-width:420px){ .b2s-grid6{ grid-template-columns:repeat(2,1fr); } }
-    .b2s-kpi { border-radius:14px; padding:14px 12px; text-align:center; position:relative; overflow:hidden; border:1px solid var(--border2); transition:transform .15s,box-shadow .15s; cursor:default; }
-    .b2s-kpi:hover { transform:translateY(-2px); box-shadow:0 6px 24px #0002; }
-    .b2s-kpi-num { font-size:28px; font-weight:900; line-height:1.1; }
-    .b2s-kpi-lbl { font-size:11px; font-weight:700; margin-top:3px; opacity:.75; }
-    .b2s-kpi-glow { position:absolute;inset:0;opacity:.08;pointer-events:none; }
-    .b2s-2col { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
-    @media(max-width:580px){ .b2s-2col{ grid-template-columns:1fr; } }
-    .b2s-panel { background:var(--surface); border:1px solid var(--border2); border-radius:14px; padding:16px; }
-    .b2s-panel-title { font-size:13px; font-weight:900; color:var(--text1); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
-    .b2s-univ-row { display:flex; align-items:center; gap:8px; padding:5px 0; }
-    .b2s-univ-row + .b2s-univ-row { border-top:1px solid var(--border2); }
-    .b2s-bar-track { flex:1; height:12px; border-radius:6px; overflow:hidden; background:var(--border2); display:flex; }
-    .b2s-tier-chip { display:inline-flex; flex-direction:column; align-items:center; padding:6px 10px; border-radius:10px; min-width:46px; }
-    .b2s-top-univ { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; }
-    .b2s-univ-card { border-radius:12px; padding:10px 12px; border:1.5px solid; position:relative; overflow:hidden; transition:transform .12s,box-shadow .12s; cursor:default; }
-    .b2s-univ-card:hover { transform:translateY(-2px); box-shadow:0 4px 16px #0002; }
+    .b2-sum-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:16px; }
+    .b2-sum-card { background:var(--surface); border:1px solid var(--border2); border-radius:12px; padding:14px 16px; }
+    .b2-sum-card-num { font-size:32px; font-weight:900; line-height:1.1; }
+    .b2-sum-card-lbl { font-size:12px; color:var(--text3); font-weight:600; margin-top:2px; }
+    .b2-sum-univ-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--border2); }
+    .b2-sum-univ-row:last-child { border-bottom:none; }
+    .b2-sum-race-donut { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    @media(max-width:600px){ .b2-sum-grid{ grid-template-columns:1fr 1fr; } }
   </style>`;
 
-  // ── KPI 카드 6개 ──
-  const kpis = [
-    { num: vis.length, lbl: '전체 선수', col: '#3b82f6', icon: '👥' },
-    { num: univList.length, lbl: '활동 대학', col: '#10b981', icon: '🏫' },
-    { num: raceCts.P, lbl: '프로토스', col: '#7c3aed', icon: '🔮' },
-    { num: raceCts.T, lbl: '테란', col: '#0284c7', icon: '⚔️' },
-    { num: raceCts.Z, lbl: '저그', col: '#059669', icon: '🦎' },
-    { num: roledVis.length, lbl: '직책자', col: '#f59e0b', icon: '👑' },
-  ];
-
-  h += `<div class="b2s-grid6">
-    ${kpis.map(k => `
-    <div class="b2s-kpi" style="background:${k.col}12;">
-      <div class="b2s-kpi-glow" style="background:radial-gradient(circle at 50% 0%,${k.col},transparent 70%)"></div>
-      <div style="font-size:20px;margin-bottom:2px">${k.icon}</div>
-      <div class="b2s-kpi-num" style="color:${k.col}">${k.num}</div>
-      <div class="b2s-kpi-lbl" style="color:${k.col}">${k.lbl}</div>
-    </div>`).join('')}
+  // KPI Cards
+  h += `<div class="b2-sum-grid">
+    <div class="b2-sum-card" style="border-top:3px solid #3b82f6">
+      <div class="b2-sum-card-num" style="color:#3b82f6">${vis.length}</div>
+      <div class="b2-sum-card-lbl">👥 전체 선수</div>
+    </div>
+    <div class="b2-sum-card" style="border-top:3px solid #10b981">
+      <div class="b2-sum-card-num" style="color:#10b981">${univList.length}</div>
+      <div class="b2-sum-card-lbl">🏫 활동 대학</div>
+    </div>
+    <div class="b2-sum-card" style="border-top:3px solid #7c3aed">
+      <div class="b2-sum-card-num" style="color:#7c3aed">${raceCts.P}</div>
+      <div class="b2-sum-card-lbl">🔮 프로토스</div>
+    </div>
+    <div class="b2-sum-card" style="border-top:3px solid #0284c7">
+      <div class="b2-sum-card-num" style="color:#0284c7">${raceCts.T}</div>
+      <div class="b2-sum-card-lbl">⚔️ 테란</div>
+    </div>
+    <div class="b2-sum-card" style="border-top:3px solid #059669">
+      <div class="b2-sum-card-num" style="color:#059669">${raceCts.Z}</div>
+      <div class="b2-sum-card-lbl">🦎 저그</div>
+    </div>
+    <div class="b2-sum-card" style="border-top:3px solid #f59e0b">
+      <div class="b2-sum-card-num" style="color:#f59e0b">${roledVis.length}</div>
+      <div class="b2-sum-card-lbl">👑 직책자</div>
+    </div>
   </div>`;
 
-  // ── 종족 비율 + 티어 분포 ──
-  h += `<div class="b2s-2col">
-    <div class="b2s-panel">
-      <div class="b2s-panel-title">🎮 종족 비율
-        <span style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:600">${tieredVis.length}명 기준</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:16px">
-        <div style="flex-shrink:0">${donutRings()}</div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
-          ${[{r:'P',c:'#7c3aed',l:'🔮 프로토스'},{r:'T',c:'#0284c7',l:'⚔️ 테란'},{r:'Z',c:'#059669',l:'🦎 저그'}].map(({r,c,l}) => {
-            const n = raceCts[r];
-            const pct = Math.round(n/total3*100);
-            return `<div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:3px">
-                <span style="font-size:11px;font-weight:800;color:${c}">${l}</span>
-                <span style="font-size:11px;font-weight:900;color:var(--text2)">${n}<span style="font-weight:600;color:var(--text3)"> (${pct}%)</span></span>
-              </div>
-              <div style="height:7px;border-radius:4px;background:var(--border2);overflow:hidden">
-                <div style="width:${pct}%;height:100%;background:${c};border-radius:4px;transition:width .8s ease"></div>
-              </div>
-            </div>`;
-          }).join('')}
+  h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+    @media(max-width:640px){ grid-template-columns:1fr; }`;
+
+  // 종족 비율 바
+  const total3 = raceCts.P + raceCts.T + raceCts.Z || 1;
+  h += `<div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px 16px">
+    <div style="font-size:13px;font-weight:800;color:var(--text1);margin-bottom:12px">🎮 종족 비율</div>
+    ${[{r:'P',c:'#7c3aed',l:'🔮 프로토스'},{r:'T',c:'#0284c7',l:'⚔️ 테란'},{r:'Z',c:'#059669',l:'🦎 저그'}].map(({r,c,l}) => {
+      const n = raceCts[r];
+      const pct = Math.round(n/total3*100);
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+          <span style="font-size:12px;font-weight:700;color:${c}">${l}</span>
+          <span style="font-size:12px;font-weight:800;color:var(--text2)">${n}명 (${pct}%)</span>
         </div>
-      </div>
-    </div>
-
-    <div class="b2s-panel">
-      <div class="b2s-panel-title">🏆 티어 분포</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${orderedTiers.map(t => {
-          const col = typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
-          const tcol = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
-          const n = tierCts[t];
-          const pct = Math.round(n/tieredVis.length*100);
-          const barH = Math.max(20, Math.round(pct * 1.2));
-          return `<div class="b2s-tier-chip" style="background:${col}18;border:1.5px solid ${col}55" title="${t}: ${n}명 (${pct}%)">
-            <div style="font-size:12px;font-weight:900;color:${col};padding:2px 8px;border-radius:6px;background:${col};color:${tcol}">${t}</div>
-            <div style="font-size:11px;font-weight:800;color:${col};margin-top:3px">${n}명</div>
-            <div style="font-size:10px;color:var(--text3)">${pct}%</div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>
+        <div style="height:8px;border-radius:4px;background:#0001;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${c};border-radius:4px;transition:width .8s ease"></div>
+        </div>
+      </div>`;
+    }).join('')}
   </div>`;
 
-  // ── 대학별 인원 현황 (상위 5개 카드 + 전체 바차트) ──
-  h += `<div class="b2s-panel" style="margin-bottom:14px">
-    <div class="b2s-panel-title">🏫 대학별 인원 현황
-      <span style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:600">${univStats.length}개 대학</span>
-    </div>
-
-    <div class="b2s-top-univ" style="margin-bottom:12px">
-      ${univStats.slice(0,6).map((u,i) => {
-        const medal = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'][i] || '';
-        const pP = u.count > 0 ? Math.round(u.races.P/u.count*100) : 0;
-        const pT = u.count > 0 ? Math.round(u.races.T/u.count*100) : 0;
-        const pZ = u.count > 0 ? Math.round(u.races.Z/u.count*100) : 0;
-        return `<div class="b2s-univ-card" style="border-color:${u.color}44;background:${u.color}0d">
-          <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
-            <span style="font-size:14px">${medal}</span>
-            <span style="font-size:12px;font-weight:900;color:${u.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${u.name}</span>
-            <span style="font-size:15px;font-weight:900;color:${u.color}">${u.count}</span>
-          </div>
-          <div style="height:6px;border-radius:3px;overflow:hidden;background:var(--border2);display:flex;margin-bottom:4px">
-            <div style="width:${pP}%;background:#7c3aed" title="P ${u.races.P}"></div>
-            <div style="width:${pT}%;background:#0284c7" title="T ${u.races.T}"></div>
-            <div style="width:${pZ}%;background:#059669" title="Z ${u.races.Z}"></div>
-          </div>
-          <div style="display:flex;gap:3px;flex-wrap:wrap">
-            ${u.races.P?`<span style="font-size:9px;background:#ede9fe;color:#5b21b6;padding:1px 5px;border-radius:5px;font-weight:800">P${u.races.P}</span>`:''}
-            ${u.races.T?`<span style="font-size:9px;background:#e0f2fe;color:#075985;padding:1px 5px;border-radius:5px;font-weight:800">T${u.races.T}</span>`:''}
-            ${u.races.Z?`<span style="font-size:9px;background:#d1fae5;color:#064e3b;padding:1px 5px;border-radius:5px;font-weight:800">Z${u.races.Z}</span>`:''}
-          </div>
+  // 티어 분포
+  h += `<div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px 16px">
+    <div style="font-size:13px;font-weight:800;color:var(--text1);margin-bottom:12px">🏆 티어 분포</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      ${orderedTiers.map(t => {
+        const col = typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
+        const tcol = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
+        const n = tierCts[t];
+        const pct = Math.round(n/tieredVis.length*100);
+        return `<div style="padding:6px 10px;border-radius:10px;background:${col};color:${tcol};text-align:center">
+          <div style="font-size:14px;font-weight:900">${t}</div>
+          <div style="font-size:11px;opacity:.85">${n}명·${pct}%</div>
         </div>`;
       }).join('')}
     </div>
+  </div>`;
+  h += `</div>`;
 
-    <div style="border-top:1px solid var(--border2);padding-top:10px">
-      ${univStats.slice(0, 20).map(u => {
-        const barW = Math.round(u.count/maxCount*100);
-        return `<div class="b2s-univ-row">
-          <span style="font-size:11px;font-weight:800;color:${u.color};min-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</span>
-          <div class="b2s-bar-track">
-            <div title="프로토스 ${u.races.P}" style="width:${Math.round(u.races.P/u.count*barW)}%;background:#7c3aed;transition:width .6s ease"></div>
-            <div title="테란 ${u.races.T}" style="width:${Math.round(u.races.T/u.count*barW)}%;background:#0284c7;transition:width .6s ease"></div>
-            <div title="저그 ${u.races.Z}" style="width:${Math.round(u.races.Z/u.count*barW)}%;background:#059669;transition:width .6s ease"></div>
-          </div>
-          <span style="font-size:11px;font-weight:900;color:${u.color};min-width:22px;text-align:right">${u.count}</span>
-          <div style="display:flex;gap:3px;margin-left:3px;min-width:70px">
-            ${u.races.P?`<span style="font-size:9px;background:#ede9fe;color:#5b21b6;padding:1px 4px;border-radius:5px;font-weight:800">P${u.races.P}</span>`:''}
-            ${u.races.T?`<span style="font-size:9px;background:#e0f2fe;color:#075985;padding:1px 4px;border-radius:5px;font-weight:800">T${u.races.T}</span>`:''}
-            ${u.races.Z?`<span style="font-size:9px;background:#d1fae5;color:#064e3b;padding:1px 4px;border-radius:5px;font-weight:800">Z${u.races.Z}</span>`:''}
-          </div>
-        </div>`;
-      }).join('')}
-      ${univStats.length > 20 ? `<div style="text-align:center;color:var(--text3);font-size:12px;margin-top:8px;padding-top:6px;border-top:1px solid var(--border2)">외 ${univStats.length-20}개 대학</div>` : ''}
-    </div>
+  // 대학별 인원 차트
+  h += `<div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px 16px">
+    <div style="font-size:13px;font-weight:800;color:var(--text1);margin-bottom:12px">🏫 대학별 인원 현황</div>
+    ${univStats.slice(0,20).map(u => {
+      const barW = Math.round(u.count/maxCount*100);
+      const rTotal = u.races.P+u.races.T+u.races.Z||1;
+      return `<div class="b2-sum-univ-row">
+        <span style="font-size:12px;font-weight:800;color:${u.color};min-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</span>
+        <div style="flex:1;height:16px;border-radius:8px;overflow:hidden;background:#0001;display:flex">
+          <div title="프로토스 ${u.races.P}" style="width:${Math.round(u.races.P/u.count*barW)}%;background:#7c3aed;transition:width .6s ease"></div>
+          <div title="테란 ${u.races.T}" style="width:${Math.round(u.races.T/u.count*barW)}%;background:#0284c7;transition:width .6s ease"></div>
+          <div title="저그 ${u.races.Z}" style="width:${Math.round(u.races.Z/u.count*barW)}%;background:#059669;transition:width .6s ease"></div>
+        </div>
+        <span style="font-size:12px;font-weight:800;color:${u.color};min-width:28px;text-align:right">${u.count}</span>
+        <div style="display:flex;gap:3px;margin-left:4px">
+          ${u.races.P?`<span style="font-size:10px;background:#ede9fe;color:#5b21b6;padding:1px 4px;border-radius:5px;font-weight:700">P${u.races.P}</span>`:''}
+          ${u.races.T?`<span style="font-size:10px;background:#e0f2fe;color:#075985;padding:1px 4px;border-radius:5px;font-weight:700">T${u.races.T}</span>`:''}
+          ${u.races.Z?`<span style="font-size:10px;background:#d1fae5;color:#064e3b;padding:1px 4px;border-radius:5px;font-weight:700">Z${u.races.Z}</span>`:''}
+        </div>
+      </div>`;
+    }).join('')}
+    ${univStats.length > 20 ? `<div style="text-align:center;color:var(--text3);font-size:12px;margin-top:8px">외 ${univStats.length-20}개 대학</div>` : ''}
   </div>`;
 
   return h;
@@ -4454,44 +3968,25 @@ function _b2HeatmapView() {
 
   let h = `<style>
     .b2-hm-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-    .b2-hm-table { border-collapse:separate; border-spacing:3px; min-width:100%; }
+    .b2-hm-table { border-collapse:separate; border-spacing:2px; min-width:100%; }
     .b2-hm-cell {
       width:44px; min-width:44px; height:40px;
       border-radius:6px; text-align:center; vertical-align:middle;
       font-size:13px; font-weight:800;
-      cursor:pointer; position:relative; outline:2px solid transparent;
+      transition:transform .12s ease, box-shadow .12s ease;
+      cursor:default; position:relative;
     }
-    .b2-hm-univ-lbl { font-size:11px; font-weight:800; white-space:nowrap; padding:4px 10px 4px 2px; text-align:right; max-width:84px; overflow:hidden; text-overflow:ellipsis; }
+    .b2-hm-cell:hover { transform:scale(1.15); z-index:10; box-shadow:0 4px 14px #0003; }
+    .b2-hm-univ-lbl { font-size:11px; font-weight:800; white-space:nowrap; padding:4px 10px 4px 2px; text-align:right; max-width:80px; overflow:hidden; text-overflow:ellipsis; }
     .b2-hm-tier-lbl { font-size:11px; font-weight:800; text-align:center; padding:2px 4px; }
-    .b2-hm-tier-lbl-inner { padding:3px 6px;border-radius:8px;font-size:10px;font-weight:800;margin-bottom:2px;display:inline-block; }
     .b2-hm-total-cell { background:var(--surface); border-radius:6px; text-align:center; font-size:11px; font-weight:900; color:var(--text3); padding:4px 6px; }
     .b2-hm-legend { display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
-    .b2-hm-table td:hover { filter:none !important; opacity:1 !important; }
-    .b2-hm-table tr:hover td { filter:none !important; opacity:1 !important; background:inherit !important; }
-    .b2-hm-cell.hm-cell-focus,
-    .b2-hm-cell.hm-row-hi,
-    .b2-hm-cell.hm-col-hi,
-    .b2-hm-cell.hm-dim { transform:none !important; box-shadow:none !important; outline:2px solid transparent !important; opacity:1 !important; filter:none !important; z-index:auto !important; }
-    .b2-hm-tier-lbl-inner.hm-col-active { transform:none !important; box-shadow:none !important; }
-    .b2-hm-univ-lbl.hm-row-active { font-size:11px !important; }
-    .b2-hm-cell.is-selected { outline:2px solid rgba(15,23,42,.85) !important; box-shadow:0 10px 26px rgba(0,0,0,.22) !important; }
-    body.dark .b2-hm-cell.is-selected { outline:2px solid rgba(255,255,255,.9) !important; }
-    .b2-hm-popup-player { cursor:pointer; }
-    /* 히트맵 팝업 오버레이 */
-    #b2-hm-popup-overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px; }
-    #b2-hm-popup { background:var(--white);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.28);max-width:520px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden; }
-    #b2-hm-popup-header { padding:14px 16px 10px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0; }
-    #b2-hm-popup-body { overflow-y:auto;padding:12px 16px 16px;flex:1; }
-    .b2-hm-popup-player { display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;transition:background .12s; }
-    .b2-hm-popup-player:hover { background:var(--surface); }
-    .b2-hm-popup-close { background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);padding:2px 6px;border-radius:6px;line-height:1; }
-    .b2-hm-popup-close:hover { background:var(--surface);color:var(--text1); }
   </style>`;
 
   // Legend
   h += `<div style="margin-bottom:14px;padding:10px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:12px">
     <div style="font-size:13px;font-weight:900;color:var(--text1);margin-bottom:8px">🗺️ 대학 × 티어 히트맵</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:8px">셀 클릭 시 해당 플레이어 목록 팝업 · 색이 진할수록 인원이 많습니다</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px">각 셀에 마우스를 올리면 상세 정보를 볼 수 있습니다 · 색이 진할수록 인원이 많습니다</div>
     <div class="b2-hm-legend">
       <span style="font-size:11px;color:var(--text3);font-weight:600">적음</span>
       ${[0.1,0.25,0.4,0.6,0.8,1.0].map(v=>`<div style="width:24px;height:14px;border-radius:4px;background:rgba(59,130,246,${0.12+v*0.78})"></div>`).join('')}
@@ -4499,172 +3994,51 @@ function _b2HeatmapView() {
     </div>
   </div>`;
 
-  // Serialize player data for inline JS popup (펨코→대학별→무소속→이미지별 순)
-  const _hmPlayerMap = {}; // key: "univ|||tier" → player info array
-  univNames.forEach(uName => {
-    tierKeys.forEach(t => {
-      const members = tieredVis.filter(p => String(p?.univ||'').trim() === uName && (p.tier||'미정') === t);
-      if (members.length) {
-        // Sort: 펨코(femco) → 대학별(univ) → 무소속(free) → 이미지별(photo)
-        members.sort((a,b) => {
-          const getFemcoRank = p => typeof p.femcoRank !== 'undefined' ? p.femcoRank : (p.femco ? 0 : 999);
-          const fa = getFemcoRank(a), fb = getFemcoRank(b);
-          if (fa !== fb) return fa - fb;
-          const ua = String(a.univ||''), ub = String(b.univ||'');
-          if (ua !== ub) return ua.localeCompare(ub,'ko');
-          const ha = a.photo?0:1, hb = b.photo?0:1;
-          return ha - hb || (a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'});
-        });
-        _hmPlayerMap[uName+'|||'+t] = members.map(p => ({
-          name: p.name||'',
-          tier: p.tier||'미정',
-          race: p.race||'?',
-          univ: p.univ||'',
-          photo: p.photo||'',
-          femco: p.femco||false
-        }));
-      }
-    });
-  });
-  const _hmDataJson = JSON.stringify(_hmPlayerMap);
-  const _hmTierColorMap = JSON.stringify(Object.fromEntries(
-    tierKeys.map(t => [t, typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b'])
-  ));
-
   h += `<div class="b2-hm-wrap"><table class="b2-hm-table">`;
 
   // Header row: tier labels
   h += `<tr>
-    <td style="width:84px"></td>
-    ${tierKeys.map((t,ci) => {
+    <td style="width:80px"></td>
+    ${tierKeys.map(t => {
       const col = typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
       const tc = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
       const ct = colTotal(t);
-      return `<td class="b2-hm-tier-lbl" data-hm-col="${ci}" style="background:transparent !important">
-        <div class="b2-hm-tier-lbl-inner" style="background:${col};color:${tc}">${t}</div>
+      return `<td class="b2-hm-tier-lbl">
+        <div style="padding:3px 6px;border-radius:8px;background:${col};color:${tc};font-size:10px;font-weight:800;margin-bottom:2px">${t}</div>
         <div style="font-size:10px;color:var(--text3);font-weight:600">${ct}명</div>
       </td>`;
     }).join('')}
-    <td class="b2-hm-tier-lbl" style="color:var(--text3);background:transparent !important">합계</td>
+    <td class="b2-hm-tier-lbl" style="color:var(--text3)">합계</td>
   </tr>`;
 
   // Data rows
-  univNames.forEach((uName, ri) => {
+  univNames.forEach(uName => {
     const uColor = gc(uName) || '#3b82f6';
     const rt = rowTotal(uName);
     h += `<tr>
-      <td class="b2-hm-univ-lbl" data-hm-row="${ri}" style="color:${uColor};background:transparent !important" title="${uName}">${uName}</td>
-      ${tierKeys.map((t,ci) => {
+      <td class="b2-hm-univ-lbl" style="color:${uColor}" title="${uName}">${uName}</td>
+      ${tierKeys.map(t => {
         const val = matrix[uName][t];
         const bg = cellColor(val, uColor);
         const tc = textColor(val);
         const title = val ? `${uName} · ${t} : ${val}명` : '';
-        const clickAttr = val ? `onclick="_b2HmCellClick(this,'${uName.replace(/'/g,"\\'")}','${t}')"` : '';
-        return `<td class="b2-hm-cell" data-hm-row="${ri}" data-hm-col="${ci}" data-hm-val="${val}" style="background:${bg} !important;color:${val?tc:'transparent'}" title="${title}" ${clickAttr}>${val||''}</td>`;
+        return `<td class="b2-hm-cell" style="background:${bg};color:${val?tc:'transparent'}" title="${title}">${val||''}</td>`;
       }).join('')}
-      <td class="b2-hm-total-cell" style="background:var(--surface) !important;color:${uColor};font-weight:900">${rt}</td>
+      <td class="b2-hm-total-cell" style="color:${uColor};font-weight:900">${rt}</td>
     </tr>`;
   });
 
   // Footer totals
   h += `<tr>
-    <td style="font-size:11px;font-weight:800;color:var(--text3);text-align:right;padding-right:8px;background:transparent !important">합계</td>
+    <td style="font-size:11px;font-weight:800;color:var(--text3);text-align:right;padding-right:8px">합계</td>
     ${tierKeys.map(t => {
       const ct = colTotal(t);
-      return `<td class="b2-hm-total-cell" style="background:var(--surface) !important">${ct}</td>`;
+      return `<td class="b2-hm-total-cell">${ct}</td>`;
     }).join('')}
-    <td class="b2-hm-total-cell" style="background:var(--surface) !important;font-weight:900;color:var(--text1)">${tieredVis.length}</td>
+    <td class="b2-hm-total-cell" style="font-weight:900;color:var(--text1)">${tieredVis.length}</td>
   </tr>`;
 
   h += `</table></div>`;
-
-  // 팝업 + hover 하이라이트 스크립트
-  h += `<script>
-  (function(){
-    const _hmData = ${_hmDataJson};
-    const _hmTierColors = ${_hmTierColorMap};
-    const RACE_LABEL = {P:'🔮 P',T:'⚔️ T',Z:'🦎 Z','?':'❓'};
-    const RACE_COLOR = {P:'#7c3aed',T:'#0284c7',Z:'#059669','?':'#94a3b8'};
-    try{
-      if(!window.__b2_hm_nohover_guard){
-        window.__b2_hm_nohover_guard = true;
-        const _clr = () => {
-          try{
-            document.querySelectorAll('.b2-hm-cell').forEach(el=>el.classList.remove('hm-row-hi','hm-col-hi','hm-cell-focus','hm-dim'));
-            document.querySelectorAll('.b2-hm-tier-lbl-inner').forEach(el=>el.classList.remove('hm-col-active'));
-            document.querySelectorAll('.b2-hm-univ-lbl').forEach(el=>el.classList.remove('hm-row-active'));
-          }catch(e){}
-        };
-        document.addEventListener('mouseover', (e)=>{
-          const t = e && e.target;
-          if(t && t.closest && t.closest('.b2-hm-table')) _clr();
-        }, true);
-      }
-    }catch(e){}
-
-    /* ─── 팝업 ─── */
-    window._b2HmCellClick = function(cell, uName, tier) {
-      try{
-        document.querySelectorAll('.b2-hm-cell.is-selected').forEach(el=>el.classList.remove('is-selected'));
-        if(cell && cell.classList) cell.classList.add('is-selected');
-      }catch(e){}
-      const key = uName + '|||' + tier;
-      const players = _hmData[key];
-      if (!players || !players.length) return;
-
-      const tierCol = _hmTierColors[tier] || '#64748b';
-
-      let overlay = document.getElementById('b2-hm-popup-overlay');
-      if (overlay) overlay.remove();
-
-      const playerRows = players.map(p => {
-        const raceCol = RACE_COLOR[p.race] || RACE_COLOR['?'];
-        const raceLabel = RACE_LABEL[p.race] || p.race;
-        const photoEl = p.photo
-          ? \`<img src="\${p.photo}" style="width:30px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">\`
-          : \`<div style="width:30px;height:30px;border-radius:6px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">\${raceLabel.charAt(0)}</div>\`;
-        const femcoBadge = p.femco ? \`<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:6px;background:#3b82f6;color:#fff;margin-left:4px">펨코</span>\` : '';
-        return \`<div class="b2-hm-popup-player">
-          \${photoEl}
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:800;color:var(--text1)">\${p.name}\${femcoBadge}</div>
-            <div style="font-size:11px;color:var(--text3)">\${p.univ||'무소속'}</div>
-          </div>
-          <span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;background:\${raceCol};color:#fff">\${raceLabel}</span>
-        </div>\`;
-      }).join('');
-
-      overlay = document.createElement('div');
-      overlay.id = 'b2-hm-popup-overlay';
-      overlay.innerHTML = \`
-        <div id="b2-hm-popup" onclick="event.stopPropagation()">
-          <div id="b2-hm-popup-header">
-            <div>
-              <span style="font-size:15px;font-weight:900;color:var(--text1)">\${uName}</span>
-              <span style="display:inline-block;margin-left:8px;padding:3px 10px;border-radius:10px;background:\${tierCol};color:#fff;font-size:12px;font-weight:800">\${tier}</span>
-              <span style="font-size:12px;color:var(--text3);margin-left:6px">\${players.length}명</span>
-            </div>
-            <button class="b2-hm-popup-close" onclick="document.getElementById('b2-hm-popup-overlay').remove()">✕</button>
-          </div>
-          <div id="b2-hm-popup-body">\${playerRows}</div>
-        </div>
-      \`;
-      overlay.addEventListener('click', () => overlay.remove());
-      document.body.appendChild(overlay);
-
-      try{
-        overlay.querySelectorAll('.b2-hm-popup-player').forEach((el, idx)=>{
-          const nm = players[idx] && players[idx].name ? String(players[idx].name) : '';
-          el.addEventListener('click', ()=>{
-            try{ overlay.remove(); }catch(e){}
-            try{ if(nm && typeof openPlayerModal==='function') openPlayerModal(nm); }catch(e){}
-          });
-        });
-      }catch(e){}
-    };
-  })();
-  </script>`;
-
   return h;
 }
 
@@ -4940,19 +4314,7 @@ function _b2BubbleView() {
       resizeTimer = setTimeout(() => { ctx.setTransform(1,0,0,1,0,0); bubbles = layout(); draw(); }, 120);
     });
     ro.observe(canvas.parentElement);
-
-    // canvas가 DOM에 추가된 직후 offsetWidth=0일 수 있으므로 여러 번 재시도
-    function tryInit(attempt) {
-      const w = canvas.parentElement ? canvas.parentElement.offsetWidth : 0;
-      if (w > 0) {
-        init();
-      } else if (attempt < 15) {
-        requestAnimationFrame(() => tryInit(attempt + 1));
-      } else {
-        setTimeout(init, 200);
-      }
-    }
-    requestAnimationFrame(() => tryInit(0));
+    setTimeout(init, 30);
   })();
   </script>`;
 }

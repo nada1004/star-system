@@ -13027,3 +13027,37 @@ body.team-chip--wave .grp-team-chip::after {
   40%{ filter: brightness(1.22) saturate(1.5); }
   80%{ filter: brightness(.92) saturate(.9); }
 }
+
+/* ══════════════════════════════════════
+   현황판 탭 네비게이션 개선 (v19 추가탭)
+══════════════════════════════════════ */
+.b2-nav.b2-nav-new {
+  flex-wrap: wrap;
+  gap: 6px 4px;
+  padding: 8px 0 10px;
+  border-bottom: 1px solid var(--border2);
+  margin-bottom: 14px;
+}
+.b2-nav.b2-nav-new > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.b2-nav.b2-nav-new .pill {
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border: 1.5px solid transparent;
+  transition: all .15s ease;
+  white-space: nowrap;
+}
+.b2-nav.b2-nav-new .pill:hover:not(.on) {
+  filter: brightness(0.92);
+  transform: translateY(-1px);
+}
+.b2-nav.b2-nav-new .pill.on {
+  box-shadow: 0 2px 8px #0002;
+  transform: translateY(-1px);
+}
