@@ -348,6 +348,8 @@ function _b2ScheduleImageSwap(playerName) {
   const mainBox = document.getElementById('b2-players-main-box');
   if (!mainBox) return;
   _b2ClearSwapTimer(mainBox);
+  mainBox._swapGen = (mainBox._swapGen || 0) + 1;
+  const swapGen = mainBox._swapGen;
   // 현재 선수의 이미지 목록 수집 (photo + profileFile2~5)
   const p = (typeof players !== 'undefined') ? players.find(x => x.name === playerName) : null;
   const imgList = p ? [
@@ -420,6 +422,7 @@ function _b2ScheduleImageSwap(playerName) {
     mainBox._swapIdx = (prev + 1) % totalImgs;
     const cur = mainBox._swapIdx;
     const curSlot = imgList[cur] ? imgList[cur].slot : 1;
+    mainBox._swapCurSlot = curSlot;
     for (let slot = 1; slot <= 5; slot++) {
       const el = document.getElementById('b2-main-img-' + slot);
       if (el) el.style.opacity = (slot === curSlot) ? '1' : '0';
@@ -431,6 +434,7 @@ function _b2ScheduleImageSwap(playerName) {
         const el = getEl(s);
         if(isVideo(el) && s !== curSlot){
           try{ el.onended = null; }catch(e){}
+          try{ el.onloadedmetadata = null; }catch(e){}
           try{ el.pause && el.pause(); }catch(e){}
           try{ el.__b2SwapDone = false; }catch(e){}
         }
@@ -469,6 +473,9 @@ function _b2ScheduleImageSwap(playerName) {
           try{ el.__b2SwapDone = false; }catch(e){}
           el.onended = ()=>{
             try{
+              if(mainBox._swapGen !== swapGen) return;
+              if(mainBox._swapIdx !== cur) return;
+              if(mainBox._swapCurSlot !== curSlot) return;
               if(el.__b2SwapDone) return;
               el.__b2SwapDone = true;
             }catch(e){}
@@ -478,6 +485,9 @@ function _b2ScheduleImageSwap(playerName) {
           const remain = Math.max(0.2, dur - Number(el.currentTime||0));
           mainBox._swapTimer = setTimeout(()=>{
             try{
+              if(mainBox._swapGen !== swapGen) return;
+              if(mainBox._swapIdx !== cur) return;
+              if(mainBox._swapCurSlot !== curSlot) return;
               if(el.__b2SwapDone) return;
               el.__b2SwapDone = true;
             }catch(e){}
@@ -492,6 +502,9 @@ function _b2ScheduleImageSwap(playerName) {
         try{
           el.onended = ()=>{
             try{
+              if(mainBox._swapGen !== swapGen) return;
+              if(mainBox._swapIdx !== cur) return;
+              if(mainBox._swapCurSlot !== curSlot) return;
               if(el.__b2SwapDone) return;
               el.__b2SwapDone = true;
             }catch(e){}
@@ -502,11 +515,17 @@ function _b2ScheduleImageSwap(playerName) {
         try{
           el.onloadedmetadata = ()=>{
             try{
+              if(mainBox._swapGen !== swapGen) return;
+              if(mainBox._swapIdx !== cur) return;
+              if(mainBox._swapCurSlot !== curSlot) return;
               const d = Number(el.duration);
               if(!(Number.isFinite(d) && d > 0)) return;
               if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
               mainBox._swapTimer = setTimeout(()=>{
                 try{
+                  if(mainBox._swapGen !== swapGen) return;
+                  if(mainBox._swapIdx !== cur) return;
+                  if(mainBox._swapCurSlot !== curSlot) return;
                   if(el.__b2SwapDone) return;
                   el.__b2SwapDone = true;
                 }catch(e){}
@@ -532,12 +551,18 @@ function _b2ScheduleImageSwap(playerName) {
         firstDelay = 60000;
         el.onloadedmetadata = ()=>{
           try{
+            if(mainBox._swapGen !== swapGen) return;
+            if(mainBox._swapIdx !== 0) return;
+            if(mainBox._swapCurSlot !== firstSlot) return;
             const d = Number(el.duration);
             if(Number.isFinite(d) && d > 0){
               if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
               try{ el.__b2SwapDone = false; }catch(e){}
               mainBox._swapTimer = setTimeout(()=>{
                 try{
+                  if(mainBox._swapGen !== swapGen) return;
+                  if(mainBox._swapIdx !== 0) return;
+                  if(mainBox._swapCurSlot !== firstSlot) return;
                   if(el.__b2SwapDone) return;
                   el.__b2SwapDone = true;
                 }catch(e){}
@@ -550,6 +575,9 @@ function _b2ScheduleImageSwap(playerName) {
       try{ el.__b2SwapDone = false; }catch(e){}
       el.onended = ()=>{
         try{
+          if(mainBox._swapGen !== swapGen) return;
+          if(mainBox._swapIdx !== 0) return;
+          if(mainBox._swapCurSlot !== firstSlot) return;
           if(el.__b2SwapDone) return;
           el.__b2SwapDone = true;
         }catch(e){}
@@ -558,6 +586,7 @@ function _b2ScheduleImageSwap(playerName) {
       };
     }
   }catch(e){}
+  mainBox._swapCurSlot = firstSlot;
   mainBox._swapTimer = setTimeout(doSwap, firstDelay);
 }
 window._b2RefreshImageControls = function(playerName, slot) {
