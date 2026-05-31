@@ -393,7 +393,7 @@ function rBoard2(C, T) {
   setTimeout(() => { try{ _b2PrewarmViewImages(); }catch(e){} }, 120);
 
   const sub = document.getElementById('b2-content');
-  if(sub) sub.innerHTML = `<div style="padding:26px 14px;color:var(--text3);font-size:12px;font-weight:700">로딩 중...</div>`;
+  // (즉시 렌더링 - 로딩 중 메시지 제거)
   const _renderSub = () => {
     const sub = document.getElementById('b2-content');
     if(!sub) return;

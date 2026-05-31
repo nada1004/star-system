@@ -2640,6 +2640,28 @@ function _rebuildAllPlayerHistoryCore() {
     });
   }
 
+  // 10-b. tourneys의 normalMatches에서 복구 [BUGFIX: 누락 수정]
+  if (typeof tourneys !== 'undefined') {
+    tourneys.forEach((tn, tnIdx) => {
+      if (tn.type === 'tier') return;
+      (tn.normalMatches || []).forEach((m, mi) => {
+        const mid = _ensureMid(m, `tourNM${tnIdx}`, mi);
+        (m.sets || []).forEach((set, setIdx) => {
+          (set.games || []).forEach((g, gameIdx) => {
+            if (!g.playerA || !g.playerB || !g.winner) return;
+            const wName = g.winner === 'A' ? g.playerA : g.playerB;
+            const lName = g.winner === 'A' ? g.playerB : g.playerA;
+            const univW = g.winner === 'A' ? (m.a || '') : (m.b || '');
+            const univL = g.winner === 'A' ? (m.b || '') : (m.a || '');
+            const gameId = g._id || g.sid || `${mid}_s${setIdx}_g${gameIdx}`;
+            applyGameResult(wName, lName, m.d || '', g.map || '', gameId, univW, univL, '대회');
+            count++;
+          });
+        });
+      });
+    });
+  }
+
   // 11. proTourneys에서 복구
   if (typeof proTourneys !== 'undefined') {
     proTourneys.forEach((tn, tnIdx) => {

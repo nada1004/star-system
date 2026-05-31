@@ -71,9 +71,20 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
     if(headActions){
       const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';
       const okShare=(!_adm||isLoggedIn) && isDone;
-      headActions.innerHTML = okShare
-        ? `<button class="btn btn-p btn-xs" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:104px;padding:7px 12px;border-radius:999px;background:linear-gradient(135deg,#7c3aed,#2563eb);border:1px solid rgba(255,255,255,.24);box-shadow:0 8px 20px rgba(37,99,235,.22);color:#fff;font-weight:900" onclick="${(gi!=null && (rnd==null || rnd===undefined) && !isManual)?`openCompMatchShareCard('${tnId}',${gi},${mi})`:`openBktShareCard('${tnId}',${rnd},${mi})`}">🎴 공유 카드</button>`
-        : '';
+      const isLeagueMatch=(gi!=null && (rnd==null || rnd===undefined) && !isManual);
+      let btnHtml='';
+      if(isLoggedIn){
+        // 수정 버튼
+        if(isLeagueMatch){
+          btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="if(typeof openCompMatchEditModal==='function')openCompMatchEditModal('${tnId}',${gi},${mi});else if(typeof grpEditMatchInline==='function')grpEditMatchInline('${tnId}',${gi},${mi})">✏️ 수정</button>`;
+        } else if(isManual){
+          btnHtml+=`<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font-weight:700" onclick="if(typeof openBktManualEditModal==='function')openBktManualEditModal('${tnId}',${mi})">✏️ 수정</button>`;
+        }
+      }
+      if(okShare){
+        btnHtml+=`<button class="btn btn-p btn-xs" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:104px;padding:7px 12px;border-radius:999px;background:linear-gradient(135deg,#7c3aed,#2563eb);border:1px solid rgba(255,255,255,.24);box-shadow:0 8px 20px rgba(37,99,235,.22);color:#fff;font-weight:900" onclick="${isLeagueMatch?`openCompMatchShareCard('${tnId}',${gi},${mi})`:`openBktShareCard('${tnId}',${rnd},${mi})`}">🎴 공유 카드</button>`;
+      }
+      headActions.innerHTML=btnHtml;
     }
     window._cmdDetailState = { tnId, gi, mi, rnd, isManual, isLeague: (gi!=null && (rnd==null || rnd===undefined) && !isManual) };
   }catch(e){}

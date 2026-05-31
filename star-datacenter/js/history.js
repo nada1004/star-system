@@ -489,10 +489,15 @@ function histTourneyHTML(context){
       const key=`${context}-tourney-${idx}`;
       const rIdx=(m._src==='comps')?m._origIdx:-1;
       const grpBadge=m._src==='tour'
-        ?`<span class="grp-meta-group" style="background:linear-gradient(135deg,${m.grpColor||'#2563eb'},${m.grpColor||'#2563eb'}cc);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor||'#2563eb'}44">GROUP ${m.grpLetter||''} · ${m.matchNum||''}경기</span>`:'';
-      const _rndBadge=m.rndLabel?`<span style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;font-size:10px;font-weight:900;padding:2px 10px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px rgba(37,99,235,.30)">${m.rndLabel}</span>`:'';
+        ?`<span class="grp-meta-group" style="background:linear-gradient(135deg,${m.grpColor||'#2563eb'},${m.grpColor||'#2563eb'}cc);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor||'#2563eb'}44">GROUP ${m.grpLetter||''} · ${m.matchNum||''}경기</span>`
+        :m._src==='tour_normal'
+        ?`<span style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px">🎮 일반경기</span>`
+        :m._src==='tour_bracket'||m._src==='tour_manual'
+        ?`<span style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px">🗂️ 토너먼트${m.rndLabel?' · '+m.rndLabel:''}</span>`
+        :'';
+      const _rndBadge=(m.rndLabel&&m._src!=='tour_bracket'&&m._src!=='tour_manual')?`<span style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;font-size:10px;font-weight:900;padding:2px 10px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px rgba(37,99,235,.30)">${m.rndLabel}</span>`:'';
       const _tAwin=m.sa>m.sb,_tBwin=m.sb>m.sa;
-      const _tBorderCol=m._src==='tour'?(m.grpColor||'#2563eb'):(_tAwin?gc(a):_tBwin?gc(b):'var(--blue-ll)');
+      const _tBorderCol=(m._src==='tour'||m._src==='tour_bracket'||m._src==='tour_manual')?(m.grpColor||'#2563eb'):m._src==='tour_normal'?'#6366f1':(_tAwin?gc(a):_tBwin?gc(b):'var(--blue-ll)');
       const _ab = (typeof _collectMatchTeamMembersAB === 'function') ? _collectMatchTeamMembersAB(m) : {a:[], b:[]};
       const _aMemJson = JSON.stringify((_ab.a||[])).replace(/"/g,"'");
       const _bMemJson = JSON.stringify((_ab.b||[])).replace(/"/g,"'");
@@ -2877,6 +2882,17 @@ function getTourneyMatches(){
         sa:m.sa,sb:m.sb,sets:m.sets||[],
         rndLabel: m.rndLabel || '',
         grpName:'토너먼트',grpLetter:'T',grpColor:'#7c3aed'
+      });
+    });
+    // 일반 경기 (normalMatches)
+    (tn.normalMatches||[]).forEach((m,nmi)=>{
+      if(!m||!m.a||!m.b||m.sa==null||m.sb==null)return;
+      result.push({
+        _src:'tour_normal',_tnId:tn.id,_nmi:nmi,
+        d:m.d||'',n:tn.name,a:m.a,b:m.b,
+        sa:m.sa,sb:m.sb,sets:m.sets||[],
+        grpName:'일반경기',grpLetter:'N',grpColor:'#6366f1',
+        compName:tn.name
       });
     });
   });

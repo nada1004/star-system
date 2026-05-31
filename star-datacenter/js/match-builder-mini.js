@@ -27,7 +27,8 @@ function rMini(C,T){
   const filteredMini = miniM.filter(_miniTypeFilter);
   if(miniSub==='input'&&isLoggedIn){
     if(!BLD['mini'])BLD['mini']={date:'',title:'',teamA:'',teamB:'',sets:[]};
-    h+=`<div class="match-builder"><h3>${label} 입력</h3><div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openMiniPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button></div>${setBuilderHTML(BLD['mini'],'mini')}</div>`;
+    const _miniActionBar=_mbActionBar([`<button class="btn btn-p btn-sm mb-mini-btn" onclick="openMiniPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`],'');
+    h+=_mbFrame(`${label} 입력`,_miniActionBar,_mbSectionCard(`${label} 입력`,`${setBuilderHTML(BLD['mini'],'mini')}`),'');
   } else if(miniSub==='rank'){
     h+=miniRankHTML(filteredMini);
   } else {

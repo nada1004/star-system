@@ -105,6 +105,7 @@ function rComp(C,T){
   } else {
     // 일반 대회 메뉴 (tiertour 제외)
     subOpts=[
+      {id:'normal',lbl:'🎮 일반'},
       {id:'league',lbl:'📅 조별리그 일정'},
       {id:'grprank',lbl:'📊 조별 순위'},
       {id:'tour',lbl:'🗂️ 대진표'},
@@ -135,7 +136,8 @@ function rComp(C,T){
     C.innerHTML=h; return;
   }
 
-  if(compSub==='league') h+=rCompLeague(tn);
+  if(compSub==='normal') h+=typeof rCompNormalMatches==='function'?rCompNormalMatches(tn):'';
+  else if(compSub==='league') h+=rCompLeague(tn);
   else if(compSub==='grprank') h+=rCompGrpRankFull(tn);
   else if(compSub==='tour'){
     h+=tn?rCompTourDynamic(tn):'';

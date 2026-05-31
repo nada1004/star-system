@@ -79,6 +79,7 @@ function preparePlayerDetailComputedData(opts){
   (tourneys||[]).forEach(tn=>{
     (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{(m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>cGame(g,m._id||''));});});});
     Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{(m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>cGame(g,m._id||''));});});
+    (tn.normalMatches||[]).forEach(m=>{(m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>cGame(g,m._id||''));});});
   });
   const gjW=(gjM||[]).filter(g=>g.wName===p.name&&(!year||(g.d||'').startsWith(year))).length;
   const gjL=(gjM||[]).filter(g=>g.lName===p.name&&(!year||(g.d||'').startsWith(year))).length;
@@ -232,6 +233,7 @@ function calcPlayerVsUniversityRecords(player, opts){
     scanMatches((tn.groups||[]).flatMap(grp=>grp.matches||[]), (m)=>({a:m.a,b:m.b}));
     scanMatches(Object.values((tn.bracket||{}).matchDetails||{}), (m)=>({a:m.a,b:m.b}));
     scanMatches(((tn.bracket||{}).manualMatches||[]), (m)=>({a:m.a,b:m.b}));
+    scanMatches((tn.normalMatches||[]), (m)=>({a:m.a,b:m.b}));
   });
 
   return [...map.values()].sort((a,b)=>(b.tot-a.tot)||(b.w-a.w)||String(a.univ).localeCompare(String(b.univ),'ko'));

@@ -357,6 +357,10 @@ function _grpPasteApplyLogic(savable){
   if(_grpPasteState.mode==='procomp-team'){
     return typeof _proCompTeamPasteApplyLogic==='function' ? _proCompTeamPasteApplyLogic(savable) : false;
   }
+  // 일반 경기 모드
+  if(_grpPasteState.mode==='normal_match'){
+    return typeof window._nmPasteApplyLogic==='function' ? window._nmPasteApplyLogic(savable) : false;
+  }
   // 브라켓 모드 분기
   if(_grpPasteState.mode==='bkt'){
     return _bktPasteApplyLogic(savable,tn);

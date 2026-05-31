@@ -909,11 +909,23 @@ function refreshSel(){
 window._gemCtx = null;
 
 function openGameEditModal(editRef, si, gi){
-  const [mode, idxStr]=editRef.split(':');
-  const idx=parseInt(idxStr);
-  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='tt'?ttM:mode==='comp'?comps:null;
-  if(!arr)return;
-  const m=arr[idx];if(!m)return;
+  const parts=editRef.split(':');
+  const mode=parts[0];
+  // nm mode: editRef = "nm:tnId:nmIdx"
+  let m, idx;
+  if(mode==='nm'){
+    const tnId=parts[1]; const nmIdx=parseInt(parts[2]);
+    const tn=(typeof tourneys!=='undefined'?tourneys:[]).find(t=>t.id===tnId);
+    if(!tn)return;
+    m=(tn.normalMatches||[])[nmIdx];
+    if(!m)return;
+    idx=nmIdx;
+  } else {
+    idx=parseInt(parts[1]);
+    const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='tt'?ttM:mode==='comp'?comps:null;
+    if(!arr)return;
+    m=arr[idx];if(!m)return;
+  }
   const set=m.sets&&m.sets[si];if(!set)return;
   const g=set.games&&set.games[gi];if(!g)return;
 
@@ -1011,11 +1023,22 @@ function saveGameEditModal(){
 }
 
 function saveGameEdit(editRef, si, gi, btn){
-  const [mode, idxStr]=editRef.split(':');
-  const idx=parseInt(idxStr);
-  const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='tt'?ttM:mode==='comp'?comps:null;
-  if(!arr)return;
-  const m=arr[idx];if(!m)return;
+  const parts=editRef.split(':');
+  const mode=parts[0];
+  let m, idx;
+  if(mode==='nm'){
+    const tnId=parts[1]; const nmIdx=parseInt(parts[2]);
+    const tn=(typeof tourneys!=='undefined'?tourneys:[]).find(t=>t.id===tnId);
+    if(!tn)return;
+    m=(tn.normalMatches||[])[nmIdx];
+    if(!m)return;
+    idx=nmIdx;
+  } else {
+    idx=parseInt(parts[1]);
+    const arr=mode==='mini'?miniM:mode==='univm'?univM:mode==='ck'?ckM:mode==='pro'?proM:mode==='tt'?ttM:mode==='comp'?comps:null;
+    if(!arr)return;
+    m=arr[idx];if(!m)return;
+  }
   const set=m.sets&&m.sets[si];if(!set)return;
   const g=set.games&&set.games[gi];if(!g)return;
 
@@ -1057,7 +1080,7 @@ function saveGameEdit(editRef, si, gi, btn){
 
   // pro 외 모드: 새 결과 선수 history에 반영
   if(mode!=='pro' && newPA && newPB && newWinner){
-    const _geLabel={mini:'미니대전',univm:'대학대전',ck:'대학CK',tt:'티어대회',comp:'조별리그'}[mode]||'';
+    const _geLabel={mini:'미니대전',univm:'대학대전',ck:'대학CK',tt:'티어대회',comp:'조별리그',nm:'대회'}[mode]||'';
     applyGameResult(
       newWinner==='A'?newPA:newPB,
       newWinner==='A'?newPB:newPA,
@@ -1078,6 +1101,13 @@ function saveGameEdit(editRef, si, gi, btn){
   try{ if(document.getElementById('gameEditModal')) cm('gameEditModal'); else if(btn&&btn.closest) btn.closest('.modal').remove(); }catch(e){ try{ cm('gameEditModal'); }catch(_){} }
   render();
   try{ if(typeof window._refreshOpenHistDetailAfterEdit==='function') window._refreshOpenHistDetailAfterEdit(mode, idx); }catch(e){}
+  // nm 모드: 상세 팝업 새로고침
+  try{
+    if(mode==='nm'){
+      const _nmParts=editRef.split(':');
+      if(typeof nmOpenDetailModal==='function') nmOpenDetailModal(_nmParts[1], parseInt(_nmParts[2]));
+    }
+  }catch(e){}
   // (보강) 티어대회 경기 수정 후 최근 경기 누락 방지
   try{ if(mode==='tt' && typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
   try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
