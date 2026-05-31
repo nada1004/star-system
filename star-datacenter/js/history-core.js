@@ -483,7 +483,7 @@ function histAllHTML(){
     h+=`<div class="rec-summary rec-mode-tierrank${_recSideFxClass(mode)}" data-rec-mode="tierrank" style="--rec-mode-col:${ti.col};--rec-mode-rgb:${(function(){const h=String(ti.col||'').replace('#','');if(h.length!==6)return'100,116,139';return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);})()};${_recSideFxStyle(mode,ca,cb)}border-left:3px solid ${ti.col}">
       <div class="rec-sum-header" style="gap:6px">
         <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:68px">
-          <span style="font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:${ti.col}18;color:${ti.col};white-space:nowrap;display:inline-block">${ti.lbl}${m._teamMatchType?` <span style="background:#7c3aed;color:#fff;padding:0 4px;border-radius:3px">${m._teamMatchType.replace('v',':')+'전'}</span>`:''}</span>
+          <span style="font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:${ti.col}18;color:${ti.col};white-space:nowrap;display:inline-block">${ti.lbl}${m._src==='tour_normal'?` <span style="background:#6366f1;color:#fff;padding:0 4px;border-radius:3px">일반경기</span>`:m._src==='tour_bracket'||m._src==='tour_manual'?` <span style="background:#1e3a8a;color:#fff;padding:0 4px;border-radius:3px">토너먼트</span>`:m._teamMatchType?` <span style="background:#7c3aed;color:#fff;padding:0 4px;border-radius:3px">${m._teamMatchType.replace('v',':')+'전'}</span>`:''}</span>
           <span style="font-size:12px;font-weight:600;color:${dColor};white-space:nowrap">${dLabel}</span>
         </div>
         <span style="font-weight:800;font-size:13px;color:${winner===teamA?'#16a34a':'var(--text)'};flex:1;min-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${teamA}</span>
@@ -598,7 +598,10 @@ function histTourneyHTML(context){
         const rIdx=(m._src==='comps')?m._origIdx:-1;
 
         const grpBadge=m._src==='tour'
-          ?`<span class="grp-meta-group" style="background:linear-gradient(135deg,${m.grpColor||'#2563eb'},${m.grpColor||'#2563eb'}cc);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor||'#2563eb'}44">GROUP ${m.grpLetter||''}</span>`:'';
+          ?`<span class="grp-meta-group" style="background:linear-gradient(135deg,${m.grpColor||'#2563eb'},${m.grpColor||'#2563eb'}cc);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px ${m.grpColor||'#2563eb'}44">GROUP ${m.grpLetter||''}</span>`
+          :m._src==='tour_normal'
+          ?`<span style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;letter-spacing:.5px">🎮 일반경기</span>`
+          :'';
         const _rndBadge=m.rndLabel?`<span style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;font-size:10px;font-weight:900;padding:2px 10px;border-radius:99px;letter-spacing:.5px;box-shadow:0 2px 6px rgba(37,99,235,.30)">${m.rndLabel}</span>`:'';
 
         const _ab = (typeof _collectMatchTeamMembersAB === 'function') ? _collectMatchTeamMembersAB(m) : {a:[], b:[]};
@@ -616,8 +619,10 @@ function histTourneyHTML(context){
 
         const _menuActions=[
           isLoggedIn&&(rIdx>=0||m._src==='tour'||m._src==='tour_bracket'||m._src==='tour_manual')?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>m._src==='tour'?leagueEditMatch(m._tnId,m._gi,m._mi):null}:null,
+          isLoggedIn&&m._src==='tour_normal'?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>{if(typeof nmStartEdit==='function')nmStartEdit(m._tnId,m._nmi);}}:null,
           {t:'🎴 공유카드',d:'공유용 카드 생성',kind:'accent',on:()=>window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(idx,context))},
-          isLoggedIn&&rIdx>=0&&!isSubAdmin?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>null}:null
+          isLoggedIn&&rIdx>=0&&!isSubAdmin?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>null}:null,
+          isLoggedIn&&m._src==='tour_normal'&&!isSubAdmin?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>{if(typeof nmDelMatch==='function')nmDelMatch(m._tnId,m._nmi);}}:null
         ].filter(Boolean);
         const _menuBtn=(_menuActions.length&&typeof _compActionMenuHTML==='function')?_compActionMenuHTML(_menuActions):'';
 
@@ -687,7 +692,9 @@ function _getHistTourneyMatchObj(idx, context){
   all.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
   const m = all[idx]||null;
   if(!m) return null;
-  return {...m,_matchType:'comp',compName:m.compName||m.n||'',teamALabel:m.teamALabel||m.a||'',teamBLabel:m.teamBLabel||m.b||''};
+  const _stage = m._src==='tour_normal'?'league':(m.stage||'league');
+  const _grpName = m._src==='tour_normal'?'일반경기':(m.grpName||'');
+  return {...m,_matchType:'comp',compName:m.compName||m.n||'',teamALabel:m.teamALabel||m.a||'',teamBLabel:m.teamBLabel||m.b||'',stage:_stage,grpName:_grpName};
 }
 
 
