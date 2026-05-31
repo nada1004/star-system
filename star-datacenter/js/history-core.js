@@ -333,6 +333,14 @@ function histAllHTML(){
       allItems.push({type:'tourney',d:m.d||'',m,idx});
     });
   }
+  // 일반대회 일반 경기 (normalMatches)
+  if(typeof getNormalMatchesForHistory==='function'){
+    getNormalMatchesForHistory().forEach((m,idx)=>{
+      if(!m.a||!m.b||m.sa==null||m.sb==null)return;
+      if(!passDateFilter(m.d||''))return;
+      allItems.push({type:'tourney',d:m.d||'',m,idx});
+    });
+  }
   // 대회 토너먼트 (comps)
   (comps||[]).forEach((m,idx)=>{
     if(!m.a&&!m.u) return; if(!m.b) return;
@@ -530,8 +538,9 @@ function histAllHTML(){
 ══════════════════════════════════════ */
 function histTourneyHTML(context){
   const tourItems=(typeof getTourneyMatches==='function') ? getTourneyMatches() : [];
+  const nmItems=(typeof getNormalMatchesForHistory==='function') ? getNormalMatchesForHistory() : [];
   const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx,a:(m.a||m.u||''),b:(m.b||'')}));
-  const allItems=[...tourItems,...compItems].filter(m=>{
+  const allItems=[...tourItems,...nmItems,...compItems].filter(m=>{
     if(!m.a||!m.b) return false;
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return false;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return false;
@@ -668,8 +677,9 @@ function histTourneyHTML(context){
 // 대회 탭 공유카드용 헬퍼
 function _getHistTourneyMatchObj(idx, context){
   const tourItems=getTourneyMatches();
+  const nmItems=(typeof getNormalMatchesForHistory==='function')?getNormalMatchesForHistory():[];
   const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
-  const all=[...tourItems,...compItems].filter(m=>{
+  const all=[...tourItems,...nmItems,...compItems].filter(m=>{
     if(!m.a||!m.b) return false;
     if(m.sa==null||m.sb==null) return false;
     return typeof passDateFilter!=='function'||passDateFilter(m.d||'');
@@ -702,8 +712,10 @@ function rHistUnivStat(){
   const myCK=ckM.filter(m=>((m.teamAMembers||[]).some(x=>x.univ===histUniv)||(m.teamBMembers||[]).some(x=>x.univ===histUniv))&&(!passDateFilter||passDateFilter(m.d||'')));
   const myComp=comps.filter(m=>(((m.a||m.u)===histUniv)||m.b===histUniv)&&(!passDateFilter||passDateFilter(m.d||'')));
   // 조별대회(tourneys) 경기 추가
-  const myTourney=(typeof getTourneyMatches==='function'?getTourneyMatches():[])
-    .filter(m=>(m.a===histUniv||m.b===histUniv)&&(!passDateFilter||passDateFilter(m.d||'')));
+  const myTourney=[
+    ...(typeof getTourneyMatches==='function'?getTourneyMatches():[]),
+    ...(typeof getNormalMatchesForHistory==='function'?getNormalMatchesForHistory():[])
+  ].filter(m=>(m.a===histUniv||m.b===histUniv)&&(!passDateFilter||passDateFilter(m.d||'')));
   function calcStats(arr,getA,getB){let w=0,l=0,d=0;arr.forEach(m=>{const a=getA(m),b=getB(m);const iA=(a===histUniv),iB=(b===histUniv);if(iA){if(m.sa>m.sb)w++;else if(m.sb>m.sa)l++;else d++;}else if(iB){if(m.sb>m.sa)w++;else if(m.sa>m.sb)l++;else d++;}});return{w,l,d,total:w+l+d};}
   const sm=calcStats(myMini,m=>m.a,m=>m.b);
   const su=calcStats(myUnivM,m=>m.a,m=>m.b);
