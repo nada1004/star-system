@@ -5,8 +5,13 @@ window._centerActiveTopTab = function(smooth){
     const tabs = on.closest('.tabs');
     if(!tabs) return;
     const mode = (localStorage.getItem('su_top_tab_align_mb')||'start').trim();
-    if(window.innerWidth <= 768 && mode === 'center'){
-      on.scrollIntoView({ behavior: 'auto', inline:'center', block:'nearest' });
+    if(window.innerWidth <= 768){
+      if(mode === 'center'){
+        on.scrollIntoView({ behavior: 'auto', inline:'center', block:'nearest' });
+      } else {
+        /* [UX] 선택된 탭이 뷰포트 밖으로 벗어나면 자동 스크롤 */
+        on.scrollIntoView({ behavior: 'smooth', inline:'nearest', block:'nearest' });
+      }
     }
   }catch(e){}
 };

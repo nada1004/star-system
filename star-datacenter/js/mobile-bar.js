@@ -25,7 +25,7 @@ function updateFabVisibility(){
     fab.style.display=hidePC?'none':'flex';
   }
   // 로그인 상태에 따라 설정 옵션 표시/숨김
-  const settingsItem=document.querySelector('.fab-sub-item[onclick*="_fabGo(\'cfg\')"]');
+  const settingsItem=document.querySelector('.fab-sub-item--cfg');
   if(settingsItem){
     settingsItem.style.display=typeof isLoggedIn!=='undefined'&&isLoggedIn?'flex':'none';
   }

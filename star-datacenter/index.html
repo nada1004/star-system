@@ -341,7 +341,7 @@
 </div>
 
 <!-- 스트리머 상세 모달 -->
-<div id="playerModal" class="modal no-export">
+<div id="playerModal" class="modal no-export" role="dialog" aria-modal="true" aria-labelledby="playerModalTitle"><!-- [A11Y] -->
   <div class="umbox">
     <div id="playerModalHead" class="detail-modal-head">
       <div class="mtitle detail-modal-title" id="playerModalTitle" style="margin-bottom:0">스트리머 상세</div>
@@ -356,7 +356,7 @@
 </div>
 
 <!-- 대학 상세 모달 -->
-<div id="univModal" class="modal no-export">
+<div id="univModal" class="modal no-export" role="dialog" aria-modal="true" aria-labelledby="univModalTitle"><!-- [A11Y] -->
   <div class="umbox">
     <div id="univModalHead" class="detail-modal-head">
       <div class="mtitle detail-modal-title" id="univModalTitle" style="margin-bottom:0">대학 상세</div>
@@ -807,17 +807,20 @@ function fabActionCfgSearch(){
     <div class="fab-sub-item" onclick="closeFab();_fabGo('univm')"><span>🏟️</span> 대학대전</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('ind')"><span>⚔️</span> 개인전</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('pro')"><span>🏅</span> 프로리그</div>
+    <div class="fab-sub-item" onclick="closeFab();_fabGo('tier')"><span>🏆</span> 대회/티어</div>
+    <div class="fab-sub-item" onclick="closeFab();_fabGo('roulette')"><span>🎰</span> 룰렛</div>
+    <div class="fab-sub-item fab-sub-item--cfg" onclick="closeFab();_fabGo('cfg')" style="display:none"><span>⚙️</span> 설정</div>
   </div>
   <button class="fab-main" id="fabMain" onclick="toggleFab()" aria-label="빠른 이동">＋</button>
 </div>
 
 <!-- 📱 하단 고정 네비게이션 바 (모바일) -->
-<div id="bottomNav">
-  <button class="bnav-item on" id="bn0" onclick="swNav('total',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📋</span></div><span class="bnav-label">스트리머</span></button>
-  <button class="bnav-item" id="bn1" onclick="swNav('board2',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📌</span></div><span class="bnav-label">현황판</span></button>
-  <button class="bnav-item" id="bn2" onclick="swNav('tier',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📊</span></div><span class="bnav-label">티어</span></button>
-  <button class="bnav-item" id="bn3" onclick="swNav('hist',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📅</span></div><span class="bnav-label">기록</span></button>
-  <button class="bnav-item" id="bn4" onclick="swNav('stats',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📈</span></div><span class="bnav-label">통계</span></button>
+<div id="bottomNav" role="tablist" aria-label="모바일 메뉴"><!-- [A11Y] -->
+  <button class="bnav-item on" id="bn0" role="tab" aria-selected="true" onclick="swNav('total',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📋</span></div><span class="bnav-label">스트리머</span></button>
+  <button class="bnav-item" id="bn1" role="tab" aria-selected="false" onclick="swNav('board2',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📌</span></div><span class="bnav-label">현황판</span></button>
+  <button class="bnav-item" id="bn2" role="tab" aria-selected="false" onclick="swNav('tier',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📊</span></div><span class="bnav-label">티어</span></button>
+  <button class="bnav-item" id="bn3" role="tab" aria-selected="false" onclick="swNav('hist',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📅</span></div><span class="bnav-label">기록</span></button>
+  <button class="bnav-item" id="bn4" role="tab" aria-selected="false" onclick="swNav('stats',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📈</span></div><span class="bnav-label">통계</span></button>
 </div>
 
 <!-- 🤖 챗봇 팝업 -->

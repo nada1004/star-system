@@ -550,8 +550,14 @@ function calShowDay(ds){
 }
 
 function swNav(t,el){
-  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('on'));
-  if(el) el.classList.add('on');
+  document.querySelectorAll('.bnav-item').forEach(b=>{
+    b.classList.remove('on');
+    b.setAttribute('aria-selected','false');/* [A11Y] */
+  });
+  if(el){
+    el.classList.add('on');
+    el.setAttribute('aria-selected','true');/* [A11Y] */
+  }
   // 탭 상태 초기화는 sw() 내부에서 처리하므로 여기서는 중복 정의하지 않음
   let found=false;
   document.querySelectorAll('.tab').forEach(b=>{
@@ -563,7 +569,9 @@ function swNav(t,el){
     // 바텀 네비 동기화
     document.querySelectorAll('.bnav-item').forEach(b=>{
       const oc=b.getAttribute('onclick')||'';
-      b.classList.toggle('on',oc.includes("'"+t+"'"));
+      const _isOn=oc.includes("'"+t+"'");
+      b.classList.toggle('on',_isOn);
+      b.setAttribute('aria-selected',_isOn?'true':'false');/* [A11Y] */
     });
     const fstrip=document.getElementById('fstrip');
     if(fstrip) fstrip.style.display=(t==='total'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin))?'block':'none';
