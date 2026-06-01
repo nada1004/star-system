@@ -1,3 +1,52 @@
+// ── [BUG-FIX #2,#3,#4,#5] bnav 동기화 헬퍼 & swNav 조기 stub ──────────────
+// bottomNav 버튼(total/board2/tier/hist/stats)과 실제 탭 간의 매핑.
+// 서브탭(ind, comp, pro, cal, roulette, univm, gj, tiertour, civil 등)도
+// 부모 bnav 항목이 하이라이트되도록 처리.
+window._BNAV_TAB_MAP = {
+  total:    'total',
+  board2:   'board2',
+  tier:     'tier',
+  hist:     'hist',
+  stats:    'stats',
+  // 메인 탭이 bnav에 없는 경우 → 가장 가까운 bnav 항목으로 매핑
+  ind:      'total',
+  gj:       'total',
+  univm:    'total',
+  univck:   'total',
+  mini:     'total',
+  comp:     'tier',
+  tiertour: 'tier',
+  pro:      'tier',
+  progj:    'tier',
+  cal:      'hist',
+  roulette: 'total',
+  civil:    'total',
+};
+
+// bnav 하이라이트를 탭 ID 기준으로 동기화하는 공통 헬퍼
+window._syncBnav = function(tabId) {
+  try {
+    const bnavTarget = (window._BNAV_TAB_MAP && window._BNAV_TAB_MAP[tabId]) || tabId;
+    document.querySelectorAll('.bnav-item').forEach(function(b) {
+      const oc = b.getAttribute('onclick') || '';
+      const isOn = oc.includes("'" + bnavTarget + "'") || oc.includes('"' + bnavTarget + '"');
+      b.classList.toggle('on', isOn);
+      b.setAttribute('aria-selected', isOn ? 'true' : 'false');
+    });
+  } catch(e) {}
+};
+
+// [BUG-FIX #2] swNav가 calendar.js 로드 전에 호출되면 에러 발생.
+// calendar.js 로드 후 실제 함수로 교체되는 조기 stub.
+if (typeof window.swNav === 'undefined') {
+  window.swNav = function(t, el) {
+    // stub: 실제 swNav(calendar.js)가 로드될 때까지 sw()로 폴백
+    window._syncBnav(t);
+    if (typeof window.sw === 'function') window.sw(t, el);
+  };
+}
+// ── [BUG-FIX #2,#3,#4,#5] END ─────────────────────────────────────────────
+
 window._centerActiveTopTab = function(smooth){
   try{
     const on = document.querySelector('.tabs .tab.on');
@@ -348,10 +397,16 @@ function sw(t,el){
     : null;
   tabs.forEach(b=>b.classList.remove('on'));
   if(resolvedEl && resolvedEl.classList) resolvedEl.classList.add('on');
-  document.querySelectorAll('.bnav-item').forEach(b=>{
-    const oc=b.getAttribute('onclick')||'';
-    b.classList.toggle('on',oc.includes("'"+t+"'"));
-  });
+  // [BUG-FIX #3,#4] _syncBnav: ind/comp/pro/cal/roulette/univm 등 bnav에
+  // 직접 없는 탭도 _BNAV_TAB_MAP 기반으로 올바른 항목을 하이라이트
+  if (typeof window._syncBnav === 'function') {
+    window._syncBnav(t);
+  } else {
+    document.querySelectorAll('.bnav-item').forEach(b=>{
+      const oc=b.getAttribute('onclick')||'';
+      b.classList.toggle('on',oc.includes("'"+t+"'"));
+    });
+  }
   const _fs=document.getElementById('fstrip');
   if(_fs)_fs.style.display=(t==='total'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin))?'block':'none';
   // [FIX-6] 탭 전환 시 CSS scale/theme 재적용 (render-core.js의 매번 호출 제거에 대응)

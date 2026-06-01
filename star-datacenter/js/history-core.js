@@ -2407,12 +2407,15 @@ window.openMatchDetailFromHistory = function(selfName, oppName, date, map, modeL
       // game 수집 (중복 제거)
       const outGames = [];
       const seenGame = new Set();
-      const pushGame = (pA, pB, winnerName, gMap) => {
+      let _pgSeq = 0;
+      const pushGame = (pA, pB, winnerName, gMap, gid) => {
         const A = String(pA||'').trim(), B = String(pB||'').trim();
         const W = String(winnerName||'').trim();
         if(!A || !B || !W) return;
         if(!(W===A || W===B)) return;
-        const key = [A,B,W,String(gMap||'').trim()].join('|');
+        // gameId가 있으면 그것을 키로 우선 사용.
+        // 없으면 seq를 붙여 같은 맵(특히 '-')인 게임 여러 개가 1개로 합산되는 버그를 방지한다.
+        const key = gid ? `gid:${gid}` : `${A}|${B}|${W}|${String(gMap||'').trim()}|seq:${++_pgSeq}`;
         if(seenGame.has(key)) return;
         seenGame.add(key);
         outGames.push({
@@ -2428,21 +2431,21 @@ window.openMatchDetailFromHistory = function(selfName, oppName, date, map, modeL
         if(ent.refType==='game' && ent.game){
           const g = ent.game;
           const wName = (g.winner==='A') ? g.playerA : (g.winner==='B') ? g.playerB : '';
-          pushGame(g.playerA, g.playerB, wName, g.map||'');
+          pushGame(g.playerA, g.playerB, wName, g.map||'', g._id||'');
         } else if(ent.refType==='pcgj' && ent.obj){
           const s = ent.obj;
           const A = s.a, B = s.b;
-          (s.games||[]).forEach(gg=>{
-            pushGame(A, B, gg.winner, gg.map||'');
+          (s.games||[]).forEach((gg,gi)=>{
+            pushGame(A, B, gg.winner, gg.map||'', gg._id || `${s._id||s.id||'pcgj'}_g${gi}`);
           });
         } else if(ent.refType==='obj' && ent.obj){
           const o = ent.obj;
           if(o.wName && o.lName){
-            pushGame(o.wName, o.lName, o.wName, o.map||'');
+            pushGame(o.wName, o.lName, o.wName, o.map||'', o._id||o.sid||o.matchId||'');
           } else if(o.a && o.b && o.winner){
             const a=o.a, b=o.b;
             const w = (o.winner==='A'||o.winner===a) ? a : (o.winner==='B'||o.winner===b) ? b : '';
-            pushGame(a, b, w, o.map||'');
+            pushGame(a, b, w, o.map||'', o._id||o.id||'');
           }
         }
       });

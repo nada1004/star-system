@@ -456,7 +456,7 @@ function _showMovePop(btn,opts){
   closeMovePop();
   const pop=document.createElement('div');
   pop.id='_movePop';
-  pop.style.cssText='position:fixed;z-index:9999;background:var(--white,#fff);border:1px solid var(--border2,#cbd5e1);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);padding:6px;min-width:180px;font-family:\'Noto Sans KR\',sans-serif';
+  pop.style.cssText='position:fixed;z-index:var(--z-top);background:var(--white,#fff);border:1px solid var(--border2,#cbd5e1);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);padding:6px;min-width:180px;font-family:\'Noto Sans KR\',sans-serif';
   const r=btn.getBoundingClientRect();
   pop.style.top=(r.bottom+4)+'px';
   pop.style.right=(window.innerWidth-r.right)+'px';
@@ -748,7 +748,6 @@ function _ensureHistDetailModal(){
   m=document.createElement('div');
   m.id='histDetModal';
   m.className='modal modal--matchdetail no-export';
-  // (개선) z-index는 CSS 변수로 통일 (공유카드가 항상 위로 오도록)
   m.style.cssText='z-index:var(--z-modal-4);display:none';
   m.setAttribute('onclick',"document.getElementById('histDetModal').style.display='none'");
   m.innerHTML=`
@@ -1481,7 +1480,7 @@ function openProMembersPopup(teamLabel, teamColor, members){
     modal.id = 'proMembersModal';
     // modal-drag.js가 인식하도록 class 부여 (PC에서 헤더 드래그 이동)
     modal.className = 'modal';
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:var(--z-top);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
 
     const membersHTML = members.map(mem => {
       const memName = typeof mem === 'string' ? mem : (mem.name || mem);

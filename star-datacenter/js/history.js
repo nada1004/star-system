@@ -2181,12 +2181,15 @@ window.openMatchDetailFromHistory = function(selfName, oppName, date, map, modeL
       // game 수집 (중복 제거)
       const outGames = [];
       const seenGame = new Set();
-      const pushGame = (pA, pB, winnerName, gMap) => {
+      let _pgSeq = 0;
+      const pushGame = (pA, pB, winnerName, gMap, gid) => {
         const A = String(pA||'').trim(), B = String(pB||'').trim();
         const W = String(winnerName||'').trim();
         if(!A || !B || !W) return;
         if(!(W===A || W===B)) return;
-        const key = [A,B,W,String(gMap||'').trim()].join('|');
+        // gameId가 있으면 그것을 키로 우선 사용.
+        // 없으면 seq를 붙여 같은 맵(특히 '-')인 게임 여러 개가 1개로 합산되는 버그를 방지한다.
+        const key = gid ? `gid:${gid}` : `${A}|${B}|${W}|${String(gMap||'').trim()}|seq:${++_pgSeq}`;
         if(seenGame.has(key)) return;
         seenGame.add(key);
         outGames.push({
@@ -2202,21 +2205,21 @@ window.openMatchDetailFromHistory = function(selfName, oppName, date, map, modeL
         if(ent.refType==='game' && ent.game){
           const g = ent.game;
           const wName = (g.winner==='A') ? g.playerA : (g.winner==='B') ? g.playerB : '';
-          pushGame(g.playerA, g.playerB, wName, g.map||'');
+          pushGame(g.playerA, g.playerB, wName, g.map||'', g._id||'');
         } else if(ent.refType==='pcgj' && ent.obj){
           const s = ent.obj;
           const A = s.a, B = s.b;
-          (s.games||[]).forEach(gg=>{
-            pushGame(A, B, gg.winner, gg.map||'');
+          (s.games||[]).forEach((gg,gi)=>{
+            pushGame(A, B, gg.winner, gg.map||'', gg._id || `${s._id||s.id||'pcgj'}_g${gi}`);
           });
         } else if(ent.refType==='obj' && ent.obj){
           const o = ent.obj;
           if(o.wName && o.lName){
-            pushGame(o.wName, o.lName, o.wName, o.map||'');
+            pushGame(o.wName, o.lName, o.wName, o.map||'', o._id||o.sid||o.matchId||'');
           } else if(o.a && o.b && o.winner){
             const a=o.a, b=o.b;
             const w = (o.winner==='A'||o.winner===a) ? a : (o.winner==='B'||o.winner===b) ? b : '';
-            pushGame(a, b, w, o.map||'');
+            pushGame(a, b, w, o.map||'', o._id||o.id||'');
           }
         }
       });
@@ -3046,7 +3049,7 @@ function _showMovePop(btn,opts){
   closeMovePop();
   const pop=document.createElement('div');
   pop.id='_movePop';
-  pop.style.cssText='position:fixed;z-index:9999;background:var(--white,#fff);border:1px solid var(--border2,#cbd5e1);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);padding:6px;min-width:180px;font-family:\'Noto Sans KR\',sans-serif';
+  pop.style.cssText='position:fixed;z-index:var(--z-top);background:var(--white,#fff);border:1px solid var(--border2,#cbd5e1);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);padding:6px;min-width:180px;font-family:\'Noto Sans KR\',sans-serif';
   const r=btn.getBoundingClientRect();
   pop.style.top=(r.bottom+4)+'px';
   pop.style.right=(window.innerWidth-r.right)+'px';
@@ -3254,7 +3257,6 @@ function _ensureHistDetailModal(){
   m=document.createElement('div');
   m.id='histDetModal';
   m.className='modal modal--matchdetail no-export';
-  // (개선) z-index는 CSS 변수로 통일 (공유카드가 항상 위로 오도록)
   m.style.cssText='z-index:var(--z-modal-4);display:none';
   m.setAttribute('onclick',"document.getElementById('histDetModal').style.display='none'");
   m.innerHTML=`
@@ -3957,7 +3959,7 @@ function openProMembersPopup(teamLabel, teamColor, members){
     modal.id = 'proMembersModal';
     // modal-drag.js가 인식하도록 class 부여 (PC에서 헤더 드래그 이동)
     modal.className = 'modal';
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:var(--z-top);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
 
     const membersHTML = members.map(mem => {
       const memName = typeof mem === 'string' ? mem : (mem.name || mem);

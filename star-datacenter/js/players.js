@@ -587,7 +587,6 @@ function openMergePlayersModal(){
   if(modal) modal.remove();
   modal=document.createElement('div');
   modal.id=modalId;
-  // (개선) z-index CSS 변수로 통일
   modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:var(--z-modal-5);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
   const list=players.map(p=>p.name).filter(Boolean).sort((a,b)=>a.localeCompare(b));
   modal.innerHTML=`<div style="background:var(--white);border-radius:16px;padding:18px 18px 16px;width:520px;max-width:100%;box-shadow:0 10px 50px rgba(0,0,0,.35)">

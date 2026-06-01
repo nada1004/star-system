@@ -13160,3 +13160,11 @@ body.team-chip--wave .grp-team-chip::after {
   }
 }
 /* ===== 모바일 스트리머 상세 개선 끝 ===== */
+
+/* ===== [BUG-FIX #1] 모바일 .main padding-bottom: bottomNav(62px) 가림 방지 ===== */
+@media (max-width: 768px) {
+  .main {
+    padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+/* ===== [BUG-FIX #1] END ===== */

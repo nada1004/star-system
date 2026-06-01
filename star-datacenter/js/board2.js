@@ -558,7 +558,6 @@ function _b2FemcoView() {
       if (existing) existing.remove();
       const ov = document.createElement('div');
       ov.id = 'b2-femco-bg-modal';
-      // (개선) z-index CSS 변수로 통일
       ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.60);z-index:var(--z-modal-5);display:flex;align-items:center;justify-content:center;padding:16px';
       const safeTitle = (u||'영상').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       ov.innerHTML = `
@@ -1066,7 +1065,6 @@ function openB2PlayerCreateModal() {
 
   const modal = document.createElement('div');
   modal.id = 'b2-player-create-modal';
-  // (개선) z-index CSS 변수로 통일
   modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:var(--z-modal-5)';
   modal.innerHTML = `
     <div style="background:var(--white);border-radius:16px;padding:24px;max-width:560px;width:92%;max-height:84vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)">
@@ -1374,7 +1372,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
           ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}bb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:45%;margin-left:2px">${uCfg.memo2}</span>`:''}
           <span style="flex:1"></span>
           <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}33;cursor:pointer" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
-          ${isLoggedIn?`<button class="no-export" onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:11px;cursor:pointer;padding:1px 7px;border-radius:8px;flex-shrink:0;font-weight:700;margin-left:3px;z-index:1000;position:relative" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶':'▼'}</button>`:''}
+          ${isLoggedIn?`<button class="no-export" onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:11px;cursor:pointer;padding:1px 7px;border-radius:8px;flex-shrink:0;font-weight:700;margin-left:3px;z-index:var(--z-dropdown);position:relative" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶':'▼'}</button>`:''}
         </div>
       </div>
       <div class="b2-card-body" style="${_b2Collapsed.has(univName)?'display:none':''}">
@@ -1449,7 +1447,7 @@ function openB2MemberBreakdown(el, univName) {
     <span style="font-weight:700;color:var(--text1);font-size:12px">${val}명</span></div>`;
   const popup = document.createElement('div');
   popup.id = 'b2-mbp';
-  popup.style.cssText = 'position:fixed;z-index:9999;background:var(--white);border:1px solid var(--border2);border-radius:12px;box-shadow:0 4px 20px #0003;padding:12px 14px;min-width:170px';
+  popup.style.cssText = 'position:fixed;z-index:var(--z-top);background:var(--white);border:1px solid var(--border2);border-radius:12px;box-shadow:0 4px 20px #0003;padding:12px 14px;min-width:170px';
   popup.innerHTML = `
     <div style="font-weight:800;font-size:13px;color:${col};margin-bottom:8px">${univName} 구성</div>
     ${row('직책자', roled.length)}
@@ -1703,7 +1701,7 @@ function _b2CrewView() {
       h += '<button class="btn btn-xs" style="background:#ef444433;color:#fff;border-color:#ef444455;font-size:10px" onclick="event.stopPropagation();deleteCrewCfg(\'' + safeName + '\')">🗑</button>';
     }
     // 접기/펼치기
-    h += '<button class="btn btn-xs" style="background:#ffffff22;color:#fff;border-color:#ffffff44;font-size:11px;padding:2px 6px;z-index:1000;position:relative" onclick="event.stopPropagation();_b2CrewCollapsed.' + (isCollapsed ? 'delete' : 'add') + '(\'' + safeName + '\');document.getElementById(\'b2-content\').innerHTML=_b2CrewView()" title="' + (isCollapsed ? '펼치기' : '접기') + '">' + (isCollapsed ? '▶' : '▼') + '</button>';
+    h += '<button class="btn btn-xs" style="background:#ffffff22;color:#fff;border-color:#ffffff44;font-size:11px;padding:2px 6px;z-index:var(--z-dropdown);position:relative" onclick="event.stopPropagation();_b2CrewCollapsed.' + (isCollapsed ? 'delete' : 'add') + '(\'' + safeName + '\');document.getElementById(\'b2-content\').innerHTML=_b2CrewView()" title="' + (isCollapsed ? '펼치기' : '접기') + '">' + (isCollapsed ? '▶' : '▼') + '</button>';
     h += '</div>';
     h += '</div>';
 
@@ -2366,7 +2364,7 @@ function _b2GameView() {
     h += '<div style="font-size:11px;color:#ffffffcc">' + members.total + '명' + (c.desc ? ' · ' + c.desc : '') + '</div>';
     h += '</div>';
     h += '<div class="no-export" style="position:relative;display:flex;gap:4px;align-items:center">';
-    h += '<button class="btn btn-xs" style="background:#ffffff22;color:#fff;border-color:#ffffff44;font-size:11px;padding:2px 6px;z-index:1000;position:relative" onclick="event.stopPropagation();_b2CrewCollapsed[' + (isCollapsed ? 'delete' : 'add') + '](' + "'game_" + safeName + "'" + ');document.getElementById(\'b2-content\').innerHTML=_b2GameView()" title="' + (isCollapsed ? '펼치기' : '접기') + '">' + (isCollapsed ? '▶' : '▼') + '</button>';
+    h += '<button class="btn btn-xs" style="background:#ffffff22;color:#fff;border-color:#ffffff44;font-size:11px;padding:2px 6px;z-index:var(--z-dropdown);position:relative" onclick="event.stopPropagation();_b2CrewCollapsed[' + (isCollapsed ? 'delete' : 'add') + '](' + "'game_" + safeName + "'" + ');document.getElementById(\'b2-content\').innerHTML=_b2GameView()" title="' + (isCollapsed ? '펼치기' : '접기') + '">' + (isCollapsed ? '▶' : '▼') + '</button>';
     h += '</div>';
     h += '</div>';
 
@@ -3064,7 +3062,7 @@ function _b2PlayersView() {
         </div>` : ''}
         
         <!-- 컨트롤 패널 토글 버튼 - 관리자(로그인 사용자)만 표시 [BUGFIX-IMG-SETTINGS] -->
-        ${isLoggedIn ? `<button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>` : ''}
+        ${isLoggedIn ? `<button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:var(--z-fixed);padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>` : ''}
         
         <div class="b2-players-info">
           <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
@@ -3223,7 +3221,7 @@ function _b2UpdateMainDisplay(playerName) {
       </div>` : ''}
       
       <!-- 컨트롤 패널 토글 버튼 - 관리자(로그인 사용자)만 표시 [BUGFIX-IMG-SETTINGS] -->
-      ${isLoggedIn ? `<button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:11;padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>` : ''}
+      ${isLoggedIn ? `<button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:var(--z-fixed);padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>` : ''}
       
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
@@ -3299,7 +3297,6 @@ function openB2ProfileEditModal(playerName) {
 
   const modal = document.createElement('div');
   modal.id = 'b2-profile-edit-modal';
-  // (개선) z-index CSS 변수로 통일
   modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:var(--z-modal-5)';
   
   modal.innerHTML = `
@@ -4485,7 +4482,7 @@ function _b2HeatmapView() {
     body.dark .b2-hm-cell.is-selected { outline:2px solid rgba(255,255,255,.9) !important; }
     .b2-hm-popup-player { cursor:pointer; }
     /* 히트맵 팝업 오버레이 */
-    #b2-hm-popup-overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px; }
+    #b2-hm-popup-overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:var(--z-modal-5);display:flex;align-items:center;justify-content:center;padding:16px; }
     #b2-hm-popup { background:var(--white);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.28);max-width:520px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden; }
     #b2-hm-popup-header { padding:14px 16px 10px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0; }
     #b2-hm-popup-body { overflow-y:auto;padding:12px 16px 16px;flex:1; }
@@ -4712,7 +4709,7 @@ function _b2BubbleView() {
       position:absolute; pointer-events:none; opacity:0;
       background:var(--white); border:1px solid var(--border2); border-radius:10px;
       padding:10px 14px; box-shadow:0 4px 20px #0002;
-      transition:opacity .15s ease; min-width:140px; z-index:100;
+      transition:opacity .15s ease; min-width:140px; z-index:var(--z-dropdown);
     }
     #${uid}-legend { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
     .${uid}-sort-btn { padding:5px 12px; border-radius:20px; border:1.5px solid var(--border2); background:var(--surface); font-size:12px; font-weight:700; color:var(--text2); cursor:pointer; transition:all .15s; }
