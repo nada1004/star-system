@@ -618,10 +618,10 @@ function histTourneyHTML(context){
         const _hasSide=!!((_sidePanel.left||'')||(_sidePanel.right||''));
 
         const _menuActions=[
-          isLoggedIn&&(rIdx>=0||m._src==='tour'||m._src==='tour_bracket'||m._src==='tour_manual')?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>m._src==='tour'?leagueEditMatch(m._tnId,m._gi,m._mi):null}:null,
+          isLoggedIn&&(rIdx>=0||m._src==='tour'||m._src==='tour_bracket'||m._src==='tour_manual')&&m._src!=='tour_normal'?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>m._src==='tour'?leagueEditMatch(m._tnId,m._gi,m._mi):null}:null,
           isLoggedIn&&m._src==='tour_normal'?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>{if(typeof nmStartEdit==='function')nmStartEdit(m._tnId,m._nmi);}}:null,
           {t:'🎴 공유카드',d:'공유용 카드 생성',kind:'accent',on:()=>window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(idx,context))},
-          isLoggedIn&&rIdx>=0&&!isSubAdmin?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>null}:null,
+          isLoggedIn&&rIdx>=0&&!isSubAdmin&&m._src!=='tour_normal'?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>null}:null,
           isLoggedIn&&m._src==='tour_normal'&&!isSubAdmin?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>{if(typeof nmDelMatch==='function')nmDelMatch(m._tnId,m._nmi);}}:null
         ].filter(Boolean);
         const _menuBtn=(_menuActions.length&&typeof _compActionMenuHTML==='function')?_compActionMenuHTML(_menuActions):'';
@@ -651,7 +651,7 @@ function histTourneyHTML(context){
                   ${(()=>{const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[a])||((typeof univCfg!=='undefined'&&Array.isArray(univCfg))?((univCfg.find(x=>x.name===a)||{}).icon||''):'');return url?`<img class="tc-uicon" src="${typeof toHttpsUrl==='function'?toHttpsUrl(url):url}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:'';})()}
                   <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${a||'—'}</span>
                 </div>
-                ${aMembers.length?`<button class="grp-mem-btn" style="--mem-col:${ca||'#3b82f6'};" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}','${ca}',${aMemJson})"><span class="mem-ico">👥</span><span>${aMembers.length}명</span></button>`:''}
+                ${aMembers.length?`<button class="grp-mem-btn" style="--mem-col:${(isDone&&bWin)?'#94a3b8':(ca||'#3b82f6')};${(isDone&&bWin)?'opacity:.45;filter:grayscale(1);':''}" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}','${ca}',${aMemJson})"><span class="mem-ico">👥</span><span>${aMembers.length}명</span></button>`:''}
               </div>
               <div class="grp-score-col" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:80px">
                 <div class="grp-match-score score-click"><span class="">${m.sa||0}</span><span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span><span class="">${m.sb||0}</span></div>
@@ -661,7 +661,7 @@ function histTourneyHTML(context){
                   ${(()=>{const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[b])||((typeof univCfg!=='undefined'&&Array.isArray(univCfg))?((univCfg.find(x=>x.name===b)||{}).icon||''):'');return url?`<img class="tc-uicon" src="${typeof toHttpsUrl==='function'?toHttpsUrl(url):url}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:'';})()}
                   <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${b||'—'}</span>
                 </div>
-                ${bMembers.length?`<button class="grp-mem-btn" style="--mem-col:${cb||'#ef4444'};" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\\'")}','${cb}',${bMemJson})"><span class="mem-ico">👥</span><span>${bMembers.length}명</span></button>`:''}
+                ${bMembers.length?`<button class="grp-mem-btn" style="--mem-col:${(isDone&&aWin)?'#94a3b8':(cb||'#ef4444')};${(isDone&&aWin)?'opacity:.45;filter:grayscale(1);':''}" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\\'")}','${cb}',${bMemJson})"><span class="mem-ico">👥</span><span>${bMembers.length}명</span></button>`:''}
               </div>
             </div>
             ${_sidePanel.right||''}

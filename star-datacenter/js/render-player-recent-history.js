@@ -114,8 +114,8 @@ function buildPlayerRecentHistoryRowHTML(opts){
         :`<span style="${resultBadgeStyle};background:#fee2e2;color:#dc2626;border:1px solid #fecaca">LOSE</span>`}</td>
     <td style="cursor:pointer;font-weight:700" data-ph-action="hist-open-player" data-ph-player="${escJS(hh.opp)}"><span style="display:inline-flex;align-items:center;gap:5px">${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span></span></td>
     <td><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
-    <td style="color:var(--gray-l);font-size:11px">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
-    <td>${eloStr}</td>
+    <td class="ph-col-map" style="color:var(--gray-l);font-size:11px">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
+    <td class="ph-col-elo">${eloStr}</td>
     ${editBtnHTML}
   </tr>`;
 }
@@ -144,8 +144,8 @@ function buildPlayerRecentHistorySectionHTML(opts){
     ${isLoggedIn?`<button class="no-export" data-ph-action="hist-bulk-toggle" style="margin-left:auto;padding:2px 8px;border-radius:10px;border:1px solid var(--border2);background:var(--white);font-size:10px;font-weight:800;cursor:pointer;color:${bulkMode?'#dc2626':'var(--text3)'}">${bulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button>`:''}
   </div>`;
   h+=seasonBar;
-  h+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
-  h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${selectAllCheckbox}<th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>${manageHeader}</tr></thead><tbody>`;
+  h+=`<div class="player-hist-table-wrap" style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
+  h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${selectAllCheckbox}<th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th class="ph-col-map">맵</th><th class="ph-col-elo">ELO</th>${manageHeader}</tr></thead><tbody>`;
   displayHist.forEach(hh=>{
     h += buildPlayerRecentHistoryRowHTML({
       hh,

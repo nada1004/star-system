@@ -117,7 +117,8 @@ function rBracketSchedule(tn){
               ${(()=>{const url=teamA?(UNIV_ICONS[teamA]||(univCfg.find(x=>x.name===teamA)||{}).icon||''):'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:'';})()}
               <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${teamA||'미정'}</span>
             </div>
-            ${(()=>{const aBtnColor = ca || '#3b82f6'; const aMemJson = JSON.stringify(aMembers).replace(/"/g, "'"); return aMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${aBtnColor};" onclick="event.stopPropagation();openProMembersPopup('${teamA.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})"><span class="mem-ico">👥</span><span>${aMembers.length}명</span></button>` : '';})()}
+            ${(()=>{const aBtnColor = (isDone&&bWin)?'#94a3b8':(ca||'#3b82f6'); const aMemJson = JSON.stringify(aMembers).replace(/"/g,"'"); return aMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${aBtnColor};${(isDone&&bWin)?'opacity:.45;filter:grayscale(1);':''}" onclick="event.stopPropagation();openProMembersPopup('${teamA.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})"><span class="mem-ico">👥</span><span>${aMembers.length}명</span></button>` : '';})()}
+
           </div>
           <div class="grp-score-col" style="text-align:center;min-width:80px">
             ${isDone?`<div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px" onclick="openCompMatchDetailModal('${tn.id}',null,${mi},${r},${isManual})"><span class="">${sa}</span><span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span><span class="">${sb}</span></div>
@@ -128,7 +129,7 @@ function rBracketSchedule(tn){
               ${(()=>{const url=teamB?(UNIV_ICONS[teamB]||(univCfg.find(x=>x.name===teamB)||{}).icon||''):'';return url?`<img class="tc-uicon" src="${toHttpsUrl(url)}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:'';})()}
               <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${teamB||'미정'}</span>
             </div>
-            ${(()=>{const bBtnColor = cb || '#ef4444'; const bMemJson = JSON.stringify(bMembers).replace(/"/g, "'"); return bMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${bBtnColor};" onclick="event.stopPropagation();openProMembersPopup('${teamB.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})"><span class="mem-ico">👥</span><span>${bMembers.length}명</span></button>` : '';})()}
+            ${(()=>{const bBtnColor = (isDone&&aWin)?'#94a3b8':(cb||'#ef4444'); const bMemJson = JSON.stringify(bMembers).replace(/"/g,"'"); return bMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${bBtnColor};${(isDone&&aWin)?'opacity:.45;filter:grayscale(1);':''}" onclick="event.stopPropagation();openProMembersPopup('${teamB.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})"><span class="mem-ico">👥</span><span>${bMembers.length}명</span></button>` : '';})()}
           </div>
         </div>
         ${_bktSide.right||''}

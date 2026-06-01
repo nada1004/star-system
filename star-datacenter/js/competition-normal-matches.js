@@ -140,7 +140,7 @@ function rCompNormalMatches(tn) {
                 ${_univIconA}
                 <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${a || '미정'}</span>
               </div>
-              ${aMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${ca || '#6366f1'};" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g, "\\'")}','${ca}',${aMemJson})"><span class="mem-ico">👥</span><span>${aMembers.length}명</span></button>` : ''}
+              ${aMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${(isDone&&bWin)?'#94a3b8':(ca||'#6366f1')};${(isDone&&bWin)?'opacity:.45;filter:grayscale(1);':''}" onclick="event.stopPropagation();openProMembersPopup('${a.replace(/'/g,"\\'")}','${ca}',${aMemJson})"><span class="mem-ico">👥</span><span>${aMembers.length}명</span></button>` : ''}
             </div>
             <div class="grp-score-col" style="text-align:center;min-width:80px;display:flex;flex-direction:column;align-items:center;gap:3px">
               ${isDone
@@ -158,7 +158,7 @@ function rCompNormalMatches(tn) {
                 ${_univIconB}
                 <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${b || '미정'}</span>
               </div>
-              ${bMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${cb || '#8b5cf6'};" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g, "\\'")}','${cb}',${bMemJson})"><span class="mem-ico">👥</span><span>${bMembers.length}명</span></button>` : ''}
+              ${bMembers.length ? `<button class="grp-mem-btn" style="--mem-col:${(isDone&&aWin)?'#94a3b8':(cb||'#8b5cf6')};${(isDone&&aWin)?'opacity:.45;filter:grayscale(1);':''}" onclick="event.stopPropagation();openProMembersPopup('${b.replace(/'/g,"\\'")}','${cb}',${bMemJson})"><span class="mem-ico">👥</span><span>${bMembers.length}명</span></button>` : ''}
             </div>
           </div>
           ${_compSide.right || ''}

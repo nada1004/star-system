@@ -9,7 +9,8 @@
       window.statsNonProHist(tp||{history:[]}).forEach(h=>{const d=h.date||'';if(!d)return;dayCnt[d]=(dayCnt[d]||0)+1;});
     }else{
       const _heatTourM=typeof window.getTourneyMatches==='function'?window.getTourneyMatches():[];
-      const allM=window.statsFilterMatches([...(window.miniM||[]),...(window.univM||[]),...(window.ckM||[]),...(window.comps||[]),...(window.proM||[]),..._heatTourM]);
+      const _heatNmM=typeof window.getNormalMatchesForHistory==='function'?window.getNormalMatchesForHistory():[];
+      const allM=window.statsFilterMatches([...(window.miniM||[]),...(window.univM||[]),...(window.ckM||[]),...(window.comps||[]),...(window.proM||[]),..._heatTourM,..._heatNmM]);
       allM.forEach(m=>{
         const d=m.d||'';if(!d)return;
         let cnt=0;

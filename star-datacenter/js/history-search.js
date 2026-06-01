@@ -308,10 +308,11 @@ function getTourneyMatches(){
   return result;
 }
 function compSummaryListHTML(context){
-  // tourneys 경기 + comps 배열 모두 합산
+  // tourneys 경기 + normalMatches + comps 배열 모두 합산
   const tourItems=getTourneyMatches();
+  const nmItems=(typeof getNormalMatchesForHistory==='function')?getNormalMatchesForHistory():[];
   const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
-  const allItems=[...tourItems,...compItems];
+  const allItems=[...tourItems,...nmItems,...compItems];
   if(!allItems.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   // 날짜 필터 적용 후 정렬
   const filtered=allItems.filter(m=>

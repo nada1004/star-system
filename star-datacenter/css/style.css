@@ -13061,3 +13061,78 @@ body.team-chip--wave .grp-team-chip::after {
   box-shadow: 0 2px 8px #0002;
   transform: translateY(-1px);
 }
+
+/* ===== 모바일 스트리머 상세 개선 (v24-fixed8) ===== */
+@media(max-width:768px){
+  /* 히스토리 테이블 가로스크롤 */
+  .player-hist-table-wrap{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    border-radius:10px;
+  }
+  /* 테이블 최소폭 보장 */
+  .player-hist-table-wrap table{
+    min-width:460px;
+  }
+  /* 맵/ELO 컬럼 모바일 숨김 */
+  .player-hist-table-wrap .ph-col-map,
+  .player-hist-table-wrap .ph-col-elo{ display:none !important; }
+
+  /* 행 수정/삭제 버튼 터치 영역 */
+  [data-ph-action="hist-edit-one"],
+  [data-ph-action="hist-delete-one"]{
+    min-width:36px !important;
+    min-height:36px !important;
+    padding:6px !important;
+  }
+
+  /* 일괄선택 체크박스 터치영역 */
+  .hist-select-checkbox{
+    width:22px !important;
+    height:22px !important;
+    cursor:pointer;
+  }
+
+  /* 탭바 활성 탭 가시성 */
+  .merged-subbar{
+    scroll-behavior:smooth;
+  }
+
+  /* 공유카드 모달 개선 */
+  .sharecard-modal-box{
+    width:min(420px, calc(100vw - 24px)) !important;
+    max-height:90dvh !important;
+    overflow-y:auto !important;
+    border-radius:18px !important;
+  }
+  .sharecard-preview-wrap{
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+  }
+  /* 공유카드 닫기 버튼 터치영역 */
+  .sharecard-modal-close{
+    min-width:44px !important;
+    min-height:44px !important;
+    display:flex !important;
+    align-items:center;
+    justify-content:center;
+    top:6px !important;
+    right:6px !important;
+  }
+  /* 공유카드 액션버튼 순서: 저장 우선 */
+  .sharecard-modal-actions{
+    flex-direction:row;
+    flex-wrap:wrap !important;
+    gap:8px !important;
+  }
+  .sharecard-modal-actions .btn-b{
+    order:-1;
+    flex:1 1 100%;
+  }
+  .sharecard-modal-actions .btn{
+    flex:1 1 calc(50% - 4px);
+    font-size:13px !important;
+    padding:11px 8px !important;
+  }
+}
+/* ===== 모바일 스트리머 상세 개선 끝 ===== */

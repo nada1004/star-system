@@ -13,6 +13,10 @@ function prepareUnivDetailComputedData(opts){
   (miniM||[]).forEach(m=>{addOpp(m.a,m.b,m.sa>m.sb);addOpp(m.b,m.a,m.sb>m.sa);});
   (univM||[]).forEach(m=>{addOpp(m.a,m.b,m.sa>m.sb);addOpp(m.b,m.a,m.sb>m.sa);});
   (comps||[]).forEach(m=>{const a=m.a||m.u||'';addOpp(a,m.b,m.sa>m.sb);addOpp(m.b,a,m.sb>m.sa);});
+  // 일반대회 일반경기 팀전적 반영
+  if(typeof getNormalMatchesForHistory==='function'){
+    getNormalMatchesForHistory().forEach(m=>{addOpp(m.a,m.b,m.sa>m.sb);addOpp(m.b,m.a,m.sb>m.sa);});
+  }
 
   const scoped = (typeof calcMembersAffiliationSummary==='function')
     ? calcMembersAffiliationSummary(members, univName)

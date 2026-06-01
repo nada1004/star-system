@@ -168,6 +168,7 @@ function _vsRenderResult(){
   scanVs(comps,'🎖️ 대회');
   scanVs(ckM,'🤝 대학CK');
   scanVs(proM,'🏅 프로리그');
+  if(typeof getNormalMatchesForHistory==='function') scanVs(getNormalMatchesForHistory(),'🎖️ 대회(일반)');
   gameLogs.sort((a,b)=>b.date.localeCompare(a.date));
 
   const total=aWins+bWins;
@@ -330,6 +331,7 @@ function openVsShareCard(){
   scanVs(comps,'🎖️ 대회');
   scanVs(ckM,'🤝 대학CK');
   scanVs(proM,'🏅 프로리그');
+  if(typeof getNormalMatchesForHistory==='function') scanVs(getNormalMatchesForHistory(),'🎖️ 대회(일반)');
   gameLogs.sort((a,b)=>b.date.localeCompare(a.date));
 
   const total=aWins+bWins;

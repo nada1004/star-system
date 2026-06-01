@@ -3871,6 +3871,22 @@ function recalculateAllELO(){
     });
   }
 
+  // 일반대회 일반경기 전적 재계산 반영
+  if(typeof getNormalMatchesForHistory==='function'){
+    getNormalMatchesForHistory().forEach(m=>{
+      (m.sets||[]).forEach(s=>{
+        (s.games||[]).forEach(g=>{
+          if(g.playerA&&g.playerB&&g.winner&&!g._isTeam){
+            const wName=g.winner==='A'?g.playerA:g.playerB;
+            const lName=g.winner==='A'?g.playerB:g.playerA;
+            const date=m.d||new Date().toISOString().slice(0,10);
+            allGames.push({wName,lName,date,map:g.map||'-',mode:'대회(일반경기)',matchId:m._id||''});
+          }
+        });
+      });
+    });
+  }
+
   // 날짜순 정렬 (오래된 순서)
   allGames.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 

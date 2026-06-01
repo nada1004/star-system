@@ -2,7 +2,10 @@
   function _calcRaceTrendData(){
     const monthData={};
     function addRace(ym,race){if(!ym||ym.length!==7)return;if(!monthData[ym])monthData[ym]={T:0,Z:0,P:0,total:0};if(race&&monthData[ym][race]!==undefined){monthData[ym][race]++;monthData[ym].total++;}}
-    const tourMs=[];(window.tourneys||[]).forEach(tn=>(tn.groups||[]).forEach(grp=>(grp.matches||[]).forEach(m=>tourMs.push(m))));
+    const tourMs=[];(window.tourneys||[]).forEach(tn=>{
+      (tn.groups||[]).forEach(grp=>(grp.matches||[]).forEach(m=>tourMs.push(m)));
+      (tn.normalMatches||[]).forEach(m=>tourMs.push(m));
+    });
     const allM=window.statsFilterMatches([...(window.miniM||[]),...(window.univM||[]),...(window.ckM||[]),...(window.comps||[]),...(window.proM||[]),...tourMs]);
     allM.forEach(m=>{
       const ym=(m.d||'').slice(0,7);
@@ -154,7 +157,8 @@
 
   function statsClutchHTML(){
     const aceStats={};
-    const allMatchSets=[...(window.miniM||[]),...(window.univM||[]),...(window.ckM||[]),...(window.comps||[]),...(window.proM||[]),...(window.ttM||[])];
+    const _clutchNm=typeof window.getNormalMatchesForHistory==='function'?window.getNormalMatchesForHistory():[];
+    const allMatchSets=[...(window.miniM||[]),...(window.univM||[]),...(window.ckM||[]),...(window.comps||[]),...(window.proM||[]),...(window.ttM||[]),..._clutchNm];
     allMatchSets.forEach(m=>(m.sets||[]).forEach(set=>{ if(!_isAceLikeSet(set))return; (set.games||[]).forEach(g=>{ if(!g.playerA||!g.playerB||!g.winner)return; const wName=g.winner==='A'?g.playerA:g.playerB; const lName=g.winner==='A'?g.playerB:g.playerA; if(!aceStats[wName])aceStats[wName]={w:0,l:0}; if(!aceStats[lName])aceStats[lName]={w:0,l:0}; aceStats[wName].w++; aceStats[lName].l++; }); }));
     const aceList=Object.entries(aceStats).map(([name,s])=>{ const p=window.statsP(name); if(!p)return null; const tot=s.w+s.l; const rate=tot?Math.round(s.w/tot*100):0; return{name,w:s.w,l:s.l,tot,rate,univ:p.univ,tier:p.tier,elo:p.elo||1200,totalGames:(p.win||0)+(p.loss||0),clutchRatio:tot>0?(s.w/tot-0.5)*2:0}; }).filter(Boolean).filter(e=>e.tot>=1).sort((a,b)=>b.rate-a.rate||b.tot-a.tot);
     const topClutch=aceList.slice(0,15);

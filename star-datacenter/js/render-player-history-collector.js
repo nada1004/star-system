@@ -399,6 +399,37 @@ function collectPlayerExtraHistoryData(opts){
     });
   });
 
+  // 일반대회 일반경기 → 스트리머 상세 기록에 반영
+  if(typeof getNormalMatchesForHistory==='function'){
+    getNormalMatchesForHistory().forEach((m,nmi)=>{
+      const mid=m._id||`tour_normal_${m._tnId||''}_${nmi}`;
+      if(existingMatchIds.has(mid))return;
+      (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
+        if(!g.playerA||!g.playerB||!g.winner)return;
+        const wn=g.winner==='A'?g.playerA:g.playerB;
+        const ln=g.winner==='A'?g.playerB:g.playerA;
+        if(wn!==p.name&&ln!==p.name)return;
+        const opp=wn===p.name?ln:wn;
+        const oppP=players.find(x=>x.name===opp);
+        const isDupInHist=prunedHistory.some(h=>
+          h.matchId===mid||(h.date===m.d&&h.map===(g.map||'-')&&h.opp===opp)
+        );
+        if(!isDupInHist){
+          tourMatches.push(_attachHistElo({
+            date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',
+            matchId:mid,mode:'대회(일반경기)',
+            _readOnly:true,
+            _editableSource:true,
+            _sourceType:'tourNormal',
+            _sourceTnId:m._tnId||'',
+            _sourceNmi:m._nmi!=null?m._nmi:nmi,
+            _sourceId:mid
+          }));
+        }
+      });});
+    });
+  }
+
   const extraMatches=[...indMatches,...gjMatches,...otherMatches,...tourMatches].filter(h=>{
     if(h.matchId && existingMatchIds.has(h.matchId)) return false;
     if(existingKeys.has(histDupKey(h))) return false;
