@@ -41,12 +41,17 @@ function buildUnivRecentMatchesHTML(opts){
   const fmtD = (d) => { if(!d) return ''; try{ const dt=new Date(d+'T00:00:00'); return `${dt.getMonth()+1}/${dt.getDate()}(${days[dt.getDay()]})`; }catch(e){ return d; } };
   const modeColor = (mode) => {
     if(!mode) return '#64748b';
+    if(mode.includes('시빌워')) return '#dc2626';
     if(mode.includes('미니')) return '#2563eb';
     if(mode.includes('대학')) return '#7c3aed';
+    if(mode.includes('조별리그')) return '#d97706';
+    if(mode.includes('일반대회')) return '#0891b2';
+    if(mode.includes('대진표')) return '#7c3aed';
+    if(mode.includes('대회(구)')) return '#64748b';
     if(mode.includes('프로')) return '#0891b2';
     return '#64748b';
   };
-  const recent = myMatches.slice(0,10);
+  const recent = myMatches.slice(0,15);
   let h = `<div style="margin-bottom:18px">
     <div style="font-weight:900;font-size:13px;color:${_col};margin-bottom:12px;display:flex;align-items:center;gap:8px">
       <span style="display:inline-block;width:3px;height:16px;background:${_col};border-radius:2px"></span>
@@ -64,6 +69,18 @@ function buildUnivRecentMatchesHTML(opts){
     const oc = gc(opp) || '#888';
     const ocRgb = _hexToRgb(oc);
     const mc = modeColor(m.mode||'');
+    // 조별리그/일반대회는 대회명 서브레이블 표시
+    const _modeShort = (()=>{
+      if(m.mode&&m.mode.includes('조별리그')) return '조별리그';
+      if(m.mode&&m.mode.includes('일반대회')) return '일반대회';
+      if(m.mode&&m.mode.includes('대진표')) return m.mode; // 결승/4강/8강 등 포함
+      if(m.mode&&m.mode.includes('대회(구)')) return '대회';
+      return m.mode||'대전';
+    })();
+    const _compSub = (m._compName||m.compName||m.n||'');
+    const _modeLabel = _compSub
+      ? `<span style="display:inline-flex;flex-direction:column;align-items:center;gap:0;background:${mc};color:#fff;font-size:${isMobile?'9px':'10px'};font-weight:800;padding:3px ${isMobile?'7px':'9px'};border-radius:8px;white-space:nowrap;letter-spacing:.2px;line-height:1.3">${_modeShort}<span style="font-size:7.5px;font-weight:600;opacity:.85">${_compSub.length>8?_compSub.slice(0,7)+'…':_compSub}</span></span>`
+      : `<span style="display:inline-block;background:${mc};color:#fff;font-size:${isMobile?'9px':'10px'};font-weight:800;padding:3px ${isMobile?'7px':'9px'};border-radius:8px;white-space:nowrap;letter-spacing:.2px">${_modeShort}</span>`;
     h += `<div style="background:var(--white,#fff);border:1px solid var(--border,#e2e8f0);border-radius:14px;padding:${isMobile?'10px 12px':'12px 16px'};display:flex;align-items:center;gap:${isMobile?'8px':'12px'};box-shadow:0 2px 8px rgba(${colRgb},.06);transition:box-shadow .2s;position:relative;overflow:hidden">
       <!-- 왼쪽 결과 색상 바 -->
       <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${win?'#16a34a':draw?'#d97706':'#dc2626'};border-radius:2px 0 0 2px"></div>
@@ -73,7 +90,7 @@ function buildUnivRecentMatchesHTML(opts){
       </div>
       <!-- 종류 배지 -->
       <div style="flex-shrink:0">
-        <span style="display:inline-block;background:${mc};color:#fff;font-size:${isMobile?'9px':'10px'};font-weight:800;padding:3px ${isMobile?'7px':'9px'};border-radius:8px;white-space:nowrap;letter-spacing:.2px">${m.mode||'대전'}</span>
+        ${_modeLabel}
       </div>
       <!-- 우리팀 -->
       <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0;justify-content:flex-end">
