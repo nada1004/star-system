@@ -125,12 +125,18 @@ function rCompNormalMatches(tn) {
       // 현재 편집중인 경기인지 확인
       const isEditing = isLoggedIn && _nmBLD && _nmBLD.tnId === tn.id && _nmBLD.editIdx === i;
 
+      const _nmActions = [
+        isLoggedIn ? { t: isEditing ? '✏️ 편집중' : '✏️ 수정', d: '경기 수정', kind: 'normal', on: () => nmStartEdit(tn.id, i) } : null,
+        okShare ? { t: '🎴 공유카드', d: '공유용 카드 생성', kind: 'accent', on: () => nmOpenShareCard(tn.id, i) } : null,
+        isLoggedIn && !isSubAdmin ? { t: '🗑️ 삭제', d: '경기 삭제', kind: 'danger', on: () => nmDelMatch(tn.id, i) } : null
+      ].filter(Boolean);
+      const _nmMenu = (_nmActions.length && typeof _compActionMenuHTML === 'function') ? _compActionMenuHTML(_nmActions) : '';
+
       h += `<div class="grp-match-wrap" style="margin-bottom:8px">
         <div class="grp-card-meta-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
           <span style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px">🎮 일반 경기</span>
-          <span style="flex:1"></span>
-          ${okShare ? `<button class="btn btn-p btn-xs" onclick="event.stopPropagation();nmOpenShareCard('${tn.id}',${i})">🎴 공유카드</button>` : ''}
-          ${isLoggedIn ? `<button class="btn btn-w btn-xs" style="display:inline-flex;align-items:center;gap:3px" onclick="event.stopPropagation();nmStartEdit('${tn.id}',${i})">${isEditing ? '✏️ 편집중' : '✏️ 수정'}</button><button class="btn btn-r btn-xs" onclick="event.stopPropagation();nmDelMatch('${tn.id}',${i})">🗑️</button>` : ''}
+          <span class="grp-meta-spacer" style="flex:1"></span>
+          ${_nmMenu ? `<span class="grp-meta-menu">${_nmMenu}</span>` : ''}
         </div>
         <div class="grp-match-card match-card-v3 tc-card${_fxOn ? ' grp-sidefx grp-sidefx--' + _fxMode : ''}${(_compSide.left || _compSide.right) ? ' has-side-panels' : ''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}background:var(--white);margin-bottom:0;border:1px solid var(--border);border-left:4px solid ${_fxOn ? (ca || '#6366f1') : '#6366f1'};${_fxOn ? `border-right:4px solid ${cb || '#8b5cf6'};` : ''}${isDone ? 'cursor:pointer' : ''}" ${isDone ? `onclick="nmOpenDetailModal('${tn.id}',${i})"` : ''}>
           ${_compSide.left || ''}
@@ -298,12 +304,154 @@ function _nmBuilderHTML(tn) {
 /* ── 수정 시작 ── */
 function nmStartEdit(tnId, idx) {
   _nmBLDInit(tnId, idx);
-  // 빌더로 스크롤
-  setTimeout(() => {
-    const el = document.querySelector('.match-builder--refined');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 100);
-  render();
+  const tn = (typeof tourneys !== 'undefined' ? tourneys : []).find(t => t.id === tnId);
+  if (!tn) return;
+  // 어디서 호출되든 항상 모달로 수정창 표시
+  _nmOpenEditModal(tn, idx);
+}
+
+/* ── 일반경기 수정 모달 ── */
+var _nmEditModalOpen = false;
+
+function _nmOpenEditModal(tn, editIdx) {
+  _nmEditModalOpen = true;
+  window._nmEditTn = tn;
+
+  const _old = document.getElementById('nmEditModal');
+  if (_old) _old.remove();
+
+  const ov = document.createElement('div');
+  ov.id = 'nmEditModal';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:var(--z-modal-5,9999);display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow-y:auto';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--white,#fff);border-radius:16px;width:100%;max-width:580px;box-shadow:0 10px 50px rgba(0,0,0,.35);overflow:hidden;margin:auto';
+
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex;align-items:center;gap:10px;padding:16px 18px 14px;border-bottom:1px solid var(--border,#e5e7eb)';
+  header.innerHTML = `<span style="font-size:15px;font-weight:800;color:var(--text,#111);flex:1">✏️ 일반 경기 수정 <span style="font-size:11px;font-weight:600;color:var(--text2,#64748b)">${tn.name || ''}</span></span><button onclick="nmCloseEditModal()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--gray-l,#94a3b8);padding:2px 6px;border-radius:6px;line-height:1" title="닫기">✕</button>`;
+
+  const body = document.createElement('div');
+  body.id = 'nmEditModalBody';
+  body.style.cssText = 'padding:16px 18px 20px;max-height:80vh;overflow-y:auto';
+
+  box.appendChild(header);
+  box.appendChild(body);
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+
+  ov.addEventListener('click', function(e) { if (e.target === ov) nmCloseEditModal(); });
+
+  _nmRenderEditModal(tn);
+}
+
+function _nmRenderEditModal(tn) {
+  if (!_nmEditModalOpen) return;
+  const body = document.getElementById('nmEditModalBody');
+  if (!body) return;
+  const tnId = tn.id;
+  const bld = (_nmBLD && _nmBLD.tnId === tnId) ? _nmBLD : null;
+  if (!bld) { nmCloseEditModal(); return; }
+
+  const knownUnivs = [...new Set([
+    ...(typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : []),
+    ...(tn.groups || []).flatMap(g => g.univs || [])
+  ])].filter(Boolean).sort((a, b) => a.localeCompare(b, 'ko'));
+
+  const colA = bld.teamA ? (gc(bld.teamA) || '#2563eb') : '#6366f1';
+  const colB = bld.teamB ? (gc(bld.teamB) || '#dc2626') : '#8b5cf6';
+
+  const uOptA = `<option value="">— 팀 A 선택 —</option>` + knownUnivs.map(u => `<option value="${u}"${bld.teamA === u ? ' selected' : ''}>${u}</option>`).join('');
+  const uOptB = `<option value="">— 팀 B 선택 —</option>` + knownUnivs.map(u => `<option value="${u}"${bld.teamB === u ? ' selected' : ''}>${u}</option>`).join('');
+
+  const mA = bld.teamA ? (typeof getMembers === 'function' ? getMembers(bld.teamA) : []) : [];
+  const mB = bld.teamB ? (typeof getMembers === 'function' ? getMembers(bld.teamB) : []) : [];
+  const mapOpts = (typeof maps !== 'undefined' ? maps : []).map(mp => `<option value="${mp}">${mp}</option>`).join('');
+
+  let fgA = 0, fgB = 0;
+  (bld.freeGames || []).forEach(g => { if (g.winner === 'A') fgA++; else if (g.winner === 'B') fgB++; });
+
+  let h = `<div style="background:var(--surface,#f8fafc);border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:14px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:800;color:var(--blue,#2563eb);margin-bottom:10px">① 날짜 &amp; 팀 선택</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <label style="font-size:12px;font-weight:700;color:var(--text2,#64748b)">날짜</label>
+      <input type="date" value="${bld.date}" onchange="_nmBLD.date=this.value" style="padding:5px 8px;border:1px solid var(--border2,#cbd5e1);border-radius:6px;font-size:12px">
+      <label style="font-size:12px;font-weight:700;color:var(--text2,#64748b);margin-left:8px">메모</label>
+      <input type="text" placeholder="메모 (선택)" value="${bld.memo || ''}" oninput="_nmBLD.memo=this.value" style="flex:1;min-width:100px;padding:5px 8px;border:1px solid var(--border2,#cbd5e1);border-radius:6px;font-size:12px">
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="flex:1;min-width:130px">
+        <div style="font-size:11px;font-weight:700;color:${colA};margin-bottom:4px">🔵 팀 A</div>
+        <select onchange="_nmBLD.teamA=this.value;_nmBLD.freeGames=[];_nmRenderEditModal(window._nmEditTn)" style="width:100%;padding:5px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px">${uOptA}</select>
+      </div>
+      <div style="flex:1;min-width:130px">
+        <div style="font-size:11px;font-weight:700;color:${colB};margin-bottom:4px">🔴 팀 B</div>
+        <select onchange="_nmBLD.teamB=this.value;_nmBLD.freeGames=[];_nmRenderEditModal(window._nmEditTn)" style="width:100%;padding:5px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px">${uOptB}</select>
+      </div>
+    </div>
+  </div>`;
+
+  if (bld.teamA && bld.teamB) {
+    const freeGames = bld.freeGames || [];
+    h += `<div style="background:var(--surface,#f8fafc);border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:800;color:var(--blue,#2563eb);margin-bottom:10px">② 경기 결과 입력</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:20px;justify-content:center">
+        <span style="color:${colA}">${bld.teamA}</span>
+        <span style="color:var(--blue,#2563eb)">${fgA}</span>
+        <span style="color:var(--gray-l,#94a3b8)">:</span>
+        <span style="color:var(--red,#dc2626)">${fgB}</span>
+        <span style="color:${colB}">${bld.teamB}</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:rgba(99,102,241,.07);border-radius:8px;border:1px solid rgba(99,102,241,.2)">
+        <span style="font-size:12px;font-weight:700;color:#6366f1">⚡ 간편 승수</span>
+        <span style="font-size:12px">${bld.teamA}:</span>
+        <input type="number" min="0" max="99" value="${bld.directSA != null ? bld.directSA : ''}" style="width:55px;text-align:center;font-weight:700;font-size:14px;padding:4px;border:1px solid var(--border2);border-radius:6px" placeholder="0" oninput="_nmBLD.directSA=parseInt(this.value)||0">
+        <span style="font-size:12px">${bld.teamB}:</span>
+        <input type="number" min="0" max="99" value="${bld.directSB != null ? bld.directSB : ''}" style="width:55px;text-align:center;font-weight:700;font-size:14px;padding:4px;border:1px solid var(--border2);border-radius:6px" placeholder="0" oninput="_nmBLD.directSB=parseInt(this.value)||0">
+        <span style="font-size:11px;color:var(--gray-l)">(선수 미지정 시)</span>
+      </div>`;
+
+    freeGames.forEach((g, gi) => {
+      const optsA = mA.map(p => `<option value="${p.name}"${g.playerA === p.name ? ' selected' : ''}>${p.name} [${p.tier || '-'}/${p.race || '-'}]</option>`).join('');
+      const optsB = mB.map(p => `<option value="${p.name}"${g.playerB === p.name ? ' selected' : ''}>${p.name} [${p.tier || '-'}/${p.race || '-'}]</option>`).join('');
+      h += `<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:6px;padding:7px 10px;background:var(--white,#fff);border:1px solid var(--border,#e5e7eb);border-radius:8px">
+        <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:38px">경기${gi + 1}</span>
+        <select onchange="_nmBLD.freeGames[${gi}].playerA=this.value" style="flex:1;min-width:80px;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px"><option value="">A 선택</option>${optsA}</select>
+        <span style="font-size:11px;color:var(--gray-l)">vs</span>
+        <select onchange="_nmBLD.freeGames[${gi}].playerB=this.value" style="flex:1;min-width:80px;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px"><option value="">B 선택</option>${optsB}</select>
+        <select onchange="_nmBLD.freeGames[${gi}].map=this.value" style="max-width:90px;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px"><option value="">맵</option>${mapOpts}${g.map && !(typeof maps !== 'undefined' && maps.includes(g.map)) ? `<option value="${g.map}" selected>${g.map} (기록값)</option>` : ''}</select>
+        <button class="win-btn ${g.winner === 'A' ? 'win-sel' : ''}" onclick="_nmBLD.freeGames[${gi}].winner='A';_nmRenderEditModal(window._nmEditTn)">A 승</button>
+        <button class="win-btn ${g.winner === 'B' ? 'lose-sel' : ''}" onclick="_nmBLD.freeGames[${gi}].winner='B';_nmRenderEditModal(window._nmEditTn)">B 승</button>
+        <button class="btn btn-r btn-xs" onclick="_nmBLD.freeGames.splice(${gi},1);_nmRenderEditModal(window._nmEditTn)">🗑️</button>
+      </div>`;
+    });
+
+    h += `<button class="btn btn-w btn-sm" style="margin-top:6px" onclick="_nmBLD.freeGames.push({playerA:'',playerB:'',winner:'',map:''});_nmRenderEditModal(window._nmEditTn)">+ 경기 추가</button>`;
+    h += `</div>`;
+  }
+
+  h += `<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+    <button class="btn btn-w" onclick="nmCloseEditModal()">취소</button>
+    <button class="btn btn-g" onclick="nmSaveFromBuilderModal()">✅ 수정 저장</button>
+  </div>`;
+
+  body.innerHTML = h;
+}
+
+function nmCloseEditModal() {
+  _nmEditModalOpen = false;
+  _nmBLD = null;
+  window._nmEditTn = null;
+  const el = document.getElementById('nmEditModal');
+  if (el) el.remove();
+}
+
+function nmSaveFromBuilderModal() {
+  nmSaveFromBuilder();
+  _nmEditModalOpen = false;
+  window._nmEditTn = null;
+  const el = document.getElementById('nmEditModal');
+  if (el) el.remove();
 }
 
 /* ── 빌더에서 저장 ── */
@@ -398,7 +546,7 @@ function nmSaveFromBuilder() {
   try { if (typeof window.refreshPlayerModalIfOpen === 'function') window.refreshPlayerModalIfOpen(); } catch (e) { }
 
   const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:99999;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.3)';
+  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:var(--z-top);pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.3)';
   toast.textContent = `✅ 일반 경기 ${bld.teamA} ${gA}:${gB} ${bld.teamB} 저장!`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
@@ -494,36 +642,62 @@ async function nmOpenShareCard(tnId, idx) {
 
 /* ── 삭제 ── */
 function nmDelMatch(tnId, idx) {
-  if (!confirm('일반 경기를 삭제하시겠습니까?')) return;
-  const tn = (typeof tourneys !== 'undefined' ? tourneys : []).find(t => t.id === tnId); if (!tn) return;
-  tn.normalMatches = tn.normalMatches || [];
-  const m = tn.normalMatches[idx];
-  if (m && m._id) {
-    const matchId = m._id;
-    const gameIds = new Set();
-    (m.sets || []).forEach((s, si) => (s.games || []).forEach((_, gi) => {
-      gameIds.add(`${matchId}_s${si}_g${gi}`);
-      gameIds.add(`${matchId}_g${gi}`); // 구버전 ID 호환
-    }));
-    if (Array.isArray(typeof players !== 'undefined' ? players : [])) {
-      players.forEach(p => {
-        if (!Array.isArray(p.history)) return;
-        p.history = p.history.filter(h => h.matchId !== matchId && !gameIds.has(h.matchId));
-      });
+  // 브라우저 기본 confirm 대신 역산 불가 경고를 포함한 커스텀 모달 사용
+  _nmConfirmDel(function() {
+    const tn = (typeof tourneys !== 'undefined' ? tourneys : []).find(t => t.id === tnId); if (!tn) return;
+    tn.normalMatches = tn.normalMatches || [];
+    const m = tn.normalMatches[idx];
+    if (m && m._id) {
+      const matchId = m._id;
+      const gameIds = new Set();
+      (m.sets || []).forEach((s, si) => (s.games || []).forEach((_, gi) => {
+        gameIds.add(`${matchId}_s${si}_g${gi}`);
+        gameIds.add(`${matchId}_g${gi}`); // 구버전 ID 호환
+      }));
+      if (Array.isArray(typeof players !== 'undefined' ? players : [])) {
+        players.forEach(p => {
+          if (!Array.isArray(p.history)) return;
+          p.history = p.history.filter(h => h.matchId !== matchId && !gameIds.has(h.matchId));
+        });
+      }
     }
-  }
-  tn.normalMatches.splice(idx, 1);
-  if (_nmBLD && _nmBLD.tnId === tnId && _nmBLD.editIdx === idx) _nmBLD = null;
-  if (typeof save === 'function') save();
-  if (typeof render === 'function') render();
-  try { if (typeof window.refreshPlayerModalIfOpen === 'function') window.refreshPlayerModalIfOpen(); } catch (e) { }
+    tn.normalMatches.splice(idx, 1);
+    if (_nmBLD && _nmBLD.tnId === tnId && _nmBLD.editIdx === idx) _nmBLD = null;
+    if (typeof save === 'function') save();
+    if (typeof render === 'function') render();
+    try { if (typeof window.refreshPlayerModalIfOpen === 'function') window.refreshPlayerModalIfOpen(); } catch (e) { }
 
-  // [개선] 삭제 후 전적 역산이 안 되므로 안내 토스트
-  const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:99999;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.3)';
-  toast.innerHTML = '🗑️ 삭제 완료 · 승패/ELO 역산은 <b>전체 재계산</b>이 필요합니다';
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
+    // 삭제 완료 토스트
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:var(--z-top);pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.3)';
+    toast.innerHTML = '🗑️ 삭제 완료 · 승패/ELO는 <b>설정 › 전체 재계산</b>에서 갱신해 주세요';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  });
+}
+
+/* ── 삭제 확인 모달 (역산 불가 사전 안내 포함) ── */
+function _nmConfirmDel(onConfirm) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:var(--z-modal-5);display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML = `
+    <div style="background:var(--white);border-radius:14px;padding:24px 22px 18px;max-width:340px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.3)">
+      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px">🗑️ 일반 경기 삭제</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:6px">이 경기를 삭제하시겠습니까?</div>
+      <div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400E;line-height:1.6;margin-bottom:18px">
+        ⚠️ <b>삭제 후 승패·ELO는 자동으로 역산되지 않습니다.</b><br>
+        삭제 완료 후 <b>설정 › 전체 재계산</b>을 실행해야 수치가 반영됩니다.
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="_nmDelCancel" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:13px;font-weight:700;cursor:pointer;color:var(--text2)">취소</button>
+        <button id="_nmDelOk" style="padding:7px 16px;border-radius:8px;border:none;background:#EF4444;color:#fff;font-size:13px;font-weight:700;cursor:pointer">삭제</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  const close = () => { try { ov.remove(); } catch(e) {} };
+  ov.querySelector('#_nmDelCancel').addEventListener('click', close);
+  ov.querySelector('#_nmDelOk').addEventListener('click', function() { close(); onConfirm(); });
+  ov.addEventListener('click', function(e) { if (e.target === ov) close(); });
 }
 
 /* ── 자동인식 (pasteModal 재활용) ── */
@@ -654,7 +828,7 @@ function _nmPasteApplyLogic(savable) {
   }, 150);
 
   const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:99999;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.3)';
+  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:var(--z-top);pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.3)';
   toast.textContent = `📋 ${freeGames.length}경기 자동인식 완료 — 확인 후 저장하세요`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
@@ -715,6 +889,10 @@ try {
   window.nmDelMatch = nmDelMatch;
   window.nmSaveFromBuilder = nmSaveFromBuilder;
   window.nmStartEdit = nmStartEdit;
+  window._nmOpenEditModal = _nmOpenEditModal;
+  window._nmRenderEditModal = _nmRenderEditModal;
+  window.nmCloseEditModal = nmCloseEditModal;
+  window.nmSaveFromBuilderModal = nmSaveFromBuilderModal;
   window.nmOpenPasteModal = nmOpenPasteModal;
   window._nmPasteApplyLogic = _nmPasteApplyLogic;
   window._nmBLDInit = _nmBLDInit;

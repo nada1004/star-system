@@ -904,6 +904,12 @@ function escAttr(s){
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;');
 }
+// HTML 이스케이프 — 전역 단일 정의 (stats.js / settings.js 등의 중복 guard가 이 정의를 우선 사용)
+window.escHTML = function(s){
+  return String(s??'').replace(/[&<>"']/g, function(m){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+  });
+};
 
 function getTierBadge(tier){
   if(!tier) return '';
@@ -2053,12 +2059,10 @@ try{
     };
   }
 }catch(e){}
-// [FIX-1] histSub 초기값 'mini' → 'race' 로 통일 (app-state.js와 일치)
-// 진실 공급원: 이 var 선언. app-state.js의 App.state는 읽히지 않으므로 제거 대상.
+// histSub 초기값 'race' — constants.js var가 진실 공급원
 var miniSub='input', univmSub='input', ckSub='input', indSub='input', gjSub='input', compSub='league', histSub='race';
 // WARNING fix: 암묵적 전역 방지 — 엄격 모드에서 접근 순서 문제 예방
 window.histSub = window.histSub || histSub;
-// histSub 변경 시 window.histSub도 동기화하려면 app-state.js의 App.state로 이전 권장
 var miniType='mini'; // 'mini' | 'civil'
 var histUniv='';
 var recSortDir='desc'; // 날짜 정렬: 'desc'=최신순, 'asc'=오래된순

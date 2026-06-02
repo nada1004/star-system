@@ -15,32 +15,20 @@ function _scGet(sub){
 function _scSet(sub,html){ _sCache[sub]=html; return html; }
 
 // ─────────────────────────────────────────────────────────────
-// [FIX-11] HTML escape 헬퍼
-// 이상적으로는 constants.js 또는 별도 utils.js 상단에 한 번만 정의해야 함.
-// 현재는 각 탭 JS마다 동일 패턴 반복 → 추후 utils.js로 통합 예정.
-// window.escHTML: 전역 공유 (constants.js에서 최초 정의 시 이 블록은 스킵됨)
-// const escHTML: 파일 스코프 로컬 shadow (window.escHTML로 위임, 무한재귀 방지)
+// HTML escape — constants.js에서 window.escHTML 전역 단일 정의됨
+// 파일 스코프 로컬 alias (코드 내 escHTML() 호출 그대로 유지)
 // ─────────────────────────────────────────────────────────────
-if (typeof window.escHTML !== 'function') {
-  window.escHTML = function(s){
-    return String(s ?? '')
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/\"/g,'&quot;')
-      .replace(/'/g,'&#39;');
-  };
-}
-// 파일 스코프 로컬 shadow: var 선언 금지 (window.escHTML 오염 → 무한재귀 위험)
 const escHTML = (s) => window.escHTML(s);
 
 /* ─── 전역 필터 상태 ─── */
 var _statsDateFrom='', _statsDateTo='', _statsMinGames=3, _statsLastN=0;
-// 🚀 티어 랭킹(선수) 상태
-var _statsRankTier = (function(){
-  try{ return (localStorage.getItem('su_statsRankTier') || '4티어').trim() || '4티어'; }catch(e){ return '4티어'; }
-})();
-try{ if(!window._statsRankTier) window._statsRankTier = _statsRankTier; }catch(e){}
+// 🚀 티어 랭킹(선수) 상태 — window._statsRankTier 단일 진실 공급원
+// (이전: var _statsRankTier + window._statsRankTier 이중 유지 → 단일화)
+try{
+  window._statsRankTier = (localStorage.getItem('su_statsRankTier') || '4티어').trim() || '4티어';
+}catch(e){
+  window._statsRankTier = '4티어';
+}
 function _statsNormGender(v){
   const s=String(v||'').trim().toUpperCase();
   if(s==='F' || s==='여' || s==='여자' || s==='W' || s==='FEMALE') return 'F';
@@ -339,8 +327,7 @@ try{ window.renderShareCardByPlayer = renderShareCardByPlayer; }catch(e){}
 // 티어 랭킹 helper는 `stats-tier-rank-utils.js`로 분리
 
 function statsTierRankHTML(){
-  const tier = (window._statsRankTier || _statsRankTier || '4티어');
-  _statsRankTier = tier;
+  const tier = (window._statsRankTier || '4티어');
   const tierBtns = (TIERS||[]).filter(t=>t && t!=='미정');
 
   // 선수 리스트(티어)
@@ -2224,7 +2211,7 @@ function onGlobalSearch(val){
   // 외부 대진기록(History > 외부탭)도 함께 검색
   let extResults = [];
   try{
-    // history.js의 데이터는 관리자 탭에서 관리되지만, 검색은 read-only로 누구나 가능하게 처리(데이터가 없으면 0건)
+    // history-core.js의 데이터는 관리자 탭에서 관리되지만, 검색은 read-only로 누구나 가능하게 처리(데이터가 없으면 0건)
     const items = (typeof _histExtGetViewItems==='function')
       ? (_histExtGetViewItems()||[])
       : (typeof _histExtLoad==='function' ? ((_histExtLoad()||{}).items||[]) : []);

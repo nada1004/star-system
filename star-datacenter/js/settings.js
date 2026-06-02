@@ -5,12 +5,9 @@
 
 // ─────────────────────────────────────────────────────────────
 // HTML escape (설정 화면 템플릿 문자열 안전 처리)
+// window.escHTML은 constants.js에서 전역 단일 정의됨
 // ─────────────────────────────────────────────────────────────
-function esc(s){
-  return String(s ?? '').replace(/[&<>"']/g, m => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[m]));
-}
+function esc(s){ return window.escHTML(s); }
 
 /* ══════════════════════════════════════
    🎨 디자인 모드 분리
@@ -904,7 +901,7 @@ window.cfgSetRecBgFxAll = function(on){
     const sfx=document.getElementById('cfg-sidefx-on');
     if(sfx) sfx.checked = !!on;
   }catch(e){}
-  // 사이드FX는 history.js의 setter가 변수를 같이 갱신하므로 가능하면 호출
+  // 사이드FX는 history-core.js의 setter가 변수를 같이 갱신하므로 가능하면 호출
   try{ if(typeof window.cfgSetRecSideFxEnabled==='function') window.cfgSetRecSideFxEnabled(!!on); }catch(e){}
   try{ if(typeof window.cfgSetRecCardSettings==='function') window.cfgSetRecCardSettings(); }catch(e){}
   try{ if(typeof window._applyRecCardTheme==='function') window._applyRecCardTheme(); }catch(e){}
@@ -2337,7 +2334,7 @@ window.cfgPasteConvertCopy = function(){
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 자동인식 출력 포맷(전역) 설정
 // - localStorage: su_auto_outfmt (JSON)
-// - search.js의 autoOutfmtLoad/autoOutfmtSave/autoFormatMatchLine와 연동
+// - search-core.js의 autoOutfmtLoad/autoOutfmtSave/autoFormatMatchLine와 연동
 // ─────────────────────────────────────────────────────────────
 function _cfgAutoOutfmtDefault(){
   return { includeRace:true, includeMap:true, mapBrackets:true, winnerEmphasis:'none', hideUnknownRace:true };
@@ -2370,7 +2367,7 @@ window.cfgAutoOutfmtRefreshPreview = function(){
   const el = document.getElementById('cfg-auto-outfmt-preview');
   if(!el) return;
   try{
-    // search.js 포맷터가 있으면 그걸로 미리보기
+    // search-core.js 포맷터가 있으면 그걸로 미리보기
     if(typeof window.autoFormatMatchLine==='function'){
       el.textContent = window.autoFormatMatchLine('조기석','변현제','실피드');
       return;
@@ -3726,13 +3723,15 @@ window.cfgSearchSettings = function(q){
       const id=el.getAttribute('data-cfg-sec')||'';
       const t = (window._cfgSecTitle && window._cfgSecTitle[id]) ? String(window._cfgSecTitle[id]) : id;
       const plain = t.replace(/<[^>]+>/g,'').replace(/^[\u{1F300}-\u{1FAFF}\u2600-\u27BF]+\s*/u,'');
-      // (개선) 섹션 제목뿐 아니라 섹션 내부의 세부 설정 문구도 검색되게
-      // - 최초 1회만 innerText를 캐싱해서 성능을 확보
+      // 섹션 제목뿐 아니라 내부 세부 설정 문구도 검색 대상에 포함.
+      // data-cfg-searchtext 속성을 캐시로 사용하며, rCfg 렌더 시 속성이 제거돼 자동 재수집됨.
       let st = el.getAttribute('data-cfg-searchtext');
       if(!st){
         try{
-          st = (plain + ' ' + (el.innerText||'')).toLowerCase();
-          el.setAttribute('data-cfg-searchtext', st);
+          const raw = el.innerText || '';
+          // 빈 innerText는 캐싱하지 않음 (아직 화면에 없는 동적 섹션 대비)
+          st = (plain + ' ' + raw).toLowerCase();
+          if(raw.trim()) el.setAttribute('data-cfg-searchtext', st);
         }catch(e){
           st = plain.toLowerCase();
         }

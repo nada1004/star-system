@@ -93,6 +93,23 @@
   /* 기록/필터 추가 스케일 */
   --ym-scale: 1;              /* 연/월 필터 크기(기록탭) */
   --rc-univ-font-scale: 1;    /* 기록카드 대학명 글자 크기 */
+
+  /* ── UI/UX 개선 패치 디자인 토큰 (ui-improvements.css에서 이관) ── */
+  --card-r: 22px;             /* 카드 기본 라운드 */
+  --card-r-sm: 16px;          /* 카드 소형 라운드 */
+  --card-sh: 0 2px 8px rgba(15,23,42,.05), 0 6px 24px rgba(15,23,42,.07);
+  --card-sh-hover: 0 10px 36px rgba(15,23,42,.13), 0 2px 8px rgba(15,23,42,.06);
+  --card-border: 1px solid rgba(148,163,184,.18);
+  --chip-r: 16px;
+  --chip-sh: 0 6px 20px rgba(15,23,42,.18);
+  --chip-sh-hover: 0 14px 36px rgba(15,23,42,.26);
+  --score-r: 18px;
+  --score-sh: 0 6px 24px rgba(15,23,42,.09), inset 0 1px 0 rgba(255,255,255,.9);
+  --tr-f: .14s cubic-bezier(.4,0,.2,1);  /* 빠른 전환 */
+  --tr-m: .22s cubic-bezier(.34,1.3,.64,1); /* 탄성 전환 */
+  --win-col: #16a34a;
+  --lose-col: #94a3b8;
+  --win-glow: rgba(22,163,74,.22);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--app-font);background:#fff;color:var(--text);font-size:calc(13px * var(--uiS) * var(--fontS));padding:16px;line-height:1.5;font-weight:400;}
@@ -809,7 +826,7 @@ b,strong{font-weight:600;}
 }
 .share-btn-unified{min-width:98px;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;}
 .share-btn-unified.btn-sm{min-width:108px;}
-.modal-compact-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;backdrop-filter:blur(4px);}
+.modal-compact-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:var(--z-chatbot);display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;backdrop-filter:blur(4px);}
 .modal-compact-box{background:var(--white);border-radius:13px;padding:13px;max-width:100%;box-shadow:0 16px 42px rgba(0,0,0,.24);box-sizing:border-box;}
 .modal-compact-box--sm{padding:12px;border-radius:11px;}
 /* 조별 순위표 세련화 */

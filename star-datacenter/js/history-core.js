@@ -618,11 +618,16 @@ function histTourneyHTML(context){
         const _hasSide=!!((_sidePanel.left||'')||(_sidePanel.right||''));
 
         const _menuActions=[
-          isLoggedIn&&(rIdx>=0||m._src==='tour'||m._src==='tour_bracket'||m._src==='tour_manual')&&m._src!=='tour_normal'?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>m._src==='tour'?leagueEditMatch(m._tnId,m._gi,m._mi):null}:null,
+          isLoggedIn&&m._src==='tour'?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>leagueEditMatch(m._tnId,m._gi,m._mi)}:null,
+          isLoggedIn&&m._src==='tour_bracket'?{t:'✏️ 결과 입력',d:'대진표 경기 결과 입력',kind:'normal',on:()=>{const _bk=m._bktKey||'';const _bkp=_bk.split('-');const _r=parseInt(_bkp[0]);const _bmi=parseInt(_bkp[1]);if(typeof openBracketMatchModal==='function')openBracketMatchModal(m._tnId,_r,_bmi,m.a,m.b);}}:null,
+          isLoggedIn&&m._src==='tour_manual'?{t:'✏️ 결과 입력',d:'수동 경기 결과 입력',kind:'normal',on:()=>{if(typeof openBracketMatchModal==='function')openBracketMatchModal(m._tnId,-1,m._manualIdx,m.a,m.b);}}:null,
           isLoggedIn&&m._src==='tour_normal'?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>{if(typeof nmStartEdit==='function')nmStartEdit(m._tnId,m._nmi);}}:null,
           {t:'🎴 공유카드',d:'공유용 카드 생성',kind:'accent',on:()=>window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(idx,context))},
-          isLoggedIn&&rIdx>=0&&!isSubAdmin&&m._src!=='tour_normal'?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>null}:null,
-          isLoggedIn&&m._src==='tour_normal'&&!isSubAdmin?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>{if(typeof nmDelMatch==='function')nmDelMatch(m._tnId,m._nmi);}}:null
+          isLoggedIn&&m._src==='tour'&&!isSubAdmin?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>typeof grpDelMatch==='function'&&grpDelMatch(m._tnId,m._gi,m._mi)}:null,
+          isLoggedIn&&m._src==='tour_bracket'&&!isSubAdmin?{t:'🗑️ 결과 삭제',d:'대진표 결과 초기화',kind:'danger',on:()=>{const _bk=m._bktKey||'';const _bkp=_bk.split('-');const _r=parseInt(_bkp[0]);const _bmi=parseInt(_bkp[1]);if(typeof bktClearMatchResult==='function')bktClearMatchResult(m._tnId,_r,_bmi);}}:null,
+          isLoggedIn&&m._src==='tour_manual'&&!isSubAdmin?{t:'🗑️ 삭제',d:'수동 경기 삭제',kind:'danger',on:()=>{if(typeof bktDelManualMatch==='function')bktDelManualMatch(m._tnId,m._manualIdx);}}:null,
+          isLoggedIn&&m._src==='tour_normal'&&!isSubAdmin?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>{if(typeof nmDelMatch==='function')nmDelMatch(m._tnId,m._nmi);}}:null,
+          isLoggedIn&&rIdx>=0&&!isSubAdmin&&(m._src==='comps'||!m._src)?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>null}:null
         ].filter(Boolean);
         const _menuBtn=(_menuActions.length&&typeof _compActionMenuHTML==='function')?_compActionMenuHTML(_menuActions):'';
 

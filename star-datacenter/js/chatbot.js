@@ -1013,17 +1013,8 @@ function sendQuickMessage(message) {
   }
 }
 
-// 특수문자 이스케이프 함수
-function escapeHtml(text) {
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-}
+// 특수문자 이스케이프 — constants.js의 window.escHTML 위임
+function escapeHtml(text) { return window.escHTML(text); }
 
 // 선수 최근 전적
 function formatPlayerRecentRecord(player) {
@@ -1351,33 +1342,72 @@ function formatUniversityInfo(univName) {
   }
 }
 
-// 대학명 퍼지 매칭 (개선된 알고리즘)
+// 대학명 퍼지 매칭 (초성 검색 + 별명 매핑 + Levenshtein)
 function findSimilarUniversity(input, universities) {
-  const inputLower = input.toLowerCase();
-  
-  // 정확히 일치
+  const inputLower = input.toLowerCase().trim();
+  if (!inputLower) return null;
+
+  // 0) univCfg의 alias 필드 + 내장 별명 테이블로 별명 → 정식명 변환
+  const _builtinAlias = {
+    '흑카': '흑카데미', '흑까': '흑카데미', '흑': '흑카데미',
+    '늪': '늪지대', '늪지': '늪지대',
+    '무소속': '무소속', '무': '무소속',
+    '츠캄': '츠캄몬스타즈', '몬스타즈': '츠캄몬스타즈',
+    'jsa': 'JSA',
+  };
+  const _cfgAliasMap = {};
+  try{
+    (typeof univCfg !== 'undefined' ? univCfg : []).forEach(function(u){
+      if(!u || !u.name) return;
+      // univCfg에 alias 배열이 있으면 등록
+      if(Array.isArray(u.alias)){
+        u.alias.forEach(function(a){ _cfgAliasMap[String(a).toLowerCase()] = u.name; });
+      }
+    });
+  }catch(e){}
+  const _aliasMap = Object.assign({}, _builtinAlias, _cfgAliasMap);
+  if (_aliasMap[inputLower]) return _aliasMap[inputLower];
+
+  // 1) 정확히 일치
   if (universities.includes(input)) return input;
-  
-  // 부분 일치 (입력이 대학명에 포함)
+  const exactCI = universities.find(u => u.toLowerCase() === inputLower);
+  if (exactCI) return exactCI;
+
+  // 2) 부분 일치 (입력이 대학명에 포함)
   const partialMatch = universities.find(u => u.toLowerCase().includes(inputLower));
   if (partialMatch) return partialMatch;
-  
-  // 대학명이 입력에 포함
+
+  // 3) 대학명이 입력에 포함
   const reverseMatch = universities.find(u => inputLower.includes(u.toLowerCase()));
   if (reverseMatch) return reverseMatch;
-  
-  // Levenshtein 거리 계산
+
+  // 4) 초성 검색 — 입력이 한글 초성 2자 이상일 때만 시도
+  const _CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+  function _extractCho(str){
+    return str.split('').map(function(c){
+      const code = c.charCodeAt(0) - 0xAC00;
+      if(code < 0 || code > 11171) return c;
+      return _CHO[Math.floor(code / 28 / 21)];
+    }).join('');
+  }
+  const inputCho = _extractCho(input);
+  const isChoInput = /^[ㄱ-ㅎ]{2,}$/.test(inputCho) && inputCho === input;
+  if (isChoInput) {
+    const choMatch = universities.find(u => _extractCho(u).startsWith(inputCho));
+    if (choMatch) return choMatch;
+  }
+
+  // 5) Levenshtein 거리
   let bestMatch = null;
   let bestScore = Infinity;
-  
-  universities.forEach(u => {
+  universities.forEach(function(u) {
     const score = levenshteinDistance(inputLower, u.toLowerCase());
     if (score < bestScore && score <= 3) {
       bestScore = score;
       bestMatch = u;
     }
   });
-  
+
   return bestMatch;
 }
 

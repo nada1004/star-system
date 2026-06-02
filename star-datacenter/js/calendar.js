@@ -385,12 +385,18 @@ let _calDetailState={};
 
 function calDeleteSched(id){
   if(!isLoggedIn) return;
-  if(!confirm('예정 경기를 삭제할까요?')) return;
-  const idx=calScheduled.findIndex(x=>x._id===id);
-  if(idx>=0){ calScheduled.splice(idx,1); window._calScheduled=calScheduled; }
-  window._calMatchCache=null;
-  if(typeof save==='function') save();
-  render();
+  _calConfirmDel(function(){
+    const idx=calScheduled.findIndex(x=>x._id===id);
+    if(idx>=0){ calScheduled.splice(idx,1); window._calScheduled=calScheduled; }
+    window._calMatchCache=null;
+    render();
+    if(typeof save==='function'){
+      Promise.resolve(save()).catch(function(e){
+        _calSaveToast('⚠️ 로컬 저장됨 — 네트워크 오류로 원격 저장 실패');
+        console.warn('[calDeleteSched] save error', e);
+      });
+    }
+  });
 }
 
 // Feature 1+3: 예정 경기 등록 모달
@@ -420,9 +426,14 @@ function saveCalSched(){
   calScheduled.push(newSched);
   window._calScheduled=calScheduled;
   window._calMatchCache=null;
-  if(typeof save==='function') save();
   cm('calSchedModal');
   render();
+  if(typeof save==='function'){
+    Promise.resolve(save()).catch(function(e){
+      _calSaveToast('⚠️ 로컬 저장됨 — 네트워크 오류로 원격 저장 실패');
+      console.warn('[saveCalSched] save error', e);
+    });
+  }
 }
 
 function calToggleDetail(key){
@@ -602,3 +613,73 @@ function swNav(t,el){
     render();
   }
 }
+
+/* ── 캘린더 헬퍼 ─────────────────────────────────────── */
+
+// 예정 경기 삭제 확인 모달
+function _calConfirmDel(onConfirm){
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:var(--z-modal-5);display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML=`
+    <div style="background:var(--white);border-radius:14px;padding:22px 20px 16px;max-width:300px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.3)">
+      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px">🗓️ 예정 경기 삭제</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px">이 예정 경기를 삭제하시겠습니까?</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="_calDelCancel" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:13px;font-weight:700;cursor:pointer;color:var(--text2)">취소</button>
+        <button id="_calDelOk" style="padding:7px 16px;border-radius:8px;border:none;background:#EF4444;color:#fff;font-size:13px;font-weight:700;cursor:pointer">삭제</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  const close=()=>{ try{ ov.remove(); }catch(e){} };
+  ov.querySelector('#_calDelCancel').addEventListener('click', close);
+  ov.querySelector('#_calDelOk').addEventListener('click', function(){ close(); onConfirm(); });
+  ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+}
+
+// 저장 결과 토스트 (오프라인/에러 안내용)
+function _calSaveToast(msg){
+  try{
+    const t=document.createElement('div');
+    t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:var(--z-top);pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap';
+    t.textContent=msg;
+    document.body.appendChild(t);
+    setTimeout(()=>{ try{ t.remove(); }catch(e){} }, 4000);
+  }catch(e){}
+}
+
+/* ── 하단 네비 더보기 드로어 ────────────────────────────── */
+(function(){
+  window._bnavMoreToggle = function(btn){
+    const d=document.getElementById('bnavMoreDrawer');
+    if(!d) return;
+    if(d.style.display!=='none'){ _bnavMoreClose(); return; }
+    d.style.display='block';
+    btn.classList.add('on');
+  };
+  window._bnavMoreClose = function(){
+    const d=document.getElementById('bnavMoreDrawer');
+    if(d) d.style.display='none';
+    const btn=document.getElementById('bn5');
+    if(btn) btn.classList.remove('on');
+  };
+  window._bnavMoreNav = function(tab){
+    _bnavMoreClose();
+    if(typeof swNav==='function') swNav(tab, null);
+    document.querySelectorAll('.bnav-item').forEach(function(b){
+      b.classList.remove('on'); b.setAttribute('aria-selected','false');
+    });
+    const moreBtn=document.getElementById('bn5');
+    if(moreBtn) moreBtn.classList.add('on');
+  };
+
+  // 더보기 버튼 스타일 (style.css 이관 전 인젝션)
+  const s=document.createElement('style');
+  s.textContent=
+    '.bnav-more-btn{display:flex;flex-direction:column;align-items:center;gap:4px;' +
+    'padding:10px 4px 8px;border:none;background:var(--surface);border-radius:12px;' +
+    'cursor:pointer;font-family:"Noto Sans KR",sans-serif;font-size:11px;font-weight:700;' +
+    'color:var(--text2);transition:background .15s,transform .1s;width:100%}' +
+    '.bnav-more-btn:active{transform:scale(.92);background:var(--border2)}' +
+    'body.dark .bnav-more-btn{background:var(--surface);color:var(--text2)}';
+  if(document.head) document.head.appendChild(s);
+})();

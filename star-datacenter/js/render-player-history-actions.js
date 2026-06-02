@@ -432,7 +432,7 @@ function openPlayerRecentEditableSourceEdit(playerName, meta){
       const gm=tn && tn.gjMatches && tn.gjMatches[gjIdx];
       if(gm && !_guardRecentEdit(gm.d||'')) return;
     }catch(e){}
-    // 프로리그 끝장전은 pro-comp.js의 GJ 섹션에서 수정 가능
+    // 프로리그 끝장전은 pro-comp-edit.js의 GJ 섹션에서 수정 가능
     if(typeof window.proCompSub === 'function' && typeof window.render === 'function'){
       window.proCompSub='gj';
       window.render();

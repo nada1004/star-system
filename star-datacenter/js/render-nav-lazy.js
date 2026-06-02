@@ -8,25 +8,39 @@ window._BNAV_TAB_MAP = {
   tier:     'tier',
   hist:     'hist',
   stats:    'stats',
-  // 메인 탭이 bnav에 없는 경우 → 가장 가까운 bnav 항목으로 매핑
-  ind:      'total',
-  gj:       'total',
-  univm:    'total',
-  univck:   'total',
+  // 메인 탭이 bnav에 없는 경우 → 더보기(bn5) 버튼으로 매핑
+  ind:      '__more__',
+  gj:       '__more__',
+  univm:    '__more__',
+  univck:   '__more__',
   mini:     'total',
-  comp:     'tier',
+  comp:     '__more__',
   tiertour: 'tier',
-  pro:      'tier',
-  progj:    'tier',
-  cal:      'hist',
-  roulette: 'total',
+  pro:      '__more__',
+  progj:    '__more__',
+  cal:      '__more__',
+  roulette: '__more__',
   civil:    'total',
+  cfg:      '__more__',
 };
 
 // bnav 하이라이트를 탭 ID 기준으로 동기화하는 공통 헬퍼
 window._syncBnav = function(tabId) {
   try {
     const bnavTarget = (window._BNAV_TAB_MAP && window._BNAV_TAB_MAP[tabId]) || tabId;
+    // __more__ 매핑 → 더보기(#bn5)를 on으로, 나머지 off
+    if (bnavTarget === '__more__') {
+      document.querySelectorAll('.bnav-item').forEach(function(b) {
+        b.classList.remove('on');
+        b.setAttribute('aria-selected', 'false');
+      });
+      const moreBtn = document.getElementById('bn5');
+      if (moreBtn) {
+        moreBtn.classList.add('on');
+        moreBtn.setAttribute('aria-selected', 'true');
+      }
+      return;
+    }
     document.querySelectorAll('.bnav-item').forEach(function(b) {
       const oc = b.getAttribute('onclick') || '';
       const isOn = oc.includes("'" + bnavTarget + "'") || oc.includes('"' + bnavTarget + '"');

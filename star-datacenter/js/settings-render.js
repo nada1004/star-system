@@ -3690,8 +3690,21 @@ ${_scfgD('notice','📢 공지 관리')}
     // 경기 상세/스트리머 상세 스타일 섹션 내용 항상 렌더링 (펼침 여부 무관)
     try{ if(typeof _renderCfgMatchDetailSection==='function') _renderCfgMatchDetailSection(); }catch(e){}
     try{ if(typeof _renderCfgPdSection==='function') _renderCfgPdSection(); }catch(e){}
+    // 동적 섹션이 새로 그려졌으므로 검색 텍스트 캐시 재무효화 (innerText 갱신 보장)
+    try{
+      document.querySelectorAll('[data-cfg-searchtext]').forEach(function(el){
+        el.removeAttribute('data-cfg-searchtext');
+      });
+    }catch(e){}
   },50);
   C.innerHTML=h;
+  // 렌더 후 검색 텍스트 캐시 무효화: innerHTML이 새로 그려졌으므로 이전 캐시는 무효
+  // cfgSearchSettings가 다음에 호출될 때 innerText를 새로 수집해 재캐싱함
+  try{
+    document.querySelectorAll('[data-cfg-searchtext]').forEach(function(el){
+      el.removeAttribute('data-cfg-searchtext');
+    });
+  }catch(e){}
   // 최초 렌더 직후 카테고리 필터를 즉시 적용 (setTimeout 실행이 막히는 환경 대비)
   try{ if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'🧩 운영/콘텐츠', false); }catch(e){}
   try{ if(typeof window.cfgApplySimpleView==='function') window.cfgApplySimpleView(); }catch(e){}

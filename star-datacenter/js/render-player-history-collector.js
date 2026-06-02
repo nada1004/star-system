@@ -270,7 +270,7 @@ function collectPlayerExtraHistoryData(opts){
         const ln=wn===m.a?m.b:m.a;
         const opp=wn===p.name?ln:wn;
         const oppP=players.find(x=>x.name===opp);
-        // 프로리그 대회 조별리그는 pro-comp.js에서 수정/삭제 가능 → editableSource로 연결
+        // 프로리그 대회 조별리그는 pro-comp-edit.js에서 수정/삭제 가능 → editableSource로 연결
         tourMatches.push(_attachHistElo({
           date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',
           matchId:mid,mode:'프로리그대회',

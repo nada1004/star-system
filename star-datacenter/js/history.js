@@ -78,20 +78,20 @@ function rHist(C,T){
     const gLbl=(typeof getTabLabel==='function') ? getTabLabel('historyGroup', g, g) : g;
     // [FIX-9] XSS 방지: onclick 인라인에서 data-hsub 속성 + 이벤트 위임으로 교체
     const safeId = String(firstId).replace(/[^a-zA-Z0-9_\-]/g,'');
-    const safeLbl = typeof window.escHTML==='function' ? window.escHTML(gLbl) : gLbl.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const safeLbl = window.escHTML(gLbl);
     h+=`<button class="pill hist-grp-btn ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" data-hsub="${safeId}">${safeLbl}</button>`;
     // '외부' 우측에 '외부2' 버튼 노출(관리자 전용)
     if(g==='외부' && tabDefs.some(t=>t.id==='ext2')){
       const isOn2=(histSub==='ext2');
       const lbl2 = (typeof getTabLabel==='function') ? getTabLabel('history','ext2','외부2') : '외부2';
-      const safeLbl2 = typeof window.escHTML==='function' ? window.escHTML(lbl2) : lbl2.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const safeLbl2 = window.escHTML(lbl2);
       h+=`<button class="pill hist-grp-btn ${isOn2?'on':''}" style="flex-shrink:0;white-space:nowrap" data-hsub="ext2">${safeLbl2}</button>`;
     }
     // '외부' 우측에 '외부3' 버튼 노출(관리자 전용)
     if(g==='외부' && tabDefs.some(t=>t.id==='ext3')){
       const isOn3=(histSub==='ext3');
       const lbl3 = (typeof getTabLabel==='function') ? getTabLabel('history','ext3','외부3') : '외부3';
-      const safeLbl3 = typeof window.escHTML==='function' ? window.escHTML(lbl3) : lbl3.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const safeLbl3 = window.escHTML(lbl3);
       h+=`<button class="pill hist-grp-btn ${isOn3?'on':''}" style="flex-shrink:0;white-space:nowrap" data-hsub="ext3">${safeLbl3}</button>`;
     }
   });

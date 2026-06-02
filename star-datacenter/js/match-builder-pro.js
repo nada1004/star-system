@@ -2,6 +2,9 @@
    Match Builder Pro League
 ══════════════════════════════════════ */
 
+// HTML escape — constants.js의 window.escHTML 위임 (var: 재선언 충돌 방지)
+var esc = function(s){ return window.escHTML(s); };
+
 var proSub='records';
 
 function rPro(C,T){

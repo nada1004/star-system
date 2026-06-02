@@ -150,7 +150,7 @@
   <button class="tabs-arrow" type="button" aria-label="다음 탭">&#9654;</button><!-- [A11Y] -->
 </div>
 <!-- 새로고침 시 탭 가로 스크롤/레이아웃 복원으로 인한 '잠깐 바뀜' 방지 -->
-<script>(function(){try{var t=document.querySelector('.tabs');if(t)t.scrollLeft=0;}catch(e){}})();</script>
+<script src="js/tabs-scroll-init.js"></script>
 
 <div id="fstrip" class="fstrip no-export lock-admin" style="display:none">
   <div class="form-row">
@@ -611,7 +611,6 @@
 </div>
 
 <script defer src="js/config.js"></script>
-<script defer src="js/app-state.js"></script>
 <script defer src="js/match-store-idb.js?v=20260504-01"></script>
 <script defer src="js/constants.js?v=20260516-02"></script>
 <script defer src="js/constants-player-html.js?v=20260508-02"></script>
@@ -728,75 +727,7 @@
 </div>
 
 <!-- 📱 FAB -->
-<script>
-var _fabOpen=false;
-
-function toggleFab(){
-  _fabOpen=!_fabOpen;
-  const btn=document.getElementById('fabMain');
-  const list=document.getElementById('fabSubList');
-  if(!btn||!list)return;
-  btn.classList.toggle('open',_fabOpen);
-  list.classList.toggle('open',_fabOpen);
-}
-function closeFab(){
-  _fabOpen=false;
-  const btn=document.getElementById('fabMain');
-  const list=document.getElementById('fabSubList');
-  if(btn) btn.classList.remove('open');
-  if(list) list.classList.remove('open');
-}
-function updateFabVisibility(){
-  const fab=document.getElementById('mobileFab');
-  if(!fab)return;
-
-  const isMobile=window.innerWidth<=768;
-  const hideMobile=localStorage.getItem('su_fabHideMobile')==='1';
-  const hidePC=localStorage.getItem('su_fabHidePC')==='1';
-
-  if(isMobile){
-    fab.style.display=hideMobile?'none':'flex';
-  }else{
-    fab.style.display=hidePC?'none':'flex';
-  }
-
-  // 관리자 전용: 펨붕이붓(AI봇) 메뉴는 관리자만 표시
-  try{
-    const aiItem=document.getElementById('fabAIBotItem');
-    if(aiItem){
-      const admin = (typeof isLoggedIn!=='undefined' && isLoggedIn) && !(typeof isSubAdmin!=='undefined' && isSubAdmin);
-      aiItem.style.display = admin ? '' : 'none';
-    }
-  }catch(e){}
-}
-window.addEventListener('resize',updateFabVisibility);
-window.addEventListener('DOMContentLoaded',updateFabVisibility);
-
-// ── FAB 빠른 액션 ──
-function fabActionPaste(){
-  try{
-    if(typeof openPasteModal==='function'){ openPasteModal(); return; }
-    if(typeof om==='function') om('pasteModal');
-  }catch(e){}
-  try{ if(typeof showToast==='function') showToast('붙여넣기 모달을 열 수 없습니다.'); }catch(e){}
-}
-function fabActionSave(){
-  try{
-    if(typeof save==='function'){ save(); if(typeof showToast==='function') showToast('저장 요청'); return; }
-  }catch(e){}
-  try{ if(typeof showToast==='function') showToast('save()를 찾을 수 없습니다.'); }catch(e){}
-}
-function fabActionCfgSearch(){
-  try{
-    const btn=document.getElementById('tabCfg');
-    if(btn) sw('cfg', btn);
-    setTimeout(()=>{
-      const inp=document.getElementById('cfgSearchInp');
-      if(inp){ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
-    }, 80);
-  }catch(e){}
-}
-</script>
+<script defer src="js/fab.js"></script>
 
 <div id="mobileFab">
   <div class="fab-sub-list" id="fabSubList">
@@ -821,6 +752,23 @@ function fabActionCfgSearch(){
   <button class="bnav-item" id="bn2" role="tab" aria-selected="false" onclick="swNav('tier',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📊</span></div><span class="bnav-label">티어</span></button>
   <button class="bnav-item" id="bn3" role="tab" aria-selected="false" onclick="swNav('hist',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📅</span></div><span class="bnav-label">기록</span></button>
   <button class="bnav-item" id="bn4" role="tab" aria-selected="false" onclick="swNav('stats',this)"><div class="bnav-icon-wrap"><span class="bnav-icon">📈</span></div><span class="bnav-label">통계</span></button>
+  <button class="bnav-item" id="bn5" role="button" aria-haspopup="true" onclick="_bnavMoreToggle(this)"><div class="bnav-icon-wrap"><span class="bnav-icon">⋯</span></div><span class="bnav-label">더보기</span></button>
+</div>
+
+<!-- 하단 네비 더보기 드로어 -->
+<div id="bnavMoreDrawer" role="menu" aria-label="더보기 메뉴" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:var(--z-modal-5);background:rgba(0,0,0,.45)" onclick="_bnavMoreClose()">
+  <div style="background:var(--white);border-radius:20px 20px 0 0;padding:12px 16px 24px;box-shadow:0 -4px 24px rgba(0,0,0,.15)" onclick="event.stopPropagation()">
+    <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px"></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      <button class="bnav-more-btn" onclick="_bnavMoreNav('ind')"><span style="font-size:22px">🎯</span><span>개인전</span></button>
+      <button class="bnav-more-btn" onclick="_bnavMoreNav('univm')"><span style="font-size:22px">🏫</span><span>대학전</span></button>
+      <button class="bnav-more-btn" onclick="_bnavMoreNav('pro')"><span style="font-size:22px">🏅</span><span>프로리그</span></button>
+      <button class="bnav-more-btn" onclick="_bnavMoreNav('comp')"><span style="font-size:22px">🏆</span><span>대회</span></button>
+      <button class="bnav-more-btn" onclick="_bnavMoreNav('cal')"><span style="font-size:22px">🗓️</span><span>캘린더</span></button>
+      <button class="bnav-more-btn" onclick="_bnavMoreNav('roulette')"><span style="font-size:22px">🎡</span><span>룰렛</span></button>
+      <button class="bnav-more-btn" onclick="_bnavMoreNav('cfg')"><span style="font-size:22px">⚙️</span><span>설정</span></button>
+    </div>
+  </div>
 </div>
 
 <!-- 🤖 챗봇 팝업 -->

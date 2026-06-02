@@ -3,6 +3,9 @@
    - 저장/파싱 유틸은 history-external-utils.js 사용
 ══════════════════════════════════════ */
 
+// HTML escape — constants.js의 window.escHTML 위임 (var: 재선언 충돌 방지)
+var esc = function(s){ return window.escHTML(s); };
+
 window.histExtSetSource = function(v){
   const st=_histExtLoad();
   const next={...st, sourceSel:String(v||'')};
