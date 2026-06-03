@@ -1,7 +1,52 @@
+function _histLsGet(k, d=''){
+  try{
+    const v = localStorage.getItem(k);
+    return (v==null) ? d : v;
+  }catch(e){
+    return d;
+  }
+}
+function _histIsLoggedIn(){
+  return ((typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn);
+}
+function _histIsSubAdmin(){
+  return ((typeof isSubAdmin!=='undefined' ? !!isSubAdmin : false) || !!window.isSubAdmin);
+}
+function _histSortDir(){
+  try{
+    if(typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) return recSortDir;
+  }catch(e){}
+  return (window.recSortDir==='asc' || window.recSortDir==='desc') ? window.recSortDir : 'desc';
+}
+function _histEscHTML(s){
+  if(typeof escHTML==='function') return escHTML(s);
+  return String(s??'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function _histEscAttr(s){
+  if(typeof escAttr==='function') return escAttr(String(s??''));
+  return String(s??'')
+    .replace(/&/g,'&amp;')
+    .replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/[\r\n]+/g,' ');
+}
+function _histEscJS(s){
+  if(typeof escJS==='function') return escJS(s);
+  return String(s??'')
+    .replace(/\\/g,'\\\\')
+    .replace(/'/g,"\\'")
+    .replace(/\r/g,'\\r')
+    .replace(/\n/g,'\\n');
+}
+
 function rHist(C,T){
   T.innerText='📅 대전 기록';
   // (A안) 하위 탭/기간 필터를 접기/펼치기
-  const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
+  const _li = _histIsLoggedIn();
+  const _sub = _histIsSubAdmin();
+  const _sortDir = _histSortDir();
+  const _lockOpen = (_histLsGet('su_filter_lock_open', '1') === '1');
   if(window._histFilterOpen===undefined) window._histFilterOpen=_lockOpen;
   if(_lockOpen) window._histFilterOpen = true;
 
@@ -48,7 +93,7 @@ function rHist(C,T){
   }catch(e){}
   // (요청사항) 관리자 전용 외부 자료 탭
   try{
-    if(typeof isLoggedIn!=='undefined' && isLoggedIn && !(typeof isSubAdmin!=='undefined' && isSubAdmin)){
+    if(_li && !_sub){
       tabDefs.push({id:'ext', grp:'외부', lbl:'📎', disp:(typeof getTabLabel==='function'?getTabLabel('history','ext','📎'):'📎')});
       // 외부2: 관리자 전용(iframe)
       tabDefs.push({id:'ext2', grp:'외부', lbl:'🌐 외부2', disp:(typeof getTabLabel==='function'?getTabLabel('history','ext2','🌐 외부2'):'🌐 외부2')});
@@ -65,7 +110,7 @@ function rHist(C,T){
   }
   const needDateFilter=['mini','civil','ck','univm','comp','tourney','pro','race','ind','gj','progj','tiertour','procomp','all'].includes(histSub);
   const _histBulkKeyTop = (()=>{
-    if(!isLoggedIn) return '';
+    if(!_li) return '';
     if(histSub==='mini' || histSub==='civil' || histSub==='univm' || histSub==='ck' || histSub==='pro') return histSub;
     if(histSub==='tiertour') return 'tt';
     return '';
@@ -78,7 +123,7 @@ function rHist(C,T){
   let h=`<div class="hist-topbar no-export">`;
   h+=`  <div class="hist-topbar-left">`;
   // (요청사항) 필터는 '종합' 좌측(=그룹바 맨 좌측)에 배치
-  if((localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1' && !_lockOpen){
+  if((_histLsGet('su_submenu_filter_enabled', '1') === '1') && !_lockOpen){
     h+=`<button class="pill ${window._histFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histFilterOpen=!window._histFilterOpen;render()">🔍 필터 ${window._histFilterOpen?'▲':'▼'}</button>`;
   }
   grps.forEach(g=>{
@@ -104,7 +149,7 @@ function rHist(C,T){
 
   // 선택 그룹 내 탭 + 기간 필터는 필터가 열렸을 때만 표시
   const grpTabs=tabDefs.filter(t=>t.grp===curTab.grp);
-  const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
+  const _enableSubFilter = (_histLsGet('su_submenu_filter_enabled', '1') === '1');
   if((_enableSubFilter?window._histFilterOpen:true) && grpTabs.length>1 && curTab.grp!=='외부'){
     // (요청사항) "우측 끝 고정"이 아니라, 하위메뉴 버튼 "바로 우측"에
     // 연도/월 + 최신/오래된순이 이어서 붙어야 함 (한 줄 드래그 메뉴)
@@ -132,8 +177,8 @@ function rHist(C,T){
       h+=`<div class="hist-ctrl-group">`;
       // (요청사항) 메뉴 버튼 우측: 연/월 → 그 우측에 최신/오래된순
       h+=buildYearMonthFilterControls('hist', true);
-      h+=`<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';window._ttPageMap=window._ttPageMap||{};window._ttPageMap['tiertour-gen']=0;render()">최신순 ↓</button>`;
-      h+=`<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';window._ttPageMap=window._ttPageMap||{};window._ttPageMap['tiertour-gen']=0;render()">오래된순 ↑</button>`;
+      h+=`<button class="pill ${_sortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="try{recSortDir='desc';}catch(e){};window.recSortDir='desc';window._ttPageMap=window._ttPageMap||{};window._ttPageMap['tiertour-gen']=0;render()">최신순 ↓</button>`;
+      h+=`<button class="pill ${_sortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="try{recSortDir='asc';}catch(e){};window.recSortDir='asc';window._ttPageMap=window._ttPageMap||{};window._ttPageMap['tiertour-gen']=0;render()">오래된순 ↑</button>`;
       h+=_histBulkBtnTop;
       h+=`</div>`;
     }
@@ -297,6 +342,9 @@ function _openAllTabIndEdit(type, m, regIdx){
    대전 기록 > 전체 통합 탭
 ══════════════════════════════════════ */
 function histAllHTML(){
+  const _li = _histIsLoggedIn();
+  const _sub = _histIsSubAdmin();
+  const _players = (typeof players!=='undefined' && Array.isArray(players)) ? players : [];
   const _mini = (typeof miniM!=='undefined' && Array.isArray(miniM)) ? miniM : [];
   const _ck = (typeof ckM!=='undefined' && Array.isArray(ckM)) ? ckM : [];
   const _univm = (typeof univM!=='undefined' && Array.isArray(univM)) ? univM : [];
@@ -527,7 +575,7 @@ function histAllHTML(){
       <div id="det-${key}" class="rec-detail-area">
         ${isInd
           ? (()=> {
-              const wp=players.find(p=>p.name===(m.wName||'')); const lp=players.find(p=>p.name===(m.lName||''));
+              const wp=_players.find(p=>p && p.name===(m.wName||'')); const lp=_players.find(p=>p && p.name===(m.lName||''));
               const wc=wp?gc(wp.univ):'#888'; const lc=lp?gc(lp.univ):'#888';
               const mapStr=m.map&&m.map!=='-'?`<span style="font-size:11px;color:var(--gray-l)">📍 ${m.map}</span>`:'';
               return `<div style="padding:8px 10px;display:flex;align-items:center;gap:8px">
@@ -557,6 +605,8 @@ function histAllHTML(){
    대전 기록 > 대회 탭: 미니대전처럼 보이는 대회 경기 기록
 ══════════════════════════════════════ */
 function histTourneyHTML(context){
+  const _li = _histIsLoggedIn();
+  const _sub = _histIsSubAdmin();
   const tourItems=(typeof getTourneyMatches==='function') ? getTourneyMatches() : [];
   const nmItems=(typeof getNormalMatchesForHistory==='function') ? getNormalMatchesForHistory() : [];
   const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
@@ -599,7 +649,7 @@ function histTourneyHTML(context){
       byDate[k].push({m,idx});
     });
     const days=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
-    Object.keys(byDate).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a)).forEach(date=>{
+    Object.keys(byDate).sort((a,b)=>_sortDir==='asc'?a.localeCompare(b):b.localeCompare(a)).forEach(date=>{
       let dateLabel=date;
       if(date!=='날짜 미정'){
         const dt=new Date(date+'T00:00:00');
@@ -612,6 +662,7 @@ function histTourneyHTML(context){
 
       byDate[date].forEach(({m,idx})=>{
         const a=m.a||'',b=m.b||'';
+        const aJs=_histEscJS(a), bJs=_histEscJS(b);
         const ca=gc(a),cb=gc(b);
         const isDone=(m.sa!=null&&m.sb!=null);
         const aWin=isDone&&m.sa>m.sb;
@@ -640,16 +691,16 @@ function histTourneyHTML(context){
         const _hasSide=!!((_sidePanel.left||'')||(_sidePanel.right||''));
 
         const _menuActions=[
-          isLoggedIn&&m._src==='tour'?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>leagueEditMatch(m._tnId,m._gi,m._mi)}:null,
-          isLoggedIn&&m._src==='tour_bracket'?{t:'✏️ 결과 입력',d:'대진표 경기 결과 입력',kind:'normal',on:()=>{const _bk=m._bktKey||'';const _bkp=_bk.split('-');const _r=parseInt(_bkp[0]);const _bmi=parseInt(_bkp[1]);if(typeof openBracketMatchModal==='function')openBracketMatchModal(m._tnId,_r,_bmi,m.a,m.b);}}:null,
-          isLoggedIn&&m._src==='tour_manual'?{t:'✏️ 결과 입력',d:'수동 경기 결과 입력',kind:'normal',on:()=>{if(typeof openBracketMatchModal==='function')openBracketMatchModal(m._tnId,-1,m._manualIdx,m.a,m.b);}}:null,
-          isLoggedIn&&m._src==='tour_normal'?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>{if(typeof nmStartEdit==='function')nmStartEdit(m._tnId,m._nmi);}}:null,
+          _li&&m._src==='tour'?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>leagueEditMatch(m._tnId,m._gi,m._mi)}:null,
+          _li&&m._src==='tour_bracket'?{t:'✏️ 결과 입력',d:'대진표 경기 결과 입력',kind:'normal',on:()=>{const _bk=m._bktKey||'';const _bkp=_bk.split('-');const _r=parseInt(_bkp[0]);const _bmi=parseInt(_bkp[1]);if(typeof openBracketMatchModal==='function')openBracketMatchModal(m._tnId,_r,_bmi,m.a,m.b);}}:null,
+          _li&&m._src==='tour_manual'?{t:'✏️ 결과 입력',d:'수동 경기 결과 입력',kind:'normal',on:()=>{if(typeof openBracketMatchModal==='function')openBracketMatchModal(m._tnId,-1,m._manualIdx,m.a,m.b);}}:null,
+          _li&&m._src==='tour_normal'?{t:'✏️ 수정',d:'경기 수정',kind:'normal',on:()=>{if(typeof nmStartEdit==='function')nmStartEdit(m._tnId,m._nmi);}}:null,
           {t:'🎴 공유카드',d:'공유용 카드 생성',kind:'accent',on:()=>window._openShareMatchObjCard&&window._openShareMatchObjCard(_getHistTourneyMatchObj(idx,context))},
-          isLoggedIn&&m._src==='tour'&&!isSubAdmin?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>typeof grpDelMatch==='function'&&grpDelMatch(m._tnId,m._gi,m._mi)}:null,
-          isLoggedIn&&m._src==='tour_bracket'&&!isSubAdmin?{t:'🗑️ 결과 삭제',d:'대진표 결과 초기화',kind:'danger',on:()=>{const _bk=m._bktKey||'';const _bkp=_bk.split('-');const _r=parseInt(_bkp[0]);const _bmi=parseInt(_bkp[1]);if(typeof bktClearMatchResult==='function')bktClearMatchResult(m._tnId,_r,_bmi);}}:null,
-          isLoggedIn&&m._src==='tour_manual'&&!isSubAdmin?{t:'🗑️ 삭제',d:'수동 경기 삭제',kind:'danger',on:()=>{if(typeof bktDelManualMatch==='function')bktDelManualMatch(m._tnId,m._manualIdx);}}:null,
-          isLoggedIn&&m._src==='tour_normal'&&!isSubAdmin?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>{if(typeof nmDelMatch==='function')nmDelMatch(m._tnId,m._nmi);}}:null,
-          isLoggedIn&&rIdx>=0&&!isSubAdmin&&(m._src==='comps'||!m._src)?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>null}:null
+          _li&&m._src==='tour'&&!_sub?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>typeof grpDelMatch==='function'&&grpDelMatch(m._tnId,m._gi,m._mi)}:null,
+          _li&&m._src==='tour_bracket'&&!_sub?{t:'🗑️ 결과 삭제',d:'대진표 결과 초기화',kind:'danger',on:()=>{const _bk=m._bktKey||'';const _bkp=_bk.split('-');const _r=parseInt(_bkp[0]);const _bmi=parseInt(_bkp[1]);if(typeof bktClearMatchResult==='function')bktClearMatchResult(m._tnId,_r,_bmi);}}:null,
+          _li&&m._src==='tour_manual'&&!_sub?{t:'🗑️ 삭제',d:'수동 경기 삭제',kind:'danger',on:()=>{if(typeof bktDelManualMatch==='function')bktDelManualMatch(m._tnId,m._manualIdx);}}:null,
+          _li&&m._src==='tour_normal'&&!_sub?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>{if(typeof nmDelMatch==='function')nmDelMatch(m._tnId,m._nmi);}}:null,
+          _li&&rIdx>=0&&!_sub&&(m._src==='comps'||!m._src)?{t:'🗑️ 삭제',d:'경기 삭제',kind:'danger',on:()=>null}:null
         ].filter(Boolean);
         const _menuBtn=(_menuActions.length&&typeof _compActionMenuHTML==='function')?_compActionMenuHTML(_menuActions):'';
 
@@ -674,7 +725,7 @@ function histTourneyHTML(context){
             ${_sidePanel.left||''}
             <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:var(--tc-vs-gap,12px);justify-content:center;flex-wrap:wrap">
               <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
-                <div class="grp-team-chip" style="--chip-col:${ca||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.26);cursor:pointer" onclick="event.stopPropagation();openUnivModal('${a}')">
+                <div class="grp-team-chip" style="--chip-col:${ca||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.26);cursor:pointer" onclick="event.stopPropagation();openUnivModal('${aJs}')">
                   ${(()=>{const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[a])||((typeof univCfg!=='undefined'&&Array.isArray(univCfg))?((univCfg.find(x=>x.name===a)||{}).icon||''):'');return url?`<img class="tc-uicon" src="${typeof toHttpsUrl==='function'?toHttpsUrl(url):url}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:'';})()}
                   <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${a||'—'}</span>
                 </div>
@@ -684,7 +735,7 @@ function histTourneyHTML(context){
                 <div class="grp-match-score score-click"><span class="">${m.sa||0}</span><span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span><span class="">${m.sb||0}</span></div>
               </div>
               <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
-                <div class="grp-team-chip" style="--chip-col:${cb||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.26);cursor:pointer" onclick="event.stopPropagation();openUnivModal('${b}')">
+                <div class="grp-team-chip" style="--chip-col:${cb||'#888'};display:flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,color-mix(in srgb, var(--chip-col) 92%, #ffffff 8%),color-mix(in srgb, var(--chip-col) 78%, #000000 22%));padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.26);cursor:pointer" onclick="event.stopPropagation();openUnivModal('${bJs}')">
                   ${(()=>{const url=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS[b])||((typeof univCfg!=='undefined'&&Array.isArray(univCfg))?((univCfg.find(x=>x.name===b)||{}).icon||''):'');return url?`<img class="tc-uicon" src="${typeof toHttpsUrl==='function'?toHttpsUrl(url):url}" style="width:var(--tc-uicon);height:var(--tc-uicon);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);clip-path:var(--su_tc_uicon_clip,none);flex-shrink:0" onerror="this.style.display='none'">`:'';})()}
                   <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#fff">${b||'—'}</span>
                 </div>
@@ -695,7 +746,7 @@ function histTourneyHTML(context){
           </div>
           <div id="det-${key}" class="rec-detail-area">
             ${_regDet(key,{...m,_editRef:rIdx>=0?'comp:'+rIdx:''},  'comp',a,b,ca,cb,aWin,bWin, rIdx)}
-            ${(()=>{const _memo=(rIdx>=0&&isLoggedIn)?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''; const _note=m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${m.memo}</div>`:''; return (_memo||_note)?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">${_note}<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${_memo}</div></div>`:'';})()}
+            ${(()=>{const _memo=(rIdx>=0&&_li)?`<input type="text" id="memo-${key}" placeholder="경기 메모..." value="${_histEscAttr(m.memo||'')}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('comp',${rIdx},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('comp',${rIdx},null)">🗑️ 삭제</button>`:''}`:''; const _note=m.memo?`<div style="font-size:12px;color:var(--text2);background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:6px;padding:6px 10px;margin-bottom:6px">📝 ${_histEscHTML(m.memo)}</div>`:''; return (_memo||_note)?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" class="no-export">${_note}<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${_memo}</div></div>`:'';})()}
           </div>
         </div>`;
       });
@@ -811,7 +862,7 @@ function rHistUnivStat(){
   h+=`<div style="background:linear-gradient(135deg,${col}18 0%,${col}08 100%);border:2px solid ${col}55;border-radius:16px;padding:20px 22px;margin-bottom:22px;position:relative;overflow:hidden;">
     <div style="position:absolute;right:-18px;top:-18px;width:90px;height:90px;border-radius:50%;background:${col}12;pointer-events:none"></div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
-      <span class="ubadge clickable-univ" style="background:${col};font-size:15px;padding:6px 18px;border-radius:999px;box-shadow:0 2px 8px ${col}55;font-weight:900;letter-spacing:.3px" onclick="openUnivModal('${histUniv}')">${histUniv}</span>
+      <span class="ubadge clickable-univ" style="background:${col};font-size:15px;padding:6px 18px;border-radius:999px;box-shadow:0 2px 8px ${col}55;font-weight:900;letter-spacing:.3px" onclick="openUnivModal('${_histEscJS(histUniv)}')">${_histEscHTML(histUniv)}</span>
       <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:17px;color:${col};letter-spacing:-.3px">대전 통합 성적</span>
       <span style="margin-left:auto;background:${col};color:#fff;border-radius:999px;padding:4px 14px;font-size:13px;font-weight:800;box-shadow:0 1px 6px ${col}55">${totalAll}경기 · ${totalWR}%</span>
     </div>
@@ -836,8 +887,8 @@ function rHistUnivStat(){
     oppList.forEach(([opp,s])=>{
       const ot=s.w+s.l;const ow=ot?Math.round(s.w/ot*100):0;const oc=gc(opp);
       const barW=Math.round(s.w/ot*100);
-      h+=`<div style="background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:box-shadow .15s" onclick="openUnivModal('${opp}')">
-        <span class="ubadge" style="background:${oc};font-size:12px;padding:3px 10px;border-radius:999px;flex-shrink:0;min-width:60px;text-align:center">${opp}</span>
+      h+=`<div style="background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:box-shadow .15s" onclick="openUnivModal('${_histEscJS(opp)}')">
+        <span class="ubadge" style="background:${oc};font-size:12px;padding:3px 10px;border-radius:999px;flex-shrink:0;min-width:60px;text-align:center">${_histEscHTML(opp)}</span>
         <div style="flex:1;min-width:0">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
             <span style="font-size:12px;font-weight:800"><span style="color:var(--green)">${s.w}승</span> <span style="color:var(--red)">${s.l}패</span></span>
@@ -1019,6 +1070,12 @@ function _collectMatchTeamMembersAB(m){
 
 function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
   if(!arr.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
+  const _li = _histIsLoggedIn();
+  const _sub = _histIsSubAdmin();
+  const _sortDir = _histSortDir();
+  const _shareAdminOnly = (_histLsGet('su_share_admin_only', '0') === '1');
+  const _canShare = (!_shareAdminOnly || _li);
+  const _canEdit = (_li && !_sub);
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
   const _editMode = (mode==='civil') ? 'mini' : mode;
   // (정렬 보강) 티어대회 등 filtered 목록도 "입력 순서"가 아니라 날짜 기준으로 정렬
@@ -1050,7 +1107,15 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
   });
 
   function _renderItem(m){
-    const srcArr=mode==='mini'?miniM:mode==='univm'?univM:mode==='pro'?proM:mode==='tt'?ttM:ckM;
+    const srcArr=mode==='mini'
+      ? ((typeof miniM!=='undefined' && Array.isArray(miniM)) ? miniM : [])
+      : mode==='univm'
+      ? ((typeof univM!=='undefined' && Array.isArray(univM)) ? univM : [])
+      : mode==='pro'
+      ? ((typeof proM!=='undefined' && Array.isArray(proM)) ? proM : [])
+      : mode==='tt'
+      ? ((typeof ttM!=='undefined' && Array.isArray(ttM)) ? ttM : [])
+      : ((typeof ckM!=='undefined' && Array.isArray(ckM)) ? ckM : []);
     const i=srcArr.indexOf(m);
     const isCK=isCKmode;
     const _sideCols = mode==='ck' ? getFixedSideColors('ck') : mode==='pro' ? getFixedSideColors('pro') : getFixedSideColors('tt');
@@ -1105,9 +1170,9 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
                 mode:'${mode}',
                 idx:${i},
                 key:'${key}',
-                canShare:${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?'true':'false';})()},
-                canEdit:${(isLoggedIn && !isSubAdmin)?'true':'false'},
-                canDel:${(isLoggedIn && !isSubAdmin)?'true':'false'},
+                canShare:${_canShare?'true':'false'},
+                canEdit:${_canEdit?'true':'false'},
+                canDel:${_canEdit?'true':'false'},
                 canMove:${['mini','univm','comp','tt','ck','pro'].includes(String(mode||''))?'true':'false'}
               })">⋯</button>
           </div>
@@ -1116,12 +1181,12 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
           ${_sidePanelHTML.left}
           <div class="rec-sum-vs">
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-              <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.a}')">${(()=>{const n=isCK?'':m.a;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelA}</span>
+              <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${_histEscJS(isCK?'':m.a)}')">${(()=>{const n=isCK?'':m.a;const icons=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS)?UNIV_ICONS:(window.UNIV_ICONS||{});const cfg=(typeof univCfg!=='undefined'&&Array.isArray(univCfg))?univCfg:(Array.isArray(window.univCfg)?window.univCfg:[]);const url=icons[n]||((cfg.find(x=>x.name===n)||{}).icon||'');return url?`<img src="${typeof toHttpsUrl==='function'?toHttpsUrl(url):url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelA}</span>
               ${(_ab.a||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${ca}12;border:1px solid ${ca}40;color:${ca};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\\'")}', '${ca}', ${_aMemJson})">👥 ${(_ab.a||[]).length}명</button>`:''}
             </div>
             <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 4px;opacity:0.8">:</span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-              <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.b}')">${(()=>{const n=isCK?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelB}</span>
+              <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${_histEscJS(isCK?'':m.b)}')">${(()=>{const n=isCK?'':m.b;const icons=(typeof UNIV_ICONS!=='undefined'&&UNIV_ICONS)?UNIV_ICONS:(window.UNIV_ICONS||{});const cfg=(typeof univCfg!=='undefined'&&Array.isArray(univCfg))?univCfg:(Array.isArray(window.univCfg)?window.univCfg:[]);const url=icons[n]||((cfg.find(x=>x.name===n)||{}).icon||'');return url?`<img src="${typeof toHttpsUrl==='function'?toHttpsUrl(url):url}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelB}</span>
               ${(_ab.b||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${cb}12;border:1px solid ${cb}40;color:${cb};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${_bMemJson})">👥 ${(_ab.b||[]).length}명</button>`:''}
             </div>
 
@@ -1137,7 +1202,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
 
   // 날짜 정렬(기본: 최신순). 같은 날짜면 원래 배열 순서를 유지
   try{
-    const dir = (typeof recSortDir!=='undefined' && recSortDir==='asc') ? 'asc' : 'desc';
+    const dir = _sortDir;
     list.sort((x,y)=>{
       const dx=_normDateSort(x.m?.d||''), dy=_normDateSort(y.m?.d||'');
       const cmp = dir==='asc' ? dx.localeCompare(dy) : dy.localeCompare(dx);
@@ -1239,6 +1304,12 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const isCKmode=(mode==='ck'||mode==='pro'||mode==='tt');
   // civil 모드는 mini 배열을 공유하므로 editRef/저장 시 'mini' 키 사용
   const _editMode = (mode==='civil') ? 'mini' : mode;
+  const _li = _histIsLoggedIn();
+  const _sub = _histIsSubAdmin();
+  const _sortDir = _histSortDir();
+  const _shareAdminOnly = (_histLsGet('su_share_admin_only', '0') === '1');
+  const _canShare = (!_shareAdminOnly || _li);
+  const _canEdit = (_li && !_sub);
   // 날짜 정규화(정렬용): 2026-4-2 같이 0이 빠진 날짜가 있으면 문자열 정렬이 깨질 수 있음
   const _normDateSort = (d)=>{
     const s = String(d||'').trim();
@@ -1337,24 +1408,24 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   };
   filtered.sort((a,b)=>{
     const da=_normDateSort(a.m.d||''), db=_normDateSort(b.m.d||'');
-    const cmp=recSortDir==='asc'?da.localeCompare(db):db.localeCompare(da);
+    const cmp=_sortDir==='asc'?da.localeCompare(db):db.localeCompare(da);
     if(cmp!==0) return cmp;
     // 동일 날짜일 때: (1) 시간/생성시각 (2) 원본 인덱스
     const ta=_getMatchTs(a.m, a.i);
     const tb=_getMatchTs(b.m, b.i);
-    const cmp2 = recSortDir==='asc' ? (ta - tb) : (tb - ta);
+    const cmp2 = _sortDir==='asc' ? (ta - tb) : (tb - ta);
     if (cmp2 !== 0) return cmp2;
     // asc(오래된→최신): unshift 기준이라 i가 클수록 오래됨
-    return recSortDir==='asc' ? (b.i - a.i) : (a.i - b.i);
+    return _sortDir==='asc' ? (b.i - a.i) : (a.i - b.i);
   });
 
   // ── 날짜(일자) 빠른 선택: ASL 스타일 날짜 메뉴(설정: su_date_menu_style) ──
   // 컨텍스트별로 날짜 선택값을 저장하여(예: hist / tiertour) 서로 간섭하지 않게 함
-  const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
+  const _dateMenuStyle = (_histLsGet('su_date_menu_style', 'pill') || 'pill');
   const _datePickKey = `su_rec_date_pick_${context||'x'}_${mode}`;
-  const _pickedDate = (localStorage.getItem(_datePickKey) || '').trim();
+  const _pickedDate = (_histLsGet(_datePickKey, '') || '').trim();
   const _baseFiltered = filtered.slice(); // 메뉴/카운트는 원본(일자 선택 전) 기준
-  const _allDates = Array.from(new Set(_baseFiltered.map(x=>_normDateSort(x.m.d||'')).filter(Boolean))).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
+  const _allDates = Array.from(new Set(_baseFiltered.map(x=>_normDateSort(x.m.d||'')).filter(Boolean))).sort((a,b)=>_sortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
   if(_pickedDate && _allDates.includes(_pickedDate)){
     filtered = filtered.filter(x => _normDateSort(x.m.d||'') === _pickedDate);
   }
@@ -1436,7 +1507,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const curPage=histPage[pageKey];
   const paged=totalItems>pageSize?filtered.slice(curPage*pageSize,(curPage+1)*pageSize):filtered;
   // 일괄 이동 컨텍스트
-  const _canBulk=isLoggedIn;
+  const _canBulk=_li;
   const _bulkKey=(mode==='mini'&&histSub==='civil')?'civil':mode;
   const _bulkOn=_canBulk&&!!_bulkModes[_bulkKey];
   const _bulkDests=_bulkKey==='mini'?[{l:'⚔️ 시빌워',d:'civil'},{l:'🏟️ 대학대전',d:'univm'}]
@@ -1511,10 +1582,10 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
               mode:'${mode}',
               idx:${i},
               key:'${key}',
-              canShare:${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?'true':'false';})()},
-              canEdit:${(isLoggedIn && !isSubAdmin)?'true':'false'},
-              canDel:${(isLoggedIn && !isSubAdmin)?'true':'false'},
-              canMove:${(isLoggedIn && (mode==='mini'||mode==='civil'||mode==='univm'))?'true':'false'}
+              canShare:${_canShare?'true':'false'},
+              canEdit:${_canEdit?'true':'false'},
+              canDel:${_canEdit?'true':'false'},
+              canMove:${(_li && (mode==='mini'||mode==='civil'||mode==='univm'))?'true':'false'}
             })">⋯</button>
           </div>
         </div>
@@ -1550,7 +1621,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
           ${_sp2.left}
           <div class="rec-sum-vs" style="flex-wrap:wrap;align-items:center">
             <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
-              <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.a||''}')`:''}">${iconA?iconA.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelA}</span>
+              <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${_histEscJS(m.a||'')}')`:''}">${iconA?iconA.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelA}</span>
               ${aMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${aBtnColor}15,${aBtnColor}08);border:1.5px solid ${aBtnColor}40;color:${aBtnColor};font-weight:700;box-shadow:0 2px 8px ${aBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\\'")}', '${ca}', ${aMemJson})">
                 <span class="mem-ico">👥</span><span>${aMembers.length}명</span>
               </button>` : ''}
@@ -1563,7 +1634,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
               </div>
             </div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
-              <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${m.b||''}')`:''}">${iconB?iconB.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelB}</span>
+              <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="${!isCK?`openUnivModal('${_histEscJS(m.b||'')}')`:''}">${iconB?iconB.replace('width:18px;height:18px',`width:${_uiconPx}px;height:${_uiconPx}px`).replace('<img ','<img class="rec-uicon" '):''}${labelB}</span>
               ${bMembers.length ? `<button class="btn btn-xs rc-mem-btn" style="background:linear-gradient(135deg,${bBtnColor}15,${bBtnColor}08);border:1.5px solid ${bBtnColor}40;color:${bBtnColor};font-weight:700;box-shadow:0 2px 8px ${bBtnColor}20,0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${bMemJson})">
                 <span class="mem-ico">👥</span><span>${bMembers.length}명</span>
               </button>` : ''}
@@ -1575,7 +1646,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       </div>
       <div id="det-${key}" class="rec-detail-area">
         ${_regDet(key,{...m,_editRef:`${_editMode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin, i)}
-        ${(()=>{const _note=m.memo?`<div class="rec-note-box">📝 ${m.memo}</div>`:''; const _memo=isLoggedIn&&_rcMemoOn?`<div class="fbar merged-subbar no-export rec-detail-footer__actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">🗑️ 삭제</button>`:''}</div>`:''; return (_note||_memo)?`<div class="rec-detail-footer">${_note}${_memo}</div>`:'';})()}
+        ${(()=>{const _note=m.memo?`<div class="rec-note-box">📝 ${_histEscHTML(m.memo)}</div>`:''; const _memo=_li&&_rcMemoOn?`<div class="fbar merged-subbar no-export rec-detail-footer__actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${_histEscAttr(m.memo||'')}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">🗑️ 삭제</button>`:''}</div>`:''; return (_note||_memo)?`<div class="rec-detail-footer">${_note}${_memo}</div>`:'';})()}
       </div>
     </div>`;
   }
@@ -1584,7 +1655,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   const _days=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
   const _byDate={};
   paged.forEach(({m,i})=>{const k=_normDateSort(m.d||'')||'날짜 미정';if(!_byDate[k])_byDate[k]=[];_byDate[k].push({m,i});});
-  const _dateKeys=Object.keys(_byDate).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
+  const _dateKeys=Object.keys(_byDate).sort((a,b)=>_sortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
   let h=sortBar+`<div id="rec-list-${mode}">`;
   _dateKeys.forEach(dk=>{
     let _dkLabel=dk;
@@ -1667,8 +1738,8 @@ window._openShareFromDetReg = window._openShareFromDetReg || function(key){
         key,
         mode,
         idx:reg.idx,
-        canEdit:_personal && !!(isLoggedIn && !isSubAdmin),
-        canDel:_personal && !!(isLoggedIn && !isSubAdmin),
+        canEdit:_personal && !!(_histIsLoggedIn() && !_histIsSubAdmin()),
+        canDel:_personal && !!(_histIsLoggedIn() && !_histIsSubAdmin()),
         editFn:()=>openRE(mode, reg.idx),
         delFn:()=>delRec(mode, reg.idx)
       };
@@ -2682,13 +2753,13 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     const rL=pL?`<span class="rbadge r${pL.race}" style="font-size:10px">${pL.race}</span>`:'';
     const uW=pW?.univ?`<span class="ubadge" style="background:${wc};font-size:10px">${pW.univ}</span>`:'';
     const uL=pL?.univ?`<span class="ubadge" style="background:${lc};font-size:10px;opacity:.92">${pL.univ}</span>`:'';
-    const mapStr=m.map?`<span style="font-size:11px;color:var(--text3);white-space:nowrap">${m.map}</span>`:'';
-    const memoStr=m.memo?`<div style="font-size:11px;color:var(--gray-l);margin-top:4px">📝 ${m.memo}</div>`:'';
+    const mapStr=m.map?`<span style="font-size:11px;color:var(--text3);white-space:nowrap">${_histEscHTML(m.map)}</span>`:'';
+    const memoStr=m.memo?`<div style="font-size:11px;color:var(--gray-l);margin-top:4px">📝 ${_histEscHTML(m.memo)}</div>`:'';
     return `<div class="cmd-single-summary">
       <div class="cmd-single-summary__row">
-        <span class="cmd-single-name">${m.wName||''}</span>${rW}${uW}
+        <span class="cmd-single-name">${_histEscHTML(m.wName||'')}</span>${rW}${uW}
         <span class="cmd-single-vs">vs</span>
-        <span class="cmd-single-name cmd-single-name--lose">${m.lName||''}</span>${rL}${uL}
+        <span class="cmd-single-name cmd-single-name--lose">${_histEscHTML(m.lName||'')}</span>${rL}${uL}
         ${mapStr}
       </div>
       ${memoStr?`<div class="cmd-single-summary__memo">${memoStr}</div>`:''}
@@ -2741,7 +2812,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         // 경기 상세 카드(경기 기록 네모) 프로필 이미지: 1배(조금 더 크게)
         const photoA=pA?getPlayerPhotoHTML(pA.name,'40px','flex-shrink:0;border:2px solid '+sideBaseA+';box-shadow:0 1px 6px '+sideBaseA+'44'):'';
         const photoB=pB?getPlayerPhotoHTML(pB.name,'40px','flex-shrink:0;border:2px solid '+sideBaseB+';box-shadow:0 1px 6px '+sideBaseB+'44'):'';
-        const editBtn=isLoggedIn&&m._editRef?`<button class="btn btn-o btn-xs no-export cmd-edit-btn" style="margin-left:4px;flex-shrink:0" onclick="openGameEditModal('${m._editRef}',${si},${gi})">✏️</button>`:'';
+        const editBtn=_histIsLoggedIn()&&m._editRef?`<button class="btn btn-o btn-xs no-export cmd-edit-btn" style="margin-left:4px;flex-shrink:0" onclick="openGameEditModal('${m._editRef}',${si},${gi})">✏️</button>`:'';
 
         {
           // (대회 상세 팝업) 더 컴팩트/세련된 한 줄 카드 UI

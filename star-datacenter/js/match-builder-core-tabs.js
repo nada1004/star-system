@@ -12,6 +12,7 @@ function rInd(C,T){
   if(typeof indSub==='undefined') window.indSub = 'records';
   if(typeof recSortDir==='undefined') window.recSortDir = 'desc';
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : ((window.recSortDir==='asc'||window.recSortDir==='desc') ? window.recSortDir : 'desc');
   if(!_li && indSub==='input') indSub='records';
   const subOpts=(typeof applyTabLabels==='function') ? applyTabLabels('ind',[
     {id:'input',lbl:'📝 경기 입력',fn:`indSub='input';render()`},
@@ -25,8 +26,8 @@ function rInd(C,T){
   let h='';
   const extra = (indSub!=='input' && typeof buildYearMonthFilterControls==='function')
     ? (buildYearMonthFilterControls('ind', true)
-      + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+      + `<button class="pill ${_sortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="try{recSortDir='desc';}catch(e){};window.recSortDir='desc';render()">최신순 ↓</button>`
+      + `<button class="pill ${_sortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="try{recSortDir='asc';}catch(e){};window.recSortDir='asc';render()">오래된순 ↑</button>`)
     : '';
   h+=_buildMatchSubtabShell(indSub, subOpts, '_indFilterOpen', extra, 'ind');
   if(indSub==='input'&&_li){
@@ -94,6 +95,7 @@ function rGJ(C,T,proOnly,proInput){
   _gjProMode=_newProMode;
   T.innerText=proOnly?'🏅 프로리그 끝장전':'⚔️ 끝장전';
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : ((window.recSortDir==='asc'||window.recSortDir==='desc') ? window.recSortDir : 'desc');
   if(!_li && gjSub==='input') gjSub='records';
   const showInput=!proOnly||proInput;
   const subOpts = _gjCanInput()
@@ -104,8 +106,8 @@ function rGJ(C,T,proOnly,proInput){
   let h='';
   const extra = (gjSub!=='input' && typeof buildYearMonthFilterControls==='function')
     ? (buildYearMonthFilterControls('gj', true)
-      + `<button class="pill ${recSortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='desc';render()">최신순 ↓</button>`
-      + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
+      + `<button class="pill ${_sortDir==='desc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="try{recSortDir='desc';}catch(e){};window.recSortDir='desc';render()">최신순 ↓</button>`
+      + `<button class="pill ${_sortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="try{recSortDir='asc';}catch(e){};window.recSortDir='asc';render()">오래된순 ↑</button>`)
     : '';
   h+=_buildMatchSubtabShell(gjSub, _gjSubOpts, '_gjFilterOpen', extra, proOnly?'progj':'gj');
   if(gjSub==='input'&&_li&&showInput){
@@ -124,11 +126,15 @@ function deleteUnivFromRank(name, mode){
   const label = mode==='univm'?'대학대전':'미니대전';
   if(!confirm(`"${name}" 대학의 모든 ${label} 경기 기록을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) return;
   if(mode==='univm'){
-    if(typeof univM==='undefined' || !Array.isArray(univM)) return;
-    univM = univM.filter(m=>m.a!==name&&m.b!==name);
+    const _arr = (typeof univM!=='undefined' && Array.isArray(univM)) ? univM : (Array.isArray(window.univM) ? window.univM : []);
+    const next = _arr.filter(m=>m && m.a!==name && m.b!==name);
+    window.univM = next;
+    try{ univM = next; }catch(e){}
   } else {
-    if(typeof miniM==='undefined' || !Array.isArray(miniM)) return;
-    miniM = miniM.filter(m=>m.a!==name&&m.b!==name);
+    const _arr = (typeof miniM!=='undefined' && Array.isArray(miniM)) ? miniM : (Array.isArray(window.miniM) ? window.miniM : []);
+    const next = _arr.filter(m=>m && m.a!==name && m.b!==name);
+    window.miniM = next;
+    try{ miniM = next; }catch(e){}
   }
   save(); render();
 }

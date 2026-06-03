@@ -77,8 +77,9 @@ function _rememberStableIndGj(kind, arr){
 function _restoreStableIndGj(kind){
   try{
     if(kind === 'ind'){
-      if(Array.isArray(indM) && indM.length){
-        _rememberStableIndGj('ind', indM);
+      const _indArr = (typeof indM!=='undefined' && Array.isArray(indM)) ? indM : (Array.isArray(window.indM) ? window.indM : []);
+      if(Array.isArray(_indArr) && _indArr.length){
+        _rememberStableIndGj('ind', _indArr);
         return;
       }
       // (버그픽스) 삭제로 인해 indM이 빈 배열이 된 경우에는 복원하지 않음
@@ -88,13 +89,14 @@ function _restoreStableIndGj(kind){
       const fromLs = (typeof J==='function' ? (J('su_indm') || []) : []);
       const next = fromMem.length ? fromMem : (Array.isArray(fromLs) ? fromLs : []);
       if(Array.isArray(next) && next.length){
-        indM = next.slice();
-        try{ window.indM = indM; }catch(e){}
+        try{ window.indM = next.slice(); }catch(e){}
+        try{ indM = window.indM; }catch(e){}
       }
       return;
     }
-    if(Array.isArray(gjM) && gjM.length){
-      _rememberStableIndGj('gj', gjM);
+    const _gjArr = (typeof gjM!=='undefined' && Array.isArray(gjM)) ? gjM : (Array.isArray(window.gjM) ? window.gjM : []);
+    if(Array.isArray(_gjArr) && _gjArr.length){
+      _rememberStableIndGj('gj', _gjArr);
       return;
     }
     // (버그픽스) 삭제로 인해 gjM이 빈 배열이 된 경우에는 복원하지 않음
@@ -103,8 +105,8 @@ function _restoreStableIndGj(kind){
     const fromLs = (typeof J==='function' ? (J('su_gjm') || []) : []);
     const next = fromMem.length ? fromMem : (Array.isArray(fromLs) ? fromLs : []);
     if(Array.isArray(next) && next.length){
-      gjM = next.slice();
-      try{ window.gjM = gjM; }catch(e){}
+      try{ window.gjM = next.slice(); }catch(e){}
+      try{ gjM = window.gjM; }catch(e){}
     }
   }catch(e){}
 }
@@ -874,12 +876,17 @@ function _h2hCardBody(mode, s, p1wins, p2wins, winner, p1col, p2col, gridCols, i
 
 function indRecordsHTML(){
   _restoreStableIndGj('ind');
-  if(!indM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
-  _rememberStableIndGj('ind', indM);
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  const _players = (typeof players!=='undefined' && Array.isArray(players)) ? players : (Array.isArray(window.players) ? window.players : []);
+  const _indArr = (typeof indM!=='undefined' && Array.isArray(indM)) ? indM : (Array.isArray(window.indM) ? window.indM : []);
+  const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : ((window.recSortDir==='asc'||window.recSortDir==='desc') ? window.recSortDir : 'desc');
+  const _lsGet = (k,d='')=>{ try{ const v=localStorage.getItem(k); return v==null?d:v; }catch(e){ return d; } };
+  if(!_indArr.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+  _rememberStableIndGj('ind', _indArr);
   const sessions=[];
   const sidPairMap=new Map();
   let lastKey=null, lastSess=null;
-  indM.forEach((m)=>{
+  _indArr.forEach((m)=>{
     const pair=[m.wName,m.lName].sort();
     const k = m.sid ? `${m.sid}|${pair[0]}|${pair[1]}` : `${m.d||''}|${pair[0]}|${pair[1]}`;
     if(k!==lastKey||!lastSess){
@@ -895,13 +902,13 @@ function indRecordsHTML(){
   });
   sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
   let filteredSess=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
-  filteredSess.sort((a,b)=>recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
+  filteredSess.sort((a,b)=>_sortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
 
-  const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
+  const _dateMenuStyle = (_lsGet('su_date_menu_style','pill') || 'pill');
   const _datePickKey = 'su_rec_date_pick_hist_ind';
-  const _pickedDate = (localStorage.getItem(_datePickKey) || '').trim();
+  const _pickedDate = (_lsGet(_datePickKey,'') || '').trim();
   const _baseSess = filteredSess.slice();
-  const _allDates = Array.from(new Set(_baseSess.map(s=>String(s.d||'').trim()).filter(Boolean))).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
+  const _allDates = Array.from(new Set(_baseSess.map(s=>String(s.d||'').trim()).filter(Boolean))).sort((a,b)=>_sortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
   if(_pickedDate && _allDates.includes(_pickedDate)){
     filteredSess = filteredSess.filter(s => String(s.d||'').trim() === _pickedDate);
   }
@@ -909,7 +916,7 @@ function indRecordsHTML(){
     if(_dateMenuStyle!=='asl' || !_allDates.length) return '';
     const daysS=['일','월','화','수','목','금','토'];
     const _pLine = (pName)=>{
-      const pObj=players.find(x=>x.name===pName)||{};
+      const pObj=_players.find(x=>x && x.name===pName)||{};
       const univ=pObj.univ||'';
       const col=univ?gc(univ):'#64748b';
       return `<span style="display:inline-flex;align-items:center;gap:4px;min-width:0">
@@ -927,7 +934,7 @@ function indRecordsHTML(){
     let h=`<div class="no-export" style="margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
       <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">`;
     const _onAll = !_pickedDate;
-    h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','');histPage['ind']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
+    h+=`<button type="button" onclick="try{localStorage.setItem('${_datePickKey}','');}catch(e){};histPage['ind']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
       <div style="font-weight:1000;font-size:12px;color:${_onAll?'var(--blue)':'var(--text2)'}">전체</div>
       <div style="margin-top:6px;font-size:10px;color:var(--gray-l)">날짜 필터 해제</div>
     </button>`;
@@ -937,7 +944,7 @@ function indRecordsHTML(){
       const dayS=_baseSess.filter(s=>String(s.d||'').trim()===d0);
       const prev=dayS.length?`<div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">${dayS.slice(0,2).map(_mini).join('')}</div>`:'';
       const on=(_pickedDate===d0);
-      h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','${d0}');histPage['ind']=0;render()" style="flex-shrink:0;text-align:left;min-width:170px;max-width:280px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
+      h+=`<button type="button" onclick="try{localStorage.setItem('${_datePickKey}','${d0}');}catch(e){};histPage['ind']=0;render()" style="flex-shrink:0;text-align:left;min-width:170px;max-width:280px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-weight:1000;font-size:12px;color:${on?'var(--blue)':'var(--text2)'}">${label}</span>
           <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${dayS.length?`세션 ${dayS.length}`:''}</span>
@@ -955,8 +962,8 @@ function indRecordsHTML(){
   if(histPage['ind']>=totalPages) histPage['ind']=Math.max(0,totalPages-1);
   const cur=histPage['ind'];
   const slice=total>pageSize?filteredSess.slice(cur*pageSize,(cur+1)*pageSize):filteredSess;
-  const _indBulkOn=isLoggedIn&&!!_bulkModes['ind'];
-  let h=isLoggedIn?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
+  const _indBulkOn=_li&&!!_bulkModes['ind'];
+  let h=_li?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
     <button onclick="toggleBulkMode('ind')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_indBulkOn?'#dc2626':'var(--border2)'};background:${_indBulkOn?'#fff1f2':'var(--surface)'};color:${_indBulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_indBulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
   </div>`:'';
   h+=_dateMenuHTML;
@@ -985,7 +992,7 @@ function indRecordsHTML(){
     // ids 배열(예: ['id1','id2'])을 그대로 넣고, 런타임에 JSON.stringify로 문자열로 변환해서 전달한다.
     // (버그픽스) 비로그인자에게는 공유카드만 표시, 수정/삭제/이동은 관리자(로그인)만 볼 수 있음
     actionOpts.push(`{l:'📷 공유카드',fn:()=>openIndShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}',JSON.stringify(${idsJson}))}`);
-    if(isLoggedIn){
+    if(_li){
       actionOpts.push(`{l:'✏️ 수정',fn:()=>openIndSessionEdit('${_indSessKey}')}`);
       actionOpts.push(`{l:'↗ 이동',fn:()=>{window._pendingMoveIds=${idsJson};openMoveIndPop(document.getElementById('_indActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}')||document.body,window._pendingMoveIds,'ind');}}`);
       actionOpts.push(`{l:'🗑 삭제',fn:()=>deleteIndSession(${idsJson})}`);
@@ -993,10 +1000,10 @@ function indRecordsHTML(){
     const _indActionBtnId = `_indActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}`;
     const actionBtn=`<button id="${_indActionBtnId}" class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openIndSessionActionPop(this,[${actionOpts.join(',')}])">⋯</button>`;
     const bulkCbInd=_indBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="ind" data-bids="${idsJson}" onchange="_indBulkCountUpdate('ind')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
-    const p1univ=players.find(x=>x.name===s.p1)?.univ||'';
-    const p2univ=players.find(x=>x.name===s.p2)?.univ||'';
-    const p1race=players.find(x=>x.name===s.p1)?.race||'';
-    const p2race=players.find(x=>x.name===s.p2)?.race||'';
+    const p1univ=_players.find(x=>x && x.name===s.p1)?.univ||'';
+    const p2univ=_players.find(x=>x && x.name===s.p2)?.univ||'';
+    const p1race=_players.find(x=>x && x.name===s.p1)?.race||'';
+    const p2race=_players.find(x=>x && x.name===s.p2)?.race||'';
     const p1col=p1univ?gc(p1univ):'#378ADD';
     const p2col=p2univ?gc(p2univ):'#1D9E75';
     const _indP1Win = p1wins > p2wins;
@@ -1039,9 +1046,14 @@ function indRecordsHTML(){
 function gjRecordsHTML(proOnly){
   _restoreStableIndGj('gj');
   window._gjSessCache = window._gjSessCache || {};
-  const _gjSrc=proOnly?gjM.filter(m=>m._proLabel):gjM.filter(m=>!m._proLabel);
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  const _players = (typeof players!=='undefined' && Array.isArray(players)) ? players : (Array.isArray(window.players) ? window.players : []);
+  const _gjAll = (typeof gjM!=='undefined' && Array.isArray(gjM)) ? gjM : (Array.isArray(window.gjM) ? window.gjM : []);
+  const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : ((window.recSortDir==='asc'||window.recSortDir==='desc') ? window.recSortDir : 'desc');
+  const _lsGet = (k,d='')=>{ try{ const v=localStorage.getItem(k); return v==null?d:v; }catch(e){ return d; } };
+  const _gjSrc=proOnly?_gjAll.filter(m=>m && m._proLabel):_gjAll.filter(m=>m && !m._proLabel);
   if(!_gjSrc.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
-  _rememberStableIndGj('gj', gjM);
+  _rememberStableIndGj('gj', _gjAll);
   const sessions=[];
   const sidPairMap=new Map();
   let lastKey=null, lastSess=null;
@@ -1061,13 +1073,13 @@ function gjRecordsHTML(proOnly){
   });
   sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
   let filteredSessGj=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
-  filteredSessGj.sort((a,b)=>recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
+  filteredSessGj.sort((a,b)=>_sortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
 
-  const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
+  const _dateMenuStyle = (_lsGet('su_date_menu_style','pill') || 'pill');
   const _datePickKey = proOnly ? 'su_rec_date_pick_hist_progj' : 'su_rec_date_pick_hist_gj';
-  const _pickedDate = (localStorage.getItem(_datePickKey) || '').trim();
+  const _pickedDate = (_lsGet(_datePickKey,'') || '').trim();
   const _baseSess = filteredSessGj.slice();
-  const _allDates = Array.from(new Set(_baseSess.map(s=>String(s.d||'').trim()).filter(Boolean))).sort((a,b)=>b.localeCompare(a));
+  const _allDates = Array.from(new Set(_baseSess.map(s=>String(s.d||'').trim()).filter(Boolean))).sort((a,b)=>_sortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
   if(_pickedDate && _allDates.includes(_pickedDate)){
     filteredSessGj = filteredSessGj.filter(s => String(s.d||'').trim() === _pickedDate);
   }
@@ -1075,7 +1087,7 @@ function gjRecordsHTML(proOnly){
     if(_dateMenuStyle!=='asl' || !_allDates.length) return '';
     const daysS=['일','월','화','수','목','금','토'];
     const _pLine = (pName)=>{
-      const pObj=players.find(x=>x.name===pName)||{};
+      const pObj=_players.find(x=>x && x.name===pName)||{};
       const univ=pObj.univ||'';
       const col=univ?gc(univ):'#64748b';
       return `<span style="display:inline-flex;align-items:center;gap:4px;min-width:0">
@@ -1093,7 +1105,7 @@ function gjRecordsHTML(proOnly){
     let h=`<div class="no-export" style="margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
       <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">`;
     const _onAll = !_pickedDate;
-    h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','');histPage['gj']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
+    h+=`<button type="button" onclick="try{localStorage.setItem('${_datePickKey}','');}catch(e){};histPage['gj']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
       <div style="font-weight:1000;font-size:12px;color:${_onAll?'var(--blue)':'var(--text2)'}">전체</div>
       <div style="margin-top:6px;font-size:10px;color:var(--gray-l)">날짜 필터 해제</div>
     </button>`;
@@ -1103,7 +1115,7 @@ function gjRecordsHTML(proOnly){
       const dayS=_baseSess.filter(s=>String(s.d||'').trim()===d0);
       const prev=dayS.length?`<div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">${dayS.slice(0,2).map(_mini).join('')}</div>`:'';
       const on=(_pickedDate===d0);
-      h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','${d0}');histPage['gj']=0;render()" style="flex-shrink:0;text-align:left;min-width:170px;max-width:280px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
+      h+=`<button type="button" onclick="try{localStorage.setItem('${_datePickKey}','${d0}');}catch(e){};histPage['gj']=0;render()" style="flex-shrink:0;text-align:left;min-width:170px;max-width:280px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-weight:1000;font-size:12px;color:${on?'var(--blue)':'var(--text2)'}">${label}</span>
           <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${dayS.length?`세션 ${dayS.length}`:''}</span>
@@ -1122,11 +1134,11 @@ function gjRecordsHTML(proOnly){
   const cur=histPage['gj'];
   const slice=total>pageSize?filteredSessGj.slice(cur*pageSize,(cur+1)*pageSize):filteredSessGj;
   const _gjBulkKey=proOnly?'pro_gj':'gj';
-  const _gjBulkOn=isLoggedIn&&!!_bulkModes[_gjBulkKey];
+  const _gjBulkOn=_li&&!!_bulkModes[_gjBulkKey];
   const _gjBulkDests=proOnly
     ?[{l:'⚔️ 일반 끝장전',d:'ungj'},{l:'🎮 개인전',d:'ind'}]
     :[{l:'🎮 개인전',d:'ind'},{l:'🏅 프로리그 끝장전',d:'progj'}];
-  let h=isLoggedIn?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
+  let h=_li?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
     <button onclick="toggleBulkMode('${_gjBulkKey}')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_gjBulkOn?'#dc2626':'var(--border2)'};background:${_gjBulkOn?'#fff1f2':'var(--surface)'};color:${_gjBulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_gjBulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
   </div>`:'';
   h+=_dateMenuHTML;
@@ -1154,7 +1166,7 @@ function gjRecordsHTML(proOnly){
     const gjActionOpts = [];
     // (버그픽스) 비로그인자에게는 공유카드만 표시, 수정/삭제/이동은 관리자(로그인)만 볼 수 있음
     gjActionOpts.push(`{l:'🎴 공유카드',fn:()=>openGJShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}',{proOnly:${proOnly?'true':'false'}})}`);
-    if(isLoggedIn){
+    if(_li){
       gjActionOpts.push(`{l:'✏️ 수정',fn:()=>openGJSessionEdit('${_gjSessKey}')}`);
       gjActionOpts.push(`{l:'↗ 이동',fn:()=>{window._pendingMoveIds=${idsJson};openMoveIndPop(document.getElementById('${_gjActionBtnId}')||document.body,window._pendingMoveIds,'${_gjMoveCtx}');}}`);
       gjActionOpts.push(`{l:'🗑 삭제',fn:()=>deleteGjSession(${idsJson})}`);
@@ -1164,10 +1176,10 @@ function gjRecordsHTML(proOnly){
     // ✅ 버그픽스: _gjSessKey와 동일한 키로 캐시 저장 (수정 버튼과 일치)
     window._gjSessCache[_gjSessKey] = {...s, _proOnly: !!proOnly};
 
-    const gj_p1univ=players.find(x=>x.name===s.p1)?.univ||'';
-    const gj_p2univ=players.find(x=>x.name===s.p2)?.univ||'';
-    const gj_p1race=players.find(x=>x.name===s.p1)?.race||'';
-    const gj_p2race=players.find(x=>x.name===s.p2)?.race||'';
+    const gj_p1univ=_players.find(x=>x && x.name===s.p1)?.univ||'';
+    const gj_p2univ=_players.find(x=>x && x.name===s.p2)?.univ||'';
+    const gj_p1race=_players.find(x=>x && x.name===s.p1)?.race||'';
+    const gj_p2race=_players.find(x=>x && x.name===s.p2)?.race||'';
     const _gjP1Win = p1wins > p2wins;
     const _gjP2Win = p2wins > p1wins;
     const _gjP1Col = gj_p1univ?gc(gj_p1univ):'#378ADD';

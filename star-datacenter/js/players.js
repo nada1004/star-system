@@ -121,17 +121,52 @@ function rTotal(C,T){
     C.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">${msg}</div><div class="empty-state-desc">새로고침 후 다시 시도해주세요.</div></div>`;
     return;
   }
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  const localStorage = (function(){
+    try{
+      const ls = window.localStorage;
+      if(!ls) throw new Error('no localStorage');
+      const k='__su_ls_test__';
+      ls.setItem(k,'1');
+      ls.removeItem(k);
+      return ls;
+    }catch(e){
+      return { getItem: ()=>null, setItem: ()=>{}, removeItem: ()=>{} };
+    }
+  })();
+  const _escHTML = (typeof escHTML==='function')
+    ? escHTML
+    : (s)=>String(s??'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const _escAttr = (typeof escAttr==='function')
+    ? escAttr
+    : (s)=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+  const _escJS = (typeof escJS==='function')
+    ? escJS
+    : (s)=>String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+  const _tiers = (typeof TIERS!=='undefined' && Array.isArray(TIERS)) ? TIERS : (Array.isArray(window.TIERS) ? window.TIERS : []);
+  const _tierIdx = (t)=>{ const i=_tiers.indexOf(t); return i>=0?i:999; };
+  const _getRoleOrder = (typeof getRoleOrder==='function') ? getRoleOrder : ()=>99;
+  const _mainRoles = (typeof MAIN_ROLES!=='undefined' && Array.isArray(MAIN_ROLES)) ? MAIN_ROLES : [];
+  const _getTierLabel = (typeof getTierLabel==='function') ? getTierLabel : (t)=>String(t||'');
+  const _getTierBadge = (typeof getTierBadge==='function') ? getTierBadge : (t)=>`<span>${_escHTML(String(t||''))}</span>`;
+  const _getRoleBadgeHTML = (typeof getRoleBadgeHTML==='function') ? getRoleBadgeHTML : ()=>'';
+  const _genderIcon = (typeof genderIcon==='function') ? genderIcon : ()=>'';
+  const _getStatusIconHTML = (typeof getStatusIconHTML==='function') ? getStatusIconHTML : ()=>'';
+  const _adminBtn = (typeof adminBtn==='function') ? adminBtn : (h)=>h;
+  const _gUI = (typeof gUI==='function') ? gUI : ()=>'';
+  const _eloDefault = (typeof ELO_DEFAULT!=='undefined') ? ELO_DEFAULT : 1500;
+  const _rname = (typeof RNAME!=='undefined' && RNAME) ? RNAME : {};
   // 랭킹 스냅샷 업데이트 (하루 1회)
   if(typeof updateRankSnapshot === 'function') updateRankSnapshot();
   const raceOpts=['전체','T','Z','P','N'];
-  const _showBulk=isLoggedIn&&_bulkEditMode;
-  const _ncols=(isLoggedIn?11:10)+(_showBulk?1:0);
+  const _showBulk=_li&&_bulkEditMode;
+  const _ncols=(_li?11:10)+(_showBulk?1:0);
   // (모바일/태블릿) 검색창이 커서 버튼들이 2줄로 밀리는 문제 방지
   // - 한 줄 유지 + 가로 스크롤(드래그)로 접근
   let filterBar=`<div class="fbar utilbar utilbar--scroll" style="margin-bottom:16px;flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-    ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
+    ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':_rname[r]||r}</button>`).join('')}
     <span style="color:var(--border2);align-self:center">│</span>
-    <input id="total-search" type="text" value="${(totalSearch||'').replace(/"/g,'&quot;')}" placeholder="🔍 이름/대학/티어/직책 + (테/저/프, 남/여) 검색..."
+    <input id="total-search" type="text" value="${_escAttr(totalSearch||'')}" placeholder="🔍 이름/대학/티어/직책 + (테/저/프, 남/여) 검색..."
       oncompositionstart="window._tsComp=true"
       oncompositionend="window._tsComp=false;totalSearch=this.value;totalApplySearchFilter()"
       oninput="totalSearch=this.value;if(!window._tsComp)totalApplySearchFilter()"
@@ -140,11 +175,11 @@ function rTotal(C,T){
     <button class="pill ${totalHideNoRecord?'on':''}" style="${totalHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
     <span style="color:var(--border2);align-self:center">│</span>
     <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode=(totalViewMode==='gallery'?'table':'gallery');_bulkEditMode=false;render()" title="${totalViewMode==='gallery'?'목록으로 돌아가기':'갤러리 뷰'}">▦ 갤러리</button>
-    ${totalViewMode==='table'?(isLoggedIn?`<button class="pill ${_bulkEditMode?'on':''}" onclick="toggleBulkEditMode()" style="${_bulkEditMode?'background:#3b82f6;border-color:#3b82f6;color:#fff':''}">☑ 일괄 수정</button>`:''):''}
-    ${totalViewMode==='table'?(isLoggedIn?`<button class="pill" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
+    ${totalViewMode==='table'?(_li?`<button class="pill ${_bulkEditMode?'on':''}" onclick="toggleBulkEditMode()" style="${_bulkEditMode?'background:#3b82f6;border-color:#3b82f6;color:#fff':''}">☑ 일괄 수정</button>`:''):''}
+    ${totalViewMode==='table'?(_li?`<button class="pill" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
     ${_showBulk&&totalViewMode==='table'?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
       <button id="bulk-edit-apply-btn" onclick="openBulkEditModal()" style="padding:4px 12px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer;display:${_bulkEditSelected.size>0?'inline-flex':'none'};align-items:center;gap:4px">✏️ <span id="bulk-edit-cnt">${_bulkEditSelected.size}</span>명 수정</button>
-      <input type="text" value="${(_bulkEditSearch||'').replace(/"/g,'&quot;')}" placeholder="선택 모드 내 검색..."
+      <input type="text" value="${_escAttr(_bulkEditSearch||'')}" placeholder="선택 모드 내 검색..."
         oncompositionstart="window._tsComp2=true"
         oncompositionend="window._tsComp2=false;_bulkEditSearch=this.value;bulkApplySearchFilter()"
         oninput="_bulkEditSearch=this.value;if(!window._tsComp2)bulkApplySearchFilter()"
@@ -157,7 +192,7 @@ function rTotal(C,T){
     <col style="width:52px"><col style="width:80px"><col style="width:60px"><col style="width:220px"><col class="col-hide-mobile" style="width:50px">
     <col style="width:52px"><col style="width:52px">
     <col style="width:70px"><col style="width:80px"><col style="width:60px">
-    ${isLoggedIn?'<col style="width:70px">':''}
+    ${_li?'<col style="width:70px">':''}
   </colgroup><thead><tr>
     ${_showBulk?`<th style="text-align:center;padding:8px 4px"><input type="checkbox" id="bulk-check-all" onchange="bulkEditToggleAll(this.checked)" style="cursor:pointer"></th>`:''}
     <th style="text-align:center;white-space:nowrap;padding:8px 6px">순위</th>
@@ -170,7 +205,7 @@ function rTotal(C,T){
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">포인트</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">ELO</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">활동</th>
-    ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
+    ${_li?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
   </tr></thead><tbody>`;
 
   // 전체 순위 맵 (points 기준)
@@ -205,8 +240,8 @@ function rTotal(C,T){
   }
   
   // University section for StarCraft streamers (exclude general)
-  _getUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
-    const _isHiddenUniv=isLoggedIn&&u.hidden;
+  _getUnivs().filter(u=>_li||!u.hidden).forEach(u=>{
+    const _isHiddenUniv=_li&&u.hidden;
     let up=_univScMap.get(u.name) || [];
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
     if(totalHideNoRecord) up=up.filter(p=>(Number(p.win||0)+Number(p.loss||0))>0);
@@ -257,8 +292,9 @@ function rTotal(C,T){
     let _tdBgSize = 'auto';
     let _tdBgPos = 'center center';
     if (_hdrBgImg) {
+      const _hdrBgImgJS = _escJS(_hdrBgImg);
       // 이미지가 있으면 그라데이션 위에 이미지 오버레이
-      _tdBgStyle = `linear-gradient(rgba(0,0,0,${1 - _hdrBgOpacity}), rgba(0,0,0,${1 - _hdrBgOpacity})), url('${_hdrBgImg.replace(/'/g, "\\'")}'), ${_gradientStyle || u.color}`;
+      _tdBgStyle = `linear-gradient(rgba(0,0,0,${1 - _hdrBgOpacity}), rgba(0,0,0,${1 - _hdrBgOpacity})), url('${_hdrBgImgJS}'), ${_gradientStyle || u.color}`;
       _tdBgSize = `${_hdrBgSize}, ${_hdrBgSize}, auto`;
       _tdBgPos = `${_hdrBgPos}, ${_hdrBgPos}, center center`;
     }
@@ -268,20 +304,23 @@ function rTotal(C,T){
     let _textHtml = '';
     if (_hdrText) {
       const _textBaseStyle = `font-size:${_hdrTextSize}px;color:${_hdrTextColor};font-weight:900;white-space:nowrap;`;
+      const _hdrTextHTML = _escHTML(_hdrText);
       if (_hdrTextPos === 'left') {
-        _textHtml = `<span style="${_textBaseStyle}margin-right:8px;">${_hdrText}</span>`;
+        _textHtml = `<span style="${_textBaseStyle}margin-right:8px;">${_hdrTextHTML}</span>`;
       } else if (_hdrTextPos === 'center') {
-        _textHtml = `<span style="${_textBaseStyle}position:absolute;left:50%;transform:translateX(-50%);">${_hdrText}</span>`;
+        _textHtml = `<span style="${_textBaseStyle}position:absolute;left:50%;transform:translateX(-50%);">${_hdrTextHTML}</span>`;
       } else {
         // right (default)
-        _textHtml = `<span style="${_textBaseStyle}margin-left:auto;">${_hdrText}</span>`;
+        _textHtml = `<span style="${_textBaseStyle}margin-left:auto;">${_hdrTextHTML}</span>`;
       }
     }
+    const _uJS = _escJS(u.name);
+    const _uHTML = _escHTML(u.name);
     tableHTML+=`<tr class="ugrp" data-univ-header="${u.name}" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${_ncols}" style="${_textStyle}background:${_tdBgStyle};background-size:${_tdBgSize};background-position:${_tdBgPos};background-repeat:no-repeat;position:relative;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
         <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
           ${_hdrTextPos === 'left' ? _textHtml : ''}
-          <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="background:${u.color};color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;font-weight:700">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','26px'):'26px'))}${u.name}</span>
+          <span class="clickable-univ" onclick="openUnivModal('${_uJS}')" style="background:${u.color};color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;font-weight:700">${_gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','26px'):'26px'))}${_uHTML}</span>
           ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
           ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;font-weight:700">🚫 방문자 숨김</span>`:''}
         </div>
@@ -291,10 +330,10 @@ function rTotal(C,T){
       </div>
     </td></tr>`;
     // 스트리머 탭: 항상 직책→티어→포인트 순 (현황판 수동 순서 무시)
-    const sorted = [...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||((b.points||0)-(a.points||0)));
+    const sorted = [...up].sort((a,b)=>_getRoleOrder(a.role)-_getRoleOrder(b.role)||_tierIdx(a.tier)-_tierIdx(b.tier)||((b.points||0)-(a.points||0)));
     // 직책자와 일반 선수 분리
-    const _rolePl = sorted.filter(p=>p.role&&MAIN_ROLES.includes(p.role));
-    const _normalPl = sorted.filter(p=>!p.role||!MAIN_ROLES.includes(p.role));
+    const _rolePl = sorted.filter(p=>p && p.role && _mainRoles.includes(p.role));
+    const _normalPl = sorted.filter(p=>p && (!p.role || !_mainRoles.includes(p.role)));
     const _displayList = _rolePl.length ? [..._rolePl, null, ..._normalPl] : _normalPl; // null = 구분자
     let lt='';
     let _inRoleSection = _rolePl.length > 0;
@@ -306,33 +345,31 @@ function rTotal(C,T){
         if(_normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}">▷ 일반 스트리머 (${_normalPl.length}명)</td></tr>`;
         return;
       }
-      if(!_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';tableHTML+=`<tr class="tgrp"><td colspan="${_ncols}">▷ ${getTierLabel(p.tier||'미정')}</td></tr>`;}
+      if(!_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';tableHTML+=`<tr class="tgrp"><td colspan="${_ncols}">▷ ${_getTierLabel(p.tier||'미정')}</td></tr>`;}
       const win = Number(p.win||0);
       const loss = Number(p.loss||0);
       const games = win + loss;
       const points = Number(p.points||0);
       const wr=games?Math.round(win/games*100):0;
-      const elo = Number(p.elo||ELO_DEFAULT);
+      const elo = Number(p.elo||_eloDefault);
       const _pRank = _rankMap[p.name];
       const _pChange = typeof getRankChangeBadge==='function' ? getRankChangeBadge(p.name, _pRank) : '';
-      const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-      const _pAttr=(typeof escAttr==='function')
-        ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
-        : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+      const _pSafe=_escJS(p.name);
+      const _pAttr=_escAttr(String(p.name||''));
       const _q = `${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       if(typeof p.photo==='string' && p.photo.trim()) _visiblePhotoUrls.push(p.photo.trim());
-      tableHTML+=`<tr data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
+      tableHTML+=`<tr data-player-row="1" data-univ="${u.name}" data-q="${_escAttr(_q)}" data-r="${p.race||''}" data-g="${p.gender||''}">
         ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
         <td style="text-align:center;white-space:nowrap;padding:5px 4px">
           <div style="font-size:11px;font-weight:800;color:var(--text3);line-height:1.2">${_pRank||'-'}</div>
           <div>${_pChange}</div>
         </td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
+        <td style="text-align:center;white-space:nowrap;padding:7px 10px">${_getTierBadge(p.tier)}</td>
         <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span style="display:inline-flex;align-items:center;gap:8px">
             ${p.photo?`<span data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세" style="width:40px;height:40px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border);background:var(--border2);font-size:11px;font-weight:900;color:#64748b;position:relative;cursor:pointer">${p.race||'?'}<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span style="display:inline-block;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
-            <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" data-tp-action="open-player" data-tp-player="${_pAttr}" style="cursor:pointer">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
+            <span style="font-weight:600">${p.role?`${_getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" data-tp-action="open-player" data-tp-player="${_pAttr}" style="cursor:pointer">${_escHTML(p.name)}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${_genderIcon(p.gender)}${_getStatusIconHTML(p.name)}</span>
           </span>
         </td>
         <td class="col-hide-mobile wt" style="text-align:center;white-space:nowrap;padding:7px 10px">${win}</td>
@@ -341,7 +378,7 @@ function rTotal(C,T){
           ${games?wr+'%':'-'}${games?`<br><span style="font-size:9px;color:var(--gray-l);font-weight:400">${games}전</span>`:''}
         </td>
         <td class="col-hide-mobile ${pC(points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${pS(points)}</td>
-        <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:12px;color:${elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${elo}</td>
+        <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:12px;color:${elo>=_eloDefault?'#2563eb':'#dc2626'}">${elo}</td>
         <td class="col-hide-mobile" style="text-align:center;padding:7px 4px">${(()=>{
           const _today2=new Date().toISOString().slice(0,10);
           const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
@@ -352,7 +389,7 @@ function rTotal(C,T){
           if(lastD>=_30ago2) return `<span style="font-size:9px;font-weight:800;color:#f59e0b" title="활동 중 (30일 이내)">🟡</span>`;
           return '<span style="font-size:9px;font-weight:800;color:#9ca3af" title="비활성 (30일 이상)">⚫</span>';
         })()}</td>
-        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
+        ${_li?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${_adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;
     });
   });
@@ -380,6 +417,29 @@ function _buildGalleryView(rankMap){
       : '스트리머 데이터를 불러올 수 없습니다.';
     return `<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">${msg}</div><div class="empty-state-desc">새로고침 후 다시 시도해주세요.</div></div>`;
   }
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  const localStorage = (function(){
+    try{
+      const ls = window.localStorage;
+      if(!ls) throw new Error('no localStorage');
+      const k='__su_ls_test__';
+      ls.setItem(k,'1');
+      ls.removeItem(k);
+      return ls;
+    }catch(e){
+      return { getItem: ()=>null, setItem: ()=>{}, removeItem: ()=>{} };
+    }
+  })();
+  const _escHTML = (typeof escHTML==='function')
+    ? escHTML
+    : (s)=>String(s??'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const _escJS = (typeof escJS==='function')
+    ? escJS
+    : (s)=>String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+  const _tiers = (typeof TIERS!=='undefined' && Array.isArray(TIERS)) ? TIERS : (Array.isArray(window.TIERS) ? window.TIERS : []);
+  const _tierIdx = (t)=>{ const i=_tiers.indexOf(t); return i>=0?i:999; };
+  const _getRoleOrder = (typeof getRoleOrder==='function') ? getRoleOrder : ()=>99;
+  const _gUI = (typeof gUI==='function') ? gUI : ()=>'';
   const RACE_CLR={T:'#2563eb',Z:'#7c3aed',P:'#c2410c',N:'#64748b'};
   let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:4px 0">';
   let anyShown=false;
@@ -393,13 +453,13 @@ function _buildGalleryView(rankMap){
     if(arr) arr.push(p);
     else _univScActiveMap.set(u, [p]);
   }
-  _getUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
+  _getUnivs().filter(u=>_li||!u.hidden).forEach(u=>{
     let up=_univScActiveMap.get(u.name) || [];
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
     if(totalHideNoRecord) up=up.filter(p=>(Number(p.win||0)+Number(p.loss||0))>0);
     if(!up.length) return;
     anyShown=true;
-    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    const sorted=[...up].sort((a,b)=>_getRoleOrder(a.role)-_getRoleOrder(b.role)||_tierIdx(a.tier)-_tierIdx(b.tier)||(b.points||0)-(a.points||0));
     // 대학 헤더: 대학별 설정 적용
     const _gHdrBgImg = u.streamerHeaderBgImg || '';
     const _gHdrBgSize = u.streamerHeaderBgSize || 'cover';
@@ -444,8 +504,9 @@ function _buildGalleryView(rankMap){
     let _gFinalBgSize = 'auto';
     let _gFinalBgPos = 'center center';
     if (_gHdrBgImg) {
+      const _gHdrBgImgJS = _escJS(_gHdrBgImg);
       // 이미지가 있으면 그라데이션 위에 이미지 오버레이 (오버레이 블렌딩 사용)
-      _gFinalBgStyle = `linear-gradient(rgba(0,0,0,${1 - _gHdrBgOpacity}), rgba(0,0,0,${1 - _gHdrBgOpacity})), url('${_gHdrBgImg.replace(/'/g, "\\'")}'), ${_gGradientStyle || (u.color || '#6366f1')}`;
+      _gFinalBgStyle = `linear-gradient(rgba(0,0,0,${1 - _gHdrBgOpacity}), rgba(0,0,0,${1 - _gHdrBgOpacity})), url('${_gHdrBgImgJS}'), ${_gGradientStyle || (u.color || '#6366f1')}`;
       _gFinalBgSize = `${_gHdrBgSize}, ${_gHdrBgSize}, auto`;
       _gFinalBgPos = `${_gHdrBgPos}, ${_gHdrBgPos}, center center`;
     }
@@ -453,13 +514,14 @@ function _buildGalleryView(rankMap){
     let _gTextHtml = '';
     if (_gHdrText) {
       const _gTextBaseStyle = `font-size:${_gHdrTextSize}px;color:${_gHdrTextColor};font-weight:900;white-space:nowrap;`;
+      const _gHdrTextHTML = _escHTML(_gHdrText);
       if (_gHdrTextPos === 'left') {
-        _gTextHtml = `<span style="${_gTextBaseStyle}margin-right:8px;">${_gHdrText}</span>`;
+        _gTextHtml = `<span style="${_gTextBaseStyle}margin-right:8px;">${_gHdrTextHTML}</span>`;
       } else if (_gHdrTextPos === 'center') {
-        _gTextHtml = `<span style="${_gTextBaseStyle}position:absolute;left:50%;transform:translateX(-50%);">${_gHdrText}</span>`;
+        _gTextHtml = `<span style="${_gTextBaseStyle}position:absolute;left:50%;transform:translateX(-50%);">${_gHdrTextHTML}</span>`;
       } else {
         // right (default)
-        _gTextHtml = `<span style="${_gTextBaseStyle}margin-left:auto;">${_gHdrText}</span>`;
+        _gTextHtml = `<span style="${_gTextBaseStyle}margin-left:auto;">${_gHdrTextHTML}</span>`;
       }
     }
     html+=`<div data-gallery-univ-header="${u.name}" style="grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:10px 12px 10px;background:${_gFinalBgStyle};background-size:${_gFinalBgSize};background-position:${_gFinalBgPos};background-repeat:no-repeat;border-radius:12px;margin-top:6px;position:relative;">
@@ -652,7 +714,11 @@ function bulkDeleteSelected(){
 }
 
 function openMergePlayersModal(){
-  if(!isLoggedIn) return;
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li) return;
+  const _escAttr = (typeof escAttr==='function')
+    ? escAttr
+    : (s)=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
   const modalId='_mergePlayersModal';
   let modal=document.getElementById(modalId);
   if(modal) modal.remove();
@@ -668,7 +734,7 @@ function openMergePlayersModal(){
     <div style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:12px">
       A(원본)를 B(대상)로 합칩니다. 모든 기록/대진/현황판에서 A 이름을 B로 치환합니다.
     </div>
-    <datalist id="_mergePlayersList">${list.map(n=>`<option value="${escAttr(n)}"></option>`).join('')}</datalist>
+    <datalist id="_mergePlayersList">${list.map(n=>`<option value="${_escAttr(n)}"></option>`).join('')}</datalist>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <div style="flex:1;min-width:220px">
         <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:4px">A (원본)</div>

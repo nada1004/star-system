@@ -36,6 +36,12 @@ function univMRankHTML(){
   if(typeof getAllUnivs!=='function') return `<div style="padding:30px;text-align:center;color:var(--gray-l)">데이터 로딩 중...</div>`;
   const _univM = (typeof univM!=='undefined' && Array.isArray(univM)) ? univM : [];
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  const _escJS = (typeof escJS==='function')
+    ? escJS
+    : (s)=>String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+  const _escHTML = (typeof escHTML==='function')
+    ? escHTML
+    : (s)=>String(s??'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const sc={};
   getAllUnivs().forEach(u=>{sc[u.name]={w:0,l:0,pts:0,total:0};});
   const _univFiltered=typeof passDateFilter==='function'?_univM.filter(m=>passDateFilter(m.d||'')):_univM;
@@ -53,9 +59,9 @@ function univMRankHTML(){
   sorted.forEach(([name,s],i)=>{
     const col=gc(name);let rnkHTML;
     if(i===0) rnkHTML=`<span class="rk1">1등</span>`;else if(i===1) rnkHTML=`<span class="rk2">2등</span>`;else if(i===2) rnkHTML=`<span class="rk3">3등</span>`;else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
-    const sn=(typeof escJS==='function') ? escJS(name) : String(name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+    const sn=_escJS(name);
     const delBtn=_li?`<td class="no-export"><button onclick="deleteUnivFromRank('${sn}','univm')" style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;color:#dc2626;font-size:11px;cursor:pointer" title="이 대학 대학대전 기록 삭제">🗑</button></td>`:'';
-    h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn}</tr>`;
+    h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${_escHTML(name)}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn}</tr>`;
   });
   h+=`</tbody></table>`;
   if(!window._rankSort)window._rankSort={};
@@ -95,7 +101,7 @@ function univMRankHTML(){
     const col=gc(p.univ);
     const _ri=_cp_um*_PAGE_um+i;
     let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
-    h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')">${getPlayerPhotoHTML(p.name,'22px')}<span style="font-weight:700">${p.name}</span></span></td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col};font-size:10px" onclick="openUnivModal('${escJS(p.univ||'')}')">${p.univ||'-'}</span></td><td class="wt" style="font-weight:800">${p.w}</td><td class="lt" style="font-weight:800">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
+    h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer" onclick="openPlayerModal('${_escJS(p.name)}')">${getPlayerPhotoHTML(p.name,'22px')}<span style="font-weight:700">${_escHTML(p.name)}</span></span></td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col};font-size:10px" onclick="openUnivModal('${_escJS(p.univ||'')}')">${_escHTML(p.univ||'-')}</span></td><td class="wt" style="font-weight:800">${p.w}</td><td class="lt" style="font-weight:800">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
   });
   const _pageNav_um=_tot_um>_PAGE_um?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
   <button class="btn btn-sm" ${_cp_um===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK_um}']=${_cp_um-1};render()">← 이전</button>

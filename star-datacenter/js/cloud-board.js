@@ -61,7 +61,7 @@ async function fbCloudSave(opts) {
     players: _pNoPhoto,
     playerPhotos: _pPhotoMap,
     univCfg, maps, tourD, miniM, univM, comps, ckM,
-    compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, indM, gjM,
+    compNames, curComp, proM, proTourneys, tiers: ((typeof TIERS!=='undefined' && Array.isArray(TIERS)) ? TIERS : (Array.isArray(window.TIERS)?window.TIERS:[])), tourneys, indM, gjM,
     // 🎯 티어대회 기록(대전기록 탭/스트리머 history 동기화용)
     ttM: (typeof ttM!=='undefined' ? ttM : []),
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
@@ -350,6 +350,28 @@ window.cloudLoad = async function(){
 
 
 /* ════ 현황판 탭 rBoard ════ */
+function _brdLsGet(k, d=''){
+  try{
+    const v = localStorage.getItem(k);
+    return (v==null) ? d : v;
+  }catch(e){
+    return d;
+  }
+}
+function _brdLsSet(k, v){
+  try{ localStorage.setItem(k, v); return true; }catch(e){ return false; }
+}
+function _brdGetTiers(){
+  try{
+    if(typeof TIERS!=='undefined' && Array.isArray(TIERS)) return TIERS;
+  }catch(e){}
+  return Array.isArray(window.TIERS) ? window.TIERS : [];
+}
+function _brdTierIndex(t){
+  const arr = _brdGetTiers();
+  const i = arr.indexOf(t||'');
+  return i>=0 ? i : (arr.length + 99);
+}
 // 현황판 전용 photo 캐시: setBrdPhoto 저장 시 갱신, 렌더링 시 참조
 var _brdPhotoCache = (function(){
   try{
@@ -388,19 +410,32 @@ let boardCardShape='circle'; // 포토카드 이미지 모양: 'circle' | 'squar
 let boardCollapsed = new Set(); // 접힌 대학 이름 집합
 // 칩 프로필 이미지 설정 (localStorage에서 복원)
 // NOTE: 전역(인라인 onclick) 접근 호환을 위해 var 사용 (window 프로퍼티로 노출)
-var boardChipPhotoShape = localStorage.getItem('su_bcp_shape') || 'circle'; // 'circle' | 'square'
-var boardChipPhotoSize  = parseInt(localStorage.getItem('su_bcp_size') || '26', 10); // px
-var boardChipLayoutScale = parseInt(localStorage.getItem('su_bcp_layout') || '100', 10); // percent
+var boardChipPhotoShape = _brdLsGet('su_bcp_shape', 'circle') || 'circle'; // 'circle' | 'square'
+var boardChipPhotoSize  = parseInt(_brdLsGet('su_bcp_size', '26') || '26', 10); // px
+var boardChipLayoutScale = parseInt(_brdLsGet('su_bcp_layout', '100') || '100', 10); // percent
 function saveBoardChipPhotoSettings(){
-  localStorage.setItem('su_bcp_shape', boardChipPhotoShape);
-  localStorage.setItem('su_bcp_size', String(boardChipPhotoSize));
-  localStorage.setItem('su_bcp_layout', String(boardChipLayoutScale||100));
+  _brdLsSet('su_bcp_shape', boardChipPhotoShape);
+  _brdLsSet('su_bcp_size', String(boardChipPhotoSize));
+  _brdLsSet('su_bcp_layout', String(boardChipLayoutScale||100));
   try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
   // 스트리머 프로필 이미지 공통 CSS 변수 동기화
   try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
 }
 // 현황판 선수 순서: {univ: [name, name, ...]}
-let boardPlayerOrder = J('su_bpo') || {};
+let boardPlayerOrder = (function(){
+  try{
+    if(typeof J === 'function'){
+      const v = J('su_bpo');
+      if(v && typeof v === 'object') return v;
+    }
+    const raw = _brdLsGet('su_bpo', '');
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && typeof parsed === 'object') return parsed;
+    }
+  }catch(e){}
+  return {};
+})();
 
 function _findBrdCardByUniv(univName, root){
   try{
@@ -416,11 +451,13 @@ function _findBrdCardByUniv(univName, root){
 }
 
 function _getBoardUnivs(){
-  const univs = getAllUnivs();
-  if(!boardOrder.length) return univs;
+  if(typeof getAllUnivs !== 'function') return [];
+  const univs = getAllUnivs() || [];
+  const _bo = (typeof boardOrder!=='undefined' && Array.isArray(boardOrder)) ? boardOrder : [];
+  if(!_bo.length) return univs;
   const ordered = [];
   const seen = new Set();
-  boardOrder.forEach(name => { const u = univs.find(x=>x.name===name); if(u&&!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
+  _bo.forEach(name => { const u = univs.find(x=>x.name===name); if(u&&!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
   univs.forEach(u => { if(!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
   return ordered;
 }
@@ -560,13 +597,13 @@ function _getBoardPlayers(univName, includeRetired=false){
   if(!order.length){
     // 무소속: 티어 → 포인트 순
     if(univName==='무소속'){
-      return [...univPlayers].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
+      return [...univPlayers].sort((a,b)=>_brdTierIndex(a.tier)-_brdTierIndex(b.tier)||b.points-a.points);
     }
     // 기본: MAIN_ROLES → 티어 → 포인트
     return [...univPlayers].sort((a,b)=>{
       const ra=getRoleOrder(a.role),rb=getRoleOrder(b.role);
       if(ra!==rb)return ra-rb;
-      return TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points;
+      return _brdTierIndex(a.tier)-_brdTierIndex(b.tier)||b.points-a.points;
     });
   }
   const sorted = [];
@@ -738,6 +775,9 @@ function _bindBoardBgAutoResize(){
 
 function rBoard(C,T){
   T.textContent='📊 현황판';
+  const _tiers = _brdGetTiers();
+  const _getTierBtnColor = (typeof getTierBtnColor==='function') ? getTierBtnColor : ()=>'#64748b';
+  const _getTierBtnTextColor = (typeof getTierBtnTextColor==='function') ? getTierBtnTextColor : ()=>'#fff';
   const univs=_getBoardUnivs();
   const _canManage=_boardCanManage();
   const visUnivs=(_canManage?univs:univs.filter(u=>!u.hidden)).filter(u=>!u.dissolved);
@@ -757,7 +797,7 @@ function rBoard(C,T){
     <span style="font-size:11px;font-weight:800;color:var(--text2)">👥 ${_brdAllVis.length}명</span>
     <span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>
     <span style="font-size:11px;font-weight:800;color:var(--text2)">🏫 ${visUnivs.length}개 대학</span>
-    ${TIERS.filter(t=>_brdTierCts[t]).length?`<span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_brdTierCts[t]).map(t=>`<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;background:${getTierBtnColor(t)||'#64748b'};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_brdTierCts[t]}</span>`).join('')}`:''}
+    ${_tiers.filter(t=>_brdTierCts[t]).length?`<span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>${_tiers.filter(t=>_brdTierCts[t]).map(t=>`<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;background:${_getTierBtnColor(t)||'#64748b'};color:${_getTierBtnTextColor(t)||'#fff'}">${t} ${_brdTierCts[t]}</span>`).join('')}`:''}
   </div>`;
   let h=`
   <style>
@@ -857,11 +897,19 @@ function rBoard(C,T){
 
 function buildUnivBoardCard(u, forExport){
   if(!u)return'';
+  const _tiers = _brdGetTiers();
+  const _mainRoles = (typeof MAIN_ROLES!=='undefined' && Array.isArray(MAIN_ROLES)) ? MAIN_ROLES : [];
+  const _roleColors = (typeof ROLE_COLORS!=='undefined' && ROLE_COLORS) ? ROLE_COLORS : {};
+  const _roleIcons = (typeof ROLE_ICONS!=='undefined' && ROLE_ICONS) ? ROLE_ICONS : {};
+  const _getTierBtnColor = (typeof getTierBtnColor==='function') ? getTierBtnColor : ()=>'#64748b';
+  const _getTierBtnTextColor = (typeof getTierBtnTextColor==='function') ? getTierBtnTextColor : ()=>'#fff';
   const uNameJs = (typeof escJS==='function')
     ? escJS(u.name)
     : String(u.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
   const col=gc(u.name);
-  const iconUrl=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';
+  const _univIcons = (typeof UNIV_ICONS!=='undefined' && UNIV_ICONS) ? UNIV_ICONS : (window.UNIV_ICONS||{});
+  const _univCfg = (typeof univCfg!=='undefined' && Array.isArray(univCfg)) ? univCfg : (Array.isArray(window.univCfg)?window.univCfg:[]);
+  const iconUrl=_univIcons[u.name]||((_univCfg.find(x=>x.name===u.name)||{}).icon)||'';
   const sorted=_getBoardPlayers(u.name);
   if(!sorted.length&&!forExport){
     // 선수 없는 대학도 빈 카드로 표시
@@ -889,8 +937,8 @@ function buildUnivBoardCard(u, forExport){
   // 티어별 칩 레이아웃 빌더 (무소속 + forExport 시 모든 대학에 적용)
   const buildChipLayout=(isWide)=>{
     // 직급자와 일반 선수 분리
-    const rolePlayers = sorted.filter(p=>p.role&&MAIN_ROLES.includes(p.role));
-    const normalPlayers = sorted.filter(p=>!p.role||!MAIN_ROLES.includes(p.role));
+    const rolePlayers = sorted.filter(p=>p && p.role && _mainRoles.includes(p.role));
+    const normalPlayers = sorted.filter(p=>p && (!p.role || !_mainRoles.includes(p.role)));
 
     const tierMap={};
     normalPlayers.forEach(p=>{
@@ -898,8 +946,8 @@ function buildUnivBoardCard(u, forExport){
       if(!tierMap[t])tierMap[t]=[];
       tierMap[t].push(p);
     });
-    const tierOrder=TIERS.filter(t=>tierMap[t]);
-    if(tierMap['기타']&&!TIERS.includes('기타'))tierOrder.push('기타');
+    const tierOrder=_tiers.filter(t=>tierMap[t]);
+    if(tierMap['기타']&&!_tiers.includes('기타'))tierOrder.push('기타');
 
     const buildPlayerChip=(p, chipIdx)=>{
       const pNameJs = (typeof escJS==='function')
@@ -908,15 +956,15 @@ function buildUnivBoardCard(u, forExport){
       const pNameHtml = (typeof window.escHTML==='function') ? window.escHTML(p && p.name) : String(p && p.name || '');
       const pRoleHtml = (typeof window.escHTML==='function') ? window.escHTML(p && p.role) : String(p && p.role || '');
       const rc=RACE_CFG[p.race]||{bg:'#f1f5f9',col:'#475569',txt:p.race||'?'};
-      const isMain=p.role&&MAIN_ROLES.includes(p.role);
-      const rCol=ROLE_COLORS[p.role]||'';
-      const rIcon=ROLE_ICONS[p.role]||'';
+      const isMain=p.role&&_mainRoles.includes(p.role);
+      const rCol=_roleColors[p.role]||'';
+      const rIcon=_roleIcons[p.role]||'';
       const photoSrcChip = _getBrdPhoto(p);
       // ── 포토카드 뷰 (화면 + 이미지저장 공통) ──
       if (boardCardView) {
         const rcBg = rc.col || col;
-        const cardTierCol = p.tier ? (getTierBtnColor(p.tier) || '#64748b') : null;
-        const cardTierText = p.tier ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
+        const cardTierCol = p.tier ? (_getTierBtnColor(p.tier) || '#64748b') : null;
+        const cardTierText = p.tier ? (_getTierBtnTextColor(p.tier) || '#fff') : '#fff';
         const rTxtCard = rc.txt||p.race||'?';
         const imgBorderRadius = boardCardShape === 'square' ? '8px' : '10px';
         const imgInner = photoSrcChip
@@ -1022,14 +1070,14 @@ function buildUnivBoardCard(u, forExport){
 
     // 직급자 섹션
     // 직책별 개별 행 (MAIN_ROLES 순서대로 각 역할 따로 표시)
-    const roleRowsArr = MAIN_ROLES
+    const roleRowsArr = _mainRoles
       .map(role => rolePlayers.filter(p => p.role === role))
       .filter(group => group.length > 0);
     const roleSection = roleRowsArr.length > 0
       ? roleRowsArr.map(group => {
           const role = group[0].role;
-          const rIcon = ROLE_ICONS[role] || '';
-          const rCol = ROLE_COLORS[role] || col;
+          const rIcon = _roleIcons[role] || '';
+          const rCol = _roleColors[role] || col;
           return `<div style="margin-bottom:6px;padding:6px 8px 8px;border-radius:10px;background:${hexToRgba(col,.1)};border:1.5px solid ${hexToRgba(col,.25)}">
             <div style="font-size:10px;font-weight:900;color:#fff;padding:2px 9px;margin-bottom:4px;background:${rCol};border-radius:5px;display:inline-block;line-height:1.6">${rIcon}${role}</div>
             <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${group.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
@@ -1040,17 +1088,17 @@ function buildUnivBoardCard(u, forExport){
     // 무소속: 티어 레이블 포함 flat 리스트
     let tierRows='', allRows='';
     if(u.name==='무소속'&&!forExport){
-      const tierSorted=[...sorted].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
+      const tierSorted=[...sorted].sort((a,b)=>_brdTierIndex(a.tier)-_brdTierIndex(b.tier)||b.points-a.points);
       const chipIdxMapElo={};
       tierSorted.forEach((p,i)=>{ chipIdxMapElo[p.name]=i; });
       // 티어별 그룹핑하여 레이블 표시
       const freeTierMap={};
       tierSorted.forEach(p=>{ const t=p.tier||'기타'; if(!freeTierMap[t])freeTierMap[t]=[]; freeTierMap[t].push(p); });
-      const freeTierOrder=[...TIERS.filter(t=>freeTierMap[t]),...(freeTierMap['기타']?['기타']:[])];
+      const freeTierOrder=[..._tiers.filter(t=>freeTierMap[t]),...(freeTierMap['기타']?['기타']:[])];
       tierRows=freeTierOrder.map(tier=>{
         const ps=freeTierMap[tier];
-        const tColor=getTierBtnColor(tier)||col;
-        const tText=getTierBtnTextColor(tier)||'#fff';
+        const tColor=_getTierBtnColor(tier)||col;
+        const tText=_getTierBtnTextColor(tier)||'#fff';
         return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
           <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${toPastel(tColor,Math.max(0,(50-b2LabelAlpha)*0.005))}!important;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
           <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${ps.map(p=>buildPlayerChip(p, chipIdxMapElo[p.name]??0)).join('')}</div>
@@ -1060,8 +1108,8 @@ function buildUnivBoardCard(u, forExport){
     } else {
       tierRows=tierOrder.map((tier,tidx)=>{
         const ps=tierMap[tier];
-        const tColor = getTierBtnColor(tier) || col;
-        const tText = getTierBtnTextColor(tier) || '#fff';
+        const tColor = _getTierBtnColor(tier) || col;
+        const tText = _getTierBtnTextColor(tier) || '#fff';
         return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
           <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${toPastel(tColor,Math.max(0,(50-b2LabelAlpha)*0.005))}!important;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
           <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${ps.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
@@ -1234,9 +1282,10 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
     : String(univName||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
   const pNameHtml = (typeof window.escHTML==='function') ? window.escHTML(playerName) : String(playerName||'');
   const uNameHtml = (typeof window.escHTML==='function') ? window.escHTML(univName) : String(univName||'');
-  const _tierIdxChip = TIERS.indexOf(p.tier||'미정');
-  const _prevTierChip = _tierIdxChip > 0 ? TIERS[_tierIdxChip-1] : null;
-  const _nextTierChip = _tierIdxChip < TIERS.length-1 ? TIERS[_tierIdxChip+1] : null;
+  const _tiers = _brdGetTiers();
+  const _tierIdxChip = _tiers.indexOf(p.tier||'미정');
+  const _prevTierChip = _tierIdxChip > 0 ? _tiers[_tierIdxChip-1] : null;
+  const _nextTierChip = (_tierIdxChip >= 0 && _tierIdxChip < _tiers.length-1) ? _tiers[_tierIdxChip+1] : null;
 
   popup.innerHTML = `
     <div class="brd-move-popup-title">👤 ${pNameHtml} <span style="font-size:10px;font-weight:400">(${uNameHtml})</span></div>
@@ -1363,9 +1412,10 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
   const pNameHtml = (typeof window.escHTML==='function') ? window.escHTML(playerName) : String(playerName||'');
   const uNameHtml = (typeof window.escHTML==='function') ? window.escHTML(univName) : String(univName||'');
   const _curIcon = getStatusIcon(playerName);
-  const _tierIdx = TIERS.indexOf(p.tier||'미정');
-  const _prevTier = _tierIdx > 0 ? TIERS[_tierIdx-1] : null;
-  const _nextTier = _tierIdx < TIERS.length-1 ? TIERS[_tierIdx+1] : null;
+  const _tiers = _brdGetTiers();
+  const _tierIdx = _tiers.indexOf(p.tier||'미정');
+  const _prevTier = _tierIdx > 0 ? _tiers[_tierIdx-1] : null;
+  const _nextTier = (_tierIdx >= 0 && _tierIdx < _tiers.length-1) ? _tiers[_tierIdx+1] : null;
   popup.innerHTML = `
     <div style="padding:8px 10px 6px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:6px">
       <div style="font-size:12px;font-weight:800;color:var(--text)">👤 ${pNameHtml} <span style="font-size:10px;font-weight:500;color:var(--text3)">(${uNameHtml})</span></div>
