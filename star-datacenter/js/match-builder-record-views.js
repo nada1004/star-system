@@ -711,6 +711,130 @@ function _h2hPosterCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
   </div>`;
 }
 
+// ──────────────────────────────────────────────────────────────
+// 배틀(battle) 카드: ⚔️ 대결 모드 — 사선 분할선 + 컬러 에너지 스트라이프
+// su_h2h_card_mode = 'battle'
+// ──────────────────────────────────────────────────────────────
+function _h2hBattleCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
+  const p1 = players.find(x=>x.name===s.p1)||{};
+  const p2 = players.find(x=>x.name===s.p2)||{};
+  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
+  const h = isMb ? 108 : 126;
+  const p1pos = _h2hPlayerBgPos(s.p1);
+  const p2pos = _h2hPlayerBgPos(s.p2);
+  const loser1 = !win1 && win2, loser2 = !win2 && win1;
+  const totalGames = p1wins + p2wins;
+  const barW1 = totalGames > 0 ? Math.round((p1wins / totalGames) * 100) : 50;
+  const diag = isMb ? 28 : 36;
+
+  const av = (pName, col)=>{
+    const p = players.find(x=>x.name===pName)||{};
+    const sz = isMb ? 40 : 48;
+    if(p.photo) return `<div style="width:${sz}px;height:${sz}px;border-radius:10px;overflow:hidden;border:2.5px solid rgba(255,255,255,.55);box-shadow:0 0 0 2px ${col}66,0 6px 18px rgba(0,0,0,.28);flex-shrink:0"><img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover"></div>`;
+    return `<div style="width:${sz}px;height:${sz}px;border-radius:10px;background:${col}33;border:2.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?17:20}px;color:rgba(255,255,255,.9);flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
+  };
+
+  return `<div style="position:relative;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
+    <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr">
+      <div style="background:linear-gradient(135deg,${p1col},${p1col}cc,${p1col}88);${loser1?'filter:grayscale(.6) brightness(.82);':''}"></div>
+      <div style="background:linear-gradient(225deg,${p2col},${p2col}cc,${p2col}88);${loser2?'filter:grayscale(.6) brightness(.82);':''}"></div>
+    </div>
+    <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" preserveAspectRatio="none" viewBox="0 0 400 ${h}">
+      <polygon points="${200-diag},0 ${200+diag},0 ${200+diag},${h} ${200-diag},${h}" fill="rgba(0,0,0,.30)"/>
+      <line x1="${200-diag}" y1="0" x2="${200-diag}" y2="${h}" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+      <line x1="${200+diag}" y1="0" x2="${200+diag}" y2="${h}" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+    </svg>
+    <div style="position:absolute;top:0;left:0;right:0;height:${isMb?4:5}px;display:flex">
+      <div style="height:100%;background:${p1col};width:${barW1}%;box-shadow:0 0 8px ${p1col}88"></div>
+      <div style="height:100%;background:${p2col};flex:1;box-shadow:0 0 8px ${p2col}88"></div>
+    </div>
+    <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:${isMb?'12px 10px':'14px 14px'}">
+      <div style="display:flex;align-items:center;gap:${isMb?7:9}px;min-width:0">
+        ${av(s.p1, p1col)}
+        <div style="min-width:0">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 6px rgba(0,0,0,.5)">${s.p1}</div>
+          <div style="font-size:${isMb?9:10}px;color:rgba(255,255,255,.75);font-weight:800">${p1.univ||''}</div>
+          ${win1?`<div style="margin-top:3px;font-size:9px;font-weight:900;color:#fff;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:1px 7px;display:inline-block">👑 승</div>`:''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${isMb?3:4}px;min-width:${isMb?68:82}px">
+        <div style="font-size:${isMb?9:10}px;font-weight:900;letter-spacing:2.5px;color:rgba(255,255,255,.6)">VS</div>
+        <div style="display:flex;align-items:center;gap:0;font-size:${isMb?28:36}px;font-weight:1000;letter-spacing:-2px;line-height:1">
+          <span style="color:#fff;text-shadow:0 0 18px ${win1?p1col+'cc':'rgba(255,255,255,.3)'}">${p1wins}</span>
+          <span style="font-size:${isMb?14:17}px;color:rgba(255,255,255,.45);font-weight:900;margin:0 5px">:</span>
+          <span style="color:#fff;text-shadow:0 0 18px ${win2?p2col+'cc':'rgba(255,255,255,.3)'}">${p2wins}</span>
+        </div>
+        ${(win1||win2)?`<div style="font-size:9px;font-weight:900;color:rgba(255,255,255,.55);background:rgba(255,255,255,.12);border-radius:99px;padding:1px 8px;white-space:nowrap">${win1?s.p1:s.p2}</div>`:
+        `<div style="font-size:9px;font-weight:900;color:rgba(255,255,255,.4)">무승부</div>`}
+      </div>
+      <div style="display:flex;align-items:center;gap:${isMb?7:9}px;justify-content:flex-end;min-width:0">
+        <div style="min-width:0;text-align:right">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 6px rgba(0,0,0,.5)">${s.p2}</div>
+          <div style="font-size:${isMb?9:10}px;color:rgba(255,255,255,.75);font-weight:800">${p2.univ||''}</div>
+          ${win2?`<div style="margin-top:3px;font-size:9px;font-weight:900;color:#fff;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:1px 7px;display:inline-block">👑 승</div>`:''}
+        </div>
+        ${av(s.p2, p2col)}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ──────────────────────────────────────────────────────────────
+// 네온(neon) 카드: 형광 테두리 + 다크 배경 대결 스타일
+// su_h2h_card_mode = 'neon'
+// ──────────────────────────────────────────────────────────────
+function _h2hNeonCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
+  const p1 = players.find(x=>x.name===s.p1)||{};
+  const p2 = players.find(x=>x.name===s.p2)||{};
+  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
+  const h = isMb ? 96 : 112;
+  const totalGames = p1wins + p2wins;
+  const barW1 = totalGames > 0 ? Math.round((p1wins / totalGames) * 100) : 50;
+
+  const av = (pName, col)=>{
+    const p = players.find(x=>x.name===pName)||{};
+    const sz = isMb ? 36 : 42;
+    if(p.photo) return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;overflow:hidden;border:2px solid ${col};box-shadow:0 0 12px ${col}99,0 0 4px ${col}66;flex-shrink:0"><img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover"></div>`;
+    return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${col}22;border:2px solid ${col};box-shadow:0 0 12px ${col}88;display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?15:17}px;color:${col};flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
+  };
+
+  return `<div style="position:relative;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0;background:linear-gradient(135deg,#0a0f1e,#0f172a,#0a0f1e)">
+    <div style="position:absolute;top:-20%;left:-10%;width:55%;height:140%;background:radial-gradient(ellipse,${p1col}22 0%,transparent 70%);pointer-events:none"></div>
+    <div style="position:absolute;top:-20%;right:-10%;width:55%;height:140%;background:radial-gradient(ellipse,${p2col}22 0%,transparent 70%);pointer-events:none"></div>
+    <div style="position:absolute;bottom:0;left:0;right:0;height:${isMb?3:4}px;background:#111827">
+      <div style="height:100%;background:linear-gradient(90deg,${p1col} ${barW1}%,${p2col} ${barW1}%);box-shadow:0 0 8px ${win1?p1col:p2col}88"></div>
+    </div>
+    <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:${isMb?'12px 10px':'14px 14px'}">
+      <div style="display:flex;align-items:center;gap:${isMb?7:9}px;min-width:0">
+        ${av(s.p1, win1?p1col:'#334155')}
+        <div style="min-width:0">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win1?p1col:'#94a3b8'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${win1?`text-shadow:0 0 12px ${p1col}88;`:''}">${s.p1}</div>
+          <div style="font-size:${isMb?9:10}px;color:#475569;font-weight:800">${p1.univ||''}</div>
+          ${win1?`<div style="margin-top:3px;font-size:9px;font-weight:900;color:${p1col};text-shadow:0 0 8px ${p1col}">⚡ 승리</div>`:''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:${isMb?3:4}px;min-width:${isMb?70:84}px">
+        <div style="width:${isMb?36:44}px;height:${isMb?36:44}px;border-radius:50%;background:#0f172a;border:2px solid rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center">
+          <span style="font-size:${isMb?10:12}px;font-weight:900;color:rgba(255,255,255,.5);letter-spacing:1px">VS</span>
+        </div>
+        <div style="display:flex;align-items:center;font-size:${isMb?26:32}px;font-weight:1000;letter-spacing:-2px;line-height:1">
+          <span style="color:${win1?p1col:'#64748b'};${win1?`text-shadow:0 0 20px ${p1col}99;`:''}">${p1wins}</span>
+          <span style="font-size:${isMb?13:15}px;color:#334155;font-weight:900;margin:0 5px">:</span>
+          <span style="color:${win2?p2col:'#64748b'};${win2?`text-shadow:0 0 20px ${p2col}99;`:''}">${p2wins}</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:${isMb?7:9}px;justify-content:flex-end;min-width:0">
+        <div style="min-width:0;text-align:right">
+          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win2?p2col:'#94a3b8'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${win2?`text-shadow:0 0 12px ${p2col}88;`:''}">${s.p2}</div>
+          <div style="font-size:${isMb?9:10}px;color:#475569;font-weight:800">${p2.univ||''}</div>
+          ${win2?`<div style="margin-top:3px;font-size:9px;font-weight:900;color:${p2col};text-shadow:0 0 8px ${p2col}">⚡ 승리</div>`:''}
+        </div>
+        ${av(s.p2, win2?p2col:'#334155')}
+      </div>
+    </div>
+  </div>`;
+}
+
 // 카드 모드별 본문 렌더링 디스패처
 function _h2hCardBody(mode, s, p1wins, p2wins, winner, p1col, p2col, gridCols, isMb, scorePad, scoreGap, bulkCb, p1bgPanel, p2bgPanel, scoreColP1, scoreColP2){
   if(mode === 'banner') return _h2hBannerCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
@@ -727,6 +851,8 @@ function _h2hCardBody(mode, s, p1wins, p2wins, winner, p1col, p2col, gridCols, i
   if(mode === 'ribbon') return _h2hRibbonCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
   if(mode === 'grid') return _h2hGridCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
   if(mode === 'poster') return _h2hPosterCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
+  if(mode === 'battle') return _h2hBattleCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
+  if(mode === 'neon') return _h2hNeonCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
   // 기본: panel 모드
   const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
   const scoreFs = isMb ? 26 : 32, dashFs = isMb ? 16 : 18;

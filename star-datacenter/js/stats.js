@@ -89,7 +89,8 @@ function _statsYmFromDateStr(v){
 }
 function _statsLatestActiveMonths(gender){
   const g=_statsNormGender(gender);
-  const months=[...new Set((players||[]).filter(p=>!g || _statsNormGender(p.gender)===g)
+  const _players = (typeof players!=='undefined' && Array.isArray(players)) ? players : [];
+  const months=[...new Set(_players.filter(p=>!g || _statsNormGender(p.gender)===g)
     .flatMap(p=>_statsAllHist(p).map(h=>_statsYmFromDateStr(h&&h.date)).filter(Boolean))
   )].sort((a,b)=>b.localeCompare(a));
   return months;
@@ -101,6 +102,11 @@ function rStats(C,T){
   _statsSyncFilterToWindow();
   // history가 비어있으면 통계가 전부 비어 보이므로 자동 재생성 시도
   _statsEnsureHistoryReady();
+  if(typeof players==='undefined' || !Array.isArray(players)){
+    C.innerHTML = `<div style="padding:40px 20px;text-align:center;color:var(--gray-l)">데이터 로딩 중...</div>`;
+    return;
+  }
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
   const _coreIds = new Set(['overview','tierRank','award','radar','univwinbar','period','psearch','sharecard']);
   window._statsViewMode = window._statsViewMode || (_coreIds.has(window.statsSub||'overview') ? 'core' : 'advanced');
   // (A안) 하위 탭 + 전역필터를 '필터'로 접기/펼치기
@@ -111,7 +117,7 @@ function rStats(C,T){
   const _savedSub=localStorage.getItem('su_statsSub');
   window.statsSub = window.statsSub || 'overview';
   if(_savedSub&&window.statsSub==='overview'&&_savedSub!=='overview'){
-    if(_savedSub!=='csvexport'||isLoggedIn) window.statsSub=_savedSub;
+    if(_savedSub!=='csvexport'||_li) window.statsSub=_savedSub;
   }
   const _statsGroups=[
     {label:'🏆 개인',tabs:[
@@ -147,7 +153,7 @@ function rStats(C,T){
       {id:'psearch',lbl:'🔍 스트리머 검색'},
       {id:'sharecard',lbl:'🎴 공유 카드'},
       {id:'advsearch',lbl:'🔍 고급 검색'},
-      ...(isLoggedIn?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
+      ...(_li?[{id:'csvexport',lbl:'📥 CSV 내보내기'}]:[]),
     ]},
   ];
   try{
@@ -328,10 +334,12 @@ try{ window.renderShareCardByPlayer = renderShareCardByPlayer; }catch(e){}
 
 function statsTierRankHTML(){
   const tier = (window._statsRankTier || '4티어');
-  const tierBtns = (TIERS||[]).filter(t=>t && t!=='미정');
+  const _tiers = (typeof TIERS!=='undefined' && Array.isArray(TIERS)) ? TIERS : (Array.isArray(window.TIERS) ? window.TIERS : []);
+  const tierBtns = _tiers.filter(t=>t && t!=='미정');
 
   // 선수 리스트(티어)
-  const tierPlayers = (players||[]).filter(p=>(p.tier||'미정')===tier);
+  const _players = Array.isArray(players) ? players : [];
+  const tierPlayers = _players.filter(p=>(p.tier||'미정')===tier);
   if(!tierPlayers.length){
     return `<div class="ssec"><h3 style="margin:0 0 10px">🚀 티어 랭킹</h3>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${tierBtns.map(t=>`<button class="pill ${t===tier?'on':''}" onclick="statsSetRankTier('${escJS(t)}')">${t}</button>`).join('')}</div>
@@ -462,8 +470,8 @@ function statsTierRankHTML(){
               <div class="sr-player">
                 ${getPlayerPhotoHTML(p.name,'34px')}
                 <div style="min-width:0">
-                  <div class="sr-name" onclick="event.stopPropagation();openPlayerModal('${escJS(p.name)}')">${p.name}${race?`<span style="font-size:12px;color:var(--gray-l);font-weight:900;margin-left:6px">(${race})</span>`:''}</div>
-                  <div class="sr-univ" style="color:${gc(p.univ)}">${p.univ||'-'} · 최근 ${r.lastDate||'-'}</div>
+                  <div class="sr-name" onclick="event.stopPropagation();openPlayerModal('${escJS(p.name)}')">${escHTML(p.name)}${race?`<span style="font-size:12px;color:var(--gray-l);font-weight:900;margin-left:6px">(${escHTML(race)})</span>`:''}</div>
+                  <div class="sr-univ" style="color:${gc(p.univ)}">${escHTML(p.univ||'-')} · 최근 ${escHTML(r.lastDate||'-')}</div>
                 </div>
               </div>
             </td>
@@ -624,8 +632,9 @@ function _ssComputeAll(){
     return kws.some(k=>k && m.includes(k));
   };
 
+  const _players = Array.isArray(players) ? players : [];
   const out = [];
-  (players||[]).forEach(p=>{
+  _players.forEach(p=>{
     const myTierNum=_ssTierToNum(p.tier);
     if(myTierNum==null) return;
     let pts=100;
@@ -794,7 +803,8 @@ function statsStarSystemHTML(){
 function statsOverviewHTML(){
   const proMatchIds=statsProMatchIds();
   const univStats={};
-  players.forEach(p=>{
+  const _players = Array.isArray(players) ? players : [];
+  _players.forEach(p=>{
     if(!univStats[p.univ])univStats[p.univ]={w:0,l:0,color:gc(p.univ)};
     const h=statsNonProHist(p);
     univStats[p.univ].w+=h.filter(x=>x.result==='승').length;
@@ -806,7 +816,7 @@ function statsOverviewHTML(){
     .sort((a,b)=>b.w-a.w||b.rate-a.rate);
 
   const rv={T:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}},Z:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}},P:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}}};
-  players.forEach(p=>{
+  _players.forEach(p=>{
     if(!p.history||!p.race)return;
     statsNonProHist(p).forEach(h=>{
       if(!h.oppRace||!rv[p.race]||!rv[p.race][h.oppRace])return;
@@ -815,7 +825,7 @@ function statsOverviewHTML(){
     });
   });
   const mapStats={};
-  players.forEach(p=>{
+  _players.forEach(p=>{
     statsNonProHist(p).forEach(h=>{
       if(!h.map||h.map==='-')return;
       if(!mapStats[h.map])mapStats[h.map]={w:0,l:0};
@@ -826,7 +836,7 @@ function statsOverviewHTML(){
   const mapRank=Object.entries(mapStats).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l})).sort((a,b)=>b.total-a.total);
   function calcFormPlayers(genderFilter, streakFilter){
     // streakFilter: '승' = 연승자만, '패' = 연패자만, undefined = 전체
-    return players.filter(p=>(genderFilter?p.gender===genderFilter:true))
+    return _players.filter(p=>(genderFilter?p.gender===genderFilter:true))
       .map(p=>{
         const hist=[...(p.history||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
         const rec=hist.slice(0,5);
@@ -845,7 +855,7 @@ function statsOverviewHTML(){
   // 대학별 활성 스트리머 수 (최근 30일)
   const _30dAgo=(()=>{const d=new Date();d.setDate(d.getDate()-30);return d.toISOString().slice(0,10);})();
   const _univActive={};
-  players.forEach(p=>{
+  _players.forEach(p=>{
     if(!p.univ)return;
     const hasRecent=(p.history||[]).some(h=>(h.date||'')>=_30dAgo);
     if(!_univActive[p.univ])_univActive[p.univ]={total:0,active:0};
@@ -861,8 +871,8 @@ function statsOverviewHTML(){
     return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px">
       <span style="font-weight:700;font-size:11px;color:var(--gray-l);min-width:20px;text-align:right">${pi+1}</span>
       ${getPlayerPhotoHTML(p.name,'38px')}
-      <span style="font-weight:800;font-size:14px;cursor:pointer;color:var(--blue);min-width:65px" onclick="openPlayerModal('${escJS(p.name)}')">${p.name}${getStatusIconHTML(p.name)}</span>
-      <span style="font-size:11px;color:${gc(p.univ)};font-weight:700;min-width:55px">${p.univ}</span>
+      <span style="font-weight:800;font-size:14px;cursor:pointer;color:var(--blue);min-width:65px" onclick="openPlayerModal('${escJS(p.name)}')">${escHTML(p.name)}${getStatusIconHTML(p.name)}</span>
+      <span style="font-size:11px;color:${gc(p.univ)};font-weight:700;min-width:55px">${escHTML(p.univ)}</span>
       <span style="display:flex;gap:2px">${icons}</span>
       <span style="font-weight:800;font-size:12px;color:${sc};white-space:nowrap">${si} ${p.streak.n}연${p.streak.type==='승'?'승':'패'}</span>
     </div>`;
@@ -876,9 +886,9 @@ function statsOverviewHTML(){
     <div style="display:flex;flex-direction:column;gap:6px">
       ${univRank.filter(u=>u.w+u.l>0).map((u,i)=>{
         const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}위`;
-        return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="openUnivModal('${u.name}')">
+        return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="openUnivModal('${escJS(u.name)}')">
           <span style="min-width:32px;font-weight:800;font-size:13px">${medal}</span>
-          <span class="ubadge" style="background:${u.color};min-width:80px;text-align:center">${u.name}</span>
+          <span class="ubadge" style="background:${u.color};min-width:80px;text-align:center">${escHTML(u.name)}</span>
           <div style="flex:1;background:var(--border2);border-radius:20px;height:14px;overflow:hidden">
             <div style="width:${u.rate}%;background:${u.color};height:100%;border-radius:20px;transition:.3s"></div>
           </div>
@@ -965,7 +975,8 @@ function _statsRebuildHistoryCtaHTML(){
 function applyEloSearch(q, forceExact){
   const raw=String(q||'').trim();
   if(!raw) return false;
-  const cands=(players||[]).filter(p=>_statsAllHist(p).length>0);
+  const _players = Array.isArray(players) ? players : [];
+  const cands=_players.filter(p=>_statsAllHist(p).length>0);
   const exact=cands.find(p=>String(p.name||'').trim()===raw);
   const partial=cands.filter(p=>String(p.name||'').toLowerCase().includes(raw.toLowerCase()));
   const hit=exact || ((!forceExact && partial.length) ? partial[0] : null);
@@ -984,7 +995,8 @@ function eloSearchFilter(q){
 function statsEloHTML(){
   const cta=_statsRebuildHistoryCtaHTML();
   if(cta) return `<div class="ssec">${cta}</div>`;
-  const allWithHist=players.filter(p=>_statsAllHist(p).length>0)
+  const _players = Array.isArray(players) ? players : [];
+  const allWithHist=_players.filter(p=>_statsAllHist(p).length>0)
     .sort((a,b)=>(b.elo||ELO_DEFAULT)-(a.elo||ELO_DEFAULT));
   const top20=allWithHist.slice(0,30);
   if(!_eloSelPlayer&&allWithHist.length)_eloSelPlayer=allWithHist[0].name;
@@ -994,7 +1006,7 @@ function statsEloHTML(){
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📈 ELO 랭킹 변동 그래프</h4>
       <select id="elo-player-select" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px" onchange="_eloSelPlayer=this.value;initEloChart()">
-        ${allWithHist.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${p.name}"${_eloSelPlayer===p.name?' selected':''}>${p.name} · ${p.univ} · ELO ${p.elo||1200}</option>`).join('')}
+        ${allWithHist.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${(typeof escAttr==='function')?escAttr(p.name):escHTML(p.name)}"${_eloSelPlayer===p.name?' selected':''}>${escHTML(p.name)} · ${escHTML(p.univ)} · ELO ${p.elo||1200}</option>`).join('')}
       </select>
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-elo-sec','elo_ranking')">📷 이미지 저장</button>
     </div>
@@ -1009,10 +1021,10 @@ function statsEloHTML(){
         const eloColor=elo>=1400?'#7c3aed':elo>=1300?'#d97706':elo>=1200?'var(--green)':'var(--red)';
         const badge=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
         const bar=Math.min(100,Math.max(0,((elo-900)/800)*100));
-        return`<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="_eloSelPlayer='${p.name}';initEloChart()">
+        return`<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--white);border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="_eloSelPlayer='${escJS(p.name)}';initEloChart()">
           <span style="min-width:28px;font-weight:800;font-size:12px">${badge}</span>
-          <span style="font-weight:800;font-size:13px;color:var(--blue);min-width:70px">${p.name}</span>
-          <span style="font-size:11px;color:${gc(p.univ)};font-weight:700;min-width:60px">${p.univ}</span>
+          <span style="font-weight:800;font-size:13px;color:var(--blue);min-width:70px">${escHTML(p.name)}</span>
+          <span style="font-size:11px;color:${gc(p.univ)};font-weight:700;min-width:60px">${escHTML(p.univ)}</span>
           <div style="flex:1;background:var(--border2);border-radius:20px;height:10px;overflow:hidden">
             <div style="width:${bar}%;background:${eloColor};height:100%;border-radius:20px"></div>
           </div>
@@ -1122,7 +1134,8 @@ function initEloChart(){
 ══════════════════════════════════════ */
 var _growthSel='';
 function _statsGrowthCandidates(){
-  return (players||[]).filter(p=>{
+  const _players = Array.isArray(players) ? players : [];
+  return _players.filter(p=>{
     try{ return _statsAllHist(p).length >= 2; }catch(e){ return (p.history||[]).length >= 2; }
   }).sort((a,b)=>{
     const ah=_statsAllHist(a).length, bh=_statsAllHist(b).length;
@@ -1166,7 +1179,7 @@ function statsGrowthHTML(){
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📊 스트리머 성장 곡선</h4>
       <select id="growth-player-select" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px" onchange="_growthSel=this.value;initGrowthChart()">
-        ${cands.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${p.name}"${_growthSel===p.name?' selected':''}>${p.name} · ${p.univ} · ${(_statsAllHist(p)||[]).length}경기</option>`).join('')}
+        ${cands.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${(typeof escAttr==='function')?escAttr(p.name):escHTML(p.name)}"${_growthSel===p.name?' selected':''}>${escHTML(p.name)} · ${escHTML(p.univ)} · ${(_statsAllHist(p)||[]).length}경기</option>`).join('')}
       </select>
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-growth-sec','growth_chart')">📷 이미지 저장</button>
     </div>
@@ -1265,6 +1278,7 @@ function initGrowthChart(){
    4. 이달의 선수
 ══════════════════════════════════════ */
 function statsAwardHTML(){
+  const _players = Array.isArray(players) ? players : [];
   const monthsF=_statsLatestActiveMonths('F');
   const monthsM=_statsLatestActiveMonths('M');
   const monthsAll=_statsLatestActiveMonths('');
@@ -1299,7 +1313,7 @@ function statsAwardHTML(){
 
   function calcMonth(ym2, gender){
     const g=_statsNormGender(gender);
-    return players.map(p=>{
+    return _players.map(p=>{
       if(g && _statsNormGender(p.gender)!==g) return null;
       const mh=_statsAllHist(p).filter(h=>_statsYmFromDateStr(h&&h.date)===ym2);
       const w=mh.filter(h=>h.result==='승').length;
@@ -1315,7 +1329,7 @@ function statsAwardHTML(){
     const g=_statsNormGender(gender);
     const from = String(fromIso||'').trim();
     const to = String(toIso||'').trim();
-    return players.map(p=>{
+    return _players.map(p=>{
       if(g && _statsNormGender(p.gender)!==g) return null;
       const mh=_statsAllHist(p).filter(h=>{
         const d = _toIso(h && h.date);
@@ -1343,20 +1357,24 @@ function statsAwardHTML(){
   function awardCard(title,p,extra='',color='#2563eb'){
     if(!p)return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center;flex:1;min-width:200px"><div style="font-size:28px;margin-bottom:8px">🏆</div><div style="color:var(--gray-l)">기록 없음</div></div>`;
     const univColor=gc(p.univ);
+    const _univIcons = (typeof UNIV_ICONS!=='undefined' && UNIV_ICONS) ? UNIV_ICONS : (window.UNIV_ICONS||{});
+    const _univCfg = (typeof univCfg!=='undefined' && Array.isArray(univCfg)) ? univCfg : [];
+    const _gUI = (typeof gUI === 'function') ? gUI : (()=>'');
     // 대학 아이콘 (gUI 사용 - UNIV_ICONS 또는 univCfg.icon 우선)
-    const univIconUrl=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
+    const univIconUrl=(_univIcons && _univIcons[p.univ])||((_univCfg.find(x=>x.name===p.univ)||{}).icon)||'';
+    const univIconUrlAttr = (typeof escAttr==='function') ? escAttr(univIconUrl) : escHTML(univIconUrl);
     // 아이콘: URL 있으면 이미지, 없으면 대학명 첫 글자 표시
     const univIconInner=univIconUrl
-      ? `<img src="${univIconUrl}" style="width:32px;height:32px;object-fit:contain" onerror="this.outerHTML='<span style=font-size:16px;font-weight:900;color:white>${p.univ[0]||'?'}</span>'">`
-      : `<span style="font-size:18px;font-weight:900;color:#fff;font-family:Noto Sans KR,sans-serif">${p.univ[0]||'?'}</span>`;
+      ? `<img src="${univIconUrlAttr}" style="width:32px;height:32px;object-fit:contain" onerror="this.outerHTML='<span style=font-size:16px;font-weight:900;color:white>${escHTML(p.univ[0]||'?')}</span>'">`
+      : `<span style="font-size:18px;font-weight:900;color:#fff;font-family:Noto Sans KR,sans-serif">${escHTML(p.univ[0]||'?')}</span>`;
     return`<div style="background:linear-gradient(135deg,${color}15,${color}08);border:2px solid ${color}44;border-radius:14px;padding:20px;flex:1;min-width:200px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')">
       <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:8px;letter-spacing:.5px">${title}</div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         ${p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:44px;height:44px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${univColor};flex-shrink:0;box-shadow:0 2px 8px ${univColor}55" onerror="this.style.display='none'">`:`<div style="width:44px;height:44px;border-radius:var(--su_profile_radius,50%);background:${univColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px ${univColor}55;overflow:hidden">${univIconInner}</div>`}
         <div style="min-width:0">
-          <div style="font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+          <div style="font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHTML(p.name)}</div>
           <div style="display:flex;align-items:center;gap:4px;margin-top:3px;flex-wrap:wrap">
-            <span style="display:inline-flex;align-items:center;gap:3px;background:${univColor};color:#fff;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700">${gUI(p.univ,'0.85em')}${p.univ}</span>
+            <span style="display:inline-flex;align-items:center;gap:3px;background:${univColor};color:#fff;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700">${_gUI(p.univ,'0.85em')}${escHTML(p.univ)}</span>
             <span style="font-size:10px;color:var(--gray-l)">${getTierLabel(p.tier||'-')}</span>
           </div>
         </div>
@@ -1443,8 +1461,8 @@ function statsAwardHTML(){
     <table><thead><tr><th>순위</th><th>선수</th><th>대학</th><th>티어</th><th>승</th><th>패</th><th>승률</th><th>경기수</th><th title="전월 대비">전월비</th></tr></thead><tbody>
     ${[...curList].sort((a,b)=>b.mw-a.mw||b.mrate-a.mrate).map((p,i)=>`<tr>
       <td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1+'위'}</td>
-      <td style="cursor:pointer;color:var(--blue);font-weight:700" onclick="openPlayerModal('${escJS(p.name)}')">${p.name}</td>
-      <td><span class="ubadge" style="background:${gc(p.univ)}">${p.univ}</span></td>
+      <td style="cursor:pointer;color:var(--blue);font-weight:700" onclick="openPlayerModal('${escJS(p.name)}')">${escHTML(p.name)}</td>
+      <td><span class="ubadge" style="background:${gc(p.univ)}">${escHTML(p.univ)}</span></td>
       <td>${p.tier||'-'}</td>
       <td class="wt">${p.mw}</td><td class="lt">${p.ml}</td>
       <td style="font-weight:700;color:${p.mrate>=50?'var(--green)':'var(--red)'}">${p.mrate}%</td>
@@ -1459,9 +1477,10 @@ function statsAwardHTML(){
    5. 최다 기록 보유자
 ══════════════════════════════════════ */
 function statsRecordsHTML(){
-  if(!players.length)return`<div class="ssec"><p style="color:var(--gray-l)">스트리머 데이터가 없습니다.</p></div>`;
+  const _players = Array.isArray(players) ? players : [];
+  if(!_players.length)return`<div class="ssec"><p style="color:var(--gray-l)">스트리머 데이터가 없습니다.</p></div>`;
   const proIds=statsProMatchIds();
-  const withStats=players.map(p=>{
+  const withStats=_players.map(p=>{
     const h=statsNonProHist(p);
     const ph=(p.history||[]).filter(x=>proIds.has(x.matchId));
     const w=h.filter(x=>x.result==='승').length;
@@ -1497,7 +1516,7 @@ function statsRecordsHTML(){
             <span style="font-size:16px;min-width:24px">${badge}</span>
             ${getPlayerPhotoHTML(p.name,'30px')}
             <div style="flex:1;min-width:0">
-              <div style="font-weight:800;font-size:13px">${p.name}${getStatusIconHTML(p.name)} <span style="font-size:10px;color:${gc(p.univ)};font-weight:600">${p.univ}</span></div>
+              <div style="font-weight:800;font-size:13px">${escHTML(p.name)}${getStatusIconHTML(p.name)} <span style="font-size:10px;color:${gc(p.univ)};font-weight:600">${escHTML(p.univ)}</span></div>
               <div style="font-size:10px;color:var(--gray-l)">${cat.sub(p)}</div>
             </div>
             <span style="font-weight:900;font-size:16px;color:${i===0?gc(p.univ):'var(--text2)'};font-family:'Noto Sans KR',sans-serif">${cat.val(p)}</span>
@@ -1518,7 +1537,8 @@ function statsRecordsHTML(){
 ══════════════════════════════════════ */
 var _radarSelUniv='';
 function statsRadarHTML(){
-  const univs=getAllUnivs().filter(u=>players.some(p=>p.univ===u.name));
+  const _players = Array.isArray(players) ? players : [];
+  const univs=getAllUnivs().filter(u=>_players.some(p=>p.univ===u.name));
   if(!_radarSelUniv&&univs.length)_radarSelUniv=univs[0].name;
   const proIds=statsProMatchIds();
   return`<div style="display:flex;flex-direction:column;gap:16px">
@@ -1526,7 +1546,7 @@ function statsRadarHTML(){
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">🕸️ 대학별 성적 레이더 차트 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
       <select id="radar-sel" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="_radarSelUniv=this.value;initRadarChart()">
-        ${univs.map(u=>`<option value="${u.name}"${_radarSelUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
+        ${univs.map(u=>`<option value="${(typeof escAttr==='function')?escAttr(u.name):escHTML(u.name)}"${_radarSelUniv===u.name?' selected':''}>${escHTML(u.name)}</option>`).join('')}
       </select>
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-radar-sec','radar')">📷 이미지 저장</button>
     </div>
@@ -1541,10 +1561,10 @@ function statsRadarHTML(){
       <thead><tr><th>대학</th><th>선수수</th><th>승률</th><th>ELO평균</th><th>포인트</th><th>활동도</th><th>다양성</th></tr></thead>
       <tbody>
         ${univs.map(u=>{
-          const mem=players.filter(p=>p.univ===u.name);
+          const mem=_players.filter(p=>p.univ===u.name);
           const scores=calcUnivRadar(u.name,proIds);
-          return`<tr style="cursor:pointer" onclick="_radarSelUniv='${u.name}';initRadarChart()">
-            <td><span class="ubadge clickable-univ" style="background:${u.color}" onclick="event.stopPropagation();openUnivModal('${u.name}')">${u.name}</span></td>
+          return`<tr style="cursor:pointer" onclick="_radarSelUniv='${escJS(u.name)}';initRadarChart()">
+            <td><span class="ubadge clickable-univ" style="background:${u.color}" onclick="event.stopPropagation();openUnivModal('${escJS(u.name)}')">${escHTML(u.name)}</span></td>
             <td>${mem.length}명</td>
             <td style="color:${scores.winrate>=50?'var(--green)':'var(--red)'};font-weight:700">${scores.winrate}%</td>
             <td>${scores.avgElo}</td>
@@ -1558,7 +1578,8 @@ function statsRadarHTML(){
   </div></div>`;
 }
 function calcUnivRadar(univName, proIds){
-  const mem=players.filter(p=>p.univ===univName);
+  const _players = Array.isArray(players) ? players : [];
+  const mem=_players.filter(p=>p.univ===univName);
   if(!mem.length)return{winrate:0,avgElo:1200,pts:0,activity:0,diversity:0,streak:0};
   const allH=mem.flatMap(p=>statsNonProHist(p));
   const w=allH.filter(h=>h.result==='승').length;
@@ -1581,7 +1602,8 @@ function initRadarChart(){
   const info=document.getElementById('radarInfo');
   if(!canvas)return;
   const proIds=statsProMatchIds();
-  const allUnivs=getAllUnivs().filter(u=>players.some(p=>p.univ===u.name));
+  const _players = Array.isArray(players) ? players : [];
+  const allUnivs=getAllUnivs().filter(u=>_players.some(p=>p.univ===u.name));
   const _allScores={};
   allUnivs.forEach(u=>{ _allScores[u.name]=calcUnivRadar(u.name,proIds); });
   const scores=_allScores[_radarSelUniv]||calcUnivRadar(_radarSelUniv,proIds);
@@ -1686,7 +1708,11 @@ function statsMismatchHTML(){
   const proIds=statsProMatchIds();
   const allMatches=[];
   // proM을 제외한 배열만 처리
-  statsFilterMatches([...miniM,...univM,...ckM,...comps]).forEach((m,_)=>{
+  const _mini = Array.isArray(window.miniM) ? window.miniM : [];
+  const _univm = Array.isArray(window.univM) ? window.univM : [];
+  const _ck = Array.isArray(window.ckM) ? window.ckM : [];
+  const _comps = Array.isArray(window.comps) ? window.comps : [];
+  statsFilterMatches([..._mini,..._univm,..._ck,..._comps]).forEach((m,_)=>{
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
@@ -1746,8 +1772,9 @@ var _shareUnivSearch='';
 var _shareMatchPage=0; // 경기 결과 페이지 인덱스
 var SHARE_MATCH_PER_PAGE=5;
 function statsShareCardHTML(){
-  const pList=players.filter(p=>p.history&&p.history.length>0).sort((a,b)=>b.history.length-a.history.length);
-  const uList=(typeof univCfg!=='undefined'&&univCfg.length)?univCfg.filter(u=>players.some(p=>p.univ===u.name)):getAllUnivs().filter(u=>players.some(p=>p.univ===u.name));
+  const _players = Array.isArray(players) ? players : [];
+  const pList=_players.filter(p=>p.history&&p.history.length>0).sort((a,b)=>b.history.length-a.history.length);
+  const uList=(typeof univCfg!=='undefined'&&univCfg.length)?univCfg.filter(u=>_players.some(p=>p.univ===u.name)):getAllUnivs().filter(u=>_players.some(p=>p.univ===u.name));
   const filteredP=_sharePlayerSearch
     ?pList.filter(p=>p.name.toLowerCase().includes(_sharePlayerSearch.toLowerCase())||p.univ.toLowerCase().includes(_sharePlayerSearch.toLowerCase()))
     :[];  // 검색하기 전에는 빈 배열 - 아무것도 표시 안 함
@@ -1765,7 +1792,11 @@ function statsShareCardHTML(){
       }
     });
   }catch(e){}
-  const allMatches=statsFilterMatches([...miniM,...univM,...ckM,...comps,...tourMatchesForShare]).sort((a,b)=>(b.d||"").localeCompare(a.d||""));
+  const _mini = Array.isArray(window.miniM) ? window.miniM : [];
+  const _univm = Array.isArray(window.univM) ? window.univM : [];
+  const _ck = Array.isArray(window.ckM) ? window.ckM : [];
+  const _comps = Array.isArray(window.comps) ? window.comps : [];
+  const allMatches=statsFilterMatches([..._mini,..._univm,..._ck,..._comps,...tourMatchesForShare]).sort((a,b)=>(b.d||"").localeCompare(a.d||""));
   // 인덱스 일치/성능 위해 리스트를 전역에 보관
   try{ window._shareMatchList = allMatches; }catch(e){}
   const totalPages=Math.ceil(allMatches.length/SHARE_MATCH_PER_PAGE)||1;
@@ -1785,16 +1816,16 @@ function statsShareCardHTML(){
 
     ${_shareMode==='player'?`
     <div style="margin-bottom:12px" class="no-export">
-      <input type="text" id="share-player-q" value="${_sharePlayerSearch}"
+      <input type="text" id="share-player-q" value="${(typeof escAttr==='function')?escAttr(_sharePlayerSearch):escHTML(_sharePlayerSearch)}"
         placeholder="🔍 스트리머 이름 또는 대학 이름 검색..."
         oninput="_sharePlayerSearch=this.value;renderShareCardFilterPlayers()"
         style="width:100%;max-width:380px;padding:9px 16px;border:2px solid var(--blue);border-radius:8px;font-size:13px;box-sizing:border-box">
       <div id="share-player-list" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;max-height:160px;overflow-y:auto;padding:2px">
         ${filteredP.length?filteredP.slice(0,50).map(p=>`
-          <button onclick="renderShareCardByPlayer('${p.name}')"
+          <button onclick="renderShareCardByPlayer('${escJS(p.name)}')"
             style="padding:4px 13px;border-radius:20px;border:2px solid ${gc(p.univ)};background:${gc(p.univ)}22;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.12s"
             onmouseover="this.style.background='${gc(p.univ)}55'" onmouseout="this.style.background='${gc(p.univ)}22'">
-            ${p.name} <span style="font-size:10px;opacity:.65">${p.univ}</span>
+            ${escHTML(p.name)} <span style="font-size:10px;opacity:.65">${escHTML(p.univ)}</span>
           </button>`).join('')
           :(_sharePlayerSearch?'<span style="color:var(--gray-l);font-size:12px;padding:8px">검색 결과 없음</span>'
           :'<span style="color:var(--gray-l);font-size:12px;padding:8px">이름 또는 대학명을 입력하세요</span>')}
@@ -1803,10 +1834,10 @@ function statsShareCardHTML(){
     :_shareMode==='univ'?`
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px" class="no-export">
       ${uList.map(u=>`
-        <button onclick="renderShareCardByUniv('${u.name}')"
+        <button onclick="renderShareCardByUniv('${escJS(u.name)}')"
           style="padding:7px 20px;border-radius:20px;background:${u.color};color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px ${u.color}55;transition:.15s"
           onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">
-          ${u.name}
+          ${escHTML(u.name)}
         </button>`).join('')||'<span style="color:var(--gray-l);font-size:12px">등록된 대학이 없습니다</span>'}
     </div>`
     :`
@@ -1829,13 +1860,13 @@ function statsShareCardHTML(){
           return`<button onclick="window._shareMatchObj=(window._shareMatchList||[])[${globalIdx}]||null;renderShareCardByMatchObj(window._shareMatchObj)"
             style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;border:2px solid ${isActive?'var(--blue)':'var(--border)'};background:${isActive?'var(--blue-l)':'transparent'};cursor:pointer;text-align:left;font-size:12px;transition:.1s"
             onmouseover="this.style.background='var(--blue-l)'" onmouseout="this.style.background='${isActive?'var(--blue-l)':'transparent'}'">
-            <span style="color:var(--text3);min-width:80px;font-size:12px;font-weight:600">${m.d||'-'}</span>
-            <span style="background:${ca};color:#fff;padding:2px 9px;border-radius:4px;font-weight:700;font-size:11px">${a}</span>
+            <span style="color:var(--text3);min-width:80px;font-size:12px;font-weight:600">${escHTML(m.d||'-')}</span>
+            <span style="background:${ca};color:#fff;padding:2px 9px;border-radius:4px;font-weight:700;font-size:11px">${escHTML(a)}</span>
             <span style="font-weight:900;font-size:15px;color:${aWin?'var(--green)':'#aaa'}">${m.sa}</span>
             <span style="color:var(--gray-l)">:</span>
             <span style="font-weight:900;font-size:15px;color:${(!aWin&&m.sb>m.sa)?'var(--green)':'#aaa'}">${m.sb}</span>
-            <span style="background:${cb};color:#fff;padding:2px 9px;border-radius:4px;font-weight:700;font-size:11px">${b}</span>
-            ${m.n?`<span style="color:var(--gold);font-size:10px;font-weight:600">🎖️${m.n}</span>`:''}
+            <span style="background:${cb};color:#fff;padding:2px 9px;border-radius:4px;font-weight:700;font-size:11px">${escHTML(b)}</span>
+            ${m.n?`<span style="color:var(--gold);font-size:10px;font-weight:600">🎖️${escHTML(m.n)}</span>`:''}
           </button>`;
         }).join(''):'<span style="color:var(--gray-l);padding:12px;font-size:12px;display:block">경기 기록이 없습니다</span>'}
       </div>
@@ -1858,7 +1889,8 @@ function statsShareCardHTML(){
 function renderShareCardFilterPlayers(){
   const q=(document.getElementById('share-player-q')||{}).value||'';
   _sharePlayerSearch=q;
-  const pList=players.filter(p=>p.history&&p.history.length>0).sort((a,b)=>b.history.length-a.history.length);
+  const _players = Array.isArray(players) ? players : [];
+  const pList=_players.filter(p=>p.history&&p.history.length>0).sort((a,b)=>b.history.length-a.history.length);
   const filtered=q?pList.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.univ.toLowerCase().includes(q.toLowerCase())):[];
   const list=document.getElementById('share-player-list');
   if(!list)return;
@@ -1867,10 +1899,10 @@ function renderShareCardFilterPlayers(){
     return;
   }
   list.innerHTML=filtered.length?filtered.slice(0,50).map(p=>`
-    <button onclick="renderShareCardByPlayer('${p.name}')"
+    <button onclick="renderShareCardByPlayer('${escJS(p.name)}')"
       style="padding:4px 13px;border-radius:20px;border:2px solid ${gc(p.univ)};background:${gc(p.univ)}22;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.12s"
       onmouseover="this.style.background='${gc(p.univ)}55'" onmouseout="this.style.background='${gc(p.univ)}22'">
-      ${p.name} <span style="font-size:10px;opacity:.65">${p.univ}</span>
+      ${escHTML(p.name)} <span style="font-size:10px;opacity:.65">${escHTML(p.univ)}</span>
     </button>`).join(''):'<span style="color:var(--gray-l);font-size:12px;padding:8px">검색 결과 없음</span>';
 }
 function renderShareCardDynamic(){renderShareCardFilterPlayers();}
@@ -1982,14 +2014,15 @@ var statsCsvExportHTML = (typeof window.statsCsvExportHTML==='function') ? windo
 var _psearchQ = '';
 function statsPlayerSearchHTML(){
   const q = _psearchQ.trim().toLowerCase();
+  const _players = Array.isArray(players) ? players : [];
   const list = q
-    ? players.filter(p => p.name.toLowerCase().includes(q) || (p.univ||'').toLowerCase().includes(q) || (p.tier||'').toLowerCase().includes(q) ||
+    ? _players.filter(p => p.name.toLowerCase().includes(q) || (p.univ||'').toLowerCase().includes(q) || (p.tier||'').toLowerCase().includes(q) ||
         (p.memo||'').split(/[\s,，\n]+/).some(m=>m.trim()&&m.trim().toLowerCase().includes(q)))
     : [];
   return `<div class="ssec">
     <h4 style="margin:0 0 12px">🔍 스트리머 검색</h4>
     <div style="position:relative;max-width:400px;margin-bottom:14px">
-      <input id="psearch-input" type="text" value="${_psearchQ.replace(/"/g,'&quot;')}"
+      <input id="psearch-input" type="text" value="${(typeof escAttr==='function')?escAttr(_psearchQ):escHTML(_psearchQ)}"
         placeholder="🔍 스트리머 이름 / 대학 / 티어 검색..."
         oninput="_psearchQ=this.value;_statsPlayerSearchUpdate()"
         style="width:100%;padding:10px 14px;border:1.5px solid var(--border2);border-radius:10px;font-size:14px;box-sizing:border-box;font-family:'Noto Sans KR',sans-serif"
@@ -2000,11 +2033,14 @@ function statsPlayerSearchHTML(){
       ${q && !list.length ? `<div style="color:var(--gray-l);padding:20px;text-align:center">검색 결과가 없습니다</div>` : ''}
       ${list.map(p=>{
         const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
-        return`<div onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
+        const safeName = (typeof escJS === 'function')
+          ? escJS(p.name)
+          : String(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+        return`<div onclick="openPlayerModal('${safeName}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
           ${p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
           <div style="flex:1;min-width:0">
-            <div style="font-weight:800;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:1px">${p.univ||'무소속'} · ${p.race||'?'}</div>
+            <div style="font-weight:800;font-size:14px">${escHTML(p.name)}${getStatusIconHTML(p.name)}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:1px">${escHTML(p.univ||'무소속')} · ${escHTML(p.race||'?')}</div>
           </div>
           ${p.tier?`<div>${getTierBadge(p.tier)}</div>`:''}
           <div style="text-align:right;font-size:11px;color:var(--text3)">
@@ -2021,8 +2057,9 @@ function statsPlayerSearchHTML(){
 }
 function _statsPlayerSearchUpdate(){
   const q = _psearchQ.trim().toLowerCase();
+  const _players = Array.isArray(players) ? players : [];
   const list = q
-    ? players.filter(p => p.name.toLowerCase().includes(q) || (p.univ||'').toLowerCase().includes(q) || (p.tier||'').toLowerCase().includes(q) ||
+    ? _players.filter(p => p.name.toLowerCase().includes(q) || (p.univ||'').toLowerCase().includes(q) || (p.tier||'').toLowerCase().includes(q) ||
         (p.memo||'').split(/[\s,，\n]+/).some(m=>m.trim()&&m.trim().toLowerCase().includes(q)))
     : [];
   const res = document.getElementById('psearch-results');
@@ -2031,11 +2068,14 @@ function _statsPlayerSearchUpdate(){
     ? `<div style="color:var(--gray-l);padding:20px;text-align:center">검색 결과가 없습니다</div>`
     : list.map(p=>{
         const wr=(p.win+p.loss)?Math.round(p.win/(p.win+p.loss)*100):null;
-        return`<div onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
+        const safeName = (typeof escJS === 'function')
+          ? escJS(p.name)
+          : String(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+        return`<div onclick="openPlayerModal('${safeName}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:.12s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--white)'">
           ${p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid var(--border)" onerror="this.style.display='none'">`:`<div style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray-l)">${p.race||'?'}</div>`}
           <div style="flex:1;min-width:0">
-            <div style="font-weight:800;font-size:14px">${p.name}${getStatusIconHTML(p.name)}</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:1px">${p.univ||'무소속'} · ${p.race||'?'}</div>
+            <div style="font-weight:800;font-size:14px">${escHTML(p.name)}${getStatusIconHTML(p.name)}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:1px">${escHTML(p.univ||'무소속')} · ${escHTML(p.race||'?')}</div>
           </div>
           ${p.tier?`<div>${getTierBadge(p.tier)}</div>`:''}
           <div style="text-align:right;font-size:11px;color:var(--text3)">
@@ -2062,7 +2102,8 @@ var _advFilter={tier:'',race:'',univ:'',gender:'',minElo:'',maxElo:'',minGames:'
 function statsAdvSearchHTML(){
   const f=_advFilter;
   const univs=getAllUnivs();
-  let list=[...players].filter(p=>{
+  const _players = Array.isArray(players) ? players : [];
+  let list=_players.slice().filter(p=>{
     if(f.name&&!p.name.includes(f.name))return false;
     if(f.tier&&p.tier!==f.tier)return false;
     if(f.race&&p.race!==f.race)return false;
@@ -2120,11 +2161,11 @@ function statsAdvSearchHTML(){
       <input id="advsearch-name-input" type="text" placeholder="🔍 스트리머 이름 검색..." value="${f.name}" oninput="_advFilterName(this.value)" style="padding:6px 12px;border:1px solid var(--border2);border-radius:8px;font-size:12px;width:150px">
       <select onchange="_advFilter.univ=this.value;render()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
         <option value="">대학 전체</option>
-        ${univs.map(u=>`<option value="${u.name}"${f.univ===u.name?' selected':''}>${u.name}</option>`).join('')}
+        ${univs.map(u=>`<option value="${(typeof escAttr==='function')?escAttr(u.name):escHTML(u.name)}"${f.univ===u.name?' selected':''}>${escHTML(u.name)}</option>`).join('')}
       </select>
       <select onchange="_advFilter.tier=this.value;render()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
         <option value="">티어 전체</option>
-        ${TIERS.map(t=>`<option value="${t}"${f.tier===t?' selected':''}>${getTierLabel(t)}</option>`).join('')}
+        ${(((typeof TIERS!=='undefined' && Array.isArray(TIERS)) ? TIERS : (Array.isArray(window.TIERS) ? window.TIERS : []))).map(t=>`<option value="${(typeof escAttr==='function')?escAttr(t):escHTML(t)}"${f.tier===t?' selected':''}>${escHTML(getTierLabel(t))}</option>`).join('')}
       </select>
       <select onchange="_advFilter.race=this.value;render()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
         <option value="">종족 전체</option>
@@ -2158,10 +2199,10 @@ function statsAdvSearchHTML(){
       <tbody>
         ${list.map((p,i)=>{
           const eloColor=p._elo>=1400?'#7c3aed':p._elo>=1300?'#d97706':p._elo>=1200?'var(--green)':'var(--red)';
-          return`<tr style="cursor:pointer" onclick="openPlayerModal('${p.name}')">
+          return`<tr style="cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')">
             <td>${i+1}</td>
-            <td style="font-weight:700;color:var(--blue)">${p.name}</td>
-            <td><span class="ubadge" style="background:${gc(p.univ)}">${p.univ}</span></td>
+            <td style="font-weight:700;color:var(--blue)">${escHTML(p.name)}</td>
+            <td><span class="ubadge" style="background:${gc(p.univ)}">${escHTML(p.univ)}</span></td>
             <td>${getTierLabel(p.tier||'-')}</td>
             <td><span class="rbadge r${p.race||'T'}">${p.race||'-'}</span></td>
             <td>${p.gender==='M'?'👨':'👩'}</td>
@@ -2185,6 +2226,7 @@ function statsAdvSearchHTML(){
 function onGlobalSearch(val){
   const drop = document.getElementById('globalSearchDrop');
   if(!val || val.trim()===''){drop.style.display='none';return;}
+  const _players = Array.isArray(players) ? players : [];
   const q = val.trim().toLowerCase();
   // 다중 조건 파싱: "흑카 테란" → 이름에 "흑카" + 종족 "테란"
   const tokens = q.split(/\s+/).filter(Boolean);
@@ -2196,7 +2238,7 @@ function onGlobalSearch(val){
     else if(GENDER_MAP[t]){genderFilter=GENDER_MAP[t];}
     else{nameTokens.push(t);}
   });
-  const results = players.filter(p=>{
+  const results = _players.filter(p=>{
     const nameMatch = nameTokens.length===0 || nameTokens.every(t=>
       p.name.toLowerCase().includes(t) ||
       (p.univ||'').toLowerCase().includes(t) ||
@@ -2355,17 +2397,18 @@ function _vsSearchDrop(id, val){
   d.querySelectorAll('.sitem').forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(val.toLowerCase())?'':'none';});
 }
 function statsPlayerVsHTML(){
-  const pAll=players.filter(p=>(p.history||[]).length>0).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  const _players = Array.isArray(players) ? players : [];
+  const pAll=_players.filter(p=>(p.history||[]).length>0).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   function selDropHTML(selId,dropId,inputId,selName){
     return`<div style="position:relative">
-      <input id="${inputId}" type="text" value="${selName}" placeholder="🔍 스트리머 검색..."
+      <input id="${inputId}" type="text" value="${(typeof escAttr==='function')?escAttr(selName):escHTML(selName)}" placeholder="🔍 스트리머 검색..."
         style="padding:6px 12px;border:2px solid ${selName?gc(statsP(selName)?.univ||''):'var(--border2)'};border-radius:8px;font-size:13px;width:180px"
         oninput="_vsSearchDrop('${dropId}',this.value)"
         onfocus="document.getElementById('${dropId}').style.display='block'"
         onblur="setTimeout(()=>{const d=document.getElementById('${dropId}');if(d)d.style.display='none'},200)">
       <div id="${dropId}" style="display:none;position:absolute;top:36px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:220px;box-shadow:var(--sh2)">
-        ${pAll.map(p=>`<div class="sitem" style="padding:6px 12px;cursor:pointer;font-size:12px" onmousedown="${selId==='A'?'_vsSelA':'_vsSelB'}='${p.name.replace(/'/g,"\'")}';document.getElementById('${inputId}').value='${p.name.replace(/'/g,"\'")}';document.getElementById('${dropId}').style.display='none';render()">
-          <b>${p.name}</b> <span style="color:${gc(p.univ)};font-size:11px">${p.univ}</span> <span style="color:var(--gray-l);font-size:10px">${p.history.length}경기</span>
+        ${pAll.map(p=>`<div class="sitem" style="padding:6px 12px;cursor:pointer;font-size:12px" onmousedown="${selId==='A'?'_vsSelA':'_vsSelB'}='${escJS(p.name)}';document.getElementById('${inputId}').value='${escJS(p.name)}';document.getElementById('${dropId}').style.display='none';render()">
+          <b>${escHTML(p.name)}</b> <span style="color:${gc(p.univ)};font-size:11px">${escHTML(p.univ)}</span> <span style="color:var(--gray-l);font-size:10px">${p.history.length}경기</span>
         </div>`).join('')}
       </div>
     </div>`;
@@ -2550,9 +2593,11 @@ function initUnivWinBarChart(){
   const canvas=document.getElementById('uwbCanvas');
   if(!canvas)return;
   // 데이터 수집
-  const univs=getAllUnivs().filter(u=>u.name!=='무소속'&&!u.hidden||isLoggedIn).filter(u=>players.some(p=>p.univ===u.name&&!p.retired));
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  const _players = Array.isArray(players) ? players : [];
+  const univs=getAllUnivs().filter(u=>((u.name!=='무소속'&&!u.hidden)||_li)).filter(u=>_players.some(p=>p.univ===u.name&&!p.retired));
   const data=univs.map(u=>{
-    const mem=players.filter(p=>p.univ===u.name&&!p.retired);
+    const mem=_players.filter(p=>p.univ===u.name&&!p.retired);
     const w=mem.reduce((s,p)=>s+(p.win||0),0);
     const l=mem.reduce((s,p)=>s+(p.loss||0),0);
     const tot=w+l;
