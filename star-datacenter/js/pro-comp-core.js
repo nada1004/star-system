@@ -190,7 +190,9 @@ function proCompGetLayoutScale(){
 // ─────────────────────────────────────────────────────────────
 
 function _findTourneyById(tnId) {
-  return proTourneys.find(t=>t.id===tnId) || tourneys.find(t=>t.id===tnId);
+  const _pt = (typeof proTourneys!=='undefined' && Array.isArray(proTourneys)) ? proTourneys : [];
+  const _t = (typeof tourneys!=='undefined' && Array.isArray(tourneys)) ? tourneys : [];
+  return _pt.find(t=>t && t.id===tnId) || _t.find(t=>t && t.id===tnId);
 }
 
 function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
@@ -247,7 +249,8 @@ function _syncBktMatchToHistory(tn, m, matchId, ri, mi) {
 }
 
 function getCurrentProTourney() {
-  return proTourneys.find(t=>t.name===curProComp) || proTourneys[0] || null;
+  const _pt = (typeof proTourneys!=='undefined' && Array.isArray(proTourneys)) ? proTourneys : [];
+  return _pt.find(t=>t && t.name===curProComp) || _pt[0] || null;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -258,12 +261,16 @@ function rProComp(C, T) {
   if (!C) return;
   
   try {
-    if (!isLoggedIn && proCompSub === 'grpedit') proCompSub = 'league';
+    const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+    if(typeof proTourneys==='undefined' || !Array.isArray(proTourneys)) window.proTourneys = [];
+    if(typeof proCompSub==='undefined') window.proCompSub = 'league';
+    if(typeof curProComp==='undefined') window.curProComp = '';
+    if (!_li && proCompSub === 'grpedit') proCompSub = 'league';
 
     const tn = getCurrentProTourney();
     if (tn && !tn.groups) tn.groups = [];
 
-    const tourneys = Array.isArray(proTourneys) ? proTourneys : [];
+    const tourneys = (typeof proTourneys!=='undefined' && Array.isArray(proTourneys)) ? proTourneys : [];
 
     let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:10px">
       <span style="font-weight:700;color:var(--gold);white-space:nowrap">대회 선택:</span>
@@ -278,8 +285,8 @@ function rProComp(C, T) {
           return`<option value="${t.name||''}"${curProComp===t.name?' selected':''}>${t.name||'이름 없음'}${_range}</option>`;
         }).join('')}
       </select>
-      ${isLoggedIn?`<button class="btn btn-b btn-xs" onclick="proCompNewTourney()">+ 새 대회</button>`:''}
-      ${tn&&isLoggedIn?`<button class="btn btn-w btn-xs" onclick="proCompRenameTourney()" title="대회명 수정">✏️ 이름수정</button><button class="btn btn-r btn-xs" onclick="proCompDelTourney()" title="현재 대회 삭제">🗑️ 삭제</button>`:''}
+      ${_li?`<button class="btn btn-b btn-xs" onclick="proCompNewTourney()">+ 새 대회</button>`:''}
+      ${tn&&_li?`<button class="btn btn-w btn-xs" onclick="proCompRenameTourney()" title="대회명 수정">✏️ 이름수정</button><button class="btn btn-r btn-xs" onclick="proCompDelTourney()" title="현재 대회 삭제">🗑️ 삭제</button>`:''}
       ${tn?`<span style="font-size:11px;color:var(--gray-l)">총 ${(tn.groups||[]).length}개 조 · ${(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0)}경기</span>`:''}
     </div>`;
 
@@ -293,7 +300,7 @@ function rProComp(C, T) {
       {id:'team', lbl:'🤝 팀전'},
       {id:'gj', lbl:'🔥 중장전'},
       {id:'stats', lbl:'📈 통계'},
-      ...(isLoggedIn?[{id:'grpedit', lbl:'🏗️ 관리'}]:[]),
+      ...(_li?[{id:'grpedit', lbl:'🏗️ 관리'}]:[]),
     ];
     const _subOpts = (typeof applyTabLabels==='function') ? applyTabLabels('procomp', subOpts) : subOpts;
     if (!_subOpts.find(o=>o.id===proCompSub)) {
@@ -309,7 +316,7 @@ function rProComp(C, T) {
         <div style="font-size:44px;margin-bottom:14px">🏆</div>
         <div style="font-size:16px;font-weight:700;margin-bottom:8px">등록된 대회가 없습니다</div>
         <div style="color:var(--gray-l);margin-bottom:20px">새 대회를 만들고 조편성을 시작해보세요</div>
-        ${isLoggedIn?`<button class="btn btn-b" onclick="proCompNewTourney()">+ 대회 만들기</button>`:''}
+        ${_li?`<button class="btn btn-b" onclick="proCompNewTourney()">+ 대회 만들기</button>`:''}
       </div>`;
       C.innerHTML = h; return;
     }
@@ -715,9 +722,9 @@ function proCompTeamSection(tn) {
           const rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
           return `<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--surface);border-radius:6px;margin-bottom:3px;font-size:12px">
             <span style="background:${g._sideW==='A'?colA:colB};color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;flex-shrink:0">${sideWin}</span>
-            <span style="font-weight:700;color:#16a34a;cursor:pointer" onclick="openPlayerModal('${escJS(g.wName)}' )">${g.wName||'?'} ${rb(pw)}</span>
+            <span style="font-weight:700;color:#16a34a;cursor:pointer" onclick="openPlayerModal('${escJS(g.wName)}') ">${g.wName||'?'} ${rb(pw)}</span>
             <span style="color:var(--gray-l);font-size:11px">WIN vs</span>
-            <span style="color:var(--text3);cursor:pointer" onclick="openPlayerModal('${escJS(g.lName||'')}' )">${g.lName||'?'} ${rb(pl)}</span>
+            <span style="color:var(--text3);cursor:pointer" onclick="openPlayerModal('${escJS(g.lName||'')}') ">${g.lName||'?'} ${rb(pl)}</span>
             ${g.map?`<span style="color:var(--gray-l);font-size:10px;margin-left:auto;flex-shrink:0">🗺️ ${g.map}</span>`:''}
             ${isLoggedIn?`<button class="btn btn-r btn-xs" style="margin-left:${g.map?'4px':'auto'};flex-shrink:0" onclick="proCompDeleteTeamGame('${tn.id}',${tmi},${gi})">삭제</button>`:''}
           </div>`;
@@ -1213,7 +1220,7 @@ function proCompBracket(tn) {
     const sz = _s(36, 22);
     if (!name||name==='TBD') return `<div style="width:${sz}px;height:${sz}px;border-radius:var(--su_profile_radius,50%);background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:${_s(14,11)}px;color:#94a3b8">?</div>`;
     const ring = isWin?`box-shadow:0 0 0 2px ${col},0 0 0 4px ${col}33`:`border:2px solid #e2e8f0`;
-    const safe = String(name).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const safe = escJS(name);
     const click = `onclick="openPlayerModal('${safe}')"`;
     const pointer = `cursor:pointer;`;
     return p&&p.photo

@@ -3,6 +3,34 @@
 // CRITICAL fix: settings.js의 중복 정의 제거됨. 이 파일만 rCfg/reCfg를 정의합니다.
 // ══════════════════════════════════════════════════════════
 function rCfg(C,T){
+  const isLoggedIn = !!window.isLoggedIn;
+  const isSubAdmin = !!window.isSubAdmin;
+  const _escHTML = (typeof window.escHTML==='function')
+    ? window.escHTML
+    : (s)=>String(s??'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const _escJS = (typeof window.escJS==='function')
+    ? window.escJS
+    : (s)=>String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+  const _escAttr = (typeof window.escAttr==='function')
+    ? window.escAttr
+    : (s)=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const esc = (typeof window.esc==='function') ? window.esc : _escHTML;
+  const _players = Array.isArray(window.players) ? window.players : [];
+  const localStorage = (function(){
+    try{
+      const ls = window.localStorage;
+      if(!ls) throw new Error('no localStorage');
+      const k='__su_ls_test__';
+      ls.setItem(k,'1');
+      ls.removeItem(k);
+      return ls;
+    }catch(e){
+      return { getItem: ()=>null, setItem: ()=>{}, removeItem: ()=>{} };
+    }
+  })();
+  try{ if(!Array.isArray(window.notices)) window.notices=[]; }catch(e){}
+  const notices = Array.isArray(window.notices) ? window.notices : [];
+  const univCfg = Array.isArray(window.univCfg) ? window.univCfg : [];
   T.innerText='⚙️ 설정';
   if(!isLoggedIn){
     // (요청사항) 설정탭은 관리자 로그인 후만 접근 가능
@@ -114,7 +142,9 @@ function rCfg(C,T){
   const _moreQuickBtns = _quickBtns.slice(4);
   const _catButtons = _cfgCats.map(c=>{
     const on=window._cfgCat===c;
-    return `<button type="button" onclick="cfgApplyCat('${c}')" class="no-export" data-cat="${c}" data-cfg-cat="${c}"
+    const cj=_escJS(c);
+    const ca=_escAttr(c);
+    return `<button type="button" onclick="cfgApplyCat('${cj}')" class="no-export" data-cat="${ca}" data-cfg-cat="${ca}"
       style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 12px;border-radius:16px;cursor:pointer;text-align:left;background:${on?'linear-gradient(135deg,var(--blue),#7c3aed)':'var(--white)'};color:${on?'#fff':'var(--text2)'};border:1px solid ${on?'transparent':'var(--border)'};box-shadow:${on?'0 10px 24px rgba(37,99,235,.22)':'0 4px 12px rgba(15,23,42,.04)'};min-height:82px">
       <span style="font-size:18px;line-height:1">${_cfgCatIcons[c]||'🗂️'}</span>
       <span style="font-size:12px;font-weight:900;line-height:1.25">${_catLabel(c)}</span>
@@ -307,14 +337,14 @@ ${_scfgD('notice','📢 공지 관리')}
   </details>
   ${(()=>{
     const seen={};const dupNames=[];
-    players.forEach(p=>{if(seen[p.name])dupNames.push(p.name);else seen[p.name]=true;});
+    _players.forEach(p=>{if(seen[p.name])dupNames.push(p.name);else seen[p.name]=true;});
     const uniq=[...new Set(dupNames)];
     if(!uniq.length) return '';
     return `<div class="ssec" style="border:2px solid #fca5a5;background:#fff5f5">
       <h4 style="color:#dc2626">⚠️ 동명이인 감지 (${uniq.length}건)</h4>
       <div style="font-size:12px;color:#7f1d1d;margin-bottom:12px">중복 이름이 있으면 승패·기록이 뒤섞입니다. 한 명의 이름을 바꿔 구분하세요.</div>
       ${uniq.map(name=>{
-        const dupes=players.map((p,i)=>({p,i})).filter(({p})=>p.name===name);
+        const dupes=_players.map((p,i)=>({p,i})).filter(({p})=>p.name===name);
         return `<div style="background:var(--white);border:1px solid #fca5a5;border-radius:8px;padding:10px 12px;margin-bottom:8px">
           <div style="font-weight:800;color:#dc2626;font-size:13px;margin-bottom:6px">👥 "${name}" — ${dupes.length}명 중복</div>
           ${dupes.map(({p,i})=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
@@ -325,26 +355,32 @@ ${_scfgD('notice','📢 공지 관리')}
               const inp=document.getElementById('dupfix-${i}');
               const nw=(inp?.value||'').trim();
               if(!nw){alert('새 이름을 입력하세요.');return;}
-              if(players.find((x,xi)=>x.name===nw&&xi!==${i})){alert('이미 존재하는 이름입니다.');return;}
-              editName=players[${i}].name;
-              document.getElementById('emBody').innerHTML='';
-              const oldN=players[${i}].name;
-              players[${i}].name=nw;
-              players.forEach(other=>{(other.history||[]).forEach(h=>{if(h.opp===oldN)h.opp=nw;});});
-              [miniM,univM,comps,ckM,proM,ttM].forEach(arr=>(arr||[]).forEach(m=>{
+              const _players = Array.isArray(window.players) ? window.players : [];
+              if(!_players[${i}]){alert('대상 스트리머를 찾을 수 없습니다.');return;}
+              if(_players.find((x,xi)=>x && x.name===nw && xi!==${i})){alert('이미 존재하는 이름입니다.');return;}
+              window.editName = _players[${i}].name;
+              try{ const _em=document.getElementById('emBody'); if(_em) _em.innerHTML=''; }catch(e){}
+              const oldN = _players[${i}].name;
+              _players[${i}].name = nw;
+              _players.forEach(other=>{(other && other.history || []).forEach(h=>{if(h && h.opp===oldN) h.opp=nw;});});
+              [window.miniM,window.univM,window.comps,window.ckM,window.proM,window.ttM].filter(Array.isArray).forEach(arr=>arr.forEach(m=>{
+                if(!m) return;
                 if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;
-                (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{if(g.playerA===oldN)g.playerA=nw;if(g.playerB===oldN)g.playerB=nw;}));
+                (m.sets||[]).forEach(s=>(s.games||[]).forEach(g=>{if(!g)return;if(g.playerA===oldN)g.playerA=nw;if(g.playerB===oldN)g.playerB=nw;}));
               }));
-              (tourneys||[]).forEach(tn=>{
-                (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});});
+              (Array.isArray(window.tourneys)?window.tourneys:[]).forEach(tn=>{
+                if(!tn) return;
+                (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(!m)return;if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});});
                 const br=tn.bracket||{};
                 Object.values(br.matchDetails||{}).forEach(m=>{if(m&&m.a===oldN)m.a=nw;if(m&&m.b===oldN)m.b=nw;});
-                (br.manualMatches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});
+                (br.manualMatches||[]).forEach(m=>{if(!m)return;if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});
               });
-              (proTourneys||[]).forEach(tn=>{
-                (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});});
+              (Array.isArray(window.proTourneys)?window.proTourneys:[]).forEach(tn=>{
+                if(!tn) return;
+                (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{if(!m)return;if(m.a===oldN)m.a=nw;if(m.b===oldN)m.b=nw;});});
               });
-              save();render();
+              try{ if(typeof window.save==='function') window.save(); }catch(e){}
+              try{ if(typeof window.render==='function') window.render(); }catch(e){}
             })()">✅ 적용</button>
           </div>`).join('')}
         </div>`;
@@ -1632,14 +1668,30 @@ ${_scfgD('notice','📢 공지 관리')}
             {v:'ribbon',  icon:'🎀', l:'리본',     desc:'승리 리본 강조'},
             {v:'grid',    icon:'🔲', l:'그리드',   desc:'아바타 그리드'},
             {v:'poster',  icon:'🎬', l:'포스터',   desc:'시네마틱 오버레이'},
+            {v:'battle',  icon:'⚔️', l:'배틀',     desc:'사선분할 대결모드'},
+            {v:'neon',    icon:'🌟', l:'네온',     desc:'다크+형광 대결모드'},
           ];
+          // SVG 미니 미리보기 생성
+          const _cardSvgPreview = (v)=>{
+            const c1='#3b82f6', c2='#ef4444', w=80, h=44;
+            const sb = `viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="display:block;width:${w}px;height:${h}px;border-radius:6px;overflow:hidden"`;
+            if(v==='battle') return `<svg ${sb}><rect x="0" y="0" width="${w/2}" height="${h}" fill="${c1}cc"/><rect x="${w/2}" y="0" width="${w/2}" height="${h}" fill="${c2}cc"/><polygon points="${w/2-10},0 ${w/2+10},0 ${w/2+10},${h} ${w/2-10},${h}" fill="rgba(0,0,0,.3)"/><rect x="0" y="0" width="${Math.round(w*0.6)}" height="4" fill="${c1}"/><rect x="${Math.round(w*0.6)}" y="0" width="${Math.round(w*0.4)}" height="4" fill="${c2}"/><text x="40" y="${h/2+5}" text-anchor="middle" font-size="13" font-weight="900" fill="white">3:2</text></svg>`;
+            if(v==='neon') return `<svg ${sb}><rect width="${w}" height="${h}" fill="#0a0f1e"/><circle cx="20" cy="${h/2}" r="18" fill="${c1}18"/><circle cx="60" cy="${h/2}" r="18" fill="${c2}18"/><circle cx="18" cy="${h/2}" r="9" fill="none" stroke="${c1}" stroke-width="1.5"/><circle cx="62" cy="${h/2}" r="9" fill="none" stroke="${c2}" stroke-width="1.5"/><text x="40" y="${h/2+5}" text-anchor="middle" font-size="11" font-weight="900" fill="white">3:2</text><rect x="0" y="${h-3}" width="${Math.round(w*0.6)}" height="3" fill="${c1}" opacity=".8"/><rect x="${Math.round(w*0.6)}" y="${h-3}" width="${Math.round(w*0.4)}" height="3" fill="${c2}" opacity=".8"/></svg>`;
+            if(v==='duotone') return `<svg ${sb}><rect x="0" y="0" width="33" height="${h}" fill="${c1}dd"/><rect x="47" y="0" width="33" height="${h}" fill="${c2}dd"/><rect x="33" y="0" width="14" height="${h}" fill="white"/><text x="40" y="${h/2+4}" text-anchor="middle" font-size="9" font-weight="900" fill="#475569">3:2</text></svg>`;
+            if(v==='banner') return `<svg ${sb}><rect x="0" y="0" width="36" height="${h}" fill="${c1}bb"/><rect x="44" y="0" width="36" height="${h}" fill="${c2}bb"/><rect x="33" y="0" width="14" height="${h}" fill="white"/><text x="40" y="${h/2+4}" text-anchor="middle" font-size="9" font-weight="900" fill="#475569">3:2</text></svg>`;
+            if(v==='poster') return `<svg ${sb}><rect width="${w}" height="${h}" fill="#1e293b"/><rect x="4" y="6" width="30" height="${h-12}" rx="8" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.2)" stroke-width="1"/><rect x="46" y="6" width="30" height="${h-12}" rx="8" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.2)" stroke-width="1"/><text x="40" y="${h/2+5}" text-anchor="middle" font-size="11" font-weight="900" fill="white">3:2</text></svg>`;
+            const _mm = _modes.find(x=>x && x.v===v) || {icon:'🎴', l:String(v||'')};
+            return `<svg ${sb}><rect width="${w}" height="${h}" fill="#f1f5f9"/><text x="40" y="${h/2+4}" text-anchor="middle" font-size="9" fill="#64748b">${_mm.icon}</text><text x="40" y="${h/2+16}" text-anchor="middle" font-size="8" fill="#94a3b8">${_mm.l}</text></svg>`;
+          };
+          const _newModes = ['battle','neon'];
           return _modes.map(m=>`<button type="button"
-            onclick="localStorage.setItem('su_h2h_card_mode','${m.v}');try{render();}catch(e){}" 
+            onclick="localStorage.setItem('su_h2h_card_mode','${m.v}');try{render();}catch(e){};" 
             title="${m.desc}"
-            style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border-radius:10px;font-size:11px;font-weight:900;cursor:pointer;border:2px solid ${_cur===m.v?'var(--blue)':'var(--border2)'};background:${_cur===m.v?'#eff6ff':'var(--white)'};color:${_cur===m.v?'var(--blue)':'var(--text2)'};min-width:72px;transition:all .15s">
-            <span style="font-size:18px">${m.icon}</span>
-            <span>${m.l}</span>
-            <span style="font-size:9px;font-weight:700;color:${_cur===m.v?'var(--blue)':'var(--gray-l)'}">${m.desc}</span>
+            style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 8px 6px;border-radius:10px;font-size:10px;font-weight:900;cursor:pointer;border:2px solid ${_cur===m.v?'var(--blue)':'var(--border2)'};background:${_cur===m.v?'#eff6ff':'var(--white)'};color:${_cur===m.v?'var(--blue)':'var(--text2)'};min-width:80px;transition:all .15s;position:relative">
+            ${_newModes.includes(m.v)?`<span style="position:absolute;top:-7px;right:-5px;font-size:7px;font-weight:900;padding:1px 4px;border-radius:99px;background:#ef4444;color:white">NEW</span>`:''}
+            ${_cardSvgPreview(m.v)}
+            <span style="font-weight:900;font-size:11px">${m.icon} ${m.l}</span>
+            <span style="font-size:8px;font-weight:700;color:${_cur===m.v?'var(--blue)':'var(--gray-l)'}">${m.desc}</span>
           </button>`).join('');
         })()}
       </div>
@@ -2602,7 +2654,7 @@ ${_scfgD('notice','📢 공지 관리')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
         <input id="cfg-pal-alias" type="text" placeholder="별명 입력 (예: 샤이니)" style="width:160px" onkeydown="if(event.key==='Enter')cfgAddPlayerAlias()">
         <select id="cfg-pal-player" style="min-width:170px;border:1px solid var(--border2);border-radius:8px;padding:6px 10px;font-size:13px">
-          ${(players||[]).map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('')}
+          ${_players.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('')}
         </select>
         <button class="btn btn-b btn-sm" onclick="cfgAddPlayerAlias()">+ 추가</button>
         <button class="btn btn-w btn-sm" onclick="cfgResetPlayerAliasMap()">초기화</button>
@@ -2887,16 +2939,30 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-b btn-sm" onclick="
-          _ttMigrated=false;_migrateTierTourneys();
-          const n=syncAllHistory?syncAllHistory():0;
-          alert('✅ 티어대회 기록 동기화 + '+n+'건 스트리머 반영 완료');render();">🔄 전체 동기화 (기록탭 + 스트리머)</button>
+          try{
+            window._ttMigrated=false;
+            if(typeof window._migrateTierTourneys==='function') window._migrateTierTourneys();
+            const n=(typeof window.syncAllHistory==='function')?window.syncAllHistory():0;
+            alert('✅ 티어대회 기록 동기화 + '+n+'건 스트리머 반영 완료');
+            if(typeof window.render==='function') window.render();
+          }catch(e){
+            alert('동기화 실패: '+String(e));
+          }">🔄 전체 동기화 (기록탭 + 스트리머)</button>
         <span style="font-size:11px;color:var(--gray-l)">티어대회 기록탭·대전기록 반영 + 스트리머 최근 경기 소급 반영</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-p btn-sm" onclick="
-          _ttMigrated=false;_migrateTierTourneys();
-          const before=ttM.length;save();render();
-          alert('✅ 티어대회 기록 동기화 완료\\n추가된 기록: '+(ttM.length-before)+'건');">🎯 티어대회 기록 동기화</button>
+          try{
+            window._ttMigrated=false;
+            if(typeof window._migrateTierTourneys==='function') window._migrateTierTourneys();
+            if(typeof window.ttM==='undefined' || !Array.isArray(window.ttM)) window.ttM=[];
+            const before=window.ttM.length;
+            if(typeof window.save==='function') window.save();
+            if(typeof window.render==='function') window.render();
+            alert('✅ 티어대회 기록 동기화 완료\\n추가된 기록: '+(window.ttM.length-before)+'건');
+          }catch(e){
+            alert('동기화 실패: '+String(e));
+          }">🎯 티어대회 기록 동기화</button>
         <span style="font-size:11px;color:var(--gray-l)">조별리그·토너먼트 경기를 기록탭·대전기록에 반영 (누락 시 사용)</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -2905,9 +2971,16 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-w btn-sm" onclick="
-          const seen=new Set();let removed=0;
-          ttM=ttM.filter(m=>{if(!m._id)return true;if(seen.has(m._id)){removed++;return false;}seen.add(m._id);return true;});
-          save();render();alert('✅ ttM 중복 제거 완료: '+removed+'건 삭제');
+          try{
+            if(typeof window.ttM==='undefined' || !Array.isArray(window.ttM)) window.ttM=[];
+            const seen=new Set();let removed=0;
+            window.ttM=window.ttM.filter(m=>{if(!m||!m._id)return true;if(seen.has(m._id)){removed++;return false;}seen.add(m._id);return true;});
+            if(typeof window.save==='function') window.save();
+            if(typeof window.render==='function') window.render();
+            alert('✅ ttM 중복 제거 완료: '+removed+'건 삭제');
+          }catch(e){
+            alert('중복 제거 실패: '+String(e));
+          }
         ">🗑️ 중복 경기 제거</button>
         <span style="font-size:11px;color:var(--gray-l)">같은 _id로 이중 등록된 티어대회 경기 제거</span>
       </div>

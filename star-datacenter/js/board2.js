@@ -48,6 +48,7 @@ let _b2PlayersFilter = 'all'; // 'all' | 'P' | 'T' | 'Z'
 let _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' | '유스'
 let _b2SelectedPlayer = null;
 let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
+let _b2PlayersWeekBadge = true;  // 이번주 전적 뱃지 표시 여부
 const _b2BgImageMeta = {};
 let _b2AutoFitResizeBound = false;
 
@@ -265,7 +266,7 @@ function rBoard2(C, T) {
   function _b2TabBtn(view, color, label) {
     const on = _b2View === view;
     // (요청사항) 티어 순위표 스타일(pill)로 통일
-    return `<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_b2View='${view}';render()">${label}</button>`;
+    return `<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_b2View='${view}';render();this.blur()">${label}</button>`;
   }
 
   // 잘못된 뷰 리셋 (삭제된 탭 or 로그인 필요 탭)
@@ -321,25 +322,36 @@ function rBoard2(C, T) {
         onclick="_b2PlayersUnivFilter='전체';document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)">현재: ${_b2PlayersUnivFilter} ✕</button>`
     : '';
   const playerFilters = _b2View === 'players' ? `
-    <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
-    <div style="position:relative">
-      <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
-        <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
-        ${playerUnivList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
-      </select>
-      <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
-    </div>
-    ${_selBadge}
-    <div style="position:relative">
-      <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
-        <option value="all" ${_b2PlayersFilter === 'all' ? 'selected' : ''}>🎮 전체 종족</option>
-        <option value="P" ${_b2PlayersFilter === 'P' ? 'selected' : ''}>🔮 프로토스</option>
-        <option value="T" ${_b2PlayersFilter === 'T' ? 'selected' : ''}>⚔️ 테란</option>
-        <option value="Z" ${_b2PlayersFilter === 'Z' ? 'selected' : ''}>🦎 저그</option>
-      </select>
-      <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+    <div class="b2-nav-playerfilters" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0">
+      <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
+      <div style="position:relative">
+        <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+          <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
+          ${playerUnivList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
+        </select>
+        <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      ${_selBadge}
+      <div style="position:relative">
+        <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+          <option value="all" ${_b2PlayersFilter === 'all' ? 'selected' : ''}>🎮 전체 종족</option>
+          <option value="P" ${_b2PlayersFilter === 'P' ? 'selected' : ''}>🔮 프로토스</option>
+          <option value="T" ${_b2PlayersFilter === 'T' ? 'selected' : ''}>⚔️ 테란</option>
+          <option value="Z" ${_b2PlayersFilter === 'Z' ? 'selected' : ''}>🦎 저그</option>
+        </select>
+        <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div style="position:relative">
+        <select id="b2-players-tier-sel" onchange="_b2PlayersTierFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+          <option value="전체" ${_b2PlayersTierFilter==='전체'?'selected':''}>🏅 전체 티어</option>
+          ${(typeof TIERS!=='undefined'?TIERS:[]).map(t=>`<option value="${t}" ${_b2PlayersTierFilter===t?'selected':''}>${t}티어</option>`).join('')}
+        </select>
+        <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <button onclick="_b2PlayersWeekBadge=!_b2PlayersWeekBadge;render()" style="padding:6px 14px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:${_b2PlayersWeekBadge?'#f59e0b':'var(--white)'};color:${_b2PlayersWeekBadge?'#fff':'var(--text2)'};cursor:pointer;font-weight:700;transition:all .2s">🔥 이번주</button>
     </div>
   ` : '';
+  const weeklyBtn = _b2TabBtn('weekly','#f59e0b', (typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 주간 브리핑'):'📅 주간 브리핑'));
   const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b', (typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')):'';
   const summaryBtn = _b2TabBtn('summary','#10b981', (typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약'));
   const compareBtn = _b2TabBtn('compare','#ef4444', (typeof getTabLabel==='function'?getTabLabel('board2','compare','⚔️ 대학비교'):'⚔️ 대학비교'));
@@ -349,14 +361,20 @@ function rBoard2(C, T) {
   const bubbleBtn  = _b2TabBtn('bubble','#0891b2',  (typeof getTabLabel==='function'?getTabLabel('board2','bubble','🌐 버블맵'):'🌐 버블맵'));
   // 우측 버튼: 펨코현황은 "전체 저장"만, 나머지는 기존 저장/기능 버튼
   const rightBtns = saveBar;
+  const _navTight = _b2View === 'players' ? '#b2-nav.b2-nav-new { padding-top: 0; }' : '';
 
   const filterBar = `
     <style>
       #b2-nav.b2-nav-new { flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
       #b2-nav.b2-nav-new::-webkit-scrollbar { display:none; }
+      #rtitle { caret-color: transparent; }
+      #rcont { caret-color: transparent; }
+      #rcont input, #rcont textarea, #rcont [contenteditable="true"] { caret-color: auto; }
+      ${_navTight}
     </style>
     <div id="b2-nav" class="b2-nav b2-nav-new">
       <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;flex-shrink:0">
+        ${weeklyBtn}
         ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코'))}
         ${_b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별'))}
         ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
@@ -364,11 +382,12 @@ function rBoard2(C, T) {
         ${heatmapBtn}
         ${bubbleBtn}
         <span style="width:1px;height:20px;background:var(--border2);display:inline-block;flex-shrink:0"></span>
-        ${summaryBtn}
         ${rankingBtn}
         ${radarBtn}
-        ${compareBtn}
         ${oldBtn}
+        <span style="width:1px;height:20px;background:var(--border2);display:inline-block;flex-shrink:0"></span>
+        ${summaryBtn}
+        ${compareBtn}
       </div>
       ${playerFilters}
       <span style="flex:1"></span>
@@ -397,7 +416,7 @@ function rBoard2(C, T) {
   const _renderSub = () => {
     const sub = document.getElementById('b2-content');
     if(!sub) return;
-    const _known = new Set(['univ','femco','free','players','summary','ranking','radar','compare','heatmap','bubble','old']);
+    const _known = new Set(['univ','femco','free','players','summary','weekly','ranking','radar','compare','heatmap','bubble','old']);
     if(!_known.has(String(_b2View||''))) _b2View = 'univ';
     if (_b2View === 'univ') {
       sub.innerHTML = _b2UnivView();
@@ -438,6 +457,10 @@ function rBoard2(C, T) {
     } else if (_b2View === 'summary') {
       sub.innerHTML = _b2SummaryView();
       injectUnivIcons && injectUnivIcons(sub);
+    } else if (_b2View === 'weekly') {
+      sub.innerHTML = _b2WeeklyBriefingView();
+      injectUnivIcons && injectUnivIcons(sub);
+      _b2InjectAndRunScripts(sub);
     } else if (_b2View === 'ranking') {
       sub.innerHTML = _b2RankingView();
       injectUnivIcons && injectUnivIcons(sub);
@@ -458,7 +481,7 @@ function rBoard2(C, T) {
       else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
     }
   };
-  setTimeout(() => { try{ _renderSub(); }catch(e){} }, 0);
+  try{ _renderSub(); }catch(e){}
   } catch(e) {
     console.error('[rBoard2] 오류:', e);
     C.innerHTML = `<div style="padding:40px;text-align:center;color:#dc2626">
@@ -486,10 +509,32 @@ function _b2UnivView() {
     (membersByUniv[pu] || (membersByUniv[pu]=[])).push(p);
   });
   const _tierCts = {}; _allVis.forEach(p=>{ const t=p.tier||'?'; _tierCts[t]=(_tierCts[t]||0)+1; });
+  // 이번주 활동 인원 계산
+  const _uvNow = new Date(), _uvDay = _uvNow.getDay();
+  const _uvMon = new Date(_uvNow); _uvMon.setDate(_uvNow.getDate()+(_uvDay===0?-6:1-_uvDay));
+  const _uvFromN = parseInt(_uvMon.toISOString().slice(0,10).replace(/-/g,''));
+  const _uvToN   = parseInt(_uvNow.toISOString().slice(0,10).replace(/-/g,''));
+  const _uvDN = s => parseInt(String(s||'').replace(/[-\.]/g,''))||0;
+  let _uvWeekActive=0, _uvTotalW=0, _uvTotalL=0;
+  _allVis.forEach(p=>{
+    let acted=false;
+    (Array.isArray(p.history)?p.history:[]).forEach(h=>{
+      if(h.result==='승')_uvTotalW++; else if(h.result==='패')_uvTotalL++;
+      const d=_uvDN(h.date||h.d||'');
+      if(d>=_uvFromN&&d<=_uvToN)acted=true;
+    });
+    if(acted)_uvWeekActive++;
+  });
+  const _uvTotalG=_uvTotalW+_uvTotalL;
+  const _uvWr=_uvTotalG>0?Math.round(_uvTotalW/_uvTotalG*100):null;
+  const _uvWrC=_uvWr===null?'#94a3b8':_uvWr>=60?'#10b981':_uvWr>=40?'#f59e0b':'#ef4444';
   const statsBar = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:7px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;flex-wrap:wrap">
     <span style="font-size:12px;font-weight:800;color:var(--text2)">👥 ${_allVis.length}명</span>
     <span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>
     <span style="font-size:12px;font-weight:800;color:var(--text2)">🏫 ${univList.length}개 대학</span>
+    <span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>
+    <span style="font-size:12px;font-weight:800;color:#f59e0b">🔥 이번주 ${_uvWeekActive}명 활동</span>
+    ${_uvWr!==null?`<span style="font-size:12px;font-weight:800;color:${_uvWrC}">📊 통산 ${_uvWr}%</span>`:''}
     ${TIERS.filter(t=>_tierCts[t]).length?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_tierCts[t]).map(t=>`<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;background:${getTierBtnColor(t)};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_tierCts[t]}</span>`).join('')}`:''}
   </div>`;
   const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';
@@ -1353,6 +1398,34 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     </div>
   </div>`;
 
+  // 이번주 전적 계산
+  const _ubNow=new Date(),_ubDay=_ubNow.getDay();
+  const _ubMon=new Date(_ubNow); _ubMon.setDate(_ubNow.getDate()+(_ubDay===0?-6:1-_ubDay));
+  const _ubFromN=parseInt(_ubMon.toISOString().slice(0,10).replace(/-/g,''));
+  const _ubToN=parseInt(_ubNow.toISOString().slice(0,10).replace(/-/g,''));
+  const _ubDN=s=>parseInt(String(s||'').replace(/[-\.]/g,''))||0;
+  let _ubWw=0,_ubWl=0,_ubActive=0,_ubTw=0,_ubTl=0;
+  tieredMembers.forEach(p=>{
+    let acted=false;
+    (Array.isArray(p.history)?p.history:[]).forEach(h=>{
+      if(h.result==='승'){_ubTw++;} else if(h.result==='패'){_ubTl++;}
+      const d=_ubDN(h.date||h.d||'');
+      if(d>=_ubFromN&&d<=_ubToN){if(h.result==='승')_ubWw++;else if(h.result==='패')_ubWl++;acted=true;}
+    });
+    if(acted)_ubActive++;
+  });
+  const _ubTg=_ubTw+_ubTl;
+  const _ubWr=_ubTg>0?Math.round(_ubTw/_ubTg*100):null;
+  const _ubWrc=_ubWr===null?null:_ubWr>=60?'#bbf7d0':_ubWr>=40?'#fef08a':'#fecaca';
+  const _ubWwTotal=_ubWw+_ubWl;
+  const _ubWeekBadge=_ubWwTotal>0
+    ? `<span style="flex-shrink:0;background:rgba(0,0,0,.18);color:${_ubWw>=_ubWl?'#bbf7d0':'#fecaca'};font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;border:1px solid rgba(255,255,255,.15)">`
+      +`🔥 ${_ubWw}승${_ubWl}패</span>`
+    : '';
+  const _ubWrBadge=_ubWr!==null
+    ? `<span style="flex-shrink:0;background:rgba(0,0,0,.18);color:${_ubWrc};font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;border:1px solid rgba(255,255,255,.15)" title="통산 ${_ubTw}승 ${_ubTl}패">📊 ${_ubWr}%</span>`
+    : '';
+
   // 하단 메모/이미지 (bMemo/bMemoImgs)
   const _bnote = uCfg.bMemo || '';
   const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
@@ -1371,6 +1444,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
           ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
           ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}bb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:45%;margin-left:2px">${uCfg.memo2}</span>`:''}
           <span style="flex:1"></span>
+          ${_ubWeekBadge}
+          ${_ubWrBadge}
           <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}33;cursor:pointer" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
           ${isLoggedIn?`<button class="no-export" onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:11px;cursor:pointer;padding:1px 7px;border-radius:8px;flex-shrink:0;font-weight:700;margin-left:3px;z-index:var(--z-dropdown);position:relative" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶':'▼'}</button>`:''}
         </div>
@@ -1392,9 +1467,9 @@ function _b2FreeView() {
   });
   if (!freeMembers.length) return `<div style="text-align:center;color:var(--text3);padding:40px">무소속 멤버가 없습니다</div>`;
 
-  const roledFree = freeMembers.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
+  const roledFree   = freeMembers.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
   roledFree.sort((a,b) => _b2RoleRank(a) - _b2RoleRank(b));
-  const tieredFree = freeMembers.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
+  const tieredFree  = freeMembers.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
 
   const tierGroups = {};
   tieredFree.forEach(p => {
@@ -1406,18 +1481,59 @@ function _b2FreeView() {
     Object.keys(tierGroups).filter(t => !TIERS.includes(t))
   );
 
+  // 이번주 전적 계산
+  const _fvNow=new Date(),_fvDay=_fvNow.getDay();
+  const _fvMon=new Date(_fvNow); _fvMon.setDate(_fvNow.getDate()+(_fvDay===0?-6:1-_fvDay));
+  const _fvFromN=parseInt(_fvMon.toISOString().slice(0,10).replace(/-/g,''));
+  const _fvToN  =parseInt(_fvNow.toISOString().slice(0,10).replace(/-/g,''));
+  const _fvDN   =s=>parseInt(String(s||'').replace(/[-\.]/g,''))||0;
+  let _fvTw=0,_fvTl=0,_fvWw=0,_fvWl=0,_fvActive=0;
+  tieredFree.forEach(p=>{
+    let acted=false;
+    (Array.isArray(p.history)?p.history:[]).forEach(h=>{
+      if(h.result==='승')_fvTw++; else if(h.result==='패')_fvTl++;
+      const d=_fvDN(h.date||h.d||'');
+      if(d>=_fvFromN&&d<=_fvToN){if(h.result==='승')_fvWw++;else if(h.result==='패')_fvWl++;acted=true;}
+    });
+    if(acted)_fvActive++;
+  });
+  const _fvTg=_fvTw+_fvTl;
+  const _fvWr=_fvTg>0?Math.round(_fvTw/_fvTg*100):null;
+  const _fvWrc=_fvWr===null?'#94a3b8':_fvWr>=60?'#10b981':_fvWr>=40?'#f59e0b':'#ef4444';
+  const _fvWwT=_fvWw+_fvWl;
+
+  // 종족 카운트
+  const rCts={P:0,T:0,Z:0,'?':0};
+  tieredFree.forEach(p=>{ const r=p.race||'?'; rCts[r in rCts?r:'?']++; });
+  const rTotal=tieredFree.length||1;
+
   const defCol = '#64748b';
   let h = `<div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 14px #0002">
-    <div style="background:${defCol};padding:10px 16px;display:flex;align-items:center;gap:8px">
-      <span style="font-weight:900;font-size:15px;color:#fff">🚶 무소속</span>
-      <span style="margin-left:auto;background:#fff2;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid #fff4">${freeMembers.length}명</span>
+    <div style="background:${defCol};padding:10px 16px">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="font-weight:900;font-size:15px;color:#fff">🚶 무소속</span>
+        <span style="background:rgba(255,255,255,.18);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">${freeMembers.length}명</span>
+        ${_fvActive>0?`<span style="background:rgba(255,165,0,.35);color:#fef08a;font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px">🔥 이번주 ${_fvActive}명</span>`:''}
+        ${_fvWwT>0?`<span style="background:rgba(0,0,0,.18);color:${_fvWw>=_fvWl?'#bbf7d0':'#fecaca'};font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px">${_fvWw}승${_fvWl}패</span>`:''}
+        ${_fvWr!==null?`<span style="background:rgba(0,0,0,.18);color:${_fvWrc};font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px" title="통산 ${_fvTw}승 ${_fvTl}패">📊 통산 ${_fvWr}%</span>`:''}
+        <div style="margin-left:auto;display:flex;gap:4px;align-items:center">
+          ${rCts.P?`<span style="font-size:10px;background:rgba(124,58,237,.4);color:#ede9fe;padding:1px 6px;border-radius:6px;font-weight:800">🔮${rCts.P}</span>`:''}
+          ${rCts.T?`<span style="font-size:10px;background:rgba(2,132,199,.4);color:#e0f2fe;padding:1px 6px;border-radius:6px;font-weight:800">⚔️${rCts.T}</span>`:''}
+          ${rCts.Z?`<span style="font-size:10px;background:rgba(5,150,105,.4);color:#d1fae5;padding:1px 6px;border-radius:6px;font-weight:800">🦎${rCts.Z}</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;height:5px;border-radius:3px;overflow:hidden;margin-top:8px;background:rgba(255,255,255,.15)">
+        ${rCts.P?`<div style="flex:${rCts.P};background:#7c3aed;opacity:.85"></div>`:''}
+        ${rCts.T?`<div style="flex:${rCts.T};background:#0284c7;opacity:.85"></div>`:''}
+        ${rCts.Z?`<div style="flex:${rCts.Z};background:#059669;opacity:.85"></div>`:''}
+        ${rCts['?']?`<div style="flex:${rCts['?']};background:rgba(255,255,255,.2)"></div>`:''}
+      </div>
     </div>
     <div style="background:#64748b${_b2AlphaHex(b2BgAlpha)};padding:6px 14px 12px">`;
 
   const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:stretch">${labelEl}<div style="flex:1;padding:2px 4px">${contentEl}</div></div></div>`;
   const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)}!important;border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
 
-  // 직책 그룹
   roledFree.forEach(p => {
     h += _frow(_fl(p.role||'', true), _b2PlayerRow(p, defCol));
   });
@@ -2456,8 +2572,26 @@ function _b2PlayersView() {
     ? univFilteredPlayers
     : univFilteredPlayers.filter(p => p.race === _b2PlayersFilter);
 
-  // 티어 미정(미확인) 필터링
-  let tierFilteredPlayers = filteredPlayers.filter(p => p.tier && p.tier !== '?' && p.tier !== '미정' && p.tier !== '미확인');
+  // 티어 필터링
+  let tierFilteredPlayers = (_b2PlayersTierFilter === '전체')
+    ? filteredPlayers.filter(p => p.tier && p.tier !== '?' && p.tier !== '미정' && p.tier !== '미확인')
+    : filteredPlayers.filter(p => p.tier === _b2PlayersTierFilter);
+
+  // 이번주 날짜 범위
+  const _b2pNow = new Date();
+  const _b2pDay = _b2pNow.getDay();
+  const _b2pMon = new Date(_b2pNow); _b2pMon.setDate(_b2pNow.getDate() + (_b2pDay===0?-6:1-_b2pDay));
+  const _b2pFromN = parseInt(_b2pMon.toISOString().slice(0,10).replace(/-/g,''));
+  const _b2pToN   = parseInt(_b2pNow.toISOString().slice(0,10).replace(/-/g,''));
+  const _b2pDateNum = s => parseInt(String(s||'').replace(/[-\.]/g,''))||0;
+  const _b2pWeekStats = (p) => {
+    let w=0,l=0;
+    (Array.isArray(p.history)?p.history:[]).forEach(h=>{
+      const d=_b2pDateNum(h.date||h.d||'');
+      if(d>=_b2pFromN&&d<=_b2pToN){ if(h.result==='승')w++; else if(h.result==='패')l++; }
+    });
+    return {w,l,total:w+l};
+  };
 
   if (!tierFilteredPlayers.length) {
     return `<div style="text-align:center;padding:60px 20px;color:var(--gray-l)">
@@ -2556,6 +2690,7 @@ function _b2PlayersView() {
         height: calc(100vh - 140px);
         min-height: ${pcHeight}px;
         align-items: stretch;
+        padding: 0 0 16px 0;
       }
       .b2-players-main {
         flex: 0 0 ${pcMainNarrow}%;
@@ -3068,7 +3203,7 @@ function _b2PlayersView() {
           <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
           <div class="b2-players-details">
             <span class="b2-players-tier">${_b2SelectedPlayer.tier || '?'}티어</span>
-            <span class="b2-players-race">${_b2SelectedPlayer.race === 'P' ? '프로토스' : _b2SelectedPlayer.race === 'T' ? '테란' : _b2SelectedPlayer.race === 'Z' ? '저그' : '종족미정'}</span>
+            <span class="b2-players-race">${_b2SelectedPlayer.race === 'P' ? '🔮 프로토스' : _b2SelectedPlayer.race === 'T' ? '⚔️ 테란' : _b2SelectedPlayer.race === 'Z' ? '🦎 저그' : '종족미정'}</span>
             ${_b2SelectedPlayer.univ ? (() => {
               const uCfg = univCfg.find(x => x.name === _b2SelectedPlayer.univ) || {};
               const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[_b2SelectedPlayer.univ] || '';
@@ -3076,6 +3211,13 @@ function _b2PlayersView() {
               ? `<span style="display:flex;align-items:center;gap:8px"><img src="${toHttpsUrl(iconUrl)}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${_b2SelectedPlayer.univ}</span></span>`
                 : `<span>🏫 ${_b2SelectedPlayer.univ}</span>`;
             })() : ''}
+            ${(() => {
+              const ws2 = _b2pWeekStats(_b2SelectedPlayer);
+              if (!ws2.total) return '';
+              const wr2 = Math.round(ws2.w/ws2.total*100);
+              const wc2 = wr2>=60?'#10b981':wr2>=40?'#f59e0b':'#ef4444';
+              return `<span style="padding:3px 10px;border-radius:10px;background:rgba(0,0,0,.5);font-size:12px;font-weight:800;color:${wc2}">🔥 이번주 ${ws2.w}승 ${ws2.l}패</span>`;
+            })()}
           </div>
           ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>` : ''}
         </div>
@@ -3096,15 +3238,31 @@ function _b2PlayersView() {
       bg: hexToRgba(playerColor, 0.1),
       border: playerColor
     };
+    const tierCol  = typeof getTierBtnColor==='function'&&p.tier?getTierBtnColor(p.tier):'#64748b';
+    const tierTc   = typeof getTierBtnTextColor==='function'&&p.tier?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
+    const raceIco  = p.race==='P'?'🔮':p.race==='T'?'⚔️':p.race==='Z'?'🦎':'';
+    const ws = _b2PlayersWeekBadge ? _b2pWeekStats(p) : null;
+    const wrColor = ws && ws.total>0 ? (ws.w/ws.total>=0.6?'#10b981':ws.w/ws.total>=0.4?'#f59e0b':'#ef4444') : '#94a3b8';
     
     h += `
-      <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:140px;padding:12px;border-radius:12px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--white);border:2px solid transparent;box-shadow:${isActive?'0 4px 12px '+playerTheme.glow:'0 1px 3px rgba(0,0,0,0.08)'}">
-        ${p.photo
-          ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" ${isActive?'fetchpriority="high"':'fetchpriority="auto"'} class="b2-players-thumbnail b2-fit-auto" data-fit-kind="thumb" data-fit-mode="auto" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:contain;display:block" onload="_b2ApplyBgAutoSizing(this)" onerror="console.warn('[프로필 탭] 썸네일 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
-          : `<div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
-        }
-        <div class="b2-players-label" style="font-size:14px;font-weight:600;text-align:center;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${p.name || '이름 없음'}</div>
+      <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:140px;padding:12px;border-radius:12px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--white);border:2px solid ${isActive?playerColor:'transparent'};box-shadow:${isActive?'0 4px 12px '+hexToRgba(playerColor,0.3):'0 1px 3px rgba(0,0,0,0.08)'}">
+        <div style="position:relative;width:116px;height:116px;flex-shrink:0">
+          ${p.photo
+            ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" ${isActive?'fetchpriority="high"':'fetchpriority="auto"'} class="b2-players-thumbnail b2-fit-auto" data-fit-kind="thumb" data-fit-mode="auto" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:contain;display:block" onload="_b2ApplyBgAutoSizing(this)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
+            : `<div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
+          }
+          ${p.tier?`<span style="position:absolute;top:4px;left:4px;font-size:10px;font-weight:800;padding:1px 6px;border-radius:6px;background:${tierCol};color:${tierTc};line-height:1.5">${p.tier}</span>`:''}
+          ${ws&&ws.total>0?`<span style="position:absolute;bottom:4px;right:4px;font-size:9px;font-weight:900;padding:2px 5px;border-radius:6px;background:rgba(0,0,0,.72);color:${wrColor};line-height:1.4;backdrop-filter:blur(4px)">${ws.w}승${ws.l}패</span>`:''}
+          ${ws&&ws.total>0&&ws.w===ws.total?`<span style="position:absolute;top:4px;right:4px;font-size:12px">🔥</span>`:''}
+        </div>
+        <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div class="b2-players-label" style="font-size:14px;font-weight:700;text-align:center;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${p.name || '이름 없음'}</div>
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center">
+            ${raceIco?`<span style="font-size:11px">${raceIco}</span>`:''}
+            <span style="font-size:10px;color:var(--text3);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px">${p.univ||''}</span>
+          </div>
+        </div>
       </div>
     `;
   });
@@ -3457,107 +3615,175 @@ function saveB2Profile(playerName) {
 /* ══════════════════════════════════════
    🏁 종족별 뷰 - 프로토스/테란/저그 분류
 ══════════════════════════════════════ */
+/* ══════════════════════════════════════
+   🎮 종족별 뷰 v2 — 승률 + 더보기 + 이번주 활동
+══════════════════════════════════════ */
 function _b2RaceView() {
   const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
   const vis = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet.has(String(p?.univ||'').trim()) && !_B2_ROLE_ORDER.includes(p.role||''));
 
+  // 이번주 날짜
+  const now = new Date(), day = now.getDay();
+  const mon = new Date(now); mon.setDate(now.getDate()+(day===0?-6:1-day));
+  const fromN = parseInt(mon.toISOString().slice(0,10).replace(/-/g,''));
+  const toN   = parseInt(now.toISOString().slice(0,10).replace(/-/g,''));
+  const dNum  = s => parseInt(String(s||'').replace(/[-\.]/g,''))||0;
+
   const races = [
-    { key: 'P', label: '🔮 프로토스', color: '#7c3aed', bg: '#ede9fe', dark: '#5b21b6', lightBg: '#f5f3ff' },
-    { key: 'T', label: '⚔️ 테란',    color: '#0369a1', bg: '#e0f2fe', dark: '#075985', lightBg: '#f0f9ff' },
-    { key: 'Z', label: '🦎 저그',    color: '#065f46', bg: '#d1fae5', dark: '#064e3b', lightBg: '#ecfdf5' },
-    { key: '?', label: '❓ 미정',    color: '#64748b', bg: '#f1f5f9', dark: '#475569', lightBg: '#f8fafc' },
+    { key:'P', label:'🔮 프로토스', color:'#7c3aed', bg:'#ede9fe', dark:'#5b21b6', lightBg:'#f5f3ff' },
+    { key:'T', label:'⚔️ 테란',    color:'#0369a1', bg:'#e0f2fe', dark:'#075985', lightBg:'#f0f9ff' },
+    { key:'Z', label:'🦎 저그',    color:'#065f46', bg:'#d1fae5', dark:'#064e3b', lightBg:'#ecfdf5' },
+    { key:'?', label:'❓ 미정',    color:'#64748b', bg:'#f1f5f9', dark:'#475569', lightBg:'#f8fafc' },
   ];
 
-  const groups = {};
-  races.forEach(r => { groups[r.key] = []; });
+  const groups = {}; races.forEach(r => { groups[r.key] = []; });
   vis.forEach(p => {
-    const r = (p.race === 'P' || p.race === 'T' || p.race === 'Z') ? p.race : '?';
-    groups[r].push(p);
+    const r = (p.race==='P'||p.race==='T'||p.race==='Z') ? p.race : '?';
+    // 이번주 전적 계산
+    let w=0,l=0;
+    (Array.isArray(p.history)?p.history:[]).forEach(h=>{
+      const d=dNum(h.date||h.d||'');
+      if(d>=fromN&&d<=toN){ if(h.result==='승')w++; else if(h.result==='패')l++; }
+    });
+    // 통산 전적
+    let tw=0,tl=0;
+    (Array.isArray(p.history)?p.history:[]).forEach(h=>{
+      if(h.result==='승')tw++; else if(h.result==='패')tl++;
+    });
+    groups[r].push({...p, _ww:w, _wl:l, _tw:tw, _tl:tl, _wActive:w+l>0});
   });
 
-  // Sort each group by tier then name
   Object.keys(groups).forEach(k => {
     groups[k].sort((a,b) => {
-      const ta = (typeof TIERS !== 'undefined' && TIERS.includes(a.tier||'')) ? TIERS.indexOf(a.tier) : 999;
-      const tb = (typeof TIERS !== 'undefined' && TIERS.includes(b.tier||'')) ? TIERS.indexOf(b.tier) : 999;
-      if (ta !== tb) return ta - tb;
-      return (a.name||'').localeCompare(b.name||'', 'ko', {sensitivity:'base'});
+      const ta=(typeof TIERS!=='undefined'&&TIERS.includes(a.tier||''))?TIERS.indexOf(a.tier):999;
+      const tb=(typeof TIERS!=='undefined'&&TIERS.includes(b.tier||''))?TIERS.indexOf(b.tier):999;
+      return ta!==tb?ta-tb:(a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'});
     });
   });
 
   const totalVis = vis.length;
-  const pct = (n) => totalVis > 0 ? Math.round(n/totalVis*100) : 0;
+  const pct = n => totalVis>0?Math.round(n/totalVis*100):0;
+  const uid = 'race_'+Math.random().toString(36).slice(2,7);
 
   let h = `<style>
-    .b2-race-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; }
-    .b2-race-card { border-radius:14px; overflow:hidden; box-shadow:0 2px 12px #0001; border:1px solid #0000000d; }
-    .b2-race-header { padding:12px 16px; display:flex; align-items:center; gap:10px; }
-    .b2-race-body { padding:10px 14px 14px; }
-    .b2-race-bar { height:6px; border-radius:3px; margin:8px 0; overflow:hidden; background:#0001; }
-    .b2-race-bar-fill { height:100%; border-radius:3px; transition:width .6s cubic-bezier(.34,1.56,.64,1); }
-    .b2-race-player-grid { display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
-    @media(max-width:640px){ .b2-race-grid{ grid-template-columns:1fr; } }
+    .b2rv2-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; }
+    .b2rv2-card { border-radius:16px; overflow:hidden; box-shadow:0 4px 20px #0002; border:1px solid #0000000d; }
+    .b2rv2-head { padding:14px 16px; display:flex; align-items:center; gap:10px; }
+    .b2rv2-body { padding:12px 14px 16px; }
+    .b2rv2-stat { display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+    .b2rv2-wr-bar { flex:1; height:8px; border-radius:4px; overflow:hidden; background:rgba(0,0,0,.1); min-width:60px; }
+    .b2rv2-players { display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
+    .b2rv2-more-btn { font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px; border:none; cursor:pointer; margin-top:6px; }
+    .b2rv2-week-badge { font-size:10px; font-weight:800; padding:1px 6px; border-radius:6px; }
+    @media(max-width:640px){ .b2rv2-grid{ grid-template-columns:1fr; } }
   </style>`;
 
-  // 전체 통계 요약 헤더
+  // 전체 통계 헤더
   h += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;flex-wrap:wrap">
     <span style="font-size:13px;font-weight:900;color:var(--text1)">👥 전체 ${totalVis}명</span>
     <span style="width:1px;height:16px;background:var(--border2)"></span>
-    ${races.filter(r=>groups[r.key].length).map(r=>`
-      <span style="font-size:12px;font-weight:800;color:${r.color}">${r.label} ${groups[r.key].length}명 (${pct(groups[r.key].length)}%)</span>
-    `).join('<span style="color:var(--border2)">·</span>')}
+    ${races.filter(r=>groups[r.key].length).map(r=>{
+      const grp=groups[r.key];
+      const tw=grp.reduce((s,p)=>s+p._tw,0), tl=grp.reduce((s,p)=>s+p._tl,0);
+      const tg=tw+tl; const wr=tg>0?Math.round(tw/tg*100):null;
+      const wrc=wr===null?'#94a3b8':wr>=60?'#10b981':wr>=40?'#f59e0b':'#ef4444';
+      return `<span style="font-size:12px;font-weight:800;color:${r.color}">${r.label} ${grp.length}명${wr!==null?` <span style="color:${wrc}">(${wr}%)</span>`:''}</span>`;
+    }).join('<span style="color:var(--border2)">·</span>')}
   </div>`;
 
   // 전체 비율 바
   h += `<div style="margin-bottom:16px;border-radius:10px;overflow:hidden;height:10px;display:flex;background:var(--border2)">`;
-  races.forEach(r => {
-    const w = pct(groups[r.key].length);
-    if (w > 0) h += `<div title="${r.label} ${w}%" style="height:100%;width:${w}%;background:${r.color};transition:width .8s ease" ></div>`;
-  });
-  h += `</div>`;
+  races.forEach(r => { const w=pct(groups[r.key].length); if(w>0) h+=`<div title="${r.label} ${w}%" style="height:100%;width:${w}%;background:${r.color};transition:width .8s ease"></div>`; });
+  h += `</div><div class="b2rv2-grid">`;
 
-  h += `<div class="b2-race-grid">`;
   races.forEach(r => {
     const grp = groups[r.key];
     if (!grp.length) return;
 
+    const totalW = grp.reduce((s,p)=>s+p._tw,0), totalL = grp.reduce((s,p)=>s+p._tl,0);
+    const totalG = totalW+totalL;
+    const wr = totalG>0?Math.round(totalW/totalG*100):null;
+    const wrColor = wr===null?'#94a3b8':wr>=60?'#10b981':wr>=40?'#f59e0b':'#ef4444';
+    const weekActive = grp.filter(p=>p._wActive).length;
+    const weekW = grp.reduce((s,p)=>s+p._ww,0), weekL = grp.reduce((s,p)=>s+p._wl,0);
+
     // 대학별 분포
     const univCounts = {};
-    grp.forEach(p => {
-      const u = String(p?.univ||'').trim() || '무소속';
-      univCounts[u] = (univCounts[u]||0)+1;
-    });
+    grp.forEach(p => { const u=String(p?.univ||'').trim()||'무소속'; univCounts[u]=(univCounts[u]||0)+1; });
     const topUnivs = Object.entries(univCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
-    h += `<div class="b2-race-card">
-      <div class="b2-race-header" style="background:${r.color};color:#fff">
-        <span style="font-size:20px">${r.label.split(' ')[0]}</span>
-        <div>
-          <div style="font-size:15px;font-weight:900">${r.label.split(' ').slice(1).join(' ')}</div>
-          <div style="font-size:12px;opacity:.85">${grp.length}명 · 전체의 ${pct(grp.length)}%</div>
+    // 대학별 승률
+    const univWr = {};
+    grp.forEach(p => {
+      const u=String(p?.univ||'').trim()||'무소속';
+      if(!univWr[u]) univWr[u]={w:0,l:0};
+      univWr[u].w+=p._tw; univWr[u].l+=p._tl;
+    });
+
+    const cid = `${uid}-${r.key}`;
+
+    h += `<div class="b2rv2-card">
+      <div class="b2rv2-head" style="background:${r.color}">
+        <span style="font-size:22px">${r.label.split(' ')[0]}</span>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:900;color:#fff">${r.label.split(' ').slice(1).join(' ')}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.8)">${grp.length}명 · 전체의 ${pct(grp.length)}%</div>
         </div>
-        <div style="margin-left:auto;background:rgba(255,255,255,.2);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">
-          #${races.findIndex(rx=>rx.key===r.key)+1}위
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div style="background:rgba(255,255,255,.2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;color:#fff">
+            #${races.findIndex(rx=>rx.key===r.key)+1}위
+          </div>
+          ${wr!==null?`<div style="background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:900;color:${wr>=50?'#bbf7d0':'#fecaca'}">승률 ${wr}%</div>`:''}
         </div>
       </div>
-      <div class="b2-race-body" style="background:${r.lightBg}">
-        <div style="font-size:11px;font-weight:700;color:${r.dark};margin-bottom:6px">TOP 대학</div>
-        ${topUnivs.map(([u,n])=>`
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-            <span style="font-size:12px;font-weight:700;color:var(--text2);min-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u}</span>
+      <div class="b2rv2-body" style="background:${r.lightBg}">
+        <div class="b2rv2-stat">
+          <span style="font-size:11px;font-weight:800;color:${r.dark}">📊 통산</span>
+          <span style="font-size:12px;font-weight:900;color:${r.dark}">${totalG}전</span>
+          <span style="font-size:11px;color:#10b981;font-weight:800">${totalW}승</span>
+          <span style="font-size:11px;color:#ef4444;font-weight:800">${totalL}패</span>
+          ${wr!==null?`<div class="b2rv2-wr-bar"><div style="width:${wr}%;height:100%;background:${wrColor}"></div></div><span style="font-size:11px;font-weight:900;color:${wrColor}">${wr}%</span>`:''}
+        </div>
+        ${weekActive>0?`<div class="b2rv2-stat" style="margin-bottom:10px">
+          <span style="font-size:11px;font-weight:800;color:${r.dark}">🔥 이번주</span>
+          <span class="b2rv2-week-badge" style="background:${r.color}22;color:${r.dark}">활동 ${weekActive}명</span>
+          ${weekW+weekL>0?`<span class="b2rv2-week-badge" style="background:#10b98122;color:#065f46">${weekW}승</span>
+          <span class="b2rv2-week-badge" style="background:#ef444422;color:#991b1b">${weekL}패</span>`:''}
+        </div>`:''}
+        <div style="font-size:11px;font-weight:800;color:${r.dark};margin-bottom:7px">🏫 TOP 대학</div>
+        ${topUnivs.map(([u,n])=>{
+          const uw=univWr[u]||{w:0,l:0}; const ug=uw.w+uw.l;
+          const uwr=ug>0?Math.round(uw.w/ug*100):null;
+          const uwc=uwr===null?'#94a3b8':uwr>=60?'#10b981':uwr>=40?'#f59e0b':'#ef4444';
+          return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+            <span style="font-size:11px;font-weight:700;color:var(--text2);min-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u}</span>
             <div style="flex:1;height:5px;border-radius:3px;background:#0001;overflow:hidden">
               <div style="width:${Math.round(n/grp.length*100)}%;height:100%;background:${r.color};border-radius:3px"></div>
             </div>
-            <span style="font-size:11px;font-weight:800;color:${r.color};min-width:24px;text-align:right">${n}</span>
-          </div>
-        `).join('')}
-        <div class="b2-race-player-grid">
-          ${grp.slice(0,24).map(p => _b2NameTag(p, r.color, false)).join('')}
-          ${grp.length > 24 ? `<span style="font-size:11px;color:${r.dark};font-weight:700;padding:3px 8px">+${grp.length-24}명 더</span>` : ''}
+            <span style="font-size:11px;font-weight:800;color:${r.color};min-width:20px;text-align:right">${n}</span>
+            ${uwr!==null?`<span style="font-size:10px;font-weight:800;color:${uwc};min-width:30px">${uwr}%</span>`:'<span style="min-width:30px"></span>'}
+          </div>`;
+        }).join('')}
+        <div class="b2rv2-players" id="${cid}-players">
+          ${grp.slice(0,24).map(p=>_b2NameTag(p,r.color,false)).join('')}
         </div>
+        ${grp.length>24?`
+          <div id="${cid}-more" style="display:none;flex-wrap:wrap;gap:5px;margin-top:4px">
+            ${grp.slice(24).map(p=>_b2NameTag(p,r.color,false)).join('')}
+          </div>
+          <button class="b2rv2-more-btn" style="background:${r.color}18;color:${r.dark}"
+            onclick="(function(btn){
+              const more=document.getElementById('${cid}-more');
+              if(!more)return;
+              const shown=more.style.display!=='none';
+              more.style.display=shown?'none':'flex';
+              btn.textContent=shown?'+ ${grp.length-24}명 더 보기':'접기';
+            })(this)">+ ${grp.length-24}명 더 보기</button>
+        `:''}
       </div>
     </div>`;
   });
+
   h += `</div>`;
   return h;
 }
@@ -3565,79 +3791,177 @@ function _b2RaceView() {
 /* ══════════════════════════════════════
    🏆 티어별 뷰
 ══════════════════════════════════════ */
+/* ══════════════════════════════════════
+   🏆 티어별 뷰 v2 — 기본접힘 + 승률 + 이번주활동 + 대학분포바
+══════════════════════════════════════ */
+window._b2TierCollapsed = window._b2TierCollapsed || null; // null=초기화 안됨
+
 function _b2TierView() {
   const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
   const vis = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet.has(String(p?.univ||'').trim()) && !_B2_ROLE_ORDER.includes(p.role||''));
+  const TIERS_LOCAL = typeof TIERS !== 'undefined' ? TIERS : [];
+  const univList = (_b2VisUnivs?_b2VisUnivs():[]).filter(u=>u.name&&u.name!=='무소속');
+
+  // 이번주 날짜
+  const now = new Date(), day=now.getDay();
+  const mon = new Date(now); mon.setDate(now.getDate()+(day===0?-6:1-day));
+  const fromN = parseInt(mon.toISOString().slice(0,10).replace(/-/g,''));
+  const toN   = parseInt(now.toISOString().slice(0,10).replace(/-/g,''));
+  const dNum  = s => parseInt(String(s||'').replace(/[-\.]/g,''))||0;
 
   const tierGroups = {};
   vis.forEach(p => {
-    const t = p.tier || '미정';
+    const t = p.tier||'미정';
     if (!tierGroups[t]) tierGroups[t] = [];
-    tierGroups[t].push(p);
+    let tw=0,tl=0,ww=0,wl=0;
+    (Array.isArray(p.history)?p.history:[]).forEach(h=>{
+      if(h.result==='승')tw++; else if(h.result==='패')tl++;
+      const d=dNum(h.date||h.d||'');
+      if(d>=fromN&&d<=toN){ if(h.result==='승')ww++; else if(h.result==='패')wl++; }
+    });
+    tierGroups[t].push({...p,_tw:tw,_tl:tl,_ww:ww,_wl:wl,_wa:ww+wl>0});
   });
 
-  const orderedTiers = (typeof TIERS !== 'undefined' ? TIERS : []).filter(t => tierGroups[t])
-    .concat(Object.keys(tierGroups).filter(t => typeof TIERS === 'undefined' || !TIERS.includes(t)));
+  const orderedTiers = TIERS_LOCAL.filter(t=>tierGroups[t])
+    .concat(Object.keys(tierGroups).filter(t=>!TIERS_LOCAL.includes(t)));
+
+  // 첫 렌더 시 최상위 티어 1개만 펼침
+  if (window._b2TierCollapsed === null) {
+    window._b2TierCollapsed = new Set(orderedTiers.slice(1));
+  }
+
+  // 전체 대학 색상 맵
+  const uColorMap = {};
+  univList.forEach(u=>{ uColorMap[u.name]=gc(u.name)||'#64748b'; });
 
   let h = `<style>
-    .b2-tier-section { margin-bottom:12px; border-radius:12px; overflow:hidden; box-shadow:0 1px 8px #0001; }
-    .b2-tier-hdr { padding:10px 16px; display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none; }
-    .b2-tier-hdr:hover { filter:brightness(0.95); }
-    .b2-tier-body { padding:10px 14px 12px; background:var(--surface); border:1px solid var(--border2); border-top:none; border-radius:0 0 12px 12px; }
-    .b2-tier-chips { display:flex; flex-wrap:wrap; gap:5px; }
-    .b2-tier-race-badge { display:inline-flex; align-items:center; gap:2px; font-size:10px; font-weight:700; padding:1px 5px; border-radius:8px; }
+    .b2tv2-section { margin-bottom:10px; border-radius:14px; overflow:hidden; box-shadow:0 2px 12px #0001; }
+    .b2tv2-hdr { padding:12px 16px; display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; transition:filter .15s; }
+    .b2tv2-hdr:hover { filter:brightness(.95); }
+    .b2tv2-body { padding:12px 16px 16px; background:var(--surface); border:1px solid var(--border2); border-top:none; border-radius:0 0 14px 14px; }
+    .b2tv2-chips { display:flex; flex-wrap:wrap; gap:5px; }
+    .b2tv2-stat-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+    .b2tv2-badge { font-size:11px; font-weight:800; padding:2px 8px; border-radius:8px; }
+    .b2tv2-wr-bar { height:6px; border-radius:3px; overflow:hidden; background:var(--border2); flex:1; min-width:60px; }
+    .b2tv2-univ-bar { display:flex; height:7px; border-radius:4px; overflow:hidden; margin:8px 0 6px; }
+    .b2tv2-expand-all { padding:6px 14px; border-radius:20px; border:1.5px solid var(--border2); background:var(--surface); font-size:12px; font-weight:700; color:var(--text2); cursor:pointer; transition:all .15s; }
+    .b2tv2-expand-all:hover { border-color:var(--text1); color:var(--text1); }
   </style>`;
 
-  h += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;flex-wrap:wrap">
+  // 상단 헤더
+  const totalVis=vis.length;
+  h += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;flex-wrap:wrap">
     <span style="font-size:13px;font-weight:900;color:var(--text1)">🏆 티어별 현황</span>
-    <span style="font-size:12px;color:var(--text3)">총 ${vis.length}명</span>
+    <span style="font-size:12px;color:var(--text3)">총 ${totalVis}명</span>
     ${orderedTiers.map(t=>{
-      const col = typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
-      const tcol = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
-      return `<span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;background:${col};color:${tcol}">${t} ${tierGroups[t].length}</span>`;
+      const col=typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
+      const tcol=typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
+      const grp=tierGroups[t];
+      const tw=grp.reduce((s,p)=>s+p._tw,0), tl=grp.reduce((s,p)=>s+p._tl,0);
+      const tg=tw+tl; const wr=tg>0?Math.round(tw/tg*100):null;
+      return `<span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;background:${col};color:${tcol};cursor:pointer" title="${t}티어 ${grp.length}명${wr!==null?' · 승률'+wr+'%':''}" onclick="
+        const s=window._b2TierCollapsed;
+        if(s.has('${t}'))s.delete('${t}'); else s.add('${t}');
+        const b=document.getElementById('b2tv2-body-${t.replace(/'/g,'_')}');
+        const ic=document.getElementById('b2tv2-ic-${t.replace(/'/g,'_')}');
+        if(b)b.style.display=s.has('${t}')?'none':'block';
+        if(ic)ic.textContent=s.has('${t}')?'▶':'▾';
+      ">${t} ${grp.length}</span>`;
     }).join('')}
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button class="b2tv2-expand-all" onclick="window._b2TierCollapsed.clear();render()">전체 펼치기</button>
+      <button class="b2tv2-expand-all" onclick="window._b2TierCollapsed=new Set(${JSON.stringify(orderedTiers)}.slice(1));render()">전체 접기</button>
+    </div>
   </div>`;
 
   orderedTiers.forEach(tier => {
     const grp = tierGroups[tier];
-    const col = typeof getTierBtnColor==='function'?getTierBtnColor(tier):'#64748b';
+    const col  = typeof getTierBtnColor==='function'?getTierBtnColor(tier):'#64748b';
     const tcol = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(tier)||'#fff'):'#fff';
+    const collapsed = window._b2TierCollapsed.has(tier);
+    const tidSafe = tier.replace(/'/g,'_');
 
-    // race breakdown
-    const rCts = {P:0,T:0,Z:0,'?':0};
-    grp.forEach(p => { const r=p.race||'?'; rCts[r in rCts?r:'?']++; });
-    // univ breakdown
-    const uCts = {};
-    grp.forEach(p => { const u=String(p?.univ||'').trim()||'무소속'; uCts[u]=(uCts[u]||0)+1; });
-    const topU = Object.entries(uCts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([u,n])=>`${u}(${n})`).join(', ');
+    // 통계
+    const tw=grp.reduce((s,p)=>s+p._tw,0), tl=grp.reduce((s,p)=>s+p._tl,0);
+    const tg=tw+tl; const wr=tg>0?Math.round(tw/tg*100):null;
+    const wrColor=wr===null?'#94a3b8':wr>=60?'#10b981':wr>=40?'#f59e0b':'#ef4444';
+    const weekActive=grp.filter(p=>p._wa).length;
+    const weekW=grp.reduce((s,p)=>s+p._ww,0), weekL=grp.reduce((s,p)=>s+p._wl,0);
 
+    // 종족 카운트
+    const rCts={P:0,T:0,Z:0,'?':0};
+    grp.forEach(p=>{const r=p.race||'?'; rCts[r in rCts?r:'?']++;});
+
+    // 대학 분포 (상위 8개)
+    const uCts={};
+    grp.forEach(p=>{ const u=String(p?.univ||'').trim()||'무소속'; uCts[u]=(uCts[u]||0)+1; });
+    const topU=Object.entries(uCts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const total8=topU.reduce((s,[,n])=>s+n,0);
+
+    // 정렬
     grp.sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'}));
 
-    h += `<div class="b2-tier-section">
-      <div class="b2-tier-hdr" style="background:${col};color:${tcol}" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
-        <span style="font-size:16px;font-weight:1000">${tier}</span>
-        <span style="background:rgba(255,255,255,.2);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700">${grp.length}명</span>
-        <div style="display:flex;gap:5px;margin-left:4px">
-          ${rCts.P?`<span class="b2-tier-race-badge" style="background:rgba(255,255,255,.25);color:${tcol}">🔮${rCts.P}</span>`:''}
-          ${rCts.T?`<span class="b2-tier-race-badge" style="background:rgba(255,255,255,.25);color:${tcol}">⚔️${rCts.T}</span>`:''}
-          ${rCts.Z?`<span class="b2-tier-race-badge" style="background:rgba(255,255,255,.25);color:${tcol}">🦎${rCts.Z}</span>`:''}
+    h += `<div class="b2tv2-section">
+      <div class="b2tv2-hdr" style="background:${col};color:${tcol}" onclick="(function(){
+        const s=window._b2TierCollapsed;
+        const b=document.getElementById('b2tv2-body-${tidSafe}');
+        const ic=document.getElementById('b2tv2-ic-${tidSafe}');
+        if(!b)return;
+        const wasCollapsed=s.has('${tier}');
+        if(wasCollapsed){s.delete('${tier}');b.style.display='block';}else{s.add('${tier}');b.style.display='none';}
+        if(ic)ic.textContent=wasCollapsed?'▾':'▶';
+      })()">
+        <span style="font-size:17px;font-weight:900">${tier}</span>
+        <span style="background:rgba(255,255,255,.22);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700">${grp.length}명</span>
+        <div style="display:flex;gap:4px;align-items:center">
+          ${rCts.P?`<span style="font-size:11px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:8px">🔮${rCts.P}</span>`:''}
+          ${rCts.T?`<span style="font-size:11px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:8px">⚔️${rCts.T}</span>`:''}
+          ${rCts.Z?`<span style="font-size:11px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:8px">🦎${rCts.Z}</span>`:''}
         </div>
-        <span style="margin-left:auto;font-size:11px;opacity:.7">${topU}</span>
-        <span style="font-size:14px;opacity:.7">▾</span>
+        ${wr!==null?`<span style="font-size:12px;font-weight:900;background:rgba(255,255,255,.18);padding:2px 10px;border-radius:20px;color:${wr>=50?'#bbf7d0':'#fecaca'}">📈 ${wr}%</span>`:''}
+        ${weekActive>0?`<span style="font-size:11px;background:rgba(255,165,0,.3);padding:2px 8px;border-radius:10px">🔥 ${weekActive}명</span>`:''}
+        <span style="margin-left:auto;font-size:14px" id="b2tv2-ic-${tidSafe}">${collapsed?'▶':'▾'}</span>
       </div>
-      <div class="b2-tier-body">
-        <div class="b2-tier-chips">
-          ${grp.map(p => _b2NameTag(p, col, false)).join('')}
+      <div id="b2tv2-body-${tidSafe}" style="display:${collapsed?'none':'block'}">
+        <div class="b2tv2-body">
+          <div class="b2tv2-stat-row">
+            ${tg>0?`
+              <span class="b2tv2-badge" style="background:#10b98118;color:#10b981">${tw}승</span>
+              <span class="b2tv2-badge" style="background:#ef444418;color:#ef4444">${tl}패</span>
+              <div class="b2tv2-wr-bar"><div style="width:${wr}%;height:100%;background:${wrColor};border-radius:3px"></div></div>
+              <span style="font-size:12px;font-weight:900;color:${wrColor}">${wr}%</span>
+            `:`<span style="font-size:11px;color:var(--text3)">전적 없음</span>`}
+            ${weekActive>0?`<span class="b2tv2-badge" style="background:#f59e0b18;color:#b45309;margin-left:8px">🔥 이번주 ${weekActive}명 활동 (${weekW}승${weekL}패)</span>`:''}
+          </div>
+          ${topU.length>1?`
+            <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:3px">대학 분포</div>
+            <div class="b2tv2-univ-bar">
+              ${topU.map(([u,n])=>`<div title="${u} ${n}명" style="flex:${n};background:${uColorMap[u]||'#94a3b8'};opacity:.85"></div>`).join('')}
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
+              ${topU.map(([u,n])=>`<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:${uColorMap[u]||'#94a3b8'}22;color:${uColorMap[u]||'#64748b'};border:1px solid ${uColorMap[u]||'#94a3b8'}44">${u} ${n}</span>`).join('')}
+              ${Object.keys(uCts).length>8?`<span style="font-size:10px;color:var(--text3)">외 ${Object.keys(uCts).length-8}개</span>`:''}
+            </div>
+          `:''}
+          <div class="b2tv2-chips">
+            ${grp.map(p=>_b2NameTag(p,col,false)).join('')}
+          </div>
         </div>
       </div>
     </div>`;
   });
+
   return h;
 }
 
 /* ══════════════════════════════════════
    🥇 랭킹 뷰 — 대학별 종합 랭킹 리더보드
 ══════════════════════════════════════ */
+/* ══════════════════════════════════════
+   🏆 랭킹 뷰 v2 — 정렬기준 전환 + 실전승률 + 순위변동
+══════════════════════════════════════ */
+window._b2RankingSort = window._b2RankingSort || 'tier';
+
 function _b2RankingView() {
   const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
   const tieredVis = players.filter(p =>
@@ -3646,107 +3970,192 @@ function _b2RankingView() {
     !_B2_ROLE_ORDER.includes(p.role||'')
   );
   const univList = _b2VisUnivs ? _b2VisUnivs().filter(u=>u.name && u.name!=='무소속') : [];
-
   const TIERS_LOCAL = typeof TIERS !== 'undefined' ? TIERS : [];
+  const sortMode = window._b2RankingSort || 'tier';
 
-  // 티어 점수: 순위가 높을수록 높은 점수
   const tierScore = (tier) => {
     const idx = TIERS_LOCAL.indexOf(tier);
-    if (idx < 0) return 0;
-    return Math.max(0, (TIERS_LOCAL.length - idx) * 10);
+    return idx < 0 ? 0 : Math.max(0, (TIERS_LOCAL.length - idx) * 10);
   };
+
+  // 이전주 날짜 범위
+  const now = new Date();
+  const day = now.getDay();
+  const diffToMon = (day === 0 ? -6 : 1 - day);
+  const thisMon = new Date(now); thisMon.setDate(now.getDate() + diffToMon);
+  const prevMon = new Date(thisMon); prevMon.setDate(thisMon.getDate() - 7);
+  const prevSun = new Date(thisMon); prevSun.setDate(thisMon.getDate() - 1);
+  const fmt = d => d.toISOString().slice(0,10).replace(/-/g,'');
+  const thisFromN = parseInt(fmt(thisMon)), thisToN = parseInt(fmt(now));
+  const prevFromN = parseInt(fmt(prevMon)), prevToN  = parseInt(fmt(prevSun));
+  const dateNum = s => parseInt(String(s||'').replace(/[-\.]/g,'')) || 0;
 
   const univStats = univList.map(u => {
     const members = tieredVis.filter(p => String(p?.univ||'').trim() === u.name);
     if (!members.length) return null;
-    const score = members.reduce((s, p) => s + tierScore(p.tier||''), 0);
-    const topMember = members.slice().sort((a,b) => {
-      const ia = TIERS_LOCAL.indexOf(a.tier||''), ib = TIERS_LOCAL.indexOf(b.tier||'');
+
+    // 티어 점수
+    const score = members.reduce((s,p) => s + tierScore(p.tier||''), 0);
+
+    // 이번주 승률
+    let tw=0, tl=0, pw=0, pl=0;
+    members.forEach(p => {
+      (Array.isArray(p.history)?p.history:[]).forEach(h => {
+        const d = dateNum(h.date||h.d||'');
+        if (d >= thisFromN && d <= thisToN) { h.result==='승'?tw++:h.result==='패'?tl++:null; }
+        if (d >= prevFromN && d <= prevToN) { h.result==='승'?pw++:h.result==='패'?pl++:null; }
+      });
+    });
+    const tg = tw+tl, pg = pw+pl;
+    const wr = tg > 0 ? Math.round(tw/tg*100) : null;
+    const pwr = pg > 0 ? Math.round(pw/pg*100) : null;
+
+    const topMember = members.slice().sort((a,b)=>{
+      const ia=TIERS_LOCAL.indexOf(a.tier||''),ib=TIERS_LOCAL.indexOf(b.tier||'');
       return (ia>=0?ia:999)-(ib>=0?ib:999);
     })[0];
-    const topTier = topMember?.tier || '없음';
-    const topTierCol = typeof getTierBtnColor==='function' ? getTierBtnColor(topTier) : '#64748b';
-    const topTierTc = typeof getTierBtnTextColor==='function' ? (getTierBtnTextColor(topTier)||'#fff') : '#fff';
-    const races = {P:0,T:0,Z:0};
-    members.forEach(p => { if(p.race in races) races[p.race]++; });
-    const dominantRace = Object.entries(races).sort((a,b)=>b[1]-a[1])[0]?.[0] || '?';
-    const raceEmoji = {P:'🔮',T:'⚔️',Z:'🦎','?':'❓'}[dominantRace] || '❓';
-    return { name: u.name, color: gc(u.name)||'#64748b', count: members.length, score, topTier, topTierCol, topTierTc, races, dominantRace, raceEmoji };
-  }).filter(Boolean).sort((a,b) => b.score - a.score || b.count - a.count);
+    const topTier = topMember?.tier||'없음';
+    const topTierCol = typeof getTierBtnColor==='function'?getTierBtnColor(topTier):'#64748b';
+    const topTierTc  = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(topTier)||'#fff'):'#fff';
+    const races={P:0,T:0,Z:0};
+    members.forEach(p=>{if(p.race in races)races[p.race]++;});
+    const dominantRace=Object.entries(races).sort((a,b)=>b[1]-a[1])[0]?.[0]||'?';
+    const raceEmoji={P:'🔮',T:'⚔️',Z:'🦎','?':'❓'}[dominantRace]||'❓';
 
-  const maxScore = univStats[0]?.score || 1;
+    return { name:u.name, color:gc(u.name)||'#64748b', count:members.length, score, topTier, topTierCol, topTierTc, races, dominantRace, raceEmoji, tw, tl, tg, wr, pwr };
+  }).filter(Boolean);
+
+  // 정렬
+  const sorted = [...univStats].sort((a,b) => {
+    if (sortMode === 'tier')   return b.score - a.score || b.count - a.count;
+    if (sortMode === 'count')  return b.count - a.count || b.score - a.score;
+    if (sortMode === 'wr')     return (b.wr??-1) - (a.wr??-1) || b.tg - a.tg;
+    if (sortMode === 'games')  return b.tg - a.tg || b.tw - a.tw;
+    return 0;
+  });
+
+  // 이전 순위 맵 (tier 기준 고정)
+  const tierSorted = [...univStats].sort((a,b)=>b.score-a.score||b.count-a.count);
+  const prevRankMap = {}; tierSorted.forEach((u,i)=>{ prevRankMap[u.name]=i+1; });
+
+  const maxScore = Math.max(...sorted.map(u=>u.score),1);
+  const maxCount = Math.max(...sorted.map(u=>u.count),1);
+  const maxGames = Math.max(...sorted.map(u=>u.tg),1);
   const medals = ['🥇','🥈','🥉'];
 
+  const sortBtns = [
+    { key:'tier',  label:'🏅 티어 점수' },
+    { key:'count', label:'👥 인원수' },
+    { key:'wr',    label:'📈 이번주 승률' },
+    { key:'games', label:'⚔️ 이번주 경기수' },
+  ];
+
   let h = `<style>
-    .b2rk-wrap { }
-    .b2rk-row { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:14px; margin-bottom:6px; border:1.5px solid var(--border2); background:var(--white); transition:transform .12s,box-shadow .12s; cursor:default; position:relative; overflow:hidden; }
-    .b2rk-row:hover { transform:translateY(-2px); box-shadow:0 6px 24px #0002; }
-    .b2rk-rank { font-size:22px; min-width:36px; text-align:center; font-weight:900; }
-    .b2rk-name { font-size:14px; font-weight:900; min-width:64px; }
-    .b2rk-bar-wrap { flex:1; height:14px; border-radius:7px; background:var(--border2); overflow:hidden; }
-    .b2rk-bar { height:100%; border-radius:7px; transition:width .8s ease; }
-    .b2rk-score { font-size:13px; font-weight:900; min-width:40px; text-align:right; }
-    .b2rk-badges { display:flex; gap:4px; flex-shrink:0; flex-wrap:wrap; align-items:center; }
-    .b2rk-glow { position:absolute;inset:0;opacity:.05;pointer-events:none; }
-    .b2rk-filter { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
-    .b2rk-filter-btn { padding:5px 12px; border-radius:20px; border:1.5px solid var(--border2); background:var(--surface); font-size:11px; font-weight:700; color:var(--text2); cursor:pointer; transition:all .12s; }
-    .b2rk-filter-btn.on { background:var(--text1); color:var(--white); border-color:var(--text1); }
+    .b2rk2-wrap {}
+    .b2rk2-sortbar { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px }
+    .b2rk2-sbtn { padding:6px 14px;border-radius:20px;border:1.5px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s }
+    .b2rk2-sbtn.on { background:var(--text1);color:var(--white);border-color:var(--text1) }
+    .b2rk2-sbtn:hover:not(.on) { border-color:var(--text2) }
+    .b2rk2-row { display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;margin-bottom:6px;border:1.5px solid var(--border2);background:var(--white);cursor:pointer;position:relative;overflow:hidden;transition:border-color .12s,background .12s }
+    .b2rk2-row:hover { background:var(--hover) }
+    .b2rk2-row.selected { border-color:var(--text1);background:var(--hover);box-shadow:0 0 0 3px rgba(0,0,0,.06) }
+    .b2rk2-row:active { transform:scale(.995) }
+    .b2rk2-rank { font-size:22px;min-width:36px;text-align:center;font-weight:900 }
+    .b2rk2-name { font-size:14px;font-weight:900;min-width:64px }
+    .b2rk2-bar-wrap { flex:1;height:12px;border-radius:6px;background:var(--border2);overflow:hidden }
+    .b2rk2-bar { height:100%;border-radius:6px;transition:width .7s ease }
+    .b2rk2-score { font-size:13px;font-weight:900;min-width:52px;text-align:right }
+    .b2rk2-badges { display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;align-items:center }
+    .b2rk2-glow { position:absolute;inset:0;opacity:.05;pointer-events:none }
+    .b2rk2-delta { font-size:11px;font-weight:800;margin-left:2px }
   </style>`;
 
+  // 헤더 배너
   h += `<div style="margin-bottom:14px;padding:12px 16px;background:linear-gradient(135deg,#f97316,#fb923c);border-radius:14px;display:flex;align-items:center;gap:10px">
     <span style="font-size:24px">🏆</span>
     <div>
-      <div style="font-size:15px;font-weight:900;color:#fff">대학별 티어 종합 랭킹</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.8)">티어별 점수 합산 · 상위 티어일수록 높은 점수</div>
+      <div style="font-size:15px;font-weight:900;color:#fff">대학별 종합 랭킹</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.8)">정렬 기준을 선택해 다양한 관점으로 비교</div>
     </div>
     <div style="margin-left:auto;text-align:right">
-      <div style="font-size:20px;font-weight:900;color:#fff">${univStats.length}</div>
+      <div style="font-size:20px;font-weight:900;color:#fff">${sorted.length}</div>
       <div style="font-size:10px;color:rgba(255,255,255,.8)">대학 참가</div>
     </div>
   </div>`;
 
-  h += `<div class="b2rk-wrap">`;
-  univStats.forEach((u, i) => {
-    const rank = i + 1;
-    const rankDisplay = medals[i] || `<span style="font-size:14px;font-weight:900;color:var(--text3)">${rank}</span>`;
-    const barW = Math.round(u.score / maxScore * 100);
-    const isTop3 = i < 3;
-    const topBorder = isTop3 ? `border-color:${u.color}66;` : '';
-    const topBg = isTop3 ? `background:${u.color}08;` : '';
+  // 정렬 버튼
+  h += `<div class="b2rk2-sortbar">
+    ${sortBtns.map(b=>`<button class="b2rk2-sbtn${sortMode===b.key?' on':''}" onclick="window._b2RankingSort='${b.key}';render()">${b.label}</button>`).join('')}
+  </div>`;
 
-    h += `<div class="b2rk-row" style="${topBorder}${topBg}">
-      <div class="b2rk-glow" style="background:radial-gradient(ellipse at 0% 50%,${u.color},transparent 60%)"></div>
-      <div class="b2rk-rank">${rankDisplay}</div>
-      <div class="b2rk-name" style="color:${u.color}">${u.name}</div>
-      <div class="b2rk-bar-wrap">
-        <div class="b2rk-bar" style="width:${barW}%;background:linear-gradient(90deg,${u.color},${u.color}88)"></div>
+  h += `<div class="b2rk2-wrap">`;
+  sorted.forEach((u, i) => {
+    const rank = i + 1;
+    const prevRank = prevRankMap[u.name] || rank;
+    const rankDelta = prevRank - rank; // 양수=상승
+    const rankDisplay = medals[i] || `<span style="font-size:14px;font-weight:900;color:var(--text3)">${rank}</span>`;
+    const isTop3 = i < 3;
+
+    // 정렬 기준에 따라 바 값 결정
+    let barW = 0, scoreLabel = '';
+    if (sortMode === 'tier')  { barW=Math.round(u.score/maxScore*100); scoreLabel=`${u.score}pt`; }
+    if (sortMode === 'count') { barW=Math.round(u.count/maxCount*100); scoreLabel=`${u.count}명`; }
+    if (sortMode === 'wr')    { barW=u.wr??0; scoreLabel=u.wr!==null?`${u.wr}%`:'-'; }
+    if (sortMode === 'games') { barW=Math.round(u.tg/Math.max(maxGames,1)*100); scoreLabel=`${u.tg}전`; }
+
+    // 순위 변동 배지
+    let deltaHtml = '';
+    if (sortMode === 'tier' && rankDelta !== 0) {
+      const col = rankDelta>0?'#10b981':'#ef4444';
+      const arrow = rankDelta>0?'▲':'▼';
+      deltaHtml = `<span class="b2rk2-delta" style="color:${col}">${arrow}${Math.abs(rankDelta)}</span>`;
+    }
+
+    // 이번주 승률 뱃지
+    const wrBadge = u.wr!==null
+      ? `<span style="font-size:10px;padding:2px 7px;border-radius:8px;background:${u.wr>=60?'#10b981':u.wr>=40?'#f59e0b':'#ef4444'};color:#fff;font-weight:800">📈 ${u.wr}%</span>`
+      : '';
+    const pWrDelta = (u.wr!==null && u.pwr!==null)
+      ? `<span style="font-size:10px;color:${u.wr>=u.pwr?'#10b981':'#ef4444'};font-weight:700">${u.wr>=u.pwr?'▲':'▼'}${Math.abs(u.wr-u.pwr)}%</span>`
+      : '';
+
+    h += `<div class="b2rk2-row" onclick="(function(el){document.querySelectorAll('.b2rk2-row').forEach(function(r){r.classList.remove('selected')});el.classList.toggle('selected')})(this)" style="${isTop3?`border-color:${u.color}66;background:${u.color}08`:''
+    }">
+      <div class="b2rk2-glow" style="background:radial-gradient(ellipse at 0% 50%,${u.color},transparent 60%)"></div>
+      <div class="b2rk2-rank">${rankDisplay}${deltaHtml}</div>
+      <div class="b2rk2-name" style="color:${u.color}">${u.name}</div>
+      <div class="b2rk2-bar-wrap">
+        <div class="b2rk2-bar" style="width:${barW}%;background:linear-gradient(90deg,${u.color},${u.color}88)"></div>
       </div>
-      <div class="b2rk-score" style="color:${u.color}">${u.score}pt</div>
-      <div class="b2rk-badges">
+      <div class="b2rk2-score" style="color:${u.color}">${scoreLabel}</div>
+      <div class="b2rk2-badges">
         <span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:${u.topTierCol};color:${u.topTierTc}">TOP ${u.topTier}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:var(--surface);color:var(--text2)">${u.raceEmoji} ${u.count}명</span>
+        ${u.tg > 0 ? wrBadge : ''}
+        ${pWrDelta}
       </div>
     </div>`;
   });
-  h += `</div>
+  h += `</div>`;
 
-  <div style="margin-top:12px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--border2)">
-    <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">📌 점수 계산 기준</div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px">
-      ${TIERS_LOCAL.filter(t=>tieredVis.some(p=>p.tier===t)).map(t=>{
-        const col = typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
-        const tc = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
-        const score = tierScore(t);
-        return `<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:${col};color:${tc}">${t} = ${score}pt</span>`;
-      }).join('')}
-    </div>
-  </div>`;
+  // 점수 기준 설명
+  if (sortMode === 'tier') {
+    h += `<div style="margin-top:12px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--border2)">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">📌 티어 점수 기준</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${TIERS_LOCAL.filter(t=>tieredVis.some(p=>p.tier===t)).map(t=>{
+          const col=typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
+          const tc=typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
+          return `<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:${col};color:${tc}">${t} = ${tierScore(t)}pt</span>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
 
   return h;
 }
-
 /* ══════════════════════════════════════
-   🕸️ 레이더 뷰 — 대학별 다차원 레이더 차트
+   🕸️ 레이더 뷰 v2 — 전체평균선 + 강점축 하이라이트 + 수치 테이블
 ══════════════════════════════════════ */
 function _b2RadarView() {
   const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
@@ -3758,36 +4167,33 @@ function _b2RadarView() {
   const univList = _b2VisUnivs ? _b2VisUnivs().filter(u=>u.name && u.name!=='무소속') : [];
   const TIERS_LOCAL = typeof TIERS !== 'undefined' ? TIERS : [];
 
-  try{
+  try {
     const sig = (function(){
-      try{
+      try {
         const arrs=[miniM,univM,ckM,proM,ttM,comps,tourneys,proTourneys,indM,gjM];
         return arrs.map(a=>Array.isArray(a)?a.length:0).join('|');
-      }catch(e){
-        return '';
-      }
+      } catch(e) { return ''; }
     })();
-    if(typeof window.__b2_radar_hist_sig === 'undefined') window.__b2_radar_hist_sig = '';
-    if(window.__b2_radar_hist_sig !== sig && typeof _rebuildAllPlayerHistoryCore === 'function'){
+    if (typeof window.__b2_radar_hist_sig === 'undefined') window.__b2_radar_hist_sig = '';
+    if (window.__b2_radar_hist_sig !== sig && typeof _rebuildAllPlayerHistoryCore === 'function') {
       _rebuildAllPlayerHistoryCore();
       window.__b2_radar_hist_sig = sig;
     }
-  }catch(e){}
+  } catch(e) {}
 
-  const tierScore = (tier) => {
-    const idx = TIERS_LOCAL.indexOf(tier);
-    return idx >= 0 ? Math.max(0, TIERS_LOCAL.length - idx) : 0;
+  const tierScore = t => {
+    const i = TIERS_LOCAL.indexOf(t);
+    return i < 0 ? 0 : Math.max(0, (TIERS_LOCAL.length - i) * 10);
   };
-
-  const _hist = (p) => Array.isArray(p && p.history) ? p.history : [];
-  const _modeKey = (modeLabel) => {
-    const m = String(modeLabel||'').trim();
-    if(m === '미니대전' || m === '시빌워') return 'mini';
-    if(m === '대학대전') return 'univm';
-    if(m === '대학CK') return 'ck';
-    if(m.startsWith('프로리그')) return 'pro';
-    if(m.startsWith('티어대회')) return 'tt';
-    if(m === '대회' || m === '조별리그' || m === '토너먼트' || m === '조별대회' || m.includes('대회') || m.includes('조별') || m.includes('토너')) return 'comp';
+  const _hist = p => Array.isArray(p && p.history) ? p.history : [];
+  const _modeKey = m => {
+    if (!m) return '';
+    m = String(m).trim();
+    if (m === '미니' || m === '친선') return 'mini';
+    if (m === '대학대전' || m === '대학') return 'univm';
+    if (m === 'CK' || m.includes('CK')) return 'ck';
+    if (m === '티어대회' || m.includes('티어')) return 'tt';
+    if (m === '대회' || m === '조별리그' || m === '토너먼트' || m === '조별대회' || m.includes('대회') || m.includes('조별') || m.includes('토너')) return 'comp';
     return '';
   };
 
@@ -3797,123 +4203,137 @@ function _b2RadarView() {
     const total = members.length;
     const avgScore = members.reduce((s,p)=>s+tierScore(p.tier||''),0) / total;
     const part = { mini:0, univm:0, ck:0, tt:0, comp:0 };
-    let wins = 0, losses = 0;
-    members.forEach(p=>{
+    let wins=0, losses=0;
+    members.forEach(p => {
       const seen = { mini:false, univm:false, ck:false, tt:false, comp:false };
-      _hist(p).forEach(h=>{
+      _hist(p).forEach(h => {
         const k = _modeKey(h && h.mode);
-        if(k && (k in part)){
+        if (k && (k in part)) {
           const r2 = String(h && h.result || '').trim();
-          if(r2 === '승') wins++;
-          else if(r2 === '패') losses++;
+          if (r2==='승') wins++; else if (r2==='패') losses++;
         }
-        if(k && k in seen) seen[k] = true;
-        if(!k || !(k in part)) return;
+        if (k && k in seen) seen[k] = true;
       });
       Object.keys(seen).forEach(k=>{ if(seen[k]) part[k]++; });
     });
-    return {
-      name: u.name,
-      color: gc(u.name)||'#64748b',
-      total,
-      avgScore,
-      wins,
-      losses,
-      partMini: part.mini / total,
-      partUnivm: part.univm / total,
-      partCk: part.ck / total,
-      partTt: part.tt / total,
-      partComp: part.comp / total
-    };
-  }).filter(Boolean).sort((a,b) => b.total - a.total).slice(0, 12);
+    const games = wins+losses;
+    const wr = games>0?Math.round(wins/games*100):null;
+    return { name:u.name, color:gc(u.name)||'#64748b', total, avgScore, wins, losses, wr,
+      partMini:part.mini/total, partUnivm:part.univm/total, partCk:part.ck/total,
+      partTt:part.tt/total, partComp:part.comp/total };
+  }).filter(Boolean).sort((a,b)=>b.total-a.total).slice(0,12);
 
   const maxTotal = Math.max(...univStats.map(u=>u.total), 1);
-  const maxAvg = Math.max(...univStats.map(u=>u.avgScore), 1);
-  const maxWins = Math.max(...univStats.map(u=>u.wins||0), 1);
-  const maxLosses = Math.max(...univStats.map(u=>u.losses||0), 1);
+  const maxAvg   = Math.max(...univStats.map(u=>u.avgScore), 1);
+  const maxWins  = Math.max(...univStats.map(u=>u.wins||0), 1);
+  const maxLoss  = Math.max(...univStats.map(u=>u.losses||0), 1);
 
-  const AXES = ['인원','평균티어','승','패','미니','대학대전','대학CK','티어대회','일반대회'];
-  const AXES_DESC = ['활동 선수 수(직책 제외)','티어 점수 평균','승리 수(종합)','패배 수(종합)','참가율(1+경기)','참가율(1+경기)','참가율(1+경기)','참가율(1+경기)','참가율(1+경기)'];
+  const AXES      = ['인원','평균티어','승','패','미니','대학대전','대학CK','티어대회','일반대회'];
+  const AXES_DESC = ['선수 수','티어 점수 평균','총 승리수','총 패배수','참가율','참가율','참가율','참가율','참가율'];
   const N = AXES.length;
 
-  const getVals = (u) => [
-    u.total / maxTotal,
-    u.avgScore / maxAvg,
-    (u.wins||0) / maxWins,
-    (u.losses||0) / maxLosses,
-    u.partMini,
-    u.partUnivm,
-    u.partCk,
-    u.partTt,
-    u.partComp,
+  const getVals = u => [
+    u.total/maxTotal, u.avgScore/maxAvg,
+    (u.wins||0)/maxWins, (u.losses||0)/maxLoss,
+    u.partMini, u.partUnivm, u.partCk, u.partTt, u.partComp
   ];
 
-  const univDataJson = JSON.stringify(univStats.map(u => ({
-    name: u.name, color: u.color, total: u.total,
-    vals: getVals(u)
-  })));
-  const axesJson = JSON.stringify(AXES);
+  // 전체 평균값 계산
+  const avgVals = AXES.map((_,i) => {
+    const vals = univStats.map(u=>getVals(u)[i]);
+    return vals.reduce((s,v)=>s+v,0)/Math.max(vals.length,1);
+  });
+
+  // 실제 수치 (테이블용)
+  const getRawVals = u => [
+    u.total, Math.round(u.avgScore*10)/10,
+    u.wins||0, u.losses||0,
+    Math.round(u.partMini*100)+'%', Math.round(u.partUnivm*100)+'%',
+    Math.round(u.partCk*100)+'%', Math.round(u.partTt*100)+'%',
+    Math.round(u.partComp*100)+'%'
+  ];
+
+  const univDataJson = JSON.stringify(univStats.map(u=>({ name:u.name, color:u.color, total:u.total, wr:u.wr, wins:u.wins, losses:u.losses, vals:getVals(u), raw:getRawVals(u) })));
+  const axesJson     = JSON.stringify(AXES);
   const axesDescJson = JSON.stringify(AXES_DESC);
+  const avgJson      = JSON.stringify(avgVals);
   const uid = 'rdr_' + Math.random().toString(36).slice(2,8);
 
   return `<style>
-    #${uid}-wrap { position:relative; }
+    #${uid}-wrap {}
     #${uid}-sel { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
     .${uid}-chip { padding:5px 12px; border-radius:20px; border:1.5px solid var(--border2); background:var(--surface); font-size:11px; font-weight:700; color:var(--text2); cursor:pointer; transition:all .12s; }
     .${uid}-chip.on { color:#fff; border-color:transparent; }
     .${uid}-chip:hover:not(.on) { border-color:var(--text2); }
-    #${uid}-canvas { display:block; max-width:520px; margin:0 auto; }
-    #${uid}-legend { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; justify-content:center; }
+    #${uid}-canvas { display:block; max-width:520px; margin:0 auto; cursor:crosshair; }
+    #${uid}-legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; justify-content:center; }
+    #${uid}-table { width:100%; border-collapse:collapse; margin-top:14px; font-size:11px; }
+    #${uid}-table th { padding:5px 8px; background:var(--bg); border-bottom:2px solid var(--border2); font-size:10px; font-weight:800; color:var(--text3); text-align:center; white-space:nowrap; position:sticky; top:0; z-index:1; }
+    #${uid}-table th:first-child { text-align:left; }
+    #${uid}-table td { padding:5px 8px; border-bottom:1px solid var(--border2); text-align:center; font-weight:700; }
+    #${uid}-table td:first-child { text-align:left; font-weight:900; }
+    #${uid}-table tr:hover td { background:var(--hover); }
+    #${uid}-table td.hi { background:#fef9c366; font-weight:900; }
+    .${uid}-avg-note { font-size:10px; color:var(--text3); display:flex; align-items:center; gap:4px; margin-top:4px; }
+    #${uid}-tooltip { position:fixed; pointer-events:none; opacity:0; background:var(--white); border:1px solid var(--border2); border-radius:10px; padding:8px 12px; box-shadow:0 4px 20px #0003; font-size:11px; font-weight:700; color:var(--text2); z-index:999; transition:opacity .1s; max-width:180px; }
   </style>
   <div id="${uid}-wrap">
     <div style="margin-bottom:12px;padding:10px 14px;background:linear-gradient(135deg,#a855f7,#9333ea);border-radius:12px;display:flex;align-items:center;gap:8px">
       <span style="font-size:20px">🕸️</span>
       <div>
         <div style="font-size:13px;font-weight:900;color:#fff">대학별 다차원 레이더</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.8)">인원·평균티어·승/패·참가율 비교 · 최대 3개 선택</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.8)">최대 3개 선택 · 점선 = 전체 평균 · 강점 축 자동 하이라이트</div>
       </div>
     </div>
-    <div style="margin:-4px 0 12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:12px">
-      <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:6px">축(꼭지점) 설명</div>
-      <div style="font-size:12px;color:var(--text3);line-height:1.55">
-        승/패: (미니/대학대전/대학CK/티어대회/일반대회) 기록 기준 · 참가율: 해당 종목 1경기 이상 뛴 선수 비율<br>
-        인원·평균티어는 대학들 중 최대값 기준으로 0~1 정규화 표시
-      </div>
+    <div style="margin-bottom:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;font-size:11px;color:var(--text3);line-height:1.6">
+      <strong style="color:var(--text2)">축 설명</strong> —
+      승/패: 공식 기록 기준 · 참가율: 해당 종목 1경기 이상 뛴 비율 · 인원·평균티어: 최대값 기준 정규화
     </div>
     <div id="${uid}-sel"></div>
-    <canvas id="${uid}-canvas" width="520" height="480"></canvas>
+    <div style="position:relative">
+      <canvas id="${uid}-canvas" width="520" height="480"></canvas>
+      <div id="${uid}-tooltip"></div>
+    </div>
     <div id="${uid}-legend"></div>
+    <div style="overflow-x:auto;margin-top:4px">
+      <table id="${uid}-table"><thead></thead><tbody></tbody></table>
+    </div>
   </div>
   <script>
   (function(){
-    const UNIVS = ${univDataJson};
-    const AXES = ${axesJson};
-    const AXES_DESC = ${axesDescJson};
+    const UNIVS    = ${univDataJson};
+    const AXES     = ${axesJson};
+    const AXES_DESC= ${axesDescJson};
+    const AVG_VALS = ${avgJson};
     const N = AXES.length;
-    const canvas = document.getElementById('${uid}-canvas');
-    const selEl = document.getElementById('${uid}-sel');
-    const legendEl = document.getElementById('${uid}-legend');
+    const canvas  = document.getElementById('${uid}-canvas');
+    const selEl   = document.getElementById('${uid}-sel');
+    const legendEl= document.getElementById('${uid}-legend');
+    const tableEl = document.getElementById('${uid}-table');
+    const ttipEl  = document.getElementById('${uid}-tooltip');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const _rootStyle = (function(){ try{ return getComputedStyle(document.documentElement); }catch(e){ return null; } })();
-    const _cssVar = (k, fallback) => {
-      try{
-        const v = _rootStyle ? String(_rootStyle.getPropertyValue(k)||'').trim() : '';
-        return v || fallback;
-      }catch(e){
-        return fallback;
-      }
-    };
-    const TEXT2 = _cssVar('--text2', '#475569');
-    const TEXT3 = _cssVar('--text3', '#64748b');
+    const _cssVar = k => { try{ return String(getComputedStyle(document.documentElement).getPropertyValue(k)||'').trim(); }catch(e){ return ''; } };
+    const TEXT2  = ()=> _cssVar('--text2') || '#475569';
+    const TEXT3  = ()=> _cssVar('--text3') || '#64748b';
+    const BORDER = ()=> _cssVar('--border2') || '#e2e8f0';
     let selected = [];
+    let mousePos = null;
 
-    // Build chips
+    const W=520,H=480,cx=260,cy=240,R=155;
+    const angle = i => (Math.PI*2*i/N) - Math.PI/2;
+    const radarPt = (val,i) => { const a=angle(i); return {x:cx+Math.cos(a)*R*val, y:cy+Math.sin(a)*R*val}; };
+
+    // 강점 축 계산 (선택된 대학이 전체 평균 대비 가장 높은 축)
+    function getStrengthAxes(u) {
+      return u.vals.map((v,i)=>({ i, diff:v-(AVG_VALS[i]||0) })).filter(d=>d.diff>0.12).sort((a,b)=>b.diff-a.diff).slice(0,2).map(d=>d.i);
+    }
+
+    // 칩 빌드
     UNIVS.forEach(u => {
       const chip = document.createElement('button');
-      chip.className = '${uid}-chip' + (selected.includes(u.name)?' on':'');
+      chip.className = '${uid}-chip';
       chip.textContent = u.name;
-      chip.style.background = selected.includes(u.name) ? u.color : '';
       chip.onclick = () => {
         if (selected.includes(u.name)) {
           selected = selected.filter(n=>n!==u.name);
@@ -3927,168 +4347,238 @@ function _b2RadarView() {
           c.classList.toggle('on', isOn);
           c.style.background = isOn && un ? un.color : '';
         });
-        draw();
+        draw(); buildTable();
       };
       selEl.appendChild(chip);
     });
 
-    const W = 520, H = 480, cx = 260, cy = 240, R = 160;
-    const angle = (i) => (Math.PI * 2 * i / N) - Math.PI / 2;
-
-    function radarPoint(val, i) {
-      const a = angle(i);
-      return { x: cx + Math.cos(a) * R * val, y: cy + Math.sin(a) * R * val };
-    }
-
     function draw() {
-      ctx.clearRect(0, 0, W, H);
+      ctx.clearRect(0,0,W,H);
+      const t2=TEXT2(), t3=TEXT3(), bd=BORDER();
+      const activeUnivs = UNIVS.filter(u=>selected.includes(u.name));
 
-      // Background rings
-      const ringCount = 5;
-      for (let r = 1; r <= ringCount; r++) {
-        const ratio = r / ringCount;
+      // 배경 링
+      for (let r=1;r<=5;r++) {
+        const ratio=r/5;
         ctx.beginPath();
-        for (let i = 0; i < N; i++) {
-          const {x,y} = radarPoint(ratio, i);
-          i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-        }
+        for (let i=0;i<N;i++) { const {x,y}=radarPt(ratio,i); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
         ctx.closePath();
-        ctx.strokeStyle = 'rgba(100,116,139,0.18)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        if (r === ringCount) {
-          ctx.fillStyle = 'rgba(100,116,139,0.04)';
-          ctx.fill();
+        ctx.strokeStyle=\`rgba(100,116,139,\${r===5?0.25:0.12})\`;
+        ctx.lineWidth=r===5?1.5:1; ctx.stroke();
+        if(r===5){ ctx.fillStyle='rgba(100,116,139,0.04)'; ctx.fill(); }
+        // 링 수치
+        ctx.save(); ctx.font='700 9px sans-serif'; ctx.fillStyle=t3; ctx.textAlign='left';
+        ctx.fillText((ratio*100).toFixed(0)+'%', cx+4, cy-R*ratio+3);
+        ctx.restore();
+      }
+
+      // 전체 평균선 (점선)
+      ctx.save();
+      ctx.beginPath();
+      AVG_VALS.forEach((v,i)=>{ const {x,y}=radarPt(Math.max(0.01,v),i); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+      ctx.closePath();
+      ctx.setLineDash([4,4]); ctx.strokeStyle='rgba(148,163,184,0.7)'; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.fillStyle='rgba(148,163,184,0.06)'; ctx.fill();
+      ctx.setLineDash([]); ctx.restore();
+
+      // 강점 축 하이라이트 (선택된 대학 기준)
+      const strengthSet = new Set();
+      activeUnivs.forEach(u=>{ getStrengthAxes(u).forEach(i=>strengthSet.add(i)); });
+
+      // 축 라인 + 레이블
+      for (let i=0;i<N;i++) {
+        const {x,y}=radarPt(1,i);
+        const isStrength = strengthSet.has(i);
+        ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y);
+        ctx.strokeStyle = isStrength ? 'rgba(251,191,36,0.7)' : 'rgba(100,116,139,0.2)';
+        ctx.lineWidth = isStrength ? 2.5 : 1.2; ctx.stroke();
+
+        const la=angle(i), lx=cx+Math.cos(la)*(R+26), ly=cy+Math.sin(la)*(R+26);
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        if (isStrength) {
+          ctx.font='900 13px sans-serif'; ctx.fillStyle='#b45309';
+        } else {
+          ctx.font='800 11px sans-serif'; ctx.fillStyle=t2;
         }
+        ctx.fillText(AXES[i], lx, ly-6);
+        ctx.font='600 9px sans-serif'; ctx.fillStyle=t3;
+        ctx.fillText(AXES_DESC[i]||'', lx, ly+7);
       }
 
-      // Axis lines + labels
-      for (let i = 0; i < N; i++) {
-        const {x,y} = radarPoint(1, i);
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(x, y);
-        ctx.strokeStyle = 'rgba(100,116,139,0.25)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // Label (2줄)
-        const la = angle(i);
-        const lx = cx + Math.cos(la) * (R + 22);
-        const ly = cy + Math.sin(la) * (R + 22);
-        ctx.fillStyle = TEXT2;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.font = '900 12px sans-serif';
-        ctx.fillText(AXES[i], lx, ly - 7);
-        ctx.font = '700 10px sans-serif';
-        ctx.fillStyle = TEXT3;
-        ctx.fillText((AXES_DESC && AXES_DESC[i]) ? AXES_DESC[i] : '', lx, ly + 7);
-      }
-
-      // Data polygons
-      const activeUnivs = UNIVS.filter(u => selected.includes(u.name));
-      if(activeUnivs.length === 0){
-        legendEl.innerHTML = '<div style="text-align:center;font-size:12px;font-weight:900;color:' + TEXT3 + ';padding:6px 0">대학을 선택하면 그래프가 표시됩니다</div>';
-        ctx.fillStyle = TEXT3;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.font = '900 14px sans-serif';
-        ctx.fillText('대학을 선택하세요', cx, cy);
+      // 데이터 폴리곤
+      if (activeUnivs.length===0) {
+        ctx.fillStyle=t3; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.font='900 13px sans-serif'; ctx.fillText('대학을 선택하세요', cx, cy-10);
+        ctx.font='700 11px sans-serif'; ctx.fillText('최대 3개까지 동시 비교 가능', cx, cy+12);
+        legendEl.innerHTML='';
         return;
       }
+
       activeUnivs.forEach(u => {
         ctx.beginPath();
-        u.vals.forEach((v, i) => {
-          const {x,y} = radarPoint(Math.max(0.01, v), i);
-          i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-        });
+        u.vals.forEach((v,i)=>{ const {x,y}=radarPt(Math.max(0.01,v),i); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
         ctx.closePath();
-        ctx.fillStyle = u.color + '30';
-        ctx.fill();
-        ctx.strokeStyle = u.color;
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-
-        // Dots
-        u.vals.forEach((v, i) => {
-          const {x,y} = radarPoint(Math.max(0.01, v), i);
-          ctx.beginPath();
-          ctx.arc(x, y, 5, 0, Math.PI * 2);
-          ctx.fillStyle = u.color;
-          ctx.fill();
-          ctx.strokeStyle = '#fff';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
+        ctx.fillStyle=u.color+'28'; ctx.fill();
+        ctx.strokeStyle=u.color; ctx.lineWidth=2.5; ctx.stroke();
+        // 점
+        u.vals.forEach((v,i)=>{ const {x,y}=radarPt(Math.max(0.01,v),i);
+          ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2);
+          ctx.fillStyle=u.color; ctx.fill();
+          ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
         });
       });
 
-      // Legend
-      legendEl.innerHTML = activeUnivs.map(u =>
-        \`<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:var(--text2)">
-          <span style="width:14px;height:14px;border-radius:50%;background:\${u.color};display:inline-block;border:2px solid #fff;box-shadow:0 1px 4px \${u.color}66"></span>
-          <span style="color:\${u.color}">\${u.name}</span>
-          <span style="color:var(--text3);font-weight:500">\${u.total}명</span>
-        </div>\`
-      ).join('');
+      // 마우스 hover → 가장 가까운 점 강조
+      if (mousePos) {
+        let minDist=Infinity, bestU=null, bestI=-1;
+        activeUnivs.forEach(u=>{ u.vals.forEach((v,i)=>{ const {x,y}=radarPt(Math.max(0.01,v),i); const d=Math.hypot(mousePos.x-x,mousePos.y-y); if(d<minDist){minDist=d;bestU=u;bestI=i;} }); });
+        if (bestU && minDist<24) {
+          const {x,y}=radarPt(Math.max(0.01,bestU.vals[bestI]),bestI);
+          ctx.beginPath(); ctx.arc(x,y,9,0,Math.PI*2);
+          ctx.strokeStyle=bestU.color; ctx.lineWidth=3; ctx.stroke();
+          // 툴팁
+          ttipEl.style.opacity='1';
+          ttipEl.style.left=(x/W*canvas.getBoundingClientRect().width+canvas.getBoundingClientRect().left+12)+'px';
+          ttipEl.style.top=(y/H*canvas.getBoundingClientRect().height+canvas.getBoundingClientRect().top-30)+'px';
+          ttipEl.innerHTML=\`<div style="color:\${bestU.color};font-weight:900">\${bestU.name}</div><div style="color:#475569">\${AXES[bestI]}: <strong>\${bestU.raw[bestI]}</strong></div><div style="font-size:10px;color:#94a3b8">평균 \${(AVG_VALS[bestI]*100).toFixed(0)}%</div>\`;
+        } else { ttipEl.style.opacity='0'; }
+      }
+
+      // 범례
+      legendEl.innerHTML = activeUnivs.map(u=>{
+        const str = getStrengthAxes(u).map(i=>AXES[i]).join(', ');
+        return \`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:10px;background:var(--surface);border:1.5px solid \${u.color}44">
+          <span style="width:12px;height:12px;border-radius:50%;background:\${u.color};flex-shrink:0"></span>
+          <span style="font-size:12px;font-weight:900;color:\${u.color}">\${u.name}</span>
+          <span style="font-size:11px;color:var(--text3);">\${u.total}명\${u.wr!==null?' · '+u.wr+'%':''}</span>
+          \${str?'<span style="font-size:10px;background:#fef9c3;color:#b45309;padding:1px 5px;border-radius:5px;font-weight:800">강점: '+str+'</span>':''}
+        </div>\`;
+      }).join('');
     }
 
-    draw();
+    // 수치 테이블 빌드
+    function buildTable() {
+      const active = UNIVS.filter(u=>selected.includes(u.name));
+      if (!tableEl) return;
+      if (!active.length) { tableEl.innerHTML=''; return; }
+      const thead=tableEl.querySelector('thead'), tbody=tableEl.querySelector('tbody');
+      if (!thead || !tbody) {
+        // thead/tbody가 없으면 재생성
+        tableEl.innerHTML='<thead></thead><tbody></tbody>';
+      }
+      const th=tableEl.querySelector('thead'), tb=tableEl.querySelector('tbody');
+      if (!th || !tb) return;
+      // 각 축별 최고값 인덱스
+      const maxIdx = AXES.map((_,ai)=>{
+        let best=-1, bestV=-Infinity;
+        active.forEach((u,ui)=>{ if(u.vals[ai]>bestV){bestV=u.vals[ai];best=ui;} });
+        return best;
+      });
+      th.innerHTML = \`<tr><th>항목</th>\${active.map(u=>\`<th style="color:\${u.color}">\${u.name}</th>\`).join('')}<th style="color:#94a3b8">전체평균</th></tr>\`;
+      tb.innerHTML = AXES.map((ax,ai)=>{
+        const avgRaw=(AVG_VALS[ai]*100).toFixed(0)+'%';
+        return \`<tr>
+          <td style="font-weight:800;color:var(--text2)">\${ax}<div style="font-size:9px;color:var(--text3);font-weight:600">\${AXES_DESC[ai]}</div></td>
+          \${active.map((u,ui)=>\`<td class="\${ui===maxIdx[ai]?'hi':''}" style="color:\${ui===maxIdx[ai]?u.color:'var(--text2)'}">\${u.raw[ai]}\${ui===maxIdx[ai]?'<span style="font-size:9px;margin-left:2px">★</span>':''}</td>\`).join('')}
+          <td style="color:#94a3b8">\${avgRaw}</td>
+        </tr>\`;
+      }).join('');
+    }
+
+    canvas.addEventListener('mousemove', e => {
+      const rect=canvas.getBoundingClientRect();
+      const scX=W/rect.width, scY=H/rect.height;
+      mousePos={ x:(e.clientX-rect.left)*scX, y:(e.clientY-rect.top)*scY };
+      draw();
+    });
+    canvas.addEventListener('mouseleave', ()=>{ mousePos=null; ttipEl.style.opacity='0'; draw(); });
+
+    // 반응형
+    const ro=new ResizeObserver(()=>draw());
+    ro.observe(canvas.parentElement);
+    draw(); buildTable();
   })();
   </script>`;
 }
-
 /* ══════════════════════════════════════
    📊 요약 통계 뷰 - 인터랙티브 대시보드
+══════════════════════════════════════ */
+/* ══════════════════════════════════════
+   📊 요약 뷰 v2 — 활동인원·통산승률·신입 추가
 ══════════════════════════════════════ */
 function _b2SummaryView() {
   const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
   const vis = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet.has(String(p?.univ||'').trim()));
   const tieredVis = vis.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
-  const roledVis = vis.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
-  const univList = _b2VisUnivs ? _b2VisUnivs().filter(u=>u.name && u.name!=='무소속') : [];
+  const roledVis  = vis.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
+  const univList  = _b2VisUnivs ? _b2VisUnivs().filter(u=>u.name && u.name!=='무소속') : [];
 
-  // Compute stats
+  // 종족 카운트
   const raceCts = {P:0,T:0,Z:0,'?':0};
   tieredVis.forEach(p => { const r=p.race||'?'; raceCts[r in raceCts?r:'?']++; });
-
   const tierCts = {};
   tieredVis.forEach(p => { const t=p.tier||'미정'; tierCts[t]=(tierCts[t]||0)+1; });
 
-  // Per-university stats
+  // 이번주 활동 인원 & 통산 승률
+  const now = new Date();
+  const day = now.getDay();
+  const diffToMon = (day===0?-6:1-day);
+  const mon = new Date(now); mon.setDate(now.getDate()+diffToMon);
+  const dateNum = s => parseInt(String(s||'').replace(/[-\.]/g,''))||0;
+  const thisFromN = dateNum(mon.toISOString().slice(0,10));
+  const thisToN   = dateNum(now.toISOString().slice(0,10));
+
+  let totalW=0, totalL=0, weekActive=new Set();
+  tieredVis.forEach(p => {
+    (Array.isArray(p.history)?p.history:[]).forEach(h => {
+      if (h.result==='승') totalW++;
+      else if (h.result==='패') totalL++;
+      const d = dateNum(h.date||h.d||'');
+      if (d>=thisFromN && d<=thisToN) weekActive.add(p.name);
+    });
+  });
+  const totalG = totalW+totalL;
+  const totalWr = totalG>0 ? Math.round(totalW/totalG*100) : null;
+
+  // 최근 합류 선수 (history 첫 경기 기준 최근 30일)
+  const thirtyDaysAgo = new Date(now); thirtyDaysAgo.setDate(now.getDate()-30);
+  const recentN = dateNum(thirtyDaysAgo.toISOString().slice(0,10));
+  const newPlayers = tieredVis.filter(p => {
+    const hist = Array.isArray(p.history)?p.history:[];
+    if (!hist.length) return false;
+    const firstD = Math.min(...hist.map(h=>dateNum(h.date||h.d||'')).filter(d=>d>0));
+    return firstD >= recentN;
+  }).sort((a,b) => {
+    const fa = Math.min(...(Array.isArray(a.history)?a.history:[]).map(h=>dateNum(h.date||h.d||'')).filter(d=>d>0));
+    const fb = Math.min(...(Array.isArray(b.history)?b.history:[]).map(h=>dateNum(h.date||h.d||'')).filter(d=>d>0));
+    return fb - fa;
+  }).slice(0, 8);
+
+  // 대학별 스탯
   const univStats = univList.map(u => {
     const members = tieredVis.filter(p => String(p?.univ||'').trim()===String(u.name||'').trim());
-    const rCts = {P:0,T:0,Z:0};
-    members.forEach(p => { if(p.race in rCts) rCts[p.race]++; });
-    const tierDist = {};
-    members.forEach(p => { const t=p.tier||'미정'; tierDist[t]=(tierDist[t]||0)+1; });
-    return { name: u.name, color: gc(u.name), count: members.length, races: rCts, tiers: tierDist };
+    const rCts={P:0,T:0,Z:0};
+    members.forEach(p=>{if(p.race in rCts)rCts[p.race]++;});
+    const tierDist={};
+    members.forEach(p=>{const t=p.tier||'미정';tierDist[t]=(tierDist[t]||0)+1;});
+    return {name:u.name,color:gc(u.name),count:members.length,races:rCts,tiers:tierDist};
   }).filter(u=>u.count>0).sort((a,b)=>b.count-a.count);
 
-  const maxCount = univStats.length > 0 ? univStats[0].count : 1;
+  const maxCount = univStats.length>0?univStats[0].count:1;
+  const orderedTiers = (typeof TIERS!=='undefined'?TIERS:[]).filter(t=>tierCts[t]);
+  const total3 = raceCts.P+raceCts.T+raceCts.Z||1;
 
-  const orderedTiers = (typeof TIERS !== 'undefined' ? TIERS : []).filter(t=>tierCts[t]);
-  const total3 = raceCts.P + raceCts.T + raceCts.Z || 1;
-
-  // SVG donut chart for race ratio
+  // 도넛 차트
   const donutRings = () => {
-    const size = 110, cx = 55, cy = 55, r = 38, stroke = 18;
-    const total = raceCts.P + raceCts.T + raceCts.Z || 1;
-    const segs = [
-      {val: raceCts.P, col: '#7c3aed', label: 'P'},
-      {val: raceCts.T, col: '#0284c7', label: 'T'},
-      {val: raceCts.Z, col: '#059669', label: 'Z'},
-    ].filter(s => s.val > 0);
-    const circ = 2 * Math.PI * r;
-    let offset = 0;
-    const paths = segs.map(s => {
-      const dash = (s.val / total) * circ;
-      const el = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.col}" stroke-width="${stroke}"
-        stroke-dasharray="${dash.toFixed(2)} ${circ.toFixed(2)}"
-        stroke-dashoffset="${(-offset).toFixed(2)}"
-        transform="rotate(-90 ${cx} ${cy})" style="transition:stroke-dasharray .8s ease"/>`;
-      offset += dash;
-      return el;
+    const size=110,cx=55,cy=55,r=38,stroke=18;
+    const total=raceCts.P+raceCts.T+raceCts.Z||1;
+    const segs=[{val:raceCts.P,col:'#7c3aed',label:'P'},{val:raceCts.T,col:'#0284c7',label:'T'},{val:raceCts.Z,col:'#059669',label:'Z'}].filter(s=>s.val>0);
+    const circ=2*Math.PI*r;
+    let offset=0;
+    const paths=segs.map(s=>{
+      const dash=(s.val/total)*circ;
+      const el=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.col}" stroke-width="${stroke}" stroke-dasharray="${dash.toFixed(2)} ${circ.toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+      offset+=dash; return el;
     });
     return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border2)" stroke-width="${stroke}"/>
@@ -4099,16 +4589,18 @@ function _b2SummaryView() {
   };
 
   let h = `<style>
-    .b2s-grid6 { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:16px; }
-    @media(max-width:700px){ .b2s-grid6{ grid-template-columns:repeat(3,1fr); } }
-    @media(max-width:420px){ .b2s-grid6{ grid-template-columns:repeat(2,1fr); } }
+    .b2s-grid7 { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-bottom:16px; }
+    @media(max-width:700px){ .b2s-grid7{ grid-template-columns:repeat(4,1fr); } }
+    @media(max-width:420px){ .b2s-grid7{ grid-template-columns:repeat(2,1fr); } }
     .b2s-kpi { border-radius:14px; padding:14px 12px; text-align:center; position:relative; overflow:hidden; border:1px solid var(--border2); transition:transform .15s,box-shadow .15s; cursor:default; }
     .b2s-kpi:hover { transform:translateY(-2px); box-shadow:0 6px 24px #0002; }
-    .b2s-kpi-num { font-size:28px; font-weight:900; line-height:1.1; }
+    .b2s-kpi-num { font-size:26px; font-weight:900; line-height:1.1; }
     .b2s-kpi-lbl { font-size:11px; font-weight:700; margin-top:3px; opacity:.75; }
+    .b2s-kpi-sub { font-size:10px; opacity:.6; margin-top:1px; }
     .b2s-kpi-glow { position:absolute;inset:0;opacity:.08;pointer-events:none; }
-    .b2s-2col { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
-    @media(max-width:580px){ .b2s-2col{ grid-template-columns:1fr; } }
+    .b2s-2col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:14px; }
+    @media(max-width:780px){ .b2s-2col{ grid-template-columns:1fr 1fr; } }
+    @media(max-width:520px){ .b2s-2col{ grid-template-columns:1fr; } }
     .b2s-panel { background:var(--surface); border:1px solid var(--border2); border-radius:14px; padding:16px; }
     .b2s-panel-title { font-size:13px; font-weight:900; color:var(--text1); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
     .b2s-univ-row { display:flex; align-items:center; gap:8px; padding:5px 0; }
@@ -4118,29 +4610,32 @@ function _b2SummaryView() {
     .b2s-top-univ { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; }
     .b2s-univ-card { border-radius:12px; padding:10px 12px; border:1.5px solid; position:relative; overflow:hidden; transition:transform .12s,box-shadow .12s; cursor:default; }
     .b2s-univ-card:hover { transform:translateY(-2px); box-shadow:0 4px 16px #0002; }
+    .b2s-new-player { display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;background:var(--surface);border:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text2);margin:2px; }
   </style>`;
 
-  // ── KPI 카드 6개 ──
+  // KPI 7개 (통산승률 + 이번주 활동 추가)
   const kpis = [
-    { num: vis.length, lbl: '전체 선수', col: '#3b82f6', icon: '👥' },
-    { num: univList.length, lbl: '활동 대학', col: '#10b981', icon: '🏫' },
-    { num: raceCts.P, lbl: '프로토스', col: '#7c3aed', icon: '🔮' },
-    { num: raceCts.T, lbl: '테란', col: '#0284c7', icon: '⚔️' },
-    { num: raceCts.Z, lbl: '저그', col: '#059669', icon: '🦎' },
-    { num: roledVis.length, lbl: '직책자', col: '#f59e0b', icon: '👑' },
+    { num: vis.length,           lbl: '전체 선수', col:'#3b82f6', icon:'👥' },
+    { num: univList.length,      lbl: '활동 대학', col:'#10b981', icon:'🏫' },
+    { num: raceCts.P,            lbl: '프로토스',  col:'#7c3aed', icon:'🔮' },
+    { num: raceCts.T,            lbl: '테란',      col:'#0284c7', icon:'⚔️' },
+    { num: raceCts.Z,            lbl: '저그',      col:'#059669', icon:'🦎' },
+    { num: weekActive.size,      lbl: '이번주 활동', col:'#f59e0b', icon:'🔥', sub:`${totalW}승 ${totalL}패` },
+    { num: totalWr!==null?`${totalWr}%`:'-', lbl:'통산 승률', col:'#ec4899', icon:'📊', sub:`${totalG.toLocaleString()}전` },
   ];
 
-  h += `<div class="b2s-grid6">
-    ${kpis.map(k => `
-    <div class="b2s-kpi" style="background:${k.col}12;">
+  h += `<div class="b2s-grid7">
+    ${kpis.map(k=>`
+    <div class="b2s-kpi" style="background:${k.col}12">
       <div class="b2s-kpi-glow" style="background:radial-gradient(circle at 50% 0%,${k.col},transparent 70%)"></div>
       <div style="font-size:20px;margin-bottom:2px">${k.icon}</div>
       <div class="b2s-kpi-num" style="color:${k.col}">${k.num}</div>
       <div class="b2s-kpi-lbl" style="color:${k.col}">${k.lbl}</div>
+      ${k.sub?`<div class="b2s-kpi-sub" style="color:${k.col}">${k.sub}</div>`:''}
     </div>`).join('')}
   </div>`;
 
-  // ── 종족 비율 + 티어 분포 ──
+  // 종족 비율 + 티어 분포
   h += `<div class="b2s-2col">
     <div class="b2s-panel">
       <div class="b2s-panel-title">🎮 종족 비율
@@ -4149,9 +4644,8 @@ function _b2SummaryView() {
       <div style="display:flex;align-items:center;gap:16px">
         <div style="flex-shrink:0">${donutRings()}</div>
         <div style="flex:1;display:flex;flex-direction:column;gap:8px">
-          ${[{r:'P',c:'#7c3aed',l:'🔮 프로토스'},{r:'T',c:'#0284c7',l:'⚔️ 테란'},{r:'Z',c:'#059669',l:'🦎 저그'}].map(({r,c,l}) => {
-            const n = raceCts[r];
-            const pct = Math.round(n/total3*100);
+          ${[{r:'P',c:'#7c3aed',l:'🔮 프로토스'},{r:'T',c:'#0284c7',l:'⚔️ 테란'},{r:'Z',c:'#059669',l:'🦎 저그'}].map(({r,c,l})=>{
+            const n=raceCts[r]; const pct=Math.round(n/total3*100);
             return `<div>
               <div style="display:flex;justify-content:space-between;margin-bottom:3px">
                 <span style="font-size:11px;font-weight:800;color:${c}">${l}</span>
@@ -4165,38 +4659,78 @@ function _b2SummaryView() {
         </div>
       </div>
     </div>
-
     <div class="b2s-panel">
       <div class="b2s-panel-title">🏆 티어 분포</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${orderedTiers.map(t => {
-          const col = typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
-          const tcol = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
-          const n = tierCts[t];
-          const pct = Math.round(n/tieredVis.length*100);
-          const barH = Math.max(20, Math.round(pct * 1.2));
+        ${orderedTiers.map(t=>{
+          const col=typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
+          const tcol=typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
+          const n=tierCts[t]; const pct=Math.round(n/tieredVis.length*100);
           return `<div class="b2s-tier-chip" style="background:${col}18;border:1.5px solid ${col}55" title="${t}: ${n}명 (${pct}%)">
-            <div style="font-size:12px;font-weight:900;color:${col};padding:2px 8px;border-radius:6px;background:${col};color:${tcol}">${t}</div>
+            <div style="font-size:12px;font-weight:900;padding:2px 8px;border-radius:6px;background:${col};color:${tcol}">${t}</div>
             <div style="font-size:11px;font-weight:800;color:${col};margin-top:3px">${n}명</div>
             <div style="font-size:10px;color:var(--text3)">${pct}%</div>
           </div>`;
         }).join('')}
       </div>
     </div>
+    <div class="b2s-panel">
+      <div class="b2s-panel-title">🏫 대학별 현황
+        <span style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:600">${univStats.length}개 대학</span>
+      </div>
+      ${univStats.slice(0,10).map((u,i)=>{
+        const barW=Math.round(u.count/maxCount*100);
+        return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border2)">
+          <span style="font-size:10px;font-weight:900;color:var(--text3);width:16px;text-align:center">${i+1}</span>
+          <span style="font-size:11px;font-weight:800;color:${u.color};min-width:60px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</span>
+          <div style="flex:1;height:8px;border-radius:4px;overflow:hidden;background:var(--border2);display:flex">
+            <div style="width:${Math.round(u.races.P/u.count*barW)}%;background:#7c3aed"></div>
+            <div style="width:${Math.round(u.races.T/u.count*barW)}%;background:#0284c7"></div>
+            <div style="width:${Math.round(u.races.Z/u.count*barW)}%;background:#059669"></div>
+          </div>
+          <span style="font-size:11px;font-weight:900;color:${u.color};min-width:20px;text-align:right">${u.count}</span>
+        </div>`;
+      }).join('')}
+      ${univStats.length>10?`<div style="text-align:center;color:var(--text3);font-size:11px;margin-top:6px">외 ${univStats.length-10}개 대학</div>`:''}
+    </div>
   </div>`;
 
-  // ── 대학별 인원 현황 (상위 5개 카드 + 전체 바차트) ──
+  // 최근 합류 선수
+  if (newPlayers.length > 0) {
+    h += `<div class="b2s-panel" style="margin-bottom:14px">
+      <div class="b2s-panel-title">🆕 최근 30일 첫 경기 선수
+        <span style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:600">${newPlayers.length}명</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        ${newPlayers.map(p=>{
+          const col=gc(String(p?.univ||''))||'#64748b';
+          const tc=typeof getTierBtnColor==='function'&&p.tier?getTierBtnColor(p.tier):'#64748b';
+          const tt=typeof getTierBtnTextColor==='function'&&p.tier?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
+          const rIco=p.race==='P'?'🔮':p.race==='T'?'⚔️':p.race==='Z'?'🦎':'';
+          const hist=Array.isArray(p.history)?p.history:[];
+          const firstD=hist.length?String(Math.min(...hist.map(h2=>parseInt(String(h2.date||h2.d||'').replace(/[-\.]/g,''))||Infinity))).replace(/(\d{4})(\d{2})(\d{2})/,'$1.$2.$3'):'';
+          return `<span class="b2s-new-player" style="border-color:${col}44;background:${col}0d">
+            <span style="color:${col};font-weight:900">${p.name}</span>
+            ${rIco?`<span style="font-size:10px">${rIco}</span>`:''}
+            ${p.tier?`<span style="font-size:9px;padding:1px 4px;border-radius:4px;background:${tc};color:${tt}">${p.tier}</span>`:''}
+            <span style="font-size:9px;color:var(--text3)">${p.univ||''}</span>
+          </span>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  // 대학별 인원 현황
   h += `<div class="b2s-panel" style="margin-bottom:14px">
     <div class="b2s-panel-title">🏫 대학별 인원 현황
       <span style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:600">${univStats.length}개 대학</span>
     </div>
-
     <div class="b2s-top-univ" style="margin-bottom:12px">
-      ${univStats.slice(0,6).map((u,i) => {
-        const medal = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'][i] || '';
-        const pP = u.count > 0 ? Math.round(u.races.P/u.count*100) : 0;
-        const pT = u.count > 0 ? Math.round(u.races.T/u.count*100) : 0;
-        const pZ = u.count > 0 ? Math.round(u.races.Z/u.count*100) : 0;
+      ${univStats.slice(0,6).map((u,i)=>{
+        const medal=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'][i]||'';
+        const pP=u.count>0?Math.round(u.races.P/u.count*100):0;
+        const pT=u.count>0?Math.round(u.races.T/u.count*100):0;
+        const pZ=u.count>0?Math.round(u.races.Z/u.count*100):0;
         return `<div class="b2s-univ-card" style="border-color:${u.color}44;background:${u.color}0d">
           <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
             <span style="font-size:14px">${medal}</span>
@@ -4216,10 +4750,9 @@ function _b2SummaryView() {
         </div>`;
       }).join('')}
     </div>
-
     <div style="border-top:1px solid var(--border2);padding-top:10px">
-      ${univStats.slice(0, 20).map(u => {
-        const barW = Math.round(u.count/maxCount*100);
+      ${univStats.slice(0,20).map(u=>{
+        const barW=Math.round(u.count/maxCount*100);
         return `<div class="b2s-univ-row">
           <span style="font-size:11px;font-weight:800;color:${u.color};min-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</span>
           <div class="b2s-bar-track">
@@ -4235,15 +4768,14 @@ function _b2SummaryView() {
           </div>
         </div>`;
       }).join('')}
-      ${univStats.length > 20 ? `<div style="text-align:center;color:var(--text3);font-size:12px;margin-top:8px;padding-top:6px;border-top:1px solid var(--border2)">외 ${univStats.length-20}개 대학</div>` : ''}
+      ${univStats.length>20?`<div style="text-align:center;color:var(--text3);font-size:12px;margin-top:8px;padding-top:6px;border-top:1px solid var(--border2)">외 ${univStats.length-20}개 대학</div>`:''}
     </div>
   </div>`;
 
   return h;
 }
-
 /* ══════════════════════════════════════
-   ⚔️ 대학 비교 뷰
+   ⚔️ 비교 뷰 v2 — 실전승률 + 직접대결 + 레이더차트
 ══════════════════════════════════════ */
 let _b2CompareA = '';
 let _b2CompareB = '';
@@ -4251,119 +4783,230 @@ let _b2CompareB = '';
 function _b2CompareView() {
   const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
   const univList = _b2VisUnivs ? _b2VisUnivs().filter(u=>u.name && u.name!=='무소속') : [];
+  if (!_b2CompareA && univList.length>0) _b2CompareA = univList[0]?.name||'';
+  if (!_b2CompareB && univList.length>1) _b2CompareB = univList[1]?.name||'';
 
-  if (!_b2CompareA && univList.length > 0) _b2CompareA = univList[0]?.name || '';
-  if (!_b2CompareB && univList.length > 1) _b2CompareB = univList[1]?.name || '';
-
-  const getUMembers = (name) => players.filter(p =>
-    String(p?.univ||'').trim() === name && !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet.has(name)
-  );
+  const dateNum = s => parseInt(String(s||'').replace(/[-\.]/g,''))||0;
 
   const getStats = (name) => {
-    const members = getUMembers(name);
-    const tiered = members.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
-    const roled = members.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
-    const races = {P:0,T:0,Z:0};
-    tiered.forEach(p => { if(p.race in races) races[p.race]++; });
-    const tiers = {};
-    tiered.forEach(p => { const t=p.tier||'미정'; tiers[t]=(tiers[t]||0)+1; });
-    const topTier = tiered.length > 0 ? (tiered.sort((a,b)=>{
-      const ti = typeof TIERS!=='undefined'?TIERS:[]; 
-      const ia=ti.indexOf(a.tier||''); const ib=ti.indexOf(b.tier||'');
+    const members = players.filter(p=>String(p?.univ||'').trim()===name&&!p.hidden&&!p.retired&&!p.hideFromBoard&&!_dissSet.has(name));
+    const tiered  = members.filter(p=>!_B2_ROLE_ORDER.includes(p.role||''));
+    const roled   = members.filter(p=>_B2_ROLE_ORDER.includes(p.role||''));
+    const races={P:0,T:0,Z:0};
+    tiered.forEach(p=>{if(p.race in races)races[p.race]++;});
+    const tiers={};
+    tiered.forEach(p=>{const t=p.tier||'미정';tiers[t]=(tiers[t]||0)+1;});
+    const topTier = tiered.length>0?(tiered.slice().sort((a,b)=>{
+      const ti=typeof TIERS!=='undefined'?TIERS:[];
+      const ia=ti.indexOf(a.tier||''),ib=ti.indexOf(b.tier||'');
       return (ia>=0?ia:999)-(ib>=0?ib:999);
-    })[0]?.tier || '없음') : '없음';
-    return { members, tiered, roled, races, tiers, topTier, total: members.length };
+    })[0]?.tier||'없음'):'없음';
+
+    // 실전 승률 계산
+    let tw=0,tl=0;
+    tiered.forEach(p=>{
+      (Array.isArray(p.history)?p.history:[]).forEach(h=>{
+        if(h.result==='승')tw++; else if(h.result==='패')tl++;
+      });
+    });
+    const tg=tw+tl;
+    const wr=tg>0?Math.round(tw/tg*100):null;
+
+    // 직접 맞대결 (상대 대학 이름이 opp 기록에 있는 경우)
+    // 각 선수 history에서 opp가 상대 대학 소속 선수명인 케이스 → oppUniv 필드 사용
+    return {members,tiered,roled,races,tiers,topTier,total:members.length,tw,tl,tg,wr};
   };
 
-  const univOptions = univList.map(u=>`<option value="${u.name}" ${_b2CompareA===u.name?'selected':''}>${u.name}</option>`).join('');
-  const univOptionsB = univList.map(u=>`<option value="${u.name}" ${_b2CompareB===u.name?'selected':''}>${u.name}</option>`).join('');
+  // 직접 맞대결: A 선수들 history 중 oppUniv === B (또는 opp가 B 소속 선수)
+  const getHeadToHead = (nameA, nameB) => {
+    const bPlayers = new Set(players.filter(p=>String(p?.univ||'').trim()===nameB).map(p=>p.name));
+    let aw=0,al=0;
+    players.filter(p=>String(p?.univ||'').trim()===nameA&&!p.hidden&&!p.retired).forEach(p=>{
+      (Array.isArray(p.history)?p.history:[]).forEach(h=>{
+        const oppU = String(h.oppUniv||h.univ||'').trim();
+        const oppN = String(h.opp||'').trim();
+        if (oppU===nameB || bPlayers.has(oppN)) {
+          if(h.result==='승')aw++; else if(h.result==='패')al++;
+        }
+      });
+    });
+    return {aw,al,ag:aw+al};
+  };
 
-  const stA = _b2CompareA ? getStats(_b2CompareA) : null;
-  const stB = _b2CompareB ? getStats(_b2CompareB) : null;
-  const colA = _b2CompareA ? gc(_b2CompareA) : '#64748b';
-  const colB = _b2CompareB ? gc(_b2CompareB) : '#64748b';
+  const colA = _b2CompareA?gc(_b2CompareA)||'#64748b':'#64748b';
+  const colB = _b2CompareB?gc(_b2CompareB)||'#64748b':'#64748b';
+  const stA  = _b2CompareA?getStats(_b2CompareA):null;
+  const stB  = _b2CompareB?getStats(_b2CompareB):null;
+  const h2h  = (_b2CompareA&&_b2CompareB)?getHeadToHead(_b2CompareA,_b2CompareB):{aw:0,al:0,ag:0};
+  const h2hB = (_b2CompareA&&_b2CompareB)?getHeadToHead(_b2CompareB,_b2CompareA):{aw:0,al:0,ag:0};
 
-  const compareRow = (label, valA, valB, highlight) => {
-    const numA = typeof valA === 'number' ? valA : null;
-    const numB = typeof valB === 'number' ? valB : null;
-    const winA = numA !== null && numB !== null && numA > numB;
-    const winB = numA !== null && numB !== null && numB > numA;
+  const univOptA = univList.map(u=>`<option value="${u.name}"${_b2CompareA===u.name?' selected':''}>${u.name}</option>`).join('');
+  const univOptB = univList.map(u=>`<option value="${u.name}"${_b2CompareB===u.name?' selected':''}>${u.name}</option>`).join('');
+
+  const compareRow = (label,valA,valB) => {
+    const numA=typeof valA==='number'?valA:null;
+    const numB=typeof valB==='number'?valB:null;
+    const winA=numA!==null&&numB!==null&&numA>numB;
+    const winB=numA!==null&&numB!==null&&numB>numA;
     return `<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border2)">
       <div style="text-align:right;font-size:13px;font-weight:${winA?'900':'600'};color:${winA?colA:'var(--text2)'}">
-        ${winA ? '✓ ' : ''}${valA}
+        ${winA?'✓ ':''}${valA}
       </div>
       <div style="font-size:11px;color:var(--text3);font-weight:600;text-align:center;white-space:nowrap">${label}</div>
       <div style="text-align:left;font-size:13px;font-weight:${winB?'900':'600'};color:${winB?colB:'var(--text2)'}">
-        ${valB}${winB ? ' ✓' : ''}
+        ${valB}${winB?' ✓':''}
       </div>
     </div>`;
   };
 
+  // 레이더 차트 SVG
+  const radarChart = (stA, stB) => {
+    if (!stA || !stB) return '';
+    const TIERS_LOCAL = typeof TIERS!=='undefined'?TIERS:[];
+    const tierScore = t => { const i=TIERS_LOCAL.indexOf(t); return i<0?0:Math.max(0,(TIERS_LOCAL.length-i)*10); };
+    const maxTierScore = Math.max(1, ...players.map(p=>tierScore(p.tier||''))) * stA.tiered.length;
+
+    const normalize = (val,max) => Math.min(1, max>0?val/max:0);
+    const axes = [
+      { label:'인원',  vA: normalize(stA.total, Math.max(stA.total,stB.total,1)),      vB: normalize(stB.total, Math.max(stA.total,stB.total,1)) },
+      { label:'티어점수', vA: normalize(stA.tiered.reduce((s,p)=>s+tierScore(p.tier||''),0), Math.max(stA.tiered.reduce((s,p)=>s+tierScore(p.tier||''),0),stB.tiered.reduce((s,p)=>s+tierScore(p.tier||''),0),1)),
+                         vB: normalize(stB.tiered.reduce((s,p)=>s+tierScore(p.tier||''),0), Math.max(stA.tiered.reduce((s,p)=>s+tierScore(p.tier||''),0),stB.tiered.reduce((s,p)=>s+tierScore(p.tier||''),0),1)) },
+      { label:'승률',  vA: stA.wr!==null?stA.wr/100:0, vB: stB.wr!==null?stB.wr/100:0 },
+      { label:'경기수', vA: normalize(stA.tg, Math.max(stA.tg,stB.tg,1)), vB: normalize(stB.tg, Math.max(stA.tg,stB.tg,1)) },
+      { label:'프로토스', vA: normalize(stA.races.P, Math.max(stA.total,stB.total,1)), vB: normalize(stB.races.P, Math.max(stA.total,stB.total,1)) },
+      { label:'테란',   vA: normalize(stA.races.T, Math.max(stA.total,stB.total,1)), vB: normalize(stB.races.T, Math.max(stA.total,stB.total,1)) },
+    ];
+    const N = axes.length;
+    const cx=120,cy=120,R=90;
+    const angleOf = i => (Math.PI*2/N)*i - Math.PI/2;
+    const pt = (val,i) => {
+      const a=angleOf(i); const r=val*R;
+      return `${(cx+Math.cos(a)*r).toFixed(1)},${(cy+Math.sin(a)*r).toFixed(1)}`;
+    };
+    const webPts = (vFn) => axes.map((_,i)=>pt(vFn(i),i)).join(' ');
+
+    // 격자
+    let grid='';
+    [0.25,0.5,0.75,1].forEach(s=>{
+      const pts=axes.map((_,i)=>{const a=angleOf(i);return `${(cx+Math.cos(a)*R*s).toFixed(1)},${(cy+Math.sin(a)*R*s).toFixed(1)}`;}).join(' ');
+      grid+=`<polygon points="${pts}" fill="none" stroke="var(--border2)" stroke-width="1"/>`;
+    });
+    // 축
+    const axisLines=axes.map((_,i)=>{const a=angleOf(i);return `<line x1="${cx}" y1="${cy}" x2="${(cx+Math.cos(a)*R).toFixed(1)}" y2="${(cy+Math.sin(a)*R).toFixed(1)}" stroke="var(--border2)" stroke-width="1"/>`;}).join('');
+    // 레이블
+    const labels=axes.map((ax,i)=>{
+      const a=angleOf(i);const lx=(cx+Math.cos(a)*(R+18)).toFixed(1);const ly=(cy+Math.sin(a)*(R+18)).toFixed(1);
+      return `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="var(--text3)">${ax.label}</text>`;
+    }).join('');
+
+    return `<div style="display:flex;justify-content:center;margin:8px 0 4px">
+      <svg width="240" height="240" viewBox="0 0 240 240" style="overflow:visible">
+        ${grid}${axisLines}
+        <polygon points="${webPts(i=>axes[i].vA)}" fill="${colA}" fill-opacity="0.18" stroke="${colA}" stroke-width="2" stroke-linejoin="round"/>
+        <polygon points="${webPts(i=>axes[i].vB)}" fill="${colB}" fill-opacity="0.18" stroke="${colB}" stroke-width="2" stroke-linejoin="round" stroke-dasharray="5 3"/>
+        ${labels}
+      </svg>
+    </div>
+    <div style="display:flex;justify-content:center;gap:16px;font-size:11px;font-weight:700">
+      <span style="color:${colA}">━ ${_b2CompareA}</span>
+      <span style="color:${colB}">╌ ${_b2CompareB}</span>
+    </div>`;
+  };
+
   let h = `<style>
-    .b2-compare-wrap { max-width:800px; margin:0 auto; }
-    .b2-compare-sel { display:grid; grid-template-columns:1fr 40px 1fr; gap:12px; align-items:center; margin-bottom:16px; }
-    .b2-compare-header { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
-    .b2-compare-col { border-radius:12px; padding:14px; text-align:center; }
-    @media(max-width:540px){ .b2-compare-sel{ grid-template-columns:1fr; } .b2-compare-header{ grid-template-columns:1fr 1fr; gap:6px; } }
+    .b2cv2-wrap { max-width:800px;margin:0 auto }
+    .b2cv2-sel { display:grid;grid-template-columns:1fr 40px 1fr;gap:12px;align-items:center;margin-bottom:16px }
+    .b2cv2-header { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px }
+    .b2cv2-col { border-radius:12px;padding:14px;text-align:center }
+    .b2cv2-h2h { padding:12px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;margin-bottom:12px;text-align:center }
+    @media(max-width:540px){ .b2cv2-sel{grid-template-columns:1fr} .b2cv2-header{grid-template-columns:1fr 1fr;gap:6px} }
   </style>
-  <div class="b2-compare-wrap">
-    <div class="b2-compare-sel">
-      <div style="text-align:center">
-        <select onchange="_b2CompareA=this.value;document.getElementById('b2-content').innerHTML=_b2CompareView()" 
+  <div class="b2cv2-wrap">
+    <div class="b2cv2-sel">
+      <div>
+        <select onchange="_b2CompareA=this.value;document.getElementById('b2-content').innerHTML=_b2CompareView()"
           style="width:100%;padding:8px 12px;border-radius:10px;border:2px solid ${colA};font-size:13px;font-weight:700;background:var(--white);color:${colA};cursor:pointer">
-          ${univOptions}
+          ${univOptA}
         </select>
       </div>
       <div style="text-align:center;font-size:18px;font-weight:900;color:var(--text3)">VS</div>
-      <div style="text-align:center">
+      <div>
         <select onchange="_b2CompareB=this.value;document.getElementById('b2-content').innerHTML=_b2CompareView()"
           style="width:100%;padding:8px 12px;border-radius:10px;border:2px solid ${colB};font-size:13px;font-weight:700;background:var(--white);color:${colB};cursor:pointer">
-          ${univOptionsB}
+          ${univOptB}
         </select>
       </div>
     </div>`;
 
   if (stA && stB) {
-    // Header cards
-    h += `<div class="b2-compare-header">
-      <div class="b2-compare-col" style="background:${colA}15;border:2px solid ${colA}44">
+    // 헤더 카드
+    h += `<div class="b2cv2-header">
+      <div class="b2cv2-col" style="background:${colA}15;border:2px solid ${colA}44">
         <div style="font-size:22px;font-weight:900;color:${colA}">${stA.total}</div>
         <div style="font-size:12px;color:var(--text3)">총 인원</div>
+        ${stA.wr!==null?`<div style="font-size:14px;font-weight:900;color:${stA.wr>=50?'#10b981':'#ef4444'};margin-top:4px">${stA.wr}% 승률</div>`:''}
       </div>
-      <div class="b2-compare-col" style="background:${colB}15;border:2px solid ${colB}44">
+      <div class="b2cv2-col" style="background:${colB}15;border:2px solid ${colB}44">
         <div style="font-size:22px;font-weight:900;color:${colB}">${stB.total}</div>
         <div style="font-size:12px;color:var(--text3)">총 인원</div>
+        ${stB.wr!==null?`<div style="font-size:14px;font-weight:900;color:${stB.wr>=50?'#10b981':'#ef4444'};margin-top:4px">${stB.wr}% 승률</div>`:''}
       </div>
     </div>`;
 
-    // Compare grid header
+    // 직접 맞대결
+    if (h2h.ag > 0 || h2hB.ag > 0) {
+      const totalAg = h2h.aw + h2hB.aw;
+      const aWpct = totalAg>0?Math.round(h2h.aw/totalAg*100):50;
+      h += `<div class="b2cv2-h2h">
+        <div style="font-size:12px;font-weight:800;color:var(--text3);margin-bottom:8px">⚔️ 직접 맞대결 전적</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:13px;font-weight:900;color:${colA};min-width:60px;text-align:right">${h2h.aw}승 ${h2h.al}패</span>
+          <div style="flex:1;height:12px;border-radius:6px;overflow:hidden;background:${colB};display:flex">
+            <div style="width:${aWpct}%;background:${colA};height:100%;border-radius:6px 0 0 6px;transition:width .6s ease"></div>
+          </div>
+          <span style="font-size:13px;font-weight:900;color:${colB};min-width:60px;text-align:left">${h2hB.aw}승 ${h2hB.al}패</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)">
+          <span style="color:${colA};font-weight:700">${_b2CompareA}</span>
+          <span>총 ${h2h.aw+h2hB.aw}전</span>
+          <span style="color:${colB};font-weight:700">${_b2CompareB}</span>
+        </div>
+      </div>`;
+    }
+
+    // 레이더 차트
+    h += `<div class="b2cv2-col" style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;margin-bottom:12px;padding:14px">
+      <div style="font-size:12px;font-weight:800;color:var(--text3);margin-bottom:4px;text-align:center">📡 다차원 비교</div>
+      ${radarChart(stA, stB)}
+    </div>`;
+
+    // 항목별 비교
     h += `<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:2px solid var(--border2);margin-bottom:4px">
       <div style="text-align:right;font-size:14px;font-weight:900;color:${colA}">${_b2CompareA}</div>
       <div style="width:60px;text-align:center"></div>
       <div style="text-align:left;font-size:14px;font-weight:900;color:${colB}">${_b2CompareB}</div>
     </div>`;
-
-    // Stats rows
     h += compareRow('선수 수', stA.tiered.length, stB.tiered.length);
     h += compareRow('직책자', stA.roled.length, stB.roled.length);
+    h += compareRow('통산 경기', stA.tg, stB.tg);
+    h += compareRow('통산 승', stA.tw, stB.tw);
+    h += compareRow(stA.wr!==null?`승률 (${stA.wr}%)`:'승률', stA.wr??0, stB.wr??0);
     h += compareRow('🔮 프로토스', stA.races.P, stB.races.P);
     h += compareRow('⚔️ 테란', stA.races.T, stB.races.T);
     h += compareRow('🦎 저그', stA.races.Z, stB.races.Z);
     h += compareRow('최상위 티어', stA.topTier, stB.topTier);
 
-    // Tier comparison
-    const allTiers = [...new Set([...Object.keys(stA.tiers), ...Object.keys(stB.tiers)])];
-    const sortedTiers = (typeof TIERS !== 'undefined' ? TIERS.filter(t=>allTiers.includes(t)) : [])
-      .concat(allTiers.filter(t=>typeof TIERS==='undefined'||!TIERS.includes(t)));
-
+    // 티어 비교
+    const allTiers=[...new Set([...Object.keys(stA.tiers),...Object.keys(stB.tiers)])];
+    const sortedTiers=(typeof TIERS!=='undefined'?TIERS.filter(t=>allTiers.includes(t)):[]).concat(allTiers.filter(t=>typeof TIERS==='undefined'||!TIERS.includes(t)));
     if (sortedTiers.length) {
-      h += `<div style="margin-top:12px;font-size:12px;font-weight:700;color:var(--text3);text-align:center;margin-bottom:8px">티어별 비교</div>`;
-      sortedTiers.forEach(t => {
-        const nA = stA.tiers[t]||0, nB = stB.tiers[t]||0;
-        const col = typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
-        const tcol = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
-        const maxN = Math.max(nA, nB, 1);
-        h += `<div style="display:grid;grid-template-columns:1fr 52px 1fr;gap:6px;align-items:center;margin-bottom:6px">
+      h+=`<div style="margin-top:12px;font-size:12px;font-weight:700;color:var(--text3);text-align:center;margin-bottom:8px">티어별 비교</div>`;
+      sortedTiers.forEach(t=>{
+        const nA=stA.tiers[t]||0,nB=stB.tiers[t]||0;
+        const col=typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
+        const tcol=typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
+        const maxN=Math.max(nA,nB,1);
+        h+=`<div style="display:grid;grid-template-columns:1fr 52px 1fr;gap:6px;align-items:center;margin-bottom:6px">
           <div style="display:flex;justify-content:flex-end">
             <div style="height:10px;width:${Math.round(nA/maxN*100)}%;max-width:100%;background:${nA>nB?colA:colA+'88'};border-radius:5px 0 0 5px;min-width:${nA?'8px':'0'}"></div>
           </div>
@@ -4380,18 +5023,18 @@ function _b2CompareView() {
       });
     }
 
-    // Player lists
-    h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+    // 선수 목록
+    h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
       <div>
         <div style="font-size:12px;font-weight:800;color:${colA};margin-bottom:6px">${_b2CompareA} 선수</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px">
-          ${stA.tiered.sort((a,b)=>{const ti=typeof TIERS!=='undefined'?TIERS:[];const ia=ti.indexOf(a.tier||'');const ib=ti.indexOf(b.tier||'');return(ia>=0?ia:999)-(ib>=0?ib:999)||((a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'}));}).map(p=>_b2NameTag(p,colA,false)).join('')}
+          ${stA.tiered.slice().sort((a,b)=>{const ti=typeof TIERS!=='undefined'?TIERS:[];const ia=ti.indexOf(a.tier||''),ib=ti.indexOf(b.tier||'');return(ia>=0?ia:999)-(ib>=0?ib:999)||(a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'});}).map(p=>_b2NameTag(p,colA,false)).join('')}
         </div>
       </div>
       <div>
         <div style="font-size:12px;font-weight:800;color:${colB};margin-bottom:6px">${_b2CompareB} 선수</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px">
-          ${stB.tiered.sort((a,b)=>{const ti=typeof TIERS!=='undefined'?TIERS:[];const ia=ti.indexOf(a.tier||'');const ib=ti.indexOf(b.tier||'');return(ia>=0?ia:999)-(ib>=0?ib:999)||((a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'}));}).map(p=>_b2NameTag(p,colB,false)).join('')}
+          ${stB.tiered.slice().sort((a,b)=>{const ti=typeof TIERS!=='undefined'?TIERS:[];const ia=ti.indexOf(a.tier||''),ib=ti.indexOf(b.tier||'');return(ia>=0?ia:999)-(ib>=0?ib:999)||(a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'});}).map(p=>_b2NameTag(p,colB,false)).join('')}
         </div>
       </div>
     </div>`;
@@ -4400,281 +5043,493 @@ function _b2CompareView() {
   h += `</div>`;
   return h;
 }
-
 /* ══════════════════════════════════════
-   🗺️ 히트맵 뷰 — 대학×티어 교차 히트맵
+   🌡️ 히트맵 뷰 v2 — 승률 모드 + 정렬 버튼
 ══════════════════════════════════════ */
+window._b2HeatmapMode = window._b2HeatmapMode || 'count';
+window._b2HeatmapSortRow = window._b2HeatmapSortRow || 'name';
+window._b2HeatmapSortCol = window._b2HeatmapSortCol || 'tier';
+
+function _b2HeatmapCellClick(el){
+  try{
+    if(!el || !el.dataset) return;
+    const uid = el.dataset.hmUid || '';
+    const univName = el.dataset.hmUniv || '';
+    const tier = el.dataset.hmTier || '';
+    const color = el.dataset.hmColor || '#64748b';
+    if(!uid || !univName || !tier) return;
+    if(typeof _b2HeatmapShowPopup === 'function') _b2HeatmapShowPopup(uid, univName, tier, color);
+  }catch(e){}
+}
+function _b2HeatmapTotalClick(el){
+  try{
+    if(!el || !el.dataset) return;
+    const uid = el.dataset.hmUid || '';
+    const univName = el.dataset.hmUniv || '';
+    const color = el.dataset.hmColor || '#64748b';
+    if(!uid || !univName) return;
+    if(typeof _b2HeatmapShowAllPopup === 'function') _b2HeatmapShowAllPopup(uid, univName, color);
+  }catch(e){}
+}
+function _b2HeatmapShowPopup(uid, univName, tier, color){
+  try{
+    const popup  = document.getElementById(uid + '-popup');
+    const header = document.getElementById(uid + '-popup-header');
+    const body   = document.getElementById(uid + '-popup-body');
+    if(!popup || !body) return;
+    const escH = (typeof escHTML === 'function') ? escHTML : (s)=>String(s||'');
+    const escA = (typeof escAttr === 'function') ? escAttr : (s)=>String(s||'');
+    const members = (Array.isArray(window.players) ? window.players : []).filter(p=>{
+      const pu = String((p && p.univ) || '').trim();
+      const pt = String((p && p.tier) || '미정');
+      return pu === univName && pt === tier && !(p && (p.hidden || p.retired || p.hideFromBoard));
+    });
+    if(!members.length) return;
+    let tw=0,tl=0;
+    members.forEach(p=>(Array.isArray(p && p.history)?p.history:[]).forEach(h=>{ if(h && h.result==='승') tw++; else if(h && h.result==='패') tl++; }));
+    const tg=tw+tl, wr=tg>0?Math.round(tw/tg*100):null;
+    const wrc=wr===null?'#94a3b8':wr>=60?'#10b981':wr>=40?'#f59e0b':'#ef4444';
+    const now=new Date(), day=now.getDay();
+    const mon=new Date(now); mon.setDate(now.getDate()+(day===0?-6:1-day));
+    const fromN=parseInt(mon.toISOString().slice(0,10).replace(/-/g,''),10);
+    const toN=parseInt(now.toISOString().slice(0,10).replace(/-/g,''),10);
+    const dNum=s=>parseInt(String(s||'').replace(/[-\.]/g,''),10)||0;
+    let ww=0,wl=0;
+    members.forEach(p=>(Array.isArray(p && p.history)?p.history:[]).forEach(h=>{
+      const d=dNum(h && (h.date||h.d||''));
+      if(d>=fromN && d<=toN){
+        if(h && h.result==='승') ww++;
+        else if(h && h.result==='패') wl++;
+      }
+    }));
+    const tierCol = (typeof getTierBtnColor==='function'&&tier)?getTierBtnColor(tier):'#64748b';
+    const tierTc  = (typeof getTierBtnTextColor==='function'&&tier)?(getTierBtnTextColor(tier)||'#fff'):'#fff';
+    if(header) header.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<div style="width:12px;height:12px;border-radius:50%;background:'+color+';flex-shrink:0;box-shadow:0 0 0 3px '+color+'30"></div>' +
+        '<span style="font-size:16px;font-weight:900;color:'+color+';">'+escH(univName)+'</span>' +
+        '<span style="font-size:12px;padding:3px 10px;border-radius:20px;background:'+tierCol+';color:'+tierTc+';font-weight:800;letter-spacing:.3px">'+escH(tier)+'</span>' +
+        '<div style="margin-left:auto;text-align:right">' +
+          (wr!==null?'<div style="font-size:18px;font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:10px;color:var(--text3);">'+tw+'승 '+tl+'패</div>':'<div style="font-size:13px;color:var(--text3)">기록 없음</div>') +
+        '</div>' +
+      '</div>';
+    let bodyHtml = '';
+    bodyHtml += '<div class="b2hm2-stat-row">' +
+      '<div class="b2hm2-stat-box" style="background:'+color+'0d;border-color:'+color+'22">' +
+        '<div style="font-size:22px;font-weight:900;color:'+color+'">'+members.length+'</div>' +
+        '<div style="font-size:10px;color:var(--text3);font-weight:700">총 인원</div>' +
+      '</div>';
+    if (tg>0) bodyHtml +=
+      '<div class="b2hm2-stat-box" style="background:'+wrc+'12;border-color:'+wrc+'30">' +
+        '<div style="font-size:22px;font-weight:900;color:'+wrc+'">'+wr+'%</div>' +
+        '<div style="font-size:10px;color:var(--text3);font-weight:700">'+tw+'승 '+tl+'패</div>' +
+      '</div>';
+    if (ww+wl>0) bodyHtml +=
+      '<div class="b2hm2-stat-box" style="background:#fff7ed;border-color:#fed7aa">' +
+        '<div style="font-size:20px;font-weight:900;color:#c2410c">🔥 '+ww+'승</div>' +
+        '<div style="font-size:10px;color:#c2410c;font-weight:700">이번주 '+wl+'패</div>' +
+      '</div>';
+    bodyHtml += '</div>';
+    bodyHtml += '<div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px">' +
+      '<span style="width:20px;height:2px;background:var(--border2);display:inline-block;border-radius:1px"></span>' +
+      members.length+'명' +
+      '<span style="flex:1;height:1px;background:var(--border2);display:inline-block;border-radius:1px"></span></div>';
+    bodyHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px">';
+    members.sort((a,b)=>(String(a && a.name || '')).localeCompare(String(b && b.name || ''),'ko',{sensitivity:'base'})).forEach(p=>{
+      const rIco=p && p.race==='P'?'🔮':p && p.race==='T'?'⚔️':p && p.race==='Z'?'🦎':'';
+      const rawPhoto = p && p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
+      const safePhoto = rawPhoto ? escA(rawPhoto) : '';
+      const initials = String(p && p.name || '?').slice(0,1);
+      let pw=0,pl=0;
+      (Array.isArray(p && p.history)?p.history:[]).forEach(h=>{ if(h && h.result==='승') pw++; else if(h && h.result==='패') pl++; });
+      const pg=pw+pl,pwr=pg>0?Math.round(pw/pg*100):null;
+      const pc=pwr===null?'#94a3b8':pwr>=60?'#10b981':pwr>=40?'#f59e0b':'#ef4444';
+      bodyHtml += '<div class="b2hm2-pcard" style="background:'+color+'09;border-color:'+color+'28">';
+      if (safePhoto) {
+        bodyHtml += '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'+
+          '<div class="b2hm2-pcard-avatar" style="display:none;background:'+color+'22;color:'+color+'">'+escH(initials)+'</div>';
+      } else {
+        bodyHtml += '<div class="b2hm2-pcard-avatar" style="background:'+color+'22;color:'+color+'">'+escH(initials)+'</div>';
+      }
+      bodyHtml += '<div style="font-size:11px;font-weight:900;color:'+color+';line-height:1.2">'+escH(p && p.name || '')+'</div>';
+      if (rIco || pwr!==null) {
+        bodyHtml += '<div style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:2px">'+rIco;
+        if (pwr!==null) bodyHtml += '<span style="color:'+pc+';font-weight:800;margin-left:2px">'+pwr+'%</span>';
+        bodyHtml += '</div>';
+      }
+      bodyHtml += '</div>';
+    });
+    bodyHtml += '</div>';
+    body.innerHTML = bodyHtml;
+    popup.classList.add('show');
+  }catch(e){}
+}
+function _b2HeatmapShowAllPopup(uid, univName, color){
+  try{
+    const popup  = document.getElementById(uid + '-popup');
+    const header = document.getElementById(uid + '-popup-header');
+    const body   = document.getElementById(uid + '-popup-body');
+    if(!popup || !body) return;
+    const escH = (typeof escHTML === 'function') ? escHTML : (s)=>String(s||'');
+    const escA = (typeof escAttr === 'function') ? escAttr : (s)=>String(s||'');
+    const members = (Array.isArray(window.players) ? window.players : []).filter(p=>{
+      const pu = String((p && p.univ) || '').trim();
+      return pu === univName && !(p && (p.hidden || p.retired || p.hideFromBoard));
+    });
+    if(!members.length) return;
+    let tw=0,tl=0;
+    members.forEach(p=>(Array.isArray(p && p.history)?p.history:[]).forEach(h=>{ if(h && h.result==='승') tw++; else if(h && h.result==='패') tl++; }));
+    const tg=tw+tl, wr=tg>0?Math.round(tw/tg*100):null;
+    const wrc=wr===null?'#94a3b8':wr>=60?'#10b981':wr>=40?'#f59e0b':'#ef4444';
+    const now=new Date(), day=now.getDay();
+    const mon=new Date(now); mon.setDate(now.getDate()+(day===0?-6:1-day));
+    const fromN=parseInt(mon.toISOString().slice(0,10).replace(/-/g,''),10);
+    const toN=parseInt(now.toISOString().slice(0,10).replace(/-/g,''),10);
+    const dNum=s=>parseInt(String(s||'').replace(/[-\.]/g,''),10)||0;
+    let ww=0,wl=0;
+    members.forEach(p=>(Array.isArray(p && p.history)?p.history:[]).forEach(h=>{
+      const d=dNum(h && (h.date||h.d||''));
+      if(d>=fromN && d<=toN){
+        if(h && h.result==='승') ww++;
+        else if(h && h.result==='패') wl++;
+      }
+    }));
+    if(header) header.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<div style="width:12px;height:12px;border-radius:50%;background:'+color+';flex-shrink:0;box-shadow:0 0 0 3px '+color+'30"></div>' +
+        '<span style="font-size:16px;font-weight:900;color:'+color+';">'+escH(univName)+'</span>' +
+        '<div style="margin-left:auto;text-align:right">' +
+          (wr!==null?'<div style="font-size:18px;font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:10px;color:var(--text3);">'+tw+'승 '+tl+'패</div>':'<div style="font-size:13px;color:var(--text3)">기록 없음</div>') +
+        '</div>' +
+      '</div>';
+    let bodyHtml = '';
+    bodyHtml += '<div class="b2hm2-stat-row">' +
+      '<div class="b2hm2-stat-box" style="background:'+color+'0d;border-color:'+color+'22">' +
+        '<div style="font-size:22px;font-weight:900;color:'+color+'">'+members.length+'</div>' +
+        '<div style="font-size:10px;color:var(--text3);font-weight:700">총 인원</div>' +
+      '</div>';
+    if (tg>0) bodyHtml +=
+      '<div class="b2hm2-stat-box" style="background:'+wrc+'12;border-color:'+wrc+'30">' +
+        '<div style="font-size:22px;font-weight:900;color:'+wrc+'">'+wr+'%</div>' +
+        '<div style="font-size:10px;color:var(--text3);font-weight:700">'+tw+'승 '+tl+'패</div>' +
+      '</div>';
+    if (ww+wl>0) bodyHtml +=
+      '<div class="b2hm2-stat-box" style="background:#fff7ed;border-color:#fed7aa">' +
+        '<div style="font-size:20px;font-weight:900;color:#c2410c">🔥 '+ww+'승</div>' +
+        '<div style="font-size:10px;color:#c2410c;font-weight:700">이번주 '+wl+'패</div>' +
+      '</div>';
+    bodyHtml += '</div>';
+    bodyHtml += '<div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px">' +
+      '<span style="width:20px;height:2px;background:var(--border2);display:inline-block;border-radius:1px"></span>' +
+      members.length+'명' +
+      '<span style="flex:1;height:1px;background:var(--border2);display:inline-block;border-radius:1px"></span></div>';
+    bodyHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px">';
+    members.sort((a,b)=>(String(a && a.name || '')).localeCompare(String(b && b.name || ''),'ko',{sensitivity:'base'})).forEach(p=>{
+      const rIco=p && p.race==='P'?'🔮':p && p.race==='T'?'⚔️':p && p.race==='Z'?'🦎':'';
+      const rawPhoto = p && p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
+      const safePhoto = rawPhoto ? escA(rawPhoto) : '';
+      const initials = String(p && p.name || '?').slice(0,1);
+      const pColor = (typeof gc === 'function' ? gc(p && p.univ) : null) || color;
+      let pw=0,pl=0;
+      (Array.isArray(p && p.history)?p.history:[]).forEach(h=>{ if(h && h.result==='승') pw++; else if(h && h.result==='패') pl++; });
+      const pg=pw+pl,pwr=pg>0?Math.round(pw/pg*100):null;
+      const pc=pwr===null?'#94a3b8':pwr>=60?'#10b981':pwr>=40?'#f59e0b':'#ef4444';
+      bodyHtml += '<div class="b2hm2-pcard" style="background:'+pColor+'09;border-color:'+pColor+'28">';
+      if (safePhoto) {
+        bodyHtml += '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'+
+          '<div class="b2hm2-pcard-avatar" style="display:none;background:'+pColor+'22;color:'+pColor+'">'+escH(initials)+'</div>';
+      } else {
+        bodyHtml += '<div class="b2hm2-pcard-avatar" style="background:'+pColor+'22;color:'+pColor+'">'+escH(initials)+'</div>';
+      }
+      bodyHtml += '<div style="font-size:11px;font-weight:900;color:'+pColor+';line-height:1.2">'+escH(p && p.name || '')+'</div>';
+      if (rIco || pwr!==null) {
+        bodyHtml += '<div style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:2px">'+rIco;
+        if (pwr!==null) bodyHtml += '<span style="color:'+pc+';font-weight:800;margin-left:2px">'+pwr+'%</span>';
+        bodyHtml += '</div>';
+      }
+      bodyHtml += '</div>';
+    });
+    bodyHtml += '</div>';
+    body.innerHTML = bodyHtml;
+    popup.classList.add('show');
+  }catch(e){}
+}
+
 function _b2HeatmapView() {
+  const hmUid = 'hm_' + Math.random().toString(36).slice(2,7);
   const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
   const univList = (_b2VisUnivs ? _b2VisUnivs() : []).filter(u=>u.name && u.name!=='무소속');
-  const tieredVis = players.filter(p =>
+  const vis = players.filter(p =>
     !p.hidden && !p.retired && !p.hideFromBoard &&
-    !_dissSet.has(String(p?.univ||'').trim()) &&
-    !_B2_ROLE_ORDER.includes(p.role||'')
+    !_dissSet.has(String(p?.univ||'').trim())
   );
+  const TIERS_LOCAL = typeof TIERS !== 'undefined' ? TIERS : [];
+  const mode    = window._b2HeatmapMode    || 'count';
+  const sortRow = window._b2HeatmapSortRow || 'name';
+  const sortCol = window._b2HeatmapSortCol || 'tier';
 
-  // Build matrix: univ × tier
-  const tierKeys = (typeof TIERS !== 'undefined' ? TIERS : ['G','K','JA','J','S','0티어','1티어','2티어','3티어','4티어','유스']).filter(t => {
-    return tieredVis.some(p => (p.tier||'미정') === t);
-  });
-  const univNames = univList.map(u => u.name).filter(n =>
-    tieredVis.some(p => String(p?.univ||'').trim() === n)
-  );
+  // 사용 중인 티어 목록
+  const usedTiers = [...new Set(vis.map(p=>p.tier||'미정'))];
+  let orderedTiers = TIERS_LOCAL.filter(t=>usedTiers.includes(t))
+    .concat(usedTiers.filter(t=>!TIERS_LOCAL.includes(t)));
 
-  // matrix[univ][tier] = count
-  const matrix = {};
-  univNames.forEach(u => {
-    matrix[u] = {};
-    tierKeys.forEach(t => { matrix[u][t] = 0; });
-  });
-  tieredVis.forEach(p => {
+  // 대학-티어 교차 집계
+  const cellData = {}; // cellData[univ][tier] = { count, wins, losses }
+  univList.forEach(u => { cellData[u.name] = {}; });
+  vis.forEach(p => {
     const u = String(p?.univ||'').trim();
-    const t = p.tier || '미정';
-    if (matrix[u] && t in matrix[u]) matrix[u][t]++;
+    const t = p.tier||'미정';
+    if (!cellData[u]) cellData[u] = {};
+    if (!cellData[u][t]) cellData[u][t] = { count:0, wins:0, losses:0 };
+    cellData[u][t].count++;
+    (Array.isArray(p.history)?p.history:[]).forEach(h => {
+      if (h.result==='승') cellData[u][t].wins++;
+      else if (h.result==='패') cellData[u][t].losses++;
+    });
   });
 
-  // Max value for color scaling
-  const allVals = univNames.flatMap(u => tierKeys.map(t => matrix[u][t]));
-  const maxVal = Math.max(...allVals, 1);
+  // 대학 합계
+  const univTotals = {};
+  univList.forEach(u => {
+    let cnt=0, w=0, l=0;
+    orderedTiers.forEach(t => { const c=cellData[u.name]?.[t]; if(c){cnt+=c.count;w+=c.wins;l+=c.losses;} });
+    univTotals[u.name] = { count:cnt, wins:w, losses:l, wr: (w+l)>0?Math.round(w/(w+l)*100):null };
+  });
 
-  // Color interpolation: white → color based on value
-  const cellColor = (val, univColor) => {
-    if (!val) return 'transparent';
-    const intensity = Math.min(val / maxVal, 1);
-    // Parse hex to rgb
-    const hex = (univColor || '#3b82f6').replace('#','');
-    const r = parseInt(hex.slice(0,2),16);
-    const g = parseInt(hex.slice(2,4),16);
-    const b = parseInt(hex.slice(4,6),16);
-    // Interpolate from near-white to full color
-    const alpha = 0.12 + intensity * 0.78;
-    return `rgba(${r},${g},${b},${alpha})`;
+  // 티어 합계
+  const tierTotals = {};
+  orderedTiers.forEach(t => {
+    let cnt=0, w=0, l=0;
+    univList.forEach(u => { const c=cellData[u.name]?.[t]; if(c){cnt+=c.count;w+=c.wins;l+=c.losses;} });
+    tierTotals[t] = { count:cnt, wins:w, losses:l, wr:(w+l)>0?Math.round(w/(w+l)*100):null };
+  });
+
+  // 행(대학) 정렬
+  let sortedUnivs = [...univList];
+  if (sortRow === 'name')  sortedUnivs.sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko'));
+  if (sortRow === 'count') sortedUnivs.sort((a,b)=>(univTotals[b.name]?.count||0)-(univTotals[a.name]?.count||0));
+  if (sortRow === 'wr')    sortedUnivs.sort((a,b)=>(univTotals[b.name]?.wr??-1)-(univTotals[a.name]?.wr??-1));
+
+  // 열(티어) 정렬
+  let sortedTiers = [...orderedTiers];
+  if (sortCol === 'tier')  {} // 기본 티어 순서 유지
+  if (sortCol === 'count') sortedTiers.sort((a,b)=>(tierTotals[b]?.count||0)-(tierTotals[a]?.count||0));
+  if (sortCol === 'wr')    sortedTiers.sort((a,b)=>(tierTotals[b]?.wr??-1)-(tierTotals[a]?.wr??-1));
+
+  // 색상 보간 (count: 대학 색상 기반 / wr: 빨강↔초록)
+  const _hexToRgb = (hex) => {
+    const h = String(hex || '').trim().replace('#','');
+    if (h.length === 3) {
+      const r = parseInt(h[0] + h[0], 16);
+      const g = parseInt(h[1] + h[1], 16);
+      const b = parseInt(h[2] + h[2], 16);
+      if ([r,g,b].some(x=>isNaN(x))) return null;
+      return { r, g, b };
+    }
+    if (h.length >= 6) {
+      const r = parseInt(h.slice(0,2), 16);
+      const g = parseInt(h.slice(2,4), 16);
+      const b = parseInt(h.slice(4,6), 16);
+      if ([r,g,b].some(x=>isNaN(x))) return null;
+      return { r, g, b };
+    }
+    return null;
   };
-  const textColor = (val) => val >= Math.ceil(maxVal * 0.5) ? '#fff' : 'var(--text1)';
+  const heatColor = (val, max, baseHex) => {
+    if (!val || max===0) return 'transparent';
+    const t = val/max;
+    if (mode === 'count') {
+      const rgb = _hexToRgb(baseHex) || _hexToRgb('#3b82f6') || { r:59, g:130, b:246 };
+      const a = Math.min(0.92, Math.max(0.12, t * 0.78 + 0.12));
+      return `rgba(${rgb.r},${rgb.g},${rgb.b},${a.toFixed(2)})`;
+    } else {
+      // 승률: 빨강(0%)→흰→초록(100%)
+      const r = val<50?255:Math.round(255*(1-(val-50)/50));
+      const g = val>50?255:Math.round(255*(val/50));
+      return `rgba(${r},${g},80,0.55)`;
+    }
+  };
+  const textColor = (val, max) => {
+    if (!val || max===0) return 'var(--text3)';
+    return val/max > 0.55 ? '#fff' : 'var(--text1)';
+  };
 
-  // Row totals and col totals
-  const rowTotal = (u) => tierKeys.reduce((s,t) => s + matrix[u][t], 0);
-  const colTotal = (t) => univNames.reduce((s,u) => s + matrix[u][t], 0);
+  const maxCount = Math.max(1, ...univList.flatMap(u=>orderedTiers.map(t=>cellData[u.name]?.[t]?.count||0)));
+
+  const modeBtns = [
+    { key:'count', label:'👥 인원수' },
+    { key:'wr',    label:'📈 승률' },
+  ];
+  const rowBtns = [
+    { key:'name',  label:'🔤 이름순' },
+    { key:'count', label:'👥 인원순' },
+    { key:'wr',    label:'📈 승률순' },
+  ];
+  const colBtns = [
+    { key:'tier',  label:'🏅 티어순' },
+    { key:'count', label:'👥 인원순' },
+    { key:'wr',    label:'📈 승률순' },
+  ];
 
   let h = `<style>
-    .b2-hm-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-    .b2-hm-table { border-collapse:separate; border-spacing:3px; min-width:100%; }
-    .b2-hm-cell {
-      width:44px; min-width:44px; height:40px;
-      border-radius:6px; text-align:center; vertical-align:middle;
-      font-size:13px; font-weight:800;
-      cursor:pointer; position:relative; outline:2px solid transparent;
-    }
-    .b2-hm-univ-lbl { font-size:11px; font-weight:800; white-space:nowrap; padding:4px 10px 4px 2px; text-align:right; max-width:84px; overflow:hidden; text-overflow:ellipsis; }
-    .b2-hm-tier-lbl { font-size:11px; font-weight:800; text-align:center; padding:2px 4px; }
-    .b2-hm-tier-lbl-inner { padding:3px 6px;border-radius:8px;font-size:10px;font-weight:800;margin-bottom:2px;display:inline-block; }
-    .b2-hm-total-cell { background:var(--surface); border-radius:6px; text-align:center; font-size:11px; font-weight:900; color:var(--text3); padding:4px 6px; }
-    .b2-hm-legend { display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
-    .b2-hm-table td:hover { filter:none !important; opacity:1 !important; }
-    .b2-hm-table tr:hover td { filter:none !important; opacity:1 !important; background:inherit !important; }
-    .b2-hm-cell.hm-cell-focus,
-    .b2-hm-cell.hm-row-hi,
-    .b2-hm-cell.hm-col-hi,
-    .b2-hm-cell.hm-dim { transform:none !important; box-shadow:none !important; outline:2px solid transparent !important; opacity:1 !important; filter:none !important; z-index:auto !important; }
-    .b2-hm-tier-lbl-inner.hm-col-active { transform:none !important; box-shadow:none !important; }
-    .b2-hm-univ-lbl.hm-row-active { font-size:11px !important; }
-    .b2-hm-cell.is-selected { outline:2px solid rgba(15,23,42,.85) !important; box-shadow:0 10px 26px rgba(0,0,0,.22) !important; }
-    body.dark .b2-hm-cell.is-selected { outline:2px solid rgba(255,255,255,.9) !important; }
-    .b2-hm-popup-player { cursor:pointer; }
-    /* 히트맵 팝업 오버레이 */
-    #b2-hm-popup-overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:var(--z-modal-5);display:flex;align-items:center;justify-content:center;padding:16px; }
-    #b2-hm-popup { background:var(--white);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.28);max-width:520px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden; }
-    #b2-hm-popup-header { padding:14px 16px 10px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0; }
-    #b2-hm-popup-body { overflow-y:auto;padding:12px 16px 16px;flex:1; }
-    .b2-hm-popup-player { display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;transition:background .12s; }
-    .b2-hm-popup-player:hover { background:var(--surface); }
-    .b2-hm-popup-close { background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);padding:2px 6px;border-radius:6px;line-height:1; }
-    .b2-hm-popup-close:hover { background:var(--surface);color:var(--text1); }
+    .b2hm2-wrap { overflow-x:auto; }
+    .b2hm2-ctrl { display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;padding:10px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:12px }
+    .b2hm2-ctrl-group { display:flex;gap:4px;align-items:center;flex-wrap:wrap }
+    .b2hm2-lbl { font-size:11px;font-weight:800;color:var(--text3);margin-right:2px }
+    .b2hm2-btn { padding:4px 10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--white);font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .12s;user-select:none }
+    .b2hm2-btn.on { background:var(--text1);color:var(--white);border-color:var(--text1);box-shadow:inset 0 2px 4px rgba(0,0,0,.25) }
+    .b2hm2-btn:not(.on):hover { border-color:var(--text1);color:var(--text1) }
+    .b2hm2-btn:not(.on):active { background:var(--border2);transform:scale(.97) }
+    .b2hm2-sep { width:1px;height:22px;background:var(--border2);margin:0 4px }
+    .b2hm2-tbl { border-collapse:separate;border-spacing:3px;min-width:100% }
+    .b2hm2-tbl th { font-size:10px;font-weight:800;color:var(--text3);padding:4px 6px;text-align:center;white-space:nowrap;position:sticky }
+    .b2hm2-tbl th.row-head { text-align:left;left:0;z-index:3;background:var(--bg) }
+    .b2hm2-tbl th.col-head { top:0;z-index:2;background:var(--bg) }
+    .b2hm2-tbl td { border-radius:8px;text-align:center;font-size:11px;font-weight:800;padding:6px 4px;min-width:44px;cursor:pointer;position:relative;transition:none }
+    .b2hm2-popup { display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px) }
+    .b2hm2-popup.show { display:flex }
+    .b2hm2-popup-inner { background:var(--white);border-radius:22px;padding:0;max-width:400px;width:92%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 72px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.06);position:relative;animation:b2hmIn .22s cubic-bezier(.34,1.56,.64,1) }
+    .b2hm2-popup-header { padding:18px 20px 14px;border-bottom:1px solid var(--border2);flex-shrink:0;background:var(--surface) }
+    .b2hm2-popup-body { padding:16px 20px 20px;overflow-y:auto;flex:1 }
+    @keyframes b2hmIn { from{opacity:0;transform:scale(.88) translateY(16px)} to{opacity:1;transform:none} }
+    .b2hm2-popup-close { position:absolute;top:14px;right:16px;background:var(--border2);border:none;width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:2 }
+    .b2hm2-popup-close:hover { background:var(--text1);color:#fff }
+    .b2hm2-pcard { display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 8px;border-radius:12px;border:1.5px solid transparent;text-align:center;transition:all .15s;cursor:pointer }
+    .b2hm2-pcard:hover { border-color:var(--border2);box-shadow:0 2px 8px #0001;transform:translateY(-1px) }
+    .b2hm2-pcard-photo { width:46px;height:46px;border-radius:10px;object-fit:cover;flex-shrink:0 }
+    .b2hm2-pcard-avatar { width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;flex-shrink:0 }
+    .b2hm2-stat-row { display:flex;gap:8px;margin-bottom:12px }
+    .b2hm2-stat-box { flex:1;padding:10px 8px;border-radius:12px;text-align:center;border:1.5px solid transparent }
+    .b2hm2-week-badge { display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:#fff7ed;border:1px solid #fed7aa;font-size:11px;font-weight:800;color:#c2410c;margin-bottom:12px }
+    .b2hm2-tbl td:hover { filter:none;box-shadow:none; }
+    .b2hm2-tbl tr:hover td { filter:none; box-shadow:none; }
+    .b2hm2-tbl td.univ-name { text-align:left;font-size:11px;font-weight:800;padding:4px 8px;white-space:nowrap;background:var(--bg);color:var(--text1);position:sticky;left:0;z-index:2;min-width:72px }
+    .b2hm2-tbl td.total-cell { background:var(--surface);border:1px solid var(--border2);font-weight:900 }
+    .b2hm2-legend { display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--text3) }
+    .b2hm2-legend-bar { height:12px;width:120px;border-radius:6px }
+    .b2hm2-empty { font-size:11px;color:var(--text3);padding:2px 4px }
   </style>`;
 
-  // Legend
-  h += `<div style="margin-bottom:14px;padding:10px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:12px">
-    <div style="font-size:13px;font-weight:900;color:var(--text1);margin-bottom:8px">🗺️ 대학 × 티어 히트맵</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:8px">셀 클릭 시 해당 플레이어 목록 팝업 · 색이 진할수록 인원이 많습니다</div>
-    <div class="b2-hm-legend">
-      <span style="font-size:11px;color:var(--text3);font-weight:600">적음</span>
-      ${[0.1,0.25,0.4,0.6,0.8,1.0].map(v=>`<div style="width:24px;height:14px;border-radius:4px;background:rgba(59,130,246,${0.12+v*0.78})"></div>`).join('')}
-      <span style="font-size:11px;color:var(--text3);font-weight:600">많음</span>
+  // 컨트롤
+  h += `<div class="b2hm2-ctrl">
+    <div class="b2hm2-ctrl-group">
+      <span class="b2hm2-lbl">표시:</span>
+      ${modeBtns.map(b=>`<button class="b2hm2-btn${mode===b.key?' on':''}" onclick="window._b2HeatmapMode='${b.key}';render()">${b.label}</button>`).join('')}
+    </div>
+    <div class="b2hm2-sep"></div>
+    <div class="b2hm2-ctrl-group">
+      <span class="b2hm2-lbl">행:</span>
+      ${rowBtns.map(b=>`<button class="b2hm2-btn${sortRow===b.key?' on':''}" onclick="window._b2HeatmapSortRow='${b.key}';render()">${b.label}</button>`).join('')}
+    </div>
+    <div class="b2hm2-sep"></div>
+    <div class="b2hm2-ctrl-group">
+      <span class="b2hm2-lbl">열:</span>
+      ${colBtns.map(b=>`<button class="b2hm2-btn${sortCol===b.key?' on':''}" onclick="window._b2HeatmapSortCol='${b.key}';render()">${b.label}</button>`).join('')}
     </div>
   </div>`;
 
-  // Serialize player data for inline JS popup (펨코→대학별→무소속→이미지별 순)
-  const _hmPlayerMap = {}; // key: "univ|||tier" → player info array
-  univNames.forEach(uName => {
-    tierKeys.forEach(t => {
-      const members = tieredVis.filter(p => String(p?.univ||'').trim() === uName && (p.tier||'미정') === t);
-      if (members.length) {
-        // Sort: 펨코(femco) → 대학별(univ) → 무소속(free) → 이미지별(photo)
-        members.sort((a,b) => {
-          const getFemcoRank = p => typeof p.femcoRank !== 'undefined' ? p.femcoRank : (p.femco ? 0 : 999);
-          const fa = getFemcoRank(a), fb = getFemcoRank(b);
-          if (fa !== fb) return fa - fb;
-          const ua = String(a.univ||''), ub = String(b.univ||'');
-          if (ua !== ub) return ua.localeCompare(ub,'ko');
-          const ha = a.photo?0:1, hb = b.photo?0:1;
-          return ha - hb || (a.name||'').localeCompare(b.name||'','ko',{sensitivity:'base'});
-        });
-        _hmPlayerMap[uName+'|||'+t] = members.map(p => ({
-          name: p.name||'',
-          tier: p.tier||'미정',
-          race: p.race||'?',
-          univ: p.univ||'',
-          photo: p.photo||'',
-          femco: p.femco||false
-        }));
-      }
-    });
-  });
-  const _hmDataJson = JSON.stringify(_hmPlayerMap);
-  const _hmTierColorMap = JSON.stringify(Object.fromEntries(
-    tierKeys.map(t => [t, typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b'])
-  ));
+  h += `<div class="b2hm2-wrap"><table class="b2hm2-tbl">`;
 
-  h += `<div class="b2-hm-wrap"><table class="b2-hm-table">`;
-
-  // Header row: tier labels
-  h += `<tr>
-    <td style="width:84px"></td>
-    ${tierKeys.map((t,ci) => {
-      const col = typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
-      const tc = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
-      const ct = colTotal(t);
-      return `<td class="b2-hm-tier-lbl" data-hm-col="${ci}" style="background:transparent !important">
-        <div class="b2-hm-tier-lbl-inner" style="background:${col};color:${tc}">${t}</div>
-        <div style="font-size:10px;color:var(--text3);font-weight:600">${ct}명</div>
-      </td>`;
+  // 헤더행 (티어)
+  const maxWr = 100;
+  h += `<thead><tr>
+    <th class="row-head col-head">대학 \\ 티어</th>
+    ${sortedTiers.map(t => {
+      const col   = typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
+      const tcol  = typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
+      const tot   = tierTotals[t];
+      const sub   = mode==='count'?`${tot.count}명`:tot.wr!==null?`${tot.wr}%`:'-';
+      return `<th class="col-head"><div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+        <span style="padding:2px 8px;border-radius:6px;background:${col};color:${tcol}">${t}</span>
+        <span style="font-size:9px;font-weight:700;color:var(--text3)">${sub}</span>
+      </div></th>`;
     }).join('')}
-    <td class="b2-hm-tier-lbl" style="color:var(--text3);background:transparent !important">합계</td>
-  </tr>`;
+    <th class="col-head" style="border-left:2px solid var(--border2)">합계</th>
+  </tr></thead><tbody>`;
 
-  // Data rows
-  univNames.forEach((uName, ri) => {
-    const uColor = gc(uName) || '#3b82f6';
-    const rt = rowTotal(uName);
+  // 데이터 행
+  sortedUnivs.forEach(u => {
+    const color = gc ? gc(u.name)||'#64748b' : '#64748b';
+    const tot   = univTotals[u.name];
+    if (!tot.count) return;
     h += `<tr>
-      <td class="b2-hm-univ-lbl" data-hm-row="${ri}" style="color:${uColor};background:transparent !important" title="${uName}">${uName}</td>
-      ${tierKeys.map((t,ci) => {
-        const val = matrix[uName][t];
-        const bg = cellColor(val, uColor);
-        const tc = textColor(val);
-        const title = val ? `${uName} · ${t} : ${val}명` : '';
-        const clickAttr = val ? `onclick="_b2HmCellClick(this,'${uName.replace(/'/g,"\\'")}','${t}')"` : '';
-        return `<td class="b2-hm-cell" data-hm-row="${ri}" data-hm-col="${ci}" data-hm-val="${val}" style="background:${bg} !important;color:${val?tc:'transparent'}" title="${title}" ${clickAttr}>${val||''}</td>`;
+      <td class="univ-name" style="border-left:3px solid ${color};background:var(--bg) !important">
+        <span style="color:${color}">${u.name}</span>
+        <div style="font-size:9px;color:var(--text3);font-weight:600">${mode==='count'?`${tot.count}명`:tot.wr!==null?`${tot.wr}%`:'-'}</div>
+      </td>
+      ${sortedTiers.map(t => {
+        const c = cellData[u.name]?.[t];
+        if (!c || !c.count) return `<td style="background:var(--bg) !important"><span class="b2hm2-empty">-</span></td>`;
+        const val   = mode==='count' ? c.count : ((c.wins+c.losses>0)?Math.round(c.wins/(c.wins+c.losses)*100):0);
+        const max   = mode==='count' ? maxCount : 100;
+        const bg    = heatColor(val, max, color);
+        const fc    = textColor(val, max);
+        const label = mode==='count' ? `${c.count}명` : `${val}%`;
+        const sub   = mode==='wr' ? `${c.wins}승${c.losses}패` : '';
+        const _au = (typeof escAttr==='function') ? escAttr : (s)=>String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `<td style="background:${bg} !important;color:${fc}" title="${u.name} / ${t}: ${c.count}명 ${c.wins}승 ${c.losses}패" data-hm-uid="${hmUid}" data-hm-univ="${_au(u.name)}" data-hm-tier="${_au(t)}" data-hm-color="${_au(color)}" onclick="_b2HeatmapCellClick(this)">
+          <div style="font-size:12px;font-weight:900">${label}</div>
+          ${sub?`<div style="font-size:9px;opacity:.8">${sub}</div>`:''}
+        </td>`;
       }).join('')}
-      <td class="b2-hm-total-cell" style="background:var(--surface) !important;color:${uColor};font-weight:900">${rt}</td>
+      <td class="total-cell" style="background:var(--surface) !important;color:${color}; cursor: pointer;" data-hm-uid="${hmUid}" data-hm-univ="${(typeof escAttr==='function')?escAttr(u.name):String(u.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}" data-hm-color="${(typeof escAttr==='function')?escAttr(color):String(color||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}" onclick="_b2HeatmapTotalClick(this)">
+        <div>${mode==='count'?`${tot.count}명`:tot.wr!==null?`${tot.wr}%`:'-'}</div>
+        ${mode==='wr'?`<div style="font-size:9px;color:var(--text3)">${tot.wins}승${tot.losses}패</div>`:`<div style="font-size:9px;color:var(--text3)">${tot.wins}승${tot.losses}패</div>`}
+      </td>
     </tr>`;
   });
 
-  // Footer totals
-  h += `<tr>
-    <td style="font-size:11px;font-weight:800;color:var(--text3);text-align:right;padding-right:8px;background:transparent !important">합계</td>
-    ${tierKeys.map(t => {
-      const ct = colTotal(t);
-      return `<td class="b2-hm-total-cell" style="background:var(--surface) !important">${ct}</td>`;
+  // 합계 행
+  const grandW = Object.values(univTotals).reduce((s,u)=>s+u.wins,0);
+  const grandL = Object.values(univTotals).reduce((s,u)=>s+u.losses,0);
+  const grandG = grandW+grandL;
+  const grandWr = grandG>0?Math.round(grandW/grandG*100):null;
+  h += `<tr style="border-top:2px solid var(--border2)">
+    <td class="univ-name" style="background:var(--surface) !important;font-weight:900;color:var(--text1)">합계</td>
+    ${sortedTiers.map(t=>{
+      const tot=tierTotals[t];
+      const val=mode==='count'?tot.count:tot.wr??0;
+      return `<td style="background:var(--surface);font-weight:900;color:var(--text2)">
+        <div>${mode==='count'?`${tot.count}명`:tot.wr!==null?`${tot.wr}%`:'-'}</div>
+        <div style="font-size:9px;color:var(--text3)">${tot.wins}승${tot.losses}패</div>
+      </td>`;
     }).join('')}
-    <td class="b2-hm-total-cell" style="background:var(--surface) !important;font-weight:900;color:var(--text1)">${tieredVis.length}</td>
+    <td class="total-cell" style="background:var(--surface) !important;font-weight:900;color:var(--text1)">
+      <div>${mode==='count'?`${vis.length}명`:grandWr!==null?`${grandWr}%`:'-'}</div>
+      <div style="font-size:9px;color:var(--text3)">${grandW}승${grandL}패</div>
+    </td>
   </tr>`;
 
-  h += `</table></div>`;
+  h += `</tbody></table></div>`;
 
-  // 팝업 + hover 하이라이트 스크립트
-  h += `<script>
-  (function(){
-    const _hmData = ${_hmDataJson};
-    const _hmTierColors = ${_hmTierColorMap};
-    const RACE_LABEL = {P:'🔮 P',T:'⚔️ T',Z:'🦎 Z','?':'❓'};
-    const RACE_COLOR = {P:'#7c3aed',T:'#0284c7',Z:'#059669','?':'#94a3b8'};
-    try{
-      if(!window.__b2_hm_nohover_guard){
-        window.__b2_hm_nohover_guard = true;
-        const _clr = () => {
-          try{
-            document.querySelectorAll('.b2-hm-cell').forEach(el=>el.classList.remove('hm-row-hi','hm-col-hi','hm-cell-focus','hm-dim'));
-            document.querySelectorAll('.b2-hm-tier-lbl-inner').forEach(el=>el.classList.remove('hm-col-active'));
-            document.querySelectorAll('.b2-hm-univ-lbl').forEach(el=>el.classList.remove('hm-row-active'));
-          }catch(e){}
-        };
-        document.addEventListener('mouseover', (e)=>{
-          const t = e && e.target;
-          if(t && t.closest && t.closest('.b2-hm-table')) _clr();
-        }, true);
-      }
-    }catch(e){}
+  // 셀 클릭 인원 팝업
+  h += `<div id="${hmUid}-popup" class="b2hm2-popup" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="b2hm2-popup-inner">
+      <button class="b2hm2-popup-close" onclick="document.getElementById('${hmUid}-popup').classList.remove('show')">✕</button>
+      <div id="${hmUid}-popup-header" class="b2hm2-popup-header"></div>
+      <div id="${hmUid}-popup-body" class="b2hm2-popup-body"></div>
+    </div>
+  </div>`;
 
-    /* ─── 팝업 ─── */
-    window._b2HmCellClick = function(cell, uName, tier) {
-      try{
-        document.querySelectorAll('.b2-hm-cell.is-selected').forEach(el=>el.classList.remove('is-selected'));
-        if(cell && cell.classList) cell.classList.add('is-selected');
-      }catch(e){}
-      const key = uName + '|||' + tier;
-      const players = _hmData[key];
-      if (!players || !players.length) return;
-
-      const tierCol = _hmTierColors[tier] || '#64748b';
-
-      let overlay = document.getElementById('b2-hm-popup-overlay');
-      if (overlay) overlay.remove();
-
-      const playerRows = players.map(p => {
-        const raceCol = RACE_COLOR[p.race] || RACE_COLOR['?'];
-        const raceLabel = RACE_LABEL[p.race] || p.race;
-        const photoEl = p.photo
-          ? \`<img src="\${p.photo}" style="width:30px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">\`
-          : \`<div style="width:30px;height:30px;border-radius:6px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">\${raceLabel.charAt(0)}</div>\`;
-        const femcoBadge = p.femco ? \`<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:6px;background:#3b82f6;color:#fff;margin-left:4px">펨코</span>\` : '';
-        return \`<div class="b2-hm-popup-player">
-          \${photoEl}
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:800;color:var(--text1)">\${p.name}\${femcoBadge}</div>
-            <div style="font-size:11px;color:var(--text3)">\${p.univ||'무소속'}</div>
-          </div>
-          <span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;background:\${raceCol};color:#fff">\${raceLabel}</span>
-        </div>\`;
-      }).join('');
-
-      overlay = document.createElement('div');
-      overlay.id = 'b2-hm-popup-overlay';
-      overlay.innerHTML = \`
-        <div id="b2-hm-popup" onclick="event.stopPropagation()">
-          <div id="b2-hm-popup-header">
-            <div>
-              <span style="font-size:15px;font-weight:900;color:var(--text1)">\${uName}</span>
-              <span style="display:inline-block;margin-left:8px;padding:3px 10px;border-radius:10px;background:\${tierCol};color:#fff;font-size:12px;font-weight:800">\${tier}</span>
-              <span style="font-size:12px;color:var(--text3);margin-left:6px">\${players.length}명</span>
-            </div>
-            <button class="b2-hm-popup-close" onclick="document.getElementById('b2-hm-popup-overlay').remove()">✕</button>
-          </div>
-          <div id="b2-hm-popup-body">\${playerRows}</div>
-        </div>
-      \`;
-      overlay.addEventListener('click', () => overlay.remove());
-      document.body.appendChild(overlay);
-
-      try{
-        overlay.querySelectorAll('.b2-hm-popup-player').forEach((el, idx)=>{
-          const nm = players[idx] && players[idx].name ? String(players[idx].name) : '';
-          el.addEventListener('click', ()=>{
-            try{ overlay.remove(); }catch(e){}
-            try{ if(nm && typeof openPlayerModal==='function') openPlayerModal(nm); }catch(e){}
-          });
-        });
-      }catch(e){}
-    };
-  })();
-  </script>`;
+  // 범례
+  if (mode === 'count') {
+    h += `<div class="b2hm2-legend">
+      <span>적음</span>
+      <div class="b2hm2-legend-bar" style="background:linear-gradient(90deg,rgba(59,130,246,.12),rgba(59,130,246,.9))"></div>
+      <span>많음</span>
+    </div>`;
+  } else {
+    h += `<div class="b2hm2-legend">
+      <span>0%</span>
+      <div class="b2hm2-legend-bar" style="background:linear-gradient(90deg,rgba(255,80,80,.55),rgba(255,255,80,.4),rgba(80,255,80,.55))"></div>
+      <span>100%</span>
+    </div>`;
+  }
 
   return h;
 }
-
 /* ══════════════════════════════════════
-   🌐 버블맵 뷰 — 대학별 종족 구성 원형 시각화
-   (Canvas 기반 인터랙티브)
+   🌐 버블뷰 v2 — 클릭 팝업 + 진입 애니메이션 + 승률 버블 모드
 ══════════════════════════════════════ */
 function _b2BubbleView() {
   const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
@@ -4685,72 +5540,105 @@ function _b2BubbleView() {
     !_B2_ROLE_ORDER.includes(p.role||'')
   );
 
-  // Per-univ data
   const univData = univList.map(u => {
     const members = tieredVis.filter(p => String(p?.univ||'').trim() === u.name);
     const P = members.filter(p=>p.race==='P').length;
     const T = members.filter(p=>p.race==='T').length;
     const Z = members.filter(p=>p.race==='Z').length;
     const color = gc(u.name) || '#64748b';
-    return { name: u.name, total: members.length, P, T, Z, color, members };
+    let wins=0, losses=0;
+    members.forEach(p=>{
+      (Array.isArray(p.history)?p.history:[]).forEach(h=>{
+        if(h.result==='승')wins++; else if(h.result==='패')losses++;
+      });
+    });
+    const games = wins+losses;
+    const wr = games>0?Math.round(wins/games*100):null;
+    // 최근 활동 (이번주)
+    const now = new Date(); const day=now.getDay();
+    const mon = new Date(now); mon.setDate(now.getDate()+(day===0?-6:1-day));
+    const fromN = parseInt(mon.toISOString().slice(0,10).replace(/-/g,''));
+    const toN   = parseInt(now.toISOString().replace(/T.*/,'').replace(/-/g,''));
+    let weekActive=0;
+    members.forEach(p=>{
+      const hist=Array.isArray(p.history)?p.history:[];
+      const d=hist.filter(h=>{ const dn=parseInt(String(h.date||h.d||'').replace(/[-\.]/g,''));return dn>=fromN&&dn<=toN; });
+      if(d.length>0)weekActive++;
+    });
+    // Top tier
+    const TIERS_LOCAL=typeof TIERS!=='undefined'?TIERS:[];
+    const sortedM=members.slice().sort((a,b)=>{const ia=TIERS_LOCAL.indexOf(a.tier||''),ib=TIERS_LOCAL.indexOf(b.tier||'');return(ia>=0?ia:999)-(ib>=0?ib:999);});
+    const topTier=sortedM[0]?.tier||null;
+    const topTierCol=typeof getTierBtnColor==='function'&&topTier?getTierBtnColor(topTier):'#94a3b8';
+    const topTierTc=typeof getTierBtnTextColor==='function'&&topTier?(getTierBtnTextColor(topTier)||'#fff'):'#fff';
+    return { name:u.name, total:members.length, P, T, Z, color, wins, losses, games, wr, weekActive, topTier, topTierCol, topTierTc };
   }).filter(u=>u.total>0).sort((a,b)=>b.total-a.total);
 
-  // Serialize for inline JS
-  const dataJson = JSON.stringify(univData.map(u => ({
-    name: u.name, total: u.total, P: u.P, T: u.T, Z: u.Z, color: u.color
-  })));
-
+  const dataJson = JSON.stringify(univData);
   const uid = 'bbl_' + Math.random().toString(36).slice(2,8);
 
   return `<style>
     #${uid}-wrap { position:relative; }
     #${uid}-canvas { display:block; width:100%; cursor:pointer; border-radius:12px; }
-    #${uid}-tooltip {
-      position:absolute; pointer-events:none; opacity:0;
-      background:var(--white); border:1px solid var(--border2); border-radius:10px;
-      padding:10px 14px; box-shadow:0 4px 20px #0002;
-      transition:opacity .15s ease; min-width:140px; z-index:var(--z-dropdown);
-    }
+    #${uid}-tooltip { position:absolute; pointer-events:none; opacity:0; background:var(--white); border:1px solid var(--border2); border-radius:14px; padding:14px 16px; box-shadow:0 8px 32px #0003; transition:opacity .15s ease; min-width:180px; z-index:var(--z-dropdown,100); }
     #${uid}-legend { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
     .${uid}-sort-btn { padding:5px 12px; border-radius:20px; border:1.5px solid var(--border2); background:var(--surface); font-size:12px; font-weight:700; color:var(--text2); cursor:pointer; transition:all .15s; }
     .${uid}-sort-btn.on { background:var(--text1); color:var(--white); border-color:var(--text1); }
     .${uid}-sort-btn:hover:not(.on) { border-color:var(--text2); }
+    #${uid}-popup { display:none; position:fixed; inset:0; z-index:999; align-items:center; justify-content:center; background:rgba(0,0,0,.45); }
+    #${uid}-popup.show { display:flex; }
+    #${uid}-popup-inner { background:var(--white); border-radius:20px; padding:24px; max-width:340px; width:90%; box-shadow:0 20px 60px #0005; position:relative; animation:b2bblIn .25s ease; }
+    @keyframes b2bblIn { from{opacity:0;transform:scale(.92) translateY(12px)} to{opacity:1;transform:none} }
+    #${uid}-popup-close { position:absolute;top:14px;right:14px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);line-height:1 }
+    #${uid}-popup-close:hover { color:var(--text1) }
   </style>
   <div id="${uid}-wrap">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
       <span style="font-size:13px;font-weight:900;color:var(--text1)">🌐 대학별 버블맵</span>
-      <span style="font-size:12px;color:var(--text3)">버블 크기 = 인원 · 파이 = 종족 비율 · 클릭으로 고정</span>
-      <div style="margin-left:auto;display:flex;gap:4px">
+      <span style="font-size:12px;color:var(--text3)">버블 크기 = 인원 · 파이 = 종족 비율</span>
+      <div style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap">
         <button class="${uid}-sort-btn on" onclick="_${uid}setSort('total',this)">인원순</button>
-        <button class="${uid}-sort-btn" onclick="_${uid}setSort('P',this)">P비율순</button>
-        <button class="${uid}-sort-btn" onclick="_${uid}setSort('T',this)">T비율순</button>
-        <button class="${uid}-sort-btn" onclick="_${uid}setSort('Z',this)">Z비율순</button>
+        <button class="${uid}-sort-btn" onclick="_${uid}setSort('wr',this)">승률순</button>
+        <button class="${uid}-sort-btn" onclick="_${uid}setSort('P',this)">P비율</button>
+        <button class="${uid}-sort-btn" onclick="_${uid}setSort('T',this)">T비율</button>
+        <button class="${uid}-sort-btn" onclick="_${uid}setSort('Z',this)">Z비율</button>
       </div>
     </div>
     <canvas id="${uid}-canvas"></canvas>
     <div id="${uid}-tooltip"></div>
     <div id="${uid}-legend"></div>
   </div>
+
+  <!-- 클릭 상세 팝업 -->
+  <div id="${uid}-popup" onclick="if(event.target===this)this.classList.remove('show')">
+    <div id="${uid}-popup-inner">
+      <button id="${uid}-popup-close" onclick="document.getElementById('${uid}-popup').classList.remove('show')">✕</button>
+      <div id="${uid}-popup-body"></div>
+    </div>
+  </div>
+
   <script>
   (function(){
     const RAW = ${dataJson};
     const RACE_COLS = { P:'#7c3aed', T:'#0284c7', Z:'#059669', '?':'#94a3b8' };
     let sortKey = 'total';
-    let pinned = null;
-    let hovIdx = -1;
-    let animFrame = 0;
+    let hovIdx  = -1;
     let bubbles = [];
-    const canvas = document.getElementById('${uid}-canvas');
-    const ttip = document.getElementById('${uid}-tooltip');
-    const legendEl = document.getElementById('${uid}-legend');
+    let animProgress = 0;
+    let animId = null;
+    const canvas  = document.getElementById('${uid}-canvas');
+    const ttip    = document.getElementById('${uid}-tooltip');
+    const legendEl= document.getElementById('${uid}-legend');
+    const popup   = document.getElementById('${uid}-popup');
+    const popBody = document.getElementById('${uid}-popup-body');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
     function sortedData() {
       return [...RAW].sort((a,b) => {
         if (sortKey === 'total') return b.total - a.total;
-        const ra = a.total > 0 ? a[sortKey]/a.total : 0;
-        const rb = b.total > 0 ? b[sortKey]/b.total : 0;
+        if (sortKey === 'wr')   return (b.wr??-1) - (a.wr??-1);
+        const ra = a.total>0?a[sortKey]/a.total:0, rb = b.total>0?b[sortKey]/b.total:0;
         return rb - ra;
       });
     }
@@ -4761,210 +5649,187 @@ function _b2BubbleView() {
       const n = data.length;
       if (!n) return [];
       const maxT = Math.max(...data.map(d=>d.total), 1);
-      const minR = 18, maxR = Math.max(44, Math.min(72, W / (Math.sqrt(n) * 2.2)));
-      const cols = Math.max(3, Math.min(8, Math.floor(W / (maxR * 2.4))));
-      const cellW = W / cols;
-      const cellH = maxR * 2.6;
-      const H = Math.ceil(n / cols) * cellH + 20;
-      canvas.width = W * devicePixelRatio;
-      canvas.height = H * devicePixelRatio;
-      canvas.style.height = H + 'px';
+      const minR = 18, maxR = Math.max(44, Math.min(72, W/(Math.sqrt(n)*2.2)));
+      const cols = Math.max(3, Math.min(8, Math.floor(W/(maxR*2.4))));
+      const cellW = W/cols, cellH = maxR*2.6;
+      const H = Math.ceil(n/cols)*cellH + 20;
+      canvas.width  = W*devicePixelRatio;
+      canvas.height = H*devicePixelRatio;
+      canvas.style.height = H+'px';
+      ctx.setTransform(1,0,0,1,0,0);
       ctx.scale(devicePixelRatio, devicePixelRatio);
-      return data.map((d, i) => {
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        const cx = cellW * col + cellW / 2;
-        const cy = row * cellH + cellH / 2 + 10;
-        const r = minR + (d.total / maxT) * (maxR - minR);
-        return { ...d, cx, cy, r, idx: i };
+      return data.map((d,i) => {
+        const col=i%cols, row=Math.floor(i/cols);
+        const cx=cellW*col+cellW/2, cy=row*cellH+cellH/2+10;
+        const r=minR+(d.total/maxT)*(maxR-minR);
+        return {...d, cx, cy, r, idx:i};
       });
     }
 
-    function drawPie(bbl) {
-      const { cx, cy, r, P, T, Z, total, color } = bbl;
-      const segs = [
-        { val: P, col: RACE_COLS.P },
-        { val: T, col: RACE_COLS.T },
-        { val: Z, col: RACE_COLS.Z },
-        { val: total - P - T - Z, col: RACE_COLS['?'] }
-      ].filter(s => s.val > 0);
+    function easeOut(t){ return 1-(1-t)*(1-t)*(1-t); }
 
+    function drawPie(bbl, scale) {
+      const {cx,cy,r,P,T,Z,total,color} = bbl;
+      const rr = r*scale;
+      const segs=[{val:P,col:RACE_COLS.P},{val:T,col:RACE_COLS.T},{val:Z,col:RACE_COLS.Z},{val:total-P-T-Z,col:RACE_COLS['?']}].filter(s=>s.val>0);
       if (!segs.length) {
-        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
-        ctx.fillStyle = color + '44'; ctx.fill();
-        return;
+        ctx.beginPath(); ctx.arc(cx,cy,rr,0,Math.PI*2);
+        ctx.fillStyle=color+'44'; ctx.fill(); return;
       }
-      let angle = -Math.PI / 2;
-      segs.forEach(seg => {
-        const slice = (seg.val / total) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, r, angle, angle + slice);
-        ctx.closePath();
-        ctx.fillStyle = seg.col;
-        ctx.fill();
-        angle += slice;
+      let angle=-Math.PI/2;
+      segs.forEach(seg=>{
+        const slice=(seg.val/total)*Math.PI*2;
+        ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,rr,angle,angle+slice); ctx.closePath();
+        ctx.fillStyle=seg.col; ctx.fill();
+        angle+=slice;
       });
-      // Ring overlay
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx,cy,rr,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,255,255,0.55)'; ctx.lineWidth=2.5; ctx.stroke();
     }
 
-    function drawLabel(bbl, isHovered, isPinned) {
-      const { cx, cy, r, name, total } = bbl;
+    function drawLabel(bbl, isHov, scale) {
+      const {cx,cy,r,name,total,wr} = bbl;
+      const rr=r*scale;
       ctx.save();
-      if (isHovered || isPinned) {
-        ctx.beginPath(); ctx.arc(cx, cy, r + 4, 0, Math.PI*2);
-        ctx.strokeStyle = isPinned ? '#f59e0b' : 'rgba(0,0,0,0.3)';
-        ctx.lineWidth = isPinned ? 3 : 2; ctx.stroke();
+      if (isHov) {
+        ctx.beginPath(); ctx.arc(cx,cy,rr+5,0,Math.PI*2);
+        ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=2.5; ctx.stroke();
+        // 글로우
+        ctx.shadowColor=bbl.color; ctx.shadowBlur=14;
+        ctx.beginPath(); ctx.arc(cx,cy,rr,0,Math.PI*2);
+        ctx.strokeStyle=bbl.color+'88'; ctx.lineWidth=2; ctx.stroke();
+        ctx.shadowBlur=0;
       }
-      // Name label below bubble
-      ctx.font = \`bold \${Math.max(9, Math.min(12, r * 0.28))}px sans-serif\`;
-      ctx.textAlign = 'center';
-      ctx.fillStyle = 'var(--text2, #334155)';
-      const shortName = name.length > 5 ? name.slice(0,5)+'…' : name;
-      ctx.fillText(shortName, cx, cy + r + 13);
-      // Count inside bubble
-      ctx.font = \`900 \${Math.max(10, Math.min(16, r * 0.38))}px sans-serif\`;
-      ctx.fillStyle = '#fff';
-      ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 3;
-      ctx.fillText(total, cx, cy + 5);
-      ctx.shadowBlur = 0;
+      const fs=Math.max(9,Math.min(12,rr*0.28));
+      const shortName=name.length>5?name.slice(0,5)+'…':name;
+      ctx.font=\`bold \${fs}px sans-serif\`; ctx.textAlign='center';
+      ctx.fillStyle='var(--text2,#334155)';
+      ctx.fillText(shortName,cx,cy+rr+fs+2);
+      ctx.font=\`900 \${Math.max(10,Math.min(16,rr*0.38))}px sans-serif\`;
+      ctx.fillStyle='#fff'; ctx.shadowColor='rgba(0,0,0,0.4)'; ctx.shadowBlur=3;
+      ctx.fillText(total,cx,cy+(wr!==null?-4:4));
+      ctx.shadowBlur=0;
+      if (wr!==null && rr>22) {
+        ctx.font=\`700 \${Math.max(8,Math.min(11,rr*0.26))}px sans-serif\`;
+        ctx.fillStyle='rgba(255,255,255,0.85)';
+        ctx.fillText(wr+'%',cx,cy+10);
+      }
       ctx.restore();
     }
 
-    function draw() {
+    function draw(progress) {
       if (!bubbles.length) return;
-      const W = canvas.width / devicePixelRatio;
-      const H = canvas.height / devicePixelRatio;
-      ctx.clearRect(0, 0, W, H);
-      bubbles.forEach((b, i) => {
-        drawPie(b);
-        drawLabel(b, i === hovIdx, b === pinned);
-      });
+      const sc = easeOut(Math.min(progress||1, 1));
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      bubbles.forEach((b,i)=>{ drawPie(b,sc); drawLabel(b,i===hovIdx,sc); });
+    }
+
+    function startAnim() {
+      if(animId) cancelAnimationFrame(animId);
+      animProgress=0;
+      const start=performance.now(), dur=420;
+      function step(now){
+        animProgress=Math.min((now-start)/dur,1);
+        draw(animProgress);
+        if(animProgress<1) animId=requestAnimationFrame(step);
+      }
+      animId=requestAnimationFrame(step);
     }
 
     function showTooltip(b, mx, my) {
-      const pct = (n) => b.total > 0 ? Math.round(n/b.total*100) : 0;
-      ttip.innerHTML = \`
+      const pct=n=>b.total>0?Math.round(n/b.total*100):0;
+      const wrCol=b.wr===null?'#94a3b8':b.wr>=60?'#10b981':b.wr>=40?'#f59e0b':'#ef4444';
+      ttip.innerHTML=\`
         <div style="font-weight:900;font-size:13px;color:\${b.color};margin-bottom:6px">\${b.name}</div>
-        <div style="font-size:12px;color:#334155;margin-bottom:4px">👥 총 \${b.total}명</div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          \${b.P?'<div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#7c3aed;display:inline-block"></span><span style="font-size:11px;font-weight:700">프로토스 '+b.P+'명 ('+pct(b.P)+'%)</span></div>':''}
-          \${b.T?'<div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#0284c7;display:inline-block"></span><span style="font-size:11px;font-weight:700">테란 '+b.T+'명 ('+pct(b.T)+'%)</span></div>':''}
-          \${b.Z?'<div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#059669;display:inline-block"></span><span style="font-size:11px;font-weight:700">저그 '+b.Z+'명 ('+pct(b.Z)+'%)</span></div>':''}
-          \${(b.total-b.P-b.T-b.Z)?'<div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;display:inline-block"></span><span style="font-size:11px;font-weight:700">미정 '+(b.total-b.P-b.T-b.Z)+'명</span></div>':''}
-        </div>
+        <div style="font-size:12px;font-weight:700;color:#334155;margin-bottom:2px">👥 \${b.total}명 · 활성 \${b.weekActive}명</div>
+        \${b.wr!==null?'<div style="font-size:12px;font-weight:800;color:'+wrCol+'">📈 승률 '+b.wr+'% ('+b.wins+'승'+b.losses+'패)</div>':''}
+        \${b.topTier?'<div style="font-size:11px;margin-top:4px"><span style="padding:1px 6px;border-radius:5px;background:'+b.topTierCol+';color:'+b.topTierTc+';font-size:10px;font-weight:800">TOP '+b.topTier+'</span></div>':''}
+        <div style="font-size:10px;color:#94a3b8;margin-top:6px">클릭 → 상세 정보</div>
       \`;
-      const rect = canvas.getBoundingClientRect();
-      const wrap = canvas.parentElement.getBoundingClientRect();
-      let left = mx + 14, top = my + 14;
-      const ttW = 160;
-      if (left + ttW > wrap.width) left = mx - ttW - 8;
-      if (top + 140 > wrap.height) top = my - 140;
-      ttip.style.left = left + 'px';
-      ttip.style.top = top + 'px';
-      ttip.style.opacity = '1';
+      const wrap=canvas.parentElement.getBoundingClientRect();
+      let left=mx+14,top=my+14;
+      if(left+180>wrap.width)left=mx-190;
+      if(top+140>wrap.height)top=my-140;
+      ttip.style.left=left+'px'; ttip.style.top=top+'px'; ttip.style.opacity='1';
+    }
+    function hideTooltip(){ ttip.style.opacity='0'; }
+
+    function showPopup(b) {
+      const pct=n=>b.total>0?Math.round(n/b.total*100):0;
+      const wrCol=b.wr===null?'#94a3b8':b.wr>=60?'#10b981':b.wr>=40?'#f59e0b':'#ef4444';
+      popBody.innerHTML=\`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <div style="width:14px;height:14px;border-radius:50%;background:\${b.color}"></div>
+          <div style="font-size:18px;font-weight:900;color:\${b.color}">\${b.name}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="padding:10px;border-radius:12px;background:\${b.color}12;border:1px solid \${b.color}33;text-align:center">
+            <div style="font-size:22px;font-weight:900;color:\${b.color}">\${b.total}</div>
+            <div style="font-size:11px;color:#94a3b8">총 인원</div>
+          </div>
+          <div style="padding:10px;border-radius:12px;background:#f59e0b12;border:1px solid #f59e0b33;text-align:center">
+            <div style="font-size:22px;font-weight:900;color:#f59e0b">\${b.weekActive}</div>
+            <div style="font-size:11px;color:#94a3b8">이번주 활동</div>
+          </div>
+          \${b.wr!==null?'<div style="padding:10px;border-radius:12px;background:'+wrCol+'12;border:1px solid '+wrCol+'33;text-align:center"><div style="font-size:22px;font-weight:900;color:'+wrCol+'">'+b.wr+'%</div><div style="font-size:11px;color:#94a3b8">통산 승률</div></div>':''}
+          <div style="padding:10px;border-radius:12px;background:#3b82f612;border:1px solid #3b82f633;text-align:center">
+            <div style="font-size:15px;font-weight:900;color:#3b82f6">\${b.wins}승 \${b.losses}패</div>
+            <div style="font-size:11px;color:#94a3b8">통산 전적</div>
+          </div>
+        </div>
+        \${b.topTier?'<div style="margin-bottom:12px"><span style="padding:2px 10px;border-radius:8px;background:'+b.topTierCol+';color:'+b.topTierTc+';font-size:12px;font-weight:800">🏅 최상위 티어: '+b.topTier+'</span></div>':''}
+        <div style="font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:6px">종족 구성</div>
+        \${[['🔮','프로토스','#7c3aed',b.P],['⚔️','테란','#0284c7',b.T],['🦎','저그','#059669',b.Z]].filter(function(r){return r[3]>0;}).map(function(r){var ico=r[0],lbl=r[1],col=r[2],n=r[3];return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span>'+ico+'</span><span style="font-size:12px;font-weight:700;min-width:52px;color:'+col+'">'+lbl+'</span><div style="flex:1;height:8px;border-radius:4px;background:#f1f5f9;overflow:hidden"><div style="width:'+pct(n)+'%;height:100%;background:'+col+';border-radius:4px"></div></div><span style="font-size:12px;font-weight:900;color:'+col+'">'+n+'명 ('+pct(n)+'%)</span></div>';}).join('')}
+      \`;
+      popup.classList.add('show');
     }
 
-    function hideTooltip() {
-      ttip.style.opacity = '0';
-    }
+    function findBubble(mx,my){ return bubbles.findIndex(b=>{ const dx=mx-b.cx,dy=my-b.cy; return Math.sqrt(dx*dx+dy*dy)<b.r+6; }); }
 
-    function findBubble(mx, my) {
-      return bubbles.findIndex(b => {
-        const dx = mx - b.cx, dy = my - b.cy;
-        return Math.sqrt(dx*dx+dy*dy) < b.r + 6;
-      });
-    }
-
-    canvas.addEventListener('mousemove', e => {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / devicePixelRatio / rect.width;
-      const scaleY = canvas.height / devicePixelRatio / rect.height;
-      const mx = (e.clientX - rect.left) * scaleX;
-      const my = (e.clientY - rect.top) * scaleY;
-      const idx = findBubble(mx, my);
-      if (idx !== hovIdx) { hovIdx = idx; draw(); }
-      if (idx >= 0) {
-        showTooltip(bubbles[idx], e.clientX - canvas.getBoundingClientRect().left, e.clientY - canvas.getBoundingClientRect().top);
-        canvas.style.cursor = 'pointer';
-      } else {
-        if (pinned === null) hideTooltip();
-        canvas.style.cursor = 'default';
-      }
+    canvas.addEventListener('mousemove',e=>{
+      const rect=canvas.getBoundingClientRect();
+      const scX=canvas.width/devicePixelRatio/rect.width, scY=canvas.height/devicePixelRatio/rect.height;
+      const mx=(e.clientX-rect.left)*scX, my=(e.clientY-rect.top)*scY;
+      const idx=findBubble(mx,my);
+      if(idx!==hovIdx){ hovIdx=idx; if(animProgress>=1)draw(1); }
+      if(idx>=0){ showTooltip(bubbles[idx],e.clientX-rect.left,e.clientY-rect.top); canvas.style.cursor='pointer'; }
+      else { hideTooltip(); canvas.style.cursor='default'; }
+    });
+    canvas.addEventListener('mouseleave',()=>{ hovIdx=-1; if(animProgress>=1)draw(1); hideTooltip(); });
+    canvas.addEventListener('click',e=>{
+      const rect=canvas.getBoundingClientRect();
+      const mx=(e.clientX-rect.left)*(canvas.width/devicePixelRatio/rect.width);
+      const my=(e.clientY-rect.top)*(canvas.height/devicePixelRatio/rect.height);
+      const idx=findBubble(mx,my);
+      if(idx>=0){ hideTooltip(); showPopup(bubbles[idx]); }
     });
 
-    canvas.addEventListener('mouseleave', () => {
-      hovIdx = -1; draw();
-      if (pinned === null) hideTooltip();
-    });
-
-    canvas.addEventListener('click', e => {
-      const rect = canvas.getBoundingClientRect();
-      const mx = (e.clientX - rect.left);
-      const my = (e.clientY - rect.top);
-      const idx = findBubble(mx, my);
-      if (idx >= 0) {
-        pinned = pinned === bubbles[idx] ? null : bubbles[idx];
-        if (pinned) showTooltip(pinned, mx, my);
-        else hideTooltip();
-        draw();
-      }
-    });
-
-    window['_${uid}setSort'] = function(key, btn) {
-      sortKey = key;
+    window['_${uid}setSort']=function(key,btn){
+      sortKey=key;
       document.querySelectorAll('.${uid}-sort-btn').forEach(b=>b.classList.remove('on'));
       btn.classList.add('on');
-      pinned = null; hovIdx = -1;
-      bubbles = layout();
-      draw();
+      hovIdx=-1; bubbles=layout(); startAnim();
     };
 
-    function buildLegend() {
-      legendEl.innerHTML = \`
-        <span style="font-size:11px;font-weight:700;color:var(--text3)">종족 범례:</span>
-        \${[['#7c3aed','🔮 프로토스'],['#0284c7','⚔️ 테란'],['#059669','🦎 저그'],['#94a3b8','❓ 미정']].map(([c,l])=>
-          \`<span style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#334155">
-            <span style="width:10px;height:10px;border-radius:50%;background:\${c};display:inline-block"></span>\${l}
-          </span>\`
-        ).join('')}
-      \`;
+    function buildLegend(){
+      legendEl.innerHTML = '<span style="font-size:11px;font-weight:700;color:var(--text3)">종족 범례:</span>' +
+        [['#7c3aed','🔮 프로토스'],['#0284c7','⚔️ 테란'],['#059669','🦎 저그'],['#94a3b8','❓ 미정']].map(function(r){var c=r[0],l=r[1];return '<span style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#334155"><span style="width:10px;height:10px;border-radius:50%;background:'+c+';display:inline-block"></span>'+l+'</span>';}).join('') +
+        '<span style="font-size:11px;color:var(--text3);margin-left:6px">버블 안 숫자 = 인원 · % = 승률</span>';
     }
 
-    function init() {
-      bubbles = layout(); draw(); buildLegend();
+    function tryInit(attempt){
+      const w=canvas.parentElement?canvas.parentElement.offsetWidth:0;
+      if(w>0){ bubbles=layout(); buildLegend(); startAnim(); }
+      else if(attempt<15){ requestAnimationFrame(()=>tryInit(attempt+1)); }
+      else { setTimeout(()=>{ bubbles=layout(); buildLegend(); startAnim(); },200); }
     }
-
-    // Re-layout on resize
     let resizeTimer;
-    const ro = new ResizeObserver(() => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => { ctx.setTransform(1,0,0,1,0,0); bubbles = layout(); draw(); }, 120);
-    });
+    const ro=new ResizeObserver(()=>{ clearTimeout(resizeTimer); resizeTimer=setTimeout(()=>{ ctx.setTransform(1,0,0,1,0,0); bubbles=layout(); draw(1); },120); });
     ro.observe(canvas.parentElement);
-
-    // canvas가 DOM에 추가된 직후 offsetWidth=0일 수 있으므로 여러 번 재시도
-    function tryInit(attempt) {
-      const w = canvas.parentElement ? canvas.parentElement.offsetWidth : 0;
-      if (w > 0) {
-        init();
-      } else if (attempt < 15) {
-        requestAnimationFrame(() => tryInit(attempt + 1));
-      } else {
-        setTimeout(init, 200);
-      }
-    }
-    requestAnimationFrame(() => tryInit(0));
+    requestAnimationFrame(()=>tryInit(0));
   })();
   </script>`;
 }
-
-/* ══════════════════════════════════════
-   📡 활동현황 뷰 — 상태아이콘 × 종족별 현황판
-   감성적인 카드 + 상태별 그루핑 + 애니메이션
-══════════════════════════════════════ */
 function _b2ActivityView() {
   const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
   const vis = players.filter(p =>
@@ -4973,7 +5838,24 @@ function _b2ActivityView() {
   );
   const tieredVis = vis.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
 
-  // Gather status icons for all players
+  // 이번주 활동 집계
+  const _avNow=new Date(),_avDay=_avNow.getDay();
+  const _avMon=new Date(_avNow); _avMon.setDate(_avNow.getDate()+(_avDay===0?-6:1-_avDay));
+  const _avFromN=parseInt(_avMon.toISOString().slice(0,10).replace(/-/g,''));
+  const _avToN  =parseInt(_avNow.toISOString().slice(0,10).replace(/-/g,''));
+  const _avDN   =s=>parseInt(String(s||'').replace(/[-\.]/g,''))||0;
+  let _avWw=0,_avWl=0,_avActive=new Set();
+  tieredVis.forEach(p=>{
+    (Array.isArray(p.history)?p.history:[]).forEach(h=>{
+      const d=_avDN(h.date||h.d||'');
+      if(d>=_avFromN&&d<=_avToN){
+        if(h.result==='승')_avWw++; else if(h.result==='패')_avWl++;
+        _avActive.add(p.name);
+      }
+    });
+  });
+  const _avWr=(_avWw+_avWl)>0?Math.round(_avWw/(_avWw+_avWl)*100):null;
+  const _avWrc=_avWr===null?'#94a3b8':_avWr>=60?'#10b981':_avWr>=40?'#f59e0b':'#ef4444';
   const statusGroups = {}; // key: emoji or '' → players
   const noStatus = [];
   tieredVis.forEach(p => {
@@ -5105,6 +5987,15 @@ function _b2ActivityView() {
       <div style="font-size:22px;font-weight:900;color:var(--text3)">${noStatus.length}</div>
       <div style="font-size:11px;color:var(--text3);font-weight:600">상태 없음</div>
     </div>
+    <div class="b2-act-kpi" style="border-color:#f59e0b44">
+      <div style="font-size:22px;font-weight:900;color:#f59e0b">${_avActive.size}</div>
+      <div style="font-size:11px;color:var(--text3);font-weight:600">🔥 이번주 활동</div>
+    </div>
+    ${_avWr!==null?`<div class="b2-act-kpi" style="border-color:${_avWrc}44">
+      <div style="font-size:22px;font-weight:900;color:${_avWrc}">${_avWr}%</div>
+      <div style="font-size:11px;color:var(--text3);font-weight:600">이번주 승률</div>
+      <div style="font-size:10px;color:var(--text3)">${_avWw}승 ${_avWl}패</div>
+    </div>`:''}
     <div style="flex:1;min-width:120px">
       <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">상태 표시 비율</div>
       <div style="height:8px;border-radius:4px;background:var(--border2);overflow:hidden;display:flex">
@@ -5150,4 +6041,450 @@ function _b2ActivityView() {
     h += `</div>`;
   }
   return h;
+}
+function _b2WeeklyGetDefaultRange(offsetWeeks) {
+  const now = new Date();
+  const offset = offsetWeeks || 0;
+  const day = now.getDay();
+  const diffToMon = (day === 0 ? -6 : 1 - day);
+  const mon = new Date(now);
+  mon.setDate(now.getDate() + diffToMon + offset * 7);
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  const fmt = d => d.toISOString().slice(0, 10);
+  return { from: fmt(mon), to: fmt(sun) };
+}
+
+// ─── 데이터 집계 헬퍼 ─────────────────────────
+function _b2WeeklyAggregate(players, dateFrom, dateTo) {
+  const dateNum = s => parseInt(String(s || '').replace(/[-\.]/g, '')) || 0;
+  const fromN = dateNum(dateFrom), toN = dateNum(dateTo);
+  const inRange = h => { const d = dateNum(h.date || h.d || ''); return d >= fromN && d <= toN; };
+  const isOff   = mode => { const m = String(mode||'').trim(); return m && !['스폰서','스크리미지','연습',''].includes(m); };
+
+  return players.map(p => {
+    const hist   = (Array.isArray(p.history) ? p.history : []).filter(inRange);
+    const wins   = hist.filter(h => h.result === '승').length;
+    const losses = hist.filter(h => h.result === '패').length;
+    const total  = wins + losses;
+    const offH   = hist.filter(h => isOff(h.mode));
+    const spH    = hist.filter(h => !isOff(h.mode));
+    // 종족별 상대 전적
+    const vsRace = { P:{w:0,l:0}, T:{w:0,l:0}, Z:{w:0,l:0} };
+    hist.forEach(h => {
+      const r = String(h.oppRace||'').trim().toUpperCase();
+      if (vsRace[r]) { h.result==='승' ? vsRace[r].w++ : vsRace[r].l++; }
+    });
+    return {
+      p, wins, losses, total, winRate: total ? Math.round(wins/total*100) : null,
+      offWins: offH.filter(h=>h.result==='승').length, offLosses: offH.filter(h=>h.result==='패').length,
+      spWins:  spH.filter(h=>h.result==='승').length,  spLosses:  spH.filter(h=>h.result==='패').length,
+      vsRace, hist
+    };
+  });
+}
+
+// ─── 유니브 집계 ──────────────────────────────
+function _b2WeeklyUnivStats(players, dateFrom, dateTo, univList) {
+  const vis = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard);
+  const stats = _b2WeeklyAggregate(vis, dateFrom, dateTo);
+  return univList.map(u => {
+    const members = stats.filter(s => String(s.p?.univ||'').trim() === u.name);
+    const active  = members.filter(s => s.total > 0);
+    const tw = active.reduce((a,s)=>a+s.wins,0);
+    const tl = active.reduce((a,s)=>a+s.losses,0);
+    const tg = tw + tl;
+    const raceCount = { P:{w:0,l:0}, T:{w:0,l:0}, Z:{w:0,l:0} };
+    active.forEach(s => { ['P','T','Z'].forEach(r => { raceCount[r].w+=s.vsRace[r].w; raceCount[r].l+=s.vsRace[r].l; }); });
+    return { u, members, active, tw, tl, tg, wr: tg ? Math.round(tw/tg*100) : null, raceCount };
+  }).sort((a,b) => b.tg - a.tg);
+}
+
+// ─── MVP 선정 ─────────────────────────────────
+function _b2WeeklyMVP(univStats) {
+  let best = null, bestScore = -1;
+  univStats.forEach(ud => {
+    ud.active.forEach(s => {
+      if (s.total < 3) return; // 최소 3경기
+      const score = s.wins * 3 + (s.total > 0 ? (s.wins/s.total)*10 : 0) + (s.offWins * 2);
+      if (score > bestScore) { bestScore = score; best = s; }
+    });
+  });
+  return best;
+}
+
+// ─── 대학별 MVP ───────────────────────────────
+function _b2WeeklyUnivMVP(active) {
+  let best = null, bestScore = -1;
+  active.forEach(s => {
+    if (s.total === 0) return;
+    const score = s.wins * 3 + (s.total > 0 ? (s.wins/s.total)*10 : 0) + s.offWins * 2;
+    if (score > bestScore) { bestScore = score; best = s; }
+  });
+  return best;
+}
+
+// ─── 최근 폼 렌더 ─────────────────────────────
+function _b2WeeklyForm(hist) {
+  const sorted = [...hist].sort((a,b)=>{
+    const da=parseInt(String(a.date||'').replace(/[-\.]/g,''))||0;
+    const db=parseInt(String(b.date||'').replace(/[-\.]/g,''))||0;
+    return da!==db?da-db:(a.time||0)-(b.time||0);
+  });
+  return sorted.slice(-5).map(h => {
+    const c = h.result==='승'?'#10b981':h.result==='패'?'#ef4444':'#94a3b8';
+    const t = h.result==='승'?'W':h.result==='패'?'L':'-';
+    return `<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:${c};font-size:9px;color:#fff;font-weight:900;flex-shrink:0">${t}</span>`;
+  }).join('');
+}
+
+// ─── 막대 차트 SVG ────────────────────────────
+function _b2WeeklyBarChart(univStats) {
+  const visible = univStats.filter(ud => ud.tg > 0).slice(0, 10);
+  if (!visible.length) return '';
+  const maxGames = Math.max(...visible.map(ud => ud.tg), 1);
+  const BAR_H = 28, GAP = 6, LEFT = 90, RIGHT = 160, TOP = 14, BOT = 10;
+  const H = visible.length * (BAR_H + GAP) + TOP + BOT;
+  const W = '100%';
+  let rows = '';
+  visible.forEach((ud, i) => {
+    const y = TOP + i * (BAR_H + GAP);
+    const color = (gc ? gc(ud.u.name) : '#64748b') || '#64748b';
+    const wBarW = `${Math.round(ud.tw / maxGames * 100)}%`;
+    const lBarW = `${Math.round(ud.tl / maxGames * 100)}%`;
+    const wr = ud.wr !== null ? `${ud.wr}%` : '-';
+    const wrColor = ud.wr===null?'#94a3b8':ud.wr>=60?'#10b981':ud.wr>=40?'#f59e0b':'#ef4444';
+    rows += `
+      <text x="${LEFT - 6}" y="${y + BAR_H/2 + 4}" text-anchor="end" font-size="11" font-weight="700" fill="var(--text2)" style="font-family:inherit">${ud.u.name.length > 6 ? ud.u.name.slice(0,6)+'…' : ud.u.name}</text>
+      <rect x="${LEFT}" y="${y}" width="0" height="${BAR_H * 0.55}" rx="3" fill="${color}" opacity="0.85">
+        <animate attributeName="width" from="0" to="${wBarW}" dur="0.5s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
+      </rect>
+      <rect x="${LEFT}" y="${y + BAR_H * 0.58}" width="0" height="${BAR_H * 0.38}" rx="3" fill="${color}" opacity="0.35">
+        <animate attributeName="width" from="0" to="${lBarW}" dur="0.5s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
+      </rect>
+      <text x="${LEFT + 4}" y="${y + BAR_H * 0.55 - 5}" font-size="10" fill="${color}" font-weight="800">${ud.tw}승</text>
+      <text x="${LEFT + 4}" y="${y + BAR_H - 4}" font-size="10" fill="${color}" opacity="0.7">${ud.tl}패</text>
+      <text x="calc(${LEFT}px + ${wBarW})" y="${y + BAR_H/2 + 4}" font-size="12" font-weight="900" fill="${wrColor}" style="font-family:inherit">${wr}</text>`;
+  });
+
+  // foreignObject로 반응형 처리
+  return `<div style="width:100%;overflow:hidden;padding:4px 0">
+    <svg viewBox="0 0 520 ${H}" width="100%" style="overflow:visible;display:block">
+      <defs>
+        <style>.b2wchart-label{font-family:inherit}</style>
+      </defs>
+      ${visible.map((ud, i) => {
+        const y = TOP + i * (BAR_H + GAP);
+        const color = (gc ? gc(ud.u.name) : '#64748b') || '#64748b';
+        const wPct  = Math.round(ud.tw / maxGames * (520 - LEFT - RIGHT));
+        const lPct  = Math.round(ud.tl / maxGames * (520 - LEFT - RIGHT));
+        const wr = ud.wr !== null ? `${ud.wr}%` : '-';
+        const wrColor = ud.wr===null?'#94a3b8':ud.wr>=60?'#10b981':ud.wr>=40?'#f59e0b':'#ef4444';
+        const name = ud.u.name.length > 6 ? ud.u.name.slice(0,6)+'…' : ud.u.name;
+        const MAX_W = 520 - LEFT - RIGHT;
+        return `
+          <text x="${LEFT-6}" y="${y+BAR_H*0.62}" text-anchor="end" font-size="11" font-weight="700" fill="var(--text2)">${name}</text>
+          <rect x="${LEFT}" y="${y}" width="${wPct}" height="${BAR_H*0.52}" rx="3" fill="${color}" opacity="0.9"/>
+          <rect x="${LEFT}" y="${y+BAR_H*0.56}" width="${lPct}" height="${BAR_H*0.38}" rx="3" fill="${color}" opacity="0.3"/>
+          ${ud.tw>0?`<text x="${LEFT+wPct+4}" y="${y+BAR_H*0.44}" font-size="10" font-weight="900" fill="${color}">${ud.tw}승</text>`:''}
+          ${ud.tl>0?`<text x="${LEFT+lPct+4}" y="${y+BAR_H*0.88}" font-size="10" fill="${color}" opacity="0.7">${ud.tl}패</text>`:''}
+          <text x="${520-RIGHT+8}" y="${y+BAR_H*0.62}" font-size="13" font-weight="900" fill="${wrColor}">${wr}</text>
+          <text x="${520-RIGHT+50}" y="${y+BAR_H*0.62}" font-size="11" fill="var(--text3)">${ud.tg}전 ${ud.active.length}명</text>`;
+      }).join('')}
+    </svg>
+  </div>`;
+}
+
+// ─── 종족별 통계 렌더 ─────────────────────────
+function _b2WeeklyRaceStats(raceCount) {
+  const races = [
+    { key:'P', label:'프로토스', ico:'🔮', color:'#8b5cf6' },
+    { key:'T', label:'테란',     ico:'⚔️', color:'#3b82f6' },
+    { key:'Z', label:'저그',     ico:'🦎', color:'#f59e0b' }
+  ];
+  return races.map(({ key, label, ico, color }) => {
+    const { w, l } = raceCount[key];
+    const t = w + l;
+    const wr = t ? Math.round(w/t*100) : null;
+    const barW = wr !== null ? wr : 0;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0">
+      <span style="font-size:13px;width:20px;text-align:center">${ico}</span>
+      <span style="font-size:11px;font-weight:700;color:var(--text2);width:52px">${label}</span>
+      <div style="flex:1;height:8px;background:var(--border2);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${barW}%;background:${color};border-radius:4px;transition:width .4s"></div>
+      </div>
+      ${t > 0
+        ? `<span style="font-size:11px;font-weight:900;color:${wr>=60?'#10b981':wr>=40?'#f59e0b':'#ef4444'};width:34px;text-align:right">${wr}%</span>
+           <span style="font-size:10px;color:var(--text3);width:48px">${w}승${l}패</span>`
+        : `<span style="font-size:11px;color:var(--text3);width:86px">기록 없음</span>`}
+    </div>`;
+  }).join('');
+}
+
+// ─── 이전주 비교 배지 ─────────────────────────
+function _b2WeeklyDelta(curr, prev) {
+  if (prev === null || curr === null) return '';
+  const d = curr - prev;
+  if (d === 0) return `<span style="font-size:10px;color:var(--text3);margin-left:4px">━ ${prev}%</span>`;
+  const arrow = d > 0 ? '▲' : '▼';
+  const col   = d > 0 ? '#10b981' : '#ef4444';
+  return `<span style="font-size:10px;font-weight:800;color:${col};margin-left:4px">${arrow}${Math.abs(d)}%</span><span style="font-size:10px;color:var(--text3);margin-left:2px">vs 전주</span>`;
+}
+
+// ═══════════════════════════════════════════════
+//  메인 렌더 함수
+// ═══════════════════════════════════════════════
+function _b2WeeklyBriefingView() {
+  try {
+    if (!window._b2WeeklyDateFrom || !window._b2WeeklyDateTo) {
+      const def = _b2WeeklyGetDefaultRange(0);
+      window._b2WeeklyDateFrom = def.from;
+      window._b2WeeklyDateTo   = def.to;
+    }
+    const dateFrom = window._b2WeeklyDateFrom;
+    const dateTo   = window._b2WeeklyDateTo;
+
+    // 이전주 범위 계산
+    const fmtN = s => parseInt(String(s||'').replace(/[-\.]/g,''))||0;
+    const diffDays = Math.round((new Date(dateTo) - new Date(dateFrom)) / 86400000) + 1;
+    const prevTo   = new Date(dateFrom); prevTo.setDate(prevTo.getDate() - 1);
+    const prevFrom = new Date(prevTo);   prevFrom.setDate(prevFrom.getDate() - (diffDays - 1));
+    const fmt = d => d.toISOString().slice(0, 10);
+    const prevDateFrom = fmt(prevFrom), prevDateTo = fmt(prevTo);
+
+    const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : [])
+      .filter(u => u.dissolved || u.hidden).map(u => String(u.name||'').trim()));
+    const vis = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet.has(String(p?.univ||'').trim()));
+    const univList = (_b2VisUnivs ? _b2VisUnivs() : []).filter(u => u.name && u.name !== '무소속');
+
+    const selUniv  = window._b2WeeklyUniv || '전체';
+    const fmtDate  = s => String(s||'').slice(0,10).replace(/-/g,'.');
+
+    // 이번주 & 이전주 집계
+    const curStats  = _b2WeeklyUnivStats(vis, dateFrom, dateTo, univList);
+    const prevStats = _b2WeeklyUnivStats(vis, prevDateFrom, prevDateTo, univList);
+    const prevMap   = {};
+    prevStats.forEach(ud => { prevMap[ud.u.name] = ud; });
+
+    // 필터
+    const targetStats = selUniv === '전체' ? curStats : curStats.filter(ud => ud.u.name === selUniv);
+
+    // 전체 MVP
+    const mvp = _b2WeeklyMVP(curStats);
+
+    // CSS
+    let h = `<style>
+      .b2w2-wrap { max-width:900px }
+      .b2w2-hdr  { display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;margin-bottom:14px }
+      .b2w2-din  { padding:4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2) }
+      .b2w2-sel  { padding:4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);max-width:140px }
+      .b2w2-btn  { padding:5px 14px;border-radius:8px;background:var(--blue);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer }
+      .b2w2-btn:hover { opacity:.85 }
+      .b2w2-mvp  { display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:linear-gradient(135deg,#fef9c355,#fef08a22);border:1px solid #fbbf24;border-radius:14px;margin-bottom:14px }
+      .b2w2-chart-box { background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px }
+      .b2w2-chart-title { font-size:12px;font-weight:800;color:var(--text3);margin-bottom:10px }
+      .b2w2-card { background:var(--surface);border:1px solid var(--border2);border-radius:14px;margin-bottom:12px;overflow:hidden }
+      .b2w2-card-head { display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;transition:background .15s }
+      .b2w2-card-head:hover { background:rgba(0,0,0,.04) }
+      .b2w2-chip { font-size:11px;font-weight:700;padding:2px 7px;border-radius:7px }
+      .b2w2-tbl  { width:100%;border-collapse:collapse }
+      .b2w2-tbl th { font-size:10px;font-weight:800;color:var(--text3);padding:6px 10px;text-align:left;border-bottom:1px solid var(--border2);background:var(--bg);white-space:nowrap }
+      .b2w2-tbl td { font-size:11px;font-weight:600;padding:7px 10px;border-bottom:1px solid var(--border2);vertical-align:middle }
+      .b2w2-tbl tr:last-child td { border-bottom:none }
+      .b2w2-tbl tr:hover td { background:var(--hover) }
+      .b2w2-race-box { padding:10px 16px 12px;border-top:1px solid var(--border2) }
+      .b2w2-race-title { font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px }
+      .b2w2-empty { text-align:center;padding:32px 16px;color:var(--text3);font-size:13px }
+      @media(max-width:600px){
+        .b2w2-tbl th:nth-child(5),.b2w2-tbl td:nth-child(5),
+        .b2w2-tbl th:nth-child(4),.b2w2-tbl td:nth-child(4){ display:none }
+      }
+    </style>`;
+
+    // ── 헤더 컨트롤
+    h += `<div class="b2w2-wrap"><div class="b2w2-hdr">
+      <span style="font-size:16px">📅</span>
+      <span style="font-size:14px;font-weight:900;color:var(--text1)">주간 브리핑</span>
+      <input type="date" class="b2w2-din" id="b2w2-from" tabindex="-1" value="${dateFrom}">
+      <span style="font-size:12px;color:var(--text3);font-weight:700">~</span>
+      <input type="date" class="b2w2-din" id="b2w2-to" tabindex="-1" value="${dateTo}">
+      <select class="b2w2-sel" id="b2w2-univ">
+        <option value="전체"${selUniv==='전체'?' selected':''}>🏫 전체 대학</option>
+        ${univList.map(u=>`<option value="${u.name}"${selUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
+      </select>
+      <button class="b2w2-btn" onclick="(function(){
+        const f=document.getElementById('b2w2-from');
+        const t=document.getElementById('b2w2-to');
+        const s=document.getElementById('b2w2-univ');
+        if(f)window._b2WeeklyDateFrom=f.value;
+        if(t)window._b2WeeklyDateTo=t.value;
+        if(s)window._b2WeeklyUniv=s.value;
+        render();
+      })()">조회</button>
+      <span style="font-size:11px;color:var(--text3);margin-left:auto">${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}</span>
+      <span style="font-size:10px;color:var(--text3)">(전주: ${fmtDate(prevDateFrom)}~${fmtDate(prevDateTo)})</span>
+    </div>`;
+
+    const hasData = targetStats.some(ud => ud.tg > 0);
+    if (!hasData) {
+      h += `<div class="b2w2-empty"><div style="font-size:28px;margin-bottom:8px">📭</div>해당 기간에 기록된 경기가 없습니다.<div style="font-size:11px;margin-top:4px">기간을 변경해보세요</div></div></div>`;
+      return h;
+    }
+
+    // ── MVP 배너
+    if (mvp && selUniv === '전체') {
+      const mp = mvp.p;
+      const col  = gc ? gc(String(mp?.univ||'')) : '#f59e0b';
+      const tc   = typeof getTierBtnColor==='function'&&mp.tier?getTierBtnColor(mp.tier):'#64748b';
+      const tt   = typeof getTierBtnTextColor==='function'&&mp.tier?(getTierBtnTextColor(mp.tier)||'#fff'):'#fff';
+      const rIco = mp.race==='P'?'🔮':mp.race==='T'?'⚔️':mp.race==='Z'?'🦎':'';
+      h += `<div class="b2w2-mvp">
+        <span style="font-size:20px">🏆</span>
+        <div>
+          <div style="font-size:10px;font-weight:800;color:#b45309;letter-spacing:.5px">이번 주 MVP</div>
+          <div style="font-size:16px;font-weight:900;color:var(--text1)">${mp.name} ${rIco}
+            ${mp.tier?`<span style="font-size:10px;padding:1px 6px;border-radius:5px;background:${tc};color:${tt}">${mp.tier}</span>`:''}
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px">${String(mp?.univ||'')}</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-left:8px">
+          <div style="text-align:center">
+            <div style="font-size:18px;font-weight:900;color:#10b981">${mvp.wins}</div>
+            <div style="font-size:10px;color:var(--text3)">승</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:18px;font-weight:900;color:#ef4444">${mvp.losses}</div>
+            <div style="font-size:10px;color:var(--text3)">패</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:18px;font-weight:900;color:${col}">${mvp.winRate}%</div>
+            <div style="font-size:10px;color:var(--text3)">승률</div>
+          </div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:3px">${_b2WeeklyForm(mvp.hist)}</div>
+      </div>`;
+    }
+
+    // ── 전체 대학 차트 (전체 탭일 때만)
+    if (selUniv === '전체' && curStats.some(ud=>ud.tg>0)) {
+      h += `<div class="b2w2-chart-box">
+        <div class="b2w2-chart-title">📊 대학별 전적 현황 (이번 기간)</div>
+        ${_b2WeeklyBarChart(curStats)}
+        <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:8px;border-radius:2px;background:#10b981;opacity:.9"></div><span style="font-size:10px;color:var(--text3)">승</span></div>
+          <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:8px;border-radius:2px;background:#64748b;opacity:.3"></div><span style="font-size:10px;color:var(--text3)">패</span></div>
+          <span style="font-size:10px;color:var(--text3)">우측: 승률 / 경기수</span>
+        </div>
+      </div>`;
+    }
+
+    // ── 대학별 카드
+    targetStats.filter(ud=>ud.tg>0).forEach((ud, ui) => {
+      const { u, active, tw, tl, tg, wr, raceCount } = ud;
+      const color   = (gc ? gc(u.name) : '#64748b') || '#64748b';
+      const prevUd  = prevMap[u.name];
+      const prevWr  = prevUd && prevUd.tg > 0 ? prevUd.wr : null;
+      const wrClass = wr===null?'':wr>=60?'#10b981':wr>=40?'#f59e0b':'#ef4444';
+      const cid     = `b2w2-body-${ui}`;
+      const icid    = `b2w2-ic-${ui}`;
+
+      // 대학 MVP
+      const univMVP = _b2WeeklyUnivMVP(active);
+
+      // 정렬: 승률→경기수
+      const sorted = [...active].sort((a,b) => {
+        const ra = a.total?a.wins/a.total:0, rb = b.total?b.wins/b.total:0;
+        return ra!==rb?rb-ra:b.total-a.total;
+      });
+
+      h += `<div class="b2w2-card" style="border-top:3px solid ${color}">
+        <div class="b2w2-card-head" onclick="(function(){
+          const b=document.getElementById('${cid}');
+          const ic=document.getElementById('${icid}');
+          if(!b)return;
+          const show=b.style.display==='none';
+          b.style.display=show?'':'none';
+          if(ic)ic.textContent=show?'▼':'▶';
+        })()">
+          <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></span>
+          <span style="font-size:14px;font-weight:900;color:var(--text1)">${u.name}</span>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span class="b2w2-chip" style="background:${color}18;color:${color}">활동 ${active.length}명</span>
+            <span class="b2w2-chip" style="background:#3b82f618;color:#3b82f6">${tg}전</span>
+            <span class="b2w2-chip" style="background:#10b98118;color:#10b981">${tw}승</span>
+            <span class="b2w2-chip" style="background:#ef444418;color:#ef4444">${tl}패</span>
+            ${wr!==null?`<span class="b2w2-chip" style="background:${wrClass}18;color:${wrClass};font-size:12px">${wr}%${_b2WeeklyDelta(wr,prevWr)}</span>`:''}
+            ${univMVP?`<span class="b2w2-chip" style="background:#fef9c3;color:#b45309">🏆 MVP: ${univMVP.p.name} (${univMVP.wins}승)</span>`:''}
+          </div>
+          <span id="${icid}" style="margin-left:auto;font-size:12px;color:var(--text3)">▼</span>
+        </div>
+        <div id="${cid}">`;
+
+      // 선수 테이블
+      h += `<table class="b2w2-tbl"><thead><tr>
+        <th style="width:28px">#</th>
+        <th>선수</th>
+        <th>전체 전적</th>
+        <th>공식전</th>
+        <th>최근 폼</th>
+      </tr></thead><tbody>`;
+
+      sorted.forEach((s, i) => {
+        const { p, wins, losses, total, winRate, offWins, offLosses } = s;
+        const wrCls  = winRate===null?'#94a3b8':winRate>=60?'#10b981':winRate>=40?'#f59e0b':'#ef4444';
+        const tc2    = typeof getTierBtnColor==='function'&&p.tier?getTierBtnColor(p.tier):'#64748b';
+        const tt2    = typeof getTierBtnTextColor==='function'&&p.tier?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
+        const rIco   = p.race==='P'?'🔮':p.race==='T'?'⚔️':p.race==='Z'?'🦎':'';
+        const medal  = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+        const isMVP  = univMVP && univMVP.p === p;
+
+        // 이전주 비교
+        const prevUd2  = prevMap[u.name];
+        const prevS    = prevUd2 ? _b2WeeklyAggregate([p], prevDateFrom, prevDateTo).find(x=>x.p===p) : null;
+        const prevWr2  = prevS && prevS.total>0 ? prevS.winRate : null;
+
+        h += `<tr ${isMVP?'style="background:#fef9c322"':''}>
+          <td style="font-size:11px;font-weight:900;color:var(--text3);text-align:center">${medal}</td>
+          <td>
+            <span style="font-weight:900;color:var(--text1)">${p.name}</span>
+            ${rIco?`<span style="font-size:11px;margin-left:2px">${rIco}</span>`:''}
+            ${p.tier?`<span style="font-size:10px;padding:1px 5px;border-radius:4px;background:${tc2};color:${tt2};margin-left:3px">${p.tier}</span>`:''}
+            ${isMVP?`<span style="font-size:9px;background:#fef9c3;color:#b45309;padding:1px 4px;border-radius:4px;margin-left:3px;font-weight:800">MVP</span>`:''}
+          </td>
+          <td>
+            <span style="font-weight:900;color:var(--text1)">${total}전</span>
+            <span style="color:#10b981;font-size:11px"> ${wins}승</span>
+            <span style="color:#ef4444;font-size:11px"> ${losses}패</span>
+            ${winRate!==null?`<span style="font-size:11px;font-weight:800;color:${wrCls};margin-left:3px">${winRate}%</span>${_b2WeeklyDelta(winRate,prevWr2)}`:''}
+          </td>
+          <td>
+            ${offWins+offLosses>0
+              ?`<span style="font-size:11px">${offWins+offLosses}전 <span style="color:#10b981">${offWins}승</span> <span style="color:#ef4444">${offLosses}패</span></span>`
+              :`<span style="font-size:11px;color:var(--text3)">-</span>`}
+          </td>
+          <td><div style="display:flex;align-items:center;gap:2px">${_b2WeeklyForm(s.hist)}</div></td>
+        </tr>`;
+      });
+
+      h += `</tbody></table>`;
+
+      // 종족별 통계
+      const hasRace = ['P','T','Z'].some(r => raceCount[r].w+raceCount[r].l > 0);
+      if (hasRace) {
+        h += `<div class="b2w2-race-box">
+          <div class="b2w2-race-title">⚔️ 종족별 상대 전적 (대학 전체)</div>
+          ${_b2WeeklyRaceStats(raceCount)}
+        </div>`;
+      }
+
+      h += `</div></div>`;
+    });
+
+    h += `</div>`;
+    return h;
+
+  } catch(e) {
+    console.error('[_b2WeeklyBriefingView v2] 오류:', e);
+    return `<div style="padding:40px;text-align:center;color:#dc2626">주간 브리핑 오류: ${e.message}</div>`;
+  }
 }

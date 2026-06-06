@@ -5,6 +5,16 @@ function rHist(C,T){
   if(window._histFilterOpen===undefined) window._histFilterOpen=_lockOpen;
   if(_lockOpen) window._histFilterOpen = true;
 
+  const _mini = (typeof miniM!=='undefined' && Array.isArray(miniM)) ? miniM : [];
+  const _ck = (typeof ckM!=='undefined' && Array.isArray(ckM)) ? ckM : [];
+  const _univm = (typeof univM!=='undefined' && Array.isArray(univM)) ? univM : [];
+  const _pro = (typeof proM!=='undefined' && Array.isArray(proM)) ? proM : [];
+  const _ind = (typeof indM!=='undefined' && Array.isArray(indM)) ? indM : [];
+  const _gj = (typeof gjM!=='undefined' && Array.isArray(gjM)) ? gjM : [];
+  const _tt = (typeof ttM!=='undefined' && Array.isArray(ttM)) ? ttM : [];
+  const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
+  const _proTourneys = (typeof proTourneys!=='undefined' && Array.isArray(proTourneys)) ? proTourneys : [];
+
   const tabDefs=[
     {id:'all',      grp:'종합',   lbl:'📋 전체 통합'},
     {id:'psearch',  grp:'종합',   lbl:'🔍 스트리머별 검색'},
@@ -134,7 +144,7 @@ function rHist(C,T){
     h+=univVsHTML();
     C.innerHTML=h;
     // 두 선수 이미 선택된 경우 결과 즉시 렌더
-    if(vsNameA&&vsNameB&&vsNameA!==vsNameB) _vsRenderResult();
+    if(typeof vsNameA!=='undefined' && typeof vsNameB!=='undefined' && vsNameA&&vsNameB&&vsNameA!==vsNameB) _vsRenderResult();
     renderUnivVsResult();
     return;
   }
@@ -174,13 +184,13 @@ function rHist(C,T){
     return;
   }
   if(histSub==='all') h+=histAllHTML();
-  else if(histSub==='civil') h+=recSummaryListHTML(miniM.filter(m=>m.type==='civil'||(m.a==='A팀'&&m.b==='B팀')),'civil','hist');
-  else if(histSub==='mini') h+=recSummaryListHTML(miniM.filter(m=>m.type!=='civil'&&!(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
+  else if(histSub==='civil') h+=recSummaryListHTML(_mini.filter(m=>m && (m.type==='civil'||(m.a==='A팀'&&m.b==='B팀'))),'civil','hist');
+  else if(histSub==='mini') h+=recSummaryListHTML(_mini.filter(m=>m && (m.type!=='civil'&&!(m.a==='A팀'&&m.b==='B팀'))),'mini','hist');
   else if(histSub==='ind') h+=typeof indRecordsHTML==='function'?indRecordsHTML():'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
   else if(histSub==='gj') h+=typeof gjRecordsHTML==='function'?gjRecordsHTML(false):'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
   else if(histSub==='progj') h+=typeof gjRecordsHTML==='function'?gjRecordsHTML(true):'<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>';
-  else if(histSub==='ck') h+=recSummaryListHTML(ckM,'ck','hist');
-  else if(histSub==='univm') h+=recSummaryListHTML(univM,'univm','hist');
+  else if(histSub==='ck') h+=recSummaryListHTML(_ck,'ck','hist');
+  else if(histSub==='univm') h+=recSummaryListHTML(_univm,'univm','hist');
   else if(histSub==='comp') h+=compSummaryListHTML('hist');
   else if(histSub==='tourney') h+=histTourneyHTML('hist');
   else if(histSub==='tiertour'||histSub==='tiertour-gen'||histSub==='tiertour-league'||histSub==='tiertour-bkt'){
@@ -211,7 +221,7 @@ function rHist(C,T){
     const _ttPageOpts = histSub==='tiertour-gen' ? {pageSize:20, pageKey:'tiertour-gen'} : null;
     h+=_ttSrc.length?recSummaryListHTMLFiltered(_ttSrc,'tt','hist',undefined,_ttPageOpts):`<div class="empty-state"><div class="empty-state-icon">${_emptyIco}</div><div class="empty-state-title">${_emptyMsg}</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div><div style="margin-top:10px"><button class="btn btn-w btn-sm" onclick="try{window.ensureTierTourRecords&&window.ensureTierTourRecords();}catch(e){};render()">🔄 티어대회 기록 다시 불러오기</button></div></div>`;
   }
-  else if(histSub==='pro') h+=recSummaryListHTML(proM,'pro','hist');
+  else if(histSub==='pro') h+=recSummaryListHTML(_pro,'pro','hist');
   else if(histSub==='procomp') h+=histProCompHTML();
   else if(histSub==='psearch') h+=histPlayerSearchHTML();
   C.innerHTML=h;
@@ -287,6 +297,16 @@ function _openAllTabIndEdit(type, m, regIdx){
    대전 기록 > 전체 통합 탭
 ══════════════════════════════════════ */
 function histAllHTML(){
+  const _mini = (typeof miniM!=='undefined' && Array.isArray(miniM)) ? miniM : [];
+  const _ck = (typeof ckM!=='undefined' && Array.isArray(ckM)) ? ckM : [];
+  const _univm = (typeof univM!=='undefined' && Array.isArray(univM)) ? univM : [];
+  const _pro = (typeof proM!=='undefined' && Array.isArray(proM)) ? proM : [];
+  const _ind = (typeof indM!=='undefined' && Array.isArray(indM)) ? indM : [];
+  const _gj = (typeof gjM!=='undefined' && Array.isArray(gjM)) ? gjM : [];
+  const _tt = (typeof ttM!=='undefined' && Array.isArray(ttM)) ? ttM : [];
+  const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
+  const _proTourneys = (typeof proTourneys!=='undefined' && Array.isArray(proTourneys)) ? proTourneys : [];
+  const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : ((window.recSortDir==='asc'||window.recSortDir==='desc') ? window.recSortDir : 'desc');
   // 각 경기 타입별 레이블과 색상
   const typeInfo={
     mini:{lbl:'⚡ 미니대전',col:'#2563eb'},
@@ -302,34 +322,34 @@ function histAllHTML(){
   // 통합 목록 생성
   const allItems=[];
   // 팀전 (mini/ck/univm/pro): m.a, m.b, m.sa, m.sb, m.d
-  [[miniM,'mini'],[ckM,'ck'],[univM,'univm'],[proM,'pro']].forEach(([arr,type])=>{
+  [[_mini,'mini'],[_ck,'ck'],[_univm,'univm'],[_pro,'pro']].forEach(([arr,type])=>{
     (arr||[]).forEach((m,idx)=>{
       const isCK=(type==='ck'||type==='pro');
       if(isCK){if(!m.teamAMembers||!m.teamBMembers)return;}else{if(!m.a||!m.b)return;}
       if(m.sa==null||m.sb==null||m.sa===''||m.sb==='')return;
-      if(!passDateFilter(m.d||''))return;
+      if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
       allItems.push({type,d:m.d||'',m,idx});
     });
   });
   // 개인전/끝장전 (ind/gj): m.wName, m.lName, m.d
-  [[indM,'ind'],[gjM,'gj']].forEach(([arr,type])=>{
+  [[_ind,'ind'],[_gj,'gj']].forEach(([arr,type])=>{
     (arr||[]).forEach((m,idx)=>{
       if(!m.wName||!m.lName)return;
-      if(!passDateFilter(m.d||''))return;
+      if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
       allItems.push({type,d:m.d||'',m,idx});
     });
   });
   // 티어대회 (tt): m.a, m.b, m.sa, m.sb, m.d
-  (ttM||[]).forEach((m,idx)=>{
+  _tt.forEach((m,idx)=>{
     if(!m.a||!m.b)return;
-    if(!passDateFilter(m.d||''))return;
+    if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
     allItems.push({type:'tt',d:m.d||'',m,idx});
   });
   // 대회 tourney
   if(typeof getTourneyMatches==='function'){
     getTourneyMatches().forEach((m,idx)=>{
       if(!m.a||!m.b||m.sa==null||m.sb==null)return;
-      if(!passDateFilter(m.d||''))return;
+      if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
       allItems.push({type:'tourney',d:m.d||'',m,idx});
     });
   }
@@ -337,31 +357,31 @@ function histAllHTML(){
   if(typeof getNormalMatchesForHistory==='function'){
     getNormalMatchesForHistory().forEach((m,idx)=>{
       if(!m.a||!m.b||m.sa==null||m.sb==null)return;
-      if(!passDateFilter(m.d||''))return;
+      if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
       allItems.push({type:'tourney',d:m.d||'',m,idx});
     });
   }
   // 대회 토너먼트 (comps)
-  (comps||[]).forEach((m,idx)=>{
+  _comps.forEach((m,idx)=>{
     if(!m.a&&!m.u) return; if(!m.b) return;
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
-    if(!passDateFilter(m.d||'')) return;
+    if(typeof passDateFilter==='function' && !passDateFilter(m.d||'')) return;
     allItems.push({type:'tourney',d:m.d||'',m:{...m,a:m.a||m.u},idx});
   });
   // 프로리그 개인 대회 (procomp)
-  (proTourneys||[]).forEach((tn,tnIdx)=>{
+  _proTourneys.forEach((tn,tnIdx)=>{
     (tn.groups||[]).forEach((grp,grpIdx)=>{
       (grp.matches||[]).forEach((m,matchIdx)=>{
         if(!m.a||!m.b||!m.winner)return;
-        if(!passDateFilter(m.d||''))return;
+        if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
         const wName=m.winner==='A'?m.a:m.b;
         const lName=m.winner==='A'?m.b:m.a;
         allItems.push({type:'procomp',d:m.d||'',m:{...m,wName,lName},idx:matchIdx,_ref:`procomp:${tnIdx}:${grpIdx}:${matchIdx}`});
       });
     });
   });
-  allItems.sort((a,b)=>recSortDir==='asc'?(a.d).localeCompare(b.d):(b.d).localeCompare(a.d));
+  allItems.sort((a,b)=>_sortDir==='asc'?(a.d).localeCompare(b.d):(b.d).localeCompare(a.d));
 
   // 검색어 필터
   const _sq=((window._recQ&&window._recQ['all'])||'').toLowerCase().trim();
@@ -539,14 +559,16 @@ function histAllHTML(){
 function histTourneyHTML(context){
   const tourItems=(typeof getTourneyMatches==='function') ? getTourneyMatches() : [];
   const nmItems=(typeof getNormalMatchesForHistory==='function') ? getNormalMatchesForHistory() : [];
-  const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx,a:(m.a||m.u||''),b:(m.b||'')}));
+  const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
+  const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : ((window.recSortDir==='asc'||window.recSortDir==='desc') ? window.recSortDir : 'desc');
+  const compItems=[..._comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx,a:(m.a||m.u||''),b:(m.b||'')}));
   const allItems=[...tourItems,...nmItems,...compItems].filter(m=>{
     if(!m.a||!m.b) return false;
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return false;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return false;
     return typeof passDateFilter!=='function'||passDateFilter(m.d||'');
   });
-  allItems.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
+  allItems.sort((a,b)=>_sortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
   const sortBar=``;
   if(!allItems.length){
     return sortBar+`<div class="empty-state"><div class="empty-state-icon">🎖️</div><div class="empty-state-title">대회 기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
@@ -686,15 +708,17 @@ function histTourneyHTML(context){
 
 // 대회 탭 공유카드용 헬퍼
 function _getHistTourneyMatchObj(idx, context){
-  const tourItems=getTourneyMatches();
+  const tourItems=(typeof getTourneyMatches==='function') ? getTourneyMatches() : [];
   const nmItems=(typeof getNormalMatchesForHistory==='function')?getNormalMatchesForHistory():[];
-  const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
+  const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
+  const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : ((window.recSortDir==='asc'||window.recSortDir==='desc') ? window.recSortDir : 'desc');
+  const compItems=[..._comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
   const all=[...tourItems,...nmItems,...compItems].filter(m=>{
     if(!m.a||!m.b) return false;
     if(m.sa==null||m.sb==null) return false;
     return typeof passDateFilter!=='function'||passDateFilter(m.d||'');
   });
-  all.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
+  all.sort((a,b)=>_sortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
   const m = all[idx]||null;
   if(!m) return null;
   const _stage = m._src==='tour_normal'?'league':(m.stage||'league');
@@ -704,6 +728,10 @@ function _getHistTourneyMatchObj(idx, context){
 
 
 function rHistUnivStat(){
+  const _mini = (typeof miniM!=='undefined' && Array.isArray(miniM)) ? miniM : [];
+  const _univm = (typeof univM!=='undefined' && Array.isArray(univM)) ? univM : [];
+  const _ck = (typeof ckM!=='undefined' && Array.isArray(ckM)) ? ckM : [];
+  const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
   const allU=getAllUnivs();
   if(!histUniv&&allU.length) histUniv=allU[0].name;
   let h='';
@@ -719,15 +747,15 @@ function rHistUnivStat(){
   h+=`</select></div>`;
   if(!histUniv) return h+`<div style="padding:60px 20px;text-align:center;"><div style="font-size:40px;margin-bottom:12px">🏛️</div><div style="font-size:15px;font-weight:800;color:var(--text2);margin-bottom:6px">대학을 선택하세요</div><div style="font-size:13px;color:var(--gray-l)">위 드롭다운에서 조회할 대학을 골라주세요.</div></div>`;
   const col=gc(histUniv);
-  const myMini=miniM.filter(m=>(m.a===histUniv||m.b===histUniv)&&(!passDateFilter||passDateFilter(m.d||'')));
-  const myUnivM=univM.filter(m=>(m.a===histUniv||m.b===histUniv)&&(!passDateFilter||passDateFilter(m.d||'')));
-  const myCK=ckM.filter(m=>((m.teamAMembers||[]).some(x=>x.univ===histUniv)||(m.teamBMembers||[]).some(x=>x.univ===histUniv))&&(!passDateFilter||passDateFilter(m.d||'')));
-  const myComp=comps.filter(m=>(((m.a||m.u)===histUniv)||m.b===histUniv)&&(!passDateFilter||passDateFilter(m.d||'')));
+  const myMini=_mini.filter(m=>(m.a===histUniv||m.b===histUniv) && (typeof passDateFilter!=='function'||passDateFilter(m.d||'')));
+  const myUnivM=_univm.filter(m=>(m.a===histUniv||m.b===histUniv) && (typeof passDateFilter!=='function'||passDateFilter(m.d||'')));
+  const myCK=_ck.filter(m=>((m.teamAMembers||[]).some(x=>x.univ===histUniv)||(m.teamBMembers||[]).some(x=>x.univ===histUniv)) && (typeof passDateFilter!=='function'||passDateFilter(m.d||'')));
+  const myComp=_comps.filter(m=>(((m.a||m.u)===histUniv)||m.b===histUniv) && (typeof passDateFilter!=='function'||passDateFilter(m.d||'')));
   // 조별대회(tourneys) 경기 추가
   const myTourney=[
     ...(typeof getTourneyMatches==='function'?getTourneyMatches():[]),
     ...(typeof getNormalMatchesForHistory==='function'?getNormalMatchesForHistory():[])
-  ].filter(m=>(m.a===histUniv||m.b===histUniv)&&(!passDateFilter||passDateFilter(m.d||'')));
+  ].filter(m=>(m.a===histUniv||m.b===histUniv) && (typeof passDateFilter!=='function'||passDateFilter(m.d||'')));
   function calcStats(arr,getA,getB){let w=0,l=0,d=0;arr.forEach(m=>{const a=getA(m),b=getB(m);const iA=(a===histUniv),iB=(b===histUniv);if(iA){if(m.sa>m.sb)w++;else if(m.sb>m.sa)l++;else d++;}else if(iB){if(m.sb>m.sa)w++;else if(m.sa>m.sb)l++;else d++;}});return{w,l,d,total:w+l+d};}
   const sm=calcStats(myMini,m=>m.a,m=>m.b);
   const su=calcStats(myUnivM,m=>m.a,m=>m.b);
@@ -1264,7 +1292,25 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     if(mode==='comp') return comps;
     return arr;
   })();
-  let filtered=arr.map((m,i)=>({m,i:_srcArr!==arr?_srcArr.indexOf(m):i})).filter(({m})=>{
+  const _srcIdxById = new Map();
+  try{
+    if(Array.isArray(_srcArr)){
+      _srcArr.forEach((x, idx)=>{
+        const id = x && (x._id || x.sid || x.matchId);
+        if(id!=null && String(id).trim()) _srcIdxById.set(String(id), idx);
+      });
+    }
+  }catch(e){}
+  let filtered=arr.map((m,i)=>{
+    let srcIdx = (_srcArr!==arr) ? _srcArr.indexOf(m) : i;
+    if(_srcArr!==arr && srcIdx < 0){
+      const id = m && (m._id || m.sid || m.matchId);
+      const k = (id!=null) ? String(id) : '';
+      if(k && _srcIdxById.has(k)) srcIdx = _srcIdxById.get(k);
+    }
+    if(!Number.isFinite(srcIdx) || srcIdx < 0) srcIdx = i;
+    return {m, i: srcIdx};
+  }).filter(({m})=>{
     if(extraFilter&&!extraFilter(m)) return false;
     if(isCKmode){
       if(mode!=='tt'&&(!m.teamAMembers||!m.teamBMembers)) return false;
@@ -1444,7 +1490,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     const labelA=isCK?(rawLA||'A팀'):isCivil?(_civilUniv||m.a||'A팀'):m.a;
     const labelB=isCK?(rawLB||'B팀'):isCivil?(_civilUniv||m.a||'B팀'):m.b;
     const aWin=(m.sa>m.sb);const bWin=(m.sb>m.sa);
-    const key=`${context}-${mode}-${i}`;
+    const midRaw = (m && (m._id || m.sid || m.matchId)) ? String(m._id || m.sid || m.matchId) : '';
+    const mid = midRaw ? midRaw.replace(/[^a-zA-Z0-9:_-]/g,'_') : '';
+    const key = mid ? `${context}-${mode}-mid:${mid}` : `${context}-${mode}-${i}`;
     // 검색용 hay 데이터
     // 대학 아이콘 (대학끼리 경기: mini/univm/comp/tour 는 상대 대학 아이콘, CK/pro/tt는 소속 대학 아이콘, 시빌워는 같은 대학)
     const _iconUnivA=isCivil?_civilUniv:(isCK?'':m.a);

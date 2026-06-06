@@ -1,5 +1,31 @@
+const _calEscHTML = (typeof window !== 'undefined' && typeof window.escHTML === 'function')
+  ? window.escHTML
+  : (s)=>String(s??'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'function')
+  ? window.escJS
+  : (s)=>String(s??'')
+    .replace(/\\/g,'\\\\')
+    .replace(/'/g,"\\'")
+    .replace(/\r/g,'\\r')
+    .replace(/\n/g,'\\n');
+
 function rCal(C,T){
   T.textContent='📅 경기 캘린더';
+  if(typeof calView==='undefined' || !String(calView||'')){
+    try{ window.calView = (localStorage.getItem('su_cal_view') || 'month'); }catch(e){ window.calView='month'; }
+  }
+  if(calView!=='month' && calView!=='week' && calView!=='day') window.calView='month';
+  if(typeof calYear==='undefined' || !isFinite(calYear)){
+    const d=new Date(); window.calYear=d.getFullYear();
+  }
+  if(typeof calMonth==='undefined' || !isFinite(calMonth)){
+    const d=new Date(); window.calMonth=d.getMonth();
+  }
+  if(typeof calWeekOffset==='undefined' || !isFinite(calWeekOffset)) window.calWeekOffset=0;
+  if(typeof calDayDate==='undefined') window.calDayDate='';
+  if(typeof calTypeFilter==='undefined' || !String(calTypeFilter||'')) window.calTypeFilter='all';
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
   if(window._calFilterOpen===undefined){
     try{ window._calFilterOpen = (localStorage.getItem('su_cal_filter_open') ?? '1') === '1'; }
@@ -7,7 +33,7 @@ function rCal(C,T){
   }
 
   // Feature 3: 뷰 저장
-  localStorage.setItem('su_cal_view', calView);
+  try{ localStorage.setItem('su_cal_view', calView); }catch(e){}
 
   // 모든 경기 데이터 캐싱
   if(typeof calScheduled==='undefined') window.calScheduled=[];
@@ -23,7 +49,8 @@ function rCal(C,T){
   // 기존 Object.defineProperty(m, ...) 는 miniM/univM 등 공유 배열의 원본을 변경하므로
   // 다른 탭에서 의도치 않은 열거 동작을 유발할 수 있다.
   function _markCalType(arr, type, mode){
-    return (arr||[]).map(m=>{
+    const a = Array.isArray(arr) ? arr : [];
+    return a.map(m=>{
       if(!m || typeof m !== 'object') return m;
       return Object.assign(Object.create(Object.getPrototypeOf(m)), m, {
         __calType: type,
@@ -31,12 +58,17 @@ function rCal(C,T){
       });
     });
   }
+  const _mini = (typeof miniM!=='undefined' && Array.isArray(miniM)) ? miniM : [];
+  const _univm = (typeof univM!=='undefined' && Array.isArray(univM)) ? univM : [];
+  const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
+  const _ck = (typeof ckM!=='undefined' && Array.isArray(ckM)) ? ckM : [];
+  const _pro = (typeof proM!=='undefined' && Array.isArray(proM)) ? proM : [];
   if(!window._calMatchCache) window._calMatchCache=[
-    ..._markCalType(miniM,'mini'),
-    ..._markCalType(univM,'univm'),
-    ..._markCalType(comps,'comp'),
-    ..._markCalType(ckM,'ck'),
-    ..._markCalType(proM,'pro'),
+    ..._markCalType(_mini,'mini'),
+    ..._markCalType(_univm,'univm'),
+    ..._markCalType(_comps,'comp'),
+    ..._markCalType(_ck,'ck'),
+    ..._markCalType(_pro,'pro'),
     ..._markCalType((typeof getTourneyMatches==='function'?getTourneyMatches():[]),'comp'),
     ..._markCalType((typeof indM!=='undefined'?indM:[]),'ind'),
     ..._markCalType((typeof gjM!=='undefined'?gjM:[]),'gj'),
@@ -64,12 +96,12 @@ function rCal(C,T){
   function matchLabel(m){
     const type=matchType(m);
     const ti=TYPE_INFO[type];
-    if(type==='sched') return `📌 ${m.note||'예정'}`;
-    if(type==='ind'||type==='gj') return `${ti.emoji} ${m.wName||''} vs ${m.lName||''}`;
-    if(type==='tt') return `🎯 ${m.compName||''}`;
-    if(type==='mini') return `⚡ ${m.a||''} vs ${m.b||''}`;
-    if(type==='univm') return `🏟️ ${m.a||''} vs ${m.b||''}`;
-    if(type==='ck'||type==='pro') return `${ti.emoji} ${m.teamALabel||'A팀'} vs ${m.teamBLabel||'B팀'}`;
+    if(type==='sched') return `📌 ${_calEscHTML(m.note||'예정')}`;
+    if(type==='ind'||type==='gj') return `${ti.emoji} ${_calEscHTML(m.wName||'')} vs ${_calEscHTML(m.lName||'')}`;
+    if(type==='tt') return `🎯 ${_calEscHTML(m.compName||'')}`;
+    if(type==='mini') return `⚡ ${_calEscHTML(m.a||'')} vs ${_calEscHTML(m.b||'')}`;
+    if(type==='univm') return `🏟️ ${_calEscHTML(m.a||'')} vs ${_calEscHTML(m.b||'')}`;
+    if(type==='ck'||type==='pro') return `${ti.emoji} ${_calEscHTML(m.teamALabel||'A팀')} vs ${_calEscHTML(m.teamBLabel||'B팀')}`;
     return `🎖️ 대회`;
   }
 
@@ -261,13 +293,14 @@ function rCal(C,T){
       }
 
       function schedCard(m){
-        const timeStr=m.time?`<span style="font-size:11px;background:#f0f6ff;border:1px solid var(--blue-ll);border-radius:4px;padding:2px 7px;color:var(--blue);font-weight:700">🕐 ${m.time}</span>`:'';
+        const timeStr=m.time?`<span style="font-size:11px;background:#f0f6ff;border:1px solid var(--blue-ll);border-radius:4px;padding:2px 7px;color:var(--blue);font-weight:700">🕐 ${_calEscHTML(m.time)}</span>`:'';
+        const sid=_calEscJS(m._id||'');
         return `<div style="background:#fef9c3;border:1px solid #fde68a;border-radius:12px;margin-bottom:10px;padding:14px 16px">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span style="font-weight:900;color:#92400e;font-size:14px">📌 ${m.note||'예정'}</span>
+            <span style="font-weight:900;color:#92400e;font-size:14px">📌 ${_calEscHTML(m.note||'예정')}</span>
             ${timeStr}
             <div style="margin-left:auto;display:flex;gap:6px" class="no-export">
-              ${isLoggedIn?`<button class="btn btn-r btn-xs" onclick="calDeleteSched('${m._id}')">🗑️ 삭제</button>`:''}
+              ${_li?`<button class="btn btn-r btn-xs" onclick="calDeleteSched('${sid}')">🗑️ 삭제</button>`:''}
             </div>
           </div>
         </div>`;
@@ -277,12 +310,13 @@ function rCal(C,T){
         const type=matchType(m);
         const ti=TYPE_INFO[type]||TYPE_INFO.comp;
         const tA=getTeamA(m), tB=getTeamB(m);
+        const tAH=_calEscHTML(tA), tBH=_calEscHTML(tB);
         const _isIG=type==='ind'||type==='gj';
         const ca=_isIG?ti.bg:(type==='ck'||type==='pro')?'#2563eb':gc(m.a||'');
         const cb=_isIG?'#64748b':(type==='ck'||type==='pro')?'#dc2626':gc(m.b||'');
         const aWin=_isIG?!!m.wName:(m.sa??-1)>(m.sb??-1), bWin=_isIG?false:(m.sb??-1)>(m.sa??-1);
         const hasResult=_isIG?!!m.wName:(m.sa!=null&&m.sa!=='');
-        const timeStr=m.time?`<span style="font-size:11px;background:#f0f6ff;border:1px solid var(--blue-ll);border-radius:4px;padding:2px 7px;color:var(--blue);font-weight:700">🕐 ${m.time}</span>`:'';
+        const timeStr=m.time?`<span style="font-size:11px;background:#f0f6ff;border:1px solid var(--blue-ll);border-radius:4px;padding:2px 7px;color:var(--blue);font-weight:700">🕐 ${_calEscHTML(m.time)}</span>`:'';
         const detKey=`calday-${calDayDate}-${mi}`;
         const modeKey=(m && m.__calMode) || matchType(m);
         const detHTML=buildDetailHTML(m,modeKey,tA,tB,ca,cb,aWin,bWin);
@@ -294,12 +328,12 @@ function rCal(C,T){
           <div class="rec-sum-header" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span style="font-size:11px;font-weight:900;color:${ti.bg}">${ti.lbl}</span>
             ${timeStr}
-            <span class="ubadge${aWin&&hasResult?'':hasResult?' loser':''}" style="background:${ca}">${tA}</span>
+            <span class="ubadge${aWin&&hasResult?'':hasResult?' loser':''}" style="background:${ca}">${tAH}</span>
             ${hasResult&&!_isIG?`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:1000;font-size:18px"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span style="color:var(--gray-l);font-size:13px"> : </span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>`:`<span style="color:var(--gray-l);font-weight:800">vs</span>`}
-            <span class="ubadge${bWin&&hasResult?'':hasResult?' loser':''}" style="background:${cb}">${tB}</span>
-            <span style="font-size:11px;color:var(--gray-l)">${hasResult?(aWin?`▶ ${tA} 승`:bWin?`▶ ${tB} 승`:'무'):'결과 미입력'}</span>
+            <span class="ubadge${bWin&&hasResult?'':hasResult?' loser':''}" style="background:${cb}">${tBH}</span>
+            <span style="font-size:11px;color:var(--gray-l)">${hasResult?(aWin?`▶ ${tAH} 승`:bWin?`▶ ${tBH} 승`:'무'):'결과 미입력'}</span>
             <div style="margin-left:auto;display:flex;gap:6px;align-items:center" class="no-export">
-              ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||isLoggedIn)?`<button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openRCalMatchShareCard('${calDayDate}',${mi})">🎴 공유 카드</button>`:'';})()}
+              ${(()=>{const _adm=(localStorage.getItem('su_share_admin_only')||'0')==='1';return(!_adm||_li)?`<button class="btn btn-p btn-xs" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openRCalMatchShareCard('${calDayDate}',${mi})">🎴 공유 카드</button>`:'';})()}
               <button id="detbtn-${detKey}" class="btn-detail" onclick="toggleDetail('${detKey}')">📂 상세</button>
             </div>
           </div>
@@ -360,7 +394,7 @@ function rCal(C,T){
         <button class="pill ${calView==='month'?'on':''}" onclick="calView='month';render()">월간</button>
         <button class="pill ${calView==='week'?'on':''}" onclick="calWeekOffset=0;calView='week';render()">주간</button>
         <button class="pill ${calView==='day'?'on':''}" onclick="calDayDate='${todayStr}';calView='day';render()">일간</button>
-        ${isLoggedIn?`<button class="pill no-export" onclick="openCalSchedModal()">+ 예정</button>`:''}
+        ${_li?`<button class="pill no-export" onclick="openCalSchedModal()">+ 예정</button>`:''}
       </div>
     </div>
     ${filterToggleHTML}
@@ -384,7 +418,9 @@ let _calActiveDay='';
 let _calDetailState={};
 
 function calDeleteSched(id){
-  if(!isLoggedIn) return;
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li) return;
+  if(typeof calScheduled==='undefined' || !Array.isArray(calScheduled)) window.calScheduled=[];
   _calConfirmDel(function(){
     const idx=calScheduled.findIndex(x=>x._id===id);
     if(idx>=0){ calScheduled.splice(idx,1); window._calScheduled=calScheduled; }
@@ -407,7 +443,7 @@ function openCalSchedModal(prefillDate){
   const dateEl=document.getElementById('cal-sched-date');
   const timeEl=document.getElementById('cal-sched-time');
   const noteEl=document.getElementById('cal-sched-note');
-  if(dateEl) dateEl.value=prefillDate||calDayDate||todayStr;
+  if(dateEl) dateEl.value=prefillDate||(typeof calDayDate!=='undefined'?calDayDate:'')||todayStr;
   if(timeEl) timeEl.value='';
   if(noteEl) noteEl.value='';
   om('calSchedModal');
@@ -449,6 +485,8 @@ function calToggleDetail(key){
 function calShowDay(ds){
   const el=document.getElementById('calDayDetail');
   if(!el)return;
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  const _scheduled = (typeof calScheduled!=='undefined' && Array.isArray(calScheduled)) ? calScheduled : [];
   if(_calActiveDay===ds){
     _calActiveDay='';
     _calDetailState={};
@@ -459,7 +497,7 @@ function calShowDay(ds){
   _calActiveDay=ds;
   _calDetailState={};
   const matches=((window._calRawDateMatchMap&&window._calRawDateMatchMap[ds])?window._calRawDateMatchMap[ds]:[]).slice();
-  const schedMatches=(calScheduled||[]).filter(m=>m.d===ds);
+  const schedMatches=_scheduled.filter(m=>m.d===ds);
   if(!window._calDayCache) window._calDayCache={};
   window._calDayCache[ds]=matches;
 
@@ -473,6 +511,9 @@ function calShowDay(ds){
       const typeBg=_isInd?'#8b5cf6':'#db2777';
       const typeLabel=_isInd?'🎮 개인전':'⚔️ 끝장전';
       const detKey='caldm-'+ds+'-'+mi;
+      const wH=_calEscHTML(m.wName||'');
+      const lH=_calEscHTML(m.lName||'');
+      const mapH=_calEscHTML(m.map||'');
       const detHTML=buildDetailHTML(m,_isInd?'ind':'gj',m.wName||'',m.lName||'',typeBg,'#64748b',true,false);
       const modeKey=_isInd?'ind':'gj';
       const MODE_COL = {ind:'#2563eb',gj:'#dc2626'};
@@ -482,11 +523,11 @@ function calShowDay(ds){
         +'<div class="rec-sum-header" style="cursor:pointer" onclick="calToggleDetail(\''+detKey+'\')">'
         +'<span style="background:'+typeBg+';color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">'+typeLabel+'</span>'
         +'<div class="rec-sum-vs" style="flex:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
-        +'<span style="font-weight:700;color:'+typeBg+'">'+( m.wName||'')+'</span>'
+        +'<span style="font-weight:700;color:'+typeBg+'">'+wH+'</span>'
         +'<span style="color:var(--gray-l);font-size:12px">vs</span>'
-        +'<span style="font-weight:600;opacity:.7">'+( m.lName||'')+'</span>'
-        +(m.map?'<span style="font-size:11px;color:var(--text3)">📍'+m.map+'</span>':'')
-        +'<span style="font-size:12px;font-weight:700;color:'+typeBg+'">▶ '+(m.wName||'')+' 승</span>'
+        +'<span style="font-weight:600;opacity:.7">'+lH+'</span>'
+        +(m.map?'<span style="font-size:11px;color:var(--text3)">📍'+mapH+'</span>':'')
+        +'<span style="font-size:12px;font-weight:700;color:'+typeBg+'">▶ '+wH+' 승</span>'
         +'</div>'
         +'<div class="no-export" style="margin-left:auto;display:flex;gap:4px;align-items:center">'
         +'<button id="detbtn-'+detKey+'" class="btn-detail" onclick="event.stopPropagation();calToggleDetail(\''+detKey+'\')">📂 상세</button>'
@@ -499,8 +540,10 @@ function calShowDay(ds){
     }
     if(m.sa==null||m.sa==='') return '';
     const isCKorPro=_type==='ck'||_type==='pro';
-    const tA=isCKorPro?'A팀':(m.a||'');
-    const tB=isCKorPro?'B팀':(m.b||'');
+    const tA=isCKorPro?((m.teamALabel||'').replace(/^\$\{.*\}$/,'')||'A팀'):(m.a||'');
+    const tB=isCKorPro?((m.teamBLabel||'').replace(/^\$\{.*\}$/,'')||'B팀'):(m.b||'');
+    const tAH=_calEscHTML(tA);
+    const tBH=_calEscHTML(tB);
     const ca=isCKorPro?'#2563eb':gc(m.a||'');
     const cb=isCKorPro?'#dc2626':gc(m.b||'');
     const aWin=(m.sa??-1)>(m.sb??-1), bWin=(m.sb??-1)>(m.sa??-1);
@@ -509,7 +552,7 @@ function calShowDay(ds){
     const detKey='caldm-'+ds+'-'+mi;
     const modeKey=(m && m.__calMode) || _type || 'comp';
     const detHTML=buildDetailHTML(m,modeKey,tA,tB,ca,cb,aWin,bWin);
-    const winLabel=aWin?'▶ '+tA+' 승':bWin?'▶ '+tB+' 승':'무승부';
+    const winLabel=aWin?'▶ '+tAH+' 승':bWin?'▶ '+tBH+' 승':'무승부';
     const winColor=aWin?ca:bWin?cb:'#888';
     const MODE_COL = {mini:'#7c3aed',univm:'#16a34a',ck:'#f59e0b',pro:'#0ea5e9',comp:'#3b82f6'};
     const _mc = MODE_COL[modeKey] || '#64748b';
@@ -518,13 +561,13 @@ function calShowDay(ds){
       +'<div class="rec-sum-header" style="cursor:pointer" onclick="calToggleDetail(\''+detKey+'\')">'
       +'<span style="background:'+typeBg+';color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">'+typeLabel+'</span>'
       +'<div class="rec-sum-vs" style="flex:1">'
-      +'<span class="ubadge'+(aWin?'':' loser')+'" style="background:'+ca+'">'+tA+'</span>'
+      +'<span class="ubadge'+(aWin?'':' loser')+'" style="background:'+ca+'">'+tAH+'</span>'
       +'<div class="rec-sum-score score-click" onclick="event.stopPropagation();calToggleDetail(\''+detKey+'\')">'
       +'<span class="'+(aWin?'wt':bWin?'lt':'pt-z')+'">'+m.sa+'</span>'
       +'<span style="color:var(--gray-l);font-size:14px"> : </span>'
       +'<span class="'+(bWin?'wt':aWin?'lt':'pt-z')+'">'+m.sb+'</span>'
       +'</div>'
-      +'<span class="ubadge'+(bWin?'':' loser')+'" style="background:'+cb+'">'+tB+'</span>'
+      +'<span class="ubadge'+(bWin?'':' loser')+'" style="background:'+cb+'">'+tBH+'</span>'
       +'<span style="font-size:12px;font-weight:700;color:'+winColor+'">'+winLabel+'</span>'
       +'</div>'
       +'<div class="no-export" style="margin-left:auto;display:flex;gap:4px;align-items:center">'
@@ -534,7 +577,7 @@ function calShowDay(ds){
       +'<div id="det-'+detKey+'" style="display:none;padding:10px 14px;background:var(--surface);border-top:1px solid var(--border)">'
       +detHTML
       +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">'
-      +'<button class="btn btn-p btn-xs no-export" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openCalMatchShareCardByCache(\''+ds+'\','+mi+');event.stopPropagation()">🎴 공유 카드</button>'
+      +'<button class="btn btn-p btn-xs no-export" style="margin-left:auto;min-width:98px;display:inline-flex;align-items:center;justify-content:center" onclick="openCalMatchShareCardByCache(\''+_calEscJS(ds)+'\','+mi+');event.stopPropagation()">🎴 공유 카드</button>'
       +'</div>'
       +'</div>'
       +'</div>';
@@ -543,17 +586,17 @@ function calShowDay(ds){
   el.style.animation='fadeIn .2s';
   el.innerHTML='<div class="ssec" style="border:2px solid var(--blue);animation:fadeIn .2s">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">'
-    +'<h4 style="margin:0;color:var(--blue)">📅 '+ds+' 경기 목록 <span style="font-size:12px;font-weight:400;color:var(--gray-l)">'+matches.length+'경기</span></h4>'
+    +'<h4 style="margin:0;color:var(--blue)">📅 '+_calEscHTML(ds)+' 경기 목록 <span style="font-size:12px;font-weight:400;color:var(--gray-l)">'+matches.length+'경기</span></h4>'
     +'<div style="display:flex;gap:6px">'
-    +'<button class="btn btn-b btn-sm" onclick="calDayDate=\''+ds+'\';calView=\'day\';render()">📋 일간 상세보기</button>'
+    +'<button class="btn btn-b btn-sm" onclick="calDayDate=\''+_calEscJS(ds)+'\';calView=\'day\';render()">📋 일간 상세보기</button>'
     +'<button class="btn btn-w btn-sm" onclick="_calActiveDay=\'\';document.getElementById(\'calDayDetail\').innerHTML=\'\'">✕ 닫기</button>'
     +'</div></div>'
     +matches.map(buildMatchRow).join('')
     +(schedMatches.length?'<div style="margin-top:10px;padding:10px 14px;background:#fefce8;border:1px solid #fde68a;border-radius:8px">'
       +'<div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px">📌 예정 경기</div>'
       +schedMatches.map(m=>'<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #fde68a20">'
-        +'<span style="font-size:12px;flex:1">'+(m.note||'예정')+(m.time?' 🕐'+m.time:'')+'</span>'
-        +(isLoggedIn?'<button class="btn btn-r btn-xs" onclick="calDeleteSched(\''+m._id+'\')">🗑️</button>':'')
+        +'<span style="font-size:12px;flex:1">'+_calEscHTML(m.note||'예정')+(m.time?' 🕐'+_calEscHTML(m.time):'')+'</span>'
+        +(_li?'<button class="btn btn-r btn-xs" onclick="calDeleteSched(\''+_calEscJS(m._id||'')+'\')">🗑️</button>':'')
         +'</div>'
       ).join('')
       +'</div>':'')
@@ -607,7 +650,8 @@ function swNav(t,el){
       });
     }
     const fstrip=document.getElementById('fstrip');
-    if(fstrip) fstrip.style.display=(t==='total'&&isLoggedIn&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin))?'block':'none';
+    const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+    if(fstrip) fstrip.style.display=(t==='total'&&_li&&!(typeof isSubAdmin!=='undefined'&&isSubAdmin))?'block':'none';
     const C=document.getElementById('rcont');
     if(C) C.innerHTML='';
     render();

@@ -29,15 +29,15 @@ function rRoulette(C, T) {
     // textarea 값 주입
     (function _injectTextareaValues() {
       var _gcInp = document.getElementById('gc-items-input');
-      if (_gcInp) _gcInp.value = localStorage.getItem(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m') || '';
+      if (_gcInp) _gcInp.value = _rLsGet(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m', '');
       var _ldN = document.getElementById('ld-names-input');
-      if (_ldN) _ldN.value = localStorage.getItem('su_ld_names') || '';
+      if (_ldN) _ldN.value = _rLsGet('su_ld_names', '');
       var _ldI = document.getElementById('ld-items-input');
-      if (_ldI) _ldI.value = localStorage.getItem('su_ld_items') || '';
+      if (_ldI) _ldI.value = _rLsGet('su_ld_items', '');
       // 뽑기 당첨 내용(1~5등) 값 주입
       for (var k=1;k<=5;k++){
         var el = document.getElementById('ppg-prize-' + k);
-        if (el) el.value = localStorage.getItem('su_ppg_prize_' + k) || '';
+        if (el) el.value = _rLsGet('su_ppg_prize_' + k, '');
       }
     })();
     if (_gcTab === 'ladder') { setTimeout(()=>{ try{ if(typeof _ldInit==='function') _ldInit(); }catch(e){} }, 60); }
@@ -52,15 +52,15 @@ function rRoulette(C, T) {
   // [Fix-2] localStorage 값을 innerHTML 삽입 대신 .value로 안전하게 세팅 (XSS/DOM 깨짐 방지)
   (function _injectTextareaValues() {
     var _gcInp = document.getElementById('gc-items-input');
-    if (_gcInp) _gcInp.value = localStorage.getItem(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m') || '';
+    if (_gcInp) _gcInp.value = _rLsGet(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m', '');
     var _ldN = document.getElementById('ld-names-input');
-    if (_ldN) _ldN.value = localStorage.getItem('su_ld_names') || '';
+    if (_ldN) _ldN.value = _rLsGet('su_ld_names', '');
     var _ldI = document.getElementById('ld-items-input');
-    if (_ldI) _ldI.value = localStorage.getItem('su_ld_items') || '';
+    if (_ldI) _ldI.value = _rLsGet('su_ld_items', '');
     // 뽑기 당첨 내용(1~5등) 값 주입
     for (var k=1;k<=5;k++){
       var el = document.getElementById('ppg-prize-' + k);
-      if (el) el.value = localStorage.getItem('su_ppg_prize_' + k) || '';
+      if (el) el.value = _rLsGet('su_ppg_prize_' + k, '');
     }
   })();
   if (_gcTab === 'ladder') {
@@ -87,13 +87,52 @@ function rRoulette(C, T) {
   document.head.appendChild(s);
 })();
 
+function _rLsGet(key, fallback){
+  try{
+    const v = localStorage.getItem(key);
+    return (v==null) ? (fallback==null?'':fallback) : v;
+  }catch(e){
+    return (fallback==null?'':fallback);
+  }
+}
+function _rLsSet(key, value){
+  try{ localStorage.setItem(key, value); return true; }catch(e){ return false; }
+}
+function _rJsonGet(key, fallback){
+  try{
+    const raw = _rLsGet(key, '');
+    if(!raw) return fallback;
+    const v = JSON.parse(raw);
+    return (v==null) ? fallback : v;
+  }catch(e){
+    return fallback;
+  }
+}
+const _rEscHTML = (typeof window !== 'undefined' && typeof window.escHTML === 'function')
+  ? window.escHTML
+  : (s)=>String(s??'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const _rEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'function')
+  ? window.escJS
+  : (s)=>String(s??'')
+    .replace(/\\/g,'\\\\')
+    .replace(/'/g,"\\'")
+    .replace(/\r/g,'\\r')
+    .replace(/\n/g,'\\n');
+const _rEscAttr = (typeof window !== 'undefined' && typeof window.escAttr === 'function')
+  ? window.escAttr
+  : (s)=>String(s??'')
+    .replace(/&/g,'&amp;')
+    .replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+
 let _gcTab = 'player';
 let _gcInputOpen = true;
 let _gcSpinning = false;
 let _gcHistory = {
-  player: JSON.parse(localStorage.getItem('su_gc_hist_p')||'[]'),
-  map:    JSON.parse(localStorage.getItem('su_gc_hist_m')||'[]'),
-  ladder: JSON.parse(localStorage.getItem('su_gc_hist_l')||'[]')
+  player: _rJsonGet('su_gc_hist_p', []),
+  map:    _rJsonGet('su_gc_hist_m', []),
+  ladder: _rJsonGet('su_gc_hist_l', [])
 };
 // MiscStore에서 비동기 로드 (IDB 우선)
 (async function _gcLoadFromIdb(){
@@ -124,7 +163,7 @@ function _ppgPrizeText(rankStr){
   const m = String(rankStr||'').match(/^(\d)등$/);
   if(!m) return '';
   const k = m[1];
-  return (localStorage.getItem('su_ppg_prize_' + k) || '').trim();
+  return (_rLsGet('su_ppg_prize_' + k, '') || '').trim();
 }
 function _ppgTogglePrizeCfg(){
   _ppgPrizeOpen = !_ppgPrizeOpen;
@@ -428,12 +467,12 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isDuck   = _gcTab === 'duck';
   const isWheel  = _gcTab === 'wheel';
   const isPpopgi = _gcTab === 'ppopgi';
-  const savedText   = (!isLadder && !isDuck && !isWheel) ? (localStorage.getItem(isPlayer ? 'su_gc_p' : 'su_gc_m') || '') : '';
+  const savedText   = (!isLadder && !isDuck && !isWheel) ? (_rLsGet(isPlayer ? 'su_gc_p' : 'su_gc_m', '') || '') : '';
   const _w = _gcParseWeightedCSV(savedText);
   const activeItems = _w.items.map(x=>x.name);
 
-  const ldNamesText = isLadder ? (localStorage.getItem('su_ld_names') || '') : '';
-  const ldItemsText = isLadder ? (localStorage.getItem('su_ld_items') || '') : '';
+  const ldNamesText = isLadder ? (_rLsGet('su_ld_names', '') || '') : '';
+  const ldItemsText = isLadder ? (_rLsGet('su_ld_items', '') || '') : '';
   const ldNames     = ldNamesText.split(',').map(v=>v.trim()).filter(v=>v);
 
   // 모바일/태블릿에서 dome 기반 폰트가 과하게 커져 입력창이 "불편"해지는 문제 완화
@@ -539,10 +578,13 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 </div>`;
   }
 
-  const mapBadges = (!isLadder && !isPlayer) ? (maps||[]).map(m => {
+  const _maps = (typeof maps!=='undefined' && Array.isArray(maps)) ? maps : (Array.isArray(window.maps) ? window.maps : []);
+  const mapBadges = (!isLadder && !isPlayer) ? _maps.map(m => {
     const active = activeItems.includes(m);
-    return `<span onclick="_gcToggleMap('${m.replace(/'/g,"\'").replace(/"/g,'\"')}',this)" data-map="${m.replace(/"/g,'&quot;')}"
-      style="cursor:pointer;padding:5px 12px;border-radius:14px;font-size:${fs}px;font-weight:700;border:2px solid ${active?'#FF4B6E':'var(--border)'};background:${active?'#FFF0F3':'var(--surface)'};color:${active?'#FF4B6E':'var(--text2)'};transition:.1s;user-select:none">${m}</span>`;
+    const mj = _rEscJS(m);
+    const ma = _rEscAttr(String(m||''));
+    return `<span onclick="_gcToggleMap('${mj}',this)" data-map="${ma}"
+      style="cursor:pointer;padding:5px 12px;border-radius:14px;font-size:${fs}px;font-weight:700;border:2px solid ${active?'#FF4B6E':'var(--border)'};background:${active?'#FFF0F3':'var(--surface)'};color:${active?'#FF4B6E':'var(--text2)'};transition:.1s;user-select:none">${_rEscHTML(m)}</span>`;
   }).join('') : '';
 
   const _inputSummary = isLadder
@@ -730,7 +772,7 @@ function _gcToggleInput() {
 }
 
 function _gcSaveText(val) {
-  localStorage.setItem(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m', val);
+  _rLsSet(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m', val);
   // (요청사항) 확률(%) 표시는 제거
 }
 
@@ -763,7 +805,7 @@ function _gcToggleMap(mapName, el) {
 function _gcClearItems() {
   const inp = document.getElementById('gc-items-input');
   if (inp) inp.value = '';
-  localStorage.removeItem(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m');
+  try{ localStorage.removeItem(_gcTab === 'player' ? 'su_gc_p' : 'su_gc_m'); }catch(e){}
   document.querySelectorAll('[data-map]').forEach(el => {
     el.style.background = 'var(--surface)';
     el.style.borderColor = 'var(--border)';
@@ -996,8 +1038,8 @@ let _ldLadder    = null;
 let _ldAnimating = false;
 let _ldAnimId2   = null;
 
-function _ldSaveNames(val) { localStorage.setItem('su_ld_names', val); }
-function _ldSaveItems(val) { localStorage.setItem('su_ld_items', val); }
+function _ldSaveNames(val) { _rLsSet('su_ld_names', val); }
+function _ldSaveItems(val) { _rLsSet('su_ld_items', val); }
 
 function _ldBuildLadder(names, items) {
   const n = names.length;
@@ -1164,8 +1206,8 @@ function _ldInit() {
   if (_ldAnimId2) { cancelAnimationFrame(_ldAnimId2); _ldAnimId2 = null; }
   _ldAnimating = false;
 
-  const namesText = localStorage.getItem('su_ld_names') || '';
-  const itemsText = localStorage.getItem('su_ld_items') || '';
+  const namesText = _rLsGet('su_ld_names', '') || '';
+  const itemsText = _rLsGet('su_ld_items', '') || '';
   const names = namesText.split(',').map(v=>v.trim()).filter(v=>v);
   const items = itemsText.split(',').map(v=>v.trim()).filter(v=>v);
 
