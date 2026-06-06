@@ -77,9 +77,8 @@ function _rememberStableIndGj(kind, arr){
 function _restoreStableIndGj(kind){
   try{
     if(kind === 'ind'){
-      const _indArr = (typeof indM!=='undefined' && Array.isArray(indM)) ? indM : (Array.isArray(window.indM) ? window.indM : []);
-      if(Array.isArray(_indArr) && _indArr.length){
-        _rememberStableIndGj('ind', _indArr);
+      if(Array.isArray(indM) && indM.length){
+        _rememberStableIndGj('ind', indM);
         return;
       }
       // (버그픽스) 삭제로 인해 indM이 빈 배열이 된 경우에는 복원하지 않음
@@ -89,14 +88,13 @@ function _restoreStableIndGj(kind){
       const fromLs = (typeof J==='function' ? (J('su_indm') || []) : []);
       const next = fromMem.length ? fromMem : (Array.isArray(fromLs) ? fromLs : []);
       if(Array.isArray(next) && next.length){
-        try{ window.indM = next.slice(); }catch(e){}
-        try{ indM = window.indM; }catch(e){}
+        indM = next.slice();
+        try{ window.indM = indM; }catch(e){}
       }
       return;
     }
-    const _gjArr = (typeof gjM!=='undefined' && Array.isArray(gjM)) ? gjM : (Array.isArray(window.gjM) ? window.gjM : []);
-    if(Array.isArray(_gjArr) && _gjArr.length){
-      _rememberStableIndGj('gj', _gjArr);
+    if(Array.isArray(gjM) && gjM.length){
+      _rememberStableIndGj('gj', gjM);
       return;
     }
     // (버그픽스) 삭제로 인해 gjM이 빈 배열이 된 경우에는 복원하지 않음
@@ -105,8 +103,8 @@ function _restoreStableIndGj(kind){
     const fromLs = (typeof J==='function' ? (J('su_gjm') || []) : []);
     const next = fromMem.length ? fromMem : (Array.isArray(fromLs) ? fromLs : []);
     if(Array.isArray(next) && next.length){
-      try{ window.gjM = next.slice(); }catch(e){}
-      try{ gjM = window.gjM; }catch(e){}
+      gjM = next.slice();
+      try{ window.gjM = gjM; }catch(e){}
     }
   }catch(e){}
 }
@@ -713,130 +711,6 @@ function _h2hPosterCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
   </div>`;
 }
 
-// ──────────────────────────────────────────────────────────────
-// 배틀(battle) 카드: ⚔️ 대결 모드 — 사선 분할선 + 컬러 에너지 스트라이프
-// su_h2h_card_mode = 'battle'
-// ──────────────────────────────────────────────────────────────
-function _h2hBattleCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
-  const p1 = players.find(x=>x.name===s.p1)||{};
-  const p2 = players.find(x=>x.name===s.p2)||{};
-  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
-  const h = isMb ? 108 : 126;
-  const p1pos = _h2hPlayerBgPos(s.p1);
-  const p2pos = _h2hPlayerBgPos(s.p2);
-  const loser1 = !win1 && win2, loser2 = !win2 && win1;
-  const totalGames = p1wins + p2wins;
-  const barW1 = totalGames > 0 ? Math.round((p1wins / totalGames) * 100) : 50;
-  const diag = isMb ? 28 : 36;
-
-  const av = (pName, col)=>{
-    const p = players.find(x=>x.name===pName)||{};
-    const sz = isMb ? 40 : 48;
-    if(p.photo) return `<div style="width:${sz}px;height:${sz}px;border-radius:10px;overflow:hidden;border:2.5px solid rgba(255,255,255,.55);box-shadow:0 0 0 2px ${col}66,0 6px 18px rgba(0,0,0,.28);flex-shrink:0"><img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover"></div>`;
-    return `<div style="width:${sz}px;height:${sz}px;border-radius:10px;background:${col}33;border:2.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?17:20}px;color:rgba(255,255,255,.9);flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
-  };
-
-  return `<div style="position:relative;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
-    <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr">
-      <div style="background:linear-gradient(135deg,${p1col},${p1col}cc,${p1col}88);${loser1?'filter:grayscale(.6) brightness(.82);':''}"></div>
-      <div style="background:linear-gradient(225deg,${p2col},${p2col}cc,${p2col}88);${loser2?'filter:grayscale(.6) brightness(.82);':''}"></div>
-    </div>
-    <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" preserveAspectRatio="none" viewBox="0 0 400 ${h}">
-      <polygon points="${200-diag},0 ${200+diag},0 ${200+diag},${h} ${200-diag},${h}" fill="rgba(0,0,0,.30)"/>
-      <line x1="${200-diag}" y1="0" x2="${200-diag}" y2="${h}" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
-      <line x1="${200+diag}" y1="0" x2="${200+diag}" y2="${h}" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
-    </svg>
-    <div style="position:absolute;top:0;left:0;right:0;height:${isMb?4:5}px;display:flex">
-      <div style="height:100%;background:${p1col};width:${barW1}%;box-shadow:0 0 8px ${p1col}88"></div>
-      <div style="height:100%;background:${p2col};flex:1;box-shadow:0 0 8px ${p2col}88"></div>
-    </div>
-    <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:${isMb?'12px 10px':'14px 14px'}">
-      <div style="display:flex;align-items:center;gap:${isMb?7:9}px;min-width:0">
-        ${av(s.p1, p1col)}
-        <div style="min-width:0">
-          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 6px rgba(0,0,0,.5)">${s.p1}</div>
-          <div style="font-size:${isMb?9:10}px;color:rgba(255,255,255,.75);font-weight:800">${p1.univ||''}</div>
-          ${win1?`<div style="margin-top:3px;font-size:9px;font-weight:900;color:#fff;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:1px 7px;display:inline-block">👑 승</div>`:''}
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${isMb?3:4}px;min-width:${isMb?68:82}px">
-        <div style="font-size:${isMb?9:10}px;font-weight:900;letter-spacing:2.5px;color:rgba(255,255,255,.6)">VS</div>
-        <div style="display:flex;align-items:center;gap:0;font-size:${isMb?28:36}px;font-weight:1000;letter-spacing:-2px;line-height:1">
-          <span style="color:#fff;text-shadow:0 0 18px ${win1?p1col+'cc':'rgba(255,255,255,.3)'}">${p1wins}</span>
-          <span style="font-size:${isMb?14:17}px;color:rgba(255,255,255,.45);font-weight:900;margin:0 5px">:</span>
-          <span style="color:#fff;text-shadow:0 0 18px ${win2?p2col+'cc':'rgba(255,255,255,.3)'}">${p2wins}</span>
-        </div>
-        ${(win1||win2)?`<div style="font-size:9px;font-weight:900;color:rgba(255,255,255,.55);background:rgba(255,255,255,.12);border-radius:99px;padding:1px 8px;white-space:nowrap">${win1?s.p1:s.p2}</div>`:
-        `<div style="font-size:9px;font-weight:900;color:rgba(255,255,255,.4)">무승부</div>`}
-      </div>
-      <div style="display:flex;align-items:center;gap:${isMb?7:9}px;justify-content:flex-end;min-width:0">
-        <div style="min-width:0;text-align:right">
-          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 6px rgba(0,0,0,.5)">${s.p2}</div>
-          <div style="font-size:${isMb?9:10}px;color:rgba(255,255,255,.75);font-weight:800">${p2.univ||''}</div>
-          ${win2?`<div style="margin-top:3px;font-size:9px;font-weight:900;color:#fff;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:1px 7px;display:inline-block">👑 승</div>`:''}
-        </div>
-        ${av(s.p2, p2col)}
-      </div>
-    </div>
-  </div>`;
-}
-
-// ──────────────────────────────────────────────────────────────
-// 네온(neon) 카드: 형광 테두리 + 다크 배경 대결 스타일
-// su_h2h_card_mode = 'neon'
-// ──────────────────────────────────────────────────────────────
-function _h2hNeonCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
-  const p1 = players.find(x=>x.name===s.p1)||{};
-  const p2 = players.find(x=>x.name===s.p2)||{};
-  const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
-  const h = isMb ? 96 : 112;
-  const totalGames = p1wins + p2wins;
-  const barW1 = totalGames > 0 ? Math.round((p1wins / totalGames) * 100) : 50;
-
-  const av = (pName, col)=>{
-    const p = players.find(x=>x.name===pName)||{};
-    const sz = isMb ? 36 : 42;
-    if(p.photo) return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;overflow:hidden;border:2px solid ${col};box-shadow:0 0 12px ${col}99,0 0 4px ${col}66;flex-shrink:0"><img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover"></div>`;
-    return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${col}22;border:2px solid ${col};box-shadow:0 0 12px ${col}88;display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?15:17}px;color:${col};flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
-  };
-
-  return `<div style="position:relative;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0;background:linear-gradient(135deg,#0a0f1e,#0f172a,#0a0f1e)">
-    <div style="position:absolute;top:-20%;left:-10%;width:55%;height:140%;background:radial-gradient(ellipse,${p1col}22 0%,transparent 70%);pointer-events:none"></div>
-    <div style="position:absolute;top:-20%;right:-10%;width:55%;height:140%;background:radial-gradient(ellipse,${p2col}22 0%,transparent 70%);pointer-events:none"></div>
-    <div style="position:absolute;bottom:0;left:0;right:0;height:${isMb?3:4}px;background:#111827">
-      <div style="height:100%;background:linear-gradient(90deg,${p1col} ${barW1}%,${p2col} ${barW1}%);box-shadow:0 0 8px ${win1?p1col:p2col}88"></div>
-    </div>
-    <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:${isMb?'12px 10px':'14px 14px'}">
-      <div style="display:flex;align-items:center;gap:${isMb?7:9}px;min-width:0">
-        ${av(s.p1, win1?p1col:'#334155')}
-        <div style="min-width:0">
-          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win1?p1col:'#94a3b8'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${win1?`text-shadow:0 0 12px ${p1col}88;`:''}">${s.p1}</div>
-          <div style="font-size:${isMb?9:10}px;color:#475569;font-weight:800">${p1.univ||''}</div>
-          ${win1?`<div style="margin-top:3px;font-size:9px;font-weight:900;color:${p1col};text-shadow:0 0 8px ${p1col}">⚡ 승리</div>`:''}
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:${isMb?3:4}px;min-width:${isMb?70:84}px">
-        <div style="width:${isMb?36:44}px;height:${isMb?36:44}px;border-radius:50%;background:#0f172a;border:2px solid rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center">
-          <span style="font-size:${isMb?10:12}px;font-weight:900;color:rgba(255,255,255,.5);letter-spacing:1px">VS</span>
-        </div>
-        <div style="display:flex;align-items:center;font-size:${isMb?26:32}px;font-weight:1000;letter-spacing:-2px;line-height:1">
-          <span style="color:${win1?p1col:'#64748b'};${win1?`text-shadow:0 0 20px ${p1col}99;`:''}">${p1wins}</span>
-          <span style="font-size:${isMb?13:15}px;color:#334155;font-weight:900;margin:0 5px">:</span>
-          <span style="color:${win2?p2col:'#64748b'};${win2?`text-shadow:0 0 20px ${p2col}99;`:''}">${p2wins}</span>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:${isMb?7:9}px;justify-content:flex-end;min-width:0">
-        <div style="min-width:0;text-align:right">
-          <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win2?p2col:'#94a3b8'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${win2?`text-shadow:0 0 12px ${p2col}88;`:''}">${s.p2}</div>
-          <div style="font-size:${isMb?9:10}px;color:#475569;font-weight:800">${p2.univ||''}</div>
-          ${win2?`<div style="margin-top:3px;font-size:9px;font-weight:900;color:${p2col};text-shadow:0 0 8px ${p2col}">⚡ 승리</div>`:''}
-        </div>
-        ${av(s.p2, win2?p2col:'#334155')}
-      </div>
-    </div>
-  </div>`;
-}
-
 // 카드 모드별 본문 렌더링 디스패처
 function _h2hCardBody(mode, s, p1wins, p2wins, winner, p1col, p2col, gridCols, isMb, scorePad, scoreGap, bulkCb, p1bgPanel, p2bgPanel, scoreColP1, scoreColP2){
   if(mode === 'banner') return _h2hBannerCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
@@ -853,8 +727,6 @@ function _h2hCardBody(mode, s, p1wins, p2wins, winner, p1col, p2col, gridCols, i
   if(mode === 'ribbon') return _h2hRibbonCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
   if(mode === 'grid') return _h2hGridCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
   if(mode === 'poster') return _h2hPosterCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
-  if(mode === 'battle') return _h2hBattleCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
-  if(mode === 'neon') return _h2hNeonCard(s, p1wins, p2wins, winner, p1col, p2col, isMb);
   // 기본: panel 모드
   const win1 = p1wins > p2wins, win2 = p2wins > p1wins;
   const scoreFs = isMb ? 26 : 32, dashFs = isMb ? 16 : 18;
@@ -876,17 +748,12 @@ function _h2hCardBody(mode, s, p1wins, p2wins, winner, p1col, p2col, gridCols, i
 
 function indRecordsHTML(){
   _restoreStableIndGj('ind');
-  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  const _players = (typeof players!=='undefined' && Array.isArray(players)) ? players : (Array.isArray(window.players) ? window.players : []);
-  const _indArr = (typeof indM!=='undefined' && Array.isArray(indM)) ? indM : (Array.isArray(window.indM) ? window.indM : []);
-  const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : ((window.recSortDir==='asc'||window.recSortDir==='desc') ? window.recSortDir : 'desc');
-  const _lsGet = (k,d='')=>{ try{ const v=localStorage.getItem(k); return v==null?d:v; }catch(e){ return d; } };
-  if(!_indArr.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
-  _rememberStableIndGj('ind', _indArr);
+  if(!indM.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
+  _rememberStableIndGj('ind', indM);
   const sessions=[];
   const sidPairMap=new Map();
   let lastKey=null, lastSess=null;
-  _indArr.forEach((m)=>{
+  indM.forEach((m)=>{
     const pair=[m.wName,m.lName].sort();
     const k = m.sid ? `${m.sid}|${pair[0]}|${pair[1]}` : `${m.d||''}|${pair[0]}|${pair[1]}`;
     if(k!==lastKey||!lastSess){
@@ -902,13 +769,13 @@ function indRecordsHTML(){
   });
   sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
   let filteredSess=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
-  filteredSess.sort((a,b)=>_sortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
+  filteredSess.sort((a,b)=>recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
 
-  const _dateMenuStyle = (_lsGet('su_date_menu_style','pill') || 'pill');
+  const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
   const _datePickKey = 'su_rec_date_pick_hist_ind';
-  const _pickedDate = (_lsGet(_datePickKey,'') || '').trim();
+  const _pickedDate = (localStorage.getItem(_datePickKey) || '').trim();
   const _baseSess = filteredSess.slice();
-  const _allDates = Array.from(new Set(_baseSess.map(s=>String(s.d||'').trim()).filter(Boolean))).sort((a,b)=>_sortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
+  const _allDates = Array.from(new Set(_baseSess.map(s=>String(s.d||'').trim()).filter(Boolean))).sort((a,b)=>recSortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
   if(_pickedDate && _allDates.includes(_pickedDate)){
     filteredSess = filteredSess.filter(s => String(s.d||'').trim() === _pickedDate);
   }
@@ -916,7 +783,7 @@ function indRecordsHTML(){
     if(_dateMenuStyle!=='asl' || !_allDates.length) return '';
     const daysS=['일','월','화','수','목','금','토'];
     const _pLine = (pName)=>{
-      const pObj=_players.find(x=>x && x.name===pName)||{};
+      const pObj=players.find(x=>x.name===pName)||{};
       const univ=pObj.univ||'';
       const col=univ?gc(univ):'#64748b';
       return `<span style="display:inline-flex;align-items:center;gap:4px;min-width:0">
@@ -934,7 +801,7 @@ function indRecordsHTML(){
     let h=`<div class="no-export" style="margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
       <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">`;
     const _onAll = !_pickedDate;
-    h+=`<button type="button" onclick="try{localStorage.setItem('${_datePickKey}','');}catch(e){};histPage['ind']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
+    h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','');histPage['ind']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
       <div style="font-weight:1000;font-size:12px;color:${_onAll?'var(--blue)':'var(--text2)'}">전체</div>
       <div style="margin-top:6px;font-size:10px;color:var(--gray-l)">날짜 필터 해제</div>
     </button>`;
@@ -944,7 +811,7 @@ function indRecordsHTML(){
       const dayS=_baseSess.filter(s=>String(s.d||'').trim()===d0);
       const prev=dayS.length?`<div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">${dayS.slice(0,2).map(_mini).join('')}</div>`:'';
       const on=(_pickedDate===d0);
-      h+=`<button type="button" onclick="try{localStorage.setItem('${_datePickKey}','${d0}');}catch(e){};histPage['ind']=0;render()" style="flex-shrink:0;text-align:left;min-width:170px;max-width:280px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
+      h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','${d0}');histPage['ind']=0;render()" style="flex-shrink:0;text-align:left;min-width:170px;max-width:280px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-weight:1000;font-size:12px;color:${on?'var(--blue)':'var(--text2)'}">${label}</span>
           <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${dayS.length?`세션 ${dayS.length}`:''}</span>
@@ -962,8 +829,8 @@ function indRecordsHTML(){
   if(histPage['ind']>=totalPages) histPage['ind']=Math.max(0,totalPages-1);
   const cur=histPage['ind'];
   const slice=total>pageSize?filteredSess.slice(cur*pageSize,(cur+1)*pageSize):filteredSess;
-  const _indBulkOn=_li&&!!_bulkModes['ind'];
-  let h=_li?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
+  const _indBulkOn=isLoggedIn&&!!_bulkModes['ind'];
+  let h=isLoggedIn?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
     <button onclick="toggleBulkMode('ind')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_indBulkOn?'#dc2626':'var(--border2)'};background:${_indBulkOn?'#fff1f2':'var(--surface)'};color:${_indBulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_indBulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
   </div>`:'';
   h+=_dateMenuHTML;
@@ -992,7 +859,7 @@ function indRecordsHTML(){
     // ids 배열(예: ['id1','id2'])을 그대로 넣고, 런타임에 JSON.stringify로 문자열로 변환해서 전달한다.
     // (버그픽스) 비로그인자에게는 공유카드만 표시, 수정/삭제/이동은 관리자(로그인)만 볼 수 있음
     actionOpts.push(`{l:'📷 공유카드',fn:()=>openIndShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}',JSON.stringify(${idsJson}))}`);
-    if(_li){
+    if(isLoggedIn){
       actionOpts.push(`{l:'✏️ 수정',fn:()=>openIndSessionEdit('${_indSessKey}')}`);
       actionOpts.push(`{l:'↗ 이동',fn:()=>{window._pendingMoveIds=${idsJson};openMoveIndPop(document.getElementById('_indActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}')||document.body,window._pendingMoveIds,'ind');}}`);
       actionOpts.push(`{l:'🗑 삭제',fn:()=>deleteIndSession(${idsJson})}`);
@@ -1000,10 +867,10 @@ function indRecordsHTML(){
     const _indActionBtnId = `_indActionBtn_${cur}_${Math.abs((s.key||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))}`;
     const actionBtn=`<button id="${_indActionBtnId}" class="btn btn-w btn-xs" style="white-space:nowrap;padding:2px 8px;font-size:16px;line-height:1;font-weight:900" onclick="event.stopPropagation();openIndSessionActionPop(this,[${actionOpts.join(',')}])">⋯</button>`;
     const bulkCbInd=_indBulkOn?`<input type="checkbox" class="bulk-cb no-export" data-bkey="ind" data-bids="${idsJson}" onchange="_indBulkCountUpdate('ind')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--blue)">`:'';
-    const p1univ=_players.find(x=>x && x.name===s.p1)?.univ||'';
-    const p2univ=_players.find(x=>x && x.name===s.p2)?.univ||'';
-    const p1race=_players.find(x=>x && x.name===s.p1)?.race||'';
-    const p2race=_players.find(x=>x && x.name===s.p2)?.race||'';
+    const p1univ=players.find(x=>x.name===s.p1)?.univ||'';
+    const p2univ=players.find(x=>x.name===s.p2)?.univ||'';
+    const p1race=players.find(x=>x.name===s.p1)?.race||'';
+    const p2race=players.find(x=>x.name===s.p2)?.race||'';
     const p1col=p1univ?gc(p1univ):'#378ADD';
     const p2col=p2univ?gc(p2univ):'#1D9E75';
     const _indP1Win = p1wins > p2wins;
@@ -1046,14 +913,9 @@ function indRecordsHTML(){
 function gjRecordsHTML(proOnly){
   _restoreStableIndGj('gj');
   window._gjSessCache = window._gjSessCache || {};
-  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  const _players = (typeof players!=='undefined' && Array.isArray(players)) ? players : (Array.isArray(window.players) ? window.players : []);
-  const _gjAll = (typeof gjM!=='undefined' && Array.isArray(gjM)) ? gjM : (Array.isArray(window.gjM) ? window.gjM : []);
-  const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : ((window.recSortDir==='asc'||window.recSortDir==='desc') ? window.recSortDir : 'desc');
-  const _lsGet = (k,d='')=>{ try{ const v=localStorage.getItem(k); return v==null?d:v; }catch(e){ return d; } };
-  const _gjSrc=proOnly?_gjAll.filter(m=>m && m._proLabel):_gjAll.filter(m=>m && !m._proLabel);
+  const _gjSrc=proOnly?gjM.filter(m=>m._proLabel):gjM.filter(m=>!m._proLabel);
   if(!_gjSrc.length) return `<div style="padding:30px;text-align:center;color:var(--gray-l)">기록 없음</div>`;
-  _rememberStableIndGj('gj', _gjAll);
+  _rememberStableIndGj('gj', gjM);
   const sessions=[];
   const sidPairMap=new Map();
   let lastKey=null, lastSess=null;
@@ -1073,13 +935,13 @@ function gjRecordsHTML(proOnly){
   });
   sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
   let filteredSessGj=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
-  filteredSessGj.sort((a,b)=>_sortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
+  filteredSessGj.sort((a,b)=>recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
 
-  const _dateMenuStyle = (_lsGet('su_date_menu_style','pill') || 'pill');
+  const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
   const _datePickKey = proOnly ? 'su_rec_date_pick_hist_progj' : 'su_rec_date_pick_hist_gj';
-  const _pickedDate = (_lsGet(_datePickKey,'') || '').trim();
+  const _pickedDate = (localStorage.getItem(_datePickKey) || '').trim();
   const _baseSess = filteredSessGj.slice();
-  const _allDates = Array.from(new Set(_baseSess.map(s=>String(s.d||'').trim()).filter(Boolean))).sort((a,b)=>_sortDir==='asc'?a.localeCompare(b):b.localeCompare(a));
+  const _allDates = Array.from(new Set(_baseSess.map(s=>String(s.d||'').trim()).filter(Boolean))).sort((a,b)=>b.localeCompare(a));
   if(_pickedDate && _allDates.includes(_pickedDate)){
     filteredSessGj = filteredSessGj.filter(s => String(s.d||'').trim() === _pickedDate);
   }
@@ -1087,7 +949,7 @@ function gjRecordsHTML(proOnly){
     if(_dateMenuStyle!=='asl' || !_allDates.length) return '';
     const daysS=['일','월','화','수','목','금','토'];
     const _pLine = (pName)=>{
-      const pObj=_players.find(x=>x && x.name===pName)||{};
+      const pObj=players.find(x=>x.name===pName)||{};
       const univ=pObj.univ||'';
       const col=univ?gc(univ):'#64748b';
       return `<span style="display:inline-flex;align-items:center;gap:4px;min-width:0">
@@ -1105,7 +967,7 @@ function gjRecordsHTML(proOnly){
     let h=`<div class="no-export" style="margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid var(--border)">
       <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">`;
     const _onAll = !_pickedDate;
-    h+=`<button type="button" onclick="try{localStorage.setItem('${_datePickKey}','');}catch(e){};histPage['gj']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
+    h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','');histPage['gj']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
       <div style="font-weight:1000;font-size:12px;color:${_onAll?'var(--blue)':'var(--text2)'}">전체</div>
       <div style="margin-top:6px;font-size:10px;color:var(--gray-l)">날짜 필터 해제</div>
     </button>`;
@@ -1115,7 +977,7 @@ function gjRecordsHTML(proOnly){
       const dayS=_baseSess.filter(s=>String(s.d||'').trim()===d0);
       const prev=dayS.length?`<div style="margin-top:6px;display:flex;flex-direction:column;gap:4px">${dayS.slice(0,2).map(_mini).join('')}</div>`:'';
       const on=(_pickedDate===d0);
-      h+=`<button type="button" onclick="try{localStorage.setItem('${_datePickKey}','${d0}');}catch(e){};histPage['gj']=0;render()" style="flex-shrink:0;text-align:left;min-width:170px;max-width:280px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
+      h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','${d0}');histPage['gj']=0;render()" style="flex-shrink:0;text-align:left;min-width:170px;max-width:280px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-weight:1000;font-size:12px;color:${on?'var(--blue)':'var(--text2)'}">${label}</span>
           <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${dayS.length?`세션 ${dayS.length}`:''}</span>
@@ -1134,11 +996,11 @@ function gjRecordsHTML(proOnly){
   const cur=histPage['gj'];
   const slice=total>pageSize?filteredSessGj.slice(cur*pageSize,(cur+1)*pageSize):filteredSessGj;
   const _gjBulkKey=proOnly?'pro_gj':'gj';
-  const _gjBulkOn=_li&&!!_bulkModes[_gjBulkKey];
+  const _gjBulkOn=isLoggedIn&&!!_bulkModes[_gjBulkKey];
   const _gjBulkDests=proOnly
     ?[{l:'⚔️ 일반 끝장전',d:'ungj'},{l:'🎮 개인전',d:'ind'}]
     :[{l:'🎮 개인전',d:'ind'},{l:'🏅 프로리그 끝장전',d:'progj'}];
-  let h=_li?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
+  let h=isLoggedIn?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
     <button onclick="toggleBulkMode('${_gjBulkKey}')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_gjBulkOn?'#dc2626':'var(--border2)'};background:${_gjBulkOn?'#fff1f2':'var(--surface)'};color:${_gjBulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_gjBulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
   </div>`:'';
   h+=_dateMenuHTML;
@@ -1166,7 +1028,7 @@ function gjRecordsHTML(proOnly){
     const gjActionOpts = [];
     // (버그픽스) 비로그인자에게는 공유카드만 표시, 수정/삭제/이동은 관리자(로그인)만 볼 수 있음
     gjActionOpts.push(`{l:'🎴 공유카드',fn:()=>openGJShareCard('${escJS(s.p1)}','${escJS(s.p2)}',${p1wins},${p2wins},'${escJS(s.d)}','${escJS(winner)}',{proOnly:${proOnly?'true':'false'}})}`);
-    if(_li){
+    if(isLoggedIn){
       gjActionOpts.push(`{l:'✏️ 수정',fn:()=>openGJSessionEdit('${_gjSessKey}')}`);
       gjActionOpts.push(`{l:'↗ 이동',fn:()=>{window._pendingMoveIds=${idsJson};openMoveIndPop(document.getElementById('${_gjActionBtnId}')||document.body,window._pendingMoveIds,'${_gjMoveCtx}');}}`);
       gjActionOpts.push(`{l:'🗑 삭제',fn:()=>deleteGjSession(${idsJson})}`);
@@ -1176,10 +1038,10 @@ function gjRecordsHTML(proOnly){
     // ✅ 버그픽스: _gjSessKey와 동일한 키로 캐시 저장 (수정 버튼과 일치)
     window._gjSessCache[_gjSessKey] = {...s, _proOnly: !!proOnly};
 
-    const gj_p1univ=_players.find(x=>x && x.name===s.p1)?.univ||'';
-    const gj_p2univ=_players.find(x=>x && x.name===s.p2)?.univ||'';
-    const gj_p1race=_players.find(x=>x && x.name===s.p1)?.race||'';
-    const gj_p2race=_players.find(x=>x && x.name===s.p2)?.race||'';
+    const gj_p1univ=players.find(x=>x.name===s.p1)?.univ||'';
+    const gj_p2univ=players.find(x=>x.name===s.p2)?.univ||'';
+    const gj_p1race=players.find(x=>x.name===s.p1)?.race||'';
+    const gj_p2race=players.find(x=>x.name===s.p2)?.race||'';
     const _gjP1Win = p1wins > p2wins;
     const _gjP2Win = p2wins > p1wins;
     const _gjP1Col = gj_p1univ?gc(gj_p1univ):'#378ADD';

@@ -2468,8 +2468,8 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         const winBgA=(typeof getMatchWinTint==='function'?getMatchWinTint(pca):(pca+'22'));
         const winBgB=(typeof getMatchWinTint==='function'?getMatchWinTint(pcb):(pcb+'22'));
         const winBorderA=pca+'88'; const winBorderB=pcb+'88';
-        const _pASafe=(g.playerA||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        const _pBSafe=(g.playerB||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const _pASafe=(g.playerA||'').replace(/\/g,'\\').replace(/'/g,"\'");
+        const _pBSafe=(g.playerB||'').replace(/\/g,'\\').replace(/'/g,"\'");
         // (설정) 경기 결과 팝업( histDetModal )에서 스트리머 클릭 시 팝업 닫기 여부
         const clickA=g.playerA?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } })();setTimeout(()=>openPlayerModal('${_pASafe}'),80)" data-player-link="1"`:''
         const clickB=g.playerB?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } })();setTimeout(()=>openPlayerModal('${_pBSafe}'),80)" data-player-link="1"`:''
@@ -3128,7 +3128,9 @@ function bulkDeleteRecs(bulkKey){
   const cbs=[...document.querySelectorAll(`.bulk-cb[data-bkey="${bulkKey}"]:checked`)];
   if(!cbs.length){alert('선택된 경기가 없습니다.');return;}
   const indices=cbs.map(cb=>parseInt(cb.dataset.bidx)).sort((a,b)=>b-a);
-  if(!confirm(`${indices.length}개 경기를 삭제하시겠습니까?\n\n⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.`))return;
+  if(!confirm(indices.length+'개 경기를 삭제하시겠습니까?
+
+⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.'))return;
   const arr=bulkKey==='univm'?univM:bulkKey==='ck'?ckM:bulkKey==='pro'?proM:bulkKey==='tt'?ttM:miniM;
   const deletedIds=new Set();
   indices.forEach(idx=>{
@@ -3228,7 +3230,9 @@ function openMoveMatchPop(btn,srcMode,srcIdx){
 }
 
 function delRec(mode,i){
-  if(!confirm(`삭제하시겠습니까?\n\n⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.`))return;
+  if(!confirm('삭제하시겠습니까?
+
+⚠️ 해당 대전의 모든 경기 결과가 선수 성적에서 차감됩니다.'))return;
   let matchObj=null;
   if(mode==='mini')     { matchObj=miniM[i];  miniM.splice(i,1); }
   else if(mode==='univm'){ matchObj=univM[i];  univM.splice(i,1); }

@@ -9,16 +9,7 @@ var proSub='records';
 
 function rPro(C,T){
   T.innerText='🏅 프로리그';
-  if(typeof players==='undefined' || !Array.isArray(players)){
-    C.innerHTML=`<div style="padding:40px 20px;text-align:center;color:var(--gray-l)">데이터 로딩 중...</div>`;
-    return;
-  }
-  if(typeof proM==='undefined' || !Array.isArray(proM)) window.proM = [];
-  if(typeof proSub==='undefined') window.proSub = 'records';
-  if(typeof recSortDir==='undefined') window.recSortDir = 'desc';
-  if(!window.BLD) window.BLD = {};
-  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
-  if(!_li && proSub==='input') proSub='records';
+  if(!isLoggedIn && proSub==='input') proSub='records';
   const subOpts=(typeof applyTabLabels==='function') ? applyTabLabels('pro', [
     {id:'input',lbl:'📝 경기 입력',fn:`proSub='input';render()`},
     {id:'rank',lbl:'🏆 순위',fn:`proSub='rank';render()`},
@@ -35,13 +26,13 @@ function rPro(C,T){
       + `<button class="pill ${recSortDir==='asc'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="recSortDir='asc';render()">오래된순 ↑</button>`)
     : '';
   h+=_buildMatchSubtabShell(proSub, subOpts, '_proFilterOpen', extra, 'pro');
-  if(proSub==='input'&&_li){
+  if(proSub==='input'&&isLoggedIn){
     if(!BLD['pro']){const _sv=J('su_bld_pro')||{};BLD['pro']={date:_sv.date||'',membersA:_sv.membersA||[],membersB:_sv.membersB||[],tierFilters:_sv.tierFilters||[],sets:_sv.sets||[]};}
     h+=buildProInputHTML();
   } else if(proSub==='rank'){
     h+=proRankHTML();
   } else {
-    h+=recSummaryListHTML(window.proM,'pro','tab');
+    h+=recSummaryListHTML(proM,'pro','tab');
   }
   C.innerHTML=h;
 }
@@ -80,7 +71,6 @@ function buildProInputHTML(){
         ${eligible.length===0
           ?'<span style="color:var(--gray-l);font-size:12px">티어를 선택하면 스트리머 목록이 표시됩니다</span>'
           :eligible.map(p=>{
-              const pn=(typeof escJS==='function') ? escJS(p.name) : String(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
               const inA=mA.some(m=>m.name===p.name);
               const inB=mB.some(m=>m.name===p.name);
               const bg=inA?'#2563eb':inB?'#dc2626':gc(p.univ);
@@ -89,8 +79,8 @@ function buildProInputHTML(){
               }
               return `<span style="display:inline-flex;align-items:center;gap:4px;background:${bg};color:#fff;padding:3px 6px;border-radius:6px;font-size:11px">
                 <span style="font-weight:700">${p.name}${p.gender==='F'?'<span style="font-size:9px;color:#fda4af;margin-left:2px">♀</span>':''}</span><span style="opacity:.8;font-size:10px">${p.univ}/${p.tier}</span>
-                <button onclick="proAddPlayer('A','${pn}')" style="background:var(--white);color:#2563eb;border:none;border-radius:3px;padding:1px 6px;font-size:10px;font-weight:800;cursor:pointer;margin-left:2px">A팀</button>
-                <button onclick="proAddPlayer('B','${pn}')" style="background:var(--white);color:#dc2626;border:none;border-radius:3px;padding:1px 6px;font-size:10px;font-weight:800;cursor:pointer">B팀</button>
+                <button onclick="proAddPlayer('A','${p.name}')" style="background:var(--white);color:#2563eb;border:none;border-radius:3px;padding:1px 6px;font-size:10px;font-weight:800;cursor:pointer;margin-left:2px">A팀</button>
+                <button onclick="proAddPlayer('B','${p.name}')" style="background:var(--white);color:#dc2626;border:none;border-radius:3px;padding:1px 6px;font-size:10px;font-weight:800;cursor:pointer">B팀</button>
               </span>`;
             }).join('')
         }

@@ -4,9 +4,6 @@
 function proCompNewTourney() {
   const name = prompt('새 대회 이름을 입력하세요', '');
   if (!name || !name.trim()) return;
-  if(typeof proTourneys==='undefined' || !Array.isArray(proTourneys)) window.proTourneys = [];
-  if(typeof curProComp==='undefined') window.curProComp = '';
-  if(typeof proCompSub==='undefined') window.proCompSub = 'league';
   const id = 'ptn_' + Date.now();
   proTourneys.push({id, name:name.trim(), groups:[], bracket:[], createdAt:new Date().toISOString().slice(0,10)});
   curProComp = name.trim();
@@ -28,7 +25,6 @@ function proCompDelTourney() {
   const tn = getCurrentProTourney();
   if (!tn) return;
   if (!confirm(`"${tn.name}" 대회를 삭제하시겠습니까?`)) return;
-  if(typeof proTourneys==='undefined' || !Array.isArray(proTourneys)) window.proTourneys = [];
   const idx = proTourneys.findIndex(t=>t.id===tn.id);
   if (idx>=0) proTourneys.splice(idx, 1);
   curProComp = proTourneys[0]?.name || '';
@@ -276,16 +272,9 @@ function proCompPrintRank() {
    ══════════════════════════════════════════════════════════════ */
 function rProAll(C, T) {
   T.innerText = '⭐ 프로리그 종합';
-  if(typeof players==='undefined' || !Array.isArray(players)){
-    C.innerHTML = `<div style="padding:40px 20px;text-align:center;color:var(--gray-l)">데이터 로딩 중...</div>`;
-    return;
-  }
-  const _proM = (typeof proM!=='undefined' && Array.isArray(proM)) ? proM : [];
-  const _proTourneys = (typeof proTourneys!=='undefined' && Array.isArray(proTourneys)) ? proTourneys : [];
-  const _players = players;
   // 일반 proM에서 경기 수집
   const proItems = [];
-  _proM.forEach(m => {
+  proM.forEach(m => {
     proItems.push({
       d: m.d||'', type:'일반', label:`${m.teamALabel||'A팀'} vs ${m.teamBLabel||'B팀'}`,
       scoreA: m.scoreA||0, scoreB: m.scoreB||0,
@@ -294,7 +283,7 @@ function rProAll(C, T) {
     });
   });
   // 대회 proTourneys에서 경기 수집
-  _proTourneys.forEach(tn => {
+  proTourneys.forEach(tn => {
     (tn.groups||[]).forEach(grp => {
       (grp.matches||[]).forEach(m => {
         if (!m.a||!m.b) return;
@@ -325,7 +314,7 @@ function rProAll(C, T) {
 
   // 통합 선수 순위
   const pAll = {};
-  _proM.forEach(m => {
+  proM.forEach(m => {
     (m.sets||[]).forEach(set=>{(set.games||[]).forEach(g=>{
       if(!g.playerA||!g.playerB||!g.winner)return;
       const w=g.winner==='A'?g.playerA:g.playerB; const l=g.winner==='A'?g.playerB:g.playerA;
@@ -333,7 +322,7 @@ function rProAll(C, T) {
       pAll[w].w++;pAll[l].l++;pAll[w].src.add('일반');pAll[l].src.add('일반');
     });});
   });
-  _proTourneys.forEach(tn=>{(tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{
+  proTourneys.forEach(tn=>{(tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{
     if(!m.a||!m.b||!m.winner)return;
     const w=m.winner==='A'?m.a:m.b; const l=m.winner==='A'?m.b:m.a;
     if(!pAll[w])pAll[w]={w:0,l:0,src:new Set()};if(!pAll[l])pAll[l]={w:0,l:0,src:new Set()};
@@ -342,10 +331,10 @@ function rProAll(C, T) {
 
   const pArr = Object.entries(pAll).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,src:[...s.src]})).filter(p=>p.total>0).sort((a,b)=>b.w-a.w||b.rate-a.rate);
 
-  const compCnt = _proTourneys.reduce((s,t)=>s+(t.groups||[]).reduce((ss,g)=>ss+(g.matches||[]).length,0),0);
+  const compCnt = proTourneys.reduce((s,t)=>s+(t.groups||[]).reduce((ss,g)=>ss+(g.matches||[]).length,0),0);
 
   // 데이터 없음
-  if (!_proM.length && !compCnt) {
+  if (!proM.length && !compCnt) {
     C.innerHTML = `<div style="padding:60px 20px;text-align:center;background:var(--surface);border-radius:12px;border:2px dashed var(--border2)">
       <div style="font-size:44px;margin-bottom:14px">📉</div>
       <div style="font-size:16px;font-weight:700;margin-bottom:8px">아직 프로리그 데이터가 없습니다</div>
@@ -357,7 +346,7 @@ function rProAll(C, T) {
   let h = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
     <div style="font-weight:900;font-size:15px;color:var(--blue)">⭐ 프로리그 통합 현황</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <span style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:10px;background:#dbeafe;color:#2563eb">일반 ${_proM.length}경기</span>
+      <span style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:10px;background:#dbeafe;color:#2563eb">일반 ${proM.length}경기</span>
       <span style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:10px;background:#f3e8ff;color:#7c3aed">대회 ${compCnt}경기</span>
       <span style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:10px;background:#f0fdf4;color:#16a34a">완료 ${compItems.length}경기</span>
     </div>
@@ -380,7 +369,7 @@ function rProAll(C, T) {
       </tr></thead><tbody>`;
     pArr.slice(0,15).forEach((r,idx)=>{
       const medal=idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':'';
-      const p=_players.find(x=>x.name===r.name);
+      const p=players.find(x=>x.name===r.name);
       const photo=p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:26px;height:26px;border-radius:var(--su_profile_radius,50%);object-fit:cover;margin-right:5px;vertical-align:middle" onerror="this.style.display='none'">`:'';
       const rb=p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
       const srcBadges=r.src.map(s=>`<span style="font-size:9px;padding:1px 5px;border-radius:8px;font-weight:700;${s==='일반'?'background:#dbeafe;color:#2563eb':'background:#f3e8ff;color:#7c3aed'}">${s}</span>`).join(' ');

@@ -61,7 +61,7 @@ async function fbCloudSave(opts) {
     players: _pNoPhoto,
     playerPhotos: _pPhotoMap,
     univCfg, maps, tourD, miniM, univM, comps, ckM,
-    compNames, curComp, proM, proTourneys, tiers: ((typeof TIERS!=='undefined' && Array.isArray(TIERS)) ? TIERS : (Array.isArray(window.TIERS)?window.TIERS:[])), tourneys, indM, gjM,
+    compNames, curComp, proM, proTourneys, tiers: TIERS, tourneys, indM, gjM,
     // 🎯 티어대회 기록(대전기록 탭/스트리머 history 동기화용)
     ttM: (typeof ttM!=='undefined' ? ttM : []),
     boardPlayerOrder, boardOrder, userMapAlias, playerStatusIcons, notices,
@@ -350,28 +350,6 @@ window.cloudLoad = async function(){
 
 
 /* ════ 현황판 탭 rBoard ════ */
-function _brdLsGet(k, d=''){
-  try{
-    const v = localStorage.getItem(k);
-    return (v==null) ? d : v;
-  }catch(e){
-    return d;
-  }
-}
-function _brdLsSet(k, v){
-  try{ localStorage.setItem(k, v); return true; }catch(e){ return false; }
-}
-function _brdGetTiers(){
-  try{
-    if(typeof TIERS!=='undefined' && Array.isArray(TIERS)) return TIERS;
-  }catch(e){}
-  return Array.isArray(window.TIERS) ? window.TIERS : [];
-}
-function _brdTierIndex(t){
-  const arr = _brdGetTiers();
-  const i = arr.indexOf(t||'');
-  return i>=0 ? i : (arr.length + 99);
-}
 // 현황판 전용 photo 캐시: setBrdPhoto 저장 시 갱신, 렌더링 시 참조
 var _brdPhotoCache = (function(){
   try{
@@ -410,54 +388,26 @@ let boardCardShape='circle'; // 포토카드 이미지 모양: 'circle' | 'squar
 let boardCollapsed = new Set(); // 접힌 대학 이름 집합
 // 칩 프로필 이미지 설정 (localStorage에서 복원)
 // NOTE: 전역(인라인 onclick) 접근 호환을 위해 var 사용 (window 프로퍼티로 노출)
-var boardChipPhotoShape = _brdLsGet('su_bcp_shape', 'circle') || 'circle'; // 'circle' | 'square'
-var boardChipPhotoSize  = parseInt(_brdLsGet('su_bcp_size', '26') || '26', 10); // px
-var boardChipLayoutScale = parseInt(_brdLsGet('su_bcp_layout', '100') || '100', 10); // percent
+var boardChipPhotoShape = localStorage.getItem('su_bcp_shape') || 'circle'; // 'circle' | 'square'
+var boardChipPhotoSize  = parseInt(localStorage.getItem('su_bcp_size') || '26', 10); // px
+var boardChipLayoutScale = parseInt(localStorage.getItem('su_bcp_layout') || '100', 10); // percent
 function saveBoardChipPhotoSettings(){
-  _brdLsSet('su_bcp_shape', boardChipPhotoShape);
-  _brdLsSet('su_bcp_size', String(boardChipPhotoSize));
-  _brdLsSet('su_bcp_layout', String(boardChipLayoutScale||100));
+  localStorage.setItem('su_bcp_shape', boardChipPhotoShape);
+  localStorage.setItem('su_bcp_size', String(boardChipPhotoSize));
+  localStorage.setItem('su_bcp_layout', String(boardChipLayoutScale||100));
   try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}
   // 스트리머 프로필 이미지 공통 CSS 변수 동기화
   try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
 }
 // 현황판 선수 순서: {univ: [name, name, ...]}
-let boardPlayerOrder = (function(){
-  try{
-    if(typeof J === 'function'){
-      const v = J('su_bpo');
-      if(v && typeof v === 'object') return v;
-    }
-    const raw = _brdLsGet('su_bpo', '');
-    if(raw){
-      const parsed = JSON.parse(raw);
-      if(parsed && typeof parsed === 'object') return parsed;
-    }
-  }catch(e){}
-  return {};
-})();
-
-function _findBrdCardByUniv(univName, root){
-  try{
-    const base = root || document.getElementById('board-wrap') || document;
-    const cards = base && base.querySelectorAll ? base.querySelectorAll('.brd-card') : [];
-    for(const c of cards){
-      if(c && c.dataset && c.dataset.univ === univName) return c;
-    }
-    return null;
-  }catch(e){
-    return null;
-  }
-}
+let boardPlayerOrder = J('su_bpo') || {};
 
 function _getBoardUnivs(){
-  if(typeof getAllUnivs !== 'function') return [];
-  const univs = getAllUnivs() || [];
-  const _bo = (typeof boardOrder!=='undefined' && Array.isArray(boardOrder)) ? boardOrder : [];
-  if(!_bo.length) return univs;
+  const univs = getAllUnivs();
+  if(!boardOrder.length) return univs;
   const ordered = [];
   const seen = new Set();
-  _bo.forEach(name => { const u = univs.find(x=>x.name===name); if(u&&!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
+  boardOrder.forEach(name => { const u = univs.find(x=>x.name===name); if(u&&!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
   univs.forEach(u => { if(!seen.has(u.name)){ordered.push(u);seen.add(u.name);} });
   return ordered;
 }
@@ -471,7 +421,7 @@ function toggleBoardUniv(name){
 }
 function _brdCollapseToggle(univName) {
   if (boardCollapsed.has(univName)) boardCollapsed.delete(univName); else boardCollapsed.add(univName);
-  const card = _findBrdCardByUniv(univName);
+  const card = document.querySelector(`.brd-card[data-univ="${univName}"]`);
   if (!card) return;
   const body = card.querySelector('.brd-card-body');
   if (body) body.style.display = boardCollapsed.has(univName) ? 'none' : '';
@@ -597,13 +547,13 @@ function _getBoardPlayers(univName, includeRetired=false){
   if(!order.length){
     // 무소속: 티어 → 포인트 순
     if(univName==='무소속'){
-      return [...univPlayers].sort((a,b)=>_brdTierIndex(a.tier)-_brdTierIndex(b.tier)||b.points-a.points);
+      return [...univPlayers].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
     }
     // 기본: MAIN_ROLES → 티어 → 포인트
     return [...univPlayers].sort((a,b)=>{
       const ra=getRoleOrder(a.role),rb=getRoleOrder(b.role);
       if(ra!==rb)return ra-rb;
-      return _brdTierIndex(a.tier)-_brdTierIndex(b.tier)||b.points-a.points;
+      return TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points;
     });
   }
   const sorted = [];
@@ -775,9 +725,6 @@ function _bindBoardBgAutoResize(){
 
 function rBoard(C,T){
   T.textContent='📊 현황판';
-  const _tiers = _brdGetTiers();
-  const _getTierBtnColor = (typeof getTierBtnColor==='function') ? getTierBtnColor : ()=>'#64748b';
-  const _getTierBtnTextColor = (typeof getTierBtnTextColor==='function') ? getTierBtnTextColor : ()=>'#fff';
   const univs=_getBoardUnivs();
   const _canManage=_boardCanManage();
   const visUnivs=(_canManage?univs:univs.filter(u=>!u.hidden)).filter(u=>!u.dissolved);
@@ -797,7 +744,7 @@ function rBoard(C,T){
     <span style="font-size:11px;font-weight:800;color:var(--text2)">👥 ${_brdAllVis.length}명</span>
     <span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>
     <span style="font-size:11px;font-weight:800;color:var(--text2)">🏫 ${visUnivs.length}개 대학</span>
-    ${_tiers.filter(t=>_brdTierCts[t]).length?`<span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>${_tiers.filter(t=>_brdTierCts[t]).map(t=>`<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;background:${_getTierBtnColor(t)||'#64748b'};color:${_getTierBtnTextColor(t)||'#fff'}">${t} ${_brdTierCts[t]}</span>`).join('')}`:''}
+    ${TIERS.filter(t=>_brdTierCts[t]).length?`<span style="width:1px;height:12px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_brdTierCts[t]).map(t=>`<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;background:${getTierBtnColor(t)||'#64748b'};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_brdTierCts[t]}</span>`).join('')}`:''}
   </div>`;
   let h=`
   <style>
@@ -897,23 +844,12 @@ function rBoard(C,T){
 
 function buildUnivBoardCard(u, forExport){
   if(!u)return'';
-  const _tiers = _brdGetTiers();
-  const _mainRoles = (typeof MAIN_ROLES!=='undefined' && Array.isArray(MAIN_ROLES)) ? MAIN_ROLES : [];
-  const _roleColors = (typeof ROLE_COLORS!=='undefined' && ROLE_COLORS) ? ROLE_COLORS : {};
-  const _roleIcons = (typeof ROLE_ICONS!=='undefined' && ROLE_ICONS) ? ROLE_ICONS : {};
-  const _getTierBtnColor = (typeof getTierBtnColor==='function') ? getTierBtnColor : ()=>'#64748b';
-  const _getTierBtnTextColor = (typeof getTierBtnTextColor==='function') ? getTierBtnTextColor : ()=>'#fff';
-  const uNameJs = (typeof escJS==='function')
-    ? escJS(u.name)
-    : String(u.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
   const col=gc(u.name);
-  const _univIcons = (typeof UNIV_ICONS!=='undefined' && UNIV_ICONS) ? UNIV_ICONS : (window.UNIV_ICONS||{});
-  const _univCfg = (typeof univCfg!=='undefined' && Array.isArray(univCfg)) ? univCfg : (Array.isArray(window.univCfg)?window.univCfg:[]);
-  const iconUrl=_univIcons[u.name]||((_univCfg.find(x=>x.name===u.name)||{}).icon)||'';
+  const iconUrl=UNIV_ICONS[u.name]||(univCfg.find(x=>x.name===u.name)||{}).icon||'';
   const sorted=_getBoardPlayers(u.name);
   if(!sorted.length&&!forExport){
     // 선수 없는 대학도 빈 카드로 표시
-    return `<div class="brd-card" data-univ="${escAttr(u.name)}" style="border:2px dashed ${col}66;border-radius:14px;padding:20px 18px;background:${col}08;display:flex;align-items:center;gap:10px;opacity:.75">
+    return `<div class="brd-card" data-univ="${u.name}" style="border:2px dashed ${col}66;border-radius:14px;padding:20px 18px;background:${col}08;display:flex;align-items:center;gap:10px;opacity:.75">
       ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,32px);height:var(--su_univ_logo_size,32px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.style.display='none'">`:''}
       <span style="font-weight:900;font-size:15px;color:${col}">${u.name}</span>
       <span style="font-size:11px;color:var(--gray-l)">등록된 스트리머 없음</span>
@@ -937,8 +873,8 @@ function buildUnivBoardCard(u, forExport){
   // 티어별 칩 레이아웃 빌더 (무소속 + forExport 시 모든 대학에 적용)
   const buildChipLayout=(isWide)=>{
     // 직급자와 일반 선수 분리
-    const rolePlayers = sorted.filter(p=>p && p.role && _mainRoles.includes(p.role));
-    const normalPlayers = sorted.filter(p=>p && (!p.role || !_mainRoles.includes(p.role)));
+    const rolePlayers = sorted.filter(p=>p.role&&MAIN_ROLES.includes(p.role));
+    const normalPlayers = sorted.filter(p=>!p.role||!MAIN_ROLES.includes(p.role));
 
     const tierMap={};
     normalPlayers.forEach(p=>{
@@ -946,25 +882,20 @@ function buildUnivBoardCard(u, forExport){
       if(!tierMap[t])tierMap[t]=[];
       tierMap[t].push(p);
     });
-    const tierOrder=_tiers.filter(t=>tierMap[t]);
-    if(tierMap['기타']&&!_tiers.includes('기타'))tierOrder.push('기타');
+    const tierOrder=TIERS.filter(t=>tierMap[t]);
+    if(tierMap['기타']&&!TIERS.includes('기타'))tierOrder.push('기타');
 
     const buildPlayerChip=(p, chipIdx)=>{
-      const pNameJs = (typeof escJS==='function')
-        ? escJS(p && p.name)
-        : String(p && p.name || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-      const pNameHtml = (typeof window.escHTML==='function') ? window.escHTML(p && p.name) : String(p && p.name || '');
-      const pRoleHtml = (typeof window.escHTML==='function') ? window.escHTML(p && p.role) : String(p && p.role || '');
       const rc=RACE_CFG[p.race]||{bg:'#f1f5f9',col:'#475569',txt:p.race||'?'};
-      const isMain=p.role&&_mainRoles.includes(p.role);
-      const rCol=_roleColors[p.role]||'';
-      const rIcon=_roleIcons[p.role]||'';
+      const isMain=p.role&&MAIN_ROLES.includes(p.role);
+      const rCol=ROLE_COLORS[p.role]||'';
+      const rIcon=ROLE_ICONS[p.role]||'';
       const photoSrcChip = _getBrdPhoto(p);
       // ── 포토카드 뷰 (화면 + 이미지저장 공통) ──
       if (boardCardView) {
         const rcBg = rc.col || col;
-        const cardTierCol = p.tier ? (_getTierBtnColor(p.tier) || '#64748b') : null;
-        const cardTierText = p.tier ? (_getTierBtnTextColor(p.tier) || '#fff') : '#fff';
+        const cardTierCol = p.tier ? (getTierBtnColor(p.tier) || '#64748b') : null;
+        const cardTierText = p.tier ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
         const rTxtCard = rc.txt||p.race||'?';
         const imgBorderRadius = boardCardShape === 'square' ? '8px' : '10px';
         const imgInner = photoSrcChip
@@ -977,8 +908,8 @@ function buildUnivBoardCard(u, forExport){
           + (p.tier?`<span style="font-size:9px;font-weight:800;background:${cardTierCol};color:${cardTierText};border-radius:4px;padding:1px 5px;line-height:1.5;text-shadow:0 1px 2px rgba(0,0,0,.3)">${p.tier}</span>`:'')
           + `</div>`;
         const overlay = `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.82));border-radius:0 0 10px 10px;padding:22px 6px 7px;text-align:center">`
-          + (p.role?`<div style="font-size:9px;font-weight:700;color:#ffffffbb;margin-bottom:1px">${pRoleHtml}</div>`:'')
-          + `<div style="font-weight:800;font-size:11px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">${pNameHtml}</div>`
+          + (p.role?`<div style="font-size:9px;font-weight:700;color:#ffffffbb;margin-bottom:1px">${p.role}</div>`:'')
+          + `<div style="font-weight:800;font-size:11px;color:#fff;word-break:break-all;text-shadow:0 1px 3px #000a">${p.name}</div>`
           + (p.channelUrl
             ? (forExport
                 ? `<div style="margin-top:4px;font-size:9px;font-weight:700;color:${col};background:rgba(255,255,255,.9);border-radius:4px;padding:1px 6px;display:inline-block">▶ 방송</div>`
@@ -989,11 +920,12 @@ function buildUnivBoardCard(u, forExport){
         if (forExport) {
           return `<div style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)}">${cardInner}</div>`;
         }
+        const pNameSafeCard=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
         const totalInUnivCard=sorted.length;
         const clickFnCard=_boardCanManage()
-          ? `openBrdPlayerPopupFromChip(event,'${pNameJs}','${uNameJs}',${chipIdx??0},${totalInUnivCard})`
+          ? `openBrdPlayerPopupFromChip(event,'${pNameSafeCard}','${u.name}',${chipIdx??0},${totalInUnivCard})`
           : `openRandomPlayerModal()`;
-        return `<div class="brd-chip" data-player="${escAttr(p.name)}" data-univ="${escAttr(u.name)}" data-idx="${chipIdx??0}"${_boardCanManage()?' draggable="true"':''}`
+        return `<div class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${_boardCanManage()?' draggable="true"':''}`
           + ` style="border-radius:10px;overflow:hidden;border:2px solid ${hexToRgba(col,.5)};cursor:pointer;transition:box-shadow .15s,transform .15s"`
           + ` onmouseover="this.style.boxShadow='0 6px 20px ${hexToRgba(col,.5)}';this.style.transform='translateY(-3px)'"`
           + ` onmouseout="this.style.boxShadow='';this.style.transform=''"`
@@ -1026,10 +958,11 @@ function buildUnivBoardCard(u, forExport){
         </span>`;
       }
       const compact=boardCompactMode;
+      const pNameSafe=p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
       const totalInUniv=sorted.length;
       // 관리자는 이동/직책 팝업, 비관리자는 스트리머 상세
       const clickFn=_boardCanManage()
-        ? `openBrdPlayerPopupFromChip(event,'${pNameJs}','${uNameJs}',${chipIdx??0},${totalInUniv})`
+        ? `openBrdPlayerPopupFromChip(event,'${pNameSafe}','${u.name}',${chipIdx??0},${totalInUniv})`
         : `openRandomPlayerModal()`;
 
       // 티어 고정 색상 (칩)
@@ -1052,11 +985,11 @@ function buildUnivBoardCard(u, forExport){
       const _photoEl = photoSrcChip
         ? `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);flex-shrink:0;position:relative;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:${compact?'2':'3'}px solid ${col};box-shadow:0 2px 10px ${hexToRgba(col,.4)};background:${col};color:#fff;font-size:${photoFs};font-weight:900">${rTxt}<img src="${toHttpsUrl(photoSrcChip)}" class="brd-fit-auto" data-fit-kind="profile" data-fit-mode="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--su_profile_radius,50%)" onload="_applyBoardBgAutoSizing(this)" onerror="this.style.display='none'"></span>`
         : `<span style="width:${photoSz};height:${photoSz};border-radius:var(--su_profile_radius,50%);background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:${photoFs};font-weight:900;flex-shrink:0;border:${compact?'2':'3'}px solid ${hexToRgba(col,.7)}">${rTxt}</span>`;
-      return `<span class="brd-chip" data-player="${escAttr(p.name)}" data-univ="${escAttr(u.name)}" data-idx="${chipIdx??0}"${_boardCanManage()?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:${chipGap};background:${cBgL};border-radius:16px;padding:${chipPad};margin:${compact?'3px':'5px'};cursor:${_boardCanManage()?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(_boardCanManage()){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
+      return `<span class="brd-chip" data-player="${p.name}" data-univ="${u.name}" data-idx="${chipIdx??0}"${_boardCanManage()?' draggable="true"':''} style="display:inline-flex;align-items:center;gap:${chipGap};background:${cBgL};border-radius:16px;padding:${chipPad};margin:${compact?'3px':'5px'};cursor:${_boardCanManage()?'grab':'pointer'};transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.13);border:2px solid ${cBd}" onmouseover="this.style.background='${cBgH}';this.style.boxShadow='0 5px 18px rgba(0,0,0,.2)';this.style.borderColor='${hexToRgba(col,.65)}'" onmouseout="this.style.background='${cBgL}';this.style.boxShadow='0 2px 10px rgba(0,0,0,.13)';this.style.borderColor='${cBd}'" onclick="event.stopPropagation();${clickFn}" ondragstart="if(_boardCanManage()){event.stopPropagation();event.dataTransfer.setData('text/chip',this.dataset.player);}">
         ${_photoEl}
         <span style="display:inline-flex;flex-direction:column;gap:${compact?'2px':'3px'};min-width:0">
           ${isMain&&!compact?`<span style="font-size:11px;font-weight:900;color:#fff;background:${col};border-radius:5px;padding:2px 8px;display:inline-block">${rIcon}${p.role}</span>`:''}
-          <span style="font-weight:900;color:#111;font-size:${nameFs};line-height:1.3;white-space:nowrap;${p.inactive?'opacity:.6':''}">${compact&&isMain?`${rIcon}`:''}${pNameHtml}${getStatusIconHTML(p.name)}${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;margin-left:3px">⏸️</span>':''}${(()=>{if(!p.transferDate||!p.prevUniv)return'';const diff=(new Date()-new Date(p.transferDate))/(864e5);return diff<=30?`<span style="font-size:9px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:800;margin-left:3px;border:1px solid #fcd34d" title="${escAttr(p.prevUniv)}에서 이적 (${escAttr(p.transferDate)})">🔄 이적</span>`:'';})()}</span>
+          <span style="font-weight:900;color:#111;font-size:${nameFs};line-height:1.3;white-space:nowrap;${p.inactive?'opacity:.6':''}">${compact&&isMain?`${rIcon}`:''}${p.name}${getStatusIconHTML(p.name)}${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;margin-left:3px">⏸️</span>':''}${(()=>{if(!p.transferDate||!p.prevUniv)return'';const diff=(new Date()-new Date(p.transferDate))/(864e5);return diff<=30?`<span style="font-size:9px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:800;margin-left:3px;border:1px solid #fcd34d" title="${p.prevUniv}에서 이적 (${p.transferDate})">🔄 이적</span>`:'';})()}</span>
           <span style="display:inline-flex;align-items:center;gap:${compact?'3px':'5px'};line-height:1.2">
             <span style="font-size:${badgeFs};font-weight:900;background:${rc.col};color:#fff;border-radius:6px;padding:${compact?'1px 5px':'2px 8px'}">${rTxt}</span>
             ${p.tier?`<span style="font-size:${tierBadgeFs};font-weight:800;background:${chipTierCol};color:${chipTierText};border-radius:6px;padding:${compact?'1px 5px':'2px 8px'}">${p.tier}</span>`:''}
@@ -1070,14 +1003,14 @@ function buildUnivBoardCard(u, forExport){
 
     // 직급자 섹션
     // 직책별 개별 행 (MAIN_ROLES 순서대로 각 역할 따로 표시)
-    const roleRowsArr = _mainRoles
+    const roleRowsArr = MAIN_ROLES
       .map(role => rolePlayers.filter(p => p.role === role))
       .filter(group => group.length > 0);
     const roleSection = roleRowsArr.length > 0
       ? roleRowsArr.map(group => {
           const role = group[0].role;
-          const rIcon = _roleIcons[role] || '';
-          const rCol = _roleColors[role] || col;
+          const rIcon = ROLE_ICONS[role] || '';
+          const rCol = ROLE_COLORS[role] || col;
           return `<div style="margin-bottom:6px;padding:6px 8px 8px;border-radius:10px;background:${hexToRgba(col,.1)};border:1.5px solid ${hexToRgba(col,.25)}">
             <div style="font-size:10px;font-weight:900;color:#fff;padding:2px 9px;margin-bottom:4px;background:${rCol};border-radius:5px;display:inline-block;line-height:1.6">${rIcon}${role}</div>
             <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${group.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
@@ -1088,17 +1021,17 @@ function buildUnivBoardCard(u, forExport){
     // 무소속: 티어 레이블 포함 flat 리스트
     let tierRows='', allRows='';
     if(u.name==='무소속'&&!forExport){
-      const tierSorted=[...sorted].sort((a,b)=>_brdTierIndex(a.tier)-_brdTierIndex(b.tier)||b.points-a.points);
+      const tierSorted=[...sorted].sort((a,b)=>TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||b.points-a.points);
       const chipIdxMapElo={};
       tierSorted.forEach((p,i)=>{ chipIdxMapElo[p.name]=i; });
       // 티어별 그룹핑하여 레이블 표시
       const freeTierMap={};
       tierSorted.forEach(p=>{ const t=p.tier||'기타'; if(!freeTierMap[t])freeTierMap[t]=[]; freeTierMap[t].push(p); });
-      const freeTierOrder=[..._tiers.filter(t=>freeTierMap[t]),...(freeTierMap['기타']?['기타']:[])];
+      const freeTierOrder=[...TIERS.filter(t=>freeTierMap[t]),...(freeTierMap['기타']?['기타']:[])];
       tierRows=freeTierOrder.map(tier=>{
         const ps=freeTierMap[tier];
-        const tColor=_getTierBtnColor(tier)||col;
-        const tText=_getTierBtnTextColor(tier)||'#fff';
+        const tColor=getTierBtnColor(tier)||col;
+        const tText=getTierBtnTextColor(tier)||'#fff';
         return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
           <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${toPastel(tColor,Math.max(0,(50-b2LabelAlpha)*0.005))}!important;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
           <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${ps.map(p=>buildPlayerChip(p, chipIdxMapElo[p.name]??0)).join('')}</div>
@@ -1108,8 +1041,8 @@ function buildUnivBoardCard(u, forExport){
     } else {
       tierRows=tierOrder.map((tier,tidx)=>{
         const ps=tierMap[tier];
-        const tColor = _getTierBtnColor(tier) || col;
-        const tText = _getTierBtnTextColor(tier) || '#fff';
+        const tColor = getTierBtnColor(tier) || col;
+        const tText = getTierBtnTextColor(tier) || '#fff';
         return `<div style="padding:4px 0 2px;border-bottom:1px solid ${hexToRgba(col,.22)}">
           <div style="font-size:10px;font-weight:900;color:${tText};letter-spacing:1px;padding:2px 9px;margin-bottom:3px;background:${toPastel(tColor,Math.max(0,(50-b2LabelAlpha)*0.005))}!important;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:inline-block;line-height:1.5">${tier}</div>
           <div style="${boardCardView&&!forExport?'display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:4px 0':'display:flex;flex-wrap:wrap;gap:0'}">${ps.map(p=>buildPlayerChip(p, chipIdxMap[p.name]??0)).join('')}</div>
@@ -1122,24 +1055,25 @@ function buildUnivBoardCard(u, forExport){
 
     const _bgPos=u.bgImgPos||'center center';
     const _bgSize=u.bgImgSize||'auto';
+    const _uNameSafe=(u.name||'').replace(/'/g,"\\'");
     const _bgPosGrid=u.bgImg?(()=>{
       const vs=['top','center','bottom'],hs=['left','center','right'];
-      return `<div onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:1px" title="배경 위치">${vs.map(v=>`<div style="display:flex;gap:1px">${hs.map(h=>{const p=`${v} ${h}`,a=_bgPos===p;return`<button onclick="event.stopPropagation();setBoardBgImgPos('${uNameJs}','${p}')" style="width:10px;height:10px;border-radius:2px;border:1px solid ${a?'rgba(255,255,255,.9)':'rgba(255,255,255,.3)'};background:${a?'rgba(255,255,255,.6)':'rgba(255,255,255,.15)'};cursor:pointer;padding:0" title="${p}"></button>`;}).join('')}</div>`).join('')}</div>`;
+      return `<div onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:1px" title="배경 위치">${vs.map(v=>`<div style="display:flex;gap:1px">${hs.map(h=>{const p=`${v} ${h}`,a=_bgPos===p;return`<button onclick="event.stopPropagation();setBoardBgImgPos('${_uNameSafe}','${p}')" style="width:10px;height:10px;border-radius:2px;border:1px solid ${a?'rgba(255,255,255,.9)':'rgba(255,255,255,.3)'};background:${a?'rgba(255,255,255,.6)':'rgba(255,255,255,.15)'};cursor:pointer;padding:0" title="${p}"></button>`;}).join('')}</div>`).join('')}</div>`;
     })():'';
-    return `<div class="brd-card" data-univ="${escAttr(u.name)}" style="position:relative;--brd-col:${toPastel(col,Math.min(1, Math.max(0.35, 0.95 - b2BgAlpha * 0.01) + 0.08))};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
+    return `<div class="brd-card" data-univ="${u.name}" style="position:relative;--brd-col:${toPastel(col,Math.min(1, Math.max(0.35, 0.95 - b2BgAlpha * 0.01) + 0.08))};--brd-shd:${shd}${isWide?';grid-column:1/-1':''}" draggable="false">
       <div class="brd-hdr" style="background:linear-gradient(135deg,${col} 0%,${hexToRgba(col,.85)} 100%);border-radius:18px 18px 0 0;cursor:${_boardCanManage()&&!forExport?'grab':'default'};overflow:hidden"${hdrDrag}>
         <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
-          <div style="width:var(--su_univ_logo_box,46px);height:var(--su_univ_logo_box,46px);border-radius:var(--su_univ_logo_radius,13px);background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${uNameJs}')"` } title="대학 상세 보기">
+          <div style="width:var(--su_univ_logo_box,46px);height:var(--su_univ_logo_box,46px);border-radius:var(--su_univ_logo_radius,13px);background:rgba(255,255,255,.20);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;${forExport?'':'cursor:pointer'}" draggable="false" ${forExport?'':`onmousedown="event.stopPropagation()" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name}')"` } title="대학 상세 보기">
             ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,34px);height:var(--su_univ_logo_size,34px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.parentElement.innerHTML='🏫'">`:'<span style="font-size:22px">🏫</span>'}
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;overflow:hidden">
-              <button class="brd-univ-name-btn" style="color:#fff!important;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.25);font-size:18px;display:inline-flex;align-items:center;gap:7px;flex-shrink:0" ${forExport?'':(`onclick="event.stopPropagation();toggleBoardUniv('${uNameJs}')"`)}>
+              <button class="brd-univ-name-btn" style="color:#fff!important;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.25);font-size:18px;display:inline-flex;align-items:center;gap:7px;flex-shrink:0" ${forExport?'':(`onclick="event.stopPropagation();toggleBoardUniv('${(u.name||'').replace(/'/g,"\\'")}')"`)}>
                 ${(u.name||'')}${(!forExport&&(boardSelUniv||'')===u.name)?`<span style="background:rgba(255,255,255,.95);color:${col};border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.2);flex-shrink:0">✓</span>`:''}</button>
               ${(u.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(u.championships||0)}</span>`:''}
-              ${_boardCanManage()&&!forExport?`<input type="text" placeholder="📌 메모..." value="${escAttr(u.memo2||'')}" style="margin-left:4px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:2px 8px;font-size:12px;color:#fff;outline:none;font-family:inherit;min-width:60px;width:200px;max-width:45%;flex:0 1 auto" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="setBoardMemo2('${uNameJs}',this.value)" onblur="setBoardMemo2('${uNameJs}',this.value)">`:(u.memo2?`<span style="margin-left:4px;font-size:12px;color:rgba(255,255,255,.92);font-weight:600;background:rgba(255,255,255,.15);border-radius:6px;padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;max-width:45%">${(typeof window.escHTML==='function')?window.escHTML(u.memo2):u.memo2}</span>`:'')}
+              ${_boardCanManage()&&!forExport?`<input type="text" placeholder="📌 메모..." value="${(u.memo2||'').replace(/"/g,'&quot;')}" style="margin-left:4px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:2px 8px;font-size:12px;color:#fff;outline:none;font-family:inherit;min-width:60px;width:200px;max-width:45%;flex:0 1 auto" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="setBoardMemo2('${(u.name||'').replace(/'/g,"\\'")}',this.value)" onblur="setBoardMemo2('${(u.name||'').replace(/'/g,"\\'")}',this.value)">`:(u.memo2?`<span style="margin-left:4px;font-size:12px;color:rgba(255,255,255,.92);font-weight:600;background:rgba(255,255,255,.15);border-radius:6px;padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;max-width:45%">${u.memo2}</span>`:'')}
             </div>
-            <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:3px;display:flex;align-items:center;gap:5px">${cnt}명 <button class="brd-collapse-btn no-export" onclick="event.stopPropagation();_brdCollapseToggle('${uNameJs}')"
+            <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:3px;display:flex;align-items:center;gap:5px">${cnt}명 <button class="brd-collapse-btn no-export" onclick="event.stopPropagation();_brdCollapseToggle('${(u.name||'').replace(/'/g,"\\'")}')"
               style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:4px;color:#fff;font-size:10px;padding:0 5px;height:16px;cursor:pointer;line-height:1;font-weight:700">${boardCollapsed.has(u.name)?'▶':'▼'}</button>${u.dissolved?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px;color:#fca5a5">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}${_boardCanManage()&&u.hidden?`<span style="background:rgba(0,0,0,.4);font-size:10px;padding:1px 7px;border-radius:10px">🚫 방문자 숨김</span>`:''}</div>
           </div>
           ${!forExport?`<div class="no-export" style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
@@ -1152,10 +1086,10 @@ function buildUnivBoardCard(u, forExport){
               <button onclick="event.stopPropagation();adjustChampionship('${u.name}',1)" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="우승 추가">⭐+</button>
               <button onclick="event.stopPropagation();adjustChampionship('${u.name}',-1)" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="우승 제거">⭐-</button>
               ${(()=>{const _ci=univCfg.findIndex(x=>x.name===u.name);if(_ci<0)return'';return u.dissolved?`<button onclick="event.stopPropagation();univCfg[${_ci}].dissolved=false;univCfg[${_ci}].hidden=false;delete univCfg[${_ci}].dissolvedDate;save();render()" style="background:rgba(34,197,94,.35);border:1px solid rgba(134,239,172,.8);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="해체 복구">🔄 복구</button>`:`<button onclick="event.stopPropagation();(function(){const _i=${_ci};if(typeof openDissolveModal==='function'){openDissolveModal(_i);}else{if(!confirm('${u.name.replace(/'/g,"\\'")} 대학을 해체하시겠습니까?'))return;univCfg[_i].dissolved=true;univCfg[_i].hidden=true;univCfg[_i].dissolvedDate=new Date().toISOString().slice(0,10);save();render();}})()" style="background:rgba(234,88,12,.35);border:1px solid rgba(253,186,116,.8);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="대학 해체">🏚️ 해체</button>`;})()}
-              <label style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer;display:flex;align-items:center;gap:2px" onclick="event.stopPropagation()" title="배경 이미지 파일 업로드">🖼️<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardBgImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${uNameJs}')"></label>
-              <button onclick="event.stopPropagation();promptBoardBgImgUrl('${uNameJs}')" style="background:${u.bgImg&&!u.bgImg.startsWith('data:')?'rgba(99,102,241,.45)':'rgba(255,255,255,.18)'};border:1px solid ${u.bgImg&&!u.bgImg.startsWith('data:')?'rgba(165,180,252,.8)':'rgba(255,255,255,.35)'};border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="배경 이미지 URL 링크">🔗</button>
-              ${u.bgImg?`<button onclick="event.stopPropagation();removeBoardBgImg('${uNameJs}')" style="background:rgba(239,68,68,.35);border:1px solid rgba(239,68,68,.6);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="배경 제거">🗑️</button>
-              <button onclick="event.stopPropagation();setBoardBgImgSize('${uNameJs}','${_bgSize==='cover'?'contain':(_bgSize==='contain'?'auto':'cover')}')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:10px;padding:0 6px;height:22px;cursor:pointer" title="${_bgSize==='cover'?'맞추기(contain)':(_bgSize==='contain'?'자동(auto)':'채우기(cover)')}">${_bgSize==='cover'?'↔맞추기':(_bgSize==='contain'?'🪄자동':'⬛채우기')}</button>
+              <label style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer;display:flex;align-items:center;gap:2px" onclick="event.stopPropagation()" title="배경 이미지 파일 업로드">🖼️<input type="file" accept="image/*" style="display:none" onchange="event.stopPropagation();(function(f,n){if(!f)return;const r=new FileReader();r.onload=function(e){setBoardBgImg(n,e.target.result);};r.readAsDataURL(f);})(this.files[0],'${_uNameSafe}')"></label>
+              <button onclick="event.stopPropagation();promptBoardBgImgUrl('${_uNameSafe}')" style="background:${u.bgImg&&!u.bgImg.startsWith('data:')?'rgba(99,102,241,.45)':'rgba(255,255,255,.18)'};border:1px solid ${u.bgImg&&!u.bgImg.startsWith('data:')?'rgba(165,180,252,.8)':'rgba(255,255,255,.35)'};border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="배경 이미지 URL 링크">🔗</button>
+              ${u.bgImg?`<button onclick="event.stopPropagation();removeBoardBgImg('${_uNameSafe}')" style="background:rgba(239,68,68,.35);border:1px solid rgba(239,68,68,.6);border-radius:5px;color:#fff;font-size:11px;padding:0 7px;height:22px;cursor:pointer" title="배경 제거">🗑️</button>
+              <button onclick="event.stopPropagation();setBoardBgImgSize('${_uNameSafe}','${_bgSize==='cover'?'contain':(_bgSize==='contain'?'auto':'cover')}')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:5px;color:#fff;font-size:10px;padding:0 6px;height:22px;cursor:pointer" title="${_bgSize==='cover'?'맞추기(contain)':(_bgSize==='contain'?'자동(auto)':'채우기(cover)')}">${_bgSize==='cover'?'↔맞추기':(_bgSize==='contain'?'🪄자동':'⬛채우기')}</button>
               ${_bgPosGrid}`:''}
             </div>`:''}
           </div>`:''}
@@ -1274,71 +1208,63 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
   const otherUnivs = allUnivs.filter(u=>u.name!==univName&&!u.dissolved);
   const univOpts = otherUnivs.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
   const _pnSafeChip = playerName.replace(/[^a-zA-Z0-9가-힣]/g,'');
-  const pNameJs = (typeof escJS==='function')
-    ? escJS(playerName)
-    : String(playerName||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-  const uNameJs = (typeof escJS==='function')
-    ? escJS(univName)
-    : String(univName||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-  const pNameHtml = (typeof window.escHTML==='function') ? window.escHTML(playerName) : String(playerName||'');
-  const uNameHtml = (typeof window.escHTML==='function') ? window.escHTML(univName) : String(univName||'');
-  const _tiers = _brdGetTiers();
-  const _tierIdxChip = _tiers.indexOf(p.tier||'미정');
-  const _prevTierChip = _tierIdxChip > 0 ? _tiers[_tierIdxChip-1] : null;
-  const _nextTierChip = (_tierIdxChip >= 0 && _tierIdxChip < _tiers.length-1) ? _tiers[_tierIdxChip+1] : null;
+  const pNameSafe = playerName.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  const _tierIdxChip = TIERS.indexOf(p.tier||'미정');
+  const _prevTierChip = _tierIdxChip > 0 ? TIERS[_tierIdxChip-1] : null;
+  const _nextTierChip = _tierIdxChip < TIERS.length-1 ? TIERS[_tierIdxChip+1] : null;
 
   popup.innerHTML = `
-    <div class="brd-move-popup-title">👤 ${pNameHtml} <span style="font-size:10px;font-weight:400">(${uNameHtml})</span></div>
+    <div class="brd-move-popup-title">👤 ${playerName} <span style="font-size:10px;font-weight:400">(${univName})</span></div>
     <div style="padding:5px 6px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🎭 상태 아이콘 <span style="margin-left:4px">${getStatusIconHTML(playerName)||''}</span></div>
       <div style="display:flex;flex-wrap:wrap;gap:2px;max-height:90px;overflow-y:auto" id="brd-icon-grid-${_pnSafeChip}">
-        ${(()=>{const _ci=getStatusIcon(playerName);return Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const sel=(id==='none'&&!_ci)||(d.emoji&&_ci===d.emoji);const inner=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'15px'):d.emoji):'<span style="font-size:9px">없음</span>';return `<button type="button" title="${d.label.replace(/"/g,'&quot;')}" onclick="setBrdStatusIcon(this,'${pNameJs}','${id}')" data-icon-id="${id}" style="padding:2px 5px;border-radius:4px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'9px':'12px'};min-width:26px;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;}).join('');})()}
+        ${(()=>{const _ci=getStatusIcon(playerName);return Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const sel=(id==='none'&&!_ci)||(d.emoji&&_ci===d.emoji);const inner=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'15px'):d.emoji):'<span style="font-size:9px">없음</span>';return `<button type="button" title="${d.label.replace(/"/g,'&quot;')}" onclick="setBrdStatusIcon(this,'${pNameSafe}','${id}')" data-icon-id="${id}" style="padding:2px 5px;border-radius:4px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'9px':'12px'};min-width:26px;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;}).join('');})()}
       </div>
     </div>
     <div class="brd-move-popup-sep"></div>
     <div style="padding:4px 6px 6px;font-size:11px;font-weight:700;color:var(--text3)">🏷️ 직책 수정</div>
     <div style="display:flex;gap:4px;flex-wrap:wrap;padding:0 6px 4px">
-      ${['이사장','동아리 회장','총장','부총장','총괄','교수','코치'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${pNameJs}','${r}')" style="font-size:10px">${r}</button>`).join('')}
-      <button class="btn btn-xs btn-w" onclick="setBrdRole('${pNameJs}','')" style="font-size:10px;color:#dc2626">해제</button>
+      ${['이사장','동아리 회장','총장','부총장','총괄','교수','코치'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${playerName}','${r}')" style="font-size:10px">${r}</button>`).join('')}
+      <button class="btn btn-xs btn-w" onclick="setBrdRole('${playerName}','')" style="font-size:10px;color:#dc2626">해제</button>
     </div>
     <div style="display:flex;gap:4px;padding:0 6px 4px;align-items:center">
       <input id="brd-role-chip-${_pnSafeChip}" type="text" placeholder="직접 입력..." style="flex:1;padding:4px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
-      <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-chip-${_pnSafeChip}');if(inp&&inp.value.trim())setBrdRole('${pNameJs}',inp.value.trim())})()">설정</button>
+      <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-chip-${_pnSafeChip}');if(inp&&inp.value.trim())setBrdRole('${playerName}',inp.value.trim())})()">설정</button>
     </div>
-    ${univName!=='무소속'?`<button onclick="const p=players.find(x=>x.name==='${pNameJs}');if(p){const from=p.univ;p.univ='무소속';delete p.role;if(boardPlayerOrder[from])boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${pNameJs}');save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}" style="width:calc(100% - 12px);margin:0 6px 6px;padding:5px;border-radius:6px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;color:#475569">🚶 무소속으로 이동</button>`:``}
+    ${univName!=='무소속'?`<button onclick="const p=players.find(x=>x.name==='${playerName}');if(p){const from=p.univ;p.univ='무소속';delete p.role;if(boardPlayerOrder[from])boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${playerName}');save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}" style="width:calc(100% - 12px);margin:0 6px 6px;padding:5px;border-radius:6px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;color:#475569">🚶 무소속으로 이동</button>`:``}
     <div class="brd-move-popup-sep"></div>
     <div style="padding:4px 6px 2px;font-size:11px;font-weight:700;color:var(--text3)">⭐ 티어</div>
     <div style="display:flex;align-items:center;gap:5px;padding:3px 6px 8px">
-      <button onclick="${_prevTierChip?`setBrdTier('${pNameJs}','${_prevTierChip}')`:'void 0'}" ${!_prevTierChip?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_prevTierChip?'.3':'1'}">▲</button>
+      <button onclick="${_prevTierChip?`setBrdTier('${playerName}','${_prevTierChip}')`:'void 0'}" ${!_prevTierChip?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_prevTierChip?'.3':'1'}">▲</button>
       <span style="flex:1;text-align:center;font-size:13px;font-weight:800;color:var(--text)">${p.tier||'미정'}</span>
-      <button onclick="${_nextTierChip?`setBrdTier('${pNameJs}','${_nextTierChip}')`:'void 0'}" ${!_nextTierChip?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_nextTierChip?'.3':'1'}">▼</button>
+      <button onclick="${_nextTierChip?`setBrdTier('${playerName}','${_nextTierChip}')`:'void 0'}" ${!_nextTierChip?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_nextTierChip?'.3':'1'}">▼</button>
     </div>
     <div class="brd-move-popup-sep"></div>
     <div style="padding:4px 6px 6px;font-size:11px;font-weight:700;color:var(--text3)">🏫 다른 대학으로 이동</div>
     <div style="display:flex;gap:6px;padding:0 6px 6px">
       <select id="brd-chip-univ-target" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border2);font-size:12px;background:var(--white)">${univOpts||'<option disabled>대학 없음</option>'}</select>
-      <button class="btn btn-b btn-xs" onclick="boardTransferPlayerFromChip('${pNameJs}','${uNameJs}')">이동</button>
+      <button class="btn btn-b btn-xs" onclick="boardTransferPlayerFromChip('${playerName}','${univName}')">이동</button>
     </div>
     <div class="brd-move-popup-sep"></div>
     <div style="padding:4px 6px 6px">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🖼️ 프로필 이미지</div>
       <div style="display:flex;gap:4px">
         <input id="brd-photo-chip-${_pnSafeChip}" type="text" placeholder="이미지 URL 입력..." value="${(p.photo||'').replace(/"/g,'&quot;')}" style="flex:1;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
-        <button class="btn btn-b btn-xs" onclick="setBrdPhoto('${pNameJs}',document.getElementById('brd-photo-chip-${_pnSafeChip}').value)">저장</button>
+        <button class="btn btn-b btn-xs" onclick="setBrdPhoto('${playerName}',document.getElementById('brd-photo-chip-${_pnSafeChip}').value)">저장</button>
       </div>
-      ${p.photo?`<button onclick="setBrdPhoto('${pNameJs}','')" style="margin-top:3px;width:100%;padding:2px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;font-size:10px;font-weight:700;cursor:pointer;color:#dc2626">🗑️ 이미지 삭제</button>`:''}
+      ${p.photo?`<button onclick="setBrdPhoto('${playerName}','')" style="margin-top:3px;width:100%;padding:2px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;font-size:10px;font-weight:700;cursor:pointer;color:#dc2626">🗑️ 이미지 삭제</button>`:''}
     </div>
     <div class="brd-move-popup-sep"></div>
     <div style="padding:4px 6px 6px">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:5px">🔧 상태</div>
       <div style="display:flex;gap:4px">
-        <button onclick="(function(){const p=players.find(x=>x.name==='${pNameJs}');if(!p)return;p.retired=!p.retired;save();_brdClose();render();_brdToast(p.retired?'🎗️ 은퇴 처리됨':'↩️ 은퇴 해제됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.retired?'#6b7280':'#e2e8f0'};background:${p.retired?'#f1f5f9':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.retired?'#374151':'#64748b'}">🎗️ ${p.retired?'은퇴 해제':'은퇴'}</button>
-        <button onclick="(function(){const p=players.find(x=>x.name==='${pNameJs}');if(!p)return;p.hidden=!p.hidden;save();_brdClose();render();_brdToast(p.hidden?'🚫 현황판에서 숨김':'👁️ 현황판에 표시됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.hidden?'#f87171':'#e2e8f0'};background:${p.hidden?'#fff1f2':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.hidden?'#dc2626':'#64748b'}">🚫 ${p.hidden?'숨김 해제':'현황판 숨기기'}</button>
+        <button onclick="(function(){const p=players.find(x=>x.name==='${playerName}');if(!p)return;p.retired=!p.retired;save();_brdClose();render();_brdToast(p.retired?'🎗️ 은퇴 처리됨':'↩️ 은퇴 해제됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.retired?'#6b7280':'#e2e8f0'};background:${p.retired?'#f1f5f9':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.retired?'#374151':'#64748b'}">🎗️ ${p.retired?'은퇴 해제':'은퇴'}</button>
+        <button onclick="(function(){const p=players.find(x=>x.name==='${playerName}');if(!p)return;p.hidden=!p.hidden;save();_brdClose();render();_brdToast(p.hidden?'🚫 현황판에서 숨김':'👁️ 현황판에 표시됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.hidden?'#f87171':'#e2e8f0'};background:${p.hidden?'#fff1f2':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.hidden?'#dc2626':'#64748b'}">🚫 ${p.hidden?'숨김 해제':'현황판 숨기기'}</button>
       </div>
     </div>
     <div class="brd-move-popup-sep"></div>
-    ${(p.gameType==='general')?`<button class="brd-move-popup-btn" onclick="if(confirm('${pNameJs}을(를) 스트리머 목록에서 삭제할까요?\\n\\n⚠️ 삭제하면 복구가 어렵습니다.')){const idx=players.findIndex(x=>x.name==='${pNameJs}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('🗑️ 스트리머 삭제 완료');}}">🗑️ 스트리머 삭제</button>`:''}
-    <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${pNameJs}')">👤 스트리머 상세 보기</button>
+    ${(p.gameType==='general')?`<button class="brd-move-popup-btn" onclick="if(confirm('${playerName}을(를) 스트리머 목록에서 삭제할까요?\\n\\n⚠️ 삭제하면 복구가 어렵습니다.')){const idx=players.findIndex(x=>x.name==='${playerName}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('🗑️ 스트리머 삭제 완료');}}">🗑️ 스트리머 삭제</button>`:''}
+    <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${playerName}')">👤 스트리머 상세 보기</button>
   `;
 
   document.body.appendChild(popup);
@@ -1403,86 +1329,77 @@ function openBrdPlayerPopup(e, playerName, univName, idx, total){
   const univOpts = otherUnivs.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
 
   const _pnSafe = playerName.replace(/[^a-zA-Z0-9가-힣]/g,'');
-  const pNameJs = (typeof escJS==='function')
-    ? escJS(playerName)
-    : String(playerName||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-  const uNameJs = (typeof escJS==='function')
-    ? escJS(univName)
-    : String(univName||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-  const pNameHtml = (typeof window.escHTML==='function') ? window.escHTML(playerName) : String(playerName||'');
-  const uNameHtml = (typeof window.escHTML==='function') ? window.escHTML(univName) : String(univName||'');
   const _curIcon = getStatusIcon(playerName);
-  const _tiers = _brdGetTiers();
-  const _tierIdx = _tiers.indexOf(p.tier||'미정');
-  const _prevTier = _tierIdx > 0 ? _tiers[_tierIdx-1] : null;
-  const _nextTier = (_tierIdx >= 0 && _tierIdx < _tiers.length-1) ? _tiers[_tierIdx+1] : null;
+  const _tierIdx = TIERS.indexOf(p.tier||'미정');
+  const _prevTier = _tierIdx > 0 ? TIERS[_tierIdx-1] : null;
+  const _nextTier = _tierIdx < TIERS.length-1 ? TIERS[_tierIdx+1] : null;
   popup.innerHTML = `
     <div style="padding:8px 10px 6px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:6px">
-      <div style="font-size:12px;font-weight:800;color:var(--text)">👤 ${pNameHtml} <span style="font-size:10px;font-weight:500;color:var(--text3)">(${uNameHtml})</span></div>
+      <div style="font-size:12px;font-weight:800;color:var(--text)">👤 ${playerName} <span style="font-size:10px;font-weight:500;color:var(--text3)">(${univName})</span></div>
       <button onclick="_brdClose()" style="background:none;border:none;color:var(--gray-l);font-size:14px;cursor:pointer;padding:0 2px;line-height:1">✕</button>
     </div>
     <div style="display:flex;gap:4px;padding:6px 8px;border-bottom:1px solid var(--border)">
-      <button onclick="boardMovePlayer('${pNameJs}','${uNameJs}','top')" title="맨 위로" ${idx===0?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx===0?'.3':'1'}">⬆️</button>
-      <button onclick="boardMovePlayer('${pNameJs}','${uNameJs}','up')" title="위로" ${idx===0?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx===0?'.3':'1'}">🔼</button>
-      <button onclick="boardMovePlayer('${pNameJs}','${uNameJs}','down')" title="아래로" ${idx>=total-1?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx>=total-1?'.3':'1'}">🔽</button>
-      <button onclick="boardMovePlayer('${pNameJs}','${uNameJs}','bottom')" title="맨 아래로" ${idx>=total-1?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx>=total-1?'.3':'1'}">⬇️</button>
+      <button onclick="boardMovePlayer('${playerName}','${univName}','top')" title="맨 위로" ${idx===0?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx===0?'.3':'1'}">⬆️</button>
+      <button onclick="boardMovePlayer('${playerName}','${univName}','up')" title="위로" ${idx===0?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx===0?'.3':'1'}">🔼</button>
+      <button onclick="boardMovePlayer('${playerName}','${univName}','down')" title="아래로" ${idx>=total-1?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx>=total-1?'.3':'1'}">🔽</button>
+      <button onclick="boardMovePlayer('${playerName}','${univName}','bottom')" title="맨 아래로" ${idx>=total-1?'disabled':''} style="flex:1;padding:4px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:16px;cursor:pointer;opacity:${idx>=total-1?'.3':'1'}">⬇️</button>
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🏷️ 직책</div>
       <div style="display:flex;gap:3px;flex-wrap:wrap">
-        ${['이사장','동아리 회장','총장','총괄','교수','코치'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${pNameJs}','${r}')" style="font-size:10px;padding:2px 7px">${r}</button>`).join('')}
-        <button class="btn btn-xs btn-w" onclick="setBrdRole('${pNameJs}','')" style="font-size:10px;padding:2px 7px;color:#dc2626">해제</button>
+        ${['이사장','동아리 회장','총장','총괄','교수','코치'].map(r=>`<button class="btn btn-xs ${p.role===r?'btn-b':'btn-w'}" onclick="setBrdRole('${playerName}','${r}')" style="font-size:10px;padding:2px 7px">${r}</button>`).join('')}
+        <button class="btn btn-xs btn-w" onclick="setBrdRole('${playerName}','')" style="font-size:10px;padding:2px 7px;color:#dc2626">해제</button>
       </div>
       <div style="display:flex;gap:4px;margin-top:4px">
         <input id="brd-role-custom-${_pnSafe}" type="text" placeholder="직접 입력..." style="flex:1;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
-        <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-custom-${_pnSafe}');if(inp&&inp.value.trim())setBrdRole('${pNameJs}',inp.value.trim())})()" style="font-size:11px">설정</button>
+        <button class="btn btn-b btn-xs" onclick="(function(){const inp=document.getElementById('brd-role-custom-${_pnSafe}');if(inp&&inp.value.trim())setBrdRole('${playerName}',inp.value.trim())})()" style="font-size:11px">설정</button>
       </div>
-      ${univName!=='무소속'?`<button onclick="const p=players.find(x=>x.name==='${pNameJs}');if(p){const from=p.univ;p.univ='무소속';delete p.role;if(boardPlayerOrder[from])boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${pNameJs}');save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}" style="width:100%;margin-top:5px;padding:4px;border-radius:6px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;color:#475569">🚶 무소속으로 이동</button>`:''}
+      ${univName!=='무소속'?`<button onclick="const p=players.find(x=>x.name==='${playerName}');if(p){const from=p.univ;p.univ='무소속';delete p.role;if(boardPlayerOrder[from])boardPlayerOrder[from]=boardPlayerOrder[from].filter(n=>n!=='${playerName}');save();_brdClose();_refreshBoardCard(from);_refreshBoardCard('무소속');_brdToast('🚶 무소속으로 이동 완료');}" style="width:100%;margin-top:5px;padding:4px;border-radius:6px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;color:#475569">🚶 무소속으로 이동</button>`:''}
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">⭐ 티어</div>
       <div style="display:flex;align-items:center;gap:5px">
-        <button onclick="${_prevTier?`setBrdTier('${pNameJs}','${_prevTier}')`:'void 0'}" ${!_prevTier?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_prevTier?'.3':'1'}">▲</button>
+        <button onclick="${_prevTier?`setBrdTier('${playerName}','${_prevTier}')`:'void 0'}" ${!_prevTier?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_prevTier?'.3':'1'}">▲</button>
         <span style="flex:1;text-align:center;font-size:13px;font-weight:800;color:var(--text)">${p.tier||'미정'}</span>
-        <button onclick="${_nextTier?`setBrdTier('${pNameJs}','${_nextTier}')`:'void 0'}" ${!_nextTier?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_nextTier?'.3':'1'}">▼</button>
+        <button onclick="${_nextTier?`setBrdTier('${playerName}','${_nextTier}')`:'void 0'}" ${!_nextTier?'disabled':''} style="padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;cursor:pointer;opacity:${!_nextTier?'.3':'1'}">▼</button>
       </div>
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🎭 상태 아이콘</div>
       <div style="display:flex;flex-wrap:wrap;gap:3px" id="brd-icon-grid-${_pnSafe}">
-        ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const sel=(id==='none'&&!_curIcon)||(d.emoji&&_curIcon===d.emoji);const inner=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'16px'):d.emoji):'<span style="font-size:10px">없음</span>';return `<button type="button" title="${d.label}" onclick="setBrdStatusIcon(this,'${pNameJs}','${id}')" data-icon-id="${id}" style="padding:3px 6px;border-radius:5px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'10px':'13px'};min-width:28px;transition:.1s;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;}).join('')}
+        ${Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const sel=(id==='none'&&!_curIcon)||(d.emoji&&_curIcon===d.emoji);const inner=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'16px'):d.emoji):'<span style="font-size:10px">없음</span>';return `<button type="button" title="${d.label}" onclick="setBrdStatusIcon(this,'${playerName}','${id}')" data-icon-id="${id}" style="padding:3px 6px;border-radius:5px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'10px':'13px'};min-width:28px;transition:.1s;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;}).join('')}
       </div>
       <div style="display:flex;gap:3px;margin-top:5px;align-items:center">
         <input id="brd-si-url-${_pnSafe}" type="text" placeholder="🔗 이미지 URL 입력" style="flex:1;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);font-size:11px" oninput="_brdSiPreview('${_pnSafe}',this.value)">
         <span id="brd-si-prev-${_pnSafe}" style="width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:5px;background:var(--white);font-size:14px;flex-shrink:0"></span>
-        <button class="btn btn-b btn-xs" onclick="_brdAddCustomIcon('${_pnSafe}','${pNameJs}')">추가</button>
+        <button class="btn btn-b btn-xs" onclick="_brdAddCustomIcon('${_pnSafe}','${playerName}')">추가</button>
       </div>
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🖼️ 프로필 이미지</div>
       <div style="display:flex;gap:4px">
         <input id="brd-photo-${_pnSafe}" type="text" placeholder="이미지 URL 입력..." value="${(p.photo||'').replace(/"/g,'&quot;')}" style="flex:1;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);font-size:11px">
-        <button class="btn btn-b btn-xs" onclick="setBrdPhoto('${pNameJs}',document.getElementById('brd-photo-${_pnSafe}').value)">저장</button>
+        <button class="btn btn-b btn-xs" onclick="setBrdPhoto('${playerName}',document.getElementById('brd-photo-${_pnSafe}').value)">저장</button>
       </div>
-      ${p.photo?`<button onclick="setBrdPhoto('${pNameJs}','')" style="margin-top:3px;width:100%;padding:2px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;font-size:10px;font-weight:700;cursor:pointer;color:#dc2626">🗑️ 이미지 삭제</button>`:''}
+      ${p.photo?`<button onclick="setBrdPhoto('${playerName}','')" style="margin-top:3px;width:100%;padding:2px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;font-size:10px;font-weight:700;cursor:pointer;color:#dc2626">🗑️ 이미지 삭제</button>`:''}
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px">🏫 대학 이동</div>
       <div style="display:flex;gap:4px">
         <select id="brd-univ-target" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid var(--border2);font-size:12px;background:var(--white)">${univOpts||'<option disabled>대학 없음</option>'}</select>
-        <button class="btn btn-b btn-xs" onclick="boardTransferPlayer('${pNameJs}','${uNameJs}')">이동</button>
+        <button class="btn btn-b btn-xs" onclick="boardTransferPlayer('${playerName}','${univName}')">이동</button>
       </div>
     </div>
     <div style="padding:5px 8px;border-bottom:1px solid var(--border)">
       <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:5px">🔧 상태</div>
       <div style="display:flex;gap:4px">
-        <button onclick="(function(){const p=players.find(x=>x.name==='${pNameJs}');if(!p)return;p.retired=!p.retired;save();_brdClose();render();_brdToast(p.retired?'🎗️ 은퇴 처리됨':'↩️ 은퇴 해제됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.retired?'#6b7280':'#e2e8f0'};background:${p.retired?'#f1f5f9':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.retired?'#374151':'#64748b'}">🎗️ ${p.retired?'은퇴 해제':'은퇴'}</button>
-        <button onclick="(function(){const p=players.find(x=>x.name==='${pNameJs}');if(!p)return;p.hidden=!p.hidden;save();_brdClose();render();_brdToast(p.hidden?'🚫 현황판에서 숨김':'👁️ 현황판에 표시됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.hidden?'#f87171':'#e2e8f0'};background:${p.hidden?'#fff1f2':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.hidden?'#dc2626':'#64748b'}">🚫 ${p.hidden?'숨김 해제':'현황판 숨기기'}</button>
+        <button onclick="(function(){const p=players.find(x=>x.name==='${playerName}');if(!p)return;p.retired=!p.retired;save();_brdClose();render();_brdToast(p.retired?'🎗️ 은퇴 처리됨':'↩️ 은퇴 해제됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.retired?'#6b7280':'#e2e8f0'};background:${p.retired?'#f1f5f9':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.retired?'#374151':'#64748b'}">🎗️ ${p.retired?'은퇴 해제':'은퇴'}</button>
+        <button onclick="(function(){const p=players.find(x=>x.name==='${playerName}');if(!p)return;p.hidden=!p.hidden;save();_brdClose();render();_brdToast(p.hidden?'🚫 현황판에서 숨김':'👁️ 현황판에 표시됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.hidden?'#f87171':'#e2e8f0'};background:${p.hidden?'#fff1f2':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.hidden?'#dc2626':'#64748b'}">🚫 ${p.hidden?'숨김 해제':'현황판 숨기기'}</button>
       </div>
     </div>
     <div style="display:flex;gap:4px;padding:6px 8px">
-      <button style="flex:1;padding:6px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdClose();_refreshBoardCard('${uNameJs}');save();_brdToast('✅ 저장 완료')">💾 저장</button>
-      <button style="flex:1;padding:6px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdClose();openPlayerModal('${pNameJs}')">📋 상세</button>
+      <button style="flex:1;padding:6px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdClose();_refreshBoardCard('${univName}');save();_brdToast('✅ 저장 완료')">💾 저장</button>
+      <button style="flex:1;padding:6px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="_brdClose();openPlayerModal('${playerName}')">📋 상세</button>
     </div>
   `;
 
@@ -1555,9 +1472,6 @@ function _brdSiPreview(pnSafe, v){
 function _brdAddCustomIcon(pnSafe, playerName){
   const urlEl = document.getElementById('brd-si-url-'+pnSafe);
   if(!urlEl || !urlEl.value.trim()) return;
-  const pnJs = (typeof escJS==='function')
-    ? escJS(playerName)
-    : String(playerName||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
   addCustomStatusIcon('커스텀', urlEl.value.trim());
   urlEl.value = '';
   const prev = document.getElementById('brd-si-prev-'+pnSafe);
@@ -1569,7 +1483,7 @@ function _brdAddCustomIcon(pnSafe, playerName){
   grid.innerHTML = Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{
     const sel=(id==='none'&&!_curIcon)||(d.emoji&&_curIcon===d.emoji);
     const inner=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'16px'):d.emoji):'<span style="font-size:10px">없음</span>';
-    return `<button type="button" title="${d.label}" onclick="setBrdStatusIcon(this,'${pnJs}','${id}')" data-icon-id="${id}" style="padding:3px 6px;border-radius:5px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'10px':'13px'};min-width:28px;transition:.1s;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;
+    return `<button type="button" title="${d.label}" onclick="setBrdStatusIcon(this,'${playerName}','${id}')" data-icon-id="${id}" style="padding:3px 6px;border-radius:5px;border:2px solid ${sel?'#16a34a':'var(--border)'};background:${sel?'#dcfce7':'var(--white)'};cursor:pointer;font-size:${id==='none'?'10px':'13px'};min-width:28px;transition:.1s;display:inline-flex;align-items:center;justify-content:center">${inner}</button>`;
   }).join('');
 }
 function setBrdStatusIcon(btn, playerName, iconId){
@@ -1655,7 +1569,7 @@ function _refreshBoardCard(univName){
   const wrap = document.getElementById('board-wrap');
   if(!wrap){ render(); return; }
   const u = getAllUnivs().find(x=>x.name===univName);
-  const existing = _findBrdCardByUniv(univName, wrap);
+  const existing = wrap.querySelector(`.brd-card[data-univ="${univName}"]`);
   // 해당 대학에 선수가 없으면 카드 제거
   if(!u || !players.some(p=>p.univ===univName)){
     if(existing) existing.remove();
@@ -2527,22 +2441,16 @@ function buildBoardRankViewHTML(univs){
     const rnk=i===0?`<span class="rk1">1</span>`:i===1?`<span class="rk2">2</span>`:i===2?`<span class="rk3">3</span>`:`<span style="font-weight:700">${i+1}</span>`;
     const pts=p.points||0;
     const ptsCol=pts>0?'#16a34a':pts<0?'#dc2626':'#64748b';
-    const pNameJs = (typeof escJS==='function')
-      ? escJS(p.name)
-      : String(p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
-    const univNameJs = (typeof escJS==='function')
-      ? escJS(p._univ)
-      : String(p._univ||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
     h+=`<tr style="border-top:1px solid var(--border)">
       <td style="padding:7px 12px;text-align:center">${rnk}</td>
       <td style="padding:7px 12px;text-align:left">
-        <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${pNameJs}')">
+        <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')">
           ${getPlayerPhotoHTML(p.name,'24px')}
           <span style="font-weight:700;font-size:13px">${p.name||''}</span>
         </div>
       </td>
       <td style="padding:7px 12px">
-        <span class="ubadge clickable-univ" style="background:${p._col};font-size:10px;padding:2px 7px" onclick="openUnivModal('${univNameJs}')">${p._univ||''}</span>
+        <span class="ubadge clickable-univ" style="background:${p._col};font-size:10px;padding:2px 7px" onclick="openUnivModal('${(p._univ||'').replace(/'/g,"\\'")}')">${p._univ||''}</span>
       </td>
       <td style="padding:7px 12px;text-align:center;font-size:12px">${tierIcon}${p.tier||''}</td>
       <td style="padding:7px 12px;text-align:center;color:#16a34a;font-weight:700">${p.win||0}</td>
@@ -2565,7 +2473,7 @@ async function downloadBoardSel(){
     if(!u){alert('해당 대학을 찾을 수 없습니다.');return;}
     const boardWrap=document.getElementById('board-wrap');
     if(boardWrap){
-      const card=_findBrdCardByUniv(boardSelUniv, boardWrap);
+      const card=boardWrap.querySelector(`.brd-card[data-univ="${boardSelUniv}"]`);
       if(card){
         const domOrder=[...card.querySelectorAll('[data-player]')].map(el=>el.dataset.player).filter(Boolean);
         if(domOrder.length>0) boardPlayerOrder[boardSelUniv]=domOrder;

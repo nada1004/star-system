@@ -58,13 +58,11 @@ function _compActionMenuHTML(items){
 }
 
 function getCurrentTourney(){
-  const _tourneys = (typeof tourneys!=='undefined' && Array.isArray(tourneys)) ? tourneys : [];
-  return _tourneys.find(t=>t && t.name===curComp) || _tourneys[0] || null;
+  return tourneys.find(t=>t.name===curComp)||tourneys[0]||null;
 }
 
 function rComp(C,T){
   T.innerText='🎖️ 대회';
-  const _tourneys = (typeof tourneys!=='undefined' && Array.isArray(tourneys)) ? tourneys : [];
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
   const _lockOpen = (localStorage.getItem('su_filter_lock_open') ?? '1') === '1';
   if(window._compFilterOpen===undefined) window._compFilterOpen=_lockOpen;
@@ -73,7 +71,7 @@ function rComp(C,T){
   if(!isLoggedIn && (compSub==='grpedit' || (new URLSearchParams(location.search).get('csub')==='grpedit'))) compSub='league';
 
   // tier 타입 대회가 curComp에 선택되어 있으면 curComp와 compSub 함께 초기화 [BUGFIX-1]
-  if(curComp && _tourneys.find(t=>t && t.name===curComp && t.type==='tier')){
+  if(curComp && tourneys.find(t=>t.name===curComp&&t.type==='tier')){
     curComp=''; compSub='league';
   }
   const tn=getCurrentTourney();
@@ -83,7 +81,7 @@ function rComp(C,T){
     <span style="font-weight:700;color:var(--gold);white-space:nowrap">🎖️ 대회 선택:</span>
     <select style="flex:1;max-width:220px;font-weight:700" onchange="curComp=this.value;leagueFilterDate='';leagueFilterGrp='';grpRankFilter='';bktSchedRound='전체';bktSchedSortDir='desc';save();render()">
       <option value="">— 대회를 선택하세요 —</option>
-      ${_tourneys.filter(t=>t && t.type!=='tier').map(t=>{
+      ${tourneys.filter(t=>t.type!=='tier').map(t=>{
         const _grpDates=(t.groups||[]).flatMap(g=>(g.matches||[]).map(m=>m.d));
         const _br=t.bracket||{};
         const _bktDates=Object.values(_br.matchDetails||{}).map(m=>m.d).concat((_br.manualMatches||[]).map(m=>m&&m.d));
@@ -1014,3 +1012,4 @@ function rGrpEditInner(){
 /* ══════════════════════════════════════
    브라켓 경기 상세 입력
 ══════════════════════════════════════ */
+

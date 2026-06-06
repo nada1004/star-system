@@ -77,10 +77,6 @@ function histUnivCompHTML(){
   // 선택된 대학 비교 카드
   function univStats(univName){
     if(!univName) return null;
-    const _mini = (typeof miniM!=='undefined' && Array.isArray(miniM)) ? miniM : (Array.isArray(window.miniM) ? window.miniM : []);
-    const _univm = (typeof univM!=='undefined' && Array.isArray(univM)) ? univM : (Array.isArray(window.univM) ? window.univM : []);
-    const _ck = (typeof ckM!=='undefined' && Array.isArray(ckM)) ? ckM : (Array.isArray(window.ckM) ? window.ckM : []);
-    const _pro = (typeof proM!=='undefined' && Array.isArray(proM)) ? proM : (Array.isArray(window.proM) ? window.proM : []);
     const col = gc(univName);
     const members = players.filter(p=>p.univ===univName&&!p.retired);
     const activeM = members.filter(p=>(p.win+p.loss)>0);
@@ -91,10 +87,10 @@ function histUnivCompHTML(){
     const ace = [...members].sort((a,b)=>(b.points||0)-(a.points||0))[0];
     // 전체 팀전 전적 (미니/대학대전/CK/프로)
     const _allTeamArrs = [
-      {arr:_mini, label:'미니'},
-      {arr:_univm, label:'대학대전'},
-      {arr:_ck,   label:'CK', isCK:true},
-      {arr:_pro,  label:'프로', isCK:true},
+      {arr:miniM, label:'미니'},
+      {arr:univM, label:'대학대전'},
+      {arr:ckM,   label:'CK', isCK:true},
+      {arr:proM,  label:'프로', isCK:true},
     ];
     let mW=0,mL=0;
     _allTeamArrs.forEach(({arr,isCK})=>{
@@ -313,18 +309,16 @@ function getTourneyMatches(){
 }
 function compSummaryListHTML(context){
   // tourneys 경기 + normalMatches + comps 배열 모두 합산
-  const tourItems=(typeof getTourneyMatches==='function') ? getTourneyMatches() : [];
+  const tourItems=getTourneyMatches();
   const nmItems=(typeof getNormalMatchesForHistory==='function')?getNormalMatchesForHistory():[];
-  const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
-  const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : ((window.recSortDir==='asc'||window.recSortDir==='desc') ? window.recSortDir : 'desc');
-  const compItems=[..._comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
+  const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
   const allItems=[...tourItems,...nmItems,...compItems];
   if(!allItems.length)return`<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">기록이 없습니다</div><div class="empty-state-desc">기록이 추가되면 여기에 표시됩니다</div></div>`;
   // 날짜 필터 적용 후 정렬
   const filtered=allItems.filter(m=>
     typeof passDateFilter!=='function'||passDateFilter(m.d||'')
   );
-  filtered.sort((a,b)=>_sortDir==='asc'
+  filtered.sort((a,b)=>recSortDir==='asc'
     ?(a.d||'').localeCompare(b.d||'')
     :(b.d||'').localeCompare(a.d||''));
   const sortBar=``;
@@ -443,12 +437,10 @@ function _getCompMatchObj(listIdx,context){
   // 캐시 없거나 데이터 변경 시 재생성
   if(!window._compListCache||!window._compListCache[context]){
     if(!window._compListCache)window._compListCache={};
-    const tourItems=(typeof getTourneyMatches==='function') ? getTourneyMatches() : [];
-    const _comps = (typeof comps!=='undefined' && Array.isArray(comps)) ? comps : [];
-    const _sortDir = (typeof recSortDir!=='undefined' && (recSortDir==='asc' || recSortDir==='desc')) ? recSortDir : ((window.recSortDir==='asc'||window.recSortDir==='desc') ? window.recSortDir : 'desc');
-    const compItems=[..._comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
+    const tourItems=getTourneyMatches();
+    const compItems=[...comps].map((m,origIdx)=>({...m,_src:'comps',_origIdx:origIdx}));
     const all=[...tourItems,...compItems].filter(m=>typeof passDateFilter!=='function'||passDateFilter(m.d||''));
-    all.sort((a,b)=>_sortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
+    all.sort((a,b)=>recSortDir==='asc'?(a.d||'').localeCompare(b.d||''):(b.d||'').localeCompare(a.d||''));
     window._compListCache[context]=all;
   }
   const m = window._compListCache[context][listIdx]||null;
