@@ -6091,11 +6091,131 @@ function _b2WeeklyGetDefaultRange(offsetWeeks) {
 function _b2WeeklyAggregate(players, dateFrom, dateTo) {
   const dateNum = s => parseInt(String(s || '').replace(/[-\.\/]/g, '')) || 0;
   const fromN = dateNum(dateFrom), toN = dateNum(dateTo);
-  const inRange = h => { const d = dateNum(h.date || h.d || ''); return d >= fromN && d <= toN; };
+  const inRange = d => { const dn = dateNum(d); return dn >= fromN && dn <= toN; };
   const isOff   = mode => { const m = String(mode||'').trim(); return m && !['스폰서','스크리미지','연습',''].includes(m); };
 
+  // ── 외부 소스에서 플레이어별 경기 목록 구성 ──────────────────
+  // key: playerName → [{date,result,oppRace,mode}]
+  const extMap = {};
+  const addExt = (name, date, result, oppRace, mode) => {
+    if (!name || !date || !result) return;
+    if (!inRange(date)) return;
+    if (!extMap[name]) extMap[name] = [];
+    extMap[name].push({ date, result, oppRace: oppRace||'', mode: mode||'' });
+  };
+
+  // 개인전 (indM)
+  try { (typeof indM!=='undefined'&&Array.isArray(indM)?indM:[]).forEach(m=>{
+    if (!m || !m.d || !m.wName || !m.lName) return;
+    const wp = players.find(p=>p.name===m.wName), lp = players.find(p=>p.name===m.lName);
+    addExt(m.wName, m.d, '승', lp?.race||'', m.mode||'개인전');
+    addExt(m.lName, m.d, '패', wp?.race||'', m.mode||'개인전');
+  }); } catch(e){}
+
+  // 끝장전 (gjM)
+  try { (typeof gjM!=='undefined'&&Array.isArray(gjM)?gjM:[]).forEach(m=>{
+    if (!m || !m.d || !m.wName || !m.lName) return;
+    const wp = players.find(p=>p.name===m.wName), lp = players.find(p=>p.name===m.lName);
+    addExt(m.wName, m.d, '승', lp?.race||'', m.mode||'끝장전');
+    addExt(m.lName, m.d, '패', wp?.race||'', m.mode||'끝장전');
+  }); } catch(e){}
+
+  // 티어대회 (ttM)
+  try { (typeof ttM!=='undefined'&&Array.isArray(ttM)?ttM:[]).forEach(m=>{
+    if (!m || !m.d) return;
+    (m.sets||[]).forEach(s=>{
+      (s.games||[]).forEach(g=>{
+        if (!g || !g.playerA || !g.playerB || !g.winner) return;
+        const pA = players.find(p=>p.name===g.playerA), pB = players.find(p=>p.name===g.playerB);
+        const wA = g.winner==='A', wB = g.winner==='B';
+        addExt(g.playerA, m.d, wA?'승':'패', pB?.race||'', '티어대회');
+        addExt(g.playerB, m.d, wB?'승':'패', pA?.race||'', '티어대회');
+      });
+    });
+  }); } catch(e){}
+
+  // 팀전 (miniM/univM/ckM/proM) - 게임 단위 개인 전적 집계
+  const _scanTeamMatches = (arr, modeLabel) => {
+    try { (Array.isArray(arr)?arr:[]).forEach(m=>{
+      if (!m || !m.d) return;
+      (m.sets||[]).forEach(s=>{
+        (s.games||[]).forEach(g=>{
+          if (!g || !g.winner) return;
+          // 개인전 형식 (playerA/B)
+          if (g.playerA && g.playerB) {
+            const pA=players.find(p=>p.name===g.playerA), pB=players.find(p=>p.name===g.playerB);
+            addExt(g.playerA, m.d, g.winner==='A'?'승':'패', pB?.race||'', modeLabel);
+            addExt(g.playerB, m.d, g.winner==='B'?'승':'패', pA?.race||'', modeLabel);
+          }
+          // 팀전 형식 (teamA/teamB 배열)
+          if (Array.isArray(g.teamA) && Array.isArray(g.teamB)) {
+            const winTeam = g.winner==='A' ? g.teamA : g.teamB;
+            const loseTeam = g.winner==='A' ? g.teamB : g.teamA;
+            winTeam.forEach(name => addExt(name, m.d, '승', '', modeLabel));
+            loseTeam.forEach(name => addExt(name, m.d, '패', '', modeLabel));
+          }
+        });
+      });
+    }); } catch(e){}
+  };
+  _scanTeamMatches(typeof miniM!=='undefined'?miniM:[], '미니대전');
+  _scanTeamMatches(typeof univM!=='undefined'?univM:[], '대학대전');
+  _scanTeamMatches(typeof ckM!=='undefined'?ckM:[], '대학CK');
+  _scanTeamMatches(typeof proM!=='undefined'?proM:[], '프로리그');
+
+  // 대회 (tourneys) - 조별/브라켓/일반
+  try { (typeof tourneys!=='undefined'&&Array.isArray(tourneys)?tourneys:[]).forEach(tn=>{
+    // 조별리그
+    (tn.groups||[]).forEach(grp=>{
+      (grp.matches||[]).forEach(m=>{
+        if (!m || !m.d) return;
+        (m.sets||[]).forEach(s=>{
+          (s.games||[]).forEach(g=>{
+            if (!g || !g.playerA || !g.playerB || !g.winner) return;
+            const pA=players.find(p=>p.name===g.playerA), pB=players.find(p=>p.name===g.playerB);
+            addExt(g.playerA, m.d, g.winner==='A'?'승':'패', pB?.race||'', '대회');
+            addExt(g.playerB, m.d, g.winner==='B'?'승':'패', pA?.race||'', '대회');
+          });
+        });
+      });
+    });
+    // 브라켓
+    Object.values((tn.bracket||{}).matchDetails||{}).forEach(m=>{
+      if (!m || !m.d) return;
+      (m.sets||[]).forEach(s=>{
+        (s.games||[]).forEach(g=>{
+          if (!g || !g.playerA || !g.playerB || !g.winner) return;
+          const pA=players.find(p=>p.name===g.playerA), pB=players.find(p=>p.name===g.playerB);
+          addExt(g.playerA, m.d, g.winner==='A'?'승':'패', pB?.race||'', '대회');
+          addExt(g.playerB, m.d, g.winner==='B'?'승':'패', pA?.race||'', '대회');
+        });
+      });
+    });
+    // 일반 경기
+    (tn.normalMatches||[]).forEach(m=>{
+      if (!m || !m.d) return;
+      (m.sets||[]).forEach(s=>{
+        (s.games||[]).forEach(g=>{
+          if (!g || !g.playerA || !g.playerB || !g.winner) return;
+          const pA=players.find(p=>p.name===g.playerA), pB=players.find(p=>p.name===g.playerB);
+          addExt(g.playerA, m.d, g.winner==='A'?'승':'패', pB?.race||'', '대회');
+          addExt(g.playerB, m.d, g.winner==='B'?'승':'패', pA?.race||'', '대회');
+        });
+      });
+    });
+  }); } catch(e){}
+
   return players.map(p => {
-    const hist   = (Array.isArray(p.history) ? p.history : []).filter(inRange);
+    // p.history (직접 기록) + 외부 소스 경기 합산
+    const phist = (Array.isArray(p.history) ? p.history : [])
+      .filter(h => inRange(h.date || h.d || ''));
+    const extHist = extMap[p.name] || [];
+
+    // 중복 제거: p.history에 이미 있는 날짜+결과+oppRace 조합은 외부에서 제외
+    const histKeys = new Set(phist.map(h => `${h.date||h.d||''}|${h.result||''}`));
+    const extFiltered = extHist.filter(h => !histKeys.has(`${h.date||''}|${h.result||''}`));
+
+    const hist = [...phist, ...extFiltered];
     const wins   = hist.filter(h => h.result === '승').length;
     const losses = hist.filter(h => h.result === '패').length;
     const total  = wins + losses;
