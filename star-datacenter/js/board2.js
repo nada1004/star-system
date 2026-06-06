@@ -3226,12 +3226,36 @@ function _b2PlayersView() {
   `;
 
   // 우측 그리드
+  const _renderKey = [
+    String(_b2PlayersUnivFilter||''),
+    String(_b2PlayersFilter||''),
+    String(_b2PlayersTierFilter||''),
+    _b2PlayersWeekBadge ? '1' : '0',
+    _shuffleOn ? '1' : '0'
+  ].join('|');
+  if(window._b2PlayersRenderKey !== _renderKey){
+    window._b2PlayersRenderKey = _renderKey;
+    window._b2PlayersRenderLimit = 240;
+  }
+  const _lim0 = Math.max(60, parseInt(window._b2PlayersRenderLimit||0,10) || 240);
+  const _limit = Math.min(tierFilteredPlayers.length, _lim0);
+  let _gridList = tierFilteredPlayers.slice();
+  if(_b2SelectedPlayer && _b2SelectedPlayer.name){
+    const si = _gridList.findIndex(x=>x && x.name === _b2SelectedPlayer.name);
+    if(si > 0){
+      const sel = _gridList.splice(si, 1)[0];
+      _gridList.unshift(sel);
+    }
+  }
+  const _gridShow = _gridList.slice(0, _limit);
+  const _remain = Math.max(0, _gridList.length - _gridShow.length);
+
   h += `
     <div class="b2-players-grid-wrapper">
       <div class="b2-players-grid">
   `;
 
-  tierFilteredPlayers.forEach(p => {
+  _gridShow.forEach(p => {
     const isActive = _b2SelectedPlayer && _b2SelectedPlayer.name === p.name;
     const playerColor = gc(p.univ) || '#6366f1';
     const playerTheme = {
@@ -3269,6 +3293,9 @@ function _b2PlayersView() {
 
   h += `
       </div>
+      ${_remain>0?`<div style="grid-column:1 / -1;display:flex;justify-content:center;padding:10px 0 16px">
+        <button class="btn btn-w" onclick="window._b2PlayersRenderLimit=Math.min(${_gridList.length},(parseInt(window._b2PlayersRenderLimit||0,10)||0)+240);document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)">▼ ${_remain}명 더 보기</button>
+      </div>`:''}
     </div>
   `;
 
@@ -5463,10 +5490,15 @@ function _b2HeatmapView() {
         const val   = mode==='count' ? c.count : ((c.wins+c.losses>0)?Math.round(c.wins/(c.wins+c.losses)*100):0);
         const max   = mode==='count' ? maxCount : 100;
         const bg    = heatColor(val, max, color);
-        const fc    = textColor(val, max);
+        let fc      = textColor(val, max);
         const label = mode==='count' ? `${c.count}명` : `${val}%`;
         const sub   = mode==='wr' ? `${c.wins}승${c.losses}패` : '';
         const _au = (typeof escAttr==='function') ? escAttr : (s)=>String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const games = (c.wins||0) + (c.losses||0);
+        if(mode==='wr' && games>0 && games < 5){
+          bg = 'rgba(148,163,184,0.16)';
+          fc = 'var(--text3)';
+        }
         return `<td style="background:${bg} !important;color:${fc}" title="${u.name} / ${t}: ${c.count}명 ${c.wins}승 ${c.losses}패" data-hm-uid="${hmUid}" data-hm-univ="${_au(u.name)}" data-hm-tier="${_au(t)}" data-hm-color="${_au(color)}" onclick="_b2HeatmapCellClick(this)">
           <div style="font-size:12px;font-weight:900">${label}</div>
           ${sub?`<div style="font-size:9px;opacity:.8">${sub}</div>`:''}
