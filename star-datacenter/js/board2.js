@@ -6089,7 +6089,7 @@ function _b2WeeklyGetDefaultRange(offsetWeeks) {
 
 // ─── 데이터 집계 헬퍼 ─────────────────────────
 function _b2WeeklyAggregate(players, dateFrom, dateTo) {
-  const dateNum = s => parseInt(String(s || '').replace(/[-\.]/g, '')) || 0;
+  const dateNum = s => parseInt(String(s || '').replace(/[-\.\/]/g, '')) || 0;
   const fromN = dateNum(dateFrom), toN = dateNum(dateTo);
   const inRange = h => { const d = dateNum(h.date || h.d || ''); return d >= fromN && d <= toN; };
   const isOff   = mode => { const m = String(mode||'').trim(); return m && !['스폰서','스크리미지','연습',''].includes(m); };
@@ -6159,8 +6159,8 @@ function _b2WeeklyUnivMVP(active) {
 // ─── 최근 폼 렌더 ─────────────────────────────
 function _b2WeeklyForm(hist) {
   const sorted = [...hist].sort((a,b)=>{
-    const da=parseInt(String(a.date||'').replace(/[-\.]/g,''))||0;
-    const db=parseInt(String(b.date||'').replace(/[-\.]/g,''))||0;
+    const da=parseInt(String(a.date||'').replace(/[-\.\/]/g,''))||0;
+    const db=parseInt(String(b.date||'').replace(/[-\.\/]/g,''))||0;
     return da!==db?da-db:(a.time||0)-(b.time||0);
   });
   return sorted.slice(-5).map(h => {
@@ -6277,7 +6277,7 @@ function _b2WeeklyBriefingView() {
     const dateTo   = window._b2WeeklyDateTo;
 
     // 이전주 범위 계산
-    const fmtN = s => parseInt(String(s||'').replace(/[-\.]/g,''))||0;
+    const fmtN = s => parseInt(String(s||'').replace(/[-\.\/]/g,''))||0;
     const diffDays = Math.round((new Date(dateTo) - new Date(dateFrom)) / 86400000) + 1;
     const prevTo   = new Date(dateFrom); prevTo.setDate(prevTo.getDate() - 1);
     const prevFrom = new Date(prevTo);   prevFrom.setDate(prevFrom.getDate() - (diffDays - 1));
