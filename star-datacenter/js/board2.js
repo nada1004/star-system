@@ -528,14 +528,37 @@ function _b2UnivView() {
   const _uvTotalG=_uvTotalW+_uvTotalL;
   const _uvWr=_uvTotalG>0?Math.round(_uvTotalW/_uvTotalG*100):null;
   const _uvWrC=_uvWr===null?'#94a3b8':_uvWr>=60?'#10b981':_uvWr>=40?'#f59e0b':'#ef4444';
-  const statsBar = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:7px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;flex-wrap:wrap">
-    <span style="font-size:12px;font-weight:800;color:var(--text2)">👥 ${_allVis.length}명</span>
-    <span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>
-    <span style="font-size:12px;font-weight:800;color:var(--text2)">🏫 ${univList.length}개 대학</span>
-    <span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>
-    <span style="font-size:12px;font-weight:800;color:#f59e0b">🔥 이번주 ${_uvWeekActive}명 활동</span>
-    ${_uvWr!==null?`<span style="font-size:12px;font-weight:800;color:${_uvWrC}">📊 통산 ${_uvWr}%</span>`:''}
-    ${TIERS.filter(t=>_tierCts[t]).length?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_tierCts[t]).map(t=>`<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;background:${getTierBtnColor(t)};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_tierCts[t]}</span>`).join('')}`:''}
+  const _uvRaces={P:0,T:0,Z:0};
+  _allVis.forEach(p=>{ if(p.race in _uvRaces) _uvRaces[p.race]++; });
+  const _uvRaceBar = ['P','T','Z'].map(r=>{
+    const c={P:'#a855f7',T:'#3b82f6',Z:'#ef4444'}[r];
+    const n={P:'🔮P',T:'⚔️T',Z:'🦎Z'}[r];
+    return _uvRaces[r]>0?`<span style="font-size:11px;font-weight:700;color:${c}">${n}${_uvRaces[r]}</span>`:'';
+  }).filter(Boolean).join('<span style="color:var(--border2);margin:0 2px">·</span>');
+  const _jumpChips = univList.map(u=>{
+    const cnt = (membersByUniv[String(u.name||'').trim()]||[]).length;
+    const col = gc(u.name);
+    const ucfg = (typeof univCfg!=='undefined'?univCfg:[]).find(x=>x.name===u.name);
+    const iconUrl = ucfg?(ucfg.icon||ucfg.img||''):'';
+    const iconEl = iconUrl?`<img src="${iconUrl}" style="width:14px;height:14px;object-fit:contain;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">`:`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>`;
+    const anchorId = 'b2-univ-anchor-'+u.name.replace(/[^a-zA-Z0-9가-힣]/g,'_');
+    return `<button onclick="const el=document.getElementById('${anchorId}');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:14px;border:1.5px solid ${col}44;background:${col}11;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">${iconEl}${u.name}<span style="color:var(--gray-l);font-weight:500"> ${cnt}</span></button>`;
+  }).join('');
+  const statsBar = `<div style="margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px 10px 0 0;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:800;color:var(--text2)">👥 ${_allVis.length}명</span>
+      <span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>
+      <span style="font-size:12px;font-weight:800;color:var(--text2)">🏫 ${univList.length}개 대학</span>
+      <span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>
+      <span style="font-size:12px;font-weight:800;color:#f59e0b">🔥 이번주 ${_uvWeekActive}명 활동</span>
+      ${_uvWr!==null?`<span style="font-size:12px;font-weight:800;color:${_uvWrC}">📊 통산 ${_uvWr}%</span>`:''}
+      ${_uvRaceBar?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>${_uvRaceBar}`:''}
+      ${TIERS.filter(t=>_tierCts[t]).length?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_tierCts[t]).map(t=>`<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;background:${getTierBtnColor(t)};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_tierCts[t]}</span>`).join('')}`:''}
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;padding:6px 14px;background:var(--white);border:1px solid var(--border2);border-top:none;border-radius:0 0 10px 10px;flex-wrap:wrap">
+      <span style="font-size:10px;font-weight:700;color:var(--gray-l);flex-shrink:0;white-space:nowrap">바로가기 ›</span>
+      ${_jumpChips}
+    </div>
   </div>`;
   const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';
   let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:1fr!important;}.b2-side-panel{width:180px;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}</style>`;
@@ -546,7 +569,8 @@ function _b2UnivView() {
       return;
     }
     const members = membersByUniv[String(u.name||'').trim()] || [];
-    h += _b2UnivBlock(u.name, gc(u.name), members);
+    const _anchorId = 'b2-univ-anchor-'+u.name.replace(/[^a-zA-Z0-9가-힣]/g,'_');
+    h += `<div id="${_anchorId}" style="scroll-margin-top:56px">` + _b2UnivBlock(u.name, gc(u.name), members) + `</div>`;
   });
   h += `</div>`;
   return h;

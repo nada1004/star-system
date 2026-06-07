@@ -1427,7 +1427,7 @@ function renameUnivAcrossData(oldName,newName){
   return true;
 }
 
-function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();}
+function addUniv(){const n=document.getElementById('nu-n').value.trim();const c=document.getElementById('nu-c').value;if(!n)return;univCfg.push({name:n,color:c});save();render();refreshSel();try{const modal=document.getElementById('cfgModal');if(modal&&modal.style.display!=='none'){setTimeout(()=>{try{if(typeof window._cfgGo==='function')window._cfgGo('univ');}catch(e){}},80);}}catch(e){}}
 function delUniv(i){if(confirm(`"${univCfg[i].name}" 삭제?`)){univCfg.splice(i,1);save();render();refreshSel();}}
 try{ if(typeof window._univDragSrc !== 'number') window._univDragSrc = -1; }catch(e){}
 function _univDragStart(e,i){try{ window._univDragSrc=i; }catch(_){} e.currentTarget.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}

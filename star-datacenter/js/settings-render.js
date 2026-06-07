@@ -128,6 +128,7 @@ function rCfg(C,T){
   }catch(e){}
   return _cfgViewMode==='advanced'; })();
   const _quickBtns = [
+    {id:'univ', icon:'🏛️', title:'대학 관리', desc:'대학 추가/수정/색상/숨김'},
     {id:'pd', icon:'🎨', title:'스트리머 상세', desc:'배경/배지/프로필'},
     {id:'matchdetail', icon:'🎮', title:'경기 상세', desc:'헤더/프로필/색상'},
     {id:'profileshape', icon:'🖼️', title:'프로필 모양', desc:'원형/네모/효과'},
@@ -475,19 +476,43 @@ ${_scfgD('notice','📢 공지 관리')}
       권장: <code>https://</code>로 시작하는 직접 이미지 링크(png/jpg/webp/svg)
     </div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      ${univCfg.map((u,i)=>{
-        const url=String(u.icon||u.img||'');
-        const disp=url?toHttpsUrl(url):'';
-        return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--border);border-radius:12px;padding:10px 12px;background:var(--white);margin-bottom:8px">
-          <div class="cdot" style="background:${u.color||'#64748b'}"></div>
-          <div style="min-width:120px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
-          ${disp?`<img src="${esc(disp)}" alt="" style="width:28px;height:28px;object-fit:contain;border-radius:6px;background:#fff;border:1px solid var(--border2)" onerror="this.style.display='none'">`
-               :`<div style="width:28px;height:28px;border-radius:6px;background:var(--surface);border:1px dashed var(--border2)"></div>`}
-          <input type="text" value="${esc(url)}" placeholder="https://... (로고 이미지 URL)" style="flex:1;min-width:240px"
-            onblur="const v=this.value.trim(); if(v){univCfg[${i}].icon=toHttpsUrl(v);} else {delete univCfg[${i}].icon;} saveCfg(); if(typeof showToast==='function')showToast('✅ 저장됨');">
-          <button class="btn btn-w btn-xs" onclick="const inp=this.parentElement.querySelector('input'); if(inp) inp.value=''; delete univCfg[${i}].icon; delete univCfg[${i}].img; saveCfg(); if(typeof showToast==='function')showToast('🧹 로고 삭제됨');">삭제</button>
-        </div>`;
-      }).join('')}
+      ${(()=>{
+        const _logoRow = (u,i,dissolved) => {
+          const url=String(u.icon||u.img||'');
+          const disp=url?toHttpsUrl(url):'';
+          const hasLogo = !!url;
+          return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid ${dissolved?'#fecaca':'var(--border)'};border-radius:12px;padding:10px 12px;background:${dissolved?'#fff5f5':'var(--white)'};margin-bottom:8px">
+            <div class="cdot" style="background:${u.color||'#64748b'};opacity:${dissolved?0.6:1}"></div>
+            <div style="min-width:120px;font-weight:900;color:${dissolved?'#b91c1c':'var(--text2)'}">
+              ${esc(u.name||'')}${dissolved?` <span style="font-size:10px;background:#fee2e2;color:#dc2626;border-radius:4px;padding:1px 5px;font-weight:700">해체</span>`:''}
+            </div>
+            ${disp?`<img src="${esc(disp)}" alt="" style="width:28px;height:28px;object-fit:contain;border-radius:6px;background:#fff;border:1px solid var(--border2)" onerror="this.style.display='none'">`
+                 :`<div style="width:28px;height:28px;border-radius:6px;background:var(--surface);border:1px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gray-l)">없음</div>`}
+            ${hasLogo?`<span style="font-size:10px;background:#f0fdf4;color:#16a34a;border:1px solid #86efac;border-radius:4px;padding:1px 5px;font-weight:700">✓ 설정됨</span>`:''}
+            <input type="text" value="${esc(url)}" placeholder="https://... (로고 이미지 URL)" style="flex:1;min-width:200px;border-color:${dissolved?'#fca5a5':'var(--border2)'}"
+              onblur="const v=this.value.trim(); if(v){univCfg[${i}].icon=toHttpsUrl(v);} else {delete univCfg[${i}].icon;} saveCfg(); if(typeof showToast==='function')showToast('✅ 저장됨'); render();">
+            <button class="btn btn-w btn-xs" onclick="const inp=this.parentElement.querySelector('input'); if(inp) inp.value=''; delete univCfg[${i}].icon; delete univCfg[${i}].img; saveCfg(); if(typeof showToast==='function')showToast('🧹 로고 삭제됨'); render();">삭제</button>
+          </div>`;
+        };
+        const active = univCfg.map((u,i)=>({u,i})).filter(x=>x.u&&!x.u.dissolved);
+        const dissolved = univCfg.map((u,i)=>({u,i})).filter(x=>x.u&&x.u.dissolved);
+        const withLogo = active.filter(x=>!!(x.u.icon||x.u.img));
+        const withoutLogo = active.filter(x=>!(x.u.icon||x.u.img));
+        let html = '';
+        if(withLogo.length){
+          html += `<div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:6px;margin-top:4px">🖼️ 로고 설정된 대학 (${withLogo.length})</div>`;
+          html += withLogo.map(({u,i})=>_logoRow(u,i,false)).join('');
+        }
+        if(withoutLogo.length){
+          html += `<div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:6px;margin-top:${withLogo.length?'14px':'4px'}">📭 로고 미설정 대학 (${withoutLogo.length})</div>`;
+          html += withoutLogo.map(({u,i})=>_logoRow(u,i,false)).join('');
+        }
+        if(dissolved.length){
+          html += `<details style="margin-top:14px"><summary style="cursor:pointer;font-size:11px;font-weight:700;color:#b91c1c;list-style:none">🏚️ 해체된 대학 (${dissolved.length}) — 펼치기</summary><div style="margin-top:8px">${dissolved.map(({u,i})=>_logoRow(u,i,true)).join('')}</div></details>`;
+        }
+        if(!active.length && !dissolved.length) html = '<div style="color:var(--gray-l);font-size:13px;padding:10px">등록된 대학이 없습니다.</div>';
+        return html;
+      })()}
       <div style="font-size:11px;color:var(--gray-l);margin-top:10px">※ URL이 막히면(깨짐/CORS) 다른 이미지 호스팅을 사용해 주세요.</div>
     </div>
   </details>
@@ -2287,6 +2312,7 @@ ${_scfgD('notice','📢 공지 관리')}
     </div>
   </details>`;
   })()}
+  ${(typeof window.buildShareCardSettingsSection==='function' ? window.buildShareCardSettingsSection(_scfgD) : '')}
   ${(()=>{ 
     const _chip = (localStorage.getItem('su_cal_chip_mode') ?? 'types');
     const _shareAdm = (localStorage.getItem('su_share_admin_only') ?? '0') === '1';
@@ -3754,6 +3780,14 @@ ${_scfgD('notice','📢 공지 관리')}
     });
     // 카테고리 필터 적용
     if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'🧩 운영/콘텐츠', false);
+    // render 후 cfgModal이 열려있었으면 해당 섹션 재오픈
+    try{
+      const _prevModalSec = window._cfgModalSecId;
+      const _cfgModalEl = document.getElementById('cfgModal');
+      if(_prevModalSec && _cfgModalEl && _cfgModalEl.style.display!=='none'){
+        if(typeof window._cfgGo==='function') window._cfgGo(_prevModalSec);
+      }
+    }catch(e){}
     try{ if(typeof window.cfgApplySimpleView==='function') window.cfgApplySimpleView(); }catch(e){}
     try{ if(typeof window.cfgApplyBottomSectionsVisibility==='function') window.cfgApplyBottomSectionsVisibility(); }catch(e){}
     // 펨코현황 설정 초기화

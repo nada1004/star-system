@@ -3278,7 +3278,7 @@ window.cfgApplySimpleView = function(){
   try{
     const mode=(localStorage.getItem('su_cfg_view_mode')||'basic')==='advanced' ? 'advanced' : 'basic';
     const q=String(window._cfgSearchQ||'').trim();
-    const fav=['sharecard','uisize','calui','profileshape','tablabels','matchdetail'];
+    const fav=['sharecard','uisize','calui','profileshape','tablabels','matchdetail','univ','univlogoimg'];
     const autoOpen=['sharecard','uisize','calui'];
     const all=document.querySelectorAll('[data-cfg-sec]');
     all.forEach(el=>{
@@ -3303,10 +3303,13 @@ window.cfgApplyBottomSectionsVisibility = function(){
       window._cfgBottomSectionsOpen = (saved==='1' || saved==='0') ? (saved==='1') : (mode==='advanced');
     }
     const open = q ? true : !!window._cfgBottomSectionsOpen;
+    const _alwaysVisible = new Set(['univ','univlogoimg','maps','tier','season']);
     if(!open){
       // 접기: 현재 카테고리만이 아니라 모든 하단 세부 섹션을 숨김
       document.querySelectorAll('[data-cfg-sec]').forEach(el=>{
         try{ if(el.closest && el.closest('#cfgModalBody')) return; }catch(e){}
+        const secId = el.getAttribute('data-cfg-sec')||'';
+        if(_alwaysVisible.has(secId)) return;
         el.style.display='none';
       });
     } else {
