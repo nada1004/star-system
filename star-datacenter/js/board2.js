@@ -6161,7 +6161,7 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
   _scanTeamMatches(typeof miniM!=='undefined'?miniM:[], '미니대전');
   _scanTeamMatches(typeof univM!=='undefined'?univM:[], '대학대전');
   _scanTeamMatches(typeof ckM!=='undefined'?ckM:[], '대학CK');
-  _scanTeamMatches(typeof proM!=='undefined'?proM:[], '프로리그');
+  // proM 프로리그는 주간 브리핑 집계에서 제외
 
   // 대회 (tourneys) - 조별/브라켓/일반
   try { (typeof tourneys!=='undefined'&&Array.isArray(tourneys)?tourneys:[]).forEach(tn=>{
