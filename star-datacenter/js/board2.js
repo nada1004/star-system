@@ -6117,6 +6117,7 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
   const fromN = dateNum(dateFrom), toN = dateNum(dateTo);
   const inRange = d => { const dn = dateNum(d); return dn >= fromN && dn <= toN; };
   const isOff   = mode => { const m = String(mode||'').trim(); return m && !['스폰서','스크리미지','연습',''].includes(m); };
+  const isPro   = mode => String(mode||'').indexOf('프로리그') !== -1;
 
   // ── 외부 소스에서 플레이어별 경기 목록 구성 ──────────────────
   // key: playerName → [{date,result,oppRace,mode}]
@@ -6124,6 +6125,7 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
   const addExt = (name, date, result, oppRace, mode) => {
     if (!name || !date || !result) return;
     if (!inRange(date)) return;
+    if (isPro(mode)) return;
     if (!extMap[name]) extMap[name] = [];
     extMap[name].push({ date, result, oppRace: oppRace||'', mode: mode||'' });
   };
@@ -6139,6 +6141,7 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
   // 끝장전 (gjM)
   try { (typeof gjM!=='undefined'&&Array.isArray(gjM)?gjM:[]).forEach(m=>{
     if (!m || !m.d || !m.wName || !m.lName) return;
+    if (m._proLabel) return;
     const wp = players.find(p=>p.name===m.wName), lp = players.find(p=>p.name===m.lName);
     addExt(m.wName, m.d, '승', lp?.race||'', m.mode||'끝장전');
     addExt(m.lName, m.d, '패', wp?.race||'', m.mode||'끝장전');
@@ -6185,7 +6188,6 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
   _scanTeamMatches(typeof miniM!=='undefined'?miniM:[], '미니대전');
   _scanTeamMatches(typeof univM!=='undefined'?univM:[], '대학대전');
   _scanTeamMatches(typeof ckM!=='undefined'?ckM:[], '대학CK');
-  // proM 프로리그는 주간 브리핑 집계에서 제외
 
   // 대회 (tourneys) - 조별/브라켓/일반
   try { (typeof tourneys!=='undefined'&&Array.isArray(tourneys)?tourneys:[]).forEach(tn=>{
@@ -6232,8 +6234,8 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
   return players.map(p => {
     // p.history (직접 기록) + 외부 소스 경기 합산
     const phist = (Array.isArray(p.history) ? p.history : [])
-      .filter(h => inRange(h.date || h.d || ''));
-    const extHist = extMap[p.name] || [];
+      .filter(h => inRange(h.date || h.d || '') && !isPro(h.mode || h.label || h.type || h.kind || h.cat || ''));
+    const extHist = (extMap[p.name] || []).filter(h => !isPro(h.mode || ''));
 
     // 중복 제거: p.history에 이미 있는 날짜+결과+oppRace 조합은 외부에서 제외
     const histKeys = new Set(phist.map(h => `${h.date||h.d||''}|${h.result||''}`));
@@ -6282,6 +6284,7 @@ function _b2WeeklyMVP(univStats) {
   univStats.forEach(ud => {
     ud.active.forEach(s => {
       if (s.total < 3) return; // 최소 3경기
+      if (String(s.p?.gender||'').trim() !== 'F') return;
       const score = s.wins * 3 + (s.total > 0 ? (s.wins/s.total)*10 : 0) + (s.offWins * 2);
       if (score > bestScore) { bestScore = score; best = s; }
     });
