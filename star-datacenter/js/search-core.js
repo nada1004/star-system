@@ -1855,8 +1855,9 @@ function pastePreview() {
       errors.push({ line: idx + 1, raw: trimmed });
       return;
     }
-    // ── (추가) 2:2 팀전 자동인식 ──
-    // - 입력 예시: "✅ 영희,철수 vs ❌ 민수,영지수 [폴]" 또는 "영희+철수 vs 민수+영지수" (승/패 마크 포함 권장)
+    // ── (추가) 팀전 자동인식 (2:2 / 3:3 / 4:4) ──
+    // - 입력 예시: "✅ 영희+철수 vs ❌ 민수+영지수 [폴]" (2v2), "영희+철수+지수 vs 민수+영지+수빈" (3v3)
+    // - su_teamMatchSize 설정값 기반으로 팀 규모 자동 인식 (기본값: 1v1이면 2인 팀 이상 모두 허용)
     // - 팀전은 개별 전적/ELO에 반영하지 않고, 해당 매치의 games 표기용으로만 저장
     const _splitTeam = (s) => String(s||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
     const _curPasteMode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || '';
@@ -1864,6 +1865,11 @@ function pastePreview() {
       ['ck','pro','tt','univm','comp'].includes(_curPasteMode) ||
       // 혼합 모드(규칙 기반 자동 분리)에서도 팀전 라인이 나올 수 있어 허용
       (!!window._pasteForceTeamA || !!window._pasteForceTeamB);
+    // su_teamMatchSize 설정에서 팀 인원 수 결정
+    // '1v1' → 2인 이상 팀이면 팀전으로 인식(기본), '2v2'→2, '3v3'→3, '4v4'→4
+    const _tmSizeSetting = (()=>{ try{ return localStorage.getItem('su_teamMatchSize')||'1v1'; }catch(e){ return '1v1'; } })();
+    const _tmSizeNum = _tmSizeSetting === '1v1' ? 0 : parseInt(_tmSizeSetting[0], 10) || 2;
+    // _tmSizeNum===0 이면 2~4인 팀 모두 허용, 아니면 정확한 인원 수만 허용
 
     let _teamLeft = null, _teamRight = null, _teamWin = null, _teamLose = null;
     let _teamOk = false;
@@ -1871,15 +1877,16 @@ function pastePreview() {
     const _oRight = parsed.rightName || '';
     const _lParts = _splitTeam(_oLeft);
     const _rParts = _splitTeam(_oRight);
-    if (_mayTeam && _lParts.length===2 && _rParts.length===2) {
-      const l1 = findPlayerByPartialName(_lParts[0]).player;
-      const l2 = findPlayerByPartialName(_lParts[1]).player;
-      const r1 = findPlayerByPartialName(_rParts[0]).player;
-      const r2 = findPlayerByPartialName(_rParts[1]).player;
-      if (l1 && l2 && r1 && r2) {
+    const _teamSizeMatch = _tmSizeNum === 0
+      ? (_lParts.length >= 2 && _lParts.length <= 4 && _lParts.length === _rParts.length)
+      : (_lParts.length === _tmSizeNum && _rParts.length === _tmSizeNum);
+    if (_mayTeam && _teamSizeMatch) {
+      const lPlayers = _lParts.map(n => findPlayerByPartialName(n).player);
+      const rPlayers = _rParts.map(n => findPlayerByPartialName(n).player);
+      if (lPlayers.every(Boolean) && rPlayers.every(Boolean)) {
         _teamOk = true;
-        _teamLeft  = [l1.name, l2.name];
-        _teamRight = [r1.name, r2.name];
+        _teamLeft  = lPlayers.map(p => p.name);
+        _teamRight = rPlayers.map(p => p.name);
         const leftDisp  = _teamLeft.join(',');
         const rightDisp = _teamRight.join(',');
         // win/lose를 left/right 기준으로 다시 구성 (원본 parsed.winName/loseName은 마크 기반)

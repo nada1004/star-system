@@ -188,11 +188,16 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','paste'],
   '🖼️ 스트리머/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','univlogoimg','si','siAssign','pdModeBadge','pd','matchdetail','streamerheader'],
-  '🧾 카드/기록':['reccard','tourneycard','procompcard','h2hpanel','sharecard','calui'],
-  '🎨 UI/테마':['designv2','hdr','appfont','uisize','uibtn','uifilter','tablabels','tabcolors','autofitall'],
+  '🧾 카드/기록':[
+    'reccard','minicard','univckcard','univmcard',
+    'tourneycard','tiertourcard','tiertourleaguecard','tiertourbrackcard',
+    'procompcard','procompleaguecard','procompteamcard','procompgjcard',
+    'h2hpanel','sharecard','calui'
+  ],
+  '🎨 UI/테마':['designv2','hdr','appfont','uisize','tierrank-view','uibtn','uifilter','tablabels','tabcolors','autofitall'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','fab'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
-  '💾 데이터':['sync','firebase','storage','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
+  '💾 데이터':['sync','firebase','aibot','storage','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
   '🧪 점검/고급':['cfgmenu','selfcheck']
 };
 

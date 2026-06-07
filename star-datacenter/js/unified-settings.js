@@ -53,7 +53,14 @@
     if(!k || typeof k!=='string') return 'misc';
     if(k.startsWith('su_b2_') || k.startsWith('su_img')) return 'images';
     if(k.startsWith('su_pd_') || k.startsWith('su_md_')) return 'matchdetail';
-    if(k.startsWith('su_rc_') || k.startsWith('su_tc_')) return 'cards';
+    if(k.startsWith('su_rc_') || k.startsWith('su_tc_') ||
+       k.startsWith('su_mini_') || k.startsWith('su_ck_card') ||
+       k.startsWith('su_univm_') || k.startsWith('su_univck_') ||
+       k.startsWith('su_tt_') || k.startsWith('su_pcomp_') ||
+       k.startsWith('su_h2h_') || k==='su_tier_view_mode' ||
+       k.startsWith('su_match_btn_') || k.startsWith('su_ym_') ||
+       k.startsWith('su_rec_avatar') || k.startsWith('su_avatar_') ||
+       k.startsWith('su_team_color_')) return 'cards';
     if(k.startsWith('su_hdr_') || k.startsWith('su_design_v2') || k==='su_dark' || k.startsWith('su_ui_') || k.startsWith('su_btn_') || k.startsWith('su_app_font_')) return 'ui';
     if(k.includes('femco') || k.startsWith('su_board') || k==='su_boardOrder' || k==='su_old_board' || k.startsWith('su_board2') || k.startsWith('su_chip')) return 'board';
     if(k.startsWith('su_bgm_') || k.startsWith('su_soop_') || k.startsWith('su_paste_') || k==='su_paste_route_rules' || k.startsWith('su_auto_')) return 'automation';

@@ -82,13 +82,13 @@ function rCfg(C,T){
     cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', h2hpanel:'🎮 개인전/끝장전(프로리그 끝장전) 카드',
     minicard:'⚡ 미니대전/시빌워 기록 카드', civilcard:'⚔️ 시빌워 기록 카드', univckcard:'🤝 대학CK 기록 카드', univmcard:'🏟️ 대학대전 기록 카드',
     tiertourcard:'🎯 티어대회 일반 기록 카드', tiertourleaguecard:'🎯 티어대회 조별리그 기록', tiertourbrackcard:'🎯 티어대회 대진표 기록',
-    procompleaguecard:'🏆 프로리그 대회 조별리그', procompteamcard:'🏆 프로리그 대회 팀전 카드', procompgjcard:'🏆 프로리그 대회 중장전 카드',
+    procompleaguecard:'🏆 프로리그 대회 조별리그', procompteamcard:'🏆 프로리그 대회 팀전 카드', procompgjcard:'🏆 프로리그 대회 중장전 카드', procompcard:'⭐ 프로리그 대회 카드',
     sharecard:'🪪 공유카드 디자인', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
     'tierrank-view':'📊 티어 순위표 보기 방식',
     bgm:'🎵 유튜브 배경음악(BGM)', soopmv:'📺 SOOP(숲) 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
     fab:'📱 플로팅(FAB)', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
-    sync:'🔄 동기화', firebase:'☁️ GitHub(깃허브) 동기화', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
+    sync:'🔄 동기화', firebase:'☁️ GitHub(깃허브) 동기화', aibot:'🤖 AI봇(Groq) 서버 설정', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   // 사용자 지정 섹션명 적용
   try{
