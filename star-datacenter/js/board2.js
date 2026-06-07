@@ -477,11 +477,36 @@ function rBoard2(C, T) {
       sub.innerHTML = _b2BubbleView();
       _b2InjectAndRunScripts(sub);
     } else if (_b2View === 'old') {
-      if (typeof rBoard === 'function') rBoard(sub, T);
-      else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
+      if (typeof rBoard === 'function') {
+        rBoard(sub, T);
+      } else {
+        sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판 로딩 중...</div>';
+        (async()=>{
+          try{
+            if (typeof window._ensureCloudBoardLoaded === 'function') await window._ensureCloudBoardLoaded();
+          }catch(e){}
+          try{
+            if (_b2View !== 'old') return;
+            if (typeof rBoard === 'function') rBoard(sub, T);
+            else sub.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-l)">구현황판을 불러올 수 없습니다.</div>';
+          }catch(e){
+            sub.innerHTML = '<div style="padding:40px;text-align:center;color:#dc2626">구현황판 오류: '+String(e && e.message || e)+'</div>';
+          }
+        })();
+      }
     }
   };
-  try{ _renderSub(); }catch(e){}
+  try{
+    _renderSub();
+  }catch(e){
+    console.error('[rBoard2] sub render fail', e);
+    try{
+      const sub = document.getElementById('b2-content');
+      if(sub){
+        sub.innerHTML = '<div style="padding:40px;text-align:center;color:#dc2626">현황판 렌더링 오류: ' + String(e && e.message || e) + '</div>';
+      }
+    }catch(_){}
+  }
   } catch(e) {
     console.error('[rBoard2] 오류:', e);
     C.innerHTML = `<div style="padding:40px;text-align:center;color:#dc2626">
@@ -4240,39 +4265,60 @@ function _b2RadarView() {
   const _modeKey = m => {
     if (!m) return '';
     m = String(m).trim();
-    if (m === '미니' || m === '친선') return 'mini';
-    if (m === '대학대전' || m === '대학') return 'univm';
+    if (m === '미니' || m === '친선' || m === '미니대전' || m.includes('미니')) return 'mini';
+    if (m === '대학대전' || m === '대학' || m.includes('대학대전')) return 'univm';
     if (m === 'CK' || m.includes('CK')) return 'ck';
     if (m === '티어대회' || m.includes('티어')) return 'tt';
-    if (m === '대회' || m === '조별리그' || m === '토너먼트' || m === '조별대회' || m.includes('대회') || m.includes('조별') || m.includes('토너')) return 'comp';
+    if (m === '대회' || m === '일반대회' || m === '조별리그' || m === '토너먼트' || m === '조별대회' || m.includes('일반대회') || m.includes('대회') || m.includes('조별') || m.includes('토너')) return 'comp';
     return '';
   };
 
-  const univStats = univList.map(u => {
-    const members = tieredVis.filter(p => String(p?.univ||'').trim() === u.name);
-    if (!members.length) return null;
-    const total = members.length;
-    const avgScore = members.reduce((s,p)=>s+tierScore(p.tier||''),0) / total;
-    const part = { mini:0, univm:0, ck:0, tt:0, comp:0 };
-    let wins=0, losses=0;
-    members.forEach(p => {
-      const seen = { mini:false, univm:false, ck:false, tt:false, comp:false };
-      _hist(p).forEach(h => {
-        const k = _modeKey(h && h.mode);
-        if (k && (k in part)) {
-          const r2 = String(h && h.result || '').trim();
-          if (r2==='승') wins++; else if (r2==='패') losses++;
-        }
-        if (k && k in seen) seen[k] = true;
+  const _radarCacheSig = (function(){
+    try{
+      const arrs=[miniM,univM,ckM,proM,ttM,comps,tourneys,proTourneys,indM,gjM];
+      const lens = arrs.map(a=>Array.isArray(a)?a.length:0).join('|');
+      const pLen = Array.isArray(players)?players.length:0;
+      const hLen = (Array.isArray(players)?players:[]).reduce((s,p)=>s+(Array.isArray(p?.history)?p.history.length:0),0);
+      const uLen = (typeof univCfg!=='undefined' && Array.isArray(univCfg)) ? univCfg.length : 0;
+      return `${pLen}|${hLen}|${uLen}|${lens}`;
+    }catch(e){ return ''; }
+  })();
+
+  if (!window.__b2_radar_stats_cache) window.__b2_radar_stats_cache = { sig:'', univStats:[] };
+
+  let univStats = window.__b2_radar_stats_cache.sig === _radarCacheSig
+    ? (window.__b2_radar_stats_cache.univStats || [])
+    : null;
+
+  if (!Array.isArray(univStats)) {
+    univStats = univList.map(u => {
+      const members = tieredVis.filter(p => String(p?.univ||'').trim() === u.name);
+      if (!members.length) return null;
+      const total = members.length;
+      const avgScore = members.reduce((s,p)=>s+tierScore(p.tier||''),0) / total;
+      const part = { mini:0, univm:0, ck:0, tt:0, comp:0 };
+      let wins=0, losses=0;
+      members.forEach(p => {
+        const seen = { mini:false, univm:false, ck:false, tt:false, comp:false };
+        _hist(p).forEach(h => {
+          const k = _modeKey(h && h.mode);
+          if (k && (k in part)) {
+            const r2 = String(h && h.result || '').trim();
+            if (r2==='승') wins++; else if (r2==='패') losses++;
+          }
+          if (k && k in seen) seen[k] = true;
+        });
+        Object.keys(seen).forEach(k=>{ if(seen[k]) part[k]++; });
       });
-      Object.keys(seen).forEach(k=>{ if(seen[k]) part[k]++; });
-    });
-    const games = wins+losses;
-    const wr = games>0?Math.round(wins/games*100):null;
-    return { name:u.name, color:gc(u.name)||'#64748b', total, avgScore, wins, losses, wr,
-      partMini:part.mini/total, partUnivm:part.univm/total, partCk:part.ck/total,
-      partTt:part.tt/total, partComp:part.comp/total };
-  }).filter(Boolean).sort((a,b)=>b.total-a.total).slice(0,12);
+      const games = wins+losses;
+      const wr = games>0?Math.round(wins/games*100):null;
+      return { name:u.name, color:gc(u.name)||'#64748b', total, avgScore, wins, losses, wr,
+        partMini:part.mini/total, partUnivm:part.univm/total, partCk:part.ck/total,
+        partTt:part.tt/total, partComp:part.comp/total };
+    }).filter(Boolean).sort((a,b)=>b.total-a.total);
+    window.__b2_radar_stats_cache.sig = _radarCacheSig;
+    window.__b2_radar_stats_cache.univStats = univStats;
+  }
 
   const maxTotal = Math.max(...univStats.map(u=>u.total), 1);
   const maxAvg   = Math.max(...univStats.map(u=>u.avgScore), 1);
@@ -4491,7 +4537,7 @@ function _b2RadarView() {
           ttipEl.style.opacity='1';
           ttipEl.style.left=(x/W*canvas.getBoundingClientRect().width+canvas.getBoundingClientRect().left+12)+'px';
           ttipEl.style.top=(y/H*canvas.getBoundingClientRect().height+canvas.getBoundingClientRect().top-30)+'px';
-          ttipEl.innerHTML=\`<div style="color:\${bestU.color};font-weight:900">\${bestU.name}</div><div style="color:#475569">\${AXES[bestI]}: <strong>\${bestU.raw[bestI]}</strong></div><div style="font-size:10px;color:#94a3b8">평균 \${(AVG_VALS[bestI]*100).toFixed(0)}%</div>\`;
+          ttipEl.innerHTML=\`<div style="color:\${bestU.color};font-weight:900">\${bestU.name}</div><div style="color:#475569">\${AXES[bestI]}: <strong>\${bestU.raw[bestI]}</strong></div><div style="font-size:10px;color:#94a3b8">정규화 평균 \${Math.round((AVG_VALS[bestI]||0)*100)}%</div>\`;
         } else { ttipEl.style.opacity='0'; }
       }
 
@@ -4501,7 +4547,7 @@ function _b2RadarView() {
         return \`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:10px;background:var(--surface);border:1.5px solid \${u.color}44">
           <span style="width:12px;height:12px;border-radius:50%;background:\${u.color};flex-shrink:0"></span>
           <span style="font-size:12px;font-weight:900;color:\${u.color}">\${u.name}</span>
-          <span style="font-size:11px;color:var(--text3);">\${u.total}명\${u.wr!==null?' · '+u.wr+'%':''}</span>
+          <span style="font-size:11px;color:var(--text3);">\${u.total}명\${u.wr!==null?' · '+u.wr+'%':''}\${(u.wins+u.losses)>0?' · '+(u.wins+u.losses)+'전':''}</span>
           \${str?'<span style="font-size:10px;background:#fef9c3;color:#b45309;padding:1px 5px;border-radius:5px;font-weight:800">강점: '+str+'</span>':''}
         </div>\`;
       }).join('');
@@ -4525,7 +4571,7 @@ function _b2RadarView() {
         active.forEach((u,ui)=>{ if(u.vals[ai]>bestV){bestV=u.vals[ai];best=ui;} });
         return best;
       });
-      th.innerHTML = \`<tr><th>항목</th>\${active.map(u=>\`<th style="color:\${u.color}">\${u.name}</th>\`).join('')}<th style="color:#94a3b8">전체평균</th></tr>\`;
+      th.innerHTML = \`<tr><th>항목</th>\${active.map(u=>\`<th style="color:\${u.color}">\${u.name}</th>\`).join('')}<th style="color:#94a3b8">정규화 평균</th></tr>\`;
       tb.innerHTML = AXES.map((ax,ai)=>{
         const avgRaw=(AVG_VALS[ai]*100).toFixed(0)+'%';
         return \`<tr>
