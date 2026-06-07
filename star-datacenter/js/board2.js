@@ -5411,16 +5411,6 @@ function _b2HeatmapView() {
     { key:'count', label:'👥 인원수' },
     { key:'wr',    label:'📈 승률' },
   ];
-  const rowBtns = [
-    { key:'name',  label:'🔤 이름순' },
-    { key:'count', label:'👥 인원순' },
-    { key:'wr',    label:'📈 승률순' },
-  ];
-  const colBtns = [
-    { key:'tier',  label:'🏅 티어순' },
-    { key:'count', label:'👥 인원순' },
-    { key:'wr',    label:'📈 승률순' },
-  ];
 
   let h = `<style>
     .b2hm2-wrap { overflow-x:auto; }
@@ -5431,6 +5421,7 @@ function _b2HeatmapView() {
     .b2hm2-btn.on { background:var(--text1);color:var(--white);border-color:var(--text1);box-shadow:inset 0 2px 4px rgba(0,0,0,.25) }
     .b2hm2-btn:not(.on):hover { border-color:var(--text1);color:var(--text1) }
     .b2hm2-btn:not(.on):active { background:var(--border2);transform:scale(.97) }
+    .b2hm2-sel { padding:4px 10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--white);font-size:11px;font-weight:700;color:var(--text2);cursor:pointer; }
     .b2hm2-sep { width:1px;height:22px;background:var(--border2);margin:0 4px }
     .b2hm2-tbl { border-collapse:separate;border-spacing:3px;min-width:100% }
     .b2hm2-tbl th { font-size:10px;font-weight:800;color:var(--text3);padding:4px 6px;text-align:center;white-space:nowrap;position:sticky }
@@ -5469,13 +5460,21 @@ function _b2HeatmapView() {
     </div>
     <div class="b2hm2-sep"></div>
     <div class="b2hm2-ctrl-group">
-      <span class="b2hm2-lbl">행:</span>
-      ${rowBtns.map(b=>`<button class="b2hm2-btn${sortRow===b.key?' on':''}" onclick="window._b2HeatmapSortRow='${b.key}';render()">${b.label}</button>`).join('')}
+      <span class="b2hm2-lbl">행 정렬:</span>
+      <select class="b2hm2-sel" onchange="window._b2HeatmapSortRow=this.value;render()">
+        <option value="name"${sortRow==='name'?' selected':''}>🔤 이름</option>
+        <option value="count"${sortRow==='count'?' selected':''}>👥 인원</option>
+        <option value="wr"${sortRow==='wr'?' selected':''}>📈 승률</option>
+      </select>
     </div>
     <div class="b2hm2-sep"></div>
     <div class="b2hm2-ctrl-group">
-      <span class="b2hm2-lbl">열:</span>
-      ${colBtns.map(b=>`<button class="b2hm2-btn${sortCol===b.key?' on':''}" onclick="window._b2HeatmapSortCol='${b.key}';render()">${b.label}</button>`).join('')}
+      <span class="b2hm2-lbl">열 정렬:</span>
+      <select class="b2hm2-sel" onchange="window._b2HeatmapSortCol=this.value;render()">
+        <option value="tier"${sortCol==='tier'?' selected':''}>🏅 티어</option>
+        <option value="count"${sortCol==='count'?' selected':''}>👥 인원</option>
+        <option value="wr"${sortCol==='wr'?' selected':''}>📈 승률</option>
+      </select>
     </div>
   </div>`;
 
@@ -5513,7 +5512,7 @@ function _b2HeatmapView() {
         if (!c || !c.count) return `<td style="background:var(--bg) !important"><span class="b2hm2-empty">-</span></td>`;
         const val   = mode==='count' ? c.count : ((c.wins+c.losses>0)?Math.round(c.wins/(c.wins+c.losses)*100):0);
         const max   = mode==='count' ? maxCount : 100;
-        const bg    = heatColor(val, max, color);
+        let bg      = heatColor(val, max, color);
         let fc      = textColor(val, max);
         const label = mode==='count' ? `${c.count}명` : `${val}%`;
         const sub   = mode==='wr' ? `${c.wins}승${c.losses}패` : '';
