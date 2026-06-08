@@ -1827,7 +1827,7 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   justify-content:space-between;
   gap:12px;
   width:100%;
-  padding:0 clamp(56px, 10vw, 320px);
+  padding:0 clamp(72px, 12vw, 420px);
 }
 .pc-vs.pc-vs--compact > :first-child{flex:1 1 0;min-width:0;max-width:44%;}
 .pc-vs.pc-vs--compact > :nth-child(2){flex:0 0 auto;}
