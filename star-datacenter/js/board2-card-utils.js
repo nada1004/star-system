@@ -2,7 +2,7 @@
    Board2 Card Utilities
 ══════════════════════════════════════ */
 function _b2NameTag(p, accentCol, showTier) {
-  const crewCol = p.crewName ? _gcCrew(p.crewName) : '';
+  const crewCol = p.crewName && typeof _gcCrew === 'function' ? (_gcCrew(p.crewName) || '') : '';
   const safeName = (p.name||'').replace(/'/g,"\\'");
   return `
     <div style="display:flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border-radius:20px;cursor:pointer;transition:background .12s"
@@ -37,7 +37,7 @@ function _b2PlayerRowCompact(p, accentCol) {
 }
 
 function _b2Chip(p, accentCol) {
-  const crewCol = p.crewName ? _gcCrew(p.crewName) : '';
+  const crewCol = p.crewName && typeof _gcCrew === 'function' ? (_gcCrew(p.crewName) || '') : '';
   const borderStyle = `border:1.5px solid ${accentCol}44`;
   return `
     <div onclick="openPlayerModal('${(p.name||'').replace(/'/g,"\\'")}')"

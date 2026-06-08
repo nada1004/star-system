@@ -367,6 +367,10 @@ function _grpPasteApplyLogic(savable){
   if(_grpPasteState.mode==='bkt'){
     return _bktPasteApplyLogic(savable,tn);
   }
+  // [BUGFIX] comp-league 모드: openCompLeaguePasteModal에서 설정 → grp 모드와 동일하게 처리
+  if(_grpPasteState.mode==='comp-league'){
+    _grpPasteState.mode='grp'; // grp 로직으로 위임
+  }
 
   // 자동인식 모드: gi가 null이면 팀/선수로 조/경기 자동 탐지
   let gi = _grpPasteState.gi, mi = _grpPasteState.mi;
@@ -674,7 +678,17 @@ function _bktPasteApplyLogic(savable, tn){
       applyGameResult(wn,ln,dateStr,g.map||'',gameId,univW,univL,'티어대회 토너먼트');
     });
   });
+  // [BUGFIX] 토너먼트 경기를 ttM에도 동기화 (기록탭 표시용)
+  try{
+    if(typeof ttM!=='undefined' && Array.isArray(ttM) && tn && tn.name){
+      const _bktEi=ttM.findIndex(x=>x._id===matchId);
+      const _bktRec={_id:matchId,d:m.d||dateStr,a:m.a,b:m.b,sa:m.sa,sb:m.sb,sets:m.sets,n:tn.name,compName:tn.name,teamALabel:m.a,teamBLabel:m.b,stage:'bkt'};
+      if(_bktEi>=0)ttM[_bktEi]=_bktRec;else ttM.unshift(_bktRec);
+    }
+  }catch(e){}
   save();
+  try{ if(typeof syncTierTtMHistory==='function') syncTierTtMHistory(); }catch(e){}
+  try{ if(typeof window.refreshPlayerModalIfOpen==='function') window.refreshPlayerModalIfOpen(); }catch(e){}
   const _matchModal=document.getElementById('grpMatchModal');
   if(_matchModal&&_matchModal.style.display!=='none'&&_matchModal.offsetParent!==null){
     bktRefreshSets();
@@ -914,9 +928,37 @@ function rTierTourTab(C, T){
 // 스트리머 상세 최근 기록에서 티어대회 클릭 → 해당 경기로 이동
 function navToTierMatch(matchId){
   let m=(ttM||[]).find(x=>x._id===matchId);
-  if(!m&&matchId){for(const tn of (tourneys||[]).filter(t=>t.type==='tier')){for(const grp of (tn.groups||[])){const found=(grp.matches||[]).find(x=>x._id===matchId);if(found&&found.sa!=null){const _rec={_id:matchId,d:found.d,a:found.a,b:found.b,sa:found.sa,sb:found.sb,sets:found.sets,n:tn.name,compName:tn.name,teamALabel:found.a,teamBLabel:found.b,stage:'league'};if(!ttM)ttM=[];ttM.unshift(_rec);save();m=_rec;break;}}if(m)break;}}
+  // [BUGFIX] ttM에 없으면 tourneys 조별리그 + 브라켓에서도 탐색
+  if(!m&&matchId){
+    for(const tn of (tourneys||[]).filter(t=>t.type==='tier')){
+      // 조별리그 탐색
+      for(const grp of (tn.groups||[])){
+        const found=(grp.matches||[]).find(x=>x._id===matchId);
+        if(found&&found.sa!=null){
+          const _rec={_id:matchId,d:found.d,a:found.a,b:found.b,sa:found.sa,sb:found.sb,sets:found.sets,n:tn.name,compName:tn.name,teamALabel:found.a,teamBLabel:found.b,stage:'league'};
+          if(!ttM)ttM=[];ttM.unshift(_rec);save();m=_rec;break;
+        }
+      }
+      if(m)break;
+      // 브라켓(matchDetails) 탐색
+      const br=(tn.bracket||{});
+      const bktFound=Object.values(br.matchDetails||{}).find(x=>x&&x._id===matchId);
+      if(bktFound&&bktFound.sa!=null){
+        const _rec={_id:matchId,d:bktFound.d,a:bktFound.a,b:bktFound.b,sa:bktFound.sa,sb:bktFound.sb,sets:bktFound.sets,n:tn.name,compName:tn.name,teamALabel:bktFound.a,teamBLabel:bktFound.b,stage:'bkt'};
+        if(!ttM)ttM=[];ttM.unshift(_rec);save();m=_rec;break;
+      }
+      // manualMatches 탐색
+      const manFound=(br.manualMatches||[]).find(x=>x&&x._id===matchId);
+      if(manFound&&manFound.sa!=null){
+        const _rec={_id:matchId,d:manFound.d,a:manFound.a,b:manFound.b,sa:manFound.sa,sb:manFound.sb,sets:manFound.sets,n:tn.name,compName:tn.name,teamALabel:manFound.a,teamBLabel:manFound.b,stage:'bkt'};
+        if(!ttM)ttM=[];ttM.unshift(_rec);save();m=_rec;break;
+      }
+    }
+  }
   if(m&&m.compName) _ttCurComp=m.compName;
-  _ttSub='records';
+  // [BUGFIX] stage에 따라 알맞은 서브탭으로 이동
+  const _navStage=m?.stage||'general';
+  _ttSub=_navStage==='bkt'?'bktrecords':_navStage==='league'?'grprecords':'records';
   _mergedCompSub='tiertour';
   openDetails={};
   if(!window.histPage) window.histPage={};
@@ -929,8 +971,10 @@ function navToTierMatch(matchId){
   });
   render();
   if(matchId&&m){
+    // [BUGFIX] 이동한 서브탭 prefix에 맞게 key 생성
+    const _navPrefix=_ttSub==='bktrecords'?'tiertour-bkt':_ttSub==='grprecords'?'tiertour-league':'tiertour-tt';
     const idx=(ttM||[]).indexOf(m);
-    const key='tiertour-tt-'+idx;
+    const key=_navPrefix+'-'+idx;
     setTimeout(()=>{
       const el=document.getElementById('det-'+key);
       if(el){
@@ -942,7 +986,15 @@ function navToTierMatch(matchId){
 }
 
 function ttPlayerRankHTML(compName){
-  const filtered=compName ? ttM.filter(m=>m.compName===compName) : ttM;
+  // [BUGFIX] compName 비교를 _eqComp으로 통일 — n/t 필드만 있는 기록도 집계되도록
+  const _ttEqComp=(m,c)=>{
+    if(!c) return true;
+    const a=String(m?.compName||'').trim();
+    const b=String(m?.n||'').trim();
+    const d=String(m?.t||'').trim();
+    return a===c||b===c||d===c;
+  };
+  const filtered=compName ? ttM.filter(m=>_ttEqComp(m,compName)) : ttM;
   const sc={};
   filtered.forEach(m=>{
     (m.sets||[]).forEach(st=>{
@@ -961,9 +1013,21 @@ function ttPlayerRankHTML(compName){
   });
   if(!window._rankSort)window._rankSort={};
   const sk=window._rankSort['tt']||'rate';
+  // [UX] 정렬 상태 라벨
+  const skLabel=sk==='w'?'🏆 승순':sk==='l'?'📉 패순':'📊 승률순';
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,univ:sc[name].univ}));
   entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
   if(!entries.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
+  // [BUGFIX] 공동 순위 계산: 정렬 기준 값이 같으면 같은 순위 부여
+  const _rankNums=[];
+  entries.forEach((p,i)=>{
+    if(i===0){_rankNums.push(1);return;}
+    const prev=entries[i-1];
+    const same=sk==='w'?(p.w===prev.w&&p.rate===prev.rate)
+      :sk==='l'?(p.l===prev.l&&p.rate===prev.rate)
+      :(p.rate===prev.rate&&p.w===prev.w);
+    _rankNums.push(same?_rankNums[i-1]:i+1);
+  });
   if(!window._rankPage)window._rankPage={};
   const _PK='tt_rank';
   const _PAGE=20;
@@ -973,12 +1037,22 @@ function ttPlayerRankHTML(compName){
   if(window._rankPage[_PK]>=_totP)window._rankPage[_PK]=0;
   const _cp=window._rankPage[_PK];
   const _paged=_tot>_PAGE?entries.slice(_cp*_PAGE,(_cp+1)*_PAGE):entries;
-  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">🏆 티어대회 개인 순위${compName?` — ${compName}`:''}</div>
+  // [UX] 헤더에 현재 정렬 상태 배지 + 우클릭 안내
+  let h=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">
+    <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed">🏆 티어대회 개인 순위${compName?` — ${compName}`:''}</span>
+    <span style="display:flex;align-items:center;gap:5px">
+      <span style="font-size:11px;color:var(--gray-l)">정렬:</span>
+      <span style="font-size:11px;font-weight:700;background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;border-radius:6px;padding:2px 8px">${skLabel}</span>
+      <span style="font-size:10px;color:var(--gray-l)">(우클릭으로 변경)</span>
+    </span>
+  </div>
   <table><thead><tr><th>순위</th><th style="text-align:left">스트리머</th><th>게임 승</th><th>게임 패</th><th>승률</th></tr></thead><tbody>`;
   _paged.forEach((p,i)=>{
     const col=gc(p.univ);
     const _ri=_cp*_PAGE+i;
-    let rnk=_ri===0?`<span class="rk1">1등</span>`:_ri===1?`<span class="rk2">2등</span>`:_ri===2?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_ri+1}위</span>`;
+    // [BUGFIX] 공동 순위 반영
+    const _rnum=_rankNums[_ri]??(_ri+1);
+    let rnk=_rnum===1?`<span class="rk1">1등</span>`:_rnum===2?`<span class="rk2">2등</span>`:_rnum===3?`<span class="rk3">3등</span>`:`<span style="font-weight:900">${_rnum}위</span>`;
     h+=`<tr><td>${rnk}</td><td style="text-align:left"><span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\\'")}')">${getPlayerPhotoHTML(p.name,'32px')}<span style="font-weight:700;font-size:14px">${p.name}</span>${p.univ?`<span class="ubadge" style="background:${col};font-size:9px">${p.univ}</span>`:''}</span></td><td class="wt">${p.w}</td><td class="lt">${p.l}</td><td style="font-weight:700;color:${p.rate>=50?'#16a34a':'#dc2626'}">${p.rate}%</td></tr>`;
   });
   const _pageNav=_tot>_PAGE?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
@@ -1007,9 +1081,10 @@ function rTierTour(){
     h+=buildTierTourInputHTML();
   } else {
     // 현재 선택된 대회의 기록만 표시
-    const _curTnName=_ttCurComp||'';
+    const _curTnName=String(_ttCurComp||'').trim();
+    // [BUGFIX] _eqComp과 동일한 로직으로 n/t 필드 기록도 포함
     const _ttFiltered=_curTnName
-      ? ttM.filter(m=>m.compName===_curTnName)
+      ? ttM.filter(m=>{ const a=String(m?.compName||'').trim();const b=String(m?.n||'').trim();const d=String(m?.t||'').trim();return a===_curTnName||b===_curTnName||d===_curTnName; })
       : ttM;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.</div>';
   }
@@ -1260,9 +1335,12 @@ function grpDelTierTourney(){
   }catch(e){}
 
   // 3) 남아있는 ttM 중 compName 같은 것 정리(혹시 _id 없는 레코드 등)
+  // [BUGFIX] ttM = filter(...) 재할당 대신 splice로 원본 배열 직접 변경
   try{
     if(typeof ttM!=='undefined' && Array.isArray(ttM)){
-      ttM = ttM.filter(m=>!(m && _eqComp(m)));
+      for(let _i=ttM.length-1;_i>=0;_i--){
+        if(ttM[_i] && _eqComp(ttM[_i])) ttM.splice(_i,1);
+      }
     }
   }catch(e){}
 
@@ -2732,29 +2810,23 @@ function showRankContext(e){
     padding: 4px 0;
   `;
   
-  menu.innerHTML = `
-    <div style="padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;"
-         onmouseover="this.style.background='#f9fafb'" 
-         onmouseout="this.style.background='white'"
-         onclick="window._rankSort['tt']='rate';render();document.getElementById('rank-context-menu').remove();">
-      <span style="font-size: 14px">📊</span>
-      <span>승률순</span>
-    </div>
-    <div style="padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;"
-         onmouseover="this.style.background='#f9fafb'" 
-         onmouseout="this.style.background='white'"
-         onclick="window._rankSort['tt']='w';render();document.getElementById('rank-context-menu').remove();">
-      <span style="font-size: 14px">🏆</span>
-      <span>승순</span>
-    </div>
-    <div style="padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 8px;"
-         onmouseover="this.style.background='#f9fafb'" 
-         onmouseout="this.style.background='white'"
-         onclick="window._rankSort['tt']='l';render();document.getElementById('rank-context-menu').remove();">
-      <span style="font-size: 14px">📉</span>
-      <span>패순</span>
-    </div>
-  `;
+  // [UX] 현재 정렬 항목 강조 표시
+  const _skItems=[
+    {key:'rate',icon:'📊',label:'승률순'},
+    {key:'w',icon:'🏆',label:'승순'},
+    {key:'l',icon:'📉',label:'패순'},
+  ];
+  menu.innerHTML = _skItems.map(item=>{
+    const isCur=sk===item.key;
+    return `<div style="padding:8px 16px;cursor:pointer;font-size:13px;font-weight:${isCur?'800':'600'};color:${isCur?'#7c3aed':'#374151'};background:${isCur?'#f5f3ff':'white'};display:flex;align-items:center;gap:8px;"
+         onmouseover="this.style.background='${isCur?'#ede9fe':'#f9fafb'}'" 
+         onmouseout="this.style.background='${isCur?'#f5f3ff':'white'}'"
+         onclick="window._rankSort['tt']='${item.key}';render();document.getElementById('rank-context-menu').remove();">
+      <span style="font-size:14px">${item.icon}</span>
+      <span>${item.label}</span>
+      ${isCur?'<span style="margin-left:auto;font-size:10px;color:#7c3aed">✓ 현재</span>':''}
+    </div>`;
+  }).join('');
   
   document.body.appendChild(menu);
   

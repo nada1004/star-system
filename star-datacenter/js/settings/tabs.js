@@ -37,10 +37,17 @@
         {id:'cfg', d:'설정'}
       ]},
       { title:'📊 현황판 하위탭', ctx:'board2', items:[
+        {id:'weekly', d:'📅 주간 브리핑'},
         {id:'femco', d:'🧩 펨코스타일'},
         {id:'univ', d:'🏟️ 대학별 신현황판'},
         {id:'free', d:'🚶 무소속'},
         {id:'players', d:'👤 이미지별'},
+        {id:'heatmap', d:'🗺️ 히트맵'},
+        {id:'bubble', d:'🌐 버블맵'},
+        {id:'ranking', d:'🥇 랭킹'},
+        {id:'radar', d:'🕸️ 레이더'},
+        {id:'summary', d:'📊 요약'},
+        {id:'compare', d:'⚔️ 대학비교'},
         {id:'old', d:'📊 구현황판'}
       ]},
       { title:'📅 대전기록 하위탭', ctx:'history', items:[
