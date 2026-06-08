@@ -1186,6 +1186,30 @@ tr.is-selected td{
   cursor:grab;
 }
 .hist-inlinebar.dragging{cursor:grabbing; user-select:none;}
+.hist-tab-count{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-left:6px;
+  padding:1px 7px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.2px;
+  background:rgba(15,23,42,.08);
+  color:var(--text3);
+  border:1px solid rgba(15,23,42,.10);
+}
+.hist-inlinebar .pill.on .hist-tab-count{
+  background:rgba(255,255,255,.22);
+  color:#fff;
+  border-color:rgba(255,255,255,.28);
+}
+body.dark .hist-tab-count{
+  background:rgba(226,232,240,.10);
+  color:rgba(226,232,240,.92);
+  border-color:rgba(226,232,240,.12);
+}
 
 /* ─────────────────────────────────────────
    SOOP 멀티뷰 모달
@@ -1578,7 +1602,12 @@ body.dark .win-btn:hover{border-color:rgba(96,165,250,.45);color:#93c5fd;}
 .rec-summary:empty{display:none!important;}
 .rec-summary:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08);transform:translateY(-1px);}
 .rec-summary.detail-open{border-left-width:4px!important;box-shadow:0 2px 12px rgba(37,99,235,.13)!important;}
-.rec-sum-header{padding:calc(9px * var(--rc-layout-scale,1)) calc(12px * var(--rc-layout-scale,1));display:flex;align-items:center;gap:calc(7px * var(--rc-layout-scale,1));flex-wrap:wrap;}
+.rec-sum-header{padding:calc(9px * var(--rc-layout-scale,1)) calc(12px * var(--rc-layout-scale,1));display:flex;align-items:center;gap:calc(7px * var(--rc-layout-scale,1));flex-wrap:wrap;cursor:pointer;}
+.rec-sum-header:focus-visible{
+  outline:3px solid rgba(37,99,235,.45);
+  outline-offset:2px;
+}
+body.dark .rec-sum-header:focus-visible{ outline-color: rgba(147,197,253,.55); }
 .rec-sum-header--stack{
   display:flex;
   flex-direction:column;
@@ -1622,11 +1651,18 @@ body.dark .win-btn:hover{border-color:rgba(96,165,250,.45);color:#93c5fd;}
   background:rgba(148,163,184,.10);
   border:1px solid rgba(148,163,184,.18);
   color:var(--text3);
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .rec-meta-chip--note{
   background:rgba(99,102,241,.10);
   border-color:rgba(99,102,241,.18);
   color:#4338ca;
+}
+@media (max-width: 768px) {
+  .rec-meta-chip{ max-width: 240px; }
 }
 .rec-victor-chip{
   background:color-mix(in srgb, var(--rec-victor-col,#64748b) 10%, #fff);
@@ -1761,17 +1797,57 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 /* (요청사항) 경기 카드의 대학/팀(ubadge) 버튼 크기: 설정탭 슬라이더로 조절
    - history.js 등에서 ubadge에 인라인 font-size/padding이 있어도 확실히 적용되도록 !important 사용
    - transform scale은 레이아웃이 안 바뀌어서 스코어/참여자 정렬이 깨질 수 있어 사용하지 않음 */
-.rec-summary:hover .rec-actions,.rec-summary.detail-open .rec-actions{opacity:1;pointer-events:auto;}
+.rec-summary:hover .rec-actions,.rec-summary.detail-open .rec-actions,.rec-summary:focus-within .rec-actions{opacity:1;pointer-events:auto;}
 /* 상세 영역: 열릴 때 컬러 상단 테두리로 연결감 */
 .rec-detail-area.open{border-top:none !important;}
 /* 상세 영역 accent bar (승리팀 색상 기반) */
 .rec-detail-area::before{display:none !important;content:none !important;}
 .rec-detail-area.open::before{display:none !important;content:none !important;}
 /* 모바일: 액션 항상 표시 */
-@media(max-width:768px){.rec-actions{opacity:1!important;pointer-events:auto!important;}}
+@media(max-width:768px){
+  .rec-actions{opacity:1!important;pointer-events:auto!important;}
+  .rec-topline{gap:6px;align-items:flex-start;}
+  .rec-meta-row{flex:1 1 100%;}
+  .rec-actions--inline{flex:0 0 100%;margin-left:0;justify-content:flex-end;gap:6px;}
+  .rec-actions--inline .btn-xs{padding:3px 9px !important;}
+  .rec-actions--inline .rec-morebtn{min-width:36px;text-align:center;}
+}
 /* ── 경기 기록카드 양쪽 끝 참여자 프로필 패널 ── */
 .rec-sum-vs-outer{display:flex;align-items:stretch;flex:1;overflow:visible;}
-.rec-sum-vs-outer > .rec-sum-vs{flex:1;padding:calc(4px * var(--rc-layout-scale,1)) calc(6px * var(--rc-layout-scale,1));}
+.rec-sum-vs-outer > .rec-sum-vs{flex:1;min-width:0;padding:calc(4px * var(--rc-layout-scale,1)) calc(6px * var(--rc-layout-scale,1));}
+.pc-vs .pc-ava{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pc-vs .pc-ava.is-lose{filter:grayscale(1);opacity:.55;}
+.pc-vs .pc-name{font-size:13px;font-weight:500;color:var(--text);min-width:0;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pc-vs .pc-name.is-win{font-weight:800;color:#16a34a;}
+.pc-vs .pc-name.is-lose{font-weight:500;color:var(--gray-l);opacity:.85;}
+.pc-vs .pc-name.is-tie{font-weight:800;color:#b45309;}
+.pc-vs.pc-vs--compact{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  width:100%;
+  padding:0 clamp(56px, 10vw, 320px);
+}
+.pc-vs.pc-vs--compact > :first-child{flex:1 1 0;min-width:0;max-width:44%;}
+.pc-vs.pc-vs--compact > :nth-child(2){flex:0 0 auto;}
+.pc-vs.pc-vs--compact > :last-child{flex:1 1 0;min-width:0;max-width:44%;justify-content:flex-end;}
+@media(max-width:768px){
+  .pc-vs.pc-vs--compact{padding:0 10px;gap:8px;}
+  .pc-vs.pc-vs--compact > :first-child,
+  .pc-vs.pc-vs--compact > :last-child{max-width:47%;}
+}
+.rec-team-name{
+  display:inline-block;
+  min-width:0;
+  max-width:min(260px, 40vw);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+@media(max-width:768px){
+  .rec-team-name{ max-width:min(170px, 32vw); }
+}
 @media(max-width:768px){
   .rec-summary.rec-mode-mini .rec-sum-vs-outer,
   .rec-summary.rec-mode-civil .rec-sum-vs-outer,

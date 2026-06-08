@@ -57,6 +57,14 @@ function rHist(C,T){
     }
   }catch(e){}
   const curTab=tabDefs.find(t=>t.id===histSub)||tabDefs[0];
+  let _histLastByGroup={};
+  try{ _histLastByGroup = JSON.parse(localStorage.getItem('su_hist_last_by_group')||'{}')||{}; }catch(e){ _histLastByGroup={}; }
+  try{
+    if(curTab?.grp){
+      _histLastByGroup[curTab.grp]=histSub;
+      localStorage.setItem('su_hist_last_by_group', JSON.stringify(_histLastByGroup));
+    }
+  }catch(e){}
   const grps=[...new Set(tabDefs.map(t=>t.grp))];
   // 과거/잘못된 histSub 값으로 들어왔을 때는 "대회" 탭으로 귀속
   if(histSub==='procomptn' || histSub==='procompteam' || histSub==='procompgj'){
@@ -85,7 +93,9 @@ function rHist(C,T){
     const isOn=curTab.grp===g;
     const firstId=tabDefs.find(t=>t.grp===g).id;
     const gLbl=(typeof getTabLabel==='function') ? getTabLabel('historyGroup', g, g) : g;
-    h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${firstId}';openDetails={};render()">${gLbl}</button>`;
+    const _lastId=_histLastByGroup?.[g];
+    const targetId=(typeof _lastId==='string' && tabDefs.some(t=>t.id===_lastId && t.grp===g)) ? _lastId : firstId;
+    h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${targetId}';openDetails={};render()">${gLbl}</button>`;
     // '외부' 우측에 '외부2' 버튼 노출(관리자 전용)
     if(g==='외부' && tabDefs.some(t=>t.id==='ext2')){
       const isOn2=(histSub==='ext2');
@@ -1084,7 +1094,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
       ? window._buildRecSideProfilePanel(m, _ab, aWin, bWin, ca, cb)
       : {left:'', right:''};
     h+=`<div class="rec-summary rec-mode-${mode}${_recSideFxClass(mode)}" data-rec-mode="${mode}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgb(_mc)};${_recSideFxStyle(mode,ca,cb)}">
-      <div class="rec-sum-header rec-sum-header--stack" onclick="(function(e){if(e.target.closest('button,a,[data-player-link],[onclick]:not(.rec-sum-header)'))return;toggleDetail('${key}');})(event)">
+      <div class="rec-sum-header rec-sum-header--stack" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDetail('${key}');}" onclick="(function(e){if(e.target.closest('button,a,[data-player-link],[onclick]:not(.rec-sum-header)'))return;toggleDetail('${key}');})(event)">
         <div class="rec-topline">
           <div class="rec-meta-row">
             ${m.t?`<span class="rec-meta-chip">${m.t}</span>`:''}
@@ -1116,12 +1126,12 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
           ${_sidePanelHTML.left}
           <div class="rec-sum-vs">
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-              <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.a}')">${(()=>{const n=isCK?'':m.a;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelA}</span>
+              <span class="ubadge${aWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${ca};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.a}')">${(()=>{const n=isCK?'':m.a;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}<span class="rec-team-name">${labelA}</span></span>
               ${(_ab.a||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${ca}12;border:1px solid ${ca}40;color:${ca};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelA.replace(/'/g,"\\'")}', '${ca}', ${_aMemJson})">👥 ${(_ab.a||[]).length}명</button>`:''}
             </div>
             <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')"><span class="${aWin?'wt':bWin?'lt':'pt-z'}">${m.sa}</span><span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 4px;opacity:0.8">:</span><span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb}</span></div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-              <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.b}')">${(()=>{const n=isCK?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}${labelB}</span>
+              <span class="ubadge${bWin?'':' loser'} clickable-univ" data-icon-done="1" style="background:${cb};display:inline-flex;align-items:center;gap:4px" onclick="openUnivModal('${isCK?'':m.b}')">${(()=>{const n=isCK?'':m.b;const url=UNIV_ICONS[n]||(univCfg.find(x=>x.name===n)||{}).icon||'';return url?`<img src="${toHttpsUrl(url)}" style="width:18px;height:18px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`:''})()}<span class="rec-team-name">${labelB}</span></span>
               ${(_ab.b||[]).length?`<button class="btn btn-xs rc-mem-btn" style="background:${cb}12;border:1px solid ${cb}40;color:${cb};font-weight:800" onclick="event.stopPropagation();openProMembersPopup('${labelB.replace(/'/g,"\\'")}', '${cb}', ${_bMemJson})">👥 ${(_ab.b||[]).length}명</button>`:''}
             </div>
 
