@@ -129,7 +129,6 @@ function rStats(C,T){
       {id:'award',lbl:'🏆 이달의 스트리머'},
       {id:'records',lbl:'🎖️ 최다 기록'},
       {id:'killer',lbl:'🗡️ 킬러/피해자'},
-      {id:'clutch',lbl:'⚡ 클러치 지수'},
       {id:'streakhist',lbl:'🔥 역대 연속 기록'},
       {id:'playervs',lbl:'⚔️ 스트리머 비교'},
     ]},
@@ -225,6 +224,12 @@ function rStats(C,T){
   });
   h+=`</div>`;
 
+  const _filterBadges = [
+    _statsDateFrom||_statsDateTo ? `기간 ${_statsDateFrom||'시작'} ~ ${_statsDateTo||'현재'}` : '기간 전체',
+    _statsLastN>0 ? `최근 ${_statsLastN}경기` : '최근 경기 제한 없음',
+    `최소경기 ${_statsMinGames}`
+  ];
+
   h+=`<div class="no-export" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;padding:8px 12px;background:${_isFiltered?'#eff6ff':'var(--surface)'};border:1px solid ${_isFiltered?'#93c5fd':'var(--border)'};border-radius:8px">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:11px;font-weight:800;color:${_isFiltered?'var(--blue)':'var(--text3)'};white-space:nowrap"></span>
@@ -254,6 +259,9 @@ function rStats(C,T){
       ${_qBtn('전체','','')}
       <span style="font-size:10px;color:var(--gray-l);white-space:nowrap;margin-left:8px">🎯 최근N경기:</span>
       ${_nBtn(0)}${_nBtn(10)}${_nBtn(20)}${_nBtn(30)}${_nBtn(50)}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      ${_filterBadges.map(txt=>`<span style="display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:var(--white);border:1px solid ${_isFiltered?'#bfdbfe':'var(--border)'};font-size:11px;font-weight:700;color:${_isFiltered?'#1d4ed8':'var(--text3)'}">${txt}</span>`).join('')}
     </div>
     ${(_statsDateFrom||_statsDateTo)?``:''}
     ${_statsLastN>0?`<span style="font-size:10px;color:#7c3aed;font-weight:700">🎯 최근 ${_statsLastN}경기 기준 통계입니다</span>`:''}
@@ -295,7 +303,6 @@ function rStats(C,T){
   else if(window.statsSub==='advsearch')h+=_safeRender(statsAdvSearchHTML, '고급 검색');
   else if(window.statsSub==='killer')   h+=_safeRender(()=>_cached('killer', statsKillerHTML), '킬러/피해자');
   else if(window.statsSub==='seasonal') h+=_safeRender(()=>_cached('seasonal', statsSeasonalHTML), '요일/시즌 승률');
-  else if(window.statsSub==='clutch')   h+=_safeRender(()=>_cached('clutch', statsClutchHTML), '클러치 지수');
   else if(window.statsSub==='streakhist')h+=_safeRender(()=>_cached('streakhist', statsStreakHistHTML), '연속 기록 히스토리');
   else if(window.statsSub==='tiermatch') h+=_safeRender(()=>_cached('tiermatch', statsTierMatchHTML), '티어별 승률(팀전)');
   else if(window.statsSub==='univmatrix2')h+=_safeRender(()=>_cached('univmatrix2', statsUnivMatrix2HTML), '대학 매트릭스+');
@@ -1536,11 +1543,115 @@ function statsRecordsHTML(){
    6. 대학별 성적 레이더 차트
 ══════════════════════════════════════ */
 var _radarSelUniv='';
-function statsRadarHTML(){
+var _radarSort='winrate';
+var _radarCompareUnivs=[];
+function _radarBaseScore(){
+  return {winrate:0,avgElo:1200,pts:0,activity:0,diversity:0,streak:0,w:0,l:0,tot:0,mem:0};
+}
+function getSortedRadarRows(){
   const _players = Array.isArray(players) ? players : [];
   const univs=getAllUnivs().filter(u=>_players.some(p=>p.univ===u.name));
-  if(!_radarSelUniv&&univs.length)_radarSelUniv=univs[0].name;
-  const proIds=statsProMatchIds();
+  const _allScores=getStatsRadarScores();
+  const rows=univs.map(u=>({u, scores:_allScores[u.name] || _radarBaseScore()}));
+  const sorter = String(_radarSort||'winrate');
+  rows.sort((a,b)=>{
+    if(sorter==='name') return String(a.u?.name||'').localeCompare(String(b.u?.name||''),'ko');
+    if(sorter==='activity') return (b.scores.activity-a.scores.activity)||(b.scores.winrate-a.scores.winrate)||(b.scores.tot-a.scores.tot);
+    if(sorter==='elo') return (b.scores.avgElo-a.scores.avgElo)||(b.scores.winrate-a.scores.winrate)||(b.scores.tot-a.scores.tot);
+    return (b.scores.winrate-a.scores.winrate)||(b.scores.tot-a.scores.tot)||(b.scores.avgElo-a.scores.avgElo);
+  });
+  return {rows, scoreMap:_allScores};
+}
+window.toggleRadarCompareUniv = window.toggleRadarCompareUniv || function(name){
+  try{
+    const key = String(name||'').trim();
+    if(!key) return;
+    const arr = Array.isArray(window._radarCompareUnivs) ? [...window._radarCompareUnivs] : [];
+    const idx = arr.indexOf(key);
+    if(idx >= 0) arr.splice(idx,1);
+    else{
+      if(arr.length >= 4) arr.shift();
+      arr.push(key);
+    }
+    window._radarCompareUnivs = arr.filter(v=>v && v!==window._radarSelUniv);
+    render();
+  }catch(e){}
+};
+function getStatsRadarSourceMatches(){
+  const _mini = Array.isArray(window.miniM) ? window.miniM : [];
+  const _univm = Array.isArray(window.univM) ? window.univM : [];
+  const _ck = Array.isArray(window.ckM) ? window.ckM : [];
+  const _comps = Array.isArray(window.comps) ? window.comps : [];
+  const _tour = (typeof getTourneyMatches === 'function') ? getTourneyMatches() : [];
+  return statsFilterMatches([].concat(_mini, _univm, _ck, _comps, _tour));
+}
+function getStatsRadarScores(){
+  const _players = Array.isArray(players) ? players : [];
+  const univNames = [...new Set(_players.map(p=>String(p?.univ||'').trim()).filter(Boolean))];
+  const scoreMap = {};
+  const memberSets = {};
+  univNames.forEach(name=>{
+    const mem=_players.filter(p=>String(p?.univ||'').trim()===name);
+    const avgElo=Math.round(mem.reduce((s,p)=>s+(p.elo||1200),0)/Math.max(1, mem.length));
+    const pts=mem.reduce((s,p)=>s+(p.points||0),0);
+    const races=new Set(mem.map(p=>p.race).filter(Boolean)).size;
+    memberSets[name] = new Set();
+    let maxS=0;
+    mem.forEach(p=>{
+      let cs=0, lt='';
+      const hist=[...statsNonProHist(p)].sort((a,b)=>(String(b.date||'')).localeCompare(String(a.date||'')));
+      for(const h of hist){
+        if(h.result===lt || lt===''){ cs++; lt=h.result; }
+        else { cs=1; lt=h.result; }
+        if(lt==='승') maxS=Math.max(maxS, cs);
+      }
+    });
+    scoreMap[name]={winrate:0,avgElo,pts,activity:0,diversity:races,streak:maxS,w:0,l:0,tot:0,mem:mem.length};
+  });
+  const d30=new Date(); d30.setDate(d30.getDate()-30);
+  const d30s=d30.toISOString().slice(0,10);
+  getStatsRadarSourceMatches().forEach(m=>{
+    const md = String(m?.d || m?.date || '');
+    (m.sets||[]).forEach(set=>{
+      (set.games||[]).forEach(g=>{
+        if(!g || !g.playerA || !g.playerB || !g.winner) return;
+        const pA = statsP(g.playerA);
+        const pB = statsP(g.playerB);
+        const ua = String(pA?.univ || '').trim();
+        const ub = String(pB?.univ || '').trim();
+        if(ua && scoreMap[ua]){
+          memberSets[ua] && memberSets[ua].add(String(g.playerA).trim());
+          if(g.winner==='A') scoreMap[ua].w++; else scoreMap[ua].l++;
+          scoreMap[ua].tot++;
+          if(md && md >= d30s) scoreMap[ua].activity++;
+        }
+        if(ub && scoreMap[ub]){
+          memberSets[ub] && memberSets[ub].add(String(g.playerB).trim());
+          if(g.winner==='B') scoreMap[ub].w++; else scoreMap[ub].l++;
+          scoreMap[ub].tot++;
+          if(md && md >= d30s) scoreMap[ub].activity++;
+        }
+      });
+    });
+  });
+  Object.values(scoreMap).forEach(s=>{
+    s.winrate = s.tot ? Math.round(s.w / s.tot * 100) : 0;
+  });
+  Object.keys(scoreMap).forEach(name=>{
+    scoreMap[name].mem = memberSets[name] ? memberSets[name].size : 0;
+  });
+  return scoreMap;
+}
+function statsRadarHTML(){
+  const _players = Array.isArray(players) ? players : [];
+  const {rows:_rows, scoreMap:_allScores} = getSortedRadarRows();
+  const univs=_rows.map(x=>x.u);
+  if((!_radarSelUniv || !univs.some(u=>u.name===_radarSelUniv)) && univs.length) _radarSelUniv=univs[0].name;
+  _radarCompareUnivs = (Array.isArray(_radarCompareUnivs)?_radarCompareUnivs:[]).filter(name=>name && name!==_radarSelUniv && univs.some(u=>u.name===name)).slice(0,4);
+  const _selectedScores=_allScores[_radarSelUniv] || {tot:0,w:0,l:0};
+  const _totalGames=_rows.reduce((sum,row)=>sum+(row.scores.tot||0),0);
+  const _quickCompare = Array.from(new Set([_radarSelUniv, ..._radarCompareUnivs, ..._rows.slice(0,5).map(r=>r.u.name)])).filter(Boolean).slice(0,7);
+  const _sortBtn = (id, label)=>`<button class="pill ${_radarSort===id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_radarSort='${id}';render()">${label}</button>`;
   return`<div style="display:flex;flex-direction:column;gap:16px">
   <div class="ssec" id="stats-radar-sec">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
@@ -1550,6 +1661,26 @@ function statsRadarHTML(){
       </select>
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-radar-sec','radar')">📷 이미지 저장</button>
     </div>
+    <div style="font-size:11px;color:var(--gray-l);margin:-6px 0 12px">선수수/전적/활동도는 현재 통계 필터에 포함된 경기 기준으로 집계됩니다.</div>
+    <div class="fbar utilbar utilbar--scroll no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;margin-bottom:10px">
+      ${_sortBtn('winrate','승률순')}
+      ${_sortBtn('activity','활동도순')}
+      ${_sortBtn('elo','ELO순')}
+      ${_sortBtn('name','이름순')}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+      ${_quickCompare.map(name=>{
+        const on = name===_radarSelUniv || _radarCompareUnivs.includes(name);
+        const isMain = name===_radarSelUniv;
+        return `<button onclick="${isMain?`_radarSelUniv='${escJS(name)}';initRadarChart()`:`toggleRadarCompareUniv('${escJS(name)}')`}" style="padding:5px 10px;border-radius:999px;border:1px solid ${on?gc(name):'var(--border2)'};background:${on?gc(name)+'18':'var(--white)'};color:${on?gc(name):'var(--text3)'};font-size:11px;font-weight:800;cursor:pointer">${isMain?'기준 ':(_radarCompareUnivs.includes(name)?'비교 ':'+ 비교 ')}${escHTML(name)}</button>`;
+      }).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px">
+      <div style="padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--white)"><div style="font-size:11px;color:var(--gray-l)">집계 대학</div><div style="font-size:18px;font-weight:900">${_rows.length}</div></div>
+      <div style="padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--white)"><div style="font-size:11px;color:var(--gray-l)">집계 경기 수</div><div style="font-size:18px;font-weight:900">${_totalGames}</div></div>
+      <div style="padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--white)"><div style="font-size:11px;color:var(--gray-l)">선택 대학 전적</div><div style="font-size:18px;font-weight:900">${_selectedScores.w||0}승 ${_selectedScores.l||0}패</div></div>
+      <div style="padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--white)"><div style="font-size:11px;color:var(--gray-l)">비교 대학</div><div style="font-size:18px;font-weight:900">${1+_radarCompareUnivs.length}개</div></div>
+    </div>
     <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
       <canvas id="radarChart" width="280" height="280" style="flex-shrink:0"></canvas>
       <div id="radarInfo" style="flex:1;min-width:200px"></div>
@@ -1558,19 +1689,19 @@ function statsRadarHTML(){
   <div class="ssec">
     <h4 style="margin-bottom:12px">📊 전체 대학 비교</h4>
     <div style="overflow-x:auto"><table>
-      <thead><tr><th>대학</th><th>선수수</th><th>승률</th><th>ELO평균</th><th>포인트</th><th>활동도</th><th>다양성</th></tr></thead>
+      <thead><tr><th>대학</th><th>집계 선수수</th><th>승률</th><th>전적</th><th>ELO평균</th><th>포인트</th><th>활동도</th><th>다양성</th></tr></thead>
       <tbody>
-        ${univs.map(u=>{
-          const mem=_players.filter(p=>p.univ===u.name);
-          const scores=calcUnivRadar(u.name,proIds);
-          return`<tr style="cursor:pointer" onclick="_radarSelUniv='${escJS(u.name)}';initRadarChart()">
+        ${_rows.map(({u,scores})=>{
+          const _isOn=_radarSelUniv===u.name || _radarCompareUnivs.includes(u.name);
+          return`<tr style="cursor:pointer;${_isOn?'background:'+u.color+'12;':''}" onclick="_radarSelUniv='${escJS(u.name)}';initRadarChart()">
             <td><span class="ubadge clickable-univ" style="background:${u.color}" onclick="event.stopPropagation();openUnivModal('${escJS(u.name)}')">${escHTML(u.name)}</span></td>
-            <td>${mem.length}명</td>
+            <td>${scores.mem}명</td>
             <td style="color:${scores.winrate>=50?'var(--green)':'var(--red)'};font-weight:700">${scores.winrate}%</td>
+            <td style="font-weight:700">${scores.w}승 ${scores.l}패</td>
             <td>${scores.avgElo}</td>
             <td class="${scores.pts>=0?'wt':'lt'}">${scores.pts>=0?'+':''}${scores.pts}</td>
             <td>${scores.activity}</td>
-            <td>${scores.diversity}종족</td>
+            <td style="white-space:nowrap">${scores.diversity}종족 <button class="btn btn-w btn-xs" style="margin-left:6px;padding:2px 6px" onclick="event.stopPropagation();toggleRadarCompareUniv('${escJS(u.name)}')">${_radarCompareUnivs.includes(u.name)?'해제':'비교'}</button></td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -1578,35 +1709,20 @@ function statsRadarHTML(){
   </div></div>`;
 }
 function calcUnivRadar(univName, proIds){
-  const _players = Array.isArray(players) ? players : [];
-  const mem=_players.filter(p=>p.univ===univName);
-  if(!mem.length)return{winrate:0,avgElo:1200,pts:0,activity:0,diversity:0,streak:0};
-  const allH=mem.flatMap(p=>statsNonProHist(p));
-  const w=allH.filter(h=>h.result==='승').length;
-  const l=allH.filter(h=>h.result==='패').length;
-  const tot=w+l;
-  const avgElo=Math.round(mem.reduce((s,p)=>s+(p.elo||1200),0)/mem.length);
-  const pts=mem.reduce((s,p)=>s+(p.points||0),0);
-  const races=new Set(mem.map(p=>p.race).filter(Boolean)).size;
-  // 최근 30일 활동
-  const d30=new Date();d30.setDate(d30.getDate()-30);
-  const d30s=d30.toISOString().slice(0,10);
-  const activity=allH.filter(h=>(h.date||'')>=d30s).length;
-  // 현재 최장 연승
-  let maxS=0;
-  mem.forEach(p=>{let cs=0,lt='';for(const h of statsNonProHist(p)){if(h.result===lt||lt===''){cs++;lt=h.result;}else{cs=1;lt=h.result;}if(lt==='승')maxS=Math.max(maxS,cs);}});
-  return{winrate:tot?Math.round(w/tot*100):0,avgElo,pts,activity,diversity:races,streak:maxS,w,l,tot,mem:mem.length};
+  const scores = getStatsRadarScores();
+  return scores[univName] || {winrate:0,avgElo:1200,pts:0,activity:0,diversity:0,streak:0,w:0,l:0,tot:0,mem:0};
 }
 function initRadarChart(){
   const canvas=document.getElementById('radarChart');
   const info=document.getElementById('radarInfo');
   if(!canvas)return;
-  const proIds=statsProMatchIds();
   const _players = Array.isArray(players) ? players : [];
   const allUnivs=getAllUnivs().filter(u=>_players.some(p=>p.univ===u.name));
-  const _allScores={};
-  allUnivs.forEach(u=>{ _allScores[u.name]=calcUnivRadar(u.name,proIds); });
-  const scores=_allScores[_radarSelUniv]||calcUnivRadar(_radarSelUniv,proIds);
+  if((!_radarSelUniv || !allUnivs.some(u=>u.name===_radarSelUniv)) && allUnivs.length) _radarSelUniv = allUnivs[0].name;
+  const _allScores=getStatsRadarScores();
+  const _activeNames = Array.from(new Set([_radarSelUniv, ...((Array.isArray(_radarCompareUnivs)?_radarCompareUnivs:[]).filter(name=>name && name!==_radarSelUniv))])).slice(0,5);
+  const _activeRows = _activeNames.map(name=>({name, scores:_allScores[name]||calcUnivRadar(name), col:gc(name)}));
+  const scores=_allScores[_radarSelUniv]||calcUnivRadar(_radarSelUniv);
   const _sv=Object.values(_allScores);
   const maxVals={
     winrate:100,
@@ -1617,14 +1733,6 @@ function initRadarChart(){
     mem:Math.max(..._sv.map(s=>s.mem),1),
   };
   const labels=['승률','ELO','활동도','다양성','연승','선수수'];
-  const vals=[
-    scores.winrate/maxVals.winrate,
-    scores.avgElo/maxVals.avgElo,
-    Math.min(1,scores.activity/maxVals.activity),
-    scores.diversity/maxVals.diversity,
-    Math.min(1,scores.streak/maxVals.streak),
-    scores.mem/maxVals.mem,
-  ];
   const col=gc(_radarSelUniv);
   const W=280,H=280,cx=W/2,cy=H/2,r=100,sides=6;
   const ctx=canvas.getContext('2d');
@@ -1647,25 +1755,33 @@ function initRadarChart(){
     ctx.lineTo(cx+r*Math.cos(angle(i)),cy+r*Math.sin(angle(i)));
     ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;ctx.stroke();
   }
-  // 데이터 폴리곤
-  ctx.beginPath();
-  for(let i=0;i<sides;i++){
-    const v=vals[i];
-    const x=cx+r*v*Math.cos(angle(i));
-    const y=cy+r*v*Math.sin(angle(i));
-    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-  }
-  ctx.closePath();
-  ctx.fillStyle=col+'44';ctx.fill();
-  ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.stroke();
-  // 점
-  for(let i=0;i<sides;i++){
-    const v=vals[i];
-    const x=cx+r*v*Math.cos(angle(i));
-    const y=cy+r*v*Math.sin(angle(i));
-    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);
-    ctx.fillStyle=col;ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
-  }
+  _activeRows.forEach((row, idx)=>{
+    const vals=[
+      row.scores.winrate/maxVals.winrate,
+      row.scores.avgElo/maxVals.avgElo,
+      Math.min(1,row.scores.activity/maxVals.activity),
+      row.scores.diversity/maxVals.diversity,
+      Math.min(1,row.scores.streak/maxVals.streak),
+      row.scores.mem/maxVals.mem,
+    ];
+    ctx.beginPath();
+    for(let i=0;i<sides;i++){
+      const v=vals[i];
+      const x=cx+r*v*Math.cos(angle(i));
+      const y=cy+r*v*Math.sin(angle(i));
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.fillStyle=row.col + (idx===0 ? '2e' : '16'); ctx.fill();
+    ctx.strokeStyle=row.col; ctx.lineWidth=idx===0?2.8:1.8; ctx.stroke();
+    for(let i=0;i<sides;i++){
+      const v=vals[i];
+      const x=cx+r*v*Math.cos(angle(i));
+      const y=cy+r*v*Math.sin(angle(i));
+      ctx.beginPath();ctx.arc(x,y,idx===0?4:3,0,Math.PI*2);
+      ctx.fillStyle=row.col;ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.2;ctx.stroke();
+    }
+  });
   // 레이블
   ctx.fillStyle='#374151';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
   for(let i=0;i<sides;i++){
@@ -1681,19 +1797,23 @@ function initRadarChart(){
   if(info){
     info.innerHTML=`
       <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="font-weight:800;font-size:16px;color:${col}">${_radarSelUniv}</div>
-        ${[
-          ['선수 수',scores.mem+'명'],
-          ['승률',scores.winrate+'%'],
-          ['평균 ELO',scores.avgElo],
-          ['총 포인트',(scores.pts>=0?'+':'')+scores.pts],
-          ['최근 30일 활동',scores.activity+'경기'],
-          ['종족 다양성',scores.diversity+'종족'],
-          ['최장 연승',scores.streak+'연승'],
-          ['총 전적',`${scores.w}승 ${scores.l}패`],
-        ].map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--white);border:1px solid var(--border);border-radius:8px">
-          <span style="font-size:12px;color:var(--text3)">${k}</span>
-          <span style="font-weight:700;font-size:12px">${v}</span>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:2px">${_activeRows.map((row, idx)=>`<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;background:${row.col}14;border:1px solid ${row.col}55;color:${row.col};font-size:11px;font-weight:900"><span style="width:8px;height:8px;border-radius:50%;background:${row.col};display:inline-block"></span>${idx===0?'기준':'비교'} ${escHTML(row.name)}</span>`).join('')}</div>
+        ${_activeRows.map((row, idx)=>`
+        <div style="display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid ${idx===0?row.col+'55':'var(--border)'};border-radius:12px;background:${idx===0?row.col+'0d':'var(--white)'}">
+          <div style="font-weight:800;font-size:15px;color:${row.col}">${escHTML(row.name)}</div>
+          ${[
+            ['집계 선수 수',row.scores.mem+'명'],
+            ['승률',row.scores.winrate+'%'],
+            ['평균 ELO',row.scores.avgElo],
+            ['총 포인트',(row.scores.pts>=0?'+':'')+row.scores.pts],
+            ['최근 30일 활동',row.scores.activity+'경기'],
+            ['종족 다양성',row.scores.diversity+'종족'],
+            ['최장 연승',row.scores.streak+'연승'],
+            ['총 전적',`${row.scores.w}승 ${row.scores.l}패`],
+          ].map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--white);border:1px solid var(--border);border-radius:8px">
+            <span style="font-size:12px;color:var(--text3)">${k}</span>
+            <span style="font-weight:700;font-size:12px">${v}</span>
+          </div>`).join('')}
         </div>`).join('')}
       </div>`;
   }
@@ -2587,10 +2707,12 @@ function statsUnivWinBarHTML(){
       </select>
     </div>
     <canvas id="uwbCanvas" style="width:100%;display:block"></canvas>
+    <div id="uwbTrendList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:12px"></div>
   </div>`;
 }
 function initUnivWinBarChart(){
   const canvas=document.getElementById('uwbCanvas');
+  const trendList=document.getElementById('uwbTrendList');
   if(!canvas)return;
   // 데이터 수집
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
@@ -2664,6 +2786,58 @@ function initUnivWinBarChart(){
     ctx.textAlign='left'; ctx.fillStyle=textCol;
     ctx.fillText(`${d.wr}%  (${d.w}승 ${d.l}패)`,PAD_L+barW+5,barY+14);
   });
+
+  if(trendList){
+    const recentMap = {};
+    const allMatches = statsFilterMatches([...(window.miniM||[]), ...(window.univM||[]), ...(window.ckM||[]), ...(window.comps||[]), ...(window.proM||[])])
+      .sort((a,b)=>String(a?.d||a?.date||'').localeCompare(String(b?.d||b?.date||'')));
+    allMatches.forEach(m=>{
+      (m.sets||[]).forEach(set=>{
+        (set.games||[]).forEach(g=>{
+          if(!g || !g.playerA || !g.playerB || !g.winner) return;
+          const pA = statsP(g.playerA), pB = statsP(g.playerB);
+          const ua = String(pA?.univ||'').trim(), ub = String(pB?.univ||'').trim();
+          if(ua){ if(!recentMap[ua]) recentMap[ua]=[]; recentMap[ua].push(g.winner==='A'?1:0); }
+          if(ub){ if(!recentMap[ub]) recentMap[ub]=[]; recentMap[ub].push(g.winner==='B'?1:0); }
+        });
+      });
+    });
+    const sparkline = (arr, col)=>{
+      const vals = (arr||[]).slice(-10);
+      if(!vals.length) return `<div style="font-size:11px;color:var(--gray-l)">최근 10경기 데이터 없음</div>`;
+      const W=140,H=34,P=4;
+      const pts = vals.map((v,i)=>{
+        const x = P + ((W-P*2) * (vals.length===1?0.5:i/(vals.length-1)));
+        const y = H-P - (H-P*2) * v;
+        return `${x},${y}`;
+      }).join(' ');
+      const dots = vals.map((v,i)=>{
+        const x = P + ((W-P*2) * (vals.length===1?0.5:i/(vals.length-1)));
+        const y = H-P - (H-P*2) * v;
+        return `<circle cx="${x}" cy="${y}" r="2.5" fill="${v?col:'#94a3b8'}" />`;
+      }).join('');
+      return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">
+        <line x1="${P}" y1="${H/2}" x2="${W-P}" y2="${H/2}" stroke="rgba(148,163,184,.45)" stroke-dasharray="3 3"/>
+        <polyline fill="none" stroke="${col}" stroke-width="2.2" points="${pts}" />
+        ${dots}
+      </svg>`;
+    };
+    trendList.innerHTML = data.slice(0, Math.min(8, data.length)).map(d=>{
+      const last = (recentMap[d.name]||[]).slice(-10);
+      const streak = last.map(v=>v?'승':'패').join(' ');
+      return `<div style="padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--white)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+          <span style="font-size:13px;font-weight:900;color:${d.col}">${d.name}</span>
+          <span style="font-size:11px;color:var(--gray-l)">최근 ${Math.min(10,last.length)}경기</span>
+        </div>
+        ${sparkline(last, d.col)}
+        <div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-size:11px">
+          <span style="color:var(--text3)">추세</span>
+          <span style="font-weight:700;color:var(--text2)">${streak || '-'}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
 }
 
 /* ══════════════════════════════════════

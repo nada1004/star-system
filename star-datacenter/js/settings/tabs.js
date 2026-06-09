@@ -170,7 +170,6 @@
         {id:'award', d:'🏆 이달의 스트리머'},
         {id:'records', d:'🎖️ 최다 기록'},
         {id:'killer', d:'🗡️ 킬러/피해자'},
-        {id:'clutch', d:'⚡ 클러치 지수'},
         {id:'streakhist', d:'🔥 역대 연속 기록'},
         {id:'playervs', d:'⚔️ 스트리머 비교'},
         {id:'radar', d:'🕸️ 대학 레이더'},
