@@ -411,6 +411,10 @@ function _b2ScheduleImageSwap(playerName) {
     const el = document.getElementById('b2-main-img-' + slot);
     if (el) el.style.opacity = (slot === firstSlot) ? '1' : '0';
   }
+  try{
+    const badge = document.getElementById('b2-cur-img-slot');
+    if(badge) badge.textContent = '🖼️ 이미지 ' + firstSlot;
+  }catch(e){}
   // 순환 인덱스 (0 = img1)
   mainBox._swapIdx = 0;
   const totalImgs = imgList.length;
@@ -427,6 +431,10 @@ function _b2ScheduleImageSwap(playerName) {
       const el = document.getElementById('b2-main-img-' + slot);
       if (el) el.style.opacity = (slot === curSlot) ? '1' : '0';
     }
+    try{
+      const badge = document.getElementById('b2-cur-img-slot');
+      if(badge) badge.textContent = '🖼️ 이미지 ' + curSlot;
+    }catch(e){}
     // 숨긴 비디오는 정지(재생 중이면 클릭 막힘/리소스 사용 방지)
     try{
       for(let i=0;i<totalImgs;i++){

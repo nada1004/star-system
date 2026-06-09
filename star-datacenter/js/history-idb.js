@@ -266,6 +266,12 @@
       const next = Array.isArray(list) ? list : [];
       if(typeof _unpackPlayers === 'function') players = _unpackPlayers(next) || [];
       else players = next;
+      try{
+        if(window._playerSchemaNeedsSave && typeof localSave === 'function'){
+          localSave();
+          window._playerSchemaNeedsSave = false;
+        }
+      }catch(_e){}
     }catch(e){
       players = Array.isArray(list) ? list : [];
     }

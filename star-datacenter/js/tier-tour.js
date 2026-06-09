@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════
+/* ══════════════════════════════════════
    🔧 구버전 티어대회 데이터 1회 마이그레이션
 ══════════════════════════════════════ */
 let _ttMigrated = false;
@@ -2349,6 +2349,13 @@ function bulkChangeMap(){
   const from=(document.getElementById('bulk-map-from')?.value||'').trim();
   const to=(document.getElementById('bulk-map-to')?.value||'').trim();
   if(!from||!to){ alert('교체 전/후 맵 이름을 입력하세요.'); return; }
+  if(typeof window.bulkReplaceMapEverywhere === 'function'){
+    const changed = window.bulkReplaceMapEverywhere(from, to);
+    if(changed){ save(); render(); }
+    const el=document.getElementById('bulk-map-result');
+    if(el){ el.textContent = changed?`✅ ${changed}개 맵명 교체 완료!`:'교체할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
+    return;
+  }
   // (보강) 사용자가 '투혼 II' vs '투혼II' 같이 띄어쓰기 차이로 입력하는 경우가 많아서
   // - 비교는 "공백 제거 + 소문자"로 한 번 더 수행한다.
   const norm = (s)=>String(s||'').trim().toLowerCase().replace(/\s+/g,'');
@@ -2393,6 +2400,18 @@ function bulkChangeMap(){
   if(changed){ save(); render(); }
   const el=document.getElementById('bulk-map-result');
   if(el){ el.textContent = changed?`✅ ${changed}개 맵명 교체 완료!`:'교체할 항목이 없습니다.'; setTimeout(()=>{ if(el) el.textContent=''; }, 3500); }
+}
+function previewBulkChangeMap(){
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li){ alert('로그인이 필요합니다.'); return; }
+  const from=(document.getElementById('bulk-map-from')?.value||'').trim();
+  if(!from){ alert('교체 전 맵 이름을 입력하세요.'); return; }
+  const cnt=(typeof window.bulkCountMapEverywhere==='function') ? window.bulkCountMapEverywhere(from) : 0;
+  const el=document.getElementById('bulk-map-result');
+  if(el){
+    el.textContent = cnt?`🔎 변경 예정 ${cnt}개`:'일치하는 맵이 없습니다.';
+    setTimeout(()=>{ if(el && el.textContent.startsWith('🔎')) el.textContent=''; }, 3500);
+  }
 }
 function bulkDeleteByDate(){
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;

@@ -198,13 +198,12 @@ function rTotal(C,T){
     const u = p.univ;
     if(!u) continue;
     _univTotalMap.set(u, (_univTotalMap.get(u)||0) + 1);
-    if(p.gameType === 'general') continue;
     const arr = _univScMap.get(u);
     if(arr) arr.push(p);
     else _univScMap.set(u, [p]);
   }
   
-  // University section for StarCraft streamers (exclude general)
+  // University section
   _getUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
     const _isHiddenUniv=isLoggedIn&&u.hidden;
     let up=_univScMap.get(u.name) || [];
@@ -388,7 +387,7 @@ function _buildGalleryView(rankMap){
   for(const p of _pl){
     if(!p || p.retired) continue;
     const u = p.univ;
-    if(!u || p.gameType === 'general') continue;
+    if(!u) continue;
     const arr = _univScActiveMap.get(u);
     if(arr) arr.push(p);
     else _univScActiveMap.set(u, [p]);

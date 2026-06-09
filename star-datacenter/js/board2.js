@@ -1269,7 +1269,6 @@ function saveB2NewPlayer() {
     role: role || '학생',
     race,
     tier,
-    gameType: 'general',
     channelUrl: channelUrl || undefined,
     photo: photo || undefined,
     secondProfileFile: photo2 || undefined,
@@ -2403,8 +2402,8 @@ function _b2PlayersView() {
         <!-- 이미지 컨트롤 패널 - 관리자(로그인)만 렌더 [BUGFIX-IMG-SETTINGS] -->
         ${isLoggedIn ? `<div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
           <div class="b2-players-controls-title">🎨 이미지 설정</div>
-          ${_b2BuildImageControlGroup(safeName, 'primary', '첫번째 이미지', hasPrimary)}
-          ${_b2BuildImageControlGroup(safeName, 'secondary', '두번째 이미지', hasSecondary)}
+          ${_b2BuildImageControlGroup(safeName, 'primary', '이미지 1', hasPrimary)}
+          ${_b2BuildImageControlGroup(safeName, 'secondary', '이미지 2', hasSecondary)}
         </div>` : ''}
         
         <!-- 컨트롤 패널 토글 버튼 - 관리자(로그인 사용자)만 표시 [BUGFIX-IMG-SETTINGS] -->
@@ -2429,6 +2428,7 @@ function _b2PlayersView() {
               const wc2 = wr2>=60?'#10b981':wr2>=40?'#f59e0b':'#ef4444';
               return `<span style="padding:3px 10px;border-radius:10px;background:rgba(0,0,0,.5);font-size:12px;font-weight:800;color:${wc2}">🔥 이번주 ${ws2.w}승 ${ws2.l}패</span>`;
             })()}
+            ${(()=>{const s=_b2SelectedPlayer.photo?1:(_b2SelectedPlayer.secondProfileFile?2:(_b2SelectedPlayer.profileFile3?3:(_b2SelectedPlayer.profileFile4?4:(_b2SelectedPlayer.profileFile5?5:1))));return `<span id="b2-cur-img-slot" style="padding:3px 10px;border-radius:10px;background:rgba(0,0,0,.5);font-size:12px;font-weight:800;color:#e2e8f0">🖼️ 이미지 ${s}</span>`;})()}
           </div>
           ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>` : ''}
         </div>
@@ -2451,13 +2451,6 @@ function _b2PlayersView() {
   const _lim0 = Math.max(60, parseInt(window._b2PlayersRenderLimit||0,10) || 240);
   const _limit = Math.min(tierFilteredPlayers.length, _lim0);
   let _gridList = tierFilteredPlayers.slice();
-  if(_b2SelectedPlayer && _b2SelectedPlayer.name){
-    const si = _gridList.findIndex(x=>x && x.name === _b2SelectedPlayer.name);
-    if(si > 0){
-      const sel = _gridList.splice(si, 1)[0];
-      _gridList.unshift(sel);
-    }
-  }
   const _gridShow = _gridList.slice(0, _limit);
   const _remain = Math.max(0, _gridList.length - _gridShow.length);
 
@@ -2612,8 +2605,8 @@ function _b2UpdateMainDisplay(playerName) {
       <!-- 이미지 컨트롤 패널 - 관리자(로그인)만 렌더 [BUGFIX-IMG-SETTINGS] -->
       ${isLoggedIn ? `<div class="b2-players-img-controls" id="b2-img-controls" style="display:none">
         <div class="b2-players-controls-title">🎨 이미지 설정</div>
-        ${_b2BuildImageControlGroup(safeName, 'primary', '첫번째 이미지', hasPrimary)}
-        ${_b2BuildImageControlGroup(safeName, 'secondary', '두번째 이미지', hasSecondary)}
+        ${_b2BuildImageControlGroup(safeName, 'primary', '이미지 1', hasPrimary)}
+        ${_b2BuildImageControlGroup(safeName, 'secondary', '이미지 2', hasSecondary)}
       </div>` : ''}
       
       <!-- 컨트롤 패널 토글 버튼 - 관리자(로그인 사용자)만 표시 [BUGFIX-IMG-SETTINGS] -->
@@ -2631,6 +2624,7 @@ function _b2UpdateMainDisplay(playerName) {
               ? `<span style="display:flex;align-items:center;gap:8px"><img src="${toHttpsUrl(iconUrl)}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
               : `<span>🏫 ${player.univ}</span>`;
           })() : ''}
+          ${(()=>{const s=player.photo?1:(player.secondProfileFile?2:(player.profileFile3?3:(player.profileFile4?4:(player.profileFile5?5:1))));return `<span id="b2-cur-img-slot" style="padding:3px 10px;border-radius:10px;background:rgba(0,0,0,.5);font-size:12px;font-weight:800;color:#e2e8f0">🖼️ 이미지 ${s}</span>`;})()}
         </div>
         ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:8px;padding:6px 12px;background:#fff;border:1px solid rgba(255,255,255,0.45);border-radius:12px;color:var(--text1);font-size:12px;font-weight:800;cursor:pointer;transition:all 0.15s ease" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">✏️ 프로필 수정</button>` : ''}
       </div>
@@ -2640,11 +2634,12 @@ function _b2UpdateMainDisplay(playerName) {
     _b2ScheduleImageSwap(player.name);
   }
 
+  const _selName = String(playerName || '').trim();
   document.querySelectorAll('.b2-players-card').forEach(card => {
     card.classList.remove('active');
-    const cardName = card.querySelector('.b2-players-label')?.textContent;
+    const cardName = String(card.querySelector('.b2-players-label')?.textContent || '').trim();
     const thumbnail = card.querySelector('.b2-players-thumbnail');
-    if (cardName === playerName) {
+    if (cardName && cardName === _selName) {
       card.classList.add('active');
       if (thumbnail) {
         thumbnail.style.borderColor = theme.border;
@@ -2653,26 +2648,6 @@ function _b2UpdateMainDisplay(playerName) {
     } else if (thumbnail) {
       thumbnail.style.borderColor = 'transparent';
       thumbnail.style.boxShadow = 'none';
-    }
-  });
-  
-  // 활성 카드 스타일 업데이트
-  document.querySelectorAll('.b2-players-card').forEach(card => {
-    card.classList.remove('active');
-    const cardName = card.querySelector('.b2-players-label')?.textContent;
-    if (cardName === playerName) {
-      card.classList.add('active');
-      const thumbnail = card.querySelector('.b2-players-thumbnail');
-      if (thumbnail) {
-        thumbnail.style.borderColor = theme.border;
-        thumbnail.style.boxShadow = `0 8px 25px ${theme.glow}`;
-      }
-    } else {
-      const thumbnail = card.querySelector('.b2-players-thumbnail');
-      if (thumbnail) {
-        thumbnail.style.borderColor = 'transparent';
-        thumbnail.style.boxShadow = 'none';
-      }
     }
   });
 }
@@ -2717,20 +2692,44 @@ function openB2ProfileEditModal(playerName) {
       </div>
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 2 (모바일/교체용) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(설정한 시간 후 자동 교체)</span></label>
-        <input type="text" id="b2-ed-second-profile" value="${player.secondProfileFile||''}" placeholder="https://... 이미지 URL 입력" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="b2-ed-second-profile" value="${player.secondProfileFile||''}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <span id="b2-ed-photo2-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.secondProfileFile&&!player.secondProfileFile.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
+            <img id="b2-ed-photo2-preview" src="${player.secondProfileFile&&!player.secondProfileFile.startsWith('data:')?toHttpsUrl(player.secondProfileFile).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+            <video id="b2-ed-photo2-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
+          </span>
+        </div>
         <div style="font-size:10px;color:var(--gray-l);margin-top:4px">스트리머 선택 후 설정한 시간 뒤 이 이미지로 자동 전환됩니다.</div>
       </div>
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 3 (순환용)</label>
-        <input type="text" id="b2-ed-photo3" value="${player.profileFile3||''}" placeholder="https://... (gif/mp4 가능)" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="b2-ed-photo3" value="${player.profileFile3||''}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <span id="b2-ed-photo3-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.profileFile3&&!player.profileFile3.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
+            <img id="b2-ed-photo3-preview" src="${player.profileFile3&&!player.profileFile3.startsWith('data:')?toHttpsUrl(player.profileFile3).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+            <video id="b2-ed-photo3-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
+          </span>
+        </div>
       </div>
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 4 (순환용)</label>
-        <input type="text" id="b2-ed-photo4" value="${player.profileFile4||''}" placeholder="https://... (gif/mp4 가능)" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="b2-ed-photo4" value="${player.profileFile4||''}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <span id="b2-ed-photo4-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.profileFile4&&!player.profileFile4.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
+            <img id="b2-ed-photo4-preview" src="${player.profileFile4&&!player.profileFile4.startsWith('data:')?toHttpsUrl(player.profileFile4).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+            <video id="b2-ed-photo4-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
+          </span>
+        </div>
       </div>
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 5 (순환용)</label>
-        <input type="text" id="b2-ed-photo5" value="${player.profileFile5||''}" placeholder="https://... (gif/mp4 가능)" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="b2-ed-photo5" value="${player.profileFile5||''}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <span id="b2-ed-photo5-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.profileFile5&&!player.profileFile5.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
+            <img id="b2-ed-photo5-preview" src="${player.profileFile5&&!player.profileFile5.startsWith('data:')?toHttpsUrl(player.profileFile5).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+            <video id="b2-ed-photo5-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
+          </span>
+        </div>
         <div style="font-size:10px;color:var(--gray-l);margin-top:4px">이미지별 탭에서 2→3→4→5(→1) 순서로 전환됩니다.</div>
       </div>
       <div style="margin-top:10px;margin-bottom:16px;padding:12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px">
@@ -2767,6 +2766,44 @@ function openB2ProfileEditModal(playerName) {
   `;
   
   document.body.appendChild(modal);
+  const _b2IsVideoUrl = (u)=>{
+    const s = String(u||'').trim().toLowerCase().split('#')[0].split('?')[0];
+    return s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.endsWith('.m4v');
+  };
+  const _b2SyncSmallPreview = (inputId, wrapId, imgId, vidId)=>{
+    try{
+      const inp = document.getElementById(inputId);
+      const wrap = document.getElementById(wrapId);
+      const img = document.getElementById(imgId);
+      const vid = document.getElementById(vidId);
+      if(!wrap || !img || !vid) return;
+      const v = String(inp?.value || '').trim();
+      if(!v || v.startsWith('data:')){
+        wrap.style.display = 'none';
+        img.style.display = 'none';
+        vid.style.display = 'none';
+        img.removeAttribute('src');
+        vid.removeAttribute('src');
+        try{ vid.pause(); }catch(e){}
+        return;
+      }
+      const src = toHttpsUrl(v);
+      wrap.style.display = 'inline-flex';
+      if(_b2IsVideoUrl(src)){
+        img.style.display = 'none';
+        vid.style.display = 'block';
+        vid.src = src;
+        try{ vid.currentTime = 0; }catch(e){}
+        try{ vid.play && vid.play(); }catch(e){}
+      }else{
+        vid.style.display = 'none';
+        try{ vid.pause(); }catch(e){}
+        vid.removeAttribute('src');
+        img.style.display = 'block';
+        img.src = src;
+      }
+    }catch(e){}
+  };
   
   // 첫 번째 프로필 URL 입력 시 미리보기
   const photoInput = document.getElementById('b2-ed-photo');
@@ -2792,7 +2829,7 @@ function openB2ProfileEditModal(playerName) {
       }
       
       if (v && !v.startsWith('data:')) {
-        img.src = v;
+        img.src = toHttpsUrl(v);
         img.style.display = 'block';
         if (wrap) wrap.style.display = 'inline-block';
       } else {
@@ -2800,6 +2837,19 @@ function openB2ProfileEditModal(playerName) {
       }
     });
   }
+  ['b2-ed-second-profile','b2-ed-photo3','b2-ed-photo4','b2-ed-photo5'].forEach((id, idx)=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const map = [
+      ['b2-ed-photo2-preview-wrap','b2-ed-photo2-preview','b2-ed-photo2-preview-vid'],
+      ['b2-ed-photo3-preview-wrap','b2-ed-photo3-preview','b2-ed-photo3-preview-vid'],
+      ['b2-ed-photo4-preview-wrap','b2-ed-photo4-preview','b2-ed-photo4-preview-vid'],
+      ['b2-ed-photo5-preview-wrap','b2-ed-photo5-preview','b2-ed-photo5-preview-vid']
+    ][idx] || null;
+    if(!map) return;
+    el.addEventListener('input', ()=>_b2SyncSmallPreview(id, map[0], map[1], map[2]));
+    _b2SyncSmallPreview(id, map[0], map[1], map[2]);
+  });
 }
 
 function saveB2Profile(playerName) {

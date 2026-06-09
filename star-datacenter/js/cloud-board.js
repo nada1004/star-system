@@ -1287,8 +1287,6 @@ function openBrdPlayerPopupFromChip(e, playerName, univName, idx, total){
         <button onclick="(function(){const p=players.find(x=>x.name==='${pNameJs}');if(!p)return;p.hidden=!p.hidden;save();_brdClose();render();_brdToast(p.hidden?'🚫 현황판에서 숨김':'👁️ 현황판에 표시됨');})()" style="flex:1;padding:5px;border-radius:6px;border:1.5px solid ${p.hidden?'#f87171':'#e2e8f0'};background:${p.hidden?'#fff1f2':'var(--white)'};font-size:11px;font-weight:700;cursor:pointer;color:${p.hidden?'#dc2626':'#64748b'}">🚫 ${p.hidden?'숨김 해제':'현황판 숨기기'}</button>
       </div>
     </div>
-    <div class="brd-move-popup-sep"></div>
-    ${(p.gameType==='general')?`<button class="brd-move-popup-btn" onclick="if(confirm('${pNameJs}을(를) 스트리머 목록에서 삭제할까요?\\n\\n⚠️ 삭제하면 복구가 어렵습니다.')){const idx=players.findIndex(x=>x.name==='${pNameJs}');if(idx>=0){players.splice(idx,1);save();_brdClose();render();_brdToast('🗑️ 스트리머 삭제 완료');}}">🗑️ 스트리머 삭제</button>`:''}
     <button class="brd-move-popup-btn" onclick="_brdClose();openPlayerModal('${pNameJs}')">👤 스트리머 상세 보기</button>
   `;
 

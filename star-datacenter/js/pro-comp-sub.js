@@ -698,41 +698,24 @@ function proCompGJSection(tn) {
     const p1w = (sess.games||[]).filter(g=>g.winner===sess.a).length;
     const p2w = (sess.games||[]).filter(g=>g.winner===sess.b).length;
     const winner = p1w>p2w?sess.a:p2w>p1w?sess.b:'';
-    const _fxCfg=(typeof _getRecSideFxCfg==='function')?_getRecSideFxCfg():{on:true,mode:'soft',intensity:68,length:25};
-    const _fxOn=!!_fxCfg.on;
-    const _fxMetrics=(typeof _buildRecSideFxMetrics==='function')?_buildRecSideFxMetrics(_fxCfg):null;
-    const _fxMode=_fxMetrics?_fxMetrics.mode:'soft';
     const _ca = gc(sess.a||'') || '#2563eb';
     const _cb = gc(sess.b||'') || '#dc2626';
-    const _fxVars=(_fxOn&&typeof _recSideFxVarStyle==='function')?_recSideFxVarStyle(_ca,_cb,_fxCfg):'';
-    const _fxCls = (_fxOn && typeof _recSideFxClass==='function') ? _recSideFxClass('procompgj') : '';
-    h += `<div class="rec-summary${_fxCls}" data-rec-mode="procompgj" style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;${_fxVars}${_fxOn?`border-left:3px solid ${_ca};border-right:3px solid ${_cb};`:''}">
-      <div style="background:var(--bg2);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span style="font-size:12px;font-weight:600;color:var(--text3)">${sess.d||'날짜 미정'}</span>
-        <span style="font-weight:700;color:var(--blue);cursor:pointer" onclick="openPlayerModal('${(sess.a||'').replace(/'/g,"\\'")}')">${sess.a||'?'}</span>
-        <span style="display:inline-flex;align-items:center;gap:4px;font-weight:900">
-          <span style="color:${p1w>p2w?(gc(sess.a||'')||'#2563eb'):p2w>p1w?'#94a3b8':'var(--text2)'};font-size:16px">${p1w}</span>
-          <span style="color:#64748b;font-size:14px;font-weight:900">:</span>
-          <span style="color:${p2w>p1w?(gc(sess.b||'')||'#2563eb'):p1w>p2w?'#94a3b8':'var(--text2)'};font-size:16px">${p2w}</span>
-        </span>
-        <span style="font-weight:700;cursor:pointer" onclick="openPlayerModal('${(sess.b||'').replace(/'/g,"\\'")}')">${sess.b||'?'}</span>
-        ${winner?`<span style="font-size:10px;font-weight:800;padding:2px 9px;border-radius:99px;background:${gc(winner)||'#16a34a'};color:#fff;margin-left:2px">${winner} 승</span>`:''}
-        <span style="font-size:11px;color:var(--gray-l)">${(sess.games||[]).length}게임</span>
-        ${isLoggedIn?`<button class="btn btn-r btn-xs" style="margin-left:auto" onclick="proCompGJDel('${tn.id}',${si})">🗑️ 삭제</button>`:'<span style="margin-left:auto"></span>'}
-      </div>
-      <table style="margin:0;border-radius:0"><thead><tr><th>게임</th><th>${sess.a||'A'}</th><th style="color:var(--gray-l)">vs</th><th>${sess.b||'B'}</th><th>맵</th></tr></thead><tbody>
-      ${(sess.games||[]).map((g,gi)=>{
-        const aWin=g.winner===sess.a;
-        return `<tr>
-          <td style="font-size:11px;color:var(--gray-l)">${gi+1}게임</td>
-          <td style="font-weight:${aWin?'900':'400'};color:${aWin?'var(--blue)':'#aaa'}">${sess.a}</td>
-          <td style="color:var(--gray-l);text-align:center">vs</td>
-          <td style="font-weight:${!aWin?'900':'400'};color:${!aWin?'var(--blue)':'#aaa'}">${sess.b}</td>
-          <td style="font-size:11px;color:var(--gray-l)">${g.map||''}</td>
-        </tr>`;
-      }).join('')}
-      </tbody></table>
-    </div>`;
+    const _sid = String(sess._id||'').replace(/'/g,"\\'");
+    const _detailBtn = `<button class="btn btn-w btn-xs" onclick="openMatchDetailByMatchId('${_sid}','프로리그대회끝장전')">📂 경기 상세</button>`;
+    const _delBtn = isLoggedIn?`<button class="btn btn-r btn-xs" onclick="proCompGJDel('${tn.id}',${si})">🗑️ 삭제</button>`:'';
+    h += _proCompH2HCardHTML({
+      p1:sess.a, p2:sess.b, p1Col:_ca, p2Col:_cb,
+      p1Score:p1w, p2Score:p2w, winner:winner,
+      date:sess.d||'', games:(sess.games||[]),
+      badges:[
+        `<span style="font-size:11px;color:var(--gray-l)">${sess.d?String(sess.d).slice(2).replace(/-/g,'/'):'미정'}</span>`,
+        `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534">중장전</span>`,
+        `<span style="font-size:11px;color:var(--gray-l)">${(sess.games||[]).length}게임</span>`,
+        winner?`<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:${gc(winner)||'#16a34a'};color:#fff">${winner} 승</span>`:''
+      ],
+      detailOnClick:`openMatchDetailByMatchId('${_sid}','프로리그대회끝장전')`,
+      actionHtml:`${_detailBtn}${_delBtn}`
+    });
   });
   return h;
 }

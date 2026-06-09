@@ -306,6 +306,91 @@ function _openAllTabIndEdit(type, m, regIdx){
 /* ══════════════════════════════════════
    대전 기록 > 전체 통합 탭
 ══════════════════════════════════════ */
+window._scanBulkMapEverywhere = window._scanBulkMapEverywhere || function(from, onMatch, replaceTo){
+  const norm = (s)=>String(s||'').trim().toLowerCase().replace(/\s+/g,'');
+  const fromV = String(from||'').trim();
+  if(!fromV) return 0;
+  const fromN = norm(fromV);
+  let changed = 0;
+  const rep = (obj)=>{
+    if(!obj || typeof obj !== 'object') return;
+    if(typeof obj.map === 'string'){
+      const cur = obj.map.trim();
+      if(cur===fromV || norm(cur)===fromN){
+        changed++;
+        if(typeof onMatch === 'function') onMatch(obj, replaceTo);
+      }
+    }
+    (obj.games||[]).forEach(rep);
+    (obj._games||[]).forEach(rep);
+    (obj.sets||[]).forEach(rep);
+  };
+  try{
+    const arrMap = (typeof _bulkArrMapAll==='function') ? _bulkArrMapAll() : {};
+    Object.keys(arrMap||{}).forEach(k => (arrMap[k]||[]).forEach(rep));
+  }catch(e){}
+  try{
+    (tourneys||[]).forEach(tn=>{
+      (tn.groups||[]).forEach(grp=> (grp.matches||[]).forEach(rep));
+      (tn.normalMatches||[]).forEach(rep);
+      if(tn.thirdPlace) rep(tn.thirdPlace);
+      const br = tn.bracket || {};
+      if(Array.isArray(br)) br.forEach(round => (round||[]).forEach(rep));
+      Object.values(br.matchDetails||{}).forEach(rep);
+      (br.manualMatches||[]).forEach(rep);
+    });
+  }catch(e){}
+  try{
+    (proTourneys||[]).forEach(tn=>{
+      (tn.groups||[]).forEach(grp=> (grp.matches||[]).forEach(rep));
+      Object.values(tn.stageRecords||{}).forEach(arr => (arr||[]).forEach(rep));
+      (tn.bracket||[]).forEach(round => (round||[]).forEach(rep));
+      if(tn.thirdPlace) rep(tn.thirdPlace);
+      (tn.teamMatches||[]).forEach(rep);
+      (tn.gjMatches||[]).forEach(rep);
+    });
+  }catch(e){}
+  try{
+    if(Array.isArray(maps)){
+      maps = maps.map(m=>((String(m||'').trim()===fromV || norm(m)===fromN) ? toV : m));
+    }
+  }catch(e){}
+  return changed;
+};
+window.bulkCountMapEverywhere = window.bulkCountMapEverywhere || function(from){
+  return window._scanBulkMapEverywhere(from, null, '');
+};
+window.bulkReplaceMapEverywhere = window.bulkReplaceMapEverywhere || function(from, to){
+  const toV = String(to||'').trim();
+  if(!String(from||'').trim() || !toV) return 0;
+  return window._scanBulkMapEverywhere(from, (obj, next)=>{ obj.map = next; }, toV);
+};
+window.histBulkPreviewMapFromAllTab = window.histBulkPreviewMapFromAllTab || function(){
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li){ alert('로그인이 필요합니다.'); return; }
+  const from = (document.getElementById('hist-bulk-map-from')?.value||'').trim();
+  if(!from){ alert('교체 전 맵 이름을 입력하세요.'); return; }
+  const cnt = (typeof window.bulkCountMapEverywhere === 'function') ? window.bulkCountMapEverywhere(from) : 0;
+  const el = document.getElementById('hist-bulk-map-result');
+  if(el){
+    el.textContent = cnt ? `🔎 변경 예정 ${cnt}개` : '일치하는 맵이 없습니다.';
+    setTimeout(()=>{ if(el && el.textContent.startsWith('🔎')) el.textContent=''; }, 3500);
+  }
+};
+window.histBulkChangeMapFromAllTab = window.histBulkChangeMapFromAllTab || function(){
+  const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
+  if(!_li){ alert('로그인이 필요합니다.'); return; }
+  const from = (document.getElementById('hist-bulk-map-from')?.value||'').trim();
+  const to = (document.getElementById('hist-bulk-map-to')?.value||'').trim();
+  if(!from || !to){ alert('교체 전/후 맵 이름을 입력하세요.'); return; }
+  const changed = window.bulkReplaceMapEverywhere(from, to);
+  if(changed){ save(); render(); }
+  const el = document.getElementById('hist-bulk-map-result');
+  if(el){
+    el.textContent = changed ? `✅ ${changed}개 맵명 교체 완료!` : '교체할 항목이 없습니다.';
+    setTimeout(()=>{ if(el) el.textContent=''; }, 3500);
+  }
+};
 function histAllHTML(){
   const _mini = (typeof miniM!=='undefined' && Array.isArray(miniM)) ? miniM : [];
   const _ck = (typeof ckM!=='undefined' && Array.isArray(ckM)) ? ckM : [];
@@ -461,6 +546,17 @@ function histAllHTML(){
   let h=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
     ${_typeButtons.map(t=>`<button class="pill ${window._recTypeFilter===t.id?'on':''}" onclick="window._recTypeFilter='${t.id}';window._recMapFilter='전체';histPage['all']=0;render()">${t.lbl}${t.id!=='전체'&&_typeCountMap[t.id]?` <span style="font-size:10px;opacity:.7">(${_typeCountMap[t.id]})</span>`:''}</button>`).join('')}
   </div>`;
+  if((typeof isLoggedIn!=='undefined' && isLoggedIn) || !!window.isLoggedIn){
+    h += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface)">
+      <span style="font-size:12px;font-weight:800;color:var(--text2)">🗺️ 맵명 일괄 변경</span>
+      <input id="hist-bulk-map-from" type="text" placeholder="교체 전 맵명" value="${window._recMapFilter&&window._recMapFilter!=='전체'?String(window._recMapFilter).replace(/"/g,'&quot;'):''}" style="width:140px;padding:7px 10px;border:1px solid var(--border);border-radius:8px">
+      <span style="font-size:12px;color:var(--gray-l)">→</span>
+      <input id="hist-bulk-map-to" type="text" placeholder="교체 후 맵명" style="width:140px;padding:7px 10px;border:1px solid var(--border);border-radius:8px">
+      <button class="btn btn-w btn-sm" onclick="histBulkPreviewMapFromAllTab()">미리보기</button>
+      <button class="btn btn-b btn-sm" onclick="histBulkChangeMapFromAllTab()">일괄 변경</button>
+      <span id="hist-bulk-map-result" style="font-size:12px;color:var(--green)"></span>
+    </div>`;
+  }
   // 맵 필터 바 (맵이 2개 이상일 때만 표시)
   if(_allMapList.length >= 2){
     h+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center">`;

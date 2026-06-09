@@ -2846,6 +2846,7 @@ ${_scfgD('notice','📢 공지 관리')}
         <label style="font-size:12px;font-weight:600;color:var(--text2)">→ 교체 후</label>
         <input type="text" id="bulk-map-to" placeholder="예: 투혼" style="font-size:12px;width:120px">
       </div>
+      <button class="btn btn-w btn-sm" onclick="previewBulkChangeMap()">미리보기</button>
       <button class="btn btn-b btn-sm" onclick="bulkChangeMap()">🗺️ 맵 일괄 교체</button>
       <span id="bulk-map-result" style="font-size:12px;margin-left:8px;color:var(--green)"></span>
     </div>

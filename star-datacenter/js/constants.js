@@ -1142,17 +1142,55 @@ function getRoleBadgeHTML(role, size='11px'){
    [FIX-18] J()와 _lsSave()는 파일 최상단으로 이동됨. 이 섹션에서는 제거.
 ══════════════════════════════════════ */
 
+function _normalizeLoadedPlayers(list){
+  try{
+    let changed = false;
+    const next = (Array.isArray(list) ? list : []).map(p=>{
+      if(!p || typeof p !== 'object') return p;
+      const n = { ...p };
+      const rawType = String(n.gameType || '').trim().toLowerCase();
+      if(rawType === 'general' || n.gameType === '종합게임'){
+        n.gameType = 'starcraft';
+        changed = true;
+      }else if(!n.gameType){
+        n.gameType = 'starcraft';
+        changed = true;
+      }
+      if(!String(n.univ || '').trim()){
+        n.univ = '무소속';
+        changed = true;
+      }
+      if(!String(n.race || '').trim()){
+        n.race = 'N';
+        changed = true;
+      }
+      if(Object.prototype.hasOwnProperty.call(n, 'displayName')){
+        delete n.displayName;
+        changed = true;
+      }
+      if(Object.prototype.hasOwnProperty.call(n, 'crew')){
+        delete n.crew;
+        changed = true;
+      }
+      return n;
+    });
+    try{ window._playerSchemaNeedsSave = window._playerSchemaNeedsSave || changed; }catch(e){}
+    return next;
+  }catch(e){
+    return Array.isArray(list) ? list : [];
+  }
+}
 // (복구/호환) su_p가 {v:2,p:[...],d:{...}} 형태여도 정상 동작하도록 unpack
 function _unpackPlayers(raw){
   try{
     if(!raw) return [];
-    if(Array.isArray(raw)) return raw;
+    if(Array.isArray(raw)) return _normalizeLoadedPlayers(raw);
     if(typeof raw!=='object') return [];
     if(raw.v!==2 || !Array.isArray(raw.p) || !raw.d) return [];
     const d=raw.d||{};
     const res=d.res||[], opp=d.opp||[], race=d.race||[], map=d.map||[], univ=d.univ||[], mode=d.mode||[];
     const get=(arr,i)=> (i==null||i<0)?'':(arr[i]||'');
-    return raw.p.map(pp=>{
+    return _normalizeLoadedPlayers(raw.p.map(pp=>{
       const p={...pp};
       const hp=Array.isArray(p.h)?p.h:[];
       p.history = hp.map(r=>({
@@ -1171,7 +1209,7 @@ function _unpackPlayers(raw){
       }));
       delete p.h;
       return p;
-    });
+    }));
   }catch(e){
     return [];
   }
@@ -1191,6 +1229,18 @@ let players    = _unpackPlayers(playersRaw) || [];
 (function(){ if(!_playerLegacyLoadEnabled) return; const _pp=J('su_pp');if(_pp&&typeof _pp==='object'&&Array.isArray(players))players.forEach(p=>{if(!p.photo&&_pp[p.name])p.photo=_pp[p.name];});})();
 try{ window.players = players; }catch(e){}
 try{ window.playerPhotos = _playerLegacyLoadEnabled ? (J('su_pp') || {}) : {}; }catch(e){}
+try{
+  if(window._playerSchemaNeedsSave){
+    setTimeout(()=>{
+      try{
+        if(window._playerSchemaNeedsSave && typeof localSave === 'function'){
+          localSave();
+          window._playerSchemaNeedsSave = false;
+        }
+      }catch(e){}
+    }, 0);
+  }
+}catch(e){}
 let boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
 var univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
