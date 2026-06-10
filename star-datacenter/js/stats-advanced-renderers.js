@@ -86,7 +86,7 @@
   }
 
   function _statsKillerCandidates(){
-    return (window.players||[]).filter(p=>_statsAllHistLocal(p).length>0)
+    return (window.players||[]).filter(p=>(window.statsNonProHist?window.statsNonProHist(p):_statsAllHistLocal(p)).length>0)
       .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko'));
   }
   function _statsAllHistLocal(p){
@@ -123,7 +123,7 @@
     function calcKiller(targetName){
       const target=window.statsP(targetName); if(!target)return{killers:[],victims:[]};
       const oppMap={};
-      _statsAllHistLocal(target).forEach(h=>{ if(!h.opp)return; if(!oppMap[h.opp])oppMap[h.opp]={w:0,l:0}; if(h.result==='승')oppMap[h.opp].w++; else oppMap[h.opp].l++; });
+      (window.statsNonProHist?window.statsNonProHist(target):_statsAllHistLocal(target)).forEach(h=>{ if(!h.opp)return; if(!oppMap[h.opp])oppMap[h.opp]={w:0,l:0}; if(h.result==='승')oppMap[h.opp].w++; else oppMap[h.opp].l++; });
       const entries=Object.entries(oppMap).map(([name,s])=>{ const opp=window.statsP(name); return{name,w:s.w,l:s.l,tot:s.w+s.l,winRate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,univ:opp?.univ||'',elo:opp?.elo||1200}; }).filter(e=>e.tot>=1);
       const killers=entries.filter(e=>e.l>0).sort((a,b)=>{ const aLR=a.l/(a.w+a.l), bLR=b.l/(b.w+b.l); return bLR-aLR||b.l-a.l; }).slice(0,10);
       const victims=entries.filter(e=>e.w>0).sort((a,b)=>{ const aWR=a.w/(a.w+a.l), bWR=b.w/(b.w+b.l); return bWR-aWR||b.w-a.w; }).slice(0,10);
@@ -171,7 +171,8 @@
   function statsStreakHistHTML(){
     const allStreaks=[];
     (window.players||[]).forEach(p=>{
-      const hist=[...window.statsNonProHist(p)].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+      // 역대 연속 기록은 날짜 필터 없이 전체 history 사용 (statsNonProHist 대신 _statsAllHistLocal)
+      const hist=[..._statsAllHistLocal(p)].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
       if(!hist.length) return;
       let cur=0, curType='', startDate='', endDate='';
       hist.forEach((h,i)=>{

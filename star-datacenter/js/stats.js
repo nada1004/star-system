@@ -1012,8 +1012,8 @@ function statsEloHTML(){
   <div class="ssec" id="stats-elo-sec">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📈 ELO 랭킹 변동 그래프</h4>
-      <select id="elo-player-select" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px" onchange="_eloSelPlayer=this.value;initEloChart()">
-        ${allWithHist.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${(typeof escAttr==='function')?escAttr(p.name):escHTML(p.name)}"${_eloSelPlayer===p.name?' selected':''}>${escHTML(p.name)} · ${escHTML(p.univ)} · ELO ${p.elo||1200}</option>`).join('')}
+      <select id="elo-player-select" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px" onchange="_eloSelPlayer=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);initEloChart()">
+        ${allWithHist.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${escHTML(p.name)}"${_eloSelPlayer===p.name?' selected':''}>${escHTML(p.name)} · ${escHTML(p.univ)} · ELO ${p.elo||1200}</option>`).join('')}
       </select>
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-elo-sec','elo_ranking')">📷 이미지 저장</button>
     </div>
@@ -1046,7 +1046,14 @@ function statsEloHTML(){
 function initEloChart(){
   const canvas=document.getElementById('eloChart');
   if(!canvas)return;
-  const p=statsP(_eloSelPlayer);
+  // HTML entity decode fallback (특수문자 이름 대응)
+  let _eloKey=_eloSelPlayer;
+  try{const ta=document.createElement('textarea');ta.innerHTML=_eloKey;_eloKey=ta.value;}catch(e){}
+  let p=statsP(_eloKey);
+  // statsP 미발견 시 players 배열 직접 탐색
+  if(!p && _eloKey){
+    p=(Array.isArray(window.players)?window.players:[]).find(x=>String(x&&x.name||'').trim()===_eloKey)||null;
+  }
   const histAll = p ? _statsAllHist(p) : [];
   if(!p||!histAll.length){canvas.style.display='none';return;}
   canvas.style.display='block';
@@ -1186,7 +1193,7 @@ function statsGrowthHTML(){
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📊 스트리머 성장 곡선</h4>
       <select id="growth-player-select" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px" onchange="_growthSel=this.value;initGrowthChart()">
-        ${cands.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${(typeof escAttr==='function')?escAttr(p.name):escHTML(p.name)}"${_growthSel===p.name?' selected':''}>${escHTML(p.name)} · ${escHTML(p.univ)} · ${(_statsAllHist(p)||[]).length}경기</option>`).join('')}
+        ${cands.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${escHTML(p.name)}"${_growthSel===p.name?' selected':''}>${escHTML(p.name)} · ${escHTML(p.univ)} · ${(_statsAllHist(p)||[]).length}경기</option>`).join('')}
       </select>
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-growth-sec','growth_chart')">📷 이미지 저장</button>
     </div>
@@ -1197,7 +1204,11 @@ function statsGrowthHTML(){
 function initGrowthChart(){
   const canvas=document.getElementById('growthChart');
   if(!canvas)return;
-  const p=statsP(_growthSel);
+  // _growthSel이 HTML 엔티티로 인코딩된 경우 디코딩 후 조회 (특수문자 스트리머명 버그 수정)
+  try{const _tmp=document.createElement('textarea');_tmp.innerHTML=_growthSel;if(_tmp.value&&_tmp.value!==_growthSel)_growthSel=_tmp.value;}catch(e){}
+  let p=statsP(_growthSel);
+  // statsP 미발견 시 이름 부분 매칭 fallback
+  if(!p&&_growthSel){p=(Array.isArray(players)?players:[]).find(x=>String(x&&x.name||'').trim()===_growthSel.trim())||null;}
   const histF = p ? _statsAllHist(p) : [];
   const info=document.getElementById('growthInfo');
   if(!p||histF.length<2){
@@ -1322,7 +1333,7 @@ function statsAwardHTML(){
     const g=_statsNormGender(gender);
     return _players.map(p=>{
       if(g && _statsNormGender(p.gender)!==g) return null;
-      const mh=_statsAllHist(p).filter(h=>_statsYmFromDateStr(h&&h.date)===ym2);
+      const mh=statsNonProHist(p).filter(h=>_statsYmFromDateStr(h&&h.date)===ym2);
       const w=mh.filter(h=>h.result==='승').length;
       const l=mh.filter(h=>h.result==='패').length;
       const tot=w+l;
@@ -1338,7 +1349,7 @@ function statsAwardHTML(){
     const to = String(toIso||'').trim();
     return _players.map(p=>{
       if(g && _statsNormGender(p.gender)!==g) return null;
-      const mh=_statsAllHist(p).filter(h=>{
+      const mh=statsNonProHist(p).filter(h=>{
         const d = _toIso(h && h.date);
         if(!d || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
         if(from && d < from) return false;
@@ -1493,12 +1504,12 @@ function statsRecordsHTML(){
     const w=h.filter(x=>x.result==='승').length;
     const l=h.filter(x=>x.result==='패').length;
     const tot=w+l;
-    // 최장 연승 계산 (오래된 순으로 반전 후 계산)
+    // 최장 연승 계산 (날짜 오름차순 정렬 후 순방향 계산)
     let maxStreak=0,cur=0,lastRes='';
-    [...h].reverse().forEach(x=>{if(x.result===lastRes){cur++;}else{cur=1;lastRes=x.result;}if(lastRes==='승')maxStreak=Math.max(maxStreak,cur);});
-    // 현재 연승
+    [...h].sort((a,b)=>(String(a.date||'')).localeCompare(String(b.date||''))).forEach(x=>{if(x.result===lastRes){cur++;}else{cur=1;lastRes=x.result;}if(lastRes==='승')maxStreak=Math.max(maxStreak,cur);});
+    // 현재 연승 (최신→과거 내림차순 정렬 후 첫 연속 구간)
     let curStreak=0,curStreakType='';
-    for(const x of h){if(!curStreakType||x.result===curStreakType){curStreak++;curStreakType=x.result;}else break;}
+    for(const x of [...h].sort((a,b)=>(String(b.date||'')).localeCompare(String(a.date||'')))){if(!curStreakType||x.result===curStreakType){curStreak++;curStreakType=x.result;}else break;}
     return{...p,w,l,tot,rate:tot?Math.round(w/tot*100):0,maxStreak,
       curStreak,curStreakType,elo:p.elo||ELO_DEFAULT,proGames:ph.length,points:p.points||0};
   }).filter(p=>p.tot>0||p.proGames>0);
@@ -1607,6 +1618,15 @@ function getStatsRadarScores(){
       }
     });
     scoreMap[name]={winrate:0,avgElo,pts,activity:0,diversity:races,streak:maxS,w:0,l:0,tot:0,mem:mem.length};
+    // 선수 개인 history 기반 활동도 사전 집계 (경기 sets 파싱이 실패해도 반영되도록)
+    const d30fallback=new Date(); d30fallback.setDate(d30fallback.getDate()-30);
+    const d30sfb=d30fallback.toISOString().slice(0,10);
+    mem.forEach(p=>{
+      (statsNonProHist(p)||[]).forEach(h=>{
+        const hd=String(h&&h.date||'');
+        if(hd && hd>=d30sfb) scoreMap[name].activity++;
+      });
+    });
   });
   const d30=new Date(); d30.setDate(d30.getDate()-30);
   const d30s=d30.toISOString().slice(0,10);
@@ -1656,8 +1676,8 @@ function statsRadarHTML(){
   <div class="ssec" id="stats-radar-sec">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">🕸️ 대학별 성적 레이더 차트 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
-      <select id="radar-sel" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="_radarSelUniv=this.value;initRadarChart()">
-        ${univs.map(u=>`<option value="${(typeof escAttr==='function')?escAttr(u.name):escHTML(u.name)}"${_radarSelUniv===u.name?' selected':''}>${escHTML(u.name)}</option>`).join('')}
+      <select id="radar-sel" style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px" onchange="_radarSelUniv=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);initRadarChart()">
+        ${univs.map(u=>`<option value="${escHTML(u.name)}"${_radarSelUniv===u.name?' selected':''}>${escHTML(u.name)}</option>`).join('')}
       </select>
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-radar-sec','radar')">📷 이미지 저장</button>
     </div>
@@ -1716,6 +1736,8 @@ function initRadarChart(){
   const canvas=document.getElementById('radarChart');
   const info=document.getElementById('radarInfo');
   if(!canvas)return;
+  // HTML entity decode fallback (특수문자 대학명 대응)
+  try{const ta=document.createElement('textarea');ta.innerHTML=_radarSelUniv;_radarSelUniv=ta.value;}catch(e){}
   const _players = Array.isArray(players) ? players : [];
   const allUnivs=getAllUnivs().filter(u=>_players.some(p=>p.univ===u.name));
   if((!_radarSelUniv || !allUnivs.some(u=>u.name===_radarSelUniv)) && allUnivs.length) _radarSelUniv = allUnivs[0].name;
@@ -2279,13 +2301,13 @@ function statsAdvSearchHTML(){
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <input id="advsearch-name-input" type="text" placeholder="🔍 스트리머 이름 검색..." value="${f.name}" oninput="_advFilterName(this.value)" style="padding:6px 12px;border:1px solid var(--border2);border-radius:8px;font-size:12px;width:150px">
-      <select onchange="_advFilter.univ=this.value;render()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+      <select onchange="_advFilter.univ=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);render()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
         <option value="">대학 전체</option>
-        ${univs.map(u=>`<option value="${(typeof escAttr==='function')?escAttr(u.name):escHTML(u.name)}"${f.univ===u.name?' selected':''}>${escHTML(u.name)}</option>`).join('')}
+        ${univs.map(u=>`<option value="${escHTML(u.name)}"${f.univ===u.name?' selected':''}>${escHTML(u.name)}</option>`).join('')}
       </select>
-      <select onchange="_advFilter.tier=this.value;render()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
+      <select onchange="_advFilter.tier=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);render()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
         <option value="">티어 전체</option>
-        ${(((typeof TIERS!=='undefined' && Array.isArray(TIERS)) ? TIERS : (Array.isArray(window.TIERS) ? window.TIERS : []))).map(t=>`<option value="${(typeof escAttr==='function')?escAttr(t):escHTML(t)}"${f.tier===t?' selected':''}>${escHTML(getTierLabel(t))}</option>`).join('')}
+        ${(((typeof TIERS!=='undefined' && Array.isArray(TIERS)) ? TIERS : (Array.isArray(window.TIERS) ? window.TIERS : []))).map(t=>`<option value="${escHTML(t)}"${f.tier===t?' selected':''}>${escHTML(getTierLabel(t))}</option>`).join('')}
       </select>
       <select onchange="_advFilter.race=this.value;render()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
         <option value="">종족 전체</option>
@@ -2555,9 +2577,9 @@ function statsPlayerVsHTML(){
     const tot=w+l;
     // 최근 5경기 폼
     const rec=[...h].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,5);
-    // 현재 연속
+    // 현재 연속 (최신→과거 내림차순 정렬 후 첫 연속 구간)
     let streak=0,sType='';
-    for(const x of h){if(!sType||x.result===sType){streak++;sType=x.result;}else break;}
+    for(const x of [...h].sort((a,b)=>(String(b.date||'')).localeCompare(String(a.date||'')))){if(!sType||x.result===sType){streak++;sType=x.result;}else break;}
     // 종족 상성
     const rv={T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}};
     h.forEach(x=>{if(x.oppRace&&rv[x.oppRace]){if(x.result==='승')rv[x.oppRace].w++;else rv[x.oppRace].l++;}});
