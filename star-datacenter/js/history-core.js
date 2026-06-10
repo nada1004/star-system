@@ -90,11 +90,11 @@ function rHist(C,T){
     h+=`<button class="pill ${window._histFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histFilterOpen=!window._histFilterOpen;render()">🔍 필터 ${window._histFilterOpen?'▲':'▼'}</button>`;
   }
   grps.forEach(g=>{
-    const isOn=curTab.grp===g;
+    const isOn=(g==='외부') ? (histSub==='ext') : (curTab.grp===g);
     const firstId=tabDefs.find(t=>t.grp===g).id;
     const gLbl=(typeof getTabLabel==='function') ? getTabLabel('historyGroup', g, g) : g;
     const _lastId=_histLastByGroup?.[g];
-    const targetId=(typeof _lastId==='string' && tabDefs.some(t=>t.id===_lastId && t.grp===g)) ? _lastId : firstId;
+    const targetId=(g==='외부') ? firstId : ((typeof _lastId==='string' && tabDefs.some(t=>t.id===_lastId && t.grp===g)) ? _lastId : firstId);
     h+=`<button class="pill ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="histSub='${targetId}';openDetails={};render()">${gLbl}</button>`;
     // '외부' 우측에 '외부2' 버튼 노출(관리자 전용)
     if(g==='외부' && tabDefs.some(t=>t.id==='ext2')){

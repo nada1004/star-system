@@ -73,11 +73,12 @@ function rHist(C,T){
     h+=`<button class="pill ${window._histFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._histFilterOpen=!window._histFilterOpen;render()">🔍 필터 ${window._histFilterOpen?'▲':'▼'}</button>`;
   }
   grps.forEach(g=>{
-    const isOn=curTab.grp===g;
+    const isOn=(g==='외부') ? (histSub==='ext') : (curTab.grp===g);
     const firstId=tabDefs.find(t=>t.grp===g).id;
     const gLbl=(typeof getTabLabel==='function') ? getTabLabel('historyGroup', g, g) : g;
     // [FIX-9] XSS 방지: onclick 인라인에서 data-hsub 속성 + 이벤트 위임으로 교체
-    const safeId = String(firstId).replace(/[^a-zA-Z0-9_\-]/g,'');
+    const targetId = (g==='외부') ? firstId : firstId;
+    const safeId = String(targetId).replace(/[^a-zA-Z0-9_\-]/g,'');
     const safeLbl = window.escHTML(gLbl);
     h+=`<button class="pill hist-grp-btn ${isOn?'on':''}" style="flex-shrink:0;white-space:nowrap" data-hsub="${safeId}">${safeLbl}</button>`;
     // '외부' 우측에 '외부2' 버튼 노출(관리자 전용)
