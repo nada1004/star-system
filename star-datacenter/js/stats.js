@@ -1617,19 +1617,10 @@ function getStatsRadarScores(){
         if(lt==='승') maxS=Math.max(maxS, cs);
       }
     });
-    scoreMap[name]={winrate:0,avgElo,pts,activity:0,diversity:races,streak:maxS,w:0,l:0,tot:0,mem:mem.length};
-    // 선수 개인 history 기반 활동도 사전 집계 (경기 sets 파싱이 실패해도 반영되도록)
-    const d30fallback=new Date(); d30fallback.setDate(d30fallback.getDate()-30);
-    const d30sfb=d30fallback.toISOString().slice(0,10);
-    mem.forEach(p=>{
-      (statsNonProHist(p)||[]).forEach(h=>{
-        const hd=String(h&&h.date||'');
-        if(hd && hd>=d30sfb) scoreMap[name].activity++;
-      });
-    });
+    // 활동도: statsNonProHist 기반 전역 날짜 필터가 적용된 게임 참여 수 (30일 하드코딩 제거)
+    const actCount = mem.reduce((s,p) => s + (statsNonProHist(p)||[]).length, 0);
+    scoreMap[name]={winrate:0,avgElo,pts,activity:actCount,diversity:races,streak:maxS,w:0,l:0,tot:0,mem:mem.length};
   });
-  const d30=new Date(); d30.setDate(d30.getDate()-30);
-  const d30s=d30.toISOString().slice(0,10);
   getStatsRadarSourceMatches().forEach(m=>{
     const md = String(m?.d || m?.date || '');
     (m.sets||[]).forEach(set=>{
@@ -1643,13 +1634,11 @@ function getStatsRadarScores(){
           memberSets[ua] && memberSets[ua].add(String(g.playerA).trim());
           if(g.winner==='A') scoreMap[ua].w++; else scoreMap[ua].l++;
           scoreMap[ua].tot++;
-          if(md && md >= d30s) scoreMap[ua].activity++;
         }
         if(ub && scoreMap[ub]){
           memberSets[ub] && memberSets[ub].add(String(g.playerB).trim());
           if(g.winner==='B') scoreMap[ub].w++; else scoreMap[ub].l++;
           scoreMap[ub].tot++;
-          if(md && md >= d30s) scoreMap[ub].activity++;
         }
       });
     });
@@ -1828,7 +1817,7 @@ function initRadarChart(){
             ['승률',row.scores.winrate+'%'],
             ['평균 ELO',row.scores.avgElo],
             ['총 포인트',(row.scores.pts>=0?'+':'')+row.scores.pts],
-            ['최근 30일 활동',row.scores.activity+'경기'],
+            ['활동도 (경기 수)',row.scores.activity+'경기'],
             ['종족 다양성',row.scores.diversity+'종족'],
             ['최장 연승',row.scores.streak+'연승'],
             ['총 전적',`${row.scores.w}승 ${row.scores.l}패`],
