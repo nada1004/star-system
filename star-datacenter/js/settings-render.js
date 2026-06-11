@@ -2677,14 +2677,70 @@ ${_scfgD('notice','📢 공지 관리')}
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
         예: <b>샤이니</b> → <b>김재현</b> 처럼, 붙여넣기에서 들어오는 별명을 실제 스트리머로 강제 매핑합니다.
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-        <input id="cfg-pal-alias" type="text" placeholder="별명 입력 (예: 샤이니)" style="width:160px" onkeydown="if(event.key==='Enter')cfgAddPlayerAlias()">
-        <select id="cfg-pal-player" style="min-width:170px;border:1px solid var(--border2);border-radius:8px;padding:6px 10px;font-size:13px">
-          ${_players.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('')}
-        </select>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px">
+        <input id="cfg-pal-alias" type="text" placeholder="별명 입력 (예: 샤이니)" style="width:150px" onkeydown="if(event.key==='Enter'){document.getElementById('cfg-pal-player-search').focus();}">
+        <div style="position:relative;display:inline-block">
+          <input id="cfg-pal-player-search" type="text" placeholder="스트리머 검색..." autocomplete="off"
+            style="width:170px;border:1px solid var(--border2);border-radius:8px;padding:6px 10px;font-size:13px"
+            oninput="cfgPalSearchInput(this.value)"
+            onkeydown="cfgPalSearchKey(event)"
+            onfocus="cfgPalSearchInput(this.value)"
+            onblur="setTimeout(()=>{const d=document.getElementById('cfg-pal-dropdown');if(d)d.style.display='none';},180)">
+          <input type="hidden" id="cfg-pal-player">
+          <div id="cfg-pal-dropdown" style="display:none;position:absolute;top:100%;left:0;min-width:170px;max-height:200px;overflow-y:auto;background:var(--white);border:1px solid var(--border2);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.13);z-index:9999;margin-top:2px"></div>
+        </div>
         <button class="btn btn-b btn-sm" onclick="cfgAddPlayerAlias()">+ 추가</button>
         <button class="btn btn-w btn-sm" onclick="cfgResetPlayerAliasMap()">초기화</button>
       </div>
+      <script>
+      (function(){
+        const _palPlayers = ${JSON.stringify(_players.map(p=>p.name))};
+        let _palIdx = -1;
+        window.cfgPalSearchInput = function(val){
+          const dd = document.getElementById('cfg-pal-dropdown');
+          const hidden = document.getElementById('cfg-pal-player');
+          if(!dd) return;
+          const q = (val||'').trim();
+          // exact or partial match
+          let list = q ? _palPlayers.filter(n=>n.includes(q)) : _palPlayers.slice(0,20);
+          _palIdx = -1;
+          if(!list.length){ dd.style.display='none'; hidden.value=''; return; }
+          dd.innerHTML = list.map((n,i)=>`<div data-idx="${i}" data-name="${n.replace(/"/g,'&quot;')}" style="padding:7px 12px;font-size:13px;cursor:pointer;white-space:nowrap" onmousedown="cfgPalSelect('${n.replace(/'/g,'\\u0027')}')">${n}</div>`).join('');
+          dd.style.display='block';
+          // highlight exact match
+          const exact = list.findIndex(n=>n===q);
+          if(exact>=0){ hidden.value=list[exact]; _palHighlight(exact,dd); }
+          else hidden.value='';
+        };
+        window.cfgPalSelect = function(name){
+          const s = document.getElementById('cfg-pal-player-search');
+          const h = document.getElementById('cfg-pal-player');
+          const dd = document.getElementById('cfg-pal-dropdown');
+          if(s) s.value = name;
+          if(h) h.value = name;
+          if(dd) dd.style.display='none';
+        };
+        window._palHighlight = function(idx, dd){
+          if(!dd) return;
+          Array.from(dd.children).forEach((el,i)=>{
+            el.style.background = i===idx ? 'var(--blue-l,#dbeafe)' : '';
+            el.style.fontWeight = i===idx ? '700' : '';
+          });
+        };
+        window.cfgPalSearchKey = function(e){
+          const dd = document.getElementById('cfg-pal-dropdown');
+          if(!dd || dd.style.display==='none'){
+            if(e.key==='Enter') cfgAddPlayerAlias();
+            return;
+          }
+          const items = Array.from(dd.children);
+          if(e.key==='ArrowDown'){ e.preventDefault(); _palIdx=Math.min(_palIdx+1,items.length-1); _palHighlight(_palIdx,dd); if(items[_palIdx]) document.getElementById('cfg-pal-player').value=items[_palIdx].dataset.name; }
+          else if(e.key==='ArrowUp'){ e.preventDefault(); _palIdx=Math.max(_palIdx-1,0); _palHighlight(_palIdx,dd); if(items[_palIdx]) document.getElementById('cfg-pal-player').value=items[_palIdx].dataset.name; }
+          else if(e.key==='Enter'){ e.preventDefault(); if(_palIdx>=0&&items[_palIdx]){ cfgPalSelect(items[_palIdx].dataset.name); } else { cfgAddPlayerAlias(); } }
+          else if(e.key==='Escape'){ dd.style.display='none'; }
+        };
+      })();
+      </script>
       <div id="cfg-pal-list" style="border:1px solid var(--border);border-radius:10px;max-height:220px;overflow:auto;background:var(--surface);padding:10px"></div>
     </div>
     <div style="padding:14px;background:var(--white);border:1px solid var(--border);border-radius:10px">
