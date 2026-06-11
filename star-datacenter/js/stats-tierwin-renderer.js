@@ -55,9 +55,9 @@
           <option value="Z"${f.race==='Z'?' selected':''}>저그</option>
           <option value="P"${f.race==='P'?' selected':''}>프로토스</option>
         </select>
-        <select onchange="_tierWinFilter.univ=this.value;render()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:7px">
+        <select onchange="_tierWinFilter.univ=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);render()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:7px">
           <option value="">대학 전체</option>
-          ${univs.map(u=>`<option value="${u.name}"${f.univ===u.name?' selected':''}>${u.name}</option>`).join('')}
+          ${univs.map(u=>`<option value="${window.escHTML?window.escHTML(u.name):u.name}"${f.univ===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
         <select onchange="_tierWinFilter.gender=this.value;render()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:7px">
           <option value="">성별 전체</option>

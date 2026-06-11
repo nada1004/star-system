@@ -515,7 +515,7 @@ function statsTierRankHTML(){
                           ${r.practice.slice(0,25).map(h=>{
                             const w=_srTimeW(h.date||'');
                             const res=h.result==='승'?'<span style="color:#16a34a;font-weight:1000">승</span>':'<span style="color:#dc2626;font-weight:1000">패</span>';
-                            return `<tr><td>${(h.date||'').slice(5).replace('-','/')}</td><td>${escAttr(h.opp||'')}</td><td>${res}</td><td style="color:#b45309;font-weight:900">×${w.toFixed(2)}</td><td style="color:var(--gray-l)">${escAttr(h.mode||'')}</td></tr>`;
+                            return `<tr><td>${(h.date||'').slice(5).replace('-','/')}</td><td>${escHTML(h.opp||'')}</td><td>${res}</td><td style="color:#b45309;font-weight:900">×${w.toFixed(2)}</td><td style="color:var(--gray-l)">${escHTML(h.mode||'')}</td></tr>`;
                           }).join('')}
                         </tbody>
                       </table>
@@ -530,7 +530,7 @@ function statsTierRankHTML(){
                         <tbody>
                           ${(r.important.slice(0,25)).map(h=>{
                             const res=h.result==='승'?'<span style="color:#16a34a;font-weight:1000">승</span>':'<span style="color:#dc2626;font-weight:1000">패</span>';
-                            return `<tr><td>${(h.date||'').slice(5).replace('-','/')}</td><td>${escAttr(h.opp||'')}${h.oppRace?`(${escAttr(h.oppRace)})`:''}</td><td>${res}</td><td style="color:var(--gray-l)">${escAttr(h.mode||'')}</td><td style="color:var(--gray-l)">${escAttr((h.map&&h.map!=='-')?h.map:'')}</td></tr>`;
+                            return `<tr><td>${(h.date||'').slice(5).replace('-','/')}</td><td>${escHTML(h.opp||'')}${h.oppRace?`(${escHTML(h.oppRace)})`:''}</td><td>${res}</td><td style="color:var(--gray-l)">${escHTML(h.mode||'')}</td><td style="color:var(--gray-l)">${escHTML((h.map&&h.map!=='-')?h.map:'')}</td></tr>`;
                           }).join('') || `<tr><td colspan="5" style="color:var(--gray-l)">중요 경기 기록이 없습니다.</td></tr>`}
                         </tbody>
                       </table>
@@ -753,7 +753,7 @@ function statsStarSystemHTML(){
     <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px">
       <div style="font-size:12px;font-weight:1000;color:var(--text2);margin-bottom:8px">공식전 모드 키워드</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <input type="text" value="${escAttr(kwsRaw||_ssKeywords().join(','))}" oninput="starSystemSetKeywords(this.value)" placeholder="예: 대학대전,CK,교수,코치,끝장전..." style="flex:1;min-width:260px">
+        <input type="text" value="${escHTML(kwsRaw||_ssKeywords().join(','))}" oninput="starSystemSetKeywords(this.value)" placeholder="예: 대학대전,CK,교수,코치,끝장전..." style="flex:1;min-width:260px">
         <button class="btn btn-w btn-sm" onclick="starSystemSetKeywords('대학대전,대학CK,CK,교수,코치,주관,끝장전,미니대전,프로리그,티어대회,대회,토너먼트')">기본값</button>
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">mode(기록의 경기 구분 텍스트)에 키워드가 포함되면 공식전으로 처리합니다.</div>
@@ -1192,7 +1192,7 @@ function statsGrowthHTML(){
   return`<div class="ssec" id="stats-growth-sec">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <h4 style="margin:0">📊 스트리머 성장 곡선</h4>
-      <select id="growth-player-select" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px" onchange="_growthSel=this.value;initGrowthChart()">
+      <select id="growth-player-select" style="padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:220px" onchange="_growthSel=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);initGrowthChart()">
         ${cands.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ko')).map(p=>`<option value="${escHTML(p.name)}"${_growthSel===p.name?' selected':''}>${escHTML(p.name)} · ${escHTML(p.univ)} · ${(_statsAllHist(p)||[]).length}경기</option>`).join('')}
       </select>
       <button class="btn-capture btn-xs no-export" style="margin-left:auto" onclick="captureSection('stats-growth-sec','growth_chart')">📷 이미지 저장</button>
@@ -1209,7 +1209,7 @@ function initGrowthChart(){
   let p=statsP(_growthSel);
   // statsP 미발견 시 이름 부분 매칭 fallback
   if(!p&&_growthSel){p=(Array.isArray(players)?players:[]).find(x=>String(x&&x.name||'').trim()===_growthSel.trim())||null;}
-  const histF = p ? _statsAllHist(p) : [];
+  const histF = p ? statsNonProHist(p) : [];
   const info=document.getElementById('growthInfo');
   if(!p||histF.length<2){
     canvas.style.display='none';
@@ -1217,7 +1217,7 @@ function initGrowthChart(){
     return;
   }
   canvas.style.display='block';
-  const hist=[...histF].reverse();
+  const hist=[...histF].sort((a,b)=>(String(a.date||'')).localeCompare(String(b.date||'')));
   // 누적 승률 계산
   const pts=[];let w=0,total=0;
   hist.forEach((h,i)=>{

@@ -996,23 +996,34 @@ function ttPlayerRankHTML(compName){
   };
   const filtered=compName ? ttM.filter(m=>_ttEqComp(m,compName)) : ttM;
   const sc={};
+  const _ttAddScore=(wn,ln)=>{
+    if(!wn||!ln)return;
+    if(!sc[wn])sc[wn]={w:0,l:0,univ:''};
+    if(!sc[ln])sc[ln]={w:0,l:0,univ:''};
+    sc[wn].w++;sc[ln].l++;
+    if(!sc[wn].univ){const p=players.find(x=>x.name===wn);if(p)sc[wn].univ=p.univ||'';}
+    if(!sc[ln].univ){const p=players.find(x=>x.name===ln);if(p)sc[ln].univ=p.univ||'';}
+  };
   filtered.forEach(m=>{
-    (m.sets||[]).forEach(st=>{
-      (st.games||[]).forEach(g=>{
+    const _games=(m.sets||[]).flatMap(st=>st.games||[]);
+    if(_games.length){
+      // sets.games 기록이 있는 경우: 게임 단위 집계
+      _games.forEach(g=>{
         let wn, ln;
         if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
         else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
         else return;
-        if(!sc[wn])sc[wn]={w:0,l:0,univ:''};
-        if(!sc[ln])sc[ln]={w:0,l:0,univ:''};
-        sc[wn].w++;sc[ln].l++;
-        if(!sc[wn].univ){const p=players.find(x=>x.name===wn);if(p)sc[wn].univ=p.univ||'';}
-        if(!sc[ln].univ){const p=players.find(x=>x.name===ln);if(p)sc[ln].univ=p.univ||'';}
+        _ttAddScore(wn,ln);
       });
-    });
+    } else if(m.a&&m.b&&m.winner){
+      // [FIX] sets.games 없는 경우: m.winner(1:1 개인전) fallback 집계
+      const wn=m.winner==='A'?m.a:m.b;
+      const ln=m.winner==='A'?m.b:m.a;
+      _ttAddScore(wn,ln);
+    }
   });
   if(!window._rankSort)window._rankSort={};
-  const sk=window._rankSort['tt']||'rate';
+  const sk=window._rankSort['tt']||'w';
   // [UX] 정렬 상태 라벨
   const skLabel=sk==='w'?'🏆 승순':sk==='l'?'📉 패순':'📊 승률순';
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,univ:sc[name].univ}));
@@ -2812,7 +2823,7 @@ function showRankContext(e){
   if(existingMenu) existingMenu.remove();
   
   if(!window._rankSort)window._rankSort={};
-  const sk=window._rankSort['tt']||'rate';
+  const sk=window._rankSort['tt']||'w';
   
   const menu = document.createElement('div');
   menu.id = 'rank-context-menu';
@@ -2831,8 +2842,8 @@ function showRankContext(e){
   
   // [UX] 현재 정렬 항목 강조 표시
   const _skItems=[
-    {key:'rate',icon:'📊',label:'승률순'},
     {key:'w',icon:'🏆',label:'승순'},
+    {key:'rate',icon:'📊',label:'승률순'},
     {key:'l',icon:'📉',label:'패순'},
   ];
   menu.innerHTML = _skItems.map(item=>{

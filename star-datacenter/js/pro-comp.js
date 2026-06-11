@@ -574,17 +574,26 @@ function proCompGrpRank(tn) {
           <th style="padding:8px 12px;text-align:center;color:var(--text3)">패</th>
           <th style="padding:8px 12px;text-align:center;color:var(--text3)">승률</th>
         </tr></thead><tbody>`;
+    // [FIX] 공동 순위 계산: 승/패 동일 시 같은 순위 부여
+    const _grpRankNums=[];
+    ranks.forEach((r,i)=>{
+      if(i===0){_grpRankNums.push(1);return;}
+      const prev=ranks[i-1];
+      const same=(r.w===prev.w&&r.l===prev.l);
+      _grpRankNums.push(same?_grpRankNums[i-1]:i+1);
+    });
     ranks.forEach((r, idx) => {
       const total = r.w + r.l;
       const wr = total ? Math.round(r.w/total*100) : 0;
-      const medal = idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':'';
+      const _rnum=_grpRankNums[idx]??idx+1;
+      const medal = _rnum===1?'🥇':_rnum===2?'🥈':_rnum===3?'🥉':'';
       const p = players.find(x=>x.name===r.name);
       const _photo = p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:28px;height:28px;border-radius:var(--su_profile_radius,50%);object-fit:cover;margin-right:6px;vertical-align:middle;flex-shrink:0" onerror="this.style.display='none'">`:'<span style="width:28px;height:28px;border-radius:var(--su_profile_radius,50%);background:var(--border);display:inline-flex;align-items:center;justify-content:center;margin-right:6px;font-size:13px;flex-shrink:0">👤</span>';
       const _tb = p&&p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
       const _rb = p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
       const _univ = p&&p.univ?`<span style="font-size:10px;color:var(--gray-l)">${p.univ}</span>`:'';
       h += `<tr style="border-top:1px solid var(--border);${idx===0?'background:'+col+'08':''}">
-        <td style="padding:8px 12px;text-align:center;font-size:16px">${medal||idx+1}</td>
+        <td style="padding:8px 12px;text-align:center;font-size:16px">${medal||_rnum}</td>
         <td style="padding:8px 10px">
           <div style="display:flex;align-items:center;gap:0">
             ${_photo}
@@ -1823,7 +1832,8 @@ function _pcStageBuildBulkResults(text, defaultDate){
   const out = [];
   const lines = (typeof splitPasteLines === 'function')
     ? splitPasteLines(raw)
-    : raw.split(/?
+    : raw.split(/
+?
 /).map(v=>v.trim()).filter(Boolean);
 
   lines.forEach(line=>{

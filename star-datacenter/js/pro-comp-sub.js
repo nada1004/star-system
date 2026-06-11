@@ -134,16 +134,34 @@ function proCompTourneyStats(tn) {
       pSt[g.wName].w++; pSt[g.lName].l++;
     });
   });
+  // [FIX] 중장전 게임 집계
+  (tn.gjMatches||[]).forEach(sess => {
+    (sess.games||[]).forEach(g => {
+      if (!g.wName||!g.lName) return;
+      if (!pSt[g.wName]) pSt[g.wName]={w:0,l:0};
+      if (!pSt[g.lName]) pSt[g.lName]={w:0,l:0};
+      pSt[g.wName].w++; pSt[g.lName].l++;
+    });
+  });
   const pArr = Object.entries(pSt).map(([name,s])=>({name,...s,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0})).filter(p=>p.total>0).sort((a,b)=>b.w-a.w||b.rate-a.rate);
 
-  // 맵 통계
+  // 맵 통계 (조별리그+대진표+3위전 + 팀전 + 중장전)
   const mapSt = {};
-  doneM.forEach(m => {
-    if (!m.map) return;
-    if (!mapSt[m.map]) mapSt[m.map]={total:0,aWin:0,bWin:0};
-    mapSt[m.map].total++;
-    if (m.winner==='A') mapSt[m.map].aWin++;
-    else mapSt[m.map].bWin++;
+  const _addMapSt=(map,winner)=>{
+    if(!map) return;
+    if(!mapSt[map]) mapSt[map]={total:0,aWin:0,bWin:0};
+    mapSt[map].total++;
+    if(winner==='A') mapSt[map].aWin++;
+    else mapSt[map].bWin++;
+  };
+  doneM.forEach(m => _addMapSt(m.map, m.winner));
+  // [FIX] 팀전 게임 맵 집계
+  (tn.teamMatches||[]).forEach(tm=>{
+    (tm.games||[]).forEach(g=>{ if(g.map) _addMapSt(g.map,'A'); });
+  });
+  // [FIX] 중장전 게임 맵 집계
+  (tn.gjMatches||[]).forEach(sess=>{
+    (sess.games||[]).forEach(g=>{ if(g.map) _addMapSt(g.map,'A'); });
   });
   const mapArr = Object.entries(mapSt).sort((a,b)=>b[1].total-a[1].total);
 
@@ -318,6 +336,18 @@ function rProAll(C, T) {
       });
     });
   });
+  // [FIX] 중장전 경기목록 추가
+  _proTourneys.forEach(tn=>{
+    (tn.gjMatches||[]).forEach(sess=>{
+      const totalG=(sess.games||[]).length;
+      const doneG=(sess.games||[]).filter(g=>g.wName&&g.lName).length;
+      proItems.push({
+        d: sess.d||'', type:'중장전', label:`${sess.a||'?'} vs ${sess.b||'?'}`,
+        winner: doneG>0?'done':'', aLabel: sess.a||'?', bLabel: sess.b||'?',
+        note: `${tn.name} (${doneG}/${totalG}게임)`
+      });
+    });
+  });
   proItems.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
 
   // 완료 경기만 통계에 반영
@@ -338,6 +368,14 @@ function rProAll(C, T) {
     const w=m.winner==='A'?m.a:m.b; const l=m.winner==='A'?m.b:m.a;
     if(!pAll[w])pAll[w]={w:0,l:0,src:new Set()};if(!pAll[l])pAll[l]={w:0,l:0,src:new Set()};
     pAll[w].w++;pAll[l].l++;pAll[w].src.add('대회');pAll[l].src.add('대회');
+  });});});
+  // [FIX] 중장전 게임 집계
+  _proTourneys.forEach(tn=>{(tn.gjMatches||[]).forEach(sess=>{(sess.games||[]).forEach(g=>{
+    if(!g.wName||!g.lName)return;
+    if(!pAll[g.wName])pAll[g.wName]={w:0,l:0,src:new Set()};
+    if(!pAll[g.lName])pAll[g.lName]={w:0,l:0,src:new Set()};
+    pAll[g.wName].w++;pAll[g.lName].l++;
+    pAll[g.wName].src.add('중장전');pAll[g.lName].src.add('중장전');
   });});});
 
   const pArr = Object.entries(pAll).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,src:[...s.src]})).filter(p=>p.total>0).sort((a,b)=>b.w-a.w||b.rate-a.rate);
@@ -386,7 +424,7 @@ function rProAll(C, T) {
       const srcBadges=r.src.map(s=>`<span style="font-size:9px;padding:1px 5px;border-radius:8px;font-weight:700;${s==='일반'?'background:#dbeafe;color:#2563eb':'background:#f3e8ff;color:#7c3aed'}">${s}</span>`).join(' ');
       h+=`<tr style="border-top:1px solid var(--border)">
         <td style="padding:8px 12px;text-align:center;font-size:16px">${medal||idx+1}</td>
-        <td style="padding:8px 10px"><div style="display:flex;align-items:center;gap:4px">${photo}<span style="font-weight:${idx<2?'800':'600'}">${r.name}</span>${rb}</div></td>
+        <td style="padding:8px 10px"><div style="display:flex;align-items:center;gap:4px">${photo}<span style="font-weight:${idx<2?'800':'600'};cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${escJS(r.name)}')">${r.name}</span>${rb}</div></td>
         <td style="padding:8px 12px;text-align:center;font-weight:700;color:#16a34a">${r.w}</td>
         <td style="padding:8px 12px;text-align:center;color:var(--red)">${r.l}</td>
         <td style="padding:8px 12px;text-align:center;font-weight:700">${r.rate}%</td>
@@ -405,13 +443,16 @@ function rProAll(C, T) {
   } else {
     h += `<div style="padding:6px 0">`;
     proItems.slice(0,50).forEach(item=>{
-      const typeBg=item.type==='일반'?'#dbeafe':'#f3e8ff';
-      const typeCol=item.type==='일반'?'#2563eb':'#7c3aed';
+      const typeBg=item.type==='일반'?'#dbeafe':item.type==='중장전'?'#dcfce7':'#f3e8ff';
+      const typeCol=item.type==='일반'?'#2563eb':item.type==='중장전'?'#166534':'#7c3aed';
       let result='';
       if(item.type==='일반'){
         const sa=item.scoreA||0;const sb=item.scoreB||0;
         if(sa>0||sb>0) result=`<span style="font-weight:800;color:${sa>sb?'#16a34a':'var(--text3)'}">${sa}</span><span style="color:var(--gray-l);margin:0 2px">:</span><span style="font-weight:800;color:${sb>sa?'#16a34a':'var(--text3)'}">${sb}</span>`;
         else result='<span style="color:var(--gray-l);font-size:11px">기록없음</span>';
+      } else if(item.type==='중장전'){
+        // [FIX] 중장전은 개인 게임 단위이므로 note에 게임 수 표시
+        result=item.winner==='done'?`<span style="font-size:11px;font-weight:700;color:#166534;background:#dcfce7;padding:1px 8px;border-radius:10px">기록완료</span>`:`<span style="font-size:11px;color:var(--gray-l);background:var(--surface);padding:1px 8px;border-radius:10px">미정</span>`;
       } else {
         result=item.winner?`<span style="font-size:11px;font-weight:700;color:#16a34a;background:#dcfce7;padding:1px 8px;border-radius:10px">${item.winner==='A'?item.aLabel:item.bLabel} 승</span>`:`<span style="font-size:11px;color:var(--gray-l);background:var(--surface);padding:1px 8px;border-radius:10px">미정</span>`;
       }
