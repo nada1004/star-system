@@ -1,4 +1,9 @@
-/* LEGACY - DO NOT LOAD - 분리된 파일로 대체됨. index.html에 추가하지 마세요. */
+/* ⚠️ LEGACY FILE — 로드하지 마세요 ⚠️
+   이 파일은 settings.js + settings-render.js 로 분리되어 대체되었습니다.
+   index.html에 포함되어 있지 않으며, 실제로 사용되지 않습니다.
+   혼란 방지를 위해 삭제하거나 _archive/ 폴더로 이동을 권장합니다.
+   대체 파일: js/settings.js, js/settings-render.js
+*/
 /* ══════════════════════════════════════
    ⚙️ settings.js — 설정 탭 전용
    tier-tour.js에서 분리됨. 이 파일의 버그가 티어대회 탭에 영향을 주지 않습니다.

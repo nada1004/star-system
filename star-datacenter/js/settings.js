@@ -2134,6 +2134,12 @@ window.cfgAddPlayerAlias = function(){
   m[alias] = player;
   _palSave(m);
   if(a) a.value='';
+  // 검색 input·hidden input 초기화
+  const ps = document.getElementById('cfg-pal-player-search');
+  if(ps) ps.value = '';
+  if(p) p.value = '';
+  const dd = document.getElementById('cfg-pal-dropdown');
+  if(dd) dd.style.display = 'none';
   window.cfgRenderPlayerAliasMap();
   if(typeof showToast==='function') showToast(`✅ 별명 등록: ${alias} → ${player}`);
 };

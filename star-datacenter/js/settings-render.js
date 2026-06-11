@@ -2692,55 +2692,6 @@ ${_scfgD('notice','📢 공지 관리')}
         <button class="btn btn-b btn-sm" onclick="cfgAddPlayerAlias()">+ 추가</button>
         <button class="btn btn-w btn-sm" onclick="cfgResetPlayerAliasMap()">초기화</button>
       </div>
-      <script>
-      (function(){
-        const _palPlayers = ${JSON.stringify(_players.map(p=>p.name))};
-        let _palIdx = -1;
-        window.cfgPalSearchInput = function(val){
-          const dd = document.getElementById('cfg-pal-dropdown');
-          const hidden = document.getElementById('cfg-pal-player');
-          if(!dd) return;
-          const q = (val||'').trim();
-          // exact or partial match
-          let list = q ? _palPlayers.filter(n=>n.includes(q)) : _palPlayers.slice(0,20);
-          _palIdx = -1;
-          if(!list.length){ dd.style.display='none'; hidden.value=''; return; }
-          dd.innerHTML = list.map((n,i)=>`<div data-idx="${i}" data-name="${n.replace(/"/g,'&quot;')}" style="padding:7px 12px;font-size:13px;cursor:pointer;white-space:nowrap" onmousedown="cfgPalSelect('${n.replace(/'/g,'\\u0027')}')">${n}</div>`).join('');
-          dd.style.display='block';
-          // highlight exact match
-          const exact = list.findIndex(n=>n===q);
-          if(exact>=0){ hidden.value=list[exact]; _palHighlight(exact,dd); }
-          else hidden.value='';
-        };
-        window.cfgPalSelect = function(name){
-          const s = document.getElementById('cfg-pal-player-search');
-          const h = document.getElementById('cfg-pal-player');
-          const dd = document.getElementById('cfg-pal-dropdown');
-          if(s) s.value = name;
-          if(h) h.value = name;
-          if(dd) dd.style.display='none';
-        };
-        window._palHighlight = function(idx, dd){
-          if(!dd) return;
-          Array.from(dd.children).forEach((el,i)=>{
-            el.style.background = i===idx ? 'var(--blue-l,#dbeafe)' : '';
-            el.style.fontWeight = i===idx ? '700' : '';
-          });
-        };
-        window.cfgPalSearchKey = function(e){
-          const dd = document.getElementById('cfg-pal-dropdown');
-          if(!dd || dd.style.display==='none'){
-            if(e.key==='Enter') cfgAddPlayerAlias();
-            return;
-          }
-          const items = Array.from(dd.children);
-          if(e.key==='ArrowDown'){ e.preventDefault(); _palIdx=Math.min(_palIdx+1,items.length-1); _palHighlight(_palIdx,dd); if(items[_palIdx]) document.getElementById('cfg-pal-player').value=items[_palIdx].dataset.name; }
-          else if(e.key==='ArrowUp'){ e.preventDefault(); _palIdx=Math.max(_palIdx-1,0); _palHighlight(_palIdx,dd); if(items[_palIdx]) document.getElementById('cfg-pal-player').value=items[_palIdx].dataset.name; }
-          else if(e.key==='Enter'){ e.preventDefault(); if(_palIdx>=0&&items[_palIdx]){ cfgPalSelect(items[_palIdx].dataset.name); } else { cfgAddPlayerAlias(); } }
-          else if(e.key==='Escape'){ dd.style.display='none'; }
-        };
-      })();
-      </script>
       <div id="cfg-pal-list" style="border:1px solid var(--border);border-radius:10px;max-height:220px;overflow:auto;background:var(--surface);padding:10px"></div>
     </div>
     <div style="padding:14px;background:var(--white);border:1px solid var(--border);border-radius:10px">
@@ -3947,3 +3898,75 @@ function reCfg(){
   }catch(e){}
 }
 window.reCfg = reCfg;
+
+// ─────────────────────────────────────────────────────────────
+// 선수 별명 매핑: 검색 자동완성 함수 (파일 레벨 — innerHTML script 불가 우회)
+// ─────────────────────────────────────────────────────────────
+(function(){
+  let _palIdx = -1;
+
+  function _palPlayerList(){
+    try{ return (window.players||[]).map(p=>p.name).filter(Boolean); }catch(e){ return []; }
+  }
+
+  window.cfgPalSearchInput = function(val){
+    const dd = document.getElementById('cfg-pal-dropdown');
+    const hidden = document.getElementById('cfg-pal-player');
+    if(!dd) return;
+    const q = (val||'').trim();
+    const list = q ? _palPlayerList().filter(n=>n.includes(q)) : _palPlayerList().slice(0,20);
+    _palIdx = -1;
+    if(!list.length){ dd.style.display='none'; if(hidden) hidden.value=''; return; }
+    dd.innerHTML = list.map((n,i)=>{
+      const safe = n.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return `<div data-idx="${i}" data-name="${safe}" style="padding:7px 12px;font-size:13px;cursor:pointer;white-space:nowrap" onmousedown="cfgPalSelect(this.dataset.name)">${safe}</div>`;
+    }).join('');
+    dd.style.display = 'block';
+    const exact = list.findIndex(n=>n===q);
+    if(exact>=0){ if(hidden) hidden.value=list[exact]; window._palHighlight(exact,dd); }
+    else if(hidden) hidden.value='';
+  };
+
+  window.cfgPalSelect = function(name){
+    const s = document.getElementById('cfg-pal-player-search');
+    const h = document.getElementById('cfg-pal-player');
+    const dd = document.getElementById('cfg-pal-dropdown');
+    if(s) s.value = name;
+    if(h) h.value = name;
+    if(dd) dd.style.display = 'none';
+  };
+
+  window._palHighlight = function(idx, dd){
+    if(!dd) return;
+    Array.from(dd.children).forEach((el,i)=>{
+      el.style.background = i===idx ? 'var(--blue-l,#dbeafe)' : '';
+      el.style.fontWeight = i===idx ? '700' : '';
+    });
+  };
+
+  window.cfgPalSearchKey = function(e){
+    const dd = document.getElementById('cfg-pal-dropdown');
+    if(!dd || dd.style.display==='none'){
+      if(e.key==='Enter') cfgAddPlayerAlias();
+      return;
+    }
+    const items = Array.from(dd.children);
+    if(e.key==='ArrowDown'){
+      e.preventDefault();
+      _palIdx = Math.min(_palIdx+1, items.length-1);
+      window._palHighlight(_palIdx, dd);
+      if(items[_palIdx]){ const h=document.getElementById('cfg-pal-player'); if(h) h.value=items[_palIdx].dataset.name; }
+    } else if(e.key==='ArrowUp'){
+      e.preventDefault();
+      _palIdx = Math.max(_palIdx-1, 0);
+      window._palHighlight(_palIdx, dd);
+      if(items[_palIdx]){ const h=document.getElementById('cfg-pal-player'); if(h) h.value=items[_palIdx].dataset.name; }
+    } else if(e.key==='Enter'){
+      e.preventDefault();
+      if(_palIdx>=0 && items[_palIdx]) window.cfgPalSelect(items[_palIdx].dataset.name);
+      else cfgAddPlayerAlias();
+    } else if(e.key==='Escape'){
+      dd.style.display = 'none';
+    }
+  };
+})();

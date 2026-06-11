@@ -1656,8 +1656,27 @@ function fixPoints(){
   });
 }
 
+// (정렬 보강) 저장 전 날짜 내림차순 정렬 — 과거 날짜 경기를 나중에 저장해도 순서 유지
+function _sortMatchArrByDate(arr){
+  if(!Array.isArray(arr)||arr.length<2) return;
+  const _nd=(d)=>{
+    const s=String(d||'').trim();
+    const m=s.match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+    if(m) return `${m[1]}-${String(parseInt(m[2],10)).padStart(2,'0')}-${String(parseInt(m[3],10)).padStart(2,'0')}`;
+    return s;
+  };
+  arr.sort((a,b)=>{
+    const da=_nd(a.d||''), db=_nd(b.d||'');
+    if(da&&db&&da!==db) return db.localeCompare(da);
+    return 0;
+  });
+}
 function localSave(){
   try{
+    // 저장 전 각 경기 배열 날짜 내림차순 정렬
+    try{
+      [window.indM, window.gjM, window.ttM, window.univM, window.ckM, window.miniM].forEach(arr=>_sortMatchArrByDate(arr));
+    }catch(_){}
     _lsSave('su_tiers',TIERS);
     // 데이터 버전 관리 - 캐시 무효화용
     _lsSave('su_data_version', DATA_VERSION || 1);
