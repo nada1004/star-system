@@ -1933,6 +1933,7 @@ window.cfgResetPlayerAliasMap = function(){
   if(typeof showToast==='function') showToast('초기화 완료');
 };
 
+
 // ─────────────────────────────────────────────────────────────
 // (요청사항) 자동인식 변환툴: 가공되지 않은 텍스트 → 리포트 포맷
 // 규칙은 사용자 메시지의 [출력 가이드라인]을 따른다.
@@ -1943,7 +1944,8 @@ window.cfgPasteConvertRun = function(){
   if(!inp || !out) return;
   const raw = String(inp.value||'').trim();
   if(!raw){ out.textContent=''; return; }
-  const lines = raw.split(/?
+  const lines = raw.split(/
+?
 /).map(l=>l.trim()).filter(Boolean);
   const mapFix = (m)=>{
     const s = String(m||'').trim();
@@ -2070,7 +2072,8 @@ window.cfgSaveSoopSettings = function(){
     u = u.replace(/\/+$/,'');
     return u;
   };
-  const lines = list.split(/?
+  const lines = list.split(/
+?
 /).map(norm).filter(Boolean);
   const uniq = [...new Set(lines)];
   list = uniq.join('

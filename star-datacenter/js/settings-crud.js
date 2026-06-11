@@ -115,6 +115,7 @@ window.openEP=function(name){
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-card-sec')">공유카드</button>
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-score-sec')">승패</button>
       <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-memo-sec')">메모</button>
+      <button type="button" class="btn btn-w btn-xs" data-ep-adv-nav="1" onclick="jumpEditPlayerSection('ep-alias-sec')">별명</button>
     </div>
     <div id="ep-basic-info" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 14px;align-items:start;margin-bottom:14px">
       <div style="min-width:0">
@@ -642,6 +643,15 @@ window.openEP=function(name){
     <div id="ep-memo-sec" class="ep-adv-section" style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#b45309;margin-bottom:8px">📝 선수 메모</div>
       <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:12px;border:1px solid #fde68a;border-radius:6px;padding:8px;background:#fff;resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
+    </div>
+    <div id="ep-alias-sec" class="ep-adv-section" style="margin-top:14px;padding:14px;background:var(--white);border:1px solid var(--border);border-radius:8px;">
+      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:4px">🧩 자동인식 별명 매핑</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">붙여넣기 자동인식에서 이 별명들이 <b>${esc(p.name)}</b>으로 자동 변환됩니다.</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+        <input id="ep-alias-input" type="text" placeholder="별명 입력 (예: 샤이니)" style="flex:1;min-width:120px;max-width:240px" onkeydown="if(event.key==='Enter') epAliasAdd(decodeURIComponent('${encodeURIComponent(p.name)}'))">
+        <button class="btn btn-b btn-sm" onclick="epAliasAdd(decodeURIComponent('${encodeURIComponent(p.name)}'))">+ 추가</button>
+      </div>
+      <div id="ep-alias-list" style="border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:8px;min-height:40px"></div>
     </div>`;
   om('emModal');
   try{ setTimeout(()=>{ 
@@ -663,6 +673,7 @@ window.openEP=function(name){
       syncEditPlayerThumbPreview('ed-photo5','ed-photo5-preview-wrap','ed-photo5-preview');
     }
     if(typeof bindEditPlayerModalShortcut==='function') bindEditPlayerModalShortcut();
+    if(typeof epRenderAliasesList==='function') epRenderAliasesList(name);
   }, 0); }catch(e){}
 }
 window.jumpEditPlayerSection = window.jumpEditPlayerSection || function(id){

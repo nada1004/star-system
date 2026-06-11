@@ -2158,6 +2158,55 @@ window.cfgResetPlayerAliasMap = function(){
 };
 
 // ─────────────────────────────────────────────────────────────
+// openEP 수정창 전용: 해당 선수의 별명 목록 렌더링 / 추가 / 삭제
+// ─────────────────────────────────────────────────────────────
+window.epRenderAliasesList = function(playerName){
+  const box = document.getElementById('ep-alias-list');
+  if(!box) return;
+  const m = _palLoad();
+  const aliases = Object.keys(m).filter(k => m[k] === playerName).sort((a,b)=>a.localeCompare(b));
+  if(!aliases.length){
+    box.innerHTML = '<div style="font-size:12px;color:var(--gray-l);text-align:center;padding:12px">등록된 별명 없음</div>';
+    return;
+  }
+  box.innerHTML = aliases.map(alias=>{
+    const safe = alias.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const enc = encodeURIComponent(alias);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-bottom:1px solid var(--border)">
+      <span style="font-family:monospace;font-size:12px;font-weight:900;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${safe}</span>
+      <button class="btn btn-r btn-xs" onclick="epAliasDel('${enc}','${encodeURIComponent(playerName)}')">삭제</button>
+    </div>`;
+  }).join('');
+};
+
+window.epAliasAdd = function(playerName){
+  const inp = document.getElementById('ep-alias-input');
+  const alias = String(inp ? inp.value : '').trim();
+  if(!alias){ if(typeof showToast==='function') showToast('별명을 입력해주세요.'); return; }
+  if(!playerName){ return; }
+  const m = _palLoad();
+  if(m[alias] && m[alias] !== playerName){
+    if(!confirm("'" + alias + "'\ub294 \uc774\ubbf8 '" + m[alias] + "'\uc5d0 \ub4f1\ub85d\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4.\n'" + playerName + "'\uc73c\ub85c \ubcc0\uacbd\ud560\uae4c\uc694?")) return;
+  }
+  m[alias] = playerName;
+  _palSave(m);
+  if(inp) inp.value = '';
+  window.epRenderAliasesList(playerName);
+  if(typeof window.cfgRenderPlayerAliasMap==='function') window.cfgRenderPlayerAliasMap();
+  if(typeof showToast==='function') showToast('\u2705 \ubcc4\uba85 \ub4f1\ub85d: ' + alias + ' \u2192 ' + playerName);
+};
+
+window.epAliasDel = function(encAlias, encPlayer){
+  const alias = decodeURIComponent(encAlias||'');
+  const playerName = decodeURIComponent(encPlayer||'');
+  const m = _palLoad();
+  delete m[alias];
+  _palSave(m);
+  window.epRenderAliasesList(playerName);
+  if(typeof window.cfgRenderPlayerAliasMap==='function') window.cfgRenderPlayerAliasMap();
+};
+
+// ─────────────────────────────────────────────────────────────
 // (요청사항) 자동인식 변환툴: 가공되지 않은 텍스트 → 리포트 포맷
 // 규칙은 사용자 메시지의 [출력 가이드라인]을 따른다.
 // ─────────────────────────────────────────────────────────────

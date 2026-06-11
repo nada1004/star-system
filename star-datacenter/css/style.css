@@ -2876,19 +2876,25 @@ details.ssec > summary.cfg-sec-summary{
   justify-content:space-between;
   gap:10px;
   padding:12px 14px;
-  border:1px solid var(--border);
+  border:1.5px solid var(--border);
   border-radius:12px;
   background:var(--white);
   box-shadow:var(--sh);
   cursor:pointer;
   user-select:none;
+  transition:background .15s,border-color .15s,box-shadow .15s,transform .1s;
 }
 details.ssec > summary.cfg-sec-summary:hover{
   background:var(--blue-l);
   border-color:var(--blue-ll);
+  box-shadow:0 4px 14px rgba(37,99,235,.10);
 }
 details.ssec > summary.cfg-sec-summary:active{
-  transform:scale(.99);
+  transform:scale(.985);
+}
+details.ssec > summary.cfg-sec-summary:focus-visible{
+  outline:2px solid var(--blue);
+  outline-offset:2px;
 }
 details.ssec > summary.cfg-sec-summary h4{
   margin:0;
@@ -4130,6 +4136,17 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   #playerModalBody .year-filter-chip input{
     width: 9px; height: 9px;
   }
+}
+
+/* ── 설정 카테고리 카드 hover/focus ── */
+.cfg-cat-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px rgba(15,23,42,.10) !important;
+  border-color:var(--blue-ll) !important;
+}
+.cfg-cat-card:focus-visible{
+  outline:2px solid var(--blue);
+  outline-offset:2px;
 }
 
 /* ── 설정 메뉴 팝업(cfgModal) 컴포넌트 규격화 ── */

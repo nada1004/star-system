@@ -128,7 +128,7 @@ function rCfg(C,T){
   }catch(e){}
   return _cfgViewMode==='advanced'; })();
   const _quickBtns = [
-    {id:'univ', icon:'🏛️', title:'대학 관리', desc:'대학 추가/수정/색상/숨김'},
+    {id:'univ', icon:'🏛️', title:'대학 관리', desc:'추가/수정/색상/숨김'},
     {id:'pd', icon:'🎨', title:'스트리머 상세', desc:'배경/배지/프로필'},
     {id:'matchdetail', icon:'🎮', title:'경기 상세', desc:'헤더/프로필/색상'},
     {id:'profileshape', icon:'🖼️', title:'프로필 모양', desc:'원형/네모/효과'},
@@ -137,7 +137,11 @@ function rCfg(C,T){
     {id:'hdr', icon:'🧩', title:'헤더 바', desc:'제목/아이콘/배경'},
     {id:'reccard', icon:'🧾', title:'기록 카드', desc:'CK/프로 버튼색 포함'},
     {id:'tierrank-view', icon:'📊', title:'티어 순위표', desc:'테이블/카드/포디움'},
-    {id:'cfgmenu', icon:'🧭', title:'메뉴 정리', desc:'자주 쓰는 설정 정리'}
+    {id:'cfgmenu', icon:'🧭', title:'메뉴 정리', desc:'자주 쓰는 설정 정리'},
+    {id:'sharecard', icon:'🪪', title:'공유카드 디자인', desc:'모드/색상/승자배경'},
+    {id:'boardchip', icon:'🏷️', title:'현황판 칩/로고', desc:'프로필/로고/칩 크기'},
+    {id:'boardbg', icon:'🖼️', title:'현황판 배경', desc:'이미지/라벨/표시방식'},
+    {id:'oldbright', icon:'✨', title:'현황판 밝기', desc:'카드/라벨 밝기 조절'}
   ];
   const _basicQuickBtns = _quickBtns.slice(0,4);
   const _moreQuickBtns = _quickBtns.slice(4);
@@ -145,11 +149,11 @@ function rCfg(C,T){
     const on=window._cfgCat===c;
     const cj=_escJS(c);
     const ca=_escAttr(c);
-    return `<button type="button" onclick="cfgApplyCat('${cj}')" class="no-export" data-cat="${ca}" data-cfg-cat="${ca}"
-      style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 12px;border-radius:16px;cursor:pointer;text-align:left;background:${on?'linear-gradient(135deg,var(--blue),#7c3aed)':'var(--white)'};color:${on?'#fff':'var(--text2)'};border:1px solid ${on?'transparent':'var(--border)'};box-shadow:${on?'0 10px 24px rgba(37,99,235,.22)':'0 4px 12px rgba(15,23,42,.04)'};min-height:82px">
+    return `<button type="button" onclick="cfgApplyCat('${cj}')" class="no-export cfg-cat-card" data-cat="${ca}" data-cfg-cat="${ca}"
+      style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;border-radius:16px;cursor:pointer;text-align:left;background:${on?'linear-gradient(135deg,var(--blue),#7c3aed)':'var(--white)'};color:${on?'#fff':'var(--text2)'};border:2px solid ${on?'transparent':'var(--border)'};box-shadow:${on?'0 10px 24px rgba(37,99,235,.22)':'0 2px 8px rgba(15,23,42,.05)'};min-height:82px;transition:background .18s,box-shadow .18s,border-color .18s,transform .12s;outline-offset:2px">
       <span style="font-size:18px;line-height:1">${_cfgCatIcons[c]||'🗂️'}</span>
-      <span style="font-size:12px;font-weight:900;line-height:1.25">${_catLabel(c)}</span>
-      <span data-cfg-cat-desc="1" style="font-size:10px;opacity:${on?'.9':'.72'};font-weight:700;line-height:1.35">${_cfgCatDesc[c]||''}</span>
+      <span style="font-size:12px;font-weight:900;line-height:1.3">${_catLabel(c)}</span>
+      <span data-cfg-cat-desc="1" style="font-size:11px;opacity:${on?'.92':'.65'};font-weight:700;line-height:1.4">${_cfgCatDesc[c]||''}</span>
     </button>`;
   }).join('');
   const _cfgSecDesc = (window._cfgSecDescMap||{});
@@ -172,9 +176,9 @@ function rCfg(C,T){
         </div>
         <span id="cfgSearchCnt" style="font-size:11px;color:var(--gray-l);font-weight:900;white-space:nowrap"></span>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn ${_cfgViewMode==='basic'?'btn-b':'btn-w'} btn-xs" onclick="cfgSetViewMode('basic')">1단계 초보</button>
-        <button class="btn ${_cfgViewMode==='advanced'?'btn-b':'btn-w'} btn-xs" onclick="cfgSetViewMode('advanced')">2단계 고급</button>
+      <div style="display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px">
+        <button class="btn btn-xs no-export" onclick="cfgSetViewMode('basic')" style="border-radius:7px;padding:4px 10px;font-size:11px;font-weight:900;transition:background .15s,color .15s;${_cfgViewMode==='basic'?'background:var(--blue);color:#fff;box-shadow:0 2px 6px rgba(37,99,235,.25);border-color:transparent':'background:transparent;color:var(--text3);border-color:transparent'}">초보</button>
+        <button class="btn btn-xs no-export" onclick="cfgSetViewMode('advanced')" style="border-radius:7px;padding:4px 10px;font-size:11px;font-weight:900;transition:background .15s,color .15s;${_cfgViewMode==='advanced'?'background:var(--blue);color:#fff;box-shadow:0 2px 6px rgba(37,99,235,.25);border-color:transparent':'background:transparent;color:var(--text3);border-color:transparent'}">고급</button>
       </div>
       ${_cfgViewMode==='advanced' ? _menuBtn : ''}
       ${_regBtn}
@@ -210,40 +214,7 @@ function rCfg(C,T){
       </div>
     </details>` : ''}
   </div>
-  ${_cfgViewMode==='basic'
-    ? `<details class="no-export" style="margin:0 0 14px;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 8px 18px rgba(15,23,42,.03)">
-    <summary style="padding:12px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:900;color:var(--text2)">🎨 디자인 빠른 이동 <span style="font-size:11px;color:var(--gray-l);font-weight:800">필요할 때만 열기</span></summary>
-    <div style="padding:0 12px 12px">
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">현황판 디자인과 공유카드 디자인을 같은 카드형 버튼으로 바로 이동할 수 있습니다.</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">`
-    : `<div class="no-export" style="margin:0 0 14px;padding:12px;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 8px 18px rgba(15,23,42,.03)">
-    <div style="margin-bottom:10px">
-      <div style="font-size:13px;font-weight:900;color:var(--text2)">🎨 디자인 빠른 이동</div>
-      <div style="font-size:11px;color:var(--gray-l)">현황판 디자인과 공유카드 디자인을 같은 카드형 버튼으로 바로 이동할 수 있습니다.</div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">`}
-      <button type="button" class="btn btn-w no-export" onclick="cfgGo('sharecard')" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;border-radius:14px;text-align:left;background:var(--white)">
-        <span style="font-size:16px;line-height:1">🪪</span>
-        <span style="font-size:12px;font-weight:900;color:var(--text2)">공유카드 디자인</span>
-        <span style="font-size:10px;color:var(--gray-l);font-weight:700">모드, 색상, 승자 배경, 타입별 오버라이드</span>
-      </button>
-      <button type="button" class="btn btn-w no-export" onclick="cfgGo('boardchip')" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;border-radius:14px;text-align:left;background:var(--white)">
-        <span style="font-size:16px;line-height:1">🏷️</span>
-        <span style="font-size:12px;font-weight:900;color:var(--text2)">현황판 칩/로고</span>
-        <span style="font-size:10px;color:var(--gray-l);font-weight:700">프로필 크기, 대학 로고, 칩 크기 조절</span>
-      </button>
-      <button type="button" class="btn btn-w no-export" onclick="cfgGo('boardbg')" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;border-radius:14px;text-align:left;background:var(--white)">
-        <span style="font-size:16px;line-height:1">🖼️</span>
-        <span style="font-size:12px;font-weight:900;color:var(--text2)">현황판 배경</span>
-        <span style="font-size:10px;color:var(--gray-l);font-weight:700">배경 이미지/라벨 배경/표시 방식</span>
-      </button>
-      <button type="button" class="btn btn-w no-export" onclick="cfgGo('oldbright')" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;border-radius:14px;text-align:left;background:var(--white)">
-        <span style="font-size:16px;line-height:1">✨</span>
-        <span style="font-size:12px;font-weight:900;color:var(--text2)">현황판 밝기</span>
-        <span style="font-size:10px;color:var(--gray-l);font-weight:700">카드 배경/라벨 밝기 세부 조절</span>
-      </button>
-    </div>
-  ${_cfgViewMode==='basic' ? `</div></details>` : `</div>`}
+
   ${_cfgViewMode==='advanced' ? `<details class="no-export" open style="margin:0 0 14px;border:1px solid var(--border);border-radius:18px;background:linear-gradient(135deg,var(--surface),rgba(255,255,255,.96));box-shadow:0 10px 22px rgba(15,23,42,.04)">
     <summary style="padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:900;color:var(--text2)">🧭 2단계 고급 설정 전체 보기 <span style="font-size:11px;color:var(--gray-l);font-weight:800">카테고리별 전체 메뉴</span></summary>
     <div style="padding:0 12px 12px">
@@ -255,7 +226,7 @@ function rCfg(C,T){
           </div>
           <div data-cfg-cur-cat-label="1" style="font-size:11px;color:var(--gray-l);font-weight:800">현재: ${_catLabel(window._cfgCat)}</div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">
           ${_catButtons}
         </div>
       </div>
@@ -287,7 +258,7 @@ function rCfg(C,T){
         <div style="font-size:13px;font-weight:900;color:var(--text2)">🧩 하단 세부 설정</div>
         <div style="font-size:11px;color:var(--gray-l)">아래 긴 설정 목록은 필요할 때만 펼쳐서 볼 수 있습니다. 검색 중에는 자동으로 표시됩니다.</div>
       </div>
-      <button class="btn btn-w btn-xs" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()">${_cfgBottomOpen?'🧩 세부 설정 접기 ▲':'🧩 세부 설정 펼치기 ▼'}</button>
+      <button class="btn btn-w btn-xs" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()">${_cfgBottomOpen?'▲ 세부 설정 접기':'▼ 세부 설정 펼치기'}</button>
     </div>
   </div>
 ${_scfgD('notice','📢 공지 관리')}
