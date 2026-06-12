@@ -361,7 +361,7 @@ function rTotal(C,T){
   tableHTML+=`</tbody></table></div>`;
 
   C.innerHTML = filterBar + tableHTML;
-  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_visiblePhotoUrls, 28); }catch(e){}
+  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_visiblePhotoUrls, _visiblePhotoUrls.length); }catch(e){}
   injectUnivIcons(C);
   requestAnimationFrame(()=>injectUnivIcons(C));
   totalApplySearchFilter();
@@ -517,7 +517,7 @@ function _buildGalleryView(rankMap){
   });
   if(!anyShown) html+=`<div style="grid-column:1/-1"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div></div></div>`;
   html+='</div>';
-  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_galleryPhotoUrls, 28); }catch(e){}
+  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_galleryPhotoUrls, _galleryPhotoUrls.length); }catch(e){}
   return html;
 }
 

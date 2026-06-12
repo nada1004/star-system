@@ -420,14 +420,20 @@ function rBoard2(C, T) {
     try {
       if (typeof prewarmImageUrls !== 'function') return;
       const _dissSet2 = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
-      const photoUrls = players
-        .filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet2.has(String(p?.univ||'').trim()) && p.photo)
-        .map(p => p.photo)
-        .filter(Boolean);
-      prewarmImageUrls(photoUrls, 80);
+      const photoUrls = [];
+      players
+        .filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet2.has(String(p?.univ||'').trim()))
+        .forEach(p => {
+          if(p.photo) photoUrls.push(p.photo);
+          if(p.secondProfileFile) photoUrls.push(p.secondProfileFile);
+          if(p.profileFile3) photoUrls.push(p.profileFile3);
+          if(p.profileFile4) photoUrls.push(p.profileFile4);
+          if(p.profileFile5) photoUrls.push(p.profileFile5);
+        });
+      prewarmImageUrls(photoUrls, photoUrls.length); // delay 없이 즉시, 전체 커버
     } catch(e) {}
   };
-  setTimeout(() => { try{ _b2PrewarmViewImages(); }catch(e){} }, 120);
+  _b2PrewarmViewImages(); // setTimeout 제거 → 렌더와 동시에 즉시 preload
 
   const sub = document.getElementById('b2-content');
   // (즉시 렌더링 - 로딩 중 메시지 제거)

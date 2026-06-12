@@ -162,6 +162,36 @@ try{
     setTimeout(_prewarmCalendar, 1200);
   }
 }catch(e){}
+// 앱 초기화 후 idle에 전체 플레이어 프로필 이미지 미리 로드
+// → 스트리머탭/현황판탭 진입 시 이미 캐시에 있어 즉시 표시
+try{
+  const _prewarmAllProfileImages = ()=>{
+    try{
+      if(typeof prewarmImageUrls !== 'function') return;
+      if(!Array.isArray(window.players)) return;
+      const urls = [];
+      window.players.forEach(p=>{
+        if(!p) return;
+        if(p.photo) urls.push(p.photo);
+        // 현황판 슬롯 2~5도 함께 preload
+        if(p.secondProfileFile)  urls.push(p.secondProfileFile);
+        if(p.profileFile3) urls.push(p.profileFile3);
+        if(p.profileFile4) urls.push(p.profileFile4);
+        if(p.profileFile5) urls.push(p.profileFile5);
+      });
+      prewarmImageUrls(urls, urls.length); // 전체 preload (제한 없음)
+    }catch(e){}
+  };
+  // 데이터 로드가 완료된 뒤 실행되도록 500ms 후 idle 큐에 등록
+  const _scheduleProfilePrewarm = ()=>{
+    if(typeof window.requestIdleCallback === 'function'){
+      window.requestIdleCallback(_prewarmAllProfileImages, { timeout: 3000 });
+    }else{
+      setTimeout(_prewarmAllProfileImages, 800);
+    }
+  };
+  setTimeout(_scheduleProfilePrewarm, 500);
+}catch(e){}
 try{
   const _prewarmShareCard = ()=>{ try{ window._ensureShareCardRuntime && window._ensureShareCardRuntime(); }catch(e){} };
   if(typeof window.requestIdleCallback === 'function'){
