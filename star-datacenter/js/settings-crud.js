@@ -1758,36 +1758,119 @@ function cfgNormHex(v){
   if(/^[0-9a-fA-F]{3}$/.test(t)) return '#'+t.split('').map(ch=>ch+ch).join('').toUpperCase();
   return null;
 }
-async function cfgPickColorHex(fallbackHex){
-  // ── EyeDropper (Chrome 95+ / Edge 95+): 화면 색상 직접 찍기 ──
-  if(window.EyeDropper){
+// ── 최근 사용 색상 저장/로드 ──
+const _RECENT_COLORS_KEY = 'su_recent_colors';
+function _recentColorsLoad(){ try{ return JSON.parse(localStorage.getItem(_RECENT_COLORS_KEY)||'[]'); }catch(e){ return []; } }
+function _recentColorsSave(hex){
+  try{
+    let arr = _recentColorsLoad().filter(c=>c!==hex);
+    arr.unshift(hex);
+    arr = arr.slice(0,12);
+    localStorage.setItem(_RECENT_COLORS_KEY, JSON.stringify(arr));
+  }catch(e){}
+}
+
+// ── 미니 색상 팔레트 팝업 ──
+function cfgShowColorPalette(anchorEl, currentHex, onSelect){
+  // 기존 팝업 제거
+  const existing = document.getElementById('cfg-color-palette-pop');
+  if(existing){ existing.remove(); return; }
+
+  // 대학 기존 색상 수집
+  const univColors = (typeof univCfg!=='undefined' ? univCfg : [])
+    .map(u=>u.color).filter(Boolean)
+    .filter((c,i,a)=>a.indexOf(c)===i);
+
+  // 최근 사용 색상
+  const recentColors = _recentColorsLoad();
+
+  // 프리셋 색상
+  const presets = [
+    '#EF4444','#F97316','#F59E0B','#EAB308','#84CC16','#22C55E',
+    '#10B981','#14B8A6','#06B6D4','#3B82F6','#6366F1','#8B5CF6',
+    '#A855F7','#EC4899','#F43F5E','#64748B','#1E293B','#FFFFFF'
+  ];
+
+  const pop = document.createElement('div');
+  pop.id = 'cfg-color-palette-pop';
+  pop.style.cssText = 'position:fixed;z-index:99999;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);min-width:220px;';
+
+  const makeSwatches = (colors, label) => {
+    if(!colors.length) return '';
+    return `<div style="font-size:10px;font-weight:700;color:var(--gray-l);margin:8px 0 5px;letter-spacing:.06em;text-transform:uppercase">${label}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px">
+      ${colors.map(c=>`<button title="${c}" style="width:22px;height:22px;border-radius:5px;background:${c};border:2px solid ${c===currentHex?'var(--text2)':'transparent'};cursor:pointer;padding:0;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.15)" onclick="window._cfgPaletteSelect('${c}')"></button>`).join('')}
+    </div>`;
+  };
+
+  // HEX 입력 + EyeDropper(Chrome/Edge)
+  const eyedropperBtn = window.EyeDropper
+    ? `<button title="화면에서 직접 찍기 (Chrome/Edge)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-size:12px" onclick="window._cfgPaletteEyedrop()">🎯 찍기</button>`
+    : '';
+
+  pop.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      색상 선택
+      <button onclick="document.getElementById('cfg-color-palette-pop').remove()" style="border:none;background:none;cursor:pointer;font-size:16px;color:var(--gray-l);line-height:1;padding:0">×</button>
+    </div>
+    ${makeSwatches(univColors, '대학 색상')}
+    ${makeSwatches(recentColors, '최근 사용')}
+    ${makeSwatches(presets, '기본 색상')}
+    <div style="font-size:10px;font-weight:700;color:var(--gray-l);margin:8px 0 5px;letter-spacing:.06em;text-transform:uppercase">직접 입력</div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <input id="cfg-palette-hex-inp" type="text" value="${currentHex||''}" placeholder="#RRGGBB"
+        style="flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-weight:700;font-family:monospace"
+        oninput="const el=this;const h=window.cfgNormHex?cfgNormHex(el.value):null;if(h){el.style.background=h;el.style.color=window._cfgContrastColor(h);}"
+        onkeydown="if(event.key==='Enter'){const h=window.cfgNormHex?cfgNormHex(this.value):null;if(h)window._cfgPaletteSelect(h);}">
+      ${eyedropperBtn}
+      <button style="padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-size:12px" onclick="const h=window.cfgNormHex?cfgNormHex(document.getElementById('cfg-palette-hex-inp').value):null;if(h)window._cfgPaletteSelect(h);">적용</button>
+    </div>`;
+
+  document.body.appendChild(pop);
+
+  // 위치 계산 (앵커 기준)
+  const rect = anchorEl.getBoundingClientRect();
+  const popW = 232, popH = 360;
+  let top = rect.bottom + 6;
+  let left = rect.left;
+  if(top + popH > window.innerHeight) top = rect.top - popH - 6;
+  if(left + popW > window.innerWidth) left = window.innerWidth - popW - 8;
+  pop.style.top = Math.max(4, top) + 'px';
+  pop.style.left = Math.max(4, left) + 'px';
+
+  // 콜백 등록
+  window._cfgPaletteSelect = function(hex){
+    _recentColorsSave(hex);
+    onSelect(hex);
+    pop.remove();
+    delete window._cfgPaletteSelect;
+    delete window._cfgPaletteEyedrop;
+  };
+  window._cfgPaletteEyedrop = async function(){
     try{
       const ed = new EyeDropper();
       const res = await ed.open();
-      return (res && res.sRGBHex) ? String(res.sRGBHex) : null;
-    }catch(e){
-      return null; // Esc 취소
-    }
-  }
-  // ── 폴백: 클립보드에서 HEX 자동 읽기 ──
-  // Windows 색 캡처(Win+Shift+C), macOS Digital Color Meter,
-  // 브라우저 확장 ColorZilla 등으로 복사한 HEX를 자동 붙여넣기
-  try{
-    const text = (await navigator.clipboard.readText()).trim();
-    const hex = cfgNormHex(text);
-    if(hex){
-      if(typeof showToast==='function') showToast('클립보드에서 색상 적용: ' + hex);
-      return hex;
-    }
-    // 클립보드에 유효한 HEX 없으면 안내 토스트 + 수동 입력 프롬프트
-    if(typeof showToast==='function') showToast('클립보드에 HEX 색상이 없습니다. 스포이드 툴로 먼저 복사해주세요.');
-    return null;
-  }catch(e){
-    // 클립보드 권한 거부 → 수동 입력 프롬프트
-    const val = prompt('HEX 색상을 입력하세요 (예: #3b82f6) — 스포이드 툴로 복사 후 붙여넣기', fallbackHex||'');
-    if(!val) return null;
-    return cfgNormHex(val.trim()) || null;
-  }
+      if(res && res.sRGBHex) window._cfgPaletteSelect(res.sRGBHex);
+    }catch(e){}
+  };
+  window._cfgContrastColor = function(hex){
+    try{
+      const n=parseInt(hex.slice(1),16);
+      const r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+      return (r*299+g*587+b*114)/1000>128?'#000':'#fff';
+    }catch(e){ return '#000'; }
+  };
+
+  // 바깥 클릭 시 닫기
+  setTimeout(()=>{
+    const onOut = (e)=>{
+      if(!pop.contains(e.target) && e.target!==anchorEl){
+        pop.remove();
+        document.removeEventListener('mousedown', onOut);
+      }
+    };
+    document.addEventListener('mousedown', onOut);
+  }, 0);
 }
 
 function cfgUnivSetColor(i, hex){
@@ -1810,17 +1893,15 @@ function cfgUnivSetColor(i, hex){
   try{ save(); }catch(e){}
   try{ if(typeof renderBoard==='function') renderBoard(); }catch(e){}
 }
-async function cfgUnivPickColor(i){
+function cfgUnivPickColor(i, btn){
   const cur = (univCfg[i] && univCfg[i].color) || '#3b82f6';
-  const c = await cfgPickColorHex(cur);
-  if(c) cfgUnivSetColor(i,c);
+  cfgShowColorPalette(btn, cur, (hex)=>{ cfgUnivSetColor(i, hex); });
 }
 
-async function cfgTierThemePickColor(tier){
-  const td = tierThemes && tierThemes[tier];
+function cfgTierThemePickColor(tier, btn){
+  const td = (typeof tierThemes!=='undefined') && tierThemes && tierThemes[tier];
   const cur = (td && td.color) || '#3b82f6';
-  const c = await cfgPickColorHex(cur);
-  if(c) cfgTierThemeSetColor(tier,c);
+  cfgShowColorPalette(btn, cur, (hex)=>{ cfgTierThemeSetColor(tier, hex); });
 }
 
 /* ════════════════════════════════════════════════════════

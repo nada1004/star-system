@@ -4385,46 +4385,10 @@ try{ if(typeof window._dissolveIdx !== 'number') window._dissolveIdx = -1; }catc
 // ── 티어 색상/밝기/이모지 커스텀 ──
 
 // ── 색상 입력/스포이드 공용 유틸 ──
-async function cfgPickColorHex(fallbackHex){
-  // ── EyeDropper (Chrome 95+ / Edge 95+): 화면 색상 직접 찍기 ──
-  if(window.EyeDropper){
-    try{
-      const ed = new EyeDropper();
-      const res = await ed.open();
-      return (res && res.sRGBHex) ? String(res.sRGBHex) : null;
-    }catch(e){
-      return null; // Esc 취소
-    }
-  }
-  // ── 폴백: 클립보드에서 HEX 자동 읽기 ──
-  try{
-    const text = (await navigator.clipboard.readText()).trim();
-    const hex = cfgNormHex(text);
-    if(hex){
-      if(typeof showToast==='function') showToast('클립보드에서 색상 적용: ' + hex);
-      return hex;
-    }
-    if(typeof showToast==='function') showToast('클립보드에 HEX 색상이 없습니다. 스포이드 툴로 먼저 복사해주세요.');
-    return null;
-  }catch(e){
-    const val = prompt('HEX 색상을 입력하세요 (예: #3b82f6) — 스포이드 툴로 복사 후 붙여넣기', fallbackHex||'');
-    if(!val) return null;
-    return cfgNormHex(val.trim()) || null;
-  }
-}
-
-async function cfgUnivPickColor(i){
-  const cur = (univCfg[i] && univCfg[i].color) || '#3b82f6';
-  const c = await cfgPickColorHex(cur);
-  if(c) cfgUnivSetColor(i,c);
-}
-
-async function cfgTierThemePickColor(tier){
-  const td = tierThemes && tierThemes[tier];
-  const cur = (td && td.color) || '#3b82f6';
-  const c = await cfgPickColorHex(cur);
-  if(c) cfgTierThemeSetColor(tier,c);
-}
+// cfgUnivPickColor / cfgTierThemePickColor / cfgShowColorPalette
+// → settings-crud.js 에 권위 소스 존재, 여기선 생략
+function cfgUnivPickColor(i,btn){ if(typeof cfgShowColorPalette==='function'){ const cur=(univCfg[i]&&univCfg[i].color)||'#3b82f6'; cfgShowColorPalette(btn,cur,(hex)=>cfgUnivSetColor(i,hex)); } }
+function cfgTierThemePickColor(tier,btn){ if(typeof cfgShowColorPalette==='function'){ const td=(typeof tierThemes!=='undefined')&&tierThemes&&tierThemes[tier]; const cur=(td&&td.color)||'#3b82f6'; cfgShowColorPalette(btn,cur,(hex)=>cfgTierThemeSetColor(tier,hex)); } }
 
 async function addAdminAccount(){
   const id=document.getElementById('adm-id').value.trim();
