@@ -75,7 +75,7 @@ function buildUnivHeaderCardHTML(opts){
       <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(0,0,0,.06) 0%,rgba(0,0,0,.24) 100%);pointer-events:none"></div>
       <div style="position:absolute;bottom:0;left:0;right:0;height:48px;background:linear-gradient(transparent,rgba(0,0,0,.18));pointer-events:none"></div>
       <div style="position:relative;display:flex;align-items:flex-start;gap:${isMobile?'14px':'18px'}">
-        <div style="width:calc(var(--su_univ_logo_box_detail,76px)*var(--su_univ_detail_scale,1));height:calc(var(--su_univ_logo_box_detail,76px)*var(--su_univ_detail_scale,1));flex-shrink:0;border-radius:calc(var(--su_univ_logo_radius,18px)+6px);background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.22),0 0 0 3px rgba(255,255,255,.45)">
+        <div style="width:calc(var(--su_univ_logo_box_detail,76px)*var(--su_univ_detail_scale,1));height:calc(var(--su_univ_logo_box_detail,76px)*var(--su_univ_detail_scale,1));flex-shrink:0;border-radius:calc(var(--su_univ_logo_radius,18px)+6px);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.22),0 0 0 3px rgba(255,255,255,.30)">
           ${gUI(univName,logoSizeEff)}
         </div>
         <div style="min-width:0;flex:1;padding-top:4px">

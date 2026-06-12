@@ -4396,26 +4396,21 @@ async function cfgPickColorHex(fallbackHex){
       return null; // Esc 취소
     }
   }
-  // ── 폴백 (Firefox / Safari): 시스템 컬러피커 ──
-  return new Promise(resolve=>{
-    const tmp = document.createElement('input');
-    tmp.type = 'color';
-    tmp.value = fallbackHex || '#3b82f6';
-    tmp.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;width:0;height:0;pointer-events:none';
-    document.body.appendChild(tmp);
-    let resolved = false;
-    const done = (val)=>{
-      if(resolved) return;
-      resolved = true;
-      try{ document.body.removeChild(tmp); }catch(e){}
-      resolve(val);
-    };
-    tmp.addEventListener('change', ()=> done(tmp.value), {once:true});
-    tmp.addEventListener('cancel', ()=> done(null),      {once:true});
-    // Firefox는 cancel 이벤트 없음 — blur 로 감지
-    tmp.addEventListener('blur',   ()=> setTimeout(()=> done(tmp.value || null), 200), {once:true});
-    tmp.click();
-  });
+  // ── 폴백: 클립보드에서 HEX 자동 읽기 ──
+  try{
+    const text = (await navigator.clipboard.readText()).trim();
+    const hex = cfgNormHex(text);
+    if(hex){
+      if(typeof showToast==='function') showToast('클립보드에서 색상 적용: ' + hex);
+      return hex;
+    }
+    if(typeof showToast==='function') showToast('클립보드에 HEX 색상이 없습니다. 스포이드 툴로 먼저 복사해주세요.');
+    return null;
+  }catch(e){
+    const val = prompt('HEX 색상을 입력하세요 (예: #3b82f6) — 스포이드 툴로 복사 후 붙여넣기', fallbackHex||'');
+    if(!val) return null;
+    return cfgNormHex(val.trim()) || null;
+  }
 }
 
 async function cfgUnivPickColor(i){
