@@ -193,7 +193,7 @@ window.openEP=function(name){
     <div id="ep-cycle-sec" class="ep-adv-section" style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div>
-          <div style="font-weight:900;font-size:12px;color:var(--text2)">🖼 이미지별 탭 순환 이미지 (최대 5장)</div>
+          <div style="font-weight:700;font-size:12px;color:var(--text2)">순환 이미지 (최대 5장)</div>
           <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-top:4px">이미지별 탭에서 순서대로 전환됩니다. (전환 시간은 아래에서 설정)</div>
         </div>
         <button type="button" class="btn btn-w btn-xs" data-ep-toggle="cycle" onclick="toggleEditPlayerSection('cycle', this)">${_epCycleCollapsed?'펼치기':'접기'}</button>
@@ -269,7 +269,7 @@ window.openEP=function(name){
     <div id="ep-p2-sec" class="ep-adv-section" style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div>
-          <div style="font-weight:900;font-size:12px;color:var(--text2)">🖼 프로필 사진 2 — 얼굴 위치(자르기 보정)</div>
+          <div style="font-weight:700;font-size:12px;color:var(--text2)">프로필 사진 2 — 얼굴 위치 보정</div>
           <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-top:4px">프로필 2도 필요하면 위치를 저장할 수 있습니다.</div>
         </div>
         <button type="button" class="btn btn-w btn-xs" data-ep-toggle="p2" onclick="toggleEditPlayerSection('p2', this)">${_epP2Collapsed?'펼치기':'접기'}</button>
@@ -307,7 +307,7 @@ window.openEP=function(name){
     <div id="ep-p345-sec" class="ep-adv-section" style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div>
-          <div style="font-weight:900;font-size:12px;color:var(--text2)">🖼 프로필 사진 3/4/5 — 얼굴 위치(자르기 보정)</div>
+          <div style="font-weight:700;font-size:12px;color:var(--text2)">프로필 사진 3/4/5 — 얼굴 위치 보정</div>
           <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-top:4px">프로필 3~5도 필요하면 위치를 저장할 수 있습니다.</div>
         </div>
         <button type="button" class="btn btn-w btn-xs" data-ep-toggle="p345" onclick="toggleEditPlayerSection('p345', this)">${_epP345Collapsed?'펼치기':'접기'}</button>
@@ -398,7 +398,7 @@ window.openEP=function(name){
     </div>
     <div id="ep-header-sec" class="ep-adv-section" style="margin-top:14px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <div style="font-weight:800;font-size:12px;color:var(--text2)">🖼 스트리머 상세 헤더 배경</div>
+        <div style="font-weight:700;font-size:12px;color:var(--text2)">스트리머 상세 헤더 배경</div>
         <button type="button" class="btn btn-w btn-xs" data-ep-toggle="header" onclick="toggleEditPlayerSection('header', this)">${_epHeaderCollapsed?'펼치기':'접기'}</button>
       </div>
       <div id="ep-sec-body-header" style="display:${_epHeaderCollapsed?'none':'block'};margin-top:${_epHeaderCollapsed?'0':'10px'}">
@@ -459,24 +459,24 @@ window.openEP=function(name){
       </div>
       </div>
     </div>
-    <div id="ep-card-sec" class="ep-adv-section" style="margin-top:14px;padding:12px;background:#fefce8;border:1px solid #fde68a;border-radius:8px">
+    <div id="ep-card-sec" class="ep-adv-section" style="margin-top:14px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div>
-          <div style="font-weight:800;font-size:12px;color:#92400e">🃏 개인/끝장전 카드 전용 이미지 URL</div>
-          <div style="font-size:11px;color:#78350f;line-height:1.6;margin-top:4px">비워두면 프로필 사진 1을 사용합니다. 카드형 레이아웃(개인전·끝장전·프로리그 끝장전)에만 적용됩니다.</div>
+          <div style="font-weight:700;font-size:12px;color:var(--text2)">카드 전용 이미지</div>
+          <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-top:4px">비워두면 프로필 사진 1을 사용합니다. 카드형 레이아웃(개인전·끝장전·프로리그 끝장전)에만 적용됩니다.</div>
         </div>
         <button type="button" class="btn btn-w btn-xs" data-ep-toggle="card" onclick="toggleEditPlayerSection('card', this)">${_epCardCollapsed?'펼치기':'접기'}</button>
       </div>
       <div id="ep-sec-body-card" style="display:${_epCardCollapsed?'none':'block'};margin-top:${_epCardCollapsed?'0':'8px'}">
-      <div style="margin-bottom:10px;padding:10px;background:rgba(255,255,255,.7);border:1px solid rgba(253,230,138,.85);border-radius:10px">
-        <div style="font-weight:900;font-size:12px;color:#92400e;margin-bottom:6px">얼굴 위치(자르기 보정)</div>
+      <div style="margin-bottom:10px;padding:10px;background:var(--white);border:1px solid var(--border);border-radius:10px">
+        <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px">얼굴 위치 보정</div>
         <div style="font-size:11px;color:#78350f;line-height:1.6;margin-bottom:10px">(채우기/cover 기준) 아래 미리보기에서 <b>드래그</b>하거나 X/Y로 위치를 보정할 수 있습니다.</div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:900;color:#92400e;margin:-2px 0 10px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text3);margin:-2px 0 10px">
           <input type="checkbox" id="ed-cardpos-use" ${_scUse?'checked':''} onchange="document.getElementById('ed-cardpos-prev').style.opacity=this.checked?1:.55">
           이 보정 적용
         </label>
         <input type="hidden" id="ed-cardpos-del" value="0">
-        <div id="ed-cardpos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid rgba(253,230,138,.9);background:linear-gradient(135deg, rgba(146,64,14,.20), rgba(146,64,14,.06));touch-action:none;user-select:none;opacity:${_scUse?1:.55}">
+        <div id="ed-cardpos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.20), rgba(100,116,139,.06));touch-action:none;user-select:none;opacity:${_scUse?1:.55}">
           ${p.shareCardPhoto?`<img id="ed-cardpos-img" src="${toHttpsUrl(p.shareCardPhoto).replace(/\"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${_scX}% ${_scY}%;transform:scale(1.02)" onerror="this.style.display='none'">`:''}
           <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
           <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
@@ -484,14 +484,14 @@ window.openEP=function(name){
           <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
         </div>
         <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
-          <div style="font-size:11px;font-weight:900;color:#92400e">가로(X)</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text2)">가로(X)</div>
           <input type="range" id="ed-cardpos-x" min="0" max="100" step="1" value="${_scX}" oninput="edCardPosSyncFromInputs()" style="width:100%">
-          <div id="ed-cardpos-xv" style="font-size:11px;color:#92400e;font-weight:900;text-align:right">${_scX}%</div>
+          <div id="ed-cardpos-xv" style="font-size:11px;color:var(--gray-l);font-weight:700;text-align:right">${_scX}%</div>
         </div>
         <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:8px">
-          <div style="font-size:11px;font-weight:900;color:#92400e">세로(Y)</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text2)">세로(Y)</div>
           <input type="range" id="ed-cardpos-y" min="0" max="100" step="1" value="${_scY}" oninput="edCardPosSyncFromInputs()" style="width:100%">
-          <div id="ed-cardpos-yv" style="font-size:11px;color:#92400e;font-weight:900;text-align:right">${_scY}%</div>
+          <div id="ed-cardpos-yv" style="font-size:11px;color:var(--gray-l);font-weight:700;text-align:right">${_scY}%</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
           <button type="button" class="btn btn-w btn-xs" onclick="edCardPosCenter()">센터(50/22)</button>
@@ -503,7 +503,7 @@ window.openEP=function(name){
     </div>
     <div id="ep-sharebg-sec" class="ep-adv-section" style="margin-top:14px;padding:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <div style="font-weight:800;font-size:12px;color:var(--text2)">🪪 개인 공유카드 배경</div>
+        <div style="font-weight:700;font-size:12px;color:var(--text2)">개인 공유카드 배경</div>
         <button type="button" class="btn btn-w btn-xs" data-ep-toggle="sharebg" onclick="toggleEditPlayerSection('sharebg', this)">${_epShareBgCollapsed?'펼치기':'접기'}</button>
       </div>
       <div id="ep-sec-body-sharebg" style="display:${_epShareBgCollapsed?'none':'block'};margin-top:${_epShareBgCollapsed?'0':'10px'}">
@@ -570,19 +570,19 @@ window.openEP=function(name){
       <div style="font-size:10px;color:var(--gray-l);margin-top:8px">공유카드 전용 배경입니다. 스트리머 상세 헤더 배경과 별도로 저장됩니다.</div>
       </div>
     </div>
-    <div id="ep-icon-sec" class="ep-adv-section" style="margin-top:14px;padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
-      <div style="font-weight:700;font-size:12px;color:#15803d;margin-bottom:10px">🎭 상태 아이콘</div>
+    <div id="ep-icon-sec" class="ep-adv-section" style="margin-top:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
+      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">상태 아이콘</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="ed-icon-btns">
         ${(()=>{const cur=getStatusIcon(p.name);return Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const isSelected=(id==='none'&&!cur)||(d.emoji&&cur===d.emoji);const iconHTML=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'18px'):d.emoji):'<span style="font-size:11px;font-weight:700">없음</span>';return `<button type="button" onclick="setStatusIconFromModal(this,'${p.name}','${id}')" data-icon-id="${id}" title="${d.label}" style="padding:5px 10px;border-radius:7px;border:2px solid ${isSelected?'#16a34a':'var(--border)'};background:${isSelected?'#dcfce7':'var(--white)'};cursor:pointer;min-width:38px;transition:.12s;font-family:'Noto Sans KR',sans-serif;">${iconHTML}</button>`}).join('')})()}
       </div>
       <div id="ed-icon-label" style="font-size:11px;color:var(--gray-l);margin-top:7px">선택: ${(()=>{const c=getStatusIcon(p.name);const found=Object.entries(STATUS_ICON_DEFS).find(([,d])=>d.emoji&&d.emoji===c);const expiry=playerStatusExpiry[p.name];const expTxt=expiry?` (${expiry} 만료)`:'';return (found?found[1].label:'없음')+expTxt;})()}</div>
       <div id="ed-icon-expiry-row" style="display:${getStatusIcon(p.name)?'flex':'none'};align-items:center;gap:7px;margin-top:8px">
-        <input type="checkbox" id="ed-icon-expiry" ${playerStatusExpiry[p.name]?'checked':''} onchange="onStatusExpiryChange('${p.name}')" style="width:14px;height:14px;cursor:pointer;accent-color:#16a34a">
-        <label for="ed-icon-expiry" style="font-size:11px;color:#15803d;font-weight:600;cursor:pointer;margin:0">10일 후 자동으로 없음으로 변경</label>
+        <input type="checkbox" id="ed-icon-expiry" ${playerStatusExpiry[p.name]?'checked':''} onchange="onStatusExpiryChange('${p.name}')" style="width:14px;height:14px;cursor:pointer">
+        <label for="ed-icon-expiry" style="font-size:11px;color:var(--text3);font-weight:600;cursor:pointer;margin:0">10일 후 자동으로 없음으로 변경</label>
       </div>
     </div>
     <div id="ep-score-sec" class="ep-adv-section" style="margin-top:16px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
-      <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:12px">📊 승패 직접 조정</div>
+      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:12px">승패 직접 조정</div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <div style="flex:1;min-width:100px">
           <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:4px">승 (현재: ${p.win})</div>
@@ -607,7 +607,7 @@ window.openEP=function(name){
             document.getElementById('ed-pts').value=0;
             save();render();
           }
-        ">🔄 승패 전체 초기화</button>
+        ">승패 전체 초기화</button>
         <button class="btn btn-w btn-sm" onclick="
           const p=players.find(x=>x.name===editName);
           p.win=parseInt(document.getElementById('ed-win').value)||0;
@@ -616,42 +616,39 @@ window.openEP=function(name){
           save();render();
           document.getElementById('emBody').querySelector('.apply-ok').style.display='inline-block';
           setTimeout(()=>document.getElementById('emBody').querySelector('.apply-ok').style.display='none',1500);
-        " style="border-color:var(--green);color:var(--green)">✅ 승패 적용</button>
+        " style="border-color:var(--green);color:var(--green)">승패 적용</button>
         <span class="apply-ok" style="display:none;color:var(--green);font-weight:700;font-size:12px;align-self:center">적용됨!</span>
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-top:8px">※ 승패 초기화 시 개인 경기 기록(히스토리)도 함께 삭제됩니다. 대전 기록(미니/대학대전 등)은 유지됩니다.</div>
     </div>
-    <div style="margin-top:14px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:10px">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0">
+    <div style="margin-top:14px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
+      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px">선수 상태</div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
         <input type="checkbox" id="ed-retired" ${p.retired?'checked':''} style="width:16px;height:16px;cursor:pointer">
-        🎗️ 은퇴 (현황판에서만 숨김, 경기 기록은 유지)
+        <span>은퇴 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">(현황판에서만 숨김, 경기 기록 유지)</span></span>
       </label>
-    </div>
-    <div style="margin-top:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:10px">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--border)">
         <input type="checkbox" id="ed-inactive" ${p.inactive?'checked':''} style="width:16px;height:16px;cursor:pointer">
-        ⏸️ 임시 상태 (휴학/활동중단) — 현황판에서 반투명 표시, 은퇴와 달리 숨기지 않음
+        <span>임시 상태 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">(휴학/활동중단 — 반투명 표시)</span></span>
       </label>
-    </div>
-    <div style="margin-top:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:10px">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0">
         <input type="checkbox" id="ed-hide-board" ${p.hideFromBoard?'checked':''} style="width:16px;height:16px;cursor:pointer">
-        👁️ 현황판에서 숨기기 (스탯·기록은 유지, 구현황판·신현황판 모두 적용)
+        <span>현황판에서 숨기기 <span style="font-size:11px;font-weight:400;color:var(--gray-l)">(스탯·기록 유지)</span></span>
       </label>
     </div>
     <!-- (요청사항) 크루 소속 항목 제거 -->
-    <div id="ep-memo-sec" class="ep-adv-section" style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
-      <div style="font-weight:700;font-size:12px;color:#b45309;margin-bottom:8px">📝 선수 메모</div>
-      <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:12px;border:1px solid #fde68a;border-radius:6px;padding:8px;background:#fff;resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
+    <div id="ep-memo-sec" class="ep-adv-section" style="margin-top:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
+      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px">선수 메모</div>
+      <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--white);resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
     </div>
-    <div id="ep-alias-sec" class="ep-adv-section" style="margin-top:14px;padding:14px;background:var(--white);border:1px solid var(--border);border-radius:8px;">
-      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:4px">🧩 자동인식 별명 매핑</div>
+    <div id="ep-alias-sec" class="ep-adv-section" style="margin-top:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
+      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:4px">자동인식 별명</div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">붙여넣기 자동인식에서 이 별명들이 <b>${esc(p.name)}</b>으로 자동 변환됩니다.</div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
-        <input id="ep-alias-input" type="text" placeholder="별명 입력 (예: 샤이니)" style="flex:1;min-width:120px;max-width:240px" onkeydown="if(event.key==='Enter') epAliasAdd(decodeURIComponent('${encodeURIComponent(p.name)}'))">
-        <button class="btn btn-b btn-sm" onclick="epAliasAdd(decodeURIComponent('${encodeURIComponent(p.name)}'))">+ 추가</button>
+      <div id="ep-alias-list" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input id="ep-alias-input" type="text" placeholder="별명 추가 (예: 샤이니)" style="flex:1;min-width:120px;max-width:240px" onkeydown="if(event.key==='Enter') epAliasAdd(decodeURIComponent('${encodeURIComponent(p.name)}'))">
+        <button class="btn btn-b btn-sm" onclick="epAliasAdd(decodeURIComponent('${encodeURIComponent(p.name)}'))">추가</button>
       </div>
-      <div id="ep-alias-list" style="border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:8px;min-height:40px"></div>
     </div>`;
   om('emModal');
   try{ setTimeout(()=>{ 
@@ -1761,18 +1758,33 @@ function cfgNormHex(v){
   if(/^[0-9a-fA-F]{3}$/.test(t)) return '#'+t.split('').map(ch=>ch+ch).join('').toUpperCase();
   return null;
 }
-async function cfgPickColorHex(){
-  try{
-    if(!window.EyeDropper){
-      alert('스포이드 기능은 크롬/엣지 등 일부 브라우저에서만 지원됩니다.');
-      return null;
+async function cfgPickColorHex(fallbackHex){
+  // EyeDropper: Chrome 95+, Edge 95+ 지원 / Firefox·Safari 미지원
+  if(window.EyeDropper){
+    try{
+      const ed = new EyeDropper();
+      const res = await ed.open();
+      return res && res.sRGBHex ? String(res.sRGBHex) : null;
+    }catch(e){
+      return null; // 사용자가 Esc 누름
     }
-    const ed=new EyeDropper();
-    const res=await ed.open();
-    return res && res.sRGBHex ? String(res.sRGBHex) : null;
-  }catch(e){
-    return null;
   }
+  // ── 폴백: input[type=color] 로 컬러피커 열기 ──
+  return new Promise(resolve=>{
+    const tmp = document.createElement('input');
+    tmp.type = 'color';
+    tmp.value = fallbackHex || '#3b82f6';
+    tmp.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;width:0;height:0';
+    document.body.appendChild(tmp);
+    const cleanup = ()=>{ try{ document.body.removeChild(tmp); }catch(e){} };
+    tmp.addEventListener('input', ()=>{ resolve(tmp.value); cleanup(); }, {once:true});
+    tmp.addEventListener('change', ()=>{ resolve(tmp.value); cleanup(); }, {once:true});
+    tmp.addEventListener('cancel', ()=>{ resolve(null); cleanup(); }, {once:true});
+    // 취소 감지 폴백: focus가 돌아왔는데 change 없으면 cancel
+    const onFocus = ()=>{ setTimeout(()=>{ if(document.body.contains(tmp)){ resolve(null); cleanup(); } }, 300); };
+    window.addEventListener('focus', onFocus, {once:true});
+    tmp.click();
+  });
 }
 
 function cfgUnivSetColor(i, hex){
@@ -1796,12 +1808,15 @@ function cfgUnivSetColor(i, hex){
   try{ if(typeof renderBoard==='function') renderBoard(); }catch(e){}
 }
 async function cfgUnivPickColor(i){
-  const c = await cfgPickColorHex();
+  const cur = (univCfg[i] && univCfg[i].color) || '#3b82f6';
+  const c = await cfgPickColorHex(cur);
   if(c) cfgUnivSetColor(i,c);
 }
 
 async function cfgTierThemePickColor(tier){
-  const c = await cfgPickColorHex();
+  const td = tierThemes && tierThemes[tier];
+  const cur = (td && td.color) || '#3b82f6';
+  const c = await cfgPickColorHex(cur);
   if(c) cfgTierThemeSetColor(tier,c);
 }
 

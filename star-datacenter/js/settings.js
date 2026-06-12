@@ -2166,16 +2166,16 @@ window.epRenderAliasesList = function(playerName){
   const m = _palLoad();
   const aliases = Object.keys(m).filter(k => m[k] === playerName).sort((a,b)=>a.localeCompare(b));
   if(!aliases.length){
-    box.innerHTML = '<div style="font-size:12px;color:var(--gray-l);text-align:center;padding:12px">등록된 별명 없음</div>';
+    box.innerHTML = '<span style="font-size:11px;color:var(--gray-l)">등록된 별명 없음</span>';
     return;
   }
   box.innerHTML = aliases.map(alias=>{
     const safe = alias.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const enc = encodeURIComponent(alias);
-    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-bottom:1px solid var(--border)">
-      <span style="font-family:monospace;font-size:12px;font-weight:900;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${safe}</span>
-      <button class="btn btn-r btn-xs" onclick="epAliasDel('${enc}','${encodeURIComponent(playerName)}')">삭제</button>
-    </div>`;
+    return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 10px 3px 12px;border-radius:99px;background:var(--white);border:1px solid var(--border);color:var(--text2);white-space:nowrap">
+      ${safe}
+      <button onclick="epAliasDel('${enc}','${encodeURIComponent(playerName)}')" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:none;background:var(--border);color:var(--gray-l);cursor:pointer;font-size:10px;padding:0;line-height:1;flex-shrink:0">✕</button>
+    </span>`;
   }).join('');
 };
 
@@ -4385,27 +4385,45 @@ try{ if(typeof window._dissolveIdx !== 'number') window._dissolveIdx = -1; }catc
 // ── 티어 색상/밝기/이모지 커스텀 ──
 
 // ── 색상 입력/스포이드 공용 유틸 ──
-async function cfgPickColorHex(){
-  try{
-    if(!window.EyeDropper){
-      alert('스포이드 기능은 크롬/엣지 등 일부 브라우저에서만 지원됩니다.');
-      return null;
+async function cfgPickColorHex(fallbackHex){
+  // EyeDropper: Chrome 95+, Edge 95+ 지원 / Firefox·Safari 미지원
+  if(window.EyeDropper){
+    try{
+      const ed = new EyeDropper();
+      const res = await ed.open();
+      return res && res.sRGBHex ? String(res.sRGBHex) : null;
+    }catch(e){
+      return null; // 사용자가 Esc 누름
     }
-    const ed=new EyeDropper();
-    const res=await ed.open();
-    return res && res.sRGBHex ? String(res.sRGBHex) : null;
-  }catch(e){
-    return null;
   }
+  // ── 폴백: input[type=color] 로 컬러피커 열기 ──
+  return new Promise(resolve=>{
+    const tmp = document.createElement('input');
+    tmp.type = 'color';
+    tmp.value = fallbackHex || '#3b82f6';
+    tmp.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;width:0;height:0';
+    document.body.appendChild(tmp);
+    const cleanup = ()=>{ try{ document.body.removeChild(tmp); }catch(e){} };
+    tmp.addEventListener('input', ()=>{ resolve(tmp.value); cleanup(); }, {once:true});
+    tmp.addEventListener('change', ()=>{ resolve(tmp.value); cleanup(); }, {once:true});
+    tmp.addEventListener('cancel', ()=>{ resolve(null); cleanup(); }, {once:true});
+    // 취소 감지 폴백: focus가 돌아왔는데 change 없으면 cancel
+    const onFocus = ()=>{ setTimeout(()=>{ if(document.body.contains(tmp)){ resolve(null); cleanup(); } }, 300); };
+    window.addEventListener('focus', onFocus, {once:true});
+    tmp.click();
+  });
 }
 
 async function cfgUnivPickColor(i){
-  const c = await cfgPickColorHex();
+  const cur = (univCfg[i] && univCfg[i].color) || '#3b82f6';
+  const c = await cfgPickColorHex(cur);
   if(c) cfgUnivSetColor(i,c);
 }
 
 async function cfgTierThemePickColor(tier){
-  const c = await cfgPickColorHex();
+  const td = tierThemes && tierThemes[tier];
+  const cur = (td && td.color) || '#3b82f6';
+  const c = await cfgPickColorHex(cur);
   if(c) cfgTierThemeSetColor(tier,c);
 }
 
