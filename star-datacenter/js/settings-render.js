@@ -376,7 +376,7 @@ ${_scfgD('notice','📢 공지 관리')}
           onchange="cfgUnivSetColor(${i},this.value)">
         <input id="cfg-univ-hex-${i}" type="text" value="${u.color}" placeholder="#RRGGBB" title="대학 색상 HEX 입력" style="width:96px;padding:4px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800"
           onblur="cfgUnivSetColor(${i},this.value)">
-        <button class="btn btn-w btn-xs" title="${window.EyeDropper?'스포이드로 색상 찍기':'색상 선택'}" onclick="cfgUnivPickColor(${i})">${window.EyeDropper?'🎯':'🎨'}</button>
+        <button class="btn btn-w btn-xs" title="스포이드로 색상 찍기" onclick="cfgUnivPickColor(${i})">🎯</button>
         <button class="btn btn-xs" style="background:${isHidden?'#fef2f2':'#f0fdf4'};color:${isHidden?'#dc2626':'#16a34a'};border:1px solid ${isHidden?'#fca5a5':'#86efac'};min-width:58px"
           onclick="univCfg[${i}].hidden=!univCfg[${i}].hidden;saveCfg();render()">
           ${isHidden?'👁️ 숨김':'✅ 표시'}</button>
@@ -768,7 +768,7 @@ ${_scfgD('notice','📢 공지 관리')}
               <div style="display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap">
                 <input id="cfg-tier-c-${encodeURIComponent(t)}" type="color" value="${c}" title="티어 색상" onchange="cfgTierThemeSetColor('${_jsq(t)}',this.value)">
                 <input id="cfg-tier-hex-${encodeURIComponent(t)}" type="text" value="${c}" placeholder="#RRGGBB" title="티어 색상 HEX 입력" style="width:92px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800;text-align:center" onblur="cfgTierThemeSetColor('${_jsq(t)}',this.value)">
-                <button class="btn btn-w btn-xs" title="${window.EyeDropper?'스포이드로 색상 찍기':'색상 선택'}" onclick="cfgTierThemePickColor('${_jsq(t)}')">${window.EyeDropper?'🎯':'🎨'}</button>
+                <button class="btn btn-w btn-xs" title="스포이드로 색상 찍기" onclick="cfgTierThemePickColor('${_jsq(t)}')">🎯</button>
                 <input type="text" value="${_attr(ic)}" placeholder="이모지" title="티어 이모지" style="width:64px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:13px;text-align:center" oninput="cfgTierThemeSetIcon('${_jsq(t)}',this.value)">
               </div>
               <div style="font-size:10px;color:var(--gray-l);text-align:center">${t}</div>

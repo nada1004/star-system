@@ -1759,30 +1759,34 @@ function cfgNormHex(v){
   return null;
 }
 async function cfgPickColorHex(fallbackHex){
-  // EyeDropper: Chrome 95+, Edge 95+ 지원 / Firefox·Safari 미지원
+  // ── EyeDropper (Chrome 95+ / Edge 95+): 화면 색상 직접 찍기 ──
   if(window.EyeDropper){
     try{
       const ed = new EyeDropper();
       const res = await ed.open();
-      return res && res.sRGBHex ? String(res.sRGBHex) : null;
+      return (res && res.sRGBHex) ? String(res.sRGBHex) : null;
     }catch(e){
-      return null; // 사용자가 Esc 누름
+      return null; // Esc 취소
     }
   }
-  // ── 폴백: input[type=color] 로 컬러피커 열기 ──
+  // ── 폴백 (Firefox / Safari): 시스템 컬러피커 ──
   return new Promise(resolve=>{
     const tmp = document.createElement('input');
     tmp.type = 'color';
     tmp.value = fallbackHex || '#3b82f6';
-    tmp.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;width:0;height:0';
+    tmp.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;width:0;height:0;pointer-events:none';
     document.body.appendChild(tmp);
-    const cleanup = ()=>{ try{ document.body.removeChild(tmp); }catch(e){} };
-    tmp.addEventListener('input', ()=>{ resolve(tmp.value); cleanup(); }, {once:true});
-    tmp.addEventListener('change', ()=>{ resolve(tmp.value); cleanup(); }, {once:true});
-    tmp.addEventListener('cancel', ()=>{ resolve(null); cleanup(); }, {once:true});
-    // 취소 감지 폴백: focus가 돌아왔는데 change 없으면 cancel
-    const onFocus = ()=>{ setTimeout(()=>{ if(document.body.contains(tmp)){ resolve(null); cleanup(); } }, 300); };
-    window.addEventListener('focus', onFocus, {once:true});
+    let resolved = false;
+    const done = (val)=>{
+      if(resolved) return;
+      resolved = true;
+      try{ document.body.removeChild(tmp); }catch(e){}
+      resolve(val);
+    };
+    tmp.addEventListener('change', ()=> done(tmp.value), {once:true});
+    tmp.addEventListener('cancel', ()=> done(null),      {once:true});
+    // Firefox는 cancel 이벤트 없음 — blur 로 감지
+    tmp.addEventListener('blur',   ()=> setTimeout(()=> done(tmp.value || null), 200), {once:true});
     tmp.click();
   });
 }
