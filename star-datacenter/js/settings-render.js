@@ -954,6 +954,19 @@ ${_scfgD('notice','📢 공지 관리')}
               {v:'zigzag',        l:'지그재그',  icon:'〰️', desc:'상/하단 지그재그'},
               {v:'burst',         l:'버스트',    icon:'💢', desc:'가시/스파이크 형태'},
               {v:'cloud',         l:'클라우드',  icon:'☁️', desc:'둥근 물결(구름)'},
+              // ── 스포츠 대결 전용 카드 모양 ──
+              {v:'versus-card',    l:'VS 대결',    icon:'⚔️', desc:'양측 사선 대결 컷'},
+              {v:'thunder-card',   l:'번개 카드',  icon:'⚡', desc:'번개 사선 분리형'},
+              {v:'esports-card',   l:'e스포츠',    icon:'🎮', desc:'e스포츠 경기 카드'},
+              {v:'arena-card',     l:'아레나',     icon:'🏟️', desc:'경기장 테두리 강조'},
+              {v:'crown-card',     l:'왕관 카드',  icon:'👑', desc:'상단 왕관 포인트'},
+              {v:'championship',   l:'챔피언십',   icon:'🏆', desc:'금장 챔피언십 카드'},
+              {v:'knockout',       l:'녹아웃',     icon:'🥊', desc:'격투 대결 스타일'},
+              {v:'blitz',          l:'블리츠',     icon:'⚡', desc:'스피드 블리츠 카드'},
+              {v:'rivalry',        l:'라이벌',     icon:'🔥', desc:'불꽃 라이벌 대결'},
+              {v:'champion-frame', l:'챔프 프레임',icon:'🥇', desc:'금색 챔피언 액자'},
+              {v:'playoff',        l:'플레이오프',  icon:'🎯', desc:'플레이오프 토너먼트'},
+              {v:'matchup',        l:'매치업',     icon:'🏅', desc:'정면 대결 매치업'},
             ];
             const byV = Object.create(null);
             _all.forEach(s=>{ byV[s.v]=s; });
@@ -963,6 +976,7 @@ ${_scfgD('notice','📢 공지 관리')}
               {t:'세련/모던', keys:['glass','frosted','floating','soft-round','deep']},
               {t:'포인트/효과', keys:['card3d','neon','stripe','gradient-bg','shadow-left','inset','topline','split-bg','underline']},
               {t:'귀엽/레트로', keys:['bubble','comic','retro','paper','terminal','double','bold-border','pill']},
+              {t:'⚔️ 스포츠 대결', keys:['versus-card','thunder-card','esports-card','arena-card','crown-card','championship','knockout','blitz','rivalry','champion-frame','playoff','matchup']},
               {t:'특수 실루엣', keys:['sharp','bevel','cut-corner','notch','ticket','stamp','scallop','tab','tag','ribbon','badge','hex','slant','wave','bracket','shield','bookmark','hourglass','zigzag','burst','cloud']},
             ];
 
@@ -1387,7 +1401,7 @@ ${_scfgD('notice','📢 공지 관리')}
               <option value="confetti" ${_sfxMode==='confetti'?'selected':''}>컨페티 (점 패턴)</option>
               </optgroup>
               <optgroup label="── 구조/반사 ──">
-              <option value="diamond-cut" ${_sfxMode==='diamond-cut'?'selected':''}>다이아몬드 커트</option>
+              <option value="diamond" ${_sfxMode==='diamond'?'selected':''}>다이아몬드 커트</option>
               <option value="mirror" ${_sfxMode==='mirror'?'selected':''}>미러 (좌우 반사)</option>
               </optgroup>
             </select>

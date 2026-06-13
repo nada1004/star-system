@@ -738,3 +738,159 @@ body[data-card-mode='photo']  .h2h-rec-card {
     box-shadow: 0 8px 28px rgba(0,0,0,.18) !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   ⚔️ 스포츠 대결 기록 카드 모양 (v29l)
+   ══════════════════════════════════════════════════════════ */
+
+/* VS 대결 — 양측 사선 대결 컷 */
+body.rc-shape--versus-card .rec-summary,
+body.rc-shape--versus-card .grp-match-card,
+body.rc-shape--versus-card .tc-card {
+  clip-path: polygon(0% 0%, 88% 0%, 100% 100%, 12% 100%);
+  border-radius: 0 !important;
+  overflow: hidden;
+}
+
+/* 번개 카드 — 사선 번개 분리 */
+body.rc-shape--thunder-card .rec-summary,
+body.rc-shape--thunder-card .grp-match-card,
+body.rc-shape--thunder-card .tc-card {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 50%, 55% 50%, 100% 100%, 0% 100%, 0% 50%, 45% 50%);
+  border-radius: 0 !important;
+  position: relative;
+}
+body.rc-shape--thunder-card .rec-summary::before,
+body.rc-shape--thunder-card .grp-match-card::before,
+body.rc-shape--thunder-card .tc-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, transparent 45%, rgba(250,204,21,.12) 50%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* e스포츠 — 헥사 크레스트 클립 */
+body.rc-shape--esports-card .rec-summary,
+body.rc-shape--esports-card .grp-match-card,
+body.rc-shape--esports-card .tc-card {
+  clip-path: polygon(4% 18%, 50% 0%, 96% 18%, 100% 60%, 75% 100%, 25% 100%, 0% 60%);
+  border-radius: 0 !important;
+}
+
+/* 아레나 — 경기장 둥근 테두리 강조 */
+body.rc-shape--arena-card .rec-summary,
+body.rc-shape--arena-card .grp-match-card,
+body.rc-shape--arena-card .tc-card {
+  border-radius: 24px !important;
+  border-width: 3px !important;
+  border-style: solid !important;
+  box-shadow: 0 0 0 3px rgba(var(--rec-mode-rgb, 99,102,241), .18), 0 8px 24px rgba(0,0,0,.10) !important;
+  background: linear-gradient(180deg, rgba(var(--rec-mode-rgb,99,102,241),.04) 0%, var(--white) 100%) !important;
+}
+
+/* 왕관 카드 — 상단 왕관 포인트 */
+body.rc-shape--crown-card .rec-summary,
+body.rc-shape--crown-card .grp-match-card,
+body.rc-shape--crown-card .tc-card {
+  clip-path: polygon(0% 14%, 12% 0%, 25% 10%, 38% 0%, 50% 12%, 62% 0%, 75% 10%, 88% 0%, 100% 14%, 100% 100%, 0% 100%);
+  border-radius: 0 0 14px 14px !important;
+}
+
+/* 챔피언십 — 금장 챔피언십 카드 */
+body.rc-shape--championship .rec-summary,
+body.rc-shape--championship .grp-match-card,
+body.rc-shape--championship .tc-card {
+  border-radius: 14px !important;
+  border: 2.5px solid #d97706 !important;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 40%, #fffde7 100%) !important;
+  box-shadow: 0 0 0 1px rgba(217,119,6,.15), inset 0 0 0 1px rgba(251,191,36,.30), 0 6px 20px rgba(217,119,6,.14) !important;
+}
+body.dark .rc-shape--championship .rec-summary,
+body.dark .rc-shape--championship .grp-match-card,
+body.dark .rc-shape--championship .tc-card {
+  background: linear-gradient(135deg, #1c1400 0%, #291c00 40%, #1c1400 100%) !important;
+  border-color: #b45309 !important;
+}
+
+/* 녹아웃 — 격투 대결 스타일 */
+body.rc-shape--knockout .rec-summary,
+body.rc-shape--knockout .grp-match-card,
+body.rc-shape--knockout .tc-card {
+  clip-path: polygon(0% 0%, 96% 0%, 100% 4%, 100% 96%, 96% 100%, 4% 100%, 0% 96%, 0% 4%);
+  border-radius: 0 !important;
+  border: 3px solid var(--border) !important;
+}
+
+/* 블리츠 — 스피드 대각선 카드 */
+body.rc-shape--blitz .rec-summary,
+body.rc-shape--blitz .grp-match-card,
+body.rc-shape--blitz .tc-card {
+  clip-path: polygon(0% 0%, 97% 0%, 100% 6%, 100% 100%, 3% 100%, 0% 94%);
+  border-radius: 0 !important;
+  position: relative;
+}
+body.rc-shape--blitz .rec-summary::after,
+body.rc-shape--blitz .grp-match-card::after,
+body.rc-shape--blitz .tc-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -2px; width: 4px; height: 100%;
+  background: linear-gradient(180deg, rgba(var(--rec-mode-rgb,99,102,241),.8), rgba(var(--rec-mode-rgb,99,102,241),.1));
+  pointer-events: none;
+}
+
+/* 라이벌 — 불꽃 라이벌 대결 */
+body.rc-shape--rivalry .rec-summary,
+body.rc-shape--rivalry .grp-match-card,
+body.rc-shape--rivalry .tc-card {
+  border-radius: 10px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+  position: relative;
+  box-shadow: -4px 0 0 0 #ef4444, 4px 0 0 0 #2563eb !important;
+}
+
+/* 챔프 프레임 — 금색 챔피언 액자 */
+body.rc-shape--champion-frame .rec-summary,
+body.rc-shape--champion-frame .grp-match-card,
+body.rc-shape--champion-frame .tc-card {
+  border-radius: 16px !important;
+  border: 3px solid transparent !important;
+  background-image: linear-gradient(var(--white), var(--white)), linear-gradient(135deg, #f59e0b, #fbbf24, #d97706, #fcd34d) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
+  box-shadow: 0 4px 16px rgba(217,119,6,.18), inset 0 1px 0 rgba(255,255,255,.5) !important;
+}
+body.dark .champion-frame .rec-summary,
+body.dark .champion-frame .grp-match-card,
+body.dark .champion-frame .tc-card {
+  background-image: linear-gradient(#1a1200, #1a1200), linear-gradient(135deg, #f59e0b, #fbbf24, #d97706, #fcd34d) !important;
+}
+
+/* 플레이오프 — 토너먼트 타겟 */
+body.rc-shape--playoff .rec-summary,
+body.rc-shape--playoff .grp-match-card,
+body.rc-shape--playoff .tc-card {
+  border-radius: 12px !important;
+  border: 2px solid var(--border) !important;
+  border-left: 5px solid rgba(var(--rec-mode-rgb,99,102,241),1) !important;
+  border-right: 5px solid rgba(var(--rec-mode-rgb,99,102,241),.4) !important;
+  background: linear-gradient(90deg, rgba(var(--rec-mode-rgb,99,102,241),.06) 0%, transparent 30%) !important;
+}
+
+/* 매치업 — 정면 대결 */
+body.rc-shape--matchup .rec-summary,
+body.rc-shape--matchup .grp-match-card,
+body.rc-shape--matchup .tc-card {
+  border-radius: 0 !important;
+  clip-path: polygon(0% 8%, 8% 0%, 92% 0%, 100% 8%, 100% 92%, 92% 100%, 8% 100%, 0% 92%);
+  border: none !important;
+  background: linear-gradient(135deg,
+    rgba(var(--rec-mode-rgb,59,130,246),.08) 0%,
+    var(--white) 35%,
+    var(--white) 65%,
+    rgba(var(--rec-mode-rgb,59,130,246),.08) 100%
+  ) !important;
+}

@@ -46,6 +46,18 @@
     { v:'ring-cut',  label:'도넛컷',    icon:'⭕', desc:'외곽 링 느낌',          radius:'50%',  clip:'none',                                                                                       preview:'border-radius:50%;outline:4px solid currentColor;outline-offset:-4px' },
     { v:'kite',      label:'연(연풍)',   icon:'🪁', desc:'마름모 세로',           radius:'0',    clip:'polygon(50% 0%,100% 40%,50% 100%,0% 40%)',                                                   preview:'clip-path:polygon(50% 0%,100% 40%,50% 100%,0% 40%)' },
     { v:'notch',     label:'노치',       icon:'📱', desc:'상단 노치 사각형',      radius:'8px',  clip:'polygon(25% 0%,75% 0%,75% 12%,100% 12%,100% 100%,0% 100%,0% 12%,25% 12%)',                  preview:'border-radius:8px;clip-path:polygon(25% 0%,75% 0%,75% 12%,100% 12%,100% 100%,0% 100%,0% 12%,25% 12%)' },
+    // ── 스포츠 대결 전용 모양 ──
+    { v:'thunder',   label:'번개',       icon:'⚡', desc:'번개/스포츠 대결',      radius:'0',    clip:'polygon(30% 0%,65% 0%,45% 42%,75% 42%,18% 100%,38% 55%,8% 55%)',                            preview:'clip-path:polygon(30% 0%,65% 0%,45% 42%,75% 42%,18% 100%,38% 55%,8% 55%)' },
+    { v:'versus',    label:'VS 방패',    icon:'🥊', desc:'VS 대결 방패형',        radius:'0',    clip:'polygon(0% 0%,100% 0%,100% 72%,50% 100%,0% 72%)',                                            preview:'clip-path:polygon(0% 0%,100% 0%,100% 72%,50% 100%,0% 72%)' },
+    { v:'esports',   label:'e스포츠',    icon:'🎮', desc:'e스포츠 헥사 크레스트', radius:'0',    clip:'polygon(50% 0%,96% 18%,100% 62%,75% 100%,25% 100%,0% 62%,4% 18%)',                           preview:'clip-path:polygon(50% 0%,96% 18%,100% 62%,75% 100%,25% 100%,0% 62%,4% 18%)' },
+    { v:'trophy',    label:'트로피',     icon:'🏆', desc:'트로피 실루엣',         radius:'0',    clip:'polygon(20% 0%,80% 0%,85% 30%,100% 30%,100% 45%,85% 45%,75% 68%,80% 80%,90% 85%,90% 100%,10% 100%,10% 85%,20% 80%,25% 68%,15% 45%,0% 45%,0% 30%,15% 30%)', preview:'clip-path:polygon(20% 0%,80% 0%,85% 30%,100% 30%,100% 45%,85% 45%,75% 68%,80% 80%,90% 85%,90% 100%,10% 100%,10% 85%,20% 80%,25% 68%,15% 45%,0% 45%,0% 30%,15% 30%)' },
+    { v:'crown',     label:'왕관',       icon:'👑', desc:'왕관 크라운형',         radius:'0',    clip:'polygon(0% 100%,0% 40%,25% 65%,50% 0%,75% 65%,100% 40%,100% 100%)',                          preview:'clip-path:polygon(0% 100%,0% 40%,25% 65%,50% 0%,75% 65%,100% 40%,100% 100%)' },
+    { v:'target',    label:'타겟',       icon:'🎯', desc:'과녁 원형 타겟',        radius:'50%',  clip:'none',                                                                                       preview:'border-radius:50%;outline:5px solid rgba(0,0,0,.25);outline-offset:-10px;box-shadow:inset 0 0 0 5px rgba(255,255,255,.5)' },
+    { v:'fist',      label:'주먹',       icon:'✊', desc:'주먹 대결형',           radius:'0',    clip:'polygon(15% 0%,85% 0%,100% 15%,100% 60%,85% 80%,70% 100%,30% 100%,15% 80%,0% 60%,0% 15%)',  preview:'clip-path:polygon(15% 0%,85% 0%,100% 15%,100% 60%,85% 80%,70% 100%,30% 100%,15% 80%,0% 60%,0% 15%)' },
+    { v:'arena',     label:'아레나',     icon:'🏟️', desc:'경기장 원형 배지',      radius:'50%',  clip:'polygon(50% 0%,90% 10%,100% 50%,90% 90%,50% 100%,10% 90%,0% 50%,10% 10%)',                   preview:'border-radius:50%;clip-path:polygon(50% 0%,90% 10%,100% 50%,90% 90%,50% 100%,10% 90%,0% 50%,10% 10%)' },
+    { v:'medal',     label:'메달',       icon:'🥇', desc:'리본 달린 메달형',      radius:'50%',  clip:'polygon(25% 0%,75% 0%,75% 10%,100% 32%,100% 68%,75% 90%,75% 100%,25% 100%,25% 90%,0% 68%,0% 32%,25% 10%)', preview:'border-radius:50%;clip-path:polygon(25% 0%,75% 0%,75% 10%,100% 32%,100% 68%,75% 90%,75% 100%,25% 100%,25% 90%,0% 68%,0% 32%,25% 10%)' },
+    { v:'saber',     label:'세이버',     icon:'⚔️', desc:'교차 칼날 대각선',      radius:'0',    clip:'polygon(0% 15%,15% 0%,100% 85%,85% 100%)',                                                   preview:'clip-path:polygon(0% 15%,15% 0%,100% 85%,85% 100%)' },
+    { v:'blast',     label:'블라스트',   icon:'💥', desc:'폭발 방사형',           radius:'0',    clip:'polygon(50% 0%,56% 36%,78% 10%,62% 43%,95% 34%,73% 52%,100% 65%,68% 65%,82% 95%,55% 72%,50% 100%,45% 72%,18% 95%,32% 65%,0% 65%,27% 52%,5% 34%,38% 43%,22% 10%,44% 36%)',  preview:'clip-path:polygon(50% 0%,56% 36%,78% 10%,62% 43%,95% 34%,73% 52%,100% 65%,68% 65%,82% 95%,55% 72%,50% 100%,45% 72%,18% 95%,32% 65%,0% 65%,27% 52%,5% 34%,38% 43%,22% 10%,44% 36%)' },
   ];
 
   function renderProfileShapeSection(){
@@ -60,12 +72,17 @@
     body.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:16px">
         <div>
-          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">📐 모양 (37가지)</div>
+          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">📐 모양 (51가지)</div>
+          <div style="margin-bottom:8px;padding:4px 10px;background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:8px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:900;color:#a5b4fc">⚔️ 스포츠 대결 NEW</span>
+            <span style="font-size:10px;color:#c7d2fe">번개·VS방패·e스포츠·트로피·왕관·타겟·주먹·아레나·메달·세이버·블라스트</span>
+          </div></div>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px">
             ${_SHAPE_OPTIONS.map(s=>{
               const sel = shape===s.v;
+              const isSports = ['thunder','versus','esports','trophy','crown','target','fist','arena','medal','saber','blast'].includes(s.v);
               const sampleBg = 'linear-gradient(135deg,#6366f1,#a855f7)';
-              return `<button type="button" onclick="_setGlobalProfileShape('${s.v}');try{applyProfileShapeVars();}catch(e){};try{render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};try{window.SettingsStore&&typeof window.SettingsStore.markPrefsChanged==='function'&&window.SettingsStore.markPrefsChanged();}catch(e){};try{window._renderCfgProfileShapeSection&&window._renderCfgProfileShapeSection();}catch(e){}" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 10px;border-radius:14px;border:${sel?'2.5px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 3px #2563eb22':'none'};transition:all .15s">
+              return `<button type="button" onclick="_setGlobalProfileShape('${s.v}');try{applyProfileShapeVars();}catch(e){};try{render();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};try{window.SettingsStore&&typeof window.SettingsStore.markPrefsChanged==='function'&&window.SettingsStore.markPrefsChanged();}catch(e){};try{window._renderCfgProfileShapeSection&&window._renderCfgProfileShapeSection();}catch(e){}" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 10px;border-radius:14px;border:${sel?'2.5px solid var(--blue)':isSports?'1.5px solid #7c3aed':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':isSports?'linear-gradient(135deg,#fdf4ff,#f5f3ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 3px #2563eb22':'none'};transition:all .15s">
                 <div style="width:52px;height:52px;background:${sampleBg};${s.preview};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.12)"></div>
                 <span style="font-size:12px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'}">${s.label}</span>
                 <span style="font-size:9px;color:var(--gray-l);font-weight:700;text-align:center;line-height:1.3">${s.desc}</span>

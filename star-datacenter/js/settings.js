@@ -1600,10 +1600,12 @@ window.cfgPreviewShareCardMode = window.cfgPreviewShareCardMode || function(mode
 };
 window.cfgSetShareCardOverrides = function(){
   const pairs = [
+    ['default', document.getElementById('cfg-sc-ov-def')?.value || 'inherit'],
     ['ck', document.getElementById('cfg-sc-ov-ck')?.value || 'inherit'],
     ['pro', document.getElementById('cfg-sc-ov-pro')?.value || 'inherit'],
     ['tt', document.getElementById('cfg-sc-ov-tt')?.value || 'inherit'],
     ['comp', document.getElementById('cfg-sc-ov-comp')?.value || 'inherit'],
+    ['procomp-bkt', document.getElementById('cfg-sc-ov-bkt')?.value || 'inherit'],
   ];
   pairs.forEach(([k,v])=>{
     try{
@@ -1612,10 +1614,12 @@ window.cfgSetShareCardOverrides = function(){
     }catch(e){}
   });
   const grayPairs = [
+    ['default', document.getElementById('cfg-sc-gray-def')?.value || 'inherit'],
     ['ck', document.getElementById('cfg-sc-gray-ck')?.value || 'inherit'],
     ['pro', document.getElementById('cfg-sc-gray-pro')?.value || 'inherit'],
     ['tt', document.getElementById('cfg-sc-gray-tt')?.value || 'inherit'],
     ['comp', document.getElementById('cfg-sc-gray-comp')?.value || 'inherit'],
+    ['procomp-bkt', document.getElementById('cfg-sc-gray-bkt')?.value || 'inherit'],
   ];
   grayPairs.forEach(([k,v])=>{
     try{
@@ -1624,10 +1628,12 @@ window.cfgSetShareCardOverrides = function(){
     }catch(e){}
   });
   const profilePairs = [
+    ['default', document.getElementById('cfg-sc-prof-def')?.value || 'inherit'],
     ['ck', document.getElementById('cfg-sc-prof-ck')?.value || 'inherit'],
     ['pro', document.getElementById('cfg-sc-prof-pro')?.value || 'inherit'],
     ['tt', document.getElementById('cfg-sc-prof-tt')?.value || 'inherit'],
     ['comp', document.getElementById('cfg-sc-prof-comp')?.value || 'inherit'],
+    ['procomp-bkt', document.getElementById('cfg-sc-prof-bkt')?.value || 'inherit'],
   ];
   profilePairs.forEach(([k,v])=>{
     try{
@@ -1636,10 +1642,12 @@ window.cfgSetShareCardOverrides = function(){
     }catch(e){}
   });
   const fontPairs = [
+    ['default', document.getElementById('cfg-sc-font-def')?.value || 'inherit'],
     ['ck', document.getElementById('cfg-sc-font-ck')?.value || 'inherit'],
     ['pro', document.getElementById('cfg-sc-font-pro')?.value || 'inherit'],
     ['tt', document.getElementById('cfg-sc-font-tt')?.value || 'inherit'],
     ['comp', document.getElementById('cfg-sc-font-comp')?.value || 'inherit'],
+    ['procomp-bkt', document.getElementById('cfg-sc-font-bkt')?.value || 'inherit'],
   ];
   fontPairs.forEach(([k,v])=>{
     try{

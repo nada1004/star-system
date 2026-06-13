@@ -8,10 +8,11 @@
     const scTypeKey = (() => {
       const mk = m._matchType||'';
       if(mk==='ck') return 'ck';
-      if(mk==='pro' || mk==='procomp-bkt' || mk==='procomp-team') return 'pro';
+      if(mk==='procomp-bkt') return 'procomp-bkt';
+      if(mk==='pro' || mk==='procomp-team') return 'pro';
       if(mk==='tt') return 'tt';
       if(m.n || m._subLabel || m.type==='tourney' || mk==='comp') return 'comp';
-      return '';
+      return 'default';
     })();
     const scp = getShareCardPrefs(scTypeKey);
     const isKnownUnivName = (name)=>{

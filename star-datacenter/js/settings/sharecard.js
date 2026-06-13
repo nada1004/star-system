@@ -55,22 +55,30 @@
     const _titleFont = parseInt(localStorage.getItem('su_sc_title_pct') ?? '100',10) || 100;
     const _univFont = parseInt(localStorage.getItem('su_sc_univ_pct') ?? '100',10) || 100;
     const _surface = (localStorage.getItem('su_sc_surface') ?? 'glass');
+    const _ovDef = (localStorage.getItem('su_sc_mode_default') ?? 'inherit');
     const _ovCk = (localStorage.getItem('su_sc_mode_ck') ?? 'inherit');
     const _ovPro = (localStorage.getItem('su_sc_mode_pro') ?? 'inherit');
     const _ovTt = (localStorage.getItem('su_sc_mode_tt') ?? 'inherit');
     const _ovComp = (localStorage.getItem('su_sc_mode_comp') ?? 'inherit');
+    const _ovBkt = (localStorage.getItem('su_sc_mode_procomp-bkt') ?? 'inherit');
+    const _grayDef = (localStorage.getItem('su_sc_losergray_default') ?? 'inherit');
     const _grayCk = (localStorage.getItem('su_sc_losergray_ck') ?? 'inherit');
     const _grayPro = (localStorage.getItem('su_sc_losergray_pro') ?? 'inherit');
     const _grayTt = (localStorage.getItem('su_sc_losergray_tt') ?? 'inherit');
     const _grayComp = (localStorage.getItem('su_sc_losergray_comp') ?? 'inherit');
+    const _grayBkt = (localStorage.getItem('su_sc_losergray_procomp-bkt') ?? 'inherit');
+    const _profDef = (localStorage.getItem('su_sc_profile_pct_default') ?? 'inherit');
     const _profCk = (localStorage.getItem('su_sc_profile_pct_ck') ?? 'inherit');
     const _profPro = (localStorage.getItem('su_sc_profile_pct_pro') ?? 'inherit');
     const _profTt = (localStorage.getItem('su_sc_profile_pct_tt') ?? 'inherit');
     const _profComp = (localStorage.getItem('su_sc_profile_pct_comp') ?? 'inherit');
+    const _profBkt = (localStorage.getItem('su_sc_profile_pct_procomp-bkt') ?? 'inherit');
+    const _fontDef = (localStorage.getItem('su_sc_font_pct_default') ?? 'inherit');
     const _fontCk = (localStorage.getItem('su_sc_font_pct_ck') ?? 'inherit');
     const _fontPro = (localStorage.getItem('su_sc_font_pct_pro') ?? 'inherit');
     const _fontTt = (localStorage.getItem('su_sc_font_pct_tt') ?? 'inherit');
     const _fontComp = (localStorage.getItem('su_sc_font_pct_comp') ?? 'inherit');
+    const _fontBkt = (localStorage.getItem('su_sc_font_pct_procomp-bkt') ?? 'inherit');
     return _scfgD('sharecard','🪪 공유카드 디자인') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머/대학/개인전/끝장전/대학대전/대회/티어대회 공유카드의 전역 톤과 색상 효과를 한 번에 조절합니다.</div>
     <div style="padding:12px;background:linear-gradient(135deg,var(--surface),rgba(255,255,255,.92));border:1px solid var(--border);border-radius:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-bottom:12px">
@@ -208,8 +216,23 @@
       </div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
         <div style="font-size:11px;color:var(--text3);font-weight:900">카드 타입별 개별 오버라이드</div>
-        <div style="font-size:11px;color:var(--gray-l)">전역 모드와 다르게 CK / 프로리그 / 티어대회 / 대회 카드에 별도 모드와 패자 회색 강도를 적용할 수 있습니다.</div>
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        <div style="font-size:11px;color:var(--gray-l)">전역 모드와 다르게 개인전/끝장전 · CK · 프로리그 · 티어대회 · 대회 · 프로리그 대회 카드에 별도 모드와 패자 회색 강도, 프로필/폰트 크기를 적용할 수 있습니다.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">개인전 / 끝장전</div>
+            <select id="cfg-sc-ov-def" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+              <option value="inherit" ${_ovDef==='inherit'?'selected':''}>전역 따름</option><option value="campus" ${_ovDef==='campus'?'selected':''}>캠퍼스</option><option value="vivid" ${_ovDef==='vivid'?'selected':''}>비비드</option><option value="soft" ${_ovDef==='soft'?'selected':''}>소프트</option><option value="dark" ${_ovDef==='dark'?'selected':''}>다크</option><option value="minimal" ${_ovDef==='minimal'?'selected':''}>미니멀</option><option value="aurora" ${_ovDef==='aurora'?'selected':''}>오로라</option><option value="poster" ${_ovDef==='poster'?'selected':''}>포스터</option><option value="mono" ${_ovDef==='mono'?'selected':''}>모노</option>
+            </select>
+            <select id="cfg-sc-gray-def" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
+              <option value="inherit" ${_grayDef==='inherit'?'selected':''}>패자 회색: 전역 따름</option><option value="30" ${_grayDef==='30'?'selected':''}>패자 회색 약함</option><option value="55" ${_grayDef==='55'?'selected':''}>패자 회색 보통</option><option value="75" ${_grayDef==='75'?'selected':''}>패자 회색 강함</option>
+            </select>
+            <select id="cfg-sc-prof-def" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
+              <option value="inherit" ${_profDef==='inherit'?'selected':''}>프로필 크기: 전역 따름</option><option value="90" ${_profDef==='90'?'selected':''}>프로필 작게</option><option value="100" ${_profDef==='100'?'selected':''}>프로필 보통</option><option value="120" ${_profDef==='120'?'selected':''}>프로필 크게</option>
+            </select>
+            <select id="cfg-sc-font-def" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
+              <option value="inherit" ${_fontDef==='inherit'?'selected':''}>폰트 크기: 전역 따름</option><option value="90" ${_fontDef==='90'?'selected':''}>폰트 작게</option><option value="100" ${_fontDef==='100'?'selected':''}>폰트 보통</option><option value="115" ${_fontDef==='115'?'selected':''}>폰트 크게</option>
+            </select>
+          </div>
           <div>
             <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">대학 CK</div>
             <select id="cfg-sc-ov-ck" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
@@ -268,6 +291,21 @@
             </select>
             <select id="cfg-sc-font-comp" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
               <option value="inherit" ${_fontComp==='inherit'?'selected':''}>폰트 크기: 전역 따름</option><option value="90" ${_fontComp==='90'?'selected':''}>폰트 작게</option><option value="100" ${_fontComp==='100'?'selected':''}>폰트 보통</option><option value="115" ${_fontComp==='115'?'selected':''}>폰트 크게</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">프로리그 대회</div>
+            <select id="cfg-sc-ov-bkt" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+              <option value="inherit" ${_ovBkt==='inherit'?'selected':''}>전역 따름</option><option value="campus" ${_ovBkt==='campus'?'selected':''}>캠퍼스</option><option value="vivid" ${_ovBkt==='vivid'?'selected':''}>비비드</option><option value="soft" ${_ovBkt==='soft'?'selected':''}>소프트</option><option value="dark" ${_ovBkt==='dark'?'selected':''}>다크</option><option value="minimal" ${_ovBkt==='minimal'?'selected':''}>미니멀</option><option value="aurora" ${_ovBkt==='aurora'?'selected':''}>오로라</option><option value="poster" ${_ovBkt==='poster'?'selected':''}>포스터</option><option value="mono" ${_ovBkt==='mono'?'selected':''}>모노</option>
+            </select>
+            <select id="cfg-sc-gray-bkt" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
+              <option value="inherit" ${_grayBkt==='inherit'?'selected':''}>패자 회색: 전역 따름</option><option value="30" ${_grayBkt==='30'?'selected':''}>패자 회색 약함</option><option value="55" ${_grayBkt==='55'?'selected':''}>패자 회색 보통</option><option value="75" ${_grayBkt==='75'?'selected':''}>패자 회색 강함</option>
+            </select>
+            <select id="cfg-sc-prof-bkt" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
+              <option value="inherit" ${_profBkt==='inherit'?'selected':''}>프로필 크기: 전역 따름</option><option value="90" ${_profBkt==='90'?'selected':''}>프로필 작게</option><option value="100" ${_profBkt==='100'?'selected':''}>프로필 보통</option><option value="120" ${_profBkt==='120'?'selected':''}>프로필 크게</option>
+            </select>
+            <select id="cfg-sc-font-bkt" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
+              <option value="inherit" ${_fontBkt==='inherit'?'selected':''}>폰트 크기: 전역 따름</option><option value="90" ${_fontBkt==='90'?'selected':''}>폰트 작게</option><option value="100" ${_fontBkt==='100'?'selected':''}>폰트 보통</option><option value="115" ${_fontBkt==='115'?'selected':''}>폰트 크게</option>
             </select>
           </div>
         </div>

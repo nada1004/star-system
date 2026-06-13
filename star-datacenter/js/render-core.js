@@ -171,6 +171,7 @@ window._applyScaleSettings = function(){
   try{ window.applyScoreColors && window.applyScoreColors(); }catch(e){}
   try{ window._applyTourneyCardTheme && window._applyTourneyCardTheme(); }catch(e){}
   try{ window._applyHeaderSettings && window._applyHeaderSettings(); }catch(e){}
+  try{ window.applyProfileShapeVars && window.applyProfileShapeVars(); }catch(e){}
 };
 // sw() 호출 시 다음 render에서 첫 1회 플래그 초기화 (탭 전환 시 재적용)
 window._resetScaleSettingsFlag = function(){ window.__scaleSettingsApplied = false; };

@@ -437,12 +437,8 @@ function cfgPdResetModeBadgeColors(){
 function _setGlobalProfileShape(shape){
   const _prevCfgSec = window._cfgModalSecId || '';
   try{
-    const _PROFILE_SHAPES = [
-      'circle','square','rounded','squircle','diamond','hexagon','shield',
-      'pentagon','star','blob','leaf','triangle','octagon','cross','heart',
-      'parallelogram','arrow'
-    ];
-    const v = _PROFILE_SHAPES.includes(shape) ? shape : shape || 'circle';
+    // 모든 지원 모양 (유효성 검사용 — 알 수 없는 값도 그대로 저장)
+    const v = shape || 'circle';
     localStorage.setItem('su_profile_shape', v);
     try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
   }catch(e){}

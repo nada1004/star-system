@@ -313,7 +313,7 @@
     };
     window.cfgSetRecSideFxMode = function(mode){
       var v = String(mode||'soft');
-      if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps','laser','diamond-cut','halo','confetti','circuit','ink','fire','ice','dust','ember','mirror','bars','bracket','corner','diagonal','scanline','sweep','shimmer'].indexOf(v) === -1) v = 'soft';
+      if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps','laser','diamond','halo','confetti','circuit','ink','fire','ice','dust','ember','mirror','bars','bracket','corner','diagonal','scanline','sweep','shimmer'].indexOf(v) === -1) v = 'soft';
       try{ localStorage.setItem('su_rec_side_fx_mode', v); }catch(e){}
       try{ _updateSideFxPreview(); }catch(e){}
       try{ render(); }catch(e){}
@@ -365,7 +365,7 @@
         var prev = document.getElementById('cfg-sidefx-preview');
         if(!prev) return;
         var mode = localStorage.getItem('su_rec_side_fx_mode')||'soft';
-        var allModes = ['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps'];
+        var allModes = ['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps','laser','diamond','halo','confetti','circuit','ink','fire','ice','dust','ember','mirror','bars','bracket','corner','diagonal','scanline','sweep','shimmer'];
         allModes.forEach(function(m){ prev.classList.remove('grp-sidefx--'+m); });
         prev.classList.add('grp-sidefx--'+mode);
         if(typeof _recSideFxVarStyle==='function'){
@@ -641,7 +641,7 @@
     var tabColorTail = Math.max(0, Math.min(60, parseInt(localStorage.getItem('su_tab_color_tail') || '22', 10) || 22));
     var recSideFxOn = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0';
     var recSideFxMode = String(localStorage.getItem('su_rec_side_fx_mode') || 'soft');
-    if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps'].indexOf(recSideFxMode) === -1) recSideFxMode = 'soft';
+    if(['soft','glow','panel','line','ribbon','frame','spotlight','fade','double','neon','wave','prism','vignette','pulse','sheen','aurora','slant','steps','laser','diamond','halo','confetti','circuit','ink','fire','ice','dust','ember','mirror','bars','bracket','corner','diagonal','scanline','sweep','shimmer'].indexOf(recSideFxMode) === -1) recSideFxMode = 'soft';
     var recSideFxIntensity = Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_intensity') || '68', 10) || 68));
     var recSideFxLength = Math.max(4, Math.min(80, parseInt(localStorage.getItem('su_rec_side_fx_length') || '25', 10) || 25));
     var recSideFxTail = Math.max(0, Math.min(140, parseInt(localStorage.getItem('su_rec_side_fx_tail') || '28', 10) || 28));
@@ -854,7 +854,7 @@
   window.renderCfgStreamerHeaderSection = renderStreamerHeaderSection;
 
   // ── 기록 카드 모양(shape) ──
-  var _RC_CARD_SHAPES = ['default','compact','wide','minimal','timeline','card3d','glass','sharp','bubble','neon','floating','retro','ticket','frosted','stripe','pill','bold-border','shadow-left','gradient-bg','soft-round','bevel','cut-corner','double','deep','underline','inset','paper','topline','split-bg','comic','terminal','notch','wave','tag','ribbon','badge','hex','slant','stamp','scallop','tab','bracket','shield','bookmark','hourglass','zigzag','burst','cloud'];
+  var _RC_CARD_SHAPES = ['default','compact','wide','minimal','timeline','card3d','glass','sharp','bubble','neon','floating','retro','ticket','frosted','stripe','pill','bold-border','shadow-left','gradient-bg','soft-round','bevel','cut-corner','double','deep','underline','inset','paper','topline','split-bg','comic','terminal','notch','wave','tag','ribbon','badge','hex','slant','stamp','scallop','tab','bracket','shield','bookmark','hourglass','zigzag','burst','cloud','versus-card','thunder-card','esports-card','arena-card','crown-card','championship','knockout','blitz','rivalry','champion-frame','playoff','matchup'];
   window.cfgSetRecCardShape = function(shape){
     var v = _RC_CARD_SHAPES.indexOf(String(shape)) !== -1 ? String(shape) : 'default';
     try{ localStorage.setItem('su_rc_card_shape', v); }catch(e){}
