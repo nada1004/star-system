@@ -2059,6 +2059,7 @@ function _pcBktPasteApplyLogic(savable, tn) {
   if (unmatched.length) alert(`일부 경기를 인식하지 못했습니다:\n${unmatched.join('\n')}`);
   if (!saved) return false;
   save();
+  try{ render(); }catch(e){}
   return true;
 }
 

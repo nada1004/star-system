@@ -2805,7 +2805,14 @@ function pasteApply() {
     }
 
     const ok = window._grpPasteApplyLogic(savable);
-    if (ok) _closeGrpPaste();
+    if (ok) {
+      _closeGrpPaste();
+      // pcbkt/pcbktbuild 모드는 applyLogic 내부에서 render()를 호출하지 않으므로 여기서 보장
+      const _mode = (window._grpPasteState && window._grpPasteState.mode) || '';
+      if (_mode === 'pcbkt' || _mode === 'pcbktbuild') {
+        try{ render(); }catch(e){}
+      }
+    }
     return;
   }
 
