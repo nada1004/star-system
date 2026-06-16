@@ -848,6 +848,18 @@ function changeBoardUnivColor(univName, color){
   u.color=color;
   save();render();
 }
+function setBoardMemo(univName, text){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.memo=text;
+  save();
+}
+function adjustChampionship(univName, delta){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.championships=Math.max(0,(u.championships||0)+delta);
+  save();render();
+}
 function setBoardNote(univName, text){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;
