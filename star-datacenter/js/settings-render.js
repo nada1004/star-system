@@ -180,119 +180,148 @@ function rCfg(C,T){
     {bg:'#f0fdf4',ic:'#16a34a'},{bg:'#fff7ed',ic:'#ea580c'},{bg:'#fdf4ff',ic:'#9333ea'},
     {bg:'#fefce8',ic:'#ca8a04'},{bg:'#fff1f2',ic:'#e11d48'}
   ];
-  // ── 카테고리 탭 (수평)
-  const _catTabsHtml = _cfgCats.map((c,ci)=>{
+  // ── 카테고리 탭 (수평, 고급모드용)
+  const _catTabsHtml = _cfgCats.map((c)=>{
     const on = window._cfgCat===c;
     const cj = _escJS(c);
     const icon = _cfgCatIcons[c]||'🗂️';
     const label = _catLabel(c);
     return `<button type="button" class="no-export cfg-cat-tab${on?' cfg-cat-tab-on':''}" onclick="cfgApplyCat('${cj}')" data-cfg-cat="${_escAttr(c)}"
-      style="display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;cursor:pointer;white-space:nowrap;font-size:12px;font-weight:900;border:1.5px solid ${on?'var(--blue)':'var(--border)'};background:${on?'var(--blue)':'var(--white)'};color:${on?'#fff':'var(--text2)'};transition:background .14s,border-color .14s,color .14s;flex-shrink:0">
-      <span style="font-size:14px;line-height:1">${icon}</span>${label}
+      style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;cursor:pointer;white-space:nowrap;font-size:12px;font-weight:900;border:1.5px solid ${on?'var(--blue)':'var(--border)'};background:${on?'var(--blue)':'var(--white)'};color:${on?'#fff':'var(--text2)'};transition:background .14s,border-color .14s,color .14s;flex-shrink:0">
+      <span style="font-size:13px;line-height:1">${icon}</span>${label}
     </button>`;
   }).join('');
-  // ── 핀 바 HTML
-  const _pinBarHtml = (()=>{
+  // ── 기본모드: 카테고리 카드 그리드
+  const _catCardsHtml = _cfgCats.map(c=>{
+    const on = window._cfgCat===c;
+    const cj = _escJS(c);
+    const icon = _cfgCatIcons[c]||'🗂️';
+    const label = _catLabel(c);
+    const desc = _cfgCatDesc[c]||'';
+    const secCount = (_catSecs[c]||[]).length;
+    return `<button type="button" class="no-export" onclick="cfgApplyCat('${cj}');window.cfgSetBottomSectionsOpen&&window.cfgSetBottomSectionsOpen(true);" data-cfg-cat="${_escAttr(c)}"
+      style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:12px 13px;border-radius:14px;cursor:pointer;text-align:left;border:2px solid ${on?'var(--blue)':'var(--border)'};background:${on?'linear-gradient(135deg,#eff6ff,#f0f9ff)':'var(--white)'};transition:all .15s">
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+        <span style="font-size:20px;line-height:1">${icon}</span>
+        <span style="font-size:10px;font-weight:700;color:${on?'var(--blue)':'var(--gray-l)'};background:${on?'#dbeafe':'var(--surface)'};border-radius:99px;padding:2px 7px">${secCount}개</span>
+      </div>
+      <span style="font-size:12px;font-weight:900;color:${on?'var(--blue)':'var(--text2)'};line-height:1.2">${label}</span>
+      <span style="font-size:10px;color:var(--gray-l);font-weight:700;line-height:1.35;word-break:keep-all">${desc}</span>
+    </button>`;
+  }).join('');
+  // ── 즐겨찾기(핀) 버튼
+  const _cfgPinsHtml = (()=>{
     const pins = _cfgPins.filter(id=>_cfgSecTitle[id]);
-    const unpinnableIds = _quickBtns.filter(x=>!_cfgPins.includes(x.id)).slice(0,3).map(x=>x.id);
-    const pinsHtml = pins.map(id=>{
+    if(!pins.length) return '';
+    return pins.map(id=>{
       const title = (_cfgSecTitle[id]||id).replace(/^[^\s]+\s*/,'');
       const icon = (_cfgSecTitle[id]||'').match(/^([^\s]+)/)?.[1]||'⚙️';
       return `<button type="button" class="no-export" onclick="cfgGo('${id}')"
-        style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;border:1.5px solid var(--blue);background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:900;white-space:nowrap;cursor:pointer;flex-shrink:0;transition:background .12s">
-        ${icon} ${_escHTML(title)}
-        <span onclick="event.stopPropagation();(function(){const p=JSON.parse(localStorage.getItem('su_cfg_pins')||'[]');const i=p.indexOf('${id}');if(i>-1)p.splice(i,1);localStorage.setItem('su_cfg_pins',JSON.stringify(p));try{render();}catch(e){}})();" style="margin-left:2px;opacity:.55;font-size:10px;cursor:pointer;line-height:1" title="핀 해제">✕</span>
+        style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px 5px 8px;border-radius:20px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:900;white-space:nowrap;cursor:pointer;flex-shrink:0">
+        <span style="font-size:13px;line-height:1">${icon}</span>${_escHTML(title)}
+        <span onclick="event.stopPropagation();(function(){const p=JSON.parse(localStorage.getItem('su_cfg_pins')||'[]');const i=p.indexOf('${id}');if(i>-1)p.splice(i,1);localStorage.setItem('su_cfg_pins',JSON.stringify(p));try{render();}catch(e){}})();"
+          style="margin-left:1px;opacity:.5;font-size:10px;cursor:pointer;line-height:1;padding:0 1px" title="핀 해제">✕</span>
       </button>`;
     }).join('');
-    return pinsHtml;
   })();
-  // ── 퀵버튼 목록 (기본/고급)
-  const _showQuickBtns = _cfgViewMode==='basic' ? _quickBtns : _quickBtns;
-  const _quickBtnsHtml = _showQuickBtns.map((x,qi)=>{
+  // ── 퀵버튼 (고급모드 전용, 핀 토글 포함)
+  const _quickBtnsHtml = _quickBtns.map((x,qi)=>{
     const col = _qBtnColors[qi % _qBtnColors.length];
     const isPinned = _cfgPins.includes(x.id);
-    return `<button type="button" class="btn no-export cfg-quick-card" onclick="cfgGo('${x.id}')"
-      style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:12px;text-align:left;background:var(--white);border:1px solid var(--border);cursor:pointer;transition:background .12s,border-color .12s;position:relative">
-      <span style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:${col.bg};font-size:15px;flex-shrink:0">${x.icon}</span>
-      <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
-        <span style="font-size:12px;font-weight:900;color:var(--text2);line-height:1.2">${x.title}</span>
-        <span style="font-size:10px;color:var(--gray-l);font-weight:700;line-height:1.3">${x.desc}</span>
+    return `<button type="button" class="btn no-export" onclick="cfgGo('${x.id}')"
+      style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:11px;text-align:left;background:var(--white);border:1px solid var(--border);cursor:pointer;position:relative;min-width:0">
+      <span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:${col.bg};font-size:14px;flex-shrink:0">${x.icon}</span>
+      <span style="display:flex;flex-direction:column;gap:1px;min-width:0;flex:1">
+        <span style="font-size:11px;font-weight:900;color:var(--text2);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x.title}</span>
+        <span style="font-size:10px;color:var(--gray-l);font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x.desc}</span>
       </span>
       <button type="button" onclick="event.stopPropagation();(function(){const p=JSON.parse(localStorage.getItem('su_cfg_pins')||JSON.stringify(['univ','pd','matchdetail','profileshape']));const i=p.indexOf('${x.id}');if(i>-1)p.splice(i,1);else p.unshift('${x.id}');localStorage.setItem('su_cfg_pins',JSON.stringify(p));try{render();}catch(e){}})();"
-        style="position:absolute;top:5px;right:6px;background:none;border:none;cursor:pointer;font-size:11px;opacity:${isPinned?'0.9':'0.25'};padding:0;line-height:1;transition:opacity .12s" title="${isPinned?'핀 해제':'즐겨찾기 고정'}">📌</button>
+        style="background:none;border:none;cursor:pointer;font-size:12px;opacity:${isPinned?'1':'0.2'};padding:0;line-height:1;flex-shrink:0" title="${isPinned?'핀 해제':'즐겨찾기 고정'}">📌</button>
     </button>`;
   }).join('');
-  // ── 고급모드 카테고리 섹션 버튼
+  // ── 고급모드 섹션 버튼
   const _secButtonsHtml = _curSecs.map(id=>{
     const title = _cfgSecTitle[id]||id;
-    const desc = (window._cfgSecDescMap||{})[id]||'세부 설정 열기';
+    const desc = (window._cfgSecDescMap||{})[id]||'';
     const icon = String(title).match(/^([^\s]+)/)?.[0]||'⚙️';
     const label = title.replace(/^[^\s]+\s*/,'');
     return `<button type="button" class="btn btn-w no-export" onclick="cfgGo('${id}')"
       style="display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:12px;text-align:left;background:var(--white);border:1px solid var(--border)">
-      <span style="font-size:16px;line-height:1;flex-shrink:0">${icon}</span>
+      <span style="font-size:15px;line-height:1;flex-shrink:0">${icon}</span>
       <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
         <span style="font-size:12px;font-weight:900;color:var(--text2);line-height:1.2">${_escHTML(label)}</span>
-        <span style="font-size:10px;color:var(--gray-l);font-weight:700;line-height:1.3">${_escHTML(desc)}</span>
+        ${desc?`<span style="font-size:10px;color:var(--gray-l);font-weight:700;line-height:1.3">${_escHTML(desc)}</span>`:''}
       </span>
     </button>`;
   }).join('');
 
   let h=`<div class="no-export cfg-topbar" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:0;margin-bottom:0;border-bottom:1px solid var(--border)">
-    <!-- ① 상단바: 검색 + 세그먼트 + 등록버튼 -->
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 2px 7px;flex-wrap:nowrap">
+    <!-- ① 스티키 헤더: 검색 + 기본/고급 토글 -->
+    <div style="display:flex;align-items:center;gap:7px;padding:7px 2px;flex-wrap:nowrap">
       <div style="position:relative;flex:1;min-width:0">
-        <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none;opacity:.45">🔎</span>
+        <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none;opacity:.4">🔎</span>
         <input id="cfgSearchInp" placeholder="설정 검색..." value="${esc(String(window._cfgSearchQ||''))}"
           style="width:100%;padding:6px 10px 6px 28px;border:1.5px solid var(--border2);border-radius:20px;font-size:12px;font-weight:700;background:var(--surface);box-sizing:border-box"
           oninput="cfgSearchSettings(this.value)">
         <div id="cfgSearchSug" class="cfg-search-sug" style="display:none"></div>
       </div>
       <span id="cfgSearchCnt" style="font-size:10px;color:var(--gray-l);font-weight:900;white-space:nowrap;flex-shrink:0"></span>
-      <!-- 세그먼트 컨트롤 -->
       <div style="display:flex;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:2px;flex-shrink:0;gap:1px">
         <button class="btn btn-xs no-export" onclick="cfgSetViewMode('basic')"
-          style="border-radius:7px;padding:4px 11px;font-size:11px;font-weight:900;transition:background .14s,color .14s;${_cfgViewMode==='basic'?'background:var(--blue);color:#fff;border-color:transparent;box-shadow:0 1px 4px rgba(37,99,235,.3)':'background:transparent;color:var(--text3);border-color:transparent'}">기본</button>
+          style="border-radius:7px;padding:4px 10px;font-size:11px;font-weight:900;${_cfgViewMode==='basic'?'background:var(--blue);color:#fff;border-color:transparent':'background:transparent;color:var(--text3);border-color:transparent'}">기본</button>
         <button class="btn btn-xs no-export" onclick="cfgSetViewMode('advanced')"
-          style="border-radius:7px;padding:4px 11px;font-size:11px;font-weight:900;transition:background .14s,color .14s;${_cfgViewMode==='advanced'?'background:var(--blue);color:#fff;border-color:transparent;box-shadow:0 1px 4px rgba(37,99,235,.3)':'background:transparent;color:var(--text3);border-color:transparent'}">고급</button>
+          style="border-radius:7px;padding:4px 10px;font-size:11px;font-weight:900;${_cfgViewMode==='advanced'?'background:var(--blue);color:#fff;border-color:transparent':'background:transparent;color:var(--text3);border-color:transparent'}">고급</button>
       </div>
       ${_cfgViewMode==='advanced' ? _menuBtn : ''}
       ${_regBtn}
     </div>
-    <!-- ② 즐겨찾기(핀) 바 -->
-    ${_pinBarHtml ? `<div style="display:flex;align-items:center;gap:6px;padding:0 2px 7px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;min-width:0">
-      <span style="font-size:10px;font-weight:900;color:var(--gray-l);white-space:nowrap;flex-shrink:0">📌</span>
-      ${_pinBarHtml}
-    </div>` : ''}
-    <!-- ③ 카테고리 수평 탭 (고급 모드에서만 표시) -->
-    ${_cfgViewMode==='advanced' ? `<div style="display:flex;gap:5px;padding:0 2px 8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;min-width:0">
+    ${_cfgViewMode==='advanced' ? `<!-- 고급모드: 카테고리 탭 수평 스크롤 -->
+    <div style="display:flex;gap:5px;padding:0 2px 7px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;min-width:0">
       ${_catTabsHtml}
     </div>` : ''}
   </div>
-  <!-- ④ 퀵 바로가기 그리드 -->
-  <div class="no-export" style="margin:10px 0 10px">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:7px;flex-wrap:wrap">
-      <div style="font-size:11px;font-weight:900;color:var(--text2)">⚡ 빠른 이동 <span style="font-size:10px;font-weight:700;color:var(--gray-l)">(📌 눌러서 즐겨찾기 고정)</span></div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap">
-        <button class="btn btn-w btn-xs" onclick="window.cfgFocusSearch&&window.cfgFocusSearch()">🔎 검색</button>
-        <button class="btn btn-w btn-xs" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()">📦 접기</button>
-        <button class="btn btn-w btn-xs" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()">${_cfgBottomOpen?'▲ 설정 접기':'▼ 설정 펼치기'}</button>
+
+  ${_cfgViewMode==='basic' ? `<!-- ② 기본모드: 카테고리 카드 그리드 + 즐겨찾기 -->
+  <div class="no-export" style="margin:10px 0 6px">
+    ${_cfgPinsHtml ? `<div style="margin-bottom:10px">
+      <div style="font-size:10px;font-weight:900;color:var(--gray-l);margin-bottom:5px">📌 즐겨찾기</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">${_cfgPinsHtml}</div>
+    </div>` : ''}
+    <div style="font-size:10px;font-weight:900;color:var(--gray-l);margin-bottom:6px">🗂️ 카테고리 선택</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:7px;margin-bottom:10px">
+      ${_catCardsHtml}
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap">
+      <button class="btn btn-w btn-xs" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()">${_cfgBottomOpen?'▲ 설정 접기':'▼ 설정 펼치기'}</button>
+      <button class="btn btn-w btn-xs" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()">📦 접기</button>
+      <button class="btn btn-w btn-xs" onclick="window.cfgFocusSearch&&window.cfgFocusSearch()">🔎 검색</button>
+    </div>
+  </div>` : `<!-- ② 고급모드: 퀵버튼 그리드 + 섹션 버튼 -->
+  <div class="no-export" style="margin:8px 0 6px">
+    ${_cfgPinsHtml ? `<div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;flex-wrap:wrap">
+      <span style="font-size:10px;font-weight:900;color:var(--gray-l);flex-shrink:0">📌</span>
+      ${_cfgPinsHtml}
+    </div>` : ''}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+      <div style="font-size:10px;font-weight:900;color:var(--gray-l)">⚡ 빠른 이동 <span style="opacity:.65">(📌 고정)</span></div>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-w btn-xs" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()">${_cfgBottomOpen?'▲ 접기':'▼ 펼치기'}</button>
+        <button class="btn btn-w btn-xs" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()">📦</button>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:5px;margin-bottom:10px">
       ${_quickBtnsHtml}
     </div>
-  </div>
-  <!-- ⑤ 고급 모드: 현재 카테고리 섹션 버튼 -->
-  ${_cfgViewMode==='advanced' ? `<div class="no-export" style="margin:0 0 10px;padding:10px;border:1px solid var(--border);border-radius:14px;background:var(--surface)">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-      <div style="font-size:12px;font-weight:900;color:var(--text2)">📚 <span data-cfg-cur-cat-label="1">${_catLabel(window._cfgCat)}</span> 전체 메뉴</div>
-      <button class="btn btn-w btn-xs" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()">화면 정리</button>
+    <div style="padding:10px;border:1px solid var(--border);border-radius:14px;background:var(--surface)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+        <div style="font-size:11px;font-weight:900;color:var(--text2)">📚 <span data-cfg-cur-cat-label="1">${_catLabel(window._cfgCat)}</span></div>
+        <button class="btn btn-w btn-xs" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()">화면 정리</button>
+      </div>
+      <div data-cfg-cur-sec-buttons="1" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px">
+        ${_secButtonsHtml}
+      </div>
     </div>
-    <div data-cfg-cur-sec-buttons="1" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px">
-      ${_secButtonsHtml}
-    </div>
-  </div>` : ''}
+  </div>`}
 ${_scfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
     <div id="notice-list-area" style="margin-bottom:16px">

@@ -836,6 +836,18 @@ function setBoardMemo2(univName, text){
   u.memo2=text;
   save();
 }
+function toggleBoardHide(univName){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.hidden=!u.hidden;
+  save();render();
+}
+function changeBoardUnivColor(univName, color){
+  const u=univCfg.find(x=>x.name===univName);
+  if(!u||!isLoggedIn)return;
+  u.color=color;
+  save();render();
+}
 function setBoardNote(univName, text){
   const u=univCfg.find(x=>x.name===univName);
   if(!u||!isLoggedIn)return;

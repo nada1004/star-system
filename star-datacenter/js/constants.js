@@ -375,7 +375,9 @@ function applyProfileShapeVars(){
       'ring-cut':'50%', kite:'0', notch:'8px',
       // ── 스포츠 대결 ──
       thunder:'0', versus:'0', esports:'0', trophy:'0', crown:'0',
-      target:'50%', fist:'0', arena:'50%', medal:'50%', saber:'0', blast:'0'
+      target:'50%', fist:'0', arena:'50%', medal:'50%', saber:'0', blast:'0',
+      // ── 추가 모양 ──
+      puzzle:'8px', 'ribbon-banner':'0', envelope:'4px', spark:'0', 'tag-corner':'0', 'wave-bottom':'0 0 50% 50% / 0 0 30% 30%'
     };
     const radius = _shapeRadius[shape] || '50%';
     document.documentElement.style.setProperty('--su_profile_radius', radius);
@@ -413,7 +415,13 @@ function applyProfileShapeVars(){
       arena:'polygon(50% 0%,90% 10%,100% 50%,90% 90%,50% 100%,10% 90%,0% 50%,10% 10%)',
       medal:'polygon(25% 0%,75% 0%,75% 10%,100% 32%,100% 68%,75% 90%,75% 100%,25% 100%,25% 90%,0% 68%,0% 32%,25% 10%)',
       saber:'polygon(0% 15%,15% 0%,100% 85%,85% 100%)',
-      blast:'polygon(50% 0%,56% 36%,78% 10%,62% 43%,95% 34%,73% 52%,100% 65%,68% 65%,82% 95%,55% 72%,50% 100%,45% 72%,18% 95%,32% 65%,0% 65%,27% 52%,5% 34%,38% 43%,22% 10%,44% 36%)'
+      blast:'polygon(50% 0%,56% 36%,78% 10%,62% 43%,95% 34%,73% 52%,100% 65%,68% 65%,82% 95%,55% 72%,50% 100%,45% 72%,18% 95%,32% 65%,0% 65%,27% 52%,5% 34%,38% 43%,22% 10%,44% 36%)',
+      // ── 추가 모양 ──
+      puzzle:'polygon(0% 0%,40% 0%,40% 10%,60% 10%,60% 0%,100% 0%,100% 40%,90% 40%,90% 60%,100% 60%,100% 100%,60% 100%,60% 90%,40% 90%,40% 100%,0% 100%,0% 60%,10% 60%,10% 40%,0% 40%)',
+      'ribbon-banner':'polygon(0% 0%,100% 0%,100% 80%,75% 80%,75% 100%,50% 80%,25% 100%,25% 80%,0% 80%)',
+      envelope:'polygon(0% 15%,50% 0%,100% 15%,100% 100%,0% 100%)',
+      spark:'polygon(50% 0%,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0% 50%,40% 40%)',
+      'tag-corner':'polygon(8% 0%,92% 0%,100% 8%,100% 92%,92% 100%,8% 100%,0% 92%,0% 8%)'
     };
     const clipPath = _shapeClip[shape] || 'none';
     document.documentElement.style.setProperty('--su_profile_clip', clipPath);
