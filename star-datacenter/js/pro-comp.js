@@ -3577,10 +3577,12 @@ ${m.a} vs ${m.b}`); return false; }
   rounds.forEach((rnd, ri) => rnd.forEach((m, mi) => {
     if (!m.a || !m.b || m.a==='TBD' || m.b==='TBD') return;
     const key = `${ri}-${mi}`;
-    if (!playerMap[m.a]) playerMap[m.a] = [];
-    if (!playerMap[m.b]) playerMap[m.b] = [];
-    playerMap[m.a].push({ri, mi, side:'A', key});
-    playerMap[m.b].push({ri, mi, side:'B', key});
+    // m.a/m.b가 별명일 수 있으므로 실제이름(resolveAlias)도 같이 인덱싱
+    const rA = resolveAlias(m.a), rB = resolveAlias(m.b);
+    const keysA = [...new Set([m.a, rA].filter(Boolean))];
+    const keysB = [...new Set([m.b, rB].filter(Boolean))];
+    keysA.forEach(k => { if (!playerMap[k]) playerMap[k] = []; playerMap[k].push({ri, mi, side:'A', key}); });
+    keysB.forEach(k => { if (!playerMap[k]) playerMap[k] = []; playerMap[k].push({ri, mi, side:'B', key}); });
   }));
 
   // Group parsed results by match key
@@ -3598,7 +3600,8 @@ ${m.a} vs ${m.b}`); return false; }
       const m = rounds[e.ri]?.[e.mi];
       if (!m) continue;
       const other = e.side==='A' ? m.b : m.a;
-      if (other === ln) { found = e; break; }
+      // other도 별명일 수 있으므로 resolveAlias 후 비교
+      if (other === ln || resolveAlias(other) === ln) { found = e; break; }
     }
     if (!found) { unmatched.push(`${wn} vs ${ln}`); continue; }
     const key = found.key;
@@ -4387,10 +4390,23 @@ function proCompSaveBktBatch(tnId) {
 ').map(l=>l.trim()).filter(Boolean);
   let applied = 0;
 
-  lines.forEach(line => {
+  // 별명 매핑
+  const _batchAliasMap = (()=>{ try{ return JSON.parse(localStorage.getItem('su_player_alias_map')||'{}')||{}; }catch(e){ return {}; } })();
+  const _batchNfc = (s)=> (s&&s.normalize) ? s.normalize('NFC') : String(s||'');
+  const _batchNormKey = (s)=> _batchNfc(String(s||'')).replace(/\s+/g,'').toLowerCase();
+  const _batchResolveAlias = (name0)=>{
+    const name = String(name0||'').trim().replace(/\s*[TZPNtzpn]$/,'').trim();
+    if(!name) return '';
+    if(_batchAliasMap && (name in _batchAliasMap)) return String(_batchAliasMap[name]||'') || name;
+    const nk = _batchNormKey(name);
+    for(const k in (_batchAliasMap||{})){ if(_batchNormKey(k)===nk) return String(_batchAliasMap[k]||'') || name; }
+    return name;
+  };
+
+    lines.forEach(line => {
     const parts = line.split(/[\s	]+/);
     if (parts.length < 2) return;
-    const p1 = parts[0], p2 = parts[1], map = parts[2] || '';
+    const p1 = _batchResolveAlias(parts[0]), p2 = _batchResolveAlias(parts[1]), map = parts[2] || '';
 
     // 대진표 전체를 돌며 매칭되는 경기 찾기
     let found = false;
@@ -4399,9 +4415,10 @@ function proCompSaveBktBatch(tnId) {
         const m = tn.bracket[ri][mi];
         if (!m.a || !m.b || m.a==='TBD' || m.b==='TBD') continue;
 
+        const rA = _batchResolveAlias(m.a), rB = _batchResolveAlias(m.b);
         let winner = '';
-        if (m.a===p1 && m.b===p2) winner = 'A';
-        else if (m.a===p2 && m.b===p1) winner = 'B';
+        if ((m.a===p1||rA===p1) && (m.b===p2||rB===p2)) winner = 'A';
+        else if ((m.a===p2||rA===p2) && (m.b===p1||rB===p1)) winner = 'B';
         if (!winner) {
           const pa = players.find(x=>x.name===m.a)||null;
           const pb = players.find(x=>x.name===m.b)||null;

@@ -13278,3 +13278,237 @@ body.team-chip--wave .grp-team-chip::after {
   }
 }
 /* ===== [BUG-FIX #1] END ===== */
+
+/* ===== 설정탭 UI 개선 ===== */
+
+/* 설정탭 전체 배경 */
+.cfg-tab-wrap {
+  background: var(--bg);
+}
+
+/* ── 상단 검색/툴바 ── */
+.cfg-topbar {
+  background: var(--white) !important;
+  border-bottom: 1.5px solid var(--border) !important;
+  padding: 8px 0 0 !important;
+  margin-bottom: 14px !important;
+  border-radius: 0;
+  box-shadow: 0 2px 10px rgba(15,23,42,.04);
+}
+
+/* 검색 인풋 */
+#cfgSearchInp {
+  background: var(--surface);
+  border: 1.5px solid var(--border) !important;
+  border-radius: 20px !important;
+  padding: 8px 16px !important;
+  font-size: 12.5px !important;
+  font-weight: 700;
+  transition: border-color .18s, box-shadow .18s;
+  outline: none;
+}
+#cfgSearchInp:focus {
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.10) !important;
+  background: var(--white);
+}
+
+/* 초보/고급 토글 */
+.cfg-topbar-inner [style*="display:flex;gap:2px;background:var(--surface)"] {
+  border-radius: 12px !important;
+  border: 1.5px solid var(--border) !important;
+  padding: 3px !important;
+  background: var(--surface) !important;
+}
+
+/* ── 퀵메뉴 카드 (빠른 이동) ── */
+.no-export[onclick^="cfgGo"],
+button[onclick^="cfgGo"] {
+  border-radius: 16px !important;
+  border: 1.5px solid var(--border) !important;
+  transition: transform .15s, box-shadow .15s, border-color .18s !important;
+  box-shadow: 0 1px 4px rgba(15,23,42,.05) !important;
+}
+button[onclick^="cfgGo"]:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(37,99,235,.10) !important;
+  border-color: var(--blue-ll) !important;
+  background: var(--blue-l) !important;
+}
+
+/* ── 카테고리 카드 ── */
+.cfg-cat-card {
+  border-radius: 18px !important;
+  transition: transform .16s cubic-bezier(.34,1.28,.64,1), box-shadow .16s, border-color .16s !important;
+}
+.cfg-cat-card:not([style*="linear-gradient"]):hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 10px 24px rgba(37,99,235,.13) !important;
+  border-color: var(--blue-ll) !important;
+}
+.cfg-cat-card[style*="linear-gradient"] {
+  box-shadow: 0 8px 24px rgba(37,99,235,.28) !important;
+  transform: translateY(-1px);
+}
+
+/* ── 세부 설정 섹션 (ssec summary) ── */
+details.ssec > summary.cfg-sec-summary {
+  border-radius: 14px !important;
+  border: 1.5px solid var(--border) !important;
+  padding: 13px 16px !important;
+  transition: background .14s, border-color .14s, box-shadow .14s, transform .1s !important;
+}
+details.ssec > summary.cfg-sec-summary:hover {
+  background: var(--blue-l) !important;
+  border-color: var(--blue-ll) !important;
+  box-shadow: 0 4px 16px rgba(37,99,235,.10) !important;
+}
+details.ssec[open] > summary.cfg-sec-summary {
+  border-radius: 14px 14px 0 0 !important;
+  border-bottom-color: var(--blue-ll) !important;
+  background: var(--blue-l) !important;
+  border-color: var(--blue-ll) !important;
+}
+
+/* ── ssec 내용 영역 ── */
+details.ssec > div {
+  border: 1.5px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+  background: var(--white);
+  padding: 16px;
+}
+
+/* ── 하단 세부설정 토글 배너 ── */
+.no-export[style*="dashed"][style*="border-radius:16px"] {
+  border-radius: 16px !important;
+  border: 1.5px dashed var(--border2) !important;
+  background: var(--surface) !important;
+  transition: background .15s;
+}
+.no-export[style*="dashed"][style*="border-radius:16px"]:hover {
+  background: var(--white) !important;
+}
+
+/* ── 섹션 구분 카드 (panel 스타일) ── */
+.no-export[style*="border:1px solid var(--border);border-radius:16px"],
+.no-export[style*="border-radius:16px"][style*="linear-gradient"] {
+  border-radius: 18px !important;
+  overflow: hidden;
+}
+
+/* ── 세부메뉴 버튼 (현재 카테고리 메뉴) ── */
+div[data-cfg-cur-sec-buttons] button,
+[data-cfg-cur-sec-buttons] button {
+  border-radius: 14px !important;
+  transition: transform .14s, box-shadow .14s, border-color .14s !important;
+}
+[data-cfg-cur-sec-buttons] button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 14px rgba(37,99,235,.09) !important;
+  border-color: var(--blue-ll) !important;
+  background: var(--blue-l) !important;
+}
+
+/* ── 스트리머 등록 / 메뉴정리 버튼 강조 ── */
+button[onclick="openB2PlayerCreateModal()"] {
+  background: var(--blue) !important;
+  color: #fff !important;
+  border-radius: 20px !important;
+  border-color: transparent !important;
+  box-shadow: 0 3px 10px rgba(37,99,235,.25) !important;
+  transition: box-shadow .15s, transform .12s !important;
+}
+button[onclick="openB2PlayerCreateModal()"]:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(37,99,235,.32) !important;
+}
+
+/* ── 설정 검색 드롭다운 ── */
+.cfg-search-sug {
+  border-radius: 14px !important;
+  border: 1.5px solid var(--border) !important;
+  box-shadow: 0 12px 32px rgba(15,23,42,.12) !important;
+  overflow: hidden;
+}
+.cfg-search-item {
+  padding: 9px 14px !important;
+  border-radius: 0 !important;
+  font-size: 12.5px !important;
+  transition: background .1s !important;
+}
+.cfg-search-item:first-child { border-radius: 14px 14px 0 0 !important; }
+.cfg-search-item:last-child  { border-radius: 0 0 14px 14px !important; }
+
+/* ── 모바일 개선 ── */
+@media (max-width: 768px) {
+  .cfg-topbar {
+    padding: 6px 0 0 !important;
+    margin-bottom: 10px !important;
+  }
+  .cfg-cat-card {
+    min-height: 72px !important;
+    padding: 10px !important;
+  }
+  button[onclick^="cfgGo"] {
+    min-height: 76px !important;
+  }
+  details.ssec > summary.cfg-sec-summary {
+    padding: 11px 13px !important;
+  }
+}
+
+/* ===== 설정탭 UI 개선 끝 ===== */
+
+/* ===== v29m: 설정탭 전면 리디자인 ===== */
+
+/* 카테고리 수평 탭 */
+.cfg-cat-tab { transition: background .14s, border-color .14s, color .14s; }
+.cfg-cat-tab:not(.cfg-cat-tab-on):hover {
+  background: var(--surface) !important;
+  border-color: var(--border2) !important;
+}
+
+/* 퀵버튼 카드 hover */
+.cfg-quick-card:hover {
+  background: var(--surface) !important;
+  border-color: var(--border2) !important;
+}
+
+/* 핀 버튼 hover */
+.cfg-quick-card button[title*="고정"]:hover,
+.cfg-quick-card button[title*="해제"]:hover { opacity: 0.9 !important; }
+
+/* 핀 바 스크롤 숨김 */
+.cfg-topbar div[style*="overflow-x:auto"]::-webkit-scrollbar { display: none; }
+
+/* 카테고리 탭 스크롤 숨김 */
+.cfg-topbar div[style*="gap:5px"][style*="overflow-x:auto"]::-webkit-scrollbar { display: none; }
+
+/* 섹션 summary 헤더 — 아이콘 박스 스타일 강화 */
+details.ssec > summary.cfg-sec-summary h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 모바일: 퀵버튼 2열 고정 */
+@media (max-width: 480px) {
+  div[style*="minmax(150px,1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .cfg-topbar div[style*="flex-wrap:nowrap"] {
+    flex-wrap: wrap !important;
+  }
+}
+
+/* design-v2 모드 호환 */
+body.design-v2 .cfg-cat-tab {
+  border-radius: 12px !important;
+  font-size: 12px !important;
+}
+body.design-v2 .cfg-cat-tab-on {
+  background: var(--blue) !important;
+  color: #fff !important;
+}
+/* ===== v29m 설정탭 리디자인 끝 ===== */

@@ -3121,7 +3121,7 @@ window.cfgApplyBottomSectionsVisibility = function(){
     // 버튼 텍스트 업데이트
     try{
       const btn = document.querySelector('[onclick*="cfgToggleBottomSections"]');
-      if(btn) btn.textContent = open ? '🧩 세부 설정 접기 ▲' : '🧩 세부 설정 펼치기 ▼';
+      if(btn) btn.textContent = open ? '▲ 설정 접기' : '▼ 설정 펼치기';
     }catch(e){}
   }catch(e){}
 };
