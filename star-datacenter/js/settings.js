@@ -1655,6 +1655,20 @@ window.cfgSetShareCardOverrides = function(){
       else localStorage.setItem(`su_sc_font_pct_${k}`, String(Math.max(85,Math.min(135,parseInt(v,10)||100))));
     }catch(e){}
   });
+  const shapePairs = [
+    ['default', document.getElementById('cfg-sc-shape-def')?.value || 'inherit'],
+    ['ck', document.getElementById('cfg-sc-shape-ck')?.value || 'inherit'],
+    ['pro', document.getElementById('cfg-sc-shape-pro')?.value || 'inherit'],
+    ['tt', document.getElementById('cfg-sc-shape-tt')?.value || 'inherit'],
+    ['comp', document.getElementById('cfg-sc-shape-comp')?.value || 'inherit'],
+    ['procomp-bkt', document.getElementById('cfg-sc-shape-bkt')?.value || 'inherit'],
+  ];
+  shapePairs.forEach(([k,v])=>{
+    try{
+      if(v==='inherit') localStorage.removeItem(`su_sc_cardshape_${k}`);
+      else localStorage.setItem(`su_sc_cardshape_${k}`, ['rounded','sharp','soft','ribbon','tag','ticket'].includes(v)?v:'rounded');
+    }catch(e){}
+  });
   try{ if(typeof render === 'function') render(); }catch(e){}
 };
 

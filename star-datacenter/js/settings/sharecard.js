@@ -1,6 +1,43 @@
 (function(){
   window.SettingsModules = window.SettingsModules || {};
 
+  window._renderCardShapePicker = function(opts){
+    const { idPrefix, current, onChangeFn, compact, allowInherit } = opts || {};
+    const list = (typeof window._shareCardShapeOptions !== 'undefined') ? window._shareCardShapeOptions : [
+      { v:'rounded', label:'기본 라운드', desc:'표준 둥근 모서리' },
+      { v:'sharp',   label:'샤프 엣지',   desc:'각진 모서리' },
+      { v:'soft',    label:'더 둥글게',   desc:'더 부드러운 모서리' },
+      { v:'ribbon',  label:'리본컷',      desc:'우측 상단 비스듬히 컷' },
+      { v:'tag',     label:'태그컷',      desc:'좌측 상단 비스듬히 컷' },
+      { v:'ticket',  label:'티켓 노치',   desc:'좌우 중앙 둥근 홈' }
+    ];
+    const fullList = allowInherit ? [{ v:'inherit', label:'전역 따름', desc:'전역 카드 모양 설정을 그대로 사용' }, ...list] : list;
+    const cur = current || (allowInherit?'inherit':'rounded');
+    const previewMap = {
+      inherit:'border-radius:24%;opacity:.35',
+      rounded:'border-radius:24%',
+      sharp:'border-radius:4%',
+      soft:'border-radius:42%',
+      ribbon:'border-radius:24%;clip-path:polygon(0% 0%,80% 0%,100% 18%,100% 100%,0% 100%)',
+      tag:'border-radius:18%;clip-path:polygon(0% 28%,28% 0%,100% 0%,100% 100%,0% 100%)',
+      ticket:'border-radius:24%;clip-path:polygon(0% 0%,100% 0%,100% 42%,88% 50%,100% 58%,100% 100%,0% 100%,0% 58%,12% 50%,0% 42%)'
+    };
+    const sz = compact ? 30 : 44;
+    const pad = compact ? '8px 6px' : '10px 8px';
+    const fsLabel = compact ? '10px' : '11px';
+    const cols = allowInherit ? (compact?7:4) : (compact?6:3);
+    return `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:${compact?'4px':'8px'}">
+      ${fullList.map(s=>{
+        const sel = cur===s.v;
+        return `<button type="button" title="${s.desc||''}" onclick="document.getElementById('${idPrefix}').value='${s.v}';${onChangeFn}()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:${pad};border-radius:10px;border:${sel?'2px solid var(--blue)':'1px solid var(--border2)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer">
+          <div style="width:${sz}px;height:${sz}px;background:linear-gradient(135deg,#6366f1,#a855f7);${previewMap[s.v]||previewMap.rounded};flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.12)"></div>
+          ${compact?'':`<span style="font-size:${fsLabel};font-weight:900;color:${sel?'var(--blue)':'var(--text2)'}">${s.label}</span>`}
+        </button>`;
+      }).join('')}
+    </div>
+    <select id="${idPrefix}" style="display:none">${fullList.map(s=>`<option value="${s.v}" ${cur===s.v?'selected':''}>${s.label}</option>`).join('')}</select>`;
+  };
+
   window.cfgSetShareCardSettings = function(){
     const mode = (document.getElementById('cfg-sc-mode')?.value || 'campus').trim();
     const color = parseInt(document.getElementById('cfg-sc-color')?.value||'72',10);
@@ -17,6 +54,7 @@
     const logoLayout = (document.getElementById('cfg-sc-logo-layout')?.value || 'stack').trim();
     const logoSize = parseInt(document.getElementById('cfg-sc-logo-size')?.value||'100',10);
     const logoFit = (document.getElementById('cfg-sc-logo-fit')?.value || 'contain').trim();
+    const cardShape = (document.getElementById('cfg-sc-cardshape')?.value || 'rounded').trim();
     try{ localStorage.setItem('su_sc_mode', ['campus','vivid','soft','dark','minimal','aurora','poster','mono'].includes(mode)?mode:'campus'); }catch(e){}
     try{ localStorage.setItem('su_sc_color', String(Math.max(20,Math.min(100,color)))); }catch(e){}
     try{ localStorage.setItem('su_sc_fx', String(Math.max(0,Math.min(100,fx)))); }catch(e){}
@@ -32,6 +70,7 @@
     try{ localStorage.setItem('su_sc_logo_layout', ['stack','inline','badge','cover'].includes(logoLayout)?logoLayout:'stack'); }catch(e){}
     try{ localStorage.setItem('su_sc_logo_size', String(Math.max(70,Math.min(150,logoSize)))); }catch(e){}
     try{ localStorage.setItem('su_sc_logo_fit', ['contain','cover','fill','zoom'].includes(logoFit)?logoFit:'contain'); }catch(e){}
+    try{ localStorage.setItem('su_sc_cardshape', ['rounded','sharp','soft','ribbon','tag','ticket'].includes(cardShape)?cardShape:'rounded'); }catch(e){}
     try{ if(typeof render === 'function') render(); }catch(e){}
     try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
   };
@@ -55,6 +94,13 @@
     const _titleFont = parseInt(localStorage.getItem('su_sc_title_pct') ?? '100',10) || 100;
     const _univFont = parseInt(localStorage.getItem('su_sc_univ_pct') ?? '100',10) || 100;
     const _surface = (localStorage.getItem('su_sc_surface') ?? 'glass');
+    const _cardShape = (localStorage.getItem('su_sc_cardshape') ?? 'rounded');
+    const _shapeDef = (localStorage.getItem('su_sc_cardshape_default') ?? 'inherit');
+    const _shapeCk = (localStorage.getItem('su_sc_cardshape_ck') ?? 'inherit');
+    const _shapePro = (localStorage.getItem('su_sc_cardshape_pro') ?? 'inherit');
+    const _shapeTt = (localStorage.getItem('su_sc_cardshape_tt') ?? 'inherit');
+    const _shapeComp = (localStorage.getItem('su_sc_cardshape_comp') ?? 'inherit');
+    const _shapeBkt = (localStorage.getItem('su_sc_cardshape_procomp-bkt') ?? 'inherit');
     const _ovDef = (localStorage.getItem('su_sc_mode_default') ?? 'inherit');
     const _ovCk = (localStorage.getItem('su_sc_mode_ck') ?? 'inherit');
     const _ovPro = (localStorage.getItem('su_sc_mode_pro') ?? 'inherit');
@@ -137,6 +183,14 @@
           <option value="solid" ${_surface==='solid'?'selected':''}>솔리드</option>
         </select>
       </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양 <span style="color:var(--gray-l);font-weight:600">— 공유카드 바깥 테두리 형태</span></div>
+        ${window._renderCardShapePicker({idPrefix:'cfg-sc-cardshape', current:_cardShape, onChangeFn:'cfgSetShareCardSettings', compact:false, allowInherit:false})}
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+          <div id="cfg-sc-cardshape-preview" style="width:120px;height:72px;flex-shrink:0;${(()=>{const sh=(typeof window._shareCardShapeStyle==='function')?window._shareCardShapeStyle(_cardShape):{radius:'24px',clip:'none'};return `border-radius:${sh.radius};${sh.clip!=='none'?`clip-path:${sh.clip};`:''}`;})()}background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 52%,#7c3aed 100%);box-shadow:0 8px 18px rgba(15,23,42,.22)"></div>
+          <div style="font-size:10px;color:var(--gray-l)">실제 공유카드 헤더 모서리가 이렇게 깎입니다. (장식·라벨 위치는 자동으로 안쪽으로 보정됩니다)</div>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
           <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">대학색 강조 강도</div>
@@ -215,11 +269,15 @@
         </div>
       </div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:10px">
-        <div style="font-size:11px;color:var(--text3);font-weight:900">카드 타입별 개별 오버라이드</div>
-        <div style="font-size:11px;color:var(--gray-l)">전역 모드와 다르게 개인전/끝장전 · CK · 프로리그 · 티어대회 · 대회 · 프로리그 대회 카드에 별도 모드와 패자 회색 강도, 프로필/폰트 크기를 적용할 수 있습니다.</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <div style="font-size:11px;color:var(--text3);font-weight:900">카드 타입별 개별 오버라이드</div>
+          <button type="button" class="btn btn-xs btn-w" onclick="document.querySelectorAll('.sc-ov-type').forEach(d=>d.open=!d.open)">전체 펼치기/접기</button>
+        </div>
+        <div style="font-size:11px;color:var(--gray-l)">전역 설정과 다르게 개인전/끝장전 · CK · 프로리그 · 티어대회 · 대회 · 프로리그 대회 카드에 별도 모드, 패자 회색 강도, 프로필/폰트 크기, 카드 모양(라운드/샤프/리본컷/태그컷/티켓노치)을 적용할 수 있습니다.</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">개인전 / 끝장전</div>
+          <details class="sc-ov-type" style="border:1px solid var(--border2);border-radius:10px;background:var(--white)">
+            <summary style="cursor:pointer;padding:8px 10px;font-size:11px;font-weight:800;color:var(--text3);list-style:none">개인전 / 끝장전</summary>
+            <div style="padding:0 10px 10px">
             <select id="cfg-sc-ov-def" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
               <option value="inherit" ${_ovDef==='inherit'?'selected':''}>전역 따름</option><option value="campus" ${_ovDef==='campus'?'selected':''}>캠퍼스</option><option value="vivid" ${_ovDef==='vivid'?'selected':''}>비비드</option><option value="soft" ${_ovDef==='soft'?'selected':''}>소프트</option><option value="dark" ${_ovDef==='dark'?'selected':''}>다크</option><option value="minimal" ${_ovDef==='minimal'?'selected':''}>미니멀</option><option value="aurora" ${_ovDef==='aurora'?'selected':''}>오로라</option><option value="poster" ${_ovDef==='poster'?'selected':''}>포스터</option><option value="mono" ${_ovDef==='mono'?'selected':''}>모노</option>
             </select>
@@ -232,9 +290,12 @@
             <select id="cfg-sc-font-def" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
               <option value="inherit" ${_fontDef==='inherit'?'selected':''}>폰트 크기: 전역 따름</option><option value="90" ${_fontDef==='90'?'selected':''}>폰트 작게</option><option value="100" ${_fontDef==='100'?'selected':''}>폰트 보통</option><option value="115" ${_fontDef==='115'?'selected':''}>폰트 크게</option>
             </select>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">대학 CK</div>
+            <div style="margin-top:6px">${window._renderCardShapePicker({idPrefix:'cfg-sc-shape-def', current:_shapeDef, onChangeFn:'cfgSetShareCardOverrides', compact:true, allowInherit:true})}</div>
+            </div>
+          </details>
+          <details class="sc-ov-type" style="border:1px solid var(--border2);border-radius:10px;background:var(--white)">
+            <summary style="cursor:pointer;padding:8px 10px;font-size:11px;font-weight:800;color:var(--text3);list-style:none">대학 CK</summary>
+            <div style="padding:0 10px 10px">
             <select id="cfg-sc-ov-ck" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
               <option value="inherit" ${_ovCk==='inherit'?'selected':''}>전역 따름</option><option value="campus" ${_ovCk==='campus'?'selected':''}>캠퍼스</option><option value="vivid" ${_ovCk==='vivid'?'selected':''}>비비드</option><option value="soft" ${_ovCk==='soft'?'selected':''}>소프트</option><option value="dark" ${_ovCk==='dark'?'selected':''}>다크</option><option value="minimal" ${_ovCk==='minimal'?'selected':''}>미니멀</option><option value="aurora" ${_ovCk==='aurora'?'selected':''}>오로라</option><option value="poster" ${_ovCk==='poster'?'selected':''}>포스터</option><option value="mono" ${_ovCk==='mono'?'selected':''}>모노</option>
             </select>
@@ -247,9 +308,12 @@
             <select id="cfg-sc-font-ck" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
               <option value="inherit" ${_fontCk==='inherit'?'selected':''}>폰트 크기: 전역 따름</option><option value="90" ${_fontCk==='90'?'selected':''}>폰트 작게</option><option value="100" ${_fontCk==='100'?'selected':''}>폰트 보통</option><option value="115" ${_fontCk==='115'?'selected':''}>폰트 크게</option>
             </select>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">프로리그</div>
+            <div style="margin-top:6px">${window._renderCardShapePicker({idPrefix:'cfg-sc-shape-ck', current:_shapeCk, onChangeFn:'cfgSetShareCardOverrides', compact:true, allowInherit:true})}</div>
+            </div>
+          </details>
+          <details class="sc-ov-type" style="border:1px solid var(--border2);border-radius:10px;background:var(--white)">
+            <summary style="cursor:pointer;padding:8px 10px;font-size:11px;font-weight:800;color:var(--text3);list-style:none">프로리그</summary>
+            <div style="padding:0 10px 10px">
             <select id="cfg-sc-ov-pro" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
               <option value="inherit" ${_ovPro==='inherit'?'selected':''}>전역 따름</option><option value="campus" ${_ovPro==='campus'?'selected':''}>캠퍼스</option><option value="vivid" ${_ovPro==='vivid'?'selected':''}>비비드</option><option value="soft" ${_ovPro==='soft'?'selected':''}>소프트</option><option value="dark" ${_ovPro==='dark'?'selected':''}>다크</option><option value="minimal" ${_ovPro==='minimal'?'selected':''}>미니멀</option><option value="aurora" ${_ovPro==='aurora'?'selected':''}>오로라</option><option value="poster" ${_ovPro==='poster'?'selected':''}>포스터</option><option value="mono" ${_ovPro==='mono'?'selected':''}>모노</option>
             </select>
@@ -262,9 +326,12 @@
             <select id="cfg-sc-font-pro" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
               <option value="inherit" ${_fontPro==='inherit'?'selected':''}>폰트 크기: 전역 따름</option><option value="90" ${_fontPro==='90'?'selected':''}>폰트 작게</option><option value="100" ${_fontPro==='100'?'selected':''}>폰트 보통</option><option value="115" ${_fontPro==='115'?'selected':''}>폰트 크게</option>
             </select>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">티어대회</div>
+            <div style="margin-top:6px">${window._renderCardShapePicker({idPrefix:'cfg-sc-shape-pro', current:_shapePro, onChangeFn:'cfgSetShareCardOverrides', compact:true, allowInherit:true})}</div>
+            </div>
+          </details>
+          <details class="sc-ov-type" style="border:1px solid var(--border2);border-radius:10px;background:var(--white)">
+            <summary style="cursor:pointer;padding:8px 10px;font-size:11px;font-weight:800;color:var(--text3);list-style:none">티어대회</summary>
+            <div style="padding:0 10px 10px">
             <select id="cfg-sc-ov-tt" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
               <option value="inherit" ${_ovTt==='inherit'?'selected':''}>전역 따름</option><option value="campus" ${_ovTt==='campus'?'selected':''}>캠퍼스</option><option value="vivid" ${_ovTt==='vivid'?'selected':''}>비비드</option><option value="soft" ${_ovTt==='soft'?'selected':''}>소프트</option><option value="dark" ${_ovTt==='dark'?'selected':''}>다크</option><option value="minimal" ${_ovTt==='minimal'?'selected':''}>미니멀</option><option value="aurora" ${_ovTt==='aurora'?'selected':''}>오로라</option><option value="poster" ${_ovTt==='poster'?'selected':''}>포스터</option><option value="mono" ${_ovTt==='mono'?'selected':''}>모노</option>
             </select>
@@ -277,9 +344,12 @@
             <select id="cfg-sc-font-tt" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
               <option value="inherit" ${_fontTt==='inherit'?'selected':''}>폰트 크기: 전역 따름</option><option value="90" ${_fontTt==='90'?'selected':''}>폰트 작게</option><option value="100" ${_fontTt==='100'?'selected':''}>폰트 보통</option><option value="115" ${_fontTt==='115'?'selected':''}>폰트 크게</option>
             </select>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">대회/토너먼트</div>
+            <div style="margin-top:6px">${window._renderCardShapePicker({idPrefix:'cfg-sc-shape-tt', current:_shapeTt, onChangeFn:'cfgSetShareCardOverrides', compact:true, allowInherit:true})}</div>
+            </div>
+          </details>
+          <details class="sc-ov-type" style="border:1px solid var(--border2);border-radius:10px;background:var(--white)">
+            <summary style="cursor:pointer;padding:8px 10px;font-size:11px;font-weight:800;color:var(--text3);list-style:none">대회/토너먼트</summary>
+            <div style="padding:0 10px 10px">
             <select id="cfg-sc-ov-comp" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
               <option value="inherit" ${_ovComp==='inherit'?'selected':''}>전역 따름</option><option value="campus" ${_ovComp==='campus'?'selected':''}>캠퍼스</option><option value="vivid" ${_ovComp==='vivid'?'selected':''}>비비드</option><option value="soft" ${_ovComp==='soft'?'selected':''}>소프트</option><option value="dark" ${_ovComp==='dark'?'selected':''}>다크</option><option value="minimal" ${_ovComp==='minimal'?'selected':''}>미니멀</option><option value="aurora" ${_ovComp==='aurora'?'selected':''}>오로라</option><option value="poster" ${_ovComp==='poster'?'selected':''}>포스터</option><option value="mono" ${_ovComp==='mono'?'selected':''}>모노</option>
             </select>
@@ -292,9 +362,12 @@
             <select id="cfg-sc-font-comp" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
               <option value="inherit" ${_fontComp==='inherit'?'selected':''}>폰트 크기: 전역 따름</option><option value="90" ${_fontComp==='90'?'selected':''}>폰트 작게</option><option value="100" ${_fontComp==='100'?'selected':''}>폰트 보통</option><option value="115" ${_fontComp==='115'?'selected':''}>폰트 크게</option>
             </select>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">프로리그 대회</div>
+            <div style="margin-top:6px">${window._renderCardShapePicker({idPrefix:'cfg-sc-shape-comp', current:_shapeComp, onChangeFn:'cfgSetShareCardOverrides', compact:true, allowInherit:true})}</div>
+            </div>
+          </details>
+          <details class="sc-ov-type" style="border:1px solid var(--border2);border-radius:10px;background:var(--white)">
+            <summary style="cursor:pointer;padding:8px 10px;font-size:11px;font-weight:800;color:var(--text3);list-style:none">프로리그 대회</summary>
+            <div style="padding:0 10px 10px">
             <select id="cfg-sc-ov-bkt" onchange="cfgSetShareCardOverrides()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
               <option value="inherit" ${_ovBkt==='inherit'?'selected':''}>전역 따름</option><option value="campus" ${_ovBkt==='campus'?'selected':''}>캠퍼스</option><option value="vivid" ${_ovBkt==='vivid'?'selected':''}>비비드</option><option value="soft" ${_ovBkt==='soft'?'selected':''}>소프트</option><option value="dark" ${_ovBkt==='dark'?'selected':''}>다크</option><option value="minimal" ${_ovBkt==='minimal'?'selected':''}>미니멀</option><option value="aurora" ${_ovBkt==='aurora'?'selected':''}>오로라</option><option value="poster" ${_ovBkt==='poster'?'selected':''}>포스터</option><option value="mono" ${_ovBkt==='mono'?'selected':''}>모노</option>
             </select>
@@ -307,7 +380,9 @@
             <select id="cfg-sc-font-bkt" onchange="cfgSetShareCardOverrides()" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800">
               <option value="inherit" ${_fontBkt==='inherit'?'selected':''}>폰트 크기: 전역 따름</option><option value="90" ${_fontBkt==='90'?'selected':''}>폰트 작게</option><option value="100" ${_fontBkt==='100'?'selected':''}>폰트 보통</option><option value="115" ${_fontBkt==='115'?'selected':''}>폰트 크게</option>
             </select>
-          </div>
+            <div style="margin-top:6px">${window._renderCardShapePicker({idPrefix:'cfg-sc-shape-bkt', current:_shapeBkt, onChangeFn:'cfgSetShareCardOverrides', compact:true, allowInherit:true})}</div>
+            </div>
+          </details>
         </div>
       </div>
     </div>

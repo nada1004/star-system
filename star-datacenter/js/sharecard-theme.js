@@ -15,6 +15,27 @@
     return '#'+m.map(v=>v.toString(16).padStart(2,'0')).join('');
   };
 
+  window._shareCardShapeStyle = window._shareCardShapeStyle || function(key){
+    const map = {
+      rounded:{radius:'24px', clip:'none', headerInsetPct:0},
+      sharp:{radius:'6px', clip:'none', headerInsetPct:0},
+      soft:{radius:'36px', clip:'none', headerInsetPct:0},
+      ribbon:{radius:'24px', clip:'polygon(0% 0%,92% 0%,100% 9%,100% 100%,0% 100%)', headerInsetPct:.09},
+      tag:{radius:'18px', clip:'polygon(0% 14%,14% 0%,100% 0%,100% 100%,0% 100%)', headerInsetPct:.14},
+      ticket:{radius:'24px', clip:'polygon(0% 0%,100% 0%,100% 47%,97% 50%,100% 53%,100% 100%,0% 100%,0% 53%,3% 50%,0% 47%)', headerInsetPct:0}
+    };
+    return map[key] || map.rounded;
+  };
+
+  window._shareCardShapeOptions = window._shareCardShapeOptions || [
+    { v:'rounded', label:'기본 라운드', desc:'표준 둥근 모서리(24px)' },
+    { v:'sharp',   label:'샤프 엣지',   desc:'각진 모서리(6px)로 딱딱한 느낌' },
+    { v:'soft',    label:'더 둥글게',   desc:'더 부드러운 둥근 모서리(36px)' },
+    { v:'ribbon',  label:'리본컷',      desc:'우측 상단을 비스듬히 깎은 리본 형태' },
+    { v:'tag',     label:'태그컷',      desc:'좌측 상단을 비스듬히 깎은 태그 형태' },
+    { v:'ticket',  label:'티켓 노치',   desc:'좌우 중앙에 티켓처럼 둥근 홈' }
+  ];
+
   window._getShareCardPrefs = window._getShareCardPrefs || function(typeKey){
     const t=String(typeKey||'').trim();
     const ov = t ? (localStorage.getItem(`su_sc_mode_${t}`)||'').trim() : '';
@@ -41,7 +62,9 @@
     const logoSizeSrc=((t ? localStorage.getItem(`su_sc_logo_size_${t}`) : null) ?? localStorage.getItem('su_sc_logo_size') ?? '100');
     const logoSize=clamp(parseInt(logoSizeSrc,10)||100,70,150)/100;
     const logoFit=((t ? localStorage.getItem(`su_sc_logo_fit_${t}`) : null) ?? localStorage.getItem('su_sc_logo_fit') ?? 'contain').trim();
-    return { mode: ov||mode, color, fx, winbg, loserGray, profileScale, fontScale, heroBrightness, loserPhotoBrightness, titleScale, univScale, surface, logoLayout, logoSize, logoFit };
+    const cardShapeSrc=((t ? localStorage.getItem(`su_sc_cardshape_${t}`) : null) ?? localStorage.getItem('su_sc_cardshape') ?? 'rounded').trim();
+    const cardShape = ['rounded','sharp','soft','ribbon','tag','ticket'].includes(cardShapeSrc) ? cardShapeSrc : 'rounded';
+    return { mode: ov||mode, color, fx, winbg, loserGray, profileScale, fontScale, heroBrightness, loserPhotoBrightness, titleScale, univScale, surface, logoLayout, logoSize, logoFit, cardShape };
   };
 
   window._makeShareCardTheme = window._makeShareCardTheme || function(hex, opts){

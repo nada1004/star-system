@@ -2,13 +2,16 @@
   function buildShareMatchPersonalShell(args){
     const {
       variant, theme, headerMatchBg, winnerColor, scMixHex, personalMetaBar,
-      aWin, bWin, personalPosterSide, summaryHTML, setsHTML
+      aWin, bWin, personalPosterSide, summaryHTML, setsHTML, scp
     } = args || {};
     const surfaceBg='linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05))';
-    return `<div class="share-shell share-shell--match share-shell--personal" style="background:${variant.outerBg};color:${theme.text};min-width:340px;width:100%;border-radius:24px;overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 24px 52px rgba(15,23,42,.18)">
-      <div class="share-personal-header" style="background:${headerMatchBg};padding:18px;position:relative;overflow:hidden">
-        <div style="position:absolute;top:-28px;right:-10px;width:180px;height:180px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#ffffff',.72)}22;filter:blur(2px);pointer-events:none"></div>
-        <div style="position:absolute;bottom:-46px;left:-12px;width:150px;height:150px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#0f172a',.40)}1f;filter:blur(2px);pointer-events:none"></div>
+    const shape = (typeof window._shareCardShapeStyle==='function') ? window._shareCardShapeStyle(scp&&scp.cardShape) : {radius:'24px',clip:'none',headerInsetPct:0};
+    const hiPct = shape.headerInsetPct||0;
+    const hiCss = hiPct>0 ? `calc(100% * ${hiPct})` : '0px';
+    return `<div class="share-shell share-shell--match share-shell--personal" style="background:${variant.outerBg};color:${theme.text};min-width:340px;width:100%;border-radius:${shape.radius};${shape.clip!=='none'?`clip-path:${shape.clip};`:''}overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 24px 52px rgba(15,23,42,.18)">
+      <div class="share-personal-header" style="background:${headerMatchBg};padding:18px;padding-top:calc(18px + ${hiCss});position:relative;overflow:hidden">
+        <div style="position:absolute;top:calc(-28px + ${hiCss});right:calc(-10px + ${hiCss});width:180px;height:180px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#ffffff',.72)}22;filter:blur(2px);pointer-events:none"></div>
+        <div style="position:absolute;bottom:-46px;left:calc(-12px + ${hiCss});width:150px;height:150px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#0f172a',.40)}1f;filter:blur(2px);pointer-events:none"></div>
         <div style="position:absolute;inset:0;background:
           radial-gradient(120px 60px at 18% 20%, rgba(255,255,255,.14), transparent 60%),
           radial-gradient(140px 70px at 82% 15%, rgba(255,255,255,.10), transparent 62%);
@@ -35,20 +38,23 @@
     const {
       m, variant, theme, headerMatchBg, winnerColor, scMixHex, teamMode,
       scoreInlineHTML, teamHeaderHTML, heroSideBlock, centerVersusHTML,
-      summaryHTML, teamRosterHTML, setsHTML
+      summaryHTML, teamRosterHTML, setsHTML, scp
     } = args || {};
     const typeLbl = {mini:'⚔️ 미니대전',univm:'🏫 대학대전',pro:'🏆 프로리그',tt:'🎯 티어대회',ck:'🤝 대학CK','procomp-team':'🤝 팀전','procomp-bkt':'🗂️ 토너먼트'}[m?m._matchType:''] || '';
     const lbl = typeLbl || ((m&&m.n)?`🎖️ ${m.n}`:'');
     const fullLbl = lbl ? `${lbl}${m&&m._subLabel?` · ${m._subLabel}`:''}` : ((m&&m._subLabel)||'');
-    return `<div class="share-shell share-shell--match" style="background:${variant.outerBg};color:${theme.text};min-width:340px;width:100%;border-radius:24px;overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 24px 52px rgba(15,23,42,.18)">
-      <div style="background:${headerMatchBg};padding:18px;position:relative;overflow:hidden">
-        <div style="position:absolute;top:-28px;right:-10px;width:180px;height:180px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#ffffff',.72)}22;filter:blur(2px);pointer-events:none"></div>
-        <div style="position:absolute;bottom:-46px;left:-12px;width:150px;height:150px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#0f172a',.40)}1f;filter:blur(2px);pointer-events:none"></div>
+    const shape = (typeof window._shareCardShapeStyle==='function') ? window._shareCardShapeStyle(scp&&scp.cardShape) : {radius:'24px',clip:'none',headerInsetPct:0};
+    const hiPct = shape.headerInsetPct||0;
+    const hiCss = hiPct>0 ? `calc(100% * ${hiPct})` : '0px';
+    return `<div class="share-shell share-shell--match" style="background:${variant.outerBg};color:${theme.text};min-width:340px;width:100%;border-radius:${shape.radius};${shape.clip!=='none'?`clip-path:${shape.clip};`:''}overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 24px 52px rgba(15,23,42,.18)">
+      <div style="background:${headerMatchBg};padding:18px;padding-top:calc(18px + ${hiCss});position:relative;overflow:hidden">
+        <div style="position:absolute;top:calc(-28px + ${hiCss});right:calc(-10px + ${hiCss});width:180px;height:180px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#ffffff',.72)}22;filter:blur(2px);pointer-events:none"></div>
+        <div style="position:absolute;bottom:-46px;left:calc(-12px + ${hiCss});width:150px;height:150px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#0f172a',.40)}1f;filter:blur(2px);pointer-events:none"></div>
         <div style="position:absolute;inset:0;background:
           radial-gradient(120px 60px at 18% 20%, rgba(255,255,255,.14), transparent 60%),
           radial-gradient(140px 70px at 82% 15%, rgba(255,255,255,.10), transparent 62%);
           pointer-events:none"></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:relative;z-index:1;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;margin-right:${hiCss};position:relative;z-index:1;gap:10px;flex-wrap:wrap">
           ${fullLbl
             ? `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
                 <div style="font-size:11px;color:rgba(255,255,255,.94);font-weight:700;background:${variant.chipBg};border:1px solid ${variant.chipBd};padding:3px 12px;border-radius:20px;backdrop-filter:blur(4px);white-space:nowrap">${fullLbl}</div>

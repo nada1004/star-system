@@ -2610,8 +2610,10 @@ function proCompSaveBktPaste(tnId) {
 
         let winner = '';
         // 1. 선수 이름으로 정확히 매칭 (우선순위)
-        if (m.a===wName && m.b===lName) winner='A';
-        else if (m.b===wName && m.a===lName) winner='B';
+        // m.a/m.b도 별명일 수 있으므로 resolveAlias 적용 후 비교
+        const rA = resolveAlias(m.a), rB = resolveAlias(m.b);
+        if ((m.a===wName||rA===wName) && (m.b===lName||rB===lName)) winner='A';
+        else if ((m.b===wName||rB===wName) && (m.a===lName||rA===lName)) winner='B';
         
         // 2. 대학명으로 매칭 (보조 - 대진표에 선수명이 있어도 대학명으로 붙여넣는 경우 대비)
         if (!winner) {

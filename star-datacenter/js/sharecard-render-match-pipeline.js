@@ -83,10 +83,10 @@
       ? window._buildShareMatchPersonalMetaBar({ m, variant, scoreInlineHTML })
       : '';
     const personalPosterHTML = isPersonalScoreCard && !teamMode && typeof window._buildShareMatchPersonalShell==='function'
-      ? window._buildShareMatchPersonalShell({ variant, theme, headerMatchBg, winnerColor, scMixHex:scMixHex, personalMetaBar, aWin, bWin, personalPosterSide, summaryHTML, setsHTML })
+      ? window._buildShareMatchPersonalShell({ variant, theme, headerMatchBg, winnerColor, scMixHex:scMixHex, personalMetaBar, aWin, bWin, personalPosterSide, summaryHTML, setsHTML, scp })
       : '';
     const html = (typeof window._buildShareMatchShell==='function')
-      ? window._buildShareMatchShell({ m, variant, theme, headerMatchBg, winnerColor, scMixHex:scMixHex, teamMode, scoreInlineHTML, teamHeaderHTML, heroSideBlock, centerVersusHTML, summaryHTML, teamRosterHTML, setsHTML })
+      ? window._buildShareMatchShell({ m, variant, theme, headerMatchBg, winnerColor, scMixHex:scMixHex, teamMode, scoreInlineHTML, teamHeaderHTML, heroSideBlock, centerVersusHTML, summaryHTML, teamRosterHTML, setsHTML, scp })
       : '';
     const finalHtml = personalPosterHTML || html;
     if(typeof window._shareCardRenderCached==='function') window._shareCardRenderCached(card, cacheKey, ()=>finalHtml);

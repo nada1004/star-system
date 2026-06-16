@@ -58,6 +58,13 @@
     { v:'medal',     label:'메달',       icon:'🥇', desc:'리본 달린 메달형',      radius:'50%',  clip:'polygon(25% 0%,75% 0%,75% 10%,100% 32%,100% 68%,75% 90%,75% 100%,25% 100%,25% 90%,0% 68%,0% 32%,25% 10%)', preview:'border-radius:50%;clip-path:polygon(25% 0%,75% 0%,75% 10%,100% 32%,100% 68%,75% 90%,75% 100%,25% 100%,25% 90%,0% 68%,0% 32%,25% 10%)' },
     { v:'saber',     label:'세이버',     icon:'⚔️', desc:'교차 칼날 대각선',      radius:'0',    clip:'polygon(0% 15%,15% 0%,100% 85%,85% 100%)',                                                   preview:'clip-path:polygon(0% 15%,15% 0%,100% 85%,85% 100%)' },
     { v:'blast',     label:'블라스트',   icon:'💥', desc:'폭발 방사형',           radius:'0',    clip:'polygon(50% 0%,56% 36%,78% 10%,62% 43%,95% 34%,73% 52%,100% 65%,68% 65%,82% 95%,55% 72%,50% 100%,45% 72%,18% 95%,32% 65%,0% 65%,27% 52%,5% 34%,38% 43%,22% 10%,44% 36%)',  preview:'clip-path:polygon(50% 0%,56% 36%,78% 10%,62% 43%,95% 34%,73% 52%,100% 65%,68% 65%,82% 95%,55% 72%,50% 100%,45% 72%,18% 95%,32% 65%,0% 65%,27% 52%,5% 34%,38% 43%,22% 10%,44% 36%)' },
+    // ── 추가 모양 ──
+    { v:'puzzle',    label:'퍼즐',       icon:'🧩', desc:'퍼즐 조각형',           radius:'8px',  clip:'polygon(0% 0%,40% 0%,40% 10%,60% 10%,60% 0%,100% 0%,100% 40%,90% 40%,90% 60%,100% 60%,100% 100%,60% 100%,60% 90%,40% 90%,40% 100%,0% 100%,0% 60%,10% 60%,10% 40%,0% 40%)', preview:'border-radius:8px;clip-path:polygon(0% 0%,40% 0%,40% 10%,60% 10%,60% 0%,100% 0%,100% 40%,90% 40%,90% 60%,100% 60%,100% 100%,60% 100%,60% 90%,40% 90%,40% 100%,0% 100%,0% 60%,10% 60%,10% 40%,0% 40%)' },
+    { v:'ribbon-banner', label:'리본배너', icon:'🎀', desc:'양쪽 리본 끝장식',     radius:'0',    clip:'polygon(0% 0%,100% 0%,100% 80%,75% 80%,75% 100%,50% 80%,25% 100%,25% 80%,0% 80%)', preview:'clip-path:polygon(0% 0%,100% 0%,100% 80%,75% 80%,75% 100%,50% 80%,25% 100%,25% 80%,0% 80%)' },
+    { v:'envelope',  label:'봉투형',     icon:'✉️', desc:'편지 봉투 모양',        radius:'4px',  clip:'polygon(0% 15%,50% 0%,100% 15%,100% 100%,0% 100%)', preview:'border-radius:4px;clip-path:polygon(0% 15%,50% 0%,100% 15%,100% 100%,0% 100%)' },
+    { v:'spark',     label:'스파클',     icon:'✨', desc:'4방향 반짝임',          radius:'0',    clip:'polygon(50% 0%,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0% 50%,40% 40%)', preview:'clip-path:polygon(50% 0%,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0% 50%,40% 40%)' },
+    { v:'tag-corner', label:'컷코너',    icon:'🏷️', desc:'모서리 살짝 컷',        radius:'0',    clip:'polygon(8% 0%,92% 0%,100% 8%,100% 92%,92% 100%,8% 100%,0% 92%,0% 8%)', preview:'clip-path:polygon(8% 0%,92% 0%,100% 8%,100% 92%,92% 100%,8% 100%,0% 92%,0% 8%)' },
+    { v:'wave-bottom', label:'바텀웨이브', icon:'🌊', desc:'하단만 둥근 직사각',   radius:'0 0 50% 50% / 0 0 30% 30%', clip:'none', preview:'border-radius:0 0 50% 50% / 0 0 30% 30%' },
   ];
 
   function renderProfileShapeSection(){
@@ -72,11 +79,16 @@
     body.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:16px">
         <div>
-          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">📐 모양 (51가지)</div>
+          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">📐 모양 (52가지)</div>
           <div style="margin-bottom:8px;padding:4px 10px;background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:8px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span style="font-size:10px;font-weight:900;color:#a5b4fc">⚔️ 스포츠 대결 NEW</span>
             <span style="font-size:10px;color:#c7d2fe">번개·VS방패·e스포츠·트로피·왕관·타겟·주먹·아레나·메달·세이버·블라스트</span>
-          </div></div>
+          </div>
+          <div style="margin-bottom:8px;padding:4px 10px;background:linear-gradient(135deg,#0f766e,#155e75);border-radius:8px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:900;color:#a5f3fc">🎉 추가 모양 NEW</span>
+            <span style="font-size:10px;color:#cffafe">퍼즐·리본배너·봉투형·스파클·컷코너·바텀웨이브</span>
+          </div>
+          <div style="margin-bottom:10px;font-size:10px;color:var(--gray-l);font-weight:700">💡 퍼즐·스파클·컷코너처럼 디테일이 많은 모양은 작은 칩/리스트(28~32px)에서는 단순화되어 보입니다. 상세 페이지처럼 큰 영역에서 가장 잘 보입니다.</div>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px">
             ${_SHAPE_OPTIONS.map(s=>{
               const sel = shape===s.v;
