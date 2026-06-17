@@ -1,4 +1,28 @@
 // 플레이어 모달용 이미지 프리로드 캐시
+;(function _injectPlayerModalPremiumStyle(){
+  if(typeof document==='undefined') return;
+  if(document.getElementById('player-modal-premium-style')) return;
+  const s=document.createElement('style');
+  s.id='player-modal-premium-style';
+  s.textContent=[
+    '#playerModal.modal--player-top{backdrop-filter:blur(8px);background:rgba(15,23,42,.38)}',
+    '#playerModal.modal--player-top .mbox,#playerModal.modal--player-top .mbox--player{width:min(1160px,calc(100vw - 24px));max-height:min(92vh,940px);border-radius:30px;background:linear-gradient(180deg,rgba(255,255,255,.985),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.18);box-shadow:0 30px 64px rgba(15,23,42,.22),inset 0 1px 0 rgba(255,255,255,.88);overflow:hidden}',
+    '#playerModal.modal--player-top #playerModalTitle{padding:18px 22px 14px;background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(255,255,255,.92));border-bottom:1px solid rgba(148,163,184,.18);font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1)}',
+    '#playerModal.modal--player-top #playerModalBody{padding:18px 20px 22px;background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,250,252,.9));overflow:auto}',
+    '.pd-premium-shell{display:flex;flex-direction:column;gap:14px}',
+    '.pd-premium-shell>div{border-radius:22px!important;box-shadow:0 16px 32px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.5)}',
+    '.pd-premium-shell>div:first-child{border-radius:26px!important;box-shadow:0 20px 40px rgba(15,23,42,.10),inset 0 1px 0 rgba(255,255,255,.32)}',
+    '.pd-premium-shell canvas{border-radius:14px}',
+    '.pd-premium-shell .btn,.pd-premium-shell button{box-shadow:0 10px 18px rgba(15,23,42,.05)}',
+    'body.dark #playerModal.modal--player-top .mbox,body.dark #playerModal.modal--player-top .mbox--player{background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(15,23,42,.94));border-color:#334155;box-shadow:0 30px 64px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.03)}',
+    'body.dark #playerModal.modal--player-top #playerModalTitle{background:linear-gradient(180deg,rgba(15,23,42,.96),rgba(15,23,42,.9));border-color:#334155;color:#f8fafc}',
+    'body.dark #playerModal.modal--player-top #playerModalBody{background:linear-gradient(180deg,rgba(15,23,42,.92),rgba(15,23,42,.9))}',
+    'body.dark .pd-premium-shell>div{box-shadow:0 16px 30px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.03)}',
+    '@media (max-width:780px){#playerModal.modal--player-top .mbox,#playerModal.modal--player-top .mbox--player{width:min(100vw - 12px,1000px);border-radius:22px}#playerModal.modal--player-top #playerModalTitle{padding:14px 16px 12px;font-size:19px}#playerModal.modal--player-top #playerModalBody{padding:14px 12px 16px}.pd-premium-shell{gap:10px}.pd-premium-shell>div{border-radius:18px!important}.pd-premium-shell>div:first-child{border-radius:20px!important}}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
 const _pmImgCache = new Map();
 
 // 이미지 URL들을 미리 로드하고, 모두 완료(또는 타임아웃)되면 resolve

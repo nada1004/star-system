@@ -59,6 +59,8 @@ function buildUnivHeaderCardHTML(opts){
   const dissolvedBadge = (()=>{ const u=univCfg.find(u=>u.name===univName); return u?.dissolved?`<span style="font-size:11px;font-weight:700;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:middle">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''; })();
   const _bgSize = hdrBgLayer?.fit==='fill' ? '100% 100%' : (hdrBgLayer?.fit==='cover' ? 'cover' : 'contain');
   const _bgScale = Math.max(40, Math.min(220, Number(hdrBgLayer?.scale||100)));
+  const _bgPosX = Math.max(0, Math.min(100, Number(hdrBgLayer?.posX ?? 50) || 50));
+  const _bgPosY = Math.max(0, Math.min(100, Number(hdrBgLayer?.posY ?? 50) || 50));
   const topNames = [...members].sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,3);
   const winPct = tot ? wr : 0;
   const winBarW = Math.max(0,Math.min(100,winPct));
@@ -66,7 +68,7 @@ function buildUnivHeaderCardHTML(opts){
   const colRgb = _hexToRgb(col);
   const ptColor = pts>0?'#4ade80':pts<0?'#f87171':'rgba(255,255,255,.85)';
   const wrColor = winPct>=60?'#4ade80':winPct>=50?'#86efac':winPct>=40?'#fcd34d':'#f87171';
-  const bgLayerHTML = hdrBgLayer?.url ? `<div style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl(hdrBgLayer.url).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:center center;background-size:${_bgSize};transform:scale(${_bgScale/100});transform-origin:center center;opacity:.28;pointer-events:none"></div>` : '';
+  const bgLayerHTML = hdrBgLayer?.url ? `<div style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl(hdrBgLayer.url).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:${_bgPosX}% ${_bgPosY}%;background-size:${_bgSize};transform:scale(${_bgScale/100});transform-origin:${_bgPosX}% ${_bgPosY}%;opacity:.28;pointer-events:none"></div>` : '';
   return `<div style="border-radius:20px;overflow:hidden;margin-bottom:20px;box-shadow:0 20px 48px rgba(${colRgb},.20),0 4px 16px rgba(15,23,42,.10);">
     <div style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${isMobile?'18px 16px':'22px 26px'};position:relative;overflow:hidden;min-height:${isMobile?'140px':'155px'}">
       ${bgLayerHTML}

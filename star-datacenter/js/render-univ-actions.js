@@ -18,6 +18,80 @@ function _bindUnivActionsDelegatedEvents(){
   });
 }
 
+function _getUnivHeaderPreviewSettings(){
+  let fallback = {};
+  try{ fallback = JSON.parse(localStorage.getItem('su_ud_style')||'{}') || {}; }catch(e){ fallback = {}; }
+  const rawUrl = (document.getElementById('ue-hbg')?.value || '').trim();
+  const fitInput = (document.getElementById('ue-hbg-fit')?.value || '').trim();
+  const scaleInput = parseInt(document.getElementById('ue-hbg-scale')?.value || '', 10);
+  const posXInput = parseInt(document.getElementById('ue-hbg-posx')?.value || '', 10);
+  const posYInput = parseInt(document.getElementById('ue-hbg-posy')?.value || '', 10);
+  const fallbackUrl = String(fallback.header_bg_img || '').trim();
+  const fallbackFit = String(fallback.header_bg_fit || 'contain').trim() || 'contain';
+  const fallbackScale = parseInt(fallback.header_bg_scale ?? '100', 10);
+  const fallbackPosX = parseInt(fallback.header_bg_pos_x ?? '50', 10);
+  const fallbackPosY = parseInt(fallback.header_bg_pos_y ?? '50', 10);
+  const fit = (fitInput || fallbackFit || 'contain').trim();
+  const scale = Math.max(40, Math.min(220, isNaN(scaleInput) ? (isNaN(fallbackScale) ? 100 : fallbackScale) : scaleInput));
+  const posX = Math.max(0, Math.min(100, isNaN(posXInput) ? (isNaN(fallbackPosX) ? 50 : fallbackPosX) : posXInput));
+  const posY = Math.max(0, Math.min(100, isNaN(posYInput) ? (isNaN(fallbackPosY) ? 50 : fallbackPosY) : posYInput));
+  const imgUrl = rawUrl || fallbackUrl;
+  return {
+    imgUrl,
+    fit: fit === 'fill' ? 'fill' : (fit === 'cover' ? 'cover' : 'contain'),
+    scale,
+    posX,
+    posY,
+    sourceLabel: rawUrl ? '대학별 설정' : (imgUrl ? '설정 기본값' : '이미지 없음'),
+    hasFallback: !rawUrl && !!fallbackUrl
+  };
+}
+
+function _updateUnivHeaderEditPreview(){
+  const frame = document.getElementById('ue-hbg-preview-frame');
+  if(!frame) return;
+  const img = document.getElementById('ue-hbg-preview-img');
+  const empty = document.getElementById('ue-hbg-preview-empty');
+  const meta = document.getElementById('ue-hbg-preview-meta');
+  const nameEl = document.getElementById('ue-hbg-preview-name');
+  const logo = document.getElementById('ue-hbg-preview-logo');
+  const logoFallback = document.getElementById('ue-hbg-preview-logo-fallback');
+  const color = (document.getElementById('ue-color')?.value || '#64748b').trim() || '#64748b';
+  const name = (document.getElementById('ue-name')?.value || '').trim() || (((typeof getUnivDetailState === 'function' ? getUnivDetailState() : (window.UnivDetailState||{})).currentName) || '대학명');
+  const iconUrlRaw = (document.getElementById('ue-icon')?.value || '').trim();
+  const iconUrl = iconUrlRaw ? toHttpsUrl(iconUrlRaw) : '';
+  const { imgUrl, fit, scale, posX, posY, sourceLabel, hasFallback } = _getUnivHeaderPreviewSettings();
+  frame.style.background = `linear-gradient(145deg,${color} 0%,${color}cc 60%,${color}88 100%)`;
+  if(nameEl) nameEl.textContent = name;
+  if(meta) meta.textContent = `${sourceLabel} · ${fit} · ${scale}% · X ${posX}% · Y ${posY}%${hasFallback ? ' · 기본값 적용중' : ''}`;
+  if(logo && logoFallback){
+    if(iconUrl){
+      logo.src = iconUrl;
+      logo.style.display = 'block';
+      logoFallback.style.display = 'none';
+    }else{
+      logo.removeAttribute('src');
+      logo.style.display = 'none';
+      logoFallback.textContent = (name || '?').charAt(0);
+      logoFallback.style.display = 'flex';
+    }
+  }
+  if(img && empty){
+    if(imgUrl){
+      img.src = toHttpsUrl(imgUrl);
+      img.style.display = 'block';
+      img.style.objectFit = fit;
+      img.style.objectPosition = `${posX}% ${posY}%`;
+      img.style.transform = `scale(${scale/100})`;
+      empty.style.display = 'none';
+    }else{
+      img.removeAttribute('src');
+      img.style.display = 'none';
+      empty.style.display = 'flex';
+    }
+  }
+}
+
 function openUnivModal(univName){
   if(!univName)return;
   const st = (typeof getUnivDetailState==='function') ? getUnivDetailState() : (window.UnivDetailState||{});
@@ -68,26 +142,26 @@ function toggleUnivEdit(){
     const editHTML=`<div id="univ-edit-panel" style="background:var(--surface);border:1.5px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:16px">
       <div style="font-weight:800;font-size:13px;color:var(--blue);margin-bottom:12px">✏️ 대학 정보 수정</div>
       <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대학 이름</label>
-      <input type="text" id="ue-name" value="${u.name||''}" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:13px;box-sizing:border-box">
+      <input type="text" id="ue-name" value="${u.name||''}" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:13px;box-sizing:border-box" oninput="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
       <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대표 색상</label>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-        <input type="color" id="ue-color" value="${u.color||'#6b7280'}" style="width:44px;height:36px;padding:2px;border-radius:6px;border:1px solid var(--border2);cursor:pointer">
+        <input type="color" id="ue-color" value="${u.color||'#6b7280'}" style="width:44px;height:36px;padding:2px;border-radius:6px;border:1px solid var(--border2);cursor:pointer" oninput="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
         <span style="font-size:12px;color:var(--text3)">현재: ${u.color||'미설정'}</span>
       </div>
       <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">🖼 로고 이미지 URL</label>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-        <input type="text" id="ue-icon" value="${u.icon||''}" placeholder="https://... 이미지 URL" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" oninput="const v=this.value.trim();const img=document.getElementById('ue-icon-preview');if(v){img.src=toHttpsUrl(v);img.style.display='block';}else img.style.display='none'">
+        <input type="text" id="ue-icon" value="${u.icon||''}" placeholder="https://... 이미지 URL" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" oninput="const v=this.value.trim();const img=document.getElementById('ue-icon-preview');if(v){img.src=toHttpsUrl(v);img.style.display='block';}else img.style.display='none';try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
         <img id="ue-icon-preview" src="${toHttpsUrl(u.icon||'')}" style="width:40px;height:40px;object-fit:contain;border-radius:var(--su_univ_logo_radius,8px);border:1px solid var(--border);${u.icon?'':'display:none'}" onerror="this.style.display='none'">
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:12px">현황판·선수 상세에서 대학 로고로 표시됩니다.</div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
         <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">🖼 대학 상세 헤더 배경</div>
         <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 설정탭 기본값 사용)</span></label>
-        <input type="text" id="ue-hbg" value="${u.detailHeaderBgImg||''}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;box-sizing:border-box">
+        <input type="text" id="ue-hbg" value="${u.detailHeaderBgImg||''}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;box-sizing:border-box" oninput="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
             <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">표시 방식</label>
-            <select id="ue-hbg-fit" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px">
+            <select id="ue-hbg-fit" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" onchange="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
               <option value=""${!u.detailHeaderBgFit?' selected':''}>설정값 따름</option>
               <option value="contain"${u.detailHeaderBgFit==='contain'?' selected':''}>맞춤</option>
               <option value="cover"${u.detailHeaderBgFit==='cover'?' selected':''}>채우기</option>
@@ -97,10 +171,52 @@ function toggleUnivEdit(){
           <div>
             <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">크기 조절</label>
             <div style="display:flex;align-items:center;gap:8px">
-              <input type="range" id="ue-hbg-scale" min="40" max="220" step="5" value="${Number(u.detailHeaderBgScale||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-hbg-scale-val').textContent=this.value+'%'">
+              <input type="range" id="ue-hbg-scale" min="40" max="220" step="5" value="${Number(u.detailHeaderBgScale||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-hbg-scale-val').textContent=this.value+'%';try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
               <span id="ue-hbg-scale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(u.detailHeaderBgScale||100)||100}%</span>
             </div>
           </div>
+        </div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;margin-top:10px">가로 위치 (좌/우)</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" id="ue-hbg-posx" min="0" max="100" step="1" value="${(u.detailHeaderBgPosX==null?50:Math.max(0,Math.min(100,parseInt(u.detailHeaderBgPosX,10)||50)))}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-hbg-posx-val').textContent=this.value+'%';try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
+          <span id="ue-hbg-posx-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${(u.detailHeaderBgPosX==null?50:Math.max(0,Math.min(100,parseInt(u.detailHeaderBgPosX,10)||50)))}%</span>
+        </div>
+        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;margin-top:10px">세로 위치 (위/아래)</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" id="ue-hbg-posy" min="0" max="100" step="1" value="${(u.detailHeaderBgPosY==null?50:Math.max(0,Math.min(100,parseInt(u.detailHeaderBgPosY,10)||50)))}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-hbg-posy-val').textContent=this.value+'%';try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
+          <span id="ue-hbg-posy-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${(u.detailHeaderBgPosY==null?50:Math.max(0,Math.min(100,parseInt(u.detailHeaderBgPosY,10)||50)))}%</span>
+        </div>
+        <div style="margin-top:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            <div style="font-size:11px;font-weight:800;color:var(--text2)">미리보기</div>
+            <div id="ue-hbg-preview-meta" style="font-size:10px;color:var(--gray-l);font-weight:700">이미지 없음</div>
+          </div>
+          <div id="ue-hbg-preview-frame" style="position:relative;min-height:152px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.24);box-shadow:0 14px 26px rgba(15,23,42,.12);background:linear-gradient(145deg,${u.color||'#6b7280'} 0%,${(u.color||'#6b7280')}cc 60%,${(u.color||'#6b7280')}88 100%)">
+            <div style="position:absolute;inset:0;overflow:hidden">
+              <img id="ue-hbg-preview-img" src="" alt="" style="position:absolute;inset:-8%;width:116%;height:116%;object-fit:contain;object-position:50% 50%;transform:scale(1);transform-origin:center center;opacity:.32;display:none" onerror="this.style.display='none';const empty=document.getElementById('ue-hbg-preview-empty');if(empty)empty.style.display='flex'">
+            </div>
+            <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(15,23,42,.08) 0%,rgba(15,23,42,.30) 100%)"></div>
+            <div style="position:absolute;top:-34px;right:-22px;width:118px;height:118px;border-radius:50%;background:rgba(255,255,255,.08)"></div>
+            <div style="position:absolute;bottom:-30px;left:24px;width:92px;height:92px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
+            <div style="position:relative;z-index:2;padding:16px;display:flex;align-items:flex-start;gap:12px">
+              <div style="width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);box-shadow:0 8px 24px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+                <img id="ue-hbg-preview-logo" src="" alt="" style="width:100%;height:100%;object-fit:contain;padding:8px;display:none" onerror="this.style.display='none';const f=document.getElementById('ue-hbg-preview-logo-fallback');if(f)f.style.display='flex'">
+                <span id="ue-hbg-preview-logo-fallback" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff">${(u.name||'?').charAt(0)}</span>
+              </div>
+              <div style="min-width:0;flex:1;padding-top:2px">
+                <div style="font-size:9px;letter-spacing:.14em;font-weight:900;color:rgba(255,255,255,.60);text-transform:uppercase;margin-bottom:5px">Detail Header Preview</div>
+                <div id="ue-hbg-preview-name" style="font-size:22px;font-weight:950;color:#fff;line-height:1.16;text-shadow:0 2px 10px rgba(0,0,0,.28);word-break:keep-all">${u.name||''}</div>
+                <div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">
+                  <span style="display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:rgba(15,23,42,.30);border:1px solid rgba(255,255,255,.16);font-size:10px;font-weight:800;color:rgba(255,255,255,.84)">배경 잘림 미리보기</span>
+                  <span style="display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:rgba(15,23,42,.24);border:1px solid rgba(255,255,255,.14);font-size:10px;font-weight:700;color:rgba(255,255,255,.72)">실제 저장 전 확인</span>
+                </div>
+              </div>
+            </div>
+            <div id="ue-hbg-preview-empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;text-align:center;font-size:11px;line-height:1.6;color:rgba(255,255,255,.82);font-weight:700;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.00))">
+              배경 이미지 URL을 입력하면<br>여기서 바로 헤더 느낌을 확인할 수 있습니다.
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--gray-l);margin-top:7px;line-height:1.5">실제 대학 상세 팝업 상단처럼 배경 크기/잘림 느낌을 바로 확인할 수 있습니다.</div>
         </div>
       </div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
@@ -205,6 +321,7 @@ function toggleUnivEdit(){
     </div>`;
     const body=document.getElementById('univModalBody');
     body.insertAdjacentHTML('afterbegin',editHTML);
+    try{ if(typeof _updateUnivHeaderEditPreview==='function') _updateUnivHeaderEditPreview(); }catch(e){}
   } else {
     if(btn) btn.textContent='✏️ 수정';
     const panel=document.getElementById('univ-edit-panel');
@@ -225,6 +342,8 @@ function saveUnivEdit(){
   const newHdrBg=(document.getElementById('ue-hbg')?.value||'').trim();
   const newHdrFit=(document.getElementById('ue-hbg-fit')?.value||'').trim();
   const newHdrScale=parseInt(document.getElementById('ue-hbg-scale')?.value||'100',10)||100;
+  const newHdrPosX=parseInt(document.getElementById('ue-hbg-posx')?.value||'50',10);
+  const newHdrPosY=parseInt(document.getElementById('ue-hbg-posy')?.value||'50',10);
   const femcoBgUrl=(document.getElementById('ue-femco-bg-url')?.value||'').trim();
   const femcoBgAlpha=parseInt(document.getElementById('ue-femco-bg-alpha')?.value||'30',10);
   if(!newName){alert('이름을 입력하세요.');return;}
@@ -248,6 +367,8 @@ function saveUnivEdit(){
   if(newHdrBg) u.detailHeaderBgImg=newHdrBg; else delete u.detailHeaderBgImg;
   if(newHdrFit) u.detailHeaderBgFit=newHdrFit; else delete u.detailHeaderBgFit;
   if(newHdrBg) u.detailHeaderBgScale=newHdrScale; else delete u.detailHeaderBgScale;
+  if(newHdrBg) u.detailHeaderBgPosX=Math.max(0,Math.min(100,isNaN(newHdrPosX)?50:newHdrPosX)); else delete u.detailHeaderBgPosX;
+  if(newHdrBg) u.detailHeaderBgPosY=Math.max(0,Math.min(100,isNaN(newHdrPosY)?50:newHdrPosY)); else delete u.detailHeaderBgPosY;
   // 스트리머탭 대학 헤더 설정(대학별)
   const streamerHdrBg=(document.getElementById('ue-streamer-hbg')?.value||'').trim();
   const streamerHdrSize=(document.getElementById('ue-streamer-hbg-size')?.value||'').trim();
@@ -372,5 +493,6 @@ try{
   window.openUnivModal = openUnivModal;
   window.toggleUnivEdit = toggleUnivEdit;
   window.saveUnivEdit = saveUnivEdit;
+  window._updateUnivHeaderEditPreview = _updateUnivHeaderEditPreview;
   window.navToMatch = navToMatch;
 }catch(e){}

@@ -285,7 +285,7 @@ function rBoard2(C, T) {
   function _b2TabBtn(view, color, label) {
     const on = _b2View === view;
     // (요청사항) 티어 순위표 스타일(pill)로 통일
-    return `<button class="pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_b2View='${view}';render();this.blur()">${label}</button>`;
+    return `<button class="pill b2-tab-pill ${on?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_b2View='${view}';render();this.blur()">${label}</button>`;
   }
 
   // 잘못된 뷰 리셋 (삭제된 탭 or 로그인 필요 탭)
@@ -296,21 +296,21 @@ function rBoard2(C, T) {
   if (_b2View === 'univ') {
     saveBar = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
       <div style="position:relative">
-        <select id="b2-save-sel" onchange="_b2SaveUniv=this.value" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <select id="b2-save-sel" class="b2-toolbar-select" onchange="_b2SaveUniv=this.value" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="전체">🏫 전체</option>
           ${univList.map(u=>`<option value="${u.name}"${_b2SaveUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
-      <button onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
+      <button class="b2-toolbar-btn" onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
   } else if (_b2View === 'free') {
     saveBar = `<div style="flex-shrink:0">
-      <button onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
+      <button class="b2-toolbar-btn" onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
     </div>`;
   } else if (_b2View === 'femco') {
     saveBar = `<div style="display:flex;gap:6px;flex-shrink:0">
-      <button onclick="saveB2FemcoAllImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">💾 전체 저장</button>
+      <button class="b2-toolbar-btn" onclick="saveB2FemcoAllImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">💾 전체 저장</button>
     </div>`;
   }
 
@@ -336,14 +336,14 @@ function rBoard2(C, T) {
     playerUnivList.sort();
   }
   const _selBadge = (_b2PlayersUnivFilter && _b2PlayersUnivFilter!=='전체')
-    ? `<button class="pill on" style="flex-shrink:0;white-space:nowrap;background:var(--blue);border-color:var(--blue);color:#fff"
+    ? `<button class="pill b2-current-filter" style="flex-shrink:0;white-space:nowrap"
         onclick="_b2PlayersUnivFilter='전체';document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)">현재: ${_b2PlayersUnivFilter} ✕</button>`
     : '';
   const playerFilters = _b2View === 'players' ? `
     <div class="b2-nav-playerfilters" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0">
       <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
       <div style="position:relative">
-        <select id="b2-players-univ-sel" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <select id="b2-players-univ-sel" class="b2-toolbar-select" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
           ${playerUnivList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
         </select>
@@ -351,7 +351,7 @@ function rBoard2(C, T) {
       </div>
       ${_selBadge}
       <div style="position:relative">
-        <select id="b2-players-race-sel" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <select id="b2-players-race-sel" class="b2-toolbar-select" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="all" ${_b2PlayersFilter === 'all' ? 'selected' : ''}>🎮 전체 종족</option>
           <option value="P" ${_b2PlayersFilter === 'P' ? 'selected' : ''}>🔮 프로토스</option>
           <option value="T" ${_b2PlayersFilter === 'T' ? 'selected' : ''}>⚔️ 테란</option>
@@ -360,13 +360,13 @@ function rBoard2(C, T) {
         <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
       <div style="position:relative">
-        <select id="b2-players-tier-sel" onchange="_b2PlayersTierFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <select id="b2-players-tier-sel" class="b2-toolbar-select" onchange="_b2PlayersTierFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="전체" ${_b2PlayersTierFilter==='전체'?'selected':''}>🏅 전체 티어</option>
           ${(typeof TIERS!=='undefined'?TIERS:[]).map(t=>`<option value="${t}" ${_b2PlayersTierFilter===t?'selected':''}>${t}티어</option>`).join('')}
         </select>
         <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
-      <button onclick="_b2PlayersWeekBadge=!_b2PlayersWeekBadge;render()" style="padding:6px 14px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:${_b2PlayersWeekBadge?'#f59e0b':'var(--white)'};color:${_b2PlayersWeekBadge?'#fff':'var(--text2)'};cursor:pointer;font-weight:700;transition:all .2s">🔥 이번주</button>
+      <button class="b2-filter-toggle ${_b2PlayersWeekBadge?'is-on':''}" onclick="_b2PlayersWeekBadge=!_b2PlayersWeekBadge;render()" style="padding:6px 14px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:${_b2PlayersWeekBadge?'#f59e0b':'var(--white)'};color:${_b2PlayersWeekBadge?'#fff':'var(--text2)'};cursor:pointer;font-weight:700;transition:all .2s">🔥 이번주</button>
     </div>
   ` : '';
   const weeklyBtn = _b2TabBtn('weekly','#f59e0b', (typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 주간 브리핑'):'📅 주간 브리핑'));
@@ -380,18 +380,119 @@ function rBoard2(C, T) {
   // 우측 버튼: 펨코현황은 "전체 저장"만, 나머지는 기존 저장/기능 버튼
   const rightBtns = saveBar;
   const _navTight = _b2View === 'players' ? '#b2-nav.b2-nav-new { padding-top: 0; }' : '';
-
-  const filterBar = `
+  const { fromN: _heroFromN, toN: _heroToN } = _b2ThisWeekRange();
+  const _heroDateNum = _b2DateNum;
+  const _heroWeekActive = visPlayers.reduce((acc, p) => {
+    const acted = (Array.isArray(p.history) ? p.history : []).some(h => {
+      const d = _heroDateNum(h.date || h.d || '');
+      return d >= _heroFromN && d <= _heroToN;
+    });
+    return acc + (acted ? 1 : 0);
+  }, 0);
+  const _heroViewMeta = {
+    univ:    { label:'대학별', desc:'대학 카드 중심으로 소속 현황과 활동 흐름을 빠르게 살펴볼 수 있습니다.' },
+    free:    { label:'무소속', desc:'무소속 스트리머만 모아서 현재 공백 구간과 개별 상태를 보기 쉽게 정리합니다.' },
+    femco:   { label:'펨코', desc:'컬러 중심의 현황판 레이아웃으로 한눈에 보기 좋은 구성을 제공합니다.' },
+    players: { label:'이미지별', desc:'프로필 중심으로 필터를 바꿔가며 스트리머별 상태를 직관적으로 확인합니다.' },
+    weekly:  { label:'주간 브리핑', desc:'이번 주 활동과 흐름을 요약 카드 위주로 빠르게 훑어볼 수 있습니다.' },
+    ranking: { label:'랭킹', desc:'대학별 성과를 리더보드 형태로 정리해 비교가 쉽도록 구성합니다.' },
+    heatmap: { label:'히트맵', desc:'분포와 집중 구간을 색 밀도로 확인할 수 있게 정리합니다.' },
+    bubble:  { label:'버블맵', desc:'규모와 비중을 시각적으로 비교하기 쉽게 배치합니다.' },
+    radar:   { label:'레이더', desc:'대학별 강점과 균형감을 다차원으로 비교해서 보여줍니다.' },
+    summary: { label:'요약', desc:'핵심 숫자와 흐름만 모아 간결하게 확인할 수 있도록 구성합니다.' },
+    compare: { label:'대학비교', desc:'여러 대학 지표를 한 자리에서 비교하기 좋게 정리합니다.' },
+    old:     { label:'구현황판', desc:'기존 현황판 레이아웃을 그대로 유지하면서 현재 데이터와 연결합니다.' }
+  };
+  const _curViewMeta = _heroViewMeta[_b2View] || { label:'현황판', desc:'여러 시각화와 카드형 화면으로 현황을 빠르게 탐색할 수 있습니다.' };
+  const _heroStyle = `
     <style>
-      #b2-nav.b2-nav-new { flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-      #b2-nav.b2-nav-new::-webkit-scrollbar { display:none; }
       #rtitle { caret-color: transparent; }
       #rcont { caret-color: transparent; }
       #rcont input, #rcont textarea, #rcont [contenteditable="true"] { caret-color: auto; }
+      .b2-shell{display:flex;flex-direction:column;gap:14px}
+      .b2-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:22px 24px;border-radius:28px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.97));box-shadow:0 20px 36px rgba(15,23,42,.06)}
+      .b2-hero-main{display:flex;flex-direction:column;gap:10px;min-width:0}
+      .b2-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}
+      .b2-hero-title{font-size:30px;font-weight:950;letter-spacing:-.04em;color:var(--text1);line-height:1.08}
+      .b2-hero-desc{font-size:13px;line-height:1.65;color:var(--text3);max-width:760px}
+      .b2-hero-badges{display:flex;flex-wrap:wrap;gap:8px}
+      .b2-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.05);font-size:12px;font-weight:800;color:var(--text2)}
+      .b2-hero-stats{display:grid;grid-template-columns:repeat(3,minmax(112px,1fr));gap:10px;min-width:min(100%,360px)}
+      .b2-hero-stat{padding:14px 14px 12px;border-radius:20px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.05)}
+      .b2-hero-stat-label{font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px}
+      .b2-hero-stat-value{font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1}
+      .b2-hero-stat-sub{margin-top:5px;font-size:11px;font-weight:700;color:var(--text3)}
+      .b2-toolbar-card{padding:12px;border-radius:24px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.95));box-shadow:0 14px 28px rgba(15,23,42,.05)}
+      #b2-nav.b2-nav-new{display:flex;align-items:center;gap:10px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+      #b2-nav.b2-nav-new::-webkit-scrollbar{display:none}
+      .b2-toolbar-main{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;flex-shrink:0}
+      .b2-toolbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
+      .b2-nav-playerfilters{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+      .b2-tab-pill{border-color:rgba(148,163,184,.18);background:rgba(255,255,255,.88);box-shadow:0 6px 12px rgba(15,23,42,.04)}
+      .b2-tab-pill.on{box-shadow:0 10px 18px rgba(37,99,235,.14)}
+      .b2-toolbar-select{box-shadow:0 6px 14px rgba(15,23,42,.04)}
+      .b2-toolbar-btn{box-shadow:0 8px 16px rgba(15,23,42,.05)}
+      .b2-current-filter{background:rgba(37,99,235,.10)!important;border-color:rgba(37,99,235,.20)!important;color:#1d4ed8!important}
+      .b2-filter-toggle{box-shadow:0 6px 14px rgba(15,23,42,.04)}
+      .b2-filter-toggle.is-on{box-shadow:0 10px 18px rgba(245,158,11,.20)}
+      .b2-content-shell{padding:14px;border-radius:26px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 20px 34px rgba(15,23,42,.05)}
+      #b2-content{min-height:260px}
       ${_navTight}
-    </style>
-    <div id="b2-nav" class="b2-nav b2-nav-new">
-      <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;flex-shrink:0">
+      body.dark .b2-hero,
+      body.dark .b2-toolbar-card,
+      body.dark .b2-content-shell{background:linear-gradient(180deg,rgba(15,23,42,.95),rgba(15,23,42,.90));border-color:#334155;box-shadow:0 20px 34px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.03)}
+      body.dark .b2-hero-badge,
+      body.dark .b2-hero-stat{background:linear-gradient(180deg,rgba(30,41,59,.90),rgba(15,23,42,.88));border-color:#334155;box-shadow:none}
+      body.dark .b2-tab-pill{background:rgba(15,23,42,.82);border-color:#334155;box-shadow:none}
+      body.dark .b2-current-filter{background:rgba(59,130,246,.16)!important;border-color:rgba(96,165,250,.28)!important;color:#bfdbfe!important}
+      @media (max-width:980px){
+        .b2-hero{flex-direction:column}
+        .b2-hero-stats{width:100%;grid-template-columns:repeat(3,minmax(0,1fr))}
+      }
+      @media (max-width:760px){
+        .b2-hero{padding:18px 16px;border-radius:22px}
+        .b2-hero-title{font-size:24px}
+        .b2-hero-stats{grid-template-columns:1fr}
+        .b2-toolbar-card,.b2-content-shell{padding:10px;border-radius:20px}
+      }
+    </style>`;
+
+  const filterBar = `
+    ${_heroStyle}
+    <div class="b2-shell">
+      <section class="b2-hero">
+        <div class="b2-hero-main">
+          <div class="b2-hero-kicker">Board Dashboard</div>
+          <div class="b2-hero-title">현황판</div>
+          <div class="b2-hero-desc">${_curViewMeta.desc}</div>
+          <div class="b2-hero-badges">
+            <span class="b2-hero-badge">현재 보기 · ${_curViewMeta.label}</span>
+            <span class="b2-hero-badge">표시 스트리머 ${visPlayers.length}명</span>
+            <span class="b2-hero-badge">대학 ${univList.length}곳</span>
+            <span class="b2-hero-badge">이번주 활동 ${_heroWeekActive}명</span>
+          </div>
+        </div>
+        <div class="b2-hero-stats">
+          <div class="b2-hero-stat">
+            <div class="b2-hero-stat-label">현재 보기</div>
+            <div class="b2-hero-stat-value">${_curViewMeta.label}</div>
+            <div class="b2-hero-stat-sub">자주 쓰는 하위 화면으로 즉시 전환</div>
+          </div>
+          <div class="b2-hero-stat">
+            <div class="b2-hero-stat-label">표시 인원</div>
+            <div class="b2-hero-stat-value">${visPlayers.length}</div>
+            <div class="b2-hero-stat-sub">숨김·은퇴 제외 기준</div>
+          </div>
+          <div class="b2-hero-stat">
+            <div class="b2-hero-stat-label">활성 대학</div>
+            <div class="b2-hero-stat-value">${univList.length}</div>
+            <div class="b2-hero-stat-sub">이번주 활동 ${_heroWeekActive}명</div>
+          </div>
+        </div>
+      </section>
+      <div class="b2-toolbar-card">
+        <div id="b2-nav" class="b2-nav b2-nav-new">
+          <div class="b2-toolbar-main">
         ${_b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별'))}
         ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
         ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코'))}
@@ -406,12 +507,16 @@ function rBoard2(C, T) {
         ${summaryBtn}
         ${compareBtn}
         ${oldBtn}
+          </div>
+          ${playerFilters}
+          <div class="b2-toolbar-actions">${rightBtns}</div>
+        </div>
       </div>
-      ${playerFilters}
-      <span style="flex:1"></span>
-      ${rightBtns}
+      <div class="b2-content-shell">
+        <div id="b2-content"></div>
+      </div>
     </div>
-    <div id="b2-content"></div>`;
+  `;
 
   C.innerHTML = filterBar;
 
@@ -589,26 +694,45 @@ function _b2UnivView() {
     const iconUrl = ucfg?(ucfg.icon||ucfg.img||''):'';
     const iconEl = iconUrl?`<img src="${iconUrl}" style="width:14px;height:14px;object-fit:contain;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">`:`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>`;
     const anchorId = 'b2-univ-anchor-'+u.name.replace(/[^a-zA-Z0-9가-힣]/g,'_');
-    return `<button onclick="const el=document.getElementById('${anchorId}');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:14px;border:1.5px solid ${col}44;background:${col}11;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">${iconEl}${u.name}<span style="color:var(--gray-l);font-weight:500"> ${cnt}</span></button>`;
+    return `<button onclick="const el=document.getElementById('${anchorId}');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}" style="display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));color:var(--text2);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:0 8px 16px rgba(15,23,42,.04)">${iconEl}${u.name}<span style="color:var(--gray-l);font-weight:700"> ${cnt}</span></button>`;
   }).join('');
-  const statsBar = `<div style="margin-bottom:10px">
-    <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px 10px 0 0;flex-wrap:wrap">
-      <span style="font-size:12px;font-weight:800;color:var(--text2)">👥 ${_allVis.length}명</span>
-      <span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>
-      <span style="font-size:12px;font-weight:800;color:var(--text2)">🏫 ${univList.length}개 대학</span>
-      <span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>
-      <span style="font-size:12px;font-weight:800;color:#f59e0b">🔥 이번주 ${_uvWeekActive}명 활동</span>
-      ${_uvWr!==null?`<span style="font-size:12px;font-weight:800;color:${_uvWrC}">📊 통산 ${_uvWr}%</span>`:''}
-      ${_uvRaceBar?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>${_uvRaceBar}`:''}
-      ${TIERS.filter(t=>_tierCts[t]).length?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block"></span>${TIERS.filter(t=>_tierCts[t]).map(t=>`<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;background:${getTierBtnColor(t)};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_tierCts[t]}</span>`).join('')}`:''}
-    </div>
-    <div style="display:flex;align-items:center;gap:5px;padding:6px 14px;background:var(--white);border:1px solid var(--border2);border-top:none;border-radius:0 0 10px 10px;flex-wrap:wrap">
-      <span style="font-size:10px;font-weight:700;color:var(--gray-l);flex-shrink:0;white-space:nowrap">바로가기 ›</span>
-      ${_jumpChips}
+  const statsBar = `<div style="margin-bottom:12px">
+    <div style="padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 16px 28px rgba(15,23,42,.05)">
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px">
+        <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
+          <div style="font-size:11px;font-weight:800;color:var(--text3)">표시 선수</div>
+          <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1)">${_allVis.length}</div>
+          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">현황판 기준 표시 인원</div>
+        </div>
+        <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
+          <div style="font-size:11px;font-weight:800;color:var(--text3)">활성 대학</div>
+          <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1)">${univList.length}</div>
+          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">무소속 제외 대학 수</div>
+        </div>
+        <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
+          <div style="font-size:11px;font-weight:800;color:var(--text3)">이번주 활동</div>
+          <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:#f59e0b">${_uvWeekActive}</div>
+          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">주간 기록 존재 기준</div>
+        </div>
+        <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
+          <div style="font-size:11px;font-weight:800;color:var(--text3)">통산 승률</div>
+          <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:${_uvWrC}">${_uvWr===null?'-':`${_uvWr}%`}</div>
+          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">${_uvTotalW}승 ${_uvTotalL}패</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
+        <span style="font-size:11px;font-weight:800;color:var(--text3)">종족 비중</span>
+        ${_uvRaceBar||`<span style="font-size:11px;font-weight:700;color:var(--gray-l)">집계 없음</span>`}
+        ${TIERS.filter(t=>_tierCts[t]).length?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block;margin:0 2px"></span>${TIERS.filter(t=>_tierCts[t]).map(t=>`<span style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;background:${getTierBtnColor(t)};color:${getTierBtnTextColor(t)||'#fff'};box-shadow:0 8px 14px rgba(15,23,42,.06)">${t} ${_tierCts[t]}</span>`).join('')}`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
+        <span style="font-size:11px;font-weight:800;color:var(--text3);flex-shrink:0;white-space:nowrap">대학 바로가기</span>
+        ${_jumpChips}
+      </div>
     </div>
   </div>`;
   const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';
-  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:1fr!important;}.b2-side-panel{width:180px;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}@media(max-width:768px){.b2-univ-grid{grid-template-columns:1fr!important;}</style>`;
+  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:1fr!important;}.b2-side-panel{width:180px;}}@media(max-width:900px){.b2-univ-grid{grid-template-columns:1fr!important;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}}</style>`;
   h += `<div class="b2-univ-grid" style="display:grid;grid-template-columns:${_b2Cols};gap:12px;align-items:start">`;
   univList.forEach(u => {
     if (!u.name) {
@@ -1386,6 +1510,17 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const textCol = _b2ContrastColor(col);
   const lightCol = col + _b2AlphaHex(b2BgAlpha);
   const labelCol = col + _b2AlphaHex(b2LabelAlpha);
+  const _hasBgImg = !!uCfg.bgImg;
+  const _softPanel = 'linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))';
+  const _softBorder = _hasBgImg ? 'rgba(255,255,255,.18)' : 'rgba(255,255,255,.55)';
+  const _rowPanelBg = _hasBgImg
+    ? 'linear-gradient(180deg,rgba(255,255,255,.00),rgba(248,250,252,.00))'
+    : _softPanel;
+  const _memoPanelBg = _hasBgImg
+    ? 'linear-gradient(180deg,rgba(255,255,255,.12),rgba(248,250,252,.04))'
+    : _softPanel;
+  const _rowPanelBorder = _hasBgImg ? 'rgba(255,255,255,.04)' : _softBorder;
+  const _rowPanelShadow = _hasBgImg ? 'none' : '0 10px 18px rgba(15,23,42,.04)';
 
   // 멤버 없을 때 빈 블록
   if (!members.length) {
@@ -1418,13 +1553,12 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const hasSide = !!((_smemo||_simgs.length));
 
   // 새 레이아웃: 왼쪽 라벨 열(대학색) + 오른쪽 스트리머 열(연한 배경)
-  // hasSide 시 padding-right:190px → border-bottom 선이 사이드 패널 영역까지 이어짐
   const _tableRow = (label, isRole, chips) => `
-    <div style="display:flex;align-items:stretch;border-bottom:1px solid ${col}44${hasSide?';padding-right:190px':''}">
-      <div style="background:${labelCol}!important;min-width:62px;width:62px;display:flex;align-items:center;justify-content:center;padding:7px 4px;flex-shrink:0">
-        <span style="font-size:11px;font-weight:800;color:${col};text-align:center;line-height:1.3;word-break:keep-all">${label}</span>
+    <div style="display:flex;align-items:stretch;gap:0;margin-bottom:8px">
+      <div style="background:${labelCol}!important;min-width:70px;width:70px;display:flex;align-items:center;justify-content:center;padding:10px 6px;flex-shrink:0;border-radius:16px 0 0 16px;border:1px solid ${col}33;border-right:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.28)">
+        <span style="font-size:11px;font-weight:900;color:${col};text-align:center;line-height:1.35;word-break:keep-all;letter-spacing:-.01em">${label}</span>
       </div>
-      <div style="flex:1;background:${lightCol};padding:7px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+      <div style="flex:1;background:${_rowPanelBg};padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-radius:0 16px 16px 0;border:1px solid ${_rowPanelBorder};box-shadow:${_rowPanelShadow}">
         ${chips}
       </div>
     </div>`;
@@ -1439,7 +1573,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   });
   const _bgPos = uCfg.bgImgPos || 'center center';
   const _bgSize = uCfg.bgImgSize || 'auto';
-  const _bgOpacity = ((uCfg.bgImgAlpha ?? b2BgImgAlpha) / 100).toFixed(2);
+  const _bgOpacityNum = (uCfg.bgImgAlpha ?? b2BgImgAlpha) / 100;
+  const _bgOpacity = (_hasBgImg ? Math.max(0.56, _bgOpacityNum) : _bgOpacityNum).toFixed(2);
   const bgImgHtml = uCfg.bgImg
     ? forExport
       ? `<img src="${uCfg.bgImg}" crossorigin="anonymous" class="b2-fit-auto" data-fit-kind="bg" data-fit-mode="${_bgSize}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_bgSize==='auto'?'cover':_bgSize};object-position:${_bgPos};opacity:${_bgOpacity};pointer-events:none;z-index:0" onload="_b2ApplyBgAutoSizing(this)">`
@@ -1456,13 +1591,14 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     group.sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ko', {sensitivity:'base'}));
     rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
   });
-  const sidePanelHtml = hasSide ? `<div style="position:absolute;top:0;right:0;width:190px;bottom:0;background:${lightCol};padding:8px;box-sizing:border-box;overflow:hidden">
-    ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;border-radius:7px;${(i<_simgs.length-1||_smemo)?'margin-bottom:5px;':''}display:block;object-fit:contain" onerror="this.style.display='none'">`).join('')}
-    ${_smemo?`<div style="font-size:11px;color:#333;white-space:pre-wrap;line-height:1.5;margin-top:${_simgs.length?'5px':'0'}">${_smemo}</div>`:''}
+  const sidePanelHtml = hasSide ? `<div style="margin-top:10px;background:${_memoPanelBg};padding:12px;box-sizing:border-box;overflow:hidden;border-radius:18px;border:1px solid ${_softBorder};box-shadow:0 14px 26px rgba(15,23,42,.06)">
+    <div style="font-size:11px;font-weight:900;color:${col};margin-bottom:${(_simgs.length||_smemo)?'10px':'0'}">사이드 메모</div>
+    ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;max-width:260px;border-radius:12px;${(i<_simgs.length-1||_smemo)?'margin-bottom:8px;':''}display:block;object-fit:contain;border:1px solid rgba(148,163,184,.14);background:#fff" onerror="this.style.display='none'">`).join('')}
+    ${_smemo?`<div style="font-size:11px;color:#334155;white-space:pre-wrap;line-height:1.65;margin-top:${_simgs.length?'8px':'0'}">${_smemo}</div>`:''}
   </div>` : '';
-  const bodyContent = `<div class="b2-bg-host" style="position:relative;overflow:hidden">
+  const bodyContent = `<div class="b2-bg-host" style="position:relative;overflow:hidden;background:${_hasBgImg?'transparent':'linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.82))'}">
     ${bgImgHtml}
-    <div style="position:relative;z-index:1">
+    <div style="position:relative;z-index:1;padding:16px;background:${_hasBgImg?'transparent':'transparent'}">
       <div>${rows}</div>
       ${sidePanelHtml}
     </div>
@@ -1492,29 +1628,47 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const _ubWrBadge=_ubWr!==null
     ? `<span style="flex-shrink:0;background:rgba(0,0,0,.18);color:${_ubWrc};font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;border:1px solid rgba(255,255,255,.15)" title="통산 ${_ubTw}승 ${_ubTl}패">📊 ${_ubWr}%</span>`
     : '';
+  const _ubRoleBadge=roledMembers.length
+    ? `<span style="flex-shrink:0;background:rgba(255,255,255,.18);color:${textCol};font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.15)">직책 ${roledMembers.length}</span>`
+    : '';
+  const _ubTierBadge=tieredMembers.length
+    ? `<span style="flex-shrink:0;background:rgba(255,255,255,.18);color:${textCol};font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.15)">일반 ${tieredMembers.length}</span>`
+    : '';
 
   // 하단 메모/이미지 (bMemo/bMemoImgs)
   const _bnote = uCfg.bMemo || '';
   const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
-  const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:8px;display:inline-block" onerror="this.style.display='none'">`).join('');
-  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:6px 14px 10px;background:${col}15;border-top:1px solid ${col}22">
-    ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${_bnote?'6px':'0'}">${_bimgHtmls}</div>`:''}
-    ${_bnote?`<div style="font-size:12px;color:#333;white-space:pre-wrap;line-height:1.6">${_bnote}</div>`:''}
+  const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:12px;display:inline-block;border:1px solid rgba(148,163,184,.14);background:#fff" onerror="this.style.display='none'">`).join('');
+  const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:14px 16px 16px;background:${_hasBgImg?'linear-gradient(180deg,rgba(255,255,255,.28),rgba(248,250,252,.14))':'linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.86))'};border-top:1px solid rgba(148,163,184,.16)">
+    <div style="font-size:11px;font-weight:900;color:${col};margin-bottom:${(_bimgHtmls||_bnote)?'10px':'0'}">하단 메모</div>
+    ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:${_bnote?'8px':'0'}">${_bimgHtmls}</div>`:''}
+    ${_bnote?`<div style="font-size:12px;color:#334155;white-space:pre-wrap;line-height:1.7">${_bnote}</div>`:''}
   </div>` : '';
 
   return `
-    <div data-b2card="${univName.replace(/"/g,'&quot;')}" style="border-radius:14px;overflow:hidden;box-shadow:0 2px 16px ${col}30">
-      <div style="background:${col};padding:10px 16px">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden">
-          ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,36px);height:var(--su_univ_logo_size,36px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px);flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
-          <span style="font-weight:900;font-size:15px;color:${textCol};flex-shrink:0;cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
-          ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
-          ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}bb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:45%;margin-left:2px">${uCfg.memo2}</span>`:''}
+    <div data-b2card="${univName.replace(/"/g,'&quot;')}" style="border-radius:22px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.06)">
+      <div style="background:linear-gradient(135deg,${col} 0%,${col}dd 100%);padding:14px 16px 12px;position:relative;overflow:hidden">
+        <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,${_hasBgImg?'.08':'.18'}),rgba(255,255,255,0) 58%);pointer-events:none"></div>
+        <div style="display:flex;align-items:flex-start;gap:10px;position:relative;z-index:1">
+          ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,42px);height:var(--su_univ_logo_size,42px);object-fit:contain;border-radius:var(--su_univ_logo_radius,12px);flex-shrink:0;cursor:pointer;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);padding:4px" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
+          <div style="min-width:0;flex:1">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0">
+              <span style="font-weight:950;font-size:18px;color:${textCol};flex-shrink:0;cursor:pointer;letter-spacing:-.02em" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
+              ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
+              ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}dd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:46%;margin-left:2px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:4px 9px">${uCfg.memo2}</span>`:''}
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px">
+              ${_ubRoleBadge}
+              ${_ubTierBadge}
+              ${_ubWeekBadge}
+              ${_ubWrBadge}
+            </div>
+          </div>
           <span style="flex:1"></span>
-          ${_ubWeekBadge}
-          ${_ubWrBadge}
-          <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}33;cursor:pointer" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
-          ${isLoggedIn?`<button class="no-export" onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:11px;cursor:pointer;padding:1px 7px;border-radius:8px;flex-shrink:0;font-weight:700;margin-left:3px;z-index:var(--z-dropdown);position:relative" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶':'▼'}</button>`:''}
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+            <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}33;cursor:pointer" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
+            ${isLoggedIn?`<button class="no-export" onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:11px;cursor:pointer;padding:1px 7px;border-radius:8px;flex-shrink:0;font-weight:700;margin-left:3px;z-index:var(--z-dropdown);position:relative" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶':'▼'}</button>`:''}
+          </div>
         </div>
       </div>
       <div class="b2-card-body" style="${_b2Collapsed.has(univName)?'display:none':''}">
@@ -1575,18 +1729,20 @@ function _b2FreeView() {
   const rTotal=tieredFree.length||1;
 
   const defCol = '#64748b';
-  let h = `<div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 14px #0002">
-    <div style="background:${defCol};padding:10px 16px">
+  let h = `<div style="border-radius:22px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.06)">
+    <div style="background:linear-gradient(135deg,${defCol} 0%,#475569 100%);padding:14px 16px 12px;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,0) 58%);pointer-events:none"></div>
+      <div style="position:relative;z-index:1">
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <span style="font-weight:900;font-size:15px;color:#fff">🚶 무소속</span>
-        <span style="background:rgba(255,255,255,.18);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">${freeMembers.length}명</span>
-        ${_fvActive>0?`<span style="background:rgba(255,165,0,.35);color:#fef08a;font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px">🔥 이번주 ${_fvActive}명</span>`:''}
-        ${_fvWwT>0?`<span style="background:rgba(0,0,0,.18);color:${_fvWw>=_fvWl?'#bbf7d0':'#fecaca'};font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px">${_fvWw}승${_fvWl}패</span>`:''}
-        ${_fvWr!==null?`<span style="background:rgba(0,0,0,.18);color:${_fvWrc};font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px" title="통산 ${_fvTw}승 ${_fvTl}패">📊 통산 ${_fvWr}%</span>`:''}
+        <span style="font-weight:950;font-size:18px;color:#fff;letter-spacing:-.02em">🚶 무소속</span>
+        <span style="background:rgba(255,255,255,.18);color:#fff;font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.15)">${freeMembers.length}명</span>
+        ${_fvActive>0?`<span style="background:rgba(255,165,0,.35);color:#fef08a;font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12)">🔥 이번주 ${_fvActive}명</span>`:''}
+        ${_fvWwT>0?`<span style="background:rgba(0,0,0,.18);color:${_fvWw>=_fvWl?'#bbf7d0':'#fecaca'};font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12)">${_fvWw}승${_fvWl}패</span>`:''}
+        ${_fvWr!==null?`<span style="background:rgba(0,0,0,.18);color:${_fvWrc};font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12)" title="통산 ${_fvTw}승 ${_fvTl}패">📊 통산 ${_fvWr}%</span>`:''}
         <div style="margin-left:auto;display:flex;gap:4px;align-items:center">
-          ${rCts.P?`<span style="font-size:10px;background:rgba(124,58,237,.4);color:#ede9fe;padding:1px 6px;border-radius:6px;font-weight:800">🔮${rCts.P}</span>`:''}
-          ${rCts.T?`<span style="font-size:10px;background:rgba(2,132,199,.4);color:#e0f2fe;padding:1px 6px;border-radius:6px;font-weight:800">⚔️${rCts.T}</span>`:''}
-          ${rCts.Z?`<span style="font-size:10px;background:rgba(5,150,105,.4);color:#d1fae5;padding:1px 6px;border-radius:6px;font-weight:800">🦎${rCts.Z}</span>`:''}
+          ${rCts.P?`<span style="font-size:10px;background:rgba(124,58,237,.4);color:#ede9fe;padding:4px 8px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.12)">🔮${rCts.P}</span>`:''}
+          ${rCts.T?`<span style="font-size:10px;background:rgba(2,132,199,.4);color:#e0f2fe;padding:4px 8px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.12)">⚔️${rCts.T}</span>`:''}
+          ${rCts.Z?`<span style="font-size:10px;background:rgba(5,150,105,.4);color:#d1fae5;padding:4px 8px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.12)">🦎${rCts.Z}</span>`:''}
         </div>
       </div>
       <div style="display:flex;height:5px;border-radius:3px;overflow:hidden;margin-top:8px;background:rgba(255,255,255,.15)">
@@ -1595,11 +1751,12 @@ function _b2FreeView() {
         ${rCts.Z?`<div style="flex:${rCts.Z};background:#059669;opacity:.85"></div>`:''}
         ${rCts['?']?`<div style="flex:${rCts['?']};background:rgba(255,255,255,.2)"></div>`:''}
       </div>
+      </div>
     </div>
-    <div style="background:#64748b${_b2AlphaHex(b2BgAlpha)};padding:6px 14px 12px">`;
+    <div style="background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.90));padding:16px">`;
 
-  const _frow = (labelEl, contentEl) => `<div style="padding:5px 0;border-bottom:1px solid ${defCol}18"><div style="display:flex;align-items:stretch">${labelEl}<div style="flex:1;padding:2px 4px">${contentEl}</div></div></div>`;
-  const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:800;color:${isRole?defCol:'var(--text3)'};width:56px;min-width:56px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)}!important;border-right:1px solid ${defCol}33;margin-right:10px">${text}</span>`;
+  const _frow = (labelEl, contentEl) => `<div style="display:flex;align-items:stretch;gap:0;margin-bottom:8px">${labelEl}<div style="flex:1;padding:10px 12px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.14);border-left:none;border-radius:0 16px 16px 0;box-shadow:0 10px 18px rgba(15,23,42,.04)">${contentEl}</div></div>`;
+  const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:900;color:${isRole?defCol:'var(--text3)'};width:68px;min-width:68px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)}!important;border:1px solid rgba(100,116,139,.28);border-right:none;border-radius:16px 0 0 16px;padding:8px 6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)">${text}</span>`;
 
   roledFree.forEach(p => {
     h += _frow(_fl(p.role||'', true), _b2PlayerRow(p, defCol));
@@ -2479,7 +2636,7 @@ function _b2PlayersView() {
     const wrColor = ws && ws.total>0 ? (ws.w/ws.total>=0.6?'#10b981':ws.w/ws.total>=0.4?'#f59e0b':'#ef4444') : '#94a3b8';
     
     h += `
-      <div class="b2-players-card ${isActive ? 'active' : ''}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:140px;padding:12px;border-radius:12px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--white);border:2px solid ${isActive?playerColor:'transparent'};box-shadow:${isActive?'0 4px 12px '+hexToRgba(playerColor,0.3):'0 1px 3px rgba(0,0,0,0.08)'}">
+      <div class="b2-players-card ${isActive ? 'active' : ''}" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:140px;padding:12px;border-radius:12px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--white);border:2px solid ${isActive?playerColor:'transparent'};box-shadow:${isActive?'0 4px 12px '+hexToRgba(playerColor,0.3):'0 1px 3px rgba(0,0,0,0.08)'}">
         <div style="position:relative;width:116px;height:116px;flex-shrink:0">
           ${p.photo
             ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" ${isActive?'fetchpriority="high"':'fetchpriority="auto"'} class="b2-players-thumbnail b2-fit-auto" data-fit-kind="thumb" data-fit-mode="auto" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:contain;display:block" onload="_b2ApplyBgAutoSizing(this)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -2643,17 +2800,23 @@ function _b2UpdateMainDisplay(playerName) {
   const _selName = String(playerName || '').trim();
   document.querySelectorAll('.b2-players-card').forEach(card => {
     card.classList.remove('active');
-    const cardName = String(card.querySelector('.b2-players-label')?.textContent || '').trim();
+    const cardName = String(card.dataset.playerName || '').trim();
     const thumbnail = card.querySelector('.b2-players-thumbnail');
     if (cardName && cardName === _selName) {
       card.classList.add('active');
+      card.style.borderColor = theme.border;
+      card.style.boxShadow = `0 4px 12px ${theme.glow}`;
       if (thumbnail) {
-        thumbnail.style.borderColor = theme.border;
+        thumbnail.style.border = `2px solid ${theme.border}`;
         thumbnail.style.boxShadow = `0 8px 25px ${theme.glow}`;
       }
-    } else if (thumbnail) {
-      thumbnail.style.borderColor = 'transparent';
-      thumbnail.style.boxShadow = 'none';
+    } else {
+      card.style.borderColor = 'transparent';
+      card.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
+      if (thumbnail) {
+        thumbnail.style.border = '2px solid transparent';
+        thumbnail.style.boxShadow = 'none';
+      }
     }
   });
 }
@@ -3573,11 +3736,21 @@ function _b2SummaryView() {
   };
 
   let h = `<style>
+    .b2s-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px;border-radius:26px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.05);margin-bottom:16px}
+    .b2s-hero-title{font-size:26px;font-weight:950;letter-spacing:-.04em;color:var(--text1);line-height:1.08}
+    .b2s-hero-desc{margin-top:6px;font-size:13px;line-height:1.65;color:var(--text3);max-width:720px}
+    .b2s-hero-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .b2s-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.04);font-size:12px;font-weight:800;color:var(--text2)}
+    .b2s-hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;min-width:min(100%,360px)}
+    .b2s-hero-stat{padding:14px;border-radius:18px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.04)}
+    .b2s-hero-stat-label{font-size:11px;font-weight:800;color:var(--text3)}
+    .b2s-hero-stat-value{margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1}
+    .b2s-hero-stat-sub{margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)}
     .b2s-grid7 { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-bottom:16px; }
     @media(max-width:700px){ .b2s-grid7{ grid-template-columns:repeat(4,1fr); } }
     @media(max-width:420px){ .b2s-grid7{ grid-template-columns:repeat(2,1fr); } }
-    .b2s-kpi { border-radius:14px; padding:14px 12px; text-align:center; position:relative; overflow:hidden; border:1px solid var(--border2); transition:transform .15s,box-shadow .15s; cursor:default; }
-    .b2s-kpi:hover { transform:translateY(-2px); box-shadow:0 6px 24px #0002; }
+    .b2s-kpi { border-radius:18px; padding:15px 12px; text-align:center; position:relative; overflow:hidden; border:1px solid rgba(148,163,184,.16); background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96)); box-shadow:0 14px 24px rgba(15,23,42,.04); transition:transform .15s,box-shadow .15s; cursor:default; }
+    .b2s-kpi:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(15,23,42,.08); }
     .b2s-kpi-num { font-size:26px; font-weight:900; line-height:1.1; }
     .b2s-kpi-lbl { font-size:11px; font-weight:700; margin-top:3px; opacity:.75; }
     .b2s-kpi-sub { font-size:10px; opacity:.6; margin-top:1px; }
@@ -3585,16 +3758,18 @@ function _b2SummaryView() {
     .b2s-2col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:14px; }
     @media(max-width:780px){ .b2s-2col{ grid-template-columns:1fr 1fr; } }
     @media(max-width:520px){ .b2s-2col{ grid-template-columns:1fr; } }
-    .b2s-panel { background:var(--surface); border:1px solid var(--border2); border-radius:14px; padding:16px; }
+    .b2s-panel { background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96)); border:1px solid rgba(148,163,184,.16); border-radius:20px; padding:16px; box-shadow:0 16px 28px rgba(15,23,42,.04); }
     .b2s-panel-title { font-size:13px; font-weight:900; color:var(--text1); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
     .b2s-univ-row { display:flex; align-items:center; gap:8px; padding:5px 0; }
     .b2s-univ-row + .b2s-univ-row { border-top:1px solid var(--border2); }
     .b2s-bar-track { flex:1; height:12px; border-radius:6px; overflow:hidden; background:var(--border2); display:flex; }
-    .b2s-tier-chip { display:inline-flex; flex-direction:column; align-items:center; padding:6px 10px; border-radius:10px; min-width:46px; }
+    .b2s-tier-chip { display:inline-flex; flex-direction:column; align-items:center; padding:8px 10px; border-radius:14px; min-width:54px; box-shadow:0 10px 16px rgba(15,23,42,.04); }
     .b2s-top-univ { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; }
-    .b2s-univ-card { border-radius:12px; padding:10px 12px; border:1.5px solid; position:relative; overflow:hidden; transition:transform .12s,box-shadow .12s; cursor:default; }
-    .b2s-univ-card:hover { transform:translateY(-2px); box-shadow:0 4px 16px #0002; }
-    .b2s-new-player { display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;background:var(--surface);border:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text2);margin:2px; }
+    .b2s-univ-card { border-radius:16px; padding:10px 12px; border:1.5px solid; position:relative; overflow:hidden; transition:transform .12s,box-shadow .12s; cursor:default; box-shadow:0 12px 18px rgba(15,23,42,.04); }
+    .b2s-univ-card:hover { transform:translateY(-2px); box-shadow:0 12px 24px rgba(15,23,42,.08); }
+    .b2s-new-player { display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:var(--surface);border:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text2);margin:2px; }
+    @media(max-width:900px){ .b2s-hero{flex-direction:column}.b2s-hero-stats{width:100%;grid-template-columns:repeat(3,minmax(0,1fr));} }
+    @media(max-width:640px){ .b2s-hero{padding:18px 16px;border-radius:22px}.b2s-hero-title{font-size:22px}.b2s-hero-stats{grid-template-columns:1fr} }
   </style>`;
 
   // KPI 7개 (통산승률 + 이번주 활동 추가)
@@ -3608,9 +3783,40 @@ function _b2SummaryView() {
     { num: totalWr!==null?`${totalWr}%`:'-', lbl:'통산 승률', col:'#ec4899', icon:'📊', sub:`${totalG.toLocaleString()}전` },
   ];
 
+  h += `<section class="b2s-hero">
+    <div>
+      <div style="font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase">Summary Dashboard</div>
+      <div class="b2s-hero-title">현황판 요약</div>
+      <div class="b2s-hero-desc">전체 인원, 활동 대학, 종족 분포, 최근 유입과 대학별 구성을 한 화면에서 빠르게 훑을 수 있도록 정리한 요약 화면입니다.</div>
+      <div class="b2s-hero-badges">
+        <span class="b2s-hero-badge">표시 선수 ${vis.length}명</span>
+        <span class="b2s-hero-badge">일반 ${tieredVis.length}명</span>
+        <span class="b2s-hero-badge">직책 ${roledVis.length}명</span>
+        <span class="b2s-hero-badge">최근 30일 신규 ${newPlayers.length}명</span>
+      </div>
+    </div>
+    <div class="b2s-hero-stats">
+      <div class="b2s-hero-stat">
+        <div class="b2s-hero-stat-label">활동 대학</div>
+        <div class="b2s-hero-stat-value">${univList.length}</div>
+        <div class="b2s-hero-stat-sub">무소속 제외 기준</div>
+      </div>
+      <div class="b2s-hero-stat">
+        <div class="b2s-hero-stat-label">이번주 활동</div>
+        <div class="b2s-hero-stat-value">${weekActive.size}</div>
+        <div class="b2s-hero-stat-sub">${totalW}승 ${totalL}패 누적</div>
+      </div>
+      <div class="b2s-hero-stat">
+        <div class="b2s-hero-stat-label">통산 승률</div>
+        <div class="b2s-hero-stat-value">${totalWr!==null?`${totalWr}%`:'-'}</div>
+        <div class="b2s-hero-stat-sub">${totalG.toLocaleString()}전 기준</div>
+      </div>
+    </div>
+  </section>`;
+
   h += `<div class="b2s-grid7">
     ${kpis.map(k=>`
-    <div class="b2s-kpi" style="background:${k.col}12">
+    <div class="b2s-kpi" style="background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96))">
       <div class="b2s-kpi-glow" style="background:radial-gradient(circle at 50% 0%,${k.col},transparent 70%)"></div>
       <div style="font-size:20px;margin-bottom:2px">${k.icon}</div>
       <div class="b2s-kpi-num" style="color:${k.col}">${k.num}</div>
@@ -5172,19 +5378,29 @@ function _b2WeeklyBriefingView() {
 
     // CSS
     let h = `<style>
-      .b2w2-wrap { max-width:900px }
-      .b2w2-hdr  { display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;margin-bottom:14px }
-      .b2w2-din  { padding:4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2) }
-      .b2w2-sel  { padding:4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);max-width:140px }
-      .b2w2-btn  { padding:5px 14px;border-radius:8px;background:var(--blue);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer }
+      .b2w2-wrap { max-width:980px }
+      .b2w2-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px;border-radius:26px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.05);margin-bottom:14px}
+      .b2w2-hero-title{font-size:26px;font-weight:950;letter-spacing:-.04em;color:var(--text1);line-height:1.08}
+      .b2w2-hero-desc{margin-top:6px;font-size:13px;line-height:1.65;color:var(--text3);max-width:720px}
+      .b2w2-hero-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+      .b2w2-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.04);font-size:12px;font-weight:800;color:var(--text2)}
+      .b2w2-hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;min-width:min(100%,360px)}
+      .b2w2-hero-stat{padding:14px;border-radius:18px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.04)}
+      .b2w2-hero-stat-label{font-size:11px;font-weight:800;color:var(--text3)}
+      .b2w2-hero-stat-value{margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1}
+      .b2w2-hero-stat-sub{margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)}
+      .b2w2-hdr  { display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 16px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.16);border-radius:20px;margin-bottom:14px;box-shadow:0 16px 28px rgba(15,23,42,.04) }
+      .b2w2-din  { padding:6px 12px;border-radius:10px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);box-shadow:0 8px 14px rgba(15,23,42,.04) }
+      .b2w2-sel  { padding:6px 12px;border-radius:10px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);max-width:160px;box-shadow:0 8px 14px rgba(15,23,42,.04) }
+      .b2w2-btn  { padding:7px 14px;border-radius:10px;background:var(--blue);color:#fff;border:none;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 12px 18px rgba(37,99,235,.18) }
       .b2w2-btn:hover { opacity:.85 }
-      .b2w2-mvp  { display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:linear-gradient(135deg,#fef9c355,#fef08a22);border:1px solid #fbbf24;border-radius:14px;margin-bottom:14px }
-      .b2w2-chart-box { background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px }
+      .b2w2-mvp  { display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px;background:linear-gradient(135deg,rgba(254,249,195,.7),rgba(255,251,235,.95));border:1px solid rgba(251,191,36,.55);border-radius:20px;margin-bottom:14px;box-shadow:0 16px 28px rgba(180,83,9,.08) }
+      .b2w2-chart-box { background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.16);border-radius:20px;padding:14px 16px;margin-bottom:14px;box-shadow:0 16px 28px rgba(15,23,42,.04) }
       .b2w2-chart-title { font-size:12px;font-weight:800;color:var(--text3);margin-bottom:10px }
-      .b2w2-card { background:var(--surface);border:1px solid var(--border2);border-radius:14px;margin-bottom:12px;overflow:hidden }
-      .b2w2-card-head { display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;transition:background .15s }
-      .b2w2-card-head:hover { background:rgba(0,0,0,.04) }
-      .b2w2-chip { font-size:11px;font-weight:700;padding:2px 7px;border-radius:7px }
+      .b2w2-card { background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.16);border-radius:20px;margin-bottom:12px;overflow:hidden;box-shadow:0 16px 28px rgba(15,23,42,.04) }
+      .b2w2-card-head { display:flex;align-items:center;gap:8px;padding:14px 16px;cursor:pointer;transition:background .15s }
+      .b2w2-card-head:hover { background:rgba(15,23,42,.03) }
+      .b2w2-chip { font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px }
       .b2w2-tbl  { width:100%;border-collapse:collapse }
       .b2w2-tbl th { font-size:10px;font-weight:800;color:var(--text3);padding:6px 10px;text-align:left;border-bottom:1px solid var(--border2);background:var(--bg);white-space:nowrap }
       .b2w2-tbl td { font-size:11px;font-weight:600;padding:7px 10px;border-bottom:1px solid var(--border2);vertical-align:middle }
@@ -5193,14 +5409,53 @@ function _b2WeeklyBriefingView() {
       .b2w2-race-box { padding:10px 16px 12px;border-top:1px solid var(--border2) }
       .b2w2-race-title { font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px }
       .b2w2-empty { text-align:center;padding:32px 16px;color:var(--text3);font-size:13px }
+      @media(max-width:900px){ .b2w2-hero{flex-direction:column}.b2w2-hero-stats{width:100%;grid-template-columns:repeat(3,minmax(0,1fr));} }
       @media(max-width:600px){
+        .b2w2-hero{padding:18px 16px;border-radius:22px}
+        .b2w2-hero-title{font-size:22px}
+        .b2w2-hero-stats{grid-template-columns:1fr}
         .b2w2-tbl th:nth-child(5),.b2w2-tbl td:nth-child(5),
         .b2w2-tbl th:nth-child(4),.b2w2-tbl td:nth-child(4){ display:none }
       }
     </style>`;
 
+    const _totalGames = curStats.reduce((s,ud)=>s+(ud.tg||0),0);
+    const _activeUnivs = curStats.filter(ud=>ud.tg>0).length;
+    const _periodDays = diffDays;
+
     // ── 헤더 컨트롤
-    h += `<div class="b2w2-wrap"><div class="b2w2-hdr">
+    h += `<div class="b2w2-wrap">
+      <section class="b2w2-hero">
+        <div>
+          <div style="font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase">Weekly Briefing</div>
+          <div class="b2w2-hero-title">주간 브리핑</div>
+          <div class="b2w2-hero-desc">기간별 활동 대학, 경기 수, MVP, 대학별 세부 전적을 한 번에 비교하기 좋도록 정리한 브리핑 화면입니다.</div>
+          <div class="b2w2-hero-badges">
+            <span class="b2w2-hero-badge">선택 기간 ${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}</span>
+            <span class="b2w2-hero-badge">활동 대학 ${_activeUnivs}곳</span>
+            <span class="b2w2-hero-badge">총 경기 ${_totalGames}전</span>
+            <span class="b2w2-hero-badge">필터 ${selUniv}</span>
+          </div>
+        </div>
+        <div class="b2w2-hero-stats">
+          <div class="b2w2-hero-stat">
+            <div class="b2w2-hero-stat-label">선택 대학</div>
+            <div class="b2w2-hero-stat-value">${selUniv==='전체'?'전체':selUniv}</div>
+            <div class="b2w2-hero-stat-sub">비교 범위 즉시 변경 가능</div>
+          </div>
+          <div class="b2w2-hero-stat">
+            <div class="b2w2-hero-stat-label">기간 길이</div>
+            <div class="b2w2-hero-stat-value">${_periodDays}</div>
+            <div class="b2w2-hero-stat-sub">일 단위 집계</div>
+          </div>
+          <div class="b2w2-hero-stat">
+            <div class="b2w2-hero-stat-label">전주 비교</div>
+            <div class="b2w2-hero-stat-value">${fmtDate(prevDateFrom)}</div>
+            <div class="b2w2-hero-stat-sub">${fmtDate(prevDateTo)} 까지</div>
+          </div>
+        </div>
+      </section>
+      <div class="b2w2-hdr">
       <span style="font-size:16px">📅</span>
       <span style="font-size:14px;font-weight:900;color:var(--text1)">주간 브리핑</span>
       <input type="date" class="b2w2-din" id="b2w2-from" tabindex="-1" value="${dateFrom}">

@@ -263,7 +263,7 @@ function buildPlayerDetailHTML(p){
       ? buildPlayerMemoHTML(p)
       : '';
   }
-  return h;
+  return `<div class="pd-premium-shell">${h}</div>`;
 }
 
 try{

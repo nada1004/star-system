@@ -9,6 +9,94 @@ let _bulkEditSelected=new Set(); // 선택된 스트리머 이름
 let _bulkEditSearch=''; // 일괄 수정(선택 모드) 검색어
 let totalViewMode='table'; // 'table' | 'gallery'
 
+(function _injectStreamerTabUiStyle(){
+  if(typeof document==='undefined') return;
+  if(document.getElementById('streamer-tab-ui-style')) return;
+  const s=document.createElement('style');
+  s.id='streamer-tab-ui-style';
+  s.textContent=[
+    '.streamer-shell{display:flex;flex-direction:column;gap:14px}',
+    '.streamer-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 38px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.88)}',
+    '.streamer-hero-copy{display:flex;flex-direction:column;gap:6px;min-width:0}',
+    '.streamer-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}',
+    '.streamer-hero-title{font-size:24px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.15}',
+    '.streamer-hero-desc{font-size:13px;line-height:1.6;color:var(--text3)}',
+    '.streamer-hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}',
+    '.streamer-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);font-size:12px;font-weight:800;color:var(--text2);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.streamer-toolbar-card,.streamer-content-card{padding:12px 14px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 32px rgba(15,23,42,.05)}',
+    '.streamer-toolbar-card .pill{border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.92));color:var(--text2);font-weight:800;box-shadow:0 8px 16px rgba(15,23,42,.04);transition:transform .15s,box-shadow .15s,border-color .15s,background .15s}',
+    '.streamer-toolbar-card .pill:hover{transform:translateY(-1px);box-shadow:0 14px 24px rgba(15,23,42,.08)}',
+    '.streamer-toolbar-card .pill.on{background:linear-gradient(135deg,#2563eb,#3b82f6);border-color:#2563eb;color:#fff;box-shadow:0 14px 26px rgba(37,99,235,.24)}',
+    '.streamer-toolbar-card .pill.warn-on{background:linear-gradient(135deg,#f59e0b,#f97316);border-color:#f59e0b;color:#fff;box-shadow:0 14px 26px rgba(245,158,11,.22)}',
+    '.streamer-toolbar-card .pill.edit-on{background:linear-gradient(135deg,#2563eb,#60a5fa);border-color:#2563eb;color:#fff;box-shadow:0 14px 26px rgba(37,99,235,.22)}',
+    '.streamer-search{padding:8px 12px;border:1px solid rgba(148,163,184,.18);border-radius:14px;font-size:12px;min-width:140px;max-width:240px;flex:0 1 210px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));color:var(--text);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}',
+    '.streamer-summary-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:rgba(248,250,252,.94);border:1px solid rgba(148,163,184,.16);font-size:11px;font-weight:800;color:var(--text2)}',
+    '.streamer-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}',
+    '.streamer-table{table-layout:fixed;width:100%;border-collapse:separate;border-spacing:0 8px}',
+    '.streamer-table thead th{background:linear-gradient(180deg,#f8fbff,#eef6ff);border-top:1px solid rgba(148,163,184,.18);border-bottom:1px solid rgba(148,163,184,.18)}',
+    '.streamer-table tbody tr{box-shadow:0 12px 24px rgba(15,23,42,.05)}',
+    '.streamer-table tbody tr.streamer-row.top1 td{background:linear-gradient(180deg,rgba(255,251,235,.98),rgba(254,243,199,.92))}',
+    '.streamer-table tbody tr.streamer-row.top2 td{background:linear-gradient(180deg,rgba(248,250,252,.98),rgba(226,232,240,.92))}',
+    '.streamer-table tbody tr.streamer-row.top3 td{background:linear-gradient(180deg,rgba(255,247,237,.98),rgba(254,215,170,.9))}',
+    '.streamer-table tbody tr.streamer-row.inactive td{opacity:.92}',
+    '.streamer-table tbody tr.streamer-row.retired td{opacity:.78;filter:saturate(.78)}',
+    '.streamer-table tbody td{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border-top:1px solid rgba(148,163,184,.14);border-bottom:1px solid rgba(148,163,184,.14)}',
+    '.streamer-table tbody tr td:first-child{border-left:1px solid rgba(148,163,184,.14);border-top-left-radius:16px;border-bottom-left-radius:16px}',
+    '.streamer-table tbody tr td:last-child{border-right:1px solid rgba(148,163,184,.14);border-top-right-radius:16px;border-bottom-right-radius:16px}',
+    '.streamer-univ-head td{padding:0!important;border:none!important;background:transparent!important;box-shadow:none!important}',
+    '.streamer-univ-banner{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:18px;color:#fff;overflow:hidden;box-shadow:0 16px 30px rgba(15,23,42,.12)}',
+    '.streamer-univ-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 42%);pointer-events:none}',
+    '.streamer-univ-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;position:relative;z-index:1}',
+    '.streamer-univ-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);color:#fff;font-size:14px;font-weight:900;border:1px solid rgba(255,255,255,.24)}',
+    '.streamer-univ-count{position:relative;z-index:1;font-size:11px;color:rgba(255,255,255,.86);font-weight:700;white-space:nowrap}',
+    '.streamer-subgrp td{padding:0!important;border:none!important;background:transparent!important;box-shadow:none!important}',
+    '.streamer-subgrp-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:12px;font-weight:800;background:rgba(59,130,246,.08);color:var(--text2);border:1px solid rgba(59,130,246,.14)}',
+    '.streamer-player-cell{display:flex;align-items:center;gap:10px;min-width:0}',
+    '.streamer-avatar{width:42px;height:42px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid rgba(148,163,184,.18);background:linear-gradient(180deg,#eef2ff,#e2e8f0);font-size:11px;font-weight:900;color:#64748b;position:relative;cursor:pointer;box-shadow:0 10px 18px rgba(15,23,42,.07)}',
+    '.streamer-name-stack{display:flex;flex-direction:column;gap:4px;min-width:0}',
+    '.streamer-name-line{display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-width:0}',
+    '.streamer-name-link{font-weight:800;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.streamer-mini-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}',
+    '.streamer-rank-box{display:flex;flex-direction:column;align-items:center;gap:4px}',
+    '.streamer-stat-num{font-weight:900}',
+    '.streamer-wr-box{display:flex;flex-direction:column;align-items:center;gap:3px}',
+    '.streamer-elo-chip,.streamer-act-chip{display:inline-flex;align-items:center;justify-content:center;min-width:54px;padding:5px 8px;border-radius:999px;border:1px solid rgba(148,163,184,.16);font-size:11px;font-weight:900;background:rgba(248,250,252,.96)}',
+    '.streamer-act-chip.hot{color:#16a34a;background:linear-gradient(180deg,rgba(240,253,244,.98),rgba(220,252,231,.92));border-color:rgba(34,197,94,.26)}',
+    '.streamer-act-chip.warm{color:#d97706;background:linear-gradient(180deg,rgba(255,251,235,.98),rgba(254,243,199,.92));border-color:rgba(245,158,11,.26)}',
+    '.streamer-act-chip.cool{color:#64748b;background:linear-gradient(180deg,rgba(248,250,252,.98),rgba(241,245,249,.92));border-color:rgba(148,163,184,.24)}',
+    '.streamer-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:12px;padding:4px 0}',
+    '.streamer-gallery-head{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:18px;position:relative;overflow:hidden;box-shadow:0 16px 30px rgba(15,23,42,.12)}',
+    '.streamer-gallery-head::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 44%);pointer-events:none}',
+    '.streamer-gallery-univ{position:relative;z-index:1;background:rgba(255,255,255,.18)!important;border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(8px)}',
+    '.streamer-gallery-card{position:relative;border-radius:18px;overflow:hidden;cursor:pointer;aspect-ratio:3/4;transition:transform .15s,box-shadow .15s;border:1px solid rgba(148,163,184,.18);box-shadow:0 14px 28px rgba(15,23,42,.10)}',
+    '.streamer-gallery-card.top1{box-shadow:0 18px 34px rgba(251,191,36,.22);border-color:rgba(251,191,36,.42)}',
+    '.streamer-gallery-card.top2{box-shadow:0 18px 34px rgba(148,163,184,.2);border-color:rgba(148,163,184,.36)}',
+    '.streamer-gallery-card.top3{box-shadow:0 18px 34px rgba(180,83,9,.18);border-color:rgba(180,83,9,.34)}',
+    '.streamer-gallery-card.inactive{filter:saturate(.92)}',
+    '.streamer-gallery-card.retired{filter:grayscale(.16) saturate(.84);opacity:.84}',
+    '.streamer-gallery-card:hover{transform:translateY(-4px);box-shadow:0 18px 34px rgba(15,23,42,.18)}',
+    '.streamer-gallery-rank{position:absolute;top:8px;left:10px;font-size:10px;font-weight:900;color:rgba(255,255,255,.82)}',
+    '.streamer-gallery-act{position:absolute;top:8px;right:10px}',
+    '.streamer-gallery-act .streamer-act-chip{min-width:40px;padding:4px 7px;font-size:10px;backdrop-filter:blur(10px);background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.24);color:#fff}',
+    '.streamer-gallery-bottom{position:absolute;bottom:0;left:0;right:0;padding:10px 10px 11px;text-align:left}',
+    '.streamer-gallery-name{font-size:12px;font-weight:900;color:#fff;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.streamer-gallery-role{font-size:9px;color:rgba(255,255,255,.72);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.streamer-gallery-stats{margin-top:5px;display:flex;align-items:center;justify-content:space-between;gap:4px}',
+    '.streamer-empty{padding:20px}',
+    'body.dark .streamer-hero,body.dark .streamer-toolbar-card,body.dark .streamer-content-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
+    'body.dark .streamer-hero-title{color:#f8fafc}',
+    'body.dark .streamer-hero-desc{color:#94a3b8}',
+    'body.dark .streamer-hero-badge,body.dark .streamer-summary-chip,body.dark .streamer-search,body.dark .streamer-elo-chip,body.dark .streamer-act-chip,body.dark .streamer-subgrp-chip{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(30,41,59,.88));border-color:#334155;color:#e2e8f0}',
+    'body.dark .streamer-toolbar-card .pill{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#cbd5e1;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .streamer-toolbar-card .pill.on{background:linear-gradient(135deg,#1d4ed8,#2563eb);border-color:#2563eb;color:#eff6ff}',
+    'body.dark .streamer-table thead th{background:linear-gradient(180deg,#132033,#17263c);border-color:#334155;color:#e2e8f0}',
+    'body.dark .streamer-table tbody td{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#e2e8f0}',
+    'body.dark .streamer-avatar{background:linear-gradient(180deg,#17263c,#0f172a);border-color:#334155;color:#cbd5e1;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    '@media (max-width:780px){.streamer-hero{flex-direction:column;padding:16px;border-radius:20px}.streamer-hero-title{font-size:20px}.streamer-hero-badges{justify-content:flex-start}.streamer-toolbar-card,.streamer-content-card{padding:10px}.streamer-gallery-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}.streamer-search{max-width:none;flex:1 1 180px}}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
 function _bindTotalDelegatedEvents(){
   if(window.__totalDelegatedBound) return;
   window.__totalDelegatedBound = true;
@@ -126,21 +214,28 @@ function rTotal(C,T){
   const raceOpts=['전체','T','Z','P','N'];
   const _showBulk=isLoggedIn&&_bulkEditMode;
   const _ncols=(isLoggedIn?11:10)+(_showBulk?1:0);
+  const _viewLabel=totalViewMode==='gallery'?'갤러리':'테이블';
+  const _visiblePlayers = _pl.filter(p=>{
+    if(!p || p.retired) return false;
+    if(totalRaceFilter!=='전체' && p.race!==totalRaceFilter) return false;
+    if(totalHideNoRecord && (Number(p.win||0)+Number(p.loss||0))<=0) return false;
+    return true;
+  });
+  const _activeUnivCount = new Set(_visiblePlayers.map(p=>p.univ).filter(Boolean)).size;
   // (모바일/태블릿) 검색창이 커서 버튼들이 2줄로 밀리는 문제 방지
   // - 한 줄 유지 + 가로 스크롤(드래그)로 접근
-  let filterBar=`<div class="fbar utilbar utilbar--scroll" style="margin-bottom:16px;flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+  let filterBar=`<div class="streamer-toolbar-card"><div class="fbar utilbar utilbar--scroll" style="flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
     ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
     <span style="color:var(--border2);align-self:center">│</span>
-    <input id="total-search" type="text" value="${(totalSearch||'').replace(/"/g,'&quot;')}" placeholder="🔍 이름/대학/티어/직책 + (테/저/프, 남/여) 검색..."
+    <input id="total-search" class="streamer-search" type="text" value="${(totalSearch||'').replace(/"/g,'&quot;')}" placeholder="🔍 이름/대학/티어/직책 + (테/저/프, 남/여) 검색..."
       oncompositionstart="window._tsComp=true"
       oncompositionend="window._tsComp=false;totalSearch=this.value;totalApplySearchFilter()"
       oninput="totalSearch=this.value;if(!window._tsComp)totalApplySearchFilter()"
-      autocomplete="off" spellcheck="false"
-      style="padding:5px 8px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:140px;max-width:220px;flex:0 1 190px;background:var(--white);color:var(--text)">
-    <button class="pill ${totalHideNoRecord?'on':''}" style="${totalHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
+      autocomplete="off" spellcheck="false">
+    <button class="pill ${totalHideNoRecord?'on warn-on':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
     <span style="color:var(--border2);align-self:center">│</span>
     <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode=(totalViewMode==='gallery'?'table':'gallery');_bulkEditMode=false;render()" title="${totalViewMode==='gallery'?'목록으로 돌아가기':'갤러리 뷰'}">▦ 갤러리</button>
-    ${totalViewMode==='table'?(isLoggedIn?`<button class="pill ${_bulkEditMode?'on':''}" onclick="toggleBulkEditMode()" style="${_bulkEditMode?'background:#3b82f6;border-color:#3b82f6;color:#fff':''}">☑ 일괄 수정</button>`:''):''}
+    ${totalViewMode==='table'?(isLoggedIn?`<button class="pill ${_bulkEditMode?'on edit-on':''}" onclick="toggleBulkEditMode()">일괄 수정</button>`:''):''}
     ${totalViewMode==='table'?(isLoggedIn?`<button class="pill" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
     ${_showBulk&&totalViewMode==='table'?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
       <button id="bulk-edit-apply-btn" onclick="openBulkEditModal()" style="padding:4px 12px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer;display:${_bulkEditSelected.size>0?'inline-flex':'none'};align-items:center;gap:4px">✏️ <span id="bulk-edit-cnt">${_bulkEditSelected.size}</span>명 수정</button>
@@ -149,10 +244,10 @@ function rTotal(C,T){
         oncompositionend="window._tsComp2=false;_bulkEditSearch=this.value;bulkApplySearchFilter()"
         oninput="_bulkEditSearch=this.value;if(!window._tsComp2)bulkApplySearchFilter()"
         autocomplete="off" spellcheck="false"
-        style="padding:5px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;min-width:170px;background:var(--white);color:var(--text)">`:''}
-  </div>`;
+        class="streamer-search" style="min-width:170px">`:''}
+  </div></div>`;
 
-    let tableHTML=`<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%"><table style="table-layout:fixed;width:100%"><colgroup>
+    let tableHTML=`<div class="streamer-content-card"><div class="streamer-table-wrap"><table class="streamer-table"><colgroup>
     ${_showBulk?'<col style="width:36px">':''}
     <col style="width:52px"><col style="width:80px"><col style="width:60px"><col style="width:220px"><col class="col-hide-mobile" style="width:50px">
     <col style="width:52px"><col style="width:52px">
@@ -180,7 +275,22 @@ function rTotal(C,T){
 
   // 갤러리 뷰 분기
   if(totalViewMode==='gallery'){
-    C.innerHTML=filterBar+_buildGalleryView(_rankMap);
+    C.innerHTML=`<div class="streamer-shell">
+      <section class="streamer-hero">
+        <div class="streamer-hero-copy">
+          <div class="streamer-hero-kicker">Streamer Directory</div>
+          <div class="streamer-hero-title">🎬 스트리머 탭</div>
+          <div class="streamer-hero-desc">대학, 티어, 종족, 활동 상태를 한눈에 보고 원하는 스트리머를 빠르게 찾아볼 수 있도록 정리했습니다.</div>
+        </div>
+        <div class="streamer-hero-badges">
+          <span class="streamer-hero-badge">${_viewLabel}</span>
+          <span class="streamer-hero-badge">대학 ${_activeUnivCount}곳</span>
+          <span class="streamer-hero-badge">총 ${_visiblePlayers.length}명</span>
+        </div>
+      </section>
+      ${filterBar}
+      <div class="streamer-content-card">${_buildGalleryView(_rankMap)}</div>
+    </div>`;
     injectUnivIcons(C);
     requestAnimationFrame(()=>injectUnivIcons(C));
     totalApplySearchFilter();
@@ -276,16 +386,16 @@ function rTotal(C,T){
         _textHtml = `<span style="${_textBaseStyle}margin-left:auto;">${_hdrText}</span>`;
       }
     }
-    tableHTML+=`<tr class="ugrp" data-univ-header="${u.name}" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${_ncols}" style="${_textStyle}background:${_tdBgStyle};background-size:${_tdBgSize};background-position:${_tdBgPos};background-repeat:no-repeat;position:relative;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+    tableHTML+=`<tr class="ugrp streamer-univ-head" data-univ-header="${u.name}" style="--c:${u.color};${_isHiddenUniv?'opacity:.55;':''}"><td colspan="${_ncols}" style="${_textStyle}">
+      <div class="streamer-univ-banner" style="background:${_tdBgStyle};background-size:${_tdBgSize};background-position:${_tdBgPos};background-repeat:no-repeat;">
+        <div class="streamer-univ-meta">
           ${_hdrTextPos === 'left' ? _textHtml : ''}
-          <span class="clickable-univ" onclick="openUnivModal('${u.name}')" style="background:${u.color};color:#fff;font-size:14px;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;font-weight:700">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','26px'):'26px'))}${u.name}</span>
+          <span class="clickable-univ streamer-univ-badge" onclick="openUnivModal('${u.name}')" style="background:${u.color}">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','26px'):'26px'))}${u.name}</span>
           ${u.dissolved?`<span style="font-size:10px;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:4px;padding:1px 6px;font-weight:700">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''}
           ${_isHiddenUniv?`<span style="font-size:10px;background:rgba(0,0,0,.4);border-radius:4px;padding:1px 6px;font-weight:700">🚫 방문자 숨김</span>`:''}
         </div>
         ${_hdrTextPos === 'center' ? _textHtml : ''}
-        <span style="font-size:11px;color:rgba(255,255,255,.8);white-space:nowrap;font-weight:600">${_univTotal}명</span>
+        <span class="streamer-univ-count">${_univTotal}명</span>
         ${_hdrTextPos === 'right' ? _textHtml : ''}
       </div>
     </td></tr>`;
@@ -297,15 +407,15 @@ function rTotal(C,T){
     const _displayList = _rolePl.length ? [..._rolePl, null, ..._normalPl] : _normalPl; // null = 구분자
     let lt='';
     let _inRoleSection = _rolePl.length > 0;
-    if(_inRoleSection) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}" style="background:${(u.color||'#6366f1')}22;color:${u.color||'#6366f1'}">👑 직책자 (${_rolePl.length}명)</td></tr>`;
+    if(_inRoleSection) tableHTML+=`<tr class="tgrp streamer-subgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}"><span class="streamer-subgrp-chip" style="background:${(u.color||'#6366f1')}22;color:${u.color||'#6366f1'};border-color:${(u.color||'#6366f1')}33">👑 직책자 (${_rolePl.length}명)</span></td></tr>`;
     _displayList.forEach(p=>{
       if(p===null){
         // 구분자 - 직책 섹션 끝, 일반 선수 시작
         _inRoleSection=false; lt='';
-        if(_normalPl.length) tableHTML+=`<tr class="tgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}">▷ 일반 스트리머 (${_normalPl.length}명)</td></tr>`;
+        if(_normalPl.length) tableHTML+=`<tr class="tgrp streamer-subgrp" style="--c:${u.color||'#6366f1'}"><td colspan="${_ncols}"><span class="streamer-subgrp-chip">▷ 일반 스트리머 (${_normalPl.length}명)</span></td></tr>`;
         return;
       }
-      if(!_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';tableHTML+=`<tr class="tgrp"><td colspan="${_ncols}">▷ ${getTierLabel(p.tier||'미정')}</td></tr>`;}
+      if(!_inRoleSection && (p.tier||'미정')!==lt){lt=p.tier||'미정';tableHTML+=`<tr class="tgrp streamer-subgrp"><td colspan="${_ncols}"><span class="streamer-subgrp-chip">▷ ${getTierLabel(p.tier||'미정')}</span></td></tr>`;}
       const win = Number(p.win||0);
       const loss = Number(p.loss||0);
       const games = win + loss;
@@ -320,36 +430,43 @@ function rTotal(C,T){
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
       const _q = `${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       if(typeof p.photo==='string' && p.photo.trim()) _visiblePhotoUrls.push(p.photo.trim());
-      tableHTML+=`<tr data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
+      tableHTML+=`<tr class="streamer-row ${_pRank===1?'top1':_pRank===2?'top2':_pRank===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
         ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
         <td style="text-align:center;white-space:nowrap;padding:5px 4px">
+          <div class="streamer-rank-box">
           <div style="font-size:11px;font-weight:800;color:var(--text3);line-height:1.2">${_pRank||'-'}</div>
           <div>${_pChange}</div>
+          </div>
         </td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
         <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
-          <span style="display:inline-flex;align-items:center;gap:8px">
-            ${p.photo?`<span data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세" style="width:40px;height:40px;border-radius:var(--su_profile_radius,50%);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid var(--border);background:var(--border2);font-size:11px;font-weight:900;color:#64748b;position:relative;cursor:pointer">${p.race||'?'}<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span style="display:inline-block;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);background:var(--border2);border:2px solid var(--border);flex-shrink:0"></span>'}
-            <span style="font-weight:600">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name" data-tp-action="open-player" data-tp-player="${_pAttr}" style="cursor:pointer">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700">⏸️ 휴학</span>':''}${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
+          <span class="streamer-player-cell">
+            ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span class="streamer-avatar"></span>'}
+            <span class="streamer-name-stack">
+              <span class="streamer-name-line">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name streamer-name-link" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;font-weight:700">⏸️ 휴학</span>':''}</span>
+              <span class="streamer-mini-meta">${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
+            </span>
           </span>
         </td>
-        <td class="col-hide-mobile wt" style="text-align:center;white-space:nowrap;padding:7px 10px">${win}</td>
-        <td class="col-hide-mobile lt" style="text-align:center;white-space:nowrap;padding:7px 10px">${loss}</td>
+        <td class="col-hide-mobile wt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px">${win}</td>
+        <td class="col-hide-mobile lt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px">${loss}</td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${games===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
-          ${games?wr+'%':'-'}${games?`<br><span style="font-size:9px;color:var(--gray-l);font-weight:400">${games}전</span>`:''}
+          <div class="streamer-wr-box">
+          ${games?wr+'%':'-'}${games?`<span style="font-size:9px;color:var(--gray-l);font-weight:400">${games}전</span>`:''}
+          </div>
         </td>
         <td class="col-hide-mobile ${pC(points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${pS(points)}</td>
-        <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:12px;color:${elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${elo}</td>
+        <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px"><span class="streamer-elo-chip" style="color:${elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${elo}</span></td>
         <td class="col-hide-mobile" style="text-align:center;padding:7px 4px">${(()=>{
           const _today2=new Date().toISOString().slice(0,10);
           const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
           const _7ago2=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
           const lastD=(p.history||[]).reduce((mx,h)=>(h&&h.date&&h.date>mx)?h.date:mx,'');
-          if(!lastD) return '<span style="font-size:9px;color:#9ca3af" title="전적 없음">-</span>';
-          if(lastD>=_7ago2) return `<span style="font-size:9px;font-weight:800;color:#16a34a" title="최근 활동 (7일 이내)">🟢</span>`;
-          if(lastD>=_30ago2) return `<span style="font-size:9px;font-weight:800;color:#f59e0b" title="활동 중 (30일 이내)">🟡</span>`;
-          return '<span style="font-size:9px;font-weight:800;color:#9ca3af" title="비활성 (30일 이상)">⚫</span>';
+          if(!lastD) return '<span class="streamer-act-chip cool" title="전적 없음">-</span>';
+          if(lastD>=_7ago2) return `<span class="streamer-act-chip hot" title="최근 활동 (7일 이내)">LIVE</span>`;
+          if(lastD>=_30ago2) return `<span class="streamer-act-chip warm" title="활동 중 (30일 이내)">WARM</span>`;
+          return '<span class="streamer-act-chip cool" title="비활성 (30일 이상)">REST</span>';
         })()}</td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;
@@ -358,9 +475,24 @@ function rTotal(C,T){
   if(totalShown===0){
     tableHTML+=`<tr><td colspan="${_ncols}"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어나 필터를 사용해보세요</div></div></td></tr>`;
   }
-  tableHTML+=`</tbody></table></div>`;
+  tableHTML+=`</tbody></table></div></div>`;
 
-  C.innerHTML = filterBar + tableHTML;
+  C.innerHTML = `<div class="streamer-shell">
+    <section class="streamer-hero">
+      <div class="streamer-hero-copy">
+        <div class="streamer-hero-kicker">Streamer Directory</div>
+        <div class="streamer-hero-title">🎬 스트리머 탭</div>
+        <div class="streamer-hero-desc">대학별 구성을 유지하면서도 검색, 필터, 순위, 활동 상태를 더 보기 좋고 빠르게 파악할 수 있도록 정리했습니다.</div>
+      </div>
+      <div class="streamer-hero-badges">
+        <span class="streamer-hero-badge">${_viewLabel}</span>
+        <span class="streamer-hero-badge">대학 ${_activeUnivCount}곳</span>
+        <span class="streamer-hero-badge">총 ${_visiblePlayers.length}명</span>
+      </div>
+    </section>
+    ${filterBar}
+    ${tableHTML}
+  </div>`;
   try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_visiblePhotoUrls, _visiblePhotoUrls.length); }catch(e){}
   injectUnivIcons(C);
   requestAnimationFrame(()=>injectUnivIcons(C));
@@ -380,7 +512,7 @@ function _buildGalleryView(rankMap){
     return `<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">${msg}</div><div class="empty-state-desc">새로고침 후 다시 시도해주세요.</div></div>`;
   }
   const RACE_CLR={T:'#2563eb',Z:'#7c3aed',P:'#c2410c',N:'#64748b'};
-  let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:4px 0">';
+  let html='<div class="streamer-gallery-grid">';
   let anyShown=false;
   const _galleryPhotoUrls = [];
   const _univScActiveMap = new Map();
@@ -461,11 +593,11 @@ function _buildGalleryView(rankMap){
         _gTextHtml = `<span style="${_gTextBaseStyle}margin-left:auto;">${_gHdrText}</span>`;
       }
     }
-    html+=`<div data-gallery-univ-header="${u.name}" style="grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:10px 12px 10px;background:${_gFinalBgStyle};background-size:${_gFinalBgSize};background-position:${_gFinalBgPos};background-repeat:no-repeat;border-radius:12px;margin-top:6px;position:relative;">
+    html+=`<div class="streamer-gallery-head" data-gallery-univ-header="${u.name}" style="background:${_gFinalBgStyle};background-size:${_gFinalBgSize};background-position:${_gFinalBgPos};background-repeat:no-repeat;margin-top:6px;">
       ${_gHdrTextPos === 'left' ? _gTextHtml : ''}
-      <span class="ubadge" data-icon-done="1" style="background:rgba(255,255,255,.2);color:#fff;display:inline-flex;align-items:center;gap:4px;font-size:12px">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','20px'):'20px'))}${u.name}</span>
+      <span class="ubadge streamer-gallery-univ" data-icon-done="1" style="color:#fff;display:inline-flex;align-items:center;gap:4px;font-size:12px">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','20px'):'20px'))}${u.name}</span>
       ${_gHdrTextPos === 'center' ? _gTextHtml : ''}
-      <span style="font-size:11px;color:rgba(255,255,255,.85);font-weight:600">${up.length}명</span>
+      <span style="font-size:11px;color:rgba(255,255,255,.85);font-weight:700;position:relative;z-index:1">${up.length}명</span>
       ${_gHdrTextPos === 'right' ? _gTextHtml : ''}
     </div>`;
     sorted.forEach(p=>{
@@ -489,9 +621,9 @@ function _buildGalleryView(rankMap){
         return '#9ca3af';
       })();
       if(typeof p.photo==='string' && p.photo.trim()) _galleryPhotoUrls.push(p.photo.trim());
-      html+=`<div data-player-card="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}"
+      html+=`<div class="streamer-gallery-card ${rankMap[p.name]===1?'top1':rankMap[p.name]===2?'top2':rankMap[p.name]===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-card="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}"
         data-tp-action="open-player" data-tp-player="${_pAttr}"
-        style="position:relative;border-radius:14px;overflow:hidden;cursor:pointer;aspect-ratio:3/4;background:${clr}22;border:2px solid ${clr}44;transition:transform .15s,box-shadow .15s"
+        style="background:${clr}22;border-color:${clr}44"
         onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 28px rgba(0,0,0,.22)';try{if(typeof _prewarmPlayerModalImages==='function'){var _pp=window.players&&window.players.find(function(x){return x.name==='${_pSafe}'});if(_pp)_prewarmPlayerModalImages(_pp);}}catch(e){}"
         onmouseleave="this.style.transform='';this.style.boxShadow=''">
         ${p.photo
@@ -499,15 +631,15 @@ function _buildGalleryView(rankMap){
           : ''}
         <div class="gc-placeholder" style="position:absolute;inset:0;display:${p.photo?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:${clr}15">${p.race||'?'}</div>
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 40%,rgba(0,0,0,.82) 100%)"></div>
-        <div style="position:absolute;top:7px;left:8px;font-size:9px;font-weight:800;color:rgba(255,255,255,.7)">${rankMap[p.name]?'#'+rankMap[p.name]:''}</div>
-        <div style="position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:${actDot};box-shadow:0 0 4px ${actDot}" title="${actDot==='#16a34a'?'최근 활동 7일 이내':actDot==='#f59e0b'?'활동 중 30일 이내':'비활성'}"></div>
-        <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 8px 9px;text-align:left">
-          <div style="font-size:12px;font-weight:800;color:#fff;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
-          ${p.role?`<div style="font-size:9px;color:rgba(255,255,255,.7);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>`:''}
+        <div class="streamer-gallery-rank">${rankMap[p.name]?'#'+rankMap[p.name]:''}</div>
+        <div class="streamer-gallery-act">${actDot==='#16a34a'?'<span class="streamer-act-chip hot" title="최근 활동 7일 이내">LIVE</span>':actDot==='#f59e0b'?'<span class="streamer-act-chip warm" title="활동 중 30일 이내">WARM</span>':'<span class="streamer-act-chip cool" title="비활성">REST</span>'}</div>
+        <div class="streamer-gallery-bottom">
+          <div class="streamer-gallery-name" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
+          ${p.role?`<div class="streamer-gallery-role">${p.role}</div>`:''}
           <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-top:2px">
             ${getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:9px;padding:1px 4px">${p.race||'?'}</span>
           </div>
-          <div style="margin-top:4px;display:flex;align-items:center;justify-content:space-between;gap:4px">
+          <div class="streamer-gallery-stats">
             <span style="font-size:10px;font-weight:700;color:${Number(p.elo||ELO_DEFAULT)>=ELO_DEFAULT?'#93c5fd':'#fca5a5'}">${Number(p.elo||ELO_DEFAULT)} ELO</span>
             <span style="font-size:10px;color:${wr===null?'rgba(255,255,255,.5)':wr>=50?'#86efac':'#fca5a5'};font-weight:600">${wr===null?'-':`${wr}%`}</span>
           </div>
@@ -848,14 +980,15 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
   s.id='tier-rank-ui-style';
   s.textContent=[
     '.tier-shell{display:flex;flex-direction:column;gap:14px}',
-    '.tier-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 38px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.88)}',
+    '.tier-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px 22px;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 34px rgba(15,23,42,.06);position:relative;overflow:hidden}',
+    '.tier-hero::after{content:none}',
     '.tier-hero-copy{display:flex;flex-direction:column;gap:6px;min-width:0}',
-    '.tier-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}',
-    '.tier-hero-title{font-size:24px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.15}',
-    '.tier-hero-desc{font-size:13px;line-height:1.6;color:var(--text3)}',
+    '.tier-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#1d4ed8;text-transform:uppercase;position:relative;z-index:1}',
+    '.tier-hero-title{font-size:26px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.15;position:relative;z-index:1}',
+    '.tier-hero-desc{font-size:13px;line-height:1.6;color:var(--text3);position:relative;z-index:1;max-width:720px}',
     '.tier-hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}',
-    '.tier-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);font-size:12px;font-weight:800;color:var(--text2);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
-    '.tier-toolbar-card,.tier-content-card{padding:12px 14px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 32px rgba(15,23,42,.05)}',
+    '.tier-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);font-size:12px;font-weight:800;color:var(--text2);box-shadow:0 10px 18px rgba(15,23,42,.05);position:relative;z-index:1}',
+    '.tier-toolbar-card,.tier-content-card{padding:14px 16px;border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 34px rgba(15,23,42,.06)}',
     '.tier-filter-shell{display:flex;flex-direction:column;gap:10px}',
     '.tier-toolbar-card .pill{border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.92));color:var(--text2);font-weight:800;box-shadow:0 8px 16px rgba(15,23,42,.04);transition:transform .15s,box-shadow .15s,border-color .15s,background .15s}',
     '.tier-toolbar-card .pill:hover{transform:translateY(-1px);box-shadow:0 14px 24px rgba(15,23,42,.08)}',
@@ -873,26 +1006,29 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-act-dot.none{color:#94a3b8}',
     '.tier-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}',
     '.tier-table{table-layout:auto;width:100%;min-width:1120px;max-width:1600px;margin:0 auto;border-collapse:separate;border-spacing:0 8px}',
-    '.tier-table thead th{background:linear-gradient(180deg,#f8fbff,#eef6ff);border-top:1px solid rgba(148,163,184,.18);border-bottom:1px solid rgba(148,163,184,.18)}',
+    '.tier-table thead th{background:linear-gradient(180deg,#eff6ff,#dbeafe);border-top:1px solid rgba(96,165,250,.24);border-bottom:1px solid rgba(96,165,250,.24);color:#1e3a8a}',
     '.tier-table tbody tr{box-shadow:0 12px 24px rgba(15,23,42,.05)}',
+    '.tier-table tbody tr.top1 td,.tier-table tbody tr.top2 td,.tier-table tbody tr.top3 td{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border-top-color:rgba(148,163,184,.14);border-bottom-color:rgba(148,163,184,.14)}',
     '.tier-table tbody td{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border-top:1px solid rgba(148,163,184,.14);border-bottom:1px solid rgba(148,163,184,.14)}',
     '.tier-table tbody tr td:first-child{border-left:1px solid rgba(148,163,184,.14);border-top-left-radius:16px;border-bottom-left-radius:16px}',
     '.tier-table tbody tr td:last-child{border-right:1px solid rgba(148,163,184,.14);border-top-right-radius:16px;border-bottom-right-radius:16px}',
+    '.tier-rank-chip{display:inline-flex;align-items:center;justify-content:center;min-width:54px;height:30px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:900;letter-spacing:-.02em;border:1px solid transparent;box-shadow:0 10px 18px rgba(15,23,42,.08)}',
+    '.tier-rank-chip.gold{background:linear-gradient(180deg,#fef3c7,#fbbf24);border-color:#f59e0b;color:#78350f}',
+    '.tier-rank-chip.silver{background:linear-gradient(180deg,#f8fafc,#cbd5e1);border-color:#94a3b8;color:#334155}',
+    '.tier-rank-chip.bronze{background:linear-gradient(180deg,#fed7aa,#fb923c);border-color:#ea580c;color:#7c2d12}',
     '.tier-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:4px 0}',
     '.tier-rank-card{cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1.5px solid rgba(148,163,184,.18);border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;transition:box-shadow .15s,transform .15s;position:relative;box-shadow:0 12px 24px rgba(15,23,42,.05)}',
     '.tier-rank-card:hover{box-shadow:0 18px 30px rgba(15,23,42,.08);transform:translateY(-2px)}',
-    '.tier-rank-card.top1{box-shadow:0 20px 36px rgba(251,191,36,.22);border-color:rgba(251,191,36,.42)}',
-    '.tier-rank-card.top2{box-shadow:0 18px 32px rgba(148,163,184,.2);border-color:rgba(148,163,184,.38)}',
-    '.tier-rank-card.top3{box-shadow:0 18px 32px rgba(180,83,9,.18);border-color:rgba(180,83,9,.34)}',
+    '.tier-rank-card.top1,.tier-rank-card.top2,.tier-rank-card.top3{box-shadow:0 16px 30px rgba(15,23,42,.07);border-color:rgba(148,163,184,.22)}',
     '.tier-rank-badge{position:absolute;top:8px;left:10px;font-size:12px;font-weight:900}',
     '.tier-rank-act{position:absolute;top:8px;right:10px}',
     '.tier-rank-statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;width:100%;border-top:1px solid rgba(148,163,184,.16);padding-top:8px;margin-top:4px}',
     '.tier-rank-stat{padding:7px 4px;border-radius:12px;background:rgba(248,250,252,.9);text-align:center;border:1px solid rgba(148,163,184,.14)}',
     '.tier-rank-extra{font-size:11px;text-align:center;padding:5px 10px;border-radius:999px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.16);font-weight:800;color:var(--text2)}',
     '.tier-podium{display:flex;align-items:flex-end;justify-content:center;gap:16px;padding:18px 8px 10px;margin-bottom:14px}',
-    '.tier-podium-card{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}',
+    '.tier-podium-card{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;padding:10px 8px 0;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(248,250,252,.72));border:1px solid rgba(148,163,184,.14);box-shadow:0 12px 24px rgba(15,23,42,.05)}',
     '.tier-podium-stat{font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.84);border:1px solid rgba(148,163,184,.16)}',
-    '.tier-podium-base{width:100%;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:0 16px 28px rgba(15,23,42,.08)}',
+    '.tier-podium-base{width:100%;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:0 16px 28px rgba(15,23,42,.08);background:linear-gradient(180deg,rgba(241,245,249,.98),rgba(226,232,240,.94));border:1px solid rgba(148,163,184,.18);border-bottom:none}',
     '.tier-podium-base::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.26),transparent 48%);pointer-events:none}',
     '.tier-podium-rest{border-top:1px solid rgba(148,163,184,.18);padding-top:10px}',
     '.tier-podium-rest-item{cursor:pointer;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.16);margin-bottom:6px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
@@ -903,7 +1039,8 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-group-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:16px;margin-bottom:8px;box-shadow:0 10px 20px rgba(15,23,42,.04)}',
     '.tier-group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;padding:0 4px}',
     '.tier-group-card{cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.16);border-radius:14px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 10px 20px rgba(15,23,42,.04)}',
-    'body.dark .tier-hero,body.dark .tier-toolbar-card,body.dark .tier-content-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
+    'body.dark .tier-hero{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
+    'body.dark .tier-toolbar-card,body.dark .tier-content-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
     'body.dark .tier-hero-title{color:#f8fafc}',
     'body.dark .tier-hero-desc{color:#94a3b8}',
     'body.dark .tier-hero-badge{background:rgba(30,41,59,.78);border-color:#334155;color:#cbd5e1}',
@@ -914,11 +1051,14 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     'body.dark .tier-view-btn.on{background:#17263c;color:#93c5fd;border-color:#2563eb}',
     'body.dark .tier-univ-badge{box-shadow:0 12px 22px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.05)}',
     'body.dark .tier-univ-badge img{background:rgba(15,23,42,.72)}',
-    'body.dark .tier-table thead th{background:linear-gradient(180deg,#132033,#17263c);border-color:#334155;color:#e2e8f0}',
+    'body.dark .tier-table thead th{background:linear-gradient(180deg,#172554,#1e3a8a);border-color:#1d4ed8;color:#dbeafe}',
+    'body.dark .tier-table tbody tr.top1 td,body.dark .tier-table tbody tr.top2 td,body.dark .tier-table tbody tr.top3 td{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-top-color:#334155;border-bottom-color:#334155}',
     'body.dark .tier-table tbody td,body.dark .tier-rank-card,body.dark .tier-podium-rest-item,body.dark .tier-compact-item,body.dark .tier-group-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#e2e8f0;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
-    'body.dark .tier-rank-card.top1{box-shadow:0 20px 36px rgba(251,191,36,.18)}',
-    'body.dark .tier-rank-card.top2{box-shadow:0 18px 32px rgba(148,163,184,.16)}',
-    'body.dark .tier-rank-card.top3{box-shadow:0 18px 32px rgba(180,83,9,.16)}',
+    'body.dark .tier-rank-chip.gold{background:linear-gradient(180deg,#fbbf24,#f59e0b);border-color:#fcd34d;color:#451a03}',
+    'body.dark .tier-rank-chip.silver{background:linear-gradient(180deg,#cbd5e1,#94a3b8);border-color:#e2e8f0;color:#0f172a}',
+    'body.dark .tier-rank-chip.bronze{background:linear-gradient(180deg,#fb923c,#ea580c);border-color:#fdba74;color:#431407}',
+    'body.dark .tier-rank-card.top1,body.dark .tier-rank-card.top2,body.dark .tier-rank-card.top3{box-shadow:0 16px 30px rgba(0,0,0,.22);border-color:#3f4c63}',
+    'body.dark .tier-podium-card{background:linear-gradient(180deg,rgba(15,23,42,.9),rgba(15,23,42,.78));border-color:#334155;box-shadow:0 16px 30px rgba(0,0,0,.24)}',
     'body.dark .tier-rank-stat,body.dark .tier-podium-stat,body.dark .tier-rank-extra,body.dark .tier-compact-extra{background:rgba(30,41,59,.78);border-color:#334155;color:#e2e8f0}',
     'body.dark .tier-act-dot{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(30,41,59,.88));border-color:#334155;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     'body.dark .tier-act-dot.hot{color:#86efac;border-color:rgba(34,197,94,.24)}',
@@ -1088,7 +1228,7 @@ function rTier(C,T){
   fh+=`</div>`;
   } // end filter open block
   fh+=`</div></div>`;
-  F.innerHTML=fh;
+  if(F) F.innerHTML='';
 
   if(false&&tierRankMode==='recent'){
     // 최근 경기 내역 (버튼 삭제됨 - 사용 안 함)
@@ -1427,9 +1567,9 @@ function rTier(C,T){
   list.forEach((p,i)=>{
     const col=gc(p.univ);const tot=p.win+p.loss;const wr=tot?Math.round(p.win/tot*100):0;
     let rnkHTML;
-    if(i===0) rnkHTML=`<span class="rk1">1등</span>`;
-    else if(i===1) rnkHTML=`<span class="rk2">2등</span>`;
-    else if(i===2) rnkHTML=`<span class="rk3">3등</span>`;
+    if(i===0) rnkHTML=`<span class="tier-rank-chip gold">1등</span>`;
+    else if(i===1) rnkHTML=`<span class="tier-rank-chip silver">2등</span>`;
+    else if(i===2) rnkHTML=`<span class="tier-rank-chip bronze">3등</span>`;
     else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
     const extraVal=_getExtraVal(p);
     const univIconHTML=_getUnivIconHTML(p);
@@ -1441,7 +1581,7 @@ function rTier(C,T){
     const _clickHist = (_canGoHist && _modePick) ? `onclick="tierRankGoHist('${_modePick}','${_pSafe}')"` : '';
     const _actHTML=_getActHTML(p);
     const _elo = (p.elo||ELO_DEFAULT);
-    h+=`<tr style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">
+    h+=`<tr class="${i===0?'top1':i===1?'top2':i===2?'top3':''}" style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">
       <td style="text-align:center;white-space:nowrap;padding:${_pad}">${rnkHTML}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad}">${getTierBadge(p.tier)}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad}">
@@ -1515,7 +1655,6 @@ function rTier(C,T){
   // 포디움 (2위/1위/3위 순서로 배치)
   const podOrder=[1,0,2]; // 인덱스: 2위, 1위, 3위 순서
   const podH=[100,130,85]; // 받침대 높이
-  const podColors=['#c0c0c0','#fbbf24','#cd7f32'];
   const podLabels=['🥈','🥇','🥉'];
   h=`<div class="tier-content-card"><div class="tier-podium" style="gap:${_isMb?'6px':'16px'}">`;
   podOrder.forEach((pi,ci)=>{
@@ -1533,8 +1672,8 @@ function rTier(C,T){
       <div style="display:flex;align-items:center;gap:4px">${getTierBadge(p.tier)}</div>
       <div class="tier-univ-badge" style="background:${col};font-size:10px;max-width:${_isMb?90:110}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</div>
       <div class="tier-podium-stat" style="color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'} · ${p.win}W ${p.loss}L</div>
-      <div class="tier-podium-base" style="background:${podColors[ci]}33;border:2px solid ${podColors[ci]};border-bottom:none;height:${podH[ci]}px">
-        <span style="font-size:${_isMb?22:28}px;font-weight:900;color:${podColors[ci]};opacity:.6">${pi+1}</span>
+      <div class="tier-podium-base" style="height:${podH[ci]}px">
+        <span style="font-size:${_isMb?22:28}px;font-weight:900;color:rgba(71,85,105,.68)">${pi+1}</span>
       </div>
     </div>`;
   });
@@ -1646,6 +1785,7 @@ function rTier(C,T){
         <span class="tier-hero-badge">총 ${list.length}명</span>
       </div>
     </section>
+    ${fh}
     ${h}
   </div>`;
 }

@@ -14,6 +14,8 @@ function prepareUnivDetailStyleData(univName){
   const bgImg=(ucfg.detailHeaderBgImg||udStyle.header_bg_img||'').trim();
   const bgFit=(ucfg.detailHeaderBgFit||udStyle.header_bg_fit||'contain').trim();
   const bgScale=Math.max(40, Math.min(220, Number(ucfg.detailHeaderBgScale||udStyle.header_bg_scale||100)||100));
+  const bgPosX=Math.max(0, Math.min(100, Number(ucfg.detailHeaderBgPosX ?? udStyle.header_bg_pos_x ?? 50) || 50));
+  const bgPosY=Math.max(0, Math.min(100, Number(ucfg.detailHeaderBgPosY ?? udStyle.header_bg_pos_y ?? 50) || 50));
   return {
     col,
     isMobile,
@@ -24,7 +26,7 @@ function prepareUnivDetailStyleData(univName){
     logoSize,
     logoSizeEff,
     hdrBg:`linear-gradient(135deg,${col},${col}cc)`,
-    hdrBgLayer:bgImg ? { url:bgImg, fit:(bgFit==='fill'?'fill':bgFit==='cover'?'cover':'contain'), scale:bgScale } : null
+    hdrBgLayer:bgImg ? { url:bgImg, fit:(bgFit==='fill'?'fill':bgFit==='cover'?'cover':'contain'), scale:bgScale, posX:bgPosX, posY:bgPosY } : null
   };
 }
 
