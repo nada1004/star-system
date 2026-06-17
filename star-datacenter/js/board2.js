@@ -218,7 +218,12 @@ function _b2ThisWeekRange() {
   return { fromN: _fmt(mon), toN: _fmt(toD) };
 }
 // 날짜 문자열 → YYYYMMDD 숫자 변환 헬퍼
-function _b2DateNum(s) { return parseInt(String(s || '').replace(/[-\.]/g, '')) || 0; }
+// `2026-06-17`, `2026.06.17`, `2026/06/17 22:10`, ISO 문자열 모두 안전하게 처리
+function _b2DateNum(s) {
+  const digits = String(s || '').replace(/\D/g, '');
+  if (digits.length < 8) return 0;
+  return parseInt(digits.slice(0, 8), 10) || 0;
+}
 
 // 대학별 현황판 색상 진하기 (0~100, %)
 let b2LabelAlpha  = J('su_b2la')  ?? 16;
@@ -665,20 +670,13 @@ function _b2UnivView() {
   const _tierCts = {}; _allVis.forEach(p=>{ const t=p.tier||'?'; _tierCts[t]=(_tierCts[t]||0)+1; });
   // 이번주 활동 인원 계산
   const { fromN: _uvFromN, toN: _uvToN } = _b2ThisWeekRange();
-  const _uvDN = _b2DateNum;
-  let _uvWeekActive=0, _uvTotalW=0, _uvTotalL=0;
-  _allVis.forEach(p=>{
-    let acted=false;
-    (Array.isArray(p.history)?p.history:[]).forEach(h=>{
-      if(h.result==='승')_uvTotalW++; else if(h.result==='패')_uvTotalL++;
-      const d=_uvDN(h.date||h.d||'');
-      if(d>=_uvFromN&&d<=_uvToN)acted=true;
-    });
-    if(acted)_uvWeekActive++;
-  });
-  const _uvTotalG=_uvTotalW+_uvTotalL;
-  const _uvWr=_uvTotalG>0?Math.round(_uvTotalW/_uvTotalG*100):null;
-  const _uvWrC=_uvWr===null?'#94a3b8':_uvWr>=60?'#10b981':_uvWr>=40?'#f59e0b':'#ef4444';
+  const _uvWeeklyStats = _b2WeeklyAggregate(
+    _allVis,
+    String(_uvFromN).replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
+    String(_uvToN).replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')
+  );
+  const _uvWeekActive = _uvWeeklyStats.filter(s => s.total > 0).length;
+  const _uvWeekG = _uvWeeklyStats.reduce((acc, s) => acc + s.total, 0);
   const _uvRaces={P:0,T:0,Z:0};
   _allVis.forEach(p=>{ if(p.race in _uvRaces) _uvRaces[p.race]++; });
   const _uvRaceBar = ['P','T','Z'].map(r=>{
@@ -698,7 +696,7 @@ function _b2UnivView() {
   }).join('');
   const statsBar = `<div style="margin-bottom:12px">
     <div style="padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 16px 28px rgba(15,23,42,.05)">
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
         <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
           <div style="font-size:11px;font-weight:800;color:var(--text3)">표시 선수</div>
           <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1)">${_allVis.length}</div>
@@ -710,14 +708,14 @@ function _b2UnivView() {
           <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">무소속 제외 대학 수</div>
         </div>
         <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
-          <div style="font-size:11px;font-weight:800;color:var(--text3)">이번주 활동</div>
-          <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:#f59e0b">${_uvWeekActive}</div>
-          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">주간 기록 존재 기준</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3)">이번주 경기수</div>
+          <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:#2563eb">${_uvWeekG}</div>
+          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">직접 기록 + 외부 경기 합산</div>
         </div>
         <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
-          <div style="font-size:11px;font-weight:800;color:var(--text3)">통산 승률</div>
-          <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:${_uvWrC}">${_uvWr===null?'-':`${_uvWr}%`}</div>
-          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">${_uvTotalW}승 ${_uvTotalL}패</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3)">이번주 활동 선수 수</div>
+          <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:#f59e0b">${_uvWeekActive}</div>
+          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">월~오늘 1경기 이상 기준</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
