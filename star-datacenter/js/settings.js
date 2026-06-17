@@ -3251,6 +3251,14 @@ function _cfgGo(secId){
 function _cfgApplyCat(cat, autoGo=true){
   window._cfgCat=cat;
   const show=_catSecs[cat]||[];
+  let _bottomOpen = true;
+  try{
+    const mode=(localStorage.getItem('su_cfg_view_mode')||'basic')==='advanced' ? 'advanced' : 'basic';
+    const saved=localStorage.getItem('su_cfg_bottom_open');
+    _bottomOpen = window._cfgBottomSectionsOpen===undefined
+      ? ((saved==='1' || saved==='0') ? (saved==='1') : (mode==='advanced'))
+      : !!window._cfgBottomSectionsOpen;
+  }catch(e){}
   // 섹션 표시/숨김
   try{
     const secs=document.querySelectorAll('[data-cfg-sec]');
@@ -3259,7 +3267,7 @@ function _cfgApplyCat(cat, autoGo=true){
       // 모달에 올라간 섹션은 숨기지 않음
       try{ if(el.closest && el.closest('#cfgModalBody')) continue; }catch(e){}
       const id=el.getAttribute('data-cfg-sec');
-      const vis=(show.indexOf(id)!==-1);
+      const vis=_bottomOpen && (show.indexOf(id)!==-1);
       el.style.display=vis?'':'none';
       if(el.tagName==='DETAILS') el.open=false;
     }
@@ -3319,9 +3327,14 @@ window._lazyCfgGo = function(secId){ return _cfgGo(secId); };
 window.cfgGo = function(secId){ return _cfgGo(secId); };
 // (요청사항) 카테고리 클릭 시 해당 카테고리 "메뉴만" 보여주고 자동으로 모달을 띄우지 않음
 window.cfgApplyCat = function(cat){
-  const r = _cfgApplyCat(cat, false);
-  try{ if(typeof curTab!=='undefined' && curTab==='cfg' && typeof render==='function') render(); }catch(e){}
-  return r;
+  try{ window._cfgCat=cat; }catch(e){}
+  try{
+    if(typeof curTab!=='undefined' && curTab==='cfg' && typeof render==='function'){
+      render();
+      return cat;
+    }
+  }catch(e){}
+  return _cfgApplyCat(cat, false);
 };
 window.cfgSetViewMode = function(mode){
   try{
@@ -3385,13 +3398,11 @@ window.cfgApplyBottomSectionsVisibility = function(){
       window._cfgBottomSectionsOpen = (saved==='1' || saved==='0') ? (saved==='1') : (mode==='advanced');
     }
     const open = q ? true : !!window._cfgBottomSectionsOpen;
-    const _alwaysVisible = new Set(['univ','univlogoimg','maps','tier','season']);
     if(!open){
-      // 접기: 현재 카테고리만이 아니라 모든 하단 세부 섹션을 숨김
+      // 접기: 카드형 메뉴는 유지하고, 아래 상세 설정 본문만 숨김
       document.querySelectorAll('[data-cfg-sec]').forEach(el=>{
         try{ if(el.closest && el.closest('#cfgModalBody')) return; }catch(e){}
-        const secId = el.getAttribute('data-cfg-sec')||'';
-        if(_alwaysVisible.has(secId)) return;
+        try{ if(el.tagName==='DETAILS') el.open=false; }catch(e){}
         el.style.display='none';
       });
     } else {
@@ -3403,8 +3414,14 @@ window.cfgApplyBottomSectionsVisibility = function(){
     }
     // 버튼 텍스트 업데이트
     try{
-      const btn = document.querySelector('[onclick*="cfgToggleBottomSections"]');
-      if(btn) btn.textContent = open ? '🧩 세부 설정 접기 ▲' : '🧩 세부 설정 펼치기 ▼';
+      document.querySelectorAll('[onclick*="cfgToggleBottomSections"]').forEach(function(btn){
+        const v = String(btn.getAttribute('data-cfg-toggle-variant')||'long');
+        btn.textContent = v==='short'
+          ? (open ? '🧩 숨기기' : '🧩 보기')
+          : v==='plain'
+            ? (open ? '세부 설정 숨기기' : '세부 설정 보기')
+            : (open ? '🧩 세부 설정 숨기기' : '🧩 세부 설정 보기');
+      });
     }catch(e){}
   }catch(e){}
 };
@@ -3413,6 +3430,8 @@ window.cfgCollapseAll = function(){
   try{
     document.querySelectorAll('[data-cfg-sec]').forEach(el=>{ if(el.tagName==='DETAILS') el.open=false; });
     const sug=document.getElementById('cfgSearchSug'); if(sug){ sug.innerHTML=''; sug.style.display='none'; }
+    try{ document.getElementById('cfgSearchInp')?.blur(); }catch(e){}
+    try{ if(typeof showToast==='function') showToast('열린 설정 항목을 닫았습니다.'); }catch(e){}
   }catch(e){}
 };
 window.cfgOpenFavorites = function(){

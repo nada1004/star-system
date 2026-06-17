@@ -1,4 +1,104 @@
 /* LEGACY - DO NOT LOAD - 분리된 파일로 대체됨. index.html에 추가하지 마세요. */
+(function _injectHistoryUiStyle(){
+  if(typeof document==='undefined') return;
+  if(document.getElementById('history-ui-style')) return;
+  const s=document.createElement('style');
+  s.id='history-ui-style';
+  s.textContent=[
+    '.hist-shell{display:flex;flex-direction:column;gap:14px}',
+    '.hist-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 38px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.88)}',
+    '.hist-hero-copy{display:flex;flex-direction:column;gap:6px;min-width:0}',
+    '.hist-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}',
+    '.hist-hero-title{font-size:24px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.15}',
+    '.hist-hero-desc{font-size:13px;line-height:1.6;color:var(--text3)}',
+    '.hist-hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}',
+    '.hist-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);font-size:12px;font-weight:800;color:var(--text2);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.hist-toolbar-card,.hist-content-card{padding:12px 14px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 32px rgba(15,23,42,.05)}',
+    '.hist-topbar,.hist-inlinebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+    '.hist-topbar-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+    '.hist-inlinebar{margin-top:10px;padding-top:10px;border-top:1px solid rgba(148,163,184,.14)}',
+    '.hist-inline-sep{width:1px;align-self:stretch;background:rgba(148,163,184,.2);margin:0 4px}',
+    '.hist-ctrl-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+    '.hist-shell .empty-state{padding:36px 22px;border-radius:20px;border:1px dashed rgba(148,163,184,.28);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));text-align:center;box-shadow:0 12px 24px rgba(15,23,42,.04)}',
+    '.hist-shell .empty-state-icon{font-size:28px;margin-bottom:8px}',
+    '.hist-shell .empty-state-title{font-size:16px;font-weight:900;color:var(--text2)}',
+    '.hist-shell .empty-state-desc{font-size:12px;color:var(--gray-l);margin-top:4px}',
+    '.hist-shell .rec-summary{margin-bottom:12px;border-radius:20px;overflow:hidden;box-shadow:0 14px 28px rgba(15,23,42,.06);border:1px solid rgba(148,163,184,.16)}',
+    '.hist-shell .rec-sum-header{padding:14px 16px;background:linear-gradient(180deg,rgba(var(--rec-mode-rgb,59,130,246),.05),rgba(255,255,255,.94))}',
+    '.hist-shell .rec-detail-area{background:linear-gradient(180deg,rgba(248,250,252,.88),rgba(241,245,249,.92));border-top:1px solid rgba(148,163,184,.18)}',
+    '.hist-shell .rec-mode-badge,.hist-shell .rec-datechip{box-shadow:0 8px 16px rgba(15,23,42,.05)}',
+    '.hist-shell .rec-sum-score{box-shadow:0 8px 18px rgba(15,23,42,.06)}',
+    '.hist-shell .rec-topline{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}',
+    '.hist-shell .rec-meta-row,.hist-shell .rec-actions--inline{display:flex;align-items:center;gap:6px;flex-wrap:wrap}',
+    '.hist-shell .rec-actions--inline .btn,.hist-shell .rc-mem-btn{border-radius:999px;box-shadow:0 8px 16px rgba(15,23,42,.04)}',
+    '.hist-shell .rec-victor-chip{box-shadow:0 10px 20px rgba(15,23,42,.05)}',
+    '.hist-shell .rec-sum-vs{gap:12px}',
+    '.hist-shell .rec-date-group{margin-bottom:22px}',
+    '.hist-shell .rec-date-group-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}',
+    '.hist-shell .rec-date-group-title{flex:1;font-family:"Noto Sans KR",sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:10px 16px;background:linear-gradient(90deg,#dbeafe,rgba(255,255,255,.45));border-left:4px solid #2563eb;border-radius:0 12px 12px 0;box-shadow:0 8px 16px rgba(37,99,235,.08)}',
+    '.hist-search-bar{margin-bottom:14px}',
+    '.hist-search-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+    '.hist-search-field{flex:1;min-width:180px;max-width:320px;padding:10px 14px;border:1.5px solid var(--blue);border-radius:14px;font-size:13px;font-weight:700;outline:none;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(37,99,235,.06)}',
+    '.hist-search-card{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);border-radius:18px;overflow:hidden;margin-bottom:16px;box-shadow:0 12px 24px rgba(15,23,42,.05)}',
+    '.hist-search-card-head{padding:14px 16px;border-bottom:1px solid rgba(148,163,184,.18);display:flex;align-items:center;gap:10px;cursor:pointer;flex-wrap:wrap}',
+    '.hist-search-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}',
+    '.hist-search-wr{font-size:12px;padding:4px 10px;border-radius:999px;font-weight:900}',
+    '.hist-search-wr.win{background:#dcfce7;color:#166534}',
+    '.hist-search-wr.lose{background:#fee2e2;color:#b91c1c}',
+    '.hist-search-card table{margin:0;border:none;border-radius:0;font-size:12px}',
+    '.hist-search-card td,.hist-search-card th{border-color:rgba(148,163,184,.16)}',
+    '.modal--matchdetail{backdrop-filter:blur(8px);background:rgba(15,23,42,.38)}',
+    '.modal--matchdetail .mbox--matchdetail{width:min(980px,calc(100vw - 24px));max-height:min(90vh,920px);border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.18);box-shadow:0 28px 60px rgba(15,23,42,.24),inset 0 1px 0 rgba(255,255,255,.88);overflow:hidden}',
+    '.modal--matchdetail .cmd-head{padding:18px 20px 16px;background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(255,255,255,.92));border-bottom:1px solid rgba(148,163,184,.18)}',
+    '.modal--matchdetail .cmd-title{font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1)}',
+    '.modal--matchdetail .cmd-sub{font-size:12px;line-height:1.6;color:var(--text3);margin-top:6px}',
+    '.modal--matchdetail .cmd-head-actions{display:flex;align-items:center;gap:8px}',
+    '.modal--matchdetail .cmd-hbtn,.modal--matchdetail .cmd-close{border-radius:999px;box-shadow:0 8px 18px rgba(15,23,42,.06)}',
+    '.modal--matchdetail .cmd-scorebar{padding:16px 20px 0;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.72))}',
+    '.modal--matchdetail .cmd-score{border-radius:24px;overflow:hidden;box-shadow:0 18px 34px rgba(15,23,42,.12)}',
+    '.modal--matchdetail .cmd-body{padding:18px 20px 20px;overflow:auto;max-height:min(62vh,640px)}',
+    '.modal--matchdetail .cmd-detail{display:flex;flex-direction:column;gap:14px}',
+    '.modal--matchdetail .cmd-actions{padding:14px 20px 18px;border-top:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.96))}',
+    '.modal--matchdetail .set-row{padding:14px;border-radius:20px;background:linear-gradient(180deg,#fff,#f8fbff);border:1px solid rgba(148,163,184,.18);box-shadow:0 12px 24px rgba(15,23,42,.05)}',
+    '.modal--matchdetail .cmd-set-head{margin-bottom:10px!important;padding:10px 12px!important;border-radius:16px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.65)}',
+    '.modal--matchdetail .cmd-game{padding:10px 0}',
+    '.modal--matchdetail .cmd-game + .cmd-game{border-top:1px dashed rgba(148,163,184,.18)}',
+    '.modal--matchdetail .cmd-game-row{gap:10px;align-items:stretch}',
+    '.modal--matchdetail .cmd-player{border-radius:18px;box-shadow:0 10px 18px rgba(15,23,42,.06)}',
+    '.modal--matchdetail .cmd-midbox{padding:8px 10px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(241,245,249,.94));border:1px solid rgba(148,163,184,.16);min-width:86px;box-shadow:0 8px 16px rgba(15,23,42,.04)}',
+    '.modal--matchdetail .cmd-gno{font-size:11px;font-weight:900;color:var(--text2)}',
+    '.modal--matchdetail .cmd-gmap{font-size:11px;color:var(--gray-l);margin-top:4px}',
+    '.modal--matchdetail .cmd-win{box-shadow:0 8px 14px rgba(15,23,42,.10)}',
+    '.modal--matchdetail .cmd-single-summary{padding:16px;border-radius:20px;background:linear-gradient(180deg,#fff,#f8fbff);border:1px solid rgba(148,163,184,.18);box-shadow:0 12px 24px rgba(15,23,42,.05)}',
+    '.modal--matchdetail .cmd-single-summary__row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+    '.modal--matchdetail .cmd-single-summary__memo{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(148,163,184,.18)}',
+    'body.dark .hist-shell .rec-date-group-title{color:#93c5fd;background:linear-gradient(90deg,rgba(30,58,138,.35),rgba(15,23,42,.2));box-shadow:0 8px 16px rgba(0,0,0,.18)}',
+    'body.dark .hist-search-field,body.dark .hist-search-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#e2e8f0;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .hist-search-card-head{border-bottom-color:#334155}',
+    'body.dark .hist-search-card td,body.dark .hist-search-card th{border-color:#233247}',
+    'body.dark .modal--matchdetail .mbox--matchdetail{background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(15,23,42,.94));border-color:#334155;box-shadow:0 28px 60px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.03)}',
+    'body.dark .modal--matchdetail .cmd-head,body.dark .modal--matchdetail .cmd-actions{background:linear-gradient(180deg,rgba(15,23,42,.96),rgba(15,23,42,.9));border-color:#334155}',
+    'body.dark .modal--matchdetail .cmd-title{color:#f8fafc}',
+    'body.dark .modal--matchdetail .cmd-sub{color:#94a3b8}',
+    'body.dark .modal--matchdetail .cmd-scorebar{background:linear-gradient(180deg,rgba(15,23,42,.88),rgba(15,23,42,.76))}',
+    'body.dark .modal--matchdetail .set-row,body.dark .modal--matchdetail .cmd-single-summary,body.dark .modal--matchdetail .cmd-midbox{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .modal--matchdetail .cmd-game + .cmd-game{border-top-color:#334155}',
+    '.hist-page-nav{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap}',
+    '.hist-filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}',
+    'body.dark .hist-hero,body.dark .hist-toolbar-card,body.dark .hist-content-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
+    'body.dark .hist-hero-title{color:#f8fafc}',
+    'body.dark .hist-hero-desc{color:#94a3b8}',
+    'body.dark .hist-hero-badge{background:rgba(30,41,59,.78);border-color:#334155;color:#cbd5e1}',
+    'body.dark .hist-inlinebar{border-top-color:#334155}',
+    'body.dark .hist-inline-sep{background:#334155}',
+    'body.dark .hist-shell .empty-state,body.dark .hist-shell .rec-summary{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .hist-shell .rec-sum-header{background:linear-gradient(180deg,rgba(var(--rec-mode-rgb,59,130,246),.16),rgba(15,23,42,.78))}',
+    'body.dark .hist-shell .rec-detail-area{background:linear-gradient(180deg,rgba(2,6,23,.22),rgba(15,23,42,.68));border-top-color:#334155}',
+    '@media (max-width:780px){.hist-hero{flex-direction:column;padding:16px;border-radius:20px}.hist-hero-title{font-size:20px}.hist-hero-badges{justify-content:flex-start}.hist-toolbar-card,.hist-content-card{padding:10px}.hist-topbar,.hist-inlinebar,.hist-ctrl-group,.hist-topbar-left{gap:6px}}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
 function rHist(C,T){
   T.innerText='📅 대전 기록';
   // (A안) 하위 탭/기간 필터를 접기/펼치기
@@ -65,8 +165,29 @@ function rHist(C,T){
     ? `<button onclick="toggleBulkMode('${_histBulkKeyTop}')" style="flex-shrink:0;white-space:nowrap;padding:3px 10px;border-radius:12px;border:1.5px solid ${_bulkModes[_histBulkKeyTop]?'#dc2626':'var(--border2)'};background:${_bulkModes[_histBulkKeyTop]?'#fff1f2':'var(--surface)'};color:${_bulkModes[_histBulkKeyTop]?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_bulkModes[_histBulkKeyTop]?'✕ 선택 해제':'☑ 일괄 선택'}</button>`
     : '';
 
+  const _safeHTML = (typeof window!=='undefined' && typeof window.escHTML==='function') ? window.escHTML : (s)=>String(s??'');
+  const _curTabLabel = _safeHTML(curTab.disp||curTab.lbl||'기록');
+  const _curGroupLabel = _safeHTML(curTab.grp||'종합');
+  const _sortLabel = recSortDir==='asc' ? '오래된순' : '최신순';
+  const _totalSources = [miniM,ckM,univM,proM,indM,gjM,ttM,comps].reduce((n,arr)=>n + ((Array.isArray(arr) ? arr.length : 0)), 0);
+
   // 상단: 기록 메뉴(그룹) 버튼 (연/월/정렬은 하위메뉴 우측에 배치)
-  let h=`<div class="hist-topbar no-export">`;
+  let h=`<div class="hist-shell">
+    <section class="hist-hero">
+      <div class="hist-hero-copy">
+        <div class="hist-hero-kicker">Match Archive</div>
+        <div class="hist-hero-title">📅 대전 기록</div>
+        <div class="hist-hero-desc">전체 통합, 개인전, 팀전, 대회 기록을 한 화면에서 빠르게 탐색하고 상세 팝업으로 경기 내용을 확인할 수 있습니다.</div>
+      </div>
+      <div class="hist-hero-badges">
+        <span class="hist-hero-badge">${_curGroupLabel}</span>
+        <span class="hist-hero-badge">${_curTabLabel}</span>
+        <span class="hist-hero-badge">${_sortLabel}</span>
+        <span class="hist-hero-badge">총 ${_totalSources}건</span>
+      </div>
+    </section>
+    <div class="hist-toolbar-card">
+    <div class="hist-topbar no-export">`;
   h+=`  <div class="hist-topbar-left">`;
   // (요청사항) 필터는 '종합' 좌측(=그룹바 맨 좌측)에 배치
   if((localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1' && !_lockOpen){
@@ -137,10 +258,11 @@ function rHist(C,T){
       h+=`</div>`;
     }
   }
+  h+=`</div>`;
   if(histSub==='vs'){
     h+=vsSearchHTML();
     h+=univVsHTML();
-    C.innerHTML=h;
+    C.innerHTML=h+`</div>`;
     // 두 선수 이미 선택된 경우 결과 즉시 렌더
     if(vsNameA&&vsNameB&&vsNameA!==vsNameB) _vsRenderResult();
     renderUnivVsResult();
@@ -149,18 +271,18 @@ function rHist(C,T){
   if(histSub==='race'){
     if(typeof raceSummaryHTML==='function'){
       h+=raceSummaryHTML();
-      C.innerHTML=h;
+      C.innerHTML=h+`</div>`;
       return;
     }
     rRace(C,T);
     return;
   }
-  if(histSub==='univstat'){h+=rHistUnivStat();C.innerHTML=h;return;}
-  if(histSub==='univcomp'){try{h+=histUnivCompHTML();}catch(e){h+=`<div style="padding:20px;color:red;font-size:12px">⚠️ 오류: ${e.message}</div>`;console.error('histUnivCompHTML error:',e);}C.innerHTML=h;return;}
+  if(histSub==='univstat'){h+=rHistUnivStat();C.innerHTML=h+`</div>`;return;}
+  if(histSub==='univcomp'){try{h+=histUnivCompHTML();}catch(e){h+=`<div style="padding:20px;color:red;font-size:12px">⚠️ 오류: ${e.message}</div>`;console.error('histUnivCompHTML error:',e);}C.innerHTML=h+`</div>`;return;}
   if(histSub==='univrank'){
     if(typeof rUnivBodyHTML==='function'){
       h+=rUnivBodyHTML();
-      C.innerHTML=h;
+      C.innerHTML=h+`</div>`;
       return;
     }
     rUniv(C,T);
@@ -168,19 +290,20 @@ function rHist(C,T){
   }
   if(histSub==='ext'){
     h+=histExternalHTML();
-    C.innerHTML=h;
+    C.innerHTML=h+`</div>`;
     return;
   }
   if(histSub==='ext2'){
     h+=histExternal2HTML();
-    C.innerHTML=h;
+    C.innerHTML=h+`</div>`;
     return;
   }
   if(histSub==='ext3'){
     h+=histExternal3HTML();
-    C.innerHTML=h;
+    C.innerHTML=h+`</div>`;
     return;
   }
+  h+=`<div class="hist-content-card">`;
   if(histSub==='all') h+=histAllHTML();
   else if(histSub==='civil') h+=recSummaryListHTML(miniM.filter(m=>m.type==='civil'||(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
   else if(histSub==='mini') h+=recSummaryListHTML(miniM.filter(m=>m.type!=='civil'&&!(m.a==='A팀'&&m.b==='B팀')),'mini','hist');
@@ -218,6 +341,7 @@ function rHist(C,T){
   else if(histSub==='pro') h+=recSummaryListHTML(proM,'pro','hist');
   else if(histSub==='procomp') h+=histProCompHTML();
   else if(histSub==='psearch') h+=histPlayerSearchHTML();
+  h+=`</div></div>`;
   C.innerHTML=h;
   // [FIX-9] 이벤트 위임: .hist-grp-btn 클릭 → data-hsub 읽어 histSub 설정
   C.querySelectorAll('.hist-grp-btn[data-hsub]').forEach(btn=>{
@@ -345,7 +469,7 @@ function histAllHTML(){
   const curPage=histPage['all'];
   const paged=_typeFiltered.length>pageSize?_typeFiltered.slice(curPage*pageSize,(curPage+1)*pageSize):_typeFiltered;
 
-  let h=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+  let h=`<div class="hist-filter-row">
     ${_typeButtons.map(t=>`<button class="pill ${window._recTypeFilter===t.id?'on':''}" onclick="window._recTypeFilter='${t.id}';histPage['all']=0;render()">${t.lbl}${t.id!=='전체'&&_typeCountMap[t.id]?` <span style="font-size:10px;opacity:.7">(${_typeCountMap[t.id]})</span>`:''}</button>`).join('')}
   </div>`;
 
@@ -421,7 +545,7 @@ function histAllHTML(){
 
   // 페이지 네비게이션
   if(_typeFiltered.length>pageSize){
-    h+=`<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
+    h+=`<div class="hist-page-nav">
       <button class="btn btn-sm" ${curPage===0?'disabled':''} onclick="histPage['all']=${curPage-1};render()">← 이전</button>
       <span style="font-size:12px;color:var(--gray-l)">${curPage+1} / ${totalPages}</span>
       <button class="btn btn-sm" ${curPage>=totalPages-1?'disabled':''} onclick="histPage['all']=${curPage+1};render()">다음 →</button>
@@ -1006,7 +1130,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv){
   _dateKeysF.forEach(dk=>{
     let _dkLabel=dk;
     if(dk!=='날짜 미정'&&dk.match(/^\d{4}-\d{2}-\d{2}$/)){const dt=new Date(dk+'T00:00:00');_dkLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_daysF[dt.getDay()]}`;}
-    h+=`<div style="margin-bottom:22px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
+    h+=`<div class="rec-date-group"><div class="rec-date-group-head"><div class="rec-date-group-title">📅 ${_dkLabel}</div></div>`;
     _byDateF[dk].forEach(m=>_renderItem(m));
     h+=`</div>`;
   });
@@ -2509,7 +2633,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
             const loseBdA = 'rgba(203,213,225,.85)';
             const loseBdB = 'rgba(203,213,225,.85)';
             h+=`<div class="cmd-game">
-              <div class="cmd-game-row">
+              <div class="cmd-game-row cmd-game-row--premium">
                 <div class="cmd-player ${winA?'is-win':''} ${loseA?'is-lose':''}" style="--cmd-col:${sideColA};background:${winA?(typeof getMatchWinTint==='function'?getMatchWinTint(sideColA):(sideColA+'22')):(loseA?loseBgA:(sideColA+'12'))};border-color:${winA?(sideColA+'55'):(loseA?loseBdA:(sideColA+'33'))};">
                   <div class="cmd-player-meta">
                     <div class="cmd-player-name" ${clickA} style="display:flex;align-items:center;justify-content:center;gap:8px;text-align:center"><span class="cmd-player-inline" style="display:inline-flex;align-items:center;gap:4px;justify-content:center">${univLogoA}${tierA}${raceA}</span><span class="cmd-player-name__txt">${g.playerA||'?'}</span></div>
@@ -2605,18 +2729,18 @@ function _histPSearchResultsHTML(q){
     const wins=filteredHist.filter(hh=>hh.result==='승').length;
     const losses=filteredHist.length-wins;
     const wr=filteredHist.length?Math.round(wins/filteredHist.length*100):0;
-    h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">
-      <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="openPlayerModal('${p.name.replace(/'/g,"\'")}')">
-        <span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>
+    h+=`<div class="hist-search-card">
+      <div class="hist-search-card-head" onclick="openPlayerModal('${p.name.replace(/'/g,"\'")}')">
+        <span class="hist-search-dot" style="background:${col}"></span>
         <span style="font-weight:800;font-size:15px;color:var(--text)">${p.name}</span>
         <span style="font-size:12px;color:var(--gray-l)">${p.univ||''}</span>
         <span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--text3)">${filteredHist.length}게임</span>
         <span style="font-size:12px;font-weight:700;color:#16a34a">${wins}승</span>
         <span style="font-size:12px;font-weight:700;color:#dc2626">${losses}패</span>
-        <span style="font-size:12px;padding:2px 8px;border-radius:20px;background:${wr>=50?'#dcfce7':'#fee2e2'};color:${wr>=50?'#16a34a':'#dc2626'};font-weight:800">${wr}%</span>
+        <span class="hist-search-wr ${wr>=50?'win':'lose'}">${wr}%</span>
       </div>
       <div style="overflow-x:auto">
-        <table style="margin:0;border:none;border-radius:0;font-size:12px"><thead><tr>
+        <table><thead><tr>
           <th style="white-space:nowrap">날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>
         </tr></thead><tbody>`;
     filteredHist.forEach(hh=>{
@@ -2796,11 +2920,11 @@ function histUnivCompHTML(){
 
 function histPlayerSearchHTML(){
   const q=(window._histPSearchQ||'').trim();
-  return`<div style="margin-bottom:12px">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+  return`<div class="hist-search-bar">
+    <div class="hist-search-row">
       <input type="text" id="hist-psearch-input" placeholder="🔍 스트리머 이름 입력..." value="${q.replace(/"/g,'&quot;')}"
         oninput="_psearchUpdate(this.value)"
-        style="flex:1;min-width:160px;max-width:280px;padding:7px 12px;border:1.5px solid var(--blue);border-radius:8px;font-size:13px;font-weight:600;outline:none" autofocus>
+        class="hist-search-field" autofocus>
       ${q?`<button onclick="window._histPSearchQ='';document.getElementById('hist-psearch-input').value='';document.getElementById('hist-psearch-results').innerHTML=_histPSearchResultsHTML('')" style="background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:18px;line-height:1;padding:0 2px">✕</button>`:''}
     </div>
   </div>

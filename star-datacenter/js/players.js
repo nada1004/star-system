@@ -613,11 +613,16 @@ function openBulkEditModal(){
 }
 
 function saveBulkEdit(){
-  const t=document.getElementById('bulk-ed-t').value;
-  const u=document.getElementById('bulk-ed-u').value;
-  const r=document.getElementById('bulk-ed-r').value;
-  const g=document.getElementById('bulk-ed-g').value;
-  const h=document.getElementById('bulk-ed-h').value;
+  const _getSelVal=(id)=>document.getElementById(id)?.value||'';
+  const t=_getSelVal('bulk-ed-t');
+  const u=_getSelVal('bulk-ed-u');
+  const r=_getSelVal('bulk-ed-r');
+  const g=_getSelVal('bulk-ed-g');
+  const h=_getSelVal('bulk-ed-h');
+  if(!document.getElementById('bulk-ed-t')&&!document.getElementById('bulk-ed-u')&&!document.getElementById('bulk-ed-r')&&!document.getElementById('bulk-ed-g')&&!document.getElementById('bulk-ed-h')){
+    alert('일괄 편집 창을 다시 열어주세요.');
+    return;
+  }
   if(!t&&!u&&!r&&!g&&!h){alert('변경할 항목을 선택하세요.');return;}
   _bulkEditSelected.forEach(name=>{
     const p=players.find(x=>x.name===name);
@@ -836,6 +841,95 @@ function tierRankGoHist(modeId, playerName){
 ══════════════════════════════════════ */
 let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | recent
 
+(function _injectTierRankUiStyle(){
+  if(typeof document==='undefined') return;
+  if(document.getElementById('tier-rank-ui-style')) return;
+  const s=document.createElement('style');
+  s.id='tier-rank-ui-style';
+  s.textContent=[
+    '.tier-shell{display:flex;flex-direction:column;gap:14px}',
+    '.tier-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 38px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.88)}',
+    '.tier-hero-copy{display:flex;flex-direction:column;gap:6px;min-width:0}',
+    '.tier-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}',
+    '.tier-hero-title{font-size:24px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.15}',
+    '.tier-hero-desc{font-size:13px;line-height:1.6;color:var(--text3)}',
+    '.tier-hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}',
+    '.tier-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);font-size:12px;font-weight:800;color:var(--text2);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.tier-toolbar-card,.tier-content-card{padding:12px 14px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 32px rgba(15,23,42,.05)}',
+    '.tier-filter-shell{display:flex;flex-direction:column;gap:10px}',
+    '.tier-toolbar-card .pill{border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.92));color:var(--text2);font-weight:800;box-shadow:0 8px 16px rgba(15,23,42,.04);transition:transform .15s,box-shadow .15s,border-color .15s,background .15s}',
+    '.tier-toolbar-card .pill:hover{transform:translateY(-1px);box-shadow:0 14px 24px rgba(15,23,42,.08)}',
+    '.tier-toolbar-card .pill.on{background:linear-gradient(135deg,#2563eb,#3b82f6);border-color:#2563eb;color:#fff;box-shadow:0 14px 26px rgba(37,99,235,.24)}',
+    '.tier-toolbar-card .tier-chip-soft{padding:4px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(248,250,252,.94);font-size:11px;font-weight:800;color:var(--text2)}',
+    '.tier-type-box{width:100%;display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;background:linear-gradient(180deg,rgba(248,250,252,.96),rgba(241,245,249,.94));border-radius:14px;border:1px solid rgba(148,163,184,.16);margin-top:2px}',
+    '.tier-view-btn{padding:6px 9px;border-radius:10px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:13px;cursor:pointer;line-height:1;box-shadow:0 8px 16px rgba(15,23,42,.04)}',
+    '.tier-view-btn.on{border-color:var(--blue);background:#eff6ff;color:var(--blue)}',
+    '.tier-univ-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;color:#fff;font-weight:900;letter-spacing:-.01em;box-shadow:0 10px 18px rgba(15,23,42,.10),inset 0 1px 0 rgba(255,255,255,.28)}',
+    '.tier-univ-badge img{box-shadow:0 4px 10px rgba(15,23,42,.16);background:rgba(255,255,255,.82);padding:1px}',
+    '.tier-act-dot{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.92));box-shadow:0 8px 16px rgba(15,23,42,.05);font-size:11px;font-weight:900}',
+    '.tier-act-dot.hot{color:#16a34a;border-color:rgba(34,197,94,.28);background:linear-gradient(180deg,rgba(240,253,244,.98),rgba(220,252,231,.92))}',
+    '.tier-act-dot.warm{color:#d97706;border-color:rgba(245,158,11,.28);background:linear-gradient(180deg,rgba(255,251,235,.98),rgba(254,243,199,.92))}',
+    '.tier-act-dot.cool{color:#64748b;border-color:rgba(148,163,184,.24);background:linear-gradient(180deg,rgba(248,250,252,.98),rgba(241,245,249,.92))}',
+    '.tier-act-dot.none{color:#94a3b8}',
+    '.tier-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}',
+    '.tier-table{table-layout:auto;width:100%;min-width:1120px;max-width:1600px;margin:0 auto;border-collapse:separate;border-spacing:0 8px}',
+    '.tier-table thead th{background:linear-gradient(180deg,#f8fbff,#eef6ff);border-top:1px solid rgba(148,163,184,.18);border-bottom:1px solid rgba(148,163,184,.18)}',
+    '.tier-table tbody tr{box-shadow:0 12px 24px rgba(15,23,42,.05)}',
+    '.tier-table tbody td{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border-top:1px solid rgba(148,163,184,.14);border-bottom:1px solid rgba(148,163,184,.14)}',
+    '.tier-table tbody tr td:first-child{border-left:1px solid rgba(148,163,184,.14);border-top-left-radius:16px;border-bottom-left-radius:16px}',
+    '.tier-table tbody tr td:last-child{border-right:1px solid rgba(148,163,184,.14);border-top-right-radius:16px;border-bottom-right-radius:16px}',
+    '.tier-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:4px 0}',
+    '.tier-rank-card{cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1.5px solid rgba(148,163,184,.18);border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;transition:box-shadow .15s,transform .15s;position:relative;box-shadow:0 12px 24px rgba(15,23,42,.05)}',
+    '.tier-rank-card:hover{box-shadow:0 18px 30px rgba(15,23,42,.08);transform:translateY(-2px)}',
+    '.tier-rank-card.top1{box-shadow:0 20px 36px rgba(251,191,36,.22);border-color:rgba(251,191,36,.42)}',
+    '.tier-rank-card.top2{box-shadow:0 18px 32px rgba(148,163,184,.2);border-color:rgba(148,163,184,.38)}',
+    '.tier-rank-card.top3{box-shadow:0 18px 32px rgba(180,83,9,.18);border-color:rgba(180,83,9,.34)}',
+    '.tier-rank-badge{position:absolute;top:8px;left:10px;font-size:12px;font-weight:900}',
+    '.tier-rank-act{position:absolute;top:8px;right:10px}',
+    '.tier-rank-statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;width:100%;border-top:1px solid rgba(148,163,184,.16);padding-top:8px;margin-top:4px}',
+    '.tier-rank-stat{padding:7px 4px;border-radius:12px;background:rgba(248,250,252,.9);text-align:center;border:1px solid rgba(148,163,184,.14)}',
+    '.tier-rank-extra{font-size:11px;text-align:center;padding:5px 10px;border-radius:999px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.16);font-weight:800;color:var(--text2)}',
+    '.tier-podium{display:flex;align-items:flex-end;justify-content:center;gap:16px;padding:18px 8px 10px;margin-bottom:14px}',
+    '.tier-podium-card{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}',
+    '.tier-podium-stat{font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.84);border:1px solid rgba(148,163,184,.16)}',
+    '.tier-podium-base{width:100%;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:0 16px 28px rgba(15,23,42,.08)}',
+    '.tier-podium-base::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.26),transparent 48%);pointer-events:none}',
+    '.tier-podium-rest{border-top:1px solid rgba(148,163,184,.18);padding-top:10px}',
+    '.tier-podium-rest-item{cursor:pointer;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.16);margin-bottom:6px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.tier-compact-list{display:flex;flex-direction:column;gap:6px}',
+    '.tier-compact-item{cursor:pointer;display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.16);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.tier-compact-extra{font-size:10px;padding:3px 8px;border-radius:999px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.16);font-weight:800;color:var(--text2)}',
+    '.tier-group-sec{margin-bottom:16px}',
+    '.tier-group-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:16px;margin-bottom:8px;box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.tier-group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;padding:0 4px}',
+    '.tier-group-card{cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.16);border-radius:14px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    'body.dark .tier-hero,body.dark .tier-toolbar-card,body.dark .tier-content-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
+    'body.dark .tier-hero-title{color:#f8fafc}',
+    'body.dark .tier-hero-desc{color:#94a3b8}',
+    'body.dark .tier-hero-badge{background:rgba(30,41,59,.78);border-color:#334155;color:#cbd5e1}',
+    'body.dark .tier-toolbar-card .pill{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#cbd5e1;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .tier-toolbar-card .pill.on{background:linear-gradient(135deg,#1d4ed8,#2563eb);border-color:#2563eb;color:#eff6ff;box-shadow:0 16px 28px rgba(37,99,235,.22)}',
+    'body.dark .tier-toolbar-card .tier-chip-soft,body.dark .tier-type-box{background:linear-gradient(180deg,rgba(15,23,42,.92),rgba(30,41,59,.88));border-color:#334155;color:#cbd5e1}',
+    'body.dark .tier-view-btn{background:#0f172a;border-color:#334155;color:#cbd5e1;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .tier-view-btn.on{background:#17263c;color:#93c5fd;border-color:#2563eb}',
+    'body.dark .tier-univ-badge{box-shadow:0 12px 22px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.05)}',
+    'body.dark .tier-univ-badge img{background:rgba(15,23,42,.72)}',
+    'body.dark .tier-table thead th{background:linear-gradient(180deg,#132033,#17263c);border-color:#334155;color:#e2e8f0}',
+    'body.dark .tier-table tbody td,body.dark .tier-rank-card,body.dark .tier-podium-rest-item,body.dark .tier-compact-item,body.dark .tier-group-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#e2e8f0;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .tier-rank-card.top1{box-shadow:0 20px 36px rgba(251,191,36,.18)}',
+    'body.dark .tier-rank-card.top2{box-shadow:0 18px 32px rgba(148,163,184,.16)}',
+    'body.dark .tier-rank-card.top3{box-shadow:0 18px 32px rgba(180,83,9,.16)}',
+    'body.dark .tier-rank-stat,body.dark .tier-podium-stat,body.dark .tier-rank-extra,body.dark .tier-compact-extra{background:rgba(30,41,59,.78);border-color:#334155;color:#e2e8f0}',
+    'body.dark .tier-act-dot{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(30,41,59,.88));border-color:#334155;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .tier-act-dot.hot{color:#86efac;border-color:rgba(34,197,94,.24)}',
+    'body.dark .tier-act-dot.warm{color:#fcd34d;border-color:rgba(245,158,11,.22)}',
+    'body.dark .tier-act-dot.cool,body.dark .tier-act-dot.none{color:#cbd5e1}',
+    'body.dark .tier-podium-rest{border-top-color:#334155}',
+    '@media (max-width:780px){.tier-hero{flex-direction:column;padding:16px;border-radius:20px}.tier-hero-title{font-size:20px}.tier-hero-badges{justify-content:flex-start}.tier-toolbar-card,.tier-content-card{padding:10px}.tier-card-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}.tier-podium{gap:6px}.tier-group-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
 function rTier(C,T){
   T.innerText='📊 티어 순위표';
   try{ _bindTotalDelegatedEvents(); }catch(e){}
@@ -910,9 +1004,12 @@ function rTier(C,T){
     window._tierHideNoRecord, window._tierExcludeMale,
     _hasTypeFilter
   ].filter(Boolean).length;
+  const _viewModeLabels={table:'테이블',card:'카드',podium:'포디움',compact:'컴팩트','tier-group':'티어 그룹'};
+  if(!window._tierViewMode) window._tierViewMode = (()=>{try{return localStorage.getItem('su_tier_view_mode')||'table';}catch(e){return 'table';}})();
+  const _viewLabel=_viewModeLabels[window._tierViewMode||'table']||'테이블';
 
   // ── 1행: 필터(좌측) + 보기 모드 + (우측) 티어표 ──
-  let fh=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
+  let fh=`<div class="tier-toolbar-card"><div class="tier-filter-shell"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
   fh+=`<div class="fbar" style="flex:1 1 420px;min-width:0;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px">`;
   fh+=`<button class="pill ${window._tierFilterOpen||_activeFilters>0?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._tierFilterOpen=!window._tierFilterOpen;render()">🔍 필터${_activeFilters>0?` (${_activeFilters})`:''} ${window._tierFilterOpen?'▲':'▼'}</button>`;
   modes.forEach(m=>{
@@ -932,7 +1029,7 @@ function rTier(C,T){
   fh+=`<div style="display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">`;
   _viewModes.forEach(vm=>{
     const on=window._tierViewMode===vm.id;
-    fh+=`<button title="${vm.title}" onclick="window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()" style="padding:5px 8px;border-radius:7px;border:1.5px solid ${on?'var(--blue)':'var(--border2)'};background:${on?'#eff6ff':'var(--white)'};color:${on?'var(--blue)':'var(--text3)'};font-size:13px;cursor:pointer;line-height:1">${vm.icon}</button>`;
+    fh+=`<button class="tier-view-btn ${on?'on':''}" title="${vm.title}" onclick="window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()">${vm.icon}</button>`;
   });
   fh+=`</div>`;
   // (요청사항) 티어순위표 하위 메뉴의 '티어표' 버튼 제거
@@ -990,6 +1087,7 @@ function rTier(C,T){
   }
   fh+=`</div>`;
   } // end filter open block
+  fh+=`</div></div>`;
   F.innerHTML=fh;
 
   if(false&&tierRankMode==='recent'){
@@ -1290,10 +1388,10 @@ function rTier(C,T){
   }
   function _getActHTML(p){
     const _lastD=(p.history||[]).reduce((mx,h)=>h.date>mx?h.date:mx,'');
-    if(!_lastD) return '<span style="font-size:10px;color:#9ca3af">-</span>';
-    if(_lastD>=_7ago2) return`<span style="font-size:10px;font-weight:900;color:#16a34a" title="7일 이내">🟢</span>`;
-    if(_lastD>=_30ago2) return`<span style="font-size:10px;font-weight:900;color:#f59e0b" title="30일 이내">🟡</span>`;
-    return '<span style="font-size:10px;font-weight:900;color:#9ca3af">⚫</span>';
+    if(!_lastD) return '<span class="tier-act-dot none" title="기록 없음">-</span>';
+    if(_lastD>=_7ago2) return`<span class="tier-act-dot hot" title="7일 이내 활동">LIVE</span>`;
+    if(_lastD>=_30ago2) return`<span class="tier-act-dot warm" title="30일 이내 활동">WARM</span>`;
+    return '<span class="tier-act-dot cool" title="최근 활동 적음">REST</span>';
   }
   function _getUnivIconHTML(p){
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
@@ -1311,8 +1409,8 @@ function rTier(C,T){
   const _tableStyle = _isMb
     ? `table-layout:auto;width:max-content;max-width:100%`
     : `table-layout:auto;width:100%;min-width:1120px;max-width:1600px;margin:0 auto`;
-  h=`<div style="${_wrapStyle}">
-    <table style="${_tableStyle}"><thead><tr>
+  h=`<div class="tier-content-card"><div class="tier-table-wrap" style="${_wrapStyle}">
+    <table class="tier-table" style="${_tableStyle}"><thead><tr>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">순위</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">티어</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">대학</th>
@@ -1347,8 +1445,8 @@ function rTier(C,T){
       <td style="text-align:center;white-space:nowrap;padding:${_pad}">${rnkHTML}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad}">${getTierBadge(p.tier)}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad}">
-        <span class="ubadge clickable-univ" data-icon-done="1"
-          style="background:${col};display:inline-flex;align-items:center;gap:6px;font-size:${_isMb?11:13}px;max-width:${_isMb?90:120}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+        <span class="ubadge tier-univ-badge clickable-univ" data-icon-done="1"
+          style="background:${col};font-size:${_isMb?11:13}px;max-width:${_isMb?90:120}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
           onclick="openUnivModal('${p.univ}')"
         >${univIconHTML}${p.univ}</span>
       </td>
@@ -1369,14 +1467,14 @@ function rTier(C,T){
       ${_li?`<td class="no-export col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
     </tr>`;
   });
-  h+=`</tbody></table></div>`;
+  h+=`</tbody></table></div></div>`;
   }
 
   // ════════════════════════════════════════════
   // 뷰2: CARD GRID (카드 그리드)
   // ════════════════════════════════════════════
   else if(_vm==='card'){
-  h=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(${_isMb?'140px':'180px'},1fr));gap:${_isMb?'8px':'12px'};padding:4px 0">`;
+  h=`<div class="tier-content-card"><div class="tier-card-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isMb?'140px':'180px'},1fr));gap:${_isMb?'8px':'12px'}">`;
   list.forEach((p,i)=>{
     const col=gc(p.univ)||'#64748b'; const tot=p.win+p.loss; const wr=tot?Math.round(p.win/tot*100):0;
     const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
@@ -1387,26 +1485,26 @@ function rTier(C,T){
     const extraVal=_getExtraVal(p);
     const _actHTML=_getActHTML(p);
     const _rankLabel=i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="font-size:11px;font-weight:900;color:var(--text3)">${i+1}위</span>`;
-    h+=`<div data-tp-action="open-player" data-tp-player="${_pAttr}" style="cursor:pointer;background:var(--white);border:1.5px solid ${col}33;border-top:3px solid ${col};border-radius:12px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;transition:box-shadow .15s,transform .15s;position:relative" onmouseover="this.style.boxShadow='0 6px 20px rgba(0,0,0,.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='none';this.style.transform='none'">
-      <div style="position:absolute;top:7px;left:9px;font-size:12px">${_rankLabel}</div>
-      <div style="position:absolute;top:7px;right:9px">${_actHTML}</div>
+    h+=`<div class="tier-rank-card ${i===0?'top1':i===1?'top2':i===2?'top3':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="border-color:${col}33;border-top:3px solid ${col}">
+      <div class="tier-rank-badge">${_rankLabel}</div>
+      <div class="tier-rank-act">${_actHTML}</div>
       <div style="margin-top:10px">${getPlayerPhotoHTML(p.name,_isMb?'44px':'52px')}</div>
       <div style="font-weight:800;font-size:${_isMb?12:13}px;text-align:center;line-height:1.3;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
       <div style="display:flex;align-items:center;gap:4px;justify-content:center">
-        <span class="ubadge" data-icon-done="1" style="background:${col};display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 6px">${univIconHTML}${p.univ}</span>
+        <span class="ubadge tier-univ-badge" data-icon-done="1" style="background:${col};font-size:10px;padding:2px 8px">${univIconHTML}${p.univ}</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;justify-content:center">
         ${getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:10px">${p.race}</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;width:100%;text-align:center;border-top:1px solid var(--border2);padding-top:6px;margin-top:2px">
-        <div><div style="font-size:10px;color:var(--gray-l)">승</div><div style="font-weight:900;font-size:13px;color:var(--score-win)">${p.win}</div></div>
-        <div><div style="font-size:10px;color:var(--gray-l)">패</div><div style="font-weight:900;font-size:13px;color:var(--score-lose)">${p.loss}</div></div>
-        <div><div style="font-size:10px;color:var(--gray-l)">승률</div><div style="font-weight:800;font-size:12px;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</div></div>
+      <div class="tier-rank-statgrid">
+        <div class="tier-rank-stat"><div style="font-size:10px;color:var(--gray-l)">승</div><div style="font-weight:900;font-size:13px;color:var(--score-win)">${p.win}</div></div>
+        <div class="tier-rank-stat"><div style="font-size:10px;color:var(--gray-l)">패</div><div style="font-weight:900;font-size:13px;color:var(--score-lose)">${p.loss}</div></div>
+        <div class="tier-rank-stat"><div style="font-size:10px;color:var(--gray-l)">승률</div><div style="font-weight:800;font-size:12px;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</div></div>
       </div>
-      <div style="font-size:11px;text-align:center">${extraVal}</div>
+      <div class="tier-rank-extra">${extraVal}</div>
     </div>`;
   });
-  h+=`</div>`;
+  h+=`</div></div>`;
   }
 
   // ════════════════════════════════════════════
@@ -1419,7 +1517,7 @@ function rTier(C,T){
   const podH=[100,130,85]; // 받침대 높이
   const podColors=['#c0c0c0','#fbbf24','#cd7f32'];
   const podLabels=['🥈','🥇','🥉'];
-  h=`<div style="display:flex;align-items:flex-end;justify-content:center;gap:${_isMb?'6px':'16px'};padding:16px 8px 8px;margin-bottom:12px">`;
+  h=`<div class="tier-content-card"><div class="tier-podium" style="gap:${_isMb?'6px':'16px'}">`;
   podOrder.forEach((pi,ci)=>{
     if(!top3[pi]) return;
     const p=top3[pi]; const col=gc(p.univ)||'#64748b';
@@ -1428,14 +1526,14 @@ function rTier(C,T){
       ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
       : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
     const tot=p.win+p.loss; const wr=tot?Math.round(p.win/tot*100):0;
-    h+=`<div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;flex:${pi===0?'0 0 ${_isMb?120:150}px':'0 0 ${_isMb?100:130}px'}" data-tp-action="open-player" data-tp-player="${_pAttr}">
+    h+=`<div class="tier-podium-card" style="flex:${pi===0?'0 0 '+(_isMb?120:150)+'px':'0 0 '+(_isMb?100:130)+'px'}" data-tp-action="open-player" data-tp-player="${_pAttr}">
       <div style="font-size:${pi===0?(_isMb?'24px':'28px'):(_isMb?'20px':'24px')}">${podLabels[ci]}</div>
       ${getPlayerPhotoHTML(p.name,pi===0?(_isMb?'56px':'70px'):(_isMb?'44px':'56px'))}
       <div style="font-weight:900;font-size:${pi===0?12:11}px;text-align:center;max-width:${_isMb?100:130}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
       <div style="display:flex;align-items:center;gap:4px">${getTierBadge(p.tier)}</div>
-      <div style="background:${col};color:#fff;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;max-width:${_isMb?90:110}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</div>
-      <div style="font-size:11px;font-weight:800;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'} (${p.win}W${p.loss}L)</div>
-      <div style="width:100%;background:${podColors[ci]}33;border:2px solid ${podColors[ci]};border-bottom:none;border-radius:8px 8px 0 0;height:${podH[ci]}px;display:flex;align-items:center;justify-content:center">
+      <div class="tier-univ-badge" style="background:${col};font-size:10px;max-width:${_isMb?90:110}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</div>
+      <div class="tier-podium-stat" style="color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'} · ${p.win}W ${p.loss}L</div>
+      <div class="tier-podium-base" style="background:${podColors[ci]}33;border:2px solid ${podColors[ci]};border-bottom:none;height:${podH[ci]}px">
         <span style="font-size:${_isMb?22:28}px;font-weight:900;color:${podColors[ci]};opacity:.6">${pi+1}</span>
       </div>
     </div>`;
@@ -1443,7 +1541,7 @@ function rTier(C,T){
   h+=`</div>`;
   // 4위 이하: 컴팩트 리스트
   if(rest.length){
-    h+=`<div style="border-top:2px solid var(--border);padding-top:8px">`;
+    h+=`<div class="tier-podium-rest">`;
     rest.forEach((p,i)=>{
       const ri=i+3; const col=gc(p.univ)||'#64748b';
       const tot=p.win+p.loss; const wr=tot?Math.round(p.win/tot*100):0;
@@ -1451,24 +1549,25 @@ function rTier(C,T){
       const _pAttr=(typeof escAttr==='function')
         ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-      h+=`<div data-tp-action="open-player" data-tp-player="${_pAttr}" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;border-left:3px solid ${col};margin-bottom:4px;background:${gcHex8(p.univ,.04)}" onmouseover="this.style.background='${gcHex8(p.univ,.10)}'" onmouseout="this.style.background='${gcHex8(p.univ,.04)}'">
+      h+=`<div class="tier-podium-rest-item" data-tp-action="open-player" data-tp-player="${_pAttr}" style="border-left:3px solid ${col};background:${gcHex8(p.univ,.04)}">
         <span style="font-weight:900;font-size:12px;color:var(--text3);min-width:28px;text-align:center">${ri+1}위</span>
         ${getPlayerPhotoHTML(p.name,'32px')}
         <span style="font-weight:700;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span>
         ${getTierBadge(p.tier)}
-        <span class="ubadge" style="background:${col};font-size:10px;padding:1px 6px">${p.univ}</span>
+        <span class="ubadge tier-univ-badge" style="background:${col};font-size:10px;padding:1px 7px">${p.univ}</span>
         <span style="font-size:11px;font-weight:800;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'};min-width:36px;text-align:right">${tot?wr+'%':'-'}</span>
       </div>`;
     });
     h+=`</div>`;
   }
+  h+=`</div>`;
   }
 
   // ════════════════════════════════════════════
   // 뷰4: COMPACT (초밀도 리스트)
   // ════════════════════════════════════════════
   else if(_vm==='compact'){
-  h=`<div style="display:flex;flex-direction:column;gap:2px">`;
+  h=`<div class="tier-content-card"><div class="tier-compact-list">`;
   list.forEach((p,i)=>{
     const col=gc(p.univ)||'#64748b'; const tot=p.win+p.loss; const wr=tot?Math.round(p.win/tot*100):0;
     const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
@@ -1478,20 +1577,20 @@ function rTier(C,T){
     const extraVal=_getExtraVal(p); const _actHTML=_getActHTML(p);
     const _elo=(p.elo||ELO_DEFAULT);
     let rnkStr=i<3?['🥇','🥈','🥉'][i]:`<span style="font-size:11px;font-weight:900;color:var(--text3);min-width:20px;text-align:center;display:inline-block">${i+1}</span>`;
-    h+=`<div data-tp-action="open-player" data-tp-player="${_pAttr}" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;background:var(--white);border:1px solid var(--border);border-left:3px solid ${col}" onmouseover="this.style.background='${gcHex8(p.univ,.07)}'" onmouseout="this.style.background='var(--white)'">
+    h+=`<div class="tier-compact-item" data-tp-action="open-player" data-tp-player="${_pAttr}" style="border-left:3px solid ${col}">
       <span style="min-width:24px;text-align:center;font-size:13px">${rnkStr}</span>
       ${getPlayerPhotoHTML(p.name,'26px')}
       <span style="font-weight:700;font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}${genderIcon(p.gender)}</span>
       ${getTierBadge(p.tier)}
       <span class="rbadge r${p.race}" style="font-size:9px">${p.race}</span>
-      <span class="ubadge" style="background:${col};font-size:9px;padding:1px 5px;max-width:${_isMb?60:80}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</span>
+      <span class="ubadge tier-univ-badge" style="background:${col};font-size:9px;padding:1px 6px;max-width:${_isMb?60:80}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</span>
       <span style="font-size:11px;min-width:${_isMb?0:70}px;text-align:right;${_isMb?'display:none':''}"><span style="color:var(--score-win);font-weight:900">${p.win}</span><span style="color:var(--gray-l)">W</span><span style="color:var(--score-lose);font-weight:900">${p.loss}</span><span style="color:var(--gray-l)">L</span></span>
       <span style="font-size:11px;font-weight:800;min-width:36px;text-align:right;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</span>
-      <span style="font-size:11px;min-width:30px;text-align:right;${_isMb?'display:none':''}">${extraVal}</span>
+      <span class="tier-compact-extra" style="${_isMb?'display:none':''}">${extraVal}</span>
       <span style="min-width:16px;text-align:center;${_isMb?'display:none':''}">${_actHTML}</span>
     </div>`;
   });
-  h+=`</div>`;
+  h+=`</div></div>`;
   }
 
   // ════════════════════════════════════════════
@@ -1509,22 +1608,22 @@ function rTier(C,T){
   _orderedTiers.forEach(t=>{
     const grp=_tierGroups[t]; if(!grp) return;
     const _tc=getTierBtnColor(t)||'#64748b'; const _tt=getTierBtnTextColor(t)||'#fff';
-    h+=`<div style="margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:${_tc}18;border-left:4px solid ${_tc};border-radius:0 8px 8px 0;margin-bottom:6px">
+    h+=`<div class="tier-group-sec">
+      <div class="tier-group-head" style="background:${_tc}18;border-left:4px solid ${_tc}">
         <span style="background:${_tc};color:${_tt};font-weight:900;font-size:13px;padding:3px 12px;border-radius:5px">${getTierLabel(t)}</span>
         <span style="font-size:12px;font-weight:700;color:var(--text3)">${grp.players.length}명</span>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(${_isMb?'130px':'160px'},1fr));gap:${_isMb?'6px':'8px'};padding:0 4px">`;
+      <div class="tier-group-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isMb?'130px':'160px'},1fr));gap:${_isMb?'6px':'8px'}">`;
     grp.players.forEach(({p,i})=>{
       const col=gc(p.univ)||'#64748b'; const tot=p.win+p.loss; const wr=tot?Math.round(p.win/tot*100):0;
       const _pAttr=(typeof escAttr==='function')
         ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-      h+=`<div data-tp-action="open-player" data-tp-player="${_pAttr}" style="cursor:pointer;background:var(--white);border:1px solid ${col}33;border-radius:10px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;transition:box-shadow .12s" onmouseover="this.style.boxShadow='0 4px 14px rgba(0,0,0,.09)'" onmouseout="this.style.boxShadow='none'">
+      h+=`<div class="tier-group-card" data-tp-action="open-player" data-tp-player="${_pAttr}" style="border-color:${col}33">
         <span style="align-self:flex-start;font-size:10px;font-weight:900;color:var(--text3)">${i+1}위</span>
         ${getPlayerPhotoHTML(p.name,_isMb?'40px':'46px')}
         <span style="font-weight:800;font-size:${_isMb?11:12}px;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span>
-        <span class="ubadge" data-icon-done="1" style="background:${col};font-size:9px;padding:1px 5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</span>
+        <span class="ubadge tier-univ-badge" data-icon-done="1" style="background:${col};font-size:9px;padding:1px 6px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</span>
         <span class="rbadge r${p.race}" style="font-size:9px">${p.race}</span>
         <div style="font-size:10px;font-weight:800;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'} (${p.win}W${p.loss}L)</div>
       </div>`;
@@ -1533,5 +1632,20 @@ function rTier(C,T){
   });
   }
 
-  C.innerHTML=h;
+  C.innerHTML=`<div class="tier-shell">
+    <section class="tier-hero">
+      <div class="tier-hero-copy">
+        <div class="tier-hero-kicker">Tier Ranking</div>
+        <div class="tier-hero-title">📊 티어 순위표</div>
+        <div class="tier-hero-desc">티어, 대학, 종족, 활동 지표를 한눈에 비교하고 테이블, 카드, 포디움 등 원하는 보기 방식으로 빠르게 확인할 수 있습니다.</div>
+      </div>
+      <div class="tier-hero-badges">
+        <span class="tier-hero-badge">${_viewLabel}</span>
+        <span class="tier-hero-badge">${hasTypeSet?`유형 ${window._tierTypeSet.size}개`:(modeHeaders[tierRankMode]||'포인트')}</span>
+        <span class="tier-hero-badge">필터 ${_activeFilters}개</span>
+        <span class="tier-hero-badge">총 ${list.length}명</span>
+      </div>
+    </section>
+    ${h}
+  </div>`;
 }

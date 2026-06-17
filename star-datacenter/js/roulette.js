@@ -83,7 +83,39 @@ function rRoulette(C, T) {
   s.id = 'gc-style';
   s.textContent = '@keyframes gcConfettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}80%{opacity:1}100%{transform:translateY(100vh) rotate(800deg) scale(0.4);opacity:0}}'
     + '@keyframes gcBounceIcon{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.3) rotate(10deg)}80%{transform:scale(0.9) rotate(-5deg)}100%{transform:scale(1) rotate(0deg)}}'
-    + '@keyframes gcCardAppear{0%{transform:scale(0.75) translateY(10px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}';
+    + '@keyframes gcCardAppear{0%{transform:scale(0.75) translateY(10px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}'
+    + '.gc-shell{position:relative}'
+    + '.gc-shell::before{content:"";position:absolute;inset:0 10px auto 10px;height:220px;border-radius:28px;background:radial-gradient(circle at top left,rgba(96,165,250,.16),transparent 40%),radial-gradient(circle at top right,rgba(244,114,182,.14),transparent 42%);pointer-events:none}'
+    + '.gc-hero{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px;border:1px solid rgba(148,163,184,.18);border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(248,250,252,.92));box-shadow:0 16px 38px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.85);margin-bottom:12px;backdrop-filter:blur(10px)}'
+    + '.gc-hero-copy{display:flex;flex-direction:column;gap:7px;min-width:0}'
+    + '.gc-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}'
+    + '.gc-hero-title{font-size:24px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.15}'
+    + '.gc-hero-desc{font-size:13px;line-height:1.6;color:var(--text3);word-break:keep-all}'
+    + '.gc-hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}'
+    + '.gc-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.86);border:1px solid rgba(148,163,184,.18);font-size:12px;font-weight:800;color:var(--text2);box-shadow:0 8px 20px rgba(15,23,42,.05)}'
+    + '.gc-tabbar-card{position:relative;padding:8px;border:1px solid rgba(148,163,184,.18);border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.88));box-shadow:0 14px 30px rgba(15,23,42,.06);margin-bottom:14px}'
+    + '.gc-tabbar-card .fbar{margin-bottom:0 !important;padding:2px}'
+    + '.gc-card{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.18);border-radius:22px;box-shadow:0 16px 34px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.9)}'
+    + '.gc-card-soft{position:relative;overflow:hidden}'
+    + '.gc-card-soft::before{content:"";position:absolute;inset:auto -10% 65% auto;width:170px;height:170px;background:radial-gradient(circle,rgba(96,165,250,.16),transparent 68%);pointer-events:none}'
+    + '.gc-stage-card{padding:18px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(244,247,251,.92));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 38px rgba(15,23,42,.07)}'
+    + '.gc-stage-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}'
+    + '.gc-stage-title{font-size:16px;font-weight:950;letter-spacing:-.02em;color:var(--text1)}'
+    + '.gc-stage-desc{font-size:12px;color:var(--text3);line-height:1.55;margin-top:4px}'
+    + '.gc-input-toggle{width:100%;padding:10px 14px;font-weight:900;border:1px solid rgba(148,163,184,.2);border-radius:16px;background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);cursor:pointer;transition:.15s;text-align:left;box-shadow:0 10px 20px rgba(15,23,42,.05)}'
+    + '.gc-input-toggle:hover{transform:translateY(-1px);border-color:rgba(37,99,235,.26);box-shadow:0 14px 26px rgba(37,99,235,.08);color:#2563eb}'
+    + '.gc-history-card{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.18);border-radius:18px;padding:14px 16px;box-shadow:0 14px 26px rgba(15,23,42,.05)}'
+    + '.gc-history-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.72);border:1px solid rgba(148,163,184,.12);border-radius:12px;font-size:13px}'
+    + '.gc-wheel-root,.gc-duck-root{min-height:420px}'
+    + 'body.dark .gc-shell::before{background:radial-gradient(circle at top left,rgba(59,130,246,.14),transparent 40%),radial-gradient(circle at top right,rgba(236,72,153,.12),transparent 42%)}'
+    + 'body.dark .gc-hero,body.dark .gc-tabbar-card,body.dark .gc-card,body.dark .gc-stage-card,body.dark .gc-history-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#2d3f55;box-shadow:0 18px 36px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.03)}'
+    + 'body.dark .gc-badge,body.dark .gc-history-item{background:rgba(30,41,59,.76);border-color:#334155;color:#cbd5e1}'
+    + 'body.dark .gc-hero-title,body.dark .gc-stage-title{color:#f8fafc}'
+    + 'body.dark .gc-hero-desc,body.dark .gc-stage-desc{color:#94a3b8}'
+    + 'body.dark .gc-input-toggle{background:linear-gradient(180deg,#18263b,#0f172a);border-color:#334155;color:#cbd5e1;box-shadow:0 12px 24px rgba(0,0,0,.24)}'
+    + 'body.dark .gc-input-toggle:hover{color:#93c5fd;border-color:#3b82f6}'
+    + '@media (max-width:900px){.gc-hero{flex-direction:column}.gc-hero-title{font-size:20px}.gc-hero-badges{justify-content:flex-start}.gc-tabbar-card{border-radius:18px}.gc-stage-card,.gc-card{border-radius:20px}}'
+    + '@media (max-width:640px){.gc-shell::before{left:0;right:0;height:180px}.gc-hero{padding:16px;border-radius:20px}.gc-hero-title{font-size:18px}.gc-badge{font-size:11px;padding:7px 10px}.gc-stage-card{padding:14px}}';
   document.head.appendChild(s);
 })();
 
@@ -483,6 +515,26 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isCompactUI = avW <= 1024; // 모바일/태블릿
   const rowsGC = isWide ? 3 : 4;
   const rowsLd = isWide ? 2 : 3;
+  const _tabMeta = {
+    player: { title:'구슬뽑기', desc:'스트리머 이름을 넣고 바로 뽑는 기본 룰렛입니다.', badge1:`항목 ${activeItems.length}개`, badge2:'가중치 지원' },
+    map: { title:'맵뽑기', desc:'등록된 맵을 빠르게 고르고 랜덤으로 추첨합니다.', badge1:`맵 ${activeItems.length}개`, badge2:'맵 배지 선택' },
+    ladder: { title:'사다리', desc:'참가자와 결과 항목을 연결해서 재미있게 추첨합니다.', badge1:`참가자 ${ldNames.length}명`, badge2:'캔버스 추첨' },
+    duck: { title:'경주', desc:'오리 경주 방식으로 더 시각적으로 결과를 뽑습니다.', badge1:'실시간 애니메이션', badge2:'가볍게 진행' },
+    wheel: { title:'휠', desc:'큰 룰렛 휠로 직관적으로 돌리고 결과를 확인합니다.', badge1:'휠 인터랙션', badge2:'몰입감 강화' },
+    ppopgi: { title:'5x5 뽑기', desc:'카드 뒤집기 느낌으로 순서대로 결과를 열어볼 수 있습니다.', badge1:'25칸 보드', badge2:'등수 커스텀' }
+  }[_gcTab] || { title:'룰렛', desc:'원하는 방식으로 간단하게 추첨할 수 있습니다.', badge1:'빠른 추첨', badge2:'탭 전환 지원' };
+  const _hero = `<section class="gc-hero">
+    <div class="gc-hero-copy">
+      <div class="gc-hero-kicker">Lucky Studio</div>
+      <div class="gc-hero-title">🎰 ${_tabMeta.title}</div>
+      <div class="gc-hero-desc">${_tabMeta.desc}</div>
+    </div>
+    <div class="gc-hero-badges">
+      <span class="gc-badge">✨ ${_tabMeta.badge1}</span>
+      <span class="gc-badge">🎯 ${_tabMeta.badge2}</span>
+      <span class="gc-badge">📱 모바일 최적화</span>
+    </div>
+  </section>`;
 
   // 공통 탭바 HTML — 다른 탭 하위 메뉴와 동일한 pill/fbar 스타일
   const _tabBar = `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
@@ -496,17 +548,35 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 
   // 오리경주 탭: 별도 레이아웃
   if (isDuck) {
-    return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
-  ${_tabBar}
-  <div id="dr-root"></div>
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div class="gc-stage-card gc-duck-root">
+    <div class="gc-stage-head">
+      <div>
+        <div class="gc-stage-title">🐥 오리 경주 추첨</div>
+        <div class="gc-stage-desc">보기 좋은 카드형 레이아웃으로 감싸서, 경주 화면이 더 또렷하게 보이도록 정리했습니다.</div>
+      </div>
+    </div>
+    <div id="dr-root"></div>
+  </div>
 </div>`;
   }
 
   // 룰렛 휠 탭: 별도 레이아웃
   if (isWheel) {
-    return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
-  ${_tabBar}
-  <div id="wh-root"></div>
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div class="gc-stage-card gc-wheel-root">
+    <div class="gc-stage-head">
+      <div>
+        <div class="gc-stage-title">🎡 휠 룰렛</div>
+        <div class="gc-stage-desc">휠 영역을 카드처럼 분리해서 시선이 더 잘 모이도록 구성했습니다.</div>
+      </div>
+    </div>
+    <div id="wh-root"></div>
+  </div>
 </div>`;
   }
 
@@ -515,13 +585,15 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     _ppgLoad();
     if(!_ppgBoard || !_ppgRev) _ppgNewBoard();
     const fs = Math.max(14, Math.min(18, Math.round(dome * 0.07)));
-    return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
-  ${_tabBar}
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
   <div class="ppg-wrap">
-    <div class="ppg-panel">
+    <div class="ppg-panel gc-card gc-card-soft">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
         <div>
           <div class="ppg-title" style="font-size:${fs}px">🎁 5×5 뽑기</div>
+          <div class="ppg-sub">카드를 뒤집듯 당첨 결과를 열어보는 방식입니다.</div>
         </div>
       </div>
 
@@ -555,7 +627,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
       </div>
     </div>
 
-    <div class="ppg-panel">
+    <div class="ppg-panel gc-card">
       <button id="ppg-prizecfg-toggle" class="btn btn-w btn-sm" style="width:100%" onclick="_ppgTogglePrizeCfg()">🎁 당첨 내용 입력 ▼</button>
       <div id="ppg-prizecfg-body" style="display:none;margin-top:10px">
         <div style="font-size:12px;color:var(--gray-l);margin-bottom:8px">각 등수에 표시할 “당첨 내용”을 적어줘. (비우면 등수만 표시)</div>
@@ -618,7 +690,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 
   // 사다리: 항상 표시할 결과 항목 블록 (접기 영역 밖)
   const ldItemsAlways = isLadder ? `
-    <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
+    <div class="gc-card gc-card-soft" style="padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">결과 항목 (쉼표 구분, 이름 수와 동일하게)</div>
       <textarea id="ld-items-input" rows="${rowsLd}" oninput="_ldSaveItems(this.value)"
         style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
@@ -629,13 +701,13 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 
   // 입력 본체 HTML (접기 대상)
   const inputBodyInner = isLadder ? `
-    <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
+    <div class="gc-card gc-card-soft" style="padding:${pad}px;margin-bottom:${Math.round(pad*0.6)}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">참가자 이름 (쉼표 구분, 2명 이상)</div>
       <textarea id="ld-names-input" rows="${rowsLd}" oninput="_ldSaveNames(this.value)"
         style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
     </div>
   ` : `
-    <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${pad}px">
+    <div class="gc-card gc-card-soft" style="padding:${pad}px;margin-bottom:${pad}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:8px">${isPlayer?'스트리머 이름 (쉼표 구분, 부분 입력 가능)':'맵 이름 (쉼표 구분)'}</div>
       <textarea id="gc-items-input" rows="${rowsGC}" oninput="_gcSaveText(this.value)"
         style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:${fsLg}px;line-height:1.6;resize:none;color:var(--text1);background:var(--surface);font-family:inherit;box-sizing:border-box"></textarea><!-- [Fix-2] value는 rRoulette()에서 .value로 주입 -->
@@ -645,7 +717,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
       <button onclick="_gcClearItems()" style="margin-top:10px;font-size:${fs}px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;font-weight:600">지우기</button>
     </div>
     ${(!isPlayer && mapBadges) ? `
-    <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-bottom:${pad}px">
+    <div class="gc-card" style="padding:${pad}px;margin-bottom:${pad}px">
       <div style="font-size:${fs}px;font-weight:700;color:var(--text3);margin-bottom:10px">📋 등록된 맵 (클릭해서 추가)</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">${mapBadges}</div>
     </div>` : ''}
@@ -653,7 +725,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
 
   // 가챠 결과 카드 + 기록 (가챠탭만)
   const gcResultHTML = isLadder ? '' : `
-    <div id="gc-result-card" style="display:none;background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2.5px solid #FF89AB;border-radius:16px;padding:${pad*1.2}px;text-align:center;animation:gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)">
+    <div id="gc-result-card" class="gc-card gc-card-soft" style="display:none;background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2.5px solid #FF89AB;border-radius:20px;padding:${pad*1.2}px;text-align:center;animation:gcCardAppear 0.4s cubic-bezier(0.175,0.885,0.32,1.35)">
       <div style="font-size:${fs}px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>
       <div id="gc-pop-icon" style="font-size:${resIconSz}px;display:block;margin-bottom:8px;line-height:1.1"></div>
       <div id="gc-res-text" style="font-size:${resTextSz}px;font-weight:900;color:#C0274A;margin-bottom:6px;word-break:keep-all"></div>
@@ -665,14 +737,14 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     ${(()=>{
       const hist = _gcHistory[isPlayer?'player':'map'];
       if (!hist.length) return '';
-      return `<div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-top:${Math.round(pad*0.5)}px">
+      return `<div class="gc-history-card" style="margin-top:${Math.round(pad*0.5)}px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <span style="font-size:${fs}px;font-weight:700;color:var(--text2)">📋 결과 기록 (${hist.length})</span>
           <button onclick="_gcClearHistory()" style="font-size:${Math.max(10,fs-2)}px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer">전체 삭제</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto">
           ${hist.slice().reverse().map((r,i)=>`
-          <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border-radius:8px;font-size:${fs}px">
+          <div class="gc-history-item" style="font-size:${fs}px">
             <span style="color:var(--text3);font-size:${Math.max(10,fs-2)}px;min-width:18px;text-align:right">${hist.length-i}</span>
             <span style="font-weight:700;flex:1;color:var(--text1)">${r.name}</span>
             <span style="color:var(--text3);font-size:${Math.max(10,fs-2)}px">${r.time}</span>
@@ -685,46 +757,63 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   // 오른쪽 패널: 사다리 캔버스 or 가챠 머신
   const rightPanelHTML = isLadder ? `
   <div style="${isWide?'flex:1;display:flex;flex-direction:column;align-items:center;margin-top:'+Math.round(pad*2.1)+'px':'display:flex;flex-direction:column;align-items:center;margin-top:'+Math.round(pad*2.1)+'px'}">
-    <div id="ld-instruction" style="font-size:${fs}px;color:var(--text3);font-weight:600;margin-bottom:10px;text-align:center">이름을 클릭하면 사다리를 타요!</div>
-    <canvas id="ld-canvas" width="${ldCanvasW}" height="${ldCanvasH}"
-      style="width:${ldCanvasW}px;height:${ldCanvasH}px;border-radius:14px;border:2px solid var(--border);background:var(--white);cursor:pointer;display:block;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.08))"></canvas>
-    <div id="ld-result-card" style="display:none;width:${ldCanvasW}px;margin-top:${pad}px;background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2.5px solid #FF89AB;border-radius:16px;padding:${pad}px;text-align:center;box-sizing:border-box">
-      <div style="font-size:${fs}px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:8px">🎊 당첨!</div>
-      <div id="ld-res-name" style="font-size:${resTextSz}px;font-weight:900;color:#C0274A;margin-bottom:4px"></div>
-      <div style="font-size:${fs}px;color:var(--text3);margin-bottom:8px">▼</div>
-      <div id="ld-res-item" style="font-size:${resTextSz}px;font-weight:900;color:#2563eb"></div>
+    <div class="gc-stage-card" style="width:100%;max-width:${ldCanvasW+20}px;box-sizing:border-box">
+      <div class="gc-stage-head">
+        <div>
+          <div class="gc-stage-title">🪜 사다리 추첨</div>
+          <div class="gc-stage-desc">이름을 클릭하면 사다리를 타고 결과까지 바로 연결됩니다.</div>
+        </div>
+      </div>
+      <div id="ld-instruction" style="font-size:${fs}px;color:var(--text3);font-weight:600;margin-bottom:10px;text-align:center">이름을 클릭하면 사다리를 타요!</div>
+      <canvas id="ld-canvas" width="${ldCanvasW}" height="${ldCanvasH}"
+        style="width:${ldCanvasW}px;height:${ldCanvasH}px;border-radius:18px;border:2px solid var(--border);background:var(--white);cursor:pointer;display:block;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.08))"></canvas>
+      <div id="ld-result-card" class="gc-card gc-card-soft" style="display:none;width:${ldCanvasW}px;margin-top:${pad}px;background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:2.5px solid #FF89AB;border-radius:20px;padding:${pad}px;text-align:center;box-sizing:border-box">
+        <div style="font-size:${fs}px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:8px">🎊 당첨!</div>
+        <div id="ld-res-name" style="font-size:${resTextSz}px;font-weight:900;color:#C0274A;margin-bottom:4px"></div>
+        <div style="font-size:${fs}px;color:var(--text3);margin-bottom:8px">▼</div>
+        <div id="ld-res-item" style="font-size:${resTextSz}px;font-weight:900;color:#2563eb"></div>
+      </div>
     </div>
   </div>
   ` : `
   <div style="${isWide?'flex:1;display:flex;flex-direction:column;align-items:center;margin-top:'+Math.round(pad*2.1)+'px':'display:flex;flex-direction:column;align-items:center;margin-top:'+Math.round(pad*2.1)+'px'}">
-    <div style="position:relative;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 8px 22px rgba(255,75,110,0.35))">
-      <div style="position:relative;width:${dome}px;height:${dome}px">
-        <div id="gc-dome" style="width:${dome}px;height:${dome}px;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,0.52),rgba(255,200,220,0.2) 55%,rgba(255,150,180,0.08));border:${Math.round(dome*0.042)}px solid white;border-radius:50%;overflow:hidden;box-shadow:inset 0 0 ${Math.round(dome*0.21)}px rgba(255,255,255,0.5),0 ${Math.round(dome*0.035)}px ${Math.round(dome*0.12)}px rgba(200,60,90,0.22),0 0 0 ${Math.round(dome*0.024)}px #FFD6E4;position:relative"></div>
-        <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(ellipse at 28% 22%,rgba(255,255,255,0.55) 0%,transparent 55%);pointer-events:none"></div>
-      </div>
-      <div style="width:${ringW}px;height:${ringH}px;background:linear-gradient(180deg,#fff 0%,#f8bbd0 60%,#f48fb1 100%);border-radius:0 0 ${Math.round(ringH*0.6)}px ${Math.round(ringH*0.6)}px;margin-top:${-Math.round(ringH*0.5)}px;position:relative;z-index:2;box-shadow:0 ${Math.round(ringH*0.22)}px 0 #FF4B6E"></div>
-      <div style="width:${bodyW}px;background:linear-gradient(180deg,#FF4B6E 0%,#e53935 100%);margin-top:${-Math.round(dome*0.04)}px;border-radius:${Math.round(dome*0.08)}px ${Math.round(dome*0.08)}px ${Math.round(dome*0.22)}px ${Math.round(dome*0.22)}px;position:relative;z-index:1;box-shadow:0 ${Math.round(dome*0.042)}px 0 #C0274A;padding:${Math.round(dome*0.06)}px ${Math.round(dome*0.095)}px ${Math.round(dome*0.12)}px;display:flex;flex-direction:column;align-items:center;gap:${Math.round(dome*0.047)}px">
-        <div id="gc-crank" onclick="_gcSpin()" title="클릭해서 뽑기!"
-          style="width:${crankSz}px;height:${crankSz}px;background:radial-gradient(circle at 35% 28%,#ffffff,#d8d8d8);border:${Math.round(crankSz*0.083)}px solid #c8c8c8;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 ${Math.round(crankSz*0.083)}px 0 #aaa;transition:transform 0.8s cubic-bezier(0.4,0,0.2,1);user-select:none;position:relative;overflow:hidden">
-          <div style="width:${Math.round(crankSz*0.69)}px;height:${Math.round(crankSz*0.19)}px;background:linear-gradient(180deg,#ccc,#999);border-radius:${Math.round(crankSz*0.12)}px;box-shadow:0 ${Math.round(crankSz*0.042)}px 0 #888"></div>
+    <div class="gc-stage-card" style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:${bodyW+90}px;box-sizing:border-box">
+      <div class="gc-stage-head" style="width:100%">
+        <div>
+          <div class="gc-stage-title">${isPlayer?'🎰 스트리머 구슬뽑기':'🗺️ 맵 구슬뽑기'}</div>
+          <div class="gc-stage-desc">클릭 한 번으로 추첨하고, 결과는 팝업과 기록 카드로 깔끔하게 확인할 수 있습니다.</div>
         </div>
-        <div style="font-size:${Math.round(dome*0.07)}px;color:rgba(255,255,255,0.92);font-weight:700;letter-spacing:.5px">🎰 클릭해서 뽑기!</div>
-        <div style="display:flex;flex-direction:column;align-items:center">
-          <div style="position:relative;width:${exitW}px;height:${exitH}px;background:linear-gradient(180deg,#1a1a1a,#333);border-radius:${Math.round(exitW*0.12)}px ${Math.round(exitW*0.12)}px 0 0;box-shadow:inset 0 -${Math.round(exitH*0.14)}px ${Math.round(exitH*0.28)}px rgba(0,0,0,0.55)">
-            <div id="gc-outcap" style="position:absolute;bottom:${-Math.round(exitCapSz*0.43)}px;left:50%;transform:translateX(-50%) scale(0);width:${exitCapSz}px;height:${exitCapSz}px;border-radius:50%;z-index:10;transition:0.65s cubic-bezier(0.175,0.885,0.32,1.45);border:${Math.round(exitCapSz*0.07)}px solid white;box-shadow:0 ${Math.round(exitCapSz*0.12)}px ${Math.round(exitCapSz*0.33)}px rgba(0,0,0,0.22)"></div>
+      </div>
+      <div style="position:relative;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 8px 22px rgba(255,75,110,0.35))">
+        <div style="position:relative;width:${dome}px;height:${dome}px">
+          <div id="gc-dome" style="width:${dome}px;height:${dome}px;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,0.52),rgba(255,200,220,0.2) 55%,rgba(255,150,180,0.08));border:${Math.round(dome*0.042)}px solid white;border-radius:50%;overflow:hidden;box-shadow:inset 0 0 ${Math.round(dome*0.21)}px rgba(255,255,255,0.5),0 ${Math.round(dome*0.035)}px ${Math.round(dome*0.12)}px rgba(200,60,90,0.22),0 0 0 ${Math.round(dome*0.024)}px #FFD6E4;position:relative"></div>
+          <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(ellipse at 28% 22%,rgba(255,255,255,0.55) 0%,transparent 55%);pointer-events:none"></div>
+        </div>
+        <div style="width:${ringW}px;height:${ringH}px;background:linear-gradient(180deg,#fff 0%,#f8bbd0 60%,#f48fb1 100%);border-radius:0 0 ${Math.round(ringH*0.6)}px ${Math.round(ringH*0.6)}px;margin-top:${-Math.round(ringH*0.5)}px;position:relative;z-index:2;box-shadow:0 ${Math.round(ringH*0.22)}px 0 #FF4B6E"></div>
+        <div style="width:${bodyW}px;background:linear-gradient(180deg,#FF4B6E 0%,#e53935 100%);margin-top:${-Math.round(dome*0.04)}px;border-radius:${Math.round(dome*0.08)}px ${Math.round(dome*0.08)}px ${Math.round(dome*0.22)}px ${Math.round(dome*0.22)}px;position:relative;z-index:1;box-shadow:0 ${Math.round(dome*0.042)}px 0 #C0274A;padding:${Math.round(dome*0.06)}px ${Math.round(dome*0.095)}px ${Math.round(dome*0.12)}px;display:flex;flex-direction:column;align-items:center;gap:${Math.round(dome*0.047)}px">
+          <div id="gc-crank" onclick="_gcSpin()" title="클릭해서 뽑기!"
+            style="width:${crankSz}px;height:${crankSz}px;background:radial-gradient(circle at 35% 28%,#ffffff,#d8d8d8);border:${Math.round(crankSz*0.083)}px solid #c8c8c8;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 ${Math.round(crankSz*0.083)}px 0 #aaa;transition:transform 0.8s cubic-bezier(0.4,0,0.2,1);user-select:none;position:relative;overflow:hidden">
+            <div style="width:${Math.round(crankSz*0.69)}px;height:${Math.round(crankSz*0.19)}px;background:linear-gradient(180deg,#ccc,#999);border-radius:${Math.round(crankSz*0.12)}px;box-shadow:0 ${Math.round(crankSz*0.042)}px 0 #888"></div>
           </div>
-          <div style="width:${trayW}px;height:${trayH}px;background:linear-gradient(180deg,#d32f2f,#b71c1c);border-radius:0 0 ${Math.round(trayW*0.15)}px ${Math.round(trayW*0.15)}px;box-shadow:0 ${Math.round(trayH*0.29)}px 0 rgba(0,0,0,0.2)"></div>
+          <div style="font-size:${Math.round(dome*0.07)}px;color:rgba(255,255,255,0.92);font-weight:700;letter-spacing:.5px">🎰 클릭해서 뽑기!</div>
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <div style="position:relative;width:${exitW}px;height:${exitH}px;background:linear-gradient(180deg,#1a1a1a,#333);border-radius:${Math.round(exitW*0.12)}px ${Math.round(exitW*0.12)}px 0 0;box-shadow:inset 0 -${Math.round(exitH*0.14)}px ${Math.round(exitH*0.28)}px rgba(0,0,0,0.55)">
+              <div id="gc-outcap" style="position:absolute;bottom:${-Math.round(exitCapSz*0.43)}px;left:50%;transform:translateX(-50%) scale(0);width:${exitCapSz}px;height:${exitCapSz}px;border-radius:50%;z-index:10;transition:0.65s cubic-bezier(0.175,0.885,0.32,1.45);border:${Math.round(exitCapSz*0.07)}px solid white;box-shadow:0 ${Math.round(exitCapSz*0.12)}px ${Math.round(exitCapSz*0.33)}px rgba(0,0,0,0.22)"></div>
+            </div>
+            <div style="width:${trayW}px;height:${trayH}px;background:linear-gradient(180deg,#d32f2f,#b71c1c);border-radius:0 0 ${Math.round(trayW*0.15)}px ${Math.round(trayW*0.15)}px;box-shadow:0 ${Math.round(trayH*0.29)}px 0 rgba(0,0,0,0.2)"></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
   `;
 
-  return `<div style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
-  ${_tabBar}
+  return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
   <div style="${innerLayout}">
     <div style="${inputColStyle}">
-      <button onclick="_gcToggleInput()" id="gc-input-toggle" style="width:100%;padding:7px 12px;font-size:${fs}px;font-weight:700;border:1.5px solid var(--border);border-radius:10px;background:var(--white);color:var(--text3);cursor:pointer;transition:.1s;margin-bottom:${Math.round(pad*0.5)}px;text-align:left">${_gcInputOpen?'📝 입력 접기 ▲':'📝 입력 펼치기 ▼'}</button>
+      <button onclick="_gcToggleInput()" id="gc-input-toggle" class="gc-input-toggle" style="font-size:${fs}px;margin-bottom:${Math.round(pad*0.5)}px">${_gcInputOpen?'📝 입력 접기 ▲':'📝 입력 펼치기 ▼'}</button>
       <div id="gc-input-body" style="display:${_gcInputOpen?'block':'none'}">
         ${inputBodyInner}
         ${ldItemsAlways}
@@ -989,7 +1078,8 @@ function _gcRefreshHistory() {
   }
   if (!container) return;
   if (!hist.length) { container.innerHTML = ''; return; }
-  container.style.cssText = `background:var(--white);border:2px solid var(--border);border-radius:14px;padding:${pad}px;margin-top:${Math.round(pad*0.5)}px`;
+  container.className = 'gc-history-card';
+  container.style.cssText = `margin-top:${Math.round(pad*0.5)}px`;
   container.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <span style="font-size:${fs}px;font-weight:700;color:var(--text2)">📋 결과 기록 (${hist.length})</span>
@@ -997,7 +1087,7 @@ function _gcRefreshHistory() {
     </div>
     <div style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto">
       ${hist.slice().reverse().map((r,i)=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border-radius:8px;font-size:${fs}px">
+      <div class="gc-history-item" style="font-size:${fs}px">
         <span style="color:var(--text3);font-size:${Math.max(10,fs-2)}px;min-width:18px;text-align:right">${hist.length-i}</span>
         <span style="font-weight:700;flex:1;color:var(--text1)">${r.name}</span>
         <span style="color:var(--text3);font-size:${Math.max(10,fs-2)}px">${r.time}</span>
