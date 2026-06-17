@@ -5,6 +5,127 @@ window._proPasteResults = null;
 window._proPasteMode = 'game'; // 'game' | 'set'
 window._proFormat = 0;         // 0=자유, 2/3/4=팀전 포맷
 
+function _proNormLine(line){
+  line = String(line||'').replace(/[\u3164\u00A0\u200B\u202F\u205F\u3000\uFEFF]/g, ' ').trim();
+  const _pasteCompat = (localStorage.getItem('su_paste_compat') ?? '1') === '1';
+  if (_pasteCompat) {
+    line = line
+      .replace(/[（]/g, '(').replace(/[）]/g, ')')
+      .replace(/🆚️/g, '🆚')
+      .replace(/ＶＳ/g, 'vs')
+      .replace(/V\s*\.?\s*S\s*\.?/gi, 'vs');
+  }
+  line = line.replace(/\s*[\u{10000}-\u{10FFFF}]+\s*$/u, '').trimEnd();
+  return line;
+}
+
+function _proExtractMapAndBody(line){
+  let map = '-';
+  line = _proNormLine(line);
+  const headMap = line.match(/^\[([^\]]+)\]\s*/);
+  if (headMap) {
+    const alias = headMap[1].trim();
+    if (!/^[TZPNR]$/i.test(alias)) {
+      map = resolveMapName(alias);
+      line = line.slice(headMap[0].length).trim();
+    }
+  }
+  return { body: line, map };
+}
+
+function _proStripMarks(s){
+  s = String(s||'').trim();
+  s = s.replace(/\((?:승|패)\)/g, '').trim();
+  s = s.replace(/\((?:✅|⭕|☑|🔵|🟢|🟦|○|❌|✖|⬜|🔴|🟥|●)\)/g, '').trim();
+  s = s.replace(/[✅⭕☑🔵🟢🟦○❌✖⬜🔴🟥●]$/g, '').trim();
+  return s;
+}
+
+function _proWinnerByMark(leftRaw, rightRaw){
+  const l = String(leftRaw||'');
+  const r = String(rightRaw||'');
+  const leftWin = /\((?:승)\)/.test(l) || /[✅⭕☑🔵🟢🟦○]/.test(l);
+  const leftLose = /\((?:패)\)/.test(l) || /[❌✖⬜🔴🟥●]/.test(l);
+  const rightWin = /\((?:승)\)/.test(r) || /[✅⭕☑🔵🟢🟦○]/.test(r);
+  const rightLose = /\((?:패)\)/.test(r) || /[❌✖⬜🔴🟥●]/.test(r);
+  if (leftWin || rightLose) return 'L';
+  if (rightWin || leftLose) return 'R';
+  return null;
+}
+
+function _proSplitTeamNames(sideText){
+  const t0 = _proStripMarks(sideText);
+  let t = t0.replace(/\s+/g, ' ').trim();
+  t = t.replace(/[\(\)\[\]]/g,' ').replace(/\s+/g,' ').trim();
+  t = t.replace(/[TZPNR]$/i, '').trim();
+  const tokens = t.split(/\s*(?:,|\/|\+|＆|&|·|ㆍ|、|\|)\s*/).map(x=>x.trim()).filter(Boolean);
+  if (tokens.length !== 2) return null;
+  return tokens;
+}
+
+function parseProTeamLine(line){
+  const { body, map: headMap } = _proExtractMapAndBody(line);
+  if (!body) return null;
+  const parts = body.split(/\s*(?:vs|🆚)\s*/i);
+  if (parts.length !== 2) return null;
+  let leftPart = parts[0].trim();
+  let rightPart = parts[1].trim();
+  let map = headMap;
+  if (map === '-') {
+    const tailHy = rightPart.match(/\s*[-–—－]\s*([^\s]+)\s*$/);
+    if (tailHy) {
+      const alias = tailHy[1].trim();
+      const resolved = resolveMapName(alias);
+      if (resolved !== alias) {
+        map = resolved;
+        rightPart = rightPart.slice(0, tailHy.index).trim();
+      }
+    }
+  }
+  if (map === '-') {
+    const tailMap = rightPart.match(/\[([^\]]+)\]\s*$/);
+    if (tailMap) {
+      const alias = tailMap[1].trim();
+      if (!/^[TZPNR]$/i.test(alias)) {
+        map = resolveMapName(alias);
+        rightPart = rightPart.slice(0, tailMap.index).trim();
+      }
+    }
+  }
+  const winnerSide = _proWinnerByMark(leftPart, rightPart);
+  if (!winnerSide) return null;
+  const leftNames = _proSplitTeamNames(leftPart);
+  const rightNames = _proSplitTeamNames(rightPart);
+  if (!leftNames || !rightNames) return null;
+  const l0 = findPlayerByPartialName(leftNames[0]);
+  const l1 = findPlayerByPartialName(leftNames[1]);
+  const r0 = findPlayerByPartialName(rightNames[0]);
+  const r1 = findPlayerByPartialName(rightNames[1]);
+  const leftPlayers = [l0.player, l1.player];
+  const rightPlayers = [r0.player, r1.player];
+  const ok = leftPlayers.every(Boolean) && rightPlayers.every(Boolean);
+  const leftName = `${leftNames[0]}, ${leftNames[1]}`;
+  const rightName = `${rightNames[0]}, ${rightNames[1]}`;
+  const winName = winnerSide === 'L' ? leftName : rightName;
+  const loseName = winnerSide === 'L' ? rightName : leftName;
+  return {
+    isTeam: true,
+    winnerSide,
+    leftNames,
+    rightNames,
+    leftPlayers,
+    rightPlayers,
+    leftMeta: [l0, l1],
+    rightMeta: [r0, r1],
+    leftName,
+    rightName,
+    winName,
+    loseName,
+    map: map || '-',
+    _teamOk: ok
+  };
+}
+
 /* ── 팀전 포맷 선택 ── */
 function setProFormat(n) {
   window._proFormat = n;
@@ -119,16 +240,21 @@ function proPreview() {
       else currentSet = sepResult;
       const setRem = trimmed.replace(/^\d+\s*(?:세트|셋|set)\s*/i, '').trim();
       if (setRem && setRem !== trimmed) {
-        const r2 = parsePasteLine(setRem);
-        if (r2) {
-          const wM2 = findPlayerByPartialName(r2.winName);
-          const lM2 = findPlayerByPartialName(r2.loseName);
-          results.push({ winName: r2.winName, loseName: r2.loseName,
-            leftName: r2.leftName||r2.winName, rightName: r2.rightName||r2.loseName,
-            map: r2.map||'-', setNum: currentSet, matchGroup: currentMatch,
-            wPlayer: wM2.player, lPlayer: lM2.player,
-            wCandidates: wM2.candidates, lCandidates: lM2.candidates,
-            wSimilar: wM2.similar||[], lSimilar: lM2.similar||[], lineNum: idx+1 });
+        const t2 = parseProTeamLine(setRem);
+        if (t2) {
+          results.push({ ...t2, setNum: currentSet, matchGroup: currentMatch, lineNum: idx+1 });
+        } else {
+          const r2 = parsePasteLine(setRem);
+          if (r2) {
+            const wM2 = findPlayerByPartialName(r2.winName);
+            const lM2 = findPlayerByPartialName(r2.loseName);
+            results.push({ winName: r2.winName, loseName: r2.loseName,
+              leftName: r2.leftName||r2.winName, rightName: r2.rightName||r2.loseName,
+              map: r2.map||'-', setNum: currentSet, matchGroup: currentMatch,
+              wPlayer: wM2.player, lPlayer: lM2.player,
+              wCandidates: wM2.candidates, lCandidates: lM2.candidates,
+              wSimilar: wM2.similar||[], lSimilar: lM2.similar||[], lineNum: idx+1 });
+          }
         }
       }
       return;
@@ -144,9 +270,13 @@ function proPreview() {
       }
       return;
     }
+    const t = parseProTeamLine(line);
+    if (t) {
+      results.push({ ...t, setNum: currentSet, matchGroup: currentMatch, lineNum: idx+1 });
+      return;
+    }
     const parsed = parsePasteLine(line);
     if (!parsed) return;
-    // 이름으로 선수 찾기
     const wMatch = findPlayerByPartialName(parsed.winName);
     const lMatch = findPlayerByPartialName(parsed.loseName);
     results.push({
@@ -167,11 +297,23 @@ function proPreview() {
       const prev = window._proPasteResults[i];
       if (!prev) return;
       // 같은 라인이면 이전 선택 복원
-      if (prev.winName === r.winName && prev.loseName === r.loseName) {
-        if (prev.wPlayer && !r.wPlayer) { r.wPlayer = prev.wPlayer; r.wCandidates = prev.wCandidates; r.wSimilar = prev.wSimilar; }
-        if (prev.lPlayer && !r.lPlayer) { r.lPlayer = prev.lPlayer; r.lCandidates = prev.lCandidates; r.lSimilar = prev.lSimilar; }
-        if (prev.map && prev.map !== '-' && (r.map === '-' || !r.map)) r.map = prev.map;
-        if (prev.setNum) r.setNum = prev.setNum;
+      if (prev.isTeam && r.isTeam) {
+        if (prev.leftName === r.leftName && prev.rightName === r.rightName) {
+          if (prev.leftPlayers && r.leftPlayers) r.leftPlayers = prev.leftPlayers;
+          if (prev.rightPlayers && r.rightPlayers) r.rightPlayers = prev.rightPlayers;
+          if (prev.leftNames && r.leftNames) r.leftNames = prev.leftNames;
+          if (prev.rightNames && r.rightNames) r.rightNames = prev.rightNames;
+          if (prev.winnerSide) r.winnerSide = prev.winnerSide;
+          if (prev.map && prev.map !== '-' && (r.map === '-' || !r.map)) r.map = prev.map;
+          if (prev.setNum) r.setNum = prev.setNum;
+        }
+      } else if (!prev.isTeam && !r.isTeam) {
+        if (prev.winName === r.winName && prev.loseName === r.loseName) {
+          if (prev.wPlayer && !r.wPlayer) { r.wPlayer = prev.wPlayer; r.wCandidates = prev.wCandidates; r.wSimilar = prev.wSimilar; }
+          if (prev.lPlayer && !r.lPlayer) { r.lPlayer = prev.lPlayer; r.lCandidates = prev.lCandidates; r.lSimilar = prev.lSimilar; }
+          if (prev.map && prev.map !== '-' && (r.map === '-' || !r.map)) r.map = prev.map;
+          if (prev.setNum) r.setNum = prev.setNum;
+        }
       }
     });
   }
@@ -199,8 +341,24 @@ function renderProPreview(results) {
     return;
   }
 
-  const savable = results.filter(r => r.wPlayer && r.lPlayer);
-  const needPick = results.filter(r => (r.wCandidates?.length>1||r.lCandidates?.length>1) && !(r.wPlayer&&r.lPlayer));
+  const isSavableRow = (r) => {
+    if (r?.isTeam) {
+      const lp = Array.isArray(r.leftPlayers) ? r.leftPlayers : [];
+      const rp = Array.isArray(r.rightPlayers) ? r.rightPlayers : [];
+      return lp.length === 2 && rp.length === 2 && lp.every(Boolean) && rp.every(Boolean) && (r.winnerSide === 'L' || r.winnerSide === 'R');
+    }
+    return !!(r?.wPlayer && r?.lPlayer);
+  };
+  const isNeedPickRow = (r) => {
+    if (r?.isTeam) {
+      if (isSavableRow(r)) return false;
+      const metas = [...(r.leftMeta||[]), ...(r.rightMeta||[])];
+      return metas.some(m => (m?.candidates?.length||0) > 1);
+    }
+    return (r?.wCandidates?.length>1 || r?.lCandidates?.length>1) && !(r?.wPlayer && r?.lPlayer);
+  };
+  const savable = results.filter(isSavableRow);
+  const needPick = results.filter(isNeedPickRow);
   if (badge) {
     badge.style.display = 'inline';
     badge.textContent = `✅ ${savable.length}/${results.length}건 인식`;
@@ -221,20 +379,21 @@ function renderProPreview(results) {
 
   // 행 렌더링 헬퍼 (matchGroup에 속하는 results의 글로벌 인덱스 i를 사용)
   const renderRow = (r, i) => {
-    const wOk = !!r.wPlayer;
-    const lOk = !!r.lPlayer;
-    const wAmbig = !wOk && (r.wCandidates?.length > 1);
-    const lAmbig = !lOk && (r.lCandidates?.length > 1);
-    const ok = wOk && lOk;
+    const ok = isSavableRow(r);
+    const isTeam = !!r.isTeam;
+    const wOk = !isTeam && !!r.wPlayer;
+    const lOk = !isTeam && !!r.lPlayer;
+    const wAmbig = !isTeam && !wOk && (r.wCandidates?.length > 1);
+    const lAmbig = !isTeam && !lOk && (r.lCandidates?.length > 1);
 
     const leftRaw  = r.leftName  || r.winName  || '';
     const rightRaw = r.rightName || r.loseName || '';
-    const isLeftWinner = (leftRaw === r.winName);
+    const isLeftWinner = isTeam ? (r.winnerSide === 'L') : (leftRaw === r.winName);
 
-    const leftPlayer  = (wOk && r.wPlayer.name === leftRaw)  ? r.wPlayer
-                      : (lOk && r.lPlayer.name === leftRaw)  ? r.lPlayer : null;
-    const rightPlayer = (lOk && r.lPlayer.name === rightRaw) ? r.lPlayer
-                      : (wOk && r.wPlayer.name === rightRaw) ? r.wPlayer : null;
+    const leftPlayer  = (!isTeam && wOk && r.wPlayer.name === leftRaw)  ? r.wPlayer
+                      : (!isTeam && lOk && r.lPlayer.name === leftRaw)  ? r.lPlayer : null;
+    const rightPlayer = (!isTeam && lOk && r.lPlayer.name === rightRaw) ? r.lPlayer
+                      : (!isTeam && wOk && r.wPlayer.name === rightRaw) ? r.wPlayer : null;
 
     const leftRole  = leftRaw  === (r.winName||'')  ? 'w' : 'l';
     const rightRole = rightRaw === (r.loseName||'') ? 'l' : 'w';
@@ -242,8 +401,8 @@ function renderProPreview(results) {
     const rightSim  = rightRole === 'l' ? (r.lSimilar||[]) : (r.wSimilar||[]);
     const leftCands  = leftRole  === 'w' ? (r.wCandidates||[]) : (r.lCandidates||[]);
     const rightCands = rightRole === 'l' ? (r.lCandidates||[]) : (r.wCandidates||[]);
-    const leftAmbig  = !leftPlayer  && leftCands.length > 1;
-    const rightAmbig = !rightPlayer && rightCands.length > 1;
+    const leftAmbig  = !isTeam && !leftPlayer  && leftCands.length > 1;
+    const rightAmbig = !isTeam && !rightPlayer && rightCands.length > 1;
 
     const aName = leftPlayer  ? leftPlayer.name  : leftRaw;
     const bName = rightPlayer ? rightPlayer.name : rightRaw;
@@ -252,7 +411,31 @@ function renderProPreview(results) {
     const winBadge  = `<span style="font-size:10px;color:#16a34a;font-weight:700;background:#dcfce7;border:1px solid #86efac;border-radius:4px;padding:1px 5px">승</span>`;
     const loseBadge = `<span style="font-size:10px;color:#dc2626;font-weight:700;background:#fee2e2;border:1px solid #fca5a5;border-radius:4px;padding:1px 5px">패</span>`;
 
+    const buildTeamCell = (sideKey) => {
+      const isLeft = sideKey === 'L';
+      const names = isLeft ? (r.leftNames||[]) : (r.rightNames||[]);
+      const playersArr = isLeft ? (r.leftPlayers||[]) : (r.rightPlayers||[]);
+      const bOk0 = !!playersArr?.[0];
+      const bOk1 = !!playersArr?.[1];
+      const winLose = isLeftWinner === isLeft ? winBadge : loseBadge;
+      const v0 = names?.[0] || '';
+      const v1 = names?.[1] || '';
+      return `<div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;font-weight:800;color:${isLeft?'#1d4ed8':'#991b1b'}">${isLeft?'A팀':'B팀'}</span>
+          ${winLose}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <input value="${v0}" onchange="proEditTeamName(this,${i},'${sideKey}',0)"
+            style="width:90px;border:1px solid ${bOk0?'#86efac':'#fca5a5'};border-radius:6px;padding:2px 6px;font-size:12px;font-weight:800;color:${bOk0?'#14532d':'#dc2626'};background:#fff" placeholder="선수1">
+          <input value="${v1}" onchange="proEditTeamName(this,${i},'${sideKey}',1)"
+            style="width:90px;border:1px solid ${bOk1?'#86efac':'#fca5a5'};border-radius:6px;padding:2px 6px;font-size:12px;font-weight:800;color:${bOk1?'#14532d':'#dc2626'};background:#fff" placeholder="선수2">
+        </div>
+      </div>`;
+    };
+
     const buildACell = () => {
+      if (isTeam) return buildTeamCell('L');
       if (leftPlayer) {
         return `<div style="display:inline-flex;align-items:center;gap:6px">
           <button class="pro-name-flip" data-idx="${i}" ${ho('#bfdbfe','#dbeafe')}
@@ -279,6 +462,7 @@ function renderProPreview(results) {
     };
 
     const buildBCell = () => {
+      if (isTeam) return buildTeamCell('R');
       if (rightPlayer) {
         return `<div style="display:inline-flex;align-items:center;gap:6px">
           <button class="pro-name-flip" data-idx="${i}" ${ho('#fecaca','#fee2e2')}
@@ -321,7 +505,7 @@ function renderProPreview(results) {
 
     const statusBadge = ok
       ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:2px 5px;border-radius:8px;white-space:nowrap">✓저장</span>`
-      : (wAmbig||lAmbig)
+      : (isNeedPickRow(r) || wAmbig || lAmbig)
         ? `<span style="background:#fef9c3;color:#b45309;border:1px solid #fcd34d;font-size:10px;font-weight:700;padding:2px 5px;border-radius:8px;white-space:nowrap">선택↑</span>`
         : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:2px 5px;border-radius:8px;white-space:nowrap">미인식</span>`;
 
@@ -329,7 +513,7 @@ function renderProPreview(results) {
       style="padding:3px 6px;border-radius:5px;border:1px solid #fecaca;background:#fff5f5;font-size:12px;cursor:pointer;transition:.12s"
       onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff5f5'">🗑</button>`;
 
-    const rowBg = ok ? '#f8faff' : (wAmbig||lAmbig) ? '#fffbeb' : '#fff8f8';
+    const rowBg = ok ? '#f8faff' : (isNeedPickRow(r) || wAmbig || lAmbig) ? '#fffbeb' : '#fff8f8';
     return `<tr style="background:${rowBg};border-bottom:1px solid #f0f0f0">
       <td style="padding:5px 6px">${setCell}</td>
       <td style="padding:5px 6px">${mapCell}</td>
@@ -343,7 +527,7 @@ function renderProPreview(results) {
 
   // ── matchGroup별 점수 요약 헬퍼 ──
   const renderGroupSummary = (groupRows) => {
-    const gSavable = groupRows.filter(r => r.wPlayer && r.lPlayer);
+    const gSavable = groupRows.filter(isSavableRow);
     if (!gSavable.length) return '';
     const mode = window._proPasteMode || 'game';
     const setMap2 = {};
@@ -351,7 +535,7 @@ function renderProPreview(results) {
       const sn = r.setNum||1;
       if(!setMap2[sn]) setMap2[sn]={A:0,B:0};
       const leftN = r.leftName || r.winName;
-      const isLeftWinner = (leftN === r.winName);
+      const isLeftWinner = r.isTeam ? (r.winnerSide === 'L') : (leftN === r.winName);
       if (isLeftWinner) setMap2[sn].A++; else setMap2[sn].B++;
     });
     const multiSet = Object.keys(setMap2).length > 1;
@@ -501,10 +685,25 @@ function renderProPreview(results) {
       const idx = parseInt(this.dataset.idx);
       const r = window._proPasteResults?.[idx];
       if (!r) return;
-      [r.winName, r.loseName] = [r.loseName, r.winName];
-      [r.wPlayer, r.lPlayer] = [r.lPlayer, r.wPlayer];
-      [r.wCandidates, r.lCandidates] = [r.lCandidates||[], r.wCandidates||[]];
-      [r.wSimilar, r.lSimilar] = [r.lSimilar||[], r.wSimilar||[]];
+      if (r.isTeam) {
+        [r.leftNames, r.rightNames] = [r.rightNames||['',''], r.leftNames||['','']];
+        [r.leftPlayers, r.rightPlayers] = [r.rightPlayers||[null,null], r.leftPlayers||[null,null]];
+        [r.leftMeta, r.rightMeta] = [r.rightMeta||[], r.leftMeta||[]];
+        const ln0 = (r.leftNames?.[0]||'').trim();
+        const ln1 = (r.leftNames?.[1]||'').trim();
+        const rn0 = (r.rightNames?.[0]||'').trim();
+        const rn1 = (r.rightNames?.[1]||'').trim();
+        r.leftName = ln0 && ln1 ? `${ln0}, ${ln1}` : (ln0 || ln1 || '');
+        r.rightName = rn0 && rn1 ? `${rn0}, ${rn1}` : (rn0 || rn1 || '');
+        r.winnerSide = r.winnerSide === 'L' ? 'R' : 'L';
+        r.winName = r.winnerSide === 'L' ? r.leftName : r.rightName;
+        r.loseName = r.winnerSide === 'L' ? r.rightName : r.leftName;
+      } else {
+        [r.winName, r.loseName] = [r.loseName, r.winName];
+        [r.wPlayer, r.lPlayer] = [r.lPlayer, r.wPlayer];
+        [r.wCandidates, r.lCandidates] = [r.lCandidates||[], r.wCandidates||[]];
+        [r.wSimilar, r.lSimilar] = [r.lSimilar||[], r.wSimilar||[]];
+      }
       renderProPreview(window._proPasteResults);
     });
   });
@@ -579,22 +778,93 @@ function proEditName(input, idx, role) {
   renderProPreview(window._proPasteResults);
 }
 
+function proEditTeamName(input, idx, sideKey, slot) {
+  if (!window._proPasteResults) return;
+  const r = window._proPasteResults[idx];
+  if (!r || !r.isTeam) return;
+  const name = (input?.value || '').trim();
+  const m = name ? findPlayerByPartialName(name) : { player: null, candidates: [], similar: [] };
+  if (sideKey === 'L') {
+    if (!Array.isArray(r.leftNames)) r.leftNames = ['', ''];
+    if (!Array.isArray(r.leftPlayers)) r.leftPlayers = [null, null];
+    if (!Array.isArray(r.leftMeta)) r.leftMeta = [null, null];
+    r.leftNames[slot] = name;
+    r.leftPlayers[slot] = m.player;
+    r.leftMeta[slot] = m;
+  } else {
+    if (!Array.isArray(r.rightNames)) r.rightNames = ['', ''];
+    if (!Array.isArray(r.rightPlayers)) r.rightPlayers = [null, null];
+    if (!Array.isArray(r.rightMeta)) r.rightMeta = [null, null];
+    r.rightNames[slot] = name;
+    r.rightPlayers[slot] = m.player;
+    r.rightMeta[slot] = m;
+  }
+  const ln0 = (r.leftNames?.[0]||'').trim();
+  const ln1 = (r.leftNames?.[1]||'').trim();
+  const rn0 = (r.rightNames?.[0]||'').trim();
+  const rn1 = (r.rightNames?.[1]||'').trim();
+  r.leftName = ln0 && ln1 ? `${ln0}, ${ln1}` : (ln0 || ln1 || '');
+  r.rightName = rn0 && rn1 ? `${rn0}, ${rn1}` : (rn0 || rn1 || '');
+  r.winName = r.winnerSide === 'L' ? r.leftName : r.rightName;
+  r.loseName = r.winnerSide === 'L' ? r.rightName : r.leftName;
+  renderProPreview(window._proPasteResults);
+}
+
 function swapProTeams() {
   if (!window._proPasteResults) return;
-  window._proPasteResults = window._proPasteResults.map(r => ({
-    ...r,
-    winName: r.loseName, loseName: r.winName,
-    wPlayer: r.lPlayer, lPlayer: r.wPlayer,
-    wCandidates: r.lCandidates||[], lCandidates: r.wCandidates||[],
-    wSimilar: r.lSimilar||[], lSimilar: r.wSimilar||[],
-  }));
+  window._proPasteResults = window._proPasteResults.map(r => {
+    if (r?.isTeam) {
+      const leftNames = r.leftNames || ['', ''];
+      const rightNames = r.rightNames || ['', ''];
+      const leftPlayers = r.leftPlayers || [null, null];
+      const rightPlayers = r.rightPlayers || [null, null];
+      const leftMeta = r.leftMeta || [null, null];
+      const rightMeta = r.rightMeta || [null, null];
+      const winnerSide = r.winnerSide === 'L' ? 'R' : 'L';
+      const ln0 = (rightNames?.[0]||'').trim();
+      const ln1 = (rightNames?.[1]||'').trim();
+      const rn0 = (leftNames?.[0]||'').trim();
+      const rn1 = (leftNames?.[1]||'').trim();
+      const leftName = ln0 && ln1 ? `${ln0}, ${ln1}` : (ln0 || ln1 || '');
+      const rightName = rn0 && rn1 ? `${rn0}, ${rn1}` : (rn0 || rn1 || '');
+      return {
+        ...r,
+        leftNames: rightNames,
+        rightNames: leftNames,
+        leftPlayers: rightPlayers,
+        rightPlayers: leftPlayers,
+        leftMeta: rightMeta,
+        rightMeta: leftMeta,
+        winnerSide,
+        leftName,
+        rightName,
+        winName: winnerSide === 'L' ? leftName : rightName,
+        loseName: winnerSide === 'L' ? rightName : leftName,
+      };
+    }
+    return {
+      ...r,
+      winName: r.loseName, loseName: r.winName,
+      wPlayer: r.lPlayer, lPlayer: r.wPlayer,
+      wCandidates: r.lCandidates||[], lCandidates: r.wCandidates||[],
+      wSimilar: r.lSimilar||[], lSimilar: r.wSimilar||[],
+    };
+  });
   renderProPreview(window._proPasteResults);
 }
 
 function proApply() {
   if (!isLoggedIn) return alert('로그인이 필요합니다.');
   if (!window._proPasteResults) return;
-  const savable = window._proPasteResults.filter(r => r.wPlayer && r.lPlayer);
+  const isSavableRow = (r) => {
+    if (r?.isTeam) {
+      const lp = Array.isArray(r.leftPlayers) ? r.leftPlayers : [];
+      const rp = Array.isArray(r.rightPlayers) ? r.rightPlayers : [];
+      return lp.length === 2 && rp.length === 2 && lp.every(Boolean) && rp.every(Boolean) && (r.winnerSide === 'L' || r.winnerSide === 'R');
+    }
+    return !!(r?.wPlayer && r?.lPlayer);
+  };
+  const savable = window._proPasteResults.filter(isSavableRow);
   if (!savable.length) return alert('저장 가능한 경기가 없습니다.');
   const defaultDate = document.getElementById('pro-paste-date')?.value || new Date().toISOString().slice(0,10);
   const mode = window._proPasteMode || 'game';
@@ -605,7 +875,7 @@ function proApply() {
     const d = (window._proMatchDates||{})[(r.matchGroup||0)] || defaultDate;
     const leftN = r.leftName || r.winName;
     const rightN = r.rightName || r.loseName;
-    const isLeftWinner = (leftN === r.winName);
+    const isLeftWinner = r.isTeam ? (r.winnerSide === 'L') : (leftN === r.winName);
     const w = isLeftWinner ? leftN : rightN;
     const l = isLeftWinner ? rightN : leftN;
     return { mode:'pro', d, w, l, map: r.map || '' };
@@ -614,6 +884,12 @@ function proApply() {
 
   // A조/B조 판별 헬퍼
   const resolveTeam = (r) => {
+    if (r?.isTeam) {
+      const aPlayers = Array.isArray(r.leftPlayers) ? r.leftPlayers : [null, null];
+      const bPlayers = Array.isArray(r.rightPlayers) ? r.rightPlayers : [null, null];
+      const winner = r.winnerSide === 'L' ? 'A' : 'B';
+      return { isTeam: true, aPlayers, bPlayers, winner };
+    }
     const leftN = r.leftName || r.winName;
     const rightN = r.rightName || r.loseName;
     const leftPlayerObj = players.find(p => p.name === leftN) || r.wPlayer;
@@ -645,6 +921,20 @@ function proApply() {
       const rows = setMap2[sn];
       const games = rows.map(r => {
         const t = resolveTeam(r);
+        if (t.isTeam) {
+          const a1 = t.aPlayers?.[0]?.name || '';
+          const a2 = t.aPlayers?.[1]?.name || '';
+          const b1 = t.bPlayers?.[0]?.name || '';
+          const b2 = t.bPlayers?.[1]?.name || '';
+          return {
+            _isTeam: true,
+            a1, a2, b1, b2,
+            playerA: [a1, a2].filter(Boolean).join(','),
+            playerB: [b1, b2].filter(Boolean).join(','),
+            map: r.map||'-',
+            winner: t.winner
+          };
+        }
         return { playerA: t.playerA.name, playerB: t.playerB.name, map: r.map||'-', winner: t.winner };
       });
       const scoreA = games.filter(g=>g.winner==='A').length;
@@ -668,8 +958,19 @@ function proApply() {
     const mA=[], mB=[];
     groupRows.forEach(r => {
       const t = resolveTeam(r);
-      if(!mA.find(x=>x.name===t.playerA.name)) mA.push({name:t.playerA.name,univ:t.playerA.univ||'',race:t.playerA.race||'',tier:t.playerA.tier||''});
-      if(!mB.find(x=>x.name===t.playerB.name)) mB.push({name:t.playerB.name,univ:t.playerB.univ||'',race:t.playerB.race||'',tier:t.playerB.tier||''});
+      if (t.isTeam) {
+        (t.aPlayers||[]).forEach(p => {
+          if (!p) return;
+          if(!mA.find(x=>x.name===p.name)) mA.push({name:p.name,univ:p.univ||'',race:p.race||'',tier:p.tier||''});
+        });
+        (t.bPlayers||[]).forEach(p => {
+          if (!p) return;
+          if(!mB.find(x=>x.name===p.name)) mB.push({name:p.name,univ:p.univ||'',race:p.race||'',tier:p.tier||''});
+        });
+      } else {
+        if(!mA.find(x=>x.name===t.playerA.name)) mA.push({name:t.playerA.name,univ:t.playerA.univ||'',race:t.playerA.race||'',tier:t.playerA.tier||''});
+        if(!mB.find(x=>x.name===t.playerB.name)) mB.push({name:t.playerB.name,univ:t.playerB.univ||'',race:t.playerB.race||'',tier:t.playerB.tier||''});
+      }
     });
 
     proM.unshift({_id:matchId, d:dateVal, sa, sb,
