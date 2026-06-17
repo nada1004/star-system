@@ -136,7 +136,7 @@ function rCfg(C,T){
     const saved=localStorage.getItem('su_cfg_bottom_open');
     if(saved==='1' || saved==='0') return saved==='1';
   }catch(e){}
-  return _cfgViewMode==='advanced'; })();
+  return false; })();
   const _quickBtns = [
     {id:'univ', icon:'🏛️', title:'대학 관리', desc:'추가/수정/색상/숨김'},
     {id:'pd', icon:'🎨', title:'스트리머 상세', desc:'배경/배지/프로필'},
@@ -275,14 +275,14 @@ function rCfg(C,T){
     const secCount = (_catSecs[c]||[]).length;
     const accent = _catCardAccents[ci % _catCardAccents.length];
     return `<button type="button" class="no-export cfg-cat-tile" onclick="cfgApplyCat('${cj}')" data-cfg-cat="${_escAttr(c)}"
-      style="display:flex;flex-direction:column;align-items:flex-start;gap:0;padding:0;border-radius:14px;cursor:pointer;text-align:left;border:2px solid ${on?accent:'var(--border)'};background:var(--white);transition:all .15s;overflow:hidden;box-shadow:${on?`0 6px 20px ${accent}28`:'0 1px 4px rgba(15,23,42,.05)'}">
-      <div style="width:100%;height:3px;background:${on?accent:'var(--border)'};flex-shrink:0;transition:background .15s"></div>
+      style="display:flex;flex-direction:column;align-items:flex-start;gap:0;padding:0;border-radius:14px;cursor:pointer;text-align:left;border:1.5px solid ${on?`${accent}55`:'var(--border)'};background:${on?`linear-gradient(180deg,${accent}12,rgba(255,255,255,.98))`:'var(--white)'};transition:all .15s;overflow:hidden;box-shadow:${on?`0 10px 26px ${accent}18`:'0 1px 4px rgba(15,23,42,.05)'}">
+      <div style="width:100%;height:3px;background:${on?accent:'transparent'};flex-shrink:0;transition:background .15s"></div>
       <div style="padding:10px 12px 12px;width:100%;box-sizing:border-box">
         <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:6px">
           <span style="font-size:22px;line-height:1">${icon}</span>
-          <span style="font-size:10px;font-weight:800;color:${on?accent:'var(--gray-l)'};background:${on?`${accent}18`:'var(--surface)'};border-radius:99px;padding:2px 7px;border:1px solid ${on?`${accent}30`:'var(--border)'}">${secCount}</span>
+          <span style="font-size:10px;font-weight:800;color:${on?accent:'var(--gray-l)'};background:${on?`${accent}14`:'var(--surface)'};border-radius:99px;padding:2px 7px;border:1px solid ${on?`${accent}22`:'var(--border)'}">${secCount}</span>
         </div>
-        <div style="font-size:12px;font-weight:900;color:${on?accent:'var(--text2)'};line-height:1.2;margin-bottom:3px">${label}</div>
+        <div style="font-size:12px;font-weight:900;color:var(--text2);line-height:1.2;margin-bottom:3px">${label}</div>
         <div style="font-size:10px;color:var(--gray-l);font-weight:600;line-height:1.4;word-break:keep-all">${desc}</div>
       </div>
     </button>`;
@@ -354,9 +354,9 @@ function rCfg(C,T){
     </div>
   `).join('');
 
-  let h=`<div class="cfg-page">
+  let h=`<div class="cfg-page cfg-mode-${_cfgViewMode}">
   <div class="no-export cfg-topbar" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:0;margin-bottom:0;border-bottom:1px solid var(--border)">
-    <!-- ① 스티키 헤더: 검색 + 기본/고급 토글 -->
+    <!-- ① 스티키 헤더: 검색 -->
     <div class="cfg-toolbar-row" style="display:flex;align-items:center;gap:7px;padding:7px 2px;flex-wrap:nowrap">
       <div class="cfg-search-wrap" style="position:relative;flex:1;min-width:0">
         <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none;opacity:.4">🔎</span>
@@ -366,14 +366,14 @@ function rCfg(C,T){
         <div id="cfgSearchSug" class="cfg-search-sug" style="display:none"></div>
       </div>
       <span id="cfgSearchCnt" class="cfg-search-count" style="font-size:10px;color:var(--gray-l);font-weight:900;white-space:nowrap;flex-shrink:0"></span>
-      <div class="cfg-mode-toggle" style="display:flex;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:2px;flex-shrink:0;gap:1px">
+      ${_cfgViewMode==='advanced' ? `<div class="cfg-mode-toggle" style="display:flex;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:2px;flex-shrink:0;gap:1px">
         <button class="btn btn-xs no-export" onclick="cfgSetViewMode('basic')"
           style="border-radius:7px;padding:4px 10px;font-size:11px;font-weight:900;${_cfgViewMode==='basic'?'background:var(--blue);color:#fff;border-color:transparent':'background:transparent;color:var(--text3);border-color:transparent'}">기본</button>
         <button class="btn btn-xs no-export" onclick="cfgSetViewMode('advanced')"
           style="border-radius:7px;padding:4px 10px;font-size:11px;font-weight:900;${_cfgViewMode==='advanced'?'background:var(--blue);color:#fff;border-color:transparent':'background:transparent;color:var(--text3);border-color:transparent'}">고급</button>
-      </div>
+      </div>` : ''}
       ${_cfgViewMode==='advanced' ? _menuBtn : ''}
-      ${_regBtn}
+      ${_cfgViewMode==='advanced' ? _regBtn : ''}
     </div>
     ${_cfgViewMode==='advanced' ? `<!-- 고급모드: 카테고리 탭 수평 스크롤 -->
     <div class="cfg-cat-tab-row" style="display:flex;gap:5px;padding:0 2px 7px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;min-width:0">
@@ -402,6 +402,25 @@ function rCfg(C,T){
 
   ${_cfgViewMode==='basic' ? `<!-- ② 기본모드: 카테고리 카드 그리드 + 즐겨찾기 -->
   <div class="no-export cfg-overview-block" style="margin:10px 0 6px">
+    <div class="cfg-subpanel cfg-subpanel--soft" style="margin-bottom:10px;padding:10px 10px 9px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div class="cfg-mode-toggle" style="display:flex;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:2px;flex-shrink:0;gap:1px">
+          <button class="btn btn-xs no-export" onclick="cfgSetViewMode('basic')"
+            style="border-radius:7px;padding:4px 10px;font-size:11px;font-weight:900;${_cfgViewMode==='basic'?'background:var(--blue);color:#fff;border-color:transparent':'background:transparent;color:var(--text3);border-color:transparent'}">기본</button>
+          <button class="btn btn-xs no-export" onclick="cfgSetViewMode('advanced')"
+            style="border-radius:7px;padding:4px 10px;font-size:11px;font-weight:900;${_cfgViewMode==='advanced'?'background:var(--blue);color:#fff;border-color:transparent':'background:transparent;color:var(--text3);border-color:transparent'}">고급</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          ${_menuBtn}
+          ${_regBtn}
+        </div>
+      </div>
+      <div class="cfg-utility-row" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn btn-w btn-xs cfg-mini-btn" data-cfg-toggle-variant="long" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()" title="원본 설정 목록(하단)을 표시/숨김">${_cfgBottomOpen?'📚 원본 목록 숨기기':'📚 원본 목록 보기'}</button>
+        <button class="btn btn-w btn-xs cfg-mini-btn" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()" title="열어둔 설정 항목만 모두 닫기">📦 열린 항목 닫기</button>
+        <button class="btn btn-w btn-xs cfg-mini-btn" onclick="window.cfgFocusSearch&&window.cfgFocusSearch()">🔎 검색</button>
+      </div>
+    </div>
     ${_cfgPinsHtml ? `<div class="cfg-subpanel cfg-subpanel--soft" style="margin-bottom:10px">
       <div class="cfg-subpanel__label" style="font-size:10px;font-weight:900;color:var(--gray-l);margin-bottom:5px">📌 즐겨찾기</div>
       <div class="cfg-pins-row" style="display:flex;gap:5px;flex-wrap:wrap">${_cfgPinsHtml}</div>
@@ -410,10 +429,14 @@ function rCfg(C,T){
     <div class="cfg-cat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:7px;margin-bottom:10px">
       ${_catCardsHtml}
     </div>
-    <div class="cfg-utility-row" style="display:flex;gap:5px;flex-wrap:wrap">
-      <button class="btn btn-w btn-xs cfg-mini-btn" data-cfg-toggle-variant="long" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()" title="하단 세부 설정 메뉴 전체 표시/숨김">${_cfgBottomOpen?'🧩 세부 설정 숨기기':'🧩 세부 설정 보기'}</button>
-      <button class="btn btn-w btn-xs cfg-mini-btn" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()" title="열어둔 설정 항목만 모두 닫기">📦 열린 항목 닫기</button>
-      <button class="btn btn-w btn-xs cfg-mini-btn" onclick="window.cfgFocusSearch&&window.cfgFocusSearch()">🔎 검색</button>
+    <div class="cfg-subpanel cfg-subpanel--surface" data-cfg-bottom-panel="1" style="padding:10px;border:1px solid var(--border);border-radius:14px;background:var(--surface)">
+      <div class="cfg-section-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+        <div class="cfg-section-title" style="font-size:11px;font-weight:900;color:var(--text2)">📚 <span data-cfg-cur-cat-label="1">${_catLabel(window._cfgCat)}</span></div>
+        <button class="btn btn-w btn-xs cfg-mini-btn" data-cfg-toggle-variant="plain" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()" title="원본 설정 목록(하단)을 표시/숨김">${_cfgBottomOpen?'원본 목록 숨기기':'원본 목록 보기'}</button>
+      </div>
+      <div class="cfg-sec-grid" data-cfg-cur-sec-buttons="1" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px">
+        ${_secButtonsHtml}
+      </div>
     </div>
   </div>` : `<!-- ② 고급모드: 퀵버튼 그리드 + 섹션 버튼 -->
   <div class="no-export cfg-overview-block" style="margin:8px 0 6px">
@@ -424,7 +447,7 @@ function rCfg(C,T){
     <div class="cfg-section-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
       <div class="cfg-subpanel__label" style="font-size:10px;font-weight:900;color:var(--gray-l)">⚡ 빠른 이동 <span style="opacity:.65">(📌 고정)</span></div>
       <div class="cfg-utility-row" style="display:flex;gap:4px">
-        <button class="btn btn-w btn-xs cfg-mini-btn" data-cfg-toggle-variant="short" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()" title="하단 세부 설정 메뉴 전체 표시/숨김">${_cfgBottomOpen?'🧩 숨기기':'🧩 보기'}</button>
+        <button class="btn btn-w btn-xs cfg-mini-btn" data-cfg-toggle-variant="short" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()" title="원본 설정 목록(하단)을 표시/숨김">${_cfgBottomOpen?'📚 숨기기':'📚 보기'}</button>
         <button class="btn btn-w btn-xs cfg-mini-btn" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()" title="열어둔 설정 항목만 모두 닫기">📦 열린 항목 닫기</button>
       </div>
     </div>
@@ -434,13 +457,14 @@ function rCfg(C,T){
     <div class="cfg-subpanel cfg-subpanel--surface" data-cfg-bottom-panel="1" style="padding:10px;border:1px solid var(--border);border-radius:14px;background:var(--surface)">
       <div class="cfg-section-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
         <div class="cfg-section-title" style="font-size:11px;font-weight:900;color:var(--text2)">📚 <span data-cfg-cur-cat-label="1">${_catLabel(window._cfgCat)}</span></div>
-        <button class="btn btn-w btn-xs cfg-mini-btn" data-cfg-toggle-variant="plain" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()" title="하단 세부 설정 메뉴 전체 표시/숨김">${_cfgBottomOpen?'세부 설정 숨기기':'세부 설정 보기'}</button>
+        <button class="btn btn-w btn-xs cfg-mini-btn" data-cfg-toggle-variant="plain" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()" title="원본 설정 목록(하단)을 표시/숨김">${_cfgBottomOpen?'원본 목록 숨기기':'원본 목록 보기'}</button>
       </div>
       <div class="cfg-sec-grid" data-cfg-cur-sec-buttons="1" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px">
         ${_secButtonsHtml}
       </div>
     </div>
   </div>`}
+<div class="cfg-bottom-sections-grid">
 ${_scfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">접속 시 팝업으로 표시됩니다. 활성화된 공지만 보여집니다.</div>
     <div id="notice-list-area" style="margin-bottom:16px">
@@ -3851,6 +3875,7 @@ ${_scfgD('notice','📢 공지 관리')}
       <button class="btn btn-b" onclick="saveOldDashboardBrightness()">💾 저장</button>
     </div>
   </details>
+  </div>
   `;
 
   // 관리자 목록 + 맵 약자 목록 렌더링

@@ -13352,6 +13352,16 @@ button[onclick^="cfgGo"]:hover {
 }
 
 /* ── 세부 설정 섹션 (ssec summary) ── */
+.cfg-page details.ssec{
+  padding: 0 !important;
+  margin: 0 0 12px !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+}
 details.ssec > summary.cfg-sec-summary {
   border-radius: 14px !important;
   border: 1.5px solid var(--border) !important;
@@ -13371,6 +13381,46 @@ details.ssec[open] > summary.cfg-sec-summary {
 }
 
 /* ── ssec 내용 영역 ── */
+.cfg-page details.ssec > :not(summary){
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+.cfg-bottom-sections-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  align-items:start;
+}
+.cfg-bottom-sections-grid > .cfg-anchor{
+  display:none !important;
+  width:0 !important;
+  height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+.cfg-bottom-sections-grid > details.ssec{
+  margin:0 !important;
+}
+.cfg-bottom-sections-grid details.ssec > summary.cfg-sec-summary{
+  min-height:86px;
+  height:100%;
+  display:flex !important;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  border-radius:18px !important;
+}
+.cfg-bottom-sections-grid details.ssec > summary.cfg-sec-summary .cfg-sec-right{
+  margin-top:auto;
+  align-self:flex-end;
+}
 details.ssec > div {
   border: 1.5px solid var(--border);
   border-top: none;

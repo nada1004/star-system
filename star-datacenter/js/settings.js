@@ -3256,7 +3256,7 @@ function _cfgApplyCat(cat, autoGo=true){
     const mode=(localStorage.getItem('su_cfg_view_mode')||'basic')==='advanced' ? 'advanced' : 'basic';
     const saved=localStorage.getItem('su_cfg_bottom_open');
     _bottomOpen = window._cfgBottomSectionsOpen===undefined
-      ? ((saved==='1' || saved==='0') ? (saved==='1') : (mode==='advanced'))
+      ? ((saved==='1' || saved==='0') ? (saved==='1') : false)
       : !!window._cfgBottomSectionsOpen;
   }catch(e){}
   // 섹션 표시/숨김
@@ -3291,10 +3291,27 @@ function _cfgApplyCat(cat, autoGo=true){
     for(let i=0;i<btns.length;i++){
       const btn=btns[i];
       const on=(btn.getAttribute('data-cfg-cat')===cat);
-      btn.style.background = on ? 'linear-gradient(135deg,var(--blue),#7c3aed)' : 'var(--white)';
-      btn.style.color = on ? '#fff' : 'var(--text2)';
-      btn.style.borderColor = on ? 'transparent' : 'var(--border)';
-      btn.style.boxShadow = on ? '0 10px 24px rgba(37,99,235,.22)' : '0 4px 12px rgba(15,23,42,.04)';
+      if (btn.classList.contains('cfg-cat-tile')) {
+        btn.style.background = on ? 'linear-gradient(180deg,rgba(79,70,229,.08),rgba(255,255,255,.98))' : 'var(--white)';
+        btn.style.color = 'var(--text2)';
+        btn.style.borderColor = on ? 'rgba(79,70,229,.30)' : 'var(--border)';
+        btn.style.boxShadow = on ? '0 10px 24px rgba(79,70,229,.12)' : '0 4px 12px rgba(15,23,42,.04)';
+        const bar = btn.firstElementChild;
+        if(bar) bar.style.background = on ? '#4f46e5' : 'transparent';
+        const count = btn.querySelector('span[style*="border-radius:99px"]');
+        if (count) {
+          count.style.color = on ? '#4338ca' : 'var(--gray-l)';
+          count.style.background = on ? 'rgba(79,70,229,.10)' : 'var(--surface)';
+          count.style.borderColor = on ? 'rgba(79,70,229,.18)' : 'var(--border)';
+        }
+        const titleEl = btn.querySelectorAll('div')[1];
+        if (titleEl) titleEl.style.color = 'var(--text2)';
+      } else {
+        btn.style.background = on ? 'linear-gradient(135deg,var(--blue),#7c3aed)' : 'var(--white)';
+        btn.style.color = on ? '#fff' : 'var(--text2)';
+        btn.style.borderColor = on ? 'transparent' : 'var(--border)';
+        btn.style.boxShadow = on ? '0 10px 24px rgba(37,99,235,.22)' : '0 4px 12px rgba(15,23,42,.04)';
+      }
       const desc=btn.querySelector('[data-cfg-cat-desc]');
       if(desc) desc.style.opacity = on ? '.9' : '.72';
     }
@@ -3395,7 +3412,7 @@ window.cfgApplyBottomSectionsVisibility = function(){
     const q=String(window._cfgSearchQ||'').trim();
     if(window._cfgBottomSectionsOpen===undefined){
       const saved=localStorage.getItem('su_cfg_bottom_open');
-      window._cfgBottomSectionsOpen = (saved==='1' || saved==='0') ? (saved==='1') : (mode==='advanced');
+      window._cfgBottomSectionsOpen = (saved==='1' || saved==='0') ? (saved==='1') : false;
     }
     const open = q ? true : !!window._cfgBottomSectionsOpen;
     if(!open){
@@ -3406,21 +3423,23 @@ window.cfgApplyBottomSectionsVisibility = function(){
         el.style.display='none';
       });
     } else {
-      // 펼치기: 모든 세부 섹션을 다시 표시
-      document.querySelectorAll('[data-cfg-sec]').forEach(el=>{
-        try{ if(el.closest && el.closest('#cfgModalBody')) return; }catch(e){}
-        if(el.style.display==='none') el.style.display='';
-      });
+      // 펼치기: 검색 중이면 검색 필터가 제어하도록 그대로 두고,
+      // 검색이 아니면 현재 카테고리만 다시 적용
+      if (!q) {
+        try{
+          if(typeof _cfgApplyCat==='function') _cfgApplyCat(window._cfgCat||'🧩 운영/콘텐츠', false);
+        }catch(e){}
+      }
     }
     // 버튼 텍스트 업데이트
     try{
       document.querySelectorAll('[onclick*="cfgToggleBottomSections"]').forEach(function(btn){
         const v = String(btn.getAttribute('data-cfg-toggle-variant')||'long');
         btn.textContent = v==='short'
-          ? (open ? '🧩 숨기기' : '🧩 보기')
+          ? (open ? '📚 숨기기' : '📚 보기')
           : v==='plain'
-            ? (open ? '세부 설정 숨기기' : '세부 설정 보기')
-            : (open ? '🧩 세부 설정 숨기기' : '🧩 세부 설정 보기');
+            ? (open ? '원본 목록 숨기기' : '원본 목록 보기')
+            : (open ? '📚 원본 목록 숨기기' : '📚 원본 목록 보기');
       });
     }catch(e){}
   }catch(e){}
