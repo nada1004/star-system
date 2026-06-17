@@ -708,14 +708,14 @@ function _b2UnivView() {
           <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">무소속 제외 대학 수</div>
         </div>
         <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
-          <div style="font-size:11px;font-weight:800;color:var(--text3)">이번주 경기수</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3)">이번주 기록 수</div>
           <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:#2563eb">${_uvWeekG}</div>
-          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">직접 기록 + 외부 경기 합산</div>
+          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">개인전·팀전·대회 기준</div>
         </div>
         <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
-          <div style="font-size:11px;font-weight:800;color:var(--text3)">이번주 활동 선수 수</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3)">이번주 활동 스트리머</div>
           <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:#f59e0b">${_uvWeekActive}</div>
-          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">월~오늘 1경기 이상 기준</div>
+          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">월~오늘 기록 1회 이상</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
