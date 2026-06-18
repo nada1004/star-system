@@ -152,15 +152,74 @@ let totalFocusPlayer=''; // 상세형에서 선택된 스트리머 이름
   document.head.appendChild(s);
 })();
 
+function _tpDateNum(v){
+  const raw = String(v || '').trim();
+  if(!raw) return 0;
+  let m = raw.match(/^(\d{4})[.\-\/](\d{2})[.\-\/](\d{2})/);
+  if(!m) m = raw.match(/^(\d{4})(\d{2})(\d{2})/);
+  if(!m) return 0;
+  return Number(`${m[1]}${m[2]}${m[3]}`);
+}
+function _tpDaysAgoNum(days){
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() - Number(days||0));
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const da = String(d.getDate()).padStart(2,'0');
+  return Number(`${y}${m}${da}`);
+}
+
 function _getStreamerActivityMeta(p){
   const hist = Array.isArray(p?.history) ? p.history : [];
-  const lastD = hist.reduce((mx,h)=>(h && h.date && h.date > mx) ? h.date : mx, '');
-  if(!lastD) return { key:'cool', label:'REST', title:'전적 없음' };
-  const _7ago = new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
-  const _30ago = new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
-  if(lastD >= _7ago) return { key:'hot', label:'LIVE', title:'최근 활동 7일 이내' };
-  if(lastD >= _30ago) return { key:'warm', label:'WARM', title:'활동 중 30일 이내' };
+  const lastNum = hist.reduce((mx,h)=>Math.max(mx,_tpDateNum(h?.date)),0);
+  if(!lastNum) return { key:'cool', label:'REST', title:'전적 없음' };
+  const _7agoN = _tpDaysAgoNum(7);
+  const _30agoN = _tpDaysAgoNum(30);
+  if(lastNum >= _7agoN) return { key:'hot', label:'LIVE', title:'최근 활동 7일 이내' };
+  if(lastNum >= _30agoN) return { key:'warm', label:'WARM', title:'활동 중 30일 이내' };
   return { key:'cool', label:'REST', title:'비활성 30일 이상' };
+}
+
+function _tpHistAllForPlayer(p){
+  try{
+    if(typeof ensureRenderMatchIdsPrepared==='function') ensureRenderMatchIdsPrepared();
+    const base = (typeof preparePlayerHistoryBaseData==='function') ? preparePlayerHistoryBaseData(p) : null;
+    const normMap = base?.normMap || ((v)=>{ const s=String(v||'-'); return s.replace(/^📍\s*/,'').trim() || '-'; });
+    const histDupKey = base?.histDupKey || (h=>{
+      if(h?.matchId) return `mid:${h.matchId}`;
+      const date = (h?.date||'').trim();
+      const map = normMap(h?.map||'-');
+      const opp = (h?.opp||'').trim();
+      const mode = (h?.mode||'').trim();
+      const result = (h?.result||'').trim();
+      return `${date}|${map}|${[p.name,opp].filter(x=>x).sort().join('|')}|${mode}|${result}`;
+    });
+    const dedupedHistory = base?.dedupedHistory || (p.history||[]);
+    const histNoResSet = base?.histNoResSet || new Set();
+    const hasDetailedKey = base?.hasDetailedKey || new Set();
+    const prunedHistory = base?.prunedHistory || dedupedHistory;
+    const prunedHistory2 = base?.prunedHistory2 || prunedHistory;
+    const existingMatchIds = base?.existingMatchIds || new Set(prunedHistory2.map(h=>h.matchId).filter(Boolean));
+    const existingKeys = base?.existingKeys || new Set(prunedHistory2.map(h=>histDupKey(h)));
+    const histAll = (typeof collectPlayerExtraHistoryData==='function')
+      ? collectPlayerExtraHistoryData({
+          player: p,
+          dedupedHistory,
+          prunedHistory,
+          prunedHistory2,
+          existingMatchIds,
+          existingKeys,
+          histNoResSet,
+          histDupKey,
+          normMap,
+          hasDetailedKey
+        }).histAll
+      : [...prunedHistory2];
+    return Array.isArray(histAll) ? histAll : [];
+  }catch(e){
+    return Array.isArray(p?.history) ? p.history : [];
+  }
 }
 
 function _bindTotalDelegatedEvents(){
@@ -301,6 +360,24 @@ function rTotal(C,T){
     C.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">${msg}</div><div class="empty-state-desc">새로고침 후 다시 시도해주세요.</div></div>`;
     return;
   }
+  try{
+    if(!window.__streamer_hist_ready && typeof _rebuildAllPlayerHistoryCore==='function'){
+      const hasMatchData = ((typeof miniM!=='undefined'&&miniM?miniM.length:0)
+        + (typeof univM!=='undefined'&&univM?univM.length:0)
+        + (typeof ckM!=='undefined'&&ckM?ckM.length:0)
+        + (typeof proM!=='undefined'&&proM?proM.length:0)
+        + (typeof indM!=='undefined'&&indM?indM.length:0)
+        + (typeof gjM!=='undefined'&&gjM?gjM.length:0)
+        + (typeof ttM!=='undefined'&&ttM?ttM.length:0)
+        + (typeof comps!=='undefined'&&comps?comps.length:0)
+        + (typeof tourneys!=='undefined'&&tourneys?tourneys.length:0)) > 0;
+      const hasAnyHistory = _pl.some(p=>Array.isArray(p?.history) && p.history.length);
+      if(hasMatchData && !hasAnyHistory){
+        _rebuildAllPlayerHistoryCore();
+        window.__streamer_hist_ready = true;
+      }
+    }
+  }catch(e){}
   // 랭킹 스냅샷 업데이트 (하루 1회)
   if(typeof updateRankSnapshot === 'function') updateRankSnapshot();
   const raceOpts=['전체','T','Z','P','N'];
@@ -318,6 +395,8 @@ function rTotal(C,T){
   const _roleCount = _visiblePlayers.filter(p=>p.role && MAIN_ROLES.includes(p.role)).length;
   const _liveCount = _visiblePlayers.filter(p=>_getStreamerActivityMeta(p).key==='hot').length;
   const _warmCount = _visiblePlayers.filter(p=>_getStreamerActivityMeta(p).key==='warm').length;
+  const _hasRecordCount = _visiblePlayers.filter(p=>(Number(p?.win||0)+Number(p?.loss||0))>0).length;
+  const _noRecordCount = Math.max(0, _visiblePlayers.length - _hasRecordCount);
   const _kpiBar = totalViewMode==='gallery'
     ? `<div class="streamer-kpi-grid">
         <article class="streamer-kpi-card">
@@ -326,9 +405,9 @@ function rTotal(C,T){
           <div class="streamer-kpi-sub">현재 필터 기준 표시 인원</div>
         </article>
         <article class="streamer-kpi-card">
-          <div class="streamer-kpi-label">활동 중</div>
-          <div class="streamer-kpi-value" style="color:#16a34a">${_liveCount}</div>
-          <div class="streamer-kpi-sub">최근 7일 활동 · 30일 내 ${_warmCount}명</div>
+          <div class="streamer-kpi-label">기록 보유</div>
+          <div class="streamer-kpi-value" style="color:#2563eb">${_hasRecordCount}</div>
+          <div class="streamer-kpi-sub">전적 있음 ${_hasRecordCount}명 · 전적 없음 ${_noRecordCount}명</div>
         </article>
         <article class="streamer-kpi-card">
           <div class="streamer-kpi-label">대학 분포</div>
@@ -879,15 +958,35 @@ function _buildFocusView(rankMap){
   const selElo = Number(selected.elo||ELO_DEFAULT);
   const selPoints = Number(selected.points||0);
   const selAct = _getStreamerActivityMeta(selected);
-  const selHist = Array.isArray(selected.history) ? selected.history : [];
-  const lastMatch = selHist.reduce((mx,h)=>(h&&h.date&&h.date>mx)?h.date:mx,'');
-  const lastRec = [...selHist].sort((a,b)=>String(b?.date||'').localeCompare(String(a?.date||'')))[0];
+  const selHistAll = _tpHistAllForPlayer(selected);
+  const selHistSorted = [...selHistAll].sort((a,b)=>_tpDateNum(b?.date)-_tpDateNum(a?.date)||(Number(b?.time||0)-Number(a?.time||0)));
+  const lastRec = selHistSorted[0] || null;
+  const lastMatch = lastRec ? (lastRec.date || '') : '';
   const selUniv = selected.univ || '무소속';
   const selColor = (typeof gc==='function' ? gc(selUniv) : '#2563eb') || '#2563eb';
   const selAttr = (typeof escAttr==='function')
     ? escAttr(String(selected.name||'').replace(/[\r\n]+/g,' '))
     : String(selected.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-  const recentDesc = lastRec ? `${lastRec.date || ''} · ${lastRec.result || '-'}${lastRec.opp ? ` vs ${lastRec.opp}` : ''}` : '최근 기록이 아직 없습니다.';
+  const recentList = selHistSorted.slice(0, 5);
+  const recentDesc = recentList.length
+    ? `<div style="display:flex;flex-direction:column;gap:6px">${recentList.map(h=>{
+        const d=String(h?.date||'').trim();
+        const r=String(h?.result||'-').trim();
+        const opp=String(h?.opp||'').trim();
+        const mode=String(h?.mode||'').trim();
+        const map=String(h?.map||'').trim();
+        const left = `${d||'-'} · ${r}${opp?` vs ${opp}`:''}`;
+        const right = `${mode||''}${map?` · ${map}`:''}`;
+        return `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+          <span style="font-weight:800;color:var(--text2)">${left}</span>
+          <span style="color:var(--text3);white-space:nowrap">${right}</span>
+        </div>`;
+      }).join('')}</div>`
+    : '최근 기록이 아직 없습니다.';
+  const _7agoN = _tpDaysAgoNum(7);
+  const _30agoN = _tpDaysAgoNum(30);
+  const _c7 = selHistAll.filter(h=>_tpDateNum(h?.date) >= _7agoN).length;
+  const _c30 = selHistAll.filter(h=>_tpDateNum(h?.date) >= _30agoN).length;
   const detailHtml = `<div class="streamer-focus-main">
     <div class="streamer-focus-main-hero" style="background:linear-gradient(135deg,color-mix(in srgb, ${selColor} 28%, #0f172a),${selColor})">
       <div class="streamer-focus-photo">
@@ -925,7 +1024,7 @@ function _buildFocusView(rankMap){
       </div>
       <div class="streamer-focus-note">
         <div class="streamer-focus-note-title">활동 상태</div>
-        <div class="streamer-focus-note-desc">${selAct.title}${lastMatch ? `<br>마지막 기록일 · ${lastMatch}` : ''}</div>
+        <div class="streamer-focus-note-desc">${selAct.title}<br>최근 7일 · ${_c7}회 / 최근 30일 · ${_c30}회${lastMatch ? `<br>마지막 기록일 · ${lastMatch}` : ''}</div>
       </div>
     </div>
   </div>`;
