@@ -1601,51 +1601,15 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     </div>
   </div>`;
 
-  // 이번주 전적 계산
-  const { fromN: _ubFromN, toN: _ubToN } = _b2ThisWeekRange();
-  const _ubDN = _b2DateNum;
-  let _ubWw=0,_ubWl=0,_ubActive=0,_ubTw=0,_ubTl=0;
-  tieredMembers.forEach(p=>{
-    let acted=false;
-    (Array.isArray(p.history)?p.history:[]).forEach(h=>{
-      if(h.result==='승'){_ubTw++;} else if(h.result==='패'){_ubTl++;}
-      const d=_ubDN(h.date||h.d||'');
-      if(d>=_ubFromN&&d<=_ubToN){if(h.result==='승')_ubWw++;else if(h.result==='패')_ubWl++;acted=true;}
-    });
-    if(acted)_ubActive++;
-  });
-  const _ubTg=_ubTw+_ubTl;
-  const _ubWr=_ubTg>0?Math.round(_ubTw/_ubTg*100):null;
-  const _ubWrc=_ubWr===null?null:_ubWr>=60?'#bbf7d0':_ubWr>=40?'#fef08a':'#fecaca';
-  const _ubWwTotal=_ubWw+_ubWl;
-  const _ubWeekBadge=_ubWwTotal>0
-    ? `<span style="flex-shrink:0;background:rgba(0,0,0,.18);color:${_ubWw>=_ubWl?'#bbf7d0':'#fecaca'};font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;border:1px solid rgba(255,255,255,.15)">`
-      +`🔥 ${_ubWw}승${_ubWl}패</span>`
-    : '';
-  const _ubWrBadge=_ubWr!==null
-    ? `<span style="flex-shrink:0;background:rgba(0,0,0,.18);color:${_ubWrc};font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;border:1px solid rgba(255,255,255,.15)" title="통산 ${_ubTw}승 ${_ubTl}패">📊 ${_ubWr}%</span>`
-    : '';
-  const _ubRoleBadge=roledMembers.length
-    ? `<span style="flex-shrink:0;background:rgba(255,255,255,.18);color:${textCol};font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.15)">직책 ${roledMembers.length}</span>`
-    : '';
-  const _ubTierBadge=tieredMembers.length
-    ? `<span style="flex-shrink:0;background:rgba(255,255,255,.18);color:${textCol};font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.15)">일반 ${tieredMembers.length}</span>`
-    : '';
-  const _ubWeekActiveBadge=_ubActive>0
-    ? `<span style="flex-shrink:0;background:rgba(251,191,36,.18);color:#fef3c7;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14)">이번주 활동 ${_ubActive}명</span>`
-    : `<span style="flex-shrink:0;background:rgba(255,255,255,.10);color:${textCol};font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12)">이번주 활동 없음</span>`;
-  const _ubSummaryLine = [
-    `${members.length}명 구성`,
-    roledMembers.length ? `직책 ${roledMembers.length}` : '',
-    tieredMembers.length ? `일반 ${tieredMembers.length}` : '',
-    _ubWwTotal > 0 ? `주간 ${_ubWw}승 ${_ubWl}패` : ''
-  ].filter(Boolean).join(' · ');
-  const _ubHeaderStatCard = (label, value, sub, accentBg) => `
-    <div style="min-width:92px;padding:10px 11px;border-radius:16px;background:${accentBg || 'rgba(255,255,255,.12)'};border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)">
-      <div style="font-size:10px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:${textCol}cc">${label}</div>
-      <div style="margin-top:5px;font-size:18px;font-weight:950;letter-spacing:-.03em;color:${textCol};line-height:1">${value}</div>
-      <div style="margin-top:4px;font-size:10px;font-weight:700;color:${textCol}cc;white-space:nowrap">${sub}</div>
-    </div>`;
+  const _ubCreatedRaw = String(uCfg.createdAt || uCfg.created || uCfg.createDate || uCfg.since || uCfg.startDate || '').trim();
+  const _ubCreatedLabel = (() => {
+    if (!_ubCreatedRaw) return '';
+    const raw = String(_ubCreatedRaw).trim();
+    let m = raw.match(/^(\d{4})[.\-\/](\d{2})[.\-\/](\d{2})/);
+    if (!m) m = raw.match(/^(\d{4})(\d{2})(\d{2})/);
+    if (!m) return raw.slice(0, 10);
+    return `${m[1]}.${m[2]}.${m[3]}`;
+  })();
 
   // 하단 메모/이미지 (bMemo/bMemoImgs)
   const _bnote = uCfg.bMemo || '';
@@ -1663,35 +1627,24 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
         <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,${_hasBgImg?'.08':'.18'}),rgba(255,255,255,0) 58%);pointer-events:none"></div>
         <div style="display:flex;align-items:stretch;gap:12px;position:relative;z-index:1">
           ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,46px);height:var(--su_univ_logo_size,46px);object-fit:contain;border-radius:var(--su_univ_logo_radius,14px);flex-shrink:0;cursor:pointer;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);padding:5px;box-shadow:0 12px 22px rgba(15,23,42,.10)" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
-          <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:8px">
+          <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:7px">
             <div style="display:flex;align-items:flex-start;gap:10px;justify-content:space-between;flex-wrap:wrap">
               <div style="min-width:0;flex:1">
-                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.12);font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:${textCol}dd">University Board</div>
-                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;margin-top:8px">
-                  <span style="font-weight:950;font-size:20px;color:${textCol};flex-shrink:0;cursor:pointer;letter-spacing:-.03em;line-height:1.08" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
-                  <span style="background:${textCol}1f;color:${textCol};font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;border:1px solid ${textCol}26;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
-                  ${_ubWeekActiveBadge}
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0">
+                  <span style="font-weight:950;font-size:20px;color:${textCol};cursor:pointer;letter-spacing:-.03em;line-height:1.08;min-width:0;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
+                  <span style="display:inline-flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap">
+                    <span style="background:${textCol}1f;color:${textCol};font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;border:1px solid ${textCol}26;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
+                    ${_ubCreatedLabel?`<span style="background:${textCol}18;color:${textCol};font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px;border:1px solid ${textCol}22;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);flex-shrink:0;white-space:nowrap">${_ubCreatedLabel}</span>`:''}
+                  </span>
                 </div>
-                <div style="margin-top:7px;font-size:11px;font-weight:700;color:${textCol}dd;line-height:1.5;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                  <span>${_ubSummaryLine}</span>
-                  ${uCfg.memo2?`<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:48%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:4px 9px">${uCfg.memo2}</span>`:''}
-                </div>
+                ${uCfg.memo2?`<div style="margin-top:5px;font-size:10px;font-weight:700;color:${textCol}dd;line-height:1.45;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                  <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:48%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:3px 8px">${uCfg.memo2}</span>
+                </div>`:''}
               </div>
               <div style="display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap;justify-content:flex-end">
                 ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12)">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
                 ${isLoggedIn?`<button class="no-export" onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:11px;cursor:pointer;padding:4px 9px;border-radius:10px;flex-shrink:0;font-weight:800;z-index:var(--z-dropdown);position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶ 접기 해제':'▼ 접기'}</button>`:''}
               </div>
-            </div>
-            <div style="display:flex;align-items:stretch;gap:8px;flex-wrap:wrap">
-              ${_ubHeaderStatCard('주간 기록', _ubWwTotal>0?`${_ubWw+_ubWl}`:'0', _ubWwTotal>0?`${_ubWw}승 ${_ubWl}패`:'집계 없음', 'rgba(255,255,255,.15)')}
-              ${_ubHeaderStatCard('통산 승률', _ubWr!==null?`${_ubWr}%`:'-', _ubTg>0?`${_ubTw}승 ${_ubTl}패`:'전적 없음', _ubWr!==null?(_ubWr>=60?'rgba(187,247,208,.20)':_ubWr>=40?'rgba(254,240,138,.18)':'rgba(254,202,202,.18)'):'rgba(255,255,255,.12)')}
-              ${_ubHeaderStatCard('구성', `${roledMembers.length}/${tieredMembers.length}`, '직책 / 일반', 'rgba(255,255,255,.12)')}
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px">
-              ${_ubRoleBadge}
-              ${_ubTierBadge}
-              ${_ubWeekBadge}
-              ${_ubWrBadge}
             </div>
           </div>
         </div>

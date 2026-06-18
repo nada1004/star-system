@@ -7,7 +7,8 @@ let totalHideNoRecord=false; // 전적 없는 선수 숨기기
 let _bulkEditMode=false; // 일괄 수정 모드
 let _bulkEditSelected=new Set(); // 선택된 스트리머 이름
 let _bulkEditSearch=''; // 일괄 수정(선택 모드) 검색어
-let totalViewMode='table'; // 'table' | 'gallery'
+let totalViewMode='gallery'; // 'gallery'(카드형) | 'table'(리스트형) | 'focus'(상세형)
+let totalFocusPlayer=''; // 상세형에서 선택된 스트리머 이름
 
 (function _injectStreamerTabUiStyle(){
   if(typeof document==='undefined') return;
@@ -31,6 +32,11 @@ let totalViewMode='table'; // 'table' | 'gallery'
     '.streamer-toolbar-card .pill.edit-on{background:linear-gradient(135deg,#2563eb,#60a5fa);border-color:#2563eb;color:#fff;box-shadow:0 14px 26px rgba(37,99,235,.22)}',
     '.streamer-search{padding:8px 12px;border:1px solid rgba(148,163,184,.18);border-radius:14px;font-size:12px;min-width:140px;max-width:240px;flex:0 1 210px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));color:var(--text);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}',
     '.streamer-summary-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:rgba(248,250,252,.94);border:1px solid rgba(148,163,184,.16);font-size:11px;font-weight:800;color:var(--text2)}',
+    '.streamer-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}',
+    '.streamer-kpi-card{padding:14px 15px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16);box-shadow:0 14px 28px rgba(15,23,42,.05)}',
+    '.streamer-kpi-label{font-size:11px;font-weight:900;letter-spacing:.04em;color:var(--text3)}',
+    '.streamer-kpi-value{margin-top:8px;font-size:24px;font-weight:950;letter-spacing:-.03em;color:var(--text1)}',
+    '.streamer-kpi-sub{margin-top:5px;font-size:11px;font-weight:700;color:var(--text3)}',
     '.streamer-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}',
     '.streamer-table{table-layout:fixed;width:100%;border-collapse:separate;border-spacing:0 8px}',
     '.streamer-table thead th{background:linear-gradient(180deg,#f8fbff,#eef6ff);border-top:1px solid rgba(148,163,184,.18);border-bottom:1px solid rgba(148,163,184,.18)}',
@@ -64,24 +70,63 @@ let totalViewMode='table'; // 'table' | 'gallery'
     '.streamer-act-chip.hot{color:#16a34a;background:linear-gradient(180deg,rgba(240,253,244,.98),rgba(220,252,231,.92));border-color:rgba(34,197,94,.26)}',
     '.streamer-act-chip.warm{color:#d97706;background:linear-gradient(180deg,rgba(255,251,235,.98),rgba(254,243,199,.92));border-color:rgba(245,158,11,.26)}',
     '.streamer-act-chip.cool{color:#64748b;background:linear-gradient(180deg,rgba(248,250,252,.98),rgba(241,245,249,.92));border-color:rgba(148,163,184,.24)}',
-    '.streamer-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:12px;padding:4px 0}',
-    '.streamer-gallery-head{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:18px;position:relative;overflow:hidden;box-shadow:0 16px 30px rgba(15,23,42,.12)}',
+    '.streamer-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));gap:14px;padding:4px 0}',
+    '.streamer-gallery-head{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:14px 16px;border-radius:20px;position:relative;overflow:hidden;box-shadow:0 16px 30px rgba(15,23,42,.12);margin-top:10px}',
     '.streamer-gallery-head::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 44%);pointer-events:none}',
     '.streamer-gallery-univ{position:relative;z-index:1;background:rgba(255,255,255,.18)!important;border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(8px)}',
-    '.streamer-gallery-card{position:relative;border-radius:18px;overflow:hidden;cursor:pointer;aspect-ratio:3/4;transition:transform .15s,box-shadow .15s;border:1px solid rgba(148,163,184,.18);box-shadow:0 14px 28px rgba(15,23,42,.10)}',
+    '.streamer-gallery-card{position:relative;border-radius:22px;overflow:hidden;cursor:pointer;min-height:292px;transition:transform .15s,box-shadow .15s,border-color .15s;display:flex;align-items:flex-end;border:1px solid rgba(148,163,184,.18);box-shadow:0 14px 28px rgba(15,23,42,.10)}',
     '.streamer-gallery-card.top1{box-shadow:0 18px 34px rgba(251,191,36,.22);border-color:rgba(251,191,36,.42)}',
     '.streamer-gallery-card.top2{box-shadow:0 18px 34px rgba(148,163,184,.2);border-color:rgba(148,163,184,.36)}',
     '.streamer-gallery-card.top3{box-shadow:0 18px 34px rgba(180,83,9,.18);border-color:rgba(180,83,9,.34)}',
     '.streamer-gallery-card.inactive{filter:saturate(.92)}',
     '.streamer-gallery-card.retired{filter:grayscale(.16) saturate(.84);opacity:.84}',
     '.streamer-gallery-card:hover{transform:translateY(-4px);box-shadow:0 18px 34px rgba(15,23,42,.18)}',
-    '.streamer-gallery-rank{position:absolute;top:8px;left:10px;font-size:10px;font-weight:900;color:rgba(255,255,255,.82)}',
-    '.streamer-gallery-act{position:absolute;top:8px;right:10px}',
+    '.streamer-gallery-rank{position:absolute;top:12px;left:12px;font-size:10px;font-weight:900;color:rgba(255,255,255,.9)}',
+    '.streamer-gallery-act{position:absolute;top:12px;right:12px}',
     '.streamer-gallery-act .streamer-act-chip{min-width:40px;padding:4px 7px;font-size:10px;backdrop-filter:blur(10px);background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.24);color:#fff}',
-    '.streamer-gallery-bottom{position:absolute;bottom:0;left:0;right:0;padding:10px 10px 11px;text-align:left}',
-    '.streamer-gallery-name{font-size:12px;font-weight:900;color:#fff;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-    '.streamer-gallery-role{font-size:9px;color:rgba(255,255,255,.72);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-    '.streamer-gallery-stats{margin-top:5px;display:flex;align-items:center;justify-content:space-between;gap:4px}',
+    '.streamer-gallery-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,.08) 0%,rgba(15,23,42,.18) 35%,rgba(15,23,42,.92) 100%)}',
+    '.streamer-gallery-bottom{position:relative;z-index:1;width:100%;padding:14px 14px 15px;text-align:left}',
+    '.streamer-gallery-topline{display:flex;align-items:center;gap:6px;justify-content:space-between;margin-bottom:6px}',
+    '.streamer-gallery-name{font-size:15px;font-weight:950;color:#fff;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.02em}',
+    '.streamer-gallery-role{font-size:11px;color:rgba(255,255,255,.74);margin-bottom:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.streamer-gallery-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:9px}',
+    '.streamer-gallery-univ-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.16);font-size:10px;font-weight:800;color:#fff;backdrop-filter:blur(8px)}',
+    '.streamer-gallery-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}',
+    '.streamer-gallery-stat{padding:8px 8px 7px;border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(8px)}',
+    '.streamer-gallery-stat-label{font-size:9px;font-weight:800;color:rgba(255,255,255,.66);text-transform:uppercase;letter-spacing:.05em}',
+    '.streamer-gallery-stat-value{margin-top:3px;font-size:12px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.streamer-focus-layout{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:14px;align-items:start}',
+    '.streamer-focus-sidebar,.streamer-focus-main{padding:14px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16);box-shadow:0 16px 30px rgba(15,23,42,.05)}',
+    '.streamer-focus-section-title{font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px;letter-spacing:-.02em}',
+    '.streamer-focus-list{display:flex;flex-direction:column;gap:10px;max-height:900px;overflow:auto;padding-right:4px}',
+    '.streamer-focus-group{display:flex;flex-direction:column;gap:8px}',
+    '.streamer-focus-group-title{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:16px;color:#fff;font-size:12px;font-weight:900;box-shadow:0 12px 24px rgba(15,23,42,.12)}',
+    '.streamer-focus-item{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s}',
+    '.streamer-focus-item:hover{transform:translateY(-1px);box-shadow:0 12px 24px rgba(15,23,42,.08)}',
+    '.streamer-focus-item.active{border-color:#2563eb;box-shadow:0 16px 28px rgba(37,99,235,.14);background:linear-gradient(180deg,rgba(239,246,255,.98),rgba(219,234,254,.92))}',
+    '.streamer-focus-avatar{width:54px;height:54px;border-radius:18px;flex-shrink:0;position:relative;overflow:hidden;background:linear-gradient(180deg,#eef2ff,#e2e8f0);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#64748b;border:1px solid rgba(148,163,184,.18)}',
+    '.streamer-focus-meta{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}',
+    '.streamer-focus-name{font-size:14px;font-weight:900;color:var(--text1);display:flex;align-items:center;gap:6px;min-width:0}',
+    '.streamer-focus-sub{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;flex-wrap:wrap}',
+    '.streamer-focus-main-hero{position:relative;display:grid;grid-template-columns:minmax(170px,220px) minmax(0,1fr);gap:18px;padding:18px;border-radius:24px;overflow:hidden;background:linear-gradient(135deg,rgba(15,23,42,.9),rgba(37,99,235,.82));box-shadow:0 20px 38px rgba(15,23,42,.16)}',
+    '.streamer-focus-main-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 42%);pointer-events:none}',
+    '.streamer-focus-photo{position:relative;border-radius:22px;overflow:hidden;min-height:260px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.16)}',
+    '.streamer-focus-photo img{width:100%;height:100%;object-fit:cover;display:block}',
+    '.streamer-focus-photo-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:900;color:rgba(255,255,255,.9)}',
+    '.streamer-focus-copy{position:relative;z-index:1;display:flex;flex-direction:column;gap:10px;min-width:0;color:#fff}',
+    '.streamer-focus-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.76)}',
+    '.streamer-focus-title{font-size:30px;font-weight:950;letter-spacing:-.04em;line-height:1.08;color:#fff}',
+    '.streamer-focus-chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+    '.streamer-focus-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);font-size:11px;font-weight:800;color:#fff;backdrop-filter:blur(8px)}',
+    '.streamer-focus-desc{font-size:13px;line-height:1.65;color:rgba(255,255,255,.82)}',
+    '.streamer-focus-statgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}',
+    '.streamer-focus-stat{padding:13px 14px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16)}',
+    '.streamer-focus-stat-label{font-size:10px;font-weight:900;color:var(--text3);letter-spacing:.05em}',
+    '.streamer-focus-stat-value{margin-top:6px;font-size:18px;font-weight:950;color:var(--text1);letter-spacing:-.03em}',
+    '.streamer-focus-note-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}',
+    '.streamer-focus-note{padding:13px 14px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.14)}',
+    '.streamer-focus-note-title{font-size:11px;font-weight:900;color:var(--text2)}',
+    '.streamer-focus-note-desc{margin-top:6px;font-size:12px;line-height:1.6;color:var(--text3)}',
     '.streamer-empty{padding:20px}',
     'body.dark .streamer-hero,body.dark .streamer-toolbar-card,body.dark .streamer-content-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
     'body.dark .streamer-hero-title{color:#f8fafc}',
@@ -89,13 +134,34 @@ let totalViewMode='table'; // 'table' | 'gallery'
     'body.dark .streamer-hero-badge,body.dark .streamer-summary-chip,body.dark .streamer-search,body.dark .streamer-elo-chip,body.dark .streamer-act-chip,body.dark .streamer-subgrp-chip{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(30,41,59,.88));border-color:#334155;color:#e2e8f0}',
     'body.dark .streamer-toolbar-card .pill{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#cbd5e1;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     'body.dark .streamer-toolbar-card .pill.on{background:linear-gradient(135deg,#1d4ed8,#2563eb);border-color:#2563eb;color:#eff6ff}',
+    'body.dark .streamer-kpi-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(30,41,59,.9));border-color:#334155;box-shadow:0 16px 30px rgba(0,0,0,.22)}',
+    'body.dark .streamer-kpi-value{color:#f8fafc}',
+    'body.dark .streamer-kpi-label,body.dark .streamer-kpi-sub{color:#94a3b8}',
+    'body.dark .streamer-focus-sidebar,body.dark .streamer-focus-main,body.dark .streamer-focus-stat,body.dark .streamer-focus-note,body.dark .streamer-focus-item{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(30,41,59,.9));border-color:#334155;color:#e2e8f0}',
+    'body.dark .streamer-focus-item.active{background:linear-gradient(180deg,rgba(30,64,175,.34),rgba(29,78,216,.28));border-color:#2563eb}',
+    'body.dark .streamer-focus-name,body.dark .streamer-focus-stat-value{color:#f8fafc}',
+    'body.dark .streamer-focus-sub,body.dark .streamer-focus-note-desc,body.dark .streamer-focus-stat-label{color:#94a3b8}',
+    'body.dark .streamer-focus-avatar{background:linear-gradient(180deg,#17263c,#0f172a);border-color:#334155;color:#cbd5e1}',
     'body.dark .streamer-table thead th{background:linear-gradient(180deg,#132033,#17263c);border-color:#334155;color:#e2e8f0}',
     'body.dark .streamer-table tbody td{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#e2e8f0}',
     'body.dark .streamer-avatar{background:linear-gradient(180deg,#17263c,#0f172a);border-color:#334155;color:#cbd5e1;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
-    '@media (max-width:780px){.streamer-hero{flex-direction:column;padding:16px;border-radius:20px}.streamer-hero-title{font-size:20px}.streamer-hero-badges{justify-content:flex-start}.streamer-toolbar-card,.streamer-content-card{padding:10px}.streamer-gallery-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}.streamer-search{max-width:none;flex:1 1 180px}}'
+    '@media (max-width:980px){.streamer-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}',
+    '@media (max-width:980px){.streamer-focus-layout{grid-template-columns:1fr}.streamer-focus-list{max-height:none}.streamer-focus-main-hero{grid-template-columns:1fr}}',
+    '@media (max-width:780px){.streamer-hero{flex-direction:column;padding:16px;border-radius:20px}.streamer-hero-title{font-size:20px}.streamer-hero-badges{justify-content:flex-start}.streamer-toolbar-card,.streamer-content-card{padding:10px}.streamer-gallery-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.streamer-search{max-width:none;flex:1 1 180px}.streamer-kpi-grid,.streamer-focus-statgrid,.streamer-focus-note-grid{grid-template-columns:1fr}.streamer-gallery-card{min-height:258px}.streamer-focus-title{font-size:24px}.streamer-focus-photo{min-height:220px}}'
   ].join('');
   document.head.appendChild(s);
 })();
+
+function _getStreamerActivityMeta(p){
+  const hist = Array.isArray(p?.history) ? p.history : [];
+  const lastD = hist.reduce((mx,h)=>(h && h.date && h.date > mx) ? h.date : mx, '');
+  if(!lastD) return { key:'cool', label:'REST', title:'전적 없음' };
+  const _7ago = new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
+  const _30ago = new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
+  if(lastD >= _7ago) return { key:'hot', label:'LIVE', title:'최근 활동 7일 이내' };
+  if(lastD >= _30ago) return { key:'warm', label:'WARM', title:'활동 중 30일 이내' };
+  return { key:'cool', label:'REST', title:'비활성 30일 이상' };
+}
 
 function _bindTotalDelegatedEvents(){
   if(window.__totalDelegatedBound) return;
@@ -177,6 +243,32 @@ function totalApplySearchFilter(){
     const any=cards.some(c=>c.style.display!=='none'&&c.getAttribute('data-univ')===u);
     h.style.display=any?'':'none';
   });
+  // 상세형 목록 필터
+  const focusRows=[...cont.querySelectorAll('[data-focus-row="1"]')];
+  focusRows.forEach(row=>{
+    if(!qHas){ row.style.display=''; return; }
+    const hay=(row.getAttribute('data-q')||'');
+    const r=row.getAttribute('data-r')||'';
+    const g=row.getAttribute('data-g')||'';
+    const okRace=!rf||r===rf;
+    const okGender=!gf||g===gf;
+    const okInc=inc.length===0||inc.every(t=>hay.includes(t));
+    const okExc=exc.length===0||exc.every(t=>!hay.includes(t));
+    row.style.display=(okRace&&okGender&&okInc&&okExc)?'':'none';
+  });
+  cont.querySelectorAll('[data-focus-univ-header]').forEach(h=>{
+    const u=h.getAttribute('data-focus-univ-header')||'';
+    const any=focusRows.some(r=>r.style.display!=='none'&&r.getAttribute('data-univ')===u);
+    h.style.display=any?'':'none';
+  });
+  if(totalViewMode==='focus'){
+    const visibleFocus = focusRows.filter(r=>r.style.display!=='none');
+    if(visibleFocus.length && !visibleFocus.some(r => (r.getAttribute('data-focus-name')||'') === totalFocusPlayer)){
+      totalFocusPlayer = visibleFocus[0].getAttribute('data-focus-name') || '';
+      render();
+      return;
+    }
+  }
 }
 
 function bulkApplySearchFilter(){
@@ -214,7 +306,7 @@ function rTotal(C,T){
   const raceOpts=['전체','T','Z','P','N'];
   const _showBulk=isLoggedIn&&_bulkEditMode;
   const _ncols=(isLoggedIn?11:10)+(_showBulk?1:0);
-  const _viewLabel=totalViewMode==='gallery'?'갤러리':'테이블';
+  const _viewLabel=totalViewMode==='gallery'?'카드형':(totalViewMode==='focus'?'상세형':'리스트형');
   const _visiblePlayers = _pl.filter(p=>{
     if(!p || p.retired) return false;
     if(totalRaceFilter!=='전체' && p.race!==totalRaceFilter) return false;
@@ -222,6 +314,34 @@ function rTotal(C,T){
     return true;
   });
   const _activeUnivCount = new Set(_visiblePlayers.map(p=>p.univ).filter(Boolean)).size;
+  const _photoCount = _visiblePlayers.filter(p=>String(p.photo||'').trim()).length;
+  const _roleCount = _visiblePlayers.filter(p=>p.role && MAIN_ROLES.includes(p.role)).length;
+  const _liveCount = _visiblePlayers.filter(p=>_getStreamerActivityMeta(p).key==='hot').length;
+  const _warmCount = _visiblePlayers.filter(p=>_getStreamerActivityMeta(p).key==='warm').length;
+  const _kpiBar = totalViewMode==='gallery'
+    ? `<div class="streamer-kpi-grid">
+        <article class="streamer-kpi-card">
+          <div class="streamer-kpi-label">표시 스트리머</div>
+          <div class="streamer-kpi-value">${_visiblePlayers.length}</div>
+          <div class="streamer-kpi-sub">현재 필터 기준 표시 인원</div>
+        </article>
+        <article class="streamer-kpi-card">
+          <div class="streamer-kpi-label">활동 중</div>
+          <div class="streamer-kpi-value" style="color:#16a34a">${_liveCount}</div>
+          <div class="streamer-kpi-sub">최근 7일 활동 · 30일 내 ${_warmCount}명</div>
+        </article>
+        <article class="streamer-kpi-card">
+          <div class="streamer-kpi-label">대학 분포</div>
+          <div class="streamer-kpi-value" style="color:#2563eb">${_activeUnivCount}</div>
+          <div class="streamer-kpi-sub">현재 조건에서 보이는 대학 수</div>
+        </article>
+        <article class="streamer-kpi-card">
+          <div class="streamer-kpi-label">프로필 준비</div>
+          <div class="streamer-kpi-value" style="color:#7c3aed">${_photoCount}</div>
+          <div class="streamer-kpi-sub">사진 등록 ${_photoCount}명 · 직책자 ${_roleCount}명</div>
+        </article>
+      </div>`
+    : '';
   // (모바일/태블릿) 검색창이 커서 버튼들이 2줄로 밀리는 문제 방지
   // - 한 줄 유지 + 가로 스크롤(드래그)로 접근
   let filterBar=`<div class="streamer-toolbar-card"><div class="fbar utilbar utilbar--scroll" style="flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
@@ -234,7 +354,9 @@ function rTotal(C,T){
       autocomplete="off" spellcheck="false">
     <button class="pill ${totalHideNoRecord?'on warn-on':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
     <span style="color:var(--border2);align-self:center">│</span>
-    <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode=(totalViewMode==='gallery'?'table':'gallery');_bulkEditMode=false;render()" title="${totalViewMode==='gallery'?'목록으로 돌아가기':'갤러리 뷰'}">▦ 갤러리</button>
+    <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode='gallery';_bulkEditMode=false;render()" title="카드형 대시보드 보기">🪪 카드형</button>
+    <button class="pill ${totalViewMode==='focus'?'on':''}" onclick="if(totalViewMode!=='focus')totalFocusPlayer='';totalViewMode='focus';_bulkEditMode=false;render()" title="좌측 목록 + 우측 상세 보기">🧾 상세형</button>
+    <button class="pill ${totalViewMode==='table'?'on':''}" onclick="totalViewMode='table';_bulkEditMode=false;render()" title="리스트 보기">☰ 리스트</button>
     ${totalViewMode==='table'?(isLoggedIn?`<button class="pill ${_bulkEditMode?'on edit-on':''}" onclick="toggleBulkEditMode()">일괄 수정</button>`:''):''}
     ${totalViewMode==='table'?(isLoggedIn?`<button class="pill" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
     ${_showBulk&&totalViewMode==='table'?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
@@ -280,7 +402,32 @@ function rTotal(C,T){
         <div class="streamer-hero-copy">
           <div class="streamer-hero-kicker">Streamer Directory</div>
           <div class="streamer-hero-title">🎬 스트리머 탭</div>
-          <div class="streamer-hero-desc">대학, 티어, 종족, 활동 상태를 한눈에 보고 원하는 스트리머를 빠르게 찾아볼 수 있도록 정리했습니다.</div>
+          <div class="streamer-hero-desc">카드형 대시보드 중심으로 스트리머를 정리해 사진, 대학, 티어, 활동 상태와 핵심 수치를 한 번에 읽기 쉽게 구성했습니다.</div>
+        </div>
+        <div class="streamer-hero-badges">
+          <span class="streamer-hero-badge">${_viewLabel}</span>
+          <span class="streamer-hero-badge">대학 ${_activeUnivCount}곳</span>
+          <span class="streamer-hero-badge">총 ${_visiblePlayers.length}명</span>
+        </div>
+      </section>
+      ${_kpiBar}
+      ${filterBar}
+      <div class="streamer-content-card">${_buildGalleryView(_rankMap)}</div>
+    </div>`;
+    injectUnivIcons(C);
+    requestAnimationFrame(()=>injectUnivIcons(C));
+    totalApplySearchFilter();
+    const si=C.querySelector('#total-search');
+    if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
+    return;
+  }
+  if(totalViewMode==='focus'){
+    C.innerHTML=`<div class="streamer-shell">
+      <section class="streamer-hero">
+        <div class="streamer-hero-copy">
+          <div class="streamer-hero-kicker">Streamer Directory</div>
+          <div class="streamer-hero-title">🎬 스트리머 탭</div>
+          <div class="streamer-hero-desc">상세형은 왼쪽 목록에서 스트리머를 고르고 오른쪽에서 프로필과 핵심 수치를 크게 보는 방식입니다.</div>
         </div>
         <div class="streamer-hero-badges">
           <span class="streamer-hero-badge">${_viewLabel}</span>
@@ -289,7 +436,7 @@ function rTotal(C,T){
         </div>
       </section>
       ${filterBar}
-      <div class="streamer-content-card">${_buildGalleryView(_rankMap)}</div>
+      ${_buildFocusView(_rankMap)}
     </div>`;
     injectUnivIcons(C);
     requestAnimationFrame(()=>injectUnivIcons(C));
@@ -605,21 +752,15 @@ function _buildGalleryView(rankMap){
       const loss = Number(p.loss||0);
       const games = win + loss;
       const wr=games?Math.round(win/games*100):null;
+      const points = Number(p.points||0);
+      const elo = Number(p.elo||ELO_DEFAULT);
       const clr=RACE_CLR[p.race]||'#64748b';
       const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
       const _pAttr=(typeof escAttr==='function')
         ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
       const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
-      const actDot=(()=>{
-        const lastD=(p.history||[]).reduce((mx,h)=>(h&&h.date&&h.date>mx)?h.date:mx,'');
-        if(!lastD) return '#9ca3af';
-        const _7ago=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
-        const _30ago=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
-        if(lastD>=_7ago) return '#16a34a';
-        if(lastD>=_30ago) return '#f59e0b';
-        return '#9ca3af';
-      })();
+      const actMeta = _getStreamerActivityMeta(p);
       if(typeof p.photo==='string' && p.photo.trim()) _galleryPhotoUrls.push(p.photo.trim());
       html+=`<div class="streamer-gallery-card ${rankMap[p.name]===1?'top1':rankMap[p.name]===2?'top2':rankMap[p.name]===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-card="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}"
         data-tp-action="open-player" data-tp-player="${_pAttr}"
@@ -630,18 +771,34 @@ function _buildGalleryView(rankMap){
           ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
           : ''}
         <div class="gc-placeholder" style="position:absolute;inset:0;display:${p.photo?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:${clr}15">${p.race||'?'}</div>
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 40%,rgba(0,0,0,.82) 100%)"></div>
+        <div class="streamer-gallery-overlay"></div>
         <div class="streamer-gallery-rank">${rankMap[p.name]?'#'+rankMap[p.name]:''}</div>
-        <div class="streamer-gallery-act">${actDot==='#16a34a'?'<span class="streamer-act-chip hot" title="최근 활동 7일 이내">LIVE</span>':actDot==='#f59e0b'?'<span class="streamer-act-chip warm" title="활동 중 30일 이내">WARM</span>':'<span class="streamer-act-chip cool" title="비활성">REST</span>'}</div>
+        <div class="streamer-gallery-act"><span class="streamer-act-chip ${actMeta.key}" title="${actMeta.title}">${actMeta.label}</span></div>
         <div class="streamer-gallery-bottom">
-          <div class="streamer-gallery-name" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
-          ${p.role?`<div class="streamer-gallery-role">${p.role}</div>`:''}
-          <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-top:2px">
+          <div class="streamer-gallery-topline">
+            <div class="streamer-gallery-name" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
+            ${getStatusIconHTML(p.name)}
+          </div>
+          <div class="streamer-gallery-role">${p.role || '일반 스트리머'}</div>
+          <div class="streamer-gallery-meta">
             ${getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:9px;padding:1px 4px">${p.race||'?'}</span>
+            <span class="streamer-gallery-univ-chip">${u.name || '무소속'}</span>
+            ${p.inactive?'<span class="streamer-gallery-univ-chip" style="background:rgba(249,115,22,.16);border-color:rgba(249,115,22,.24)">휴학</span>':''}
+            ${p.retired?'<span class="streamer-gallery-univ-chip" style="background:rgba(148,163,184,.18);border-color:rgba(148,163,184,.28)">은퇴</span>':''}
           </div>
           <div class="streamer-gallery-stats">
-            <span style="font-size:10px;font-weight:700;color:${Number(p.elo||ELO_DEFAULT)>=ELO_DEFAULT?'#93c5fd':'#fca5a5'}">${Number(p.elo||ELO_DEFAULT)} ELO</span>
-            <span style="font-size:10px;color:${wr===null?'rgba(255,255,255,.5)':wr>=50?'#86efac':'#fca5a5'};font-weight:600">${wr===null?'-':`${wr}%`}</span>
+            <div class="streamer-gallery-stat">
+              <div class="streamer-gallery-stat-label">전적</div>
+              <div class="streamer-gallery-stat-value">${games ? `${win}승 ${loss}패` : '기록 없음'}</div>
+            </div>
+            <div class="streamer-gallery-stat">
+              <div class="streamer-gallery-stat-label">포인트</div>
+              <div class="streamer-gallery-stat-value">${pS(points)}</div>
+            </div>
+            <div class="streamer-gallery-stat">
+              <div class="streamer-gallery-stat-label">ELO / 승률</div>
+              <div class="streamer-gallery-stat-value" style="color:${wr===null?'#fff':wr>=50?'#86efac':'#fecaca'}">${elo} · ${wr===null?'-':wr+'%'}</div>
+            </div>
           </div>
         </div>
       </div>`;
@@ -651,6 +808,134 @@ function _buildGalleryView(rankMap){
   html+='</div>';
   try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_galleryPhotoUrls, _galleryPhotoUrls.length); }catch(e){}
   return html;
+}
+
+function _buildFocusView(rankMap){
+  const _pl = (typeof players !== 'undefined' && Array.isArray(players)) ? players : [];
+  const _getUnivs = (typeof getAllUnivs === 'function') ? getAllUnivs : null;
+  if(!_getUnivs) return `<div class="streamer-content-card"><div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">스트리머 데이터를 불러오는 중입니다.</div></div></div>`;
+  const visible = _pl.filter(p=>{
+    if(!p || p.retired) return false;
+    if(totalRaceFilter!=='전체' && p.race!==totalRaceFilter) return false;
+    if(totalHideNoRecord && (Number(p.win||0)+Number(p.loss||0))<=0) return false;
+    return true;
+  });
+  const focusPool = visible.length ? visible : _pl.filter(Boolean);
+  if(!focusPool.length){
+    return `<div class="streamer-content-card"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">표시할 스트리머가 없습니다.</div></div></div>`;
+  }
+  if(!focusPool.some(p=>p.name===totalFocusPlayer)){
+    const withPhoto = focusPool.filter(p=>String(p.photo||'').trim());
+    const seedPool = withPhoto.length ? withPhoto : focusPool;
+    totalFocusPlayer = (seedPool[Math.floor(Math.random() * seedPool.length)] || {}).name || '';
+  }
+  const selected = focusPool.find(p=>p.name===totalFocusPlayer) || focusPool[0];
+  if(selected) totalFocusPlayer = selected.name;
+  const groups = new Map();
+  focusPool.forEach(p=>{
+    const key = p.univ || '무소속';
+    if(groups.has(key)) groups.get(key).push(p);
+    else groups.set(key,[p]);
+  });
+  const orderedUnivs = (_getUnivs().filter(u=>isLoggedIn||!u.hidden).map(u=>u.name)).concat('무소속');
+  let listHtml = '<div class="streamer-focus-list">';
+  orderedUnivs.forEach(univName=>{
+    const members = groups.get(univName);
+    if(!members || !members.length) return;
+    const u = (typeof getAllUnivs === 'function' ? getAllUnivs().find(x=>x.name===univName) : null) || { name:univName, color:'#64748b' };
+    const color = u.color || '#64748b';
+    listHtml += `<section class="streamer-focus-group">
+      <div class="streamer-focus-group-title" data-focus-univ-header="${u.name}" style="background:linear-gradient(135deg,${color},color-mix(in srgb, ${color} 68%, #ffffff))">
+        <span style="display:inline-flex;align-items:center;gap:6px">${u.name && u.name!=='무소속' ? gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','18px'):'18px')) : '🏷️'}<span>${u.name}</span></span>
+        <span style="font-size:11px;color:rgba(255,255,255,.82)">${members.length}명</span>
+      </div>`;
+    const sorted = [...members].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    sorted.forEach(p=>{
+      const win = Number(p.win||0);
+      const loss = Number(p.loss||0);
+      const games = win + loss;
+      const wr = games ? Math.round(win/games*100) : null;
+      const actMeta = _getStreamerActivityMeta(p);
+      const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+      const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
+      listHtml += `<div class="streamer-focus-item ${selected && selected.name===p.name?'active':''}" data-focus-row="1" data-focus-name="${(typeof escAttr==='function'?escAttr(p.name):p.name)}" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" onclick="totalFocusPlayer='${_pSafe}';render()">
+        <div class="streamer-focus-avatar">
+          ${p.photo ? `<img src="${toHttpsUrl(p.photo)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : `${p.race||'?'}`}
+        </div>
+        <div class="streamer-focus-meta">
+          <div class="streamer-focus-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span>${genderIcon(p.gender)}</div>
+          <div class="streamer-focus-sub">${p.role||'일반 스트리머'} · ${p.tier||'?'}티어 · ${p.race||'?'}</div>
+          <div class="streamer-focus-sub"><span class="streamer-act-chip ${actMeta.key}" style="min-width:42px;padding:3px 7px;font-size:10px">${actMeta.label}</span><span>${games?`${win}승 ${loss}패 · ${wr}%`:'기록 없음'}</span></div>
+        </div>
+      </div>`;
+    });
+    listHtml += `</section>`;
+  });
+  listHtml += '</div>';
+  const selWin = Number(selected.win||0);
+  const selLoss = Number(selected.loss||0);
+  const selGames = selWin + selLoss;
+  const selWr = selGames ? Math.round(selWin/selGames*100) : null;
+  const selElo = Number(selected.elo||ELO_DEFAULT);
+  const selPoints = Number(selected.points||0);
+  const selAct = _getStreamerActivityMeta(selected);
+  const selHist = Array.isArray(selected.history) ? selected.history : [];
+  const lastMatch = selHist.reduce((mx,h)=>(h&&h.date&&h.date>mx)?h.date:mx,'');
+  const lastRec = [...selHist].sort((a,b)=>String(b?.date||'').localeCompare(String(a?.date||'')))[0];
+  const selUniv = selected.univ || '무소속';
+  const selColor = (typeof gc==='function' ? gc(selUniv) : '#2563eb') || '#2563eb';
+  const selAttr = (typeof escAttr==='function')
+    ? escAttr(String(selected.name||'').replace(/[\r\n]+/g,' '))
+    : String(selected.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+  const recentDesc = lastRec ? `${lastRec.date || ''} · ${lastRec.result || '-'}${lastRec.opp ? ` vs ${lastRec.opp}` : ''}` : '최근 기록이 아직 없습니다.';
+  const detailHtml = `<div class="streamer-focus-main">
+    <div class="streamer-focus-main-hero" style="background:linear-gradient(135deg,color-mix(in srgb, ${selColor} 28%, #0f172a),${selColor})">
+      <div class="streamer-focus-photo">
+        ${selected.photo ? `<img src="${toHttpsUrl(selected.photo)}" alt="${selected.name}">` : ''}
+        <div class="streamer-focus-photo-fallback" style="display:${selected.photo?'none':'flex'}">${selected.race||'?'}</div>
+      </div>
+      <div class="streamer-focus-copy">
+        <div class="streamer-focus-kicker">Focused Profile</div>
+        <div class="streamer-focus-title">${selected.name}${genderIcon(selected.gender)}</div>
+        <div class="streamer-focus-chips">
+          ${selected.role ? `<span class="streamer-focus-chip">${selected.role}</span>` : ''}
+          <span class="streamer-focus-chip">${selected.tier||'?'}티어</span>
+          <span class="streamer-focus-chip">${selected.race==='P'?'프로토스':selected.race==='T'?'테란':selected.race==='Z'?'저그':'종족 미정'}</span>
+          <span class="streamer-focus-chip">${selUniv}</span>
+          <span class="streamer-focus-chip">${selAct.label}</span>
+          ${getStatusIconHTML(selected.name)}
+        </div>
+        <div class="streamer-focus-desc">${selUniv} 소속으로 현재 ${selGames ? `${selGames}전 ${selWin}승 ${selLoss}패` : '공식 기록이 아직 없고'}${selWr==null ? '' : `, 승률 ${selWr}%`} 상태입니다.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="pill on" data-tp-action="open-player" data-tp-player="${selAttr}" style="border:none">상세 열기</button>
+          ${isLoggedIn ? `<button class="pill" onclick="openEPFromModal('${(typeof escJS==='function'?escJS(selected.name):selected.name)}')">✏️ 수정</button>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="streamer-focus-statgrid">
+      <div class="streamer-focus-stat"><div class="streamer-focus-stat-label">전적</div><div class="streamer-focus-stat-value">${selGames ? `${selWin}승 ${selLoss}패` : '기록 없음'}</div></div>
+      <div class="streamer-focus-stat"><div class="streamer-focus-stat-label">승률</div><div class="streamer-focus-stat-value" style="color:${selWr==null?'var(--text1)':selWr>=50?'#16a34a':'#dc2626'}">${selWr==null?'-':`${selWr}%`}</div></div>
+      <div class="streamer-focus-stat"><div class="streamer-focus-stat-label">포인트</div><div class="streamer-focus-stat-value">${pS(selPoints)}</div></div>
+      <div class="streamer-focus-stat"><div class="streamer-focus-stat-label">ELO</div><div class="streamer-focus-stat-value" style="color:${selElo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${selElo}</div></div>
+    </div>
+    <div class="streamer-focus-note-grid">
+      <div class="streamer-focus-note">
+        <div class="streamer-focus-note-title">최근 기록</div>
+        <div class="streamer-focus-note-desc">${recentDesc}</div>
+      </div>
+      <div class="streamer-focus-note">
+        <div class="streamer-focus-note-title">활동 상태</div>
+        <div class="streamer-focus-note-desc">${selAct.title}${lastMatch ? `<br>마지막 기록일 · ${lastMatch}` : ''}</div>
+      </div>
+    </div>
+  </div>`;
+  return `<div class="streamer-focus-layout">
+    <aside class="streamer-focus-sidebar">
+      <div class="streamer-focus-section-title">스트리머 선택</div>
+      ${listHtml}
+    </aside>
+    ${detailHtml}
+  </div>`;
 }
 
 function toggleBulkEditMode(){
