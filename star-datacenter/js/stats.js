@@ -182,6 +182,11 @@ function _statsLatestActiveMonths(gender){
     '.stats-compare-table th,.stats-compare-table td{padding:10px 12px;border-bottom:1px solid rgba(148,163,184,.12)}',
     '.stats-compare-table tbody tr:last-child td{border-bottom:none}',
     '.stats-panel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}',
+    '.stats-compare-duel{display:grid;grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr);gap:12px;align-items:stretch}',
+    '.stats-compare-univ-card{padding:14px;border-radius:18px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 12px 22px rgba(15,23,42,.05)}',
+    '.stats-compare-vs{display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:950;color:var(--text3)}',
+    '.stats-compare-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}',
+    '.stats-compare-kpi{padding:12px 14px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
     '.stats-note-box{padding:16px 18px;border:1px dashed rgba(148,163,184,.28);border-radius:16px;color:var(--gray-l);font-size:13px;text-align:center;background:rgba(248,250,252,.7)}',
     '.stats-chip-pool{display:flex;flex-wrap:wrap;gap:8px}',
     '.stats-choice-chip{padding:7px 14px;border-radius:999px;border:1px solid rgba(148,163,184,.2);background:rgba(255,255,255,.96);font-size:12px;font-weight:800;cursor:pointer;transition:.15s;box-shadow:0 8px 16px rgba(15,23,42,.04)}',
@@ -217,11 +222,11 @@ function _statsLatestActiveMonths(gender){
     'body.dark .stats-search-field{background:#0f172a;border-color:#334155;color:#e2e8f0;box-shadow:none}',
     'body.dark .stats-search-drop{background:#0f172a;border-color:#334155;box-shadow:0 18px 32px rgba(0,0,0,.28)}',
     'body.dark .stats-search-item:hover{background:#17263c}',
-    'body.dark .stats-vs-card,body.dark .stats-h2h-board,body.dark .stats-compare-table,body.dark .stats-note-box{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .stats-vs-card,body.dark .stats-h2h-board,body.dark .stats-compare-table,body.dark .stats-note-box,body.dark .stats-compare-univ-card,body.dark .stats-compare-kpi{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     'body.dark .stats-compare-table th,body.dark .stats-compare-table td{border-color:#233247;color:#e2e8f0}',
     'body.dark .stats-choice-chip,body.dark .stats-result-card,body.dark .stats-selection-list,body.dark .stats-selection-item,body.dark .stats-preview-frame{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#e2e8f0;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     'body.dark .stats-selection-item:hover{background:#17263c}',
-    '@media (max-width:780px){.stats-hero{flex-direction:column;padding:16px;border-radius:20px}.stats-hero-title{font-size:20px}.stats-hero-badges{justify-content:flex-start}.stats-toolbar-card{padding:10px 10px 12px}.stats-chart-board,.stats-table-card{padding:10px}.stats-chart-wrap{padding:10px}.stats-select{min-width:180px;width:100%}}'
+    '@media (max-width:780px){.stats-hero{flex-direction:column;padding:16px;border-radius:20px}.stats-hero-title{font-size:20px}.stats-hero-badges{justify-content:flex-start}.stats-toolbar-card{padding:10px 10px 12px}.stats-chart-board,.stats-table-card{padding:10px}.stats-chart-wrap{padding:10px}.stats-select{min-width:180px;width:100%}.stats-compare-duel{grid-template-columns:1fr}.stats-compare-vs{min-height:24px}}'
   ].join('');
   document.head.appendChild(s);
 })();
@@ -1887,6 +1892,33 @@ function getStatsRadarScores(){
   });
   return scoreMap;
 }
+function getStatsUnivHeadToHead(nameA, nameB){
+  const a = String(nameA || '').trim();
+  const b = String(nameB || '').trim();
+  const res = { aWins:0, bWins:0, total:0 };
+  if(!a || !b || a === b) return res;
+  getStatsRadarSourceMatches().forEach(m=>{
+    (m.sets || []).forEach(set=>{
+      (set.games || []).forEach(g=>{
+        if(!g || !g.playerA || !g.playerB || !g.winner) return;
+        const pA = statsP(g.playerA);
+        const pB = statsP(g.playerB);
+        const ua = String(pA?.univ || '').trim();
+        const ub = String(pB?.univ || '').trim();
+        if(ua === a && ub === b){
+          res.total++;
+          if(g.winner === 'A') res.aWins++;
+          else if(g.winner === 'B') res.bWins++;
+        }else if(ua === b && ub === a){
+          res.total++;
+          if(g.winner === 'A') res.bWins++;
+          else if(g.winner === 'B') res.aWins++;
+        }
+      });
+    });
+  });
+  return res;
+}
 function statsRadarHTML(){
   const _players = Array.isArray(players) ? players : [];
   const {rows:_rows, scoreMap:_allScores} = getSortedRadarRows();
@@ -1899,17 +1931,54 @@ function statsRadarHTML(){
   const _sortBtn = (id, label)=>`<button class="pill ${_radarSort===id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_radarSort='${id}';render()">${label}</button>`;
   const _selectedUnivObj = univs.find(u=>u.name===_radarSelUniv);
   const _selectedColor = gc(_radarSelUniv);
+  const _compareName = (_radarCompareUnivs[0] && _radarCompareUnivs[0] !== _radarSelUniv)
+    ? _radarCompareUnivs[0]
+    : (_rows.find(r=>r.u.name !== _radarSelUniv)?.u.name || '');
+  const _compareScores = _compareName ? (_allScores[_compareName] || _radarBaseScore()) : _radarBaseScore();
+  const _compareColor = _compareName ? gc(_compareName) : '#64748b';
+  const _h2h = _compareName ? getStatsUnivHeadToHead(_radarSelUniv, _compareName) : { aWins:0, bWins:0, total:0 };
+  const _fmtSigned = (n, suffix='') => `${n > 0 ? '+' : ''}${n}${suffix}`;
+  const _metricCard = (label, a, b, opts={})=>{
+    const suffix = opts.suffix || '';
+    const signed = !!opts.signed;
+    const diff = (Number(a) || 0) - (Number(b) || 0);
+    const diffColor = diff === 0 ? 'var(--text3)' : (diff > 0 ? '#16a34a' : '#dc2626');
+    const av = signed ? _fmtSigned(Number(a) || 0, suffix) : `${a}${suffix}`;
+    const bv = signed ? _fmtSigned(Number(b) || 0, suffix) : `${b}${suffix}`;
+    const dv = signed ? _fmtSigned(diff, suffix) : `${diff > 0 ? '+' : ''}${diff}${suffix}`;
+    return `<div class="stats-compare-kpi">
+      <div class="stats-metric-label">${label}</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div style="min-width:0">
+          <div style="font-size:16px;font-weight:950;color:${_selectedColor}">${av}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${escHTML(_radarSelUniv)}</div>
+        </div>
+        <div style="font-size:12px;font-weight:900;color:${diffColor};padding-top:2px">${dv}</div>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(148,163,184,.14)">
+        <div style="font-size:14px;font-weight:900;color:${_compareColor}">${bv}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${escHTML(_compareName || '비교 없음')}</div>
+      </div>
+    </div>`;
+  };
+  const _compareSummary = _compareName
+    ? `${_radarSelUniv}와 ${_compareName}를 현재 통계 필터 기준으로 바로 비교할 수 있습니다.`
+    : '비교할 대학을 선택하면 핵심 차이를 바로 보여줍니다.';
   return`<div style="display:flex;flex-direction:column;gap:16px">
   <div class="ssec" id="stats-radar-sec">
     <div class="stats-chart-shell">
     <div class="stats-chart-toolbar">
       <div>
         <h4 style="margin:0">🕸️ 대학별 성적 레이더 차트 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그 제외)</span></h4>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:4px">선수수, 전적, 활동도는 현재 통계 필터에 포함된 경기 기준으로 집계됩니다.</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:4px">${_compareSummary}</div>
       </div>
       <div class="stats-chart-actions no-export">
         <select id="radar-sel" class="stats-select" onchange="_radarSelUniv=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);initRadarChart()">
           ${univs.map(u=>`<option value="${escHTML(u.name)}"${_radarSelUniv===u.name?' selected':''}>${escHTML(u.name)}</option>`).join('')}
+        </select>
+        <select id="radar-compare-sel" class="stats-select" onchange="(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;v=t.value;}catch(e){}var arr=(Array.isArray(window._radarCompareUnivs)?window._radarCompareUnivs:[]).filter(function(name){return name&&name!==window._radarSelUniv&&name!==v;});if(v)arr.unshift(v);window._radarCompareUnivs=arr.slice(0,4);render();})(this.value)">
+          <option value="">비교 대학 선택</option>
+          ${univs.filter(u=>u.name!==_radarSelUniv).map(u=>`<option value="${escHTML(u.name)}"${_compareName===u.name?' selected':''}>${escHTML(u.name)}</option>`).join('')}
         </select>
         <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-radar-sec','radar')">📷 이미지 저장</button>
       </div>
@@ -1946,6 +2015,45 @@ function statsRadarHTML(){
         <div class="stats-metric-value">${1+_radarCompareUnivs.length}개</div>
       </div>
     </div>
+    ${_compareName ? `
+      <div class="stats-chart-board">
+        <div class="stats-compare-duel" style="margin-bottom:12px">
+          <div class="stats-compare-univ-card" style="border-color:${_selectedColor}55;background:${_selectedColor}0d">
+            <div style="font-size:11px;font-weight:900;color:${_selectedColor};letter-spacing:.05em;text-transform:uppercase">기준 대학</div>
+            <div style="font-size:20px;font-weight:950;color:${_selectedColor};margin-top:6px">${escHTML(_radarSelUniv)}</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:6px">${_selectedScores.w || 0}승 ${_selectedScores.l || 0}패 · 승률 ${_selectedScores.winrate || 0}%</div>
+          </div>
+          <div class="stats-compare-vs">VS</div>
+          <div class="stats-compare-univ-card" style="border-color:${_compareColor}55;background:${_compareColor}0d">
+            <div style="font-size:11px;font-weight:900;color:${_compareColor};letter-spacing:.05em;text-transform:uppercase">비교 대학</div>
+            <div style="font-size:20px;font-weight:950;color:${_compareColor};margin-top:6px">${escHTML(_compareName)}</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:6px">${_compareScores.w || 0}승 ${_compareScores.l || 0}패 · 승률 ${_compareScores.winrate || 0}%</div>
+          </div>
+        </div>
+        <div class="stats-compare-kpi-grid">
+          ${_metricCard('집계 선수 수', _selectedScores.mem || 0, _compareScores.mem || 0, { suffix:'명' })}
+          ${_metricCard('승률', _selectedScores.winrate || 0, _compareScores.winrate || 0, { suffix:'%' })}
+          ${_metricCard('평균 ELO', _selectedScores.avgElo || 0, _compareScores.avgElo || 0)}
+          ${_metricCard('활동도', _selectedScores.activity || 0, _compareScores.activity || 0, { suffix:'경기' })}
+          ${_metricCard('포인트', _selectedScores.pts || 0, _compareScores.pts || 0, { signed:true })}
+          ${_metricCard('종족 다양성', _selectedScores.diversity || 0, _compareScores.diversity || 0, { suffix:'종족' })}
+        </div>
+        <div class="stats-h2h-board" style="margin-top:12px">
+          <div style="font-size:12px;font-weight:900;color:var(--text3);margin-bottom:8px">맞대결</div>
+          <div class="stats-h2h-score">
+            <div style="text-align:center;min-width:120px">
+              <div style="font-size:24px;font-weight:950;color:${_selectedColor}">${_h2h.aWins}</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">${escHTML(_radarSelUniv)}</div>
+            </div>
+            <div style="font-size:13px;color:var(--text3);font-weight:900">${_h2h.total ? `${_h2h.total}전` : '맞대결 없음'}</div>
+            <div style="text-align:center;min-width:120px">
+              <div style="font-size:24px;font-weight:950;color:${_compareColor}">${_h2h.bWins}</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px">${escHTML(_compareName)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ` : ''}
     <div class="stats-chart-board">
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
         <div class="stats-chart-wrap" style="flex-shrink:0">

@@ -171,6 +171,9 @@ function _scfgToggle(id,el){
     if(el && el.open && id==='paste' && typeof window.cfgRenderPlayerAliasMap==='function'){
       window.cfgRenderPlayerAliasMap();
     }
+    if(el && el.open && id==='datacheck' && typeof window.cfgRunDataAudit==='function'){
+      window.cfgRunDataAudit();
+    }
     if(el && el.open && id==='imgsettings'){
       _ensureB2ImgSettingsWrap();
     }
@@ -198,7 +201,117 @@ const _DEFAULT_CATSECS = {
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','fab'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
   '💾 데이터':['sync','firebase','aibot','storage','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
-  '🧪 점검/고급':['cfgmenu','selfcheck']
+  '🧪 점검/고급':['cfgmenu','datacheck','selfcheck']
+};
+
+window.cfgRunDataAudit = function(){
+  const out = document.getElementById('cfg-datacheck-out');
+  if(!out) return;
+  const _escH = (typeof window.escHTML === 'function')
+    ? window.escHTML
+    : (s)=>String(s ?? '').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const _escJ = (typeof window.escJS === 'function')
+    ? window.escJS
+    : (s)=>String(s ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+  try{
+    const allPlayers = Array.isArray(window.players) ? window.players : [];
+    const players = allPlayers.filter(p => !p?.hidden && !p?.retired);
+    const allUnivs = Array.isArray(window.univCfg) ? window.univCfg : [];
+    const validUnivs = new Set(allUnivs
+      .filter(u => u && !u.hidden && !u.dissolved)
+      .map(u => String(u.name || '').trim())
+      .filter(Boolean));
+    const histOf = p => Array.isArray(p?.history) ? p.history.filter(Boolean) : [];
+    const dateNum = (v)=>{
+      if(typeof window._b2DateNum === 'function') return window._b2DateNum(v);
+      const digits = String(v || '').replace(/\D/g,'');
+      return digits.length >= 8 ? (parseInt(digits.slice(0,8), 10) || 0) : 0;
+    };
+    const fmtNum = (d)=>{
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return parseInt(`${yyyy}${mm}${dd}`, 10);
+    };
+    const recentFrom = new Date();
+    recentFrom.setDate(recentFrom.getDate() - 30);
+    const recentFromN = fmtNum(recentFrom);
+    const recentLabel = `${recentFrom.toISOString().slice(0,10)} 이후`;
+
+    const noPhoto = players.filter(p => !String(p?.photo || '').trim());
+    const noUniv = players.filter(p => !String(p?.univ || '').trim());
+    const invalidUniv = players.filter(p => {
+      const u = String(p?.univ || '').trim();
+      return !!u && !validUnivs.has(u);
+    });
+    const noTier = players.filter(p => !String(p?.tier || '').trim());
+    const noRecent = players.filter(p => !histOf(p).some(h => dateNum(h?.date || h?.d || '') >= recentFromN));
+
+    const nameMap = new Map();
+    players.forEach(p => {
+      const key = String(p?.name || '').trim().toLowerCase();
+      if(!key) return;
+      if(!nameMap.has(key)) nameMap.set(key, []);
+      nameMap.get(key).push(p);
+    });
+    const duplicateGroups = Array.from(nameMap.values()).filter(arr => arr.length > 1);
+
+    const dateIssues = [];
+    players.forEach(p => {
+      histOf(p).forEach((h, idx) => {
+        const raw = String(h?.date || h?.d || '').trim();
+        if(!raw) return;
+        if(dateNum(raw)) return;
+        if(dateIssues.length < 16){
+          dateIssues.push({ name:String(p?.name || ''), raw, idx });
+        }
+      });
+    });
+
+    const metricCard = (label, count, sub, color) => `
+      <div style="padding:12px 14px;border-radius:14px;border:1px solid ${color}22;background:${color}0d;min-width:140px;flex:1">
+        <div style="font-size:11px;font-weight:800;color:var(--text3)">${label}</div>
+        <div style="margin-top:6px;font-size:22px;font-weight:950;color:${color}">${count}</div>
+        <div style="margin-top:4px;font-size:11px;color:var(--text3)">${sub}</div>
+      </div>`;
+    const playerButtons = arr => arr.slice(0, 8).map(p => `
+      <button type="button" class="btn btn-w btn-xs" style="padding:4px 8px;border-radius:999px" onclick="openPlayerModal('${_escJ(String(p?.name || ''))}')">${_escH(String(p?.name || '-'))}</button>
+    `).join('');
+    const sectionBox = (title, arr, body, empty) => `
+      <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--white)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:900;color:var(--text2)">${title}</div>
+          <span style="font-size:11px;font-weight:800;color:var(--text3)">${arr.length}건</span>
+        </div>
+        ${arr.length ? body : `<div style="font-size:11px;color:var(--gray-l)">${empty}</div>`}
+      </div>`;
+
+    out.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${metricCard('사진 누락', noPhoto.length, '프로필 이미지 미등록', '#2563eb')}
+          ${metricCard('대학 미지정', noUniv.length, '대학 값 없음', '#f59e0b')}
+          ${metricCard('티어 미설정', noTier.length, '티어 값 없음', '#8b5cf6')}
+          ${metricCard('최근 30일 기록 없음', noRecent.length, recentLabel, '#64748b')}
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${metricCard('잘못된 대학값', invalidUniv.length, '설정된 대학 목록과 불일치', '#ef4444')}
+          ${metricCard('중복 이름 의심', duplicateGroups.length, '이름이 같은 스트리머 그룹', '#10b981')}
+          ${metricCard('날짜 형식 이상', dateIssues.length, 'history 날짜 파싱 실패', '#dc2626')}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+          ${sectionBox('사진 누락 스트리머', noPhoto, `<div style="display:flex;gap:6px;flex-wrap:wrap">${playerButtons(noPhoto)}</div>`, '누락 없음')}
+          ${sectionBox('대학 미지정 스트리머', noUniv, `<div style="display:flex;gap:6px;flex-wrap:wrap">${playerButtons(noUniv)}</div>`, '누락 없음')}
+          ${sectionBox('티어 미설정 스트리머', noTier, `<div style="display:flex;gap:6px;flex-wrap:wrap">${playerButtons(noTier)}</div>`, '누락 없음')}
+          ${sectionBox('최근 30일 기록 없음', noRecent, `<div style="display:flex;gap:6px;flex-wrap:wrap">${playerButtons(noRecent)}</div>`, '모두 최근 기록 있음')}
+          ${sectionBox('잘못된 대학값', invalidUniv, `<div style="display:flex;flex-direction:column;gap:6px">${invalidUniv.slice(0, 8).map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:10px;background:var(--surface)"><button type="button" class="btn btn-w btn-xs" onclick="openPlayerModal('${_escJ(String(p?.name || ''))}')">${_escH(String(p?.name || '-'))}</button><span style="font-size:11px;color:#dc2626;font-weight:800">${_escH(String(p?.univ || '-'))}</span></div>`).join('')}</div>`, '이상 없음')}
+          ${sectionBox('중복 이름 의심', duplicateGroups, `<div style="display:flex;flex-direction:column;gap:6px">${duplicateGroups.slice(0, 8).map(group=>`<div style="padding:8px 10px;border-radius:10px;background:var(--surface);font-size:11px;color:var(--text2);font-weight:800">${group.map(p=>_escH(String(p?.name || '-'))).join(' / ')}</div>`).join('')}</div>`, '중복 의심 없음')}
+          ${sectionBox('날짜 형식 이상 기록', dateIssues, `<div style="display:flex;flex-direction:column;gap:6px">${dateIssues.map(item=>`<div style="padding:8px 10px;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;font-size:11px"><strong style="color:#be123c">${_escH(item.name)}</strong><span style="color:var(--text3)"> · ${_escH(item.raw)}</span></div>`).join('')}</div>`, '이상 없음')}
+        </div>
+      </div>`;
+  }catch(e){
+    out.innerHTML = `<div style="font-size:12px;color:#dc2626">데이터 검수 중 오류: ${_escH(e?.message || e)}</div>`;
+  }
 };
 
 // ─────────────────────────────────────────────────────────────

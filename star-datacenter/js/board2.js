@@ -41,7 +41,6 @@ let _b2PlayersFilter = 'all'; // 'all' | 'P' | 'T' | 'Z'
 let _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' | '유스'
 let _b2SelectedPlayer = null;
 let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
-let _b2PlayersWeekBadge = true;  // 이번주 전적 뱃지 표시 여부
 const _b2BgImageMeta = {};
 let _b2AutoFitResizeBound = false;
 
@@ -371,10 +370,9 @@ function rBoard2(C, T) {
         </select>
         <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
-      <button class="b2-filter-toggle ${_b2PlayersWeekBadge?'is-on':''}" onclick="_b2PlayersWeekBadge=!_b2PlayersWeekBadge;render()" style="padding:6px 14px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:${_b2PlayersWeekBadge?'#f59e0b':'var(--white)'};color:${_b2PlayersWeekBadge?'#fff':'var(--text2)'};cursor:pointer;font-weight:700;transition:all .2s">🔥 이번주</button>
     </div>
   ` : '';
-  const weeklyBtn = _b2TabBtn('weekly','#f59e0b', (typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 주간 브리핑'):'📅 주간 브리핑'));
+  const weeklyBtn = _b2TabBtn('weekly','#f59e0b', (typeof getTabLabel==='function'?getTabLabel('board2','weekly','📅 브리핑'):'📅 브리핑'));
   const oldBtn = isLoggedIn?_b2TabBtn('old','#64748b', (typeof getTabLabel==='function'?getTabLabel('board2','old','📊 구현황판'):'📊 구현황판')):'';
   const summaryBtn = _b2TabBtn('summary','#10b981', (typeof getTabLabel==='function'?getTabLabel('board2','summary','📊 요약'):'📊 요약'));
   const compareBtn = _b2TabBtn('compare','#ef4444', (typeof getTabLabel==='function'?getTabLabel('board2','compare','⚔️ 대학비교'):'⚔️ 대학비교'));
@@ -399,7 +397,7 @@ function rBoard2(C, T) {
     free:    { label:'무소속', desc:'무소속 스트리머만 모아서 현재 공백 구간과 개별 상태를 보기 쉽게 정리합니다.' },
     femco:   { label:'펨코', desc:'컬러 중심의 현황판 레이아웃으로 한눈에 보기 좋은 구성을 제공합니다.' },
     players: { label:'이미지별', desc:'프로필 중심으로 필터를 바꿔가며 스트리머별 상태를 직관적으로 확인합니다.' },
-    weekly:  { label:'주간 브리핑', desc:'이번 주 활동과 흐름을 요약 카드 위주로 빠르게 훑어볼 수 있습니다.' },
+    weekly:  { label:'브리핑', desc:'이번 주와 이번 달 활동 흐름을 요약 카드 위주로 빠르게 훑어볼 수 있습니다.' },
     ranking: { label:'랭킹', desc:'대학별 성과를 리더보드 형태로 정리해 비교가 쉽도록 구성합니다.' },
     heatmap: { label:'히트맵', desc:'분포와 집중 구간을 색 밀도로 확인할 수 있게 정리합니다.' },
     bubble:  { label:'버블맵', desc:'규모와 비중을 시각적으로 비교하기 쉽게 배치합니다.' },
@@ -688,11 +686,12 @@ function _b2UnivView() {
     const cnt = (membersByUniv[String(u.name||'').trim()]||[]).length;
     if (!cnt) return ''; // [FIX-8] 멤버 없는 대학은 바로가기 칩에서 제외
     const col = gc(u.name);
+    const txtCol = _b2ContrastColor(col);
     const ucfg = (typeof univCfg!=='undefined'?univCfg:[]).find(x=>x.name===u.name);
     const iconUrl = ucfg?(ucfg.icon||ucfg.img||''):'';
     const iconEl = iconUrl?`<img src="${iconUrl}" style="width:14px;height:14px;object-fit:contain;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">`:`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>`;
     const anchorId = 'b2-univ-anchor-'+u.name.replace(/[^a-zA-Z0-9가-힣]/g,'_');
-    return `<button onclick="const el=document.getElementById('${anchorId}');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}" style="display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));color:var(--text2);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:0 8px 16px rgba(15,23,42,.04)">${iconEl}${u.name}<span style="color:var(--gray-l);font-weight:700"> ${cnt}</span></button>`;
+    return `<button onclick="const el=document.getElementById('${anchorId}');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}" style="display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:999px;border:1px solid ${col};background:linear-gradient(135deg,${col},${col}dd);color:${txtCol};font-size:11px;font-weight:900;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:0 10px 18px rgba(15,23,42,.08),0 6px 18px ${col}33">${iconEl}<span>${u.name}</span><span style="display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:rgba(255,255,255,.22);color:${txtCol};font-size:10px;font-weight:900;line-height:1">${cnt}</span></button>`;
   }).join('');
   const statsBar = `<div style="margin-bottom:12px">
     <div style="padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 16px 28px rgba(15,23,42,.05)">
@@ -1632,6 +1631,21 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const _ubTierBadge=tieredMembers.length
     ? `<span style="flex-shrink:0;background:rgba(255,255,255,.18);color:${textCol};font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.15)">일반 ${tieredMembers.length}</span>`
     : '';
+  const _ubWeekActiveBadge=_ubActive>0
+    ? `<span style="flex-shrink:0;background:rgba(251,191,36,.18);color:#fef3c7;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14)">이번주 활동 ${_ubActive}명</span>`
+    : `<span style="flex-shrink:0;background:rgba(255,255,255,.10);color:${textCol};font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12)">이번주 활동 없음</span>`;
+  const _ubSummaryLine = [
+    `${members.length}명 구성`,
+    roledMembers.length ? `직책 ${roledMembers.length}` : '',
+    tieredMembers.length ? `일반 ${tieredMembers.length}` : '',
+    _ubWwTotal > 0 ? `주간 ${_ubWw}승 ${_ubWl}패` : ''
+  ].filter(Boolean).join(' · ');
+  const _ubHeaderStatCard = (label, value, sub, accentBg) => `
+    <div style="min-width:92px;padding:10px 11px;border-radius:16px;background:${accentBg || 'rgba(255,255,255,.12)'};border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)">
+      <div style="font-size:10px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:${textCol}cc">${label}</div>
+      <div style="margin-top:5px;font-size:18px;font-weight:950;letter-spacing:-.03em;color:${textCol};line-height:1">${value}</div>
+      <div style="margin-top:4px;font-size:10px;font-weight:700;color:${textCol}cc;white-space:nowrap">${sub}</div>
+    </div>`;
 
   // 하단 메모/이미지 (bMemo/bMemoImgs)
   const _bnote = uCfg.bMemo || '';
@@ -1645,27 +1659,40 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
 
   return `
     <div data-b2card="${univName.replace(/"/g,'&quot;')}" style="border-radius:22px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.06)">
-      <div style="background:linear-gradient(135deg,${col} 0%,${col}dd 100%);padding:14px 16px 12px;position:relative;overflow:hidden">
+      <div style="background:linear-gradient(135deg,${col} 0%,${col}dd 100%);padding:16px 16px 14px;position:relative;overflow:hidden">
         <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,${_hasBgImg?'.08':'.18'}),rgba(255,255,255,0) 58%);pointer-events:none"></div>
-        <div style="display:flex;align-items:flex-start;gap:10px;position:relative;z-index:1">
-          ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,42px);height:var(--su_univ_logo_size,42px);object-fit:contain;border-radius:var(--su_univ_logo_radius,12px);flex-shrink:0;cursor:pointer;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);padding:4px" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
-          <div style="min-width:0;flex:1">
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0">
-              <span style="font-weight:950;font-size:18px;color:${textCol};flex-shrink:0;cursor:pointer;letter-spacing:-.02em" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
-              ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
-              ${uCfg.memo2?`<span style="font-size:11px;color:${textCol}dd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:46%;margin-left:2px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:4px 9px">${uCfg.memo2}</span>`:''}
+        <div style="display:flex;align-items:stretch;gap:12px;position:relative;z-index:1">
+          ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,46px);height:var(--su_univ_logo_size,46px);object-fit:contain;border-radius:var(--su_univ_logo_radius,14px);flex-shrink:0;cursor:pointer;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);padding:5px;box-shadow:0 12px 22px rgba(15,23,42,.10)" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
+          <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:flex-start;gap:10px;justify-content:space-between;flex-wrap:wrap">
+              <div style="min-width:0;flex:1">
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.12);font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:${textCol}dd">University Board</div>
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;margin-top:8px">
+                  <span style="font-weight:950;font-size:20px;color:${textCol};flex-shrink:0;cursor:pointer;letter-spacing:-.03em;line-height:1.08" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
+                  <span style="background:${textCol}1f;color:${textCol};font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;border:1px solid ${textCol}26;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
+                  ${_ubWeekActiveBadge}
+                </div>
+                <div style="margin-top:7px;font-size:11px;font-weight:700;color:${textCol}dd;line-height:1.5;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                  <span>${_ubSummaryLine}</span>
+                  ${uCfg.memo2?`<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;max-width:48%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:4px 9px">${uCfg.memo2}</span>`:''}
+                </div>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+                ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12)">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
+                ${isLoggedIn?`<button class="no-export" onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:11px;cursor:pointer;padding:4px 9px;border-radius:10px;flex-shrink:0;font-weight:800;z-index:var(--z-dropdown);position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶ 접기 해제':'▼ 접기'}</button>`:''}
+              </div>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px">
+            <div style="display:flex;align-items:stretch;gap:8px;flex-wrap:wrap">
+              ${_ubHeaderStatCard('주간 기록', _ubWwTotal>0?`${_ubWw+_ubWl}`:'0', _ubWwTotal>0?`${_ubWw}승 ${_ubWl}패`:'집계 없음', 'rgba(255,255,255,.15)')}
+              ${_ubHeaderStatCard('통산 승률', _ubWr!==null?`${_ubWr}%`:'-', _ubTg>0?`${_ubTw}승 ${_ubTl}패`:'전적 없음', _ubWr!==null?(_ubWr>=60?'rgba(187,247,208,.20)':_ubWr>=40?'rgba(254,240,138,.18)':'rgba(254,202,202,.18)'):'rgba(255,255,255,.12)')}
+              ${_ubHeaderStatCard('구성', `${roledMembers.length}/${tieredMembers.length}`, '직책 / 일반', 'rgba(255,255,255,.12)')}
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px">
               ${_ubRoleBadge}
               ${_ubTierBadge}
               ${_ubWeekBadge}
               ${_ubWrBadge}
             </div>
-          </div>
-          <span style="flex:1"></span>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-            <span style="flex-shrink:0;background:${textCol}22;color:${textCol};font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid ${textCol}33;cursor:pointer" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
-            ${isLoggedIn?`<button class="no-export" onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:11px;cursor:pointer;padding:1px 7px;border-radius:8px;flex-shrink:0;font-weight:700;margin-left:3px;z-index:var(--z-dropdown);position:relative" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶':'▼'}</button>`:''}
           </div>
         </div>
       </div>
@@ -2235,8 +2262,8 @@ function _b2PlayersView() {
         bottom: 0;
         left: 0;
         right: 0;
-        padding: 30px;
-        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        padding: 24px;
+        background: linear-gradient(to top, rgba(2,6,23,0.92), rgba(2,6,23,0.72) 44%, transparent);
         z-index: 12;
       }
       .b2-players-name {
@@ -2247,12 +2274,11 @@ function _b2PlayersView() {
         text-shadow: 0 2px 8px rgba(0,0,0,0.8);
       }
       .b2-players-details {
-        font-size: 14px;
-        color: rgba(255,255,255,0.8);
         display: flex;
         flex-wrap: wrap;
-        gap: 12px;
+        gap: 8px;
         align-items: center;
+        margin-bottom: 12px;
       }
       .b2-players-tier {
         background: ${theme.border};
@@ -2263,18 +2289,39 @@ function _b2PlayersView() {
         font-size: 13px;
       }
       .b2-players-race {
-        font-size: 16px;
+        font-size: 13px;
         font-weight: 800;
-        margin-left: auto; /* 종족을 우측으로 */
+      }
+      .b2-players-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.14);
+        color: rgba(255,255,255,0.92);
+        font-size: 12px;
+        font-weight: 800;
+        backdrop-filter: blur(12px);
+      }
+      .b2-players-chip img {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+        border-radius: 6px;
+        background: rgba(255,255,255,0.9);
+        padding: 2px;
       }
       .b2-players-grid-wrapper {
         flex: 1;
-        background: rgba(255,255,255,0.05);
+        background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
         backdrop-filter: blur(15px);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 24px;
-        padding: 20px;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 26px;
+        padding: 22px;
         overflow-y: auto;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
       }
       .b2-players-grid-wrapper::-webkit-scrollbar {
         width: 6px;
@@ -2286,7 +2333,7 @@ function _b2PlayersView() {
       .b2-players-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-        gap: 14px;
+        gap: 16px;
       }
       @media (min-width: 769px) and (max-width: 1024px) {
         .b2-players-wrapper {
@@ -2550,6 +2597,10 @@ function _b2PlayersView() {
   const _slot5 = _b2SelectedPlayer.profileFile5
     ? _b2MainMediaHTML(5, _b2SelectedPlayer.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
     : '';
+  const _selUnivIcon = (() => {
+    const uCfg = univCfg.find(x => x.name === _b2SelectedPlayer.univ) || {};
+    return uCfg.icon || uCfg.img || UNIV_ICONS[_b2SelectedPlayer.univ] || '';
+  })();
   
   h += `
     <div class="b2-players-main">
@@ -2574,22 +2625,12 @@ function _b2PlayersView() {
           <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
           <div class="b2-players-details">
             <span class="b2-players-tier">${_b2SelectedPlayer.tier || '?'}티어</span>
-            <span class="b2-players-race">${_b2SelectedPlayer.race === 'P' ? '🔮 프로토스' : _b2SelectedPlayer.race === 'T' ? '⚔️ 테란' : _b2SelectedPlayer.race === 'Z' ? '🦎 저그' : '종족미정'}</span>
+            <span class="b2-players-chip b2-players-race">${_b2SelectedPlayer.race === 'P' ? '🔮 프로토스' : _b2SelectedPlayer.race === 'T' ? '⚔️ 테란' : _b2SelectedPlayer.race === 'Z' ? '🦎 저그' : '종족미정'}</span>
             ${_b2SelectedPlayer.univ ? (() => {
-              const uCfg = univCfg.find(x => x.name === _b2SelectedPlayer.univ) || {};
-              const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[_b2SelectedPlayer.univ] || '';
-              return iconUrl 
-              ? `<span style="display:flex;align-items:center;gap:8px"><img src="${toHttpsUrl(iconUrl)}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${_b2SelectedPlayer.univ}</span></span>`
-                : `<span>🏫 ${_b2SelectedPlayer.univ}</span>`;
-            })() : ''}
-            ${(() => {
-              const ws2 = _b2pWeekStats(_b2SelectedPlayer);
-              if (!ws2.total) return '';
-              const wr2 = Math.round(ws2.w/ws2.total*100);
-              const wc2 = wr2>=60?'#10b981':wr2>=40?'#f59e0b':'#ef4444';
-              return `<span style="padding:3px 10px;border-radius:10px;background:rgba(0,0,0,.5);font-size:12px;font-weight:800;color:${wc2}">🔥 이번주 ${ws2.w}승 ${ws2.l}패</span>`;
-            })()}
-            ${(()=>{const s=_b2SelectedPlayer.photo?1:(_b2SelectedPlayer.secondProfileFile?2:(_b2SelectedPlayer.profileFile3?3:(_b2SelectedPlayer.profileFile4?4:(_b2SelectedPlayer.profileFile5?5:1))));return `<span id="b2-cur-img-slot" style="padding:3px 10px;border-radius:10px;background:rgba(0,0,0,.5);font-size:12px;font-weight:800;color:#e2e8f0">🖼️ 이미지 ${s}</span>`;})()}
+              return _selUnivIcon
+              ? `<span class="b2-players-chip"><img src="${toHttpsUrl(_selUnivIcon)}" onerror="this.style.display='none'"><span>${_b2SelectedPlayer.univ}</span></span>`
+                : `<span class="b2-players-chip">🏫 ${_b2SelectedPlayer.univ}</span>`;
+            })() : '<span class="b2-players-chip">🏫 무소속</span>'}
           </div>
           ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>` : ''}
         </div>
@@ -2602,7 +2643,6 @@ function _b2PlayersView() {
     String(_b2PlayersUnivFilter||''),
     String(_b2PlayersFilter||''),
     String(_b2PlayersTierFilter||''),
-    _b2PlayersWeekBadge ? '1' : '0',
     _shuffleOn ? '1' : '0'
   ].join('|');
   if(window._b2PlayersRenderKey !== _renderKey){
@@ -2622,6 +2662,7 @@ function _b2PlayersView() {
 
   _gridShow.forEach(p => {
     const isActive = _b2SelectedPlayer && _b2SelectedPlayer.name === p.name;
+    const encodedPlayerName = encodeURIComponent(String(p.name || ''));
     const playerColor = gc(p.univ) || '#6366f1';
     const playerTheme = {
       bg: hexToRgba(playerColor, 0.1),
@@ -2630,26 +2671,26 @@ function _b2PlayersView() {
     const tierCol  = typeof getTierBtnColor==='function'&&p.tier?getTierBtnColor(p.tier):'#64748b';
     const tierTc   = typeof getTierBtnTextColor==='function'&&p.tier?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
     const raceIco  = p.race==='P'?'🔮':p.race==='T'?'⚔️':p.race==='Z'?'🦎':'';
-    const ws = _b2PlayersWeekBadge ? _b2pWeekStats(p) : null;
+    const ws = _b2pWeekStats(p);
     const wrColor = ws && ws.total>0 ? (ws.w/ws.total>=0.6?'#10b981':ws.w/ws.total>=0.4?'#f59e0b':'#ef4444') : '#94a3b8';
     
     h += `
-      <div class="b2-players-card ${isActive ? 'active' : ''}" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" onclick="_b2UpdateMainDisplay('${p.name}')" style="width:140px;padding:12px;border-radius:12px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--white);border:2px solid ${isActive?playerColor:'transparent'};box-shadow:${isActive?'0 4px 12px '+hexToRgba(playerColor,0.3):'0 1px 3px rgba(0,0,0,0.08)'}">
-        <div style="position:relative;width:116px;height:116px;flex-shrink:0">
+      <div class="b2-players-card ${isActive ? 'active' : ''}" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))" style="width:148px;padding:14px;border-radius:18px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(180deg,var(--white),rgba(248,250,252,.98));border:1px solid ${isActive?hexToRgba(playerColor,0.55):'rgba(148,163,184,.14)'};box-shadow:${isActive?'0 10px 24px '+hexToRgba(playerColor,0.24):'0 8px 18px rgba(15,23,42,0.06)'}">
+        <div style="position:relative;width:118px;height:118px;flex-shrink:0">
           ${p.photo
-            ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" ${isActive?'fetchpriority="high"':'fetchpriority="auto"'} class="b2-players-thumbnail b2-fit-auto" data-fit-kind="thumb" data-fit-mode="auto" alt="${p.name}" style="width:116px;height:116px;border-radius:10px;object-fit:contain;display:block" onload="_b2ApplyBgAutoSizing(this)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-              <div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
-            : `<div class="b2-players-thumbnail" style="width:116px;height:116px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border}">${(p.name||'?')[0]}</div>`
+            ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" ${isActive?'fetchpriority="high"':'fetchpriority="auto"'} class="b2-players-thumbnail b2-fit-auto" data-fit-kind="thumb" data-fit-mode="auto" alt="${p.name}" style="width:118px;height:118px;border-radius:14px;object-fit:contain;display:block;border:2px solid ${isActive?hexToRgba(playerColor,0.5):'rgba(226,232,240,.8)'};background:linear-gradient(180deg,#fff,#f8fafc)" onload="_b2ApplyBgAutoSizing(this)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="b2-players-thumbnail" style="width:118px;height:118px;border-radius:14px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border};border:2px solid ${isActive?hexToRgba(playerColor,0.5):'rgba(226,232,240,.8)'}">${(p.name||'?')[0]}</div>`
+            : `<div class="b2-players-thumbnail" style="width:118px;height:118px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border};border:2px solid ${isActive?hexToRgba(playerColor,0.5):'rgba(226,232,240,.8)'}">${(p.name||'?')[0]}</div>`
           }
-          ${p.tier?`<span style="position:absolute;top:4px;left:4px;font-size:10px;font-weight:800;padding:1px 6px;border-radius:6px;background:${tierCol};color:${tierTc};line-height:1.5">${p.tier}</span>`:''}
-          ${ws&&ws.total>0?`<span style="position:absolute;bottom:4px;right:4px;font-size:9px;font-weight:900;padding:2px 5px;border-radius:6px;background:rgba(0,0,0,.72);color:${wrColor};line-height:1.4;backdrop-filter:blur(4px)">${ws.w}승${ws.l}패</span>`:''}
-          ${ws&&ws.total>0&&ws.w===ws.total?`<span style="position:absolute;top:4px;right:4px;font-size:12px">🔥</span>`:''}
+          ${p.tier?`<span style="position:absolute;top:6px;left:6px;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;box-shadow:0 8px 16px rgba(15,23,42,.18)">${p.tier}</span>`:''}
+          ${ws&&ws.total>0?`<span style="position:absolute;bottom:6px;right:6px;font-size:9px;font-weight:900;padding:3px 6px;border-radius:999px;background:rgba(15,23,42,.78);color:${wrColor};line-height:1.4;backdrop-filter:blur(6px);box-shadow:0 8px 16px rgba(15,23,42,.18)">${ws.w}승 ${ws.l}패</span>`:''}
+          ${ws&&ws.total>0&&ws.w===ws.total?`<span style="position:absolute;top:6px;right:6px;font-size:12px">🔥</span>`:''}
         </div>
         <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:2px">
-          <div class="b2-players-label" style="font-size:14px;font-weight:700;text-align:center;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${p.name || '이름 없음'}</div>
-          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center">
+          <div class="b2-players-label" style="font-size:14px;font-weight:800;text-align:center;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${p.name || '이름 없음'}</div>
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center;padding:0 2px">
             ${raceIco?`<span style="font-size:11px">${raceIco}</span>`:''}
-            <span style="font-size:10px;color:var(--text3);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px">${p.univ||''}</span>
+            <span style="font-size:10px;color:var(--text3);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:104px">${p.univ||'무소속'}</span>
           </div>
         </div>
       </div>
@@ -2741,13 +2782,15 @@ function _b2UpdateMainDisplay(playerName) {
   const _slot5 = player.profileFile5
     ? _b2MainMediaHTML(5, player.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
     : '';
+  const _updUnivIcon = (() => {
+    const uCfg = univCfg.find(x => x.name === player.univ) || {};
+    return uCfg.icon || uCfg.img || UNIV_ICONS[player.univ] || '';
+  })();
   
   // 메인 디스플레이 업데이트
   const mainBox = document.getElementById('b2-players-main-box');
-  const imgSettings = _b2GetImgSettings(player.name);
   const primarySettings = _b2GetImgSettings(player.name, 'primary');
   const secondarySettings = _b2GetImgSettings(player.name, 'secondary');
-  const hasSecondProfile = !!(player.secondProfileFile && player.secondProfileFile.length > 0);
 
   const safeName = (player.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   const hasPrimary = !!player.photo;
@@ -2777,15 +2820,12 @@ function _b2UpdateMainDisplay(playerName) {
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
         <div class="b2-players-details">
           <span class="b2-players-tier" style="background:${theme.border}">${player.tier || '?'}티어</span>
-          <span class="b2-players-race">${player.race === 'P' ? '프로토스' : player.race === 'T' ? '테란' : player.race === 'Z' ? '저그' : '종족미정'}</span>
+          <span class="b2-players-chip b2-players-race">${player.race === 'P' ? '프로토스' : player.race === 'T' ? '테란' : player.race === 'Z' ? '저그' : '종족미정'}</span>
           ${player.univ ? (() => {
-            const uCfg = univCfg.find(x => x.name === player.univ) || {};
-            const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[player.univ] || '';
-            return iconUrl
-              ? `<span style="display:flex;align-items:center;gap:8px"><img src="${toHttpsUrl(iconUrl)}" style="width:32px;height:32px;object-fit:contain;border-radius:6px" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
-              : `<span>🏫 ${player.univ}</span>`;
-          })() : ''}
-          ${(()=>{const s=player.photo?1:(player.secondProfileFile?2:(player.profileFile3?3:(player.profileFile4?4:(player.profileFile5?5:1))));return `<span id="b2-cur-img-slot" style="padding:3px 10px;border-radius:10px;background:rgba(0,0,0,.5);font-size:12px;font-weight:800;color:#e2e8f0">🖼️ 이미지 ${s}</span>`;})()}
+            return _updUnivIcon
+              ? `<span class="b2-players-chip"><img src="${toHttpsUrl(_updUnivIcon)}" onerror="this.style.display='none'"><span>${player.univ}</span></span>`
+              : `<span class="b2-players-chip">🏫 ${player.univ}</span>`;
+          })() : '<span class="b2-players-chip">🏫 무소속</span>'}
         </div>
         ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:8px;padding:6px 12px;background:#fff;border:1px solid rgba(255,255,255,0.45);border-radius:12px;color:var(--text1);font-size:12px;font-weight:800;cursor:pointer;transition:all 0.15s ease" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">✏️ 프로필 수정</button>` : ''}
       </div>
@@ -5031,6 +5071,24 @@ function _b2WeeklyGetDefaultRange(offsetWeeks) {
   const fmt = d => d.toISOString().slice(0, 10);
   return { from: fmt(mon), to: fmt(sun) };
 }
+function _b2MonthlyGetDefaultRange(offsetMonths, fullMonth) {
+  const now = new Date();
+  const offset = offsetMonths || 0;
+  const base = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+  const from = new Date(base.getFullYear(), base.getMonth(), 1);
+  const to = fullMonth
+    ? new Date(base.getFullYear(), base.getMonth() + 1, 0)
+    : (offset === 0 ? new Date(now.getFullYear(), now.getMonth(), now.getDate()) : new Date(base.getFullYear(), base.getMonth() + 1, 0));
+  const fmt = d => d.toISOString().slice(0, 10);
+  return { from: fmt(from), to: fmt(to) };
+}
+function _b2BriefingPresetRange(preset) {
+  const key = String(preset || 'thisWeek');
+  if (key === 'lastWeek') return _b2WeeklyGetDefaultRange(-1);
+  if (key === 'thisMonth') return _b2MonthlyGetDefaultRange(0, false);
+  if (key === 'lastMonth') return _b2MonthlyGetDefaultRange(-1, true);
+  return _b2WeeklyGetDefaultRange(0);
+}
 
 // ─── 데이터 집계 헬퍼 ─────────────────────────
 function _b2WeeklyAggregate(players, dateFrom, dateTo) {
@@ -5335,14 +5393,18 @@ function _b2WeeklyDelta(curr, prev) {
 // ═══════════════════════════════════════════════
 function _b2WeeklyBriefingView() {
   try {
+    if (typeof window._b2WeeklyPreset === 'undefined') {
+      window._b2WeeklyPreset = 'thisWeek';
+    }
     if (!window._b2WeeklyDateFrom || !window._b2WeeklyDateTo) {
-      const def = _b2WeeklyGetDefaultRange(0);
+      const def = _b2BriefingPresetRange(window._b2WeeklyPreset);
       window._b2WeeklyDateFrom = def.from;
       window._b2WeeklyDateTo   = def.to;
     }
     if (typeof window._b2WeeklyUniv === 'undefined') {
       window._b2WeeklyUniv = '전체';
     }
+    const preset = String(window._b2WeeklyPreset || 'thisWeek');
     const dateFrom = window._b2WeeklyDateFrom;
     const dateTo   = window._b2WeeklyDateTo;
 
@@ -5361,6 +5423,19 @@ function _b2WeeklyBriefingView() {
 
     const selUniv  = window._b2WeeklyUniv || '전체';
     const fmtDate  = s => String(s||'').slice(0,10).replace(/-/g,'.');
+    const _briefingMeta = {
+      thisWeek:  { kicker:'Weekly Briefing', title:'브리핑', short:'이번주', prevLabel:'지난주', desc:'이번 주 활동과 흐름을 카드 위주로 빠르게 훑어볼 수 있도록 정리한 화면입니다.' },
+      lastWeek:  { kicker:'Weekly Briefing', title:'브리핑', short:'지난주', prevLabel:'그 전 주', desc:'지난주 활동 흐름과 주요 변화를 되짚어보기 좋게 정리한 화면입니다.' },
+      thisMonth: { kicker:'Monthly Briefing', title:'월간 브리핑', short:'이번달', prevLabel:'지난달', desc:'이번 달 활동 흐름과 월간 변화 포인트를 한 화면에서 보기 좋게 정리한 화면입니다.' },
+      lastMonth: { kicker:'Monthly Briefing', title:'월간 브리핑', short:'지난달', prevLabel:'그 전 달', desc:'지난달 활동 흐름과 월간 요약을 되돌아보기 좋게 정리한 화면입니다.' },
+      custom:    { kicker:'Period Briefing', title:'기간 브리핑', short:'사용자 기간', prevLabel:'이전 기간', desc:'직접 지정한 기간의 활동 흐름과 핵심 변화를 비교해서 보는 화면입니다.' }
+    };
+    const _briefingInfo = _briefingMeta[preset] || _briefingMeta.custom;
+    const _isMonthly = preset === 'thisMonth' || preset === 'lastMonth';
+    const _isCustom = preset === 'custom';
+    const _mvpLabel = preset === 'thisMonth' ? '이달 MVP' : preset === 'lastMonth' ? '지난달 MVP' : '이번 주 MVP';
+    const _topLabel = _isMonthly ? '활동 많은 대학 TOP 5' : '활동 많은 대학 TOP 3';
+    const _topLimit = _isMonthly ? 5 : 3;
 
     // 이번주 & 이전주 집계
     const curStats  = _b2WeeklyUnivStats(vis, dateFrom, dateTo, univList);
@@ -5373,31 +5448,116 @@ function _b2WeeklyBriefingView() {
 
     // 전체 MVP
     const mvp = _b2WeeklyMVP(curStats);
+    const curPlayerStats = _b2WeeklyAggregate(vis, dateFrom, dateTo);
+    const prevPlayerStats = _b2WeeklyAggregate(vis, prevDateFrom, prevDateTo);
+    const prevPlayerMap = {};
+    prevPlayerStats.forEach(s => { prevPlayerMap[s.p?.name || ''] = s; });
+    const beforeStart = new Date(dateFrom);
+    beforeStart.setDate(beforeStart.getDate() - 1);
+    const earliestDate = '2000-01-01';
+    const beforePlayerStats = beforeStart >= new Date(earliestDate)
+      ? _b2WeeklyAggregate(vis, earliestDate, fmt(beforeStart))
+      : [];
+    const beforePlayerMap = {};
+    beforePlayerStats.forEach(s => { beforePlayerMap[s.p?.name || ''] = s; });
+    const activePlayers = curPlayerStats.filter(s => s.total > 0);
+    const topUnivs = [...curStats]
+      .filter(ud => ud.tg > 0)
+      .sort((a, b) => (b.tg - a.tg) || (b.active.length - a.active.length) || ((b.wr ?? -1) - (a.wr ?? -1)))
+      .slice(0, _topLimit);
+    const silentUnivs = curStats.filter(ud => ud.tg === 0).map(ud => ud.u.name);
+    const firstActivityPlayers = activePlayers
+      .filter(s => ((beforePlayerMap[s.p?.name || '']?.total) || 0) === 0)
+      .sort((a, b) => (b.total - a.total) || (b.wins - a.wins))
+      .slice(0, 4);
+    const risingPlayers = activePlayers
+      .map(s => {
+        const prev = prevPlayerMap[s.p?.name || ''] || null;
+        const prevWr = prev && prev.total > 0 ? (prev.winRate ?? 0) : 0;
+        const prevTotal = prev ? (prev.total || 0) : 0;
+        return {
+          ...s,
+          wrDelta: (s.winRate ?? 0) - prevWr,
+          totalDelta: s.total - prevTotal,
+          prevTotal
+        };
+      })
+      .filter(s => s.total >= 2)
+      .sort((a, b) => (b.wrDelta - a.wrDelta) || (b.totalDelta - a.totalDelta) || (b.wins - a.wins));
+    const hotPlayer = risingPlayers[0] || null;
+    const monthlyTopPlayers = [...activePlayers]
+      .sort((a, b) => (b.total - a.total) || (b.wins - a.wins) || ((b.winRate ?? -1) - (a.winRate ?? -1)))
+      .slice(0, 5);
+    const monthlyMvp = monthlyTopPlayers[0] || null;
+    const _heroSummary = (() => {
+      const parts = [];
+      if (topUnivs[0]) parts.push(`${topUnivs[0].u.name}이(가) ${topUnivs[0].tg}전으로 가장 활발합니다`);
+      if (hotPlayer && hotPlayer.wrDelta > 0) parts.push(`${hotPlayer.p?.name || '-'}는 전주 대비 승률 ${hotPlayer.wrDelta > 0 ? '+' : ''}${hotPlayer.wrDelta}%p`);
+      if (firstActivityPlayers.length) parts.push(`이번 기간 첫 활동 ${firstActivityPlayers.length}명`);
+      if (silentUnivs.length) parts.push(`기록 없는 대학 ${silentUnivs.length}곳`);
+      return parts.length ? `${parts.join(' · ')}.` : '이번 기간 활동 흐름과 변화를 한눈에 볼 수 있도록 정리했습니다.';
+    })();
+    const _heroSpotlight = (() => {
+      if (_isMonthly && monthlyMvp) return `${monthlyMvp.p?.name || '-'}가 ${monthlyMvp.total}전으로 가장 활발합니다`;
+      if (topUnivs[0]) return `${topUnivs[0].u.name}이(가) ${topUnivs[0].tg}전으로 가장 활발합니다`;
+      if (firstActivityPlayers[0]) return `${firstActivityPlayers[0].p?.name || '-'}가 이번 기간 첫 활동 흐름을 열었습니다`;
+      return '이번 기간 핵심 흐름을 빠르게 읽을 수 있도록 정리했습니다';
+    })();
+    const _heroFocusLabel = _isMonthly ? '월간 포인트' : (_isCustom ? '기간 포인트' : '주간 포인트');
+    const _heroFocusValue = _isMonthly
+      ? `${monthlyTopPlayers.length}명 활동 상위권`
+      : `${activePlayers.length}명 활동`;
+    const _heroCompareText = `${_briefingInfo.prevLabel} ${fmtDate(prevDateFrom)} ~ ${fmtDate(prevDateTo)}`;
 
     // CSS
     let h = `<style>
-      .b2w2-wrap { max-width:980px }
-      .b2w2-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px;border-radius:26px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.05);margin-bottom:14px}
+      .b2w2-wrap { max-width:1020px }
+      .b2w2-hero{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:22px 24px;border-radius:28px;border:1px solid rgba(148,163,184,.16);background:
+        radial-gradient(circle at top left, rgba(37,99,235,.08), transparent 34%),
+        radial-gradient(circle at top right, rgba(124,58,237,.06), transparent 30%),
+        linear-gradient(180deg,rgba(255,255,255,.995),rgba(248,250,252,.97));box-shadow:0 20px 38px rgba(15,23,42,.055);margin-bottom:16px}
+      .b2w2-hero-main{display:flex;flex-direction:column;gap:12px;min-width:0;flex:1}
       .b2w2-hero-title{font-size:26px;font-weight:950;letter-spacing:-.04em;color:var(--text1);line-height:1.08}
       .b2w2-hero-desc{margin-top:6px;font-size:13px;line-height:1.65;color:var(--text3);max-width:720px}
+      .b2w2-hero-spotlight{padding:16px 18px;border-radius:22px;border:1px solid rgba(99,102,241,.14);background:linear-gradient(135deg,rgba(37,99,235,.10),rgba(124,58,237,.06),rgba(255,255,255,.96));box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 14px 24px rgba(37,99,235,.08)}
+      .b2w2-hero-spotlight-kicker{font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#4f46e5}
+      .b2w2-hero-spotlight-title{margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.04em;line-height:1.22;color:var(--text1)}
+      .b2w2-hero-spotlight-sub{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+      .b2w2-hero-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.84);border:1px solid rgba(148,163,184,.16);font-size:11px;font-weight:900;color:var(--text2)}
       .b2w2-hero-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-      .b2w2-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.04);font-size:12px;font-weight:800;color:var(--text2)}
+      .b2w2-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.035);font-size:12px;font-weight:800;color:var(--text2)}
       .b2w2-hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;min-width:min(100%,360px)}
-      .b2w2-hero-stat{padding:14px;border-radius:18px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.04)}
+      .b2w2-hero-stat{padding:14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.985),rgba(248,250,252,.94));box-shadow:0 12px 20px rgba(15,23,42,.04)}
+      .b2w2-hero-stat:nth-child(1){background:linear-gradient(180deg,rgba(239,246,255,.95),rgba(255,255,255,.96))}
+      .b2w2-hero-stat:nth-child(2){background:linear-gradient(180deg,rgba(250,245,255,.92),rgba(255,255,255,.96))}
+      .b2w2-hero-stat:nth-child(3){background:linear-gradient(180deg,rgba(255,251,235,.94),rgba(255,255,255,.96))}
       .b2w2-hero-stat-label{font-size:11px;font-weight:800;color:var(--text3)}
       .b2w2-hero-stat-value{margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1}
       .b2w2-hero-stat-sub{margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)}
-      .b2w2-hdr  { display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 16px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.16);border-radius:20px;margin-bottom:14px;box-shadow:0 16px 28px rgba(15,23,42,.04) }
+      .b2w2-hdr  { display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:15px 16px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.965));border:1px solid rgba(148,163,184,.14);border-radius:22px;margin-bottom:16px;box-shadow:0 16px 28px rgba(15,23,42,.04) }
       .b2w2-din  { padding:6px 12px;border-radius:10px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);box-shadow:0 8px 14px rgba(15,23,42,.04) }
       .b2w2-sel  { padding:6px 12px;border-radius:10px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);max-width:160px;box-shadow:0 8px 14px rgba(15,23,42,.04) }
       .b2w2-btn  { padding:7px 14px;border-radius:10px;background:var(--blue);color:#fff;border:none;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 12px 18px rgba(37,99,235,.18) }
       .b2w2-btn:hover { opacity:.85 }
+      .b2w2-modebar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px}
+      .b2w2-modecard{padding:15px;border-radius:22px;border:1px solid rgba(148,163,184,.15);background:linear-gradient(180deg,rgba(255,255,255,.992),rgba(248,250,252,.965));box-shadow:0 16px 28px rgba(15,23,42,.04);display:flex;flex-direction:column;gap:10px;transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease}
+      .b2w2-modecard:hover{transform:translateY(-1px);box-shadow:0 18px 30px rgba(15,23,42,.06)}
+      .b2w2-modecard.is-active{border-color:#2563eb4a;box-shadow:0 20px 34px rgba(37,99,235,.11);background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(255,255,255,.995))}
+      .b2w2-modehead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+      .b2w2-modekicker{font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+      .b2w2-modetitle{font-size:15px;font-weight:950;color:var(--text1);letter-spacing:-.02em}
+      .b2w2-modedesc{font-size:11px;line-height:1.6;color:var(--text3)}
+      .b2w2-presetrow{display:flex;gap:8px;flex-wrap:wrap}
+      .b2w2-preset{padding:7px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:var(--white);font-size:12px;font-weight:800;color:var(--text2);cursor:pointer;box-shadow:0 8px 14px rgba(15,23,42,.035);transition:transform .15s ease, box-shadow .15s ease}
+      .b2w2-preset:hover{transform:translateY(-1px);box-shadow:0 10px 18px rgba(15,23,42,.06)}
+      .b2w2-preset.on{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border-color:transparent;box-shadow:0 12px 18px rgba(37,99,235,.18)}
+      .b2w2-modebadge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:var(--white);font-size:11px;font-weight:900;color:var(--text2)}
       .b2w2-mvp  { display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px;background:linear-gradient(135deg,rgba(254,249,195,.7),rgba(255,251,235,.95));border:1px solid rgba(251,191,36,.55);border-radius:20px;margin-bottom:14px;box-shadow:0 16px 28px rgba(180,83,9,.08) }
-      .b2w2-chart-box { background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.16);border-radius:20px;padding:14px 16px;margin-bottom:14px;box-shadow:0 16px 28px rgba(15,23,42,.04) }
+      .b2w2-chart-box { background:linear-gradient(180deg,rgba(255,255,255,.992),rgba(248,250,252,.965));border:1px solid rgba(148,163,184,.14);border-radius:22px;padding:15px 16px;margin-bottom:16px;box-shadow:0 16px 28px rgba(15,23,42,.04) }
       .b2w2-chart-title { font-size:12px;font-weight:800;color:var(--text3);margin-bottom:10px }
-      .b2w2-card { background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.16);border-radius:20px;margin-bottom:12px;overflow:hidden;box-shadow:0 16px 28px rgba(15,23,42,.04) }
-      .b2w2-card-head { display:flex;align-items:center;gap:8px;padding:14px 16px;cursor:pointer;transition:background .15s }
-      .b2w2-card-head:hover { background:rgba(15,23,42,.03) }
+      .b2w2-card { background:linear-gradient(180deg,rgba(255,255,255,.992),rgba(248,250,252,.965));border:1px solid rgba(148,163,184,.14);border-radius:22px;margin-bottom:14px;overflow:hidden;box-shadow:0 16px 28px rgba(15,23,42,.04) }
+      .b2w2-card-head { display:flex;align-items:center;gap:8px;padding:15px 16px;cursor:pointer;transition:background .15s }
+      .b2w2-card-head:hover { background:rgba(15,23,42,.025) }
       .b2w2-chip { font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px }
       .b2w2-tbl  { width:100%;border-collapse:collapse }
       .b2w2-tbl th { font-size:10px;font-weight:800;color:var(--text3);padding:6px 10px;text-align:left;border-bottom:1px solid var(--border2);background:var(--bg);white-space:nowrap }
@@ -5406,15 +5566,30 @@ function _b2WeeklyBriefingView() {
       .b2w2-tbl tr:hover td { background:var(--hover) }
       .b2w2-race-box { padding:10px 16px 12px;border-top:1px solid var(--border2) }
       .b2w2-race-title { font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px }
+      .b2w2-highlight-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
+      .b2w2-highlight-card{padding:17px;border-radius:22px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.992),rgba(248,250,252,.965));box-shadow:0 16px 28px rgba(15,23,42,.04);display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+      .b2w2-highlight-card::before{content:'';position:absolute;inset:0 auto auto 0;width:100%;height:3px;background:linear-gradient(90deg,rgba(37,99,235,.18),rgba(124,58,237,.12),transparent)}
+      .b2w2-highlight-kicker{font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--text3)}
+      .b2w2-highlight-title{font-size:18px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.2}
+      .b2w2-highlight-desc{font-size:12px;line-height:1.65;color:var(--text3)}
+      .b2w2-highlight-list{display:flex;flex-direction:column;gap:7px}
+      .b2w2-highlight-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border-radius:13px;background:rgba(255,255,255,.84);border:1px solid rgba(148,163,184,.12)}
+      .b2w2-note-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:13px 14px;border-radius:20px;border:1px dashed rgba(148,163,184,.28);background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(248,250,252,.82));margin-bottom:16px}
+      .b2w2-note-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--white);border:1px solid rgba(148,163,184,.18);font-size:11px;font-weight:800;color:var(--text2)}
+      .b2w2-monthly-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:14px;margin-bottom:16px}
       .b2w2-empty { text-align:center;padding:32px 16px;color:var(--text3);font-size:13px }
       @media(max-width:900px){ .b2w2-hero{flex-direction:column}.b2w2-hero-stats{width:100%;grid-template-columns:repeat(3,minmax(0,1fr));} }
       @media(max-width:600px){
         .b2w2-hero{padding:18px 16px;border-radius:22px}
         .b2w2-hero-title{font-size:22px}
         .b2w2-hero-stats{grid-template-columns:1fr}
+        .b2w2-modebar{grid-template-columns:1fr}
+        .b2w2-highlight-grid{grid-template-columns:1fr}
+        .b2w2-monthly-grid{grid-template-columns:1fr}
         .b2w2-tbl th:nth-child(5),.b2w2-tbl td:nth-child(5),
         .b2w2-tbl th:nth-child(4),.b2w2-tbl td:nth-child(4){ display:none }
       }
+      @media(min-width:601px) and (max-width:960px){ .b2w2-modebar{grid-template-columns:repeat(2,minmax(0,1fr));}.b2w2-highlight-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.b2w2-monthly-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
     </style>`;
 
     const _totalGames = curStats.reduce((s,ud)=>s+(ud.tg||0),0);
@@ -5424,11 +5599,21 @@ function _b2WeeklyBriefingView() {
     // ── 헤더 컨트롤
     h += `<div class="b2w2-wrap">
       <section class="b2w2-hero">
-        <div>
-          <div style="font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase">Weekly Briefing</div>
-          <div class="b2w2-hero-title">주간 브리핑</div>
-          <div class="b2w2-hero-desc">기간별 활동 대학, 경기 수, MVP, 대학별 세부 전적을 한 번에 비교하기 좋도록 정리한 브리핑 화면입니다.</div>
+        <div class="b2w2-hero-main">
+          <div style="font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase">${_briefingInfo.kicker}</div>
+          <div class="b2w2-hero-title">${_briefingInfo.title}</div>
+          <div class="b2w2-hero-desc">${_heroSummary}</div>
+          <div class="b2w2-hero-spotlight">
+            <div class="b2w2-hero-spotlight-kicker">Briefing Insight</div>
+            <div class="b2w2-hero-spotlight-title">${_heroSpotlight}</div>
+            <div class="b2w2-hero-spotlight-sub">
+              <span class="b2w2-hero-pill">${_heroFocusLabel}</span>
+              <span class="b2w2-hero-pill">${_heroFocusValue}</span>
+              <span class="b2w2-hero-pill">${_heroCompareText}</span>
+            </div>
+          </div>
           <div class="b2w2-hero-badges">
+            <span class="b2w2-hero-badge">${_briefingInfo.short}</span>
             <span class="b2w2-hero-badge">선택 기간 ${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}</span>
             <span class="b2w2-hero-badge">활동 대학 ${_activeUnivs}곳</span>
             <span class="b2w2-hero-badge">총 경기 ${_totalGames}전</span>
@@ -5453,9 +5638,56 @@ function _b2WeeklyBriefingView() {
           </div>
         </div>
       </section>
+      <div class="b2w2-modebar">
+        <div class="b2w2-modecard ${(!_isMonthly && !_isCustom)?'is-active':''}">
+          <div class="b2w2-modehead">
+            <div>
+              <div class="b2w2-modekicker">Weekly Mode</div>
+              <div class="b2w2-modetitle">주간</div>
+            </div>
+            <span class="b2w2-modebadge">${(!_isMonthly && !_isCustom)?'선택됨':'빠른 확인'}</span>
+          </div>
+          <div class="b2w2-modedesc">이번주와 지난주 흐름을 빠르게 비교할 때 보기 좋습니다.</div>
+          <div class="b2w2-presetrow">
+            ${[
+              ['thisWeek','이번주'],
+              ['lastWeek','지난주']
+            ].map(([key,label])=>`<button class="b2w2-preset${preset===key?' on':''}" onclick="(function(){var r=_b2BriefingPresetRange('${key}');window._b2WeeklyPreset='${key}';window._b2WeeklyDateFrom=r.from;window._b2WeeklyDateTo=r.to;render();})()">${label}</button>`).join('')}
+          </div>
+        </div>
+        <div class="b2w2-modecard ${_isMonthly?'is-active':''}">
+          <div class="b2w2-modehead">
+            <div>
+              <div class="b2w2-modekicker">Monthly Mode</div>
+              <div class="b2w2-modetitle">월간</div>
+            </div>
+            <span class="b2w2-modebadge">${_isMonthly?'선택됨':'깊게 보기'}</span>
+          </div>
+          <div class="b2w2-modedesc">이번달과 지난달 흐름을 조금 더 넓게 확인할 때 적합합니다.</div>
+          <div class="b2w2-presetrow">
+            ${[
+              ['thisMonth','이번달'],
+              ['lastMonth','지난달']
+            ].map(([key,label])=>`<button class="b2w2-preset${preset===key?' on':''}" onclick="(function(){var r=_b2BriefingPresetRange('${key}');window._b2WeeklyPreset='${key}';window._b2WeeklyDateFrom=r.from;window._b2WeeklyDateTo=r.to;render();})()">${label}</button>`).join('')}
+          </div>
+        </div>
+        <div class="b2w2-modecard ${_isCustom?'is-active':''}">
+          <div class="b2w2-modehead">
+            <div>
+              <div class="b2w2-modekicker">Custom Range</div>
+              <div class="b2w2-modetitle">기간</div>
+            </div>
+            <span class="b2w2-modebadge">${_isCustom?'사용 중':'직접 지정'}</span>
+          </div>
+          <div class="b2w2-modedesc">원하는 날짜 범위를 직접 입력해 특정 기간 브리핑으로 볼 수 있습니다.</div>
+          <div class="b2w2-presetrow">
+            <span class="b2w2-modebadge" style="background:${_isCustom?'#eff6ff':'var(--white)'};color:${_isCustom?'#2563eb':'var(--text2)'};border-color:${_isCustom?'#bfdbfe':'rgba(148,163,184,.18)'}">${_isCustom ? `${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}` : '아래 날짜 입력 후 조회'}</span>
+          </div>
+        </div>
+      </div>
       <div class="b2w2-hdr">
       <span style="font-size:16px">📅</span>
-      <span style="font-size:14px;font-weight:900;color:var(--text1)">주간 브리핑</span>
+      <span style="font-size:14px;font-weight:900;color:var(--text1)">${_briefingInfo.title}</span>
       <input type="date" class="b2w2-din" id="b2w2-from" tabindex="-1" value="${dateFrom}">
       <span style="font-size:12px;color:var(--text3);font-weight:700">~</span>
       <input type="date" class="b2w2-din" id="b2w2-to" tabindex="-1" value="${dateTo}">
@@ -5470,16 +5702,127 @@ function _b2WeeklyBriefingView() {
         if(f)window._b2WeeklyDateFrom=f.value;
         if(t)window._b2WeeklyDateTo=t.value;
         if(s)window._b2WeeklyUniv=s.value;
+        window._b2WeeklyPreset='custom';
         render();
       })()">조회</button>
       <span style="font-size:11px;color:var(--text3);margin-left:auto">${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}</span>
-      <span style="font-size:10px;color:var(--text3)">(전주: ${fmtDate(prevDateFrom)}~${fmtDate(prevDateTo)})</span>
+      <span style="font-size:10px;color:var(--text3)">(${_briefingInfo.prevLabel}: ${fmtDate(prevDateFrom)}~${fmtDate(prevDateTo)})</span>
     </div>`;
 
     const hasData = targetStats.some(ud => ud.tg > 0);
     if (!hasData) {
       h += `<div class="b2w2-empty"><div style="font-size:28px;margin-bottom:8px">📭</div>해당 기간에 기록된 경기가 없습니다.<div style="font-size:11px;margin-top:4px">기간을 변경해보세요</div></div></div>`;
       return h;
+    }
+
+    h += `<section class="b2w2-highlight-grid">
+      <article class="b2w2-highlight-card" style="background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(255,255,255,.98))">
+        <div class="b2w2-highlight-kicker" style="color:#2563eb">One Line</div>
+        <div class="b2w2-highlight-title">이번 기간 한 줄 브리핑</div>
+        <div class="b2w2-highlight-desc">${_heroSummary}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="b2w2-note-chip" style="border-color:#bfdbfe;color:#2563eb;background:#eff6ff">활동 스트리머 ${activePlayers.length}명</span>
+          <span class="b2w2-note-chip">${_periodDays}일 집계</span>
+        </div>
+      </article>
+      <article class="b2w2-highlight-card">
+        <div class="b2w2-highlight-kicker">Top Universities</div>
+        <div class="b2w2-highlight-title">${_topLabel}</div>
+        <div class="b2w2-highlight-list">
+          ${topUnivs.length ? topUnivs.map((ud, idx) => `
+            <div class="b2w2-highlight-row">
+              <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                <span style="font-size:11px;font-weight:900;color:${gc ? gc(ud.u.name) : '#64748b'}">${idx + 1}</span>
+                <span style="font-size:12px;font-weight:900;color:var(--text1)">${ud.u.name}</span>
+              </div>
+              <div style="font-size:11px;font-weight:800;color:var(--text3)">${ud.tg}전 · 활동 ${ud.active.length}명</div>
+            </div>
+          `).join('') : `<div class="b2w2-highlight-desc">활동 대학이 없습니다.</div>`}
+        </div>
+      </article>
+      <article class="b2w2-highlight-card">
+        <div class="b2w2-highlight-kicker">Momentum</div>
+        <div class="b2w2-highlight-title">상승세 스트리머</div>
+        ${hotPlayer ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-size:18px;font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${hotPlayer.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${hotPlayer.p?.name || '-'}</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px">${String(hotPlayer.p?.univ || '무소속')}</div>
+            </div>
+            <span class="b2w2-note-chip" style="border-color:#bbf7d0;color:#15803d;background:#f0fdf4">${hotPlayer.wins}승 ${hotPlayer.losses}패</span>
+          </div>
+          <div class="b2w2-highlight-list">
+            <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">승률 변화</span><strong style="font-size:12px;color:${hotPlayer.wrDelta >= 0 ? '#10b981' : '#ef4444'}">${hotPlayer.wrDelta >= 0 ? '+' : ''}${hotPlayer.wrDelta}%p</strong></div>
+            <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">경기 수 변화</span><strong style="font-size:12px;color:var(--text1)">${hotPlayer.totalDelta >= 0 ? '+' : ''}${hotPlayer.totalDelta}전</strong></div>
+          </div>
+        ` : `<div class="b2w2-highlight-desc">전주와 비교할 만큼 활동한 스트리머가 아직 없습니다.</div>`}
+      </article>
+      <article class="b2w2-highlight-card">
+        <div class="b2w2-highlight-kicker">First Activity</div>
+        <div class="b2w2-highlight-title">이번 기간 첫 활동 스트리머</div>
+        <div class="b2w2-highlight-list">
+          ${firstActivityPlayers.length ? firstActivityPlayers.map(s => `
+            <div class="b2w2-highlight-row">
+              <span style="font-size:12px;font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${s.p?.name || '-'}</span>
+              <span style="font-size:11px;font-weight:800;color:var(--text3)">${s.total}전 · ${s.wins}승 ${s.losses}패</span>
+            </div>
+          `).join('') : `<div class="b2w2-highlight-desc">이번 기간 첫 활동 스트리머가 없습니다.</div>`}
+        </div>
+      </article>
+    </section>`;
+
+    if (_isMonthly && selUniv === '전체') {
+      h += `<section class="b2w2-monthly-grid">
+        <article class="b2w2-highlight-card" style="background:linear-gradient(135deg,rgba(245,158,11,.10),rgba(255,255,255,.98))">
+          <div class="b2w2-highlight-kicker" style="color:#b45309">Monthly MVP</div>
+          <div class="b2w2-highlight-title">${preset==='thisMonth' ? '이달 MVP' : '지난달 MVP'}</div>
+          ${monthlyMvp ? `
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div>
+                <div style="font-size:20px;font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${monthlyMvp.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${monthlyMvp.p?.name || '-'}</div>
+                <div style="font-size:12px;color:var(--text3);margin-top:4px">${String(monthlyMvp.p?.univ || '무소속')}</div>
+              </div>
+              <span class="b2w2-note-chip" style="border-color:#fde68a;color:#b45309;background:#fff7ed">${monthlyMvp.total}전</span>
+            </div>
+            <div class="b2w2-highlight-list">
+              <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">전적</span><strong style="font-size:12px;color:var(--text1)">${monthlyMvp.wins}승 ${monthlyMvp.losses}패</strong></div>
+              <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">승률</span><strong style="font-size:12px;color:${(monthlyMvp.winRate ?? 0) >= 50 ? '#16a34a' : '#ef4444'}">${monthlyMvp.winRate ?? 0}%</strong></div>
+            </div>
+          ` : `<div class="b2w2-highlight-desc">월간 MVP를 선정할 기록이 아직 없습니다.</div>`}
+        </article>
+        <article class="b2w2-highlight-card">
+          <div class="b2w2-highlight-kicker">Monthly Top 5</div>
+          <div class="b2w2-highlight-title">${preset==='thisMonth' ? '이달 활동 TOP 5' : '지난달 활동 TOP 5'}</div>
+          <div class="b2w2-highlight-list">
+            ${monthlyTopPlayers.length ? monthlyTopPlayers.map((s, idx) => `
+              <div class="b2w2-highlight-row">
+                <span style="font-size:12px;font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${idx + 1}. ${s.p?.name || '-'}</span>
+                <span style="font-size:11px;font-weight:800;color:var(--text3)">${s.total}전 · ${s.wins}승</span>
+              </div>
+            `).join('') : `<div class="b2w2-highlight-desc">월간 활동 스트리머가 없습니다.</div>`}
+          </div>
+        </article>
+        <article class="b2w2-highlight-card">
+          <div class="b2w2-highlight-kicker">Monthly First</div>
+          <div class="b2w2-highlight-title">${preset==='thisMonth' ? '이번달 첫 활동' : '지난달 첫 활동'}</div>
+          <div class="b2w2-highlight-list">
+            ${firstActivityPlayers.length ? firstActivityPlayers.map(s => `
+              <div class="b2w2-highlight-row">
+                <span style="font-size:12px;font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${s.p?.name || '-'}</span>
+                <span style="font-size:11px;font-weight:800;color:var(--text3)">${s.total}전</span>
+              </div>
+            `).join('') : `<div class="b2w2-highlight-desc">해당 월에 새로 활동한 스트리머가 없습니다.</div>`}
+          </div>
+        </article>
+      </section>`;
+    }
+
+    if (silentUnivs.length) {
+      h += `<div class="b2w2-note-row">
+        <span style="font-size:11px;font-weight:900;color:var(--text3)">기록 없는 대학</span>
+        ${silentUnivs.slice(0, 8).map(name => `<span class="b2w2-note-chip">${name}</span>`).join('')}
+        ${silentUnivs.length > 8 ? `<span style="font-size:11px;color:var(--text3);font-weight:800">외 ${silentUnivs.length - 8}곳</span>` : ''}
+      </div>`;
     }
 
     // ── MVP 배너
@@ -5492,7 +5835,7 @@ function _b2WeeklyBriefingView() {
       h += `<div class="b2w2-mvp">
         <span style="font-size:20px">🏆</span>
         <div>
-          <div style="font-size:10px;font-weight:800;color:#b45309;letter-spacing:.5px">이번 주 MVP</div>
+          <div style="font-size:10px;font-weight:800;color:#b45309;letter-spacing:.5px">${_mvpLabel}</div>
           <div style="font-size:16px;font-weight:900;color:var(--text1)"><span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${mp.name}" style="cursor:pointer;border-bottom:2px solid ${col}66;padding-bottom:1px">${mp.name}</span> ${rIco}
             ${mp.tier?`<span style="font-size:10px;padding:1px 6px;border-radius:5px;background:${tc};color:${tt}">${mp.tier}</span>`:''}
           </div>
@@ -5636,6 +5979,6 @@ function _b2WeeklyBriefingView() {
 
   } catch(e) {
     console.error('[_b2WeeklyBriefingView v2] 오류:', e);
-    return `<div style="padding:40px;text-align:center;color:#dc2626">주간 브리핑 오류: ${e.message}</div>`;
+    return `<div style="padding:40px;text-align:center;color:#dc2626">브리핑 오류: ${e.message}</div>`;
   }
 }

@@ -97,7 +97,7 @@ function rCfg(C,T){
     'tierrank-view':'📊 티어 순위표 보기 방식',
     bgm:'🎵 유튜브 배경음악(BGM)', soopmv:'📺 SOOP(숲) 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
-    fab:'📱 플로팅(FAB)', storage:'💾 저장소', selfcheck:'🧪 설정 점검',
+    fab:'📱 플로팅(FAB)', storage:'💾 저장소', datacheck:'🧾 데이터 검수', selfcheck:'🧪 설정 점검',
     sync:'🔄 동기화', firebase:'☁️ GitHub(깃허브) 동기화', aibot:'🤖 AI봇(Groq) 서버 설정', bulkdate:'📅 일괄 날짜', bulkmap:'🗺️ 일괄 맵', bulktier:'🎯 일괄 티어', bulkdel:'🗑️ 일괄 삭제', bulkconv:'🧾 변환'
   };
   // 사용자 지정 섹션명 적용
@@ -218,6 +218,7 @@ function rCfg(C,T){
     hdr:'상단 헤더 제목, 배경, 아이콘 조정',
     fab:'모바일 플로팅 버튼 구성 설정',
     storage:'로컬 저장 용량과 사용 현황 확인',
+    datacheck:'사진/대학/티어/기록 누락과 날짜 이상 점검',
     selfcheck:'설정 동작 이상 여부 점검',
     sync:'설정 백업, 내보내기, 가져오기, 동기화',
     firebase:'GitHub/Firebase 연동 설정',
@@ -1019,6 +1020,14 @@ ${_scfgD('notice','📢 공지 관리')}
       <div id="cfg-storage-info"><div style="color:var(--gray-l);font-size:12px">계산 중...</div></div>
       <button class="btn btn-w btn-sm" style="margin-top:8px" onclick="renderStorageInfo()">🔄 새로고침</button>
     </div>
+  </details>
+  ${_scfgD('datacheck','🧾 데이터 검수')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">관리용 점검 패널입니다. 사진 누락, 대학/티어 미설정, 최근 30일 기록 없음, 날짜 형식 이상을 한 번에 확인할 수 있습니다.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-b btn-sm" onclick="cfgRunDataAudit()">🔎 지금 점검</button>
+      <span style="font-size:11px;color:var(--gray-l)">※ 클릭한 이름은 바로 상세 팝업으로 열 수 있습니다.</span>
+    </div>
+    <div id="cfg-datacheck-out" style="margin-top:10px"></div>
   </details>
   ${_scfgD('selfcheck','🧪 설정 기능 점검')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">설정 화면에서 버튼/토글이 “눌러도 안되는” 경우, 핸들러(함수) 누락이 원인일 수 있습니다.</div>

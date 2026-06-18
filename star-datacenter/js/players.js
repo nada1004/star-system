@@ -993,7 +993,39 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-toolbar-card .pill{border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.92));color:var(--text2);font-weight:800;box-shadow:0 8px 16px rgba(15,23,42,.04);transition:transform .15s,box-shadow .15s,border-color .15s,background .15s}',
     '.tier-toolbar-card .pill:hover{transform:translateY(-1px);box-shadow:0 14px 24px rgba(15,23,42,.08)}',
     '.tier-toolbar-card .pill.on{background:linear-gradient(135deg,#2563eb,#3b82f6);border-color:#2563eb;color:#fff;box-shadow:0 14px 26px rgba(37,99,235,.24)}',
-    '.tier-toolbar-card .tier-chip-soft{padding:4px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(248,250,252,.94);font-size:11px;font-weight:800;color:var(--text2)}',
+    '.tier-toolbar-card .tier-chip-soft{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(248,250,252,.94);font-size:11px;font-weight:800;color:var(--text2)}',
+    '.tier-toolbar-card .tier-chip-soft button{border:0;background:transparent;color:inherit;padding:0;margin:0;cursor:pointer;font-size:12px;font-weight:900;line-height:1;opacity:.72}',
+    '.tier-toolbar-card .tier-chip-soft button:hover{opacity:1}',
+    '.tier-toolbar-card .tier-chip-soft.is-date{background:linear-gradient(180deg,rgba(219,234,254,.96),rgba(239,246,255,.92));border-color:rgba(59,130,246,.22);color:#1d4ed8}',
+    '.tier-toolbar-card .tier-chip-soft.is-univ{background:linear-gradient(180deg,rgba(237,233,254,.96),rgba(245,243,255,.92));border-color:rgba(124,58,237,.20);color:#6d28d9}',
+    '.tier-toolbar-card .tier-chip-soft.is-tier{background:linear-gradient(180deg,rgba(255,247,237,.96),rgba(255,251,235,.92));border-color:rgba(245,158,11,.24);color:#b45309}',
+    '.tier-toolbar-card .tier-chip-soft.is-race{background:linear-gradient(180deg,rgba(236,253,245,.96),rgba(240,253,250,.92));border-color:rgba(16,185,129,.20);color:#047857}',
+    '.tier-toolbar-card .tier-chip-soft.is-option{background:linear-gradient(180deg,rgba(254,242,242,.96),rgba(255,241,242,.92));border-color:rgba(239,68,68,.20);color:#b91c1c}',
+    '.tier-toolbar-card .tier-chip-soft.is-type{background:linear-gradient(180deg,rgba(243,232,255,.96),rgba(250,245,255,.92));border-color:rgba(168,85,247,.20);color:#7e22ce}',
+    '.tier-filter-blocks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}',
+    '.tier-filter-block{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.04)}',
+    '.tier-filter-block.is-full{grid-column:1 / -1}',
+    '.tier-filter-head{display:flex;align-items:center;justify-content:space-between;gap:8px}',
+    '.tier-filter-title{font-size:12px;font-weight:900;color:var(--text2);letter-spacing:-.01em}',
+    '.tier-filter-desc{font-size:11px;font-weight:700;color:var(--text3)}',
+    '.tier-filter-sub{font-size:11px;font-weight:900;color:var(--text3);letter-spacing:-.01em;margin-top:2px}',
+    '.tier-filter-selectrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:2px}',
+    '.tier-filter-selectbox{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 8px 16px rgba(15,23,42,.04)}',
+    '.tier-filter-selectbox label{font-size:11px;font-weight:900;color:var(--text3);white-space:nowrap}',
+    '.tier-filter-selectbox select{flex:1;min-width:0;border:1px solid rgba(148,163,184,.22);background:#fff;border-radius:10px;padding:7px 10px;font-size:12px;font-weight:800;color:var(--text2);outline:none}',
+    '.tier-filter-chiprow{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;padding-bottom:2px}',
+    '.tier-filter-option-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}',
+    '.tier-type-preset-row{display:flex;flex-wrap:wrap;gap:6px}',
+    '.tier-type-selected{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;border-radius:14px;border:1px dashed rgba(148,163,184,.26);background:rgba(248,250,252,.72)}',
+    '.tier-type-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}',
+    '.tier-type-group{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.9))}',
+    '.tier-type-group-head{display:flex;align-items:center;justify-content:space-between;gap:6px}',
+    '.tier-type-group-title{font-size:11px;font-weight:900;color:var(--text2)}',
+    '.tier-type-group-count{font-size:10px;font-weight:800;color:var(--text3)}',
+    '.tier-toggle-pill{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));cursor:pointer;box-shadow:0 8px 16px rgba(15,23,42,.04);font-size:12px;font-weight:800;color:var(--text2)}',
+    '.tier-toggle-pill::after{content:"OFF";font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px;background:rgba(148,163,184,.14);color:var(--text3)}',
+    '.tier-toggle-pill.on{border-color:rgba(37,99,235,.24);background:linear-gradient(180deg,rgba(239,246,255,.98),rgba(219,234,254,.92));color:#1d4ed8;box-shadow:0 12px 22px rgba(37,99,235,.10)}',
+    '.tier-toggle-pill.on::after{content:"ON";background:rgba(37,99,235,.14);color:#1d4ed8}',
     '.tier-type-box{width:100%;display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;background:linear-gradient(180deg,rgba(248,250,252,.96),rgba(241,245,249,.94));border-radius:14px;border:1px solid rgba(148,163,184,.16);margin-top:2px}',
     '.tier-view-btn{padding:6px 9px;border-radius:10px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:13px;cursor:pointer;line-height:1;box-shadow:0 8px 16px rgba(15,23,42,.04)}',
     '.tier-view-btn.on{border-color:var(--blue);background:#eff6ff;color:var(--blue)}',
@@ -1047,6 +1079,27 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     'body.dark .tier-toolbar-card .pill{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#cbd5e1;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     'body.dark .tier-toolbar-card .pill.on{background:linear-gradient(135deg,#1d4ed8,#2563eb);border-color:#2563eb;color:#eff6ff;box-shadow:0 16px 28px rgba(37,99,235,.22)}',
     'body.dark .tier-toolbar-card .tier-chip-soft,body.dark .tier-type-box{background:linear-gradient(180deg,rgba(15,23,42,.92),rgba(30,41,59,.88));border-color:#334155;color:#cbd5e1}',
+    'body.dark .tier-toolbar-card .tier-chip-soft.is-date{background:linear-gradient(180deg,rgba(29,78,216,.22),rgba(30,64,175,.18));border-color:rgba(96,165,250,.22);color:#bfdbfe}',
+    'body.dark .tier-toolbar-card .tier-chip-soft.is-univ{background:linear-gradient(180deg,rgba(109,40,217,.22),rgba(91,33,182,.18));border-color:rgba(196,181,253,.18);color:#ddd6fe}',
+    'body.dark .tier-toolbar-card .tier-chip-soft.is-tier{background:linear-gradient(180deg,rgba(180,83,9,.22),rgba(146,64,14,.18));border-color:rgba(251,191,36,.18);color:#fde68a}',
+    'body.dark .tier-toolbar-card .tier-chip-soft.is-race{background:linear-gradient(180deg,rgba(4,120,87,.22),rgba(6,95,70,.18));border-color:rgba(110,231,183,.18);color:#a7f3d0}',
+    'body.dark .tier-toolbar-card .tier-chip-soft.is-option{background:linear-gradient(180deg,rgba(185,28,28,.22),rgba(153,27,27,.18));border-color:rgba(252,165,165,.18);color:#fecaca}',
+    'body.dark .tier-toolbar-card .tier-chip-soft.is-type{background:linear-gradient(180deg,rgba(126,34,206,.22),rgba(107,33,168,.18));border-color:rgba(216,180,254,.18);color:#e9d5ff}',
+    'body.dark .tier-filter-block{background:linear-gradient(180deg,rgba(15,23,42,.92),rgba(30,41,59,.88));border-color:#334155;box-shadow:0 14px 24px rgba(0,0,0,.18)}',
+    'body.dark .tier-filter-title{color:#e2e8f0}',
+    'body.dark .tier-filter-desc{color:#94a3b8}',
+    'body.dark .tier-filter-sub{color:#94a3b8}',
+    'body.dark .tier-filter-selectbox{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(30,41,59,.88));border-color:#334155;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .tier-filter-selectbox label{color:#94a3b8}',
+    'body.dark .tier-filter-selectbox select{background:#0f172a;border-color:#334155;color:#e2e8f0}',
+    'body.dark .tier-type-selected{background:rgba(15,23,42,.56);border-color:#334155}',
+    'body.dark .tier-type-group{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(30,41,59,.88));border-color:#334155}',
+    'body.dark .tier-type-group-title{color:#e2e8f0}',
+    'body.dark .tier-type-group-count{color:#94a3b8}',
+    'body.dark .tier-toggle-pill{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(30,41,59,.88));border-color:#334155;color:#cbd5e1;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
+    'body.dark .tier-toggle-pill::after{background:rgba(148,163,184,.14);color:#cbd5e1}',
+    'body.dark .tier-toggle-pill.on{background:linear-gradient(180deg,rgba(30,64,175,.26),rgba(29,78,216,.20));border-color:#2563eb;color:#dbeafe}',
+    'body.dark .tier-toggle-pill.on::after{background:rgba(59,130,246,.18);color:#bfdbfe}',
     'body.dark .tier-view-btn{background:#0f172a;border-color:#334155;color:#cbd5e1;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     'body.dark .tier-view-btn.on{background:#17263c;color:#93c5fd;border-color:#2563eb}',
     'body.dark .tier-univ-badge{box-shadow:0 12px 22px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.05)}',
@@ -1065,7 +1118,7 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     'body.dark .tier-act-dot.warm{color:#fcd34d;border-color:rgba(245,158,11,.22)}',
     'body.dark .tier-act-dot.cool,body.dark .tier-act-dot.none{color:#cbd5e1}',
     'body.dark .tier-podium-rest{border-top-color:#334155}',
-    '@media (max-width:780px){.tier-hero{flex-direction:column;padding:16px;border-radius:20px}.tier-hero-title{font-size:20px}.tier-hero-badges{justify-content:flex-start}.tier-toolbar-card,.tier-content-card{padding:10px}.tier-card-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}.tier-podium{gap:6px}.tier-group-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}}'
+    '@media (max-width:780px){.tier-hero{flex-direction:column;padding:16px;border-radius:20px}.tier-hero-title{font-size:20px}.tier-hero-badges{justify-content:flex-start}.tier-toolbar-card,.tier-content-card{padding:10px}.tier-filter-blocks{grid-template-columns:1fr}.tier-filter-selectrow,.tier-filter-option-row,.tier-type-grid{grid-template-columns:1fr}.tier-card-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}.tier-podium{gap:6px}.tier-group-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}}'
   ].join('');
   document.head.appendChild(s);
 })();
@@ -1129,17 +1182,122 @@ function rTier(C,T){
     {id:'univm_win',lbl:'🏟️ 대학대전 승',color:'#7c3aed'},
     {id:'univm_loss',lbl:'🏟️ 대학대전 패',color:'#7c3aed'},
   ];
+  const _typeGroups=[
+    { title:'대학/팀전', ids:['mini_win','mini_loss','ck_win','ck_loss','univm_win','univm_loss'] },
+    { title:'개인전', ids:['ind_win','ind_loss','gj_win','gj_loss','civ_win','civ_loss'] },
+    { title:'대회/프로', ids:['comp_win','comp_loss','tt_win','tt_loss','pro_win','pro_loss'] },
+  ];
+  const _typePresets=[
+    { title:'승만', ids:modeSortBtns.filter(m=>m.id.endsWith('_win')).map(m=>m.id) },
+    { title:'패만', ids:modeSortBtns.filter(m=>m.id.endsWith('_loss')).map(m=>m.id) },
+    { title:'대학전만', ids:_typeGroups[0].ids },
+    { title:'개인전만', ids:_typeGroups[1].ids },
+    { title:'대회/프로만', ids:_typeGroups[2].ids },
+  ];
+  const _isSameTypePreset = (ids)=>{
+    const cur = window._tierTypeSet || new Set();
+    if(cur.size !== ids.length) return false;
+    return ids.every(id => cur.has(id));
+  };
   const allModeIds=new Set([...modes.map(m=>m.id),...modeSortBtns.map(m=>m.id)]);
   if(!tierRankMode||!allModeIds.has(tierRankMode)) tierRankMode='tier';
   const _curModeNoFilter=tierRankMode&&(!window._tierTypeSet||window._tierTypeSet.size===0);
   if(window._tierTypeFilterOpen===undefined) window._tierTypeFilterOpen=false;
   if(window._tierFilterOpen===undefined) window._tierFilterOpen=false;
+  if(window._tierDatePreset===undefined) window._tierDatePreset='all';
+  if(window._tierDateFrom===undefined) window._tierDateFrom='';
+  if(window._tierDateTo===undefined) window._tierDateTo='';
   if(!window._tierRaceFilter) window._tierRaceFilter='전체';
   if(window._tierHideNoRecord===undefined) window._tierHideNoRecord=false;
+  const _toIsoTier = (v)=>{
+    try{
+      if(typeof window._toIsoDateStr === 'function'){
+        const iso = String(window._toIsoDateStr(v)||'').trim();
+        if(iso) return iso.slice(0,10);
+      }
+    }catch(e){}
+    const s = String(v||'').trim();
+    if(!s) return '';
+    const m = s.match(/(20\d{2})\D?(\d{1,2})\D?(\d{1,2})/);
+    if(!m) return '';
+    return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  };
+  const _tierDateNum = (v)=>{
+    const iso = _toIsoTier(v);
+    return iso ? parseInt(iso.replace(/-/g,''),10) || 0 : 0;
+  };
+  const _tierNow = new Date();
+  const _tierToday = _tierNow.toISOString().slice(0,10);
+  const _tierDaysAgo = (n)=>new Date(_tierNow.getTime()-n*86400000).toISOString().slice(0,10);
+  const _tierMonthStart = `${_tierNow.getFullYear()}-${String(_tierNow.getMonth()+1).padStart(2,'0')}-01`;
+  const _tierPrevMonth = new Date(_tierNow.getFullYear(), _tierNow.getMonth()-1, 1);
+  const _tierPrevMonthFrom = `${_tierPrevMonth.getFullYear()}-${String(_tierPrevMonth.getMonth()+1).padStart(2,'0')}-01`;
+  const _tierPrevMonthTo = `${_tierPrevMonth.getFullYear()}-${String(_tierPrevMonth.getMonth()+1).padStart(2,'0')}-${String(new Date(_tierPrevMonth.getFullYear(), _tierPrevMonth.getMonth()+1, 0).getDate()).padStart(2,'0')}`;
+  const _tierDateFrom = String(window._tierDateFrom||'').trim();
+  const _tierDateTo = String(window._tierDateTo||'').trim();
+  const _tierFromN = _tierDateNum(_tierDateFrom);
+  const _tierToN = _tierDateNum(_tierDateTo);
+  const _hasDateFilter = !!(_tierDateFrom || _tierDateTo);
+  const _tierDateBadge = _hasDateFilter ? `${_tierDateFrom||'시작'} ~ ${_tierDateTo||'현재'}` : '전체 기간';
+  function _tierInDateRange(raw){
+    if(!_hasDateFilter) return true;
+    const n = _tierDateNum(raw);
+    if(!n) return false;
+    if(_tierFromN && n < _tierFromN) return false;
+    if(_tierToN && n > _tierToN) return false;
+    return true;
+  }
+  const _tierPeriodStats = {};
+  _pl.forEach(p=>{
+    const hist = (Array.isArray(p.history) ? p.history : []).filter(h=>_tierInDateRange(h?.date || h?.d || ''));
+    const w = hist.filter(h=>h && h.result==='승').length;
+    const l = hist.filter(h=>h && h.result==='패').length;
+    const pointDelta = hist.reduce((sum,h)=>{
+      if(!h) return sum;
+      if(h.result==='승') return sum + 3;
+      if(h.result==='패') return sum - 3;
+      return sum;
+    }, 0);
+    const eloDelta = hist.reduce((sum,h)=>sum + (Number(h?.eloDelta||0) || 0), 0);
+    const lastD = hist.reduce((mx,h)=>{
+      const d = _toIsoTier(h?.date || h?.d || '');
+      return d && d > mx ? d : mx;
+    },'');
+    _tierPeriodStats[p.name] = { w, l, total:w+l, pointDelta, eloDelta, lastD };
+  });
+  function _tierWL(p){
+    if(_hasDateFilter){
+      const s = _tierPeriodStats[p.name] || { w:0, l:0, total:0, pointDelta:0, eloDelta:0, lastD:'' };
+      return {
+        w: s.w || 0,
+        l: s.l || 0,
+        tot: s.total || 0,
+        wr: s.total ? Math.round((s.w||0)/s.total*100) : 0,
+        points: Number(s.pointDelta||0) || 0,
+        eloDelta: Number(s.eloDelta||0) || 0,
+        lastD: s.lastD || ''
+      };
+    }
+    const w = Number(p.win||0);
+    const l = Number(p.loss||0);
+    const tot = w + l;
+    const lastD = (Array.isArray(p.history) ? p.history : []).reduce((mx,h)=>{
+      const d = _toIsoTier(h?.date || h?.d || '');
+      return d && d > mx ? d : mx;
+    },'');
+    return {
+      w, l, tot,
+      wr: tot ? Math.round(w/tot*100) : 0,
+      points: Number(p.points||0),
+      eloDelta: 0,
+      lastD
+    };
+  }
   const _hasTypeFilter=window._tierTypeSet&&window._tierTypeSet.size>0;
   // 활성 필터 수 계산 (뱃지용)
   const _activeFilters=[
     _fUniv!=='전체', _fTier!=='전체',
+    _hasDateFilter,
     window._tierRaceFilter!=='전체',
     window._tierHideNoRecord, window._tierExcludeMale,
     _hasTypeFilter
@@ -1175,15 +1333,64 @@ function rTier(C,T){
   // (요청사항) 티어순위표 하위 메뉴의 '티어표' 버튼 제거
   fh+=`</div>`;
 
-  if(window._tierFilterOpen||_activeFilters>0){
-  {
+  if(window._tierFilterOpen){
+    const _periodBtn = (id, label, from, to)=>{
+      const on = (window._tierDatePreset||'all')===id && _tierDateFrom===from && _tierDateTo===to;
+      return `<button class="pill ${on?'on':''}" style="flex-shrink:0" onclick="window._tierDatePreset='${id}';window._tierDateFrom='${from}';window._tierDateTo='${to}';render()">${label}</button>`;
+    };
+    fh+=`<div class="tier-filter-blocks">`;
+    fh+=`<section class="tier-filter-block">
+      <div class="tier-filter-head">
+        <div class="tier-filter-title">기간 필터</div>
+        <div class="tier-filter-desc">${_tierDateBadge}</div>
+      </div>
+      <div class="fbar" style="flex-wrap:wrap;gap:6px;align-items:center">
+        ${_periodBtn('all','전체','','')}
+        ${_periodBtn('7d','최근 7일',_tierDaysAgo(6),_tierToday)}
+        ${_periodBtn('30d','최근 30일',_tierDaysAgo(29),_tierToday)}
+        ${_periodBtn('month','이번달',_tierMonthStart,_tierToday)}
+        ${_periodBtn('prev-month','지난달',_tierPrevMonthFrom,_tierPrevMonthTo)}
+      </div>
+      <div class="fbar" style="flex-wrap:wrap;gap:8px;align-items:center">
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text3);white-space:nowrap">
+          <input type="date" value="${_tierDateFrom}" onchange="window._tierDatePreset='custom';window._tierDateFrom=this.value;render()" style="font-size:11px;padding:4px 8px;border:1px solid var(--border2);border-radius:8px">
+          <span>~</span>
+          <input type="date" value="${_tierDateTo}" onchange="window._tierDatePreset='custom';window._tierDateTo=this.value;render()" style="font-size:11px;padding:4px 8px;border:1px solid var(--border2);border-radius:8px">
+        </label>
+        <span style="font-size:11px;font-weight:700;color:${_hasDateFilter?'var(--blue)':'var(--text3)'};padding:4px 9px;border-radius:999px;border:1px solid ${_hasDateFilter?'rgba(37,99,235,.25)':'var(--border2)'};background:${_hasDateFilter?'rgba(37,99,235,.08)':'transparent'}">${_tierDateBadge}</span>
+        ${_hasDateFilter?`<button class="pill" style="background:#fff1f2;border-color:#fecdd3;color:#dc2626" onclick="window._tierDatePreset='all';window._tierDateFrom='';window._tierDateTo='';render()">기간 초기화</button>`:''}
+      </div>
+    </section>`;
+    fh+=`<section class="tier-filter-block">
+      <div class="tier-filter-head">
+        <div class="tier-filter-title">기본 필터</div>
+        <div class="tier-filter-desc">대학, 티어, 종족, 옵션</div>
+      </div>`;
+    fh+=`<div class="tier-filter-selectrow">
+      <div class="tier-filter-selectbox">
+        <label for="tier-univ-select">대학 선택</label>
+        <select id="tier-univ-select" onchange="sf(this.value,'${_fTier}')">
+          <option value="전체"${_fUniv==='전체'?' selected':''}>전체 대학</option>
+          ${allU.map(u=>`<option value="${String(u.name||'').replace(/"/g,'&quot;')}"${_fUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="tier-filter-selectbox">
+        <label for="tier-tier-select">티어 선택</label>
+        <select id="tier-tier-select" onchange="sf('${_fUniv}',this.value)">
+          <option value="전체"${_fTier==='전체'?' selected':''}>전체 티어</option>
+          ${_tiers.map(t=>`<option value="${String(t).replace(/"/g,'&quot;')}"${_fTier===t?' selected':''}>${getTierPillLabel(t)}</option>`).join('')}
+        </select>
+      </div>
+    </div>`;
     // ── 2행: 대학 (스크롤) ──
-    fh+=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;padding-bottom:2px">`;
+    fh+=`<div class="tier-filter-sub">대학</div>`;
+    fh+=`<div class="fbar tier-filter-chiprow">`;
     fh+=`<button class="pill ${_fUniv==='전체'?'on':''}" style="flex-shrink:0" onclick="sf('전체','${_fTier}')">전체</button>`;
     allU.forEach(u=>{fh+=`<button class="pill ${_fUniv===u.name?'on':''}" style="flex-shrink:0;${_fUniv===u.name?`background:${u.color};border-color:${u.color};color:#fff`:''}" onclick="sf('${u.name}','${_fTier}')">${u.name}</button>`;});
     fh+=`</div>`;
     // ── 3행: 티어 (스크롤) ──
-    fh+=`<div class="fbar" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;padding-bottom:2px">`;
+    fh+=`<div class="tier-filter-sub">티어</div>`;
+    fh+=`<div class="fbar tier-filter-chiprow">`;
     fh+=`<button class="pill ${_fTier==='전체'?'on':''}" style="flex-shrink:0" onclick="sf('${_fUniv}','전체')">전체</button>`;
     _tiers.forEach(t=>{
       const _bc=getTierBtnColor(t),_bt=getTierBtnTextColor(t),_sel=_fTier===t;
@@ -1191,15 +1398,17 @@ function rTier(C,T){
     });
     fh+=`</div>`;
     // ── 4행: 종족 + 옵션 (flex-wrap) ──
+    fh+=`<div class="tier-filter-sub">종족</div>`;
     fh+=`<div class="fbar" style="flex-wrap:wrap;gap:6px">`;
     ['전체','T','Z','P'].forEach(r=>{
       fh+=`<button class="pill ${window._tierRaceFilter===r?'on':''}" onclick="window._tierRaceFilter='${r}';render()">${r==='전체'?'전체':r}</button>`;
     });
-    fh+=`<span style="color:var(--border2);align-self:center">│</span>`;
-    fh+=`<button class="pill ${window._tierHideNoRecord?'on':''}" style="${window._tierHideNoRecord?'background:#f59e0b;border-color:#f59e0b;color:#fff':''}" onclick="window._tierHideNoRecord=!window._tierHideNoRecord;render()">전적없는 스트리머 숨김</button>`;
-    fh+=`<button class="pill ${window._tierExcludeMale?'on':''}" style="${window._tierExcludeMale?'background:#ec4899;border-color:#ec4899;color:#fff':''}" onclick="window._tierExcludeMale=!window._tierExcludeMale;render()">남자 제외</button>`;
     fh+=`</div>`;
-  }
+    fh+=`<div class="tier-filter-sub">옵션</div>`;
+    fh+=`<div class="tier-filter-option-row">
+      <button class="tier-toggle-pill ${window._tierHideNoRecord?'on':''}" onclick="window._tierHideNoRecord=!window._tierHideNoRecord;render()">전적없는 스트리머 숨김</button>
+      <button class="tier-toggle-pill ${window._tierExcludeMale?'on':''}" onclick="window._tierExcludeMale=!window._tierExcludeMale;render()">남자 제외</button>
+    </div></section>`;
 
   // ── 3행: 유형별 필터 ──
   const _typeCount=window._tierTypeSet?window._tierTypeSet.size:0;
@@ -1207,26 +1416,69 @@ function rTier(C,T){
   const _toggleBtnStyle=_typeCount>0&&!window._tierTypeFilterOpen
     ?'padding:3px 10px;border-radius:12px;border:2px solid var(--blue);background:var(--blue);font-size:11px;cursor:pointer;color:#fff;font-weight:700'
     :'padding:3px 10px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);font-size:11px;cursor:pointer;color:var(--text3)';
-  fh+=`<div class="fbar" style="gap:6px;flex-wrap:wrap;align-items:center">
+  fh+=`<section class="tier-filter-block is-full">
+    <div class="tier-filter-head">
+      <div class="tier-filter-title">유형 필터</div>
+      <div class="tier-filter-desc">승/패 종류별 세부 선택</div>
+    </div>
+    <div class="fbar" style="gap:6px;flex-wrap:wrap;align-items:center">
     <button class="pill ${!_hasTypeFilter?'on':''}" onclick="window._tierTypeSet=new Set();window._tierTypeFilterOpen=false;render()">전체</button>`;
+  fh+=`<div class="tier-type-preset-row">`;
+  _typePresets.forEach(p=>{
+    const _on = _isSameTypePreset(p.ids);
+    fh+=`<button class="pill ${_on?'on':''}" onclick="window._tierTypeSet=new Set(${JSON.stringify(p.ids)});window._tierTypeFilterOpen=true;render()">${p.title}</button>`;
+  });
+  fh+=`</div>`;
   if(_hasTypeFilter){
-    window._tierTypeSet.forEach(id=>{
+    fh+=`<div class="tier-type-selected">`;
+    [...window._tierTypeSet].forEach(id=>{
       const mb=modeSortBtns.find(m=>m.id===id);
       if(mb) fh+=`<button class="pill on" style="background:${mb.color};border-color:${mb.color};color:#fff" onclick="window._tierTypeSet.delete('${id}');render()">${mb.lbl} ✕</button>`;
     });
+    fh+=`</div>`;
   }
   fh+=`<button onclick="window._tierTypeFilterOpen=!window._tierTypeFilterOpen;render()" style="${_toggleBtnStyle}">${_toggleBtnLabel}</button>`;
   if(window._tierTypeFilterOpen){
-    fh+=`<div style="width:100%;display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;background:var(--surface);border-radius:10px;border:1px solid var(--border2);margin-top:2px">`;
-    modeSortBtns.forEach(m=>{
-      if(!window._tierTypeSet)window._tierTypeSet=new Set();
-      const on=window._tierTypeSet.has(m.id);
-      fh+=`<button class="pill ${on?'on':''}" style="${on?`background:${m.color};border-color:${m.color};color:#fff`:''}" onclick="if(!window._tierTypeSet)window._tierTypeSet=new Set();window._tierTypeSet.has('${m.id}')?window._tierTypeSet.delete('${m.id}'):window._tierTypeSet.add('${m.id}');render()">${m.lbl}</button>`;
+    fh+=`<div class="tier-type-grid">`;
+    _typeGroups.forEach(g=>{
+      const _items = g.ids.map(id=>modeSortBtns.find(m=>m.id===id)).filter(Boolean);
+      const _selCount = _items.filter(m=>window._tierTypeSet&&window._tierTypeSet.has(m.id)).length;
+      fh+=`<div class="tier-type-group">
+        <div class="tier-type-group-head">
+          <div class="tier-type-group-title">${g.title}</div>
+          <div class="tier-type-group-count">${_selCount}/${_items.length}</div>
+        </div>
+        <div class="fbar" style="gap:5px;flex-wrap:wrap">`;
+      _items.forEach(m=>{
+        if(!window._tierTypeSet)window._tierTypeSet=new Set();
+        const on=window._tierTypeSet.has(m.id);
+        fh+=`<button class="pill ${on?'on':''}" style="${on?`background:${m.color};border-color:${m.color};color:#fff`:''}" onclick="if(!window._tierTypeSet)window._tierTypeSet=new Set();window._tierTypeSet.has('${m.id}')?window._tierTypeSet.delete('${m.id}'):window._tierTypeSet.add('${m.id}');render()">${m.lbl}</button>`;
+      });
+      fh+=`</div></div>`;
     });
     fh+=`</div>`;
   }
-  fh+=`</div>`;
+  fh+=`</div></section></div>`;
   } // end filter open block
+  if(_activeFilters>0){
+    const _summaryChips = [];
+    if(_hasDateFilter) _summaryChips.push({ cls:'is-date', txt:`기간 ${_tierDateBadge}`, onclick:`window._tierDatePreset='all';window._tierDateFrom='';window._tierDateTo='';render()` });
+    if(_fUniv!=='전체') _summaryChips.push({ cls:'is-univ', txt:`대학 ${_fUniv}`, onclick:`sf('전체','${_fTier}');` });
+    if(_fTier!=='전체') _summaryChips.push({ cls:'is-tier', txt:`티어 ${getTierPillLabel(_fTier)}`, onclick:`sf('${_fUniv}','전체');` });
+    if(window._tierRaceFilter!=='전체') _summaryChips.push({ cls:'is-race', txt:`종족 ${window._tierRaceFilter}`, onclick:`window._tierRaceFilter='전체';render()` });
+    if(window._tierHideNoRecord) _summaryChips.push({ cls:'is-option', txt:'전적없음 숨김', onclick:`window._tierHideNoRecord=false;render()` });
+    if(window._tierExcludeMale) _summaryChips.push({ cls:'is-option', txt:'남자 제외', onclick:`window._tierExcludeMale=false;render()` });
+    if(_hasTypeFilter){
+      const _typeLabels = [...window._tierTypeSet]
+        .map(id => modeSortBtns.find(m=>m.id===id)?.lbl)
+        .filter(Boolean);
+      if(_typeLabels.length) _summaryChips.push({ cls:'is-type', txt:`유형 ${_typeLabels.join(', ')}`, onclick:`window._tierTypeSet=new Set();window._tierTypeFilterOpen=false;render()` });
+    }
+    fh+=`<div class="fbar" style="gap:6px;flex-wrap:wrap;align-items:center;padding-top:2px">
+      ${_summaryChips.map(x=>`<span class="tier-chip-soft ${x.cls||''}">${x.txt}<button type="button" onclick="${x.onclick}" title="해제">×</button></span>`).join('')}
+      <button class="pill" style="padding:4px 10px;font-size:11px;background:#fff1f2;border-color:#fecdd3;color:#dc2626" onclick="sf('전체','전체');window._tierDatePreset='all';window._tierDateFrom='';window._tierDateTo='';window._tierRaceFilter='전체';window._tierHideNoRecord=false;window._tierExcludeMale=false;window._tierTypeSet=new Set();window._tierTypeFilterOpen=false;render()">전체 초기화</button>
+    </div>`;
+  }
   fh+=`</div></div>`;
   if(F) F.innerHTML='';
 
@@ -1345,13 +1597,13 @@ function rTier(C,T){
     return;
   }
 
-  let list=[...players]; // 모든 선수 표시 (승패 기록 없어도)
+  let list=[..._pl]; // 모든 선수 표시 (승패 기록 없어도)
   if(_fUniv!=='전체')list=list.filter(p=>p.univ===_fUniv);
   if(_fTier!=='전체')list=list.filter(p=>_fTier==='미정'?(p.tier==='미정'||!p.tier):p.tier===_fTier);
   // 종족 필터 적용
   if(window._tierRaceFilter&&window._tierRaceFilter!=='전체') list=list.filter(p=>p.race===window._tierRaceFilter);
   // 전적없는 선수 숨기기
-  if(window._tierHideNoRecord) list=list.filter(p=>(p.win+p.loss)>0);
+  if(window._tierHideNoRecord) list=list.filter(p=>_tierWL(p).tot>0);
   // 남자 제외
   if(window._tierExcludeMale) list=list.filter(p=>p.gender!=='M');
 
@@ -1363,7 +1615,7 @@ function rTier(C,T){
     // 각 유형별 데이터 집계 함수
     function _collectPS(arr, useWL){
       const _ps={};
-      (arr||[]).forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(g=>{
+      (arr||[]).forEach(m=>{ if(!_tierInDateRange(m?.d || m?.date || '')) return; (m.sets||[]).forEach(st=>{(st.games||[]).forEach(g=>{
         let wn,ln;
         if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
         else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
@@ -1376,6 +1628,7 @@ function rTier(C,T){
     function _collectPSFromGames(games){
       const _ps={};
       (games||[]).forEach(g=>{
+        if(!_tierInDateRange(g?.d || g?.date || '')) return;
         if(!g.playerA||!g.playerB||!g.winner)return;
         const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
         if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};
@@ -1386,6 +1639,7 @@ function rTier(C,T){
     function _collectIndPS(arr){
       const _ps={};
       (arr||[]).forEach(m=>{
+        if(!_tierInDateRange(m?.d || m?.date || '')) return;
         if(!m.wName||!m.lName)return;
         if(!_ps[m.wName])_ps[m.wName]={w:0,l:0};if(!_ps[m.lName])_ps[m.lName]={w:0,l:0};
         _ps[m.wName].w++;_ps[m.lName].l++;
@@ -1394,11 +1648,11 @@ function rTier(C,T){
     }
     function _collectCompPS(){
       const _ps={};
-      function _cg(g){if(!g.playerA||!g.playerB||!g.winner)return;const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};_ps[wn].w++;_ps[ln].l++;}
+      function _cg(g, rawDate){if(!_tierInDateRange(rawDate)) return; if(!g.playerA||!g.playerB||!g.winner)return;const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};_ps[wn].w++;_ps[ln].l++;}
       _tourneys.forEach(tn=>{
-        (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(_cg);});});});
+        (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{const _rawDate=m?.d || m?.date || tn?.d || tn?.date || ''; (m.sets||[]).forEach(st=>{(st.games||[]).forEach(g=>_cg(g,_rawDate));});});});
         const _br=typeof getBracket==='function'?getBracket(tn):{};
-        Object.values(_br.matchDetails||{}).forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(_cg);});});
+        Object.values(_br.matchDetails||{}).forEach(m=>{const _rawDate=m?.d || m?.date || tn?.d || tn?.date || ''; (m.sets||[]).forEach(st=>{(st.games||[]).forEach(g=>_cg(g,_rawDate));});});
       });
       return _ps;
     }
@@ -1429,22 +1683,34 @@ function rTier(C,T){
     _typeSum=sumMap;
     list.sort((a,b)=>(sumMap[b.name]||0)-(sumMap[a.name]||0));
   }
-  else if(tierRankMode==='tier'){const _ti=t=>{ const i=TIERS.indexOf(t||'미정'); return i<0?TIERS.length:i; }; list.sort((a,b)=>_ti(a.tier)-_ti(b.tier)||b.points-a.points);}
-  else if(tierRankMode==='wins') list.sort((a,b)=>b.win-a.win||a.loss-b.loss);
+  else if(tierRankMode==='tier'){
+    const _ti=t=>{ const i=TIERS.indexOf(t||'미정'); return i<0?TIERS.length:i; };
+    list.sort((a,b)=>{
+      const sa=_tierWL(a), sb=_tierWL(b);
+      return _ti(a.tier)-_ti(b.tier) || sb.points-sa.points || sb.w-sa.w || sa.l-sb.l;
+    });
+  }
+  else if(tierRankMode==='wins') list.sort((a,b)=>{const sa=_tierWL(a), sb=_tierWL(b); return sb.w-sa.w||sa.l-sb.l;});
   else if(tierRankMode==='winrate'){
-    list=list.filter(p=>(p.win+p.loss)>=1);
-    list.sort((a,b)=>{const ra=(a.win+a.loss)?a.win/(a.win+a.loss):0;const rb=(b.win+b.loss)?b.win/(b.win+b.loss):0;return rb-ra||b.win-a.win;});
+    list=list.filter(p=>_tierWL(p).tot>=1);
+    list.sort((a,b)=>{const sa=_tierWL(a), sb=_tierWL(b); const ra=sa.tot?sa.w/sa.tot:0; const rb=sb.tot?sb.w/sb.tot:0; return rb-ra||sb.w-sa.w;});
   }
   else if(tierRankMode==='winstreak'){
     // 승차: 승수 - 패수 (많을수록 상위)
-    list.sort((a,b)=>(b.win-b.loss)-(a.win-a.loss)||b.win-a.win);
+    list.sort((a,b)=>{const sa=_tierWL(a), sb=_tierWL(b); return (sb.w-sb.l)-(sa.w-sa.l)||sb.w-sa.w;});
   }
   else if(tierRankMode==='revstreak'){
     // 역승차: 패수 - 승수 (많을수록 상위, 즉 승차 낮은 순)
-    list.sort((a,b)=>(b.loss-b.win)-(a.loss-a.win)||b.loss-a.loss);
+    list.sort((a,b)=>{const sa=_tierWL(a), sb=_tierWL(b); return (sb.l-sb.w)-(sa.l-sa.w)||sb.l-sa.l;});
   }
   else if(tierRankMode==='elo'){
-    list.sort((a,b)=>(b.elo||ELO_DEFAULT)-(a.elo||ELO_DEFAULT));
+    list.sort((a,b)=>{
+      if(_hasDateFilter){
+        const sa=_tierWL(a), sb=_tierWL(b);
+        return sb.eloDelta-sa.eloDelta || sb.w-sa.w || sa.l-sb.l;
+      }
+      return (b.elo||ELO_DEFAULT)-(a.elo||ELO_DEFAULT);
+    });
   }
   else if(tierRankMode==='mini_win'||tierRankMode==='mini_loss'){
     const _ps={};
@@ -1488,11 +1754,12 @@ function rTier(C,T){
   }
 
   const modeHeaders={
-    tier:'포인트',wins:'승',winrate:'승률',winstreak:'승차',revstreak:'역승차',
+    tier:_hasDateFilter?'기간 포인트':'포인트',wins:'승',winrate:'승률',winstreak:'승차',revstreak:'역승차',
     mini_win:'미니승',mini_loss:'미니패',ck_win:'CK승',ck_loss:'CK패',comp_win:'대회승',comp_loss:'대회패',
     ind_win:'개인전승',ind_loss:'개인전패',gj_win:'끝장전승',gj_loss:'끝장전패',
     civ_win:'시빌워승',civ_loss:'시빌워패',tt_win:'티어대회승',tt_loss:'티어대회패',
-    pro_win:'프로리그승',pro_loss:'프로리그패',univm_win:'대학대전승',univm_loss:'대학대전패'
+    pro_win:'프로리그승',pro_loss:'프로리그패',univm_win:'대학대전승',univm_loss:'대학대전패',
+    elo:_hasDateFilter?'ELO 변동':'ELO'
   };
   const hasTypeSet=window._tierTypeSet&&window._tierTypeSet.size>0;
   const extraHeader=hasTypeSet?(window._tierTypeSet.size===1?modeHeaders[[...window._tierTypeSet][0]]||'합산':'합산'):modeHeaders[tierRankMode]||'포인트';
@@ -1512,14 +1779,26 @@ function rTier(C,T){
 
   // 공통 헬퍼
   function _getExtraVal(p){
-    const tot=p.win+p.loss; const wr=tot?Math.round(p.win/tot*100):0;
+    const rec=_tierWL(p); const tot=rec.tot; const wr=rec.wr;
     if(_typeSum!==null){const sv=_typeSum[p.name]||0;return`<span style="font-weight:800;color:${sv>0?'#16a34a':sv<0?'#dc2626':'var(--gray-l)'}">${sv}</span>`;}
-    if(tierRankMode==='tier') return`<span class="${pC(p.points)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px">${pS(p.points)}</span>`;
-    if(tierRankMode==='wins') return`<span class="wt" style="font-size:15px;font-weight:800">${p.win}</span>`;
+    if(tierRankMode==='tier'){
+      if(_hasDateFilter){
+        const v=rec.points;
+        return`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${v>0?'var(--green)':v<0?'var(--red)':'var(--gray-l)'}">${v>0?'+':''}${v}</span>`;
+      }
+      return`<span class="${pC(p.points)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px">${pS(p.points)}</span>`;
+    }
+    if(tierRankMode==='wins') return`<span class="wt" style="font-size:15px;font-weight:800">${rec.w}</span>`;
     if(tierRankMode==='winrate') return`<span style="font-weight:700;color:${wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</span>`;
-    if(tierRankMode==='winstreak'){const d=p.win-p.loss;return`<span style="font-weight:800;color:${d>0?'var(--green)':d<0?'var(--red)':'var(--gray-l)'}">${d>0?'+':''}${d}</span>`;}
-    if(tierRankMode==='revstreak'){const d=p.loss-p.win;return`<span style="font-weight:800;color:${d>0?'var(--red)':d<0?'var(--green)':'var(--gray-l)'}">${d>0?'+':''}${d}</span>`;}
-    if(tierRankMode==='elo'){const e=p.elo||ELO_DEFAULT;return`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${e>=1400?'#7c3aed':e>=1300?'var(--gold)':e>=1200?'var(--green)':'var(--red)'}">${e}</span>`;}
+    if(tierRankMode==='winstreak'){const d=rec.w-rec.l;return`<span style="font-weight:800;color:${d>0?'var(--green)':d<0?'var(--red)':'var(--gray-l)'}">${d>0?'+':''}${d}</span>`;}
+    if(tierRankMode==='revstreak'){const d=rec.l-rec.w;return`<span style="font-weight:800;color:${d>0?'var(--red)':d<0?'var(--green)':'var(--gray-l)'}">${d>0?'+':''}${d}</span>`;}
+    if(tierRankMode==='elo'){
+      if(_hasDateFilter){
+        const d=rec.eloDelta;
+        return`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${d>0?'var(--green)':d<0?'var(--red)':'var(--gray-l)'}">${d>0?'+':''}${d}</span>`;
+      }
+      const e=p.elo||ELO_DEFAULT;return`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:${e>=1400?'#7c3aed':e>=1300?'var(--gold)':e>=1200?'var(--green)':'var(--red)'}">${e}</span>`;
+    }
     if(['mini_win','mini_loss','ck_win','ck_loss','comp_win','comp_loss','ind_win','ind_loss','gj_win','gj_loss','civ_win','civ_loss','tt_win','tt_loss','pro_win','pro_loss','univm_win','univm_loss'].includes(tierRankMode)){
       const _v=_modePStats?_modePStats[p.name]:null; const isWin=tierRankMode.endsWith('_win'); const cnt=_v?(isWin?_v.w:_v.l):0;
       return`<span style="font-weight:800;color:${isWin?'#16a34a':'#dc2626'}">${cnt}</span>`;
@@ -1527,7 +1806,7 @@ function rTier(C,T){
     return '';
   }
   function _getActHTML(p){
-    const _lastD=(p.history||[]).reduce((mx,h)=>h.date>mx?h.date:mx,'');
+    const _lastD=_tierWL(p).lastD;
     if(!_lastD) return '<span class="tier-act-dot none" title="기록 없음">-</span>';
     if(_lastD>=_7ago2) return`<span class="tier-act-dot hot" title="7일 이내 활동">LIVE</span>`;
     if(_lastD>=_30ago2) return`<span class="tier-act-dot warm" title="30일 이내 활동">WARM</span>`;
@@ -1560,12 +1839,12 @@ function rTier(C,T){
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">패</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">승률</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">${extraHeader}</th>
-      <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">ELO</th>
+      <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${_hasDateFilter?'현재 ELO':'ELO'}</th>
       <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">활동</th>
       ${_li?`<th class="no-export col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">관리</th>`:''}
     </tr></thead><tbody>`;
   list.forEach((p,i)=>{
-    const col=gc(p.univ);const tot=p.win+p.loss;const wr=tot?Math.round(p.win/tot*100):0;
+    const rec=_tierWL(p); const col=gc(p.univ);const tot=rec.tot;const wr=rec.wr;
     let rnkHTML;
     if(i===0) rnkHTML=`<span class="tier-rank-chip gold">1등</span>`;
     else if(i===1) rnkHTML=`<span class="tier-rank-chip silver">2등</span>`;
@@ -1598,8 +1877,8 @@ function rTier(C,T){
           <span style="flex-shrink:0">${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
         </span>
       </td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--score-win)">${p.win}</td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--score-lose)">${p.loss}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--score-win)">${rec.w}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--score-lose)">${rec.l}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad};${_canGoHist?'cursor:pointer;text-decoration:underline dotted':''}" ${_clickHist} title="${_canGoHist?'대전기록탭에서 보기':''}">${extraVal}</td>
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${_elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${_elo}</td>
@@ -1616,7 +1895,7 @@ function rTier(C,T){
   else if(_vm==='card'){
   h=`<div class="tier-content-card"><div class="tier-card-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isMb?'140px':'180px'},1fr));gap:${_isMb?'8px':'12px'}">`;
   list.forEach((p,i)=>{
-    const col=gc(p.univ)||'#64748b'; const tot=p.win+p.loss; const wr=tot?Math.round(p.win/tot*100):0;
+    const rec=_tierWL(p); const col=gc(p.univ)||'#64748b'; const tot=rec.tot; const wr=rec.wr;
     const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
     const _pAttr=(typeof escAttr==='function')
       ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
@@ -1637,8 +1916,8 @@ function rTier(C,T){
         ${getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:10px">${p.race}</span>
       </div>
       <div class="tier-rank-statgrid">
-        <div class="tier-rank-stat"><div style="font-size:10px;color:var(--gray-l)">승</div><div style="font-weight:900;font-size:13px;color:var(--score-win)">${p.win}</div></div>
-        <div class="tier-rank-stat"><div style="font-size:10px;color:var(--gray-l)">패</div><div style="font-weight:900;font-size:13px;color:var(--score-lose)">${p.loss}</div></div>
+        <div class="tier-rank-stat"><div style="font-size:10px;color:var(--gray-l)">승</div><div style="font-weight:900;font-size:13px;color:var(--score-win)">${rec.w}</div></div>
+        <div class="tier-rank-stat"><div style="font-size:10px;color:var(--gray-l)">패</div><div style="font-weight:900;font-size:13px;color:var(--score-lose)">${rec.l}</div></div>
         <div class="tier-rank-stat"><div style="font-size:10px;color:var(--gray-l)">승률</div><div style="font-weight:800;font-size:12px;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</div></div>
       </div>
       <div class="tier-rank-extra">${extraVal}</div>
@@ -1664,14 +1943,14 @@ function rTier(C,T){
     const _pAttr=(typeof escAttr==='function')
       ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
       : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-    const tot=p.win+p.loss; const wr=tot?Math.round(p.win/tot*100):0;
+    const rec=_tierWL(p); const tot=rec.tot; const wr=rec.wr;
     h+=`<div class="tier-podium-card" style="flex:${pi===0?'0 0 '+(_isMb?120:150)+'px':'0 0 '+(_isMb?100:130)+'px'}" data-tp-action="open-player" data-tp-player="${_pAttr}">
       <div style="font-size:${pi===0?(_isMb?'24px':'28px'):(_isMb?'20px':'24px')}">${podLabels[ci]}</div>
       ${getPlayerPhotoHTML(p.name,pi===0?(_isMb?'56px':'70px'):(_isMb?'44px':'56px'))}
       <div style="font-weight:900;font-size:${pi===0?12:11}px;text-align:center;max-width:${_isMb?100:130}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
       <div style="display:flex;align-items:center;gap:4px">${getTierBadge(p.tier)}</div>
       <div class="tier-univ-badge" style="background:${col};font-size:10px;max-width:${_isMb?90:110}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</div>
-      <div class="tier-podium-stat" style="color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'} · ${p.win}W ${p.loss}L</div>
+      <div class="tier-podium-stat" style="color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'} · ${rec.w}W ${rec.l}L</div>
       <div class="tier-podium-base" style="height:${podH[ci]}px">
         <span style="font-size:${_isMb?22:28}px;font-weight:900;color:rgba(71,85,105,.68)">${pi+1}</span>
       </div>
@@ -1683,7 +1962,7 @@ function rTier(C,T){
     h+=`<div class="tier-podium-rest">`;
     rest.forEach((p,i)=>{
       const ri=i+3; const col=gc(p.univ)||'#64748b';
-      const tot=p.win+p.loss; const wr=tot?Math.round(p.win/tot*100):0;
+      const rec=_tierWL(p); const tot=rec.tot; const wr=rec.wr;
       const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
       const _pAttr=(typeof escAttr==='function')
         ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
@@ -1708,7 +1987,7 @@ function rTier(C,T){
   else if(_vm==='compact'){
   h=`<div class="tier-content-card"><div class="tier-compact-list">`;
   list.forEach((p,i)=>{
-    const col=gc(p.univ)||'#64748b'; const tot=p.win+p.loss; const wr=tot?Math.round(p.win/tot*100):0;
+    const rec=_tierWL(p); const col=gc(p.univ)||'#64748b'; const tot=rec.tot; const wr=rec.wr;
     const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
     const _pAttr=(typeof escAttr==='function')
       ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
@@ -1723,7 +2002,7 @@ function rTier(C,T){
       ${getTierBadge(p.tier)}
       <span class="rbadge r${p.race}" style="font-size:9px">${p.race}</span>
       <span class="ubadge tier-univ-badge" style="background:${col};font-size:9px;padding:1px 6px;max-width:${_isMb?60:80}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</span>
-      <span style="font-size:11px;min-width:${_isMb?0:70}px;text-align:right;${_isMb?'display:none':''}"><span style="color:var(--score-win);font-weight:900">${p.win}</span><span style="color:var(--gray-l)">W</span><span style="color:var(--score-lose);font-weight:900">${p.loss}</span><span style="color:var(--gray-l)">L</span></span>
+      <span style="font-size:11px;min-width:${_isMb?0:70}px;text-align:right;${_isMb?'display:none':''}"><span style="color:var(--score-win);font-weight:900">${rec.w}</span><span style="color:var(--gray-l)">W</span><span style="color:var(--score-lose);font-weight:900">${rec.l}</span><span style="color:var(--gray-l)">L</span></span>
       <span style="font-size:11px;font-weight:800;min-width:36px;text-align:right;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</span>
       <span class="tier-compact-extra" style="${_isMb?'display:none':''}">${extraVal}</span>
       <span style="min-width:16px;text-align:center;${_isMb?'display:none':''}">${_actHTML}</span>
@@ -1754,7 +2033,7 @@ function rTier(C,T){
       </div>
       <div class="tier-group-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isMb?'130px':'160px'},1fr));gap:${_isMb?'6px':'8px'}">`;
     grp.players.forEach(({p,i})=>{
-      const col=gc(p.univ)||'#64748b'; const tot=p.win+p.loss; const wr=tot?Math.round(p.win/tot*100):0;
+      const rec=_tierWL(p); const col=gc(p.univ)||'#64748b'; const tot=rec.tot; const wr=rec.wr;
       const _pAttr=(typeof escAttr==='function')
         ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
@@ -1764,7 +2043,7 @@ function rTier(C,T){
         <span style="font-weight:800;font-size:${_isMb?11:12}px;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span>
         <span class="ubadge tier-univ-badge" data-icon-done="1" style="background:${col};font-size:9px;padding:1px 6px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</span>
         <span class="rbadge r${p.race}" style="font-size:9px">${p.race}</span>
-        <div style="font-size:10px;font-weight:800;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'} (${p.win}W${p.loss}L)</div>
+        <div style="font-size:10px;font-weight:800;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'} (${rec.w}W${rec.l}L)</div>
       </div>`;
     });
     h+=`</div></div>`;
@@ -1781,6 +2060,7 @@ function rTier(C,T){
       <div class="tier-hero-badges">
         <span class="tier-hero-badge">${_viewLabel}</span>
         <span class="tier-hero-badge">${hasTypeSet?`유형 ${window._tierTypeSet.size}개`:(modeHeaders[tierRankMode]||'포인트')}</span>
+        <span class="tier-hero-badge">${_hasDateFilter?`기간 ${_tierDateBadge}`:'전체 기간'}</span>
         <span class="tier-hero-badge">필터 ${_activeFilters}개</span>
         <span class="tier-hero-badge">총 ${list.length}명</span>
       </div>
