@@ -175,6 +175,55 @@ function _b2ApplyBgAutoSizing(root){
   }catch(e){}
 }
 
+let _b2BgLazyIO = null;
+function _b2LazyLoadBgLayers(root){
+  try{
+    const scope = root || document;
+    const els = [];
+    if(scope && scope.matches && scope.matches('.b2-bg-layer[data-bg-src]')) els.push(scope);
+    if(scope && scope.querySelectorAll) els.push(...scope.querySelectorAll('.b2-bg-layer[data-bg-src]'));
+    if(!els.length) return;
+
+    const loadOne = (el)=>{
+      try{
+        if(!el || el.getAttribute('data-bg-loaded') === '1') return;
+        let src = el.getAttribute('data-bg-src') || '';
+        if(typeof toHttpsUrl === 'function'){
+          const u = toHttpsUrl(src);
+          if(u) src = u;
+        }
+        const pos = el.getAttribute('data-bg-pos') || 'center center';
+        if(src){
+          el.style.backgroundImage = `url("${String(src).replace(/"/g,'\\"')}")`;
+          el.style.backgroundPosition = pos;
+          el.style.backgroundRepeat = 'no-repeat';
+          el.setAttribute('data-bg-loaded','1');
+          try{ _b2ApplyBgAutoSizing(el); }catch(e){}
+        }
+      }catch(e){}
+    };
+
+    if(!(window && 'IntersectionObserver' in window)){
+      els.forEach(loadOne);
+      return;
+    }
+    if(!_b2BgLazyIO){
+      _b2BgLazyIO = new IntersectionObserver((entries)=>{
+        entries.forEach(ent=>{
+          if(ent && (ent.isIntersecting || (ent.intersectionRatio||0) > 0)){
+            loadOne(ent.target);
+            try{ _b2BgLazyIO.unobserve(ent.target); }catch(e){}
+          }
+        });
+      }, { root: null, rootMargin: '600px 0px', threshold: 0.01 });
+    }
+    els.forEach(el=>{
+      if(!el || el.getAttribute('data-bg-loaded') === '1') return;
+      try{ _b2BgLazyIO.observe(el); }catch(e){ loadOne(el); }
+    });
+  }catch(e){}
+}
+
 function _b2BindAutoFitResize(){
   if(_b2AutoFitResizeBound) return;
   _b2AutoFitResizeBound = true;
@@ -572,25 +621,27 @@ function rBoard2(C, T) {
 
   C.innerHTML = filterBar;
 
-  // 현황판 공통: 뷰 렌더 전에 화면에 표시될 플레이어 사진을 미리 로드
-  const _b2PrewarmViewImages = () => {
-    try {
-      if (typeof prewarmImageUrls !== 'function') return;
-      const _dissSet2 = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
-      const photoUrls = [];
-      players
-        .filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet2.has(String(p?.univ||'').trim()))
-        .forEach(p => {
-          if(p.photo) photoUrls.push(p.photo);
-          if(p.secondProfileFile) photoUrls.push(p.secondProfileFile);
-          if(p.profileFile3) photoUrls.push(p.profileFile3);
-          if(p.profileFile4) photoUrls.push(p.profileFile4);
-          if(p.profileFile5) photoUrls.push(p.profileFile5);
-        });
-      prewarmImageUrls(photoUrls, photoUrls.length); // delay 없이 즉시, 전체 커버
-    } catch(e) {}
-  };
-  _b2PrewarmViewImages(); // setTimeout 제거 → 렌더와 동시에 즉시 preload
+  try{
+    const _b2SchedulePrewarm = () => {
+      try{
+        if (typeof prewarmImageUrls !== 'function') return;
+        const _dissSet2 = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||'').trim()));
+        const photoUrls = [];
+        (Array.isArray(players)?players:[])
+          .filter(p => p && !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet2.has(String(p?.univ||'').trim()))
+          .slice(0, 220)
+          .forEach(p => {
+            if(p.photo) photoUrls.push(p.photo);
+          });
+        prewarmImageUrls(photoUrls, 180);
+      }catch(e){}
+    };
+    if(typeof window.requestIdleCallback === 'function'){
+      window.requestIdleCallback(_b2SchedulePrewarm, { timeout: 1200 });
+    }else{
+      setTimeout(_b2SchedulePrewarm, 450);
+    }
+  }catch(e){}
 
   const sub = document.getElementById('b2-content');
   // (즉시 렌더링 - 로딩 중 메시지 제거)
@@ -603,12 +654,12 @@ function rBoard2(C, T) {
       sub.innerHTML = _b2UnivView();
       injectUnivIcons(sub);
       _b2BindAutoFitResize();
-      setTimeout(() => { try{ _b2ApplyBgAutoSizing(sub); }catch(e){} }, 0);
-      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 220); }catch(e){} }, 80);
+      try{ _b2LazyLoadBgLayers(sub); }catch(e){}
+      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 60); }catch(e){} }, 120);
     } else if (_b2View === 'femco') {
       sub.innerHTML = _b2FemcoView();
       injectUnivIcons(sub);
-      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 260); }catch(e){} }, 80);
+      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 80); }catch(e){} }, 120);
       requestAnimationFrame(() => {
         try{
           sub.querySelectorAll('.b2-femco-grid').forEach(g=>{ g.scrollLeft = 0; });
@@ -619,7 +670,7 @@ function rBoard2(C, T) {
     } else if (_b2View === 'free') {
       sub.innerHTML = _b2FreeView();
       injectUnivIcons(sub);
-      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 180); }catch(e){} }, 80);
+      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 60); }catch(e){} }, 120);
     } else if (_b2View === 'players') {
       sub.innerHTML = _b2PlayersView();
       _b2BindAutoFitResize();
@@ -634,7 +685,7 @@ function rBoard2(C, T) {
           console.error('[rBoard] 이미지 설정 적용 실패:', e.message);
         }
       }, 0);
-      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 200); }catch(e){} }, 120);
+      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 80); }catch(e){} }, 160);
     } else if (_b2View === 'summary') {
       sub.innerHTML = _b2SummaryView();
       injectUnivIcons && injectUnivIcons(sub);
@@ -1624,7 +1675,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const bgImgHtml = uCfg.bgImg
     ? forExport
       ? `<img src="${uCfg.bgImg}" crossorigin="anonymous" class="b2-fit-auto" data-fit-kind="bg" data-fit-mode="${_bgSize}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_bgSize==='auto'?'cover':_bgSize};object-position:${_bgPos};opacity:${_bgOpacity};pointer-events:none;z-index:0" onload="_b2ApplyBgAutoSizing(this)">`
-      : `<div class="b2-bg-layer" data-bg-src="${String(uCfg.bgImg).replace(/"/g,'&quot;')}" data-bg-size-mode="${_bgSize}" style="position:absolute;inset:0;background:url('${String(uCfg.bgImg).replace(/'/g,'%27')}') ${_bgPos}/${_bgSize==='auto'?'cover':_bgSize} no-repeat;opacity:${_bgOpacity};pointer-events:none;z-index:0"></div>`
+      : `<div class="b2-bg-layer" data-bg-src="${String(uCfg.bgImg).replace(/"/g,'&quot;')}" data-bg-pos="${String(_bgPos).replace(/"/g,'&quot;')}" data-bg-size-mode="${_bgSize}" style="position:absolute;inset:0;opacity:${_bgOpacity};pointer-events:none;z-index:0;background-position:${_bgPos};background-size:${_bgSize==='auto'?'cover':_bgSize};background-repeat:no-repeat"></div>`
     : '';
 
   let rows = '';

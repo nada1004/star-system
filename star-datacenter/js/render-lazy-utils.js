@@ -173,13 +173,8 @@ try{
       window.players.forEach(p=>{
         if(!p) return;
         if(p.photo) urls.push(p.photo);
-        // 현황판 슬롯 2~5도 함께 preload
-        if(p.secondProfileFile)  urls.push(p.secondProfileFile);
-        if(p.profileFile3) urls.push(p.profileFile3);
-        if(p.profileFile4) urls.push(p.profileFile4);
-        if(p.profileFile5) urls.push(p.profileFile5);
       });
-      prewarmImageUrls(urls, urls.length); // 전체 preload (제한 없음)
+      prewarmImageUrls(urls, 240);
     }catch(e){}
   };
   // 데이터 로드가 완료된 뒤 실행되도록 500ms 후 idle 큐에 등록
