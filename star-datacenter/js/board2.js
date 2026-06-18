@@ -5091,6 +5091,79 @@ function _b2BriefingPresetRange(preset) {
   if (key === 'lastMonth') return _b2MonthlyGetDefaultRange(-1, true);
   return _b2WeeklyGetDefaultRange(0);
 }
+function _b2SetBriefingPreset(preset) {
+  const r = _b2BriefingPresetRange(preset);
+  window._b2WeeklyPreset = String(preset || 'thisWeek');
+  window._b2WeeklyDateFrom = r.from;
+  window._b2WeeklyDateTo = r.to;
+  if (typeof render === 'function') render();
+}
+function _b2GetBriefingInputValues() {
+  const f = document.getElementById('b2w2-from');
+  const t = document.getElementById('b2w2-to');
+  const s = document.getElementById('b2w2-univ');
+  const fallback = _b2BriefingPresetRange('thisWeek');
+  return {
+    from: (f && f.value) || window._b2WeeklyDateFrom || fallback.from,
+    to: (t && t.value) || window._b2WeeklyDateTo || fallback.to,
+    univ: (s && s.value) || window._b2WeeklyUniv || '전체'
+  };
+}
+function _b2SyncBriefingCustomInputs(applyNow) {
+  const v = _b2GetBriefingInputValues();
+  window._b2WeeklyDateFrom = v.from;
+  window._b2WeeklyDateTo = v.to;
+  window._b2WeeklyUniv = v.univ;
+  window._b2WeeklyPreset = 'custom';
+  if (applyNow && typeof render === 'function') render();
+}
+function _b2ApplyBriefingCustomFromInputs() {
+  _b2SyncBriefingCustomInputs(true);
+}
+function _b2ActivateBriefingCustom(focusInput) {
+  _b2SyncBriefingCustomInputs(true);
+  if (focusInput) {
+    setTimeout(() => {
+      const el = document.getElementById('b2w2-from');
+      if (el && typeof el.focus === 'function') el.focus();
+      try{ if (el && typeof el.showPicker === 'function') el.showPicker(); }catch(e){}
+    }, 30);
+  }
+}
+function _b2SetBriefingRecentDays(days) {
+  const n = Math.max(1, Number(days) || 7);
+  const to = new Date();
+  to.setHours(0,0,0,0);
+  const from = new Date(to);
+  from.setDate(to.getDate() - (n - 1));
+  const fmt = d => d.toISOString().slice(0, 10);
+  window._b2WeeklyPreset = 'custom';
+  window._b2WeeklyDateFrom = fmt(from);
+  window._b2WeeklyDateTo = fmt(to);
+  if (typeof render === 'function') render();
+}
+function _b2OpenBriefingDateInput(which) {
+  const id = which === 'to' ? 'b2w2-to' : 'b2w2-from';
+  const el = document.getElementById(id);
+  if (!el) return;
+  try { if (typeof el.focus === 'function') el.focus(); } catch(e){}
+  try {
+    if (typeof el.showPicker === 'function') {
+      el.showPicker();
+      return;
+    }
+  } catch(e){}
+  const current = String(el.value || (which === 'to' ? window._b2WeeklyDateTo : window._b2WeeklyDateFrom) || '').trim();
+  const input = window.prompt('날짜를 YYYY-MM-DD 형식으로 입력하세요.', current);
+  if (input == null) return;
+  const raw = String(input).trim().replace(/\./g,'-').replace(/\//g,'-');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    alert('날짜 형식은 YYYY-MM-DD 로 입력해주세요.');
+    return;
+  }
+  el.value = raw;
+  _b2SyncBriefingCustomInputs(false);
+}
 
 // ─── 데이터 집계 헬퍼 ─────────────────────────
 function _b2WeeklyAggregate(players, dateFrom, dateTo) {
@@ -5537,12 +5610,15 @@ function _b2WeeklyBriefingView() {
       .b2w2-hero-stat-value{margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1}
       .b2w2-hero-stat-sub{margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)}
       .b2w2-hdr  { display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:15px 16px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.965));border:1px solid rgba(148,163,184,.14);border-radius:22px;margin-bottom:16px;box-shadow:0 16px 28px rgba(15,23,42,.04) }
-      .b2w2-din  { padding:6px 12px;border-radius:10px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);box-shadow:0 8px 14px rgba(15,23,42,.04) }
+      .b2w2-din  { padding:6px 12px;border-radius:10px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);box-shadow:0 8px 14px rgba(15,23,42,.04);min-width:132px;cursor:pointer }
+      .b2w2-datebtn { padding:6px 10px;border-radius:10px;border:1px solid var(--border2);background:var(--white);font-size:12px;font-weight:800;color:var(--text2);cursor:pointer;box-shadow:0 8px 14px rgba(15,23,42,.04) }
+      .b2w2-datebtn:hover { border-color:rgba(37,99,235,.28);color:#2563eb }
+      .b2w2-din::-webkit-calendar-picker-indicator { cursor:pointer; opacity:.95 }
       .b2w2-sel  { padding:6px 12px;border-radius:10px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);max-width:160px;box-shadow:0 8px 14px rgba(15,23,42,.04) }
       .b2w2-btn  { padding:7px 14px;border-radius:10px;background:var(--blue);color:#fff;border:none;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 12px 18px rgba(37,99,235,.18) }
       .b2w2-btn:hover { opacity:.85 }
       .b2w2-modebar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px}
-      .b2w2-modecard{padding:15px;border-radius:22px;border:1px solid rgba(148,163,184,.15);background:linear-gradient(180deg,rgba(255,255,255,.992),rgba(248,250,252,.965));box-shadow:0 16px 28px rgba(15,23,42,.04);display:flex;flex-direction:column;gap:10px;transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease}
+      .b2w2-modecard{padding:15px;border-radius:22px;border:1px solid rgba(148,163,184,.15);background:linear-gradient(180deg,rgba(255,255,255,.992),rgba(248,250,252,.965));box-shadow:0 16px 28px rgba(15,23,42,.04);display:flex;flex-direction:column;gap:10px;transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;cursor:pointer}
       .b2w2-modecard:hover{transform:translateY(-1px);box-shadow:0 18px 30px rgba(15,23,42,.06)}
       .b2w2-modecard.is-active{border-color:#2563eb4a;box-shadow:0 20px 34px rgba(37,99,235,.11);background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(255,255,255,.995))}
       .b2w2-modehead{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -5641,7 +5717,7 @@ function _b2WeeklyBriefingView() {
         </div>
       </section>
       <div class="b2w2-modebar">
-        <div class="b2w2-modecard ${(!_isMonthly && !_isCustom)?'is-active':''}">
+        <div class="b2w2-modecard ${(!_isMonthly && !_isCustom)?'is-active':''}" onclick="_b2SetBriefingPreset('thisWeek')">
           <div class="b2w2-modehead">
             <div>
               <div class="b2w2-modekicker">Weekly Mode</div>
@@ -5654,10 +5730,10 @@ function _b2WeeklyBriefingView() {
             ${[
               ['thisWeek','이번주'],
               ['lastWeek','지난주']
-            ].map(([key,label])=>`<button class="b2w2-preset${preset===key?' on':''}" onclick="(function(){var r=_b2BriefingPresetRange('${key}');window._b2WeeklyPreset='${key}';window._b2WeeklyDateFrom=r.from;window._b2WeeklyDateTo=r.to;render();})()">${label}</button>`).join('')}
+            ].map(([key,label])=>`<button type="button" class="b2w2-preset${preset===key?' on':''}" onclick="event.stopPropagation();_b2SetBriefingPreset('${key}')">${label}</button>`).join('')}
           </div>
         </div>
-        <div class="b2w2-modecard ${_isMonthly?'is-active':''}">
+        <div class="b2w2-modecard ${_isMonthly?'is-active':''}" onclick="_b2SetBriefingPreset('thisMonth')">
           <div class="b2w2-modehead">
             <div>
               <div class="b2w2-modekicker">Monthly Mode</div>
@@ -5670,10 +5746,10 @@ function _b2WeeklyBriefingView() {
             ${[
               ['thisMonth','이번달'],
               ['lastMonth','지난달']
-            ].map(([key,label])=>`<button class="b2w2-preset${preset===key?' on':''}" onclick="(function(){var r=_b2BriefingPresetRange('${key}');window._b2WeeklyPreset='${key}';window._b2WeeklyDateFrom=r.from;window._b2WeeklyDateTo=r.to;render();})()">${label}</button>`).join('')}
+            ].map(([key,label])=>`<button type="button" class="b2w2-preset${preset===key?' on':''}" onclick="event.stopPropagation();_b2SetBriefingPreset('${key}')">${label}</button>`).join('')}
           </div>
         </div>
-        <div class="b2w2-modecard ${_isCustom?'is-active':''}">
+        <div class="b2w2-modecard ${_isCustom?'is-active':''}" onclick="_b2ActivateBriefingCustom(true)">
           <div class="b2w2-modehead">
             <div>
               <div class="b2w2-modekicker">Custom Range</div>
@@ -5683,30 +5759,27 @@ function _b2WeeklyBriefingView() {
           </div>
           <div class="b2w2-modedesc">원하는 날짜 범위를 직접 입력해 특정 기간 브리핑으로 볼 수 있습니다.</div>
           <div class="b2w2-presetrow">
-            <span class="b2w2-modebadge" style="background:${_isCustom?'#eff6ff':'var(--white)'};color:${_isCustom?'#2563eb':'var(--text2)'};border-color:${_isCustom?'#bfdbfe':'rgba(148,163,184,.18)'}">${_isCustom ? `${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}` : '아래 날짜 입력 후 조회'}</span>
+            <button type="button" class="b2w2-preset${_isCustom && _periodDays===7?' on':''}" onclick="event.stopPropagation();_b2SetBriefingRecentDays(7)">최근 7일</button>
+            <button type="button" class="b2w2-preset${_isCustom && _periodDays===14?' on':''}" onclick="event.stopPropagation();_b2SetBriefingRecentDays(14)">최근 14일</button>
+            <button type="button" class="b2w2-preset${_isCustom && _periodDays===30?' on':''}" onclick="event.stopPropagation();_b2SetBriefingRecentDays(30)">최근 30일</button>
+            <button type="button" class="b2w2-preset${_isCustom && ![7,14,30].includes(_periodDays)?' on':''}" onclick="event.stopPropagation();_b2ActivateBriefingCustom(true)">직접 지정</button>
+            <button type="button" class="b2w2-preset${_isCustom && ![7,14,30].includes(_periodDays)?' on':''}" onclick="event.stopPropagation();_b2ApplyBriefingCustomFromInputs()">${_isCustom ? `${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}` : '입력값 조회'}</button>
           </div>
         </div>
       </div>
       <div class="b2w2-hdr">
       <span style="font-size:16px">📅</span>
       <span style="font-size:14px;font-weight:900;color:var(--text1)">${_briefingInfo.title}</span>
-      <input type="date" class="b2w2-din" id="b2w2-from" tabindex="-1" value="${dateFrom}">
+      <input type="date" class="b2w2-din" id="b2w2-from" value="${dateFrom}" onchange="_b2SyncBriefingCustomInputs(true)" title="시작 날짜 변경">
+      <button type="button" class="b2w2-datebtn" onclick="_b2OpenBriefingDateInput('from')" title="시작 날짜 선택">📅 시작일</button>
       <span style="font-size:12px;color:var(--text3);font-weight:700">~</span>
-      <input type="date" class="b2w2-din" id="b2w2-to" tabindex="-1" value="${dateTo}">
-      <select class="b2w2-sel" id="b2w2-univ">
+      <input type="date" class="b2w2-din" id="b2w2-to" value="${dateTo}" onchange="_b2SyncBriefingCustomInputs(true)" title="종료 날짜 변경">
+      <button type="button" class="b2w2-datebtn" onclick="_b2OpenBriefingDateInput('to')" title="종료 날짜 선택">📅 종료일</button>
+      <select class="b2w2-sel" id="b2w2-univ" onchange="_b2SyncBriefingCustomInputs(true)">
         <option value="전체"${selUniv==='전체'?' selected':''}>🏫 전체 대학</option>
         ${univList.map(u=>`<option value="${u.name}"${selUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
       </select>
-      <button class="b2w2-btn" onclick="(function(){
-        const f=document.getElementById('b2w2-from');
-        const t=document.getElementById('b2w2-to');
-        const s=document.getElementById('b2w2-univ');
-        if(f)window._b2WeeklyDateFrom=f.value;
-        if(t)window._b2WeeklyDateTo=t.value;
-        if(s)window._b2WeeklyUniv=s.value;
-        window._b2WeeklyPreset='custom';
-        render();
-      })()">조회</button>
+      <button type="button" class="b2w2-btn" onclick="_b2ApplyBriefingCustomFromInputs()">조회</button>
       <span style="font-size:11px;color:var(--text3);margin-left:auto">${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}</span>
       <span style="font-size:10px;color:var(--text3)">(${_briefingInfo.prevLabel}: ${fmtDate(prevDateFrom)}~${fmtDate(prevDateTo)})</span>
     </div>`;
