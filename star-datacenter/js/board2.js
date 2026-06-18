@@ -385,13 +385,62 @@ function rBoard2(C, T) {
   const _navTight = _b2View === 'players' ? '#b2-nav.b2-nav-new { padding-top: 0; }' : '';
   const { fromN: _heroFromN, toN: _heroToN } = _b2ThisWeekRange();
   const _heroDateNum = _b2DateNum;
-  const _heroWeekActive = visPlayers.reduce((acc, p) => {
-    const acted = (Array.isArray(p.history) ? p.history : []).some(h => {
-      const d = _heroDateNum(h.date || h.d || '');
-      return d >= _heroFromN && d <= _heroToN;
-    });
-    return acc + (acted ? 1 : 0);
-  }, 0);
+  try{
+    const sig = (function(){
+      try{
+        const arrs=[miniM,univM,ckM,proM,ttM,comps,tourneys,proTourneys,indM,gjM];
+        return arrs.map(a=>Array.isArray(a)?a.length:0).join('|');
+      }catch(e){ return ''; }
+    })();
+    if (typeof window.__b2_hist_sig === 'undefined') window.__b2_hist_sig = '';
+    if (window.__b2_hist_sig !== sig && typeof _rebuildAllPlayerHistoryCore === 'function') {
+      const hasMatchData = sig.split('|').some(n => Number(n) > 0);
+      const hasAnyHistory = (typeof players !== 'undefined' && Array.isArray(players))
+        ? players.some(p => Array.isArray(p?.history) && p.history.length)
+        : false;
+      if (hasMatchData && !hasAnyHistory) _rebuildAllPlayerHistoryCore();
+      window.__b2_hist_sig = sig;
+    }
+  }catch(e){}
+  const _heroWeekActive = (() => {
+    const actedNames = new Set();
+    const addName = (v) => { const n = String(v||'').trim(); if(n) actedNames.add(n); };
+    const scanTeam = (arr) => {
+      (arr||[]).forEach(x => addName(typeof x === 'string' ? x : (x?.name||x)));
+    };
+    const scanSets = (m) => {
+      (m?.sets||[]).forEach(s=>{
+        (s?.games||[]).forEach(g=>{
+          addName(g?.playerA); addName(g?.playerB);
+          addName(g?.a1); addName(g?.a2); addName(g?.b1); addName(g?.b2);
+          addName(g?.a); addName(g?.b);
+          scanTeam(g?.teamA); scanTeam(g?.teamB);
+        });
+      });
+    };
+    const scanMatchArr = (arr) => {
+      if(!Array.isArray(arr) || !arr.length) return;
+      arr.forEach(m=>{
+        const d = _heroDateNum(m?.d || m?.date || '');
+        if(d < _heroFromN || d > _heroToN) return;
+        addName(m?.wName); addName(m?.lName);
+        scanSets(m);
+      });
+    };
+    scanMatchArr(typeof miniM!=='undefined'?miniM:[]);
+    scanMatchArr(typeof univM!=='undefined'?univM:[]);
+    scanMatchArr(typeof ckM!=='undefined'?ckM:[]);
+    scanMatchArr(typeof proM!=='undefined'?proM:[]);
+    scanMatchArr(typeof ttM!=='undefined'?ttM:[]);
+    scanMatchArr(typeof comps!=='undefined'?comps:[]);
+    scanMatchArr(typeof indM!=='undefined'?indM:[]);
+    scanMatchArr(typeof gjM!=='undefined'?gjM:[]);
+
+    const visNameSet = new Set(visPlayers.map(p=>String(p?.name||'').trim()).filter(Boolean));
+    let cnt = 0;
+    actedNames.forEach(n => { if(visNameSet.has(n)) cnt++; });
+    return cnt;
+  })();
   const _heroViewMeta = {
     univ:    { label:'대학별', desc:'대학 카드 중심으로 소속 현황과 활동 흐름을 빠르게 살펴볼 수 있습니다.' },
     free:    { label:'무소속', desc:'무소속 스트리머만 모아서 현재 공백 구간과 개별 상태를 보기 쉽게 정리합니다.' },

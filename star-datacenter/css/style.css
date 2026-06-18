@@ -9,7 +9,8 @@
   --score-lose:#dc2626;
   --score-lose-2:#fb7185;
   --score-neutral:var(--text);
-  --text:#1a202c;--text2:#374151;--text3:#6b7280;
+  --text:#1a202c;--text1:var(--text);--text2:#374151;--text3:#6b7280;
+  --hover:rgba(148,163,184,.16);
   --god:#7c3aed;--king:#2563eb;--jack:#1e3a8a;--joker:#2040a8;--spade:#2d52c8;--youth:#10b981;
   /* 통일된 그림자 3단계 */
   --r:10px;--r2:16px;
@@ -6092,7 +6093,8 @@ body.dark {
   --blue:#60a5fa;--blue-d:#93c5fd;--blue-l:#1e3a5f;--blue-ll:#1e3a5f;
   --gold:#fbbf24;--gold-bg:#2d2000;--gold-b:#78500a;
   --green:#4ade80;--red:#f87171;--gray:#94a3b8;--gray-l:#64748b;
-  --text:#e2e8f0;--text2:#cbd5e1;--text3:#94a3b8;
+  --text:#e2e8f0;--text1:var(--text);--text2:#cbd5e1;--text3:#94a3b8;
+  --hover:rgba(148,163,184,.14);
   --tc-line-rgb:59,130,246;--tc-line-a:0.50;
   background:#0f172a!important;color:#e2e8f0!important;
 }
