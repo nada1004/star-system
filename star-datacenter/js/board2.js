@@ -1984,25 +1984,25 @@ function _b2LineupCard(p, col, big, iconUrl) {
   const photoHtml = photo
     ? `<img src="${photo}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
        <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:6px">
-         <div style="font-size:${big?'44px':'34px'};font-weight:900;color:${col};opacity:.7">${raceLetter}</div>
+         <div style="font-size:56px;font-weight:900;color:${col};opacity:.7">${raceLetter}</div>
        </div>`
     : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px">
-         <div style="font-size:${big?'44px':'34px'};font-weight:900;color:${col};opacity:.7">${raceLetter}</div>
+         <div style="font-size:56px;font-weight:900;color:${col};opacity:.7">${raceLetter}</div>
        </div>`;
   // 종족 배지 — 우상단
   const _raceBadge = (p.race && p.race!=='N')
-    ? `<div style="position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:999px;background:${_raceCol};color:#fff;font-size:10px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.32);z-index:2;letter-spacing:.02em">${p.race}</div>`
+    ? `<div style="position:absolute;top:10px;right:10px;padding:3px 10px;border-radius:999px;background:${_raceCol};color:#fff;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.32);z-index:2;letter-spacing:.02em">${p.race}</div>`
     : '';
   // 하단 그라데이션 오버레이 (네임바 가독성)
   const _gradient = `<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.72) 100%);z-index:1;pointer-events:none"></div>`;
-  // 네임바 — 그라데이션 위에 텍스트만
+  // 네임바 — 그라데이션 위에 텍스트만 (직급자/멤버 카드 동일 크기)
   const _nameBar = `
-    <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:${big?'10px 10px 10px':'8px 9px 9px'}">
-      ${badgeTxt?`<div style="margin-bottom:3px"><span style="background:${col};color:#fff;font-weight:900;font-size:${big?'10px':'9px'};padding:1px 7px;border-radius:999px;white-space:nowrap;line-height:1.6;letter-spacing:-.01em">${badgeTxt}</span></div>`:''}
-      <div style="color:#fff;font-weight:900;font-size:${big?'14px':'12px'};letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.5)">${p.name||''}</div>
+    <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:14px 14px 14px">
+      ${badgeTxt?`<div style="margin-bottom:4px"><span style="background:${col};color:#fff;font-weight:900;font-size:13px;padding:2px 9px;border-radius:999px;white-space:nowrap;line-height:1.6;letter-spacing:-.01em">${badgeTxt}</span></div>`:''}
+      <div style="color:#fff;font-weight:900;font-size:19px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.5)">${p.name||''}</div>
     </div>`;
   return `
-    <div style="position:relative;cursor:pointer;border-radius:14px;overflow:hidden;background:${_b2PastelBg(col,0.10)};box-shadow:0 4px 16px rgba(15,23,42,.18);border:1px solid ${col}33;transition:transform .15s,box-shadow .15s" onclick="openPlayerModal('${safeName}')"
+    <div style="position:relative;cursor:pointer;border-radius:16px;overflow:hidden;background:${_b2PastelBg(col,0.10)};box-shadow:0 4px 16px rgba(15,23,42,.18);border:1px solid ${col}33;transition:transform .15s,box-shadow .15s" onclick="openPlayerModal('${safeName}')"
       onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 26px rgba(15,23,42,.28)'"
       onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(15,23,42,.18)'">
       <div style="position:relative;width:100%;aspect-ratio:3/4;overflow:hidden">
@@ -2052,8 +2052,8 @@ function _b2LineupPoster(univName, col, forExport=false) {
     { k:'Z', ico:'🦎', col:'#7c3aed' }
   ];
   const raceStatHtml = _raceMeta.filter(r => raceCount[r.k] > 0).map(r => `
-    <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:4px 10px 4px 8px;color:#fff;font-size:11px;font-weight:800">
-      <span style="font-size:11px">${r.ico}</span>${r.k} ${raceCount[r.k]}
+    <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 12px 5px 10px;color:#fff;font-size:12px;font-weight:800">
+      <span style="font-size:12px">${r.ico}</span>${r.k} ${raceCount[r.k]}
     </span>`).join('');
 
   // 티어 분포 — 등록된 티어 순서 기준 상위 항목만 (보유한 티어만)
@@ -2064,39 +2064,39 @@ function _b2LineupPoster(univName, col, forExport=false) {
     .sort((a,b) => { const ia=TIERS_LOCAL.indexOf(a), ib=TIERS_LOCAL.indexOf(b); return (ia>=0?ia:99)-(ib>=0?ib:99); })
     .map(t => ({ tier:t, n:tierCountMap[t] }));
   const tierStatHtml = tierStatList.map(t => `
-    <span style="display:inline-flex;align-items:center;gap:4px;background:${col}14;border:1px solid ${col}33;border-radius:999px;padding:3px 10px;color:${col};font-size:11px;font-weight:800">
+    <span style="display:inline-flex;align-items:center;gap:4px;background:${col}14;border:1px solid ${col}33;border-radius:999px;padding:4px 11px;color:${col};font-size:12px;font-weight:800">
       ${t.tier}<span style="opacity:.65;font-weight:700">×${t.n}</span>
     </span>`).join('');
 
   return `
     <div data-b2lineup="${univName.replace(/"/g,'&quot;')}" style="border-radius:24px;overflow:hidden;background:#0b1220;box-shadow:0 20px 40px rgba(15,23,42,.28)">
-      <div style="padding:26px 26px 20px;position:relative;overflow:hidden;background:linear-gradient(135deg,${col} 0%,${col}cc 65%,#0b1220 130%)">
+      <div style="padding:30px 30px 24px;position:relative;overflow:hidden;background:linear-gradient(135deg,${col} 0%,${col}cc 65%,#0b1220 130%)">
         <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.14),transparent 58%);pointer-events:none"></div>
-        ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-height:84%;max-width:140px;width:auto;height:auto;opacity:.20;object-fit:contain;pointer-events:none;filter:drop-shadow(0 0 20px ${col})" onerror="this.style.display='none'">`:''}
+        ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-height:84%;max-width:160px;width:auto;height:auto;opacity:.20;object-fit:contain;pointer-events:none;filter:drop-shadow(0 0 20px ${col})" onerror="this.style.display='none'">`:''}
         <div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-          <div style="display:flex;align-items:center;gap:12px;min-width:0">
-            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:54px;height:54px;object-fit:contain;border-radius:14px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);padding:6px;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.22)" onerror="this.style.display='none'">`:''}
+          <div style="display:flex;align-items:center;gap:14px;min-width:0">
+            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:62px;height:62px;object-fit:contain;border-radius:16px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);padding:7px;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.22)" onerror="this.style.display='none'">`:''}
             <div style="min-width:0">
-              <div style="color:rgba(255,255,255,.64);font-size:11px;font-weight:800;letter-spacing:.10em;text-transform:uppercase">SDC MEMBER LINEUP</div>
-              <div style="color:#fff;font-weight:950;font-size:28px;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 8px rgba(0,0,0,.18)">${univName}</div>
+              <div style="color:rgba(255,255,255,.64);font-size:12px;font-weight:800;letter-spacing:.10em;text-transform:uppercase">SDC MEMBER LINEUP</div>
+              <div style="color:#fff;font-weight:950;font-size:32px;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 8px rgba(0,0,0,.18)">${univName}</div>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            <span style="background:rgba(255,255,255,.16);color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(8px)">총 ${members.length}명</span>
-            <span style="color:rgba(255,255,255,.55);font-size:11px;font-weight:700">${dateTxt}</span>
+            <span style="background:rgba(255,255,255,.16);color:#fff;font-size:13px;font-weight:800;padding:7px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(8px)">총 ${members.length}명</span>
+            <span style="color:rgba(255,255,255,.55);font-size:12px;font-weight:700">${dateTxt}</span>
           </div>
         </div>
-        ${raceStatHtml ? `<div style="position:relative;z-index:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:14px">${raceStatHtml}</div>` : ''}
+        ${raceStatHtml ? `<div style="position:relative;z-index:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:16px">${raceStatHtml}</div>` : ''}
       </div>
-      <div style="position:relative;overflow:hidden;background:linear-gradient(180deg,${_b2PastelBg(col,0.26)} 0%,${_b2PastelBg(col,0.18)} 100%);padding:22px 24px 28px">
-        ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:58%;max-width:480px;opacity:.16;object-fit:contain;pointer-events:none;z-index:0" onerror="this.style.display='none'">`:''}
+      <div style="position:relative;overflow:hidden;background:linear-gradient(180deg,${_b2PastelBg(col,0.26)} 0%,${_b2PastelBg(col,0.18)} 100%);padding:26px 28px 32px">
+        ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:58%;max-width:560px;opacity:.16;object-fit:contain;pointer-events:none;z-index:0" onerror="this.style.display='none'">`:''}
         <div style="position:relative;z-index:1">
           ${roleCardsHtml ? `
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
             <div style="width:3px;height:14px;border-radius:999px;background:${col};flex-shrink:0"></div>
             <div style="font-size:11px;font-weight:900;color:${col};letter-spacing:.06em;text-transform:uppercase">직급자</div>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:22px">${roleCardsHtml}</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;margin-bottom:24px">${roleCardsHtml}</div>
           <div style="height:1px;background:linear-gradient(90deg,${col}44,transparent);margin-bottom:20px"></div>
           ` : ''}
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap">
@@ -2106,7 +2106,7 @@ function _b2LineupPoster(univName, col, forExport=false) {
             </div>
             ${tierStatHtml ? `<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">${tierStatHtml}</div>` : ''}
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">${rosterCardsHtml}</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px">${rosterCardsHtml}</div>
         </div>
       </div>
     </div>`;
@@ -2117,7 +2117,7 @@ function _b2LineupView() {
   if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">등록된 대학이 없습니다</div>`;
   if (!_b2LineupUniv || !univList.some(u=>u.name===_b2LineupUniv)) _b2LineupUniv = univList[0].name;
   const col = gc(_b2LineupUniv);
-  return `<div style="max-width:1180px;margin:0 auto">${_b2LineupPoster(_b2LineupUniv, col, false)}</div>`;
+  return `<div style="max-width:1360px;margin:0 auto">${_b2LineupPoster(_b2LineupUniv, col, false)}</div>`;
 }
 
 async function saveB2LineupImg() {
@@ -2128,7 +2128,7 @@ async function saveB2LineupImg() {
   const btn = document.querySelector('[onclick="saveB2LineupImg()"]');
   if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
 
-  const CARD_W = 1180;
+  const CARD_W = 1360;
   const PAD = 0;
   const col = gc(_b2LineupUniv);
 
@@ -5843,6 +5843,31 @@ function _b2WeeklyBriefingView() {
       .filter(s => s.total >= 2)
       .sort((a, b) => (b.wrDelta - a.wrDelta) || (b.totalDelta - a.totalDelta) || (b.wins - a.wins));
     const hotPlayer = risingPlayers[0] || null;
+    // 하락세 — 승률이 떨어졌고 표본이 있는 선수만 (전주 활동이 있었던 경우)
+    const decliningPlayers = risingPlayers
+      .filter(s => s.prevTotal >= 2 && s.wrDelta < 0)
+      .slice()
+      .sort((a, b) => (a.wrDelta - b.wrDelta) || (a.totalDelta - b.totalDelta));
+    const coldPlayer = decliningPlayers[0] || null;
+    // 연승 스트릭 — 기간 내 최근 경기부터 거슬러 올라가며 연속 승 카운트
+    const _calcStreak = hist => {
+      const sorted = [...hist].sort((a,b)=>{
+        const da=parseInt(String(a.date||'').replace(/[-\.\/]/g,''))||0;
+        const db=parseInt(String(b.date||'').replace(/[-\.\/]/g,''))||0;
+        return db!==da?db-da:(b.time||0)-(a.time||0);
+      });
+      let streak = 0;
+      for (const h of sorted) {
+        if (h.result === '승') streak++;
+        else break;
+      }
+      return streak;
+    };
+    const streakPlayers = activePlayers
+      .map(s => ({ ...s, streak: _calcStreak(s.hist) }))
+      .filter(s => s.streak >= 2)
+      .sort((a, b) => b.streak - a.streak);
+    const streakPlayer = streakPlayers[0] || null;
     const monthlyTopPlayers = [...activePlayers]
       .sort((a, b) => (b.total - a.total) || (b.wins - a.wins) || ((b.winRate ?? -1) - (a.winRate ?? -1)))
       .slice(0, 5);
@@ -5927,7 +5952,7 @@ function _b2WeeklyBriefingView() {
       .b2w2-tbl tr:hover td { background:var(--hover) }
       .b2w2-race-box { padding:10px 16px 12px;border-top:1px solid var(--border2) }
       .b2w2-race-title { font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px }
-      .b2w2-highlight-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
+      .b2w2-highlight-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:16px}
       .b2w2-highlight-card{padding:17px;border-radius:22px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.992),rgba(248,250,252,.965));box-shadow:0 16px 28px rgba(15,23,42,.04);display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
       .b2w2-highlight-card::before{content:'';position:absolute;inset:0 auto auto 0;width:100%;height:3px;background:linear-gradient(90deg,rgba(37,99,235,.18),rgba(124,58,237,.12),transparent)}
       .b2w2-highlight-kicker{font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--text3)}
@@ -6100,7 +6125,7 @@ function _b2WeeklyBriefingView() {
       </article>
       <article class="b2w2-highlight-card">
         <div class="b2w2-highlight-kicker">Momentum</div>
-        <div class="b2w2-highlight-title">상승세 스트리머</div>
+        <div class="b2w2-highlight-title">상승세 스트리머 TOP 3</div>
         ${hotPlayer ? `
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
             <div>
@@ -6113,19 +6138,64 @@ function _b2WeeklyBriefingView() {
             <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">승률 변화</span><strong style="font-size:12px;color:${hotPlayer.wrDelta >= 0 ? '#10b981' : '#ef4444'}">${hotPlayer.wrDelta >= 0 ? '+' : ''}${hotPlayer.wrDelta}%p</strong></div>
             <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">경기 수 변화</span><strong style="font-size:12px;color:var(--text1)">${hotPlayer.totalDelta >= 0 ? '+' : ''}${hotPlayer.totalDelta}전</strong></div>
           </div>
+          ${risingPlayers.length > 1 ? `
+          <div class="b2w2-highlight-list" style="margin-top:4px;padding-top:8px;border-top:1px dashed rgba(148,163,184,.25)">
+            ${risingPlayers.slice(1, 3).map((s, idx) => `
+              <div class="b2w2-highlight-row">
+                <span style="font-size:12px;font-weight:800;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${idx + 2}. ${s.p?.name || '-'}</span>
+                <strong style="font-size:11px;color:${s.wrDelta >= 0 ? '#10b981' : '#ef4444'}">${s.wrDelta >= 0 ? '+' : ''}${s.wrDelta}%p</strong>
+              </div>
+            `).join('')}
+          </div>` : ''}
         ` : `<div class="b2w2-highlight-desc">전주와 비교할 만큼 활동한 스트리머가 아직 없습니다.</div>`}
       </article>
       <article class="b2w2-highlight-card">
-        <div class="b2w2-highlight-kicker">First Activity</div>
-        <div class="b2w2-highlight-title">이번 기간 첫 활동 스트리머</div>
-        <div class="b2w2-highlight-list">
-          ${firstActivityPlayers.length ? firstActivityPlayers.map(s => `
-            <div class="b2w2-highlight-row">
-              <span style="font-size:12px;font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${s.p?.name || '-'}</span>
-              <span style="font-size:11px;font-weight:800;color:var(--text3)">${s.total}전 · ${s.wins}승 ${s.losses}패</span>
+        <div class="b2w2-highlight-kicker" style="color:#dc2626">Cooldown</div>
+        <div class="b2w2-highlight-title">하락세 스트리머 TOP 3</div>
+        ${coldPlayer ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-size:18px;font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${coldPlayer.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${coldPlayer.p?.name || '-'}</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px">${String(coldPlayer.p?.univ || '무소속')}</div>
             </div>
-          `).join('') : `<div class="b2w2-highlight-desc">이번 기간 첫 활동 스트리머가 없습니다.</div>`}
-        </div>
+            <span class="b2w2-note-chip" style="border-color:#fecaca;color:#dc2626;background:#fef2f2">${coldPlayer.wins}승 ${coldPlayer.losses}패</span>
+          </div>
+          <div class="b2w2-highlight-list">
+            <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">승률 변화</span><strong style="font-size:12px;color:#ef4444">${coldPlayer.wrDelta}%p</strong></div>
+            <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">경기 수 변화</span><strong style="font-size:12px;color:var(--text1)">${coldPlayer.totalDelta >= 0 ? '+' : ''}${coldPlayer.totalDelta}전</strong></div>
+          </div>
+          ${decliningPlayers.length > 1 ? `
+          <div class="b2w2-highlight-list" style="margin-top:4px;padding-top:8px;border-top:1px dashed rgba(148,163,184,.25)">
+            ${decliningPlayers.slice(1, 3).map((s, idx) => `
+              <div class="b2w2-highlight-row">
+                <span style="font-size:12px;font-weight:800;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${idx + 2}. ${s.p?.name || '-'}</span>
+                <strong style="font-size:11px;color:#ef4444">${s.wrDelta}%p</strong>
+              </div>
+            `).join('')}
+          </div>` : ''}
+        ` : `<div class="b2w2-highlight-desc">전주와 비교할 만큼 하락한 스트리머가 없습니다.</div>`}
+      </article>
+      <article class="b2w2-highlight-card">
+        <div class="b2w2-highlight-kicker" style="color:#0891b2">Win Streak</div>
+        <div class="b2w2-highlight-title">최장 연승</div>
+        ${streakPlayer ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-size:18px;font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${streakPlayer.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${streakPlayer.p?.name || '-'}</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px">${String(streakPlayer.p?.univ || '무소속')}</div>
+            </div>
+            <span class="b2w2-note-chip" style="border-color:#a5f3fc;color:#0891b2;background:#ecfeff">🔥 ${streakPlayer.streak}연승</span>
+          </div>
+          ${streakPlayers.length > 1 ? `
+          <div class="b2w2-highlight-list" style="margin-top:4px;padding-top:8px;border-top:1px dashed rgba(148,163,184,.25)">
+            ${streakPlayers.slice(1, 3).map((s, idx) => `
+              <div class="b2w2-highlight-row">
+                <span style="font-size:12px;font-weight:800;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${idx + 2}. ${s.p?.name || '-'}</span>
+                <strong style="font-size:11px;color:#0891b2">${s.streak}연승</strong>
+              </div>
+            `).join('')}
+          </div>` : ''}
+        ` : `<div class="b2w2-highlight-desc">2연승 이상 기록 중인 스트리머가 없습니다.</div>`}
       </article>
     </section>`;
 
@@ -6230,6 +6300,25 @@ function _b2WeeklyBriefingView() {
       </div>`;
     }
 
+    // ── 전체 종족 메타 (선택 범위 기준 — 상대 종족전 승률)
+    const _metaRaceCount = { P:{w:0,l:0}, T:{w:0,l:0}, Z:{w:0,l:0} };
+    targetStats.forEach(ud => { ['P','T','Z'].forEach(r => { _metaRaceCount[r].w += ud.raceCount[r].w; _metaRaceCount[r].l += ud.raceCount[r].l; }); });
+    const _metaHasRace = ['P','T','Z'].some(r => _metaRaceCount[r].w + _metaRaceCount[r].l > 0);
+    if (_metaHasRace) {
+      const _metaRaceRanked = ['P','T','Z'].map(r => {
+        const { w, l } = _metaRaceCount[r];
+        const t = w + l;
+        return { r, t, wr: t ? Math.round(w/t*100) : null };
+      }).filter(x => x.t > 0).sort((a,b) => (b.wr ?? -1) - (a.wr ?? -1));
+      const _metaTop = _metaRaceRanked[0];
+      const _metaRaceLabel = { P:'프로토스', T:'테란', Z:'저그' };
+      h += `<div class="b2w2-chart-box">
+        <div class="b2w2-chart-title">⚔️ 종족전 메타 (${selUniv==='전체'?'전체':selUniv} · ${_briefingInfo.short})</div>
+        ${_b2WeeklyRaceStats(_metaRaceCount)}
+        ${_metaTop ? `<div style="margin-top:8px;font-size:11px;font-weight:700;color:var(--text3)">${_metaRaceLabel[_metaTop.r]} 진영이 상대 종족전 승률 ${_metaTop.wr}%로 가장 강세입니다.</div>` : ''}
+      </div>`;
+    }
+
     // ── 대학별 카드
     targetStats.filter(ud=>ud.tg>0).forEach((ud, ui) => {
       const { u, active, tw, tl, tg, wr, raceCount } = ud;
@@ -6290,9 +6379,8 @@ function _b2WeeklyBriefingView() {
         const medal  = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
         const isMVP  = univMVP && univMVP.p === p;
 
-        // 이전주 비교
-        const prevUd2  = prevMap[u.name];
-        const prevS    = prevUd2 ? _b2WeeklyAggregate([p], prevDateFrom, prevDateTo).find(x=>x.p===p) : null;
+        // 이전주 비교 (사전 계산된 맵 재사용 — 매 선수마다 재집계하지 않음)
+        const prevS    = prevPlayerMap[p.name] || null;
         const prevWr2  = prevS && prevS.total>0 ? prevS.winRate : null;
 
         h += `<tr ${isMVP?'style="background:#fef9c322"':''}>
