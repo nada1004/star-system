@@ -78,7 +78,7 @@ window._cfgB2RenderSwapDelay = function(playerName){
     if(!area) return;
     const name = String(playerName||'').trim();
     if(!name){
-      area.innerHTML = `<div style="font-size:12px;color:var(--gray-l)">선수를 선택하면 이미지 2→3, 3→4, 4→5 전환 시간을 설정할 수 있습니다.</div>`;
+      area.innerHTML = `<div style="font-size:12px;color:var(--gray-l)">선수를 선택하면 이미지 전환 시간을 세부적으로 설정할 수 있습니다.</div>`;
       return;
     }
     const p = (Array.isArray(window.players)?window.players:[]).find(x=>x && x.name===name);
@@ -91,30 +91,41 @@ window._cfgB2RenderSwapDelay = function(playerName){
       if(isNaN(n)) return 1;
       return Math.max(0.2, Math.min(60, n));
     };
-    const d23 = clamp(p.photoDelay23 ?? 1);
-    const d34 = clamp(p.photoDelay34 ?? 1);
-    const d45 = clamp(p.photoDelay45 ?? 1);
-    const d51 = clamp(p.photoDelay51 ?? 1);
+    const slotOrder = [
+      { slot:1, url:String(p.photo||'').trim() },
+      { slot:2, url:String(p.secondProfileFile||'').trim() },
+      { slot:3, url:String(p.profileFile3||'').trim() },
+      { slot:4, url:String(p.profileFile4||'').trim() },
+      { slot:5, url:String(p.profileFile5||'').trim() }
+    ].filter(item=>!!item.url);
+    const delayKey = (from, to)=>{
+      if(to === 1){
+        if(from === 2) return 'photoDelay21';
+        if(from === 3) return 'photoDelay31';
+        if(from === 4) return 'photoDelay41';
+        return 'photoDelay51';
+      }
+      if(from === 1) return 'photoDelay12';
+      if(from === 2) return 'photoDelay23';
+      if(from === 3) return 'photoDelay34';
+      if(from === 4) return 'photoDelay45';
+      return '';
+    };
     const safe = name.replace(/\/g,'\\').replace(/'/g,"\'");
+    const inputsHtml = slotOrder.length < 2
+      ? `<div style="font-size:12px;color:var(--gray-l)">등록된 이미지가 1개라 전환 시간이 필요하지 않습니다.</div>`
+      : `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">${slotOrder.map((item, idx)=>{
+          const next = slotOrder[(idx + 1) % slotOrder.length];
+          const key = delayKey(item.slot, next.slot);
+          if(!key) return '';
+          const val = clamp(p[key] ?? 1);
+          return `<div>
+            <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">${item.slot} → ${next.slot} (초)</div>
+            <input type="number" data-delay-key="${key}" min="0.2" max="60" step="0.1" value="${val}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
+          </div>`;
+        }).join('')}</div>`;
     area.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
-        <div>
-          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">2 → 3 (초)</div>
-          <input type="number" min="0.2" max="60" step="0.1" value="${d23}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">3 → 4 (초)</div>
-          <input type="number" min="0.2" max="60" step="0.1" value="${d34}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">4 → 5 (초)</div>
-          <input type="number" min="0.2" max="60" step="0.1" value="${d45}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">5 → 1 (초)</div>
-          <input type="number" min="0.2" max="60" step="0.1" value="${d51}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
-        </div>
-      </div>
+      ${inputsHtml}
       <div style="font-size:10px;color:var(--gray-l);margin-top:8px">값은 즉시 저장됩니다. 기본값(1초)은 저장하지 않습니다.</div>
     `;
   }catch(e){}
@@ -127,20 +138,18 @@ window._cfgB2SaveSwapDelay = function(playerName){
     const p = (Array.isArray(window.players)?window.players:[]).find(x=>x && x.name===name);
     if(!p) return;
     const inputs = area.querySelectorAll('input[type="number"]');
-    if(!inputs || inputs.length < 4) return;
+    if(!inputs || !inputs.length) return;
     const clamp = (v)=>{
       const n = parseFloat(v);
       if(isNaN(n)) return 1;
       return Math.max(0.2, Math.min(60, n));
     };
-    const d23 = clamp(inputs[0].value);
-    const d34 = clamp(inputs[1].value);
-    const d45 = clamp(inputs[2].value);
-    const d51 = clamp(inputs[3].value);
-    if(d23===1) delete p.photoDelay23; else p.photoDelay23 = d23;
-    if(d34===1) delete p.photoDelay34; else p.photoDelay34 = d34;
-    if(d45===1) delete p.photoDelay45; else p.photoDelay45 = d45;
-    if(d51===1) delete p.photoDelay51; else p.photoDelay51 = d51;
+    inputs.forEach(input=>{
+      const key = String(input?.getAttribute('data-delay-key') || '').trim();
+      if(!key) return;
+      const v = clamp(input.value);
+      if(v===1) delete p[key]; else p[key] = v;
+    });
     if(typeof window.save === 'function') window.save();
     try{
       const cur = window._b2SelectedPlayer && window._b2SelectedPlayer.name;

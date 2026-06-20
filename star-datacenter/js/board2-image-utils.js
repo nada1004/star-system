@@ -388,7 +388,13 @@ function _b2ScheduleImageSwap(playerName) {
   const delayMs = (fromSlot, toSlot)=>{
     try{
       if(!p) return 1000;
-      if(toSlot===1) return Math.round(clampSec(p.photoDelay51 ?? 1, 1) * 1000);
+      if(toSlot===1){
+        if(fromSlot===2) return Math.round(clampSec(p.photoDelay21 ?? p.photoDelay51 ?? 1, 1) * 1000);
+        if(fromSlot===3) return Math.round(clampSec(p.photoDelay31 ?? p.photoDelay51 ?? 1, 1) * 1000);
+        if(fromSlot===4) return Math.round(clampSec(p.photoDelay41 ?? p.photoDelay51 ?? 1, 1) * 1000);
+        if(fromSlot===5) return Math.round(clampSec(p.photoDelay51 ?? 1, 1) * 1000);
+        return Math.round(clampSec(p.photoDelay51 ?? 1, 1) * 1000);
+      }
       if(fromSlot===1) return Math.round(clampSec(p.photoDelay12 ?? 1, 1) * 1000);
       if(fromSlot===2) return Math.round(clampSec(p.photoDelay23 ?? 1, 1) * 1000);
       if(fromSlot===3) return Math.round(clampSec(p.photoDelay34 ?? 1, 1) * 1000);
@@ -419,7 +425,6 @@ function _b2ScheduleImageSwap(playerName) {
   // 순환 인덱스 (0 = img1)
   mainBox._swapIdx = 0;
   const totalImgs = imgList.length;
-  const stopAtSecond = (totalImgs === 2 && imgList[0] && imgList[1] && imgList[0].slot === 1 && imgList[1].slot === 2);
   // 첫 이미지가 비디오면 즉시 재생
   applyMediaForSlot(firstSlot);
   function doSwap() {
@@ -449,23 +454,6 @@ function _b2ScheduleImageSwap(playerName) {
         }
       }
     }catch(e){}
-
-    // 이미지가 1/2만 있으면: 1초 후 2로 전환하고 "2에서 멈춤"
-    if(stopAtSecond && cur === 1){
-      applyMediaForSlot(curSlot);
-      if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
-      mainBox._swapTimer = null;
-      try{
-        const el1 = getEl(1);
-        if(isVideo(el1)){
-          try{ el1.onended = null; }catch(e){}
-          try{ el1.onloadedmetadata = null; }catch(e){}
-          try{ el1.pause && el1.pause(); }catch(e){}
-          try{ el1.__b2SwapDone = false; }catch(e){}
-        }
-      }catch(e){}
-      return;
-    }
 
     // 다음 전환 예약(현재→다음 기준)
     if (mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
@@ -552,7 +540,7 @@ function _b2ScheduleImageSwap(playerName) {
   let firstDelay = (imgList[0] && imgList[1]) ? delayMs(imgList[0].slot, imgList[1].slot) : 1000;
   try{
     const el = getEl(firstSlot);
-    if(isVideo(el) && !stopAtSecond){
+    if(isVideo(el)){
       const dur = Number(el.duration);
       if(Number.isFinite(dur) && dur > 0){
         firstDelay = Math.round(dur * 1000) + 180;

@@ -91,7 +91,43 @@ window.openEP=function(name){
   const _p4X = _pct(p.photo4PosX, 50),        _p4Y = _pct(p.photo4PosY, 50),        _p4Use = _use(p.photo4PosUse);
   const _p5X = _pct(p.photo5PosX, 50),        _p5Y = _pct(p.photo5PosY, 50),        _p5Use = _use(p.photo5PosUse);
   const _scX = _pct(p.shareCardPhotoPosX, 50), _scY = _pct(p.shareCardPhotoPosY, 22), _scUse = _use(p.shareCardPhotoPosUse);
-  const _d12 = _dly(p.photoDelay12), _d23 = _dly(p.photoDelay23), _d34 = _dly(p.photoDelay34), _d45 = _dly(p.photoDelay45), _d51 = _dly(p.photoDelay51);
+  const _d12 = _dly(p.photoDelay12), _d21 = _dly(p.photoDelay21 ?? p.photoDelay51), _d23 = _dly(p.photoDelay23), _d31 = _dly(p.photoDelay31 ?? p.photoDelay51), _d34 = _dly(p.photoDelay34), _d41 = _dly(p.photoDelay41 ?? p.photoDelay51), _d45 = _dly(p.photoDelay45), _d51 = _dly(p.photoDelay51);
+  const _slotOrder = [
+    { slot:1, url:String(p.photo||'').trim() },
+    { slot:2, url:String(p.secondProfileFile||'').trim() },
+    { slot:3, url:String(p.profileFile3||'').trim() },
+    { slot:4, url:String(p.profileFile4||'').trim() },
+    { slot:5, url:String(p.profileFile5||'').trim() }
+  ].filter(item=>!!item.url);
+  const _delayKey = (from, to)=>{
+    if(to === 1){
+      if(from === 2) return 'photoDelay21';
+      if(from === 3) return 'photoDelay31';
+      if(from === 4) return 'photoDelay41';
+      return 'photoDelay51';
+    }
+    if(from === 1) return 'photoDelay12';
+    if(from === 2) return 'photoDelay23';
+    if(from === 3) return 'photoDelay34';
+    if(from === 4) return 'photoDelay45';
+    return '';
+  };
+  const _delayValue = (key)=>{
+    const n = parseFloat(p?.[key] ?? 1);
+    if(isNaN(n)) return 1;
+    return Math.max(0.2, Math.min(60, n));
+  };
+  const _swapDelayHtml = _slotOrder.length < 2
+    ? `<div style="font-size:11px;color:var(--gray-l);line-height:1.65">등록된 이미지가 1개라 전환 시간 설정이 필요하지 않습니다.</div>`
+    : `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">${_slotOrder.map((item, idx)=>{
+        const next = _slotOrder[(idx + 1) % _slotOrder.length];
+        const key = _delayKey(item.slot, next.slot);
+        if(!key) return '';
+        return `<div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">${item.slot} → ${next.slot}</div>
+          <input type="number" data-delay-key="${key}" min="0.2" max="60" step="0.1" value="${_delayValue(key)}" style="width:100%">
+        </div>`;
+      }).join('')}</div>`;
   const _epCollapsed = (key, def=true) => {
     try{
       const raw = localStorage.getItem('editPlayerSectionCollapsed');
@@ -239,29 +275,8 @@ window.openEP=function(name){
       </div>
       <div style="margin-top:10px;padding:10px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px">
         <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">전환 시간(초)</div>
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">1 → 2</div>
-            <input type="number" id="ed-delay-12" min="0.2" max="60" step="0.1" value="${_d12}" style="width:100%">
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">2 → 3</div>
-            <input type="number" id="ed-delay-23" min="0.2" max="60" step="0.1" value="${_d23}" style="width:100%">
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">3 → 4</div>
-            <input type="number" id="ed-delay-34" min="0.2" max="60" step="0.1" value="${_d34}" style="width:100%">
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">4 → 5</div>
-            <input type="number" id="ed-delay-45" min="0.2" max="60" step="0.1" value="${_d45}" style="width:100%">
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">마지막 → 1</div>
-            <input type="number" id="ed-delay-51" min="0.2" max="60" step="0.1" value="${_d51}" style="width:100%">
-          </div>
-        </div>
-        <div style="font-size:10px;color:var(--gray-l);margin-top:6px">※ 1/2만 있으면 2에서 멈춥니다. (2에서 계속 표시)</div>
+        ${_swapDelayHtml}
+        <div style="font-size:10px;color:var(--gray-l);margin-top:6px">※ 실제 존재하는 이미지 순서만 순환합니다.</div>
       </div>
       </div>
     </div>
@@ -993,15 +1008,15 @@ function savePlayer(){
   try {
     // 이미지 전환 딜레이 저장 (기본값 1초와 같으면 키 삭제해 용량 절약)
     const _clampDelay = (v) => { const n = parseFloat(v); return isNaN(n) ? 1 : Math.max(0.2, Math.min(60, n)); };
-    const _setDelay = (key, elId) => {
-      const v = _clampDelay(document.getElementById(elId)?.value || '1');
+    const _setDelay = (key, val) => {
+      const v = _clampDelay(val || '1');
       if (v === 1) delete p[key]; else p[key] = v;
     };
-    _setDelay('photoDelay12', 'ed-delay-12');
-    _setDelay('photoDelay23', 'ed-delay-23');
-    _setDelay('photoDelay34', 'ed-delay-34');
-    _setDelay('photoDelay45', 'ed-delay-45');
-    _setDelay('photoDelay51', 'ed-delay-51');
+    document.querySelectorAll('#emBody [data-delay-key]').forEach(inp=>{
+      const key = String(inp?.getAttribute('data-delay-key') || '').trim();
+      if(!key) return;
+      _setDelay(key, inp.value);
+    });
   } catch (e) { /* 딜레이 저장 실패는 치명적이지 않음 */ }
 
   _savePhotoPos(p, 'cardpos', 'shareCardPhoto', 'shareCardPhotoPosX', 'shareCardPhotoPosY', 'shareCardPhotoPosUse', 50, 22);

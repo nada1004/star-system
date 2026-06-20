@@ -2923,16 +2923,47 @@ function openB2ProfileEditModal(playerName) {
   const _media3 = _trimMedia(player.profileFile3);
   const _media4 = _trimMedia(player.profileFile4);
   const _media5 = _trimMedia(player.profileFile5);
+  const _slotOrder = [
+    { slot:1, url:_media1 },
+    { slot:2, url:_media2 },
+    { slot:3, url:_media3 },
+    { slot:4, url:_media4 },
+    { slot:5, url:_media5 }
+  ].filter(item => !!item.url);
+  const _swapDelayKey = (from, to)=>{
+    if(to === 1){
+      if(from === 2) return 'photoDelay21';
+      if(from === 3) return 'photoDelay31';
+      if(from === 4) return 'photoDelay41';
+      return 'photoDelay51';
+    }
+    if(from === 1) return 'photoDelay12';
+    if(from === 2) return 'photoDelay23';
+    if(from === 3) return 'photoDelay34';
+    if(from === 4) return 'photoDelay45';
+    return '';
+  };
+  const _swapDelayVal = (key)=>{
+    const n = parseFloat(player?.[key] ?? 1);
+    if(isNaN(n)) return 1;
+    return Math.max(0.2, Math.min(60, n));
+  };
   const clampDelay = (v)=>{
     const n = parseFloat(v);
     if(isNaN(n)) return 1;
     return Math.max(0.2, Math.min(60, n));
   };
-  const d12 = clampDelay(player.photoDelay12 ?? 1);
-  const d23 = clampDelay(player.photoDelay23 ?? 1);
-  const d34 = clampDelay(player.photoDelay34 ?? 1);
-  const d45 = clampDelay(player.photoDelay45 ?? 1);
-  const d51 = clampDelay(player.photoDelay51 ?? 1);
+  const _swapDelayInputs = _slotOrder.length < 2
+    ? `<div style="font-size:11px;color:var(--gray-l);line-height:1.65">등록된 이미지가 1개라 전환 시간 설정이 필요하지 않습니다.</div>`
+    : `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">${_slotOrder.map((item, idx)=>{
+        const next = _slotOrder[(idx + 1) % _slotOrder.length];
+        const key = _swapDelayKey(item.slot, next.slot);
+        if(!key) return '';
+        return `<div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">${item.slot} → ${next.slot}</div>
+          <input type="number" data-b2-delay-key="${key}" min="0.2" max="60" step="0.1" value="${_swapDelayVal(key)}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        </div>`;
+      }).join('')}</div>`;
 
   const modal = document.createElement('div');
   modal.id = 'b2-profile-edit-modal';
@@ -3002,29 +3033,8 @@ function openB2ProfileEditModal(playerName) {
       </div>
       <div style="margin-top:10px;margin-bottom:16px;padding:12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px">
         <div style="font-size:13px;font-weight:800;color:var(--text2);margin-bottom:10px">전환 시간(초)</div>
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">1 → 2</div>
-            <input type="number" id="b2-ed-delay-12" min="0.2" max="60" step="0.1" value="${d12}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">2 → 3</div>
-            <input type="number" id="b2-ed-delay-23" min="0.2" max="60" step="0.1" value="${d23}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">3 → 4</div>
-            <input type="number" id="b2-ed-delay-34" min="0.2" max="60" step="0.1" value="${d34}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">4 → 5</div>
-            <input type="number" id="b2-ed-delay-45" min="0.2" max="60" step="0.1" value="${d45}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">마지막 → 1</div>
-            <input type="number" id="b2-ed-delay-51" min="0.2" max="60" step="0.1" value="${d51}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-          </div>
-        </div>
-        <div style="font-size:10px;color:var(--gray-l);margin-top:10px">※ 1/2만 있으면 2에서 멈춥니다. mp4는 끝까지 재생 후 이동합니다.</div>
+        ${_swapDelayInputs}
+        <div style="font-size:10px;color:var(--gray-l);margin-top:10px">※ 실제 존재하는 이미지 순서만 순환합니다. mp4는 끝까지 재생 후 다음 이미지로 이동합니다.</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:20px">
         <button onclick="document.getElementById('b2-profile-edit-modal').remove()" style="flex:1;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer">취소</button>
@@ -3134,11 +3144,6 @@ function saveB2Profile(playerName) {
     if(isNaN(n)) return 1;
     return Math.max(0.2, Math.min(60, n));
   };
-  const d12 = clampDelay(document.getElementById('b2-ed-delay-12')?.value || '1');
-  const d23 = clampDelay(document.getElementById('b2-ed-delay-23')?.value || '1');
-  const d34 = clampDelay(document.getElementById('b2-ed-delay-34')?.value || '1');
-  const d45 = clampDelay(document.getElementById('b2-ed-delay-45')?.value || '1');
-  const d51 = clampDelay(document.getElementById('b2-ed-delay-51')?.value || '1');
   
   const anyBase64 = [photoUrl, secondProfileUrl, thirdProfileUrl, fourthProfileUrl, fifthProfileUrl].some(u=>u && u.startsWith('data:'));
   if (anyBase64) {
@@ -3151,11 +3156,15 @@ function saveB2Profile(playerName) {
   player.profileFile3 = thirdProfileUrl || undefined;
   player.profileFile4 = fourthProfileUrl || undefined;
   player.profileFile5 = fifthProfileUrl || undefined;
-  if(d12 === 1) delete player.photoDelay12; else player.photoDelay12 = d12;
-  if(d23 === 1) delete player.photoDelay23; else player.photoDelay23 = d23;
-  if(d34 === 1) delete player.photoDelay34; else player.photoDelay34 = d34;
-  if(d45 === 1) delete player.photoDelay45; else player.photoDelay45 = d45;
-  if(d51 === 1) delete player.photoDelay51; else player.photoDelay51 = d51;
+  try{
+    document.querySelectorAll('#b2-profile-edit-modal [data-b2-delay-key]').forEach(inp=>{
+      const key = String(inp?.getAttribute('data-b2-delay-key') || '').trim();
+      if(!key) return;
+      const v = clampDelay(inp?.value || '1');
+      if(v === 1) delete player[key];
+      else player[key] = v;
+    });
+  }catch(e){}
   
   save();
   render();
