@@ -2576,8 +2576,9 @@ function _b2PlayersView() {
   const secondarySettings = _b2GetImgSettings(_b2SelectedPlayer.name, 'secondary');
   const imgSettings = primarySettings;
   const safeName = (_b2SelectedPlayer.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  const hasPrimary = !!_b2SelectedPlayer.photo;
-  const hasSecondary = !!_b2SelectedPlayer.secondProfileFile;
+  const _hasMediaUrl = (v)=>!!String(v || '').trim();
+  const hasPrimary = _hasMediaUrl(_b2SelectedPlayer.photo);
+  const hasSecondary = _hasMediaUrl(_b2SelectedPlayer.secondProfileFile);
   const _b2PosPct = (useFlag, x, y)=>{
     try{
       if(useFlag === false) return 'center center';
@@ -2625,7 +2626,7 @@ function _b2PlayersView() {
     return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart}>`;
   };
   const _b2NameEsc = _b2SelectedPlayer.name.replace(/'/g,"\\'");
-  const _slot1 = _b2SelectedPlayer.photo
+  const _slot1 = _hasMediaUrl(_b2SelectedPlayer.photo)
     ? _b2MainMediaHTML(1, _b2SelectedPlayer.photo, {
       z: 1,
       opacity: 1,
@@ -2633,7 +2634,7 @@ function _b2PlayersView() {
       style: `object-fit:${primarySettings.fit || 'cover'};object-position:center center;transform:${_b2GetImgTransform(primarySettings)};filter:brightness(${(primarySettings.brightness || 100) / 100});`
     })
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`;
-  const _slot2 = _b2SelectedPlayer.secondProfileFile
+  const _slot2 = _hasMediaUrl(_b2SelectedPlayer.secondProfileFile)
     ? _b2MainMediaHTML(2, _b2SelectedPlayer.secondProfileFile, {
       z: 2,
       opacity: 0,
@@ -2641,13 +2642,13 @@ function _b2PlayersView() {
       style: `object-fit:${secondarySettings.fit || 'cover'};object-position:center center;transform:${_b2GetImgTransform(secondarySettings)};filter:brightness(${(secondarySettings.brightness || 100) / 100});transition:opacity 0.4s ease;`
     })
     : '';
-  const _slot3 = _b2SelectedPlayer.profileFile3
+  const _slot3 = _hasMediaUrl(_b2SelectedPlayer.profileFile3)
     ? _b2MainMediaHTML(3, _b2SelectedPlayer.profileFile3, { z:3, opacity:0, style:`object-fit:cover;object-position:${_p3pos};transition:opacity 0.4s ease;` })
     : '';
-  const _slot4 = _b2SelectedPlayer.profileFile4
+  const _slot4 = _hasMediaUrl(_b2SelectedPlayer.profileFile4)
     ? _b2MainMediaHTML(4, _b2SelectedPlayer.profileFile4, { z:4, opacity:0, style:`object-fit:cover;object-position:${_p4pos};transition:opacity 0.4s ease;` })
     : '';
-  const _slot5 = _b2SelectedPlayer.profileFile5
+  const _slot5 = _hasMediaUrl(_b2SelectedPlayer.profileFile5)
     ? _b2MainMediaHTML(5, _b2SelectedPlayer.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
     : '';
   const _selUnivIcon = (() => {
@@ -2820,19 +2821,20 @@ function _b2UpdateMainDisplay(playerName) {
     return `<img ${common} src="${src}" decoding="async" fetchpriority="high"${evPart}>`;
   };
   const _nameEsc = player.name.replace(/'/g,"\\'");
-  const _slot1 = player.photo
+  const _hasMediaUrl2 = (v)=>!!String(v || '').trim();
+  const _slot1 = _hasMediaUrl2(player.photo)
     ? _b2MainMediaHTML(1, player.photo, { z:1, opacity:1, onLoadJs:`_b2ScheduleImageSwap('${_nameEsc}')`, style:'' })
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`;
-  const _slot2 = player.secondProfileFile
+  const _slot2 = _hasMediaUrl2(player.secondProfileFile)
     ? _b2MainMediaHTML(2, player.secondProfileFile, { z:2, opacity:0, style:`object-fit:cover;transition:opacity 0.4s ease;` })
     : '';
-  const _slot3 = player.profileFile3
+  const _slot3 = _hasMediaUrl2(player.profileFile3)
     ? _b2MainMediaHTML(3, player.profileFile3, { z:3, opacity:0, style:`object-fit:cover;object-position:${_p3pos};transition:opacity 0.4s ease;` })
     : '';
-  const _slot4 = player.profileFile4
+  const _slot4 = _hasMediaUrl2(player.profileFile4)
     ? _b2MainMediaHTML(4, player.profileFile4, { z:4, opacity:0, style:`object-fit:cover;object-position:${_p4pos};transition:opacity 0.4s ease;` })
     : '';
-  const _slot5 = player.profileFile5
+  const _slot5 = _hasMediaUrl2(player.profileFile5)
     ? _b2MainMediaHTML(5, player.profileFile5, { z:5, opacity:0, style:`object-fit:cover;object-position:${_p5pos};transition:opacity 0.4s ease;` })
     : '';
   const _updUnivIcon = (() => {
@@ -2846,8 +2848,8 @@ function _b2UpdateMainDisplay(playerName) {
   const secondarySettings = _b2GetImgSettings(player.name, 'secondary');
 
   const safeName = (player.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  const hasPrimary = !!player.photo;
-  const hasSecondary = !!player.secondProfileFile;
+  const hasPrimary = _hasMediaUrl2(player.photo);
+  const hasSecondary = _hasMediaUrl2(player.secondProfileFile);
   
   if (mainBox) {
     _b2ClearSwapTimer(mainBox);
@@ -2915,6 +2917,12 @@ function _b2UpdateMainDisplay(playerName) {
 function openB2ProfileEditModal(playerName) {
   const player = players.find(p => p.name === playerName);
   if (!player) return;
+  const _trimMedia = (v)=>String(v || '').trim();
+  const _media1 = _trimMedia(player.photo);
+  const _media2 = _trimMedia(player.secondProfileFile);
+  const _media3 = _trimMedia(player.profileFile3);
+  const _media4 = _trimMedia(player.profileFile4);
+  const _media5 = _trimMedia(player.profileFile5);
   const clampDelay = (v)=>{
     const n = parseFloat(v);
     if(isNaN(n)) return 1;
@@ -2943,19 +2951,19 @@ function openB2ProfileEditModal(playerName) {
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 1 (PC/기본) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(선택 즉시 표시)</span></label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="b2-ed-photo" value="${player.photo||''}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-          <span id="b2-ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.photo&&!player.photo.startsWith('data:')?'inline-block':'none'}">
-            <img id="b2-ed-photo-preview" src="${player.photo&&!player.photo.startsWith('data:')?toHttpsUrl(player.photo):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+          <input type="text" id="b2-ed-photo" value="${_media1}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <span id="b2-ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${_media1&&!_media1.startsWith('data:')?'inline-block':'none'}">
+            <img id="b2-ed-photo-preview" src="${_media1&&!_media1.startsWith('data:')?toHttpsUrl(_media1):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
           </span>
         </div>
-        <div id="b2-ed-photo-warn" style="font-size:10px;color:${player.photo&&player.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:4px">${player.photo&&player.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
+        <div id="b2-ed-photo-warn" style="font-size:10px;color:${_media1&&_media1.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:4px">${_media1&&_media1.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
       </div>
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 2 (모바일/교체용) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(설정한 시간 후 자동 교체)</span></label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="b2-ed-second-profile" value="${player.secondProfileFile||''}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-          <span id="b2-ed-photo2-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.secondProfileFile&&!player.secondProfileFile.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
-            <img id="b2-ed-photo2-preview" src="${player.secondProfileFile&&!player.secondProfileFile.startsWith('data:')?toHttpsUrl(player.secondProfileFile).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+          <input type="text" id="b2-ed-second-profile" value="${_media2}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <span id="b2-ed-photo2-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${_media2&&!_media2.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
+            <img id="b2-ed-photo2-preview" src="${_media2&&!_media2.startsWith('data:')?toHttpsUrl(_media2).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
             <video id="b2-ed-photo2-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
           </span>
         </div>
@@ -2964,9 +2972,9 @@ function openB2ProfileEditModal(playerName) {
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 3 (순환용)</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="b2-ed-photo3" value="${player.profileFile3||''}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-          <span id="b2-ed-photo3-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.profileFile3&&!player.profileFile3.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
-            <img id="b2-ed-photo3-preview" src="${player.profileFile3&&!player.profileFile3.startsWith('data:')?toHttpsUrl(player.profileFile3).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+          <input type="text" id="b2-ed-photo3" value="${_media3}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <span id="b2-ed-photo3-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${_media3&&!_media3.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
+            <img id="b2-ed-photo3-preview" src="${_media3&&!_media3.startsWith('data:')?toHttpsUrl(_media3).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
             <video id="b2-ed-photo3-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
           </span>
         </div>
@@ -2974,9 +2982,9 @@ function openB2ProfileEditModal(playerName) {
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 4 (순환용)</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="b2-ed-photo4" value="${player.profileFile4||''}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-          <span id="b2-ed-photo4-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.profileFile4&&!player.profileFile4.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
-            <img id="b2-ed-photo4-preview" src="${player.profileFile4&&!player.profileFile4.startsWith('data:')?toHttpsUrl(player.profileFile4).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+          <input type="text" id="b2-ed-photo4" value="${_media4}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <span id="b2-ed-photo4-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${_media4&&!_media4.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
+            <img id="b2-ed-photo4-preview" src="${_media4&&!_media4.startsWith('data:')?toHttpsUrl(_media4).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
             <video id="b2-ed-photo4-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
           </span>
         </div>
@@ -2984,9 +2992,9 @@ function openB2ProfileEditModal(playerName) {
       <div style="margin-bottom:16px">
         <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 5 (순환용)</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="b2-ed-photo5" value="${player.profileFile5||''}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
-          <span id="b2-ed-photo5-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${player.profileFile5&&!player.profileFile5.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
-            <img id="b2-ed-photo5-preview" src="${player.profileFile5&&!player.profileFile5.startsWith('data:')?toHttpsUrl(player.profileFile5).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
+          <input type="text" id="b2-ed-photo5" value="${_media5}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <span id="b2-ed-photo5-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${_media5&&!_media5.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
+            <img id="b2-ed-photo5-preview" src="${_media5&&!_media5.startsWith('data:')?toHttpsUrl(_media5).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
             <video id="b2-ed-photo5-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
           </span>
         </div>

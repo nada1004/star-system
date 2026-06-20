@@ -350,6 +350,7 @@ function _b2ScheduleImageSwap(playerName) {
   _b2ClearSwapTimer(mainBox);
   mainBox._swapGen = (mainBox._swapGen || 0) + 1;
   const swapGen = mainBox._swapGen;
+  const _hasMediaUrl = (v)=>!!String(v || '').trim();
   // 현재 선수의 이미지 목록 수집 (photo + profileFile2~5)
   const p = (typeof players !== 'undefined') ? players.find(x => x.name === playerName) : null;
   const imgList = p ? [
@@ -358,7 +359,7 @@ function _b2ScheduleImageSwap(playerName) {
     {slot:3, url:p.profileFile3},
     {slot:4, url:p.profileFile4},
     {slot:5, url:p.profileFile5}
-  ].filter(x=>x && x.url) : [];
+  ].filter(x=>x && _hasMediaUrl(x.url)) : [];
   const clampSec = (v, d)=>{
     const n = parseFloat(v);
     if(isNaN(n)) return d;
