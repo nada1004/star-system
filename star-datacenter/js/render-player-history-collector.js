@@ -130,14 +130,26 @@ function collectPlayerExtraHistoryData(opts){
   }).filter(Boolean);
 
   const otherMatches=[];
+  const _teamLabel = (list)=> (list||[]).filter(Boolean).join(' / ');
+  const _splitTeamNames = (v)=>Array.isArray(v)
+    ? v.map(x=>typeof x==='string'?x:(x?.name||'')).filter(Boolean)
+    : String(v||'').split(/[,+，]/).map(v=>v.trim()).filter(Boolean);
+  const _gameTeams = (g)=>{
+    if(!g) return { teamA:[], teamB:[] };
+    const teamA = (Array.isArray(g.teamA) && g.teamA.length) ? _splitTeamNames(g.teamA) : ((g.a1 || g.a2) ? [g.a1, g.a2].filter(Boolean) : _splitTeamNames(g.playerA));
+    const teamB = (Array.isArray(g.teamB) && g.teamB.length) ? _splitTeamNames(g.teamB) : ((g.b1 || g.b2) ? [g.b1, g.b2].filter(Boolean) : _splitTeamNames(g.playerB));
+    return { teamA, teamB };
+  };
   function pushTeamGameIfAny(m, s, g, setIdx, gameIdx, modeLabel){
     try{
-      if(!g || !g.winner || !g._isTeam || !Array.isArray(g.teamA) || !Array.isArray(g.teamB)) return false;
-      const inA = g.teamA.includes(p.name);
-      const inB = g.teamB.includes(p.name);
+      if(!g || !g.winner) return false;
+      const { teamA, teamB } = _gameTeams(g);
+      if(teamA.length < 2 || teamB.length < 2) return false;
+      const inA = teamA.includes(p.name);
+      const inB = teamB.includes(p.name);
       if(!inA && !inB) return false;
-      const oppTeam = (inA ? g.teamB : g.teamA).filter(Boolean).join(',');
-      const winnerTeam = (g.winner==='A') ? g.teamA : g.teamB;
+      const oppTeam = _teamLabel(inA ? teamB : teamA);
+      const winnerTeam = (g.winner==='A') ? teamA : teamB;
       const isWin = winnerTeam.includes(p.name);
       const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
       const isDupInHist = dedupedHistory.some(h =>
@@ -161,8 +173,11 @@ function collectPlayerExtraHistoryData(opts){
       (m.sets||[]).forEach((s,setIdx)=>{
         (s.games||[]).forEach((g,gameIdx)=>{
           const modeLabel = typeof modeLabelResolver==='function' ? modeLabelResolver(m,g) : modeLabelResolver;
-          if(g.winner && (pushTeamGameIfAny(m,s,g,setIdx,gameIdx,modeLabel) || (g.playerA===p.name||g.playerB===p.name))){
-            const opp=g.playerA===p.name?g.playerB:g.playerA;
+          const { teamA, teamB } = _gameTeams(g);
+          const inA = teamA.includes(p.name);
+          const inB = teamB.includes(p.name);
+          if(g.winner && (pushTeamGameIfAny(m,s,g,setIdx,gameIdx,modeLabel) || inA || inB)){
+            const opp=_teamLabel(inA ? teamB : teamA);
             const oppP=players.find(x=>x.name===opp);
             const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
             const isDupInHist = dedupedHistory.some(h =>
@@ -170,7 +185,7 @@ function collectPlayerExtraHistoryData(opts){
             );
             if(!isDupInHist){
               otherMatches.push(_attachHistElo({
-                date:m.d||'',time:0,result:g.playerA===p.name&&g.winner==='A'?'승':g.playerB===p.name&&g.winner==='B'?'승':'패',
+                date:m.d||'',time:0,result:inA&&g.winner==='A'?'승':inB&&g.winner==='B'?'승':'패',
                 opp,oppRace:oppP?.race||'',map:g.map||'-',matchId:gameId,mode:modeLabel,
                 _dupKey:`mid:${gameId}`
               }));
@@ -234,7 +249,7 @@ function collectPlayerExtraHistoryData(opts){
           const hasMe = (g.playerA===p.name || g.playerB===p.name || aList.includes(p.name) || bList.includes(p.name));
           const pushedTeam = pushTeamGameIfAny(m,s,g,setIdx,gameIdx,'티어대회');
           if(!pushedTeam && !hasMe) return;
-          const opp = (g.playerA===p.name || aList.includes(p.name)) ? g.playerB : g.playerA;
+          const opp = _teamLabel((g.playerA===p.name || aList.includes(p.name)) ? bList : aList);
           const oppP=players.find(x=>x.name===opp);
           const gameId = g._id || `${m._id}_s${setIdx}_g${gameIdx}`;
           let _ed=null,_ea=null;
@@ -335,11 +350,11 @@ function collectPlayerExtraHistoryData(opts){
         const mid=m._id||`tour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
         if(existingMatchIds.has(mid))return;
         (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
-          if(!g.playerA||!g.playerB||!g.winner)return;
-          const wn=g.winner==='A'?g.playerA:g.playerB;
-          const ln=g.winner==='A'?g.playerB:g.playerA;
-          if(wn!==p.name&&ln!==p.name)return;
-          const opp=wn===p.name?ln:wn;
+          const { teamA, teamB } = _gameTeams(g);
+          const inA = teamA.includes(p.name);
+          const inB = teamB.includes(p.name);
+          if(!g.winner || (!inA && !inB))return;
+          const opp=_teamLabel(inA ? teamB : teamA);
           const oppP=players.find(x=>x.name===opp);
           const isDupInHist = prunedHistory.some(h =>
             h.matchId===mid || (h.date===m.d && h.map===(g.map||'-') && h.opp===opp)
@@ -347,7 +362,7 @@ function collectPlayerExtraHistoryData(opts){
           if(!isDupInHist){
             // 일반 대회/티어대회 조별리그는 competition.js에서 수정/삭제 가능 → editableSource로 연결
             tourMatches.push(_attachHistElo({
-              date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',
+              date:m.d||'',time:0,result:inA&&g.winner==='A'?'승':inB&&g.winner==='B'?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',
               matchId:mid,mode:tn.type==='tier'?'티어대회':'조별리그',
               _readOnly:true,
               _editableSource:true,
@@ -365,11 +380,11 @@ function collectPlayerExtraHistoryData(opts){
       const mid=m? (m._id||`tour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`) : (`tour_${tn.id||''}_${k}`);
       if(existingMatchIds.has(mid))return;
       (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
-        if(!g.playerA||!g.playerB||!g.winner)return;
-        const wn=g.winner==='A'?g.playerA:g.playerB;
-        const ln=g.winner==='A'?g.playerB:g.playerA;
-        if(wn!==p.name&&ln!==p.name)return;
-        const opp=wn===p.name?ln:wn;
+        const { teamA, teamB } = _gameTeams(g);
+        const inA = teamA.includes(p.name);
+        const inB = teamB.includes(p.name);
+        if(!g.winner || (!inA && !inB))return;
+        const opp=_teamLabel(inA ? teamB : teamA);
         const oppP=players.find(x=>x.name===opp);
         const isDupInHist = prunedHistory.some(h =>
           h.matchId===mid || (h.date===m.d && h.map===(g.map||'-') && h.opp===opp)
@@ -382,7 +397,7 @@ function collectPlayerExtraHistoryData(opts){
           }catch(e){}
           // 일반 대회/티어대회 토너먼트는 competition.js에서 수정/삭제 가능 → editableSource로 연결
           tourMatches.push(_attachHistElo({
-            date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',
+            date:m.d||'',time:0,result:inA&&g.winner==='A'?'승':inB&&g.winner==='B'?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',
             matchId:mid,mode:tn.type==='tier'?'티어대회':'대회',
             _readOnly:true,
             _editableSource:true,
@@ -405,18 +420,18 @@ function collectPlayerExtraHistoryData(opts){
       const mid=m._id||`tour_normal_${m._tnId||''}_${nmi}`;
       if(existingMatchIds.has(mid))return;
       (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
-        if(!g.playerA||!g.playerB||!g.winner)return;
-        const wn=g.winner==='A'?g.playerA:g.playerB;
-        const ln=g.winner==='A'?g.playerB:g.playerA;
-        if(wn!==p.name&&ln!==p.name)return;
-        const opp=wn===p.name?ln:wn;
+        const { teamA, teamB } = _gameTeams(g);
+        const inA = teamA.includes(p.name);
+        const inB = teamB.includes(p.name);
+        if(!g.winner || (!inA && !inB))return;
+        const opp=_teamLabel(inA ? teamB : teamA);
         const oppP=players.find(x=>x.name===opp);
         const isDupInHist=prunedHistory.some(h=>
           h.matchId===mid||(h.date===m.d&&h.map===(g.map||'-')&&h.opp===opp)
         );
         if(!isDupInHist){
           tourMatches.push(_attachHistElo({
-            date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',
+            date:m.d||'',time:0,result:inA&&g.winner==='A'?'승':inB&&g.winner==='B'?'승':'패',opp,oppRace:oppP?.race||'',map:g.map||'-',
             matchId:mid,mode:'대회(일반경기)',
             _readOnly:true,
             _editableSource:true,

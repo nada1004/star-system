@@ -114,10 +114,15 @@ function grpRefreshSets(){
   const teamA=aEl.value,teamB=bEl?bEl.value:'';
   const tfs=window._grpTierFilters||[];
   const _existNamesA=new Set(), _existNamesB=new Set();
+  const _splitNames = (v)=>String(v||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
   (m.sets||[]).forEach(set=>{
     (set.games||[]).forEach(g=>{
-      if(g.playerA) _existNamesA.add(g.playerA);
-      if(g.playerB) _existNamesB.add(g.playerB);
+      _splitNames(g.playerA).forEach(name=>_existNamesA.add(name));
+      _splitNames(g.playerB).forEach(name=>_existNamesB.add(name));
+      if(g.a1) _existNamesA.add(g.a1);
+      if(g.a2) _existNamesA.add(g.a2);
+      if(g.b1) _existNamesB.add(g.b1);
+      if(g.b2) _existNamesB.add(g.b2);
     });
   });
   const mARaw=players.filter(p=>(p.univ===teamA||(teamA&&_existNamesA.has(p.name)))&&(tfs.length===0||tfs.includes(p.tier)));
@@ -129,7 +134,14 @@ function grpRefreshSets(){
   const optsB=`<option value="">B팀 스트리머${tfLabel}</option>`+mB.map(p=>`<option value="${p.name}"${_existNamesB.has(p.name)&&p.univ!==teamB?` style="color:#f59e0b"`:''} >${p.name}${p.univ!==teamB?` (${p.univ||'무소속'})`:''} [${p.tier||'-'}/${p.race||'-'}]</option>`).join('');
   const setsEl=document.getElementById('gm-sets');if(!setsEl)return;
   if(!m.sets||!m.sets.length){setsEl.innerHTML='<div style="color:var(--gray-l);font-size:12px;margin:12px 0;padding:14px;background:var(--surface);border-radius:8px;text-align:center">세트를 추가하세요 ↓</div>';return;}
-  let h='';
+  let h=`<div style="margin-bottom:10px;padding:10px 12px;border:1px solid rgba(37,99,235,.16);background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(248,250,252,.98));border-radius:10px;font-size:11px;color:#0f172a;line-height:1.6">
+    <strong style="color:#1d4ed8">2대2 수동 입력 가능</strong>
+    <span style="color:#475569"> 각 경기의 </span>
+    <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;padding:0 7px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:10px;font-weight:900;vertical-align:middle">2:2</span>
+    <span style="color:#475569"> 버튼을 누르면 </span>
+    <strong>A1/A2 vs B1/B2</strong>
+    <span style="color:#475569"> 형태로 입력됩니다.</span>
+  </div>`;
   m.sets.forEach((set,si)=>{
     const lbl=set.label||(si===2?'🎯 에이스전':`${si+1}세트`);
     const sA=set.scoreA||0,sB=set.scoreB||0;
@@ -147,18 +159,28 @@ function grpRefreshSets(){
       const dlB=mB.map(p=>`<option value="${p.name}${p.univ!==teamB?' ('+p.univ+')':''}">${p.name}</option>`).join('');
       h+=`<div class="game-row">
         <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi2+1}</span>
+        <button class="btn btn-xs ${g._isTeam?'btn-b':'btn-w'}" onclick="grpSetGame(${si},${gi2},'_isTeam',${!g._isTeam});if(${!g._isTeam?'false':'true'}){grpSetGame(${si},${gi2},'a1','');grpSetGame(${si},${gi2},'a2','');grpSetGame(${si},${gi2},'b1','');grpSetGame(${si},${gi2},'b2','');grpSetGame(${si},${gi2},'playerA','');grpSetGame(${si},${gi2},'playerB','');}grpRefreshSets()" title="2대2 팀전 입력으로 전환">2:2</button>
         <datalist id="${dlIdA}">${dlA}</datalist>
-        <input list="${dlIdA}" value="${g.playerA||''}" placeholder="A팀 스트리머 검색..." style="flex:1;min-width:80px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="grpSetGame(${si},${gi2},'playerA',this.value.split(' (')[0].trim())" onchange="grpSetGame(${si},${gi2},'playerA',this.value.split(' (')[0].trim())">
-        <span style="font-size:11px;color:var(--gray-l)">vs</span>
         <datalist id="${dlIdB}">${dlB}</datalist>
-        <input list="${dlIdB}" value="${g.playerB||''}" placeholder="B팀 스트리머 검색..." style="flex:1;min-width:80px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="grpSetGame(${si},${gi2},'playerB',this.value.split(' (')[0].trim())" onchange="grpSetGame(${si},${gi2},'playerB',this.value.split(' (')[0].trim())">
+        ${g._isTeam
+          ? `<input list="${dlIdA}" value="${g.a1||''}" placeholder="A1" style="flex:1;min-width:72px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="var v=this.value.split(' (')[0].trim();grpSetGame(${si},${gi2},'a1',v);grpSetGame(${si},${gi2},'playerA',[v,'${(g.a2||'').replace(/'/g,"\\'")}'].filter(Boolean).join(','))" onchange="var v=this.value.split(' (')[0].trim();grpSetGame(${si},${gi2},'a1',v);grpSetGame(${si},${gi2},'playerA',[v,(document.querySelector('[data-grp-a2=&quot;${si}-${gi2}&quot;]')?.value||'').split(' (')[0].trim()].filter(Boolean).join(','))">
+             <input data-grp-a2="${si}-${gi2}" list="${dlIdA}" value="${g.a2||''}" placeholder="A2" style="flex:1;min-width:72px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="var v=this.value.split(' (')[0].trim();grpSetGame(${si},${gi2},'a2',v);grpSetGame(${si},${gi2},'playerA',[(document.querySelector('[data-grp-a1=&quot;${si}-${gi2}&quot;]')?.value||'').split(' (')[0].trim(),v].filter(Boolean).join(','))" onchange="var v=this.value.split(' (')[0].trim();grpSetGame(${si},${gi2},'a2',v);grpSetGame(${si},${gi2},'playerA',[(document.querySelector('[data-grp-a1=&quot;${si}-${gi2}&quot;]')?.value||'').split(' (')[0].trim(),v].filter(Boolean).join(','))">
+             <span style="font-size:11px;color:var(--gray-l)">vs</span>
+             <input data-grp-b1="${si}-${gi2}" list="${dlIdB}" value="${g.b1||''}" placeholder="B1" style="flex:1;min-width:72px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="var v=this.value.split(' (')[0].trim();grpSetGame(${si},${gi2},'b1',v);grpSetGame(${si},${gi2},'playerB',[v,'${(g.b2||'').replace(/'/g,"\\'")}'].filter(Boolean).join(','))" onchange="var v=this.value.split(' (')[0].trim();grpSetGame(${si},${gi2},'b1',v);grpSetGame(${si},${gi2},'playerB',[v,(document.querySelector('[data-grp-b2=&quot;${si}-${gi2}&quot;]')?.value||'').split(' (')[0].trim()].filter(Boolean).join(','))">
+             <input data-grp-b2="${si}-${gi2}" list="${dlIdB}" value="${g.b2||''}" placeholder="B2" style="flex:1;min-width:72px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="var v=this.value.split(' (')[0].trim();grpSetGame(${si},${gi2},'b2',v);grpSetGame(${si},${gi2},'playerB',[(document.querySelector('[data-grp-b1=&quot;${si}-${gi2}&quot;]')?.value||'').split(' (')[0].trim(),v].filter(Boolean).join(','))" onchange="var v=this.value.split(' (')[0].trim();grpSetGame(${si},${gi2},'b2',v);grpSetGame(${si},${gi2},'playerB',[(document.querySelector('[data-grp-b1=&quot;${si}-${gi2}&quot;]')?.value||'').split(' (')[0].trim(),v].filter(Boolean).join(','))">`
+          : `<input data-grp-a1="${si}-${gi2}" list="${dlIdA}" value="${g.playerA||''}" placeholder="A팀 스트리머 검색..." style="flex:1;min-width:80px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="grpSetGame(${si},${gi2},'playerA',this.value.split(' (')[0].trim())" onchange="grpSetGame(${si},${gi2},'playerA',this.value.split(' (')[0].trim())">
+             <span style="font-size:11px;color:var(--gray-l)">vs</span>
+             <input data-grp-b1="${si}-${gi2}" list="${dlIdB}" value="${g.playerB||''}" placeholder="B팀 스트리머 검색..." style="flex:1;min-width:80px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="grpSetGame(${si},${gi2},'playerB',this.value.split(' (')[0].trim())" onchange="grpSetGame(${si},${gi2},'playerB',this.value.split(' (')[0].trim())">`}
         <select onchange="grpSetGame(${si},${gi2},'map',this.value)" style="max-width:100px"><option value="">맵</option>${mapOpts}</select>
         <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="grpSetGame(${si},${gi2},'winner','A');grpRefreshSets()">A 승</button>
         <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="grpSetGame(${si},${gi2},'winner','B');grpRefreshSets()">B 승</button>
         <button class="btn btn-r btn-xs" onclick="grpDelGame(${si},${gi2})">🗑️ 삭제</button>
       </div>`;
     });
-    h+=`<button class="btn btn-w btn-sm" onclick="grpAddGame(${si})">+ 경기 추가</button></div>`;
+    h+=`<div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-w btn-sm" onclick="grpAddGame(${si},false)">+ 경기 추가</button>
+      <button class="btn btn-b btn-sm" onclick="grpAddGame(${si},true)">+ 2:2 경기 추가</button>
+    </div></div>`;
   });
   setsEl.innerHTML=h;
 }
@@ -198,12 +220,12 @@ function grpDelSet(si){
   const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];m.sets.splice(si,1);grpRefreshSets();
 }
 
-function grpAddGame(si){
+function grpAddGame(si, isTeam){
   const tn=tourneys.find(t=>t.id===grpMatchState.tnId);if(!tn)return;
   const m=tn.groups[grpMatchState.gi].matches[grpMatchState.mi];
   if(!m||!m.sets||!m.sets[si])return;
   if(!m.sets[si].games)m.sets[si].games=[];
-  m.sets[si].games.push({playerA:'',playerB:'',winner:'',map:''});grpRefreshSets();
+  m.sets[si].games.push({playerA:'',playerB:'',winner:'',map:'',_isTeam:!!isTeam,a1:'',a2:'',b1:'',b2:''});grpRefreshSets();
 }
 
 function grpDelGame(si,gi2){

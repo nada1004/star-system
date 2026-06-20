@@ -5492,6 +5492,36 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
     if (!extMap[name]) extMap[name] = [];
     extMap[name].push({ date, result, oppRace: oppRace||'', mode: mode||'' });
   };
+  const _b2TeamNames = (side) => {
+    if (Array.isArray(side)) {
+      return side.map(x => {
+        if (x && typeof x === 'object') return String(x.name || '').trim();
+        return String(x || '').trim();
+      }).filter(Boolean);
+    }
+    return String(side || '').split(/[,+，]/).map(x => x.trim()).filter(Boolean);
+  };
+  const _b2AddTeamGameExt = (game, date, modeLabel) => {
+    if (!game || !date || !game.winner) return;
+    const teamA = (Array.isArray(game.teamA) && game.teamA.length)
+      ? _b2TeamNames(game.teamA)
+      : (game.a1 || game.a2)
+        ? [game.a1, game.a2].filter(Boolean)
+        : _b2TeamNames(game.playerA);
+    const teamB = (Array.isArray(game.teamB) && game.teamB.length)
+      ? _b2TeamNames(game.teamB)
+      : (game.b1 || game.b2)
+        ? [game.b1, game.b2].filter(Boolean)
+        : _b2TeamNames(game.playerB);
+    if (teamA.length >= 2 && teamB.length >= 2) {
+      const winTeam = game.winner === 'A' ? teamA : teamB;
+      const loseTeam = game.winner === 'A' ? teamB : teamA;
+      winTeam.forEach(name => addExt(name, date, '승', '', modeLabel));
+      loseTeam.forEach(name => addExt(name, date, '패', '', modeLabel));
+      return true;
+    }
+    return false;
+  };
 
   // 개인전 (indM)
   try { (typeof indM!=='undefined'&&Array.isArray(indM)?indM:[]).forEach(m=>{
@@ -5515,6 +5545,7 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
     if (!m || !m.d) return;
     (m.sets||[]).forEach(s=>{
       (s.games||[]).forEach(g=>{
+        if (_b2AddTeamGameExt(g, m.d, '티어대회')) return;
         if (!g || !g.playerA || !g.playerB || !g.winner) return;
         const pA = players.find(p=>p.name===g.playerA), pB = players.find(p=>p.name===g.playerB);
         const wA = g.winner==='A', wB = g.winner==='B';
@@ -5531,18 +5562,12 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
       (m.sets||[]).forEach(s=>{
         (s.games||[]).forEach(g=>{
           if (!g || !g.winner) return;
+          if (_b2AddTeamGameExt(g, m.d, modeLabel)) return;
           // 개인전 형식 (playerA/B)
           if (g.playerA && g.playerB) {
             const pA=players.find(p=>p.name===g.playerA), pB=players.find(p=>p.name===g.playerB);
             addExt(g.playerA, m.d, g.winner==='A'?'승':'패', pB?.race||'', modeLabel);
             addExt(g.playerB, m.d, g.winner==='B'?'승':'패', pA?.race||'', modeLabel);
-          }
-          // 팀전 형식 (teamA/teamB 배열)
-          if (Array.isArray(g.teamA) && Array.isArray(g.teamB)) {
-            const winTeam = g.winner==='A' ? g.teamA : g.teamB;
-            const loseTeam = g.winner==='A' ? g.teamB : g.teamA;
-            winTeam.forEach(name => addExt(name, m.d, '승', '', modeLabel));
-            loseTeam.forEach(name => addExt(name, m.d, '패', '', modeLabel));
           }
         });
       });
@@ -5560,6 +5585,7 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
         if (!m || !m.d) return;
         (m.sets||[]).forEach(s=>{
           (s.games||[]).forEach(g=>{
+            if (_b2AddTeamGameExt(g, m.d, '대회')) return;
             if (!g || !g.playerA || !g.playerB || !g.winner) return;
             const pA=players.find(p=>p.name===g.playerA), pB=players.find(p=>p.name===g.playerB);
             addExt(g.playerA, m.d, g.winner==='A'?'승':'패', pB?.race||'', '대회');
@@ -5573,6 +5599,7 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
       if (!m || !m.d) return;
       (m.sets||[]).forEach(s=>{
         (s.games||[]).forEach(g=>{
+          if (_b2AddTeamGameExt(g, m.d, '대회')) return;
           if (!g || !g.playerA || !g.playerB || !g.winner) return;
           const pA=players.find(p=>p.name===g.playerA), pB=players.find(p=>p.name===g.playerB);
           addExt(g.playerA, m.d, g.winner==='A'?'승':'패', pB?.race||'', '대회');
@@ -5585,6 +5612,7 @@ function _b2WeeklyAggregate(players, dateFrom, dateTo) {
       if (!m || !m.d) return;
       (m.sets||[]).forEach(s=>{
         (s.games||[]).forEach(g=>{
+          if (_b2AddTeamGameExt(g, m.d, '대회')) return;
           if (!g || !g.playerA || !g.playerB || !g.winner) return;
           const pA=players.find(p=>p.name===g.playerA), pB=players.find(p=>p.name===g.playerB);
           addExt(g.playerA, m.d, g.winner==='A'?'승':'패', pB?.race||'', '대회');

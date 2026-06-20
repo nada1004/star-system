@@ -113,7 +113,16 @@ function buildProInputHTML(){
         <div id="pro-b-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:var(--white);margin-bottom:6px"></div>
         <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['pro'].membersB.splice(${i},1);BLD['pro'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">스트리머 없음</span>'}</div>
       </div>
-    </div>`) + _mbSectionCard('⑤ 경기 결과 입력', `${setBuilderHTML(bld,'pro')}`);
+    </div>`) + _mbSectionCard('⑤ 경기 결과 입력', `
+      <div style="margin-bottom:10px;padding:10px 12px;border:1px solid rgba(14,165,233,.22);background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(248,250,252,.98));border-radius:10px;font-size:11px;color:#0f172a;line-height:1.6">
+        <strong style="color:#0369a1">2대2 수동 입력 가능</strong>
+        <span style="color:#475569">각 경기의 </span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;padding:0 7px;border-radius:999px;background:#e0f2fe;color:#0369a1;font-size:10px;font-weight:900;vertical-align:middle">2:2</span>
+        <span style="color:#475569"> 버튼을 누르면 </span>
+        <strong>A1/A2 vs B1/B2</strong>
+        <span style="color:#475569"> 형태로 바뀝니다.</span>
+      </div>
+      ${setBuilderHTML(bld,'pro')}`);
   return _mbFrame('🏅 프로리그 입력', actionBar, h, '');
 }
 
@@ -346,16 +355,27 @@ function proTeamResultsHTML(){
 
 function proRankHTML(){
   const pStats={};
+  const _proSplit=(v)=>String(v||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+  const _proSides=(g)=>{
+    if(!g.winner) return null;
+    const aList=Array.isArray(g.teamA)?g.teamA:(g.a1||g.a2?[g.a1,g.a2].filter(Boolean):_proSplit(g.playerA));
+    const bList=Array.isArray(g.teamB)?g.teamB:(g.b1||g.b2?[g.b1,g.b2].filter(Boolean):_proSplit(g.playerB));
+    if(!aList.length||!bList.length) return null;
+    return g.winner==='A' ? {w:aList,l:bList} : {w:bList,l:aList};
+  };
   proM.forEach(m=>{
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(g=>{
-        if(!g.playerA||!g.playerB||!g.winner)return;
-        const wName=g.winner==='A'?g.playerA:g.playerB;
-        const lName=g.winner==='A'?g.playerB:g.playerA;
-        if(!pStats[wName])pStats[wName]={w:0,l:0};
-        if(!pStats[lName])pStats[lName]={w:0,l:0};
-        pStats[wName].w++;
-        pStats[lName].l++;
+        const sides=_proSides(g);
+        if(!sides) return;
+        sides.w.forEach(wName=>{
+          if(!pStats[wName])pStats[wName]={w:0,l:0};
+          pStats[wName].w++;
+        });
+        sides.l.forEach(lName=>{
+          if(!pStats[lName])pStats[lName]={w:0,l:0};
+          pStats[lName].l++;
+        });
       });
     });
   });

@@ -1034,6 +1034,44 @@ function toggleDetail(key){
   openHistDetailModal(key);
 }
 
+function _histSearchSplitSideNames(v){
+  return String(v || '').split(/[,+，]/).map(s => s.trim()).filter(Boolean);
+}
+function _histSearchGameSideNames(g, side){
+  if (!g) return [];
+  if (side === 'A') {
+    if (Array.isArray(g.teamA) && g.teamA.length) return g.teamA.map(x => typeof x === 'object' ? x.name : x).filter(Boolean);
+    if (g.a1 || g.a2) return [g.a1, g.a2].filter(Boolean);
+    return _histSearchSplitSideNames(g.playerA);
+  }
+  if (Array.isArray(g.teamB) && g.teamB.length) return g.teamB.map(x => typeof x === 'object' ? x.name : x).filter(Boolean);
+  if (g.b1 || g.b2) return [g.b1, g.b2].filter(Boolean);
+  return _histSearchSplitSideNames(g.playerB);
+}
+function _histSearchEscHtml(v){
+  return String(v ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function _histSearchEscJs(v){
+  return String(v ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+}
+function _histSearchTeamBadge(names){
+  return (names || []).length >= 2
+    ? `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:18px;padding:0 6px;border-radius:999px;background:#e0f2fe;color:#0369a1;font-size:10px;font-weight:900;flex-shrink:0">2:2</span>`
+    : '';
+}
+function _histSearchRenderNameList(names){
+  const safeNames = (names || []).filter(Boolean);
+  if (!safeNames.length) return '?';
+  return safeNames.map(name => {
+    const safeJs = _histSearchEscJs(name);
+    return `<span onclick="openPlayerModal('${safeJs}')" style="cursor:pointer;text-decoration:underline dotted">${_histSearchEscHtml(name)}</span>`;
+  }).join(`<span style="color:var(--text3)"> / </span>`);
+}
+function _histSearchTeamText(names){
+  const safeNames = (names || []).filter(Boolean);
+  return safeNames.length ? safeNames.join(' / ') : '?';
+}
+
 /* ══════════════════════════════════════
    대전기록 액션 메뉴(⋯)
    - (개선) 아이콘 버튼(복사/공유/상세/수정/삭제/이동)을 한 곳에 모아 UI 복잡도 감소
@@ -1052,8 +1090,12 @@ function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
   if(set.games&&set.games.length){
     set.games.forEach((g,gi)=>{
       if(!g.playerA&&!g.playerB)return;
-      const pA=players.find(p=>p.name===g.playerA);
-      const pB=players.find(p=>p.name===g.playerB);
+      const sideA = _histSearchGameSideNames(g, 'A');
+      const sideB = _histSearchGameSideNames(g, 'B');
+      const isTeamA = sideA.length >= 2;
+      const isTeamB = sideB.length >= 2;
+      const pA=(!isTeamA && g.playerA) ? players.find(p=>p.name===g.playerA) : null;
+      const pB=(!isTeamB && g.playerB) ? players.find(p=>p.name===g.playerB) : null;
       const pca=(pA&&gc(pA.univ))||ca;
       const pcb=(pB&&gc(pB.univ))||cb;
       const aIsWinner=g.winner==='A';const bIsWinner=g.winner==='B';const hasWinner=!!g.winner;
@@ -1065,11 +1107,13 @@ function buildSingleSetHTML(m, si, labelA, labelB, ca, cb){
       const cA=g.playerA?`onclick="openPlayerModal('${g.playerA}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
       const cB=g.playerB?`onclick="openPlayerModal('${g.playerB}')" style="cursor:pointer;text-decoration:underline dotted"`:'';
       const mapStr=g.map?`<span style="background:var(--surface);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:10px">${g.map}</span>`:'';
+      const teamANameHTML = `${_histSearchTeamBadge(sideA)}<strong style="font-size:14px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">${_histSearchRenderNameList(sideA)}</strong>`;
+      const teamBNameHTML = `${_histSearchTeamBadge(sideB)}<strong style="font-size:14px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap">${_histSearchRenderNameList(sideB)}</strong>`;
       h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
         <span style="color:var(--gray-l);font-size:11px;font-weight:900;min-width:54px;text-align:center">경기 ${gi+1}</span>
-        <div style="${styleA}">${pA?getPlayerPhotoHTML(pA.name,'30px','margin-right:4px'):''} ${pA?`<span class="rbadge r${pA.race}" style="font-size:11px;padding:2px 6px">${pA.race}</span>`:''}<strong style="font-size:14px" ${cA}>${g.playerA||'?'}</strong>${pA?genderIcon(pA.gender):''}<span style="font-size:11px;color:${ca};font-weight:700;margin-left:2px">(${labelA})</span>${aIsWinner&&hasWinner?`<span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:4px">WIN</span>`:''}</div>
+        <div style="${styleA}">${isTeamA ? teamANameHTML : `${pA?getPlayerPhotoHTML(pA.name,'30px','margin-right:4px'):''} ${pA?`<span class="rbadge r${pA.race}" style="font-size:11px;padding:2px 6px">${pA.race}</span>`:''}<strong style="font-size:14px" ${cA}>${g.playerA||'?'}</strong>${pA?genderIcon(pA.gender):''}`}<span style="font-size:11px;color:${ca};font-weight:700;margin-left:2px">(${labelA})</span>${aIsWinner&&hasWinner?`<span style="background:${ca};color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:4px">WIN</span>`:''}</div>
         <span style="color:var(--gray-l);font-size:12px;font-weight:700">vs</span>
-        <div style="${styleB}">${pB?getPlayerPhotoHTML(pB.name,'30px','margin-right:4px'):''} ${pB?`<span class="rbadge r${pB.race}" style="font-size:11px;padding:2px 6px">${pB.race}</span>`:''}<strong style="font-size:14px" ${cB}>${g.playerB||'?'}</strong>${pB?genderIcon(pB.gender):''}<span style="font-size:11px;color:${cb};font-weight:700;margin-left:2px">(${labelB})</span>${bIsWinner&&hasWinner?`<span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:4px">WIN</span>`:''}</div>
+        <div style="${styleB}">${isTeamB ? teamBNameHTML : `${pB?getPlayerPhotoHTML(pB.name,'30px','margin-right:4px'):''} ${pB?`<span class="rbadge r${pB.race}" style="font-size:11px;padding:2px 6px">${pB.race}</span>`:''}<strong style="font-size:14px" ${cB}>${g.playerB||'?'}</strong>${pB?genderIcon(pB.gender):''}`}<span style="font-size:11px;color:${cb};font-weight:700;margin-left:2px">(${labelB})</span>${bIsWinner&&hasWinner?`<span style="background:${cb};color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:4px">WIN</span>`:''}</div>
         ${mapStr}
       </div>`;
     });
@@ -1150,24 +1194,32 @@ function _pcRecDetailRowsHTML(payload){
     let left = p1 || '?';
     let right = p2 || '?';
     let winSide = '';
+    let leftNames = [];
+    let rightNames = [];
     if (row.wName || row.lName) {
-      left = String(row.wName || left);
-      right = String(row.lName || right);
+      leftNames = _histSearchSplitSideNames(row.wName || left);
+      rightNames = _histSearchSplitSideNames(row.lName || right);
+      left = _histSearchTeamText(leftNames);
+      right = _histSearchTeamText(rightNames);
       winSide = 'left';
     } else {
-      left = String(row.a || left);
-      right = String(row.b || right);
+      leftNames = _histSearchGameSideNames(row, 'A');
+      rightNames = _histSearchGameSideNames(row, 'B');
+      left = leftNames.length ? _histSearchTeamText(leftNames) : String(row.a || left);
+      right = rightNames.length ? _histSearchTeamText(rightNames) : String(row.b || right);
       const winner = String(row.winner || '');
       if (winner === 'A' || winner === left || winner === p1) winSide = 'left';
       else if (winner === 'B' || winner === right || winner === p2) winSide = 'right';
     }
     const map = row.map ? `🗺️ ${_pcRecDetailEsc(row.map)}` : '';
     const note = row.note ? `📝 ${_pcRecDetailEsc(row.note)}` : '';
+    const leftBadge = _histSearchTeamBadge(leftNames);
+    const rightBadge = _histSearchTeamBadge(rightNames);
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-bottom:8px;flex-wrap:wrap">
       <span style="font-size:11px;font-weight:800;color:var(--gray-l);min-width:44px">${idx+1}경기</span>
-      <span style="font-size:13px;font-weight:${winSide==='left'?'900':'700'};color:${winSide==='left'?'#16a34a':'var(--text)'}">${_pcRecDetailEsc(left)}</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:${winSide==='left'?'900':'700'};color:${winSide==='left'?'#16a34a':'var(--text)'}">${leftBadge}<span>${_pcRecDetailEsc(left)}</span></span>
       <span style="font-size:11px;color:var(--gray-l);font-weight:900">vs</span>
-      <span style="font-size:13px;font-weight:${winSide==='right'?'900':'700'};color:${winSide==='right'?'#16a34a':'var(--text)'}">${_pcRecDetailEsc(right)}</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:${winSide==='right'?'900':'700'};color:${winSide==='right'?'#16a34a':'var(--text)'}">${rightBadge}<span>${_pcRecDetailEsc(right)}</span></span>
       ${map?`<span style="margin-left:auto;font-size:11px;color:var(--gray-l)">${map}</span>`:'<span style="margin-left:auto"></span>'}
       ${note?`<span style="flex-basis:100%;font-size:11px;color:var(--gray-l)">${note}</span>`:''}
     </div>`;
@@ -1582,21 +1634,26 @@ function histProCompTeamHTML(_omitBar) {
         </div>
         ${games.map(g=>{
           const pw=players.find(p=>p.name===g.wName), pl=players.find(p=>p.name===g.lName);
+          const wNames = _histSearchSplitSideNames(g.wName);
+          const lNames = _histSearchSplitSideNames(g.lName);
+          const wDisplay = _histSearchTeamText(wNames);
+          const lDisplay = _histSearchTeamText(lNames);
+          const isTeamGame = wNames.length >= 2 || lNames.length >= 2;
           const sideWin=g._sideW==='A'?tm.teamAName||'A팀':tm.teamBName||'B팀';
           const winCol = g._sideW==='A' ? colA : colB;
           const loseCol = g._sideW==='A' ? colB : colA;
           const _detailPayload = encodeURIComponent(JSON.stringify({
             title:'프로리그 대회 팀전 세트',
             subtitle:`${tnName||''} · ${sideWin}`,
-            p1:g.wName, p2:g.lName, p1Score:1, p2Score:0, winner:g.wName, date:tm.d||'', games:[g]
+            p1:wDisplay, p2:lDisplay, p1Score:1, p2Score:0, winner:wDisplay, date:tm.d||'', games:[g]
           }));
           return _histProCompH2HCardHTML({
-            p1:g.wName, p2:g.lName, p1Col:winCol, p2Col:loseCol,
-            p1Score:1, p2Score:0, winner:g.wName, date:tm.d||'', games:[g],
+            p1:wDisplay, p2:lDisplay, p1Col:winCol, p2Col:loseCol,
+            p1Score:1, p2Score:0, winner:wDisplay, date:tm.d||'', games:[g],
             badges:[
               `<span style="font-size:11px;color:var(--gray-l)">${tm.d?tm.d.slice(2).replace(/-/g,'/'):'미정'}</span>`,
               `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${winCol};color:#fff">${sideWin}</span>`,
-              `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#e0f2fe;color:#0284c7">팀전</span>`,
+              `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#e0f2fe;color:#0284c7">${isTeamGame ? '2:2' : '팀전'}</span>`,
               g.map?`<span style="font-size:11px;color:var(--gray-l)">🗺️ ${g.map}</span>`:'',
               pw&&pw.univ?`<span style="font-size:11px;color:${winCol};font-weight:800">${pw.univ}</span>`:'',
               pl&&pl.univ?`<span style="font-size:11px;color:${loseCol};font-weight:800">${pl.univ}</span>`:''

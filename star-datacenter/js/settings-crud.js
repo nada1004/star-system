@@ -880,12 +880,27 @@ function savePlayer(){
     players.forEach(other=>{
       (other.history||[]).forEach(h=>{if(h.opp===oldName)h.opp=newName;});
     });
+    const _renameSide = (v) => {
+      if(Array.isArray(v)){
+        v.forEach(item => {
+          if(item && typeof item === 'object' && item.name===oldName) item.name=newName;
+        });
+        return;
+      }
+      return v;
+    };
     const renameInMatches=(arr)=>{
       (arr||[]).forEach(m=>{
         (m.sets||[]).forEach(set=>{
           (set.games||[]).forEach(g=>{
             if(g.playerA===oldName)g.playerA=newName;
             if(g.playerB===oldName)g.playerB=newName;
+            if(g.a1===oldName)g.a1=newName;
+            if(g.a2===oldName)g.a2=newName;
+            if(g.b1===oldName)g.b1=newName;
+            if(g.b2===oldName)g.b2=newName;
+            _renameSide(g.teamA);
+            _renameSide(g.teamB);
           });
         });
         (m.teamAMembers||[]).forEach(mb=>{if(mb.name===oldName)mb.name=newName;});
@@ -908,6 +923,12 @@ function savePlayer(){
             (set.games||[]).forEach(g=>{
               if(g.playerA===oldName)g.playerA=newName;
               if(g.playerB===oldName)g.playerB=newName;
+              if(g.a1===oldName)g.a1=newName;
+              if(g.a2===oldName)g.a2=newName;
+              if(g.b1===oldName)g.b1=newName;
+              if(g.b2===oldName)g.b2=newName;
+              _renameSide(g.teamA);
+              _renameSide(g.teamB);
             });
           });
         });
@@ -922,6 +943,12 @@ function savePlayer(){
           (set.games||[]).forEach(g=>{
             if(g.playerA===oldName)g.playerA=newName;
             if(g.playerB===oldName)g.playerB=newName;
+            if(g.a1===oldName)g.a1=newName;
+            if(g.a2===oldName)g.a2=newName;
+            if(g.b1===oldName)g.b1=newName;
+            if(g.b2===oldName)g.b2=newName;
+            _renameSide(g.teamA);
+            _renameSide(g.teamB);
           });
         });
       });
@@ -933,6 +960,12 @@ function savePlayer(){
           (set.games||[]).forEach(g=>{
             if(g.playerA===oldName)g.playerA=newName;
             if(g.playerB===oldName)g.playerB=newName;
+            if(g.a1===oldName)g.a1=newName;
+            if(g.a2===oldName)g.a2=newName;
+            if(g.b1===oldName)g.b1=newName;
+            if(g.b2===oldName)g.b2=newName;
+            _renameSide(g.teamA);
+            _renameSide(g.teamB);
           });
         });
       });
@@ -1082,7 +1115,13 @@ function delPlayer(){
       if(!m.sets) return;
       m.sets.forEach(set => {
         if(!set.games) return;
-        set.games = set.games.filter(g => g.playerA !== name && g.playerB !== name);
+        set.games = set.games.filter(g => {
+          const teamA = Array.isArray(g.teamA) ? g.teamA : [];
+          const teamB = Array.isArray(g.teamB) ? g.teamB : [];
+          const inTeamA = teamA.some(x => (x && typeof x === 'object' ? x.name : x) === name);
+          const inTeamB = teamB.some(x => (x && typeof x === 'object' ? x.name : x) === name);
+          return g.playerA !== name && g.playerB !== name && g.a1 !== name && g.a2 !== name && g.b1 !== name && g.b2 !== name && !inTeamA && !inTeamB;
+        });
       });
     });
   }

@@ -149,15 +149,27 @@ function ckRankHTML(){
   const sk=window._rankSort['ck']||'w';
   const sortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${sk==='w'?'on':''}" onclick="window._rankSort['ck']='w';render()">승순</button><button class="sort-btn ${sk==='rate'?'on':''}" onclick="window._rankSort['ck']='rate';render()">승률순</button><button class="sort-btn ${sk==='l'?'on':''}" onclick="window._rankSort['ck']='l';render()">패순</button></div>`;
   const pS2={};
+  const _ckSplit=(v)=>String(v||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+  const _ckSides=(g)=>{
+    if(!g.winner) return null;
+    const aList=Array.isArray(g.teamA)?g.teamA:(g.a1||g.a2?[g.a1,g.a2].filter(Boolean):_ckSplit(g.playerA));
+    const bList=Array.isArray(g.teamB)?g.teamB:(g.b1||g.b2?[g.b1,g.b2].filter(Boolean):_ckSplit(g.playerB));
+    if(!aList.length||!bList.length) return null;
+    return g.winner==='A' ? {w:aList,l:bList} : {w:bList,l:aList};
+  };
   ckM.forEach(m=>{
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(g=>{
-        if(!g.playerA||!g.playerB||!g.winner)return;
-        const wn=g.winner==='A'?g.playerA:g.playerB;
-        const ln=g.winner==='A'?g.playerB:g.playerA;
-        if(!pS2[wn])pS2[wn]={w:0,l:0};
-        if(!pS2[ln])pS2[ln]={w:0,l:0};
-        pS2[wn].w++;pS2[ln].l++;
+        const sides=_ckSides(g);
+        if(!sides) return;
+        sides.w.forEach(wn=>{
+          if(!pS2[wn])pS2[wn]={w:0,l:0};
+          pS2[wn].w++;
+        });
+        sides.l.forEach(ln=>{
+          if(!pS2[ln])pS2[ln]={w:0,l:0};
+          pS2[ln].l++;
+        });
       });
     });
   });

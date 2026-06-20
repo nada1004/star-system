@@ -996,24 +996,34 @@ function ttPlayerRankHTML(compName){
   };
   const filtered=compName ? ttM.filter(m=>_ttEqComp(m,compName)) : ttM;
   const sc={};
+  const _ttSplit=(v)=>String(v||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+  const _ttSides=(g)=>{
+    if(g.wName&&g.lName) return {w:[g.wName], l:[g.lName]};
+    if(!g.winner) return null;
+    const aList=Array.isArray(g.teamA)?g.teamA:(g.a1||g.a2?[g.a1,g.a2].filter(Boolean):_ttSplit(g.playerA));
+    const bList=Array.isArray(g.teamB)?g.teamB:(g.b1||g.b2?[g.b1,g.b2].filter(Boolean):_ttSplit(g.playerB));
+    if(!aList.length||!bList.length) return null;
+    return g.winner==='A' ? {w:aList,l:bList} : {w:bList,l:aList};
+  };
+  const _ttEnsure=(name)=>{
+    if(!name) return;
+    if(!sc[name])sc[name]={w:0,l:0,univ:''};
+    if(!sc[name].univ){const p=players.find(x=>x.name===name);if(p)sc[name].univ=p.univ||'';}
+  };
   const _ttAddScore=(wn,ln)=>{
     if(!wn||!ln)return;
-    if(!sc[wn])sc[wn]={w:0,l:0,univ:''};
-    if(!sc[ln])sc[ln]={w:0,l:0,univ:''};
+    _ttEnsure(wn); _ttEnsure(ln);
     sc[wn].w++;sc[ln].l++;
-    if(!sc[wn].univ){const p=players.find(x=>x.name===wn);if(p)sc[wn].univ=p.univ||'';}
-    if(!sc[ln].univ){const p=players.find(x=>x.name===ln);if(p)sc[ln].univ=p.univ||'';}
   };
   filtered.forEach(m=>{
     const _games=(m.sets||[]).flatMap(st=>st.games||[]);
     if(_games.length){
       // sets.games 기록이 있는 경우: 게임 단위 집계
       _games.forEach(g=>{
-        let wn, ln;
-        if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
-        else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
-        else return;
-        _ttAddScore(wn,ln);
+        const sides=_ttSides(g);
+        if(!sides) return;
+        sides.w.forEach(wn=>{ _ttEnsure(wn); sc[wn].w++; });
+        sides.l.forEach(ln=>{ _ttEnsure(ln); sc[ln].l++; });
       });
     } else if(m.a&&m.b&&m.winner){
       // [FIX] sets.games 없는 경우: m.winner(1:1 개인전) fallback 집계

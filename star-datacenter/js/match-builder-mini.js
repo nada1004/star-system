@@ -66,18 +66,30 @@ function miniRankHTML(data){
   const msk=window._rankSort['mini']||'w';
   const msortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${msk==='w'?'on':''}" onclick="window._rankSort['mini']='w';render()">승순</button><button class="sort-btn ${msk==='rate'?'on':''}" onclick="window._rankSort['mini']='rate';render()">승률순</button><button class="sort-btn ${msk==='l'?'on':''}" onclick="window._rankSort['mini']='l';render()">패순</button></div>`;
   const psc={};
+  const _miniSplit=(v)=>String(v||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+  const _miniSides=(g)=>{
+    if(g.wName&&g.lName) return {w:[g.wName], l:[g.lName]};
+    if(!g.winner) return null;
+    const aList=Array.isArray(g.teamA)?g.teamA:(g.a1||g.a2?[g.a1,g.a2].filter(Boolean):_miniSplit(g.playerA));
+    const bList=Array.isArray(g.teamB)?g.teamB:(g.b1||g.b2?[g.b1,g.b2].filter(Boolean):_miniSplit(g.playerB));
+    if(!aList.length||!bList.length) return null;
+    return g.winner==='A' ? {w:aList,l:bList} : {w:bList,l:aList};
+  };
   data.forEach(m=>{
     (m.sets||[]).forEach(st=>{
       (st.games||[]).forEach(g=>{
-        let wn,ln;
-        if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
-        else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
-        else return;
-        if(!psc[wn])psc[wn]={w:0,l:0,univ:''};
-        if(!psc[ln])psc[ln]={w:0,l:0,univ:''};
-        psc[wn].w++;psc[ln].l++;
-        if(!psc[wn].univ){const p=players.find(x=>x.name===wn);if(p)psc[wn].univ=p.univ||'';}
-        if(!psc[ln].univ){const p=players.find(x=>x.name===ln);if(p)psc[ln].univ=p.univ||'';}
+        const sides=_miniSides(g);
+        if(!sides) return;
+        sides.w.forEach(wn=>{
+          if(!psc[wn])psc[wn]={w:0,l:0,univ:''};
+          psc[wn].w++;
+          if(!psc[wn].univ){const p=players.find(x=>x.name===wn);if(p)psc[wn].univ=p.univ||'';}
+        });
+        sides.l.forEach(ln=>{
+          if(!psc[ln])psc[ln]={w:0,l:0,univ:''};
+          psc[ln].l++;
+          if(!psc[ln].univ){const p=players.find(x=>x.name===ln);if(p)psc[ln].univ=p.univ||'';}
+        });
       });
     });
   });

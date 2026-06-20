@@ -368,6 +368,7 @@ function _recoverCivilMiniFromPlayerHistory(baseData, monthParts){
   const hasCivil = out.miniM.some(m=>m && (m.type==='civil' || (m.a==='A팀' && m.b==='B팀')));
   if(hasCivil) return out;
   const gameMap = new Map();
+  const _splitNames = (v) => String(v || '').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
   (Array.isArray(monthParts) ? monthParts : []).filter(Boolean).forEach(part=>{
     const ph = part && part.playerHistory || {};
     Object.keys(ph).forEach(name=>{
@@ -375,12 +376,22 @@ function _recoverCivilMiniFromPlayerHistory(baseData, monthParts){
         if(String(h && h.mode || '').trim() !== '시빌워') return;
         const matchId = String(h.matchId || '').trim();
         if(!matchId) return;
-        const prev = gameMap.get(matchId) || { _id:matchId, d:String(h.date||'').trim(), map:String(h.map||'').trim(), p1:'', p2:'', wName:'', lName:'', univMap:{} };
+        const prev = gameMap.get(matchId) || { _id:matchId, d:String(h.date||'').trim(), map:String(h.map||'').trim(), p1:'', p2:'', wName:'', lName:'', winNames:new Set(), loseNames:new Set(), univMap:{} };
         prev.d = prev.d || String(h.date||'').trim();
         prev.map = prev.map || String(h.map||'').trim();
         prev.univMap[name] = String(h.univ || '').trim();
-        if(h.result === '승'){ prev.wName = name; prev.lName = String(h.opp || '').trim(); }
-        else if(h.result === '패'){ prev.wName = String(h.opp || '').trim(); prev.lName = name; }
+        if(h.result === '승'){
+          prev.wName = name;
+          prev.lName = String(h.opp || '').trim();
+          prev.winNames.add(name);
+          _splitNames(h.opp).forEach(n => prev.loseNames.add(n));
+        }
+        else if(h.result === '패'){
+          prev.wName = String(h.opp || '').trim();
+          prev.lName = name;
+          _splitNames(h.opp).forEach(n => prev.winNames.add(n));
+          prev.loseNames.add(name);
+        }
         prev.p1 = prev.p1 || name;
         prev.p2 = prev.p2 || String(h.opp || '').trim();
         gameMap.set(matchId, prev);
@@ -401,13 +412,21 @@ function _recoverCivilMiniFromPlayerHistory(baseData, monthParts){
     const sess = sessions.get(base);
     sess.d = sess.d || rec.d || '';
     sess.games.push({ ...rec, setIdx, gameIdx });
-    [rec.wName, rec.lName].forEach(n=>{
+    const _gameNames = [...(rec.winNames || []), ...(rec.loseNames || [])];
+    _gameNames.forEach(n=>{
       if(!n) return;
       if(!sess.players.has(n)) sess.players.set(n, { name:n, univ: String(rec.univMap && rec.univMap[n] || '') });
       if(!sess.adj.has(n)) sess.adj.set(n, new Set());
     });
-    sess.adj.get(rec.wName).add(rec.lName);
-    sess.adj.get(rec.lName).add(rec.wName);
+    const winNames = [...(rec.winNames || [])];
+    const loseNames = [...(rec.loseNames || [])];
+    winNames.forEach(wn => {
+      loseNames.forEach(ln => {
+        if(!wn || !ln) return;
+        sess.adj.get(wn).add(ln);
+        sess.adj.get(ln).add(wn);
+      });
+    });
   }
   const recovered = [];
   for(const sess of sessions.values()){
@@ -427,15 +446,22 @@ function _recoverCivilMiniFromPlayerHistory(baseData, monthParts){
     const setsMap = new Map();
     sess.games.sort((a,b)=>(a.setIdx-b.setIdx)||(a.gameIdx-b.gameIdx));
     sess.games.forEach(g=>{
-      const sa = side.get(g.wName)||'A';
-      const sb = side.get(g.lName)|| (sa==='A'?'B':'A');
-      const playerA = sa==='A' ? g.wName : g.lName;
-      const playerB = sa==='A' ? g.lName : g.wName;
+      const winNames = [...(g.winNames || [])];
+      const loseNames = [...(g.loseNames || [])];
+      const sa = side.get(winNames[0] || g.wName)||'A';
+      const teamA = sa==='A' ? winNames : loseNames;
+      const teamB = sa==='A' ? loseNames : winNames;
+      const playerA = teamA.join(',');
+      const playerB = teamB.join(',');
       const winner = sa==='A' ? 'A' : 'B';
       if(!setsMap.has(g.setIdx)) setsMap.set(g.setIdx, { scoreA:0, scoreB:0, winner:'', games:[] });
       const st = setsMap.get(g.setIdx);
       if(winner==='A') st.scoreA++; else st.scoreB++;
-      st.games.push({ _id:g._id, playerA, playerB, winner, map:g.map||'-', wName:g.wName, lName:g.lName });
+      st.games.push({
+        _id:g._id, playerA, playerB, winner, map:g.map||'-',
+        wName: winNames.join(','), lName: loseNames.join(','),
+        ...(teamA.length >= 2 && teamB.length >= 2 ? { _isTeam:true, teamA:[...teamA], teamB:[...teamB], a1:teamA[0]||'', a2:teamA[1]||'', b1:teamB[0]||'', b2:teamB[1]||'' } : {})
+      });
     });
     const sets = [...setsMap.entries()].sort((a,b)=>a[0]-b[0]).map(([,st])=>{
       st.winner = st.scoreA>st.scoreB ? 'A' : (st.scoreB>st.scoreA ? 'B' : '');

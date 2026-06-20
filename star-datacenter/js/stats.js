@@ -1800,6 +1800,31 @@ var _radarCompareUnivs=[];
 function _radarBaseScore(){
   return {winrate:0,avgElo:1200,pts:0,activity:0,diversity:0,streak:0,w:0,l:0,tot:0,mem:0};
 }
+function _statsSideNames(side){
+  if(Array.isArray(side)){
+    return side.map(x => {
+      if(x && typeof x === 'object') return String(x.name || '').trim();
+      return String(x || '').trim();
+    }).filter(Boolean);
+  }
+  return String(side || '').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+}
+function _statsGameSides(g){
+  if(!g || !g.winner) return null;
+  const aList = (Array.isArray(g.teamA) && g.teamA.length) ? _statsSideNames(g.teamA) : ((g.a1 || g.a2) ? [g.a1, g.a2].filter(Boolean) : _statsSideNames(g.playerA));
+  const bList = (Array.isArray(g.teamB) && g.teamB.length) ? _statsSideNames(g.teamB) : ((g.b1 || g.b2) ? [g.b1, g.b2].filter(Boolean) : _statsSideNames(g.playerB));
+  if(!aList.length || !bList.length) return null;
+  return { a:aList, b:bList, winner:String(g.winner || '') };
+}
+function _statsSideUnivs(names){
+  const set = new Set();
+  (names || []).forEach(name => {
+    const p = statsP(name);
+    const u = String(p?.univ || '').trim();
+    if(u) set.add(u);
+  });
+  return [...set];
+}
 function getSortedRadarRows(){
   const _players = Array.isArray(players) ? players : [];
   const univs=getAllUnivs().filter(u=>_players.some(p=>p.univ===u.name));
@@ -1866,21 +1891,26 @@ function getStatsRadarScores(){
     const md = String(m?.d || m?.date || '');
     (m.sets||[]).forEach(set=>{
       (set.games||[]).forEach(g=>{
-        if(!g || !g.playerA || !g.playerB || !g.winner) return;
-        const pA = statsP(g.playerA);
-        const pB = statsP(g.playerB);
-        const ua = String(pA?.univ || '').trim();
-        const ub = String(pB?.univ || '').trim();
-        if(ua && scoreMap[ua]){
-          memberSets[ua] && memberSets[ua].add(String(g.playerA).trim());
-          if(g.winner==='A') scoreMap[ua].w++; else scoreMap[ua].l++;
-          scoreMap[ua].tot++;
-        }
-        if(ub && scoreMap[ub]){
-          memberSets[ub] && memberSets[ub].add(String(g.playerB).trim());
-          if(g.winner==='B') scoreMap[ub].w++; else scoreMap[ub].l++;
-          scoreMap[ub].tot++;
-        }
+        const sides = _statsGameSides(g);
+        if(!sides) return;
+        sides.a.forEach(name => {
+          const pA = statsP(name);
+          const ua = String(pA?.univ || '').trim();
+          if(ua && scoreMap[ua]){
+            memberSets[ua] && memberSets[ua].add(String(name).trim());
+            if(sides.winner === 'A') scoreMap[ua].w++; else scoreMap[ua].l++;
+            scoreMap[ua].tot++;
+          }
+        });
+        sides.b.forEach(name => {
+          const pB = statsP(name);
+          const ub = String(pB?.univ || '').trim();
+          if(ub && scoreMap[ub]){
+            memberSets[ub] && memberSets[ub].add(String(name).trim());
+            if(sides.winner === 'B') scoreMap[ub].w++; else scoreMap[ub].l++;
+            scoreMap[ub].tot++;
+          }
+        });
       });
     });
   });
@@ -1900,19 +1930,18 @@ function getStatsUnivHeadToHead(nameA, nameB){
   getStatsRadarSourceMatches().forEach(m=>{
     (m.sets || []).forEach(set=>{
       (set.games || []).forEach(g=>{
-        if(!g || !g.playerA || !g.playerB || !g.winner) return;
-        const pA = statsP(g.playerA);
-        const pB = statsP(g.playerB);
-        const ua = String(pA?.univ || '').trim();
-        const ub = String(pB?.univ || '').trim();
-        if(ua === a && ub === b){
+        const sides = _statsGameSides(g);
+        if(!sides) return;
+        const uA = _statsSideUnivs(sides.a);
+        const uB = _statsSideUnivs(sides.b);
+        if(uA.length === 1 && uB.length === 1 && uA[0] === a && uB[0] === b){
           res.total++;
-          if(g.winner === 'A') res.aWins++;
-          else if(g.winner === 'B') res.bWins++;
-        }else if(ua === b && ub === a){
+          if(sides.winner === 'A') res.aWins++;
+          else if(sides.winner === 'B') res.bWins++;
+        }else if(uA.length === 1 && uB.length === 1 && uA[0] === b && uB[0] === a){
           res.total++;
-          if(g.winner === 'A') res.bWins++;
-          else if(g.winner === 'B') res.aWins++;
+          if(sides.winner === 'A') res.bWins++;
+          else if(sides.winner === 'B') res.aWins++;
         }
       });
     });
@@ -3193,11 +3222,18 @@ function initUnivWinBarChart(){
     allMatches.forEach(m=>{
       (m.sets||[]).forEach(set=>{
         (set.games||[]).forEach(g=>{
-          if(!g || !g.playerA || !g.playerB || !g.winner) return;
-          const pA = statsP(g.playerA), pB = statsP(g.playerB);
-          const ua = String(pA?.univ||'').trim(), ub = String(pB?.univ||'').trim();
-          if(ua){ if(!recentMap[ua]) recentMap[ua]=[]; recentMap[ua].push(g.winner==='A'?1:0); }
-          if(ub){ if(!recentMap[ub]) recentMap[ub]=[]; recentMap[ub].push(g.winner==='B'?1:0); }
+          const sides = _statsGameSides(g);
+          if(!sides) return;
+          sides.a.forEach(name => {
+            const pA = statsP(name);
+            const ua = String(pA?.univ||'').trim();
+            if(ua){ if(!recentMap[ua]) recentMap[ua]=[]; recentMap[ua].push(sides.winner==='A'?1:0); }
+          });
+          sides.b.forEach(name => {
+            const pB = statsP(name);
+            const ub = String(pB?.univ||'').trim();
+            if(ub){ if(!recentMap[ub]) recentMap[ub]=[]; recentMap[ub].push(sides.winner==='B'?1:0); }
+          });
         });
       });
     });

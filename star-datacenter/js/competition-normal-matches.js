@@ -257,6 +257,14 @@ function _nmBuilderHTML(tn) {
         <span style="font-weight:700;color:${colB}">${bld.teamB}</span>
         <span style="font-size:11px;color:var(--gray-l);margin-left:auto">총 ${freeGames.length}경기</span>
       </div>`;
+    h += `<div style="margin-bottom:10px;padding:10px 12px;border:1px solid rgba(99,102,241,.18);background:linear-gradient(135deg,rgba(238,242,255,.96),rgba(248,250,252,.98));border-radius:10px;font-size:11px;color:#0f172a;line-height:1.6">
+      <strong style="color:#4338ca">2대2 수동 입력 가능</strong>
+      <span style="color:#475569"> 각 경기의 </span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;padding:0 7px;border-radius:999px;background:#e0e7ff;color:#4338ca;font-size:10px;font-weight:900;vertical-align:middle">2:2</span>
+      <span style="color:#475569"> 버튼을 누르면 </span>
+      <strong>A1/A2 vs B1/B2</strong>
+      <span style="color:#475569"> 형태로 입력됩니다.</span>
+    </div>`;
 
     // 간편 승수만 입력 (선수 미지정)
     h += `<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
@@ -274,9 +282,16 @@ function _nmBuilderHTML(tn) {
       const optsB = mB.map(p => `<option value="${p.name}"${g.playerB === p.name ? ' selected' : ''}>${p.name}${p.gender === 'F' ? '♀' : ''} [${p.tier || '-'}/${p.race || '-'}]</option>`).join('');
       h += `<div class="game-row">
         <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi + 1}</span>
-        <select onchange="_nmBLD.freeGames[${gi}].playerA=this.value" style="flex:1;min-width:80px"><option value="">A 선택</option>${optsA}</select>
-        <span style="font-size:11px;color:var(--gray-l)">vs</span>
-        <select onchange="_nmBLD.freeGames[${gi}].playerB=this.value" style="flex:1;min-width:80px"><option value="">B 선택</option>${optsB}</select>
+        <button class="btn btn-xs ${g._isTeam?'btn-b':'btn-w'}" onclick="_nmBLD.freeGames[${gi}]._isTeam=!_nmBLD.freeGames[${gi}]._isTeam;if(!_nmBLD.freeGames[${gi}]._isTeam){_nmBLD.freeGames[${gi}].a1='';_nmBLD.freeGames[${gi}].a2='';_nmBLD.freeGames[${gi}].b1='';_nmBLD.freeGames[${gi}].b2='';_nmBLD.freeGames[${gi}].playerA='';_nmBLD.freeGames[${gi}].playerB='';}render()" title="2대2 팀전 입력으로 전환">2:2</button>
+        ${g._isTeam
+          ? `<select onchange="var g=_nmBLD.freeGames[${gi}];g._isTeam=true;g.a1=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');" style="flex:1;min-width:72px"><option value="">A1</option>${mA.map(p => `<option value="${p.name}"${g.a1 === p.name ? ' selected' : ''}>${p.name}${p.gender === 'F' ? '♀' : ''} [${p.tier || '-'}/${p.race || '-'}]</option>`).join('')}</select>
+             <select onchange="var g=_nmBLD.freeGames[${gi}];g._isTeam=true;g.a2=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');" style="flex:1;min-width:72px"><option value="">A2</option>${mA.map(p => `<option value="${p.name}"${g.a2 === p.name ? ' selected' : ''}>${p.name}${p.gender === 'F' ? '♀' : ''} [${p.tier || '-'}/${p.race || '-'}]</option>`).join('')}</select>
+             <span style="font-size:11px;color:var(--gray-l)">vs</span>
+             <select onchange="var g=_nmBLD.freeGames[${gi}];g._isTeam=true;g.b1=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');" style="flex:1;min-width:72px"><option value="">B1</option>${mB.map(p => `<option value="${p.name}"${g.b1 === p.name ? ' selected' : ''}>${p.name}${p.gender === 'F' ? '♀' : ''} [${p.tier || '-'}/${p.race || '-'}]</option>`).join('')}</select>
+             <select onchange="var g=_nmBLD.freeGames[${gi}];g._isTeam=true;g.b2=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');" style="flex:1;min-width:72px"><option value="">B2</option>${mB.map(p => `<option value="${p.name}"${g.b2 === p.name ? ' selected' : ''}>${p.name}${p.gender === 'F' ? '♀' : ''} [${p.tier || '-'}/${p.race || '-'}]</option>`).join('')}</select>`
+          : `<select onchange="_nmBLD.freeGames[${gi}].playerA=this.value" style="flex:1;min-width:80px"><option value="">A 선택</option>${optsA}</select>
+             <span style="font-size:11px;color:var(--gray-l)">vs</span>
+             <select onchange="_nmBLD.freeGames[${gi}].playerB=this.value" style="flex:1;min-width:80px"><option value="">B 선택</option>${optsB}</select>`}
         <select onchange="_nmBLD.freeGames[${gi}].map=this.value" style="max-width:100px"><option value="">맵</option>${mapOpts}${g.map && !(typeof maps !== 'undefined' && maps.includes(g.map)) ? `<option value="${g.map}" selected>${g.map}</option>` : ''}</select>
         <button class="win-btn ${g.winner === 'A' ? 'win-sel' : ''}" onclick="_nmBLD.freeGames[${gi}].winner='A';render()">A 승</button>
         <button class="win-btn ${g.winner === 'B' ? 'lose-sel' : ''}" onclick="_nmBLD.freeGames[${gi}].winner='B';render()">B 승</button>
@@ -284,7 +299,10 @@ function _nmBuilderHTML(tn) {
       </div>`;
     });
 
-    h += `<button class="btn btn-w btn-sm" style="margin-top:6px;margin-bottom:12px" onclick="_nmBLD.freeGames.push({playerA:'',playerB:'',winner:'',map:''});render()">+ 경기 추가</button>`;
+    h += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;margin-bottom:12px">
+      <button class="btn btn-w btn-sm" onclick="_nmBLD.freeGames.push({playerA:'',playerB:'',winner:'',map:'',_isTeam:false,a1:'',a2:'',b1:'',b2:''});render()">+ 경기 추가</button>
+      <button class="btn btn-b btn-sm" onclick="_nmBLD.freeGames.push({playerA:'',playerB:'',winner:'',map:'',_isTeam:true,a1:'',a2:'',b1:'',b2:''});render()">+ 2:2 경기 추가</button>
+    </div>`;
 
     // 저장 바
     h += `<div class="mb-savebar" style="margin-top:10px;padding-top:12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
@@ -393,6 +411,14 @@ function _nmRenderEditModal(tn) {
 
   if (bld.teamA && bld.teamB) {
     const freeGames = bld.freeGames || [];
+    h += `<div style="margin-bottom:10px;padding:10px 12px;border:1px solid rgba(99,102,241,.18);background:linear-gradient(135deg,rgba(238,242,255,.96),rgba(248,250,252,.98));border-radius:10px;font-size:11px;color:#0f172a;line-height:1.6">
+      <strong style="color:#4338ca">2대2 수동 입력 가능</strong>
+      <span style="color:#475569"> 각 경기의 </span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;padding:0 7px;border-radius:999px;background:#e0e7ff;color:#4338ca;font-size:10px;font-weight:900;vertical-align:middle">2:2</span>
+      <span style="color:#475569"> 버튼을 누르면 </span>
+      <strong>A1/A2 vs B1/B2</strong>
+      <span style="color:#475569"> 형태로 입력됩니다.</span>
+    </div>`;
     h += `<div style="background:var(--surface,#f8fafc);border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:14px;margin-bottom:14px">
       <div style="font-size:11px;font-weight:800;color:var(--blue,#2563eb);margin-bottom:10px">② 경기 결과 입력</div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:20px;justify-content:center">
@@ -416,9 +442,16 @@ function _nmRenderEditModal(tn) {
       const optsB = mB.map(p => `<option value="${p.name}"${g.playerB === p.name ? ' selected' : ''}>${p.name} [${p.tier || '-'}/${p.race || '-'}]</option>`).join('');
       h += `<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:6px;padding:7px 10px;background:var(--white,#fff);border:1px solid var(--border,#e5e7eb);border-radius:8px">
         <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:38px">경기${gi + 1}</span>
-        <select onchange="_nmBLD.freeGames[${gi}].playerA=this.value" style="flex:1;min-width:80px;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px"><option value="">A 선택</option>${optsA}</select>
-        <span style="font-size:11px;color:var(--gray-l)">vs</span>
-        <select onchange="_nmBLD.freeGames[${gi}].playerB=this.value" style="flex:1;min-width:80px;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px"><option value="">B 선택</option>${optsB}</select>
+        <button class="btn btn-xs ${g._isTeam?'btn-b':'btn-w'}" onclick="_nmBLD.freeGames[${gi}]._isTeam=!_nmBLD.freeGames[${gi}]._isTeam;if(!_nmBLD.freeGames[${gi}]._isTeam){_nmBLD.freeGames[${gi}].a1='';_nmBLD.freeGames[${gi}].a2='';_nmBLD.freeGames[${gi}].b1='';_nmBLD.freeGames[${gi}].b2='';_nmBLD.freeGames[${gi}].playerA='';_nmBLD.freeGames[${gi}].playerB='';}_nmRenderEditModal(window._nmEditTn)" title="2대2 팀전 입력으로 전환">2:2</button>
+        ${g._isTeam
+          ? `<select onchange="var g=_nmBLD.freeGames[${gi}];g._isTeam=true;g.a1=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');" style="flex:1;min-width:72px;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px"><option value="">A1</option>${mA.map(p => `<option value="${p.name}"${g.a1 === p.name ? ' selected' : ''}>${p.name} [${p.tier || '-'}/${p.race || '-'}]</option>`).join('')}</select>
+             <select onchange="var g=_nmBLD.freeGames[${gi}];g._isTeam=true;g.a2=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');" style="flex:1;min-width:72px;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px"><option value="">A2</option>${mA.map(p => `<option value="${p.name}"${g.a2 === p.name ? ' selected' : ''}>${p.name} [${p.tier || '-'}/${p.race || '-'}]</option>`).join('')}</select>
+             <span style="font-size:11px;color:var(--gray-l)">vs</span>
+             <select onchange="var g=_nmBLD.freeGames[${gi}];g._isTeam=true;g.b1=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');" style="flex:1;min-width:72px;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px"><option value="">B1</option>${mB.map(p => `<option value="${p.name}"${g.b1 === p.name ? ' selected' : ''}>${p.name} [${p.tier || '-'}/${p.race || '-'}]</option>`).join('')}</select>
+             <select onchange="var g=_nmBLD.freeGames[${gi}];g._isTeam=true;g.b2=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');" style="flex:1;min-width:72px;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px"><option value="">B2</option>${mB.map(p => `<option value="${p.name}"${g.b2 === p.name ? ' selected' : ''}>${p.name} [${p.tier || '-'}/${p.race || '-'}]</option>`).join('')}</select>`
+          : `<select onchange="_nmBLD.freeGames[${gi}].playerA=this.value" style="flex:1;min-width:80px;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px"><option value="">A 선택</option>${optsA}</select>
+             <span style="font-size:11px;color:var(--gray-l)">vs</span>
+             <select onchange="_nmBLD.freeGames[${gi}].playerB=this.value" style="flex:1;min-width:80px;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px"><option value="">B 선택</option>${optsB}</select>`}
         <select onchange="_nmBLD.freeGames[${gi}].map=this.value" style="max-width:90px;font-size:12px;padding:4px 6px;border:1px solid var(--border2);border-radius:6px"><option value="">맵</option>${mapOpts}${g.map && !(typeof maps !== 'undefined' && maps.includes(g.map)) ? `<option value="${g.map}" selected>${g.map} (기록값)</option>` : ''}</select>
         <button class="win-btn ${g.winner === 'A' ? 'win-sel' : ''}" onclick="_nmBLD.freeGames[${gi}].winner='A';_nmRenderEditModal(window._nmEditTn)">A 승</button>
         <button class="win-btn ${g.winner === 'B' ? 'lose-sel' : ''}" onclick="_nmBLD.freeGames[${gi}].winner='B';_nmRenderEditModal(window._nmEditTn)">B 승</button>
@@ -426,7 +459,10 @@ function _nmRenderEditModal(tn) {
       </div>`;
     });
 
-    h += `<button class="btn btn-w btn-sm" style="margin-top:6px" onclick="_nmBLD.freeGames.push({playerA:'',playerB:'',winner:'',map:''});_nmRenderEditModal(window._nmEditTn)">+ 경기 추가</button>`;
+    h += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+      <button class="btn btn-w btn-sm" onclick="_nmBLD.freeGames.push({playerA:'',playerB:'',winner:'',map:'',_isTeam:false,a1:'',a2:'',b1:'',b2:''});_nmRenderEditModal(window._nmEditTn)">+ 경기 추가</button>
+      <button class="btn btn-b btn-sm" onclick="_nmBLD.freeGames.push({playerA:'',playerB:'',winner:'',map:'',_isTeam:true,a1:'',a2:'',b1:'',b2:''});_nmRenderEditModal(window._nmEditTn)">+ 2:2 경기 추가</button>
+    </div>`;
     h += `</div>`;
   }
 
@@ -507,21 +543,27 @@ function nmSaveFromBuilder() {
   const matchId = (editIdx >= 0 && tn.normalMatches[editIdx]?._id) || (typeof genId === 'function' ? genId() : Date.now().toString(36));
   freeGames.forEach((g, gi) => { g._id = `${matchId}_s0_g${gi}`; });
 
-  // 개인 전적 반영 [BUGFIX: 수동 저장 시 applyGameResult 누락 수정]
+  // 개인/팀전 전적 반영
   freeGames.forEach(g => {
     if (!g.playerA || !g.playerB || !g.winner) return;
-    const wName = g.winner === 'A' ? g.playerA : g.playerB;
-    const lName = g.winner === 'A' ? g.playerB : g.playerA;
-    const univW = g.winner === 'A' ? bld.teamA : bld.teamB;
-    const univL = g.winner === 'A' ? bld.teamB : bld.teamA;
-    if (typeof applyGameResult === 'function') applyGameResult(wName, lName, date, g.map || '', g._id, univW, univL, '대회');
+    if (g._isTeam && typeof applyTeamGameResult === 'function') {
+      const ta = [g.a1, g.a2].filter(Boolean);
+      const tb = [g.b1, g.b2].filter(Boolean);
+      applyTeamGameResult(ta, tb, g.winner, date, g.map || '', g._id, '대회', { sideUnivA: bld.teamA, sideUnivB: bld.teamB });
+    } else {
+      const wName = g.winner === 'A' ? g.playerA : g.playerB;
+      const lName = g.winner === 'A' ? g.playerB : g.playerA;
+      const univW = g.winner === 'A' ? bld.teamA : bld.teamB;
+      const univL = g.winner === 'A' ? bld.teamB : bld.teamA;
+      if (typeof applyGameResult === 'function') applyGameResult(wName, lName, date, g.map || '', g._id, univW, univL, '대회');
+    }
   });
 
   const setsSnap = freeGames.length ? [{
     scoreA: gA, scoreB: gB,
     winner: gA > gB ? 'A' : gB > gA ? 'B' : '',
     label: '일반 경기',
-    games: freeGames.map(g => ({ ...g }))
+    games: freeGames.map(g => ({ ...g, ...(g._isTeam ? { teamA: [g.a1, g.a2].filter(Boolean), teamB: [g.b1, g.b2].filter(Boolean) } : {}) }))
   }] : [];
 
   const newM = {

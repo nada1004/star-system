@@ -296,6 +296,7 @@ function setBuilderHTML(bld, mode){
   const mB=rfB?rawMB.filter(p=>p.race===rfB):rawMB;
   const canBuild=(isCK)?(rawMA.length&&rawMB.length):(teamA&&teamB);
   if(canBuild){
+    h+=_teamModeHintHTML(mode);
     const _gjLabelA = mode==='gj' ? (mA[0]?.name||'A') : '';
     const _gjLabelB = mode==='gj' ? (mB[0]?.name||'B') : '';
     const _gjDefA = mode==='gj' && mA.length===1 ? (mA[0].name||'').replace(/'/g,"\\'") : '';
@@ -335,7 +336,7 @@ function setBuilderHTML(bld, mode){
         const mapOpts=maps.map(m=>`<option value="${m}"${g.map===m?' selected':''}>${m}</option>`).join('');
         h+=`<div class="game-row">
           <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
-          <button class="btn btn-xs ${g._isTeam?'btn-b':'btn-w'}" onclick="BLD['${mode}'].freeGames[${gi}]._isTeam=!BLD['${mode}'].freeGames[${gi}]._isTeam; if(!BLD['${mode}'].freeGames[${gi}]._isTeam){BLD['${mode}'].freeGames[${gi}].a1='';BLD['${mode}'].freeGames[${gi}].a2='';BLD['${mode}'].freeGames[${gi}].b1='';BLD['${mode}'].freeGames[${gi}].b2='';BLD['${mode}'].freeGames[${gi}].playerA='';BLD['${mode}'].freeGames[${gi}].playerB='';} render()" title="1경기에 2명 vs 2명 같은 팀전 게임">👥</button>
+          <button class="btn btn-xs ${g._isTeam?'btn-b':'btn-w'}" onclick="BLD['${mode}'].freeGames[${gi}]._isTeam=!BLD['${mode}'].freeGames[${gi}]._isTeam; if(!BLD['${mode}'].freeGames[${gi}]._isTeam){BLD['${mode}'].freeGames[${gi}].a1='';BLD['${mode}'].freeGames[${gi}].a2='';BLD['${mode}'].freeGames[${gi}].b1='';BLD['${mode}'].freeGames[${gi}].b2='';BLD['${mode}'].freeGames[${gi}].playerA='';BLD['${mode}'].freeGames[${gi}].playerB='';} render()" title="2대2 팀전 입력으로 전환">2:2</button>
           ${g._isTeam
             ? (function(){
                 const sp = (s)=>String(s||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
@@ -362,7 +363,10 @@ function setBuilderHTML(bld, mode){
           <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].freeGames.splice(${gi},1);render()">🗑️ 삭제</button>
         </div>`;
       });
-      h+=`<button class="btn btn-w btn-sm" style="margin-bottom:10px" onclick="BLD['${mode}'].freeGames=BLD['${mode}'].freeGames||[];BLD['${mode}'].freeGames.push({playerA:'${mode==='gj'?_gjDefA:''}',playerB:'${mode==='gj'?_gjDefB:''}',winner:'',map:''});render()">+ 경기 추가</button>`;
+      h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btn-w btn-sm" onclick="BLD['${mode}'].freeGames=BLD['${mode}'].freeGames||[];BLD['${mode}'].freeGames.push({playerA:'${mode==='gj'?_gjDefA:''}',playerB:'${mode==='gj'?_gjDefB:''}',winner:'',map:'',_isTeam:false,a1:'',a2:'',b1:'',b2:''});render()">+ 경기 추가</button>
+        <button class="btn btn-b btn-sm" onclick="BLD['${mode}'].freeGames=BLD['${mode}'].freeGames||[];BLD['${mode}'].freeGames.push({playerA:'',playerB:'',winner:'',map:'',_isTeam:true,a1:'',a2:'',b1:'',b2:''});render()">+ 2:2 경기 추가</button>
+      </div>`;
       h+=_renderSaveBar();
     } else {
       h+=`<div class="score-board">
@@ -388,7 +392,7 @@ function setBuilderHTML(bld, mode){
           const mapOpts=maps.map(m=>`<option value="${m}"${g.map===m?' selected':''}>${m}</option>`).join('');
           h+=`<div class="game-row">
             <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
-            <button class="btn btn-xs ${g._isTeam?'btn-b':'btn-w'}" onclick="BLD['${mode}'].sets[${si}].games[${gi}]._isTeam=!BLD['${mode}'].sets[${si}].games[${gi}]._isTeam; if(!BLD['${mode}'].sets[${si}].games[${gi}]._isTeam){BLD['${mode}'].sets[${si}].games[${gi}].a1='';BLD['${mode}'].sets[${si}].games[${gi}].a2='';BLD['${mode}'].sets[${si}].games[${gi}].b1='';BLD['${mode}'].sets[${si}].games[${gi}].b2='';BLD['${mode}'].sets[${si}].games[${gi}].playerA='';BLD['${mode}'].sets[${si}].games[${gi}].playerB='';} render()" title="1경기에 2명 vs 2명 같은 팀전 게임">👥</button>
+            <button class="btn btn-xs ${g._isTeam?'btn-b':'btn-w'}" onclick="BLD['${mode}'].sets[${si}].games[${gi}]._isTeam=!BLD['${mode}'].sets[${si}].games[${gi}]._isTeam; if(!BLD['${mode}'].sets[${si}].games[${gi}]._isTeam){BLD['${mode}'].sets[${si}].games[${gi}].a1='';BLD['${mode}'].sets[${si}].games[${gi}].a2='';BLD['${mode}'].sets[${si}].games[${gi}].b1='';BLD['${mode}'].sets[${si}].games[${gi}].b2='';BLD['${mode}'].sets[${si}].games[${gi}].playerA='';BLD['${mode}'].sets[${si}].games[${gi}].playerB='';} render()" title="2대2 팀전 입력으로 전환">2:2</button>
             ${g._isTeam
               ? (function(){
                   const sp = (s)=>String(s||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
@@ -415,7 +419,10 @@ function setBuilderHTML(bld, mode){
             <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].sets[${si}].games.splice(${gi},1);recalcSet('${mode}',${si});render()">🗑️ 삭제</button>
           </div>`;
         });
-        h+=`<button class="btn btn-w btn-sm" onclick="BLD['${mode}'].sets[${si}].games.push({playerA:'${mode==='gj'?_gjDefA:''}',playerB:'${mode==='gj'?_gjDefB:''}',winner:'',map:''});render()">+ 경기 추가</button></div>`;
+        h+=`<div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-w btn-sm" onclick="BLD['${mode}'].sets[${si}].games.push({playerA:'${mode==='gj'?_gjDefA:''}',playerB:'${mode==='gj'?_gjDefB:''}',winner:'',map:'',_isTeam:false,a1:'',a2:'',b1:'',b2:''});render()">+ 경기 추가</button>
+          <button class="btn btn-b btn-sm" onclick="BLD['${mode}'].sets[${si}].games.push({playerA:'',playerB:'',winner:'',map:'',_isTeam:true,a1:'',a2:'',b1:'',b2:''});render()">+ 2:2 경기 추가</button>
+        </div></div>`;
       });
       if(bld.sets.length<3){
         const nLabel=bld.sets.length===2?'🎯 에이스전 추가':`${bld.sets.length+1}세트 추가`;
@@ -440,6 +447,48 @@ function genId(){
     }
   }catch(e){}
   return Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+}
+
+function _accumulateSideUnivStats(univWins, univLosses, teamA, teamB, game){
+  const add = (bucket, univ) => {
+    const key = String(univ||'').trim();
+    if(!key) return;
+    bucket[key] = (bucket[key] || 0) + 1;
+  };
+  const sideA = new Map((teamA||[]).map(m=>[String(m?.name||'').trim(), m]).filter(([name])=>!!name));
+  const sideB = new Map((teamB||[]).map(m=>[String(m?.name||'').trim(), m]).filter(([name])=>!!name));
+  const pickNames = (sideMap, names) => {
+    const out = [];
+    const seen = new Set();
+    (names||[]).forEach(name=>{
+      const key = String(name||'').trim();
+      if(!key || seen.has(key) || !sideMap.has(key)) return;
+      seen.add(key);
+      out.push(key);
+    });
+    return out;
+  };
+  if(!game || !game.winner) return;
+  const namesA = game._isTeam ? [game.a1, game.a2] : [game.playerA];
+  const namesB = game._isTeam ? [game.b1, game.b2] : [game.playerB];
+  const winMap = game.winner==='A' ? sideA : sideB;
+  const loseMap = game.winner==='A' ? sideB : sideA;
+  const winNames = game.winner==='A' ? pickNames(sideA, namesA) : pickNames(sideB, namesB);
+  const loseNames = game.winner==='A' ? pickNames(sideB, namesB) : pickNames(sideA, namesA);
+  winNames.forEach(name=>add(univWins, winMap.get(name)?.univ));
+  loseNames.forEach(name=>add(univLosses, loseMap.get(name)?.univ));
+}
+
+function _teamModeHintHTML(mode){
+  if(!['mini','univm','ck','pro','tt','comp'].includes(String(mode||''))) return '';
+  return `<div style="margin-bottom:12px;padding:10px 12px;border:1px solid rgba(14,165,233,.22);background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(248,250,252,.98));border-radius:10px;font-size:11px;color:#0f172a;line-height:1.6">
+    <strong style="color:#0369a1">2대2 수동 입력 가능</strong>
+    <span style="color:#475569"> 각 경기의 </span>
+    <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;padding:0 7px;border-radius:999px;background:#e0f2fe;color:#0369a1;font-size:10px;font-weight:900;vertical-align:middle">2:2</span>
+    <span style="color:#475569"> 버튼을 누르면 </span>
+    <strong>A1/A2 vs B1/B2</strong>
+    <span style="color:#475569"> 형태로 입력할 수 있습니다.</span>
+  </div>`;
 }
 
 function saveMatch(mode){
@@ -569,12 +618,7 @@ function saveMatch(mode){
         const univW={},univL={};
         freeGames.forEach(g=>{
             if(!g.playerA||!g.playerB||!g.winner)return;
-            const wName=g.winner==='A'?g.playerA:g.playerB;
-            const lName=g.winner==='A'?g.playerB:g.playerA;
-            const wM=(g.winner==='A'?mA:mB).find(m=>m.name===wName);
-            const lM=(g.winner==='A'?mB:mA).find(m=>m.name===lName);
-            if(wM){univW[wM.univ]=(univW[wM.univ]||0)+1;}
-            if(lM){univL[lM.univ]=(univL[lM.univ]||0)+1;}
+            _accumulateSideUnivStats(univW, univL, mA, mB, g);
         });
 
         const matchData = {_id:matchId,d:date,sa:totalA,sb:totalB, teamALabel:mode==='ck'?'A조':'A팀', teamBLabel:mode==='ck'?'B조':'B팀', teamAMembers:mA,teamBMembers:mB,sets:setsSnap, univWins:univW,univLosses:univL, noSetMode:true };
@@ -707,12 +751,7 @@ function saveMatch(mode){
     bld.sets.forEach(set=>{
       set.games.forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const wName=g.winner==='A'?g.playerA:g.playerB;
-        const lName=g.winner==='A'?g.playerB:g.playerA;
-        const wM=(g.winner==='A'?mA:mB).find(m=>m.name===wName);
-        const lM=(g.winner==='A'?mB:mA).find(m=>m.name===lName);
-        if(wM){univW[wM.univ]=(univW[wM.univ]||0)+1;}
-        if(lM){univL[lM.univ]=(univL[lM.univ]||0)+1;}
+        _accumulateSideUnivStats(univW, univL, mA, mB, g);
       });
     });
     ckM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
@@ -728,12 +767,7 @@ function saveMatch(mode){
     bld.sets.forEach(set=>{
       set.games.forEach(g=>{
         if(!g.playerA||!g.playerB||!g.winner)return;
-        const wName=g.winner==='A'?g.playerA:g.playerB;
-        const lName=g.winner==='A'?g.playerB:g.playerA;
-        const wM=(g.winner==='A'?mA:mB).find(m=>m.name===wName);
-        const lM=(g.winner==='A'?mB:mA).find(m=>m.name===lName);
-        if(wM){univW[wM.univ]=(univW[wM.univ]||0)+1;}
-        if(lM){univL[lM.univ]=(univL[lM.univ]||0)+1;}
+        _accumulateSideUnivStats(univW, univL, mA, mB, g);
       });
     });
     proM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,

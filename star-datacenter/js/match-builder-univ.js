@@ -62,18 +62,30 @@ function univMRankHTML(){
   const usk=window._rankSort['univm']||'w';
   const usortBar=`<div class="sort-bar no-export" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="sort-btn ${usk==='w'?'on':''}" onclick="window._rankSort['univm']='w';render()">승순</button><button class="sort-btn ${usk==='rate'?'on':''}" onclick="window._rankSort['univm']='rate';render()">승률순</button><button class="sort-btn ${usk==='l'?'on':''}" onclick="window._rankSort['univm']='l';render()">패순</button></div>`;
   const upsc={};
+  const _univSplit=(v)=>String(v||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+  const _univSides=(g)=>{
+    if(g.wName&&g.lName) return {w:[g.wName], l:[g.lName]};
+    if(!g.winner) return null;
+    const aList=Array.isArray(g.teamA)?g.teamA:(g.a1||g.a2?[g.a1,g.a2].filter(Boolean):_univSplit(g.playerA));
+    const bList=Array.isArray(g.teamB)?g.teamB:(g.b1||g.b2?[g.b1,g.b2].filter(Boolean):_univSplit(g.playerB));
+    if(!aList.length||!bList.length) return null;
+    return g.winner==='A' ? {w:aList,l:bList} : {w:bList,l:aList};
+  };
   _univFiltered.forEach(m=>{
     (m.sets||[]).forEach(st=>{
       (st.games||[]).forEach(g=>{
-        let wn,ln;
-        if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
-        else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
-        else return;
-        if(!upsc[wn])upsc[wn]={w:0,l:0,univ:''};
-        if(!upsc[ln])upsc[ln]={w:0,l:0,univ:''};
-        upsc[wn].w++;upsc[ln].l++;
-        if(!upsc[wn].univ){const p=players.find(x=>x.name===wn);if(p)upsc[wn].univ=p.univ||'';}
-        if(!upsc[ln].univ){const p=players.find(x=>x.name===ln);if(p)upsc[ln].univ=p.univ||'';}
+        const sides=_univSides(g);
+        if(!sides) return;
+        sides.w.forEach(wn=>{
+          if(!upsc[wn])upsc[wn]={w:0,l:0,univ:''};
+          upsc[wn].w++;
+          if(!upsc[wn].univ){const p=players.find(x=>x.name===wn);if(p)upsc[wn].univ=p.univ||'';}
+        });
+        sides.l.forEach(ln=>{
+          if(!upsc[ln])upsc[ln]={w:0,l:0,univ:''};
+          upsc[ln].l++;
+          if(!upsc[ln].univ){const p=players.find(x=>x.name===ln);if(p)upsc[ln].univ=p.univ||'';}
+        });
       });
     });
   });

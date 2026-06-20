@@ -1997,15 +1997,40 @@ function rTier(C,T){
   // 유형별 다중선택이 활성화된 경우
   if(window._tierTypeSet && window._tierTypeSet.size>0){
     // 각 유형별 데이터 집계 함수
+    function _splitTeamNames(v){
+      if(Array.isArray(v)){
+        return v.map(x => {
+          if(x && typeof x === 'object') return String(x.name || '').trim();
+          return String(x || '').trim();
+        }).filter(Boolean);
+      }
+      return String(v || '').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+    }
+    function _gameSides(g){
+      if(!g || !g.winner) return null;
+      if(g.wName && g.lName){
+        return { w:_splitTeamNames(g.wName), l:_splitTeamNames(g.lName) };
+      }
+      const aList = (Array.isArray(g.teamA) && g.teamA.length) ? _splitTeamNames(g.teamA) : ((g.a1 || g.a2) ? [g.a1, g.a2].filter(Boolean) : _splitTeamNames(g.playerA));
+      const bList = (Array.isArray(g.teamB) && g.teamB.length) ? _splitTeamNames(g.teamB) : ((g.b1 || g.b2) ? [g.b1, g.b2].filter(Boolean) : _splitTeamNames(g.playerB));
+      if(!aList.length || !bList.length) return null;
+      return g.winner === 'A' ? { w:aList, l:bList } : { w:bList, l:aList };
+    }
+    function _addWL(_ps, sides){
+      if(!sides) return;
+      (sides.w || []).forEach(name => {
+        if(!_ps[name]) _ps[name] = { w:0, l:0 };
+        _ps[name].w++;
+      });
+      (sides.l || []).forEach(name => {
+        if(!_ps[name]) _ps[name] = { w:0, l:0 };
+        _ps[name].l++;
+      });
+    }
     function _collectPS(arr, useWL){
       const _ps={};
       (arr||[]).forEach(m=>{ if(!_tierInDateRange(m?.d || m?.date || '')) return; (m.sets||[]).forEach(st=>{(st.games||[]).forEach(g=>{
-        let wn,ln;
-        if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
-        else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
-        else return;
-        if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};
-        _ps[wn].w++;_ps[ln].l++;
+        _addWL(_ps, _gameSides(g));
       });});});
       return _ps;
     }
@@ -2013,10 +2038,7 @@ function rTier(C,T){
       const _ps={};
       (games||[]).forEach(g=>{
         if(!_tierInDateRange(g?.d || g?.date || '')) return;
-        if(!g.playerA||!g.playerB||!g.winner)return;
-        const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
-        if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};
-        _ps[wn].w++;_ps[ln].l++;
+        _addWL(_ps, _gameSides(g));
       });
       return _ps;
     }
@@ -2032,7 +2054,7 @@ function rTier(C,T){
     }
     function _collectCompPS(){
       const _ps={};
-      function _cg(g, rawDate){if(!_tierInDateRange(rawDate)) return; if(!g.playerA||!g.playerB||!g.winner)return;const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};_ps[wn].w++;_ps[ln].l++;}
+      function _cg(g, rawDate){ if(!_tierInDateRange(rawDate)) return; _addWL(_ps, _gameSides(g)); }
       _tourneys.forEach(tn=>{
         (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{const _rawDate=m?.d || m?.date || tn?.d || tn?.date || ''; (m.sets||[]).forEach(st=>{(st.games||[]).forEach(g=>_cg(g,_rawDate));});});});
         const _br=typeof getBracket==='function'?getBracket(tn):{};
@@ -2099,12 +2121,15 @@ function rTier(C,T){
   else if(tierRankMode==='mini_win'||tierRankMode==='mini_loss'){
     const _ps={};
     _mini.forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(g=>{
-      let wn,ln;
-      if(g.wName&&g.lName){wn=g.wName;ln=g.lName;}
-      else if(g.playerA&&g.playerB&&g.winner){wn=g.winner==='A'?g.playerA:g.playerB;ln=g.winner==='A'?g.playerB:g.playerA;}
-      else return;
-      if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};
-      _ps[wn].w++;_ps[ln].l++;
+      const _splitTeamNames = v => Array.isArray(v) ? v.map(x => x && typeof x === 'object' ? String(x.name || '').trim() : String(x || '').trim()).filter(Boolean) : String(v || '').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+      const aList = (Array.isArray(g.teamA) && g.teamA.length) ? _splitTeamNames(g.teamA) : ((g.a1 || g.a2) ? [g.a1, g.a2].filter(Boolean) : _splitTeamNames(g.playerA));
+      const bList = (Array.isArray(g.teamB) && g.teamB.length) ? _splitTeamNames(g.teamB) : ((g.b1 || g.b2) ? [g.b1, g.b2].filter(Boolean) : _splitTeamNames(g.playerB));
+      const sides = g.wName && g.lName
+        ? { w:_splitTeamNames(g.wName), l:_splitTeamNames(g.lName) }
+        : (!g.winner || !aList.length || !bList.length) ? null : (g.winner==='A' ? { w:aList, l:bList } : { w:bList, l:aList });
+      if(!sides) return;
+      (sides.w||[]).forEach(name=>{ if(!_ps[name]) _ps[name]={w:0,l:0}; _ps[name].w++; });
+      (sides.l||[]).forEach(name=>{ if(!_ps[name]) _ps[name]={w:0,l:0}; _ps[name].l++; });
     });});});
     _modePStats=_ps;
     list.sort((a,b)=>tierRankMode==='mini_win'?(_ps[b.name]?.w||0)-(_ps[a.name]?.w||0):(_ps[b.name]?.l||0)-(_ps[a.name]?.l||0));
@@ -2112,10 +2137,13 @@ function rTier(C,T){
   else if(tierRankMode==='ck_win'||tierRankMode==='ck_loss'){
     const _ps={};
     _ck.forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(g=>{
-      if(!g.playerA||!g.playerB||!g.winner)return;
-      const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
-      if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};
-      _ps[wn].w++;_ps[ln].l++;
+      const _splitTeamNames = v => Array.isArray(v) ? v.map(x => x && typeof x === 'object' ? String(x.name || '').trim() : String(x || '').trim()).filter(Boolean) : String(v || '').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+      const aList = (Array.isArray(g.teamA) && g.teamA.length) ? _splitTeamNames(g.teamA) : ((g.a1 || g.a2) ? [g.a1, g.a2].filter(Boolean) : _splitTeamNames(g.playerA));
+      const bList = (Array.isArray(g.teamB) && g.teamB.length) ? _splitTeamNames(g.teamB) : ((g.b1 || g.b2) ? [g.b1, g.b2].filter(Boolean) : _splitTeamNames(g.playerB));
+      if(!g.winner || !aList.length || !bList.length) return;
+      const sides = g.winner==='A' ? { w:aList, l:bList } : { w:bList, l:aList };
+      (sides.w||[]).forEach(name=>{ if(!_ps[name]) _ps[name]={w:0,l:0}; _ps[name].w++; });
+      (sides.l||[]).forEach(name=>{ if(!_ps[name]) _ps[name]={w:0,l:0}; _ps[name].l++; });
     });});});
     _modePStats=_ps;
     list.sort((a,b)=>tierRankMode==='ck_win'?(_ps[b.name]?.w||0)-(_ps[a.name]?.w||0):(_ps[b.name]?.l||0)-(_ps[a.name]?.l||0));
@@ -2123,10 +2151,13 @@ function rTier(C,T){
   else if(tierRankMode==='comp_win'||tierRankMode==='comp_loss'){
     const _ps={};
     function _cntGame(g){
-      if(!g.playerA||!g.playerB||!g.winner)return;
-      const wn=g.winner==='A'?g.playerA:g.playerB;const ln=g.winner==='A'?g.playerB:g.playerA;
-      if(!_ps[wn])_ps[wn]={w:0,l:0};if(!_ps[ln])_ps[ln]={w:0,l:0};
-      _ps[wn].w++;_ps[ln].l++;
+      const _splitTeamNames = v => Array.isArray(v) ? v.map(x => x && typeof x === 'object' ? String(x.name || '').trim() : String(x || '').trim()).filter(Boolean) : String(v || '').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
+      const aList = (Array.isArray(g.teamA) && g.teamA.length) ? _splitTeamNames(g.teamA) : ((g.a1 || g.a2) ? [g.a1, g.a2].filter(Boolean) : _splitTeamNames(g.playerA));
+      const bList = (Array.isArray(g.teamB) && g.teamB.length) ? _splitTeamNames(g.teamB) : ((g.b1 || g.b2) ? [g.b1, g.b2].filter(Boolean) : _splitTeamNames(g.playerB));
+      if(!g.winner || !aList.length || !bList.length) return;
+      const sides = g.winner==='A' ? { w:aList, l:bList } : { w:bList, l:aList };
+      (sides.w||[]).forEach(name=>{ if(!_ps[name]) _ps[name]={w:0,l:0}; _ps[name].w++; });
+      (sides.l||[]).forEach(name=>{ if(!_ps[name]) _ps[name]={w:0,l:0}; _ps[name].l++; });
     }
     _tourneys.forEach(tn=>{
       (tn.groups||[]).forEach(grp=>{(grp.matches||[]).forEach(m=>{(m.sets||[]).forEach(st=>{(st.games||[]).forEach(_cntGame);});});});

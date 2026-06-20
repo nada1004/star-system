@@ -3689,6 +3689,36 @@ function recalculateAllELO(){
 
   // 모든 경기 기록 수집
   const allGames = [];
+  const _splitTeamMembers = (side) => {
+    if (Array.isArray(side)) {
+      return side.map(x => {
+        if (x && typeof x === 'object') {
+          const name = String(x.name || '').trim();
+          if (!name) return null;
+          return { name, univ: String(x.univ || '').trim() };
+        }
+        const name = String(x || '').trim();
+        return name ? { name, univ: '' } : null;
+      }).filter(Boolean);
+    }
+    return String(side || '')
+      .split(/[,+，]/)
+      .map(x => String(x || '').trim())
+      .filter(Boolean)
+      .map(name => ({ name, univ: '' }));
+  };
+  const _buildTeamMembers = (game, side, roster) => {
+    const raw = side === 'A'
+      ? ((Array.isArray(game?.teamA) && game.teamA.length) ? game.teamA : ((game?.a1 || game?.a2) ? [game.a1, game.a2] : game?.playerA))
+      : ((Array.isArray(game?.teamB) && game.teamB.length) ? game.teamB : ((game?.b1 || game?.b2) ? [game.b1, game.b2] : game?.playerB));
+    const parsed = _splitTeamMembers(raw);
+    if (!parsed.length) return [];
+    const rosterMap = new Map((Array.isArray(roster) ? roster : []).map(x => {
+      const name = String(x?.name || '').trim();
+      return name ? [name, { name, univ: String(x?.univ || '').trim() }] : null;
+    }).filter(Boolean));
+    return parsed.map(x => rosterMap.get(x.name) || x).filter(x => x && x.name);
+  };
 
   // miniM (미니대전)
   if(typeof miniM!=='undefined' && miniM.length){
@@ -3726,12 +3756,19 @@ function recalculateAllELO(){
   // proM (프로리그)
   if(typeof proM!=='undefined' && proM.length){
     proM.forEach(m => {
-      (m.sets||[]).forEach(s => {
-        (s.games||[]).forEach(g => {
-          if(g.playerA && g.playerB && g.winner && !g._isTeam){
+      (m.sets||[]).forEach((s, si) => {
+        (s.games||[]).forEach((g, gi) => {
+          const gameId = g._id || `${m._id || 'pro'}_s${si}_g${gi}`;
+          if(g._isTeam){
+            const teamA = _buildTeamMembers(g, 'A', m.teamAMembers);
+            const teamB = _buildTeamMembers(g, 'B', m.teamBMembers);
+            if(teamA.length >= 2 && teamB.length >= 2 && g.winner){
+              allGames.push({_isTeam:true, teamA, teamB, winner:g.winner, date:m.d || '', map:g.map || '-', mode:'프로리그', matchId:gameId});
+            }
+          }else if(g.playerA && g.playerB && g.winner){
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            allGames.push({wName, lName, date: m.d || '', map: g.map || '-', mode: '프로리그'});
+            allGames.push({wName, lName, date: m.d || '', map: g.map || '-', mode: '프로리그', matchId: gameId});
           }
         });
       });
@@ -3759,12 +3796,19 @@ function recalculateAllELO(){
   // ttM (티어대회)
   if(typeof ttM!=='undefined' && ttM.length){
     ttM.forEach(m => {
-      (m.sets||[]).forEach(s => {
-        (s.games||[]).forEach(g => {
-          if(g.playerA && g.playerB && g.winner){
+      (m.sets||[]).forEach((s, si) => {
+        (s.games||[]).forEach((g, gi) => {
+          const gameId = g._id || `${m._id || 'tt'}_s${si}_g${gi}`;
+          if(g._isTeam){
+            const teamA = _buildTeamMembers(g, 'A', m.teamAMembers);
+            const teamB = _buildTeamMembers(g, 'B', m.teamBMembers);
+            if(teamA.length >= 2 && teamB.length >= 2 && g.winner){
+              allGames.push({_isTeam:true, teamA, teamB, winner:g.winner, date:m.d || '', map:g.map || '-', mode:'티어대회', matchId:gameId});
+            }
+          }else if(g.playerA && g.playerB && g.winner){
             const wName = g.winner === 'A' ? g.playerA : g.playerB;
             const lName = g.winner === 'A' ? g.playerB : g.playerA;
-            allGames.push({wName, lName, date: m.d || '', map: g.map || '-', mode: '티어대회'});
+            allGames.push({wName, lName, date: m.d || '', map: g.map || '-', mode: '티어대회', matchId: gameId});
           }
         });
       });
@@ -3778,14 +3822,23 @@ function recalculateAllELO(){
         (grp.matches||[]).forEach(m => {
           // 개별 게임이 있는 경우
           let hasGames = false;
-          (m.sets||[]).forEach(s => {
-            (s.games||[]).forEach(g => {
-              if(g.playerA && g.playerB && g.winner && !g._isTeam){
+          (m.sets||[]).forEach((s, si) => {
+            (s.games||[]).forEach((g, gi) => {
+              const gameId = g._id || `${m._id || 'grp'}_s${si}_g${gi}`;
+              if(g._isTeam){
+                const teamA = _buildTeamMembers(g, 'A');
+                const teamB = _buildTeamMembers(g, 'B');
+                const date = m.d || tn.start || new Date().toISOString().slice(0, 10);
+                if(teamA.length >= 2 && teamB.length >= 2 && g.winner){
+                  allGames.push({_isTeam:true, teamA, teamB, winner:g.winner, date: date, map: g.map || '-', mode: tn.type === 'tier' ? '티어대회' : '조별리그', matchId: gameId});
+                  hasGames = true;
+                }
+              }else if(g.playerA && g.playerB && g.winner){
                 const wName = g.winner === 'A' ? g.playerA : g.playerB;
                 const lName = g.winner === 'A' ? g.playerB : g.playerA;
                 const date = m.d || tn.start || new Date().toISOString().slice(0, 10);
                 // 원본 matchId 보존
-                allGames.push({wName, lName, date: date, map: g.map || '-', mode: tn.type === 'tier' ? '티어대회' : '조별리그', matchId: m._id || ''});
+                allGames.push({wName, lName, date: date, map: g.map || '-', mode: tn.type === 'tier' ? '티어대회' : '조별리그', matchId: gameId});
                 hasGames = true;
               }
             });
@@ -3806,13 +3859,22 @@ function recalculateAllELO(){
       });
       Object.values((tn.bracket||{}).matchDetails||{}).forEach(m => {
         let hasGames = false;
-        (m.sets||[]).forEach(s => {
-          (s.games||[]).forEach(g => {
-            if(g.playerA && g.playerB && g.winner && !g._isTeam){
+        (m.sets||[]).forEach((s, si) => {
+          (s.games||[]).forEach((g, gi) => {
+            const gameId = g._id || `${m._id || 'bkt'}_s${si}_g${gi}`;
+            if(g._isTeam){
+              const teamA = _buildTeamMembers(g, 'A');
+              const teamB = _buildTeamMembers(g, 'B');
+              const date = m.d || tn.start || new Date().toISOString().slice(0, 10);
+              if(teamA.length >= 2 && teamB.length >= 2 && g.winner){
+                allGames.push({_isTeam:true, teamA, teamB, winner:g.winner, date: date, map: g.map || '-', mode: '토너먼트', matchId: gameId});
+                hasGames = true;
+              }
+            }else if(g.playerA && g.playerB && g.winner){
               const wName = g.winner === 'A' ? g.playerA : g.playerB;
               const lName = g.winner === 'A' ? g.playerB : g.playerA;
               const date = m.d || tn.start || new Date().toISOString().slice(0, 10);
-              allGames.push({wName, lName, date: date, map: g.map || '-', mode: '토너먼트', matchId: m._id || ''});
+              allGames.push({wName, lName, date: date, map: g.map || '-', mode: '토너먼트', matchId: gameId});
               hasGames = true;
             }
           });
@@ -3837,6 +3899,15 @@ function recalculateAllELO(){
   // applyGameResult로 다시 적용 (중복 제거 안함)
   let appliedCount = 0;
   allGames.forEach(g => {
+    if (g._isTeam) {
+      if (typeof applyTeamGameResult !== 'function') return;
+      const teamA = Array.isArray(g.teamA) ? g.teamA : [];
+      const teamB = Array.isArray(g.teamB) ? g.teamB : [];
+      if (teamA.length < 2 || teamB.length < 2 || !g.winner) return;
+      applyTeamGameResult(teamA, teamB, g.winner, g.date, g.map, g.matchId || '', g.mode);
+      appliedCount++;
+      return;
+    }
     // 팀전(2:2)처럼 "이름1,이름2" 형태는 개별 전적에 반영하지 않음
     const wp = (typeof players!=='undefined' && players) ? players.find(x => x.name === g.wName) : null;
     const lp = (typeof players!=='undefined' && players) ? players.find(x => x.name === g.lName) : null;
@@ -4169,4 +4240,3 @@ function openUnivmPasteModal() {
   const hint = document.getElementById('paste-mode-hint');
   if (hint) hint.innerHTML = '<span style="color:#7c3aed;font-weight:700">🏟️ 대학대전 경기 결과 입력 모드</span>';
 }
-
