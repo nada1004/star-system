@@ -5,6 +5,8 @@ let _b2GlobalImgSettings = JSON.parse(localStorage.getItem('su_b2_global_img_set
 const _b2ImgMetaCache = {};
 let _b2ImgSettingsSaveTimer = null;
 let _b2ImgSettingsSavePending = false;
+const _b2MediaDurationCache = Object.create(null);
+const _b2MediaDurationInflight = Object.create(null);
 function _b2FlushImgSettingsSave(){
   if(_b2ImgSettingsSaveTimer){
     clearTimeout(_b2ImgSettingsSaveTimer);
@@ -28,6 +30,95 @@ function _b2ScheduleImgSettingsSave(){
   _b2ImgSettingsSaveTimer = setTimeout(()=>{
     _b2FlushImgSettingsSave();
   }, 800);
+}
+function _b2IsGifUrl(url){
+  const s = String(url||'').trim().toLowerCase().split('#')[0].split('?')[0];
+  return s.endsWith('.gif');
+}
+async function _b2ReadGifDurationMs(url0){
+  let src = String(url0||'').trim();
+  if(!src) return 0;
+  try{
+    if(typeof toHttpsUrl === 'function'){
+      const next = toHttpsUrl(src);
+      if(next) src = next;
+    }
+  }catch(e){}
+  if(_b2MediaDurationCache[src] != null) return _b2MediaDurationCache[src];
+  if(_b2MediaDurationInflight[src]) return _b2MediaDurationInflight[src];
+  const task = (async()=>{
+    try{
+      const res = await fetch(src, { cache:'force-cache', mode:'cors' });
+      if(!res.ok) throw new Error('gif fetch failed');
+      const buf = await res.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      if(bytes.length < 20) return 0;
+      const sig = String.fromCharCode(bytes[0],bytes[1],bytes[2],bytes[3],bytes[4],bytes[5]);
+      if(sig !== 'GIF87a' && sig !== 'GIF89a') return 0;
+      let i = 6;
+      i += 4;
+      const packed = bytes[i++] || 0;
+      i += 2;
+      if(packed & 0x80){
+        i += 3 * (1 << ((packed & 0x07) + 1));
+      }
+      let total = 0;
+      let pendingDelay = 100;
+      const skipSubBlocks = ()=>{
+        while(i < bytes.length){
+          const sz = bytes[i++] || 0;
+          if(sz === 0) break;
+          i += sz;
+        }
+      };
+      while(i < bytes.length){
+        const b = bytes[i++];
+        if(b === 0x3B) break;
+        if(b === 0x21){
+          const label = bytes[i++] || 0;
+          if(label === 0xF9){
+            const blockSize = bytes[i++] || 0;
+            if(blockSize >= 4 && i + 3 < bytes.length){
+              i += 1;
+              const delayCs = (bytes[i] | (bytes[i+1] << 8)) || 0;
+              i += 2;
+              i += 1;
+              pendingDelay = delayCs > 1 ? delayCs * 10 : 100;
+              i += 1;
+            }else{
+              i += blockSize;
+              if(i < bytes.length) i += 1;
+            }
+          }else{
+            skipSubBlocks();
+          }
+          continue;
+        }
+        if(b === 0x2C){
+          i += 8;
+          const imgPacked = bytes[i++] || 0;
+          if(imgPacked & 0x80){
+            i += 3 * (1 << ((imgPacked & 0x07) + 1));
+          }
+          i += 1;
+          skipSubBlocks();
+          total += Math.max(60, pendingDelay || 100);
+          pendingDelay = 100;
+          continue;
+        }
+        break;
+      }
+      _b2MediaDurationCache[src] = total || 0;
+      return _b2MediaDurationCache[src];
+    }catch(e){
+      _b2MediaDurationCache[src] = 0;
+      return 0;
+    }finally{
+      try{ delete _b2MediaDurationInflight[src]; }catch(e){}
+    }
+  })();
+  _b2MediaDurationInflight[src] = task;
+  return await task;
 }
 try{ window._b2FlushImgSettingsSave = _b2FlushImgSettingsSave; }catch(e){}
 try{ window._b2CancelImgSettingsSave = _b2CancelImgSettingsSave; }catch(e){}
@@ -367,6 +458,33 @@ function _b2ScheduleImageSwap(playerName) {
   };
   const getEl = (slot)=>document.getElementById('b2-main-img-' + slot);
   const isVideo = (el)=>!!(el && el.tagName === 'VIDEO');
+  const currentUrl = (slot)=>{
+    const item = imgList.find(x=>x && x.slot === slot);
+    return item ? String(item.url||'').trim() : '';
+  };
+  const scheduleGifSwap = (slot, fromSlot, toSlot, curIdx)=>{
+    const fallback = Math.max(2600, delayMs(fromSlot, toSlot), 2600);
+    if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
+    mainBox._swapTimer = setTimeout(doSwap, fallback);
+    const url = currentUrl(slot);
+    _b2ReadGifDurationMs(url).then(ms=>{
+      try{
+        if(!(ms > 0)) return;
+        if(mainBox._swapGen !== swapGen) return;
+        if(mainBox._swapIdx !== curIdx) return;
+        if(mainBox._swapCurSlot !== slot) return;
+        if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
+        mainBox._swapTimer = setTimeout(()=>{
+          try{
+            if(mainBox._swapGen !== swapGen) return;
+            if(mainBox._swapIdx !== curIdx) return;
+            if(mainBox._swapCurSlot !== slot) return;
+          }catch(e){}
+          doSwap();
+        }, Math.max(180, ms + 120));
+      }catch(e){}
+    }).catch(()=>{});
+  };
   const applyMediaForSlot = (slot)=>{
     try{
       const el = getEl(slot);
@@ -460,6 +578,7 @@ function _b2ScheduleImageSwap(playerName) {
     const next = (cur + 1) % totalImgs;
     const fromSlot = imgList[cur] ? imgList[cur].slot : 1;
     const toSlot = imgList[next] ? imgList[next].slot : 1;
+    const curUrl = currentUrl(curSlot);
 
     const media = applyMediaForSlot(curSlot);
     if(media.handled && media.el){
@@ -535,6 +654,10 @@ function _b2ScheduleImageSwap(playerName) {
         return;
       }catch(e){}
     }
+    if(_b2IsGifUrl(curUrl)){
+      scheduleGifSwap(curSlot, fromSlot, toSlot, cur);
+      return;
+    }
     mainBox._swapTimer = setTimeout(doSwap, delayMs(fromSlot, toSlot));
   }
   let firstDelay = (imgList[0] && imgList[1]) ? delayMs(imgList[0].slot, imgList[1].slot) : 1000;
@@ -584,6 +707,10 @@ function _b2ScheduleImageSwap(playerName) {
     }
   }catch(e){}
   mainBox._swapCurSlot = firstSlot;
+  if(_b2IsGifUrl(currentUrl(firstSlot))){
+    scheduleGifSwap(firstSlot, firstSlot, imgList[1] ? imgList[1].slot : firstSlot, 0);
+    return;
+  }
   mainBox._swapTimer = setTimeout(doSwap, firstDelay);
 }
 window._b2RefreshImageControls = function(playerName, slot) {
