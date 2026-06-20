@@ -2043,11 +2043,36 @@ function _b2LineupPoster(univName, col, forExport=false) {
 
   const dateTxt = new Date().toISOString().slice(0,10).replace(/-/g,'.');
 
+  // 종족 통계 — 로스터(일반 멤버) 기준
+  const raceCount = { T: 0, P: 0, Z: 0 };
+  rosterMembers.forEach(p => { if (raceCount.hasOwnProperty(p.race)) raceCount[p.race]++; });
+  const _raceMeta = [
+    { k:'T', ico:'⚔️', col:'#2563eb' },
+    { k:'P', ico:'🔮', col:'#d97706' },
+    { k:'Z', ico:'🦎', col:'#7c3aed' }
+  ];
+  const raceStatHtml = _raceMeta.filter(r => raceCount[r.k] > 0).map(r => `
+    <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:4px 10px 4px 8px;color:#fff;font-size:11px;font-weight:800">
+      <span style="font-size:11px">${r.ico}</span>${r.k} ${raceCount[r.k]}
+    </span>`).join('');
+
+  // 티어 분포 — 등록된 티어 순서 기준 상위 항목만 (보유한 티어만)
+  const TIERS_LOCAL = (typeof TIERS !== 'undefined') ? TIERS : [];
+  const tierCountMap = {};
+  rosterMembers.forEach(p => { const t = p.tier || '미정'; tierCountMap[t] = (tierCountMap[t]||0) + 1; });
+  const tierStatList = Object.keys(tierCountMap)
+    .sort((a,b) => { const ia=TIERS_LOCAL.indexOf(a), ib=TIERS_LOCAL.indexOf(b); return (ia>=0?ia:99)-(ib>=0?ib:99); })
+    .map(t => ({ tier:t, n:tierCountMap[t] }));
+  const tierStatHtml = tierStatList.map(t => `
+    <span style="display:inline-flex;align-items:center;gap:4px;background:${col}14;border:1px solid ${col}33;border-radius:999px;padding:3px 10px;color:${col};font-size:11px;font-weight:800">
+      ${t.tier}<span style="opacity:.65;font-weight:700">×${t.n}</span>
+    </span>`).join('');
+
   return `
     <div data-b2lineup="${univName.replace(/"/g,'&quot;')}" style="border-radius:24px;overflow:hidden;background:#0b1220;box-shadow:0 20px 40px rgba(15,23,42,.28)">
       <div style="padding:26px 26px 20px;position:relative;overflow:hidden;background:linear-gradient(135deg,${col} 0%,${col}cc 65%,#0b1220 130%)">
         <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.14),transparent 58%);pointer-events:none"></div>
-        ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" aria-hidden="true" style="position:absolute;right:-10px;top:50%;transform:translateY(-50%);height:110%;max-height:120px;opacity:.10;object-fit:contain;pointer-events:none;filter:drop-shadow(0 0 24px ${col})" onerror="this.style.display='none'">`:''}
+        ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-height:84%;max-width:140px;width:auto;height:auto;opacity:.20;object-fit:contain;pointer-events:none;filter:drop-shadow(0 0 20px ${col})" onerror="this.style.display='none'">`:''}
         <div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:12px;min-width:0">
             ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:54px;height:54px;object-fit:contain;border-radius:14px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);padding:6px;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.22)" onerror="this.style.display='none'">`:''}
@@ -2061,9 +2086,10 @@ function _b2LineupPoster(univName, col, forExport=false) {
             <span style="color:rgba(255,255,255,.55);font-size:11px;font-weight:700">${dateTxt}</span>
           </div>
         </div>
+        ${raceStatHtml ? `<div style="position:relative;z-index:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:14px">${raceStatHtml}</div>` : ''}
       </div>
       <div style="position:relative;overflow:hidden;background:linear-gradient(180deg,${_b2PastelBg(col,0.26)} 0%,${_b2PastelBg(col,0.18)} 100%);padding:22px 24px 28px">
-        ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55%;max-width:460px;opacity:.07;object-fit:contain;pointer-events:none;z-index:0" onerror="this.style.display='none'">`:''}
+        ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:58%;max-width:480px;opacity:.16;object-fit:contain;pointer-events:none;z-index:0" onerror="this.style.display='none'">`:''}
         <div style="position:relative;z-index:1">
           ${roleCardsHtml ? `
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
@@ -2073,9 +2099,12 @@ function _b2LineupPoster(univName, col, forExport=false) {
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:22px">${roleCardsHtml}</div>
           <div style="height:1px;background:linear-gradient(90deg,${col}44,transparent);margin-bottom:20px"></div>
           ` : ''}
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <div style="width:3px;height:14px;border-radius:999px;background:${col}99;flex-shrink:0"></div>
-            <div style="font-size:11px;font-weight:900;color:${col};letter-spacing:.06em;text-transform:uppercase">멤버</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:3px;height:14px;border-radius:999px;background:${col}99;flex-shrink:0"></div>
+              <div style="font-size:11px;font-weight:900;color:${col};letter-spacing:.06em;text-transform:uppercase">멤버</div>
+            </div>
+            ${tierStatHtml ? `<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">${tierStatHtml}</div>` : ''}
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">${rosterCardsHtml}</div>
         </div>
