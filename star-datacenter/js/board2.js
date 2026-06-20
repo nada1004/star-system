@@ -5849,8 +5849,8 @@ function _b2WeeklyBriefingView() {
       .slice()
       .sort((a, b) => (a.wrDelta - b.wrDelta) || (a.totalDelta - b.totalDelta));
     const coldPlayer = decliningPlayers[0] || null;
-    // 연승 스트릭 — 기간 내 최근 경기부터 거슬러 올라가며 연속 승 카운트
-    const _calcStreak = hist => {
+    // 연승/연패 스트릭 — 기간 내 최근 경기부터 거슬러 올라가며 연속 결과 카운트
+    const _calcStreak = (hist, want) => {
       const sorted = [...hist].sort((a,b)=>{
         const da=parseInt(String(a.date||'').replace(/[-\.\/]/g,''))||0;
         const db=parseInt(String(b.date||'').replace(/[-\.\/]/g,''))||0;
@@ -5858,16 +5858,33 @@ function _b2WeeklyBriefingView() {
       });
       let streak = 0;
       for (const h of sorted) {
-        if (h.result === '승') streak++;
+        if (h.result === want) streak++;
         else break;
       }
       return streak;
     };
     const streakPlayers = activePlayers
-      .map(s => ({ ...s, streak: _calcStreak(s.hist) }))
+      .map(s => ({ ...s, streak: _calcStreak(s.hist, '승') }))
       .filter(s => s.streak >= 2)
       .sort((a, b) => b.streak - a.streak);
     const streakPlayer = streakPlayers[0] || null;
+    const loseStreakPlayers = activePlayers
+      .map(s => ({ ...s, streak: _calcStreak(s.hist, '패') }))
+      .filter(s => s.streak >= 2)
+      .sort((a, b) => b.streak - a.streak);
+    const loseStreakPlayer = loseStreakPlayers[0] || null;
+    // 최고 승률 — 최소 3전 이상 표본 보장
+    const bestWrPlayers = activePlayers
+      .filter(s => s.total >= 3)
+      .slice()
+      .sort((a, b) => ((b.winRate ?? -1) - (a.winRate ?? -1)) || (b.total - a.total));
+    const bestWrPlayer = bestWrPlayers[0] || null;
+    // 최다 공식전 참여 — 스폰서전/스크리미지/연습이 아닌 모드만 집계
+    const officialPlayers = activePlayers
+      .map(s => ({ ...s, offTotal: s.offWins + s.offLosses }))
+      .filter(s => s.offTotal > 0)
+      .sort((a, b) => b.offTotal - a.offTotal);
+    const officialPlayer = officialPlayers[0] || null;
     const monthlyTopPlayers = [...activePlayers]
       .sort((a, b) => (b.total - a.total) || (b.wins - a.wins) || ((b.winRate ?? -1) - (a.winRate ?? -1)))
       .slice(0, 5);
@@ -6196,6 +6213,78 @@ function _b2WeeklyBriefingView() {
             `).join('')}
           </div>` : ''}
         ` : `<div class="b2w2-highlight-desc">2연승 이상 기록 중인 스트리머가 없습니다.</div>`}
+      </article>
+      <article class="b2w2-highlight-card">
+        <div class="b2w2-highlight-kicker" style="color:#7c3aed">Lose Streak</div>
+        <div class="b2w2-highlight-title">최장 연패</div>
+        ${loseStreakPlayer ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-size:18px;font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${loseStreakPlayer.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${loseStreakPlayer.p?.name || '-'}</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px">${String(loseStreakPlayer.p?.univ || '무소속')}</div>
+            </div>
+            <span class="b2w2-note-chip" style="border-color:#ddd6fe;color:#7c3aed;background:#f5f3ff">💧 ${loseStreakPlayer.streak}연패</span>
+          </div>
+          ${loseStreakPlayers.length > 1 ? `
+          <div class="b2w2-highlight-list" style="margin-top:4px;padding-top:8px;border-top:1px dashed rgba(148,163,184,.25)">
+            ${loseStreakPlayers.slice(1, 3).map((s, idx) => `
+              <div class="b2w2-highlight-row">
+                <span style="font-size:12px;font-weight:800;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${idx + 2}. ${s.p?.name || '-'}</span>
+                <strong style="font-size:11px;color:#7c3aed">${s.streak}연패</strong>
+              </div>
+            `).join('')}
+          </div>` : ''}
+        ` : `<div class="b2w2-highlight-desc">2연패 이상 기록 중인 스트리머가 없습니다.</div>`}
+      </article>
+      <article class="b2w2-highlight-card">
+        <div class="b2w2-highlight-kicker" style="color:#16a34a">Best Win Rate</div>
+        <div class="b2w2-highlight-title">최고 승률</div>
+        ${bestWrPlayer ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-size:18px;font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${bestWrPlayer.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${bestWrPlayer.p?.name || '-'}</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px">${String(bestWrPlayer.p?.univ || '무소속')}</div>
+            </div>
+            <span class="b2w2-note-chip" style="border-color:#bbf7d0;color:#16a34a;background:#f0fdf4">${bestWrPlayer.winRate}%</span>
+          </div>
+          <div class="b2w2-highlight-list">
+            <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">전적</span><strong style="font-size:12px;color:var(--text1)">${bestWrPlayer.total}전 ${bestWrPlayer.wins}승 ${bestWrPlayer.losses}패</strong></div>
+          </div>
+          ${bestWrPlayers.length > 1 ? `
+          <div class="b2w2-highlight-list" style="margin-top:4px;padding-top:8px;border-top:1px dashed rgba(148,163,184,.25)">
+            ${bestWrPlayers.slice(1, 3).map((s, idx) => `
+              <div class="b2w2-highlight-row">
+                <span style="font-size:12px;font-weight:800;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${idx + 2}. ${s.p?.name || '-'}</span>
+                <strong style="font-size:11px;color:#16a34a">${s.winRate}%</strong>
+              </div>
+            `).join('')}
+          </div>` : ''}
+        ` : `<div class="b2w2-highlight-desc">3전 이상 기록한 스트리머가 없습니다.</div>`}
+      </article>
+      <article class="b2w2-highlight-card">
+        <div class="b2w2-highlight-kicker" style="color:#2563eb">Official Matches</div>
+        <div class="b2w2-highlight-title">최다 공식전 참여</div>
+        ${officialPlayer ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-size:18px;font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${officialPlayer.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${officialPlayer.p?.name || '-'}</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px">${String(officialPlayer.p?.univ || '무소속')}</div>
+            </div>
+            <span class="b2w2-note-chip" style="border-color:#bfdbfe;color:#2563eb;background:#eff6ff">${officialPlayer.offTotal}전</span>
+          </div>
+          <div class="b2w2-highlight-list">
+            <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">공식전 전적</span><strong style="font-size:12px;color:var(--text1)">${officialPlayer.offWins}승 ${officialPlayer.offLosses}패</strong></div>
+          </div>
+          ${officialPlayers.length > 1 ? `
+          <div class="b2w2-highlight-list" style="margin-top:4px;padding-top:8px;border-top:1px dashed rgba(148,163,184,.25)">
+            ${officialPlayers.slice(1, 3).map((s, idx) => `
+              <div class="b2w2-highlight-row">
+                <span style="font-size:12px;font-weight:800;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${idx + 2}. ${s.p?.name || '-'}</span>
+                <strong style="font-size:11px;color:#2563eb">${s.offTotal}전</strong>
+              </div>
+            `).join('')}
+          </div>` : ''}
+        ` : `<div class="b2w2-highlight-desc">공식전 기록이 없습니다.</div>`}
       </article>
     </section>`;
 
