@@ -89,6 +89,10 @@ function _b2AvatarFallback(letter, col, size) {
 }
 
 try{
+  window._b2NameTag = _b2NameTag;
+  window._b2PlayerRowCompact = _b2PlayerRowCompact;
+  window._b2Chip = _b2Chip;
+  window._b2Avatar = _b2Avatar;
   window.Board2CardUtils = window.Board2CardUtils || {
     nameTag: _b2NameTag,
     playerRowCompact: _b2PlayerRowCompact,

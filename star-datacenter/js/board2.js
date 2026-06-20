@@ -32,6 +32,35 @@ if (typeof window._siRender !== 'function') {
   };
 }
 
+if (typeof _b2NameTag !== 'function') {
+  var _b2NameTag = function(p, accentCol, showTier) {
+    try{
+      if (window.Board2CardUtils && typeof window.Board2CardUtils.nameTag === 'function') {
+        return window.Board2CardUtils.nameTag(p, accentCol, showTier);
+      }
+      if (typeof window._b2NameTag === 'function') {
+        return window._b2NameTag(p, accentCol, showTier);
+      }
+    }catch(e){}
+    const name = (p && p.name) || '';
+    const safeName = String(name).replace(/'/g, "\\'");
+    const tier = (p && p.tier) || '';
+    const race = (p && p.race) || '';
+    const inactive = !!(p && p.inactive);
+    const tierBg = typeof getTierBtnColor === 'function' ? getTierBtnColor(tier) : '#64748b';
+    const tierFg = typeof getTierBtnTextColor === 'function' ? (getTierBtnTextColor(tier) || '#fff') : '#fff';
+    return `
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:20px;cursor:pointer;transition:background .12s"
+        onmouseover="this.style.background='${accentCol}14'"
+        onmouseout="this.style.background='transparent'"
+        onclick="openPlayerModal('${safeName}')">
+        <span style="font-weight:700;font-size:18px;color:var(--text1);white-space:nowrap;${inactive?'opacity:.6':''}">${name}</span>
+        ${race&&race!=='N'?`<span class="rbadge r${race}" style="font-size:10px;flex-shrink:0">${race}</span>`:''}
+        ${showTier&&tier?`<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:${tierBg};color:${tierFg};flex-shrink:0">${tier}</span>`:''}
+      </div>`;
+  };
+}
+
 let _b2View = 'univ';
 let _b2SaveUniv = '전체';
 let _b2LineupUniv = '';
