@@ -7,7 +7,7 @@ let totalHideNoRecord=false; // 전적 없는 선수 숨기기
 let _bulkEditMode=false; // 일괄 수정 모드
 let _bulkEditSelected=new Set(); // 선택된 스트리머 이름
 let _bulkEditSearch=''; // 일괄 수정(선택 모드) 검색어
-let totalViewMode='gallery'; // 'gallery'(카드형) | 'table'(리스트형) | 'focus'(상세형)
+let totalViewMode=(()=>{try{return localStorage.getItem('su_streamer_view_mode')||'table';}catch(e){return 'table';}})(); // 'gallery'(카드형) | 'table'(리스트형) | 'focus'(상세형)
 let totalFocusPlayer=''; // 상세형에서 선택된 스트리머 이름
 
 (function _injectStreamerTabUiStyle(){
@@ -433,9 +433,9 @@ function rTotal(C,T){
       autocomplete="off" spellcheck="false">
     <button class="pill ${totalHideNoRecord?'on warn-on':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
     <span style="color:var(--border2);align-self:center">│</span>
-    <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode='gallery';_bulkEditMode=false;render()" title="카드형 대시보드 보기">🪪 카드형</button>
-    <button class="pill ${totalViewMode==='focus'?'on':''}" onclick="if(totalViewMode!=='focus')totalFocusPlayer='';totalViewMode='focus';_bulkEditMode=false;render()" title="좌측 목록 + 우측 상세 보기">🧾 상세형</button>
-    <button class="pill ${totalViewMode==='table'?'on':''}" onclick="totalViewMode='table';_bulkEditMode=false;render()" title="리스트 보기">☰ 리스트</button>
+    <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode='gallery';try{localStorage.setItem('su_streamer_view_mode','gallery');}catch(e){};_bulkEditMode=false;render()" title="카드형 대시보드 보기">🪪 카드형</button>
+    <button class="pill ${totalViewMode==='focus'?'on':''}" onclick="if(totalViewMode!=='focus')totalFocusPlayer='';totalViewMode='focus';try{localStorage.setItem('su_streamer_view_mode','focus');}catch(e){};_bulkEditMode=false;render()" title="좌측 목록 + 우측 상세 보기">🧾 상세형</button>
+    <button class="pill ${totalViewMode==='table'?'on':''}" onclick="totalViewMode='table';try{localStorage.setItem('su_streamer_view_mode','table');}catch(e){};_bulkEditMode=false;render()" title="리스트 보기">☰ 리스트</button>
     ${totalViewMode==='table'?(isLoggedIn?`<button class="pill ${_bulkEditMode?'on edit-on':''}" onclick="toggleBulkEditMode()">일괄 수정</button>`:''):''}
     ${totalViewMode==='table'?(isLoggedIn?`<button class="pill" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
     ${_showBulk&&totalViewMode==='table'?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
@@ -843,13 +843,13 @@ function _buildGalleryView(rankMap){
       if(typeof p.photo==='string' && p.photo.trim()) _galleryPhotoUrls.push(p.photo.trim());
       html+=`<div class="streamer-gallery-card ${rankMap[p.name]===1?'top1':rankMap[p.name]===2?'top2':rankMap[p.name]===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-card="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}"
         data-tp-action="open-player" data-tp-player="${_pAttr}"
-        style="background:${clr}22;border-color:${clr}44"
+        style="background:${clr}18;border-color:${clr}38;backdrop-filter:blur(1px)"
         onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 28px rgba(0,0,0,.22)';try{if(typeof _prewarmPlayerModalImages==='function'){var _pp=window.players&&window.players.find(function(x){return x.name==='${_pSafe}'});if(_pp)_prewarmPlayerModalImages(_pp);}}catch(e){}"
         onmouseleave="this.style.transform='';this.style.boxShadow=''">
         ${p.photo
           ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
           : ''}
-        <div class="gc-placeholder" style="position:absolute;inset:0;display:${p.photo?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:${clr}15">${p.race||'?'}</div>
+        <div class="gc-placeholder" style="position:absolute;inset:0;display:${p.photo?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:linear-gradient(160deg,${clr}2a 0%,${clr}0e 100%)">${p.race||'?'}</div>
         <div class="streamer-gallery-overlay"></div>
         <div class="streamer-gallery-rank">${rankMap[p.name]?'#'+rankMap[p.name]:''}</div>
         <div class="streamer-gallery-act"><span class="streamer-act-chip ${actMeta.key}" title="${actMeta.title}">${actMeta.label}</span></div>

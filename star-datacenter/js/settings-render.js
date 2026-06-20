@@ -95,6 +95,7 @@ function rCfg(C,T){
     procompleaguecard:'🏆 프로리그 대회 조별리그', procompteamcard:'🏆 프로리그 대회 팀전 카드', procompgjcard:'🏆 프로리그 대회 중장전 카드', procompcard:'⭐ 프로리그 대회 카드',
     sharecard:'🪪 공유카드 디자인', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
     'tierrank-view':'📊 티어 순위표 보기 방식',
+    'streamer-view':'🎬 스트리머탭 기본 뷰',
     bgm:'🎵 유튜브 배경음악(BGM)', soopmv:'📺 SOOP(숲) 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
     fab:'📱 플로팅(FAB)', storage:'💾 저장소', datacheck:'🧾 데이터 검수', selfcheck:'🧪 설정 점검',
@@ -1053,6 +1054,28 @@ ${_scfgD('notice','📢 공지 관리')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">모바일/태블릿에서 버튼/메뉴가 너무 커 보일 때 여기서 한 번에 조절합니다. (코드 수정 없이)</div>
     <div id="cfg-uisize-body" style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="font-size:12px;color:var(--gray-l)">로딩 중...</div>
+    </div>
+  </details>
+  ${_scfgD('streamer-view','🎬 스트리머탭 기본 뷰')}
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머탭 진입 시 기본으로 표시할 뷰 방식을 설정합니다. 탭 상단 버튼으로도 즉시 전환 가능합니다.</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${(function(){
+          const _cur = (()=>{try{return localStorage.getItem('su_streamer_view_mode')||'table';}catch(e){return 'table';}})();
+          return [
+            {id:'table',   icon:'☰',  title:'리스트형',   desc:'표 형식. 빠르고 정보 밀도 높음'},
+            {id:'gallery', icon:'🪪', title:'카드형',     desc:'사진 중심 카드 대시보드'},
+            {id:'focus',   icon:'🧾', title:'상세형',     desc:'좌측 목록 + 우측 상세'},
+          ].map(v=>`<button type="button"
+            onclick="try{localStorage.setItem('su_streamer_view_mode','${v.id}');if(typeof totalViewMode!=='undefined'){totalViewMode='${v.id}';}try{render();}catch(e){};}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}"
+            style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;border-radius:10px;border:2px solid ${_cur===v.id?'var(--blue)':'var(--border2)'};background:${_cur===v.id?'#eff6ff':'var(--white)'};cursor:pointer;min-width:90px;transition:border-color .15s"
+          >
+            <span style="font-size:20px">${v.icon}</span>
+            <span style="font-size:11px;font-weight:900;color:${_cur===v.id?'var(--blue)':'var(--text2)'}">${v.title}</span>
+            <span style="font-size:10px;color:var(--gray-l);text-align:center;line-height:1.3">${v.desc}</span>
+          </button>`).join('');
+        })()}
+      </div>
     </div>
   </details>
   ${_scfgD('tierrank-view','📊 티어 순위표 보기 방식')}

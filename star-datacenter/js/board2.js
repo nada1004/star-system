@@ -34,6 +34,7 @@ if (typeof window._siRender !== 'function') {
 
 let _b2View = 'univ';
 let _b2SaveUniv = '전체';
+let _b2LineupUniv = '';
 let _b2Collapsed = new Set();
 // 프로필 탭 필터 변수
 let _b2PlayersUnivFilter = '전체';
@@ -365,6 +366,17 @@ function rBoard2(C, T) {
     saveBar = `<div style="display:flex;gap:6px;flex-shrink:0">
       <button class="b2-toolbar-btn" onclick="saveB2FemcoAllImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">💾 전체 저장</button>
     </div>`;
+  } else if (_b2View === 'lineup') {
+    if (!_b2LineupUniv || !univList.some(u=>u.name===_b2LineupUniv)) _b2LineupUniv = univList[0] ? univList[0].name : '';
+    saveBar = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+      <div style="position:relative">
+        <select id="b2-lineup-sel" class="b2-toolbar-select" onchange="_b2LineupUniv=this.value;document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+          ${univList.map(u=>`<option value="${u.name}"${_b2LineupUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
+        </select>
+        <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <button class="b2-toolbar-btn" onclick="saveB2LineupImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
+    </div>`;
   }
 
   const profileTabLabel = '👤 이미지별';
@@ -594,6 +606,7 @@ function rBoard2(C, T) {
       <div class="b2-toolbar-card">
         <div id="b2-nav" class="b2-nav b2-nav-new">
           <div class="b2-toolbar-main">
+        ${_b2TabBtn('lineup','#dc2626', (typeof getTabLabel==='function'?getTabLabel('board2','lineup','🎽 라인업'):'🎽 라인업'))}
         ${_b2TabBtn('univ','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','univ','🏟️ 대학별'):'🏟️ 대학별'))}
         ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
         ${_b2TabBtn('femco','var(--blue)', (typeof getTabLabel==='function'?getTabLabel('board2','femco','🧩 펨코'):'🧩 펨코'))}
@@ -613,6 +626,17 @@ function rBoard2(C, T) {
           <div class="b2-toolbar-actions">${rightBtns}</div>
         </div>
       </div>
+      ${_b2View === 'lineup' ? `
+      <div style="display:flex;align-items:center;gap:8px;margin:-6px 0 14px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow-x:auto;scrollbar-width:none" class="b2-lineup-jumpbar">
+        <span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0;white-space:nowrap">🏫 바로가기</span>
+        <span style="width:1px;height:14px;background:var(--border2);flex-shrink:0"></span>
+        ${univList.map(u=>{
+          const _uc = gc(u.name);
+          const _on = u.name===_b2LineupUniv;
+          return `<button type="button" onclick="_b2LineupUniv='${u.name.replace(/'/g,"\\'")}';document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:3px 11px;border-radius:999px;border:1px solid ${_on?_uc:'transparent'};background:${_on?_uc+'1a':'var(--white)'};color:${_on?_uc:'var(--text3)'};font-size:11px;font-weight:${_on?900:700};cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s">${u.name}</button>`;
+        }).join('')}
+      </div>
+      ` : ''}
       <div class="b2-content-shell">
         <div id="b2-content"></div>
       </div>
@@ -648,7 +672,7 @@ function rBoard2(C, T) {
   const _renderSub = () => {
     const sub = document.getElementById('b2-content');
     if(!sub) return;
-    const _known = new Set(['univ','femco','free','players','summary','weekly','ranking','radar','compare','heatmap','bubble','old']);
+    const _known = new Set(['univ','femco','free','players','lineup','summary','weekly','ranking','radar','compare','heatmap','bubble','old']);
     if(!_known.has(String(_b2View||''))) _b2View = 'univ';
     if (_b2View === 'univ') {
       sub.innerHTML = _b2UnivView();
@@ -686,6 +710,10 @@ function rBoard2(C, T) {
         }
       }, 0);
       setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 80); }catch(e){} }, 160);
+    } else if (_b2View === 'lineup') {
+      sub.innerHTML = _b2LineupView();
+      injectUnivIcons && injectUnivIcons(sub);
+      setTimeout(() => { try{ window._precacheVisibleImages && window._precacheVisibleImages(sub, 60); }catch(e){} }, 120);
     } else if (_b2View === 'summary') {
       sub.innerHTML = _b2SummaryView();
       injectUnivIcons && injectUnivIcons(sub);
@@ -1931,6 +1959,176 @@ async function saveB2Img() {
   }
 }
 
+/* ══════════════════════════════════════
+   대학 라인업 포스터 ("STARTING XI" 스타일)
+══════════════════════════════════════ */
+function _b2PastelBg(hex, ratio) {
+  const { r, g, b } = (typeof _hexToRgbObj === 'function') ? _hexToRgbObj(hex) : { r: 100, g: 116, b: 139 };
+  const t = (typeof ratio === 'number') ? ratio : 0.10;
+  const mix = c => Math.round(255 * (1 - t) + c * t);
+  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
+}
+
+function _b2LineupCard(p, col, big, iconUrl) {
+  const safeName = (p.name||'').replace(/'/g,"\\'");
+  const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
+  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const _raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
+  const badgeTxt = big ? (p.role||'') : (p.tier||'');
+  // 배경 blur 레이어
+  const _fillBackdrop = photo
+    ? `<img src="${photo}" crossorigin="anonymous" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.22);filter:blur(16px) saturate(1.15) brightness(.8);opacity:.85" onerror="this.style.display='none'">
+       <div style="position:absolute;inset:0;background:linear-gradient(180deg,${col}33 0%,rgba(0,0,0,.18) 100%)"></div>`
+    : `<div style="position:absolute;inset:0;background:linear-gradient(160deg,${col}44 0%,${col}1a 100%)"></div>`;
+  // 메인 사진 (전체 꽉 채움, 모양 적용 없이 카드 자체 overflow:hidden으로 처리)
+  const photoHtml = photo
+    ? `<img src="${photo}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:6px">
+         <div style="font-size:${big?'44px':'34px'};font-weight:900;color:${col};opacity:.7">${raceLetter}</div>
+       </div>`
+    : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px">
+         <div style="font-size:${big?'44px':'34px'};font-weight:900;color:${col};opacity:.7">${raceLetter}</div>
+       </div>`;
+  // 종족 배지 — 우상단
+  const _raceBadge = (p.race && p.race!=='N')
+    ? `<div style="position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:999px;background:${_raceCol};color:#fff;font-size:10px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.32);z-index:2;letter-spacing:.02em">${p.race}</div>`
+    : '';
+  // 하단 그라데이션 오버레이 (네임바 가독성)
+  const _gradient = `<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.72) 100%);z-index:1;pointer-events:none"></div>`;
+  // 네임바 — 그라데이션 위에 텍스트만
+  const _nameBar = `
+    <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:${big?'10px 10px 10px':'8px 9px 9px'}">
+      ${badgeTxt?`<div style="margin-bottom:3px"><span style="background:${col};color:#fff;font-weight:900;font-size:${big?'10px':'9px'};padding:1px 7px;border-radius:999px;white-space:nowrap;line-height:1.6;letter-spacing:-.01em">${badgeTxt}</span></div>`:''}
+      <div style="color:#fff;font-weight:900;font-size:${big?'14px':'12px'};letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.5)">${p.name||''}</div>
+    </div>`;
+  return `
+    <div style="position:relative;cursor:pointer;border-radius:14px;overflow:hidden;background:${_b2PastelBg(col,0.10)};box-shadow:0 4px 16px rgba(15,23,42,.18);border:1px solid ${col}33;transition:transform .15s,box-shadow .15s" onclick="openPlayerModal('${safeName}')"
+      onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 26px rgba(15,23,42,.28)'"
+      onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(15,23,42,.18)'">
+      <div style="position:relative;width:100%;aspect-ratio:3/4;overflow:hidden">
+        ${_fillBackdrop}
+        ${photoHtml}
+        ${_raceBadge}
+        ${_gradient}
+        ${_nameBar}
+      </div>
+    </div>`;
+}
+
+function _b2LineupPoster(univName, col, forExport=false) {
+  if (!univName) return `<div style="text-align:center;color:var(--text3);padding:40px">대학을 선택해주세요</div>`;
+  const uCfg = (typeof univCfg !== 'undefined' ? univCfg.find(x=>x.name===univName) : null) || {};
+  const iconUrl = uCfg.icon || uCfg.img || UNIV_ICONS[univName] || '';
+  const members = players.filter(p => String(p?.univ||'').trim() === String(univName||'').trim() && !p.hidden && !p.retired && !p.hideFromBoard);
+
+  if (!members.length) {
+    return `<div style="border-radius:18px;border:2px dashed ${col}55;padding:30px;background:${col}10;text-align:center;color:var(--text3)">등록된 선수가 없습니다</div>`;
+  }
+
+  // 보직(임원) 그룹 — 큰 카드로 상단에 배치
+  const roleMembers = members.filter(p => _B2_ROLE_ORDER.includes(p.role||''));
+  roleMembers.sort((a,b) => _b2RoleRank(a) - _b2RoleRank(b));
+
+  // 일반 멤버 — 티어순
+  const rosterMembers = members.filter(p => !_B2_ROLE_ORDER.includes(p.role||''));
+  rosterMembers.sort((a,b) => {
+    const ta = TIERS.indexOf(a.tier||''), tb = TIERS.indexOf(b.tier||'');
+    const ra = ta>=0?ta:99, rb = tb>=0?tb:99;
+    if (ra!==rb) return ra-rb;
+    return (a.name||'').localeCompare(b.name||'', 'ko', {sensitivity:'base'});
+  });
+
+  const roleCardsHtml = roleMembers.map(p => _b2LineupCard(p, col, true, iconUrl)).join('');
+  const rosterCardsHtml = rosterMembers.map(p => _b2LineupCard(p, col, false, iconUrl)).join('');
+
+  const dateTxt = new Date().toISOString().slice(0,10).replace(/-/g,'.');
+
+  return `
+    <div data-b2lineup="${univName.replace(/"/g,'&quot;')}" style="border-radius:24px;overflow:hidden;background:#0b1220;box-shadow:0 20px 40px rgba(15,23,42,.28)">
+      <div style="padding:26px 26px 20px;position:relative;overflow:hidden;background:linear-gradient(135deg,${col} 0%,${col}cc 65%,#0b1220 130%)">
+        <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.14),transparent 58%);pointer-events:none"></div>
+        ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" aria-hidden="true" style="position:absolute;right:-10px;top:50%;transform:translateY(-50%);height:110%;max-height:120px;opacity:.10;object-fit:contain;pointer-events:none;filter:drop-shadow(0 0 24px ${col})" onerror="this.style.display='none'">`:''}
+        <div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0">
+            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:54px;height:54px;object-fit:contain;border-radius:14px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);padding:6px;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.22)" onerror="this.style.display='none'">`:''}
+            <div style="min-width:0">
+              <div style="color:rgba(255,255,255,.64);font-size:11px;font-weight:800;letter-spacing:.10em;text-transform:uppercase">SDC MEMBER LINEUP</div>
+              <div style="color:#fff;font-weight:950;font-size:28px;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 8px rgba(0,0,0,.18)">${univName}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <span style="background:rgba(255,255,255,.16);color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(8px)">총 ${members.length}명</span>
+            <span style="color:rgba(255,255,255,.55);font-size:11px;font-weight:700">${dateTxt}</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;overflow:hidden;background:linear-gradient(180deg,${_b2PastelBg(col,0.26)} 0%,${_b2PastelBg(col,0.18)} 100%);padding:22px 24px 28px">
+        ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55%;max-width:460px;opacity:.07;object-fit:contain;pointer-events:none;z-index:0" onerror="this.style.display='none'">`:''}
+        <div style="position:relative;z-index:1">
+          ${roleCardsHtml ? `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div style="width:3px;height:14px;border-radius:999px;background:${col};flex-shrink:0"></div>
+            <div style="font-size:11px;font-weight:900;color:${col};letter-spacing:.06em;text-transform:uppercase">직급자</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:22px">${roleCardsHtml}</div>
+          <div style="height:1px;background:linear-gradient(90deg,${col}44,transparent);margin-bottom:20px"></div>
+          ` : ''}
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <div style="width:3px;height:14px;border-radius:999px;background:${col}99;flex-shrink:0"></div>
+            <div style="font-size:11px;font-weight:900;color:${col};letter-spacing:.06em;text-transform:uppercase">멤버</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">${rosterCardsHtml}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function _b2LineupView() {
+  const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
+  if (!univList.length) return `<div style="text-align:center;color:var(--text3);padding:40px">등록된 대학이 없습니다</div>`;
+  if (!_b2LineupUniv || !univList.some(u=>u.name===_b2LineupUniv)) _b2LineupUniv = univList[0].name;
+  const col = gc(_b2LineupUniv);
+  return `<div style="max-width:1180px;margin:0 auto">${_b2LineupPoster(_b2LineupUniv, col, false)}</div>`;
+}
+
+async function saveB2LineupImg() {
+  const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
+  if (!_b2LineupUniv || !univList.some(u=>u.name===_b2LineupUniv)) _b2LineupUniv = univList[0] ? univList[0].name : '';
+  if (!_b2LineupUniv) { alert('저장할 대학이 없습니다.'); return; }
+
+  const btn = document.querySelector('[onclick="saveB2LineupImg()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+
+  const CARD_W = 1180;
+  const PAD = 0;
+  const col = gc(_b2LineupUniv);
+
+  const tmpDiv = document.createElement('div');
+  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:${PAD}px;background:#f0f2f5;box-sizing:border-box;width:${CARD_W + PAD * 2}px`;
+  tmpDiv.innerHTML = _b2LineupPoster(_b2LineupUniv, col, true);
+  document.body.appendChild(tmpDiv);
+  tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el => el.remove());
+
+  await new Promise(r => setTimeout(r, 100));
+  injectUnivIcons(tmpDiv);
+
+  const h = tmpDiv.scrollHeight + 8;
+  const w = tmpDiv.scrollWidth;
+  const fname = `대학라인업_${_b2LineupUniv}_` + new Date().toISOString().slice(0,10) + '.png';
+
+  try {
+    if (typeof _captureAndSave !== 'function') throw new Error('이미지 저장 기능을 불러오지 못했습니다.');
+    await _captureAndSave(tmpDiv, w, h, fname);
+  } catch(e) {
+    console.error('[라인업 이미지 저장 실패]', e);
+    alert('❌ 이미지 저장 실패\n\n' + (e.message || '알 수 없는 오류가 발생했습니다.'));
+  }
+  finally {
+    document.body.removeChild(tmpDiv);
+    if (btn) { btn.disabled = false; btn.textContent = '📷 이미지저장'; }
+  }
+}
+
 async function saveB2FreeImg() {
   const btn = document.querySelector('[onclick="saveB2FreeImg()"]');
   if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
@@ -2631,7 +2829,7 @@ function _b2PlayersView() {
       z: 1,
       opacity: 1,
       onLoadJs: `_b2ScheduleImageSwap('${_b2NameEsc}'); if(typeof _b2ApplyImgSettingsToDom==='function'){ _b2ApplyImgSettingsToDom('${_b2NameEsc}', 'primary'); }`,
-      style: `object-fit:${primarySettings.fit || 'cover'};object-position:center center;transform:${_b2GetImgTransform(primarySettings)};filter:brightness(${(primarySettings.brightness || 100) / 100});`
+      style: `object-fit:${primarySettings.fit || 'cover'};object-position:center center;transform:${_b2GetImgTransform(primarySettings)};filter:brightness(${(primarySettings.brightness || 100) / 100});transition:opacity 0.4s ease;`
     })
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(_b2SelectedPlayer.name||'?')[0]}</div>`;
   const _slot2 = _hasMediaUrl(_b2SelectedPlayer.secondProfileFile)
@@ -2729,12 +2927,12 @@ function _b2PlayersView() {
     const wrColor = ws && ws.total>0 ? (ws.w/ws.total>=0.6?'#10b981':ws.w/ws.total>=0.4?'#f59e0b':'#ef4444') : '#94a3b8';
     
     h += `
-      <div class="b2-players-card ${isActive ? 'active' : ''}" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))" style="width:148px;padding:14px;border-radius:18px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(180deg,var(--white),rgba(248,250,252,.98));border:1px solid ${isActive?hexToRgba(playerColor,0.55):'rgba(148,163,184,.14)'};box-shadow:${isActive?'0 10px 24px '+hexToRgba(playerColor,0.24):'0 8px 18px rgba(15,23,42,0.06)'}">
+      <div class="b2-players-card" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))" style="width:148px;padding:14px;border-radius:18px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(180deg,var(--white),rgba(248,250,252,.98));border:1px solid rgba(148,163,184,.14);box-shadow:0 8px 18px rgba(15,23,42,0.06)">
         <div style="position:relative;width:118px;height:118px;flex-shrink:0">
           ${p.photo
-            ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" ${isActive?'fetchpriority="high"':'fetchpriority="auto"'} class="b2-players-thumbnail b2-fit-auto" data-fit-kind="thumb" data-fit-mode="auto" alt="${p.name}" style="width:118px;height:118px;border-radius:14px;object-fit:contain;display:block;border:2px solid ${isActive?hexToRgba(playerColor,0.5):'rgba(226,232,240,.8)'};background:linear-gradient(180deg,#fff,#f8fafc)" onload="_b2ApplyBgAutoSizing(this)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-              <div class="b2-players-thumbnail" style="width:118px;height:118px;border-radius:14px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border};border:2px solid ${isActive?hexToRgba(playerColor,0.5):'rgba(226,232,240,.8)'}">${(p.name||'?')[0]}</div>`
-            : `<div class="b2-players-thumbnail" style="width:118px;height:118px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border};border:2px solid ${isActive?hexToRgba(playerColor,0.5):'rgba(226,232,240,.8)'}">${(p.name||'?')[0]}</div>`
+            ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="auto" class="b2-players-thumbnail b2-fit-auto" data-fit-kind="thumb" data-fit-mode="auto" alt="${p.name}" style="width:118px;height:118px;border-radius:14px;object-fit:contain;display:block;border:2px solid rgba(226,232,240,.8);background:linear-gradient(180deg,#fff,#f8fafc)" onload="_b2ApplyBgAutoSizing(this)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="b2-players-thumbnail" style="width:118px;height:118px;border-radius:14px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border};border:2px solid rgba(226,232,240,.8)">${(p.name||'?')[0]}</div>`
+            : `<div class="b2-players-thumbnail" style="width:118px;height:118px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border};border:2px solid rgba(226,232,240,.8)">${(p.name||'?')[0]}</div>`
           }
           ${p.tier?`<span style="position:absolute;top:6px;left:6px;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;box-shadow:0 8px 16px rgba(15,23,42,.18)">${p.tier}</span>`:''}
           ${ws&&ws.total>0?`<span style="position:absolute;bottom:6px;right:6px;font-size:9px;font-weight:900;padding:3px 6px;border-radius:999px;background:rgba(15,23,42,.78);color:${wrColor};line-height:1.4;backdrop-filter:blur(6px);box-shadow:0 8px 16px rgba(15,23,42,.18)">${ws.w}승 ${ws.l}패</span>`:''}
@@ -2823,7 +3021,7 @@ function _b2UpdateMainDisplay(playerName) {
   const _nameEsc = player.name.replace(/'/g,"\\'");
   const _hasMediaUrl2 = (v)=>!!String(v || '').trim();
   const _slot1 = _hasMediaUrl2(player.photo)
-    ? _b2MainMediaHTML(1, player.photo, { z:1, opacity:1, onLoadJs:`_b2ScheduleImageSwap('${_nameEsc}')`, style:'' })
+    ? _b2MainMediaHTML(1, player.photo, { z:1, opacity:1, onLoadJs:`_b2ScheduleImageSwap('${_nameEsc}')`, style:'transition:opacity 0.4s ease;' })
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);font-size:64px;font-weight:900;color:rgba(255,255,255,0.2)">${(player.name||'?')[0]}</div>`;
   const _slot2 = _hasMediaUrl2(player.secondProfileFile)
     ? _b2MainMediaHTML(2, player.secondProfileFile, { z:2, opacity:0, style:`object-fit:cover;transition:opacity 0.4s ease;` })
@@ -2887,30 +3085,18 @@ function _b2UpdateMainDisplay(playerName) {
     `;
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-1'), primarySettings);
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-2'), secondarySettings);
-    _b2ScheduleImageSwap(player.name);
+    // [FIX] 슬롯1의 onload/onloadedmetadata 속성이 이미 _b2ScheduleImageSwap을 트리거하므로
+    // 여기서 동기적으로 한번 더 호출하면 메타데이터(영상 길이) 로딩 전에 잘못된 타이머가
+    // 먼저 설정되어, GIF/MP4가 끝까지 재생되지 못하고 바로 다음 사진으로 넘어가는 문제가 있었음.
+    // 캐시된 이미지의 경우를 대비해 안전하게 한번만 폴백 호출한다.
+    if (!_hasMediaUrl2(player.photo)) {
+      _b2ScheduleImageSwap(player.name);
+    }
   }
 
   const _selName = String(playerName || '').trim();
   document.querySelectorAll('.b2-players-card').forEach(card => {
     card.classList.remove('active');
-    const cardName = String(card.dataset.playerName || '').trim();
-    const thumbnail = card.querySelector('.b2-players-thumbnail');
-    if (cardName && cardName === _selName) {
-      card.classList.add('active');
-      card.style.borderColor = theme.border;
-      card.style.boxShadow = `0 4px 12px ${theme.glow}`;
-      if (thumbnail) {
-        thumbnail.style.border = `2px solid ${theme.border}`;
-        thumbnail.style.boxShadow = `0 8px 25px ${theme.glow}`;
-      }
-    } else {
-      card.style.borderColor = 'transparent';
-      card.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
-      if (thumbnail) {
-        thumbnail.style.border = '2px solid transparent';
-        thumbnail.style.boxShadow = 'none';
-      }
-    }
   });
 }
 
