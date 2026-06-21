@@ -263,6 +263,14 @@ function buildPlayerDetailHTML(p){
       ? buildPlayerMemoHTML(p)
       : '';
   }
+
+  // ELO 차트는 p.history만이 아니라 개인전/끝장전/대회 등 외부 매치소스까지 합쳐진
+  // _modeHist(통합 기록) 기준으로 그려야 하므로, initPEloChart가 재사용할 수 있게 캐시해둔다.
+  try{
+    window._pEloChartDataCache = window._pEloChartDataCache || {};
+    window._pEloChartDataCache[p.name] = _eloChartPts;
+  }catch(e){}
+
   return `<div class="pd-premium-shell">${h}</div>`;
 }
 

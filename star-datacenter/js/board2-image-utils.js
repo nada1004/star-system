@@ -403,12 +403,16 @@ function _b2ScheduleImageSwap(playerName) {
     }catch(e){}
     return 1000;
   };
-  // 이미지 1장 이하면 전환 없음
+  // 이미지 1장 이하면 전환 없음 — showSlot을 즉시 opacity:1로 (공백 플리커 방지)
   if (imgList.length < 2) {
     const showSlot = (imgList[0] && imgList[0].slot) ? imgList[0].slot : 1;
+    // 먼저 showSlot을 즉시 보이게 한 뒤 나머지를 숨김
+    const _showEl = document.getElementById('b2-main-img-' + showSlot);
+    if (_showEl) _showEl.style.opacity = '1';
     for (let slot = 1; slot <= 5; slot++) {
+      if (slot === showSlot) continue;
       const el = document.getElementById('b2-main-img-' + slot);
-      if (el) el.style.opacity = (slot === showSlot) ? '1' : '0';
+      if (el) el.style.opacity = '0';
     }
     return;
   }

@@ -3,7 +3,11 @@ function initPEloChart(name, year){
   const canvas=document.getElementById('pEloChart');
   const tip=document.getElementById('pEloTip');
   if(!p||!canvas)return;
-  const histAll=[...(p.history||[])].reverse();
+  // 개인전/끝장전/대회 등 외부 매치소스까지 합쳐진 통합 기록(있으면 우선 사용).
+  // 캐시가 없으면(모달이 아직 한 번도 렌더링되지 않은 예외적인 경우) p.history로 폴백.
+  const _cached = (window._pEloChartDataCache && window._pEloChartDataCache[name]);
+  const _src = (Array.isArray(_cached) && _cached.length) ? _cached : (p.history||[]);
+  const histAll=[...(_src||[])].reverse();
   let _eloRc=p.elo||ELO_DEFAULT;
   const _eloRcMap=new Map();
   [...histAll].reverse().forEach((h,i)=>{_eloRcMap.set(i,_eloRc);_eloRc-=(h.eloDelta||0);});
