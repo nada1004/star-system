@@ -4692,7 +4692,8 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
       (Array.isArray(p && p.history)?p.history:[]).forEach(h=>{ if(h && h.result==='승') pw++; else if(h && h.result==='패') pl++; });
       const pg=pw+pl,pwr=pg>0?Math.round(pw/pg*100):null;
       const pc=pwr===null?'#94a3b8':pwr>=60?'#10b981':pwr>=40?'#f59e0b':'#ef4444';
-      bodyHtml += '<div class="b2hm2-pcard" style="background:'+color+'09;border-color:'+color+'28">';
+      const safeNameAttr = escA(p && p.name || '');
+      bodyHtml += '<div class="b2hm2-pcard" style="background:'+color+'09;border-color:'+color+'28" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
       if (safePhoto) {
         bodyHtml += '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'+
           '<div class="b2hm2-pcard-avatar" style="display:none;background:'+color+'22;color:'+color+'">'+escH(initials)+'</div>';
@@ -4779,7 +4780,8 @@ function _b2HeatmapShowAllPopup(uid, univName, color){
       (Array.isArray(p && p.history)?p.history:[]).forEach(h=>{ if(h && h.result==='승') pw++; else if(h && h.result==='패') pl++; });
       const pg=pw+pl,pwr=pg>0?Math.round(pw/pg*100):null;
       const pc=pwr===null?'#94a3b8':pwr>=60?'#10b981':pwr>=40?'#f59e0b':'#ef4444';
-      bodyHtml += '<div class="b2hm2-pcard" style="background:'+pColor+'09;border-color:'+pColor+'28">';
+      const safeNameAttr2 = escA(p && p.name || '');
+      bodyHtml += '<div class="b2hm2-pcard" style="background:'+pColor+'09;border-color:'+pColor+'28" onclick="openPlayerModal(\''+safeNameAttr2.replace(/'/g,"\\'")+'\')">';
       if (safePhoto) {
         bodyHtml += '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'+
           '<div class="b2hm2-pcard-avatar" style="display:none;background:'+pColor+'22;color:'+pColor+'">'+escH(initials)+'</div>';
@@ -6125,6 +6127,8 @@ function _b2WeeklyBriefingView() {
       .b2w2-race-table{display:flex;flex-direction:column;gap:6px}
       .b2w2-race-head,.b2w2-race-row{display:grid;grid-template-columns:minmax(110px,1.4fr) repeat(4,minmax(0,.7fr));align-items:center;gap:8px}
       .b2w2-race-head{padding:0 12px;font-size:10px;font-weight:800;color:#6b6b6b;letter-spacing:.04em;text-transform:uppercase}
+      .b2w2-race-head span{text-align:center}
+      .b2w2-race-head span:first-child{text-align:left}
       .b2w2-race-row{padding:8px 12px;border-radius:0;border:1px solid var(--b2w-rule-soft);background:var(--white)}
       .b2w2-race-cell{display:flex;align-items:center;justify-content:center}
       .b2w2-race-cell-main{justify-content:flex-start;gap:8px}

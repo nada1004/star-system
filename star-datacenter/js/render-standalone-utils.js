@@ -14,7 +14,7 @@ function initPEloChart(name, year){
   const allPts=[];let elo=ELO_DEFAULT;
   histAll.forEach((h,i)=>{
     const _ea = h.eloAfter != null ? h.eloAfter : (_eloRcMap.get(histAll.length-1-i) ?? null);
-    if(_ea!=null) allPts.push({elo:_ea,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});
+    if(_ea!=null){ elo=_ea; allPts.push({elo,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0}); }
     else{elo+=(h.eloDelta||0);allPts.push({elo,date:h.date||'',result:h.result,opp:h.opp||'',delta:h.eloDelta||0});}
   });
   const st = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});

@@ -1251,11 +1251,13 @@ function initEloChart(){
   if(!p||!histAll.length){canvas.style.display='none';return;}
   canvas.style.display='block';
   const hist=[...histAll].sort((a,b)=>(String(a.date||'')).localeCompare(String(b.date||'')));
-  // ELO 재구성: eloAfter 필드 사용
+  // ELO 재구성: eloAfter 필드를 우선 사용하고, 없는 구간은 직전까지 알려진 ELO에서 델타를 누적한다.
+  // (주의) elo 추적 변수를 eloAfter가 있을 때도 동기화해야 함 — 안 그러면 eloAfter가 끊긴 다음 기록부터
+  // ELO_DEFAULT 기준으로 다시 누적되어 그래프가 갑자기 뚝 떨어지거나 튀는 오류가 발생한다.
   const pts=[];let elo=ELO_DEFAULT;
   hist.forEach((h,i)=>{
-    if(h.eloAfter!=null)pts.push({i,elo:h.eloAfter,date:h.date||'',result:h.result,opp:h.opp||'',eloDelta:h.eloDelta||0});
-    else{elo+=(h.eloDelta||0);pts.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||'',eloDelta:h.eloDelta||0});}
+    if(h.eloAfter!=null){ elo=h.eloAfter; pts.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||'',eloDelta:h.eloDelta||0}); }
+    else{ elo+=(h.eloDelta||0); pts.push({i,elo,date:h.date||'',result:h.result,opp:h.opp||'',eloDelta:h.eloDelta||0}); }
   });
   if(!pts.length)return;
   const ctx=canvas.getContext('2d');
