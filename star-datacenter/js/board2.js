@@ -4693,7 +4693,7 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
       const pg=pw+pl,pwr=pg>0?Math.round(pw/pg*100):null;
       const pc=pwr===null?'#94a3b8':pwr>=60?'#10b981':pwr>=40?'#f59e0b':'#ef4444';
       const safeNameAttr = escA(p && p.name || '');
-      bodyHtml += '<div class="b2hm2-pcard" style="background:'+color+'09;border-color:'+color+'28" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
+      bodyHtml += '<div class="b2hm2-pcard" style="background:'+color+'09;border-color:'+color+'28" onclick="_b2HeatmapCloseAll();openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
       if (safePhoto) {
         bodyHtml += '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'+
           '<div class="b2hm2-pcard-avatar" style="display:none;background:'+color+'22;color:'+color+'">'+escH(initials)+'</div>';
@@ -4781,7 +4781,7 @@ function _b2HeatmapShowAllPopup(uid, univName, color){
       const pg=pw+pl,pwr=pg>0?Math.round(pw/pg*100):null;
       const pc=pwr===null?'#94a3b8':pwr>=60?'#10b981':pwr>=40?'#f59e0b':'#ef4444';
       const safeNameAttr2 = escA(p && p.name || '');
-      bodyHtml += '<div class="b2hm2-pcard" style="background:'+pColor+'09;border-color:'+pColor+'28" onclick="openPlayerModal(\''+safeNameAttr2.replace(/'/g,"\\'")+'\')">';
+      bodyHtml += '<div class="b2hm2-pcard" style="background:'+pColor+'09;border-color:'+pColor+'28" onclick="_b2HeatmapCloseAll();openPlayerModal(\''+safeNameAttr2.replace(/'/g,"\\'")+'\')">';
       if (safePhoto) {
         bodyHtml += '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'+
           '<div class="b2hm2-pcard-avatar" style="display:none;background:'+pColor+'22;color:'+pColor+'">'+escH(initials)+'</div>';
