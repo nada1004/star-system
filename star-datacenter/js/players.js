@@ -1633,7 +1633,8 @@ function rTier(C,T){
   }
   let _tierRecByName = null;
   try{
-    const _saveSig = (()=>{ try{ return String(localStorage.getItem('su_last_save_time')||''); }catch(e){ return ''; } })();
+    let _saveSig = '';
+    try{ _saveSig = String(localStorage.getItem('su_last_save_time')||''); }catch(e){}
     const _cacheKey = `${_hasDateFilter?'1':'0'}|${_tierDateFrom}|${_tierDateTo}|${_saveSig}`;
     const _cache = window._tierRecByNameCache || null;
     if(_cache && _cache.ref === _pl && _cache.key === _cacheKey && _cache.map){
@@ -1648,11 +1649,11 @@ function rTier(C,T){
         if(_hasDateFilter){
           for(const h of hist){
             if(!h) continue;
-            const rawDate = h?.date || h?.d || '';
+            const rawDate = h.date || h.d || '';
             if(!_tierInDateRange(rawDate)) continue;
             if(h.result === '승'){ w++; points += 3; }
             else if(h.result === '패'){ l++; points -= 3; }
-            eloDelta += (Number(h?.eloDelta||0) || 0);
+            eloDelta += (Number(h.eloDelta||0) || 0);
             const d = _toIsoTier(rawDate);
             if(d && d > lastD) lastD = d;
           }
@@ -1664,7 +1665,8 @@ function rTier(C,T){
         l = Number(p.loss||0) || 0;
         points = Number(p.points||0) || 0;
         for(const h of hist){
-          const d = _toIsoTier(h?.date || h?.d || '');
+          if(!h) continue;
+          const d = _toIsoTier(h.date || h.d || '');
           if(d && d > lastD) lastD = d;
         }
         const tot = w + l;
@@ -1680,13 +1682,13 @@ function rTier(C,T){
     const name = p && p.name;
     const s = (name && _tierRecByName) ? _tierRecByName[name] : null;
     if(s) return s;
-    const w = Number(p?.win||0) || 0;
-    const l = Number(p?.loss||0) || 0;
+    const w = Number((p && p.win) || 0) || 0;
+    const l = Number((p && p.loss) || 0) || 0;
     const tot = w + l;
     return {
       w, l, tot,
       wr: tot ? Math.round(w/tot*100) : 0,
-      points: Number(p?.points||0) || 0,
+      points: Number((p && p.points) || 0) || 0,
       eloDelta: 0,
       lastD: ''
     };
