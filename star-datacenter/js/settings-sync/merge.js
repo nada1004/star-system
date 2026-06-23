@@ -80,11 +80,10 @@
         }
       };
 
-      let ai = { proxyUrl: '', apiKey: '', updatedAt: null };
+      let ai = { proxyUrl: '', updatedAt: null };
       try{
         const a = JSON.parse(localStorage.getItem(LS.aiCfg) || '{}');
         ai.proxyUrl = String(a.proxyUrl || '');
-        ai.apiKey = String(a.apiKey || '');
         ai.updatedAt = a.updatedAt || null;
       }catch(e){}
       const prefs = {
@@ -113,9 +112,10 @@
 
       try{
         if(state.ai && typeof state.ai === 'object'){
+          const cur = JSON.parse(localStorage.getItem(LS.aiCfg) || '{}');
           const ai = {
+            ...cur,
             proxyUrl: String(state.ai.proxyUrl || ''),
-            apiKey: String(state.ai.apiKey || ''),
             updatedAt: state.ai.updatedAt || null,
           };
           localStorage.setItem(LS.aiCfg, JSON.stringify(ai));

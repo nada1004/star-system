@@ -28,7 +28,20 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
     }
   }catch(e){}
   const arr = Array.isArray(window.players) ? window.players : [];
-  const basePlayer = arr.find(x=>String(x&&x.name||'').trim()===String(playerName||'').trim()) || null;
+  if(!window._playerByNameCache) window._playerByNameCache = { ref:null, len:-1, map:null };
+  const _cache = window._playerByNameCache;
+  if(_cache.ref !== arr || _cache.len !== arr.length || !_cache.map){
+    const m = new Map();
+    arr.forEach(x=>{
+      const nm = String(x&&x.name||'').trim();
+      if(nm) m.set(nm, x);
+    });
+    _cache.ref = arr;
+    _cache.len = arr.length;
+    _cache.map = m;
+  }
+  const _key = String(playerName||'').trim();
+  const basePlayer = (_key && _cache.map && _cache.map.get) ? (_cache.map.get(_key) || null) : null;
   const photoMap = (window.playerPhotos && typeof window.playerPhotos==='object') ? window.playerPhotos : {};
   const p = basePlayer ? ({...basePlayer, ...((!basePlayer.photo && photoMap[basePlayer.name]) ? {photo:photoMap[basePlayer.name]} : {})}) : null;
   const hasBorder=extraStyle.includes('border');

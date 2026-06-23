@@ -406,25 +406,7 @@ window.cfgSaveAiApiKey = async function(){
       window.SettingsStore.setAiCfg({ apiKey: key });
       // 입력칸은 즉시 비움(노출 최소화)
       try{ if(inp) inp.value=''; }catch(e){}
-      try{
-        const c = window.SettingsStore.cfg();
-        if(c && c.enabled){
-          await window.SettingsStore.push('ai'); // 토큰 필요
-          if(st) st.textContent='✅ 키 저장 + 다른 기기 반영 완료';
-          return;
-        }
-      }catch(e){
-        // push 실패면 로컬 저장은 성공. (대부분 토큰 없음)
-      }
-      // enabled인데 push 실패한 경우(토큰 없음 등) 메시지 보강
-      try{
-        const c2 = window.SettingsStore.cfg();
-        if(c2 && c2.enabled){
-          if(st) st.textContent='⚠️ 키는 이 기기에 저장됨. 다른 기기 반영은 실패했습니다. (GitHub 토큰 필요)';
-          return;
-        }
-      }catch(e){}
-      if(st) st.textContent='✅ 키 저장 완료 (보안상 입력칸은 비워집니다)';
+      if(st) st.textContent='✅ 키 저장 완료 (동기화 제외: 이 기기에만 저장됨)';
     }else{
       const cur = JSON.parse(localStorage.getItem('su_ai_cfg')||'{}');
       const next={ ...cur, apiKey:key, updatedAt:new Date().toISOString() };
@@ -441,18 +423,12 @@ window.cfgClearAiApiKey = async function(){
   try{
     if(window.SettingsStore && typeof window.SettingsStore.setAiCfg==='function'){
       window.SettingsStore.setAiCfg({ apiKey: '' });
-      try{
-        const c = window.SettingsStore.cfg();
-        if(c && c.enabled){
-          await window.SettingsStore.push('ai');
-        }
-      }catch(e){}
     }else{
       const cur = JSON.parse(localStorage.getItem('su_ai_cfg')||'{}');
       const next={ ...cur, apiKey:'', updatedAt:new Date().toISOString() };
       localStorage.setItem('su_ai_cfg', JSON.stringify(next));
     }
-    if(st) st.textContent='✅ 키 삭제됨';
+    if(st) st.textContent='✅ 키 삭제됨 (동기화 제외)';
   }catch(e){
     if(st) st.textContent='❌ 실패: '+(e.message||e);
   }

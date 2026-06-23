@@ -51,6 +51,8 @@ function _b2Chip(p, accentCol) {
 
 function _b2Avatar(p, col, size) {
   const raceShort = {'T':'T','Z':'Z','P':'P','N':'?'}[p.race||'N'] || '?';
+  const _escAttr = (typeof window.escAttr === 'function') ? window.escAttr : (s)=>String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const _escJS = (typeof window.escJS === 'function') ? window.escJS : (s)=>String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
   const base = size || 28;
   let mult = 1;
   try{
@@ -63,12 +65,16 @@ function _b2Avatar(p, col, size) {
   const badgeSize = Math.round(s * 0.38);
   const _rawIcon = getStatusIcon(p.name);
   const statusHtml = getStatusIconHTML(p.name);
+  const _safeColAttr = _escAttr(col);
+  const _safeColJs = _escJS(col);
+  const _safeRaceJs = _escJS(raceShort);
+  const _safeNameJs = _escJS(p && p.name ? p.name : '');
   const r = s / 2, br = badgeSize / 2;
   const _bTop   = Math.round(r * 0.134 - br);
   const _bRight = Math.round(r * 0.5   - br);
   const _isImgIcon = _rawIcon && (typeof window._siIsImg === 'function' ? window._siIsImg(_rawIcon) : false);
   const _badgeInner = _isImgIcon
-    ? `<img src="${_rawIcon}" crossorigin="anonymous" style="width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;object-fit:cover;opacity:.82" onerror="this.style.display='none';console.warn('[현황판] 상태 아이콘 로드 실패:', this.src)">`
+    ? `<img src="${_escAttr(_rawIcon)}" crossorigin="anonymous" style="width:${badgeSize}px;height:${badgeSize}px;border-radius:50%;object-fit:cover;opacity:.82" onerror="this.style.display='none';console.warn('[현황판] 상태 아이콘 로드 실패:', this.src)">`
     : statusHtml.replace(/margin-left:[^;]+;/g,'').replace(/font-size:[^;]+;/g,'');
   const _badgeBg = _isImgIcon ? 'rgba(255,255,255,.72)' : 'transparent';
   const badge = statusHtml
@@ -76,11 +82,11 @@ function _b2Avatar(p, col, size) {
     : '';
   if (p.photo) {
     return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
-      <img src="${toHttpsUrl(p.photo)}" crossorigin="anonymous" loading="lazy" decoding="async" fetchpriority="low" data-b2-photo="1" style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,6px);object-fit:cover;flex-shrink:0;border:2px solid ${col}88" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${p.name||''}');this.parentNode.innerHTML=_b2AvatarFallback('${raceShort}','${col}',${s})">
+      <img src="${_escAttr(toHttpsUrl(p.photo))}" crossorigin="anonymous" loading="lazy" decoding="async" fetchpriority="low" data-b2-photo="1" style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,6px);object-fit:cover;flex-shrink:0;border:2px solid ${_safeColAttr}88" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${_safeNameJs}');this.parentNode.innerHTML=_b2AvatarFallback('${_safeRaceJs}','${_safeColJs}',${s})">
       ${badge}
     </span>`;
   }
-  return `<span style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,6px);background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88;position:relative">${raceShort}${badge}</span>`;
+  return `<span style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,6px);background:${_safeColAttr};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${_safeColAttr}88;position:relative">${raceShort}${badge}</span>`;
 }
 
 function _b2AvatarFallback(letter, col, size) {

@@ -1631,50 +1631,64 @@ function rTier(C,T){
     if(_tierToN && n > _tierToN) return false;
     return true;
   }
-  const _tierPeriodStats = {};
-  _pl.forEach(p=>{
-    const hist = (Array.isArray(p.history) ? p.history : []).filter(h=>_tierInDateRange(h?.date || h?.d || ''));
-    const w = hist.filter(h=>h && h.result==='승').length;
-    const l = hist.filter(h=>h && h.result==='패').length;
-    const pointDelta = hist.reduce((sum,h)=>{
-      if(!h) return sum;
-      if(h.result==='승') return sum + 3;
-      if(h.result==='패') return sum - 3;
-      return sum;
-    }, 0);
-    const eloDelta = hist.reduce((sum,h)=>sum + (Number(h?.eloDelta||0) || 0), 0);
-    const lastD = hist.reduce((mx,h)=>{
-      const d = _toIsoTier(h?.date || h?.d || '');
-      return d && d > mx ? d : mx;
-    },'');
-    _tierPeriodStats[p.name] = { w, l, total:w+l, pointDelta, eloDelta, lastD };
-  });
-  function _tierWL(p){
-    if(_hasDateFilter){
-      const s = _tierPeriodStats[p.name] || { w:0, l:0, total:0, pointDelta:0, eloDelta:0, lastD:'' };
-      return {
-        w: s.w || 0,
-        l: s.l || 0,
-        tot: s.total || 0,
-        wr: s.total ? Math.round((s.w||0)/s.total*100) : 0,
-        points: Number(s.pointDelta||0) || 0,
-        eloDelta: Number(s.eloDelta||0) || 0,
-        lastD: s.lastD || ''
-      };
+  let _tierRecByName = null;
+  try{
+    const _saveSig = (()=>{ try{ return String(localStorage.getItem('su_last_save_time')||''); }catch(e){ return ''; } })();
+    const _cacheKey = `${_hasDateFilter?'1':'0'}|${_tierDateFrom}|${_tierDateTo}|${_saveSig}`;
+    const _cache = window._tierRecByNameCache || null;
+    if(_cache && _cache.ref === _pl && _cache.key === _cacheKey && _cache.map){
+      _tierRecByName = _cache.map;
+    }else{
+      const m = {};
+      _pl.forEach(p=>{
+        const name = p && p.name;
+        if(!name) return;
+        const hist = Array.isArray(p.history) ? p.history : [];
+        let w = 0, l = 0, points = 0, eloDelta = 0, lastD = '';
+        if(_hasDateFilter){
+          for(const h of hist){
+            if(!h) continue;
+            const rawDate = h?.date || h?.d || '';
+            if(!_tierInDateRange(rawDate)) continue;
+            if(h.result === '승'){ w++; points += 3; }
+            else if(h.result === '패'){ l++; points -= 3; }
+            eloDelta += (Number(h?.eloDelta||0) || 0);
+            const d = _toIsoTier(rawDate);
+            if(d && d > lastD) lastD = d;
+          }
+          const tot = w + l;
+          m[name] = { w, l, tot, wr: tot ? Math.round(w/tot*100) : 0, points, eloDelta, lastD };
+          return;
+        }
+        w = Number(p.win||0) || 0;
+        l = Number(p.loss||0) || 0;
+        points = Number(p.points||0) || 0;
+        for(const h of hist){
+          const d = _toIsoTier(h?.date || h?.d || '');
+          if(d && d > lastD) lastD = d;
+        }
+        const tot = w + l;
+        m[name] = { w, l, tot, wr: tot ? Math.round(w/tot*100) : 0, points, eloDelta: 0, lastD };
+      });
+      _tierRecByName = m;
+      window._tierRecByNameCache = { ref:_pl, key:_cacheKey, map:m };
     }
-    const w = Number(p.win||0);
-    const l = Number(p.loss||0);
+  }catch(e){
+    _tierRecByName = {};
+  }
+  function _tierWL(p){
+    const name = p && p.name;
+    const s = (name && _tierRecByName) ? _tierRecByName[name] : null;
+    if(s) return s;
+    const w = Number(p?.win||0) || 0;
+    const l = Number(p?.loss||0) || 0;
     const tot = w + l;
-    const lastD = (Array.isArray(p.history) ? p.history : []).reduce((mx,h)=>{
-      const d = _toIsoTier(h?.date || h?.d || '');
-      return d && d > mx ? d : mx;
-    },'');
     return {
       w, l, tot,
       wr: tot ? Math.round(w/tot*100) : 0,
-      points: Number(p.points||0),
+      points: Number(p?.points||0) || 0,
       eloDelta: 0,
-      lastD
+      lastD: ''
     };
   }
   const _hasTypeFilter=window._tierTypeSet&&window._tierTypeSet.size>0;
@@ -2187,6 +2201,42 @@ function rTier(C,T){
   const _today2=new Date().toISOString().slice(0,10);
   const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
   const _7ago2=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
+  const _univColorCache = new Map();
+  const _univBgCache = new Map();
+  const _tierBadgeCache = new Map();
+  const _statusIconCache = new Map();
+  const _getUnivColor = (univ)=>{
+    const k = String(univ||'');
+    if(_univColorCache.has(k)) return _univColorCache.get(k);
+    let c = '#64748b';
+    try{ c = gc(k) || '#64748b'; }catch(e){}
+    _univColorCache.set(k, c);
+    return c;
+  };
+  const _getUnivBg = (univ, alpha)=>{
+    const k = `${String(univ||'')}|${alpha}`;
+    if(_univBgCache.has(k)) return _univBgCache.get(k);
+    let v = 'transparent';
+    try{ v = gcHex8(univ, alpha); }catch(e){}
+    _univBgCache.set(k, v);
+    return v;
+  };
+  const _getTierBadge = (tier)=>{
+    const k = String(tier||'');
+    if(_tierBadgeCache.has(k)) return _tierBadgeCache.get(k);
+    let v = '';
+    try{ v = getTierBadge(tier); }catch(e){ v = ''; }
+    _tierBadgeCache.set(k, v);
+    return v;
+  };
+  const _getStatusIcon = (name)=>{
+    const k = String(name||'');
+    if(_statusIconCache.has(k)) return _statusIconCache.get(k);
+    let v = '';
+    try{ v = getStatusIconHTML(k); }catch(e){ v = ''; }
+    _statusIconCache.set(k, v);
+    return v;
+  };
   const _canGoHist = (()=>{
     const pick = hasTypeSet && window._tierTypeSet.size===1 ? [...window._tierTypeSet][0] : (!hasTypeSet ? tierRankMode : '');
     return pick && pick.endsWith('_win') || pick && pick.endsWith('_loss');
@@ -2227,8 +2277,28 @@ function rTier(C,T){
     if(_lastD>=_30ago2) return`<span class="tier-act-dot warm" title="30일 이내 활동">WARM</span>`;
     return '<span class="tier-act-dot cool" title="최근 활동 적음">REST</span>';
   }
+
+  const _univIconUrlCache = (()=>{
+    const m = new Map();
+    try{
+      if(typeof UNIV_ICONS!=='undefined' && UNIV_ICONS){
+        for(const k in UNIV_ICONS){
+          if(!k) continue;
+          const v = UNIV_ICONS[k];
+          if(v) m.set(k, v);
+        }
+      }
+    }catch(e){}
+    try{
+      (typeof univCfg!=='undefined' && Array.isArray(univCfg) ? univCfg : []).forEach(u=>{
+        if(!u || !u.name || !u.icon) return;
+        if(!m.has(u.name)) m.set(u.name, u.icon);
+      });
+    }catch(e){}
+    return m;
+  })();
   function _getUnivIconHTML(p){
-    const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
+    const url=_univIconUrlCache.get(p.univ)||'';
     return url?`<img src="${toHttpsUrl(url)}" style="width:22px;height:22px;object-fit:contain;border-radius:var(--su_univ_logo_radius,6px);flex-shrink:0" onerror="this.style.display='none'">`:``; 
   }
 
@@ -2259,7 +2329,7 @@ function rTier(C,T){
       ${_li?`<th class="no-export col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">관리</th>`:''}
     </tr></thead><tbody>`;
   list.forEach((p,i)=>{
-    const rec=_tierWL(p); const col=gc(p.univ);const tot=rec.tot;const wr=rec.wr;
+    const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
     let rnkHTML;
     if(i===0) rnkHTML=`<span class="tier-rank-chip gold">1등</span>`;
     else if(i===1) rnkHTML=`<span class="tier-rank-chip silver">2등</span>`;
@@ -2275,9 +2345,9 @@ function rTier(C,T){
     const _clickHist = (_canGoHist && _modePick) ? `onclick="tierRankGoHist('${_modePick}','${_pSafe}')"` : '';
     const _actHTML=_getActHTML(p);
     const _elo = (p.elo||ELO_DEFAULT);
-    h+=`<tr class="${i===0?'top1':i===1?'top2':i===2?'top3':''}" style="border-left:3px solid ${col};background:${gcHex8(p.univ,.06)}">
+    h+=`<tr class="${i===0?'top1':i===1?'top2':i===2?'top3':''}" style="border-left:3px solid ${col};background:${_getUnivBg(p.univ,.06)}">
       <td style="text-align:center;white-space:nowrap;padding:${_pad}">${rnkHTML}</td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad}">${getTierBadge(p.tier)}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad}">${_getTierBadge(p.tier)}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad}">
         <span class="ubadge tier-univ-badge clickable-univ" data-icon-done="1"
           style="background:${col};font-size:${_isMb?11:13}px;max-width:${_isMb?90:120}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
@@ -2289,7 +2359,7 @@ function rTier(C,T){
         <span style="display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:${_isMb?170:260}px">
           ${getPlayerPhotoHTML(p.name,_isMb?'34px':'40px')}
           <span class="clickable-name" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>
-          <span style="flex-shrink:0">${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
+          <span style="flex-shrink:0">${genderIcon(p.gender)}${_getStatusIcon(p.name)}</span>
         </span>
       </td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--score-win)">${rec.w}</td>
@@ -2310,7 +2380,7 @@ function rTier(C,T){
   else if(_vm==='card'){
   h=`<div class="tier-content-card"><div class="tier-card-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isMb?'140px':'180px'},1fr));gap:${_isMb?'8px':'12px'}">`;
   list.forEach((p,i)=>{
-    const rec=_tierWL(p); const col=gc(p.univ)||'#64748b'; const tot=rec.tot; const wr=rec.wr;
+    const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
     const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
     const _pAttr=(typeof escAttr==='function')
       ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
@@ -2328,7 +2398,7 @@ function rTier(C,T){
         <span class="ubadge tier-univ-badge" data-icon-done="1" style="background:${col};font-size:10px;padding:2px 8px">${univIconHTML}${p.univ}</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;justify-content:center">
-        ${getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:10px">${p.race}</span>
+        ${_getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:10px">${p.race}</span>
       </div>
       <div class="tier-rank-statgrid">
         <div class="tier-rank-stat"><div style="font-size:10px;color:var(--gray-l)">승</div><div style="font-weight:900;font-size:13px;color:var(--score-win)">${rec.w}</div></div>
@@ -2353,7 +2423,7 @@ function rTier(C,T){
   h=`<div class="tier-content-card"><div class="tier-podium" style="gap:${_isMb?'6px':'16px'}">`;
   podOrder.forEach((pi,ci)=>{
     if(!top3[pi]) return;
-    const p=top3[pi]; const col=gc(p.univ)||'#64748b';
+    const p=top3[pi]; const col=_getUnivColor(p.univ);
     const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
     const _pAttr=(typeof escAttr==='function')
       ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
@@ -2363,7 +2433,7 @@ function rTier(C,T){
       <div style="font-size:${pi===0?(_isMb?'24px':'28px'):(_isMb?'20px':'24px')}">${podLabels[ci]}</div>
       ${getPlayerPhotoHTML(p.name,pi===0?(_isMb?'56px':'70px'):(_isMb?'44px':'56px'))}
       <div style="font-weight:900;font-size:${pi===0?12:11}px;text-align:center;max-width:${_isMb?100:130}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
-      <div style="display:flex;align-items:center;gap:4px">${getTierBadge(p.tier)}</div>
+      <div style="display:flex;align-items:center;gap:4px">${_getTierBadge(p.tier)}</div>
       <div class="tier-univ-badge" style="background:${col};font-size:10px;max-width:${_isMb?90:110}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</div>
       <div class="tier-podium-stat" style="color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'} · ${rec.w}W ${rec.l}L</div>
       <div class="tier-podium-base" style="height:${podH[ci]}px">
@@ -2376,17 +2446,17 @@ function rTier(C,T){
   if(rest.length){
     h+=`<div class="tier-podium-rest">`;
     rest.forEach((p,i)=>{
-      const ri=i+3; const col=gc(p.univ)||'#64748b';
+      const ri=i+3; const col=_getUnivColor(p.univ);
       const rec=_tierWL(p); const tot=rec.tot; const wr=rec.wr;
       const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
       const _pAttr=(typeof escAttr==='function')
         ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-      h+=`<div class="tier-podium-rest-item" data-tp-action="open-player" data-tp-player="${_pAttr}" style="border-left:3px solid ${col};background:${gcHex8(p.univ,.04)}">
+      h+=`<div class="tier-podium-rest-item" data-tp-action="open-player" data-tp-player="${_pAttr}" style="border-left:3px solid ${col};background:${_getUnivBg(p.univ,.04)}">
         <span style="font-weight:900;font-size:12px;color:var(--text3);min-width:28px;text-align:center">${ri+1}위</span>
         ${getPlayerPhotoHTML(p.name,'32px')}
         <span style="font-weight:700;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span>
-        ${getTierBadge(p.tier)}
+        ${_getTierBadge(p.tier)}
         <span class="ubadge tier-univ-badge" style="background:${col};font-size:10px;padding:1px 7px">${p.univ}</span>
         <span style="font-size:11px;font-weight:800;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'};min-width:36px;text-align:right">${tot?wr+'%':'-'}</span>
       </div>`;
@@ -2402,7 +2472,7 @@ function rTier(C,T){
   else if(_vm==='compact'){
   h=`<div class="tier-content-card"><div class="tier-compact-list">`;
   list.forEach((p,i)=>{
-    const rec=_tierWL(p); const col=gc(p.univ)||'#64748b'; const tot=rec.tot; const wr=rec.wr;
+    const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
     const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
     const _pAttr=(typeof escAttr==='function')
       ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
@@ -2414,7 +2484,7 @@ function rTier(C,T){
       <span style="min-width:24px;text-align:center;font-size:13px">${rnkStr}</span>
       ${getPlayerPhotoHTML(p.name,'26px')}
       <span style="font-weight:700;font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}${genderIcon(p.gender)}</span>
-      ${getTierBadge(p.tier)}
+      ${_getTierBadge(p.tier)}
       <span class="rbadge r${p.race}" style="font-size:9px">${p.race}</span>
       <span class="ubadge tier-univ-badge" style="background:${col};font-size:9px;padding:1px 6px;max-width:${_isMb?60:80}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</span>
       <span style="font-size:11px;min-width:${_isMb?0:70}px;text-align:right;${_isMb?'display:none':''}"><span style="color:var(--score-win);font-weight:900">${rec.w}</span><span style="color:var(--gray-l)">W</span><span style="color:var(--score-lose);font-weight:900">${rec.l}</span><span style="color:var(--gray-l)">L</span></span>
@@ -2448,7 +2518,7 @@ function rTier(C,T){
       </div>
       <div class="tier-group-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isMb?'130px':'160px'},1fr));gap:${_isMb?'6px':'8px'}">`;
     grp.players.forEach(({p,i})=>{
-      const rec=_tierWL(p); const col=gc(p.univ)||'#64748b'; const tot=rec.tot; const wr=rec.wr;
+      const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
       const _pAttr=(typeof escAttr==='function')
         ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
