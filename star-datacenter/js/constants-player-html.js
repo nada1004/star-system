@@ -1,13 +1,29 @@
 /* ══════════════════════════════════════
    Common Player HTML Utilities
 ══════════════════════════════════════ */
+// ── render-cycle localStorage 캐시 (동일 rAF 내 반복 읽기 방지) ──
+let _pphCache = null;
+function _getPPHCache() {
+  if (_pphCache) return _pphCache;
+  try {
+    const scale = Math.max(0.7, Math.min(1.6, parseFloat(localStorage.getItem('su_avatar_scale')||'1')||1));
+    const fit = (localStorage.getItem('su_avatar_fit')||'contain').trim();
+    const recFit = (localStorage.getItem('su_rec_avatar_fit')||fit).trim();
+    _pphCache = {
+      scale: isNaN(scale) ? 1 : scale,
+      fit: ['contain','cover'].includes(fit) ? fit : 'contain',
+      recFit: ['contain','cover'].includes(recFit) ? recFit : 'contain'
+    };
+  } catch(e) { _pphCache = { scale:1, fit:'contain', recFit:'contain' }; }
+  // 次の render() 呼び出し時にキャッシュをクリア
+  requestAnimationFrame(() => { _pphCache = null; });
+  return _pphCache;
+}
+
 function getPlayerPhotoHTML(playerName, size, extraStyle){
   size=size||'32px'; extraStyle=extraStyle||'';
-  let _scale=1;
-  try{
-    const v=parseFloat(localStorage.getItem('su_avatar_scale')||'1');
-    if(!isNaN(v)) _scale=Math.max(0.7, Math.min(1.6, v));
-  }catch(e){}
+  const _pph = _getPPHCache();
+  let _scale = _pph.scale;
   try{
     const m=String(size).match(/^(\d+(?:\.\d+)?)px$/);
     if(m && _scale!==1){
@@ -67,10 +83,9 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
       if(ctx==='compModal' || ctx==='histModal'){
         fit = getMatchDetailAvatarSetting('fit');
       } else if(ctx==='recCard'){
-        fit = (localStorage.getItem('su_rec_avatar_fit') || localStorage.getItem('su_avatar_fit') || 'contain').trim();
-        if(!['contain','cover'].includes(fit)) fit='contain';
+        fit = _pph.recFit;
       } else {
-        fit = (localStorage.getItem('su_avatar_fit') || 'contain').trim();
+        fit = _pph.fit;
       }
       if(!['contain','cover'].includes(fit)) fit='contain';
     } else {

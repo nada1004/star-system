@@ -1,0 +1,247 @@
+/* ══════════════════════════════════════════════════════════════
+   스타대학 데이터 센터 — 디자인 개선 패치
+   개선 항목:
+   1. body/앱 배경 통일 (흰 배경에 앱이 공중에 뜨는 느낌 제거)
+   2. #actionBar — 인라인 스타일 → CSS 정의, sticky 고정, 시각 개선
+   3. 모달 .mbox — 세로 중앙 정렬 개선 (flex 기반)
+   4. .tab hover — 그림자 과함 완화, 전환 부드럽게
+   5. 헤더 검색바 height 일관성
+   6. 모바일: exportHint 줄바꿈 없이 숨김
+   7. 다크 모드: actionBar 중복 룰 정리
+   8. .fstrip (관리자 등록 바) 시각 강조
+   9. 탭 영역 상단 여백/하단 여백 미세 조정
+   10. 버튼 focus-visible 링 색상 통일
+   ══════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════
+   1. body / 앱 배경 통일
+   ════════════════════════════════════
+   기존: body {background: #fff; padding: 16px;}
+   → PC에서 .app 카드가 흰 배경 위에 떠서 경계 불명확
+   → 배경을 --bg 변수(연한 슬레이트)와 맞추고, 앱 shadow 강화
+*/
+body:not(.dark) {
+  background: var(--bg, #f1f5f9) !important;
+}
+
+/* 앱 컨테이너: 배경이 생겼으니 shadow 조금 강조 */
+.app {
+  box-shadow: 0 4px 6px rgba(0,0,0,.04), 0 12px 40px rgba(15,23,42,.09) !important;
+}
+
+/* ════════════════════════════════════
+   2. #actionBar — 하단 액션 바
+   ════════════════════════════════════
+   기존: 인라인 style="..." 로 정의, 시각적 구분 약함
+   → CSS로 이관, 유리(glass) 느낌, sticky로 스크롤 시 고정
+*/
+#actionBar {
+  /* 인라인 style 오버라이드 */
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  padding: 10px 18px !important;
+
+  /* 디자인 개선 */
+  background: rgba(248,250,252,.96) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-top: 1px solid var(--border, #e2e8f0) !important;
+  box-shadow: 0 -4px 20px rgba(15,23,42,.06) !important;
+
+  /* sticky 고정 */
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: var(--z-sticky, 920) !important;
+}
+
+/* exportHint: 모바일에서 공간 부족 시 숨김 */
+#exportHint {
+  font-size: 12px !important;
+  color: var(--gray-l) !important;
+  margin-left: auto !important; /* 오른쪽 정렬 */
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+@media (max-width: 600px) {
+  #exportHint {
+    display: none !important;
+  }
+  #actionBar {
+    padding: 8px 12px !important;
+    gap: 6px !important;
+  }
+}
+
+/* 다크 모드 actionBar — 중복 룰 정리 (기존 2개 중복 → 1개로) */
+body.dark #actionBar {
+  background: rgba(22,32,50,.97) !important;
+  border-color: #2d3f55 !important;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.22) !important;
+}
+
+/* ════════════════════════════════════
+   3. 모달 .mbox — 세로 중앙 정렬
+   ════════════════════════════════════
+   기존: margin: 4% auto → 뷰포트 높이에 따라 중앙에서 벗어남
+   → 모달을 flex 컨테이너로 바꿔 진짜 중앙 정렬
+*/
+.modal {
+  display: none;
+  position: fixed !important;
+  z-index: var(--z-modal) !important;
+  inset: 0 !important;
+  background: rgba(15,23,42,.5) !important;
+  backdrop-filter: blur(4px) !important;
+  /* flex로 중앙 정렬 */
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  box-sizing: border-box !important;
+}
+
+/* 모달이 display:block으로 열릴 때 flex 적용 */
+.modal[style*="display:block"],
+.modal[style*="display: block"],
+.modal[style*="display:flex"],
+.modal[style*="display: flex"] {
+  display: flex !important;
+}
+
+.mbox {
+  /* margin: 4% auto 제거 → flex 부모가 중앙 정렬 */
+  margin: 0 !important;
+  max-height: calc(100vh - 32px) !important;
+  overflow-y: auto !important;
+}
+
+/* 예외: 이미 flex 중앙 정렬된 모달들은 그대로 */
+.modal--matchdetail {
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* ════════════════════════════════════
+   4. .tab hover — 그림자 과함 완화
+   ════════════════════════════════════
+   기존: box-shadow: 0 10px 22px rgba(37,99,235,.10) → 너무 강함
+   → 절반으로 줄이고 translateY 제거 (탭이 '뜨는' 느낌 방지)
+*/
+.tab:hover {
+  background: linear-gradient(180deg, #ffffff, #eef4ff) !important;
+  border-color: rgba(37,99,235,.18) !important;
+  color: var(--blue) !important;
+  box-shadow: 0 4px 12px rgba(37,99,235,.08) !important;
+  /* transform 제거: 탭이 위로 뜨면 레이아웃 불안정 */
+  transform: none !important;
+}
+
+/* 활성 탭 그림자도 약간 줄임 */
+.tab.on {
+  box-shadow: 0 8px 20px rgba(37,99,235,.20) !important;
+}
+
+/* ════════════════════════════════════
+   5. 헤더 검색바 height 일관성
+   ════════════════════════════════════
+   기존: height:36px (globalSearch) vs hdr 버튼들 40px min-height
+   → 36px로 통일 (버튼들도 36px로)
+*/
+@media (min-width: 769px) {
+  .hdr-right {
+    min-height: 36px !important;
+  }
+  #hdrBgmBtn,
+  #hdrSoopBtn {
+    height: 36px !important;
+  }
+}
+
+/* 헤더 검색 드롭다운: 위치를 헤더 높이 기반으로 */
+#globalSearchDrop {
+  top: calc(100% + 8px) !important;
+}
+
+/* ════════════════════════════════════
+   6. .fstrip (관리자 등록 바) 시각 강조
+   ════════════════════════════════════
+   기존: 일반 surface 배경, 구분 없음
+   → 연한 파란 tint + 좌측 accent 라인으로 관리자 영역임을 명시
+*/
+.fstrip {
+  border-left: 3px solid var(--blue, #2563eb) !important;
+  background: linear-gradient(90deg, rgba(37,99,235,.04), var(--surface)) !important;
+}
+
+body.dark .fstrip {
+  background: linear-gradient(90deg, rgba(59,130,246,.08), #162032) !important;
+  border-left-color: #3b82f6 !important;
+}
+
+/* ════════════════════════════════════
+   7. 탭 영역 마진/패딩 미세 조정
+   ════════════════════════════════════
+   기존: tabs-scroll-wrap에 box-shadow만, 위아래 여백 없음
+   → 헤더와 컨텐츠 사이 호흡 추가
+*/
+.tabs-scroll-wrap {
+  margin: 10px 18px !important;
+}
+
+body.af-on .tabs-scroll-wrap {
+  margin: calc(var(--af-gap)) var(--af-main-pad) !important;
+}
+
+@media (max-width: 768px) {
+  .tabs-scroll-wrap {
+    margin: 6px 8px !important;
+  }
+}
+
+/* ════════════════════════════════════
+   8. 버튼 focus-visible 링 색상 통일
+   ════════════════════════════════════
+   기존: .btn:focus-visible → blue, 다른 요소 불일치
+*/
+:focus-visible {
+  outline: 2px solid var(--blue, #2563eb) !important;
+  outline-offset: 2px !important;
+}
+/* 헤더 버튼은 흰색 outline이 더 잘 보임 */
+.hdr :focus-visible {
+  outline-color: rgba(255,255,255,.8) !important;
+}
+
+/* ════════════════════════════════════
+   9. 다크모드: 배경 통일
+   ════════════════════════════════════
+*/
+body.dark:not(.design-v2) {
+  background: #0f172a !important;
+}
+body.dark .app {
+  box-shadow: 0 4px 6px rgba(0,0,0,.2), 0 12px 40px rgba(0,0,0,.3) !important;
+}
+
+/* ════════════════════════════════════
+   10. 카드 hover: translateY 진동 제거
+   ════════════════════════════════════
+   기존 ui-improvements.css의 여러 카드에 translateY(-3px)/(-4px) hover
+   → 리스트가 길면 스크롤 중 카드가 튀는 느낌 발생
+   → translateY 줄이기
+*/
+.grp-match-card:hover {
+  transform: translateY(-1px) !important;
+}
+.grp-match-card.match-card-v3:hover {
+  transform: translateY(-2px) !important;
+}
+.rec-summary:hover,
+.rec-card:hover,
+.mb-card:hover,
+.tc-card:hover {
+  transform: translateY(-1px) !important;
+}

@@ -11,6 +11,7 @@
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
 <link rel="stylesheet" href="css/style.css?v=20260521-ui21"><!-- /* [Z-IDX] */ -->
 <link rel="stylesheet" href="css/ui-improvements.css?v=20260521-v29">
+<link rel="stylesheet" href="css/design-improvements.css?v=20260626-v1">
 </head>
 <body>
 
@@ -177,7 +178,7 @@
 
 <!-- 하단 액션 버튼 바 -->
 <input type="file" id="fi" style="display:none" onchange="doFile(this)">
-<div id="actionBar" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--surface);border-top:1px solid var(--border);flex-wrap:wrap;">
+<div id="actionBar">
   <button class="btn btn-b" id="btn-img-save" onclick="if(typeof window.saveCurrentView === 'function') window.saveCurrentView(); else alert('이미지 저장 기능 로딩 중입니다. 잠시 후 다시 시도해주세요.');" style="display:flex;align-items:center;gap:5px;"><span>📷</span> <span id="btn-img-save-label">이미지저장</span></button>
 
   <button id="btnExportVis" class="btn btn-w" onclick="doExport()" style="display:none;align-items:center;gap:5px;border:1px solid var(--border2);"><span>📤</span> 데이터 내보내기</button>
@@ -608,7 +609,7 @@
 <script defer src="js/config.js"></script>
 <script defer src="js/match-store-idb.js?v=20260504-01"></script>
 <script defer src="js/constants.js?v=20260516-02"></script>
-<script defer src="js/constants-player-html.js?v=20260508-02"></script>
+<script defer src="js/constants-player-html.js?v=20260626-v29v"></script>
 <script defer src="js/unified-settings.js?v=20260607-03"></script>
 <script defer src="js/modal-open.js?v=20260502-02"></script>
 <script defer src="js/modal-drag.js?v=20260504-04"></script>
@@ -672,7 +673,7 @@
 <script defer src="js/render-univ-actions.js?v=20260509-01"></script>
 <script defer src="js/render-player-modal-entry.js?v=20260504-02"></script>
 <script defer src="js/render-match-id-prepare.js?v=20260501-36"></script>
-<script defer src="js/players.js?v=20260515-02"></script>
+<script defer src="js/players.js?v=20260626-v29v"></script>
 <script defer src="js/vs.js?v=20260502-03"></script>
 <script defer src="js/history-action-utils.js?v=20260510-02"></script>
 <script defer src="js/history-external-utils.js?v=20260501-11"></script>
@@ -697,7 +698,7 @@
 <script defer src="js/match-builder-share-legacy.js?v=20260503-01"></script>
 <script defer src="js/match-builder-share-entry.js?v=20260510-04"></script>
 <script defer src="js/search-core.js?v=20260510-03"></script>
-<script defer src="js/search-pro-paste.js?v=20260510-01"></script>
+<script defer src="js/search-pro-paste.js?v=20260626-v29v"></script>
 <script defer src="js/pro-comp-core.js?v=20260523-02"></script>
 <script defer src="js/pro-comp-edit.js?v=20260523-01"></script>
 <script defer src="js/pro-comp-sub.js?v=20260523-01"></script>

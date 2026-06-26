@@ -373,8 +373,15 @@ function rTotal(C,T){
         + (typeof tourneys!=='undefined'&&tourneys?tourneys.length:0)) > 0;
       const hasAnyHistory = _pl.some(p=>Array.isArray(p?.history) && p.history.length);
       if(hasMatchData && !hasAnyHistory){
-        _rebuildAllPlayerHistoryCore();
+        // 이름/UI 먼저 렌더 후 다음 프레임에 히스토리 재빌드 → 이름 즉시 표시
         window.__streamer_hist_ready = true;
+        requestAnimationFrame(()=>{
+          try{
+            _rebuildAllPlayerHistoryCore();
+            if(typeof render==='function') render();
+          }catch(e){}
+        });
+        // 첫 렌더는 히스토리 없이 진행 (이름·티어 즉시 표시)
       }
     }
   }catch(e){}
@@ -2321,7 +2328,7 @@ function rTier(C,T){
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">티어</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">대학</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">종족</th>
-      <th style="text-align:left;white-space:nowrap;padding:${_padName}">스트리머</th>
+      <th style="text-align:left;white-space:nowrap;padding:${_padName}">이름</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">승</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">패</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">승률</th>
