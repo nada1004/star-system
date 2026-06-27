@@ -666,6 +666,14 @@ window.openEP=function(name){
       </div>
     </div>`;
   om('emModal');
+  try{
+    const pm = document.getElementById('playerModal');
+    const em = document.getElementById('emModal');
+    const pzComputed = parseInt(pm ? getComputedStyle(pm).zIndex : '0', 10);
+    const pzInline = parseInt(pm?.style?.zIndex || '0', 10);
+    const nextZ = Math.max(6100, Number.isFinite(pzComputed) ? pzComputed : 0, Number.isFinite(pzInline) ? pzInline : 0) + 40;
+    if(em) em.style.setProperty('z-index', String(nextZ), 'important');
+  }catch(e){}
   try{ setTimeout(()=>{ 
     const nameEl=document.getElementById('ed-n');
     if(nameEl && typeof nameEl.focus==='function'){ nameEl.focus(); try{nameEl.select();}catch(_e){} }
@@ -829,6 +837,9 @@ function openEPFromModal(nameArg){
   const p=players.find(x=>x.name===name);
   if(!p){alert('선수 정보를 찾을 수 없습니다: '+name);return;}
   try{
+    window._resumePlayerModalAfterEdit = name;
+    window._suppressPlayerModalFront = true;
+    try{ if(typeof cm === 'function') cm('playerModal'); }catch(e){}
     openEP(name);
   }catch(e){
     console.error('[openEP] 오류:',e);
@@ -1071,6 +1082,7 @@ function savePlayer(){
   p.shareCardBgPosX=_shareBg ? _shareBgPosX : undefined;
   p.shareCardBgPosY=_shareBg ? _shareBgPosY : undefined;
   save();
+  window._resumePlayerModalAfterEdit = '';
   cm('emModal');
   
   // (요청사항) 크루 자동 전환 로직 제거

@@ -73,14 +73,17 @@ function _prewarmPlayerModalImages(p){
 }
 
 function _doOpenPlayerModal(name, p){
+  const st = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
+  const em = document.getElementById('emModal');
+  const isEditModalOpen = !!(em && getComputedStyle(em).display !== 'none');
+  const keepEditModalFront = !!window._suppressPlayerModalFront || (isEditModalOpen && st.currentName === name);
   try{
     const pm = document.getElementById('playerModal');
     if(pm){
-      if(typeof window._bringModalToFront === 'function') window._bringModalToFront(pm);
+      if(!keepEditModalFront && typeof window._bringModalToFront === 'function') window._bringModalToFront(pm);
       pm.classList.add('modal--player-top');
     }
   }catch(e){}
-  const st = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});
   try{
     const sc=document.getElementById('sharecard-overlay');
     if(sc) sc.remove();
@@ -109,7 +112,7 @@ function _doOpenPlayerModal(name, p){
     editBtn.dataset.playerName=name;
   }
   st.currentName=name;
-  om('playerModal');
+  if(!keepEditModalFront) om('playerModal');
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   setTimeout(()=>initPEloChart(name),60);
 }

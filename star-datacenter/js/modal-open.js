@@ -12,7 +12,14 @@ window._bringModalToFront = function(el) {
     });
   }catch(e){}
   try{
-    el.style.zIndex = String(maxZ + 20);
+    const currentInlineZ = parseInt(el?.style?.zIndex || '0', 10);
+    const currentComputedZ = parseInt(getComputedStyle(el).zIndex || '0', 10);
+    const nextZ = Math.max(
+      maxZ + 20,
+      Number.isFinite(currentInlineZ) ? currentInlineZ : 0,
+      Number.isFinite(currentComputedZ) ? currentComputedZ : 0
+    );
+    el.style.zIndex = String(nextZ);
   }catch(e){}
 };
 
@@ -29,6 +36,18 @@ window.cm = function(id) {
   if(el) {
     el.style.setProperty('display', 'none', 'important');
     try{
+      if(id === 'emModal'){
+        window._suppressPlayerModalFront = false;
+        const reopenName = String(window._resumePlayerModalAfterEdit || '').trim();
+        if(reopenName){
+          window._resumePlayerModalAfterEdit = '';
+          setTimeout(()=>{
+            try{
+              if(typeof window.openPlayerModal === 'function') window.openPlayerModal(reopenName);
+            }catch(e){}
+          }, 40);
+        }
+      }
       if(id === 'histDetModal') window._lastHistDetailState = null;
       if(typeof window._syncTabUrlFromState === 'function') window._syncTabUrlFromState('replace');
     }catch(e){}

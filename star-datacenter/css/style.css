@@ -3600,6 +3600,8 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 
 /* 플레이어 모달이 경기상세 뒤로 깔리는 문제 방지 */
 #playerModal{ z-index: 6100; } /* [Z-IDX] */
+/* 스트리머 수정창은 상세 팝업 위에 떠야 함 */
+#emModal{ z-index: 6200; } /* [Z-IDX] */
 .modal--matchdetail .cmd-detail .cmd-player-badges{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
 .modal--matchdetail .cmd-detail .cmd-midbox{
   width:46px;
