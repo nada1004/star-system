@@ -89,6 +89,78 @@ function collectPlayerExtraHistoryData(opts){
     return obj;
   }
 
+  function _inferTournamentSide(match, tnType){
+    const a = String(match?.a||'').trim();
+    const b = String(match?.b||'').trim();
+    if(tnType === 'tier'){
+      const inA = a === p.name;
+      const inB = b === p.name;
+      const opp = inA ? b : (inB ? a : '');
+      const oppP = players.find(x=>x && x.name===opp);
+      return { inA, inB, opp, oppRace: oppP?.race||'' };
+    }
+    const pu = String(p.univ||'').trim();
+    const inA = !!pu && a === pu;
+    const inB = !!pu && b === pu;
+    const opp = inA ? b : (inB ? a : '');
+    return { inA, inB, opp, oppRace: '' };
+  }
+
+  function _pushTournamentFallback(arr, cfg){
+    const {
+      mid='',
+      match=null,
+      tnType='',
+      mode='',
+      sourceMeta={}
+    } = cfg || {};
+    const sourceType = String(sourceMeta?._sourceType||'').trim();
+    if(tnType !== 'tier' && (sourceType === 'tourNormal' || sourceType === 'tourGrp' || sourceType === 'tourBkt')){
+      return false;
+    }
+    if(!match || match.sa==null || match.sb==null) return false;
+    const { inA, inB, opp, oppRace } = _inferTournamentSide(match, tnType);
+    if((!inA && !inB) || !opp) return false;
+    const result = inA
+      ? (match.sa>match.sb ? '승' : match.sa<match.sb ? '패' : '무')
+      : (match.sb>match.sa ? '승' : match.sb<match.sa ? '패' : '무');
+    const isDupInHist = prunedHistory.some(h =>
+      h.matchId===mid ||
+      (h.date===(match.d||'') && normMap(h.map||'-')==='-' && h.opp===opp && String(h.mode||'').trim()===String(mode||'').trim())
+    );
+    if(isDupInHist) return false;
+    arr.push(_attachHistElo({
+      date:match.d||'',
+      time:0,
+      result,
+      opp,
+      oppRace,
+      map:'-',
+      matchId:mid,
+      mode,
+      _readOnly:true,
+      _editableSource:true,
+      ...sourceMeta
+    }));
+    return true;
+  }
+
+  function _resolveDirectWinnerName(match){
+    const winner = String(match?.winner||'').trim();
+    const a = String(match?.a||'').trim();
+    const b = String(match?.b||'').trim();
+    if(!winner && match && match.sa!=null && match.sb!=null){
+      if(Number(match.sa) > Number(match.sb)) return a;
+      if(Number(match.sb) > Number(match.sa)) return b;
+      return '';
+    }
+    if(winner === 'A') return a;
+    if(winner === 'B') return b;
+    if(winner === a) return a;
+    if(winner === b) return b;
+    return '';
+  }
+
   const indMatches=(typeof indM!=='undefined'?indM:[]).filter(m=>m.wName===p.name||m.lName===p.name).map(m=>{
     const matchId=m._id||`ind_${m.d||''}${m.map||''}${(m.wName||'').replace(/\s+/g,'')}${(m.lName||'').replace(/\s+/g,'')}`;
     const d=String(m.d||'').trim();
@@ -280,7 +352,7 @@ function collectPlayerExtraHistoryData(opts){
         const mid=m._id||`protour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
         if(existingMatchIds.has(mid))return;
         if(m.a!==p.name&&m.b!==p.name)return;
-        const wn=m.winner===m.a?m.a:m.winner===m.b?m.b:null;
+        const wn=_resolveDirectWinnerName(m);
         if(!wn)return;
         const ln=wn===m.a?m.b:m.a;
         const opp=wn===p.name?ln:wn;
@@ -295,7 +367,10 @@ function collectPlayerExtraHistoryData(opts){
           _sourceTnId:tn.id||'',
           _sourceGrpIdx:gi,
           _sourceMatchIdx:mi,
-          _sourceId:mid
+          _sourceId:mid,
+          _sourceTeamA:m.a||'',
+          _sourceTeamB:m.b||'',
+          _compName:tn.name||''
         }));
       });
     });
@@ -305,8 +380,9 @@ function collectPlayerExtraHistoryData(opts){
         const mid=m._id||`protour_stage_${tn.id||''}_${round}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
         if(existingMatchIds.has(mid)) return;
         if(m.a!==p.name&&m.b!==p.name) return;
-        const isWin = (m.winner==='A' && m.a===p.name) || (m.winner==='B' && m.b===p.name);
-        const isLose = (m.winner==='A' && m.b===p.name) || (m.winner==='B' && m.a===p.name);
+        const wn = _resolveDirectWinnerName(m);
+        const isWin = !!wn && wn === p.name;
+        const isLose = !!wn && wn !== p.name;
         if(!isWin && !isLose) return;
         const opp = m.a===p.name ? m.b : m.a;
         const oppP=players.find(x=>x.name===opp);
@@ -326,7 +402,10 @@ function collectPlayerExtraHistoryData(opts){
           _sourceRound:round,
           _sourceId:mid,
           _stageRound:round,
-          _dupKey:`${m.d||''}|${m.map||''}|${[m.a,m.b].sort().join('|')}|프로리그대회|${round}`
+          _dupKey:`${m.d||''}|${m.map||''}|${[m.a,m.b].sort().join('|')}|프로리그대회|${round}`,
+          _sourceTeamA:m.a||'',
+          _sourceTeamB:m.b||'',
+          _compName:tn.name||''
         }));
       });
     });
@@ -334,13 +413,13 @@ function collectPlayerExtraHistoryData(opts){
       const mid=m._id||`protour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
       if(existingMatchIds.has(mid))return;
       if(m.a!==p.name&&m.b!==p.name)return;
-      const wn=m.winner===m.a?m.a:m.winner===m.b?m.b:null;
+      const wn=_resolveDirectWinnerName(m);
       if(!wn)return;
       const ln=wn===m.a?m.b:m.a;
       const opp=wn===p.name?ln:wn;
       const oppP=players.find(x=>x.name===opp);
       const gjIdx=(tn.gjMatches||[]).indexOf(m);
-      tourMatches.push(_attachHistElo({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',matchId:mid,mode:'프로리그끝장전',_readOnly:true,_editableSource:true,_sourceType:'proTourGj',_sourceTnId:tn.id||'',_sourceGjIdx:gjIdx,_sourceId:mid,_sourceDate:m.d||''}));
+      tourMatches.push(_attachHistElo({date:m.d||'',time:0,result:wn===p.name?'승':'패',opp,oppRace:oppP?.race||'',map:m.map||'-',matchId:mid,mode:'프로리그끝장전',_readOnly:true,_editableSource:true,_sourceType:'proTourGj',_sourceTnId:tn.id||'',_sourceGjIdx:gjIdx,_sourceId:mid,_sourceDate:m.d||'',_sourceTeamA:m.a||'',_sourceTeamB:m.b||'',_compName:tn.name||''}));
     });
   });
 
@@ -349,11 +428,14 @@ function collectPlayerExtraHistoryData(opts){
       (grp.matches||[]).forEach((m,mi)=>{
         const mid=m._id||`tour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`;
         if(existingMatchIds.has(mid))return;
+        let captured=false;
+        let hasRelevantGame=false;
         (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
           const { teamA, teamB } = _gameTeams(g);
           const inA = teamA.includes(p.name);
           const inB = teamB.includes(p.name);
           if(!g.winner || (!inA && !inB))return;
+          hasRelevantGame=true;
           const opp=_teamLabel(inA ? teamB : teamA);
           const oppP=players.find(x=>x.name===opp);
           const isDupInHist = prunedHistory.some(h =>
@@ -370,20 +452,47 @@ function collectPlayerExtraHistoryData(opts){
               _sourceTnId:tn.id||'',
               _sourceGrpIdx:gi,
               _sourceMatchIdx:mi,
-              _sourceId:mid
+              _sourceId:mid,
+              _sourceTeamA:m.a||'',
+              _sourceTeamB:m.b||'',
+              _compName:tn.name||''
             }));
+            captured=true;
           }
         });});
+        if(!captured && !hasRelevantGame){
+          _pushTournamentFallback(tourMatches, {
+            mid,
+            match:m,
+            tnType:tn.type||'',
+            mode:tn.type==='tier'?'티어대회':'조별리그',
+            sourceMeta:{
+              _readOnly:true,
+              _editableSource:true,
+              _sourceType:'tourGrp',
+              _sourceTnId:tn.id||'',
+              _sourceGrpIdx:gi,
+              _sourceMatchIdx:mi,
+              _sourceId:mid,
+              _sourceTeamA:m.a||'',
+              _sourceTeamB:m.b||'',
+              _compName:tn.name||''
+            }
+          });
+        }
       });
     });
     Object.entries((tn.bracket||{}).matchDetails||{}).forEach(([k,m])=>{
       const mid=m? (m._id||`tour_${tn.id||''}_${m.d||''}${(m.a||'').replace(/\s+/g,'')}${(m.b||'').replace(/\s+/g,'')}`) : (`tour_${tn.id||''}_${k}`);
       if(existingMatchIds.has(mid))return;
+      let captured=false;
+      let hasRelevantGame=false;
       (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
         const { teamA, teamB } = _gameTeams(g);
         const inA = teamA.includes(p.name);
         const inB = teamB.includes(p.name);
         if(!g.winner || (!inA && !inB))return;
+        hasRelevantGame=true;
         const opp=_teamLabel(inA ? teamB : teamA);
         const oppP=players.find(x=>x.name===opp);
         const isDupInHist = prunedHistory.some(h =>
@@ -407,10 +516,37 @@ function collectPlayerExtraHistoryData(opts){
             _sourceMi:mm,
             _sourceTeamA:m.a||'',
             _sourceTeamB:m.b||'',
-            _sourceId:mid
+            _sourceId:mid,
+            _compName:tn.name||''
           }));
+          captured=true;
         }
       });});
+      if(!captured && !hasRelevantGame){
+        let rr=null, mm=null;
+        try{
+          const parts=String(k||'').split('-');
+          if(parts.length===2){ rr=parseInt(parts[0],10); mm=parseInt(parts[1],10); if(isNaN(rr)) rr=null; if(isNaN(mm)) mm=null; }
+        }catch(e){}
+        _pushTournamentFallback(tourMatches, {
+          mid,
+          match:m,
+          tnType:tn.type||'',
+          mode:tn.type==='tier'?'티어대회':'대회',
+          sourceMeta:{
+            _readOnly:true,
+            _editableSource:true,
+            _sourceType:'tourBkt',
+            _sourceTnId:tn.id||'',
+            _sourceRnd:rr,
+            _sourceMi:mm,
+            _sourceTeamA:m?.a||'',
+            _sourceTeamB:m?.b||'',
+            _sourceId:mid,
+            _compName:tn.name||''
+          }
+        });
+      }
     });
   });
 
@@ -419,11 +555,14 @@ function collectPlayerExtraHistoryData(opts){
     getNormalMatchesForHistory().forEach((m,nmi)=>{
       const mid=m._id||`tour_normal_${m._tnId||''}_${nmi}`;
       if(existingMatchIds.has(mid))return;
+      let captured=false;
+      let hasRelevantGame=false;
       (m.sets||[]).forEach(s=>{(s.games||[]).forEach(g=>{
         const { teamA, teamB } = _gameTeams(g);
         const inA = teamA.includes(p.name);
         const inB = teamB.includes(p.name);
         if(!g.winner || (!inA && !inB))return;
+        hasRelevantGame=true;
         const opp=_teamLabel(inA ? teamB : teamA);
         const oppP=players.find(x=>x.name===opp);
         const isDupInHist=prunedHistory.some(h=>
@@ -438,10 +577,33 @@ function collectPlayerExtraHistoryData(opts){
             _sourceType:'tourNormal',
             _sourceTnId:m._tnId||'',
             _sourceNmi:m._nmi!=null?m._nmi:nmi,
-            _sourceId:mid
+            _sourceId:mid,
+            _sourceTeamA:m.a||'',
+            _sourceTeamB:m.b||'',
+            _compName:m.compName||m.n||''
           }));
+          captured=true;
         }
       });});
+      if(!captured && !hasRelevantGame){
+        _pushTournamentFallback(tourMatches, {
+          mid,
+          match:m,
+          tnType:'',
+          mode:'대회(일반경기)',
+          sourceMeta:{
+            _readOnly:true,
+            _editableSource:true,
+            _sourceType:'tourNormal',
+            _sourceTnId:m._tnId||'',
+            _sourceNmi:m._nmi!=null?m._nmi:nmi,
+            _sourceId:mid,
+            _sourceTeamA:m.a||'',
+            _sourceTeamB:m.b||'',
+            _compName:m.compName||m.n||''
+          }
+        });
+      }
     });
   }
 

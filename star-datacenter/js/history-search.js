@@ -1,8 +1,70 @@
 /* ══════════════════════════════════════
    대전 기록 > 선수별 검색 탭
 ══════════════════════════════════════ */
+function _histPSearchModeLabel(hh){
+  const st=String(hh?._sourceType||'').trim();
+  const mode=String(hh?.mode||'').trim();
+  const round=String(hh?._stageRound||hh?._sourceRound||'').trim();
+  if(st==='proTourGrp') return '프로리그대회 조별리그';
+  if(st==='proTourStage') return round ? `프로리그대회 토너먼트(${round})` : '프로리그대회 토너먼트';
+  if(st==='proTourGj') return '프로리그대회 끝장전';
+  if(st==='tourGrp') return mode==='티어대회' ? '티어대회 조별리그' : '일반대회 조별리그';
+  if(st==='tourBkt') return mode==='티어대회' ? '티어대회 토너먼트' : '일반대회 토너먼트';
+  if(st==='tourNormal') return '일반대회 일반경기';
+  if(mode==='대회(일반경기)') return '일반대회 일반경기';
+  if(mode==='조별리그') return '일반대회 조별리그';
+  if(mode==='대회') return '일반대회 토너먼트';
+  return mode;
+}
+
+function _histPSearchModeColor(label){
+  const s=String(label||'').trim();
+  if(!s) return '#6b7280';
+  if(s.indexOf('프로리그대회 조별리그')!==-1) return '#0f766e';
+  if(s.indexOf('프로리그대회 토너먼트')!==-1) return '#0f766e';
+  if(s.indexOf('프로리그대회 끝장전')!==-1) return '#7c3aed';
+  if(s.indexOf('일반대회 조별리그')!==-1) return '#2563eb';
+  if(s.indexOf('일반대회 토너먼트')!==-1) return '#7c3aed';
+  if(s.indexOf('일반대회 일반경기')!==-1) return '#b45309';
+  if(s.indexOf('티어대회 조별리그')!==-1 || s.indexOf('티어대회 토너먼트')!==-1 || s.indexOf('티어대회')!==-1) return '#f59e0b';
+  if(s.indexOf('미니대전')!==-1) return '#2563eb';
+  if(s.indexOf('시빌워')!==-1) return '#db2777';
+  if(s.indexOf('대학대전')!==-1) return '#7c3aed';
+  if(s.indexOf('대학CK')!==-1) return '#dc2626';
+  if(s.indexOf('프로리그')!==-1) return '#0891b2';
+  if(s.indexOf('끝장전')!==-1) return '#8b5cf6';
+  if(s.indexOf('개인전')!==-1 || s.indexOf('개인')!==-1) return '#8b5cf6';
+  return '#6b7280';
+}
+
+function _histPSearchOpponentMeta(hh,p){
+  let opp=String(hh?.opp||'').trim();
+  let oppP=opp ? players.find(x=>x.name===opp) : null;
+  const st=String(hh?._sourceType||'').trim();
+  const isTeamSource=(st==='tourNormal' || st==='tourGrp' || st==='tourBkt');
+  let kind=(oppP || !isTeamSource) ? 'player' : (opp ? 'team' : 'player');
+  if(!opp){
+    const a=String(hh?._sourceTeamA||'').trim();
+    const b=String(hh?._sourceTeamB||'').trim();
+    if(hh?._sourceType==='proTourGrp' || hh?._sourceType==='proTourStage' || hh?._sourceType==='proTourGj'){
+      opp = p?.name===a ? b : (p?.name===b ? a : '');
+    }else{
+      const pu=String(p?.univ||'').trim();
+      opp = pu && pu===a ? b : (pu && pu===b ? a : '');
+    }
+    oppP = opp ? players.find(x=>x.name===opp) : null;
+    if(!oppP && opp) kind='team';
+  }
+  return {
+    text: opp || '-',
+    clickable: !!oppP,
+    race: String(hh?.oppRace||oppP?.race||'').trim(),
+    color: oppP ? gc(oppP.univ) : (kind==='team' ? gc(opp||'') : '#6b7280'),
+    kind
+  };
+}
+
 function _histPSearchResultsHTML(q){
-  const modeBadgeColors={'조별리그':'#2563eb','대회':'#b45309','미니대전':'#2563eb','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','끝장전':'#8b5cf6','개인전':'#8b5cf6','개인':'#8b5cf6'};
   if(!q){
     return`<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">스트리머 이름을 입력하세요</div><div class="empty-state-desc">선수의 전체 경기 기록에서 검색합니다</div></div>`;
   }
@@ -36,19 +98,25 @@ function _histPSearchResultsHTML(q){
       </div>
       <div style="overflow-x:auto">
         <table style="margin:0;border:none;border-radius:0;font-size:12px"><thead><tr>
-          <th style="white-space:nowrap">날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th>맵</th><th>ELO</th>
+          <th style="white-space:nowrap">날짜</th><th>종류</th><th>결과</th><th>상대 선수/팀</th><th>종족</th><th>맵</th><th>ELO</th>
         </tr></thead><tbody>`;
     filteredHist.forEach(hh=>{
       const isWin=hh.result==='승';
-      const mc=modeBadgeColors[hh.mode||'']||'#6b7280';
-      const oppP=players.find(x=>x.name===hh.opp);const oppCol=oppP?gc(oppP.univ):'#6b7280';
+      const modeLabel=_histPSearchModeLabel(hh);
+      const mc=_histPSearchModeColor(modeLabel);
+      const oppMeta=_histPSearchOpponentMeta(hh,p);
       const eloStr=hh.eloDelta!=null?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':'#dc2626'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`:'-';
+      const modeTitle=[modeLabel, hh._compName||''].filter(Boolean).join(' · ');
+      const oppKindChip=oppMeta.kind==='team'
+        ? `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;padding:0 6px;border-radius:999px;background:${oppMeta.color}18;border:1px solid ${oppMeta.color}55;color:${oppMeta.color};font-size:10px;font-weight:900;line-height:1">팀</span>`
+        : '';
+      const oppCellInner=`<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:${oppMeta.color};display:inline-block;flex-shrink:0"></span><span style="color:${oppMeta.clickable?'var(--blue)':'var(--text)'}">${oppMeta.text}</span>${oppKindChip}</span>`;
       h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
         <td style="color:var(--text3);font-size:12px;font-weight:600;white-space:nowrap">${hh.date||''}</td>
-        <td><span style="background:${mc};color:#fff;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${hh.mode||''}</span></td>
+        <td><span title="${modeTitle.replace(/"/g,'&quot;')}" style="background:${mc};color:#fff;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${modeLabel||''}</span></td>
         <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">LOSE</span>`}</td>
-        <td style="cursor:pointer;font-weight:700" onclick="openPlayerModal('${(hh.opp||'').replace(/'/g,"\\'")}')"><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:3px;background:${oppCol};display:inline-block;flex-shrink:0"></span><span style="color:var(--blue)">${hh.opp||''}</span></span></td>
-        <td><span class="rbadge r${hh.oppRace}" style="font-size:10px">${hh.oppRace||''}</span></td>
+        <td title="${oppMeta.kind==='team'?'선수 정보가 없어 상대 팀명으로 표시 중':''}" style="font-weight:700;${oppMeta.clickable?'cursor:pointer':''}" ${oppMeta.clickable?`onclick="openPlayerModal('${oppMeta.text.replace(/'/g,"\\'")}')"`:''}>${oppCellInner}</td>
+        <td>${oppMeta.race?`<span class="rbadge r${oppMeta.race}" style="font-size:10px">${oppMeta.race||''}</span>`:`<span style="color:var(--gray-l);font-size:11px">-</span>`}</td>
         <td style="color:var(--gray-l);font-size:11px">${hh.map&&hh.map!=='-'?hh.map:''}</td>
         <td>${eloStr}</td>
       </tr>`;
