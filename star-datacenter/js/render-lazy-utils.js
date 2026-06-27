@@ -108,7 +108,7 @@ async function _ensureStatsLoaded(){
   await _loadScriptOnce('js/stats-heatmap-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-maprank-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-univmatrix-renderer.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260627-01');
   await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-runtime.js?v=20260517-01');
   await _loadScriptOnce('js/sharecard-render-entity.js?v=20260504-03');
@@ -133,7 +133,7 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/stats-heatmap-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-maprank-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-univmatrix-renderer.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260627-01');
   await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-normalize.js?v=20260503-01');
   await _loadScriptOnce('js/sharecard-theme.js?v=20260503-05');

@@ -580,7 +580,7 @@ b,strong{font-weight:600;}
   --hdr-c2:#2563eb;
   --hdr-c3:#1e40af;
   background:linear-gradient(135deg,var(--hdr-c1) 0%,var(--hdr-c2) 55%,var(--hdr-c3) 100%);
-  padding:12px 20px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;min-height:var(--hdr-h, auto);
+  padding:12px 20px;display:flex;align-items:center;gap:12px;position:relative;overflow:visible;min-height:var(--hdr-h, auto);
   box-shadow:0 4px 16px rgba(30,58,138,0.15);
 }
 /* 효과 레이어(기본 none) */
@@ -4917,7 +4917,7 @@ body.dark [id^="vs-drop-"] input{color:var(--text)!important;}
   #board-wrap { grid-template-columns: 1fr !important; gap: 14px !important; }
 
   /* ── 검색 결과 ── */
-  #globalSearchDrop { right: 8px !important; left: 8px !important; width: auto !important; max-width: calc(100vw - 16px) !important; top: 54px !important; }
+  #globalSearchDrop { right: 0 !important; left: auto !important; width: min(300px, calc(100vw - 16px)) !important; max-width: calc(100vw - 16px) !important; top: calc(100% + 8px) !important; }
 
   /* ── 하단 내비게이션 ── */
   #bottomNav { display: flex !important; }

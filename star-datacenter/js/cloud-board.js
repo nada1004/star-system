@@ -259,82 +259,95 @@ async function githubDataSave(dataObj) {
 
 try{ window.fbCloudSave = fbCloudSave; }catch(e){}
 
-// ── GitHub JSON 불러오기 ───────────────────────────────────
+// ── GitHub JSON 가져오기 (네트워크 요청 + 파싱만, 적용은 호출자가 결정) ──
+// cloudLoad(수동)와 _autoSyncApply(자동) 양쪽에서 공유하는 fetch 로직.
+async function _fetchGithubData(){
+  if(typeof window.__suFetchGithubMergedData === 'function'){
+    return await window.__suFetchGithubMergedData();
+  }
+  const baseUrl=GITHUB_JSON_URL;
+  const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
+  const urls=[
+    baseUrl+'?nocache='+Date.now(),
+    'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json',
+    ghApiUrl,
+    'https://corsproxy.io/?url='+encodeURIComponent(baseUrl),
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(baseUrl),
+  ];
+
+  // 각 URL을 파싱까지 완료한 데이터 객체로 변환하는 함수
+  const tryUrl = async (url) => {
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(),12000);
+    try{
+      const res=await fetch(url,{cache:'no-store',mode:'cors',signal:ctrl.signal});
+      clearTimeout(timer);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const text=(await res.text()).replace(/^\uFEFF/,'').trim();
+      if(text.startsWith('<')) throw new Error('HTML 응답');
+      const raw=JSON.parse(text);
+      if(raw&&raw.content&&raw.encoding==='base64'){
+        const bin=atob(raw.content.replace(/\s/g,''));
+        const bytes=new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+        return JSON.parse(new TextDecoder('utf-8').decode(bytes));
+      }
+      return raw;
+    }catch(e){ clearTimeout(timer); throw e; }
+  };
+
+  // 모든 URL 동시 시도 → 가장 먼저 성공한 결과 사용 (Promise.any)
+  try{
+    return await Promise.any(urls.map(tryUrl));
+  }catch(aggErr){
+    const errs=(aggErr.errors||[aggErr]).map((e,i)=>`[${i+1}] ${e?.message||e}`).join('\n');
+    throw new Error('데이터를 불러올 수 없습니다.\n\n원인:\n'+errs+'\n\n해결방법:\n· 인터넷 연결 확인\n· GitHub 저장소(nada1004/star-system)가 공개(Public) 상태인지 확인\n· data.json 파일이 main 브랜치에 있는지 확인');
+  }
+}
+
+// 가져온 데이터를 전역 상태에 적용 + 탭/캐시 초기화 + init() 재실행까지 공통 처리
+function _applyFetchedCloudData(d){
+  _applyCloudData(d);
+  console.log('[불러오기] 데이터 구조:', {players:players.length,miniM:miniM.length,univM:univM.length,comps:comps.length,ckM:ckM.length,proM:proM.length,tourneys:tourneys.length});
+
+  localSave();
+  fixPoints();
+  window._compListCache={}; // 대회 목록 캐시 초기화
+  window._shareAllMatchesCached=null; // 공유카드 캐시 초기화
+  window._histTourneyCache={}; // 대회 기록 탭 캐시 초기화
+  curTab='total'; // 탭 초기화 (렌더링 오류 방지)
+  statsSub='overview';
+  histSub='mini';
+  compSub='league';
+  // yearOptions를 불러온 데이터에서 자동 추출
+  (function(){
+    const allD=[...d.miniM||[],...d.univM||[],...d.comps||[],...d.ckM||[],...d.proM||[]];
+    mergeValidYearsIntoOptions(yearOptions, allD);
+  })();
+  filterYear='전체'; // 연도 필터 초기화 (데이터가 다른 년도일 수 있음)
+  filterMonth='전체';
+  init();
+
+  const compCount=(d.comps||[]).length;
+  const tourCount=(d.tourneys||[]).reduce((s,t)=>s+(t.groups||[]).reduce((ss,g)=>ss+(g.matches||[]).filter(m=>m.sa!=null).length,0),0);
+  const miniCount=(d.miniM||[]).length;
+  return { compCount, tourCount, miniCount };
+}
+
+// ── GitHub JSON 불러오기 (수동 — 사용자가 버튼을 눌렀을 때) ───────
 window.cloudLoad = async function(){
   try{
     gsSetStatus('📥 불러오는 중...', 'var(--blue)');
     const loadBtn=document.getElementById('btnCloudLoad');
     if(loadBtn){loadBtn.disabled=true;loadBtn.textContent='⏳ 불러오는 중...';}
-    let d=null;
-    if(typeof window.__suFetchGithubMergedData === 'function'){
-      d = await window.__suFetchGithubMergedData();
-    }else{
-    const baseUrl=GITHUB_JSON_URL;
-    const ghApiUrl='https://api.github.com/repos/nada1004/star-system/contents/star-datacenter/data.json';
-    const urls=[
-      baseUrl+'?nocache='+Date.now(),
-      'https://cdn.jsdelivr.net/gh/nada1004/star-system@main/star-datacenter/data.json',
-      ghApiUrl,
-      'https://corsproxy.io/?url='+encodeURIComponent(baseUrl),
-      'https://api.allorigins.win/raw?url='+encodeURIComponent(baseUrl),
-    ];
 
-    // 각 URL을 파싱까지 완료한 데이터 객체로 변환하는 함수
-    const tryUrl = async (url) => {
-      const ctrl=new AbortController();
-      const timer=setTimeout(()=>ctrl.abort(),12000);
-      try{
-        const res=await fetch(url,{cache:'no-store',mode:'cors',signal:ctrl.signal});
-        clearTimeout(timer);
-        if(!res.ok) throw new Error('HTTP '+res.status);
-        const text=(await res.text()).replace(/^\uFEFF/,'').trim();
-        if(text.startsWith('<')) throw new Error('HTML 응답');
-        const raw=JSON.parse(text);
-        if(raw&&raw.content&&raw.encoding==='base64'){
-          const bin=atob(raw.content.replace(/\s/g,''));
-          const bytes=new Uint8Array(bin.length);
-          for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-          return JSON.parse(new TextDecoder('utf-8').decode(bytes));
-        }
-        return raw;
-      }catch(e){ clearTimeout(timer); throw e; }
-    };
-
-    // 모든 URL 동시 시도 → 가장 먼저 성공한 결과 사용 (Promise.any)
-    try{
-      d=await Promise.any(urls.map(tryUrl));
-    }catch(aggErr){
-      const errs=(aggErr.errors||[aggErr]).map((e,i)=>`[${i+1}] ${e?.message||e}`).join('\n');
-      throw new Error('데이터를 불러올 수 없습니다.\n\n원인:\n'+errs+'\n\n해결방법:\n· 인터넷 연결 확인\n· GitHub 저장소(nada1004/star-system)가 공개(Public) 상태인지 확인\n· data.json 파일이 main 브랜치에 있는지 확인');
+    const d = await _fetchGithubData();
+    if(!confirm('GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?')) {
+      if(loadBtn){loadBtn.disabled=false;loadBtn.innerHTML='<span>☁️</span> 데이터 불러오기';}
+      return;
     }
-    }
-    if(!confirm('GitHub 데이터를 불러옵니다.\n\n⚠️ 현재 로컬 데이터가 덮어씌워집니다. 계속하시겠습니까?')) return;
 
-    // 필드명 별칭 지원 (파싱 유연성)
-    _applyCloudData(d);
-    console.log('[불러오기] 데이터 구조:', {players:players.length,miniM:miniM.length,univM:univM.length,comps:comps.length,ckM:ckM.length,proM:proM.length,tourneys:tourneys.length});
-
-    localSave();
-    fixPoints();
-    window._compListCache={}; // 대회 목록 캐시 초기화
-    window._shareAllMatchesCached=null; // 공유카드 캐시 초기화
-    window._histTourneyCache={}; // 대회 기록 탭 캐시 초기화
-    curTab='total'; // 탭 초기화 (렌더링 오류 방지)
-    statsSub='overview';
-    histSub='mini';
-    compSub='league';
-    // yearOptions를 불러온 데이터에서 자동 추출
-    (function(){
-      const allD=[...d.miniM||[],...d.univM||[],...d.comps||[],...d.ckM||[],...d.proM||[]];
-      mergeValidYearsIntoOptions(yearOptions, allD);
-    })();
-    filterYear='전체'; // 연도 필터 초기화 (데이터가 다른 년도일 수 있음)
-    filterMonth='전체';
-    init();
-
-    const compCount=(d.comps||[]).length;
-    const tourCount=(d.tourneys||[]).reduce((s,t)=>s+(t.groups||[]).reduce((ss,g)=>ss+(g.matches||[]).filter(m=>m.sa!=null).length,0),0);
-    const miniCount=(d.miniM||[]).length;
+    const { compCount, tourCount, miniCount } = _applyFetchedCloudData(d);
     const _lb=document.getElementById('btnCloudLoad');if(_lb){_lb.disabled=false;_lb.innerHTML='<span>☁️</span> 데이터 불러오기';}
     gsSetStatus(`✅ 불러오기 완료 (${new Date().toLocaleTimeString()}) — 미니 ${miniCount}건·대회 ${compCount+tourCount}건`, 'var(--green)');
   } catch(e){
@@ -346,6 +359,14 @@ window.cloudLoad = async function(){
     const shortMsg=errMsg.split('\n').slice(0,3).join('\n');
     setTimeout(()=>alert('⚠️ 데이터 불러오기 실패\n\n'+shortMsg), 100);
   }
+};
+
+// ── GitHub JSON 자동 동기화 (백그라운드 — confirm 없이 조용히) ─────
+// 수동 cloudLoad와 달리 confirm 다이얼로그를 띄우지 않는다.
+// 호출 시점 가드(모달 열림/입력 중 여부 등)는 _autoSyncCheck에서 처리한다.
+window._autoSyncApply = async function(){
+  const d = await _fetchGithubData();
+  return _applyFetchedCloudData(d);
 };
 
 
@@ -2636,6 +2657,25 @@ async function _checkRemoteSavedAt() {
   return 0;
 }
 
+// 모달이 열려있거나(사용자가 상세 화면을 보는 중) 텍스트를 입력하는 중이면
+// 자동 동기화로 화면을 통째로 다시 그리는 것은 다음 주기로 미룬다.
+// (전체 재렌더가 프로필 이미지 DOM을 새로 만들어 깜빡임/작업 중단을 유발하므로)
+function _autoSyncShouldDefer() {
+  try {
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
+      return true;
+    }
+    const openModal = Array.from(document.querySelectorAll('.modal,[id$="Modal"],[id$="modal"]'))
+      .find(el => {
+        const st = window.getComputedStyle(el);
+        return st.display !== 'none' && st.visibility !== 'hidden';
+      });
+    if (openModal) return true;
+  } catch (e) {}
+  return false;
+}
+
 // 자동 동기화 실행
 async function _autoSyncCheck() {
   if (!_boardCanManage()) return; // 로그인/권한 체크
@@ -2656,12 +2696,16 @@ async function _autoSyncCheck() {
     
     // 원격에 더 새로운 데이터가 있으면 자동으로 불러오기
     if (remoteAt > localSavedAt + 3000) { // 3초 여유
+      if (_autoSyncShouldDefer()) {
+        console.log('[autoSync] 모달/입력 중 - 이번 주기는 보류 (다음 30초에 재시도)');
+        return;
+      }
       console.log('[autoSync] 원격에 새 데이터 감지 - 자동 동기화 시작');
       
-      // 자동으로 데이터 불러오기
-      if (typeof window.cloudLoad === 'function') {
+      // 자동으로 데이터 불러오기 (confirm 없이 조용히)
+      if (typeof window._autoSyncApply === 'function') {
         try {
-          await window.cloudLoad();
+          await window._autoSyncApply();
           console.log('[autoSync] 자동 동기화 완료');
           // 알림 토스트
           if (typeof showToast === 'function') {

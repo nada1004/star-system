@@ -4,7 +4,7 @@
 function _histPSearchResultsHTML(q){
   const modeBadgeColors={'조별리그':'#2563eb','대회':'#b45309','미니대전':'#2563eb','시빌워':'#db2777','대학대전':'#7c3aed','대학CK':'#dc2626','프로리그':'#0891b2','티어대회':'#f59e0b','끝장전':'#8b5cf6','개인전':'#8b5cf6','개인':'#8b5cf6'};
   if(!q){
-    return`<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">스트리머 이름을 입력하세요</div><div class="empty-state-desc">선수의 최근 기록(p.history)에서 검색합니다</div></div>`;
+    return`<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">스트리머 이름을 입력하세요</div><div class="empty-state-desc">선수의 전체 경기 기록에서 검색합니다</div></div>`;
   }
   const ql=q.toLowerCase();
   const matched=players.filter(p=>p.name.toLowerCase().includes(ql));
@@ -13,7 +13,10 @@ function _histPSearchResultsHTML(q){
   }
   let h='';
   matched.forEach(p=>{
-    const hist=(p.history||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0));
+    const histSource = (typeof _tpHistAllForPlayer === 'function')
+      ? _tpHistAllForPlayer(p)
+      : (Array.isArray(p.history) ? p.history : []);
+    const hist=(histSource||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0));
     // 날짜 필터 적용
     const filteredHist=typeof passDateFilter==='function'?hist.filter(h=>passDateFilter(h.date||'')):hist;
     if(!filteredHist.length)return;

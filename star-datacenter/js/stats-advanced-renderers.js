@@ -51,8 +51,8 @@
     <div class="ssec">
       <h4 style="margin-bottom:12px">📊 월별 종족 픽률 상세</h4>
       <div style="overflow-x:auto"><table>
-        <thead><tr><th>월</th><th style="color:#3b82f6">⚔️ 테란</th><th style="color:#7c3aed">🦟 저그</th><th style="color:#d97706">🔮 프로토스</th><th>총 게임</th></tr></thead><tbody>
-        ${months.slice().reverse().map(ym=>{const d=monthData[ym]; const t=d.total||1; const tr=Math.round(d.T/t*100), zr=Math.round(d.Z/t*100), pr=Math.round(d.P/t*100); return`<tr><td style="font-weight:700;color:var(--text2)">${ym}</td><td style="color:#3b82f6;font-weight:700">${tr}% <span style="color:var(--gray-l);font-size:10px">(${d.T})</span></td><td style="color:#7c3aed;font-weight:700">${zr}% <span style="color:var(--gray-l);font-size:10px">(${d.Z})</span></td><td style="color:#d97706;font-weight:700">${pr}% <span style="color:var(--gray-l);font-size:10px">(${d.P})</span></td><td style="color:var(--gray-l)">${d.total}</td></tr>`;}).join('')}
+        <thead><tr><th style="text-align:left">월</th><th style="color:#3b82f6;text-align:center">⚔️ 테란</th><th style="color:#7c3aed;text-align:center">🦟 저그</th><th style="color:#d97706;text-align:center">🔮 프로토스</th><th style="text-align:center">총 게임</th></tr></thead><tbody>
+        ${months.slice().reverse().map(ym=>{const d=monthData[ym]; const t=d.total||1; const tr=Math.round(d.T/t*100), zr=Math.round(d.Z/t*100), pr=Math.round(d.P/t*100); return`<tr><td style="font-weight:700;color:var(--text2);text-align:left">${ym}</td><td style="color:#3b82f6;font-weight:700;text-align:center">${tr}% <span style="color:var(--gray-l);font-size:10px">(${d.T})</span></td><td style="color:#7c3aed;font-weight:700;text-align:center">${zr}% <span style="color:var(--gray-l);font-size:10px">(${d.Z})</span></td><td style="color:#d97706;font-weight:700;text-align:center">${pr}% <span style="color:var(--gray-l);font-size:10px">(${d.P})</span></td><td style="color:var(--gray-l);text-align:center">${d.total}</td></tr>`;}).join('')}
         </tbody></table></div>
     </div></div>`;
   }

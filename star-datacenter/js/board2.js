@@ -7228,6 +7228,9 @@ function _b2WeeklyBriefingView() {
       @media(min-width:1180px){
         .b2w2-highlight-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
         .b2w2-lead-card{grid-column:span 2}
+        /* 기간 요약(2칸) + 일반 카드 6개(6칸) + MVP 카드(2칸) = 10칸 = 5열 x 2줄로 정확히 채움.
+           MVP 카드를 1칸으로 두면 9칸이 되어 마지막 줄에 빈 슬롯이 하나 남는 문제를 방지. */
+        .b2w2-mvp-card-lead{grid-column:span 2}
       }
       @media(max-width:900px){
         .b2w2-hero{flex-direction:column}
@@ -7254,7 +7257,11 @@ function _b2WeeklyBriefingView() {
         .b2w2-monthly-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
         .b2w2-card-summary{grid-template-columns:1fr}
       }
-      @media(min-width:961px) and (max-width:1179px){ .b2w2-highlight-grid{grid-template-columns:repeat(3,minmax(0,1fr));} }
+      @media(min-width:961px) and (max-width:1179px){
+        .b2w2-highlight-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+        /* 1180px 미만에서는 lead/MVP 카드의 span 2가 적용되지 않으므로(미디어쿼리 스코프 밖)
+           모든 카드가 1칸씩 차지해 자연스럽게 흐른다. 이 구간에서만 별도 span 처리는 불필요. */
+      }
     `;
     _b2EnsureStyleTag('b2w2-style', css);
     let h = '';

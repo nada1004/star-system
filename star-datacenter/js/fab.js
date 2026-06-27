@@ -42,6 +42,15 @@ function updateFabVisibility() {
       aiItem.style.display = admin ? '' : 'none';
     }
   } catch (e) {}
+
+  // 로그인 상태에 따라 설정 메뉴 표시/숨김
+  // (mobile-bar.js의 동명 함수가 fab.js 로드 순서에 덮어써져 죽어있던 로직을 병합)
+  try {
+    var settingsItem = document.querySelector('.fab-sub-item--cfg');
+    if (settingsItem) {
+      settingsItem.style.display = (typeof isLoggedIn !== 'undefined' && isLoggedIn) ? 'flex' : 'none';
+    }
+  } catch (e) {}
 }
 
 window.addEventListener('resize', updateFabVisibility);

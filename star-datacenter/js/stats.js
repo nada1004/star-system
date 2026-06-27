@@ -2811,7 +2811,8 @@ function onGlobalSearch(val){
       검색 결과 없음<br>
       <span style="font-size:10px;color:var(--gray-l);margin-top:4px;display:block">이름 · 대학 · 티어 · 종족(테란/저그/프토) · 성별(남/여) 검색 가능</span>
     </div>`;
-    drop.style.display='block';return;
+    drop.style.display='block';
+    return;
   }
   const RACE_CFG={T:{bg:'#dbeafe',col:'#1e40af',label:'테란'},Z:{bg:'#ede9fe',col:'#5b21b6',label:'저그'},P:{bg:'#fef3c7',col:'#92400e',label:'프토'}};
   const TIER_CFG={'S':{bg:'#ede9fe',col:'#7c3aed'},'A':{bg:'#dbeafe',col:'#2563eb'},'B':{bg:'#dcfce7',col:'#16a34a'},'C':{bg:'#fef3c7',col:'#d97706'},'D':{bg:'#fee2e2',col:'#dc2626'}};
@@ -2920,6 +2921,14 @@ function globalSearchSelectExt(idx){
     document.body.appendChild(modal);
   }catch(e){}
 }
+
+// Lazy 로더가 먼저 프록시를 등록하는 경로에서도 실제 구현을 전역에 확실히 연결한다.
+try{
+  window.onGlobalSearch = onGlobalSearch;
+  window.globalSearchSelect = globalSearchSelect;
+  window.globalSearchSelectExt = globalSearchSelectExt;
+  window.rStats = rStats;
+}catch(e){}
 
 // 외부 클릭 시 드롭다운 닫기
 document.addEventListener('click', e=>{

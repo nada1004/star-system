@@ -743,6 +743,8 @@ function applyLoginState(){
     if(!isLoggedIn || isSubAdmin){fstrip.style.display='none';}
     else{fstrip.style.display=(curTab==='total')?'block':'none';}
   }
+  // FAB(모바일 플로팅 버튼)의 설정/관리자 메뉴 표시 상태도 로그인 변화 즉시 반영
+  try{ if(typeof updateFabVisibility==='function') updateFabVisibility(); }catch(e){}
   render();
 }
 document.addEventListener('visibilitychange', ()=>{

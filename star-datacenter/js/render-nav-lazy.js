@@ -475,10 +475,20 @@ async function _ensureStatsFeatureReady(){
   }
 }
 
+async function _ensureGlobalSearchReady(){
+  try{
+    await _loadScriptOnce('js/stats.js?v=' + (window.SU_STATS_JS_V || '20260516-01'));
+    return typeof window.onGlobalSearch === 'function' && window.onGlobalSearch !== _lazyOnGlobalSearch;
+  }catch(e){
+    console.error('[lazy] global search load fail', e);
+    return false;
+  }
+}
+
 function _lazyOnGlobalSearch(val){
   const q = String(val||'');
   (async()=>{
-    const ok = await _ensureStatsFeatureReady();
+    const ok = await _ensureGlobalSearchReady();
     if(!ok) return;
     const fn = window.onGlobalSearch;
     if(typeof fn === 'function' && fn !== _lazyOnGlobalSearch) fn(q);
