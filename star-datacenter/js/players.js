@@ -74,27 +74,34 @@ let totalFocusPlayer=''; // 상세형에서 선택된 스트리머 이름
     '.streamer-gallery-head{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:14px 16px;border-radius:20px;position:relative;overflow:hidden;box-shadow:0 16px 30px rgba(15,23,42,.12);margin-top:10px}',
     '.streamer-gallery-head::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 44%);pointer-events:none}',
     '.streamer-gallery-univ{position:relative;z-index:1;background:rgba(255,255,255,.18)!important;border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(8px)}',
-    '.streamer-gallery-card{position:relative;border-radius:22px;overflow:hidden;cursor:pointer;min-height:292px;transition:transform .15s,box-shadow .15s,border-color .15s;display:flex;align-items:flex-end;border:1px solid rgba(148,163,184,.18);box-shadow:0 14px 28px rgba(15,23,42,.10)}',
+    '.streamer-gallery-card{position:relative;border-radius:22px;overflow:hidden;cursor:pointer;min-height:308px;transition:transform .15s,box-shadow .15s,border-color .15s;display:flex;align-items:flex-end;border:1px solid rgba(148,163,184,.18);box-shadow:0 14px 28px rgba(15,23,42,.10);-webkit-tap-highlight-color:transparent;tap-highlight-color:transparent;outline:none}',
+    '.streamer-gallery-card,.streamer-gallery-card *{-webkit-tap-highlight-color:transparent}',
+    '.streamer-gallery-card:focus,.streamer-gallery-card:active,.streamer-gallery-card *:focus,.streamer-gallery-card *:active{outline:none!important}',
     '.streamer-gallery-card.top1{box-shadow:0 18px 34px rgba(251,191,36,.22);border-color:rgba(251,191,36,.42)}',
     '.streamer-gallery-card.top2{box-shadow:0 18px 34px rgba(148,163,184,.2);border-color:rgba(148,163,184,.36)}',
     '.streamer-gallery-card.top3{box-shadow:0 18px 34px rgba(180,83,9,.18);border-color:rgba(180,83,9,.34)}',
     '.streamer-gallery-card.inactive{filter:saturate(.92)}',
     '.streamer-gallery-card.retired{filter:grayscale(.16) saturate(.84);opacity:.84}',
-    '.streamer-gallery-card:hover{transform:translateY(-4px);box-shadow:0 18px 34px rgba(15,23,42,.18)}',
+    '.streamer-gallery-card:hover{transform:none;box-shadow:0 14px 28px rgba(15,23,42,.10)}',
     '.streamer-gallery-rank{position:absolute;top:12px;left:12px;font-size:10px;font-weight:900;color:rgba(255,255,255,.9)}',
     '.streamer-gallery-act{position:absolute;top:12px;right:12px}',
-    '.streamer-gallery-act .streamer-act-chip{min-width:40px;padding:4px 7px;font-size:10px;backdrop-filter:blur(10px);background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.24);color:#fff}',
-    '.streamer-gallery-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,.08) 0%,rgba(15,23,42,.18) 35%,rgba(15,23,42,.92) 100%)}',
-    '.streamer-gallery-bottom{position:relative;z-index:1;width:100%;padding:14px 14px 15px;text-align:left}',
+    '.streamer-gallery-act .streamer-act-chip{min-width:40px;padding:4px 7px;font-size:10px;backdrop-filter:blur(10px);background:rgba(15,23,42,.58);border-color:rgba(255,255,255,.20);color:#fff;box-shadow:0 10px 18px rgba(15,23,42,.18);text-shadow:0 1px 2px rgba(0,0,0,.28)}',
+    '.streamer-gallery-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,.18) 0%,rgba(15,23,42,.32) 34%,rgba(15,23,42,.94) 100%)}',
+    '.streamer-gallery-bottom{position:relative;z-index:1;width:100%;padding:16px 14px 16px;text-align:left}',
     '.streamer-gallery-topline{display:flex;align-items:center;gap:6px;justify-content:space-between;margin-bottom:6px}',
-    '.streamer-gallery-name{font-size:15px;font-weight:950;color:#fff;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.02em}',
-    '.streamer-gallery-role{font-size:11px;color:rgba(255,255,255,.74);margin-bottom:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-    '.streamer-gallery-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:9px}',
-    '.streamer-gallery-univ-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.16);font-size:10px;font-weight:800;color:#fff;backdrop-filter:blur(8px)}',
-    '.streamer-gallery-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}',
-    '.streamer-gallery-stat{padding:8px 8px 7px;border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(8px)}',
-    '.streamer-gallery-stat-label{font-size:9px;font-weight:800;color:rgba(255,255,255,.66);text-transform:uppercase;letter-spacing:.05em}',
-    '.streamer-gallery-stat-value{margin-top:3px;font-size:12px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.streamer-gallery-name{font-size:15px;font-weight:950;color:#fff;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.02em;text-shadow:0 2px 10px rgba(0,0,0,.34)}',
+    '.streamer-gallery-role{font-size:11px;color:rgba(255,255,255,.86);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 6px rgba(0,0,0,.28)}',
+    '.streamer-gallery-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:10px}',
+    '.streamer-gallery-univ-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;background:rgba(15,23,42,.46);border:1px solid rgba(255,255,255,.18);font-size:10px;font-weight:800;color:#fff;backdrop-filter:blur(8px);text-shadow:0 1px 2px rgba(0,0,0,.25)}',
+    '.streamer-gallery-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}',
+    '.streamer-gallery-stat{padding:8px 8px 8px;border-radius:14px;background:rgba(15,23,42,.44);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(8px);box-shadow:0 10px 20px rgba(15,23,42,.14);min-height:62px;display:flex;flex-direction:column;justify-content:space-between}',
+    '.streamer-gallery-stat-label{font-size:9px;font-weight:800;color:rgba(255,255,255,.80);text-transform:uppercase;letter-spacing:.05em;text-shadow:0 1px 2px rgba(0,0,0,.25)}',
+    '.streamer-gallery-stat-value{margin-top:4px;font-size:12px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.32);line-height:1.2}',
+    '.streamer-gallery-stat-value--split{display:flex;flex-direction:column;gap:2px;white-space:normal;overflow:visible;text-overflow:clip}',
+    '.streamer-gallery-stat-value--split span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.streamer-gallery-stat-value--em{font-size:13px;letter-spacing:-.02em}',
+    '.streamer-gallery-stat-value--muted{color:rgba(255,255,255,.82);font-size:11px;font-weight:800}',
+    '.streamer-gallery-univ-chip,.streamer-gallery-stat,.streamer-gallery-stat *{user-select:none;-webkit-user-select:none}',
     '.streamer-focus-layout{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:14px;align-items:start}',
     '.streamer-focus-sidebar,.streamer-focus-main{padding:14px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16);box-shadow:0 16px 30px rgba(15,23,42,.05)}',
     '.streamer-focus-section-title{font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px;letter-spacing:-.02em}',
@@ -147,7 +154,7 @@ let totalFocusPlayer=''; // 상세형에서 선택된 스트리머 이름
     'body.dark .streamer-avatar{background:linear-gradient(180deg,#17263c,#0f172a);border-color:#334155;color:#cbd5e1;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     '@media (max-width:980px){.streamer-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}',
     '@media (max-width:980px){.streamer-focus-layout{grid-template-columns:1fr}.streamer-focus-list{max-height:none}.streamer-focus-main-hero{grid-template-columns:1fr}}',
-    '@media (max-width:780px){.streamer-hero{flex-direction:column;padding:16px;border-radius:20px}.streamer-hero-title{font-size:20px}.streamer-hero-badges{justify-content:flex-start}.streamer-toolbar-card,.streamer-content-card{padding:10px}.streamer-gallery-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.streamer-search{max-width:none;flex:1 1 180px}.streamer-kpi-grid,.streamer-focus-statgrid,.streamer-focus-note-grid{grid-template-columns:1fr}.streamer-gallery-card{min-height:258px}.streamer-focus-title{font-size:24px}.streamer-focus-photo{min-height:220px}}'
+    '@media (max-width:780px){.streamer-hero{flex-direction:column;padding:16px;border-radius:20px}.streamer-hero-title{font-size:20px}.streamer-hero-badges{justify-content:flex-start}.streamer-toolbar-card,.streamer-content-card{padding:10px}.streamer-gallery-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.streamer-search{max-width:none;flex:1 1 180px}.streamer-kpi-grid,.streamer-focus-statgrid,.streamer-focus-note-grid{grid-template-columns:1fr}.streamer-gallery-card{min-height:276px}.streamer-gallery-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.streamer-gallery-stat--wide{grid-column:1/-1}.streamer-focus-title{font-size:24px}.streamer-focus-photo{min-height:220px}}'
   ].join('');
   document.head.appendChild(s);
 })();
@@ -173,12 +180,12 @@ function _tpDaysAgoNum(days){
 function _getStreamerActivityMeta(p){
   const hist = Array.isArray(p?.history) ? p.history : [];
   const lastNum = hist.reduce((mx,h)=>Math.max(mx,_tpDateNum(h?.date)),0);
-  if(!lastNum) return { key:'cool', label:'REST', title:'전적 없음' };
+  if(!lastNum) return { key:'none', label:'', title:'전적 없음' };
   const _7agoN = _tpDaysAgoNum(7);
   const _30agoN = _tpDaysAgoNum(30);
   if(lastNum >= _7agoN) return { key:'hot', label:'LIVE', title:'최근 활동 7일 이내' };
   if(lastNum >= _30agoN) return { key:'warm', label:'WARM', title:'활동 중 30일 이내' };
-  return { key:'cool', label:'REST', title:'비활성 30일 이상' };
+  return { key:'none', label:'', title:'최근 활동 적음' };
 }
 
 function _tpHistAllForPlayer(p){
@@ -696,10 +703,10 @@ function rTotal(C,T){
           const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
           const _7ago2=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
           const lastD=(p.history||[]).reduce((mx,h)=>(h&&h.date&&h.date>mx)?h.date:mx,'');
-          if(!lastD) return '<span class="streamer-act-chip cool" title="전적 없음">-</span>';
+          if(!lastD) return '';
           if(lastD>=_7ago2) return `<span class="streamer-act-chip hot" title="최근 활동 (7일 이내)">LIVE</span>`;
           if(lastD>=_30ago2) return `<span class="streamer-act-chip warm" title="활동 중 (30일 이내)">WARM</span>`;
-          return '<span class="streamer-act-chip cool" title="비활성 (30일 이상)">REST</span>';
+          return '';
         })()}</td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;
@@ -847,19 +854,23 @@ function _buildGalleryView(rankMap){
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
       const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       const actMeta = _getStreamerActivityMeta(p);
-      if(typeof p.photo==='string' && p.photo.trim()) _galleryPhotoUrls.push(p.photo.trim());
+      const photoMap=(window.playerPhotos&&typeof window.playerPhotos==='object')?window.playerPhotos:{};
+      const photoSrcRaw=(typeof p.photo==='string'&&p.photo.trim())?p.photo.trim():String(photoMap[p.name]||'').trim();
+      const _posUse=(p.photoPosUse!==false);
+      const _posX=Number(p.photoPosX), _posY=Number(p.photoPosY);
+      const photoPos=(_posUse && Number.isFinite(_posX) && Number.isFinite(_posY)) ? `${_posX}% ${_posY}%` : 'top center';
+      if(photoSrcRaw) _galleryPhotoUrls.push(photoSrcRaw);
       html+=`<div class="streamer-gallery-card ${rankMap[p.name]===1?'top1':rankMap[p.name]===2?'top2':rankMap[p.name]===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-card="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}"
         data-tp-action="open-player" data-tp-player="${_pAttr}"
-        style="background:${clr}18;border-color:${clr}38;backdrop-filter:blur(1px)"
-        onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 28px rgba(0,0,0,.22)';try{if(typeof _prewarmPlayerModalImages==='function'){var _pp=window.players&&window.players.find(function(x){return x.name==='${_pSafe}'});if(_pp)_prewarmPlayerModalImages(_pp);}}catch(e){}"
-        onmouseleave="this.style.transform='';this.style.boxShadow=''">
-        ${p.photo
-          ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
+        style="--card-accent:${clr};background:${clr}18;border-color:${clr}38;backdrop-filter:blur(1px)"
+        onmouseenter="try{if(typeof _prewarmPlayerModalImages==='function'){var _pp=window.players&&window.players.find(function(x){return x.name==='${_pSafe}'});if(_pp)_prewarmPlayerModalImages(_pp);}}catch(e){}">
+        ${photoSrcRaw
+          ? `<img src="${toHttpsUrl(photoSrcRaw)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
           : ''}
-        <div class="gc-placeholder" style="position:absolute;inset:0;display:${p.photo?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:linear-gradient(160deg,${clr}2a 0%,${clr}0e 100%)">${p.race||'?'}</div>
+        <div class="gc-placeholder" style="position:absolute;inset:0;display:${photoSrcRaw?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:linear-gradient(160deg,${clr}2a 0%,${clr}0e 100%)">${p.race||'?'}</div>
         <div class="streamer-gallery-overlay"></div>
         <div class="streamer-gallery-rank">${rankMap[p.name]?'#'+rankMap[p.name]:''}</div>
-        <div class="streamer-gallery-act"><span class="streamer-act-chip ${actMeta.key}" title="${actMeta.title}">${actMeta.label}</span></div>
+        ${actMeta.label?`<div class="streamer-gallery-act"><span class="streamer-act-chip ${actMeta.key}" title="${actMeta.title}">${actMeta.label}</span></div>`:''}
         <div class="streamer-gallery-bottom">
           <div class="streamer-gallery-topline">
             <div class="streamer-gallery-name" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
@@ -875,15 +886,21 @@ function _buildGalleryView(rankMap){
           <div class="streamer-gallery-stats">
             <div class="streamer-gallery-stat">
               <div class="streamer-gallery-stat-label">전적</div>
-              <div class="streamer-gallery-stat-value">${games ? `${win}승 ${loss}패` : '기록 없음'}</div>
+              <div class="streamer-gallery-stat-value streamer-gallery-stat-value--split">
+                <span class="streamer-gallery-stat-value--em">${games ? `${win}승 ${loss}패` : '기록 없음'}</span>
+                <span class="streamer-gallery-stat-value--muted">${games ? `${games}전` : '공식전 없음'}</span>
+              </div>
             </div>
             <div class="streamer-gallery-stat">
               <div class="streamer-gallery-stat-label">포인트</div>
-              <div class="streamer-gallery-stat-value">${pS(points)}</div>
+              <div class="streamer-gallery-stat-value streamer-gallery-stat-value--em">${pS(points)}</div>
             </div>
-            <div class="streamer-gallery-stat">
+            <div class="streamer-gallery-stat streamer-gallery-stat--wide">
               <div class="streamer-gallery-stat-label">ELO / 승률</div>
-              <div class="streamer-gallery-stat-value" style="color:${wr===null?'#fff':wr>=50?'#86efac':'#fecaca'}">${elo} · ${wr===null?'-':wr+'%'}</div>
+              <div class="streamer-gallery-stat-value streamer-gallery-stat-value--split">
+                <span class="streamer-gallery-stat-value--em">${elo}</span>
+                <span class="streamer-gallery-stat-value--muted" style="color:${wr===null?'rgba(255,255,255,.82)':wr>=50?'#86efac':'#fecaca'}">승률 ${wr===null?'-':wr+'%'}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -951,7 +968,7 @@ function _buildFocusView(rankMap){
         <div class="streamer-focus-meta">
           <div class="streamer-focus-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span>${genderIcon(p.gender)}</div>
           <div class="streamer-focus-sub">${p.role||'일반 스트리머'} · ${p.tier||'?'}티어 · ${p.race||'?'}</div>
-          <div class="streamer-focus-sub"><span class="streamer-act-chip ${actMeta.key}" style="min-width:42px;padding:3px 7px;font-size:10px">${actMeta.label}</span><span>${games?`${win}승 ${loss}패 · ${wr}%`:'기록 없음'}</span></div>
+          <div class="streamer-focus-sub">${actMeta.label?`<span class="streamer-act-chip ${actMeta.key}" style="min-width:42px;padding:3px 7px;font-size:10px">${actMeta.label}</span>`:''}<span>${games?`${win}승 ${loss}패 · ${wr}%`:'기록 없음'}</span></div>
         </div>
       </div>`;
     });
@@ -1008,7 +1025,7 @@ function _buildFocusView(rankMap){
           <span class="streamer-focus-chip">${selected.tier||'?'}티어</span>
           <span class="streamer-focus-chip">${selected.race==='P'?'프로토스':selected.race==='T'?'테란':selected.race==='Z'?'저그':'종족 미정'}</span>
           <span class="streamer-focus-chip">${selUniv}</span>
-          <span class="streamer-focus-chip">${selAct.label}</span>
+          ${selAct.label ? `<span class="streamer-focus-chip">${selAct.label}</span>` : ''}
           ${getStatusIconHTML(selected.name)}
         </div>
         <div class="streamer-focus-desc">${selUniv} 소속으로 현재 ${selGames ? `${selGames}전 ${selWin}승 ${selLoss}패` : '공식 기록이 아직 없고'}${selWr==null ? '' : `, 승률 ${selWr}%`} 상태입니다.</div>
@@ -2281,10 +2298,10 @@ function rTier(C,T){
   }
   function _getActHTML(p){
     const _lastD=_tierWL(p).lastD;
-    if(!_lastD) return '<span class="tier-act-dot none" title="기록 없음">-</span>';
+    if(!_lastD) return '';
     if(_lastD>=_7ago2) return`<span class="tier-act-dot hot" title="7일 이내 활동">LIVE</span>`;
     if(_lastD>=_30ago2) return`<span class="tier-act-dot warm" title="30일 이내 활동">WARM</span>`;
-    return '<span class="tier-act-dot cool" title="최근 활동 적음">REST</span>';
+    return '';
   }
 
   const _univIconUrlCache = (()=>{
@@ -2387,7 +2404,7 @@ function rTier(C,T){
   // 뷰2: CARD GRID (카드 그리드)
   // ════════════════════════════════════════════
   else if(_vm==='card'){
-  h=`<div class="tier-content-card"><div class="tier-card-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isMb?'140px':'180px'},1fr));gap:${_isMb?'8px':'12px'}">`;
+  h=`<div class="tier-content-card"><div class="tier-card-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isMb?'150px':'190px'},1fr));gap:${_isMb?'10px':'12px'}">`;
   list.forEach((p,i)=>{
     const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
     const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
@@ -2396,25 +2413,57 @@ function rTier(C,T){
       : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
     const univIconHTML=_getUnivIconHTML(p);
     const extraVal=_getExtraVal(p);
-    const _actHTML=_getActHTML(p);
-    const _rankLabel=i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="font-size:11px;font-weight:900;color:var(--text3)">${i+1}위</span>`;
-    h+=`<div class="tier-rank-card ${i===0?'top1':i===1?'top2':i===2?'top3':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="border-color:${col}33;border-top:3px solid ${col}">
-      <div class="tier-rank-badge">${_rankLabel}</div>
-      <div class="tier-rank-act">${_actHTML}</div>
-      <div style="margin-top:10px">${getPlayerPhotoHTML(p.name,_isMb?'44px':'52px')}</div>
-      <div style="font-weight:800;font-size:${_isMb?12:13}px;text-align:center;line-height:1.3;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
-      <div style="display:flex;align-items:center;gap:4px;justify-content:center">
-        <span class="ubadge tier-univ-badge" data-icon-done="1" style="background:${col};font-size:10px;padding:2px 8px">${univIconHTML}${p.univ}</span>
+    const actMeta=_getStreamerActivityMeta(p);
+    const metricLabel=_typeSum!==null?'유형 합계':(modeHeaders[tierRankMode]||'포인트');
+    const elo=(p.elo||ELO_DEFAULT);
+    const photoMap=(window.playerPhotos&&typeof window.playerPhotos==='object')?window.playerPhotos:{};
+    const photoSrcRaw=(typeof p.photo==='string'&&p.photo.trim())?p.photo.trim():String(photoMap[p.name]||'').trim();
+    const _posUse=(p.photoPosUse!==false);
+    const _posX=Number(p.photoPosX), _posY=Number(p.photoPosY);
+    const photoPos=(_posUse && Number.isFinite(_posX) && Number.isFinite(_posY)) ? `${_posX}% ${_posY}%` : 'top center';
+    h+=`<div class="streamer-gallery-card ${i===0?'top1':i===1?'top2':i===2?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-tp-action="open-player" data-tp-player="${_pAttr}"
+      style="--card-accent:${col};background:${col}18;border-color:${col}38;backdrop-filter:blur(1px)"
+      onmouseenter="try{if(typeof _prewarmPlayerModalImages==='function'){var _pp=window.players&&window.players.find(function(x){return x.name==='${_pSafe}'});if(_pp)_prewarmPlayerModalImages(_pp);}}catch(e){}">
+      ${photoSrcRaw
+        ? `<img src="${toHttpsUrl(photoSrcRaw)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
+        : ''}
+      <div class="gc-placeholder" style="position:absolute;inset:0;display:${photoSrcRaw?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${col};background:linear-gradient(160deg,${col}2a 0%,${col}0e 100%)">${p.race||'?'}</div>
+      <div class="streamer-gallery-overlay"></div>
+      <div class="streamer-gallery-rank">#${i+1}</div>
+      ${actMeta.label?`<div class="streamer-gallery-act"><span class="streamer-act-chip ${actMeta.key}" title="${actMeta.title}">${actMeta.label}</span></div>`:''}
+      <div class="streamer-gallery-bottom">
+        <div class="streamer-gallery-topline">
+          <div class="streamer-gallery-name" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
+          ${getStatusIconHTML(p.name)}
+        </div>
+        <div class="streamer-gallery-role">${p.role || '티어 랭커'}</div>
+        <div class="streamer-gallery-meta">
+          ${_getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:9px;padding:1px 4px">${p.race||'?'}</span>
+          <span class="streamer-gallery-univ-chip">${univIconHTML}${p.univ || '무소속'}</span>
+          ${p.inactive?'<span class="streamer-gallery-univ-chip" style="background:rgba(249,115,22,.16);border-color:rgba(249,115,22,.24)">휴학</span>':''}
+          ${p.retired?'<span class="streamer-gallery-univ-chip" style="background:rgba(148,163,184,.18);border-color:rgba(148,163,184,.28)">은퇴</span>':''}
+        </div>
+        <div class="streamer-gallery-stats">
+          <div class="streamer-gallery-stat">
+            <div class="streamer-gallery-stat-label">전적</div>
+            <div class="streamer-gallery-stat-value streamer-gallery-stat-value--split">
+              <span class="streamer-gallery-stat-value--em">${tot ? `${rec.w}승 ${rec.l}패` : '기록 없음'}</span>
+              <span class="streamer-gallery-stat-value--muted">${tot ? `${tot}전` : '공식전 없음'}</span>
+            </div>
+          </div>
+          <div class="streamer-gallery-stat">
+            <div class="streamer-gallery-stat-label">${metricLabel}</div>
+            <div class="streamer-gallery-stat-value streamer-gallery-stat-value--em">${extraVal || '-'}</div>
+          </div>
+          <div class="streamer-gallery-stat streamer-gallery-stat--wide">
+            <div class="streamer-gallery-stat-label">ELO / 승률</div>
+            <div class="streamer-gallery-stat-value streamer-gallery-stat-value--split">
+              <span class="streamer-gallery-stat-value--em">${elo}</span>
+              <span class="streamer-gallery-stat-value--muted" style="color:${wr===null?'rgba(255,255,255,.82)':wr>=50?'#86efac':'#fecaca'}">승률 ${tot?wr+'%':'-'}</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;justify-content:center">
-        ${_getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:10px">${p.race}</span>
-      </div>
-      <div class="tier-rank-statgrid">
-        <div class="tier-rank-stat"><div style="font-size:10px;color:var(--gray-l)">승</div><div style="font-weight:900;font-size:13px;color:var(--score-win)">${rec.w}</div></div>
-        <div class="tier-rank-stat"><div style="font-size:10px;color:var(--gray-l)">패</div><div style="font-weight:900;font-size:13px;color:var(--score-lose)">${rec.l}</div></div>
-        <div class="tier-rank-stat"><div style="font-size:10px;color:var(--gray-l)">승률</div><div style="font-weight:800;font-size:12px;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</div></div>
-      </div>
-      <div class="tier-rank-extra">${extraVal}</div>
     </div>`;
   });
   h+=`</div></div>`;
