@@ -1150,7 +1150,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
     else{if(!m.a||!m.b) return;}
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return;
-    if(typeof passDateFilter==='function' && !passDateFilter(m.d||''))return;
+    if(typeof passDateFilter==='function' && !passDateFilter(m.d||'', mode))return;
     _filtered=true;
     list.push({m, _origIdx});
   });
@@ -1425,7 +1425,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     }
     if(m.sa==null||m.sa===''||m.sb==null||m.sb==='') return false;
     if(isNaN(Number(m.sa))||isNaN(Number(m.sb))) return false;
-    if(typeof passDateFilter==='function'&&!passDateFilter(m.d||'')) return false;
+    if(typeof passDateFilter==='function'&&!passDateFilter(m.d||'', mode)) return false;
     return true;
   });
   // 동일 날짜 내 정렬 보조키(최신이 위): 시간/생성시각 기반
@@ -2820,7 +2820,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     if(!safeNames.length) return '?';
     return safeNames.map(name=>{
       const safeJs = _escJs(name);
-      const click = `onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } })();setTimeout(()=>openPlayerModal('${safeJs}'),80)" data-player-link="1"`;
+      const click = `onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } openPlayerModal('${safeJs}'); })()" data-player-link="1"`;
       return `<span ${click} style="cursor:pointer;text-decoration:underline dotted">${_escHtml(name)}</span>`;
     }).join(`<span style="color:var(--text3)"> / </span>`);
   };
@@ -2895,8 +2895,8 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         const nameHtmlA=_renderNameList(namesA);
         const nameHtmlB=_renderNameList(namesB);
         // (설정) 경기 결과 팝업( histDetModal )에서 스트리머 클릭 시 팝업 닫기 여부
-        const clickA=!isTeamGame&&g.playerA?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } })();setTimeout(()=>openPlayerModal('${_escJs(g.playerA||'')}'),80)" data-player-link="1"`:''
-        const clickB=!isTeamGame&&g.playerB?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } })();setTimeout(()=>openPlayerModal('${_escJs(g.playerB||'')}'),80)" data-player-link="1"`:''
+        const clickA=!isTeamGame&&g.playerA?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } openPlayerModal('${_escJs(g.playerA||'')}'); })()" data-player-link="1"`:''
+        const clickB=!isTeamGame&&g.playerB?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } openPlayerModal('${_escJs(g.playerB||'')}'); })()" data-player-link="1"`:''
         const _teamColorMode = ['mini','univm','ck','pro','tt','comp','procomp','procomptn'].includes(String(mode||''));
         const sideBaseA = _teamColorMode ? ca : pca;
         const sideBaseB = _teamColorMode ? cb : pcb;

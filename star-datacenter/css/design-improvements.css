@@ -92,7 +92,7 @@ body.dark #actionBar {
 .modal {
   display: none;
   position: fixed !important;
-  z-index: var(--z-modal) !important;
+  /* z-index는 inline style(om 함수)로 동적 관리 - !important 제거 */
   inset: 0 !important;
   background: rgba(15,23,42,.5) !important;
   backdrop-filter: blur(4px) !important;

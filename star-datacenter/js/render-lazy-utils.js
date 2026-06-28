@@ -316,7 +316,7 @@ async function _ensureChatbotLoaded(){
   await _loadScriptOnce('js/chatbot-formatters-tournaments.js?v=20260623-01');
   await _loadScriptOnce('js/chatbot-formatters-univ.js?v=20260623-01');
   await _loadScriptOnce('js/chatbot-handlers.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-ui.js?v=20260623-01');
+  await _loadScriptOnce('js/chatbot-ui.js?v=20260628-fix01');
 }
 function _lazyOpenChatbot(mode){
   (async()=>{

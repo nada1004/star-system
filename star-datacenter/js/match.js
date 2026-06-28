@@ -175,15 +175,20 @@ function buildYearMonthFilterControls(section, compact=false){
   // (요청사항) 드롭다운 기반 연/월 필터 + 필요 시(예: 기록탭 상단 바) 인라인으로 삽입 가능
   const years = ['전체', ...getYearOptions()];
   const months = ['전체','01','02','03','04','05','06','07','08','09','10','11','12'];
+  // section별 독립 필터값, 없으면 전역값 폴백
+  const _curY = (section && window._sectionFilterYear  && window._sectionFilterYear[section]  != null)
+    ? window._sectionFilterYear[section]  : filterYear;
+  const _curM = (section && window._sectionFilterMonth && window._sectionFilterMonth[section] != null)
+    ? window._sectionFilterMonth[section] : filterMonth;
 
   const yOpts = years.map(y=>{
     const label = (y==='전체') ? '전체' : `${y}년`;
-    return `<option value="${y}"${filterYear===y?' selected':''}>${label}</option>`;
+    return `<option value="${y}"${_curY===y?' selected':''}>${label}</option>`;
   }).join('');
 
   const mOpts = months.map(m=>{
     const label = (m==='전체') ? '전체' : `${parseInt(m,10)}월`;
-    return `<option value="${m}"${filterMonth===m?' selected':''}>${label}</option>`;
+    return `<option value="${m}"${_curM===m?' selected':''}>${label}</option>`;
   }).join('');
 
   return `
@@ -201,8 +206,12 @@ function buildYearMonthFilter(section){
   return `<div class="fbar no-export ym-filter-bar">${buildYearMonthFilterControls(section,false)}</div>`;
 }
 
+// section별 독립 날짜 필터 저장소
+window._sectionFilterYear  = window._sectionFilterYear  || {};
+window._sectionFilterMonth = window._sectionFilterMonth || {};
+
 function setFilterYear(y, section){
-  filterYear=y;
+  if(section){ window._sectionFilterYear[section]=y; } else { filterYear=y; }
   openDetails={};
   window._ttPageMap=window._ttPageMap||{};
   window._ttPageMap['tiertour-gen']=0;
@@ -210,19 +219,23 @@ function setFilterYear(y, section){
 }
 
 function setFilterMonth(m, section){
-  filterMonth=m;
+  if(section){ window._sectionFilterMonth[section]=m; } else { filterMonth=m; }
   openDetails={};
   window._ttPageMap=window._ttPageMap||{};
   window._ttPageMap['tiertour-gen']=0;
   render();
 }
 
-function passDateFilter(dateStr){
+function passDateFilter(dateStr, section){
   if(!dateStr)return true;
   const y=dateStr.slice(0,4);
   const m=dateStr.slice(5,7);
-  if(filterYear!=='전체' && y!==filterYear)return false;
-  if(filterMonth!=='전체' && m!==filterMonth)return false;
+  const _fy = (section && window._sectionFilterYear  && window._sectionFilterYear[section]  != null)
+    ? window._sectionFilterYear[section]  : filterYear;
+  const _fm = (section && window._sectionFilterMonth && window._sectionFilterMonth[section] != null)
+    ? window._sectionFilterMonth[section] : filterMonth;
+  if(_fy!=='전체' && y!==_fy)return false;
+  if(_fm!=='전체' && m!==_fm)return false;
   return true;
 }
 

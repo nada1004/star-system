@@ -20,8 +20,11 @@ function _getPPHCache() {
   return _pphCache;
 }
 
-function getPlayerPhotoHTML(playerName, size, extraStyle){
+function getPlayerPhotoHTML(playerName, size, extraStyle, opts){
   size=size||'32px'; extraStyle=extraStyle||'';
+  opts = opts || {};
+  // opts.lazy === true → 리스트/순위표 컨텍스트. 뷰포트 바깥 이미지는 지연 로드.
+  //                    → 한꺼번에 high priority로 폭주하는 것 방지.
   const _pph = _getPPHCache();
   let _scale = _pph.scale;
   try{
@@ -105,7 +108,11 @@ function getPlayerPhotoHTML(playerName, size, extraStyle){
       }
     }
   }catch(e){}
-  return '<img '+clickAttr+' src="'+src+'" decoding="async" fetchpriority="high" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+(pos?('object-position:'+pos+';'):'')+bdr+clickStyle+'" onerror="this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');">';
+  const _lazyAttr = opts.lazy ? ' loading="lazy"' : '';
+  // lazy 컨텍스트는 priority를 'auto'로 강제 → high-priority 폭주 방지
+  const _prio = opts.lazy ? 'auto' : (opts.priority || 'high');
+  const _prioAttr = ' fetchpriority="' + _prio + '"';
+  return '<img '+clickAttr+_lazyAttr+_prioAttr+' src="'+src+'" decoding="async" style="'+base+';'+(fit?('object-fit:'+fit+';'):'')+(pos?('object-position:'+pos+';'):'')+bdr+clickStyle+'" onerror="this.style.opacity=\'.35\';this.style.filter=\'grayscale(1)\';this.removeAttribute(\'onerror\');">';
 }
 
 const _prewarmedImageUrls = new Set();

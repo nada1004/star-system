@@ -2915,9 +2915,9 @@ function histUnivCompHTML(){
           ${statRow('팀전 패(전체)', sA.mL, sB.mL, false)}
           ${statRow('선수 수', sA.members.length, sB.members.length)}
           <tr>
-            <td style="text-align:right;padding:6px 10px;cursor:pointer;color:${sA.col};font-weight:700" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${(sA.ace?.name||'').replace(/'/g,"\'")}'),80)">${sA.ace?.name||'-'}</td>
+            <td style="text-align:right;padding:6px 10px;cursor:pointer;color:${sA.col};font-weight:700" onclick="cm('univModal');openPlayerModal('${(sA.ace?.name||'').replace(/'/g,"\'")}');">${sA.ace?.name||'-'}</td>
             <td style="text-align:center;padding:6px 8px;color:var(--gray-l);font-size:11px">에이스</td>
-            <td style="text-align:left;padding:6px 10px;cursor:pointer;color:${sB.col};font-weight:700" onclick="cm('univModal');setTimeout(()=>openPlayerModal('${(sB.ace?.name||'').replace(/'/g,"\'")}'),80)">${sB.ace?.name||'-'}</td>
+            <td style="text-align:left;padding:6px 10px;cursor:pointer;color:${sB.col};font-weight:700" onclick="cm('univModal');openPlayerModal('${(sB.ace?.name||'').replace(/'/g,"\'")}');">${sB.ace?.name||'-'}</td>
           </tr>
         </tbody>
       </table>
@@ -3385,8 +3385,8 @@ function _ensureHistDetailModal(){
   m=document.createElement('div');
   m.id='histDetModal';
   m.className='modal modal--matchdetail no-export';
-  m.style.cssText='z-index:var(--z-modal-4);display:none';
-  m.setAttribute('onclick',"document.getElementById('histDetModal').style.display='none'");
+  m.style.cssText='display:none';
+  m.setAttribute('onclick',"cm('histDetModal')");
   m.innerHTML=`
     <div class="mbox mbox--matchdetail" onclick="event.stopPropagation()">
       <div class="cmd-head">
@@ -3398,12 +3398,12 @@ function _ensureHistDetailModal(){
           <button id="hmdActCopy" class="cmd-hbtn" title="결과 복사">📤</button>
           <button id="hmdActShare" class="cmd-hbtn" title="공유 카드">🎴</button>
         </div>
-        <button class="cmd-close" onclick="document.getElementById('histDetModal').style.display='none'" aria-label="닫기">✕</button>
+        <button class="cmd-close" onclick="cm('histDetModal')" aria-label="닫기">✕</button>
       </div>
       <div id="hmdScoreBar" class="cmd-scorebar" style="display:none"></div>
       <div id="histDetBody" class="cmd-body"></div>
       <div class="cmd-actions no-export">
-        <button class="btn btn-w" onclick="document.getElementById('histDetModal').style.display='none'">닫기</button>
+        <button class="btn btn-w" onclick="cm('histDetModal')">닫기</button>
       </div>
     </div>`;
   document.body.appendChild(m);
@@ -3683,7 +3683,7 @@ function _histRenderNameList(names, opts){
   if(!safeNames.length) return '?';
   return safeNames.map(name=>{
     const safeJs = _histEscapeJs(name);
-    const click = `onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(${closeModal ? "_s.close_on_match_player!==false" : "false"}){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } })();setTimeout(()=>openPlayerModal('${safeJs}'),80)"`;
+    const click = `onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(${closeModal ? "_s.close_on_match_player!==false" : "false"}){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } openPlayerModal('${safeJs}'); })()"`;
     return `<span ${click} data-player-link="1" style="cursor:pointer;text-decoration:underline dotted">${_histEscapeHtml(name)}</span>`;
   }).join(`<span style="color:var(--text3)"> / </span>`);
 }

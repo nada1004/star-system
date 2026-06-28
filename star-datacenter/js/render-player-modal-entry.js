@@ -80,14 +80,10 @@ function _doOpenPlayerModal(name, p){
   try{
     const pm = document.getElementById('playerModal');
     if(pm){
-      if(!keepEditModalFront && typeof window._bringModalToFront === 'function') window._bringModalToFront(pm);
       pm.classList.add('modal--player-top');
     }
   }catch(e){}
-  try{
-    const sc=document.getElementById('sharecard-overlay');
-    if(sc) sc.remove();
-  }catch(e){}
+  // sharecard-overlay는 닫지 않음: 공유카드 위에 스트리머 모달이 떠야 함
   if(st.currentName!==name){
     playerHistPage=0;
     st.oppPage=0;
@@ -112,7 +108,14 @@ function _doOpenPlayerModal(name, p){
     editBtn.dataset.playerName=name;
   }
   st.currentName=name;
-  if(!keepEditModalFront) om('playerModal');
+  if(!keepEditModalFront){
+    om('playerModal');
+    // proMembersModal 등 --z-top(99999) 기반 팝업보다 위로 강제 설정
+    try{
+      const pm2=document.getElementById('playerModal');
+      if(pm2) pm2.style.zIndex='100010';
+    }catch(e){}
+  }
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   setTimeout(()=>initPEloChart(name),60);
 }

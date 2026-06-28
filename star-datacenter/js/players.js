@@ -730,7 +730,7 @@ function rTotal(C,T){
         <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span class="streamer-player-cell">
-            ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span class="streamer-avatar"></span>'}
+            ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img loading="lazy" src="${toHttpsUrl(p.photo)}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span class="streamer-avatar"></span>'}
             <span class="streamer-name-stack">
               <span class="streamer-name-line">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name streamer-name-link" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;font-weight:700">⏸️ 휴학</span>':''}</span>
               <span class="streamer-mini-meta">${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
@@ -906,7 +906,7 @@ function _buildGalleryView(rankMap){
         style="--card-accent:${clr};background:${clr}18;border-color:${clr}38;backdrop-filter:blur(1px)"
         onmouseenter="try{if(typeof _prewarmPlayerModalImages==='function'){var _pp=window.players&&window.players.find(function(x){return x.name==='${_pSafe}'});if(_pp)_prewarmPlayerModalImages(_pp);}}catch(e){}">
         ${photoSrcRaw
-          ? `<img src="${toHttpsUrl(photoSrcRaw)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
+          ? `<img loading="lazy" src="${toHttpsUrl(photoSrcRaw)}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
           : ''}
         <div class="gc-placeholder" style="position:absolute;inset:0;display:${photoSrcRaw?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:linear-gradient(160deg,${clr}2a 0%,${clr}0e 100%)">${p.race||'?'}</div>
         <div class="streamer-gallery-overlay"></div>
@@ -1003,7 +1003,7 @@ function _buildFocusView(rankMap){
       const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       listHtml += `<div class="streamer-focus-item ${selected && selected.name===p.name?'active':''}" data-focus-row="1" data-focus-name="${(typeof escAttr==='function'?escAttr(p.name):p.name)}" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" onclick="totalFocusPlayer='${_pSafe}';render()">
         <div class="streamer-focus-avatar">
-          ${p.photo ? `<img src="${toHttpsUrl(p.photo)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : `${p.race||'?'}`}
+          ${p.photo ? `<img loading="lazy" src="${toHttpsUrl(p.photo)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : `${p.race||'?'}`}
         </div>
         <div class="streamer-focus-meta">
           <div class="streamer-focus-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span>${genderIcon(p.gender)}</div>
@@ -2102,12 +2102,12 @@ function rTier(C,T){
         <td style="color:var(--gray-l);font-size:11px">${g.date}</td>
         <td><span style="background:${lblColor};color:#fff;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700">${g.label||'-'}</span></td>
         <td><span style="display:inline-flex;align-items:center;gap:5px;font-weight:800" class="wt">
-          ${wp?getPlayerPhotoHTML(g.winner,'22px'):''}
+          ${wp?getPlayerPhotoHTML(g.winner,'22px','',{lazy:true}):''}
           <span style="cursor:pointer" data-tp-action="open-player" data-tp-player="${wAttr}">
             ${wp?`<span class="rbadge r${wp.race}" style="font-size:10px;margin-right:2px">${wp.race}</span>`:''}${g.winner}${getStatusIconHTML(g.winner)}</span></span>
           ${wp?`<span class="ubadge" style="background:${wc};font-size:10px;padding:1px 6px;margin-left:4px">${wp.univ}</span>`:''}</td>
         <td><span style="display:inline-flex;align-items:center;gap:5px;opacity:.75">
-          ${lp?getPlayerPhotoHTML(g.loser,'22px'):''}
+          ${lp?getPlayerPhotoHTML(g.loser,'22px','',{lazy:true}):''}
           <span style="cursor:pointer" data-tp-action="open-player" data-tp-player="${lAttr}">
             ${lp?`<span class="rbadge r${lp.race}" style="font-size:10px;margin-right:2px">${lp.race}</span>`:''}${g.loser}</span></span>
           ${lp?`<span class="ubadge" style="background:${lc};font-size:10px;padding:1px 6px;margin-left:4px;opacity:.7">${lp.univ}</span>`:''}</td>
@@ -2480,7 +2480,7 @@ function rTier(C,T){
       <td style="text-align:center;white-space:nowrap;padding:${_pad}"><span class="rbadge r${p.race}">${p.race}</span></td>
       <td style="text-align:left;white-space:nowrap;padding:${_padName};font-weight:700;min-width:0">
         <span style="display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:${_isMb?170:260}px">
-          ${getPlayerPhotoHTML(p.name,_isMb?'34px':'40px')}
+          ${getPlayerPhotoHTML(p.name,_isMb?'34px':'40px','',{lazy:true})}
           <span class="clickable-name" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>
           <span style="flex-shrink:0">${genderIcon(p.gender)}${_getStatusIcon(p.name)}</span>
         </span>
@@ -2521,7 +2521,7 @@ function rTier(C,T){
       style="--card-accent:${col};--selected-accent:${col};background:${col}18;border-color:${col}38;backdrop-filter:blur(1px)"
       onmouseenter="try{if(typeof _prewarmPlayerModalImages==='function'){var _pp=window.players&&window.players.find(function(x){return x.name==='${_pSafe}'});if(_pp)_prewarmPlayerModalImages(_pp);}}catch(e){}">
       ${photoSrcRaw
-        ? `<img src="${toHttpsUrl(photoSrcRaw)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
+        ? `<img loading="lazy" src="${toHttpsUrl(photoSrcRaw)}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
         : ''}
       <div class="gc-placeholder" style="position:absolute;inset:0;display:${photoSrcRaw?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${col};background:linear-gradient(160deg,${col}2a 0%,${col}0e 100%)">${p.race||'?'}</div>
       <div class="streamer-gallery-overlay"></div>
@@ -2586,7 +2586,7 @@ function rTier(C,T){
         <span class="tier-podium-ranknum">TOP ${place}</span>
       </div>
       <div class="tier-podium-main ${place===1?'tier-podium-main--hero':''}">
-        ${getPlayerPhotoHTML(p.name,place===1?(_isMb?'64px':'84px'):(_isMb?'48px':'58px'))}
+        ${getPlayerPhotoHTML(p.name,place===1?(_isMb?'64px':'84px'):(_isMb?'48px':'58px'),'',{lazy:true})}
         <div class="tier-podium-copy">
           <div class="tier-podium-name">${p.name}${genderIcon(p.gender)}</div>
           <div class="tier-podium-sub">
@@ -2639,7 +2639,7 @@ function rTier(C,T){
       h+=`<article class="tier-podium-rest-item ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col};border-top:3px solid ${col}">
         <div class="tier-podium-rest-top">
           <span class="tier-podium-rest-rank">${ri}위</span>
-          ${getPlayerPhotoHTML(p.name,'34px')}
+          ${getPlayerPhotoHTML(p.name,'34px','',{lazy:true})}
           <div class="tier-podium-rest-copy">
             <div class="tier-podium-rest-name">${p.name}${genderIcon(p.gender)}</div>
             <div class="tier-podium-rest-subline">
@@ -2691,7 +2691,7 @@ function rTier(C,T){
         <span class="tier-compact-rank-label">${i+1}위</span>
       </div>
       <div class="tier-compact-main">
-        ${getPlayerPhotoHTML(p.name,_isMb?'28px':'30px')}
+        ${getPlayerPhotoHTML(p.name,_isMb?'28px':'30px','',{lazy:true})}
         <div class="tier-compact-meta">
           <div class="tier-compact-name">${p.name}${genderIcon(p.gender)}</div>
           <div class="tier-compact-sub">
@@ -2749,7 +2749,7 @@ function rTier(C,T){
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
       h+=`<div class="tier-group-card ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--selected-accent:${col};border-color:${col}33">
         <span style="align-self:flex-start;font-size:10px;font-weight:900;color:var(--text3)">${i+1}위</span>
-        ${getPlayerPhotoHTML(p.name,_isMb?'40px':'46px')}
+        ${getPlayerPhotoHTML(p.name,_isMb?'40px':'46px','',{lazy:true})}
         <span style="font-weight:800;font-size:${_isMb?11:12}px;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span>
         <span class="ubadge tier-univ-badge" data-icon-done="1" style="background:${col};font-size:9px;padding:1px 6px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ}</span>
         <span class="rbadge r${p.race}" style="font-size:9px">${p.race}</span>

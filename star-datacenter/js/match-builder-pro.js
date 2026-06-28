@@ -41,7 +41,7 @@ function rPro(C,T){
   } else if(proSub==='rank'){
     h+=proRankHTML();
   } else {
-    h+=recSummaryListHTML(window.proM,'pro','tab');
+    h+=recSummaryListHTML(proM,'pro','tab');
   }
   C.innerHTML=h;
 }

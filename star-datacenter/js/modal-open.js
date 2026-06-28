@@ -1,36 +1,35 @@
-/* 기본 모달 열기/닫기 함수 */
+/* ═══════════════════════════════════════════════════════
+   modal-open.js  —  팝업 z-index 관리
+   핵심 원칙: 나중에 열린 팝업이 항상 제일 위
+   글로벌 카운터 방식으로 경쟁 조건(race condition) 완전 제거
+   ═══════════════════════════════════════════════════════ */
+
+/* 글로벌 z-index 카운터: 모달 열 때마다 +10씩 증가
+   CSS 하드코딩 최대값(#emModal: 6200)보다 높은 6500에서 시작 */
+window.__modalZCounter = window.__modalZCounter || 6500;
+
+window._getNextModalZ = function() {
+  window.__modalZCounter += 10;
+  return window.__modalZCounter;
+};
+
+/* 특정 모달을 최전방으로 (카운터 기반) */
 window._bringModalToFront = function(el) {
   if(!el) return;
-  let maxZ = 6000;
   try{
-    document.querySelectorAll('.modal,[id$="Modal"],[id$="modal"],.sharecard-modal-overlay').forEach(node=>{
-      if(!node || node===el) return;
-      const st = window.getComputedStyle(node);
-      if(st.display === 'none' || st.visibility === 'hidden') return;
-      const z = Number(st.zIndex);
-      if(Number.isFinite(z)) maxZ = Math.max(maxZ, z);
-    });
-  }catch(e){}
-  try{
-    const currentInlineZ = parseInt(el?.style?.zIndex || '0', 10);
-    const currentComputedZ = parseInt(getComputedStyle(el).zIndex || '0', 10);
-    const nextZ = Math.max(
-      maxZ + 20,
-      Number.isFinite(currentInlineZ) ? currentInlineZ : 0,
-      Number.isFinite(currentComputedZ) ? currentComputedZ : 0
-    );
-    el.style.zIndex = String(nextZ);
+    el.style.zIndex = String(window._getNextModalZ());
   }catch(e){}
 };
 
+/* 모달 열기: display:flex 설정 + 즉시 최전방 z-index 부여 */
 window.om = function(id) {
   const el = document.getElementById(id);
-  if(el) {
-    el.style.setProperty('display', 'flex', 'important');
-    try{ window._bringModalToFront(el); }catch(e){}
-  }
+  if(!el) return;
+  el.style.setProperty('display', 'flex', 'important');
+  try{ window._bringModalToFront(el); }catch(e){}
 };
 
+/* 모달 닫기 */
 window.cm = function(id) {
   const el = document.getElementById(id);
   if(el) {
@@ -103,6 +102,7 @@ window._getTopClosableModal = function(){
   return topEl;
 };
 
+/* 클릭/키보드 이벤트: 최상위 모달 닫기 */
 try{
   if(!window.__globalModalCloseBound){
     window.__globalModalCloseBound = true;
@@ -129,33 +129,32 @@ try{
   }
 }catch(e){}
 
+/* MutationObserver: 새로 DOM에 추가되는 모달(sharecard 등)만 처리
+   기존에 있던 모달의 style 변경은 무시 → 경쟁 조건 완전 제거 */
 try{
   if(!window.__autoFrontModalObserver){
-    const isCandidate = (node) => {
+    const isModalCandidate = (node) => {
       if(!(node instanceof HTMLElement)) return false;
-      if(node.classList?.contains('modal')) return true;
       if(node.classList?.contains('sharecard-modal-overlay')) return true;
-      const id = String(node.id||'');
-      if(/modal/i.test(id)) return true;
+      if(node.classList?.contains('modal-compact-overlay')) return true;
+      /* DOM에 새로 추가된 모달 엘리먼트만 대상 */
       return false;
-    };
-    const promote = (node) => {
-      if(!isCandidate(node)) return;
-      const st = window.getComputedStyle(node);
-      if(st.display === 'none' || st.visibility === 'hidden') return;
-      try{ window._bringModalToFront(node); }catch(e){}
     };
     window.__autoFrontModalObserver = new MutationObserver((mutations)=>{
       mutations.forEach(m=>{
-        if(m.target) promote(m.target);
-        m.addedNodes && m.addedNodes.forEach(promote);
+        /* 새로 추가된 노드만 처리 (style 변경은 무시) */
+        m.addedNodes && m.addedNodes.forEach(node=>{
+          if(!isModalCandidate(node)) return;
+          const st = window.getComputedStyle(node);
+          if(st.display === 'none' || st.visibility === 'hidden') return;
+          try{ window._bringModalToFront(node); }catch(e){}
+        });
       });
     });
     window.__autoFrontModalObserver.observe(document.documentElement || document.body, {
       childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['style','class']
+      subtree: true
+      /* attributes 감지 제거: style 변경으로 인한 무한 경쟁 원천 차단 */
     });
   }
 }catch(e){}

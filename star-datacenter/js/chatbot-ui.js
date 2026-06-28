@@ -72,7 +72,8 @@ function openPlayerDetail(playerName) {
       if (typeof injectUnivIcons !== 'undefined') {
         injectUnivIcons(modalBody);
       }
-      document.getElementById('playerModal').style.display = 'flex';
+      if(typeof om === 'function') om('playerModal');
+      else document.getElementById('playerModal').style.display = 'flex';
     }
   }
 }
