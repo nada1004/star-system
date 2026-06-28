@@ -3,6 +3,38 @@ function prepareUnivDetailComputedData(opts){
     univName='',
     members=[]
   } = opts || {};
+  const _isAllowedUnivDetailMode = (mode) => {
+    const m = String(mode || '').trim();
+    if(!m) return false;
+    return m.includes('미니대전')
+      || m.includes('대학대전')
+      || m.includes('일반대회')
+      || m.includes('조별리그')
+      || m.includes('대진표');
+  };
+  const _memberScopedSummary = (() => {
+    const arr = Array.isArray(members) ? members : [];
+    const byPlayer = {};
+    let wins = 0, losses = 0, draws = 0, pts = 0;
+    arr.forEach(p => {
+      const filteredHist = (Array.isArray(p?.history) ? p.history : []).filter(h=>{
+        if(String(h?.univ || '').trim() !== String(univName || '').trim()) return false;
+        return _isAllowedUnivDetailMode(h?.mode);
+      });
+      const rec = (typeof calcPlayerAffiliationRecord === 'function')
+        ? calcPlayerAffiliationRecord(p, univName, filteredHist)
+        : { w:0, l:0, d:0, tot:0, wr:0, pts:0 };
+      const key = String(p?.name || '').trim();
+      if(key) byPlayer[key] = rec;
+      wins += rec.w || 0;
+      losses += rec.l || 0;
+      draws += rec.d || 0;
+      pts += rec.pts || 0;
+    });
+    const tot = wins + losses;
+    const wr = tot ? Math.round(wins / tot * 100) : 0;
+    return { byPlayer, wins, losses, draws, tot, wr, pts };
+  })();
   const oppStats={};
   function addOpp(myU,oppU,myWin){
     if(myU!==univName)return;
@@ -12,15 +44,12 @@ function prepareUnivDetailComputedData(opts){
   }
   (miniM||[]).forEach(m=>{addOpp(m.a,m.b,m.sa>m.sb);addOpp(m.b,m.a,m.sb>m.sa);});
   (univM||[]).forEach(m=>{addOpp(m.a,m.b,m.sa>m.sb);addOpp(m.b,m.a,m.sb>m.sa);});
-  (comps||[]).forEach(m=>{const a=m.a||m.u||'';addOpp(a,m.b,m.sa>m.sb);addOpp(m.b,a,m.sb>m.sa);});
   // 일반대회 일반경기 팀전적 반영
   if(typeof getNormalMatchesForHistory==='function'){
     getNormalMatchesForHistory().forEach(m=>{addOpp(m.a,m.b,m.sa>m.sb);addOpp(m.b,m.a,m.sb>m.sa);});
   }
 
-  const scoped = (typeof calcMembersAffiliationSummary==='function')
-    ? calcMembersAffiliationSummary(members, univName)
-    : { byPlayer:{}, wins:0, losses:0, draws:0, tot:0, wr:0, pts:0 };
+  const scoped = _memberScopedSummary;
   const wins = scoped.wins || 0;
   const losses = scoped.losses || 0;
   const tot = scoped.tot || 0;
@@ -91,35 +120,41 @@ function prepareUnivDetailComputedData(opts){
     });
   }
 
-  // comps (구형 대회 기록) 수집
-  const _compOldMatches = [];
-  (typeof comps!=='undefined' ? comps : []).forEach(m=>{
-    const a = m.a||m.u||'';
-    const b = m.b||'';
-    if(!a||!b||m.sa==null||m.sb==null) return;
-    if(a!==univName&&b!==univName) return;
-    _compOldMatches.push({...m, a, b, mode:'대회(구)', _compName:m.n||m.compName||''});
-  });
-
   const myMatches=[
     ...(miniM||[]).filter(m=>m.type!=='civil'&&(m.a===univName||m.b===univName)).map(m=>({...m,mode:'미니대전'})),
-    ...(miniM||[]).filter(m=>m.type==='civil'&&(m.a===univName||m.b===univName)).map(m=>({...m,mode:'시빌워'})),
     ...(univM||[]).filter(m=>m.a===univName||m.b===univName).map(m=>({...m,mode:'대학대전'})),
     ..._grpMatches,
     ..._nmMatches,
     ..._bktMatches,
-    ..._compOldMatches,
   ].sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  const teamWins = myMatches.filter(m=>{
+    const isA = m.a === univName;
+    const myS = isA ? Number(m.sa) : Number(m.sb);
+    const oppS = isA ? Number(m.sb) : Number(m.sa);
+    return Number.isFinite(myS) && Number.isFinite(oppS) && myS > oppS;
+  }).length;
+  const teamLosses = myMatches.filter(m=>{
+    const isA = m.a === univName;
+    const myS = isA ? Number(m.sa) : Number(m.sb);
+    const oppS = isA ? Number(m.sb) : Number(m.sa);
+    return Number.isFinite(myS) && Number.isFinite(oppS) && myS < oppS;
+  }).length;
+  const teamTot = teamWins + teamLosses;
+  const teamWr = teamTot ? Math.round(teamWins / teamTot * 100) : 0;
 
   return {
     oppStats,
     byPlayer: scoped.byPlayer || {},
-    wins,
-    losses,
-    tot,
+    wins: teamWins,
+    losses: teamLosses,
+    tot: teamTot,
     pts,
-    wr,
-    myMatches
+    wr: teamWr,
+    myMatches,
+    playerWins: wins,
+    playerLosses: losses,
+    playerTot: tot,
+    playerWr: wr
   };
 }
 

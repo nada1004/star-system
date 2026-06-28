@@ -8,8 +8,8 @@ function prepareUnivDetailStyleData(univName){
   let udStyle={};
   try{ udStyle = JSON.parse(localStorage.getItem('su_ud_style')||'{}') || {}; }catch(e){ udStyle={}; }
   const logoSize = (typeof getUnivLogoSizeStr==='function')
-    ? getUnivLogoSizeStr(univName, 'detail', 'var(--su_univ_logo_size_detail,46px)')
-    : 'var(--su_univ_logo_size_detail,46px)';
+    ? getUnivLogoSizeStr(univName, 'detail', 'var(--su_univ_logo_size_detail,132px)')
+    : 'var(--su_univ_logo_size_detail,132px)';
   const logoSizeEff = `calc(${logoSize} * var(--su_univ_detail_scale,1))`;
   const bgImg=(ucfg.detailHeaderBgImg||udStyle.header_bg_img||'').trim();
   const bgFit=(ucfg.detailHeaderBgFit||udStyle.header_bg_fit||'contain').trim();

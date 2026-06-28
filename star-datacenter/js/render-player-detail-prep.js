@@ -149,7 +149,8 @@ function preparePlayerRecentSectionData(opts){
   const totalPages=Math.ceil(totalGames/pageSize)||1;
   if(typeof playerHistPage!=='number' || isNaN(playerHistPage)) playerHistPage=0;
   const curPage=Math.max(0,Math.min(playerHistPage,totalPages-1));
-  const sortedHist=[...filteredHist.map(h=>({...h,_origIdx:p.history.indexOf(h)}))]
+  const historyRef = Array.isArray(p?.history) ? p.history : [];
+  const sortedHist=[...filteredHist.map(h=>({...h,_origIdx:historyRef.indexOf(h)}))]
     .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||0)-(a.time||0));
   const displayHist = sortedHist.slice(curPage*pageSize,(curPage+1)*pageSize);
   const fromN = (curPage*pageSize+1);

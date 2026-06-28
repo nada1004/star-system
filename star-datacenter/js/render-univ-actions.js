@@ -96,12 +96,28 @@ function openUnivModal(univName){
   if(!univName)return;
   const st = (typeof getUnivDetailState==='function') ? getUnivDetailState() : (window.UnivDetailState||{});
   try{ if(typeof applyUnivLogoVars==='function') applyUnivLogoVars(); }catch(e){}
-  document.getElementById('univModalTitle').innerHTML=`<span class="detail-main">🎓 ${univName}</span>`;
-  document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(univName);
-  injectUnivIcons(document.getElementById('univModalBody'));
+  const titleEl = document.getElementById('univModalTitle');
+  const bodyEl = document.getElementById('univModalBody');
+  if(titleEl) titleEl.innerHTML=`<span class="detail-main">🎓 ${univName}</span>`;
+  if(bodyEl){
+    bodyEl.innerHTML=buildUnivDetailHTML(univName);
+    bodyEl.scrollTop = 0;
+    try{
+      const scrollBox = bodyEl.closest('.umbox');
+      if(scrollBox) scrollBox.scrollTop = 0;
+    }catch(e){}
+    injectUnivIcons(bodyEl);
+  }
   st.currentName=univName;
   st.editOpen=false;
   om('univModal');
+  requestAnimationFrame(()=>{
+    try{
+      if(bodyEl) bodyEl.scrollTop = 0;
+      const scrollBox = bodyEl && bodyEl.closest ? bodyEl.closest('.umbox') : null;
+      if(scrollBox) scrollBox.scrollTop = 0;
+    }catch(e){}
+  });
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   const editBtn=document.getElementById('univEditBtn');
   if(editBtn){

@@ -54,6 +54,81 @@ window.cm = function(id) {
   }
 };
 
+window._isModalVisible = function(el){
+  if(!(el instanceof HTMLElement)) return false;
+  try{
+    const st = window.getComputedStyle(el);
+    return st.display !== 'none' && st.visibility !== 'hidden';
+  }catch(e){
+    return false;
+  }
+};
+
+window._isModalBackdropCloseBlocked = function(el){
+  if(!(el instanceof HTMLElement)) return true;
+  if(el.classList?.contains('sharecard-modal-overlay')) return false;
+  return String(el.dataset?.noClose || '') === '1';
+};
+
+window._closeModalElement = function(el){
+  if(!(el instanceof HTMLElement)) return false;
+  if(el.classList?.contains('sharecard-modal-overlay')){
+    try{ el.remove(); return true; }catch(e){ return false; }
+  }
+  if(el.id && typeof window.cm === 'function'){
+    try{ window.cm(el.id); return true; }catch(e){}
+  }
+  try{
+    el.style.setProperty('display', 'none', 'important');
+    return true;
+  }catch(e){
+    return false;
+  }
+};
+
+window._getTopClosableModal = function(){
+  let topEl = null;
+  let topZ = -Infinity;
+  try{
+    document.querySelectorAll('.modal,.sharecard-modal-overlay').forEach(el=>{
+      if(!window._isModalVisible(el)) return;
+      if(window._isModalBackdropCloseBlocked(el)) return;
+      const z = Number(window.getComputedStyle(el).zIndex || 0);
+      if(!topEl || z >= topZ){
+        topEl = el;
+        topZ = z;
+      }
+    });
+  }catch(e){}
+  return topEl;
+};
+
+try{
+  if(!window.__globalModalCloseBound){
+    window.__globalModalCloseBound = true;
+    document.addEventListener('click', function(ev){
+      try{
+        const target = ev.target;
+        if(!(target instanceof HTMLElement)) return;
+        const modalEl = target.closest('.modal,.sharecard-modal-overlay');
+        if(!modalEl) return;
+        if(target !== modalEl) return;
+        if(window._isModalBackdropCloseBlocked(modalEl)) return;
+        window._closeModalElement(modalEl);
+      }catch(e){}
+    });
+    document.addEventListener('keydown', function(ev){
+      try{
+        if(ev.defaultPrevented || ev.key !== 'Escape') return;
+        const topModal = window._getTopClosableModal();
+        if(!topModal) return;
+        ev.preventDefault();
+        window._closeModalElement(topModal);
+      }catch(e){}
+    });
+  }
+}catch(e){}
+
 try{
   if(!window.__autoFrontModalObserver){
     const isCandidate = (node) => {

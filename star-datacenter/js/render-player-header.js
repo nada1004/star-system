@@ -66,7 +66,6 @@ function buildPlayerHeaderCardHTML(opts){
         <div style="display:flex;align-items:center;gap:12px">
           <div style="width:${pmPhotoSz+12}px;height:${pmPhotoSz+12}px;border-radius:var(--su_profile_radius,${pmPhotoR+4}px);clip-path:var(--su_profile_clip,none);background:rgba(255,255,255,.16);border:2.5px solid rgba(255,255,255,.42);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:var(--su_profile_fx, 0 8px 24px rgba(0,0,0,.18));backdrop-filter:blur(8px)">${photoHTML}</div>
           <div style="min-width:0;flex:1">
-            <div style="font-size:9px;font-weight:900;letter-spacing:.8px;color:rgba(255,255,255,.72);margin-bottom:4px">STREAMER PROFILE</div>
             <div style="font-size:${pmNameFs+3}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all">${p.name}${genderIcon(p.gender)}</div>
             <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px">
               ${p.role?getRoleBadgeHTML(p.role,'10px'):''}
@@ -93,7 +92,6 @@ function buildPlayerHeaderCardHTML(opts){
       <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;position:relative">
         <div style="width:${pmPhotoSz+12}px;height:${pmPhotoSz+12}px;border-radius:var(--su_profile_radius,${pmPhotoR+4}px);clip-path:var(--su_profile_clip,none);background:rgba(255,255,255,.16);border:2.5px solid rgba(255,255,255,.42);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:var(--su_profile_fx, 0 8px 24px rgba(0,0,0,.18));backdrop-filter:blur(8px)">${photoHTML}</div>
         <div style="min-width:0">
-          <div style="font-size:10px;font-weight:900;letter-spacing:.9px;color:rgba(255,255,255,.78);margin-bottom:6px">STREAMER PROFILE</div>
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:8px">
             <span style="font-size:${pmNameFs+2}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22)">${p.name}${genderIcon(p.gender)}</span>
             ${p.role?getRoleBadgeHTML(p.role,'11px'):''}

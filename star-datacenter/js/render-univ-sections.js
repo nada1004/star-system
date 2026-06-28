@@ -54,7 +54,7 @@ function buildUnivHeaderCardHTML(opts){
     isTablet=false,
     logoSizeEff='46px'
   } = opts || {};
-  const uNameFs = isMobile ? 18 : (isTablet ? 20 : 22);
+  const uNameFs = isMobile ? 36 : (isTablet ? 46 : 54);
   const uSubFs = isMobile ? 11 : 12;
   const dissolvedBadge = (()=>{ const u=univCfg.find(u=>u.name===univName); return u?.dissolved?`<span style="font-size:11px;font-weight:700;background:rgba(0,0,0,.35);color:#fca5a5;border-radius:6px;padding:2px 8px;margin-left:6px;vertical-align:middle">🏚️ 해체${u.dissolvedDate?' '+u.dissolvedDate:''}</span>`:''; })();
   const _bgSize = hdrBgLayer?.fit==='fill' ? '100% 100%' : (hdrBgLayer?.fit==='cover' ? 'cover' : 'contain');
@@ -69,45 +69,43 @@ function buildUnivHeaderCardHTML(opts){
   const ptColor = pts>0?'#4ade80':pts<0?'#f87171':'rgba(255,255,255,.85)';
   const wrColor = winPct>=60?'#4ade80':winPct>=50?'#86efac':winPct>=40?'#fcd34d':'#f87171';
   const bgLayerHTML = hdrBgLayer?.url ? `<div style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl(hdrBgLayer.url).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:${_bgPosX}% ${_bgPosY}%;background-size:${_bgSize};transform:scale(${_bgScale/100});transform-origin:${_bgPosX}% ${_bgPosY}%;opacity:.28;pointer-events:none"></div>` : '';
-  return `<div style="border-radius:20px;overflow:hidden;margin-bottom:20px;box-shadow:0 20px 48px rgba(${colRgb},.20),0 4px 16px rgba(15,23,42,.10);">
-    <div style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${isMobile?'18px 16px':'22px 26px'};position:relative;overflow:hidden;min-height:${isMobile?'140px':'155px'}">
+  return `<div style="border-radius:26px;overflow:hidden;margin-bottom:20px;box-shadow:0 26px 58px rgba(${colRgb},.22),0 6px 18px rgba(15,23,42,.10);">
+    <div style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${isMobile?'22px 16px':'28px 22px 28px 18px'};position:relative;overflow:hidden;min-height:${isMobile?'176px':'198px'}">
       ${bgLayerHTML}
-      <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
-      <div style="position:absolute;bottom:-50px;left:20%;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none"></div>
-      <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(0,0,0,.06) 0%,rgba(0,0,0,.24) 100%);pointer-events:none"></div>
-      <div style="position:absolute;bottom:0;left:0;right:0;height:48px;background:linear-gradient(transparent,rgba(0,0,0,.18));pointer-events:none"></div>
-      <div style="position:relative;display:flex;align-items:flex-start;gap:${isMobile?'14px':'18px'}">
-        <div style="width:calc(var(--su_univ_logo_box_detail,76px)*var(--su_univ_detail_scale,1));height:calc(var(--su_univ_logo_box_detail,76px)*var(--su_univ_detail_scale,1));flex-shrink:0;border-radius:calc(var(--su_univ_logo_radius,18px)+6px);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.22),0 0 0 3px rgba(255,255,255,.30)">
-          ${gUI(univName,logoSizeEff)}
-        </div>
-        <div style="min-width:0;flex:1;padding-top:4px">
-          <div style="font-size:9px;font-weight:900;letter-spacing:2px;color:rgba(255,255,255,.62);text-transform:uppercase;margin-bottom:4px">UNIVERSITY</div>
-          <div style="font-size:${uNameFs}px;font-weight:900;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.3);line-height:1.2;margin-bottom:6px">${univName}${dissolvedBadge}</div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span style="font-size:${uSubFs}px;color:rgba(255,255,255,.75);font-weight:600">👥 ${members.length}명</span>
-            <span style="width:1px;height:12px;background:rgba(255,255,255,.3)"></span>
-            <span style="font-size:${uSubFs}px;color:rgba(255,255,255,.75);font-weight:600">${wins}승 ${losses}패</span>
-            ${tot?`<span style="width:1px;height:12px;background:rgba(255,255,255,.3)"></span><span style="font-size:${uSubFs}px;color:${wrColor};font-weight:800">승률 ${winPct}%</span>`:''}
+      <div style="position:absolute;top:-30px;right:-20px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none"></div>
+      <div style="position:absolute;bottom:-66px;left:12%;width:148px;height:148px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(15,23,42,.04) 0%,rgba(15,23,42,.20) 55%,rgba(15,23,42,.28) 100%);pointer-events:none"></div>
+      <div style="position:absolute;left:0;right:0;top:0;height:72px;background:linear-gradient(180deg,rgba(255,255,255,.10),transparent);pointer-events:none"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:72px;background:linear-gradient(transparent,rgba(15,23,42,.22));pointer-events:none"></div>
+      <div style="position:relative;display:flex;align-items:${isMobile?'flex-start':'center'};justify-content:flex-start;gap:${isMobile?'10px':'12px'}">
+        <div style="display:flex;align-items:center;gap:${isMobile?'4px':'6px'};min-width:0;flex:0 1 auto;margin-left:${isMobile?'-2px':'-4px'};padding:${isMobile?'6px 4px 6px 0':'8px 6px 8px 2px'};border-radius:30px;background:none;border:none;box-shadow:none;backdrop-filter:none">
+          <div style="width:calc(var(--su_univ_logo_box_detail,166px)*var(--su_univ_detail_scale,1));height:calc(var(--su_univ_logo_box_detail,166px)*var(--su_univ_detail_scale,1));flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:visible;margin-right:${isMobile?'-4px':'-10px'}">
+            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 18px 26px rgba(15,23,42,.24)) drop-shadow(0 4px 10px rgba(255,255,255,.10))">
+              ${gUI(univName,logoSizeEff)}
+            </div>
           </div>
-          <div style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:6px 14px;">
-            <span style="font-size:10px;color:rgba(255,255,255,.65);font-weight:700">SCORE</span>
-            <span style="font-size:20px;font-weight:900;color:${ptColor};line-height:1">${pts>0?'+':''}${pts}</span>
+          <div style="min-width:0;flex:0 1 auto;margin-left:${isMobile?'4px':'10px'}">
+            <div style="display:inline-flex;align-items:center;gap:2px;max-width:100%">
+              <div style="font-size:${Math.round(uNameFs*1.12)}px;font-weight:1000;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.30),0 1px 0 rgba(255,255,255,.10);line-height:1.02;letter-spacing:-.045em;word-break:keep-all">${univName}${dissolvedBadge}</div>
+            </div>
           </div>
         </div>
-        ${!isMobile&&topNames.length?`<div style="flex-shrink:0;display:flex;flex-direction:column;gap:4px">
-          ${topNames.map((p,i)=>`<div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:5px 10px;">
-            <span style="font-size:9px;font-weight:900;color:rgba(255,255,255,.5);min-width:14px">${['🥇','🥈','🥉'][i]||''}</span>
-            ${getPlayerPhotoHTML(p.name,'22px')}
-            <span style="font-size:11px;font-weight:800;color:#fff;white-space:nowrap">${p.name}</span>
-            <span style="font-size:10px;color:${ptColor};font-weight:700">${p.points>0?'+':''}${p.points}pt</span>
+        ${!isMobile&&topNames.length?`<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:7px;min-width:auto;margin-left:auto;max-width:42%;align-self:flex-end;margin-bottom:0;margin-right:-4px;transform:translateY(18px)">
+          <div style="display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:18px;background:linear-gradient(180deg,rgba(15,23,42,.16),rgba(15,23,42,.10));border:1px solid rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 12px 24px rgba(15,23,42,.12);backdrop-filter:blur(8px)">
+          ${topNames.map((p,i)=>`<div style="display:flex;align-items:center;gap:5px;background:rgba(15,23,42,.16);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:5px 8px;min-width:0">
+            <span style="font-size:9px;font-weight:900;color:rgba(255,255,255,.68);min-width:12px">${['🥇','🥈','🥉'][i]||''}</span>
+            ${getPlayerPhotoHTML(p.name,'20px')}
+            <span style="font-size:10px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:68px">${p.name}</span>
+            <span style="font-size:9px;color:${ptColor};font-weight:700;white-space:nowrap">${p.points>0?'+':''}${p.points}pt</span>
           </div>`).join('')}
+          </div>
         </div>`:''}
       </div>
     </div>
     <div style="background:var(--white,#fff);padding:${isMobile?'14px 16px':'16px 26px'}">
       ${tot?`<div style="margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:11px;font-weight:800;color:var(--text3,#475569);letter-spacing:.4px">개인 승률</span>
+          <span style="font-size:11px;font-weight:800;color:var(--text3,#475569);letter-spacing:.4px">대학승률</span>
           <span style="font-size:13px;font-weight:900;color:${col}">${winPct}%</span>
         </div>
         <div style="height:8px;background:${col}20;border-radius:99px;overflow:hidden;position:relative">
@@ -117,7 +115,7 @@ function buildUnivHeaderCardHTML(opts){
       <div style="display:grid;grid-template-columns:repeat(${isMobile?'2':'4'},1fr);gap:${isMobile?'8px':'10px'}">
         <div style="background:${col}0d;border:1.5px solid ${col}28;border-radius:14px;padding:${isMobile?'10px 8px':'12px 10px'};text-align:center;position:relative;overflow:hidden">
           <div style="position:absolute;top:-8px;right:-8px;font-size:28px;opacity:.07">⚔️</div>
-          <div style="font-size:9px;color:var(--gray-l,#94a3b8);margin-bottom:5px;font-weight:800;letter-spacing:.8px">개인전적</div>
+          <div style="font-size:9px;color:var(--gray-l,#94a3b8);margin-bottom:5px;font-weight:800;letter-spacing:.8px">대학전적</div>
           <div style="font-weight:900;font-size:${isMobile?'13px':'15px'};color:var(--text,#1e293b)">${wins}<span style="color:var(--green,#16a34a)">승</span> ${losses}<span style="color:var(--red,#dc2626)">패</span></div>
         </div>
         <div style="background:${col}0d;border:1.5px solid ${col}28;border-radius:14px;padding:${isMobile?'10px 8px':'12px 10px'};text-align:center;position:relative;overflow:hidden">
@@ -155,7 +153,7 @@ function buildUnivMembersTableHTML(opts){
   let h=`<div style="font-weight:900;font-size:12px;color:${col};margin-bottom:10px;display:flex;align-items:center;gap:6px">
     <span style="display:inline-block;width:3px;height:14px;background:${col};border-radius:2px"></span>소속 스트리머 (${displayList.length}명)
   </div>`;
-  h+=`<div style="border:1px solid rgba(148,163,184,.18);border-radius:14px;overflow:hidden;margin-bottom:18px;background:linear-gradient(180deg,#ffffff,#f8fafc);box-shadow:0 10px 22px rgba(15,23,42,.05)"><table style="margin:0;border:none;border-radius:0;table-layout:auto"><thead><tr><th style="text-align:center;width:1px;white-space:nowrap;padding:9px 6px;background:${col};color:#fff">직책</th><th style="text-align:center;background:${col};color:#fff">티어</th><th style="text-align:center;width:50px;background:${col};color:#fff">종족</th><th style="text-align:left;padding-left:10px;background:${col};color:#fff">이름</th><th style="text-align:center;width:40px;background:${col};color:#fff">성별</th><th style="text-align:center;width:40px;background:${col};color:#fff">승</th><th style="text-align:center;width:40px;background:${col};color:#fff">패</th><th style="text-align:center;width:52px;background:${col};color:#fff">승률</th><th style="text-align:center;width:60px;background:${col};color:#fff">포인트</th></tr></thead><tbody>`;
+  h+=`<div style="border:1px solid rgba(148,163,184,.18);border-radius:14px;overflow:hidden;margin-bottom:18px;background:linear-gradient(180deg,#ffffff,#f8fafc);box-shadow:0 10px 22px rgba(15,23,42,.05)"><table style="margin:0;border:none;border-radius:0;table-layout:auto"><thead><tr><th style="text-align:center;width:1px;white-space:nowrap;padding:9px 6px;background:${col}!important;color:#fff!important">직책</th><th style="text-align:center;background:${col}!important;color:#fff!important">티어</th><th style="text-align:center;width:50px;background:${col}!important;color:#fff!important">종족</th><th style="text-align:left;padding-left:10px;background:${col}!important;color:#fff!important">이름</th><th style="text-align:center;width:40px;background:${col}!important;color:#fff!important">성별</th><th style="text-align:center;width:40px;background:${col}!important;color:#fff!important">승</th><th style="text-align:center;width:40px;background:${col}!important;color:#fff!important">패</th><th style="text-align:center;width:52px;background:${col}!important;color:#fff!important">승률</th><th style="text-align:center;width:60px;background:${col}!important;color:#fff!important">포인트</th></tr></thead><tbody>`;
   displayList.forEach(p=>{
     const rec=_recOf(p);
     const tw=rec.tot||0;
