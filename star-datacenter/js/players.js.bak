@@ -41,7 +41,9 @@ let totalFocusPlayer=''; // 상세형에서 선택된 스트리머 이름
     '.streamer-table{table-layout:fixed;width:100%;border-collapse:separate;border-spacing:0 8px}',
     '.streamer-table thead th{background:linear-gradient(180deg,#f8fbff,#eef6ff);border-top:1px solid rgba(148,163,184,.18);border-bottom:1px solid rgba(148,163,184,.18)}',
     '.streamer-table tbody tr{box-shadow:0 12px 24px rgba(15,23,42,.05)}',
-
+    '.streamer-table tbody tr.streamer-row.top1 td{background:linear-gradient(180deg,rgba(255,251,235,.98),rgba(254,243,199,.92))}',
+    '.streamer-table tbody tr.streamer-row.top2 td{background:linear-gradient(180deg,rgba(248,250,252,.98),rgba(226,232,240,.92))}',
+    '.streamer-table tbody tr.streamer-row.top3 td{background:linear-gradient(180deg,rgba(255,247,237,.98),rgba(254,215,170,.9))}',
     '.streamer-table tbody tr.streamer-row.inactive td{opacity:.92}',
     '.streamer-table tbody tr.streamer-row.retired td{opacity:.78;filter:saturate(.78)}',
     '.streamer-table tbody td{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border-top:1px solid rgba(148,163,184,.14);border-bottom:1px solid rgba(148,163,184,.14)}',
