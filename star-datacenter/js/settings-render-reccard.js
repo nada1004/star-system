@@ -6,7 +6,23 @@
 
 window.renderCfgRecCardSection = function(_scfgD) {
   const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-  ${_scfgD('reccard','🧾 기록 카드(기록탭) 스타일')}
+  const _rcOn = (localStorage.getItem('su_rc_theme_on') ?? '1') === '1';
+  const _rcAccent = (localStorage.getItem('su_rc_accent_mode') ?? 'none');
+  const _rcBg = parseInt(localStorage.getItem('su_rc_bg_alpha') ?? '12',10) || 12;
+  const _rcHd = parseInt(localStorage.getItem('su_rc_hd_alpha') ?? '14',10) || 14;
+  const _rcIc = parseInt(localStorage.getItem('su_rc_uicon') ?? '24',10) || 24;
+  const _rcUnivFont = parseInt(localStorage.getItem('su_rc_univ_font_pct') ?? '110',10) || 110;
+  const _ymScale = parseInt(localStorage.getItem('su_ym_scale_pct') ?? '100',10) || 100;
+  const _rcMemoOn = (localStorage.getItem('su_rc_memo_on') ?? '0') === '1';
+  const _avaScale = Math.round((parseFloat(localStorage.getItem('su_avatar_scale') ?? '1') || 1) * 100);
+  const _sfxOn = (localStorage.getItem('su_rec_side_fx_on') || '1') !== '0';
+  const _sfxMode = localStorage.getItem('su_rec_side_fx_mode') || 'soft';
+  const _sfxInt = Math.max(20,Math.min(100,parseInt(localStorage.getItem('su_rec_side_fx_intensity')||'68',10)||68));
+  const _sfxLen = Math.max(4,Math.min(80,parseInt(localStorage.getItem('su_rec_side_fx_length')||'25',10)||25));
+  const _sfxTail = Math.max(0,Math.min(140,parseInt(localStorage.getItem('su_rec_side_fx_tail')||'28',10)||28));
+  const _sfxSoft = Math.max(0,Math.min(100,parseInt(localStorage.getItem('su_rec_side_fx_softness')||'52',10)||52));
+  const _sfxEdge = Math.max(2,Math.min(24,parseInt(localStorage.getItem('su_rec_side_fx_edge')||'8',10)||8));
+  return _scfgD('reccard','🧾 기록 카드(기록탭) 스타일') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">개인전/끝장전/미니/프로리그/대회 기록 목록에 쓰이는 “기록 카드” 스타일입니다. (대회탭 조별리그 일정 카드는 별도 설정)</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
@@ -416,8 +432,14 @@ window.renderCfgRecCardSection = function(_scfgD) {
 
         <!-- 밝기 조절: 패배팀의 이긴 선수 -->
         <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
-          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">💪 패배팀 패널 – 이긴 선수 밝기 조절</div>
-          <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">패배팀에서 개인전을 이긴 선수입니다. 팀은 졌지만 개인전은 이겼으므로 약간만 연하게 표시됩니다.</div>
+          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">💪 패배팀 패널 – 이긴 선수 원색/밝기 조절</div>
+          <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">패배팀이지만 개인전은 이긴 선수입니다. 밝기를 올리면 더 밝고 원색이 살아나고, 흑백을 낮추면 회색감이 줄어듭니다.</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">원색/밝기(Brightness) <span id="cfg-rsp-ltwb-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_brightness')||'1.0').toFixed(2);}catch(e){return '1.00';}})()}x</span></div>
+          <input type="range" min="0.5" max="1.8" step="0.05"
+            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_brightness')||'1.0');}catch(e){return 1.0;}})()}"
+            style="width:100%;max-width:260px;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-rsp-ltwb-v').textContent=parseFloat(this.value).toFixed(2)+'x'"
+            onchange="(window.cfgSetRspLoseTeamWinBrightness||function(){})(this.value)">
           <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-ltwo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_opacity')||'0.80').toFixed(2);}catch(e){return '0.80';}})()}</span></div>
           <input type="range" min="0.1" max="1.0" step="0.05"
             value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_opacity')||'0.80');}catch(e){return 0.80;}})()}"
@@ -589,15 +611,5 @@ window.renderCfgRecCardSection = function(_scfgD) {
         </div>
       </div>
     </div>
-  </details>
-  ${(()=>{ 
-    const _tcOn = (localStorage.getItem('su_tc_theme_on') ?? '0') === '1';
-    const _tcAccent = (localStorage.getItem('su_tc_accent_mode') ?? 'none');
-    const _tcHd = parseInt(localStorage.getItem('su_tc_hd_alpha') ?? '12',10) || 12;
-    const _tcBw = parseInt(localStorage.getItem('su_tc_border_w') ?? '4',10) || 4;
-    const _tcIc = parseInt(localStorage.getItem('su_tc_uicon') ?? '34',10) || 34;
-    const _tcLw = parseInt(localStorage.getItem('su_tc_line_w') ?? '2',10) || 2;
-    const _tcLa = parseInt(localStorage.getItem('su_tc_line_a') ?? '70',10) || 70;
-    const _tcPreset = (localStorage.getItem('su_tc_preset') ?? '기본');
-    const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') ?? 'pill'); // pill | asl
+  </details>`;
 };

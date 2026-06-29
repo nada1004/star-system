@@ -76,6 +76,11 @@
     catch(e){ return 0.15; }
   }
 
+  function _getLoseTeamWinBrightness(){
+    try{ return Math.max(0.5, Math.min(1.8, parseFloat(localStorage.getItem('su_rsp_loseteam_win_brightness')||'1.0')||1.0)); }
+    catch(e){ return 1.0; }
+  }
+
   function _getLoseTeamLoseOpacity(){
     try{ return Math.max(0.1, Math.min(1.0, parseFloat(localStorage.getItem('su_rsp_loseteam_lose_opacity')||'0.45')||0.45)); }
     catch(e){ return 0.45; }
@@ -246,7 +251,7 @@
       // 패배팀 패널: 진 선수(개인전 패)는 연하게
       if(isLose && !playerWon) combined += ' grayscale('+_getLoseTeamLoseGray().toFixed(2)+') opacity('+_getLoseTeamLoseOpacity().toFixed(2)+')';
       // 패배팀에서 개인전 이긴 선수: 약간만 처리 (팀은 졌지만 개인전은 이겼으므로)
-      if(!isLose && playerWon) combined += ' grayscale('+_getLoseTeamWinGray().toFixed(2)+') opacity('+_getLoseTeamWinOpacity().toFixed(2)+')';
+      if(!isLose && playerWon) combined += ' grayscale('+_getLoseTeamWinGray().toFixed(2)+') opacity('+_getLoseTeamWinOpacity().toFixed(2)+') brightness('+_getLoseTeamWinBrightness().toFixed(2)+')';
     }
     return combined;
   }
@@ -629,6 +634,10 @@
 
   window.cfgSetRspLoseTeamWinGray = function(v){
     try{ localStorage.setItem('su_rsp_loseteam_win_gray', String(Math.max(0,Math.min(1.0,parseFloat(v)||0.15)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
+  };
+
+  window.cfgSetRspLoseTeamWinBrightness = function(v){
+    try{ localStorage.setItem('su_rsp_loseteam_win_brightness', String(Math.max(0.5,Math.min(1.8,parseFloat(v)||1.0)).toFixed(2))); if(typeof render==='function') render(); try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){} }catch(e){}
   };
 
   window.cfgSetRspLoseTeamLoseOpacity = function(v){

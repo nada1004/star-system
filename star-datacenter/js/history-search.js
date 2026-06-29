@@ -1238,17 +1238,40 @@ function _pcRecDetailPlayerHTML(name, isWin, size){
   const safeName = _pcRecDetailEsc(name || '?');
   const click = name ? `onclick="event.stopPropagation();openPlayerModal('${escJS(name)}')"` : '';
   const isLose = !isWin;
-  return `<span class="pcd-player ${isWin?'is-win':'is-lose'}" style="display:inline-flex;align-items:center;gap:8px;min-width:0">
-    ${_pcRecDetailPhotoHTML(name, size, isLose)}
-    <span ${click} style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;font-size:13px;font-weight:${isWin?'900':'700'};color:${isWin?'#16a34a':'var(--text)'};${isLose?'opacity:.8;':''}">${safeName}</span>
+  let race = '';
+  let univ = '';
+  let tier = '';
+  let univCol = '';
+  try{
+    const ps = (typeof players!=='undefined' && Array.isArray(players)) ? players : (Array.isArray(window.players) ? window.players : []);
+    const p = name ? ps.find(x=>x && x.name===name) : null;
+    if (p) {
+      race = String(p.race || '').trim();
+      univ = String(p.univ || '').trim();
+      tier = String(p.tier || '').trim();
+      if (univ && typeof gc === 'function') univCol = String(gc(univ) || '');
+    }
+  }catch(e){}
+  const tierHTML = tier ? `${typeof _getTierBadge === 'function' ? _getTierBadge(tier) : `<span style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;background:#475569;color:#fff;font-size:10px;font-weight:800">${_pcRecDetailEsc(tier)}</span>`}` : '';
+  const raceHTML = race ? `<span class="rbadge r${_pcRecDetailEsc(race)}" style="font-size:10px;padding:2px 6px">${_pcRecDetailEsc(race)}</span>` : '';
+  const univHTML = univ ? `<span class="ubadge" style="background:${_pcRecDetailEsc(univCol||'#64748b')};font-size:10px;padding:2px 8px">${_pcRecDetailEsc(univ)}</span>` : '';
+  const metaHTML = (tierHTML || raceHTML || univHTML) ? `<span class="pcd-player__meta">${tierHTML}${raceHTML}${univHTML}</span>` : '';
+  return `<span class="pcd-player ${isWin?'is-win':'is-lose'}" style="display:inline-flex;align-items:center;gap:10px;min-width:0">
+    <span class="pcd-player__photo">
+      ${_pcRecDetailPhotoHTML(name, size, isLose)}
+    </span>
+    <span class="pcd-player__info">
+      <span class="pcd-player__name" ${click} style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;font-size:14px;font-weight:${isWin?'900':'800'};color:${isWin?'#86efac':'#f8fafc'};${isLose?'opacity:.92;':''}">${safeName}</span>
+      ${metaHTML}
+    </span>
   </span>`;
 }
 function _pcRecDetailSummaryMetaHTML(payload){
   const games = Array.isArray(payload?.games) ? payload.games : [];
   const first = games[0] || {};
   const bits = [];
-  if (first.map) bits.push(`<span style="font-size:12px;color:var(--gray-l)">🗺️ ${_pcRecDetailEsc(first.map)}</span>`);
-  if (first.note) bits.push(`<span style="font-size:12px;color:var(--gray-l)">📝 ${_pcRecDetailEsc(first.note)}</span>`);
+  if (first.map) bits.push(`<span class="pcd-meta2__item pcd-meta2__item--map">🗺️ ${_pcRecDetailEsc(first.map)}</span>`);
+  if (first.note) bits.push(`<span class="pcd-meta2__item pcd-meta2__item--note">📝 ${_pcRecDetailEsc(first.note)}</span>`);
   if (!bits.length) return '';
   return `<div class="pcd-meta2">${bits.join('')}</div>`;
 }
@@ -1348,6 +1371,7 @@ window.openProCompRecordDetailPopup = window.openProCompRecordDetailPopup || fun
     const p2Score = Number(payload.p2Score || 0);
     const p1Col = String(payload.p1Col || '#2563eb');
     const p2Col = String(payload.p2Col || '#dc2626');
+    const rowsHtml = _pcRecDetailRowsHTML(payload);
     const title = _pcRecDetailEsc(payload.title || '경기 상세');
     const subtitle = payload.subtitle ? `<div style="font-size:12px;color:var(--gray-l);margin-top:4px">${_pcRecDetailEsc(payload.subtitle)}</div>` : '';
     const modal = document.createElement('div');
@@ -1355,7 +1379,7 @@ window.openProCompRecordDetailPopup = window.openProCompRecordDetailPopup || fun
     modal.className = 'modal modal--procompdetail no-export';
     modal.style.cssText = 'z-index:var(--z-modal-4);display:flex';
     modal.onclick = () => modal.remove();
-    modal.innerHTML = `<div class="mbox mbox--procompdetail" style="--pcd-c1:${_pcRecDetailEsc(p1Col)};--pcd-c2:${_pcRecDetailEsc(p2Col)}" onclick="event.stopPropagation()">
+    modal.innerHTML = `<div class="mbox mbox--procompdetail ${rowsHtml?'':'is-summary-only'}" style="--pcd-c1:${_pcRecDetailEsc(p1Col)};--pcd-c2:${_pcRecDetailEsc(p2Col)}" onclick="event.stopPropagation()">
       <div class="pcd-head">
         <div class="pcd-head__txt">
           <div class="pcd-title">${title}</div>
@@ -1365,14 +1389,14 @@ window.openProCompRecordDetailPopup = window.openProCompRecordDetailPopup || fun
       </div>
       <div class="pcd-score">
         <div class="pcd-score__inner">
-          ${_pcRecDetailPlayerHTML(p1, winner===p1, 50)}
+          ${_pcRecDetailPlayerHTML(p1, winner===p1, 84)}
           <span class="pcd-score__value">${p1Score}<span class="pcd-score__colon">:</span>${p2Score}</span>
-          ${_pcRecDetailPlayerHTML(p2, winner===p2, 50)}
+          ${_pcRecDetailPlayerHTML(p2, winner===p2, 84)}
           ${payload.date?`<div class="pcd-meta">${_pcRecDetailEsc(payload.date)}</div>`:''}
           ${_pcRecDetailSummaryMetaHTML(payload)}
         </div>
       </div>
-      <div class="pcd-body">${_pcRecDetailRowsHTML(payload)}</div>
+      ${rowsHtml?`<div class="pcd-body">${rowsHtml}</div>`:''}
       <div class="pcd-actions no-export">
         <button class="btn btn-w" onclick="document.getElementById('proCompRecDetailModal')?.remove()">닫기</button>
       </div>

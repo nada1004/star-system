@@ -1729,29 +1729,29 @@ function _scfgD(t,e,o){return`<div class="cfg-anchor" data-cfg-anchor="${t}"></d
     `,document.body.appendChild(t)}catch(e){}try{const e=t.querySelector("#cfgModalBody");if(e&&!e._autoCloudSyncBound){e._autoCloudSyncBound=!0;const o=()=>{try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave()}catch(c){}};e.addEventListener("input",o,!0),e.addEventListener("change",o,!0),e.addEventListener("click",c=>{try{const n=c&&c.target;if(!n)return;(n.tagName==="BUTTON"||n.closest&&n.closest("button"))&&o()}catch(n){}},!0)}}catch(e){}try{t.addEventListener("click",e=>{try{if(window._cfgModalJustOpenedTime&&Date.now()-window._cfgModalJustOpenedTime<350)return;e&&e.target===t&&typeof window.closeCfgModal=="function"&&window.closeCfgModal()}catch(o){}},{capture:!0})}catch(e){}return typeof window.closeCfgModal!="function"&&(window.closeCfgModal=function(){try{const e=window._cfgModalSecId;if(e){const c=document.querySelector(`[data-cfg-sec="${e}"]`),n=document.querySelector(`[data-cfg-anchor="${e}"]`);if(c&&n){n.parentNode.insertBefore(c,n.nextSibling),c.style.display="";try{c.tagName==="DETAILS"&&(c.open=!1)}catch(d){}}window._cfgModalSecId=null}const o=document.getElementById("cfgModalBody");o&&(o.innerHTML="")}catch(e){}try{if(typeof cm=="function")cm("cfgModal");else{const e=document.getElementById("cfgModal");e&&(e.style.display="none")}}catch(e){}try{typeof window.cfgApplyBottomSectionsVisibility=="function"&&window.cfgApplyBottomSectionsVisibility()}catch(e){}}),t}(typeof window._cfgCat=="undefined"||window._cfgCat==="\uC804\uCCB4"||!Object.keys(_catSecs||{}).includes(window._cfgCat))&&(window._cfgCat=window._cfgCatOrder&&window._cfgCatOrder[0]||"\u{1F9E9} \uC6B4\uC601/\uCF58\uD150\uCE20");function _cfgGo(t){try{let o=null;for(const c in _catSecs)if((_catSecs[c]||[]).indexOf(t)!==-1){o=c;break}o&&window._cfgCat!==o&&_cfgApplyCat(o,!1)}catch(o){}const e=document.getElementById(`cfg-sec-${t}`)||document.querySelector(`[data-cfg-sec="${t}"]`);if(!e){try{if(window.__CFG_DEBUG){const o=[...document.querySelectorAll("[data-cfg-sec]")].slice(0,40).map(c=>`${c.getAttribute("data-cfg-sec")}#${c.id||""}`);console.warn("[cfgGo] section not found:",t,"known secs=",o)}}catch(o){}return}try{const o=document.querySelectorAll("[data-cfg-sec]");for(let c=0;c<o.length;c++){const n=o[c];n!==e&&n.tagName==="DETAILS"&&(n.open=!1)}}catch(o){}try{_cfgEnsureModal();const o=window._cfgModalSecId;if(o&&o!==t){const i=document.getElementById(`cfg-sec-${o}`)||document.querySelector(`[data-cfg-sec="${o}"]`),a=document.querySelector(`[data-cfg-anchor="${o}"]`);i&&a&&(a.parentNode.insertBefore(i,a.nextSibling),i.style.display="")}window._cfgModalSecId=t;const c=document.getElementById("cfgModalTitle");if(c){const i=window._cfgSecTitle&&window._cfgSecTitle[t]?window._cfgSecTitle[t]:"";c.textContent=t==="cfgmenu"?"\u{1F9ED} \uC124\uC815 \uBA54\uB274 \uC815\uB9AC":i||"\u2699\uFE0F \uC124\uC815"}const n=document.getElementById("cfgModalBody");if(n){n.innerHTML="",e.style.display="",n.appendChild(e);try{n.scrollTop=0}catch(i){}try{e.tagName==="DETAILS"&&(e.open=!0)}catch(i){}try{t==="profileshape"&&typeof window._renderCfgProfileShapeSection=="function"&&window._renderCfgProfileShapeSection(),t==="uisize"&&typeof window._renderCfgUiSizeSection=="function"&&window._renderCfgUiSizeSection(),t==="pd"&&typeof window._renderCfgPdSection=="function"&&window._renderCfgPdSection(),t==="pdModeBadge"&&typeof window._renderCfgPdModeBadgeSection=="function"&&window._renderCfgPdModeBadgeSection(),t==="matchdetail"&&typeof window._renderCfgMatchDetailSection=="function"&&window._renderCfgMatchDetailSection(),t==="aibot"&&typeof window.cfgInitAiProxy=="function"&&window.cfgInitAiProxy()}catch(i){}}const d=document.getElementById("cfgModal");if(d)window._cfgModalJustOpenedTime=Date.now(),setTimeout(()=>{try{d.style.display="flex"}catch(i){}try{const i=document.getElementById("cfgModalBody");i&&(i.scrollTop=0)}catch(i){}if(typeof om=="function")try{om("cfgModal")}catch(i){window.__CFG_DEBUG&&console.error("[cfgGo] om() failed",i)}},0);else if(typeof om=="function")try{om("cfgModal")}catch(i){window.__CFG_DEBUG&&console.error("[cfgGo] om() failed",i)}}catch(o){try{console.error("[cfgGo] failed:",t,o)}catch(c){}}try{e&&e.tagName==="DETAILS"&&!(e.closest&&e.closest("#cfgModalBody"))&&(e.open=!1)}catch(o){}}
 
 /* settings-cfg-apply.js */
-function _cfgApplyCat(n,e=!0){window._cfgCat=n;const i=_catSecs[n]||[];let o=!0;try{const r=(localStorage.getItem("su_cfg_view_mode")||"basic")==="advanced"?"advanced":"basic",t=localStorage.getItem("su_cfg_bottom_open");o=window._cfgBottomSectionsOpen===void 0?t==="1"||t==="0"?t==="1":!1:!!window._cfgBottomSectionsOpen}catch(r){}try{const r=document.querySelectorAll("[data-cfg-sec]");for(let t=0;t<r.length;t++){const a=r[t];try{if(a.closest&&a.closest("#cfgModalBody"))continue}catch(f){}const d=a.getAttribute("data-cfg-sec"),p=o&&i.indexOf(d)!==-1;a.style.display=p?"":"none",a.tagName==="DETAILS"&&(a.open=!1)}}catch(r){}try{const r=document.querySelectorAll(".cfg-cat-pill");for(let t=0;t<r.length;t++){const a=r[t],d=a.getAttribute("data-cat")===n;a.classList.toggle("on",d),a.style.borderColor=d?"var(--blue)":"var(--border)",a.style.background=d?"var(--blue)":"transparent",a.style.fontWeight=d?"800":"700",a.style.color=d?"#fff":"var(--text)"}}catch(r){}try{const r=document.querySelectorAll("[data-cfg-cat]");for(let t=0;t<r.length;t++){const a=r[t],d=a.getAttribute("data-cfg-cat")===n;if(a.classList.contains("cfg-cat-tile")){a.style.background=d?"linear-gradient(180deg,rgba(79,70,229,.08),rgba(255,255,255,.98))":"var(--white)",a.style.color="var(--text2)",a.style.borderColor=d?"rgba(79,70,229,.30)":"var(--border)",a.style.boxShadow=d?"0 10px 24px rgba(79,70,229,.12)":"0 4px 12px rgba(15,23,42,.04)";const f=a.firstElementChild;f&&(f.style.background=d?"#4f46e5":"transparent");const h=a.querySelector('span[style*="border-radius:99px"]');h&&(h.style.color=d?"#4338ca":"var(--gray-l)",h.style.background=d?"rgba(79,70,229,.10)":"var(--surface)",h.style.borderColor=d?"rgba(79,70,229,.18)":"var(--border)");const m=a.querySelectorAll("div")[1];m&&(m.style.color="var(--text2)")}else a.style.background=d?"linear-gradient(135deg,var(--blue),#7c3aed)":"var(--white)",a.style.color=d?"#fff":"var(--text2)",a.style.borderColor=d?"transparent":"var(--border)",a.style.boxShadow=d?"0 10px 24px rgba(37,99,235,.22)":"0 4px 12px rgba(15,23,42,.04)";const p=a.querySelector("[data-cfg-cat-desc]");p&&(p.style.opacity=d?".9":".72")}document.querySelectorAll("[data-cfg-cur-cat-label]").forEach(t=>{t.textContent=`\uD604\uC7AC: ${_catLabel(n)}`}),document.querySelectorAll("[data-cfg-cur-cat-desc]").forEach(t=>{t.textContent=`${_catLabel(n)} \uC548\uC758 \uC138\uBD80 \uBA54\uB274\uB97C \uBC84\uD2BC\uC73C\uB85C \uBC14\uB85C \uC5FD\uB2C8\uB2E4.`}),document.querySelectorAll("[data-cfg-cur-sec-buttons]").forEach(t=>{const a=window._cfgSecTitle||{};t.innerHTML=i.map(d=>{var f;const p=a[d]||d;return`<button type="button" class="btn btn-w no-export" onclick="cfgGo('${d}')" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;text-align:left;background:var(--white);justify-content:flex-start">
-          <span style="font-size:15px;line-height:1">${((f=String(p).match(/^[^\s]+/))==null?void 0:f[0])||"\u2699\uFE0F"}</span>
-          <span style="font-size:12px;font-weight:800;color:var(--text2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.replace(/^[^\s]+\s*/,"")}</span>
-        </button>`}).join("")})}catch(r){}if(e){const r=i[0];r&&setTimeout(()=>_cfgGo(r),0)}}window._cfgGo=_cfgGo,window._cfgApplyCat=_cfgApplyCat,window._lazyCfgGo=function(n){return _cfgGo(n)},window.cfgGo=function(n){return _cfgGo(n)},window.cfgApplyCat=function(n){try{window._cfgCat=n}catch(e){}try{if(typeof curTab!="undefined"&&curTab==="cfg"&&typeof render=="function")return render(),n}catch(e){}return _cfgApplyCat(n,!1)},window.cfgSetViewMode=function(n){try{const e=String(n||"basic").trim();localStorage.setItem("su_cfg_view_mode",e==="advanced"?"advanced":"basic")}catch(e){}try{typeof curTab!="undefined"&&curTab==="cfg"&&typeof render=="function"&&render()}catch(e){}},window.cfgSetBottomSectionsOpen=function(n){try{window._cfgBottomSectionsOpen=!!n,localStorage.setItem("su_cfg_bottom_open",window._cfgBottomSectionsOpen?"1":"0")}catch(e){}try{typeof window.cfgApplyBottomSectionsVisibility=="function"&&window.cfgApplyBottomSectionsVisibility()}catch(e){}},window.cfgSetRemoteCfgAuto=function(n){try{localStorage.setItem("su_cfg_remote_auto",n?"1":"0");const e=document.getElementById("cfg-remote-auto-status");e&&(e.style.color=n?"#16a34a":"var(--gray-l)",e.textContent=n?"ON \xB7 \uC124\uC815/\uC0C1\uC138 \uC218\uC815\uC740 GitHub\uC5D0\uB3C4 \uBC18\uC601, \uC0C8\uB85C\uACE0\uCE68\uB9CC\uC73C\uB85C\uB294 \uC800\uC7A5\uB418\uC9C0 \uC54A\uC74C":"OFF \xB7 \uC124\uC815 \uBCC0\uACBD\uC740 \uB85C\uCEEC\uB9CC \uC800\uC7A5")}catch(e){}},window.cfgToggleBottomSections=function(){var n;try{const e=window._cfgBottomSectionsOpen===void 0?((n=localStorage.getItem("su_cfg_bottom_open"))!=null?n:"1")==="1":!!window._cfgBottomSectionsOpen;window.cfgSetBottomSectionsOpen(!e)}catch(e){}},window.cfgApplySimpleView=function(){try{const n=(localStorage.getItem("su_cfg_view_mode")||"basic")==="advanced"?"advanced":"basic",e=String(window._cfgSearchQ||"").trim(),i=["sharecard","uisize","calui","profileshape","tablabels","matchdetail","univ","univlogoimg"],o=["sharecard","uisize","calui"];document.querySelectorAll("[data-cfg-sec]").forEach(a=>{const d=String(a.getAttribute("data-cfg-sec")||"").trim();let p=!0;n==="basic"&&!e&&(p=i.includes(d)),a.style.display=p?"":"none",a.tagName==="DETAILS"&&n==="basic"&&!e&&(a.open=o.includes(d))});const t=document.getElementById("cfgSearchCnt");t&&n==="basic"&&!e&&(t.textContent=`\uAC04\uB2E8 \uBCF4\uAE30 \xB7 \uC790\uC8FC \uC4F0\uB294 \uC124\uC815 ${i.length}\uAC1C`)}catch(n){}},window.cfgApplyBottomSectionsVisibility=function(){try{const n=(localStorage.getItem("su_cfg_view_mode")||"basic")==="advanced"?"advanced":"basic",e=String(window._cfgSearchQ||"").trim();if(window._cfgBottomSectionsOpen===void 0){const o=localStorage.getItem("su_cfg_bottom_open");window._cfgBottomSectionsOpen=o==="1"||o==="0"?o==="1":!1}const i=e?!0:!!window._cfgBottomSectionsOpen;if(!i)document.querySelectorAll("[data-cfg-sec]").forEach(o=>{try{if(o.closest&&o.closest("#cfgModalBody"))return}catch(r){}try{o.tagName==="DETAILS"&&(o.open=!1)}catch(r){}o.style.display="none"});else if(!e)try{typeof _cfgApplyCat=="function"&&_cfgApplyCat(window._cfgCat||"\u{1F9E9} \uC6B4\uC601/\uCF58\uD150\uCE20",!1)}catch(o){}try{document.querySelectorAll('[onclick*="cfgToggleBottomSections"]').forEach(function(o){const r=String(o.getAttribute("data-cfg-toggle-variant")||"long");o.textContent=r==="short"?i?"\u{1F4DA} \uC228\uAE30\uAE30":"\u{1F4DA} \uBCF4\uAE30":r==="plain"?i?"\uC6D0\uBCF8 \uBAA9\uB85D \uC228\uAE30\uAE30":"\uC6D0\uBCF8 \uBAA9\uB85D \uBCF4\uAE30":i?"\u{1F4DA} \uC6D0\uBCF8 \uBAA9\uB85D \uC228\uAE30\uAE30":"\u{1F4DA} \uC6D0\uBCF8 \uBAA9\uB85D \uBCF4\uAE30"})}catch(o){}}catch(n){}},window.cfgFocusSearch=function(){var n;try{(n=document.getElementById("cfgSearchInp"))==null||n.focus()}catch(e){}},window.cfgCollapseAll=function(){var n;try{document.querySelectorAll("[data-cfg-sec]").forEach(i=>{i.tagName==="DETAILS"&&(i.open=!1)});const e=document.getElementById("cfgSearchSug");e&&(e.innerHTML="",e.style.display="none");try{(n=document.getElementById("cfgSearchInp"))==null||n.blur()}catch(i){}try{typeof showToast=="function"&&showToast("\uC5F4\uB9B0 \uC124\uC815 \uD56D\uBAA9\uC744 \uB2EB\uC558\uC2B5\uB2C8\uB2E4.")}catch(i){}}catch(e){}},window.cfgOpenFavorites=function(){try{const n=["pd","matchdetail","profileshape","uisize","tablabels"];document.querySelectorAll("[data-cfg-sec]").forEach(i=>{const o=i.getAttribute("data-cfg-sec"),r=n.includes(o);i.style.display=r?"":"none",i.tagName==="DETAILS"&&(i.open=r)});const e=document.getElementById("cfgSearchCnt");e&&(e.textContent=`\uC790\uC8FC \uC4F0\uB294 \uC124\uC815 ${n.length}\uAC1C`)}catch(n){}},window.cfgUnivOrderMove=function(n,e){try{if(n=parseInt(n,10),isNaN(n)||!Array.isArray(univCfg))return;const i=univCfg.map((p,f)=>({u:p,idx:f})).filter(p=>p.u&&!p.u.dissolved).map(p=>p.idx),o=i.indexOf(n);if(o<0)return;const r=o+(e==="up"?-1:1);if(r<0||r>=i.length)return;const t=i[r],a=univCfg.splice(n,1)[0],d=t>n?t-1:t;univCfg.splice(d,0,a);try{typeof boardOrder!="undefined"&&(boardOrder=univCfg.map(p=>p&&p.name).filter(Boolean))}catch(p){}try{typeof save=="function"?save():typeof localSave=="function"?localSave():typeof saveCfg=="function"&&saveCfg()}catch(p){}try{typeof render=="function"&&render()}catch(p){}try{typeof showToast=="function"&&showToast("\u2705 \uC21C\uC11C \uC800\uC7A5\uB428")}catch(p){}}catch(i){try{console.error("[cfgUnivOrderMove] failed",i)}catch(o){}}},(function(){function n(){try{const o=window._loadScriptOnce;if(typeof o!="function"){alert("\uAE30\uB2A5 \uB85C\uB529 \uC911\uC785\uB2C8\uB2E4. \uC7A0\uC2DC \uD6C4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694.");return}Promise.all([o("js/cloud-board-state.js?v=20260629-split"),o("js/cloud-board-render.js?v=20260629-split"),o("js/cloud-board-drag.js?v=20260629-split"),o("js/cloud-board-rank-sync.js?v=20260629-split")]).then(()=>{const r=window.checkFbSyncStatus;typeof r=="function"&&r!==n&&r()}).catch(r=>{console.error("[lazy] checkFbSyncStatus load fail",r),alert("\uB3D9\uAE30\uD654 \uC0C1\uD0DC \uD655\uC778 \uB85C\uB529 \uC2E4\uD328")})}catch(o){}}window.checkFbSyncStatus=window.checkFbSyncStatus||n;function e(o,r){try{const t=window._loadScriptOnce;if(typeof t!="function"){o&&(o.innerHTML='<div style="padding:24px;color:var(--gray-l);text-align:center">\uCE98\uB9B0\uB354 \uB85C\uB529 \uC911...</div>');return}t("js/calendar.js?v=20260504-02").then(()=>{const a=window.rCal;typeof a=="function"&&a!==e&&a(o,r)}).catch(a=>{console.error("[lazy] rCal load fail",a)})}catch(t){}}window.rCal=window.rCal||e;function i(o,r){try{const t=window._loadScriptOnce;if(typeof t!="function"){o&&(o.innerHTML='<div style="padding:24px;color:var(--gray-l);text-align:center">\uD1B5\uACC4 \uB85C\uB529 \uC911...</div>');return}const a=window.ensureChartJS||(()=>t("https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"));(window._ensureStatsLoaded?window._ensureStatsLoaded():Promise.resolve()).then(()=>{const d=window.rStats;typeof d=="function"&&d!==i&&d(o,r)}).catch(d=>{console.error("[lazy] rStats load fail",d)})}catch(t){}}window.rStats=window.rStats||i})(),window.cfgRunFullQaDryRun=function(){var d,p,f,h,m,x,w,S;const n=document.getElementById("cfg-selfcheck-out");n&&(n.innerHTML='<div style="color:var(--gray-l);font-size:12px">QA \uC810\uAC80 \uC911...</div>');const e=[],i=(c,u,v="")=>{e.push({name:c,pass:u,detail:v})},o=(c,u)=>{i(c,typeof window[u]=="function",u)},r=(c,u)=>{i(c,!!document.querySelector(u),u)};r("\uC790\uB3D9\uC778\uC2DD \uBAA8\uB2EC \uC874\uC7AC","#pasteModal"),r("\uD2F0\uC5B4\uB300\uD68C \uAD6C\uBD84 \uC120\uD0DD UI","#paste-tt-stage"),o("\uB9F5 \uC57D\uC790 \uBCC0\uD658(resolveMapName)","resolveMapName"),o("\uB9F5 \uC57D\uC790 \uD569\uCE58\uAE30(getMapAlias)","getMapAlias"),o("\uC0C1\uD0DC \uC544\uC774\uCF58 \uC124\uC815(setStatusIcon)","setStatusIcon"),o("\uC0C1\uD0DC \uC544\uC774\uCF58 \uC870\uD68C(getStatusIcon)","getStatusIcon"),o("\uBAA8\uBC14\uC77C/\uD0DC\uBE14\uB9BF UI \uBCC0\uC218 \uC801\uC6A9(applyResponsiveUiVars)","applyResponsiveUiVars"),o("\uC77C\uAD04 \uB0A0\uC9DC \uBCC0\uACBD(bulkChangeDate)","bulkChangeDate"),o("\uC77C\uAD04 \uB9F5 \uAD50\uCCB4(bulkChangeMap)","bulkChangeMap"),o("\uC77C\uAD04 \uD2F0\uC5B4 \uBCC0\uACBD(bulkChangeTier)","bulkChangeTier"),o("\uC77C\uAD04 \uB0A0\uC9DC\uBC94\uC704 \uC0AD\uC81C(bulkDeleteByDate)","bulkDeleteByDate"),o("\uC138\uD2B8\u2192\uAC8C\uC784\uC218 \uD569\uC0B0 \uBCC0\uD658(bulkConvertToGameScore)","bulkConvertToGameScore");const t={},a={};try{t.isLoggedIn=typeof window.isLoggedIn!="undefined"?window.isLoggedIn:void 0,t.isLoggedInLex=typeof isLoggedIn!="undefined"?isLoggedIn:void 0;try{window.isLoggedIn=!0}catch(s){}try{typeof isLoggedIn!="undefined"&&(isLoggedIn=!0)}catch(s){}["miniM","univM","ckM","proM","ttM","comps","indM","gjM","tourneys","maps","players","compNames","curComp","userMapAlias","playerStatusIcons","playerStatusExpiry"].forEach(s=>{typeof window[s]!="undefined"&&(t[s]=window[s])});try{t._lex_miniM=typeof miniM!="undefined"?miniM:void 0}catch(s){}try{t._lex_univM=typeof univM!="undefined"?univM:void 0}catch(s){}try{t._lex_ckM=typeof ckM!="undefined"?ckM:void 0}catch(s){}try{t._lex_proM=typeof proM!="undefined"?proM:void 0}catch(s){}try{t._lex_ttM=typeof ttM!="undefined"?ttM:void 0}catch(s){}try{t._lex_comps=typeof comps!="undefined"?comps:void 0}catch(s){}try{t._lex_indM=typeof indM!="undefined"?indM:void 0}catch(s){}try{t._lex_gjM=typeof gjM!="undefined"?gjM:void 0}catch(s){}try{t._lex_tourneys=typeof tourneys!="undefined"?tourneys:void 0}catch(s){}try{t._lex_maps=typeof maps!="undefined"?maps:void 0}catch(s){}try{t._lex_players=typeof players!="undefined"?players:void 0}catch(s){}t.save=window.save,t.render=window.render,t.getEl=document.getElementById.bind(document),["su_psi","su_psi_expiry","su_tt_paste_stage","su_pd_badge_scale","su_pd_chip_scale","su_mb_scale","su_tb_scale"].forEach(s=>{try{a[s]=localStorage.getItem(s)}catch(I){}});let u=0,v=0;window.save=()=>{u++},window.render=()=>{v++};const _=[{d:"2026-04-01",map:"\uD22C\uD63CII",sets:[{scoreA:1,scoreB:0,games:[{playerA:"A",playerB:"B",map:"\uD22C\uD63CII",winner:"A"}]}],sa:1,sb:0}],k=[{d:"2026-04-01",sets:[{map:"\uD22C\uD63C II",scoreA:1,scoreB:0,games:[{playerA:"C",playerB:"D",map:"\uD22C\uD63CII",winner:"A"}]}],sa:1,sb:0}],l=[{d:"2026-04-01",sets:[{scoreA:1,scoreB:0,games:[{playerA:"E",playerB:"F",map:"\uD3F4\uB9AC\uD3EC\uC774\uB4DC",winner:"A"}]}],sa:1,sb:0,stage:"general"}],g=[{name:"A",tier:"S",univ:"U1"},{name:"B",tier:"A",univ:"U1"},{name:"C",tier:"S",univ:"U2"}],y=["\uD22C\uD63C II","\uD3F4\uB9AC\uD3EC\uC774\uB4DC"];try{typeof miniM!="undefined"&&(miniM=_)}catch(s){}try{typeof univM!="undefined"&&(univM=k)}catch(s){}try{typeof ckM!="undefined"&&(ckM=[])}catch(s){}try{typeof proM!="undefined"&&(proM=[])}catch(s){}try{typeof ttM!="undefined"&&(ttM=l)}catch(s){}try{typeof comps!="undefined"&&(comps=[])}catch(s){}try{typeof indM!="undefined"&&(indM=[])}catch(s){}try{typeof gjM!="undefined"&&(gjM=[])}catch(s){}try{typeof tourneys!="undefined"&&(tourneys=[])}catch(s){}try{typeof players!="undefined"&&(players=g)}catch(s){}try{typeof maps!="undefined"&&(maps=y)}catch(s){}try{window.miniM=typeof miniM!="undefined"?miniM:_}catch(s){}try{window.univM=typeof univM!="undefined"?univM:k}catch(s){}try{window.ckM=typeof ckM!="undefined"?ckM:[]}catch(s){}try{window.proM=typeof proM!="undefined"?proM:[]}catch(s){}try{window.ttM=typeof ttM!="undefined"?ttM:l}catch(s){}try{window.comps=typeof comps!="undefined"?comps:[]}catch(s){}try{window.indM=typeof indM!="undefined"?indM:[]}catch(s){}try{window.gjM=typeof gjM!="undefined"?gjM:[]}catch(s){}try{window.tourneys=typeof tourneys!="undefined"?tourneys:[]}catch(s){}try{window.players=typeof players!="undefined"?players:g}catch(s){}try{window.maps=typeof maps!="undefined"?maps:y}catch(s){}const b={"bulk-date-from":{value:"2026-04-01"},"bulk-date-to":{value:"2026-04-30"},"bulk-date-chk-mini":{checked:!0},"bulk-date-chk-univm":{checked:!0},"bulk-date-chk-ck":{checked:!1},"bulk-date-chk-pro":{checked:!1},"bulk-date-chk-tt":{checked:!1},"bulk-date-chk-ind":{checked:!1},"bulk-date-chk-gj":{checked:!1},"bulk-date-chk-comp":{checked:!1},"bulk-map-from":{value:"\uD22C\uD63CII"},"bulk-map-to":{value:"\uD22C\uD63C"},"bulk-tier-from":{value:"S"},"bulk-tier-to":{value:"B"},"bulk-tier-univ":{value:"U1"},"bulk-del-from":{value:"2026-04-01"},"bulk-del-to":{value:"2026-04-30"},"bulk-del-chk-mini":{checked:!0},"bulk-conv-chk-mini":{checked:!0},"bulk-conv-chk-univm":{checked:!0},"paste-tt-stage":{value:"bkt"}};if(document.getElementById=s=>b[s]?b[s]:t.getEl(s),t.confirm=window.confirm,window.confirm=()=>!0,typeof window.bulkChangeDate=="function"?(window.bulkChangeDate(),i("\uB4DC\uB77C\uC774\uB7F0: \uB0A0\uC9DC \uC77C\uAD04 \uBCC0\uACBD",((d=miniM==null?void 0:miniM[0])==null?void 0:d.d)==="2026-04-30"&&((p=univM==null?void 0:univM[0])==null?void 0:p.d)==="2026-04-30")):i("\uB4DC\uB77C\uC774\uB7F0: \uB0A0\uC9DC \uC77C\uAD04 \uBCC0\uACBD",!1,"\uD568\uC218 \uC5C6\uC74C"),typeof window.bulkChangeMap=="function"?(window.bulkChangeMap(),i("\uB4DC\uB77C\uC774\uB7F0: \uB9F5 \uC77C\uAD04 \uAD50\uCCB4",((f=miniM==null?void 0:miniM[0])==null?void 0:f.map)==="\uD22C\uD63C"&&((x=(m=(h=univM==null?void 0:univM[0])==null?void 0:h.sets)==null?void 0:m[0])==null?void 0:x.map)==="\uD22C\uD63C")):i("\uB4DC\uB77C\uC774\uB7F0: \uB9F5 \uC77C\uAD04 \uAD50\uCCB4",!1,"\uD568\uC218 \uC5C6\uC74C"),typeof window.bulkChangeTier=="function"?(window.bulkChangeTier(),i("\uB4DC\uB77C\uC774\uB7F0: \uC120\uC218 \uC77C\uAD04 \uD2F0\uC5B4 \uBCC0\uACBD",((w=players.find(s=>s.name==="A"))==null?void 0:w.tier)==="B"&&((S=players.find(s=>s.name==="C"))==null?void 0:S.tier)==="S")):i("\uB4DC\uB77C\uC774\uB7F0: \uC120\uC218 \uC77C\uAD04 \uD2F0\uC5B4 \uBCC0\uACBD",!1,"\uD568\uC218 \uC5C6\uC74C"),typeof window.bulkDeleteByDate=="function"?(window.bulkDeleteByDate(),i("\uB4DC\uB77C\uC774\uB7F0: \uB0A0\uC9DC \uBC94\uC704 \uC77C\uAD04 \uC0AD\uC81C",Array.isArray(miniM)&&miniM.length===0)):i("\uB4DC\uB77C\uC774\uB7F0: \uB0A0\uC9DC \uBC94\uC704 \uC77C\uAD04 \uC0AD\uC81C",!1,"\uD568\uC218 \uC5C6\uC74C"),typeof window.bulkConvertToGameScore=="function"){try{typeof miniM!="undefined"&&(miniM=[{sa:2,sb:1,sets:[{scoreA:1,scoreB:0},{scoreA:1,scoreB:1},{scoreA:1,scoreB:0}]}])}catch(s){}try{typeof univM!="undefined"&&(univM=[{sa:0,sb:0,sets:[{scoreA:0,scoreB:1},{scoreA:0,scoreB:1},{scoreA:0,scoreB:1}]}])}catch(s){}window.bulkConvertToGameScore(),i("\uB4DC\uB77C\uC774\uB7F0: \uC138\uD2B8\u2192\uAC8C\uC784\uC218 \uD569\uC0B0 \uBCC0\uD658",miniM[0].sa===3&&miniM[0].sb===1&&univM[0].sb===3)}else i("\uB4DC\uB77C\uC774\uB7F0: \uC138\uD2B8\u2192\uAC8C\uC784\uC218 \uD569\uC0B0 \uBCC0\uD658",!1,"\uD568\uC218 \uC5C6\uC74C");if(typeof window.setStatusIcon=="function"&&typeof window.getStatusIcon=="function")try{window.setStatusIcon("\uD14C\uC2A4\uD130","fire"),i("\uB4DC\uB77C\uC774\uB7F0: \uC0C1\uD0DC \uC544\uC774\uCF58 \uC800\uC7A5",window.getStatusIcon("\uD14C\uC2A4\uD130")==="\u{1F525}"),window.setStatusIcon("\uD14C\uC2A4\uD130","none"),i("\uB4DC\uB77C\uC774\uB7F0: \uC0C1\uD0DC \uC544\uC774\uCF58 \uD574\uC81C",!window.getStatusIcon("\uD14C\uC2A4\uD130"))}catch(s){i("\uB4DC\uB77C\uC774\uB7F0: \uC0C1\uD0DC \uC544\uC774\uCF58",!1,s.message)}typeof window.resolveMapName=="function"&&i("\uB4DC\uB77C\uC774\uB7F0: \uB9F5 \uC57D\uC790 \uBCC0\uD658(\uD3F4\u2192\uD3F4\uB9AC\uD3EC\uC774\uB4DC)",window.resolveMapName("\uD3F4")==="\uD3F4\uB9AC\uD3EC\uC774\uB4DC"),i("\uD2F0\uC5B4\uB300\uD68C \uAD6C\uBD84(stage) \uC800\uC7A5 \uD544\uB4DC",!0,"ttM.stage \uC0AC\uC6A9(\uC77C\uBC18/\uC870\uBCC4/\uD1A0\uB108)"),i("save/render \uD638\uCD9C\uC774 \uC2E4\uC81C \uC800\uC7A5 \uC5C6\uC774 \uB3D9\uC791",u>=0&&v>=0,`save=${u}, render=${v}`)}catch(c){i("\uB4DC\uB77C\uC774\uB7F0 \uC2E4\uD589",!1,String(c.message||c))}finally{try{t.getEl&&(document.getElementById=t.getEl),typeof t.confirm=="function"&&(window.confirm=t.confirm),t.save&&(window.save=t.save),t.render&&(window.render=t.render),typeof t.isLoggedIn!="undefined"&&(window.isLoggedIn=t.isLoggedIn);try{typeof t.isLoggedInLex!="undefined"&&typeof isLoggedIn!="undefined"&&(isLoggedIn=t.isLoggedInLex)}catch(c){}Object.keys(t).forEach(c=>{["save","render","getEl","confirm","isLoggedIn"].includes(c)||(window[c]=t[c])});try{typeof t._lex_miniM!="undefined"&&typeof miniM!="undefined"&&(miniM=t._lex_miniM)}catch(c){}try{typeof t._lex_univM!="undefined"&&typeof univM!="undefined"&&(univM=t._lex_univM)}catch(c){}try{typeof t._lex_ckM!="undefined"&&typeof ckM!="undefined"&&(ckM=t._lex_ckM)}catch(c){}try{typeof t._lex_proM!="undefined"&&typeof proM!="undefined"&&(proM=t._lex_proM)}catch(c){}try{typeof t._lex_ttM!="undefined"&&typeof ttM!="undefined"&&(ttM=t._lex_ttM)}catch(c){}try{typeof t._lex_comps!="undefined"&&typeof comps!="undefined"&&(comps=t._lex_comps)}catch(c){}try{typeof t._lex_indM!="undefined"&&typeof indM!="undefined"&&(indM=t._lex_indM)}catch(c){}try{typeof t._lex_gjM!="undefined"&&typeof gjM!="undefined"&&(gjM=t._lex_gjM)}catch(c){}try{typeof t._lex_tourneys!="undefined"&&typeof tourneys!="undefined"&&(tourneys=t._lex_tourneys)}catch(c){}try{typeof t._lex_maps!="undefined"&&typeof maps!="undefined"&&(maps=t._lex_maps)}catch(c){}try{typeof t._lex_players!="undefined"&&typeof players!="undefined"&&(players=t._lex_players)}catch(c){}Object.keys(a).forEach(c=>{try{a[c]===null||typeof a[c]=="undefined"?localStorage.removeItem(c):localStorage.setItem(c,a[c])}catch(u){}})}catch(c){}}if(n){const c=e.filter(v=>v.pass).length,u=e.length-c;n.innerHTML=`
+function _cfgApplyCat(n,e=!0){window._cfgCat=n;const o=_catSecs[n]||[];let i=!0;try{const s=(localStorage.getItem("su_cfg_view_mode")||"basic")==="advanced"?"advanced":"basic",t=localStorage.getItem("su_cfg_bottom_open");i=window._cfgBottomSectionsOpen===void 0?t==="1"||t==="0"?t==="1":!1:!!window._cfgBottomSectionsOpen}catch(s){}try{const s=document.querySelectorAll("[data-cfg-sec]");for(let t=0;t<s.length;t++){const a=s[t];try{if(a.closest&&a.closest("#cfgModalBody"))continue}catch(x){}const c=a.getAttribute("data-cfg-sec"),u=i&&o.indexOf(c)!==-1;a.style.display=u?"":"none",a.tagName==="DETAILS"&&(a.open=!1)}}catch(s){}try{const s=document.querySelectorAll(".cfg-cat-pill");for(let t=0;t<s.length;t++){const a=s[t],c=a.getAttribute("data-cat")===n;a.classList.toggle("on",c),a.style.borderColor=c?"var(--blue)":"var(--border)",a.style.background=c?"var(--blue)":"transparent",a.style.fontWeight=c?"800":"700",a.style.color=c?"#fff":"var(--text)"}}catch(s){}try{const s=document.querySelectorAll("[data-cfg-cat]");for(let t=0;t<s.length;t++){const a=s[t],c=a.getAttribute("data-cfg-cat")===n;if(a.classList.contains("cfg-cat-tile")){a.style.background=c?"linear-gradient(180deg,rgba(79,70,229,.08),rgba(255,255,255,.98))":"var(--white)",a.style.color="var(--text2)",a.style.borderColor=c?"rgba(79,70,229,.30)":"var(--border)",a.style.boxShadow=c?"0 10px 24px rgba(79,70,229,.12)":"0 4px 12px rgba(15,23,42,.04)";const x=a.firstElementChild;x&&(x.style.background=c?"#4f46e5":"transparent");const p=a.querySelector('span[style*="border-radius:99px"]');p&&(p.style.color=c?"#4338ca":"var(--gray-l)",p.style.background=c?"rgba(79,70,229,.10)":"var(--surface)",p.style.borderColor=c?"rgba(79,70,229,.18)":"var(--border)");const g=a.querySelectorAll("div")[1];g&&(g.style.color="var(--text2)")}else a.style.background=c?"linear-gradient(135deg,var(--blue),#7c3aed)":"var(--white)",a.style.color=c?"#fff":"var(--text2)",a.style.borderColor=c?"transparent":"var(--border)",a.style.boxShadow=c?"0 10px 24px rgba(37,99,235,.22)":"0 4px 12px rgba(15,23,42,.04)";const u=a.querySelector("[data-cfg-cat-desc]");u&&(u.style.opacity=c?".9":".72")}document.querySelectorAll("[data-cfg-cur-cat-label]").forEach(t=>{t.textContent=`\uD604\uC7AC: ${_catLabel(n)}`}),document.querySelectorAll("[data-cfg-cur-cat-desc]").forEach(t=>{t.textContent=`${_catLabel(n)} \uC548\uC758 \uC138\uBD80 \uBA54\uB274\uB97C \uBC84\uD2BC\uC73C\uB85C \uBC14\uB85C \uC5FD\uB2C8\uB2E4.`}),document.querySelectorAll("[data-cfg-cur-sec-buttons]").forEach(t=>{const a=window._cfgSecTitle||{};t.innerHTML=o.map(c=>{var x;const u=a[c]||c;return`<button type="button" class="btn btn-w no-export" onclick="cfgGo('${c}')" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;text-align:left;background:var(--white);justify-content:flex-start">
+          <span style="font-size:15px;line-height:1">${((x=String(u).match(/^[^\s]+/))==null?void 0:x[0])||"\u2699\uFE0F"}</span>
+          <span style="font-size:12px;font-weight:800;color:var(--text2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.replace(/^[^\s]+\s*/,"")}</span>
+        </button>`}).join("")})}catch(s){}if(e){const s=o[0];s&&setTimeout(()=>_cfgGo(s),0)}}window._cfgGo=_cfgGo,window._cfgApplyCat=_cfgApplyCat,window._lazyCfgGo=function(n){return _cfgGo(n)},window.cfgGo=function(n){return _cfgGo(n)},window.cfgApplyCat=function(n){try{window._cfgCat=n}catch(e){}try{if(typeof curTab!="undefined"&&curTab==="cfg"&&typeof render=="function")return render(),n}catch(e){}return _cfgApplyCat(n,!1)},window.cfgSetViewMode=function(n){try{const e=String(n||"basic").trim();localStorage.setItem("su_cfg_view_mode",e==="advanced"?"advanced":"basic")}catch(e){}try{typeof curTab!="undefined"&&curTab==="cfg"&&typeof render=="function"&&render()}catch(e){}},window.cfgSetBottomSectionsOpen=function(n){try{window._cfgBottomSectionsOpen=!!n,localStorage.setItem("su_cfg_bottom_open",window._cfgBottomSectionsOpen?"1":"0")}catch(e){}try{typeof window.cfgApplyBottomSectionsVisibility=="function"&&window.cfgApplyBottomSectionsVisibility()}catch(e){}},window.cfgSetRemoteCfgAuto=function(n){try{localStorage.setItem("su_cfg_remote_auto",n?"1":"0");const e=document.getElementById("cfg-remote-auto-status");e&&(e.style.color=n?"#16a34a":"var(--gray-l)",e.textContent=n?"ON \xB7 \uC124\uC815/\uC0C1\uC138 \uC218\uC815\uC740 GitHub\uC5D0\uB3C4 \uBC18\uC601, \uC0C8\uB85C\uACE0\uCE68\uB9CC\uC73C\uB85C\uB294 \uC800\uC7A5\uB418\uC9C0 \uC54A\uC74C":"OFF \xB7 \uC124\uC815 \uBCC0\uACBD\uC740 \uB85C\uCEEC\uB9CC \uC800\uC7A5")}catch(e){}},window.cfgToggleBottomSections=function(){var n;try{const e=window._cfgBottomSectionsOpen===void 0?((n=localStorage.getItem("su_cfg_bottom_open"))!=null?n:"1")==="1":!!window._cfgBottomSectionsOpen;window.cfgSetBottomSectionsOpen(!e)}catch(e){}},window.cfgApplySimpleView=function(){try{const n=(localStorage.getItem("su_cfg_view_mode")||"basic")==="advanced"?"advanced":"basic",e=String(window._cfgSearchQ||"").trim(),o=["sharecard","uisize","calui","profileshape","tablabels","matchdetail","univ","univlogoimg"],i=["sharecard","uisize","calui"];document.querySelectorAll("[data-cfg-sec]").forEach(a=>{const c=String(a.getAttribute("data-cfg-sec")||"").trim();let u=!0;n==="basic"&&!e&&(u=o.includes(c)),a.style.display=u?"":"none",a.tagName==="DETAILS"&&n==="basic"&&!e&&(a.open=i.includes(c))});const t=document.getElementById("cfgSearchCnt");t&&n==="basic"&&!e&&(t.textContent=`\uAC04\uB2E8 \uBCF4\uAE30 \xB7 \uC790\uC8FC \uC4F0\uB294 \uC124\uC815 ${o.length}\uAC1C`)}catch(n){}},window.cfgApplyBottomSectionsVisibility=function(){try{const n=(localStorage.getItem("su_cfg_view_mode")||"basic")==="advanced"?"advanced":"basic",e=String(window._cfgSearchQ||"").trim();if(window._cfgBottomSectionsOpen===void 0){const i=localStorage.getItem("su_cfg_bottom_open");window._cfgBottomSectionsOpen=i==="1"||i==="0"?i==="1":!1}const o=e?!0:!!window._cfgBottomSectionsOpen;if(!o)document.querySelectorAll("[data-cfg-sec]").forEach(i=>{try{if(i.closest&&i.closest("#cfgModalBody"))return}catch(s){}try{i.tagName==="DETAILS"&&(i.open=!1)}catch(s){}i.style.display="none"});else if(!e)try{typeof _cfgApplyCat=="function"&&_cfgApplyCat(window._cfgCat||"\u{1F9E9} \uC6B4\uC601/\uCF58\uD150\uCE20",!1)}catch(i){}try{document.querySelectorAll('[onclick*="cfgToggleBottomSections"]').forEach(function(i){const s=String(i.getAttribute("data-cfg-toggle-variant")||"long");i.textContent=s==="short"?o?"\u{1F4DA} \uC228\uAE30\uAE30":"\u{1F4DA} \uBCF4\uAE30":s==="plain"?o?"\uC6D0\uBCF8 \uBAA9\uB85D \uC228\uAE30\uAE30":"\uC6D0\uBCF8 \uBAA9\uB85D \uBCF4\uAE30":o?"\u{1F4DA} \uC6D0\uBCF8 \uBAA9\uB85D \uC228\uAE30\uAE30":"\u{1F4DA} \uC6D0\uBCF8 \uBAA9\uB85D \uBCF4\uAE30"})}catch(i){}}catch(n){}},window.cfgFocusSearch=function(){var n;try{(n=document.getElementById("cfgSearchInp"))==null||n.focus()}catch(e){}},window.cfgCollapseAll=function(){var n;try{document.querySelectorAll("[data-cfg-sec]").forEach(o=>{o.tagName==="DETAILS"&&(o.open=!1)});const e=document.getElementById("cfgSearchSug");e&&(e.innerHTML="",e.style.display="none");try{(n=document.getElementById("cfgSearchInp"))==null||n.blur()}catch(o){}try{typeof showToast=="function"&&showToast("\uC5F4\uB9B0 \uC124\uC815 \uD56D\uBAA9\uC744 \uB2EB\uC558\uC2B5\uB2C8\uB2E4.")}catch(o){}}catch(e){}},window.cfgOpenFavorites=function(){try{const n=["pd","matchdetail","profileshape","uisize","tablabels"];document.querySelectorAll("[data-cfg-sec]").forEach(o=>{const i=o.getAttribute("data-cfg-sec"),s=n.includes(i);o.style.display=s?"":"none",o.tagName==="DETAILS"&&(o.open=s)});const e=document.getElementById("cfgSearchCnt");e&&(e.textContent=`\uC790\uC8FC \uC4F0\uB294 \uC124\uC815 ${n.length}\uAC1C`)}catch(n){}},window.cfgUnivOrderMove=function(n,e){try{if(n=parseInt(n,10),isNaN(n)||!Array.isArray(univCfg))return;const o=univCfg.map((u,x)=>({u,idx:x})).filter(u=>u.u&&!u.u.dissolved).map(u=>u.idx),i=o.indexOf(n);if(i<0)return;const s=i+(e==="up"?-1:1);if(s<0||s>=o.length)return;const t=o[s],a=univCfg.splice(n,1)[0],c=t>n?t-1:t;univCfg.splice(c,0,a);try{typeof boardOrder!="undefined"&&(boardOrder=univCfg.map(u=>u&&u.name).filter(Boolean))}catch(u){}try{typeof save=="function"?save():typeof localSave=="function"?localSave():typeof saveCfg=="function"&&saveCfg()}catch(u){}try{typeof render=="function"&&render()}catch(u){}try{typeof showToast=="function"&&showToast("\u2705 \uC21C\uC11C \uC800\uC7A5\uB428")}catch(u){}}catch(o){try{console.error("[cfgUnivOrderMove] failed",o)}catch(i){}}},(function(){function n(){try{const i=window._loadScriptOnce;if(typeof i!="function"){alert("\uAE30\uB2A5 \uB85C\uB529 \uC911\uC785\uB2C8\uB2E4. \uC7A0\uC2DC \uD6C4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694.");return}Promise.all([i("js/cloud-board-state.js?v=20260629-split"),i("js/cloud-board-render.js?v=20260629-split"),i("js/cloud-board-drag.js?v=20260629-split"),i("js/cloud-board-rank-sync.js?v=20260629-split")]).then(()=>{const s=window.checkFbSyncStatus;typeof s=="function"&&s!==n&&s()}).catch(s=>{console.error("[lazy] checkFbSyncStatus load fail",s),alert("\uB3D9\uAE30\uD654 \uC0C1\uD0DC \uD655\uC778 \uB85C\uB529 \uC2E4\uD328")})}catch(i){}}window.checkFbSyncStatus=window.checkFbSyncStatus||n;function e(i,s){try{const t=window._loadScriptOnce;if(typeof t!="function"){i&&(i.innerHTML='<div style="padding:24px;color:var(--gray-l);text-align:center">\uCE98\uB9B0\uB354 \uB85C\uB529 \uC911...</div>');return}t("js/calendar.js?v=20260504-02").then(()=>{const a=window.rCal;typeof a=="function"&&a!==e&&a(i,s)}).catch(a=>{console.error("[lazy] rCal load fail",a)})}catch(t){}}window.rCal=window.rCal||e;function o(i,s){try{const t=window._loadScriptOnce;if(typeof t!="function"){i&&(i.innerHTML='<div style="padding:24px;color:var(--gray-l);text-align:center">\uD1B5\uACC4 \uB85C\uB529 \uC911...</div>');return}const a=window.ensureChartJS||(()=>t("https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"));(window._ensureStatsLoaded?window._ensureStatsLoaded():Promise.resolve()).then(()=>{const c=window.rStats;typeof c=="function"&&c!==o&&c(i,s)}).catch(c=>{console.error("[lazy] rStats load fail",c)})}catch(t){}}window.rStats=window.rStats||o})(),window.cfgRunFullQaDryRun=function(){var c,u,x,p,g,v,m,h;const n=document.getElementById("cfg-selfcheck-out");n&&(n.innerHTML='<div style="color:var(--gray-l);font-size:12px">QA \uC810\uAC80 \uC911...</div>');const e=[],o=(d,f,b="")=>{e.push({name:d,pass:f,detail:b})},i=(d,f)=>{o(d,typeof window[f]=="function",f)},s=(d,f)=>{o(d,!!document.querySelector(f),f)};s("\uC790\uB3D9\uC778\uC2DD \uBAA8\uB2EC \uC874\uC7AC","#pasteModal"),s("\uD2F0\uC5B4\uB300\uD68C \uAD6C\uBD84 \uC120\uD0DD UI","#paste-tt-stage"),i("\uB9F5 \uC57D\uC790 \uBCC0\uD658(resolveMapName)","resolveMapName"),i("\uB9F5 \uC57D\uC790 \uD569\uCE58\uAE30(getMapAlias)","getMapAlias"),i("\uC0C1\uD0DC \uC544\uC774\uCF58 \uC124\uC815(setStatusIcon)","setStatusIcon"),i("\uC0C1\uD0DC \uC544\uC774\uCF58 \uC870\uD68C(getStatusIcon)","getStatusIcon"),i("\uBAA8\uBC14\uC77C/\uD0DC\uBE14\uB9BF UI \uBCC0\uC218 \uC801\uC6A9(applyResponsiveUiVars)","applyResponsiveUiVars"),i("\uC77C\uAD04 \uB0A0\uC9DC \uBCC0\uACBD(bulkChangeDate)","bulkChangeDate"),i("\uC77C\uAD04 \uB9F5 \uAD50\uCCB4(bulkChangeMap)","bulkChangeMap"),i("\uC77C\uAD04 \uD2F0\uC5B4 \uBCC0\uACBD(bulkChangeTier)","bulkChangeTier"),i("\uC77C\uAD04 \uB0A0\uC9DC\uBC94\uC704 \uC0AD\uC81C(bulkDeleteByDate)","bulkDeleteByDate"),i("\uC138\uD2B8\u2192\uAC8C\uC784\uC218 \uD569\uC0B0 \uBCC0\uD658(bulkConvertToGameScore)","bulkConvertToGameScore");const t={},a={};try{t.isLoggedIn=typeof window.isLoggedIn!="undefined"?window.isLoggedIn:void 0,t.isLoggedInLex=typeof isLoggedIn!="undefined"?isLoggedIn:void 0;try{window.isLoggedIn=!0}catch(r){}try{typeof isLoggedIn!="undefined"&&(isLoggedIn=!0)}catch(r){}["miniM","univM","ckM","proM","ttM","comps","indM","gjM","tourneys","maps","players","compNames","curComp","userMapAlias","playerStatusIcons","playerStatusExpiry"].forEach(r=>{typeof window[r]!="undefined"&&(t[r]=window[r])});try{t._lex_miniM=typeof miniM!="undefined"?miniM:void 0}catch(r){}try{t._lex_univM=typeof univM!="undefined"?univM:void 0}catch(r){}try{t._lex_ckM=typeof ckM!="undefined"?ckM:void 0}catch(r){}try{t._lex_proM=typeof proM!="undefined"?proM:void 0}catch(r){}try{t._lex_ttM=typeof ttM!="undefined"?ttM:void 0}catch(r){}try{t._lex_comps=typeof comps!="undefined"?comps:void 0}catch(r){}try{t._lex_indM=typeof indM!="undefined"?indM:void 0}catch(r){}try{t._lex_gjM=typeof gjM!="undefined"?gjM:void 0}catch(r){}try{t._lex_tourneys=typeof tourneys!="undefined"?tourneys:void 0}catch(r){}try{t._lex_maps=typeof maps!="undefined"?maps:void 0}catch(r){}try{t._lex_players=typeof players!="undefined"?players:void 0}catch(r){}t.save=window.save,t.render=window.render,t.getEl=document.getElementById.bind(document),["su_psi","su_psi_expiry","su_tt_paste_stage","su_pd_badge_scale","su_pd_chip_scale","su_mb_scale","su_tb_scale"].forEach(r=>{try{a[r]=localStorage.getItem(r)}catch(I){}});let f=0,b=0;window.save=()=>{f++},window.render=()=>{b++};const _=[{d:"2026-04-01",map:"\uD22C\uD63CII",sets:[{scoreA:1,scoreB:0,games:[{playerA:"A",playerB:"B",map:"\uD22C\uD63CII",winner:"A"}]}],sa:1,sb:0}],S=[{d:"2026-04-01",sets:[{map:"\uD22C\uD63C II",scoreA:1,scoreB:0,games:[{playerA:"C",playerB:"D",map:"\uD22C\uD63CII",winner:"A"}]}],sa:1,sb:0}],l=[{d:"2026-04-01",sets:[{scoreA:1,scoreB:0,games:[{playerA:"E",playerB:"F",map:"\uD3F4\uB9AC\uD3EC\uC774\uB4DC",winner:"A"}]}],sa:1,sb:0,stage:"general"}],y=[{name:"A",tier:"S",univ:"U1"},{name:"B",tier:"A",univ:"U1"},{name:"C",tier:"S",univ:"U2"}],w=["\uD22C\uD63C II","\uD3F4\uB9AC\uD3EC\uC774\uB4DC"];try{typeof miniM!="undefined"&&(miniM=_)}catch(r){}try{typeof univM!="undefined"&&(univM=S)}catch(r){}try{typeof ckM!="undefined"&&(ckM=[])}catch(r){}try{typeof proM!="undefined"&&(proM=[])}catch(r){}try{typeof ttM!="undefined"&&(ttM=l)}catch(r){}try{typeof comps!="undefined"&&(comps=[])}catch(r){}try{typeof indM!="undefined"&&(indM=[])}catch(r){}try{typeof gjM!="undefined"&&(gjM=[])}catch(r){}try{typeof tourneys!="undefined"&&(tourneys=[])}catch(r){}try{typeof players!="undefined"&&(players=y)}catch(r){}try{typeof maps!="undefined"&&(maps=w)}catch(r){}try{window.miniM=typeof miniM!="undefined"?miniM:_}catch(r){}try{window.univM=typeof univM!="undefined"?univM:S}catch(r){}try{window.ckM=typeof ckM!="undefined"?ckM:[]}catch(r){}try{window.proM=typeof proM!="undefined"?proM:[]}catch(r){}try{window.ttM=typeof ttM!="undefined"?ttM:l}catch(r){}try{window.comps=typeof comps!="undefined"?comps:[]}catch(r){}try{window.indM=typeof indM!="undefined"?indM:[]}catch(r){}try{window.gjM=typeof gjM!="undefined"?gjM:[]}catch(r){}try{window.tourneys=typeof tourneys!="undefined"?tourneys:[]}catch(r){}try{window.players=typeof players!="undefined"?players:y}catch(r){}try{window.maps=typeof maps!="undefined"?maps:w}catch(r){}const k={"bulk-date-from":{value:"2026-04-01"},"bulk-date-to":{value:"2026-04-30"},"bulk-date-chk-mini":{checked:!0},"bulk-date-chk-univm":{checked:!0},"bulk-date-chk-ck":{checked:!1},"bulk-date-chk-pro":{checked:!1},"bulk-date-chk-tt":{checked:!1},"bulk-date-chk-ind":{checked:!1},"bulk-date-chk-gj":{checked:!1},"bulk-date-chk-comp":{checked:!1},"bulk-map-from":{value:"\uD22C\uD63CII"},"bulk-map-to":{value:"\uD22C\uD63C"},"bulk-tier-from":{value:"S"},"bulk-tier-to":{value:"B"},"bulk-tier-univ":{value:"U1"},"bulk-del-from":{value:"2026-04-01"},"bulk-del-to":{value:"2026-04-30"},"bulk-del-chk-mini":{checked:!0},"bulk-conv-chk-mini":{checked:!0},"bulk-conv-chk-univm":{checked:!0},"paste-tt-stage":{value:"bkt"}};if(document.getElementById=r=>k[r]?k[r]:t.getEl(r),t.confirm=window.confirm,window.confirm=()=>!0,typeof window.bulkChangeDate=="function"?(window.bulkChangeDate(),o("\uB4DC\uB77C\uC774\uB7F0: \uB0A0\uC9DC \uC77C\uAD04 \uBCC0\uACBD",((c=miniM==null?void 0:miniM[0])==null?void 0:c.d)==="2026-04-30"&&((u=univM==null?void 0:univM[0])==null?void 0:u.d)==="2026-04-30")):o("\uB4DC\uB77C\uC774\uB7F0: \uB0A0\uC9DC \uC77C\uAD04 \uBCC0\uACBD",!1,"\uD568\uC218 \uC5C6\uC74C"),typeof window.bulkChangeMap=="function"?(window.bulkChangeMap(),o("\uB4DC\uB77C\uC774\uB7F0: \uB9F5 \uC77C\uAD04 \uAD50\uCCB4",((x=miniM==null?void 0:miniM[0])==null?void 0:x.map)==="\uD22C\uD63C"&&((v=(g=(p=univM==null?void 0:univM[0])==null?void 0:p.sets)==null?void 0:g[0])==null?void 0:v.map)==="\uD22C\uD63C")):o("\uB4DC\uB77C\uC774\uB7F0: \uB9F5 \uC77C\uAD04 \uAD50\uCCB4",!1,"\uD568\uC218 \uC5C6\uC74C"),typeof window.bulkChangeTier=="function"?(window.bulkChangeTier(),o("\uB4DC\uB77C\uC774\uB7F0: \uC120\uC218 \uC77C\uAD04 \uD2F0\uC5B4 \uBCC0\uACBD",((m=players.find(r=>r.name==="A"))==null?void 0:m.tier)==="B"&&((h=players.find(r=>r.name==="C"))==null?void 0:h.tier)==="S")):o("\uB4DC\uB77C\uC774\uB7F0: \uC120\uC218 \uC77C\uAD04 \uD2F0\uC5B4 \uBCC0\uACBD",!1,"\uD568\uC218 \uC5C6\uC74C"),typeof window.bulkDeleteByDate=="function"?(window.bulkDeleteByDate(),o("\uB4DC\uB77C\uC774\uB7F0: \uB0A0\uC9DC \uBC94\uC704 \uC77C\uAD04 \uC0AD\uC81C",Array.isArray(miniM)&&miniM.length===0)):o("\uB4DC\uB77C\uC774\uB7F0: \uB0A0\uC9DC \uBC94\uC704 \uC77C\uAD04 \uC0AD\uC81C",!1,"\uD568\uC218 \uC5C6\uC74C"),typeof window.bulkConvertToGameScore=="function"){try{typeof miniM!="undefined"&&(miniM=[{sa:2,sb:1,sets:[{scoreA:1,scoreB:0},{scoreA:1,scoreB:1},{scoreA:1,scoreB:0}]}])}catch(r){}try{typeof univM!="undefined"&&(univM=[{sa:0,sb:0,sets:[{scoreA:0,scoreB:1},{scoreA:0,scoreB:1},{scoreA:0,scoreB:1}]}])}catch(r){}window.bulkConvertToGameScore(),o("\uB4DC\uB77C\uC774\uB7F0: \uC138\uD2B8\u2192\uAC8C\uC784\uC218 \uD569\uC0B0 \uBCC0\uD658",miniM[0].sa===3&&miniM[0].sb===1&&univM[0].sb===3)}else o("\uB4DC\uB77C\uC774\uB7F0: \uC138\uD2B8\u2192\uAC8C\uC784\uC218 \uD569\uC0B0 \uBCC0\uD658",!1,"\uD568\uC218 \uC5C6\uC74C");if(typeof window.setStatusIcon=="function"&&typeof window.getStatusIcon=="function")try{window.setStatusIcon("\uD14C\uC2A4\uD130","fire"),o("\uB4DC\uB77C\uC774\uB7F0: \uC0C1\uD0DC \uC544\uC774\uCF58 \uC800\uC7A5",window.getStatusIcon("\uD14C\uC2A4\uD130")==="\u{1F525}"),window.setStatusIcon("\uD14C\uC2A4\uD130","none"),o("\uB4DC\uB77C\uC774\uB7F0: \uC0C1\uD0DC \uC544\uC774\uCF58 \uD574\uC81C",!window.getStatusIcon("\uD14C\uC2A4\uD130"))}catch(r){o("\uB4DC\uB77C\uC774\uB7F0: \uC0C1\uD0DC \uC544\uC774\uCF58",!1,r.message)}typeof window.resolveMapName=="function"&&o("\uB4DC\uB77C\uC774\uB7F0: \uB9F5 \uC57D\uC790 \uBCC0\uD658(\uD3F4\u2192\uD3F4\uB9AC\uD3EC\uC774\uB4DC)",window.resolveMapName("\uD3F4")==="\uD3F4\uB9AC\uD3EC\uC774\uB4DC"),o("\uD2F0\uC5B4\uB300\uD68C \uAD6C\uBD84(stage) \uC800\uC7A5 \uD544\uB4DC",!0,"ttM.stage \uC0AC\uC6A9(\uC77C\uBC18/\uC870\uBCC4/\uD1A0\uB108)"),o("save/render \uD638\uCD9C\uC774 \uC2E4\uC81C \uC800\uC7A5 \uC5C6\uC774 \uB3D9\uC791",f>=0&&b>=0,`save=${f}, render=${b}`)}catch(d){o("\uB4DC\uB77C\uC774\uB7F0 \uC2E4\uD589",!1,String(d.message||d))}finally{try{t.getEl&&(document.getElementById=t.getEl),typeof t.confirm=="function"&&(window.confirm=t.confirm),t.save&&(window.save=t.save),t.render&&(window.render=t.render),typeof t.isLoggedIn!="undefined"&&(window.isLoggedIn=t.isLoggedIn);try{typeof t.isLoggedInLex!="undefined"&&typeof isLoggedIn!="undefined"&&(isLoggedIn=t.isLoggedInLex)}catch(d){}Object.keys(t).forEach(d=>{["save","render","getEl","confirm","isLoggedIn"].includes(d)||(window[d]=t[d])});try{typeof t._lex_miniM!="undefined"&&typeof miniM!="undefined"&&(miniM=t._lex_miniM)}catch(d){}try{typeof t._lex_univM!="undefined"&&typeof univM!="undefined"&&(univM=t._lex_univM)}catch(d){}try{typeof t._lex_ckM!="undefined"&&typeof ckM!="undefined"&&(ckM=t._lex_ckM)}catch(d){}try{typeof t._lex_proM!="undefined"&&typeof proM!="undefined"&&(proM=t._lex_proM)}catch(d){}try{typeof t._lex_ttM!="undefined"&&typeof ttM!="undefined"&&(ttM=t._lex_ttM)}catch(d){}try{typeof t._lex_comps!="undefined"&&typeof comps!="undefined"&&(comps=t._lex_comps)}catch(d){}try{typeof t._lex_indM!="undefined"&&typeof indM!="undefined"&&(indM=t._lex_indM)}catch(d){}try{typeof t._lex_gjM!="undefined"&&typeof gjM!="undefined"&&(gjM=t._lex_gjM)}catch(d){}try{typeof t._lex_tourneys!="undefined"&&typeof tourneys!="undefined"&&(tourneys=t._lex_tourneys)}catch(d){}try{typeof t._lex_maps!="undefined"&&typeof maps!="undefined"&&(maps=t._lex_maps)}catch(d){}try{typeof t._lex_players!="undefined"&&typeof players!="undefined"&&(players=t._lex_players)}catch(d){}Object.keys(a).forEach(d=>{try{a[d]===null||typeof a[d]=="undefined"?localStorage.removeItem(d):localStorage.setItem(d,a[d])}catch(f){}})}catch(d){}}if(n){const d=e.filter(b=>b.pass).length,f=e.length-d;n.innerHTML=`
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-        <div style="font-size:12px;font-weight:1000;color:${u?"#dc2626":"#16a34a"}">QA \uACB0\uACFC: ${c} PASS / ${u} FAIL</div>
+        <div style="font-size:12px;font-weight:1000;color:${f?"#dc2626":"#16a34a"}">QA \uACB0\uACFC: ${d} PASS / ${f} FAIL</div>
         <div style="font-size:11px;color:var(--gray-l)">\u203B \uB3D9\uAE30\uD654/\uC678\uBD80 \uC774\uBBF8\uC9C0 \uB9C1\uD06C/\uC2E4\uC11C\uBC84 \uC5F0\uB3D9\uC740 \uC5EC\uAE30\uC11C \uC644\uC804 \uAC80\uC99D\uC774 \uC5B4\uB835\uC2B5\uB2C8\uB2E4(\uD568\uC218/\uCD08\uAE30\uD654 \uC218\uC900\uB9CC \uD655\uC778).</div>
       </div>
       <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden">
         <div style="display:grid;grid-template-columns:1.4fr .4fr 1fr;gap:0;background:var(--surface);border-bottom:1px solid var(--border);font-size:11px;font-weight:900;color:var(--text2)">
           <div style="padding:8px 10px">\uD56D\uBAA9</div><div style="padding:8px 10px">\uACB0\uACFC</div><div style="padding:8px 10px">\uBA54\uBAA8</div>
         </div>
-        ${e.map(v=>`
+        ${e.map(b=>`
           <div style="display:grid;grid-template-columns:1.4fr .4fr 1fr;gap:0;border-bottom:1px solid var(--border)">
-            <div style="padding:8px 10px;font-size:12px;color:var(--text2)">${esc(v.name)}</div>
-            <div style="padding:8px 10px;font-size:12px;font-weight:1000;color:${v.pass?"#16a34a":"#dc2626"}">${v.pass?"PASS":"FAIL"}</div>
-            <div style="padding:8px 10px;font-size:11px;color:var(--gray-l);font-family:ui-monospace,monospace;white-space:pre-wrap">${esc(v.detail||"")}</div>
+            <div style="padding:8px 10px;font-size:12px;color:var(--text2)">${esc(b.name)}</div>
+            <div style="padding:8px 10px;font-size:12px;font-weight:1000;color:${b.pass?"#16a34a":"#dc2626"}">${b.pass?"PASS":"FAIL"}</div>
+            <div style="padding:8px 10px;font-size:11px;color:var(--gray-l);font-family:ui-monospace,monospace;white-space:pre-wrap">${esc(b.detail||"")}</div>
           </div>
         `).join("")}
       </div>
-    `}},window.cfgSearchSettings=function(n){window._cfgSearchQ=String(n||"").trim();const e=window._cfgSearchQ.toLowerCase();if(!e){try{_cfgApplyCat(window._cfgCat,!1)}catch(o){}try{const o=document.getElementById("cfgSearchCnt");o&&(o.textContent="")}catch(o){}try{const o=document.getElementById("cfgSearchSug");o&&(o.innerHTML="",o.style.display="none")}catch(o){}return}let i=0;try{const o=document.querySelectorAll("[data-cfg-sec]");for(let r=0;r<o.length;r++){const t=o[r];try{if(t.closest&&t.closest("#cfgModalBody"))continue}catch(m){}const a=t.getAttribute("data-cfg-sec")||"",p=(window._cfgSecTitle&&window._cfgSecTitle[a]?String(window._cfgSecTitle[a]):a).replace(/<[^>]+>/g,"").replace(/^[\u{1F300}-\u{1FAFF}\u2600-\u27BF]+\s*/u,"");let f=t.getAttribute("data-cfg-searchtext");if(!f)try{const m=t.innerText||"";f=(p+" "+m).toLowerCase(),m.trim()&&t.setAttribute("data-cfg-searchtext",f)}catch(m){f=p.toLowerCase()}const h=a.toLowerCase().includes(e)||f.includes(e);t.style.display=h?"":"none",h&&i++,t.tagName==="DETAILS"&&(t.open=!1)}}catch(o){}try{const o=document.getElementById("cfgSearchCnt");o&&(o.textContent=`\uAC80\uC0C9 ${i}\uAC1C`)}catch(o){}try{const o=document.getElementById("cfgSearchSug");if(!o)return;const r=window._cfgSecTitle||{},t=[];for(const d in r){const f=String(r[d]||"").replace(/<[^>]+>/g,"");(d+" "+f).toLowerCase().includes(e)&&t.push({id:d,t:f})}t.sort((d,p)=>d.t.localeCompare(p.t,"ko"));const a=t.slice(0,10);if(!a.length){o.innerHTML="",o.style.display="none";return}o.innerHTML=a.map(d=>`<button type="button" class="cfg-search-item" onclick="(function(){try{cfgGo('${d.id}');}catch(e){};try{document.getElementById('cfgSearchSug').style.display='none';}catch(e){}})()">${d.t}</button>`).join(""),o.style.display="block"}catch(o){}};try{typeof window.__CFG_DEBUG=="undefined"&&(window.__CFG_DEBUG=typeof location!="undefined"&&(location.search||"").indexOf("cfgdebug=1")!==-1)}catch(n){}window.cfgRenderGistSyncStatus=function(){const n=document.getElementById("cfg-gist-sync-status");if(!n)return;if(!window.SettingsStore){n.innerHTML='<span style="color:var(--red);font-weight:900">\u26A0\uFE0F SettingsStore \uBAA8\uB4C8\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.</span>';return}const e=typeof window.SettingsStore.getSyncStatus=="function"?window.SettingsStore.getSyncStatus():{enabled:localStorage.getItem("al_sync_enabled")==="1",gistId:localStorage.getItem("al_gist_id")||"",tokenSet:!!localStorage.getItem("al_github_token"),isAdmin:typeof isLoggedIn!="undefined"&&isLoggedIn&&!(typeof isSubAdmin!="undefined"&&isSubAdmin)};try{const o=document.getElementById("cfg-gist-id");o&&(o.value=e.gistId||"");const r=document.getElementById("cfg-gist-enabled");r&&(r.checked=!!e.enabled)}catch(o){}const i=[];i.push(`<div><b>\uB3D9\uAE30\uD654</b>: ${e.enabled?"ON":"OFF"} ${e.isAdmin?"(\uAD00\uB9AC\uC790 \uC800\uC7A5 \uAC00\uB2A5)":"(\uC77D\uAE30\uB9CC \uAC00\uB2A5)"}</div>`),i.push(`<div><b>Gist ID</b>: ${e.gistId?`<code>${e.gistId}</code>`:'<span style="color:var(--gray-l)">\uBBF8\uC124\uC815</span>'}</div>`),i.push(`<div><b>\uD1A0\uD070</b>: ${e.tokenSet?"\u2705 \uC124\uC815\uB428":"\uBBF8\uC124\uC815"}</div>`),e.remoteMode&&i.push(`<div><b>\uC6D0\uACA9 \uD30C\uC77C</b>: ${e.remoteMode==="legacy"?"legacy(\uC790\uB3D9 \uB9C8\uC774\uADF8\uB808\uC774\uC158 \uB300\uC0C1)":"su_settings.json"}</div>`),e.lastPull&&i.push(`<div><b>\uB9C8\uC9C0\uB9C9 \uBD88\uB7EC\uC624\uAE30</b>: ${e.lastPull}</div>`),e.lastPush&&i.push(`<div><b>\uB9C8\uC9C0\uB9C9 \uC800\uC7A5</b>: ${e.lastPush}</div>`),e.migrated&&i.push("<div><b>\uB9C8\uC774\uADF8\uB808\uC774\uC158</b>: \u2705 \uC218\uD589\uB428</div>"),e.lastError&&i.push(`<div style="color:var(--red)"><b>\uCD5C\uADFC \uC624\uB958</b>: ${esc(String(e.lastError))}</div>`),n.innerHTML=i.join("")},window.cfgGistSyncSaveCfg=function(){var t,a;if(!window.SettingsStore)return alert("SettingsStore \uBAA8\uB4C8\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");const n=(((t=document.getElementById("cfg-gist-id"))==null?void 0:t.value)||"").trim(),e=(((a=document.getElementById("cfg-gist-token"))==null?void 0:a.value)||"").trim(),i=document.getElementById("cfg-gist-enabled"),o=i?!!i.checked:window.SettingsStore.cfg().enabled,r={};n&&(r.gistId=n),typeof o!="undefined"&&(r.enabled=o),e&&(r.token=e);try{window.SettingsStore.setCfg(r);const d=document.getElementById("cfg-gist-sync-msg");d&&(d.textContent="\u2705 \uC800\uC7A5\uB428")}catch(d){alert("\uC800\uC7A5 \uC2E4\uD328: "+d.message)}try{window.cfgRenderGistSyncStatus()}catch(d){}},window.cfgGistSyncSetAutoPush=function(n){try{if(!window.SettingsStore||!window.SettingsStore.isAdmin())return;window.SettingsStore.setPrefsAutoPush(!!n);const e=document.getElementById("cfg-gist-sync-msg");e&&(e.textContent=n?"\u2705 \uC790\uB3D9 \uC800\uC7A5 ON":"\uC790\uB3D9 \uC800\uC7A5 OFF")}catch(e){}try{window.cfgRenderGistSyncStatus()}catch(e){}},window.cfgTouchPrefsSync=function(){try{window.SettingsStore&&typeof window.SettingsStore.markPrefsChanged=="function"&&window.SettingsStore.markPrefsChanged()}catch(n){}},window.cfgGistSyncPull=async function(){const n=document.getElementById("cfg-gist-sync-msg");n&&(n.textContent="\uBD88\uB7EC\uC624\uB294 \uC911...");try{if(!window.SettingsStore)throw new Error("SettingsStore \uBAA8\uB4C8\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");const e=await window.SettingsStore.pull({returnInfo:!0});n&&(n.textContent=e&&e.migrated?"\u2705 \uBD88\uB7EC\uC624\uAE30 \uC644\uB8CC (+\uB9C8\uC774\uADF8\uB808\uC774\uC158 \uC644\uB8CC)":"\u2705 \uBD88\uB7EC\uC624\uAE30 \uC644\uB8CC");try{typeof showToast=="function"&&showToast("\u2705 \uC6D0\uACA9 \uC124\uC815 \uBD88\uB7EC\uC624\uAE30 \uC644\uB8CC")}catch(i){}}catch(e){n&&(n.textContent="\u274C \uC2E4\uD328: "+e.message);try{typeof showToast=="function"&&showToast("\u274C \uBD88\uB7EC\uC624\uAE30 \uC2E4\uD328: "+e.message)}catch(i){}}try{window.cfgRenderGistSyncStatus()}catch(e){}},window.cfgGistSyncPush=async function(){const n=document.getElementById("cfg-gist-sync-msg");n&&(n.textContent="\uC800\uC7A5\uD558\uB294 \uC911...");try{if(!window.SettingsStore)throw new Error("SettingsStore \uBAA8\uB4C8\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");if(!window.SettingsStore.isAdmin())throw new Error("\uAD00\uB9AC\uC790\uB9CC \uC800\uC7A5\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.");await window.SettingsStore.push(),n&&(n.textContent="\u2705 \uC6D0\uACA9 \uC800\uC7A5 \uC644\uB8CC");try{typeof showToast=="function"&&showToast("\u2601\uFE0F \uB2E4\uB978 \uAE30\uAE30\uC5D0\uB3C4 \uBC18\uC601\uB428")}catch(e){}}catch(e){n&&(n.textContent="\u274C \uC2E4\uD328: "+e.message);try{typeof showToast=="function"&&showToast("\u274C \uC800\uC7A5 \uC2E4\uD328: "+e.message)}catch(i){}}try{window.cfgRenderGistSyncStatus()}catch(e){}};async function rebuildIndexedDbStores(){try{let n=[];if(window.MatchStore&&typeof window.MatchStore.rebuild=="function"){const e=await window.MatchStore.rebuild();n.push(`\uACBD\uAE30 \uAE30\uB85D: ${e.backend||"unknown"}`)}if(window.HistoryExternalUtils&&typeof window.HistoryExternalUtils.rebuildStorage=="function"){const e=await window.HistoryExternalUtils.rebuildStorage();n.push(`\uC678\uBD80\uD0ED: ${e.backend||"unknown"}`)}renderStorageInfo(),alert(`\uC7AC\uBE4C\uB4DC\uB97C \uC644\uB8CC\uD588\uC2B5\uB2C8\uB2E4.
+    `}},window.cfgSearchSettings=function(n){window._cfgSearchQ=String(n||"").trim();const e=window._cfgSearchQ.toLowerCase(),o={\uBC1D\uAE30:["brightness","\uC6D0\uC0C9","\uAD11\uB3C4","\uB178\uCD9C","\uD658\uD558\uAC8C"],\uC6D0\uC0C9:["\uBC1D\uAE30","\uC0C9\uAC10","\uCEEC\uB7EC","color","\uCC44\uB3C4","saturate"],\uC0C9\uAC10:["\uC6D0\uC0C9","\uCC44\uB3C4","\uCEEC\uB7EC","color","saturate"],\uD751\uBC31:["\uD68C\uC0C9","gray","grey","grayscale","\uBB34\uCC44\uC0C9"],\uD68C\uC0C9:["\uD751\uBC31","gray","grey","grayscale","\uBB34\uCC44\uC0C9"],\uCC44\uB3C4:["\uC6D0\uC0C9","\uC0C9\uAC10","saturate","\uCEEC\uB7EC","color"],\uD22C\uBA85\uB3C4:["opacity","\uBD88\uD22C\uBA85\uB3C4","\uC54C\uD30C","alpha"],\uD504\uB85C\uD544:["\uC0AC\uC9C4","\uC774\uBBF8\uC9C0","\uC544\uBC14\uD0C0","avatar","photo","img"],\uC0AC\uC9C4:["\uD504\uB85C\uD544","\uC774\uBBF8\uC9C0","\uC544\uBC14\uD0C0","avatar","photo","img"],\uC774\uBBF8\uC9C0:["\uC0AC\uC9C4","\uD504\uB85C\uD544","\uC378\uB124\uC77C","thumbnail","img","photo"],\uBC30\uACBD:["background","bg","\uB4B7\uBC30\uACBD","\uBC30\uACBD\uC0C9"],\uD14C\uB450\uB9AC:["border","\uB77C\uC778","\uC120","\uC678\uACFD\uC120"],\uD3F0\uD2B8:["\uAE00\uC790","\uD14D\uC2A4\uD2B8","\uC11C\uCCB4","font","\uD0C0\uC774\uD3EC"],\uAE00\uC790:["\uD3F0\uD2B8","\uD14D\uC2A4\uD2B8","font","\uD0C0\uC774\uD3EC"],\uB9F5:["map","\uB9F5\uBA85","\uC9C0\uB3C4"],\uB0A0\uC9DC:["date","\uC77C\uC790","\uB0A0\uC790"],\uC9C4\uC0AC\uB78C:["\uD328\uC790","\uD328\uBC30","\uD328\uBC30\uD300","loser","lose","\uC9C4 \uC120\uC218"],\uD328\uC790:["\uC9C4\uC0AC\uB78C","\uD328\uBC30\uD300","loser","lose","\uC9C4 \uC120\uC218"],\uD328\uBC30\uD300:["\uC9C4\uC0AC\uB78C","\uD328\uC790","loser","lose","\uC9C4 \uD300"],\uC774\uAE34\uC0AC\uB78C:["\uC2B9\uC790","\uC2B9\uB9AC","winner","win","\uC774\uAE34 \uC120\uC218"],\uC2B9\uC790:["\uC774\uAE34\uC0AC\uB78C","\uC2B9\uB9AC","winner","win","\uC774\uAE34 \uC120\uC218"],\uAE30\uB85D:["\uCE74\uB4DC","\uAE30\uB85D\uCE74\uB4DC","record","history"],\uD31D\uC5C5:["\uBAA8\uB2EC","modal","\uC0C1\uC138"],\uBAA8\uB2EC:["\uD31D\uC5C5","modal","\uC0C1\uC138"],\uAC80\uC0C9:["\uC11C\uCE58","\uCC3E\uAE30","\uD544\uD130","search"],\uC21C\uC704:["\uB7AD\uD0B9","\uD3EC\uB514\uC6C0","rank","ranking"],\uD3EC\uB514\uC6C0:["\uC21C\uC704","\uB7AD\uD0B9","1\uB4F1","2\uB4F1","3\uB4F1","podium"]},i=function(p){return String(p||"").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim().toLowerCase()},s=function(p){const g=i(p),v=new Set(g?[g]:[]);return g?(Object.keys(o).forEach(function(m){const h=i(m),d=(o[m]||[]).map(i).filter(Boolean);(g.includes(h)||h.includes(g)||d.some(function(f){return f.includes(g)||g.includes(f)}))&&(v.add(h),d.forEach(function(f){v.add(f)}))}),Array.from(v).filter(Boolean)):[]},t=i(window._cfgSearchQ).split(" ").filter(Boolean).map(s),a=function(p){const g=i(p);if(!g)return{hit:!1,label:""};if(!t.length)return{hit:!1,label:""};const v=[];for(let m=0;m<t.length;m++){const h=t[m]||[];let d="";for(let f=0;f<h.length;f++){const b=h[f];if(b&&g.includes(b)){d=b;break}}if(!d)return{hit:!1,label:""};v.push(d)}return{hit:!0,label:v.join(", ")}};if(!e){try{_cfgApplyCat(window._cfgCat,!1)}catch(p){}try{const p=document.getElementById("cfgSearchCnt");p&&(p.textContent="")}catch(p){}try{const p=document.getElementById("cfgSearchSug");p&&(p.innerHTML="",p.style.display="none")}catch(p){}return}let c=0;const u=[],x={};try{document.querySelectorAll('button[onclick*="cfgGo("], [onclick*="cfgGo("]').forEach(function(g){try{const m=String(g.getAttribute("onclick")||"").match(/cfgGo\('([^']+)'\)/);if(!m||!m[1])return;const h=String(m[1]).trim();if(!h)return;const d=i([g.textContent||"",g.innerText||"",g.getAttribute("title")||"",g.getAttribute("aria-label")||""].join(" "));if(!d)return;x[h]=(x[h]?x[h]+" ":"")+d}catch(v){}}),document.querySelectorAll("[data-cfg-bottom-panel]").forEach(function(g){g.style.display=""});const p=document.querySelectorAll("[data-cfg-sec]");for(let g=0;g<p.length;g++){const v=p[g];try{if(v.closest&&v.closest("#cfgModalBody"))continue}catch(l){}const m=v.getAttribute("data-cfg-sec")||"",d=(window._cfgSecTitle&&window._cfgSecTitle[m]?String(window._cfgSecTitle[m]):m).replace(/<[^>]+>/g,"").replace(/^[\u{1F300}-\u{1FAFF}\u2600-\u27BF]+\s*/u,"");let f=v.getAttribute("data-cfg-searchtext");if(!f)try{const l=[v.textContent||"",v.innerText||""].filter(Boolean).join(" "),y=window._cfgSecDescMap&&window._cfgSecDescMap[m]?String(window._cfgSecDescMap[m]):"",w=x[m]||"";f=i(m+" "+d+" "+y+" "+w+" "+l),l.trim()&&v.setAttribute("data-cfg-searchtext",f)}catch(l){f=i(m+" "+d)}const b=a(m+" "+d),_=a(f),S=!!(b.hit||_.hit);v.style.display=S?"":"none",S&&c++,S&&u.push({id:m,t:d,st:f,m:b.label||_.label||"",score:(b.hit?100:0)+(_.hit?20:0)+(f.includes(e)?10:0)}),v.tagName==="DETAILS"&&(v.open=!!S)}}catch(p){}try{const p=document.getElementById("cfgSearchCnt");p&&(p.textContent=`\uAC80\uC0C9 ${c}\uAC1C`)}catch(p){}try{const p=document.getElementById("cfgSearchSug");if(!p)return;const g=[],v=new Set;u.forEach(function(h){!h||!h.id||v.has(h.id)||(v.add(h.id),g.push(h))}),g.sort((h,d)=>(d.score||0)-(h.score||0)||h.t.localeCompare(d.t,"ko"));const m=g.slice(0,10);if(!m.length){p.innerHTML="",p.style.display="none";return}p.innerHTML=m.map(h=>`<button type="button" class="cfg-search-item" onclick="(function(){try{cfgGo('${h.id}');}catch(e){};try{document.getElementById('cfgSearchSug').style.display='none';}catch(e){}})()"><span style="display:block;font-size:12px;font-weight:900;color:var(--text2)">${h.t}</span><span style="display:block;font-size:10px;color:var(--gray-l);font-weight:700">${h.m?"\uB9E4\uCE6D: "+h.m:"\uB0B4\uBD80 \uAE30\uB2A5 \uC124\uC815 \uB9E4\uCE6D"}</span></button>`).join(""),p.style.display="block"}catch(p){}};try{typeof window.__CFG_DEBUG=="undefined"&&(window.__CFG_DEBUG=typeof location!="undefined"&&(location.search||"").indexOf("cfgdebug=1")!==-1)}catch(n){}window.cfgRenderGistSyncStatus=function(){const n=document.getElementById("cfg-gist-sync-status");if(!n)return;if(!window.SettingsStore){n.innerHTML='<span style="color:var(--red);font-weight:900">\u26A0\uFE0F SettingsStore \uBAA8\uB4C8\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.</span>';return}const e=typeof window.SettingsStore.getSyncStatus=="function"?window.SettingsStore.getSyncStatus():{enabled:localStorage.getItem("al_sync_enabled")==="1",gistId:localStorage.getItem("al_gist_id")||"",tokenSet:!!localStorage.getItem("al_github_token"),isAdmin:typeof isLoggedIn!="undefined"&&isLoggedIn&&!(typeof isSubAdmin!="undefined"&&isSubAdmin)};try{const i=document.getElementById("cfg-gist-id");i&&(i.value=e.gistId||"");const s=document.getElementById("cfg-gist-enabled");s&&(s.checked=!!e.enabled)}catch(i){}const o=[];o.push(`<div><b>\uB3D9\uAE30\uD654</b>: ${e.enabled?"ON":"OFF"} ${e.isAdmin?"(\uAD00\uB9AC\uC790 \uC800\uC7A5 \uAC00\uB2A5)":"(\uC77D\uAE30\uB9CC \uAC00\uB2A5)"}</div>`),o.push(`<div><b>Gist ID</b>: ${e.gistId?`<code>${e.gistId}</code>`:'<span style="color:var(--gray-l)">\uBBF8\uC124\uC815</span>'}</div>`),o.push(`<div><b>\uD1A0\uD070</b>: ${e.tokenSet?"\u2705 \uC124\uC815\uB428":"\uBBF8\uC124\uC815"}</div>`),e.remoteMode&&o.push(`<div><b>\uC6D0\uACA9 \uD30C\uC77C</b>: ${e.remoteMode==="legacy"?"legacy(\uC790\uB3D9 \uB9C8\uC774\uADF8\uB808\uC774\uC158 \uB300\uC0C1)":"su_settings.json"}</div>`),e.lastPull&&o.push(`<div><b>\uB9C8\uC9C0\uB9C9 \uBD88\uB7EC\uC624\uAE30</b>: ${e.lastPull}</div>`),e.lastPush&&o.push(`<div><b>\uB9C8\uC9C0\uB9C9 \uC800\uC7A5</b>: ${e.lastPush}</div>`),e.migrated&&o.push("<div><b>\uB9C8\uC774\uADF8\uB808\uC774\uC158</b>: \u2705 \uC218\uD589\uB428</div>"),e.lastError&&o.push(`<div style="color:var(--red)"><b>\uCD5C\uADFC \uC624\uB958</b>: ${esc(String(e.lastError))}</div>`),n.innerHTML=o.join("")},window.cfgGistSyncSaveCfg=function(){var t,a;if(!window.SettingsStore)return alert("SettingsStore \uBAA8\uB4C8\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");const n=(((t=document.getElementById("cfg-gist-id"))==null?void 0:t.value)||"").trim(),e=(((a=document.getElementById("cfg-gist-token"))==null?void 0:a.value)||"").trim(),o=document.getElementById("cfg-gist-enabled"),i=o?!!o.checked:window.SettingsStore.cfg().enabled,s={};n&&(s.gistId=n),typeof i!="undefined"&&(s.enabled=i),e&&(s.token=e);try{window.SettingsStore.setCfg(s);const c=document.getElementById("cfg-gist-sync-msg");c&&(c.textContent="\u2705 \uC800\uC7A5\uB428")}catch(c){alert("\uC800\uC7A5 \uC2E4\uD328: "+c.message)}try{window.cfgRenderGistSyncStatus()}catch(c){}},window.cfgGistSyncSetAutoPush=function(n){try{if(!window.SettingsStore||!window.SettingsStore.isAdmin())return;window.SettingsStore.setPrefsAutoPush(!!n);const e=document.getElementById("cfg-gist-sync-msg");e&&(e.textContent=n?"\u2705 \uC790\uB3D9 \uC800\uC7A5 ON":"\uC790\uB3D9 \uC800\uC7A5 OFF")}catch(e){}try{window.cfgRenderGistSyncStatus()}catch(e){}},window.cfgTouchPrefsSync=function(){try{window.SettingsStore&&typeof window.SettingsStore.markPrefsChanged=="function"&&window.SettingsStore.markPrefsChanged()}catch(n){}},window.cfgGistSyncPull=async function(){const n=document.getElementById("cfg-gist-sync-msg");n&&(n.textContent="\uBD88\uB7EC\uC624\uB294 \uC911...");try{if(!window.SettingsStore)throw new Error("SettingsStore \uBAA8\uB4C8\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");const e=await window.SettingsStore.pull({returnInfo:!0});n&&(n.textContent=e&&e.migrated?"\u2705 \uBD88\uB7EC\uC624\uAE30 \uC644\uB8CC (+\uB9C8\uC774\uADF8\uB808\uC774\uC158 \uC644\uB8CC)":"\u2705 \uBD88\uB7EC\uC624\uAE30 \uC644\uB8CC");try{typeof showToast=="function"&&showToast("\u2705 \uC6D0\uACA9 \uC124\uC815 \uBD88\uB7EC\uC624\uAE30 \uC644\uB8CC")}catch(o){}}catch(e){n&&(n.textContent="\u274C \uC2E4\uD328: "+e.message);try{typeof showToast=="function"&&showToast("\u274C \uBD88\uB7EC\uC624\uAE30 \uC2E4\uD328: "+e.message)}catch(o){}}try{window.cfgRenderGistSyncStatus()}catch(e){}},window.cfgGistSyncPush=async function(){const n=document.getElementById("cfg-gist-sync-msg");n&&(n.textContent="\uC800\uC7A5\uD558\uB294 \uC911...");try{if(!window.SettingsStore)throw new Error("SettingsStore \uBAA8\uB4C8\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");if(!window.SettingsStore.isAdmin())throw new Error("\uAD00\uB9AC\uC790\uB9CC \uC800\uC7A5\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.");await window.SettingsStore.push(),n&&(n.textContent="\u2705 \uC6D0\uACA9 \uC800\uC7A5 \uC644\uB8CC");try{typeof showToast=="function"&&showToast("\u2601\uFE0F \uB2E4\uB978 \uAE30\uAE30\uC5D0\uB3C4 \uBC18\uC601\uB428")}catch(e){}}catch(e){n&&(n.textContent="\u274C \uC2E4\uD328: "+e.message);try{typeof showToast=="function"&&showToast("\u274C \uC800\uC7A5 \uC2E4\uD328: "+e.message)}catch(o){}}try{window.cfgRenderGistSyncStatus()}catch(e){}};async function rebuildIndexedDbStores(){try{let n=[];if(window.MatchStore&&typeof window.MatchStore.rebuild=="function"){const e=await window.MatchStore.rebuild();n.push(`\uACBD\uAE30 \uAE30\uB85D: ${e.backend||"unknown"}`)}if(window.HistoryExternalUtils&&typeof window.HistoryExternalUtils.rebuildStorage=="function"){const e=await window.HistoryExternalUtils.rebuildStorage();n.push(`\uC678\uBD80\uD0ED: ${e.backend||"unknown"}`)}renderStorageInfo(),alert(`\uC7AC\uBE4C\uB4DC\uB97C \uC644\uB8CC\uD588\uC2B5\uB2C8\uB2E4.
 ${n.join(`
-`)}`)}catch(n){alert("\uC7AC\uBE4C\uB4DC \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.")}}try{typeof window._settingsImgContextMenuEl=="undefined"&&(window._settingsImgContextMenuEl=null),typeof window._currentImageTarget=="undefined"&&(window._currentImageTarget=null)}catch(n){}try{typeof window._randomRotationTimer=="undefined"&&(window._randomRotationTimer=null)}catch(n){}try{typeof window._settingsCurrentTab!="string"&&(window._settingsCurrentTab="total")}catch(n){}window.openEP=function(n){var S,c,u,v,_,k;editName=n;const e=players.find(l=>l.name===n);if(!e)return;const o=(()=>{try{return JSON.parse(localStorage.getItem("su_h2h_player_bgpos")||"{}")||{}}catch(l){return{}}})()[e.name]||{x:50,y:50},r=(()=>{var g;const l=parseInt((g=o.x)!=null?g:"50",10);return isNaN(l)?50:Math.max(0,Math.min(100,l))})(),t=(()=>{var g;const l=parseInt((g=o.y)!=null?g:"50",10);return isNaN(l)?50:Math.max(0,Math.min(100,l))})(),a=(()=>{try{return(localStorage.getItem("su_h2h_panel_fit")||"cover").trim()}catch(l){return"cover"}})(),d=a==="fill"?"100% 100%":a==="contain"?"contain":"cover",p=(()=>{var g;const l=parseInt((g=e.photoPosX)!=null?g:"50",10);return isNaN(l)?50:Math.max(0,Math.min(100,l))})(),f=(()=>{var g;const l=parseInt((g=e.photoPosY)!=null?g:"50",10);return isNaN(l)?50:Math.max(0,Math.min(100,l))})(),h=(()=>{var g;const l=parseInt((g=e.photo2PosX)!=null?g:"50",10);return isNaN(l)?50:Math.max(0,Math.min(100,l))})(),m=(()=>{var g;const l=parseInt((g=e.photo2PosY)!=null?g:"50",10);return isNaN(l)?50:Math.max(0,Math.min(100,l))})(),x=e.photoPosUse!==!1,w=e.photo2PosUse!==!1;document.getElementById("emBody").innerHTML=`
+`)}`)}catch(n){alert("\uC7AC\uBE4C\uB4DC \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.")}}try{typeof window._settingsImgContextMenuEl=="undefined"&&(window._settingsImgContextMenuEl=null),typeof window._currentImageTarget=="undefined"&&(window._currentImageTarget=null)}catch(n){}try{typeof window._randomRotationTimer=="undefined"&&(window._randomRotationTimer=null)}catch(n){}try{typeof window._settingsCurrentTab!="string"&&(window._settingsCurrentTab="total")}catch(n){}window.openEP=function(n){var h,d,f,b,_,S;editName=n;const e=players.find(l=>l.name===n);if(!e)return;const i=(()=>{try{return JSON.parse(localStorage.getItem("su_h2h_player_bgpos")||"{}")||{}}catch(l){return{}}})()[e.name]||{x:50,y:50},s=(()=>{var y;const l=parseInt((y=i.x)!=null?y:"50",10);return isNaN(l)?50:Math.max(0,Math.min(100,l))})(),t=(()=>{var y;const l=parseInt((y=i.y)!=null?y:"50",10);return isNaN(l)?50:Math.max(0,Math.min(100,l))})(),a=(()=>{try{return(localStorage.getItem("su_h2h_panel_fit")||"cover").trim()}catch(l){return"cover"}})(),c=a==="fill"?"100% 100%":a==="contain"?"contain":"cover",u=(()=>{var y;const l=parseInt((y=e.photoPosX)!=null?y:"50",10);return isNaN(l)?50:Math.max(0,Math.min(100,l))})(),x=(()=>{var y;const l=parseInt((y=e.photoPosY)!=null?y:"50",10);return isNaN(l)?50:Math.max(0,Math.min(100,l))})(),p=(()=>{var y;const l=parseInt((y=e.photo2PosX)!=null?y:"50",10);return isNaN(l)?50:Math.max(0,Math.min(100,l))})(),g=(()=>{var y;const l=parseInt((y=e.photo2PosY)!=null?y:"50",10);return isNaN(l)?50:Math.max(0,Math.min(100,l))})(),v=e.photoPosUse!==!1,m=e.photo2PosUse!==!1;document.getElementById("emBody").innerHTML=`
     <label>\uC2A4\uD2B8\uB9AC\uBA38 \uC774\uB984</label><input type="text" id="ed-n" value="${e.name}">
     <label>\uD2F0\uC5B4</label><select id="ed-t">${TIERS.map(l=>`<option value="${l}"${e.tier===l?" selected":""}>${getTierLabel(l)}</option>`).join("")}</select>
     <label>\uB300\uD559</label>
@@ -1763,7 +1763,7 @@ ${n.join(`
     <label>\uC131\uBCC4</label><select id="ed-g"><option value="F"${(e.gender||"F")==="F"?" selected":""}>\u{1F469} \uC5EC\uC790</option><option value="M"${e.gender==="M"?" selected":""}>\u{1F468} \uB0A8\uC790</option></select>
     <label>\uC9C1\uCC45 <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(\uC774\uC0AC\uC7A5/\uC120\uC7A5/\uB3D9\uC544\uB9AC\uC7A5/\uBC18\uC7A5/\uCD1D\uC7A5/\uBD80\uCD1D\uC7A5/\uCD1D\uAD04/\uAD50\uC218/\uCF54\uCE58\uB294 \uC815\uB82C \uC6B0\uC120\uC21C\uC704 \uC801\uC6A9)</span></label>
     <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
-      ${MAIN_ROLES.map(l=>{const g=ROLE_ICONS[l]||"\u{1F3F7}\uFE0F",y=ROLE_COLORS[l]||"#6b7280";return`<button type="button" onclick="const el=document.getElementById('ed-role');el.value=el.value===this.dataset.role?'':this.dataset.role;" data-role="${l}" style="padding:3px 8px;border-radius:6px;border:1.5px solid ${y};background:${e.role===l?y+"22":"var(--white)"};color:${y};font-size:11px;font-weight:700;cursor:pointer">${g} ${l}</button>`}).join("")}
+      ${MAIN_ROLES.map(l=>{const y=ROLE_ICONS[l]||"\u{1F3F7}\uFE0F",w=ROLE_COLORS[l]||"#6b7280";return`<button type="button" onclick="const el=document.getElementById('ed-role');el.value=el.value===this.dataset.role?'':this.dataset.role;" data-role="${l}" style="padding:3px 8px;border-radius:6px;border:1.5px solid ${w};background:${e.role===l?w+"22":"var(--white)"};color:${w};font-size:11px;font-weight:700;cursor:pointer">${y} ${l}</button>`}).join("")}
       <button type="button" onclick="document.getElementById('ed-role').value=''" style="padding:3px 8px;border-radius:6px;border:1.5px solid #9ca3af;background:var(--white);color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer">\u2715 \uC5C6\uC74C</button>
     </div>
     <input type="text" id="ed-role" value="${e.role||""}" placeholder="\uC9C1\uCC45 \uC9C1\uC811 \uC785\uB825 \uB610\uB294 \uC704 \uBC84\uD2BC \uD074\uB9AD" style="width:100%">
@@ -1782,12 +1782,12 @@ ${n.join(`
         (\uCC44\uC6B0\uAE30/cover \uC0AC\uC6A9 \uC2DC) \uC5BC\uAD74\uC774 \uC798\uB9AC\uBA74 \uC544\uB798 \uBBF8\uB9AC\uBCF4\uAE30\uC5D0\uC11C <b>\uB4DC\uB798\uADF8</b>\uD558\uAC70\uB098 X/Y\uB85C \uC704\uCE58\uB97C \uBCF4\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.
       </div>
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:900;color:var(--text3);margin:-2px 0 10px">
-        <input type="checkbox" id="ed-p1pos-use" ${x?"checked":""} onchange="document.getElementById('ed-p1pos-prev').style.opacity=this.checked?1:.55">
+        <input type="checkbox" id="ed-p1pos-use" ${v?"checked":""} onchange="document.getElementById('ed-p1pos-prev').style.opacity=this.checked?1:.55">
         \uC774 \uBCF4\uC815 \uC801\uC6A9(\uCCB4\uD06C \uD574\uC81C \uC2DC \uAE30\uC874 \uC124\uC815 \uC0AC\uC6A9)
       </label>
       <input type="hidden" id="ed-p1pos-del" value="0">
-      <div id="ed-p1pos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${x?1:.55}">
-        ${e.photo?`<img id="ed-p1pos-img" src="${toHttpsUrl(e.photo).replace(/\"/g,"&quot;")}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${p}% ${f}%;transform:scale(1.02)" onerror="this.style.display='none'">`:""}
+      <div id="ed-p1pos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${v?1:.55}">
+        ${e.photo?`<img id="ed-p1pos-img" src="${toHttpsUrl(e.photo).replace(/\"/g,"&quot;")}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${u}% ${x}%;transform:scale(1.02)" onerror="this.style.display='none'">`:""}
         <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
         <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
         <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
@@ -1795,13 +1795,13 @@ ${n.join(`
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">\uAC00\uB85C(X)</div>
-        <input type="range" id="ed-p1pos-x" min="0" max="100" step="1" value="${p}" oninput="edP1PosSyncFromInputs()" style="width:100%">
-        <div id="ed-p1pos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${p}%</div>
+        <input type="range" id="ed-p1pos-x" min="0" max="100" step="1" value="${u}" oninput="edP1PosSyncFromInputs()" style="width:100%">
+        <div id="ed-p1pos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${u}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC138\uB85C(Y)</div>
-        <input type="range" id="ed-p1pos-y" min="0" max="100" step="1" value="${f}" oninput="edP1PosSyncFromInputs()" style="width:100%">
-        <div id="ed-p1pos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${f}%</div>
+        <input type="range" id="ed-p1pos-y" min="0" max="100" step="1" value="${x}" oninput="edP1PosSyncFromInputs()" style="width:100%">
+        <div id="ed-p1pos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${x}%</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">
         <button type="button" class="btn btn-w btn-xs" onclick="edP1PosCenter()">\uC13C\uD130(50/50)</button>
@@ -1815,7 +1815,7 @@ ${n.join(`
         \uCC44\uC6B0\uAE30(cover)\uC5D0\uC11C \uC5BC\uAD74\uC774 \uC798\uB9AC\uB294 \uACBD\uC6B0, \uC544\uB798 \uBBF8\uB9AC\uBCF4\uAE30\uC5D0\uC11C <b>\uB4DC\uB798\uADF8</b>\uD558\uAC70\uB098 X/Y\uB85C \uC704\uCE58\uB97C \uBCF4\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. (\uAC1C\uC778\uC804/\uB05D\uC7A5\uC804/\uD504\uB85C\uB9AC\uADF8 \uB05D\uC7A5\uC804 \uC801\uC6A9)
       </div>
       <input type="hidden" id="ed-h2hpos-del" value="0">
-      <div id="ed-h2hpos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:${e.photo?`url('${toHttpsUrl(e.photo)}')`:"linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10))"};background-size:${d};background-position:${r}% ${t}%;background-repeat:no-repeat;touch-action:none;user-select:none">
+      <div id="ed-h2hpos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:${e.photo?`url('${toHttpsUrl(e.photo)}')`:"linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10))"};background-size:${c};background-position:${s}% ${t}%;background-repeat:no-repeat;touch-action:none;user-select:none">
         <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.32) 60%, rgba(15,23,42,.78) 100%)"></div>
         <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
         <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
@@ -1831,9 +1831,9 @@ ${n.join(`
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">\uAC00\uB85C(X)</div>
-        <input type="range" id="ed-h2hpos-x" min="0" max="100" step="1" value="${r}"
+        <input type="range" id="ed-h2hpos-x" min="0" max="100" step="1" value="${s}"
           oninput="edH2HPosSyncFromInputs()" style="width:100%">
-        <div id="ed-h2hpos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${r}%</div>
+        <div id="ed-h2hpos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${s}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC138\uB85C(Y)</div>
@@ -1857,12 +1857,12 @@ ${n.join(`
       <div style="font-weight:900;font-size:12px;color:var(--text2);margin-bottom:6px">\u{1F5BC} \uD504\uB85C\uD544 \uC0AC\uC9C4 2 \u2014 \uC5BC\uAD74 \uC704\uCE58(\uC790\uB974\uAE30 \uBCF4\uC815)</div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">\uD504\uB85C\uD544 2\uB3C4 \uD544\uC694\uD558\uBA74 \uC704\uCE58\uB97C \uC800\uC7A5\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.</div>
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:900;color:var(--text3);margin:-2px 0 10px">
-        <input type="checkbox" id="ed-p2pos-use" ${w?"checked":""} onchange="document.getElementById('ed-p2pos-prev').style.opacity=this.checked?1:.55">
+        <input type="checkbox" id="ed-p2pos-use" ${m?"checked":""} onchange="document.getElementById('ed-p2pos-prev').style.opacity=this.checked?1:.55">
         \uC774 \uBCF4\uC815 \uC801\uC6A9(\uCCB4\uD06C \uD574\uC81C \uC2DC \uAE30\uC874 \uC124\uC815 \uC0AC\uC6A9)
       </label>
       <input type="hidden" id="ed-p2pos-del" value="0">
-      <div id="ed-p2pos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${w?1:.55}">
-        ${e.secondProfileFile?`<img id="ed-p2pos-img" src="${toHttpsUrl(e.secondProfileFile).replace(/\"/g,"&quot;")}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${h}% ${m}%;transform:scale(1.02)" onerror="this.style.display='none'">`:""}
+      <div id="ed-p2pos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${m?1:.55}">
+        ${e.secondProfileFile?`<img id="ed-p2pos-img" src="${toHttpsUrl(e.secondProfileFile).replace(/\"/g,"&quot;")}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${p}% ${g}%;transform:scale(1.02)" onerror="this.style.display='none'">`:""}
         <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
         <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
         <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
@@ -1870,13 +1870,13 @@ ${n.join(`
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">\uAC00\uB85C(X)</div>
-        <input type="range" id="ed-p2pos-x" min="0" max="100" step="1" value="${h}" oninput="edP2PosSyncFromInputs()" style="width:100%">
-        <div id="ed-p2pos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${h}%</div>
+        <input type="range" id="ed-p2pos-x" min="0" max="100" step="1" value="${p}" oninput="edP2PosSyncFromInputs()" style="width:100%">
+        <div id="ed-p2pos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${p}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC138\uB85C(Y)</div>
-        <input type="range" id="ed-p2pos-y" min="0" max="100" step="1" value="${m}" oninput="edP2PosSyncFromInputs()" style="width:100%">
-        <div id="ed-p2pos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${m}%</div>
+        <input type="range" id="ed-p2pos-y" min="0" max="100" step="1" value="${g}" oninput="edP2PosSyncFromInputs()" style="width:100%">
+        <div id="ed-p2pos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${g}%</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">
         <button type="button" class="btn btn-w btn-xs" onclick="edP2PosCenter()">\uC13C\uD130(50/50)</button>
@@ -1894,7 +1894,7 @@ ${n.join(`
       <label>\uBC30\uACBD \uC774\uBBF8\uC9C0 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(\uBE44\uC6CC\uB450\uBA74 \uC124\uC815\uD0ED \uAE30\uBCF8\uAC12 \uC0AC\uC6A9)</span></label>
       <input type="text" id="ed-phbg" value="${e.detailHeaderBgImg||""}" placeholder="https://... \uC774\uBBF8\uC9C0 URL">
       <div id="ed-phbg-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);margin-top:10px;background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none">
-        ${(e.detailHeaderBgImg||"").trim()?`<div id="ed-phbg-prev-bg" style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl((e.detailHeaderBgImg||"").trim()).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:${Number((S=e.detailHeaderBgPosX)!=null?S:50)||50}% ${Number((c=e.detailHeaderBgPosY)!=null?c:50)||50}%;background-size:${(e.detailHeaderBgFit||"")==="fill"?"100% 100%":(e.detailHeaderBgFit||"")==="cover"?"cover":"contain"};transform:scale(${Math.max(40,Math.min(220,Number(e.detailHeaderBgScale||100)||100))/100});transform-origin:center center;opacity:.85;pointer-events:none"></div>`:""}
+        ${(e.detailHeaderBgImg||"").trim()?`<div id="ed-phbg-prev-bg" style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl((e.detailHeaderBgImg||"").trim()).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:${Number((h=e.detailHeaderBgPosX)!=null?h:50)||50}% ${Number((d=e.detailHeaderBgPosY)!=null?d:50)||50}%;background-size:${(e.detailHeaderBgFit||"")==="fill"?"100% 100%":(e.detailHeaderBgFit||"")==="cover"?"cover":"contain"};transform:scale(${Math.max(40,Math.min(220,Number(e.detailHeaderBgScale||100)||100))/100});transform-origin:center center;opacity:.85;pointer-events:none"></div>`:""}
         <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%);pointer-events:none"></div>
         <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
         <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
@@ -1922,23 +1922,23 @@ ${n.join(`
       </div>
       <div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 6px">\uC774\uBBF8\uC9C0 \uC704\uCE58</div>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
-        ${[["left top","\u2196 \uC88C\uC0C1"],["center top","\u2191 \uC0C1\uB2E8"],["right top","\u2197 \uC6B0\uC0C1"],["left center","\u2190 \uC88C\uC911"],["center center","\u2022 \uC911\uC559"],["right center","\u2192 \uC6B0\uC911"],["left bottom","\u2199 \uC88C\uD558"],["center bottom","\u2193 \uD558\uB2E8"],["right bottom","\u2198 \uC6B0\uD558"]].map(([l,g])=>`<button type="button" data-phbg-pos="${l}" class="btn btn-xs ${(e.detailHeaderBgPos||"center center")===l?"btn-b":"btn-w"}"
-          onclick="document.getElementById('ed-phbg-pos').value='${l}'; document.querySelectorAll('[data-phbg-pos]').forEach(el=>el.className='btn btn-xs btn-w'); this.className='btn btn-xs btn-b';">${g}</button>`).join("")}
+        ${[["left top","\u2196 \uC88C\uC0C1"],["center top","\u2191 \uC0C1\uB2E8"],["right top","\u2197 \uC6B0\uC0C1"],["left center","\u2190 \uC88C\uC911"],["center center","\u2022 \uC911\uC559"],["right center","\u2192 \uC6B0\uC911"],["left bottom","\u2199 \uC88C\uD558"],["center bottom","\u2193 \uD558\uB2E8"],["right bottom","\u2198 \uC6B0\uD558"]].map(([l,y])=>`<button type="button" data-phbg-pos="${l}" class="btn btn-xs ${(e.detailHeaderBgPos||"center center")===l?"btn-b":"btn-w"}"
+          onclick="document.getElementById('ed-phbg-pos').value='${l}'; document.querySelectorAll('[data-phbg-pos]').forEach(el=>el.className='btn btn-xs btn-w'); this.className='btn btn-xs btn-b';">${y}</button>`).join("")}
       </div>
       <input type="hidden" id="ed-phbg-pos" value="${e.detailHeaderBgPos||"center center"}">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
         <div>
           <label>\uAC00\uB85C \uBBF8\uC138 \uC704\uCE58</label>
           <div style="display:flex;align-items:center;gap:8px">
-            <input type="range" id="ed-phbg-posx" min="0" max="100" step="1" value="${Number((u=e.detailHeaderBgPosX)!=null?u:50)||50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-posx-val').textContent=this.value+'%'; edPhbgSyncFromInputs()">
-            <span id="ed-phbg-posx-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number((v=e.detailHeaderBgPosX)!=null?v:50)||50}%</span>
+            <input type="range" id="ed-phbg-posx" min="0" max="100" step="1" value="${Number((f=e.detailHeaderBgPosX)!=null?f:50)||50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-posx-val').textContent=this.value+'%'; edPhbgSyncFromInputs()">
+            <span id="ed-phbg-posx-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number((b=e.detailHeaderBgPosX)!=null?b:50)||50}%</span>
           </div>
         </div>
         <div>
           <label>\uC138\uB85C \uBBF8\uC138 \uC704\uCE58</label>
           <div style="display:flex;align-items:center;gap:8px">
             <input type="range" id="ed-phbg-posy" min="0" max="100" step="1" value="${Number((_=e.detailHeaderBgPosY)!=null?_:50)||50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-posy-val').textContent=this.value+'%'; edPhbgSyncFromInputs()">
-            <span id="ed-phbg-posy-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number((k=e.detailHeaderBgPosY)!=null?k:50)||50}%</span>
+            <span id="ed-phbg-posy-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number((S=e.detailHeaderBgPosY)!=null?S:50)||50}%</span>
           </div>
         </div>
       </div>
@@ -2004,9 +2004,9 @@ ${n.join(`
     <div style="margin-top:14px;padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#15803d;margin-bottom:10px">\u{1F3AD} \uC0C1\uD0DC \uC544\uC774\uCF58</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="ed-icon-btns">
-        ${(()=>{const l=getStatusIcon(e.name);return Object.entries(STATUS_ICON_DEFS).map(([g,y])=>{const b=g==="none"&&!l||y.emoji&&l===y.emoji,s=y.emoji?_siIsImg(y.emoji)?_siRender(y.emoji,"18px"):y.emoji:'<span style="font-size:11px;font-weight:700">\uC5C6\uC74C</span>';return`<button type="button" onclick="setStatusIconFromModal(this,'${escJS(e.name)}','${g}')" data-icon-id="${g}" title="${y.label}" style="padding:5px 10px;border-radius:7px;border:2px solid ${b?"#16a34a":"var(--border)"};background:${b?"#dcfce7":"var(--white)"};cursor:pointer;min-width:38px;transition:.12s;font-family:'Noto Sans KR',sans-serif;">${s}</button>`}).join("")})()}
+        ${(()=>{const l=getStatusIcon(e.name);return Object.entries(STATUS_ICON_DEFS).map(([y,w])=>{const k=y==="none"&&!l||w.emoji&&l===w.emoji,r=w.emoji?_siIsImg(w.emoji)?_siRender(w.emoji,"18px"):w.emoji:'<span style="font-size:11px;font-weight:700">\uC5C6\uC74C</span>';return`<button type="button" onclick="setStatusIconFromModal(this,'${escJS(e.name)}','${y}')" data-icon-id="${y}" title="${w.label}" style="padding:5px 10px;border-radius:7px;border:2px solid ${k?"#16a34a":"var(--border)"};background:${k?"#dcfce7":"var(--white)"};cursor:pointer;min-width:38px;transition:.12s;font-family:'Noto Sans KR',sans-serif;">${r}</button>`}).join("")})()}
       </div>
-      <div id="ed-icon-label" style="font-size:11px;color:var(--gray-l);margin-top:7px">\uC120\uD0DD: ${(()=>{const l=getStatusIcon(e.name),g=Object.entries(STATUS_ICON_DEFS).find(([,s])=>s.emoji&&s.emoji===l),y=playerStatusExpiry[e.name],b=y?` (${y} \uB9CC\uB8CC)`:"";return(g?g[1].label:"\uC5C6\uC74C")+b})()}</div>
+      <div id="ed-icon-label" style="font-size:11px;color:var(--gray-l);margin-top:7px">\uC120\uD0DD: ${(()=>{const l=getStatusIcon(e.name),y=Object.entries(STATUS_ICON_DEFS).find(([,r])=>r.emoji&&r.emoji===l),w=playerStatusExpiry[e.name],k=w?` (${w} \uB9CC\uB8CC)`:"";return(y?y[1].label:"\uC5C6\uC74C")+k})()}</div>
       <div id="ed-icon-expiry-row" style="display:${getStatusIcon(e.name)?"flex":"none"};align-items:center;gap:7px;margin-top:8px">
         <input type="checkbox" id="ed-icon-expiry" ${playerStatusExpiry[e.name]?"checked":""} onchange="onStatusExpiryChange('${e.name}')" style="width:14px;height:14px;cursor:pointer;accent-color:#16a34a">
         <label for="ed-icon-expiry" style="font-size:11px;color:#15803d;font-weight:600;cursor:pointer;margin:0">10\uC77C \uD6C4 \uC790\uB3D9\uC73C\uB85C \uC5C6\uC74C\uC73C\uB85C \uBCC0\uACBD</label>
@@ -2074,1510 +2074,1167 @@ ${n.join(`
     <div style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
       <div style="font-weight:700;font-size:12px;color:#b45309;margin-bottom:8px">\u{1F4DD} \uC120\uC218 \uBA54\uBAA8</div>
       <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:12px;border:1px solid #fde68a;border-radius:6px;padding:8px;background:#fff;resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="\uC120\uC218\uC5D0 \uB300\uD55C \uBA54\uBAA8\uB97C \uC785\uB825\uD558\uC138\uC694...">${e.memo||""}</textarea>
-    </div>`,om("emModal");try{setTimeout(()=>{typeof edBindH2HPosDrag=="function"&&edBindH2HPosDrag(),typeof edBindP1PosDrag=="function"&&edBindP1PosDrag(),typeof edBindP2PosDrag=="function"&&edBindP2PosDrag(),typeof edPhbgSyncFromInputs=="function"&&edPhbgSyncFromInputs(),typeof edBindPhbgDrag=="function"&&edBindPhbgDrag()},0)}catch(l){}};try{typeof window._univDragSrc!="number"&&(window._univDragSrc=-1)}catch(n){}try{typeof window._dissolveIdx!="number"&&(window._dissolveIdx=-1)}catch(n){}function cfgUnivPickColor(n,e){if(typeof cfgShowColorPalette=="function"){const i=univCfg[n]&&univCfg[n].color||"#3b82f6";cfgShowColorPalette(e,i,o=>cfgUnivSetColor(n,o))}}
+    </div>`,om("emModal");try{setTimeout(()=>{typeof edBindH2HPosDrag=="function"&&edBindH2HPosDrag(),typeof edBindP1PosDrag=="function"&&edBindP1PosDrag(),typeof edBindP2PosDrag=="function"&&edBindP2PosDrag(),typeof edPhbgSyncFromInputs=="function"&&edPhbgSyncFromInputs(),typeof edBindPhbgDrag=="function"&&edBindPhbgDrag()},0)}catch(l){}};try{typeof window._univDragSrc!="number"&&(window._univDragSrc=-1)}catch(n){}try{typeof window._dissolveIdx!="number"&&(window._dissolveIdx=-1)}catch(n){}function cfgUnivPickColor(n,e){if(typeof cfgShowColorPalette=="function"){const o=univCfg[n]&&univCfg[n].color||"#3b82f6";cfgShowColorPalette(e,o,i=>cfgUnivSetColor(n,i))}}
 
 /* settings-cfg-misc.js */
 function cfgTierThemePickColor(e,o){if(typeof cfgShowColorPalette=="function"){const c=typeof tierThemes!="undefined"&&tierThemes&&tierThemes[e],n=c&&c.color||"#3b82f6";cfgShowColorPalette(o,n,t=>cfgTierThemeSetColor(e,t))}}async function addAdminAccount(){const e=document.getElementById("adm-id").value.trim(),o=document.getElementById("adm-pw").value,c=document.getElementById("adm-role"),n=c?c.value:"admin",t=document.getElementById("adm-msg");if(!e||!o){t.style.color="var(--red)",t.textContent="\uC544\uC774\uB514\uC640 \uBE44\uBC00\uBC88\uD638\uB97C \uBAA8\uB450 \uC785\uB825\uD558\uC138\uC694.";return}if(o.length<8){t.style.color="var(--red)",t.textContent="\uBE44\uBC00\uBC88\uD638\uB294 8\uC790 \uC774\uC0C1\uC774\uC5B4\uC57C \uD569\uB2C8\uB2E4.";return}if(!(localStorage.getItem("su_gh_token")||"").trim()){t.style.color="var(--red)",t.textContent="\uC6D0\uACA9 \uAD00\uB9AC\uC790 \uACC4\uC815 \uAD00\uB9AC\uB97C \uC704\uD574 GitHub \uD1A0\uD070\uC744 \uBA3C\uC800 \uC124\uC815\uD558\uC138\uC694.";return}try{typeof pullAdminAccountsRemote=="function"&&await pullAdminAccountsRemote(!0)}catch(r){}const a=getAdminAccounts(),i=String(e||"").trim().toLowerCase(),l=await sha256(i);if(a.some(r=>String(r.idHash||"")===l)){t.style.color="var(--gold)",t.textContent="\uC774\uBBF8 \uB3D9\uC77C\uD55C \uC544\uC774\uB514\uAC00 \uB4F1\uB85D\uB418\uC5B4 \uC788\uC2B5\uB2C8\uB2E4.";return}if(n==="admin"&&a.some(r=>(r&&r.role)!=="sub-admin")){t.style.color="var(--red)",t.textContent="\uCD1D\uAD00\uB9AC\uC790 \uACC4\uC815\uC740 1\uBA85\uB9CC \uB4F1\uB85D\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.";return}const m=typeof createAdminAccountRecord=="function"?await createAdminAccountRecord(e,o,n,e):{hash:await sha256(e+":"+o),role:n,label:e},s=a.concat([m]);localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(s));try{localStorage.setItem("su_admin_hashes_updated_at",String(Date.now()))}catch(r){}if(!(typeof pushAdminAccountsRemote=="function"?await pushAdminAccountsRemote(s):!1)){localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(a)),t.style.color="var(--red)",t.textContent="\uC6D0\uACA9 \uAD00\uB9AC\uC790 \uACC4\uC815 \uC800\uC7A5\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694.";return}t.style.color="var(--green)";const d=n==="sub-admin"?"\uBD80\uAD00\uB9AC\uC790":"\uCD1D\uAD00\uB9AC\uC790";t.textContent=`\u2705 ${d} \uACC4\uC815\uC774 \uCD94\uAC00\uB418\uC5C8\uC2B5\uB2C8\uB2E4. \uCD1D ${s.length}\uBA85`,document.getElementById("adm-id").value="",document.getElementById("adm-pw").value="",reCfg()}async function clearAllAdmins(){if(!confirm(`\uBAA8\uB4E0 \uAD00\uB9AC\uC790 \uACC4\uC815\uC744 \uC0AD\uC81C\uD560\uAE4C\uC694?
 \uC6D0\uACA9 \uAD00\uB9AC\uC790 \uACC4\uC815 \uBAA9\uB85D\uB3C4 \uD568\uAED8 \uBE44\uC6CC\uC9D1\uB2C8\uB2E4.`))return;if(!(localStorage.getItem("su_gh_token")||"").trim()){alert("\uC6D0\uACA9 \uAD00\uB9AC\uC790 \uACC4\uC815 \uAD00\uB9AC\uB97C \uC704\uD574 GitHub \uD1A0\uD070\uC744 \uBA3C\uC800 \uC124\uC815\uD558\uC138\uC694.");return}const o=getAdminAccounts();localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify([]));try{localStorage.setItem("su_admin_hashes_updated_at",String(Date.now()))}catch(n){}if(!(typeof pushAdminAccountsRemote=="function"?await pushAdminAccountsRemote([]):!1)){localStorage.setItem(ADMIN_HASH_KEY,JSON.stringify(o)),alert("\uC6D0\uACA9 \uAD00\uB9AC\uC790 \uACC4\uC815 \uC0AD\uC81C\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694.");return}doLogout(),alert("\uCD08\uAE30\uD654 \uC644\uB8CC. \uC6D0\uACA9 \uAD00\uB9AC\uC790 \uACC4\uC815 \uBAA9\uB85D\uC774 \uBE44\uC6CC\uC84C\uC2B5\uB2C8\uB2E4.")}try{window.statsSub=window.statsSub||"overview"}catch(e){}
 
 /* settings-render-reccard.js */
-// ══════════════════════════════════════════════════════════
-// settings-render-reccard.js — 기록카드/대회카드/H2H/프로리그카드 설정 섹션
-// settings-render.js 에서 분리됨
-// 의존: settings-render.js (_scfgD 인자로 전달)
-// ══════════════════════════════════════════════════════════
-
-window.renderCfgRecCardSection = function(_scfgD) {
-  const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-  ${_scfgD('reccard','🧾 기록 카드(기록탭) 스타일')}
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">개인전/끝장전/미니/프로리그/대회 기록 목록에 쓰이는 “기록 카드” 스타일입니다. (대회탭 조별리그 일정 카드는 별도 설정)</div>
+window.renderCfgRecCardSection=function(F){var b,w,_,I,$,z,S,M,C;const t=(function(){try{const e=window.localStorage,i="__su_ls_test__";return e.setItem(i,"1"),e.removeItem(i),e}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),v=((b=t.getItem("su_rc_theme_on"))!=null?b:"1")==="1",r=(w=t.getItem("su_rc_accent_mode"))!=null?w:"none",x=parseInt((_=t.getItem("su_rc_bg_alpha"))!=null?_:"12",10)||12,m=parseInt((I=t.getItem("su_rc_hd_alpha"))!=null?I:"14",10)||14,u=parseInt(($=t.getItem("su_rc_uicon"))!=null?$:"24",10)||24,f=parseInt((z=t.getItem("su_rc_univ_font_pct"))!=null?z:"110",10)||110,h=parseInt((S=t.getItem("su_ym_scale_pct"))!=null?S:"100",10)||100,R=((M=t.getItem("su_rc_memo_on"))!=null?M:"0")==="1",y=Math.round((parseFloat((C=t.getItem("su_avatar_scale"))!=null?C:"1")||1)*100),s=(t.getItem("su_rec_side_fx_on")||"1")!=="0",n=t.getItem("su_rec_side_fx_mode")||"soft",l=Math.max(20,Math.min(100,parseInt(t.getItem("su_rec_side_fx_intensity")||"68",10)||68)),p=Math.max(4,Math.min(80,parseInt(t.getItem("su_rec_side_fx_length")||"25",10)||25)),c=Math.max(0,Math.min(140,parseInt(t.getItem("su_rec_side_fx_tail")||"28",10)||28)),d=Math.max(0,Math.min(100,parseInt(t.getItem("su_rec_side_fx_softness")||"52",10)||52)),B=Math.max(2,Math.min(24,parseInt(t.getItem("su_rec_side_fx_edge")||"8",10)||8));return F("reccard","\u{1F9FE} \uAE30\uB85D \uCE74\uB4DC(\uAE30\uB85D\uD0ED) \uC2A4\uD0C0\uC77C")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uAC1C\uC778\uC804/\uB05D\uC7A5\uC804/\uBBF8\uB2C8/\uD504\uB85C\uB9AC\uADF8/\uB300\uD68C \uAE30\uB85D \uBAA9\uB85D\uC5D0 \uC4F0\uC774\uB294 \u201C\uAE30\uB85D \uCE74\uB4DC\u201D \uC2A4\uD0C0\uC77C\uC785\uB2C8\uB2E4. (\uB300\uD68C\uD0ED \uC870\uBCC4\uB9AC\uADF8 \uC77C\uC815 \uCE74\uB4DC\uB294 \uBCC4\uB3C4 \uC124\uC815)</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" id="cfg-rc-theme-on" style="width:15px;height:15px" ${_rcOn?'checked':''} onchange="cfgSetRecCardSettings()">
-        승리 대학색을 카드 배경/헤더에 연하게 적용
+        <input type="checkbox" id="cfg-rc-theme-on" style="width:15px;height:15px" ${v?"checked":""} onchange="cfgSetRecCardSettings()">
+        \uC2B9\uB9AC \uB300\uD559\uC0C9\uC744 \uCE74\uB4DC \uBC30\uACBD/\uD5E4\uB354\uC5D0 \uC5F0\uD558\uAC8C \uC801\uC6A9
       </label>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" id="cfg-rc-bgfx-all" style="width:15px;height:15px" ${(_rcOn && _sfxOn)?'checked':''} onchange="cfgSetRecBgFxAll(this.checked)">
-        기록 카드 배경 효과 전체 사용 (배경/양끝 효과)
+        <input type="checkbox" id="cfg-rc-bgfx-all" style="width:15px;height:15px" ${v&&s?"checked":""} onchange="cfgSetRecBgFxAll(this.checked)">
+        \uAE30\uB85D \uCE74\uB4DC \uBC30\uACBD \uD6A8\uACFC \uC804\uCCB4 \uC0AC\uC6A9 (\uBC30\uACBD/\uC591\uB05D \uD6A8\uACFC)
       </label>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">디자인 모드</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uB514\uC790\uC778 \uBAA8\uB4DC</div>
         <select id="cfg-rc-accent" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-          <option value="none" ${_rcAccent==='none'?'selected':''}>무색</option>
-          <option value="header" ${_rcAccent==='header'?'selected':''}>헤더만 포인트</option>
-          <option value="border" ${_rcAccent==='border'?'selected':''}>테두리만 포인트</option>
-          <option value="full" ${_rcAccent==='full'?'selected':''}>전체 배경 포인트</option>
-          <option value="gradient" ${_rcAccent==='gradient'?'selected':''}>그라디언트 헤더</option>
+          <option value="none" ${r==="none"?"selected":""}>\uBB34\uC0C9</option>
+          <option value="header" ${r==="header"?"selected":""}>\uD5E4\uB354\uB9CC \uD3EC\uC778\uD2B8</option>
+          <option value="border" ${r==="border"?"selected":""}>\uD14C\uB450\uB9AC\uB9CC \uD3EC\uC778\uD2B8</option>
+          <option value="full" ${r==="full"?"selected":""}>\uC804\uCCB4 \uBC30\uACBD \uD3EC\uC778\uD2B8</option>
+          <option value="gradient" ${r==="gradient"?"selected":""}>\uADF8\uB77C\uB514\uC5B8\uD2B8 \uD5E4\uB354</option>
         </select>
-        <span style="font-size:11px;color:var(--gray-l)">※ 체크를 끄면 무조건 무색</span>
+        <span style="font-size:11px;color:var(--gray-l)">\u203B \uCCB4\uD06C\uB97C \uB044\uBA74 \uBB34\uC870\uAC74 \uBB34\uC0C9</span>
       </div>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uCE74\uB4DC \uBAA8\uC591</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          ${(function(){
-            const _curShape = localStorage.getItem('su_rc_card_shape') || 'default';
-            const _all = [
-              {v:'default',       l:'기본',      icon:'🃏', desc:'기본 둥근 카드'},
-              {v:'compact',       l:'컴팩트',    icon:'📋', desc:'패딩 축소, 밀도 높게'},
-              {v:'wide',          l:'와이드',    icon:'🖼️', desc:'넓고 여유로운 카드'},
-              {v:'minimal',       l:'미니멀',    icon:'➖', desc:'테두리 없음, 구분선만'},
-              {v:'timeline',      l:'타임라인',  icon:'📅', desc:'왼쪽 색선 강조'},
-
-              {v:'glass',         l:'유리',      icon:'🔮', desc:'반투명 유리 효과'},
-              {v:'frosted',       l:'프로스트',  icon:'❄️', desc:'세련된 frosted glass'},
-              {v:'floating',      l:'플로팅',    icon:'🎈', desc:'둥실 떠오르는 그림자'},
-              {v:'soft-round',    l:'소프트',    icon:'🫧', desc:'더 둥글고 부드러운 카드'},
-              {v:'deep',          l:'딥쉐도우',  icon:'🕳️', desc:'깊은 그림자 강조'},
-
-              {v:'card3d',        l:'3D 카드',   icon:'🎴', desc:'입체 그림자 효과'},
-              {v:'neon',          l:'네온',      icon:'⚡', desc:'네온 발광 테두리'},
-              {v:'stripe',        l:'스트라이프', icon:'🟦', desc:'왼쪽 컬러 스트라이프'},
-              {v:'gradient-bg',   l:'그라데이션', icon:'🌈', desc:'모드 컬러 그라데이션 배경'},
-              {v:'shadow-left',   l:'사이드 쉐도우', icon:'🌗', desc:'측면 강조 그림자'},
-              {v:'inset',         l:'인셋',      icon:'🧊', desc:'안쪽 테두리(inset)'},
-              {v:'topline',       l:'탑라인',    icon:'⬆️', desc:'상단 컬러 바'},
-              {v:'split-bg',      l:'스플릿BG',  icon:'🌓', desc:'좌측 컬러 틴트 분할'},
-              {v:'underline',     l:'언더라인',  icon:'📏', desc:'하단 컬러 라인'},
-
-              {v:'retro',         l:'레트로',    icon:'🕹️', desc:'복고풍 진한 테두리'},
-              {v:'paper',         l:'페이퍼',    icon:'📄', desc:'종이 텍스처 느낌'},
-              {v:'terminal',      l:'터미널',    icon:'⌨️', desc:'모노톤 콘솔 스타일'},
-              {v:'double',        l:'이중선',    icon:'🧷', desc:'테두리 이중 라인'},
-              {v:'bold-border',   l:'굵은선',    icon:'🖊️', desc:'컬러 두꺼운 테두리'},
-              {v:'comic',         l:'코믹',      icon:'💥', desc:'굵은 테두리+툰 느낌'},
-              {v:'bubble',        l:'버블',      icon:'💬', desc:'크고 둥근 버블형'},
-              {v:'pill',          l:'알약형',    icon:'💊', desc:'완전 둥근 알약 카드'},
-
-              {v:'sharp',         l:'각진',      icon:'▬',  desc:'직각 카드'},
-              {v:'bevel',         l:'베벨',      icon:'🔻', desc:'대각 모서리 베벨 느낌'},
-              {v:'cut-corner',    l:'컷코너',    icon:'✂️', desc:'모서리 컷(clip-path)'},
-              {v:'notch',         l:'노치',      icon:'🧩', desc:'노치 코너 카드'},
-              {v:'ticket',        l:'티켓',      icon:'🎟️', desc:'점선 티켓 스타일'},
-              {v:'stamp',         l:'스탬프',    icon:'📮', desc:'점선+스탬프 느낌'},
-              {v:'scallop',       l:'스캘럽',    icon:'🪡', desc:'톱니/스캘럽 가장자리'},
-              {v:'tab',           l:'탭',        icon:'🔖', desc:'상단 탭이 있는 카드'},
-              {v:'tag',           l:'태그',      icon:'🏷️', desc:'꼬리표(tag) 모양'},
-              {v:'ribbon',        l:'리본',      icon:'🎗️', desc:'양쪽 리본 컷'},
-              {v:'badge',         l:'배지',      icon:'🏅', desc:'옥타곤 배지형'},
-              {v:'hex',           l:'육각',      icon:'⬢',  desc:'육각형 클립'},
-              {v:'slant',         l:'사선',      icon:'⟋',  desc:'사선(평행사변형)'},
-              {v:'wave',          l:'웨이브',    icon:'🌊', desc:'물결형 실루엣'},
-              {v:'bracket',       l:'브라켓',    icon:'⟦⟧', desc:'중앙 홈(브라켓) 형태'},
-              {v:'shield',        l:'실드',      icon:'🛡️', desc:'하단 뾰족(방패)'},
-              {v:'bookmark',      l:'북마크',    icon:'🔻', desc:'하단 접힌 북마크'},
-              {v:'hourglass',     l:'모래시계',  icon:'⌛', desc:'양옆 중앙이 들어간 형태'},
-              {v:'zigzag',        l:'지그재그',  icon:'〰️', desc:'상/하단 지그재그'},
-              {v:'burst',         l:'버스트',    icon:'💢', desc:'가시/스파이크 형태'},
-              {v:'cloud',         l:'클라우드',  icon:'☁️', desc:'둥근 물결(구름)'},
-              // ── 스포츠 대결 전용 카드 모양 ──
-              {v:'versus-card',    l:'VS 대결',    icon:'⚔️', desc:'양측 사선 대결 컷'},
-              {v:'thunder-card',   l:'번개 카드',  icon:'⚡', desc:'번개 사선 분리형'},
-              {v:'esports-card',   l:'e스포츠',    icon:'🎮', desc:'e스포츠 경기 카드'},
-              {v:'arena-card',     l:'아레나',     icon:'🏟️', desc:'경기장 테두리 강조'},
-              {v:'crown-card',     l:'왕관 카드',  icon:'👑', desc:'상단 왕관 포인트'},
-              {v:'championship',   l:'챔피언십',   icon:'🏆', desc:'금장 챔피언십 카드'},
-              {v:'knockout',       l:'녹아웃',     icon:'🥊', desc:'격투 대결 스타일'},
-              {v:'blitz',          l:'블리츠',     icon:'⚡', desc:'스피드 블리츠 카드'},
-              {v:'rivalry',        l:'라이벌',     icon:'🔥', desc:'불꽃 라이벌 대결'},
-              {v:'champion-frame', l:'챔프 프레임',icon:'🥇', desc:'금색 챔피언 액자'},
-              {v:'playoff',        l:'플레이오프',  icon:'🎯', desc:'플레이오프 토너먼트'},
-              {v:'matchup',        l:'매치업',     icon:'🏅', desc:'정면 대결 매치업'},
-            ];
-            const byV = Object.create(null);
-            _all.forEach(s=>{ byV[s.v]=s; });
-
-            const groups = [
-              {t:'기본/레이아웃', keys:['default','compact','wide','minimal','timeline']},
-              {t:'세련/모던', keys:['glass','frosted','floating','soft-round','deep']},
-              {t:'포인트/효과', keys:['card3d','neon','stripe','gradient-bg','shadow-left','inset','topline','split-bg','underline']},
-              {t:'귀엽/레트로', keys:['bubble','comic','retro','paper','terminal','double','bold-border','pill']},
-              {t:'⚔️ 스포츠 대결', keys:['versus-card','thunder-card','esports-card','arena-card','crown-card','championship','knockout','blitz','rivalry','champion-frame','playoff','matchup']},
-              {t:'특수 실루엣', keys:['sharp','bevel','cut-corner','notch','ticket','stamp','scallop','tab','tag','ribbon','badge','hex','slant','wave','bracket','shield','bookmark','hourglass','zigzag','burst','cloud']},
-            ];
-
-            const btn = (s)=>`<button type="button"
-              onclick="if(typeof cfgSetRecCardShape==='function')cfgSetRecCardShape('${s.v}');try{render();}catch(e){}"
-              title="${s.desc}"
-              style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${_curShape===s.v?'var(--blue)':'var(--border2)'};background:${_curShape===s.v?'#eff6ff':'var(--white)'};color:${_curShape===s.v?'var(--blue)':'var(--text2)'}"
-            >${s.icon} ${s.l}</button>`;
-
-            return groups.map(g=>{
-              const items = g.keys.map(k=>byV[k]).filter(Boolean);
-              if(!items.length) return '';
-              return `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:2px 0">
-                <span style="padding:3px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--border);font-size:10px;font-weight:900;color:var(--text3)">${g.t}</span>
-                ${items.map(btn).join('')}
-              </div>`;
-            }).join('');
-          })()}
+          ${(function(){const e=t.getItem("su_rc_card_shape")||"default",i=[{v:"default",l:"\uAE30\uBCF8",icon:"\u{1F0CF}",desc:"\uAE30\uBCF8 \uB465\uADFC \uCE74\uB4DC"},{v:"compact",l:"\uCEF4\uD329\uD2B8",icon:"\u{1F4CB}",desc:"\uD328\uB529 \uCD95\uC18C, \uBC00\uB3C4 \uB192\uAC8C"},{v:"wide",l:"\uC640\uC774\uB4DC",icon:"\u{1F5BC}\uFE0F",desc:"\uB113\uACE0 \uC5EC\uC720\uB85C\uC6B4 \uCE74\uB4DC"},{v:"minimal",l:"\uBBF8\uB2C8\uBA40",icon:"\u2796",desc:"\uD14C\uB450\uB9AC \uC5C6\uC74C, \uAD6C\uBD84\uC120\uB9CC"},{v:"timeline",l:"\uD0C0\uC784\uB77C\uC778",icon:"\u{1F4C5}",desc:"\uC67C\uCABD \uC0C9\uC120 \uAC15\uC870"},{v:"glass",l:"\uC720\uB9AC",icon:"\u{1F52E}",desc:"\uBC18\uD22C\uBA85 \uC720\uB9AC \uD6A8\uACFC"},{v:"frosted",l:"\uD504\uB85C\uC2A4\uD2B8",icon:"\u2744\uFE0F",desc:"\uC138\uB828\uB41C frosted glass"},{v:"floating",l:"\uD50C\uB85C\uD305",icon:"\u{1F388}",desc:"\uB465\uC2E4 \uB5A0\uC624\uB974\uB294 \uADF8\uB9BC\uC790"},{v:"soft-round",l:"\uC18C\uD504\uD2B8",icon:"\u{1FAE7}",desc:"\uB354 \uB465\uAE00\uACE0 \uBD80\uB4DC\uB7EC\uC6B4 \uCE74\uB4DC"},{v:"deep",l:"\uB525\uC250\uB3C4\uC6B0",icon:"\u{1F573}\uFE0F",desc:"\uAE4A\uC740 \uADF8\uB9BC\uC790 \uAC15\uC870"},{v:"card3d",l:"3D \uCE74\uB4DC",icon:"\u{1F3B4}",desc:"\uC785\uCCB4 \uADF8\uB9BC\uC790 \uD6A8\uACFC"},{v:"neon",l:"\uB124\uC628",icon:"\u26A1",desc:"\uB124\uC628 \uBC1C\uAD11 \uD14C\uB450\uB9AC"},{v:"stripe",l:"\uC2A4\uD2B8\uB77C\uC774\uD504",icon:"\u{1F7E6}",desc:"\uC67C\uCABD \uCEEC\uB7EC \uC2A4\uD2B8\uB77C\uC774\uD504"},{v:"gradient-bg",l:"\uADF8\uB77C\uB370\uC774\uC158",icon:"\u{1F308}",desc:"\uBAA8\uB4DC \uCEEC\uB7EC \uADF8\uB77C\uB370\uC774\uC158 \uBC30\uACBD"},{v:"shadow-left",l:"\uC0AC\uC774\uB4DC \uC250\uB3C4\uC6B0",icon:"\u{1F317}",desc:"\uCE21\uBA74 \uAC15\uC870 \uADF8\uB9BC\uC790"},{v:"inset",l:"\uC778\uC14B",icon:"\u{1F9CA}",desc:"\uC548\uCABD \uD14C\uB450\uB9AC(inset)"},{v:"topline",l:"\uD0D1\uB77C\uC778",icon:"\u2B06\uFE0F",desc:"\uC0C1\uB2E8 \uCEEC\uB7EC \uBC14"},{v:"split-bg",l:"\uC2A4\uD50C\uB9BFBG",icon:"\u{1F313}",desc:"\uC88C\uCE21 \uCEEC\uB7EC \uD2F4\uD2B8 \uBD84\uD560"},{v:"underline",l:"\uC5B8\uB354\uB77C\uC778",icon:"\u{1F4CF}",desc:"\uD558\uB2E8 \uCEEC\uB7EC \uB77C\uC778"},{v:"retro",l:"\uB808\uD2B8\uB85C",icon:"\u{1F579}\uFE0F",desc:"\uBCF5\uACE0\uD48D \uC9C4\uD55C \uD14C\uB450\uB9AC"},{v:"paper",l:"\uD398\uC774\uD37C",icon:"\u{1F4C4}",desc:"\uC885\uC774 \uD14D\uC2A4\uCC98 \uB290\uB08C"},{v:"terminal",l:"\uD130\uBBF8\uB110",icon:"\u2328\uFE0F",desc:"\uBAA8\uB178\uD1A4 \uCF58\uC194 \uC2A4\uD0C0\uC77C"},{v:"double",l:"\uC774\uC911\uC120",icon:"\u{1F9F7}",desc:"\uD14C\uB450\uB9AC \uC774\uC911 \uB77C\uC778"},{v:"bold-border",l:"\uAD75\uC740\uC120",icon:"\u{1F58A}\uFE0F",desc:"\uCEEC\uB7EC \uB450\uAEBC\uC6B4 \uD14C\uB450\uB9AC"},{v:"comic",l:"\uCF54\uBBF9",icon:"\u{1F4A5}",desc:"\uAD75\uC740 \uD14C\uB450\uB9AC+\uD230 \uB290\uB08C"},{v:"bubble",l:"\uBC84\uBE14",icon:"\u{1F4AC}",desc:"\uD06C\uACE0 \uB465\uADFC \uBC84\uBE14\uD615"},{v:"pill",l:"\uC54C\uC57D\uD615",icon:"\u{1F48A}",desc:"\uC644\uC804 \uB465\uADFC \uC54C\uC57D \uCE74\uB4DC"},{v:"sharp",l:"\uAC01\uC9C4",icon:"\u25AC",desc:"\uC9C1\uAC01 \uCE74\uB4DC"},{v:"bevel",l:"\uBCA0\uBCA8",icon:"\u{1F53B}",desc:"\uB300\uAC01 \uBAA8\uC11C\uB9AC \uBCA0\uBCA8 \uB290\uB08C"},{v:"cut-corner",l:"\uCEF7\uCF54\uB108",icon:"\u2702\uFE0F",desc:"\uBAA8\uC11C\uB9AC \uCEF7(clip-path)"},{v:"notch",l:"\uB178\uCE58",icon:"\u{1F9E9}",desc:"\uB178\uCE58 \uCF54\uB108 \uCE74\uB4DC"},{v:"ticket",l:"\uD2F0\uCF13",icon:"\u{1F39F}\uFE0F",desc:"\uC810\uC120 \uD2F0\uCF13 \uC2A4\uD0C0\uC77C"},{v:"stamp",l:"\uC2A4\uD0EC\uD504",icon:"\u{1F4EE}",desc:"\uC810\uC120+\uC2A4\uD0EC\uD504 \uB290\uB08C"},{v:"scallop",l:"\uC2A4\uCE98\uB7FD",icon:"\u{1FAA1}",desc:"\uD1B1\uB2C8/\uC2A4\uCE98\uB7FD \uAC00\uC7A5\uC790\uB9AC"},{v:"tab",l:"\uD0ED",icon:"\u{1F516}",desc:"\uC0C1\uB2E8 \uD0ED\uC774 \uC788\uB294 \uCE74\uB4DC"},{v:"tag",l:"\uD0DC\uADF8",icon:"\u{1F3F7}\uFE0F",desc:"\uAF2C\uB9AC\uD45C(tag) \uBAA8\uC591"},{v:"ribbon",l:"\uB9AC\uBCF8",icon:"\u{1F397}\uFE0F",desc:"\uC591\uCABD \uB9AC\uBCF8 \uCEF7"},{v:"badge",l:"\uBC30\uC9C0",icon:"\u{1F3C5}",desc:"\uC625\uD0C0\uACE4 \uBC30\uC9C0\uD615"},{v:"hex",l:"\uC721\uAC01",icon:"\u2B22",desc:"\uC721\uAC01\uD615 \uD074\uB9BD"},{v:"slant",l:"\uC0AC\uC120",icon:"\u27CB",desc:"\uC0AC\uC120(\uD3C9\uD589\uC0AC\uBCC0\uD615)"},{v:"wave",l:"\uC6E8\uC774\uBE0C",icon:"\u{1F30A}",desc:"\uBB3C\uACB0\uD615 \uC2E4\uB8E8\uC5E3"},{v:"bracket",l:"\uBE0C\uB77C\uCF13",icon:"\u27E6\u27E7",desc:"\uC911\uC559 \uD648(\uBE0C\uB77C\uCF13) \uD615\uD0DC"},{v:"shield",l:"\uC2E4\uB4DC",icon:"\u{1F6E1}\uFE0F",desc:"\uD558\uB2E8 \uBFB0\uC871(\uBC29\uD328)"},{v:"bookmark",l:"\uBD81\uB9C8\uD06C",icon:"\u{1F53B}",desc:"\uD558\uB2E8 \uC811\uD78C \uBD81\uB9C8\uD06C"},{v:"hourglass",l:"\uBAA8\uB798\uC2DC\uACC4",icon:"\u231B",desc:"\uC591\uC606 \uC911\uC559\uC774 \uB4E4\uC5B4\uAC04 \uD615\uD0DC"},{v:"zigzag",l:"\uC9C0\uADF8\uC7AC\uADF8",icon:"\u3030\uFE0F",desc:"\uC0C1/\uD558\uB2E8 \uC9C0\uADF8\uC7AC\uADF8"},{v:"burst",l:"\uBC84\uC2A4\uD2B8",icon:"\u{1F4A2}",desc:"\uAC00\uC2DC/\uC2A4\uD30C\uC774\uD06C \uD615\uD0DC"},{v:"cloud",l:"\uD074\uB77C\uC6B0\uB4DC",icon:"\u2601\uFE0F",desc:"\uB465\uADFC \uBB3C\uACB0(\uAD6C\uB984)"},{v:"versus-card",l:"VS \uB300\uACB0",icon:"\u2694\uFE0F",desc:"\uC591\uCE21 \uC0AC\uC120 \uB300\uACB0 \uCEF7"},{v:"thunder-card",l:"\uBC88\uAC1C \uCE74\uB4DC",icon:"\u26A1",desc:"\uBC88\uAC1C \uC0AC\uC120 \uBD84\uB9AC\uD615"},{v:"esports-card",l:"e\uC2A4\uD3EC\uCE20",icon:"\u{1F3AE}",desc:"e\uC2A4\uD3EC\uCE20 \uACBD\uAE30 \uCE74\uB4DC"},{v:"arena-card",l:"\uC544\uB808\uB098",icon:"\u{1F3DF}\uFE0F",desc:"\uACBD\uAE30\uC7A5 \uD14C\uB450\uB9AC \uAC15\uC870"},{v:"crown-card",l:"\uC655\uAD00 \uCE74\uB4DC",icon:"\u{1F451}",desc:"\uC0C1\uB2E8 \uC655\uAD00 \uD3EC\uC778\uD2B8"},{v:"championship",l:"\uCC54\uD53C\uC5B8\uC2ED",icon:"\u{1F3C6}",desc:"\uAE08\uC7A5 \uCC54\uD53C\uC5B8\uC2ED \uCE74\uB4DC"},{v:"knockout",l:"\uB179\uC544\uC6C3",icon:"\u{1F94A}",desc:"\uACA9\uD22C \uB300\uACB0 \uC2A4\uD0C0\uC77C"},{v:"blitz",l:"\uBE14\uB9AC\uCE20",icon:"\u26A1",desc:"\uC2A4\uD53C\uB4DC \uBE14\uB9AC\uCE20 \uCE74\uB4DC"},{v:"rivalry",l:"\uB77C\uC774\uBC8C",icon:"\u{1F525}",desc:"\uBD88\uAF43 \uB77C\uC774\uBC8C \uB300\uACB0"},{v:"champion-frame",l:"\uCC54\uD504 \uD504\uB808\uC784",icon:"\u{1F947}",desc:"\uAE08\uC0C9 \uCC54\uD53C\uC5B8 \uC561\uC790"},{v:"playoff",l:"\uD50C\uB808\uC774\uC624\uD504",icon:"\u{1F3AF}",desc:"\uD50C\uB808\uC774\uC624\uD504 \uD1A0\uB108\uBA3C\uD2B8"},{v:"matchup",l:"\uB9E4\uCE58\uC5C5",icon:"\u{1F3C5}",desc:"\uC815\uBA74 \uB300\uACB0 \uB9E4\uCE58\uC5C5"}],a=Object.create(null);i.forEach(o=>{a[o.v]=o});const g=[{t:"\uAE30\uBCF8/\uB808\uC774\uC544\uC6C3",keys:["default","compact","wide","minimal","timeline"]},{t:"\uC138\uB828/\uBAA8\uB358",keys:["glass","frosted","floating","soft-round","deep"]},{t:"\uD3EC\uC778\uD2B8/\uD6A8\uACFC",keys:["card3d","neon","stripe","gradient-bg","shadow-left","inset","topline","split-bg","underline"]},{t:"\uADC0\uC5FD/\uB808\uD2B8\uB85C",keys:["bubble","comic","retro","paper","terminal","double","bold-border","pill"]},{t:"\u2694\uFE0F \uC2A4\uD3EC\uCE20 \uB300\uACB0",keys:["versus-card","thunder-card","esports-card","arena-card","crown-card","championship","knockout","blitz","rivalry","champion-frame","playoff","matchup"]},{t:"\uD2B9\uC218 \uC2E4\uB8E8\uC5E3",keys:["sharp","bevel","cut-corner","notch","ticket","stamp","scallop","tab","tag","ribbon","badge","hex","slant","wave","bracket","shield","bookmark","hourglass","zigzag","burst","cloud"]}],E=o=>`<button type="button"
+              onclick="if(typeof cfgSetRecCardShape==='function')cfgSetRecCardShape('${o.v}');try{render();}catch(e){}"
+              title="${o.desc}"
+              style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${e===o.v?"var(--blue)":"var(--border2)"};background:${e===o.v?"#eff6ff":"var(--white)"};color:${e===o.v?"var(--blue)":"var(--text2)"}"
+            >${o.icon} ${o.l}</button>`;return g.map(o=>{const k=o.keys.map(L=>a[L]).filter(Boolean);return k.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:2px 0">
+                <span style="padding:3px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--border);font-size:10px;font-weight:900;color:var(--text3)">${o.t}</span>
+                ${k.map(E).join("")}
+              </div>`:""}).join("")})()}
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">카드 레이아웃/모양을 변경합니다</span>
+        <span style="font-size:11px;color:var(--gray-l)">\uCE74\uB4DC \uB808\uC774\uC544\uC6C3/\uBAA8\uC591\uC744 \uBCC0\uACBD\uD569\uB2C8\uB2E4</span>
       </div>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">스코어/좌우 배치(PC)</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uC2A4\uCF54\uC5B4/\uC88C\uC6B0 \uBC30\uCE58(PC)</div>
         <select id="cfg-rc-vs-align" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-          <option value="left" ${(localStorage.getItem('su_rc_vs_align')||'center')==='left'?'selected':''}>좌측</option>
-          <option value="center" ${(localStorage.getItem('su_rc_vs_align')||'center')==='center'?'selected':''}>가운데</option>
-          <option value="right" ${(localStorage.getItem('su_rc_vs_align')||'center')==='right'?'selected':''}>우측</option>
+          <option value="left" ${(t.getItem("su_rc_vs_align")||"center")==="left"?"selected":""}>\uC88C\uCE21</option>
+          <option value="center" ${(t.getItem("su_rc_vs_align")||"center")==="center"?"selected":""}>\uAC00\uC6B4\uB370</option>
+          <option value="right" ${(t.getItem("su_rc_vs_align")||"center")==="right"?"selected":""}>\uC6B0\uCE21</option>
         </select>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:11px;color:var(--text3);font-weight:800">스코어 크기(기록탭·대학전·프로리그·티어)</span>
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">공통(PC/모바일)</span>
-          <input type="range" id="cfg-rc-score-scale" min="50" max="130" step="5" value="${(()=>{try{return Math.max(50,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'88',10)||88));}catch(e){return 88;}})(  )}" oninput="document.getElementById('cfg-rc-score-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
-          <span id="cfg-rc-score-scale-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${(()=>{try{return Math.max(50,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'88',10)||88));}catch(e){return 88;}})(  )}%</span>
+          <span style="font-size:11px;color:var(--text3);font-weight:800">\uC2A4\uCF54\uC5B4 \uD06C\uAE30(\uAE30\uB85D\uD0ED\xB7\uB300\uD559\uC804\xB7\uD504\uB85C\uB9AC\uADF8\xB7\uD2F0\uC5B4)</span>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uACF5\uD1B5(PC/\uBAA8\uBC14\uC77C)</span>
+          <input type="range" id="cfg-rc-score-scale" min="50" max="130" step="5" value="${(()=>{try{return Math.max(50,Math.min(130,parseInt(t.getItem("su_rc_score_scale")||"88",10)||88))}catch(e){return 88}})()}" oninput="document.getElementById('cfg-rc-score-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
+          <span id="cfg-rc-score-scale-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${(()=>{try{return Math.max(50,Math.min(130,parseInt(t.getItem("su_rc_score_scale")||"88",10)||88))}catch(e){return 88}})()}%</span>
         </div>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">레이아웃 크기(기록 카드)</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uB808\uC774\uC544\uC6C3 \uD06C\uAE30(\uAE30\uB85D \uCE74\uB4DC)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-rc-layout-pc" min="60" max="120" step="5"
-            value="${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_pc')||'100',10)||100))}"
+            value="${Math.max(60,Math.min(120,parseInt(t.getItem("su_rc_layout_scale_pc")||"100",10)||100))}"
             oninput="document.getElementById('cfg-rc-layout-pc-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
-          <span id="cfg-rc-layout-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_pc')||'100',10)||100))}%</span>
+          <span id="cfg-rc-layout-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(60,Math.min(120,parseInt(t.getItem("su_rc_layout_scale_pc")||"100",10)||100))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uBAA8\uBC14\uC77C</span>
           <input type="range" id="cfg-rc-layout-mb" min="60" max="120" step="5"
-            value="${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_mb')||'100',10)||100))}"
+            value="${Math.max(60,Math.min(120,parseInt(t.getItem("su_rc_layout_scale_mb")||"100",10)||100))}"
             oninput="document.getElementById('cfg-rc-layout-mb-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
-          <span id="cfg-rc-layout-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_mb')||'100',10)||100))}%</span>
+          <span id="cfg-rc-layout-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(60,Math.min(120,parseInt(t.getItem("su_rc_layout_scale_mb")||"100",10)||100))}%</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ 카드 여백/칩/스코어 박스 등 전반을 함께 줄입니다</span>
+        <span style="font-size:11px;color:var(--gray-l)">\u203B \uCE74\uB4DC \uC5EC\uBC31/\uCE69/\uC2A4\uCF54\uC5B4 \uBC15\uC2A4 \uB4F1 \uC804\uBC18\uC744 \uD568\uAED8 \uC904\uC785\uB2C8\uB2E4</span>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">스코어 숫자 색상(공통)</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uC2A4\uCF54\uC5B4 \uC22B\uC790 \uC0C9\uC0C1(\uACF5\uD1B5)</div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">승</span>
-          <input type="color" id="cfg-score-win" value="${(()=>{try{return (localStorage.getItem('su_score_win')||'#16a34a');}catch(e){return '#16a34a';}})()}" onchange="cfgSetScoreColors()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px;background:none">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uC2B9</span>
+          <input type="color" id="cfg-score-win" value="${(()=>{try{return t.getItem("su_score_win")||"#16a34a"}catch(e){return"#16a34a"}})()}" onchange="cfgSetScoreColors()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px;background:none">
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">패</span>
-          <input type="color" id="cfg-score-lose" value="${(()=>{try{return (localStorage.getItem('su_score_lose')||'#dc2626');}catch(e){return '#dc2626';}})()}" onchange="cfgSetScoreColors()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px;background:none">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uD328</span>
+          <input type="color" id="cfg-score-lose" value="${(()=>{try{return t.getItem("su_score_lose")||"#dc2626"}catch(e){return"#dc2626"}})()}" onchange="cfgSetScoreColors()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px;background:none">
         </div>
         <div style="flex:1;min-width:180px;max-width:280px;border:1px solid var(--border2);border-radius:12px;padding:8px 12px;background:var(--white);display:flex;align-items:center;justify-content:center;gap:10px">
           <span class="wt" style="font-size:18px">3</span><span style="color:var(--gray-l);font-weight:900">:</span><span class="lt" style="font-size:18px">2</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">대회탭 조별/토너, 프로리그 대회, 기록탭 스코어에 공통 적용</span>
+        <span style="font-size:11px;color:var(--gray-l)">\uB300\uD68C\uD0ED \uC870\uBCC4/\uD1A0\uB108, \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C, \uAE30\uB85D\uD0ED \uC2A4\uCF54\uC5B4\uC5D0 \uACF5\uD1B5 \uC801\uC6A9</span>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">대학/팀 버튼 크기(기록탭/프로리그/티어대회 등)</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uB300\uD559/\uD300 \uBC84\uD2BC \uD06C\uAE30(\uAE30\uB85D\uD0ED/\uD504\uB85C\uB9AC\uADF8/\uD2F0\uC5B4\uB300\uD68C \uB4F1)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-mbtn-pc" min="40" max="220" step="5"
-            value="${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_pc')||'100',10)||100))}"
+            value="${Math.max(40,Math.min(220,parseInt(t.getItem("su_match_btn_scale_pc")||"100",10)||100))}"
             oninput="document.getElementById('cfg-mbtn-pc-v').textContent=this.value+'%'" onchange="cfgSetMatchBtnScaleSettings()" style="width:140px">
-          <span id="cfg-mbtn-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_pc')||'100',10)||100))}%</span>
+          <span id="cfg-mbtn-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(t.getItem("su_match_btn_scale_pc")||"100",10)||100))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uBAA8\uBC14\uC77C</span>
           <input type="range" id="cfg-mbtn-mb" min="40" max="220" step="5"
-            value="${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_mb')||'100',10)||100))}"
+            value="${Math.max(40,Math.min(220,parseInt(t.getItem("su_match_btn_scale_mb")||"100",10)||100))}"
             oninput="document.getElementById('cfg-mbtn-mb-v').textContent=this.value+'%'" onchange="cfgSetMatchBtnScaleSettings()" style="width:140px">
-          <span id="cfg-mbtn-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_mb')||'100',10)||100))}%</span>
+          <span id="cfg-mbtn-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(t.getItem("su_match_btn_scale_mb")||"100",10)||100))}%</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ 미니/시빌워/대학대전/대학CK/티어대회/프로리그/일반 기록카드에 적용 (대회탭 조별/토너는 아래 “대회 카드”에서 별도)</span>
+        <span style="font-size:11px;color:var(--gray-l)">\u203B \uBBF8\uB2C8/\uC2DC\uBE4C\uC6CC/\uB300\uD559\uB300\uC804/\uB300\uD559CK/\uD2F0\uC5B4\uB300\uD68C/\uD504\uB85C\uB9AC\uADF8/\uC77C\uBC18 \uAE30\uB85D\uCE74\uB4DC\uC5D0 \uC801\uC6A9 (\uB300\uD68C\uD0ED \uC870\uBCC4/\uD1A0\uB108\uB294 \uC544\uB798 \u201C\uB300\uD68C \uCE74\uB4DC\u201D\uC5D0\uC11C \uBCC4\uB3C4)</span>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">참가자(👥) 버튼 크기(기록탭)</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uCC38\uAC00\uC790(\u{1F465}) \uBC84\uD2BC \uD06C\uAE30(\uAE30\uB85D\uD0ED)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-rc-mem-pc" min="40" max="240" step="5"
-            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_pc')||'100',10)||100))}"
+            value="${Math.max(40,Math.min(240,parseInt(t.getItem("su_rc_mem_btn_scale_pc")||"100",10)||100))}"
             oninput="document.getElementById('cfg-rc-mem-pc-v').textContent=this.value+'%'" onchange="cfgSetRecMemBtnScaleSettings()" style="width:140px">
-          <span id="cfg-rc-mem-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_pc')||'100',10)||100))}%</span>
+          <span id="cfg-rc-mem-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(t.getItem("su_rc_mem_btn_scale_pc")||"100",10)||100))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uBAA8\uBC14\uC77C</span>
           <input type="range" id="cfg-rc-mem-mb" min="40" max="240" step="5"
-            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_mb')||'100',10)||100))}"
+            value="${Math.max(40,Math.min(240,parseInt(t.getItem("su_rc_mem_btn_scale_mb")||"100",10)||100))}"
             oninput="document.getElementById('cfg-rc-mem-mb-v').textContent=this.value+'%'" onchange="cfgSetRecMemBtnScaleSettings()" style="width:140px">
-          <span id="cfg-rc-mem-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_mb')||'100',10)||100))}%</span>
+          <span id="cfg-rc-mem-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(t.getItem("su_rc_mem_btn_scale_mb")||"100",10)||100))}%</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ 미니/시빌워/대학대전/대학CK/티어대회/프로리그/대회(기록탭) 참가자 버튼에 적용</span>
+        <span style="font-size:11px;color:var(--gray-l)">\u203B \uBBF8\uB2C8/\uC2DC\uBE4C\uC6CC/\uB300\uD559\uB300\uC804/\uB300\uD559CK/\uD2F0\uC5B4\uB300\uD68C/\uD504\uB85C\uB9AC\uADF8/\uB300\uD68C(\uAE30\uB85D\uD0ED) \uCC38\uAC00\uC790 \uBC84\uD2BC\uC5D0 \uC801\uC6A9</span>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(기록탭)</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uB300\uD559 \u2194 \uC2A4\uCF54\uC5B4 \uAC04\uACA9(\uAE30\uB85D\uD0ED)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-rc-gap-pc" min="0" max="120" step="1"
-            value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}"
+            value="${Math.max(0,Math.min(120,parseInt(t.getItem("su_rc_vs_gap_pc")||"12",10)||12))}"
             oninput="document.getElementById('cfg-rc-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetRecVsGapSettings()" style="width:140px">
-          <span id="cfg-rc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}px</span>
+          <span id="cfg-rc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(t.getItem("su_rc_vs_gap_pc")||"12",10)||12))}px</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uBAA8\uBC14\uC77C</span>
           <input type="range" id="cfg-rc-gap-mb" min="0" max="120" step="1"
-            value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}"
+            value="${Math.max(0,Math.min(120,parseInt(t.getItem("su_rc_vs_gap_mb")||"8",10)||8))}"
             oninput="document.getElementById('cfg-rc-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetRecVsGapSettings()" style="width:140px">
-          <span id="cfg-rc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}px</span>
+          <span id="cfg-rc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(t.getItem("su_rc_vs_gap_mb")||"8",10)||8))}px</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ “스코어 - 대학버튼” 좌우 간격</span>
+        <span style="font-size:11px;color:var(--gray-l)">\u203B \u201C\uC2A4\uCF54\uC5B4 - \uB300\uD559\uBC84\uD2BC\u201D \uC88C\uC6B0 \uAC04\uACA9</span>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">카드 배경 색상 강도</div>
-          <input type="range" id="cfg-rc-bg" min="0" max="30" step="1" value="${Math.max(0,Math.min(30,_rcBg))}" oninput="document.getElementById('cfg-rc-bg-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-bg-v">${Math.max(0,Math.min(30,_rcBg))}%</span></div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uCE74\uB4DC \uBC30\uACBD \uC0C9\uC0C1 \uAC15\uB3C4</div>
+          <input type="range" id="cfg-rc-bg" min="0" max="30" step="1" value="${Math.max(0,Math.min(30,x))}" oninput="document.getElementById('cfg-rc-bg-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-bg-v">${Math.max(0,Math.min(30,x))}%</span></div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">카드 헤더 색상 강도</div>
-          <input type="range" id="cfg-rc-hd" min="0" max="30" step="1" value="${Math.max(0,Math.min(30,_rcHd))}" oninput="document.getElementById('cfg-rc-hd-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-hd-v">${Math.max(0,Math.min(30,_rcHd))}%</span></div>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
-        <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">대학 아이콘 크기(기록 카드)</div>
-          <input type="range" id="cfg-rc-uicon" min="12" max="34" step="1" value="${Math.max(12,Math.min(34,_rcIc))}" oninput="document.getElementById('cfg-rc-ic-v').textContent=this.value+'px'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-ic-v">${Math.max(12,Math.min(34,_rcIc))}px</span></div>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">스트리머 프로필 이미지 크기(전역 배율)</div>
-          <input type="range" id="cfg-ava-scale" min="70" max="160" step="5" value="${Math.max(70,Math.min(160,_avaScale))}" oninput="document.getElementById('cfg-ava-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-ava-v">${Math.max(70,Math.min(160,_avaScale))}%</span></div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uCE74\uB4DC \uD5E4\uB354 \uC0C9\uC0C1 \uAC15\uB3C4</div>
+          <input type="range" id="cfg-rc-hd" min="0" max="30" step="1" value="${Math.max(0,Math.min(30,m))}" oninput="document.getElementById('cfg-rc-hd-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-hd-v">${Math.max(0,Math.min(30,m))}%</span></div>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">대학명 글자 크기(기록 카드)</div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uB300\uD559 \uC544\uC774\uCF58 \uD06C\uAE30(\uAE30\uB85D \uCE74\uB4DC)</div>
+          <input type="range" id="cfg-rc-uicon" min="12" max="34" step="1" value="${Math.max(12,Math.min(34,u))}" oninput="document.getElementById('cfg-rc-ic-v').textContent=this.value+'px'" onchange="cfgSetRecCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-ic-v">${Math.max(12,Math.min(34,u))}px</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uC2A4\uD2B8\uB9AC\uBA38 \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 \uD06C\uAE30(\uC804\uC5ED \uBC30\uC728)</div>
+          <input type="range" id="cfg-ava-scale" min="70" max="160" step="5" value="${Math.max(70,Math.min(160,y))}" oninput="document.getElementById('cfg-ava-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-ava-v">${Math.max(70,Math.min(160,y))}%</span></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uB300\uD559\uBA85 \uAE00\uC790 \uD06C\uAE30(\uAE30\uB85D \uCE74\uB4DC)</div>
           <input type="range" id="cfg-rc-univ-font" min="90" max="150" step="5"
-            value="${Math.max(90,Math.min(150,_rcUnivFont))}"
+            value="${Math.max(90,Math.min(150,f))}"
             oninput="document.getElementById('cfg-rc-univ-font-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-univ-font-v">${Math.max(90,Math.min(150,_rcUnivFont))}%</span></div>
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-univ-font-v">${Math.max(90,Math.min(150,f))}%</span></div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">연/월 필터 크기(기록탭)</div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uC5F0/\uC6D4 \uD544\uD130 \uD06C\uAE30(\uAE30\uB85D\uD0ED)</div>
           <input type="range" id="cfg-ym-scale" min="80" max="140" step="5"
-            value="${Math.max(80,Math.min(140,_ymScale))}"
+            value="${Math.max(80,Math.min(140,h))}"
             oninput="document.getElementById('cfg-ym-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-ym-scale-v">${Math.max(80,Math.min(140,_ymScale))}%</span></div>
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-ym-scale-v">${Math.max(80,Math.min(140,h))}%</span></div>
         </div>
       </div>
 
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" id="cfg-rc-memo-on" style="width:15px;height:15px" ${_rcMemoOn?'checked':''} onchange="cfgSetRecCardSettings()">
-        기록 카드에서 메모 입력 기능 사용(관리자)
+        <input type="checkbox" id="cfg-rc-memo-on" style="width:15px;height:15px" ${R?"checked":""} onchange="cfgSetRecCardSettings()">
+        \uAE30\uB85D \uCE74\uB4DC\uC5D0\uC11C \uBA54\uBAA8 \uC785\uB825 \uAE30\uB2A5 \uC0AC\uC6A9(\uAD00\uB9AC\uC790)
       </label>
-      <div style="font-size:11px;color:var(--gray-l)">※ 메모가 이미 저장된 경우는 항상 표시됩니다. 이 옵션은 “입력칸”만 켜고 끕니다.</div>
+      <div style="font-size:11px;color:var(--gray-l)">\u203B \uBA54\uBAA8\uAC00 \uC774\uBBF8 \uC800\uC7A5\uB41C \uACBD\uC6B0\uB294 \uD56D\uC0C1 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uC774 \uC635\uC158\uC740 \u201C\uC785\uB825\uCE78\u201D\uB9CC \uCF1C\uACE0 \uB055\uB2C8\uB2E4.</div>
       
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">🖼️ 기록 카드 프로필 이미지 설정</div>
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">\u{1F5BC}\uFE0F \uAE30\uB85D \uCE74\uB4DC \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 \uC124\uC815</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">프로필 이미지 크기 <span id="cfg-rc-avatar-size-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_rec_avatar_size')||'38',10);}catch(e){return 38;}})()}px</span></div>
-            <input type="range" id="cfg-rc-avatar-size" min="20" max="80" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_rec_avatar_size')||'38',10);}catch(e){return 38;}})()}" oninput="document.getElementById('cfg-rc-avatar-size-v').textContent=this.value+'px'" onchange="cfgSetRecCardSettings()" style="width:100%">
-            <div style="font-size:10px;color:var(--gray-l);margin-top:2px">기록 카드 내 프로필 이미지 지름 (px)</div>
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 \uD06C\uAE30 <span id="cfg-rc-avatar-size-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(t.getItem("su_rec_avatar_size")||"38",10)}catch(e){return 38}})()}px</span></div>
+            <input type="range" id="cfg-rc-avatar-size" min="20" max="80" step="2" value="${(()=>{try{return parseInt(t.getItem("su_rec_avatar_size")||"38",10)}catch(e){return 38}})()}" oninput="document.getElementById('cfg-rc-avatar-size-v').textContent=this.value+'px'" onchange="cfgSetRecCardSettings()" style="width:100%">
+            <div style="font-size:10px;color:var(--gray-l);margin-top:2px">\uAE30\uB85D \uCE74\uB4DC \uB0B4 \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 \uC9C0\uB984 (px)</div>
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">이미지 맞춤 방식</div>
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uC774\uBBF8\uC9C0 \uB9DE\uCDA4 \uBC29\uC2DD</div>
             <select id="cfg-rc-avatar-fit" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;width:100%">
-              <option value="contain" ${(localStorage.getItem('su_rec_avatar_fit')||'contain')==='contain'?'selected':''}>맞춤(contain)</option>
-              <option value="cover" ${(localStorage.getItem('su_rec_avatar_fit')||'contain')==='cover'?'selected':''}>채우기(cover)</option>
+              <option value="contain" ${(t.getItem("su_rec_avatar_fit")||"contain")==="contain"?"selected":""}>\uB9DE\uCDA4(contain)</option>
+              <option value="cover" ${(t.getItem("su_rec_avatar_fit")||"contain")==="cover"?"selected":""}>\uCC44\uC6B0\uAE30(cover)</option>
             </select>
-            <div style="font-size:10px;color:var(--gray-l);margin-top:4px"><b>맞춤</b>: 이미지 전체 보임 · <b>채우기</b>: 원형 꽉 채움</div>
+            <div style="font-size:10px;color:var(--gray-l);margin-top:4px"><b>\uB9DE\uCDA4</b>: \uC774\uBBF8\uC9C0 \uC804\uCCB4 \uBCF4\uC784 \xB7 <b>\uCC44\uC6B0\uAE30</b>: \uC6D0\uD615 \uAF49 \uCC44\uC6C0</div>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 전역 배율(위 슬라이더)과 별개로 기록 카드만 따로 설정됩니다.</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">\u203B \uC804\uC5ED \uBC30\uC728(\uC704 \uC2AC\uB77C\uC774\uB354)\uACFC \uBCC4\uAC1C\uB85C \uAE30\uB85D \uCE74\uB4DC\uB9CC \uB530\uB85C \uC124\uC815\uB429\uB2C8\uB2E4.</div>
       </div>
 
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-          <span style="font-size:12px;font-weight:900;color:var(--text2)">👤 기록 카드 양쪽 끝 참여자 프로필</span>
+          <span style="font-size:12px;font-weight:900;color:var(--text2)">\u{1F464} \uAE30\uB85D \uCE74\uB4DC \uC591\uCABD \uB05D \uCC38\uC5EC\uC790 \uD504\uB85C\uD544</span>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2);margin-left:auto">
             <input type="checkbox" id="cfg-rec-side-panel-on" style="width:15px;height:15px"
-              ${(()=>{ try{ return (localStorage.getItem('su_rec_side_panel_on')??'1') !== '0' ? 'checked' : ''; }catch(e){ return 'checked'; } })()}
+              ${(()=>{var e;try{return((e=t.getItem("su_rec_side_panel_on"))!=null?e:"1")!=="0"?"checked":""}catch(i){return"checked"}})()}
               onchange="(window.cfgSetRecSidePanelSettings||function(){})()">
-            표시 사용
+            \uD45C\uC2DC \uC0AC\uC6A9
           </label>
         </div>
-        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">기록 카드(미니대전·대학대전·대학CK·티어대회·프로리그 일반·일반 등) 및 대회탭(조별리그·토너먼트) 좌우에 각 팀 참여자 이미지를 표시합니다. 승리팀은 이긴 선수, 패배팀은 진 선수를 랜덤 표시합니다. 이미지가 없으면 패널을 표시하지 않습니다.</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">\uAE30\uB85D \uCE74\uB4DC(\uBBF8\uB2C8\uB300\uC804\xB7\uB300\uD559\uB300\uC804\xB7\uB300\uD559CK\xB7\uD2F0\uC5B4\uB300\uD68C\xB7\uD504\uB85C\uB9AC\uADF8 \uC77C\uBC18\xB7\uC77C\uBC18 \uB4F1) \uBC0F \uB300\uD68C\uD0ED(\uC870\uBCC4\uB9AC\uADF8\xB7\uD1A0\uB108\uBA3C\uD2B8) \uC88C\uC6B0\uC5D0 \uAC01 \uD300 \uCC38\uC5EC\uC790 \uC774\uBBF8\uC9C0\uB97C \uD45C\uC2DC\uD569\uB2C8\uB2E4. \uC2B9\uB9AC\uD300\uC740 \uC774\uAE34 \uC120\uC218, \uD328\uBC30\uD300\uC740 \uC9C4 \uC120\uC218\uB97C \uB79C\uB364 \uD45C\uC2DC\uD569\uB2C8\uB2E4. \uC774\uBBF8\uC9C0\uAC00 \uC5C6\uC73C\uBA74 \uD328\uB110\uC744 \uD45C\uC2DC\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.</div>
 
-        <!-- 표시 타입: 프로필 이미지 / 대학 로고 -->
+        <!-- \uD45C\uC2DC \uD0C0\uC785: \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 / \uB300\uD559 \uB85C\uACE0 -->
         <div style="margin-bottom:12px;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px">🖼️ 표시 타입</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px">\u{1F5BC}\uFE0F \uD45C\uC2DC \uD0C0\uC785</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${(()=>{const cur=(()=>{try{return localStorage.getItem('su_rsp_image_type')||'profile';}catch(e){return 'profile';}})();return[['profile','👤 선수 프로필 이미지'],['logo','🏫 대학 로고']].map(([v,l])=>`<button class="btn btn-sm ${cur===v?'btn-b':'btn-w'}" onclick="(window.cfgSetRspImageType||function(){})(this.dataset.v);document.querySelectorAll('[data-rsptype]').forEach(b=>{b.classList.remove('btn-b');b.classList.add('btn-w')});this.classList.remove('btn-w');this.classList.add('btn-b')" data-rsptype="${v}" data-v="${v}">${l}</button>`).join('');})()}
+            ${(()=>{const e=(()=>{try{return t.getItem("su_rsp_image_type")||"profile"}catch(i){return"profile"}})();return[["profile","\u{1F464} \uC120\uC218 \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0"],["logo","\u{1F3EB} \uB300\uD559 \uB85C\uACE0"]].map(([i,a])=>`<button class="btn btn-sm ${e===i?"btn-b":"btn-w"}" onclick="(window.cfgSetRspImageType||function(){})(this.dataset.v);document.querySelectorAll('[data-rsptype]').forEach(b=>{b.classList.remove('btn-b');b.classList.add('btn-w')});this.classList.remove('btn-w');this.classList.add('btn-b')" data-rsptype="${i}" data-v="${i}">${a}</button>`).join("")})()}
           </div>
-          <div style="font-size:10px;color:var(--gray-l);margin-top:6px">대학 로고 선택 시: 대학 아이콘 설정에 등록된 로고를 표시합니다.</div>
+          <div style="font-size:10px;color:var(--gray-l);margin-top:6px">\uB300\uD559 \uB85C\uACE0 \uC120\uD0DD \uC2DC: \uB300\uD559 \uC544\uC774\uCF58 \uC124\uC815\uC5D0 \uB4F1\uB85D\uB41C \uB85C\uACE0\uB97C \uD45C\uC2DC\uD569\uB2C8\uB2E4.</div>
         </div>
 
-        <!-- 대회탭 포함 여부 -->
+        <!-- \uB300\uD68C\uD0ED \uD3EC\uD568 \uC5EC\uBD80 -->
         <div style="margin-bottom:12px">
           <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:700;color:var(--text2)">
             <input type="checkbox" id="cfg-rsp-comp-on" style="width:14px;height:14px"
-              ${(()=>{ try{ return (localStorage.getItem('su_rsp_comp_on')??'1') !== '0' ? 'checked' : ''; }catch(e){ return 'checked'; } })()}
+              ${(()=>{var e;try{return((e=t.getItem("su_rsp_comp_on"))!=null?e:"1")!=="0"?"checked":""}catch(i){return"checked"}})()}
               onchange="(window.cfgSetRspCompOn||function(){})()">
-            🏆 대회탭 조별리그·토너먼트에도 표시
+            \u{1F3C6} \uB300\uD68C\uD0ED \uC870\uBCC4\uB9AC\uADF8\xB7\uD1A0\uB108\uBA3C\uD2B8\uC5D0\uB3C4 \uD45C\uC2DC
           </label>
         </div>
 
-        <!-- 이미지 크기 -->
+        <!-- \uC774\uBBF8\uC9C0 \uD06C\uAE30 -->
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">📐 이미지 크기 <span id="cfg-rsp-size-v" style="font-weight:400;color:var(--gray-l)">${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_size')||'72',10); }catch(e){ return 72; } })()}px</span></div>
-          <input type="range" min="40" max="160" step="4" value="${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_size')||'72',10); }catch(e){ return 72; } })()}" style="width:100%;max-width:260px;accent-color:var(--blue)" oninput="document.getElementById('cfg-rsp-size-v').textContent=this.value+'px'" onchange="(window.cfgSetRspSize||function(){})(this.value)">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">\u{1F4D0} \uC774\uBBF8\uC9C0 \uD06C\uAE30 <span id="cfg-rsp-size-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(t.getItem("su_rsp_size")||"72",10)}catch(e){return 72}})()}px</span></div>
+          <input type="range" min="40" max="160" step="4" value="${(()=>{try{return parseInt(t.getItem("su_rsp_size")||"72",10)}catch(e){return 72}})()}" style="width:100%;max-width:260px;accent-color:var(--blue)" oninput="document.getElementById('cfg-rsp-size-v').textContent=this.value+'px'" onchange="(window.cfgSetRspSize||function(){})(this.value)">
         </div>
 
-        <!-- 패널 너비 -->
+        <!-- \uD328\uB110 \uB108\uBE44 -->
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">↔️ 패널 너비 <span id="cfg-rsp-width-v" style="font-weight:400;color:var(--gray-l)">${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_width')||'90',10); }catch(e){ return 90; } })()}px</span></div>
-          <input type="range" min="60" max="180" step="4" value="${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_width')||'90',10); }catch(e){ return 90; } })()}" style="width:100%;max-width:260px;accent-color:var(--blue)" oninput="document.getElementById('cfg-rsp-width-v').textContent=this.value+'px'" onchange="(window.cfgSetRspWidth||function(){})(this.value)">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">\u2194\uFE0F \uD328\uB110 \uB108\uBE44 <span id="cfg-rsp-width-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(t.getItem("su_rsp_width")||"90",10)}catch(e){return 90}})()}px</span></div>
+          <input type="range" min="60" max="180" step="4" value="${(()=>{try{return parseInt(t.getItem("su_rsp_width")||"90",10)}catch(e){return 90}})()}" style="width:100%;max-width:260px;accent-color:var(--blue)" oninput="document.getElementById('cfg-rsp-width-v').textContent=this.value+'px'" onchange="(window.cfgSetRspWidth||function(){})(this.value)">
         </div>
 
-        <!-- 이미지 세로 위치 -->
+        <!-- \uC774\uBBF8\uC9C0 \uC138\uB85C \uC704\uCE58 -->
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">📍 이미지 세로 위치</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">\u{1F4CD} \uC774\uBBF8\uC9C0 \uC138\uB85C \uC704\uCE58</div>
           <div style="display:flex;gap:6px" id="cfg-rsp-valign-row">
-            ${['top','center','bottom'].map(v=>{const cur=(()=>{try{return localStorage.getItem('su_rsp_valign')||'center';}catch(e){return 'center';}})();const labelMap={top:'⬆ 위',center:'가운데',bottom:'⬇ 아래'};return `<button class="btn btn-xs ${cur===v?'btn-b':'btn-w'}" onclick="(window.cfgSetRspValign||function(){})(this.dataset.v);document.getElementById('cfg-rsp-valign-row').querySelectorAll('button').forEach(b=>{b.classList.remove('btn-b');b.classList.add('btn-w')});this.classList.remove('btn-w');this.classList.add('btn-b')" data-v="${v}">${labelMap[v]}</button>`;}).join('')}
+            ${["top","center","bottom"].map(e=>`<button class="btn btn-xs ${(()=>{try{return t.getItem("su_rsp_valign")||"center"}catch(g){return"center"}})()===e?"btn-b":"btn-w"}" onclick="(window.cfgSetRspValign||function(){})(this.dataset.v);document.getElementById('cfg-rsp-valign-row').querySelectorAll('button').forEach(b=>{b.classList.remove('btn-b');b.classList.add('btn-w')});this.classList.remove('btn-w');this.classList.add('btn-b')" data-v="${e}">${{top:"\u2B06 \uC704",center:"\uAC00\uC6B4\uB370",bottom:"\u2B07 \uC544\uB798"}[e]}</button>`).join("")}
           </div>
         </div>
 
-        <!-- 이미지 수평/수직 이동 -->
+        <!-- \uC774\uBBF8\uC9C0 \uC218\uD3C9/\uC218\uC9C1 \uC774\uB3D9 -->
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">↔️ 이미지 수평 이동 <span id="cfg-rsp-hoffset-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{const v=parseInt(localStorage.getItem('su_rsp_hoffset')||'0',10);return(v>0?'+':'')+v+'px';}catch(e){return '0px';}})()}</span></div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">\u2194\uFE0F \uC774\uBBF8\uC9C0 \uC218\uD3C9 \uC774\uB3D9 <span id="cfg-rsp-hoffset-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{const e=parseInt(t.getItem("su_rsp_hoffset")||"0",10);return(e>0?"+":"")+e+"px"}catch(e){return"0px"}})()}</span></div>
           <input type="range" min="-200" max="200" step="4"
-            value="${(()=>{try{return parseInt(localStorage.getItem('su_rsp_hoffset')||'0',10);}catch(e){return 0;}})()}"
+            value="${(()=>{try{return parseInt(t.getItem("su_rsp_hoffset")||"0",10)}catch(e){return 0}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
             oninput="document.getElementById('cfg-rsp-hoffset-v').textContent=(parseFloat(this.value)>0?'+':'')+parseInt(this.value)+'px'"
             onchange="(window.cfgSetRspHoffset||function(){})(this.value)">
-          <div style="font-size:10px;color:var(--gray-l);margin-top:3px">양수(+): 좌우 이미지가 스코어 방향(안쪽)으로 이동 &nbsp;|&nbsp; 음수(-): 카드 바깥쪽으로 이동</div>
+          <div style="font-size:10px;color:var(--gray-l);margin-top:3px">\uC591\uC218(+): \uC88C\uC6B0 \uC774\uBBF8\uC9C0\uAC00 \uC2A4\uCF54\uC5B4 \uBC29\uD5A5(\uC548\uCABD)\uC73C\uB85C \uC774\uB3D9 &nbsp;|&nbsp; \uC74C\uC218(-): \uCE74\uB4DC \uBC14\uAE65\uCABD\uC73C\uB85C \uC774\uB3D9</div>
         </div>
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">↕️ 이미지 수직 이동 <span id="cfg-rsp-voffset-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{const v=parseInt(localStorage.getItem('su_rsp_voffset')||'0',10);return(v>0?'+':'')+v+'px';}catch(e){return '0px';}})()}</span></div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">\u2195\uFE0F \uC774\uBBF8\uC9C0 \uC218\uC9C1 \uC774\uB3D9 <span id="cfg-rsp-voffset-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{const e=parseInt(t.getItem("su_rsp_voffset")||"0",10);return(e>0?"+":"")+e+"px"}catch(e){return"0px"}})()}</span></div>
           <input type="range" min="-200" max="200" step="4"
-            value="${(()=>{try{return parseInt(localStorage.getItem('su_rsp_voffset')||'0',10);}catch(e){return 0;}})()}"
+            value="${(()=>{try{return parseInt(t.getItem("su_rsp_voffset")||"0",10)}catch(e){return 0}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
             oninput="document.getElementById('cfg-rsp-voffset-v').textContent=(parseFloat(this.value)>0?'+':'')+parseInt(this.value)+'px'"
             onchange="(window.cfgSetRspVoffset||function(){})(this.value)">
-          <div style="font-size:10px;color:var(--gray-l);margin-top:3px">양수(+): 이미지가 아래로 이동 &nbsp;|&nbsp; 음수(-): 위로 이동</div>
+          <div style="font-size:10px;color:var(--gray-l);margin-top:3px">\uC591\uC218(+): \uC774\uBBF8\uC9C0\uAC00 \uC544\uB798\uB85C \uC774\uB3D9 &nbsp;|&nbsp; \uC74C\uC218(-): \uC704\uB85C \uC774\uB3D9</div>
         </div>
 
-        <!-- 슬라이드쇼 -->
+        <!-- \uC2AC\uB77C\uC774\uB4DC\uC1FC -->
         <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
           <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:800;color:var(--text2);margin-bottom:8px">
             <input type="checkbox" id="cfg-rsp-rotate-on" style="width:14px;height:14px"
-              ${(()=>{try{return (localStorage.getItem('su_rsp_rotate_on')??'1')!=='0'?'checked':'';}catch(e){return 'checked';}})()}
+              ${(()=>{var e;try{return((e=t.getItem("su_rsp_rotate_on"))!=null?e:"1")!=="0"?"checked":""}catch(i){return"checked"}})()}
               onchange="(window.cfgSetRspRotateOn||function(){})()">
-            🔄 참여자 슬라이드쇼 (자동 전환)
+            \u{1F504} \uCC38\uC5EC\uC790 \uC2AC\uB77C\uC774\uB4DC\uC1FC (\uC790\uB3D9 \uC804\uD658)
           </label>
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">⏱ 전환 주기 <span id="cfg-rsp-rotate-sec-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_rsp_rotate_sec')||'5',10);}catch(e){return 5;}})()}초</span></div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">\u23F1 \uC804\uD658 \uC8FC\uAE30 <span id="cfg-rsp-rotate-sec-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(t.getItem("su_rsp_rotate_sec")||"5",10)}catch(e){return 5}})()}\uCD08</span></div>
           <input type="range" min="1" max="60" step="1"
-            value="${(()=>{try{return parseInt(localStorage.getItem('su_rsp_rotate_sec')||'5',10);}catch(e){return 5;}})()}"
+            value="${(()=>{try{return parseInt(t.getItem("su_rsp_rotate_sec")||"5",10)}catch(e){return 5}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
-            oninput="document.getElementById('cfg-rsp-rotate-sec-v').textContent=this.value+'초'"
+            oninput="document.getElementById('cfg-rsp-rotate-sec-v').textContent=this.value+'\uCD08'"
             onchange="(window.cfgSetRspRotateSec||function(){})(this.value)">
         </div>
 
-        <!-- 연한색(Opacity) 조절: 승리팀의 진 선수 -->
+        <!-- \uC5F0\uD55C\uC0C9(Opacity) \uC870\uC808: \uC2B9\uB9AC\uD300\uC758 \uC9C4 \uC120\uC218 -->
         <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
-          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">🏆 승리팀 패널 – 진 선수 연한 회색 조절</div>
-          <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">승리팀에서 개인전을 진 선수의 투명도·흑백을 조절합니다.</div>
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-wtlo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_opacity')||'0.65').toFixed(2);}catch(e){return '0.65';}})()}</span></div>
+          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">\u{1F3C6} \uC2B9\uB9AC\uD300 \uD328\uB110 \u2013 \uC9C4 \uC120\uC218 \uC5F0\uD55C \uD68C\uC0C9 \uC870\uC808</div>
+          <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">\uC2B9\uB9AC\uD300\uC5D0\uC11C \uAC1C\uC778\uC804\uC744 \uC9C4 \uC120\uC218\uC758 \uD22C\uBA85\uB3C4\xB7\uD751\uBC31\uC744 \uC870\uC808\uD569\uB2C8\uB2E4.</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">\uD22C\uBA85\uB3C4(Opacity) <span id="cfg-rsp-wtlo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(t.getItem("su_rsp_winteam_lose_opacity")||"0.65").toFixed(2)}catch(e){return"0.65"}})()}</span></div>
           <input type="range" min="0.1" max="1.0" step="0.05"
-            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_opacity')||'0.50');}catch(e){return 0.50;}})()}"
+            value="${(()=>{try{return parseFloat(t.getItem("su_rsp_winteam_lose_opacity")||"0.50")}catch(e){return .5}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
             oninput="document.getElementById('cfg-rsp-wtlo-v').textContent=parseFloat(this.value).toFixed(2)"
             onchange="(window.cfgSetRspWinTeamLoseOpacity||function(){})(this.value)">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">흑백(Grayscale) <span id="cfg-rsp-wtlg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_gray')||'0.35').toFixed(2);}catch(e){return '0.35';}})()}</span></div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">\uD751\uBC31(Grayscale) <span id="cfg-rsp-wtlg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(t.getItem("su_rsp_winteam_lose_gray")||"0.35").toFixed(2)}catch(e){return"0.35"}})()}</span></div>
           <input type="range" min="0" max="1.0" step="0.05"
-            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_gray')||'0.70');}catch(e){return 0.70;}})()}"
+            value="${(()=>{try{return parseFloat(t.getItem("su_rsp_winteam_lose_gray")||"0.70")}catch(e){return .7}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
             oninput="document.getElementById('cfg-rsp-wtlg-v').textContent=parseFloat(this.value).toFixed(2)"
             onchange="(window.cfgSetRspWinTeamLoseGray||function(){})(this.value)">
         </div>
 
-        <!-- 밝기 조절: 패배팀의 이긴 선수 -->
+        <!-- \uBC1D\uAE30 \uC870\uC808: \uD328\uBC30\uD300\uC758 \uC774\uAE34 \uC120\uC218 -->
         <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
-          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">💪 패배팀 패널 – 이긴 선수 밝기 조절</div>
-          <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">패배팀에서 개인전을 이긴 선수입니다. 팀은 졌지만 개인전은 이겼으므로 약간만 연하게 표시됩니다.</div>
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-ltwo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_opacity')||'0.80').toFixed(2);}catch(e){return '0.80';}})()}</span></div>
+          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">\u{1F4AA} \uD328\uBC30\uD300 \uD328\uB110 \u2013 \uC774\uAE34 \uC120\uC218 \uC6D0\uC0C9/\uBC1D\uAE30 \uC870\uC808</div>
+          <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">\uD328\uBC30\uD300\uC774\uC9C0\uB9CC \uAC1C\uC778\uC804\uC740 \uC774\uAE34 \uC120\uC218\uC785\uB2C8\uB2E4. \uBC1D\uAE30\uB97C \uC62C\uB9AC\uBA74 \uB354 \uBC1D\uACE0 \uC6D0\uC0C9\uC774 \uC0B4\uC544\uB098\uACE0, \uD751\uBC31\uC744 \uB0AE\uCD94\uBA74 \uD68C\uC0C9\uAC10\uC774 \uC904\uC5B4\uB4ED\uB2C8\uB2E4.</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">\uC6D0\uC0C9/\uBC1D\uAE30(Brightness) <span id="cfg-rsp-ltwb-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(t.getItem("su_rsp_loseteam_win_brightness")||"1.0").toFixed(2)}catch(e){return"1.00"}})()}x</span></div>
+          <input type="range" min="0.5" max="1.8" step="0.05"
+            value="${(()=>{try{return parseFloat(t.getItem("su_rsp_loseteam_win_brightness")||"1.0")}catch(e){return 1}})()}"
+            style="width:100%;max-width:260px;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-rsp-ltwb-v').textContent=parseFloat(this.value).toFixed(2)+'x'"
+            onchange="(window.cfgSetRspLoseTeamWinBrightness||function(){})(this.value)">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">\uD22C\uBA85\uB3C4(Opacity) <span id="cfg-rsp-ltwo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(t.getItem("su_rsp_loseteam_win_opacity")||"0.80").toFixed(2)}catch(e){return"0.80"}})()}</span></div>
           <input type="range" min="0.1" max="1.0" step="0.05"
-            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_opacity')||'0.80');}catch(e){return 0.80;}})()}"
+            value="${(()=>{try{return parseFloat(t.getItem("su_rsp_loseteam_win_opacity")||"0.80")}catch(e){return .8}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
             oninput="document.getElementById('cfg-rsp-ltwo-v').textContent=parseFloat(this.value).toFixed(2)"
             onchange="(window.cfgSetRspLoseTeamWinOpacity||function(){})(this.value)">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">흑백(Grayscale) <span id="cfg-rsp-ltwg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_gray')||'0.15').toFixed(2);}catch(e){return '0.15';}})()}</span></div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">\uD751\uBC31(Grayscale) <span id="cfg-rsp-ltwg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(t.getItem("su_rsp_loseteam_win_gray")||"0.15").toFixed(2)}catch(e){return"0.15"}})()}</span></div>
           <input type="range" min="0" max="1.0" step="0.05"
-            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_gray')||'0.15');}catch(e){return 0.15;}})()}"
+            value="${(()=>{try{return parseFloat(t.getItem("su_rsp_loseteam_win_gray")||"0.15")}catch(e){return .15}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
             oninput="document.getElementById('cfg-rsp-ltwg-v').textContent=parseFloat(this.value).toFixed(2)"
             onchange="(window.cfgSetRspLoseTeamWinGray||function(){})(this.value)">
         </div>
 
-        <!-- 연한색(Opacity) 조절: 패배팀의 진 선수 -->
+        <!-- \uC5F0\uD55C\uC0C9(Opacity) \uC870\uC808: \uD328\uBC30\uD300\uC758 \uC9C4 \uC120\uC218 -->
         <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
-          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">💔 패배팀 패널 – 진 선수 연한색 조절</div>
-          <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">패배팀에서 개인전까지 진 선수(전패)의 투명도·흑백을 조절합니다.</div>
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-ltlo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_opacity')||'0.45').toFixed(2);}catch(e){return '0.45';}})()}</span></div>
+          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">\u{1F494} \uD328\uBC30\uD300 \uD328\uB110 \u2013 \uC9C4 \uC120\uC218 \uC5F0\uD55C\uC0C9 \uC870\uC808</div>
+          <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">\uD328\uBC30\uD300\uC5D0\uC11C \uAC1C\uC778\uC804\uAE4C\uC9C0 \uC9C4 \uC120\uC218(\uC804\uD328)\uC758 \uD22C\uBA85\uB3C4\xB7\uD751\uBC31\uC744 \uC870\uC808\uD569\uB2C8\uB2E4.</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">\uD22C\uBA85\uB3C4(Opacity) <span id="cfg-rsp-ltlo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(t.getItem("su_rsp_loseteam_lose_opacity")||"0.45").toFixed(2)}catch(e){return"0.45"}})()}</span></div>
           <input type="range" min="0.1" max="1.0" step="0.05"
-            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_opacity')||'0.45');}catch(e){return 0.45;}})()}"
+            value="${(()=>{try{return parseFloat(t.getItem("su_rsp_loseteam_lose_opacity")||"0.45")}catch(e){return .45}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
             oninput="document.getElementById('cfg-rsp-ltlo-v').textContent=parseFloat(this.value).toFixed(2)"
             onchange="(window.cfgSetRspLoseTeamLoseOpacity||function(){})(this.value)">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">흑백(Grayscale) <span id="cfg-rsp-ltlg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_gray')||'0.75').toFixed(2);}catch(e){return '0.75';}})()}</span></div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">\uD751\uBC31(Grayscale) <span id="cfg-rsp-ltlg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(t.getItem("su_rsp_loseteam_lose_gray")||"0.75").toFixed(2)}catch(e){return"0.75"}})()}</span></div>
           <input type="range" min="0" max="1.0" step="0.05"
-            value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_gray')||'0.75');}catch(e){return 0.75;}})()}"
+            value="${(()=>{try{return parseFloat(t.getItem("su_rsp_loseteam_lose_gray")||"0.75")}catch(e){return .75}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
             oninput="document.getElementById('cfg-rsp-ltlg-v').textContent=parseFloat(this.value).toFixed(2)"
             onchange="(window.cfgSetRspLoseTeamLoseGray||function(){})(this.value)">
         </div>
 
-        <!-- 네모 박스(배경/테두리) 표시 -->
+        <!-- \uB124\uBAA8 \uBC15\uC2A4(\uBC30\uACBD/\uD14C\uB450\uB9AC) \uD45C\uC2DC -->
         <div style="margin-bottom:10px">
           <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:700;color:var(--text2)">
             <input type="checkbox" id="cfg-rsp-show-box" style="width:14px;height:14px"
-              ${(()=>{try{return (localStorage.getItem('su_rsp_show_box')||'0')!=='0'?'checked':'';}catch(e){return '';}})()}
+              ${(()=>{try{return(t.getItem("su_rsp_show_box")||"0")!=="0"?"checked":""}catch(e){return""}})()}
               onchange="(window.cfgSetRspShowBox||function(){})(this.checked)">
-            🔲 패널 배경·테두리 표시 (기본 OFF = 이미지만 표시)
+            \u{1F532} \uD328\uB110 \uBC30\uACBD\xB7\uD14C\uB450\uB9AC \uD45C\uC2DC (\uAE30\uBCF8 OFF = \uC774\uBBF8\uC9C0\uB9CC \uD45C\uC2DC)
           </label>
         </div>
 
-        <!-- 밝기 -->
+        <!-- \uBC1D\uAE30 -->
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">☀️ 밝기 <span id="cfg-rsp-br-v" style="font-weight:400;color:var(--gray-l)">${(()=>{ try{ return parseFloat(localStorage.getItem('su_rsp_brightness')||'1.0').toFixed(1); }catch(e){ return '1.0'; } })()}x</span></div>
-          <input type="range" min="0.3" max="2.0" step="0.1" value="${(()=>{ try{ return parseFloat(localStorage.getItem('su_rsp_brightness')||'1.0'); }catch(e){ return 1.0; } })()}" style="width:100%;max-width:260px;accent-color:var(--blue)" oninput="document.getElementById('cfg-rsp-br-v').textContent=parseFloat(this.value).toFixed(1)+'x'" onchange="(window.cfgSetRspBrightness||function(){})(this.value)">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">\u2600\uFE0F \uBC1D\uAE30 <span id="cfg-rsp-br-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(t.getItem("su_rsp_brightness")||"1.0").toFixed(1)}catch(e){return"1.0"}})()}x</span></div>
+          <input type="range" min="0.3" max="2.0" step="0.1" value="${(()=>{try{return parseFloat(t.getItem("su_rsp_brightness")||"1.0")}catch(e){return 1}})()}" style="width:100%;max-width:260px;accent-color:var(--blue)" oninput="document.getElementById('cfg-rsp-br-v').textContent=parseFloat(this.value).toFixed(1)+'x'" onchange="(window.cfgSetRspBrightness||function(){})(this.value)">
         </div>
 
-        <!-- 이미지 효과 -->
+        <!-- \uC774\uBBF8\uC9C0 \uD6A8\uACFC -->
         <div style="margin-bottom:4px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">✨ 이미지 효과(필터)</div>
+          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">\u2728 \uC774\uBBF8\uC9C0 \uD6A8\uACFC(\uD544\uD130)</div>
           <select onchange="(window.cfgSetRspEffect||function(){})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:700;width:100%;max-width:200px">
-            ${[['none','없음(기본)'],['sepia','세피아'],['warm','따뜻한 톤'],['cool','차가운 톤'],['vivid','선명하게'],['dark','어둡게'],['mono','흑백']].map(([v,l])=>{const cur=(()=>{try{return localStorage.getItem('su_rsp_effect')||'none';}catch(e){return 'none';}})();return `<option value="${v}" ${cur===v?'selected':''}>${l}</option>`;}).join('')}
+            ${[["none","\uC5C6\uC74C(\uAE30\uBCF8)"],["sepia","\uC138\uD53C\uC544"],["warm","\uB530\uB73B\uD55C \uD1A4"],["cool","\uCC28\uAC00\uC6B4 \uD1A4"],["vivid","\uC120\uBA85\uD558\uAC8C"],["dark","\uC5B4\uB461\uAC8C"],["mono","\uD751\uBC31"]].map(([e,i])=>{const a=(()=>{try{return t.getItem("su_rsp_effect")||"none"}catch(g){return"none"}})();return`<option value="${e}" ${a===e?"selected":""}>${i}</option>`}).join("")}
           </select>
         </div>
       </div>
 
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">🎨 기록 카드 양쪽 끝 색상 효과</div>
-        <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">기록 카드 좌우 끝에 A·B팀 대학 색상 그라디언트를 표시합니다. 대전기록탭·대회탭(조별리그 일정·대진표 기록·프로리그 조별리그·대진표) 기록 카드 전체에 적용됩니다.</div>
-        <div style="font-size:11px;color:#475569;margin-bottom:8px"><b>대학CK</b> / <b>프로리그 일반</b>의 양쪽 끝 색상은 바로 아래 나오는 <b>팀 버튼 색상</b> 블록에서 바꿉니다.</div>
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">\u{1F3A8} \uAE30\uB85D \uCE74\uB4DC \uC591\uCABD \uB05D \uC0C9\uC0C1 \uD6A8\uACFC</div>
+        <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">\uAE30\uB85D \uCE74\uB4DC \uC88C\uC6B0 \uB05D\uC5D0 A\xB7B\uD300 \uB300\uD559 \uC0C9\uC0C1 \uADF8\uB77C\uB514\uC5B8\uD2B8\uB97C \uD45C\uC2DC\uD569\uB2C8\uB2E4. \uB300\uC804\uAE30\uB85D\uD0ED\xB7\uB300\uD68C\uD0ED(\uC870\uBCC4\uB9AC\uADF8 \uC77C\uC815\xB7\uB300\uC9C4\uD45C \uAE30\uB85D\xB7\uD504\uB85C\uB9AC\uADF8 \uC870\uBCC4\uB9AC\uADF8\xB7\uB300\uC9C4\uD45C) \uAE30\uB85D \uCE74\uB4DC \uC804\uCCB4\uC5D0 \uC801\uC6A9\uB429\uB2C8\uB2E4.</div>
+        <div style="font-size:11px;color:#475569;margin-bottom:8px"><b>\uB300\uD559CK</b> / <b>\uD504\uB85C\uB9AC\uADF8 \uC77C\uBC18</b>\uC758 \uC591\uCABD \uB05D \uC0C9\uC0C1\uC740 \uBC14\uB85C \uC544\uB798 \uB098\uC624\uB294 <b>\uD300 \uBC84\uD2BC \uC0C9\uC0C1</b> \uBE14\uB85D\uC5D0\uC11C \uBC14\uAFC9\uB2C8\uB2E4.</div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-            <input type="checkbox" id="cfg-sidefx-on" style="width:15px;height:15px" ${_sfxOn?'checked':''} onchange="(window.cfgSetRecSideFxEnabled||function(){})(this.checked)">
-            색상 효과 사용
+            <input type="checkbox" id="cfg-sidefx-on" style="width:15px;height:15px" ${s?"checked":""} onchange="(window.cfgSetRecSideFxEnabled||function(){})(this.checked)">
+            \uC0C9\uC0C1 \uD6A8\uACFC \uC0AC\uC6A9
           </label>
-          ${_sfxOn ? `<div id="cfg-sidefx-preview" class="grp-match-card grp-sidefx grp-sidefx--${_sfxMode}" style="${(()=>{try{if(typeof _recSideFxVarStyle==='function')return _recSideFxVarStyle('#2563eb','#a855f7',{mode:_sfxMode,intensity:_sfxInt,length:_sfxLen,tail:_sfxTail,softness:_sfxSoft,edge:_sfxEdge});}catch(e){}return '';})()}--rec-side-left-rgb:37,99,235;--rec-side-right-rgb:168,85,247;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:10px;background:var(--white);margin:0;">
-            <span style="position:relative;z-index:1;font-size:11px;font-weight:900;color:#2563eb">🔵 A팀</span>
-            <span style="position:relative;z-index:1;font-size:11px;color:var(--gray-l);font-weight:700">미리보기</span>
-            <span style="position:relative;z-index:1;font-size:11px;font-weight:900;color:#a855f7">B팀 🟣</span>
-          </div>` : ''}
+          ${s?`<div id="cfg-sidefx-preview" class="grp-match-card grp-sidefx grp-sidefx--${n}" style="${(()=>{try{if(typeof _recSideFxVarStyle=="function")return _recSideFxVarStyle("#2563eb","#a855f7",{mode:n,intensity:l,length:p,tail:c,softness:d,edge:B})}catch(e){}return""})()}--rec-side-left-rgb:37,99,235;--rec-side-right-rgb:168,85,247;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:10px;background:var(--white);margin:0;">
+            <span style="position:relative;z-index:1;font-size:11px;font-weight:900;color:#2563eb">\u{1F535} A\uD300</span>
+            <span style="position:relative;z-index:1;font-size:11px;color:var(--gray-l);font-weight:700">\uBBF8\uB9AC\uBCF4\uAE30</span>
+            <span style="position:relative;z-index:1;font-size:11px;font-weight:900;color:#a855f7">B\uD300 \u{1F7E3}</span>
+          </div>`:""}
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <div style="font-size:11px;color:var(--text3);font-weight:800">효과 종류</div>
+            <div style="font-size:11px;color:var(--text3);font-weight:800">\uD6A8\uACFC \uC885\uB958</div>
             <select id="cfg-sidefx-mode" onchange="(window.cfgSetRecSideFxMode||function(){})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-              <optgroup label="── 기본 ──">
-              <option value="soft" ${_sfxMode==='soft'?'selected':''}>소프트 (기본)</option>
-              <option value="glow" ${_sfxMode==='glow'?'selected':''}>글로우 (발광)</option>
-              <option value="panel" ${_sfxMode==='panel'?'selected':''}>패널 (선명)</option>
-              <option value="line" ${_sfxMode==='line'?'selected':''}>라인 (세로 바)</option>
-              <option value="ribbon" ${_sfxMode==='ribbon'?'selected':''}>리본</option>
-              <option value="frame" ${_sfxMode==='frame'?'selected':''}>프레임</option>
-              <option value="spotlight" ${_sfxMode==='spotlight'?'selected':''}>스포트라이트</option>
-              <option value="fade" ${_sfxMode==='fade'?'selected':''}>페이드 (은은)</option>
-              <option value="double" ${_sfxMode==='double'?'selected':''}>더블라인</option>
-              <option value="neon" ${_sfxMode==='neon'?'selected':''}>네온</option>
-              <option value="wave" ${_sfxMode==='wave'?'selected':''}>웨이브</option>
-              <option value="prism" ${_sfxMode==='prism'?'selected':''}>프리즘</option>
-              <option value="vignette" ${_sfxMode==='vignette'?'selected':''}>비네트</option>
-              <option value="pulse" ${_sfxMode==='pulse'?'selected':''}>펄스</option>
-              <option value="sheen" ${_sfxMode==='sheen'?'selected':''}>실크 (사선)</option>
-              <option value="aurora" ${_sfxMode==='aurora'?'selected':''}>오로라</option>
-              <option value="slant" ${_sfxMode==='slant'?'selected':''}>슬랜트</option>
-              <option value="steps" ${_sfxMode==='steps'?'selected':''}>스텝</option>
+              <optgroup label="\u2500\u2500 \uAE30\uBCF8 \u2500\u2500">
+              <option value="soft" ${n==="soft"?"selected":""}>\uC18C\uD504\uD2B8 (\uAE30\uBCF8)</option>
+              <option value="glow" ${n==="glow"?"selected":""}>\uAE00\uB85C\uC6B0 (\uBC1C\uAD11)</option>
+              <option value="panel" ${n==="panel"?"selected":""}>\uD328\uB110 (\uC120\uBA85)</option>
+              <option value="line" ${n==="line"?"selected":""}>\uB77C\uC778 (\uC138\uB85C \uBC14)</option>
+              <option value="ribbon" ${n==="ribbon"?"selected":""}>\uB9AC\uBCF8</option>
+              <option value="frame" ${n==="frame"?"selected":""}>\uD504\uB808\uC784</option>
+              <option value="spotlight" ${n==="spotlight"?"selected":""}>\uC2A4\uD3EC\uD2B8\uB77C\uC774\uD2B8</option>
+              <option value="fade" ${n==="fade"?"selected":""}>\uD398\uC774\uB4DC (\uC740\uC740)</option>
+              <option value="double" ${n==="double"?"selected":""}>\uB354\uBE14\uB77C\uC778</option>
+              <option value="neon" ${n==="neon"?"selected":""}>\uB124\uC628</option>
+              <option value="wave" ${n==="wave"?"selected":""}>\uC6E8\uC774\uBE0C</option>
+              <option value="prism" ${n==="prism"?"selected":""}>\uD504\uB9AC\uC998</option>
+              <option value="vignette" ${n==="vignette"?"selected":""}>\uBE44\uB124\uD2B8</option>
+              <option value="pulse" ${n==="pulse"?"selected":""}>\uD384\uC2A4</option>
+              <option value="sheen" ${n==="sheen"?"selected":""}>\uC2E4\uD06C (\uC0AC\uC120)</option>
+              <option value="aurora" ${n==="aurora"?"selected":""}>\uC624\uB85C\uB77C</option>
+              <option value="slant" ${n==="slant"?"selected":""}>\uC2AC\uB79C\uD2B8</option>
+              <option value="steps" ${n==="steps"?"selected":""}>\uC2A4\uD15D</option>
               </optgroup>
-              <optgroup label="── 발광/빔 ──">
-              <option value="laser" ${_sfxMode==='laser'?'selected':''}>레이저</option>
-              <option value="halo" ${_sfxMode==='halo'?'selected':''}>헤일로 (고리 발광)</option>
-              <option value="ember" ${_sfxMode==='ember'?'selected':''}>엠버 (잔불)</option>
-              <option value="shimmer" ${_sfxMode==='shimmer'?'selected':''}>시머 (반짝 광택)</option>
-              <option value="sweep" ${_sfxMode==='sweep'?'selected':''}>스윕 (방사 호)</option>
+              <optgroup label="\u2500\u2500 \uBC1C\uAD11/\uBE54 \u2500\u2500">
+              <option value="laser" ${n==="laser"?"selected":""}>\uB808\uC774\uC800</option>
+              <option value="halo" ${n==="halo"?"selected":""}>\uD5E4\uC77C\uB85C (\uACE0\uB9AC \uBC1C\uAD11)</option>
+              <option value="ember" ${n==="ember"?"selected":""}>\uC5E0\uBC84 (\uC794\uBD88)</option>
+              <option value="shimmer" ${n==="shimmer"?"selected":""}>\uC2DC\uBA38 (\uBC18\uC9DD \uAD11\uD0DD)</option>
+              <option value="sweep" ${n==="sweep"?"selected":""}>\uC2A4\uC715 (\uBC29\uC0AC \uD638)</option>
               </optgroup>
-              <optgroup label="── 자연/온도 ──">
-              <option value="fire" ${_sfxMode==='fire'?'selected':''}>파이어 (불꽃)</option>
-              <option value="ice" ${_sfxMode==='ice'?'selected':''}>아이스 (냉기)</option>
-              <option value="ink" ${_sfxMode==='ink'?'selected':''}>잉크 (먹물 번짐)</option>
-              <option value="dust" ${_sfxMode==='dust'?'selected':''}>더스트 (먼지 입자)</option>
+              <optgroup label="\u2500\u2500 \uC790\uC5F0/\uC628\uB3C4 \u2500\u2500">
+              <option value="fire" ${n==="fire"?"selected":""}>\uD30C\uC774\uC5B4 (\uBD88\uAF43)</option>
+              <option value="ice" ${n==="ice"?"selected":""}>\uC544\uC774\uC2A4 (\uB0C9\uAE30)</option>
+              <option value="ink" ${n==="ink"?"selected":""}>\uC789\uD06C (\uBA39\uBB3C \uBC88\uC9D0)</option>
+              <option value="dust" ${n==="dust"?"selected":""}>\uB354\uC2A4\uD2B8 (\uBA3C\uC9C0 \uC785\uC790)</option>
               </optgroup>
-              <optgroup label="── 선/패턴 ──">
-              <option value="bars" ${_sfxMode==='bars'?'selected':''}>바 (복수 세로 바)</option>
-              <option value="bracket" ${_sfxMode==='bracket'?'selected':''}>브라켓 [ ]</option>
-              <option value="corner" ${_sfxMode==='corner'?'selected':''}>코너 (L자 모서리)</option>
-              <option value="diagonal" ${_sfxMode==='diagonal'?'selected':''}>다이아고날 (사선)</option>
-              <option value="scanline" ${_sfxMode==='scanline'?'selected':''}>스캔라인 (CRT)</option>
-              <option value="circuit" ${_sfxMode==='circuit'?'selected':''}>서킷 (회로 패턴)</option>
-              <option value="confetti" ${_sfxMode==='confetti'?'selected':''}>컨페티 (점 패턴)</option>
+              <optgroup label="\u2500\u2500 \uC120/\uD328\uD134 \u2500\u2500">
+              <option value="bars" ${n==="bars"?"selected":""}>\uBC14 (\uBCF5\uC218 \uC138\uB85C \uBC14)</option>
+              <option value="bracket" ${n==="bracket"?"selected":""}>\uBE0C\uB77C\uCF13 [ ]</option>
+              <option value="corner" ${n==="corner"?"selected":""}>\uCF54\uB108 (L\uC790 \uBAA8\uC11C\uB9AC)</option>
+              <option value="diagonal" ${n==="diagonal"?"selected":""}>\uB2E4\uC774\uC544\uACE0\uB0A0 (\uC0AC\uC120)</option>
+              <option value="scanline" ${n==="scanline"?"selected":""}>\uC2A4\uCE94\uB77C\uC778 (CRT)</option>
+              <option value="circuit" ${n==="circuit"?"selected":""}>\uC11C\uD0B7 (\uD68C\uB85C \uD328\uD134)</option>
+              <option value="confetti" ${n==="confetti"?"selected":""}>\uCEE8\uD398\uD2F0 (\uC810 \uD328\uD134)</option>
               </optgroup>
-              <optgroup label="── 구조/반사 ──">
-              <option value="diamond" ${_sfxMode==='diamond'?'selected':''}>다이아몬드 커트</option>
-              <option value="mirror" ${_sfxMode==='mirror'?'selected':''}>미러 (좌우 반사)</option>
+              <optgroup label="\u2500\u2500 \uAD6C\uC870/\uBC18\uC0AC \u2500\u2500">
+              <option value="diamond" ${n==="diamond"?"selected":""}>\uB2E4\uC774\uC544\uBAAC\uB4DC \uCEE4\uD2B8</option>
+              <option value="mirror" ${n==="mirror"?"selected":""}>\uBBF8\uB7EC (\uC88C\uC6B0 \uBC18\uC0AC)</option>
               </optgroup>
             </select>
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">색상 강도 <span id="cfg-sidefx-int-v" style="font-weight:400;color:var(--gray-l)">${_sfxInt}</span></div>
-            <input type="range" id="cfg-sidefx-int" min="20" max="100" step="4" value="${_sfxInt}" oninput="document.getElementById('cfg-sidefx-int-v').textContent=this.value" onchange="(window.cfgSetRecSideFxIntensity||function(){})(this.value)" style="width:100%;max-width:260px">
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uC0C9\uC0C1 \uAC15\uB3C4 <span id="cfg-sidefx-int-v" style="font-weight:400;color:var(--gray-l)">${l}</span></div>
+            <input type="range" id="cfg-sidefx-int" min="20" max="100" step="4" value="${l}" oninput="document.getElementById('cfg-sidefx-int-v').textContent=this.value" onchange="(window.cfgSetRecSideFxIntensity||function(){})(this.value)" style="width:100%;max-width:260px">
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 효과 길이 <span id="cfg-sidefx-len-v" style="font-weight:400;color:var(--gray-l)">${_sfxLen}%</span></div>
-            <input type="range" id="cfg-sidefx-len" min="4" max="80" step="2" value="${_sfxLen}" oninput="document.getElementById('cfg-sidefx-len-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxLength||function(){})(this.value)" style="width:100%;max-width:260px">
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uC591\uCABD \uD6A8\uACFC \uAE38\uC774 <span id="cfg-sidefx-len-v" style="font-weight:400;color:var(--gray-l)">${p}%</span></div>
+            <input type="range" id="cfg-sidefx-len" min="4" max="80" step="2" value="${p}" oninput="document.getElementById('cfg-sidefx-len-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxLength||function(){})(this.value)" style="width:100%;max-width:260px">
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 끝 진하기 <span id="cfg-sidefx-tail-v" style="font-weight:400;color:var(--gray-l)">${_sfxTail}%</span></div>
-            <input type="range" id="cfg-sidefx-tail" min="0" max="140" step="4" value="${_sfxTail}" oninput="document.getElementById('cfg-sidefx-tail-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxTail||function(){})(this.value)" style="width:100%;max-width:260px">
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uC591\uCABD \uB05D \uC9C4\uD558\uAE30 <span id="cfg-sidefx-tail-v" style="font-weight:400;color:var(--gray-l)">${c}%</span></div>
+            <input type="range" id="cfg-sidefx-tail" min="0" max="140" step="4" value="${c}" oninput="document.getElementById('cfg-sidefx-tail-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxTail||function(){})(this.value)" style="width:100%;max-width:260px">
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">연해지는 정도(부드러움) <span id="cfg-sidefx-soft-v" style="font-weight:400;color:var(--gray-l)">${_sfxSoft}%</span></div>
-            <input type="range" id="cfg-sidefx-soft" min="0" max="100" step="4" value="${_sfxSoft}" oninput="document.getElementById('cfg-sidefx-soft-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxSoftness||function(){})(this.value)" style="width:100%;max-width:260px">
+            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uC5F0\uD574\uC9C0\uB294 \uC815\uB3C4(\uBD80\uB4DC\uB7EC\uC6C0) <span id="cfg-sidefx-soft-v" style="font-weight:400;color:var(--gray-l)">${d}%</span></div>
+            <input type="range" id="cfg-sidefx-soft" min="0" max="100" step="4" value="${d}" oninput="document.getElementById('cfg-sidefx-soft-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxSoftness||function(){})(this.value)" style="width:100%;max-width:260px">
           </div>
         </div>
       </div>
-      ${(typeof window.buildSettingsTeamColorBlock==='function' ? window.buildSettingsTeamColorBlock() : '')}
+      ${typeof window.buildSettingsTeamColorBlock=="function"?window.buildSettingsTeamColorBlock():""}
 
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:6px">📄 경기 기록 페이지 크기 (한 페이지에 표시할 기록 수)</div>
+        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:6px">\u{1F4C4} \uACBD\uAE30 \uAE30\uB85D \uD398\uC774\uC9C0 \uD06C\uAE30 (\uD55C \uD398\uC774\uC9C0\uC5D0 \uD45C\uC2DC\uD560 \uAE30\uB85D \uC218)</div>
         <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">
-          대전기록 탭·티어대회·프로리그 등 모든 기록 목록에 적용됩니다.<br>
-          기본값: PC 20개 / 모바일 10개 (설정 시 PC·모바일 구분 없이 고정 적용)
+          \uB300\uC804\uAE30\uB85D \uD0ED\xB7\uD2F0\uC5B4\uB300\uD68C\xB7\uD504\uB85C\uB9AC\uADF8 \uB4F1 \uBAA8\uB4E0 \uAE30\uB85D \uBAA9\uB85D\uC5D0 \uC801\uC6A9\uB429\uB2C8\uB2E4.<br>
+          \uAE30\uBCF8\uAC12: PC 20\uAC1C / \uBAA8\uBC14\uC77C 10\uAC1C (\uC124\uC815 \uC2DC PC\xB7\uBAA8\uBC14\uC77C \uAD6C\uBD84 \uC5C6\uC774 \uACE0\uC815 \uC801\uC6A9)
         </div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <div style="font-size:11px;color:var(--text3);font-weight:800;min-width:80px">한 페이지 수</div>
-            <select id="cfg-hist-page-size" onchange="(function(v){try{if(v==='auto'){localStorage.removeItem('su_hist_page_size');}else{localStorage.setItem('su_hist_page_size',v);}try{render();}catch(e){}try{if(typeof showToast==='function')showToast('✅ 페이지 크기 변경: '+(v==='auto'?'기본(자동)':v+'개'));}catch(e){}}catch(e){}})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-              <option value="auto" ${!(()=>{try{return localStorage.getItem('su_hist_page_size');}catch(e){return '';}})()? 'selected':''}>기본 (PC 20개 / 모바일 10개)</option>
-              <option value="10" ${(()=>{try{return localStorage.getItem('su_hist_page_size')==='10';}catch(e){return false;}})()? 'selected':''}>10개씩</option>
-              <option value="15" ${(()=>{try{return localStorage.getItem('su_hist_page_size')==='15';}catch(e){return false;}})()? 'selected':''}>15개씩</option>
-              <option value="20" ${(()=>{try{return localStorage.getItem('su_hist_page_size')==='20';}catch(e){return false;}})()? 'selected':''}>20개씩</option>
-              <option value="25" ${(()=>{try{return localStorage.getItem('su_hist_page_size')==='25';}catch(e){return false;}})()? 'selected':''}>25개씩</option>
-              <option value="30" ${(()=>{try{return localStorage.getItem('su_hist_page_size')==='30';}catch(e){return false;}})()? 'selected':''}>30개씩</option>
-              <option value="40" ${(()=>{try{return localStorage.getItem('su_hist_page_size')==='40';}catch(e){return false;}})()? 'selected':''}>40개씩</option>
-              <option value="50" ${(()=>{try{return localStorage.getItem('su_hist_page_size')==='50';}catch(e){return false;}})()? 'selected':''}>50개씩</option>
-              <option value="100" ${(()=>{try{return localStorage.getItem('su_hist_page_size')==='100';}catch(e){return false;}})()? 'selected':''}>100개씩</option>
+            <div style="font-size:11px;color:var(--text3);font-weight:800;min-width:80px">\uD55C \uD398\uC774\uC9C0 \uC218</div>
+            <select id="cfg-hist-page-size" onchange="(function(v){try{if(v==='auto'){localStorage.removeItem('su_hist_page_size');}else{localStorage.setItem('su_hist_page_size',v);}try{render();}catch(e){}try{if(typeof showToast==='function')showToast('\u2705 \uD398\uC774\uC9C0 \uD06C\uAE30 \uBCC0\uACBD: '+(v==='auto'?'\uAE30\uBCF8(\uC790\uB3D9)':v+'\uAC1C'));}catch(e){}}catch(e){}})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+              <option value="auto" ${(()=>{try{return t.getItem("su_hist_page_size")}catch(e){return""}})()?"":"selected"}>\uAE30\uBCF8 (PC 20\uAC1C / \uBAA8\uBC14\uC77C 10\uAC1C)</option>
+              <option value="10" ${(()=>{try{return t.getItem("su_hist_page_size")==="10"}catch(e){return!1}})()?"selected":""}>10\uAC1C\uC529</option>
+              <option value="15" ${(()=>{try{return t.getItem("su_hist_page_size")==="15"}catch(e){return!1}})()?"selected":""}>15\uAC1C\uC529</option>
+              <option value="20" ${(()=>{try{return t.getItem("su_hist_page_size")==="20"}catch(e){return!1}})()?"selected":""}>20\uAC1C\uC529</option>
+              <option value="25" ${(()=>{try{return t.getItem("su_hist_page_size")==="25"}catch(e){return!1}})()?"selected":""}>25\uAC1C\uC529</option>
+              <option value="30" ${(()=>{try{return t.getItem("su_hist_page_size")==="30"}catch(e){return!1}})()?"selected":""}>30\uAC1C\uC529</option>
+              <option value="40" ${(()=>{try{return t.getItem("su_hist_page_size")==="40"}catch(e){return!1}})()?"selected":""}>40\uAC1C\uC529</option>
+              <option value="50" ${(()=>{try{return t.getItem("su_hist_page_size")==="50"}catch(e){return!1}})()?"selected":""}>50\uAC1C\uC529</option>
+              <option value="100" ${(()=>{try{return t.getItem("su_hist_page_size")==="100"}catch(e){return!1}})()?"selected":""}>100\uAC1C\uC529</option>
             </select>
-            <button class="btn btn-w btn-xs" onclick="localStorage.removeItem('su_hist_page_size');document.getElementById('cfg-hist-page-size').value='auto';try{render();}catch(e){}">초기화</button>
+            <button class="btn btn-w btn-xs" onclick="localStorage.removeItem('su_hist_page_size');document.getElementById('cfg-hist-page-size').value='auto';try{render();}catch(e){}">\uCD08\uAE30\uD654</button>
           </div>
           <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
-            ※ 기록 수가 많으면 30~50개, 빠른 스크롤을 원하면 20개를 권장합니다.<br>
-            ※ 적용 범위: 대전기록(전체·개인전·끝장전·미니대전·시빌워·CK·대학대전·프로·티어대회·대회 등)
+            \u203B \uAE30\uB85D \uC218\uAC00 \uB9CE\uC73C\uBA74 30~50\uAC1C, \uBE60\uB978 \uC2A4\uD06C\uB864\uC744 \uC6D0\uD558\uBA74 20\uAC1C\uB97C \uAD8C\uC7A5\uD569\uB2C8\uB2E4.<br>
+            \u203B \uC801\uC6A9 \uBC94\uC704: \uB300\uC804\uAE30\uB85D(\uC804\uCCB4\xB7\uAC1C\uC778\uC804\xB7\uB05D\uC7A5\uC804\xB7\uBBF8\uB2C8\uB300\uC804\xB7\uC2DC\uBE4C\uC6CC\xB7CK\xB7\uB300\uD559\uB300\uC804\xB7\uD504\uB85C\xB7\uD2F0\uC5B4\uB300\uD68C\xB7\uB300\uD68C \uB4F1)
           </div>
         </div>
       </div>
     </div>
-  </details>
-  ${(()=>{ 
-    const _tcOn = (localStorage.getItem('su_tc_theme_on') ?? '0') === '1';
-    const _tcAccent = (localStorage.getItem('su_tc_accent_mode') ?? 'none');
-    const _tcHd = parseInt(localStorage.getItem('su_tc_hd_alpha') ?? '12',10) || 12;
-    const _tcBw = parseInt(localStorage.getItem('su_tc_border_w') ?? '4',10) || 4;
-    const _tcIc = parseInt(localStorage.getItem('su_tc_uicon') ?? '34',10) || 34;
-    const _tcLw = parseInt(localStorage.getItem('su_tc_line_w') ?? '2',10) || 2;
-    const _tcLa = parseInt(localStorage.getItem('su_tc_line_a') ?? '70',10) || 70;
-    const _tcPreset = (localStorage.getItem('su_tc_preset') ?? '기본');
-    const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') ?? 'pill'); // pill | asl
-};
+  </details>`};
 
 /* settings-render-tourneycard.js */
-// ══════════════════════════════════════════════════════════
-// settings-render-tourneycard.js — 대회카드/H2H/프로리그 설정 섹션
-// settings-render.js 에서 분리됨
-// ══════════════════════════════════════════════════════════
-
-window.renderCfgTourneyCardSection = function(_scfgD) {
-  const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-    return _scfgD('tourneycard','🏆 대회 카드(대회탭) 스타일') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대회탭 “조별리그 일정/대진표” 카드 스타일입니다. 기록탭 카드와 <b>별도</b>로 설정됩니다.</div>
+window.renderCfgTourneyCardSection=function(n){var b,$,I,M,S,z,C,B,P;const t=(function(){try{const i=window.localStorage,r="__su_ls_test__";return i.setItem(r,"1"),i.removeItem(r),i}catch(i){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),H=((b=t.getItem("su_tc_theme_on"))!=null?b:"0")==="1",x=($=t.getItem("su_tc_accent_mode"))!=null?$:"none",v=parseInt((I=t.getItem("su_tc_hd_alpha"))!=null?I:"12",10)||12,f=parseInt((M=t.getItem("su_tc_border_w"))!=null?M:"4",10)||4,y=parseInt((S=t.getItem("su_tc_uicon"))!=null?S:"34",10)||34,u=parseInt((z=t.getItem("su_tc_line_w"))!=null?z:"2",10)||2,w=parseInt((C=t.getItem("su_tc_line_a"))!=null?C:"70",10)||70,s=(B=t.getItem("su_tc_preset"))!=null?B:"\uAE30\uBCF8",_=(P=t.getItem("su_date_menu_style"))!=null?P:"pill";return n("tourneycard","\u{1F3C6} \uB300\uD68C \uCE74\uB4DC(\uB300\uD68C\uD0ED) \uC2A4\uD0C0\uC77C")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uB300\uD68C\uD0ED \u201C\uC870\uBCC4\uB9AC\uADF8 \uC77C\uC815/\uB300\uC9C4\uD45C\u201D \uCE74\uB4DC \uC2A4\uD0C0\uC77C\uC785\uB2C8\uB2E4. \uAE30\uB85D\uD0ED \uCE74\uB4DC\uC640 <b>\uBCC4\uB3C4</b>\uB85C \uC124\uC815\uB429\uB2C8\uB2E4.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" id="cfg-tc-theme-on" style="width:15px;height:15px" ${_tcOn?'checked':''} onchange="cfgSetTourneyCardSettings()">
-        대회 카드 디자인 모드 사용
+        <input type="checkbox" id="cfg-tc-theme-on" style="width:15px;height:15px" ${H?"checked":""} onchange="cfgSetTourneyCardSettings()">
+        \uB300\uD68C \uCE74\uB4DC \uB514\uC790\uC778 \uBAA8\uB4DC \uC0AC\uC6A9
       </label>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">날짜 버튼 메뉴</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uB0A0\uC9DC \uBC84\uD2BC \uBA54\uB274</div>
         <select id="cfg-date-menu-style" onchange="cfgSetDateMenuStyle()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-          <option value="pill" ${_dateMenuStyle!=='asl'?'selected':''}>기본 (pill)</option>
-          <option value="asl" ${_dateMenuStyle==='asl'?'selected':''}>ASL 스타일 (날짜+미니매치업)</option>
+          <option value="pill" ${_!=="asl"?"selected":""}>\uAE30\uBCF8 (pill)</option>
+          <option value="asl" ${_==="asl"?"selected":""}>ASL \uC2A4\uD0C0\uC77C (\uB0A0\uC9DC+\uBBF8\uB2C8\uB9E4\uCE58\uC5C5)</option>
         </select>
-        <span style="font-size:11px;color:var(--gray-l)">대회탭/프로리그 대회탭 상단 날짜 필터에 적용</span>
+        <span style="font-size:11px;color:var(--gray-l)">\uB300\uD68C\uD0ED/\uD504\uB85C\uB9AC\uADF8 \uB300\uD68C\uD0ED \uC0C1\uB2E8 \uB0A0\uC9DC \uD544\uD130\uC5D0 \uC801\uC6A9</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">토너먼트/대진표 프리셋</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uD1A0\uB108\uBA3C\uD2B8/\uB300\uC9C4\uD45C \uD504\uB9AC\uC14B</div>
         <select id="cfg-tc-preset" onchange="localStorage.setItem('su_tc_preset',this.value);cfgApplyBracketPreset(this.value);try{if(typeof window.cfgTouchPrefsSync==="function")window.cfgTouchPrefsSync();}catch(e){}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-          <option value="기본" ${_tcPreset==='기본'?'selected':''}>기본</option>
-          <option value="월드컵" ${_tcPreset==='월드컵'?'selected':''}>월드컵</option>
-          <option value="프로리그" ${_tcPreset==='프로리그'?'selected':''}>프로리그</option>
-          <option value="컴팩트" ${_tcPreset==='컴팩트'?'selected':''}>컴팩트</option>
-          <option value="미니멀" ${_tcPreset==='미니멀'?'selected':''}>미니멀 (깔끔함)</option>
-          <option value="다크리그" ${_tcPreset==='다크리그'?'selected':''}>다크리그 (강한 포인트)</option>
+          <option value="\uAE30\uBCF8" ${s==="\uAE30\uBCF8"?"selected":""}>\uAE30\uBCF8</option>
+          <option value="\uC6D4\uB4DC\uCEF5" ${s==="\uC6D4\uB4DC\uCEF5"?"selected":""}>\uC6D4\uB4DC\uCEF5</option>
+          <option value="\uD504\uB85C\uB9AC\uADF8" ${s==="\uD504\uB85C\uB9AC\uADF8"?"selected":""}>\uD504\uB85C\uB9AC\uADF8</option>
+          <option value="\uCEF4\uD329\uD2B8" ${s==="\uCEF4\uD329\uD2B8"?"selected":""}>\uCEF4\uD329\uD2B8</option>
+          <option value="\uBBF8\uB2C8\uBA40" ${s==="\uBBF8\uB2C8\uBA40"?"selected":""}>\uBBF8\uB2C8\uBA40 (\uAE54\uB054\uD568)</option>
+          <option value="\uB2E4\uD06C\uB9AC\uADF8" ${s==="\uB2E4\uD06C\uB9AC\uADF8"?"selected":""}>\uB2E4\uD06C\uB9AC\uADF8 (\uAC15\uD55C \uD3EC\uC778\uD2B8)</option>
         </select>
-        <span style="font-size:11px;color:var(--gray-l)">※ 아래 슬라이더 값도 같이 변경됩니다</span>
+        <span style="font-size:11px;color:var(--gray-l)">\u203B \uC544\uB798 \uC2AC\uB77C\uC774\uB354 \uAC12\uB3C4 \uAC19\uC774 \uBCC0\uACBD\uB429\uB2C8\uB2E4</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">디자인 모드</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uB514\uC790\uC778 \uBAA8\uB4DC</div>
         <select id="cfg-tc-accent" onchange="cfgSetTourneyCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-          <option value="none" ${_tcAccent==='none'?'selected':''}>무색</option>
-          <option value="header" ${_tcAccent==='header'?'selected':''}>상단 바 포인트</option>
-          <option value="border" ${_tcAccent==='border'?'selected':''}>테두리 포인트</option>
+          <option value="none" ${x==="none"?"selected":""}>\uBB34\uC0C9</option>
+          <option value="header" ${x==="header"?"selected":""}>\uC0C1\uB2E8 \uBC14 \uD3EC\uC778\uD2B8</option>
+          <option value="border" ${x==="border"?"selected":""}>\uD14C\uB450\uB9AC \uD3EC\uC778\uD2B8</option>
         </select>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">상단 바 색상 강도</div>
-          <input type="range" id="cfg-tc-hd" min="0" max="30" step="1" value="${Math.max(0,Math.min(30,_tcHd))}" oninput="document.getElementById('cfg-tc-hd-v').textContent=this.value+'%'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-hd-v">${Math.max(0,Math.min(30,_tcHd))}%</span></div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uC0C1\uB2E8 \uBC14 \uC0C9\uC0C1 \uAC15\uB3C4</div>
+          <input type="range" id="cfg-tc-hd" min="0" max="30" step="1" value="${Math.max(0,Math.min(30,v))}" oninput="document.getElementById('cfg-tc-hd-v').textContent=this.value+'%'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-hd-v">${Math.max(0,Math.min(30,v))}%</span></div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">테두리 두께</div>
-          <input type="range" id="cfg-tc-bw" min="2" max="6" step="1" value="${Math.max(2,Math.min(6,_tcBw))}" oninput="document.getElementById('cfg-tc-bw-v').textContent=this.value+'px'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-bw-v">${Math.max(2,Math.min(6,_tcBw))}px</span></div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uD14C\uB450\uB9AC \uB450\uAED8</div>
+          <input type="range" id="cfg-tc-bw" min="2" max="6" step="1" value="${Math.max(2,Math.min(6,f))}" oninput="document.getElementById('cfg-tc-bw-v').textContent=this.value+'px'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-bw-v">${Math.max(2,Math.min(6,f))}px</span></div>
         </div>
       </div>
       <div>
-        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">대학 로고 크기(대회 카드)</div>
-        <input type="range" id="cfg-tc-uicon" min="24" max="48" step="2" value="${Math.max(24,Math.min(48,_tcIc))}" oninput="document.getElementById('cfg-tc-ic-v').textContent=this.value+'px'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
-        <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-ic-v">${Math.max(24,Math.min(48,_tcIc))}px</span></div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uB300\uD559 \uB85C\uACE0 \uD06C\uAE30(\uB300\uD68C \uCE74\uB4DC)</div>
+        <input type="range" id="cfg-tc-uicon" min="24" max="48" step="2" value="${Math.max(24,Math.min(48,y))}" oninput="document.getElementById('cfg-tc-ic-v').textContent=this.value+'px'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
+        <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-ic-v">${Math.max(24,Math.min(48,y))}px</span></div>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">대학 버튼 크기(대회탭)</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uB300\uD559 \uBC84\uD2BC \uD06C\uAE30(\uB300\uD68C\uD0ED)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-tc-team-pc" min="40" max="220" step="5"
-            value="${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_tc_team_btn_scale_pc')||'100',10)||100))}"
+            value="${Math.max(40,Math.min(220,parseInt(t.getItem("su_tc_team_btn_scale_pc")||"100",10)||100))}"
             oninput="document.getElementById('cfg-tc-team-pc-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnScaleSettings()" style="width:140px">
-          <span id="cfg-tc-team-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_tc_team_btn_scale_pc')||'100',10)||100))}%</span>
+          <span id="cfg-tc-team-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(t.getItem("su_tc_team_btn_scale_pc")||"100",10)||100))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uBAA8\uBC14\uC77C</span>
           <input type="range" id="cfg-tc-team-mb" min="40" max="220" step="5"
-            value="${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_tc_team_btn_scale_mb')||'100',10)||100))}"
+            value="${Math.max(40,Math.min(220,parseInt(t.getItem("su_tc_team_btn_scale_mb")||"100",10)||100))}"
             oninput="document.getElementById('cfg-tc-team-mb-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnScaleSettings()" style="width:140px">
-          <span id="cfg-tc-team-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_tc_team_btn_scale_mb')||'100',10)||100))}%</span>
+          <span id="cfg-tc-team-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(t.getItem("su_tc_team_btn_scale_mb")||"100",10)||100))}%</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ 조별리그/토너 기록 카드의 대학 버튼에 적용</span>
+        <span style="font-size:11px;color:var(--gray-l)">\u203B \uC870\uBCC4\uB9AC\uADF8/\uD1A0\uB108 \uAE30\uB85D \uCE74\uB4DC\uC758 \uB300\uD559 \uBC84\uD2BC\uC5D0 \uC801\uC6A9</span>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">대학 버튼 폰트 크기(대회탭)</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uB300\uD559 \uBC84\uD2BC \uD3F0\uD2B8 \uD06C\uAE30(\uB300\uD68C\uD0ED)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-tc-team-font-pc" min="40" max="240" step="5"
-            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_font_scale_pc')||'100',10)||100))}"
+            value="${Math.max(40,Math.min(240,parseInt(t.getItem("su_tc_team_font_scale_pc")||"100",10)||100))}"
             oninput="document.getElementById('cfg-tc-team-font-pc-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnDetailScaleSettings()" style="width:140px">
-          <span id="cfg-tc-team-font-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_font_scale_pc')||'100',10)||100))}%</span>
+          <span id="cfg-tc-team-font-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(t.getItem("su_tc_team_font_scale_pc")||"100",10)||100))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uBAA8\uBC14\uC77C</span>
           <input type="range" id="cfg-tc-team-font-mb" min="40" max="240" step="5"
-            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_font_scale_mb')||'100',10)||100))}"
+            value="${Math.max(40,Math.min(240,parseInt(t.getItem("su_tc_team_font_scale_mb")||"100",10)||100))}"
             oninput="document.getElementById('cfg-tc-team-font-mb-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnDetailScaleSettings()" style="width:140px">
-          <span id="cfg-tc-team-font-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_font_scale_mb')||'100',10)||100))}%</span>
+          <span id="cfg-tc-team-font-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(t.getItem("su_tc_team_font_scale_mb")||"100",10)||100))}%</span>
         </div>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">대학 로고(아이콘) 크기(대회탭)</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uB300\uD559 \uB85C\uACE0(\uC544\uC774\uCF58) \uD06C\uAE30(\uB300\uD68C\uD0ED)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-tc-team-ico-pc" min="40" max="240" step="5"
-            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_icon_scale_pc')||'100',10)||100))}"
+            value="${Math.max(40,Math.min(240,parseInt(t.getItem("su_tc_team_icon_scale_pc")||"100",10)||100))}"
             oninput="document.getElementById('cfg-tc-team-ico-pc-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnDetailScaleSettings()" style="width:140px">
-          <span id="cfg-tc-team-ico-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_icon_scale_pc')||'100',10)||100))}%</span>
+          <span id="cfg-tc-team-ico-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(t.getItem("su_tc_team_icon_scale_pc")||"100",10)||100))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uBAA8\uBC14\uC77C</span>
           <input type="range" id="cfg-tc-team-ico-mb" min="40" max="240" step="5"
-            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_icon_scale_mb')||'100',10)||100))}"
+            value="${Math.max(40,Math.min(240,parseInt(t.getItem("su_tc_team_icon_scale_mb")||"100",10)||100))}"
             oninput="document.getElementById('cfg-tc-team-ico-mb-v').textContent=this.value+'%'" onchange="cfgSetTourneyTeamBtnDetailScaleSettings()" style="width:140px">
-          <span id="cfg-tc-team-ico-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_team_icon_scale_mb')||'100',10)||100))}%</span>
+          <span id="cfg-tc-team-ico-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(t.getItem("su_tc_team_icon_scale_mb")||"100",10)||100))}%</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ 위 “대학 로고 크기(대회 카드)”는 기본값(px), 여기서는 버튼 안 아이콘만 추가 배율</span>
+        <span style="font-size:11px;color:var(--gray-l)">\u203B \uC704 \u201C\uB300\uD559 \uB85C\uACE0 \uD06C\uAE30(\uB300\uD68C \uCE74\uB4DC)\u201D\uB294 \uAE30\uBCF8\uAC12(px), \uC5EC\uAE30\uC11C\uB294 \uBC84\uD2BC \uC548 \uC544\uC774\uCF58\uB9CC \uCD94\uAC00 \uBC30\uC728</span>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">참가자(👥) 버튼 크기(대회탭)</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uCC38\uAC00\uC790(\u{1F465}) \uBC84\uD2BC \uD06C\uAE30(\uB300\uD68C\uD0ED)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-tc-mem-pc" min="40" max="240" step="5"
-            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_mem_btn_scale_pc')||'100',10)||100))}"
+            value="${Math.max(40,Math.min(240,parseInt(t.getItem("su_tc_mem_btn_scale_pc")||"100",10)||100))}"
             oninput="document.getElementById('cfg-tc-mem-pc-v').textContent=this.value+'%'" onchange="cfgSetTourneyMemBtnScaleSettings()" style="width:140px">
-          <span id="cfg-tc-mem-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_mem_btn_scale_pc')||'100',10)||100))}%</span>
+          <span id="cfg-tc-mem-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(t.getItem("su_tc_mem_btn_scale_pc")||"100",10)||100))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uBAA8\uBC14\uC77C</span>
           <input type="range" id="cfg-tc-mem-mb" min="40" max="240" step="5"
-            value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_mem_btn_scale_mb')||'100',10)||100))}"
+            value="${Math.max(40,Math.min(240,parseInt(t.getItem("su_tc_mem_btn_scale_mb")||"100",10)||100))}"
             oninput="document.getElementById('cfg-tc-mem-mb-v').textContent=this.value+'%'" onchange="cfgSetTourneyMemBtnScaleSettings()" style="width:140px">
-          <span id="cfg-tc-mem-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_tc_mem_btn_scale_mb')||'100',10)||100))}%</span>
+          <span id="cfg-tc-mem-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(t.getItem("su_tc_mem_btn_scale_mb")||"100",10)||100))}%</span>
         </div>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">스코어 크기(대회탭 조별/토너)</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uC2A4\uCF54\uC5B4 \uD06C\uAE30(\uB300\uD68C\uD0ED \uC870\uBCC4/\uD1A0\uB108)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-tc-score-pc" min="50" max="150" step="5"
-            value="${(()=>{try{return Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10)||82));}catch(e){return 82;}})(  )}"
+            value="${(()=>{try{return Math.max(50,Math.min(150,parseInt(t.getItem("su_tc_score_scale_pc")||"82",10)||82))}catch(i){return 82}})()}"
             oninput="document.getElementById('cfg-tc-score-pc-v').textContent=this.value+'%'" onchange="cfgSetTcScoreScale()" style="width:140px">
-          <span id="cfg-tc-score-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${(()=>{try{return Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_pc')||'82',10)||82));}catch(e){return 82;}})(  )}%</span>
+          <span id="cfg-tc-score-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${(()=>{try{return Math.max(50,Math.min(150,parseInt(t.getItem("su_tc_score_scale_pc")||"82",10)||82))}catch(i){return 82}})()}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uBAA8\uBC14\uC77C</span>
           <input type="range" id="cfg-tc-score-mb" min="50" max="150" step="5"
-            value="${(()=>{try{return Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10)||75));}catch(e){return 75;}})(  )}"
+            value="${(()=>{try{return Math.max(50,Math.min(150,parseInt(t.getItem("su_tc_score_scale_mb")||"75",10)||75))}catch(i){return 75}})()}"
             oninput="document.getElementById('cfg-tc-score-mb-v').textContent=this.value+'%'" onchange="cfgSetTcScoreScale()" style="width:140px">
-          <span id="cfg-tc-score-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${(()=>{try{return Math.max(50,Math.min(150,parseInt(localStorage.getItem('su_tc_score_scale_mb')||'75',10)||75));}catch(e){return 75;}})(  )}%</span>
+          <span id="cfg-tc-score-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${(()=>{try{return Math.max(50,Math.min(150,parseInt(t.getItem("su_tc_score_scale_mb")||"75",10)||75))}catch(i){return 75}})()}%</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ 대회탭 조별리그/토너 기록카드 스코어 크기</span>
+        <span style="font-size:11px;color:var(--gray-l)">\u203B \uB300\uD68C\uD0ED \uC870\uBCC4\uB9AC\uADF8/\uD1A0\uB108 \uAE30\uB85D\uCE74\uB4DC \uC2A4\uCF54\uC5B4 \uD06C\uAE30</span>
       </div>
 
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(대회탭)</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uB300\uD559 \u2194 \uC2A4\uCF54\uC5B4 \uAC04\uACA9(\uB300\uD68C\uD0ED)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
         <input type="range" id="cfg-tc-gap-pc" min="0" max="120" step="1"
-            value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_tc_vs_gap_pc')||'12',10)||12))}"
+            value="${Math.max(0,Math.min(120,parseInt(t.getItem("su_tc_vs_gap_pc")||"12",10)||12))}"
             oninput="document.getElementById('cfg-tc-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetTourneyVsGapSettings()" style="width:140px">
-          <span id="cfg-tc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_tc_vs_gap_pc')||'12',10)||12))}px</span>
+          <span id="cfg-tc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(t.getItem("su_tc_vs_gap_pc")||"12",10)||12))}px</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">\uBAA8\uBC14\uC77C</span>
           <input type="range" id="cfg-tc-gap-mb" min="0" max="120" step="1"
-            value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_tc_vs_gap_mb')||'8',10)||8))}"
+            value="${Math.max(0,Math.min(120,parseInt(t.getItem("su_tc_vs_gap_mb")||"8",10)||8))}"
             oninput="document.getElementById('cfg-tc-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetTourneyVsGapSettings()" style="width:140px">
-          <span id="cfg-tc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_tc_vs_gap_mb')||'8',10)||8))}px</span>
+          <span id="cfg-tc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(t.getItem("su_tc_vs_gap_mb")||"8",10)||8))}px</span>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">브라켓 연결선 두께</div>
-          <input type="range" id="cfg-tc-line-w" min="1" max="4" step="1" value="${Math.max(1,Math.min(4,_tcLw))}" oninput="document.getElementById('cfg-tc-lw-v').textContent=this.value+'px'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-lw-v">${Math.max(1,Math.min(4,_tcLw))}px</span></div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uBE0C\uB77C\uCF13 \uC5F0\uACB0\uC120 \uB450\uAED8</div>
+          <input type="range" id="cfg-tc-line-w" min="1" max="4" step="1" value="${Math.max(1,Math.min(4,u))}" oninput="document.getElementById('cfg-tc-lw-v').textContent=this.value+'px'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-lw-v">${Math.max(1,Math.min(4,u))}px</span></div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">브라켓 연결선 진하기</div>
-          <input type="range" id="cfg-tc-line-a" min="25" max="100" step="5" value="${Math.max(25,Math.min(100,_tcLa))}" oninput="document.getElementById('cfg-tc-la-v').textContent=this.value+'%'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-la-v">${Math.max(25,Math.min(100,_tcLa))}%</span></div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">\uBE0C\uB77C\uCF13 \uC5F0\uACB0\uC120 \uC9C4\uD558\uAE30</div>
+          <input type="range" id="cfg-tc-line-a" min="25" max="100" step="5" value="${Math.max(25,Math.min(100,w))}" oninput="document.getElementById('cfg-tc-la-v').textContent=this.value+'%'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
+          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-tc-la-v">${Math.max(25,Math.min(100,w))}%</span></div>
         </div>
       </div>
     </div>
-  </details>`;
-  })()}
-  ${(()=>{ 
-    const pc = parseInt(localStorage.getItem('su_h2h_panel_pc')||'150',10)||150;
-    const mb = parseInt(localStorage.getItem('su_h2h_panel_mb')||'126',10)||126;
-    const fit = (localStorage.getItem('su_h2h_panel_fit')||'cover');
-    const gpc = parseInt(localStorage.getItem('su_h2h_score_gap_pc')||'10',10)||10;
-    const gmb = parseInt(localStorage.getItem('su_h2h_score_gap_mb')||'8',10)||8;
-    const spc = parseInt(localStorage.getItem('su_h2h_score_pad_pc')||'10',10)||10;
-    const smb = parseInt(localStorage.getItem('su_h2h_score_pad_mb')||'6',10)||6;
-    return _scfgD('h2hpanel','🎮 개인전/끝장전(프로리그 끝장전) 카드') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대전기록 탭의 개인전/끝장전/프로리그 끝장전 카드에서 선수 패널(프로필 배경 카드) 크기와 이미지 맞춤을 설정합니다.</div>
+  </details>`+(()=>{const i=parseInt(t.getItem("su_h2h_panel_pc")||"150",10)||150,r=parseInt(t.getItem("su_h2h_panel_mb")||"126",10)||126,o=t.getItem("su_h2h_panel_fit")||"cover",d=parseInt(t.getItem("su_h2h_score_gap_pc")||"10",10)||10,g=parseInt(t.getItem("su_h2h_score_gap_mb")||"8",10)||8,m=parseInt(t.getItem("su_h2h_score_pad_pc")||"10",10)||10,h=parseInt(t.getItem("su_h2h_score_pad_mb")||"6",10)||6;return n("h2hpanel","\u{1F3AE} \uAC1C\uC778\uC804/\uB05D\uC7A5\uC804(\uD504\uB85C\uB9AC\uADF8 \uB05D\uC7A5\uC804) \uCE74\uB4DC")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uB300\uC804\uAE30\uB85D \uD0ED\uC758 \uAC1C\uC778\uC804/\uB05D\uC7A5\uC804/\uD504\uB85C\uB9AC\uADF8 \uB05D\uC7A5\uC804 \uCE74\uB4DC\uC5D0\uC11C \uC120\uC218 \uD328\uB110(\uD504\uB85C\uD544 \uBC30\uACBD \uCE74\uB4DC) \uD06C\uAE30\uC640 \uC774\uBBF8\uC9C0 \uB9DE\uCDA4\uC744 \uC124\uC815\uD569\uB2C8\uB2E4.</div>
 
     <div style="padding:14px;background:var(--surface);border:1px solid var(--blue);border-radius:12px;margin-bottom:10px">
-      <div style="font-size:12px;font-weight:900;color:var(--blue);margin-bottom:10px">🃏 카드 디자인 모드</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">개인전/끝장전/프로리그 끝장전 기록카드의 전체 레이아웃 스타일을 선택합니다.</div>
+      <div style="font-size:12px;font-weight:900;color:var(--blue);margin-bottom:10px">\u{1F0CF} \uCE74\uB4DC \uB514\uC790\uC778 \uBAA8\uB4DC</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">\uAC1C\uC778\uC804/\uB05D\uC7A5\uC804/\uD504\uB85C\uB9AC\uADF8 \uB05D\uC7A5\uC804 \uAE30\uB85D\uCE74\uB4DC\uC758 \uC804\uCCB4 \uB808\uC774\uC544\uC6C3 \uC2A4\uD0C0\uC77C\uC744 \uC120\uD0DD\uD569\uB2C8\uB2E4.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${(()=>{
-          const _cur = localStorage.getItem('su_h2h_card_mode')||'panel';
-          const _modes = [
-            {v:'panel',   icon:'🎴', l:'패널형',   desc:'프로필 배경사진 패널'},
-            {v:'banner',  icon:'🖼️', l:'배너형',   desc:'좌우 배경 분할 배너'},
-            {v:'minimal', icon:'➖', l:'미니멀',   desc:'아바타+텍스트, 깔끔'},
-            {v:'photo',   icon:'📸', l:'사진전체', desc:'전면 배경사진 오버레이'},
-            {v:'classic', icon:'📋', l:'클래식',   desc:'텍스트 위주 심플'},
-            {v:'stack',   icon:'🧱', l:'스택',     desc:'상단 라인+중앙 스코어'},
-            {v:'duotone', icon:'🎨', l:'듀오톤',   desc:'양쪽 컬러 패널'},
-            {v:'split',   icon:'🌓', l:'스플릿',   desc:'연한 컬러 분할'},
-            {v:'glass',   icon:'🫧', l:'글래스',   desc:'유리 패널(블러)'},
-            {v:'pill',    icon:'💊', l:'필',       desc:'캡슐형 배너'},
-            {v:'bar',     icon:'📊', l:'바',       desc:'승률 바 표시'},
-            {v:'outline', icon:'🧩', l:'아웃라인', desc:'테두리 카드'},
-            {v:'ribbon',  icon:'🎀', l:'리본',     desc:'승리 리본 강조'},
-            {v:'grid',    icon:'🔲', l:'그리드',   desc:'아바타 그리드'},
-            {v:'poster',  icon:'🎬', l:'포스터',   desc:'시네마틱 오버레이'},
-            {v:'battle',  icon:'⚔️', l:'배틀',     desc:'사선분할 대결모드'},
-            {v:'neon',    icon:'🌟', l:'네온',     desc:'다크+형광 대결모드'},
-          ];
-          // SVG 미니 미리보기 생성
-          const _cardSvgPreview = (v)=>{
-            const c1='#3b82f6', c2='#ef4444', w=80, h=44;
-            const sb = `viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="display:block;width:${w}px;height:${h}px;border-radius:6px;overflow:hidden"`;
-            if(v==='battle') return `<svg ${sb}><rect x="0" y="0" width="${w/2}" height="${h}" fill="${c1}cc"/><rect x="${w/2}" y="0" width="${w/2}" height="${h}" fill="${c2}cc"/><polygon points="${w/2-10},0 ${w/2+10},0 ${w/2+10},${h} ${w/2-10},${h}" fill="rgba(0,0,0,.3)"/><rect x="0" y="0" width="${Math.round(w*0.6)}" height="4" fill="${c1}"/><rect x="${Math.round(w*0.6)}" y="0" width="${Math.round(w*0.4)}" height="4" fill="${c2}"/><text x="40" y="${h/2+5}" text-anchor="middle" font-size="13" font-weight="900" fill="white">3:2</text></svg>`;
-            if(v==='neon') return `<svg ${sb}><rect width="${w}" height="${h}" fill="#0a0f1e"/><circle cx="20" cy="${h/2}" r="18" fill="${c1}18"/><circle cx="60" cy="${h/2}" r="18" fill="${c2}18"/><circle cx="18" cy="${h/2}" r="9" fill="none" stroke="${c1}" stroke-width="1.5"/><circle cx="62" cy="${h/2}" r="9" fill="none" stroke="${c2}" stroke-width="1.5"/><text x="40" y="${h/2+5}" text-anchor="middle" font-size="11" font-weight="900" fill="white">3:2</text><rect x="0" y="${h-3}" width="${Math.round(w*0.6)}" height="3" fill="${c1}" opacity=".8"/><rect x="${Math.round(w*0.6)}" y="${h-3}" width="${Math.round(w*0.4)}" height="3" fill="${c2}" opacity=".8"/></svg>`;
-            if(v==='duotone') return `<svg ${sb}><rect x="0" y="0" width="33" height="${h}" fill="${c1}dd"/><rect x="47" y="0" width="33" height="${h}" fill="${c2}dd"/><rect x="33" y="0" width="14" height="${h}" fill="white"/><text x="40" y="${h/2+4}" text-anchor="middle" font-size="9" font-weight="900" fill="#475569">3:2</text></svg>`;
-            if(v==='banner') return `<svg ${sb}><rect x="0" y="0" width="36" height="${h}" fill="${c1}bb"/><rect x="44" y="0" width="36" height="${h}" fill="${c2}bb"/><rect x="33" y="0" width="14" height="${h}" fill="white"/><text x="40" y="${h/2+4}" text-anchor="middle" font-size="9" font-weight="900" fill="#475569">3:2</text></svg>`;
-            if(v==='poster') return `<svg ${sb}><rect width="${w}" height="${h}" fill="#1e293b"/><rect x="4" y="6" width="30" height="${h-12}" rx="8" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.2)" stroke-width="1"/><rect x="46" y="6" width="30" height="${h-12}" rx="8" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.2)" stroke-width="1"/><text x="40" y="${h/2+5}" text-anchor="middle" font-size="11" font-weight="900" fill="white">3:2</text></svg>`;
-            const _mm = _modes.find(x=>x && x.v===v) || {icon:'🎴', l:String(v||'')};
-            return `<svg ${sb}><rect width="${w}" height="${h}" fill="#f1f5f9"/><text x="40" y="${h/2+4}" text-anchor="middle" font-size="9" fill="#64748b">${_mm.icon}</text><text x="40" y="${h/2+16}" text-anchor="middle" font-size="8" fill="#94a3b8">${_mm.l}</text></svg>`;
-          };
-          const _newModes = ['battle','neon'];
-          return _modes.map(m=>`<button type="button"
-            onclick="localStorage.setItem('su_h2h_card_mode','${m.v}');try{render();}catch(e){};" 
-            title="${m.desc}"
-            style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 8px 6px;border-radius:10px;font-size:10px;font-weight:900;cursor:pointer;border:2px solid ${_cur===m.v?'var(--blue)':'var(--border2)'};background:${_cur===m.v?'#eff6ff':'var(--white)'};color:${_cur===m.v?'var(--blue)':'var(--text2)'};min-width:80px;transition:all .15s;position:relative">
-            ${_newModes.includes(m.v)?`<span style="position:absolute;top:-7px;right:-5px;font-size:7px;font-weight:900;padding:1px 4px;border-radius:99px;background:#ef4444;color:white">NEW</span>`:''}
-            ${_cardSvgPreview(m.v)}
-            <span style="font-weight:900;font-size:11px">${m.icon} ${m.l}</span>
-            <span style="font-size:8px;font-weight:700;color:${_cur===m.v?'var(--blue)':'var(--gray-l)'}">${m.desc}</span>
-          </button>`).join('');
-        })()}
+        ${(()=>{const a=t.getItem("su_h2h_card_mode")||"panel",T=[{v:"panel",icon:"\u{1F3B4}",l:"\uD328\uB110\uD615",desc:"\uD504\uB85C\uD544 \uBC30\uACBD\uC0AC\uC9C4 \uD328\uB110"},{v:"banner",icon:"\u{1F5BC}\uFE0F",l:"\uBC30\uB108\uD615",desc:"\uC88C\uC6B0 \uBC30\uACBD \uBD84\uD560 \uBC30\uB108"},{v:"minimal",icon:"\u2796",l:"\uBBF8\uB2C8\uBA40",desc:"\uC544\uBC14\uD0C0+\uD14D\uC2A4\uD2B8, \uAE54\uB054"},{v:"photo",icon:"\u{1F4F8}",l:"\uC0AC\uC9C4\uC804\uCCB4",desc:"\uC804\uBA74 \uBC30\uACBD\uC0AC\uC9C4 \uC624\uBC84\uB808\uC774"},{v:"classic",icon:"\u{1F4CB}",l:"\uD074\uB798\uC2DD",desc:"\uD14D\uC2A4\uD2B8 \uC704\uC8FC \uC2EC\uD50C"},{v:"stack",icon:"\u{1F9F1}",l:"\uC2A4\uD0DD",desc:"\uC0C1\uB2E8 \uB77C\uC778+\uC911\uC559 \uC2A4\uCF54\uC5B4"},{v:"duotone",icon:"\u{1F3A8}",l:"\uB4C0\uC624\uD1A4",desc:"\uC591\uCABD \uCEEC\uB7EC \uD328\uB110"},{v:"split",icon:"\u{1F313}",l:"\uC2A4\uD50C\uB9BF",desc:"\uC5F0\uD55C \uCEEC\uB7EC \uBD84\uD560"},{v:"glass",icon:"\u{1FAE7}",l:"\uAE00\uB798\uC2A4",desc:"\uC720\uB9AC \uD328\uB110(\uBE14\uB7EC)"},{v:"pill",icon:"\u{1F48A}",l:"\uD544",desc:"\uCEA1\uC290\uD615 \uBC30\uB108"},{v:"bar",icon:"\u{1F4CA}",l:"\uBC14",desc:"\uC2B9\uB960 \uBC14 \uD45C\uC2DC"},{v:"outline",icon:"\u{1F9E9}",l:"\uC544\uC6C3\uB77C\uC778",desc:"\uD14C\uB450\uB9AC \uCE74\uB4DC"},{v:"ribbon",icon:"\u{1F380}",l:"\uB9AC\uBCF8",desc:"\uC2B9\uB9AC \uB9AC\uBCF8 \uAC15\uC870"},{v:"grid",icon:"\u{1F532}",l:"\uADF8\uB9AC\uB4DC",desc:"\uC544\uBC14\uD0C0 \uADF8\uB9AC\uB4DC"},{v:"poster",icon:"\u{1F3AC}",l:"\uD3EC\uC2A4\uD130",desc:"\uC2DC\uB124\uB9C8\uD2F1 \uC624\uBC84\uB808\uC774"},{v:"battle",icon:"\u2694\uFE0F",l:"\uBC30\uD2C0",desc:"\uC0AC\uC120\uBD84\uD560 \uB300\uACB0\uBAA8\uB4DC"},{v:"neon",icon:"\u{1F31F}",l:"\uB124\uC628",desc:"\uB2E4\uD06C+\uD615\uAD11 \uB300\uACB0\uBAA8\uB4DC"}],L=e=>{const p="#3b82f6",l="#ef4444",c='viewBox="0 0 80 44" xmlns="http://www.w3.org/2000/svg" style="display:block;width:80px;height:44px;border-radius:6px;overflow:hidden"';if(e==="battle")return`<svg ${c}><rect x="0" y="0" width="${80/2}" height="44" fill="${p}cc"/><rect x="${80/2}" y="0" width="${80/2}" height="44" fill="${l}cc"/><polygon points="${80/2-10},0 ${80/2+10},0 ${80/2+10},44 ${80/2-10},44" fill="rgba(0,0,0,.3)"/><rect x="0" y="0" width="${Math.round(80*.6)}" height="4" fill="${p}"/><rect x="${Math.round(80*.6)}" y="0" width="${Math.round(80*.4)}" height="4" fill="${l}"/><text x="40" y="${44/2+5}" text-anchor="middle" font-size="13" font-weight="900" fill="white">3:2</text></svg>`;if(e==="neon")return`<svg ${c}><rect width="80" height="44" fill="#0a0f1e"/><circle cx="20" cy="${44/2}" r="18" fill="${p}18"/><circle cx="60" cy="${44/2}" r="18" fill="${l}18"/><circle cx="18" cy="${44/2}" r="9" fill="none" stroke="${p}" stroke-width="1.5"/><circle cx="62" cy="${44/2}" r="9" fill="none" stroke="${l}" stroke-width="1.5"/><text x="40" y="${44/2+5}" text-anchor="middle" font-size="11" font-weight="900" fill="white">3:2</text><rect x="0" y="41" width="${Math.round(80*.6)}" height="3" fill="${p}" opacity=".8"/><rect x="${Math.round(80*.6)}" y="41" width="${Math.round(80*.4)}" height="3" fill="${l}" opacity=".8"/></svg>`;if(e==="duotone")return`<svg ${c}><rect x="0" y="0" width="33" height="44" fill="${p}dd"/><rect x="47" y="0" width="33" height="44" fill="${l}dd"/><rect x="33" y="0" width="14" height="44" fill="white"/><text x="40" y="${44/2+4}" text-anchor="middle" font-size="9" font-weight="900" fill="#475569">3:2</text></svg>`;if(e==="banner")return`<svg ${c}><rect x="0" y="0" width="36" height="44" fill="${p}bb"/><rect x="44" y="0" width="36" height="44" fill="${l}bb"/><rect x="33" y="0" width="14" height="44" fill="white"/><text x="40" y="${44/2+4}" text-anchor="middle" font-size="9" font-weight="900" fill="#475569">3:2</text></svg>`;if(e==="poster")return`<svg ${c}><rect width="80" height="44" fill="#1e293b"/><rect x="4" y="6" width="30" height="32" rx="8" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.2)" stroke-width="1"/><rect x="46" y="6" width="30" height="32" rx="8" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.2)" stroke-width="1"/><text x="40" y="${44/2+5}" text-anchor="middle" font-size="11" font-weight="900" fill="white">3:2</text></svg>`;const E=T.find(k=>k&&k.v===e)||{icon:"\u{1F3B4}",l:String(e||"")};return`<svg ${c}><rect width="80" height="44" fill="#f1f5f9"/><text x="40" y="${44/2+4}" text-anchor="middle" font-size="9" fill="#64748b">${E.icon}</text><text x="40" y="${44/2+16}" text-anchor="middle" font-size="8" fill="#94a3b8">${E.l}</text></svg>`},A=["battle","neon"];return T.map(e=>`<button type="button"
+            onclick="localStorage.setItem('su_h2h_card_mode','${e.v}');try{render();}catch(e){};" 
+            title="${e.desc}"
+            style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 8px 6px;border-radius:10px;font-size:10px;font-weight:900;cursor:pointer;border:2px solid ${a===e.v?"var(--blue)":"var(--border2)"};background:${a===e.v?"#eff6ff":"var(--white)"};color:${a===e.v?"var(--blue)":"var(--text2)"};min-width:80px;transition:all .15s;position:relative">
+            ${A.includes(e.v)?'<span style="position:absolute;top:-7px;right:-5px;font-size:7px;font-weight:900;padding:1px 4px;border-radius:99px;background:#ef4444;color:white">NEW</span>':""}
+            ${L(e.v)}
+            <span style="font-weight:900;font-size:11px">${e.icon} ${e.l}</span>
+            <span style="font-size:8px;font-weight:700;color:${a===e.v?"var(--blue)":"var(--gray-l)"}">${e.desc}</span>
+          </button>`).join("")})()}
       </div>
-      <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">※ 패널형·배너형·사진전체 모드는 아래 이미지 설정이 함께 적용됩니다.</div>
+      <div style="margin-top:10px;font-size:11px;color:var(--gray-l)">\u203B \uD328\uB110\uD615\xB7\uBC30\uB108\uD615\xB7\uC0AC\uC9C4\uC804\uCCB4 \uBAA8\uB4DC\uB294 \uC544\uB798 \uC774\uBBF8\uC9C0 \uC124\uC815\uC774 \uD568\uAED8 \uC801\uC6A9\uB429\uB2C8\uB2E4.</div>
     </div>
 
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:90px">이미지 맞춤</div>
+        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:90px">\uC774\uBBF8\uC9C0 \uB9DE\uCDA4</div>
         <select id="cfg-h2h-panel-fit" onchange="cfgSetH2HPanelSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-          <option value="contain" ${fit==='contain'?'selected':''}>맞춤(contain)</option>
-          <option value="cover" ${fit!=='contain'&&fit!=='fill'?'selected':''}>채우기(cover)</option>
-          <option value="fill" ${fit==='fill'?'selected':''}>늘리기(fill)</option>
+          <option value="contain" ${o==="contain"?"selected":""}>\uB9DE\uCDA4(contain)</option>
+          <option value="cover" ${o!=="contain"&&o!=="fill"?"selected":""}>\uCC44\uC6B0\uAE30(cover)</option>
+          <option value="fill" ${o==="fill"?"selected":""}>\uB298\uB9AC\uAE30(fill)</option>
         </select>
-        <span style="font-size:11px;color:var(--gray-l)">※ 추천: 채우기(cover)</span>
+        <span style="font-size:11px;color:var(--gray-l)">\u203B \uCD94\uCC9C: \uCC44\uC6B0\uAE30(cover)</span>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">PC</div>
-        <input type="range" id="cfg-h2h-panel-pc" min="110" max="230" step="2" value="${Math.max(110,Math.min(230,pc))}"
+        <input type="range" id="cfg-h2h-panel-pc" min="110" max="230" step="2" value="${Math.max(110,Math.min(230,i))}"
           oninput="document.getElementById('cfg-h2h-panel-pc-v').textContent=this.value+'px'"
           onchange="cfgSetH2HPanelSettings()" style="width:100%">
-        <div id="cfg-h2h-panel-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(110,Math.min(230,pc))}px</div>
+        <div id="cfg-h2h-panel-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(110,Math.min(230,i))}px</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
-        <input type="range" id="cfg-h2h-panel-mb" min="96" max="210" step="2" value="${Math.max(96,Math.min(210,mb))}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uBAA8\uBC14\uC77C</div>
+        <input type="range" id="cfg-h2h-panel-mb" min="96" max="210" step="2" value="${Math.max(96,Math.min(210,r))}"
           oninput="document.getElementById('cfg-h2h-panel-mb-v').textContent=this.value+'px'"
           onchange="cfgSetH2HPanelSettings()" style="width:100%">
-        <div id="cfg-h2h-panel-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(96,Math.min(210,mb))}px</div>
+        <div id="cfg-h2h-panel-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(96,Math.min(210,r))}px</div>
       </div>
 
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC 간격</div>
-        <input type="range" id="cfg-h2h-gap-pc" min="0" max="120" step="1" value="${Math.max(0,Math.min(120,gpc))}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC \uAC04\uACA9</div>
+        <input type="range" id="cfg-h2h-gap-pc" min="0" max="120" step="1" value="${Math.max(0,Math.min(120,d))}"
           oninput="document.getElementById('cfg-h2h-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
-        <div id="cfg-h2h-gap-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(120,gpc))}px</div>
+        <div id="cfg-h2h-gap-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(120,d))}px</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일 간격</div>
-        <input type="range" id="cfg-h2h-gap-mb" min="0" max="120" step="1" value="${Math.max(0,Math.min(120,gmb))}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uBAA8\uBC14\uC77C \uAC04\uACA9</div>
+        <input type="range" id="cfg-h2h-gap-mb" min="0" max="120" step="1" value="${Math.max(0,Math.min(120,g))}"
           oninput="document.getElementById('cfg-h2h-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
-        <div id="cfg-h2h-gap-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(120,gmb))}px</div>
+        <div id="cfg-h2h-gap-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(120,g))}px</div>
       </div>
 
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC 스코어 여백</div>
-        <input type="range" id="cfg-h2h-scorepad-pc" min="0" max="24" step="1" value="${Math.max(0,Math.min(24,spc))}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC \uC2A4\uCF54\uC5B4 \uC5EC\uBC31</div>
+        <input type="range" id="cfg-h2h-scorepad-pc" min="0" max="24" step="1" value="${Math.max(0,Math.min(24,m))}"
           oninput="document.getElementById('cfg-h2h-scorepad-pc-v').textContent=this.value+'px'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
-        <div id="cfg-h2h-scorepad-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(24,spc))}px</div>
+        <div id="cfg-h2h-scorepad-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(24,m))}px</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일 스코어 여백</div>
-        <input type="range" id="cfg-h2h-scorepad-mb" min="0" max="24" step="1" value="${Math.max(0,Math.min(24,smb))}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uBAA8\uBC14\uC77C \uC2A4\uCF54\uC5B4 \uC5EC\uBC31</div>
+        <input type="range" id="cfg-h2h-scorepad-mb" min="0" max="24" step="1" value="${Math.max(0,Math.min(24,h))}"
           oninput="document.getElementById('cfg-h2h-scorepad-mb-v').textContent=this.value+'px'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
-        <div id="cfg-h2h-scorepad-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(24,smb))}px</div>
+        <div id="cfg-h2h-scorepad-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(0,Math.min(24,h))}px</div>
       </div>
 
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC 좌우</div>
-        <input type="range" id="cfg-h2h-w-pc" min="10" max="300" step="2" value="${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_wmul_pc')||'105',10)||105));}catch(e){return 105;}})()}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC \uC88C\uC6B0</div>
+        <input type="range" id="cfg-h2h-w-pc" min="10" max="300" step="2" value="${(()=>{try{return Math.max(10,Math.min(300,parseInt(t.getItem("su_h2h_panel_wmul_pc")||"105",10)||105))}catch(a){return 105}})()}"
           oninput="document.getElementById('cfg-h2h-w-pc-v').textContent=this.value+'%'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
-        <div id="cfg-h2h-w-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_wmul_pc')||'105',10)||105));}catch(e){return 105;}})()}%</div>
+        <div id="cfg-h2h-w-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(t.getItem("su_h2h_panel_wmul_pc")||"105",10)||105))}catch(a){return 105}})()}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC 상하</div>
-        <input type="range" id="cfg-h2h-h-pc" min="10" max="300" step="2" value="${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_hmul_pc')||'100',10)||100));}catch(e){return 100;}})()}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">PC \uC0C1\uD558</div>
+        <input type="range" id="cfg-h2h-h-pc" min="10" max="300" step="2" value="${(()=>{try{return Math.max(10,Math.min(300,parseInt(t.getItem("su_h2h_panel_hmul_pc")||"100",10)||100))}catch(a){return 100}})()}"
           oninput="document.getElementById('cfg-h2h-h-pc-v').textContent=this.value+'%'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
-        <div id="cfg-h2h-h-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_hmul_pc')||'100',10)||100));}catch(e){return 100;}})()}%</div>
+        <div id="cfg-h2h-h-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(t.getItem("su_h2h_panel_hmul_pc")||"100",10)||100))}catch(a){return 100}})()}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일 좌우</div>
-        <input type="range" id="cfg-h2h-w-mb" min="10" max="300" step="2" value="${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_wmul_mb')||'100',10)||100));}catch(e){return 100;}})()}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uBAA8\uBC14\uC77C \uC88C\uC6B0</div>
+        <input type="range" id="cfg-h2h-w-mb" min="10" max="300" step="2" value="${(()=>{try{return Math.max(10,Math.min(300,parseInt(t.getItem("su_h2h_panel_wmul_mb")||"100",10)||100))}catch(a){return 100}})()}"
           oninput="document.getElementById('cfg-h2h-w-mb-v').textContent=this.value+'%'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
-        <div id="cfg-h2h-w-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_wmul_mb')||'100',10)||100));}catch(e){return 100;}})()}%</div>
+        <div id="cfg-h2h-w-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(t.getItem("su_h2h_panel_wmul_mb")||"100",10)||100))}catch(a){return 100}})()}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일 상하</div>
-        <input type="range" id="cfg-h2h-h-mb" min="10" max="300" step="2" value="${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_hmul_mb')||'100',10)||100));}catch(e){return 100;}})()}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uBAA8\uBC14\uC77C \uC0C1\uD558</div>
+        <input type="range" id="cfg-h2h-h-mb" min="10" max="300" step="2" value="${(()=>{try{return Math.max(10,Math.min(300,parseInt(t.getItem("su_h2h_panel_hmul_mb")||"100",10)||100))}catch(a){return 100}})()}"
           oninput="document.getElementById('cfg-h2h-h-mb-v').textContent=this.value+'%'" onchange="cfgSetH2HPanelSettings()" style="width:100%">
-        <div id="cfg-h2h-h-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_hmul_mb')||'100',10)||100));}catch(e){return 100;}})()}%</div>
+        <div id="cfg-h2h-h-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(t.getItem("su_h2h_panel_hmul_mb")||"100",10)||100))}catch(a){return 100}})()}%</div>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);line-height:1.6">※ 값 변경 후 자동으로 재렌더링됩니다.</div>
+      <div style="font-size:11px;color:var(--gray-l);line-height:1.6">\u203B \uAC12 \uBCC0\uACBD \uD6C4 \uC790\uB3D9\uC73C\uB85C \uC7AC\uB80C\uB354\uB9C1\uB429\uB2C8\uB2E4.</div>
 
       <div style="height:1px;background:var(--border);margin:4px 0"></div>
-      <div style="font-size:12px;font-weight:900;color:var(--text2)">스트리머별 얼굴 위치 보정(채우기/늘리기 모드에서)</div>
+      <div style="font-size:12px;font-weight:900;color:var(--text2)">\uC2A4\uD2B8\uB9AC\uBA38\uBCC4 \uC5BC\uAD74 \uC704\uCE58 \uBCF4\uC815(\uCC44\uC6B0\uAE30/\uB298\uB9AC\uAE30 \uBAA8\uB4DC\uC5D0\uC11C)</div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
-        채우기(cover)에서 얼굴이 잘리는 경우, 스트리머별로 배경 위치(가로/세로 %)를 저장할 수 있습니다.
+        \uCC44\uC6B0\uAE30(cover)\uC5D0\uC11C \uC5BC\uAD74\uC774 \uC798\uB9AC\uB294 \uACBD\uC6B0, \uC2A4\uD2B8\uB9AC\uBA38\uBCC4\uB85C \uBC30\uACBD \uC704\uCE58(\uAC00\uB85C/\uC138\uB85C %)\uB97C \uC800\uC7A5\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input id="cfg-h2h-bgpos-name" placeholder="스트리머 이름" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;font-weight:900;min-width:180px">
-        <button class="btn btn-w btn-xs" onclick="cfgH2HBgPosLoad()" style="padding:6px 10px">불러오기</button>
-        <button class="btn btn-b btn-xs" onclick="cfgH2HBgPosSave()" style="padding:6px 10px">저장</button>
-        <button class="btn btn-w btn-xs" onclick="cfgH2HBgPosReset()" style="padding:6px 10px">초기화</button>
+        <input id="cfg-h2h-bgpos-name" placeholder="\uC2A4\uD2B8\uB9AC\uBA38 \uC774\uB984" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px;font-size:12px;font-weight:900;min-width:180px">
+        <button class="btn btn-w btn-xs" onclick="cfgH2HBgPosLoad()" style="padding:6px 10px">\uBD88\uB7EC\uC624\uAE30</button>
+        <button class="btn btn-b btn-xs" onclick="cfgH2HBgPosSave()" style="padding:6px 10px">\uC800\uC7A5</button>
+        <button class="btn btn-w btn-xs" onclick="cfgH2HBgPosReset()" style="padding:6px 10px">\uCD08\uAE30\uD654</button>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">가로(X)</div>
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uAC00\uB85C(X)</div>
         <input type="range" id="cfg-h2h-bgpos-x" min="0" max="100" step="1" value="50"
           oninput="document.getElementById('cfg-h2h-bgpos-xv').textContent=this.value+'%'" style="width:100%">
         <div id="cfg-h2h-bgpos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">50%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">세로(Y)</div>
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC138\uB85C(Y)</div>
         <input type="range" id="cfg-h2h-bgpos-y" min="0" max="100" step="1" value="50"
           oninput="document.getElementById('cfg-h2h-bgpos-yv').textContent=this.value+'%'" style="width:100%">
         <div id="cfg-h2h-bgpos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">50%</div>
       </div>
     </div>
-  </details>`;
-  })()}
-  ${(()=>{ 
-    const pc = parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52;
-    const mb = parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40;
-    const fit = (localStorage.getItem('su_procomp_avatar_fit')||'cover');
-    const spc = parseInt(localStorage.getItem('su_procomp_score_scale_pc')||'100',10)||100;
-    const smb = parseInt(localStorage.getItem('su_procomp_score_scale_mb')||'100',10)||100;
-    const lpc = parseInt(localStorage.getItem('su_procomp_layout_scale_pc')||'100',10)||100;
-    const lmb = parseInt(localStorage.getItem('su_procomp_layout_scale_mb')||'100',10)||100;
-    return _scfgD('procompcard','⭐ 프로리그 대회 카드(프로리그탭)') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">프로리그탭 → 프로리그 대회 → 조별리그/대진표 기록 카드에서 선수(스트리머) 프로필 크기를 조절합니다.</div>
+  </details>`})()+(()=>{const i=parseInt(t.getItem("su_procomp_avatar_pc")||"52",10)||52,r=parseInt(t.getItem("su_procomp_avatar_mb")||"40",10)||40,o=t.getItem("su_procomp_avatar_fit")||"cover",d=parseInt(t.getItem("su_procomp_score_scale_pc")||"100",10)||100,g=parseInt(t.getItem("su_procomp_score_scale_mb")||"100",10)||100,m=parseInt(t.getItem("su_procomp_layout_scale_pc")||"100",10)||100,h=parseInt(t.getItem("su_procomp_layout_scale_mb")||"100",10)||100;return n("procompcard","\u2B50 \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uCE74\uB4DC(\uD504\uB85C\uB9AC\uADF8\uD0ED)")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uD504\uB85C\uB9AC\uADF8\uD0ED \u2192 \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \u2192 \uC870\uBCC4\uB9AC\uADF8/\uB300\uC9C4\uD45C \uAE30\uB85D \uCE74\uB4DC\uC5D0\uC11C \uC120\uC218(\uC2A4\uD2B8\uB9AC\uBA38) \uD504\uB85C\uD544 \uD06C\uAE30\uB97C \uC870\uC808\uD569\uB2C8\uB2E4.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:90px">이미지 맞춤</div>
+        <div style="font-size:12px;font-weight:800;color:var(--text2);min-width:90px">\uC774\uBBF8\uC9C0 \uB9DE\uCDA4</div>
         <select id="cfg-procomp-ava-fit" onchange="cfgSetProCompAvatarSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-          <option value="contain" ${fit==='contain'?'selected':''}>맞춤(contain)</option>
-          <option value="cover" ${fit!=='contain'&&fit!=='fill'?'selected':''}>채우기(cover)</option>
-          <option value="fill" ${fit==='fill'?'selected':''}>늘리기(fill)</option>
+          <option value="contain" ${o==="contain"?"selected":""}>\uB9DE\uCDA4(contain)</option>
+          <option value="cover" ${o!=="contain"&&o!=="fill"?"selected":""}>\uCC44\uC6B0\uAE30(cover)</option>
+          <option value="fill" ${o==="fill"?"selected":""}>\uB298\uB9AC\uAE30(fill)</option>
         </select>
-        <span style="font-size:11px;color:var(--gray-l)">※ 추천: 채우기(cover)</span>
+        <span style="font-size:11px;color:var(--gray-l)">\u203B \uCD94\uCC9C: \uCC44\uC6B0\uAE30(cover)</span>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:800;color:var(--text2)">PC</div>
-        <input type="range" id="cfg-procomp-ava-pc" min="28" max="200" step="2" value="${Math.max(28,Math.min(200,pc))}"
+        <input type="range" id="cfg-procomp-ava-pc" min="28" max="200" step="2" value="${Math.max(28,Math.min(200,i))}"
           oninput="document.getElementById('cfg-procomp-ava-pc-v').textContent=this.value+'px'"
           onchange="cfgSetProCompAvatarSettings()" style="width:100%">
-        <div id="cfg-procomp-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(28,Math.min(200,pc))}px</div>
+        <div id="cfg-procomp-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(28,Math.min(200,i))}px</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">모바일</div>
-        <input type="range" id="cfg-procomp-ava-mb" min="24" max="160" step="2" value="${Math.max(24,Math.min(160,mb))}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uBAA8\uBC14\uC77C</div>
+        <input type="range" id="cfg-procomp-ava-mb" min="24" max="160" step="2" value="${Math.max(24,Math.min(160,r))}"
           oninput="document.getElementById('cfg-procomp-ava-mb-v').textContent=this.value+'px'"
           onchange="cfgSetProCompAvatarSettings()" style="width:100%">
-        <div id="cfg-procomp-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(24,Math.min(160,mb))}px</div>
+        <div id="cfg-procomp-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(24,Math.min(160,r))}px</div>
       </div>
       <div style="height:1px;background:var(--border);margin:2px 0"></div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">스코어(PC)</div>
-        <input type="range" id="cfg-procomp-score-pc" min="60" max="160" step="5" value="${Math.max(60,Math.min(160,spc))}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC2A4\uCF54\uC5B4(PC)</div>
+        <input type="range" id="cfg-procomp-score-pc" min="60" max="160" step="5" value="${Math.max(60,Math.min(160,d))}"
           oninput="document.getElementById('cfg-procomp-score-pc-v').textContent=this.value+'%'" onchange="cfgSetProCompScoreSettings()" style="width:100%">
-        <div id="cfg-procomp-score-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(160,spc))}%</div>
+        <div id="cfg-procomp-score-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(160,d))}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">스코어(모바일)</div>
-        <input type="range" id="cfg-procomp-score-mb" min="60" max="160" step="5" value="${Math.max(60,Math.min(160,smb))}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC2A4\uCF54\uC5B4(\uBAA8\uBC14\uC77C)</div>
+        <input type="range" id="cfg-procomp-score-mb" min="60" max="160" step="5" value="${Math.max(60,Math.min(160,g))}"
           oninput="document.getElementById('cfg-procomp-score-mb-v').textContent=this.value+'%'" onchange="cfgSetProCompScoreSettings()" style="width:100%">
-        <div id="cfg-procomp-score-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(160,smb))}%</div>
+        <div id="cfg-procomp-score-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(160,g))}%</div>
       </div>
       <div style="height:1px;background:var(--border);margin:2px 0"></div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">레이아웃(PC)</div>
-        <input type="range" id="cfg-procomp-layout-pc" min="60" max="120" step="5" value="${Math.max(60,Math.min(120,lpc))}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uB808\uC774\uC544\uC6C3(PC)</div>
+        <input type="range" id="cfg-procomp-layout-pc" min="60" max="120" step="5" value="${Math.max(60,Math.min(120,m))}"
           oninput="document.getElementById('cfg-procomp-layout-pc-v').textContent=this.value+'%'" onchange="cfgSetProCompLayoutSettings()" style="width:100%">
-        <div id="cfg-procomp-layout-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(120,lpc))}%</div>
+        <div id="cfg-procomp-layout-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(120,m))}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">레이아웃(모바일)</div>
-        <input type="range" id="cfg-procomp-layout-mb" min="60" max="120" step="5" value="${Math.max(60,Math.min(120,lmb))}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uB808\uC774\uC544\uC6C3(\uBAA8\uBC14\uC77C)</div>
+        <input type="range" id="cfg-procomp-layout-mb" min="60" max="120" step="5" value="${Math.max(60,Math.min(120,h))}"
           oninput="document.getElementById('cfg-procomp-layout-mb-v').textContent=this.value+'%'" onchange="cfgSetProCompLayoutSettings()" style="width:100%">
-        <div id="cfg-procomp-layout-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(120,lmb))}%</div>
+        <div id="cfg-procomp-layout-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${Math.max(60,Math.min(120,h))}%</div>
       </div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
-        ※ 값 변경 후 자동으로 재렌더링됩니다. 레이아웃은 카드 전체 여백/크기(프로필 카드 포함)를 함께 줄입니다.
+        \u203B \uAC12 \uBCC0\uACBD \uD6C4 \uC790\uB3D9\uC73C\uB85C \uC7AC\uB80C\uB354\uB9C1\uB429\uB2C8\uB2E4. \uB808\uC774\uC544\uC6C3\uC740 \uCE74\uB4DC \uC804\uCCB4 \uC5EC\uBC31/\uD06C\uAE30(\uD504\uB85C\uD544 \uCE74\uB4DC \uD3EC\uD568)\uB97C \uD568\uAED8 \uC904\uC785\uB2C8\uB2E4.
       </div>
     </div>
-  </details>`;
-  })()}
-  ${(typeof window.renderCfgMiniCardSection==='function' ? window.renderCfgMiniCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgUnivCKCardSection==='function' ? window.renderCfgUnivCKCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgUnivMCardSection==='function' ? window.renderCfgUnivMCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgTierTourCardSection==='function' ? window.renderCfgTierTourCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgTierTourLeagueCardSection==='function' ? window.renderCfgTierTourLeagueCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgTierTourBrackCardSection==='function' ? window.renderCfgTierTourBrackCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgProCompLeagueCardSection==='function' ? window.renderCfgProCompLeagueCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgProCompTourCardSection==='function' ? window.renderCfgProCompTourCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgProCompTeamCardSection==='function' ? window.renderCfgProCompTeamCardSection(_scfgD) : '')}
-  ${(typeof window.buildShareCardSettingsSection==='function' ? window.buildShareCardSettingsSection(_scfgD) : '')}
-};
+  </details>`})()+(typeof window.renderCfgMiniCardSection=="function"?window.renderCfgMiniCardSection(n):"")+(typeof window.renderCfgUnivCKCardSection=="function"?window.renderCfgUnivCKCardSection(n):"")+(typeof window.renderCfgUnivMCardSection=="function"?window.renderCfgUnivMCardSection(n):"")+(typeof window.renderCfgTierTourCardSection=="function"?window.renderCfgTierTourCardSection(n):"")+(typeof window.renderCfgTierTourLeagueCardSection=="function"?window.renderCfgTierTourLeagueCardSection(n):"")+(typeof window.renderCfgTierTourBrackCardSection=="function"?window.renderCfgTierTourBrackCardSection(n):"")+(typeof window.renderCfgProCompLeagueCardSection=="function"?window.renderCfgProCompLeagueCardSection(n):"")+(typeof window.renderCfgProCompTourCardSection=="function"?window.renderCfgProCompTourCardSection(n):"")+(typeof window.renderCfgProCompTeamCardSection=="function"?window.renderCfgProCompTeamCardSection(n):"")+(typeof window.buildShareCardSettingsSection=="function"?window.buildShareCardSettingsSection(n):"")};
 
 /* settings-render-cards.js */
-// ══════════════════════════════════════════════════════════
-// settings-render-cards.js — 기록 카드 디자인 설정 섹션 렌더러
-// settings-render.js 에서 분리됨
-// 의존: settings-render.js (_scfgD 헬퍼를 인자로 받음)
-// ══════════════════════════════════════════════════════════
-
-// 미니대전/시빌워 기록 카드 디자인 섹션
-window.renderCfgMiniCardSection = function(_scfgD) {
-  const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-    // ── 미니대전 기록 카드 디자인 ──
-    const shape = localStorage.getItem('su_mini_card_shape')||'default';
-    const accent = localStorage.getItem('su_mini_card_accent')||'none';
-    const layoutPc = parseInt(localStorage.getItem('su_mini_card_layout_pc')||'100',10)||100;
-    const layoutMb = parseInt(localStorage.getItem('su_mini_card_layout_mb')||'100',10)||100;
-    const shapes = [
-      {v:'default',l:'기본',icon:'🃏'},{v:'compact',l:'컴팩트',icon:'📋'},{v:'wide',l:'와이드',icon:'🖼️'},
-      {v:'minimal',l:'미니멀',icon:'➖'},{v:'timeline',l:'타임라인',icon:'📅'},{v:'card3d',l:'3D',icon:'🎴'},
-      {v:'glass',l:'유리',icon:'🔮'},{v:'sharp',l:'각진',icon:'▬'},{v:'bubble',l:'버블',icon:'💬'},
-      {v:'neon',l:'네온',icon:'⚡'},{v:'floating',l:'플로팅',icon:'🎈'},{v:'retro',l:'레트로',icon:'🕹️'},
-    ];
-    return _scfgD('minicard','⚡ 미니대전/시빌워 기록 카드') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대전기록 탭 → 미니대전/시빌워 기록 카드의 디자인과 레이아웃을 설정합니다.</div>
+window.renderCfgMiniCardSection=function(c){const t=(function(){try{const e=window.localStorage,a="__su_ls_test__";return e.setItem(a,"1"),e.removeItem(a),e}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),i=t.getItem("su_mini_card_shape")||"default",r=t.getItem("su_mini_card_accent")||"none",n=parseInt(t.getItem("su_mini_card_layout_pc")||"100",10)||100,l=parseInt(t.getItem("su_mini_card_layout_mb")||"100",10)||100,o=[{v:"default",l:"\uAE30\uBCF8",icon:"\u{1F0CF}"},{v:"compact",l:"\uCEF4\uD329\uD2B8",icon:"\u{1F4CB}"},{v:"wide",l:"\uC640\uC774\uB4DC",icon:"\u{1F5BC}\uFE0F"},{v:"minimal",l:"\uBBF8\uB2C8\uBA40",icon:"\u2796"},{v:"timeline",l:"\uD0C0\uC784\uB77C\uC778",icon:"\u{1F4C5}"},{v:"card3d",l:"3D",icon:"\u{1F3B4}"},{v:"glass",l:"\uC720\uB9AC",icon:"\u{1F52E}"},{v:"sharp",l:"\uAC01\uC9C4",icon:"\u25AC"},{v:"bubble",l:"\uBC84\uBE14",icon:"\u{1F4AC}"},{v:"neon",l:"\uB124\uC628",icon:"\u26A1"},{v:"floating",l:"\uD50C\uB85C\uD305",icon:"\u{1F388}"},{v:"retro",l:"\uB808\uD2B8\uB85C",icon:"\u{1F579}\uFE0F"}];return c("minicard","\u26A1 \uBBF8\uB2C8\uB300\uC804/\uC2DC\uBE4C\uC6CC \uAE30\uB85D \uCE74\uB4DC")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uB300\uC804\uAE30\uB85D \uD0ED \u2192 \uBBF8\uB2C8\uB300\uC804/\uC2DC\uBE4C\uC6CC \uAE30\uB85D \uCE74\uB4DC\uC758 \uB514\uC790\uC778\uACFC \uB808\uC774\uC544\uC6C3\uC744 \uC124\uC815\uD569\uB2C8\uB2E4.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uCE74\uB4DC \uBAA8\uC591</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${shapes.map(s=>`<button type="button"
-            onclick="localStorage.setItem('su_mini_card_shape','${s.v}');document.body.classList.remove(${shapes.map(x=>`'mini-card--${x.v}'`).join(',')});if('${s.v}'!=='default')document.body.classList.add('mini-card--${s.v}');try{render();}catch(e){}"
-            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${shape===s.v?'var(--blue)':'var(--border2)'};background:${shape===s.v?'#eff6ff':'var(--white)'};color:${shape===s.v?'var(--blue)':'var(--text2)'}">
-            ${s.icon} ${s.l}</button>`).join('')}
+          ${o.map(e=>`<button type="button"
+            onclick="localStorage.setItem('su_mini_card_shape','${e.v}');document.body.classList.remove(${o.map(a=>`'mini-card--${a.v}'`).join(",")});if('${e.v}'!=='default')document.body.classList.add('mini-card--${e.v}');try{render();}catch(e){}"
+            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${i===e.v?"var(--blue)":"var(--border2)"};background:${i===e.v?"#eff6ff":"var(--white)"};color:${i===e.v?"var(--blue)":"var(--text2)"}">
+            ${e.icon} ${e.l}</button>`).join("")}
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">색상 강조</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uC0C9\uC0C1 \uAC15\uC870</div>
         <select onchange="localStorage.setItem('su_mini_card_accent',this.value);try{render();}catch(e){}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-          <option value="none" ${accent==='none'?'selected':''}>무색</option>
-          <option value="header" ${accent==='header'?'selected':''}>헤더만</option>
-          <option value="border" ${accent==='border'?'selected':''}>테두리만</option>
-          <option value="full" ${accent==='full'?'selected':''}>전체 배경</option>
-          <option value="gradient" ${accent==='gradient'?'selected':''}>그라디언트</option>
+          <option value="none" ${r==="none"?"selected":""}>\uBB34\uC0C9</option>
+          <option value="header" ${r==="header"?"selected":""}>\uD5E4\uB354\uB9CC</option>
+          <option value="border" ${r==="border"?"selected":""}>\uD14C\uB450\uB9AC\uB9CC</option>
+          <option value="full" ${r==="full"?"selected":""}>\uC804\uCCB4 \uBC30\uACBD</option>
+          <option value="gradient" ${r==="gradient"?"selected":""}>\uADF8\uB77C\uB514\uC5B8\uD2B8</option>
         </select>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">레이아웃(PC)</div>
-        <input type="range" id="cfg-mini-layout-pc" min="60" max="130" step="5" value="${layoutPc}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uB808\uC774\uC544\uC6C3(PC)</div>
+        <input type="range" id="cfg-mini-layout-pc" min="60" max="130" step="5" value="${n}"
           oninput="document.getElementById('cfg-mini-layout-pc-v').textContent=this.value+'%'"
           onchange="localStorage.setItem('su_mini_card_layout_pc',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-mini-layout-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${layoutPc}%</div>
+        <div id="cfg-mini-layout-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${n}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">레이아웃(모바일)</div>
-        <input type="range" id="cfg-mini-layout-mb" min="60" max="130" step="5" value="${layoutMb}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uB808\uC774\uC544\uC6C3(\uBAA8\uBC14\uC77C)</div>
+        <input type="range" id="cfg-mini-layout-mb" min="60" max="130" step="5" value="${l}"
           oninput="document.getElementById('cfg-mini-layout-mb-v').textContent=this.value+'%'"
           onchange="localStorage.setItem('su_mini_card_layout_mb',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-mini-layout-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${layoutMb}%</div>
+        <div id="cfg-mini-layout-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${l}%</div>
       </div>
-      <div style="font-size:11px;color:var(--gray-l)">※ 미니대전·시빌워 카드 공통 설정입니다.</div>
+      <div style="font-size:11px;color:var(--gray-l)">\u203B \uBBF8\uB2C8\uB300\uC804\xB7\uC2DC\uBE4C\uC6CC \uCE74\uB4DC \uACF5\uD1B5 \uC124\uC815\uC785\uB2C8\uB2E4.</div>
     </div>
-  </details>`;
-  })()}
-};
-
-// 대학CK 기록 카드 디자인 섹션
-window.renderCfgUnivCKCardSection = function(_scfgD) {
-  const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-    // ── 대학CK 기록 카드 디자인 ──
-    const shape = localStorage.getItem('su_ck_card_shape')||'default';
-    const showTeams = (localStorage.getItem('su_ck_card_show_teams')||'1')==='1';
-    const avatarPc = parseInt(localStorage.getItem('su_ck_card_avatar_pc')||'44',10)||44;
-    const avatarMb = parseInt(localStorage.getItem('su_ck_card_avatar_mb')||'36',10)||36;
-    const shapes = [
-      {v:'default',l:'기본',icon:'🃏'},{v:'compact',l:'컴팩트',icon:'📋'},{v:'wide',l:'와이드',icon:'🖼️'},
-      {v:'minimal',l:'미니멀',icon:'➖'},{v:'timeline',l:'타임라인',icon:'📅'},{v:'glass',l:'유리',icon:'🔮'},
-      {v:'sharp',l:'각진',icon:'▬'},{v:'bubble',l:'버블',icon:'💬'},{v:'neon',l:'네온',icon:'⚡'},
-      {v:'retro',l:'레트로',icon:'🕹️'},{v:'ticket',l:'티켓',icon:'🎟️'},{v:'frosted',l:'프로스트',icon:'❄️'},
-    ];
-    return _scfgD('univckcard','🤝 대학CK 기록 카드') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대전기록 탭 → 대학CK 기록 카드의 디자인을 설정합니다.</div>
+  </details>`},window.renderCfgUnivCKCardSection=function(c){const t=(function(){try{const e=window.localStorage,a="__su_ls_test__";return e.setItem(a,"1"),e.removeItem(a),e}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),i=t.getItem("su_ck_card_shape")||"default",r=(t.getItem("su_ck_card_show_teams")||"1")==="1",n=parseInt(t.getItem("su_ck_card_avatar_pc")||"44",10)||44,l=parseInt(t.getItem("su_ck_card_avatar_mb")||"36",10)||36,o=[{v:"default",l:"\uAE30\uBCF8",icon:"\u{1F0CF}"},{v:"compact",l:"\uCEF4\uD329\uD2B8",icon:"\u{1F4CB}"},{v:"wide",l:"\uC640\uC774\uB4DC",icon:"\u{1F5BC}\uFE0F"},{v:"minimal",l:"\uBBF8\uB2C8\uBA40",icon:"\u2796"},{v:"timeline",l:"\uD0C0\uC784\uB77C\uC778",icon:"\u{1F4C5}"},{v:"glass",l:"\uC720\uB9AC",icon:"\u{1F52E}"},{v:"sharp",l:"\uAC01\uC9C4",icon:"\u25AC"},{v:"bubble",l:"\uBC84\uBE14",icon:"\u{1F4AC}"},{v:"neon",l:"\uB124\uC628",icon:"\u26A1"},{v:"retro",l:"\uB808\uD2B8\uB85C",icon:"\u{1F579}\uFE0F"},{v:"ticket",l:"\uD2F0\uCF13",icon:"\u{1F39F}\uFE0F"},{v:"frosted",l:"\uD504\uB85C\uC2A4\uD2B8",icon:"\u2744\uFE0F"}];return c("univckcard","\u{1F91D} \uB300\uD559CK \uAE30\uB85D \uCE74\uB4DC")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uB300\uC804\uAE30\uB85D \uD0ED \u2192 \uB300\uD559CK \uAE30\uB85D \uCE74\uB4DC\uC758 \uB514\uC790\uC778\uC744 \uC124\uC815\uD569\uB2C8\uB2E4.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uCE74\uB4DC \uBAA8\uC591</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${shapes.map(s=>`<button type="button"
-            onclick="localStorage.setItem('su_ck_card_shape','${s.v}');try{render();}catch(e){}"
-            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${shape===s.v?'var(--blue)':'var(--border2)'};background:${shape===s.v?'#eff6ff':'var(--white)'};color:${shape===s.v?'var(--blue)':'var(--text2)'}">
-            ${s.icon} ${s.l}</button>`).join('')}
+          ${o.map(e=>`<button type="button"
+            onclick="localStorage.setItem('su_ck_card_shape','${e.v}');try{render();}catch(e){}"
+            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${i===e.v?"var(--blue)":"var(--border2)"};background:${i===e.v?"#eff6ff":"var(--white)"};color:${i===e.v?"var(--blue)":"var(--text2)"}">
+            ${e.icon} ${e.l}</button>`).join("")}
         </div>
       </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" style="width:15px;height:15px" ${showTeams?'checked':''}
+        <input type="checkbox" style="width:15px;height:15px" ${r?"checked":""}
           onchange="localStorage.setItem('su_ck_card_show_teams',this.checked?'1':'0');try{render();}catch(e){}">
-        팀(대학) 버튼 표시
+        \uD300(\uB300\uD559) \uBC84\uD2BC \uD45C\uC2DC
       </label>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">아바타(PC)</div>
-        <input type="range" id="cfg-ck-ava-pc" min="24" max="80" step="2" value="${avatarPc}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC544\uBC14\uD0C0(PC)</div>
+        <input type="range" id="cfg-ck-ava-pc" min="24" max="80" step="2" value="${n}"
           oninput="document.getElementById('cfg-ck-ava-pc-v').textContent=this.value+'px'"
           onchange="localStorage.setItem('su_ck_card_avatar_pc',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-ck-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${avatarPc}px</div>
+        <div id="cfg-ck-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${n}px</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">아바타(모바일)</div>
-        <input type="range" id="cfg-ck-ava-mb" min="20" max="64" step="2" value="${avatarMb}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC544\uBC14\uD0C0(\uBAA8\uBC14\uC77C)</div>
+        <input type="range" id="cfg-ck-ava-mb" min="20" max="64" step="2" value="${l}"
           oninput="document.getElementById('cfg-ck-ava-mb-v').textContent=this.value+'px'"
           onchange="localStorage.setItem('su_ck_card_avatar_mb',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-ck-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${avatarMb}px</div>
+        <div id="cfg-ck-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${l}px</div>
       </div>
     </div>
-  </details>`;
-  })()}
-};
-
-// 대학대전 기록 카드 디자인 섹션
-window.renderCfgUnivMCardSection = function(_scfgD) {
-  const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-    // ── 대학대전 기록 카드 디자인 ──
-    const shape = localStorage.getItem('su_univm_card_shape')||'default';
-    const accent = localStorage.getItem('su_univm_card_accent')||'none';
-    const scorePc = parseInt(localStorage.getItem('su_univm_score_scale_pc')||'100',10)||100;
-    const scoreMb = parseInt(localStorage.getItem('su_univm_score_scale_mb')||'100',10)||100;
-    const showRace = (localStorage.getItem('su_univm_show_race')||'1')==='1';
-    const shapes = [
-      {v:'default',l:'기본',icon:'🃏'},{v:'compact',l:'컴팩트',icon:'📋'},{v:'wide',l:'와이드',icon:'🖼️'},
-      {v:'minimal',l:'미니멀',icon:'➖'},{v:'timeline',l:'타임라인',icon:'📅'},{v:'glass',l:'유리',icon:'🔮'},
-      {v:'sharp',l:'각진',icon:'▬'},{v:'neon',l:'네온',icon:'⚡'},{v:'retro',l:'레트로',icon:'🕹️'},
-      {v:'ticket',l:'티켓',icon:'🎟️'},{v:'stripe',l:'스트라이프',icon:'🟦'},{v:'gradient-bg',l:'그라데이션',icon:'🌈'},
-    ];
-    return _scfgD('univmcard','🏟️ 대학대전 기록 카드') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대전기록 탭 → 대학대전 기록 카드의 디자인을 설정합니다.</div>
+  </details>`},window.renderCfgUnivMCardSection=function(c){const t=(function(){try{const a=window.localStorage,s="__su_ls_test__";return a.setItem(s,"1"),a.removeItem(s),a}catch(a){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),i=t.getItem("su_univm_card_shape")||"default",r=t.getItem("su_univm_card_accent")||"none",n=parseInt(t.getItem("su_univm_score_scale_pc")||"100",10)||100,l=parseInt(t.getItem("su_univm_score_scale_mb")||"100",10)||100,o=(t.getItem("su_univm_show_race")||"1")==="1",e=[{v:"default",l:"\uAE30\uBCF8",icon:"\u{1F0CF}"},{v:"compact",l:"\uCEF4\uD329\uD2B8",icon:"\u{1F4CB}"},{v:"wide",l:"\uC640\uC774\uB4DC",icon:"\u{1F5BC}\uFE0F"},{v:"minimal",l:"\uBBF8\uB2C8\uBA40",icon:"\u2796"},{v:"timeline",l:"\uD0C0\uC784\uB77C\uC778",icon:"\u{1F4C5}"},{v:"glass",l:"\uC720\uB9AC",icon:"\u{1F52E}"},{v:"sharp",l:"\uAC01\uC9C4",icon:"\u25AC"},{v:"neon",l:"\uB124\uC628",icon:"\u26A1"},{v:"retro",l:"\uB808\uD2B8\uB85C",icon:"\u{1F579}\uFE0F"},{v:"ticket",l:"\uD2F0\uCF13",icon:"\u{1F39F}\uFE0F"},{v:"stripe",l:"\uC2A4\uD2B8\uB77C\uC774\uD504",icon:"\u{1F7E6}"},{v:"gradient-bg",l:"\uADF8\uB77C\uB370\uC774\uC158",icon:"\u{1F308}"}];return c("univmcard","\u{1F3DF}\uFE0F \uB300\uD559\uB300\uC804 \uAE30\uB85D \uCE74\uB4DC")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uB300\uC804\uAE30\uB85D \uD0ED \u2192 \uB300\uD559\uB300\uC804 \uAE30\uB85D \uCE74\uB4DC\uC758 \uB514\uC790\uC778\uC744 \uC124\uC815\uD569\uB2C8\uB2E4.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uCE74\uB4DC \uBAA8\uC591</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${shapes.map(s=>`<button type="button"
-            onclick="localStorage.setItem('su_univm_card_shape','${s.v}');try{render();}catch(e){}"
-            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${shape===s.v?'var(--blue)':'var(--border2)'};background:${shape===s.v?'#eff6ff':'var(--white)'};color:${shape===s.v?'var(--blue)':'var(--text2)'}">
-            ${s.icon} ${s.l}</button>`).join('')}
+          ${e.map(a=>`<button type="button"
+            onclick="localStorage.setItem('su_univm_card_shape','${a.v}');try{render();}catch(e){}"
+            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${i===a.v?"var(--blue)":"var(--border2)"};background:${i===a.v?"#eff6ff":"var(--white)"};color:${i===a.v?"var(--blue)":"var(--text2)"}">
+            ${a.icon} ${a.l}</button>`).join("")}
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">색상 강조</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uC0C9\uC0C1 \uAC15\uC870</div>
         <select onchange="localStorage.setItem('su_univm_card_accent',this.value);try{render();}catch(e){}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-          <option value="none" ${accent==='none'?'selected':''}>무색</option>
-          <option value="header" ${accent==='header'?'selected':''}>헤더만</option>
-          <option value="border" ${accent==='border'?'selected':''}>테두리만</option>
-          <option value="full" ${accent==='full'?'selected':''}>전체 배경</option>
-          <option value="gradient" ${accent==='gradient'?'selected':''}>그라디언트</option>
+          <option value="none" ${r==="none"?"selected":""}>\uBB34\uC0C9</option>
+          <option value="header" ${r==="header"?"selected":""}>\uD5E4\uB354\uB9CC</option>
+          <option value="border" ${r==="border"?"selected":""}>\uD14C\uB450\uB9AC\uB9CC</option>
+          <option value="full" ${r==="full"?"selected":""}>\uC804\uCCB4 \uBC30\uACBD</option>
+          <option value="gradient" ${r==="gradient"?"selected":""}>\uADF8\uB77C\uB514\uC5B8\uD2B8</option>
         </select>
       </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" style="width:15px;height:15px" ${showRace?'checked':''}
+        <input type="checkbox" style="width:15px;height:15px" ${o?"checked":""}
           onchange="localStorage.setItem('su_univm_show_race',this.checked?'1':'0');try{render();}catch(e){}">
-        종족 아이콘 표시
+        \uC885\uC871 \uC544\uC774\uCF58 \uD45C\uC2DC
       </label>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">스코어(PC)</div>
-        <input type="range" id="cfg-univm-score-pc" min="60" max="160" step="5" value="${scorePc}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC2A4\uCF54\uC5B4(PC)</div>
+        <input type="range" id="cfg-univm-score-pc" min="60" max="160" step="5" value="${n}"
           oninput="document.getElementById('cfg-univm-score-pc-v').textContent=this.value+'%'"
           onchange="localStorage.setItem('su_univm_score_scale_pc',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-univm-score-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${scorePc}%</div>
+        <div id="cfg-univm-score-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${n}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">스코어(모바일)</div>
-        <input type="range" id="cfg-univm-score-mb" min="60" max="160" step="5" value="${scoreMb}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC2A4\uCF54\uC5B4(\uBAA8\uBC14\uC77C)</div>
+        <input type="range" id="cfg-univm-score-mb" min="60" max="160" step="5" value="${l}"
           oninput="document.getElementById('cfg-univm-score-mb-v').textContent=this.value+'%'"
           onchange="localStorage.setItem('su_univm_score_scale_mb',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-univm-score-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${scoreMb}%</div>
+        <div id="cfg-univm-score-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${l}%</div>
       </div>
     </div>
-  </details>`;
-  })()}
-};
-
-// 티어대회 일반 기록 카드 섹션
-window.renderCfgTierTourCardSection = function(_scfgD) {
-  const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-    // ── 티어대회 일반 기록 카드 ──
-    const shape = localStorage.getItem('su_tt_card_shape')||'default';
-    const mode = localStorage.getItem('su_tt_card_mode')||'panel';
-    const layoutPc = parseInt(localStorage.getItem('su_tt_card_layout_pc')||'100',10)||100;
-    const shapes = [
-      {v:'default',l:'기본',icon:'🃏'},{v:'compact',l:'컴팩트',icon:'📋'},{v:'wide',l:'와이드',icon:'🖼️'},
-      {v:'minimal',l:'미니멀',icon:'➖'},{v:'card3d',l:'3D',icon:'🎴'},{v:'glass',l:'유리',icon:'🔮'},
-      {v:'neon',l:'네온',icon:'⚡'},{v:'ticket',l:'티켓',icon:'🎟️'},{v:'frosted',l:'프로스트',icon:'❄️'},
-      {v:'stripe',l:'스트라이프',icon:'🟦'},{v:'bold-border',l:'굵은선',icon:'🖊️'},{v:'gradient-bg',l:'그라데이션',icon:'🌈'},
-    ];
-    const modes = [
-      {v:'panel',icon:'🎴',l:'패널형'},{v:'banner',icon:'🖼️',l:'배너형'},
-      {v:'minimal',icon:'➖',l:'미니멀'},{v:'classic',icon:'📋',l:'클래식'},
-    ];
-    return _scfgD('tiertourcard','🎯 티어대회 일반 기록 카드') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">티어대회 탭 → 일반 경기 기록 카드의 디자인을 설정합니다.</div>
+  </details>`},window.renderCfgTierTourCardSection=function(c){const t=(function(){try{const e=window.localStorage,a="__su_ls_test__";return e.setItem(a,"1"),e.removeItem(a),e}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),i=t.getItem("su_tt_card_shape")||"default",r=t.getItem("su_tt_card_mode")||"panel",n=parseInt(t.getItem("su_tt_card_layout_pc")||"100",10)||100,l=[{v:"default",l:"\uAE30\uBCF8",icon:"\u{1F0CF}"},{v:"compact",l:"\uCEF4\uD329\uD2B8",icon:"\u{1F4CB}"},{v:"wide",l:"\uC640\uC774\uB4DC",icon:"\u{1F5BC}\uFE0F"},{v:"minimal",l:"\uBBF8\uB2C8\uBA40",icon:"\u2796"},{v:"card3d",l:"3D",icon:"\u{1F3B4}"},{v:"glass",l:"\uC720\uB9AC",icon:"\u{1F52E}"},{v:"neon",l:"\uB124\uC628",icon:"\u26A1"},{v:"ticket",l:"\uD2F0\uCF13",icon:"\u{1F39F}\uFE0F"},{v:"frosted",l:"\uD504\uB85C\uC2A4\uD2B8",icon:"\u2744\uFE0F"},{v:"stripe",l:"\uC2A4\uD2B8\uB77C\uC774\uD504",icon:"\u{1F7E6}"},{v:"bold-border",l:"\uAD75\uC740\uC120",icon:"\u{1F58A}\uFE0F"},{v:"gradient-bg",l:"\uADF8\uB77C\uB370\uC774\uC158",icon:"\u{1F308}"}],o=[{v:"panel",icon:"\u{1F3B4}",l:"\uD328\uB110\uD615"},{v:"banner",icon:"\u{1F5BC}\uFE0F",l:"\uBC30\uB108\uD615"},{v:"minimal",icon:"\u2796",l:"\uBBF8\uB2C8\uBA40"},{v:"classic",icon:"\u{1F4CB}",l:"\uD074\uB798\uC2DD"}];return c("tiertourcard","\u{1F3AF} \uD2F0\uC5B4\uB300\uD68C \uC77C\uBC18 \uAE30\uB85D \uCE74\uB4DC")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uD2F0\uC5B4\uB300\uD68C \uD0ED \u2192 \uC77C\uBC18 \uACBD\uAE30 \uAE30\uB85D \uCE74\uB4DC\uC758 \uB514\uC790\uC778\uC744 \uC124\uC815\uD569\uB2C8\uB2E4.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--blue);border-radius:12px;margin-bottom:10px">
-      <div style="font-size:12px;font-weight:900;color:var(--blue);margin-bottom:8px">🃏 카드 디자인 모드</div>
+      <div style="font-size:12px;font-weight:900;color:var(--blue);margin-bottom:8px">\u{1F0CF} \uCE74\uB4DC \uB514\uC790\uC778 \uBAA8\uB4DC</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${modes.map(m=>`<button type="button"
-          onclick="localStorage.setItem('su_tt_card_mode','${m.v}');try{render();}catch(e){}"
-          style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border-radius:10px;font-size:11px;font-weight:900;cursor:pointer;border:2px solid ${mode===m.v?'var(--blue)':'var(--border2)'};background:${mode===m.v?'#eff6ff':'var(--white)'};color:${mode===m.v?'var(--blue)':'var(--text2)'};min-width:72px">
-          <span style="font-size:18px">${m.icon}</span><span>${m.l}</span>
-        </button>`).join('')}
+        ${o.map(e=>`<button type="button"
+          onclick="localStorage.setItem('su_tt_card_mode','${e.v}');try{render();}catch(e){}"
+          style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border-radius:10px;font-size:11px;font-weight:900;cursor:pointer;border:2px solid ${r===e.v?"var(--blue)":"var(--border2)"};background:${r===e.v?"#eff6ff":"var(--white)"};color:${r===e.v?"var(--blue)":"var(--text2)"};min-width:72px">
+          <span style="font-size:18px">${e.icon}</span><span>${e.l}</span>
+        </button>`).join("")}
       </div>
     </div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uCE74\uB4DC \uBAA8\uC591</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${shapes.map(s=>`<button type="button"
-            onclick="localStorage.setItem('su_tt_card_shape','${s.v}');try{render();}catch(e){}"
-            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${shape===s.v?'var(--blue)':'var(--border2)'};background:${shape===s.v?'#eff6ff':'var(--white)'};color:${shape===s.v?'var(--blue)':'var(--text2)'}">
-            ${s.icon} ${s.l}</button>`).join('')}
+          ${l.map(e=>`<button type="button"
+            onclick="localStorage.setItem('su_tt_card_shape','${e.v}');try{render();}catch(e){}"
+            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${i===e.v?"var(--blue)":"var(--border2)"};background:${i===e.v?"#eff6ff":"var(--white)"};color:${i===e.v?"var(--blue)":"var(--text2)"}">
+            ${e.icon} ${e.l}</button>`).join("")}
         </div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">레이아웃(PC)</div>
-        <input type="range" id="cfg-tt-layout-pc" min="60" max="130" step="5" value="${layoutPc}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uB808\uC774\uC544\uC6C3(PC)</div>
+        <input type="range" id="cfg-tt-layout-pc" min="60" max="130" step="5" value="${n}"
           oninput="document.getElementById('cfg-tt-layout-pc-v').textContent=this.value+'%'"
           onchange="localStorage.setItem('su_tt_card_layout_pc',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-tt-layout-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${layoutPc}%</div>
+        <div id="cfg-tt-layout-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${n}%</div>
       </div>
     </div>
-  </details>`;
-  })()}
-};
-
-// 티어대회 조별리그 기록 섹션
-window.renderCfgTierTourLeagueCardSection = function(_scfgD) {
-  const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-    // ── 티어대회 조별리그 기록 ──
-    const shape = localStorage.getItem('su_tt_league_card_shape')||'default';
-    const showScore = (localStorage.getItem('su_tt_league_show_score')||'1')==='1';
-    const showDate = (localStorage.getItem('su_tt_league_show_date')||'1')==='1';
-    const avatarPc = parseInt(localStorage.getItem('su_tt_league_avatar_pc')||'44',10)||44;
-    const shapes = [
-      {v:'default',l:'기본',icon:'🃏'},{v:'compact',l:'컴팩트',icon:'📋'},{v:'wide',l:'와이드',icon:'🖼️'},
-      {v:'minimal',l:'미니멀',icon:'➖'},{v:'timeline',l:'타임라인',icon:'📅'},{v:'glass',l:'유리',icon:'🔮'},
-      {v:'sharp',l:'각진',icon:'▬'},{v:'neon',l:'네온',icon:'⚡'},{v:'stripe',l:'스트라이프',icon:'🟦'},
-      {v:'ticket',l:'티켓',icon:'🎟️'},{v:'retro',l:'레트로',icon:'🕹️'},{v:'frosted',l:'프로스트',icon:'❄️'},
-    ];
-    return _scfgD('tiertourleaguecard','🎯 티어대회 조별리그 기록') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">티어대회 탭 → 조별리그 일정/기록 카드의 디자인을 설정합니다.</div>
+  </details>`},window.renderCfgTierTourLeagueCardSection=function(c){const t=(function(){try{const e=window.localStorage,a="__su_ls_test__";return e.setItem(a,"1"),e.removeItem(a),e}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),i=t.getItem("su_tt_league_card_shape")||"default",r=(t.getItem("su_tt_league_show_score")||"1")==="1",n=(t.getItem("su_tt_league_show_date")||"1")==="1",l=parseInt(t.getItem("su_tt_league_avatar_pc")||"44",10)||44,o=[{v:"default",l:"\uAE30\uBCF8",icon:"\u{1F0CF}"},{v:"compact",l:"\uCEF4\uD329\uD2B8",icon:"\u{1F4CB}"},{v:"wide",l:"\uC640\uC774\uB4DC",icon:"\u{1F5BC}\uFE0F"},{v:"minimal",l:"\uBBF8\uB2C8\uBA40",icon:"\u2796"},{v:"timeline",l:"\uD0C0\uC784\uB77C\uC778",icon:"\u{1F4C5}"},{v:"glass",l:"\uC720\uB9AC",icon:"\u{1F52E}"},{v:"sharp",l:"\uAC01\uC9C4",icon:"\u25AC"},{v:"neon",l:"\uB124\uC628",icon:"\u26A1"},{v:"stripe",l:"\uC2A4\uD2B8\uB77C\uC774\uD504",icon:"\u{1F7E6}"},{v:"ticket",l:"\uD2F0\uCF13",icon:"\u{1F39F}\uFE0F"},{v:"retro",l:"\uB808\uD2B8\uB85C",icon:"\u{1F579}\uFE0F"},{v:"frosted",l:"\uD504\uB85C\uC2A4\uD2B8",icon:"\u2744\uFE0F"}];return c("tiertourleaguecard","\u{1F3AF} \uD2F0\uC5B4\uB300\uD68C \uC870\uBCC4\uB9AC\uADF8 \uAE30\uB85D")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uD2F0\uC5B4\uB300\uD68C \uD0ED \u2192 \uC870\uBCC4\uB9AC\uADF8 \uC77C\uC815/\uAE30\uB85D \uCE74\uB4DC\uC758 \uB514\uC790\uC778\uC744 \uC124\uC815\uD569\uB2C8\uB2E4.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uCE74\uB4DC \uBAA8\uC591</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${shapes.map(s=>`<button type="button"
-            onclick="localStorage.setItem('su_tt_league_card_shape','${s.v}');try{render();}catch(e){}"
-            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${shape===s.v?'var(--blue)':'var(--border2)'};background:${shape===s.v?'#eff6ff':'var(--white)'};color:${shape===s.v?'var(--blue)':'var(--text2)'}">
-            ${s.icon} ${s.l}</button>`).join('')}
+          ${o.map(e=>`<button type="button"
+            onclick="localStorage.setItem('su_tt_league_card_shape','${e.v}');try{render();}catch(e){}"
+            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${i===e.v?"var(--blue)":"var(--border2)"};background:${i===e.v?"#eff6ff":"var(--white)"};color:${i===e.v?"var(--blue)":"var(--text2)"}">
+            ${e.icon} ${e.l}</button>`).join("")}
         </div>
       </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" style="width:15px;height:15px" ${showScore?'checked':''}
+        <input type="checkbox" style="width:15px;height:15px" ${r?"checked":""}
           onchange="localStorage.setItem('su_tt_league_show_score',this.checked?'1':'0');try{render();}catch(e){}">
-        스코어 표시
+        \uC2A4\uCF54\uC5B4 \uD45C\uC2DC
       </label>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" style="width:15px;height:15px" ${showDate?'checked':''}
+        <input type="checkbox" style="width:15px;height:15px" ${n?"checked":""}
           onchange="localStorage.setItem('su_tt_league_show_date',this.checked?'1':'0');try{render();}catch(e){}">
-        날짜 표시
+        \uB0A0\uC9DC \uD45C\uC2DC
       </label>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">아바타 크기</div>
-        <input type="range" id="cfg-ttl-ava" min="24" max="80" step="2" value="${avatarPc}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC544\uBC14\uD0C0 \uD06C\uAE30</div>
+        <input type="range" id="cfg-ttl-ava" min="24" max="80" step="2" value="${l}"
           oninput="document.getElementById('cfg-ttl-ava-v').textContent=this.value+'px'"
           onchange="localStorage.setItem('su_tt_league_avatar_pc',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-ttl-ava-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${avatarPc}px</div>
+        <div id="cfg-ttl-ava-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${l}px</div>
       </div>
     </div>
-  </details>`;
-  })()}
-};
-
-// 티어대회 대진표 기록 섹션
-window.renderCfgTierTourBrackCardSection = function(_scfgD) {
-  const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-    // ── 티어대회 대진표 기록 ──
-    const shape = localStorage.getItem('su_tt_brack_card_shape')||'default';
-    const showRound = (localStorage.getItem('su_tt_brack_show_round')||'1')==='1';
-    const panelPc = parseInt(localStorage.getItem('su_tt_brack_panel_pc')||'160',10)||160;
-    const shapes = [
-      {v:'default',l:'기본',icon:'🃏'},{v:'compact',l:'컴팩트',icon:'📋'},{v:'wide',l:'와이드',icon:'🖼️'},
-      {v:'minimal',l:'미니멀',icon:'➖'},{v:'card3d',l:'3D',icon:'🎴'},{v:'glass',l:'유리',icon:'🔮'},
-      {v:'sharp',l:'각진',icon:'▬'},{v:'neon',l:'네온',icon:'⚡'},{v:'retro',l:'레트로',icon:'🕹️'},
-      {v:'frosted',l:'프로스트',icon:'❄️'},{v:'bold-border',l:'굵은선',icon:'🖊️'},{v:'gradient-bg',l:'그라데이션',icon:'🌈'},
-    ];
-    return _scfgD('tiertourbrackcard','🎯 티어대회 대진표 기록') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">티어대회 탭 → 토너먼트/대진표 기록 카드의 디자인을 설정합니다.</div>
+  </details>`},window.renderCfgTierTourBrackCardSection=function(c){const t=(function(){try{const o=window.localStorage,e="__su_ls_test__";return o.setItem(e,"1"),o.removeItem(e),o}catch(o){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),i=t.getItem("su_tt_brack_card_shape")||"default",r=(t.getItem("su_tt_brack_show_round")||"1")==="1",n=parseInt(t.getItem("su_tt_brack_panel_pc")||"160",10)||160,l=[{v:"default",l:"\uAE30\uBCF8",icon:"\u{1F0CF}"},{v:"compact",l:"\uCEF4\uD329\uD2B8",icon:"\u{1F4CB}"},{v:"wide",l:"\uC640\uC774\uB4DC",icon:"\u{1F5BC}\uFE0F"},{v:"minimal",l:"\uBBF8\uB2C8\uBA40",icon:"\u2796"},{v:"card3d",l:"3D",icon:"\u{1F3B4}"},{v:"glass",l:"\uC720\uB9AC",icon:"\u{1F52E}"},{v:"sharp",l:"\uAC01\uC9C4",icon:"\u25AC"},{v:"neon",l:"\uB124\uC628",icon:"\u26A1"},{v:"retro",l:"\uB808\uD2B8\uB85C",icon:"\u{1F579}\uFE0F"},{v:"frosted",l:"\uD504\uB85C\uC2A4\uD2B8",icon:"\u2744\uFE0F"},{v:"bold-border",l:"\uAD75\uC740\uC120",icon:"\u{1F58A}\uFE0F"},{v:"gradient-bg",l:"\uADF8\uB77C\uB370\uC774\uC158",icon:"\u{1F308}"}];return c("tiertourbrackcard","\u{1F3AF} \uD2F0\uC5B4\uB300\uD68C \uB300\uC9C4\uD45C \uAE30\uB85D")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uD2F0\uC5B4\uB300\uD68C \uD0ED \u2192 \uD1A0\uB108\uBA3C\uD2B8/\uB300\uC9C4\uD45C \uAE30\uB85D \uCE74\uB4DC\uC758 \uB514\uC790\uC778\uC744 \uC124\uC815\uD569\uB2C8\uB2E4.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uCE74\uB4DC \uBAA8\uC591</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${shapes.map(s=>`<button type="button"
-            onclick="localStorage.setItem('su_tt_brack_card_shape','${s.v}');try{render();}catch(e){}"
-            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${shape===s.v?'var(--blue)':'var(--border2)'};background:${shape===s.v?'#eff6ff':'var(--white)'};color:${shape===s.v?'var(--blue)':'var(--text2)'}">
-            ${s.icon} ${s.l}</button>`).join('')}
+          ${l.map(o=>`<button type="button"
+            onclick="localStorage.setItem('su_tt_brack_card_shape','${o.v}');try{render();}catch(e){}"
+            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${i===o.v?"var(--blue)":"var(--border2)"};background:${i===o.v?"#eff6ff":"var(--white)"};color:${i===o.v?"var(--blue)":"var(--text2)"}">
+            ${o.icon} ${o.l}</button>`).join("")}
         </div>
       </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" style="width:15px;height:15px" ${showRound?'checked':''}
+        <input type="checkbox" style="width:15px;height:15px" ${r?"checked":""}
           onchange="localStorage.setItem('su_tt_brack_show_round',this.checked?'1':'0');try{render();}catch(e){}">
-        라운드명 표시 (16강/8강/4강 등)
+        \uB77C\uC6B4\uB4DC\uBA85 \uD45C\uC2DC (16\uAC15/8\uAC15/4\uAC15 \uB4F1)
       </label>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">패널 너비</div>
-        <input type="range" id="cfg-ttb-panel" min="100" max="240" step="4" value="${panelPc}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uD328\uB110 \uB108\uBE44</div>
+        <input type="range" id="cfg-ttb-panel" min="100" max="240" step="4" value="${n}"
           oninput="document.getElementById('cfg-ttb-panel-v').textContent=this.value+'px'"
           onchange="localStorage.setItem('su_tt_brack_panel_pc',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-ttb-panel-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${panelPc}px</div>
+        <div id="cfg-ttb-panel-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${n}px</div>
       </div>
     </div>
-  </details>`;
-  })()}
-};
-
-// 프로리그 대회 조별리그 기록 섹션
-window.renderCfgProCompLeagueCardSection = function(_scfgD) {
-  const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-    // ── 프로리그 대회 조별리그 기록 ──
-    const shape = localStorage.getItem('su_pcomp_league_shape')||'default';
-    const accent = localStorage.getItem('su_pcomp_league_accent')||'none';
-    const avatarPc = parseInt(localStorage.getItem('su_pcomp_league_avatar_pc')||'52',10)||52;
-    const avatarMb = parseInt(localStorage.getItem('su_pcomp_league_avatar_mb')||'40',10)||40;
-    const shapes = [
-      {v:'default',l:'기본',icon:'🃏'},{v:'compact',l:'컴팩트',icon:'📋'},{v:'wide',l:'와이드',icon:'🖼️'},
-      {v:'minimal',l:'미니멀',icon:'➖'},{v:'timeline',l:'타임라인',icon:'📅'},{v:'glass',l:'유리',icon:'🔮'},
-      {v:'sharp',l:'각진',icon:'▬'},{v:'neon',l:'네온',icon:'⚡'},{v:'ticket',l:'티켓',icon:'🎟️'},
-      {v:'frosted',l:'프로스트',icon:'❄️'},{v:'stripe',l:'스트라이프',icon:'🟦'},{v:'gradient-bg',l:'그라데이션',icon:'🌈'},
-    ];
-    return _scfgD('procompleaguecard','🏆 프로리그 대회 조별리그 기록') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">프로리그탭 → 프로리그 대회 → 조별리그 일정/기록 카드의 디자인을 설정합니다.</div>
+  </details>`},window.renderCfgProCompLeagueCardSection=function(c){const t=(function(){try{const e=window.localStorage,a="__su_ls_test__";return e.setItem(a,"1"),e.removeItem(a),e}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),i=t.getItem("su_pcomp_league_shape")||"default",r=t.getItem("su_pcomp_league_accent")||"none",n=parseInt(t.getItem("su_pcomp_league_avatar_pc")||"52",10)||52,l=parseInt(t.getItem("su_pcomp_league_avatar_mb")||"40",10)||40,o=[{v:"default",l:"\uAE30\uBCF8",icon:"\u{1F0CF}"},{v:"compact",l:"\uCEF4\uD329\uD2B8",icon:"\u{1F4CB}"},{v:"wide",l:"\uC640\uC774\uB4DC",icon:"\u{1F5BC}\uFE0F"},{v:"minimal",l:"\uBBF8\uB2C8\uBA40",icon:"\u2796"},{v:"timeline",l:"\uD0C0\uC784\uB77C\uC778",icon:"\u{1F4C5}"},{v:"glass",l:"\uC720\uB9AC",icon:"\u{1F52E}"},{v:"sharp",l:"\uAC01\uC9C4",icon:"\u25AC"},{v:"neon",l:"\uB124\uC628",icon:"\u26A1"},{v:"ticket",l:"\uD2F0\uCF13",icon:"\u{1F39F}\uFE0F"},{v:"frosted",l:"\uD504\uB85C\uC2A4\uD2B8",icon:"\u2744\uFE0F"},{v:"stripe",l:"\uC2A4\uD2B8\uB77C\uC774\uD504",icon:"\u{1F7E6}"},{v:"gradient-bg",l:"\uADF8\uB77C\uB370\uC774\uC158",icon:"\u{1F308}"}];return c("procompleaguecard","\u{1F3C6} \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uC870\uBCC4\uB9AC\uADF8 \uAE30\uB85D")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uD504\uB85C\uB9AC\uADF8\uD0ED \u2192 \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \u2192 \uC870\uBCC4\uB9AC\uADF8 \uC77C\uC815/\uAE30\uB85D \uCE74\uB4DC\uC758 \uB514\uC790\uC778\uC744 \uC124\uC815\uD569\uB2C8\uB2E4.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uCE74\uB4DC \uBAA8\uC591</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${shapes.map(s=>`<button type="button"
-            onclick="localStorage.setItem('su_pcomp_league_shape','${s.v}');try{render();}catch(e){}"
-            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${shape===s.v?'var(--blue)':'var(--border2)'};background:${shape===s.v?'#eff6ff':'var(--white)'};color:${shape===s.v?'var(--blue)':'var(--text2)'}">
-            ${s.icon} ${s.l}</button>`).join('')}
+          ${o.map(e=>`<button type="button"
+            onclick="localStorage.setItem('su_pcomp_league_shape','${e.v}');try{render();}catch(e){}"
+            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${i===e.v?"var(--blue)":"var(--border2)"};background:${i===e.v?"#eff6ff":"var(--white)"};color:${i===e.v?"var(--blue)":"var(--text2)"}">
+            ${e.icon} ${e.l}</button>`).join("")}
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">색상 강조</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uC0C9\uC0C1 \uAC15\uC870</div>
         <select onchange="localStorage.setItem('su_pcomp_league_accent',this.value);try{render();}catch(e){}" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
-          <option value="none" ${accent==='none'?'selected':''}>무색</option>
-          <option value="header" ${accent==='header'?'selected':''}>헤더만</option>
-          <option value="border" ${accent==='border'?'selected':''}>테두리만</option>
-          <option value="full" ${accent==='full'?'selected':''}>전체 배경</option>
-          <option value="gradient" ${accent==='gradient'?'selected':''}>그라디언트</option>
+          <option value="none" ${r==="none"?"selected":""}>\uBB34\uC0C9</option>
+          <option value="header" ${r==="header"?"selected":""}>\uD5E4\uB354\uB9CC</option>
+          <option value="border" ${r==="border"?"selected":""}>\uD14C\uB450\uB9AC\uB9CC</option>
+          <option value="full" ${r==="full"?"selected":""}>\uC804\uCCB4 \uBC30\uACBD</option>
+          <option value="gradient" ${r==="gradient"?"selected":""}>\uADF8\uB77C\uB514\uC5B8\uD2B8</option>
         </select>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">아바타(PC)</div>
-        <input type="range" id="cfg-pclg-ava-pc" min="24" max="120" step="2" value="${avatarPc}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC544\uBC14\uD0C0(PC)</div>
+        <input type="range" id="cfg-pclg-ava-pc" min="24" max="120" step="2" value="${n}"
           oninput="document.getElementById('cfg-pclg-ava-pc-v').textContent=this.value+'px'"
           onchange="localStorage.setItem('su_pcomp_league_avatar_pc',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-pclg-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${avatarPc}px</div>
+        <div id="cfg-pclg-ava-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${n}px</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">아바타(모바일)</div>
-        <input type="range" id="cfg-pclg-ava-mb" min="20" max="80" step="2" value="${avatarMb}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC544\uBC14\uD0C0(\uBAA8\uBC14\uC77C)</div>
+        <input type="range" id="cfg-pclg-ava-mb" min="20" max="80" step="2" value="${l}"
           oninput="document.getElementById('cfg-pclg-ava-mb-v').textContent=this.value+'px'"
           onchange="localStorage.setItem('su_pcomp_league_avatar_mb',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-pclg-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${avatarMb}px</div>
+        <div id="cfg-pclg-ava-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${l}px</div>
       </div>
     </div>
-  </details>`;
-  })()}
-};
-
-// 프로리그 대회 대진표 기록 섹션
-window.renderCfgProCompTourCardSection = function(_scfgD) {
-  const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-    // ── 프로리그 대회 대진표 기록 ──
-    const shape = localStorage.getItem('su_pcomp_tour_shape')||'default';
-    const panelPc = parseInt(localStorage.getItem('su_pcomp_tour_panel_pc')||'160',10)||160;
-    const panelMb = parseInt(localStorage.getItem('su_pcomp_tour_panel_mb')||'130',10)||130;
-    const showRound = (localStorage.getItem('su_pcomp_tour_show_round')||'1')==='1';
-    const shapes = [
-      {v:'default',l:'기본',icon:'🃏'},{v:'compact',l:'컴팩트',icon:'📋'},{v:'wide',l:'와이드',icon:'🖼️'},
-      {v:'minimal',l:'미니멀',icon:'➖'},{v:'card3d',l:'3D',icon:'🎴'},{v:'glass',l:'유리',icon:'🔮'},
-      {v:'sharp',l:'각진',icon:'▬'},{v:'neon',l:'네온',icon:'⚡'},{v:'frosted',l:'프로스트',icon:'❄️'},
-      {v:'retro',l:'레트로',icon:'🕹️'},{v:'bold-border',l:'굵은선',icon:'🖊️'},{v:'gradient-bg',l:'그라데이션',icon:'🌈'},
-    ];
-    return _scfgD('procompteamcard','🏆 프로리그 대회 대진표 기록') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">프로리그탭 → 프로리그 대회 → 대진표(토너먼트) 기록 카드의 디자인을 설정합니다.</div>
+  </details>`},window.renderCfgProCompTourCardSection=function(c){const t=(function(){try{const e=window.localStorage,a="__su_ls_test__";return e.setItem(a,"1"),e.removeItem(a),e}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),i=t.getItem("su_pcomp_tour_shape")||"default",r=parseInt(t.getItem("su_pcomp_tour_panel_pc")||"160",10)||160,n=parseInt(t.getItem("su_pcomp_tour_panel_mb")||"130",10)||130,l=(t.getItem("su_pcomp_tour_show_round")||"1")==="1",o=[{v:"default",l:"\uAE30\uBCF8",icon:"\u{1F0CF}"},{v:"compact",l:"\uCEF4\uD329\uD2B8",icon:"\u{1F4CB}"},{v:"wide",l:"\uC640\uC774\uB4DC",icon:"\u{1F5BC}\uFE0F"},{v:"minimal",l:"\uBBF8\uB2C8\uBA40",icon:"\u2796"},{v:"card3d",l:"3D",icon:"\u{1F3B4}"},{v:"glass",l:"\uC720\uB9AC",icon:"\u{1F52E}"},{v:"sharp",l:"\uAC01\uC9C4",icon:"\u25AC"},{v:"neon",l:"\uB124\uC628",icon:"\u26A1"},{v:"frosted",l:"\uD504\uB85C\uC2A4\uD2B8",icon:"\u2744\uFE0F"},{v:"retro",l:"\uB808\uD2B8\uB85C",icon:"\u{1F579}\uFE0F"},{v:"bold-border",l:"\uAD75\uC740\uC120",icon:"\u{1F58A}\uFE0F"},{v:"gradient-bg",l:"\uADF8\uB77C\uB370\uC774\uC158",icon:"\u{1F308}"}];return c("procompteamcard","\u{1F3C6} \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uB300\uC9C4\uD45C \uAE30\uB85D")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uD504\uB85C\uB9AC\uADF8\uD0ED \u2192 \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \u2192 \uB300\uC9C4\uD45C(\uD1A0\uB108\uBA3C\uD2B8) \uAE30\uB85D \uCE74\uB4DC\uC758 \uB514\uC790\uC778\uC744 \uC124\uC815\uD569\uB2C8\uB2E4.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uCE74\uB4DC \uBAA8\uC591</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${shapes.map(s=>`<button type="button"
-            onclick="localStorage.setItem('su_pcomp_tour_shape','${s.v}');try{render();}catch(e){}"
-            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${shape===s.v?'var(--blue)':'var(--border2)'};background:${shape===s.v?'#eff6ff':'var(--white)'};color:${shape===s.v?'var(--blue)':'var(--text2)'}">
-            ${s.icon} ${s.l}</button>`).join('')}
+          ${o.map(e=>`<button type="button"
+            onclick="localStorage.setItem('su_pcomp_tour_shape','${e.v}');try{render();}catch(e){}"
+            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${i===e.v?"var(--blue)":"var(--border2)"};background:${i===e.v?"#eff6ff":"var(--white)"};color:${i===e.v?"var(--blue)":"var(--text2)"}">
+            ${e.icon} ${e.l}</button>`).join("")}
         </div>
       </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" style="width:15px;height:15px" ${showRound?'checked':''}
+        <input type="checkbox" style="width:15px;height:15px" ${l?"checked":""}
           onchange="localStorage.setItem('su_pcomp_tour_show_round',this.checked?'1':'0');try{render();}catch(e){}">
-        라운드명 표시
+        \uB77C\uC6B4\uB4DC\uBA85 \uD45C\uC2DC
       </label>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">패널(PC)</div>
-        <input type="range" id="cfg-pctour-pc" min="100" max="260" step="4" value="${panelPc}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uD328\uB110(PC)</div>
+        <input type="range" id="cfg-pctour-pc" min="100" max="260" step="4" value="${r}"
           oninput="document.getElementById('cfg-pctour-pc-v').textContent=this.value+'px'"
           onchange="localStorage.setItem('su_pcomp_tour_panel_pc',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-pctour-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${panelPc}px</div>
+        <div id="cfg-pctour-pc-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${r}px</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">패널(모바일)</div>
-        <input type="range" id="cfg-pctour-mb" min="80" max="200" step="4" value="${panelMb}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uD328\uB110(\uBAA8\uBC14\uC77C)</div>
+        <input type="range" id="cfg-pctour-mb" min="80" max="200" step="4" value="${n}"
           oninput="document.getElementById('cfg-pctour-mb-v').textContent=this.value+'px'"
           onchange="localStorage.setItem('su_pcomp_tour_panel_mb',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-pctour-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${panelMb}px</div>
+        <div id="cfg-pctour-mb-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${n}px</div>
       </div>
     </div>
-  </details>`;
-  })()}
-};
-
-// 프로리그 대회 팀전 카드 섹션
-window.renderCfgProCompTeamCardSection = function(_scfgD) {
-  const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-    // ── 프로리그 대회 팀전 카드 ──
-    const shape = localStorage.getItem('su_pcomp_team_shape')||'default';
-    const showMembers = (localStorage.getItem('su_pcomp_team_show_members')||'1')==='1';
-    const scorePc = parseInt(localStorage.getItem('su_pcomp_team_score_pc')||'100',10)||100;
-    const shapes = [
-      {v:'default',l:'기본',icon:'🃏'},{v:'compact',l:'컴팩트',icon:'📋'},{v:'wide',l:'와이드',icon:'🖼️'},
-      {v:'minimal',l:'미니멀',icon:'➖'},{v:'card3d',l:'3D',icon:'🎴'},{v:'glass',l:'유리',icon:'🔮'},
-      {v:'sharp',l:'각진',icon:'▬'},{v:'bubble',l:'버블',icon:'💬'},{v:'neon',l:'네온',icon:'⚡'},
-      {v:'stripe',l:'스트라이프',icon:'🟦'},{v:'frosted',l:'프로스트',icon:'❄️'},{v:'gradient-bg',l:'그라데이션',icon:'🌈'},
-    ];
-    return _scfgD('procompgjcard','🏆 프로리그 대회 팀전/중장전 카드') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">프로리그탭 → 프로리그 대회 → 팀전/중장전 기록 카드의 디자인을 설정합니다.</div>
+  </details>`},window.renderCfgProCompTeamCardSection=function(c){const t=(function(){try{const o=window.localStorage,e="__su_ls_test__";return o.setItem(e,"1"),o.removeItem(e),o}catch(o){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),i=t.getItem("su_pcomp_team_shape")||"default",r=(t.getItem("su_pcomp_team_show_members")||"1")==="1",n=parseInt(t.getItem("su_pcomp_team_score_pc")||"100",10)||100,l=[{v:"default",l:"\uAE30\uBCF8",icon:"\u{1F0CF}"},{v:"compact",l:"\uCEF4\uD329\uD2B8",icon:"\u{1F4CB}"},{v:"wide",l:"\uC640\uC774\uB4DC",icon:"\u{1F5BC}\uFE0F"},{v:"minimal",l:"\uBBF8\uB2C8\uBA40",icon:"\u2796"},{v:"card3d",l:"3D",icon:"\u{1F3B4}"},{v:"glass",l:"\uC720\uB9AC",icon:"\u{1F52E}"},{v:"sharp",l:"\uAC01\uC9C4",icon:"\u25AC"},{v:"bubble",l:"\uBC84\uBE14",icon:"\u{1F4AC}"},{v:"neon",l:"\uB124\uC628",icon:"\u26A1"},{v:"stripe",l:"\uC2A4\uD2B8\uB77C\uC774\uD504",icon:"\u{1F7E6}"},{v:"frosted",l:"\uD504\uB85C\uC2A4\uD2B8",icon:"\u2744\uFE0F"},{v:"gradient-bg",l:"\uADF8\uB77C\uB370\uC774\uC158",icon:"\u{1F308}"}];return c("procompgjcard","\u{1F3C6} \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uD300\uC804/\uC911\uC7A5\uC804 \uCE74\uB4DC")+`
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">\uD504\uB85C\uB9AC\uADF8\uD0ED \u2192 \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \u2192 \uD300\uC804/\uC911\uC7A5\uC804 \uAE30\uB85D \uCE74\uB4DC\uC758 \uB514\uC790\uC778\uC744 \uC124\uC815\uD569\uB2C8\uB2E4.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:800">\uCE74\uB4DC \uBAA8\uC591</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${shapes.map(s=>`<button type="button"
-            onclick="localStorage.setItem('su_pcomp_team_shape','${s.v}');try{render();}catch(e){}"
-            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${shape===s.v?'var(--blue)':'var(--border2)'};background:${shape===s.v?'#eff6ff':'var(--white)'};color:${shape===s.v?'var(--blue)':'var(--text2)'}">
-            ${s.icon} ${s.l}</button>`).join('')}
+          ${l.map(o=>`<button type="button"
+            onclick="localStorage.setItem('su_pcomp_team_shape','${o.v}');try{render();}catch(e){}"
+            style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${i===o.v?"var(--blue)":"var(--border2)"};background:${i===o.v?"#eff6ff":"var(--white)"};color:${i===o.v?"var(--blue)":"var(--text2)"}">
+            ${o.icon} ${o.l}</button>`).join("")}
         </div>
       </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
-        <input type="checkbox" style="width:15px;height:15px" ${showMembers?'checked':''}
+        <input type="checkbox" style="width:15px;height:15px" ${r?"checked":""}
           onchange="localStorage.setItem('su_pcomp_team_show_members',this.checked?'1':'0');try{render();}catch(e){}">
-        팀원 목록 표시
+        \uD300\uC6D0 \uBAA9\uB85D \uD45C\uC2DC
       </label>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">스코어 크기</div>
-        <input type="range" id="cfg-pcteam-score" min="60" max="160" step="5" value="${scorePc}"
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">\uC2A4\uCF54\uC5B4 \uD06C\uAE30</div>
+        <input type="range" id="cfg-pcteam-score" min="60" max="160" step="5" value="${n}"
           oninput="document.getElementById('cfg-pcteam-score-v').textContent=this.value+'%'"
           onchange="localStorage.setItem('su_pcomp_team_score_pc',this.value);try{render();}catch(e){}" style="width:100%">
-        <div id="cfg-pcteam-score-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${scorePc}%</div>
+        <div id="cfg-pcteam-score-v" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${n}%</div>
       </div>
-      <div style="font-size:11px;color:var(--gray-l)">※ 팀전(🤝 팀전 탭)과 중장전(🔥 중장전 탭) 카드에 공통 적용됩니다.</div>
+      <div style="font-size:11px;color:var(--gray-l)">\u203B \uD300\uC804(\u{1F91D} \uD300\uC804 \uD0ED)\uACFC \uC911\uC7A5\uC804(\u{1F525} \uC911\uC7A5\uC804 \uD0ED) \uCE74\uB4DC\uC5D0 \uACF5\uD1B5 \uC801\uC6A9\uB429\uB2C8\uB2E4.</div>
     </div>
-  </details>`;
-  })()}
-};
+  </details>`};
 
 /* settings-render.js */
 var Ct=Object.defineProperty;var mt=Object.getOwnPropertySymbols;var Et=Object.prototype.hasOwnProperty,Mt=Object.prototype.propertyIsEnumerable;var yt=(g,h,c)=>h in g?Ct(g,h,{enumerable:!0,configurable:!0,writable:!0,value:c}):g[h]=c,V=(g,h)=>{for(var c in h||(h={}))Et.call(h,c)&&yt(g,c,h[c]);if(mt)for(var c of mt(h))Mt.call(h,c)&&yt(g,c,h[c]);return g};function rCfg(g,h){var it,ot,nt,at,rt,lt,st,pt,dt,ct,gt,ft;const c=!!window.isLoggedIn,x=!!window.isSubAdmin,u=typeof window.escHTML=="function"?window.escHTML:t=>String(t!=null?t:"").replace(/[&<>"']/g,e=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[e]),y=typeof window.escJS=="function"?window.escJS:t=>String(t!=null?t:"").replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n"),I=typeof window.escAttr=="function"?window.escAttr:t=>String(t!=null?t:"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"),f=typeof window.esc=="function"?window.esc:u,B=Array.isArray(window.players)?window.players:[],i=(function(){try{const t=window.localStorage;if(!t)throw new Error("no localStorage");const e="__su_ls_test__";return t.setItem(e,"1"),t.removeItem(e),t}catch(t){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})();try{Array.isArray(window.notices)||(window.notices=[])}catch(t){}const A=Array.isArray(window.notices)?window.notices:[],M=Array.isArray(window.univCfg)?window.univCfg:[];if(h.innerText="\u2699\uFE0F \uC124\uC815",!c){g.innerHTML=`<div class="cfg-lock-screen">
@@ -7930,7 +7587,7 @@ let _vsInputA="",_vsInputB="",_uvA="",_uvB="";function vsSearchHTML(){const i=vs
     </div>`}`}async function captureVsCard(){const i=document.getElementById("vs-result-card");if(!i){alert("\uACB0\uACFC \uCE74\uB4DC\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.");return}try{_showSaveLoading();try{await(window.ensureHtml2Canvas&&window.ensureHtml2Canvas())}catch(n){}await _imgToDataUrls(i);const t=await html2canvas(i,{backgroundColor:null,scale:2,useCORS:!1,allowTaint:!1,logging:!1,ignoreElements:n=>n.classList.contains("no-export")}),e=document.createElement("a");e.download=`vs_${vsNameA}_vs_${vsNameB}_${new Date().toISOString().slice(0,10)}.jpg`,e.href=t.toDataURL("image/jpeg",.95),e.click()}catch(t){alert("\uC800\uC7A5 \uC624\uB958: "+t.message)}finally{_hideSaveLoading()}}
 
 /* rec-side-profiles.js */
-(function(){function A(){var e;try{return((e=localStorage.getItem("su_rec_side_panel_on"))!=null?e:"1")!=="0"}catch(t){return!0}}function V(){var e;try{return((e=localStorage.getItem("su_rsp_rotate_on"))!=null?e:"1")!=="0"}catch(t){return!0}}function z(){try{return Math.max(1,Math.min(60,parseInt(localStorage.getItem("su_rsp_rotate_sec")||"5",10)||5))}catch(e){return 5}}function X(){var e;try{return((e=localStorage.getItem("su_rsp_comp_on"))!=null?e:"1")!=="0"}catch(t){return!0}}function O(){try{return localStorage.getItem("su_rsp_image_type")||"profile"}catch(e){return"profile"}}function Y(){try{return localStorage.getItem("su_rsp_halign")||"center"}catch(e){return"center"}}function G(){try{return Math.max(.1,Math.min(1,parseFloat(localStorage.getItem("su_rsp_winteam_lose_opacity")||"0.50")||.5))}catch(e){return .5}}function N(){try{return Math.max(0,Math.min(1,parseFloat(localStorage.getItem("su_rsp_winteam_lose_gray")||"0.70")||.7))}catch(e){return .7}}function J(){try{return Math.max(.1,Math.min(1,parseFloat(localStorage.getItem("su_rsp_loseteam_win_opacity")||"0.80")||.8))}catch(e){return .8}}function B(){try{return Math.max(0,Math.min(1,parseFloat(localStorage.getItem("su_rsp_loseteam_win_gray")||"0.15")||.15))}catch(e){return .15}}function g(){try{return Math.max(.1,Math.min(1,parseFloat(localStorage.getItem("su_rsp_loseteam_lose_opacity")||"0.45")||.45))}catch(e){return .45}}function m(){try{return Math.max(0,Math.min(1,parseFloat(localStorage.getItem("su_rsp_loseteam_lose_gray")||"0.75")||.75))}catch(e){return .75}}function f(e,t){try{var r=localStorage.getItem(e);return r==null?t:r}catch(i){return t}}var R={circle:"50%",square:"6px",rounded:"22%",squircle:"28%",diamond:"50%",hexagon:"50%",shield:"50% 50% 45% 45% / 60% 60% 40% 40%",star:"50%",pentagon:"50%",blob:"40% 60% 55% 45% / 45% 55% 60% 40%",leaf:"50%",triangle:"0",octagon:"50%",cross:"0",heart:"50% 50% 50% 50%/60% 60% 40% 40%",parallelogram:"0",arrow:"0","rounded-top":"50% 50% 10% 10% / 70% 70% 10% 10%",cloud:"50%",arch:"50% 50% 8px 8px / 60% 60% 8px 8px",badge:"0",chevron:"0",clover:"50%",gem:"0",flag:"0",pill:"50px",stadium:"40% 40% 40% 40% / 60% 60% 60% 60%",teardrop:"50% 50% 50% 50% / 60% 60% 40% 40%",moon:"50%",tv:"14%",flower:"50%",pac:"50%","ring-cut":"50%",kite:"0",notch:"8px",thunder:"0",versus:"0",esports:"0",trophy:"0",crown:"0",target:"50%",fist:"0",arena:"50%",medal:"50%",saber:"0",blast:"0"},P={diamond:"polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",hexagon:"polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)",shield:"polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)",star:"polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)",pentagon:"polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",leaf:"polygon(50% 0%,100% 50%,50% 100%,0% 50%)",triangle:"polygon(50% 0%, 0% 100%, 100% 100%)",octagon:"polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%)",cross:"polygon(33% 0%,67% 0%,67% 33%,100% 33%,100% 67%,67% 67%,67% 100%,33% 100%,33% 67%,0% 67%,0% 33%,33% 33%)",parallelogram:"polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)",arrow:"polygon(0% 0%,75% 0%,100% 50%,75% 100%,0% 100%,25% 50%)",cloud:"polygon(8% 60%,5% 45%,12% 32%,22% 26%,30% 10%,45% 4%,60% 10%,72% 5%,85% 14%,92% 28%,96% 43%,90% 58%,78% 66%,62% 70%,40% 70%,22% 66%)",badge:"polygon(50% 0%,95% 15%,100% 55%,75% 92%,25% 92%,0% 55%,5% 15%)",chevron:"polygon(0% 0%,85% 0%,100% 50%,85% 100%,0% 100%,15% 50%)",clover:"polygon(50% 20%,58% 35%,75% 25%,65% 42%,82% 48%,65% 55%,75% 72%,58% 62%,50% 80%,42% 62%,25% 72%,35% 55%,18% 48%,35% 42%,25% 25%,42% 35%)",gem:"polygon(50% 0%,85% 20%,100% 55%,75% 100%,25% 100%,0% 55%,15% 20%)",flag:"polygon(0% 0%,100% 0%,75% 50%,100% 100%,0% 100%)",moon:"ellipse(50% 50% at 65% 50%)",flower:"polygon(50% 5%,61% 29%,84% 20%,74% 44%,98% 50%,74% 56%,84% 80%,61% 71%,50% 95%,39% 71%,16% 80%,26% 56%,2% 50%,26% 44%,16% 20%,39% 29%)",pac:"polygon(100% 35%,55% 50%,100% 65%,100% 100%,0% 100%,0% 0%,100% 0%)",kite:"polygon(50% 0%,100% 40%,50% 100%,0% 40%)",notch:"polygon(25% 0%,75% 0%,75% 12%,100% 12%,100% 100%,0% 100%,0% 12%,25% 12%)",thunder:"polygon(30% 0%,65% 0%,45% 42%,75% 42%,18% 100%,38% 55%,8% 55%)",versus:"polygon(0% 0%,100% 0%,100% 72%,50% 100%,0% 72%)",esports:"polygon(50% 0%,96% 18%,100% 62%,75% 100%,25% 100%,0% 62%,4% 18%)",trophy:"polygon(20% 0%,80% 0%,85% 30%,100% 30%,100% 45%,85% 45%,75% 68%,80% 80%,90% 85%,90% 100%,10% 100%,10% 85%,20% 80%,25% 68%,15% 45%,0% 45%,0% 30%,15% 30%)",crown:"polygon(0% 100%,0% 40%,25% 65%,50% 0%,75% 65%,100% 40%,100% 100%)",fist:"polygon(15% 0%,85% 0%,100% 15%,100% 60%,85% 80%,70% 100%,30% 100%,15% 80%,0% 60%,0% 15%)",arena:"polygon(50% 0%,90% 10%,100% 50%,90% 90%,50% 100%,10% 90%,0% 50%,10% 10%)",medal:"polygon(25% 0%,75% 0%,75% 10%,100% 32%,100% 68%,75% 90%,75% 100%,25% 100%,25% 90%,0% 68%,0% 32%,25% 10%)",saber:"polygon(0% 15%,15% 0%,100% 85%,85% 100%)",blast:"polygon(50% 0%,56% 36%,78% 10%,62% 43%,95% 34%,73% 52%,100% 65%,68% 65%,82% 95%,55% 72%,50% 100%,45% 72%,18% 95%,32% 65%,0% 65%,27% 52%,5% 34%,38% 43%,22% 10%,44% 36%)"};function F(){try{return localStorage.getItem("su_profile_shape")||localStorage.getItem("su_bcp_shape")||"circle"}catch(e){return"circle"}}function D(){return R[F()]||"50%"}function E(){return P[F()]||"none"}function K(e,t,r){var i=[],d={};function s(c,a){c&&String(c).split(",").forEach(function(w){var u=w.trim();!u||d[u]||(d[u]=1,i.push({name:u,isWinner:a}))})}var o=t==="a",y=e&&e.sets&&e.sets.length;if(y&&(e.sets||[]).forEach(function(c){(c.games||[]).forEach(function(a){var w=a.winner==="A",u=a.winner==="B";if(o){var h=a.playerA||a.a1||a.a||"",p=a.a2||"",x=w;h&&s(h,x),p&&s(p,x)}else{var b=a.playerB||a.b1||a.b||"",_=a.b2||"",n=u;b&&s(b,n),_&&s(_,n)}})}),!i.length){var l=o?e&&e.teamAMembers||[]:e&&e.teamBMembers||[];(l||[]).forEach(function(c){var a=typeof c=="string"?c:c&&c.name||"";a&&!d[a]&&(d[a]=1,i.push({name:a,isWinner:r}))})}var v=i.filter(function(c){return c.isWinner}).map(function(c){return c.name}),S=i.filter(function(c){return!c.isWinner}).map(function(c){return c.name});return{winNames:v,loseNames:S,ordered:i}}function _e(e){return!e||!e.length?null:e[Math.floor(Math.random()*e.length)]}function C(e,t){var r=String(e||"").replace("#","");return r.length!==6?"rgba(148,163,184,"+t+")":"rgba("+parseInt(r.slice(0,2),16)+","+parseInt(r.slice(2,4),16)+","+parseInt(r.slice(4,6),16)+","+t+")"}function W(e,t,r,i,d){var s=parseFloat(t)||1,o="";switch(e){case"sepia":o="sepia(0.55) saturate(1.2)";break;case"warm":o="sepia(0.3) saturate(1.4) hue-rotate(-15deg)";break;case"cool":o="saturate(0.85) hue-rotate(20deg)";break;case"vivid":o="saturate(1.7) contrast(1.1)";break;case"dark":o="brightness(0.60) contrast(1.2)";break;case"mono":o="grayscale(1) contrast(1.1)";break;default:o="";break}var y="brightness("+s.toFixed(2)+")",l=o?o+" "+y:y;return i?r&&(l+=" grayscale("+N().toFixed(2)+") opacity("+G().toFixed(2)+")"):(r&&!d&&(l+=" grayscale("+m().toFixed(2)+") opacity("+g().toFixed(2)+")"),!r&&d&&(l+=" grayscale("+B().toFixed(2)+") opacity("+J().toFixed(2)+")")),l}function ie(e,t){try{var r=window.UNIV_ICONS&&window.UNIV_ICONS[e]||"";if(!r&&Array.isArray(window.univCfg)){var i=window.univCfg.find(function(o){return o.name===e});i&&(r=i.icon||"")}if(!r)return"";var d=D(),s=E();return'<img src="'+(typeof toHttpsUrl=="function"?toHttpsUrl(r):r)+'" style="width:'+t+"px;height:"+t+"px;object-fit:contain;border-radius:"+d+";"+(s!=="none"?"clip-path:"+s+";":"")+`;display:block;" onerror="this.closest('.rec-side-profiles')&&(this.closest('.rec-side-profiles').style.display='none')">`}catch(o){return""}}function ee(e,t,r,i,d,s,o,y,l,v){var S=r==="50%"||r==="999px"||r==="9999px"||parseInt(r,10)>=50,c=o&&s?3:1.5,a=o&&s?y:"rgba(148,163,184,0.25)",w=o&&s?"0 4px 16px "+y+"55, 0 0 0 "+(c+1)+"px "+y+"33":i,u=o&&s?"0 6px 28px "+y+"88, 0 0 0 "+(c+2)+"px "+y+"55":"0 6px 20px rgba(0,0,0,.22)",h=o&&s?y:"var(--gray-l)",p=o&&s?"0 0 8px "+y+"77":"none",x=l?l.length>6?l.slice(0,6)+"\u2026":l:"",b=x?'<div class="rsp-namelbl" style="color:'+h+";text-shadow:"+p+';">'+x.replace(/</g,"&lt;").replace(/>/g,"&gt;")+"</div>":"",_=t+c*2+6,n="position:relative;display:flex;align-items:center;justify-content:center;width:"+_+"px;height:"+_+"px;flex-shrink:0;--rsp-glow-base:"+w+";--rsp-glow-peak:"+u+";",M=typeof E=="function"?E():"none",k="width:"+t+"px;height:"+t+"px;border-radius:"+(S?"50%":r)+";"+(M!=="none"?"clip-path:"+M+";":"")+"overflow:hidden;display:flex;align-items:center;justify-content:center;border:"+c+"px solid "+a+";box-shadow:"+w+";filter:"+d+";background:#e2e8f0;";return'<div class="rsp-imgbox'+(o&&s?" rsp-imgbox--win":"")+(S?" rsp-imgbox--circle":"")+'" style="'+n+'"><div class="rsp-imginner" style="'+k+'">'+e+"</div></div>"+b}function T(e,t,r,i,d){if(!e||!e.length)return"";for(var s=Math.max(40,Math.min(160,parseInt(f("su_rsp_size","72"),10)||72)),o=f("su_rsp_valign","center"),y=f("su_rsp_brightness","1.0"),l=f("su_rsp_effect","none"),v=Math.max(60,Math.min(180,parseInt(f("su_rsp_width","90"),10)||90)),S=D(),c=E(),a=O(),w=Math.max(-200,Math.min(200,parseInt(f("su_rsp_hoffset","0"),10)||0)),u=i?w:-w,h=Math.max(-200,Math.min(200,parseInt(f("su_rsp_voffset","0"),10)||0)),p=f("su_rsp_show_box","0")!=="0",x=V(),b=z(),_=[],n=0;n<e.length;n++){var M=e[n],k=M.name;if(k){var L="";if(a==="logo")L=ie(k,s);else{if(typeof getPlayerPhotoHTML!="function")continue;var Q=window.__detailCtx;if(window.__detailCtx="recCard",L=getPlayerPhotoHTML(k,s+"px",""),window.__detailCtx=Q,!L)continue}_.push({name:k,isWinner:M.isWinner,raw:L})}}if(!_.length)return"";var H=o==="top"?"flex-start":o==="bottom"?"flex-end":"center",ce=u!==0?"translateX("+u+"px)":"",se=h!==0?"translateY("+h+"px)":"",te=[ce,se].filter(Boolean).join(" "),re=te?"transform:"+te+";":"",ne=p?t?C(r,.12):"rgba(148,163,184,0.07)":"transparent",oe=p?t?C(r,.3):"rgba(148,163,184,0.18)":"transparent",fe="rsp"+Math.random().toString(36).slice(2,9);if(!x||_.length===1){var Z=_[0],j=!!Z.isWinner,le=W(l,y,!j,t,j),ue=t&&j?p?"0 4px 18px "+C(r,.38):"0 4px 16px "+C(r,.32):p?"0 2px 8px rgba(0,0,0,0.10)":"0 2px 8px rgba(0,0,0,0.12)",pe=ee(Z.raw,s,S,ue,le,t,j,r,Z.name,i);return'<div class="rec-side-profiles rsp-styled'+(t?" rec-side-profiles--win":" rec-side-profiles--lose")+(p?"":" rsp-no-box")+'" style="background:'+ne+";outline:1px solid "+oe+";min-width:"+v+"px;max-width:"+v+"px;overflow:visible;align-items:center;justify-content:"+H+';"><div class="rsp-inner" style="display:flex;align-items:'+H+";justify-content:center;width:100%;overflow:visible;"+re+'">'+pe+"</div></div>"}for(var ae="",q=0;q<_.length;q++){var $=_[q],U=!!$.isWinner,ge=W(l,y,!U,t,U),de=t&&U?p?"0 4px 18px "+C(r,.38):"0 4px 16px "+C(r,.32):p?"0 2px 8px rgba(0,0,0,0.10)":"0 2px 8px rgba(0,0,0,0.12)",ye=q===0?"flex":"none",he=ee($.raw,s,S,de,ge,t,U,r,$.name,i);ae+='<div class="rsp-slide" style="display:'+ye+";align-items:"+H+';justify-content:center;width:100%;">'+he+"</div>"}var we=parseInt(d||0,10)||0;return'<div id="'+fe+'" class="rec-side-profiles rsp-styled'+(t?" rec-side-profiles--win":" rec-side-profiles--lose")+(p?"":" rsp-no-box")+'" data-rsp-slides="1" data-rsp-slot="'+we+'" style="background:'+ne+";outline:1px solid "+oe+";min-width:"+v+"px;max-width:"+v+"px;overflow:visible;align-items:center;justify-content:"+H+';"><div class="rsp-inner" style="display:flex;flex-direction:column;width:100%;overflow:visible;'+re+'">'+ae+"</div></div>"}function I(e,t){return(e||[]).map(function(r){return{name:r,isWinner:t}})}window._buildRecSideProfilePanel=function(e,t,r,i,d,s){if(!A())return{left:"",right:""};try{var o=O(),y=r||i;if(o==="logo"){var l=e&&(e.a||e.univA||e.a_univ||"")||"",v=e&&(e.b||e.univB||e.b_univ||"")||"";if(!l&&Array.isArray(window.players)){var S=(t&&t.a||[]).map(function(n){return typeof n=="string"?n:n&&n.name||""}).filter(Boolean);if(S.length){var c=window.players.find(function(n){return n.name===S[0]});c&&(l=c.univ||"")}}if(!v&&Array.isArray(window.players)){var a=(t&&t.b||[]).map(function(n){return typeof n=="string"?n:n&&n.name||""}).filter(Boolean);if(a.length){var w=window.players.find(function(n){return n.name===a[0]});w&&(v=w.univ||"")}}return{left:l?T([{name:l,isWinner:r}],r,d,!0):"",right:v?T([{name:v,isWinner:i}],i,s,!1):""}}var u=K(e,"a",r),h=K(e,"b",i),p=u.ordered&&u.ordered.length?u.ordered:I(u.winNames,!0).concat(I(u.loseNames,!1)),x=h.ordered&&h.ordered.length?h.ordered:I(h.winNames,!0).concat(I(h.loseNames,!1));if(!p.length){var b=(t&&t.a||[]).map(function(n){return typeof n=="string"?n:n&&n.name||""}).filter(Boolean);p=I(b,r)}if(!x.length){var _=(t&&t.b||[]).map(function(n){return typeof n=="string"?n:n&&n.name||""}).filter(Boolean);x=I(_,i)}return{left:p.length?T(p,r,d,!0):"",right:x.length?T(x,i,s,!1):""}}catch(n){return{left:"",right:""}}},window._buildCompSidePanel=function(e,t,r,i,d,s,o){if(!A())return{left:"",right:""};if(!X())return{left:"",right:""};try{var y=O(),l=o&&o.matchNum!=null?o.matchNum-1:o&&o._matchIdx!=null?o._matchIdx:0;if(y==="logo")return{left:e?T([{name:e,isWinner:r}],r,d,!0,l):"",right:t?T([{name:t,isWinner:i}],i,s,!1,l):""};var v=function(S,c){var a=K(o,S,c),w=S==="a"?e:t;function u(n){if(!Array.isArray(window.players)||!w)return n;var M=n.filter(function(k){var L=window.players.find(function(Q){return Q.name===k.name});return L&&L.univ===w});return M.length?M:n}var h=a.ordered&&a.ordered.length?u(a.ordered):I(u(I(a.winNames,!0).concat(I(a.loseNames,!1)).map(function(n){return n.name})),c);if(!h.length){var p=a.winNames||[],x=a.loseNames||[];h=I(p,!0).concat(I(x,!1))}var b=h;if(!b.length&&Array.isArray(window.players)){var _=window.players.filter(function(n){return n.univ===w});b=_.map(function(n){return{name:n.name,isWinner:c}})}return b};return{left:T(v("a",r),r,d,!0,l),right:T(v("b",i),i,s,!1,l)}}catch(S){return{left:"",right:""}}},window.cfgSetRecSidePanelSettings=function(){try{var e=!!(document.getElementById("cfg-rec-side-panel-on")||{}).checked;localStorage.setItem("su_rec_side_panel_on",e?"1":"0"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspSize=function(e){try{localStorage.setItem("su_rsp_size",String(parseInt(e,10)||72)),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspWidth=function(e){try{localStorage.setItem("su_rsp_width",String(parseInt(e,10)||90)),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspValign=function(e){try{localStorage.setItem("su_rsp_valign",e||"center"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspBrightness=function(e){try{localStorage.setItem("su_rsp_brightness",String(parseFloat(e)||1)),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspEffect=function(e){try{localStorage.setItem("su_rsp_effect",e||"none"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspImageType=function(e){try{localStorage.setItem("su_rsp_image_type",e||"profile"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspCompOn=function(){try{var e=!!(document.getElementById("cfg-rsp-comp-on")||{}).checked;localStorage.setItem("su_rsp_comp_on",e?"1":"0"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspHalign=function(e){try{localStorage.setItem("su_rsp_halign",e||"center"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspHoffset=function(e){try{localStorage.setItem("su_rsp_hoffset",String(parseInt(e,10)||0)),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspVoffset=function(e){try{localStorage.setItem("su_rsp_voffset",String(parseInt(e,10)||0)),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspShowBox=function(e){try{localStorage.setItem("su_rsp_show_box",e?"1":"0"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspRotateOn=function(){try{var e=!!(document.getElementById("cfg-rsp-rotate-on")||{}).checked;localStorage.setItem("su_rsp_rotate_on",e?"1":"0"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspRotateSec=function(e){try{localStorage.setItem("su_rsp_rotate_sec",String(Math.max(1,Math.min(60,parseInt(e,10)||5)))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspWinTeamLoseOpacity=function(e){try{localStorage.setItem("su_rsp_winteam_lose_opacity",String(Math.max(.1,Math.min(1,parseFloat(e)||.65)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspWinTeamLoseGray=function(e){try{localStorage.setItem("su_rsp_winteam_lose_gray",String(Math.max(0,Math.min(1,parseFloat(e)||.35)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspLoseTeamWinOpacity=function(e){try{localStorage.setItem("su_rsp_loseteam_win_opacity",String(Math.max(.1,Math.min(1,parseFloat(e)||.8)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspLoseTeamWinGray=function(e){try{localStorage.setItem("su_rsp_loseteam_win_gray",String(Math.max(0,Math.min(1,parseFloat(e)||.15)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspLoseTeamLoseOpacity=function(e){try{localStorage.setItem("su_rsp_loseteam_lose_opacity",String(Math.max(.1,Math.min(1,parseFloat(e)||.45)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspLoseTeamLoseGray=function(e){try{localStorage.setItem("su_rsp_loseteam_lose_gray",String(Math.max(0,Math.min(1,parseFloat(e)||.75)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}}})(),(function(){window._rspGlobalTick=window._rspGlobalTick||0;var A=null;function V(){try{return Math.max(1,Math.min(60,parseInt(localStorage.getItem("su_rsp_rotate_sec")||"5",10)||5))}catch(g){return 5}}function z(){var g;try{return((g=localStorage.getItem("su_rsp_rotate_on"))!=null?g:"1")!=="0"}catch(m){return!0}}function X(){window._rspGlobalTick=window._rspGlobalTick+1;for(var g=window._rspGlobalTick,m=document.querySelectorAll('[data-rsp-slides="1"]'),f=0;f<m.length;f++)O(m[f],g)}function O(g,m){var f=g.querySelectorAll(".rsp-slide");if(f.length)for(var R=parseInt(g.getAttribute("data-rsp-slot")||"0",10)||0,P=(m+R)%f.length,F=0;F<f.length;F++)f[F].style.display=F===P?"flex":"none"}function Y(g){O(g,window._rspGlobalTick)}function G(g){for(var m=(g||document).querySelectorAll('[data-rsp-slides="1"]'),f=0;f<m.length;f++)Y(m[f])}function N(){if(A&&clearInterval(A),!!z()){var g=V();A=setInterval(function(){X()},g*1e3)}}window._rspRestartGlobalTimer=function(){N(),G(document)};var J=new MutationObserver(function(g){for(var m=0;m<g.length;m++)for(var f=g[m].addedNodes,R=0;R<f.length;R++){var P=f[R];P.nodeType===1&&(P.hasAttribute&&P.hasAttribute("data-rsp-slides")?Y(P):P.querySelectorAll&&G(P))}});function B(){J.observe(document.body,{childList:!0,subtree:!0}),G(document),N()}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",B):B()})();
+(function(){function L(){var e;try{return((e=localStorage.getItem("su_rec_side_panel_on"))!=null?e:"1")!=="0"}catch(t){return!0}}function V(){var e;try{return((e=localStorage.getItem("su_rsp_rotate_on"))!=null?e:"1")!=="0"}catch(t){return!0}}function z(){try{return Math.max(1,Math.min(60,parseInt(localStorage.getItem("su_rsp_rotate_sec")||"5",10)||5))}catch(e){return 5}}function X(){var e;try{return((e=localStorage.getItem("su_rsp_comp_on"))!=null?e:"1")!=="0"}catch(t){return!0}}function A(){try{return localStorage.getItem("su_rsp_image_type")||"profile"}catch(e){return"profile"}}function Y(){try{return localStorage.getItem("su_rsp_halign")||"center"}catch(e){return"center"}}function G(){try{return Math.max(.1,Math.min(1,parseFloat(localStorage.getItem("su_rsp_winteam_lose_opacity")||"0.50")||.5))}catch(e){return .5}}function B(){try{return Math.max(0,Math.min(1,parseFloat(localStorage.getItem("su_rsp_winteam_lose_gray")||"0.70")||.7))}catch(e){return .7}}function J(){try{return Math.max(.1,Math.min(1,parseFloat(localStorage.getItem("su_rsp_loseteam_win_opacity")||"0.80")||.8))}catch(e){return .8}}function N(){try{return Math.max(0,Math.min(1,parseFloat(localStorage.getItem("su_rsp_loseteam_win_gray")||"0.15")||.15))}catch(e){return .15}}function p(){try{return Math.max(.5,Math.min(1.8,parseFloat(localStorage.getItem("su_rsp_loseteam_win_brightness")||"1.0")||1))}catch(e){return 1}}function v(){try{return Math.max(.1,Math.min(1,parseFloat(localStorage.getItem("su_rsp_loseteam_lose_opacity")||"0.45")||.45))}catch(e){return .45}}function h(){try{return Math.max(0,Math.min(1,parseFloat(localStorage.getItem("su_rsp_loseteam_lose_gray")||"0.75")||.75))}catch(e){return .75}}function S(e,t){try{var r=localStorage.getItem(e);return r==null?t:r}catch(i){return t}}var T={circle:"50%",square:"6px",rounded:"22%",squircle:"28%",diamond:"50%",hexagon:"50%",shield:"50% 50% 45% 45% / 60% 60% 40% 40%",star:"50%",pentagon:"50%",blob:"40% 60% 55% 45% / 45% 55% 60% 40%",leaf:"50%",triangle:"0",octagon:"50%",cross:"0",heart:"50% 50% 50% 50%/60% 60% 40% 40%",parallelogram:"0",arrow:"0","rounded-top":"50% 50% 10% 10% / 70% 70% 10% 10%",cloud:"50%",arch:"50% 50% 8px 8px / 60% 60% 8px 8px",badge:"0",chevron:"0",clover:"50%",gem:"0",flag:"0",pill:"50px",stadium:"40% 40% 40% 40% / 60% 60% 60% 60%",teardrop:"50% 50% 50% 50% / 60% 60% 40% 40%",moon:"50%",tv:"14%",flower:"50%",pac:"50%","ring-cut":"50%",kite:"0",notch:"8px",thunder:"0",versus:"0",esports:"0",trophy:"0",crown:"0",target:"50%",fist:"0",arena:"50%",medal:"50%",saber:"0",blast:"0"},O={diamond:"polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",hexagon:"polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)",shield:"polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)",star:"polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)",pentagon:"polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)",leaf:"polygon(50% 0%,100% 50%,50% 100%,0% 50%)",triangle:"polygon(50% 0%, 0% 100%, 100% 100%)",octagon:"polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%)",cross:"polygon(33% 0%,67% 0%,67% 33%,100% 33%,100% 67%,67% 67%,67% 100%,33% 100%,33% 67%,0% 67%,0% 33%,33% 33%)",parallelogram:"polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)",arrow:"polygon(0% 0%,75% 0%,100% 50%,75% 100%,0% 100%,25% 50%)",cloud:"polygon(8% 60%,5% 45%,12% 32%,22% 26%,30% 10%,45% 4%,60% 10%,72% 5%,85% 14%,92% 28%,96% 43%,90% 58%,78% 66%,62% 70%,40% 70%,22% 66%)",badge:"polygon(50% 0%,95% 15%,100% 55%,75% 92%,25% 92%,0% 55%,5% 15%)",chevron:"polygon(0% 0%,85% 0%,100% 50%,85% 100%,0% 100%,15% 50%)",clover:"polygon(50% 20%,58% 35%,75% 25%,65% 42%,82% 48%,65% 55%,75% 72%,58% 62%,50% 80%,42% 62%,25% 72%,35% 55%,18% 48%,35% 42%,25% 25%,42% 35%)",gem:"polygon(50% 0%,85% 20%,100% 55%,75% 100%,25% 100%,0% 55%,15% 20%)",flag:"polygon(0% 0%,100% 0%,75% 50%,100% 100%,0% 100%)",moon:"ellipse(50% 50% at 65% 50%)",flower:"polygon(50% 5%,61% 29%,84% 20%,74% 44%,98% 50%,74% 56%,84% 80%,61% 71%,50% 95%,39% 71%,16% 80%,26% 56%,2% 50%,26% 44%,16% 20%,39% 29%)",pac:"polygon(100% 35%,55% 50%,100% 65%,100% 100%,0% 100%,0% 0%,100% 0%)",kite:"polygon(50% 0%,100% 40%,50% 100%,0% 40%)",notch:"polygon(25% 0%,75% 0%,75% 12%,100% 12%,100% 100%,0% 100%,0% 12%,25% 12%)",thunder:"polygon(30% 0%,65% 0%,45% 42%,75% 42%,18% 100%,38% 55%,8% 55%)",versus:"polygon(0% 0%,100% 0%,100% 72%,50% 100%,0% 72%)",esports:"polygon(50% 0%,96% 18%,100% 62%,75% 100%,25% 100%,0% 62%,4% 18%)",trophy:"polygon(20% 0%,80% 0%,85% 30%,100% 30%,100% 45%,85% 45%,75% 68%,80% 80%,90% 85%,90% 100%,10% 100%,10% 85%,20% 80%,25% 68%,15% 45%,0% 45%,0% 30%,15% 30%)",crown:"polygon(0% 100%,0% 40%,25% 65%,50% 0%,75% 65%,100% 40%,100% 100%)",fist:"polygon(15% 0%,85% 0%,100% 15%,100% 60%,85% 80%,70% 100%,30% 100%,15% 80%,0% 60%,0% 15%)",arena:"polygon(50% 0%,90% 10%,100% 50%,90% 90%,50% 100%,10% 90%,0% 50%,10% 10%)",medal:"polygon(25% 0%,75% 0%,75% 10%,100% 32%,100% 68%,75% 90%,75% 100%,25% 100%,25% 90%,0% 68%,0% 32%,25% 10%)",saber:"polygon(0% 15%,15% 0%,100% 85%,85% 100%)",blast:"polygon(50% 0%,56% 36%,78% 10%,62% 43%,95% 34%,73% 52%,100% 65%,68% 65%,82% 95%,55% 72%,50% 100%,45% 72%,18% 95%,32% 65%,0% 65%,27% 52%,5% 34%,38% 43%,22% 10%,44% 36%)"};function D(){try{return localStorage.getItem("su_profile_shape")||localStorage.getItem("su_bcp_shape")||"circle"}catch(e){return"circle"}}function W(){return T[D()]||"50%"}function E(){return O[D()]||"none"}function K(e,t,r){var i=[],g={};function s(c,a){c&&String(c).split(",").forEach(function(w){var l=w.trim();!l||g[l]||(g[l]=1,i.push({name:l,isWinner:a}))})}var o=t==="a",d=e&&e.sets&&e.sets.length;if(d&&(e.sets||[]).forEach(function(c){(c.games||[]).forEach(function(a){var w=a.winner==="A",l=a.winner==="B";if(o){var y=a.playerA||a.a1||a.a||"",u=a.a2||"",b=w;y&&s(y,b),u&&s(u,b)}else{var P=a.playerB||a.b1||a.b||"",_=a.b2||"",n=l;P&&s(P,n),_&&s(_,n)}})}),!i.length){var f=o?e&&e.teamAMembers||[]:e&&e.teamBMembers||[];(f||[]).forEach(function(c){var a=typeof c=="string"?c:c&&c.name||"";a&&!g[a]&&(g[a]=1,i.push({name:a,isWinner:r}))})}var m=i.filter(function(c){return c.isWinner}).map(function(c){return c.name}),x=i.filter(function(c){return!c.isWinner}).map(function(c){return c.name});return{winNames:m,loseNames:x,ordered:i}}function me(e){return!e||!e.length?null:e[Math.floor(Math.random()*e.length)]}function C(e,t){var r=String(e||"").replace("#","");return r.length!==6?"rgba(148,163,184,"+t+")":"rgba("+parseInt(r.slice(0,2),16)+","+parseInt(r.slice(2,4),16)+","+parseInt(r.slice(4,6),16)+","+t+")"}function ee(e,t,r,i,g){var s=parseFloat(t)||1,o="";switch(e){case"sepia":o="sepia(0.55) saturate(1.2)";break;case"warm":o="sepia(0.3) saturate(1.4) hue-rotate(-15deg)";break;case"cool":o="saturate(0.85) hue-rotate(20deg)";break;case"vivid":o="saturate(1.7) contrast(1.1)";break;case"dark":o="brightness(0.60) contrast(1.2)";break;case"mono":o="grayscale(1) contrast(1.1)";break;default:o="";break}var d="brightness("+s.toFixed(2)+")",f=o?o+" "+d:d;return i?r&&(f+=" grayscale("+B().toFixed(2)+") opacity("+G().toFixed(2)+")"):(r&&!g&&(f+=" grayscale("+h().toFixed(2)+") opacity("+v().toFixed(2)+")"),!r&&g&&(f+=" grayscale("+N().toFixed(2)+") opacity("+J().toFixed(2)+") brightness("+p().toFixed(2)+")")),f}function ce(e,t){try{var r=window.UNIV_ICONS&&window.UNIV_ICONS[e]||"";if(!r&&Array.isArray(window.univCfg)){var i=window.univCfg.find(function(o){return o.name===e});i&&(r=i.icon||"")}if(!r)return"";var g=W(),s=E();return'<img src="'+(typeof toHttpsUrl=="function"?toHttpsUrl(r):r)+'" style="width:'+t+"px;height:"+t+"px;object-fit:contain;border-radius:"+g+";"+(s!=="none"?"clip-path:"+s+";":"")+`;display:block;" onerror="this.closest('.rec-side-profiles')&&(this.closest('.rec-side-profiles').style.display='none')">`}catch(o){return""}}function te(e,t,r,i,g,s,o,d,f,m){var x=r==="50%"||r==="999px"||r==="9999px"||parseInt(r,10)>=50,c=o&&s?3:1.5,a=o&&s?d:"rgba(148,163,184,0.25)",w=o&&s?"0 4px 16px "+d+"55, 0 0 0 "+(c+1)+"px "+d+"33":i,l=o&&s?"0 6px 28px "+d+"88, 0 0 0 "+(c+2)+"px "+d+"55":"0 6px 20px rgba(0,0,0,.22)",y=o&&s?d:"var(--gray-l)",u=o&&s?"0 0 8px "+d+"77":"none",b=f?f.length>6?f.slice(0,6)+"\u2026":f:"",P=b?'<div class="rsp-namelbl" style="color:'+y+";text-shadow:"+u+';">'+b.replace(/</g,"&lt;").replace(/>/g,"&gt;")+"</div>":"",_=t+c*2+6,n="position:relative;display:flex;align-items:center;justify-content:center;width:"+_+"px;height:"+_+"px;flex-shrink:0;--rsp-glow-base:"+w+";--rsp-glow-peak:"+l+";",F=typeof E=="function"?E():"none",k="width:"+t+"px;height:"+t+"px;border-radius:"+(x?"50%":r)+";"+(F!=="none"?"clip-path:"+F+";":"")+"overflow:hidden;display:flex;align-items:center;justify-content:center;border:"+c+"px solid "+a+";box-shadow:"+w+";filter:"+g+";background:#e2e8f0;";return'<div class="rsp-imgbox'+(o&&s?" rsp-imgbox--win":"")+(x?" rsp-imgbox--circle":"")+'" style="'+n+'"><div class="rsp-imginner" style="'+k+'">'+e+"</div></div>"+P}function M(e,t,r,i,g){if(!e||!e.length)return"";for(var s=Math.max(40,Math.min(160,parseInt(S("su_rsp_size","72"),10)||72)),o=S("su_rsp_valign","center"),d=S("su_rsp_brightness","1.0"),f=S("su_rsp_effect","none"),m=Math.max(60,Math.min(180,parseInt(S("su_rsp_width","90"),10)||90)),x=W(),c=E(),a=A(),w=Math.max(-200,Math.min(200,parseInt(S("su_rsp_hoffset","0"),10)||0)),l=i?w:-w,y=Math.max(-200,Math.min(200,parseInt(S("su_rsp_voffset","0"),10)||0)),u=S("su_rsp_show_box","0")!=="0",b=V(),P=z(),_=[],n=0;n<e.length;n++){var F=e[n],k=F.name;if(k){var R="";if(a==="logo")R=ce(k,s);else{if(typeof getPlayerPhotoHTML!="function")continue;var Q=window.__detailCtx;if(window.__detailCtx="recCard",R=getPlayerPhotoHTML(k,s+"px",""),window.__detailCtx=Q,!R)continue}_.push({name:k,isWinner:F.isWinner,raw:R})}}if(!_.length)return"";var H=o==="top"?"flex-start":o==="bottom"?"flex-end":"center",se=l!==0?"translateX("+l+"px)":"",fe=y!==0?"translateY("+y+"px)":"",re=[se,fe].filter(Boolean).join(" "),ne=re?"transform:"+re+";":"",oe=u?t?C(r,.12):"rgba(148,163,184,0.07)":"transparent",ae=u?t?C(r,.3):"rgba(148,163,184,0.18)":"transparent",le="rsp"+Math.random().toString(36).slice(2,9);if(!b||_.length===1){var Z=_[0],j=!!Z.isWinner,ue=ee(f,d,!j,t,j),pe=t&&j?u?"0 4px 18px "+C(r,.38):"0 4px 16px "+C(r,.32):u?"0 2px 8px rgba(0,0,0,0.10)":"0 2px 8px rgba(0,0,0,0.12)",ge=te(Z.raw,s,x,pe,ue,t,j,r,Z.name,i);return'<div class="rec-side-profiles rsp-styled'+(t?" rec-side-profiles--win":" rec-side-profiles--lose")+(u?"":" rsp-no-box")+'" style="background:'+oe+";outline:1px solid "+ae+";min-width:"+m+"px;max-width:"+m+"px;overflow:visible;align-items:center;justify-content:"+H+';"><div class="rsp-inner" style="display:flex;align-items:'+H+";justify-content:center;width:100%;overflow:visible;"+ne+'">'+ge+"</div></div>"}for(var ie="",q=0;q<_.length;q++){var $=_[q],U=!!$.isWinner,de=ee(f,d,!U,t,U),he=t&&U?u?"0 4px 18px "+C(r,.38):"0 4px 16px "+C(r,.32):u?"0 2px 8px rgba(0,0,0,0.10)":"0 2px 8px rgba(0,0,0,0.12)",ye=q===0?"flex":"none",we=te($.raw,s,x,he,de,t,U,r,$.name,i);ie+='<div class="rsp-slide" style="display:'+ye+";align-items:"+H+';justify-content:center;width:100%;">'+we+"</div>"}var _e=parseInt(g||0,10)||0;return'<div id="'+le+'" class="rec-side-profiles rsp-styled'+(t?" rec-side-profiles--win":" rec-side-profiles--lose")+(u?"":" rsp-no-box")+'" data-rsp-slides="1" data-rsp-slot="'+_e+'" style="background:'+oe+";outline:1px solid "+ae+";min-width:"+m+"px;max-width:"+m+"px;overflow:visible;align-items:center;justify-content:"+H+';"><div class="rsp-inner" style="display:flex;flex-direction:column;width:100%;overflow:visible;'+ne+'">'+ie+"</div></div>"}function I(e,t){return(e||[]).map(function(r){return{name:r,isWinner:t}})}window._buildRecSideProfilePanel=function(e,t,r,i,g,s){if(!L())return{left:"",right:""};try{var o=A(),d=r||i;if(o==="logo"){var f=e&&(e.a||e.univA||e.a_univ||"")||"",m=e&&(e.b||e.univB||e.b_univ||"")||"";if(!f&&Array.isArray(window.players)){var x=(t&&t.a||[]).map(function(n){return typeof n=="string"?n:n&&n.name||""}).filter(Boolean);if(x.length){var c=window.players.find(function(n){return n.name===x[0]});c&&(f=c.univ||"")}}if(!m&&Array.isArray(window.players)){var a=(t&&t.b||[]).map(function(n){return typeof n=="string"?n:n&&n.name||""}).filter(Boolean);if(a.length){var w=window.players.find(function(n){return n.name===a[0]});w&&(m=w.univ||"")}}return{left:f?M([{name:f,isWinner:r}],r,g,!0):"",right:m?M([{name:m,isWinner:i}],i,s,!1):""}}var l=K(e,"a",r),y=K(e,"b",i),u=l.ordered&&l.ordered.length?l.ordered:I(l.winNames,!0).concat(I(l.loseNames,!1)),b=y.ordered&&y.ordered.length?y.ordered:I(y.winNames,!0).concat(I(y.loseNames,!1));if(!u.length){var P=(t&&t.a||[]).map(function(n){return typeof n=="string"?n:n&&n.name||""}).filter(Boolean);u=I(P,r)}if(!b.length){var _=(t&&t.b||[]).map(function(n){return typeof n=="string"?n:n&&n.name||""}).filter(Boolean);b=I(_,i)}return{left:u.length?M(u,r,g,!0):"",right:b.length?M(b,i,s,!1):""}}catch(n){return{left:"",right:""}}},window._buildCompSidePanel=function(e,t,r,i,g,s,o){if(!L())return{left:"",right:""};if(!X())return{left:"",right:""};try{var d=A(),f=o&&o.matchNum!=null?o.matchNum-1:o&&o._matchIdx!=null?o._matchIdx:0;if(d==="logo")return{left:e?M([{name:e,isWinner:r}],r,g,!0,f):"",right:t?M([{name:t,isWinner:i}],i,s,!1,f):""};var m=function(x,c){var a=K(o,x,c),w=x==="a"?e:t;function l(n){if(!Array.isArray(window.players)||!w)return n;var F=n.filter(function(k){var R=window.players.find(function(Q){return Q.name===k.name});return R&&R.univ===w});return F.length?F:n}var y=a.ordered&&a.ordered.length?l(a.ordered):I(l(I(a.winNames,!0).concat(I(a.loseNames,!1)).map(function(n){return n.name})),c);if(!y.length){var u=a.winNames||[],b=a.loseNames||[];y=I(u,!0).concat(I(b,!1))}var P=y;if(!P.length&&Array.isArray(window.players)){var _=window.players.filter(function(n){return n.univ===w});P=_.map(function(n){return{name:n.name,isWinner:c}})}return P};return{left:M(m("a",r),r,g,!0,f),right:M(m("b",i),i,s,!1,f)}}catch(x){return{left:"",right:""}}},window.cfgSetRecSidePanelSettings=function(){try{var e=!!(document.getElementById("cfg-rec-side-panel-on")||{}).checked;localStorage.setItem("su_rec_side_panel_on",e?"1":"0"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspSize=function(e){try{localStorage.setItem("su_rsp_size",String(parseInt(e,10)||72)),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspWidth=function(e){try{localStorage.setItem("su_rsp_width",String(parseInt(e,10)||90)),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspValign=function(e){try{localStorage.setItem("su_rsp_valign",e||"center"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspBrightness=function(e){try{localStorage.setItem("su_rsp_brightness",String(parseFloat(e)||1)),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspEffect=function(e){try{localStorage.setItem("su_rsp_effect",e||"none"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspImageType=function(e){try{localStorage.setItem("su_rsp_image_type",e||"profile"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspCompOn=function(){try{var e=!!(document.getElementById("cfg-rsp-comp-on")||{}).checked;localStorage.setItem("su_rsp_comp_on",e?"1":"0"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspHalign=function(e){try{localStorage.setItem("su_rsp_halign",e||"center"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspHoffset=function(e){try{localStorage.setItem("su_rsp_hoffset",String(parseInt(e,10)||0)),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspVoffset=function(e){try{localStorage.setItem("su_rsp_voffset",String(parseInt(e,10)||0)),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspShowBox=function(e){try{localStorage.setItem("su_rsp_show_box",e?"1":"0"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspRotateOn=function(){try{var e=!!(document.getElementById("cfg-rsp-rotate-on")||{}).checked;localStorage.setItem("su_rsp_rotate_on",e?"1":"0"),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspRotateSec=function(e){try{localStorage.setItem("su_rsp_rotate_sec",String(Math.max(1,Math.min(60,parseInt(e,10)||5)))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspWinTeamLoseOpacity=function(e){try{localStorage.setItem("su_rsp_winteam_lose_opacity",String(Math.max(.1,Math.min(1,parseFloat(e)||.65)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspWinTeamLoseGray=function(e){try{localStorage.setItem("su_rsp_winteam_lose_gray",String(Math.max(0,Math.min(1,parseFloat(e)||.35)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspLoseTeamWinOpacity=function(e){try{localStorage.setItem("su_rsp_loseteam_win_opacity",String(Math.max(.1,Math.min(1,parseFloat(e)||.8)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspLoseTeamWinGray=function(e){try{localStorage.setItem("su_rsp_loseteam_win_gray",String(Math.max(0,Math.min(1,parseFloat(e)||.15)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspLoseTeamWinBrightness=function(e){try{localStorage.setItem("su_rsp_loseteam_win_brightness",String(Math.max(.5,Math.min(1.8,parseFloat(e)||1)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspLoseTeamLoseOpacity=function(e){try{localStorage.setItem("su_rsp_loseteam_lose_opacity",String(Math.max(.1,Math.min(1,parseFloat(e)||.45)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}},window.cfgSetRspLoseTeamLoseGray=function(e){try{localStorage.setItem("su_rsp_loseteam_lose_gray",String(Math.max(0,Math.min(1,parseFloat(e)||.75)).toFixed(2))),typeof render=="function"&&render();try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(t){}}catch(t){}}})(),(function(){window._rspGlobalTick=window._rspGlobalTick||0;var L=null;function V(){try{return Math.max(1,Math.min(60,parseInt(localStorage.getItem("su_rsp_rotate_sec")||"5",10)||5))}catch(p){return 5}}function z(){var p;try{return((p=localStorage.getItem("su_rsp_rotate_on"))!=null?p:"1")!=="0"}catch(v){return!0}}function X(){window._rspGlobalTick=window._rspGlobalTick+1;for(var p=window._rspGlobalTick,v=document.querySelectorAll('[data-rsp-slides="1"]'),h=0;h<v.length;h++)A(v[h],p)}function A(p,v){var h=p.querySelectorAll(".rsp-slide");if(h.length)for(var S=parseInt(p.getAttribute("data-rsp-slot")||"0",10)||0,T=(v+S)%h.length,O=0;O<h.length;O++)h[O].style.display=O===T?"flex":"none"}function Y(p){A(p,window._rspGlobalTick)}function G(p){for(var v=(p||document).querySelectorAll('[data-rsp-slides="1"]'),h=0;h<v.length;h++)Y(v[h])}function B(){if(L&&clearInterval(L),!!z()){var p=V();L=setInterval(function(){X()},p*1e3)}}window._rspRestartGlobalTimer=function(){B(),G(document)};var J=new MutationObserver(function(p){for(var v=0;v<p.length;v++)for(var h=p[v].addedNodes,S=0;S<h.length;S++){var T=h[S];T.nodeType===1&&(T.hasAttribute&&T.hasAttribute("data-rsp-slides")?Y(T):T.querySelectorAll&&G(T))}});function N(){J.observe(document.body,{childList:!0,subtree:!0}),G(document),B()}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",N):N()})();
 
 /* mobile-bar.js */
 (function(){function t(){const e=document.getElementById("mobileActionBar");e&&(e.style.display=window.innerWidth<=768?"flex":"none")}t(),window.addEventListener("resize",t),updateFabVisibility()})();function updateFabVisibility(){const t=document.getElementById("mobileFab");if(!t)return;const e=window.innerWidth<=768,o=localStorage.getItem("su_fabHideMobile")==="1",a=localStorage.getItem("su_fabHidePC")==="1";e?t.style.display=o?"none":"flex":t.style.display=a?"none":"flex";const n=document.querySelector(".fab-sub-item--cfg");n&&(n.style.display=typeof isLoggedIn!="undefined"&&isLoggedIn?"flex":"none")}window.addEventListener("resize",updateFabVisibility),window.addEventListener("DOMContentLoaded",function(){updateFabVisibility(),updateFabButtonOnclick()}),(function(){var t=document.querySelector(".tabs");if(!t)return;var e=t.closest(".tabs-scroll-wrap"),o=null,a=null,n=null;e||(e=document.createElement("div"),e.className="tabs-scroll-wrap no-export",t.parentNode.insertBefore(e,t),e.appendChild(t)),o=e.querySelectorAll(".tabs-arrow"),a=o[0]||null,n=o[1]||null,a||(a=document.createElement("button"),a.className="tabs-arrow",a.innerHTML="&#9664;",a.title="\uC774\uC804 \uD0ED",a.setAttribute("aria-label","\uC774\uC804 \uD0ED"),e.insertBefore(a,t)),n||(n=document.createElement("button"),n.className="tabs-arrow",n.innerHTML="&#9654;",n.title="\uB2E4\uC74C \uD0ED",n.setAttribute("aria-label","\uB2E4\uC74C \uD0ED"),e.appendChild(n)),a.onclick=function(){t.scrollBy({left:-200,behavior:"smooth"})},n.onclick=function(){t.scrollBy({left:200,behavior:"smooth"})};try{t.scrollLeft=0}catch(s){}function r(){var s=t.scrollLeft>4,u=t.scrollLeft<t.scrollWidth-t.clientWidth-4;a.classList.toggle("visible",s),n.classList.toggle("visible",u)}t.addEventListener("scroll",r,{passive:!0}),window.addEventListener("resize",r),setTimeout(r,200)})();var _fabOpen=!1;function toggleFab(){_fabOpen=!_fabOpen;const t=document.getElementById("fabMain"),e=document.getElementById("fabSubList");!t||!e||(t.classList.toggle("open",_fabOpen),e.classList.toggle("open",_fabOpen))}function closeFab(){_fabOpen=!1;const t=document.getElementById("fabMain"),e=document.getElementById("fabSubList");t&&t.classList.remove("open"),e&&e.classList.remove("open")}function _fabGo(t){var e=null;document.querySelectorAll(".tab").forEach(function(o){var a=o.getAttribute("onclick")||"";(a.indexOf("'"+t+"'")!==-1||a.indexOf('"'+t+'"')!==-1)&&(e=o)}),e?(e.click(),setTimeout(function(){window.scrollTo({top:0,behavior:"smooth"})},80)):typeof sw=="function"&&sw(t)}function updateFabButtonOnclick(){const t=JSON.parse(localStorage.getItem("su_fabTabs")||"{}"),e={cal:"cal",comp:"comp",univm:"univm",ind:"ind",pro:"pro"},o={cal:"\uCE98\uB9B0\uB354",total:"\uC2A4\uD2B8\uB9AC\uBA38",board2:"\uD604\uD669\uD310",tier:"\uD2F0\uC5B4 \uC21C\uC704\uD45C",hist:"\uB300\uC804 \uAE30\uB85D",ind:"\uAC1C\uC778\uC804",univm:"\uB300\uD559\uB300\uC804",comp:"\uB300\uD68C",pro:"\uD504\uB85C\uB9AC\uADF8",stats:"\uD1B5\uACC4",roulette:"\uB8F0\uB81B"},a=document.querySelectorAll(".fab-sub-item"),n={"\u{1F5D3}\uFE0F":"cal","\u26A1":"comp","\u{1F3DF}\uFE0F":"univm","\u2694\uFE0F":"ind","\u{1F3C5}":"pro"};a.forEach(r=>{const s=r.querySelector("span"),u=s==null?void 0:s.textContent;if(u&&n[u]){const c=n[u],i=t[c]||e[c];r.setAttribute("onclick","closeFab();_fabGo('"+i+"')");const l=o[i]||t[c]||e[c];Array.from(r.childNodes).forEach(f=>{f.nodeType===3&&(f.textContent=" "+l)})}})}document.addEventListener("click",function(t){_fabOpen&&!t.target.closest("#mobileFab")&&closeFab()}),(function(){var t=1,e=0,o=null;function a(n){var r=n[0].clientX-n[1].clientX,s=n[0].clientY-n[1].clientY;return Math.sqrt(r*r+s*s)}document.addEventListener("touchstart",function(n){if(n.touches.length===2){var r=n.target.closest(".tour-wrap");if(r){n.preventDefault(),o=r.querySelector(".tour-inner")||r,e=a(n.touches);var s=parseFloat(o.style.transform&&o.style.transform.match(/scale\(([^)]+)\)/)?o.style.transform.match(/scale\(([^)]+)\)/)[1]:1)||1;t=s}}},{passive:!1}),document.addEventListener("touchmove",function(n){if(!(n.touches.length!==2||!o)){n.preventDefault();var r=a(n.touches)/e,s=Math.min(Math.max(t*r,.4),3);o.style.transformOrigin="top left",o.style.transform="scale("+s+")"}},{passive:!1}),document.addEventListener("touchend",function(n){if(n.touches.length<2&&o){var r=parseFloat(o.style.transform&&o.style.transform.match(/scale\(([^)]+)\)/)?o.style.transform.match(/scale\(([^)]+)\)/)[1]:1)||1;t=r,o=null}},{passive:!0})})(),(function(){var t=null,e=null,o=500;document.addEventListener("touchstart",function(a){var n=a.target.closest(".brd-chip");n&&(e=n,t=setTimeout(function(){if(e){var r=e.dataset.player;r&&(navigator.vibrate&&navigator.vibrate(40),typeof openPlayerModal=="function"&&openPlayerModal(r),e=null)}},o))},{passive:!0}),document.addEventListener("touchmove",function(){t&&(clearTimeout(t),t=null,e=null)},{passive:!0}),document.addEventListener("touchend",function(){t&&(clearTimeout(t),t=null,e=null)},{passive:!0})})(),(function(){var t=!1,e=null,o="",a=0;function n(i){var l=i.target.closest(".tab");if(l&&!(i.touches&&i.touches.length>1)){t=!0;try{var f=l.getAttribute("onclick")||"";if(f&&typeof sw=="function"){var v=f.match(/sw\(['"]([^'"]+)['"]\s*(?:,\s*this)?\)/);if(v){var d=v[1],m=Date.now();if(d===o&&m-a<500)return;o=d,a=m,i.preventDefault(),sw(d,l)}}}catch(b){}e&&clearTimeout(e),e=setTimeout(function(){t=!1},400)}}var r="",s=0;function u(i){var l=i.target.closest(".bnav-item");if(l&&!(i.touches&&i.touches.length>1))try{var f=l.getAttribute("onclick")||"",v=f.match(/swNav\(['"]([^'"]+)['"]\s*,\s*this\)/);if(v&&typeof swNav=="function"){var d=v[1],m=Date.now();if(d===r&&m-s<500)return;r=d,s=m,i.preventDefault(),swNav(d,l)}}catch(b){}}function c(){var i=document.querySelector(".tabs");i&&!i._touchTabBound&&(i.addEventListener("touchstart",n,{passive:!1}),i._touchTabBound=!0);var l=document.getElementById("bottomNav");l&&!l._touchNavBound&&(l.addEventListener("touchstart",u,{passive:!1}),l._touchNavBound=!0)}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",c):c(),setTimeout(c,500),setTimeout(c,1500)})();

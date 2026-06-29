@@ -182,9 +182,14 @@ function _h2hPlayerBgPanel(pName, isWin, isLose){
   const race=(p.race&&p.race!=='N')?`<span class="rbadge r${p.race}" style="transform:scale(.92);transform-origin:center">${p.race}</span>`:'';
   const univ = p.univ||'';
   const click = pName?`onclick="event.stopPropagation();openPlayerModal('${escJS(pName)}')"`:'';
-  const loseFx = isLose ? 'filter:grayscale(1);opacity:.78;' : '';
+  const loseFx = isLose ? 'filter:grayscale(.1) saturate(1.01) brightness(.99);opacity:.95;' : '';
   const txtCol = isLose ? 'rgba(255,255,255,.78)' : '#fff';
   const txtCol2 = isLose ? 'rgba(255,255,255,.60)' : 'rgba(255,255,255,.86)';
+  const frameCol = isWin ? '#22c55e' : 'rgba(148,163,184,.35)';
+  const frameShadow = isWin ? '0 18px 38px rgba(34,197,94,.24)' : '0 10px 24px rgba(15,23,42,.08)';
+  const overlayBg = isWin
+    ? 'linear-gradient(180deg, rgba(255,255,255,.04) 0%, rgba(15,23,42,.12) 42%, rgba(15,23,42,.54) 100%)'
+    : 'linear-gradient(180deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.10) 22%, rgba(15,23,42,.22) 52%, rgba(15,23,42,.70) 100%)';
   const isMb = _h2hIsMobile();
   // (요청사항) 좌우/상하 폭이 "확실히" 바뀌게:
   // - PC: width를 지정하되 max-width:100%로 오버플로 방지
@@ -197,8 +202,8 @@ function _h2hPlayerBgPanel(pName, isWin, isLose){
   const wCss = isMb
     ? `width:min(60vw, ${Math.max(40,sizeW)}px);max-width:60vw;flex:0 1 auto;min-width:0;`
     : `width:min(100%, ${Math.max(80,sizeW)}px);flex:0 1 auto;min-width:0;`;
-  return `<div ${click} style="position:relative;overflow:hidden;border-radius:16px;height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${isWin?'#16a34a':'rgba(148,163,184,.35)'};box-shadow:${isWin?'0 14px 30px rgba(34,197,94,.16)':'0 10px 24px rgba(15,23,42,.08)'};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${isLose?'filter:grayscale(1);opacity:.88;':''}">
-    <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.30) 55%, rgba(15,23,42,.78) 100%)"></div>
+  return `<div ${click} style="position:relative;overflow:hidden;border-radius:16px;height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${frameCol};box-shadow:${frameShadow};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${isLose?'filter:grayscale(.14) saturate(1) brightness(.99) contrast(.99);opacity:.98;':''}">
+    <div style="position:absolute;inset:0;background:${overlayBg}"></div>
     ${!p.photo?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(28,Math.round(base*0.30))}px;font-weight:1000;color:rgba(255,255,255,.16)">${initial}</div>`:''}
     <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;z-index:1;${loseFx}">
       <div style="font-weight:1000;font-size:16px;line-height:1.1;color:${txtCol};text-shadow:0 2px 10px rgba(0,0,0,.45)">${pName||'미정'}</div>
@@ -228,7 +233,7 @@ function _h2hBannerCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
   const sc2 = win2 ? p2col : win1 ? '#94a3b8' : 'var(--text2)';
   const fs = isMb ? 26 : 32;
   return `<div style="display:grid;grid-template-columns:1fr auto 1fr;height:${h}px;position:relative;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
-    <div style="background-image:${p1bg};background-size:cover;background-position:${p1pos};position:relative;${!p1.photo?`background:linear-gradient(135deg,${p1col}33,${p1col}11);`:''}${!win1&&win2?'filter:grayscale(.7);opacity:.7;':''}">
+    <div style="background-image:${p1bg};background-size:cover;background-position:${p1pos};position:relative;${!p1.photo?`background:linear-gradient(135deg,${p1col}33,${p1col}11);`:''}${!win1&&win2?'filter:grayscale(.14) saturate(1) brightness(.99);opacity:.94;':''}">
       <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,23,42,.12),rgba(15,23,42,.5))"></div>
       <div style="position:absolute;bottom:8px;left:10px;right:0">
         <div style="font-weight:1000;font-size:${isMb?12:14}px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
@@ -243,7 +248,7 @@ function _h2hBannerCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
       </div>
       ${(win1||win2)?`<div style="margin-top:3px;font-size:9px;font-weight:800;padding:1px 7px;border-radius:99px;background:${win1?p1col:p2col};color:#fff;white-space:nowrap">${win1?s.p1:s.p2} 승</div>`:''}
     </div>
-    <div style="background-image:${p2bg};background-size:cover;background-position:${p2pos};position:relative;${!p2.photo?`background:linear-gradient(225deg,${p2col}33,${p2col}11);`:''}${!win2&&win1?'filter:grayscale(.7);opacity:.7;':''}">
+    <div style="background-image:${p2bg};background-size:cover;background-position:${p2pos};position:relative;${!p2.photo?`background:linear-gradient(225deg,${p2col}33,${p2col}11);`:''}${!win2&&win1?'filter:grayscale(.14) saturate(1) brightness(.99);opacity:.94;':''}">
       <div style="position:absolute;inset:0;background:linear-gradient(270deg,rgba(15,23,42,.12),rgba(15,23,42,.5))"></div>
       <div style="position:absolute;bottom:8px;right:10px;left:0;text-align:right">
         <div style="font-weight:1000;font-size:${isMb?12:14}px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
@@ -305,8 +310,8 @@ function _h2hPhotoFullCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
   const p2Shadow = win2 ? `0 0 0 3px ${p2col},0 0 0 5px rgba(255,255,255,.5)` : 'none';
   return `<div style="position:relative;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
     <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr">
-      <div style="${p1.photo?`background-image:url('${toHttpsUrl(p1.photo)}');background-size:cover;background-position:${p1pos};`:`background:linear-gradient(135deg,${p1col}66,${p1col}22);`}${!win1&&win2?'filter:grayscale(.65);opacity:.75;':''}"></div>
-      <div style="${p2.photo?`background-image:url('${toHttpsUrl(p2.photo)}');background-size:cover;background-position:${p2pos};`:`background:linear-gradient(225deg,${p2col}66,${p2col}22);`}${!win2&&win1?'filter:grayscale(.65);opacity:.75;':''}"></div>
+      <div style="${p1.photo?`background-image:url('${toHttpsUrl(p1.photo)}');background-size:cover;background-position:${p1pos};`:`background:linear-gradient(135deg,${p1col}66,${p1col}22);`}${!win1&&win2?'filter:grayscale(.12) saturate(1.01) brightness(.99);opacity:.93;':''}"></div>
+      <div style="${p2.photo?`background-image:url('${toHttpsUrl(p2.photo)}');background-size:cover;background-position:${p2pos};`:`background:linear-gradient(225deg,${p2col}66,${p2col}22);`}${!win2&&win1?'filter:grayscale(.12) saturate(1.01) brightness(.99);opacity:.93;':''}"></div>
     </div>
     <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,23,42,.55) 0%,rgba(15,23,42,.1) 30%,rgba(15,23,42,.1) 70%,rgba(15,23,42,.55) 100%)"></div>
     <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 10px">
@@ -404,7 +409,7 @@ function _h2hDuoToneCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
     return `<div style="width:${sz}px;height:${sz}px;border-radius:12px;background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?13:14}px;color:#fff">${(pName||'?').slice(0,1)}</div>`;
   };
   return `<div style="display:grid;grid-template-columns:1fr auto 1fr;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
-    <div style="background:linear-gradient(135deg,${p1col},${p1col}aa);display:flex;flex-direction:column;justify-content:center;padding:${isMb?'10px 10px':'12px 14px'};${!win1&&win2?'filter:grayscale(.65);opacity:.78;':''}">
+    <div style="background:linear-gradient(135deg,${p1col},${p1col}aa);display:flex;flex-direction:column;justify-content:center;padding:${isMb?'10px 10px':'12px 14px'};${!win1&&win2?'filter:grayscale(.1) saturate(1.01) brightness(.99);opacity:.95;':''}">
       <div style="display:flex;align-items:center;gap:8px;min-width:0">
         ${av(s.p1)}
         <div style="min-width:0">
@@ -422,7 +427,7 @@ function _h2hDuoToneCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
       </div>
       <div style="font-size:9px;color:#94a3b8;font-weight:900;letter-spacing:1px">VS</div>
     </div>
-    <div style="background:linear-gradient(225deg,${p2col},${p2col}aa);display:flex;flex-direction:column;justify-content:center;padding:${isMb?'10px 10px':'12px 14px'};align-items:flex-end;text-align:right;${!win2&&win1?'filter:grayscale(.65);opacity:.78;':''}">
+    <div style="background:linear-gradient(225deg,${p2col},${p2col}aa);display:flex;flex-direction:column;justify-content:center;padding:${isMb?'10px 10px':'12px 14px'};align-items:flex-end;text-align:right;${!win2&&win1?'filter:grayscale(.1) saturate(1.01) brightness(.99);opacity:.95;':''}">
       <div style="display:flex;align-items:center;gap:8px;min-width:0;justify-content:flex-end">
         <div style="min-width:0">
           <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
@@ -448,7 +453,7 @@ function _h2hSplitCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
     return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?12:13}px;color:#fff;flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
   };
   return `<div style="display:grid;grid-template-columns:1fr auto 1fr;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
-    <div style="background:linear-gradient(135deg,${p1col}66,${p1col}18);display:flex;align-items:center;gap:10px;padding:${pad}px;${!win1&&win2?'filter:grayscale(.65);opacity:.82;':''}">
+    <div style="background:linear-gradient(135deg,${p1col}66,${p1col}18);display:flex;align-items:center;gap:10px;padding:${pad}px;${!win1&&win2?'filter:grayscale(.1) saturate(1.01) brightness(.99);opacity:.95;':''}">
       ${av(s.p1, p1col)}
       <div style="min-width:0">
         <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
@@ -463,7 +468,7 @@ function _h2hSplitCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
       </div>
       <div style="font-size:9px;color:#94a3b8;font-weight:900;letter-spacing:1px">VS</div>
     </div>
-    <div style="background:linear-gradient(225deg,${p2col}66,${p2col}18);display:flex;align-items:center;gap:10px;padding:${pad}px;justify-content:flex-end;text-align:right;${!win2&&win1?'filter:grayscale(.65);opacity:.82;':''}">
+    <div style="background:linear-gradient(225deg,${p2col}66,${p2col}18);display:flex;align-items:center;gap:10px;padding:${pad}px;justify-content:flex-end;text-align:right;${!win2&&win1?'filter:grayscale(.1) saturate(1.01) brightness(.99);opacity:.95;':''}">
       <div style="min-width:0">
         <div style="font-weight:1000;font-size:${isMb?13:15}px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
         <div style="font-size:10px;color:rgba(15,23,42,.62);font-weight:800">${p2.univ||''}</div>
@@ -736,8 +741,8 @@ function _h2hBattleCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
 
   return `<div style="position:relative;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
     <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr">
-      <div style="background:linear-gradient(135deg,${p1col},${p1col}cc,${p1col}88);${loser1?'filter:grayscale(.6) brightness(.82);':''}"></div>
-      <div style="background:linear-gradient(225deg,${p2col},${p2col}cc,${p2col}88);${loser2?'filter:grayscale(.6) brightness(.82);':''}"></div>
+      <div style="background:linear-gradient(135deg,${p1col},${p1col}cc,${p1col}88);${loser1?'filter:grayscale(.08) saturate(1.02) brightness(.97);':''}"></div>
+      <div style="background:linear-gradient(225deg,${p2col},${p2col}cc,${p2col}88);${loser2?'filter:grayscale(.08) saturate(1.02) brightness(.97);':''}"></div>
     </div>
     <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" preserveAspectRatio="none" viewBox="0 0 400 ${h}">
       <polygon points="${200-diag},0 ${200+diag},0 ${200+diag},${h} ${200-diag},${h}" fill="rgba(0,0,0,.30)"/>

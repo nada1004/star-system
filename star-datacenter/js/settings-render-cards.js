@@ -57,7 +57,6 @@ window.renderCfgMiniCardSection = function(_scfgD) {
       <div style="font-size:11px;color:var(--gray-l)">※ 미니대전·시빌워 카드 공통 설정입니다.</div>
     </div>
   </details>`;
-  })()}
 };
 
 // 대학CK 기록 카드 디자인 섹션
@@ -107,7 +106,6 @@ window.renderCfgUnivCKCardSection = function(_scfgD) {
       </div>
     </div>
   </details>`;
-  })()}
 };
 
 // 대학대전 기록 카드 디자인 섹션
@@ -168,7 +166,6 @@ window.renderCfgUnivMCardSection = function(_scfgD) {
       </div>
     </div>
   </details>`;
-  })()}
 };
 
 // 티어대회 일반 기록 카드 섹션
@@ -219,7 +216,6 @@ window.renderCfgTierTourCardSection = function(_scfgD) {
       </div>
     </div>
   </details>`;
-  })()}
 };
 
 // 티어대회 조별리그 기록 섹션
@@ -267,7 +263,6 @@ window.renderCfgTierTourLeagueCardSection = function(_scfgD) {
       </div>
     </div>
   </details>`;
-  })()}
 };
 
 // 티어대회 대진표 기록 섹션
@@ -309,7 +304,6 @@ window.renderCfgTierTourBrackCardSection = function(_scfgD) {
       </div>
     </div>
   </details>`;
-  })()}
 };
 
 // 프로리그 대회 조별리그 기록 섹션
@@ -364,7 +358,6 @@ window.renderCfgProCompLeagueCardSection = function(_scfgD) {
       </div>
     </div>
   </details>`;
-  })()}
 };
 
 // 프로리그 대회 대진표 기록 섹션
@@ -414,7 +407,6 @@ window.renderCfgProCompTourCardSection = function(_scfgD) {
       </div>
     </div>
   </details>`;
-  })()}
 };
 
 // 프로리그 대회 팀전 카드 섹션
@@ -457,5 +449,4 @@ window.renderCfgProCompTeamCardSection = function(_scfgD) {
       <div style="font-size:11px;color:var(--gray-l)">※ 팀전(🤝 팀전 탭)과 중장전(🔥 중장전 탭) 카드에 공통 적용됩니다.</div>
     </div>
   </details>`;
-  })()}
 };

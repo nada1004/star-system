@@ -584,6 +584,77 @@ window.cfgRunFullQaDryRun = function(){
 window.cfgSearchSettings = function(q){
   window._cfgSearchQ = String(q||'').trim();
   const qq = window._cfgSearchQ.toLowerCase();
+  const _cfgAliasMap = {
+    '밝기':['brightness','원색','광도','노출','환하게'],
+    '원색':['밝기','색감','컬러','color','채도','saturate'],
+    '색감':['원색','채도','컬러','color','saturate'],
+    '흑백':['회색','gray','grey','grayscale','무채색'],
+    '회색':['흑백','gray','grey','grayscale','무채색'],
+    '채도':['원색','색감','saturate','컬러','color'],
+    '투명도':['opacity','불투명도','알파','alpha'],
+    '프로필':['사진','이미지','아바타','avatar','photo','img'],
+    '사진':['프로필','이미지','아바타','avatar','photo','img'],
+    '이미지':['사진','프로필','썸네일','thumbnail','img','photo'],
+    '배경':['background','bg','뒷배경','배경색'],
+    '테두리':['border','라인','선','외곽선'],
+    '폰트':['글자','텍스트','서체','font','타이포'],
+    '글자':['폰트','텍스트','font','타이포'],
+    '맵':['map','맵명','지도'],
+    '날짜':['date','일자','날자'],
+    '진사람':['패자','패배','패배팀','loser','lose','진 선수'],
+    '패자':['진사람','패배팀','loser','lose','진 선수'],
+    '패배팀':['진사람','패자','loser','lose','진 팀'],
+    '이긴사람':['승자','승리','winner','win','이긴 선수'],
+    '승자':['이긴사람','승리','winner','win','이긴 선수'],
+    '기록':['카드','기록카드','record','history'],
+    '팝업':['모달','modal','상세'],
+    '모달':['팝업','modal','상세'],
+    '검색':['서치','찾기','필터','search'],
+    '순위':['랭킹','포디움','rank','ranking'],
+    '포디움':['순위','랭킹','1등','2등','3등','podium']
+  };
+  const _normCfgSearchText = function(v){
+    return String(v||'')
+      .replace(/<[^>]+>/g,' ')
+      .replace(/\s+/g,' ')
+      .trim()
+      .toLowerCase();
+  };
+  const _expandCfgSearchToken = function(tok){
+    const base = _normCfgSearchText(tok);
+    const out = new Set(base ? [base] : []);
+    if(!base) return [];
+    Object.keys(_cfgAliasMap).forEach(function(key){
+      const nk = _normCfgSearchText(key);
+      const aliases = (_cfgAliasMap[key]||[]).map(_normCfgSearchText).filter(Boolean);
+      if(base.includes(nk) || nk.includes(base) || aliases.some(function(a){ return a.includes(base) || base.includes(a); })){
+        out.add(nk);
+        aliases.forEach(function(a){ out.add(a); });
+      }
+    });
+    return Array.from(out).filter(Boolean);
+  };
+  const _queryGroups = _normCfgSearchText(window._cfgSearchQ).split(' ').filter(Boolean).map(_expandCfgSearchToken);
+  const _matchCfgSearch = function(hay){
+    const hh = _normCfgSearchText(hay);
+    if(!hh) return { hit:false, label:'' };
+    if(!_queryGroups.length) return { hit:false, label:'' };
+    const labels = [];
+    for(let i=0;i<_queryGroups.length;i++){
+      const group = _queryGroups[i]||[];
+      let matched = '';
+      for(let j=0;j<group.length;j++){
+        const token = group[j];
+        if(token && hh.includes(token)){
+          matched = token;
+          break;
+        }
+      }
+      if(!matched) return { hit:false, label:'' };
+      labels.push(matched);
+    }
+    return { hit:true, label:labels.join(', ') };
+  };
   // 검색어 없으면 현재 카테고리 기준으로 복구
   if(!qq){
     try{ _cfgApplyCat(window._cfgCat, false); }catch(e){}
@@ -592,7 +663,29 @@ window.cfgSearchSettings = function(q){
     return;
   }
   let shown=0;
+  const hits=[];
+  const _linkedTextMap = {};
   try{
+    document.querySelectorAll('button[onclick*="cfgGo("], [onclick*="cfgGo("]').forEach(function(btn){
+      try{
+        const oc = String(btn.getAttribute('onclick')||'');
+        const m = oc.match(/cfgGo\('([^']+)'\)/);
+        if(!m || !m[1]) return;
+        const id = String(m[1]).trim();
+        if(!id) return;
+        const txt = _normCfgSearchText([
+          btn.textContent || '',
+          btn.innerText || '',
+          btn.getAttribute('title') || '',
+          btn.getAttribute('aria-label') || ''
+        ].join(' '));
+        if(!txt) return;
+        _linkedTextMap[id] = (_linkedTextMap[id] ? (_linkedTextMap[id] + ' ') : '') + txt;
+      }catch(e){}
+    });
+    document.querySelectorAll('[data-cfg-bottom-panel]').forEach(function(panel){
+      panel.style.display = '';
+    });
     const secs=document.querySelectorAll('[data-cfg-sec]');
     for(let i=0;i<secs.length;i++){
       const el=secs[i];
@@ -606,18 +699,29 @@ window.cfgSearchSettings = function(q){
       let st = el.getAttribute('data-cfg-searchtext');
       if(!st){
         try{
-          const raw = el.innerText || '';
+          const raw = [el.textContent || '', el.innerText || ''].filter(Boolean).join(' ');
+          const desc = (window._cfgSecDescMap && window._cfgSecDescMap[id]) ? String(window._cfgSecDescMap[id]) : '';
+          const linked = _linkedTextMap[id] || '';
           // 빈 innerText는 캐싱하지 않음 (아직 화면에 없는 동적 섹션 대비)
-          st = (plain + ' ' + raw).toLowerCase();
+          st = _normCfgSearchText(id + ' ' + plain + ' ' + desc + ' ' + linked + ' ' + raw);
           if(raw.trim()) el.setAttribute('data-cfg-searchtext', st);
         }catch(e){
-          st = plain.toLowerCase();
+          st = _normCfgSearchText(id + ' ' + plain);
         }
       }
-      const hit = id.toLowerCase().includes(qq) || st.includes(qq);
+      const titleMatch = _matchCfgSearch(id + ' ' + plain);
+      const bodyMatch = _matchCfgSearch(st);
+      const hit = !!(titleMatch.hit || bodyMatch.hit);
       el.style.display = hit ? '' : 'none';
       if(hit) shown++;
-      if(el.tagName==='DETAILS') el.open=false;
+      if(hit) hits.push({
+        id,
+        t:plain,
+        st,
+        m:titleMatch.label || bodyMatch.label || '',
+        score:(titleMatch.hit?100:0) + (bodyMatch.hit?20:0) + (st.includes(qq)?10:0)
+      });
+      if(el.tagName==='DETAILS') el.open=!!hit;
     }
   }catch(e){}
   try{ const cnt=document.getElementById('cfgSearchCnt'); if(cnt) cnt.textContent = `검색 ${shown}개`; }catch(e){}
@@ -626,22 +730,21 @@ window.cfgSearchSettings = function(q){
   try{
     const sug=document.getElementById('cfgSearchSug');
     if(!sug) return;
-    const titles=window._cfgSecTitle||{};
-    const hits=[];
-    for(const id in titles){
-      const t=String(titles[id]||'');
-      const plain=t.replace(/<[^>]+>/g,'');
-      const hay=(id+' '+plain).toLowerCase();
-      if(hay.includes(qq)) hits.push({id,t:plain});
-    }
-    hits.sort((a,b)=>a.t.localeCompare(b.t,'ko'));
-    const top=hits.slice(0,10);
+    const uniq = [];
+    const seen = new Set();
+    hits.forEach(function(x){
+      if(!x || !x.id || seen.has(x.id)) return;
+      seen.add(x.id);
+      uniq.push(x);
+    });
+    uniq.sort((a,b)=>(b.score||0)-(a.score||0) || a.t.localeCompare(b.t,'ko'));
+    const top=uniq.slice(0,10);
     if(!top.length){
       sug.innerHTML='';
       sug.style.display='none';
       return;
     }
-    sug.innerHTML = top.map(x=>`<button type="button" class="cfg-search-item" onclick="(function(){try{cfgGo('${x.id}');}catch(e){};try{document.getElementById('cfgSearchSug').style.display='none';}catch(e){}})()">${x.t}</button>`).join('');
+    sug.innerHTML = top.map(x=>`<button type="button" class="cfg-search-item" onclick="(function(){try{cfgGo('${x.id}');}catch(e){};try{document.getElementById('cfgSearchSug').style.display='none';}catch(e){}})()"><span style="display:block;font-size:12px;font-weight:900;color:var(--text2)">${x.t}</span><span style="display:block;font-size:10px;color:var(--gray-l);font-weight:700">${x.m ? '매칭: '+x.m : '내부 기능 설정 매칭'}</span></button>`).join('');
     sug.style.display='block';
   }catch(e){}
 };

@@ -82,8 +82,8 @@ let totalFocusPlayer=''; // 상세형에서 선택된 스트리머 이름
     '.streamer-gallery-card.retired{filter:grayscale(.16) saturate(.84);opacity:.84}',
     '.streamer-gallery-card:hover{box-shadow:0 22px 42px rgba(15,23,42,.18)}',
     '.streamer-gallery-card:hover img{transform:scale(1.05)}',
-    '.streamer-gallery-card.is-selected{transform:translateY(-2px);border-color:color-mix(in srgb,var(--card-accent,#60a5fa) 58%, rgba(148,163,184,.18));box-shadow:0 18px 34px rgba(15,23,42,.14),0 0 0 2px color-mix(in srgb,var(--card-accent,#60a5fa) 30%, transparent)}',
-    '.streamer-gallery-card.is-selected::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--card-accent,#60a5fa) 54%, transparent);pointer-events:none;z-index:2}',
+    '.streamer-gallery-card.is-selected{transform:none;border-color:rgba(148,163,184,.18);box-shadow:0 14px 28px rgba(15,23,42,.10)}',
+    '.streamer-gallery-card.is-selected::after{content:none}',
 
     '.streamer-gallery-rank{position:absolute;top:12px;left:12px;font-size:10px;font-weight:900;color:rgba(255,255,255,.9)}',
     '.streamer-gallery-act{position:absolute;top:12px;right:12px}',
@@ -100,7 +100,7 @@ let totalFocusPlayer=''; // 상세형에서 선택된 스트리머 이름
     '.streamer-gallery-univ-chip.clickable-univ:hover{transform:translateY(-1px);box-shadow:0 10px 18px rgba(15,23,42,.18)}',
     '.streamer-gallery-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}',
     '.streamer-gallery-stat{padding:8px 8px 8px;border-radius:14px;background:rgba(15,23,42,.44);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(8px);box-shadow:0 10px 20px rgba(15,23,42,.14);min-height:62px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .2s ease,background .2s ease,box-shadow .2s ease;transform-origin:center}',
-    '.streamer-gallery-card:hover .streamer-gallery-stat,.streamer-gallery-card.is-selected .streamer-gallery-stat{transform:scale(1.045)}',
+    '.streamer-gallery-card:hover .streamer-gallery-stat{transform:scale(1.045)}',
     '.streamer-gallery-stat-label{font-size:9px;font-weight:800;color:rgba(255,255,255,.80);text-transform:uppercase;letter-spacing:.05em;text-shadow:0 1px 2px rgba(0,0,0,.25)}',
     '.streamer-gallery-stat-value{margin-top:4px;font-size:12px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.32);line-height:1.2}',
     '.streamer-gallery-stat-value--split{display:flex;flex-direction:column;gap:2px;white-space:normal;overflow:visible;text-overflow:clip}',
@@ -158,7 +158,7 @@ let totalFocusPlayer=''; // 상세형에서 선택된 스트리머 이름
     'body.dark .streamer-table thead th{background:linear-gradient(180deg,#132033,#17263c);border-color:#334155;color:#e2e8f0}',
     'body.dark .streamer-table tbody td{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#e2e8f0}',
     'body.dark .streamer-avatar{background:linear-gradient(180deg,#17263c,#0f172a);border-color:#334155;color:#cbd5e1;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
-    'body.dark .streamer-gallery-card.is-selected{box-shadow:0 20px 38px rgba(0,0,0,.32),0 0 0 2px color-mix(in srgb,var(--card-accent,#60a5fa) 34%, transparent);border-color:color-mix(in srgb,var(--card-accent,#60a5fa) 56%, #334155)}',
+    'body.dark .streamer-gallery-card.is-selected{box-shadow:0 16px 30px rgba(0,0,0,.24);border-color:#334155}',
     '@media (max-width:980px){.streamer-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}',
     '@media (max-width:980px){.streamer-focus-layout{grid-template-columns:1fr}.streamer-focus-list{max-height:none}.streamer-focus-main-hero{grid-template-columns:1fr}}',
     '@media (max-width:780px){.streamer-hero{flex-direction:column;padding:16px;border-radius:20px}.streamer-hero-title{font-size:20px}.streamer-hero-badges{justify-content:flex-start}.streamer-toolbar-card,.streamer-content-card{padding:10px}.streamer-gallery-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.streamer-search{max-width:none;flex:1 1 180px}.streamer-kpi-grid,.streamer-focus-statgrid,.streamer-focus-note-grid{grid-template-columns:1fr}.streamer-gallery-card{min-height:276px}.streamer-gallery-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.streamer-gallery-stat--wide{grid-column:1/-1}.streamer-focus-title{font-size:24px}.streamer-focus-photo{min-height:220px}}'
@@ -401,4 +401,3 @@ function bulkApplySearchFilter(){
     h.style.display=any?'':'none';
   });
 }
-

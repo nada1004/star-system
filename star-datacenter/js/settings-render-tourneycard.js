@@ -5,7 +5,16 @@
 
 window.renderCfgTourneyCardSection = function(_scfgD) {
   const localStorage = (function(){try{const ls=window.localStorage;const k='__su_ls_test__';ls.setItem(k,'1');ls.removeItem(k);return ls;}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}};} })();
-    return _scfgD('tourneycard','🏆 대회 카드(대회탭) 스타일') + `
+  const _tcOn = (localStorage.getItem('su_tc_theme_on') ?? '0') === '1';
+  const _tcAccent = (localStorage.getItem('su_tc_accent_mode') ?? 'none');
+  const _tcHd = parseInt(localStorage.getItem('su_tc_hd_alpha') ?? '12',10) || 12;
+  const _tcBw = parseInt(localStorage.getItem('su_tc_border_w') ?? '4',10) || 4;
+  const _tcIc = parseInt(localStorage.getItem('su_tc_uicon') ?? '34',10) || 34;
+  const _tcLw = parseInt(localStorage.getItem('su_tc_line_w') ?? '2',10) || 2;
+  const _tcLa = parseInt(localStorage.getItem('su_tc_line_a') ?? '70',10) || 70;
+  const _tcPreset = (localStorage.getItem('su_tc_preset') ?? '기본');
+  const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') ?? 'pill');
+  return _scfgD('tourneycard','🏆 대회 카드(대회탭) 스타일') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">대회탭 “조별리그 일정/대진표” 카드 스타일입니다. 기록탭 카드와 <b>별도</b>로 설정됩니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
@@ -182,9 +191,8 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
         </div>
       </div>
     </div>
-  </details>`;
-  })()}
-  ${(()=>{ 
+  </details>` +
+  (()=>{ 
     const pc = parseInt(localStorage.getItem('su_h2h_panel_pc')||'150',10)||150;
     const mb = parseInt(localStorage.getItem('su_h2h_panel_mb')||'126',10)||126;
     const fit = (localStorage.getItem('su_h2h_panel_fit')||'cover');
@@ -348,9 +356,9 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
         <div id="cfg-h2h-bgpos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">50%</div>
       </div>
     </div>
-  </details>`;
-  })()}
-  ${(()=>{ 
+  </details>`
+  })() +
+  (()=>{ 
     const pc = parseInt(localStorage.getItem('su_procomp_avatar_pc')||'52',10)||52;
     const mb = parseInt(localStorage.getItem('su_procomp_avatar_mb')||'40',10)||40;
     const fit = (localStorage.getItem('su_procomp_avatar_fit')||'cover');
@@ -414,16 +422,16 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
         ※ 값 변경 후 자동으로 재렌더링됩니다. 레이아웃은 카드 전체 여백/크기(프로필 카드 포함)를 함께 줄입니다.
       </div>
     </div>
-  </details>`;
-  })()}
-  ${(typeof window.renderCfgMiniCardSection==='function' ? window.renderCfgMiniCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgUnivCKCardSection==='function' ? window.renderCfgUnivCKCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgUnivMCardSection==='function' ? window.renderCfgUnivMCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgTierTourCardSection==='function' ? window.renderCfgTierTourCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgTierTourLeagueCardSection==='function' ? window.renderCfgTierTourLeagueCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgTierTourBrackCardSection==='function' ? window.renderCfgTierTourBrackCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgProCompLeagueCardSection==='function' ? window.renderCfgProCompLeagueCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgProCompTourCardSection==='function' ? window.renderCfgProCompTourCardSection(_scfgD) : '')}
-  ${(typeof window.renderCfgProCompTeamCardSection==='function' ? window.renderCfgProCompTeamCardSection(_scfgD) : '')}
-  ${(typeof window.buildShareCardSettingsSection==='function' ? window.buildShareCardSettingsSection(_scfgD) : '')}
+  </details>`
+  })() +
+  (typeof window.renderCfgMiniCardSection==='function' ? window.renderCfgMiniCardSection(_scfgD) : '') +
+  (typeof window.renderCfgUnivCKCardSection==='function' ? window.renderCfgUnivCKCardSection(_scfgD) : '') +
+  (typeof window.renderCfgUnivMCardSection==='function' ? window.renderCfgUnivMCardSection(_scfgD) : '') +
+  (typeof window.renderCfgTierTourCardSection==='function' ? window.renderCfgTierTourCardSection(_scfgD) : '') +
+  (typeof window.renderCfgTierTourLeagueCardSection==='function' ? window.renderCfgTierTourLeagueCardSection(_scfgD) : '') +
+  (typeof window.renderCfgTierTourBrackCardSection==='function' ? window.renderCfgTierTourBrackCardSection(_scfgD) : '') +
+  (typeof window.renderCfgProCompLeagueCardSection==='function' ? window.renderCfgProCompLeagueCardSection(_scfgD) : '') +
+  (typeof window.renderCfgProCompTourCardSection==='function' ? window.renderCfgProCompTourCardSection(_scfgD) : '') +
+  (typeof window.renderCfgProCompTeamCardSection==='function' ? window.renderCfgProCompTeamCardSection(_scfgD) : '') +
+  (typeof window.buildShareCardSettingsSection==='function' ? window.buildShareCardSettingsSection(_scfgD) : '');
 };
