@@ -1,4 +1,12 @@
 {
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:watch": "node build.mjs --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.5"
+  },
   "dependencies": {
     "acorn": "^8.17.0"
   }

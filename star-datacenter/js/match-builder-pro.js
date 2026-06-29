@@ -154,7 +154,7 @@ function proSearchPlayer(team){
     dropEl.innerHTML='<div style="padding:10px;color:var(--gray-l);font-size:12px;text-align:center">검색 결과 없음</div>';
     dropEl.style.display='block';return;
   }
-  dropEl.innerHTML=results.map(p=>`<div onclick="proAddPlayer('${team}','${p.name}');document.getElementById('pro-${team.toLowerCase()}-search').value='';document.getElementById('pro-${team.toLowerCase()}-drop').style.display='none'"
+  dropEl.innerHTML=results.map(p=>`<div onclick="proAddPlayer('${team}','${escJS(p.name)}');document.getElementById('pro-${team.toLowerCase()}-search').value='';document.getElementById('pro-${team.toLowerCase()}-drop').style.display='none'"
     style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:12px"
     onmouseover="this.style.background='var(--blue-l)'" onmouseout="this.style.background=''">
     <span style="display:inline-block;width:28px;height:28px;border-radius:6px;background:${gc(p.univ)};color:#fff;text-align:center;line-height:28px;font-size:11px;font-weight:700;flex-shrink:0">${(p.race||'?').charAt(0)}</span>

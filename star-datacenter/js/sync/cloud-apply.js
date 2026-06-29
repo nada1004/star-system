@@ -2,6 +2,27 @@
    Firebase/GitHub 수신 데이터 적용
 ══════════════════════════════════════ */
 
+// [BUGFIX] window.miniM/univM/ckM/proM/ttM/comps/indM/gjM/tourneys/proTourneys/players는
+// 여러 화면(특히 통계 탭, 프로리그 기록 탭)에서 "캐시된 스냅샷"으로 직접 참조한다.
+// 이 스냅샷은 IndexedDB 최초 로드 시(match-store-idb.js)나 설정 저장 시에만 갱신되고,
+// 클라우드 동기화로 들어온 데이터는 살아있는 전역 변수(let miniM 등)만 갱신하므로
+// window.* 스냅샷은 그대로 남아 새로고침 전까지 옛 데이터를 계속 보여주는 문제가 있었다.
+// 클라우드 데이터 반영 직후 항상 호출해 두 참조를 동기화한다.
+function _syncWindowDataRefs(){
+  try{ if(typeof miniM!=='undefined') window.miniM = miniM; }catch(e){}
+  try{ if(typeof univM!=='undefined') window.univM = univM; }catch(e){}
+  try{ if(typeof ckM!=='undefined') window.ckM = ckM; }catch(e){}
+  try{ if(typeof proM!=='undefined') window.proM = proM; }catch(e){}
+  try{ if(typeof ttM!=='undefined') window.ttM = ttM; }catch(e){}
+  try{ if(typeof comps!=='undefined') window.comps = comps; }catch(e){}
+  try{ if(typeof indM!=='undefined') window.indM = indM; }catch(e){}
+  try{ if(typeof gjM!=='undefined') window.gjM = gjM; }catch(e){}
+  try{ if(typeof tourneys!=='undefined') window.tourneys = tourneys; }catch(e){}
+  try{ if(typeof proTourneys!=='undefined') window.proTourneys = proTourneys; }catch(e){}
+  try{ if(typeof players!=='undefined') window.players = players; }catch(e){}
+}
+try{ window._syncWindowDataRefs = _syncWindowDataRefs; }catch(e){}
+
 // 클라우드 데이터를 전역 변수에 반영 (cloudLoad + onFirebaseLoad 공통)
 // 🔧 Firebase 배열→객체 변환 대응 헬퍼
 // Firebase Realtime DB는 배열을 {0:...,1:...,2:...} 객체로 저장할 수 있음
@@ -557,6 +578,7 @@ window.onFirebaseLoad = function(data) {
     _markReceiveMeta(sa);
   }catch(e){}
   _applyCloudData(clean);
+  try{ if(typeof window._syncWindowDataRefs==='function') window._syncWindowDataRefs(); }catch(e){}
   if (typeof localSave === 'function') localSave();
   try{ if(typeof window._primeMatchSyncSignature === 'function') window._primeMatchSyncSignature(true); }catch(e){}
   if (typeof fixPoints === 'function') fixPoints();

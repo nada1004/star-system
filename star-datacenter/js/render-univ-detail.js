@@ -60,7 +60,7 @@ function buildUnivDetailHTML(univName){
     ? buildUnivAceCardsHTML({ members, col })
     : '';
 
-  return h;
+  return `<div class="ud-premium-shell">${h}</div>`;
 }
 
 try{

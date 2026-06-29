@@ -71,9 +71,14 @@ function preparePlayerHeaderDisplayData(opts){
       return `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,.65)">${raceL}</span><img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="high" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_finalFit};object-position:${imagePos};transform:scale(${imgScale});filter:brightness(${imgBrightness});${_profClipInline}" onerror="this.style.display='none'">`;
     }
     const url=UNIV_ICONS[p.univ]||(univCfg.find(x=>x.name===p.univ)||{}).icon||'';
-    return url
-      ? `<img src="${toHttpsUrl(url)}" style="width:42px;height:42px;object-fit:contain;filter:brightness(0) invert(1) opacity(0.9)" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'">`
-      : `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white' width='32' height='32'><path d='M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z'/></svg>`;
+    if(url){
+      return `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><img src="${toHttpsUrl(url)}" style="width:42px;height:42px;object-fit:contain;filter:brightness(0) invert(1) opacity(0.9)" onerror="this.outerHTML='<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'white\\' width=\\'32\\' height=\\'32\\'><path d=\\'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z\\'/></svg>'"></div>`;
+    }
+    // 사진/대학아이콘 모두 없을 때: 종족 컬러 그라디언트 + 큰 이니셜로 카드감 유지
+    const _raceFallback = { T:'#2563eb', Z:'#7c3aed', P:'#d97706', N:'#64748b' }[p.race] || '#64748b';
+    return `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(150deg,${_raceFallback},${_raceFallback}aa)">
+      <span style="font-size:30px;font-weight:1000;color:rgba(255,255,255,.92);text-shadow:0 2px 8px rgba(0,0,0,.2)">${(p.name||'?').trim().charAt(0)}</span>
+    </div>`;
   })();
 
   const channelHTML = (()=>{
@@ -95,7 +100,7 @@ function preparePlayerHeaderDisplayData(opts){
     let val=cur; const elos=[val];
     deltas.forEach(h=>{val+=h.eloDelta;elos.push(val);});
     const mn=Math.min(...elos),mx=Math.max(...elos),rng=mx-mn||1;
-    const SW=60,SH=20;
+    const SW=86,SH=28;
     const coords=elos.map((e,i)=>`${Math.round(i/(elos.length-1)*SW)},${Math.round(SH-((e-mn)/rng)*SH)}`);
     const lc=elos[elos.length-1]>=elos[elos.length-2]?winColor:lossColor;
     return `<svg viewBox="0 0 ${SW} ${SH}" width="${SW}" height="${SH}" style="display:block;margin:3px auto 0;overflow:visible"><polyline points="${coords.join(' ')}" fill="none" stroke="${lc}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;

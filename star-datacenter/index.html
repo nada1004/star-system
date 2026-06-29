@@ -12,6 +12,28 @@
 <link rel="stylesheet" href="css/style.css?v=20260521-ui21"><!-- /* [Z-IDX] */ -->
 <link rel="stylesheet" href="css/ui-improvements.css?v=20260521-v29">
 <link rel="stylesheet" href="css/design-improvements.css?v=20260628-fix01">
+<!-- ⚡ Service Worker 등록 (캐싱 최적화) -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then(reg => {
+        console.log('[SW] 등록 완료:', reg.scope);
+        // 새 버전 감지 시 자동 활성화
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('[SW] 새 버전 감지 → 즉시 적용');
+              nw.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        });
+      })
+      .catch(e => console.warn('[SW] 등록 실패:', e));
+  });
+}
+</script>
 </head>
 <body>
 
@@ -608,7 +630,10 @@
 
 <script defer src="js/config.js"></script>
 <script defer src="js/match-store-idb.js?v=20260504-01"></script>
-<script defer src="js/constants.js?v=20260628-07"></script>
+<script defer src="js/constants.js?v=20260629-split"></script>
+<script defer src="js/constants-save.js?v=20260629-split"></script>
+<script defer src="js/constants-game.js?v=20260629-split"></script>
+<script defer src="js/constants-tab-colors.js?v=20260629-split"></script>
 <script defer src="js/constants-player-html.js?v=20260628-v29z2"></script>
 <script defer src="js/unified-settings.js?v=20260607-03"></script>
 <script defer src="js/modal-open.js?v=20260628-fix01"></script>
@@ -626,13 +651,25 @@
 <script defer src="js/settings/team-colors.js?v=20260503-01"></script>
 <script defer src="js/settings/sharecard.js?v=20260503-01"></script>
 <script defer src="js/settings/index.js?v=20260430-01"></script>
-<script defer src="js/tier-tour.js?v=20260517-01"></script>
+<script defer src="js/tier-tour-migrate.js?v=20260629-split"></script>
+<script defer src="js/tier-tour-render.js?v=20260629-split"></script>
+<script defer src="js/tier-tour-cfg.js?v=20260629-split"></script>
+<script defer src="js/tier-tour-misc.js?v=20260629-split"></script>
 <script defer src="js/settings/font-controls.js?v=20260502-01"></script>
 <script defer src="js/settings/ui-scale-controls.js?v=20260502-01"></script>
-<script defer src="js/settings.js?v=20260607-v33"></script>
-<script defer src="js/settings-render.js?v=20260607-v32"></script>
+<script defer src="js/settings-base.js?v=20260629-split"></script>
+<script defer src="js/settings-presets.js?v=20260629-split"></script>
+<script defer src="js/settings-femco-cfg.js?v=20260629-split"></script>
+<script defer src="js/settings-cfg-modal.js?v=20260629-split"></script>
+<script defer src="js/settings-cfg-apply.js?v=20260629-split"></script>
+<script defer src="js/settings-cfg-misc.js?v=20260629-split"></script>
+<script defer src="js/settings-render-reccard.js?v=20260629-split"></script>
+<script defer src="js/settings-render-tourneycard.js?v=20260629-split"></script>
+<script defer src="js/settings-render-cards.js?v=20260629-split"></script>
+<script defer src="js/settings-render.js?v=20260629-split"></script>
 <script defer src="js/settings-data-ops.js?v=20260510-01"></script>
-<script defer src="js/settings-crud.js?v=20260510-02"></script>
+<script defer src="js/settings-crud.js?v=20260629-split"></script>
+<script defer src="js/settings-crud-univ.js?v=20260629-split"></script>
 <script defer src="js/settings-map-status.js?v=20260501-01"></script>
 <script defer src="js/settings-profile-ui.js?v=20260502-01"></script>
 <script defer src="js/settings-match-detail.js?v=20260501-03"></script>
@@ -673,13 +710,17 @@
 <script defer src="js/render-univ-actions.js?v=20260628-02"></script>
 <script defer src="js/render-player-modal-entry.js?v=20260628-fix01"></script>
 <script defer src="js/render-match-id-prepare.js?v=20260501-36"></script>
-<script defer src="js/players.js?v=20260628-v29z2"></script>
+<script defer src="js/players-search-state.js?v=20260629-split"></script>
+<script defer src="js/players-streamer-views.js?v=20260629-split"></script>
+<script defer src="js/players-tier-rank.js?v=20260629-split"></script>
 <script defer src="js/vs.js?v=20260502-03"></script>
 <script defer src="js/history-action-utils.js?v=20260510-02"></script>
 <script defer src="js/history-external-utils.js?v=20260501-11"></script>
 <script defer src="js/history-external-ui.js?v=20260502-01"></script>
 <script defer src="js/rec-side-profiles.js?v=20260515-03"></script>
-<script defer src="js/history-core.js?v=20260628-fix01"></script>
+<script defer src="js/history-render-tabs.js?v=20260629-split"></script>
+<script defer src="js/history-rec-summary.js?v=20260629-split"></script>
+<script defer src="js/history-match-index.js?v=20260629-split"></script>
 <script defer src="js/history-search.js?v=20260628-fix01"></script>
 <script defer src="js/match.js?v=20260502-03"></script>
 <script defer src="js/match-builder.js?v=20260503-03"></script>
@@ -697,10 +738,17 @@
 <script defer src="js/match-builder-record-views.js?v=20260513-01"></script>
 <script defer src="js/match-builder-share-legacy.js?v=20260503-01"></script>
 <script defer src="js/match-builder-share-entry.js?v=20260510-04"></script>
-<script defer src="js/search-core.js?v=20260510-03"></script>
+<script defer src="js/search-parsing.js?v=20260629-split"></script>
+<script defer src="js/search-preview.js?v=20260629-split"></script>
+<script defer src="js/search-paste-edit.js?v=20260629-split"></script>
+<script defer src="js/search-paste-apply.js?v=20260629-split"></script>
+<script defer src="js/search-elo-cleanup.js?v=20260629-split"></script>
+<script defer src="js/search-modals.js?v=20260629-split"></script>
 <script defer src="js/search-pro-paste.js?v=20260626-v29v"></script>
 <script defer src="js/pro-comp-core.js?v=20260523-02"></script>
-<script defer src="js/pro-comp-edit.js?v=20260523-01"></script>
+<script defer src="js/pro-comp-edit-stage.js?v=20260629-split"></script>
+<script defer src="js/pro-comp-edit-bracket.js?v=20260629-split"></script>
+<script defer src="js/pro-comp-edit-paste.js?v=20260629-split"></script>
 <script defer src="js/pro-comp-sub.js?v=20260523-01"></script>
 <!-- (성능) stats/calendar는 탭 진입 시 지연 로딩 (render-core.js) -->
 <!-- (성능) 룰렛/부가기능은 탭 진입 시 지연 로딩 (render-core.js에서 로드) -->
@@ -709,11 +757,20 @@
 <script defer src="js/sync/cloud-status.js?v=20260503-01"></script>
 <!-- html2canvas 라이브러리 직접 로드 (ensureHtml2Canvas와 동일 버전으로 통일) -->
 <script defer crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script defer src="js/cloud-board.js?v=20260627-01"></script>
+<script defer src="js/cloud-board-state.js?v=20260629-split"></script>
+<script defer src="js/cloud-board-render.js?v=20260629-split"></script>
+<script defer src="js/cloud-board-drag.js?v=20260629-split"></script>
+<script defer src="js/cloud-board-rank-sync.js?v=20260629-split"></script>
 <script defer src="js/init.js?v=20260521-03"></script>
 <script defer src="js/board2-image-utils.js?v=20260504-01"></script>
 <script defer src="js/board2-card-utils.js?v=20260501-10"></script>
-<script defer src="js/board2.js?v=20260627-01"></script>
+<script defer src="js/board2-core.js?v=20260629-split"></script>
+<script defer src="js/board2-univ-views.js?v=20260629-split"></script>
+<script defer src="js/board2-players.js?v=20260629-split"></script>
+<script defer src="js/board2-analytics.js?v=20260629-split"></script>
+<script defer src="js/board2-heatmap-bubble.js?v=20260629-split"></script>
+<script defer src="js/board2-briefing-data.js?v=20260629-split"></script>
+<script defer src="js/board2-briefing.js?v=20260629-split"></script>
 <!-- (성능) 챗봇은 열 때 지연 로딩 (render-core.js) -->
 <script defer src="js/mobile-bar.js?v=20260507-01"></script>
 

@@ -75,7 +75,7 @@
           <th style="min-width:70px;text-align:center">⬇️ 하위전</th>
           <th style="min-width:50px;text-align:center">총경기</th>
         </tr></thead><tbody>
-        ${data.map((p,i)=>`<tr style="cursor:pointer" onclick="openPlayerModal('${p.name}')">
+        ${data.map((p,i)=>`<tr style="cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')">
           <td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td>
           <td style="font-weight:700;color:var(--blue)">${p.name}</td>
           <td><span class="ubadge" style="background:${window.gc(p.univ)}">${p.univ}</span></td>

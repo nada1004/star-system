@@ -326,7 +326,7 @@ function rCompGrpRankFull(tn){
       <button class="pill ${!grpRankFilter?'on':''}" onclick="grpRankFilter='';render()">전체</button>`;
     tn.groups.forEach((grp,gi)=>{
       const gl=GL[gi];const col=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
-      filterHTML+=`<button class="pill ${grpRankFilter===grp.name?'on':''}" style="${grpRankFilter===grp.name?`background:${col};border-color:${col};color:#fff`:''}" onclick="grpRankFilter='${grp.name}';render()">GROUP ${gl}</button>`;
+      filterHTML+=`<button class="pill ${grpRankFilter===grp.name?'on':''}" style="${grpRankFilter===grp.name?`background:${col};border-color:${col};color:#fff`:''}" onclick="grpRankFilter='${escJS(grp.name)}';render()">GROUP ${gl}</button>`;
     });
     filterHTML+=`</div>`;
   }
@@ -922,7 +922,7 @@ function rCompGrpEdit(){
         <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px">${isActive?'✅ ':''} ${tn.name}</span>
         <span style="font-size:11px;color:var(--gray-l)">${(tn.groups||[]).length}개조 / ${(tn.groups||[]).reduce((s,g)=>s+(g.matches||[]).length,0)}경기</span>
         <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
-          ${!isActive?`<button class="btn btn-b btn-xs" onclick="curComp='${tn.name}';save();render()">현재 대회로 설정</button>`:'<span style="font-size:11px;color:var(--blue);font-weight:700">📌 현재 대회</span>'}
+          ${!isActive?`<button class="btn btn-b btn-xs" onclick="curComp='${escJS(tn.name)}';save();render()">현재 대회로 설정</button>`:'<span style="font-size:11px;color:var(--blue);font-weight:700">📌 현재 대회</span>'}
           <button class="btn btn-w btn-xs" onclick="grpEditId='${tn.id}';grpSub='edit';render()">📝 조편성 입력</button>
           <button class="btn btn-r btn-xs" onclick="grpDelTourney(${ti})">🗑️ 삭제</button>
         </div>

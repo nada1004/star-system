@@ -55,12 +55,8 @@ function buildPlayerMapStatsHTML(modeHist){
       </div>
     </div>`;
   }).join('');
-  return `<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
-    <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
-      <span style="display:inline-block;width:3px;height:14px;background:#f59e0b;border-radius:2px"></span>
-      맵별 승률
-      <span style="font-size:10px;color:var(--gray-l);font-weight:400">(2게임 이상)</span>
-    </div>
+  return `<div class="su-sec" style="--su-sec-accent:#f59e0b">
+    <div class="su-sec__title">맵별 승률 <small>(2게임 이상)</small></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">${mapCards}</div>
   </div>`;
 }
@@ -82,12 +78,8 @@ function buildPlayerTeammatesHTML(opts){
       ${qPhoto}<span>${q.role?getRoleBadgeHTML(q.role,'9px')+' ':''} ${q.name}</span>${getTierBadge(q.tier)}
     </button>`;
   }).join('');
-  return `<details style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
-    <summary style="font-weight:700;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none;user-select:none">
-      <span style="display:inline-block;width:3px;height:14px;background:${col};border-radius:2px"></span>
-      <span>${p.univ} 팀원 (${teammates.length}명)</span>
-      <span style="margin-left:auto;font-size:11px;color:var(--gray-l)">펼치기 / 접기</span>
-    </summary>
+  return `<details class="su-sec su-sec--details" style="--su-sec-accent:${col}">
+    <summary>${p.univ} 팀원 <small>(${teammates.length}명)</small></summary>
     <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px">${tmCards}</div>
   </details>`;
 }
@@ -96,10 +88,10 @@ function buildPlayerMemoHTML(player){
   const p = player;
   if(!p) return '';
   const safeName=(typeof escJS==='function') ? escJS(p.name) : String(p.name||'').replace(/'/g,"\\'");
-  return `<div style="background:var(--gold-bg);border:1px solid var(--gold-b);border-radius:12px;padding:14px 16px">
-    <div style="font-weight:700;font-size:12px;color:var(--gold);margin-bottom:8px">📝 스트리머 메모</div>
+  return `<div class="su-sec" style="--su-sec-accent:var(--gold,#f59e0b)">
+    <div class="su-sec__title">스트리머 메모</div>
     ${p.memo?`<div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7;white-space:pre-wrap">${p.memo}</div>`:'<div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">메모 없음</div>'}
-    <textarea id="player-memo-input" style="width:100%;min-height:60px;font-size:12px;border:1px solid var(--gold-b);border-radius:8px;padding:8px 10px;resize:vertical;font-family:'Noto Sans KR',sans-serif;background:var(--surface)" placeholder="스트리머 메모...">${p.memo||''}</textarea>
+    <textarea id="player-memo-input" style="width:100%;min-height:60px;font-size:12px;padding:10px 12px;resize:vertical;font-family:'Noto Sans KR',sans-serif" placeholder="스트리머 메모...">${p.memo||''}</textarea>
     <div style="display:flex;gap:6px;margin-top:8px">
       <button class="btn btn-b btn-sm" data-px-action="save-memo" data-px-player="${safeName}">💾 저장</button>
       ${p.memo?`<button class="btn btn-r btn-sm" data-px-action="delete-memo" data-px-player="${safeName}">🗑️ 삭제</button>`:''}

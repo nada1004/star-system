@@ -138,11 +138,11 @@ function buildPlayerRecentHistorySectionHTML(opts){
     ? `<th class="no-export" style="width:40px"><input type="checkbox" class="hist-select-checkbox" data-ph-action="hist-select-all" data-ph-name="${escJS(pName)}" data-ph-indices="[${displayHist.map(h=>h._origIdx).join(',')}]" style="cursor:pointer"></th>`
     : '';
   const manageHeader = isLoggedIn ? '<th class="no-export" style="width:48px">관리</th>' : '';
-  let h=`<div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-    <span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>최근 경기 기록
-    <span style="font-size:11px;color:var(--gray-l);font-weight:400">(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</span>
-    ${isLoggedIn?`<button class="no-export" data-ph-action="hist-bulk-toggle" style="margin-left:auto;padding:2px 8px;border-radius:10px;border:1px solid var(--border2);background:var(--white);font-size:10px;font-weight:800;cursor:pointer;color:${bulkMode?'#dc2626':'var(--text3)'}">${bulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button>`:''}
-  </div>`;
+  let h=`<div class="su-sec" style="--su-sec-accent:var(--blue)">
+    <div class="su-sec__title-row">
+      <div class="su-sec__title">최근 경기 기록 <small>(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</small></div>
+      ${isLoggedIn?`<div class="su-sec__tools"><button class="no-export" data-ph-action="hist-bulk-toggle" style="padding:2px 10px;border-radius:10px;border:1px solid var(--border2);background:var(--white);font-size:10px;font-weight:900;cursor:pointer;color:${bulkMode?'#dc2626':'var(--text3)'}">${bulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button></div>`:''}
+    </div>`;
   h+=seasonBar;
   h+=`<div class="player-hist-table-wrap" style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
   h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${selectAllCheckbox}<th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th class="ph-col-map">맵</th><th class="ph-col-elo">ELO</th>${manageHeader}</tr></thead><tbody>`;

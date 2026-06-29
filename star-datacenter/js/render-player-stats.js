@@ -59,11 +59,8 @@ function buildPlayerModeStatsHTML(opts){
     cWin='#16a34a',
     cLoss='#dc2626'
   } = opts || {};
-  let h=`<div style="margin-bottom:14px">
-    <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px">
-      <span style="display:inline-block;width:3px;height:14px;background:#6b7280;border-radius:2px"></span>
-      모드별 전적
-    </div>
+  let h=`<div class="su-sec" style="--su-sec-accent:#6b7280">
+    <div class="su-sec__title">모드별 전적</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">`;
   fixedModes.forEach(({key,w,l})=>{
     const t=w+l;
@@ -106,10 +103,8 @@ function buildPlayerRaceStatsHTML(modeHist){
       </div>
     </div>`;
   };
-  return `<div style="margin:10px 0 14px">
-    <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px">
-      <span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>상대 종족별 전적
-    </div>
+  return `<div class="su-sec" style="--su-sec-accent:var(--blue)">
+    <div class="su-sec__title">상대 종족별 전적</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       ${raceBox('Z','저그','#a855f7')}
       ${raceBox('T','테란','#3b82f6')}
@@ -135,13 +130,10 @@ function buildPlayerOppTableHTML(opts){
   const oppTotalPages=Math.ceil(oppList.length/oppPageSize)||1;
   const oppCurPage=Math.max(0,Math.min(oppPage,oppTotalPages-1));
   const oppDisplay=oppList.slice(oppCurPage*oppPageSize,(oppCurPage+1)*oppPageSize);
-  return `<div style="margin-bottom:14px">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-      <div style="font-weight:700;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px">
-        <span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>
-        상대 전적 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(${oppList.length}명)</span>
-      </div>
-      <div style="margin-left:auto;display:flex;gap:4px">
+  return `<div class="su-sec" style="--su-sec-accent:var(--blue)">
+    <div class="su-sec__title-row">
+      <div class="su-sec__title">상대 전적 <small>(${oppList.length}명)</small></div>
+      <div class="su-sec__tools">
         <button data-po-action="opp-sort" data-po-name="${safeName}" data-po-sort="tot" style="padding:2px 8px;border-radius:8px;border:1px solid ${oppSort==='tot'?'var(--blue)':'var(--border2)'};background:${oppSort==='tot'?'var(--blue)':'var(--white)'};color:${oppSort==='tot'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">다전순</button>
         <button data-po-action="opp-sort" data-po-name="${safeName}" data-po-sort="w" style="padding:2px 8px;border-radius:8px;border:1px solid ${oppSort==='w'?'var(--blue)':'var(--border2)'};background:${oppSort==='w'?'var(--blue)':'var(--white)'};color:${oppSort==='w'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">승리순</button>
         <button data-po-action="opp-sort" data-po-name="${safeName}" data-po-sort="wr" style="padding:2px 8px;border-radius:8px;border:1px solid ${oppSort==='wr'?'var(--blue)':'var(--border2)'};background:${oppSort==='wr'?'var(--blue)':'var(--white)'};color:${oppSort==='wr'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">승률순</button>
@@ -214,11 +206,8 @@ function buildPlayerVsUnivSectionHTML(opts){
       </div>
       <div style="margin-top:4px;font-size:11px;color:var(--gray-l);font-weight:700">${row.tot}전</div>
     </div>`;
-  return `<div style="margin-bottom:14px">
-    <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px">
-      <span style="display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px"></span>
-      대학별 전적 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(${rows.length}개 대학 · 미니대전/대학대전/대회 기준)</span>
-    </div>
+  return `<div class="su-sec" style="--su-sec-accent:var(--blue)">
+    <div class="su-sec__title">대학별 전적 <small>(${rows.length}개 대학 · 미니대전/대학대전/대회 기준)</small></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
       ${visible.map(card).join('')}
     </div>

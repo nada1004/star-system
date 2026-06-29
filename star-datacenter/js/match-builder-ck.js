@@ -103,8 +103,8 @@ function ckSearchPlayer(){
         ${inB?'<span style="background:#fee2e2;color:#dc2626;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:700;margin-left:4px">B팀</span>':''}
       </div>
       ${!inTeam?`
-      <button onclick="ckAddBySearch('A','${p.name}')" style="background:#2563eb;color:#fff;border:none;border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">A팀</button>
-      <button onclick="ckAddBySearch('B','${p.name}')" style="background:#dc2626;color:#fff;border:none;border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">B팀</button>
+      <button onclick="ckAddBySearch('A','${escJS(p.name)}')" style="background:#2563eb;color:#fff;border:none;border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">A팀</button>
+      <button onclick="ckAddBySearch('B','${escJS(p.name)}')" style="background:#dc2626;color:#fff;border:none;border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">B팀</button>
       `:'<span style="font-size:11px;color:var(--gray-l)">배정됨</span>'}
     </div>`;
   }).join('');
