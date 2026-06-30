@@ -1,0 +1,776 @@
+/*
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  ui-fix-empty-classes.css                                        ║
+ * ║  목적: 코드 안에서 실제로 CSS가 누락되어 있던 클래스만 보강        ║
+ * ║   1. .su-sec / .su-sec__title 등                                  ║
+ * ║      → 대학상세 팝업 + 스트리머상세 팝업 공용 섹션 제목            ║
+ * ║   2. .streamer-gallery-*                                          ║
+ * ║      → 스트리머탭 "카드형" 갤러리 뷰 (CSS가 전혀 없던 상태)        ║
+ * ║   3. .share-stat-card / .share-ace-card 호버                      ║
+ * ║      → 공유카드 본문 살짝 인터랙션 추가                            ║
+ * ║                                                                    ║
+ * ║  주의: style.css에 이미 있는 팝업 공통 박스/경기상세(.modal--      ║
+ * ║  matchdetail) 디자인은 폰트·색상 설정(su_md_* 변수)과 맞물려       ║
+ * ║  있으므로 이 파일에서는 절대 다시 건드리지 않습니다.               ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
+
+:root {
+  --uifx-accent: #2563eb;
+  --uifx-anim: .22s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   1. 대학상세/스트리머상세 팝업 공용 섹션 제목 (.su-sec)
+═══════════════════════════════════════════════════════════ */
+.su-sec {
+  margin: 22px 0 0;
+}
+.su-sec:first-child { margin-top: 0; }
+.su-sec__title {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: -.01em;
+  color: var(--text, #0f172a);
+  margin-bottom: 10px;
+  padding-left: 12px;
+  position: relative;
+}
+.su-sec__title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1px;
+  bottom: 1px;
+  width: 4px;
+  border-radius: 99px;
+  background: var(--su-sec-accent, var(--uifx-accent));
+}
+.su-sec__title small {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--gray-l, #94a3b8);
+}
+.su-sec__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.su-sec__title-row .su-sec__title {
+  margin-bottom: 0;
+}
+.su-sec__tools {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+body.dark .su-sec__title {
+  color: #f1f5f9;
+}
+/* 펼침/접힘 형태(팀원 목록 등) */
+.su-sec--details summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: -.01em;
+  color: var(--text, #0f172a);
+  padding-left: 12px;
+  position: relative;
+}
+.su-sec--details summary::-webkit-details-marker { display: none; }
+.su-sec--details summary::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1px;
+  bottom: 1px;
+  width: 4px;
+  border-radius: 99px;
+  background: var(--su-sec-accent, var(--uifx-accent));
+}
+.su-sec--details summary::after {
+  content: '▾';
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--gray-l, #94a3b8);
+  transition: transform .18s;
+}
+.su-sec--details[open] summary::after { transform: rotate(180deg); }
+.su-sec--details summary small {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--gray-l, #94a3b8);
+}
+body.dark .su-sec--details summary {
+  color: #f1f5f9;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   2. 스트리머탭 "카드형" 갤러리 뷰 (.streamer-gallery-*)
+═══════════════════════════════════════════════════════════ */
+.streamer-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: var(--su-streamer-card-gap, 13px);
+  padding: 22px;
+}
+@media (max-width: 640px) {
+  .streamer-gallery-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--su-streamer-card-gap, 9px); padding: 16px; }
+}
+
+.streamer-gallery-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(15,23,42,.16);
+}
+.streamer-gallery-univ {
+  font-weight: 900 !important;
+  letter-spacing: -.01em;
+  text-shadow: 0 1px 4px rgba(0,0,0,.25);
+}
+.streamer-gallery-univ.clickable-univ { cursor: pointer; }
+.streamer-gallery-univ.clickable-univ:hover { text-decoration: underline; }
+
+.streamer-gallery-card {
+  position: relative;
+  aspect-ratio: 0.72;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 10px 28px rgba(15,23,42,.14), 0 2px 10px rgba(15,23,42,.08);
+  cursor: pointer;
+  transition: transform var(--uifx-anim), box-shadow .2s;
+  isolation: isolate;
+  background: #0b1120;
+}
+.streamer-gallery-card:hover { transform: none; box-shadow: 0 10px 28px rgba(15,23,42,.14), 0 2px 10px rgba(15,23,42,.08); }
+.streamer-gallery-card.is-selected {
+  outline: 2px solid rgba(255,255,255,.26);
+  outline-offset: 2px;
+}
+.streamer-gallery-card.inactive { filter: saturate(.55); }
+.streamer-gallery-card.retired { filter: grayscale(.7) opacity(.7); }
+
+.streamer-gallery-rank {
+  position: absolute;
+  top: 8px; left: 8px;
+  z-index: 3;
+  font-size: 11px;
+  font-weight: 1000;
+  color: #fff;
+  background: rgba(15,23,42,.55);
+  backdrop-filter: blur(4px);
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: -.02em;
+}
+.streamer-gallery-card.top1 .streamer-gallery-rank { background: linear-gradient(135deg,#fbbf24,#f59e0b); color:#451a03; }
+.streamer-gallery-card.top2 .streamer-gallery-rank { background: linear-gradient(135deg,#e2e8f0,#94a3b8); color:#1e293b; }
+.streamer-gallery-card.top3 .streamer-gallery-rank { background: linear-gradient(135deg,#fb923c,#ea580c); color:#431407; }
+
+.streamer-gallery-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,0) 55%, rgba(8,12,28,.30) 78%, rgba(5,8,20,.72) 100%);
+  pointer-events: none;
+}
+
+.streamer-gallery-bottom {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 2;
+  padding: 9px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.streamer-gallery-bottom--compact {
+  padding: 12px 12px 14px;
+  gap: 8px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+.streamer-gallery-bottom--compact::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 62%;
+  background: linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,.22) 26%, rgba(5,8,20,.64) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+.streamer-gallery-bottom--compact > * { position: relative; z-index: 1; }
+.streamer-gallery-topline {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.streamer-gallery-name {
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -.02em;
+  text-shadow: 0 1px 6px rgba(0,0,0,.55), 0 0 1px rgba(0,0,0,.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.streamer-gallery-role {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: rgba(255,255,255,.82);
+  text-shadow: 0 1px 4px rgba(0,0,0,.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 1px;
+}
+.streamer-gallery-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.streamer-gallery-brief {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 1px;
+}
+.sg-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(15,23,42,.34);
+  backdrop-filter: blur(6px) saturate(1.15);
+  color: rgba(255,255,255,.88);
+  font-size: 10.5px;
+  font-weight: 850;
+  line-height: 1.25;
+  max-width: 100%;
+  white-space: nowrap;
+  text-decoration: none !important;
+}
+.streamer-gallery-card.is-selected .sg-pill {
+  border-color: rgba(255,255,255,.18) !important;
+  background: rgba(15,23,42,.34) !important;
+  color: rgba(255,255,255,.88) !important;
+  box-shadow: none !important;
+}
+.streamer-gallery-card.is-selected .sg-metric {
+  color: rgba(255,255,255,.90) !important;
+}
+.streamer-gallery-metrics {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255,255,255,.90);
+  text-shadow: 0 1px 3px rgba(0,0,0,.35);
+}
+.sg-metric { white-space: nowrap; }
+.sg-dot { opacity: .65; }
+.streamer-gallery-univ-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.26);
+  backdrop-filter: blur(3px);
+  padding: 2px 7px;
+  border-radius: 999px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.streamer-gallery-univ-chip.clickable-univ { cursor: pointer; }
+.streamer-gallery-univ-chip.clickable-univ:hover { background: rgba(255,255,255,.28); }
+
+.streamer-gallery-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 6px;
+  background: rgba(15,23,42,.22);
+  border: 1px solid rgba(255,255,255,.16);
+  backdrop-filter: blur(6px) saturate(1.15);
+  border-radius: 10px;
+  padding: 6px 8px;
+  margin-top: 2px;
+}
+.streamer-gallery-stat--wide { grid-column: 1 / -1; }
+.streamer-gallery-stat-label {
+  font-size: 8.5px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+  margin-bottom: 1px;
+}
+.streamer-gallery-stat-value {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,.4);
+}
+.streamer-gallery-stat-value--split {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+.streamer-gallery-stat-value--em { font-weight: 900; }
+.streamer-gallery-stat-value--muted {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,.68);
+}
+.gc-placeholder { letter-spacing: -.02em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .streamer-gallery-card { transition: none !important; transform: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   3. 공유카드 본문 — 살짝 살아있는 호버 인터랙션
+═══════════════════════════════════════════════════════════ */
+.share-stat-card,
+.share-ace-card {
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+.sharecard-preview-wrap .share-stat-card:hover {
+  transform: translateY(-2px);
+}
+.sharecard-preview-wrap .share-ace-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(0,0,0,.18);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4. 현황판 탭 공통 컨테이너 — 패딩/여백/기본 타이포 강화
+═══════════════════════════════════════════════════════════ */
+
+/* 모든 현황판 탭은 #b2-content 안에 렌더됨 */
+#b2-content {
+  line-height: 1.55;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4-A. 브리핑 (b2w2-*)
+   — 이미 잘 만들어진 CSS, 반경/간격/KPI 패딩 보강만
+═══════════════════════════════════════════════════════════ */
+
+/* 라운드 토큰 확대 */
+#b2-content .b2w2-wrap {
+  --b2w-r: 8px;
+  --b2w-r-lg: 14px;
+}
+
+/* KPI 카드 상단 구분선 + 패딩 여유 */
+#b2-content .b2w2-kpi-card {
+  padding: 20px 20px !important;
+}
+#b2-content .b2w2-kpi-value {
+  font-size: 28px !important;
+  margin-top: 10px !important;
+}
+
+/* 하이라이트 카드 상단 컬러 바 두께 */
+#b2-content .b2w2-highlight-card::after {
+  height: 4px !important;
+}
+#b2-content .b2w2-highlight-card {
+  gap: 12px !important;
+  padding: 18px 20px !important;
+}
+#b2-content .b2w2-highlight-title {
+  font-size: 18px !important;
+  padding-bottom: 10px !important;
+}
+
+/* MVP 카드 shadow 강화 */
+#b2-content .b2w2-mvp-card {
+  border-radius: 20px !important;
+  box-shadow: 0 8px 24px rgba(15,23,42,.12) !important;
+}
+
+/* 섹션 제목 줄 높이 */
+#b2-content .b2w2-chart-title {
+  font-size: 15px !important;
+  margin-bottom: 16px !important;
+}
+
+/* 대학별 카드 좌측 컬러닷 크기 */
+#b2-content .b2w2-card-dot {
+  width: 12px !important;
+  height: 12px !important;
+  margin-top: 6px !important;
+}
+#b2-content .b2w2-card-name {
+  font-size: 20px !important;
+}
+#b2-content .b2w2-card-body {
+  padding: 16px 20px 22px !important;
+}
+
+/* 순위 배지 크기 */
+#b2-content .b2w2-rank-badge {
+  width: 30px !important;
+  height: 30px !important;
+  font-size: 13px !important;
+}
+#b2-content .b2w2-rank-name {
+  font-size: 14px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4-B. 펨코 뷰 (b2-femco-*) — 데스크탑 기본 CSS 없어서 신규 추가
+═══════════════════════════════════════════════════════════ */
+
+.b2-femco-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.b2-femco-univ {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+/* 상단 헤더 영역 */
+.b2-femco-head {
+  position: relative;
+}
+
+/* 타이틀 */
+.b2-femco-title {
+  font-weight: 950;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+}
+.b2-femco-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.b2-femco-subtitle {
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 4px;
+  opacity: .88;
+}
+
+/* 별 아이콘 간격 */
+.b2-femco-stars {
+  display: flex;
+  gap: 2px;
+}
+
+/* 몸통 그리드 */
+.b2-femco-body {
+  padding: 10px 16px 16px;
+}
+.b2-femco-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--colWidth, 100px), 1fr));
+  gap: 4px;
+}
+
+/* 개별 아이템 */
+.b2-femco-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 6px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background .14s, transform .14s;
+}
+.b2-femco-item:hover {
+  background: rgba(255,255,255,.22);
+  transform: translateY(-2px);
+}
+
+/* 아바타 */
+.b2-femco-avatar {
+  flex-shrink: 0;
+}
+
+/* 텍스트 영역 */
+.b2-femco-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  min-width: 0;
+}
+.b2-femco-name {
+  font-weight: 900;
+  letter-spacing: -.01em;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+.b2-femco-role {
+  font-weight: 700;
+  opacity: .78;
+}
+.b2-femco-tier {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.b2-femco-tierbadge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  letter-spacing: .02em;
+}
+.b2-femco-race-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  border: 1px solid;
+}
+
+/* 인원수 박스 (우상단 절대배치) */
+.b2-femco-countbox {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+/* 헤더행/열 레이아웃 */
+.b2-femco-headrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.b2-femco-headcol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.b2-femco-logo {
+  flex-shrink: 0;
+}
+.b2-femco-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.b2-femco-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.22);
+  cursor: pointer;
+  transition: background .13s;
+}
+.b2-femco-pill:hover {
+  background: rgba(255,255,255,.30);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4-C. 랭킹 (b2rk2-*) — 라운드 보강, 바 개선
+═══════════════════════════════════════════════════════════ */
+
+#b2-content .b2rk2-row {
+  border-radius: 16px !important;
+  padding: 12px 16px !important;
+  gap: 12px !important;
+  margin-bottom: 8px !important;
+  transition: border-color .15s, background .15s, transform .15s, box-shadow .15s !important;
+}
+#b2-content .b2rk2-row:hover {
+  transform: translateX(4px) !important;
+  box-shadow: 0 4px 16px rgba(15,23,42,.08) !important;
+}
+#b2-content .b2rk2-rank {
+  font-size: 24px !important;
+  min-width: 40px !important;
+}
+#b2-content .b2rk2-name {
+  font-size: 15px !important;
+  min-width: 70px !important;
+}
+#b2-content .b2rk2-bar-wrap {
+  height: 14px !important;
+  border-radius: 7px !important;
+}
+#b2-content .b2rk2-bar {
+  border-radius: 7px !important;
+}
+#b2-content .b2rk2-sbtn {
+  padding: 7px 16px !important;
+  border-radius: 24px !important;
+  font-size: 12.5px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4-D. 히트맵 (b2hm2-*) — 셀·컨트롤 다듬기
+═══════════════════════════════════════════════════════════ */
+
+#b2-content .b2hm2-ctrl {
+  border-radius: 16px !important;
+  padding: 12px 16px !important;
+  gap: 10px !important;
+}
+#b2-content .b2hm2-btn {
+  padding: 6px 13px !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+#b2-content .b2hm2-tbl td {
+  border-radius: 10px !important;
+  padding: 8px 6px !important;
+  font-size: 12px !important;
+}
+#b2-content .b2hm2-tbl th {
+  font-size: 11px !important;
+  padding: 6px 8px !important;
+  font-weight: 900 !important;
+}
+#b2-content .b2hm2-tbl td.univ-name {
+  font-size: 12px !important;
+  padding: 6px 10px !important;
+}
+#b2-content .b2hm2-popup-inner {
+  border-radius: 26px !important;
+}
+#b2-content .b2hm2-pcard {
+  border-radius: 14px !important;
+  padding: 0 !important;
+}
+#b2-content .b2hm2-legend {
+  margin-top: 12px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4-E. 요약 (b2s-*) — KPI·패널·바 세련도 보강
+═══════════════════════════════════════════════════════════ */
+
+#b2-content .b2s-kpi {
+  border-radius: 20px !important;
+  padding: 18px 14px !important;
+}
+#b2-content .b2s-kpi-num {
+  font-size: 28px !important;
+}
+#b2-content .b2s-kpi-lbl {
+  font-size: 12px !important;
+  margin-top: 5px !important;
+}
+#b2-content .b2s-panel {
+  border-radius: 22px !important;
+  padding: 18px !important;
+}
+#b2-content .b2s-panel-title {
+  font-size: 14px !important;
+  margin-bottom: 14px !important;
+}
+#b2-content .b2s-bar-track {
+  height: 14px !important;
+  border-radius: 7px !important;
+}
+#b2-content .b2s-univ-card {
+  border-radius: 18px !important;
+  padding: 12px 14px !important;
+}
+#b2-content .b2s-tier-chip {
+  border-radius: 16px !important;
+  padding: 10px 12px !important;
+}
+#b2-content .b2s-hero {
+  border-radius: 28px !important;
+  padding: 22px 24px !important;
+}
+#b2-content .b2s-new-player {
+  padding: 6px 11px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4-F. 대학비교 (b2cv2-*) — 라운드·패딩 보강
+═══════════════════════════════════════════════════════════ */
+
+#b2-content .b2cv2-wrap {
+  max-width: 860px !important;
+}
+#b2-content .b2cv2-col {
+  border-radius: 18px !important;
+  padding: 18px !important;
+}
+#b2-content .b2cv2-h2h {
+  border-radius: 18px !important;
+  padding: 16px 20px !important;
+}
+#b2-content .b2cv2-sel {
+  gap: 14px !important;
+  margin-bottom: 20px !important;
+  align-items: center;
+}

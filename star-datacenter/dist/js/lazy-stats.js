@@ -170,14 +170,14 @@ var T=Object.defineProperty,M=Object.defineProperties;var z=Object.getOwnPropert
     </div></div>`}window.statsTierWinHTML=r})();
 
 /* stats-heatmap-renderer.js */
-(function(){function z(){const p=String(window._heatmapSelPlayer||""),D=(window.players||[]).filter(t=>(t.history||[]).length>0).sort((t,e)=>t.name.localeCompare(e.name,"ko")),g=!!p,a={};if(g){const t=window.statsP(p);window.statsNonProHist(t||{history:[]}).forEach(e=>{const o=e.date||"";o&&(a[o]=(a[o]||0)+1)})}else{const t=typeof window.getTourneyMatches=="function"?window.getTourneyMatches():[],e=typeof window.getNormalMatchesForHistory=="function"?window.getNormalMatchesForHistory():[];window.statsFilterMatches([...window.miniM||[],...window.univM||[],...window.ckM||[],...window.comps||[],...window.proM||[],...t,...e]).forEach(r=>{const s=r.d||"";if(!s)return;let n=0;(r.sets||[]).forEach(T=>(T.games||[]).forEach(()=>n++)),n>0?a[s]=(a[s]||0)+n:a[s]=(a[s]||0)+1});const c=new Set(Object.keys(a));(window.players||[]).forEach(r=>window.statsNonProHist(r).forEach(s=>{const n=s.date||"";!n||s.result!=="\uC2B9"||c.has(n)||(a[n]=(a[n]||0)+1)}))}if(!Object.keys(a).length)return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">${g?`${p} \uC120\uC218\uC758 \uACBD\uAE30 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.`:"\uACBD\uAE30 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4."}</p></div>`;const u=new Date;u.setHours(0,0,0,0);const l=new Date(u);l.setDate(l.getDate()-363),l.setDate(l.getDate()-l.getDay());const v=Math.max(...Object.values(a),1),y=14,k=2,h=y+k,x=53,E=x*h+60,w=7*h+36,i={l:32,t:20};function H(t){return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`}function f(t){if(!t)return"var(--border)";const e=t/v;return e<.25?"#bbf7d0":e<.5?"#4ade80":e<.75?"#16a34a":"#166534"}let $="",b="",M=-1;const d=new Date(l);for(let t=0;t<x;t++)for(let e=0;e<7;e++){const o=H(d),c=a[o]||0,r=i.l+t*h,s=i.t+e*h;if($+=`<rect x="${r}" y="${s}" width="${y}" height="${y}" rx="2" fill="${f(c)}" data-date="${o}" data-cnt="${c}"><title>${o}: ${c}\uAC8C\uC784</title></rect>`,e===0&&d.getMonth()!==M){M=d.getMonth();const n=["1\uC6D4","2\uC6D4","3\uC6D4","4\uC6D4","5\uC6D4","6\uC6D4","7\uC6D4","8\uC6D4","9\uC6D4","10\uC6D4","11\uC6D4","12\uC6D4"][d.getMonth()];b+=`<text x="${r}" y="${i.t-6}" font-size="9" fill="var(--gray-l)">${n}</text>`}d.setDate(d.getDate()+1)}const P=["\uC77C","\uC6D4","\uD654","\uC218","\uBAA9","\uAE08","\uD1A0"].map((t,e)=>e%2===1?`<text x="${i.l-6}" y="${i.t+e*h+y-2}" font-size="9" fill="var(--gray-l)" text-anchor="end">${t}</text>`:"").join(""),j=Object.values(a).reduce((t,e)=>t+e,0),_=Object.keys(a).length,S=Object.entries(a).sort((t,e)=>e[1]-t[1]).slice(0,5),m=window.statsP(p);return`<div style="display:flex;flex-direction:column;gap:16px">
+(function(){function D(){const c=String(window._heatmapSelPlayer||""),k=(window.players||[]).filter(t=>(t.history||[]).length>0).sort((t,e)=>t.name.localeCompare(e.name,"ko")),m=!!c,a={};if(m){const t=window.statsP(c);window.statsNonProHist(t||{history:[]}).forEach(e=>{const o=e.date||"";o&&(a[o]=(a[o]||0)+1)})}else{const t=typeof window.getTourneyMatches=="function"?window.getTourneyMatches():[],e=typeof window.getNormalMatchesForHistory=="function"?window.getNormalMatchesForHistory():[];window.statsFilterMatches([...window.miniM||[],...window.univM||[],...window.ckM||[],...window.comps||[],...window.proM||[],...t,...e]).forEach(s=>{const n=s.d||"";if(!n)return;let i=0;(s.sets||[]).forEach(T=>(T.games||[]).forEach(()=>i++)),i>0?a[n]=(a[n]||0)+i:a[n]=(a[n]||0)+1});const l=new Set(Object.keys(a));(window.players||[]).forEach(s=>window.statsNonProHist(s).forEach(n=>{const i=n.date||"";!i||n.result!=="\uC2B9"||l.has(i)||(a[i]=(a[i]||0)+1)}))}if(!Object.keys(a).length)return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">${m?`${c} \uC120\uC218\uC758 \uACBD\uAE30 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.`:"\uACBD\uAE30 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4."}</p></div>`;const u=new Date;u.setHours(0,0,0,0);const d=new Date(u);d.setDate(d.getDate()-363),d.setDate(d.getDate()-d.getDay());const g=Math.max(...Object.values(a),1),y=14,H=2,h=y+H,x=53,P=x*h+60,w=7*h+36,r={l:32,t:20};function z(t){return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`}function v(t){if(!t)return"var(--border)";const e=t/g;return e<.25?"#bbf7d0":e<.5?"#4ade80":e<.75?"#16a34a":"#166534"}let $="",b="",M=-1;const p=new Date(d);for(let t=0;t<x;t++)for(let e=0;e<7;e++){const o=z(p),l=a[o]||0,s=r.l+t*h,n=r.t+e*h;if($+=`<rect x="${s}" y="${n}" width="${y}" height="${y}" rx="2" fill="${v(l)}" data-date="${o}" data-cnt="${l}"><title>${o}: ${l}\uAC8C\uC784</title></rect>`,e===0&&p.getMonth()!==M){M=p.getMonth();const i=["1\uC6D4","2\uC6D4","3\uC6D4","4\uC6D4","5\uC6D4","6\uC6D4","7\uC6D4","8\uC6D4","9\uC6D4","10\uC6D4","11\uC6D4","12\uC6D4"][p.getMonth()];b+=`<text x="${s}" y="${r.t-6}" font-size="9" fill="var(--gray-l)">${i}</text>`}p.setDate(p.getDate()+1)}const E=["\uC77C","\uC6D4","\uD654","\uC218","\uBAA9","\uAE08","\uD1A0"].map((t,e)=>e%2===1?`<text x="${r.l-6}" y="${r.t+e*h+y-2}" font-size="9" fill="var(--gray-l)" text-anchor="end">${t}</text>`:"").join(""),j=Object.values(a).reduce((t,e)=>t+e,0),_=Object.keys(a).length,S=Object.entries(a).sort((t,e)=>e[1]-t[1]).slice(0,5),f=window.statsP(c);return`<div style="display:flex;flex-direction:column;gap:16px">
     <div class="ssec" id="stats-heatmap-sec">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <h4 style="margin:0">\u{1F4C5} \uD65C\uB3D9\uB7C9 \uD788\uD2B8\uB9F5 <span style="font-size:11px;color:var(--gray-l);font-weight:400">\uCD5C\uADFC 1\uB144</span></h4>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <div style="position:relative">
             <input id="heatmap-search-input" type="text" placeholder="\u{1F50D} \uC2A4\uD2B8\uB9AC\uBA38 \uAC80\uC0C9 (\uC804\uCCB4\uBCF4\uAE30: \uBE44\uC6CC\uB450\uAE30)"
-              value="${p}"
+              value="${c}"
               style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px;width:200px"
               oncompositionstart="window._hsComp=true"
               oncompositionend="window._hsComp=false;heatmapSearchFilter(this.value);if(!this.value){window._heatmapSelPlayer='';render();}"
@@ -186,41 +186,41 @@ var T=Object.defineProperty,M=Object.defineProperties;var z=Object.getOwnPropert
               onblur="setTimeout(()=>{const d=document.getElementById('heatmap-search-drop');if(d)d.style.display='none'},200)">
             <div id="heatmap-search-drop" style="display:none;position:absolute;top:34px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:260px;box-shadow:var(--sh2)">
               <div class="sitem" style="color:var(--gray-l);font-style:italic" onmousedown="window._heatmapSelPlayer='';document.getElementById('heatmap-search-input').value='';document.getElementById('heatmap-search-drop').style.display='none';render()">\u2014 \uC804\uCCB4 \uACBD\uAE30 \uBCF4\uAE30 \u2014</div>
-              ${D.map(t=>`<div class="sitem" onmousedown="window._heatmapSelPlayer='${window.escJS(t.name)}';document.getElementById('heatmap-search-input').value='${window.escAttr(t.name)}';document.getElementById('heatmap-search-drop').style.display='none';render()">
+              ${k.map(t=>`<div class="sitem" onmousedown="window._heatmapSelPlayer='${window.escJS(t.name)}';document.getElementById('heatmap-search-input').value='${window.escAttr(t.name)}';document.getElementById('heatmap-search-drop').style.display='none';render()">
                 <b>${t.name}</b> <span style="color:${window.gc(t.univ)};font-size:11px">${t.univ}</span> <span style="color:var(--gray-l);font-size:10px">${(t.history||[]).length}\uACBD\uAE30</span>
               </div>`).join("")}
             </div>
           </div>
-          ${m?`<span class="ubadge" style="background:${window.gc(m.univ)}">${m.univ}</span>`:""}
+          ${f?`<span class="ubadge" style="background:${window.gc(f.univ)}">${f.univ}</span>`:""}
           <div style="display:flex;gap:12px;font-size:12px;color:var(--gray-l)">
-            <span>\uCD1D <b style="color:var(--blue)">${j}</b>${g?"\uACBD\uAE30":"\uAC8C\uC784"}</span>
+            <span>\uCD1D <b style="color:var(--blue)">${j}</b>${m?"\uACBD\uAE30":"\uAC8C\uC784"}</span>
             <span>\uD65C\uB3D9\uC77C <b style="color:var(--green)">${_}</b>\uC77C</span>
           </div>
         </div>
       </div>
       <div style="overflow-x:auto;padding-bottom:4px">
-        <svg width="${E}" height="${w}" style="display:block">
-          ${b}${P}${$}
-          <text x="${i.l}" y="${w-2}" font-size="9" fill="var(--gray-l)">\uC801\uC74C</text>
-          ${[0,1,2,3,4].map((t,e)=>`<rect x="${i.l+24+e*16}" y="${w-12}" width="12" height="12" rx="2" fill="${f(t===0?0:Math.ceil(v*t/4))}"/>`).join("")}
-          <text x="${i.l+24+80}" y="${w-2}" font-size="9" fill="var(--gray-l)">\uB9CE\uC74C</text>
+        <svg width="${P}" height="${w}" style="display:block">
+          ${b}${E}${$}
+          <text x="${r.l}" y="${w-2}" font-size="9" fill="var(--gray-l)">\uC801\uC74C</text>
+          ${[0,1,2,3,4].map((t,e)=>`<rect x="${r.l+24+e*16}" y="${w-12}" width="12" height="12" rx="2" fill="${v(t===0?0:Math.ceil(g*t/4))}"/>`).join("")}
+          <text x="${r.l+24+80}" y="${w-2}" font-size="9" fill="var(--gray-l)">\uB9CE\uC74C</text>
         </svg>
       </div>
     </div>
     <div class="ssec">
-      <h4 style="margin-bottom:12px">\u{1F525} \uCD5C\uB2E4 \uACBD\uAE30\uC77C TOP 5</h4>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        ${S.map(([t,e],o)=>`<div style="display:flex;align-items:center;gap:12px;padding:8px 14px;background:var(--white);border:1px solid var(--border);border-radius:8px">
-            <span style="font-size:16px">${o===0?"\u{1F947}":o===1?"\u{1F948}":o===2?"\u{1F949}":`${o+1}`}</span>
-            <span style="font-weight:700;font-size:13px;color:var(--blue);min-width:96px">${t}</span>
+      <h4 style="margin-bottom:12px">\u{1F525} \uCD5C\uB2E4 \uACBD\uAE30\uC77C TOP 5 <span style="font-size:11px;font-weight:600;color:var(--gray-l)">\u2014 \uC22B\uC790 \uD074\uB9AD \uC2DC \uC2A4\uD2B8\uB9AC\uBA38 \uBAA9\uB85D</span></h4>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${S.map(([t,e],o)=>{const l=o===0?"\u{1F947}":o===1?"\u{1F948}":o===2?"\u{1F949}":`${o+1}`,s=window.escJS?window.escJS(t):t.replace(/'/g,"'");return`<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--white);border:1px solid var(--border);border-radius:12px;transition:box-shadow .15s,transform .15s" onmouseenter="this.style.boxShadow='0 4px 14px rgba(15,23,42,.10)';this.style.transform='translateX(2px)'" onmouseleave="this.style.boxShadow='';this.style.transform=''">
+            <span style="font-size:18px;flex-shrink:0">${l}</span>
+            <span class="heatmap-top5-date" style="font-weight:800;font-size:13px;color:var(--blue);min-width:96px" onclick="if(typeof openHeatmapDayPopup==='function')openHeatmapDayPopup('${s}',${e})">${t}</span>
             <div style="flex:1;background:var(--border2);border-radius:20px;height:10px;overflow:hidden">
-              <div style="width:${Math.round(e/S[0][1]*100)}%;background:#16a34a;height:100%;border-radius:20px"></div>
+              <div style="width:${Math.round(e/S[0][1]*100)}%;background:linear-gradient(90deg,#22c55e,#16a34a);height:100%;border-radius:20px"></div>
             </div>
-            <span style="font-weight:800;font-size:14px;color:#16a34a;min-width:40px;text-align:right">${e}\uAC8C\uC784</span>
-          </div>`).join("")}
+            <span class="heatmap-top5-count" style="font-weight:900;font-size:14px;color:#16a34a" onclick="if(typeof openHeatmapDayPopup==='function')openHeatmapDayPopup('${s}',${e})">${e}\uACBD\uAE30</span>
+          </div>`}).join("")}
       </div>
     </div>
-    </div>`}window.statsHeatmapHTML=z})();
+    </div>`}window.statsHeatmapHTML=D})();
 
 /* stats-maprank-renderer.js */
 (function(){function h(){const M=String(window._mapRankSelMap||""),u=[...new Set((window.players||[]).flatMap(t=>(t.history||[]).map(a=>a.map).filter(a=>a&&a!=="-")))],f=(window.maps||[]).filter(t=>t&&t!=="-"),l=[...new Set([...u,...f])].sort();if(!l.length)return'<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">\uB9F5 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.<br><span style="font-size:11px">\uC124\uC815\uC5D0\uC11C \uB9F5\uC744 \uB4F1\uB85D\uD558\uAC70\uB098 \uACBD\uAE30 \uAE30\uB85D\uC5D0 \uB9F5 \uC815\uBCF4\uB97C \uC785\uB825\uD574 \uC8FC\uC138\uC694.</span></p></div>';(!window._mapRankSelMap||!l.includes(window._mapRankSelMap))&&(window._mapRankSelMap=l[0]);const e={};l.forEach(t=>e[t]={});const p=new Set;(window.players||[]).forEach(t=>{window.statsNonProHist(t).forEach(a=>{!a.map||a.map==="-"||(e[a.map]||(e[a.map]={}),e[a.map][t.name]||(e[a.map][t.name]={w:0,l:0,univ:t.univ,tier:t.tier}),a.result==="\uC2B9"?e[a.map][t.name].w++:e[a.map][t.name].l++,a.matchId&&p.add(a.matchId+"_"+t.name))})});const w=[];(window.tourneys||[]).forEach(t=>(t.groups||[]).forEach(a=>(a.matches||[]).forEach(d=>w.push(d)))),window.statsFilterMatches([...window.miniM||[],...window.univM||[],...window.ckM||[],...window.comps||[],...window.proM||[],...w]).forEach(t=>{(t.sets||[]).forEach((a,d)=>{const c=a.map||t.maps&&t.maps[d]||t.map||"";(a.games||[]).forEach(n=>{const r=n.map||c||"";if(!r||r==="-")return;const i=n.winner==="A"?n.playerA:n.playerB,s=n.winner==="A"?n.playerB:n.playerA,y=n.matchId&&i?n.matchId+"_"+i:"",g=n.matchId&&s?n.matchId+"_"+s:"";if(e[r]||(e[r]={}),i&&!p.has(y)){const o=window.statsP(i);e[r][i]||(e[r][i]={w:0,l:0,univ:(o==null?void 0:o.univ)||"",tier:(o==null?void 0:o.tier)||""}),e[r][i].w++}if(s&&!p.has(g)){const o=window.statsP(s);e[r][s]||(e[r][s]={w:0,l:0,univ:(o==null?void 0:o.univ)||"",tier:(o==null?void 0:o.tier)||""}),e[r][s].l++}})})});const v=l.map(t=>{const d=Object.values(e[t]||{}).reduce((n,r)=>n+r.w+r.l,0),c=Math.round(d/2);return{name:t,games:c,players:Object.keys(e[t]||{}).length}}).sort((t,a)=>a.games-t.games||t.name.localeCompare(a.name,"ko")),m=Object.entries(e[window._mapRankSelMap]||{}).map(([t,a])=>({name:t,w:a.w,l:a.l,univ:a.univ,tier:a.tier,tot:a.w+a.l,rate:a.w+a.l?Math.round(a.w/(a.w+a.l)*100):0})).filter(t=>t.tot>=2).sort((t,a)=>a.rate-t.rate||a.tot-t.tot);return`<div style="display:flex;flex-direction:column;gap:14px">

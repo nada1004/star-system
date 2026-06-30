@@ -82,16 +82,16 @@ function _b2Avatar(p, col, size) {
     : '';
   if (p.photo) {
     return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
-      <img src="${_escAttr(toHttpsUrl(p.photo))}" crossorigin="anonymous" loading="lazy" decoding="async" fetchpriority="low" data-b2-photo="1" style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,6px);object-fit:cover;flex-shrink:0;border:2px solid ${_safeColAttr}88" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${_safeNameJs}');this.parentNode.innerHTML=_b2AvatarFallback('${_safeRaceJs}','${_safeColJs}',${s})">
+      <img src="${_escAttr(toHttpsUrl(p.photo))}" crossorigin="anonymous" loading="lazy" decoding="async" fetchpriority="low" data-b2-photo="1" style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,6px);clip-path:var(--su_profile_clip,none);object-fit:cover;flex-shrink:0;border:2px solid ${_safeColAttr}88" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${_safeNameJs}');this.parentNode.innerHTML=_b2AvatarFallback('${_safeRaceJs}','${_safeColJs}',${s})">
       ${badge}
     </span>`;
   }
-  return `<span style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,6px);background:${_safeColAttr};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${_safeColAttr}88;position:relative">${raceShort}${badge}</span>`;
+  return `<span style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,6px);clip-path:var(--su_profile_clip,none);background:${_safeColAttr};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${_safeColAttr}88;position:relative">${raceShort}${badge}</span>`;
 }
 
 function _b2AvatarFallback(letter, col, size) {
   const s = size || 28;
-  return `<span style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,6px);background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88">${letter}</span>`;
+  return `<span style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,6px);clip-path:var(--su_profile_clip,none);background:${col};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:${Math.round(s*0.45)}px;color:#fff;flex-shrink:0;border:2px solid ${col}88">${letter}</span>`;
 }
 
 try{

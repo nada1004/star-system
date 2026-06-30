@@ -26,19 +26,31 @@ function _b2UnivView() {
   const _uvWeekG = _uvWeeklyStats.reduce((acc, s) => acc + s.total, 0);
   const _uvRaces={P:0,T:0,Z:0};
   _allVis.forEach(p=>{ const r=String(p.race||'').trim().toUpperCase(); if(r==='P'||r==='T'||r==='Z') _uvRaces[r]++; });
-  const _uvRaceBar = ['P','T','Z'].map(r=>{
-    const c={P:'#a855f7',T:'#3b82f6',Z:'#ef4444'}[r];
-    const n={P:'🔮P',T:'⚔️T',Z:'🦎Z'}[r];
-    return _uvRaces[r]>0?`<span style="font-size:11px;font-weight:700;color:${c}">${n}${_uvRaces[r]}</span>`:'';
-  }).filter(Boolean).join('<span style="color:var(--border2);margin:0 2px">·</span>');
+  const _uvTotal = _uvRaces.P + _uvRaces.T + _uvRaces.Z;
+  const _uvRaceBar = _uvTotal > 0 ? ['T','P','Z'].map(r=>{
+    const meta={T:{cls:'race-T',label:'테란'},P:{cls:'race-P',label:'프로토스'},Z:{cls:'race-Z',label:'저그'}}[r];
+    if(!_uvRaces[r]) return '';
+    const pct = Math.round(_uvRaces[r]/_uvTotal*100);
+    return `<button type="button" class="b2-race-badge ${meta.cls}" title="${meta.label} ${pct}%" style="cursor:pointer" onclick="if(typeof openB2RaceTierModal==='function')openB2RaceTierModal('${r}')">${r}<span style="opacity:.75;font-size:10px;margin-left:6px">${pct}%</span></button>`;
+  }).filter(Boolean).join('') : '';
+  const _uvTierBtns = (Array.isArray(TIERS)?TIERS:[]).filter(t=>_tierCts[t]).map(t=>{
+    const col = (typeof getTierBtnColor==='function') ? getTierBtnColor(t) : '#64748b';
+    const txt = (typeof getTierBtnTextColor==='function') ? (getTierBtnTextColor(t)||'#fff') : '#fff';
+    return `<button type="button" class="b2-tier-badge" title="${t}티어 ${_tierCts[t]}명" style="cursor:pointer;background:${col};color:${txt};border:1px solid ${col}55" onclick="if(typeof openB2TierUnivModal==='function')openB2TierUnivModal('${String(t).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">${t}</button>`;
+  }).join('');
+
+  try{ window._b2LastAllVisPlayers = _allVis; }catch(e){}
   const _jumpChips = univList.map(u=>{
     const cnt = (membersByUniv[String(u.name||'').trim()]||[]).length;
     if (!cnt) return ''; // [FIX-8] 멤버 없는 대학은 바로가기 칩에서 제외
     const col = gc(u.name);
     const txtCol = _b2ContrastColor(col);
     const anchorId = 'b2-univ-anchor-'+u.name.replace(/[^a-zA-Z0-9가-힣]/g,'_');
-    return `<button onclick="const el=document.getElementById('${anchorId}');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}" style="display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;border:1px solid ${col}cc;background:linear-gradient(135deg,${col}f2,${col}d8);color:${txtCol};font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:0 6px 12px rgba(15,23,42,.06),0 4px 10px ${col}26"><span>${u.name}</span><span style="display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 5px;border-radius:999px;background:rgba(255,255,255,.20);color:${txtCol};font-size:9px;font-weight:900;line-height:1">${cnt}</span></button>`;
+    return `<button class="b2-jump-chip" onclick="const el=document.getElementById('${anchorId}');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}" style="--chip-color:${col}40;border:1.5px solid ${col}bb;background:linear-gradient(135deg,${col}ee,${col}cc);color:${txtCol}"><span style="letter-spacing:-.01em">${u.name}</span></button>`;
   }).join('');
+  const _viewMode = _b2GetUnivProfileViewMode();
+  const _viewBtn = (mode, label) => `
+    <button type="button" class="b2-jump-chip" onclick="_b2SetUnivProfileViewMode('${mode}')" style="border:${_viewMode===mode?'1.5px solid #2563eb':'1.5px solid rgba(148,163,184,.20)'};background:${_viewMode===mode?'linear-gradient(135deg,#eff6ff,#dbeafe)':'linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94))'};color:${_viewMode===mode?'#1d4ed8':'var(--text2)'};box-shadow:${_viewMode===mode?'0 6px 16px rgba(37,99,235,.12)':'0 4px 10px rgba(15,23,42,.04)'}">${label}</button>`;
   const statsBar = `<div style="margin-bottom:12px">
     <div style="padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 16px 28px rgba(15,23,42,.05)">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
@@ -64,13 +76,19 @@ function _b2UnivView() {
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
-        <span style="font-size:11px;font-weight:800;color:var(--text3)">종족 비중</span>
+        <span class="b2-jump-label">종족 비중</span>
         ${_uvRaceBar||`<span style="font-size:11px;font-weight:700;color:var(--gray-l)">집계 없음</span>`}
-        ${TIERS.filter(t=>_tierCts[t]).length?`<span style="width:1px;height:14px;background:var(--border2);display:inline-block;margin:0 2px"></span>${TIERS.filter(t=>_tierCts[t]).map(t=>`<span style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;background:${getTierBtnColor(t)};color:${getTierBtnTextColor(t)||'#fff'};box-shadow:0 8px 14px rgba(15,23,42,.06)">${t} ${_tierCts[t]}</span>`).join('')}`:''}
+        ${_uvTierBtns?`<span style="width:1px;height:20px;background:var(--border2);display:inline-block;margin:0 4px;flex-shrink:0"></span><span class="b2-jump-label">티어</span>${_uvTierBtns}`:''}
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
-        <span style="font-size:11px;font-weight:800;color:var(--text3);flex-shrink:0;white-space:nowrap">대학 바로가기</span>
+        <span class="b2-jump-label">🏛️ 바로가기</span>
         ${_jumpChips}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(148,163,184,.14)">
+        <span class="b2-jump-label">🖼️ 모드</span>
+        ${_viewBtn('default','기본')}
+        ${_viewBtn('poster','포스터')}
+        ${_viewBtn('heat','히트맵')}
       </div>
     </div>
   </div>`;
@@ -90,6 +108,278 @@ function _b2UnivView() {
   return h;
 }
 
+try{
+  if(!window.openB2RaceTierModal){
+    window.openB2RaceTierModal = function(race){
+      try{
+        const list = Array.isArray(window._b2LastAllVisPlayers) ? window._b2LastAllVisPlayers : [];
+        const rc = String(race||'').trim().toUpperCase();
+        const label = rc==='P'?'프로토스':rc==='T'?'테란':rc==='Z'?'저그':'종족';
+        const pool = list.filter(p=>String(p?.race||'').trim().toUpperCase()===rc);
+        const tiers = (Array.isArray(window.TIERS) && window.TIERS.length) ? window.TIERS.slice() : ['S','A','B','C','D','E','F','?'];
+        const counts = {};
+        const univCounts = {};
+        pool.forEach(p=>{
+          const t=String(p?.tier||'?');
+          const u=String(p?.univ||'무소속');
+          counts[t]=(counts[t]||0)+1;
+          univCounts[u]=(univCounts[u]||0)+1;
+        });
+        window._b2RaceTierState = window._b2RaceTierState || {};
+        window._b2RaceTierState.race = rc;
+        window._b2RaceTierState.tier = window._b2RaceTierState.tier || 'ALL';
+        window._b2RaceTierState.univ = window._b2RaceTierState.univ || 'ALL';
+        window._b2RaceTierState.list = pool;
+        window._b2RaceTierState.counts = counts;
+        window._b2RaceTierState.univCounts = univCounts;
+        window._b2RaceTierState.tiers = tiers;
+        window._b2RaceTierState.label = label;
+
+        if(!document.getElementById('b2RaceTierStyle')){
+          const st = document.createElement('style');
+          st.id = 'b2RaceTierStyle';
+          st.textContent = `
+            #b2RaceTierOverlay{display:none;position:fixed;inset:0;z-index:6000;background:rgba(2,6,23,.42);backdrop-filter:blur(6px)}
+            #b2RaceTierOverlay .su-modal{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(1120px,calc(100vw - 28px));height:min(820px,calc(100vh - 28px));background:linear-gradient(180deg,rgba(255,255,255,.985),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.18);border-radius:26px;box-shadow:0 30px 64px rgba(15,23,42,.22);display:flex;flex-direction:column;overflow:hidden}
+            #b2RaceTierOverlay .su-modal-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(148,163,184,.14);background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(255,255,255,.92))}
+            #b2RaceTierOverlay .su-modal-bd{padding:14px 14px 16px;overflow:auto;flex:1;min-height:0}
+            #b2RaceTierOverlay .b2rt-title{font-size:16px;font-weight:1000;letter-spacing:-.02em;color:var(--text1)}
+            #b2RaceTierOverlay .b2rt-sub{font-size:11px;font-weight:800;color:var(--text3)}
+            #b2RaceTierOverlay .b2rt-univbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+            #b2RaceTierOverlay .b2rt-univbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(248,250,252,.98);font-size:11px;font-weight:900;color:var(--text2);cursor:pointer}
+            #b2RaceTierOverlay .b2rt-univbtn.on{border-color:rgba(37,99,235,.35);background:linear-gradient(180deg,rgba(239,246,255,.98),rgba(219,234,254,.92));color:#1d4ed8}
+            #b2RaceTierOverlay .b2rt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-top:12px}
+            #b2RaceTierOverlay .b2rt-card{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:0.78;background:#0b1120;border:1px solid rgba(255,255,255,.14);box-shadow:0 10px 22px rgba(15,23,42,.10);cursor:pointer}
+            #b2RaceTierOverlay .b2rt-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}
+            #b2RaceTierOverlay .b2rt-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000;color:rgba(255,255,255,.72);background:linear-gradient(160deg,rgba(148,163,184,.30),rgba(15,23,42,.18))}
+            #b2RaceTierOverlay .b2rt-bottom{position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;gap:4px}
+            #b2RaceTierOverlay .b2rt-bottom::before{content:'';position:absolute;left:0;right:0;bottom:0;height:72%;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.26) 28%,rgba(5,8,20,.78) 100%);pointer-events:none}
+            #b2RaceTierOverlay .b2rt-bottom>*{position:relative;z-index:1}
+            #b2RaceTierOverlay .b2rt-name{font-size:12px;font-weight:950;color:#fff;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.35)}
+            #b2RaceTierOverlay .b2rt-meta{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:850;color:rgba(255,255,255,.82);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.35)}
+            #b2RaceTierOverlay .b2rt-ubadge{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.18);font-size:9.5px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(6px)}
+            @media (max-width:780px){#b2RaceTierOverlay .su-modal{height:min(860px,calc(100vh - 14px));width:min(100vw - 14px,1120px);border-radius:22px}#b2RaceTierOverlay .b2rt-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}}
+          `;
+          document.head.appendChild(st);
+        }
+
+        let ov = document.getElementById('b2RaceTierOverlay');
+        if(!ov){
+          ov = document.createElement('div');
+          ov.id = 'b2RaceTierOverlay';
+          ov.innerHTML = `
+            <div class="su-modal">
+              <div class="su-modal-hd">
+                <div style="min-width:0;display:flex;flex-direction:column;gap:2px">
+                  <div class="b2rt-title" id="b2rtTitle"></div>
+                  <div class="b2rt-sub" id="b2rtSub"></div>
+                </div>
+                <button type="button" class="btn btn-r btn-sm" id="b2rtClose">닫기</button>
+              </div>
+              <div class="su-modal-bd">
+                <div class="b2rt-univbar" id="b2rtUnivBar"></div>
+                <div class="b2rt-grid" id="b2rtGrid"></div>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(ov);
+          ov.addEventListener('click', (e)=>{
+            try{
+              if(e.target && e.target.id==='b2RaceTierOverlay') window.closeB2RaceTierModal();
+            }catch(_){}
+          });
+          const btn = ov.querySelector('#b2rtClose');
+          if(btn) btn.addEventListener('click', ()=>window.closeB2RaceTierModal());
+          window.closeB2RaceTierModal = function(){
+            const el = document.getElementById('b2RaceTierOverlay');
+            if(el) el.style.display = 'none';
+          };
+        }
+
+        window._b2RaceTierRender = function(){
+          const st = window._b2RaceTierState || {};
+          const ov2 = document.getElementById('b2RaceTierOverlay');
+          if(!ov2) return;
+          const title = ov2.querySelector('#b2rtTitle');
+          const sub = ov2.querySelector('#b2rtSub');
+          const bar = ov2.querySelector('#b2rtUnivBar');
+          const grid = ov2.querySelector('#b2rtGrid');
+          if(title) title.textContent = `종족 비중 · ${st.label || ''}`;
+          const filtered = (st.univ && st.univ!=='ALL') ? (st.list||[]).filter(p=>String(p?.univ||'무소속')===st.univ) : (st.list||[]);
+          if(sub) sub.textContent = `${st.univ && st.univ!=='ALL' ? `${st.univ} · ` : ''}${filtered.length}명`;
+          if(bar){
+            const univs = ['ALL'].concat(Object.keys(st.univCounts||{}).sort((a,b)=>(st.univCounts[b]||0)-(st.univCounts[a]||0) || a.localeCompare(b)));
+            bar.innerHTML = univs.map(u=>{
+              const cnt = u==='ALL' ? (st.list||[]).length : (st.univCounts||{})[u] || 0;
+              const on = (st.univ||'ALL')===u;
+              const label2 = u==='ALL' ? `전체 (${cnt})` : `${u} (${cnt})`;
+              return `<button type="button" class="b2rt-univbtn ${on?'on':''}" onclick="window._b2RaceTierSetUniv && window._b2RaceTierSetUniv('${String(u).replace(/'/g,'\\\'')}')">${label2}</button>`;
+            }).join('');
+          }
+          if(grid){
+            grid.innerHTML = filtered.map(p=>{
+              const name = String(p?.name||'');
+              const univ = String(p?.univ||'무소속');
+              const tier = String(p?.tier||'?');
+              const photo = String(p?.photo||'').trim();
+              const uCol = (typeof gc==='function' ? (gc(univ)||'#64748b') : '#64748b');
+              const uLogo = (univ && univ!=='무소속' && typeof gUI==='function') ? gUI(univ,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(univ,'players','16px'):'16px')) : '';
+              const nameJs = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+              const img = photo ? `<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '';
+              const fb = `<div class="b2rt-fb" style="display:${photo?'none':'flex'}">${String(p?.race||'?')}</div>`;
+              return `<div class="b2rt-card" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')">
+                ${img}${fb}
+                <div class="b2rt-bottom">
+                  <div class="b2rt-name" title="${name.replace(/\"/g,'&quot;')}">${name}</div>
+                  <div class="b2rt-meta"><span>${tier}티어</span><span class="b2rt-ubadge" style="background:${uCol}22;border-color:${uCol}55;color:#fff">${uLogo}${univ}</span></div>
+                </div>
+              </div>`;
+            }).join('');
+          }
+        };
+        window._b2RaceTierSetUniv = function(univ){
+          window._b2RaceTierState = window._b2RaceTierState || {};
+          window._b2RaceTierState.univ = String(univ||'ALL');
+          window._b2RaceTierRender && window._b2RaceTierRender();
+        };
+
+        const ov3 = document.getElementById('b2RaceTierOverlay');
+        if(ov3) ov3.style.display = 'block';
+        window._b2RaceTierSetUniv('ALL');
+      }catch(e){ console.error(e); }
+    };
+  }
+}catch(e){}
+
+try{
+  if(!window.openB2TierUnivModal){
+    window.openB2TierUnivModal = function(tier){
+      try{
+        const list = Array.isArray(window._b2LastAllVisPlayers) ? window._b2LastAllVisPlayers : [];
+        const tt = String(tier||'?').trim();
+        const pool = list.filter(p=>String(p?.tier||'?')===tt);
+        const groups = new Map();
+        pool.forEach(p=>{
+          const u = String(p?.univ||'무소속');
+          if(groups.has(u)) groups.get(u).push(p);
+          else groups.set(u,[p]);
+        });
+        const ordered = Array.from(groups.entries()).sort((a,b)=>b[1].length-a[1].length || a[0].localeCompare(b[0]));
+
+        if(!document.getElementById('b2TierUnivStyle')){
+          const st = document.createElement('style');
+          st.id = 'b2TierUnivStyle';
+          st.textContent = `
+            #b2TierUnivOverlay{display:none;position:fixed;inset:0;z-index:6000;background:rgba(2,6,23,.42);backdrop-filter:blur(6px)}
+            #b2TierUnivOverlay .su-modal{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(1120px,calc(100vw - 28px));height:min(860px,calc(100vh - 28px));background:linear-gradient(180deg,rgba(255,255,255,.985),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.18);border-radius:26px;box-shadow:0 30px 64px rgba(15,23,42,.22);display:flex;flex-direction:column;overflow:hidden}
+            #b2TierUnivOverlay .su-modal-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(148,163,184,.14);background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(255,255,255,.92))}
+            #b2TierUnivOverlay .su-modal-bd{padding:14px 14px 16px;overflow:auto;flex:1;min-height:0}
+            #b2TierUnivOverlay .b2tu-title{font-size:16px;font-weight:1000;letter-spacing:-.02em;color:var(--text1)}
+            #b2TierUnivOverlay .b2tu-sub{font-size:11px;font-weight:800;color:var(--text3)}
+            #b2TierUnivOverlay .b2tu-filter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+            #b2TierUnivOverlay .b2tu-filterbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(248,250,252,.98);font-size:11px;font-weight:900;color:var(--text2);cursor:pointer}
+            #b2TierUnivOverlay .b2tu-filterbtn.on{border-color:rgba(37,99,235,.35);background:linear-gradient(180deg,rgba(239,246,255,.98),rgba(219,234,254,.92));color:#1d4ed8}
+            #b2TierUnivOverlay .b2tu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+            #b2TierUnivOverlay .b2tu-card{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:0.78;background:#0b1120;border:1px solid rgba(255,255,255,.14);box-shadow:0 10px 22px rgba(15,23,42,.10);cursor:pointer}
+            #b2TierUnivOverlay .b2tu-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}
+            #b2TierUnivOverlay .b2tu-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000;color:rgba(255,255,255,.72);background:linear-gradient(160deg,rgba(148,163,184,.30),rgba(15,23,42,.18))}
+            #b2TierUnivOverlay .b2tu-bottom{position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;gap:4px}
+            #b2TierUnivOverlay .b2tu-bottom::before{content:'';position:absolute;left:0;right:0;bottom:0;height:72%;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.26) 28%,rgba(5,8,20,.78) 100%);pointer-events:none}
+            #b2TierUnivOverlay .b2tu-bottom>*{position:relative;z-index:1}
+            #b2TierUnivOverlay .b2tu-name{font-size:12px;font-weight:950;color:#fff;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.35)}
+            #b2TierUnivOverlay .b2tu-meta{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:850;color:rgba(255,255,255,.82);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.35)}
+            #b2TierUnivOverlay .b2tu-ubadge{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.18);font-size:9.5px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(6px)}
+            #b2TierUnivOverlay .b2tu-heat{display:grid;grid-template-columns:repeat(auto-fill,44px);gap:8px}
+            #b2TierUnivOverlay .b2tu-av{width:44px;height:44px;border-radius:16px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(160deg,rgba(148,163,184,.26),rgba(15,23,42,.12));box-shadow:0 6px 14px rgba(15,23,42,.08);cursor:pointer;padding:0}
+            #b2TierUnivOverlay .b2tu-av img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+            #b2TierUnivOverlay .b2tu-av span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:rgba(255,255,255,.75)}
+            @media (max-width:780px){#b2TierUnivOverlay .su-modal{height:min(920px,calc(100vh - 14px));width:min(100vw - 14px,1120px);border-radius:22px}#b2TierUnivOverlay .b2tu-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}}
+          `;
+          document.head.appendChild(st);
+        }
+
+        let ov = document.getElementById('b2TierUnivOverlay');
+        if(!ov){
+          ov = document.createElement('div');
+          ov.id = 'b2TierUnivOverlay';
+          ov.innerHTML = `
+            <div class="su-modal">
+              <div class="su-modal-hd">
+                <div style="min-width:0;display:flex;flex-direction:column;gap:2px">
+                  <div class="b2tu-title" id="b2tuTitle"></div>
+                  <div class="b2tu-sub" id="b2tuSub"></div>
+                </div>
+                <button type="button" class="btn btn-r btn-sm" id="b2tuClose">닫기</button>
+              </div>
+              <div class="su-modal-bd">
+                <div class="b2tu-filter" id="b2tuFilter"></div>
+                <div id="b2tuBody"></div>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(ov);
+          ov.addEventListener('click', (e)=>{
+            try{ if(e.target && e.target.id==='b2TierUnivOverlay') window.closeB2TierUnivModal(); }catch(_){}
+          });
+          const btn = ov.querySelector('#b2tuClose');
+          if(btn) btn.addEventListener('click', ()=>window.closeB2TierUnivModal());
+          window.closeB2TierUnivModal = function(){
+            const el = document.getElementById('b2TierUnivOverlay');
+            if(el) el.style.display = 'none';
+          };
+        }
+
+        window._b2TierUnivState = { tier: tt, pool, ordered, selectedUniv:'ALL' };
+        const title = ov.querySelector('#b2tuTitle');
+        const sub = ov.querySelector('#b2tuSub');
+        const body = ov.querySelector('#b2tuBody');
+        const filter = ov.querySelector('#b2tuFilter');
+        if(title) title.textContent = `티어 · ${tt}티어`;
+        window._b2TierUnivRender = function(){
+          const st2 = window._b2TierUnivState || {};
+          const selectedUniv = st2.selectedUniv || 'ALL';
+          if(filter){
+            filter.innerHTML = ['ALL'].concat((st2.ordered||[]).map(([univName])=>univName)).map(univName=>{
+              const cnt = univName==='ALL' ? (st2.pool||[]).length : (((st2.ordered||[]).find(([n])=>n===univName)||[])[1]||[]).length;
+              const on = selectedUniv===univName;
+              return `<button type="button" class="b2tu-filterbtn ${on?'on':''}" onclick="window._b2TierUnivSetFilter && window._b2TierUnivSetFilter('${String(univName).replace(/'/g,'\\\'')}')">${univName==='ALL' ? `전체 (${cnt})` : `${univName} (${cnt})`}</button>`;
+            }).join('');
+          }
+          const filtered = selectedUniv==='ALL' ? (st2.pool||[]) : (st2.pool||[]).filter(p=>String(p?.univ||'무소속')===selectedUniv);
+          if(sub) sub.textContent = `${selectedUniv!=='ALL' ? `${selectedUniv} · ` : ''}${filtered.length}명`;
+          if(body){
+            body.innerHTML = filtered.length ? `<div class="b2tu-grid">${filtered.map(p=>{
+              const name = String(p?.name||'');
+              const photo = String(p?.photo||'').trim();
+              const race = String(p?.race||'?');
+              const univName = String(p?.univ||'무소속');
+              const col = (typeof gc==='function') ? (gc(univName)||'#64748b') : '#64748b';
+              const logo = (univName && univName!=='무소속' && typeof gUI==='function') ? gUI(univName,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(univName,'players','16px'):'16px')) : '';
+              const nameJs = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+              const img = photo ? `<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '';
+              const fb = `<div class="b2tu-fb" style="display:${photo?'none':'flex'}">${race}</div>`;
+              return `<div class="b2tu-card" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')">
+                ${img}${fb}
+                <div class="b2tu-bottom">
+                  <div class="b2tu-name" title="${name.replace(/\"/g,'&quot;')}">${name}</div>
+                  <div class="b2tu-meta"><span>${race}</span><span class="b2tu-ubadge" style="background:${col}22;border-color:${col}55;color:#fff">${logo}${univName}</span></div>
+                </div>
+              </div>`;
+            }).join('')}</div>` : `<div style="padding:24px;text-align:center;color:var(--text3);font-weight:800">표시할 선수가 없습니다.</div>`;
+          }
+        };
+        window._b2TierUnivSetFilter = function(univName){
+          window._b2TierUnivState = window._b2TierUnivState || {};
+          window._b2TierUnivState.selectedUniv = String(univName||'ALL');
+          window._b2TierUnivRender && window._b2TierUnivRender();
+        };
+        window._b2TierUnivSetFilter('ALL');
+        ov.style.display = 'block';
+      }catch(e){ console.error(e); }
+    };
+  }
+}catch(e){}
+
 /* ── 🧩 펨코현황 뷰 ──
    첨부 이미지처럼 "대학별 컬러 섹션 + 촘촘한 프로필 그리드" 형태로 렌더링
 */
@@ -104,11 +394,11 @@ function _b2FemcoView() {
     logoOffsetX: 0, logoOffsetY: 0,
     titleSize: 28, titleFont: 'system', titlePos: 'top',
     titleOffsetX: 0, titleOffsetY: 0,
-    playerImgSize: 46, playerImgShape: 'square',
+    playerImgSize: 76, playerImgShape: 'square',
     rowsPerCol: 5, colWidth: 170, colGap: 10, univGap: 18,
     countFontSize: 12, contentPadX: 16, contentAlign: 'left', contentOffsetX: 0,
     univSubtitles: {}, subtitleSize: 12, subtitleWeight: 800, subtitleColor: '',
-    nameFontSize: 12, roleFontSize: 10, tierBadgeSize: 10, tierBadgePadX: 6,
+    nameFontSize: 18, roleFontSize: 10, tierBadgeSize: 10, tierBadgePadX: 6,
     starSize: 15, statusIconSize: 18,
     bgOverlay: 0,
     univColorOverrides: {}, univBgMedia: {}
@@ -196,8 +486,15 @@ function _b2FemcoView() {
   const OV_TOP = (BG_OVERLAY/70) * 0.22; // 0 → 0.22
   const OV_BOT = (BG_OVERLAY/70) * 0.52; // 0 → 0.52
   const titleSize = Math.max(16, Math.min(44, parseInt(femcoSettings.titleSize || 28, 10) || 28));
-  const playerImgSize = Math.max(28, Math.min(90, parseInt(femcoSettings.playerImgSize || 46, 10) || 46));
-  const playerRadius = femcoSettings.playerImgShape === 'circle' ? '50%' : '10px';
+  const playerImgSize = Math.max(28, Math.min(160, parseInt(femcoSettings.playerImgSize || 64, 10) || 64));
+  const playerRadius = ({
+    sharp: '0px',
+    roundedsm: '6px',
+    square: '10px',
+    roundedlg: '22px',
+    roundedxl: '34px',
+    circle: '50%'
+  })[femcoSettings.playerImgShape] || '10px';
   const rowsPerCol = Math.max(2, Math.min(12, parseInt(femcoSettings.rowsPerCol || 5, 10) || 5));
   const colWidth = Math.max(80, Math.min(360, parseInt(femcoSettings.colWidth || 170, 10) || 170));
   const rowGap = Math.max(0, Math.min(28, parseInt(femcoSettings.colGap || 10, 10) || 10)); // UI에서 '상하 간격'
@@ -236,7 +533,7 @@ function _b2FemcoView() {
   const subtitleSize = Math.max(10, Math.min(24, parseInt(femcoSettings.subtitleSize || 12, 10) || 12));
   const subtitleWeight = [400,500,600,700,800,900].includes(parseInt(femcoSettings.subtitleWeight||800,10)) ? parseInt(femcoSettings.subtitleWeight||800,10) : 800;
   const subtitleColor = (typeof femcoSettings.subtitleColor === 'string') ? femcoSettings.subtitleColor : '';
-  const nameFontSize = Math.max(10, Math.min(20, parseInt(femcoSettings.nameFontSize || 12, 10) || 12));
+  const nameFontSize = Math.max(10, Math.min(28, parseInt(femcoSettings.nameFontSize || 16, 10) || 16));
   const roleFontSize = Math.max(9, Math.min(16, parseInt(femcoSettings.roleFontSize || 10, 10) || 10));
   const tierBadgeSize = Math.max(9, Math.min(16, parseInt(femcoSettings.tierBadgeSize || 10, 10) || 10));
   const tierBadgePadX = Math.max(4, Math.min(12, parseInt(femcoSettings.tierBadgePadX || 6, 10) || 6));
@@ -371,8 +668,8 @@ function _b2FemcoView() {
   let h = `
     <style>
       .b2-femco-wrap{display:flex;flex-direction:column;gap:${univGap}px}
-      .b2-femco-univ{border-radius:16px;overflow:hidden;box-shadow:0 2px 22px rgba(0,0,0,.12);transition:background-color .35s ease, box-shadow .35s ease, transform .2s ease}
-      .b2-femco-univ:hover{transform:translateY(-1px);box-shadow:0 6px 26px rgba(0,0,0,.18)}
+      .b2-femco-univ{border-radius:22px;overflow:hidden;box-shadow:0 4px 28px rgba(0,0,0,.14);transition:background-color .35s ease, box-shadow .35s ease, transform .22s ease}
+      .b2-femco-univ:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(0,0,0,.20)}
       .b2-femco-head{padding:16px 16px 12px;text-align:center;position:relative}
       .b2-femco-headrow{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
       .b2-femco-headcol{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${headGap}px}
@@ -421,10 +718,10 @@ function _b2FemcoView() {
 
       /* 스트리머 항목(카드형식X): 프로필(네모, 작게) + 우측 텍스트 4줄 */
       /* 카드 느낌 제거: 배경/테두리 최소화 */
-      .b2-femco-item{display:flex;align-items:center;gap:10px;padding:6px 4px;border-radius:10px;cursor:pointer;min-width:0;transition:background .1s;justify-self:start;width:fit-content;max-width:100%}
-      .b2-femco-item:hover{background:rgba(255,255,255,.12)}
+      .b2-femco-item{display:flex!important;flex-direction:row!important;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;cursor:pointer;min-width:0;transition:background .15s,transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .15s;justify-self:start;width:fit-content;max-width:100%}
+      .b2-femco-item:hover{background:rgba(255,255,255,.20);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.14)}
       .b2-femco-avatar{width:${playerImgSize}px;height:${playerImgSize}px;border-radius:${playerRadius};overflow:hidden;flex-shrink:0;position:relative}
-      .b2-femco-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+      .b2-femco-text{display:flex!important;flex-direction:column!important;align-items:flex-start!important;text-align:left!important;gap:2px;min-width:0}
       .b2-femco-tier{font-size:10px;font-weight:1000;display:inline-flex;align-items:center;gap:4px}
       .b2-femco-tierbadge{font-size:${tierBadgeSize}px;padding:2px ${tierBadgePadX}px;border-radius:999px;border:1px solid rgba(0,0,0,.12);display:inline-flex;align-items:center;line-height:1}
       .b2-femco-role{font-size:${roleFontSize}px;font-weight:1000;opacity:.9}
@@ -901,7 +1198,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       <div style="background:${labelCol}!important;min-width:70px;width:70px;display:flex;align-items:center;justify-content:center;padding:10px 6px;flex-shrink:0;border-radius:16px 0 0 16px;border:1px solid ${col}33;border-right:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.28)">
         <span style="font-size:11px;font-weight:900;color:${col};text-align:center;line-height:1.35;word-break:keep-all;letter-spacing:-.01em">${label}</span>
       </div>
-      <div style="flex:1;background:${_rowPanelBg};padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-radius:0 16px 16px 0;border:1px solid ${_rowPanelBorder};box-shadow:${_rowPanelShadow}">
+      <div style="flex:1;background:${_rowPanelBg};padding:10px 12px;border-radius:0 16px 16px 0;border:1px solid ${_rowPanelBorder};box-shadow:${_rowPanelShadow}">
         ${chips}
       </div>
     </div>`;
@@ -917,7 +1214,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const _bgPos = uCfg.bgImgPos || 'center center';
   const _bgSize = uCfg.bgImgSize || 'auto';
   const _bgOpacityNum = (uCfg.bgImgAlpha ?? b2BgImgAlpha) / 100;
-  const _bgOpacity = (_hasBgImg ? Math.max(0.56, _bgOpacityNum) : _bgOpacityNum).toFixed(2);
+  const _bgOpacity = (_hasBgImg ? Math.max(0.64, _bgOpacityNum + 0.08) : _bgOpacityNum).toFixed(2);
+  const _profileViewMode = _b2GetUnivProfileViewMode();
   const bgImgHtml = uCfg.bgImg
     ? forExport
       ? `<img src="${uCfg.bgImg}" crossorigin="anonymous" class="b2-fit-auto" data-fit-kind="bg" data-fit-mode="${_bgSize}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_bgSize==='auto'?'cover':_bgSize};object-position:${_bgPos};opacity:${_bgOpacity};pointer-events:none;z-index:0" onload="_b2ApplyBgAutoSizing(this)">`
@@ -927,12 +1225,14 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   let rows = '';
   roleOrder.forEach(role => {
     const group = roleGroups[role];
-    rows += _tableRow(role, true, group.map(p => _b2NameTag(p, col, true)).join(''));
+    const chips = _b2RenderUnivGroupCards(group, col, true, _profileViewMode);
+    rows += _tableRow(role, true, chips);
   });
   orderedTierKeys.forEach(tier => {
     const group = tierGroups[tier];
     group.sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ko', {sensitivity:'base'}));
-    rows += _tableRow(tier, false, group.map(p => _b2NameTag(p, col, false)).join(''));
+    const chips = _b2RenderUnivGroupCards(group, col, false, _profileViewMode);
+    rows += _tableRow(tier, false, chips);
   });
   const sidePanelHtml = hasSide ? `<div style="margin-top:10px;background:${_memoPanelBg};padding:12px;box-sizing:border-box;overflow:hidden;border-radius:18px;border:1px solid ${_softBorder};box-shadow:0 14px 26px rgba(15,23,42,.06)">
     <div style="font-size:11px;font-weight:900;color:${col};margin-bottom:${(_simgs.length||_smemo)?'10px':'0'}">사이드 메모</div>
@@ -941,6 +1241,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   </div>` : '';
   const bodyContent = `<div class="b2-bg-host" style="position:relative;overflow:hidden;background:${_hasBgImg?'transparent':'linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.82))'}">
     ${bgImgHtml}
+    ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" aria-hidden="true" style="position:absolute;right:16px;bottom:10px;width:min(36%,240px);max-width:240px;opacity:${_hasBgImg?'.42':'.32'};object-fit:contain;pointer-events:none;z-index:0;filter:drop-shadow(0 12px 28px rgba(15,23,42,.18))" onerror="this.style.display='none'">`:''}
     <div style="position:relative;z-index:1;padding:16px;background:${_hasBgImg?'transparent':'transparent'}">
       <div>${rows}</div>
       ${sidePanelHtml}
@@ -972,7 +1273,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       <div style="background:linear-gradient(135deg,${col} 0%,${col}dd 100%);padding:16px 16px 14px;position:relative;overflow:hidden">
         <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,${_hasBgImg?'.08':'.18'}),rgba(255,255,255,0) 58%);pointer-events:none"></div>
         <div style="display:flex;align-items:stretch;gap:12px;position:relative;z-index:1">
-          ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,46px);height:var(--su_univ_logo_size,46px);object-fit:contain;border-radius:var(--su_univ_logo_radius,14px);flex-shrink:0;cursor:pointer;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);padding:5px;box-shadow:0 12px 22px rgba(15,23,42,.10)" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
+          ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,56px);height:var(--su_univ_logo_size,56px);object-fit:contain;border-radius:var(--su_univ_logo_radius,16px);flex-shrink:0;cursor:pointer;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.28);padding:6px;box-shadow:0 14px 26px rgba(15,23,42,.12)" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
           <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:7px">
             <div style="display:flex;align-items:flex-start;gap:10px;justify-content:space-between;flex-wrap:wrap">
               <div style="min-width:0;flex:1">
@@ -1187,12 +1488,99 @@ function _b2PastelBg(hex, ratio) {
   return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
 }
 
+function _b2GetUnivProfileViewMode() {
+  try{
+    const raw = String(localStorage.getItem('su_b2_univ_profile_view') || '').trim();
+    if (raw === 'card') return 'poster';
+    if (raw === 'compact' || raw === 'media') return 'default';
+    return ['default','poster','heat'].includes(raw) ? raw : 'default';
+  }catch(e){
+    return 'default';
+  }
+}
+
+function _b2SetUnivProfileViewMode(mode) {
+  const nextMode = ['default','poster','heat'].includes(String(mode||'')) ? String(mode) : 'default';
+  try{ localStorage.setItem('su_b2_univ_profile_view', nextMode); }catch(e){}
+  if (typeof render === 'function') render();
+}
+
+function _b2UnivPhotoCard(p, accentCol, showBadge) {
+  const safeName = (p.name||'').replace(/'/g,"\\'");
+  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
+  const shapeStyle = 'border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);';
+  const badgeTxt = showBadge ? (p.tier || p.role || '') : '';
+  const badgeBg = (p.tier && typeof getTierBtnColor === 'function') ? getTierBtnColor(p.tier) : accentCol;
+  const badgeFg = (p.tier && typeof getTierBtnTextColor === 'function') ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
+  const raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
+  const backdrop = photo
+    ? `<img src="${photo}" crossorigin="anonymous" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.16);filter:blur(14px) saturate(1.08) brightness(.88);opacity:.88" onerror="this.style.display='none'">
+       <div style="position:absolute;inset:0;background:linear-gradient(180deg,${accentCol}24 0%,rgba(2,6,23,.12) 100%)"></div>`
+    : `<div style="position:absolute;inset:0;background:linear-gradient(160deg,${accentCol}44 0%,${accentCol}18 100%)"></div>`;
+  const photoHtml = photo
+    ? `<img src="${photo}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.78">${raceLetter}</div>`
+    : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.78">${raceLetter}</div>`;
+  return `
+    <div style="position:relative;width:122px;max-width:100%;aspect-ratio:.78;${shapeStyle}overflow:hidden;border:1px solid rgba(255,255,255,.16);background:#0b1120;box-shadow:0 10px 20px rgba(15,23,42,.12);cursor:pointer" onclick="openPlayerModal('${safeName}')">
+      ${backdrop}
+      ${photoHtml}
+      ${p.race&&p.race!=='N'?`<div style="position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:999px;background:${raceCol};color:#fff;font-size:10px;font-weight:900;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.26)">${p.race}</div>`:''}
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:9px 9px 10px;background:linear-gradient(180deg,rgba(2,6,23,0) 0%,rgba(2,6,23,.20) 30%,rgba(2,6,23,.62) 100%);z-index:2">
+        ${badgeTxt?`<div style="margin-bottom:3px"><span style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;background:${badgeBg};color:${badgeFg};font-size:10px;font-weight:900;line-height:1.4">${badgeTxt}</span></div>`:''}
+        <div style="color:#fff;font-size:12px;font-weight:950;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.5)">${p.name||''}</div>
+      </div>
+    </div>`;
+}
+
+function _b2UnivDefaultTag(p, accentCol, showTier) {
+  const safeName = (p.name||'').replace(/'/g,"\\'");
+  const crewCol = p.crewName && typeof _gcCrew === 'function' ? (_gcCrew(p.crewName) || '') : '';
+  return `
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-radius:24px;cursor:pointer;transition:background .12s;white-space:nowrap;flex-shrink:0"
+      onmouseover="this.style.background='${accentCol}14'"
+      onmouseout="this.style.background='transparent'">
+      <div onclick="openPlayerModal('${safeName}')" style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+      ${_b2Avatar(p, crewCol||accentCol, 58)}
+      <span style="font-weight:800;font-size:20px;color:var(--text1);white-space:nowrap;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
+      ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:11px;flex-shrink:0">${p.race}</span>`:''}
+      ${showTier&&p.tier?`<span style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)||'#fff'};flex-shrink:0">${p.tier}</span>`:''}
+      ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
+      </div>
+    </div>`;
+}
+
+function _b2UnivHeatCard(p, accentCol) {
+  const safeName = (p.name||'').replace(/'/g,"\\'");
+  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
+  const shapeStyle = 'border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);';
+  return `<button type="button" title="${(p.name||'').replace(/"/g,'&quot;')}" onclick="openPlayerModal('${safeName}')" style="width:112px;height:112px;padding:0;border:none;${shapeStyle}overflow:hidden;background:${accentCol}22;box-shadow:0 8px 20px rgba(15,23,42,.09);cursor:pointer">
+    ${photo ? `<img src="${photo}" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:1000;color:${accentCol}">${raceLetter}</span>` : `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:1000;color:${accentCol}">${raceLetter}</span>`}
+  </button>`;
+}
+
+function _b2RenderUnivGroupCards(group, accentCol, showBadge, mode) {
+  const items = Array.isArray(group) ? group : [];
+  if (mode === 'heat') {
+    return `<div style="display:flex;flex-wrap:wrap;gap:14px">${items.map(p => _b2UnivHeatCard(p, accentCol)).join('')}</div>`;
+  }
+  if (mode === 'poster') {
+    return `<div style="display:flex;flex-wrap:wrap;gap:14px">${items.map(p => _b2UnivPhotoCard(p, accentCol, showBadge)).join('')}</div>`;
+  }
+  return `<div style="display:grid;grid-template-columns:repeat(5,max-content);align-items:center;justify-content:start;column-gap:10px;row-gap:8px;max-width:100%;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;scrollbar-width:thin">${items.map(p => _b2UnivDefaultTag(p, accentCol, showBadge)).join('')}</div>`;
+}
+
 function _b2LineupCard(p, col, big, iconUrl) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const photo = p.photo ? toHttpsUrl(p.photo) : '';
   const _raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
   const badgeTxt = big ? (p.role||'') : (p.tier||'');
+  // 티어 배지 색상 — 스트리머탭 티어색상과 동일하게
+  const _tierBadgeCol = (!big && p.tier && typeof getTierBtnColor==='function') ? getTierBtnColor(p.tier) : col;
+  const _tierBadgeTxt = (!big && p.tier && typeof getTierBtnTextColor==='function') ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
   // 배경 blur 레이어
   const _fillBackdrop = photo
     ? `<img src="${photo}" crossorigin="anonymous" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.22);filter:blur(16px) saturate(1.15) brightness(.8);opacity:.85" onerror="this.style.display='none'">
@@ -1211,12 +1599,9 @@ function _b2LineupCard(p, col, big, iconUrl) {
   const _raceBadge = (p.race && p.race!=='N')
     ? `<div style="position:absolute;top:10px;right:10px;padding:3px 10px;border-radius:999px;background:${_raceCol};color:#fff;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.32);z-index:2;letter-spacing:.02em">${p.race}</div>`
     : '';
-  // 하단 그라데이션 오버레이 (네임바 가독성)
-  const _gradient = `<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.72) 100%);z-index:1;pointer-events:none"></div>`;
-  // 네임바 — 그라데이션 위에 텍스트만 (직급자/멤버 카드 동일 크기)
   const _nameBar = `
-    <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:14px 14px 14px">
-      ${badgeTxt?`<div style="margin-bottom:4px"><span style="background:${col};color:#fff;font-weight:900;font-size:13px;padding:2px 9px;border-radius:999px;white-space:nowrap;line-height:1.6;letter-spacing:-.01em">${badgeTxt}</span></div>`:''}
+    <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:12px 14px 13px">
+      ${badgeTxt?`<div style="margin-bottom:4px"><span style="background:${_tierBadgeCol};color:${_tierBadgeTxt};font-weight:900;font-size:13px;padding:2px 9px;border-radius:999px;white-space:nowrap;line-height:1.6;letter-spacing:-.01em">${badgeTxt}</span></div>`:''}
       <div style="color:#fff;font-weight:900;font-size:19px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.5)">${p.name||''}</div>
     </div>`;
   return `
@@ -1227,7 +1612,6 @@ function _b2LineupCard(p, col, big, iconUrl) {
         ${_fillBackdrop}
         ${photoHtml}
         ${_raceBadge}
-        ${_gradient}
         ${_nameBar}
       </div>
     </div>`;
@@ -1274,18 +1658,6 @@ function _b2LineupPoster(univName, col, forExport=false) {
       <span style="font-size:12px">${r.ico}</span>${r.k} ${raceCount[r.k]}
     </span>`).join('');
 
-  // 티어 분포 — 등록된 티어 순서 기준 상위 항목만 (보유한 티어만)
-  const TIERS_LOCAL = (typeof TIERS !== 'undefined') ? TIERS : [];
-  const tierCountMap = {};
-  rosterMembers.forEach(p => { const t = p.tier || '미정'; tierCountMap[t] = (tierCountMap[t]||0) + 1; });
-  const tierStatList = Object.keys(tierCountMap)
-    .sort((a,b) => { const ia=TIERS_LOCAL.indexOf(a), ib=TIERS_LOCAL.indexOf(b); return (ia>=0?ia:99)-(ib>=0?ib:99); })
-    .map(t => ({ tier:t, n:tierCountMap[t] }));
-  const tierStatHtml = tierStatList.map(t => `
-    <span style="display:inline-flex;align-items:center;gap:4px;background:${col}14;border:1px solid ${col}33;border-radius:999px;padding:4px 11px;color:${col};font-size:12px;font-weight:800">
-      ${t.tier}<span style="opacity:.65;font-weight:700">×${t.n}</span>
-    </span>`).join('');
-
   return `
     <div data-b2lineup="${univName.replace(/"/g,'&quot;')}" style="border-radius:24px;overflow:hidden;background:#0b1220;box-shadow:0 20px 40px rgba(15,23,42,.28)">
       <div style="padding:30px 30px 24px;position:relative;overflow:hidden;background:linear-gradient(135deg,${col} 0%,${col}cc 65%,#0b1220 130%)">
@@ -1322,7 +1694,6 @@ function _b2LineupPoster(univName, col, forExport=false) {
               <div style="width:3px;height:14px;border-radius:999px;background:${col}99;flex-shrink:0"></div>
               <div style="font-size:11px;font-weight:900;color:${col};letter-spacing:.06em;text-transform:uppercase">멤버</div>
             </div>
-            ${tierStatHtml ? `<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">${tierStatHtml}</div>` : ''}
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px">${rosterCardsHtml}</div>
         </div>
@@ -1441,4 +1812,3 @@ localStorage.removeItem('su_b2SelectedPlayer'); // 저장된 이전 선수 초�
     _b2SelectedPlayer = pool[Math.floor(Math.random() * pool.length)];
   }
 })();
-

@@ -88,6 +88,7 @@ function rCfg(C,T){
     b2femco:'🧩 펨코스타일', femcoorder:'🔀 펨코스타일 스타대학 순서', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
     tablabels:'🏷️ 탭 이름(라벨) 설정',
     uisize:'📱 모바일/태블릿 UI 크기',
+    cardgap:'🧩 카드 간격(스트리머/티어)',
     siAssign:'🎭 스트리머별 상태 아이콘 지정',
     cfgmenu:'🧭 설정 메뉴 정리', autofitall:'📱 전역 자동 맞춤', reccard:'🧾 기록 카드', tourneycard:'🏆 대회 카드', h2hpanel:'🎮 개인전/끝장전(프로리그 끝장전) 카드',
     minicard:'⚡ 미니대전/시빌워 기록 카드', civilcard:'⚔️ 시빌워 기록 카드', univckcard:'🤝 대학CK 기록 카드', univmcard:'🏟️ 대학대전 기록 카드',
@@ -193,6 +194,7 @@ function rCfg(C,T){
     boardbg:'현황판 배경 이미지와 라벨 배경 관리',
     tablabels:'상단과 하위 메뉴 이름 변경',
     uisize:'모바일/태블릿 버튼과 글자 크기 조정',
+    cardgap:'스트리머/티어 카드형 카드 간격 조정',
     siAssign:'스트리머별 상태 아이콘 지정',
     cfgmenu:'자주 쓰는 설정 메뉴 이름과 순서 정리',
     autofitall:'화면 크기에 맞춘 자동 맞춤 설정',
@@ -1056,6 +1058,56 @@ ${_scfgD('notice','📢 공지 관리')}
       <div style="font-size:12px;color:var(--gray-l)">로딩 중...</div>
     </div>
   </details>
+  ${(()=>{ 
+    const sgPc = Math.max(0,Math.min(80,parseInt(localStorage.getItem('su_streamer_card_gap_pc')||'13',10)||13));
+    const sgMb = Math.max(0,Math.min(80,parseInt(localStorage.getItem('su_streamer_card_gap_mb')||'9',10)||9));
+    const tgPc = Math.max(0,Math.min(80,parseInt(localStorage.getItem('su_tier_card_gap_pc')||'26',10)||26));
+    const tgMb = Math.max(0,Math.min(80,parseInt(localStorage.getItem('su_tier_card_gap_mb')||'18',10)||18));
+    return _scfgD('cardgap','🧩 카드 간격(스트리머/티어)') + `
+    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머탭 카드형 / 티어 순위표 카드형에서 카드가 붙어 보일 때 간격을 조절합니다. (PC/모바일 별도)</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-size:12px;font-weight:1000;color:var(--text2)">🎬 스트리머탭 카드형 간격</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-streamer-gap-pc" min="4" max="80" step="1"
+            value="${sgPc}"
+            oninput="document.getElementById('cfg-streamer-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetStreamerCardGapSettings()" style="width:160px">
+          <span id="cfg-streamer-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${sgPc}px</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-streamer-gap-mb" min="4" max="80" step="1"
+            value="${sgMb}"
+            oninput="document.getElementById('cfg-streamer-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetStreamerCardGapSettings()" style="width:160px">
+          <span id="cfg-streamer-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${sgMb}px</span>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--border2)"></div>
+      <div style="font-size:12px;font-weight:1000;color:var(--text2)">📊 티어 순위표 카드형 간격</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <input type="range" id="cfg-tier-gap-pc" min="10" max="80" step="1"
+            value="${tgPc}"
+            oninput="document.getElementById('cfg-tier-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetTierCardGapSettings()" style="width:160px">
+          <span id="cfg-tier-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${tgPc}px</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <input type="range" id="cfg-tier-gap-mb" min="10" max="80" step="1"
+            value="${tgMb}"
+            oninput="document.getElementById('cfg-tier-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetTierCardGapSettings()" style="width:160px">
+          <span id="cfg-tier-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${tgMb}px</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-w btn-sm" onclick="try{localStorage.removeItem('su_streamer_card_gap_pc');localStorage.removeItem('su_streamer_card_gap_mb');localStorage.removeItem('su_tier_card_gap_pc');localStorage.removeItem('su_tier_card_gap_mb');}catch(e){};try{window.applyStreamerCardGap&&window.applyStreamerCardGap();}catch(e){};try{window.applyTierCardGap&&window.applyTierCardGap();}catch(e){};try{render();}catch(e){}">기본값으로</button>
+        <span style="font-size:11px;color:var(--gray-l)">※ 카드형 화면에서 바로 체감됩니다.</span>
+      </div>
+    </div>
+  </details>`;
+  })()}
   ${_scfgD('streamer-view','🎬 스트리머탭 기본 뷰')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머탭 진입 시 기본으로 표시할 뷰 방식을 설정합니다. 탭 상단 버튼으로도 즉시 전환 가능합니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
@@ -2018,22 +2070,26 @@ ${_scfgD('notice','📢 공지 관리')}
 
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:700;color:var(--text2)">스트리머 이미지 크기</div>
-        <input type="range" id="cfg-femco-playerImgSize" min="28" max="90" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-playerImgSizeNum').value=this.value;cfgFemcoUpd('playerImgSize',this.value)">
-        <input type="number" id="cfg-femco-playerImgSizeNum" min="28" max="90" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-playerImgSize').value=this.value;cfgFemcoUpd('playerImgSize',this.value)">
+        <input type="range" id="cfg-femco-playerImgSize" min="28" max="160" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-playerImgSizeNum').value=this.value;cfgFemcoUpd('playerImgSize',this.value)">
+        <input type="number" id="cfg-femco-playerImgSizeNum" min="28" max="160" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-playerImgSize').value=this.value;cfgFemcoUpd('playerImgSize',this.value)">
       </div>
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:140px">이미지 모양</div>
         <select id="cfg-femco-playerImgShape" onchange="cfgFemcoUpd('playerImgShape',this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
-          <option value="square">네모</option>
+          <option value="sharp">직각 네모</option>
+          <option value="roundedsm">살짝 둥근 네모</option>
+          <option value="square">둥근 네모</option>
+          <option value="roundedlg">더 둥근 네모</option>
+          <option value="roundedxl">아주 둥근 네모</option>
           <option value="circle">원</option>
         </select>
       </div>
 
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
         <div style="font-size:12px;font-weight:700;color:var(--text2)">이름 폰트 크기</div>
-        <input type="range" id="cfg-femco-nameFontSize" min="10" max="20" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-nameFontSizeNum').value=this.value;cfgFemcoUpd('nameFontSize',this.value)">
-        <input type="number" id="cfg-femco-nameFontSizeNum" min="10" max="20" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-nameFontSize').value=this.value;cfgFemcoUpd('nameFontSize',this.value)">
+        <input type="range" id="cfg-femco-nameFontSize" min="10" max="28" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-nameFontSizeNum').value=this.value;cfgFemcoUpd('nameFontSize',this.value)">
+        <input type="number" id="cfg-femco-nameFontSizeNum" min="10" max="28" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-weight:700" onchange="document.getElementById('cfg-femco-nameFontSize').value=this.value;cfgFemcoUpd('nameFontSize',this.value)">
       </div>
 
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">

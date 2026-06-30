@@ -91,6 +91,12 @@ function _renderImpl(){
     try{ window._applyScaleSettings && window._applyScaleSettings(); }catch(e){}
   }
   injectUnivIcons(C);
+  try{
+    const sl = C.querySelector('.streamer-focus-list');
+    if(sl && window._streamerFocusScrollTop != null){
+      sl.scrollTop = window._streamerFocusScrollTop;
+    }
+  }catch(e){}
   requestAnimationFrame(()=>{
     C.querySelectorAll('.rec-summary').forEach(el=>{
       const header=el.querySelector('.rec-sum-header');
@@ -168,6 +174,8 @@ window._applyScaleSettings = function(){
   try{ window.applyTourneyTeamBtnDetailScale && window.applyTourneyTeamBtnDetailScale(); }catch(e){}
   try{ window.applyTourneyMemBtnScale && window.applyTourneyMemBtnScale(); }catch(e){}
   try{ window.applyTourneyVsGap && window.applyTourneyVsGap(); }catch(e){}
+  try{ window.applyStreamerCardGap && window.applyStreamerCardGap(); }catch(e){}
+  try{ window.applyTierCardGap && window.applyTierCardGap(); }catch(e){}
   try{ window.applyScoreColors && window.applyScoreColors(); }catch(e){}
   try{ window._applyTourneyCardTheme && window._applyTourneyCardTheme(); }catch(e){}
   try{ window._applyHeaderSettings && window._applyHeaderSettings(); }catch(e){}

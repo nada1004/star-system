@@ -1,0 +1,894 @@
+/*
+ * ui-custom-v3.css
+ * 개선 사항:
+ * 1. 브리핑 디자인 개선
+ * 2. 대학 UI 개선 (바로가기 칩, 종족비율)
+ * 3. 히트맵 팝업 스타일
+ * 4. 펨코탭 첨부파일 스타일
+ */
+
+/* ═══════════════════════════════════════
+   1. 브리핑 디자인 개선
+═══════════════════════════════════════ */
+
+/* 브리핑 MVP 카드 향상 */
+#b2-content .b2w2-mvp-card {
+  border-radius: 22px !important;
+  box-shadow: 0 12px 32px rgba(15,23,42,.16), 0 4px 12px rgba(15,23,42,.10) !important;
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease !important;
+}
+#b2-content .b2w2-mvp-card:hover {
+  transform: translateY(-6px) scale(1.018) !important;
+  box-shadow: 0 24px 56px rgba(15,23,42,.22), 0 8px 20px rgba(15,23,42,.14) !important;
+}
+
+/* 브리핑 MVP 트리플 레이아웃 개선 */
+#b2-content .b2w2-mvp-triple {
+  gap: 20px !important;
+  padding: 4px 0 !important;
+}
+
+/* 브리핑 highlight 카드 개선 */
+#b2-content .b2w2-highlight-card {
+  border-radius: 18px !important;
+  box-shadow: 0 8px 24px rgba(15,23,42,.08) !important;
+  transition: box-shadow .18s, transform .18s !important;
+}
+#b2-content .b2w2-highlight-card:hover {
+  box-shadow: 0 14px 36px rgba(15,23,42,.14) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* 브리핑 섹션 제목 */
+#b2-content .b2w2-chart-title {
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  letter-spacing: -.02em !important;
+  margin-bottom: 18px !important;
+}
+
+/* 브리핑 rank 행 개선 */
+#b2-content .b2w2-rank-row {
+  padding: 11px 8px !important;
+  border-radius: 12px !important;
+  transition: background .14s, transform .14s !important;
+}
+#b2-content .b2w2-rank-row:hover {
+  background: var(--b2w-paper-alt, rgba(248,250,252,.96)) !important;
+  transform: translateX(2px) !important;
+}
+
+/* 브리핑 rank badge 크기 */
+#b2-content .b2w2-rank-badge {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 13px !important;
+  box-shadow: 0 2px 8px rgba(15,23,42,.10) !important;
+}
+
+/* 브리핑 preset 버튼 개선 */
+#b2-content .b2w2-preset {
+  padding: 6px 14px !important;
+  border-radius: 999px !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  transition: all .15s ease !important;
+  box-shadow: 0 2px 6px rgba(15,23,42,.06) !important;
+}
+
+/* 브리핑 헤더 */
+#b2-content .b2w2-header-row {
+  padding: 18px 22px !important;
+  border-radius: 22px !important;
+  border: 1px solid rgba(148,163,184,.14) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.92)) !important;
+  box-shadow: 0 12px 30px rgba(15,23,42,.06) !important;
+}
+
+#b2-content .b2w2-kpi-grid {
+  gap: 12px !important;
+}
+
+#b2-content .b2w2-kpi-card {
+  border-color: rgba(148,163,184,.16) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.90)) !important;
+  box-shadow: 0 8px 22px rgba(15,23,42,.06) !important;
+  border-radius: 18px !important;
+}
+
+#b2-content .b2w2-kpi-card::before {
+  opacity: .92 !important;
+}
+
+#b2-content .b2w2-kpi-value {
+  letter-spacing: -.03em !important;
+}
+
+#b2-content .b2w2-hdr {
+  border-radius: 18px !important;
+  border: 1px solid rgba(148,163,184,.14) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(248,250,252,.90)) !important;
+  box-shadow: 0 8px 20px rgba(15,23,42,.05) !important;
+}
+
+#b2-content .b2w2-highlight-grid {
+  gap: 12px !important;
+}
+
+#b2-content .b2w2-highlight-card {
+  border: 1px solid rgba(148,163,184,.14) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.97), rgba(248,250,252,.92)) !important;
+}
+
+/* 브리핑 MVP 이름/통계 개선 */
+#b2-content .b2w2-mvp-name {
+  font-size: 15px !important;
+  font-weight: 950 !important;
+  letter-spacing: -.02em !important;
+}
+#b2-content .b2w2-mvp-sv {
+  font-size: 15px !important;
+  font-weight: 900 !important;
+}
+
+/* 브리핑 chart box 개선 */
+#b2-content .b2w2-chart-box {
+  border-radius: 20px !important;
+  box-shadow: 0 8px 24px rgba(15,23,42,.08) !important;
+  overflow: hidden !important;
+}
+
+/* 브리핑 note row */
+#b2-content .b2w2-note-row {
+  border-radius: 14px !important;
+  padding: 12px 16px !important;
+}
+
+#b2-content .b2w2-note-chip {
+  border-radius: 999px !important;
+  padding: 5px 10px !important;
+  background: rgba(255,255,255,.78) !important;
+  border-color: rgba(148,163,184,.16) !important;
+}
+
+/* 브리핑 상단 헤더/히어로를 한 덩어리 카드처럼 */
+#b2-content .b2w2-masthead {
+  margin-bottom: 12px !important;
+  padding: 10px 4px 14px !important;
+  border-bottom: 1px solid rgba(148,163,184,.18) !important;
+  color: var(--b2w-ink-soft, #64748b) !important;
+}
+
+#b2-content .b2w2-hero {
+  position: relative !important;
+  padding: 24px 24px 22px !important;
+  margin-bottom: 22px !important;
+  border: 1px solid rgba(148,163,184,.16) !important;
+  border-bottom: 1px solid rgba(148,163,184,.16) !important;
+  border-radius: 28px !important;
+  background:
+    radial-gradient(circle at top right, rgba(99,102,241,.10), transparent 30%),
+    radial-gradient(circle at top left, rgba(14,165,233,.08), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.94)) !important;
+  box-shadow: 0 18px 42px rgba(15,23,42,.08) !important;
+  overflow: hidden !important;
+}
+
+#b2-content .b2w2-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,.40), rgba(255,255,255,0) 42%);
+}
+
+#b2-content .b2w2-hero-main,
+#b2-content .b2w2-hero-stats {
+  position: relative;
+  z-index: 1;
+}
+
+#b2-content .b2w2-hero-title {
+  font-size: 40px !important;
+  letter-spacing: -.04em !important;
+}
+
+#b2-content .b2w2-hero-desc {
+  margin-top: 6px !important;
+  padding: 11px 14px !important;
+  border-left: none !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, rgba(239,246,255,.92), rgba(255,255,255,.84)) !important;
+  box-shadow: inset 0 0 0 1px rgba(148,163,184,.12) !important;
+  font-style: normal !important;
+}
+
+#b2-content .b2w2-hero-spotlight {
+  margin-top: 4px !important;
+  padding: 14px 16px 0 !important;
+  border-top: 1px solid rgba(148,163,184,.14) !important;
+}
+
+#b2-content .b2w2-hero-spotlight-title {
+  font-size: 21px !important;
+  letter-spacing: -.03em !important;
+}
+
+#b2-content .b2w2-hero-pill {
+  padding: 6px 12px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.72) !important;
+  border: 1px solid rgba(148,163,184,.14) !important;
+  box-shadow: 0 3px 10px rgba(15,23,42,.04) !important;
+}
+
+#b2-content .b2w2-hero-pill:not(:last-child) {
+  border-right: 1px solid rgba(148,163,184,.14) !important;
+  padding-right: 12px !important;
+}
+
+#b2-content .b2w2-hero-badge {
+  padding: 5px 11px !important;
+  border: 1px solid rgba(148,163,184,.16) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.90), rgba(248,250,252,.86)) !important;
+  box-shadow: 0 4px 10px rgba(15,23,42,.04) !important;
+}
+
+#b2-content .b2w2-hero-stats {
+  gap: 10px !important;
+  padding: 10px !important;
+  min-width: min(100%, 300px) !important;
+  border: 1px solid rgba(148,163,184,.14) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.82), rgba(248,250,252,.72)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 10px 24px rgba(15,23,42,.05) !important;
+}
+
+#b2-content .b2w2-hero-stat {
+  border: 1px solid rgba(148,163,184,.14) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.86)) !important;
+  box-shadow: 0 6px 16px rgba(15,23,42,.05) !important;
+}
+
+#b2-content .b2w2-hero-stat-value {
+  font-size: 19px !important;
+  font-weight: 900 !important;
+}
+
+/* 브리핑 모드 카드 */
+#b2-content .b2w2-modebar {
+  gap: 14px !important;
+  margin-bottom: 24px !important;
+}
+
+#b2-content .b2w2-modecard {
+  position: relative !important;
+  padding: 18px 18px 17px !important;
+  border-radius: 22px !important;
+  border: 1px solid rgba(148,163,184,.16) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.94)) !important;
+  box-shadow: 0 12px 28px rgba(15,23,42,.06) !important;
+  overflow: hidden !important;
+}
+
+#b2-content .b2w2-modecard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,.38), rgba(255,255,255,0) 50%);
+}
+
+#b2-content .b2w2-modecard:hover {
+  transform: translateY(-3px) !important;
+  border-color: rgba(99,102,241,.22) !important;
+  box-shadow: 0 18px 36px rgba(15,23,42,.10) !important;
+}
+
+#b2-content .b2w2-modecard.is-active {
+  border-color: rgba(59,130,246,.36) !important;
+  background:
+    radial-gradient(circle at top right, rgba(96,165,250,.16), transparent 34%),
+    linear-gradient(180deg, rgba(239,246,255,.98), rgba(219,234,254,.84)) !important;
+  box-shadow: 0 0 0 1px rgba(59,130,246,.10), 0 18px 38px rgba(37,99,235,.12) !important;
+}
+
+#b2-content .b2w2-modebadge {
+  background: rgba(255,255,255,.72) !important;
+  border-color: rgba(148,163,184,.16) !important;
+  box-shadow: 0 3px 8px rgba(15,23,42,.04) !important;
+}
+
+/* 브리핑 KPI 카드 */
+#b2-content .b2w2-kpi-card {
+  padding: 16px 17px !important;
+  box-shadow: 0 12px 26px rgba(15,23,42,.07) !important;
+}
+
+#b2-content .b2w2-kpi-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,.28), rgba(255,255,255,0) 46%);
+}
+
+#b2-content .b2w2-kpi-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 18px 36px rgba(15,23,42,.10) !important;
+}
+
+#b2-content .b2w2-kpi-value {
+  font-size: 30px !important;
+}
+
+/* 하이라이트/차트/랭킹 박스 */
+#b2-content .b2w2-highlight-card {
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: 0 10px 24px rgba(15,23,42,.08) !important;
+}
+
+#b2-content .b2w2-highlight-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--hc-top, #6366f1), rgba(255,255,255,.55)) !important;
+}
+
+#b2-content .b2w2-highlight-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 18px 38px rgba(15,23,42,.12) !important;
+}
+
+#b2-content .b2w2-chart-box {
+  border: 1px solid rgba(148,163,184,.14) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.94)) !important;
+  box-shadow: 0 14px 30px rgba(15,23,42,.07) !important;
+}
+
+#b2-content .b2w2-rank-row {
+  border-radius: 14px !important;
+  margin-bottom: 4px !important;
+}
+
+#b2-content .b2w2-rank-row:hover {
+  background: linear-gradient(135deg, rgba(239,246,255,.88), rgba(248,250,252,.98)) !important;
+  box-shadow: inset 0 0 0 1px rgba(148,163,184,.12) !important;
+  transform: translateX(3px) !important;
+}
+
+#b2-content .b2w2-note-row {
+  border: 1px solid rgba(148,163,184,.14) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(248,250,252,.92)) !important;
+  box-shadow: 0 8px 20px rgba(15,23,42,.05) !important;
+}
+
+/* 브리핑 MVP 카드 디테일 업 */
+#b2-content .b2w2-mvp-card {
+  border: 1px solid rgba(255,255,255,.16) !important;
+  overflow: hidden !important;
+}
+
+#b2-content .b2w2-mvp-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.20), rgba(255,255,255,0) 36%),
+    radial-gradient(circle at top right, rgba(255,255,255,.20), transparent 24%);
+  z-index: 0;
+}
+
+#b2-content .b2w2-mvp-bg {
+  filter: saturate(1.08) contrast(1.03) brightness(.96) !important;
+}
+
+#b2-content .b2w2-mvp-overlay {
+  background:
+    linear-gradient(180deg, rgba(15,23,42,.02) 0%, rgba(15,23,42,.08) 18%, rgba(15,23,42,.54) 58%, rgba(2,6,23,.88) 100%) !important;
+}
+
+#b2-content .b2w2-mvp-top-badge {
+  top: 10px !important;
+  left: 10px !important;
+  padding: 6px 12px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 8px 18px rgba(15,23,42,.16) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+#b2-content .b2w2-mvp-race-badge {
+  top: 10px !important;
+  right: 10px !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.18) !important;
+  border: 1px solid rgba(255,255,255,.20) !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow: 0 10px 20px rgba(15,23,42,.14) !important;
+}
+
+#b2-content .b2w2-mvp-bottom {
+  padding: 14px 14px 15px !important;
+}
+
+#b2-content .b2w2-mvp-univ {
+  margin-top: 4px !important;
+  color: rgba(255,255,255,.84) !important;
+}
+
+#b2-content .b2w2-mvp-tier {
+  border-radius: 999px !important;
+  padding: 3px 8px !important;
+  box-shadow: 0 4px 10px rgba(15,23,42,.16) !important;
+}
+
+#b2-content .b2w2-mvp-stats-row {
+  margin-top: 10px !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06)) !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10) !important;
+}
+
+#b2-content .b2w2-mvp-stat {
+  padding: 7px 4px !important;
+}
+
+#b2-content .b2w2-mvp-form-row {
+  margin-top: 8px !important;
+  padding: 7px 8px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.10) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* 하이라이트 카드 디테일 업 */
+#b2-content .b2w2-lead-card {
+  background:
+    radial-gradient(circle at top right, rgba(99,102,241,.10), transparent 32%),
+    linear-gradient(180deg, rgba(255,255,255,.99), rgba(248,250,252,.95)) !important;
+  box-shadow: 0 18px 36px rgba(15,23,42,.10) !important;
+}
+
+#b2-content .b2w2-highlight-kicker {
+  font-size: 10px !important;
+  letter-spacing: .14em !important;
+}
+
+#b2-content .b2w2-highlight-title {
+  font-size: 18px !important;
+  letter-spacing: -.03em !important;
+  padding-bottom: 10px !important;
+}
+
+#b2-content .b2w2-highlight-desc {
+  font-size: 12px !important;
+  line-height: 1.78 !important;
+}
+
+#b2-content .b2w2-highlight-row {
+  padding: 9px 0 !important;
+}
+
+#b2-content .b2w2-highlight-row strong {
+  font-weight: 900 !important;
+  letter-spacing: -.01em !important;
+}
+
+/* 차트 박스 제목을 더 또렷하게 */
+#b2-content .b2w2-chart-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding-bottom: 12px !important;
+  margin-bottom: 16px !important;
+  border-bottom: 1px solid rgba(148,163,184,.14) !important;
+}
+
+#b2-content .b2w2-chart-title::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 24px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #6366f1, #8b5cf6);
+  box-shadow: 0 4px 12px rgba(99,102,241,.26);
+  flex-shrink: 0;
+}
+
+/* 월간 랭킹 가독성 업 */
+#b2-content .b2w2-rank-badge {
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 13px !important;
+  border-width: 0 !important;
+  box-shadow: 0 6px 14px rgba(15,23,42,.08) !important;
+}
+
+#b2-content .b2w2-rank-name {
+  font-size: 15px !important;
+  letter-spacing: -.02em !important;
+}
+
+#b2-content .b2w2-rank-sub {
+  margin-top: 4px !important;
+  font-size: 11px !important;
+}
+
+#b2-content .b2w2-rank-delta {
+  box-shadow: 0 4px 10px rgba(15,23,42,.05) !important;
+}
+
+/* ═══════════════════════════════════════
+   2. 대학 UI 개선 - 바로가기 칩
+═══════════════════════════════════════ */
+
+/* 통계바 개선 */
+.b2-statsbar-wrap {
+  margin-bottom: 14px;
+}
+.b2-statsbar-inner {
+  padding: 16px !important;
+  border-radius: 24px !important;
+  box-shadow: 0 16px 32px rgba(15,23,42,.06) !important;
+}
+
+/* 종족비율 바 개선 */
+.b2-racebar-improved {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(248,250,252,.95), rgba(241,245,249,.90));
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(15,23,42,.04);
+}
+
+/* 종족 뱃지 개선 */
+.b2-race-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(15,23,42,.08);
+  transition: transform .14s, box-shadow .14s;
+}
+.b2-race-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15,23,42,.12);
+}
+.b2-race-badge.race-T { background: linear-gradient(135deg,#dbeafe,#bfdbfe); color: #1e40af; border: 1px solid #bfdbfe; }
+.b2-race-badge.race-P { background: linear-gradient(135deg,#ede9fe,#ddd6fe); color: #6d28d9; border: 1px solid #ddd6fe; }
+.b2-race-badge.race-Z { background: linear-gradient(135deg,#fee2e2,#fecaca); color: #b91c1c; border: 1px solid #fecaca; }
+
+.b2-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 2px 8px rgba(15,23,42,.08);
+  transition: transform .14s, box-shadow .14s;
+}
+.b2-tier-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15,23,42,.12);
+}
+
+/* 바로가기 칩 개선 */
+.b2-jump-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px !important;
+  border-radius: 12px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  cursor: pointer;
+  transition: transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .16s ease, opacity .14s !important;
+  box-shadow: 0 4px 10px rgba(15,23,42,.08), 0 2px 6px var(--chip-color, rgba(15,23,42,.06)) !important;
+  letter-spacing: -.01em;
+}
+.b2-jump-chip:hover {
+  transform: translateY(-2px) scale(1.04) !important;
+  box-shadow: 0 8px 18px rgba(15,23,42,.12), 0 4px 10px var(--chip-color, rgba(15,23,42,.08)) !important;
+}
+.b2-jump-chip:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+.b2-jump-chip .chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.28);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* 대학 바로가기 래퍼 */
+.b2-jump-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(148,163,184,.14);
+}
+.b2-jump-label {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--text3);
+  flex-shrink: 0;
+  white-space: nowrap;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════
+   3. 히트맵 팝업 스타일
+═══════════════════════════════════════ */
+
+#heatmap-day-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8,12,28,.72);
+  backdrop-filter: blur(6px);
+  animation: hmPopFadeIn .22s ease;
+}
+@keyframes hmPopFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#heatmap-day-popup .hm-popup-box {
+  background: var(--white, #fff);
+  border-radius: 24px;
+  box-shadow: 0 24px 64px rgba(8,12,28,.32), 0 8px 24px rgba(8,12,28,.16);
+  padding: 28px 28px 24px;
+  max-width: 680px;
+  width: calc(100vw - 40px);
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: hmBoxSlideUp .28s cubic-bezier(.34,1.56,.64,1);
+  position: relative;
+}
+@keyframes hmBoxSlideUp {
+  from { transform: translateY(24px) scale(.96); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+#heatmap-day-popup .hm-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+#heatmap-day-popup .hm-popup-title {
+  font-size: 20px;
+  font-weight: 950;
+  color: var(--text1);
+  letter-spacing: -.03em;
+}
+#heatmap-day-popup .hm-popup-subtitle {
+  font-size: 13px;
+  color: var(--gray-l, #94a3b8);
+  font-weight: 700;
+  margin-top: 3px;
+}
+#heatmap-day-popup .hm-popup-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e2e8f0);
+  background: var(--surface, #f8fafc);
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  transition: background .14s, transform .14s;
+  flex-shrink: 0;
+}
+#heatmap-day-popup .hm-popup-close:hover {
+  background: #f1f5f9;
+  transform: rotate(90deg);
+}
+
+#heatmap-day-popup .hm-popup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+#heatmap-day-popup .hm-player-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border, #e2e8f0);
+  background: linear-gradient(180deg, var(--white,#fff), var(--surface,#f8fafc));
+  cursor: pointer;
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
+  text-align: center;
+}
+#heatmap-day-popup .hm-player-card:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 12px 28px rgba(15,23,42,.12);
+}
+
+#heatmap-day-popup .hm-player-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  object-fit: cover;
+  object-position: top center;
+  background: var(--surface, #f1f5f9);
+  border: 2px solid var(--border, #e2e8f0);
+}
+#heatmap-day-popup .hm-player-fallback {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #1e40af;
+  border: 2px solid #bfdbfe;
+}
+#heatmap-day-popup .hm-player-name {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--text1);
+  letter-spacing: -.01em;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 110px;
+}
+#heatmap-day-popup .hm-player-sub {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gray-l, #94a3b8);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+#heatmap-day-popup .hm-player-wins {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f0fdf4;
+  color: #15803d;
+  font-size: 10px;
+  font-weight: 800;
+  border: 1px solid #bbf7d0;
+}
+
+/* ═══════════════════════════════════════
+   4. 펨코탭 첨부파일 스타일 개선
+═══════════════════════════════════════ */
+
+/* 펨코 헤더 개선 */
+.b2-femco-head {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 펨코 타이틀 강화 */
+.b2-femco-title {
+  font-weight: 950 !important;
+  letter-spacing: -.04em !important;
+  text-shadow: 0 2px 8px rgba(0,0,0,.15) !important;
+}
+
+/* 펨코 아이템 카드 hover */
+.b2-femco-item {
+  border-radius: 14px !important;
+  padding: 10px 8px !important;
+  transition: background .14s, transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .14s !important;
+}
+.b2-femco-item:hover {
+  background: rgba(255,255,255,.26) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12) !important;
+}
+
+/* 펨코 아바타 border */
+.b2-femco-avatar img {
+  box-shadow: 0 4px 12px rgba(0,0,0,.18) !important;
+}
+.b2-femco-avatar .b2-femco-av-letter {
+  box-shadow: 0 4px 12px rgba(0,0,0,.12) !important;
+}
+
+/* 펨코 이름 */
+.b2-femco-name {
+  font-weight: 900 !important;
+  letter-spacing: -.02em !important;
+}
+
+/* 펨코 wrap 간격 */
+.b2-femco-wrap {
+  gap: 16px !important;
+}
+
+/* 펨코 대학 블록 */
+.b2-femco-univ {
+  border-radius: 20px !important;
+  box-shadow: 0 8px 24px rgba(15,23,42,.10) !important;
+  overflow: hidden !important;
+  transition: box-shadow .18s !important;
+}
+.b2-femco-univ:hover {
+  box-shadow: 0 12px 32px rgba(15,23,42,.14) !important;
+}
+
+/* 펨코 티어 뱃지 */
+.b2-femco-tier {
+  font-weight: 800 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.14) !important;
+}
+
+/* TOP 5 클릭 가능한 숫자 */
+.heatmap-top5-count {
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 2px 6px;
+  transition: background .14s, color .14s;
+  min-width: 40px;
+  text-align: right;
+  display: inline-block;
+}
+.heatmap-top5-count:hover {
+  background: #dcfce7;
+  color: #15803d !important;
+}
+
+/* TOP 5 날짜도 클릭 가능 */
+.heatmap-top5-date {
+  cursor: pointer;
+  transition: color .14s;
+}
+.heatmap-top5-date:hover {
+  text-decoration: underline;
+}

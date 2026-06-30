@@ -169,8 +169,8 @@ function _b2RankingView() {
       ? `<span style="font-size:10px;color:${u.wr>=u.pwr?'#10b981':'#ef4444'};font-weight:700">${u.wr>=u.pwr?'▲':'▼'}${Math.abs(u.wr-u.pwr)}%</span>`
       : '';
 
-    h += `<div class="b2rk2-row" onclick="(function(el){document.querySelectorAll('.b2rk2-row').forEach(function(r){r.classList.remove('selected')});el.classList.toggle('selected');})(this)" style="${isTop3?`border-color:${u.color}66;background:${u.color}08`:''
-    }">
+    h += `<div class="b2rk2-row" style="cursor:pointer;${isTop3?`border-color:${u.color}66;background:${u.color}08`:''
+    }" onclick="(function(el){document.querySelectorAll('.b2rk2-row').forEach(function(r){r.classList.remove('selected')});el.classList.toggle('selected');})(this);if(typeof openUnivModal==='function')openUnivModal('${(typeof escJS==='function'?escJS(u.name):String(u.name).replace(/'/g,"\\'"))}')">
       <div class="b2rk2-glow" style="background:radial-gradient(ellipse at 0% 50%,${u.color},transparent 60%)"></div>
       <div class="b2rk2-rank">${rankDisplay}${deltaHtml}</div>
       <div class="b2rk2-name" style="color:${u.color}">${u.name}</div>

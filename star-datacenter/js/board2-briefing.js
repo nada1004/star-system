@@ -463,8 +463,8 @@ function _b2WeeklyBriefingView() {
         --b2w-paper-warm: var(--surface, #f8fafc);
         --b2w-shadow: var(--sh2, 0 6px 20px rgba(0,0,0,.06));
         --b2w-shadow-sm: var(--sh, 0 2px 4px rgba(0,0,0,.04));
-        --b2w-r: 4px;
-        --b2w-r-lg: 8px;
+        --b2w-r: 12px;
+        --b2w-r-lg: 18px;
         --b2w-accent-border: rgba(37,99,235,.22);
         --b2w-accent-shadow: rgba(37,99,235,.10);
         --b2w-accent-shadow-strong: rgba(37,99,235,.16);
@@ -617,35 +617,39 @@ function _b2WeeklyBriefingView() {
       .b2w2-kpi-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0,1fr));
-        gap: 0;
+        gap: 10px;
         margin-bottom: 20px;
-        border: 1px solid var(--b2w-rule);
-        border-radius: var(--b2w-r-lg);
-        overflow: hidden;
-        background: var(--b2w-paper);
-        box-shadow: var(--b2w-shadow-sm);
       }
       .b2w2-kpi-card {
-        padding: 16px 18px;
-        border-right: 1px solid var(--b2w-rule-soft);
-        background: none;
-        box-shadow: none;
-        border-radius: 0;
-        transition: background .14s ease;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--b2w-rule);
+        background: var(--b2w-paper-alt);
+        box-shadow: var(--b2w-shadow-sm);
+        transition: transform .14s ease, box-shadow .14s ease;
+        position: relative;
+        overflow: hidden;
       }
-      .b2w2-kpi-card:last-child { border-right: none }
-      .b2w2-kpi-card:hover { background: var(--b2w-paper-alt) }
+      .b2w2-kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: var(--kpi-accent, var(--b2w-accent));
+        border-radius: 14px 14px 0 0;
+        opacity: .7;
+      }
+      .b2w2-kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.09) }
       .b2w2-kpi-label { font-size: 10px; font-weight: 800; color: var(--b2w-ink-soft); letter-spacing: .1em; text-transform: uppercase }
       .b2w2-kpi-value {
-        margin-top: 8px;
-        font-family: 'Noto Serif KR', Georgia, serif;
-        font-size: 26px;
-        font-weight: 800;
-        letter-spacing: -.02em;
+        margin-top: 6px;
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: -.03em;
         color: var(--b2w-ink);
         line-height: 1.1;
       }
-      .b2w2-kpi-sub { margin-top: 5px; font-size: 11px; font-weight: 600; color: var(--b2w-ink-soft); line-height: 1.5 }
+      .b2w2-kpi-sub { margin-top: 4px; font-size: 11px; font-weight: 600; color: var(--b2w-ink-soft); line-height: 1.4 }
 
       /* ── 컨트롤 헤더 ── */
       .b2w2-hdr {
@@ -1209,7 +1213,7 @@ function _b2WeeklyBriefingView() {
         border-bottom: 1px solid var(--b2w-rule-soft);
         transition: background .1s ease;
       }
-      .b2w2-rank-row:hover { background: var(--b2w-paper-alt); margin: 0 -4px; padding-left: 8px; padding-right: 8px; border-radius: var(--b2w-r); }
+      .b2w2-rank-row:hover { background: var(--b2w-paper-alt); margin: 0 -4px; padding-left: 8px; padding-right: 8px; border-radius: var(--b2w-r); cursor: pointer; }
       .b2w2-rank-row:last-child { border-bottom: none }
       .b2w2-rank-main { display: flex; align-items: center; gap: 10px; min-width: 0 }
       .b2w2-rank-badge {
@@ -1633,6 +1637,9 @@ function _b2WeeklyBriefingView() {
     const _leaderForKpi = _isMonthly ? rankedUnivs[0] : topUnivs[0];
     const _leaderLabel = _isMonthly ? '선두 대학' : '활동량 1위 대학';
     const _leaderValue = _leaderForKpi ? _leaderForKpi.u.name : '-';
+    const _leaderColor = _leaderForKpi && typeof gc === 'function'
+      ? (gc(_leaderForKpi.u.name) || '#f59e0b')
+      : '#f59e0b';
     const _leaderSub = _leaderForKpi
       ? (_isMonthly
           ? `${_leaderForKpi.tw}승 ${_leaderForKpi.tl}패 · 승률 ${_leaderForKpi.wr ?? 0}%`
@@ -1640,24 +1647,24 @@ function _b2WeeklyBriefingView() {
       : '집계 데이터 없음';
     const _bestWrSub = bestWrPlayer ? `${bestWrPlayer.p?.name || '-'} · ${bestWrPlayer.total}전` : '표본 부족';
     h += `<section class="b2w2-kpi-grid">
-      <article class="b2w2-kpi-card">
+      <article class="b2w2-kpi-card" style="--kpi-accent:#6366f1">
         <div class="b2w2-kpi-label">활동 대학</div>
-        <div class="b2w2-kpi-value">${_activeUnivs}곳</div>
-        <div class="b2w2-kpi-sub">선택 기간에 경기 기록이 있는 대학 수</div>
+        <div class="b2w2-kpi-value">${_activeUnivs}<span style="font-size:14px;font-weight:700;color:var(--b2w-ink-soft);margin-left:2px">곳</span></div>
+        <div class="b2w2-kpi-sub">경기 기록 있는 대학 수</div>
       </article>
-      <article class="b2w2-kpi-card">
+      <article class="b2w2-kpi-card" style="--kpi-accent:#0ea5e9">
         <div class="b2w2-kpi-label">총 경기 수</div>
-        <div class="b2w2-kpi-value">${_totalGames}전</div>
-        <div class="b2w2-kpi-sub">집계 기간 ${_periodDays}일 기준</div>
+        <div class="b2w2-kpi-value">${_totalGames}<span style="font-size:14px;font-weight:700;color:var(--b2w-ink-soft);margin-left:2px">전</span></div>
+        <div class="b2w2-kpi-sub">${_periodDays}일 집계 기준</div>
       </article>
-      <article class="b2w2-kpi-card">
+      <article class="b2w2-kpi-card" style="--kpi-accent:${_leaderColor}">
         <div class="b2w2-kpi-label">${_leaderLabel}</div>
-        <div class="b2w2-kpi-value">${_leaderValue}</div>
+        <div class="b2w2-kpi-value" style="font-size:18px;margin-top:8px">${_leaderValue}</div>
         <div class="b2w2-kpi-sub">${_leaderSub}</div>
       </article>
-      <article class="b2w2-kpi-card">
+      <article class="b2w2-kpi-card" style="--kpi-accent:#10b981">
         <div class="b2w2-kpi-label">최고 승률</div>
-        <div class="b2w2-kpi-value">${bestWrPlayer ? `${bestWrPlayer.winRate}%` : '-'}</div>
+        <div class="b2w2-kpi-value" style="color:#10b981">${bestWrPlayer ? `${bestWrPlayer.winRate}%` : '-'}</div>
         <div class="b2w2-kpi-sub">${_bestWrSub}</div>
       </article>
     </section>`;
@@ -1863,8 +1870,9 @@ function _b2WeeklyBriefingView() {
         const col = (typeof gc === 'function' ? gc(ud.u.name) : '#64748b') || '#64748b';
         const deltaClass = ud.rankDelta === null ? 'new' : ud.rankDelta > 0 ? 'up' : ud.rankDelta < 0 ? 'down' : 'same';
         const deltaText = ud.rankDelta === null ? 'NEW' : ud.rankDelta > 0 ? `▲${ud.rankDelta}` : ud.rankDelta < 0 ? `▼${Math.abs(ud.rankDelta)}` : '유지';
+        const univNameJs = ud.u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         return `
-              <div class="b2w2-rank-row">
+              <div class="b2w2-rank-row" style="cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univNameJs}')">
                 <div class="b2w2-rank-main">
                   <span class="b2w2-rank-badge" style="background:${col}18;color:${col}">${ud.rank}</span>
                   <div style="min-width:0">
@@ -2039,7 +2047,10 @@ function _b2WeeklyBriefingView() {
           <div class="b2w2-card-title">
             <span class="b2w2-card-dot" style="background:${color}"></span>
             <div style="min-width:0">
-              <div class="b2w2-card-name">${u.name}</div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <div class="b2w2-card-name">${u.name}</div>
+                <button type="button" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;border:1px solid ${color}44;background:${color}12;color:${color};cursor:pointer;white-space:nowrap;line-height:1.6">🏫 대학상세</button>
+              </div>
               <div class="b2w2-card-sub">
                 <span>활동 ${active.length}명</span>
                 <span>${tg}전 ${tw}승 ${tl}패</span>

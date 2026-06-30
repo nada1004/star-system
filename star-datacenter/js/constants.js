@@ -979,7 +979,7 @@ function getTierBadge(tier){
     'S':'0 2px 10px rgba(30,58,95,.5)',
   };
   const shadow=shadowMap[tier]||'0 1px 5px rgba(0,0,0,.25)';
-  return `<span class="tbadge" style="background:${bg};color:${col};box-shadow:${shadow};border-radius:6px;padding:3px 8px;font-size:11px;font-weight:800;letter-spacing:.3px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px">${ic?ic+' ':''}${tier}</span>`;
+  return `<span class="tbadge" style="background:${bg};color:${col};box-shadow:${shadow};border-radius:6px;padding:1px 5px;font-size:9.5px;font-weight:800;letter-spacing:.2px;white-space:nowrap;display:inline-flex;align-items:center;gap:2px">${ic?ic+' ':''}${tier}</span>`;
 }
 
 function getTierLabel(tier){
@@ -1163,9 +1163,9 @@ function getRoleBadgeHTML(role, size='11px'){
   // MAIN_ROLES는 진한 배경색, 그 외는 연한 배경
   const isMain = MAIN_ROLES.includes(role);
   if(isMain){
-    return `<span style="font-size:${size};padding:2px 7px;border-radius:5px;background:${col};color:#fff;font-weight:800;white-space:nowrap;flex-shrink:0;letter-spacing:.3px;text-shadow:0 1px 2px rgba(0,0,0,.2)">${icon} ${role}</span>`;
+    return `<span style="font-size:${size};padding:1px 5px;border-radius:5px;background:${col};color:#fff;font-weight:800;white-space:nowrap;flex-shrink:0;letter-spacing:.2px;text-shadow:0 1px 2px rgba(0,0,0,.2)">${icon} ${role}</span>`;
   }
-  return `<span style="font-size:${size};padding:1px 6px;border-radius:4px;background:${col}20;color:${col};border:1px solid ${col}44;font-weight:700;white-space:nowrap;flex-shrink:0">${icon} ${role}</span>`;
+  return `<span style="font-size:${size};padding:1px 4px;border-radius:4px;background:${col}20;color:${col};border:1px solid ${col}44;font-weight:700;white-space:nowrap;flex-shrink:0">${icon} ${role}</span>`;
 }
 
 /* ══════════════════════════════════════

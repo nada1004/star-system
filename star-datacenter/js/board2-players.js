@@ -386,8 +386,8 @@ function _b2PlayersView() {
       }
       .b2-players-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-        gap: 16px;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 10px;
       }
       @media (min-width: 769px) and (max-width: 1024px) {
         .b2-players-wrapper {
@@ -730,22 +730,20 @@ function _b2PlayersView() {
     const wrColor = ws && ws.total>0 ? (ws.w/ws.total>=0.6?'#10b981':ws.w/ws.total>=0.4?'#f59e0b':'#ef4444') : '#94a3b8';
     
     h += `
-      <div class="b2-players-card" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''));openPlayerModal(decodeURIComponent(this.dataset.playerKey||''))" style="width:148px;padding:14px;border-radius:18px;cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(180deg,var(--white),rgba(248,250,252,.98));border:1px solid rgba(148,163,184,.14);box-shadow:0 8px 18px rgba(15,23,42,0.06)">
-        <div style="position:relative;width:118px;height:118px;flex-shrink:0">
-          ${p.photo
-            ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="auto" class="b2-players-thumbnail b2-fit-auto" data-fit-kind="thumb" data-fit-mode="auto" alt="${p.name}" style="width:118px;height:118px;border-radius:14px;object-fit:contain;display:block;border:2px solid rgba(226,232,240,.8);background:linear-gradient(180deg,#fff,#f8fafc)" onload="_b2ApplyBgAutoSizing(this)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-              <div class="b2-players-thumbnail" style="width:118px;height:118px;border-radius:14px;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border};border:2px solid rgba(226,232,240,.8)">${(p.name||'?')[0]}</div>`
-            : `<div class="b2-players-thumbnail" style="width:118px;height:118px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:48px;font-weight:900;color:${playerTheme.border};border:2px solid rgba(226,232,240,.8)">${(p.name||'?')[0]}</div>`
-          }
-          ${p.tier?`<span style="position:absolute;top:6px;left:6px;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;box-shadow:0 8px 16px rgba(15,23,42,.18)">${p.tier}</span>`:''}
-          ${ws&&ws.total>0?`<span style="position:absolute;bottom:6px;right:6px;font-size:9px;font-weight:900;padding:3px 6px;border-radius:999px;background:rgba(15,23,42,.78);color:${wrColor};line-height:1.4;backdrop-filter:blur(6px);box-shadow:0 8px 16px rgba(15,23,42,.18)">${ws.w}승 ${ws.l}패</span>`:''}
-          ${ws&&ws.total>0&&ws.w===ws.total?`<span style="position:absolute;top:6px;right:6px;font-size:12px">🔥</span>`:''}
-        </div>
-        <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:2px">
-          <div class="b2-players-label" style="font-size:14px;font-weight:800;text-align:center;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${p.name || '이름 없음'}</div>
-          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center;padding:0 2px">
-            ${raceIco?`<span style="font-size:11px">${raceIco}</span>`:''}
-            <span style="font-size:10px;color:var(--text3);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:104px">${p.univ||'무소속'}</span>
+      <div class="b2-players-card" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))" style="position:relative;cursor:pointer;border-radius:16px;overflow:hidden;aspect-ratio:3/4;background:${playerTheme.bg};border:1.5px solid ${tierCol}55;box-shadow:0 6px 16px rgba(15,23,42,.10);transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;isolation:isolate" onmouseenter="this.style.transform='translateY(-4px) scale(1.025)';this.style.boxShadow='0 14px 30px rgba(15,23,42,.18)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 6px 16px rgba(15,23,42,.10)'">
+        ${p.photo
+          ? `<img src="${toHttpsUrl(p.photo)}" decoding="async" fetchpriority="auto" alt="${p.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:0" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+             <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
+          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
+        }
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,0) 35%,rgba(8,12,28,.55) 65%,rgba(5,8,20,.90) 100%);z-index:1;pointer-events:none"></div>
+        ${p.tier?`<span style="position:absolute;top:8px;left:8px;z-index:2;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.28)">${p.tier}</span>`:''}
+        ${ws&&ws.total>0?`<span style="position:absolute;top:8px;right:8px;z-index:2;font-size:9px;font-weight:900;padding:3px 7px;border-radius:999px;background:rgba(15,23,42,.80);color:${wrColor};line-height:1.4;backdrop-filter:blur(6px)">${ws.w}승 ${ws.l}패</span>`:''}
+        <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:9px 10px 10px">
+          <div style="color:#fff;font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 5px rgba(0,0,0,.5);letter-spacing:-.01em">${p.name||''}</div>
+          <div style="display:flex;align-items:center;gap:3px;margin-top:2px;flex-wrap:nowrap;overflow:hidden">
+            ${raceIco?`<span style="font-size:10px;flex-shrink:0">${raceIco}</span>`:''}
+            <span style="font-size:9.5px;color:rgba(255,255,255,.72);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ||'무소속'}</span>
           </div>
         </div>
       </div>

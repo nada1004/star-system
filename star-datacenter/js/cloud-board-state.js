@@ -796,10 +796,10 @@ function rBoard(C,T){
   const _currentUnivLabel = boardSelUniv!=='전체' ? boardSelUniv : '전체 대학';
   const _tierBadges = TIERS.filter(t=>_brdTierCts[t]).map(t=>`<span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;background:${getTierBtnColor(t)||'#64748b'};color:${getTierBtnTextColor(t)||'#fff'}">${t} ${_brdTierCts[t]}</span>`).join('');
   const _brdStatsHtml = `<div class="brd-mini-stats">
-    <div class="brd-mini-stat"><div class="brd-mini-stat-label">표시 스트리머</div><div class="brd-mini-stat-value">${_brdAllVis.length}</div><div class="brd-mini-stat-sub">구현황판 기준 인원</div></div>
-    <div class="brd-mini-stat"><div class="brd-mini-stat-label">활성 대학</div><div class="brd-mini-stat-value">${visUnivs.length}</div><div class="brd-mini-stat-sub">숨김/해체 제외</div></div>
-    <div class="brd-mini-stat"><div class="brd-mini-stat-label">현재 보기</div><div class="brd-mini-stat-value" style="font-size:18px">${_currentUnivLabel}</div><div class="brd-mini-stat-sub">${boardSelUniv!=='전체'?'선택 대학 중심':'전체 흐름 보기'}</div></div>
-    <div class="brd-mini-stat"><div class="brd-mini-stat-label">티어 분포</div><div class="brd-mini-stat-tier">${_tierBadges||'<span style="font-size:11px;color:var(--text3);font-weight:700">집계 없음</span>'}</div></div>
+    <div class="brd-mini-stat" style="--stat-accent:#6366f1"><div class="brd-mini-stat-label">표시 스트리머</div><div class="brd-mini-stat-value">${_brdAllVis.length}</div><div class="brd-mini-stat-sub">구현황판 기준 인원</div></div>
+    <div class="brd-mini-stat" style="--stat-accent:#0ea5e9"><div class="brd-mini-stat-label">활성 대학</div><div class="brd-mini-stat-value">${visUnivs.length}</div><div class="brd-mini-stat-sub">숨김/해체 제외</div></div>
+    <div class="brd-mini-stat" style="--stat-accent:${_heroCol}"><div class="brd-mini-stat-label">현재 보기</div><div class="brd-mini-stat-value" style="font-size:18px;color:${_heroCol}">${_currentUnivLabel}</div><div class="brd-mini-stat-sub">${boardSelUniv!=='전체'?'선택 대학 중심':'전체 흐름 보기'}</div></div>
+    <div class="brd-mini-stat" style="--stat-accent:#f59e0b"><div class="brd-mini-stat-label">티어 분포</div><div class="brd-mini-stat-tier">${_tierBadges||'<span style="font-size:11px;color:var(--text3);font-weight:700">집계 없음</span>'}</div></div>
   </div>`;
   let h=`
   <style>
@@ -820,11 +820,12 @@ function rBoard(C,T){
     .brd-toolbar-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .brd-toolbar-note{font-size:11px;color:var(--text3);font-weight:700}
     .brd-mini-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;min-width:min(100%,520px)}
-    .brd-mini-stat{padding:12px 13px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))}
-    .brd-mini-stat-label{font-size:11px;font-weight:800;color:var(--text3)}
-    .brd-mini-stat-value{margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1)}
-    .brd-mini-stat-sub{margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)}
-    .brd-mini-stat-tier{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+    .brd-mini-stat{padding:14px 16px;border-radius:16px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.94));box-shadow:0 6px 16px rgba(15,23,42,.05);position:relative;overflow:hidden}
+    .brd-mini-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--stat-accent,#2563eb);border-radius:16px 16px 0 0;opacity:.7}
+    .brd-mini-stat-label{font-size:10px;font-weight:900;color:var(--text3);letter-spacing:.06em;text-transform:uppercase}
+    .brd-mini-stat-value{margin-top:5px;font-size:24px;font-weight:950;letter-spacing:-.03em;color:var(--text1)}
+    .brd-mini-stat-sub{margin-top:3px;font-size:11px;font-weight:700;color:var(--text3)}
+    .brd-mini-stat-tier{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
     .brd-card{background:var(--brd-col,#dbeafe);border-radius:18px;overflow:hidden;box-shadow:0 4px 18px var(--brd-shd,rgba(37,99,235,.15)),0 1px 6px rgba(0,0,0,.07);position:relative;transition:transform .18s,box-shadow .18s;align-self:start;border:1px solid rgba(0,0,0,.06);}
     .brd-card:hover{transform:translateY(-2px);box-shadow:0 10px 32px var(--brd-shd,rgba(37,99,235,.22)),0 3px 10px rgba(0,0,0,.1);}
     .brd-card.drag-over{outline:3px solid rgba(0,0,0,.2);opacity:.85;}

@@ -262,7 +262,7 @@ function _cfgFemcoDefaults(){
     headGap: 10,        // 로고-대학명(세로) 간격
     titleSize: 28,
     titleFont: 'system',
-    playerImgSize: 46,
+    playerImgSize: 76,
     playerImgShape: 'square',
     rowsPerCol: 5,
     colWidth: 170,
@@ -276,7 +276,7 @@ function _cfgFemcoDefaults(){
     subtitleSize: 12,
     subtitleWeight: 800,
     subtitleColor: '',
-    nameFontSize: 12,
+    nameFontSize: 18,
     roleFontSize: 10,
     tierBadgeSize: 10,
     tierBadgePadX: 6,
@@ -303,11 +303,17 @@ function _cfgFemcoLoad(){
     const raw = localStorage.getItem(_FEMCO_CFG_KEY);
     if(!raw) return _cfgFemcoDefaults();
     const obj = JSON.parse(raw) || {};
-    return {..._cfgFemcoDefaults(), ...obj,
-      univSubtitles:{...((_cfgFemcoDefaults().univSubtitles)||{}), ...(obj.univSubtitles||{})},
-      univColorOverrides:{...((_cfgFemcoDefaults().univColorOverrides)||{}), ...(obj.univColorOverrides||{})},
-      univBgMedia:{...((_cfgFemcoDefaults().univBgMedia)||{}), ...(obj.univBgMedia||{})}
+    const defs = _cfgFemcoDefaults();
+    const merged = {...defs, ...obj,
+      univSubtitles:{...((defs.univSubtitles)||{}), ...(obj.univSubtitles||{})},
+      univColorOverrides:{...((defs.univColorOverrides)||{}), ...(obj.univColorOverrides||{})},
+      univBgMedia:{...((defs.univBgMedia)||{}), ...(obj.univBgMedia||{})}
     };
+    if((obj.autoLayout ?? defs.autoLayout) ? true : false){
+      if((parseInt(obj.playerImgSize,10) || 0) === 64) merged.playerImgSize = defs.playerImgSize;
+      if((parseInt(obj.nameFontSize,10) || 0) === 16) merged.nameFontSize = defs.nameFontSize;
+    }
+    return merged;
   }catch(e){ return _cfgFemcoDefaults(); }
 }
 function _cfgFemcoSave(obj){
@@ -359,7 +365,7 @@ window.cfgFemcoInit = function(){
   setVal('cfg-femco-contentPadX', s.contentPadX || 16); setVal('cfg-femco-contentPadXNum', s.contentPadX || 16);
   setVal('cfg-femco-contentAlign', s.contentAlign || 'left');
   setVal('cfg-femco-contentOffsetX', s.contentOffsetX || 0); setVal('cfg-femco-contentOffsetXNum', s.contentOffsetX || 0);
-  setVal('cfg-femco-nameFontSize', s.nameFontSize || 12); setVal('cfg-femco-nameFontSizeNum', s.nameFontSize || 12);
+  setVal('cfg-femco-nameFontSize', s.nameFontSize || 16); setVal('cfg-femco-nameFontSizeNum', s.nameFontSize || 16);
   setVal('cfg-femco-roleFontSize', s.roleFontSize || 10); setVal('cfg-femco-roleFontSizeNum', s.roleFontSize || 10);
   setVal('cfg-femco-tierBadgeSize', s.tierBadgeSize || 10); setVal('cfg-femco-tierBadgeSizeNum', s.tierBadgeSize || 10);
   setVal('cfg-femco-starSize', s.starSize || 15); setVal('cfg-femco-starSizeNum', s.starSize || 15);

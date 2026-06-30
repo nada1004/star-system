@@ -104,17 +104,18 @@
       </div>
     </div>
     <div class="ssec">
-      <h4 style="margin-bottom:12px">🔥 최다 경기일 TOP 5</h4>
-      <div style="display:flex;flex-direction:column;gap:6px">
+      <h4 style="margin-bottom:12px">🔥 최다 경기일 TOP 5 <span style="font-size:11px;font-weight:600;color:var(--gray-l)">— 숫자 클릭 시 스트리머 목록</span></h4>
+      <div style="display:flex;flex-direction:column;gap:8px">
         ${topDays.map(([d,c],i)=>{
           const badge=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
-          return`<div style="display:flex;align-items:center;gap:12px;padding:8px 14px;background:var(--white);border:1px solid var(--border);border-radius:8px">
-            <span style="font-size:16px">${badge}</span>
-            <span style="font-weight:700;font-size:13px;color:var(--blue);min-width:96px">${d}</span>
+          const safeD=window.escJS?window.escJS(d):d.replace(/'/g,"\'");
+          return`<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--white);border:1px solid var(--border);border-radius:12px;transition:box-shadow .15s,transform .15s" onmouseenter="this.style.boxShadow='0 4px 14px rgba(15,23,42,.10)';this.style.transform='translateX(2px)'" onmouseleave="this.style.boxShadow='';this.style.transform=''">
+            <span style="font-size:18px;flex-shrink:0">${badge}</span>
+            <span class="heatmap-top5-date" style="font-weight:800;font-size:13px;color:var(--blue);min-width:96px" onclick="if(typeof openHeatmapDayPopup==='function')openHeatmapDayPopup('${safeD}',${c})">${d}</span>
             <div style="flex:1;background:var(--border2);border-radius:20px;height:10px;overflow:hidden">
-              <div style="width:${Math.round(c/topDays[0][1]*100)}%;background:#16a34a;height:100%;border-radius:20px"></div>
+              <div style="width:${Math.round(c/topDays[0][1]*100)}%;background:linear-gradient(90deg,#22c55e,#16a34a);height:100%;border-radius:20px"></div>
             </div>
-            <span style="font-weight:800;font-size:14px;color:#16a34a;min-width:40px;text-align:right">${c}게임</span>
+            <span class="heatmap-top5-count" style="font-weight:900;font-size:14px;color:#16a34a" onclick="if(typeof openHeatmapDayPopup==='function')openHeatmapDayPopup('${safeD}',${c})">${c}경기</span>
           </div>`;
         }).join('')}
       </div>

@@ -206,7 +206,7 @@ const _DEFAULT_CATSECS = {
     'procompcard','procompleaguecard','procompteamcard','procompgjcard',
     'h2hpanel','sharecard','calui'
   ],
-  '🎨 UI/테마':['designv2','hdr','appfont','uisize','tierrank-view','uibtn','uifilter','tablabels','tabcolors','autofitall'],
+  '🎨 UI/테마':['designv2','hdr','appfont','uisize','cardgap','tierrank-view','uibtn','uifilter','tablabels','tabcolors','autofitall'],
   '🧠 자동화/도구':['bgm','soopmv','pasteRoute','fab'],
   '🧩 현황판/펨코':['b2femco','femcoorder','boardchip','oldbright','boardbg'],
   '💾 데이터':['sync','firebase','aibot','storage','bulkdate','bulkmap','bulktier','bulkdel','bulkconv'],
@@ -909,6 +909,62 @@ window.cfgSetTourneyVsGapSettings = function(){
   try{ window.applyTourneyVsGap && window.applyTourneyVsGap(); }catch(e){}
   try{ if(typeof render==='function') render(); }catch(e){}
 };
+
+window.applyStreamerCardGap = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth||1024));
+    const isMobile = w <= 768;
+    const key = isMobile ? 'su_streamer_card_gap_mb' : 'su_streamer_card_gap_pc';
+    const def = isMobile ? 9 : 13;
+    const px = parseInt(localStorage.getItem(key) || String(def), 10);
+    const v = Math.max(4, Math.min(80, isNaN(px) ? def : px));
+    document.documentElement.style.setProperty('--su-streamer-card-gap', v+'px');
+  }catch(e){}
+};
+window.cfgSetStreamerCardGapSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-streamer-gap-pc')?.value||'13',10);
+    const mb = parseInt(document.getElementById('cfg-streamer-gap-mb')?.value||'9',10);
+    localStorage.setItem('su_streamer_card_gap_pc', String(Math.max(4,Math.min(80,isNaN(pc)?13:pc))));
+    localStorage.setItem('su_streamer_card_gap_mb', String(Math.max(4,Math.min(80,isNaN(mb)?9:mb))));
+  }catch(e){}
+  try{ window.applyStreamerCardGap && window.applyStreamerCardGap(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+try{
+  if(!window._streamerCardGapBound){
+    window._streamerCardGapBound = true;
+    window.addEventListener('resize', ()=>{ try{ window.applyStreamerCardGap && window.applyStreamerCardGap(); }catch(e){} }, {passive:true});
+  }
+}catch(e){}
+
+window.applyTierCardGap = function(){
+  try{
+    const w = Math.max(320, Math.min(1920, window.innerWidth||1024));
+    const isMobile = w <= 768;
+    const key = isMobile ? 'su_tier_card_gap_mb' : 'su_tier_card_gap_pc';
+    const def = isMobile ? 18 : 26;
+    const px = parseInt(localStorage.getItem(key) || String(def), 10);
+    const v = Math.max(10, Math.min(80, isNaN(px) ? def : px));
+    document.documentElement.style.setProperty('--su-tier-card-gap', v+'px');
+  }catch(e){}
+};
+window.cfgSetTierCardGapSettings = function(){
+  try{
+    const pc = parseInt(document.getElementById('cfg-tier-gap-pc')?.value||'26',10);
+    const mb = parseInt(document.getElementById('cfg-tier-gap-mb')?.value||'18',10);
+    localStorage.setItem('su_tier_card_gap_pc', String(Math.max(10,Math.min(80,isNaN(pc)?26:pc))));
+    localStorage.setItem('su_tier_card_gap_mb', String(Math.max(10,Math.min(80,isNaN(mb)?18:mb))));
+  }catch(e){}
+  try{ window.applyTierCardGap && window.applyTierCardGap(); }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+};
+try{
+  if(!window._tierCardGapBound){
+    window._tierCardGapBound = true;
+    window.addEventListener('resize', ()=>{ try{ window.applyTierCardGap && window.applyTierCardGap(); }catch(e){} }, {passive:true});
+  }
+}catch(e){}
 
 // 대회탭 스코어 크기 설정 (TC Score Scale)
 window.cfgSetTcScoreScale = function(){

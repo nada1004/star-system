@@ -318,7 +318,7 @@ function rTotal(C,T){
         ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
         <td style="text-align:center;white-space:nowrap;padding:5px 4px">
           <div class="streamer-rank-box">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);line-height:1.2">${_pRank||'-'}</div>
+          <div style="font-size:11px;font-weight:900;color:var(--text2);line-height:1.2">${_pRank||'-'}</div>
           <div>${_pChange}</div>
           </div>
         </td>
@@ -333,8 +333,8 @@ function rTotal(C,T){
             </span>
           </span>
         </td>
-        <td class="col-hide-mobile wt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px">${win}</td>
-        <td class="col-hide-mobile lt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px">${loss}</td>
+        <td class="col-hide-mobile wt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:900;color:var(--text1)">${win}</td>
+        <td class="col-hide-mobile lt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:900;color:var(--text1)">${loss}</td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${games===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
           <div class="streamer-wr-box">
           ${games?wr+'%':'-'}${games?`<span style="font-size:9px;color:var(--gray-l);font-weight:400">${games}전</span>`:''}
@@ -497,47 +497,35 @@ function _buildGalleryView(rankMap){
       const _posX=Number(p.photoPosX), _posY=Number(p.photoPosY);
       const photoPos=(_posUse && Number.isFinite(_posX) && Number.isFinite(_posY)) ? `${_posX}% ${_posY}%` : 'top center';
       if(photoSrcRaw) _galleryPhotoUrls.push(photoSrcRaw);
-      html+=`<div class="streamer-gallery-card ${rankMap[p.name]===1?'top1':rankMap[p.name]===2?'top2':rankMap[p.name]===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''} ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-player-card="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}"
+      html+=`<div class="streamer-gallery-card ${p.inactive?'inactive':''} ${p.retired?'retired':''} ${_isTpPlayerSelected(p.name)?'is-selected':''}" data-player-card="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}"
         data-tp-action="open-player" data-tp-player="${_pAttr}"
-        style="--card-accent:${clr};background:${clr}18;border-color:${clr}38;backdrop-filter:blur(1px)"
+        style="--card-accent:${clr};background:#0b1120;border-color:rgba(255,255,255,.14);backdrop-filter:blur(1px)"
         onmouseenter="try{if(typeof _prewarmPlayerModalImages==='function'){var _pp=window.players&&window.players.find(function(x){return x.name==='${_pSafe}'});if(_pp)_prewarmPlayerModalImages(_pp);}}catch(e){}">
         ${photoSrcRaw
           ? `<img loading="eager" fetchpriority="high" src="${toHttpsUrl(photoSrcRaw)}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
           : ''}
-        <div class="gc-placeholder" style="position:absolute;inset:0;display:${photoSrcRaw?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:linear-gradient(160deg,${clr}2a 0%,${clr}0e 100%)">${p.race||'?'}</div>
-        <div class="streamer-gallery-overlay"></div>
-        <div class="streamer-gallery-rank">${rankMap[p.name]?'#'+rankMap[p.name]:''}</div>
-        <div class="streamer-gallery-bottom">
+        <div class="gc-placeholder" style="position:absolute;inset:0;display:${photoSrcRaw?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:linear-gradient(160deg,${clr}28 0%,${clr}10 100%)">${p.race||'?'}</div>
+        ${photoSrcRaw ? '' : '<div class="streamer-gallery-overlay"></div>'}
+        <div class="streamer-gallery-bottom streamer-gallery-bottom--compact">
           <div class="streamer-gallery-topline">
             <div class="streamer-gallery-name" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
             ${getStatusIconHTML(p.name)}
           </div>
-          <div class="streamer-gallery-role">${p.role || '일반 스트리머'}</div>
-          <div class="streamer-gallery-meta">
-            ${getTierBadge(p.tier)}<span class="rbadge r${p.race}" style="font-size:9px;padding:1px 4px">${p.race||'?'}</span>
-            <span class="streamer-gallery-univ-chip ${u.name&&u.name!=='무소속'?'clickable-univ':''}" ${u.name&&u.name!=='무소속'?`onclick="event.stopPropagation();openUnivModal('${_uSafe}')"`:''}>${u.name&&u.name!=='무소속'?gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','16px'):'16px')):''}${u.name || '무소속'}</span>
-            ${p.inactive?'<span class="streamer-gallery-univ-chip" style="background:rgba(249,115,22,.16);border-color:rgba(249,115,22,.24)">휴학</span>':''}
-            ${p.retired?'<span class="streamer-gallery-univ-chip" style="background:rgba(148,163,184,.18);border-color:rgba(148,163,184,.28)">은퇴</span>':''}
+          <div class="streamer-gallery-brief">
+            ${p.role ? `<span class="sg-pill">${p.role}</span>` : ''}
+            <span class="sg-pill">${p.tier||'?'}티어</span>
+            <span class="sg-pill">${p.race||'?'}</span>
+            <span class="sg-pill" ${u.name&&u.name!=='무소속'?`onclick="event.stopPropagation();openUnivModal('${_uSafe}')"`:''}>${u.name || '무소속'}</span>
+            ${p.inactive?'<span class="sg-pill" style="background:rgba(249,115,22,.18);border-color:rgba(249,115,22,.26)">휴학</span>':''}
+            ${p.retired?'<span class="sg-pill" style="background:rgba(148,163,184,.18);border-color:rgba(148,163,184,.26)">은퇴</span>':''}
           </div>
-          <div class="streamer-gallery-stats">
-            <div class="streamer-gallery-stat">
-              <div class="streamer-gallery-stat-label">전적</div>
-              <div class="streamer-gallery-stat-value streamer-gallery-stat-value--split">
-                <span class="streamer-gallery-stat-value--em">${games ? `${win}승 ${loss}패` : '기록 없음'}</span>
-                <span class="streamer-gallery-stat-value--muted">${games ? `${games}전` : '공식전 없음'}</span>
-              </div>
-            </div>
-            <div class="streamer-gallery-stat">
-              <div class="streamer-gallery-stat-label">포인트</div>
-              <div class="streamer-gallery-stat-value streamer-gallery-stat-value--em">${pS(points)}</div>
-            </div>
-            <div class="streamer-gallery-stat streamer-gallery-stat--wide">
-              <div class="streamer-gallery-stat-label">ELO / 승률</div>
-              <div class="streamer-gallery-stat-value streamer-gallery-stat-value--split">
-                <span class="streamer-gallery-stat-value--em">${elo}</span>
-                <span class="streamer-gallery-stat-value--muted" style="color:${wr===null?'rgba(255,255,255,.82)':wr>=50?'#86efac':'#fecaca'}">승률 ${wr===null?'-':wr+'%'}</span>
-              </div>
-            </div>
+          <div class="streamer-gallery-metrics">
+            <span class="sg-metric">전적 ${games ? `${win}-${loss}` : '-'}</span>
+            <span class="sg-dot">·</span>
+            <span class="sg-metric">P ${pS(points)}</span>
+            <span class="sg-dot">·</span>
+            <span class="sg-metric">ELO ${elo}</span>
+            ${wr==null?'':`<span class="sg-dot">·</span><span class="sg-metric" style="color:${wr>=50?'#86efac':'#fecaca'}">${wr}%</span>`}
           </div>
         </div>
       </div>`;
@@ -589,6 +577,7 @@ function _buildFocusView(rankMap){
         <span style="font-size:11px;color:rgba(255,255,255,.82)">${members.length}명</span>
       </div>`;
     const sorted = [...members].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    listHtml += `<div class="streamer-focus-card-grid">`;
     sorted.forEach(p=>{
       const win = Number(p.win||0);
       const loss = Number(p.loss||0);
@@ -597,17 +586,18 @@ function _buildFocusView(rankMap){
       const actMeta = _getStreamerActivityMeta(p);
       const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
       const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
-      listHtml += `<div class="streamer-focus-item ${selected && selected.name===p.name?'active':''}" data-focus-row="1" data-focus-name="${(typeof escAttr==='function'?escAttr(p.name):p.name)}" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" onclick="totalFocusPlayer='${_pSafe}';render()">
-        <div class="streamer-focus-avatar">
-          ${p.photo ? `<img loading="eager" fetchpriority="high" src="${toHttpsUrl(p.photo)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : `${p.race||'?'}`}
-        </div>
-        <div class="streamer-focus-meta">
-          <div class="streamer-focus-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span>${genderIcon(p.gender)}</div>
-          <div class="streamer-focus-sub">${p.role||'일반 스트리머'} · ${p.tier||'?'}티어 · ${p.race||'?'}</div>
-          <div class="streamer-focus-sub">${actMeta.label?`<span class="streamer-act-chip ${actMeta.key}" style="min-width:42px;padding:3px 7px;font-size:10px">${actMeta.label}</span>`:''}<span>${games?`${win}승 ${loss}패 · ${wr}%`:'기록 없음'}</span></div>
+      const photoSrc = String(p.photo||'').trim();
+      listHtml += `<div class="streamer-focus-card ${selected && selected.name===p.name?'active':''}" data-focus-row="1" data-focus-name="${(typeof escAttr==='function'?escAttr(p.name):p.name)}" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" onclick="try{var _sl=document.querySelector('.streamer-focus-list');if(_sl)window._streamerFocusScrollTop=_sl.scrollTop;}catch(e){};totalFocusPlayer='${_pSafe}';render()">
+        ${photoSrc ? `<img loading="eager" fetchpriority="high" src="${toHttpsUrl(photoSrc)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none'">` : ''}
+        <div class="streamer-focus-card-fallback" style="display:${photoSrc?'none':'flex'}">${p.race||'?'}</div>
+        <div class="streamer-focus-card-bottom">
+          <div class="streamer-focus-card-name" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
+          <div class="streamer-focus-card-sub">${p.role||'일반'} · ${p.tier||'?'}T · ${p.race||'?'}</div>
+          <div class="streamer-focus-card-sub">${actMeta.label?`${actMeta.label} · `:''}${games?`${win}-${loss} · ${wr}%`:'기록 없음'}</div>
         </div>
       </div>`;
     });
+    listHtml += `</div>`;
     listHtml += `</section>`;
   });
   listHtml += '</div>';
@@ -627,9 +617,9 @@ function _buildFocusView(rankMap){
   const selAttr = (typeof escAttr==='function')
     ? escAttr(String(selected.name||'').replace(/[\r\n]+/g,' '))
     : String(selected.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
-  const recentList = selHistSorted.slice(0, 5);
+  const recentList = selHistSorted.slice(0, 10);
   const recentDesc = recentList.length
-    ? `<div style="display:flex;flex-direction:column;gap:6px">${recentList.map(h=>{
+    ? `<div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto;padding-right:6px">${recentList.map(h=>{
         const d=String(h?.date||'').trim();
         const r=String(h?.result||'-').trim();
         const opp=String(h?.opp||'').trim();
@@ -647,14 +637,21 @@ function _buildFocusView(rankMap){
   const _30agoN = _tpDaysAgoNum(30);
   const _c7 = selHistAll.filter(h=>_tpDateNum(h?.date) >= _7agoN).length;
   const _c30 = selHistAll.filter(h=>_tpDateNum(h?.date) >= _30agoN).length;
+  const heroPhotoUrl = selected.photo ? toHttpsUrl(selected.photo).replace(/'/g,'%27').replace(/"/g,'%22') : '';
+  const heroPhotoUrl2Src = String(selected.secondProfileFile||'').trim();
+  const heroPhotoUrl2 = heroPhotoUrl2Src ? toHttpsUrl(heroPhotoUrl2Src).replace(/'/g,'%27').replace(/"/g,'%22') : '';
+  const heroPhoto2Use = (selected.photo2PosUse !== false);
+  const heroPhoto2PosX = Number(selected.photo2PosX), heroPhoto2PosY = Number(selected.photo2PosY);
+  const heroPhoto2Pos = (heroPhoto2Use && Number.isFinite(heroPhoto2PosX) && Number.isFinite(heroPhoto2PosY)) ? `${heroPhoto2PosX}% ${heroPhoto2PosY}%` : 'top center';
   const detailHtml = `<div class="streamer-focus-main">
     <div class="streamer-focus-main-hero" style="background:linear-gradient(135deg,color-mix(in srgb, ${selColor} 28%, #0f172a),${selColor})">
+      ${heroPhotoUrl ? `<div class="streamer-focus-hero-bg" style="background-image:url('${heroPhotoUrl}')"></div>` : ''}
+      ${(heroPhotoUrl2 || heroPhotoUrl) ? `<div class="streamer-focus-hero-bg2" style="background-image:url('${heroPhotoUrl2 || heroPhotoUrl}');--hero-bg2-op:${heroPhotoUrl2 ? '.11' : '.05'};--hero-bg2-pos:${heroPhotoUrl2 ? heroPhoto2Pos : 'top center'};--hero-bg2-left:${heroPhotoUrl2 ? '46%' : '54%'};--hero-bg2-scale:${heroPhotoUrl2 ? '1.02' : '1.05'}"></div>` : ''}
       <div class="streamer-focus-photo">
         ${selected.photo ? `<img src="${toHttpsUrl(selected.photo)}" alt="${selected.name}">` : ''}
         <div class="streamer-focus-photo-fallback" style="display:${selected.photo?'none':'flex'}">${selected.race||'?'}</div>
       </div>
       <div class="streamer-focus-copy">
-        <div class="streamer-focus-kicker">Focused Profile</div>
         <div class="streamer-focus-title">${selected.name}${genderIcon(selected.gender)}</div>
         <div class="streamer-focus-chips">
           ${selected.role ? `<span class="streamer-focus-chip">${selected.role}</span>` : ''}
