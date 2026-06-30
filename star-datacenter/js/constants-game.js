@@ -210,6 +210,41 @@ function _cleanPlayerInputName(name){
   // 종족 접미사 제거: "김명운Z", "샤이니T"
   return raw.replace(/\s*[TZPN]$/i,'').trim();
 }
+function _playerAliasNorm(name){
+  const s = String(name||'');
+  return (s.normalize ? s.normalize('NFC') : s).replace(/\s+/g,'').toLowerCase();
+}
+function _playerMemoTokens(memo){
+  return String(memo||'')
+    .split(/[\s,，;|\/\\\r\n:\(\)\[\]\{\}<>]+/)
+    .map(x=>x.trim())
+    .filter(Boolean);
+}
+function _loadPlayerAliasMap(){
+  try{
+    return JSON.parse(localStorage.getItem('su_player_alias_map')||'{}')||{};
+  }catch(e){
+    return {};
+  }
+}
+function _resolveAliasToPlayer(name){
+  const cleaned = _cleanPlayerInputName(name);
+  if(!cleaned) return null;
+  const aliasMap = _loadPlayerAliasMap();
+  if(aliasMap && Object.prototype.hasOwnProperty.call(aliasMap, cleaned)){
+    const target = String(aliasMap[cleaned]||'').trim();
+    return (players||[]).find(p=>p && p.name===target) || null;
+  }
+  const nk = _playerAliasNorm(cleaned);
+  for(const key in aliasMap){
+    if(!Object.prototype.hasOwnProperty.call(aliasMap, key)) continue;
+    if(_playerAliasNorm(key) !== nk) continue;
+    const target = String(aliasMap[key]||'').trim();
+    const matched = (players||[]).find(p=>p && p.name===target);
+    if(matched) return matched;
+  }
+  return null;
+}
 function resolvePlayerName(rawName){
   const raw = (rawName||'').trim();
   const cleaned = _cleanPlayerInputName(raw);
@@ -219,9 +254,13 @@ function resolvePlayerName(rawName){
   let p = (players||[]).find(x=>x && x.name===cleaned) || (players||[]).find(x=>x && x.name===raw);
   if(p) return {name:p.name, player:p, match:'name', candidates:[p]};
 
+  // 1.5) 사용자 별명 매핑 exact 일치
+  p = _resolveAliasToPlayer(cleaned);
+  if(p) return {name:p.name, player:p, match:'alias', candidates:[p]};
+
   // 2) 메모(별명) 정확 일치
-  const low = cleaned.toLowerCase();
-  const memoExact = (players||[]).filter(x=>x && x.memo && String(x.memo).split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
+  const low = (cleaned.normalize ? cleaned.normalize('NFC') : cleaned).toLowerCase();
+  const memoExact = (players||[]).filter(x=>x && x.memo && _playerMemoTokens(x.memo).some(m=>((m.normalize?m.normalize('NFC'):m).toLowerCase()===low)));
   if(memoExact.length===1) return {name:memoExact[0].name, player:memoExact[0], match:'memo', candidates:memoExact};
 
   // 3) 공백 제거 후 이름 일치
@@ -229,7 +268,20 @@ function resolvePlayerName(rawName){
   const nsMatches = (players||[]).filter(x=>x && x.name && x.name.replace(/\s+/g,'')===ns);
   if(nsMatches.length===1) return {name:nsMatches[0].name, player:nsMatches[0], match:'space', candidates:nsMatches};
 
-  // 4) 후보 추천(부분 일치)
+  // 4) 상세 탐색기와 동일한 후보 탐색이 있으면 우선 사용
+  if(typeof window.findPlayerByPartialName === 'function'){
+    try{
+      const info = window.findPlayerByPartialName(cleaned);
+      if(info && info.player){
+        return {name:info.player.name, player:info.player, match:'search', candidates:info.candidates||[info.player]};
+      }
+      if(info && Array.isArray(info.candidates) && info.candidates.length){
+        return {name: raw, player:null, match:'none', candidates:info.candidates};
+      }
+    }catch(e){}
+  }
+
+  // 5) 후보 추천(부분 일치)
   const cand = [];
   const push = (pp, why)=>{
     if(!pp || !pp.name) return;
@@ -241,7 +293,7 @@ function resolvePlayerName(rawName){
     const n = String(pp.name);
     if(n.includes(cleaned) || n.replace(/\s+/g,'').includes(ns)) push(pp,'name');
     else if(pp.memo){
-      const toks = String(pp.memo).split(/[\s,，\n]+/).map(x=>x.trim()).filter(Boolean);
+      const toks = _playerMemoTokens(pp.memo);
       if(toks.some(t=>t.toLowerCase().includes(low))) push(pp,'memo');
     }
   });
@@ -297,22 +349,8 @@ try{ window._toIsoDateStr = _toIsoDateStr; }catch(e){}
 function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mode){
   // 정확한 이름 일치 우선, 없으면 메모 별명 fallback, 그 다음 공백 제거 후 일치
   function _findPlayer(name){
-    // 종족 접미사 제거: "김명운Z", "샤이니T" 같이 이름 뒤에 종족이 붙은 입력도 허용
-    // (붙여넣기/자동인식에서 자주 등장)
-    const raw = (name||'').trim();
-    const cleanedRace = raw.replace(/\s*[TZPN]$/i,'').trim();
-    let p=players.find(x=>x.name===name);
-    if(p)return p;
-    // cleanedRace 우선으로도 재시도
-    if (cleanedRace && cleanedRace !== name) {
-      p = players.find(x => x.name === cleanedRace);
-      if (p) return p;
-    }
-    const low=cleanedRace.toLowerCase();
-    p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
-    if(p)return p;
-    const ns=cleanedRace.replace(/\s+/g,'');
-    return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
+    const info = resolvePlayerName(name);
+    return info && info.player ? info.player : null;
   }
   const w=_findPlayer(winName);
   const l=_findPlayer(loseName);
@@ -357,19 +395,8 @@ function applyGameResult(winName, loseName, date, map, matchId, univW, univL, mo
 // - matchId는 충돌 방지를 위해 호출부에서 기존 matchId에 "_tie" 같은 suffix를 붙이는 것을 권장
 function applyDrawResult(nameA, nameB, date, map, matchId, univA, univB, mode, scoreA, scoreB){
   function _findPlayer(name){
-    const raw = (name||'').trim();
-    const cleanedRace = raw.replace(/\s*[TZPN]$/i,'').trim();
-    let p=players.find(x=>x.name===name);
-    if(p)return p;
-    if (cleanedRace && cleanedRace !== name) {
-      p = players.find(x => x.name === cleanedRace);
-      if (p) return p;
-    }
-    const low=cleanedRace.toLowerCase();
-    p=players.find(x=>x.memo&&x.memo.split(/[\s,，\n]+/).some(m=>m.trim().toLowerCase()===low));
-    if(p)return p;
-    const ns=cleanedRace.replace(/\s+/g,'');
-    return players.find(x=>x.name.replace(/\s+/g,'')===ns)||null;
+    const info = resolvePlayerName(name);
+    return info && info.player ? info.player : null;
   }
   const a=_findPlayer(nameA);
   const b=_findPlayer(nameB);

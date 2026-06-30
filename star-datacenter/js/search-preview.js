@@ -1,3 +1,33 @@
+function _pasteResolvePlayer(name) {
+  const raw = String(name || '').trim();
+  if (!raw) return { name: '', player: null, candidates: [], similar: [] };
+  try {
+    if (typeof window.resolvePlayerName === 'function') {
+      const info = window.resolvePlayerName(raw);
+      if (info && info.player) {
+        return {
+          name: info.player.name,
+          player: info.player,
+          candidates: Array.isArray(info.candidates) && info.candidates.length ? info.candidates : [info.player],
+          similar: []
+        };
+      }
+      if (info && Array.isArray(info.candidates) && info.candidates.length) {
+        return { name: raw, player: null, candidates: info.candidates, similar: [] };
+      }
+    }
+  } catch (e) {}
+  const match = (typeof findPlayerByPartialName === 'function')
+    ? findPlayerByPartialName(raw)
+    : { player: null, candidates: [], similar: [] };
+  return {
+    name: match && match.player ? match.player.name : raw,
+    player: match ? match.player : null,
+    candidates: match && Array.isArray(match.candidates) ? match.candidates : [],
+    similar: match && Array.isArray(match.similar) ? match.similar : []
+  };
+}
+
 function pastePreview() {
   const raw = (document.getElementById('paste-input')?.value || '').trim();
   const previewEl = document.getElementById('paste-preview');
@@ -10,10 +40,10 @@ function pastePreview() {
     const dResults = parseFormatD_blocks(raw);
     if (dResults.length > 0) {
       const results = dResults.map((r, i) => {
-        const wMatch = findPlayerByPartialName(r.winName);
-        const lMatch = findPlayerByPartialName(r.loseName);
+        const wMatch = _pasteResolvePlayer(r.winName);
+        const lMatch = _pasteResolvePlayer(r.loseName);
         return {
-          winName: r.winName, loseName: r.loseName, map: r.map,
+          winName: wMatch.name || r.winName, loseName: lMatch.name || r.loseName, map: r.map,
           setNum: r.setNum || 1,
           wPlayer: wMatch.player, lPlayer: lMatch.player,
           wCandidates: wMatch.candidates, lCandidates: lMatch.candidates,
@@ -154,8 +184,8 @@ function pastePreview() {
               const _tMap = _tc[1] ? resolveMapName(_tc[1].trim()) : '-';
               const winName = _isWin ? _refPlayer : _oppName;
               const loseName = _isWin ? _oppName : _refPlayer;
-              const _wM = findPlayerByPartialName(winName), _lM = findPlayerByPartialName(loseName);
-              results.push({ winName, loseName, map: _tMap, _rawMapStr: _tc[1]||'', setNum: currentSet,
+              const _wM = _pasteResolvePlayer(winName), _lM = _pasteResolvePlayer(loseName);
+              results.push({ winName: _wM.name || winName, loseName: _lM.name || loseName, map: _tMap, _rawMapStr: _tc[1]||'', setNum: currentSet,
                 wPlayer: _wM.player, lPlayer: _lM.player,
                 wCandidates: _wM.candidates, lCandidates: _lM.candidates,
                 wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
@@ -171,12 +201,12 @@ function pastePreview() {
             const _tP1 = _tEx(_tc[0]), _tP2 = _tEx(_tc[1]);
             const _tMap = _tc[2] ? resolveMapName(_tc[2].trim()) : '-';
             const winName = _tIsW ? _tP1 : _tP2, loseName = _tIsW ? _tP2 : _tP1;
-            const _wM = findPlayerByPartialName(winName), _lM = findPlayerByPartialName(loseName);
+            const _wM = _pasteResolvePlayer(winName), _lM = _pasteResolvePlayer(loseName);
             // 5번째 열: 저장 경로 타입 (mini·gj·ind 등)
             const _lineType = _parseTsvType(_tc[4]);
             // 6번째 이후: 메모(외부탭 등에서 넘어오는 비고)
             const _memo = (_tc.slice(5).join(' ') || '').trim();
-            results.push({ winName, loseName, map: _tMap, _rawMapStr: _tc[2]||'', setNum: currentSet,
+            results.push({ winName: _wM.name || winName, loseName: _lM.name || loseName, map: _tMap, _rawMapStr: _tc[2]||'', setNum: currentSet,
               wPlayer: _wM.player, lPlayer: _lM.player,
               wCandidates: _wM.candidates, lCandidates: _lM.candidates,
               wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
@@ -198,9 +228,9 @@ function pastePreview() {
             const p1Win = isNaN(eloNum) ? true : (eloNum >= 0);
             const winName = p1Win ? p1 : p2;
             const loseName = p1Win ? p2 : p1;
-            const _wM = findPlayerByPartialName(winName), _lM = findPlayerByPartialName(loseName);
+            const _wM = _pasteResolvePlayer(winName), _lM = _pasteResolvePlayer(loseName);
             const _memo = (_tc.slice(5).join(' ') || '').trim();
-            results.push({ winName, loseName, map: mp, _rawMapStr: _tc[2]||'', setNum: currentSet,
+            results.push({ winName: _wM.name || winName, loseName: _lM.name || loseName, map: mp, _rawMapStr: _tc[2]||'', setNum: currentSet,
               wPlayer: _wM.player, lPlayer: _lM.player,
               wCandidates: _wM.candidates, lCandidates: _lM.candidates,
               wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
@@ -212,9 +242,9 @@ function pastePreview() {
         }
         const _rp = parsePasteLine(_restLine);
         if (_rp) {
-          const _wM = findPlayerByPartialName(_rp.winName);
-          const _lM = findPlayerByPartialName(_rp.loseName);
-          results.push({ ..._rp, _rawMapStr: _rp._rawMapStr||'', setNum: currentSet,
+          const _wM = _pasteResolvePlayer(_rp.winName);
+          const _lM = _pasteResolvePlayer(_rp.loseName);
+          results.push({ ..._rp, winName: _wM.name || _rp.winName, loseName: _lM.name || _rp.loseName, _rawMapStr: _rp._rawMapStr||'', setNum: currentSet,
             wPlayer: _wM.player, lPlayer: _lM.player,
             wCandidates: _wM.candidates, lCandidates: _lM.candidates,
             wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
@@ -235,9 +265,9 @@ function pastePreview() {
       if (_restLine) {
         const _rp = parsePasteLine(_restLine);
         if (_rp) {
-          const _wM = findPlayerByPartialName(_rp.winName);
-          const _lM = findPlayerByPartialName(_rp.loseName);
-          results.push({ ..._rp, _rawMapStr: _rp._rawMapStr||'', setNum: currentSet,
+          const _wM = _pasteResolvePlayer(_rp.winName);
+          const _lM = _pasteResolvePlayer(_rp.loseName);
+          results.push({ ..._rp, winName: _wM.name || _rp.winName, loseName: _lM.name || _rp.loseName, _rawMapStr: _rp._rawMapStr||'', setNum: currentSet,
             wPlayer: _wM.player, lPlayer: _lM.player,
             wCandidates: _wM.candidates, lCandidates: _lM.candidates,
             wSimilar: _wM.similar||[], lSimilar: _lM.similar||[],
@@ -316,10 +346,10 @@ function pastePreview() {
       if (setNumM) currentSet = parseInt(setNumM[1]);
       formatCScore = cParsed.nextScore;
       isFormatC = true;
-      const wMatch = findPlayerByPartialName(cParsed.winName);
-      const lMatch = findPlayerByPartialName(cParsed.loseName);
+      const wMatch = _pasteResolvePlayer(cParsed.winName);
+      const lMatch = _pasteResolvePlayer(cParsed.loseName);
       results.push({
-        winName: cParsed.winName, loseName: cParsed.loseName, map: cParsed.map,
+        winName: wMatch.name || cParsed.winName, loseName: lMatch.name || cParsed.loseName, map: cParsed.map,
         setNum: currentSet,
         wPlayer: wMatch.player, lPlayer: lMatch.player,
         wCandidates: wMatch.candidates, lCandidates: lMatch.candidates,
@@ -364,9 +394,9 @@ function pastePreview() {
         }
         const r2 = parsePasteLine(setRem);
         if (r2) {
-          const wM2 = findPlayerByPartialName(r2.winName);
-          const lM2 = findPlayerByPartialName(r2.loseName);
-          results.push({ ...r2, _rawMapStr: r2._rawMapStr||'', setNum: currentSet,
+          const wM2 = _pasteResolvePlayer(r2.winName);
+          const lM2 = _pasteResolvePlayer(r2.loseName);
+          results.push({ ...r2, winName: wM2.name || r2.winName, loseName: lM2.name || r2.loseName, _rawMapStr: r2._rawMapStr||'', setNum: currentSet,
             wPlayer: wM2.player, lPlayer: lM2.player,
             wCandidates: wM2.candidates, lCandidates: lM2.candidates,
             wSimilar: wM2.similar||[], lSimilar: lM2.similar||[],
@@ -396,9 +426,9 @@ function pastePreview() {
         currentLineDate = _tsvDate;
         const _dateInput = document.getElementById('paste-date');
         if (_dateInput) _dateInput.value = _tsvDate;
-        const wM = findPlayerByPartialName(winName);
-        const lM = findPlayerByPartialName(loseName);
-        results.push({ winName, loseName, map: _tsvMap, _rawMapStr: cols[3]||'',
+        const wM = _pasteResolvePlayer(winName);
+        const lM = _pasteResolvePlayer(loseName);
+        results.push({ winName: wM.name || winName, loseName: lM.name || loseName, map: _tsvMap, _rawMapStr: cols[3]||'',
           setNum: currentSet,
           wPlayer: wM.player, lPlayer: lM.player,
           wCandidates: wM.candidates, lCandidates: lM.candidates,
@@ -439,8 +469,10 @@ function pastePreview() {
       ? (_lParts.length >= 2 && _lParts.length <= 4 && _lParts.length === _rParts.length)
       : (_lParts.length === _tmSizeNum && _rParts.length === _tmSizeNum);
     if (_mayTeam && _teamSizeMatch) {
-      const lPlayers = _lParts.map(n => findPlayerByPartialName(n).player);
-      const rPlayers = _rParts.map(n => findPlayerByPartialName(n).player);
+      const lMetas = _lParts.map(n => _pasteResolvePlayer(n));
+      const rMetas = _rParts.map(n => _pasteResolvePlayer(n));
+      const lPlayers = lMetas.map(m => m.player);
+      const rPlayers = rMetas.map(m => m.player);
       if (lPlayers.every(Boolean) && rPlayers.every(Boolean)) {
         _teamOk = true;
         _teamLeft  = lPlayers.map(p => p.name);
@@ -459,10 +491,12 @@ function pastePreview() {
       }
     }
 
-    const wMatch = _teamOk ? { player: { name: parsed.winName }, candidates: [], similar: [] } : findPlayerByPartialName(parsed.winName);
-    const lMatch = _teamOk ? { player: { name: parsed.loseName }, candidates: [], similar: [] } : findPlayerByPartialName(parsed.loseName);
+    const wMatch = _teamOk ? { name: parsed.winName, player: { name: parsed.winName }, candidates: [], similar: [] } : _pasteResolvePlayer(parsed.winName);
+    const lMatch = _teamOk ? { name: parsed.loseName, player: { name: parsed.loseName }, candidates: [], similar: [] } : _pasteResolvePlayer(parsed.loseName);
     results.push({
       ...parsed,
+      winName: wMatch.name || parsed.winName,
+      loseName: lMatch.name || parsed.loseName,
       _rawMapStr: parsed._rawMapStr || '',
       setNum: currentSet,
       wPlayer: wMatch.player,

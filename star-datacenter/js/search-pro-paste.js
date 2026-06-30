@@ -5,6 +5,36 @@ window._proPasteResults = null;
 window._proPasteMode = 'game'; // 'game' | 'set'
 window._proFormat = 0;         // 0=자유, 2/3/4=팀전 포맷
 
+function _proPasteResolvePlayer(name) {
+  const raw = String(name || '').trim();
+  if (!raw) return { name: '', player: null, candidates: [], similar: [] };
+  try {
+    if (typeof window.resolvePlayerName === 'function') {
+      const info = window.resolvePlayerName(raw);
+      if (info && info.player) {
+        return {
+          name: info.player.name,
+          player: info.player,
+          candidates: Array.isArray(info.candidates) && info.candidates.length ? info.candidates : [info.player],
+          similar: []
+        };
+      }
+      if (info && Array.isArray(info.candidates) && info.candidates.length) {
+        return { name: raw, player: null, candidates: info.candidates, similar: [] };
+      }
+    }
+  } catch (e) {}
+  const match = (typeof findPlayerByPartialName === 'function')
+    ? findPlayerByPartialName(raw)
+    : { player: null, candidates: [], similar: [] };
+  return {
+    name: match && match.player ? match.player.name : raw,
+    player: match ? match.player : null,
+    candidates: match && Array.isArray(match.candidates) ? match.candidates : [],
+    similar: match && Array.isArray(match.similar) ? match.similar : []
+  };
+}
+
 // ── 새 포맷: "N. 정우T경모P (패) vs (승) 현제Z윤환Z" 파싱 ──
 // 다음 줄 "(맵1,맵2 / 맵3,맵4)" 는 proPreview()에서 연결해서 넘긴다
 function parseProNewFormat(line) {
@@ -62,15 +92,15 @@ function parseProNewFormat(line) {
   if (leftWin === rightWin) return null;
   const winnerSide = leftWin ? 'L' : 'R';
 
-  const l0 = findPlayerByPartialName(leftNames[0]);
-  const l1 = findPlayerByPartialName(leftNames[1]);
-  const r0 = findPlayerByPartialName(rightNames[0]);
-  const r1 = findPlayerByPartialName(rightNames[1]);
+  const l0 = _proPasteResolvePlayer(leftNames[0]);
+  const l1 = _proPasteResolvePlayer(leftNames[1]);
+  const r0 = _proPasteResolvePlayer(rightNames[0]);
+  const r1 = _proPasteResolvePlayer(rightNames[1]);
   const leftPlayers  = [l0.player, l1.player];
   const rightPlayers = [r0.player, r1.player];
   const ok = leftPlayers.every(Boolean) && rightPlayers.every(Boolean);
-  const leftName  = `${leftNames[0]}, ${leftNames[1]}`;
-  const rightName = `${rightNames[0]}, ${rightNames[1]}`;
+  const leftName  = `${l0.name || leftNames[0]}, ${l1.name || leftNames[1]}`;
+  const rightName = `${r0.name || rightNames[0]}, ${r1.name || rightNames[1]}`;
   const winName   = winnerSide === 'L' ? leftName : rightName;
   const loseName  = winnerSide === 'L' ? rightName : leftName;
   return {
@@ -189,15 +219,15 @@ function parseProTeamLine(line){
   const leftNames = _proSplitTeamNames(leftPart);
   const rightNames = _proSplitTeamNames(rightPart);
   if (!leftNames || !rightNames) return null;
-  const l0 = findPlayerByPartialName(leftNames[0]);
-  const l1 = findPlayerByPartialName(leftNames[1]);
-  const r0 = findPlayerByPartialName(rightNames[0]);
-  const r1 = findPlayerByPartialName(rightNames[1]);
+  const l0 = _proPasteResolvePlayer(leftNames[0]);
+  const l1 = _proPasteResolvePlayer(leftNames[1]);
+  const r0 = _proPasteResolvePlayer(rightNames[0]);
+  const r1 = _proPasteResolvePlayer(rightNames[1]);
   const leftPlayers = [l0.player, l1.player];
   const rightPlayers = [r0.player, r1.player];
   const ok = leftPlayers.every(Boolean) && rightPlayers.every(Boolean);
-  const leftName = `${leftNames[0]}, ${leftNames[1]}`;
-  const rightName = `${rightNames[0]}, ${rightNames[1]}`;
+  const leftName = `${l0.name || leftNames[0]}, ${l1.name || leftNames[1]}`;
+  const rightName = `${r0.name || rightNames[0]}, ${r1.name || rightNames[1]}`;
   const winName = winnerSide === 'L' ? leftName : rightName;
   const loseName = winnerSide === 'L' ? rightName : leftName;
   return {
@@ -338,9 +368,9 @@ function proPreview() {
         } else {
           const r2 = parsePasteLine(setRem);
           if (r2) {
-            const wM2 = findPlayerByPartialName(r2.winName);
-            const lM2 = findPlayerByPartialName(r2.loseName);
-            results.push({ winName: r2.winName, loseName: r2.loseName,
+            const wM2 = _proPasteResolvePlayer(r2.winName);
+            const lM2 = _proPasteResolvePlayer(r2.loseName);
+            results.push({ winName: wM2.name || r2.winName, loseName: lM2.name || r2.loseName,
               leftName: r2.leftName||r2.winName, rightName: r2.rightName||r2.loseName,
               map: r2.map||'-', setNum: currentSet, matchGroup: currentMatch,
               wPlayer: wM2.player, lPlayer: lM2.player,
@@ -394,10 +424,10 @@ function proPreview() {
     }
     const parsed = parsePasteLine(line);
     if (!parsed) return;
-    const wMatch = findPlayerByPartialName(parsed.winName);
-    const lMatch = findPlayerByPartialName(parsed.loseName);
+    const wMatch = _proPasteResolvePlayer(parsed.winName);
+    const lMatch = _proPasteResolvePlayer(parsed.loseName);
     results.push({
-      winName: parsed.winName, loseName: parsed.loseName,
+      winName: wMatch.name || parsed.winName, loseName: lMatch.name || parsed.loseName,
       leftName: parsed.leftName || parsed.winName, rightName: parsed.rightName || parsed.loseName,
       map: parsed.map || '-', setNum: currentSet, matchGroup: currentMatch,
       wPlayer: wMatch.player, lPlayer: lMatch.player,
@@ -881,14 +911,14 @@ function renderProPreview(results) {
 function proEditName(input, idx, role) {
   const name = input.value.trim();
   if (!name || !window._proPasteResults) return;
-  const m = findPlayerByPartialName(name);
+  const m = _proPasteResolvePlayer(name);
   const r = window._proPasteResults[idx];
   if (!r) return;
   if (role==='w') {
-    r.wPlayer = m.player; r.winName = name;
+    r.wPlayer = m.player; r.winName = m.name || name;
     r.wCandidates = m.candidates; r.wSimilar = m.similar||[];
   } else {
-    r.lPlayer = m.player; r.loseName = name;
+    r.lPlayer = m.player; r.loseName = m.name || name;
     r.lCandidates = m.candidates; r.lSimilar = m.similar||[];
   }
   // 맵 별칭 학습: 입력된 이름과 실제 맵 이름이 다르면 alias에 추가
@@ -900,19 +930,19 @@ function proEditTeamName(input, idx, sideKey, slot) {
   const r = window._proPasteResults[idx];
   if (!r || !r.isTeam) return;
   const name = (input?.value || '').trim();
-  const m = name ? findPlayerByPartialName(name) : { player: null, candidates: [], similar: [] };
+  const m = name ? _proPasteResolvePlayer(name) : { name: '', player: null, candidates: [], similar: [] };
   if (sideKey === 'L') {
     if (!Array.isArray(r.leftNames)) r.leftNames = ['', ''];
     if (!Array.isArray(r.leftPlayers)) r.leftPlayers = [null, null];
     if (!Array.isArray(r.leftMeta)) r.leftMeta = [null, null];
-    r.leftNames[slot] = name;
+    r.leftNames[slot] = m.name || name;
     r.leftPlayers[slot] = m.player;
     r.leftMeta[slot] = m;
   } else {
     if (!Array.isArray(r.rightNames)) r.rightNames = ['', ''];
     if (!Array.isArray(r.rightPlayers)) r.rightPlayers = [null, null];
     if (!Array.isArray(r.rightMeta)) r.rightMeta = [null, null];
-    r.rightNames[slot] = name;
+    r.rightNames[slot] = m.name || name;
     r.rightPlayers[slot] = m.player;
     r.rightMeta[slot] = m;
   }
