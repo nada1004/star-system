@@ -1194,7 +1194,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
 
   // 새 레이아웃: 왼쪽 라벨 열(대학색) + 오른쪽 스트리머 열(연한 배경)
   const _tableRow = (label, isRole, chips) => `
-    <div style="display:flex;align-items:stretch;gap:0;margin-bottom:8px">
+    <div data-b2-univ-row="1" style="display:flex;align-items:stretch;gap:0;margin-bottom:8px">
       <div style="background:${labelCol}!important;min-width:70px;width:70px;display:flex;align-items:center;justify-content:center;padding:10px 6px;flex-shrink:0;border-radius:16px 0 0 16px;border:1px solid ${col}33;border-right:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.28)">
         <span style="font-size:11px;font-weight:900;color:${col};text-align:center;line-height:1.35;word-break:keep-all;letter-spacing:-.01em">${label}</span>
       </div>
@@ -1215,11 +1215,62 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const _bgSize = uCfg.bgImgSize || 'auto';
   const _bgOpacityNum = (uCfg.bgImgAlpha ?? b2BgImgAlpha) / 100;
   const _bgOpacity = (_hasBgImg ? Math.max(0.64, _bgOpacityNum + 0.08) : _bgOpacityNum).toFixed(2);
+  const _uKeyRaw = String(univName||'').trim();
+  const _uKey = _uKeyRaw.toUpperCase();
+  const _logoOverlayCfg = (() => {
+    const def = { wmGlobalOn: 1, wmOn: 1, wmScale: 150, wmRight: 120, wmBottom: 30, bgScale: 100 };
+    try{
+      const raw = String(localStorage.getItem('su_b2_univ_logo_overlay_v1') || '').trim();
+      const parsed = raw ? (JSON.parse(raw) || {}) : {};
+      const d = (parsed && parsed.default && typeof parsed.default === 'object') ? parsed.default : {};
+      const per = (parsed && parsed.perUniv && typeof parsed.perUniv === 'object') ? parsed.perUniv : {};
+      const over = (_uKeyRaw && per && per[_uKeyRaw] && typeof per[_uKeyRaw] === 'object') ? per[_uKeyRaw] : {};
+      const out = Object.assign({}, def, d, over);
+      out.wmGlobalOn = (out.wmGlobalOn==null) ? 1 : (Number(out.wmGlobalOn) ? 1 : 0);
+      out.wmOn = (out.wmOn==null) ? 1 : (Number(out.wmOn) ? 1 : 0);
+      out.wmScale = Math.max(50, Math.min(250, parseInt(out.wmScale||150, 10) || 150));
+      out.wmRight = Math.max(0, Math.min(260, parseInt(out.wmRight||120, 10) || 120));
+      out.wmBottom = Math.max(0, Math.min(160, parseInt(out.wmBottom||30, 10) || 30));
+      out.bgScale = Math.max(60, Math.min(120, parseInt(out.bgScale||100, 10) || 100));
+      return out;
+    }catch(e){
+      return def;
+    }
+  })();
+  const _logoUnivNames = ['늇캐슬','뉴캣슬','캄몬스타즈','케이대','엠비대','와플대','수술대','흑카데미'];
+  const _isMonstarName = _uKeyRaw.includes('몬스타') || _uKey.includes('MONSTAR');
+  const _bgIsLogo =
+    (_uKey === 'HM' || _uKey === 'DM' || _uKey === 'SSG' || _uKey === 'JSA' || _uKey === 'BGM') ||
+    (_logoUnivNames.includes(_uKeyRaw) || _isMonstarName);
+  const _bgLogoPos = '44% 50%';
+  const _bgLogoSizeBase = (() => {
+    const isSmall =
+      (_uKey === 'JSA' || _uKey === 'BGM') ||
+      _logoUnivNames.includes(_uKeyRaw) ||
+      _isMonstarName;
+    if (_uKey === 'JSA' || _uKeyRaw === '흑카데미') return 'min(72%,620px) auto';
+    if (_uKeyRaw === '수술대' || _uKeyRaw === '엠비대' || _uKeyRaw === '케이대') return 'min(84%,740px) auto';
+    return isSmall ? 'min(78%,680px) auto' : 'min(86%,760px) auto';
+  })();
+  const _bgLogoSize = (() => {
+    const sc = (_logoOverlayCfg.bgScale || 100) / 100;
+    if (sc === 1) return _bgLogoSizeBase;
+    const m = String(_bgLogoSizeBase||'').match(/min\(\s*(\d+)\s*%\s*,\s*(\d+)\s*px\s*\)/i);
+    if (!m) return _bgLogoSizeBase;
+    const pct = Math.max(10, Math.min(100, Math.round(parseInt(m[1],10) * sc)));
+    const px = Math.max(80, Math.min(1200, Math.round(parseInt(m[2],10) * sc)));
+    return `min(${pct}%,${px}px) auto`;
+  })();
+  const _bgOpacity2 = _bgIsLogo ? String(Math.min(0.48, parseFloat(_bgOpacity)||0.48).toFixed(2)) : _bgOpacity;
   const _profileViewMode = _b2GetUnivProfileViewMode();
   const bgImgHtml = uCfg.bgImg
     ? forExport
-      ? `<img src="${uCfg.bgImg}" crossorigin="anonymous" class="b2-fit-auto" data-fit-kind="bg" data-fit-mode="${_bgSize}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_bgSize==='auto'?'cover':_bgSize};object-position:${_bgPos};opacity:${_bgOpacity};pointer-events:none;z-index:0" onload="_b2ApplyBgAutoSizing(this)">`
-      : `<div class="b2-bg-layer" data-bg-src="${String(uCfg.bgImg).replace(/"/g,'&quot;')}" data-bg-pos="${String(_bgPos).replace(/"/g,'&quot;')}" data-bg-size-mode="${_bgSize}" style="position:absolute;inset:0;opacity:${_bgOpacity};pointer-events:none;z-index:0;background-position:${_bgPos};background-size:${_bgSize==='auto'?'cover':_bgSize};background-repeat:no-repeat"></div>`
+      ? (_bgIsLogo
+        ? `<img src="${uCfg.bgImg}" crossorigin="anonymous" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:${_bgLogoSize.replace(' auto','')};max-width:760px;max-height:78%;height:auto;object-fit:contain;object-position:${_bgLogoPos};opacity:${_bgOpacity2};pointer-events:none;z-index:0" onerror="this.style.display='none'">`
+        : `<img src="${uCfg.bgImg}" crossorigin="anonymous" class="b2-fit-auto" data-fit-kind="bg" data-fit-mode="${_bgSize}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${_bgSize==='auto'?'cover':_bgSize};object-position:${_bgPos};opacity:${_bgOpacity2};pointer-events:none;z-index:0" onload="_b2ApplyBgAutoSizing(this)">`)
+      : (_bgIsLogo
+        ? `<div class="b2-bg-layer" data-bg-src="${String(uCfg.bgImg).replace(/"/g,'&quot;')}" data-bg-pos="${_bgLogoPos}" style="position:absolute;inset:0;opacity:${_bgOpacity2};pointer-events:none;z-index:0;background-position:${_bgLogoPos};background-size:${_bgLogoSize};background-repeat:no-repeat"></div>`
+        : `<div class="b2-bg-layer" data-bg-src="${String(uCfg.bgImg).replace(/"/g,'&quot;')}" data-bg-pos="${String(_bgPos).replace(/"/g,'&quot;')}" data-bg-size-mode="${_bgSize}" style="position:absolute;inset:0;opacity:${_bgOpacity2};pointer-events:none;z-index:0;background-position:${_bgPos};background-size:${_bgSize==='auto'?'cover':_bgSize};background-repeat:no-repeat"></div>`)
     : '';
 
   let rows = '';
@@ -1239,10 +1290,33 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;max-width:260px;border-radius:12px;${(i<_simgs.length-1||_smemo)?'margin-bottom:8px;':''}display:block;object-fit:contain;border:1px solid rgba(148,163,184,.14);background:#fff" onerror="this.style.display='none'">`).join('')}
     ${_smemo?`<div style="font-size:11px;color:#334155;white-space:pre-wrap;line-height:1.65;margin-top:${_simgs.length?'8px':'0'}">${_smemo}</div>`:''}
   </div>` : '';
+  const _wmSpec = (() => {
+    const kRaw = String(univName||'').trim();
+    const k = kRaw.toUpperCase();
+    if (k === 'HM' || k === 'DM' || k === 'SSG') return { pct: 20, max: 148, op1: '.34', op0: '.24' };
+    if (k === 'JSA' || kRaw === '흑카데미') return { pct: 22, max: 160, op1: '.36', op0: '.26', right: 66, bottom: 28 };
+    if (
+      k === 'JSA' || k === 'BGM' ||
+      _logoUnivNames.includes(kRaw) ||
+      kRaw.includes('몬스타') || k.includes('MONSTAR')
+    ) {
+      return { pct: 26, max: 182, op1: '.36', op0: '.26', right: 46, bottom: 28 };
+    }
+    return { pct: 22, max: 160, op1: '.36', op0: '.26' };
+  })();
+  const _wmScale = (_logoOverlayCfg.wmScale || 100) / 100;
+  const _wmPct = Math.max(6, Math.min(60, Math.round(_wmSpec.pct * _wmScale)));
+  const _wmMax = Math.max(60, Math.min(520, Math.round(_wmSpec.max * _wmScale)));
+  const _wmRightBase = (typeof _wmSpec.right === 'number') ? _wmSpec.right : 18;
+  const _wmBottomBase = (typeof _wmSpec.bottom === 'number') ? _wmSpec.bottom : 22;
+  const _wmRight = (typeof _logoOverlayCfg.wmRight === 'number') ? _logoOverlayCfg.wmRight : _wmRightBase;
+  const _wmBottom = (typeof _logoOverlayCfg.wmBottom === 'number') ? _logoOverlayCfg.wmBottom : _wmBottomBase;
+  const _wmMaxH = Math.round(_wmMax * 0.70);
+  const _wmOn = ((_logoOverlayCfg.wmGlobalOn==null)?true:!!Number(_logoOverlayCfg.wmGlobalOn)) && ((_logoOverlayCfg.wmOn==null)?true:!!Number(_logoOverlayCfg.wmOn));
   const bodyContent = `<div class="b2-bg-host" style="position:relative;overflow:hidden;background:${_hasBgImg?'transparent':'linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.82))'}">
     ${bgImgHtml}
-    ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" aria-hidden="true" style="position:absolute;right:16px;bottom:10px;width:min(36%,240px);max-width:240px;opacity:${_hasBgImg?'.42':'.32'};object-fit:contain;pointer-events:none;z-index:0;filter:drop-shadow(0 12px 28px rgba(15,23,42,.18))" onerror="this.style.display='none'">`:''}
-    <div style="position:relative;z-index:1;padding:16px;background:${_hasBgImg?'transparent':'transparent'}">
+    ${(_wmOn && iconUrl)?`<img src="${toHttpsUrl(iconUrl)}" aria-hidden="true" style="position:absolute;right:${_wmRight}px;bottom:${_wmBottom}px;width:min(${_wmPct}%,${_wmMax}px);max-width:${_wmMax}px;max-height:${_wmMaxH}px;opacity:${_hasBgImg?_wmSpec.op1:_wmSpec.op0};object-fit:contain;pointer-events:none;z-index:0;filter:drop-shadow(0 12px 28px rgba(15,23,42,.18))" onerror="this.style.display='none'">`:''}
+    <div data-b2-univ-content="1" style="position:relative;z-index:1;padding:16px 20px 22px 16px;background:${_hasBgImg?'transparent':'transparent'}">
       <div>${rows}</div>
       ${sidePanelHtml}
     </div>
@@ -1273,7 +1347,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
       <div style="background:linear-gradient(135deg,${col} 0%,${col}dd 100%);padding:16px 16px 14px;position:relative;overflow:hidden">
         <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,${_hasBgImg?'.08':'.18'}),rgba(255,255,255,0) 58%);pointer-events:none"></div>
         <div style="display:flex;align-items:stretch;gap:12px;position:relative;z-index:1">
-          ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,56px);height:var(--su_univ_logo_size,56px);object-fit:contain;border-radius:var(--su_univ_logo_radius,16px);flex-shrink:0;cursor:pointer;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.28);padding:6px;box-shadow:0 14px 26px rgba(15,23,42,.12)" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
+          ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:clamp(56px,var(--su_univ_logo_size,64px),76px);height:clamp(56px,var(--su_univ_logo_size,64px),76px);object-fit:contain;border-radius:var(--su_univ_logo_radius,16px);flex-shrink:0;cursor:pointer;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.28);padding:6px;box-shadow:0 14px 26px rgba(15,23,42,.12)" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')" onerror="this.style.display='none'">`:''}
           <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:7px">
             <div style="display:flex;align-items:flex-start;gap:10px;justify-content:space-between;flex-wrap:wrap">
               <div style="min-width:0;flex:1">

@@ -301,7 +301,7 @@ function rCfg(C,T){
       return `<button type="button" class="no-export cfg-pin-chip" onclick="cfgGo('${id}')"
         style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px 5px 8px;border-radius:20px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:900;white-space:nowrap;cursor:pointer;flex-shrink:0">
         <span style="font-size:13px;line-height:1">${icon}</span>${_escHTML(title)}
-        <span onclick="event.stopPropagation();(function(){const p=JSON.parse(localStorage.getItem('su_cfg_pins')||'[]');const i=p.indexOf('${id}');if(i>-1)p.splice(i,1);localStorage.setItem('su_cfg_pins',JSON.stringify(p));try{render();}catch(e){}})();"
+            <span onclick="event.stopPropagation();(function(el){try{const p=JSON.parse(localStorage.getItem('su_cfg_pins')||'[]');const i=p.indexOf('${id}');if(i>-1)p.splice(i,1);localStorage.setItem('su_cfg_pins',JSON.stringify(p));}catch(e){};try{const b=el&&el.closest?el.closest('button'):null;if(b)b.remove();}catch(e){}})(this);"
           style="margin-left:1px;opacity:.5;font-size:10px;cursor:pointer;line-height:1;padding:0 1px" title="핀 해제">✕</span>
       </button>`;
     }).join('');
@@ -317,7 +317,7 @@ function rCfg(C,T){
         <span style="font-size:12px;font-weight:900;color:var(--text2);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x.title}</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x.desc}</span>
       </span>
-      <button type="button" onclick="event.stopPropagation();(function(){const p=JSON.parse(localStorage.getItem('su_cfg_pins')||JSON.stringify(['univ','pd','matchdetail','profileshape']));const i=p.indexOf('${x.id}');if(i>-1)p.splice(i,1);else p.unshift('${x.id}');localStorage.setItem('su_cfg_pins',JSON.stringify(p));try{render();}catch(e){}})();"
+        <button type="button" onclick="event.stopPropagation();(function(el){try{const p=JSON.parse(localStorage.getItem('su_cfg_pins')||JSON.stringify(['univ','pd','matchdetail','profileshape']));const i=p.indexOf('${x.id}');if(i>-1)p.splice(i,1);else p.unshift('${x.id}');localStorage.setItem('su_cfg_pins',JSON.stringify(p));const on=(i===-1);el.style.opacity=on?'1':'0.2';el.title=on?'핀 해제':'즐겨찾기 고정';}catch(e){}})(this);"
         style="background:none;border:none;cursor:pointer;font-size:12px;opacity:${isPinned?'1':'0.2'};padding:0;line-height:1;flex-shrink:0" title="${isPinned?'핀 해제':'즐겨찾기 고정'}">📌</button>
     </button>`;
   }).join('');
@@ -594,16 +594,16 @@ ${_scfgD('notice','📢 공지 관리')}
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <div style="font-size:11px;font-weight:800;color:var(--text2);min-width:154px">🏛️ 대학상세 로고 크기</div>
             <input type="range" min="28" max="72" step="2" value="${isNaN(_dSz)?46:Math.max(28,Math.min(72,_dSz))}" style="flex:1;min-width:140px;accent-color:var(--blue)"
-              oninput="univCfg[${i}].logoSizeDetail=+this.value;saveCfg();try{if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();}catch(e){};render()">
+              oninput="univCfg[${i}].logoSizeDetail=+this.value;saveCfg();try{this.parentElement.querySelector('span').textContent=this.value+'px';}catch(e){};try{if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
             <span style="font-size:11px;color:var(--gray-l);min-width:42px;font-weight:900">${isNaN(_dSz)?46:Math.max(28,Math.min(72,_dSz))}px</span>
-            <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizeDetail;saveCfg();render()" title="대학별 값 제거(기본값 사용)">초기화</button>
+            <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizeDetail;saveCfg();try{if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();}catch(e){};try{const p=this.parentElement;const r=p.querySelector('input[type=range]');if(r)r.value='46';const s=p.querySelector('span');if(s)s.textContent='46px';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}" title="대학별 값 제거(기본값 사용)">초기화</button>
           </div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <div style="font-size:11px;font-weight:800;color:var(--text2);min-width:154px">🎬 스트리머탭 로고 크기</div>
             <input type="range" min="16" max="40" step="1" value="${isNaN(_pSz)?26:Math.max(16,Math.min(40,_pSz))}" style="flex:1;min-width:140px;accent-color:var(--blue)"
-              oninput="univCfg[${i}].logoSizePlayers=+this.value;saveCfg();render()">
+              oninput="univCfg[${i}].logoSizePlayers=+this.value;saveCfg();try{this.parentElement.querySelector('span').textContent=this.value+'px';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
             <span style="font-size:11px;color:var(--gray-l);min-width:42px;font-weight:900">${isNaN(_pSz)?26:Math.max(16,Math.min(40,_pSz))}px</span>
-            <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizePlayers;saveCfg();render()" title="대학별 값 제거(기본값 사용)">초기화</button>
+            <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizePlayers;saveCfg();try{const p=this.parentElement;const r=p.querySelector('input[type=range]');if(r)r.value='26';const s=p.querySelector('span');if(s)s.textContent='26px';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}" title="대학별 값 제거(기본값 사용)">초기화</button>
           </div>
         </div>
       </div>`;
@@ -627,16 +627,16 @@ ${_scfgD('notice','📢 공지 관리')}
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                   <div style="font-size:11px;font-weight:800;color:#7f1d1d;min-width:154px">🏛️ 대학상세 로고 크기</div>
                   <input type="range" min="28" max="72" step="2" value="${isNaN(_dSz)?46:Math.max(28,Math.min(72,_dSz))}" style="flex:1;min-width:140px;accent-color:#dc2626"
-                    oninput="univCfg[${i}].logoSizeDetail=+this.value;saveCfg();try{if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();}catch(e){};render()">
+                    oninput="univCfg[${i}].logoSizeDetail=+this.value;saveCfg();try{this.parentElement.querySelector('span').textContent=this.value+'px';}catch(e){};try{if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
                   <span style="font-size:11px;color:#7f1d1d;min-width:42px;font-weight:900">${isNaN(_dSz)?46:Math.max(28,Math.min(72,_dSz))}px</span>
-                  <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizeDetail;saveCfg();render()">초기화</button>
+                  <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizeDetail;saveCfg();try{if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();}catch(e){};try{const p=this.parentElement;const r=p.querySelector('input[type=range]');if(r)r.value='46';const s=p.querySelector('span');if(s)s.textContent='46px';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">초기화</button>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                   <div style="font-size:11px;font-weight:800;color:#7f1d1d;min-width:154px">🎬 스트리머탭 로고 크기</div>
                   <input type="range" min="16" max="40" step="1" value="${isNaN(_pSz)?26:Math.max(16,Math.min(40,_pSz))}" style="flex:1;min-width:140px;accent-color:#dc2626"
-                    oninput="univCfg[${i}].logoSizePlayers=+this.value;saveCfg();render()">
+                    oninput="univCfg[${i}].logoSizePlayers=+this.value;saveCfg();try{this.parentElement.querySelector('span').textContent=this.value+'px';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
                   <span style="font-size:11px;color:#7f1d1d;min-width:42px;font-weight:900">${isNaN(_pSz)?26:Math.max(16,Math.min(40,_pSz))}px</span>
-                  <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizePlayers;saveCfg();render()">초기화</button>
+                  <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizePlayers;saveCfg();try{const p=this.parentElement;const r=p.querySelector('input[type=range]');if(r)r.value='26';const s=p.querySelector('span');if(s)s.textContent='26px';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">초기화</button>
                 </div>
               </div>
             </div>`;
@@ -1980,9 +1980,9 @@ ${_scfgD('notice','📢 공지 관리')}
                 <div class="cdot" style="background:${u.color||'#64748b'}"></div>
                 <div style="flex:1;min-width:120px;font-weight:900;color:var(--text2)">${esc(u.name||'')}</div>
                 <input type="range" min="60" max="520" step="1" value="${cur||(()=>{try{return Math.max(60,Math.min(520,parseInt((J('su_femco_settings')||{}).logoSize||150,10)||150));}catch(e){return 150;}})()}" style="flex:1;min-width:180px;accent-color:var(--blue)"
-                  oninput="univCfg[${i}].logoSizeFemco=+this.value;saveCfg();render()">
+                  oninput="univCfg[${i}].logoSizeFemco=+this.value;saveCfg();try{this.parentElement.querySelector('span').textContent=this.value+'px';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
                 <span style="font-size:11px;color:var(--gray-l);min-width:52px;font-weight:900">${cur?cur+'px':'(기본)'}</span>
-                <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizeFemco;saveCfg();render()">초기화</button>
+                <button class="btn btn-w btn-xs" onclick="delete univCfg[${i}].logoSizeFemco;saveCfg();try{const p=this.parentElement;const r=p.querySelector('input[type=range]');if(r)r.value='150';const s=p.querySelector('span');if(s)s.textContent='(기본)';}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">초기화</button>
               </div>
             `;
           }).join('')}
@@ -2439,13 +2439,13 @@ ${_scfgD('notice','📢 공지 관리')}
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 프로필 이미지 크기 <span id="cfg-bcp-size-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_bcp_size')||'26');}catch(e){return 26;}})()}px</span></div>
         <input type="range" min="16" max="56" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_bcp_size')||'26');}catch(e){return 26;}})()}" style="width:100%;accent-color:var(--blue)"
-          oninput="boardChipPhotoSize=+this.value;saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-size-val').textContent=this.value+'px';render();try{if(typeof window.cfgTouchPrefsSync==="function")window.cfgTouchPrefsSync();}catch(e){}">
+          oninput="boardChipPhotoSize=+this.value;saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-size-val').textContent=this.value+'px';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray-l);margin-top:2px"><span>16px</span><span>56px</span></div>
       </div>
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📦 레이아웃 크기 <span id="cfg-bcp-layout-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_bcp_layout')||'100');}catch(e){return 100;}})()}%</span></div>
         <input type="range" min="70" max="160" step="5" value="${(()=>{try{return parseInt(localStorage.getItem('su_bcp_layout')||'100');}catch(e){return 100;}})()}" style="width:100%;accent-color:var(--blue)"
-          oninput="boardChipLayoutScale=+this.value;saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-layout-val').textContent=this.value+'%';render()">
+          oninput="boardChipLayoutScale=+this.value;saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-layout-val').textContent=this.value+'%';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray-l);margin-top:2px"><span>70%</span><span>160%</span></div>
       </div>
       <div style="border-top:1px dashed var(--border2);padding-top:12px">
@@ -2481,7 +2481,7 @@ ${_scfgD('notice','📢 공지 관리')}
               const _ulCur=(()=>{try{return localStorage.getItem('su_ul_shape')||'circle';}catch(e){return 'circle';}})();
               return _ulShapes.map(s=>{
                 const sel=_ulCur===s.v;
-                return `<button type="button" onclick="localStorage.setItem('su_ul_shape','${s.v}');if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();render();try{if(typeof window.cfgTouchPrefsSync==="function")window.cfgTouchPrefsSync();}catch(e){}" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 6px;border-radius:10px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 2px #2563eb22':'none'}">
+                return `<button type="button" onclick="localStorage.setItem('su_ul_shape','${s.v}');try{if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();}catch(e){};try{const g=this.parentElement; if(g){ g.querySelectorAll('button').forEach(b=>{b.style.border='1.5px solid var(--border)'; b.style.background='var(--white)'; b.style.boxShadow='none'; const sp=b.querySelector('span'); if(sp) sp.style.color='var(--text2)';}); this.style.border='2px solid var(--blue)'; this.style.background='linear-gradient(135deg,#eff6ff,#eef2ff)'; this.style.boxShadow='0 0 0 2px #2563eb22'; const sp=this.querySelector('span'); if(sp) sp.style.color='var(--blue)'; }}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 6px;border-radius:10px;border:${sel?'2px solid var(--blue)':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 2px #2563eb22':'none'}">
                   <div style="width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#a855f7);${s.preview};flex-shrink:0"></div>
                   <span style="font-size:10px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'};text-align:center;line-height:1.2">${s.label}</span>
                 </button>`;
@@ -2492,24 +2492,24 @@ ${_scfgD('notice','📢 공지 관리')}
         <div style="margin-bottom:10px">
           <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 대학 로고 이미지 크기 <span id="cfg-ul-size-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_ul_size')||'34');}catch(e){return 34;}})()}px</span></div>
           <input type="range" min="20" max="60" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_ul_size')||'34');}catch(e){return 34;}})()}" style="width:100%;accent-color:var(--blue)"
-            oninput="localStorage.setItem('su_ul_size',String(this.value));if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();document.getElementById('cfg-ul-size-val').textContent=this.value+'px';render();try{if(typeof window.cfgTouchPrefsSync==="function")window.cfgTouchPrefsSync();}catch(e){}">
+            oninput="localStorage.setItem('su_ul_size',String(this.value));if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();document.getElementById('cfg-ul-size-val').textContent=this.value+'px';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
         </div>
         <div>
           <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📦 대학 로고 레이아웃 크기 <span id="cfg-ul-box-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_ul_box')||'46');}catch(e){return 46;}})()}px</span></div>
           <input type="range" min="34" max="72" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_ul_box')||'46');}catch(e){return 46;}})()}" style="width:100%;accent-color:var(--blue)"
-            oninput="localStorage.setItem('su_ul_box',String(this.value));if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();document.getElementById('cfg-ul-box-val').textContent=this.value+'px';render();try{if(typeof window.cfgTouchPrefsSync==="function")window.cfgTouchPrefsSync();}catch(e){}">
+            oninput="localStorage.setItem('su_ul_box',String(this.value));if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();document.getElementById('cfg-ul-box-val').textContent=this.value+'px';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
         </div>
         <div style="border-top:1px dashed var(--border2);padding-top:12px">
           <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:10px">🏛️ 대학 상세(모달) 로고 크기</div>
           <div style="margin-bottom:10px">
             <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 로고 이미지 크기 <span id="cfg-ul-size-d-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_ul_size_detail')||localStorage.getItem('su_ul_size')||'46');}catch(e){return 46;}})()}px</span></div>
             <input type="range" min="28" max="72" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_ul_size_detail')||localStorage.getItem('su_ul_size')||'46');}catch(e){return 46;}})()}" style="width:100%;accent-color:var(--blue)"
-              oninput="localStorage.setItem('su_ul_size_detail',String(this.value));if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();document.getElementById('cfg-ul-size-d-val').textContent=this.value+'px';render();try{if(typeof window.cfgTouchPrefsSync==="function")window.cfgTouchPrefsSync();}catch(e){}">
+              oninput="localStorage.setItem('su_ul_size_detail',String(this.value));if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();document.getElementById('cfg-ul-size-d-val').textContent=this.value+'px';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
           </div>
           <div>
             <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📦 로고 박스 크기 <span id="cfg-ul-box-d-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_ul_box_detail')||localStorage.getItem('su_ul_box')||'72');}catch(e){return 72;}})()}px</span></div>
             <input type="range" min="48" max="110" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_ul_box_detail')||localStorage.getItem('su_ul_box')||'72');}catch(e){return 72;}})()}" style="width:100%;accent-color:var(--blue)"
-              oninput="localStorage.setItem('su_ul_box_detail',String(this.value));if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();document.getElementById('cfg-ul-box-d-val').textContent=this.value+'px';render();try{if(typeof window.cfgTouchPrefsSync==="function")window.cfgTouchPrefsSync();}catch(e){}">
+              oninput="localStorage.setItem('su_ul_box_detail',String(this.value));if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();document.getElementById('cfg-ul-box-d-val').textContent=this.value+'px';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
           </div>
         </div>
         <div style="border-top:1px dashed var(--border2);padding-top:12px">
@@ -2517,8 +2517,71 @@ ${_scfgD('notice','📢 공지 관리')}
           <div>
             <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 로고 크기 <span id="cfg-b2-ul-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_b2_univ_logo_size')||'42');}catch(e){return 42;}})()}px</span></div>
             <input type="range" min="28" max="72" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_b2_univ_logo_size')||'42');}catch(e){return 42;}})()}" style="width:100%;accent-color:var(--blue)"
-              oninput="localStorage.setItem('su_b2_univ_logo_size',String(this.value));if(typeof applyBoard2LogoVars==='function')applyBoard2LogoVars();document.getElementById('cfg-b2-ul-val').textContent=this.value+'px';render();try{if(typeof window.cfgTouchPrefsSync==="function")window.cfgTouchPrefsSync();}catch(e){}">
+              oninput="localStorage.setItem('su_b2_univ_logo_size',String(this.value));if(typeof applyBoard2LogoVars==='function')applyBoard2LogoVars();document.getElementById('cfg-b2-ul-val').textContent=this.value+'px';try{window._cfgSoftRefreshBoard2&&window._cfgSoftRefreshBoard2();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
           </div>
+        </div>
+        <div style="border-top:1px dashed var(--border2);padding-top:12px">
+          <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🧷 대학별 신현황판 워터마크(우측 아래/가운데)</div>
+          <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">우측 아래 로고(작은 워터마크)와 가운데 로고(배경 로고)의 위치/크기를 전체 또는 대학별로 조정합니다.</div>
+          ${(()=>{
+            const _esc = (s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            const _sel = (()=>{ try{ return (localStorage.getItem('su_cfg_b2_wm_univ')||'__ALL__').trim() || '__ALL__'; }catch(e){ return '__ALL__'; } })();
+            const _list = (Array.isArray(window.univCfg)?window.univCfg:[]).map(u=>String(u&&u.name||'').trim()).filter(Boolean).sort((a,b)=>a.localeCompare(b,'ko'));
+            const _cfg = (typeof window._cfgB2LogoOverlayGet==='function') ? window._cfgB2LogoOverlayGet(_sel) : { wmScale:150, wmRight:120, wmBottom:30, bgScale:100 };
+            const _gcfg = (typeof window._cfgB2LogoOverlayGet==='function') ? window._cfgB2LogoOverlayGet('__ALL__') : { wmGlobalOn:1 };
+            const _wmGlobalOn = (_gcfg.wmGlobalOn==null) ? 1 : Number(_gcfg.wmGlobalOn);
+            const _wmScale = parseInt(_cfg.wmScale||150,10);
+            const _wmRight = parseInt(_cfg.wmRight||120,10);
+            const _wmBottom = parseInt(_cfg.wmBottom||30,10);
+            const _bgScale = parseInt(_cfg.bgScale||100,10);
+            return `
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2);margin-bottom:12px">
+                <input id="cfg-b2-wm-global-on" type="checkbox" style="width:15px;height:15px" ${_wmGlobalOn? 'checked' : ''} onchange="try{if(typeof window._cfgB2LogoOverlaySet==='function')window._cfgB2LogoOverlaySet('__ALL__','wmGlobalOn',this.checked?1:0);}catch(e){};try{window._cfgSoftRefreshBoard2&&window._cfgSoftRefreshBoard2();}catch(e){}">
+                우측 아래 로고 전체 표시(ON/OFF)
+              </label>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+                <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:44px">대상</div>
+                <select id="cfg-b2-wm-univ" style="flex:1;min-width:220px" onchange="localStorage.setItem('su_cfg_b2_wm_univ',this.value);try{window._cfgB2LogoOverlayUiSync&&window._cfgB2LogoOverlayUiSync();}catch(e){}">
+                  <option value="__ALL__"${_sel==='__ALL__'?' selected':''}>전체(기본)</option>
+                  ${_list.map(n=>`<option value="${_esc(n)}"${_sel===n?' selected':''}>${_esc(n)}</option>`).join('')}
+                </select>
+                <button class="btn btn-xs btn-w" onclick="try{const sel=(document.getElementById('cfg-b2-wm-univ')||{}).value||'__ALL__';if(typeof window._cfgB2LogoOverlayReset==='function')window._cfgB2LogoOverlayReset(sel);localStorage.setItem('su_cfg_b2_wm_univ',sel);}catch(e){};try{window._cfgB2LogoOverlayUiSync&&window._cfgB2LogoOverlayUiSync();}catch(e){};try{window._cfgSoftRefreshBoard2&&window._cfgSoftRefreshBoard2();}catch(e){}">초기화</button>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+                <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:12px">
+                  <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">우측 아래 로고</div>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:800;color:var(--text2);margin-bottom:10px">
+                    <input id="cfg-b2-wm-on" type="checkbox" style="width:15px;height:15px" ${((_cfg.wmOn==null)?1:Number(_cfg.wmOn))? 'checked' : ''} onchange="try{const sel=(document.getElementById('cfg-b2-wm-univ')||{}).value||'__ALL__';if(typeof window._cfgB2LogoOverlaySet==='function')window._cfgB2LogoOverlaySet(sel,'wmOn',this.checked?1:0);}catch(e){};try{window._cfgSoftRefreshBoard2&&window._cfgSoftRefreshBoard2();}catch(e){}">
+                    표시(ON/OFF)
+                  </label>
+                  <div style="margin-bottom:10px">
+                    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">크기 <span id="cfg-b2-wm-scale-val" style="font-weight:400;color:var(--gray-l)">${_wmScale}% (x${(_wmScale/100).toFixed(2)})</span></div>
+                    <input id="cfg-b2-wm-scale" type="range" min="50" max="250" step="5" value="${_wmScale}" style="width:100%;accent-color:var(--blue)"
+                      oninput="try{const sel=(document.getElementById('cfg-b2-wm-univ')||{}).value||'__ALL__';if(typeof window._cfgB2LogoOverlaySet==='function')window._cfgB2LogoOverlaySet(sel,'wmScale',this.value);document.getElementById('cfg-b2-wm-scale-val').textContent=this.value+'% (x'+(this.value/100).toFixed(2)+')';}catch(e){};try{window._cfgSoftRefreshBoard2&&window._cfgSoftRefreshBoard2();}catch(e){}">
+                  </div>
+                  <div style="margin-bottom:10px">
+                    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">좌측 이동(오른쪽에서) <span id="cfg-b2-wm-right-val" style="font-weight:400;color:var(--gray-l)">${_wmRight}px</span></div>
+                    <input id="cfg-b2-wm-right" type="range" min="0" max="260" step="2" value="${_wmRight}" style="width:100%;accent-color:var(--blue)"
+                      oninput="try{const sel=(document.getElementById('cfg-b2-wm-univ')||{}).value||'__ALL__';if(typeof window._cfgB2LogoOverlaySet==='function')window._cfgB2LogoOverlaySet(sel,'wmRight',this.value);document.getElementById('cfg-b2-wm-right-val').textContent=this.value+'px';}catch(e){};try{window._cfgSoftRefreshBoard2&&window._cfgSoftRefreshBoard2();}catch(e){}">
+                  </div>
+                  <div>
+                    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">위로 이동(아래에서) <span id="cfg-b2-wm-bottom-val" style="font-weight:400;color:var(--gray-l)">${_wmBottom}px</span></div>
+                    <input id="cfg-b2-wm-bottom" type="range" min="0" max="160" step="2" value="${_wmBottom}" style="width:100%;accent-color:var(--blue)"
+                      oninput="try{const sel=(document.getElementById('cfg-b2-wm-univ')||{}).value||'__ALL__';if(typeof window._cfgB2LogoOverlaySet==='function')window._cfgB2LogoOverlaySet(sel,'wmBottom',this.value);document.getElementById('cfg-b2-wm-bottom-val').textContent=this.value+'px';}catch(e){};try{window._cfgSoftRefreshBoard2&&window._cfgSoftRefreshBoard2();}catch(e){}">
+                  </div>
+                </div>
+                <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:12px">
+                  <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">가운데 로고(배경)</div>
+                  <div style="margin-bottom:10px">
+                    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">크기 <span id="cfg-b2-bg-scale-val" style="font-weight:400;color:var(--gray-l)">${_bgScale}%</span></div>
+                    <input id="cfg-b2-bg-scale" type="range" min="60" max="120" step="2" value="${_bgScale}" style="width:100%;accent-color:var(--blue)"
+                      oninput="try{const sel=(document.getElementById('cfg-b2-wm-univ')||{}).value||'__ALL__';if(typeof window._cfgB2LogoOverlaySet==='function')window._cfgB2LogoOverlaySet(sel,'bgScale',this.value);document.getElementById('cfg-b2-bg-scale-val').textContent=this.value+'%';}catch(e){};try{window._cfgSoftRefreshBoard2&&window._cfgSoftRefreshBoard2();}catch(e){}">
+                    <div style="font-size:11px;color:var(--gray-l);margin-top:8px">대학 배경이 로고형(가운데 배치)인 경우에만 적용됩니다.</div>
+                  </div>
+                </div>
+              </div>
+            `;
+          })()}
         </div>
       </div>
     </div>

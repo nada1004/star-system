@@ -165,6 +165,8 @@ function _b2ResolveImgAutoPosition(kind, fit, rect, meta){
   return 'center center';
 }
 
+function _b2ApplyUnivWatermarkSizing(root){}
+
 function _b2ApplyBgAutoSizing(root){
   try{
     const scope = root || document;
