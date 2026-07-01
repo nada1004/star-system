@@ -276,13 +276,13 @@ function _b2WeeklyBriefingView() {
       const lossColor  = 'b2w2-mvp-sv-loss';
       const rateColor  = 'b2w2-mvp-sv-rate';
 
+      const _statItem = (val, label, colorClass) =>
+        `<span class="b2w2-mvp-stat"><b class="b2w2-mvp-sv ${colorClass}">${val}</b><i class="b2w2-mvp-sl">${label}</i></span>`;
+      const _sep = `<span class="b2w2-mvp-statline-sep"></span>`;
+
       const statsHtml = isWorst
-        ? `<div class="b2w2-mvp-stat"><span class="b2w2-mvp-sv ${lossColor}">${s.losses}</span><span class="b2w2-mvp-sl">패</span></div>
-           <div class="b2w2-mvp-stat"><span class="b2w2-mvp-sv ${winColor}">${s.wins}</span><span class="b2w2-mvp-sl">승</span></div>
-           <div class="b2w2-mvp-stat"><span class="b2w2-mvp-sv ${rateColor}">${s.winRate??0}%</span><span class="b2w2-mvp-sl">승률</span></div>`
-        : `<div class="b2w2-mvp-stat"><span class="b2w2-mvp-sv ${winColor}">${s.wins}</span><span class="b2w2-mvp-sl">승</span></div>
-           <div class="b2w2-mvp-stat"><span class="b2w2-mvp-sv ${lossColor}">${s.losses}</span><span class="b2w2-mvp-sl">패</span></div>
-           <div class="b2w2-mvp-stat"><span class="b2w2-mvp-sv ${rateColor}">${s.winRate??0}%</span><span class="b2w2-mvp-sl">승률</span></div>`;
+        ? `${_statItem(s.losses,'패',lossColor)}${_sep}${_statItem(s.wins,'승',winColor)}${_sep}${_statItem((s.winRate??0)+'%','승률',rateColor)}`
+        : `${_statItem(s.wins,'승',winColor)}${_sep}${_statItem(s.losses,'패',lossColor)}${_sep}${_statItem((s.winRate??0)+'%','승률',rateColor)}`;
 
       return `<div class="b2w2-mvp-card ${cardClass}${extraClass ? ' '+extraClass : ''}" onclick="openPlayerModal('${nameEsc}')">
         ${photo
@@ -292,14 +292,18 @@ function _b2WeeklyBriefingView() {
         <div class="b2w2-mvp-bg-fallback" style="${photo?'display:none':''}">${initial}</div>
         <div class="b2w2-mvp-overlay"></div>
         <div class="b2w2-mvp-top-badge">${badgeEmoji} ${badgeText}</div>
-        ${rIco ? `<div class="b2w2-mvp-race-badge">${rIco}</div>` : ''}
         <div class="b2w2-mvp-bottom">
-          <div>
+          <div class="b2w2-mvp-id">
             <div class="b2w2-mvp-name">${mp.name||'-'}</div>
-            <div class="b2w2-mvp-univ">${String(mp.univ||'무소속')}${mp.tier?` &nbsp;<span class="b2w2-mvp-tier" style="background:${tc};color:${tt}">${mp.tier}</span>`:''}</div>
+            <div class="b2w2-mvp-meta">
+              <span class="b2w2-mvp-univ">${String(mp.univ||'무소속')}</span>
+              ${mp.tier?`<span class="b2w2-mvp-tier" style="background:${tc};color:${tt}">${mp.tier}</span>`:''}
+            </div>
           </div>
-          <div class="b2w2-mvp-stats-row">${statsHtml}</div>
-          <div class="b2w2-mvp-form-row">${_b2WeeklyForm(s.hist)}</div>
+          <div class="b2w2-mvp-statline">
+            ${statsHtml}
+            <div class="b2w2-mvp-statline-form">${_b2WeeklyForm(s.hist)}</div>
+          </div>
         </div>
       </div>`;
     };
@@ -488,17 +492,38 @@ function _b2WeeklyBriefingView() {
 
       /* ── Masthead ── */
       .b2w2-masthead {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 8px 0 10px;
-        border-bottom: 2px solid var(--b2w-rule-hard);
-        margin-bottom: 4px;
+        padding: 8px 0 12px;
+        margin-bottom: 6px;
         font-size: 10px;
         font-weight: 800;
         letter-spacing: .18em;
         text-transform: uppercase;
         color: var(--b2w-ink-soft);
+      }
+      .b2w2-masthead::after {
+        content: '';
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--b2w-accent) 0%, var(--b2w-accent) 38%, var(--b2w-rule-hard) 38%, var(--b2w-rule-hard) 100%);
+        opacity: .9;
+      }
+      .b2w2-masthead-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--b2w-ink);
+      }
+      .b2w2-masthead-mark {
+        width: 16px; height: 16px;
+        border-radius: 4px;
+        background: linear-gradient(135deg, var(--b2w-accent), var(--b2w-accent-strong));
+        box-shadow: 0 2px 6px var(--b2w-accent-shadow-strong, rgba(37,99,235,.2));
+        flex-shrink: 0;
       }
 
       /* ── Hero ── */
@@ -508,20 +533,30 @@ function _b2WeeklyBriefingView() {
         align-items: flex-start;
         justify-content: space-between;
         gap: 24px;
-        padding: 18px 0 20px;
-        border-bottom: 3px double var(--b2w-rule-hard);
+        padding: 20px 22px 22px;
         margin-bottom: 20px;
+        border-bottom: 3px double var(--b2w-rule-hard);
+        background:
+          radial-gradient(circle at 6px 6px, var(--b2w-rule-soft) 1px, transparent 1.6px) 0 0/18px 18px,
+          linear-gradient(180deg, var(--b2w-accent-soft) 0%, transparent 65%);
+        border-radius: var(--b2w-r-lg) var(--b2w-r-lg) 0 0;
       }
       .b2w2-hero-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; flex: 1 }
       .b2w2-hero-title {
+        position: relative;
         font-family: 'Noto Serif KR', Georgia, serif;
         font-size: 36px;
         font-weight: 900;
         letter-spacing: -.02em;
         color: var(--b2w-ink);
         line-height: 1.04;
+        background: linear-gradient(180deg, var(--b2w-ink) 55%, var(--b2w-ink-mid) 130%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
       .b2w2-hero-desc {
+        position: relative;
         margin-top: 4px;
         font-size: 13px;
         line-height: 1.75;
@@ -592,13 +627,16 @@ function _b2WeeklyBriefingView() {
         border-radius: var(--b2w-r-lg);
         overflow: hidden;
         background: var(--b2w-paper-alt);
+        box-shadow: var(--b2w-shadow-sm);
         flex-shrink: 0;
       }
       .b2w2-hero-stat {
         padding: 14px 16px;
         border-right: 1px solid var(--b2w-rule-soft);
         border-bottom: 1px solid var(--b2w-rule-soft);
+        transition: background .14s ease;
       }
+      .b2w2-hero-stat:hover { background: var(--b2w-accent-soft) }
       .b2w2-hero-stat:nth-child(2n) { border-right: none }
       .b2w2-hero-stat:nth-last-child(-n+2) { border-bottom: none }
       .b2w2-hero-stat-label { font-size: 10px; font-weight: 800; color: var(--b2w-ink-soft); text-transform: uppercase; letter-spacing: .1em }
@@ -624,9 +662,9 @@ function _b2WeeklyBriefingView() {
         padding: 14px 16px;
         border-radius: 14px;
         border: 1px solid var(--b2w-rule);
-        background: var(--b2w-paper-alt);
+        background: linear-gradient(165deg, var(--b2w-paper-alt) 0%, var(--b2w-paper-alt) 70%, color-mix(in srgb, var(--kpi-accent, var(--b2w-accent)) 7%, var(--b2w-paper-alt)) 100%);
         box-shadow: var(--b2w-shadow-sm);
-        transition: transform .14s ease, box-shadow .14s ease;
+        transition: transform .16s cubic-bezier(.2,.8,.3,1.2), box-shadow .16s ease, border-color .16s ease;
         position: relative;
         overflow: hidden;
       }
@@ -634,12 +672,20 @@ function _b2WeeklyBriefingView() {
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0;
-        height: 2px;
-        background: var(--kpi-accent, var(--b2w-accent));
+        height: 3px;
+        background: linear-gradient(90deg, var(--kpi-accent, var(--b2w-accent)), color-mix(in srgb, var(--kpi-accent, var(--b2w-accent)) 40%, transparent));
         border-radius: 14px 14px 0 0;
-        opacity: .7;
       }
-      .b2w2-kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.09) }
+      .b2w2-kpi-card::after {
+        content: '';
+        position: absolute;
+        top: -20px; right: -20px;
+        width: 70px; height: 70px;
+        border-radius: 50%;
+        background: radial-gradient(circle, color-mix(in srgb, var(--kpi-accent, var(--b2w-accent)) 16%, transparent), transparent 70%);
+        pointer-events: none;
+      }
+      .b2w2-kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0,0,0,.10); border-color: color-mix(in srgb, var(--kpi-accent, var(--b2w-accent)) 35%, var(--b2w-rule)) }
       .b2w2-kpi-label { font-size: 10px; font-weight: 800; color: var(--b2w-ink-soft); letter-spacing: .1em; text-transform: uppercase }
       .b2w2-kpi-value {
         margin-top: 6px;
@@ -842,38 +888,9 @@ function _b2WeeklyBriefingView() {
         letter-spacing: -.04em;
       }
 
-      /* 공통 그라디언트 오버레이 — 상단 어둡게, 하단 진하게 */
+      /* 요청에 따라 프로필 이미지 위 그라디언트 효과 제거 — 원본 그대로 노출 */
       .b2w2-mvp-overlay {
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-      }
-      .b2w2-mvp-first .b2w2-mvp-overlay {
-        background: linear-gradient(
-          180deg,
-          rgba(0,0,0,.18) 0%,
-          rgba(0,0,0,.04) 38%,
-          rgba(0,0,0,.0) 55%,
-          rgba(15,10,0,.72) 100%
-        );
-      }
-      .b2w2-mvp-second .b2w2-mvp-overlay {
-        background: linear-gradient(
-          180deg,
-          rgba(0,0,0,.22) 0%,
-          rgba(0,0,0,.04) 38%,
-          rgba(0,0,0,.0) 55%,
-          rgba(10,10,20,.68) 100%
-        );
-      }
-      .b2w2-mvp-worst .b2w2-mvp-overlay {
-        background: linear-gradient(
-          180deg,
-          rgba(60,0,0,.25) 0%,
-          rgba(0,0,0,.04) 38%,
-          rgba(0,0,0,.0) 55%,
-          rgba(30,5,5,.80) 100%
-        );
+        display: none;
       }
 
       /* 배경 이미지 없을 때 색상 */
@@ -914,7 +931,7 @@ function _b2WeeklyBriefingView() {
         filter: drop-shadow(0 1px 4px rgba(0,0,0,.5));
       }
 
-      /* 하단 오버레이 콘텐츠 */
+      /* 하단 콘텐츠 — 이미지 위 효과 없음, 텍스트 자체 그림자로만 가독성 확보 */
       .b2w2-mvp-bottom {
         position: absolute;
         bottom: 0;
@@ -939,6 +956,14 @@ function _b2WeeklyBriefingView() {
       }
       .b2w2-mvp-name:hover { opacity: .88 }
 
+      .b2w2-mvp-id { display: flex; flex-direction: column; gap: 3px; }
+
+      .b2w2-mvp-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
       .b2w2-mvp-univ {
         font-size: 10px;
         font-weight: 700;
@@ -947,42 +972,45 @@ function _b2WeeklyBriefingView() {
         text-shadow: 0 1px 4px rgba(0,0,0,.5);
       }
 
-      /* 스탯 row — 글라스 배경 */
-      .b2w2-mvp-stats-row {
+      /* 스탯 + 최근 폼 통합 라인 — 글라스 배경 */
+      .b2w2-mvp-statline {
         display: flex;
-        align-items: stretch;
-        border-radius: 8px;
-        overflow: hidden;
-        border: 1px solid rgba(255,255,255,.18);
-        backdrop-filter: blur(16px) saturate(160%);
-        -webkit-backdrop-filter: blur(16px) saturate(160%);
-        background: rgba(0,0,0,.32);
+        align-items: center;
+        gap: 7px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.16);
+        backdrop-filter: blur(14px) saturate(160%);
+        -webkit-backdrop-filter: blur(14px) saturate(160%);
+        background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 6px 16px rgba(0,0,0,.18);
+        padding: 6px 10px;
       }
       .b2w2-mvp-stat {
-        flex: 1;
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 5px 4px;
-        gap: 1px;
-        border-right: 1px solid rgba(255,255,255,.1);
+        align-items: baseline;
+        gap: 3px;
+        flex-shrink: 0;
       }
-      .b2w2-mvp-stat:last-child { border-right: none }
+      .b2w2-mvp-statline-sep {
+        width: 1px;
+        height: 10px;
+        background: rgba(255,255,255,.22);
+        flex-shrink: 0;
+      }
       .b2w2-mvp-sv {
         font-family: 'Noto Serif KR', Georgia, serif;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 900;
         letter-spacing: -.02em;
-        line-height: 1.1;
+        line-height: 1;
         color: #fff;
       }
       .b2w2-mvp-sl {
         font-size: 8px;
+        font-style: normal;
         font-weight: 800;
-        color: rgba(255,255,255,.65);
-        letter-spacing: .05em;
-        text-transform: uppercase;
+        color: rgba(255,255,255,.62);
+        letter-spacing: .02em;
       }
       .b2w2-mvp-first .b2w2-mvp-sv-win   { color: #4ade80 }
       .b2w2-mvp-first .b2w2-mvp-sv-loss  { color: #f87171 }
@@ -994,12 +1022,15 @@ function _b2WeeklyBriefingView() {
       .b2w2-mvp-worst .b2w2-mvp-sv-loss  { color: #ff6b6b }
       .b2w2-mvp-worst .b2w2-mvp-sv-rate  { color: #fca5a5 }
 
-      /* 폼 dots */
-      .b2w2-mvp-form-row {
+      /* 최근 폼 dots — statline 우측 정렬 */
+      .b2w2-mvp-statline-form {
         display: flex;
         align-items: center;
         gap: 3px;
-        flex-wrap: wrap;
+        margin-left: auto;
+        flex-shrink: 0;
+        padding-left: 7px;
+        border-left: 1px solid rgba(255,255,255,.16);
       }
 
       /* 티어 뱃지 */
@@ -1011,7 +1042,6 @@ function _b2WeeklyBriefingView() {
         font-size: 9px;
         font-weight: 900;
         letter-spacing: .02em;
-        margin-top: 1px;
       }
 
       /* ── 하이라이트 그리드용 단일 MVP 카드 (더 길게) ── */
@@ -1043,12 +1073,11 @@ function _b2WeeklyBriefingView() {
       .b2w2-mvp-card-mini .b2w2-mvp-name { font-size: 12px; }
       .b2w2-mvp-card-mini .b2w2-mvp-univ { font-size: 8.5px; }
       .b2w2-mvp-card-mini .b2w2-mvp-tier { font-size: 7px; padding: 1px 5px; }
-      .b2w2-mvp-card-mini .b2w2-mvp-stats-row { border-radius: 6px; }
-      .b2w2-mvp-card-mini .b2w2-mvp-stat { padding: 3px 2px; }
+      .b2w2-mvp-card-mini .b2w2-mvp-statline { border-radius: 999px; padding: 4px 7px; gap: 5px; }
       .b2w2-mvp-card-mini .b2w2-mvp-sv { font-size: 10px; }
       .b2w2-mvp-card-mini .b2w2-mvp-sl { font-size: 6px; }
-      .b2w2-mvp-card-mini .b2w2-mvp-form-row { gap: 2px; }
-      .b2w2-mvp-card-mini .b2w2-mvp-form-row span {
+      .b2w2-mvp-card-mini .b2w2-mvp-statline-form { gap: 2px; padding-left: 5px; }
+      .b2w2-mvp-card-mini .b2w2-mvp-statline-form span {
         width: 11px !important;
         height: 11px !important;
         font-size: 6px !important;
@@ -1102,19 +1131,28 @@ function _b2WeeklyBriefingView() {
         gap: 10px;
         position: relative;
         overflow: hidden;
-        transition: box-shadow .16s ease, transform .16s ease;
+        transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
       }
       .b2w2-highlight-card::after {
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0; height: 3px;
-        background: var(--hc-top, var(--b2w-rule-soft));
+        background: linear-gradient(90deg, var(--hc-top, var(--b2w-rule-soft)), color-mix(in srgb, var(--hc-top, var(--b2w-rule-soft)) 30%, transparent));
         border-radius: 10px 10px 0 0;
-        opacity: .85;
+      }
+      .b2w2-highlight-card::before {
+        content: '';
+        position: absolute;
+        top: -30px; right: -30px;
+        width: 90px; height: 90px;
+        border-radius: 50%;
+        background: radial-gradient(circle, color-mix(in srgb, var(--hc-top, var(--b2w-accent)) 10%, transparent), transparent 70%);
+        pointer-events: none;
       }
       .b2w2-highlight-card:hover {
-        box-shadow: 0 4px 20px rgba(0,0,0,.10);
-        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(0,0,0,.11);
+        transform: translateY(-3px);
+        border-color: color-mix(in srgb, var(--hc-top, var(--b2w-accent)) 30%, var(--b2w-rule));
       }
       .b2w2-highlight-kicker {
         font-size: 10px;
@@ -1371,20 +1409,21 @@ function _b2WeeklyBriefingView() {
         margin-bottom: 14px;
         overflow: hidden;
         box-shadow: var(--b2w-shadow-sm);
-        transition: box-shadow .16s ease;
+        transition: box-shadow .18s ease, transform .18s ease;
       }
-      .b2w2-card:hover { box-shadow: var(--b2w-shadow) }
+      .b2w2-card:hover { box-shadow: var(--b2w-shadow); transform: translateY(-1px) }
       .b2w2-card-head {
+        position: relative;
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 12px;
         padding: 14px 18px;
         cursor: pointer;
-        transition: background .14s ease;
+        transition: filter .14s ease;
         border-bottom: 1px solid var(--b2w-rule-soft);
       }
-      .b2w2-card-head:hover { background: var(--b2w-paper-alt) }
+      .b2w2-card-head:hover { filter: brightness(.97) }
       .b2w2-chip { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px }
       .b2w2-card-title { display: flex; align-items: flex-start; gap: 10px; min-width: 0 }
       .b2w2-card-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0 }
@@ -1395,7 +1434,7 @@ function _b2WeeklyBriefingView() {
         color: var(--b2w-ink);
         letter-spacing: -.01em;
       }
-      .b2w2-card-sub { margin-top: 4px; font-size: 11px; color: var(--b2w-ink-soft); display: flex; gap: 8px; flex-wrap: wrap }
+      .b2w2-card-sub { margin-top: 4px; font-size: 11px; font-weight: 600; color: var(--b2w-ink-mid); display: flex; gap: 8px; flex-wrap: wrap }
       .b2w2-card-chevron { margin-left: auto; font-size: 12px; color: var(--b2w-ink-soft); padding-top: 3px; flex-shrink: 0 }
       .b2w2-card-body { padding: 14px 18px 18px }
       .b2w2-card-summary { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(260px,.8fr); gap: 14px; padding-bottom: 14px }
@@ -1500,6 +1539,27 @@ function _b2WeeklyBriefingView() {
         /* 1180px 미만에서는 lead/MVP 카드의 span 2가 적용되지 않으므로(미디어쿼리 스코프 밖)
            모든 카드가 1칸씩 차지해 자연스럽게 흐른다. 이 구간에서만 별도 span 처리는 불필요. */
       }
+
+      /* ── 은은한 등장 애니메이션 ── */
+      @keyframes b2w2FadeUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .b2w2-kpi-card, .b2w2-highlight-card, .b2w2-mvp-card, .b2w2-card {
+        animation: b2w2FadeUp .42s cubic-bezier(.2,.7,.3,1) both;
+      }
+      .b2w2-kpi-grid .b2w2-kpi-card:nth-child(1){animation-delay:.02s}
+      .b2w2-kpi-grid .b2w2-kpi-card:nth-child(2){animation-delay:.06s}
+      .b2w2-kpi-grid .b2w2-kpi-card:nth-child(3){animation-delay:.10s}
+      .b2w2-kpi-grid .b2w2-kpi-card:nth-child(4){animation-delay:.14s}
+      .b2w2-highlight-grid .b2w2-highlight-card:nth-child(1){animation-delay:.04s}
+      .b2w2-highlight-grid .b2w2-highlight-card:nth-child(2){animation-delay:.08s}
+      .b2w2-highlight-grid .b2w2-highlight-card:nth-child(3){animation-delay:.12s}
+      .b2w2-highlight-grid .b2w2-highlight-card:nth-child(4){animation-delay:.16s}
+      .b2w2-highlight-grid .b2w2-highlight-card:nth-child(5){animation-delay:.20s}
+      @media (prefers-reduced-motion: reduce) {
+        .b2w2-kpi-card, .b2w2-highlight-card, .b2w2-mvp-card, .b2w2-card { animation: none }
+      }
     `;
     _b2EnsureStyleTag('b2w2-style', css);
     let h = '';
@@ -1511,7 +1571,7 @@ function _b2WeeklyBriefingView() {
     // ── 헤더 컨트롤
     h += `<div class="b2w2-wrap">
       <div class="b2w2-masthead">
-        <span>STAR DATACENTER</span>
+        <span class="b2w2-masthead-brand"><span class="b2w2-masthead-mark"></span>STAR DATACENTER</span>
         <span>${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)} 발행</span>
       </div>
       <section class="b2w2-hero">
@@ -1648,22 +1708,22 @@ function _b2WeeklyBriefingView() {
     const _bestWrSub = bestWrPlayer ? `${bestWrPlayer.p?.name || '-'} · ${bestWrPlayer.total}전` : '표본 부족';
     h += `<section class="b2w2-kpi-grid">
       <article class="b2w2-kpi-card" style="--kpi-accent:#6366f1">
-        <div class="b2w2-kpi-label">활동 대학</div>
+        <div class="b2w2-kpi-label">🏫 활동 대학</div>
         <div class="b2w2-kpi-value">${_activeUnivs}<span style="font-size:14px;font-weight:700;color:var(--b2w-ink-soft);margin-left:2px">곳</span></div>
         <div class="b2w2-kpi-sub">경기 기록 있는 대학 수</div>
       </article>
       <article class="b2w2-kpi-card" style="--kpi-accent:#0ea5e9">
-        <div class="b2w2-kpi-label">총 경기 수</div>
+        <div class="b2w2-kpi-label">🎮 총 경기 수</div>
         <div class="b2w2-kpi-value">${_totalGames}<span style="font-size:14px;font-weight:700;color:var(--b2w-ink-soft);margin-left:2px">전</span></div>
         <div class="b2w2-kpi-sub">${_periodDays}일 집계 기준</div>
       </article>
       <article class="b2w2-kpi-card" style="--kpi-accent:${_leaderColor}">
-        <div class="b2w2-kpi-label">${_leaderLabel}</div>
+        <div class="b2w2-kpi-label">👑 ${_leaderLabel}</div>
         <div class="b2w2-kpi-value" style="font-size:18px;margin-top:8px">${_leaderValue}</div>
         <div class="b2w2-kpi-sub">${_leaderSub}</div>
       </article>
       <article class="b2w2-kpi-card" style="--kpi-accent:#10b981">
-        <div class="b2w2-kpi-label">최고 승률</div>
+        <div class="b2w2-kpi-label">🎯 최고 승률</div>
         <div class="b2w2-kpi-value" style="color:#10b981">${bestWrPlayer ? `${bestWrPlayer.winRate}%` : '-'}</div>
         <div class="b2w2-kpi-sub">${_bestWrSub}</div>
       </article>
@@ -2036,7 +2096,7 @@ function _b2WeeklyBriefingView() {
       });
 
       h += `<div class="b2w2-card" style="border-top:3px solid ${color}">
-        <div class="b2w2-card-head" onclick="(function(){
+        <div class="b2w2-card-head" style="background:linear-gradient(135deg, ${color}17 0%, ${color}08 55%, transparent 100%)" onclick="(function(){
           const b=document.getElementById('${cid}');
           const ic=document.getElementById('${icid}');
           if(!b)return;
@@ -2049,7 +2109,7 @@ function _b2WeeklyBriefingView() {
             <div style="min-width:0">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                 <div class="b2w2-card-name">${u.name}</div>
-                <button type="button" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;border:1px solid ${color}44;background:${color}12;color:${color};cursor:pointer;white-space:nowrap;line-height:1.6">🏫 대학상세</button>
+                <button type="button" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;border:1.5px solid ${color};background:var(--b2w-paper-alt);color:${color};cursor:pointer;white-space:nowrap;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,.08)">🏫 대학상세</button>
               </div>
               <div class="b2w2-card-sub">
                 <span>활동 ${active.length}명</span>

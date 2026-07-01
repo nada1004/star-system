@@ -109,6 +109,18 @@ function _statsLatestActiveMonths(gender){
     '.stats-hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}',
     '.stats-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);font-size:12px;font-weight:800;color:var(--text2);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
     '.stats-toolbar-card{padding:12px 14px 14px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 32px rgba(15,23,42,.05)}',
+    /* ── 모드 전환(핵심/심화) 세그먼트 ── */
+    '.stats-modebar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(148,163,184,.16)}',
+    '.stats-modeseg{display:inline-flex;gap:8px;padding:4px;border-radius:14px;background:rgba(148,163,184,.10);border:1px solid rgba(148,163,184,.16)}',
+    '.stats-modeseg .pill{margin:0;box-shadow:none;border:none;background:transparent}',
+    '.stats-modeseg .pill.on{box-shadow:0 6px 16px rgba(37,99,235,.24)}',
+    '.stats-modebar-hint{font-size:11px;color:var(--gray-l);font-weight:700}',
+    /* ── 그룹(개인/대학/경기/기록실) 행 ── */
+    '.stats-grouprow{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed rgba(148,163,184,.18)}',
+    '.stats-grouprow .pill{min-width:80px;justify-content:center}',
+    /* ── 서브탭(종합/티어랭킹 등) 행 ── */
+    '.stats-subrow{display:flex;flex-wrap:wrap;gap:10px}',
+    '@media (max-width:680px){.stats-modeseg{width:100%;justify-content:center}.stats-modebar-hint{width:100%;text-align:center}.stats-grouprow,.stats-subrow{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:10px}.stats-grouprow::-webkit-scrollbar,.stats-subrow::-webkit-scrollbar{display:none}.stats-grouprow .pill{min-width:0}}',
     '.stats-filter-box{display:flex;flex-direction:column;gap:8px;margin-bottom:2px;padding:12px 14px;border-radius:18px;background:linear-gradient(180deg,#f8fbff,#eff6ff);border:1px solid rgba(147,197,253,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.78)}',
     '.stats-filter-box.is-idle{background:linear-gradient(180deg,#fff,#f8fafc);border-color:rgba(148,163,184,.22)}',
     '.stats-award-toggle{display:inline-flex;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--surface);border:1px solid var(--border)}',
@@ -327,13 +339,15 @@ function rStats(C,T){
     </div>
   </section>`;
   h+=`<div class="stats-toolbar-card no-export">`;
-  h+=`<div class="fbar utilbar utilbar--scroll no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:8px;align-items:center">
-    <button class="pill ${window._statsViewMode==='core'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsViewMode='core';window.statsSub='${_coreIds.has(window.statsSub||'')?(window.statsSub||'overview'):'overview'}';localStorage.setItem('su_statsSub',window.statsSub);render()">⚡ 핵심 통계</button>
-    <button class="pill ${window._statsViewMode==='advanced'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsViewMode='advanced';window.statsSub='${_coreIds.has(window.statsSub||'overview')?'starsystem':(window.statsSub||'starsystem')}';localStorage.setItem('su_statsSub',window.statsSub);render()">🧠 심화 분석</button>
-    <span style="font-size:11px;color:var(--gray-l);font-weight:700;margin-left:4px">${window._statsViewMode==='core'?'자주 보는 핵심 지표 중심':'세부 비교·추세·매트릭스 중심'}</span>
+  h+=`<div class="stats-modebar fbar no-export">
+    <div class="stats-modeseg">
+      <button class="pill ${window._statsViewMode==='core'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsViewMode='core';window.statsSub='${_coreIds.has(window.statsSub||'')?(window.statsSub||'overview'):'overview'}';localStorage.setItem('su_statsSub',window.statsSub);render()">⚡ 핵심 통계</button>
+      <button class="pill ${window._statsViewMode==='advanced'?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsViewMode='advanced';window.statsSub='${_coreIds.has(window.statsSub||'overview')?'starsystem':(window.statsSub||'starsystem')}';localStorage.setItem('su_statsSub',window.statsSub);render()">🧠 심화 분석</button>
+    </div>
+    <span class="stats-modebar-hint">${window._statsViewMode==='core'?'자주 보는 핵심 지표 중심':'세부 비교·추세·매트릭스 중심'}</span>
   </div>`;
   // 1행: 그룹 pill 바
-  h+=`<div class="fbar utilbar utilbar--scroll no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:10px;align-items:center">`;
+  h+=`<div class="stats-grouprow fbar no-export">`;
   // (요청사항) 통계탭 필터는 맨 좌측(개인 버튼 왼쪽). 단, '항상 펼침'이면 버튼 숨김
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
   if(_enableSubFilter && !_lockOpen){
@@ -367,7 +381,7 @@ function rStats(C,T){
   // (A안) 필터가 열렸을 때만 하위 탭 + 전역필터 표시
   if((_enableSubFilter?window._statsFilterOpen:true)){
   // 하위 탭 pill 바
-  h+=`<div class="fbar utilbar utilbar--scroll no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin:-2px 0 10px">`;
+  h+=`<div class="stats-subrow fbar no-export" style="margin:-2px 0 10px">`;
   _curGrp.tabs.forEach(o=>{
     h+=`<button class="pill ${(window.statsSub||'overview')===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()">${o.lbl}</button>`;
   });

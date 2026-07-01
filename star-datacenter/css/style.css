@@ -14063,3 +14063,25 @@ body.dark .sharecard-modal-hdr { border-color: rgba(255,255,255,.07) !important;
 
 /* 다크모드 matchdetail */
 body.dark .modal--matchdetail .mbox--matchdetail { border-color: rgba(255,255,255,.06) !important; }
+
+/* ── 대전기록(기록실) 탭: 그룹/하위메뉴 버튼 간격 확대 ── */
+.hist-topbar-left { gap: 14px !important; }
+.hist-inlinebar { gap: 14px !important; }
+@media (max-width: 768px) {
+  .hist-topbar-left { gap: 10px !important; }
+  .hist-inlinebar { gap: 10px !important; }
+}
+
+/* ── 티어 순위표 탭: 상단 모드 버튼 간격 확대 ── */
+.tier-toolbar-card .fbar { gap: 14px !important; }
+.tier-toolbar-card .tier-filter-chiprow { gap: 12px !important; }
+@media (max-width: 768px) {
+  .tier-toolbar-card .fbar { gap: 10px !important; }
+  .tier-toolbar-card .tier-filter-chiprow { gap: 9px !important; }
+}
+
+/* ── 스트리머 탭: 상단 필터/보기모드 버튼 간격 확대 ── */
+.streamer-toolbar-card .fbar { gap: 14px !important; }
+@media (max-width: 768px) {
+  .streamer-toolbar-card .fbar { gap: 10px !important; }
+}

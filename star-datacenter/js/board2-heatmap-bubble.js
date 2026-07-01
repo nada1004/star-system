@@ -97,7 +97,7 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
       const safeNameAttr = escA(p && p.name || '');
       const tierCol1 = (typeof getTierBtnColor==='function'&&p&&p.tier)?getTierBtnColor(p.tier):'#64748b';
       const tierTxt1 = (typeof getTierBtnTextColor==='function'&&p&&p.tier)?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
-      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+color+'55" onclick="_b2HeatmapCloseAll();openPlayerModal(\'+'+safeNameAttr.replace(/'/g,"\\'")+'\')">';
+      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+color+'55" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
       if (safePhoto) {
         bodyHtml += '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'+ 
           '<div class="b2hm2-pcard-avatar" style="display:none;background:linear-gradient(160deg,'+color+'44,'+color+'22);color:'+color+'">'+ escH(initials)+'</div>';
@@ -186,7 +186,7 @@ function _b2HeatmapShowAllPopup(uid, univName, color){
       const safeNameAttr2 = escA(p && p.name || '');
       const tierCol2 = (typeof getTierBtnColor==='function'&&p&&p.tier)?getTierBtnColor(p.tier):'#64748b';
       const tierTxt2 = (typeof getTierBtnTextColor==='function'&&p&&p.tier)?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
-      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="_b2HeatmapCloseAll();openPlayerModal(\'+'+safeNameAttr.replace(/'/g,"\\'")+'\')">';
+      bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
       if (safePhoto) {
         bodyHtml += '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'+ 
           '<div class="b2hm2-pcard-avatar" style="display:none;background:linear-gradient(160deg,'+pColor+'44,'+pColor+'22);color:'+pColor+'">'+ escH(initials)+'</div>';
