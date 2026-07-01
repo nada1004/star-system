@@ -368,6 +368,11 @@ function _b2WeeklyBriefingView() {
       .slice()
       .sort((a, b) => ((b.winRate ?? -1) - (a.winRate ?? -1)) || (b.total - a.total));
     const bestWrPlayer = bestWrPlayers[0] || null;
+    const mostWinsPlayers = activePlayers
+      .filter(s => (s.wins || 0) > 0)
+      .slice()
+      .sort((a, b) => (b.wins - a.wins) || (b.total - a.total) || ((b.winRate ?? -1) - (a.winRate ?? -1)));
+    const mostWinsPlayer = mostWinsPlayers[0] || null;
     const mostActivePlayers = activePlayers
       .filter(s => s.total > 0)
       .slice()
@@ -1880,6 +1885,31 @@ function _b2WeeklyBriefingView() {
             `).join('')}
           </div>` : ''}
         ` : `<div class="b2w2-highlight-desc">경기 기록이 없습니다.</div>`}
+      </article>
+      <article class="b2w2-highlight-card" style="--hc-top:#f97316">
+        <div class="b2w2-highlight-kicker" style="color:#f97316">🏆 승수 지표</div>
+        <div class="b2w2-highlight-title">최다 승수</div>
+        ${mostWinsPlayer ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-size:18px;font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${mostWinsPlayer.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${mostWinsPlayer.p?.name || '-'}</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px">${String(mostWinsPlayer.p?.univ || '무소속')}</div>
+            </div>
+            <span class="b2w2-note-chip" style="border-color:#fed7aa;color:#c2410c;background:#fff7ed">${mostWinsPlayer.wins}승</span>
+          </div>
+          <div class="b2w2-highlight-list">
+            <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">전적</span><strong style="font-size:12px;color:var(--text1)">${mostWinsPlayer.total}전 ${mostWinsPlayer.wins}승 ${mostWinsPlayer.losses}패</strong></div>
+          </div>
+          ${mostWinsPlayers.length > 1 ? `
+          <div class="b2w2-highlight-list" style="margin-top:4px;padding-top:8px;border-top:1px dashed rgba(148,163,184,.25)">
+            ${mostWinsPlayers.slice(1, 3).map((s, idx) => `
+              <div class="b2w2-highlight-row">
+                <span style="font-size:12px;font-weight:800;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${idx + 2}. ${s.p?.name || '-'}</span>
+                <strong style="font-size:11px;color:#c2410c">${s.wins}승</strong>
+              </div>
+            `).join('')}
+          </div>` : ''}
+        ` : `<div class="b2w2-highlight-desc">승리 기록이 없습니다.</div>`}
       </article>
       ${(() => {
         const _profileMvp = mvp || monthlyTopPlayers[0] || null;
