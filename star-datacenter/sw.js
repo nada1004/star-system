@@ -15,7 +15,7 @@
  *  → 이전 캐시가 모두 삭제되고 새 버전으로 교체됩니다.
  */
 
-const CACHE_VERSION = 'v20260629-01';
+const CACHE_VERSION = 'v20260701-04';
 
 const CACHE_NAMES = {
   immutable: `immutable-${CACHE_VERSION}`,  // 번들/버전 쿼리 파일 (장기 캐시)
@@ -78,6 +78,9 @@ self.addEventListener('activate', event => {
 // ─────────────────────────────────────────
 function classify(url) {
   const { pathname, search, hostname } = url;
+  try{
+    if(self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') return 'network-only';
+  }catch(e){}
 
   // API — 캐시 안 함
   if (pathname.startsWith('/api/')) return 'network-only';

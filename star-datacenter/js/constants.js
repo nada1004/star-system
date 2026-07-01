@@ -1177,7 +1177,7 @@ function _normalizeLoadedPlayers(list){
   try{
     let changed = false;
     const next = (Array.isArray(list) ? list : []).map(p=>{
-      if(!p || typeof p !== 'object') return p;
+      if(!p || typeof p !== 'object'){ changed = true; return null; }
       const n = { ...p };
       const rawType = String(n.gameType || '').trim().toLowerCase();
       if(rawType === 'general' || n.gameType === '종합게임'){
@@ -1204,7 +1204,7 @@ function _normalizeLoadedPlayers(list){
         changed = true;
       }
       return n;
-    });
+    }).filter(Boolean);
     try{ window._playerSchemaNeedsSave = window._playerSchemaNeedsSave || changed; }catch(e){}
     return next;
   }catch(e){
@@ -1222,9 +1222,10 @@ function _unpackPlayers(raw){
     const res=d.res||[], opp=d.opp||[], race=d.race||[], map=d.map||[], univ=d.univ||[], mode=d.mode||[];
     const get=(arr,i)=> (i==null||i<0)?'':(arr[i]||'');
     return _normalizeLoadedPlayers(raw.p.map(pp=>{
-      const p={...pp};
+      const base = (pp && typeof pp === 'object') ? pp : {};
+      const p={...base};
       const hp=Array.isArray(p.h)?p.h:[];
-      p.history = hp.map(r=>({
+      p.history = hp.filter(r=>Array.isArray(r)).map(r=>({
         date: r[0]||'',
         time: r[1]||0,
         result: get(res, r[2]),
@@ -1272,7 +1273,14 @@ try{
     }, 0);
   }
 }catch(e){}
-let boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
+var boardOrder = J('su_boardOrder') || []; // 현황판 대학 순서
+var b2LabelAlpha  = J('su_b2la')  ?? 16;
+var b2BgAlpha     = J('su_b2ba')  ?? 9;
+var b2BgImgAlpha      = J('su_b2bia')  ?? 12;
+var b2FreeBgAlpha     = J('su_b2fba')  ?? 25;
+var b2FreeTierBgAlpha = J('su_b2ftba') ?? 15;
+var b2ProfileBgAlpha  = J('su_b2pba') ?? 10;
+function _b2AlphaHex(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); }
 var univCfg    = J('su_u')  || [{name:'흑카데미',color:'#1e3a8a'},{name:'JSA',color:'#c2410c'},{name:'늪지대',color:'#15803d'},{name:'무소속',color:'#6b7280'}];
 let maps       = J('su_m')  || ['투혼','서킷','블리츠','신 개마고원'];
 let userMapAlias = J('su_mAlias') || {};   // 사용자 정의 맵 약자 { '약자': '전체이름' }
@@ -1360,6 +1368,7 @@ const STATUS_ICON_DEFS = {
 let _customStatusIcons = _ICON_LEGACY_LOAD_ENABLED ? (J('su_si_customs') || []) : [];
 function _rebuildCustomStatusDefs(){
   Object.keys(STATUS_ICON_DEFS).filter(k=>k.startsWith('_c')).forEach(k=>delete STATUS_ICON_DEFS[k]);
+  if(!Array.isArray(_customStatusIcons)) _customStatusIcons = [];
   _customStatusIcons.forEach((c,i)=>{ STATUS_ICON_DEFS['_c'+i]={label:c.label||'커스텀'+(i+1),emoji:c.emoji}; });
 }
 _rebuildCustomStatusDefs();
@@ -1376,9 +1385,9 @@ function _iconNormalizeState(v){
 }
 function _iconApplyState(v){
   const s=_iconNormalizeState(v);
-  playerStatusIcons = {...s.playerStatusIcons};
-  playerStatusExpiry = {...s.playerStatusExpiry};
-  _customStatusIcons = [...s.customStatusIcons];
+  playerStatusIcons = s.playerStatusIcons ? {...s.playerStatusIcons} : {};
+  playerStatusExpiry = s.playerStatusExpiry ? {...s.playerStatusExpiry} : {};
+  _customStatusIcons = Array.isArray(s.customStatusIcons) ? [...s.customStatusIcons] : [];
   _rebuildCustomStatusDefs();
   return s;
 }

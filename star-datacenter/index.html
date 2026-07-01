@@ -18,9 +18,20 @@
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+    const SWV = '20260701-04';
+    try{
+      const prev = localStorage.getItem('su_sw_v') || '';
+      if(prev !== SWV && navigator.serviceWorker.controller){
+        const ch = new MessageChannel();
+        ch.port1.onmessage = () => { try{ location.reload(); }catch(e){} };
+        navigator.serviceWorker.controller.postMessage({ type:'CLEAR_CACHE' }, [ch.port2]);
+        localStorage.setItem('su_sw_v', SWV);
+      }
+    }catch(e){}
+    navigator.serviceWorker.register('/sw.js?v=20260701-04', { scope: '/' })
       .then(reg => {
         console.log('[SW] 등록 완료:', reg.scope);
+        try{ reg.update(); }catch(e){}
         // 새 버전 감지 시 자동 활성화
         reg.addEventListener('updatefound', () => {
           const nw = reg.installing;
@@ -632,7 +643,7 @@ if ('serviceWorker' in navigator) {
 
 <script defer src="js/config.js"></script>
 <script defer src="js/match-store-idb.js?v=20260504-01"></script>
-<script defer src="js/constants.js?v=20260629-split"></script>
+<script defer src="js/constants.js?v=20260701-fix03"></script>
 <script defer src="js/constants-save.js?v=20260629-split"></script>
 <script defer src="js/constants-game.js?v=20260629-split"></script>
 <script defer src="js/constants-tab-colors.js?v=20260629-split"></script>
@@ -688,7 +699,7 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/render-core.js?v=20260521-03"></script>
 <script defer src="js/render-nav-lazy.js?v=20260502-09"></script>
 <script defer src="js/render-iconify-ui.js?v=20260501-34"></script>
-<script defer src="js/render-capture-utils.js?v=20260501-48"></script>
+<script defer src="js/render-capture-utils.js?v=20260701-fix03"></script>
 <script defer src="js/render-share-utils.js?v=20260504-02"></script>
 <script defer src="js/render-merged-tabs.js?v=20260502-05"></script>
 <script defer src="js/render-standalone-utils.js?v=20260501-48"></script>
@@ -759,20 +770,20 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/sync/cloud-status.js?v=20260503-01"></script>
 <!-- html2canvas 라이브러리 직접 로드 (ensureHtml2Canvas와 동일 버전으로 통일) -->
 <script defer crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script defer src="js/cloud-board-state.js?v=20260629-split"></script>
+<script defer src="js/cloud-board-state.js?v=20260701-fix03"></script>
 <script defer src="js/cloud-board-render.js?v=20260629-split"></script>
 <script defer src="js/cloud-board-drag.js?v=20260629-split"></script>
 <script defer src="js/cloud-board-rank-sync.js?v=20260629-split"></script>
 <script defer src="js/init.js?v=20260521-03"></script>
 <script defer src="js/board2-image-utils.js?v=20260504-01"></script>
 <script defer src="js/board2-card-utils.js?v=20260501-10"></script>
-<script defer src="js/board2-core.js?v=20260629-split"></script>
+<script defer src="js/board2-core.js?v=20260701-fix03"></script>
 <script defer src="js/board2-univ-views.js?v=20260629-split"></script>
 <script defer src="js/board2-players.js?v=20260629-split"></script>
 <script defer src="js/board2-analytics.js?v=20260629-split"></script>
 <script defer src="js/board2-heatmap-bubble.js?v=20260629-split"></script>
 <script defer src="js/board2-briefing-data.js?v=20260629-split"></script>
-<script defer src="js/board2-briefing.js?v=20260629-split"></script>
+<script defer src="js/board2-briefing.js?v=20260701-fix03"></script>
 <!-- (성능) 챗봇은 열 때 지연 로딩 (render-core.js) -->
 <script defer src="js/mobile-bar.js?v=20260507-01"></script>
 

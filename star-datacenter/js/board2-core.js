@@ -61,16 +61,16 @@ if (typeof _b2NameTag !== 'function') {
   };
 }
 
-let _b2View = 'univ';
-let _b2SaveUniv = '전체';
-let _b2LineupUniv = '';
-let _b2Collapsed = new Set();
+var _b2View = 'univ';
+var _b2SaveUniv = '전체';
+var _b2LineupUniv = '';
+var _b2Collapsed = new Set();
 // 프로필 탭 필터 변수
-let _b2PlayersUnivFilter = '전체';
-let _b2PlayersFilter = 'all'; // 'all' | 'P' | 'T' | 'Z'
-let _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' | '유스'
-let _b2SelectedPlayer = null;
-let _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
+var _b2PlayersUnivFilter = '전체';
+var _b2PlayersFilter = 'all'; // 'all' | 'P' | 'T' | 'Z'
+var _b2PlayersTierFilter = '전체'; // '전체' | '0' | '1' | '2' | '3' | '4' | '유스'
+var _b2SelectedPlayer = null;
+var _b2PlayersSort = 'default'; // 'default' | 'name' | 'tier'
 const _b2BgImageMeta = {};
 let _b2AutoFitResizeBound = false;
 
@@ -306,13 +306,15 @@ function _b2DateNum(s) {
 }
 
 // 대학별 현황판 색상 진하기 (0~100, %)
-let b2LabelAlpha  = J('su_b2la')  ?? 16;
-let b2BgAlpha     = J('su_b2ba')  ?? 9;
-let b2BgImgAlpha      = J('su_b2bia')  ?? 12; // 배경 이미지 진하기 기본값 (0~100, %)
-let b2FreeBgAlpha     = J('su_b2fba')  ?? 25; // 무소속 배경 진하기 (기본 25%)
-let b2FreeTierBgAlpha = J('su_b2ftba') ?? 15; // 무소속 티어 우측 배경 진하기 (기본 15%)
-let b2ProfileBgAlpha  = J('su_b2pba') ?? 10; // 프로필 탭 배경 밝기 (기본 10%)
-function _b2AlphaHex(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); }
+var b2LabelAlpha  = typeof b2LabelAlpha  !== 'undefined' ? b2LabelAlpha  : (J('su_b2la')  ?? 16);
+var b2BgAlpha     = typeof b2BgAlpha     !== 'undefined' ? b2BgAlpha     : (J('su_b2ba')  ?? 9);
+var b2BgImgAlpha      = typeof b2BgImgAlpha      !== 'undefined' ? b2BgImgAlpha      : (J('su_b2bia')  ?? 12);
+var b2FreeBgAlpha     = typeof b2FreeBgAlpha     !== 'undefined' ? b2FreeBgAlpha     : (J('su_b2fba')  ?? 25);
+var b2FreeTierBgAlpha = typeof b2FreeTierBgAlpha !== 'undefined' ? b2FreeTierBgAlpha : (J('su_b2ftba') ?? 15);
+var b2ProfileBgAlpha  = typeof b2ProfileBgAlpha  !== 'undefined' ? b2ProfileBgAlpha  : (J('su_b2pba') ?? 10);
+if(typeof _b2AlphaHex !== 'function'){
+  var _b2AlphaHex = function(pct){ return Math.round((pct||0)/100*255).toString(16).padStart(2,'0'); };
+}
 
 function _b2ToggleCard(btn, univName) {
   if (_b2Collapsed.has(univName)) _b2Collapsed.delete(univName); else _b2Collapsed.add(univName);

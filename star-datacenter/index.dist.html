@@ -18,9 +18,20 @@
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+    const SWV = '20260701-04';
+    try{
+      const prev = localStorage.getItem('su_sw_v') || '';
+      if(prev !== SWV && navigator.serviceWorker.controller){
+        const ch = new MessageChannel();
+        ch.port1.onmessage = () => { try{ location.reload(); }catch(e){} };
+        navigator.serviceWorker.controller.postMessage({ type:'CLEAR_CACHE' }, [ch.port2]);
+        localStorage.setItem('su_sw_v', SWV);
+      }
+    }catch(e){}
+    navigator.serviceWorker.register('/sw.js?v=20260701-04', { scope: '/' })
       .then(reg => {
         console.log('[SW] 등록 완료:', reg.scope);
+        try{ reg.update(); }catch(e){}
         // 새 버전 감지 시 자동 활성화
         reg.addEventListener('updatefound', () => {
           const nw = reg.installing;

@@ -368,13 +368,6 @@ function _b2WeeklyBriefingView() {
       .slice()
       .sort((a, b) => ((b.winRate ?? -1) - (a.winRate ?? -1)) || (b.total - a.total));
     const bestWrPlayer = bestWrPlayers[0] || null;
-    // 최다 공식전 참여 — 스폰서전/스크리미지/연습이 아닌 모드만 집계
-    const officialPlayers = activePlayers
-      .map(s => ({ ...s, offTotal: s.offWins + s.offLosses }))
-      .filter(s => s.offTotal > 0)
-      .sort((a, b) => b.offTotal - a.offTotal);
-    const officialPlayer = officialPlayers[0] || null;
-    // 최다 전체 경기 참여 (공식전+스폰서전 합산)
     const mostActivePlayers = activePlayers
       .filter(s => s.total > 0)
       .slice()
@@ -1569,7 +1562,7 @@ function _b2WeeklyBriefingView() {
     const _periodDays = diffDays;
 
     // ── 헤더 컨트롤
-    h += `<div class="b2w2-wrap">
+    h += `<div class="b2w2-wrap" id="b2w2-export-root">
       <div class="b2w2-masthead">
         <span class="b2w2-masthead-brand"><span class="b2w2-masthead-mark"></span>STAR DATACENTER</span>
         <span>${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)} 발행</span>
@@ -1671,6 +1664,8 @@ function _b2WeeklyBriefingView() {
         ${univList.map(u=>`<option value="${u.name}"${selUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
       </select>
       <button type="button" class="b2w2-btn" onclick="_b2ApplyBriefingCustomFromInputs()">조회</button>
+      <button type="button" class="b2w2-btn no-export" onclick="captureBriefingArticle('split')" style="background:#111827">📰 저장(분할)</button>
+      <button type="button" class="b2w2-btn no-export" onclick="captureBriefingArticle('single')" style="background:#334155">📰 저장(1장)</button>
       <span style="font-size:11px;color:var(--text3);margin-left:auto">${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}</span>
       <span style="font-size:10px;color:var(--text3)">(${_briefingInfo.prevLabel}: ${fmtDate(prevDateFrom)}~${fmtDate(prevDateTo)})</span>
     </div>
@@ -1861,31 +1856,6 @@ function _b2WeeklyBriefingView() {
           </div>` : ''}
         ` : `<div class="b2w2-highlight-desc">3전 이상 기록한 스트리머가 없습니다.</div>`}
       </article>
-      <article class="b2w2-highlight-card" style="--hc-top:#2563eb">
-        <div class="b2w2-highlight-kicker" style="color:#2563eb">🎯 공식전 지표</div>
-        <div class="b2w2-highlight-title">최다 공식전 참여</div>
-        ${officialPlayer ? `
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-            <div>
-              <div style="font-size:18px;font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${officialPlayer.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${officialPlayer.p?.name || '-'}</div>
-              <div style="font-size:12px;color:var(--text3);margin-top:4px">${String(officialPlayer.p?.univ || '무소속')}</div>
-            </div>
-            <span class="b2w2-note-chip" style="border-color:#bfdbfe;color:#2563eb;background:#eff6ff">${officialPlayer.offTotal}전</span>
-          </div>
-          <div class="b2w2-highlight-list">
-            <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">공식전 전적</span><strong style="font-size:12px;color:var(--text1)">${officialPlayer.offWins}승 ${officialPlayer.offLosses}패</strong></div>
-          </div>
-          ${officialPlayers.length > 1 ? `
-          <div class="b2w2-highlight-list" style="margin-top:4px;padding-top:8px;border-top:1px dashed rgba(148,163,184,.25)">
-            ${officialPlayers.slice(1, 3).map((s, idx) => `
-              <div class="b2w2-highlight-row">
-                <span style="font-size:12px;font-weight:800;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${idx + 2}. ${s.p?.name || '-'}</span>
-                <strong style="font-size:11px;color:#2563eb">${s.offTotal}전</strong>
-              </div>
-            `).join('')}
-          </div>` : ''}
-        ` : `<div class="b2w2-highlight-desc">공식전 기록이 없습니다.</div>`}
-      </article>
       <article class="b2w2-highlight-card" style="--hc-top:#7c3aed">
         <div class="b2w2-highlight-kicker" style="color:#7c3aed">⚔️ 전체 경기 지표</div>
         <div class="b2w2-highlight-title">최다 전체 경기</div>
@@ -1899,7 +1869,6 @@ function _b2WeeklyBriefingView() {
           </div>
           <div class="b2w2-highlight-list">
             <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">전체 전적</span><strong style="font-size:12px;color:var(--text1)">${mostActivePlayer.wins}승 ${mostActivePlayer.losses}패 · ${mostActivePlayer.winRate ?? '-'}%</strong></div>
-            ${(mostActivePlayer.offWins + mostActivePlayer.offLosses) > 0 ? `<div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">공식전</span><strong style="font-size:12px;color:var(--text1)">${mostActivePlayer.offWins + mostActivePlayer.offLosses}전</strong></div>` : ''}
           </div>
           ${mostActivePlayers.length > 1 ? `
           <div class="b2w2-highlight-list" style="margin-top:4px;padding-top:8px;border-top:1px dashed rgba(148,163,184,.25)">
@@ -2001,7 +1970,6 @@ function _b2WeeklyBriefingView() {
                 </div>
                 <div class="b2w2-ace-badges">
                   <span class="b2w2-ace-badge" style="background:${aceTone.badgeBg};color:${aceTone.badgeCol};border-color:${aceTone.badgeBorder}">${aceTone.label}</span>
-                  ${(ace.offTotal || 0) > 0 ? `<span class="b2w2-ace-badge">공식전 ${ace.offTotal}전</span>` : ''}
                   ${(ace.netWins || 0) >= 3 ? `<span class="b2w2-ace-badge">순승 강세</span>` : ''}
                 </div>
               </div>`;
@@ -2149,7 +2117,6 @@ function _b2WeeklyBriefingView() {
                 <div class="b2w2-card-spotlight-sub">
                   <span>${univMVP.wins}승 ${univMVP.losses}패</span>
                   <span>승률 ${univMVP.winRate}%</span>
-                  <span>공식전 ${univMVP.offWins + univMVP.offLosses}전</span>
                 </div>
               ` : `
                 <div class="b2w2-card-spotlight-kicker">대학별 에이스</div>
@@ -2164,7 +2131,6 @@ function _b2WeeklyBriefingView() {
         <th style="width:28px">#</th>
         <th>선수</th>
         <th>전체 전적</th>
-        <th>공식전</th>
         <th>최근 폼</th>
       </tr></thead><tbody>`;
 
@@ -2194,11 +2160,6 @@ function _b2WeeklyBriefingView() {
             <span style="color:#10b981;font-size:11px"> ${wins}승</span>
             <span style="color:#ef4444;font-size:11px"> ${losses}패</span>
             ${winRate!==null?`<span style="font-size:11px;font-weight:800;color:${wrCls};margin-left:3px">${winRate}%</span>${_b2WeeklyDelta(winRate,prevWr2)}`:''}
-          </td>
-          <td>
-            ${offWins+offLosses>0
-              ?`<span style="font-size:11px">${offWins+offLosses}전 <span style="color:#10b981">${offWins}승</span> <span style="color:#ef4444">${offLosses}패</span></span>`
-              :`<span style="font-size:11px;color:var(--text3)">-</span>`}
           </td>
           <td><div style="display:flex;align-items:center;gap:2px">${_b2WeeklyForm(s.hist)}</div></td>
         </tr>`;

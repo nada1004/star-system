@@ -422,7 +422,7 @@ function saveBoardChipPhotoSettings(){
   try{ if(typeof applyProfileShapeVars==='function') applyProfileShapeVars(); }catch(e){}
 }
 // 현황판 선수 순서: {univ: [name, name, ...]}
-let boardPlayerOrder = J('su_bpo') || {};
+var boardPlayerOrder = J('su_bpo') || {};
 
 function _findBrdCardByUniv(univName, root){
   try{
@@ -949,4 +949,3 @@ function rBoard(C,T){
     _brdPopupListenerAdded = true;
   }
 }
-
