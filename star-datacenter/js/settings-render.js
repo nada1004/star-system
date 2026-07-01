@@ -86,6 +86,7 @@ function rCfg(C,T){
     streamerheader:'🎓 스트리머탭 대학 헤더',
     univlogoimg:'🏫 대학 로고 이미지(URL)',
     b2femco:'🧩 펨코스타일', femcoorder:'🔀 펨코스타일 스타대학 순서', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
+    briefingfx:'🎞️ 브리핑 디자인 & 효과',
     tablabels:'🏷️ 탭 이름(라벨) 설정',
     uisize:'📱 모바일/태블릿 UI 크기',
     cardgap:'🧩 카드 간격(스트리머/티어)',
@@ -133,6 +134,12 @@ function rCfg(C,T){
   const _sfxSoft = Math.max(0,Math.min(100,parseInt(localStorage.getItem('su_rec_side_fx_softness')||'52',10)||52));
   const _sfxEdge = Math.max(2,Math.min(24,parseInt(localStorage.getItem('su_rec_side_fx_edge')||'8',10)||8));
   const _avaScale = Math.round((parseFloat(localStorage.getItem('su_avatar_scale') ?? '1') || 1) * 100);
+  // 🎞️ 브리핑 MVP 카드 효과 (js/board2-briefing.js의 _b2MvpFxDefaults와 기본값 동일하게 유지)
+  const _mvpFxOn = (localStorage.getItem('su_b2mvp_fx_on') ?? '1') === '1';
+  const _mvpFxStyle = (()=>{ const v=localStorage.getItem('su_b2mvp_fx_style'); return ['fade','vignette','topbottom','tint','spotlight','noir','diagonal','glass','none'].includes(v) ? v : 'fade'; })();
+  const _mvpFxIntensity = (()=>{ const n=parseInt(localStorage.getItem('su_b2mvp_fx_intensity'),10); return Number.isFinite(n) ? Math.max(0,Math.min(100,n)) : 45; })();
+  const _mvpDesignMode = (()=>{ const v=localStorage.getItem('su_b2mvp_design_mode'); return ['photo','panel','frame','glasscard','border','ribbon','split','poster'].includes(v) ? v : 'photo'; })();
+  const _briefingTheme = (()=>{ const v=localStorage.getItem('su_b2_briefing_theme'); return ['classic','minimal','vivid','mono','elegant','pastel','luxury','sports','esports','pop','nature','ocean','sunset','neon'].includes(v) ? v : 'classic'; })();
   const _cfgViewMode = (localStorage.getItem('su_cfg_view_mode') || 'basic') === 'advanced' ? 'advanced' : 'basic';
   const _cfgBottomOpen = (()=>{ try{
     const saved=localStorage.getItem('su_cfg_bottom_open');
@@ -192,6 +199,7 @@ function rCfg(C,T){
     boardchip:'현황판 칩, 로고, 프로필 표시 설정',
     oldbright:'현황판 카드와 라벨 밝기 조정',
     boardbg:'현황판 배경 이미지와 라벨 배경 관리',
+    briefingfx:'브리핑 탭 전체 디자인 테마와 MVP 카드 그라디언트 강도/스타일, 카드 디자인 모드 설정',
     tablabels:'상단과 하위 메뉴 이름 변경',
     uisize:'모바일/태블릿 버튼과 글자 크기 조정',
     cardgap:'스트리머/티어 카드형 카드 간격 조정',
@@ -2600,6 +2608,79 @@ ${_scfgD('notice','📢 공지 관리')}
         <span style="font-size:11px;color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="cfg-b2-label-alpha-val">16%</span>
       </div>
       <button class="btn btn-b" onclick="saveOldDashboardBrightness()">💾 저장</button>
+    </div>
+  </details>
+  ${_scfgD('briefingfx','🎞️ 브리핑 디자인 & 효과')}
+    <p style="font-size:12px;color:var(--gray-l);margin-bottom:12px">브리핑 탭 전체 디자인 테마와, 이달/이번주 MVP 카드의 프로필 사진 위 효과 강도·스타일, 카드 디자인 모드를 조절합니다. 변경하면 즉시 반영됩니다.</p>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:16px">
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">🖋️ 브리핑 전체 디자인 테마</label>
+        <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px"
+          onchange="localStorage.setItem('su_b2_briefing_theme',this.value);render()">
+          <option value="classic" ${_briefingTheme==='classic'?'selected':''}>클래식 (기본 · 신문/매거진 톤)</option>
+          <option value="minimal" ${_briefingTheme==='minimal'?'selected':''}>미니멀 (그레이 톤 · 절제된 강조)</option>
+          <option value="vivid" ${_briefingTheme==='vivid'?'selected':''}>비비드 (보라·핑크 포인트 컬러)</option>
+          <option value="mono" ${_briefingTheme==='mono'?'selected':''}>모노 (세피아 신문지 느낌)</option>
+          <option value="elegant" ${_briefingTheme==='elegant'?'selected':''}>엘레강트 (세련된 · 네이비·골드)</option>
+          <option value="pastel" ${_briefingTheme==='pastel'?'selected':''}>파스텔 (이쁜 · 핑크·라벤더)</option>
+          <option value="luxury" ${_briefingTheme==='luxury'?'selected':''}>럭셔리 (화려한 · 블랙·골드)</option>
+          <option value="sports" ${_briefingTheme==='sports'?'selected':''}>스포츠 스타일 (레드·블루 다이나믹)</option>
+          <option value="esports" ${_briefingTheme==='esports'?'selected':''}>e스포츠 스타일 (퍼플·시안 네온)</option>
+          <option value="pop" ${_briefingTheme==='pop'?'selected':''}>팝 컬러 (오렌지·틸 발랄함)</option>
+          <option value="nature" ${_briefingTheme==='nature'?'selected':''}>네이처 (편안한 그린 톤)</option>
+          <option value="ocean" ${_briefingTheme==='ocean'?'selected':''}>오션 (시원한 블루 그라디언트)</option>
+          <option value="sunset" ${_briefingTheme==='sunset'?'selected':''}>선셋 (따뜻한 노을 그라디언트)</option>
+          <option value="neon" ${_briefingTheme==='neon'?'selected':''}>네온 (화려한 · 시안·마젠타)</option>
+        </select>
+        <div style="font-size:10px;color:var(--gray-l);margin-top:4px">헤더, 카드 테두리, 포인트 색상 등 브리핑 탭 전체 색감 톤이 바뀝니다.</div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <label style="font-size:12px;font-weight:700;color:var(--text2)">MVP 카드 그라디언트 효과 사용</label>
+        <input type="checkbox" id="cfg-b2mvp-fx-on" style="width:16px;height:16px" ${_mvpFxOn?'checked':''}
+          onchange="localStorage.setItem('su_b2mvp_fx_on',this.checked?'1':'0');render()">
+      </div>
+      <div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+          <label style="font-size:12px;font-weight:600;color:var(--text2);min-width:70px">효과 강도:</label>
+          <input type="range" id="cfg-b2mvp-fx-intensity" min="0" max="100" step="5" value="${_mvpFxIntensity}" style="flex:1;accent-color:var(--blue)"
+            oninput="document.getElementById('cfg-b2mvp-fx-intensity-val').textContent=this.value+'%'"
+            onchange="localStorage.setItem('su_b2mvp_fx_intensity',this.value);render()">
+          <span id="cfg-b2mvp-fx-intensity-val" style="font-size:11px;color:var(--gray-l);min-width:34px;text-align:right;font-weight:700">${_mvpFxIntensity}%</span>
+        </div>
+        <div style="font-size:10px;color:var(--gray-l)">기본값(45%)이 은은하게 어울립니다. 값이 높을수록 하단이 진하게 어두워집니다.</div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">효과 스타일</label>
+        <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px"
+          onchange="localStorage.setItem('su_b2mvp_fx_style',this.value);render()">
+          <option value="fade" ${_mvpFxStyle==='fade'?'selected':''}>하단 그라디언트 (기본)</option>
+          <option value="vignette" ${_mvpFxStyle==='vignette'?'selected':''}>비네트 (모서리 음영)</option>
+          <option value="topbottom" ${_mvpFxStyle==='topbottom'?'selected':''}>상하 그라디언트</option>
+          <option value="tint" ${_mvpFxStyle==='tint'?'selected':''}>컬러 틴트 (순위 색상)</option>
+          <option value="spotlight" ${_mvpFxStyle==='spotlight'?'selected':''}>스포트라이트 (무대 조명형)</option>
+          <option value="noir" ${_mvpFxStyle==='noir'?'selected':''}>느와르 (고대비 흑백톤)</option>
+          <option value="diagonal" ${_mvpFxStyle==='diagonal'?'selected':''}>대각선 (역동적인 음영)</option>
+          <option value="glass" ${_mvpFxStyle==='glass'?'selected':''}>글래스 (하단 유리질감 패널)</option>
+          <option value="none" ${_mvpFxStyle==='none'?'selected':''}>효과 없음 (원본 그대로)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">카드 디자인 모드</label>
+        <select style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px"
+          onchange="localStorage.setItem('su_b2mvp_design_mode',this.value);render()">
+          <option value="photo" ${_mvpDesignMode==='photo'?'selected':''}>풀사진형 (기본)</option>
+          <option value="panel" ${_mvpDesignMode==='panel'?'selected':''}>하단 패널형</option>
+          <option value="frame" ${_mvpDesignMode==='frame'?'selected':''}>미니멀 프레임형</option>
+          <option value="glasscard" ${_mvpDesignMode==='glasscard'?'selected':''}>글래스카드형 (떠 있는 유리 패널)</option>
+          <option value="border" ${_mvpDesignMode==='border'?'selected':''}>컬러 테두리 강조형</option>
+          <option value="ribbon" ${_mvpDesignMode==='ribbon'?'selected':''}>리본형 (대각선 순위 리본)</option>
+          <option value="split" ${_mvpDesignMode==='split'?'selected':''}>스플릿형 (순위 컬러 라인 강조)</option>
+          <option value="poster" ${_mvpDesignMode==='poster'?'selected':''}>포스터형 (고대비 타이포 강조)</option>
+        </select>
+      </div>
+      <button class="btn btn-w btn-xs" style="align-self:flex-start"
+        onclick="localStorage.removeItem('su_b2mvp_fx_on');localStorage.removeItem('su_b2mvp_fx_intensity');localStorage.removeItem('su_b2mvp_fx_style');localStorage.removeItem('su_b2mvp_design_mode');localStorage.removeItem('su_b2_briefing_theme');render()">↩️ 기본값으로 초기화</button>
     </div>
   </details>
   </div>

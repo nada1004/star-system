@@ -62,7 +62,7 @@
        k.startsWith('su_rec_avatar') || k.startsWith('su_avatar_') ||
        k.startsWith('su_team_color_')) return 'cards';
     if(k.startsWith('su_hdr_') || k.startsWith('su_design_v2') || k==='su_dark' || k.startsWith('su_ui_') || k.startsWith('su_btn_') || k.startsWith('su_app_font_')) return 'ui';
-    if(k.includes('femco') || k.startsWith('su_board') || k==='su_boardOrder' || k==='su_old_board' || k.startsWith('su_board2') || k.startsWith('su_chip')) return 'board';
+    if(k.includes('femco') || k.startsWith('su_board') || k==='su_boardOrder' || k==='su_old_board' || k.startsWith('su_board2') || k.startsWith('su_chip') || k.startsWith('su_b2mvp_') || k==='su_b2_briefing_theme') return 'board';
     if(k.startsWith('su_bgm_') || k.startsWith('su_soop_') || k.startsWith('su_paste_') || k==='su_paste_route_rules' || k.startsWith('su_auto_')) return 'automation';
     if(k.startsWith('su_cal_') || k.startsWith('su_date_')) return 'calendar';
     return 'misc';

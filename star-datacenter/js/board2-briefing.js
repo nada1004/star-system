@@ -38,6 +38,39 @@ function _b2EnsureStyleTag(id, cssText) {
     if ((el.textContent || '') !== css) el.textContent = css;
   } catch (e) {}
 }
+// ── MVP 카드 그라디언트 효과 / 디자인 모드 설정 (설정탭 "브리핑 디자인 & 효과"에서 조정) ──
+function _b2MvpFxDefaults() {
+  return { on: true, style: 'fade', intensity: 45, design: 'photo' };
+}
+const _B2_MVP_FX_STYLES = ['fade', 'vignette', 'topbottom', 'tint', 'spotlight', 'noir', 'diagonal', 'glass', 'none'];
+const _B2_MVP_DESIGNS = ['photo', 'panel', 'frame', 'glasscard', 'border', 'ribbon', 'split', 'poster'];
+function _b2MvpFxLoad() {
+  const d = _b2MvpFxDefaults();
+  try {
+    const onRaw = localStorage.getItem('su_b2mvp_fx_on');
+    const styleRaw = localStorage.getItem('su_b2mvp_fx_style');
+    const intRaw = localStorage.getItem('su_b2mvp_fx_intensity');
+    const designRaw = localStorage.getItem('su_b2mvp_design_mode');
+    const on = onRaw === null ? d.on : onRaw === '1';
+    const style = _B2_MVP_FX_STYLES.includes(styleRaw) ? styleRaw : d.style;
+    const design = _B2_MVP_DESIGNS.includes(designRaw) ? designRaw : d.design;
+    const intN = parseInt(intRaw, 10);
+    const intensity = Number.isFinite(intN) ? Math.max(0, Math.min(100, intN)) : d.intensity;
+    return { on, style, intensity, design };
+  } catch (e) {
+    return d;
+  }
+}
+// ── 브리핑 탭 전체 디자인 테마 (설정탭에서 선택, MVP 카드 외 헤더/카드/색감 톤 전체에 적용) ──
+const _B2_BRIEFING_THEMES = ['classic', 'minimal', 'vivid', 'mono', 'elegant', 'pastel', 'luxury', 'sports', 'esports', 'pop', 'nature', 'ocean', 'sunset', 'neon'];
+function _b2BriefingThemeLoad() {
+  try {
+    const v = localStorage.getItem('su_b2_briefing_theme');
+    return _B2_BRIEFING_THEMES.includes(v) ? v : 'classic';
+  } catch (e) {
+    return 'classic';
+  }
+}
 function _b2IsValidDateStr(s) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '').trim());
 }
@@ -254,6 +287,9 @@ function _b2WeeklyBriefingView() {
     const mvp2 = _b2WeeklyMVP2(curStats, mvp);
     const worstPlayer = _b2WeeklyWorst(curStats);
     // ── 풀배경 사진형 MVP 카드 빌더 (하이라이트 카드 + MVP 트리플 배너 공용) ──
+    const _mvpFx = _b2MvpFxLoad();
+    const _mvpFxOp = ((_mvpFx.on ? _mvpFx.intensity : 0) / 100).toFixed(3);
+    const _mvpFxStyleAttr = _mvpFx.on ? _mvpFx.style : 'none';
     const _mkMvpCard = (s, rank, isWorst, extraClass) => {
       if (!s) return '';
       const mp = s.p;
@@ -284,14 +320,14 @@ function _b2WeeklyBriefingView() {
         ? `${_statItem(s.losses,'패',lossColor)}${_sep}${_statItem(s.wins,'승',winColor)}${_sep}${_statItem((s.winRate??0)+'%','승률',rateColor)}`
         : `${_statItem(s.wins,'승',winColor)}${_sep}${_statItem(s.losses,'패',lossColor)}${_sep}${_statItem((s.winRate??0)+'%','승률',rateColor)}`;
 
-      return `<div class="b2w2-mvp-card ${cardClass}${extraClass ? ' '+extraClass : ''}" onclick="openPlayerModal('${nameEsc}')">
+      return `<div class="b2w2-mvp-card ${cardClass}${extraClass ? ' '+extraClass : ''}" data-fx="${_mvpFxStyleAttr}" data-design="${_mvpFx.design}" style="--b2mvp-fx-op:${_mvpFxOp}" onclick="openPlayerModal('${nameEsc}')">
         ${photo
           ? `<img class="b2w2-mvp-bg" src="${photo}" alt="${mp.name||''}"
                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
           : ''}
         <div class="b2w2-mvp-bg-fallback" style="${photo?'display:none':''}">${initial}</div>
         <div class="b2w2-mvp-overlay"></div>
-        <div class="b2w2-mvp-top-badge">${badgeEmoji} ${badgeText}</div>
+        <div class="b2w2-mvp-top-badge">${_mvpFx.design==='ribbon' ? badgeText : `${badgeEmoji} ${badgeText}`}</div>
         <div class="b2w2-mvp-bottom">
           <div class="b2w2-mvp-id">
             <div class="b2w2-mvp-name">${mp.name||'-'}</div>
@@ -860,7 +896,25 @@ function _b2WeeklyBriefingView() {
         transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease;
         isolation: isolate;
       }
-      .b2w2-mvp-card:hover { transform: translateY(-4px) scale(1.012); box-shadow: 0 20px 48px rgba(0,0,0,.22) }
+      .b2w2-mvp-card:hover {
+        transform: translateY(-4px) scale(1.012);
+        /* 검은색 그림자 + 현재 브리핑 테마의 포인트 컬러를 살짝 얹은 글로우 링 — 테마마다 hover 느낌이 달라짐 */
+        box-shadow: 0 20px 44px rgba(0,0,0,.20), 0 0 0 1px var(--b2w-accent-shadow-strong, rgba(0,0,0,.12)), 0 10px 26px var(--b2w-accent-shadow, rgba(0,0,0,.10));
+      }
+      /* hover 시 카드 위로 대각선 하이라이트가 한 번 스윽 지나가는 샤인 스윕 연출 */
+      .b2w2-mvp-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        pointer-events: none;
+        background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,.32) 50%, transparent 58%);
+        transform: translateX(-130%);
+        transition: transform .6s ease;
+      }
+      .b2w2-mvp-card:hover::after {
+        transform: translateX(130%);
+      }
 
       /* 배경 이미지 레이어 */
       .b2w2-mvp-bg {
@@ -888,14 +942,481 @@ function _b2WeeklyBriefingView() {
         letter-spacing: -.04em;
       }
 
-      /* 요청에 따라 프로필 이미지 위 그라디언트 효과 제거 — 원본 그대로 노출 */
+      /* 프로필 이미지 위 가독성 보조 오버레이 — 강도/스타일은 설정탭 "브리핑 MVP 카드 효과"에서 조절 가능 */
       .b2w2-mvp-overlay {
         display: block;
         position: absolute;
         inset: 0;
         z-index: 1;
         pointer-events: none;
-        background: linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,.10) 25%, rgba(15,23,42,.52) 65%, rgba(2,6,23,.86) 100%);
+        /* 기본(fade) 스타일: --b2mvp-fx-op(0~1)로 강도를 조절, 원본 100% 강도 기준 색상값은 유지 */
+        background: linear-gradient(180deg,
+          rgba(15,23,42,0) 0%,
+          rgba(15,23,42, calc(var(--b2mvp-fx-op, 0.45) * 0.10)) 25%,
+          rgba(15,23,42, calc(var(--b2mvp-fx-op, 0.45) * 0.52)) 65%,
+          rgba(2,6,23, calc(var(--b2mvp-fx-op, 0.45) * 0.86)) 100%);
+      }
+      /* 효과 스타일: 비네트 — 하단 중앙에서 은은하게 퍼지는 음영 */
+      .b2w2-mvp-card[data-fx="vignette"] .b2w2-mvp-overlay {
+        background:
+          radial-gradient(ellipse at 50% 118%, rgba(2,6,23, calc(var(--b2mvp-fx-op, 0.45) * 1.35)) 0%, rgba(2,6,23,0) 60%),
+          linear-gradient(180deg, rgba(15,23,42,0) 62%, rgba(15,23,42, calc(var(--b2mvp-fx-op, 0.45) * 0.42)) 100%);
+      }
+      /* 효과 스타일: 상하 그라디언트 — 상단 뱃지 가독성까지 함께 보강 */
+      .b2w2-mvp-card[data-fx="topbottom"] .b2w2-mvp-overlay {
+        background: linear-gradient(180deg,
+          rgba(15,23,42, calc(var(--b2mvp-fx-op, 0.45) * 0.34)) 0%,
+          rgba(15,23,42,0) 22%,
+          rgba(15,23,42,0) 55%,
+          rgba(2,6,23, calc(var(--b2mvp-fx-op, 0.45) * 0.80)) 100%);
+      }
+      /* 효과 스타일: 컬러 틴트 — 순위 색상을 은은하게 얹은 하단 그라디언트 */
+      .b2w2-mvp-card.b2w2-mvp-first[data-fx="tint"] .b2w2-mvp-overlay {
+        background: linear-gradient(180deg, rgba(245,158,11,0) 0%, rgba(245,158,11, calc(var(--b2mvp-fx-op, 0.45) * 0.16)) 35%, rgba(120,53,15, calc(var(--b2mvp-fx-op, 0.45) * 0.80)) 100%);
+      }
+      .b2w2-mvp-card.b2w2-mvp-second[data-fx="tint"] .b2w2-mvp-overlay {
+        background: linear-gradient(180deg, rgba(148,163,184,0) 0%, rgba(148,163,184, calc(var(--b2mvp-fx-op, 0.45) * 0.14)) 35%, rgba(30,41,59, calc(var(--b2mvp-fx-op, 0.45) * 0.80)) 100%);
+      }
+      .b2w2-mvp-card.b2w2-mvp-worst[data-fx="tint"] .b2w2-mvp-overlay {
+        background: linear-gradient(180deg, rgba(239,68,68,0) 0%, rgba(239,68,68, calc(var(--b2mvp-fx-op, 0.45) * 0.16)) 35%, rgba(69,10,10, calc(var(--b2mvp-fx-op, 0.45) * 0.80)) 100%);
+      }
+      /* 효과 스타일: 없음 — 원본 사진 그대로 노출 (텍스트 자체 그림자로만 가독성 확보) */
+      .b2w2-mvp-card[data-fx="none"] .b2w2-mvp-overlay {
+        display: none;
+      }
+      /* 효과 스타일: 스포트라이트 — 하단 중앙에서 무대 조명처럼 은은하게 번지는 음영 */
+      .b2w2-mvp-card[data-fx="spotlight"] .b2w2-mvp-overlay {
+        background: radial-gradient(ellipse 140% 90% at 50% 100%,
+          rgba(2,6,23, calc(var(--b2mvp-fx-op, 0.45) * 0.95)) 0%,
+          rgba(2,6,23, calc(var(--b2mvp-fx-op, 0.45) * 0.40)) 45%,
+          rgba(2,6,23,0) 78%);
+      }
+      /* 효과 스타일: 느와르 — 고대비 흑백톤 + 짙은 하단 그라디언트 */
+      .b2w2-mvp-card[data-fx="noir"] .b2w2-mvp-bg {
+        filter: grayscale(.6) contrast(1.18) brightness(.96);
+      }
+      .b2w2-mvp-card[data-fx="noir"] .b2w2-mvp-overlay {
+        background: linear-gradient(180deg,
+          rgba(0,0,0,0) 0%,
+          rgba(0,0,0, calc(var(--b2mvp-fx-op, 0.45) * 0.28)) 30%,
+          rgba(0,0,0, calc(var(--b2mvp-fx-op, 0.45) * 0.95)) 100%);
+      }
+      /* 효과 스타일: 대각선 — 모서리에서 비스듬히 짙어지는 그라디언트 (역동적인 느낌) */
+      .b2w2-mvp-card[data-fx="diagonal"] .b2w2-mvp-overlay {
+        background:
+          linear-gradient(135deg, rgba(2,6,23, calc(var(--b2mvp-fx-op, 0.45) * 0.55)) 0%, rgba(2,6,23,0) 48%),
+          linear-gradient(180deg, rgba(15,23,42,0) 55%, rgba(2,6,23, calc(var(--b2mvp-fx-op, 0.45) * 0.72)) 100%);
+      }
+      /* 효과 스타일: 글래스 — 그라디언트 대신 하단부에 반투명 유리질감 패널 */
+      .b2w2-mvp-card[data-fx="glass"] .b2w2-mvp-overlay {
+        display: none;
+      }
+      .b2w2-mvp-card[data-fx="glass"] .b2w2-mvp-bottom {
+        background: rgba(15,23,42, calc(var(--b2mvp-fx-op, 0.45) * 0.34));
+        backdrop-filter: blur(calc(4px + var(--b2mvp-fx-op, 0.45) * 10px)) saturate(160%);
+        -webkit-backdrop-filter: blur(calc(4px + var(--b2mvp-fx-op, 0.45) * 10px)) saturate(160%);
+        border-top: 1px solid rgba(255,255,255, calc(var(--b2mvp-fx-op, 0.45) * 0.30));
+      }
+      /* 디자인 모드: 하단 패널형 — 사진 전체 대신 하단 바 형태로만 어둡게 처리 */
+      .b2w2-mvp-card[data-design="panel"] .b2w2-mvp-overlay {
+        display: none;
+      }
+      .b2w2-mvp-card[data-design="panel"] .b2w2-mvp-bottom {
+        background: linear-gradient(180deg,
+          rgba(2,6,23,0) 0%,
+          rgba(2,6,23, calc(0.55 + var(--b2mvp-fx-op, 0.45) * 0.45)) 32%,
+          rgba(2,6,23, calc(0.55 + var(--b2mvp-fx-op, 0.45) * 0.45)) 100%);
+        border-radius: 0 0 16px 16px;
+        padding-top: 16px;
+      }
+      /* 디자인 모드: 미니멀 프레임형 — 오버레이 없이 이름표를 떠 있는 캡슐로 표시 */
+      .b2w2-mvp-card[data-design="frame"] .b2w2-mvp-overlay {
+        display: none;
+      }
+      .b2w2-mvp-card[data-design="frame"] {
+        box-shadow: inset 0 0 0 2px rgba(255,255,255,.55);
+      }
+      /* hover 시 기본 box-shadow가 통째로 덮어써서 프레임 테두리가 사라지던 문제 수정 */
+      .b2w2-mvp-card[data-design="frame"]:hover {
+        box-shadow: inset 0 0 0 2px rgba(255,255,255,.55), 0 20px 44px rgba(0,0,0,.20), 0 0 0 1px var(--b2w-accent-shadow-strong, rgba(0,0,0,.12));
+      }
+      .b2w2-mvp-card[data-design="frame"] .b2w2-mvp-bottom {
+        padding: 9px;
+      }
+      .b2w2-mvp-card[data-design="frame"] .b2w2-mvp-id {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 3px;
+        width: fit-content;
+        max-width: 100%;
+        padding: 6px 10px;
+        border-radius: 12px;
+        background: rgba(15,23,42, calc(0.32 + var(--b2mvp-fx-op, 0.45) * 0.25));
+        border: 1px solid rgba(255,255,255,.20);
+        backdrop-filter: blur(10px) saturate(160%);
+        -webkit-backdrop-filter: blur(10px) saturate(160%);
+      }
+      .b2w2-mvp-card[data-design="frame"] .b2w2-mvp-statline {
+        margin-top: 4px;
+      }
+      /* 디자인 모드: 글래스카드형 — 카드 전체 하단에 통유리 재질 패널, 이름/스탯 전부 그 위에 표시 */
+      .b2w2-mvp-card[data-design="glasscard"] .b2w2-mvp-overlay {
+        display: none;
+      }
+      .b2w2-mvp-card[data-design="glasscard"] .b2w2-mvp-bottom {
+        margin: 8px;
+        border-radius: 14px;
+        padding: 10px 12px 9px;
+        background: rgba(15,23,42, calc(0.30 + var(--b2mvp-fx-op, 0.45) * 0.30));
+        border: 1px solid rgba(255,255,255,.22);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        box-shadow: 0 8px 24px rgba(2,6,23,.28);
+        left: 0; right: 0; bottom: 8px;
+      }
+      .b2w2-mvp-card[data-design="glasscard"] .b2w2-mvp-top-badge {
+        backdrop-filter: blur(14px) saturate(180%);
+        -webkit-backdrop-filter: blur(14px) saturate(180%);
+      }
+      /* 디자인 모드: 컬러 테두리 강조형 — 순위 색상의 굵은 테두리로 카드 자체를 강조 */
+      .b2w2-mvp-card[data-design="border"] {
+        box-shadow: inset 0 0 0 3px var(--b2mvp-rank-color, rgba(255,255,255,.55));
+      }
+      /* hover 시 기본 box-shadow가 통째로 덮어써서 테두리가 사라지던 문제 수정 — 테두리 + 그림자를 함께 유지 */
+      .b2w2-mvp-card[data-design="border"]:hover {
+        box-shadow: inset 0 0 0 3px var(--b2mvp-rank-color, rgba(255,255,255,.55)), 0 20px 44px rgba(0,0,0,.20), 0 0 0 1px var(--b2w-accent-shadow-strong, rgba(0,0,0,.12));
+      }
+      .b2w2-mvp-card.b2w2-mvp-first[data-design="border"]  { --b2mvp-rank-color: rgba(245,158,11,.88); }
+      .b2w2-mvp-card.b2w2-mvp-second[data-design="border"] { --b2mvp-rank-color: rgba(148,163,184,.88); }
+      .b2w2-mvp-card.b2w2-mvp-worst[data-design="border"]  { --b2mvp-rank-color: rgba(239,68,68,.88); }
+      .b2w2-mvp-card[data-design="border"] .b2w2-mvp-bottom {
+        background: linear-gradient(180deg,
+          rgba(2,6,23,0) 0%,
+          rgba(2,6,23, calc(0.38 + var(--b2mvp-fx-op, 0.45) * 0.40)) 100%);
+        /* 테두리 색상을 하단 패널 상단에 얇게 반영해 통일감 부여 */
+        box-shadow: inset 0 1px 0 var(--b2mvp-rank-color, rgba(255,255,255,.4));
+      }
+      /* 디자인 모드: 리본형 — 상단 배지 대신 모서리를 가로지르는 대각선 리본으로 순위 표시 */
+      .b2w2-mvp-card[data-design="ribbon"] .b2w2-mvp-top-badge {
+        top: 16px;
+        left: -36px;
+        width: 148px;
+        justify-content: center;
+        border-radius: 0;
+        padding: 4px 0;
+        transform: rotate(-45deg);
+        box-shadow: 0 3px 8px rgba(2,6,23,.30);
+        letter-spacing: .02em;
+      }
+      /* 미니 카드(트리플 배너)는 폭이 좁아 리본 크기·위치를 별도로 축소 보정 */
+      .b2w2-mvp-card-mini[data-design="ribbon"] .b2w2-mvp-top-badge {
+        top: 10px;
+        left: -30px;
+        width: 118px;
+        padding: 3px 0;
+        font-size: 7px;
+      }
+      /* 하이라이트 리드 카드는 폭이 넓어 리본을 조금 더 길게 보정 */
+      .b2w2-mvp-card-lead[data-design="ribbon"] .b2w2-mvp-top-badge {
+        top: 20px;
+        left: -42px;
+        width: 172px;
+        padding: 5px 0;
+      }
+      /* 디자인 모드: 스플릿형 — 하단을 순위 색 라인으로 구분한 불투명 패널로 표시 */
+      .b2w2-mvp-card[data-design="split"] .b2w2-mvp-overlay {
+        display: none;
+      }
+      .b2w2-mvp-card.b2w2-mvp-first[data-design="split"]  { --b2mvp-rank-color: #f59e0b; }
+      .b2w2-mvp-card.b2w2-mvp-second[data-design="split"] { --b2mvp-rank-color: #94a3b8; }
+      .b2w2-mvp-card.b2w2-mvp-worst[data-design="split"]  { --b2mvp-rank-color: #ef4444; }
+      .b2w2-mvp-card[data-design="split"] .b2w2-mvp-bottom {
+        background: rgba(8,12,24, calc(0.62 + var(--b2mvp-fx-op, 0.45) * 0.30));
+        border-top: 3px solid var(--b2mvp-rank-color, rgba(255,255,255,.5));
+        padding-top: 10px;
+        /* 사진에서 불투명 패널로 넘어가는 경계가 딱딱해 보이지 않도록 위쪽에 부드러운 그림자 블렌드 추가 */
+        box-shadow: inset 0 10px 12px -8px rgba(0,0,0,.45);
+      }
+      /* 디자인 모드: 포스터형 — 사진 대비를 살리고 하단은 완전 불투명 블록으로 처리해 타이포를 강조 */
+      .b2w2-mvp-card[data-design="poster"] .b2w2-mvp-overlay {
+        display: none;
+      }
+      .b2w2-mvp-card[data-design="poster"] .b2w2-mvp-bg {
+        filter: contrast(1.10) saturate(1.16);
+      }
+      .b2w2-mvp-card[data-design="poster"] .b2w2-mvp-bottom {
+        background: #0b0f19;
+        padding: 12px 11px 10px;
+        /* 사진 → 불투명 블록 경계를 자연스럽게 블렌드 */
+        box-shadow: inset 0 14px 16px -10px rgba(0,0,0,.55);
+      }
+      /* 포스터 특유의 굵고 강한 타이포 강조 — 기존에 실제로 존재하지 않는 선택자(.b2w2-mvp-id b)를 잘못 지정했던 것을 수정하고
+         이름 표기 자체를 더 크고 임팩트있게 조정 */
+      .b2w2-mvp-card[data-design="poster"] .b2w2-mvp-name {
+        font-size: 16px;
+        letter-spacing: -.01em;
+      }
+      .b2w2-mvp-card-mini[data-design="poster"] .b2w2-mvp-name {
+        font-size: 13px;
+      }
+
+      /* ── 브리핑 디자인 테마 (설정탭 "브리핑 디자인 & 효과"에서 선택) ──
+         classic(기본)은 별도 override 없이 위의 기본 토큰을 그대로 사용 */
+      .b2w2-wrap[data-theme="minimal"] {
+        --b2w-accent: #64748b;
+        --b2w-accent-strong: #475569;
+        --b2w-accent-soft: rgba(100,116,139,.06);
+        --b2w-rule-hard: rgba(17,24,39,.22);
+        --b2w-rule-soft: rgba(17,24,39,.07);
+        --b2w-shadow: 0 3px 12px rgba(15,23,42,.045);
+        --b2w-shadow-sm: 0 1px 3px rgba(15,23,42,.03);
+        --b2w-accent-border: rgba(100,116,139,.16);
+        --b2w-accent-shadow: rgba(100,116,139,.08);
+        --b2w-accent-shadow-strong: rgba(100,116,139,.12);
+        --b2w-tag-accent-bg: rgba(100,116,139,.08);
+        --b2w-tag-accent-border: rgba(100,116,139,.18);
+      }
+      .b2w2-wrap[data-theme="vivid"] {
+        --b2w-accent: #7c3aed;
+        --b2w-accent-strong: #db2777;
+        --b2w-accent-soft: rgba(124,58,237,.10);
+        --b2w-paper-warm: var(--b2w-paper);
+        --b2w-accent-border: rgba(124,58,237,.32);
+        --b2w-accent-shadow: rgba(124,58,237,.18);
+        --b2w-accent-shadow-strong: rgba(219,39,119,.24);
+        --b2w-tag-accent-bg: rgba(124,58,237,.10);
+        --b2w-tag-accent-border: rgba(124,58,237,.28);
+      }
+      .b2w2-wrap[data-theme="mono"] {
+        --b2w-accent: #1c1a17;
+        --b2w-accent-strong: #000000;
+        --b2w-accent-soft: rgba(28,26,23,.05);
+        --b2w-paper: #f4f1ea;
+        --b2w-paper-alt: #fdfbf6;
+        --b2w-paper-warm: #f4f1ea;
+        --b2w-ink: #1c1a17;
+        --b2w-ink-mid: #3f3b35;
+        --b2w-ink-soft: #7a7266;
+        --b2w-rule-hard: rgba(28,26,23,.55);
+        --b2w-rule-soft: rgba(28,26,23,.12);
+        --b2w-accent-border: rgba(28,26,23,.25);
+        --b2w-accent-shadow: rgba(28,26,23,.10);
+        --b2w-accent-shadow-strong: rgba(28,26,23,.16);
+        --b2w-tag-accent-bg: rgba(28,26,23,.06);
+        --b2w-tag-accent-border: rgba(28,26,23,.20);
+      }
+      /* 세련된 · 엘레강트 — 네이비 & 골드, 차분하고 고급스러운 톤 */
+      .b2w2-wrap[data-theme="elegant"] {
+        --b2w-accent: #1e3a5f;
+        --b2w-accent-strong: #0f2942;
+        --b2w-accent-soft: rgba(30,58,95,.07);
+        --b2w-paper: #f7f5f0;
+        --b2w-paper-alt: #ffffff;
+        --b2w-paper-warm: #f4f0e8;
+        --b2w-ink: #1a1a2e;
+        --b2w-ink-mid: #3d3d52;
+        --b2w-ink-soft: #6b6b80;
+        --b2w-rule-hard: rgba(26,26,46,.35);
+        --b2w-rule-soft: rgba(26,26,46,.10);
+        --b2w-shadow: 0 8px 24px rgba(15,41,66,.08);
+        --b2w-shadow-sm: 0 2px 6px rgba(15,41,66,.05);
+        --b2w-accent-border: rgba(30,58,95,.28);
+        --b2w-accent-shadow: rgba(30,58,95,.14);
+        --b2w-accent-shadow-strong: rgba(191,161,74,.30);
+        --b2w-tag-accent-bg: rgba(191,161,74,.12);
+        --b2w-tag-accent-border: rgba(191,161,74,.35);
+      }
+      /* 이쁜 · 파스텔 — 핑크·라벤더 톤, 사랑스럽고 부드러운 느낌 */
+      .b2w2-wrap[data-theme="pastel"] {
+        --b2w-accent: #ec4899;
+        --b2w-accent-strong: #db2777;
+        --b2w-accent-soft: rgba(236,72,153,.08);
+        --b2w-paper: #fdf4ff;
+        --b2w-paper-alt: #ffffff;
+        --b2w-paper-warm: #fef2f8;
+        --b2w-ink: #3f2a3d;
+        --b2w-ink-mid: #6b4c68;
+        --b2w-ink-soft: #9c7d98;
+        --b2w-rule-hard: rgba(219,39,119,.18);
+        --b2w-rule-soft: rgba(219,39,119,.06);
+        --b2w-shadow: 0 6px 18px rgba(236,72,153,.10);
+        --b2w-shadow-sm: 0 2px 5px rgba(236,72,153,.06);
+        --b2w-accent-border: rgba(236,72,153,.25);
+        --b2w-accent-shadow: rgba(236,72,153,.12);
+        --b2w-accent-shadow-strong: rgba(167,139,250,.22);
+        --b2w-tag-accent-bg: rgba(167,139,250,.10);
+        --b2w-tag-accent-border: rgba(167,139,250,.25);
+      }
+      /* 화려한 · 럭셔리 — 블랙 & 골드, 진하고 고급스러운 다크 톤 */
+      .b2w2-wrap[data-theme="luxury"] {
+        --b2w-accent: #c9a227;
+        --b2w-accent-strong: #8a6d1a;
+        --b2w-accent-soft: rgba(201,162,39,.09);
+        --b2w-paper: #14120d;
+        --b2w-paper-alt: #1c1a13;
+        --b2w-paper-warm: #18160f;
+        --b2w-ink: #f5ecd7;
+        --b2w-ink-mid: #d9c9a0;
+        --b2w-ink-soft: #a99a75;
+        --b2w-rule-hard: rgba(201,162,39,.45);
+        --b2w-rule-soft: rgba(201,162,39,.15);
+        --b2w-shadow: 0 10px 30px rgba(0,0,0,.45);
+        --b2w-shadow-sm: 0 3px 8px rgba(0,0,0,.35);
+        --b2w-accent-border: rgba(201,162,39,.45);
+        --b2w-accent-shadow: rgba(201,162,39,.20);
+        --b2w-accent-shadow-strong: rgba(201,162,39,.30);
+        --b2w-btn-text: #14120d;
+        --b2w-tag-accent-bg: rgba(201,162,39,.14);
+        --b2w-tag-accent-border: rgba(201,162,39,.35);
+      }
+      /* 스포츠 스타일 — 레드 & 블루의 다이나믹한 경기장 톤 */
+      .b2w2-wrap[data-theme="sports"] {
+        --b2w-accent: #dc2626;
+        --b2w-accent-strong: #991b1b;
+        --b2w-accent-soft: rgba(220,38,38,.08);
+        --b2w-paper: #f8fafc;
+        --b2w-paper-alt: #ffffff;
+        --b2w-paper-warm: #f1f5f9;
+        --b2w-ink: #0f172a;
+        --b2w-ink-mid: #334155;
+        --b2w-ink-soft: #64748b;
+        --b2w-rule-hard: rgba(15,23,42,.30);
+        --b2w-rule-soft: rgba(15,23,42,.08);
+        --b2w-shadow: 0 8px 22px rgba(220,38,38,.10);
+        --b2w-shadow-sm: 0 2px 6px rgba(15,23,42,.05);
+        --b2w-accent-border: rgba(220,38,38,.30);
+        --b2w-accent-shadow: rgba(220,38,38,.16);
+        --b2w-accent-shadow-strong: rgba(37,99,235,.22);
+        --b2w-tag-accent-bg: rgba(37,99,235,.08);
+        --b2w-tag-accent-border: rgba(37,99,235,.24);
+      }
+      /* e스포츠 스타일 — 퍼플·시안 네온의 사이버/게이밍 다크 톤 */
+      .b2w2-wrap[data-theme="esports"] {
+        --b2w-accent: #a855f7;
+        --b2w-accent-strong: #7c3aed;
+        --b2w-accent-soft: rgba(168,85,247,.10);
+        --b2w-paper: #0b0f19;
+        --b2w-paper-alt: #131a2a;
+        --b2w-paper-warm: #0f1524;
+        --b2w-ink: #e5e9f5;
+        --b2w-ink-mid: #b8c0d9;
+        --b2w-ink-soft: #7a86a8;
+        --b2w-rule-hard: rgba(34,211,238,.40);
+        --b2w-rule-soft: rgba(34,211,238,.14);
+        --b2w-shadow: 0 0 24px rgba(168,85,247,.25);
+        --b2w-shadow-sm: 0 0 10px rgba(34,211,238,.18);
+        --b2w-accent-border: rgba(168,85,247,.45);
+        --b2w-accent-shadow: rgba(168,85,247,.25);
+        --b2w-accent-shadow-strong: rgba(34,211,238,.35);
+        --b2w-btn-text: #0b0f19;
+        --b2w-tag-accent-bg: rgba(34,211,238,.12);
+        --b2w-tag-accent-border: rgba(34,211,238,.35);
+      }
+      /* 팝 컬러 — 오렌지 & 틸의 발랄하고 경쾌한 톤 */
+      .b2w2-wrap[data-theme="pop"] {
+        --b2w-accent: #f97316;
+        --b2w-accent-strong: #ea580c;
+        --b2w-accent-soft: rgba(249,115,22,.09);
+        --b2w-paper: #fffdf7;
+        --b2w-paper-alt: #ffffff;
+        --b2w-paper-warm: #fff8ec;
+        --b2w-ink: #1f2937;
+        --b2w-ink-mid: #4b5563;
+        --b2w-ink-soft: #9ca3af;
+        --b2w-rule-hard: rgba(249,115,22,.28);
+        --b2w-rule-soft: rgba(249,115,22,.08);
+        --b2w-shadow: 0 6px 18px rgba(249,115,22,.10);
+        --b2w-shadow-sm: 0 2px 6px rgba(249,115,22,.06);
+        --b2w-accent-border: rgba(249,115,22,.32);
+        --b2w-accent-shadow: rgba(249,115,22,.16);
+        --b2w-accent-shadow-strong: rgba(20,184,166,.28);
+        --b2w-tag-accent-bg: rgba(20,184,166,.10);
+        --b2w-tag-accent-border: rgba(20,184,166,.28);
+      }
+      /* 네이처 — 편안한 그린 톤, 차분하고 자연스러운 느낌 */
+      .b2w2-wrap[data-theme="nature"] {
+        --b2w-accent: #16a34a;
+        --b2w-accent-strong: #15803d;
+        --b2w-accent-soft: rgba(22,163,74,.08);
+        --b2w-paper: #f6f9f4;
+        --b2w-paper-alt: #ffffff;
+        --b2w-paper-warm: #f1f6ee;
+        --b2w-ink: #1c2b1f;
+        --b2w-ink-mid: #3f5745;
+        --b2w-ink-soft: #718775;
+        --b2w-rule-hard: rgba(22,101,52,.28);
+        --b2w-rule-soft: rgba(22,101,52,.08);
+        --b2w-shadow: 0 6px 18px rgba(22,101,52,.08);
+        --b2w-shadow-sm: 0 2px 5px rgba(22,101,52,.05);
+        --b2w-accent-border: rgba(22,163,74,.28);
+        --b2w-accent-shadow: rgba(22,163,74,.14);
+        --b2w-accent-shadow-strong: rgba(22,163,74,.20);
+        --b2w-tag-accent-bg: rgba(22,163,74,.09);
+        --b2w-tag-accent-border: rgba(22,163,74,.24);
+      }
+      /* 오션 — 시원한 블루 그라디언트 톤 */
+      .b2w2-wrap[data-theme="ocean"] {
+        --b2w-accent: #0891b2;
+        --b2w-accent-strong: #0e7490;
+        --b2w-accent-soft: rgba(8,145,178,.08);
+        --b2w-paper: #f0f9fb;
+        --b2w-paper-alt: #ffffff;
+        --b2w-paper-warm: #eaf6f8;
+        --b2w-ink: #0c2b33;
+        --b2w-ink-mid: #2f5761;
+        --b2w-ink-soft: #6b8b93;
+        --b2w-rule-hard: rgba(8,145,178,.28);
+        --b2w-rule-soft: rgba(8,145,178,.08);
+        --b2w-shadow: 0 6px 18px rgba(8,145,178,.10);
+        --b2w-shadow-sm: 0 2px 5px rgba(8,145,178,.06);
+        --b2w-accent-border: rgba(8,145,178,.30);
+        --b2w-accent-shadow: rgba(8,145,178,.14);
+        --b2w-accent-shadow-strong: rgba(14,116,144,.22);
+        --b2w-tag-accent-bg: rgba(8,145,178,.09);
+        --b2w-tag-accent-border: rgba(8,145,178,.25);
+      }
+      /* 선셋 — 오렌지 & 핑크의 따뜻한 노을 그라디언트 톤 */
+      .b2w2-wrap[data-theme="sunset"] {
+        --b2w-accent: #f5760a;
+        --b2w-accent-strong: #db2777;
+        --b2w-accent-soft: rgba(245,118,10,.09);
+        --b2w-paper: #fff7f2;
+        --b2w-paper-alt: #ffffff;
+        --b2w-paper-warm: #fef1ea;
+        --b2w-ink: #3a1f24;
+        --b2w-ink-mid: #6b4048;
+        --b2w-ink-soft: #a1767c;
+        --b2w-rule-hard: rgba(219,39,119,.22);
+        --b2w-rule-soft: rgba(245,118,10,.08);
+        --b2w-shadow: 0 8px 22px rgba(245,118,10,.12);
+        --b2w-shadow-sm: 0 2px 6px rgba(245,118,10,.07);
+        --b2w-accent-border: rgba(245,118,10,.30);
+        --b2w-accent-shadow: rgba(245,118,10,.16);
+        --b2w-accent-shadow-strong: rgba(219,39,119,.26);
+        --b2w-tag-accent-bg: rgba(219,39,119,.10);
+        --b2w-tag-accent-border: rgba(219,39,119,.26);
+      }
+      /* 네온 — 시안 & 마젠타 형광의 화려한 다크 톤 */
+      .b2w2-wrap[data-theme="neon"] {
+        --b2w-accent: #22d3ee;
+        --b2w-accent-strong: #d946ef;
+        --b2w-accent-soft: rgba(34,211,238,.10);
+        --b2w-paper: #0a0a0f;
+        --b2w-paper-alt: #121218;
+        --b2w-paper-warm: #0d0d13;
+        --b2w-ink: #eafcff;
+        --b2w-ink-mid: #b6ecf5;
+        --b2w-ink-soft: #7fa8b0;
+        --b2w-rule-hard: rgba(217,70,239,.45);
+        --b2w-rule-soft: rgba(34,211,238,.16);
+        --b2w-shadow: 0 0 26px rgba(34,211,238,.28);
+        --b2w-shadow-sm: 0 0 12px rgba(217,70,239,.22);
+        --b2w-accent-border: rgba(34,211,238,.45);
+        --b2w-accent-shadow: rgba(34,211,238,.22);
+        --b2w-accent-shadow-strong: rgba(217,70,239,.32);
+        --b2w-btn-text: #0a0a0f;
+        --b2w-tag-accent-bg: rgba(217,70,239,.12);
+        --b2w-tag-accent-border: rgba(217,70,239,.32);
       }
 
       /* 배경 이미지 없을 때 색상 */
@@ -1575,7 +2096,7 @@ function _b2WeeklyBriefingView() {
     const _periodDays = diffDays;
 
     // ── 헤더 컨트롤
-    h += `<div class="b2w2-wrap" id="b2w2-export-root">
+    h += `<div class="b2w2-wrap" id="b2w2-export-root" data-theme="${_b2BriefingThemeLoad()}">
       <div class="b2w2-masthead">
         <span class="b2w2-masthead-brand"><span class="b2w2-masthead-mark"></span>STAR DATACENTER</span>
         <span>${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)} 발행</span>
