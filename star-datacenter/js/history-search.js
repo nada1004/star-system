@@ -634,6 +634,9 @@ function bulkDeleteRecs(bulkKey){
   indices.forEach(idx=>{
     const matchObj=arr[idx];
     if(matchObj){
+      if(bulkKey==='tt'){
+        try{ if(typeof window._rememberDeletedTierGeneralRestoreMatch === 'function') window._rememberDeletedTierGeneralRestoreMatch(matchObj); }catch(e){}
+      }
       if(matchObj._id){
         deletedIds.add(matchObj._id);
         // 게임 레벨 ID도 추가 (sets 기반 저장: matchId_sN_gN 포맷)
@@ -669,6 +672,7 @@ function bulkDeleteRecs(bulkKey){
   _bulkModes[bulkKey]=false;
   if(typeof fixPoints==='function')fixPoints();
   save();render();
+  try{ if(typeof window.refreshPlayerModalIfOpen === 'function') window.refreshPlayerModalIfOpen(); }catch(e){}
 }
 
 // (버그픽스) 티어대회 삭제 시 tourneys 내부(조별/브라켓)에 남은 같은 _id 기록도 같이 제거
@@ -808,7 +812,11 @@ function delRec(mode,i,matchId){
   }
   else if(mode==='tt'){
     const idx = _safeIndex(ttM, i);
-    if(idx>=0){ matchObj=ttM[idx]; ttM.splice(idx,1); }
+    if(idx>=0){
+      matchObj=ttM[idx];
+      try{ if(typeof window._rememberDeletedTierGeneralRestoreMatch === 'function') window._rememberDeletedTierGeneralRestoreMatch(matchObj); }catch(e){}
+      ttM.splice(idx,1);
+    }
   }
   if(matchObj) {
     revertMatchRecord(matchObj);
@@ -818,6 +826,7 @@ function delRec(mode,i,matchId){
   }
   if(typeof fixPoints==='function')fixPoints();
   save();render();
+  try{ if(typeof window.refreshPlayerModalIfOpen === 'function') window.refreshPlayerModalIfOpen(); }catch(e){}
 }
 
 

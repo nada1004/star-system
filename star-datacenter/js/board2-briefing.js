@@ -660,6 +660,7 @@ function _b2WeeklyBriefingView() {
         padding: 14px 16px;
         border-radius: 14px;
         border: 1px solid var(--b2w-rule);
+        background: linear-gradient(165deg, var(--b2w-paper-alt) 0%, var(--b2w-paper-alt) 72%, rgba(15,23,42,.03) 100%);
         background: linear-gradient(165deg, var(--b2w-paper-alt) 0%, var(--b2w-paper-alt) 70%, color-mix(in srgb, var(--kpi-accent, var(--b2w-accent)) 7%, var(--b2w-paper-alt)) 100%);
         box-shadow: var(--b2w-shadow-sm);
         transition: transform .16s cubic-bezier(.2,.8,.3,1.2), box-shadow .16s ease, border-color .16s ease;
@@ -671,7 +672,7 @@ function _b2WeeklyBriefingView() {
         position: absolute;
         top: 0; left: 0; right: 0;
         height: 3px;
-        background: linear-gradient(90deg, var(--kpi-accent, var(--b2w-accent)), color-mix(in srgb, var(--kpi-accent, var(--b2w-accent)) 40%, transparent));
+        background: linear-gradient(90deg, var(--kpi-accent, var(--b2w-accent)), transparent);
         border-radius: 14px 14px 0 0;
       }
       .b2w2-kpi-card::after {
@@ -680,10 +681,11 @@ function _b2WeeklyBriefingView() {
         top: -20px; right: -20px;
         width: 70px; height: 70px;
         border-radius: 50%;
-        background: radial-gradient(circle, color-mix(in srgb, var(--kpi-accent, var(--b2w-accent)) 16%, transparent), transparent 70%);
+        background: radial-gradient(circle, var(--kpi-accent, var(--b2w-accent)), transparent 72%);
+        opacity: .12;
         pointer-events: none;
       }
-      .b2w2-kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0,0,0,.10); border-color: color-mix(in srgb, var(--kpi-accent, var(--b2w-accent)) 35%, var(--b2w-rule)) }
+      .b2w2-kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0,0,0,.10); border-color: rgba(148,163,184,.22) }
       .b2w2-kpi-label { font-size: 10px; font-weight: 800; color: var(--b2w-ink-soft); letter-spacing: .1em; text-transform: uppercase }
       .b2w2-kpi-value {
         margin-top: 6px;
@@ -888,7 +890,12 @@ function _b2WeeklyBriefingView() {
 
       /* 요청에 따라 프로필 이미지 위 그라디언트 효과 제거 — 원본 그대로 노출 */
       .b2w2-mvp-overlay {
-        display: none;
+        display: block;
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,.10) 25%, rgba(15,23,42,.52) 65%, rgba(2,6,23,.86) 100%);
       }
 
       /* 배경 이미지 없을 때 색상 */
@@ -1135,7 +1142,7 @@ function _b2WeeklyBriefingView() {
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0; height: 3px;
-        background: linear-gradient(90deg, var(--hc-top, var(--b2w-rule-soft)), color-mix(in srgb, var(--hc-top, var(--b2w-rule-soft)) 30%, transparent));
+        background: linear-gradient(90deg, var(--hc-top, var(--b2w-rule-soft)), rgba(255,255,255,.55));
         border-radius: 10px 10px 0 0;
       }
       .b2w2-highlight-card::before {
@@ -1144,13 +1151,14 @@ function _b2WeeklyBriefingView() {
         top: -30px; right: -30px;
         width: 90px; height: 90px;
         border-radius: 50%;
-        background: radial-gradient(circle, color-mix(in srgb, var(--hc-top, var(--b2w-accent)) 10%, transparent), transparent 70%);
+        background: radial-gradient(circle, var(--hc-top, var(--b2w-accent)), transparent 72%);
+        opacity: .10;
         pointer-events: none;
       }
       .b2w2-highlight-card:hover {
         box-shadow: 0 6px 24px rgba(0,0,0,.11);
         transform: translateY(-3px);
-        border-color: color-mix(in srgb, var(--hc-top, var(--b2w-accent)) 30%, var(--b2w-rule));
+        border-color: rgba(148,163,184,.22);
       }
       .b2w2-highlight-kicker {
         font-size: 10px;
@@ -1973,7 +1981,7 @@ function _b2WeeklyBriefingView() {
               </div>`;
         }
         const aceTone = (ace.winRate ?? 0) >= 70 && (ace.netWins ?? 0) >= 3
-          ? { bg:'var(--b2w-paper-alt)', badgeBg:'color-mix(in srgb, var(--green) 14%, transparent)', badgeCol:'var(--green)', badgeBorder:'color-mix(in srgb, var(--green) 36%, transparent)', label:'고승률' }
+          ? { bg:'var(--b2w-paper-alt)', badgeBg:'rgba(16,185,129,.14)', badgeCol:'var(--green)', badgeBorder:'rgba(16,185,129,.36)', label:'고승률' }
           : (ace.winRate ?? 0) >= 60
             ? { bg:'var(--b2w-paper-alt)', badgeBg:'var(--b2w-tag-accent-bg)', badgeCol:'var(--b2w-accent)', badgeBorder:'var(--b2w-tag-accent-border)', label:'에이스' }
             : { bg:'var(--b2w-paper)', badgeBg:'var(--b2w-paper-alt)', badgeCol:'var(--b2w-ink-mid)', badgeBorder:'var(--b2w-rule)', label:'근소 우세' };

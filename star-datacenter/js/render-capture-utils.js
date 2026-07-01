@@ -111,7 +111,24 @@ function _briefingExportHeaderHtml(meta){
     </section>`;
 }
 
-function _briefingExportCss(){
+function _briefingExportCss(mode){
+  const m = String(mode||'');
+  const extra = m==='single' ? `
+    .b2w2-export-sheet .b2w2-hero-stats,
+    .b2w2-export-sheet .b2w2-kpi-card,
+    .b2w2-export-sheet .b2w2-highlight-card,
+    .b2w2-export-sheet .b2w2-chart-box,
+    .b2w2-export-sheet .b2w2-card,
+    .b2w2-export-sheet .b2w2-note-row{
+      border-radius:18px !important;
+      background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.92)) !important;
+      border-color:rgba(148,163,184,.16) !important;
+      box-shadow:0 12px 30px rgba(15,23,42,.07) !important;
+    }
+    .b2w2-export-sheet .b2w2-highlight-card::before{ display:block !important; opacity:.10 !important; }
+    .b2w2-export-sheet .b2w2-kpi-card::after{ display:block !important; opacity:.10 !important; }
+    .b2w2-export-sheet .b2w2-mvp-overlay{ display:block !important; }
+  ` : '';
   return `
     .b2w2-export-sheet{
       color:#111827 !important;
@@ -252,7 +269,7 @@ function _briefingExportCss(){
     .b2w2-export-sheet .b2w2-rank-delta.new{ background:#f5f3ff !important; border-color:#ddd6fe !important; color:#5b21b6 !important; }
     @media (max-width:900px){
       .b2w2-export-cover-grid{ grid-template-columns:1fr; }
-    }`;
+    }${extra}`;
 }
 
 function _sanitizeUnsupportedCssFunctions(root){
@@ -309,14 +326,14 @@ async function captureBriefingArticle(mode){
     const rect=root.getBoundingClientRect();
     const captureWidth=Math.max(900, Math.ceil(root.scrollWidth||rect.width||900));
     const meta=_getBriefingExportMeta();
-    const framePad = saveMode==='single' ? 28 : 24;
+    const framePad = saveMode==='single' ? 22 : 24;
     tempWrap=document.createElement('div');
     tempWrap.style.cssText=`position:absolute;left:-99999px;top:0;width:${captureWidth + framePad*2}px;padding:${framePad}px;background:${saveMode==='single'
       ? 'radial-gradient(1200px 600px at 15% 10%, rgba(56,189,248,.16) 0%, transparent 60%),radial-gradient(900px 520px at 90% 0%, rgba(167,139,250,.14) 0%, transparent 55%),linear-gradient(180deg, #ffffff 0%, #f8fafc 55%, #ffffff 100%)'
       : '#ffffff'};box-sizing:border-box;z-index:-1`;
 
     const exportStyle=document.createElement('style');
-    exportStyle.textContent=_briefingExportCss();
+    exportStyle.textContent=_briefingExportCss(saveMode);
     tempWrap.appendChild(exportStyle);
 
     const clone=root.cloneNode(true);

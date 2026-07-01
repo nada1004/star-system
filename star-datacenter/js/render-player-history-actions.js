@@ -503,15 +503,25 @@ function deletePlayerHist(playerName, histIdx){
   }
   p.history.splice(histIdx,1);
   if(hh.matchId){
-    const mid=hh.matchId;
-    const _arrMap={mini:miniM,univm:univM,ck:ckM,pro:proM};
+    const mid=String(hh.matchId||'').trim();
+    const baseMid=mid.replace(/_s\d+_g\d+$/,'').replace(/_g\d+$/,'');
+    const _targetIds=new Set([mid, baseMid].filter(Boolean));
+    const _arrMap={mini:miniM,univm:univM,ck:ckM,pro:proM,tt:ttM};
     const _modeArrKey={'미니대전':'mini','시빌워':'mini','대학대전':'univm','대학CK':'ck','프로리그':'pro','티어대회':'tt'};
     const _targetKey=hh.mode?_modeArrKey[hh.mode]:null;
     const _searchArrs=_targetKey?[[_targetKey,_arrMap[_targetKey]]]:Object.entries(_arrMap);
     for(const [,arr] of _searchArrs){
       if(!arr)continue;
-      const idx=arr.findIndex(m=>m._id===mid);
-      if(idx>=0){ arr.splice(idx,1); break; }
+      const idx=arr.findIndex(m=>_targetIds.has(String(m&&m._id||'').trim()));
+      if(idx>=0){
+        try{
+          if(hh.mode==='티어대회' && typeof window._rememberDeletedTierGeneralRestoreMatch === 'function'){
+            window._rememberDeletedTierGeneralRestoreMatch(arr[idx]);
+          }
+        }catch(e){}
+        arr.splice(idx,1);
+        break;
+      }
     }
   }
   if(hh.mode==='개인전'||hh.mode==='프로리그'||hh.mode==='끝장전'||hh.mode==='프로리그끝장전'){
@@ -566,6 +576,28 @@ function deletePlayerHistBulk(playerName){
           if(oh.result==='승'){ opp.win=Math.max(0,(opp.win||0)-1); opp.points=(opp.points||0)-3; }
           else { opp.loss=Math.max(0,(opp.loss||0)-1); opp.points=(opp.points||0)+3; }
           oppHist.splice(oppIdx,1);
+        }
+      }
+      if(hh.matchId){
+        const mid=String(hh.matchId||'').trim();
+        const baseMid=mid.replace(/_s\d+_g\d+$/,'').replace(/_g\d+$/,'');
+        const ids=new Set([mid, baseMid].filter(Boolean));
+        const arrMap={mini:miniM,univm:univM,ck:ckM,pro:proM,tt:ttM};
+        const modeArrKey={'미니대전':'mini','시빌워':'mini','대학대전':'univm','대학CK':'ck','프로리그':'pro','티어대회':'tt'};
+        const targetKey=hh.mode?modeArrKey[hh.mode]:null;
+        const searchArrs=targetKey?[[targetKey,arrMap[targetKey]]]:Object.entries(arrMap);
+        for(const [,arr] of searchArrs){
+          if(!arr) continue;
+          const arrIdx=arr.findIndex(m=>ids.has(String(m&&m._id||'').trim()));
+          if(arrIdx>=0){
+            try{
+              if(hh.mode==='티어대회' && typeof window._rememberDeletedTierGeneralRestoreMatch === 'function'){
+                window._rememberDeletedTierGeneralRestoreMatch(arr[arrIdx]);
+              }
+            }catch(e){}
+            arr.splice(arrIdx,1);
+            break;
+          }
         }
       }
       p.history.splice(idx,1);

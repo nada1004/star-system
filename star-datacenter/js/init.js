@@ -264,6 +264,55 @@ async function _seedTierTtM(){
 try{ window._seedTierTtM = _seedTierTtM; }catch(e){}
 
 let _ttGeneralRestoreLoading = false;
+function _ttGeneralRestoreKey(m){
+  try{
+    const c = String(m?.compName||m?.n||m?.t||'').trim();
+    const stage = String(m?.stage||'general').trim() || 'general';
+    return [
+      String(m?.d||'').trim(),
+      String(m?.a||'').trim(),
+      String(m?.b||'').trim(),
+      c,
+      stage
+    ].join('|');
+  }catch(e){
+    return '';
+  }
+}
+function _getTierGeneralRestoreDeletedState(){
+  try{
+    const raw = JSON.parse(localStorage.getItem('su_tt_general_restore_deleted')||'{}') || {};
+    return {
+      ids: new Set(Array.isArray(raw.ids) ? raw.ids.map(v=>String(v||'').trim()).filter(Boolean) : []),
+      keys: new Set(Array.isArray(raw.keys) ? raw.keys.map(v=>String(v||'').trim()).filter(Boolean) : [])
+    };
+  }catch(e){
+    return { ids:new Set(), keys:new Set() };
+  }
+}
+function _rememberDeletedTierGeneralRestoreMatch(m){
+  try{
+    if(!m || typeof m!=='object') return false;
+    const stage = String(m.stage||'general').trim() || 'general';
+    if(stage !== 'general') return false;
+    const state = _getTierGeneralRestoreDeletedState();
+    const id = String(m._id||'').trim();
+    const key = _ttGeneralRestoreKey(m);
+    if(id) state.ids.add(id);
+    if(key) state.keys.add(key);
+    localStorage.setItem('su_tt_general_restore_deleted', JSON.stringify({
+      ids: [...state.ids].slice(-400),
+      keys: [...state.keys].slice(-400)
+    }));
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+try{
+  window._ttGeneralRestoreKey = _ttGeneralRestoreKey;
+  window._rememberDeletedTierGeneralRestoreMatch = _rememberDeletedTierGeneralRestoreMatch;
+}catch(e){}
 async function _mergeTierGeneralRestore(){
   try{
     if(_ttGeneralRestoreLoading) return;
@@ -273,22 +322,19 @@ async function _mergeTierGeneralRestore(){
     const arr = await res.json();
     if(!Array.isArray(arr) || !arr.length){ _ttGeneralRestoreLoading = false; return; }
     if(typeof ttM==='undefined' || !Array.isArray(ttM)) window.ttM = [];
+    const suppressed = _getTierGeneralRestoreDeletedState();
     const existingIds = new Set((ttM||[]).map(m=>String(m&&m._id||'').trim()).filter(Boolean));
     const existingKeys = new Set((ttM||[]).map(m=>{
-      const d=String(m&&m.d||'').trim();
-      const a=String(m&&m.a||'').trim();
-      const b=String(m&&m.b||'').trim();
-      const c=String(m&&m.compName||m&&m.n||m&&m.t||'').trim();
-      const st=String(m&&m.stage||'general').trim();
-      return [d,a,b,c,st].join('|');
+      return _ttGeneralRestoreKey(m);
     }));
     let added = 0;
     arr.forEach(m=>{
       if(!m || typeof m!=='object') return;
       if(!m.stage) m.stage='general';
-      const c = String(m.compName||m.n||m.t||'').trim();
       const id = String(m._id||'').trim();
-      const key = [String(m.d||'').trim(), String(m.a||'').trim(), String(m.b||'').trim(), c, String(m.stage||'general').trim()].join('|');
+      const c = String(m.compName||m.n||m.t||'').trim();
+      const key = _ttGeneralRestoreKey(m);
+      if((id && suppressed.ids.has(id)) || suppressed.keys.has(key)) return;
       if((id && existingIds.has(id)) || existingKeys.has(key)) return;
       if(!m.compName && c) m.compName = c;
       if(!m.n && c) m.n = c;
