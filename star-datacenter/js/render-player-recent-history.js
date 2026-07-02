@@ -103,7 +103,7 @@ function buildPlayerRecentHistoryRowHTML(opts){
       ? `<span style="${modeBadgeStyle};cursor:pointer;text-decoration:underline dotted" data-ph-action="hist-open-match" data-ph-self="${selfSafe}" data-ph-opp="${oppSafe}" data-ph-date="${dSafe}" data-ph-map="${mSafe}" data-ph-mode="${escJS(modeLbl)}" data-ph-match-id="${hhMid}" data-ph-result="${rSafe}" title="경기 상세 보기">${modeLbl}</span>`
       : `<span style="${modeBadgeStyle}">${modeLbl}</span>`
   ):'';
-  return `<tr style="background:${isWin?'#f0fdf4':isDraw?'#f1f5f9':'#fef2f2'}10">
+  return `<tr class="pd-hist-row ${isWin?'is-win':isDraw?'is-draw':'is-lose'}" style="background:${isWin?'#f0fdf4':isDraw?'#f1f5f9':'#fef2f2'}10">
     ${selectCheckboxHTML}
     <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
     <td style="white-space:nowrap;text-align:center">${modeCellHTML}</td>

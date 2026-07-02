@@ -68,7 +68,7 @@ function rCfg(C,T){
   };
   const _cfgCatDesc={
     '🧩 운영/콘텐츠':'공지/티어/시즌/대학/맵/자동인식',
-    '🖼️ 스트리머/프로필':'이미지탭/스트리머 상세/경기 상세(팝업)/상태아이콘',
+    '🖼️ 스트리머/프로필':'이미지탭/스트리머 상세/대학 상세(팝업)/경기 상세(팝업)/상태아이콘',
     '🧾 카드/기록':'기록카드/대회카드/프로리그/개인·끝장전',
     '🎨 UI/테마':'탭/버튼/필터/폰트/모바일크기/테마',
     '🧠 자동화/도구':'배경음악(BGM)/SOOP 멀티뷰/붙여넣기 분리/FAB',
@@ -82,7 +82,7 @@ function rCfg(C,T){
     b2layout:'📐 이미지탭 레이아웃', imgsettings:'🖼️ 이미지탭 이미지', imgmodalsettings:'🖼️ 스트리머 상세 이미지',
     profileshape:'🖼️ 프로필 이미지 모양',
     pdModeBadge:'🎨 최근 경기 종목 배지 색상',
-    pd:'🎨 스트리머 상세 스타일', matchdetail:'🎮 경기 상세(팝업)',
+    pd:'🎨 스트리머 상세 스타일', matchdetail:'🎮 경기 상세(팝업)', ud:'🏫 대학 상세(팝업) 디자인',
     streamerheader:'🎓 스트리머탭 대학 헤더',
     univlogoimg:'🏫 대학 로고 이미지(URL)',
     b2femco:'🧩 펨코스타일', femcoorder:'🔀 펨코스타일 스타대학 순서', boardchip:'🏷️ 현황판 칩/대학로고', oldbright:'🎨 구현황판 밝기', boardbg:'🧱 현황판 배경',
@@ -2376,6 +2376,9 @@ ${_scfgD('notice','📢 공지 관리')}
   </details>
   ${_scfgD('pd','🎨 스트리머 상세 스타일 설정')}
     <div id="cfg-pd-body"></div>
+  </details>
+  ${_scfgD('ud','🏫 대학 상세(팝업) 디자인 설정')}
+    <div id="cfg-ud-body"></div>
   </details>
   ${_scfgD('fab','🔘 플로팅(FAB) 버튼 탭 설정')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:14px">하단 FAB 버튼 클릭 시 이동할 탭을 설정합니다.</div>

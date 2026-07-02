@@ -157,6 +157,7 @@ function _cfgGo(secId){
         if(secId==='profileshape' && typeof window._renderCfgProfileShapeSection==='function') window._renderCfgProfileShapeSection();
         if(secId==='uisize' && typeof window._renderCfgUiSizeSection==='function') window._renderCfgUiSizeSection();
         if(secId==='pd' && typeof window._renderCfgPdSection==='function') window._renderCfgPdSection();
+        if(secId==='ud' && typeof window._renderCfgUdSection==='function') window._renderCfgUdSection();
         if(secId==='pdModeBadge' && typeof window._renderCfgPdModeBadgeSection==='function') window._renderCfgPdModeBadgeSection();
         if(secId==='matchdetail' && typeof window._renderCfgMatchDetailSection==='function') window._renderCfgMatchDetailSection();
         if(secId==='aibot' && typeof window.cfgInitAiProxy==='function') window.cfgInitAiProxy();

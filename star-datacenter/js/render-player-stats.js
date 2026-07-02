@@ -67,7 +67,7 @@ function buildPlayerModeStatsHTML(opts){
     const wr=t?Math.round(w/t*100):0;
     const mc=modeColors[key]||'#6b7280';
     const wrCol=t?(wr>=50?cWin:cLoss):'#9ca3af';
-    h+=`<div style="background:${mc}${_rpPctToHex(modeTint)};border:1.5px solid ${mc}${_rpPctToHex(Math.min(99,modeTint*3.5))};border-radius:10px;padding:8px 6px;text-align:center">
+    h+=`<div class="pd-mode-card" style="background:${mc}${_rpPctToHex(modeTint)};border:1.5px solid ${mc}${_rpPctToHex(Math.min(99,modeTint*3.5))};border-radius:10px;padding:8px 6px;text-align:center">
       <div style="font-size:10px;color:${mc};font-weight:800;margin-bottom:5px;letter-spacing:.2px">${key}</div>
       <div style="font-size:12px;font-weight:700;margin-bottom:2px"><span style="color:${cWin}">${w}승</span> <span style="color:${cLoss}">${l}패</span></div>
       <div style="font-size:13px;font-weight:900;color:${wrCol}">${t?wr+'%':'-'}</div>
@@ -89,7 +89,7 @@ function buildPlayerRaceStatsHTML(modeHist){
   const raceBox=(r,label,barCol)=>{
     const w=raceAgg[r].w, l=raceAgg[r].l, t=w+l;
     const wr=t?Math.round(w/t*100):0;
-    return `<div style="flex:1;min-width:120px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface)">
+    return `<div class="pd-race-card" style="flex:1;min-width:120px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface)">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
         <span style="font-weight:1000;font-size:12px;color:var(--text2)">${label}</span>
         <span style="font-size:10px;color:var(--gray-l);font-weight:900">${t}게임</span>
@@ -140,7 +140,7 @@ function buildPlayerOppTableHTML(opts){
       </div>
     </div>
     <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
-      <table style="margin:0;border:none;border-radius:0">
+      <table class="pd-opp-table" style="margin:0;border:none;border-radius:0">
         <thead><tr>
           <th style="text-align:left;padding:7px 12px">선수</th>
           <th style="text-align:center;width:40px">종족</th>
@@ -192,7 +192,7 @@ function buildPlayerVsUnivSectionHTML(opts){
   const visible = rows.slice(0, maxVisible);
   const hidden = rows.slice(maxVisible);
   const card = (row)=>`
-    <div style="border:1px solid rgba(148,163,184,.16);border-radius:12px;background:rgba(255,255,255,.88);padding:9px 10px;box-shadow:0 6px 14px rgba(15,23,42,.03)">
+    <div class="pd-univ-card" style="border:1px solid rgba(148,163,184,.16);border-radius:12px;background:rgba(255,255,255,.88);padding:9px 10px;box-shadow:0 6px 14px rgba(15,23,42,.03)">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
         <span class="${row.univ&&row.univ!=='무소속'?'clickable-univ':''}" data-icon-done="1"
           ${row.univ&&row.univ!=='무소속'?`onclick="openUnivModal('${(typeof escJS==='function'?escJS(row.univ):String(row.univ).replace(/'/g,"\\'"))}')"`:''}

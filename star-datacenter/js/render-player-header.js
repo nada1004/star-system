@@ -41,64 +41,64 @@ function buildPlayerHeaderCardHTML(opts){
   const wrColor = wr>=60?cWin:wr>=50?'#4ade80':wr>=40?'#fbbf24':cLoss;
 
   const statsBlock = `
-    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:14px 16px 16px;background:linear-gradient(180deg,#ffffff,${col}${p2h(statsTint)})">
-      <div style="text-align:center;padding:10px 6px 11px;border:1.5px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(15,23,42,.05);position:relative;overflow:hidden">
+    <div class="pd-hero-stats" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:14px 16px 16px;background:linear-gradient(180deg,#ffffff,${col}${p2h(statsTint)})">
+      <div class="pd-hero-stat" data-pd-stat="record" style="text-align:center;padding:10px 6px 11px;border:1.5px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(15,23,42,.05);position:relative;overflow:hidden">
         <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.06;line-height:1">⚔️</div>
-        <div style="font-size:8.5px;font-weight:900;color:var(--gray-l,#94a3b8);letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">전적</div>
-        <div style="font-weight:1000;font-size:${pmStatsNum1}px"><span style="color:${cWin}">${p.win}승</span>&nbsp;<span style="color:${cLoss}">${p.loss}패</span></div>
+        <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:900;color:var(--gray-l,#94a3b8);letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">전적</div>
+        <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsNum1}px"><span style="color:${cWin}">${p.win}승</span>&nbsp;<span style="color:${cLoss}">${p.loss}패</span></div>
       </div>
-      <div style="text-align:center;padding:10px 6px 11px;border:1.5px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(15,23,42,.05);position:relative;overflow:hidden">
+      <div class="pd-hero-stat" data-pd-stat="winrate" style="text-align:center;padding:10px 6px 11px;border:1.5px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(15,23,42,.05);position:relative;overflow:hidden">
         <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.06;line-height:1">📈</div>
-        <div style="font-size:8.5px;font-weight:900;color:var(--gray-l,#94a3b8);letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">승률</div>
-        <div style="font-weight:1000;font-size:${pmStatsBig}px;line-height:1;color:${tot?wrColor:'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
-        ${tot?`<div style="height:3px;border-radius:99px;background:rgba(148,163,184,.2);margin:5px 6px 0;overflow:hidden"><div style="height:100%;width:${wrBarW}%;background:${wrColor};border-radius:99px"></div></div>`:''}
+        <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:900;color:var(--gray-l,#94a3b8);letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">승률</div>
+        <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsBig}px;line-height:1;color:${tot?wrColor:'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
+        ${tot?`<div class="pd-hero-stat-bar" style="height:3px;border-radius:99px;background:rgba(148,163,184,.2);margin:5px 6px 0;overflow:hidden"><div style="height:100%;width:${wrBarW}%;background:${wrColor};border-radius:99px"></div></div>`:''}
       </div>
-      <div style="text-align:center;padding:10px 6px 11px;border:1.5px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(15,23,42,.05);position:relative;overflow:hidden">
+      <div class="pd-hero-stat" data-pd-stat="points" style="text-align:center;padding:10px 6px 11px;border:1.5px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(15,23,42,.05);position:relative;overflow:hidden">
         <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.06;line-height:1">🏆</div>
-        <div style="font-size:8.5px;font-weight:900;color:var(--gray-l,#94a3b8);letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">포인트</div>
-        <div style="font-weight:1000;font-size:20px;line-height:1;color:${(p.points||0)>=0?cWin:cLoss}">${pS(p.points)}</div>
+        <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:900;color:var(--gray-l,#94a3b8);letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">포인트</div>
+        <div class="pd-hero-stat-val" style="font-weight:1000;font-size:20px;line-height:1;color:${(p.points||0)>=0?cWin:cLoss}">${pS(p.points)}</div>
       </div>
-      <div style="text-align:center;padding:10px 6px 11px;border:1.5px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(15,23,42,.05);position:relative;overflow:hidden">
+      <div class="pd-hero-stat" data-pd-stat="status" style="text-align:center;padding:10px 6px 11px;border:1.5px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(15,23,42,.05);position:relative;overflow:hidden">
         <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.06;line-height:1">⚡</div>
-        <div style="font-size:8.5px;font-weight:900;color:var(--gray-l,#94a3b8);letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">상태</div>
-        <div style="font-weight:1000;font-size:${pmStatsNum1+1}px;line-height:1;color:${p.retired?'#94a3b8':'#0f172a'}">${p.retired?'은퇴':'활동중'}</div>
+        <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:900;color:var(--gray-l,#94a3b8);letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">상태</div>
+        <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsNum1+1}px;line-height:1;color:${p.retired?'#94a3b8':'#0f172a'}">${p.retired?'은퇴':'활동중'}</div>
       </div>
     </div>`;
 
   // ELO 패널 (PC) — 레이팅과 추이를 하나의 카드로 통합해 붕 뜨는 느낌 제거
   const eloPanel = `
-    <div style="display:flex;flex-direction:column;min-width:118px;align-self:stretch;justify-content:center">
-      <div style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.24);border-radius:16px;padding:10px 12px ${eloSparkHTML?'8px':'10px'};text-align:center;backdrop-filter:blur(10px)">
-        <div style="font-size:8px;letter-spacing:1.2px;font-weight:900;color:rgba(255,255,255,.6);margin-bottom:2px">ELO RATING</div>
-        <div style="font-size:28px;font-weight:1000;color:#fff;line-height:1.05;letter-spacing:-1px">${eloVal}</div>
-        <div style="font-size:9px;font-weight:900;color:${eloGradeColor};letter-spacing:.6px;margin-top:2px">${eloGrade}</div>
+    <div class="pd-elo-panel" style="display:flex;flex-direction:column;min-width:118px;align-self:stretch;justify-content:center">
+      <div class="pd-elo-panel-inner" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.24);border-radius:16px;padding:10px 12px ${eloSparkHTML?'8px':'10px'};text-align:center;backdrop-filter:blur(10px)">
+        <div class="pd-elo-label" style="font-size:8px;letter-spacing:1.2px;font-weight:900;color:rgba(255,255,255,.6);margin-bottom:2px">ELO RATING</div>
+        <div class="pd-elo-value" style="font-size:28px;font-weight:1000;color:#fff;line-height:1.05;letter-spacing:-1px">${eloVal}</div>
+        <div class="pd-elo-grade" style="font-size:9px;font-weight:900;color:${eloGradeColor};letter-spacing:.6px;margin-top:2px">${eloGrade}</div>
         ${eloSparkHTML?`<div style="margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center">${eloSparkHTML}</div>`:''}
       </div>
     </div>`;
 
   // ELO 패널 (모바일)
   const eloMobilePanel = `
-    <div style="display:flex;gap:8px;align-items:stretch">
-      <div style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:8px 10px;text-align:center;backdrop-filter:blur(8px)">
-        <div style="font-size:8px;letter-spacing:1px;font-weight:900;color:rgba(255,255,255,.6);margin-bottom:1px">ELO RATING</div>
-        <div style="font-size:24px;font-weight:1000;color:#fff;line-height:1.1">${eloVal}</div>
-        <div style="font-size:9px;font-weight:900;color:${eloGradeColor}">${eloGrade}</div>
+    <div class="pd-elo-panel pd-elo-panel--mb" style="display:flex;gap:8px;align-items:stretch">
+      <div class="pd-elo-panel-inner" style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:8px 10px;text-align:center;backdrop-filter:blur(8px)">
+        <div class="pd-elo-label" style="font-size:8px;letter-spacing:1px;font-weight:900;color:rgba(255,255,255,.6);margin-bottom:1px">ELO RATING</div>
+        <div class="pd-elo-value" style="font-size:24px;font-weight:1000;color:#fff;line-height:1.1">${eloVal}</div>
+        <div class="pd-elo-grade" style="font-size:9px;font-weight:900;color:${eloGradeColor}">${eloGrade}</div>
       </div>
       ${eloSparkHTML?`<div style="flex:1;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:7px 8px;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center">${eloSparkHTML}</div>`:''}
     </div>`;
 
   const photoBorder = `width:${pmPhotoSz+14}px;height:${pmPhotoSz+14}px;border-radius:var(--su_profile_radius,${pmPhotoR+6}px);clip-path:var(--su_profile_clip,none);background:rgba(255,255,255,.14);border:2.5px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;position:relative;box-shadow:var(--su_profile_fx, 0 10px 28px rgba(0,0,0,.22),0 0 0 1px rgba(255,255,255,.1));backdrop-filter:blur(8px)`;
 
-  const univBadge = `<span class="ubadge${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
+  const univBadge = `<span class="ubadge pd-chip${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
     ${p.univ&&p.univ!=='무소속'?`data-pph-action="open-univ" data-pph-univ="${String(p.univ).replace(/"/g,'&quot;')}"`:''} 
     style="background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.32);font-size:${pmMetaFs}px;padding:${pmMetaPad};display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-weight:800;backdrop-filter:blur(6px)${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}">
     ${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>`;
 
   const _raceAccent = { T:'#60a5fa', Z:'#c084fc', P:'#fbbf24', N:'#cbd5e1' }[p.race] || '#cbd5e1';
-  const raceBadge = `<span style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:800;color:#fff;backdrop-filter:blur(6px);display:inline-flex;align-items:center;gap:5px">
+  const raceBadge = `<span class="pd-chip" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:800;color:#fff;backdrop-filter:blur(6px);display:inline-flex;align-items:center;gap:5px">
     <span style="width:7px;height:7px;border-radius:50%;background:${_raceAccent};box-shadow:0 0 0 2px rgba(255,255,255,.25);flex-shrink:0"></span>${p.race||''} ${RNAME[p.race]||''}</span>`;
 
-  const tierBadge = p.tier ? `<span style="background:rgba(255,255,255,.20);border:1.5px solid rgba(255,255,255,.36);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:900;color:#fff">${getTierLabel(p.tier)||p.tier}</span>` : '';
+  const tierBadge = p.tier ? `<span class="pd-chip" style="background:rgba(255,255,255,.20);border:1.5px solid rgba(255,255,255,.36);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:900;color:#fff">${getTierLabel(p.tier)||p.tier}</span>` : '';
 
   const bgLayerHTML = hdrBgLayer?.url
     ? `<div style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl(hdrBgLayer.url).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:${_bgPos};background-size:${_bgSize};transform:scale(${_bgScale/100});transform-origin:center center;opacity:.42;pointer-events:none"></div>`
@@ -109,10 +109,10 @@ function buildPlayerHeaderCardHTML(opts){
 
   const hdrContent_PC = `
     <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;position:relative">
-      <div style="${photoBorder}">${photoHTML}</div>
+      <div class="pd-hero-photo" style="${photoBorder}">${photoHTML}</div>
       <div style="min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px">
-          <span style="font-size:${pmNameFs+4}px;font-weight:1000;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28);letter-spacing:-.02em;line-height:1">${p.name}${genderIcon(p.gender)}</span>
+          <span class="pd-hero-name" style="font-size:${pmNameFs+4}px;font-weight:1000;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28);letter-spacing:-.02em;line-height:1">${p.name}${genderIcon(p.gender)}</span>
           ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
           ${tierBadge}
         </div>
@@ -126,9 +126,9 @@ function buildPlayerHeaderCardHTML(opts){
   const hdrContent_MB = `
     <div style="display:flex;flex-direction:column;gap:11px;position:relative">
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="${photoBorder.replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`).replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`)}">${photoHTML}</div>
+        <div class="pd-hero-photo" style="${photoBorder.replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`).replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`)}">${photoHTML}</div>
         <div style="min-width:0;flex:1">
-          <div style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${p.name}${genderIcon(p.gender)}</div>
+          <div class="pd-hero-name" style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${p.name}${genderIcon(p.gender)}</div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
             ${p.role?getRoleBadgeHTML(p.role,'10px'):''}${tierBadge}
           </div>
@@ -140,8 +140,8 @@ function buildPlayerHeaderCardHTML(opts){
       ${eloMobilePanel}
     </div>`;
 
-  return `<div style="background:linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.16);border-radius:${pmCardR+6}px;margin-bottom:16px;overflow:hidden;box-shadow:0 20px 52px rgba(15,23,42,.12),0 4px 16px rgba(15,23,42,.06)">
-    <div style="background:${hdrBg};padding:${pmHdrPad};position:relative;overflow:hidden">
+  return `<div class="pd-hero" style="background:linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.16);border-radius:${pmCardR+6}px;margin-bottom:16px;overflow:hidden;box-shadow:0 20px 52px rgba(15,23,42,.12),0 4px 16px rgba(15,23,42,.06)">
+    <div class="pd-hero-top" style="background:${hdrBg};padding:${pmHdrPad};position:relative;overflow:hidden">
       ${bgLayerHTML}
       ${noiseOverlay}
       <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(15,23,42,.06),rgba(15,23,42,.26));pointer-events:none"></div>
@@ -184,7 +184,7 @@ function buildPlayerSummaryStripHTML(opts){
     <span style="font-size:10px;color:var(--gray-l);margin-left:4px;font-weight:700">최근${recent10.length}</span>
   </div>` : '';
   if(!(streakHTML||rankHTML||formHTML)) return '';
-  return `<div style="background:linear-gradient(135deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.15);border-radius:16px;padding:11px 14px;margin-bottom:14px;box-shadow:0 6px 18px rgba(15,23,42,.04)">
+  return `<div class="pd-strip" style="background:linear-gradient(135deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.15);border-radius:16px;padding:11px 14px;margin-bottom:14px;box-shadow:0 6px 18px rgba(15,23,42,.04)">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       ${rankHTML}${streakHTML}${formHTML}
     </div>

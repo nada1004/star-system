@@ -86,9 +86,9 @@ function buildUnivHeaderCardHTML(opts){
         <span style="font-size:calc(${logoSizeEff} * 0.52);font-weight:1000;color:#fff;line-height:1;text-shadow:0 2px 10px rgba(0,0,0,.2)">${univName ? univName.trim().charAt(0) : '?'}</span>
       </div>`;
 
-  return `<div style="border-radius:26px;overflow:hidden;margin-bottom:18px;box-shadow:0 28px 60px rgba(${colRgb},.2),0 8px 22px rgba(15,23,42,.10)">
+  return `<div class="ud-hero" style="border-radius:26px;overflow:hidden;margin-bottom:18px;box-shadow:0 28px 60px rgba(${colRgb},.2),0 8px 22px rgba(15,23,42,.10)">
     <!-- 헤더 배너 -->
-    <div style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${isMobile?'20px 16px 28px':'26px 22px 34px 18px'};position:relative;overflow:hidden;min-height:${isMobile?'170px':'192px'}">
+    <div class="ud-hero-top" style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${isMobile?'20px 16px 28px':'26px 22px 34px 18px'};position:relative;overflow:hidden;min-height:${isMobile?'170px':'192px'}">
       ${bgLayerHTML}
       <!-- 장식 원 -->
       <div style="position:absolute;top:-34px;right:-24px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
@@ -108,14 +108,14 @@ function buildUnivHeaderCardHTML(opts){
             </div>
           </div>
           <div style="min-width:0;flex:0 1 auto;margin-left:${isMobile?'6px':'12px'}">
-            <div style="font-size:${Math.round(uNameFs*1.1)}px;font-weight:1000;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.28),0 1px 0 rgba(255,255,255,.08);line-height:1.02;letter-spacing:-.04em;word-break:keep-all">${univName}${dissolvedBadge}</div>
+            <div style="font-size:${Math.round(uNameFs*1.1)}px;font-weight:1000;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.28),0 1px 0 rgba(255,255,255,.08);line-height:1.02;letter-spacing:-.04em;word-break:keep-all" class="ud-hero-name">${univName}${dissolvedBadge}</div>
           </div>
         </div>
         ${topAvatarsHTML}
       </div>
     </div>
     <!-- 하단 스탯 -->
-    <div style="background:var(--white,#fff);padding:${isMobile?'14px 14px 16px':'16px 20px 18px'}">
+    <div class="ud-hero-stats" style="background:var(--white,#fff);padding:${isMobile?'14px 14px 16px':'16px 20px 18px'}">
       ${tot?`<div style="margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <span style="font-size:10.5px;font-weight:900;color:var(--text3,#475569);letter-spacing:.5px">대학 승률</span>
@@ -126,10 +126,10 @@ function buildUnivHeaderCardHTML(opts){
         </div>
       </div>`:''}
       <div style="display:grid;grid-template-columns:repeat(${isMobile?'2':'4'},1fr);gap:${isMobile?'7px':'9px'}">
-        ${statItems.map(s=>`<div style="background:linear-gradient(145deg,${col}0c,${col}06);border:1.5px solid ${col}22;border-radius:16px;padding:${isMobile?'10px 8px':'13px 10px'};text-align:center;position:relative;overflow:hidden;transition:border-color .15s">
+        ${statItems.map(s=>`<div class="ud-hero-stat" style="background:linear-gradient(145deg,${col}0c,${col}06);border:1.5px solid ${col}22;border-radius:16px;padding:${isMobile?'10px 8px':'13px 10px'};text-align:center;position:relative;overflow:hidden;transition:border-color .15s">
           <div style="position:absolute;bottom:-8px;right:-6px;font-size:26px;opacity:.07;line-height:1">${s.icon}</div>
-          <div style="font-size:8.5px;color:var(--gray-l,#94a3b8);margin-bottom:5px;font-weight:900;letter-spacing:.9px;text-transform:uppercase">${s.label}</div>
-          <div style="font-weight:1000;font-size:${s.fs}px;color:var(--text,#1e293b)">${s.value}</div>
+          <div class="ud-hero-stat-label" style="font-size:8.5px;color:var(--gray-l,#94a3b8);margin-bottom:5px;font-weight:900;letter-spacing:.9px;text-transform:uppercase">${s.label}</div>
+          <div class="ud-hero-stat-val" style="font-weight:1000;font-size:${s.fs}px;color:var(--text,#1e293b)">${s.value}</div>
         </div>`).join('')}
       </div>
     </div>
@@ -146,8 +146,8 @@ function buildUnivMembersTableHTML(opts){
   const colRgb = _hexToRgb(col);
   let h=`<div class="su-sec" style="--su-sec-accent:${col}">
     <div class="su-sec__title">소속 스트리머 <small>(${sorted.length}명)</small></div>
-    <div style="border:1px solid rgba(148,163,184,.16);border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#ffffff,#f8fafc);box-shadow:0 8px 24px rgba(${colRgb},.07),0 2px 8px rgba(15,23,42,.04)">
-    <table style="margin:0;border:none;border-radius:0;table-layout:auto">
+    <div class="ud-members-table-wrap" style="border:1px solid rgba(148,163,184,.16);border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#ffffff,#f8fafc);box-shadow:0 8px 24px rgba(${colRgb},.07),0 2px 8px rgba(15,23,42,.04)">
+    <table class="ud-members-table" style="margin:0;border:none;border-radius:0;table-layout:auto">
       <thead>
         <tr>
           <th style="text-align:center;width:1px;white-space:nowrap;padding:9px 7px;background:${col}!important;color:#fff!important;font-weight:900;letter-spacing:.3px;font-size:11px">직책</th>
@@ -196,7 +196,7 @@ function buildUnivOppStatsHTML(opts){
     const oc=gc(opp);
     const _hexToRgb = h => { const m=String(h||'').match(/^#([0-9a-f]{6})$/i); if(!m)return '59,130,246'; const n=parseInt(m[1],16); return `${(n>>16)&255},${(n>>8)&255},${n&255}`; };
     const ocRgb = _hexToRgb(oc);
-    h+=`<div style="background:var(--white);border:1.5px solid rgba(148,163,184,.18);border-radius:14px;padding:${isMobile?'9px 11px':(isTablet?'10px 13px':'11px 15px')};text-align:center;cursor:pointer;min-width:${isMobile?'78px':'92px'};box-shadow:0 4px 12px rgba(${ocRgb},.08),0 1px 4px rgba(0,0,0,.04);transition:box-shadow .15s,transform .15s"
+    h+=`<div class="ud-opp-card" style="background:var(--white);border:1.5px solid rgba(148,163,184,.18);border-radius:14px;padding:${isMobile?'9px 11px':(isTablet?'10px 13px':'11px 15px')};text-align:center;cursor:pointer;min-width:${isMobile?'78px':'92px'};box-shadow:0 4px 12px rgba(${ocRgb},.08),0 1px 4px rgba(0,0,0,.04);transition:box-shadow .15s,transform .15s"
       data-uds-action="open-univ" data-uds-univ="${opp.replace(/"/g,'&quot;')}">
       <span class="ubadge" data-icon-done="1" style="background:${oc};font-size:${isMobile?'9px':'10px'};margin-bottom:7px;display:inline-flex;align-items:center;gap:3px">${gUI(opp,isMobile?'10px':'11px')}${opp}</span>
       <div style="font-size:${isMobile?'11px':'12px'};margin-top:4px;font-weight:700"><span class="wt">${s.w}</span>승 <span class="lt">${s.l}</span>패</div>

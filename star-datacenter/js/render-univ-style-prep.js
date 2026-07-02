@@ -16,6 +16,8 @@ function prepareUnivDetailStyleData(univName){
   const bgScale=Math.max(40, Math.min(220, Number(ucfg.detailHeaderBgScale||udStyle.header_bg_scale||100)||100));
   const bgPosX=Math.max(0, Math.min(100, Number(ucfg.detailHeaderBgPosX ?? udStyle.header_bg_pos_x ?? 50) || 50));
   const bgPosY=Math.max(0, Math.min(100, Number(ucfg.detailHeaderBgPosY ?? udStyle.header_bg_pos_y ?? 50) || 50));
+  const _validUdModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora'];
+  const designMode = _validUdModes.includes(udStyle.design_mode) ? udStyle.design_mode : 'classic';
   return {
     col,
     isMobile,
@@ -26,7 +28,8 @@ function prepareUnivDetailStyleData(univName){
     logoSize,
     logoSizeEff,
     hdrBg:`linear-gradient(135deg,${col},${col}cc)`,
-    hdrBgLayer:bgImg ? { url:bgImg, fit:(bgFit==='fill'?'fill':bgFit==='cover'?'cover':'contain'), scale:bgScale, posX:bgPosX, posY:bgPosY } : null
+    hdrBgLayer:bgImg ? { url:bgImg, fit:(bgFit==='fill'?'fill':bgFit==='cover'?'cover':'contain'), scale:bgScale, posX:bgPosX, posY:bgPosY } : null,
+    designMode
   };
 }
 

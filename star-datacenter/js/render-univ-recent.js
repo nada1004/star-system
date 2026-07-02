@@ -73,7 +73,7 @@ function buildUnivRecentMatchesHTML(opts){
       ? `<div style="display:flex;flex-direction:column;align-items:center;gap:0;background:${mc};color:#fff;font-size:${isMobile?'8.5px':'9.5px'};font-weight:900;padding:3px ${isMobile?'6px':'8px'};border-radius:9px;white-space:nowrap;letter-spacing:.2px;line-height:1.4;text-align:center">${_modeShort}<span style="font-size:7px;font-weight:700;opacity:.88">${_compSub.length>8?_compSub.slice(0,7)+'…':_compSub}</span></div>`
       : `<div style="background:${mc};color:#fff;font-size:${isMobile?'8.5px':'9.5px'};font-weight:900;padding:3px ${isMobile?'7px':'9px'};border-radius:9px;white-space:nowrap;letter-spacing:.2px">${_modeShort}</div>`;
 
-    h += `<div style="background:var(--white,#fff);border:1px solid rgba(148,163,184,.16);border-radius:16px;padding:${isMobile?'10px 12px':'11px 16px'};display:flex;align-items:center;gap:${isMobile?'7px':'11px'};box-shadow:0 2px 10px rgba(${colRgb},.05),0 1px 3px rgba(15,23,42,.04);position:relative;overflow:hidden;transition:box-shadow .15s">
+    h += `<div class="ud-match-card" style="background:var(--white,#fff);border:1px solid rgba(148,163,184,.16);border-radius:16px;padding:${isMobile?'10px 12px':'11px 16px'};display:flex;align-items:center;gap:${isMobile?'7px':'11px'};box-shadow:0 2px 10px rgba(${colRgb},.05),0 1px 3px rgba(15,23,42,.04);position:relative;overflow:hidden;transition:box-shadow .15s">
       <!-- 결과 바 -->
       <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${leftBarColor};border-radius:2px 0 0 2px"></div>
       <!-- 날짜 -->
@@ -136,7 +136,7 @@ function buildUnivAceCardsHTML(opts){
     const photoEl=ap.photo
       ?`<img src="${toHttpsUrl(ap.photo)}" style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);object-fit:cover;border:2px solid ${col}55;box-shadow:0 4px 10px rgba(0,0,0,.14)" onerror="this.style.display='none'">`
       :`<div style="width:38px;height:38px;border-radius:var(--su_profile_radius,50%);background:linear-gradient(135deg,${col},${col}88);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:1000;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.12)">${ap.name[0]}</div>`;
-    return `<div style="flex:1;min-width:140px;background:linear-gradient(145deg,${col}14,${col}08);border:1.5px solid ${col}38;border-radius:18px;padding:13px 14px;cursor:pointer;box-shadow:0 8px 22px rgba(15,23,42,.05),0 2px 6px ${col}14;transition:box-shadow .15s,transform .15s" data-ur-action="open-player" data-ur-player="${safeName}">
+    return `<div class="ud-ace-card" style="flex:1;min-width:140px;background:linear-gradient(145deg,${col}14,${col}08);border:1.5px solid ${col}38;border-radius:18px;padding:13px 14px;cursor:pointer;box-shadow:0 8px 22px rgba(15,23,42,.05),0 2px 6px ${col}14;transition:box-shadow .15s,transform .15s" data-ur-action="open-player" data-ur-player="${safeName}">
       <div style="font-size:9px;font-weight:900;color:${col};margin-bottom:8px;letter-spacing:.4px;text-transform:uppercase">${label}</div>
       <div style="display:flex;align-items:center;gap:9px">
         ${photoEl}

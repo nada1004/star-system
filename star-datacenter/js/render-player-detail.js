@@ -18,6 +18,7 @@ function buildPlayerDetailHTML(p){
   const _modeTint = _style?.modeTint ?? 10;
   const _cWin = _style?.cWin || _winC;
   const _cLoss = _style?.cLoss || _lossC;
+  const _designMode = _style?.designMode || 'classic';
   const _year=_pdState.year||'';
   const _histBase = (typeof preparePlayerHistoryBaseData==='function')
     ? preparePlayerHistoryBaseData(p)
@@ -167,7 +168,7 @@ function buildPlayerDetailHTML(p){
 
   const _eloChartPts=_computed?.eloChartPts || _modeHist.filter(h=>h.eloDelta!=null||h.eloAfter!=null);
   if(_eloChartPts.length>=3){
-    h+=`<div style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+    h+=`<div class="pd-elo-chart-card" style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
       <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
         <span style="display:inline-block;width:3px;height:14px;background:#7c3aed;border-radius:2px"></span>
         ELO 변화 추이${_year?` (${_year}년)`:''}
@@ -271,7 +272,12 @@ function buildPlayerDetailHTML(p){
     window._pEloChartDataCache[p.name] = _eloChartPts;
   }catch(e){}
 
-  return `<div class="pd-premium-shell">${h}</div>`;
+  const _modeDecor = (typeof buildPlayerDetailModeDecorHTML==='function') ? buildPlayerDetailModeDecorHTML(_designMode) : '';
+  try{
+    const _pm = document.getElementById('playerModal');
+    if(_pm) _pm.setAttribute('data-pd-mode', _designMode);
+  }catch(e){}
+  return `<div class="pd-premium-shell" data-pd-mode="${_designMode}">${_modeDecor}${h}</div>`;
 }
 
 try{

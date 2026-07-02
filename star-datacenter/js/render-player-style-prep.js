@@ -8,7 +8,7 @@ function preparePlayerDetailStyleData(player){
       pmCardR:18, pmHdrPad:'18px 18px 16px', pmPhotoSz:76, pmPhotoR:16, pmNameFs:20,
       pmMetaFs:11, pmMetaPad:'3px 10px', pmMetaPad2:'3px 9px', pmStatsPad:'14px 6px',
       pmStatsNum1:14, pmStatsBig:22,
-      chipFs:'9px', chipPad:'2px 6px', chipR:'8px'
+      chipFs:'9px', chipPad:'2px 6px', chipR:'8px', designMode:'classic'
     };
   }
   const col=gc(p.univ)||'#6366f1';
@@ -62,6 +62,8 @@ function preparePlayerDetailStyleData(player){
   const cp=CPM[pdStyle.color_preset||'normal'];
   const cWin=cp.win;
   const cLoss=cp.loss;
+  const _validDesignModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora'];
+  const designMode=_validDesignModes.includes(pdStyle.design_mode) ? pdStyle.design_mode : 'classic';
   const pmCardR = isMobile ? 14 : (isTablet ? 16 : 18);
   const pmHdrPad = isMobile ? '14px 14px 12px' : (isTablet ? '16px 16px 14px' : '18px 18px 16px');
   const _profileBase = isMobile ? 62 : (isTablet ? 70 : 76);
@@ -86,7 +88,7 @@ function preparePlayerDetailStyleData(player){
   return {
     col, winC, lossC, cWin, cLoss, pdStyle, isMobile, isTablet, hdrBg, hdrBgLayer, p2h, statsTint, modeTint,
     pmCardR, pmHdrPad, pmPhotoSz, pmPhotoR, pmNameFs, pmMetaFs, pmMetaPad, pmMetaPad2,
-    pmStatsPad, pmStatsNum1, pmStatsBig, chipFs, chipPad, chipR
+    pmStatsPad, pmStatsNum1, pmStatsBig, chipFs, chipPad, chipR, designMode
   };
 }
 

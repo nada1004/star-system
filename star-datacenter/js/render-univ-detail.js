@@ -60,7 +60,13 @@ function buildUnivDetailHTML(univName){
     ? buildUnivAceCardsHTML({ members, col })
     : '';
 
-  return `<div class="ud-premium-shell">${h}</div>`;
+  const _udMode = _style?.designMode || 'classic';
+  const _udDecor = (typeof buildUnivDetailModeDecorHTML==='function') ? buildUnivDetailModeDecorHTML(_udMode) : '';
+  try{
+    const _um = document.getElementById('univModal');
+    if(_um) _um.setAttribute('data-ud-mode', _udMode);
+  }catch(e){}
+  return `<div class="ud-premium-shell" data-ud-mode="${_udMode}">${_udDecor}${h}</div>`;
 }
 
 try{
