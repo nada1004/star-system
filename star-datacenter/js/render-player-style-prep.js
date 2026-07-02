@@ -8,7 +8,7 @@ function preparePlayerDetailStyleData(player){
       pmCardR:18, pmHdrPad:'18px 18px 16px', pmPhotoSz:76, pmPhotoR:16, pmNameFs:20,
       pmMetaFs:11, pmMetaPad:'3px 10px', pmMetaPad2:'3px 9px', pmStatsPad:'14px 6px',
       pmStatsNum1:14, pmStatsBig:22,
-      chipFs:'9px', chipPad:'2px 6px', chipR:'8px', designMode:'classic', layoutMode:'default', pastelVars:null
+      chipFs:'9px', chipPad:'2px 6px', chipR:'8px', designMode:'classic', layoutMode:'default', pastelVars:null, univBtnEnabled:false
     };
   }
   const col=gc(p.univ)||'#6366f1';
@@ -148,9 +148,13 @@ function preparePlayerDetailStyleData(player){
       '--su-pd-strip-bg': `linear-gradient(135deg,rgba(255,255,255,.98),${_rgba(baseBg, cardBottom)})`,
       '--su-pd-card-bg': `linear-gradient(180deg,rgba(255,255,255,.985),${_rgba(baseBg, cardTop)})`,
       '--su-pd-card-border': _rgba(baseBg, Math.max(.14, headerStrong*.78)),
-      '--su-pd-card-chip-bg': _rgba(baseBg, Math.max(.08, headerStrong*.58))
+      '--su-pd-card-chip-bg': _rgba(baseBg, Math.max(.08, headerStrong*.58)),
+      '--su-pd-card-btn-bg': `linear-gradient(135deg,${_rgba(baseBg, Math.max(.16, headerStrong*.9))},rgba(255,255,255,.92))`,
+      '--su-pd-card-btn-border': _rgba(baseBg, Math.max(.24, headerStrong*1.15)),
+      '--su-pd-card-btn-text': _mix(col, '#0b1020', .42)
     };
   }
+  const univBtnEnabled = !!pdStyle.univ_btn_enabled;
   const pmCardR = isMobile ? 14 : (isTablet ? 16 : 18);
   const pmHdrPad = isMobile ? '14px 14px 12px' : (isTablet ? '16px 16px 14px' : '18px 18px 16px');
   const _profileBase = isMobile ? 62 : (isTablet ? 70 : 76);
@@ -175,7 +179,7 @@ function preparePlayerDetailStyleData(player){
   return {
     col, winC, lossC, cWin, cLoss, pdStyle, isMobile, isTablet, hdrBg:hdrBgEff, hdrBgLayer, p2h, statsTint, modeTint,
     pmCardR, pmHdrPad, pmPhotoSz, pmPhotoR, pmNameFs, pmMetaFs, pmMetaPad, pmMetaPad2,
-      pmStatsPad, pmStatsNum1, pmStatsBig, chipFs, chipPad, chipR, designMode, layoutMode, pastelVars, modalBgVars, bgScope
+      pmStatsPad, pmStatsNum1, pmStatsBig, chipFs, chipPad, chipR, designMode, layoutMode, pastelVars, modalBgVars, bgScope, univBtnEnabled
   };
 }
 

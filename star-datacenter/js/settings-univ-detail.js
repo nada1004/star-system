@@ -13,6 +13,7 @@ function _renderCfgUdSection(){
   const udUnivBgPastel=s.univ_bg_pastel!==undefined?!!s.univ_bg_pastel:true;
   const udUnivBgTint=(()=>{ const n=parseInt(s.univ_bg_tint??'18',10); return isNaN(n)?18:Math.max(0,Math.min(60,n)); })();
   const udUnivBgScope=['header','body','cards'].includes(s.univ_bg_scope)?s.univ_bg_scope:'cards';
+  const udUnivBtnEnabled=s.univ_btn_enabled!==undefined?!!s.univ_btn_enabled:false;
   const dmCards = [
     ['classic','✨ 클래식','기존 화이트/글래스 디자인','linear-gradient(135deg,#eef2ff,#e0e7ff)','#6366f1'],
     ['editorial','📰 미니멀 매거진','화이트 · 세리프 · 여백 중심','linear-gradient(135deg,#fdfcf9,#f5f2ea)','#1a1a1a'],
@@ -183,6 +184,12 @@ function _renderCfgUdSection(){
         <span id="ud-univbg-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${udUnivBgTint}%</span>
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">헤더/본문 배경에 대학 색상이 은은하게 섞입니다. 파스텔톤을 끄면 원래 대학 색감에 더 가깝게 보입니다.</div>
+      <div style="height:1px;background:var(--border2);margin:10px 0"></div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" ${udUnivBtnEnabled?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setUdUnivBtnEnabled(this.checked)">
+        <span style="font-size:12px;color:var(--text)">팝업 안 버튼에도 대학 색상 적용</span>
+      </label>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">켜면 팝업 안의 보조 버튼(흰 버튼)에도 대학 색상이 은은하게 섞입니다. 배경 적용을 켜야 함께 동작합니다.</div>
     </div>
     <div style="font-size:11px;color:var(--gray-l);margin-top:10px;padding:0 2px">※ 대학 상세 헤더 배경 이미지는 스트리머 상세 설정 안내와 별개로, 각 대학 편집 화면에서 개별 설정할 수 있습니다.</div>
   `;
@@ -246,6 +253,14 @@ function _setUdUnivBgScope(scope){
   try{ _refreshOpenDetailModals(); }catch(e){}
   try{ _pdTouchPrefs(); }catch(e){}
 }
+function _setUdUnivBtnEnabled(checked){
+  const s=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
+  s.univ_btn_enabled=!!checked;
+  localStorage.setItem('su_ud_style',JSON.stringify(s));
+  _renderCfgUdSection();
+  try{ _refreshOpenDetailModals(); }catch(e){}
+  try{ _pdTouchPrefs(); }catch(e){}
+}
 function _setUdUnivBgTint(val){
   const s=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
   const n=parseInt(val,10);
@@ -263,4 +278,5 @@ try{
   window._setUdUnivBgPastel = _setUdUnivBgPastel;
   window._setUdUnivBgScope = _setUdUnivBgScope;
   window._setUdUnivBgTint = _setUdUnivBgTint;
+  window._setUdUnivBtnEnabled = _setUdUnivBtnEnabled;
 }catch(e){}

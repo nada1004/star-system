@@ -103,8 +103,9 @@ function buildUnivDetailHTML(univName){
       _um.setAttribute('data-ud-layout', _layoutMode);
       _um.setAttribute('data-ud-univbg-enabled', _style?.modalBgVars ? '1' : '0');
       _um.setAttribute('data-ud-univbg-scope', _style?.bgScope || 'body');
+      _um.setAttribute('data-ud-univbtn-enabled', (_style?.modalBgVars && _style?.univBtnEnabled) ? '1' : '0');
       const keys=['--su-pastel-bg1','--su-pastel-bg2','--su-pastel-card','--su-pastel-border','--su-pastel-accent1','--su-pastel-accent2','--su-pastel-accent3','--su-pastel-text1','--su-pastel-text2','--su-pastel-shadow','--su-pastel-glow'];
-      const modalKeys=['--su-ud-modal-box-bg','--su-ud-modal-box-border','--su-ud-modal-title-bg','--su-ud-modal-body-bg','--su-ud-hero-bg','--su-ud-card-bg','--su-ud-card-border'];
+      const modalKeys=['--su-ud-modal-box-bg','--su-ud-modal-box-border','--su-ud-modal-title-bg','--su-ud-modal-body-bg','--su-ud-hero-bg','--su-ud-card-bg','--su-ud-card-border','--su-ud-card-btn-bg','--su-ud-card-btn-border','--su-ud-card-btn-text'];
       if(_udMode==='pastel' && _style?.pastelVars){
         keys.forEach(k=>{
           const v=_style.pastelVars[k];

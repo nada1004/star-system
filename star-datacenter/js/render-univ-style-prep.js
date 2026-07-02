@@ -98,9 +98,13 @@ function prepareUnivDetailStyleData(univName){
       '--su-ud-modal-body-bg': `linear-gradient(180deg,${_rgba(baseBg, bodyTop)},rgba(248,250,252,.94) 28%,${_rgba(baseBg, bodyBottom)} 100%)`,
       '--su-ud-hero-bg': `linear-gradient(180deg,${_rgba(baseBg, cardTop)},rgba(255,255,255,.96) 56%,${_rgba(baseBg, cardBottom)} 100%)`,
       '--su-ud-card-bg': `linear-gradient(180deg,rgba(255,255,255,.985),${_rgba(baseBg, cardTop)})`,
-      '--su-ud-card-border': _rgba(baseBg, Math.max(.14, headerStrong*.78))
+      '--su-ud-card-border': _rgba(baseBg, Math.max(.14, headerStrong*.78)),
+      '--su-ud-card-btn-bg': `linear-gradient(135deg,${_rgba(baseBg, Math.max(.16, headerStrong*.9))},rgba(255,255,255,.92))`,
+      '--su-ud-card-btn-border': _rgba(baseBg, Math.max(.24, headerStrong*1.15)),
+      '--su-ud-card-btn-text': _mix(col || '#6366f1', '#0b1020', .42)
     };
   }
+  const univBtnEnabled = !!udStyle.univ_btn_enabled;
   return {
     col,
     isMobile,
@@ -116,7 +120,8 @@ function prepareUnivDetailStyleData(univName){
     layoutMode,
     pastelVars,
     modalBgVars,
-    bgScope
+    bgScope,
+    univBtnEnabled
   };
 }
 

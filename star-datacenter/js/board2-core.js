@@ -64,6 +64,14 @@ if (typeof _b2NameTag !== 'function') {
 var _b2View = 'univ';
 var _b2SaveUniv = '전체';
 var _b2LineupUniv = '';
+var _b2LineupCardMode = (()=>{try{const m=localStorage.getItem('su_b2_lineup_card_mode')||'default';return m==='list'?'default':m;}catch(e){return 'default';}})(); // 라인업 카드 스타일: 'default'(기본) | 'stat'(사진+통계그리드형) | 'table'(테이블형)
+function _b2SetLineupCardMode(mode){
+  _b2LineupCardMode = ['default','stat','table'].includes(String(mode||'')) ? String(mode) : 'default';
+  try{ localStorage.setItem('su_b2_lineup_card_mode', _b2LineupCardMode); }catch(e){}
+  const el = document.getElementById('b2-content');
+  if (el) { el.innerHTML = _b2LineupView(); if (typeof injectUnivIcons === 'function') injectUnivIcons(el); }
+  if (typeof render === 'function') render();
+}
 var _b2Collapsed = new Set();
 // 프로필 탭 필터 변수
 var _b2PlayersUnivFilter = '전체';
@@ -401,12 +409,18 @@ function rBoard2(C, T) {
     </div>`;
   } else if (_b2View === 'lineup') {
     if (!_b2LineupUniv || !univList.some(u=>u.name===_b2LineupUniv)) _b2LineupUniv = univList[0] ? univList[0].name : '';
-    saveBar = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+    const _lcModeBtn = (mode, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2SetLineupCardMode('${mode}')" style="padding:4px 10px;border-radius:8px;border:1px solid ${_b2LineupCardMode===mode?'#2563eb':'var(--border2)'};background:${_b2LineupCardMode===mode?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LineupCardMode===mode?'#1d4ed8':'var(--text2)'};font-size:12px;font-weight:${_b2LineupCardMode===mode?900:700};cursor:pointer;margin-bottom:0">${label}</button>`;
+    saveBar = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">
       <div style="position:relative">
         <select id="b2-lineup-sel" class="b2-toolbar-select" onchange="_b2LineupUniv=this.value;document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           ${univList.map(u=>`<option value="${u.name}"${_b2LineupUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div style="display:flex;gap:4px">
+        ${_lcModeBtn('default','🖼️ 기본')}
+        ${_lcModeBtn('stat','📊 통계카드')}
+        ${_lcModeBtn('table','🗂️ 테이블')}
       </div>
       <button class="b2-toolbar-btn" onclick="saveB2LineupImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;

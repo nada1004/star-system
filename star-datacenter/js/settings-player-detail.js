@@ -19,6 +19,7 @@ function _renderCfgPdSection(){
   const pdUnivBgPastel=s.univ_bg_pastel!==undefined?!!s.univ_bg_pastel:true;
   const pdUnivBgTint=(()=>{ const n=parseInt(s.univ_bg_tint??'18',10); return isNaN(n)?18:Math.max(0,Math.min(60,n)); })();
   const pdUnivBgScope=['header','body','cards'].includes(s.univ_bg_scope)?s.univ_bg_scope:'cards';
+  const pdUnivBtnEnabled=s.univ_btn_enabled!==undefined?!!s.univ_btn_enabled:false;
   const _phbgPosX = (()=>{ const n=parseInt(s.header_bg_pos_x??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
   const _phbgPosY = (()=>{ const n=parseInt(s.header_bg_pos_y??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
   const uds=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
@@ -250,6 +251,12 @@ function _renderCfgPdSection(){
         <span id="pd-univbg-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${pdUnivBgTint}%</span>
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">켜면 헤더/본문 배경에 대학 색상이 은은하게 섞입니다. 농도는 0~60% 범위에서 조절됩니다.</div>
+      <div style="height:1px;background:var(--border2);margin:10px 0"></div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" ${pdUnivBtnEnabled?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdUnivBtnEnabled(this.checked)">
+        <span style="font-size:12px;color:var(--text)">팝업 안 버튼에도 소속 대학 색상 적용</span>
+      </label>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">켜면 팝업 안의 보조 버튼(흰 버튼)에도 대학 색상이 은은하게 섞입니다. 배경 적용을 켜야 함께 동작합니다.</div>
     </div>
     <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🖼 스트리머 상세 헤더 기본 배경</div>
@@ -534,6 +541,14 @@ function _setPdUnivBgScope(scope){
   try{ _refreshOpenDetailModals(); }catch(e){}
   _pdTouchPrefs();
 }
+function _setPdUnivBtnEnabled(checked){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.univ_btn_enabled=!!checked;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  try{ _renderCfgPdSection(); }catch(e){}
+  try{ _refreshOpenDetailModals(); }catch(e){}
+  _pdTouchPrefs();
+}
 function _setPdUnivBgTint(val){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   const n=parseInt(val,10);
@@ -711,6 +726,7 @@ try{
   window._setPdUnivBgPastel = _setPdUnivBgPastel;
   window._setPdUnivBgScope = _setPdUnivBgScope;
   window._setPdUnivBgTint = _setPdUnivBgTint;
+  window._setPdUnivBtnEnabled = _setPdUnivBtnEnabled;
   window._applyPdUiPreset = _applyPdUiPreset;
   window._setPdDesignMode = _setPdDesignMode;
   window._setPdLayoutMode = _setPdLayoutMode;

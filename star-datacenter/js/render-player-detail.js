@@ -312,8 +312,9 @@ function buildPlayerDetailHTML(p){
       _pm.setAttribute('data-pd-layout', _layoutMode);
       _pm.setAttribute('data-pd-univbg-enabled', _style?.modalBgVars ? '1' : '0');
       _pm.setAttribute('data-pd-univbg-scope', _style?.bgScope || 'body');
+      _pm.setAttribute('data-pd-univbtn-enabled', (_style?.modalBgVars && _style?.univBtnEnabled) ? '1' : '0');
       const keys=['--su-pastel-bg1','--su-pastel-bg2','--su-pastel-card','--su-pastel-border','--su-pastel-accent1','--su-pastel-accent2','--su-pastel-accent3','--su-pastel-text1','--su-pastel-text2','--su-pastel-shadow','--su-pastel-glow'];
-      const modalKeys=['--su-pd-modal-box-bg','--su-pd-modal-box-border','--su-pd-modal-title-bg','--su-pd-modal-body-bg','--su-pd-hero-bg','--su-pd-strip-bg','--su-pd-card-bg','--su-pd-card-border','--su-pd-card-chip-bg'];
+      const modalKeys=['--su-pd-modal-box-bg','--su-pd-modal-box-border','--su-pd-modal-title-bg','--su-pd-modal-body-bg','--su-pd-hero-bg','--su-pd-strip-bg','--su-pd-card-bg','--su-pd-card-border','--su-pd-card-chip-bg','--su-pd-card-btn-bg','--su-pd-card-btn-border','--su-pd-card-btn-text'];
       if(_designMode==='pastel' && _style?.pastelVars){
         keys.forEach(k=>{
           const v=_style.pastelVars[k];

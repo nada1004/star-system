@@ -570,6 +570,65 @@ function _buildGalleryView(rankMap){
   return html;
 }
 
+// 상세형 - "사진+리스트형" 두번째 레이아웃 전용 스타일 (최초 1회만 주입)
+;(function _injectFocusCardStyle(){
+  if(typeof document==='undefined') return;
+  if(document.getElementById('focus-card-detail-style')) return;
+  const s=document.createElement('style');
+  s.id='focus-card-detail-style';
+  s.textContent=[
+    '.streamer-focus-card2{display:flex;gap:0;border-radius:22px;overflow:hidden;background:var(--panel,#fff);border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 32px rgba(15,23,42,.08);min-height:420px}',
+    '.streamer-focus-card2-photo{position:relative;flex:0 0 42%;min-width:220px;overflow:hidden;background:#e2e8f0}',
+    '.streamer-focus-card2-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}',
+    '.streamer-focus-card2-photo .streamer-focus-photo-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:900;color:rgba(15,23,42,.28)}',
+    '.streamer-focus-card2-info{flex:1;min-width:0;padding:26px 28px 22px;display:flex;flex-direction:column}',
+    '.streamer-focus-card2-name{font-size:24px;font-weight:950;letter-spacing:-.02em;color:var(--text1);margin-bottom:14px}',
+    '.streamer-focus-card2-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 2px;border-bottom:1px dashed rgba(148,163,184,.38)}',
+    '.streamer-focus-card2-row:last-child{border-bottom:none}',
+    '.streamer-focus-card2-label{font-size:13px;font-weight:700;color:var(--text3)}',
+    '.streamer-focus-card2-value{font-size:15px;font-weight:900;color:var(--text1);text-align:right}',
+    '.streamer-focus-card2-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}',
+    '@media (max-width:768px){.streamer-focus-card2{flex-direction:column;min-height:0}.streamer-focus-card2-photo{flex:0 0 auto;aspect-ratio:4/3}}',
+    'body.dark .streamer-focus-card2{background:#0f172a;border-color:#334155}',
+    'body.dark .streamer-focus-card2-row{border-color:#334155}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
+function _buildFocusCardDetail(selected, opts){
+  const { selUniv, selColor, selWin, selLoss, selGames, selWr, selAttr } = opts;
+  const photoSrc = selected.photo ? toHttpsUrl(selected.photo) : '';
+  const raceLabel = selected.race==='P'?'프로토스':selected.race==='T'?'테란':selected.race==='Z'?'저그':'미정';
+  const rows = [
+    ['역할', selected.role || '일반'],
+    ['티어', selected.tier ? `${selected.tier}티어` : '미정'],
+    ['종족', raceLabel],
+    ['소속대학', selUniv || '무소속'],
+    ['전적', selGames ? `${selWin}승 ${selLoss}패` : '기록 없음'],
+    ['승률', selWr==null ? '-' : `${selWr}%`]
+  ];
+  return `<div class="streamer-focus-main">
+    <div class="streamer-focus-card2">
+      <div class="streamer-focus-card2-photo">
+        ${photoSrc ? `<img src="${photoSrc}" alt="${selected.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+        <div class="streamer-focus-photo-fallback" style="display:${photoSrc?'none':'flex'}">${selected.race||'?'}</div>
+      </div>
+      <div class="streamer-focus-card2-info">
+        <div class="streamer-focus-card2-name">${selected.name}${genderIcon(selected.gender)}</div>
+        ${rows.map(([label,value])=>`
+          <div class="streamer-focus-card2-row">
+            <span class="streamer-focus-card2-label">${label}</span>
+            <span class="streamer-focus-card2-value">${value}</span>
+          </div>`).join('')}
+        <div class="streamer-focus-card2-actions">
+          <button class="pill on" data-tp-action="open-player" data-tp-player="${selAttr}" style="border:none;background:${selColor}">상세 열기</button>
+          ${isLoggedIn ? `<button class="pill" onclick="openEPFromModal('${(typeof escJS==='function'?escJS(selected.name):selected.name)}')">✏️ 수정</button>` : ''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function _buildFocusView(rankMap){
   const _pl = (typeof players !== 'undefined' && Array.isArray(players)) ? players : [];
   const _getUnivs = (typeof getAllUnivs === 'function') ? getAllUnivs : null;
@@ -676,7 +735,9 @@ function _buildFocusView(rankMap){
   const heroPhoto2Use = (selected.photo2PosUse !== false);
   const heroPhoto2PosX = Number(selected.photo2PosX), heroPhoto2PosY = Number(selected.photo2PosY);
   const heroPhoto2Pos = (heroPhoto2Use && Number.isFinite(heroPhoto2PosX) && Number.isFinite(heroPhoto2PosY)) ? `${heroPhoto2PosX}% ${heroPhoto2PosY}%` : 'top center';
-  const detailHtml = `<div class="streamer-focus-main">
+  const detailHtml = (totalFocusDetailStyle === 'card')
+    ? _buildFocusCardDetail(selected, { selUniv, selColor, selWin, selLoss, selGames, selWr, selAttr })
+    : `<div class="streamer-focus-main">
     <div class="streamer-focus-main-hero" style="background:linear-gradient(135deg,color-mix(in srgb, ${selColor} 28%, #0f172a),${selColor})">
       ${heroPhotoUrl ? `<div class="streamer-focus-hero-bg" style="background-image:url('${heroPhotoUrl}')"></div>` : ''}
       ${(heroPhotoUrl2 || heroPhotoUrl) ? `<div class="streamer-focus-hero-bg2" style="background-image:url('${heroPhotoUrl2 || heroPhotoUrl}');--hero-bg2-op:${heroPhotoUrl2 ? '.11' : '.05'};--hero-bg2-pos:${heroPhotoUrl2 ? heroPhoto2Pos : 'top center'};--hero-bg2-left:${heroPhotoUrl2 ? '46%' : '54%'};--hero-bg2-scale:${heroPhotoUrl2 ? '1.02' : '1.05'}"></div>` : ''}
@@ -720,7 +781,13 @@ function _buildFocusView(rankMap){
   </div>`;
   return `<div class="streamer-focus-layout">
     <aside class="streamer-focus-sidebar">
-      <div class="streamer-focus-section-title">스트리머 선택</div>
+      <div class="streamer-focus-section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span>스트리머 선택</span>
+        <span style="display:inline-flex;gap:4px">
+          <button class="pill ${totalFocusDetailStyle==='hero'?'on':''}" style="padding:4px 10px;font-size:11px" onclick="totalFocusDetailStyle='hero';try{localStorage.setItem('su_focus_detail_style','hero');}catch(e){};render()" title="기본형">🖼️ 기본</button>
+          <button class="pill ${totalFocusDetailStyle==='card'?'on':''}" style="padding:4px 10px;font-size:11px" onclick="totalFocusDetailStyle='card';try{localStorage.setItem('su_focus_detail_style','card');}catch(e){};render()" title="사진+리스트형">📋 리스트</button>
+        </span>
+      </div>
       ${listHtml}
     </aside>
     ${detailHtml}

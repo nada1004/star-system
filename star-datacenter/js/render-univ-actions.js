@@ -12,7 +12,8 @@
     '#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="body"] #univModalBody,#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] #univModalBody{background:var(--su-ud-modal-body-bg)!important}',
     '#univModal[data-ud-univbg-enabled="1"] .ud-hero{background:var(--su-ud-hero-bg)!important;border:1px solid var(--su-ud-card-border)!important}',
     '#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-members-table-wrap,#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-opp-card,#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-match-card,#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-ace-card{background:var(--su-ud-card-bg)!important;border-color:var(--su-ud-card-border)!important}',
-    '#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-members-table th,#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-members-table td{border-color:var(--su-ud-card-border)!important}'
+    '#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-members-table th,#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-members-table td{border-color:var(--su-ud-card-border)!important}',
+    '#univModal[data-ud-univbtn-enabled="1"] .btn.btn-w,#univModal[data-ud-univbtn-enabled="1"] button.btn-w{background:var(--su-ud-card-btn-bg)!important;border-color:var(--su-ud-card-btn-border)!important;color:var(--su-ud-card-btn-text)!important}'
   ].join('');
   document.head.appendChild(s);
 })();

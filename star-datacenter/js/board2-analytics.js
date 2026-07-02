@@ -114,6 +114,9 @@ function _b2RankingView() {
     .b2rk2-name { font-size:14px;font-weight:900;min-width:64px }
     .b2rk2-bar-wrap { flex:1;height:12px;border-radius:6px;background:var(--border2);overflow:hidden }
     .b2rk2-bar { height:100%;border-radius:6px;transition:width .7s ease }
+    .b2rk2-bar-wrap.wl { display:flex;align-items:stretch;background:#ef4444;gap:1px }
+    .b2rk2-bar-win { height:100%;background:#10b981;transition:width .7s ease }
+    .b2rk2-bar-loss { height:100%;flex:1;background:#ef4444 }
     .b2rk2-score { font-size:13px;font-weight:900;min-width:52px;text-align:right }
     .b2rk2-badges { display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;align-items:center }
     .b2rk2-glow { position:absolute;inset:0;opacity:.05;pointer-events:none }
@@ -174,9 +177,12 @@ function _b2RankingView() {
       <div class="b2rk2-glow" style="background:radial-gradient(ellipse at 0% 50%,${u.color},transparent 60%)"></div>
       <div class="b2rk2-rank">${rankDisplay}${deltaHtml}</div>
       <div class="b2rk2-name" style="color:${u.color}">${u.name}</div>
-      <div class="b2rk2-bar-wrap">
-        <div class="b2rk2-bar" style="width:${barW}%;background:linear-gradient(90deg,${u.color},${u.color}88)"></div>
-      </div>
+      ${u.tg === 0
+        ? `<div class="b2rk2-bar-wrap"></div>`
+        : `<div class="b2rk2-bar-wrap wl">
+        <div class="b2rk2-bar-win" style="width:${u.wr}%"></div>
+        <div class="b2rk2-bar-loss"></div>
+      </div>`}
       <div class="b2rk2-score" style="color:${u.color}">${scoreLabel}</div>
       <div class="b2rk2-badges">
         <span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:${u.topTierCol};color:${u.topTierTc}">TOP ${u.topTier}</span>

@@ -9,6 +9,7 @@ let _bulkEditSelected=new Set(); // 선택된 스트리머 이름
 let _bulkEditSearch=''; // 일괄 수정(선택 모드) 검색어
 let totalViewMode=(()=>{try{return localStorage.getItem('su_streamer_view_mode')||'table';}catch(e){return 'table';}})(); // 'gallery'(카드형) | 'table'(리스트형) | 'focus'(상세형)
 let totalFocusPlayer=''; // 상세형에서 선택된 스트리머 이름
+let totalFocusDetailStyle=(()=>{try{return localStorage.getItem('su_focus_detail_style')||'hero';}catch(e){return 'hero';}})(); // 상세형 우측 상세 레이아웃: 'hero'(기본) | 'card'(사진+리스트형)
 
 (function _injectStreamerTabUiStyle(){
   if(typeof document==='undefined') return;

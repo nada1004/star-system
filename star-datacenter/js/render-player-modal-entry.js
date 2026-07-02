@@ -17,6 +17,7 @@
     '#playerModal[data-pd-univbg-enabled="1"][data-pd-univbg-scope="cards"] .mode-filter-chip:not(.active),#playerModal[data-pd-univbg-enabled="1"][data-pd-univbg-scope="cards"] .year-filter-chip:not(.active){background:var(--su-pd-card-chip-bg)!important;border-color:var(--su-pd-card-border)!important}',
     '#playerModal[data-pd-univbg-enabled="1"][data-pd-univbg-scope="cards"] .pd-opp-table,#playerModal[data-pd-univbg-enabled="1"][data-pd-univbg-scope="cards"] .pd-opp-table tbody tr td{background:var(--su-pd-card-bg)!important}',
     '#playerModal[data-pd-univbg-enabled="1"][data-pd-univbg-scope="cards"] .pd-opp-table tbody tr td,#playerModal[data-pd-univbg-enabled="1"][data-pd-univbg-scope="cards"] .pd-opp-table thead th{border-color:var(--su-pd-card-border)!important}',
+    '#playerModal[data-pd-univbtn-enabled="1"] .pd-premium-shell .btn.btn-w,#playerModal[data-pd-univbtn-enabled="1"] .pd-premium-shell button.btn-w{background:var(--su-pd-card-btn-bg)!important;border-color:var(--su-pd-card-btn-border)!important;color:var(--su-pd-card-btn-text)!important}',
     '.pd-premium-shell{display:flex;flex-direction:column;gap:14px}',
     '.pd-premium-shell>div{border-radius:22px!important;box-shadow:0 16px 32px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.5)}',
     '.pd-premium-shell>div:first-child{border-radius:26px!important;box-shadow:0 20px 40px rgba(15,23,42,.10),inset 0 1px 0 rgba(255,255,255,.32)}',
