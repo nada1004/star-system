@@ -19,6 +19,7 @@ function buildPlayerDetailHTML(p){
   const _cWin = _style?.cWin || _winC;
   const _cLoss = _style?.cLoss || _lossC;
   const _designMode = _style?.designMode || 'classic';
+  const _layoutMode = _style?.layoutMode || 'default';
   const _year=_pdState.year||'';
   const _histBase = (typeof preparePlayerHistoryBaseData==='function')
     ? preparePlayerHistoryBaseData(p)
@@ -104,7 +105,7 @@ function buildPlayerDetailHTML(p){
   const _pmStatsNum1 = _style?.pmStatsNum1 ?? (_isMobile ? 13 : 14);
   const _pmStatsBig = _style?.pmStatsBig ?? (_isMobile ? 18 : 22);
 
-  let h = (typeof buildPlayerHeaderCardHTML==='function')
+  const _secHeader = (typeof buildPlayerHeaderCardHTML==='function')
     ? buildPlayerHeaderCardHTML({
         player: p,
         hdrBg: _hdrBg,
@@ -132,11 +133,12 @@ function buildPlayerDetailHTML(p){
         histAll: _histAll,
         eloVal,
         eloColor,
-        eloSparkHTML: _eloSparkHTML
+        eloSparkHTML: _eloSparkHTML,
+        layoutMode: _layoutMode
       })
     : '';
 
-  h += (typeof buildPlayerSummaryStripHTML==='function')
+  const _secStrip = (typeof buildPlayerSummaryStripHTML==='function')
     ? buildPlayerSummaryStripHTML({
         histAll: _histAll,
         player: p,
@@ -164,11 +166,10 @@ function buildPlayerDetailHTML(p){
   const _histFilterBar = _filterPrep?.histFilterBar || '';
   const _yearBar = _filterPrep?.yearBar || '';
 
-  h+=_yearBar;
+  const _secYearBar = _yearBar;
 
   const _eloChartPts=_computed?.eloChartPts || _modeHist.filter(h=>h.eloDelta!=null||h.eloAfter!=null);
-  if(_eloChartPts.length>=3){
-    h+=`<div class="pd-elo-chart-card" style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+  const _secEloChart = (_eloChartPts.length>=3) ? `<div class="pd-elo-chart-card" style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
       <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
         <span style="display:inline-block;width:3px;height:14px;background:#7c3aed;border-radius:2px"></span>
         ELO 변화 추이${_year?` (${_year}년)`:''}
@@ -179,12 +180,11 @@ function buildPlayerDetailHTML(p){
         <canvas id="pEloChart" style="width:100%;height:140px;display:block"></canvas>
         <div id="pEloTip" style="position:absolute;display:none;background:rgba(15,23,42,.92);color:#fff;font-size:10px;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:nowrap;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,.3)"></div>
       </div>
-    </div>`;
-  }
+    </div>` : '';
 
   const _modeColors=_computed?.modeColors || {'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그':'#16a34a'};
   const _fixedModes=_computed?.fixedModes || [];
-  h += (typeof buildPlayerModeStatsHTML==='function')
+  const _secModeStats = (typeof buildPlayerModeStatsHTML==='function')
     ? buildPlayerModeStatsHTML({
         fixedModes: _fixedModes,
         modeColors: _modeColors,
@@ -194,15 +194,15 @@ function buildPlayerDetailHTML(p){
       })
     : '';
 
-  h += (typeof buildPlayerMapStatsHTML==='function')
+  const _secMapStats = (typeof buildPlayerMapStatsHTML==='function')
     ? buildPlayerMapStatsHTML(_modeHist)
     : '';
 
-  h += (typeof buildPlayerRaceStatsHTML==='function')
+  const _secRaceStats = (typeof buildPlayerRaceStatsHTML==='function')
     ? buildPlayerRaceStatsHTML(_modeHist)
     : '';
 
-  h += (typeof buildPlayerVsUnivSectionHTML==='function')
+  const _secVsUniv = (typeof buildPlayerVsUnivSectionHTML==='function')
     ? buildPlayerVsUnivSectionHTML({
         rows: vsUnivs,
         playerName: p.name,
@@ -212,7 +212,7 @@ function buildPlayerDetailHTML(p){
 
   if(!_pdState.oppSort) _pdState.oppSort='tot';
   if(!_pdState.oppPage) _pdState.oppPage=0;
-  h += (typeof buildPlayerOppTableHTML==='function')
+  const _secOppTable = (typeof buildPlayerOppTableHTML==='function')
     ? buildPlayerOppTableHTML({
         opps,
         pName: p.name,
@@ -221,8 +221,10 @@ function buildPlayerDetailHTML(p){
       })
     : '';
 
+  let _secRecent = '';
+  let _secHistFilterBar = '';
   if(_modeHist.length){
-    h+=_histFilterBar;
+    _secHistFilterBar = _histFilterBar;
     const _recentPrep = (typeof preparePlayerRecentSectionData==='function')
       ? preparePlayerRecentSectionData({
           player: p,
@@ -238,7 +240,7 @@ function buildPlayerDetailHTML(p){
     const displayHist = _recentPrep?.displayHist || [];
     const fromN = _recentPrep?.fromN || 0;
     const toN = _recentPrep?.toN || 0;
-    h += (typeof buildPlayerRecentHistorySectionHTML==='function')
+    _secRecent = (typeof buildPlayerRecentHistorySectionHTML==='function')
       ? buildPlayerRecentHistorySectionHTML({
           pName: p.name,
           totalGames,
@@ -255,14 +257,44 @@ function buildPlayerDetailHTML(p){
       : '';
   }
 
-  h += (typeof buildPlayerTeammatesHTML==='function')
+  const _secTeammates = (typeof buildPlayerTeammatesHTML==='function')
     ? buildPlayerTeammatesHTML({ player:p, col })
     : '';
 
-  if(isLoggedIn){
-    h += (typeof buildPlayerMemoHTML==='function')
-      ? buildPlayerMemoHTML(p)
-      : '';
+  const _secMemo = (isLoggedIn && (typeof buildPlayerMemoHTML==='function'))
+    ? buildPlayerMemoHTML(p)
+    : '';
+
+  let h='';
+  if(_layoutMode==='poster'){
+    h = `<div class="pd-layout pd-layout--poster">
+      <div class="pd-layout-top">${_secHeader}${_secStrip}</div>
+      <div class="pd-layout-grid">
+        <div class="pd-layout-main">${_secYearBar}${_secEloChart}${_secHistFilterBar}${_secRecent}${_secOppTable}</div>
+        <div class="pd-layout-side">${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secTeammates}${_secMemo}</div>
+      </div>
+    </div>`;
+  }else if(_layoutMode==='split'){
+    h = `<div class="pd-layout pd-layout--split">
+      <div class="pd-split-left">${_secHeader}${_secStrip}${_secYearBar}</div>
+      <div class="pd-split-right">${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}</div>
+    </div>`;
+  }else if(_layoutMode==='timeline'){
+    h = `<div class="pd-layout pd-layout--timeline">
+      <div class="pd-layout-top">${_secHeader}${_secStrip}</div>
+      <div class="pd-layout-grid">
+        <div class="pd-layout-main">${_secYearBar}${_secHistFilterBar}${_secRecent}</div>
+        <div class="pd-layout-side">${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secTeammates}${_secMemo}</div>
+      </div>
+    </div>`;
+  }else if(_layoutMode==='board'){
+    h = `<div class="pd-layout pd-layout--board">
+      ${_secHeader}
+      <div class="pd-board-grid">${_secStrip}${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}</div>
+      ${_secYearBar}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}
+    </div>`;
+  }else{
+    h = `${_secHeader}${_secStrip}${_secYearBar}${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}`;
   }
 
   // ELO 차트는 p.history만이 아니라 개인전/끝장전/대회 등 외부 매치소스까지 합쳐진
@@ -275,9 +307,33 @@ function buildPlayerDetailHTML(p){
   const _modeDecor = (typeof buildPlayerDetailModeDecorHTML==='function') ? buildPlayerDetailModeDecorHTML(_designMode) : '';
   try{
     const _pm = document.getElementById('playerModal');
-    if(_pm) _pm.setAttribute('data-pd-mode', _designMode);
+    if(_pm){
+      _pm.setAttribute('data-pd-mode', _designMode);
+      _pm.setAttribute('data-pd-layout', _layoutMode);
+      _pm.setAttribute('data-pd-univbg-enabled', _style?.modalBgVars ? '1' : '0');
+      _pm.setAttribute('data-pd-univbg-scope', _style?.bgScope || 'body');
+      const keys=['--su-pastel-bg1','--su-pastel-bg2','--su-pastel-card','--su-pastel-border','--su-pastel-accent1','--su-pastel-accent2','--su-pastel-accent3','--su-pastel-text1','--su-pastel-text2','--su-pastel-shadow','--su-pastel-glow'];
+      const modalKeys=['--su-pd-modal-box-bg','--su-pd-modal-box-border','--su-pd-modal-title-bg','--su-pd-modal-body-bg','--su-pd-hero-bg','--su-pd-strip-bg','--su-pd-card-bg','--su-pd-card-border','--su-pd-card-chip-bg'];
+      if(_designMode==='pastel' && _style?.pastelVars){
+        keys.forEach(k=>{
+          const v=_style.pastelVars[k];
+          if(v!=null && v!=='') _pm.style.setProperty(k, String(v));
+        });
+      }else{
+        keys.forEach(k=>{ try{ _pm.style.removeProperty(k); }catch(e){} });
+      }
+      if(_style?.modalBgVars){
+        modalKeys.forEach(k=>{
+          const v=_style.modalBgVars[k];
+          if(v!=null && v!=='') _pm.style.setProperty(k, String(v));
+          else try{ _pm.style.removeProperty(k); }catch(e){}
+        });
+      }else{
+        modalKeys.forEach(k=>{ try{ _pm.style.removeProperty(k); }catch(e){} });
+      }
+    }
   }catch(e){}
-  return `<div class="pd-premium-shell" data-pd-mode="${_designMode}">${_modeDecor}${h}</div>`;
+  return `<div class="pd-premium-shell" data-pd-mode="${_designMode}" data-pd-layout="${_layoutMode}">${_modeDecor}${h}</div>`;
 }
 
 try{

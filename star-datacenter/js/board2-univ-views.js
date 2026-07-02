@@ -89,6 +89,8 @@ function _b2UnivView() {
         ${_viewBtn('default','기본')}
         ${_viewBtn('poster','포스터')}
         ${_viewBtn('heat','히트맵')}
+        ${_viewBtn('split','리스트')}
+        ${_viewBtn('board','보드')}
       </div>
     </div>
   </div>`;
@@ -145,12 +147,19 @@ try{
             #b2RaceTierOverlay .su-modal-bd{padding:14px 14px 16px;overflow:auto;flex:1;min-height:0}
             #b2RaceTierOverlay .b2rt-title{font-size:16px;font-weight:1000;letter-spacing:-.02em;color:var(--text1)}
             #b2RaceTierOverlay .b2rt-sub{font-size:11px;font-weight:800;color:var(--text3)}
+            #b2RaceTierOverlay .b2rt-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+            #b2RaceTierOverlay .b2rt-summarycard{padding:12px 13px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.14);box-shadow:0 10px 24px rgba(15,23,42,.06)}
+            #b2RaceTierOverlay .b2rt-summarylabel{font-size:10px;font-weight:900;letter-spacing:.08em;color:var(--text3);text-transform:uppercase}
+            #b2RaceTierOverlay .b2rt-summaryvalue{margin-top:7px;font-size:20px;font-weight:1000;letter-spacing:-.03em;color:var(--text1)}
+            #b2RaceTierOverlay .b2rt-summarymeta{margin-top:4px;font-size:11px;font-weight:800;color:var(--text3)}
             #b2RaceTierOverlay .b2rt-univbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
             #b2RaceTierOverlay .b2rt-univbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(248,250,252,.98);font-size:11px;font-weight:900;color:var(--text2);cursor:pointer}
             #b2RaceTierOverlay .b2rt-univbtn.on{border-color:rgba(37,99,235,.35);background:linear-gradient(180deg,rgba(239,246,255,.98),rgba(219,234,254,.92));color:#1d4ed8}
             #b2RaceTierOverlay .b2rt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-top:12px}
             #b2RaceTierOverlay .b2rt-card{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:0.78;background:#0b1120;border:1px solid rgba(255,255,255,.14);box-shadow:0 10px 22px rgba(15,23,42,.10);cursor:pointer}
             #b2RaceTierOverlay .b2rt-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}
+            #b2RaceTierOverlay .b2rt-topbadges{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;z-index:2}
+            #b2RaceTierOverlay .b2rt-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;background:rgba(15,23,42,.48);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px);font-size:9.5px;font-weight:900;color:#fff}
             #b2RaceTierOverlay .b2rt-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000;color:rgba(255,255,255,.72);background:linear-gradient(160deg,rgba(148,163,184,.30),rgba(15,23,42,.18))}
             #b2RaceTierOverlay .b2rt-bottom{position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;gap:4px}
             #b2RaceTierOverlay .b2rt-bottom::before{content:'';position:absolute;left:0;right:0;bottom:0;height:72%;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.26) 28%,rgba(5,8,20,.78) 100%);pointer-events:none}
@@ -158,7 +167,7 @@ try{
             #b2RaceTierOverlay .b2rt-name{font-size:12px;font-weight:950;color:#fff;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.35)}
             #b2RaceTierOverlay .b2rt-meta{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:850;color:rgba(255,255,255,.82);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.35)}
             #b2RaceTierOverlay .b2rt-ubadge{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.18);font-size:9.5px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(6px)}
-            @media (max-width:780px){#b2RaceTierOverlay .su-modal{height:min(860px,calc(100vh - 14px));width:min(100vw - 14px,1120px);border-radius:22px}#b2RaceTierOverlay .b2rt-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}}
+            @media (max-width:780px){#b2RaceTierOverlay .su-modal{height:min(860px,calc(100vh - 14px));width:min(100vw - 14px,1120px);border-radius:22px}#b2RaceTierOverlay .b2rt-summary{grid-template-columns:1fr}#b2RaceTierOverlay .b2rt-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}}
           `;
           document.head.appendChild(st);
         }
@@ -177,6 +186,7 @@ try{
                 <button type="button" class="btn btn-r btn-sm" id="b2rtClose">닫기</button>
               </div>
               <div class="su-modal-bd">
+                <div class="b2rt-summary" id="b2rtSummary"></div>
                 <div class="b2rt-univbar" id="b2rtUnivBar"></div>
                 <div class="b2rt-grid" id="b2rtGrid"></div>
               </div>
@@ -202,11 +212,32 @@ try{
           if(!ov2) return;
           const title = ov2.querySelector('#b2rtTitle');
           const sub = ov2.querySelector('#b2rtSub');
+          const summary = ov2.querySelector('#b2rtSummary');
           const bar = ov2.querySelector('#b2rtUnivBar');
           const grid = ov2.querySelector('#b2rtGrid');
           if(title) title.textContent = `종족 비중 · ${st.label || ''}`;
           const filtered = (st.univ && st.univ!=='ALL') ? (st.list||[]).filter(p=>String(p?.univ||'무소속')===st.univ) : (st.list||[]);
           if(sub) sub.textContent = `${st.univ && st.univ!=='ALL' ? `${st.univ} · ` : ''}${filtered.length}명`;
+          if(summary){
+            const topTierEntry = Object.entries(st.counts||{}).sort((a,b)=>(b[1]-a[1]) || a[0].localeCompare(b[0]))[0];
+            const univLen = Object.keys(st.univCounts||{}).length;
+            summary.innerHTML = `
+              <div class="b2rt-summarycard">
+                <div class="b2rt-summarylabel">총 인원</div>
+                <div class="b2rt-summaryvalue">${filtered.length}</div>
+                <div class="b2rt-summarymeta">${st.univ && st.univ!=='ALL' ? '선택 대학 기준' : '전체 표시 기준'}</div>
+              </div>
+              <div class="b2rt-summarycard">
+                <div class="b2rt-summarylabel">분포 대학</div>
+                <div class="b2rt-summaryvalue">${st.univ && st.univ!=='ALL' ? '1' : univLen}</div>
+                <div class="b2rt-summarymeta">${st.univ && st.univ!=='ALL' ? st.univ : '대학별 분포'}</div>
+              </div>
+              <div class="b2rt-summarycard">
+                <div class="b2rt-summarylabel">핵심 티어</div>
+                <div class="b2rt-summaryvalue">${topTierEntry ? topTierEntry[0] : '-'}</div>
+                <div class="b2rt-summarymeta">${topTierEntry ? `${topTierEntry[1]}명` : '집계 대기'}</div>
+              </div>`;
+          }
           if(bar){
             const univs = ['ALL'].concat(Object.keys(st.univCounts||{}).sort((a,b)=>(st.univCounts[b]||0)-(st.univCounts[a]||0) || a.localeCompare(b)));
             bar.innerHTML = univs.map(u=>{
@@ -228,6 +259,10 @@ try{
               const img = photo ? `<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '';
               const fb = `<div class="b2rt-fb" style="display:${photo?'none':'flex'}">${String(p?.race||'?')}</div>`;
               return `<div class="b2rt-card" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')">
+                <div class="b2rt-topbadges">
+                  <span class="b2rt-pill">${tier}티어</span>
+                  <span class="b2rt-pill" style="background:${uCol}55;border-color:${uCol}88">${String(p?.race||'?')}</span>
+                </div>
                 ${img}${fb}
                 <div class="b2rt-bottom">
                   <div class="b2rt-name" title="${name.replace(/\"/g,'&quot;')}">${name}</div>
@@ -276,12 +311,25 @@ try{
             #b2TierUnivOverlay .su-modal-bd{padding:14px 14px 16px;overflow:auto;flex:1;min-height:0}
             #b2TierUnivOverlay .b2tu-title{font-size:16px;font-weight:1000;letter-spacing:-.02em;color:var(--text1)}
             #b2TierUnivOverlay .b2tu-sub{font-size:11px;font-weight:800;color:var(--text3)}
+            #b2TierUnivOverlay .b2tu-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+            #b2TierUnivOverlay .b2tu-summarycard{padding:12px 13px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.14);box-shadow:0 10px 24px rgba(15,23,42,.06)}
+            #b2TierUnivOverlay .b2tu-summarylabel{font-size:10px;font-weight:900;letter-spacing:.08em;color:var(--text3);text-transform:uppercase}
+            #b2TierUnivOverlay .b2tu-summaryvalue{margin-top:7px;font-size:20px;font-weight:1000;letter-spacing:-.03em;color:var(--text1)}
+            #b2TierUnivOverlay .b2tu-summarymeta{margin-top:4px;font-size:11px;font-weight:800;color:var(--text3)}
             #b2TierUnivOverlay .b2tu-filter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
             #b2TierUnivOverlay .b2tu-filterbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(248,250,252,.98);font-size:11px;font-weight:900;color:var(--text2);cursor:pointer}
             #b2TierUnivOverlay .b2tu-filterbtn.on{border-color:rgba(37,99,235,.35);background:linear-gradient(180deg,rgba(239,246,255,.98),rgba(219,234,254,.92));color:#1d4ed8}
+            #b2TierUnivOverlay .b2tu-groupgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:12px}
+            #b2TierUnivOverlay .b2tu-groupcard{padding:12px 13px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.14);box-shadow:0 10px 22px rgba(15,23,42,.06)}
+            #b2TierUnivOverlay .b2tu-grouphead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+            #b2TierUnivOverlay .b2tu-groupname{font-size:13px;font-weight:950;color:var(--text1);display:flex;align-items:center;gap:6px;min-width:0}
+            #b2TierUnivOverlay .b2tu-groupcount{font-size:11px;font-weight:900;color:var(--text3)}
+            #b2TierUnivOverlay .b2tu-groupavatars{display:flex;flex-wrap:wrap;gap:6px}
             #b2TierUnivOverlay .b2tu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
             #b2TierUnivOverlay .b2tu-card{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:0.78;background:#0b1120;border:1px solid rgba(255,255,255,.14);box-shadow:0 10px 22px rgba(15,23,42,.10);cursor:pointer}
             #b2TierUnivOverlay .b2tu-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}
+            #b2TierUnivOverlay .b2tu-topbadges{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;z-index:2}
+            #b2TierUnivOverlay .b2tu-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;background:rgba(15,23,42,.48);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px);font-size:9.5px;font-weight:900;color:#fff}
             #b2TierUnivOverlay .b2tu-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000;color:rgba(255,255,255,.72);background:linear-gradient(160deg,rgba(148,163,184,.30),rgba(15,23,42,.18))}
             #b2TierUnivOverlay .b2tu-bottom{position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;gap:4px}
             #b2TierUnivOverlay .b2tu-bottom::before{content:'';position:absolute;left:0;right:0;bottom:0;height:72%;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.26) 28%,rgba(5,8,20,.78) 100%);pointer-events:none}
@@ -293,7 +341,7 @@ try{
             #b2TierUnivOverlay .b2tu-av{width:44px;height:44px;border-radius:16px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(160deg,rgba(148,163,184,.26),rgba(15,23,42,.12));box-shadow:0 6px 14px rgba(15,23,42,.08);cursor:pointer;padding:0}
             #b2TierUnivOverlay .b2tu-av img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
             #b2TierUnivOverlay .b2tu-av span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:rgba(255,255,255,.75)}
-            @media (max-width:780px){#b2TierUnivOverlay .su-modal{height:min(920px,calc(100vh - 14px));width:min(100vw - 14px,1120px);border-radius:22px}#b2TierUnivOverlay .b2tu-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}}
+            @media (max-width:780px){#b2TierUnivOverlay .su-modal{height:min(920px,calc(100vh - 14px));width:min(100vw - 14px,1120px);border-radius:22px}#b2TierUnivOverlay .b2tu-summary{grid-template-columns:1fr}#b2TierUnivOverlay .b2tu-groupgrid{grid-template-columns:1fr}#b2TierUnivOverlay .b2tu-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}}
           `;
           document.head.appendChild(st);
         }
@@ -312,6 +360,7 @@ try{
                 <button type="button" class="btn btn-r btn-sm" id="b2tuClose">닫기</button>
               </div>
               <div class="su-modal-bd">
+                <div class="b2tu-summary" id="b2tuSummary"></div>
                 <div class="b2tu-filter" id="b2tuFilter"></div>
                 <div id="b2tuBody"></div>
               </div>
@@ -334,6 +383,7 @@ try{
         const sub = ov.querySelector('#b2tuSub');
         const body = ov.querySelector('#b2tuBody');
         const filter = ov.querySelector('#b2tuFilter');
+        const summary = ov.querySelector('#b2tuSummary');
         if(title) title.textContent = `티어 · ${tt}티어`;
         window._b2TierUnivRender = function(){
           const st2 = window._b2TierUnivState || {};
@@ -347,8 +397,46 @@ try{
           }
           const filtered = selectedUniv==='ALL' ? (st2.pool||[]) : (st2.pool||[]).filter(p=>String(p?.univ||'무소속')===selectedUniv);
           if(sub) sub.textContent = `${selectedUniv!=='ALL' ? `${selectedUniv} · ` : ''}${filtered.length}명`;
+          if(summary){
+            const orderedNow = st2.ordered||[];
+            const topUniv = orderedNow[0];
+            summary.innerHTML = `
+              <div class="b2tu-summarycard">
+                <div class="b2tu-summarylabel">총 인원</div>
+                <div class="b2tu-summaryvalue">${filtered.length}</div>
+                <div class="b2tu-summarymeta">${selectedUniv==='ALL' ? '전체 기준' : '선택 대학 기준'}</div>
+              </div>
+              <div class="b2tu-summarycard">
+                <div class="b2tu-summarylabel">분포 대학</div>
+                <div class="b2tu-summaryvalue">${selectedUniv==='ALL' ? orderedNow.length : 1}</div>
+                <div class="b2tu-summarymeta">${selectedUniv==='ALL' ? '티어 분포 대학 수' : selectedUniv}</div>
+              </div>
+              <div class="b2tu-summarycard">
+                <div class="b2tu-summarylabel">최다 보유 대학</div>
+                <div class="b2tu-summaryvalue">${topUniv ? topUniv[0] : '-'}</div>
+                <div class="b2tu-summarymeta">${topUniv ? `${topUniv[1].length}명` : '집계 대기'}</div>
+              </div>`;
+          }
           if(body){
-            body.innerHTML = filtered.length ? `<div class="b2tu-grid">${filtered.map(p=>{
+            const groupedHtml = selectedUniv==='ALL'
+              ? `<div class="b2tu-groupgrid">${(st2.ordered||[]).map(([univName, arr])=>{
+                  const col = (typeof gc==='function') ? (gc(univName)||'#64748b') : '#64748b';
+                  const logo = (univName && univName!=='무소속' && typeof gUI==='function') ? gUI(univName,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(univName,'players','16px'):'16px')) : '';
+                  return `<div class="b2tu-groupcard">
+                    <div class="b2tu-grouphead">
+                      <div class="b2tu-groupname" title="${String(univName).replace(/"/g,'&quot;')}"><span class="b2tu-pill" style="background:${col}20;border-color:${col}44;color:${col}">${logo}${univName}</span></div>
+                      <div class="b2tu-groupcount">${arr.length}명</div>
+                    </div>
+                    <div class="b2tu-groupavatars">${arr.slice(0,8).map(p=>{
+                      const name = String(p?.name||'');
+                      const nameJs = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+                      const photo = String(p?.photo||'').trim();
+                      return `<button type="button" class="b2tu-av" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')" title="${name.replace(/"/g,'&quot;')}">${photo?`<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.parentNode.innerHTML='<span>${String(p?.race||'?')}</span>'">`:`<span>${String(p?.race||'?')}</span>`}</button>`;
+                    }).join('')}</div>
+                  </div>`;
+                }).join('')}</div>`
+              : '';
+            body.innerHTML = filtered.length ? `${groupedHtml}<div class="b2tu-grid">${filtered.map(p=>{
               const name = String(p?.name||'');
               const photo = String(p?.photo||'').trim();
               const race = String(p?.race||'?');
@@ -359,6 +447,10 @@ try{
               const img = photo ? `<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '';
               const fb = `<div class="b2tu-fb" style="display:${photo?'none':'flex'}">${race}</div>`;
               return `<div class="b2tu-card" onclick="if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')">
+                <div class="b2tu-topbadges">
+                  <span class="b2tu-pill">${tt}티어</span>
+                  <span class="b2tu-pill" style="background:${col}55;border-color:${col}88">${race}</span>
+                </div>
                 ${img}${fb}
                 <div class="b2tu-bottom">
                   <div class="b2tu-name" title="${name.replace(/\"/g,'&quot;')}">${name}</div>
@@ -1486,9 +1578,16 @@ function openB2MemberBreakdown(el, univName) {
     <span style="font-weight:700;color:var(--text1);font-size:12px">${val}명</span></div>`;
   const popup = document.createElement('div');
   popup.id = 'b2-mbp';
-  popup.style.cssText = 'position:fixed;z-index:var(--z-top);background:var(--white);border:1px solid var(--border2);border-radius:12px;box-shadow:0 4px 20px #0003;padding:12px 14px;min-width:170px';
+  popup.style.cssText = 'position:fixed;z-index:var(--z-top);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.16);border-radius:18px;box-shadow:0 16px 38px rgba(15,23,42,.16);padding:14px 15px;min-width:220px;backdrop-filter:blur(12px)';
   popup.innerHTML = `
-    <div style="font-weight:800;font-size:13px;color:${col};margin-bottom:8px">${univName} 구성</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px">
+      <div style="font-weight:900;font-size:14px;color:${col};letter-spacing:-.02em">${univName} 구성</div>
+      <div style="font-size:11px;font-weight:900;color:var(--text3)">${members.length}명</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px">
+      <div style="padding:10px 11px;border-radius:14px;background:${col}12;border:1px solid ${col}22"><div style="font-size:10px;font-weight:900;color:var(--text3)">직책자</div><div style="margin-top:5px;font-size:18px;font-weight:1000;color:${col}">${roled.length}</div></div>
+      <div style="padding:10px 11px;border-radius:14px;background:${col}0a;border:1px solid ${col}18"><div style="font-size:10px;font-weight:900;color:var(--text3)">일반 스트리머</div><div style="margin-top:5px;font-size:18px;font-weight:1000;color:var(--text1)">${tiered.length}</div></div>
+    </div>
     ${row('직책자', roled.length)}
     ${row('일반 스트리머', tiered.length)}
     ${orderedTiers.length ? `<div style="border-top:1px solid var(--border2);margin:6px 0"></div>${orderedTiers.map(t=>row(t, tierCounts[t], getTierBtnColor(t))).join('')}` : ''}`;
@@ -1567,16 +1666,67 @@ function _b2GetUnivProfileViewMode() {
     const raw = String(localStorage.getItem('su_b2_univ_profile_view') || '').trim();
     if (raw === 'card') return 'poster';
     if (raw === 'compact' || raw === 'media') return 'default';
-    return ['default','poster','heat'].includes(raw) ? raw : 'default';
+    return ['default','poster','heat','split','board'].includes(raw) ? raw : 'default';
   }catch(e){
     return 'default';
   }
 }
 
 function _b2SetUnivProfileViewMode(mode) {
-  const nextMode = ['default','poster','heat'].includes(String(mode||'')) ? String(mode) : 'default';
+  const nextMode = ['default','poster','heat','split','board'].includes(String(mode||'')) ? String(mode) : 'default';
   try{ localStorage.setItem('su_b2_univ_profile_view', nextMode); }catch(e){}
   if (typeof render === 'function') render();
+}
+
+function _b2UnivBoardTile(p, accentCol, showBadge) {
+  const safeName = (p.name||'').replace(/'/g,"\\'");
+  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
+  const tier = showBadge ? (p.tier || p.role || '') : '';
+  const tierBg = (p.tier && typeof getTierBtnColor === 'function') ? getTierBtnColor(p.tier) : accentCol;
+  const tierFg = (p.tier && typeof getTierBtnTextColor === 'function') ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
+  return `
+    <div style="width:118px;aspect-ratio:1/1;border-radius:20px;overflow:hidden;border:1px solid rgba(148,163,184,.18);background:${accentCol}12;box-shadow:0 12px 26px rgba(15,23,42,.08);cursor:pointer;position:relative"
+      onclick="openPlayerModal('${safeName}')">
+      ${photo
+        ? `<img src="${photo}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.72">${raceLetter}</div>`
+        : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.72">${raceLetter}</div>`
+      }
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 10px 11px;background:linear-gradient(180deg,rgba(2,6,23,0) 0%,rgba(2,6,23,.22) 34%,rgba(2,6,23,.70) 100%)">
+        ${tier?`<div style="margin-bottom:4px"><span style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;background:${tierBg};color:${tierFg};font-size:10px;font-weight:900;line-height:1.4">${tier}</span></div>`:''}
+        <div style="color:#fff;font-size:12px;font-weight:950;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.45)">${p.name||''}</div>
+      </div>
+    </div>`;
+}
+
+function _b2UnivSplitRow(p, accentCol, showBadge) {
+  const safeName = (p.name||'').replace(/'/g,"\\'");
+  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
+  const badgeTxt = showBadge ? (p.tier || p.role || '') : '';
+  const badgeBg = (p.tier && typeof getTierBtnColor === 'function') ? getTierBtnColor(p.tier) : accentCol;
+  const badgeFg = (p.tier && typeof getTierBtnTextColor === 'function') ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
+  const shapeStyle = 'border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);';
+  return `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:18px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.05);cursor:pointer"
+      onclick="openPlayerModal('${safeName}')">
+      <div style="width:46px;height:46px;flex-shrink:0;${shapeStyle}overflow:hidden;border:2px solid ${accentCol}55;background:${accentCol}18;box-shadow:0 6px 14px ${accentCol}24">
+        ${photo
+          ? `<img src="${photo}" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none'">`
+          : `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:${accentCol}">${(p.race&&p.race!=='N')?p.race:'?'}</div>`
+        }
+      </div>
+      <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0">
+          <div style="font-size:14px;font-weight:950;color:var(--text1);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${p.inactive?'opacity:.65':''}">${p.name||''}</div>
+          ${p.inactive?'<span style="font-size:10px;font-weight:900;color:#9a3412;background:#fff7ed;border:1px solid rgba(154,52,18,.18);padding:2px 6px;border-radius:999px;flex-shrink:0">휴</span>':''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          ${(p.race&&p.race!=='N')?`<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:${raceCol};color:#fff;font-size:10px;font-weight:900">${p.race}</span>`:''}
+          ${badgeTxt?`<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:${badgeBg};color:${badgeFg};font-size:10px;font-weight:900">${badgeTxt}</span>`:''}
+        </div>
+      </div>
+    </div>`;
 }
 
 function _b2UnivPhotoCard(p, accentCol, showBadge) {
@@ -1642,6 +1792,12 @@ function _b2RenderUnivGroupCards(group, accentCol, showBadge, mode) {
   }
   if (mode === 'poster') {
     return `<div style="display:flex;flex-wrap:wrap;gap:14px">${items.map(p => _b2UnivPhotoCard(p, accentCol, showBadge)).join('')}</div>`;
+  }
+  if (mode === 'board') {
+    return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px">${items.map(p => _b2UnivBoardTile(p, accentCol, showBadge)).join('')}</div>`;
+  }
+  if (mode === 'split') {
+    return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px">${items.map(p => _b2UnivSplitRow(p, accentCol, showBadge)).join('')}</div>`;
   }
   return `<div style="display:grid;grid-template-columns:repeat(5,max-content);align-items:center;justify-content:start;column-gap:10px;row-gap:8px;max-width:100%;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;scrollbar-width:thin">${items.map(p => _b2UnivDefaultTag(p, accentCol, showBadge)).join('')}</div>`;
 }

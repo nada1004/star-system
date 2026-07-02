@@ -97,7 +97,7 @@ function rCfg(C,T){
     procompleaguecard:'🏆 프로리그 대회 조별리그', procompteamcard:'🏆 프로리그 대회 팀전 카드', procompgjcard:'🏆 프로리그 대회 중장전 카드', procompcard:'⭐ 프로리그 대회 카드',
     sharecard:'🪪 공유카드 디자인', calui:'📅 캘린더', appfont:'🅰️ 전역 폰트',
     'tierrank-view':'📊 티어 순위표 보기 방식',
-    'streamer-view':'🎬 스트리머탭 기본 뷰',
+    'streamer-view':'🎬 스트리머탭 기본 뷰', 'streamer-tab-style':'🎬 스트리머탭 디자인/레이아웃',
     bgm:'🎵 유튜브 배경음악(BGM)', soopmv:'📺 SOOP(숲) 멀티뷰', pasteRoute:'🧠 붙여넣기 자동 분리',
     designv2:'✨ 디자인 모드', hdr:'🧩 헤더 상단바',
     fab:'📱 플로팅(FAB)', storage:'💾 저장소', datacheck:'🧾 데이터 검수', selfcheck:'🧪 설정 점검',
@@ -193,6 +193,7 @@ function rCfg(C,T){
     pd:'스트리머 상세 카드 색감과 배치 조정',
     matchdetail:'경기 상세 팝업 레이아웃과 색감 조정',
     streamerheader:'스트리머탭 상단 대학 헤더 꾸미기',
+    'streamer-tab-style':'스트리머탭 카드/헤더/레이아웃 분위기 설정',
     univlogoimg:'대학 로고 이미지 등록과 관리',
     b2femco:'펨코스타일 색감과 카드 디자인 조정',
     femcoorder:'펨코스타일 대학 순서 정리',
@@ -1138,6 +1139,7 @@ ${_scfgD('notice','📢 공지 관리')}
       </div>
     </div>
   </details>
+  ${(typeof window.renderCfgStreamerTabStyleSection==='function' ? window.renderCfgStreamerTabStyleSection(_scfgD) : '')}
   ${_scfgD('tierrank-view','📊 티어 순위표 보기 방식')}
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머탭 → 티어 순위표의 기본 뷰 방식을 설정합니다. 순위표 상단 아이콘 버튼으로도 즉시 전환할 수 있습니다.</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:14px">
@@ -2529,6 +2531,27 @@ ${_scfgD('notice','📢 공지 관리')}
             <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 로고 크기 <span id="cfg-b2-ul-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_b2_univ_logo_size')||'42');}catch(e){return 42;}})()}px</span></div>
             <input type="range" min="28" max="72" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_b2_univ_logo_size')||'42');}catch(e){return 42;}})()}" style="width:100%;accent-color:var(--blue)"
               oninput="localStorage.setItem('su_b2_univ_logo_size',String(this.value));if(typeof applyBoard2LogoVars==='function')applyBoard2LogoVars();document.getElementById('cfg-b2-ul-val').textContent=this.value+'px';try{window._cfgSoftRefreshBoard2&&window._cfgSoftRefreshBoard2();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
+          </div>
+        </div>
+        <div style="border-top:1px dashed var(--border2);padding-top:12px">
+          <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🖼️ 현황판(대학별) 멤버 표시 모드</div>
+          <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">대학 카드 안에서 멤버들을 어떤 형태로 보여줄지 선택합니다.</div>
+          <div id="cfg-b2-univview" style="display:flex;flex-wrap:wrap;gap:8px">
+            ${(()=>{
+              const cur = (typeof window.cfgGetB2UnivProfileView==='function') ? window.cfgGetB2UnivProfileView() : 'default';
+              const mkBtn = (v, label) => {
+                const on = (cur===v);
+                return `<button type="button" onclick="cfgSetB2UnivProfileView('${v}');try{const g=document.getElementById('cfg-b2-univview'); if(g){ g.querySelectorAll('button').forEach(b=>{ b.style.border='1.5px solid rgba(148,163,184,.20)'; b.style.background='linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94))'; b.style.color='var(--text2)'; b.style.boxShadow='0 4px 10px rgba(15,23,42,.04)'; }); this.style.border='1.5px solid #2563eb'; this.style.background='linear-gradient(135deg,#eff6ff,#dbeafe)'; this.style.color='#1d4ed8'; this.style.boxShadow='0 6px 16px rgba(37,99,235,.12)'; }}catch(e){}"
+                  style="border:${on?'1.5px solid #2563eb':'1.5px solid rgba(148,163,184,.20)'};background:${on?'linear-gradient(135deg,#eff6ff,#dbeafe)':'linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94))'};color:${on?'#1d4ed8':'var(--text2)'};box-shadow:${on?'0 6px 16px rgba(37,99,235,.12)':'0 4px 10px rgba(15,23,42,.04)'};padding:8px 10px;border-radius:14px;font-size:12px;font-weight:900;cursor:pointer">${label}</button>`;
+              };
+              return [
+                mkBtn('default','기본'),
+                mkBtn('poster','포스터'),
+                mkBtn('heat','히트맵'),
+                mkBtn('split','리스트'),
+                mkBtn('board','보드')
+              ].join('');
+            })()}
           </div>
         </div>
         <div style="border-top:1px dashed var(--border2);padding-top:12px">

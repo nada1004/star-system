@@ -5,7 +5,12 @@ window._goPlayerHistPage = function(page, name){
   const _mb = document.getElementById('playerModalBody');
   if(!_mb) return;
   const _st = _mb.scrollTop;
-  _mb.innerHTML = buildPlayerDetailHTML(_p);
+  const _fn = (typeof window.buildPlayerDetailHTML==='function')
+    ? window.buildPlayerDetailHTML
+    : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+  _mb.innerHTML = _fn
+    ? _fn(_p)
+    : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
   _mb.scrollTop = _st;
   injectUnivIcons(_mb);
 };
@@ -18,7 +23,12 @@ window._goPlayerOppPage = function(page, name){
   const _mb = document.getElementById('playerModalBody');
   if(!_mb) return;
   const _st = _mb.scrollTop;
-  _mb.innerHTML = buildPlayerDetailHTML(_p);
+  const _fn = (typeof window.buildPlayerDetailHTML==='function')
+    ? window.buildPlayerDetailHTML
+    : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+  _mb.innerHTML = _fn
+    ? _fn(_p)
+    : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
   _mb.scrollTop = _st;
   injectUnivIcons(_mb);
 };
@@ -28,7 +38,12 @@ window._rebuildPlayerDetail = function(name){
   if(!_p) return;
   const _mb = document.getElementById('playerModalBody');
   if(!_mb) return;
-  _mb.innerHTML = buildPlayerDetailHTML(_p);
+  const _fn = (typeof window.buildPlayerDetailHTML==='function')
+    ? window.buildPlayerDetailHTML
+    : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+  _mb.innerHTML = _fn
+    ? _fn(_p)
+    : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
   injectUnivIcons(_mb);
 };
 
@@ -538,7 +553,12 @@ function deletePlayerHist(playerName, histIdx){
   if(pb){
     const p=players.find(x=>x.name===playerName);
     if(p){
-      pb.innerHTML=buildPlayerDetailHTML(p);
+      const _fn = (typeof window.buildPlayerDetailHTML==='function')
+        ? window.buildPlayerDetailHTML
+        : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+      pb.innerHTML = _fn
+        ? _fn(p)
+        : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
       injectUnivIcons(pb);
     }
   }
@@ -606,8 +626,18 @@ function deletePlayerHistBulk(playerName){
   _playerHistBulkSelected.clear();
   if(typeof fixPoints==='function')fixPoints();
   save();
-  document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
-  injectUnivIcons(document.getElementById('playerModalBody'));
+  {
+    const _fn = (typeof window.buildPlayerDetailHTML==='function')
+      ? window.buildPlayerDetailHTML
+      : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+    const pb = document.getElementById('playerModalBody');
+    if(pb){
+      pb.innerHTML = _fn
+        ? _fn(p)
+        : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
+      injectUnivIcons(pb);
+    }
+  }
 }
 
 function togglePlayerHistBulkMode(){
@@ -723,7 +753,12 @@ function savePlayerHistBulkEdit(playerName){
   if(pb){
     const p=players.find(x=>x.name===playerName);
     if(p){
-      pb.innerHTML=buildPlayerDetailHTML(p);
+      const _fn = (typeof window.buildPlayerDetailHTML==='function')
+        ? window.buildPlayerDetailHTML
+        : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+      pb.innerHTML = _fn
+        ? _fn(p)
+        : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
       injectUnivIcons(pb);
     }
   }
@@ -834,7 +869,12 @@ function openPlayerHistEdit(playerName, histIdx){
       if(pb){
         const p=players.find(x=>x.name===playerName);
         if(p){
-          pb.innerHTML=buildPlayerDetailHTML(p);
+          const _fn = (typeof window.buildPlayerDetailHTML==='function')
+            ? window.buildPlayerDetailHTML
+            : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+          pb.innerHTML = _fn
+            ? _fn(p)
+            : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
           injectUnivIcons(pb);
         }
       }

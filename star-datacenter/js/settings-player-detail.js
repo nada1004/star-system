@@ -4,7 +4,7 @@
 function _renderCfgPdSection(){
   const body=document.getElementById('cfg-pd-body');
   if(!body) return;
-  const _validPdDesignModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora'];
+  const _validPdDesignModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora','studio','blush','obsidian'];
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   const fs=s.font_size||'normal';
   const cp=s.color_preset||'normal';
@@ -15,6 +15,10 @@ function _renderCfgPdSection(){
   const phbgFit=s.header_bg_fit||'contain';
   const phbgScale=s.header_bg_scale!==undefined?s.header_bg_scale:100;
   const phbgPos=s.header_bg_pos||'center center';
+  const pdUnivBgEnabled=s.univ_bg_enabled!==undefined?!!s.univ_bg_enabled:false;
+  const pdUnivBgPastel=s.univ_bg_pastel!==undefined?!!s.univ_bg_pastel:true;
+  const pdUnivBgTint=(()=>{ const n=parseInt(s.univ_bg_tint??'18',10); return isNaN(n)?18:Math.max(0,Math.min(60,n)); })();
+  const pdUnivBgScope=['header','body','cards'].includes(s.univ_bg_scope)?s.univ_bg_scope:'cards';
   const _phbgPosX = (()=>{ const n=parseInt(s.header_bg_pos_x??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
   const _phbgPosY = (()=>{ const n=parseInt(s.header_bg_pos_y??'50',10); return isNaN(n)?50:Math.max(0,Math.min(100,n)); })();
   const uds=(()=>{ try{ return JSON.parse(localStorage.getItem('su_ud_style')||'{}')||{}; }catch(e){ return {}; } })();
@@ -56,7 +60,9 @@ function _renderCfgPdSection(){
       <span style="font-size:11px;color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="pd-dv-${i}">${val}%</span>
     </div>`;
   }).join('');
+  const _validPdLayoutModes=['default','photocard','showcase','stats','split','banner','poster','timeline','board'];
   const dm = _validPdDesignModes.includes(s.design_mode) ? s.design_mode : 'classic';
+  const lm = _validPdLayoutModes.includes(s.layout_mode) ? s.layout_mode : 'default';
   const dmCards = [
     ['classic','✨ 클래식','기존 화이트/글래스 디자인','linear-gradient(135deg,#eef2ff,#e0e7ff)','#6366f1'],
     ['editorial','📰 미니멀 매거진','화이트 · 세리프 · 여백 중심','linear-gradient(135deg,#fdfcf9,#f5f2ea)','#1a1a1a'],
@@ -72,7 +78,10 @@ function _renderCfgPdSection(){
     ['holo','💿 홀로그램','무지개 이리데센트 · 미래적 글로우','linear-gradient(135deg,#e0c3fc,#8ec5fc)','#a855f7'],
     ['arcade','🕹 레트로 아케이드','원색 · 두꺼운 픽셀 테두리 · Y2K 감성','linear-gradient(135deg,#fff066,#ff6b81)','#2563eb'],
     ['luxury','👑 럭셔리 골드','화이트/크림 배경 · 골드 라인 · 프리미엄 VIP 감성','linear-gradient(135deg,#fdfbf5,#f1e2b8)','#d4af37'],
-    ['aurora','🌌 오로라','민트/라벤더/핑크 그라디언트 · 몽환적인 라이트 감성','linear-gradient(135deg,#99f6e4,#c4b5fd,#fbcfe8)','#818cf8']
+    ['aurora','🌌 오로라','민트/라벤더/핑크 그라디언트 · 몽환적인 라이트 감성','linear-gradient(135deg,#99f6e4,#c4b5fd,#fbcfe8)','#818cf8'],
+    ['studio','🎥 스튜디오','방송 그래픽 느낌의 라이트 블루/실버 UI','linear-gradient(135deg,#eff6ff,#dbeafe,#bae6fd)','#38bdf8'],
+    ['blush','🩰 블러시 포토','핑크/크림 톤의 포토카드 감성 강화','linear-gradient(135deg,#fff1f2,#ffe4e6,#fef3c7)','#fb7185'],
+    ['obsidian','🖤 옵시디언','라벤더/아이보리 계열의 프리미엄 라이트 톤','linear-gradient(135deg,#f5f3ff,#e9d5ff,#c4b5fd)','#8b5cf6']
   ].map(([key,label,desc,bg,accent])=>`
     <button class="btn btn-xs ${dm===key?'btn-b':'btn-w'}" onclick="_setPdDesignMode('${key}')"
       style="text-align:left;padding:0;overflow:hidden;border-radius:12px;display:flex;flex-direction:column;height:auto;border-width:${dm===key?'2px':'1px'}">
@@ -84,11 +93,128 @@ function _renderCfgPdSection(){
         <span style="display:block;font-size:10px;color:var(--gray-l);margin-top:2px;font-weight:600">${desc}</span>
       </span>
     </button>`).join('');
+  const lmCards = [
+    ['default','기본형','지금 구조 그대로 안정적인 기본 배치','linear-gradient(180deg,#ffffff 0 38%,#eef2ff 38% 100%)','grid-template-columns:36px 1fr 42px;'],
+    ['photocard','포토카드형','프로필/비주얼 강조, 카드 감성 강화','linear-gradient(180deg,#fdf2f8 0 55%,#ffffff 55% 100%)','grid-template-columns:1fr;'],
+    ['showcase','쇼케이스형','이름과 핵심 정보 중심의 넓은 전개형','linear-gradient(180deg,#eff6ff 0 48%,#ffffff 48% 100%)','grid-template-columns:52px 1fr;'],
+    ['stats','통계강조형','상단에서 기록과 지표를 먼저 보여주는 타입','linear-gradient(180deg,#ecfeff 0 40%,#ffffff 40% 100%)','grid-template-columns:1fr 1fr;'],
+    ['split','스플릿형','프로필과 요약 정보를 좌우 분할해서 강조','linear-gradient(180deg,#eef2ff 0 46%,#ffffff 46% 100%)','grid-template-columns:22px 1fr;'],
+    ['banner','배너형','상단을 슬림하게 정리한 방송 배너 타입','linear-gradient(180deg,#f8fafc 0 36%,#ffffff 36% 100%)','grid-template-columns:20px 1fr 30px;'],
+    ['poster','포스터형','큰 배너+포스터 느낌으로 완전 다른 상단','linear-gradient(180deg,#fff7ed 0 48%,#ffffff 48% 100%)','grid-template-columns:1fr 34px 1fr;'],
+    ['timeline','타임라인형','최근 경기 기록을 메인 스트림으로 배치','linear-gradient(180deg,#ecfeff 0 44%,#ffffff 44% 100%)','grid-template-columns:26px 1fr 18px;'],
+    ['board','보드형','상단 KPI 보드 + 카드 그리드 중심','linear-gradient(180deg,#eef2ff 0 42%,#ffffff 42% 100%)','grid-template-columns:1fr 1fr;']
+  ].map(([key,label,desc,bg,grid])=>`
+    <button class="btn btn-xs ${lm===key?'btn-b':'btn-w'}" onclick="_setPdLayoutMode('${key}')"
+      style="text-align:left;padding:0;overflow:hidden;border-radius:12px;display:flex;flex-direction:column;height:auto;border-width:${lm===key?'2px':'1px'}">
+      <span style="display:block;height:56px;background:${bg};padding:8px">
+        <span style="display:grid;${key==='showcase'?'grid-template-columns:24px 1fr;grid-template-rows:auto auto;':'grid-template-columns:auto;'}gap:5px;height:100%">
+          <span style="display:grid;${grid}gap:4px;align-items:center">
+            <span style="width:${key==='photocard'?'100%':'24px'};height:${key==='photocard'?'24px':'24px'};border-radius:${key==='stats'?'8px':'999px'};background:rgba(79,70,229,.26);display:block"></span>
+            <span style="height:8px;border-radius:999px;background:rgba(15,23,42,.16);display:block"></span>
+            ${key==='default'?'<span style="height:18px;border-radius:10px;background:rgba(148,163,184,.26);display:block"></span>':(key==='photocard'?'':(key==='showcase'?'':(key==='split'?'':'<span style="height:18px;border-radius:10px;background:rgba(148,163,184,.22);display:block"></span>')))}
+          </span>
+          <span style="display:grid;grid-template-columns:${key==='stats'||key==='banner'?'repeat(4,1fr)':(key==='split'?'repeat(3,1fr)':'repeat(3,1fr)')};gap:4px">
+            ${Array.from({length:key==='stats'||key==='banner'?4:3}).map(()=>'<span style="height:12px;border-radius:7px;background:rgba(255,255,255,.92);border:1px solid rgba(99,102,241,.12)"></span>').join('')}
+          </span>
+        </span>
+      </span>
+      <span style="padding:7px 9px;background:var(--white)">
+        <span style="display:block;font-size:12px;font-weight:900;color:var(--text2)">${label}${lm===key?' ✓':''}</span>
+        <span style="display:block;font-size:10px;color:var(--gray-l);margin-top:2px;font-weight:600">${desc}</span>
+      </span>
+    </button>`).join('');
+  const _pdPreviewSkinMap = {
+    classic:{bg:'linear-gradient(135deg,#eef2ff,#dbeafe)',fg:'#312e81',chip:'rgba(255,255,255,.82)'},
+    editorial:{bg:'linear-gradient(135deg,#fdfcf9,#f5f2ea)',fg:'#1a1a1a',chip:'rgba(255,255,255,.96)'},
+    pastel:{bg:'linear-gradient(135deg,#ffe4ef,#e8e4ff)',fg:'#831843',chip:'rgba(255,255,255,.92)'},
+    glass:{bg:'linear-gradient(135deg,#c7d2fe,#a5f3fc)',fg:'#1e1b4b',chip:'rgba(255,255,255,.55)'},
+    dashboard:{bg:'linear-gradient(135deg,#f8fafc,#eef2f7)',fg:'#0f172a',chip:'rgba(255,255,255,.96)'},
+    mono:{bg:'linear-gradient(135deg,#f8fafc,#e2e8f0)',fg:'#0f172a',chip:'rgba(255,255,255,.96)'},
+    sunset:{bg:'linear-gradient(135deg,#ffd9c0,#ff8fab)',fg:'#7c2d12',chip:'rgba(255,255,255,.9)'},
+    botanical:{bg:'linear-gradient(135deg,#d9f2e6,#a7e3c5)',fg:'#064e3b',chip:'rgba(255,255,255,.9)'},
+    neon:{bg:'linear-gradient(135deg,#ecfeff,#fdf4ff)',fg:'#0e7490',chip:'rgba(255,255,255,.96)'},
+    terminal:{bg:'linear-gradient(135deg,#f5faf6,#eaf7ee)',fg:'#15803d',chip:'rgba(255,255,255,.95)'},
+    paper:{bg:'linear-gradient(135deg,#f2e9d8,#e6d8bd)',fg:'#4b3621',chip:'rgba(251,246,233,.96)'},
+    holo:{bg:'linear-gradient(135deg,#e0c3fc,#8ec5fc,#fbc2eb)',fg:'#4c1d95',chip:'rgba(255,255,255,.7)'},
+    arcade:{bg:'linear-gradient(135deg,#fff066,#ff6b81)',fg:'#111827',chip:'rgba(255,255,255,.95)'},
+    luxury:{bg:'linear-gradient(135deg,#fdfbf5,#f1e2b8)',fg:'#7a5f17',chip:'rgba(255,255,255,.94)'},
+    aurora:{bg:'linear-gradient(135deg,#99f6e4,#c4b5fd,#fbcfe8)',fg:'#312e81',chip:'rgba(255,255,255,.92)'}
+    ,studio:{bg:'linear-gradient(135deg,#eff6ff,#dbeafe,#bae6fd)',fg:'#0f172a',chip:'rgba(255,255,255,.92)'}
+    ,blush:{bg:'linear-gradient(135deg,#fff1f2,#ffe4e6,#fef3c7)',fg:'#9f1239',chip:'rgba(255,255,255,.9)'}
+    ,obsidian:{bg:'linear-gradient(135deg,#f5f3ff,#e9d5ff,#c4b5fd)',fg:'#4c1d95',chip:'rgba(255,255,255,.92)'}
+  };
+  const _pdPreviewSkin = _pdPreviewSkinMap[dm] || _pdPreviewSkinMap.classic;
+  const _pdPreviewHeroLayout = (lm==='photocard' || lm==='poster')
+    ? 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center'
+    : (lm==='showcase' || lm==='split'
+      ? 'display:grid;grid-template-columns:28px 1fr;align-items:center;gap:8px'
+      : 'display:grid;grid-template-columns:28px 1fr 38px;align-items:center;gap:8px');
+  const _pdPreviewStatsCols = (lm==='stats' || lm==='board' || lm==='banner') ? 'repeat(4,1fr)' : ((lm==='split' || lm==='poster') ? 'repeat(3,1fr)' : 'repeat(2,1fr)');
+  const _pdPreviewPhoto = (lm==='photocard' || lm==='poster')
+    ? 'width:54px;height:54px;border-radius:18px'
+    : (lm==='split' ? 'width:34px;height:40px;border-radius:12px' : 'width:28px;height:28px;border-radius:999px');
+  const _pdPreviewMetaAlign = (lm==='photocard' || lm==='poster') ? 'center' : 'left';
+  const _pdUiPreset = `
+    <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--white));box-shadow:0 10px 28px rgba(15,23,42,.05);margin-bottom:16px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🪄 추천 UI 프리셋</div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+        <button class="btn btn-xs btn-w" onclick="_applyPdUiPreset('photocard')">포토카드형</button>
+        <button class="btn btn-xs btn-w" onclick="_applyPdUiPreset('studio')">방송형</button>
+        <button class="btn btn-xs btn-w" onclick="_applyPdUiPreset('dark')">라이트 프리미엄</button>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">디자인 + 레이아웃 조합을 한 번에 적용합니다.</div>
+    </div>`;
+  const _pdPreviewCard = `
+    <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--white));box-shadow:0 10px 28px rgba(15,23,42,.06);margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:800;color:var(--text2)">👀 현재 조합 미리보기</div>
+        <div style="font-size:10px;color:var(--gray-l);font-weight:800">${dm} × ${lm}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 118px;gap:12px;align-items:stretch">
+        <div style="min-width:0;border-radius:20px;overflow:hidden;border:1px solid rgba(99,102,241,.14);box-shadow:0 14px 30px rgba(15,23,42,.10);background:#fff">
+          <div style="background:${_pdPreviewSkin.bg};padding:14px;${_pdPreviewHeroLayout};min-height:102px;position:relative">
+            <span style="position:absolute;inset:auto auto 10px 10px;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.14);filter:blur(2px)"></span>
+            <span style="${_pdPreviewPhoto};background:${_pdPreviewSkin.chip};border:1px solid rgba(255,255,255,.7);box-shadow:0 8px 18px rgba(15,23,42,.12);display:block;z-index:1"></span>
+            <span style="display:block;min-width:0;text-align:${_pdPreviewMetaAlign};z-index:1">
+              <span style="display:block;font-size:${lm==='photocard'?'15px':'13px'};font-weight:1000;color:${_pdPreviewSkin.fg};line-height:1.1">이경민</span>
+              <span style="display:flex;justify-content:${lm==='photocard'?'center':'flex-start'};gap:4px;flex-wrap:wrap;margin-top:6px">
+                <span style="padding:3px 7px;border-radius:999px;background:${_pdPreviewSkin.chip};font-size:9px;font-weight:800;color:${_pdPreviewSkin.fg}">늪지대</span>
+                <span style="padding:3px 7px;border-radius:999px;background:${_pdPreviewSkin.chip};font-size:9px;font-weight:800;color:${_pdPreviewSkin.fg}">T 테란</span>
+              </span>
+            </span>
+            ${lm==='photocard'?'':`<span style="padding:7px 8px;border-radius:12px;background:${_pdPreviewSkin.chip};font-size:10px;font-weight:900;color:${_pdPreviewSkin.fg};text-align:center;line-height:1.1;z-index:1">ELO<br>1320</span>`}
+          </div>
+          <div style="display:grid;grid-template-columns:${_pdPreviewStatsCols};gap:7px;padding:10px;background:linear-gradient(180deg,#fff,rgba(99,102,241,.04))">
+            ${Array.from({length: (lm==='stats' || lm==='board')?4:2}).map((_,idx)=>`<span style="display:block;padding:8px 6px;border-radius:12px;background:#fff;border:1px solid rgba(148,163,184,.16);text-align:center">
+              <span style="display:block;font-size:8px;font-weight:900;color:#94a3b8;letter-spacing:.08em">${idx===0?'전적':idx===1?'승률':idx===2?'포인트':'상태'}</span>
+              <span style="display:block;font-size:${(lm==='stats' || lm==='board')?'12px':'11px'};font-weight:1000;color:#0f172a;margin-top:3px">${idx===0?'12승 4패':idx===1?'75%':idx===2?'+18':'활동중'}</span>
+            </span>`).join('')}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;justify-content:center">
+          <div style="padding:9px 10px;border-radius:12px;background:var(--white);border:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-bottom:3px">추천 포인트</div>
+            <div style="font-size:11px;color:var(--text2);font-weight:800">${lm==='photocard'?'프로필 이미지와 감성 분위기 강조':lm==='showcase'?'이름과 핵심 정보가 넓게 펼쳐짐':lm==='stats'?'상단에서 지표를 먼저 읽기 쉬움':lm==='poster'?'포스터/배너 느낌으로 ‘완전 다른 화면’ 체감':lm==='timeline'?'최근 경기 스트림을 메인으로 바로 보는 구조':lm==='board'?'KPI/카드 보드 중심으로 빠르게 스캔':'균형형 구조로 가장 안정적'}</div>
+          </div>
+          <div style="padding:9px 10px;border-radius:12px;background:var(--white);border:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-bottom:3px">추천 조합</div>
+            <div style="font-size:11px;color:var(--text2);font-weight:800">${lm==='photocard'?'glass / aurora / pastel':lm==='showcase'?'luxury / editorial / sunset':lm==='stats'?'dashboard / classic / mono':lm==='poster'?'sunset / blush / aurora':lm==='timeline'?'studio / glass / aurora':lm==='board'?'dashboard / mono / classic':'classic / botanical / holo'}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
   body.innerHTML=`
+    ${_pdPreviewCard}
+    ${_pdUiPreset}
     <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🎨 디자인 모드</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${dmCards}</div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">스트리머 상세 팝업의 전체적인 UI/디자인을 통째로 바꿉니다. 색상뿐 아니라 카드 모양·글꼴·레이아웃 느낌이 모드마다 다릅니다.</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🧩 레이아웃 모드</div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${lmCards}</div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">썸네일은 미리보기이고, 선택하면 현재 열려 있는 스트리머 상세 팝업에 바로 반영됩니다.</div>
     </div>
     <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 폰트 크기</div>
@@ -102,6 +228,28 @@ function _renderCfgPdSection(){
         <span id="pd-ps-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${ps}%</span>
       </div>
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 크기 (기본 100%)</div>
+    </div>
+    <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🎓 대학 색상 팝업 배경</div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px">
+        <input type="checkbox" ${pdUnivBgEnabled?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdUnivBgEnabled(this.checked)">
+        <span style="font-size:12px;color:var(--text)">스트리머 상세 팝업 배경에 소속 대학 색상 적용</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;opacity:${pdUnivBgEnabled?1:.55}">
+        <input type="checkbox" ${pdUnivBgPastel?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdUnivBgPastel(this.checked)">
+        <span style="font-size:12px;color:var(--text)">파스텔톤으로 부드럽게 보정</span>
+      </label>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">적용 범위</div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:10px;opacity:${pdUnivBgEnabled?1:.55}">
+        <button class="btn btn-xs ${pdUnivBgScope==='header'?'btn-b':'btn-w'}" onclick="_setPdUnivBgScope('header')">헤더만</button>
+        <button class="btn btn-xs ${pdUnivBgScope==='body'?'btn-b':'btn-w'}" onclick="_setPdUnivBgScope('body')">본문까지</button>
+        <button class="btn btn-xs ${pdUnivBgScope==='cards'?'btn-b':'btn-w'}" onclick="_setPdUnivBgScope('cards')">카드 섹션까지</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;opacity:${pdUnivBgEnabled?1:.55}">
+        <input type="range" min="0" max="60" step="2" value="${pdUnivBgTint}" style="flex:1;accent-color:var(--blue)" oninput="_setPdUnivBgTint(this.value);document.getElementById('pd-univbg-val').textContent=this.value+'%'">
+        <span id="pd-univbg-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${pdUnivBgTint}%</span>
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">켜면 헤더/본문 배경에 대학 색상이 은은하게 섞입니다. 농도는 0~60% 범위에서 조절됩니다.</div>
     </div>
     <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
       <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🖼 스트리머 상세 헤더 기본 배경</div>
@@ -359,12 +507,71 @@ function _setPdProfileSize(val){
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.profile_size=parseInt(val)||100;
   localStorage.setItem('su_pd_style',JSON.stringify(s));
+  try{ _refreshOpenDetailModals(); }catch(e){}
+  _pdTouchPrefs();
+}
+function _setPdUnivBgEnabled(checked){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.univ_bg_enabled=!!checked;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  try{ _renderCfgPdSection(); }catch(e){}
+  try{ _refreshOpenDetailModals(); }catch(e){}
+  _pdTouchPrefs();
+}
+function _setPdUnivBgPastel(checked){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.univ_bg_pastel=!!checked;
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  try{ _renderCfgPdSection(); }catch(e){}
+  try{ _refreshOpenDetailModals(); }catch(e){}
+  _pdTouchPrefs();
+}
+function _setPdUnivBgScope(scope){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.univ_bg_scope=['header','body','cards'].includes(scope)?scope:'cards';
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  try{ _renderCfgPdSection(); }catch(e){}
+  try{ _refreshOpenDetailModals(); }catch(e){}
+  _pdTouchPrefs();
+}
+function _setPdUnivBgTint(val){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  const n=parseInt(val,10);
+  s.univ_bg_tint=isNaN(n)?18:Math.max(0,Math.min(60,n));
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  try{ _refreshOpenDetailModals(); }catch(e){}
+  _pdTouchPrefs();
+}
+function _applyPdUiPreset(preset){
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  if(preset==='photocard'){
+    s.design_mode='blush';
+    s.layout_mode='photocard';
+  }else if(preset==='studio'){
+    s.design_mode='studio';
+    s.layout_mode='banner';
+  }else if(preset==='dark'){
+    s.design_mode='obsidian';
+    s.layout_mode='split';
+  }
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _renderCfgPdSection();
+  try{ _refreshOpenDetailModals(); }catch(e){}
   _pdTouchPrefs();
 }
 function _setPdDesignMode(mode){
-  const valid=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora'];
+  const valid=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora','studio','blush','obsidian'];
   const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   s.design_mode=valid.includes(mode)?mode:'classic';
+  localStorage.setItem('su_pd_style',JSON.stringify(s));
+  _renderCfgPdSection();
+  try{ _refreshOpenDetailModals(); }catch(e){}
+  _pdTouchPrefs();
+}
+function _setPdLayoutMode(mode){
+  const valid=['default','photocard','showcase','stats','split','banner','poster','timeline','board'];
+  const s=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
+  s.layout_mode=valid.includes(mode)?mode:'default';
   localStorage.setItem('su_pd_style',JSON.stringify(s));
   _renderCfgPdSection();
   try{ _refreshOpenDetailModals(); }catch(e){}
@@ -500,7 +707,13 @@ try{
   window._renderCfgPdSection = _renderCfgPdSection;
   window._setGlobalProfileShape = _setGlobalProfileShape;
   window._setPdHeaderBg = _setPdHeaderBg;
+  window._setPdUnivBgEnabled = _setPdUnivBgEnabled;
+  window._setPdUnivBgPastel = _setPdUnivBgPastel;
+  window._setPdUnivBgScope = _setPdUnivBgScope;
+  window._setPdUnivBgTint = _setPdUnivBgTint;
+  window._applyPdUiPreset = _applyPdUiPreset;
   window._setPdDesignMode = _setPdDesignMode;
+  window._setPdLayoutMode = _setPdLayoutMode;
   window._setUdHeaderBg = _setUdHeaderBg;
   window._setMdTeamHeaderColor = _setMdTeamHeaderColor;
 }catch(e){}

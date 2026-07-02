@@ -787,6 +787,24 @@ window.openMatchDetailFromHistory = function(selfName, oppName, date, map, modeL
 };
 
 function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
+  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const _wrapMdDetail = (inner)=>`<div class="cmd-detail-shell" data-md-mode="${_mdDesignMode}" data-md-layout="${_mdLayoutMode}">${inner}</div>`;
+  const _modeLabel = (mk)=>{
+    const v=String(mk||'').trim();
+    if(v==='mini') return '미니대전';
+    if(v==='univm') return '대학대전';
+    if(v==='ck') return '대학CK';
+    if(v==='pro') return '프로리그';
+    if(v==='tt') return '티어대회';
+    if(v==='comp') return '대회';
+    if(v==='tourney') return '토너';
+    if(v==='procomp') return '프로대회';
+    if(v==='procompgj') return '프로대회끝장전';
+    if(v==='gj') return '끝장전';
+    if(v==='ind') return '개인전';
+    return v;
+  };
   const _resolvePlayerCol = (name, fallback) => {
     try{
       const p = (players||[]).find(x=>x && x.name===name);
@@ -846,7 +864,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     const loseNameHtml=isTeamGame?_renderNameList(loseNames):_escHtml(m.lName||'');
     const mapStr=m.map?`<span style="font-size:11px;color:var(--text3);white-space:nowrap">${m.map}</span>`:'';
     const memoStr=m.memo?`<div style="font-size:11px;color:var(--gray-l);margin-top:4px">📝 ${m.memo}</div>`:'';
-    return `<div class="cmd-single-summary">
+    return _wrapMdDetail(`<div class="cmd-single-summary">
       <div class="cmd-single-summary__row">
         ${_teamBadge(winNames)}<span class="cmd-single-name">${winNameHtml}</span>${rW}${uW}
         <span class="cmd-single-vs">vs</span>
@@ -854,152 +872,233 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         ${mapStr}
       </div>
       ${memoStr?`<div class="cmd-single-summary__memo">${memoStr}</div>`:''}
-    </div>`;
+    </div>`);
   }
-  if(!m.sets||!m.sets.length) return '<div style="font-size:12px;color:var(--gray-l);padding:8px 0">세트 상세 기록 없음</div>';
-  let h='';
+  if(!m.sets||!m.sets.length) return _wrapMdDetail('<div style="font-size:12px;color:var(--gray-l);padding:8px 0">세트 상세 기록 없음</div>');
+
+  const _buildGameCard = (g, si, gi) => {
+    if(!g || (!g.playerA && !g.playerB)) return '';
+    const namesA=_gameSideNames(g,'A');
+    const namesB=_gameSideNames(g,'B');
+    const isTeamGame=!!(g._isTeam || namesA.length>=2 || namesB.length>=2);
+    const pA=!isTeamGame&&namesA.length===1?players.find(p=>p.name===namesA[0]):null;
+    const pB=!isTeamGame&&namesB.length===1?players.find(p=>p.name===namesB[0]):null;
+    const pca=(pA&&gc(pA.univ))||ca;
+    const pcb=(pB&&gc(pB.univ))||cb;
+    const aIsWinner=(g.winner==='A');
+    const bIsWinner=(g.winner==='B');
+    const hasWinner=!!(g.winner);
+    const nameHtmlA=_renderNameList(namesA);
+    const nameHtmlB=_renderNameList(namesB);
+    const clickA=!isTeamGame&&g.playerA?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } openPlayerModal('${_escJs(g.playerA||'')}'); })()" data-player-link="1"`:'';
+    const clickB=!isTeamGame&&g.playerB?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } openPlayerModal('${_escJs(g.playerB||'')}'); })()" data-player-link="1"`:'';
+    const _teamColorMode = ['mini','univm','ck','pro','tt','comp','procomp','procomptn'].includes(String(mode||''));
+    const sideBaseA = _teamColorMode ? ca : pca;
+    const sideBaseB = _teamColorMode ? cb : pcb;
+    const raceA=!isTeamGame&&pA?`<span class="rbadge cmd-race-badge r${pA.race}" style="font-size:10px;flex-shrink:0">${pA.race}</span>`:'';
+    const raceB=!isTeamGame&&pB?`<span class="rbadge cmd-race-badge r${pB.race}" style="font-size:10px;flex-shrink:0">${pB.race}</span>`:'';
+    const univLogoA='';
+    const univLogoB='';
+    const photoA=!isTeamGame&&pA?getPlayerPhotoHTML(pA.name,'40px','flex-shrink:0;border:2px solid '+sideBaseA+';box-shadow:0 1px 6px '+sideBaseA+'44'):'';
+    const photoB=!isTeamGame&&pB?getPlayerPhotoHTML(pB.name,'40px','flex-shrink:0;border:2px solid '+sideBaseB+';box-shadow:0 1px 6px '+sideBaseB+'44'):'';
+    const editBtn=isLoggedIn&&m._editRef?`<button class="btn btn-o btn-xs no-export cmd-edit-btn" style="margin-left:4px;flex-shrink:0" onclick="openGameEditModal('${m._editRef}',${si},${gi})">✏️</button>`:'';
+
+    const winA = aIsWinner&&hasWinner;
+    const winB = bIsWinner&&hasWinner;
+    const _ct = t => t ? t.replace(/티어$/,'') : '';
+    const _tierBadge = (tier) => tier ? `<span class="cmd-tier-badge" style="background:${getTierBtnColor(tier)||'#64748b'};color:${getTierBtnTextColor(tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;flex-shrink:0"><span class="tier-pc">${tier}</span><span class="tier-mob">${_ct(tier)}</span></span>` : '';
+    const tierA = _tierBadge(pA?.tier);
+    const tierB = _tierBadge(pB?.tier);
+
+    if((window.__detailCtx||'')==='compModal' || (window.__detailCtx||'')==='histModal'){
+      const sideColA = sideBaseA;
+      const sideColB = sideBaseB;
+      const loseA = hasWinner && !winA;
+      const loseB = hasWinner && !winB;
+      const pAHtml = photoA ? `<span class="cmd-photo ${loseA?'is-lose':''}">${photoA}</span>` : '';
+      const pBHtml = photoB ? `<span class="cmd-photo ${loseB?'is-lose':''}">${photoB}</span>` : '';
+      const loseBgA = `linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))`;
+      const loseBgB = `linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))`;
+      const loseBdA = 'rgba(203,213,225,.85)';
+      const loseBdB = 'rgba(203,213,225,.85)';
+      return `<div class="cmd-game" data-si="${si}" data-gi="${gi}">
+        <div class="cmd-game-row">
+          <div class="cmd-player ${winA?'is-win':''} ${loseA?'is-lose':''}" style="--cmd-col:${sideColA};background:${winA?(typeof getMatchWinTint==='function'?getMatchWinTint(sideColA):(sideColA+'22')):(loseA?loseBgA:(sideColA+'12'))};border-color:${winA?(sideColA+'55'):(loseA?loseBdA:(sideColA+'33'))};">
+            <div class="cmd-player-meta">
+              <div class="cmd-player-name" ${clickA} style="display:flex;align-items:center;justify-content:center;gap:8px;text-align:center"><span class="cmd-player-inline" style="display:inline-flex;align-items:center;gap:4px;justify-content:center">${_teamBadge(namesA)}${univLogoA}${tierA}${raceA}</span><span class="cmd-player-name__txt">${nameHtmlA}</span></div>
+            </div>
+            ${pAHtml}
+          </div>
+          <div class="cmd-midbox">
+            <div class="cmd-gno">경기 ${gi+1}</div>
+            ${g.map?`<div class="cmd-gmap">${g.map}</div>`:''}
+          </div>
+          <div class="cmd-player ${winB?'is-win':''} ${loseB?'is-lose':''} is-right" style="--cmd-col:${sideColB};background:${winB?(typeof getMatchWinTint==='function'?getMatchWinTint(sideColB):(sideColB+'22')):(loseB?loseBgB:(sideColB+'12'))};border-color:${winB?(sideColB+'55'):(loseB?loseBdB:(sideColB+'33'))};">
+            ${pBHtml}
+            <div class="cmd-player-meta">
+              <div class="cmd-player-name" ${clickB} style="display:flex;align-items:center;justify-content:center;gap:8px;text-align:center"><span class="cmd-player-inline" style="display:inline-flex;align-items:center;gap:4px;justify-content:center">${_teamBadge(namesB)}${univLogoB}${tierB}${raceB}</span><span class="cmd-player-name__txt">${nameHtmlB}</span></div>
+            </div>
+          </div>
+          ${editBtn}
+        </div>
+      </div>`;
+    }
+
+    const loseA = hasWinner && !winA;
+    const loseB = hasWinner && !winB;
+    const mapDot = g.map ? `<span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">${g.map}</span>` : '';
+    const photoAHtml = photoA ? `<span class="cmd-photo ${loseA?'is-lose':''}">${photoA}</span>` : '';
+    const photoBHtml = photoB ? `<span class="cmd-photo ${loseB?'is-lose':''}">${photoB}</span>` : '';
+    const nameStyleA = loseA ? 'opacity:.7;color:#64748b;' : 'opacity:1;';
+    const nameStyleB = loseB ? 'opacity:.7;color:#64748b;' : 'opacity:1;';
+    return `<div data-si="${si}" data-gi="${gi}" style="display:flex;flex-direction:column;gap:3px;padding:5px 2px;">
+      <div style="display:flex;align-items:center;gap:5px;">
+        <span style="color:var(--gray-l);font-size:11px;min-width:40px;font-weight:700;flex-shrink:0;text-align:center">경기${gi+1}</span>
+        <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winA?pca+'18':(loseA?'linear-gradient(180deg, rgba(148,163,184,.14), rgba(255,255,255,.96))':pca+'12')};border:${winA?'1.5px solid '+pca+'55':(loseA?'1px solid rgba(148,163,184,.26)':'1px solid '+pca+'33')};min-width:0;">
+          <div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:4px;overflow:hidden">
+            ${_teamBadge(namesA)}${univLogoA}${tierA}${raceA}
+            <strong style="font-size:13px;color:var(--text);white-space:nowrap;${nameStyleA}" ${clickA}>${nameHtmlA}</strong>
+          </div>
+          ${photoAHtml}
+        </div>
+        <span style="color:var(--gray-l);font-size:12px;font-weight:800;flex-shrink:0">vs</span>
+        <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winB?pcb+'18':(loseB?'linear-gradient(180deg, rgba(148,163,184,.14), rgba(255,255,255,.96))':pcb+'12')};border:${winB?'1.5px solid '+pcb+'55':(loseB?'1px solid rgba(148,163,184,.26)':'1px solid '+pcb+'33')};min-width:0;">
+          ${photoBHtml}
+          <div style="flex:1;min-width:0;display:flex;align-items:center;gap:4px;overflow:hidden">
+            ${_teamBadge(namesB)}${univLogoB}${tierB}${raceB}
+            <strong style="font-size:13px;color:var(--text);white-space:nowrap;${nameStyleB}" ${clickB}>${nameHtmlB}</strong>
+          </div>
+        </div>
+        ${editBtn}
+      </div>
+      ${mapDot ? `<div style="padding-left:48px;font-size:10px;color:var(--text3)">${mapDot}</div>` : ''}
+    </div>`;
+  };
+
+  const setBlocks=[];
   m.sets.forEach((set,si)=>{
     const isAce=(si===m.sets.length-1&&m.sets.length>=3);
     const sLabel=isAce?'🎯 에이스전':`${si+1}세트`;
     const swA=set.scoreA||0, swB=set.scoreB||0;
     const setAWin=swA>swB, setBWin=swB>swA;
-    h+=`<div class="set-row">
-      <div class="cmd-set-head" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:5px 10px;background:${isAce?'#f5f3ff':'var(--blue-l)'};border-radius:7px;border:1px solid ${isAce?'#ddd6fe':'var(--blue-ll)'}">
-        <span class="set-row-title ${isAce?'ace-t':''}" style="margin-bottom:0;font-size:12px">${sLabel}</span>
-        <span class="ubadge${setAWin?'':' loser'}" style="background:${setAWin?ca:`linear-gradient(135deg, ${typeof getMatchWinTint==='function'?getMatchWinTint(ca):ca+'18'}, rgba(255,255,255,.92))`};color:${setAWin?'#fff':'#334155'};border-color:${setAWin?ca:ca+'33'};font-size:10px">${labelA}</span>
-        <span style="font-weight:800;font-size:14px">
-          <span class="${setAWin?'wt':setBWin?'lt':'pt-z'}">${swA}</span>
-          <span style="color:var(--border2)"> : </span>
-          <span class="${setBWin?'wt':setAWin?'lt':'pt-z'}">${swB}</span>
-        </span>
-        <span class="ubadge${setBWin?'':' loser'}" style="background:${setBWin?cb:`linear-gradient(135deg, ${typeof getMatchWinTint==='function'?getMatchWinTint(cb):cb+'18'}, rgba(255,255,255,.92))`};color:${setBWin?'#fff':'#334155'};border-color:${setBWin?cb:cb+'33'};font-size:10px">${labelB}</span>
-
-      </div>`;
+    const head=`<div class="cmd-set-head" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:5px 10px;background:${isAce?'#f5f3ff':'var(--blue-l)'};border-radius:7px;border:1px solid ${isAce?'#ddd6fe':'var(--blue-ll)'}">
+      <span class="set-row-title ${isAce?'ace-t':''}" style="margin-bottom:0;font-size:12px">${sLabel}</span>
+      <span class="ubadge${setAWin?'':' loser'}" style="background:${setAWin?ca:`linear-gradient(135deg, ${typeof getMatchWinTint==='function'?getMatchWinTint(ca):ca+'18'}, rgba(255,255,255,.92))`};color:${setAWin?'#fff':'#334155'};border-color:${setAWin?ca:ca+'33'};font-size:10px">${labelA}</span>
+      <span style="font-weight:800;font-size:14px">
+        <span class="${setAWin?'wt':setBWin?'lt':'pt-z'}">${swA}</span>
+        <span style="color:var(--border2)"> : </span>
+        <span class="${setBWin?'wt':setAWin?'lt':'pt-z'}">${swB}</span>
+      </span>
+      <span class="ubadge${setBWin?'':' loser'}" style="background:${setBWin?cb:`linear-gradient(135deg, ${typeof getMatchWinTint==='function'?getMatchWinTint(cb):cb+'18'}, rgba(255,255,255,.92))`};color:${setBWin?'#fff':'#334155'};border-color:${setBWin?cb:cb+'33'};font-size:10px">${labelB}</span>
+    </div>`;
+    const gamesArr=[];
     if(set.games&&set.games.length){
       set.games.forEach((g,gi)=>{
-        if(!g.playerA&&!g.playerB)return;
-        const namesA=_gameSideNames(g,'A');
-        const namesB=_gameSideNames(g,'B');
-        const isTeamGame=!!(g._isTeam || namesA.length>=2 || namesB.length>=2);
-        const pA=!isTeamGame&&namesA.length===1?players.find(p=>p.name===namesA[0]):null;
-        const pB=!isTeamGame&&namesB.length===1?players.find(p=>p.name===namesB[0]):null;
-        const pca=(pA&&gc(pA.univ))||ca;
-        const pcb=(pB&&gc(pB.univ))||cb;
-        const aIsWinner=(g.winner==='A');
-        const bIsWinner=(g.winner==='B');
-        const hasWinner=!!(g.winner);
-        const winBgA=(typeof getMatchWinTint==='function'?getMatchWinTint(pca):(pca+'22'));
-        const winBgB=(typeof getMatchWinTint==='function'?getMatchWinTint(pcb):(pcb+'22'));
-        const winBorderA=pca+'88'; const winBorderB=pcb+'88';
-        const nameHtmlA=_renderNameList(namesA);
-        const nameHtmlB=_renderNameList(namesB);
-        // (설정) 경기 결과 팝업( histDetModal )에서 스트리머 클릭 시 팝업 닫기 여부
-        const clickA=!isTeamGame&&g.playerA?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } openPlayerModal('${_escJs(g.playerA||'')}'); })()" data-player-link="1"`:''
-        const clickB=!isTeamGame&&g.playerB?`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } openPlayerModal('${_escJs(g.playerB||'')}'); })()" data-player-link="1"`:''
-        const _teamColorMode = ['mini','univm','ck','pro','tt','comp','procomp','procomptn'].includes(String(mode||''));
-        const sideBaseA = _teamColorMode ? ca : pca;
-        const sideBaseB = _teamColorMode ? cb : pcb;
-        const raceA=!isTeamGame&&pA?`<span class="rbadge cmd-race-badge r${pA.race}" style="font-size:10px;flex-shrink:0">${pA.race}</span>`:'';
-        const raceB=!isTeamGame&&pB?`<span class="rbadge cmd-race-badge r${pB.race}" style="font-size:10px;flex-shrink:0">${pB.race}</span>`:'';
-        const univLogoA='';
-        const univLogoB='';
-        // 경기 상세 카드(경기 기록 네모) 프로필 이미지: 1배(조금 더 크게)
-        const photoA=!isTeamGame&&pA?getPlayerPhotoHTML(pA.name,'40px','flex-shrink:0;border:2px solid '+sideBaseA+';box-shadow:0 1px 6px '+sideBaseA+'44'):'';
-        const photoB=!isTeamGame&&pB?getPlayerPhotoHTML(pB.name,'40px','flex-shrink:0;border:2px solid '+sideBaseB+';box-shadow:0 1px 6px '+sideBaseB+'44'):'';
-        const editBtn=isLoggedIn&&m._editRef?`<button class="btn btn-o btn-xs no-export cmd-edit-btn" style="margin-left:4px;flex-shrink:0" onclick="openGameEditModal('${m._editRef}',${si},${gi})">✏️</button>`:'';
-
-        {
-          // (대회 상세 팝업) 더 컴팩트/세련된 한 줄 카드 UI
-          const winA = aIsWinner&&hasWinner;
-          const winB = bIsWinner&&hasWinner;
-          const _ct = t => t ? t.replace(/티어$/,'') : '';
-          const _tierBadge = (tier) => tier ? `<span class="cmd-tier-badge" style="background:${getTierBtnColor(tier)||'#64748b'};color:${getTierBtnTextColor(tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;flex-shrink:0"><span class="tier-pc">${tier}</span><span class="tier-mob">${_ct(tier)}</span></span>` : '';
-          const tierA = _tierBadge(pA?.tier);
-          const tierB = _tierBadge(pB?.tier);
-          const winMark = col => `<span class="cmd-win" style="--cmd-col:${col}">WIN</span>`;
-
-          // 팝업(대회탭/기록탭)에서는 동일한 '세련된' 경기 카드 UI 사용
-          if((window.__detailCtx||'')==='compModal' || (window.__detailCtx||'')==='histModal'){
-            const sideColA = sideBaseA;
-            const sideColB = sideBaseB;
-            const loseA = hasWinner && !winA;
-            const loseB = hasWinner && !winB;
-            const pAHtml = photoA ? `<span class="cmd-photo ${loseA?'is-lose':''}">${photoA}</span>` : '';
-            const pBHtml = photoB ? `<span class="cmd-photo ${loseB?'is-lose':''}">${photoB}</span>` : '';
-            const loseBgA = `linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))`;
-            const loseBgB = `linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96))`;
-            const loseBdA = 'rgba(203,213,225,.85)';
-            const loseBdB = 'rgba(203,213,225,.85)';
-            h+=`<div class="cmd-game">
-              <div class="cmd-game-row">
-                <div class="cmd-player ${winA?'is-win':''} ${loseA?'is-lose':''}" style="--cmd-col:${sideColA};background:${winA?(typeof getMatchWinTint==='function'?getMatchWinTint(sideColA):(sideColA+'22')):(loseA?loseBgA:(sideColA+'12'))};border-color:${winA?(sideColA+'55'):(loseA?loseBdA:(sideColA+'33'))};">
-                  <div class="cmd-player-meta">
-                    <div class="cmd-player-name" ${clickA} style="display:flex;align-items:center;justify-content:center;gap:8px;text-align:center"><span class="cmd-player-inline" style="display:inline-flex;align-items:center;gap:4px;justify-content:center">${_teamBadge(namesA)}${univLogoA}${tierA}${raceA}</span><span class="cmd-player-name__txt">${nameHtmlA}</span></div>
-                  </div>
-                  ${pAHtml}
-                </div>
-                <div class="cmd-midbox">
-                  <div class="cmd-gno">경기 ${gi+1}</div>
-                  ${g.map?`<div class="cmd-gmap">${g.map}</div>`:''}
-                </div>
-                <div class="cmd-player ${winB?'is-win':''} ${loseB?'is-lose':''} is-right" style="--cmd-col:${sideColB};background:${winB?(typeof getMatchWinTint==='function'?getMatchWinTint(sideColB):(sideColB+'22')):(loseB?loseBgB:(sideColB+'12'))};border-color:${winB?(sideColB+'55'):(loseB?loseBdB:(sideColB+'33'))};">
-                  ${pBHtml}
-                  <div class="cmd-player-meta">
-                    <div class="cmd-player-name" ${clickB} style="display:flex;align-items:center;justify-content:center;gap:8px;text-align:center"><span class="cmd-player-inline" style="display:inline-flex;align-items:center;gap:4px;justify-content:center">${_teamBadge(namesB)}${univLogoB}${tierB}${raceB}</span><span class="cmd-player-name__txt">${nameHtmlB}</span></div>
-                  </div>
-                </div>
-                ${editBtn}
-              </div>
-            </div>`;
-          } else {
-            // ── [WIN] [소속 종족 이름] [사진] vs [사진] [이름 종족 소속] [WIN] ──
-            // (요청사항) 경기 상세 창에서 패자 영역이 '반투명'처럼 보이지 않도록
-            // 패자 스타일에 opacity를 적용하지 않는다. (승자만 강조)
-            const loserStyleA = '';
-            const loserStyleB = '';
-            const winBadge = col => `<span style="background:${col};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;flex-shrink:0">WIN</span>`;
-            const mapDot = g.map ? `<span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">${g.map}</span>` : '';
-            // (요청사항) 패자 프로필 사진 흐리게
-            const loseA = hasWinner && !winA;
-            const loseB = hasWinner && !winB;
-            const photoAHtml = photoA ? `<span class="cmd-photo ${loseA?'is-lose':''}">${photoA}</span>` : '';
-            const photoBHtml = photoB ? `<span class="cmd-photo ${loseB?'is-lose':''}">${photoB}</span>` : '';
-            const nameStyleA = loseA ? 'opacity:.7;color:#64748b;' : 'opacity:1;';
-            const nameStyleB = loseB ? 'opacity:.7;color:#64748b;' : 'opacity:1;';
-            h+=`<div style="display:flex;flex-direction:column;gap:3px;padding:5px 2px;">
-              <div style="display:flex;align-items:center;gap:5px;">
-                <span style="color:var(--gray-l);font-size:11px;min-width:40px;font-weight:700;flex-shrink:0;text-align:center">경기${gi+1}</span>
-                <!-- 좌측 선수: [WIN] [티어 종족 이름] [사진] -->
-                <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winA?pca+'18':(loseA?'linear-gradient(180deg, rgba(148,163,184,.14), rgba(255,255,255,.96))':pca+'12')};border:${winA?'1.5px solid '+pca+'55':(loseA?'1px solid rgba(148,163,184,.26)':'1px solid '+pca+'33')};min-width:0;${loserStyleA}">
-
-                  <div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:4px;overflow:hidden">
-                    ${_teamBadge(namesA)}${univLogoA}${tierA}${raceA}
-                    <strong style="font-size:13px;color:var(--text);white-space:nowrap;${nameStyleA}" ${clickA}>${nameHtmlA}</strong>
-                  </div>
-                  ${photoAHtml}
-                </div>
-                <span style="color:var(--gray-l);font-size:12px;font-weight:800;flex-shrink:0">vs</span>
-                <!-- 우측 선수: [사진] [이름 종족 티어] [WIN] -->
-                <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winB?pcb+'18':(loseB?'linear-gradient(180deg, rgba(148,163,184,.14), rgba(255,255,255,.96))':pcb+'12')};border:${winB?'1.5px solid '+pcb+'55':(loseB?'1px solid rgba(148,163,184,.26)':'1px solid '+pcb+'33')};min-width:0;${loserStyleB}">
-                  ${photoBHtml}
-                  <div style="flex:1;min-width:0;display:flex;align-items:center;gap:4px;overflow:hidden">
-                    ${_teamBadge(namesB)}${univLogoB}${tierB}${raceB}
-                    <strong style="font-size:13px;color:var(--text);white-space:nowrap;${nameStyleB}" ${clickB}>${nameHtmlB}</strong>
-                  </div>
-
-                </div>
-                ${editBtn}
-              </div>
-              ${mapDot ? `<div style="padding-left:48px;font-size:10px;color:var(--text3)">${mapDot}</div>` : ''}
-            </div>`;
-          }
-        }
+        const card=_buildGameCard(g, si, gi);
+        if(card) gamesArr.push(card);
       });
-    } else {
-      h+=`<div style="font-size:11px;color:var(--gray-l);padding:4px 0">상세 경기 기록 없음</div>`;
     }
-    h+=`</div>`;
+    const gamesHtml = gamesArr.length ? gamesArr.join('') : `<div style="font-size:11px;color:var(--gray-l);padding:4px 0">상세 경기 기록 없음</div>`;
+    const id=`md-set-${si+1}`;
+    const html=`<div class="set-row cmd-set" id="${id}" data-si="${si}" data-is-ace="${isAce?'1':'0'}">${head}${gamesHtml}</div>`;
+    setBlocks.push({si,isAce,sLabel,swA,swB,setAWin,setBWin,gamesArr,html});
   });
-  h+=`</div>`;
-  return h;
+
+  const _matchScore = ()=>{
+    const a=(m.sa!=null?m.sa:null);
+    const b=(m.sb!=null?m.sb:null);
+    if(a!=null && b!=null) return {a:Number(a)||0,b:Number(b)||0};
+    let wa=0, wb=0;
+    (m.sets||[]).forEach(s=>{
+      const sa=Number(s?.scoreA||0), sb=Number(s?.scoreB||0);
+      if(sa>sb) wa++;
+      else if(sb>sa) wb++;
+    });
+    return {a:wa,b:wb};
+  };
+
+  const _posterHero = ()=>{
+    const sc=_matchScore();
+    const d=_escHtml(String(m.d||'').trim());
+    const mk=_escHtml(_modeLabel(mode));
+    const aTxt=_escHtml(labelA||'A');
+    const bTxt=_escHtml(labelB||'B');
+    const scA=`${sc.a}`; const scB=`${sc.b}`;
+    const pill = (d||mk) ? `<div class="cmd-poster-meta"><span>${mk}</span>${d?`<span>${d}</span>`:''}</div>` : '';
+    return `<div class="cmd-poster-hero" style="--cmdA:${ca};--cmdB:${cb}">
+      ${pill}
+      <div class="cmd-poster-row">
+        <div class="cmd-poster-side cmd-poster-side--a">
+          <div class="cmd-poster-name">${aTxt}</div>
+        </div>
+        <div class="cmd-poster-mid">
+          <div class="cmd-poster-score"><span class="cmd-poster-scoreA">${scA}</span><span class="cmd-poster-colon">:</span><span class="cmd-poster-scoreB">${scB}</span></div>
+          <div class="cmd-poster-vs">VS</div>
+        </div>
+        <div class="cmd-poster-side cmd-poster-side--b">
+          <div class="cmd-poster-name">${bTxt}</div>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  if(_mdLayoutMode==='broadcast'){
+    const items=[];
+    setBlocks.forEach(sb=>{
+      sb.gamesArr.forEach((card,gi)=>{
+        items.push(`<div class="cmd-tl-item" data-si="${sb.si}" data-gi="${gi}">
+          <div class="cmd-tl-top">
+            <span class="cmd-tl-set">${sb.sLabel}</span>
+            <span class="cmd-tl-score">${sb.swA}:${sb.swB}</span>
+            <span class="cmd-tl-game">경기 ${gi+1}</span>
+          </div>
+          ${card}
+        </div>`);
+      });
+      if(!sb.gamesArr.length){
+        items.push(`<div class="cmd-tl-item" data-si="${sb.si}">
+          <div class="cmd-tl-top">
+            <span class="cmd-tl-set">${sb.sLabel}</span>
+            <span class="cmd-tl-score">${sb.swA}:${sb.swB}</span>
+          </div>
+          <div class="cmd-tl-empty">상세 경기 기록 없음</div>
+        </div>`);
+      }
+    });
+    return _wrapMdDetail(`<div class="cmd-timeline">${items.join('')}</div>`);
+  }
+
+  if(_mdLayoutMode==='split'){
+    const idx=setBlocks.map(sb=>{
+      const aW=sb.setAWin?'is-win':'';
+      const bW=sb.setBWin?'is-win':'';
+      const ace=sb.isAce?'is-ace':'';
+      const lab=`${sb.sLabel}`;
+      const sc=`${sb.swA}:${sb.swB}`;
+      const t=`document.getElementById('md-set-${sb.si+1}')&&document.getElementById('md-set-${sb.si+1}').scrollIntoView({behavior:'smooth',block:'start'});`;
+      return `<button type="button" class="cmd-setlink ${ace}" onclick="${t}">
+        <span class="cmd-setlink-title">${lab}</span>
+        <span class="cmd-setlink-score"><span class="cmd-setlink-a ${aW}">${sb.swA}</span><span class="cmd-setlink-colon">:</span><span class="cmd-setlink-b ${bW}">${sb.swB}</span></span>
+        <span class="cmd-setlink-teams"><span class="cmd-setlink-team" style="--c:${ca}">${_escHtml(labelA||'A')}</span><span class="cmd-setlink-team" style="--c:${cb}">${_escHtml(labelB||'B')}</span></span>
+      </button>`;
+    }).join('');
+    const main=setBlocks.map(sb=>sb.html).join('');
+    return _wrapMdDetail(`<div class="cmd-split"><div class="cmd-split-index">${idx}</div><div class="cmd-split-main">${main}</div></div>`);
+  }
+
+  if(_mdLayoutMode==='poster'){
+    const main=setBlocks.map(sb=>sb.html).join('');
+    return _wrapMdDetail(`<div class="cmd-poster">${_posterHero()}<div class="cmd-sets">${main}</div></div>`);
+  }
+
+  if(_mdLayoutMode==='focus'){
+    const ace=setBlocks.filter(x=>x.isAce);
+    const rest=setBlocks.filter(x=>!x.isAce);
+    const ordered=ace.concat(rest);
+    const main=ordered.map(sb=>sb.html).join('');
+    return _wrapMdDetail(`<div class="cmd-focus">${main}</div>`);
+  }
+
+  const main=setBlocks.map(sb=>sb.html).join('');
+  return _wrapMdDetail(`<div class="cmd-sets">${main}</div>`);
 }

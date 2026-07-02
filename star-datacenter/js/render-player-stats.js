@@ -61,14 +61,18 @@ function buildPlayerModeStatsHTML(opts){
   } = opts || {};
   let h=`<div class="su-sec" style="--su-sec-accent:#6b7280">
     <div class="su-sec__title">모드별 전적</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">`;
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">`;
   fixedModes.forEach(({key,w,l})=>{
     const t=w+l;
     const wr=t?Math.round(w/t*100):0;
     const mc=modeColors[key]||'#6b7280';
     const wrCol=t?(wr>=50?cWin:cLoss):'#9ca3af';
-    h+=`<div class="pd-mode-card" style="background:${mc}${_rpPctToHex(modeTint)};border:1.5px solid ${mc}${_rpPctToHex(Math.min(99,modeTint*3.5))};border-radius:10px;padding:8px 6px;text-align:center">
-      <div style="font-size:10px;color:${mc};font-weight:800;margin-bottom:5px;letter-spacing:.2px">${key}</div>
+    // 낮은 채도 색(파랑/보라 등)이 흐려서 안 보이던 문제 방지용 최소 대비 보장
+    const bgA=Math.max(modeTint,14);
+    const bdA=Math.max(Math.min(99,modeTint*3.5),55);
+    h+=`<div class="pd-mode-card" style="position:relative;background:${mc}${_rpPctToHex(bgA)};border:1.5px solid ${mc}${_rpPctToHex(bdA)};border-radius:12px;padding:10px 6px 8px;text-align:center;overflow:hidden;box-shadow:0 3px 10px ${mc}26;transition:transform .15s,box-shadow .15s">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${mc}"></div>
+      <div style="font-size:10px;color:${mc};font-weight:900;margin-bottom:5px;letter-spacing:.2px">${key}</div>
       <div style="font-size:12px;font-weight:700;margin-bottom:2px"><span style="color:${cWin}">${w}승</span> <span style="color:${cLoss}">${l}패</span></div>
       <div style="font-size:13px;font-weight:900;color:${wrCol}">${t?wr+'%':'-'}</div>
     </div>`;

@@ -596,6 +596,8 @@ function nmSaveFromBuilder() {
 
 /* ── 일반 경기 상세 팝업 ── */
 function nmOpenDetailModal(tnId, idx) {
+  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const tn = (typeof tourneys !== 'undefined' ? tourneys : []).find(t => t.id === tnId); if (!tn) return;
   const m = (tn.normalMatches || [])[idx]; if (!m) return;
   const caBase = gc(m.a || ''), cbBase = gc(m.b || '');
@@ -658,6 +660,13 @@ function nmOpenDetailModal(tnId, idx) {
     window.__detailCtx = 'compModal';
     content.innerHTML = `<div class="cmd-detail">${(typeof buildDetailHTML === 'function') ? buildDetailHTML(_mForDetail, 'mini', m.a || 'A팀', m.b || 'B팀', ca, cb, aWin, bWin) : '<div style="color:var(--gray-l);padding:20px;text-align:center">상세 기록이 없습니다</div>'}</div>`;
   }
+  try{
+    const modal=document.getElementById('compMatchDetailModal');
+    if(modal){
+      modal.setAttribute('data-md-mode', _mdDesignMode);
+      modal.setAttribute('data-md-layout', _mdLayoutMode);
+    }
+  }catch(e){}
   try { if (typeof om === 'function') om('compMatchDetailModal'); } catch (e) { }
 }
 

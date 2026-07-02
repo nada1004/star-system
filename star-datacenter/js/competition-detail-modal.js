@@ -2,6 +2,8 @@
 
 function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
   try{ window.__detailCtx = 'compModal'; }catch(_){}
+  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const tn=tourneys.find(t=>t.id===tnId);
   if(!tn)return;
   let m;
@@ -93,6 +95,29 @@ function openCompMatchDetailModal(tnId, gi, mi, rnd, isManual){
   if(content){
     content.innerHTML=`<div class="cmd-detail">${buildDetailHTML(m,'comp',m.a||'A팀',m.b||'B팀',ca,cb,aWin,bWin)}</div>`;
   }
+  try{
+    const modal=document.getElementById('compMatchDetailModal');
+    if(modal){
+      modal.setAttribute('data-md-mode', _mdDesignMode);
+      modal.setAttribute('data-md-layout', _mdLayoutMode);
+      const box = modal.querySelector('.mbox--matchdetail');
+      const body = modal.querySelector('.cmd-body');
+      if(box){
+        box.setAttribute('data-md-mode', _mdDesignMode);
+        box.setAttribute('data-md-layout', _mdLayoutMode);
+      }
+      if(body){
+        body.setAttribute('data-md-mode', _mdDesignMode);
+        body.setAttribute('data-md-layout', _mdLayoutMode);
+      }
+    }
+  }catch(e){}
+  try{
+    document.querySelectorAll('#compMatchDetailModal .cmd-detail-shell').forEach(el=>{
+      el.setAttribute('data-md-mode', _mdDesignMode);
+      el.setAttribute('data-md-layout', _mdLayoutMode);
+    });
+  }catch(e){}
   try{
     if(typeof om==='function') om('compMatchDetailModal');
     else { const mm=document.getElementById('compMatchDetailModal'); if(mm) mm.style.display='flex'; }

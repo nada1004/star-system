@@ -97,6 +97,22 @@ try{
       else if(typeof window.renderNow === 'function') window.renderNow();
     }catch(e){}
   };
+  window.cfgGetB2UnivProfileView = function(){
+    try{
+      const raw = String(localStorage.getItem('su_b2_univ_profile_view') || '').trim();
+      if(raw === 'card') return 'poster';
+      if(raw === 'compact' || raw === 'media') return 'default';
+      return ['default','poster','heat','split','board'].includes(raw) ? raw : 'default';
+    }catch(e){
+      return 'default';
+    }
+  };
+  window.cfgSetB2UnivProfileView = function(mode){
+    const next = ['default','poster','heat','split','board'].includes(String(mode||'')) ? String(mode) : 'default';
+    try{ localStorage.setItem('su_b2_univ_profile_view', next); }catch(e){}
+    try{ window._cfgSoftRefreshBoard2 && window._cfgSoftRefreshBoard2(); }catch(e){}
+    try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
+  };
   window._cfgB2LogoOverlayUiSync = function(){
     try{
       const selEl = document.getElementById('cfg-b2-wm-univ');
@@ -318,7 +334,7 @@ const _CFG_MENU_KEY = 'su_cfg_menu_layout_v1';
 // - UI(탭/버튼/폰트/모바일크기)와 자동화(멀티뷰/BGM/붙여넣기)를 분리
 const _DEFAULT_CATSECS = {
   '🧩 운영/콘텐츠':['notice','tier','season','teammatch','acct','univ','maps','mAlias','paste'],
-  '🖼️ 스트리머/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','univlogoimg','si','siAssign','pdModeBadge','pd','matchdetail','ud','streamerheader','streamer-view'],
+  '🖼️ 스트리머/프로필':['b2layout','imgsettings','imgmodalsettings','profileshape','univlogoimg','si','siAssign','pdModeBadge','pd','matchdetail','ud','streamerheader','streamer-view','streamer-tab-style'],
   '🧾 카드/기록':[
     'reccard','minicard','univckcard','univmcard',
     'tourneycard','tiertourcard','tiertourleaguecard','tiertourbrackcard',

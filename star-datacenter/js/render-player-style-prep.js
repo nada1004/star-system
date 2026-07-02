@@ -8,7 +8,7 @@ function preparePlayerDetailStyleData(player){
       pmCardR:18, pmHdrPad:'18px 18px 16px', pmPhotoSz:76, pmPhotoR:16, pmNameFs:20,
       pmMetaFs:11, pmMetaPad:'3px 10px', pmMetaPad2:'3px 9px', pmStatsPad:'14px 6px',
       pmStatsNum1:14, pmStatsBig:22,
-      chipFs:'9px', chipPad:'2px 6px', chipR:'8px', designMode:'classic'
+      chipFs:'9px', chipPad:'2px 6px', chipR:'8px', designMode:'classic', layoutMode:'default', pastelVars:null
     };
   }
   const col=gc(p.univ)||'#6366f1';
@@ -62,8 +62,95 @@ function preparePlayerDetailStyleData(player){
   const cp=CPM[pdStyle.color_preset||'normal'];
   const cWin=cp.win;
   const cLoss=cp.loss;
-  const _validDesignModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora'];
+  const _validDesignModes=['classic','editorial','pastel','glass','dashboard','mono','sunset','botanical','neon','terminal','paper','holo','arcade','luxury','aurora','studio','blush','obsidian'];
+  const _validLayoutModes=['default','photocard','showcase','stats','split','banner','poster','timeline','board'];
   const designMode=_validDesignModes.includes(pdStyle.design_mode) ? pdStyle.design_mode : 'classic';
+  const layoutMode=_validLayoutModes.includes(pdStyle.layout_mode) ? pdStyle.layout_mode : 'default';
+  const _hexToRgb = (hex) => {
+    const s = String(hex||'').trim();
+    const m = s.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if(!m) return null;
+    let h = m[1];
+    if(h.length===3) h = h.split('').map(ch=>ch+ch).join('');
+    const n = parseInt(h, 16);
+    return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+  };
+  const _rgbToHex = (r,g,b) => {
+    const to = (v)=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0');
+    return `#${to(r)}${to(g)}${to(b)}`;
+  };
+  const _mix = (c1, c2, t) => {
+    const a=_hexToRgb(c1); const b=_hexToRgb(c2);
+    if(!a || !b) return c1;
+    const tt=Math.max(0,Math.min(1,Number(t)||0));
+    return _rgbToHex(
+      a.r*(1-tt)+b.r*tt,
+      a.g*(1-tt)+b.g*tt,
+      a.b*(1-tt)+b.b*tt
+    );
+  };
+  const _rgba = (hex, a) => {
+    const c=_hexToRgb(hex);
+    if(!c) return `rgba(0,0,0,${a})`;
+    const aa=Math.max(0,Math.min(1,Number(a)||0));
+    return `rgba(${c.r},${c.g},${c.b},${aa})`;
+  };
+  let modalBgVars = null;
+  let pastelVars = null;
+  let hdrBgEff = hdrBg;
+  const bgScope = ['header','body','cards'].includes(pdStyle.univ_bg_scope) ? pdStyle.univ_bg_scope : 'cards';
+  if(designMode==='pastel'){
+    const base = col;
+    const bg1 = _mix(base, '#ffffff', .92);
+    const bg2 = _mix(base, '#ffffff', .84);
+    const card = _mix(base, '#ffffff', .965);
+    const border = _mix(base, '#ffffff', .70);
+    const accent1 = _mix(base, '#ffffff', .36);
+    const accent2 = _mix(base, '#ffffff', .18);
+    const accent3 = _mix(base, '#ffffff', .52);
+    const text1 = _mix(base, '#0b1020', .78);
+    const text2 = _mix(base, '#0b1020', .62);
+    pastelVars = {
+      '--su-pastel-bg1': bg1,
+      '--su-pastel-bg2': bg2,
+      '--su-pastel-card': card,
+      '--su-pastel-border': border,
+      '--su-pastel-accent1': accent1,
+      '--su-pastel-accent2': accent2,
+      '--su-pastel-accent3': accent3,
+      '--su-pastel-text1': text1,
+      '--su-pastel-text2': text2,
+      '--su-pastel-shadow': _rgba(base, .18),
+      '--su-pastel-glow': _rgba(base, .28)
+    };
+    hdrBgEff = darken>0
+      ? `linear-gradient(rgba(0,0,0,${darken}),rgba(0,0,0,${darken})),linear-gradient(135deg,${accent2},${accent1})`
+      : `linear-gradient(135deg,${accent2},${accent1})`;
+  }
+  if(pdStyle.univ_bg_enabled===true){
+    const tintRaw = parseInt(pdStyle.univ_bg_tint ?? 18, 10);
+    const tint = isNaN(tintRaw) ? 18 : Math.max(0, Math.min(60, tintRaw));
+    const usePastel = pdStyle.univ_bg_pastel!==undefined ? !!pdStyle.univ_bg_pastel : true;
+    const baseBg = usePastel ? _mix(col, '#ffffff', .58) : col;
+    const headerStrong = Math.max(0.06, tint/100);
+    const headerSoft = Math.max(0.02, headerStrong*.38);
+    const bodyTop = Math.max(0.03, headerStrong*.52);
+    const bodyBottom = Math.max(0.015, headerStrong*.18);
+    const boxBottom = Math.max(0.018, headerStrong*.22);
+    const cardTop = Math.max(0.04, headerStrong*.56);
+    const cardBottom = Math.max(0.02, headerStrong*.24);
+    modalBgVars = {
+      '--su-pd-modal-box-bg': `linear-gradient(180deg,rgba(255,255,255,.988),${_rgba(baseBg, boxBottom)})`,
+      '--su-pd-modal-box-border': _rgba(baseBg, Math.max(.16, headerStrong*.95)),
+      '--su-pd-modal-title-bg': `linear-gradient(135deg,${_rgba(baseBg, headerStrong)},rgba(255,255,255,.94) 72%,${_rgba(baseBg, headerSoft)})`,
+      '--su-pd-modal-body-bg': `linear-gradient(180deg,${_rgba(baseBg, bodyTop)},rgba(248,250,252,.94) 28%,${_rgba(baseBg, bodyBottom)} 100%)`,
+      '--su-pd-hero-bg': `linear-gradient(180deg,${_rgba(baseBg, cardTop)},rgba(255,255,255,.96) 56%,${_rgba(baseBg, cardBottom)} 100%)`,
+      '--su-pd-strip-bg': `linear-gradient(135deg,rgba(255,255,255,.98),${_rgba(baseBg, cardBottom)})`,
+      '--su-pd-card-bg': `linear-gradient(180deg,rgba(255,255,255,.985),${_rgba(baseBg, cardTop)})`,
+      '--su-pd-card-border': _rgba(baseBg, Math.max(.14, headerStrong*.78)),
+      '--su-pd-card-chip-bg': _rgba(baseBg, Math.max(.08, headerStrong*.58))
+    };
+  }
   const pmCardR = isMobile ? 14 : (isTablet ? 16 : 18);
   const pmHdrPad = isMobile ? '14px 14px 12px' : (isTablet ? '16px 16px 14px' : '18px 18px 16px');
   const _profileBase = isMobile ? 62 : (isTablet ? 70 : 76);
@@ -86,9 +173,9 @@ function preparePlayerDetailStyleData(player){
   const chipPad = `calc(${chipPadYBase}px * ${chipScale}) calc(${chipPadXBase}px * ${chipScale})`;
   const chipR = `calc(${chipRBase}px * ${chipScale})`;
   return {
-    col, winC, lossC, cWin, cLoss, pdStyle, isMobile, isTablet, hdrBg, hdrBgLayer, p2h, statsTint, modeTint,
+    col, winC, lossC, cWin, cLoss, pdStyle, isMobile, isTablet, hdrBg:hdrBgEff, hdrBgLayer, p2h, statsTint, modeTint,
     pmCardR, pmHdrPad, pmPhotoSz, pmPhotoR, pmNameFs, pmMetaFs, pmMetaPad, pmMetaPad2,
-    pmStatsPad, pmStatsNum1, pmStatsBig, chipFs, chipPad, chipR, designMode
+      pmStatsPad, pmStatsNum1, pmStatsBig, chipFs, chipPad, chipR, designMode, layoutMode, pastelVars, modalBgVars, bgScope
   };
 }
 

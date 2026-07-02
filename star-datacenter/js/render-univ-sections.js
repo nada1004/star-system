@@ -34,7 +34,7 @@ function _bindUnivSectionsDelegatedEvents(){
 function buildUnivHeaderCardHTML(opts){
   const {
     univName='', col='', members=[], wins=0, losses=0, tot=0, pts=0, wr=0,
-    hdrBg='', hdrBgLayer=null, isMobile=false, isTablet=false, logoSizeEff='46px'
+    hdrBg='', hdrBgLayer=null, isMobile=false, isTablet=false, logoSizeEff='46px', layoutMode='default'
   } = opts || {};
   const uNameFs = isMobile ? 34 : (isTablet ? 44 : 52);
   const dissolvedBadge = (()=>{
@@ -55,10 +55,41 @@ function buildUnivHeaderCardHTML(opts){
   const bgLayerHTML = hdrBgLayer?.url
     ? `<div style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl(hdrBgLayer.url).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:${_bgPosX}% ${_bgPosY}%;background-size:${_bgSize};transform:scale(${_bgScale/100});transform-origin:${_bgPosX}% ${_bgPosY}%;opacity:.28;pointer-events:none"></div>`
     : '';
+  const tierCounts = {};
+  members.forEach(m=>{ const t=String(m?.tier||'?'); tierCounts[t]=(tierCounts[t]||0)+1; });
+  const tierSummary = Object.entries(tierCounts).sort((a,b)=>(b[1]-a[1]) || a[0].localeCompare(b[0])).slice(0,2).map(([t,c])=>`${t} ${c}명`).join(' · ');
+  const activeCount = members.filter(m=>!m?.retired).length;
+  const aceName = topNames[0]?.name || '미정';
+  const quickCardBg = 'linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))';
+  const quickCardBd = 'rgba(226,232,240,.92)';
+  const quickLabelCol = '#475569';
+  const quickValueCol = '#020617';
+  const quickMetaCol = '#334155';
+  const kicker = `<div class="ud-hero-kicker" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);font-size:${isMobile?9:10}px;font-weight:900;letter-spacing:.08em;color:rgba(255,255,255,.86);text-transform:uppercase;backdrop-filter:blur(8px)">University Overview <span style="width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 0 0 3px rgba(255,255,255,.14)"></span></div>`;
+  const quickRail = `
+    <div class="ud-hero-quickrail" data-ud-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(${isMobile?2:4},minmax(0,1fr));gap:8px;padding:${isMobile?'10px 10px 12px':'12px 14px 14px'};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
+      <div class="ud-hero-quickcard" data-kind="members" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+        <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">활동 인원</div>
+        <div style="margin-top:7px;font-size:${isMobile?13:15}px;font-weight:1000;color:${quickValueCol};text-shadow:0 1px 0 rgba(255,255,255,.35)">${activeCount}명</div>
+      </div>
+      <div class="ud-hero-quickcard" data-kind="tier" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+        <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">핵심 티어</div>
+        <div style="margin-top:7px;font-size:${isMobile?13:15}px;font-weight:1000;color:${quickValueCol};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 rgba(255,255,255,.35)">${tierSummary||'집계 대기'}</div>
+      </div>
+      <div class="ud-hero-quickcard" data-kind="ace" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+        <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">에이스</div>
+        <div style="margin-top:7px;font-size:${isMobile?13:15}px;font-weight:1000;color:${quickValueCol};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 rgba(255,255,255,.35)">${aceName}</div>
+      </div>
+      <div class="ud-hero-quickcard" data-kind="form" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+        <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">대학 폼</div>
+        <div style="margin-top:7px;font-size:${isMobile?13:15}px;font-weight:1000;color:${wrColor};text-shadow:0 1px 0 rgba(255,255,255,.45)">${tot?`${winPct}%`:'기록 대기'}</div>
+        <div style="margin-top:3px;font-size:10px;color:${quickMetaCol};font-weight:900">${wins}승 ${losses}패</div>
+      </div>
+    </div>`;
 
   // 상위 3인 미니 아바타
   const topAvatarsHTML = !isMobile && topNames.length
-    ? `<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:auto;margin-left:auto;align-self:flex-end;margin-bottom:2px;margin-right:-2px;transform:translateY(20px)">
+    ? `<div class="ud-hero-top-avatars" style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:auto;margin-left:auto;align-self:flex-end;margin-bottom:2px;margin-right:-2px;transform:translateY(20px)">
         <div style="display:flex;align-items:center;gap:5px;padding:8px 10px;border-radius:18px;background:rgba(15,23,42,.18);border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 20px rgba(15,23,42,.14);backdrop-filter:blur(10px)">
           ${topNames.map((p,i)=>`<div style="display:flex;align-items:center;gap:4px;background:rgba(15,23,42,.2);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:4px 9px;min-width:0">
             <span style="font-size:10px;min-width:14px">${['🥇','🥈','🥉'][i]||''}</span>
@@ -86,7 +117,7 @@ function buildUnivHeaderCardHTML(opts){
         <span style="font-size:calc(${logoSizeEff} * 0.52);font-weight:1000;color:#fff;line-height:1;text-shadow:0 2px 10px rgba(0,0,0,.2)">${univName ? univName.trim().charAt(0) : '?'}</span>
       </div>`;
 
-  return `<div class="ud-hero" style="border-radius:26px;overflow:hidden;margin-bottom:18px;box-shadow:0 28px 60px rgba(${colRgb},.2),0 8px 22px rgba(15,23,42,.10)">
+  return `<div class="ud-hero" data-ud-layout="${layoutMode}" style="border-radius:26px;overflow:hidden;margin-bottom:18px;box-shadow:0 28px 60px rgba(${colRgb},.2),0 8px 22px rgba(15,23,42,.10)">
     <!-- 헤더 배너 -->
     <div class="ud-hero-top" style="background:${hdrBg||`linear-gradient(145deg,${col} 0%,${col}bb 60%,${col}88 100%)`};padding:${isMobile?'20px 16px 28px':'26px 22px 34px 18px'};position:relative;overflow:hidden;min-height:${isMobile?'170px':'192px'}">
       ${bgLayerHTML}
@@ -99,23 +130,25 @@ function buildUnivHeaderCardHTML(opts){
       <div style="position:absolute;left:0;right:0;top:0;height:60px;background:linear-gradient(180deg,rgba(255,255,255,.08),transparent);pointer-events:none"></div>
       <div style="position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(transparent,rgba(15,23,42,.20));pointer-events:none"></div>
       <!-- 콘텐츠 -->
-      <div style="position:relative;display:flex;align-items:${isMobile?'flex-start':'center'};justify-content:flex-start;gap:${isMobile?'10px':'12px'}">
+      <div class="ud-hero-main" style="position:relative;display:flex;align-items:${isMobile?'flex-start':'center'};justify-content:flex-start;gap:${isMobile?'10px':'12px'}">
         <!-- 로고 + 이름 -->
-        <div style="display:flex;align-items:center;gap:${isMobile?'6px':'10px'};min-width:0;flex:0 1 auto">
+        <div class="ud-hero-brand" style="display:flex;align-items:center;gap:${isMobile?'6px':'10px'};min-width:0;flex:0 1 auto">
           <div style="width:calc(var(--su_univ_logo_box_detail,160px)*var(--su_univ_detail_scale,1));height:calc(var(--su_univ_logo_box_detail,160px)*var(--su_univ_detail_scale,1));flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:visible;margin-right:${isMobile?'-6px':'-8px'}">
             <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 16px 28px rgba(15,23,42,.22)) drop-shadow(0 4px 10px rgba(255,255,255,.08))">
               ${_logoContentHTML}
             </div>
           </div>
           <div style="min-width:0;flex:0 1 auto;margin-left:${isMobile?'6px':'12px'}">
+            <div style="margin-bottom:10px">${kicker}</div>
             <div style="font-size:${Math.round(uNameFs*1.1)}px;font-weight:1000;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.28),0 1px 0 rgba(255,255,255,.08);line-height:1.02;letter-spacing:-.04em;word-break:keep-all" class="ud-hero-name">${univName}${dissolvedBadge}</div>
           </div>
         </div>
         ${topAvatarsHTML}
       </div>
     </div>
+    ${quickRail}
     <!-- 하단 스탯 -->
-    <div class="ud-hero-stats" style="background:var(--white,#fff);padding:${isMobile?'14px 14px 16px':'16px 20px 18px'}">
+    <div class="ud-hero-stats" data-ud-layout="${layoutMode}" style="background:var(--white,#fff);padding:${isMobile?'14px 14px 16px':'16px 20px 18px'}">
       ${tot?`<div style="margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <span style="font-size:10.5px;font-weight:900;color:var(--text3,#475569);letter-spacing:.5px">대학 승률</span>

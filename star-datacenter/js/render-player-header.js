@@ -22,7 +22,7 @@ function buildPlayerHeaderCardHTML(opts){
     pmMetaPad='3px 10px', pmMetaPad2='3px 9px', pmStatsPad='14px 6px',
     pmStatsNum1=14, pmStatsBig=22, tot=0, wr=0,
     cWin='#16a34a', cLoss='#dc2626', histAll=[], eloVal=1000,
-    eloColor='#16a34a', eloSparkHTML='', isMobile=false
+    eloColor='#16a34a', eloSparkHTML='', isMobile=false, layoutMode='default'
   } = opts || {};
   const _isMobile = isMobile || (typeof window!=='undefined' && window.innerWidth<=768);
   const p = player;
@@ -31,36 +31,73 @@ function buildPlayerHeaderCardHTML(opts){
   const _bgSize = hdrBgLayer?.fit==='fill' ? '100% 100%' : (hdrBgLayer?.fit==='cover' ? 'cover' : 'contain');
   const _bgScale = Math.max(40, Math.min(220, Number(hdrBgLayer?.scale||100)));
   const _bgPos = String(hdrBgLayer?.pos || 'center center').trim() || 'center center';
+  const recent10 = histAll.slice(0,10);
+  const recent10Wins = recent10.filter(h=>h?.result==='승').length;
+  const recent10Rate = recent10.length ? Math.round((recent10Wins/recent10.length)*100) : 0;
+  const activeModes = [...new Set(histAll.map(h=>String(h?.mode||'').trim()).filter(Boolean))].length;
+  const quickCardBg = 'linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))';
+  const quickCardBd = 'rgba(226,232,240,.92)';
+  const quickLabelCol = '#475569';
+  const quickValueCol = '#020617';
+  const quickMetaCol = '#334155';
+  const statCardBg = 'linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.95))';
+  const statCardBd = 'rgba(226,232,240,.92)';
+  const statCardAccent = 'rgba(148,163,184,.38)';
+  const statCardShadow = '0 10px 24px rgba(15,23,42,.06)';
+  const raceTheme = {
+    T: { chip:'#2563eb' },
+    Z: { chip:'#7c3aed' },
+    P: { chip:'#d97706' },
+    N: { chip:'#475569' }
+  }[p.race] || { chip:'#475569' };
+  const univAccent = /^#|^rgb|^hsl/i.test(String(col||'')) ? String(col) : quickValueCol;
+  const gradeTheme = eloVal>=1500
+    ? { color:'#b45309' }
+    : eloVal>=1400
+      ? { color:'#7e22ce' }
+      : eloVal>=1300
+        ? { color:'#0369a1' }
+        : eloVal>=1200
+          ? { color:'#a16207' }
+          : eloVal>=1100
+            ? { color:'#64748b' }
+            : { color:'#92400e' };
+  const pointsVal = Number(p.points||0);
+  const pointsColor = pointsVal>0 ? cWin : pointsVal<0 ? cLoss : '#64748b';
 
   // ELO 등급 레이블
   const eloGrade = eloVal>=1500?'LEGEND':eloVal>=1400?'MASTER':eloVal>=1300?'DIAMOND':eloVal>=1200?'GOLD':eloVal>=1100?'SILVER':'BRONZE';
-  const eloGradeColor = eloVal>=1500?'#f59e0b':eloVal>=1400?'#a855f7':eloVal>=1300?'#38bdf8':eloVal>=1200?'#fbbf24':eloVal>=1100?'#94a3b8':'#c87941';
+  const eloGradeColor = gradeTheme.color;
 
   // 승률 바
   const wrBarW = Math.max(0, Math.min(100, wr));
-  const wrColor = wr>=60?cWin:wr>=50?'#4ade80':wr>=40?'#fbbf24':cLoss;
+  const wrColor = wr>=60 ? '#16a34a' : wr>=50 ? '#0f766e' : wr>=40 ? '#b45309' : '#dc2626';
 
   const statsBlock = `
-    <div class="pd-hero-stats" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:14px 16px 16px;background:linear-gradient(180deg,#ffffff,${col}${p2h(statsTint)})">
-      <div class="pd-hero-stat" data-pd-stat="record" style="text-align:center;padding:10px 6px 11px;border:1.5px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(15,23,42,.05);position:relative;overflow:hidden">
-        <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.06;line-height:1">⚔️</div>
-        <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:900;color:var(--gray-l,#94a3b8);letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">전적</div>
+    <div class="pd-hero-stats" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:14px 16px 16px;background:linear-gradient(180deg,#ffffff,${col}${p2h(statsTint)})">
+      <div class="pd-hero-stat" data-pd-stat="record" style="text-align:center;padding:10px 6px 11px;border:1.5px solid ${statCardBd};border-radius:18px;background:${statCardBg};box-shadow:${statCardShadow};position:relative;overflow:hidden">
+        <div style="position:absolute;left:0;top:0;right:0;height:4px;background:${statCardAccent}"></div>
+        <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.05;line-height:1">⚔️</div>
+        <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:1000;color:${quickLabelCol};letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">전적</div>
         <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsNum1}px"><span style="color:${cWin}">${p.win}승</span>&nbsp;<span style="color:${cLoss}">${p.loss}패</span></div>
       </div>
-      <div class="pd-hero-stat" data-pd-stat="winrate" style="text-align:center;padding:10px 6px 11px;border:1.5px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(15,23,42,.05);position:relative;overflow:hidden">
-        <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.06;line-height:1">📈</div>
-        <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:900;color:var(--gray-l,#94a3b8);letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">승률</div>
+      <div class="pd-hero-stat" data-pd-stat="winrate" style="text-align:center;padding:10px 6px 11px;border:1.5px solid ${statCardBd};border-radius:18px;background:${statCardBg};box-shadow:${statCardShadow};position:relative;overflow:hidden">
+        <div style="position:absolute;left:0;top:0;right:0;height:4px;background:${statCardAccent}"></div>
+        <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.05;line-height:1">📈</div>
+        <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:1000;color:${quickLabelCol};letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">승률</div>
         <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsBig}px;line-height:1;color:${tot?wrColor:'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
         ${tot?`<div class="pd-hero-stat-bar" style="height:3px;border-radius:99px;background:rgba(148,163,184,.2);margin:5px 6px 0;overflow:hidden"><div style="height:100%;width:${wrBarW}%;background:${wrColor};border-radius:99px"></div></div>`:''}
       </div>
-      <div class="pd-hero-stat" data-pd-stat="points" style="text-align:center;padding:10px 6px 11px;border:1.5px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(15,23,42,.05);position:relative;overflow:hidden">
-        <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.06;line-height:1">🏆</div>
-        <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:900;color:var(--gray-l,#94a3b8);letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">포인트</div>
-        <div class="pd-hero-stat-val" style="font-weight:1000;font-size:20px;line-height:1;color:${(p.points||0)>=0?cWin:cLoss}">${pS(p.points)}</div>
+      <div class="pd-hero-stat" data-pd-stat="points" style="text-align:center;padding:10px 6px 11px;border:1.5px solid ${statCardBd};border-radius:18px;background:${statCardBg};box-shadow:${statCardShadow};position:relative;overflow:hidden">
+        <div style="position:absolute;left:0;top:0;right:0;height:4px;background:${statCardAccent}"></div>
+        <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.05;line-height:1">🏆</div>
+        <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:1000;color:${quickLabelCol};letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">포인트</div>
+        <div class="pd-hero-stat-val" style="font-weight:1000;font-size:20px;line-height:1;color:${pointsColor}">${pS(p.points)}</div>
       </div>
-      <div class="pd-hero-stat" data-pd-stat="status" style="text-align:center;padding:10px 6px 11px;border:1.5px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(15,23,42,.05);position:relative;overflow:hidden">
-        <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.06;line-height:1">⚡</div>
-        <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:900;color:var(--gray-l,#94a3b8);letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">상태</div>
+      <div class="pd-hero-stat" data-pd-stat="status" style="text-align:center;padding:10px 6px 11px;border:1.5px solid ${statCardBd};border-radius:18px;background:${statCardBg};box-shadow:${statCardShadow};position:relative;overflow:hidden">
+        <div style="position:absolute;left:0;top:0;right:0;height:4px;background:${statCardAccent}"></div>
+        <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.05;line-height:1">⚡</div>
+        <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:1000;color:${quickLabelCol};letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">상태</div>
         <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsNum1+1}px;line-height:1;color:${p.retired?'#94a3b8':'#0f172a'}">${p.retired?'은퇴':'활동중'}</div>
       </div>
     </div>`;
@@ -99,6 +136,27 @@ function buildPlayerHeaderCardHTML(opts){
     <span style="width:7px;height:7px;border-radius:50%;background:${_raceAccent};box-shadow:0 0 0 2px rgba(255,255,255,.25);flex-shrink:0"></span>${p.race||''} ${RNAME[p.race]||''}</span>`;
 
   const tierBadge = p.tier ? `<span class="pd-chip" style="background:rgba(255,255,255,.20);border:1.5px solid rgba(255,255,255,.36);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:900;color:#fff">${getTierLabel(p.tier)||p.tier}</span>` : '';
+  const kicker = `<div class="pd-hero-kicker" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);font-size:${Math.max(9, pmMetaFs-1)}px;font-weight:900;letter-spacing:.08em;color:rgba(255,255,255,.86);text-transform:uppercase;backdrop-filter:blur(8px)">Player Detail <span style="width:5px;height:5px;border-radius:50%;background:${_raceAccent};box-shadow:0 0 0 3px rgba(255,255,255,.14)"></span></div>`;
+  const quickRail = `
+    <div class="pd-hero-quickrail" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(${_isMobile?2:4},minmax(0,1fr));gap:8px;padding:${_isMobile?'10px 10px 12px':'12px 14px 14px'};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
+      <div class="pd-hero-quickcard" data-kind="univ" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+        <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">소속</div>
+        <div style="margin-top:7px;font-size:${_isMobile?13:15}px;font-weight:1000;color:${univAccent};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 rgba(255,255,255,.35)">${p.univ||'무소속'}</div>
+      </div>
+      <div class="pd-hero-quickcard" data-kind="race" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+        <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">종족</div>
+        <div style="margin-top:7px;font-size:${_isMobile?13:15}px;font-weight:1000;color:${raceTheme.chip};text-shadow:0 1px 0 rgba(255,255,255,.35)">${RNAME[p.race]||p.race||'-'}</div>
+      </div>
+      <div class="pd-hero-quickcard" data-kind="elo" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+        <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">등급</div>
+        <div style="margin-top:7px;font-size:${_isMobile?13:15}px;font-weight:1000;color:${eloGradeColor};text-shadow:0 1px 0 rgba(255,255,255,.45)">${eloGrade}</div>
+      </div>
+      <div class="pd-hero-quickcard" data-kind="form" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+        <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">최근 폼</div>
+        <div style="margin-top:7px;font-size:${_isMobile?13:15}px;font-weight:1000;color:${quickValueCol};text-shadow:0 1px 0 rgba(255,255,255,.45)">${recent10.length?`<span style="color:${cWin}">${recent10Wins}</span>/<span style="color:${quickMetaCol}">${recent10.length}</span><span style="color:${quickValueCol}">승</span>`:'기록 대기'}</div>
+        <div style="margin-top:3px;font-size:10px;color:${quickMetaCol};font-weight:900">${activeModes}개 모드</div>
+      </div>
+    </div>`;
 
   const bgLayerHTML = hdrBgLayer?.url
     ? `<div style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl(hdrBgLayer.url).replace(/'/g,"%27")}');background-repeat:no-repeat;background-position:${_bgPos};background-size:${_bgSize};transform:scale(${_bgScale/100});transform-origin:center center;opacity:.42;pointer-events:none"></div>`
@@ -108,9 +166,10 @@ function buildPlayerHeaderCardHTML(opts){
   const noiseOverlay = `<div style="position:absolute;inset:0;background:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.75%22 numOctaves=%224%22 stitchTiles=%22stitch%22/><feColorMatrix type=%22saturate%22 values=%220%22/></filter><rect width=%22200%22 height=%22200%22 filter=%22url(%23n)%22 opacity=%220.04%22/></svg>');opacity:.5;pointer-events:none;mix-blend-mode:overlay"></div>`;
 
   const hdrContent_PC = `
-    <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;position:relative">
+    <div class="pd-hero-main pd-hero-main--pc" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;position:relative">
       <div class="pd-hero-photo" style="${photoBorder}">${photoHTML}</div>
-      <div style="min-width:0">
+      <div class="pd-hero-meta" style="min-width:0">
+        <div style="margin-bottom:10px">${kicker}</div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px">
           <span class="pd-hero-name" style="font-size:${pmNameFs+4}px;font-weight:1000;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28);letter-spacing:-.02em;line-height:1">${p.name}${genderIcon(p.gender)}</span>
           ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
@@ -124,10 +183,11 @@ function buildPlayerHeaderCardHTML(opts){
     </div>`;
 
   const hdrContent_MB = `
-    <div style="display:flex;flex-direction:column;gap:11px;position:relative">
-      <div style="display:flex;align-items:center;gap:12px">
+    <div class="pd-hero-main pd-hero-main--mb" style="display:flex;flex-direction:column;gap:11px;position:relative">
+      <div class="pd-hero-row" style="display:flex;align-items:center;gap:12px">
         <div class="pd-hero-photo" style="${photoBorder.replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`).replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`)}">${photoHTML}</div>
-        <div style="min-width:0;flex:1">
+        <div class="pd-hero-meta" style="min-width:0;flex:1">
+          <div style="margin-bottom:8px">${kicker}</div>
           <div class="pd-hero-name" style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${p.name}${genderIcon(p.gender)}</div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
             ${p.role?getRoleBadgeHTML(p.role,'10px'):''}${tierBadge}
@@ -140,7 +200,7 @@ function buildPlayerHeaderCardHTML(opts){
       ${eloMobilePanel}
     </div>`;
 
-  return `<div class="pd-hero" style="background:linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.16);border-radius:${pmCardR+6}px;margin-bottom:16px;overflow:hidden;box-shadow:0 20px 52px rgba(15,23,42,.12),0 4px 16px rgba(15,23,42,.06)">
+  return `<div class="pd-hero" data-pd-layout="${layoutMode}" style="background:linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.16);border-radius:${pmCardR+6}px;margin-bottom:16px;overflow:hidden;box-shadow:0 20px 52px rgba(15,23,42,.12),0 4px 16px rgba(15,23,42,.06)">
     <div class="pd-hero-top" style="background:${hdrBg};padding:${pmHdrPad};position:relative;overflow:hidden">
       ${bgLayerHTML}
       ${noiseOverlay}
@@ -150,6 +210,7 @@ function buildPlayerHeaderCardHTML(opts){
       <div style="position:absolute;top:50%;left:-20px;transform:translateY(-50%);width:60px;height:120px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none"></div>
       ${_isMobile ? hdrContent_MB : hdrContent_PC}
     </div>
+    ${quickRail}
     ${statsBlock}
   </div>`;
 }

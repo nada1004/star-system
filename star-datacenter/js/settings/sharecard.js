@@ -55,7 +55,9 @@
     const logoSize = parseInt(document.getElementById('cfg-sc-logo-size')?.value||'100',10);
     const logoFit = (document.getElementById('cfg-sc-logo-fit')?.value || 'contain').trim();
     const cardShape = (document.getElementById('cfg-sc-cardshape')?.value || 'rounded').trim();
-    try{ localStorage.setItem('su_sc_mode', ['campus','vivid','soft','dark','minimal','aurora','poster','mono'].includes(mode)?mode:'campus'); }catch(e){}
+    const entityLayout = (document.getElementById('cfg-sc-entity-layout')?.value || 'default').trim();
+    const matchLayout = (document.getElementById('cfg-sc-match-layout')?.value || 'default').trim();
+    try{ localStorage.setItem('su_sc_mode', ['campus','vivid','soft','dark','minimal','aurora','poster','mono','glacier','rose','midnight'].includes(mode)?mode:'campus'); }catch(e){}
     try{ localStorage.setItem('su_sc_color', String(Math.max(20,Math.min(100,color)))); }catch(e){}
     try{ localStorage.setItem('su_sc_fx', String(Math.max(0,Math.min(100,fx)))); }catch(e){}
     try{ localStorage.setItem('su_sc_winbg', String(Math.max(0,Math.min(100,winbg)))); }catch(e){}
@@ -71,18 +73,50 @@
     try{ localStorage.setItem('su_sc_logo_size', String(Math.max(70,Math.min(150,logoSize)))); }catch(e){}
     try{ localStorage.setItem('su_sc_logo_fit', ['contain','cover','fill','zoom'].includes(logoFit)?logoFit:'contain'); }catch(e){}
     try{ localStorage.setItem('su_sc_cardshape', ['rounded','sharp','soft','ribbon','tag','ticket'].includes(cardShape)?cardShape:'rounded'); }catch(e){}
+    try{ localStorage.setItem('su_sc_entity_layout', ['default','photocard','showcase','compact'].includes(entityLayout)?entityLayout:'default'); }catch(e){}
+    try{ localStorage.setItem('su_sc_match_layout', ['default','spotlight','broadcast','compact'].includes(matchLayout)?matchLayout:'default'); }catch(e){}
     try{ if(typeof render === 'function') render(); }catch(e){}
     try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
   };
 
   window.cfgPreviewShareCardMode = function(mode){
     const el=document.getElementById('cfg-sc-mode');
-    if(el) el.value = ['campus','vivid','soft','dark','minimal','aurora','poster','mono'].includes(mode)?mode:'campus';
+    if(el) el.value = ['campus','vivid','soft','dark','minimal','aurora','poster','mono','glacier','rose','midnight'].includes(mode)?mode:'campus';
     window.cfgSetShareCardSettings && window.cfgSetShareCardSettings();
+  };
+
+  window.cfgSetShareCardCategorySettings = function(kind){
+    const t = String(kind||'').trim();
+    if(!['player','univ','match'].includes(t)) return;
+    const modeEl = document.getElementById(`cfg-sc-cat-mode-${t}`);
+    const layoutEl = document.getElementById(`cfg-sc-cat-layout-${t}`);
+    const mode = (modeEl?.value || 'inherit').trim();
+    const layout = (layoutEl?.value || 'inherit').trim();
+    const validModes = ['inherit','campus','vivid','soft','dark','minimal','aurora','poster','mono','glacier','rose','midnight'];
+    try{
+      if(mode==='inherit') localStorage.removeItem(`su_sc_mode_${t}`);
+      else localStorage.setItem(`su_sc_mode_${t}`, validModes.includes(mode)?mode:'campus');
+    }catch(e){}
+    try{
+      if(t==='match'){
+        const validLayouts = ['inherit','default','spotlight','broadcast','compact'];
+        if(layout==='inherit') localStorage.removeItem('su_sc_match_layout_match');
+        else localStorage.setItem('su_sc_match_layout_match', validLayouts.includes(layout)?layout:'default');
+      }else{
+        const validLayouts = ['inherit','default','photocard','showcase','compact'];
+        if(layout==='inherit') localStorage.removeItem(`su_sc_entity_layout_${t}`);
+        else localStorage.setItem(`su_sc_entity_layout_${t}`, validLayouts.includes(layout)?layout:'default');
+      }
+    }catch(e){}
+    try{ if(typeof render === 'function') render(); }catch(e){}
+    try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
   };
 
   window.buildShareCardSettingsSection = function(_scfgD){
     const _mode = (localStorage.getItem('su_sc_mode') ?? 'campus');
+    const _modePlayer = (localStorage.getItem('su_sc_mode_player') ?? 'inherit');
+    const _modeUniv = (localStorage.getItem('su_sc_mode_univ') ?? 'inherit');
+    const _modeMatch = (localStorage.getItem('su_sc_mode_match') ?? 'inherit');
     const _color = parseInt(localStorage.getItem('su_sc_color') ?? '72',10) || 72;
     const _fx = parseInt(localStorage.getItem('su_sc_fx') ?? '55',10) || 55;
     const _winbg = parseInt(localStorage.getItem('su_sc_winbg') ?? '55',10) || 55;
@@ -94,6 +128,11 @@
     const _titleFont = parseInt(localStorage.getItem('su_sc_title_pct') ?? '100',10) || 100;
     const _univFont = parseInt(localStorage.getItem('su_sc_univ_pct') ?? '100',10) || 100;
     const _surface = (localStorage.getItem('su_sc_surface') ?? 'glass');
+    const _entityLayout = (localStorage.getItem('su_sc_entity_layout') ?? 'default');
+    const _matchLayout = (localStorage.getItem('su_sc_match_layout') ?? 'default');
+    const _entityLayoutPlayer = (localStorage.getItem('su_sc_entity_layout_player') ?? 'inherit');
+    const _entityLayoutUniv = (localStorage.getItem('su_sc_entity_layout_univ') ?? 'inherit');
+    const _matchLayoutMatch = (localStorage.getItem('su_sc_match_layout_match') ?? 'inherit');
     const _cardShape = (localStorage.getItem('su_sc_cardshape') ?? 'rounded');
     const _shapeDef = (localStorage.getItem('su_sc_cardshape_default') ?? 'inherit');
     const _shapeCk = (localStorage.getItem('su_sc_cardshape_ck') ?? 'inherit');
@@ -127,6 +166,59 @@
     const _fontBkt = (localStorage.getItem('su_sc_font_pct_procomp-bkt') ?? 'inherit');
     return _scfgD('sharecard','🪪 공유카드 디자인') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">스트리머/대학/개인전/끝장전/대학대전/대회/티어대회 공유카드의 전역 톤과 색상 효과를 한 번에 조절합니다.</div>
+    <div style="padding:12px;background:linear-gradient(180deg,var(--surface),var(--white));border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div style="font-size:12px;font-weight:900;color:var(--text2)">🗂️ 카테고리별 공유카드 설정</div>
+        <div style="font-size:10px;color:var(--gray-l);font-weight:800">전역 설정과 별도로 카드 종류별 디자인/레이아웃을 따로 저장</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+        ${[
+          ['player','🎬 스트리머 공유카드',_modePlayer,_entityLayoutPlayer,'player'],
+          ['univ','🏫 대학 공유카드',_modeUniv,_entityLayoutUniv,'univ'],
+          ['match','🎮 경기 공유카드',_modeMatch,_matchLayoutMatch,'match']
+        ].map(([key,title,modeVal,layoutVal,kind])=>`
+          <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--white);display:flex;flex-direction:column;gap:8px">
+            <div style="font-size:12px;font-weight:900;color:var(--text2)">${title}</div>
+            <div style="font-size:10px;color:var(--gray-l);font-weight:700">${key==='match'?'경기 결과 공유카드 전용 디자인/배치':'전역 공유카드와 별도로 이 카드 타입만 따로 적용'}</div>
+            <div>
+              <div style="font-size:10px;color:var(--text3);font-weight:800;margin-bottom:4px">디자인 모드</div>
+              <select id="cfg-sc-cat-mode-${kind}" onchange="cfgSetShareCardCategorySettings('${kind}')" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+                <option value="inherit" ${modeVal==='inherit'?'selected':''}>전역 따름</option>
+                <option value="campus" ${modeVal==='campus'?'selected':''}>캠퍼스</option>
+                <option value="vivid" ${modeVal==='vivid'?'selected':''}>비비드</option>
+                <option value="soft" ${modeVal==='soft'?'selected':''}>소프트</option>
+                <option value="dark" ${modeVal==='dark'?'selected':''}>다크</option>
+                <option value="minimal" ${modeVal==='minimal'?'selected':''}>미니멀</option>
+                <option value="aurora" ${modeVal==='aurora'?'selected':''}>오로라</option>
+                <option value="poster" ${modeVal==='poster'?'selected':''}>포스터</option>
+                <option value="mono" ${modeVal==='mono'?'selected':''}>모노</option>
+                <option value="glacier" ${modeVal==='glacier'?'selected':''}>글레이셔</option>
+                <option value="rose" ${modeVal==='rose'?'selected':''}>로즈</option>
+                <option value="midnight" ${modeVal==='midnight'?'selected':''}>미드나잇</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--text3);font-weight:800;margin-bottom:4px">레이아웃 모드</div>
+              ${key==='match'
+                ? `<select id="cfg-sc-cat-layout-${kind}" onchange="cfgSetShareCardCategorySettings('${kind}')" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+                    <option value="inherit" ${layoutVal==='inherit'?'selected':''}>전역 따름</option>
+                    <option value="default" ${layoutVal==='default'?'selected':''}>기본형</option>
+                    <option value="spotlight" ${layoutVal==='spotlight'?'selected':''}>스포트라이트형</option>
+                    <option value="broadcast" ${layoutVal==='broadcast'?'selected':''}>브로드캐스트형</option>
+                    <option value="compact" ${layoutVal==='compact'?'selected':''}>컴팩트형</option>
+                  </select>`
+                : `<select id="cfg-sc-cat-layout-${kind}" onchange="cfgSetShareCardCategorySettings('${kind}')" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+                    <option value="inherit" ${layoutVal==='inherit'?'selected':''}>전역 따름</option>
+                    <option value="default" ${layoutVal==='default'?'selected':''}>기본형</option>
+                    <option value="photocard" ${layoutVal==='photocard'?'selected':''}>포토카드형</option>
+                    <option value="showcase" ${layoutVal==='showcase'?'selected':''}>쇼케이스형</option>
+                    <option value="compact" ${layoutVal==='compact'?'selected':''}>컴팩트형</option>
+                  </select>`
+              }
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
     <div style="padding:12px;background:linear-gradient(135deg,var(--surface),rgba(255,255,255,.92));border:1px solid var(--border);border-radius:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-bottom:12px">
       <button type="button" class="btn btn-w no-export" onclick="cfgGo('boardchip')" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;border-radius:14px;text-align:left;background:var(--white)">
         <span style="font-size:16px;line-height:1">🏷️</span>
@@ -160,6 +252,9 @@
         <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMode('aurora')">오로라</button>
         <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMode('poster')">포스터</button>
         <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMode('mono')">모노</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMode('glacier')">글레이셔</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMode('rose')">로즈</button>
+        <button class="btn btn-sm btn-w" onclick="cfgPreviewShareCardMode('midnight')">미드나잇</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div style="font-size:11px;color:var(--text3);font-weight:800">디자인 모드</div>
@@ -172,8 +267,31 @@
           <option value="aurora" ${_mode==='aurora'?'selected':''}>오로라</option>
           <option value="poster" ${_mode==='poster'?'selected':''}>포스터</option>
           <option value="mono" ${_mode==='mono'?'selected':''}>모노</option>
+          <option value="glacier" ${_mode==='glacier'?'selected':''}>글레이셔</option>
+          <option value="rose" ${_mode==='rose'?'selected':''}>로즈</option>
+          <option value="midnight" ${_mode==='midnight'?'selected':''}>미드나잇</option>
         </select>
         <span style="font-size:11px;color:var(--gray-l)">대학색 중심 정도와 대비감을 바꿉니다.</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">스트리머/대학 공유카드 레이아웃</div>
+          <select id="cfg-sc-entity-layout" onchange="cfgSetShareCardSettings()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+            <option value="default" ${_entityLayout==='default'?'selected':''}>기본형</option>
+            <option value="photocard" ${_entityLayout==='photocard'?'selected':''}>포토카드형</option>
+            <option value="showcase" ${_entityLayout==='showcase'?'selected':''}>쇼케이스형</option>
+            <option value="compact" ${_entityLayout==='compact'?'selected':''}>컴팩트형</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">경기 공유카드 레이아웃</div>
+          <select id="cfg-sc-match-layout" onchange="cfgSetShareCardSettings()" style="width:100%;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+            <option value="default" ${_matchLayout==='default'?'selected':''}>기본형</option>
+            <option value="spotlight" ${_matchLayout==='spotlight'?'selected':''}>스포트라이트형</option>
+            <option value="broadcast" ${_matchLayout==='broadcast'?'selected':''}>브로드캐스트형</option>
+            <option value="compact" ${_matchLayout==='compact'?'selected':''}>컴팩트형</option>
+          </select>
+        </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div style="font-size:11px;color:var(--text3);font-weight:800">표면 스타일</div>

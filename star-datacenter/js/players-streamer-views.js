@@ -1,6 +1,9 @@
 function rTotal(C,T){
   T.innerText='🎬 전체 스타크래프트 스트리머 리스트';
   try{ _bindTotalDelegatedEvents(); }catch(e){}
+  const _streamerTabDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_design_mode')||'classic').trim(); return ['classic','glass','vivid','obsidian','aurora','blush','paper','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _streamerTabLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_layout_mode')||'default').trim(); return ['default','compact','cozy','showcase'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
+  const _streamerTabUiMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_ui_mode')||'standard').trim(); return ['standard','pill','minimal','photocard'].includes(v)?v:'standard'; }catch(e){ return 'standard'; } })();
   const _pl = (typeof players !== 'undefined' && Array.isArray(players)) ? players : null;
   const _getUnivs = (typeof getAllUnivs === 'function') ? getAllUnivs : null;
   if(!_pl || !_getUnivs){
@@ -104,6 +107,73 @@ function rTotal(C,T){
         autocomplete="off" spellcheck="false"
         class="streamer-search" style="min-width:170px">`:''}
   </div></div>`;
+  const _heroHtml = (desc)=>`<section class="streamer-hero">
+        <div class="streamer-hero-copy">
+          <div class="streamer-hero-kicker">Streamer Directory</div>
+          <div class="streamer-hero-title">🎬 스트리머 탭</div>
+          <div class="streamer-hero-desc">${desc}</div>
+        </div>
+        <div class="streamer-hero-badges">
+          <span class="streamer-hero-badge">${_viewLabel}</span>
+          <span class="streamer-hero-badge">대학 ${_activeUnivCount}곳</span>
+          <span class="streamer-hero-badge">총 ${_visiblePlayers.length}명</span>
+        </div>
+      </section>`;
+  const _quickRail = `<div class="streamer-quickrail">
+      <article class="streamer-quickstat">
+        <div class="streamer-quickstat-label">표시 인원</div>
+        <div class="streamer-quickstat-value">${_visiblePlayers.length}</div>
+        <div class="streamer-quickstat-sub">필터 기준 표시 수</div>
+      </article>
+      <article class="streamer-quickstat">
+        <div class="streamer-quickstat-label">대학 분포</div>
+        <div class="streamer-quickstat-value">${_activeUnivCount}</div>
+        <div class="streamer-quickstat-sub">보이는 대학 수</div>
+      </article>
+      <article class="streamer-quickstat">
+        <div class="streamer-quickstat-label">활동 상태</div>
+        <div class="streamer-quickstat-value">${_liveCount + _warmCount}</div>
+        <div class="streamer-quickstat-sub">활성 ${_liveCount} · 주목 ${_warmCount}</div>
+      </article>
+      <article class="streamer-quickstat">
+        <div class="streamer-quickstat-label">프로필 준비</div>
+        <div class="streamer-quickstat-value">${_photoCount}</div>
+        <div class="streamer-quickstat-sub">사진 ${_photoCount} · 직책 ${_roleCount}</div>
+      </article>
+    </div>`;
+  const _renderTopChrome = (desc, includeKpi)=>{
+    const hero = _heroHtml(desc);
+    if(_streamerTabLayoutMode==='compact'){
+      return `<div class="streamer-topgrid streamer-topgrid--compact">
+        <div class="streamer-topgrid-main">
+          ${filterBar}
+          ${_quickRail}
+        </div>
+        <div class="streamer-topgrid-side">${hero}</div>
+      </div>`;
+    }
+    if(_streamerTabLayoutMode==='cozy'){
+      return `<div class="streamer-topstack streamer-topstack--cozy">
+        ${hero}
+        <div class="streamer-topstack-body">
+          ${_quickRail}
+          ${filterBar}
+          ${includeKpi?_kpiBar:''}
+        </div>
+      </div>`;
+    }
+    if(_streamerTabLayoutMode==='showcase'){
+      return `<div class="streamer-showcase-shell">
+        ${hero}
+        <div class="streamer-showcase-rail">
+          ${_quickRail}
+        </div>
+        ${filterBar}
+        ${includeKpi?_kpiBar:''}
+      </div>`;
+    }
+    return `${hero}${includeKpi?_kpiBar:''}${filterBar}`;
+  };
 
     let tableHTML=`<div class="streamer-content-card"><div class="streamer-table-wrap"><table class="streamer-table"><colgroup>
     ${_showBulk?'<col style="width:36px">':''}
@@ -133,21 +203,8 @@ function rTotal(C,T){
 
   // 갤러리 뷰 분기
   if(totalViewMode==='gallery'){
-    C.innerHTML=`<div class="streamer-shell">
-      <section class="streamer-hero">
-        <div class="streamer-hero-copy">
-          <div class="streamer-hero-kicker">Streamer Directory</div>
-          <div class="streamer-hero-title">🎬 스트리머 탭</div>
-          <div class="streamer-hero-desc">카드형 대시보드 중심으로 스트리머를 정리해 사진, 대학, 티어, 활동 상태와 핵심 수치를 한 번에 읽기 쉽게 구성했습니다.</div>
-        </div>
-        <div class="streamer-hero-badges">
-          <span class="streamer-hero-badge">${_viewLabel}</span>
-          <span class="streamer-hero-badge">대학 ${_activeUnivCount}곳</span>
-          <span class="streamer-hero-badge">총 ${_visiblePlayers.length}명</span>
-        </div>
-      </section>
-      ${_kpiBar}
-      ${filterBar}
+    C.innerHTML=`<div class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
+      ${_renderTopChrome('카드형 대시보드 중심으로 스트리머를 정리해 사진, 대학, 티어, 활동 상태와 핵심 수치를 한 번에 읽기 쉽게 구성했습니다.', true)}
       <div class="streamer-content-card">${_buildGalleryView(_rankMap)}</div>
     </div>`;
     _syncTpSelectedCards();
@@ -159,20 +216,8 @@ function rTotal(C,T){
     return;
   }
   if(totalViewMode==='focus'){
-    C.innerHTML=`<div class="streamer-shell">
-      <section class="streamer-hero">
-        <div class="streamer-hero-copy">
-          <div class="streamer-hero-kicker">Streamer Directory</div>
-          <div class="streamer-hero-title">🎬 스트리머 탭</div>
-          <div class="streamer-hero-desc">상세형은 왼쪽 목록에서 스트리머를 고르고 오른쪽에서 프로필과 핵심 수치를 크게 보는 방식입니다.</div>
-        </div>
-        <div class="streamer-hero-badges">
-          <span class="streamer-hero-badge">${_viewLabel}</span>
-          <span class="streamer-hero-badge">대학 ${_activeUnivCount}곳</span>
-          <span class="streamer-hero-badge">총 ${_visiblePlayers.length}명</span>
-        </div>
-      </section>
-      ${filterBar}
+    C.innerHTML=`<div class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
+      ${_renderTopChrome('상세형은 왼쪽 목록에서 스트리머를 고르고 오른쪽에서 프로필과 핵심 수치를 크게 보는 방식입니다.', false)}
       ${_buildFocusView(_rankMap)}
     </div>`;
     injectUnivIcons(C);
@@ -352,20 +397,8 @@ function rTotal(C,T){
   }
   tableHTML+=`</tbody></table></div></div>`;
 
-  C.innerHTML = `<div class="streamer-shell">
-    <section class="streamer-hero">
-      <div class="streamer-hero-copy">
-        <div class="streamer-hero-kicker">Streamer Directory</div>
-        <div class="streamer-hero-title">🎬 스트리머 탭</div>
-        <div class="streamer-hero-desc">대학별 구성을 유지하면서도 검색, 필터, 순위, 활동 상태를 더 보기 좋고 빠르게 파악할 수 있도록 정리했습니다.</div>
-      </div>
-      <div class="streamer-hero-badges">
-        <span class="streamer-hero-badge">${_viewLabel}</span>
-        <span class="streamer-hero-badge">대학 ${_activeUnivCount}곳</span>
-        <span class="streamer-hero-badge">총 ${_visiblePlayers.length}명</span>
-      </div>
-    </section>
-    ${filterBar}
+  C.innerHTML = `<div class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
+    ${_renderTopChrome('대학별 구성을 유지하면서도 검색, 필터, 순위, 활동 상태를 더 보기 좋고 빠르게 파악할 수 있도록 정리했습니다.', false)}
     ${tableHTML}
   </div>`;
   try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_visiblePhotoUrls, _visiblePhotoUrls.length); }catch(e){}

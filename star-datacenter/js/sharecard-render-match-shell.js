@@ -8,7 +8,7 @@
     const shape = (typeof window._shareCardShapeStyle==='function') ? window._shareCardShapeStyle(scp&&scp.cardShape) : {radius:'24px',clip:'none',headerInsetPct:0};
     const hiPct = shape.headerInsetPct||0;
     const hiCss = hiPct>0 ? `calc(100% * ${hiPct})` : '0px';
-    return `<div class="share-shell share-shell--match share-shell--personal" style="background:${variant.outerBg};color:${theme.text};min-width:340px;width:100%;border-radius:${shape.radius};${shape.clip!=='none'?`clip-path:${shape.clip};`:''}overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 24px 52px rgba(15,23,42,.18)">
+    return `<div class="share-shell share-shell--match share-shell--personal" data-sc-mode="${scp&&scp.mode||'campus'}" data-sc-match-layout="${scp&&scp.matchLayout||'default'}" style="background:${variant.outerBg};color:${theme.text};min-width:340px;width:100%;border-radius:${shape.radius};${shape.clip!=='none'?`clip-path:${shape.clip};`:''}overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 24px 52px rgba(15,23,42,.18)">
       <div class="share-personal-header" style="background:${headerMatchBg};padding:18px;padding-top:calc(18px + ${hiCss});position:relative;overflow:hidden">
         <div style="position:absolute;top:calc(-28px + ${hiCss});right:calc(-10px + ${hiCss});width:180px;height:180px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#ffffff',.72)}22;filter:blur(2px);pointer-events:none"></div>
         <div style="position:absolute;bottom:-46px;left:calc(-12px + ${hiCss});width:150px;height:150px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#0f172a',.40)}1f;filter:blur(2px);pointer-events:none"></div>
@@ -46,7 +46,7 @@
     const shape = (typeof window._shareCardShapeStyle==='function') ? window._shareCardShapeStyle(scp&&scp.cardShape) : {radius:'24px',clip:'none',headerInsetPct:0};
     const hiPct = shape.headerInsetPct||0;
     const hiCss = hiPct>0 ? `calc(100% * ${hiPct})` : '0px';
-    return `<div class="share-shell share-shell--match" style="background:${variant.outerBg};color:${theme.text};min-width:340px;width:100%;border-radius:${shape.radius};${shape.clip!=='none'?`clip-path:${shape.clip};`:''}overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 24px 52px rgba(15,23,42,.18)">
+    return `<div class="share-shell share-shell--match" data-sc-mode="${scp&&scp.mode||'campus'}" data-sc-match-layout="${scp&&scp.matchLayout||'default'}" style="background:${variant.outerBg};color:${theme.text};min-width:340px;width:100%;border-radius:${shape.radius};${shape.clip!=='none'?`clip-path:${shape.clip};`:''}overflow:hidden;font-family:'Noto Sans KR',sans-serif;box-shadow:0 24px 52px rgba(15,23,42,.18)">
       <div style="background:${headerMatchBg};padding:18px;padding-top:calc(18px + ${hiCss});position:relative;overflow:hidden">
         <div style="position:absolute;top:calc(-28px + ${hiCss});right:calc(-10px + ${hiCss});width:180px;height:180px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#ffffff',.72)}22;filter:blur(2px);pointer-events:none"></div>
         <div style="position:absolute;bottom:-46px;left:calc(-12px + ${hiCss});width:150px;height:150px;border-radius:50%;background:${scMixHex(winnerColor||'#475569','#0f172a',.40)}1f;filter:blur(2px);pointer-events:none"></div>

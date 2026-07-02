@@ -14,7 +14,15 @@
       if(m.n || m._subLabel || m.type==='tourney' || mk==='comp') return 'comp';
       return 'default';
     })();
-    const scp = getShareCardPrefs(scTypeKey);
+    const scpByType = getShareCardPrefs(scTypeKey);
+    const scpByMatch = getShareCardPrefs('match');
+    const hasTypeMode = !!localStorage.getItem(`su_sc_mode_${scTypeKey}`);
+    const hasTypeLayout = !!localStorage.getItem(`su_sc_match_layout_${scTypeKey}`);
+    const scp = {
+      ...scpByType,
+      mode: hasTypeMode ? scpByType.mode : scpByMatch.mode,
+      matchLayout: hasTypeLayout ? scpByType.matchLayout : scpByMatch.matchLayout
+    };
     const isKnownUnivName = (name)=>{
       const n = String(name||'').trim();
       if(!n) return false;

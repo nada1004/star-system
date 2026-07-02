@@ -65,10 +65,21 @@ function openPlayerDetail(playerName) {
     }
   }catch(e){}
   if (!player) player = typeof players !== 'undefined' ? players.find(p => p.name === playerName) : null;
-  if (player && typeof buildPlayerDetailHTML !== 'undefined') {
+  try{
+    if(typeof window.openPlayerModal === 'function' && playerName){
+      window.openPlayerModal(playerName);
+      return;
+    }
+  }catch(e){}
+  if (player) {
+    const _fn = (typeof window.buildPlayerDetailHTML==='function')
+      ? window.buildPlayerDetailHTML
+      : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
     const modalBody = document.getElementById('playerModalBody');
     if (modalBody) {
-      modalBody.innerHTML = buildPlayerDetailHTML(player);
+      modalBody.innerHTML = _fn
+        ? _fn(player)
+        : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
       if (typeof injectUnivIcons !== 'undefined') {
         injectUnivIcons(modalBody);
       }

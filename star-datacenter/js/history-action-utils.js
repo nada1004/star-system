@@ -126,7 +126,12 @@ function savePlayerMemo(name, del=false){
     if(el) p.memo=el.value.trim();
   }
   save();
-  document.getElementById('playerModalBody').innerHTML=buildPlayerDetailHTML(p);
+  const _fn = (typeof window.buildPlayerDetailHTML==='function')
+    ? window.buildPlayerDetailHTML
+    : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
+  document.getElementById('playerModalBody').innerHTML = _fn
+    ? _fn(p)
+    : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
 }
 
 function saveMemo(mode,idx,inputId){

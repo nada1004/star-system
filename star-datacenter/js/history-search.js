@@ -907,6 +907,8 @@ function _applyOpenHistDetailTeamHeaderColors(){
 function openHistDetailModal(key){
   const reg=(window._detReg||{})[key];
   if(!reg || !reg.m) return;
+  const _mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   try{
     window._lastHistDetailState = {
       key,
@@ -916,6 +918,22 @@ function openHistDetailModal(key){
   }catch(e){}
   try{ window.__detailCtx = 'histModal'; }catch(_){}
   const m=_ensureHistDetailModal();
+  try{
+    if(m){
+      m.setAttribute('data-md-mode', _mdDesignMode);
+      m.setAttribute('data-md-layout', _mdLayoutMode);
+      const box = m.querySelector('.mbox--matchdetail');
+      const body = m.querySelector('.cmd-body');
+      if(box){
+        box.setAttribute('data-md-mode', _mdDesignMode);
+        box.setAttribute('data-md-layout', _mdLayoutMode);
+      }
+      if(body){
+        body.setAttribute('data-md-mode', _mdDesignMode);
+        body.setAttribute('data-md-layout', _mdLayoutMode);
+      }
+    }
+  }catch(e){}
   const titleEl=document.getElementById('hmdTitle');
   const subEl=document.getElementById('hmdSub');
   const bar=document.getElementById('hmdScoreBar');
@@ -931,6 +949,12 @@ function openHistDetailModal(key){
     if(canEdit && editable && match && !match._editRef){
       match._editRef = `${modeForEdit}:${idx}`;
     }
+  }catch(e){}
+  try{
+    document.querySelectorAll('#histDetModal .cmd-detail-shell').forEach(el=>{
+      el.setAttribute('data-md-mode', _mdDesignMode);
+      el.setAttribute('data-md-layout', _mdLayoutMode);
+    });
   }catch(e){}
   try{ if(typeof window._syncTabUrlFromState==='function') window._syncTabUrlFromState('replace'); }catch(e){}
   const _resolveOriginalShareSource = ()=> typeof window._resolveHistoryShareSource==='function'
@@ -1371,46 +1395,68 @@ window.openProCompRecordDetailPopup = window.openProCompRecordDetailPopup || fun
     const payload = typeof encodedPayload === 'string'
       ? JSON.parse(decodeURIComponent(encodedPayload))
       : (encodedPayload || {});
-    const old = document.getElementById('proCompRecDetailModal');
-    if (old) old.remove();
+    const p1 = String(payload.p1 || payload.a || '?');
+    const p2 = String(payload.p2 || payload.b || '?');
+    const p1Score = Number(payload.p1Score ?? payload.sa ?? 0);
+    const p2Score = Number(payload.p2Score ?? payload.sb ?? 0);
     const winner = String(payload.winner || '');
-    const p1 = String(payload.p1 || '?');
-    const p2 = String(payload.p2 || '?');
-    const p1Score = Number(payload.p1Score || 0);
-    const p2Score = Number(payload.p2Score || 0);
-    const p1Col = String(payload.p1Col || '#2563eb');
-    const p2Col = String(payload.p2Col || '#dc2626');
-    const rowsHtml = _pcRecDetailRowsHTML(payload);
-    const title = _pcRecDetailEsc(payload.title || '경기 상세');
-    const subtitle = payload.subtitle ? `<div style="font-size:12px;color:var(--gray-l);margin-top:4px">${_pcRecDetailEsc(payload.subtitle)}</div>` : '';
-    const modal = document.createElement('div');
-    modal.id = 'proCompRecDetailModal';
-    modal.className = 'modal modal--procompdetail no-export';
-    modal.style.cssText = 'z-index:var(--z-modal-4);display:flex';
-    modal.onclick = () => modal.remove();
-    modal.innerHTML = `<div class="mbox mbox--procompdetail ${rowsHtml?'':'is-summary-only'}" style="--pcd-c1:${_pcRecDetailEsc(p1Col)};--pcd-c2:${_pcRecDetailEsc(p2Col)}" onclick="event.stopPropagation()">
-      <div class="pcd-head">
-        <div class="pcd-head__txt">
-          <div class="pcd-title">${title}</div>
-          ${subtitle?`<div class="pcd-sub">${subtitle.replace(/^<div[^>]*>|<\/div>$/g,'')}</div>`:''}
-        </div>
-        <button class="pcd-close" onclick="document.getElementById('proCompRecDetailModal')?.remove()" aria-label="닫기">✕</button>
-      </div>
-      <div class="pcd-score">
-        <div class="pcd-score__inner">
-          ${_pcRecDetailPlayerHTML(p1, winner===p1, 84)}
-          <span class="pcd-score__value">${p1Score}<span class="pcd-score__colon">:</span>${p2Score}</span>
-          ${_pcRecDetailPlayerHTML(p2, winner===p2, 84)}
-          ${payload.date?`<div class="pcd-meta">${_pcRecDetailEsc(payload.date)}</div>`:''}
-          ${_pcRecDetailSummaryMetaHTML(payload)}
-        </div>
-      </div>
-      ${rowsHtml?`<div class="pcd-body">${rowsHtml}</div>`:''}
-      <div class="pcd-actions no-export">
-        <button class="btn btn-w" onclick="document.getElementById('proCompRecDetailModal')?.remove()">닫기</button>
-      </div>
-    </div>`;
-    document.body.appendChild(modal);
+    const seriesWinner = winner===p1 ? 'A' : winner===p2 ? 'B' : (p1Score>p2Score?'A':p2Score>p1Score?'B':'');
+    const _colByName = (name, fallback) => {
+      try{
+        const p = (players||[]).find(x=>x && String(x.name||'').trim()===String(name||'').trim());
+        const col = p && p.univ ? gc(p.univ) : '';
+        return (col && col !== '#6b7280') ? col : (fallback || gc(name||'') || '#64748b');
+      }catch(e){
+        return fallback || '#64748b';
+      }
+    };
+    const ca = _colByName(p1, String(payload.p1Col || payload.ca || '#2563eb'));
+    const cb = _colByName(p2, String(payload.p2Col || payload.cb || '#dc2626'));
+    const gamesRaw = Array.isArray(payload.games) ? payload.games : [];
+    const games = gamesRaw.map((g)=>{
+      const ga = String(g?.a || g?.playerA || p1);
+      const gb = String(g?.b || g?.playerB || p2);
+      const w = String(g?.winner||'');
+      const ww = (w==='A'||w==='B') ? w : (w===ga?'A':w===gb?'B':'');
+      return {
+        playerA: ga,
+        playerB: gb,
+        winner: ww || '',
+        map: String(g?.map||'')
+      };
+    });
+    const match = {
+      a: p1,
+      b: p2,
+      sa: p1Score,
+      sb: p2Score,
+      d: String(payload.date || payload.d || ''),
+      t: String(payload.title || payload.t || ''),
+      n: String(payload.subtitle || payload.n || ''),
+      sets: [{
+        scoreA: p1Score,
+        scoreB: p2Score,
+        winner: seriesWinner,
+        games
+      }]
+    };
+    const key = `procomp:detail:${Date.now()}:${Math.random().toString(36).slice(2,7)}`;
+    window._detReg = window._detReg || {};
+    window._detReg[key] = {
+      m: match,
+      mode: 'procomp',
+      lA: p1,
+      lB: p2,
+      ca,
+      cb,
+      aW: p1Score>p2Score,
+      bW: p2Score>p1Score,
+      idx: null
+    };
+    if(typeof openHistDetailModal === 'function'){
+      openHistDetailModal(key);
+      return;
+    }
   }catch(e){
     console.warn('openProCompRecordDetailPopup failed', e);
   }

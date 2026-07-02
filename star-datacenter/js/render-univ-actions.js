@@ -1,3 +1,22 @@
+;(function _injectUnivModalPremiumStyle(){
+  if(typeof document==='undefined') return;
+  if(document.getElementById('univ-modal-premium-style')) return;
+  const s=document.createElement('style');
+  s.id='univ-modal-premium-style';
+  s.textContent=[
+    '#univModal{backdrop-filter:blur(8px);background:var(--su-ud-modal-overlay-bg,rgba(15,23,42,.38))}',
+    '#univModal .mbox,#univModal .umbox{background:var(--su-ud-modal-box-bg,linear-gradient(180deg,rgba(255,255,255,.985),rgba(248,250,252,.96)))!important;border:1px solid var(--su-ud-modal-box-border,rgba(148,163,184,.18))!important}',
+    '#univModal #univModalTitle{background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(255,255,255,.92))!important;border-bottom:1px solid var(--su-ud-modal-box-border,rgba(148,163,184,.18))!important}',
+    '#univModal #univModalBody{background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,250,252,.9))!important}',
+    '#univModal[data-ud-univbg-enabled="1"] #univModalTitle{background:var(--su-ud-modal-title-bg)!important}',
+    '#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="body"] #univModalBody,#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] #univModalBody{background:var(--su-ud-modal-body-bg)!important}',
+    '#univModal[data-ud-univbg-enabled="1"] .ud-hero{background:var(--su-ud-hero-bg)!important;border:1px solid var(--su-ud-card-border)!important}',
+    '#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-members-table-wrap,#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-opp-card,#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-match-card,#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-ace-card{background:var(--su-ud-card-bg)!important;border-color:var(--su-ud-card-border)!important}',
+    '#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-members-table th,#univModal[data-ud-univbg-enabled="1"][data-ud-univbg-scope="cards"] .ud-members-table td{border-color:var(--su-ud-card-border)!important}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
 function _bindUnivActionsDelegatedEvents(){
   if(window._univActionsDelegatedBound) return;
   window._univActionsDelegatedBound = true;
@@ -100,7 +119,15 @@ function openUnivModal(univName){
   const bodyEl = document.getElementById('univModalBody');
   if(titleEl) titleEl.innerHTML=`<span class="detail-main">🎓 ${univName}</span>`;
   if(bodyEl){
-    bodyEl.innerHTML=buildUnivDetailHTML(univName);
+    const _fn = (typeof buildUnivDetailHTML==='function')
+      ? buildUnivDetailHTML
+      : (typeof window.buildUnivDetailHTML==='function' ? window.buildUnivDetailHTML : null);
+    bodyEl.innerHTML = _fn
+      ? _fn(univName)
+      : `<div style="padding:14px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 12px 24px rgba(15,23,42,.06)">
+          <div style="font-size:13px;font-weight:950;color:var(--text2);margin-bottom:6px">대학 상세 렌더러 로드 실패</div>
+          <div style="font-size:12px;color:var(--text3);line-height:1.6">buildUnivDetailHTML을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.</div>
+        </div>`;
     bodyEl.scrollTop = 0;
     try{
       const scrollBox = bodyEl.closest('.umbox');
@@ -429,7 +456,17 @@ function saveUnivEdit(){
   save();render();
   st.currentName=newName;
   document.getElementById('univModalTitle').innerHTML=`<span class="detail-main">🎓 ${newName}</span>`;
-  document.getElementById('univModalBody').innerHTML=buildUnivDetailHTML(newName);
+  {
+    const _fn = (typeof buildUnivDetailHTML==='function')
+      ? buildUnivDetailHTML
+      : (typeof window.buildUnivDetailHTML==='function' ? window.buildUnivDetailHTML : null);
+    document.getElementById('univModalBody').innerHTML = _fn
+      ? _fn(newName)
+      : `<div style="padding:14px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 12px 24px rgba(15,23,42,.06)">
+          <div style="font-size:13px;font-weight:950;color:var(--text2);margin-bottom:6px">대학 상세 렌더러 로드 실패</div>
+          <div style="font-size:12px;color:var(--text3);line-height:1.6">buildUnivDetailHTML을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.</div>
+        </div>`;
+  }
   injectUnivIcons(document.getElementById('univModalBody'));
   st.editOpen=false;
   const btn=document.getElementById('univEditBtn');

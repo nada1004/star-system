@@ -63,11 +63,75 @@ function _renderCfgMatchDetailSection(){
   const mdFxAnim = (localStorage.getItem('su_md_fx_anim') || 'both').trim();
   const mdFxSpeedMul = (()=>{ try{ return parseFloat(localStorage.getItem('su_md_fx_speed_mul')||'1'); }catch(e){ return 1; } })();
   const mdFxInt = (()=>{ try{ return parseInt(localStorage.getItem('su_md_fx_int')||'100',10); }catch(e){ return 100; } })();
+  const mdDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_md_design_mode')||'classic').trim(); return ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const mdLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_md_layout_mode')||'default').trim(); return ['default','compact','focus','broadcast','split','poster'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
 
   body.innerHTML=`
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">
       대전기록/대회/프로리그 등에서 열리는 <b>경기 상세 팝업</b>의 상단(대학 카드)과 프로필 표시를 조절합니다.
+    </div>
+    <div style="font-size:11px;color:var(--gray-l);margin:-2px 0 12px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,var(--surface),var(--white));border:1px solid var(--border)">현재 설정은 <b>미니대전</b>, <b>대학대전</b>, <b>대학CK</b>, 대회/프로리그 경기 상세 팝업에도 같이 적용됩니다.</div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">🎨 디자인 모드</div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+        ${[
+          ['classic','클래식','기본 경기 상세 톤','linear-gradient(135deg,#dbeafe,#1d4ed8)'],
+          ['glass','글래스','유리질감과 밝은 카드 강조','linear-gradient(135deg,#bfdbfe,#a5f3fc)'],
+          ['editorial','에디토리얼','잡지형 대비와 차분한 면 분리','linear-gradient(135deg,#f8fafc,#e2e8f0)'],
+          ['neon','네온','보라/청록 계열의 강한 하이라이트','linear-gradient(135deg,#7c3aed,#06b6d4)'],
+          ['midnight','미드나잇','짙은 방송형 헤더와 어두운 대비','linear-gradient(135deg,#0f172a,#1e293b)'],
+          ['sunset','선셋','오렌지/핑크 계열의 경기 포스터 톤','linear-gradient(135deg,#fb7185,#f59e0b)'],
+          ['aurora','오로라','민트/라벤더 계열 몽환 톤','linear-gradient(135deg,#67e8f9,#a78bfa)'],
+          ['mono','모노','무채색 기반의 단정한 시트형 UI','linear-gradient(135deg,#111827,#6b7280)']
+        ].map(([key,label,desc,bg])=>`<button class="btn btn-xs ${mdDesignMode===key?'btn-b':'btn-w'}" onclick="cfgSetMatchDetailMode('${key}')"
+          style="text-align:left;padding:0;overflow:hidden;border-radius:12px;height:auto;border-width:${mdDesignMode===key?'2px':'1px'}">
+          <span style="display:block;height:52px;background:${bg};padding:8px;position:relative">
+            <span style="display:block;height:10px;border-radius:999px;background:rgba(255,255,255,.88);width:65%"></span>
+            <span style="display:grid;grid-template-columns:1fr 34px 1fr;gap:4px;margin-top:8px">
+              <span style="height:22px;border-radius:10px;background:rgba(255,255,255,.24)"></span>
+              <span style="height:22px;border-radius:10px;background:rgba(255,255,255,.9)"></span>
+              <span style="height:22px;border-radius:10px;background:rgba(255,255,255,.24)"></span>
+            </span>
+          </span>
+          <span style="display:block;padding:8px 9px;background:var(--white)">
+            <span style="display:block;font-size:12px;font-weight:900;color:var(--text2)">${label}${mdDesignMode===key?' ✓':''}</span>
+            <span style="display:block;font-size:10px;color:var(--gray-l);font-weight:700;margin-top:2px">${desc}</span>
+          </span>
+        </button>`).join('')}
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">🧩 레이아웃 모드</div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+        ${[
+          ['default','기본형','현재 구조 중심의 균형형','linear-gradient(180deg,#fff 0 38%,#eff6ff 38% 100%)'],
+          ['compact','컴팩트형','세트와 경기 카드를 촘촘하게','linear-gradient(180deg,#fff 0 38%,#f8fafc 38% 100%)'],
+          ['focus','포커스형','승자/핵심 경기 카드 존재감 확대','linear-gradient(180deg,#fff 0 38%,#ede9fe 38% 100%)'],
+          ['broadcast','브로드캐스트형','헤더와 스코어바를 방송형으로 강조','linear-gradient(180deg,#fff 0 38%,#ecfeff 38% 100%)'],
+          ['split','스플릿형','좌우 카드와 중간 스코어 분리감 강화','linear-gradient(180deg,#fff 0 38%,#eef2ff 38% 100%)'],
+          ['poster','포스터형','상단 배너와 경기행 존재감 강조','linear-gradient(180deg,#fff 0 38%,#fff7ed 38% 100%)']
+        ].map(([key,label,desc,bg])=>`<button class="btn btn-xs ${mdLayoutMode===key?'btn-b':'btn-w'}" onclick="cfgSetMatchDetailLayout('${key}')"
+          style="text-align:left;padding:0;overflow:hidden;border-radius:12px;height:auto;border-width:${mdLayoutMode===key?'2px':'1px'}">
+          <span style="display:block;height:52px;background:${bg};padding:8px">
+            <span style="display:grid;grid-template-columns:1fr;gap:5px;height:100%">
+              <span style="height:14px;border-radius:10px;background:rgba(99,102,241,.18)"></span>
+              <span style="display:grid;grid-template-columns:${key==='broadcast'?'1fr 42px 1fr':(key==='split'?'1fr 36px 1fr':'1fr 30px 1fr')};gap:4px">
+                <span style="height:18px;border-radius:8px;background:rgba(148,163,184,.24)"></span>
+                <span style="height:18px;border-radius:8px;background:rgba(255,255,255,.92)"></span>
+                <span style="height:18px;border-radius:8px;background:rgba(148,163,184,.24)"></span>
+              </span>
+            </span>
+          </span>
+          <span style="display:block;padding:8px 9px;background:var(--white)">
+            <span style="display:block;font-size:12px;font-weight:900;color:var(--text2)">${label}${mdLayoutMode===key?' ✓':''}</span>
+            <span style="display:block;font-size:10px;color:var(--gray-l);font-weight:700;margin-top:2px">${desc}</span>
+          </span>
+        </button>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">선택하면 열려 있는 경기 상세 팝업에 바로 반영됩니다.</div>
     </div>
 
     <div style="margin-bottom:16px">
@@ -223,6 +287,76 @@ function _renderCfgMatchDetailSection(){
   `;
 }
 
+function _refreshOpenMatchDetailModals(){
+  try{
+    const histOpen = (()=>{ try{ const el=document.getElementById('histDetModal'); return !!(el && el.style.display!=='none'); }catch(e){ return false; } })();
+    const compOpen = (()=>{ try{ const el=document.getElementById('compMatchDetailModal'); return !!(el && el.style.display!=='none'); }catch(e){ return false; } })();
+    if(histOpen && window._lastHistDetailState && typeof openHistDetailModal==='function'){
+      openHistDetailModal(window._lastHistDetailState.key);
+    }
+    if(compOpen && window._cmdDetailState){
+      const st=window._cmdDetailState;
+      if(st.isNm && typeof nmOpenDetailModal==='function'){
+        nmOpenDetailModal(st.tnId, st.nmIdx);
+      }else if(st.isLeague && typeof openCompMatchDetailModal==='function'){
+        openCompMatchDetailModal(st.tnId, st.gi, st.mi, st.rnd, !!st.isManual);
+      }else if(typeof openCompMatchDetailModal==='function'){
+        openCompMatchDetailModal(st.tnId, st.gi, st.mi, st.rnd, !!st.isManual);
+      }
+    }
+  }catch(e){}
+}
+
+function cfgSetMatchDetailMode(mode){
+  try{ localStorage.setItem('su_md_design_mode', ['classic','glass','editorial','neon','midnight','sunset','aurora','mono'].includes(mode)?mode:'classic'); }catch(e){}
+  try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
+  try{
+    const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();
+    const lm = (localStorage.getItem('su_md_layout_mode')||'default').trim();
+    const m1 = document.getElementById('histDetModal');
+    const m2 = document.getElementById('compMatchDetailModal');
+    if(m1){ m1.setAttribute('data-md-mode', md); m1.setAttribute('data-md-layout', lm); }
+    if(m2){ m2.setAttribute('data-md-mode', md); m2.setAttribute('data-md-layout', lm); }
+    document.querySelectorAll('.modal--matchdetail .mbox--matchdetail, .modal--matchdetail .cmd-body').forEach(el=>{
+      el.setAttribute('data-md-mode', md);
+      el.setAttribute('data-md-layout', lm);
+    });
+    document.querySelectorAll('.cmd-detail-shell').forEach(el=>{
+      el.setAttribute('data-md-mode', md);
+      el.setAttribute('data-md-layout', lm);
+    });
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+  try{ _refreshOpenMatchDetailModals(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
+  try{ _renderCfgMatchDetailSection(); }catch(e){}
+}
+
+function cfgSetMatchDetailLayout(mode){
+  try{ localStorage.setItem('su_md_layout_mode', ['default','compact','focus','broadcast','split','poster'].includes(mode)?mode:'default'); }catch(e){}
+  try{ if(typeof applyMatchDetailVars==='function') applyMatchDetailVars(); }catch(e){}
+  try{
+    const md = (localStorage.getItem('su_md_design_mode')||'classic').trim();
+    const lm = (localStorage.getItem('su_md_layout_mode')||'default').trim();
+    const m1 = document.getElementById('histDetModal');
+    const m2 = document.getElementById('compMatchDetailModal');
+    if(m1){ m1.setAttribute('data-md-mode', md); m1.setAttribute('data-md-layout', lm); }
+    if(m2){ m2.setAttribute('data-md-mode', md); m2.setAttribute('data-md-layout', lm); }
+    document.querySelectorAll('.modal--matchdetail .mbox--matchdetail, .modal--matchdetail .cmd-body').forEach(el=>{
+      el.setAttribute('data-md-mode', md);
+      el.setAttribute('data-md-layout', lm);
+    });
+    document.querySelectorAll('.cmd-detail-shell').forEach(el=>{
+      el.setAttribute('data-md-mode', md);
+      el.setAttribute('data-md-layout', lm);
+    });
+  }catch(e){}
+  try{ if(typeof render==='function') render(); }catch(e){}
+  try{ _refreshOpenMatchDetailModals(); }catch(e){}
+  try{ if(typeof window.cfgTouchPrefsSync==='function') window.cfgTouchPrefsSync(); }catch(e){}
+  try{ _renderCfgMatchDetailSection(); }catch(e){}
+}
+
 try{
   window.SettingsModules = window.SettingsModules || {};
   window.SettingsModules.matchDetail = {
@@ -230,5 +364,7 @@ try{
     renderMatchDetailSection: _renderCfgMatchDetailSection
   };
   window.cfgMdFxApplyPreset = cfgMdFxApplyPreset;
+  window.cfgSetMatchDetailMode = cfgSetMatchDetailMode;
+  window.cfgSetMatchDetailLayout = cfgSetMatchDetailLayout;
   window._renderCfgMatchDetailSection = _renderCfgMatchDetailSection;
 }catch(e){}
