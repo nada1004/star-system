@@ -1772,8 +1772,10 @@ function _b2UnivRankRow(p, accentCol, showBadge, idx) {
   const recordTxt = games ? `${win}승 ${loss}패` : '기록 없음';
   const shapeStyle = 'border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);';
   return `
-    <div style="display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:16px;border:1px solid ${accentCol}22;background:linear-gradient(120deg,${accentCol}14 0%,${accentCol}05 100%);box-shadow:0 6px 16px rgba(15,23,42,.06);cursor:pointer"
-      onclick="openPlayerModal('${safeName}')">
+    <div style="display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:16px;border:1px solid ${accentCol}22;background:linear-gradient(120deg,${accentCol}14 0%,${accentCol}05 100%);box-shadow:0 6px 16px rgba(15,23,42,.06);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease"
+      onclick="openPlayerModal('${safeName}')"
+      onmouseenter="this.style.transform='translateX(3px)';this.style.boxShadow='0 10px 22px rgba(15,23,42,.14)';this.style.borderColor='${accentCol}55'"
+      onmouseleave="this.style.transform='';this.style.boxShadow='0 6px 16px rgba(15,23,42,.06)';this.style.borderColor='${accentCol}22'">
       <div style="flex-shrink:0;width:20px;text-align:center;font-size:11px;font-weight:900;color:${accentCol};opacity:.75">${idx}</div>
       <div style="width:42px;height:42px;flex-shrink:0;${shapeStyle}overflow:hidden;border:2px solid ${accentCol}55;background:${accentCol}22;box-shadow:0 4px 10px ${accentCol}26">
         ${photo
@@ -1887,7 +1889,9 @@ function _b2UnivPhotoCard(p, accentCol, showBadge) {
        <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.78">${raceLetter}</div>`
     : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.78">${raceLetter}</div>`;
   return `
-    <div style="position:relative;width:122px;max-width:100%;aspect-ratio:.78;${shapeStyle}overflow:hidden;border:1px solid rgba(255,255,255,.16);background:#0b1120;box-shadow:0 10px 20px rgba(15,23,42,.12);cursor:pointer" onclick="openPlayerModal('${safeName}')">
+    <div style="position:relative;width:122px;max-width:100%;aspect-ratio:.78;${shapeStyle}overflow:hidden;border:1px solid rgba(255,255,255,.16);background:#0b1120;box-shadow:0 10px 20px rgba(15,23,42,.12);cursor:pointer;transition:transform .18s ease,box-shadow .18s ease" onclick="openPlayerModal('${safeName}')"
+      onmouseenter="this.style.transform='translateY(-4px) scale(1.03)';this.style.boxShadow='0 16px 28px rgba(15,23,42,.24)'"
+      onmouseleave="this.style.transform='';this.style.boxShadow='0 10px 20px rgba(15,23,42,.12)'">
       ${backdrop}
       ${photoHtml}
       ${p.race&&p.race!=='N'?`<div style="position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:999px;background:${raceCol};color:#fff;font-size:10px;font-weight:900;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.26)">${p.race}</div>`:''}
@@ -1957,8 +1961,8 @@ function _b2RenderUnivGroupCards(group, accentCol, showBadge, mode, hideTableHea
   const s=document.createElement('style');
   s.id='b2-lineup-card3-style';
   s.textContent=[
-    '.b2-lc3{position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(165deg,var(--lc-col,#64748b)1f 0%,var(--lc-col,#64748b)08 34%,rgba(255,255,255,.98) 58%);box-shadow:0 4px 16px rgba(15,23,42,.16);cursor:pointer;transition:transform .2s ease,box-shadow .2s ease;border:1px solid var(--lc-col,#64748b)2e;transform-origin:center center}',
-    '.b2-lc3:hover{transform:scale(2);box-shadow:0 30px 60px rgba(15,23,42,.35);z-index:40}',
+    '.b2-lc3{position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(165deg,var(--lc-col,#64748b)1f 0%,var(--lc-col,#64748b)08 34%,rgba(255,255,255,.98) 58%);box-shadow:0 4px 16px rgba(15,23,42,.16);cursor:pointer;transition:transform .18s ease,box-shadow .18s ease;border:1px solid var(--lc-col,#64748b)2e}',
+    '.b2-lc3:hover{transform:translateY(-4px) scale(1.035);box-shadow:0 16px 30px rgba(15,23,42,.22);z-index:2}',
     '.b2-lc3-photo{position:relative;width:100%;aspect-ratio:.82;overflow:hidden;background:linear-gradient(160deg,var(--lc-col,#64748b)55 0%,var(--lc-col,#64748b)22 100%)}',
     '.b2-lc3-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}',
     '.b2-lc3-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.2);filter:blur(15px) saturate(1.1) brightness(.82)}',
