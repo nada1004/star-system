@@ -290,59 +290,14 @@ function _b2WeeklyBriefingView() {
     const _mvpFx = _b2MvpFxLoad();
     const _mvpFxOp = ((_mvpFx.on ? _mvpFx.intensity : 0) / 100).toFixed(3);
     const _mvpFxStyleAttr = _mvpFx.on ? _mvpFx.style : 'none';
-    const _mkMvpCard = (s, rank, isWorst, extraClass) => {
-      if (!s) return '';
-      const mp = s.p;
-      const univCol = gc ? gc(String(mp?.univ||'')) : (isWorst ? '#ef4444' : (rank===1?'#f59e0b':'#94a3b8'));
-      const tc  = typeof getTierBtnColor==='function'&&mp.tier?getTierBtnColor(mp.tier):'#475569';
-      const tt  = typeof getTierBtnTextColor==='function'&&mp.tier?(getTierBtnTextColor(mp.tier)||'#fff'):'#fff';
-      const rIco = mp.race==='P'?'🔮':mp.race==='T'?'⚔️':mp.race==='Z'?'🦎':'';
-      const photo = mp.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(mp.photo):mp.photo) : '';
-      const initial = String(mp.name||'-').trim().slice(0,1);
-      const nameEsc = String(mp.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-
-      const cardClass = isWorst ? 'b2w2-mvp-worst' : (rank===1 ? 'b2w2-mvp-first' : 'b2w2-mvp-second');
-      const _isMini = extraClass === 'b2w2-mvp-card-mini';
-      const badgeText = _isMini
-        ? (isWorst ? '3등' : (rank===1 ? '1등' : '2등'))
-        : (isWorst ? (_isMonthly?'이달의 최악':'이번주 최악') : (rank===1 ? _mvpLabel : (_isMonthly?'이달의 2위':'이번주 2위')));
-      const badgeEmoji = isWorst ? '💀' : (rank===1 ? '🏆' : '🥈');
-
-      const winColor   = 'b2w2-mvp-sv-win';
-      const lossColor  = 'b2w2-mvp-sv-loss';
-      const rateColor  = 'b2w2-mvp-sv-rate';
-
-      const _statItem = (val, label, colorClass) =>
-        `<span class="b2w2-mvp-stat"><b class="b2w2-mvp-sv ${colorClass}">${val}</b><i class="b2w2-mvp-sl">${label}</i></span>`;
-      const _sep = `<span class="b2w2-mvp-statline-sep"></span>`;
-
-      const statsHtml = isWorst
-        ? `${_statItem(s.losses,'패',lossColor)}${_sep}${_statItem(s.wins,'승',winColor)}${_sep}${_statItem((s.winRate??0)+'%','승률',rateColor)}`
-        : `${_statItem(s.wins,'승',winColor)}${_sep}${_statItem(s.losses,'패',lossColor)}${_sep}${_statItem((s.winRate??0)+'%','승률',rateColor)}`;
-
-      return `<div class="b2w2-mvp-card ${cardClass}${extraClass ? ' '+extraClass : ''}" data-fx="${_mvpFxStyleAttr}" data-design="${_mvpFx.design}" style="--b2mvp-fx-op:${_mvpFxOp}" onclick="openPlayerModal('${nameEsc}')">
-        ${photo
-          ? `<img class="b2w2-mvp-bg" src="${photo}" alt="${mp.name||''}"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-          : ''}
-        <div class="b2w2-mvp-bg-fallback" style="${photo?'display:none':''}">${initial}</div>
-        <div class="b2w2-mvp-overlay"></div>
-        <div class="b2w2-mvp-top-badge">${_mvpFx.design==='ribbon' ? badgeText : `${badgeEmoji} ${badgeText}`}</div>
-        <div class="b2w2-mvp-bottom">
-          <div class="b2w2-mvp-id">
-            <div class="b2w2-mvp-name">${mp.name||'-'}</div>
-            <div class="b2w2-mvp-meta">
-              <span class="b2w2-mvp-univ">${String(mp.univ||'무소속')}</span>
-              ${mp.tier?`<span class="b2w2-mvp-tier" style="background:${tc};color:${tt}">${mp.tier}</span>`:''}
-            </div>
-          </div>
-          <div class="b2w2-mvp-statline">
-            ${statsHtml}
-            <div class="b2w2-mvp-statline-form">${_b2WeeklyForm(s.hist)}</div>
-          </div>
-        </div>
-      </div>`;
-    };
+    // MVP/최악 카드 HTML 빌더는 board2-briefing-data.js의 _b2BuildMvpCardHtml로 분리했습니다.
+    const _mkMvpCard = (s, rank, isWorst, extraClass) => _b2BuildMvpCardHtml(s, rank, isWorst, extraClass, {
+      isMonthly: _isMonthly,
+      mvpLabel: _mvpLabel,
+      mvpFxStyleAttr: _mvpFxStyleAttr,
+      mvpFxDesign: _mvpFx.design,
+      mvpFxOp: _mvpFxOp
+    });
     const curPlayerStats = _b2WeeklyAggregate(vis, dateFrom, dateTo);
     const prevPlayerStats = _b2WeeklyAggregate(vis, prevDateFrom, prevDateTo);
     const prevPlayerMap = {};
@@ -374,20 +329,8 @@ function _b2WeeklyBriefingView() {
       .slice()
       .sort((a, b) => (a.wrDelta - b.wrDelta) || (a.totalDelta - b.totalDelta));
     const coldPlayer = decliningPlayers[0] || null;
-    // 연승/연패 스트릭 — 기간 내 최근 경기부터 거슬러 올라가며 연속 결과 카운트
-    const _calcStreak = (hist, want) => {
-      const sorted = [...hist].sort((a,b)=>{
-        const da=parseInt(String(a.date||'').replace(/[-\.\/]/g,''))||0;
-        const db=parseInt(String(b.date||'').replace(/[-\.\/]/g,''))||0;
-        return db!==da?db-da:(b.time||0)-(a.time||0);
-      });
-      let streak = 0;
-      for (const h of sorted) {
-        if (h.result === want) streak++;
-        else break;
-      }
-      return streak;
-    };
+    // 연승/연패 스트릭 — 순수 계산 로직은 board2-briefing-data.js의 _b2CalcStreak로 분리했습니다.
+    const _calcStreak = _b2CalcStreak;
     const streakPlayers = activePlayers
       .map(s => ({ ...s, streak: _calcStreak(s.hist, '승') }))
       .filter(s => s.streak >= 2)
@@ -418,30 +361,9 @@ function _b2WeeklyBriefingView() {
       .sort((a, b) => (b.total - a.total) || (b.wins - a.wins) || ((b.winRate ?? -1) - (a.winRate ?? -1)))
       .slice(0, 5);
     const monthlyMvp = monthlyTopPlayers[0] || null;
-    const _rankSort = (a, b) =>
-      (b.tw - a.tw) ||
-      ((b.wr ?? -1) - (a.wr ?? -1)) ||
-      (b.tg - a.tg) ||
-      (b.active.length - a.active.length) ||
-      String(a.u?.name || '').localeCompare(String(b.u?.name || ''), 'ko', { sensitivity: 'base' });
-    const _buildRankedUnivs = (list, prevList) => {
-      const prevRankMap = {};
-      (prevList || [])
-        .filter(ud => ud.tg > 0)
-        .slice()
-        .sort(_rankSort)
-        .forEach((ud, idx) => { prevRankMap[ud.u.name] = idx + 1; });
-      return (list || [])
-        .filter(ud => ud.tg > 0)
-        .slice()
-        .sort(_rankSort)
-        .map((ud, idx) => {
-          const rank = idx + 1;
-          const prevRank = prevRankMap[ud.u.name] || null;
-          const rankDelta = prevRank ? (prevRank - rank) : null;
-          return { ...ud, rank, prevRank, rankDelta };
-        });
-    };
+    // 대학 랭킹 정렬/순위 계산 로직도 board2-briefing-data.js로 분리했습니다.
+    const _rankSort = _b2RankSortUnivs;
+    const _buildRankedUnivs = _b2BuildRankedUnivs;
     const rankedUnivs = _buildRankedUnivs(curStats, prevStats);
     const rankedUnivLeaders = rankedUnivs;
     const monthlyUnivAces = rankedUnivs

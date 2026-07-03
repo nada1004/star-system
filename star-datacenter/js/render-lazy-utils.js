@@ -270,7 +270,7 @@ window.fbCloudSave = window.fbCloudSave || _lazyFbCloudSave;
 window.fbUpdate = window.fbUpdate || _lazyFbUpdate;
 window.cloudLoad = window.cloudLoad || _lazyCloudLoad;
 async function _ensureElboardLoaded(){
-  await _loadScriptOnce('js/elboard.js?v=20260422-01');
+  await _loadScriptOnce('js/elboard.js?v=20260703');
 }
 function _lazyRCfg(C, T){
   _lazyLoadingView(T, C, '설정', '설정 모듈을 불러오는 중...');

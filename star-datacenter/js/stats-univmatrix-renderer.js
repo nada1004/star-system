@@ -40,7 +40,7 @@
           ${univRank.map(u=>`<th style="padding:6px 8px;background:${window.gc(u.name)}22;border:1px solid var(--border);white-space:nowrap;min-width:72px">
             <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
               <span style="background:${window.gc(u.name)};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700">${u.name}</span>
-              <span style="font-size:10px;color:${u.rate>=50?'var(--green)':'var(--red)'};font-weight:700">${u.rate}%</span>
+              <span style="font-size:10px;color:${u.rate>=50?'var(--red)':'var(--text3)'};font-weight:700">${u.rate}%</span>
             </div>
           </th>`).join('')}
           <th style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);white-space:nowrap">총합</th>
@@ -61,7 +61,7 @@
               </td>`;
             }).join('')}
             <td style="background:var(--surface);border:1px solid var(--border);text-align:center;padding:5px 8px">
-              <div style="font-weight:800;font-size:13px;color:${u.rate>=50?'#16a34a':'#dc2626'}">${u.rate}%</div>
+              <div style="font-weight:800;font-size:13px;color:${u.rate>=50?'#dc2626':'#94a3b8'}">${u.rate}%</div>
               <div style="font-size:10px;color:var(--gray-l)">${u.w}W${u.l}L</div>
             </td>
           </tr>`).join('')}

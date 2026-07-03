@@ -5,8 +5,8 @@ function preparePlayerDetailComputedData(opts){
     year='',
     normMap=(v=>String(v||'-')),
     modeTint=10,
-    cWin='#16a34a',
-    cLoss='#dc2626'
+    cWin='#dc2626',
+    cLoss='#94a3b8'
   } = opts || {};
   const p = player;
   const st = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});

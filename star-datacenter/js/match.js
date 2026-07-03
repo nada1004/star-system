@@ -634,7 +634,8 @@ function saveMatch(mode){
             _accumulateSideUnivStats(univW, univL, mA, mB, g);
         });
 
-        const matchData = {_id:matchId,d:date,sa:totalA,sb:totalB, teamALabel:mode==='ck'?'A조':'A팀', teamBLabel:mode==='ck'?'B조':'B팀', teamAMembers:mA,teamBMembers:mB,sets:setsSnap, univWins:univW,univLosses:univL, noSetMode:true };
+        const _defTlA=mode==='ck'?'A조':'A팀', _defTlB=mode==='ck'?'B조':'B팀';
+        const matchData = {_id:matchId,d:date,sa:totalA,sb:totalB, teamALabel:String(bld.teamNameA||'').trim()||_defTlA, teamBLabel:String(bld.teamNameB||'').trim()||_defTlB, teamAMembers:mA,teamBMembers:mB,sets:setsSnap, univWins:univW,univLosses:univL, noSetMode:true };
 
         if(mode==='ck') ckM.unshift(matchData);
         else if (mode==='pro') proM.unshift(matchData);
@@ -768,8 +769,8 @@ function saveMatch(mode){
       });
     });
     ckM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
-      teamALabel:'A조',
-      teamBLabel:'B조',
+      teamALabel:String(bld.teamNameA||'').trim()||'A조',
+      teamBLabel:String(bld.teamNameB||'').trim()||'B조',
       teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
       univWins:univW,univLosses:univL
     });
@@ -784,8 +785,8 @@ function saveMatch(mode){
       });
     });
     proM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
-      teamALabel:'A팀',
-      teamBLabel:'B팀',
+      teamALabel:String(bld.teamNameA||'').trim()||'A팀',
+      teamBLabel:String(bld.teamNameB||'').trim()||'B팀',
       teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
       univWins:univW,univLosses:univL
     });
@@ -809,7 +810,7 @@ function saveMatch(mode){
       }
     }catch(e){ _ttComp=''; }
     ttM.unshift({_id:matchId,d:date,sa:totalA,sb:totalB,
-      teamALabel:'A팀',teamBLabel:'B팀',tierLabel:tLabel,
+      teamALabel:String(bld.teamNameA||'').trim()||'A팀',teamBLabel:String(bld.teamNameB||'').trim()||'B팀',tierLabel:tLabel,
       teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
       compName:_ttComp, n:_ttComp, stage:'general'
     });

@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;800;900&display=optional" rel="stylesheet">
 <script defer crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="css/style.css?v=20260521-ui21"><!-- /* [Z-IDX] */ -->
+<link rel="stylesheet" href="css/style.css?v=20260703"><!-- /* [Z-IDX] */ -->
 <link rel="stylesheet" href="css/ui-improvements.css?v=20260521-v29">
 <link rel="stylesheet" href="css/design-improvements.css?v=20260628-fix01">
 <link rel="stylesheet" href="css/ui-fix-empty-classes.css?v=20260630-ui01">
@@ -499,6 +499,13 @@ if ('serviceWorker' in navigator) {
           </select>
         </div>
       </div>
+      <div id="paste-team-name-wrap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;width:100%">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">🏷️ 팀명</label>
+        <input type="text" id="paste-team-a-name" placeholder="A팀명 (선택)" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:130px" oninput="onPasteTeamNameInput()">
+        <span style="color:var(--gray-l);font-size:12px">vs</span>
+        <input type="text" id="paste-team-b-name" placeholder="B팀명 (선택)" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:130px" oninput="onPasteTeamNameInput()">
+        <span style="font-size:10px;color:var(--gray-l)">(미입력 시 자동 라벨)</span>
+      </div>
       <div id="paste-mode-hint" style="font-size:11px;color:var(--gray-l);width:100%;margin-top:2px"></div>
     </div>
     <!-- 기준 선수 입력 (개인전 TSV용) -->
@@ -691,12 +698,12 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/settings-player-detail.js?v=20260504-03"></script>
 <script defer src="js/settings-univ-detail.js?v=20260702-v01"></script>
 <script defer src="js/competition.js?v=20260515-02"></script>
-<script defer src="js/competition-detail-modal.js?v=20260504-01"></script>
+<script defer src="js/competition-detail-modal.js?v=20260703"></script>
 <script defer src="js/competition-group-records.js?v=20260514-01"></script>
 <script defer src="js/competition-bracket-records.js?v=20260514-01"></script>
 <script defer src="js/competition-bracket-editor.js?v=20260504-01"></script>
 <script defer src="js/competition-group-editor.js?v=20260504-01"></script>
-<script defer src="js/competition-normal-matches.js?v=20260531-02"></script>
+<script defer src="js/competition-normal-matches.js?v=20260703"></script>
 <script defer src="js/history-share.js?v=20260503-01"></script>
 <script defer src="js/render-lazy-utils.js?v=20260628-fix01"></script>
 <script defer src="js/render-core.js?v=20260521-03"></script>
@@ -736,10 +743,10 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/history-external-utils.js?v=20260501-11"></script>
 <script defer src="js/history-external-ui.js?v=20260502-01"></script>
 <script defer src="js/rec-side-profiles.js?v=20260515-03"></script>
-<script defer src="js/history-render-tabs.js?v=20260629-split"></script>
-<script defer src="js/history-rec-summary.js?v=20260629-split"></script>
+<script defer src="js/history-render-tabs.js?v=20260703"></script>
+<script defer src="js/history-rec-summary.js?v=20260703"></script>
 <script defer src="js/history-match-index.js?v=20260629-split"></script>
-<script defer src="js/history-search.js?v=20260628-fix01"></script>
+<script defer src="js/history-search.js?v=20260703"></script>
 <script defer src="js/match.js?v=20260502-03"></script>
 <script defer src="js/match-builder.js?v=20260503-03"></script>
 <script defer src="js/match-builder-core-tabs.js?v=20260510-06"></script>
@@ -747,13 +754,13 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/match-builder-mini.js?v=20260503-01"></script>
 <script defer src="js/match-builder-ck.js?v=20260503-01"></script>
 <script defer src="js/match-builder-univ.js?v=20260503-01"></script>
-<script defer src="js/match-builder-pro.js?v=20260503-01"></script>
+<script defer src="js/match-builder-pro.js?v=20260703"></script>
 <script defer src="js/match-builder-input-views.js?v=20260510-02"></script>
 <script defer src="js/match-builder-bulk-input.js?v=20260503-01"></script>
 <script defer src="js/match-builder-ranks.js?v=20260503-01"></script>
 <script defer src="js/match-builder-record-actions.js?v=20260504-01"></script>
 <script defer src="js/match-builder-record-ops.js?v=20260510-06"></script>
-<script defer src="js/match-builder-record-views.js?v=20260513-01"></script>
+<script defer src="js/match-builder-record-views.js?v=20260703"></script>
 <script defer src="js/match-builder-share-legacy.js?v=20260503-01"></script>
 <script defer src="js/match-builder-share-entry.js?v=20260510-04"></script>
 <script defer src="js/search-parsing.js?v=20260629-split"></script>
@@ -763,7 +770,7 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/search-elo-cleanup.js?v=20260629-split"></script>
 <script defer src="js/search-modals.js?v=20260629-split"></script>
 <script defer src="js/search-pro-paste.js?v=20260626-v29v"></script>
-<script defer src="js/pro-comp-core.js?v=20260523-02"></script>
+<script defer src="js/pro-comp-core.js?v=20260703"></script>
 <script defer src="js/pro-comp-edit-stage.js?v=20260629-split"></script>
 <script defer src="js/pro-comp-edit-bracket.js?v=20260629-split"></script>
 <script defer src="js/pro-comp-edit-paste.js?v=20260629-split"></script>

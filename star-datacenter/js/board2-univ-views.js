@@ -155,19 +155,28 @@ try{
             #b2RaceTierOverlay .b2rt-univbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
             #b2RaceTierOverlay .b2rt-univbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(248,250,252,.98);font-size:11px;font-weight:900;color:var(--text2);cursor:pointer}
             #b2RaceTierOverlay .b2rt-univbtn.on{border-color:rgba(37,99,235,.35);background:linear-gradient(180deg,rgba(239,246,255,.98),rgba(219,234,254,.92));color:#1d4ed8}
+            #b2RaceTierOverlay .b2rt-groupgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:12px;margin-bottom:2px}
+            #b2RaceTierOverlay .b2rt-groupcard{padding:12px 13px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.14);box-shadow:0 10px 22px rgba(15,23,42,.06);cursor:pointer}
+            #b2RaceTierOverlay .b2rt-grouphead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+            #b2RaceTierOverlay .b2rt-groupname{font-size:13px;font-weight:950;color:var(--text1);display:flex;align-items:center;gap:6px;min-width:0}
+            #b2RaceTierOverlay .b2rt-groupcount{font-size:11px;font-weight:900;color:var(--text3);flex-shrink:0}
+            #b2RaceTierOverlay .b2rt-groupavatars{display:flex;flex-wrap:wrap;gap:6px}
+            #b2RaceTierOverlay .b2rt-av{width:44px;height:44px;border-radius:16px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(160deg,rgba(148,163,184,.26),rgba(15,23,42,.12));box-shadow:0 6px 14px rgba(15,23,42,.08);cursor:pointer;padding:0}
+            #b2RaceTierOverlay .b2rt-av img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+            #b2RaceTierOverlay .b2rt-av span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:rgba(255,255,255,.75)}
             #b2RaceTierOverlay .b2rt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-top:12px}
             #b2RaceTierOverlay .b2rt-card{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:0.78;background:#0b1120;border:1px solid rgba(255,255,255,.14);box-shadow:0 10px 22px rgba(15,23,42,.10);cursor:pointer}
             #b2RaceTierOverlay .b2rt-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}
             #b2RaceTierOverlay .b2rt-topbadges{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;z-index:2}
-            #b2RaceTierOverlay .b2rt-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;background:rgba(15,23,42,.48);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px);font-size:9.5px;font-weight:900;color:#fff}
-            #b2RaceTierOverlay .b2rt-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000;color:rgba(255,255,255,.72);background:linear-gradient(160deg,rgba(148,163,184,.30),rgba(15,23,42,.18))}
+            #b2RaceTierOverlay .b2rt-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:rgba(15,23,42,.72);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(10px);font-size:11px;font-weight:900;color:#fff}
+            #b2RaceTierOverlay .b2rt-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000;color:rgba(255,255,255,.85);background:linear-gradient(160deg,rgba(71,85,105,.55),rgba(15,23,42,.42))}
             #b2RaceTierOverlay .b2rt-bottom{position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;gap:4px}
-            #b2RaceTierOverlay .b2rt-bottom::before{content:'';position:absolute;left:0;right:0;bottom:0;height:72%;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.26) 28%,rgba(5,8,20,.78) 100%);pointer-events:none}
+            #b2RaceTierOverlay .b2rt-bottom::before{content:'';position:absolute;left:0;right:0;bottom:0;height:78%;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.40) 24%,rgba(4,7,18,.92) 100%);pointer-events:none}
             #b2RaceTierOverlay .b2rt-bottom>*{position:relative;z-index:1}
-            #b2RaceTierOverlay .b2rt-name{font-size:12px;font-weight:950;color:#fff;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.35)}
-            #b2RaceTierOverlay .b2rt-meta{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:850;color:rgba(255,255,255,.82);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.35)}
-            #b2RaceTierOverlay .b2rt-ubadge{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.18);font-size:9.5px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(6px)}
-            @media (max-width:780px){#b2RaceTierOverlay .su-modal{height:min(860px,calc(100vh - 14px));width:min(100vw - 14px,1120px);border-radius:22px}#b2RaceTierOverlay .b2rt-summary{grid-template-columns:1fr}#b2RaceTierOverlay .b2rt-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}}
+            #b2RaceTierOverlay .b2rt-name{font-size:13px;font-weight:950;color:#fff;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+            #b2RaceTierOverlay .b2rt-meta{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:850;color:rgba(255,255,255,.92);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 5px rgba(0,0,0,.5)}
+            #b2RaceTierOverlay .b2rt-ubadge{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.3);font-size:10.5px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(6px);background:rgba(15,23,42,.55)!important}
+            @media (max-width:780px){#b2RaceTierOverlay .su-modal{height:min(860px,calc(100vh - 14px));width:min(100vw - 14px,1120px);border-radius:22px}#b2RaceTierOverlay .b2rt-summary{grid-template-columns:1fr}#b2RaceTierOverlay .b2rt-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}#b2RaceTierOverlay .b2rt-groupgrid{grid-template-columns:1fr}}
           `;
           document.head.appendChild(st);
         }
@@ -188,6 +197,7 @@ try{
               <div class="su-modal-bd">
                 <div class="b2rt-summary" id="b2rtSummary"></div>
                 <div class="b2rt-univbar" id="b2rtUnivBar"></div>
+                <div id="b2rtGroup"></div>
                 <div class="b2rt-grid" id="b2rtGrid"></div>
               </div>
             </div>
@@ -214,6 +224,7 @@ try{
           const sub = ov2.querySelector('#b2rtSub');
           const summary = ov2.querySelector('#b2rtSummary');
           const bar = ov2.querySelector('#b2rtUnivBar');
+          const group = ov2.querySelector('#b2rtGroup');
           const grid = ov2.querySelector('#b2rtGrid');
           if(title) title.textContent = `종족 비중 · ${st.label || ''}`;
           const filtered = (st.univ && st.univ!=='ALL') ? (st.list||[]).filter(p=>String(p?.univ||'무소속')===st.univ) : (st.list||[]);
@@ -246,6 +257,35 @@ try{
               const label2 = u==='ALL' ? `전체 (${cnt})` : `${u} (${cnt})`;
               return `<button type="button" class="b2rt-univbtn ${on?'on':''}" onclick="window._b2RaceTierSetUniv && window._b2RaceTierSetUniv('${String(u).replace(/'/g,'\\\'')}')">${label2}</button>`;
             }).join('');
+          }
+          if(group){
+            if((st.univ||'ALL')==='ALL'){
+              const groups = new Map();
+              filtered.forEach(p=>{
+                const u = String(p?.univ||'무소속');
+                if(groups.has(u)) groups.get(u).push(p);
+                else groups.set(u,[p]);
+              });
+              const ordered = Array.from(groups.entries()).sort((a,b)=>b[1].length-a[1].length || a[0].localeCompare(b[0]));
+              group.innerHTML = `<div class="b2rt-groupgrid">${ordered.map(([univName, arr])=>{
+                const col = (typeof gc==='function') ? (gc(univName)||'#64748b') : '#64748b';
+                const logo = (univName && univName!=='무소속' && typeof gUI==='function') ? gUI(univName,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(univName,'players','16px'):'16px')) : '';
+                return `<div class="b2rt-groupcard" onclick="window._b2RaceTierSetUniv && window._b2RaceTierSetUniv('${String(univName).replace(/'/g,"\\'")}')">
+                  <div class="b2rt-grouphead">
+                    <div class="b2rt-groupname" title="${String(univName).replace(/"/g,'&quot;')}"><span class="b2rt-pill" style="position:static;background:${col}22;border-color:${col}55;color:${col}">${logo}${univName}</span></div>
+                    <div class="b2rt-groupcount">${arr.length}명</div>
+                  </div>
+                  <div class="b2rt-groupavatars">${arr.slice(0,8).map(p=>{
+                    const name = String(p?.name||'');
+                    const nameJs = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+                    const photo = String(p?.photo||'').trim();
+                    return `<button type="button" class="b2rt-av" onclick="event.stopPropagation();if(typeof openPlayerModal==='function')openPlayerModal('${nameJs}')" title="${name.replace(/"/g,'&quot;')}">${photo?`<img src="${toHttpsUrl(photo).replace(/\"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.parentNode.innerHTML='<span>${String(p?.race||'?')}</span>'">`:`<span>${String(p?.race||'?')}</span>`}</button>`;
+                  }).join('')}</div>
+                </div>`;
+              }).join('')}</div>`;
+            } else {
+              group.innerHTML = '';
+            }
           }
           if(grid){
             grid.innerHTML = filtered.map(p=>{
@@ -329,14 +369,14 @@ try{
             #b2TierUnivOverlay .b2tu-card{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:0.78;background:#0b1120;border:1px solid rgba(255,255,255,.14);box-shadow:0 10px 22px rgba(15,23,42,.10);cursor:pointer}
             #b2TierUnivOverlay .b2tu-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}
             #b2TierUnivOverlay .b2tu-topbadges{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;z-index:2}
-            #b2TierUnivOverlay .b2tu-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;background:rgba(15,23,42,.48);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px);font-size:9.5px;font-weight:900;color:#fff}
-            #b2TierUnivOverlay .b2tu-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000;color:rgba(255,255,255,.72);background:linear-gradient(160deg,rgba(148,163,184,.30),rgba(15,23,42,.18))}
+            #b2TierUnivOverlay .b2tu-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:rgba(15,23,42,.72);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(10px);font-size:11px;font-weight:900;color:#fff}
+            #b2TierUnivOverlay .b2tu-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000;color:rgba(255,255,255,.85);background:linear-gradient(160deg,rgba(71,85,105,.55),rgba(15,23,42,.42))}
             #b2TierUnivOverlay .b2tu-bottom{position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;gap:4px}
-            #b2TierUnivOverlay .b2tu-bottom::before{content:'';position:absolute;left:0;right:0;bottom:0;height:72%;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.26) 28%,rgba(5,8,20,.78) 100%);pointer-events:none}
+            #b2TierUnivOverlay .b2tu-bottom::before{content:'';position:absolute;left:0;right:0;bottom:0;height:78%;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.40) 24%,rgba(4,7,18,.92) 100%);pointer-events:none}
             #b2TierUnivOverlay .b2tu-bottom>*{position:relative;z-index:1}
-            #b2TierUnivOverlay .b2tu-name{font-size:12px;font-weight:950;color:#fff;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.35)}
-            #b2TierUnivOverlay .b2tu-meta{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:850;color:rgba(255,255,255,.82);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.35)}
-            #b2TierUnivOverlay .b2tu-ubadge{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.18);font-size:9.5px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(6px)}
+            #b2TierUnivOverlay .b2tu-name{font-size:13px;font-weight:950;color:#fff;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+            #b2TierUnivOverlay .b2tu-meta{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:850;color:rgba(255,255,255,.92);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 5px rgba(0,0,0,.5)}
+            #b2TierUnivOverlay .b2tu-ubadge{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.3);font-size:10.5px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(6px);background:rgba(15,23,42,.55)!important}
             #b2TierUnivOverlay .b2tu-heat{display:grid;grid-template-columns:repeat(auto-fill,44px);gap:8px}
             #b2TierUnivOverlay .b2tu-av{width:44px;height:44px;border-radius:16px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(160deg,rgba(148,163,184,.26),rgba(15,23,42,.12));box-shadow:0 6px 14px rgba(15,23,42,.08);cursor:pointer;padding:0}
             #b2TierUnivOverlay .b2tu-av img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
@@ -1471,11 +1511,16 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
 
 /* ── 무소속 뷰 ── */
 function _b2FreeView() {
-  // [FIX-FREE-1] dissolved 대학 선수 제외
+  // [FIX-FREE-2] 대학 해체 시 "소속 선수 이동" 옵션을 껐으면(confirmDissolve, movePlayers=false)
+  // 선수의 p.univ 값이 해체된 대학명 그대로 남습니다. 이 경우 대학별 화면(univList)에는
+  // 해체된 대학이 빠져 있어 표시되지 않고, 기존 무소속 필터는 pu가 ''나 '무소속'일 때만
+  // 통과시켜서 이 선수들이 어느 현황판 화면에도 노출되지 않고 사라지는 문제가 있었습니다.
+  // → 해체된 대학 소속(미이동) 선수도 무소속 목록에 포함되도록 조건을 넓혔습니다.
   const _freeDissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved).map(u=>String(u.name||'').trim()));
   const freeMembers = players.filter(p => {
     const pu = String(p?.univ||'').trim();
-    return (!pu || pu === '무소속') && !p.hidden && !p.retired && !p.hideFromBoard && !_freeDissSet.has(pu);
+    const isFreeOrOrphaned = !pu || pu === '무소속' || _freeDissSet.has(pu);
+    return isFreeOrOrphaned && !p.hidden && !p.retired && !p.hideFromBoard;
   });
   if (!freeMembers.length) return `<div style="text-align:center;color:var(--text3);padding:40px">무소속 멤버가 없습니다</div>`;
 
@@ -2195,36 +2240,31 @@ function _b2LineupView() {
   return `<div style="max-width:1360px;margin:0 auto">${_b2LineupPoster(_b2LineupUniv, col, false)}</div>`;
 }
 
-async function saveB2LineupImg() {
-  const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
-  if (!_b2LineupUniv || !univList.some(u=>u.name===_b2LineupUniv)) _b2LineupUniv = univList[0] ? univList[0].name : '';
-  if (!_b2LineupUniv) { alert('저장할 대학이 없습니다.'); return; }
-
-  const btn = document.querySelector('[onclick="saveB2LineupImg()"]');
+// [REFACTOR] saveB2LineupImg / saveB2FreeImg 공통 캡처 로직
+// 두 함수가 거의 동일한 "임시 div 생성 → 아이콘 주입 → 캡처 → 정리" 흐름을 중복 구현하고 있어
+// 공통 헬퍼로 묶었습니다. (동작은 기존과 동일, 유지보수 시 한 곳만 고치면 되도록 개선)
+async function _b2CaptureBoardHtml({ btnSelector, cardWidth, pad, innerHtml, heightPad, filename, errorLabel }) {
+  const btn = document.querySelector(btnSelector);
   if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
 
-  const CARD_W = 1360;
-  const PAD = 0;
-  const col = gc(_b2LineupUniv);
-
   const tmpDiv = document.createElement('div');
-  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:${PAD}px;background:#f0f2f5;box-sizing:border-box;width:${CARD_W + PAD * 2}px`;
-  tmpDiv.innerHTML = _b2LineupPoster(_b2LineupUniv, col, true);
+  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:${pad}px;background:#f0f2f5;box-sizing:border-box;width:${cardWidth + pad * 2}px`;
+  tmpDiv.innerHTML = innerHtml;
   document.body.appendChild(tmpDiv);
+  // no-export 요소 제거 (접기 버튼 등)
   tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el => el.remove());
 
   await new Promise(r => setTimeout(r, 100));
   injectUnivIcons(tmpDiv);
 
-  const h = tmpDiv.scrollHeight + 8;
+  const h = tmpDiv.scrollHeight + heightPad;
   const w = tmpDiv.scrollWidth;
-  const fname = `대학라인업_${_b2LineupUniv}_` + new Date().toISOString().slice(0,10) + '.png';
 
   try {
     if (typeof _captureAndSave !== 'function') throw new Error('이미지 저장 기능을 불러오지 못했습니다.');
-    await _captureAndSave(tmpDiv, w, h, fname);
+    await _captureAndSave(tmpDiv, w, h, filename);
   } catch(e) {
-    console.error('[라인업 이미지 저장 실패]', e);
+    console.error(`[${errorLabel} 이미지 저장 실패]`, e);
     alert('❌ 이미지 저장 실패\n\n' + (e.message || '알 수 없는 오류가 발생했습니다.'));
   }
   finally {
@@ -2233,38 +2273,33 @@ async function saveB2LineupImg() {
   }
 }
 
+async function saveB2LineupImg() {
+  const univList = _b2VisUnivs().filter(u => u.name !== '무소속');
+  if (!_b2LineupUniv || !univList.some(u=>u.name===_b2LineupUniv)) _b2LineupUniv = univList[0] ? univList[0].name : '';
+  if (!_b2LineupUniv) { alert('저장할 대학이 없습니다.'); return; }
+
+  const col = gc(_b2LineupUniv);
+  await _b2CaptureBoardHtml({
+    btnSelector: '[onclick="saveB2LineupImg()"]',
+    cardWidth: 1360,
+    pad: 0,
+    innerHtml: _b2LineupPoster(_b2LineupUniv, col, true),
+    heightPad: 8,
+    filename: `대학라인업_${_b2LineupUniv}_` + new Date().toISOString().slice(0,10) + '.png',
+    errorLabel: '라인업'
+  });
+}
+
 async function saveB2FreeImg() {
-  const btn = document.querySelector('[onclick="saveB2FreeImg()"]');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
-
-  const CARD_W = 720;
-  const PAD = 24;
-
-  const tmpDiv = document.createElement('div');
-  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:0;padding:${PAD}px;background:#f0f2f5;box-sizing:border-box;width:${CARD_W + PAD * 2}px`;
-  tmpDiv.innerHTML = `<style>.b2-bottom-img{max-width:160px;max-height:130px;object-fit:contain;}</style>${_b2FreeView()}`;
-  document.body.appendChild(tmpDiv);
-  // no-export 요소 제거 (접기 버튼 등)
-  tmpDiv.querySelectorAll('.no-export,.no-export-movebtns').forEach(el => el.remove());
-
-  await new Promise(r => setTimeout(r, 100));
-  injectUnivIcons(tmpDiv);
-
-  const h = tmpDiv.scrollHeight + 32;
-  const w = tmpDiv.scrollWidth;
-  const fname = '무소속현황판_' + new Date().toISOString().slice(0,10) + '.png';
-
-  try {
-    if (typeof _captureAndSave !== 'function') throw new Error('이미지 저장 기능을 불러오지 못했습니다.');
-    await _captureAndSave(tmpDiv, w, h, fname);
-  } catch(e) {
-    console.error('[무소속 현황판 이미지 저장 실패]', e);
-    alert('❌ 이미지 저장 실패\n\n' + (e.message || '알 수 없는 오류가 발생했습니다.'));
-  }
-  finally {
-    document.body.removeChild(tmpDiv);
-    if (btn) { btn.disabled = false; btn.textContent = '📷 이미지저장'; }
-  }
+  await _b2CaptureBoardHtml({
+    btnSelector: '[onclick="saveB2FreeImg()"]',
+    cardWidth: 720,
+    pad: 24,
+    innerHtml: `<style>.b2-bottom-img{max-width:160px;max-height:130px;object-fit:contain;}</style>${_b2FreeView()}`,
+    heightPad: 32,
+    filename: '무소속현황판_' + new Date().toISOString().slice(0,10) + '.png',
+    errorLabel: '무소속 현황판'
+  });
 }
 
 function _b2ContrastColor(hex) {

@@ -44,6 +44,9 @@ function rTotal(C,T){
   const _showBulk=isLoggedIn&&_bulkEditMode;
   const _ncols=(isLoggedIn?11:10)+(_showBulk?1:0);
   const _viewLabel=totalViewMode==='gallery'?'카드형':(totalViewMode==='focus'?'상세형':'리스트형');
+  // [참고] p.hidden / p.hideFromBoard 는 이름과 달리 "현황판(board2)에서만" 숨기는 용도입니다
+  // (cloud-board-render.js 숨김 버튼 문구: "현황판에서 숨김"). 그래서 스트리머탭(여기)에서는
+  // 이 두 플래그를 의도적으로 무시하고 retired(은퇴) 여부만 걸러냅니다 — 실수로 지운 게 아닙니다.
   const _visiblePlayers = _pl.filter(p=>{
     if(!p || p.retired) return false;
     if(totalRaceFilter!=='전체' && p.race!==totalRaceFilter) return false;
@@ -904,6 +907,9 @@ function saveBulkEdit(){
     if(u) p.univ=u;
     if(r) p.race=r;
     if(g) p.gender=g;
+    // p.hideFromBoard: 이 일괄편집에서 쓰는 "현황판 숨김" 플래그.
+    // cloud-board-render.js의 개별 숨김 버튼은 p.hidden을 토글하는데, 용도가 같아 보이지만
+    // 별개 필드입니다. 현황판(board2) 각 뷰는 두 플래그를 모두 검사합니다(!p.hidden && !p.hideFromBoard).
     if(h==='hide') p.hideFromBoard=true;
     else if(h==='show') p.hideFromBoard=undefined;
   });

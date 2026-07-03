@@ -2,35 +2,32 @@ function statsOverviewHTML(){
   const proMatchIds=statsProMatchIds();
   const univStats={};
   const _players = Array.isArray(players) ? players : [];
+  const rv={T:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}},Z:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}},P:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}}};
+  const mapStats={};
   _players.forEach(p=>{
-    if(!univStats[p.univ])univStats[p.univ]={w:0,l:0,color:gc(p.univ)};
     const h=statsNonProHist(p);
-    univStats[p.univ].w+=h.filter(x=>x.result==='승').length;
-    univStats[p.univ].l+=h.filter(x=>x.result==='패').length;
+    if(!univStats[p.univ])univStats[p.univ]={w:0,l:0,color:gc(p.univ)};
+    let _uw=0,_ul=0;
+    h.forEach(x=>{
+      if(x.result==='승')_uw++; else if(x.result==='패')_ul++;
+      if(p.history&&p.race&&x.oppRace&&rv[p.race]&&rv[p.race][x.oppRace]){
+        if(x.result==='승')rv[p.race][x.oppRace].w++;
+        else if(x.result==='패')rv[p.race][x.oppRace].l++;
+      }
+      if(x.map&&x.map!=='-'){
+        if(!mapStats[x.map])mapStats[x.map]={w:0,l:0};
+        if(x.result==='승')mapStats[x.map].w++;
+        else if(x.result==='패')mapStats[x.map].l++;
+      }
+    });
+    univStats[p.univ].w+=_uw;
+    univStats[p.univ].l+=_ul;
   });
   const univRank=Object.entries(univStats)
     .map(([name,s])=>({name,w:s.w,l:s.l,color:s.color,rate:s.w+s.l===0?0:Math.round(s.w/(s.w+s.l)*100)}))
     .filter(u=>u.w+u.l>=10)
     .sort((a,b)=>b.w-a.w||b.rate-a.rate);
 
-  const rv={T:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}},Z:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}},P:{T:{w:0,l:0},Z:{w:0,l:0},P:{w:0,l:0}}};
-  _players.forEach(p=>{
-    if(!p.history||!p.race)return;
-    statsNonProHist(p).forEach(h=>{
-      if(!h.oppRace||!rv[p.race]||!rv[p.race][h.oppRace])return;
-      if(h.result==='승')rv[p.race][h.oppRace].w++;
-      else if(h.result==='패')rv[p.race][h.oppRace].l++;
-    });
-  });
-  const mapStats={};
-  _players.forEach(p=>{
-    statsNonProHist(p).forEach(h=>{
-      if(!h.map||h.map==='-')return;
-      if(!mapStats[h.map])mapStats[h.map]={w:0,l:0};
-      if(h.result==='승')mapStats[h.map].w++;
-      else if(h.result==='패')mapStats[h.map].l++;
-    });
-  });
   const mapRank=Object.entries(mapStats).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l})).sort((a,b)=>b.total-a.total);
   function calcFormPlayers(genderFilter, streakFilter){
     // streakFilter: '승' = 연승자만, '패' = 연패자만, undefined = 전체

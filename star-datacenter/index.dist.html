@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;800;900&display=optional" rel="stylesheet">
 <script defer crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="css/style.css?v=20260521-ui21"><!-- /* [Z-IDX] */ -->
+<link rel="stylesheet" href="css/style.css?v=20260703"><!-- /* [Z-IDX] */ -->
 <link rel="stylesheet" href="css/ui-improvements.css?v=20260521-v29">
 <link rel="stylesheet" href="css/design-improvements.css?v=20260628-fix01">
 <link rel="stylesheet" href="css/ui-fix-empty-classes.css?v=20260630-ui01">
@@ -498,6 +498,13 @@ if ('serviceWorker' in navigator) {
             <option value="bkt">🏆 토너먼트</option>
           </select>
         </div>
+      </div>
+      <div id="paste-team-name-wrap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;width:100%">
+        <label style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">🏷️ 팀명</label>
+        <input type="text" id="paste-team-a-name" placeholder="A팀명 (선택)" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:130px" oninput="onPasteTeamNameInput()">
+        <span style="color:var(--gray-l);font-size:12px">vs</span>
+        <input type="text" id="paste-team-b-name" placeholder="B팀명 (선택)" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:130px" oninput="onPasteTeamNameInput()">
+        <span style="font-size:10px;color:var(--gray-l)">(미입력 시 자동 라벨)</span>
       </div>
       <div id="paste-mode-hint" style="font-size:11px;color:var(--gray-l);width:100%;margin-top:2px"></div>
     </div>

@@ -185,8 +185,8 @@ function _h2hPlayerBgPanel(pName, isWin, isLose){
   const loseFx = isLose ? 'filter:grayscale(.1) saturate(1.01) brightness(.99);opacity:.95;' : '';
   const txtCol = isLose ? 'rgba(255,255,255,.78)' : '#fff';
   const txtCol2 = isLose ? 'rgba(255,255,255,.60)' : 'rgba(255,255,255,.86)';
-  const frameCol = isWin ? '#22c55e' : 'rgba(148,163,184,.35)';
-  const frameShadow = isWin ? '0 18px 38px rgba(34,197,94,.24)' : '0 10px 24px rgba(15,23,42,.08)';
+  const frameCol = isWin ? '#dc2626' : 'rgba(148,163,184,.35)';
+  const frameShadow = isWin ? '0 18px 38px rgba(220,38,38,.24)' : '0 10px 24px rgba(15,23,42,.08)';
   const overlayBg = isWin
     ? 'linear-gradient(180deg, rgba(255,255,255,.04) 0%, rgba(15,23,42,.12) 42%, rgba(15,23,42,.54) 100%)'
     : 'linear-gradient(180deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.10) 22%, rgba(15,23,42,.22) 52%, rgba(15,23,42,.70) 100%)';
@@ -284,7 +284,7 @@ function _h2hMinimalCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
         <span style="font-size:${isMb?13:15}px;color:#94a3b8;margin:0 4px">:</span>
         <span style="color:${sc2}">${p2wins}</span>
       </div>
-      ${(win1||win2)?`<div style="font-size:8px;font-weight:800;padding:1px 6px;border-radius:99px;background:${win1?p1col:p2col}22;color:${win1?p1col:p2col};border:1px solid ${win1?p1col:p2col}44;white-space:nowrap">${win1?s.p1:s.p2} 승</div>`:''}
+      ${(win1||win2)?`<div style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;background:${win1?p1col:p2col}22;color:${win1?p1col:p2col};border:1px solid ${win1?p1col:p2col}44;white-space:nowrap">${win1?s.p1:s.p2} 승</div>`:''}
     </div>
     <div style="display:flex;align-items:center;gap:${isMb?6:8}px;flex:1;min-width:0">
       ${av(s.p2, p2col)}
@@ -506,7 +506,7 @@ function _h2hGlassCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
           <span style="font-size:${isMb?14:16}px;color:#94a3b8;font-weight:900;margin:0 6px">:</span>
           <span style="color:${sc2}">${p2wins}</span>
         </div>
-        ${(win1||win2)?`<div style="font-size:8px;font-weight:900;padding:1px 8px;border-radius:999px;background:${win1?p1col:p2col}22;color:${win1?p1col:p2col};border:1px solid ${win1?p1col:p2col}33;white-space:nowrap">${win1?s.p1:s.p2} 승</div>`:''}
+        ${(win1||win2)?`<div style="font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;background:${win1?p1col:p2col}22;color:${win1?p1col:p2col};border:1px solid ${win1?p1col:p2col}33;white-space:nowrap">${win1?s.p1:s.p2} 승</div>`:''}
       </div>
       <div style="min-width:0;display:flex;flex-direction:column;gap:3px;text-align:right;align-items:flex-end">
         <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win2?p2col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p2}</div>
@@ -669,7 +669,7 @@ function _h2hGridCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
           <span style="font-size:${isMb?14:16}px;color:#94a3b8;font-weight:900;margin:0 6px">:</span>
           <span style="color:${win2?p2col:(win1?'#94a3b8':'var(--text2)')}">${p2wins}</span>
         </div>
-        ${(win1||win2)?`<span style="font-size:8px;font-weight:900;padding:1px 8px;border-radius:999px;background:${win1?p1col:p2col}22;color:${win1?p1col:p2col};border:1px solid ${win1?p1col:p2col}33;white-space:nowrap">${win1?s.p1:s.p2} 승</span>`:''}
+        ${(win1||win2)?`<span style="font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;background:${win1?p1col:p2col}22;color:${win1?p1col:p2col};border:1px solid ${win1?p1col:p2col}33;white-space:nowrap">${win1?s.p1:s.p2} 승</span>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:10px;min-width:0;justify-content:flex-end;text-align:right">
         <div style="min-width:0">
@@ -1006,8 +1006,8 @@ function indRecordsHTML(){
     const p2col=p2univ?gc(p2univ):'#1D9E75';
     const _indP1Win = p1wins > p2wins;
     const _indP2Win = p2wins > p1wins;
-    const _indScoreColP1 = _indP1Win ? (p1col||'#16a34a') : _indP2Win ? '#94a3b8' : 'var(--text2)';
-    const _indScoreColP2 = _indP2Win ? (p2col||'#16a34a') : _indP1Win ? '#94a3b8' : 'var(--text2)';
+    const _indScoreColP1 = _indP1Win ? (p1col||'#dc2626') : _indP2Win ? '#94a3b8' : 'var(--text2)';
+    const _indScoreColP2 = _indP2Win ? (p2col||'#dc2626') : _indP1Win ? '#94a3b8' : 'var(--text2)';
     const p1bg=_h2hPlayerBgPanel(s.p1, winner===s.p1, winner && winner!==s.p1);
     const p2bg=_h2hPlayerBgPanel(s.p2, winner===s.p2, winner && winner!==s.p2);
     const _indWrapFx = _safeHeadToHeadSideFx(p1col, p2col);
@@ -1177,8 +1177,8 @@ function gjRecordsHTML(proOnly){
     const _gjP2Win = p2wins > p1wins;
     const _gjP1Col = gj_p1univ?gc(gj_p1univ):'#378ADD';
     const _gjP2Col = gj_p2univ?gc(gj_p2univ):'#1D9E75';
-    const _gjScoreColP1 = _gjP1Win ? (_gjP1Col||'#16a34a') : _gjP2Win ? '#94a3b8' : 'var(--text2)';
-    const _gjScoreColP2 = _gjP2Win ? (_gjP2Col||'#16a34a') : _gjP1Win ? '#94a3b8' : 'var(--text2)';
+    const _gjScoreColP1 = _gjP1Win ? (_gjP1Col||'#dc2626') : _gjP2Win ? '#94a3b8' : 'var(--text2)';
+    const _gjScoreColP2 = _gjP2Win ? (_gjP2Col||'#dc2626') : _gjP1Win ? '#94a3b8' : 'var(--text2)';
     const gj_typeLabel=proOnly?'프로리그 끝장전':'끝장전';
     const gj_typeBg=proOnly?'#E1F5EE':'#FAECE7';
     const gj_typeColor=proOnly?'#085041':'#993C1D';

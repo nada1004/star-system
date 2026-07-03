@@ -417,10 +417,13 @@ function rBoard2(C, T) {
         </select>
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
-      <div style="display:flex;gap:4px">
-        ${_lcModeBtn('default','🖼️ 기본')}
-        ${_lcModeBtn('stat','📊 통계카드')}
-        ${_lcModeBtn('table','🗂️ 테이블')}
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:11px;font-weight:800;color:var(--text3);flex-shrink:0">모드</span>
+        <div style="display:flex;gap:4px">
+          ${_lcModeBtn('default','🖼️ 기본')}
+          ${_lcModeBtn('stat','📊 통계카드')}
+          ${_lcModeBtn('table','🗂️ 테이블')}
+        </div>
       </div>
       <button class="b2-toolbar-btn" onclick="saveB2LineupImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;

@@ -454,6 +454,7 @@ function buildTierTourInputHTML(){
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
       <div class="ck-panel">
         <h4>🔵 팀 A (${mA.length}명)</h4>
+        <input type="text" id="tt-tla-input" value="${(bld.teamNameA||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 A팀)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;margin-bottom:6px;font-weight:700" onchange="BLD['tt'].teamNameA=this.value">
         <div style="display:flex;gap:6px;margin-bottom:6px">
           <input type="text" id="tt-a-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="ttSearchPlayer('A')">
         </div>
@@ -462,6 +463,7 @@ function buildTierTourInputHTML(){
       </div>
       <div class="ck-panel">
         <h4>🔴 팀 B (${mB.length}명)</h4>
+        <input type="text" id="tt-tlb-input" value="${(bld.teamNameB||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 B팀)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;margin-bottom:6px;font-weight:700" onchange="BLD['tt'].teamNameB=this.value">
         <div style="display:flex;gap:6px;margin-bottom:6px">
           <input type="text" id="tt-b-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="ttSearchPlayer('B')">
         </div>

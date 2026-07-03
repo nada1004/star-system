@@ -26,6 +26,32 @@ function onPasteModeChange(val) {
       }).join('');
     }
   }
+  _updatePasteTeamNameFields(val);
+}
+
+/* ── 팀명 직접 입력(자동인식 팝업) ── */
+function _updatePasteTeamNameFields(val){
+  const wrap = document.getElementById('paste-team-name-wrap');
+  if (!wrap) return;
+  const fm = window._forcedPasteMode;
+  const show = (val === 'ck' || val === 'comp' || fm === 'tt' || fm === 'pro' || fm === 'ck');
+  wrap.style.display = show ? 'flex' : 'none';
+  const aInp = document.getElementById('paste-team-a-name');
+  const bInp = document.getElementById('paste-team-b-name');
+  if (aInp) aInp.placeholder = (val === 'ck') ? 'A조명 (선택)' : 'A팀명 (선택)';
+  if (bInp) bInp.placeholder = (val === 'ck') ? 'B조명 (선택)' : 'B팀명 (선택)';
+}
+
+function onPasteTeamNameInput(){
+  const a = (document.getElementById('paste-team-a-name')?.value || '').trim();
+  const b = (document.getElementById('paste-team-b-name')?.value || '').trim();
+  window._pasteForceTeamA = a || null;
+  window._pasteForceTeamB = b || null;
+  if ((document.getElementById('paste-input')?.value || '').trim()) {
+    pastePreview();
+  } else if (window._pasteResults) {
+    renderPastePreview(window._pasteResults, window._pasteErrors || []);
+  }
 }
 
 function setPasteMatchMode(mode){
@@ -143,6 +169,10 @@ function openPasteModal() {
   if (refWrap) refWrap.style.display = 'none';
   const refInput = document.getElementById('paste-ref-player');
   if (refInput) refInput.value = '';
+  const teamAInp = document.getElementById('paste-team-a-name');
+  const teamBInp = document.getElementById('paste-team-b-name');
+  if (teamAInp) teamAInp.value = '';
+  if (teamBInp) teamBInp.value = '';
 
   const dateInput = document.getElementById('paste-date');
   if (dateInput) {
@@ -257,6 +287,7 @@ function openTTPasteModal() {
     if (inp) { inp.placeholder = '티어대회명 입력 (선택)'; inp.value = _ttCurComp||''; }
     compWrap.style.display = 'flex';
   }
+  _updatePasteTeamNameFields('mini');
   // (요청사항) 티어대회 구분(일반/조별리그/토너먼트)
   try{
     const stWrap = document.getElementById('paste-tt-stage-wrap');

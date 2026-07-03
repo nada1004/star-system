@@ -522,18 +522,18 @@ function proCompLeague(tn) {
         const padB = Math.max(8, Math.round(12*_ls));
         const bgImg = (p && p.photo) ? `background-image:url('${toHttpsUrl(p.photo)}');` : '';
         const bgFallback = (!p || !p.photo)
-          ? `background:linear-gradient(135deg,${isWin?'#16a34a':'#64748b'}33,${isWin?'#16a34a':'#64748b'}11);`
+          ? `background:linear-gradient(135deg,${isWin?'#dc2626':'#64748b'}33,${isWin?'#dc2626':'#64748b'}11);`
           : '';
         const name = p ? (p.name||'') : '';
         const initial = (name||'미').slice(0,1);
-        return `<div ${clickAttr} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:${padT}px ${padX}px ${padB}px;border-radius:14px;width:${minW}px;height:${minH}px;border:2px solid ${isWin?'#16a34a':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(34,197,94,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
+        return `<div ${clickAttr} style="position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:${padT}px ${padX}px ${padB}px;border-radius:14px;width:${minW}px;height:${minH}px;border:2px solid ${isWin?'#dc2626':'var(--border)'};box-shadow:${isWin?'0 10px 24px rgba(220,38,38,.18)':'0 8px 18px rgba(15,23,42,.08)'};cursor:${canClick?'pointer':'default'};${bgFallback}${bgImg}background-size:${bgSize};background-position:center;background-repeat:no-repeat;${isLose?'opacity:.92;filter:grayscale(1);':''}">
           <div style="position:absolute;inset:0;background:${p&&p.photo
             ? `linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.28) 50%, rgba(15,23,42,.72) 100%)`
             : `linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.18))`
           }"></div>
           ${(!p||!p.photo)?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(26,Math.round(minH*0.28))}px;font-weight:1000;color:rgba(15,23,42,.20)">${initial}</div>`:''}
           <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;width:100%">
-            <div style="font-weight:1000;font-size:16px;line-height:1.1;color:${p&&p.photo?'#fff':(isWin?'#16a34a':'#0f172a')};text-shadow:${p&&p.photo?'0 2px 10px rgba(0,0,0,.45)':'none'}">${name||'미정'}</div>
+            <div style="font-weight:1000;font-size:16px;line-height:1.1;color:${p&&p.photo?'#fff':(isWin?'#dc2626':'#0f172a')};text-shadow:${p&&p.photo?'0 2px 10px rgba(0,0,0,.45)':'none'}">${name||'미정'}</div>
             <div style="font-size:11px;font-weight:800;color:${p&&p.photo?'rgba(255,255,255,.85)':'#64748b'};text-shadow:${p&&p.photo?'0 2px 10px rgba(0,0,0,.35)':'none'}">${p?.univ||''}</div>
             <div style="display:flex;gap:4px;align-items:center;justify-content:center;flex-wrap:wrap">
               ${_rb(p)}${_tb(p)}
@@ -573,10 +573,10 @@ function proCompLeague(tn) {
         const isLose = isDone && !isWin;
         return `<span style="display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:230px">
           ${_photo(p,name,isLose)}
-          <span ${click} style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;font-weight:${isWin?900:700};color:${isWin?'#16a34a':(isLose?'var(--gray-l)':'var(--text)')};${isLose?'opacity:.75;':''}">${safe(name||'?')}</span>
+          <span ${click} style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;font-weight:${isWin?900:700};color:${isWin?'#dc2626':(isLose?'var(--gray-l)':'var(--text)')};${isLose?'opacity:.75;':''}">${safe(name||'?')}</span>
           ${_rb(p)}${_tb(p)}
           ${_univ(p)}
-          ${isDone?`<span style="font-size:10px;font-weight:900;color:${isWin?'#16a34a':'#94a3b8'}">${isWin?'WIN':'LOSE'}</span>`:''}
+          ${isDone?`<span style="font-size:10px;font-weight:900;color:${isWin?'#dc2626':'#94a3b8'}">${isWin?'WIN':'LOSE'}</span>`:''}
         </span>`;
       };
       const _fxClsLeague = (typeof _recSideFxClass==='function') ? _recSideFxClass('procomp') : (_fxOn ? ` rec-sidefx rec-sidefx--${_fxMode}` : '');
@@ -1764,10 +1764,10 @@ function proCompTourMatchInput(tn){
       const isLose = isDone && !isWin;
       return `<span style="display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:230px">
         ${_photo(p,name,isLose)}
-        <span ${click} style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;font-weight:${isWin?900:700};color:${isWin?'#16a34a':(isLose?'var(--gray-l)':'var(--text)')};${isLose?'opacity:.75;':''}">${safe(name||'?')}</span>
+        <span ${click} style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;font-weight:${isWin?900:700};color:${isWin?'#dc2626':(isLose?'var(--gray-l)':'var(--text)')};${isLose?'opacity:.75;':''}">${safe(name||'?')}</span>
         ${_rb(p)}${_tb(p)}
         ${_univ(p)}
-        ${isDone?`<span style="font-size:10px;font-weight:900;color:${isWin?'#16a34a':'#94a3b8'}">${isWin?'WIN':'LOSE'}</span>`:''}
+        ${isDone?`<span style="font-size:10px;font-weight:900;color:${isWin?'#dc2626':'#94a3b8'}">${isWin?'WIN':'LOSE'}</span>`:''}
       </span>`;
     };
     const _srcChip = item.src==='bkt'

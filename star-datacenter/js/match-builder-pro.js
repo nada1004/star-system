@@ -99,6 +99,7 @@ function buildProInputHTML(){
     <div class="mb-split">
       <div class="ck-panel">
         <h4>🔵 팀 A (${mA.length}명)</h4>
+        <input type="text" id="pro-tla-input" value="${(bld.teamNameA||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 A팀)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;margin-bottom:6px;font-weight:700" onchange="BLD['pro'].teamNameA=this.value">
         <div style="display:flex;gap:6px;margin-bottom:6px">
           <input type="text" id="pro-a-search" placeholder="🔍 이름·메모/별명 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="proSearchPlayer('A')" onkeydown="if(event.key==='Enter')proAddByQuery('A')">
         </div>
@@ -107,6 +108,7 @@ function buildProInputHTML(){
       </div>
       <div class="ck-panel">
         <h4>🔴 팀 B (${mB.length}명)</h4>
+        <input type="text" id="pro-tlb-input" value="${(bld.teamNameB||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 B팀)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;margin-bottom:6px;font-weight:700" onchange="BLD['pro'].teamNameB=this.value">
         <div style="display:flex;gap:6px;margin-bottom:6px">
           <input type="text" id="pro-b-search" placeholder="🔍 이름·메모/별명 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="proSearchPlayer('B')" onkeydown="if(event.key==='Enter')proAddByQuery('B')">
         </div>
@@ -318,16 +320,16 @@ function proTeamResultsHTML(){
     const a=m.teamALabel||'A팀'; const b=m.teamBLabel||'B팀';
     const sa=m.scoreA||0; const sb=m.scoreB||0;
     const aWin=sa>sb; const bWin=sb>sa; const draw=sa===sb&&sa>0;
-    const aCol=aWin?'#16a34a':aWin===false&&bWin?'var(--gray-l)':'var(--text)';
-    const bCol=bWin?'#16a34a':bWin===false&&aWin?'var(--gray-l)':'var(--text)';
+    const aCol=aWin?'var(--win-col)':aWin===false&&bWin?'var(--lose-col)':'var(--text)';
+    const bCol=bWin?'var(--win-col)':bWin===false&&aWin?'var(--lose-col)':'var(--text)';
     h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap">
       <span style="font-size:12px;font-weight:600;color:var(--text3);white-space:nowrap;min-width:80px">${m.d||'날짜미정'}</span>
       <div style="flex:1;display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap">
         <span style="font-weight:${aWin?'800':'500'};color:${aCol}">${a}</span>
         <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;padding:3px 10px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
-          <span style="color:${aWin?'#16a34a':'var(--text3)'}">${sa}</span>
+          <span style="color:${aWin?'var(--win-col)':bWin?'var(--lose-col)':'var(--text3)'}">${sa}</span>
           <span style="color:var(--gray-l);font-size:11px;margin:0 2px">:</span>
-          <span style="color:${bWin?'#16a34a':'var(--text3)'}">${sb}</span>
+          <span style="color:${bWin?'var(--win-col)':aWin?'var(--lose-col)':'var(--text3)'}">${sb}</span>
         </div>
         <span style="font-weight:${bWin?'800':'500'};color:${bCol}">${b}</span>
       </div>

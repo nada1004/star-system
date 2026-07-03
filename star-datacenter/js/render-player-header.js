@@ -21,7 +21,7 @@ function buildPlayerHeaderCardHTML(opts){
     pmPhotoSz=76, pmPhotoR=16, pmNameFs=20, pmMetaFs=11,
     pmMetaPad='3px 10px', pmMetaPad2='3px 9px', pmStatsPad='14px 6px',
     pmStatsNum1=14, pmStatsBig=22, tot=0, wr=0,
-    cWin='#16a34a', cLoss='#dc2626', histAll=[], eloVal=1000,
+    cWin='#dc2626', cLoss='#94a3b8', histAll=[], eloVal=1000,
     eloColor='#16a34a', eloSparkHTML='', isMobile=false, layoutMode='default'
   } = opts || {};
   const _isMobile = isMobile || (typeof window!=='undefined' && window.innerWidth<=768);
@@ -216,7 +216,7 @@ function buildPlayerHeaderCardHTML(opts){
 }
 
 function buildPlayerSummaryStripHTML(opts){
-  const { histAll=[], player, cWin='#16a34a', cLoss='#dc2626' } = opts || {};
+  const { histAll=[], player, cWin='#dc2626', cLoss='#94a3b8' } = opts || {};
   const p = player;
   if(!p) return '';
   const hist = histAll.slice();

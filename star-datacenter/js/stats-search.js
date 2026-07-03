@@ -80,7 +80,7 @@ function onGlobalSearch(val){
         <div style="font-size:11px;color:var(--gray-l);margin-top:1px"><span style="background:${(TIER_CFG[p.tier]||{bg:'#f1f5f9'}).bg};color:${(TIER_CFG[p.tier]||{col:'#475569'}).col};padding:1px 6px;border-radius:4px;font-size:10px;font-weight:800">${hl(p.tier,mainQ)}</span> · ${hl(p.univ,mainQ)}${p.role?` · <span style="color:var(--blue);font-size:10px;font-weight:600">${hl(p.role,mainQ)}</span>`:''} · <span style="background:${rc.bg};color:${rc.col};padding:0 4px;border-radius:3px;font-size:10px;font-weight:700">${rc.label}</span></div>
       </div>
       <div style="text-align:right;flex-shrink:0">
-        <div style="font-weight:700;font-size:12px;color:${wr>=50?'#16a34a':'#dc2626'}">${wr}%</div>
+        <div style="font-weight:700;font-size:12px;color:${wr>=50?'#dc2626':'#94a3b8'}">${wr}%</div>
         <div style="font-size:10px;color:var(--gray-l)">${p.win}승${p.loss}패</div>
         ${p.points?`<div style="font-size:10px;color:var(--gold);font-weight:700">${p.points>0?'+':''}${p.points}pt</div>`:''}
       </div>
@@ -239,7 +239,7 @@ function statsPlayerVsHTML(){
   const stA=getStats(pA), stB=getStats(pB);
 
   function formDots(rec){
-    return(rec||[]).map(h=>`<span title="${h.date} vs ${h.opp}" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:${h.result==='승'?'#16a34a':'#dc2626'};color:#fff;font-size:9px;font-weight:900;text-align:center;line-height:18px">${h.result==='승'?'W':'L'}</span>`).join('');
+    return(rec||[]).map(h=>`<span title="${h.date} vs ${h.opp}" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:${h.result==='승'?'#dc2626':'#94a3b8'};color:#fff;font-size:9px;font-weight:900;text-align:center;line-height:18px">${h.result==='승'?'W':'L'}</span>`).join('');
   }
   function raceTbl(rv,race,col){
     const r=rv[race]||{w:0,l:0};const t=r.w+r.l;

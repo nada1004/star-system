@@ -146,12 +146,12 @@ function rElboard(C, T) {
         <div class="rec-sum-vs" style="flex:1;min-width:200px">
           <span style="font-size:13px;font-weight:900;padding:3px 10px;border-radius:8px;color:#fff;background:${aColor};opacity:${aWin?1:.65}">${aLabel}</span>
           <div style="display:flex;align-items:center;gap:4px;font-size:18px;font-weight:900">
-            <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text3)'}">${sa}</span>
+            <span style="color:${aWin?'var(--win-col)':bWin?'var(--lose-col)':'var(--text3)'}">${sa}</span>
             <span style="color:var(--gray-l);font-size:13px">:</span>
-            <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text3)'}">${sb}</span>
+            <span style="color:${bWin?'var(--win-col)':aWin?'var(--lose-col)':'var(--text3)'}">${sb}</span>
           </div>
           <span style="font-size:13px;font-weight:900;padding:3px 10px;border-radius:8px;color:#fff;background:${bColor};opacity:${bWin?1:.65}">${bLabel}</span>
-          <span style="font-size:11px;font-weight:700;color:${aWin?'#16a34a':bWin?'#16a34a':'#6b7280'}">
+          <span style="font-size:11px;font-weight:700;color:${aWin?'var(--win-col)':bWin?'var(--win-col)':'#6b7280'}">
             ${aWin?'▶ '+aLabel+' 승':bWin?'▶ '+bLabel+' 승':'🤝 무승부'}
           </span>
         </div>

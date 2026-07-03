@@ -558,9 +558,9 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
             </div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
               <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기">
-                <span style="color:${aWin?'#16a34a':bWin?'#dc2626':'var(--text)'}">${m.sa}</span>
+                <span style="color:${aWin?'var(--win-col)':bWin?'var(--lose-col)':'var(--text)'}">${m.sa}</span>
                 <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
-                <span style="color:${bWin?'#16a34a':aWin?'#dc2626':'var(--text)'}">${m.sb}</span>
+                <span style="color:${bWin?'var(--win-col)':aWin?'var(--lose-col)':'var(--text)'}">${m.sb}</span>
               </div>
             </div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:5px">

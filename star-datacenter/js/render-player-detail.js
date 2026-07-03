@@ -6,8 +6,8 @@ function buildPlayerDetailHTML(p){
     ? preparePlayerDetailStyleData(p)
     : null;
   const col = _style?.col || (gc(p.univ)||'#6366f1');
-  const _winC = _style?.winC || '#16a34a';
-  const _lossC = _style?.lossC || '#dc2626';
+  const _winC = _style?.winC || '#dc2626';
+  const _lossC = _style?.lossC || '#94a3b8';
   const _pdStyle = _style?.pdStyle || {};
   const _isMobile = _style?.isMobile || (window.innerWidth<=768);
   const _isTablet = _style?.isTablet || (window.innerWidth>768 && window.innerWidth<=1024);

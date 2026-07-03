@@ -5,8 +5,8 @@ function preparePlayerHeaderDisplayData(opts){
     isTablet=false,
     histAll=[],
     eloVal=ELO_DEFAULT,
-    winColor='#16a34a',
-    lossColor='#dc2626'
+    winColor='#dc2626',
+    lossColor='#94a3b8'
   } = opts || {};
   const p = player;
   if(!p) return { photoHTML:'', channelHTML:'', eloSparkHTML:'' };

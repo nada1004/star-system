@@ -108,9 +108,9 @@
   --score-sh: 0 6px 24px rgba(15,23,42,.09), inset 0 1px 0 rgba(255,255,255,.9);
   --tr-f: .14s cubic-bezier(.4,0,.2,1);  /* 빠른 전환 */
   --tr-m: .22s cubic-bezier(.34,1.3,.64,1); /* 탄성 전환 */
-  --win-col: #16a34a;
+  --win-col: #dc2626;
   --lose-col: #94a3b8;
-  --win-glow: rgba(22,163,74,.22);
+  --win-glow: rgba(220,38,38,.22);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--app-font);background:#fff;color:var(--text);font-size:calc(13px * var(--uiS) * var(--fontS));padding:16px;line-height:1.5;font-weight:400;}
@@ -1833,7 +1833,7 @@ body.rc-theme-on .rec-summary img.rec-uicon{
 .pc-vs .pc-ava{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
 .pc-vs .pc-ava.is-lose{filter:grayscale(1);opacity:.55;}
 .pc-vs .pc-name{font-size:13px;font-weight:500;color:var(--text);min-width:0;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.pc-vs .pc-name.is-win{font-weight:800;color:#16a34a;}
+.pc-vs .pc-name.is-win{font-weight:800;color:var(--win-col);}
 .pc-vs .pc-name.is-lose{font-weight:500;color:var(--gray-l);opacity:.85;}
 .pc-vs .pc-name.is-tie{font-weight:800;color:#b45309;}
 .pc-vs.pc-vs--compact{

@@ -56,8 +56,8 @@ function buildPlayerModeStatsHTML(opts){
     fixedModes=[],
     modeColors={},
     modeTint=0,
-    cWin='#16a34a',
-    cLoss='#dc2626'
+    cWin='#dc2626',
+    cLoss='#94a3b8'
   } = opts || {};
   let h=`<div class="su-sec" style="--su-sec-accent:#6b7280">
     <div class="su-sec__title">모드별 전적</div>
@@ -66,14 +66,16 @@ function buildPlayerModeStatsHTML(opts){
     const t=w+l;
     const wr=t?Math.round(w/t*100):0;
     const mc=modeColors[key]||'#6b7280';
-    const wrCol=t?(wr>=50?cWin:cLoss):'#9ca3af';
-    // 낮은 채도 색(파랑/보라 등)이 흐려서 안 보이던 문제 방지용 최소 대비 보장
-    const bgA=Math.max(modeTint,14);
-    const bdA=Math.max(Math.min(99,modeTint*3.5),55);
-    h+=`<div class="pd-mode-card" style="position:relative;background:${mc}${_rpPctToHex(bgA)};border:1.5px solid ${mc}${_rpPctToHex(bdA)};border-radius:12px;padding:10px 6px 8px;text-align:center;overflow:hidden;box-shadow:0 3px 10px ${mc}26;transition:transform .15s,box-shadow .15s">
-      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${mc}"></div>
-      <div style="font-size:10px;color:${mc};font-weight:900;margin-bottom:5px;letter-spacing:.2px">${key}</div>
-      <div style="font-size:12px;font-weight:700;margin-bottom:2px"><span style="color:${cWin}">${w}승</span> <span style="color:${cLoss}">${l}패</span></div>
+    const wrCol=t?(wr>=50?cWin:'#64748b'):'#9ca3af';
+    // (개선) 카드 전체를 진하게 물들이지 않고, 옅은 배경 + 상단 포인트 바 + 좌측 얇은 라인으로
+    // 모드 색상은 "표시"만 하고 텍스트 대비(가독성)는 항상 확보
+    h+=`<div class="pd-mode-card" style="position:relative;background:var(--surface);border:1px solid var(--border);border-left:3px solid ${mc};border-radius:12px;padding:10px 8px 8px;text-align:center;overflow:hidden;transition:transform .15s,box-shadow .15s">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${mc}${_rpPctToHex(55)}"></div>
+      <div style="font-size:10px;color:${mc};font-weight:900;margin-bottom:6px;letter-spacing:.2px">${key}</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;font-weight:800;margin-bottom:4px">
+        <span style="color:${cWin};background:${cWin}14;border-radius:6px;padding:1px 6px">${w}승</span>
+        <span style="color:${cLoss};background:${cLoss}1f;border-radius:6px;padding:1px 6px">${l}패</span>
+      </div>
       <div style="font-size:13px;font-weight:900;color:${wrCol}">${t?wr+'%':'-'}</div>
     </div>`;
   });
@@ -169,8 +171,8 @@ function buildPlayerOppTableHTML(opts){
               </td>
               <td style="text-align:center"><span class="rbadge r${s.race||op?.race||'?'}" style="font-size:10px">${s.race||op?.race||'?'}</span></td>
               <td style="text-align:center"><span style="background:${oc};color:#fff;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${op?.univ||'-'}</span></td>
-              <td style="text-align:center;font-weight:700;color:#16a34a">${s.w}</td>
-              <td style="text-align:center;font-weight:700;color:#dc2626">${s.l}</td>
+              <td style="text-align:center;font-weight:700;color:#dc2626">${s.w}</td>
+              <td style="text-align:center;font-weight:700;color:#94a3b8">${s.l}</td>
               <td style="text-align:center;font-weight:800;font-size:12px;color:${ot?(ow>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${ot?ow+'%':'-'}</td>
             </tr>`;
           }).join('')}
@@ -204,9 +206,9 @@ function buildPlayerVsUnivSectionHTML(opts){
         <span style="font-size:10px;color:var(--gray-l);font-weight:700">${row.tot?row.wr+'%':'-'}</span>
       </div>
       <div style="margin-top:7px;font-size:13px;font-weight:900;color:#0f172a">
-        <span style="color:#16a34a">${row.w}승</span>
+        <span style="color:#dc2626">${row.w}승</span>
         <span style="color:var(--gray-l);margin:0 5px">/</span>
-        <span style="color:#dc2626">${row.l}패</span>
+        <span style="color:#94a3b8">${row.l}패</span>
       </div>
       <div style="margin-top:4px;font-size:11px;color:var(--gray-l);font-weight:700">${row.tot}전</div>
     </div>`;

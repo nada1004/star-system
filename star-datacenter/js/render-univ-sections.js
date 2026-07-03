@@ -103,7 +103,7 @@ function buildUnivHeaderCardHTML(opts){
 
   // 스탯 그리드
   const statItems = [
-    { icon:'⚔️', label:'대학전적', value:`<span style="color:#4ade80">${wins}승</span> <span style="color:#f87171">${losses}패</span>`, fs: isMobile?13:15 },
+    { icon:'⚔️', label:'대학전적', value:`<span style="color:#f87171">${wins}승</span> <span style="color:#cbd5e1">${losses}패</span>`, fs: isMobile?13:15 },
     { icon:'📈', label:'승률', value:`<span style="color:${tot?wrColor:'rgba(255,255,255,.5)'}">${tot?winPct+'%':'-'}</span>`, fs: isMobile?17:20 },
     { icon:'🏆', label:'총 포인트', value:`<span style="color:${pts>0?'#4ade80':pts<0?'#f87171':'rgba(255,255,255,.85)'}">${pts>0?'+':''}${pts}</span>`, fs: isMobile?15:17 },
     { icon:'👥', label:'선수 수', value:`<span style="color:var(--text,#1e293b)">${members.length}<span style="font-size:12px;font-weight:600;color:var(--gray-l,#94a3b8)">명</span></span>`, fs: isMobile?17:19 }

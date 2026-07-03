@@ -49,6 +49,7 @@ function buildCKInputHTML(){
     <div class="mb-split">
       <div class="ck-panel">
         <h4>🔵 팀 A 구성 (${mA.length}명)</h4>
+        <input type="text" id="ck-tla-input" value="${(bld.teamNameA||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 A조)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;margin-bottom:6px;font-weight:700" onchange="BLD['ck'].teamNameA=this.value">
         <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
           <select id="ck-a-univ" style="flex:1" onchange="ckFilterPlayers('A')">${uO}</select>
           <select id="ck-a-player" style="flex:1"><option value="">대학 먼저 선택</option></select>
@@ -58,6 +59,7 @@ function buildCKInputHTML(){
       </div>
       <div class="ck-panel">
         <h4>🔴 팀 B 구성 (${mB.length}명)</h4>
+        <input type="text" id="ck-tlb-input" value="${(bld.teamNameB||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 B조)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;margin-bottom:6px;font-weight:700" onchange="BLD['ck'].teamNameB=this.value">
         <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
           <select id="ck-b-univ" style="flex:1" onchange="ckFilterPlayers('B')">${uO}</select>
           <select id="ck-b-player" style="flex:1"><option value="">대학 먼저 선택</option></select>

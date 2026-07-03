@@ -151,9 +151,9 @@ function rCompNormalMatches(tn) {
             <div class="grp-score-col" style="text-align:center;min-width:80px;display:flex;flex-direction:column;align-items:center;gap:3px">
               ${isDone
                 ? `<div class="grp-match-score score-click" style="cursor:pointer" onclick="event.stopPropagation();nmOpenDetailModal('${tn.id}',${i})" title="경기 상세 보기">
-                    <span style="${aWin ? 'color:var(--blue);font-size:22px' : ''}">${m.sa}</span>
+                    <span style="${aWin ? 'color:var(--win-col);font-size:22px' : bWin ? 'color:var(--lose-col)' : ''}">${m.sa}</span>
                     <span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span>
-                    <span style="${bWin ? 'color:var(--red);font-size:22px' : ''}">${m.sb}</span>
+                    <span style="${bWin ? 'color:var(--win-col);font-size:22px' : aWin ? 'color:var(--lose-col)' : ''}">${m.sb}</span>
                   </div>`
                 : `<div class="grp-vs-text" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:#6366f1;text-shadow:0 1px 8px #6366f144">VS</div>`
               }
@@ -632,7 +632,7 @@ function nmOpenDetailModal(tnId, idx) {
         };
         bar.innerHTML = `<div class="cmd-score">
           <div class="cmd-team" style="background:${aBg};border:1px solid ${aBd};justify-content:center;text-align:center;position:relative;color:${aFg};padding:0 18px"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:1000;font-size:22px;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:calc(100% - 78px);white-space:nowrap">${uicon(m.a || '')}<span>${safe(m.a || 'A팀')}</span></span></div>
-          <div class="cmd-mid"><span style="color:${aWin ? '#16a34a' : bWin ? '#dc2626' : '#111827'}">${m.sa}</span><span class="cmd-colon">:</span><span style="color:${bWin ? '#16a34a' : aWin ? '#dc2626' : '#111827'}">${m.sb}</span></div>
+          <div class="cmd-mid"><span style="color:${aWin ? 'var(--win-col)' : bWin ? 'var(--lose-col)' : '#111827'}">${m.sa}</span><span class="cmd-colon">:</span><span style="color:${bWin ? 'var(--win-col)' : aWin ? 'var(--lose-col)' : '#111827'}">${m.sb}</span></div>
           <div class="cmd-team" style="background:${bBg};border:1px solid ${bBd};justify-content:center;text-align:center;position:relative;color:${bFg};padding:0 18px"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:1000;font-size:22px;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:calc(100% - 78px);white-space:nowrap">${uicon(m.b || '')}<span>${safe(m.b || 'B팀')}</span></span></div>
         </div>`;
         bar.style.display = 'block';

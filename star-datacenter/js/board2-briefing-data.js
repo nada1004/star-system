@@ -4,13 +4,150 @@
 // 의존: constants.js (players, univCfg 등 전역)
 // ══════════════════════════════════════════════════════════
 
+// ─── 순수 계산 헬퍼 (board2-briefing.js의 거대 함수에서 분리) ─────
+// [REFACTOR] _b2WeeklyBriefingView()가 약 2200줄짜리 단일 함수라 유지보수가 어렵습니다.
+// 전체를 한번에 쪼개는 건 서로 얽힌 지역변수가 많아 위험이 커서, 우선 외부 상태에
+// 의존하지 않는 "순수 함수"만 안전하게 여기로 옮겼습니다. (동작 변화 없음)
+
+// 연승/연패 스트릭 — 기간 내 최근 경기부터 거슬러 올라가며 연속 결과 카운트
+function _b2CalcStreak(hist, want) {
+  const sorted = [...hist].sort((a, b) => {
+    const da = parseInt(String(a.date||'').replace(/[-\.\/]/g,''))||0;
+    const db = parseInt(String(b.date||'').replace(/[-\.\/]/g,''))||0;
+    return db!==da ? db-da : (b.time||0)-(a.time||0);
+  });
+  let streak = 0;
+  for (const h of sorted) {
+    if (h.result === want) streak++;
+    else break;
+  }
+  return streak;
+}
+
+// 대학 랭킹 정렬 기준: 승 수 → 승률 → 총 전적 → 활동 인원 → 이름
+function _b2RankSortUnivs(a, b) {
+  return (b.tw - a.tw) ||
+    ((b.wr ?? -1) - (a.wr ?? -1)) ||
+    (b.tg - a.tg) ||
+    (b.active.length - a.active.length) ||
+    String(a.u?.name || '').localeCompare(String(b.u?.name || ''), 'ko', { sensitivity: 'base' });
+}
+
+// 현재 기간 대학 통계(list)에 순위(rank)와 이전 기간(prevList) 대비 순위 변동(rankDelta)을 붙여서 반환
+function _b2BuildRankedUnivs(list, prevList) {
+  const prevRankMap = {};
+  (prevList || [])
+    .filter(ud => ud.tg > 0)
+    .slice()
+    .sort(_b2RankSortUnivs)
+    .forEach((ud, idx) => { prevRankMap[ud.u.name] = idx + 1; });
+  return (list || [])
+    .filter(ud => ud.tg > 0)
+    .slice()
+    .sort(_b2RankSortUnivs)
+    .map((ud, idx) => {
+      const rank = idx + 1;
+      const prevRank = prevRankMap[ud.u.name] || null;
+      const rankDelta = prevRank ? (prevRank - rank) : null;
+      return { ...ud, rank, prevRank, rankDelta };
+    });
+}
+
+// MVP/최악 카드 HTML 빌더 (풀배경 사진형) — board2-briefing.js의 거대 함수에서 분리.
+// opts: { isMonthly, mvpLabel, mvpFxStyleAttr, mvpFxDesign, mvpFxOp }
+function _b2BuildMvpCardHtml(s, rank, isWorst, extraClass, opts) {
+  if (!s) return '';
+  const o = opts || {};
+  const isMonthly = !!o.isMonthly;
+  const mvpLabel = o.mvpLabel || 'MVP';
+  const mvpFxStyleAttr = o.mvpFxStyleAttr;
+  const mvpFxDesign = o.mvpFxDesign;
+  const mvpFxOp = o.mvpFxOp;
+
+  const mp = s.p;
+  const tc  = typeof getTierBtnColor==='function'&&mp.tier?getTierBtnColor(mp.tier):'#475569';
+  const tt  = typeof getTierBtnTextColor==='function'&&mp.tier?(getTierBtnTextColor(mp.tier)||'#fff'):'#fff';
+  const photo = mp.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(mp.photo):mp.photo) : '';
+  const initial = String(mp.name||'-').trim().slice(0,1);
+  const nameEsc = String(mp.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+
+  const cardClass = isWorst ? 'b2w2-mvp-worst' : (rank===1 ? 'b2w2-mvp-first' : 'b2w2-mvp-second');
+  const _isMini = extraClass === 'b2w2-mvp-card-mini';
+  const badgeText = _isMini
+    ? (isWorst ? '3등' : (rank===1 ? '1등' : '2등'))
+    : (isWorst ? (isMonthly?'이달의 최악':'이번주 최악') : (rank===1 ? mvpLabel : (isMonthly?'이달의 2위':'이번주 2위')));
+  const badgeEmoji = isWorst ? '💀' : (rank===1 ? '🏆' : '🥈');
+
+  const winColor   = 'b2w2-mvp-sv-win';
+  const lossColor  = 'b2w2-mvp-sv-loss';
+  const rateColor  = 'b2w2-mvp-sv-rate';
+
+  const _statItem = (val, label, colorClass) =>
+    `<span class="b2w2-mvp-stat"><b class="b2w2-mvp-sv ${colorClass}">${val}</b><i class="b2w2-mvp-sl">${label}</i></span>`;
+  const _sep = `<span class="b2w2-mvp-statline-sep"></span>`;
+
+  const statsHtml = isWorst
+    ? `${_statItem(s.losses,'패',lossColor)}${_sep}${_statItem(s.wins,'승',winColor)}${_sep}${_statItem((s.winRate??0)+'%','승률',rateColor)}`
+    : `${_statItem(s.wins,'승',winColor)}${_sep}${_statItem(s.losses,'패',lossColor)}${_sep}${_statItem((s.winRate??0)+'%','승률',rateColor)}`;
+
+  return `<div class="b2w2-mvp-card ${cardClass}${extraClass ? ' '+extraClass : ''}" data-fx="${mvpFxStyleAttr}" data-design="${mvpFxDesign}" style="--b2mvp-fx-op:${mvpFxOp}" onclick="openPlayerModal('${nameEsc}')">
+    ${photo
+      ? `<img class="b2w2-mvp-bg" src="${photo}" alt="${mp.name||''}"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : ''}
+    <div class="b2w2-mvp-bg-fallback" style="${photo?'display:none':''}">${initial}</div>
+    <div class="b2w2-mvp-overlay"></div>
+    <div class="b2w2-mvp-top-badge">${mvpFxDesign==='ribbon' ? badgeText : `${badgeEmoji} ${badgeText}`}</div>
+    <div class="b2w2-mvp-bottom">
+      <div class="b2w2-mvp-id">
+        <div class="b2w2-mvp-name">${mp.name||'-'}</div>
+        <div class="b2w2-mvp-meta">
+          <span class="b2w2-mvp-univ">${String(mp.univ||'무소속')}</span>
+          ${mp.tier?`<span class="b2w2-mvp-tier" style="background:${tc};color:${tt}">${mp.tier}</span>`:''}
+        </div>
+      </div>
+      <div class="b2w2-mvp-statline">
+        ${statsHtml}
+        <div class="b2w2-mvp-statline-form">${_b2WeeklyForm(s.hist)}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
 // ─── 데이터 집계 헬퍼 ─────────────────────────
+// [PERF] _b2WeeklyAggregate는 브리핑(현재/이전 기간)과 대학별 화면 등에서
+// render()가 다시 호출될 때마다 미니게임/CK/대회/개인전/끝장전 등 모든 경기 배열을
+// 처음부터 다시 훑습니다. 실제로 선수 목록·기간·저장 데이터가 바뀌지 않았다면
+// 결과가 동일하므로, (선수 이름 목록 + 기간 + 마지막 저장 시각) 서명이 같으면
+// 캐시된 결과를 재사용하도록 했습니다. (players-tier-rank.js의 _tierRecByNameCache와 동일한 접근)
+const _b2WeeklyAggregateCache = [];
+const _B2_WEEKLY_AGG_CACHE_MAX = 4;
 function _b2WeeklyAggregate(players, dateFrom, dateTo) {
+  let cacheKey = null;
+  try {
+    let saveSig = '';
+    try { saveSig = String(localStorage.getItem('su_last_save_time') || ''); } catch(e) {}
+    // 선수 수만 비교하면 "같은 인원, 다른 구성"을 같다고 오판할 수 있어 이름을 이어붙여 서명으로 사용합니다.
+    const namesSig = players.map(p => p && p.name).join(',');
+    cacheKey = `${dateFrom}|${dateTo}|${saveSig}|${namesSig}`;
+    const hit = _b2WeeklyAggregateCache.find(e => e.key === cacheKey);
+    if (hit) return hit.result;
+  } catch(e) { cacheKey = null; }
+
+  const result = _b2WeeklyAggregateCompute(players, dateFrom, dateTo);
+
+  if (cacheKey) {
+    _b2WeeklyAggregateCache.push({ key: cacheKey, result });
+    if (_b2WeeklyAggregateCache.length > _B2_WEEKLY_AGG_CACHE_MAX) _b2WeeklyAggregateCache.shift();
+  }
+  return result;
+}
+
+function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
   const dateNum = s => parseInt(String(s || '').replace(/[-\.\/]/g, '')) || 0;
   const fromN = dateNum(dateFrom), toN = dateNum(dateTo);
   const inRange = d => { const dn = dateNum(d); return dn >= fromN && dn <= toN; };
   const isOff   = mode => { const m = String(mode||'').trim(); return m && !['스폰서','스크리미지','연습',''].includes(m); };
-  const isPro   = mode => String(mode||'').indexOf('프로리그') !== -1;
   // 브리핑 집계 제외 모드: 개인전 / 끝장전 / 프로리그 기록은 반영하지 않음
   const isBriefingExcluded = mode => {
     const m = String(mode||'').trim();

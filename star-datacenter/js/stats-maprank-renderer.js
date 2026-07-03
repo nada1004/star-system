@@ -85,10 +85,10 @@
             <td><span class="ubadge" style="background:${window.gc(p.univ)}">${p.univ}</span></td>
             <td style="font-size:11px">${p.tier||'-'}</td>
             <td class="wt">${p.w}</td><td class="lt">${p.l}</td>
-            <td style="font-weight:800;color:${p.rate>=50?'var(--green)':'var(--red)'}">
+            <td style="font-weight:800;color:${p.rate>=50?'var(--red)':'var(--text3)'}">
               ${p.rate}%
               <div style="width:48px;height:4px;background:var(--border2);border-radius:2px;display:inline-block;margin-left:4px;vertical-align:middle;overflow:hidden">
-                <div style="width:${p.rate}%;height:100%;background:${p.rate>=50?'var(--green)':'var(--red)'};border-radius:2px"></div>
+                <div style="width:${p.rate}%;height:100%;background:${p.rate>=50?'var(--red)':'var(--text3)'};border-radius:2px"></div>
               </div>
             </td>
             <td>${p.tot}</td>

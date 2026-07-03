@@ -365,7 +365,7 @@ function pasteApply() {
       if(!mB.find(x=>x.name===r.lPlayer.name)) mB.push({name:r.lPlayer.name,univ:r.lPlayer.univ||'',race:r.lPlayer.race||'',tier:r.lPlayer.tier||''});
     });
     proM.unshift({_id:matchId,d:dateVal,sa:proSA,sb:proSB,
-      teamALabel:'A팀',teamBLabel:'B팀',teamAMembers:mA,teamBMembers:mB,sets:setsSnap,univWins:{},univLosses:{},...(_matchMemo?{memo:_matchMemo}:{})});
+      teamALabel:String(window._pasteForceTeamA||'').trim()||'A팀',teamBLabel:String(window._pasteForceTeamB||'').trim()||'B팀',teamAMembers:mA,teamBMembers:mB,sets:setsSnap,univWins:{},univLosses:{},...(_matchMemo?{memo:_matchMemo}:{})});
     if(typeof applyTeamGameResult==='function'){
       (setsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
         if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
@@ -410,7 +410,7 @@ function pasteApply() {
     });
     const ckSA=ckSetsSnap.filter(s=>s.winner==='A').length;
     const ckSB=ckSetsSnap.filter(s=>s.winner==='B').length;
-    ckM.unshift({_id:matchId,d:dateVal,sa:ckSA,sb:ckSB,teamALabel:'A조',teamBLabel:'B조',teamAMembers:mA,teamBMembers:mB,sets:ckSetsSnap,univWins:{},univLosses:{},...(_matchMemo?{memo:_matchMemo}:{})});
+    ckM.unshift({_id:matchId,d:dateVal,sa:ckSA,sb:ckSB,teamALabel:String(window._pasteForceTeamA||'').trim()||'A조',teamBLabel:String(window._pasteForceTeamB||'').trim()||'B조',teamAMembers:mA,teamBMembers:mB,sets:ckSetsSnap,univWins:{},univLosses:{},...(_matchMemo?{memo:_matchMemo}:{})});
     if(typeof applyTeamGameResult==='function'){
       (ckSetsSnap||[]).forEach((s,si)=>{ (s.games||[]).forEach((g,gi)=>{
         if(g._isTeam && Array.isArray(g.teamA) && Array.isArray(g.teamB)){
@@ -689,7 +689,7 @@ function pasteApply() {
       const _sb = (_mm==='set' || _isMultiSet) ? (ttSetsSnap||[]).filter(s=>s.winner==='B').length
         : (ttSetsSnap||[]).reduce((acc,s)=>acc+(s.scoreB||0),0);
       ttM.unshift({_id:matchId,d:dateVal,n:_ttSaveComp,compName:_ttSaveComp,
-        sa:_sa,sb:_sb,teamALabel:'A팀',teamBLabel:'B팀',
+        sa:_sa,sb:_sb,teamALabel:String(window._pasteForceTeamA||'').trim()||'A팀',teamBLabel:String(window._pasteForceTeamB||'').trim()||'B팀',
         teamAMembers:mA,teamBMembers:mB,sets:ttSetsSnap,univWins:{},univLosses:{},stage:'general',...(_matchMemo?{memo:_matchMemo}:{})});
       // 팀전 형태(_isTeam)가 있을 때만 반영
       if(typeof applyTeamGameResult==='function'){

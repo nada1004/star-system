@@ -1079,8 +1079,8 @@ function rTier(C,T){
           <span style="flex-shrink:0">${genderIcon(p.gender)}${_getStatusIcon(p.name)}</span>
         </span>
       </td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--score-win)">${rec.w}</td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--score-lose)">${rec.l}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--win-col)">${rec.w}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--lose-col)">${rec.l}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad};${_canGoHist?'cursor:pointer;text-decoration:underline dotted':''}" ${_clickHist} title="${_canGoHist?'대전기록탭에서 보기':''}">${extraVal}</td>
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${_elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${_elo}</td>
@@ -1288,7 +1288,7 @@ function rTier(C,T){
       <div class="tier-compact-metrics">
         <div class="tier-compact-metric">
           <span class="tier-compact-metric-label">전적</span>
-          <span class="tier-compact-metric-value"><span style="color:var(--score-win)">${rec.w}</span>W <span style="color:var(--score-lose)">${rec.l}</span>L</span>
+          <span class="tier-compact-metric-value"><span style="color:var(--win-col)">${rec.w}</span>W <span style="color:var(--lose-col)">${rec.l}</span>L</span>
         </div>
         <div class="tier-compact-metric">
           <span class="tier-compact-metric-label">승률</span>

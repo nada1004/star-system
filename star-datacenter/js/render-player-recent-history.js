@@ -103,15 +103,15 @@ function buildPlayerRecentHistoryRowHTML(opts){
       ? `<span style="${modeBadgeStyle};cursor:pointer;text-decoration:underline dotted" data-ph-action="hist-open-match" data-ph-self="${selfSafe}" data-ph-opp="${oppSafe}" data-ph-date="${dSafe}" data-ph-map="${mSafe}" data-ph-mode="${escJS(modeLbl)}" data-ph-match-id="${hhMid}" data-ph-result="${rSafe}" title="경기 상세 보기">${modeLbl}</span>`
       : `<span style="${modeBadgeStyle}">${modeLbl}</span>`
   ):'';
-  return `<tr class="pd-hist-row ${isWin?'is-win':isDraw?'is-draw':'is-lose'}" style="background:${isWin?'#f0fdf4':isDraw?'#f1f5f9':'#fef2f2'}10">
+  return `<tr class="pd-hist-row ${isWin?'is-win':isDraw?'is-draw':'is-lose'}" style="background:${isWin?'#fef2f2':isDraw?'#f1f5f9':'#f8fafc'}10">
     ${selectCheckboxHTML}
     <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
     <td style="white-space:nowrap;text-align:center">${modeCellHTML}</td>
     <td style="text-align:center">${isWin
-      ?`<span style="${resultBadgeStyle};background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0">WIN</span>`
+      ?`<span style="${resultBadgeStyle};background:#fee2e2;color:#dc2626;border:1px solid #fecaca">WIN</span>`
       :isDraw
         ?`<span style="${resultBadgeStyle};background:#f1f5f9;color:#475569;border:1px solid #e2e8f0">DRAW</span>`
-        :`<span style="${resultBadgeStyle};background:#fee2e2;color:#dc2626;border:1px solid #fecaca">LOSE</span>`}</td>
+        :`<span style="${resultBadgeStyle};background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0">LOSE</span>`}</td>
     <td style="cursor:pointer;font-weight:700" data-ph-action="hist-open-player" data-ph-player="${escJS(hh.opp)}"><span style="display:inline-flex;align-items:center;gap:5px">${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span></span></td>
     <td><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
     <td class="ph-col-map" style="color:var(--gray-l);font-size:11px">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
