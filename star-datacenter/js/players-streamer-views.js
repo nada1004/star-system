@@ -592,11 +592,13 @@ function _buildGalleryView(rankMap){
     '.streamer-focus-card2-label{font-size:13px;font-weight:700;color:var(--text3)}',
     '.streamer-focus-card2-value{font-size:15px;font-weight:900;color:var(--text1);text-align:right}',
     '.streamer-focus-card2-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}',
-    '.streamer-focus-card2-photo2{margin-top:14px;border-radius:22px;overflow:hidden;position:relative;width:100%;aspect-ratio:16/9;background:#e2e8f0;border-top:1px solid rgba(148,163,184,.18);border-right:1px solid rgba(148,163,184,.18);border-bottom:1px solid rgba(148,163,184,.18);border-left:none;box-shadow:0 16px 32px rgba(15,23,42,.08);transition:aspect-ratio .18s ease}',
+    '.streamer-focus-card2-photo2{margin-top:14px;border-radius:22px;overflow:hidden;position:relative;width:100%;aspect-ratio:3/2;background:#e2e8f0;border-top:1px solid rgba(148,163,184,.18);border-right:1px solid rgba(148,163,184,.18);border-bottom:1px solid rgba(148,163,184,.18);border-left:none;box-shadow:0 16px 32px rgba(15,23,42,.08);transition:aspect-ratio .18s ease}',
     '.streamer-focus-card2-photo2 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}',
     // 자동 맞춤 모드: 이미지를 두 겹으로 겹치지 않고, 박스 자체의 비율을 사진의 실제 비율에 맞춰 자동으로 조절 → 크롭도, 위치 지정도 필요 없음
     '.streamer-focus-card2-photo2.is-autofit{max-height:min(74vh,560px)}',
     '.streamer-focus-card2-photo2.is-autofit .sfc2p2-fg{object-fit:cover;object-position:center 22%}',
+    // 수동 위치 모드도 자동 모드와 비슷한 크기감을 갖도록 최소 높이 확보 (전보다 작아 보이지 않게)
+    '.streamer-focus-card2-photo2:not(.is-autofit){min-height:320px;max-height:min(64vh,520px)}',
     '@media (max-width:768px){.streamer-focus-card2{flex-direction:column;min-height:0}.streamer-focus-card2-photo{flex:0 0 auto;aspect-ratio:4/3}}',
     'body.dark .streamer-focus-card2{background:#0f172a;border-color:#334155}',
     'body.dark .streamer-focus-card2-row{border-color:#334155}',
@@ -610,7 +612,7 @@ function _buildGalleryView(rankMap){
     '.sfp2-badge{position:absolute;top:10px;left:10px;background:rgba(15,23,42,.72);color:#fff;font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;pointer-events:none;z-index:4;letter-spacing:.01em}',
     '.sfp2-hint{position:absolute;bottom:10px;right:12px;background:rgba(15,23,42,.55);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;pointer-events:none;z-index:4}',
     // 사이드바 카드 - 이미지2 수동 위치 지정 여부 뱃지
-    '.streamer-focus-card-pin{position:absolute;top:6px;right:6px;font-size:12px;line-height:1;background:rgba(15,23,42,.55);border-radius:999px;padding:3px 4px;z-index:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}'
+    '.streamer-focus-card-pin{position:absolute;top:7px;left:7px;font-size:12px;line-height:1;background:rgba(15,23,42,.55);border-radius:999px;padding:3px 4px;z-index:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}'
   ].join('');
   document.head.appendChild(s);
 })();
@@ -714,7 +716,7 @@ function _focusPhoto2EnableManual(){
     const p = (typeof players!=='undefined' ? players : []).find(x=>x && x.name===totalFocusPlayer);
     if(!p) return;
     if(!Number.isFinite(Number(p.photo2PosX))) p.photo2PosX = 50;
-    if(!Number.isFinite(Number(p.photo2PosY))) p.photo2PosY = 22;
+    if(!Number.isFinite(Number(p.photo2PosY))) p.photo2PosY = 32;
     p.photo2CardAutoManual = true;
     if(typeof save==='function') save();
     if(typeof render==='function') render();
@@ -848,9 +850,13 @@ function _buildFocusView(rankMap){
       const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
       const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       const photoSrc = String(p.photo||'').trim();
-      listHtml += `<div class="streamer-focus-card ${selected && selected.name===p.name?'active':''}" data-focus-row="1" data-focus-name="${(typeof escAttr==='function'?escAttr(p.name):p.name)}" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" onclick="try{var _sl=document.querySelector('.streamer-focus-list');if(_sl)window._streamerFocusScrollTop=_sl.scrollTop;}catch(e){};totalFocusPlayer='${_pSafe}';render()">
+      const _isActive = !!(selected && selected.name===p.name);
+      const _tierBarColor = (typeof getTierBtnColor==='function' ? getTierBtnColor(p.tier) : '') || '#64748b';
+      listHtml += `<div class="streamer-focus-card ${_isActive?'active':''}" data-focus-row="1" data-focus-name="${(typeof escAttr==='function'?escAttr(p.name):p.name)}" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" onclick="try{var _sl=document.querySelector('.streamer-focus-list');if(_sl)window._streamerFocusScrollTop=_sl.scrollTop;}catch(e){};totalFocusPlayer='${_pSafe}';render()">
+        <span class="streamer-focus-card-tierbar" style="background:${_tierBarColor}"></span>
         ${photoSrc ? `<img loading="lazy" decoding="async" src="${toHttpsUrl(photoSrc)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none'">` : ''}
         <div class="streamer-focus-card-fallback" style="display:${photoSrc?'none':'flex'}">${p.race||'?'}</div>
+        ${_isActive ? `<span class="streamer-focus-card-check">✓</span>` : ''}
         ${(isLoggedIn && p.photo2CardAutoManual===true) ? `<span class="streamer-focus-card-pin" title="이미지2 위치가 수동으로 지정된 스트리머입니다">📌</span>` : ''}
         <div class="streamer-focus-card-bottom">
           <div class="streamer-focus-card-name" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
@@ -905,7 +911,7 @@ function _buildFocusView(rankMap){
   try{ if(heroPhotoUrl2Src && typeof prewarmImageUrls==='function') prewarmImageUrls([heroPhotoUrl2Src], 1); }catch(e){}
   const heroPhoto2Use = (selected.photo2PosUse !== false);
   const heroPhoto2PosX = Number(selected.photo2PosX), heroPhoto2PosY = Number(selected.photo2PosY);
-  const heroPhoto2Pos = (heroPhoto2Use && Number.isFinite(heroPhoto2PosX) && Number.isFinite(heroPhoto2PosY)) ? `${heroPhoto2PosX}% ${heroPhoto2PosY}%` : 'top center';
+  const heroPhoto2Pos = (heroPhoto2Use && Number.isFinite(heroPhoto2PosX) && Number.isFinite(heroPhoto2PosY)) ? `${heroPhoto2PosX}% ${heroPhoto2PosY}%` : 'center 32%';
   const detailHtml = (totalFocusDetailStyle === 'card')
     ? _buildFocusCardDetail(selected, { selUniv, selColor, selWin, selLoss, selGames, selWr, selAttr, selHistAll, heroPhoto2Pos })
     : `<div class="streamer-focus-main">
