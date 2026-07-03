@@ -201,7 +201,8 @@
         if(repPlayer && repPlayer.name){
           const p = repPlayer;
           if(p && p.photo){
-            return `<div style="position:relative;width:${sOuter};height:${sOuter};border-radius:var(--su_profile_radius,50%);margin:0 auto 8px;overflow:hidden;${ring}">
+            const _safeRepN = String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+            return `<div onclick="openPlayerModal('${_safeRepN}')" title="스트리머 상세" style="position:relative;width:${sOuter};height:${sOuter};border-radius:var(--su_profile_radius,50%);margin:0 auto 8px;overflow:hidden;cursor:pointer;${ring}">
               <img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover;filter:${win?`brightness(${scp.heroBrightness||1})`:`grayscale(${loseGray}%) brightness(${scp.loserPhotoBrightness||.92})`}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
               <div style="display:none;position:absolute;inset:0;border-radius:16px;background:rgba(${rgb},.22);align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);':''}">
                 ${hasUnivLogo(p.univ||'') ? univIconHTML(p.univ||'', `${teamLogoInner}px`) : `<span style="color:#fff;font-weight:1000;font-size:${Math.round(20*scp.logoSize)}px">${sideTitle.slice(0,1)||side}</span>`}
@@ -230,7 +231,7 @@
         }else{
           icon = `<div style="position:relative;width:${size}px;height:${size}px"><div style="width:${size}px;height:${size}px;border-radius:999px;background:rgba(${rgb},.22);display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;box-shadow:0 5px 16px rgba(0,0,0,.18)">${univ ? univIconHTML(univ,logoSz+'px') : `<span style="color:#fff;font-weight:1000;font-size:${Math.max(12,Math.round(size*0.33))}px">${name.slice(0,1)}</span>`}</div>${race ? `<span class="rbadge r${race}" style="position:absolute;right:-3px;bottom:-3px;font-size:8px;padding:0 5px;line-height:14px;box-shadow:0 3px 10px rgba(0,0,0,.22)">${race}</span>` : ''}</div>`;
         }
-        return `<div style="min-width:0;padding:2px 1px;border-radius:14px;background:transparent;display:flex;flex-direction:column;align-items:center;gap:0">
+        return `<div onclick="openPlayerModal('${String(name).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="min-width:0;padding:2px 1px;border-radius:14px;background:transparent;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer">
           <div style="display:flex;align-items:center;justify-content:center">${icon}</div>
         </div>`;
       };

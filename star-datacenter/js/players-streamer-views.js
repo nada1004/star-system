@@ -374,7 +374,7 @@ function rTotal(C,T){
         <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span class="streamer-player-cell">
-            ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img loading="eager" fetchpriority="high" src="${toHttpsUrl(p.photo)}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span class="streamer-avatar"></span>'}
+            ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img loading="lazy" decoding="async" src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span class="streamer-avatar"></span>'}
             <span class="streamer-name-stack">
               <span class="streamer-name-line">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name streamer-name-link" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;font-weight:700">⏸️ 휴학</span>':''}</span>
               <span class="streamer-mini-meta">${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
@@ -538,7 +538,7 @@ function _buildGalleryView(rankMap){
         style="--card-accent:${clr};background:#0b1120;border-color:rgba(255,255,255,.14);backdrop-filter:blur(1px)"
         onmouseenter="try{if(typeof _prewarmPlayerModalImages==='function'){var _pp=window.players&&window.players.find(function(x){return x.name==='${_pSafe}'});if(_pp)_prewarmPlayerModalImages(_pp);}}catch(e){}">
         ${photoSrcRaw
-          ? `<img loading="eager" fetchpriority="high" src="${toHttpsUrl(photoSrcRaw)}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
+          ? `<img loading="lazy" decoding="async" src="${toHttpsUrl(photoSrcRaw)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
           : ''}
         <div class="gc-placeholder" style="position:absolute;inset:0;display:${photoSrcRaw?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:linear-gradient(160deg,${clr}28 0%,${clr}10 100%)">${p.race||'?'}</div>
         ${photoSrcRaw ? '' : '<div class="streamer-gallery-overlay"></div>'}
@@ -580,7 +580,7 @@ function _buildGalleryView(rankMap){
   const s=document.createElement('style');
   s.id='focus-card-detail-style';
   s.textContent=[
-    '.streamer-focus-card2{display:flex;gap:0;border-radius:22px;overflow:hidden;background:var(--panel,#fff);border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 32px rgba(15,23,42,.08);min-height:420px}',
+    '.streamer-focus-card2{display:flex;gap:0;border-radius:22px;overflow:hidden;background:var(--panel,#fff);border-top:1px solid rgba(148,163,184,.18);border-right:1px solid rgba(148,163,184,.18);border-bottom:1px solid rgba(148,163,184,.18);border-left:none;box-shadow:0 16px 32px rgba(15,23,42,.08);min-height:420px}',
     '.streamer-focus-card2-photo{position:relative;flex:0 0 42%;min-width:220px;overflow:hidden;background:#e2e8f0}',
     '.streamer-focus-card2-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}',
     '.streamer-focus-card2-photo .streamer-focus-photo-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:900;color:rgba(15,23,42,.28)}',
@@ -591,16 +591,32 @@ function _buildGalleryView(rankMap){
     '.streamer-focus-card2-label{font-size:13px;font-weight:700;color:var(--text3)}',
     '.streamer-focus-card2-value{font-size:15px;font-weight:900;color:var(--text1);text-align:right}',
     '.streamer-focus-card2-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}',
+    '.streamer-focus-card2-photo2{margin-top:14px;border-radius:22px;overflow:hidden;position:relative;width:100%;aspect-ratio:16/9;background:#e2e8f0;border-top:1px solid rgba(148,163,184,.18);border-right:1px solid rgba(148,163,184,.18);border-bottom:1px solid rgba(148,163,184,.18);border-left:none;box-shadow:0 16px 32px rgba(15,23,42,.08);transition:aspect-ratio .18s ease}',
+    '.streamer-focus-card2-photo2 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}',
+    // 자동 맞춤 모드: 이미지를 두 겹으로 겹치지 않고, 박스 자체의 비율을 사진의 실제 비율에 맞춰 자동으로 조절 → 크롭도, 위치 지정도 필요 없음
+    '.streamer-focus-card2-photo2.is-autofit{max-height:min(74vh,560px)}',
+    '.streamer-focus-card2-photo2.is-autofit .sfc2p2-fg{object-fit:cover;object-position:center 22%}',
     '@media (max-width:768px){.streamer-focus-card2{flex-direction:column;min-height:0}.streamer-focus-card2-photo{flex:0 0 auto;aspect-ratio:4/3}}',
     'body.dark .streamer-focus-card2{background:#0f172a;border-color:#334155}',
-    'body.dark .streamer-focus-card2-row{border-color:#334155}'
+    'body.dark .streamer-focus-card2-row{border-color:#334155}',
+    'body.dark .streamer-focus-card2-photo2{background:#1e293b;border-color:#334155}'
   ].join('');
   document.head.appendChild(s);
 })();
 
 function _buildFocusCardDetail(selected, opts){
-  const { selUniv, selColor, selWin, selLoss, selGames, selWr, selAttr } = opts;
+  const { selUniv, selColor, selWin, selLoss, selGames, selWr, selAttr, selHistAll, heroPhoto2Pos } = opts;
   const photoSrc = selected.photo ? toHttpsUrl(selected.photo) : '';
+  const photo2Src = String(selected.secondProfileFile||'').trim() ? toHttpsUrl(String(selected.secondProfileFile||'').trim()) : '';
+  const photo2Pos = heroPhoto2Pos || 'center center';
+  const _p2YNow = (()=>{ const n=Number(selected.photo2PosY); return Number.isFinite(n) ? Math.round(Math.max(0,Math.min(100,n))) : 50; })();
+  const _globalAutoFitOn = (typeof totalFocusCard2AutoFit!=='undefined' ? totalFocusCard2AutoFit : true);
+  // 개인별 수동 위치 오버라이드 전용 플래그. photo2PosUse는 선수 편집창의 '위치 고정' 체크박스와
+  // 공용으로 쓰이며 기본값이 true라서 재사용하면 안 됨 (거의 모든 스트리머가 수동으로 잡혀버림).
+  // ▲▼로 실제 조정했을 때만 photo2CardAutoManual이 true가 되므로, 기본값은 항상 '전역 자동'을 따름.
+  const _manualOverride = selected.photo2CardAutoManual === true;
+  const _autoFitOn = _globalAutoFitOn && !_manualOverride;
+  const _showPosNudge = isLoggedIn && photo2Src;
   const raceLabel = selected.race==='P'?'프로토스':selected.race==='T'?'테란':selected.race==='Z'?'저그':'미정';
   const rows = [
     ['역할', selected.role || '일반'],
@@ -626,10 +642,49 @@ function _buildFocusCardDetail(selected, opts){
         <div class="streamer-focus-card2-actions">
           <button class="pill on" data-tp-action="open-player" data-tp-player="${selAttr}" style="border:none;background:${selColor}">상세 열기</button>
           ${isLoggedIn ? `<button class="pill" onclick="openEPFromModal('${(typeof escJS==='function'?escJS(selected.name):selected.name)}')">✏️ 수정</button>` : ''}
+          ${_showPosNudge ? `<span class="pill" style="display:inline-flex;align-items:center;gap:0;padding:2px 3px" title="하단 이미지2 상하 위치 조정 (이 스트리머에게만 적용되며, 전역이 자동이어도 이 스트리머는 수동 위치가 우선됩니다. 클릭 시 즉시 저장됩니다)">
+            <button type="button" onclick="event.stopPropagation();_nudgeFocusPhoto2Y(-5)" style="border:none;background:transparent;cursor:pointer;font-size:12px;padding:3px 7px;line-height:1;color:inherit" title="위로">▲</button>
+            <span style="font-size:10px;font-weight:800;color:var(--text3);min-width:26px;text-align:center">${_p2YNow}%</span>
+            <button type="button" onclick="event.stopPropagation();_nudgeFocusPhoto2Y(5)" style="border:none;background:transparent;cursor:pointer;font-size:12px;padding:3px 7px;line-height:1;color:inherit" title="아래로">▼</button>
+          </span>` : ''}
+          ${(_showPosNudge && _globalAutoFitOn && _manualOverride) ? `<button type="button" class="pill" onclick="event.stopPropagation();_resetFocusPhoto2ToAuto()" style="padding:3px 8px;font-size:11px" title="이 스트리머만 전역 자동 배치로 되돌립니다">↺ 자동으로</button>` : ''}
         </div>
       </div>
     </div>
+    ${photo2Src ? (
+      _autoFitOn
+        ? `<div class="streamer-focus-card2-photo2 is-autofit">
+             <img class="sfc2p2-fg" src="${photo2Src}" alt="${selected.name}" loading="eager" fetchpriority="high" decoding="async"
+               onload="try{var r=this.naturalWidth/this.naturalHeight;if(!isFinite(r)||r<=0)r=16/9;r=Math.max(.68,Math.min(2.1,r));this.parentElement.style.aspectRatio=r;}catch(e){}"
+               onerror="this.parentElement.style.display='none'">
+           </div>`
+        : `<div class="streamer-focus-card2-photo2"><img src="${photo2Src}" alt="${selected.name}" loading="eager" fetchpriority="high" decoding="async" style="object-position:${photo2Pos}" onerror="this.parentElement.style.display='none'"></div>`
+    ) : ''}
   </div>`;
+}
+
+// 상세형(리스트) 하단 이미지2 상하 위치 즉시 조정 + 저장 (관리자 전용, 수동위치 모드에서만 노출)
+function _nudgeFocusPhoto2Y(delta){
+  try{
+    const p = (typeof players!=='undefined' ? players : []).find(x=>x && x.name===totalFocusPlayer);
+    if(!p) return;
+    const cur = Number.isFinite(Number(p.photo2PosY)) ? Number(p.photo2PosY) : 50;
+    p.photo2PosY = Math.max(0, Math.min(100, Math.round(cur + delta)));
+    p.photo2CardAutoManual = true; // 이 스트리머만 수동 위치로 전환 (전역 자동 설정과 무관하게 개인별로 저장됨)
+    if(typeof save==='function') save();
+    if(typeof render==='function') render();
+  }catch(e){ console.error('[_nudgeFocusPhoto2Y]', e); }
+}
+
+// 개인별 수동 위치 오버라이드를 해제하고, 전역 자동/수동 설정을 다시 따르게 합니다.
+function _resetFocusPhoto2ToAuto(){
+  try{
+    const p = (typeof players!=='undefined' ? players : []).find(x=>x && x.name===totalFocusPlayer);
+    if(!p) return;
+    p.photo2CardAutoManual = false;
+    if(typeof save==='function') save();
+    if(typeof render==='function') render();
+  }catch(e){ console.error('[_resetFocusPhoto2ToAuto]', e); }
 }
 
 function _buildFocusView(rankMap){
@@ -683,7 +738,7 @@ function _buildFocusView(rankMap){
       const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       const photoSrc = String(p.photo||'').trim();
       listHtml += `<div class="streamer-focus-card ${selected && selected.name===p.name?'active':''}" data-focus-row="1" data-focus-name="${(typeof escAttr==='function'?escAttr(p.name):p.name)}" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" onclick="try{var _sl=document.querySelector('.streamer-focus-list');if(_sl)window._streamerFocusScrollTop=_sl.scrollTop;}catch(e){};totalFocusPlayer='${_pSafe}';render()">
-        ${photoSrc ? `<img loading="eager" fetchpriority="high" src="${toHttpsUrl(photoSrc)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none'">` : ''}
+        ${photoSrc ? `<img loading="lazy" decoding="async" src="${toHttpsUrl(photoSrc)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none'">` : ''}
         <div class="streamer-focus-card-fallback" style="display:${photoSrc?'none':'flex'}">${p.race||'?'}</div>
         <div class="streamer-focus-card-bottom">
           <div class="streamer-focus-card-name" title="${p.name}">${p.name}${genderIcon(p.gender)}</div>
@@ -735,11 +790,12 @@ function _buildFocusView(rankMap){
   const heroPhotoUrl = selected.photo ? toHttpsUrl(selected.photo).replace(/'/g,'%27').replace(/"/g,'%22') : '';
   const heroPhotoUrl2Src = String(selected.secondProfileFile||'').trim();
   const heroPhotoUrl2 = heroPhotoUrl2Src ? toHttpsUrl(heroPhotoUrl2Src).replace(/'/g,'%27').replace(/"/g,'%22') : '';
+  try{ if(heroPhotoUrl2Src && typeof prewarmImageUrls==='function') prewarmImageUrls([heroPhotoUrl2Src], 1); }catch(e){}
   const heroPhoto2Use = (selected.photo2PosUse !== false);
   const heroPhoto2PosX = Number(selected.photo2PosX), heroPhoto2PosY = Number(selected.photo2PosY);
   const heroPhoto2Pos = (heroPhoto2Use && Number.isFinite(heroPhoto2PosX) && Number.isFinite(heroPhoto2PosY)) ? `${heroPhoto2PosX}% ${heroPhoto2PosY}%` : 'top center';
   const detailHtml = (totalFocusDetailStyle === 'card')
-    ? _buildFocusCardDetail(selected, { selUniv, selColor, selWin, selLoss, selGames, selWr, selAttr })
+    ? _buildFocusCardDetail(selected, { selUniv, selColor, selWin, selLoss, selGames, selWr, selAttr, selHistAll, heroPhoto2Pos })
     : `<div class="streamer-focus-main">
     <div class="streamer-focus-main-hero" style="background:linear-gradient(135deg,color-mix(in srgb, ${selColor} 28%, #0f172a),${selColor})">
       ${heroPhotoUrl ? `<div class="streamer-focus-hero-bg" style="background-image:url('${heroPhotoUrl}')"></div>` : ''}
@@ -784,11 +840,12 @@ function _buildFocusView(rankMap){
   </div>`;
   return `<div class="streamer-focus-layout">
     <aside class="streamer-focus-sidebar">
-      <div class="streamer-focus-section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div class="streamer-focus-section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;row-gap:6px">
         <span>스트리머 선택</span>
-        <span style="display:inline-flex;gap:4px">
-          <button class="pill ${totalFocusDetailStyle==='hero'?'on':''}" style="padding:4px 10px;font-size:11px" onclick="totalFocusDetailStyle='hero';try{localStorage.setItem('su_focus_detail_style','hero');}catch(e){};render()" title="기본형">🖼️ 기본</button>
-          <button class="pill ${totalFocusDetailStyle==='card'?'on':''}" style="padding:4px 10px;font-size:11px" onclick="totalFocusDetailStyle='card';try{localStorage.setItem('su_focus_detail_style','card');}catch(e){};render()" title="사진+리스트형">📋 리스트</button>
+        <span style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
+          <button class="pill ${totalFocusDetailStyle==='hero'?'on':''}" style="padding:4px 10px;font-size:11px;white-space:nowrap" onclick="totalFocusDetailStyle='hero';try{localStorage.setItem('su_focus_detail_style','hero');}catch(e){};render()" title="기본형">🖼️ 기본</button>
+          <button class="pill ${totalFocusDetailStyle==='card'?'on':''}" style="padding:4px 10px;font-size:11px;white-space:nowrap" onclick="totalFocusDetailStyle='card';try{localStorage.setItem('su_focus_detail_style','card');}catch(e){};render()" title="사진+리스트형">📋 리스트</button>
+          ${(totalFocusDetailStyle==='card' && isLoggedIn) ? `<button class="pill ${totalFocusCard2AutoFit?'on':''}" style="padding:4px 10px;font-size:11px;white-space:nowrap" onclick="totalFocusCard2AutoFit=!totalFocusCard2AutoFit;try{localStorage.setItem('su_focus_card2_autofit',totalFocusCard2AutoFit?'1':'0');}catch(e){};render()" title="하단 이미지2 배치의 기본값입니다. 자동: 크롭 없이 꽉 차게 배치. 수동: 스트리머별로 지정한 위치를 사용. 자동 상태에서도 개별 스트리머에서 ▲▼로 위치를 조정하면 그 스트리머만 수동 위치가 우선 적용됩니다.">${totalFocusCard2AutoFit?'🪄 자동':'✋ 수동'}</button>` : ''}
         </span>
       </div>
       ${listHtml}

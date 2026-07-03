@@ -69,9 +69,13 @@ function buildPlayerModeStatsHTML(opts){
     const wrCol=t?(wr>=50?cWin:'#64748b'):'#9ca3af';
     // (개선) 카드 전체를 진하게 물들이지 않고, 옅은 배경 + 상단 포인트 바 + 좌측 얇은 라인으로
     // 모드 색상은 "표시"만 하고 텍스트 대비(가독성)는 항상 확보
-    h+=`<div class="pd-mode-card" style="position:relative;background:var(--surface);border:1px solid var(--border);border-left:3px solid ${mc};border-radius:12px;padding:10px 8px 8px;text-align:center;overflow:hidden;transition:transform .15s,box-shadow .15s">
-      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${mc}${_rpPctToHex(55)}"></div>
-      <div style="font-size:10px;color:${mc};font-weight:900;margin-bottom:6px;letter-spacing:.2px">${key}</div>
+    // 설정(모드별 전적 배경 색상 강도)의 modeTint 값을 실제로 카드 배경에 반영해 은은한 모드색 배경을 만든다
+    const cardBg = modeTint>0
+      ? `linear-gradient(160deg,var(--surface),${mc}${_rpPctToHex(modeTint)})`
+      : 'var(--surface)';
+    h+=`<div class="pd-mode-card" style="position:relative;background:${cardBg};border-top:1px solid var(--border);border-bottom:1px solid var(--border);border-right:none;border-left:3px solid ${mc}${_rpPctToHex(45)};border-radius:12px;padding:10px 8px 8px;text-align:center;overflow:hidden;transition:transform .15s,box-shadow .15s;box-shadow:0 1px 3px rgba(15,23,42,.04)">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${mc}${_rpPctToHex(32)}"></div>
+      <div style="font-size:10px;color:${mc}${_rpPctToHex(80)};font-weight:900;margin-bottom:6px;letter-spacing:.2px">${key}</div>
       <div style="display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;font-weight:800;margin-bottom:4px">
         <span style="color:${cWin};background:${cWin}14;border-radius:6px;padding:1px 6px">${w}승</span>
         <span style="color:${cLoss};background:${cLoss}1f;border-radius:6px;padding:1px 6px">${l}패</span>

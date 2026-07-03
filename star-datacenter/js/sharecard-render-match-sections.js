@@ -13,8 +13,8 @@
         const aW=g.winner==='A',bW=g.winner==='B';
         const loserA=!aW&&bW?';filter:grayscale(.45) brightness(.92);opacity:.74':'';
         const loserB=!bW&&aW?';filter:grayscale(.45) brightness(.92);opacity:.74':'';
-        const photoA=g.playerA?getPlayerPhotoHTML(g.playerA,'28px',`flex-shrink:0${loserA}`):'';
-        const photoB=g.playerB?getPlayerPhotoHTML(g.playerB,'28px',`flex-shrink:0${loserB}`):'';
+        const photoA=g.playerA?`<span onclick="openPlayerModal('${String(g.playerA).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="cursor:pointer;display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(g.playerA,'28px',`flex-shrink:0${loserA}`)}</span>`:'';
+        const photoB=g.playerB?`<span onclick="openPlayerModal('${String(g.playerB).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}')" title="스트리머 상세" style="cursor:pointer;display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(g.playerB,'28px',`flex-shrink:0${loserB}`)}</span>`:'';
         const winA=aW?`<span style="background:${ca};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';
         const winB=bW?`<span style="background:${cb};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;flex-shrink:0">WIN</span>`:'';
         return`<div class="share-match-game-row" style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid ${theme.divider}">

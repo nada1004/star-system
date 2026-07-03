@@ -4,7 +4,7 @@ function preparePlayerDetailStyleData(player){
     return {
       col:'#6366f1', winC:'#dc2626', lossC:'#94a3b8', cWin:'#dc2626', cLoss:'#94a3b8',
       pdStyle:{}, isMobile:false, isTablet:false, hdrBg:'linear-gradient(135deg,#6366f1,#6366f1ee)',
-      p2h:(v=>'00'), statsTint:8, modeTint:10,
+      p2h:(v=>'00'), statsTint:8, modeTint:6,
       pmCardR:18, pmHdrPad:'18px 18px 16px', pmPhotoSz:76, pmPhotoR:16, pmNameFs:20,
       pmMetaFs:11, pmMetaPad:'3px 10px', pmMetaPad2:'3px 9px', pmStatsPad:'14px 6px',
       pmStatsNum1:14, pmStatsBig:22,
@@ -57,7 +57,7 @@ function preparePlayerDetailStyleData(player){
   } : null;
   const p2h=v=>Math.max(0,Math.min(255,Math.round(v*2.55))).toString(16).padStart(2,'0');
   const statsTint=pdStyle.stats_tint!==undefined?pdStyle.stats_tint:8;
-  const modeTint=pdStyle.mode_tint!==undefined?pdStyle.mode_tint:10;
+  const modeTint=pdStyle.mode_tint!==undefined?pdStyle.mode_tint:6;
   const CPM={light:{win:'#ef4444',loss:'#9ca3af'},normal:{win:'#dc2626',loss:'#94a3b8'},dark:{win:'#f87171',loss:'#cbd5e1'}};
   const cp=CPM[pdStyle.color_preset||'normal'];
   const cWin=cp.win;

@@ -161,8 +161,8 @@ function buildUnivHeaderCardHTML(opts){
       <div style="display:grid;grid-template-columns:repeat(${isMobile?'2':'4'},1fr);gap:${isMobile?'7px':'9px'}">
         ${statItems.map(s=>`<div class="ud-hero-stat" style="background:linear-gradient(145deg,${col}0c,${col}06);border:1.5px solid ${col}22;border-radius:16px;padding:${isMobile?'10px 8px':'13px 10px'};text-align:center;position:relative;overflow:hidden;transition:border-color .15s">
           <div style="position:absolute;bottom:-8px;right:-6px;font-size:26px;opacity:.07;line-height:1">${s.icon}</div>
-          <div class="ud-hero-stat-label" style="font-size:8.5px;color:var(--gray-l,#94a3b8);margin-bottom:5px;font-weight:900;letter-spacing:.9px;text-transform:uppercase">${s.label}</div>
-          <div class="ud-hero-stat-val" style="font-weight:1000;font-size:${s.fs}px;color:var(--text,#1e293b)">${s.value}</div>
+          <div class="ud-hero-stat-label" style="font-size:8.5px;color:var(--text3,#475569);margin-bottom:5px;font-weight:900;letter-spacing:.9px;text-transform:uppercase">${s.label}</div>
+          <div class="ud-hero-stat-val" style="font-weight:900;font-size:${s.fs}px;color:var(--text,#1e293b);text-shadow:0 0 .3px currentColor">${s.value}</div>
         </div>`).join('')}
       </div>
     </div>

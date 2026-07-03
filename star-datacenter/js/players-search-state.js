@@ -10,6 +10,7 @@ let _bulkEditSearch=''; // 일괄 수정(선택 모드) 검색어
 let totalViewMode=(()=>{try{return localStorage.getItem('su_streamer_view_mode')||'table';}catch(e){return 'table';}})(); // 'gallery'(카드형) | 'table'(리스트형) | 'focus'(상세형)
 let totalFocusPlayer=''; // 상세형에서 선택된 스트리머 이름
 let totalFocusDetailStyle=(()=>{try{return localStorage.getItem('su_focus_detail_style')||'hero';}catch(e){return 'hero';}})(); // 상세형 우측 상세 레이아웃: 'hero'(기본) | 'card'(사진+리스트형)
+let totalFocusCard2AutoFit=(()=>{try{return localStorage.getItem('su_focus_card2_autofit')!=='0';}catch(e){return true;}})(); // 상세형 리스트(card2) 하단 이미지2: true=자동 크기/위치 맞춤(크롭 없이 전체 표시, 개별 설정 불필요), false=수동 위치 지정(기존 방식, streamer.photo2PosX/Y 사용)
 
 (function _injectStreamerTabUiStyle(){
   if(typeof document==='undefined') return;

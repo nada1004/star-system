@@ -4,7 +4,7 @@ function preparePlayerDetailComputedData(opts){
     histAll=[],
     year='',
     normMap=(v=>String(v||'-')),
-    modeTint=10,
+    modeTint=6,
     cWin='#dc2626',
     cLoss='#94a3b8'
   } = opts || {};

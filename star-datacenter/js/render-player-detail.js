@@ -15,7 +15,7 @@ function buildPlayerDetailHTML(p){
   const _hdrBgLayer = _style?.hdrBgLayer || null;
   const _p2h = _style?.p2h || (v=>Math.max(0,Math.min(255,Math.round(v*2.55))).toString(16).padStart(2,'0'));
   const _statsTint = _style?.statsTint ?? 8;
-  const _modeTint = _style?.modeTint ?? 10;
+  const _modeTint = _style?.modeTint ?? 6;
   const _cWin = _style?.cWin || _winC;
   const _cLoss = _style?.cLoss || _lossC;
   const _designMode = _style?.designMode || 'classic';

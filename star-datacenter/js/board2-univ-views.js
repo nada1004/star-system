@@ -90,7 +90,7 @@ function _b2UnivView() {
         ${_viewBtn('poster','포스터')}
         ${_viewBtn('rank','랭킹')}
         ${_viewBtn('glass','✨ 글래스')}
-        ${_viewBtn('frame','🎴 프레임')}
+        ${_viewBtn('table','📋 테이블')}
       </div>
     </div>
   </div>`;
@@ -1406,15 +1406,18 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     : '';
 
   let rows = '';
+  let _tableHeadShown = false;
   roleOrder.forEach(role => {
     const group = roleGroups[role];
-    const chips = _b2RenderUnivGroupCards(group, col, true, _profileViewMode);
+    const chips = _b2RenderUnivGroupCards(group, col, true, _profileViewMode, _profileViewMode==='table' && _tableHeadShown);
+    if (_profileViewMode==='table' && group.length) _tableHeadShown = true;
     rows += _tableRow(role, true, chips);
   });
   orderedTierKeys.forEach(tier => {
     const group = tierGroups[tier];
     group.sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ko', {sensitivity:'base'}));
-    const chips = _b2RenderUnivGroupCards(group, col, false, _profileViewMode);
+    const chips = _b2RenderUnivGroupCards(group, col, false, _profileViewMode, _profileViewMode==='table' && _tableHeadShown);
+    if (_profileViewMode==='table' && group.length) _tableHeadShown = true;
     rows += _tableRow(tier, false, chips);
   });
   const sidePanelHtml = hasSide ? `<div style="margin-top:10px;background:${_memoPanelBg};padding:12px;box-sizing:border-box;overflow:hidden;border-radius:18px;border:1px solid ${_softBorder};box-shadow:0 14px 26px rgba(15,23,42,.06)">
@@ -1743,14 +1746,14 @@ function _b2GetUnivProfileViewMode() {
     const raw = String(localStorage.getItem('su_b2_univ_profile_view') || '').trim();
     if (raw === 'card') return 'poster';
     if (raw === 'compact' || raw === 'media' || raw === 'board' || raw === 'split') return 'rank';
-    return ['default','poster','rank','glass','frame'].includes(raw) ? raw : 'default';
+    return ['default','poster','rank','glass','table'].includes(raw) ? raw : 'default';
   }catch(e){
     return 'default';
   }
 }
 
 function _b2SetUnivProfileViewMode(mode) {
-  const nextMode = ['default','poster','rank','glass','frame'].includes(String(mode||'')) ? String(mode) : 'default';
+  const nextMode = ['default','poster','rank','glass','table'].includes(String(mode||'')) ? String(mode) : 'default';
   try{ localStorage.setItem('su_b2_univ_profile_view', nextMode); }catch(e){}
   if (typeof render === 'function') render();
 }
@@ -1774,7 +1777,7 @@ function _b2UnivRankRow(p, accentCol, showBadge, idx) {
       <div style="flex-shrink:0;width:20px;text-align:center;font-size:11px;font-weight:900;color:${accentCol};opacity:.75">${idx}</div>
       <div style="width:42px;height:42px;flex-shrink:0;${shapeStyle}overflow:hidden;border:2px solid ${accentCol}55;background:${accentCol}22;box-shadow:0 4px 10px ${accentCol}26">
         ${photo
-          ? `<img src="${photo}" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
+          ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
           : `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
         }
       </div>
@@ -1817,7 +1820,7 @@ function _b2UnivGlassCard(p, accentCol, showBadge) {
       onmouseleave="this.style.transform='';this.style.boxShadow='0 10px 22px rgba(15,23,42,.12)'">
       <div style="position:relative;width:100%;aspect-ratio:.86;overflow:hidden;background:linear-gradient(160deg,${accentCol}40,${accentCol}12)">
         ${photo
-          ? `<img src="${photo}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
+          ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
           : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
         }
         ${(p.race&&p.race!=='N')?`<div style="position:absolute;top:7px;right:7px;padding:2px 8px;border-radius:999px;background:${raceCol}e6;color:#fff;font-size:10px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.22)">${p.race}</div>`:''}
@@ -1853,7 +1856,7 @@ function _b2UnivFrameCard(p, accentCol, showBadge) {
       onmouseleave="this.style.transform='';this.style.boxShadow='0 10px 20px rgba(15,23,42,.14)'">
       <div style="position:relative;width:100%;aspect-ratio:.86;overflow:hidden;background:linear-gradient(160deg,${accentCol}45,${accentCol}14)">
         ${photo
-          ? `<img src="${photo}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
+          ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
           : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
         }
         ${badgeTxt?`<div style="position:absolute;top:0;left:0;padding:3px 10px 3px 8px;border-radius:0 0 10px 0;background:${badgeBg};color:${badgeFg};font-weight:900;font-size:10px">${badgeTxt}</div>`:''}
@@ -1876,11 +1879,11 @@ function _b2UnivPhotoCard(p, accentCol, showBadge) {
   const badgeFg = (p.tier && typeof getTierBtnTextColor === 'function') ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
   const raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
   const backdrop = photo
-    ? `<img src="${photo}" crossorigin="anonymous" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.16);filter:blur(14px) saturate(1.08) brightness(.88);opacity:.88" onerror="this.style.display='none'">
+    ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.16);filter:blur(14px) saturate(1.08) brightness(.88);opacity:.88" onerror="this.style.display='none'">
        <div style="position:absolute;inset:0;background:linear-gradient(180deg,${accentCol}24 0%,rgba(2,6,23,.12) 100%)"></div>`
     : `<div style="position:absolute;inset:0;background:linear-gradient(160deg,${accentCol}44 0%,${accentCol}18 100%)"></div>`;
   const photoHtml = photo
-    ? `<img src="${photo}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
        <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.78">${raceLetter}</div>`
     : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.78">${raceLetter}</div>`;
   return `
@@ -1918,11 +1921,11 @@ function _b2UnivHeatCard(p, accentCol) {
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const shapeStyle = 'border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);';
   return `<button type="button" title="${(p.name||'').replace(/"/g,'&quot;')}" onclick="openPlayerModal('${safeName}')" style="width:112px;height:112px;padding:0;border:none;${shapeStyle}overflow:hidden;background:${accentCol}22;box-shadow:0 8px 20px rgba(15,23,42,.09);cursor:pointer">
-    ${photo ? `<img src="${photo}" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:1000;color:${accentCol}">${raceLetter}</span>` : `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:1000;color:${accentCol}">${raceLetter}</span>`}
+    ${photo ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:1000;color:${accentCol}">${raceLetter}</span>` : `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:1000;color:${accentCol}">${raceLetter}</span>`}
   </button>`;
 }
 
-function _b2RenderUnivGroupCards(group, accentCol, showBadge, mode) {
+function _b2RenderUnivGroupCards(group, accentCol, showBadge, mode, hideTableHead) {
   const items = Array.isArray(group) ? group : [];
   if (mode === 'poster') {
     return `<div style="display:flex;flex-wrap:wrap;gap:14px">${items.map(p => _b2UnivPhotoCard(p, accentCol, showBadge)).join('')}</div>`;
@@ -1940,8 +1943,8 @@ function _b2RenderUnivGroupCards(group, accentCol, showBadge, mode) {
   if (mode === 'glass') {
     return `<div style="display:flex;flex-wrap:wrap;gap:14px">${items.map(p => _b2UnivGlassCard(p, accentCol, showBadge)).join('')}</div>`;
   }
-  if (mode === 'frame') {
-    return `<div style="display:flex;flex-wrap:wrap;gap:14px">${items.map(p => _b2UnivFrameCard(p, accentCol, showBadge)).join('')}</div>`;
+  if (mode === 'table') {
+    return (typeof _b2LineupTable === 'function') ? _b2LineupTable(items, accentCol, '', '', hideTableHead) : '';
   }
   return `<div style="display:grid;grid-template-columns:repeat(5,max-content);align-items:center;justify-content:start;column-gap:10px;row-gap:8px;max-width:100%;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;scrollbar-width:thin">${items.map(p => _b2UnivDefaultTag(p, accentCol, showBadge)).join('')}</div>`;
 }
@@ -1954,8 +1957,8 @@ function _b2RenderUnivGroupCards(group, accentCol, showBadge, mode) {
   const s=document.createElement('style');
   s.id='b2-lineup-card3-style';
   s.textContent=[
-    '.b2-lc3{border-radius:18px;overflow:hidden;background:linear-gradient(165deg,var(--lc-col,#64748b)1f 0%,var(--lc-col,#64748b)08 34%,rgba(255,255,255,.98) 58%);box-shadow:0 4px 16px rgba(15,23,42,.16);cursor:pointer;transition:transform .15s,box-shadow .15s;border:1px solid var(--lc-col,#64748b)2e}',
-    '.b2-lc3:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(15,23,42,.26)}',
+    '.b2-lc3{position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(165deg,var(--lc-col,#64748b)1f 0%,var(--lc-col,#64748b)08 34%,rgba(255,255,255,.98) 58%);box-shadow:0 4px 16px rgba(15,23,42,.16);cursor:pointer;transition:transform .2s ease,box-shadow .2s ease;border:1px solid var(--lc-col,#64748b)2e;transform-origin:center center}',
+    '.b2-lc3:hover{transform:scale(2);box-shadow:0 30px 60px rgba(15,23,42,.35);z-index:40}',
     '.b2-lc3-photo{position:relative;width:100%;aspect-ratio:.82;overflow:hidden;background:linear-gradient(160deg,var(--lc-col,#64748b)55 0%,var(--lc-col,#64748b)22 100%)}',
     '.b2-lc3-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}',
     '.b2-lc3-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.2);filter:blur(15px) saturate(1.1) brightness(.82)}',
@@ -2000,8 +2003,8 @@ function _b2LineupCard3(p, col) {
   return `<div class="b2-lc3" style="--lc-col:${col}" onclick="openPlayerModal('${safeName}')">
     <div class="b2-lc3-photo">
       ${photo
-        ? `<img class="b2-lc3-backdrop" src="${photo}" crossorigin="anonymous" aria-hidden="true" onerror="this.style.display='none'">
-           <img src="${photo}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" onerror="this.style.display='none';this.previousElementSibling.style.display='none';this.nextElementSibling.style.display='flex'">
+        ? `<img class="b2-lc3-backdrop" src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" onerror="this.style.display='none'">
+           <img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" onerror="this.style.display='none';this.previousElementSibling.style.display='none';this.nextElementSibling.style.display='flex'">
            <div class="b2-lc3-fallback" style="display:none;z-index:1">${raceLetter}</div>`
         : `<div class="b2-lc3-fallback">${raceLetter}</div>`}
       <div class="b2-lc3-overlay">
@@ -2032,10 +2035,12 @@ function _b2LineupCard3(p, col) {
     '.b2-lc4 tbody td{padding:7px 12px;border-bottom:1px solid rgba(0,0,0,.06);vertical-align:middle;background:transparent!important}',
     '.b2-lc4 tbody tr:last-child td{border-bottom:none}',
     '.b2-lc4 tbody tr:hover td{background:var(--lc-col,#64748b)16!important}',
+    '.b2-lc4 tbody tr{cursor:pointer;position:relative;transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s ease;transform-origin:center center}',
+    '.b2-lc4 tbody tr:hover{transform:scale(1.025);box-shadow:0 10px 22px rgba(15,23,42,.18);z-index:30}',
+    '.b2-lc4 tbody tr:hover td{background:var(--white,#fff)!important}',
     '.b2-lc4-head{display:flex;align-items:center;gap:8px;padding:9px 12px}',
     '.b2-lc4-head img{width:24px;height:24px;object-fit:contain;border-radius:6px;flex-shrink:0}',
     '.b2-lc4-head span{font-size:12px;font-weight:900;color:#0f172a}',
-    '.b2-lc4 tbody tr{cursor:pointer}',
     '.b2-lc4-namecell{display:flex;align-items:center;gap:9px;min-width:120px}',
     '.b2-lc4-avatar{position:relative;width:28px;height:28px;flex-shrink:0;border-radius:50%;overflow:hidden;border:1.5px solid var(--lc-col,#64748b)55;background:linear-gradient(160deg,var(--lc-col,#64748b)55,var(--lc-col,#64748b)22)}',
     '.b2-lc4-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}',
@@ -2064,7 +2069,7 @@ function _b2LineupTableRow(p, col) {
     <td><div class="b2-lc4-namecell">
       <div class="b2-lc4-avatar">
         ${photo
-          ? `<img src="${photo}" crossorigin="anonymous" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="b2-lc4-fallback" style="display:none">${raceLetter}</div>`
+          ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="b2-lc4-fallback" style="display:none">${raceLetter}</div>`
           : `<div class="b2-lc4-fallback">${raceLetter}</div>`}
       </div>
       <span class="b2-lc4-name">${p.name||''}</span>
@@ -2080,7 +2085,7 @@ function _b2LineupTableRow(p, col) {
   </tr>`;
 }
 
-function _b2LineupTable(members, col, iconUrl, univName) {
+function _b2LineupTable(members, col, iconUrl, univName, hideHead) {
   if (!members.length) return '';
   const headBar = iconUrl
     ? `<div class="b2-lc4-head"><img src="${toHttpsUrl(iconUrl)}" alt="" onerror="this.style.display='none'"><span>${univName||''}</span></div>`
@@ -2088,7 +2093,7 @@ function _b2LineupTable(members, col, iconUrl, univName) {
   return `<div class="b2-lc4-wrap" style="--lc-col:${col}">
     ${headBar}
     <table class="b2-lc4">
-      <thead><tr><th>이름</th><th>역할</th><th>티어</th><th>종족</th><th>전적</th><th>승률</th></tr></thead>
+      ${hideHead ? '' : '<thead><tr><th>이름</th><th>역할</th><th>티어</th><th>종족</th><th>전적</th><th>승률</th></tr></thead>'}
       <tbody>${members.map(p => _b2LineupTableRow(p, col)).join('')}</tbody>
     </table>
   </div>`;
@@ -2105,12 +2110,12 @@ function _b2LineupCard(p, col, big, iconUrl) {
   const _tierBadgeTxt = (!big && p.tier && typeof getTierBtnTextColor==='function') ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
   // 배경 blur 레이어
   const _fillBackdrop = photo
-    ? `<img src="${photo}" crossorigin="anonymous" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.22);filter:blur(16px) saturate(1.15) brightness(.8);opacity:.85" onerror="this.style.display='none'">
+    ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.22);filter:blur(16px) saturate(1.15) brightness(.8);opacity:.85" onerror="this.style.display='none'">
        <div style="position:absolute;inset:0;background:linear-gradient(180deg,${col}33 0%,rgba(0,0,0,.18) 100%)"></div>`
     : `<div style="position:absolute;inset:0;background:linear-gradient(160deg,${col}44 0%,${col}1a 100%)"></div>`;
   // 메인 사진 (전체 꽉 채움, 모양 적용 없이 카드 자체 overflow:hidden으로 처리)
   const photoHtml = photo
-    ? `<img src="${photo}" crossorigin="anonymous" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
        <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:6px">
          <div style="font-size:56px;font-weight:900;color:${col};opacity:.7">${raceLetter}</div>
        </div>`
@@ -2210,7 +2215,7 @@ function _b2LineupPoster(univName, col, forExport=false) {
         ${raceStatHtml ? `<div style="position:relative;z-index:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:16px">${raceStatHtml}</div>` : ''}
       </div>
       <div style="position:relative;overflow:hidden;background:linear-gradient(180deg,${_b2PastelBg(col,0.26)} 0%,${_b2PastelBg(col,0.18)} 100%);padding:26px 28px 32px">
-        ${(iconUrl && _lcMode !== 'table')?`<img src="${toHttpsUrl(iconUrl)}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:58%;max-width:560px;opacity:.16;object-fit:contain;pointer-events:none;z-index:0" onerror="this.style.display='none'">`:''}
+        ${(iconUrl)?`<img src="${toHttpsUrl(iconUrl)}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:58%;max-width:560px;opacity:.16;object-fit:contain;pointer-events:none;z-index:0" onerror="this.style.display='none'">`:''}
         <div style="position:relative;z-index:1">
           ${roleCardsHtml ? `
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">

@@ -2992,7 +2992,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   display:flex;
   flex-direction:column;
   min-height:0;
-  box-shadow:0 40px 100px rgba(15,23,42,.30),0 12px 32px rgba(15,23,42,.14),0 0 0 1px rgba(255,255,255,.48);
+  box-shadow:0 42px 104px rgba(15,23,42,.34),0 12px 32px rgba(15,23,42,.14),0 0 0 1px rgba(255,255,255,.48),0 2px 0 rgba(255,255,255,.85) inset;
   border:1px solid rgba(148,163,184,.16);
 }
 .modal--matchdetail .cmd-head{
@@ -4713,7 +4713,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   background:linear-gradient(180deg,#ffffff,#f8fafc);
   border:1px solid rgba(148,163,184,.20);
   border-radius:28px;
-  box-shadow:0 40px 90px rgba(15,23,42,.24),0 10px 28px rgba(15,23,42,.10),0 0 0 1px rgba(255,255,255,.62);
+  box-shadow:0 40px 90px rgba(15,23,42,.24),0 10px 28px rgba(15,23,42,.10),0 0 0 1px rgba(255,255,255,.62),0 2px 0 rgba(255,255,255,.85) inset;
   overflow:hidden;
 }
 #playerModal .umbox, #univModal .umbox{
@@ -14470,3 +14470,7 @@ body.dark .modal--matchdetail .mbox--matchdetail { border-color: rgba(255,255,25
 @media (max-width: 768px) {
   .streamer-toolbar-card .fbar { gap: 10px !important; }
 }
+
+/* ── 스트리머 상세: 모드별 전적 카드 hover 가독성/입체감 개선 ── */
+.pd-mode-card:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(15,23,42,.10); }
+body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }

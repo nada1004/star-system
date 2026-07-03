@@ -164,6 +164,9 @@ body.dark .su-sec--details summary {
 .streamer-gallery-card.is-selected {
   outline: 2px solid rgba(255,255,255,.26);
   outline-offset: 2px;
+  transform: scale(2);
+  z-index: 40;
+  box-shadow: 0 30px 60px rgba(15,23,42,.4);
 }
 .streamer-gallery-card.inactive { filter: saturate(.55); }
 .streamer-gallery-card.retired { filter: grayscale(.7) opacity(.7); }
