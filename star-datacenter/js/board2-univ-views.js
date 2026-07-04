@@ -88,7 +88,6 @@ function _b2UnivView() {
         <span class="b2-jump-label">🖼️ 모드</span>
         ${_viewBtn('default','기본')}
         ${_viewBtn('poster','포스터')}
-        ${_viewBtn('rank','랭킹')}
         ${_viewBtn('glass','✨ 글래스')}
         ${_viewBtn('table','📋 테이블')}
       </div>
@@ -1797,9 +1796,6 @@ function _b2UnivRankRow(p, accentCol, showBadge, idx) {
           <span style="font-size:10px;font-weight:800;color:var(--text3);white-space:nowrap">${recordTxt}</span>
           <span style="font-size:11px;font-weight:950;color:${wrCol};flex-shrink:0">${wr==null?'-':wr+'%'}</span>
         </div>
-        <div style="height:7px;border-radius:999px;background:${accentCol}15;overflow:hidden">
-          <div style="height:100%;width:${wr==null?0:wr}%;border-radius:999px;background:${wrCol}"></div>
-        </div>
       </div>
     </div>`;
 }
@@ -1830,11 +1826,8 @@ function _b2UnivGlassCard(p, accentCol, showBadge) {
       </div>
       <div style="padding:9px 11px 10px;background:rgba(255,255,255,.7);backdrop-filter:blur(10px) saturate(1.3);-webkit-backdrop-filter:blur(10px) saturate(1.3);border-top:1px solid ${accentCol}20">
         <div style="color:var(--text1);font-weight:950;font-size:13px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name||''}</div>
-        <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
-          <div style="flex:1;height:5px;border-radius:999px;background:${accentCol}18;overflow:hidden">
-            <div style="height:100%;width:${wr==null?0:wr}%;border-radius:999px;background:${wrCol}"></div>
-          </div>
-          <span style="font-size:10px;font-weight:900;color:${wrCol};flex-shrink:0">${wr==null?'-':wr+'%'}</span>
+        <div style="margin-top:6px;display:flex;align-items:center;justify-content:flex-end;gap:6px">
+          <span style="font-size:11px;font-weight:900;color:${wrCol};flex-shrink:0">${wr==null?'-':wr+'%'}</span>
         </div>
       </div>
     </div>`;
@@ -1972,9 +1965,9 @@ function _b2RenderUnivGroupCards(group, accentCol, showBadge, mode, hideTableHea
     '.b2-lc3-name{font-size:15px;font-weight:950;color:#fff;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.5)}',
     '.b2-lc3-sub{font-size:10px;font-weight:800;color:rgba(255,255,255,.82);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '.b2-lc3-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:9px 10px 10px}',
-    '.b2-lc3-box{border-radius:10px;padding:7px 4px;background:var(--lc-col,#64748b)0f;text-align:center}',
+    '.b2-lc3-box{border-radius:10px;padding:7px 4px;background:var(--lc-col,#64748b)14;text-align:center}',
     '.b2-lc3-box-value{font-size:13px;font-weight:950;color:#0f172a}',
-    '.b2-lc3-box-label{font-size:10px;font-weight:700;color:#94a3b8;margin-top:2px}'
+    '.b2-lc3-box-label{font-size:10px;font-weight:800;color:#475569;margin-top:2px}'
   ].join('');
   document.head.appendChild(s);
 })();
@@ -2083,7 +2076,6 @@ function _b2LineupTableRow(p, col) {
     <td>${(p.race&&p.race!=='N')?`<span class="b2-lc4-chip" style="background:${raceCol}">${p.race}</span>`:'-'}</td>
     <td>${games ? `${win}승 ${loss}패` : '기록 없음'}</td>
     <td><div class="b2-lc4-wrcell">
-      <div class="b2-lc4-bartrack"><div class="b2-lc4-barfill" style="width:${wr==null?0:wr}%;background:${wrCol}"></div></div>
       <span class="b2-lc4-wr" style="color:${wrCol}">${wr==null?'-':wr+'%'}</span>
     </div></td>
   </tr>`;

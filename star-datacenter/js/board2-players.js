@@ -1,3 +1,9 @@
+function _b2TierLabel(t) {
+  const s = String(t || '').trim();
+  if (!s) return '?티어';
+  return s.endsWith('티어') ? s : s + '티어';
+}
+
 function _b2PlayersView() {
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
   const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
@@ -175,7 +181,7 @@ function _b2PlayersView() {
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 24px;
         overflow: hidden;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.3), 0 0 30px ${theme.glow};
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
         transition: all 0.5s ease;
         padding: 0;
         box-sizing: border-box;
@@ -317,15 +323,17 @@ function _b2PlayersView() {
         left: 0;
         right: 0;
         padding: 24px;
-        background: linear-gradient(to top, rgba(2,6,23,0.92), rgba(2,6,23,0.72) 44%, transparent);
         z-index: 12;
+      }
+      .b2-players-info .b2-players-name,
+      .b2-players-info .b2-players-race {
+        text-shadow: 0 2px 10px rgba(0,0,0,.7), 0 1px 3px rgba(0,0,0,.9);
       }
       .b2-players-name {
         font-size: 36px;
         font-weight: 800;
         margin-bottom: 8px;
         color: #fff;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.8);
       }
       .b2-players-details {
         display: flex;
@@ -343,29 +351,25 @@ function _b2PlayersView() {
         font-size: 13px;
       }
       .b2-players-race {
-        font-size: 13px;
-        font-weight: 800;
+        font-size: 14px;
+        font-weight: 900;
       }
       .b2-players-chip {
         display: inline-flex;
         align-items: center;
-        gap: 7px;
-        padding: 7px 12px;
+        gap: 8px;
+        padding: 8px 14px;
         border-radius: 999px;
-        background: rgba(255,255,255,0.12);
-        border: 1px solid rgba(255,255,255,0.14);
-        color: rgba(255,255,255,0.92);
-        font-size: 12px;
-        font-weight: 800;
-        backdrop-filter: blur(12px);
+        background: rgba(0,0,0,0.4);
+        border: 1.5px solid rgba(255,255,255,0.35);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 900;
       }
       .b2-players-chip img {
-        width: 24px;
-        height: 24px;
+        width: 26px;
+        height: 26px;
         object-fit: contain;
-        border-radius: 6px;
-        background: rgba(255,255,255,0.9);
-        padding: 2px;
       }
       .b2-players-grid-wrapper {
         flex: 1;
@@ -387,7 +391,7 @@ function _b2PlayersView() {
       .b2-players-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        gap: 10px;
+        gap: 13px;
       }
       @media (min-width: 769px) and (max-width: 1024px) {
         .b2-players-wrapper {
@@ -679,8 +683,8 @@ function _b2PlayersView() {
         <div class="b2-players-info">
           <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
           <div class="b2-players-details">
-            <span class="b2-players-tier">${_b2SelectedPlayer.tier || '?'}티어</span>
-            <span class="b2-players-chip b2-players-race">${_b2SelectedPlayer.race === 'P' ? '🔮 프로토스' : _b2SelectedPlayer.race === 'T' ? '⚔️ 테란' : _b2SelectedPlayer.race === 'Z' ? '🦎 저그' : '종족미정'}</span>
+            <span class="b2-players-tier">${_b2TierLabel(_b2SelectedPlayer.tier)}</span>
+            ${(_b2SelectedPlayer.race==='P'||_b2SelectedPlayer.race==='T'||_b2SelectedPlayer.race==='Z') ? `<span class="rbadge r${_b2SelectedPlayer.race}" style="font-size:14px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35)">${_b2SelectedPlayer.race}</span>` : `<span class="b2-players-chip b2-players-race">종족미정</span>`}
             ${_b2SelectedPlayer.univ ? (() => {
               return _selUnivIcon
               ? `<span class="b2-players-chip"><img src="${toHttpsUrl(_selUnivIcon)}" onerror="this.style.display='none'"><span>${_b2SelectedPlayer.univ}</span></span>`
@@ -725,25 +729,29 @@ function _b2PlayersView() {
     };
     const tierCol  = typeof getTierBtnColor==='function'&&p.tier?getTierBtnColor(p.tier):'#64748b';
     const tierTc   = typeof getTierBtnTextColor==='function'&&p.tier?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
-    const raceIco  = p.race==='P'?'🔮':p.race==='T'?'⚔️':p.race==='Z'?'🦎':'';
-    const ws = _b2pWeekStats(p);
-    const wrColor = ws && ws.total>0 ? (ws.w/ws.total>=0.6?'#10b981':ws.w/ws.total>=0.4?'#f59e0b':'#ef4444') : '#94a3b8';
-    
+    const raceTxt  = (p.race==='P'||p.race==='T'||p.race==='Z') ? p.race : '';
+    const gridUnivIcon = (() => {
+      const uCfg = univCfg.find(x => x.name === p.univ) || {};
+      return uCfg.icon || uCfg.img || UNIV_ICONS[p.univ] || '';
+    })();
+
     h += `
-      <div class="b2-players-card" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))" style="position:relative;cursor:pointer;border-radius:16px;overflow:hidden;aspect-ratio:3/4;background:${playerTheme.bg};border:1.5px solid ${tierCol}55;box-shadow:0 6px 16px rgba(15,23,42,.10);transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;isolation:isolate" onmouseenter="this.style.transform='translateY(-4px) scale(1.025)';this.style.boxShadow='0 14px 30px rgba(15,23,42,.18)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 6px 16px rgba(15,23,42,.10)'">
+      <div class="b2-players-card" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))" style="position:relative;cursor:pointer;border-radius:18px;overflow:hidden;aspect-ratio:3/4;background:${playerTheme.bg};border:1.5px solid ${tierCol}66;isolation:isolate">
         ${p.photo
           ? `<img src="${toHttpsUrl(p.photo)}" loading="lazy" decoding="async" alt="${p.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:0" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
              <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
           : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
         }
-        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,0) 35%,rgba(8,12,28,.55) 65%,rgba(5,8,20,.90) 100%);z-index:1;pointer-events:none"></div>
-        ${p.tier?`<span style="position:absolute;top:8px;left:8px;z-index:2;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.28)">${p.tier}</span>`:''}
-        ${ws&&ws.total>0?`<span style="position:absolute;top:8px;right:8px;z-index:2;font-size:9px;font-weight:900;padding:3px 7px;border-radius:999px;background:rgba(15,23,42,.80);color:${wrColor};line-height:1.4;backdrop-filter:blur(6px)">${ws.w}승 ${ws.l}패</span>`:''}
+        ${p.tier?`<span style="position:absolute;top:8px;left:8px;z-index:2;font-size:10px;font-weight:900;padding:1px 6px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;opacity:.8">${p.tier}</span>`:''}
+        <div style="position:absolute;bottom:0;left:0;right:0;z-index:1;height:62%;background:linear-gradient(180deg, transparent 0%, rgba(0,0,0,.15) 35%, rgba(0,0,0,.75) 100%);pointer-events:none"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:9px 10px 10px">
-          <div style="color:#fff;font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 5px rgba(0,0,0,.5);letter-spacing:-.01em">${p.name||''}</div>
-          <div style="display:flex;align-items:center;gap:3px;margin-top:2px;flex-wrap:nowrap;overflow:hidden">
-            ${raceIco?`<span style="font-size:10px;flex-shrink:0">${raceIco}</span>`:''}
-            <span style="font-size:9.5px;color:rgba(255,255,255,.72);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.univ||'무소속'}</span>
+          <div style="display:flex;align-items:center;gap:5px;overflow:hidden">
+            ${raceTxt?`<span class="rbadge r${raceTxt}" style="flex-shrink:0;font-size:10px;padding:1px 6px;opacity:.8">${raceTxt}</span>`:''}
+            <span style="color:rgba(255,255,255,.85);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;text-shadow:0 2px 8px rgba(0,0,0,.75),0 1px 3px rgba(0,0,0,.9)">${p.name||''}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:nowrap;overflow:hidden">
+            ${gridUnivIcon?`<img src="${toHttpsUrl(gridUnivIcon)}" onerror="this.style.display='none'" style="flex-shrink:0;width:16px;height:16px;object-fit:contain;opacity:.85;filter:drop-shadow(0 1px 3px rgba(0,0,0,.8))">`:''}
+            <span style="font-size:10.5px;color:rgba(255,255,255,.75);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.85),0 1px 3px rgba(0,0,0,.95)">${p.univ||'무소속'}</span>
           </div>
         </div>
       </div>
@@ -873,8 +881,8 @@ function _b2UpdateMainDisplay(playerName) {
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
         <div class="b2-players-details">
-          <span class="b2-players-tier" style="background:${theme.border}">${player.tier || '?'}티어</span>
-          <span class="b2-players-chip b2-players-race">${player.race === 'P' ? '프로토스' : player.race === 'T' ? '테란' : player.race === 'Z' ? '저그' : '종족미정'}</span>
+          <span class="b2-players-tier" style="background:${theme.border}">${_b2TierLabel(player.tier)}</span>
+          ${(player.race==='P'||player.race==='T'||player.race==='Z') ? `<span class="rbadge r${player.race}" style="font-size:14px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35)">${player.race}</span>` : `<span class="b2-players-chip b2-players-race">종족미정</span>`}
           ${player.univ ? (() => {
             return _updUnivIcon
               ? `<span class="b2-players-chip"><img src="${toHttpsUrl(_updUnivIcon)}" onerror="this.style.display='none'"><span>${player.univ}</span></span>`

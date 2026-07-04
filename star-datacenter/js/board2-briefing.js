@@ -410,21 +410,23 @@ function _b2WeeklyBriefingView() {
         font-family: 'Noto Sans KR', -apple-system, sans-serif;
         /* 토큰 */
         --b2w-accent: var(--blue, #2563eb);
-        --b2w-accent-strong: var(--blue-d, #1d4ed8);
+        --b2w-accent-strong: var(--blue-d, #1a3fb0);
         --b2w-accent-soft: var(--blue-l, rgba(37,99,235,.08));
+        --b2w-gold: #b8862c;
+        --b2w-gold-soft: rgba(184,134,44,.14);
         --b2w-ink: var(--text1, #111827);
         --b2w-ink-mid: var(--text2, #374151);
         --b2w-ink-soft: var(--text3, #6b7280);
         --b2w-rule: var(--border, rgba(17,24,39,.15));
         --b2w-rule-hard: var(--border2, rgba(17,24,39,.55));
         --b2w-rule-soft: var(--border, rgba(17,24,39,.10));
-        --b2w-paper: var(--surface, #f8fafc);
-        --b2w-paper-alt: var(--white, #fff);
-        --b2w-paper-warm: var(--surface, #f8fafc);
-        --b2w-shadow: var(--sh2, 0 6px 20px rgba(0,0,0,.06));
-        --b2w-shadow-sm: var(--sh, 0 2px 4px rgba(0,0,0,.04));
-        --b2w-r: 12px;
-        --b2w-r-lg: 18px;
+        --b2w-paper: var(--surface, #f8f8f5);
+        --b2w-paper-alt: var(--white, #fffdf9);
+        --b2w-paper-warm: var(--surface, #faf7f0);
+        --b2w-shadow: var(--sh2, 0 12px 32px rgba(15,23,42,.09));
+        --b2w-shadow-sm: var(--sh, 0 3px 9px rgba(15,23,42,.055));
+        --b2w-r: 14px;
+        --b2w-r-lg: 20px;
         --b2w-accent-border: rgba(37,99,235,.22);
         --b2w-accent-shadow: rgba(37,99,235,.10);
         --b2w-accent-shadow-strong: rgba(37,99,235,.16);
@@ -435,6 +437,8 @@ function _b2WeeklyBriefingView() {
         --b2w-tag-muted: var(--text3, #6b7280);
         --b2w-tag-accent-bg: var(--blue-l, #eff6ff);
         --b2w-tag-accent-border: rgba(37,99,235,.22);
+        /* 가독성 강화: 옅은 회색 보조 텍스트가 잘 안 보인다는 피드백 반영 */
+        --text3: #52525b;
       }
       body.dark .b2w2-wrap {
         --b2w-accent-border: rgba(96,165,250,.30);
@@ -442,6 +446,9 @@ function _b2WeeklyBriefingView() {
         --b2w-accent-shadow-strong: rgba(96,165,250,.20);
         --b2w-btn-text: #0f172a;
         --b2w-tag-accent-border: rgba(96,165,250,.28);
+        --b2w-gold: #e0b45a;
+        --b2w-gold-soft: rgba(224,180,90,.16);
+        --text3: #b8c2cf;
       }
       .b2w2-wrap *, .b2w2-wrap *::before, .b2w2-wrap *::after { box-sizing: border-box; }
       .b2w2-wrap b, .b2w2-wrap strong { font-weight: 800 }
@@ -465,7 +472,7 @@ function _b2WeeklyBriefingView() {
         position: absolute;
         left: 0; right: 0; bottom: 0;
         height: 3px;
-        background: linear-gradient(90deg, var(--b2w-accent) 0%, var(--b2w-accent) 38%, var(--b2w-rule-hard) 38%, var(--b2w-rule-hard) 100%);
+        background: linear-gradient(90deg, var(--b2w-accent) 0%, var(--b2w-accent) 28%, var(--b2w-gold) 28%, var(--b2w-gold) 38%, var(--b2w-rule-hard) 38%, var(--b2w-rule-hard) 100%);
         opacity: .9;
       }
       .b2w2-masthead-brand {
@@ -477,7 +484,7 @@ function _b2WeeklyBriefingView() {
       .b2w2-masthead-mark {
         width: 16px; height: 16px;
         border-radius: 4px;
-        background: linear-gradient(135deg, var(--b2w-accent), var(--b2w-accent-strong));
+        background: linear-gradient(135deg, var(--b2w-gold), var(--b2w-accent) 60%, var(--b2w-accent-strong));
         box-shadow: 0 2px 6px var(--b2w-accent-shadow-strong, rgba(37,99,235,.2));
         flex-shrink: 0;
       }
@@ -489,13 +496,14 @@ function _b2WeeklyBriefingView() {
         align-items: flex-start;
         justify-content: space-between;
         gap: 24px;
-        padding: 20px 22px 22px;
+        padding: 22px 24px 24px;
         margin-bottom: 20px;
         border-bottom: 3px double var(--b2w-rule-hard);
         background:
           radial-gradient(circle at 6px 6px, var(--b2w-rule-soft) 1px, transparent 1.6px) 0 0/18px 18px,
           linear-gradient(180deg, var(--b2w-accent-soft) 0%, transparent 65%);
         border-radius: var(--b2w-r-lg) var(--b2w-r-lg) 0 0;
+        box-shadow: var(--b2w-shadow-sm);
       }
       .b2w2-hero-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; flex: 1 }
       .b2w2-hero-title {
@@ -520,7 +528,7 @@ function _b2WeeklyBriefingView() {
         max-width: 880px;
         font-family: 'Noto Serif KR', Georgia, serif;
         font-style: italic;
-        border-left: 3px solid var(--b2w-accent);
+        border-left: 3px solid var(--b2w-gold);
         padding-left: 13px;
         background: var(--b2w-accent-soft);
         padding-top: 6px;
@@ -1460,14 +1468,14 @@ function _b2WeeklyBriefingView() {
         color: rgba(255,255,255,.62);
         letter-spacing: .02em;
       }
-      .b2w2-mvp-first .b2w2-mvp-sv-win   { color: #4ade80 }
-      .b2w2-mvp-first .b2w2-mvp-sv-loss  { color: #f87171 }
+      .b2w2-mvp-first .b2w2-mvp-sv-win   { color: #f87171 }
+      .b2w2-mvp-first .b2w2-mvp-sv-loss  { color: #cbd5e1 }
       .b2w2-mvp-first .b2w2-mvp-sv-rate  { color: #fbbf24 }
-      .b2w2-mvp-second .b2w2-mvp-sv-win  { color: #6ee7b7 }
-      .b2w2-mvp-second .b2w2-mvp-sv-loss { color: #fca5a5 }
+      .b2w2-mvp-second .b2w2-mvp-sv-win  { color: #fca5a5 }
+      .b2w2-mvp-second .b2w2-mvp-sv-loss { color: #94a3b8 }
       .b2w2-mvp-second .b2w2-mvp-sv-rate { color: #e2e8f0 }
-      .b2w2-mvp-worst .b2w2-mvp-sv-win   { color: #86efac }
-      .b2w2-mvp-worst .b2w2-mvp-sv-loss  { color: #ff6b6b }
+      .b2w2-mvp-worst .b2w2-mvp-sv-win   { color: #fda4af }
+      .b2w2-mvp-worst .b2w2-mvp-sv-loss  { color: #94a3b8 }
       .b2w2-mvp-worst .b2w2-mvp-sv-rate  { color: #fca5a5 }
 
       /* 최근 폼 dots — statline 우측 정렬 */
@@ -1570,7 +1578,7 @@ function _b2WeeklyBriefingView() {
       .b2w2-lead-card .b2w2-highlight-desc { font-size: 13px; line-height: 1.75 }
       .b2w2-highlight-card {
         padding: 16px 18px;
-        border-radius: 10px;
+        border-radius: var(--b2w-r);
         border: 1px solid var(--b2w-rule);
         background: var(--b2w-paper);
         box-shadow: var(--b2w-shadow-sm);
@@ -1585,8 +1593,8 @@ function _b2WeeklyBriefingView() {
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0; height: 3px;
-        background: linear-gradient(90deg, var(--hc-top, var(--b2w-rule-soft)), rgba(255,255,255,.55));
-        border-radius: 10px 10px 0 0;
+        background: linear-gradient(90deg, var(--hc-top, var(--b2w-rule-soft)), var(--b2w-gold, rgba(255,255,255,.55)));
+        border-radius: var(--b2w-r) var(--b2w-r) 0 0;
       }
       .b2w2-highlight-card::before {
         content: '';
@@ -1914,7 +1922,7 @@ function _b2WeeklyBriefingView() {
       .b2w2-table-wrap { border: 1px solid var(--b2w-rule-soft); border-radius: var(--b2w-r); overflow: hidden; background: var(--white) }
       .b2w2-tbl { width: 100%; border-collapse: collapse }
       .b2w2-tbl th {
-        font-size: 10px;
+        font-size: 13px;
         font-weight: 800;
         color: var(--b2w-ink-soft);
         padding: 9px 12px;
@@ -1925,7 +1933,7 @@ function _b2WeeklyBriefingView() {
         text-transform: uppercase;
         letter-spacing: .06em;
       }
-      .b2w2-tbl td { font-size: 11px; font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--b2w-rule-soft); vertical-align: middle }
+      .b2w2-tbl td { font-size: 13px; font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--b2w-rule-soft); vertical-align: middle }
       .b2w2-tbl tr:last-child td { border-bottom: none }
       .b2w2-tbl tr:hover td { background: var(--b2w-paper-alt) }
 
@@ -1942,8 +1950,8 @@ function _b2WeeklyBriefingView() {
       .b2w2-race-cell { display: flex; align-items: center; justify-content: center }
       .b2w2-race-cell-main { justify-content: flex-start; gap: 8px }
       .b2w2-race-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 38px; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 800 }
-      .b2w2-race-pill.win { background: #f0fdf4; color: #15803d }
-      .b2w2-race-pill.loss { background: #fef2f2; color: #b91c1c }
+      .b2w2-race-pill.win { background: #fef2f2; color: #dc2626 }
+      .b2w2-race-pill.loss { background: #f1f5f9; color: #475569 }
       .b2w2-race-count { font-size: 12px; font-weight: 800; color: var(--b2w-ink) }
       .b2w2-race-rate { display: inline-flex; align-items: center; justify-content: center; min-width: 52px; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; border: 1px solid var(--b2w-rule-soft) }
 
@@ -2025,7 +2033,7 @@ function _b2WeeklyBriefingView() {
       </div>
       <section class="b2w2-hero">
         <div class="b2w2-hero-main">
-          <div style="font-size:11px;font-weight:900;letter-spacing:.08em;color:var(--b2w-accent);text-transform:uppercase">${_briefingInfo.kicker}</div>
+          <div style="font-size:11px;font-weight:900;letter-spacing:.08em;color:var(--b2w-gold);text-transform:uppercase">${_briefingInfo.kicker}</div>
           <div class="b2w2-hero-title">${_briefingInfo.title}</div>
           <div class="b2w2-hero-desc">${_heroSummary}</div>
           <div class="b2w2-hero-spotlight">
@@ -2420,7 +2428,7 @@ function _b2WeeklyBriefingView() {
                   <span class="b2w2-ace-rank">${item.rank}위 대학</span>
                 </div>
                 <div class="b2w2-ace-empty-title">확실한 에이스 없음</div>
-                <div class="b2w2-ace-empty-sub">이번 기간은 기준을 만족한 선수가 없습니다. 최소 3전, 승률 50% 이상, 순승 우세 조건을 적용했습니다.</div>
+                <div class="b2w2-ace-empty-sub">이번 기간은 기준을 만족한 스트리머가 없습니다. 최소 3전, 승률 50% 이상, 순승 우세 조건을 적용했습니다.</div>
               </div>`;
         }
         const aceTone = (ace.winRate ?? 0) >= 70 && (ace.netWins ?? 0) >= 3
@@ -2499,8 +2507,8 @@ function _b2WeeklyBriefingView() {
         <div class="b2w2-chart-title">📊 대학별 전적 현황 (이번 기간)</div>
         ${_b2WeeklyBarChart(curStats)}
         <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
-          <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:8px;border-radius:2px;background:#10b981;opacity:.9"></div><span style="font-size:10px;color:var(--text3)">승</span></div>
-          <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:8px;border-radius:2px;background:#64748b;opacity:.3"></div><span style="font-size:10px;color:var(--text3)">패</span></div>
+          <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:8px;border-radius:2px;background:#dc2626;opacity:.9"></div><span style="font-size:10px;font-weight:700;color:var(--text2)">승</span></div>
+          <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:8px;border-radius:2px;background:#94a3b8;opacity:.85"></div><span style="font-size:10px;font-weight:700;color:var(--text2)">패</span></div>
           <span style="font-size:10px;color:var(--text3)">우측: 승률 / 경기수</span>
         </div>
       </div>`;
@@ -2548,10 +2556,12 @@ function _b2WeeklyBriefingView() {
         <div class="b2w2-card-head" style="background:linear-gradient(135deg, ${color}17 0%, ${color}08 55%, transparent 100%)" onclick="(function(){
           const b=document.getElementById('${cid}');
           const ic=document.getElementById('${icid}');
+          const sub=document.getElementById('b2w2-sub-${ui}');
           if(!b)return;
           const show=b.style.display==='none';
           b.style.display=show?'':'none';
           if(ic)ic.textContent=show?'▼':'▶';
+          if(sub)sub.style.display=show?'none':'flex';
         })()">
           <div class="b2w2-card-title">
             <span class="b2w2-card-dot" style="background:${color}"></span>
@@ -2560,7 +2570,7 @@ function _b2WeeklyBriefingView() {
                 <div class="b2w2-card-name">${u.name}</div>
                 <button type="button" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;border:1.5px solid ${color};background:var(--b2w-paper-alt);color:${color};cursor:pointer;white-space:nowrap;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,.08)">🏫 대학상세</button>
               </div>
-              <div class="b2w2-card-sub">
+              <div id="b2w2-sub-${ui}" class="b2w2-card-sub" style="display:none">
                 <span>활동 ${active.length}명</span>
                 <span>${tg}전 ${tw}승 ${tl}패</span>
                 ${wr!==null?`<span style="font-weight:900;color:${wrClass}">승률 ${wr}%${_b2WeeklyDelta(wr,prevWr)}</span>`:''}
@@ -2575,11 +2585,11 @@ function _b2WeeklyBriefingView() {
               <div class="b2w2-card-kpi">
                 <div class="b2w2-card-kpi-label">활동 인원</div>
                 <div class="b2w2-card-kpi-value">${active.length}명</div>
-                <div class="b2w2-card-kpi-sub">이번 기간 출전 선수</div>
+                <div class="b2w2-card-kpi-sub">이번 기간 출전 스트리머</div>
               </div>
               <div class="b2w2-card-kpi">
                 <div class="b2w2-card-kpi-label">팀 전적</div>
-                <div class="b2w2-card-kpi-value">${tw}<span style="color:#10b981">승</span> ${tl}<span style="color:#ef4444">패</span></div>
+                <div class="b2w2-card-kpi-value">${tw}<span style="color:#dc2626">승</span> ${tl}<span style="color:#64748b">패</span></div>
                 <div class="b2w2-card-kpi-sub">총 ${tg}전 소화</div>
               </div>
               <div class="b2w2-card-kpi">
@@ -2602,7 +2612,7 @@ function _b2WeeklyBriefingView() {
               ` : `
                 <div class="b2w2-card-spotlight-kicker">대학별 에이스</div>
                 <div class="b2w2-card-spotlight-title">이번 기간 확실한 에이스 없음</div>
-                <div class="b2w2-card-spotlight-sub">최소 경기 수와 승률 기준을 동시에 만족한 선수가 없습니다.</div>
+                <div class="b2w2-card-spotlight-sub">최소 경기 수와 승률 기준을 동시에 만족한 스트리머가 없습니다.</div>
               `}
             </div>
           </div>`;
@@ -2610,7 +2620,7 @@ function _b2WeeklyBriefingView() {
       // 선수 테이블
       h += `<div class="b2w2-table-wrap"><table class="b2w2-tbl"><thead><tr>
         <th style="width:28px">#</th>
-        <th>선수</th>
+        <th>스트리머</th>
         <th>전체 전적</th>
         <th>최근 폼</th>
       </tr></thead><tbody>`;
@@ -2631,16 +2641,14 @@ function _b2WeeklyBriefingView() {
         h += `<tr ${isMVP?'style="background:#fef9c322"':''}>
           <td style="font-size:11px;font-weight:900;color:var(--text3);text-align:center">${medal}</td>
           <td>
-            <span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${p.name}" style="font-weight:900;color:var(--text1);cursor:pointer;border-bottom:1.5px solid var(--border2);padding-bottom:1px">${p.name}</span>
-            ${rIco?`<span style="font-size:11px;margin-left:2px">${rIco}</span>`:''}
-            ${p.tier?`<span style="font-size:10px;padding:1px 5px;border-radius:4px;background:${tc2};color:${tt2};margin-left:3px">${p.tier}</span>`:''}
-            ${isMVP?`<span style="font-size:9px;background:#fef9c3;color:#b45309;padding:1px 4px;border-radius:4px;margin-left:3px;font-weight:800">MVP</span>`:''}
+            <span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${p.name}" style="font-size:13px;font-weight:900;color:var(--text1);cursor:pointer;border-bottom:1.5px solid var(--border2);padding-bottom:1px">${p.name}</span>
+            ${rIco?`<span style="font-size:13px;margin-left:2px">${rIco}</span>`:''}
+            ${p.tier?`<span style="font-size:12px;padding:1px 5px;border-radius:4px;background:${tc2};color:${tt2};margin-left:3px">${p.tier}</span>`:''}
+            ${isMVP?`<span style="font-size:11px;background:#fef9c3;color:#b45309;padding:1px 4px;border-radius:4px;margin-left:3px;font-weight:800">MVP</span>`:''}
           </td>
           <td>
-            <span style="font-weight:900;color:var(--text1)">${total}전</span>
-            <span style="color:#10b981;font-size:11px"> ${wins}승</span>
-            <span style="color:#ef4444;font-size:11px"> ${losses}패</span>
-            ${winRate!==null?`<span style="font-size:11px;font-weight:800;color:${wrCls};margin-left:3px">${winRate}%</span>${_b2WeeklyDelta(winRate,prevWr2)}`:''}
+            <div style="font-size:13px;font-weight:800;color:var(--text1)">${total}전 <span style="color:#dc2626">${wins}승</span> <span style="color:#64748b">${losses}패</span></div>
+            ${winRate!==null?`<div style="margin-top:2px;font-size:11px;font-weight:700;color:${wrCls}">${winRate}%${_b2WeeklyDelta(winRate,prevWr2)}</div>`:''}
           </td>
           <td><div style="display:flex;align-items:center;gap:2px">${_b2WeeklyForm(s.hist)}</div></td>
         </tr>`;

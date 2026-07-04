@@ -436,24 +436,9 @@ function applyProfileShapeVars(){
     const sc = Math.max(0.7, Math.min(1.3, pct/100));
     document.documentElement.style.setProperty('--su_profile_scale', String(sc));
 
-    // (추가) 프로필 이미지 효과
-    const fx = (localStorage.getItem('su_profile_fx')||'none').trim();
-    let shadow = 'none';
-    if(fx==='shadow') shadow = '0 6px 16px rgba(0,0,0,.18)';
-    if(fx==='ring') shadow = '0 0 0 2px rgba(255,255,255,.85)';
-    if(fx==='both') shadow = '0 0 0 2px rgba(255,255,255,.85), 0 6px 16px rgba(0,0,0,.18)';
-    if(fx==='glow') shadow = '0 0 0 2px rgba(255,255,255,.6), 0 0 12px 4px rgba(255,255,255,.4)';
-    if(fx==='glow-color') shadow = '0 0 0 2px rgba(99,102,241,.8), 0 0 16px 6px rgba(99,102,241,.45)';
-    if(fx==='blur-edge') shadow = '0 0 0 0 transparent';
-    document.documentElement.style.setProperty('--su_profile_fx', shadow);
-    // CSS filter 효과
-    let filterFx = 'none';
-    if(fx==='vintage') filterFx = 'sepia(.35) contrast(1.1) brightness(1.05) saturate(1.2)';
-    if(fx==='sepia') filterFx = 'sepia(.8) contrast(1.05)';
-    if(fx==='grayscale') filterFx = 'grayscale(1)';
-    if(fx==='invert') filterFx = 'invert(1)';
-    if(fx==='blur-edge') filterFx = 'drop-shadow(0 0 6px rgba(0,0,0,.3))';
-    document.documentElement.style.setProperty('--su_profile_filter_fx', filterFx);
+    // 프로필 이미지 효과 — 기능 완전 제거(항상 "없음"으로 고정)
+    document.documentElement.style.setProperty('--su_profile_fx', 'none');
+    document.documentElement.style.setProperty('--su_profile_filter_fx', 'none');
   }catch(e){
     console.warn('[applyProfileShapeVars] CSS 변수 설정 실패:', e.message);
   }

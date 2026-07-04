@@ -71,7 +71,6 @@
     const body = document.getElementById('cfg-profileshape-body');
     if(!body) return;
     const shape = (()=>{ try{ return (localStorage.getItem('su_profile_shape')||'circle'); }catch(e){ return 'circle'; } })();
-    const fx = (()=>{ try{ return (localStorage.getItem('su_profile_fx')||'none'); }catch(e){ return 'none'; } })();
     const pc = (()=>{ try{ return parseInt(localStorage.getItem('su_profile_scale_pc')||'100',10)||100; }catch(e){ return 100; } })();
     const tb = (()=>{ try{ return parseInt(localStorage.getItem('su_profile_scale_tb')||'96',10)||96; }catch(e){ return 96; } })();
     const mb = (()=>{ try{ return parseInt(localStorage.getItem('su_profile_scale_mb')||'92',10)||92; }catch(e){ return 92; } })();
@@ -126,13 +125,6 @@
             </div>
             <div style="font-size:11px;color:var(--gray-l)">※ 브라우저 폭 기준: 모바일(≤768) / 태블릿(≤1024) / PC(그 외)</div>
           </div>
-        </div>
-        <div>
-          <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:8px">✨ 효과</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${[['none','없음'],['shadow','그림자'],['ring','링'],['both','링+그림자'],['glow','글로우'],['glow-color','컬러 글로우'],['blur-edge','외곽 블러'],['vintage','빈티지'],['sepia','세피아'],['grayscale','흑백'],['invert','반전']].map(([k,l])=>`<button class="btn btn-xs ${(fx===k)?'btn-b':'btn-w'}" onclick="localStorage.setItem('su_profile_fx','${k}');try{applyProfileShapeVars();}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};try{window.SettingsStore&&typeof window.SettingsStore.markPrefsChanged==='function'&&window.SettingsStore.markPrefsChanged();}catch(e){};try{window._renderCfgProfileShapeSection&&window._renderCfgProfileShapeSection();}catch(e){}">${l}</button>`).join('')}
-          </div>
-          <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 효과는 프로필 이미지(사진/플레이스홀더)에 공통 적용됩니다</div>
         </div>
       </div>
     `;

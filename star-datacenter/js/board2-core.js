@@ -663,7 +663,6 @@ function rBoard2(C, T) {
         ${_b2TabBtn('free','var(--blue)',  (typeof getTabLabel==='function'?getTabLabel('board2','free','🚶 무소속'):'🚶 무소속'))}
         ${_b2TabBtn('players','var(--purple)', (typeof getTabLabel==='function'?getTabLabel('board2','players',profileTabLabel):profileTabLabel))}
         <span style="width:1px;height:20px;background:var(--border2);display:inline-block;flex-shrink:0"></span>
-        ${rankingBtn}
         ${heatmapBtn}
         ${bubbleBtn}
         ${radarBtn}

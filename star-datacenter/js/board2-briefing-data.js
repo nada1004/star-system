@@ -419,7 +419,7 @@ function _b2WeeklyForm(hist) {
     return da!==db?da-db:(a.time||0)-(b.time||0);
   });
   return sorted.slice(-5).map(h => {
-    const c = h.result==='승'?'#10b981':h.result==='패'?'#ef4444':'#94a3b8';
+    const c = h.result==='승'?'#dc2626':h.result==='패'?'#64748b':'#94a3b8';
     const t = h.result==='승'?'W':h.result==='패'?'L':'-';
     return `<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:${c};font-size:9px;color:#fff;font-weight:900;flex-shrink:0">${t}</span>`;
   }).join('');
