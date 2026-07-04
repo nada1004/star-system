@@ -257,6 +257,10 @@ function buildPlayerDetailHTML(p){
       : '';
   }
 
+  const _secMvpHistory = (typeof buildPlayerMvpHistoryHTML==='function')
+    ? buildPlayerMvpHistoryHTML(p)
+    : '';
+
   const _secTeammates = (typeof buildPlayerTeammatesHTML==='function')
     ? buildPlayerTeammatesHTML({ player:p, col })
     : '';
@@ -268,7 +272,7 @@ function buildPlayerDetailHTML(p){
   let h='';
   if(_layoutMode==='poster'){
     h = `<div class="pd-layout pd-layout--poster">
-      <div class="pd-layout-top">${_secHeader}${_secStrip}</div>
+      <div class="pd-layout-top">${_secHeader}${_secStrip}${_secMvpHistory}</div>
       <div class="pd-layout-grid">
         <div class="pd-layout-main">${_secYearBar}${_secEloChart}${_secHistFilterBar}${_secRecent}${_secOppTable}</div>
         <div class="pd-layout-side">${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secTeammates}${_secMemo}</div>
@@ -276,12 +280,12 @@ function buildPlayerDetailHTML(p){
     </div>`;
   }else if(_layoutMode==='split'){
     h = `<div class="pd-layout pd-layout--split">
-      <div class="pd-split-left">${_secHeader}${_secStrip}${_secYearBar}</div>
+      <div class="pd-split-left">${_secHeader}${_secStrip}${_secMvpHistory}${_secYearBar}</div>
       <div class="pd-split-right">${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}</div>
     </div>`;
   }else if(_layoutMode==='timeline'){
     h = `<div class="pd-layout pd-layout--timeline">
-      <div class="pd-layout-top">${_secHeader}${_secStrip}</div>
+      <div class="pd-layout-top">${_secHeader}${_secStrip}${_secMvpHistory}</div>
       <div class="pd-layout-grid">
         <div class="pd-layout-main">${_secYearBar}${_secHistFilterBar}${_secRecent}</div>
         <div class="pd-layout-side">${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secTeammates}${_secMemo}</div>
@@ -291,10 +295,10 @@ function buildPlayerDetailHTML(p){
     h = `<div class="pd-layout pd-layout--board">
       ${_secHeader}
       <div class="pd-board-grid">${_secStrip}${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}</div>
-      ${_secYearBar}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}
+      ${_secMvpHistory}${_secYearBar}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}
     </div>`;
   }else{
-    h = `${_secHeader}${_secStrip}${_secYearBar}${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}`;
+    h = `${_secHeader}${_secStrip}${_secMvpHistory}${_secYearBar}${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}`;
   }
 
   // ELO 차트는 p.history만이 아니라 개인전/끝장전/대회 등 외부 매치소스까지 합쳐진

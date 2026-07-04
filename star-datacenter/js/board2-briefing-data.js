@@ -411,6 +411,68 @@ function _b2WeeklyUnivMVP(active) {
   return null;
 }
 
+// ─── MVP 수상 기록 저장/조회 (주간/월간 MVP 횟수 · 시점 · 소속 추적) ──
+const _B2_MVP_HISTORY_KEY = 'su_mvp_history_v1';
+function _b2MvpHistoryLoad() {
+  try {
+    const raw = localStorage.getItem(_B2_MVP_HISTORY_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+function _b2MvpHistorySave(arr) {
+  try {
+    localStorage.setItem(_B2_MVP_HISTORY_KEY, JSON.stringify(Array.isArray(arr) ? arr : []));
+  } catch (e) {}
+}
+// preset(thisWeek/lastWeek/thisMonth/lastMonth)과 실제 집계 기간(dateFrom~dateTo)을 기준으로
+// 해당 기간의 MVP를 기록/갱신한다. 같은 기간(type+from+to)은 항상 최신 결과로 덮어써서
+// 진행 중인 이번주/이번달의 MVP가 바뀌어도 최종적으로 정확한 값이 남도록 한다.
+function _b2SyncMvpHistory(preset, dateFrom, dateTo, mvpStat) {
+  const type = (preset === 'thisWeek' || preset === 'lastWeek') ? 'week'
+    : (preset === 'thisMonth' || preset === 'lastMonth') ? 'month'
+    : null;
+  if (!type || !dateFrom || !dateTo) return;
+  const key = `${type}:${dateFrom}:${dateTo}`;
+  const arr = _b2MvpHistoryLoad();
+  const idx = arr.findIndex(e => e && e.key === key);
+  if (!mvpStat || !mvpStat.p || !mvpStat.p.name) {
+    if (idx >= 0) { arr.splice(idx, 1); _b2MvpHistorySave(arr); }
+    return;
+  }
+  const entry = {
+    key, type, from: dateFrom, to: dateTo,
+    name: String(mvpStat.p.name || '').trim(),
+    univ: String(mvpStat.p.univ || '').trim() || '무소속',
+    wins: mvpStat.wins || 0,
+    losses: mvpStat.losses || 0,
+    updatedAt: Date.now()
+  };
+  if (idx >= 0) arr[idx] = entry; else arr.push(entry);
+  if (arr.length > 500) arr.splice(0, arr.length - 500);
+  _b2MvpHistorySave(arr);
+}
+// 특정 선수의 MVP 수상 이력 조회 (주간/월간 횟수 + 시점별 소속 목록, 최신순)
+function _b2GetPlayerMvpStats(playerName) {
+  const nm = String(playerName || '').trim();
+  if (!nm) return { weekCount: 0, monthCount: 0, entries: [] };
+  const mine = _b2MvpHistoryLoad()
+    .filter(e => e && String(e.name || '').trim() === nm)
+    .sort((a, b) => String(b.from || '').localeCompare(String(a.from || '')));
+  return {
+    weekCount: mine.filter(e => e.type === 'week').length,
+    monthCount: mine.filter(e => e.type === 'month').length,
+    entries: mine
+  };
+}
+try {
+  window._b2MvpHistoryLoad = _b2MvpHistoryLoad;
+  window._b2SyncMvpHistory = _b2SyncMvpHistory;
+  window._b2GetPlayerMvpStats = _b2GetPlayerMvpStats;
+} catch (e) {}
+
 // ─── 최근 폼 렌더 ─────────────────────────────
 function _b2WeeklyForm(hist) {
   const sorted = [...hist].sort((a,b)=>{

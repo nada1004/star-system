@@ -84,6 +84,35 @@ function buildPlayerTeammatesHTML(opts){
   </details>`;
 }
 
+function buildPlayerMvpHistoryHTML(player){
+  const p = player;
+  if(!p || !p.name) return '';
+  const stats = (typeof _b2GetPlayerMvpStats==='function') ? _b2GetPlayerMvpStats(p.name) : null;
+  if(!stats || (!stats.weekCount && !stats.monthCount)) return '';
+  const fmtRange = (from,to)=>`${String(from||'').slice(0,10).replace(/-/g,'.')} ~ ${String(to||'').slice(0,10).replace(/-/g,'.')}`;
+  const rows = stats.entries.slice(0,20).map(e=>{
+    const isMonth = e.type==='month';
+    const badge = isMonth ? '월간 MVP' : '주간 MVP';
+    const badgeBg = isMonth ? '#ede9fe' : '#fef9c3';
+    const badgeCol = isMonth ? '#6d28d9' : '#b45309';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid rgba(148,163,184,.14)">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        <span style="font-size:10px;font-weight:900;padding:2px 7px;border-radius:999px;background:${badgeBg};color:${badgeCol};white-space:nowrap;flex-shrink:0">${badge}</span>
+        <span style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtRange(e.from,e.to)}</span>
+      </div>
+      <span style="font-size:11px;font-weight:800;color:var(--text3);white-space:nowrap;flex-shrink:0">${e.univ||'무소속'}</span>
+    </div>`;
+  }).join('');
+  return `<details class="su-sec su-sec--details" style="--su-sec-accent:#f59e0b;margin-top:12px" open>
+    <summary>MVP 기록</summary>
+    <div style="display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap">
+      <span style="font-size:11px;font-weight:900;padding:4px 11px;border-radius:99px;background:#fef9c3;color:#b45309;border:1.5px solid #fde68a">🏅 주간 MVP ${stats.weekCount}회</span>
+      <span style="font-size:11px;font-weight:900;padding:4px 11px;border-radius:99px;background:#ede9fe;color:#6d28d9;border:1.5px solid #ddd6fe">🏆 월간 MVP ${stats.monthCount}회</span>
+    </div>
+    <div style="margin-top:4px">${rows}</div>
+  </details>`;
+}
+
 function buildPlayerMemoHTML(player){
   const p = player;
   if(!p) return '';
@@ -103,5 +132,6 @@ try{
   _bindPlayerExtraDelegatedEvents();
   window.buildPlayerMapStatsHTML = buildPlayerMapStatsHTML;
   window.buildPlayerTeammatesHTML = buildPlayerTeammatesHTML;
+  window.buildPlayerMvpHistoryHTML = buildPlayerMvpHistoryHTML;
   window.buildPlayerMemoHTML = buildPlayerMemoHTML;
 }catch(e){}

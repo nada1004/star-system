@@ -317,54 +317,31 @@ async function captureBriefingArticle(mode){
   const root=document.getElementById('b2w2-export-root');
   if(!root){alert('캡처할 브리핑 영역이 없습니다.');return;}
   const saveMode = String(mode||'split')==='single' ? 'single' : 'split';
-  let tempWrap=null;
   try{
     _showSaveLoading();
     try{ await (window.ensureHtml2Canvas && window.ensureHtml2Canvas()); }catch(e){}
     if(typeof html2canvas!=='function') throw new Error('html2canvas를 불러오지 못했습니다.');
+    await _imgToDataUrls(root);
+    try{ if(typeof _waitForImages==='function') await _waitForImages(root,1500); }catch(e){}
 
-    const rect=root.getBoundingClientRect();
-    const captureWidth=Math.max(900, Math.ceil(root.scrollWidth||rect.width||900));
     const meta=_getBriefingExportMeta();
-    const framePad = saveMode==='single' ? 22 : 24;
-    tempWrap=document.createElement('div');
-    tempWrap.style.cssText=`position:absolute;left:-99999px;top:0;width:${captureWidth + framePad*2}px;padding:${framePad}px;background:${saveMode==='single'
-      ? 'radial-gradient(1200px 600px at 15% 10%, rgba(56,189,248,.16) 0%, transparent 60%),radial-gradient(900px 520px at 90% 0%, rgba(167,139,250,.14) 0%, transparent 55%),linear-gradient(180deg, #ffffff 0%, #f8fafc 55%, #ffffff 100%)'
-      : '#ffffff'};box-sizing:border-box;z-index:-1`;
+    let bgColor='#ffffff';
+    try{
+      const bodyBg=getComputedStyle(document.body).backgroundColor;
+      if(bodyBg && bodyBg!=='rgba(0, 0, 0, 0)' && bodyBg!=='transparent') bgColor=bodyBg;
+    }catch(e){}
 
-    const exportStyle=document.createElement('style');
-    exportStyle.textContent=_briefingExportCss(saveMode);
-    tempWrap.appendChild(exportStyle);
-
-    const clone=root.cloneNode(true);
-    _prepareBriefingExportClone(clone, meta);
-    clone.style.width='100%';
-    clone.style.maxWidth='none';
-    clone.style.margin='0';
-    if(saveMode==='single'){
-      const sheet=document.createElement('div');
-      sheet.style.cssText='width:100%;border-radius:22px;overflow:hidden;background:#ffffff;box-shadow:0 18px 60px rgba(15,23,42,.18),0 2px 10px rgba(15,23,42,.10);';
-      sheet.appendChild(clone);
-      tempWrap.appendChild(sheet);
-    } else {
-      tempWrap.appendChild(clone);
-    }
-    document.body.appendChild(tempWrap);
-
-    await _imgToDataUrls(tempWrap);
-    try{ if(typeof _waitForImages==='function') await _waitForImages(tempWrap,1500); }catch(e){}
-
-    const w=Math.ceil(tempWrap.scrollWidth||captureWidth);
-    const h=Math.ceil(tempWrap.scrollHeight||clone.scrollHeight||root.scrollHeight||0);
+    const w=Math.max(900, Math.ceil(root.scrollWidth||root.getBoundingClientRect().width||900));
+    const h=Math.max(1, Math.ceil(root.scrollHeight||0));
     const baseArea=Math.max(1, w*h);
     const maxArea=36000000;
     const autoScale=Math.sqrt(maxArea/baseArea);
     const maxSide=15000;
     const sideScale=Math.min(1, maxSide/Math.max(1,w), maxSide/Math.max(1,h));
-    const minScale = saveMode==='single' ? 0.8 : 1;
-    const scale=Math.max(minScale, Math.min(2.4, sideScale, Number.isFinite(autoScale)?autoScale:1.5));
-    const canvas=await html2canvas(tempWrap,{
-      backgroundColor:null,
+    const scale=Math.max(1, Math.min(2.4, sideScale, Number.isFinite(autoScale)?autoScale:1.5));
+
+    const canvas=await html2canvas(root,{
+      backgroundColor:bgColor,
       scale,
       useCORS:true,
       allowTaint:false,
@@ -378,8 +355,11 @@ async function captureBriefingArticle(mode){
       scrollY:0,
       onclone:(doc)=>{
         try{
-          const exportRoot=doc.getElementById('b2w2-export-root');
-          _prepareBriefingExportClone(exportRoot, meta);
+          const cloneRoot=doc.getElementById('b2w2-export-root');
+          if(cloneRoot){
+            cloneRoot.querySelectorAll('.no-export, .b2w2-modebar').forEach(el=>el.remove());
+            _sanitizeUnsupportedCssFunctions(cloneRoot);
+          }
         }catch(e){}
       }
     });
@@ -390,7 +370,6 @@ async function captureBriefingArticle(mode){
     else await _saveCanvasSlices(canvas,safeName,'png',2200);
   }catch(e){alert('브리핑 이미지 저장 오류: '+e.message);}
   finally{
-    try{ if(tempWrap&&tempWrap.parentNode) tempWrap.parentNode.removeChild(tempWrap); }catch(e){}
     _hideSaveLoading();
   }
 }

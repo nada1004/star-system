@@ -286,6 +286,8 @@ function _b2WeeklyBriefingView() {
     const mvp = _b2WeeklyMVP(curStats);
     const mvp2 = _b2WeeklyMVP2(curStats, mvp);
     const worstPlayer = _b2WeeklyWorst(curStats);
+    // 주간/월간 MVP 수상 기록 저장 — 스트리머 상세 팝업의 "MVP 기록"에서 조회됨
+    try { if (typeof _b2SyncMvpHistory === 'function') _b2SyncMvpHistory(preset, dateFrom, dateTo, mvp); } catch (e) {}
     // ── 풀배경 사진형 MVP 카드 빌더 (하이라이트 카드 + MVP 트리플 배너 공용) ──
     const _mvpFx = _b2MvpFxLoad();
     const _mvpFxOp = ((_mvpFx.on ? _mvpFx.intensity : 0) / 100).toFixed(3);
@@ -2630,7 +2632,6 @@ function _b2WeeklyBriefingView() {
         const wrCls  = winRate===null?'#94a3b8':winRate>=60?'#10b981':winRate>=40?'#f59e0b':'#ef4444';
         const tc2    = typeof getTierBtnColor==='function'&&p.tier?getTierBtnColor(p.tier):'#64748b';
         const tt2    = typeof getTierBtnTextColor==='function'&&p.tier?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
-        const rIco   = p.race==='P'?'🔮':p.race==='T'?'⚔️':p.race==='Z'?'🦎':'';
         const medal  = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
         const isMVP  = univMVP && univMVP.p === p;
 
@@ -2642,7 +2643,6 @@ function _b2WeeklyBriefingView() {
           <td style="font-size:11px;font-weight:900;color:var(--text3);text-align:center">${medal}</td>
           <td>
             <span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${p.name}" style="font-size:13px;font-weight:900;color:var(--text1);cursor:pointer;border-bottom:1.5px solid var(--border2);padding-bottom:1px">${p.name}</span>
-            ${rIco?`<span style="font-size:13px;margin-left:2px">${rIco}</span>`:''}
             ${p.tier?`<span style="font-size:12px;padding:1px 5px;border-radius:4px;background:${tc2};color:${tt2};margin-left:3px">${p.tier}</span>`:''}
             ${isMVP?`<span style="font-size:11px;background:#fef9c3;color:#b45309;padding:1px 4px;border-radius:4px;margin-left:3px;font-weight:800">MVP</span>`:''}
           </td>
