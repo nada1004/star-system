@@ -851,9 +851,7 @@ function _buildFocusView(rankMap){
       const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       const photoSrc = String(p.photo||'').trim();
       const _isActive = !!(selected && selected.name===p.name);
-      const _tierBarColor = (typeof getTierBtnColor==='function' ? getTierBtnColor(p.tier) : '') || '#64748b';
       listHtml += `<div class="streamer-focus-card ${_isActive?'active':''}" data-focus-row="1" data-focus-name="${(typeof escAttr==='function'?escAttr(p.name):p.name)}" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" onclick="try{var _sl=document.querySelector('.streamer-focus-list');if(_sl)window._streamerFocusScrollTop=_sl.scrollTop;}catch(e){};totalFocusPlayer='${_pSafe}';render()">
-        <span class="streamer-focus-card-tierbar" style="background:${_tierBarColor}"></span>
         ${photoSrc ? `<img loading="lazy" decoding="async" src="${toHttpsUrl(photoSrc)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none'">` : ''}
         <div class="streamer-focus-card-fallback" style="display:${photoSrc?'none':'flex'}">${p.race||'?'}</div>
         ${_isActive ? `<span class="streamer-focus-card-check">✓</span>` : ''}
