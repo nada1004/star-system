@@ -57,7 +57,7 @@ function buildPlayerModeStatsHTML(opts){
     modeColors={},
     modeTint=0,
     cWin='#dc2626',
-    cLoss='#94a3b8'
+    cLoss='#2563eb'
   } = opts || {};
   let h=`<div class="su-sec" style="--su-sec-accent:#6b7280">
     <div class="su-sec__title">모드별 전적</div>

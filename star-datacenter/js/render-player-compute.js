@@ -6,7 +6,7 @@ function preparePlayerDetailComputedData(opts){
     normMap=(v=>String(v||'-')),
     modeTint=6,
     cWin='#dc2626',
-    cLoss='#94a3b8'
+    cLoss='#2563eb'
   } = opts || {};
   const p = player;
   const st = (typeof getPlayerDetailState==='function') ? getPlayerDetailState() : (window.PlayerDetailState||{});

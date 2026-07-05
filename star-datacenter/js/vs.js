@@ -35,7 +35,7 @@ function vsSearchHTML(){
     }
     return `<div style="flex:1;min-width:160px;position:relative">
       <div style="display:flex;align-items:center;gap:6px;border:2px solid var(--border2);border-radius:10px;padding:7px 12px;background:var(--white);transition:.15s" id="vs-wrap-${slot}">
-        <span style="font-size:14px">${slot==='A'?'🔵':'🔴'}</span>
+        <span style="width:9px;height:9px;border-radius:50%;background:${slot==='A'?colA:colB};display:inline-block;flex-shrink:0"></span>
         <input id="${inputId}" type="text" placeholder="${label} 이름 검색..."
           value="${inputVal}"
           oninput="_vsInput('${slot}',this.value)"
@@ -51,15 +51,15 @@ function vsSearchHTML(){
   return `
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:6px">
-      <div style="font-size:13px;font-weight:700;color:var(--text2)">⚔️ 1:1 상대 전적 조회</div>
-      ${(vsNameA||vsNameB)?`<button onclick="vsClearAll()" class="btn btn-w btn-sm" style="font-size:11px">🗑 초기화</button>`:''}
+      <div style="font-size:13px;font-weight:700;color:var(--text2)">1:1 상대 전적 조회</div>
+      ${(vsNameA||vsNameB)?`<button onclick="vsClearAll()" class="btn btn-w btn-sm" style="font-size:11px">초기화</button>`:''}
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       ${playerSlot('A')}
       <div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px;color:var(--gray-l);flex-shrink:0">VS</div>
       ${playerSlot('B')}
     </div>
-    ${(!vsNameA&&!vsNameB)?`<div style="margin-top:12px;font-size:11px;color:var(--gray-l);text-align:center">💡 스트리머 이름을 입력하면 목록이 나타납니다</div>`:''}
+    ${(!vsNameA&&!vsNameB)?`<div style="margin-top:12px;font-size:11px;color:var(--gray-l);text-align:center">스트리머 이름을 입력하면 목록이 나타납니다</div>`:''}
   </div>
   <div id="vsResult"></div>`;
 }
@@ -163,12 +163,12 @@ function _vsRenderResult(){
       });
     });
   }
-  scanVs(miniM,'⚡ 미니대전');
-  scanVs(univM,'🏟️ 대학대전');
-  scanVs(comps,'🎖️ 대회');
-  scanVs(ckM,'🤝 대학CK');
-  scanVs(proM,'🏅 프로리그');
-  if(typeof getNormalMatchesForHistory==='function') scanVs(getNormalMatchesForHistory(),'🎖️ 대회(일반)');
+  scanVs(miniM,'미니대전');
+  scanVs(univM,'대학대전');
+  scanVs(comps,'대회');
+  scanVs(ckM,'대학CK');
+  scanVs(proM,'프로리그');
+  if(typeof getNormalMatchesForHistory==='function') scanVs(getNormalMatchesForHistory(),'대회(일반)');
   gameLogs.sort((a,b)=>b.date.localeCompare(a.date));
 
   const total=aWins+bWins;
@@ -195,7 +195,7 @@ function _vsRenderResult(){
         <div style="font-weight:800;font-size:13px;color:var(--text)">${vsNameA}</div>
         ${pA?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">${pA.univ}</div>`:''}
         ${pA?getTierBadge(pA.tier):''}
-        ${aLeading?'<div style="margin-top:6px;font-size:10px;font-weight:800;color:'+colA+'">🏆 우세</div>':''}
+        ${aLeading?'<div style="margin-top:6px;font-size:10px;font-weight:800;color:'+colA+'">우세</div>':''}
       </div>
       <!-- 중앙 스코어 -->
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;min-width:80px">
@@ -214,7 +214,7 @@ function _vsRenderResult(){
         <div style="font-weight:800;font-size:13px;color:var(--text)">${vsNameB}</div>
         ${pB?`<div style="font-size:10px;color:var(--gray-l);margin-top:2px">${pB.univ}</div>`:''}
         ${pB?getTierBadge(pB.tier):''}
-        ${bLeading?'<div style="margin-top:6px;font-size:10px;font-weight:800;color:'+colB+'">🏆 우세</div>':''}
+        ${bLeading?'<div style="margin-top:6px;font-size:10px;font-weight:800;color:'+colB+'">우세</div>':''}
       </div>
     </div>
 
@@ -233,20 +233,20 @@ function _vsRenderResult(){
 
     <!-- 액션 버튼 -->
     <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap" class="no-export">
-      <button class="btn btn-p btn-sm" style="min-width:108px;display:inline-flex;align-items:center;justify-content:center" onclick="openVsShareCard()">🎴 공유 카드</button>
-      <button class="btn-capture btn-sm" onclick="captureVsCard()">📷 이미지 저장</button>
-      <button class="btn btn-w btn-sm" onclick="vsClearAll()">🗑 결과 지우기</button>
+      <button class="btn btn-p btn-sm" style="min-width:108px;display:inline-flex;align-items:center;justify-content:center" onclick="openVsShareCard()">공유 카드</button>
+      <button class="btn-capture btn-sm" onclick="captureVsCard()">이미지 저장</button>
+      <button class="btn btn-w btn-sm" onclick="vsClearAll()">결과 지우기</button>
     </div>
 
     <!-- 대전 내역 테이블 -->
-    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📋 게임 내역 (${gameLogs.length}건)</div>
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">게임 내역 (${gameLogs.length}건)</div>
     <div style="overflow-x:auto">
       <table style="min-width:340px"><thead><tr><th>날짜</th><th>대전 종류</th><th>맵</th><th>결과</th></tr></thead><tbody>
       ${gameLogs.length===0?`<tr><td colspan="4" style="padding:20px;color:var(--gray-l)">없음</td></tr>`:''}
       ${gameLogs.map(lg=>`<tr>
         <td style="color:var(--gray-l);font-size:11px">${lg.date}</td>
         <td style="font-size:11px">${lg.mode}</td>
-        <td style="color:var(--gray-l);font-size:11px">${lg.map!=='-'?'📍'+lg.map:'-'}</td>
+        <td style="color:var(--gray-l);font-size:11px">${lg.map!=='-'?lg.map:'-'}</td>
         <td>${lg.aWon?`<span style="font-weight:700;color:${colA}">▶ ${vsNameA} 승</span>`:lg.bWon?`<span style="font-weight:700;color:${colB}">▶ ${vsNameB} 승</span>`:'<span style="color:var(--gray-l)">미정</span>'}</td>
       </tr>`).join('')}
       </tbody></table>
@@ -271,7 +271,7 @@ function _vsRenderResult(){
         </tr>`;
       }
       return `<div style="margin-top:14px">
-        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📊 스탯 비교</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">스탯 비교</div>
         <div style="overflow-x:auto">
           <table style="min-width:300px;table-layout:fixed">
             <thead><tr>
@@ -326,12 +326,12 @@ function openVsShareCard(){
       gameLogs.push({date:m.d||'',mode:label,map:g.map||'-',aWon,bWon});
     });});});
   }
-  scanVs(miniM,'⚡ 미니대전');
-  scanVs(univM,'🏟️ 대학대전');
-  scanVs(comps,'🎖️ 대회');
-  scanVs(ckM,'🤝 대학CK');
-  scanVs(proM,'🏅 프로리그');
-  if(typeof getNormalMatchesForHistory==='function') scanVs(getNormalMatchesForHistory(),'🎖️ 대회(일반)');
+  scanVs(miniM,'미니대전');
+  scanVs(univM,'대학대전');
+  scanVs(comps,'대회');
+  scanVs(ckM,'대학CK');
+  scanVs(proM,'프로리그');
+  if(typeof getNormalMatchesForHistory==='function') scanVs(getNormalMatchesForHistory(),'대회(일반)');
   gameLogs.sort((a,b)=>b.date.localeCompare(a.date));
 
   const total=aWins+bWins;
@@ -392,7 +392,7 @@ function openVsShareCard(){
     <div style="position:absolute;top:-30px;right:-30px;width:130px;height:130px;border-radius:50%;background:${winCol};opacity:.08;pointer-events:none"></div>
     <!-- 제목 -->
     <div style="text-align:center;margin-bottom:16px">
-      <div style="font-size:10px;color:${vsDimColor};letter-spacing:1px;margin-bottom:4px">⚔️ 1:1 상대 전적</div>
+      <div style="font-size:10px;color:${vsDimColor};letter-spacing:1px;margin-bottom:4px">1:1 상대 전적</div>
       <div style="font-size:11px;color:${vsDimColor}">${new Date().toLocaleDateString('ko-KR')} 기준</div>
     </div>
     <!-- 두 선수 대결 -->
@@ -405,7 +405,7 @@ function openVsShareCard(){
           <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:3px">
             ${tierBadgeVS(pA?.tier)}${raceBadgeVS(raceA)}
           </div>
-          ${aLead?`<div style="font-size:10px;font-weight:800;color:${colA};margin-top:4px">🏆 우세</div>`:''}
+          ${aLead?`<div style="font-size:10px;font-weight:800;color:${colA};margin-top:4px">우세</div>`:''}
         </div>
       </div>
       <!-- 스코어 -->
@@ -425,7 +425,7 @@ function openVsShareCard(){
           <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap;margin-top:3px">
             ${raceBadgeVS(raceB)}${tierBadgeVS(pB?.tier)}
           </div>
-          ${bLead?`<div style="font-size:10px;font-weight:800;color:${colB};margin-top:4px">우세 🏆</div>`:''}
+          ${bLead?`<div style="font-size:10px;font-weight:800;color:${colB};margin-top:4px">우세</div>`:''}
         </div>
       </div>
     </div>
@@ -446,7 +446,7 @@ function openVsShareCard(){
       <div style="display:flex;gap:4px">${recentForm}</div>
     </div>`:''}
     <!-- 푸터 -->
-    <div style="text-align:right;font-size:9px;color:${vsDimColor};letter-spacing:.3px">⭐ 스타대학 데이터 센터</div>
+    <div style="text-align:right;font-size:9px;color:${vsDimColor};letter-spacing:.3px">스타대학 데이터 센터</div>
   </div>`;
 
   // 모달 열기
@@ -457,13 +457,13 @@ function openVsShareCard(){
   overlay.className='sharecard-modal-overlay modal-compact-overlay';
   overlay.innerHTML=`<div class="sharecard-modal-box modal-compact-box" onclick="event.stopPropagation()" style="max-width:460px;width:96vw;padding:14px 14px 12px">
     <button class="sharecard-modal-close" onclick="document.getElementById('sharecard-overlay').remove()">✕</button>
-    <div style="font-weight:700;font-size:14px;color:var(--blue);margin-bottom:10px;padding-right:30px">🎴 1:1 상대 전적 공유 카드</div>
+    <div style="font-weight:700;font-size:14px;color:var(--blue);margin-bottom:10px;padding-right:30px">1:1 상대 전적 공유 카드</div>
     <div id="modal-share-card" style="display:flex;justify-content:center;overflow:auto;max-height:70vh">
       <div id="share-card">${cardHTML}</div>
     </div>
     <div class="sharecard-modal-actions" style="margin-top:10px">
-      <button class="btn btn-p" onclick="downloadVsShareCard('jpg')">📷 JPG 저장</button>
-      <button class="btn btn-w" onclick="downloadVsShareCard('png')">🖼 PNG 저장</button>
+      <button class="btn btn-p" onclick="downloadVsShareCard('jpg')">JPG 저장</button>
+      <button class="btn btn-w" onclick="downloadVsShareCard('png')">PNG 저장</button>
       <button class="btn btn-w" onclick="document.getElementById('sharecard-overlay').remove()">닫기</button>
     </div>
   </div>`;
@@ -492,7 +492,7 @@ function univVsHTML(){
   const univs=getAllUnivs().map(u=>u.name);
   const selStyle='padding:7px 10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--white);font-size:13px;color:var(--text);font-family:\'Noto Sans KR\',sans-serif;flex:1;min-width:120px';
   return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px">
-    <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:14px">🏟️ 대학 대결 히스토리</div>
+    <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:14px">대학 대결 히스토리</div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
       <select id="uv-a" style="${selStyle}" onchange="_uvA=this.value;renderUnivVsResult()">
         <option value="">대학 A 선택</option>
@@ -503,7 +503,7 @@ function univVsHTML(){
         <option value="">대학 B 선택</option>
         ${univs.map(u=>`<option value="${u}"${_uvB===u?' selected':''}>${u}</option>`).join('')}
       </select>
-      ${(_uvA||_uvB)?`<button onclick="_uvA='';_uvB='';renderUnivVsResult()" class="btn btn-w btn-sm" style="font-size:11px">🗑 초기화</button>`:''}
+      ${(_uvA||_uvB)?`<button onclick="_uvA='';_uvB='';renderUnivVsResult()" class="btn btn-w btn-sm" style="font-size:11px">초기화</button>`:''}
     </div>
     <div id="uvResult"></div>
   </div>`;
@@ -513,7 +513,7 @@ function renderUnivVsResult(){
   const r=document.getElementById('uvResult');
   if(!r)return;
   if(!_uvA||!_uvB||_uvA===_uvB){
-    r.innerHTML=(!_uvA&&!_uvB)?'<div style="font-size:11px;color:var(--gray-l);text-align:center">💡 두 대학을 선택하면 대결 기록이 표시됩니다</div>':'';
+    r.innerHTML=(!_uvA&&!_uvB)?'<div style="font-size:11px;color:var(--gray-l);text-align:center">두 대학을 선택하면 대결 기록이 표시됩니다</div>':'';
     return;
   }
   const colA=gc(_uvA), colB=gc(_uvB);
@@ -530,8 +530,8 @@ function renderUnivVsResult(){
       logs.push({date:m.d||'',mode:modeLabel,sa,sb,draw:sa===sb});
     });
   }
-  scanUnivMatch(univM,'🏟️ 대학대전');
-  scanUnivMatch(ckM,'🤝 대학CK');
+  scanUnivMatch(univM,'대학대전');
+  scanUnivMatch(ckM,'대학CK');
   logs.sort((a,b)=>b.date.localeCompare(a.date));
 
   const total=aWins+bWins;
@@ -543,7 +543,7 @@ function renderUnivVsResult(){
       <div style="flex:1;min-width:110px;background:${colA}18;border:2px solid ${colA}44;border-radius:10px;padding:12px;text-align:center">
         <div style="width:40px;height:40px;border-radius:10px;background:${colA};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff">${_uvA[0]}</div>
         <div style="font-weight:800;font-size:13px;color:var(--text)">${_uvA}</div>
-        ${aWins>bWins?`<div style="margin-top:6px;font-size:10px;font-weight:800;color:${colA}">🏆 우세</div>`:''}
+        ${aWins>bWins?`<div style="margin-top:6px;font-size:10px;font-weight:800;color:${colA}">우세</div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;min-width:80px">
         <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">전체 전적</div>
@@ -557,7 +557,7 @@ function renderUnivVsResult(){
       <div style="flex:1;min-width:110px;background:${colB}18;border:2px solid ${colB}44;border-radius:10px;padding:12px;text-align:center">
         <div style="width:40px;height:40px;border-radius:10px;background:${colB};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff">${_uvB[0]}</div>
         <div style="font-weight:800;font-size:13px;color:var(--text)">${_uvB}</div>
-        ${bWins>aWins?`<div style="margin-top:6px;font-size:10px;font-weight:800;color:${colB}">🏆 우세</div>`:''}
+        ${bWins>aWins?`<div style="margin-top:6px;font-size:10px;font-weight:800;color:${colB}">우세</div>`:''}
       </div>
     </div>
     ${total>0?`<div style="margin-bottom:14px">
@@ -571,7 +571,7 @@ function renderUnivVsResult(){
       </div>
     </div>`:''}
     ${logs.length===0?`<div style="padding:20px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:8px;font-size:13px">두 대학 간 대결 기록이 없습니다.</div>`:`
-    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📋 매치 기록 (${logs.length}건)</div>
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">매치 기록 (${logs.length}건)</div>
     <div style="overflow-x:auto">
       <table style="min-width:300px"><thead><tr><th>날짜</th><th>대전 종류</th><th>스코어</th><th>결과</th></tr></thead><tbody>
       ${logs.map(lg=>{

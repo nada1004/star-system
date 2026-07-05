@@ -65,7 +65,6 @@ function buildUnivHeaderCardHTML(opts){
   const quickLabelCol = '#475569';
   const quickValueCol = '#020617';
   const quickMetaCol = '#334155';
-  const kicker = `<div class="ud-hero-kicker" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);font-size:${isMobile?9:10}px;font-weight:900;letter-spacing:.08em;color:rgba(255,255,255,.86);text-transform:uppercase;backdrop-filter:blur(8px)">University Overview <span style="width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 0 0 3px rgba(255,255,255,.14)"></span></div>`;
   const quickRail = `
     <div class="ud-hero-quickrail" data-ud-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(${isMobile?2:4},minmax(0,1fr));gap:8px;padding:${isMobile?'10px 10px 12px':'12px 14px 14px'};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
       <div class="ud-hero-quickcard" data-kind="members" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
@@ -139,7 +138,6 @@ function buildUnivHeaderCardHTML(opts){
             </div>
           </div>
           <div style="min-width:0;flex:0 1 auto;margin-left:${isMobile?'6px':'12px'}">
-            <div style="margin-bottom:10px">${kicker}</div>
             <div style="font-size:${Math.round(uNameFs*1.1)}px;font-weight:1000;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.28),0 1px 0 rgba(255,255,255,.08);line-height:1.02;letter-spacing:-.04em;word-break:keep-all" class="ud-hero-name">${univName}${dissolvedBadge}</div>
           </div>
         </div>

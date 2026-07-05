@@ -21,7 +21,7 @@ function buildPlayerHeaderCardHTML(opts){
     pmPhotoSz=76, pmPhotoR=16, pmNameFs=20, pmMetaFs=11,
     pmMetaPad='3px 10px', pmMetaPad2='3px 9px', pmStatsPad='14px 6px',
     pmStatsNum1=14, pmStatsBig=22, tot=0, wr=0,
-    cWin='#dc2626', cLoss='#94a3b8', histAll=[], eloVal=1000,
+    cWin='#dc2626', cLoss='#2563eb', histAll=[], eloVal=1000,
     eloColor='#16a34a', eloSparkHTML='', isMobile=false, layoutMode='default'
   } = opts || {};
   const _isMobile = isMobile || (typeof window!=='undefined' && window.innerWidth<=768);
@@ -132,7 +132,6 @@ function buildPlayerHeaderCardHTML(opts){
     <span style="width:7px;height:7px;border-radius:50%;background:${_raceAccent};box-shadow:0 0 0 2px rgba(255,255,255,.25);flex-shrink:0"></span>${p.race||''} ${RNAME[p.race]||''}</span>`;
 
   const tierBadge = p.tier ? `<span class="pd-chip" style="background:rgba(255,255,255,.20);border:1.5px solid rgba(255,255,255,.36);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:900;color:#fff">${getTierLabel(p.tier)||p.tier}</span>` : '';
-  const kicker = `<div class="pd-hero-kicker" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);font-size:${Math.max(9, pmMetaFs-1)}px;font-weight:900;letter-spacing:.08em;color:rgba(255,255,255,.86);text-transform:uppercase;backdrop-filter:blur(8px)">Player Detail <span style="width:5px;height:5px;border-radius:50%;background:${_raceAccent};box-shadow:0 0 0 3px rgba(255,255,255,.14)"></span></div>`;
   const quickRail = `
     <div class="pd-hero-quickrail" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(${_isMobile?2:4},minmax(0,1fr));gap:8px;padding:${_isMobile?'10px 10px 12px':'12px 14px 14px'};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
       <div class="pd-hero-quickcard" data-kind="univ" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
@@ -165,7 +164,6 @@ function buildPlayerHeaderCardHTML(opts){
     <div class="pd-hero-main pd-hero-main--pc" style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;position:relative">
       <div class="pd-hero-photo" style="${photoBorder}">${photoHTML}</div>
       <div class="pd-hero-meta" style="min-width:0">
-        <div style="margin-bottom:10px">${kicker}</div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px">
           <span class="pd-hero-name" style="font-size:${pmNameFs+4}px;font-weight:1000;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28);letter-spacing:-.02em;line-height:1">${p.name}${genderIcon(p.gender)}</span>
           ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
@@ -183,7 +181,6 @@ function buildPlayerHeaderCardHTML(opts){
       <div class="pd-hero-row" style="display:flex;align-items:center;gap:12px">
         <div class="pd-hero-photo" style="${photoBorder.replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`).replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`)}">${photoHTML}</div>
         <div class="pd-hero-meta" style="min-width:0;flex:1">
-          <div style="margin-bottom:8px">${kicker}</div>
           <div class="pd-hero-name" style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${p.name}${genderIcon(p.gender)}</div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
             ${p.role?getRoleBadgeHTML(p.role,'10px'):''}${tierBadge}
@@ -212,7 +209,7 @@ function buildPlayerHeaderCardHTML(opts){
 }
 
 function buildPlayerSummaryStripHTML(opts){
-  const { histAll=[], player, cWin='#dc2626', cLoss='#94a3b8' } = opts || {};
+  const { histAll=[], player, cWin='#dc2626', cLoss='#2563eb' } = opts || {};
   const p = player;
   if(!p) return '';
   const hist = histAll.slice();

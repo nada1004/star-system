@@ -2,7 +2,7 @@ function preparePlayerDetailStyleData(player){
   const p = player;
   if(!p){
     return {
-      col:'#6366f1', winC:'#dc2626', lossC:'#94a3b8', cWin:'#dc2626', cLoss:'#94a3b8',
+      col:'#6366f1', winC:'#dc2626', lossC:'#2563eb', cWin:'#dc2626', cLoss:'#2563eb',
       pdStyle:{}, isMobile:false, isTablet:false, hdrBg:'linear-gradient(135deg,#6366f1,#6366f1ee)',
       p2h:(v=>'00'), statsTint:8, modeTint:6,
       pmCardR:18, pmHdrPad:'18px 18px 16px', pmPhotoSz:76, pmPhotoR:16, pmNameFs:20,
@@ -13,7 +13,7 @@ function preparePlayerDetailStyleData(player){
   }
   const col=gc(p.univ)||'#6366f1';
   const winC ='#dc2626';
-  const lossC='#94a3b8';
+  const lossC='#2563eb';
   const pdStyle=JSON.parse(localStorage.getItem('su_pd_style')||'{}');
   const darken=((pdStyle.univ_darken||{})[p.univ]||0);
   const isMobile=window.innerWidth<=768;
@@ -58,7 +58,7 @@ function preparePlayerDetailStyleData(player){
   const p2h=v=>Math.max(0,Math.min(255,Math.round(v*2.55))).toString(16).padStart(2,'0');
   const statsTint=pdStyle.stats_tint!==undefined?pdStyle.stats_tint:8;
   const modeTint=pdStyle.mode_tint!==undefined?pdStyle.mode_tint:6;
-  const CPM={light:{win:'#ef4444',loss:'#9ca3af'},normal:{win:'#dc2626',loss:'#94a3b8'},dark:{win:'#f87171',loss:'#cbd5e1'}};
+  const CPM={light:{win:'#ef4444',loss:'#60a5fa'},normal:{win:'#dc2626',loss:'#2563eb'},dark:{win:'#f87171',loss:'#93c5fd'}};
   const cp=CPM[pdStyle.color_preset||'normal'];
   const cWin=cp.win;
   const cLoss=cp.loss;

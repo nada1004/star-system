@@ -267,16 +267,53 @@ function _newsTopPlayersHtml(ctx){
   }).join('');
   return `<div class="b2n-col-title"><i></i>최다 출전 TOP 5</div><div class="b2n-standings">${rows}</div>`;
 }
+function _newsUnivAceCardHtml(item){
+  const col = (typeof gc === 'function' ? (gc(item.u.name) || '#9f1d1d') : '#9f1d1d');
+  const ace = item.ace;
+  if(!ace || !ace.p){
+    return `<div class="b2n-ace-card" style="--_c:${col}">
+      <div class="b2n-ace-univ"><span class="b2n-ace-dot" style="background:${col}"></span>${_esc(item.u.name)}</div>
+      <div class="b2n-ace-empty">확실한 에이스 없음</div>
+    </div>`;
+  }
+  const wrCol = (ace.winRate ?? 0) >= 60 ? '#15803d' : (ace.winRate ?? 0) >= 50 ? '#9f1d1d' : '#78716c';
+  const photo = _newsPhotoUrl(ace.p);
+  const initial = String(ace.p.name||'-').trim().slice(0,1);
+  return `<div class="b2n-ace-card" style="--_c:${col}">
+    <div class="b2n-ace-univ"><span class="b2n-ace-dot" style="background:${col}"></span>${_esc(item.u.name)}</div>
+    <div class="b2n-ace-main">
+      <div class="b2n-ace-photo" style="--_c:${col}">
+        ${photo?`<img src="${photo}" alt="${_esc(ace.p.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
+        <div class="b2n-ace-photo-fallback" style="${photo?'display:none':''}">${_esc(initial)}</div>
+      </div>
+      <div class="b2n-ace-info">
+        <div class="b2n-ace-name">${_esc(ace.p.name||'-')}</div>
+        <div class="b2n-ace-rec">${ace.wins ?? 0}승 ${ace.losses ?? 0}패 · <span style="color:${wrCol};font-weight:800">승률 ${ace.winRate ?? 0}%</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+function _newsUnivAcesHtml(ctx){
+  const list = (ctx.univAces || []).filter(item => item && item.u);
+  if(!list.length) return '';
+  const cards = list.slice(0, 30).map(_newsUnivAceCardHtml).join('');
+  return `<div class="b2n-aces-section">
+    <div class="b2n-aces-title"><i></i>대학별 우수 스트리머</div>
+    <div class="b2n-aces-grid">${cards}</div>
+  </div>`;
+}
 function _newsCss(){
   return `
     .b2n-sheet{
-      width:1040px; margin:0 auto; padding:0 0 26px;
+      width:1040px; margin:0 auto; padding:0 0 30px;
       font-family:'Noto Sans KR', -apple-system, sans-serif;
-      background:#ece7da; color:#1c1917;
-      border-radius:10px; overflow:hidden; box-shadow:0 16px 46px rgba(15,23,42,.16);
+      background:radial-gradient(140% 100% at 50% 0%, #f3efe4 0%, #ece7da 55%, #e6e0d0 100%);
+      color:#1c1917;
+      border-radius:14px; overflow:hidden;
+      box-shadow:0 24px 60px rgba(15,23,42,.20), 0 2px 8px rgba(15,23,42,.08);
     }
     .b2n-sheet *, .b2n-sheet *::before, .b2n-sheet *::after{ box-sizing:border-box }
-    .b2n-topband{ height:5px; background:linear-gradient(90deg,#9f1d1d 0%,#b45309 45%,#9f1d1d 65%,#57534e 100%); }
+    .b2n-topband{ height:6px; background:linear-gradient(90deg,#7f1414 0%,#9f1d1d 22%,#c2761f 50%,#9f1d1d 78%,#57534e 100%); background-size:200% 100%; }
     .b2n-topbar{
       display:flex; align-items:center; justify-content:space-between;
       background:#ece7da; color:#57534e; padding:7px 26px; font-size:10px; font-weight:800;
@@ -292,20 +329,20 @@ function _newsCss(){
       display:flex; align-items:center; justify-content:center; gap:12px; text-align:center;
     }
     .b2n-brand-name{
-      font-family:'Noto Serif KR', Georgia, serif; font-size:42px; font-weight:900;
-      letter-spacing:-.01em; color:#1c1917;
+      font-family:'Noto Serif KR', Georgia, serif; font-size:44px; font-weight:900;
+      letter-spacing:-.01em; color:#1c1917; text-shadow:0 1px 0 rgba(255,255,255,.5);
     }
     .b2n-brand-name b{ color:#9f1d1d }
     .b2n-edition{
-      margin-top:6px; text-align:center; font-size:11px; font-weight:800; color:#57534e;
-      letter-spacing:.1em; padding-bottom:14px;
+      margin-top:7px; text-align:center; font-size:11px; font-weight:800; color:#57534e;
+      letter-spacing:.12em; padding-bottom:15px;
     }
     .b2n-rule-double{ border-top:3px solid #1c1917; margin-top:0; }
     .b2n-rule-double-thin{ border-top:1px solid #1c1917; margin-top:3px; }
-    .b2n-headline-wrap{ padding:20px 26px 0; background:linear-gradient(180deg,#faf7f0 0%,#f8f5ee 100%); }
+    .b2n-headline-wrap{ padding:22px 26px 0; background:linear-gradient(180deg,#faf7f0 0%,#f8f5ee 100%); }
     .b2n-headline{
       font-family:'Noto Serif KR', Georgia, serif;
-      font-size:38px; font-weight:900; line-height:1.18; letter-spacing:-.02em; color:#1c1917;
+      font-size:39px; font-weight:900; line-height:1.22; letter-spacing:-.02em; color:#1c1917;
     }
     .b2n-dek{
       margin-top:10px; font-size:14px; line-height:1.7; color:#374151; max-width:900px;
@@ -332,32 +369,37 @@ function _newsCss(){
     .b2n-col-title:first-child{ margin-top:0 }
     .b2n-col-title i{ display:inline-block; width:7px; height:7px; border-radius:2px; background:#9f1d1d; flex-shrink:0; font-style:normal }
     .b2n-feature{
-      display:flex; gap:16px; background:linear-gradient(155deg,#fdfbf7 0%,#fbf8f2 70%,#f6f1e6 100%);
-      border:1px solid rgba(28,25,23,.14);
-      border-radius:14px; padding:14px; box-shadow:0 8px 20px rgba(15,23,42,.07); margin-bottom:16px;
+      display:flex; gap:18px; background:linear-gradient(155deg,#fefcf8 0%,#fbf8f2 65%,#f5efe1 100%);
+      border:1px solid rgba(28,25,23,.14); border-top:3px solid #d4af37;
+      border-radius:16px; padding:16px; box-shadow:0 12px 30px rgba(15,23,42,.10), inset 0 1px 0 rgba(255,255,255,.6); margin-bottom:16px;
     }
     .b2n-feature-empty{
       background:#fbf8f2; border:1px dashed rgba(28,25,23,.25); border-radius:12px; padding:20px;
       text-align:center; color:#6b7280; font-size:12px; margin-bottom:16px;
     }
     .b2n-feature-photo{
-      position:relative; width:132px; height:160px; flex-shrink:0; border-radius:10px; overflow:hidden;
+      position:relative; width:158px; height:192px; flex-shrink:0; border-radius:14px; overflow:hidden;
       background:linear-gradient(160deg,#3f3a33,#171512);
-      box-shadow:inset 0 0 0 3px #fbf8f2, inset 0 0 0 4px rgba(28,25,23,.16);
+      box-shadow:inset 0 0 0 3px #fefcf8, inset 0 0 0 5px #d4af37, 0 12px 28px rgba(15,23,42,.22);
       display:flex; align-items:center; justify-content:center;
     }
-    .b2n-feature-photo img{ width:100%; height:100%; object-fit:cover; display:block }
-    .b2n-feature-fallback{ width:100%; height:100%; align-items:center; justify-content:center; display:flex; font-size:44px; font-weight:900; color:#fff }
-    .b2n-feature-ribbon{
-      position:absolute; left:0; top:10px; background:#9f1d1d; color:#fff; font-size:10px; font-weight:900;
-      padding:3px 10px 3px 8px; border-radius:0 6px 6px 0; letter-spacing:.02em;
+    .b2n-feature-photo::after{
+      content:''; position:absolute; inset:0; pointer-events:none;
+      background:linear-gradient(185deg,rgba(0,0,0,0) 58%,rgba(0,0,0,.34) 100%);
     }
-    .b2n-feature-body{ display:flex; flex-direction:column; justify-content:center; gap:6px; min-width:0 }
-    .b2n-feature-name{ font-family:'Noto Serif KR', Georgia, serif; font-size:22px; font-weight:900; color:#111827 }
-    .b2n-feature-univ{ font-size:12px; font-weight:700; color:#6b7280 }
+    .b2n-feature-photo img{ width:100%; height:100%; object-fit:cover; display:block }
+    .b2n-feature-fallback{ width:100%; height:100%; align-items:center; justify-content:center; display:flex; font-size:50px; font-weight:900; color:#fff }
+    .b2n-feature-ribbon{
+      position:absolute; left:0; top:12px; z-index:1; background:linear-gradient(135deg,#dca02f,#9f1d1d); color:#fff; font-size:10.5px; font-weight:900;
+      padding:4px 12px 4px 9px; border-radius:0 8px 8px 0; letter-spacing:.03em;
+      box-shadow:0 3px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.25);
+    }
+    .b2n-feature-body{ display:flex; flex-direction:column; justify-content:center; gap:7px; min-width:0 }
+    .b2n-feature-name{ font-family:'Noto Serif KR', Georgia, serif; font-size:24px; font-weight:900; color:#111827 }
+    .b2n-feature-univ{ font-size:12.5px; font-weight:700; color:#6b7280 }
     .b2n-feature-stats{ display:flex; gap:14px; margin-top:6px }
     .b2n-fstat{ display:flex; flex-direction:column; align-items:center; }
-    .b2n-fstat b{ font-size:18px; font-weight:900; color:#9f1d1d }
+    .b2n-fstat b{ font-size:19px; font-weight:900; color:#9f1d1d }
     .b2n-fstat i{ font-style:normal; font-size:10px; font-weight:700; color:#6b7280 }
     .b2n-fstat-streak b{ color:#b45309 }
     .b2n-fstat-sub{ margin-left:2px; padding-left:12px; border-left:1px dashed rgba(28,25,23,.2) }
@@ -376,7 +418,7 @@ function _newsCss(){
     .b2n-row-stat{ color:#292524; font-weight:900; font-size:11.5px }
     .b2n-row-wr{ color:#a39d8c; font-weight:700; font-size:10.5px }
     .b2n-row-extra{ color:#9f1d1d; font-weight:800; font-size:11px }
-    .b2n-standings{ background:#fbf8f2; border:1px solid rgba(28,25,23,.14); border-radius:12px; overflow:hidden; margin-bottom:16px }
+    .b2n-standings{ background:#fbf8f2; border:1px solid rgba(28,25,23,.14); border-radius:14px; overflow:hidden; margin-bottom:16px; box-shadow:0 4px 12px rgba(15,23,42,.05) }
     .b2n-stline{
       display:flex; gap:9px; align-items:center;
       padding:9px 12px; font-size:12px; border-bottom:1px solid rgba(28,25,23,.08);
@@ -400,20 +442,58 @@ function _newsCss(){
     .b2n-rd.new{ background:#f5f3ff; color:#5b21b6 }
     .b2n-kpis{ display:flex; gap:10px; margin-bottom:16px }
     .b2n-kpi{
-      position:relative; flex:1; min-width:0; color:#111827; border-radius:10px; padding:12px 14px 12px 44px;
-      background:linear-gradient(155deg,#fdfbf7 0%,#fbf8f2 65%,#f5f0e5 100%);
+      position:relative; flex:1; min-width:0; color:#111827; border-radius:12px; padding:13px 14px 13px 50px;
+      background:linear-gradient(155deg,#fefcf8 0%,#fbf8f2 60%,#f5efe1 100%);
       border:1px solid rgba(28,25,23,.1); border-top:3px solid #9f1d1d;
-      box-shadow:0 4px 12px rgba(15,23,42,.05);
+      box-shadow:0 6px 16px rgba(15,23,42,.07), inset 0 1px 0 rgba(255,255,255,.6);
     }
     .b2n-kpi:nth-child(2){ border-top-color:#0e7490 }
-    .b2n-kpi-ico{ position:absolute; left:12px; top:12px; font-size:15px; opacity:.7 }
-    .b2n-kpi b{ display:block; font-size:22px; font-weight:900; color:#111827; line-height:1.2 }
+    .b2n-kpi-ico{
+      position:absolute; left:12px; top:50%; transform:translateY(-50%);
+      width:26px; height:26px; border-radius:50%; font-size:13px;
+      display:flex; align-items:center; justify-content:center;
+      background:radial-gradient(120% 120% at 30% 25%, #fff 0%, #ede4cf 100%);
+      box-shadow:0 2px 6px rgba(15,23,42,.14), inset 0 0 0 1px rgba(28,25,23,.08);
+    }
+    .b2n-kpi b{ display:block; font-size:23px; font-weight:900; color:#111827; line-height:1.2 }
     .b2n-kpi i{ font-style:normal; font-size:10px; font-weight:800; color:#9ca3af; letter-spacing:.02em }
     .b2n-worst{ background:#fbf8f2; border:1px dashed rgba(28,25,23,.25); border-radius:12px; padding:12px; margin-top:16px }
     .b2n-worst-title{ font-size:11px; font-weight:900; color:#6b7280; margin-bottom:6px }
     .b2n-empty{ font-size:12px; color:#9ca3af; padding:10px 0 }
+    .b2n-aces-section{ padding:4px 26px 22px }
+    .b2n-aces-title{
+      display:flex; align-items:center; gap:7px;
+      font-size:12px; font-weight:900; letter-spacing:.08em; text-transform:uppercase;
+      color:#57534e; margin:6px 0 12px; padding-bottom:7px; border-bottom:1.5px solid rgba(28,25,23,.55);
+    }
+    .b2n-aces-title i{ display:inline-block; width:7px; height:7px; border-radius:2px; background:#9f1d1d; flex-shrink:0; font-style:normal }
+    .b2n-aces-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px }
+    .b2n-ace-card{
+      background:#fbf8f2; border:1px solid rgba(28,25,23,.14); border-top:3px solid var(--_c,#9f1d1d);
+      border-radius:12px; padding:11px 12px; display:flex; flex-direction:column; gap:6px; min-width:0;
+      box-shadow:0 4px 12px rgba(15,23,42,.05);
+    }
+    .b2n-ace-main{ display:flex; align-items:center; gap:9px; margin-top:1px }
+    .b2n-ace-photo{
+      position:relative; width:40px; height:40px; border-radius:var(--su_profile_radius,50%); clip-path:var(--su_profile_clip,none); overflow:hidden; flex-shrink:0;
+      background:linear-gradient(160deg,#3f3a33,#171512);
+      border:2.5px solid var(--_c,#9f1d1d);
+      filter:drop-shadow(0 3px 7px rgba(15,23,42,.22));
+      display:flex; align-items:center; justify-content:center;
+    }
+    .b2n-ace-photo img{ width:100%; height:100%; object-fit:cover; display:block }
+    .b2n-ace-photo-fallback{ width:100%; height:100%; align-items:center; justify-content:center; display:flex; font-size:16px; font-weight:900; color:#fff }
+    .b2n-ace-info{ min-width:0; flex:1 }
+    .b2n-ace-univ{
+      display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:900; color:#57534e;
+      text-transform:uppercase; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .b2n-ace-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0 }
+    .b2n-ace-name{ font-size:14px; font-weight:900; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .b2n-ace-rec{ font-size:11px; font-weight:700; color:#374151; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .b2n-ace-empty{ font-size:11px; color:#9ca3af; font-weight:600 }
     .b2n-footer{
-      margin-top:20px; padding:12px 26px 0; border-top:3px double rgba(28,25,23,.5);
+      margin-top:22px; padding:14px 26px 0; border-top:3px double rgba(28,25,23,.5);
       display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:700; color:#9ca3af;
     }
     .b2n-footer-dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:#9f1d1d; margin-right:6px; vertical-align:middle }
@@ -454,7 +534,7 @@ function _newsBuildHtml(ctx, meta){
     </div>
     <div class="b2n-body">
       <div class="b2n-col">
-        <div class="b2n-col-title"><i></i>오늘의 MVP</div>
+        <div class="b2n-col-title"><i></i>${_esc(ctx.mvpLabel||'오늘의 MVP')}</div>
         ${_newsMvpFeatureHtml(ctx)}
         <div class="b2n-col-title"><i></i>이 주의 기록</div>
         ${_newsHighlightRows(ctx)}
@@ -473,6 +553,7 @@ function _newsBuildHtml(ctx, meta){
         </div>` : ''}
       </div>
     </div>
+    ${_newsUnivAcesHtml(ctx)}
     <div class="b2n-footer">
       <span><span class="b2n-footer-dot"></span>STAR DATACENTER · star-datacenter</span>
       <span>${_esc(meta.univ)} · ${_esc(info.title||'브리핑')}</span>
@@ -483,7 +564,9 @@ async function _captureBriefingNewspaper(meta){
   const ctx = window._b2BriefingExportCtx;
   if(!ctx){ alert('브리핑 데이터를 아직 불러오지 못했습니다. 브리핑 화면을 한 번 연 뒤 다시 시도해주세요.'); return; }
   const holder=document.createElement('div');
-  holder.style.cssText='position:fixed;left:-99999px;top:0;pointer-events:none;z-index:-1';
+  // html2canvas는 뷰포트 밖(left:-99999px)에 있는 콘텐츠를 렌더 윈도우 밖으로 취급해
+  // 잘라내는 경우가 있어, 실제 좌표(0,0)에 두고 opacity:0으로 화면에는 보이지 않게 처리한다.
+  holder.style.cssText='position:fixed;left:0;top:0;opacity:0;pointer-events:none;z-index:-1';
   holder.innerHTML=_newsBuildHtml(ctx, meta);
   document.body.appendChild(holder);
   try{
@@ -494,7 +577,7 @@ async function _captureBriefingNewspaper(meta){
     const w=1040;
     const h=Math.max(1, Math.ceil(sheet.scrollHeight||0));
     const canvas=await html2canvas(sheet,{
-      backgroundColor:'#ece7da', scale:2, useCORS:true, allowTaint:false, logging:false,
+      backgroundColor:'#ece7da', scale:2.5, useCORS:true, allowTaint:false, logging:false,
       imageTimeout:20000, width:w, height:h, windowWidth:w+80, windowHeight:h+80, scrollX:0, scrollY:0
     });
     const rawName=`브리핑_신문기사_${meta.presetLabel}_${String(window._b2WeeklyDateFrom||'').slice(0,10)}_${String(window._b2WeeklyDateTo||'').slice(0,10)}${meta.univ!=='전체'?'_'+meta.univ:''}.png`;

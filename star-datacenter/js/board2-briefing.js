@@ -731,12 +731,17 @@ function _b2WeeklyBriefingView() {
       .b2w2-btn:hover { background: var(--b2w-accent-strong); transform: translateY(-1px) }
       .b2w2-btn:focus-visible { outline: 2px solid var(--b2w-accent); outline-offset: 2px }
       .b2w2-savebtn {
-        background: #fee2e2;
-        color: #b91c1c;
-        border: 1px solid rgba(185,28,28,.22);
-        box-shadow: 0 2px 8px rgba(185,28,28,.12);
+        background: linear-gradient(135deg, #fff5f5, #fee2e2 60%, #fecaca);
+        color: #9f1d1d;
+        border: 1px solid rgba(159,29,29,.28);
+        box-shadow: 0 4px 14px rgba(159,29,29,.16), inset 0 1px 0 rgba(255,255,255,.7);
+        font-weight: 900;
       }
-      .b2w2-savebtn:hover { background: #fecaca; color: #991b1b; }
+      .b2w2-savebtn:hover {
+        background: linear-gradient(135deg, #fee2e2, #fecaca 55%, #fca5a5);
+        color: #7f1414;
+        box-shadow: 0 8px 20px rgba(159,29,29,.22), inset 0 1px 0 rgba(255,255,255,.7);
+      }
 
       /* ── 모드 선택 바 ── */
       .b2w2-modebar {
@@ -1437,17 +1442,17 @@ function _b2WeeklyBriefingView() {
         text-shadow: 0 1px 4px rgba(0,0,0,.5);
       }
 
-      /* 스탯 + 최근 폼 통합 라인 — 글라스 배경 */
+      /* 스탯 + 최근 폼 통합 라인 — 글라스 배경 (밝은 사진 위에서도 항상 읽히도록 어둡게 보강) */
       .b2w2-mvp-statline {
         display: flex;
         align-items: center;
         gap: 7px;
         border-radius: 999px;
-        border: 1px solid rgba(255,255,255,.16);
+        border: 1px solid rgba(255,255,255,.18);
         backdrop-filter: blur(14px) saturate(160%);
         -webkit-backdrop-filter: blur(14px) saturate(160%);
-        background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 6px 16px rgba(0,0,0,.18);
+        background: linear-gradient(180deg, rgba(10,10,16,.30), rgba(10,10,16,.52));
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 6px 16px rgba(0,0,0,.28);
         padding: 6px 10px;
       }
       .b2w2-mvp-stat {
@@ -1459,7 +1464,7 @@ function _b2WeeklyBriefingView() {
       .b2w2-mvp-statline-sep {
         width: 1px;
         height: 10px;
-        background: rgba(255,255,255,.22);
+        background: rgba(255,255,255,.28);
         flex-shrink: 0;
       }
       .b2w2-mvp-sv {
@@ -1469,13 +1474,15 @@ function _b2WeeklyBriefingView() {
         letter-spacing: -.02em;
         line-height: 1;
         color: #fff;
+        text-shadow: 0 1px 6px rgba(0,0,0,.7), 0 1px 2px rgba(0,0,0,.55);
       }
       .b2w2-mvp-sl {
         font-size: 8px;
         font-style: normal;
         font-weight: 800;
-        color: rgba(255,255,255,.62);
+        color: rgba(255,255,255,.78);
         letter-spacing: .02em;
+        text-shadow: 0 1px 4px rgba(0,0,0,.6);
       }
       .b2w2-mvp-first .b2w2-mvp-sv-win   { color: #f87171 }
       .b2w2-mvp-first .b2w2-mvp-sv-loss  { color: #cbd5e1 }
@@ -1802,6 +1809,17 @@ function _b2WeeklyBriefingView() {
         border: 1px solid var(--b2w-rule-soft);
       }
       .b2w2-ace-player { display: flex; align-items: center; justify-content: space-between; gap: 10px }
+      .b2w2-ace-player-main { display: flex; align-items: center; gap: 10px; min-width: 0 }
+      .b2w2-ace-photo {
+        position: relative; width: 40px; height: 40px; flex-shrink: 0; overflow: hidden;
+        border-radius: var(--su_profile_radius,50%); clip-path: var(--su_profile_clip,none);
+        background: linear-gradient(160deg,#3f3a33,#171512);
+        border: 2px solid var(--_c,#64748b);
+        filter: drop-shadow(0 2px 6px rgba(15,23,42,.18));
+        display: flex; align-items: center; justify-content: center;
+      }
+      .b2w2-ace-photo img { width: 100%; height: 100%; object-fit: cover; display: block }
+      .b2w2-ace-photo-fallback { width: 100%; height: 100%; align-items: center; justify-content: center; display: flex; font-size: 15px; font-weight: 900; color: #fff }
       .b2w2-ace-player-name {
         font-family: 'Noto Serif KR', Georgia, serif;
         font-size: 17px;
@@ -1926,6 +1944,17 @@ function _b2WeeklyBriefingView() {
       .b2w2-card-spotlight-kicker { font-size: 10px; font-weight: 800; color: var(--gold, #92651b); letter-spacing: .08em; text-transform: uppercase }
       .b2w2-card-spotlight-title { margin-top: 6px; font-family: 'Noto Serif KR', Georgia, serif; font-size: 16px; font-weight: 800; color: var(--b2w-ink); display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
       .b2w2-card-spotlight-sub { margin-top: 5px; font-size: 11px; color: var(--b2w-ink-soft); display: flex; gap: 8px; flex-wrap: wrap }
+      .b2w2-card-spotlight-body { display: flex; align-items: center; gap: 12px }
+      .b2w2-card-spotlight-photo {
+        position: relative; width: 52px; height: 52px; flex-shrink: 0; overflow: hidden;
+        border-radius: var(--su_profile_radius,50%); clip-path: var(--su_profile_clip,none);
+        background: linear-gradient(160deg,#3f3a33,#171512);
+        border: 2px solid var(--_c,#92651b);
+        filter: drop-shadow(0 3px 7px rgba(15,23,42,.18));
+        display: flex; align-items: center; justify-content: center;
+      }
+      .b2w2-card-spotlight-photo img { width: 100%; height: 100%; object-fit: cover; display: block }
+      .b2w2-card-spotlight-photo-fallback { width: 100%; height: 100%; align-items: center; justify-content: center; display: flex; font-size: 19px; font-weight: 900; color: #fff }
 
       /* ── 테이블 ── */
       .b2w2-table-wrap { border: 1px solid var(--b2w-rule-soft); border-radius: var(--b2w-r); overflow: hidden; background: var(--white) }
@@ -2037,6 +2066,17 @@ function _b2WeeklyBriefingView() {
     // ── "저장(1장)" 신문기사 스타일 캡처용 데이터 스냅샷 ──
     // render-capture-utils.js의 captureBriefingArticle('single')에서 사용.
     // (여기서 이미 계산해둔 통계를 그대로 재사용 — 중복 계산 방지)
+    // 대학별 우수 스트리머(에이스)는 월간 모드에서는 monthlyUnivAces를 그대로 쓰고,
+    // 주간 모드에서는 topUnivs 기준으로 동일하게 계산해 export에서도 항상 노출되도록 함.
+    // topUnivs는 화면상의 "대학 활동량 TOP" 카드용으로 상위 _topLimit(주간 3 / 월간 5)개만 담지만,
+    // 저장(신문) 내보내기용 "대학별 우수 스트리머" 섹션은 활동이 있었던 대학을 전부 보여줘야 하므로
+    // 별도로 전체 목록을 만들어 사용한다 (주간 모드에서 3개로 잘리던 문제 수정).
+    const _univAcesForExport = _isMonthly
+      ? monthlyUnivAces
+      : [...curStats]
+          .filter(ud => ud.tg > 0)
+          .sort((a, b) => (b.tg - a.tg) || (b.active.length - a.active.length) || ((b.wr ?? -1) - (a.wr ?? -1)))
+          .map(ud => ({ ...ud, ace: _b2WeeklyUnivMVP(ud.active) }));
     try {
       window._b2BriefingExportCtx = {
         preset, dateFrom, dateTo, prevDateFrom, prevDateTo,
@@ -2044,7 +2084,7 @@ function _b2WeeklyBriefingView() {
         briefingInfo: _briefingInfo, mvpLabel: _mvpLabel,
         heroSummary: _heroSummary, heroSpotlight: _heroSpotlight,
         mvp, mvp2, worstPlayer,
-        topUnivs, rankedUnivs,
+        topUnivs, rankedUnivs, univAces: _univAcesForExport,
         hotPlayer, coldPlayer, streakPlayer, loseStreakPlayer,
         bestWrPlayer, mostWinsPlayer, mostActivePlayer,
         monthlyMvp, monthlyTopPlayers, silentUnivs,
@@ -2423,9 +2463,9 @@ function _b2WeeklyBriefingView() {
                   <div style="min-width:0">
                     <div class="b2w2-rank-name">${ud.u.name}</div>
                     <div class="b2w2-rank-sub">
-                      <span>${ud.tw}승 ${ud.tl}패</span>
+                      <span><span style="color:var(--win-col,#dc2626);font-weight:800">${ud.tw}승</span> <span style="color:var(--lose-col,#94a3b8);font-weight:800">${ud.tl}패</span></span>
                       <span>승률 ${ud.wr ?? 0}%</span>
-                      <span>${ud.tg}전</span>
+                      <span style="color:${col};font-weight:800">${ud.tg}전</span>
                     </div>
                   </div>
                 </div>
@@ -2473,13 +2513,19 @@ function _b2WeeklyBriefingView() {
                   <span class="b2w2-ace-rank">${item.rank}위 대학</span>
                 </div>
                 <div class="b2w2-ace-player">
-                  <div style="min-width:0">
-                    <div class="b2w2-ace-player-name" onclick="openPlayerModal('${ace.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${ace.p?.name || '-'}</div>
-                    <div class="b2w2-ace-player-sub">
-                      <span>${ace.wins}승 ${ace.losses}패</span>
-                      <span style="color:${(ace.winRate ?? 0) >= 60 ? 'var(--green)' : (ace.winRate ?? 0) >= 50 ? 'var(--b2w-accent)' : 'var(--gray)'}">승률 ${ace.winRate ?? 0}%</span>
-                      <span>순승 +${ace.netWins ?? 0}</span>
-                      <span>${ace.total}전</span>
+                  <div class="b2w2-ace-player-main">
+                    <div class="b2w2-ace-photo" style="--_c:${col}">
+                      ${(() => { const _ph = ace.p?.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(ace.p.photo):ace.p.photo) : ''; return _ph ? `<img src="${_ph}" alt="${ace.p?.name||''}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''; })()}
+                      <div class="b2w2-ace-photo-fallback" style="${ace.p?.photo?'display:none':''}">${String(ace.p?.name||'-').trim().slice(0,1)}</div>
+                    </div>
+                    <div style="min-width:0">
+                      <div class="b2w2-ace-player-name" onclick="openPlayerModal('${ace.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${ace.p?.name || '-'}</div>
+                      <div class="b2w2-ace-player-sub">
+                        <span>${ace.wins}승 ${ace.losses}패</span>
+                        <span style="color:${(ace.winRate ?? 0) >= 60 ? 'var(--green)' : (ace.winRate ?? 0) >= 50 ? 'var(--b2w-accent)' : 'var(--gray)'}">승률 ${ace.winRate ?? 0}%</span>
+                        <span>순승 +${ace.netWins ?? 0}</span>
+                        <span>${ace.total}전</span>
+                      </div>
                     </div>
                   </div>
                   <div style="display:flex;align-items:center;gap:3px;flex-shrink:0">${_b2WeeklyForm(ace.hist)}</div>
@@ -2599,7 +2645,7 @@ function _b2WeeklyBriefingView() {
               </div>
               <div id="b2w2-sub-${ui}" class="b2w2-card-sub" style="display:none">
                 <span>활동 ${active.length}명</span>
-                <span>${tg}전 ${tw}승 ${tl}패</span>
+                <span><span style="color:${color};font-weight:800">${tg}전</span> <span style="color:var(--win-col,#dc2626);font-weight:800">${tw}승</span> <span style="color:var(--lose-col,#94a3b8);font-weight:800">${tl}패</span></span>
                 ${wr!==null?`<span style="font-weight:900;color:${wrClass}">승률 ${wr}%${_b2WeeklyDelta(wr,prevWr)}</span>`:''}
               </div>
             </div>
@@ -2616,8 +2662,8 @@ function _b2WeeklyBriefingView() {
               </div>
               <div class="b2w2-card-kpi">
                 <div class="b2w2-card-kpi-label">팀 전적</div>
-                <div class="b2w2-card-kpi-value">${tw}<span style="color:#dc2626">승</span> ${tl}<span style="color:#64748b">패</span></div>
-                <div class="b2w2-card-kpi-sub">총 ${tg}전 소화</div>
+                <div class="b2w2-card-kpi-value"><span style="color:var(--win-col,#dc2626)">${tw}승</span> <span style="color:var(--lose-col,#94a3b8)">${tl}패</span></div>
+                <div class="b2w2-card-kpi-sub">총 <span style="color:${color};font-weight:900">${tg}</span>전 소화</div>
               </div>
               <div class="b2w2-card-kpi">
                 <div class="b2w2-card-kpi-label">팀 승률</div>
@@ -2627,14 +2673,22 @@ function _b2WeeklyBriefingView() {
             </div>
             <div class="b2w2-card-spotlight">
               ${univMVP ? `
-                <div class="b2w2-card-spotlight-kicker">대학별 에이스</div>
-                <div class="b2w2-card-spotlight-title">
-                  <span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${univMVP.p.name}" style="cursor:pointer;border-bottom:1.5px solid ${color}55">${univMVP.p.name}</span>
-                  ${univMVP.p.tier?`<span style="font-size:10px;padding:2px 6px;border-radius:999px;background:${typeof getTierBtnColor==='function' ? getTierBtnColor(univMVP.p.tier) : '#64748b'};color:${typeof getTierBtnTextColor==='function' ? (getTierBtnTextColor(univMVP.p.tier)||'#fff') : '#fff'}">${univMVP.p.tier}</span>`:''}
-                </div>
-                <div class="b2w2-card-spotlight-sub">
-                  <span>${univMVP.wins}승 ${univMVP.losses}패</span>
-                  <span>승률 ${univMVP.winRate}%</span>
+                <div class="b2w2-card-spotlight-body">
+                  <div class="b2w2-card-spotlight-photo" style="--_c:${color}">
+                    ${(() => { const _ph = univMVP.p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(univMVP.p.photo):univMVP.p.photo) : ''; return _ph ? `<img src="${_ph}" alt="${univMVP.p.name||''}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''; })()}
+                    <div class="b2w2-card-spotlight-photo-fallback" style="${univMVP.p.photo?'display:none':''}">${String(univMVP.p.name||'-').trim().slice(0,1)}</div>
+                  </div>
+                  <div style="min-width:0">
+                    <div class="b2w2-card-spotlight-kicker">대학별 에이스</div>
+                    <div class="b2w2-card-spotlight-title">
+                      <span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${univMVP.p.name}" style="cursor:pointer;border-bottom:1.5px solid ${color}55">${univMVP.p.name}</span>
+                      ${univMVP.p.tier?`<span style="font-size:10px;padding:2px 6px;border-radius:999px;background:${typeof getTierBtnColor==='function' ? getTierBtnColor(univMVP.p.tier) : '#64748b'};color:${typeof getTierBtnTextColor==='function' ? (getTierBtnTextColor(univMVP.p.tier)||'#fff') : '#fff'}">${univMVP.p.tier}</span>`:''}
+                    </div>
+                    <div class="b2w2-card-spotlight-sub">
+                      <span>${univMVP.wins}승 ${univMVP.losses}패</span>
+                      <span>승률 ${univMVP.winRate}%</span>
+                    </div>
+                  </div>
                 </div>
               ` : `
                 <div class="b2w2-card-spotlight-kicker">대학별 에이스</div>
@@ -2672,8 +2726,12 @@ function _b2WeeklyBriefingView() {
             ${isMVP?`<span style="font-size:11px;background:#fef9c3;color:#b45309;padding:1px 4px;border-radius:4px;margin-left:3px;font-weight:800">MVP</span>`:''}
           </td>
           <td>
-            <div style="font-size:13px;font-weight:800;color:var(--text1)">${total}전 <span style="color:#dc2626">${wins}승</span> <span style="color:#64748b">${losses}패</span></div>
-            ${winRate!==null?`<div style="margin-top:2px;font-size:11px;font-weight:700;color:${wrCls}">${winRate}%${_b2WeeklyDelta(winRate,prevWr2)}</div>`:''}
+            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+              <span style="font-size:12px;font-weight:900;color:var(--text1);background:var(--surface,#f8fafc);border:1px solid var(--border,#e2e8f0);padding:1px 8px;border-radius:999px">${total}전</span>
+              <span style="font-size:11px;font-weight:900;color:var(--win-col,#dc2626);background:color-mix(in srgb, var(--win-col,#dc2626) 14%, transparent);padding:1px 7px;border-radius:999px">${wins}승</span>
+              <span style="font-size:11px;font-weight:900;color:var(--lose-col,#2563eb);background:color-mix(in srgb, var(--lose-col,#2563eb) 14%, transparent);padding:1px 7px;border-radius:999px">${losses}패</span>
+            </div>
+            ${winRate!==null?`<div style="margin-top:3px;font-size:11px;font-weight:700;color:${wrCls}">${winRate}%${_b2WeeklyDelta(winRate,prevWr2)}</div>`:''}
           </td>
           <td><div style="display:flex;align-items:center;gap:2px">${_b2WeeklyForm(s.hist)}</div></td>
         </tr>`;

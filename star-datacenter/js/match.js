@@ -2,7 +2,7 @@
    종족 승률
 ══════════════════════════════════════ */
 function rRace(C,T){
-  T.innerText='🧬 종족별 전체 승률';
+  T.innerText='종족별 전체 승률';
   let h='';
   if(typeof buildYearMonthFilter==='function'){
     h+=buildYearMonthFilter('race');
