@@ -729,7 +729,7 @@ window.cfgSetRecCardSettings = function(){
   const lpcEl = document.getElementById('cfg-rc-layout-pc');
   const lmbEl = document.getElementById('cfg-rc-layout-mb');
   const ckA = (document.getElementById('cfg-team-ck-a')?.value || '#2563eb').trim();
-  const ckB = (document.getElementById('cfg-team-ck-b')?.value || '#6366f1').trim();
+  const ckB = (document.getElementById('cfg-team-ck-b')?.value || '#d97706').trim();
   const proA = (document.getElementById('cfg-team-pro-a')?.value || '#0f766e').trim();
   const proB = (document.getElementById('cfg-team-pro-b')?.value || '#4f46e5').trim();
   const _hex = v => /^#[0-9a-fA-F]{6}$/.test(String(v||'').trim()) ? String(v).trim() : '';
@@ -1853,7 +1853,7 @@ window.cfgSetShareCardSettings = window.cfgSetShareCardSettings || function(){
 window.cfgSyncTeamColorPreview = window.cfgSyncTeamColorPreview || function(){
   try{
     const ckA = document.getElementById('cfg-team-ck-a')?.value || (localStorage.getItem('su_team_color_ck_a')||'#2563eb');
-    const ckB = document.getElementById('cfg-team-ck-b')?.value || (localStorage.getItem('su_team_color_ck_b')||'#6366f1');
+    const ckB = document.getElementById('cfg-team-ck-b')?.value || (localStorage.getItem('su_team_color_ck_b')||'#d97706');
     const proA = document.getElementById('cfg-team-pro-a')?.value || (localStorage.getItem('su_team_color_pro_a')||'#0f766e');
     const proB = document.getElementById('cfg-team-pro-b')?.value || (localStorage.getItem('su_team_color_pro_b')||'#4f46e5');
     const paint=(id,color,label)=>{
@@ -1872,7 +1872,8 @@ window.cfgSyncTeamColorPreview = window.cfgSyncTeamColorPreview || function(){
 try{
   const _m = [
     ['su_team_color_ck_a', '#0e7490', '#2563eb'],
-    ['su_team_color_ck_b', '#b45309', '#6366f1'],
+    // (재수정) 블루/인디고 조합이 서로 비슷해 보인다는 피드백으로 B팀을 대비되는 앰버로 되돌림
+    ['su_team_color_ck_b', '#6366f1', '#d97706'],
     ['su_team_color_pro_b', '#7c3aed', '#4f46e5']
   ];
   _m.forEach(([k, oldV, nextV])=>{

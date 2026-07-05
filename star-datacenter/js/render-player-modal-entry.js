@@ -258,6 +258,7 @@ function openPlayerModal(name){
   const nm = String(name||'').trim();
   try{ window._lastOpenPlayerModalCall = nm; }catch(e){}
   if(!nm) return;
+  try{ if(typeof _b2EnsureMvpHistoryFresh==='function') _b2EnsureMvpHistoryFresh(true); }catch(e){}
   const arr = Array.isArray(players) ? players : [];
   let p = arr.find(x=>x && String(x.name||'').trim()===nm);
   if(!p){

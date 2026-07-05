@@ -176,7 +176,7 @@ function deletePlayerRecentEditableSource(playerName, meta){
     const found = _findProTourStageRecordByMeta(meta);
     if(!found || !found.rec) return;
     if(!_guardRecentEdit(found.rec.d||'')) return;
-    if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.')) return;
+    if(!confirm('이 경기 기록을 삭제할까요?\n\nELO와 승패 기록이 차감됩니다.')) return;
     try{
       if(typeof window.pcDeleteStageRec === 'function'){
         window.pcDeleteStageRec(found.tn.id, found.round, found.idx);
@@ -290,7 +290,7 @@ function deletePlayerRecentEditableSource(playerName, meta){
       const m=(typeof indM!=='undefined'?indM:[])[idx];
       if(m && !_guardRecentEdit(m.d||'')) return;
     }catch(e){}
-    if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.')) return;
+    if(!confirm('이 경기 기록을 삭제할까요?\n\nELO와 승패 기록이 차감됩니다.')) return;
     try{
       const m=(typeof indM!=='undefined'?indM:[])[idx];
       if(m){
@@ -311,7 +311,7 @@ function deletePlayerRecentEditableSource(playerName, meta){
       const m=(typeof gjM!=='undefined'?gjM:[])[idx];
       if(m && !_guardRecentEdit(m.d||'')) return;
     }catch(e){}
-    if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.')) return;
+    if(!confirm('이 경기 기록을 삭제할까요?\n\nELO와 승패 기록이 차감됩니다.')) return;
     try{
       const m=(typeof gjM!=='undefined'?gjM:[])[idx];
       if(m){
@@ -338,7 +338,7 @@ function openPlayerRecentEditableSourceEdit(playerName, meta){
   const currentOpp = selfIsA ? rec.b : rec.a;
   const currentResult = ((selfIsA && rec.winner==='A') || (!selfIsA && rec.winner==='B')) ? '승' : '패';
   const mapOpts=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
-  document.getElementById('reTitle').textContent=`✏️ 경기 수정 — ${playerName} vs ${currentOpp||''}`;
+  document.getElementById('reTitle').textContent=`경기 수정 — ${playerName} vs ${currentOpp||''}`;
   document.getElementById('reBody').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:8px">
       <div><label>날짜</label><input id="phe-date" type="date" value="${rec.d||''}" style="width:100%"></div>
@@ -496,7 +496,7 @@ function openPlayerRecentEditableSourceEdit(playerName, meta){
 
 function deletePlayerHist(playerName, histIdx){
   if(!isLoggedIn)return;
-  if(!confirm('이 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.'))return;
+  if(!confirm('이 경기 기록을 삭제할까요?\n\nELO와 승패 기록이 차감됩니다.'))return;
   const p=players.find(x=>x.name===playerName);
   if(!p||!p.history||!p.history[histIdx])return;
   const hh=p.history[histIdx];
@@ -578,7 +578,7 @@ function deletePlayerHistBulk(playerName){
     alert('부관리자는 최근 2일 경기만 수정/삭제할 수 있습니다.');
     return;
   }
-  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 삭제할까요?\n\n⚠️ ELO와 승패 기록이 차감됩니다.`))return;
+  if(!confirm(`${_playerHistBulkSelected.size}개의 경기 기록을 삭제할까요?\n\nELO와 승패 기록이 차감됩니다.`))return;
   const sortedIdx=[..._playerHistBulkSelected].sort((a,b)=>b-a);
   sortedIdx.forEach(idx=>{
     if(p.history[idx]){
@@ -651,7 +651,7 @@ function togglePlayerHistSelect(idx){
   if(_playerHistBulkSelected.has(idx)) _playerHistBulkSelected.delete(idx);
   else _playerHistBulkSelected.add(idx);
   const btn=document.getElementById('bulk-delete-btn');
-  if(btn) btn.textContent=`🗑 선택 삭제 (${_playerHistBulkSelected.size})`;
+  if(btn) btn.textContent=`선택 삭제 (${_playerHistBulkSelected.size})`;
 }
 
 function togglePlayerHistSelectAll(playerName, allIndices){
@@ -660,9 +660,9 @@ function togglePlayerHistSelectAll(playerName, allIndices){
   if(_playerHistBulkSelected.size===allowed.length) _playerHistBulkSelected.clear();
   else allowed.forEach(idx=>_playerHistBulkSelected.add(idx));
   const btn=document.getElementById('bulk-delete-btn');
-  if(btn) btn.textContent=`🗑 선택 삭제 (${_playerHistBulkSelected.size})`;
+  if(btn) btn.textContent=`선택 삭제 (${_playerHistBulkSelected.size})`;
   const editBtn=document.getElementById('bulk-edit-btn');
-  if(editBtn) editBtn.textContent=`✏️ 선택 수정 (${_playerHistBulkSelected.size})`;
+  if(editBtn) editBtn.textContent=`선택 수정 (${_playerHistBulkSelected.size})`;
   const checkboxes=document.querySelectorAll('.hist-select-checkbox');
   checkboxes.forEach(cb=>cb.checked=_playerHistBulkSelected.has(parseInt(cb.value)));
 }
@@ -683,10 +683,10 @@ function openPlayerHistBulkEdit(playerName){
   }
   const selectedHists=[..._playerHistBulkSelected].map(idx=>p.history[idx]).filter(Boolean);
   const allModes=[...new Set(selectedHists.map(h=>h.mode).filter(Boolean))];
-  document.getElementById('reTitle').textContent=`✏️ 일괄 경기 수정 — ${playerName} (${_playerHistBulkSelected.size}개)`;
+  document.getElementById('reTitle').textContent=`일괄 경기 수정 — ${playerName} (${_playerHistBulkSelected.size}개)`;
   document.getElementById('reBody').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:11px;color:#92400e">⚠️ 선택된 ${_playerHistBulkSelected.size}개의 경기 기록을 일괄 수정합니다.</div>
+      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:11px;color:#92400e">선택된 ${_playerHistBulkSelected.size}개의 경기 기록을 일괄 수정합니다.</div>
       <div>
         <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">종목 변경</label>
         <select id="phe-bulk-mode" style="width:100%">
@@ -772,7 +772,7 @@ function openPlayerHistEdit(playerName, histIdx){
   if(!_guardRecentEdit(hh.date)) return;
   const races=['T','Z','P'];
   const mapOpts=maps.map(m=>`<option value="${m}">${m}</option>`).join('');
-  document.getElementById('reTitle').textContent=`✏️ 경기 수정 — ${playerName} vs ${hh.opp}`;
+  document.getElementById('reTitle').textContent=`경기 수정 — ${playerName} vs ${hh.opp}`;
   document.getElementById('reBody').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:8px">
       <div><label>날짜</label><input id="phe-date" type="date" value="${hh.date||''}" style="width:100%"></div>

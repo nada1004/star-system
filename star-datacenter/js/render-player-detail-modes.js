@@ -11,10 +11,7 @@ function buildPlayerDetailModeDecorHTML(mode){
     </div>`;
   }
   if(mode==='pastel'){
-    return `<div class="pd-decor pd-decor-pastel" aria-hidden="true">
-      <span class="pd-decor-pastel-emoji" style="top:8px;right:14px">✨</span>
-      <span class="pd-decor-pastel-emoji" style="top:22px;right:38px;font-size:11px">🎀</span>
-    </div>`;
+    return `<div class="pd-decor pd-decor-pastel" aria-hidden="true"></div>`;
   }
   if(mode==='glass'){
     return `<div class="pd-decor pd-decor-glass" aria-hidden="true"></div>`;
@@ -30,18 +27,14 @@ function buildPlayerDetailModeDecorHTML(mode){
     </div>`;
   }
   if(mode==='sunset'){
-    return `<div class="pd-decor pd-decor-sunset" aria-hidden="true">
-      <span class="pd-decor-pastel-emoji" style="top:8px;right:14px">🌇</span>
-    </div>`;
+    return `<div class="pd-decor pd-decor-sunset" aria-hidden="true"></div>`;
   }
   if(mode==='botanical'){
-    return `<div class="pd-decor pd-decor-botanical" aria-hidden="true">
-      <span class="pd-decor-pastel-emoji" style="top:8px;right:14px">🌿</span>
-    </div>`;
+    return `<div class="pd-decor pd-decor-botanical" aria-hidden="true"></div>`;
   }
   if(mode==='neon'){
     return `<div class="pd-decor pd-decor-neon" aria-hidden="true">
-      <span class="pd-decor-neon-tag">⚡ ONLINE</span>
+      <span class="pd-decor-neon-tag">ONLINE</span>
     </div>`;
   }
   if(mode==='terminal'){
@@ -72,7 +65,7 @@ function buildPlayerDetailModeDecorHTML(mode){
   }
   if(mode==='aurora'){
     return `<div class="pd-decor pd-decor-aurora" aria-hidden="true">
-      <span class="pd-decor-aurora-tag">✨ AURORA</span>
+      <span class="pd-decor-aurora-tag">AURORA</span>
     </div>`;
   }
   return '';

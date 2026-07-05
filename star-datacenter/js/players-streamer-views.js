@@ -2,6 +2,7 @@ function rTotal(C,T){
   T.innerText='🎬 전체 스타크래프트 스트리머 리스트';
   try{ _bindTotalDelegatedEvents(); }catch(e){}
   try{ _bindFocusPhoto2DragEvents(); }catch(e){}
+  try{ if(typeof _b2EnsureMvpHistoryFresh==='function') _b2EnsureMvpHistoryFresh(true); }catch(e){}
   const _streamerTabDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_design_mode')||'classic').trim(); return ['classic','glass','vivid','obsidian','aurora','blush','paper','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
   const _streamerTabLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_layout_mode')||'default').trim(); return ['default','compact','cozy','showcase'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const _streamerTabUiMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_ui_mode')||'standard').trim(); return ['standard','pill','minimal','photocard'].includes(v)?v:'standard'; }catch(e){ return 'standard'; } })();
@@ -528,6 +529,9 @@ function _buildGalleryView(rankMap){
       const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       const _uSafe=(typeof escJS==='function') ? escJS(u.name||'') : String(u.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
       const actMeta = _getStreamerActivityMeta(p);
+      let _gMvpStats=null;
+      try{ _gMvpStats = (typeof _b2GetPlayerMvpStats==='function') ? _b2GetPlayerMvpStats(p.name) : null; }catch(e){}
+      const _gHasMvp = !!(_gMvpStats && (_gMvpStats.weekCount||_gMvpStats.monthCount));
       const photoMap=(window.playerPhotos&&typeof window.playerPhotos==='object')?window.playerPhotos:{};
       const photoSrcRaw=(typeof p.photo==='string'&&p.photo.trim())?p.photo.trim():String(photoMap[p.name]||'').trim();
       const _posUse=(p.photoPosUse!==false);
@@ -549,6 +553,7 @@ function _buildGalleryView(rankMap){
             ${getStatusIconHTML(p.name)}
           </div>
           <div class="streamer-gallery-brief">
+            ${_gHasMvp ? `<span class="sg-pill" style="background:linear-gradient(135deg,#fef9c3,#fde68a);border-color:#fcd34d;color:#92400e;font-weight:900">🏆 MVP</span>` : ''}
             ${p.role ? `<span class="sg-pill">${p.role}</span>` : ''}
             <span class="sg-pill">${p.tier||'?'}티어</span>
             <span class="sg-pill">${p.race||'?'}</span>
@@ -585,14 +590,14 @@ function _buildGalleryView(rankMap){
     '.streamer-focus-card2-photo{position:relative;flex:0 0 42%;min-width:220px;overflow:hidden;background:#e2e8f0}',
     '.streamer-focus-card2-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}',
     '.streamer-focus-card2-photo .streamer-focus-photo-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:900;color:rgba(15,23,42,.28)}',
-    '.streamer-focus-card2-info{flex:1;min-width:0;padding:26px 28px 22px;display:flex;flex-direction:column}',
-    '.streamer-focus-card2-name{font-size:24px;font-weight:950;letter-spacing:-.02em;color:var(--text1);margin-bottom:14px}',
-    '.streamer-focus-card2-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 2px;border-bottom:1px dashed rgba(148,163,184,.38)}',
+    '.streamer-focus-card2-info{flex:1;min-width:0;padding:22px 26px 18px;display:flex;flex-direction:column}',
+    '.streamer-focus-card2-name{font-size:24px;font-weight:950;letter-spacing:-.02em;color:var(--text1);margin-bottom:8px}',
+    '.streamer-focus-card2-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 2px;border-bottom:1px dashed rgba(148,163,184,.38)}',
     '.streamer-focus-card2-row:last-child{border-bottom:none}',
     '.streamer-focus-card2-label{font-size:13px;font-weight:700;color:var(--text3)}',
     '.streamer-focus-card2-value{font-size:15px;font-weight:900;color:var(--text1);text-align:right}',
-    '.streamer-focus-card2-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}',
-    '.streamer-focus-card2-photo2{margin-top:14px;border-radius:22px;overflow:hidden;position:relative;width:100%;aspect-ratio:3/2;background:#e2e8f0;border-top:1px solid rgba(148,163,184,.18);border-right:1px solid rgba(148,163,184,.18);border-bottom:1px solid rgba(148,163,184,.18);border-left:none;box-shadow:0 16px 32px rgba(15,23,42,.08);transition:aspect-ratio .18s ease}',
+    '.streamer-focus-card2-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}',
+    '.streamer-focus-card2-photo2{margin-top:10px;border-radius:22px;overflow:hidden;position:relative;width:100%;aspect-ratio:3/2;background:#e2e8f0;border-top:1px solid rgba(148,163,184,.18);border-right:1px solid rgba(148,163,184,.18);border-bottom:1px solid rgba(148,163,184,.18);border-left:none;box-shadow:0 16px 32px rgba(15,23,42,.08);transition:aspect-ratio .18s ease}',
     '.streamer-focus-card2-photo2 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}',
     // 자동 맞춤 모드: 이미지를 두 겹으로 겹치지 않고, 박스 자체의 비율을 사진의 실제 비율에 맞춰 자동으로 조절 → 크롭도, 위치 지정도 필요 없음
     '.streamer-focus-card2-photo2.is-autofit{max-height:min(74vh,560px)}',
@@ -632,13 +637,21 @@ function _buildFocusCardDetail(selected, opts){
   const _autoFitOn = _globalAutoFitOn && !_manualOverride;
   const _showPosNudge = isLoggedIn && photo2Src;
   const raceLabel = selected.race==='P'?'프로토스':selected.race==='T'?'테란':selected.race==='Z'?'저그':'미정';
+  let _fMvpStats=null;
+  try{ _fMvpStats = (typeof _b2GetPlayerMvpStats==='function') ? _b2GetPlayerMvpStats(selected.name) : null; }catch(e){}
+  const _fMvpParts=[];
+  if(_fMvpStats){
+    if(_fMvpStats.weekCount) _fMvpParts.push(`주간 ${_fMvpStats.weekCount}회`);
+    if(_fMvpStats.monthCount) _fMvpParts.push(`월간 ${_fMvpStats.monthCount}회`);
+  }
   const rows = [
     ['역할', selected.role || '일반'],
     ['티어', selected.tier ? `${selected.tier}티어` : '미정'],
     ['종족', raceLabel],
     ['소속대학', selUniv || '무소속'],
     ['전적', selGames ? `${selWin}승 ${selLoss}패` : '기록 없음'],
-    ['승률', selWr==null ? '-' : `${selWr}%`]
+    ['승률', selWr==null ? '-' : `${selWr}%`],
+    ..._fMvpParts.length ? [['🏆 MVP', _fMvpParts.join(' · ')]] : []
   ];
   return `<div class="streamer-focus-main">
     <div class="streamer-focus-card2">

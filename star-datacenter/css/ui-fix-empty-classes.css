@@ -24,7 +24,7 @@
    1. 대학상세/스트리머상세 팝업 공용 섹션 제목 (.su-sec)
 ═══════════════════════════════════════════════════════════ */
 .su-sec {
-  margin: 22px 0 0;
+  margin: 14px 0 0;
 }
 .su-sec:first-child { margin-top: 0; }
 .su-sec__title {

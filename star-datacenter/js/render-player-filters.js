@@ -219,7 +219,7 @@ function buildPlayerHistFilterBar(opts){
   if(allModes.length<=1) return '';
   const safeName = (typeof escJS==='function') ? escJS(pName) : String(pName||'').replace(/'/g,"\\'");
   return `<div class="pd-hist-filter-bar" style="display:flex;gap:4px;flex-wrap:wrap;margin:0 0 8px;align-items:center">
-    <span style="font-size:${chipFs}px;font-weight:900;color:var(--text3);flex-shrink:0">📂 종목</span>
+    <span style="font-size:${chipFs}px;font-weight:900;color:var(--text3);flex-shrink:0">종목</span>
     ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
       <label class="mode-filter-chip ${selectedFilters.length===0?'active':''}" data-pd-action="hist-set-all" data-pd-name="${safeName}" data-pd-all-modes='${JSON.stringify(allModes).replace(/'/g,'&#39;')}' style="display:flex;align-items:center;gap:4px;font-size:${chipFs}px;font-weight:900;padding:${chipPad};border-radius:${chipR};border:1px solid var(--border2);background:${selectedFilters.length===0?'var(--blue)':'var(--surface)'};color:${selectedFilters.length===0?'#fff':'var(--text3)'};cursor:pointer">
         <input type="checkbox" ${selectedFilters.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
@@ -255,7 +255,7 @@ function buildPlayerYearFilterBar(opts){
   const yTot=yWin+yLoss;
   const yWr=yTot?Math.round(yWin/yTot*100):0;
   return `<div class="pd-year-filter-bar" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px;padding:${isMobile?'5px 7px':'6px 8px'};background:var(--surface);border:1px solid var(--border);border-radius:10px">
-    <span style="font-size:${chipFs}px;font-weight:900;color:var(--text3);flex-shrink:0">📅 연도</span>
+    <span style="font-size:${chipFs}px;font-weight:900;color:var(--text3);flex-shrink:0">연도</span>
     ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
       <label class="year-filter-chip ${selectedYears.length===0?'active':''}" data-pd-action="year-set-all" data-pd-name="${safeName}" data-pd-all-years='${JSON.stringify(availYears).replace(/'/g,'&#39;')}' style="display:flex;align-items:center;gap:4px;font-size:${chipFs}px;font-weight:900;padding:${chipPad};border-radius:${chipR};border:1px solid var(--border2);background:${selectedYears.length===0?'var(--blue)':'var(--surface)'};color:${selectedYears.length===0?'#fff':'var(--text3)'};cursor:pointer">
         <input type="checkbox" ${selectedYears.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체

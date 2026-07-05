@@ -184,7 +184,7 @@ function buildPlayerDetailHTML(p){
 
   const _modeColors=_computed?.modeColors || {'미니대전':'#7c3aed','대학대전':'#2563eb','대학CK':'#dc2626','끝장전':'#8b5cf6','개인전':'#0891b2','티어대회':'#f59e0b','대회':'#d97706','프로리그':'#16a34a'};
   const _fixedModes=_computed?.fixedModes || [];
-  const _secModeStats = (typeof buildPlayerModeStatsHTML==='function')
+  const _secModeStatsRaw = (typeof buildPlayerModeStatsHTML==='function')
     ? buildPlayerModeStatsHTML({
         fixedModes: _fixedModes,
         modeColors: _modeColors,
@@ -193,26 +193,30 @@ function buildPlayerDetailHTML(p){
         cLoss: _cLoss
       })
     : '';
+  const _secModeStats = _secModeStatsRaw ? `<div id="pd-jump-mode">${_secModeStatsRaw}</div>` : '';
 
-  const _secMapStats = (typeof buildPlayerMapStatsHTML==='function')
+  const _secMapStatsRaw = (typeof buildPlayerMapStatsHTML==='function')
     ? buildPlayerMapStatsHTML(_modeHist)
     : '';
+  const _secMapStats = _secMapStatsRaw ? `<div id="pd-jump-map">${_secMapStatsRaw}</div>` : '';
 
-  const _secRaceStats = (typeof buildPlayerRaceStatsHTML==='function')
+  const _secRaceStatsRaw = (typeof buildPlayerRaceStatsHTML==='function')
     ? buildPlayerRaceStatsHTML(_modeHist)
     : '';
+  const _secRaceStats = _secRaceStatsRaw ? `<div id="pd-jump-race">${_secRaceStatsRaw}</div>` : '';
 
-  const _secVsUniv = (typeof buildPlayerVsUnivSectionHTML==='function')
+  const _secVsUnivRaw = (typeof buildPlayerVsUnivSectionHTML==='function')
     ? buildPlayerVsUnivSectionHTML({
         rows: vsUnivs,
         playerName: p.name,
         maxVisible: 6
       })
     : '';
+  const _secVsUniv = _secVsUnivRaw ? `<div id="pd-jump-vsuniv">${_secVsUnivRaw}</div>` : '';
 
   if(!_pdState.oppSort) _pdState.oppSort='tot';
   if(!_pdState.oppPage) _pdState.oppPage=0;
-  const _secOppTable = (typeof buildPlayerOppTableHTML==='function')
+  const _secOppTableRaw = (typeof buildPlayerOppTableHTML==='function')
     ? buildPlayerOppTableHTML({
         opps,
         pName: p.name,
@@ -220,6 +224,7 @@ function buildPlayerDetailHTML(p){
         oppPage: _pdState.oppPage
       })
     : '';
+  const _secOppTable = _secOppTableRaw ? `<div id="pd-jump-opp">${_secOppTableRaw}</div>` : '';
 
   let _secRecent = '';
   let _secHistFilterBar = '';
@@ -240,7 +245,7 @@ function buildPlayerDetailHTML(p){
     const displayHist = _recentPrep?.displayHist || [];
     const fromN = _recentPrep?.fromN || 0;
     const toN = _recentPrep?.toN || 0;
-    _secRecent = (typeof buildPlayerRecentHistorySectionHTML==='function')
+    const _secRecentRaw = (typeof buildPlayerRecentHistorySectionHTML==='function')
       ? buildPlayerRecentHistorySectionHTML({
           pName: p.name,
           totalGames,
@@ -255,24 +260,44 @@ function buildPlayerDetailHTML(p){
           totalPages
         })
       : '';
+    _secRecent = _secRecentRaw ? `<div id="pd-jump-recent">${_secRecentRaw}</div>` : '';
   }
 
-  const _secMvpHistory = (typeof buildPlayerMvpHistoryHTML==='function')
+  const _secMvpHistoryRaw = (typeof buildPlayerMvpHistoryHTML==='function')
     ? buildPlayerMvpHistoryHTML(p)
     : '';
+  const _secMvpHistory = _secMvpHistoryRaw ? `<div id="pd-jump-mvp">${_secMvpHistoryRaw}</div>` : '';
 
-  const _secTeammates = (typeof buildPlayerTeammatesHTML==='function')
+  const _secTeammatesRaw = (typeof buildPlayerTeammatesHTML==='function')
     ? buildPlayerTeammatesHTML({ player:p, col })
     : '';
+  const _secTeammates = _secTeammatesRaw ? `<div id="pd-jump-teammates">${_secTeammatesRaw}</div>` : '';
 
-  const _secMemo = (isLoggedIn && (typeof buildPlayerMemoHTML==='function'))
+  const _secMemoRaw = (isLoggedIn && (typeof buildPlayerMemoHTML==='function'))
     ? buildPlayerMemoHTML(p)
     : '';
+  const _secMemo = _secMemoRaw ? `<div id="pd-jump-memo">${_secMemoRaw}</div>` : '';
+
+  // 종목/섹션 바로가기 칩 — 실제 내용이 있는 섹션만 노출
+  const _jumpTargets = [
+    ['pd-jump-mode', '모드별', _secModeStats],
+    ['pd-jump-map', '맵별', _secMapStats],
+    ['pd-jump-race', '종족별', _secRaceStats],
+    ['pd-jump-vsuniv', '상대 대학', _secVsUniv],
+    ['pd-jump-opp', '상대 전적', _secOppTable],
+    ['pd-jump-recent', '최근 경기', _secRecent],
+    ['pd-jump-mvp', 'MVP', _secMvpHistory],
+    ['pd-jump-teammates', '팀원', _secTeammates],
+    ['pd-jump-memo', '메모', _secMemo]
+  ].filter(([,,html]) => !!html);
+  const _secJumpNav = _jumpTargets.length>=3 ? `<div class="pd-jumpnav" style="display:flex;gap:6px;overflow-x:auto;padding:2px 1px 4px;margin-bottom:10px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+    ${_jumpTargets.map(([id,label])=>`<button type="button" onclick="const t=document.getElementById('${id}');if(t)t.scrollIntoView({behavior:'smooth',block:'start'})" style="flex-shrink:0;font-size:11.5px;font-weight:800;padding:6px 12px;border-radius:99px;border:1.5px solid rgba(148,163,184,.28);background:var(--white,#fff);color:var(--text2,#334155);white-space:nowrap;cursor:pointer">${label}</button>`).join('')}
+  </div>` : '';
 
   let h='';
   if(_layoutMode==='poster'){
     h = `<div class="pd-layout pd-layout--poster">
-      <div class="pd-layout-top">${_secHeader}${_secStrip}${_secMvpHistory}</div>
+      <div class="pd-layout-top">${_secHeader}${_secStrip}${_secJumpNav}${_secMvpHistory}</div>
       <div class="pd-layout-grid">
         <div class="pd-layout-main">${_secYearBar}${_secEloChart}${_secHistFilterBar}${_secRecent}${_secOppTable}</div>
         <div class="pd-layout-side">${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secTeammates}${_secMemo}</div>
@@ -280,12 +305,12 @@ function buildPlayerDetailHTML(p){
     </div>`;
   }else if(_layoutMode==='split'){
     h = `<div class="pd-layout pd-layout--split">
-      <div class="pd-split-left">${_secHeader}${_secStrip}${_secMvpHistory}${_secYearBar}</div>
+      <div class="pd-split-left">${_secHeader}${_secStrip}${_secJumpNav}${_secMvpHistory}${_secYearBar}</div>
       <div class="pd-split-right">${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}</div>
     </div>`;
   }else if(_layoutMode==='timeline'){
     h = `<div class="pd-layout pd-layout--timeline">
-      <div class="pd-layout-top">${_secHeader}${_secStrip}${_secMvpHistory}</div>
+      <div class="pd-layout-top">${_secHeader}${_secStrip}${_secJumpNav}${_secMvpHistory}</div>
       <div class="pd-layout-grid">
         <div class="pd-layout-main">${_secYearBar}${_secHistFilterBar}${_secRecent}</div>
         <div class="pd-layout-side">${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secTeammates}${_secMemo}</div>
@@ -295,10 +320,10 @@ function buildPlayerDetailHTML(p){
     h = `<div class="pd-layout pd-layout--board">
       ${_secHeader}
       <div class="pd-board-grid">${_secStrip}${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}</div>
-      ${_secMvpHistory}${_secYearBar}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}
+      ${_secJumpNav}${_secMvpHistory}${_secYearBar}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}
     </div>`;
   }else{
-    h = `${_secHeader}${_secStrip}${_secMvpHistory}${_secYearBar}${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}`;
+    h = `${_secHeader}${_secStrip}${_secJumpNav}${_secMvpHistory}${_secYearBar}${_secEloChart}${_secModeStats}${_secMapStats}${_secRaceStats}${_secVsUniv}${_secOppTable}${_secHistFilterBar}${_secRecent}${_secTeammates}${_secMemo}`;
   }
 
   // ELO 차트는 p.history만이 아니라 개인전/끝장전/대회 등 외부 매치소스까지 합쳐진

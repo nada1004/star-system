@@ -187,9 +187,6 @@ function _h2hPlayerBgPanel(pName, isWin, isLose){
   const txtCol2 = isLose ? 'rgba(255,255,255,.60)' : 'rgba(255,255,255,.86)';
   const frameCol = isWin ? '#dc2626' : 'rgba(148,163,184,.35)';
   const frameShadow = isWin ? '0 18px 38px rgba(220,38,38,.24)' : '0 10px 24px rgba(15,23,42,.08)';
-  const overlayBg = isWin
-    ? 'linear-gradient(180deg, rgba(255,255,255,.04) 0%, rgba(15,23,42,.12) 42%, rgba(15,23,42,.54) 100%)'
-    : 'linear-gradient(180deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.10) 22%, rgba(15,23,42,.22) 52%, rgba(15,23,42,.70) 100%)';
   const isMb = _h2hIsMobile();
   // (요청사항) 좌우/상하 폭이 "확실히" 바뀌게:
   // - PC: width를 지정하되 max-width:100%로 오버플로 방지
@@ -202,12 +199,13 @@ function _h2hPlayerBgPanel(pName, isWin, isLose){
   const wCss = isMb
     ? `width:min(60vw, ${Math.max(40,sizeW)}px);max-width:60vw;flex:0 1 auto;min-width:0;`
     : `width:min(100%, ${Math.max(80,sizeW)}px);flex:0 1 auto;min-width:0;`;
-  return `<div ${click} style="position:relative;overflow:hidden;border-radius:16px;height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${frameCol};box-shadow:${frameShadow};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${isLose?'filter:grayscale(.14) saturate(1) brightness(.99) contrast(.99);opacity:.98;':''}">
-    <div style="position:absolute;inset:0;background:${overlayBg}"></div>
+  // 패배자는 눈에 띄게 흑백 처리(예전엔 grayscale(.14)로 거의 표시가 안 됐음)
+  const loseImgFx = isLose ? 'filter:grayscale(.9) saturate(.3) brightness(.9) contrast(.96);opacity:.88;' : '';
+  return `<div ${click} style="position:relative;overflow:hidden;border-radius:16px;height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${frameCol};box-shadow:${frameShadow};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${loseImgFx}">
     ${!p.photo?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(28,Math.round(base*0.30))}px;font-weight:1000;color:rgba(255,255,255,.16)">${initial}</div>`:''}
     <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;z-index:1;${loseFx}">
-      <div style="font-weight:1000;font-size:16px;line-height:1.1;color:${txtCol};text-shadow:0 2px 10px rgba(0,0,0,.45)">${pName||'미정'}</div>
-      <div style="font-size:11px;font-weight:800;color:${txtCol2};text-shadow:0 2px 10px rgba(0,0,0,.35)">${univ}</div>
+      <div style="font-weight:1000;font-size:16px;line-height:1.1;color:${txtCol};text-shadow:0 1px 3px rgba(0,0,0,.9),0 2px 10px rgba(0,0,0,.7)">${pName||'미정'}</div>
+      <div style="font-size:11px;font-weight:800;color:${txtCol2};text-shadow:0 1px 3px rgba(0,0,0,.9),0 2px 8px rgba(0,0,0,.6)">${univ}</div>
       <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;align-items:center">${race}${tier?`<span style="transform:scale(.92);transform-origin:center">${tier}</span>`:''}</div>
     </div>
   </div>`;

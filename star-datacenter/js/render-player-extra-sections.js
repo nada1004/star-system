@@ -92,24 +92,20 @@ function buildPlayerMvpHistoryHTML(player){
   const fmtRange = (from,to)=>`${String(from||'').slice(0,10).replace(/-/g,'.')} ~ ${String(to||'').slice(0,10).replace(/-/g,'.')}`;
   const rows = stats.entries.slice(0,20).map(e=>{
     const isMonth = e.type==='month';
-    const badge = isMonth ? '월간 MVP' : '주간 MVP';
+    const badge = isMonth ? '월간' : '주간';
     const badgeBg = isMonth ? '#ede9fe' : '#fef9c3';
     const badgeCol = isMonth ? '#6d28d9' : '#b45309';
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid rgba(148,163,184,.14)">
       <div style="display:flex;align-items:center;gap:8px;min-width:0">
-        <span style="font-size:10px;font-weight:900;padding:2px 7px;border-radius:999px;background:${badgeBg};color:${badgeCol};white-space:nowrap;flex-shrink:0">${badge}</span>
+        <span style="font-size:10px;font-weight:900;padding:2px 7px;border-radius:999px;background:${badgeBg};color:${badgeCol};white-space:nowrap;flex-shrink:0">${badge} MVP</span>
         <span style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtRange(e.from,e.to)}</span>
       </div>
       <span style="font-size:11px;font-weight:800;color:var(--text3);white-space:nowrap;flex-shrink:0">${e.univ||'무소속'}</span>
     </div>`;
   }).join('');
-  return `<details class="su-sec su-sec--details" style="--su-sec-accent:#f59e0b;margin-top:12px" open>
-    <summary>MVP 기록</summary>
-    <div style="display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap">
-      <span style="font-size:11px;font-weight:900;padding:4px 11px;border-radius:99px;background:#fef9c3;color:#b45309;border:1.5px solid #fde68a">🏅 주간 MVP ${stats.weekCount}회</span>
-      <span style="font-size:11px;font-weight:900;padding:4px 11px;border-radius:99px;background:#ede9fe;color:#6d28d9;border:1.5px solid #ddd6fe">🏆 월간 MVP ${stats.monthCount}회</span>
-    </div>
-    <div style="margin-top:4px">${rows}</div>
+  return `<details class="su-sec su-sec--details" style="--su-sec-accent:#f59e0b" open>
+    <summary>MVP 기록 <small>(총 ${stats.entries.length}회)</small></summary>
+    <div style="margin-top:8px">${rows}</div>
   </details>`;
 }
 
@@ -122,8 +118,8 @@ function buildPlayerMemoHTML(player){
     ${p.memo?`<div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7;white-space:pre-wrap">${p.memo}</div>`:'<div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">메모 없음</div>'}
     <textarea id="player-memo-input" class="pd-memo-input" style="width:100%;min-height:60px;font-size:12px;padding:10px 12px;resize:vertical;font-family:'Noto Sans KR',sans-serif" placeholder="스트리머 메모...">${p.memo||''}</textarea>
     <div style="display:flex;gap:6px;margin-top:8px">
-      <button class="btn btn-b btn-sm" data-px-action="save-memo" data-px-player="${safeName}">💾 저장</button>
-      ${p.memo?`<button class="btn btn-r btn-sm" data-px-action="delete-memo" data-px-player="${safeName}">🗑️ 삭제</button>`:''}
+      <button class="btn btn-b btn-sm" data-px-action="save-memo" data-px-player="${safeName}">저장</button>
+      ${p.memo?`<button class="btn btn-r btn-sm" data-px-action="delete-memo" data-px-player="${safeName}">삭제</button>`:''}
     </div>
   </div>`;
 }

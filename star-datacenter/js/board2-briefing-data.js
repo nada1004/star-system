@@ -467,6 +467,32 @@ function _b2GetPlayerMvpStats(playerName) {
     entries: mine
   };
 }
+// 브리핑 탭에 들어가지 않아도 스트리머탭/상세팝업에서 바로 최신 MVP 현황을 볼 수 있도록,
+// 이번주·저번주·이번달·지난달 MVP를 그 자리에서 즉시 계산해 기록을 최신화한다.
+// (기존에는 브리핑 탭을 열어야만 _b2SyncMvpHistory가 호출되어 기록이 쌓였음)
+let _b2MvpHistoryFreshAt = 0;
+function _b2EnsureMvpHistoryFresh(force){
+  try{
+    const now = Date.now();
+    if(!force && _b2MvpHistoryFreshAt && (now - _b2MvpHistoryFreshAt) < 60000) return; // 1분 내 재계산 스킵
+    if(typeof players === 'undefined' || !Array.isArray(players)) return;
+    if(typeof _b2WeeklyUnivStats !== 'function' || typeof _b2WeeklyMVP !== 'function') return;
+    if(typeof _b2BriefingPresetRange !== 'function') return;
+    const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : [])
+      .filter(u => u.dissolved || u.hidden).map(u => String(u.name||'').trim()));
+    const vis = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet.has(String(p?.univ||'').trim()));
+    const univList = (typeof _b2VisUnivs === 'function' ? _b2VisUnivs() : []).filter(u => u.name && u.name !== '무소속');
+    ['thisWeek', 'lastWeek', 'thisMonth', 'lastMonth'].forEach(preset => {
+      const r = _b2BriefingPresetRange(preset);
+      if(!r || !r.from || !r.to) return;
+      const stats = _b2WeeklyUnivStats(vis, r.from, r.to, univList);
+      const mvp = _b2WeeklyMVP(stats);
+      _b2SyncMvpHistory(preset, r.from, r.to, mvp);
+    });
+    _b2MvpHistoryFreshAt = now;
+  }catch(e){}
+}
+try { window._b2EnsureMvpHistoryFresh = _b2EnsureMvpHistoryFresh; } catch (e) {}
 try {
   window._b2MvpHistoryLoad = _b2MvpHistoryLoad;
   window._b2SyncMvpHistory = _b2SyncMvpHistory;

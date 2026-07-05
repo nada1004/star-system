@@ -1460,7 +1460,9 @@ function openRE(mode,idx){
     const m=ckM[idx];tit='🤝 대학CK 수정';
     const _ckMemA = m.teamAMembers||[]; const _ckMemB = m.teamBMembers||[];
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d||''}">
+      <label>A팀 레이블</label><input type="text" id="re-tla" value="${m.teamALabel||''}" placeholder="미입력 시 A조">
       <label>A조 세트 승</label><input type="number" id="re-sa" value="${m.sa||0}">
+      <label>B팀 레이블</label><input type="text" id="re-tlb" value="${m.teamBLabel||''}" placeholder="미입력 시 B조">
       <label>B조 세트 승</label><input type="number" id="re-sb" value="${m.sb||0}">
       ${_buildMemberEditHTML(_ckMemA,'A','A팀')}
       ${_buildMemberEditHTML(_ckMemB,'B','B팀')}
@@ -1587,6 +1589,8 @@ function saveRow(){
     });
   } else if(reMode==='ck'){
     const m=ckM[reIdx];m.d=d;
+    m.teamALabel=document.getElementById('re-tla')?.value||m.teamALabel;
+    m.teamBLabel=document.getElementById('re-tlb')?.value||m.teamBLabel;
     m.sa=parseInt(document.getElementById('re-sa').value)||0;
     m.sb=parseInt(document.getElementById('re-sb').value)||0;
     // 참가자 수정 저장

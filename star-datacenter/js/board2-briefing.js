@@ -730,6 +730,13 @@ function _b2WeeklyBriefingView() {
       }
       .b2w2-btn:hover { background: var(--b2w-accent-strong); transform: translateY(-1px) }
       .b2w2-btn:focus-visible { outline: 2px solid var(--b2w-accent); outline-offset: 2px }
+      .b2w2-savebtn {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid rgba(185,28,28,.22);
+        box-shadow: 0 2px 8px rgba(185,28,28,.12);
+      }
+      .b2w2-savebtn:hover { background: #fecaca; color: #991b1b; }
 
       /* ── 모드 선택 바 ── */
       .b2w2-modebar {
@@ -2027,6 +2034,25 @@ function _b2WeeklyBriefingView() {
     const _activeUnivs = curStats.filter(ud=>ud.tg>0).length;
     const _periodDays = diffDays;
 
+    // ── "저장(1장)" 신문기사 스타일 캡처용 데이터 스냅샷 ──
+    // render-capture-utils.js의 captureBriefingArticle('single')에서 사용.
+    // (여기서 이미 계산해둔 통계를 그대로 재사용 — 중복 계산 방지)
+    try {
+      window._b2BriefingExportCtx = {
+        preset, dateFrom, dateTo, prevDateFrom, prevDateTo,
+        selUniv, isMonthly: _isMonthly, isCustom: _isCustom,
+        briefingInfo: _briefingInfo, mvpLabel: _mvpLabel,
+        heroSummary: _heroSummary, heroSpotlight: _heroSpotlight,
+        mvp, mvp2, worstPlayer,
+        topUnivs, rankedUnivs,
+        hotPlayer, coldPlayer, streakPlayer, loseStreakPlayer,
+        bestWrPlayer, mostWinsPlayer, mostActivePlayer,
+        monthlyMvp, monthlyTopPlayers, silentUnivs,
+        totalGames: _totalGames, activeUnivs: _activeUnivs,
+        activePlayerCount: activePlayers.length, periodDays: _periodDays
+      };
+    } catch (e) {}
+
     // ── 헤더 컨트롤
     h += `<div class="b2w2-wrap" id="b2w2-export-root" data-theme="${_b2BriefingThemeLoad()}">
       <div class="b2w2-masthead">
@@ -2130,8 +2156,7 @@ function _b2WeeklyBriefingView() {
         ${univList.map(u=>`<option value="${u.name}"${selUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
       </select>
       <button type="button" class="b2w2-btn" onclick="_b2ApplyBriefingCustomFromInputs()">조회</button>
-      <button type="button" class="b2w2-btn no-export" onclick="captureBriefingArticle('split')" style="background:#111827">📰 저장(분할)</button>
-      <button type="button" class="b2w2-btn no-export" onclick="captureBriefingArticle('single')" style="background:#334155">📰 저장(1장)</button>
+      <button type="button" class="b2w2-btn no-export b2w2-savebtn" onclick="captureBriefingArticle()">📰 브리핑 저장</button>
       <span style="font-size:11px;color:var(--text3);margin-left:auto">${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}</span>
       <span style="font-size:10px;color:var(--text3)">(${_briefingInfo.prevLabel}: ${fmtDate(prevDateFrom)}~${fmtDate(prevDateTo)})</span>
     </div>

@@ -97,7 +97,9 @@ function _normHexColor(v,fallback){
 function getFixedSideColors(kind){
   const k=String(kind||'').trim();
   const defaults = {
-    ck: { a:'#2563eb', b:'#6366f1' },
+    // (수정) 기존 a:#2563eb / b:#6366f1 은 둘 다 블루~인디고 계열이라 카드에서
+    // 좌/우 팀 색이 거의 구분 안 된다는 피드백 반영. B팀을 대비되는 앰버 계열로 변경.
+    ck: { a:'#2563eb', b:'#d97706' },
     pro:{ a:'#0f766e', b:'#4f46e5' },
     tt: { a:'#2563eb', b:'#dc2626' }
   };

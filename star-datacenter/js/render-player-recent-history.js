@@ -78,8 +78,8 @@ function buildPlayerRecentHistoryRowHTML(opts){
   })();
   const editBtnHTML=canEdit
     ? `<td class="no-export" style="text-align:center;white-space:nowrap">
-        <button class="btn btn-w btn-xs" data-ph-action="hist-edit-one" data-ph-name="${escJS(pName)}" data-ph-index="${hi}"${_editableSourceAttrs} title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">✏️</button>
-        <button class="btn btn-r btn-xs" data-ph-action="hist-delete-one" data-ph-name="${escJS(pName)}" data-ph-index="${hi}"${_editableSourceAttrs} title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">🗑</button>
+        <button class="btn btn-w btn-xs" data-ph-action="hist-edit-one" data-ph-name="${escJS(pName)}" data-ph-index="${hi}"${_editableSourceAttrs} title="경기 수정" style="padding:2px 6px;font-size:10px;border-color:var(--border2)">수정</button>
+        <button class="btn btn-r btn-xs" data-ph-action="hist-delete-one" data-ph-name="${escJS(pName)}" data-ph-index="${hi}"${_editableSourceAttrs} title="경기 삭제" style="padding:2px 6px;font-size:10px;margin-left:2px">삭제</button>
       </td>`
     : (isLoggedIn?'<td class="no-export"></td>':'');
   const modeLbl=_pdNormalizeRecentModeLabel(hh.mode);
@@ -163,11 +163,11 @@ function buildPlayerRecentHistorySectionHTML(opts){
       <button class="btn btn-w btn-xs" ${curPage===0?'disabled':''} data-ph-action="hist-page" data-ph-name="${escJS(pName)}" data-ph-page="${curPage-1}">◀ 이전</button>
       <span style="font-size:12px;color:var(--gray-l)">${curPage+1} / ${totalPages} 페이지</span>
       <button class="btn btn-w btn-xs" ${curPage>=totalPages-1?'disabled':''} data-ph-action="hist-page" data-ph-name="${escJS(pName)}" data-ph-page="${curPage+1}">다음 ▶</button>
-      ${bulkMode?`<button id="bulk-edit-btn" class="btn btn-g btn-xs no-export" data-ph-action="hist-bulk-edit" data-ph-name="${escJS(pName)}" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">✏️ 선택 수정 (${bulkSelectedSet?.size||0})</button><button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" data-ph-action="hist-bulk-delete" data-ph-name="${escJS(pName)}" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">🗑 선택 삭제 (${bulkSelectedSet?.size||0})</button>`:''}
+      ${bulkMode?`<button id="bulk-edit-btn" class="btn btn-g btn-xs no-export" data-ph-action="hist-bulk-edit" data-ph-name="${escJS(pName)}" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">선택 수정 (${bulkSelectedSet?.size||0})</button><button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" data-ph-action="hist-bulk-delete" data-ph-name="${escJS(pName)}" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">선택 삭제 (${bulkSelectedSet?.size||0})</button>`:''}
     </div>`;
   }else if(bulkMode){
     h+=`<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)">
-      <button id="bulk-edit-btn" class="btn btn-g btn-xs no-export" data-ph-action="hist-bulk-edit" data-ph-name="${escJS(pName)}" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">✏️ 선택 수정 (${bulkSelectedSet?.size||0})</button><button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" data-ph-action="hist-bulk-delete" data-ph-name="${escJS(pName)}" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">🗑 선택 삭제 (${bulkSelectedSet?.size||0})</button>
+      <button id="bulk-edit-btn" class="btn btn-g btn-xs no-export" data-ph-action="hist-bulk-edit" data-ph-name="${escJS(pName)}" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">선택 수정 (${bulkSelectedSet?.size||0})</button><button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" data-ph-action="hist-bulk-delete" data-ph-name="${escJS(pName)}" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">선택 삭제 (${bulkSelectedSet?.size||0})</button>
     </div>`;
   }
   h+=`</div>`;

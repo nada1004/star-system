@@ -129,7 +129,7 @@
     }
     const civColor=civUniv?gc(civUniv):'#6366f1';
     const TYPE_COLORS={
-      ck: (typeof getFixedSideColors==='function' ? getFixedSideColors('ck') : {a:'#2563eb',b:'#6366f1'}),
+      ck: (typeof getFixedSideColors==='function' ? getFixedSideColors('ck') : {a:'#2563eb',b:'#d97706'}),
       pro: (typeof getFixedSideColors==='function' ? getFixedSideColors('pro') : {a:'#0f766e',b:'#4f46e5'}),
       tt: {a:'#7c3aed',b:'#047857'}
     };

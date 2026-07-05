@@ -77,26 +77,22 @@ function buildPlayerHeaderCardHTML(opts){
     <div class="pd-hero-stats" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:14px 16px 16px;background:linear-gradient(180deg,#ffffff,${col}${p2h(statsTint)})">
       <div class="pd-hero-stat" data-pd-stat="record" style="text-align:center;padding:10px 6px 11px;border:1.5px solid ${statCardBd};border-radius:18px;background:${statCardBg};box-shadow:${statCardShadow};position:relative;overflow:hidden">
         <div style="position:absolute;left:0;top:0;right:0;height:4px;background:${statCardAccent}"></div>
-        <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.05;line-height:1">⚔️</div>
         <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:1000;color:${quickLabelCol};letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">전적</div>
         <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsNum1}px"><span style="color:${cWin}">${p.win}승</span>&nbsp;<span style="color:${cLoss}">${p.loss}패</span></div>
       </div>
       <div class="pd-hero-stat" data-pd-stat="winrate" style="text-align:center;padding:10px 6px 11px;border:1.5px solid ${statCardBd};border-radius:18px;background:${statCardBg};box-shadow:${statCardShadow};position:relative;overflow:hidden">
         <div style="position:absolute;left:0;top:0;right:0;height:4px;background:${statCardAccent}"></div>
-        <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.05;line-height:1">📈</div>
         <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:1000;color:${quickLabelCol};letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">승률</div>
         <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsBig}px;line-height:1;color:${tot?wrColor:'var(--gray-l)'}">${tot?wr+'%':'-'}</div>
         ${tot?`<div class="pd-hero-stat-bar" style="height:3px;border-radius:99px;background:rgba(148,163,184,.2);margin:5px 6px 0;overflow:hidden"><div style="height:100%;width:${wrBarW}%;background:${wrColor};border-radius:99px"></div></div>`:''}
       </div>
       <div class="pd-hero-stat" data-pd-stat="points" style="text-align:center;padding:10px 6px 11px;border:1.5px solid ${statCardBd};border-radius:18px;background:${statCardBg};box-shadow:${statCardShadow};position:relative;overflow:hidden">
         <div style="position:absolute;left:0;top:0;right:0;height:4px;background:${statCardAccent}"></div>
-        <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.05;line-height:1">🏆</div>
         <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:1000;color:${quickLabelCol};letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">포인트</div>
         <div class="pd-hero-stat-val" style="font-weight:1000;font-size:20px;line-height:1;color:${pointsColor}">${pS(p.points)}</div>
       </div>
       <div class="pd-hero-stat" data-pd-stat="status" style="text-align:center;padding:10px 6px 11px;border:1.5px solid ${statCardBd};border-radius:18px;background:${statCardBg};box-shadow:${statCardShadow};position:relative;overflow:hidden">
         <div style="position:absolute;left:0;top:0;right:0;height:4px;background:${statCardAccent}"></div>
-        <div style="position:absolute;bottom:-6px;right:-4px;font-size:24px;opacity:.05;line-height:1">⚡</div>
         <div class="pd-hero-stat-label" style="font-size:8.5px;font-weight:1000;color:${quickLabelCol};letter-spacing:.9px;margin-bottom:5px;text-transform:uppercase">상태</div>
         <div class="pd-hero-stat-val" style="font-weight:1000;font-size:${pmStatsNum1+1}px;line-height:1;color:${p.retired?'#94a3b8':'#0f172a'}">${p.retired?'은퇴':'활동중'}</div>
       </div>
@@ -230,24 +226,33 @@ function buildPlayerSummaryStripHTML(opts){
   const streakBg = isWinStreak ? 'linear-gradient(135deg,#dcfce7,#bbf7d0)' : 'linear-gradient(135deg,#fee2e2,#fecaca)';
   const streakCol = isWinStreak ? cWin : cLoss;
   const streakBd = isWinStreak ? '#86efac' : '#fca5a5';
-  const streakEmoji = isWinStreak ? '🔥' : '❄️';
   const streakHTML = streak>=2
-    ? `<span style="font-size:11px;font-weight:900;padding:4px 11px;border-radius:99px;background:${streakBg};color:${streakCol};border:1.5px solid ${streakBd};box-shadow:0 2px 8px ${streakCol}28">${streakEmoji} ${streak}연${streakType}</span>`
+    ? `<span style="font-size:11px;font-weight:900;padding:4px 11px;border-radius:99px;background:${streakBg};color:${streakCol};border:1.5px solid ${streakBd};box-shadow:0 2px 8px ${streakCol}28">${streak}연${streakType}</span>`
     : '';
   const allRanked=[...players].filter(q=>!q.retired).sort((a,b)=>(b.points||0)-(a.points||0)||(b.win||0)-(a.win||0));
   const myRank = allRanked.findIndex(q=>q.name===p.name)+1;
   const rankChange = typeof getRankChangeBadge==='function' ? getRankChangeBadge(p.name, myRank) : '';
-  const rankIcon = myRank===1?'🥇':myRank===2?'🥈':myRank===3?'🥉':'🏅';
-  const rankHTML = myRank ? `<span style="font-size:11px;font-weight:900;color:var(--text2,#334155);display:inline-flex;align-items:center;gap:4px">${rankIcon} <span style="color:var(--text3)">전체</span> ${myRank}위</span> ${rankChange}` : '';
+  const rankHTML = myRank ? `<span style="font-size:11px;font-weight:900;color:var(--text2,#334155);display:inline-flex;align-items:center;gap:4px"><span style="color:var(--text3)">전체</span> ${myRank}위</span> ${rankChange}` : '';
+  let mvpHTML = '';
+  try{
+    if(typeof _b2EnsureMvpHistoryFresh==='function') _b2EnsureMvpHistoryFresh(true);
+    const mvpStats = (typeof _b2GetPlayerMvpStats==='function') ? _b2GetPlayerMvpStats(p.name) : null;
+    if(mvpStats && (mvpStats.weekCount || mvpStats.monthCount)){
+      const parts=[];
+      if(mvpStats.weekCount) parts.push(`주간 ${mvpStats.weekCount}회`);
+      if(mvpStats.monthCount) parts.push(`월간 ${mvpStats.monthCount}회`);
+      mvpHTML = `<span style="font-size:11px;font-weight:900;padding:4px 11px;border-radius:99px;background:linear-gradient(135deg,#fef9c3,#fde68a);color:#b45309;border:1.5px solid #fcd34d;box-shadow:0 2px 8px rgba(217,119,6,.16);display:inline-flex;align-items:center;gap:4px">MVP ${parts.join(' · ')}</span>`;
+    }
+  }catch(e){}
   const recent10 = hist.slice(0,10);
   const formHTML = recent10.length>=3 ? `<div style="display:flex;gap:3px;align-items:center">
     ${recent10.map(h=>`<span style="width:13px;height:13px;border-radius:50%;background:${h.result==='승'?cWin:(h.result==='무'?'#94a3b8':cLoss)};display:inline-block;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.12)" title="${h.result} vs ${h.opp||''}"></span>`).join('')}
     <span style="font-size:10px;color:var(--gray-l);margin-left:4px;font-weight:700">최근${recent10.length}</span>
   </div>` : '';
-  if(!(streakHTML||rankHTML||formHTML)) return '';
-  return `<div class="pd-strip" style="background:linear-gradient(135deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.15);border-radius:16px;padding:11px 14px;margin-bottom:14px;box-shadow:0 6px 18px rgba(15,23,42,.04)">
+  if(!(streakHTML||rankHTML||formHTML||mvpHTML)) return '';
+  return `<div class="pd-strip" style="background:linear-gradient(135deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.15);border-radius:16px;padding:11px 14px;margin-bottom:10px;box-shadow:0 6px 18px rgba(15,23,42,.04)">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      ${rankHTML}${streakHTML}${formHTML}
+      ${rankHTML}${mvpHTML}${streakHTML}${formHTML}
     </div>
   </div>`;
 }

@@ -279,7 +279,19 @@ async function minifyFile(filePath) {
   try {
     const src = fs.readFileSync(filePath, 'utf8');
     const result = await transform(src, {
-      minify: true,
+      // ⚠️ minifyIdentifiers는 절대 켜지 않는다.
+      // esbuild의 transform()은 파일 하나하나를 "독립된 프로그램"으로 보고 최적화하기 때문에,
+      // 여러 파일이 결국 한 청크 파일(하나의 전역 스코프)로 그대로 이어붙여지는 이 빌드 구조에서는
+      // 서로 다른 파일의 top-level let/const/함수가 우연히 같은 축약 이름(a, e, n, J ...)으로
+      // 렌더링되어 충돌할 수 있다. 이 경우 "Identifier 'X' has already been declared" 같은
+      // 치명적 SyntaxError(청크 전체 실행 중단)나, 선언 순서에 따른
+      // "can't access lexical declaration before initialization"(TDZ) 버그가 발생한다.
+      // (board2-core.js의 _b2AutoFitResizeBound 오류가 바로 이 문제였다.)
+      // whitespace/syntax 최적화만 해도 용량 절감 효과는 충분하고, 원래 이름을 유지하므로
+      // 파일 간 이름 충돌 자체가 발생하지 않는다.
+      minifyWhitespace: true,
+      minifySyntax: true,
+      minifyIdentifiers: false,
       target: 'es2017',
       // 전역 변수 기반 코드이므로 tree-shaking 없이 순수 minify만
     });
