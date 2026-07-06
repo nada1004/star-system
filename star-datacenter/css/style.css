@@ -14646,32 +14646,35 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
    ============================================================ */
 @media (max-width: 768px) {
   /* 스트리머 탭: 리스트(테이블) 보기 - 컬럼 폭 축소 + 정렬 보강으로 가로 스크롤 최소화 */
-  .streamer-table { table-layout: fixed; }
-  .streamer-table col.streamer-col-rank { width: 28px !important; }
-  .streamer-table col.streamer-col-tier { width: 44px !important; }
-  .streamer-table col.streamer-col-race { width: 22px !important; }
+  .streamer-table { table-layout: fixed; width: 100% !important; }
+  .streamer-table col.streamer-col-rank { width: 26px !important; }
+  .streamer-table col.streamer-col-tier { width: 40px !important; }
+  /* 종족은 아바타 코너 배지(streamer-avatar-race)로 이미 표시되므로 모바일에서는 별도 컬럼 숨김 → 이름 공간 확보 */
+  .streamer-table col.streamer-col-race { display: none !important; }
+  .streamer-table .streamer-th-race, .streamer-table .streamer-td-race { display: none !important; }
   .streamer-table col.streamer-col-name { width: auto !important; }
-  .streamer-table col.streamer-col-wr   { width: 42px !important; }
-  .streamer-table th, .streamer-table td { padding-left: 3px !important; padding-right: 3px !important; }
+  .streamer-table col.streamer-col-wr   { width: 46px !important; }
+  .streamer-table th, .streamer-table td { padding-left: 4px !important; padding-right: 4px !important; }
+  .streamer-table thead th { font-size: 10.5px !important; white-space: nowrap; }
   .streamer-table .streamer-rank-box { min-height: 26px; }
   .streamer-table .streamer-rank-box > div:first-child { font-size: 10.5px !important; }
-  .streamer-table .streamer-avatar { width: 30px !important; height: 30px !important; font-size: 9px !important; }
-  .streamer-table .streamer-avatar-race { width: 13px !important; height: 13px !important; font-size: 7px !important; }
-  .streamer-table .streamer-player-cell { gap: 6px !important; }
-  .streamer-table .streamer-name-line { font-size: 11.5px !important; row-gap: 2px; column-gap: 4px !important; min-width: 0; }
+  .streamer-table .streamer-avatar { width: 32px !important; height: 32px !important; font-size: 9px !important; }
+  .streamer-table .streamer-avatar-race { width: 14px !important; height: 14px !important; font-size: 7px !important; }
+  .streamer-table .streamer-player-cell { gap: 7px !important; }
+  .streamer-table .streamer-name-line { font-size: 12.5px !important; row-gap: 2px; column-gap: 4px !important; min-width: 0; }
   .streamer-table .streamer-name-line > span[style*="padding:1px 5px"],
   .streamer-table .streamer-name-line > span[style*="padding:1px 4px"] { font-size: 9px !important; padding: 1px 4px !important; flex-shrink: 0; }
   /* 이름은 남는 폭만큼만 차지하고, 넘치면 말줄임표로 처리 (고정폭 대신 유동폭) */
   .streamer-table .streamer-name-line .streamer-name-link {
-    flex: 1 1 auto; min-width: 24px; overflow: hidden; text-overflow: ellipsis;
+    flex: 1 1 auto; min-width: 40px; overflow: hidden; text-overflow: ellipsis;
     white-space: nowrap; display: inline-block; vertical-align: bottom;
   }
   .streamer-table .streamer-mini-meta { font-size: 10px !important; }
-  .streamer-table .streamer-wr-box { font-size: 11px !important; }
+  .streamer-table .streamer-wr-box { font-size: 11.5px !important; }
   .streamer-univ-banner { flex-wrap: wrap; row-gap: 4px; }
   /* 커스텀(긴) 티어명이 고정폭 컬럼을 넘어 옆 컬럼과 겹치는 문제 방지: 줄바꿈 허용 */
   .streamer-table .streamer-td-tier { white-space: normal !important; word-break: keep-all; }
-  .streamer-table .streamer-td-tier .tbadge { white-space: normal !important; max-width: 100%; text-align: center; }
+  .streamer-table .streamer-td-tier .tbadge { white-space: normal !important; max-width: 100%; text-align: center; font-size: 10px !important; padding: 2px 4px !important; }
 
   /* 현황판 탭: 대학 로스터 - 사진/이름 태그가 화면 밖으로 넘치지 않고 다음 줄로 감싸지도록 */
   .b2-def-tag-grid {
@@ -14690,6 +14693,17 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
 @media (max-width: 480px) {
   .streamer-table col.streamer-col-wr { display: none !important; }
   .streamer-table .streamer-th-wr, .streamer-table .streamer-td-wr { display: none !important; }
+}
+
+/* 초소형 폰(~360px 이하) 추가 대응: 순위/티어 폭을 더 줄여 이름에 폭을 더 확보 */
+@media (max-width: 360px) {
+  .streamer-table col.streamer-col-rank { width: 22px !important; }
+  .streamer-table col.streamer-col-tier { width: 34px !important; }
+  .streamer-table th, .streamer-table td { padding-left: 3px !important; padding-right: 3px !important; }
+  .streamer-table .streamer-avatar { width: 28px !important; height: 28px !important; }
+  .streamer-table .streamer-player-cell { gap: 5px !important; }
+  .streamer-table .streamer-name-line { font-size: 11.5px !important; }
+  .streamer-table .streamer-td-tier .tbadge { font-size: 9px !important; padding: 1px 3px !important; }
 }
 
 /* ============================================================
