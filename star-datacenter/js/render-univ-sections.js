@@ -177,7 +177,7 @@ function buildUnivMembersTableHTML(opts){
   const colRgb = _hexToRgb(col);
   let h=`<div class="su-sec" style="--su-sec-accent:${col}">
     <div class="su-sec__title">소속 스트리머 <small>(${sorted.length}명)</small></div>
-    <div class="ud-members-table-wrap" style="border:1px solid rgba(148,163,184,.16);border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#ffffff,#f8fafc);box-shadow:0 8px 24px rgba(${colRgb},.07),0 2px 8px rgba(15,23,42,.04)">
+    <div class="ud-members-table-wrap" style="border:1px solid rgba(148,163,184,.16);border-radius:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg,#ffffff,#f8fafc);box-shadow:0 8px 24px rgba(${colRgb},.07),0 2px 8px rgba(15,23,42,.04)">
     <table class="ud-members-table" style="margin:0;border:none;border-radius:0;table-layout:auto">
       <thead>
         <tr>

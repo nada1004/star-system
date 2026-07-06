@@ -1325,11 +1325,11 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
 
   // 새 레이아웃: 왼쪽 라벨 열(대학색) + 오른쪽 스트리머 열(연한 배경)
   const _tableRow = (label, isRole, chips) => `
-    <div data-b2-univ-row="1" style="display:flex;align-items:stretch;gap:0;margin-bottom:8px">
-      <div style="background:${labelCol}!important;min-width:70px;width:70px;display:flex;align-items:center;justify-content:center;padding:10px 6px;flex-shrink:0;border-radius:16px 0 0 16px;border:1px solid ${col}33;border-right:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.28)">
+    <div data-b2-univ-row="1" class="b2-univ-row" style="display:flex;align-items:stretch;gap:0;margin-bottom:8px">
+      <div class="b2-univ-row-label" style="background:${labelCol}!important;min-width:70px;width:70px;display:flex;align-items:center;justify-content:center;padding:10px 6px;flex-shrink:0;border-radius:16px 0 0 16px;border:1px solid ${col}33;border-right:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.28)">
         <span style="font-size:11px;font-weight:900;color:${col};text-align:center;line-height:1.35;word-break:keep-all;letter-spacing:-.01em">${label}</span>
       </div>
-      <div style="flex:1;background:${_rowPanelBg};padding:10px 12px;border-radius:0 16px 16px 0;border:1px solid ${_rowPanelBorder};box-shadow:${_rowPanelShadow}">
+      <div class="b2-univ-row-body" style="flex:1;min-width:0;background:${_rowPanelBg};padding:10px 12px;border-radius:0 16px 16px 0;border:1px solid ${_rowPanelBorder};box-shadow:${_rowPanelShadow}">
         ${chips}
       </div>
     </div>`;
@@ -1899,7 +1899,7 @@ function _b2UnivDefaultTag(p, accentCol, showTier) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const crewCol = p.crewName && typeof _gcCrew === 'function' ? (_gcCrew(p.crewName) || '') : '';
   return `
-    <div style="display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-radius:24px;cursor:pointer;transition:background .12s;white-space:nowrap;flex-shrink:0"
+    <div class="b2-def-tag-item" style="display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-radius:24px;cursor:pointer;transition:background .12s;white-space:nowrap;flex-shrink:0"
       onmouseover="this.style.background='${accentCol}14'"
       onmouseout="this.style.background='transparent'">
       <div onclick="openPlayerModal('${safeName}')" style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
@@ -1943,7 +1943,7 @@ function _b2RenderUnivGroupCards(group, accentCol, showBadge, mode, hideTableHea
   if (mode === 'table') {
     return (typeof _b2LineupTable === 'function') ? _b2LineupTable(items, accentCol, '', '', hideTableHead) : '';
   }
-  return `<div style="display:grid;grid-template-columns:repeat(5,max-content);align-items:center;justify-content:start;column-gap:10px;row-gap:8px;max-width:100%;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;scrollbar-width:thin">${items.map(p => _b2UnivDefaultTag(p, accentCol, showBadge)).join('')}</div>`;
+  return `<div class="b2-def-tag-grid" style="display:grid;grid-template-columns:repeat(5,max-content);align-items:center;justify-content:start;column-gap:10px;row-gap:8px;max-width:100%;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;scrollbar-width:thin">${items.map(p => _b2UnivDefaultTag(p, accentCol, showBadge)).join('')}</div>`;
 }
 
 // 라인업 카드 - 모드3 "사진+통계그리드형" 전용 스타일 (사진이 카드 상단을 꽉 채우는 풀블리드 레이아웃)

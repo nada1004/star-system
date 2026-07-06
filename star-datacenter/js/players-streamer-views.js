@@ -182,9 +182,9 @@ function rTotal(C,T){
 
     let tableHTML=`<div class="streamer-content-card"><div class="streamer-table-wrap"><table class="streamer-table"><colgroup>
     ${_showBulk?'<col style="width:36px">':''}
-    <col style="width:52px"><col style="width:80px"><col style="width:60px"><col style="width:220px"><col class="col-hide-mobile" style="width:50px">
-    <col style="width:52px"><col style="width:52px">
-    <col style="width:70px"><col style="width:80px"><col style="width:60px">
+    <col class="streamer-col-rank" style="width:52px"><col class="streamer-col-tier" style="width:80px"><col class="streamer-col-race" style="width:60px"><col class="streamer-col-name" style="width:220px"><col class="col-hide-mobile" style="width:50px">
+    <col class="col-hide-mobile" style="width:52px"><col class="streamer-col-wr" style="width:52px">
+    <col class="col-hide-mobile" style="width:70px"><col class="col-hide-mobile" style="width:80px"><col class="col-hide-mobile" style="width:60px">
     ${isLoggedIn?'<col style="width:70px">':''}
   </colgroup><thead><tr>
     ${_showBulk?`<th style="text-align:center;padding:8px 4px"><input type="checkbox" id="bulk-check-all" onchange="bulkEditToggleAll(this.checked)" style="cursor:pointer"></th>`:''}
@@ -194,7 +194,7 @@ function rTotal(C,T){
     <th style="text-align:left;padding:8px 12px">스트리머</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">승</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">패</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
+    <th class="streamer-th-wr" style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">포인트</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">ELO</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">활동</th>
@@ -385,7 +385,7 @@ function rTotal(C,T){
         </td>
         <td class="col-hide-mobile wt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:900;color:var(--text1)">${win}</td>
         <td class="col-hide-mobile lt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:900;color:var(--text1)">${loss}</td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${games===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
+        <td class="streamer-td-wr" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${games===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
           <div class="streamer-wr-box">
           ${games?wr+'%':'-'}${games?`<span style="font-size:9px;color:var(--gray-l);font-weight:400">${games}전</span>`:''}
           </div>

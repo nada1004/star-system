@@ -14063,9 +14063,8 @@ body.design-v2 .cfg-cat-tab-on {
   letter-spacing: .02em;
 }
 @media (max-width: 640px) {
-  .streamer-hero { padding: 20px 18px; border-radius: 18px; }
-  .streamer-hero-title { font-size: 19px; }
-  .streamer-hero-desc { font-size: 12px; }
+  /* 모바일: 히어로 배너(설명글+배지) 통째로 숨기고 필터바가 바로 노출되도록 함 */
+  .streamer-hero { display: none !important; }
 }
 
 /* ── KPI 카드 그리드 ── */
@@ -14478,3 +14477,64 @@ body.dark .modal--matchdetail .mbox--matchdetail { border-color: rgba(255,255,25
 /* ── 스트리머 상세: 모드별 전적 카드 hover 가독성/입체감 개선 ── */
 .pd-mode-card:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(15,23,42,.10); }
 body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
+
+/* ============================================================
+   모바일 최적화: 스트리머 탭 / 티어 순위표 탭 / 현황판 탭
+   (좁은 화면에서 표/카드가 화면 밖으로 잘려나가는 문제 수정)
+   ============================================================ */
+@media (max-width: 768px) {
+  /* 스트리머 탭: 리스트(테이블) 보기 - 컬럼 폭 축소로 가로 스크롤 최소화 */
+  .streamer-table { table-layout: fixed; }
+  .streamer-table col.streamer-col-rank { width: 34px !important; }
+  .streamer-table col.streamer-col-tier { width: 56px !important; }
+  .streamer-table col.streamer-col-race { width: 30px !important; }
+  .streamer-table col.streamer-col-name { width: auto !important; }
+  .streamer-table col.streamer-col-wr   { width: 46px !important; }
+  .streamer-table th, .streamer-table td { padding-left: 4px !important; padding-right: 4px !important; }
+  .streamer-table .streamer-avatar { width: 34px !important; height: 34px !important; font-size: 10px !important; }
+  .streamer-table .streamer-name-line { font-size: 12px !important; }
+  .streamer-table .streamer-name-line .clickable-name { max-width: 108px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
+  .streamer-univ-banner { flex-wrap: wrap; row-gap: 4px; }
+
+  /* 현황판 탭: 대학 로스터 - 사진/이름 태그가 화면 밖으로 넘치지 않고 다음 줄로 감싸지도록 */
+  .b2-def-tag-grid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
+    max-width: 100%;
+  }
+  .b2-def-tag-item { flex-shrink: 1 !important; }
+  .b2-def-tag-item [style*="width:58"],
+  .b2-def-tag-item .streamer-avatar { width: 40px !important; height: 40px !important; }
+  .b2-def-tag-item span[style*="font-size:20px"] { font-size: 14px !important; }
+  .b2-univ-row-label { min-width: 56px !important; width: 56px !important; }
+}
+
+@media (max-width: 480px) {
+  .streamer-table col.streamer-col-wr { display: none !important; }
+  .streamer-table .streamer-th-wr, .streamer-table .streamer-td-wr { display: none !important; }
+}
+
+/* ============================================================
+   모바일 최적화: 대학 상세 팝업(현황판→대학 클릭) 회원 테이블
+   (고정폭 9컬럼 표가 좁은 화면에서 overflow:hidden에 가려
+    오른쪽 컬럼이 통째로 사라지던 문제 - 스크롤 허용 + 컬럼 축소)
+   ============================================================ */
+@media (max-width: 600px) {
+  .ud-members-table-wrap { -webkit-overflow-scrolling: touch; }
+  .ud-members-table { min-width: 460px; }
+  .ud-members-table th, .ud-members-table td { padding-left: 4px !important; padding-right: 4px !important; font-size: 10.5px !important; }
+  /* 성별 컬럼(5번째) 숨김 - 로스터 파악에 우선순위 낮음 */
+  .ud-members-table th:nth-child(5), .ud-members-table td:nth-child(5) { display: none !important; }
+  .ud-members-table .clickable-name { max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
+}
+@media (max-width: 380px) {
+  /* 아주 좁은 화면: 포인트 컬럼(9번째, 성별 숨김 후 8번째)까지 추가로 숨겨 스크롤 부담 축소 */
+  .ud-members-table th:nth-child(9), .ud-members-table td:nth-child(9) { display: none !important; }
+}
+
+/* ── 현황판 브리핑 탭: 주간 순위표도 동일한 이유로 스크롤 허용 (안전장치) ── */
+@media (max-width: 600px) {
+  .b2w2-table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+  .b2w2-tbl { min-width: 380px; }
+}

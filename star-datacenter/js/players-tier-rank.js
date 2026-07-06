@@ -1034,11 +1034,11 @@ function rTier(C,T){
     <table class="tier-table" style="${_tableStyle}"><thead><tr>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">순위</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">티어</th>
-      <th style="text-align:center;white-space:nowrap;padding:${_pad}">대학</th>
+      <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">대학</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">종족</th>
       <th style="text-align:left;white-space:nowrap;padding:${_padName}">이름</th>
-      <th style="text-align:center;white-space:nowrap;padding:${_pad}">승</th>
-      <th style="text-align:center;white-space:nowrap;padding:${_pad}">패</th>
+      <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">승</th>
+      <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">패</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">승률</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">${extraHeader}</th>
       <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${_hasDateFilter?'현재 ELO':'ELO'}</th>
@@ -1065,7 +1065,7 @@ function rTier(C,T){
     h+=`<tr class="${i===0?'top1':i===1?'top2':i===2?'top3':''}" style="border-left:3px solid ${col};background:${_getUnivBg(p.univ,.06)}">
       <td style="text-align:center;white-space:nowrap;padding:${_pad}">${rnkHTML}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad}">${_getTierBadge(p.tier)}</td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad}">
+      <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">
         <span class="ubadge tier-univ-badge clickable-univ" data-icon-done="1"
           style="background:${col};font-size:${_isMb?11:13}px;max-width:${_isMb?90:120}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
           onclick="openUnivModal('${p.univ}')"
@@ -1079,8 +1079,8 @@ function rTier(C,T){
           <span style="flex-shrink:0">${genderIcon(p.gender)}${_getStatusIcon(p.name)}</span>
         </span>
       </td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--win-col)">${rec.w}</td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--lose-col)">${rec.l}</td>
+      <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--win-col)">${rec.w}</td>
+      <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--lose-col)">${rec.l}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_pad};${_canGoHist?'cursor:pointer;text-decoration:underline dotted':''}" ${_clickHist} title="${_canGoHist?'대전기록탭에서 보기':''}">${extraVal}</td>
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${_elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${_elo}</td>
