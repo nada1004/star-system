@@ -614,9 +614,7 @@ function rBoard2(C, T) {
       }
       @media (max-width:760px){
         .b2-shell{overflow-x:hidden;max-width:100%}
-        .b2-hero{padding:18px 16px;border-radius:22px}
-        .b2-hero-title{font-size:24px}
-        .b2-hero-stats{grid-template-columns:1fr}
+        .b2-hero{display:none}
         .b2-toolbar-card,.b2-content-shell{padding:10px;border-radius:20px;overflow-x:hidden}
         #b2-content{overflow-x:hidden;max-width:100%}
       }
