@@ -14549,15 +14549,18 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
 @media (max-width: 768px) {
   /* 스트리머 탭: 리스트(테이블) 보기 - 컬럼 폭 축소로 가로 스크롤 최소화 */
   .streamer-table { table-layout: fixed; }
-  .streamer-table col.streamer-col-rank { width: 34px !important; }
-  .streamer-table col.streamer-col-tier { width: 56px !important; }
-  .streamer-table col.streamer-col-race { width: 30px !important; }
+  .streamer-table col.streamer-col-rank { width: 26px !important; }
+  .streamer-table col.streamer-col-tier { width: 46px !important; }
+  .streamer-table col.streamer-col-race { width: 24px !important; }
   .streamer-table col.streamer-col-name { width: auto !important; }
-  .streamer-table col.streamer-col-wr   { width: 46px !important; }
-  .streamer-table th, .streamer-table td { padding-left: 4px !important; padding-right: 4px !important; }
-  .streamer-table .streamer-avatar { width: 34px !important; height: 34px !important; font-size: 10px !important; }
-  .streamer-table .streamer-name-line { font-size: 12px !important; }
-  .streamer-table .streamer-name-line .clickable-name { max-width: 108px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
+  .streamer-table col.streamer-col-wr   { width: 40px !important; }
+  .streamer-table th, .streamer-table td { padding-left: 3px !important; padding-right: 3px !important; }
+  .streamer-table .streamer-avatar { width: 30px !important; height: 30px !important; font-size: 9px !important; }
+  .streamer-table .streamer-player-cell { gap: 5px !important; }
+  .streamer-table .streamer-name-line { font-size: 11.5px !important; flex-wrap: wrap !important; row-gap: 2px; column-gap: 4px !important; }
+  .streamer-table .streamer-name-line > span[style*="padding:1px 5px"],
+  .streamer-table .streamer-name-line > span[style*="padding:1px 4px"] { font-size: 9px !important; padding: 1px 4px !important; }
+  .streamer-table .streamer-name-line .clickable-name { max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
   .streamer-univ-banner { flex-wrap: wrap; row-gap: 4px; }
   /* 커스텀(긴) 티어명이 고정폭 컬럼을 넘어 옆 컬럼과 겹치는 문제 방지: 줄바꿈 허용 */
   .streamer-table .streamer-td-tier { white-space: normal !important; word-break: keep-all; }

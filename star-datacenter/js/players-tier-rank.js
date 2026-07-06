@@ -228,8 +228,9 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
       '.tier-avatar-race{display:inline-flex;align-items:center;justify-content:center;position:absolute;right:-3px;bottom:-3px;padding:1px 4px !important;font-size:8.5px !important;line-height:1.3;border-radius:5px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(15,23,42,.35)}',
       'body.dark .tier-avatar-race{border-color:#0f172a}',
       '.tier-table thead th{font-size:10.5px !important}',
-      '.tier-table .tbadge{font-size:11.5px !important;padding:3px 7px !important}',
-      '.tier-table .clickable-name{font-size:13.5px !important;font-weight:800 !important}',
+      '.tier-table .tbadge{font-size:10px !important;padding:2px 5px !important}',
+      '.tier-table .clickable-name{font-size:12.5px !important;font-weight:800 !important}',
+      '.tier-table .tier-rank-chip{min-width:0 !important;width:100%;height:22px !important;padding:0 4px !important;font-size:10.5px !important}',
     '}'
   ].join('');
   document.head.appendChild(s);
@@ -927,8 +928,8 @@ function rTier(C,T){
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
   const _isMb = (typeof window !== 'undefined' && window.innerWidth <= 768);
   const _isNarrow = (typeof window !== 'undefined' && window.innerWidth <= 400); // 초소형 폰(320~400px) 추가 대응
-  const _pad = _isMb ? '6px 8px' : '8px 10px';
-  const _padName = _isMb ? '6px 10px' : '8px 12px';
+  const _pad = _isMb ? (_isNarrow?'4px 3px':'5px 4px') : '8px 10px';
+  const _padName = _isMb ? (_isNarrow?'4px 4px':'5px 6px') : '8px 12px';
   const _today2=new Date().toISOString().slice(0,10);
   const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
   const _7ago2=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
@@ -1042,12 +1043,17 @@ function rTier(C,T){
   if(_vm==='table'){
   const _wrapStyle = `overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%`;
   const _tableStyle = _isMb
-    ? `table-layout:auto;width:max-content;max-width:100%`
+    ? `table-layout:fixed;width:100%;max-width:100%`
     : `table-layout:auto;width:100%;min-width:1120px;max-width:1600px;margin:0 auto`;
+  const _mbColgroup = _isMb ? `<colgroup>
+      <col style="width:${_isNarrow?'26px':'30px'}"><col style="width:${_isNarrow?'38px':'42px'}"><col class="col-hide-mobile"><col style="width:auto">
+      <col class="col-hide-mobile"><col class="col-hide-mobile"><col style="width:${_isNarrow?'32px':'36px'}"><col style="width:${_isNarrow?'34px':'38px'}">
+      <col class="col-hide-mobile"><col class="col-hide-mobile">${_li?'<col class="col-hide-mobile">':''}
+    </colgroup>` : '';
   h=`<div class="tier-content-card"><div class="tier-table-wrap" style="${_wrapStyle}">
-    <table class="tier-table" style="${_tableStyle}"><thead><tr>
+    <table class="tier-table" style="${_tableStyle}">${_mbColgroup}<thead><tr>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">순위</th>
-      <th style="text-align:center;white-space:nowrap;padding:${_pad}">티어</th>
+      <th class="tier-th-tier" style="text-align:center;white-space:nowrap;padding:${_pad}">티어</th>
       <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">대학</th>
       ${_isMb?'':`<th style="text-align:center;white-space:nowrap;padding:${_pad}">종족</th>`}
       <th style="text-align:left;white-space:nowrap;padding:${_padName}">이름</th>
@@ -1087,16 +1093,16 @@ function rTier(C,T){
       </td>
       ${_isMb?'':`<td style="text-align:center;white-space:nowrap;padding:${_pad}"><span class="rbadge r${p.race}">${p.race}</span></td>`}
       <td style="text-align:left;white-space:nowrap;padding:${_padName};font-weight:700;min-width:0">
-        <span style="display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:${_isMb?190:260}px">
-          <span class="tier-avatar-wrap">${getPlayerPhotoHTML(p.name,_isMb?'34px':'40px','',{lazy:true})}${_isMb?`<span class="tier-avatar-race rbadge r${p.race}">${p.race}</span>`:''}</span>
+        <span style="display:inline-flex;align-items:center;gap:${_isMb?'4px':'6px'};min-width:0;max-width:100%">
+          <span class="tier-avatar-wrap">${getPlayerPhotoHTML(p.name,_isMb?(_isNarrow?'24px':'28px'):'40px','',{lazy:true})}${_isMb?`<span class="tier-avatar-race rbadge r${p.race}">${p.race}</span>`:''}</span>
           <span class="clickable-name" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>
           <span style="flex-shrink:0">${genderIcon(p.gender)}${_getStatusIcon(p.name)}</span>
         </span>
       </td>
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--win-col)">${rec.w}</td>
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--lose-col)">${rec.l}</td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad};${_canGoHist?'cursor:pointer;text-decoration:underline dotted':''}" ${_clickHist} title="${_canGoHist?'대전기록탭에서 보기':''}">${extraVal}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;font-size:${_isMb?'11px':''};color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-size:${_isMb?'11px':''};${_canGoHist?'cursor:pointer;text-decoration:underline dotted':''}" ${_clickHist} title="${_canGoHist?'대전기록탭에서 보기':''}">${extraVal}</td>
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${_elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${_elo}</td>
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${_actHTML}</td>
       ${_li?`<td class="no-export col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
