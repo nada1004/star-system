@@ -238,7 +238,8 @@ function _statsLatestActiveMonths(gender){
     'body.dark .stats-compare-table th,body.dark .stats-compare-table td{border-color:#233247;color:#e2e8f0}',
     'body.dark .stats-choice-chip,body.dark .stats-result-card,body.dark .stats-selection-list,body.dark .stats-selection-item,body.dark .stats-preview-frame{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#e2e8f0;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     'body.dark .stats-selection-item:hover{background:#17263c}',
-    '@media (max-width:780px){.stats-hero{flex-direction:column;padding:16px;border-radius:20px}.stats-hero-title{font-size:20px}.stats-hero-badges{justify-content:flex-start}.stats-toolbar-card{padding:10px 10px 12px}.stats-chart-board,.stats-table-card{padding:10px}.stats-chart-wrap{padding:10px}.stats-select{min-width:180px;width:100%}.stats-compare-duel{grid-template-columns:1fr}.stats-compare-vs{min-height:24px}}'
+    '@media (max-width:780px){.stats-hero{flex-direction:column;padding:16px;border-radius:20px}.stats-hero-title{font-size:20px}.stats-hero-badges{justify-content:flex-start}.stats-toolbar-card{padding:10px 10px 12px}.stats-chart-board,.stats-table-card{padding:10px}.stats-chart-wrap{padding:10px}.stats-select{min-width:180px;width:100%}.stats-compare-duel{grid-template-columns:1fr}.stats-compare-vs{min-height:24px}}',
+    '@media (max-width:768px){.stats-hero{display:none}}'
   ].join('');
   document.head.appendChild(s);
 })();

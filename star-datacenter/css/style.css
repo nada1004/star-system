@@ -14559,6 +14559,9 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
   .streamer-table .streamer-name-line { font-size: 12px !important; }
   .streamer-table .streamer-name-line .clickable-name { max-width: 108px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
   .streamer-univ-banner { flex-wrap: wrap; row-gap: 4px; }
+  /* 커스텀(긴) 티어명이 고정폭 컬럼을 넘어 옆 컬럼과 겹치는 문제 방지: 줄바꿈 허용 */
+  .streamer-table .streamer-td-tier { white-space: normal !important; word-break: keep-all; }
+  .streamer-table .streamer-td-tier .tbadge { white-space: normal !important; max-width: 100%; }
 
   /* 현황판 탭: 대학 로스터 - 사진/이름 태그가 화면 밖으로 넘치지 않고 다음 줄로 감싸지도록 */
   .b2-def-tag-grid {

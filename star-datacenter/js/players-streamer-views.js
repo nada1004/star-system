@@ -372,7 +372,7 @@ function rTotal(C,T){
           <div>${_pChange}</div>
           </div>
         </td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
+        <td class="streamer-td-tier" style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
         <td class="streamer-td-race" style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span class="streamer-player-cell">

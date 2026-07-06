@@ -98,7 +98,8 @@ const _calEscJS = (typeof window !== 'undefined' && typeof window.escJS === 'fun
     'body.dark .cal-day-num{color:#e2e8f0}',
     'body.dark .cal-undated{background:linear-gradient(180deg,rgba(120,53,15,.28),rgba(120,53,15,.18));border-color:#92400e}',
     'body.dark .cal-undated-chip{background:rgba(120,53,15,.18);border-color:#92400e;color:#fde68a}',
-    '@media (max-width:780px){.cal-hero{flex-direction:column;padding:16px;border-radius:20px}.cal-hero-title{font-size:20px}.cal-hero-badges{justify-content:flex-start}.cal-toolbar-card,.cal-board-card,.cal-soft-card{padding:10px}.cal-board-month table{border-spacing:4px}.cal-cell,.cal-cell-empty{min-height:86px}}'
+    '@media (max-width:780px){.cal-hero{flex-direction:column;padding:16px;border-radius:20px}.cal-hero-title{font-size:20px}.cal-hero-badges{justify-content:flex-start}.cal-toolbar-card,.cal-board-card,.cal-soft-card{padding:10px}.cal-board-month table{border-spacing:4px}.cal-cell,.cal-cell-empty{min-height:86px}}',
+    '@media (max-width:768px){.cal-hero{display:none}}'
   ].join('');
   document.head.appendChild(s);
 })();
