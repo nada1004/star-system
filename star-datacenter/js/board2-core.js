@@ -613,10 +613,12 @@ function rBoard2(C, T) {
         .b2-hero-stats{width:100%;grid-template-columns:repeat(3,minmax(0,1fr))}
       }
       @media (max-width:760px){
+        .b2-shell{overflow-x:hidden;max-width:100%}
         .b2-hero{padding:18px 16px;border-radius:22px}
         .b2-hero-title{font-size:24px}
         .b2-hero-stats{grid-template-columns:1fr}
-        .b2-toolbar-card,.b2-content-shell{padding:10px;border-radius:20px}
+        .b2-toolbar-card,.b2-content-shell{padding:10px;border-radius:20px;overflow-x:hidden}
+        #b2-content{overflow-x:hidden;max-width:100%}
       }
       @media (max-width:640px){
         /* 모바일: 배지 줄(현재보기/표시 스트리머/대학/이번주 활동)에 이미 같은 정보가 요약돼 있으므로

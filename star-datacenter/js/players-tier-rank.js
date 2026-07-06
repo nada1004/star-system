@@ -217,7 +217,20 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     'body.dark .tier-act-dot.hot{color:#86efac;border-color:rgba(34,197,94,.24)}',
     'body.dark .tier-act-dot.warm{color:#fcd34d;border-color:rgba(245,158,11,.22)}',
     'body.dark .tier-act-dot.cool,body.dark .tier-act-dot.none{color:#cbd5e1}',
-    '@media (max-width:780px){.tier-hero{flex-direction:column;padding:16px;border-radius:20px}.tier-hero-title{font-size:20px}.tier-hero-badges{justify-content:flex-start}.tier-toolbar-card,.tier-content-card{padding:10px}.tier-filter-blocks{grid-template-columns:1fr}.tier-filter-selectrow,.tier-filter-option-row,.tier-type-grid{grid-template-columns:1fr}.tier-card-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:var(--su-tier-card-gap,18px);padding:8px 0}.tier-podium-stage{grid-template-columns:1fr;gap:10px;max-width:none}.tier-podium-card{padding:14px 14px 16px;border-radius:20px;min-height:0 !important}.tier-podium-card.place-1{padding:18px;order:0}.tier-podium-card.place-2{order:1}.tier-podium-card.place-3{order:2}.tier-podium-name{font-size:18px}.tier-podium-card.place-1 .tier-podium-name{font-size:20px}.tier-podium-main{align-items:flex-start}.tier-podium-avatar{width:52px;height:52px;border-radius:18px}.tier-podium-card.place-1 .tier-podium-avatar{width:96px;height:118px;border-radius:20px}.tier-podium-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tier-podium-rest-grid{grid-template-columns:1fr}.tier-group-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.tier-compact-head{display:none}.tier-compact-item{grid-template-columns:48px minmax(0,1fr);gap:8px 10px;align-items:start;padding:9px 10px}.tier-compact-main,.tier-compact-metrics{grid-column:2 / 3}.tier-compact-side{display:none}.tier-compact-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tier-compact-metric{align-items:flex-start;padding:6px 7px}.tier-compact-metric-value{font-size:11px;white-space:normal}}'
+    '@media (max-width:768px){.tier-shell{overflow-x:hidden;max-width:100%}.tier-hero{flex-direction:column;padding:16px;border-radius:20px}.tier-hero-title{font-size:20px}.tier-hero-badges{justify-content:flex-start}.tier-toolbar-card,.tier-content-card{padding:10px;overflow-x:hidden}.tier-filter-blocks{grid-template-columns:1fr}.tier-filter-selectrow,.tier-filter-option-row,.tier-type-grid{grid-template-columns:1fr}.tier-card-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:var(--su-tier-card-gap,18px);padding:8px 0}.tier-podium-stage{grid-template-columns:1fr;gap:10px;max-width:none;width:100%}.tier-podium-card{padding:14px 14px 16px;border-radius:20px;min-height:0 !important;max-width:100%}.tier-podium-card.place-1{padding:18px;order:0}.tier-podium-card.place-2{order:1}.tier-podium-card.place-3{order:2}.tier-podium-name{font-size:18px}.tier-podium-card.place-1 .tier-podium-name{font-size:20px}.tier-podium-main{align-items:flex-start}.tier-podium-avatar{width:52px!important;height:52px!important;max-width:52px!important;max-height:52px!important;border-radius:18px}.tier-podium-card.place-1 .tier-podium-avatar{width:96px!important;height:118px!important;max-width:96px!important;max-height:118px!important;border-radius:20px}.tier-podium-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tier-podium-rest-grid{grid-template-columns:1fr}.tier-group-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.tier-compact-head{display:none}.tier-compact-item{grid-template-columns:48px minmax(0,1fr);gap:8px 10px;align-items:start;padding:9px 10px}.tier-compact-main,.tier-compact-metrics{grid-column:2 / 3}.tier-compact-side{display:none}.tier-compact-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tier-compact-metric{align-items:flex-start;padding:6px 7px}.tier-compact-metric-value{font-size:11px;white-space:normal}}',
+    /* 초소형 폰(400px 이하) 추가 대응: 카드/그룹 그리드 여백을 더 좁혀 2열이 빠듯하게라도 들어가도록 */
+    '@media (max-width:400px){.tier-hero{padding:12px}.tier-toolbar-card,.tier-content-card{padding:8px}.tier-podium-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.tier-podium-card{padding:12px}.tier-podium-card.place-1{padding:14px}.tier-podium-statbox{padding:7px 6px}.tier-podium-rest-metrics{gap:5px}.tier-compact-item{padding:8px 8px}.tier-compact-metrics{gap:5px}}',
+    /* 티어 순위표 - 테이블뷰 모바일 전용: 종족 컬럼을 없애고 아바타 코너 배지로 대체,
+       확보된 공간으로 순위/티어/이름을 더 크고 읽기 쉽게 표시 (PC는 영향 없음) */
+    '.tier-avatar-wrap{position:relative;display:inline-flex;flex-shrink:0}',
+    '.tier-avatar-race{display:none}',
+    '@media (max-width:768px){',
+      '.tier-avatar-race{display:inline-flex;align-items:center;justify-content:center;position:absolute;right:-3px;bottom:-3px;padding:1px 4px !important;font-size:8.5px !important;line-height:1.3;border-radius:5px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(15,23,42,.35)}',
+      'body.dark .tier-avatar-race{border-color:#0f172a}',
+      '.tier-table thead th{font-size:10.5px !important}',
+      '.tier-table .tbadge{font-size:11.5px !important;padding:3px 7px !important}',
+      '.tier-table .clickable-name{font-size:13.5px !important;font-weight:800 !important}',
+    '}'
   ].join('');
   document.head.appendChild(s);
 })();
@@ -913,6 +926,7 @@ function rTier(C,T){
   // ── 뷰별 렌더링 ──
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
   const _isMb = (typeof window !== 'undefined' && window.innerWidth <= 768);
+  const _isNarrow = (typeof window !== 'undefined' && window.innerWidth <= 400); // 초소형 폰(320~400px) 추가 대응
   const _pad = _isMb ? '6px 8px' : '8px 10px';
   const _padName = _isMb ? '6px 10px' : '8px 12px';
   const _today2=new Date().toISOString().slice(0,10);
@@ -1035,7 +1049,7 @@ function rTier(C,T){
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">순위</th>
       <th style="text-align:center;white-space:nowrap;padding:${_pad}">티어</th>
       <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">대학</th>
-      <th style="text-align:center;white-space:nowrap;padding:${_pad}">종족</th>
+      ${_isMb?'':`<th style="text-align:center;white-space:nowrap;padding:${_pad}">종족</th>`}
       <th style="text-align:left;white-space:nowrap;padding:${_padName}">이름</th>
       <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">승</th>
       <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">패</th>
@@ -1051,7 +1065,7 @@ function rTier(C,T){
     if(i===0) rnkHTML=`<span class="tier-rank-chip gold">1등</span>`;
     else if(i===1) rnkHTML=`<span class="tier-rank-chip silver">2등</span>`;
     else if(i===2) rnkHTML=`<span class="tier-rank-chip bronze">3등</span>`;
-    else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
+    else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:${_isMb?14:13}px">${i+1}위</span>`;
     const extraVal=_getExtraVal(p);
     const univIconHTML=_getUnivIconHTML(p);
     const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
@@ -1071,10 +1085,10 @@ function rTier(C,T){
           onclick="openUnivModal('${p.univ}')"
         >${univIconHTML}${p.univ}</span>
       </td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad}"><span class="rbadge r${p.race}">${p.race}</span></td>
+      ${_isMb?'':`<td style="text-align:center;white-space:nowrap;padding:${_pad}"><span class="rbadge r${p.race}">${p.race}</span></td>`}
       <td style="text-align:left;white-space:nowrap;padding:${_padName};font-weight:700;min-width:0">
-        <span style="display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:${_isMb?170:260}px">
-          ${getPlayerPhotoHTML(p.name,_isMb?'34px':'40px','',{lazy:true})}
+        <span style="display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:${_isMb?190:260}px">
+          <span class="tier-avatar-wrap">${getPlayerPhotoHTML(p.name,_isMb?'34px':'40px','',{lazy:true})}${_isMb?`<span class="tier-avatar-race rbadge r${p.race}">${p.race}</span>`:''}</span>
           <span class="clickable-name" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>
           <span style="flex-shrink:0">${genderIcon(p.gender)}${_getStatusIcon(p.name)}</span>
         </span>
@@ -1095,7 +1109,7 @@ function rTier(C,T){
   // 뷰2: CARD GRID (카드 그리드)
   // ════════════════════════════════════════════
   else if(_vm==='card'){
-  h=`<div class="tier-content-card"><div class="tier-card-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isMb?'150px':'190px'},1fr));gap:var(--su-tier-card-gap,${_isMb?'18px':'26px'})">`;
+  h=`<div class="tier-content-card"><div class="tier-card-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isNarrow?'128px':(_isMb?'150px':'190px')},1fr));gap:var(--su-tier-card-gap,${_isNarrow?'10px':(_isMb?'18px':'26px')})">`;
   list.forEach((p,i)=>{
     const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
     const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
@@ -1325,7 +1339,7 @@ function rTier(C,T){
         <span style="background:${_tc};color:${_tt};font-weight:900;font-size:13px;padding:3px 12px;border-radius:5px">${getTierLabel(t)}</span>
         <span style="font-size:12px;font-weight:700;color:var(--text3)">${grp.players.length}명</span>
       </div>
-      <div class="tier-group-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isMb?'130px':'160px'},1fr));gap:${_isMb?'6px':'8px'}">`;
+      <div class="tier-group-grid" style="grid-template-columns:repeat(auto-fill,minmax(${_isNarrow?'104px':(_isMb?'130px':'160px')},1fr));gap:${_isNarrow?'5px':(_isMb?'6px':'8px')}">`;
     grp.players.forEach(({p,i})=>{
       const rec=_tierWL(p); const col=_getUnivColor(p.univ); const tot=rec.tot; const wr=rec.wr;
       const _pAttr=(typeof escAttr==='function')

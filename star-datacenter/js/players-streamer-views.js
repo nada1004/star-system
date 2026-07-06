@@ -190,7 +190,7 @@ function rTotal(C,T){
     ${_showBulk?`<th style="text-align:center;padding:8px 4px"><input type="checkbox" id="bulk-check-all" onchange="bulkEditToggleAll(this.checked)" style="cursor:pointer"></th>`:''}
     <th style="text-align:center;white-space:nowrap;padding:8px 6px">순위</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
+    <th class="streamer-th-race" style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
     <th style="text-align:left;padding:8px 12px">스트리머</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">승</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">패</th>
@@ -373,10 +373,10 @@ function rTotal(C,T){
           </div>
         </td>
         <td style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
+        <td class="streamer-td-race" style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span class="streamer-player-cell">
-            ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img loading="lazy" decoding="async" src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:'<span class="streamer-avatar"></span>'}
+            ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img loading="lazy" decoding="async" src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"><span class="streamer-avatar-race rbadge r${p.race}">${p.race||'?'}</span></span>`:`<span class="streamer-avatar"><span class="streamer-avatar-race rbadge r${p.race}">${p.race||'?'}</span></span>`}
             <span class="streamer-name-stack">
               <span class="streamer-name-line">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name streamer-name-link" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;font-weight:700">⏸️ 휴학</span>':''}</span>
               <span class="streamer-mini-meta">${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
@@ -604,7 +604,7 @@ function _buildGalleryView(rankMap){
     '.streamer-focus-card2-photo2.is-autofit .sfc2p2-fg{object-fit:cover;object-position:center 22%}',
     // 수동 위치 모드도 자동 모드와 비슷한 크기감을 갖도록 최소 높이 확보 (전보다 작아 보이지 않게)
     '.streamer-focus-card2-photo2:not(.is-autofit){min-height:320px;max-height:min(64vh,520px)}',
-    '@media (max-width:768px){.streamer-focus-card2{flex-direction:column;min-height:0}.streamer-focus-card2-photo{flex:0 0 auto;aspect-ratio:4/3}}',
+    '@media (max-width:768px){.streamer-focus-card2{flex-direction:column;min-height:0}.streamer-focus-card2-photo{flex:0 0 auto;aspect-ratio:4/3;min-width:0;width:100%}.streamer-focus-card2-info{padding:16px 16px 14px}}',
     'body.dark .streamer-focus-card2{background:#0f172a;border-color:#334155}',
     'body.dark .streamer-focus-card2-row{border-color:#334155}',
     'body.dark .streamer-focus-card2-photo2{background:#1e293b;border-color:#334155}',
