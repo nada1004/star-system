@@ -14233,7 +14233,50 @@ body.dark .streamer-quickstat-value { color: #f1f5f9; }
 .streamer-table tbody tr { transition: background .14s; cursor: pointer; }
 .streamer-table tbody tr:hover { background: rgba(37,99,235,.04); }
 .streamer-table tbody tr:not(:last-child) td { border-bottom: 1px solid rgba(148,163,184,.08) !important; }
-.streamer-table tbody td { padding: 11px 10px !important; font-size: 13px !important; color: var(--text1); font-weight: 600; }
+.streamer-table tbody td { padding: 11px 10px !important; font-size: 13px !important; color: var(--text1); font-weight: 600; vertical-align: middle; }
+
+/* ── 스트리머 탭 리스트뷰: 행 내부 요소 정렬 보강 (사진/직책/이름/승률 박스가
+   실제로 flex 컨테이너로 동작하도록 기본 레이아웃을 명시) ── */
+.streamer-table .streamer-rank-box {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; min-height: 30px;
+}
+.streamer-table .streamer-player-cell {
+  display: flex; align-items: center; gap: 9px; min-width: 0; width: 100%;
+}
+.streamer-table .streamer-avatar {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: linear-gradient(160deg,#e2e8f0,#cbd5e1); color: #64748b;
+  font-size: 11px; font-weight: 800;
+}
+.streamer-table .streamer-avatar img { border-radius: inherit; }
+.streamer-table .streamer-avatar-race {
+  position: absolute; right: -2px; bottom: -2px; width: 15px; height: 15px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 900; line-height: 1; padding: 0 !important;
+  border: 1.5px solid #fff; box-sizing: border-box;
+}
+.streamer-table .streamer-name-stack {
+  display: flex; flex-direction: column; justify-content: center; gap: 3px;
+  min-width: 0; flex: 1 1 auto;
+}
+.streamer-table .streamer-name-line {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap; row-gap: 3px; min-width: 0;
+}
+.streamer-table .streamer-name-line .streamer-name-link {
+  font-weight: 800; color: var(--text1);
+}
+.streamer-table .streamer-mini-meta {
+  display: flex; align-items: center; gap: 3px; min-height: 14px; line-height: 1;
+}
+.streamer-table .streamer-wr-box {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px; line-height: 1.25;
+}
+.streamer-table .streamer-td-tier,
+.streamer-table .streamer-td-race { text-align: center; }
+.streamer-table .streamer-td-tier .tbadge { margin: 0 auto; }
 
 /* 종족 필터 등 스트리머 탭 툴바 버튼 - 미니얼하게 */
 .streamer-toolbar-card .pill {
@@ -14486,6 +14529,59 @@ tr.tgrp td { padding: 2px 10px !important; }
   color: #166534 !important; border-color: #4ade80 !important;
 }
 
+/* ============================================================
+   티어 순위표 탭: 테이블(리스트) 뷰 - 기본 레이아웃 (기존에 전용 CSS가 없어
+   컬럼/행이 들쭉날쭉하게 보이던 문제 수정)
+   ============================================================ */
+.tier-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tier-table { border-collapse: separate; border-spacing: 0; }
+.tier-table thead tr { background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); }
+.tier-table thead th {
+  font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase;
+  color: #5b6573; border-bottom: 1.5px solid rgba(148,163,184,.14); white-space: nowrap;
+}
+.tier-table tbody tr { transition: background .14s; cursor: pointer; }
+.tier-table tbody tr:hover { background: rgba(37,99,235,.05); }
+.tier-table tbody tr:not(:last-child) td { border-bottom: 1px solid rgba(148,163,184,.08); }
+.tier-table tbody td { font-size: 13px; color: var(--text1); font-weight: 600; vertical-align: middle; }
+
+/* 순위/이름 셀 내부 요소 정렬 */
+.tier-avatar-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 0; }
+.tier-avatar-wrap img { display: block; border-radius: 50%; }
+.tier-avatar-race {
+  position: absolute; right: -3px; bottom: -3px; width: 15px; height: 15px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 7.5px; font-weight: 900;
+  line-height: 1; padding: 0 !important; border: 1.5px solid #fff; box-sizing: border-box;
+}
+.tier-rank-chip {
+  display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
+  padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 900;
+}
+.tier-rank-chip.gold   { background: linear-gradient(135deg,#fde68a,#f59e0b); color: #78350f; box-shadow: 0 2px 8px rgba(245,158,11,.35); }
+.tier-rank-chip.silver { background: linear-gradient(135deg,#e2e8f0,#94a3b8); color: #1e293b; box-shadow: 0 2px 8px rgba(148,163,184,.35); }
+.tier-rank-chip.bronze { background: linear-gradient(135deg,#fdba8c,#c2703d); color: #431407; box-shadow: 0 2px 8px rgba(194,112,61,.35); }
+.tier-table tr.top1 td:first-child, .tier-table tr.top2 td:first-child, .tier-table tr.top3 td:first-child { text-align: center; }
+
+/* 활동 칩 */
+.tier-act-dot {
+  display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
+  padding: 2px 7px; border-radius: 20px; font-size: 9px; font-weight: 900; letter-spacing: .04em;
+}
+.tier-act-dot.hot  { background: linear-gradient(135deg,#fee2e2,#fecaca); color: #b91c1c; }
+.tier-act-dot.warm { background: linear-gradient(135deg,#dcfce7,#bbf7d0); color: #166534; }
+
+@media (max-width: 768px) {
+  .tier-table th, .tier-table td { padding-left: 4px !important; padding-right: 4px !important; }
+  .tier-table thead th { font-size: 9px; }
+  .tier-rank-chip { padding: 2px 7px; font-size: 10px; }
+  /* 순위/티어 컬럼은 가운데 정렬, 이름 컬럼만 남는 폭을 유동적으로 사용 */
+  .tier-table td:first-child, .tier-table th:first-child { text-align: center; }
+  .tier-table .clickable-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (max-width: 400px) {
+  .tier-table th, .tier-table td { padding-left: 3px !important; padding-right: 3px !important; }
+}
+
 /* ── 다크모드 스트리머 ── */
 body.dark .streamer-hero { box-shadow: 0 20px 56px rgba(37,99,235,.15); }
 body.dark .streamer-kpi-card { background: rgba(30,41,59,.85); border-color: rgba(255,255,255,.07); }
@@ -14496,6 +14592,8 @@ body.dark .streamer-content-card { background: rgba(15,23,42,.9); border-color: 
 body.dark .streamer-search { background: rgba(15,23,42,.8) !important; border-color: rgba(255,255,255,.12) !important; color: #f1f5f9 !important; }
 body.dark .streamer-table thead tr { background: rgba(30,41,59,.8); }
 body.dark .streamer-table tbody tr:hover { background: rgba(37,99,235,.10); }
+body.dark .tier-table thead tr { background: rgba(30,41,59,.8); }
+body.dark .tier-table tbody tr:hover { background: rgba(37,99,235,.10); }
 body.dark .streamer-focus-sidebar,
 body.dark .streamer-focus-main { background: rgba(15,23,42,.9); border-color: rgba(255,255,255,.06); }
 body.dark .streamer-focus-stat,
@@ -14547,24 +14645,33 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
    (좁은 화면에서 표/카드가 화면 밖으로 잘려나가는 문제 수정)
    ============================================================ */
 @media (max-width: 768px) {
-  /* 스트리머 탭: 리스트(테이블) 보기 - 컬럼 폭 축소로 가로 스크롤 최소화 */
+  /* 스트리머 탭: 리스트(테이블) 보기 - 컬럼 폭 축소 + 정렬 보강으로 가로 스크롤 최소화 */
   .streamer-table { table-layout: fixed; }
-  .streamer-table col.streamer-col-rank { width: 26px !important; }
-  .streamer-table col.streamer-col-tier { width: 46px !important; }
-  .streamer-table col.streamer-col-race { width: 24px !important; }
+  .streamer-table col.streamer-col-rank { width: 28px !important; }
+  .streamer-table col.streamer-col-tier { width: 44px !important; }
+  .streamer-table col.streamer-col-race { width: 22px !important; }
   .streamer-table col.streamer-col-name { width: auto !important; }
-  .streamer-table col.streamer-col-wr   { width: 40px !important; }
+  .streamer-table col.streamer-col-wr   { width: 42px !important; }
   .streamer-table th, .streamer-table td { padding-left: 3px !important; padding-right: 3px !important; }
+  .streamer-table .streamer-rank-box { min-height: 26px; }
+  .streamer-table .streamer-rank-box > div:first-child { font-size: 10.5px !important; }
   .streamer-table .streamer-avatar { width: 30px !important; height: 30px !important; font-size: 9px !important; }
-  .streamer-table .streamer-player-cell { gap: 5px !important; }
-  .streamer-table .streamer-name-line { font-size: 11.5px !important; flex-wrap: wrap !important; row-gap: 2px; column-gap: 4px !important; }
+  .streamer-table .streamer-avatar-race { width: 13px !important; height: 13px !important; font-size: 7px !important; }
+  .streamer-table .streamer-player-cell { gap: 6px !important; }
+  .streamer-table .streamer-name-line { font-size: 11.5px !important; row-gap: 2px; column-gap: 4px !important; min-width: 0; }
   .streamer-table .streamer-name-line > span[style*="padding:1px 5px"],
-  .streamer-table .streamer-name-line > span[style*="padding:1px 4px"] { font-size: 9px !important; padding: 1px 4px !important; }
-  .streamer-table .streamer-name-line .clickable-name { max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
+  .streamer-table .streamer-name-line > span[style*="padding:1px 4px"] { font-size: 9px !important; padding: 1px 4px !important; flex-shrink: 0; }
+  /* 이름은 남는 폭만큼만 차지하고, 넘치면 말줄임표로 처리 (고정폭 대신 유동폭) */
+  .streamer-table .streamer-name-line .streamer-name-link {
+    flex: 1 1 auto; min-width: 24px; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; display: inline-block; vertical-align: bottom;
+  }
+  .streamer-table .streamer-mini-meta { font-size: 10px !important; }
+  .streamer-table .streamer-wr-box { font-size: 11px !important; }
   .streamer-univ-banner { flex-wrap: wrap; row-gap: 4px; }
   /* 커스텀(긴) 티어명이 고정폭 컬럼을 넘어 옆 컬럼과 겹치는 문제 방지: 줄바꿈 허용 */
   .streamer-table .streamer-td-tier { white-space: normal !important; word-break: keep-all; }
-  .streamer-table .streamer-td-tier .tbadge { white-space: normal !important; max-width: 100%; }
+  .streamer-table .streamer-td-tier .tbadge { white-space: normal !important; max-width: 100%; text-align: center; }
 
   /* 현황판 탭: 대학 로스터 - 사진/이름 태그가 화면 밖으로 넘치지 않고 다음 줄로 감싸지도록 */
   .b2-def-tag-grid {
