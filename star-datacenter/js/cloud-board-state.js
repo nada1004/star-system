@@ -875,6 +875,10 @@ function rBoard(C,T){
     body.dark .brd-mini-stat-label,body.dark .brd-mini-stat-sub{color:#94a3b8}
     @media(max-width:900px){.brd-hero{flex-direction:column;padding:18px;border-radius:22px}.brd-hero-side{justify-content:flex-start}.brd-toolbar-top{flex-direction:column}.brd-toolbar-controls,.brd-mini-stats{min-width:100%}}
     @media(max-width:768px){#board-wrap{grid-template-columns:1fr!important;}}
+    @media(max-width:640px){
+      /* 모바일: 상단 배지(brd-hero-badges)에 이미 같은 정보가 요약돼 있으므로 중복되는 미니 통계 카드는 숨김 */
+      .brd-mini-stats{display:none!important}
+    }
   </style>
   <div class="brd-shell">
   <section class="brd-hero no-export">

@@ -710,7 +710,12 @@ function _b2SummaryView() {
     .b2s-univ-card:hover { transform:translateY(-2px); box-shadow:0 12px 24px rgba(15,23,42,.08); }
     .b2s-new-player { display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:var(--surface);border:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text2);margin:2px; }
     @media(max-width:900px){ .b2s-hero{flex-direction:column}.b2s-hero-stats{width:100%;grid-template-columns:repeat(3,minmax(0,1fr));} }
-    @media(max-width:640px){ .b2s-hero{padding:18px 16px;border-radius:22px}.b2s-hero-title{font-size:22px}.b2s-hero-stats{grid-template-columns:1fr} }
+    @media(max-width:640px){
+      .b2s-hero{padding:18px 16px;border-radius:22px}
+      .b2s-hero-title{font-size:22px}
+      /* 모바일: 배지 줄에 이미 같은 정보가 요약돼 있으므로 중복되는 히어로 통계 카드는 숨김 */
+      .b2s-hero-stats{display:none!important}
+    }
   </style>`;
 
   // KPI 7개 (통산승률 + 이번주 활동 추가)

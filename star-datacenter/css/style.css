@@ -6234,6 +6234,12 @@ body.design-v2 .scard:hover{
   .hdr-title { font-size: 12px; letter-spacing: 0; }
   #darkToggleBtn { width: 24px !important; height: 24px !important; font-size: 12px !important; }
   #hdrLoginBtn, #hdrLogoutBtn { width: 24px !important; height: 24px !important; font-size: 12px !important; }
+  /* 시각적 크기는 24px 유지(헤더 공간 절약)하되, 실제 터치 판정 영역은 44px로 확장 */
+  #darkToggleBtn, #hdrLoginBtn, #hdrLogoutBtn { position: relative; }
+  #darkToggleBtn::after, #hdrLoginBtn::after, #hdrLogoutBtn::after {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 44px; height: 44px; transform: translate(-50%, -50%);
+  }
   #hdrCloudLoad { font-size: 11px !important; padding: 4px 7px !important; }
   .tab { padding: 7px 10px; font-size: 10px; min-height: 36px; }
   .scard { min-width: 66px; }
@@ -6247,6 +6253,14 @@ body.design-v2 .scard:hover{
   /* iOS 자동확대 방지: input/select font-size 16px 이상 */
   input, select, textarea { font-size: 16px !important; }
   .mbox input, .mbox select, .umbox input, .umbox select { font-size: 16px !important; }
+  /* 설정탭: 라벨 고정폭 그리드(140px/120px 1fr ...)가 좁은 화면에서 잘리는 문제 방지 → 세로 배치로 전환 */
+  [style*="grid-template-columns:140px 1fr 100px"],
+  [style*="grid-template-columns:140px 1fr"],
+  [style*="grid-template-columns:120px 1fr 90px"],
+  [style*="grid-template-columns:120px 1fr"] {
+    grid-template-columns: 1fr !important;
+    gap: 5px !important;
+  }
   /* 480px 이하: 프로필 패널 48px 고정 - 이미지 잘림 방지 */
   .rec-side-profiles { max-width: 48px !important; padding: 2px 1px !important; }
   .rec-side-profiles.rsp-no-box { max-width: 48px !important; }
@@ -14065,6 +14079,56 @@ body.design-v2 .cfg-cat-tab-on {
 @media (max-width: 640px) {
   /* 모바일: 히어로 배너(설명글+배지) 통째로 숨기고 필터바가 바로 노출되도록 함 */
   .streamer-hero { display: none !important; }
+  /* 모바일: 카드형/컴팩트·코지·쇼케이스 레이아웃의 요약 통계 카드(표시 인원/대학 분포 등)도
+     리스트·카드 자체에서 확인 가능한 중복 정보이므로 함께 숨김 */
+  .streamer-kpi-grid,
+  .streamer-quickrail { display: none !important; }
+}
+
+/* ── 퀵레일(요약 통계 바) — 컴팩트/코지/쇼케이스 레이아웃에서 사용 ── */
+.streamer-quickrail { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.streamer-quickstat {
+  flex: 1; min-width: 140px;
+  background: linear-gradient(180deg, #fff, #f8fafc);
+  border: 1px solid rgba(148,163,184,.16);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 18px rgba(15,23,42,.04);
+}
+.streamer-quickstat-label { font-size: 10px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; }
+.streamer-quickstat-value { margin-top: 4px; font-size: 20px; font-weight: 900; letter-spacing: -.02em; color: var(--text1); }
+.streamer-quickstat-sub { margin-top: 3px; font-size: 11px; font-weight: 700; color: var(--text3); }
+body.dark .streamer-quickstat { background: rgba(30,41,59,.85); border-color: rgba(255,255,255,.07); }
+body.dark .streamer-quickstat-value { color: #f1f5f9; }
+
+/* ── 레이아웃 모드: 컴팩트(좌: 필터+퀵레일 / 우: 히어로) ── */
+.streamer-topgrid { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 14px; align-items: start; margin-bottom: 14px; }
+.streamer-topgrid-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.streamer-topgrid-side { min-width: 0; }
+.streamer-topgrid-side .streamer-hero { margin-bottom: 0; height: 100%; box-sizing: border-box; flex-direction: column; align-items: flex-start; padding: 22px 20px; }
+.streamer-topgrid-side .streamer-hero-desc { max-width: none; }
+@media (max-width: 980px) { .streamer-topgrid { grid-template-columns: 1fr; } }
+
+/* ── 레이아웃 모드: 코지(히어로 위 + 퀵레일/필터 아래로 스택) ── */
+.streamer-topstack { display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; }
+.streamer-topstack .streamer-hero { margin-bottom: 0; }
+.streamer-topstack-body { display: flex; flex-direction: column; gap: 12px; }
+
+/* ── 레이아웃 모드: 쇼케이스(히어로 + 가로 스크롤 통계 레일) ── */
+.streamer-showcase-shell { display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; }
+.streamer-showcase-shell .streamer-hero { margin-bottom: 0; }
+.streamer-showcase-rail {
+  display: flex; gap: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; padding-bottom: 2px;
+}
+.streamer-showcase-rail::-webkit-scrollbar { display: none; }
+.streamer-showcase-rail .streamer-quickrail { flex-wrap: nowrap; margin-bottom: 0; width: max-content; min-width: 100%; }
+.streamer-showcase-rail .streamer-quickstat { min-width: 150px; flex: 0 0 auto; }
+
+@media (max-width: 640px) {
+  /* 모바일에서는 히어로/퀵레일이 위에서 숨겨지므로, 세 레이아웃 모두 필터바 중심의 단순한 구조로 자연스럽게 정리됨 */
+  .streamer-topgrid, .streamer-topstack, .streamer-showcase-shell { gap: 8px; margin-bottom: 8px; }
+  .streamer-topgrid { grid-template-columns: 1fr; }
 }
 
 /* ── KPI 카드 그리드 ── */

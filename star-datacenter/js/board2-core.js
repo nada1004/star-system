@@ -618,6 +618,11 @@ function rBoard2(C, T) {
         .b2-hero-stats{grid-template-columns:1fr}
         .b2-toolbar-card,.b2-content-shell{padding:10px;border-radius:20px}
       }
+      @media (max-width:640px){
+        /* 모바일: 배지 줄(현재보기/표시 스트리머/대학/이번주 활동)에 이미 같은 정보가 요약돼 있으므로
+           중복되는 히어로 통계 카드(현재 보기·표시 인원·활성 대학)는 통째로 숨김 */
+        .b2-hero-stats{display:none!important}
+      }
     </style>`;
 
   const filterBar = `

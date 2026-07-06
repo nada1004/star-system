@@ -2011,7 +2011,8 @@ function _b2WeeklyBriefingView() {
       @media(max-width:600px){
         .b2w2-hero{padding:0 0 14px}
         .b2w2-hero-title{font-size:26px}
-        .b2w2-hero-stats{grid-template-columns:1fr}
+        /* 모바일: 배지 줄(선택 기간/필터)에 이미 같은 정보가 있으므로 중복되는 히어로 통계 카드는 숨김 */
+        .b2w2-hero-stats{display:none!important}
         .b2w2-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
         .b2w2-modebar{grid-template-columns:1fr;gap:8px}
         .b2w2-highlight-grid{grid-template-columns:1fr;gap:8px}
