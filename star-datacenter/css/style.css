@@ -14656,6 +14656,8 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
     white-space: nowrap;
   }
   .streamer-mobile-stats .sm-stat b { font-weight: 900; color: var(--text3); margin-right: 3px; font-size: 9.5px; }
+  .streamer-mobile-stats .sm-stat-wr { font-weight: 900; background: rgba(148,163,184,.14); }
+  .streamer-mobile-stats .sm-stat-wr b { color: inherit; opacity: .75; }
   body.dark .streamer-mobile-stats .sm-stat { background: rgba(255,255,255,.06); }
   /* 메인 행과 정보 요약 행 사이 구분선 제거 (같은 스트리머 묶음으로 보이도록) */
   .streamer-table tbody tr.streamer-row:has(+ .streamer-mobile-info-row) td { border-bottom: none !important; }
@@ -14671,17 +14673,12 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
   .streamer-table col.streamer-col-race { display: none !important; }
   .streamer-table .streamer-th-race, .streamer-table .streamer-td-race { display: none !important; }
   .streamer-table col.streamer-col-name { width: auto !important; }
-  .streamer-table col.streamer-col-wr   { width: 52px !important; }
+  /* 승률은 이름 줄이 아니라 아래 요약줄에서만 표시 (좁은 화면에서 배지/이름과 겹치는 문제 근본 해결) */
+  .streamer-table col.streamer-col-wr { display: none !important; }
+  .streamer-table th.streamer-th-wr, .streamer-table td.streamer-td-wr { display: none !important; }
   .streamer-table th, .streamer-table td { padding-left: 4px !important; padding-right: 4px !important; }
-  /* 이름 셀과 승률 셀이 서로 붙어 보이지 않도록 여백/구분선 확보 */
-  .streamer-table td:has(.streamer-player-cell) { padding-right: 8px !important; }
-  .streamer-table th.streamer-th-wr,
-  .streamer-table td.streamer-td-wr {
-    padding-left: 8px !important;
-    border-left: 1px solid rgba(148,163,184,.16) !important;
-  }
-  body.dark .streamer-table th.streamer-th-wr,
-  body.dark .streamer-table td.streamer-td-wr { border-left-color: rgba(148,163,184,.22) !important; }
+  .streamer-table td:has(.streamer-player-cell) { padding-right: 8px !important; overflow: hidden; }
+  .streamer-table .streamer-player-cell { max-width: 100%; }
   .streamer-table thead th { font-size: 10.5px !important; white-space: nowrap; }
   .streamer-table .streamer-rank-box { min-height: 26px; }
   .streamer-table .streamer-rank-box > div:first-child { font-size: 10.5px !important; }

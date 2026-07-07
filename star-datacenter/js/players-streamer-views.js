@@ -398,6 +398,7 @@ function rTotal(C,T){
       <tr class="streamer-mobile-info-row">
         <td colspan="${_ncols}">
           <div class="streamer-mobile-stats">
+            <span class="sm-stat sm-stat-wr" style="color:${games===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}"><b>승률</b>${games?wr+'%':'-'}${games?` (${games}전)`:''}</span>
             <span class="sm-stat"><b>종족</b>${p.race||'?'}</span>
             <span class="sm-stat"><b>승</b>${win}</span>
             <span class="sm-stat"><b>패</b>${loss}</span>
