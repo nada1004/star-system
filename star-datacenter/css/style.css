@@ -14648,8 +14648,8 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
 .streamer-mobile-info-row { display: none; }
 @media (max-width: 768px) {
   .streamer-mobile-info-row { display: table-row; }
-  .streamer-mobile-info-row td { border-top: none !important; padding: 0 10px 8px 42px !important; }
-  .streamer-mobile-stats { display: flex; flex-wrap: wrap; gap: 5px; }
+  .streamer-mobile-info-row td { border-top: none !important; padding: 4px 10px 9px 42px !important; }
+  .streamer-mobile-stats { display: flex; flex-wrap: wrap; gap: 6px; }
   .streamer-mobile-stats .sm-stat {
     font-size: 10.5px; font-weight: 700; color: var(--text2);
     background: rgba(148,163,184,.10); border-radius: 7px; padding: 2px 7px;
@@ -14671,8 +14671,17 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
   .streamer-table col.streamer-col-race { display: none !important; }
   .streamer-table .streamer-th-race, .streamer-table .streamer-td-race { display: none !important; }
   .streamer-table col.streamer-col-name { width: auto !important; }
-  .streamer-table col.streamer-col-wr   { width: 46px !important; }
+  .streamer-table col.streamer-col-wr   { width: 52px !important; }
   .streamer-table th, .streamer-table td { padding-left: 4px !important; padding-right: 4px !important; }
+  /* 이름 셀과 승률 셀이 서로 붙어 보이지 않도록 여백/구분선 확보 */
+  .streamer-table td:has(.streamer-player-cell) { padding-right: 8px !important; }
+  .streamer-table th.streamer-th-wr,
+  .streamer-table td.streamer-td-wr {
+    padding-left: 8px !important;
+    border-left: 1px solid rgba(148,163,184,.16) !important;
+  }
+  body.dark .streamer-table th.streamer-th-wr,
+  body.dark .streamer-table td.streamer-td-wr { border-left-color: rgba(148,163,184,.22) !important; }
   .streamer-table thead th { font-size: 10.5px !important; white-space: nowrap; }
   .streamer-table .streamer-rank-box { min-height: 26px; }
   .streamer-table .streamer-rank-box > div:first-child { font-size: 10.5px !important; }
@@ -14688,7 +14697,7 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
     white-space: nowrap; display: inline-block; vertical-align: bottom;
   }
   .streamer-table .streamer-mini-meta { font-size: 10px !important; }
-  .streamer-table .streamer-wr-box { font-size: 11.5px !important; }
+  .streamer-table .streamer-wr-box { font-size: 11.5px !important; gap: 3px !important; }
   .streamer-univ-banner { flex-wrap: wrap; row-gap: 4px; }
   /* 커스텀(긴) 티어명이 고정폭 컬럼을 넘어 옆 컬럼과 겹치는 문제 방지: 줄바꿈 허용 */
   .streamer-table .streamer-td-tier { white-space: normal !important; word-break: keep-all; }
@@ -14710,8 +14719,8 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
 
 /* 초소형 폰에서도 승률은 핵심 정보이므로 숨기지 않고 폭만 더 축소 */
 @media (max-width: 480px) {
-  .streamer-table col.streamer-col-wr { width: 40px !important; }
-  .streamer-table .streamer-th-wr, .streamer-table .streamer-td-wr { padding-left: 2px !important; padding-right: 2px !important; }
+  .streamer-table col.streamer-col-wr { width: 46px !important; }
+  .streamer-table .streamer-th-wr, .streamer-table .streamer-td-wr { padding-left: 6px !important; padding-right: 2px !important; }
   .streamer-table .streamer-wr-box { font-size: 10.5px !important; }
 }
 
