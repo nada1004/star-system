@@ -14683,6 +14683,8 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
      table-layout:fixed 의 폭 계산이 실제 컬럼 수와 항상 일치함 (겹침/잘림 방지의 핵심) */
   .streamer-table-mb { table-layout: fixed; width: 100% !important; }
   .streamer-table-mb th, .streamer-table-mb td { padding-left: 4px !important; padding-right: 4px !important; box-sizing: border-box; }
+  .streamer-content-card { margin: 0 2px; }
+  .streamer-name-link, .streamer-row { -webkit-tap-highlight-color: transparent; }
   .streamer-table-mb thead th { font-size: 10.5px !important; white-space: nowrap; }
   .streamer-table-mb .streamer-rank-box { min-height: 28px; }
   .streamer-table-mb .streamer-rank-box > div:first-child { font-size: 10.5px !important; }
