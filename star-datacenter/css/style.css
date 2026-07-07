@@ -14644,6 +14644,24 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
    모바일 최적화: 스트리머 탭 / 티어 순위표 탭 / 현황판 탭
    (좁은 화면에서 표/카드가 화면 밖으로 잘려나가는 문제 수정)
    ============================================================ */
+/* 모바일에서 숨겨지는 컬럼(종족/승/패/포인트/ELO) 정보를 각 행 아래 요약 줄로 노출 (PC에서는 숨김) */
+.streamer-mobile-info-row { display: none; }
+@media (max-width: 768px) {
+  .streamer-mobile-info-row { display: table-row; }
+  .streamer-mobile-info-row td { border-top: none !important; padding: 0 10px 8px 42px !important; }
+  .streamer-mobile-stats { display: flex; flex-wrap: wrap; gap: 5px; }
+  .streamer-mobile-stats .sm-stat {
+    font-size: 10.5px; font-weight: 700; color: var(--text2);
+    background: rgba(148,163,184,.10); border-radius: 7px; padding: 2px 7px;
+    white-space: nowrap;
+  }
+  .streamer-mobile-stats .sm-stat b { font-weight: 900; color: var(--text3); margin-right: 3px; font-size: 9.5px; }
+  body.dark .streamer-mobile-stats .sm-stat { background: rgba(255,255,255,.06); }
+  /* 메인 행과 정보 요약 행 사이 구분선 제거 (같은 스트리머 묶음으로 보이도록) */
+  .streamer-table tbody tr.streamer-row:has(+ .streamer-mobile-info-row) td { border-bottom: none !important; }
+}
+@media (min-width: 769px) { .streamer-mobile-info-row { display: none !important; } }
+
 @media (max-width: 768px) {
   /* 스트리머 탭: 리스트(테이블) 보기 - 컬럼 폭 축소 + 정렬 보강으로 가로 스크롤 최소화 */
   .streamer-table { table-layout: fixed; width: 100% !important; }
@@ -14690,9 +14708,11 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
   .b2-univ-row-label { min-width: 56px !important; width: 56px !important; }
 }
 
+/* 초소형 폰에서도 승률은 핵심 정보이므로 숨기지 않고 폭만 더 축소 */
 @media (max-width: 480px) {
-  .streamer-table col.streamer-col-wr { display: none !important; }
-  .streamer-table .streamer-th-wr, .streamer-table .streamer-td-wr { display: none !important; }
+  .streamer-table col.streamer-col-wr { width: 40px !important; }
+  .streamer-table .streamer-th-wr, .streamer-table .streamer-td-wr { padding-left: 2px !important; padding-right: 2px !important; }
+  .streamer-table .streamer-wr-box { font-size: 10.5px !important; }
 }
 
 /* 초소형 폰(~360px 이하) 추가 대응: 순위/티어 폭을 더 줄여 이름에 폭을 더 확보 */

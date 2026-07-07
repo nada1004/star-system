@@ -231,6 +231,18 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
       '.tier-table .tbadge{font-size:10px !important;padding:2px 5px !important}',
       '.tier-table .clickable-name{font-size:12.5px !important;font-weight:800 !important}',
       '.tier-table .tier-rank-chip{min-width:0 !important;width:100%;height:22px !important;padding:0 4px !important;font-size:10.5px !important}',
+    '}',
+    /* 모바일에서 숨겨지는 컬럼(대학/승/패/ELO/활동) 정보를 각 행 아래 요약 줄로 노출 (PC에서는 숨김) */
+    '.tier-mobile-info-row{display:none}',
+    '@media (max-width:768px){',
+      '.tier-mobile-info-row{display:table-row}',
+      '.tier-mobile-info-row td{border-top:none !important;padding:0 8px 8px 40px !important;background:transparent !important}',
+      '.tier-table tbody tr:has(+ .tier-mobile-info-row) td{border-bottom:none !important}',
+      '.tier-mobile-stats{display:flex;flex-wrap:wrap;gap:5px}',
+      '.tier-mobile-stats .tm-stat{font-size:10.5px;font-weight:700;color:var(--text2);background:rgba(148,163,184,.10);border-radius:7px;padding:2px 7px;white-space:nowrap}',
+      '.tier-mobile-stats .tm-stat b{font-weight:900;color:var(--text3);margin-right:3px;font-size:9.5px}',
+      '.tier-mobile-stats .tm-stat--act{display:inline-flex;align-items:center}',
+      'body.dark .tier-mobile-stats .tm-stat{background:rgba(255,255,255,.06)}',
     '}'
   ].join('');
   document.head.appendChild(s);
@@ -1045,6 +1057,7 @@ function rTier(C,T){
   const _tableStyle = _isMb
     ? `table-layout:fixed;width:100%;max-width:100%`
     : `table-layout:auto;width:100%;min-width:1120px;max-width:1600px;margin:0 auto`;
+  const _mbNcols = 10 + (_li?1:0);
   const _mbColgroup = _isMb ? `<colgroup>
       <col style="width:${_isNarrow?'26px':'30px'}"><col style="width:${_isNarrow?'38px':'42px'}"><col class="col-hide-mobile"><col style="width:auto">
       <col class="col-hide-mobile"><col class="col-hide-mobile"><col style="width:${_isNarrow?'32px':'36px'}"><col style="width:${_isNarrow?'34px':'38px'}">
@@ -1106,6 +1119,17 @@ function rTier(C,T){
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${_elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${_elo}</td>
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${_actHTML}</td>
       ${_li?`<td class="no-export col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
+    </tr>
+    <tr class="tier-mobile-info-row">
+      <td colspan="${_mbNcols}">
+        <div class="tier-mobile-stats">
+          <span class="tm-stat"><b>대학</b>${p.univ||'-'}</span>
+          <span class="tm-stat"><b>승</b>${rec.w}</span>
+          <span class="tm-stat"><b>패</b>${rec.l}</span>
+          <span class="tm-stat"><b>${_hasDateFilter?'현재 ELO':'ELO'}</b>${_elo}</span>
+          <span class="tm-stat tm-stat--act">${_actHTML}</span>
+        </div>
+      </td>
     </tr>`;
   });
   h+=`</tbody></table></div></div>`;

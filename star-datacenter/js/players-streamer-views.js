@@ -182,7 +182,7 @@ function rTotal(C,T){
 
     let tableHTML=`<div class="streamer-content-card"><div class="streamer-table-wrap"><table class="streamer-table"><colgroup>
     ${_showBulk?'<col style="width:36px">':''}
-    <col class="streamer-col-rank" style="width:52px"><col class="streamer-col-tier" style="width:80px"><col class="streamer-col-race" style="width:60px"><col class="streamer-col-name" style="width:220px"><col class="col-hide-mobile" style="width:50px">
+    <col class="streamer-col-rank" style="width:52px"><col class="streamer-col-tier" style="width:80px"><col class="streamer-col-race col-hide-mobile" style="width:60px"><col class="streamer-col-name" style="width:220px"><col class="col-hide-mobile" style="width:50px">
     <col class="col-hide-mobile" style="width:52px"><col class="streamer-col-wr" style="width:52px">
     <col class="col-hide-mobile" style="width:70px"><col class="col-hide-mobile" style="width:80px"><col class="col-hide-mobile" style="width:60px">
     ${isLoggedIn?'<col style="width:70px">':''}
@@ -190,7 +190,7 @@ function rTotal(C,T){
     ${_showBulk?`<th style="text-align:center;padding:8px 4px"><input type="checkbox" id="bulk-check-all" onchange="bulkEditToggleAll(this.checked)" style="cursor:pointer"></th>`:''}
     <th style="text-align:center;white-space:nowrap;padding:8px 6px">순위</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
-    <th class="streamer-th-race" style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
+    <th class="streamer-th-race col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
     <th style="text-align:left;padding:8px 12px">스트리머</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">승</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">패</th>
@@ -373,7 +373,7 @@ function rTotal(C,T){
           </div>
         </td>
         <td class="streamer-td-tier" style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
-        <td class="streamer-td-race" style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
+        <td class="streamer-td-race col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span class="streamer-player-cell">
             ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img loading="lazy" decoding="async" src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"><span class="streamer-avatar-race rbadge r${p.race}">${p.race||'?'}</span></span>`:`<span class="streamer-avatar"><span class="streamer-avatar-race rbadge r${p.race}">${p.race||'?'}</span></span>`}
@@ -394,6 +394,17 @@ function rTotal(C,T){
         <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px"><span class="streamer-elo-chip" style="color:${elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${elo}</span></td>
         <td class="col-hide-mobile" style="text-align:center;padding:7px 4px"></td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
+      </tr>
+      <tr class="streamer-mobile-info-row">
+        <td colspan="${_ncols}">
+          <div class="streamer-mobile-stats">
+            <span class="sm-stat"><b>종족</b>${p.race||'?'}</span>
+            <span class="sm-stat"><b>승</b>${win}</span>
+            <span class="sm-stat"><b>패</b>${loss}</span>
+            <span class="sm-stat ${pC(points)}"><b>포인트</b>${pS(points)}</span>
+            <span class="sm-stat"><b>ELO</b>${elo}</span>
+          </div>
+        </td>
       </tr>`;
     });
   });
