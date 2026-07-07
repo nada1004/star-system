@@ -14256,17 +14256,11 @@ body.dark .streamer-quickstat-value { color: #f1f5f9; }
 }
 .streamer-table .streamer-avatar {
   position: relative; display: flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  width: 68px; height: 68px; border-radius: var(--su_profile_radius,50%); clip-path: var(--su_profile_clip,none); overflow: hidden; flex-shrink: 0;
   background: linear-gradient(160deg,#e2e8f0,#cbd5e1); color: #64748b;
-  font-size: 11px; font-weight: 800;
+  font-size: 22px; font-weight: 800;
 }
 .streamer-table .streamer-avatar img { border-radius: inherit; }
-.streamer-table .streamer-avatar-race {
-  position: absolute; right: -2px; bottom: -2px; width: 15px; height: 15px;
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-size: 8px; font-weight: 900; line-height: 1; padding: 0 !important;
-  border: 1.5px solid #fff; box-sizing: border-box;
-}
 .streamer-table .streamer-name-stack {
   display: flex; flex-direction: column; justify-content: center; gap: 3px;
   min-width: 0; flex: 1 1 auto;
@@ -14711,11 +14705,10 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
   .streamer-table-mb .streamer-rank-box > div:first-child { font-size: 10.5px !important; }
 
   /* 프로필 이미지 살짝 크게 */
-  .streamer-table-mb .streamer-avatar { width: 44px !important; height: 44px !important; font-size: 15px !important; font-weight: 800; }
-  .streamer-table-mb .streamer-avatar-race { width: 16px !important; height: 16px !important; font-size: 7.5px !important; }
+  .streamer-table-mb .streamer-avatar { width: 88px !important; height: 88px !important; font-size: 30px !important; font-weight: 800; }
 
   .streamer-table-mb td:has(.streamer-player-cell) { padding-right: 6px !important; padding-top: 8px !important; padding-bottom: 8px !important; overflow: hidden; }
-  .streamer-table-mb .streamer-player-cell { display: flex; align-items: center; gap: 9px !important; max-width: 100%; min-width: 0; min-height: 44px; }
+  .streamer-table-mb .streamer-player-cell { display: flex; align-items: center; gap: 9px !important; max-width: 100%; min-width: 0; min-height: 88px; }
   .streamer-table-mb .streamer-name-stack { min-width: 0; flex: 1 1 auto; justify-content: center; gap: 2px; }
   .streamer-table-mb .streamer-name-line { font-size: 17px !important; row-gap: 2px; column-gap: 4px !important; min-width: 0; flex-wrap: wrap; letter-spacing: -.01em; }
   .streamer-table-mb .streamer-name-line > span[style*="padding:1px 5px"],
@@ -14753,7 +14746,7 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
   .streamer-table-mb col.streamer-col-rank { width: 24px !important; }
   .streamer-table-mb col.streamer-col-tier { width: 36px !important; }
   .streamer-table-mb th, .streamer-table-mb td { padding-left: 3px !important; padding-right: 3px !important; }
-  .streamer-table-mb .streamer-avatar { width: 38px !important; height: 38px !important; }
+  .streamer-table-mb .streamer-avatar { width: 76px !important; height: 76px !important; }
   .streamer-table-mb .streamer-player-cell { gap: 7px !important; }
   .streamer-table-mb .streamer-name-line { font-size: 15px !important; }
   .streamer-table-mb .streamer-td-tier .tbadge { font-size: 9px !important; padding: 1px 3px !important; }

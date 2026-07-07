@@ -245,11 +245,10 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-avatar-wrap{position:relative;display:inline-flex;flex-shrink:0}',
     '.tier-avatar-race{display:none}',
     '@media (max-width:768px){',
-      /* [FIX] 이전 값(padding 1px 4px + font-size 8.5px)은 24~28px짜리 아주 작은 아바타 위에서
-         배지 실제 크기가 약 15px까지 커져 사진 얼굴의 60%+ 를 가려버리는 문제가 있었음.
-         고정 크기(11px 원형)로 바꿔 아바타 대비 비율을 스트리머탭 리스트뷰(15/34≈44%)와 비슷한
-         수준으로 낮추고, 코너에 살짝 겹치는 정도로만 보이게 함. */
-      '.tier-avatar-race{display:inline-flex;align-items:center;justify-content:center;position:absolute;right:-2px;bottom:-2px;width:11px !important;height:11px !important;padding:0 !important;font-size:6.5px !important;line-height:1;border-radius:50%;border:1.2px solid #fff;box-shadow:0 1px 3px rgba(15,23,42,.35)}',
+      /* [FIX] 아바타를 30~36px로 확대(모양 설정이 잘 보이도록)하면서 배지도 비율에 맞춰 소폭 상향.
+         고정 크기(12px 원형)로 아바타 대비 비율을 스트리머탭 리스트뷰와 비슷한 수준으로 유지하고,
+         코너에 살짝 겹치는 정도로만 보이게 함. */
+      '.tier-avatar-race{display:inline-flex;align-items:center;justify-content:center;position:absolute;left:-3px;top:-3px;width:22px !important;height:22px !important;padding:0 !important;font-size:11px !important;line-height:1;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(15,23,42,.35)}',
       'body.dark .tier-avatar-race{border-color:#0f172a}',
       '.tier-table thead th{font-size:10.5px !important}',
       '.tier-table .tbadge{font-size:10px !important;padding:2px 5px !important}',
@@ -267,7 +266,7 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-mobile-info-row{display:none}',
     '@media (max-width:768px){',
       '.tier-mobile-info-row{display:table-row}',
-      '.tier-mobile-info-row td{border-top:none !important;padding:0 10px 8px 40px !important}',
+      '.tier-mobile-info-row td{border-top:none !important;padding:0 10px 8px 74px !important}',
       '.tier-table tbody tr:has(+ .tier-mobile-info-row) td{border-bottom:none !important;padding-bottom:4px !important}',
       '.tier-table tbody tr:has(+ .tier-mobile-info-row) td:first-child{border-bottom-left-radius:0 !important}',
       '.tier-table tbody tr:has(+ .tier-mobile-info-row) td:first-child,.tier-mobile-info-row td:first-child{border-top-left-radius:0 !important}',
@@ -283,7 +282,6 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
       '.tier-mobile-meta .tmm-rec .w{color:var(--win-col)}',
       '.tier-mobile-meta .tmm-rec .l{color:var(--lose-col)}',
       '.tier-mobile-meta .tmm-elo{flex-shrink:0;white-space:nowrap;font-weight:900;color:var(--text2)}',
-      '.tier-mobile-meta .tmm-act{margin-left:auto;flex-shrink:0;display:inline-flex;align-items:center}',
     '}'
   ].join('');
   document.head.appendChild(s);
@@ -983,7 +981,7 @@ function rTier(C,T){
   const _isNarrow = (typeof window !== 'undefined' && window.innerWidth <= 400); // 초소형 폰(320~400px) 추가 대응
   const _pad = _isMb ? (_isNarrow?'4px 3px':'5px 4px') : '8px 10px';
   const _padRT = _isMb ? (_isNarrow?'4px 1px':'5px 2px') : '8px 10px'; // 순위/티어 칸: 간격을 좁혀 이름 쪽에 폭을 더 확보
-  const _padName = _isMb ? (_isNarrow?'4px 4px':'5px 6px') : '8px 12px';
+  const _padName = _isMb ? (_isNarrow?'8px 4px':'9px 6px') : '8px 12px';
   const _today2=new Date().toISOString().slice(0,10);
   const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
   const _7ago2=new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
@@ -1105,8 +1103,8 @@ function rTier(C,T){
   // 모바일: 숨김 컬럼을 제외한 5개 컬럼(순위/티어/이름/승률/포인트)의 폭을 %로 고정해
   // 합계가 항상 100%가 되도록 해서 가로 슬라이드 없이 한 화면에 다 보이게 함
   const _mbColgroup = _isMb ? `<colgroup>
-      <col style="width:9%"><col style="width:13%"><col class="col-hide-mobile"><col style="width:46%">
-      <col class="col-hide-mobile"><col class="col-hide-mobile"><col style="width:16%"><col style="width:16%">
+      <col style="width:7%"><col style="width:11%"><col class="col-hide-mobile"><col style="width:54%">
+      <col class="col-hide-mobile"><col class="col-hide-mobile"><col style="width:14%"><col style="width:14%">
       <col class="col-hide-mobile"><col class="col-hide-mobile">${_li?'<col class="col-hide-mobile">':''}
     </colgroup>` : '';
   h=`<div class="tier-content-card"><div class="tier-table-wrap" style="${_wrapStyle}">
@@ -1153,7 +1151,7 @@ function rTier(C,T){
       ${_isMb?'':`<td style="text-align:center;white-space:nowrap;padding:${_pad}"><span class="rbadge r${p.race}">${p.race}</span></td>`}
       <td style="text-align:left;white-space:nowrap;padding:${_padName};font-weight:700;min-width:0">
         <span style="display:inline-flex;align-items:center;gap:${_isMb?'6px':'6px'};min-width:0;max-width:100%">
-          <span class="tier-avatar-wrap">${getPlayerPhotoHTML(p.name,_isMb?(_isNarrow?'24px':'28px'):'40px','',{lazy:true})}${_isMb?`<span class="tier-avatar-race rbadge r${p.race}">${p.race}</span>`:''}</span>
+          <span class="tier-avatar-wrap">${getPlayerPhotoHTML(p.name,_isMb?(_isNarrow?'60px':'72px'):'40px','',{lazy:true})}${_isMb?`<span class="tier-avatar-race rbadge r${p.race}">${p.race}</span>`:''}</span>
           <span class="clickable-name" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>
           <span class="tier-name-badges" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px">${genderIcon(p.gender)}${_getStatusIcon(p.name)}</span>
         </span>
@@ -1174,7 +1172,6 @@ function rTier(C,T){
           <span class="tmm-rec"><b class="w">${rec.w}승</b> <b class="l">${rec.l}패</b></span>
           <span class="tmm-sep">·</span>
           <span class="tmm-elo">${_hasDateFilter?'현재 ':''}ELO ${_elo}</span>
-          ${_actHTML?`<span class="tmm-act">${_actHTML}</span>`:''}
         </div>
       </td>
     </tr>`;
