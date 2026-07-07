@@ -14693,14 +14693,15 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
 
   .streamer-table-mb td:has(.streamer-player-cell) { padding-right: 6px !important; overflow: hidden; }
   .streamer-table-mb .streamer-player-cell { display: flex; align-items: center; gap: 8px !important; max-width: 100%; min-width: 0; }
-  .streamer-table-mb .streamer-name-stack { min-width: 0; flex: 1 1 auto; }
-  .streamer-table-mb .streamer-name-line { font-size: 13px !important; row-gap: 2px; column-gap: 4px !important; min-width: 0; flex-wrap: wrap; }
+  .streamer-table-mb .streamer-name-stack { min-width: 0; flex: 1 1 auto; justify-content: center; }
+  .streamer-table-mb .streamer-name-line { font-size: 16px !important; row-gap: 2px; column-gap: 4px !important; min-width: 0; flex-wrap: wrap; }
   .streamer-table-mb .streamer-name-line > span[style*="padding:1px 5px"],
   .streamer-table-mb .streamer-name-line > span[style*="padding:1px 4px"] { font-size: 9px !important; padding: 1px 4px !important; flex-shrink: 0; }
   /* 이름은 남는 폭만큼만 차지하고, 넘치면 말줄임표로 처리 */
   .streamer-table-mb .streamer-name-line .streamer-name-link {
     flex: 1 1 auto; min-width: 32px; overflow: hidden; text-overflow: ellipsis;
     white-space: nowrap; display: inline-block; vertical-align: bottom;
+    font-weight: 900 !important; border-bottom: none !important;
   }
   .streamer-table-mb .streamer-mini-meta { font-size: 10px !important; }
 
@@ -14731,7 +14732,7 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
   .streamer-table-mb th, .streamer-table-mb td { padding-left: 3px !important; padding-right: 3px !important; }
   .streamer-table-mb .streamer-avatar { width: 34px !important; height: 34px !important; }
   .streamer-table-mb .streamer-player-cell { gap: 6px !important; }
-  .streamer-table-mb .streamer-name-line { font-size: 12px !important; }
+  .streamer-table-mb .streamer-name-line { font-size: 14px !important; }
   .streamer-table-mb .streamer-td-tier .tbadge { font-size: 9px !important; padding: 1px 3px !important; }
   .streamer-mobile-info-row td { padding-left: 46px !important; }
 }

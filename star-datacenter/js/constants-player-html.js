@@ -142,7 +142,7 @@ function getStatusIconHTML(name){
 }
 
 function genderIcon(gender){
-  if(gender==='M')return `<span class="male-icon">♂</span>`;
+  // 남자 이모지(♂) 표시 제거 - 요청에 따라 항상 빈 문자열 반환
   return '';
 }
 

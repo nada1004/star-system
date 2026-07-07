@@ -220,6 +220,24 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '@media (max-width:768px){.tier-shell{overflow-x:hidden;max-width:100%}.tier-hero{display:none}.tier-toolbar-card,.tier-content-card{padding:10px;overflow-x:hidden}.tier-filter-blocks{grid-template-columns:1fr}.tier-filter-selectrow,.tier-filter-option-row,.tier-type-grid{grid-template-columns:1fr}.tier-card-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:var(--su-tier-card-gap,18px);padding:8px 0}.tier-podium-stage{grid-template-columns:1fr;gap:10px;max-width:none;width:100%}.tier-podium-card{padding:14px 14px 16px;border-radius:20px;min-height:0 !important;max-width:100%}.tier-podium-card.place-1{padding:18px;order:0}.tier-podium-card.place-2{order:1}.tier-podium-card.place-3{order:2}.tier-podium-name{font-size:18px}.tier-podium-card.place-1 .tier-podium-name{font-size:20px}.tier-podium-main{align-items:flex-start}.tier-podium-avatar{width:52px!important;height:52px!important;max-width:52px!important;max-height:52px!important;border-radius:18px}.tier-podium-card.place-1 .tier-podium-avatar{width:96px!important;height:118px!important;max-width:96px!important;max-height:118px!important;border-radius:20px}.tier-podium-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tier-podium-rest-grid{grid-template-columns:1fr}.tier-group-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.tier-compact-head{display:none}.tier-compact-item{grid-template-columns:48px minmax(0,1fr);gap:8px 10px;align-items:start;padding:9px 10px}.tier-compact-main,.tier-compact-metrics{grid-column:2 / 3}.tier-compact-side{display:none}.tier-compact-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tier-compact-metric{align-items:flex-start;padding:6px 7px}.tier-compact-metric-value{font-size:11px;white-space:normal}}',
     /* 초소형 폰(400px 이하) 추가 대응: 카드/그룹 그리드 여백을 더 좁혀 2열이 빠듯하게라도 들어가도록 */
     '@media (max-width:400px){.tier-hero{padding:12px}.tier-toolbar-card,.tier-content-card{padding:8px}.tier-podium-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.tier-podium-card{padding:12px}.tier-podium-card.place-1{padding:14px}.tier-podium-statbox{padding:7px 6px}.tier-podium-rest-metrics{gap:5px}.tier-compact-item{padding:8px 8px}.tier-compact-metrics{gap:5px}}',
+    /* 포디움 모드 모바일: 1/2/3등을 한 줄(3열)에 나란히, 박스 크기를 모바일에 맞게 축소 */
+    '@media (max-width:768px){',
+      '.tier-podium-stage{grid-template-columns:repeat(3,1fr) !important;gap:6px !important;max-width:100% !important;width:100%}',
+      '.tier-podium-lane{min-width:0}',
+      '.tier-podium-card{padding:8px 6px 10px !important;border-radius:14px !important;gap:6px !important;min-width:0}',
+      '.tier-podium-card.place-1{padding:10px 6px 12px !important}',
+      '.tier-podium-rankline{gap:4px}',
+      '.tier-podium-medal{font-size:9.5px !important;gap:3px !important}',
+      '.tier-podium-ranknum{min-width:20px !important;height:20px !important;font-size:9.5px !important;padding:0 5px !important}',
+      '.tier-podium-main{flex-direction:column !important;align-items:center !important;text-align:center;gap:4px !important}',
+      '.tier-podium-main--hero{align-items:center !important}',
+      '.tier-podium-avatar{width:36px !important;height:36px !important;max-width:36px !important;max-height:36px !important;border-radius:10px !important}',
+      '.tier-podium-card.place-1 .tier-podium-avatar{width:56px !important;height:68px !important;max-width:56px !important;max-height:68px !important;border-radius:14px !important}',
+      '.tier-podium-copy{align-items:center !important;width:100%;gap:3px !important}',
+      '.tier-podium-name{font-size:11px !important;max-width:100%;text-align:center}',
+      '.tier-podium-card.place-1 .tier-podium-name{font-size:12.5px !important}',
+      '.tier-podium-sub,.tier-podium-highlight,.tier-podium-foot,.tier-podium-stats{display:none !important}',
+    '}',
     /* 티어 순위표 - 테이블뷰 모바일 전용: 종족 컬럼을 없애고 아바타 코너 배지로 대체,
        확보된 공간으로 순위/티어/이름을 더 크고 읽기 쉽게 표시 (PC는 영향 없음) */
     '.tier-avatar-wrap{position:relative;display:inline-flex;flex-shrink:0}',
@@ -234,7 +252,7 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
       '.tier-table thead th{font-size:10.5px !important}',
       '.tier-table .tbadge{font-size:10px !important;padding:2px 5px !important}',
       '.tier-table .clickable-name{font-size:12.5px !important;font-weight:800 !important}',
-      '.tier-table .tier-rank-chip{min-width:0 !important;width:100%;height:22px !important;padding:0 4px !important;font-size:10.5px !important}',
+      '.tier-table .tier-rank-chip{min-width:0 !important;width:100%;height:19px !important;padding:0 2px !important;font-size:9.5px !important;border-radius:8px !important}',
       '.tier-name-badges{margin-left:1px}',
       '.tier-name-badges img{width:14px !important;height:14px !important}',
       '.tier-name-badges .male-icon{font-size:12px}',
@@ -952,6 +970,7 @@ function rTier(C,T){
   const _isMb = (typeof window !== 'undefined' && window.innerWidth <= 768);
   const _isNarrow = (typeof window !== 'undefined' && window.innerWidth <= 400); // 초소형 폰(320~400px) 추가 대응
   const _pad = _isMb ? (_isNarrow?'4px 3px':'5px 4px') : '8px 10px';
+  const _padRT = _isMb ? (_isNarrow?'4px 1px':'5px 2px') : '8px 10px'; // 순위/티어 칸: 간격을 좁혀 이름 쪽에 폭을 더 확보
   const _padName = _isMb ? (_isNarrow?'4px 4px':'5px 6px') : '8px 12px';
   const _today2=new Date().toISOString().slice(0,10);
   const _30ago2=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);
@@ -1074,14 +1093,14 @@ function rTier(C,T){
   // 모바일: 숨김 컬럼을 제외한 5개 컬럼(순위/티어/이름/승률/포인트)의 폭을 %로 고정해
   // 합계가 항상 100%가 되도록 해서 가로 슬라이드 없이 한 화면에 다 보이게 함
   const _mbColgroup = _isMb ? `<colgroup>
-      <col style="width:13%"><col style="width:17%"><col class="col-hide-mobile"><col style="width:38%">
+      <col style="width:9%"><col style="width:13%"><col class="col-hide-mobile"><col style="width:46%">
       <col class="col-hide-mobile"><col class="col-hide-mobile"><col style="width:16%"><col style="width:16%">
       <col class="col-hide-mobile"><col class="col-hide-mobile">${_li?'<col class="col-hide-mobile">':''}
     </colgroup>` : '';
   h=`<div class="tier-content-card"><div class="tier-table-wrap" style="${_wrapStyle}">
     <table class="tier-table" style="${_tableStyle}">${_mbColgroup}<thead><tr>
-      <th style="text-align:center;white-space:nowrap;padding:${_pad}">순위</th>
-      <th class="tier-th-tier" style="text-align:center;white-space:nowrap;padding:${_pad}">티어</th>
+      <th style="text-align:center;white-space:nowrap;padding:${_padRT}">순위</th>
+      <th class="tier-th-tier" style="text-align:center;white-space:nowrap;padding:${_padRT}">티어</th>
       <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">대학</th>
       ${_isMb?'':`<th style="text-align:center;white-space:nowrap;padding:${_pad}">종족</th>`}
       <th style="text-align:left;white-space:nowrap;padding:${_padName}">이름</th>
@@ -1099,7 +1118,7 @@ function rTier(C,T){
     if(i===0) rnkHTML=`<span class="tier-rank-chip gold">1등</span>`;
     else if(i===1) rnkHTML=`<span class="tier-rank-chip silver">2등</span>`;
     else if(i===2) rnkHTML=`<span class="tier-rank-chip bronze">3등</span>`;
-    else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:${_isMb?14:13}px">${i+1}위</span>`;
+    else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:${_isMb?12:13}px">${i+1}위</span>`;
     const extraVal=_getExtraVal(p);
     const univIconHTML=_getUnivIconHTML(p);
     const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
@@ -1111,8 +1130,8 @@ function rTier(C,T){
     const _actHTML=_getActHTML(p);
     const _elo = (p.elo||ELO_DEFAULT);
     h+=`<tr class="${i===0?'top1':i===1?'top2':i===2?'top3':''}" style="border-left:3px solid ${col};background:${_getUnivBg(p.univ,.06)}">
-      <td style="text-align:center;white-space:nowrap;padding:${_pad}">${rnkHTML}</td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad}">${_getTierBadge(p.tier)}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_padRT}">${rnkHTML}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_padRT}">${_getTierBadge(p.tier)}</td>
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">
         <span class="ubadge tier-univ-badge clickable-univ" data-icon-done="1"
           style="background:${col};font-size:${_isMb?11:13}px;max-width:${_isMb?90:120}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
