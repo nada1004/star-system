@@ -14682,8 +14682,29 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
   /* 스트리머 탭: 리스트(테이블) 보기 - 모바일에서는 컬럼 자체를 줄여서(순위/티어/이름[/관리]만) 렌더링하므로
      table-layout:fixed 의 폭 계산이 실제 컬럼 수와 항상 일치함 (겹침/잘림 방지의 핵심) */
   .streamer-table-mb { table-layout: fixed; width: 100% !important; }
+
+  /* 티어 순위표와 통일된 "카드형 리스트" 룩: 얇은 줄 구분선 대신 둥근 카드+그림자로,
+     한 스트리머의 메인행+정보행은 하나의 카드처럼 이어붙임 */
+  .streamer-table-mb { border-collapse: separate !important; border-spacing: 0 6px !important; }
+  .streamer-table-mb tbody tr { box-shadow: 0 8px 16px rgba(15,23,42,.05); }
+  .streamer-table-mb tbody tr:not(:last-child) td { border-bottom: 1px solid rgba(148,163,184,.12) !important; }
+  .streamer-table-mb tbody td {
+    background: linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));
+    border-top: 1px solid rgba(148,163,184,.12); border-bottom: 1px solid rgba(148,163,184,.12);
+  }
+  .streamer-table-mb tbody tr td:first-child { border-left: 1px solid rgba(148,163,184,.12); border-top-left-radius: 14px; border-bottom-left-radius: 14px; }
+  .streamer-table-mb tbody tr td:last-child { border-right: 1px solid rgba(148,163,184,.12); border-top-right-radius: 14px; border-bottom-right-radius: 14px; }
+  .streamer-table-mb tbody tr.streamer-row:has(+ .streamer-mobile-info-row) td { border-bottom: none !important; }
+  .streamer-table-mb tbody tr.streamer-row:has(+ .streamer-mobile-info-row) td:first-child { border-bottom-left-radius: 0 !important; }
+  .streamer-table-mb tbody tr.streamer-row:has(+ .streamer-mobile-info-row) td:last-child { border-bottom-right-radius: 0 !important; }
+  .streamer-table-mb .streamer-mobile-info-row td {
+    border-top: none !important; border-top-left-radius: 0 !important; border-top-right-radius: 0 !important;
+    border-bottom-left-radius: 14px !important; border-bottom-right-radius: 14px !important;
+  }
+  body.dark .streamer-table-mb tbody td { background: linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9)); border-color: #334155; color: #e2e8f0; }
   .streamer-table-mb th, .streamer-table-mb td { padding-left: 4px !important; padding-right: 4px !important; box-sizing: border-box; vertical-align: middle; }
-  .streamer-content-card { margin: 0 2px; }
+  .streamer-content-card { margin: 0 2px; overflow: visible !important; }
+  .streamer-table-wrap { overflow-x: auto; overflow-y: visible; }
   .streamer-name-link, .streamer-row { -webkit-tap-highlight-color: transparent; }
   .streamer-table-mb thead th { font-size: 10.5px !important; white-space: nowrap; }
   .streamer-table-mb .streamer-rank-box { min-height: 28px; }

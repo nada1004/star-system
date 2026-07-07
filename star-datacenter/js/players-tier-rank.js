@@ -259,23 +259,31 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
       '.tier-name-badges img{width:14px !important;height:14px !important}',
       '.tier-name-badges .male-icon{font-size:12px}',
       '.tier-content-card{margin:0 2px;box-sizing:border-box}',
+      '.tier-table tbody tr{box-shadow:0 8px 16px rgba(15,23,42,.05) !important}',
+      '.tier-table{border-spacing:0 6px !important}',
       '.tier-table tbody tr,.clickable-name{-webkit-tap-highlight-color:transparent}',
     '}',
     /* 모바일에서 숨겨지는 컬럼(대학/승/패/ELO/활동) 정보를 각 행 아래 요약 줄로 노출 (PC에서는 숨김) */
     '.tier-mobile-info-row{display:none}',
     '@media (max-width:768px){',
       '.tier-mobile-info-row{display:table-row}',
-      '.tier-mobile-info-row td{border-top:none !important;padding:2px 8px 9px 40px !important}',
-      '.tier-table tbody tr:has(+ .tier-mobile-info-row) td{border-bottom:none !important}',
+      '.tier-mobile-info-row td{border-top:none !important;padding:0 10px 8px 40px !important}',
+      '.tier-table tbody tr:has(+ .tier-mobile-info-row) td{border-bottom:none !important;padding-bottom:4px !important}',
       '.tier-table tbody tr:has(+ .tier-mobile-info-row) td:first-child{border-bottom-left-radius:0 !important}',
       '.tier-table tbody tr:has(+ .tier-mobile-info-row) td:first-child,.tier-mobile-info-row td:first-child{border-top-left-radius:0 !important}',
       '.tier-table tbody tr:has(+ .tier-mobile-info-row) td:last-child{border-bottom-right-radius:0 !important}',
       '.tier-mobile-info-row td{border-top-left-radius:0 !important;border-top-right-radius:0 !important;border-bottom-left-radius:16px !important;border-bottom-right-radius:16px !important}',
-      '.tier-mobile-stats{display:flex;flex-wrap:wrap;gap:5px}',
-      '.tier-mobile-stats .tm-stat{font-size:10.5px;font-weight:700;color:var(--text2);background:rgba(255,255,255,.55);border-radius:7px;padding:2px 7px;white-space:nowrap}',
-      '.tier-mobile-stats .tm-stat b{font-weight:900;color:var(--text3);margin-right:3px;font-size:9.5px}',
-      '.tier-mobile-stats .tm-stat--act{display:inline-flex;align-items:center}',
-      'body.dark .tier-mobile-stats .tm-stat{background:rgba(255,255,255,.08)}',
+      /* [클린업] 낱개 pill 배지 나열 대신 한 줄짜리 메타 텍스트로 정리 (대학 · 승패 · ELO, 활동은 우측 정렬) */
+      '.tier-mobile-meta{display:flex;align-items:center;gap:5px;min-width:0;font-size:10.5px;font-weight:700;color:var(--text3);border-top:1px solid rgba(148,163,184,.14);padding-top:5px}',
+      'body.dark .tier-mobile-meta{border-top-color:rgba(255,255,255,.08)}',
+      '.tier-mobile-meta .tmm-univ{color:var(--text2);font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:88px;flex-shrink:0}',
+      '.tier-mobile-meta .tmm-sep{opacity:.35;flex-shrink:0}',
+      '.tier-mobile-meta .tmm-rec{flex-shrink:0;white-space:nowrap}',
+      '.tier-mobile-meta .tmm-rec b{font-weight:900}',
+      '.tier-mobile-meta .tmm-rec .w{color:var(--win-col)}',
+      '.tier-mobile-meta .tmm-rec .l{color:var(--lose-col)}',
+      '.tier-mobile-meta .tmm-elo{flex-shrink:0;white-space:nowrap;font-weight:900;color:var(--text2)}',
+      '.tier-mobile-meta .tmm-act{margin-left:auto;flex-shrink:0;display:inline-flex;align-items:center}',
     '}'
   ].join('');
   document.head.appendChild(s);
@@ -1160,12 +1168,13 @@ function rTier(C,T){
     </tr>
     <tr class="tier-mobile-info-row" style="border-left:3px solid ${col};background:${_getUnivBg(p.univ,.06)}">
       <td colspan="${_mbNcols}">
-        <div class="tier-mobile-stats">
-          <span class="tm-stat"><b>대학</b>${p.univ||'-'}</span>
-          <span class="tm-stat"><b>승</b>${rec.w}</span>
-          <span class="tm-stat"><b>패</b>${rec.l}</span>
-          <span class="tm-stat"><b>${_hasDateFilter?'현재 ELO':'ELO'}</b>${_elo}</span>
-          <span class="tm-stat tm-stat--act">${_actHTML}</span>
+        <div class="tier-mobile-meta">
+          <span class="tmm-univ">${p.univ||'무소속'}</span>
+          <span class="tmm-sep">·</span>
+          <span class="tmm-rec"><b class="w">${rec.w}승</b> <b class="l">${rec.l}패</b></span>
+          <span class="tmm-sep">·</span>
+          <span class="tmm-elo">${_hasDateFilter?'현재 ':''}ELO ${_elo}</span>
+          ${_actHTML?`<span class="tmm-act">${_actHTML}</span>`:''}
         </div>
       </td>
     </tr>`;
