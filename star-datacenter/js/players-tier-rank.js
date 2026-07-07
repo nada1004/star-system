@@ -231,18 +231,25 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
       '.tier-table .tbadge{font-size:10px !important;padding:2px 5px !important}',
       '.tier-table .clickable-name{font-size:12.5px !important;font-weight:800 !important}',
       '.tier-table .tier-rank-chip{min-width:0 !important;width:100%;height:22px !important;padding:0 4px !important;font-size:10.5px !important}',
+      '.tier-name-badges{margin-left:1px}',
+      '.tier-name-badges img{width:14px !important;height:14px !important}',
+      '.tier-name-badges .male-icon{font-size:12px}',
     '}',
     /* 모바일에서 숨겨지는 컬럼(대학/승/패/ELO/활동) 정보를 각 행 아래 요약 줄로 노출 (PC에서는 숨김) */
     '.tier-mobile-info-row{display:none}',
     '@media (max-width:768px){',
       '.tier-mobile-info-row{display:table-row}',
-      '.tier-mobile-info-row td{border-top:none !important;padding:0 8px 8px 40px !important;background:transparent !important}',
+      '.tier-mobile-info-row td{border-top:none !important;padding:2px 8px 9px 40px !important}',
       '.tier-table tbody tr:has(+ .tier-mobile-info-row) td{border-bottom:none !important}',
+      '.tier-table tbody tr:has(+ .tier-mobile-info-row) td:first-child{border-bottom-left-radius:0 !important}',
+      '.tier-table tbody tr:has(+ .tier-mobile-info-row) td:first-child,.tier-mobile-info-row td:first-child{border-top-left-radius:0 !important}',
+      '.tier-table tbody tr:has(+ .tier-mobile-info-row) td:last-child{border-bottom-right-radius:0 !important}',
+      '.tier-mobile-info-row td{border-top-left-radius:0 !important;border-top-right-radius:0 !important;border-bottom-left-radius:16px !important;border-bottom-right-radius:16px !important}',
       '.tier-mobile-stats{display:flex;flex-wrap:wrap;gap:5px}',
-      '.tier-mobile-stats .tm-stat{font-size:10.5px;font-weight:700;color:var(--text2);background:rgba(148,163,184,.10);border-radius:7px;padding:2px 7px;white-space:nowrap}',
+      '.tier-mobile-stats .tm-stat{font-size:10.5px;font-weight:700;color:var(--text2);background:rgba(255,255,255,.55);border-radius:7px;padding:2px 7px;white-space:nowrap}',
       '.tier-mobile-stats .tm-stat b{font-weight:900;color:var(--text3);margin-right:3px;font-size:9.5px}',
       '.tier-mobile-stats .tm-stat--act{display:inline-flex;align-items:center}',
-      'body.dark .tier-mobile-stats .tm-stat{background:rgba(255,255,255,.06)}',
+      'body.dark .tier-mobile-stats .tm-stat{background:rgba(255,255,255,.08)}',
     '}'
   ].join('');
   document.head.appendChild(s);
@@ -1106,10 +1113,10 @@ function rTier(C,T){
       </td>
       ${_isMb?'':`<td style="text-align:center;white-space:nowrap;padding:${_pad}"><span class="rbadge r${p.race}">${p.race}</span></td>`}
       <td style="text-align:left;white-space:nowrap;padding:${_padName};font-weight:700;min-width:0">
-        <span style="display:inline-flex;align-items:center;gap:${_isMb?'4px':'6px'};min-width:0;max-width:100%">
+        <span style="display:inline-flex;align-items:center;gap:${_isMb?'6px':'6px'};min-width:0;max-width:100%">
           <span class="tier-avatar-wrap">${getPlayerPhotoHTML(p.name,_isMb?(_isNarrow?'24px':'28px'):'40px','',{lazy:true})}${_isMb?`<span class="tier-avatar-race rbadge r${p.race}">${p.race}</span>`:''}</span>
           <span class="clickable-name" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>
-          <span style="flex-shrink:0">${genderIcon(p.gender)}${_getStatusIcon(p.name)}</span>
+          <span class="tier-name-badges" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px">${genderIcon(p.gender)}${_getStatusIcon(p.name)}</span>
         </span>
       </td>
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--win-col)">${rec.w}</td>
@@ -1120,7 +1127,7 @@ function rTier(C,T){
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${_actHTML}</td>
       ${_li?`<td class="no-export col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
     </tr>
-    <tr class="tier-mobile-info-row">
+    <tr class="tier-mobile-info-row" style="border-left:3px solid ${col};background:${_getUnivBg(p.univ,.06)}">
       <td colspan="${_mbNcols}">
         <div class="tier-mobile-stats">
           <span class="tm-stat"><b>대학</b>${p.univ||'-'}</span>

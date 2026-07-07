@@ -620,6 +620,12 @@ if ('serviceWorker' in navigator) {
         <button id="pro-fmt-4-btn" onclick="setProFormat(4)" style="padding:4px 11px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:12px;font-weight:700;cursor:pointer">4:4</button>
         <span id="pro-fmt-hint" style="font-size:11px;color:var(--gray-l)">포맷 선택 시 경기당 게임 수가 자동 그룹화됩니다</span>
       </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:700;color:#1d4ed8;flex-shrink:0">🔵 A팀명</span>
+        <input type="text" id="pro-paste-team-a" placeholder="A팀명 (미입력 시 A조)" oninput="onProPasteTeamNameInput()" style="flex:1;min-width:120px;padding:5px 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px;font-weight:700">
+        <span style="font-size:12px;font-weight:700;color:#dc2626;flex-shrink:0">🔴 B팀명</span>
+        <input type="text" id="pro-paste-team-b" placeholder="B팀명 (미입력 시 B조)" oninput="onProPasteTeamNameInput()" style="flex:1;min-width:120px;padding:5px 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px;font-weight:700">
+      </div>
     </div>
     <div style="position:relative">
       <textarea id="pro-paste-input" placeholder="프로리그 경기 결과 붙여넣기...&#10;예: 1. [도미] 홍길동T (승) vs (패) 이순신Z&#10;&#10;여러 경기: ===경기구분=== 으로 구분 입력 가능"

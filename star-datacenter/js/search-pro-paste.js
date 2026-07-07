@@ -4,6 +4,16 @@
 window._proPasteResults = null;
 window._proPasteMode = 'game'; // 'game' | 'set'
 window._proFormat = 0;         // 0=자유, 2/3/4=팀전 포맷
+window._proForceTeamA = null;  // (요청사항) 프로리그 자동인식 팀명 직접 입력 — 대학CK와 동일한 방식
+window._proForceTeamB = null;
+
+// (요청사항) 팀명 입력칸 → 저장 시 사용할 레이블로 반영
+function onProPasteTeamNameInput() {
+  const a = (document.getElementById('pro-paste-team-a')?.value || '').trim();
+  const b = (document.getElementById('pro-paste-team-b')?.value || '').trim();
+  window._proForceTeamA = a || null;
+  window._proForceTeamB = b || null;
+}
 
 function _proPasteResolvePlayer(name) {
   const raw = String(name || '').trim();
@@ -300,6 +310,13 @@ function openProPasteModal() {
   if (multiBadge) multiBadge.style.display = 'none';
   window._proPasteResults = null;
   window._proPasteMode = 'game';
+  // 팀명 입력칸 초기화
+  window._proForceTeamA = null;
+  window._proForceTeamB = null;
+  const tlA = document.getElementById('pro-paste-team-a');
+  const tlB = document.getElementById('pro-paste-team-b');
+  if (tlA) tlA.value = '';
+  if (tlB) tlB.value = '';
   // 날짜
   const di = document.getElementById('pro-paste-date');
   if (di) di.value = new Date().toISOString().slice(0, 10); // Always reset to today
@@ -959,6 +976,14 @@ function proEditTeamName(input, idx, sideKey, slot) {
 
 function swapProTeams() {
   if (!window._proPasteResults) return;
+  // 팀명 입력칸도 함께 교체
+  const _tmpTeamName = window._proForceTeamA;
+  window._proForceTeamA = window._proForceTeamB;
+  window._proForceTeamB = _tmpTeamName;
+  const tlA = document.getElementById('pro-paste-team-a');
+  const tlB = document.getElementById('pro-paste-team-b');
+  if (tlA) tlA.value = window._proForceTeamA || '';
+  if (tlB) tlB.value = window._proForceTeamB || '';
   window._proPasteResults = window._proPasteResults.map(r => {
     if (r?.isTeam) {
       const leftNames = r.leftNames || ['', ''];
@@ -1121,7 +1146,8 @@ function proApply() {
     });
 
     proM.unshift({_id:matchId, d:dateVal, sa, sb,
-      teamALabel:'A팀', teamBLabel:'B팀',
+      teamALabel:String(window._proForceTeamA||'').trim()||'A팀',
+      teamBLabel:String(window._proForceTeamB||'').trim()||'B팀',
       teamAMembers:mA, teamBMembers:mB,
       sets:setsSnap, univWins:{}, univLosses:{},
       ...(fmt > 0 ? {fmt} : {})
