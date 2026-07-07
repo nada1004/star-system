@@ -314,6 +314,7 @@ function rTier(C,T){
   const _fUniv = (typeof fUniv!=='undefined') ? fUniv : window.fUniv;
   const _fTier = (typeof fTier!=='undefined') ? fTier : window.fTier;
   if(window._tierExcludeMale===undefined) window._tierExcludeMale=false;
+  const _tierCuteMode = (()=>{ try{ return localStorage.getItem('su_tier_cute_mode')==='1'; }catch(e){ return false; } })();
   const _tiers = (typeof TIERS !== 'undefined' && Array.isArray(TIERS))
     ? TIERS
     : (Array.isArray(window.TIERS) ? window.TIERS : null);
@@ -998,7 +999,6 @@ function rTier(C,T){
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
   const _isMb = (typeof window !== 'undefined' && window.innerWidth <= 768);
   const _isNarrow = (typeof window !== 'undefined' && window.innerWidth <= 400); // 초소형 폰(320~400px) 추가 대응
-  const _tierCuteMode = (()=>{ try{ return localStorage.getItem('su_tier_cute_mode')==='1'; }catch(e){ return false; } })();
   const _pad = _isMb ? (_isNarrow?'4px 3px':'5px 4px') : '8px 10px';
   const _padRT = _isMb ? (_isNarrow?'4px 1px':'5px 2px') : '8px 10px'; // 순위/티어 칸: 간격을 좁혀 이름 쪽에 폭을 더 확보
   const _padName = _isMb ? (_isNarrow?'8px 4px':'9px 6px') : '8px 12px';
