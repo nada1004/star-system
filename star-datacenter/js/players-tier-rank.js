@@ -225,7 +225,11 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-avatar-wrap{position:relative;display:inline-flex;flex-shrink:0}',
     '.tier-avatar-race{display:none}',
     '@media (max-width:768px){',
-      '.tier-avatar-race{display:inline-flex;align-items:center;justify-content:center;position:absolute;right:-3px;bottom:-3px;padding:1px 4px !important;font-size:8.5px !important;line-height:1.3;border-radius:5px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(15,23,42,.35)}',
+      /* [FIX] 이전 값(padding 1px 4px + font-size 8.5px)은 24~28px짜리 아주 작은 아바타 위에서
+         배지 실제 크기가 약 15px까지 커져 사진 얼굴의 60%+ 를 가려버리는 문제가 있었음.
+         고정 크기(11px 원형)로 바꿔 아바타 대비 비율을 스트리머탭 리스트뷰(15/34≈44%)와 비슷한
+         수준으로 낮추고, 코너에 살짝 겹치는 정도로만 보이게 함. */
+      '.tier-avatar-race{display:inline-flex;align-items:center;justify-content:center;position:absolute;right:-2px;bottom:-2px;width:11px !important;height:11px !important;padding:0 !important;font-size:6.5px !important;line-height:1;border-radius:50%;border:1.2px solid #fff;box-shadow:0 1px 3px rgba(15,23,42,.35)}',
       'body.dark .tier-avatar-race{border-color:#0f172a}',
       '.tier-table thead th{font-size:10.5px !important}',
       '.tier-table .tbadge{font-size:10px !important;padding:2px 5px !important}',

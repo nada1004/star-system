@@ -61,7 +61,12 @@ function rTotal(C,T){
   if(typeof updateRankSnapshot === 'function') updateRankSnapshot();
   const raceOpts=['전체','T','Z','P','N'];
   const _showBulk=isLoggedIn&&_bulkEditMode;
-  const _ncols=(isLoggedIn?11:10)+(_showBulk?1:0);
+  const _isMb = (typeof window!=='undefined' && window.innerWidth<=768);
+  // [FIX] 리스트(테이블) 뷰의 대학헤더/구분줄 colspan은 실제 렌더되는 컬럼 수와 반드시 일치해야 함.
+  // 모바일에서는 컬럼을 순위/티어/이름[/관리]만 렌더링하는데, 이 값이 데스크톱 컬럼 수(10~11)로
+  // 고정되어 있으면 table-layout:fixed 폭 계산이 깨져 "이름" 컬럼이 극단적으로 좁아지고,
+  // 그 안의 프로필 사진이 잘려 보이고 이름이 가려지는 문제가 발생함.
+  const _ncols=_isMb ? (3+(isLoggedIn?1:0)+(_showBulk?1:0)) : ((isLoggedIn?11:10)+(_showBulk?1:0));
   const _viewLabel=totalViewMode==='gallery'?'카드형':(totalViewMode==='focus'?'상세형':'리스트형');
   // [참고] p.hidden / p.hideFromBoard 는 이름과 달리 "현황판(board2)에서만" 숨기는 용도입니다
   // (cloud-board-render.js 숨김 버튼 문구: "현황판에서 숨김"). 그래서 스트리머탭(여기)에서는
@@ -197,7 +202,6 @@ function rTotal(C,T){
     return `${hero}${includeKpi?_kpiBar:''}${filterBar}`;
   };
 
-    const _isMb = (typeof window!=='undefined' && window.innerWidth<=768);
     let tableHTML=_isMb
       ? `<div class="streamer-content-card"><div class="streamer-table-wrap"><table class="streamer-table streamer-table-mb"><colgroup>
     ${_showBulk?'<col style="width:30px">':''}
