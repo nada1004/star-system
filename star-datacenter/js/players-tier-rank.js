@@ -56,6 +56,25 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-type-box{width:100%;display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;background:linear-gradient(180deg,rgba(248,250,252,.96),rgba(241,245,249,.94));border-radius:14px;border:1px solid rgba(148,163,184,.16);margin-top:2px}',
     '.tier-view-btn{padding:6px 9px;border-radius:10px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:13px;cursor:pointer;line-height:1;box-shadow:0 8px 16px rgba(15,23,42,.04)}',
     '.tier-view-btn.on{border-color:var(--blue);background:#eff6ff;color:var(--blue)}',
+    /* [큐트 모드] 파스텔 핑크/민트/버터 톤의 사랑스러운 테마 — 🌸 버튼으로 토글 */
+    '.tier-shell[data-tier-mode="cute"] .tier-hero{background:linear-gradient(135deg,#ffd6ec,#c9f7f0 55%,#fff6b7);border-color:rgba(244,114,182,.28);box-shadow:0 20px 40px rgba(244,114,182,.16)}',
+    '.tier-shell[data-tier-mode="cute"] .tier-hero-kicker,.tier-shell[data-tier-mode="cute"] .tier-hero-title{color:#9d174d}',
+    '.tier-shell[data-tier-mode="cute"] .tier-hero-desc{color:#831843}',
+    '.tier-shell[data-tier-mode="cute"] .tier-hero-badge{background:rgba(255,255,255,.6);border-color:rgba(244,114,182,.32);color:#9d174d}',
+    '.tier-shell[data-tier-mode="cute"] .tier-toolbar-card,.tier-shell[data-tier-mode="cute"] .tier-content-card{background:linear-gradient(180deg,#fffdfb,#fff0f7);border-color:rgba(244,114,182,.2);border-radius:26px;box-shadow:0 18px 36px rgba(244,114,182,.13)}',
+    '.tier-shell[data-tier-mode="cute"] .pill{border-radius:999px}',
+    '.tier-shell[data-tier-mode="cute"] .pill.on{background:linear-gradient(135deg,#fb7185,#f9a8d4);border-color:#fb7185;color:#fff}',
+    '.tier-shell[data-tier-mode="cute"] .tier-view-btn{border-radius:999px}',
+    '.tier-shell[data-tier-mode="cute"] .tier-view-btn.on{background:#ffe4f2;border-color:#fb7185;color:#be185d}',
+    '.tier-shell[data-tier-mode="cute"] .tier-table tbody tr{border-radius:18px}',
+    '.tier-shell[data-tier-mode="cute"] .tier-table thead th{background:rgba(255,241,246,.92);color:#9d174d}',
+    '.tier-shell[data-tier-mode="cute"] .tier-avatar-wrap>span:first-child,.tier-shell[data-tier-mode="cute"] .tier-avatar-wrap img{box-shadow:0 0 0 3px #ffe4f2,0 4px 10px rgba(244,114,182,.25)}',
+    '.tier-shell[data-tier-mode="cute"] .tier-rank-chip.gold{background:linear-gradient(135deg,#fde68a,#fbbf24);color:#78350f;border-color:#fbbf24}',
+    '.tier-shell[data-tier-mode="cute"] .tier-rank-chip.silver{background:linear-gradient(135deg,#f1f5f9,#cbd5e1);color:#334155;border-color:#cbd5e1}',
+    '.tier-shell[data-tier-mode="cute"] .tier-rank-chip.bronze{background:linear-gradient(135deg,#fdecd8,#f4c99a);color:#7c2d12;border-color:#f4c99a}',
+    '.tier-shell[data-tier-mode="cute"] .clickable-name{color:#be185d}',
+    '.tier-shell[data-tier-mode="cute"] .tier-compact-item,.tier-shell[data-tier-mode="cute"] .tier-podium-card,.tier-shell[data-tier-mode="cute"] .tier-card{border-radius:22px}',
+    'body.dark .tier-shell[data-tier-mode="cute"] .tier-toolbar-card,body.dark .tier-shell[data-tier-mode="cute"] .tier-content-card{background:linear-gradient(180deg,#1a1025,#241226);border-color:rgba(244,114,182,.22)}',
     '.tier-univ-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;color:#fff;font-weight:900;letter-spacing:-.01em;box-shadow:0 10px 18px rgba(15,23,42,.10),inset 0 1px 0 rgba(255,255,255,.28)}',
     '.tier-univ-badge img{box-shadow:0 4px 10px rgba(15,23,42,.16);background:rgba(255,255,255,.82);padding:1px}',
     '.tier-act-dot{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.92));box-shadow:0 8px 16px rgba(15,23,42,.05);font-size:11px;font-weight:900}',
@@ -510,7 +529,7 @@ function rTier(C,T){
     fh+=`<button class="tier-view-btn ${on?'on':''}" title="${vm.title}" onclick="window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()">${vm.icon}</button>`;
   });
   fh+=`</div>`;
-  // (요청사항) 티어순위표 하위 메뉴의 '티어표' 버튼 제거
+  fh+=`<button class="tier-view-btn ${_tierCuteMode?'on':''}" title="큐트 모드" onclick="try{localStorage.setItem('su_tier_cute_mode','${_tierCuteMode?'0':'1'}');}catch(e){}render()" style="flex-shrink:0">🌸</button>`;
   fh+=`</div>`;
 
   if(window._tierFilterOpen){
@@ -979,6 +998,7 @@ function rTier(C,T){
   const _li = (typeof isLoggedIn!=='undefined' ? !!isLoggedIn : false) || !!window.isLoggedIn;
   const _isMb = (typeof window !== 'undefined' && window.innerWidth <= 768);
   const _isNarrow = (typeof window !== 'undefined' && window.innerWidth <= 400); // 초소형 폰(320~400px) 추가 대응
+  const _tierCuteMode = (()=>{ try{ return localStorage.getItem('su_tier_cute_mode')==='1'; }catch(e){ return false; } })();
   const _pad = _isMb ? (_isNarrow?'4px 3px':'5px 4px') : '8px 10px';
   const _padRT = _isMb ? (_isNarrow?'4px 1px':'5px 2px') : '8px 10px'; // 순위/티어 칸: 간격을 좁혀 이름 쪽에 폭을 더 확보
   const _padName = _isMb ? (_isNarrow?'8px 4px':'9px 6px') : '8px 12px';
@@ -1136,16 +1156,16 @@ function rTier(C,T){
       ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
       : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
     const _modePick = hasTypeSet && window._tierTypeSet.size===1 ? [...window._tierTypeSet][0] : (!hasTypeSet ? tierRankMode : '');
-    const _clickHist = (_canGoHist && _modePick) ? `onclick="tierRankGoHist('${_modePick}','${_pSafe}')"` : '';
+    const _clickHist = (_canGoHist && _modePick) ? `onclick="event.stopPropagation();tierRankGoHist('${_modePick}','${_pSafe}')"` : '';
     const _actHTML=_getActHTML(p);
     const _elo = (p.elo||ELO_DEFAULT);
-    h+=`<tr class="${i===0?'top1':i===1?'top2':i===2?'top3':''}" style="border-left:3px solid ${col};background:${_getUnivBg(p.univ,.06)}">
+    h+=`<tr class="${i===0?'top1':i===1?'top2':i===2?'top3':''}" style="border-left:3px solid ${col};background:${_getUnivBg(p.univ,.06)};cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">
       <td style="text-align:center;white-space:nowrap;padding:${_padRT}">${rnkHTML}</td>
       <td style="text-align:center;white-space:nowrap;padding:${_padRT}">${_getTierBadge(p.tier)}</td>
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">
         <span class="ubadge tier-univ-badge clickable-univ" data-icon-done="1"
           style="background:${col};font-size:${_isMb?11:13}px;max-width:${_isMb?90:120}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
-          onclick="openUnivModal('${p.univ}')"
+          onclick="event.stopPropagation();openUnivModal('${p.univ}')"
         >${univIconHTML}${p.univ}</span>
       </td>
       ${_isMb?'':`<td style="text-align:center;white-space:nowrap;padding:${_pad}"><span class="rbadge r${p.race}">${p.race}</span></td>`}
@@ -1156,17 +1176,17 @@ function rTier(C,T){
           <span class="tier-name-badges" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px">${genderIcon(p.gender)}${_getStatusIcon(p.name)}</span>
         </span>
       </td>
-      <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--win-col)">${rec.w}</td>
-      <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--lose-col)">${rec.l}</td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;font-size:${_isMb?'11px':''};color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
-      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-size:${_isMb?'11px':''};${_canGoHist?'cursor:pointer;text-decoration:underline dotted':''}" ${_clickHist} title="${_canGoHist?'대전기록탭에서 보기':''}">${extraVal}</td>
-      <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${_elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${_elo}</td>
+      <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--win-col);cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${rec.w}</td>
+      <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:900;color:var(--lose-col);cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${rec.l}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;font-size:${_isMb?'11px':''};color:${tot===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'};cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${tot?wr+'%':'-'}</td>
+      <td style="text-align:center;white-space:nowrap;padding:${_pad};font-size:${_isMb?'11px':''};cursor:pointer;${_canGoHist?'text-decoration:underline dotted':''}" ${_clickHist||`data-tp-action="open-player" data-tp-player="${_pAttr}"`} title="${_canGoHist?'대전기록탭에서 보기':'스트리머 상세'}">${extraVal}</td>
+      <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad};font-weight:800;color:${_elo>=ELO_DEFAULT?'#2563eb':'#dc2626'};cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${_elo}</td>
       <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${_actHTML}</td>
-      ${_li?`<td class="no-export col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
+      ${_li?`<td class="no-export col-hide-mobile" style="text-align:center;white-space:nowrap;padding:${_pad}">${adminBtn(`<button class="btn btn-w btn-xs" onclick="event.stopPropagation();openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
     </tr>
-    <tr class="tier-mobile-info-row" style="border-left:3px solid ${col};background:${_getUnivBg(p.univ,.06)}">
+    <tr class="tier-mobile-info-row" style="border-left:3px solid ${col};background:${_getUnivBg(p.univ,.06)};cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">
       <td colspan="${_mbNcols}">
-        <div class="tier-mobile-meta">
+        <div class="tier-mobile-meta" style="cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">
           <span class="tmm-univ">${p.univ||'무소속'}</span>
           <span class="tmm-sep">·</span>
           <span class="tmm-rec"><b class="w">${rec.w}승</b> <b class="l">${rec.l}패</b></span>
@@ -1432,7 +1452,7 @@ function rTier(C,T){
   });
   }
 
-  C.innerHTML=`<div class="tier-shell">
+  C.innerHTML=`<div class="tier-shell" data-tier-mode="${_tierCuteMode?'cute':'classic'}">
     <section class="tier-hero">
       <div class="tier-hero-copy">
         <div class="tier-hero-kicker">Tier Ranking</div>

@@ -220,6 +220,22 @@ let totalFocusCard2AutoFit=(()=>{try{return localStorage.getItem('su_focus_card2
     '.streamer-shell[data-st-mode="blush"] .streamer-table tbody tr{box-shadow:0 18px 34px rgba(251,113,133,.10)}',
     '.streamer-shell[data-st-mode="blush"] .streamer-name-link{color:#be185d}',
     '.streamer-shell[data-st-mode="blush"] .streamer-focus-main-hero{background:linear-gradient(135deg,rgba(251,113,133,.92),rgba(244,114,182,.84),rgba(251,191,36,.78));box-shadow:0 24px 48px rgba(251,113,133,.18)}',
+    /* [큐트 모드] 핑크/민트/버터 파스텔 톤 + 넉넉한 라운드로 사랑스러운 분위기 */
+    '.streamer-shell[data-st-mode="cute"] .streamer-hero{background:linear-gradient(135deg,#ffd6ec,#c9f7f0 55%,#fff6b7);border-color:rgba(244,114,182,.28);box-shadow:0 22px 44px rgba(244,114,182,.16);border-radius:28px}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-hero-kicker,.streamer-shell[data-st-mode="cute"] .streamer-hero-title{color:#9d174d}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-hero-desc{color:#831843}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-hero-badge{background:rgba(255,255,255,.62);border-color:rgba(244,114,182,.32);color:#9d174d;border-radius:999px}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-toolbar-card,.streamer-shell[data-st-mode="cute"] .streamer-content-card,.streamer-shell[data-st-mode="cute"] .streamer-focus-sidebar,.streamer-shell[data-st-mode="cute"] .streamer-focus-main{background:linear-gradient(180deg,#fffdfb,#fff0f7);border-color:rgba(244,114,182,.2);border-radius:24px;box-shadow:0 18px 36px rgba(244,114,182,.12)}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-toolbar-card .pill{border-radius:999px}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-toolbar-card .pill.on{background:linear-gradient(135deg,#fb7185,#f9a8d4);border-color:#fb7185;color:#fff;box-shadow:0 14px 28px rgba(251,113,133,.24)}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-search,.streamer-shell[data-st-mode="cute"] .streamer-summary-chip,.streamer-shell[data-st-mode="cute"] .streamer-elo-chip,.streamer-shell[data-st-mode="cute"] .streamer-act-chip,.streamer-shell[data-st-mode="cute"] .streamer-subgrp-chip,.streamer-shell[data-st-mode="cute"] .streamer-table thead th,.streamer-shell[data-st-mode="cute"] .streamer-table tbody td,.streamer-shell[data-st-mode="cute"] .streamer-kpi-card,.streamer-shell[data-st-mode="cute"] .streamer-quickstat,.streamer-shell[data-st-mode="cute"] .streamer-focus-stat,.streamer-shell[data-st-mode="cute"] .streamer-focus-note{background:linear-gradient(180deg,#ffffff,#fff5fa);border-color:rgba(244,114,182,.16);border-radius:16px}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-table tbody tr{box-shadow:0 16px 30px rgba(244,114,182,.10);border-radius:20px}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-avatar{box-shadow:0 0 0 3px #ffe4f2,0 4px 10px rgba(244,114,182,.22)}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-name-link{color:#be185d}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-univ-banner,.streamer-shell[data-st-mode="cute"] .streamer-gallery-head{box-shadow:0 18px 36px rgba(244,114,182,.16)}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-gallery-stat{background:rgba(157,23,77,.3);border-color:rgba(255,255,255,.2)}',
+    '.streamer-shell[data-st-mode="cute"] .streamer-focus-main-hero{background:linear-gradient(135deg,rgba(255,214,236,.92),rgba(201,247,240,.84),rgba(255,246,183,.78));box-shadow:0 24px 48px rgba(244,114,182,.18)}',
+    'body.dark .streamer-shell[data-st-mode="cute"] .streamer-toolbar-card,body.dark .streamer-shell[data-st-mode="cute"] .streamer-content-card{background:linear-gradient(180deg,#1a1025,#241226);border-color:rgba(244,114,182,.22)}',
     '.streamer-shell[data-st-mode="paper"] .streamer-hero{background:linear-gradient(135deg,#fdfcf9,#f2e9d8,#e6d8bd);border-color:rgba(180,130,50,.18);box-shadow:0 22px 44px rgba(120,75,40,.12)}',
     '.streamer-shell[data-st-mode="paper"] .streamer-hero-title{color:#4b3621}',
     '.streamer-shell[data-st-mode="paper"] .streamer-toolbar-card .pill.on{background:linear-gradient(135deg,#b45309,#4b3621);border-color:#b45309;color:#fff}',
@@ -301,7 +317,7 @@ let totalFocusCard2AutoFit=(()=>{try{return localStorage.getItem('su_focus_card2
 window.cfgSetStreamerTabVisual = function(type, value){
   try{
     if(type==='design'){
-      localStorage.setItem('su_streamer_tab_design_mode', ['classic','glass','vivid','obsidian','aurora','blush','paper','mono'].includes(value)?value:'classic');
+      localStorage.setItem('su_streamer_tab_design_mode', ['classic','glass','vivid','obsidian','aurora','blush','paper','mono','cute'].includes(value)?value:'classic');
     }else if(type==='layout'){
       localStorage.setItem('su_streamer_tab_layout_mode', ['default','compact','cozy','showcase'].includes(value)?value:'default');
     }else if(type==='ui'){
@@ -323,6 +339,10 @@ window.cfgSetStreamerTabVisual = function(type, value){
         localStorage.setItem('su_streamer_tab_design_mode','aurora');
         localStorage.setItem('su_streamer_tab_layout_mode','default');
         localStorage.setItem('su_streamer_tab_ui_mode','pill');
+      }else if(value==='cute'){
+        localStorage.setItem('su_streamer_tab_design_mode','cute');
+        localStorage.setItem('su_streamer_tab_layout_mode','cozy');
+        localStorage.setItem('su_streamer_tab_ui_mode','photocard');
       }
     }
   }catch(e){}
@@ -340,7 +360,7 @@ window.cfgSetStreamerTabVisual = function(type, value){
 };
 
 window.renderCfgStreamerTabStyleSection = function(_scfgD){
-  const dm = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_design_mode')||'classic').trim(); return ['classic','glass','vivid','obsidian','aurora','blush','paper','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const dm = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_design_mode')||'classic').trim(); return ['classic','glass','vivid','obsidian','aurora','blush','paper','mono','cute'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
   const lm = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_layout_mode')||'default').trim(); return ['default','compact','cozy','showcase'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const um = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_ui_mode')||'standard').trim(); return ['standard','pill','minimal','photocard'].includes(v)?v:'standard'; }catch(e){ return 'standard'; } })();
   const modeCards = [
@@ -351,7 +371,8 @@ window.renderCfgStreamerTabStyleSection = function(_scfgD){
     ['blush','블러시','핑크/크림 포토카드 톤','linear-gradient(135deg,#fff1f2,#ffe4e6,#fef3c7)'],
     ['paper','페이퍼','종이 질감의 웜톤','linear-gradient(135deg,#fdfcf9,#f2e9d8,#e6d8bd)'],
     ['mono','모노','무채색 라이트 UI','linear-gradient(135deg,#f8fafc,#e2e8f0)'],
-    ['obsidian','옵시디언','다크 프리미엄 톤','linear-gradient(135deg,#020617,#312e81)']
+    ['obsidian','옵시디언','다크 프리미엄 톤','linear-gradient(135deg,#020617,#312e81)'],
+    ['cute','큐트','핑크/민트/버터 파스텔의 사랑스러운 톤','linear-gradient(135deg,#ffd6ec,#c9f7f0,#fff6b7)']
   ];
   const layoutCards = [
     ['default','기본형','현재 균형형 배치','linear-gradient(180deg,#fff 0 40%,#eff6ff 40% 100%)'],
@@ -374,6 +395,7 @@ window.renderCfgStreamerTabStyleSection = function(_scfgD){
         <button class="btn btn-xs btn-w" onclick="cfgSetStreamerTabVisual('preset','broadcast')">방송형</button>
         <button class="btn btn-xs btn-w" onclick="cfgSetStreamerTabVisual('preset','dark')">다크형</button>
         <button class="btn btn-xs btn-w" onclick="cfgSetStreamerTabVisual('preset','aurora')">오로라형</button>
+        <button class="btn btn-xs btn-w" onclick="cfgSetStreamerTabVisual('preset','cute')">🌸 큐트형</button>
       </div>
     </div>
     <div style="margin-bottom:14px">

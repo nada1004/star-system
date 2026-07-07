@@ -20,7 +20,7 @@ function rTotal(C,T){
   try{ _bindTotalDelegatedEvents(); }catch(e){}
   try{ _bindFocusPhoto2DragEvents(); }catch(e){}
   try{ if(typeof _b2EnsureMvpHistoryFresh==='function') _b2EnsureMvpHistoryFresh(true); }catch(e){}
-  const _streamerTabDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_design_mode')||'classic').trim(); return ['classic','glass','vivid','obsidian','aurora','blush','paper','mono'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
+  const _streamerTabDesignMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_design_mode')||'classic').trim(); return ['classic','glass','vivid','obsidian','aurora','blush','paper','mono','cute'].includes(v)?v:'classic'; }catch(e){ return 'classic'; } })();
   const _streamerTabLayoutMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_layout_mode')||'default').trim(); return ['default','compact','cozy','showcase'].includes(v)?v:'default'; }catch(e){ return 'default'; } })();
   const _streamerTabUiMode = (()=>{ try{ const v=(localStorage.getItem('su_streamer_tab_ui_mode')||'standard').trim(); return ['standard','pill','minimal','photocard'].includes(v)?v:'standard'; }catch(e){ return 'standard'; } })();
   const _pl = (typeof players !== 'undefined' && Array.isArray(players)) ? players : null;
@@ -401,8 +401,8 @@ function rTotal(C,T){
       const _metaHTML = `${genderIcon(p.gender)}${getStatusIconHTML(p.name)}`;
       const _metaSpan = _metaHTML ? `<span class="streamer-mini-meta">${_metaHTML}</span>` : '';
       if(typeof p.photo==='string' && p.photo.trim()) _visiblePhotoUrls.push(p.photo.trim());
-      tableHTML+=_isMb ? `<tr class="streamer-row ${_pRank===1?'top1':_pRank===2?'top2':_pRank===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
-        ${_showBulk?`<td style="text-align:center;padding:7px 2px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
+      tableHTML+=_isMb ? `<tr class="streamer-row ${_pRank===1?'top1':_pRank===2?'top2':_pRank===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="cursor:pointer">
+        ${_showBulk?`<td style="text-align:center;padding:7px 2px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onclick="event.stopPropagation()" onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
         <td style="text-align:center;white-space:nowrap;padding:5px 2px">
           <div class="streamer-rank-box">
           <div style="font-size:10.5px;font-weight:900;color:var(--text2);line-height:1.2">${_pRank||'-'}</div>
@@ -419,9 +419,9 @@ function rTotal(C,T){
             </span>
           </span>
         </td>
-        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 4px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️</button>`)}</td>`:''}
-      </tr>` : `<tr class="streamer-row ${_pRank===1?'top1':_pRank===2?'top2':_pRank===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
-        ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
+        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 4px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="event.stopPropagation();openEPFromModal('${_pSafe}')">✏️</button>`)}</td>`:''}
+      </tr>` : `<tr class="streamer-row ${_pRank===1?'top1':_pRank===2?'top2':_pRank===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="cursor:pointer">
+        ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onclick="event.stopPropagation()" onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
         <td style="text-align:center;white-space:nowrap;padding:5px 4px">
           <div class="streamer-rank-box">
           <div style="font-size:11px;font-weight:900;color:var(--text2);line-height:1.2">${_pRank||'-'}</div>
@@ -439,22 +439,22 @@ function rTotal(C,T){
             </span>
           </span>
         </td>
-        <td class="col-hide-mobile wt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:900;color:var(--text1)">${win}</td>
-        <td class="col-hide-mobile lt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:900;color:var(--text1)">${loss}</td>
-        <td class="streamer-td-wr" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${games===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
+        <td class="col-hide-mobile wt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:900;color:var(--text1);cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${win}</td>
+        <td class="col-hide-mobile lt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:900;color:var(--text1);cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${loss}</td>
+        <td class="streamer-td-wr" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${games===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'};cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">
           <div class="streamer-wr-box">
           ${games?wr+'%':'-'}${games?`<span style="font-size:9px;color:var(--gray-l);font-weight:400">${games}전</span>`:''}
           </div>
         </td>
-        <td class="col-hide-mobile ${pC(points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${pS(points)}</td>
-        <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px"><span class="streamer-elo-chip" style="color:${elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${elo}</span></td>
+        <td class="col-hide-mobile ${pC(points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${pS(points)}</td>
+        <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}"><span class="streamer-elo-chip" style="color:${elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${elo}</span></td>
         <td class="col-hide-mobile" style="text-align:center;padding:7px 4px"></td>
-        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
+        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="event.stopPropagation();openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;
       tableHTML+=`
-      <tr class="streamer-mobile-info-row">
+      <tr class="streamer-mobile-info-row" style="cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">
         <td colspan="${_ncols}">
-          <div class="streamer-mobile-stats">
+          <div class="streamer-mobile-stats" style="cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">
             <span class="sm-stat sm-stat-wr" style="color:${games===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}"><b>승률</b>${games?wr+'%':'-'}${games?` (${games}전)`:''}</span>
             <span class="sm-stat"><b>종족</b>${p.race||'?'}</span>
             <span class="sm-stat"><b>승</b>${win}</span>
