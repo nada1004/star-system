@@ -1064,14 +1064,18 @@ function rTier(C,T){
   // 뷰1: TABLE (기존)
   // ════════════════════════════════════════════
   if(_vm==='table'){
-  const _wrapStyle = `overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%`;
+  const _wrapStyle = _isMb
+    ? `overflow-x:hidden;width:100%`
+    : `overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%`;
   const _tableStyle = _isMb
     ? `table-layout:fixed;width:100%;max-width:100%`
     : `table-layout:auto;width:100%;min-width:1120px;max-width:1600px;margin:0 auto`;
   const _mbNcols = 10 + (_li?1:0);
+  // 모바일: 숨김 컬럼을 제외한 5개 컬럼(순위/티어/이름/승률/포인트)의 폭을 %로 고정해
+  // 합계가 항상 100%가 되도록 해서 가로 슬라이드 없이 한 화면에 다 보이게 함
   const _mbColgroup = _isMb ? `<colgroup>
-      <col style="width:${_isNarrow?'26px':'30px'}"><col style="width:${_isNarrow?'38px':'42px'}"><col class="col-hide-mobile"><col style="width:auto">
-      <col class="col-hide-mobile"><col class="col-hide-mobile"><col style="width:${_isNarrow?'32px':'36px'}"><col style="width:${_isNarrow?'34px':'38px'}">
+      <col style="width:13%"><col style="width:17%"><col class="col-hide-mobile"><col style="width:38%">
+      <col class="col-hide-mobile"><col class="col-hide-mobile"><col style="width:16%"><col style="width:16%">
       <col class="col-hide-mobile"><col class="col-hide-mobile">${_li?'<col class="col-hide-mobile">':''}
     </colgroup>` : '';
   h=`<div class="tier-content-card"><div class="tier-table-wrap" style="${_wrapStyle}">

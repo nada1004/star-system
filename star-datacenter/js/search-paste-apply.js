@@ -355,14 +355,18 @@ function pasteApply() {
       });});
     }
   } else if (mode === 'pro') {
-    // 프로리그: wPlayer(A팀)=승자, lPlayer(B팀)=패자
+    // 프로리그: 좌측=A팀, 우측=B팀 고정 (승/패와 무관하게 입력 순서 유지)
+    // (수정) 기존에는 wPlayer(승자)=A팀, lPlayer(패자)=B팀으로 고정되어 있어
+    // 우측팀이 이기면 화면상 좌측(A팀)으로 뒤바뀌어 보이는 문제가 있었음.
+    // → 다른 모드와 동일하게 resolveAB()로 좌/우 위치를 그대로 유지하도록 수정.
     const proSA = setsSnap.reduce((acc,s)=>acc+s.scoreA,0);
     const proSB = setsSnap.reduce((acc,s)=>acc+s.scoreB,0);
     const mA=[], mB=[];
     savable.forEach(r=>{
       if(r._isTeam) return;
-      if(!mA.find(x=>x.name===r.wPlayer.name)) mA.push({name:r.wPlayer.name,univ:r.wPlayer.univ||'',race:r.wPlayer.race||'',tier:r.wPlayer.tier||''});
-      if(!mB.find(x=>x.name===r.lPlayer.name)) mB.push({name:r.lPlayer.name,univ:r.lPlayer.univ||'',race:r.lPlayer.race||'',tier:r.lPlayer.tier||''});
+      const ab = resolveAB(r);
+      if(ab.playerA && !mA.find(x=>x.name===ab.playerA.name)) mA.push({name:ab.playerA.name,univ:ab.playerA.univ||'',race:ab.playerA.race||'',tier:ab.playerA.tier||''});
+      if(ab.playerB && !mB.find(x=>x.name===ab.playerB.name)) mB.push({name:ab.playerB.name,univ:ab.playerB.univ||'',race:ab.playerB.race||'',tier:ab.playerB.tier||''});
     });
     proM.unshift({_id:matchId,d:dateVal,sa:proSA,sb:proSB,
       teamALabel:String(window._pasteForceTeamA||'').trim()||'A팀',teamBLabel:String(window._pasteForceTeamB||'').trim()||'B팀',teamAMembers:mA,teamBMembers:mB,sets:setsSnap,univWins:{},univLosses:{},...(_matchMemo?{memo:_matchMemo}:{})});

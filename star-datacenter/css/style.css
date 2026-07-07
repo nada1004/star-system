@@ -4883,6 +4883,16 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 .foot{display:none!important;}
 .male-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#2563eb;color:#fff;border-radius:50%;font-size:8px;font-weight:700;margin-left:3px;vertical-align:middle;flex-shrink:0;}
 .female-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#db2777;color:#fff;border-radius:50%;font-size:8px;font-weight:700;margin-left:3px;vertical-align:middle;flex-shrink:0;}
+/* (요청사항) 모바일 스트리머탭에서는 남자 표시(♂ 아이콘) 숨김 */
+@media (max-width: 768px) {
+  .streamer-mini-meta .male-icon,
+  .streamer-gallery-name .male-icon,
+  .streamer-focus-card-name .male-icon,
+  .streamer-focus-card2-name .male-icon,
+  .streamer-focus-title .male-icon {
+    display: none !important;
+  }
+}
 .clickable-name{cursor:pointer;color:var(--blue);font-weight:500;border-bottom:1px solid rgba(37,99,235,.25);transition:.12s;}
 .clickable-name:hover{border-bottom-color:var(--blue);}
 .clickable-univ{cursor:pointer;}
@@ -14577,6 +14587,10 @@ tr.tgrp td { padding: 2px 10px !important; }
   /* 순위/티어 컬럼은 가운데 정렬, 이름 컬럼만 남는 폭을 유동적으로 사용 */
   .tier-table td:first-child, .tier-table th:first-child { text-align: center; }
   .tier-table .clickable-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* 가로 슬라이드 방지: 컬럼폭이 %로 고정되어 있으므로 셀 내용이 넘치지 않도록 강제 클리핑 */
+  .tier-table-wrap { overflow-x: hidden !important; }
+  .tier-table td, .tier-table th { overflow: hidden; }
+  .tier-table .tier-avatar-wrap, .tier-table .tier-name-badges { flex-shrink: 0; }
 }
 @media (max-width: 400px) {
   .tier-table th, .tier-table td { padding-left: 3px !important; padding-right: 3px !important; }
