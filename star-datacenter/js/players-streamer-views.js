@@ -1,3 +1,20 @@
+(function(){
+  if(typeof window==='undefined' || window.__streamerMbResizeBound) return;
+  window.__streamerMbResizeBound = true;
+  let _lastMb = window.innerWidth<=768;
+  let _t=null;
+  window.addEventListener('resize', ()=>{
+    clearTimeout(_t);
+    _t=setTimeout(()=>{
+      const nowMb = window.innerWidth<=768;
+      if(nowMb!==_lastMb){
+        _lastMb=nowMb;
+        try{ if(typeof render==='function') render(); }catch(e){}
+      }
+    }, 150);
+  }, {passive:true});
+})();
+
 function rTotal(C,T){
   T.innerText='🎬 전체 스타크래프트 스트리머 리스트';
   try{ _bindTotalDelegatedEvents(); }catch(e){}
@@ -180,7 +197,20 @@ function rTotal(C,T){
     return `${hero}${includeKpi?_kpiBar:''}${filterBar}`;
   };
 
-    let tableHTML=`<div class="streamer-content-card"><div class="streamer-table-wrap"><table class="streamer-table"><colgroup>
+    const _isMb = (typeof window!=='undefined' && window.innerWidth<=768);
+    let tableHTML=_isMb
+      ? `<div class="streamer-content-card"><div class="streamer-table-wrap"><table class="streamer-table streamer-table-mb"><colgroup>
+    ${_showBulk?'<col style="width:30px">':''}
+    <col class="streamer-col-rank" style="width:30px"><col class="streamer-col-tier" style="width:42px"><col class="streamer-col-name">
+    ${isLoggedIn?'<col style="width:44px">':''}
+  </colgroup><thead><tr>
+    ${_showBulk?`<th style="text-align:center;padding:8px 2px"><input type="checkbox" id="bulk-check-all" onchange="bulkEditToggleAll(this.checked)" style="cursor:pointer"></th>`:''}
+    <th style="text-align:center;white-space:nowrap;padding:8px 2px">순위</th>
+    <th style="text-align:center;white-space:nowrap;padding:8px 4px">티어</th>
+    <th style="text-align:left;padding:8px 8px">스트리머</th>
+    ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 4px">관리</th>':''}
+  </tr></thead><tbody>`
+      : `<div class="streamer-content-card"><div class="streamer-table-wrap"><table class="streamer-table"><colgroup>
     ${_showBulk?'<col style="width:36px">':''}
     <col class="streamer-col-rank" style="width:52px"><col class="streamer-col-tier" style="width:80px"><col class="streamer-col-race col-hide-mobile" style="width:60px"><col class="streamer-col-name" style="width:220px"><col class="col-hide-mobile" style="width:50px">
     <col class="col-hide-mobile" style="width:52px"><col class="streamer-col-wr" style="width:52px">
@@ -200,6 +230,7 @@ function rTotal(C,T){
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">활동</th>
     ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
   </tr></thead><tbody>`;
+
 
   // 전체 순위 맵 (points 기준)
   const _allRanked = [..._pl].filter(p=>!p.retired).sort((a,b)=>(b.points||0)-(a.points||0)||(b.win||0)-(a.win||0));
@@ -364,7 +395,26 @@ function rTotal(C,T){
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
       const _q = `${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       if(typeof p.photo==='string' && p.photo.trim()) _visiblePhotoUrls.push(p.photo.trim());
-      tableHTML+=`<tr class="streamer-row ${_pRank===1?'top1':_pRank===2?'top2':_pRank===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
+      tableHTML+=_isMb ? `<tr class="streamer-row ${_pRank===1?'top1':_pRank===2?'top2':_pRank===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
+        ${_showBulk?`<td style="text-align:center;padding:7px 2px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
+        <td style="text-align:center;white-space:nowrap;padding:5px 2px">
+          <div class="streamer-rank-box">
+          <div style="font-size:10.5px;font-weight:900;color:var(--text2);line-height:1.2">${_pRank||'-'}</div>
+          <div>${_pChange}</div>
+          </div>
+        </td>
+        <td class="streamer-td-tier" style="text-align:center;white-space:normal;padding:7px 4px">${getTierBadge(p.tier)}</td>
+        <td style="text-align:left;padding:6px 8px">
+          <span class="streamer-player-cell">
+            ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img loading="lazy" decoding="async" src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"><span class="streamer-avatar-race rbadge r${p.race}">${p.race||'?'}</span></span>`:`<span class="streamer-avatar"><span class="streamer-avatar-race rbadge r${p.race}">${p.race||'?'}</span></span>`}
+            <span class="streamer-name-stack">
+              <span class="streamer-name-line">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name streamer-name-link" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;font-weight:700">⏸️ 휴학</span>':''}</span>
+              <span class="streamer-mini-meta">${genderIcon(p.gender)}${getStatusIconHTML(p.name)}</span>
+            </span>
+          </span>
+        </td>
+        ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 4px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️</button>`)}</td>`:''}
+      </tr>` : `<tr class="streamer-row ${_pRank===1?'top1':_pRank===2?'top2':_pRank===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
         ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
         <td style="text-align:center;white-space:nowrap;padding:5px 4px">
           <div class="streamer-rank-box">
@@ -394,7 +444,8 @@ function rTotal(C,T){
         <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px"><span class="streamer-elo-chip" style="color:${elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${elo}</span></td>
         <td class="col-hide-mobile" style="text-align:center;padding:7px 4px"></td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
-      </tr>
+      </tr>`;
+      tableHTML+=`
       <tr class="streamer-mobile-info-row">
         <td colspan="${_ncols}">
           <div class="streamer-mobile-stats">
