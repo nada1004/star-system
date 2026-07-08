@@ -7,7 +7,7 @@ let totalHideNoRecord=false; // 전적 없는 선수 숨기기
 let _bulkEditMode=false; // 일괄 수정 모드
 let _bulkEditSelected=new Set(); // 선택된 스트리머 이름
 let _bulkEditSearch=''; // 일괄 수정(선택 모드) 검색어
-let totalViewMode=(()=>{try{return localStorage.getItem('su_streamer_view_mode')||'table';}catch(e){return 'table';}})(); // 'gallery'(카드형) | 'table'(리스트형) | 'focus'(상세형)
+let totalViewMode=(()=>{try{return localStorage.getItem('su_streamer_view_mode')||'table';}catch(e){return 'table';}})(); // 'gallery'(카드형) | 'table'(리스트형) | 'focus'(상세형) | 'simple'(심플형)
 let totalFocusPlayer=''; // 상세형에서 선택된 스트리머 이름
 let totalFocusDetailStyle=(()=>{try{return localStorage.getItem('su_focus_detail_style')||'hero';}catch(e){return 'hero';}})(); // 상세형 우측 상세 레이아웃: 'hero'(기본) | 'card'(사진+리스트형)
 let totalFocusCard2AutoFit=(()=>{try{return localStorage.getItem('su_focus_card2_autofit')!=='0';}catch(e){return true;}})(); // 상세형 리스트(card2) 하단 이미지2: true=자동 크기/위치 맞춤(크롭 없이 전체 표시, 개별 설정 불필요), false=수동 위치 지정(기존 방식, streamer.photo2PosX/Y 사용)
@@ -675,6 +675,24 @@ function totalApplySearchFilter(){
       return;
     }
   }
+  // 심플형 목록 필터
+  const simpleRows=[...cont.querySelectorAll('[data-simple-row="1"]')];
+  simpleRows.forEach(row=>{
+    if(!qHas){ row.style.display=''; return; }
+    const hay=(row.getAttribute('data-q')||'');
+    const r=row.getAttribute('data-r')||'';
+    const g=row.getAttribute('data-g')||'';
+    const okRace=!rf||r===rf;
+    const okGender=!gf||g===gf;
+    const okInc=inc.length===0||inc.every(t=>hay.includes(t));
+    const okExc=exc.length===0||exc.every(t=>!hay.includes(t));
+    row.style.display=(okRace&&okGender&&okInc&&okExc)?'':'none';
+  });
+  cont.querySelectorAll('[data-simple-univ-header]').forEach(h=>{
+    const u=h.getAttribute('data-simple-univ-header')||'';
+    const any=simpleRows.some(r=>r.style.display!=='none'&&r.getAttribute('data-univ')===u);
+    h.style.display=any?'':'none';
+  });
 }
 
 function bulkApplySearchFilter(){

@@ -67,7 +67,7 @@ function rTotal(C,T){
   // 고정되어 있으면 table-layout:fixed 폭 계산이 깨져 "이름" 컬럼이 극단적으로 좁아지고,
   // 그 안의 프로필 사진이 잘려 보이고 이름이 가려지는 문제가 발생함.
   const _ncols=_isMb ? (3+(isLoggedIn?1:0)+(_showBulk?1:0)) : ((isLoggedIn?11:10)+(_showBulk?1:0));
-  const _viewLabel=totalViewMode==='gallery'?'카드형':(totalViewMode==='focus'?'상세형':'리스트형');
+  const _viewLabel=totalViewMode==='gallery'?'카드형':(totalViewMode==='focus'?'상세형':(totalViewMode==='simple'?'심플형':'리스트형'));
   // [참고] p.hidden / p.hideFromBoard 는 이름과 달리 "현황판(board2)에서만" 숨기는 용도입니다
   // (cloud-board-render.js 숨김 버튼 문구: "현황판에서 숨김"). 그래서 스트리머탭(여기)에서는
   // 이 두 플래그를 의도적으로 무시하고 retired(은퇴) 여부만 걸러냅니다 — 실수로 지운 게 아닙니다.
@@ -123,6 +123,7 @@ function rTotal(C,T){
     <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode='gallery';try{localStorage.setItem('su_streamer_view_mode','gallery');}catch(e){};_bulkEditMode=false;render()" title="카드형 대시보드 보기">🪪 카드형</button>
     <button class="pill ${totalViewMode==='focus'?'on':''}" onclick="if(totalViewMode!=='focus')totalFocusPlayer='';totalViewMode='focus';try{localStorage.setItem('su_streamer_view_mode','focus');}catch(e){};_bulkEditMode=false;render()" title="좌측 목록 + 우측 상세 보기">🧾 상세형</button>
     <button class="pill ${totalViewMode==='table'?'on':''}" onclick="totalViewMode='table';try{localStorage.setItem('su_streamer_view_mode','table');}catch(e){};_bulkEditMode=false;render()" title="리스트 보기">☰ 리스트</button>
+    <button class="pill ${totalViewMode==='simple'?'on':''}" onclick="totalViewMode='simple';try{localStorage.setItem('su_streamer_view_mode','simple');}catch(e){};_bulkEditMode=false;render()" title="여백을 줄인 한 줄 미니멀 리스트">✨ 심플형</button>
     ${totalViewMode==='table'?(isLoggedIn?`<button class="pill ${_bulkEditMode?'on edit-on':''}" onclick="toggleBulkEditMode()">일괄 수정</button>`:''):''}
     ${totalViewMode==='table'?(isLoggedIn?`<button class="pill" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
     ${_showBulk&&totalViewMode==='table'?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
@@ -259,6 +260,18 @@ function rTotal(C,T){
     C.innerHTML=`<div class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
       ${_renderTopChrome('상세형은 왼쪽 목록에서 스트리머를 고르고 오른쪽에서 프로필과 핵심 수치를 크게 보는 방식입니다.', false)}
       ${_buildFocusView(_rankMap)}
+    </div>`;
+    injectUnivIcons(C);
+    requestAnimationFrame(()=>injectUnivIcons(C));
+    totalApplySearchFilter();
+    const si=C.querySelector('#total-search');
+    if(si&&totalSearch){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
+    return;
+  }
+  if(totalViewMode==='simple'){
+    C.innerHTML=`<div class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
+      ${_renderTopChrome('심플형은 불필요한 여백과 장식을 덜어내고 순위·이름·티어·승률만 한 줄로 빠르게 훑어볼 수 있도록 구성했습니다.', false)}
+      <div class="streamer-content-card">${_buildSimpleView(_rankMap)}</div>
     </div>`;
     injectUnivIcons(C);
     requestAnimationFrame(()=>injectUnivIcons(C));
@@ -648,6 +661,70 @@ function _buildGalleryView(rankMap){
   return html;
 }
 
+// 심플형 - 여백을 최소화한 한 줄 미니멀 리스트. 카드형(사진 중심)/상세형(분할 화면)/리스트형(다열 표)과
+// 구분되는 네번째 보기 방식으로, 순위·프로필·이름·티어·승률만 한 줄에 압축해 빠르게 훑어볼 수 있도록 구성한다.
+function _buildSimpleView(rankMap){
+  const _pl = (typeof players !== 'undefined' && Array.isArray(players)) ? players : null;
+  const _getUnivs = (typeof getAllUnivs === 'function') ? getAllUnivs : null;
+  if(!_pl || !_getUnivs){
+    const msg = (typeof players === 'undefined')
+      ? '데이터 로딩 중...'
+      : '스트리머 데이터를 불러올 수 없습니다.';
+    return `<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">${msg}</div><div class="empty-state-desc">새로고침 후 다시 시도해주세요.</div></div>`;
+  }
+  const _simplePhotoUrls = [];
+  const _univScMap = new Map();
+  for(const p of _pl){
+    if(!p || p.retired) continue;
+    const u = p.univ;
+    if(!u) continue;
+    const arr = _univScMap.get(u);
+    if(arr) arr.push(p);
+    else _univScMap.set(u, [p]);
+  }
+  let html='<div class="streamer-simple-list">';
+  let anyShown=false;
+  _getUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
+    let up=_univScMap.get(u.name) || [];
+    if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
+    if(totalHideNoRecord) up=up.filter(p=>(Number(p.win||0)+Number(p.loss||0))>0);
+    if(!up.length) return;
+    anyShown=true;
+    const sorted=[...up].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
+    const _uSafe=(typeof escJS==='function') ? escJS(u.name||'') : String(u.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+    html+=`<div class="streamer-simple-head" data-simple-univ-header="${u.name}" style="--c:${u.color||'#6366f1'}">
+      <span class="streamer-simple-univ clickable-univ" onclick="openUnivModal('${_uSafe}')">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','18px'):'18px'))}${u.name}</span>
+      <span class="streamer-simple-univ-count">${up.length}명</span>
+    </div>`;
+    sorted.forEach(p=>{
+      const win = Number(p.win||0);
+      const loss = Number(p.loss||0);
+      const games = win + loss;
+      const wr = games?Math.round(win/games*100):null;
+      const _pRank = rankMap[p.name];
+      const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
+      const _pAttr=(typeof escAttr==='function')
+        ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
+        : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
+      const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
+      const photoSrcRaw=(typeof p.photo==='string'&&p.photo.trim())?p.photo.trim():'';
+      if(photoSrcRaw) _simplePhotoUrls.push(photoSrcRaw);
+      html+=`<div class="streamer-simple-row ${_pRank===1?'top1':_pRank===2?'top2':_pRank===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-simple-row="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" data-tp-action="open-player" data-tp-player="${_pAttr}">
+        <span class="streamer-simple-rank">${_pRank||'-'}</span>
+        ${photoSrcRaw?`<span class="streamer-simple-avatar"><img loading="lazy" decoding="async" src="${toHttpsUrl(photoSrcRaw)}" onerror="this.style.display='none';this.parentNode.textContent='${p.race||'?'}'"></span>`:`<span class="streamer-simple-avatar">${p.race||'?'}</span>`}
+        <span class="streamer-simple-name">${p.role?`${getRoleBadgeHTML(p.role,'9px')} `:''}<span class="clickable-name">${p.name}</span>${genderIcon(p.gender)}${p.retired?'<span class="streamer-simple-flag">은퇴</span>':''}${p.inactive?'<span class="streamer-simple-flag">휴학</span>':''}</span>
+        <span class="streamer-simple-tier">${p.tier?getTierLabel(p.tier):'미정'}</span>
+        <span class="streamer-simple-record">${games?`${win}승 ${loss}패`:'전적없음'}</span>
+        <span class="streamer-simple-wr" style="color:${games===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${games?wr+'%':'-'}</span>
+      </div>`;
+    });
+  });
+  html+='</div>';
+  if(!anyShown) html+=`<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어나 필터를 사용해보세요</div></div>`;
+  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_simplePhotoUrls, _simplePhotoUrls.length); }catch(e){}
+  return html;
+}
+
 // 상세형 - "사진+리스트형" 두번째 레이아웃 전용 스타일 (최초 1회만 주입)
 ;(function _injectFocusCardStyle(){
   if(typeof document==='undefined') return;
@@ -687,6 +764,42 @@ function _buildGalleryView(rankMap){
     '.sfp2-hint{position:absolute;bottom:10px;right:12px;background:rgba(15,23,42,.55);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;pointer-events:none;z-index:4}',
     // 사이드바 카드 - 이미지2 수동 위치 지정 여부 뱃지
     '.streamer-focus-card-pin{position:absolute;top:7px;left:7px;font-size:12px;line-height:1;background:rgba(15,23,42,.55);border-radius:999px;padding:3px 4px;z-index:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
+// 심플형(4번째 보기) 및 리스트형 심플모드 전용 스타일 (최초 1회만 주입)
+;(function _injectSimpleViewStyle(){
+  if(typeof document==='undefined') return;
+  if(document.getElementById('streamer-simple-style')) return;
+  const s=document.createElement('style');
+  s.id='streamer-simple-style';
+  s.textContent=[
+    // 심플형: 여백을 최소화한 한 줄 리스트
+    '.streamer-simple-list{display:flex;flex-direction:column}',
+    '.streamer-simple-head{display:flex;align-items:center;gap:8px;padding:6px 10px;margin-top:8px;border-radius:8px;background:color-mix(in srgb, var(--c,#6366f1) 12%, transparent)}',
+    '.streamer-simple-head:first-child{margin-top:0}',
+    '.streamer-simple-univ{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:900;color:var(--c,#6366f1);cursor:pointer}',
+    '.streamer-simple-univ-count{margin-left:auto;font-size:11px;font-weight:700;color:var(--gray-l)}',
+    '.streamer-simple-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid rgba(148,163,184,.16);cursor:pointer}',
+    '.streamer-simple-row:hover{background:rgba(148,163,184,.08)}',
+    '.streamer-simple-row.top1{background:rgba(251,191,36,.08)}',
+    '.streamer-simple-row.top2{background:rgba(148,163,184,.10)}',
+    '.streamer-simple-row.top3{background:rgba(251,146,60,.08)}',
+    '.streamer-simple-row.inactive{opacity:.6}',
+    '.streamer-simple-row.retired{opacity:.5;filter:grayscale(.5)}',
+    '.streamer-simple-rank{flex:0 0 22px;text-align:center;font-size:11px;font-weight:900;color:var(--gray-l)}',
+    '.streamer-simple-avatar{flex:0 0 26px;width:26px;height:26px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:var(--surface2,#eef2ff);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--gray-l);position:relative}',
+    '.streamer-simple-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;clip-path:inherit}',
+    '.streamer-simple-name{flex:1;min-width:0;font-size:13px;font-weight:800;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:3px}',
+    '.streamer-simple-name .clickable-name{overflow:hidden;text-overflow:ellipsis}',
+    '.streamer-simple-flag{font-size:9px;font-weight:700;color:var(--gray-l);background:rgba(148,163,184,.18);border-radius:4px;padding:1px 5px;margin-left:2px}',
+    '.streamer-simple-tier{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--text3);min-width:36px;text-align:center}',
+    '.streamer-simple-record{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--text3);min-width:64px;text-align:right;white-space:nowrap}',
+    '.streamer-simple-wr{flex:0 0 40px;text-align:right;font-size:12px;font-weight:900}',
+    '@media (max-width:768px){.streamer-simple-row{padding:6px 8px;gap:6px}.streamer-simple-tier{min-width:28px;font-size:10px}.streamer-simple-record{min-width:52px;font-size:10px}}',
+    'body.dark .streamer-simple-row{border-color:rgba(255,255,255,.08)}',
+    'body.dark .streamer-simple-row:hover{background:rgba(255,255,255,.05)}'
   ].join('');
   document.head.appendChild(s);
 })();

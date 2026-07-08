@@ -1127,6 +1127,7 @@ ${_scfgD('notice','📢 공지 관리')}
             {id:'table',   icon:'☰',  title:'리스트형',   desc:'표 형식. 빠르고 정보 밀도 높음'},
             {id:'gallery', icon:'🪪', title:'카드형',     desc:'사진 중심 카드 대시보드'},
             {id:'focus',   icon:'🧾', title:'상세형',     desc:'좌측 목록 + 우측 상세'},
+            {id:'simple',  icon:'✨', title:'심플형',     desc:'여백을 줄인 한 줄 미니멀 리스트'},
           ].map(v=>`<button type="button"
             onclick="try{localStorage.setItem('su_streamer_view_mode','${v.id}');if(typeof totalViewMode!=='undefined'){totalViewMode='${v.id}';}try{render();}catch(e){};}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}"
             style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;border-radius:10px;border:2px solid ${_cur===v.id?'var(--blue)':'var(--border2)'};background:${_cur===v.id?'#eff6ff':'var(--white)'};cursor:pointer;min-width:90px;transition:border-color .15s"
