@@ -701,7 +701,6 @@ function _buildSimpleView(rankMap){
       const loss = Number(p.loss||0);
       const games = win + loss;
       const wr = games?Math.round(win/games*100):null;
-      const _pRank = rankMap[p.name];
       const _pSafe=(typeof escJS==='function') ? escJS(p.name) : (p.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
       const _pAttr=(typeof escAttr==='function')
         ? escAttr(String(p.name||'').replace(/[\r\n]+/g,' '))
@@ -709,8 +708,7 @@ function _buildSimpleView(rankMap){
       const q=`${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       const photoSrcRaw=(typeof p.photo==='string'&&p.photo.trim())?p.photo.trim():'';
       if(photoSrcRaw) _simplePhotoUrls.push(photoSrcRaw);
-      html+=`<div class="streamer-simple-row ${_pRank===1?'top1':_pRank===2?'top2':_pRank===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-simple-row="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" data-tp-action="open-player" data-tp-player="${_pAttr}">
-        <span class="streamer-simple-rank">${_pRank||'-'}</span>
+      html+=`<div class="streamer-simple-row ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-simple-row="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" data-tp-action="open-player" data-tp-player="${_pAttr}">
         ${photoSrcRaw?`<span class="streamer-simple-avatar"><img loading="lazy" decoding="async" src="${toHttpsUrl(photoSrcRaw)}" onerror="this.style.display='none';this.parentNode.textContent='${p.race||'?'}'"></span>`:`<span class="streamer-simple-avatar">${p.race||'?'}</span>`}
         <span class="streamer-simple-name">${p.role?`${getRoleBadgeHTML(p.role,'9px')} `:''}<span class="clickable-name">${p.name}</span>${genderIcon(p.gender)}${p.retired?'<span class="streamer-simple-flag">은퇴</span>':''}${p.inactive?'<span class="streamer-simple-flag">휴학</span>':''}</span>
         <span class="streamer-simple-tier">${p.tier?getTierLabel(p.tier):'미정'}</span>
@@ -781,23 +779,19 @@ function _buildSimpleView(rankMap){
     '.streamer-simple-head:first-child{margin-top:0}',
     '.streamer-simple-univ{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:900;color:var(--c,#6366f1);cursor:pointer}',
     '.streamer-simple-univ-count{margin-left:auto;font-size:11px;font-weight:700;color:var(--gray-l)}',
-    '.streamer-simple-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid rgba(148,163,184,.16);cursor:pointer}',
+    '.streamer-simple-row{display:grid;grid-template-columns:28px minmax(0,1fr) 15% 20% 13%;align-items:center;column-gap:12px;padding:8px 10px;border-bottom:1px solid rgba(148,163,184,.16);cursor:pointer}',
     '.streamer-simple-row:hover{background:rgba(148,163,184,.08)}',
-    '.streamer-simple-row.top1{background:rgba(251,191,36,.08)}',
-    '.streamer-simple-row.top2{background:rgba(148,163,184,.10)}',
-    '.streamer-simple-row.top3{background:rgba(251,146,60,.08)}',
     '.streamer-simple-row.inactive{opacity:.6}',
     '.streamer-simple-row.retired{opacity:.5;filter:grayscale(.5)}',
-    '.streamer-simple-rank{flex:0 0 22px;text-align:center;font-size:11px;font-weight:900;color:var(--gray-l)}',
-    '.streamer-simple-avatar{flex:0 0 26px;width:26px;height:26px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:var(--surface2,#eef2ff);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--gray-l);position:relative}',
+    '.streamer-simple-avatar{width:26px;height:26px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:var(--surface2,#eef2ff);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--gray-l);position:relative}',
     '.streamer-simple-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;clip-path:inherit}',
-    '.streamer-simple-name{flex:1;min-width:0;font-size:13px;font-weight:800;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:3px}',
+    '.streamer-simple-name{min-width:0;font-size:13px;font-weight:800;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:3px}',
     '.streamer-simple-name .clickable-name{overflow:hidden;text-overflow:ellipsis}',
     '.streamer-simple-flag{font-size:9px;font-weight:700;color:var(--gray-l);background:rgba(148,163,184,.18);border-radius:4px;padding:1px 5px;margin-left:2px}',
-    '.streamer-simple-tier{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--text3);min-width:36px;text-align:center}',
-    '.streamer-simple-record{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--text3);min-width:64px;text-align:right;white-space:nowrap}',
-    '.streamer-simple-wr{flex:0 0 40px;text-align:right;font-size:12px;font-weight:900}',
-    '@media (max-width:768px){.streamer-simple-row{padding:6px 8px;gap:6px}.streamer-simple-tier{min-width:28px;font-size:10px}.streamer-simple-record{min-width:52px;font-size:10px}}',
+    '.streamer-simple-tier{font-size:11px;font-weight:700;color:var(--text3);text-align:center}',
+    '.streamer-simple-record{font-size:11px;font-weight:700;color:var(--text3);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.streamer-simple-wr{text-align:center;font-size:12px;font-weight:900}',
+    '@media (max-width:768px){.streamer-simple-row{grid-template-columns:24px minmax(0,1fr) 19% 24% 16%;padding:7px 8px;column-gap:8px}.streamer-simple-tier{font-size:10px}.streamer-simple-record{font-size:10px}}',
     'body.dark .streamer-simple-row{border-color:rgba(255,255,255,.08)}',
     'body.dark .streamer-simple-row:hover{background:rgba(255,255,255,.05)}'
   ].join('');
