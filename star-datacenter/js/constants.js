@@ -944,40 +944,42 @@ function escAttr(s){
     .replace(/>/g,'&gt;');
 }
 // HTML 이스케이프 — 전역 단일 정의 (stats.js / settings.js 등의 중복 guard가 이 정의를 우선 사용)
+const _ESC_HTML_MAP={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
 window.escHTML = function(s){
   return String(s??'').replace(/[&<>"']/g, function(m){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+    return _ESC_HTML_MAP[m];
   });
 };
 
+const _TIER_SHADOW_MAP={
+  'G':'0 2px 14px rgba(124,58,237,.55),0 0 0 1px rgba(167,139,250,.3)',
+  'K':'0 2px 10px rgba(26,42,82,.5),0 0 0 1px rgba(226,201,126,.2)',
+  'JA':'0 2px 10px rgba(12,74,92,.5)',
+  'J':'0 2px 10px rgba(6,78,59,.5)',
+  'S':'0 2px 10px rgba(30,58,95,.5)',
+};
 function getTierBadge(tier){
   if(!tier) return '';
   const ic=(_TIER_ICON&&_TIER_ICON[tier])||'';
   const bg=getTierBtnColor(tier)||'#64748b';
   const col=getTierBtnTextColor(tier)||'#fff';
   // 현황판과 동일한 그라디언트 스타일 (box-shadow 포함)
-  const shadowMap={
-    'G':'0 2px 14px rgba(124,58,237,.55),0 0 0 1px rgba(167,139,250,.3)',
-    'K':'0 2px 10px rgba(26,42,82,.5),0 0 0 1px rgba(226,201,126,.2)',
-    'JA':'0 2px 10px rgba(12,74,92,.5)',
-    'J':'0 2px 10px rgba(6,78,59,.5)',
-    'S':'0 2px 10px rgba(30,58,95,.5)',
-  };
-  const shadow=shadowMap[tier]||'0 1px 5px rgba(0,0,0,.25)';
+  const shadow=_TIER_SHADOW_MAP[tier]||'0 1px 5px rgba(0,0,0,.25)';
   return `<span class="tbadge" style="background:${bg};color:${col};box-shadow:${shadow};border-radius:6px;padding:1px 5px;font-size:9.5px;font-weight:800;letter-spacing:.2px;white-space:nowrap;display:inline-flex;align-items:center;gap:2px">${ic?ic+' ':''}${tier}</span>`;
 }
 
+const _TIER_LABEL_ICONS_DEFAULT={G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠',유스:'🐣',미정:'❓'};
+const _TIER_LABEL_MAP={G:'G (God)',K:'K (King)',JA:'JA (Jack)',J:'J (Joker)',S:'S (Spade)',유스:'유스',미정:'미정 (미확인)'};
 function getTierLabel(tier){
-  const icons=_TIER_ICON||{G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠',유스:'🐣',미정:'❓'};
-  const labels={G:'G (God)',K:'K (King)',JA:'JA (Jack)',J:'J (Joker)',S:'S (Spade)',유스:'유스',미정:'미정 (미확인)'};
+  const icons=_TIER_ICON||_TIER_LABEL_ICONS_DEFAULT;
   const ic=icons[tier]||'';
-  return ic?`${ic} ${labels[tier]||tier}`:tier;
+  return ic?`${ic} ${_TIER_LABEL_MAP[tier]||tier}`:tier;
 }
 
+const _TIER_PILL_ICONS_DEFAULT={G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠️',유스:'🐣',미정:'❓'};
 function getTierPillLabel(tier){
-  const icons=_TIER_ICON||{G:'✨',K:'👑',JA:'⚔️',J:'🃏',S:'♠️',유스:'🐣',미정:'❓'};
-  const labels={G:'G (God)',K:'K (King)',JA:'JA (Jack)',J:'J (Joker)',S:'S (Spade)',유스:'유스',미정:'미정 (미확인)'};
-  return icons[tier]?`${icons[tier]} ${labels[tier]||tier}`:tier;
+  const icons=_TIER_ICON||_TIER_PILL_ICONS_DEFAULT;
+  return icons[tier]?`${icons[tier]} ${_TIER_LABEL_MAP[tier]||tier}`:tier;
 }
 
 // ── (설정) 티어 색상/이모지 커스텀 ──
@@ -1135,11 +1137,11 @@ const MAIN_ROLES = ['이사장','동아리 회장','총장','부총장','총괄'
 const ROLE_ICONS = {'이사장':'👔','동아리 회장':'🏅','총장':'🎓','부총장':'📚','총괄':'🏛️','교수':'🏫','코치':'🎯','대표':'👥'};
 const ROLE_COLORS = {'이사장':'#6d28d9','동아리 회장':'#0f766e','총장':'#b91c1c','부총장':'#b45309','총괄':'#0c6e9e','교수':'#1d4ed8','코치':'#0e7490','대표':'#8b5cf6'};
 
+const _ROLE_ORDER_MAP = {'대표':0,'이사장':0,'선장':0,'동아리장':0,'동아리 회장':0,'반장':0,'총장':1,'부총장':2,'총괄':2,'교수':3,'코치':4};
 function getRoleOrder(role){
   // Representative=0, President=0, Captain=0, Club President=0, Class President=0, Dean=1, Vice Dean=2, Director=2(tie), Professor=3, Coach=4, Other=99
-  const ORDER = {'대표':0,'이사장':0,'선장':0,'동아리장':0,'동아리 회장':0,'반장':0,'총장':1,'부총장':2,'총괄':2,'교수':3,'코치':4};
   if(!role) return 99;
-  return role in ORDER ? ORDER[role] : 99;
+  return role in _ROLE_ORDER_MAP ? _ROLE_ORDER_MAP[role] : 99;
 }
 function getRoleBadgeHTML(role, size='11px'){
   if(!role) return '';

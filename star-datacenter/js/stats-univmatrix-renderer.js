@@ -1,6 +1,7 @@
 (function(){
   function statsUnivMatrixHTML(){
-    const univs=window.getAllUnivs().filter(u=>(window.players||[]).some(p=>p.univ===u.name));
+    const _univsWithPlayers=new Set((window.players||[]).map(p=>p.univ));
+    const univs=window.getAllUnivs().filter(u=>_univsWithPlayers.has(u.name));
     if(univs.length<2) return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">대학 데이터가 부족합니다.</p></div>`;
     const matrix={};
     univs.forEach(a=>{ matrix[a.name]={}; univs.forEach(b=>{ matrix[a.name][b.name]={w:0,l:0}; }); });

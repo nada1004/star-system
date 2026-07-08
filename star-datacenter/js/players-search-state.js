@@ -610,8 +610,9 @@ function totalApplySearchFilter(){
   const table=document.querySelector('#rcont table');
   if(table){
     const rows=[...table.querySelectorAll('tr[data-player-row="1"]')];
+    const _visibleUnivsT=new Set();
     rows.forEach(tr=>{
-      if(!qHas){ tr.style.display=''; return; }
+      if(!qHas){ tr.style.display=''; _visibleUnivsT.add(tr.getAttribute('data-univ')||''); return; }
       const hay=(tr.getAttribute('data-q')||'');
       const r=tr.getAttribute('data-r')||'';
       const g=tr.getAttribute('data-g')||'';
@@ -619,12 +620,13 @@ function totalApplySearchFilter(){
       const okGender=!gf||g===gf;
       const okInc=inc.length===0||inc.every(t=>hay.includes(t));
       const okExc=exc.length===0||exc.every(t=>!hay.includes(t));
-      tr.style.display=(okRace&&okGender&&okInc&&okExc)?'':'none';
+      const ok=(okRace&&okGender&&okInc&&okExc);
+      tr.style.display=ok?'':'none';
+      if(ok) _visibleUnivsT.add(tr.getAttribute('data-univ')||'');
     });
     table.querySelectorAll('tr[data-univ-header]').forEach(h=>{
       const u=h.getAttribute('data-univ-header')||'';
-      const any=rows.some(r=>r.style.display!== 'none' && r.getAttribute('data-univ')===u);
-      h.style.display=any?'':'none';
+      h.style.display=_visibleUnivsT.has(u)?'':'none';
     });
   }
   // 갤러리 뷰
@@ -632,8 +634,9 @@ function totalApplySearchFilter(){
   if(!cont) return;
   const cards=[...cont.querySelectorAll('[data-player-card="1"]')];
   if(!cards.length) return;
+  const _visibleUnivsG=new Set();
   cards.forEach(card=>{
-    if(!qHas){ card.style.display=''; return; }
+    if(!qHas){ card.style.display=''; _visibleUnivsG.add(card.getAttribute('data-univ')||''); return; }
     const hay=(card.getAttribute('data-q')||'');
     const r=card.getAttribute('data-r')||'';
     const g=card.getAttribute('data-g')||'';
@@ -641,13 +644,14 @@ function totalApplySearchFilter(){
     const okGender=!gf||g===gf;
     const okInc=inc.length===0||inc.every(t=>hay.includes(t));
     const okExc=exc.length===0||exc.every(t=>!hay.includes(t));
-    card.style.display=(okRace&&okGender&&okInc&&okExc)?'':'none';
+    const ok=(okRace&&okGender&&okInc&&okExc);
+    card.style.display=ok?'':'none';
+    if(ok) _visibleUnivsG.add(card.getAttribute('data-univ')||'');
   });
   // 갤러리 대학 섹션 헤더 숨김
   cont.querySelectorAll('[data-gallery-univ-header]').forEach(h=>{
     const u=h.getAttribute('data-gallery-univ-header')||'';
-    const any=cards.some(c=>c.style.display!=='none'&&c.getAttribute('data-univ')===u);
-    h.style.display=any?'':'none';
+    h.style.display=_visibleUnivsG.has(u)?'':'none';
   });
   // 상세형 목록 필터
   const focusRows=[...cont.querySelectorAll('[data-focus-row="1"]')];
@@ -662,11 +666,14 @@ function totalApplySearchFilter(){
     const okExc=exc.length===0||exc.every(t=>!hay.includes(t));
     row.style.display=(okRace&&okGender&&okInc&&okExc)?'':'none';
   });
-  cont.querySelectorAll('[data-focus-univ-header]').forEach(h=>{
-    const u=h.getAttribute('data-focus-univ-header')||'';
-    const any=focusRows.some(r=>r.style.display!=='none'&&r.getAttribute('data-univ')===u);
-    h.style.display=any?'':'none';
-  });
+  {
+    const _visibleUnivsF=new Set();
+    focusRows.forEach(r=>{ if(r.style.display!=='none') _visibleUnivsF.add(r.getAttribute('data-univ')||''); });
+    cont.querySelectorAll('[data-focus-univ-header]').forEach(h=>{
+      const u=h.getAttribute('data-focus-univ-header')||'';
+      h.style.display=_visibleUnivsF.has(u)?'':'none';
+    });
+  }
   if(totalViewMode==='focus'){
     const visibleFocus = focusRows.filter(r=>r.style.display!=='none');
     if(visibleFocus.length && !visibleFocus.some(r => (r.getAttribute('data-focus-name')||'') === totalFocusPlayer)){
@@ -688,11 +695,14 @@ function totalApplySearchFilter(){
     const okExc=exc.length===0||exc.every(t=>!hay.includes(t));
     row.style.display=(okRace&&okGender&&okInc&&okExc)?'':'none';
   });
-  cont.querySelectorAll('[data-simple-univ-header]').forEach(h=>{
-    const u=h.getAttribute('data-simple-univ-header')||'';
-    const any=simpleRows.some(r=>r.style.display!=='none'&&r.getAttribute('data-univ')===u);
-    h.style.display=any?'':'none';
-  });
+  {
+    const _visibleUnivsS=new Set();
+    simpleRows.forEach(r=>{ if(r.style.display!=='none') _visibleUnivsS.add(r.getAttribute('data-univ')||''); });
+    cont.querySelectorAll('[data-simple-univ-header]').forEach(h=>{
+      const u=h.getAttribute('data-simple-univ-header')||'';
+      h.style.display=_visibleUnivsS.has(u)?'':'none';
+    });
+  }
 }
 
 function bulkApplySearchFilter(){

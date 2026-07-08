@@ -898,8 +898,15 @@ function getStatsRadarScores(){
   const univNames = [...new Set(_players.map(p=>String(p?.univ||'').trim()).filter(Boolean))];
   const scoreMap = {};
   const memberSets = {};
+  // 대학별 소속 선수를 1회 순회로 그룹핑 (기존: 대학 수 × 전체 선수 수 만큼 filter 반복)
+  const _membersByUniv = {};
+  _players.forEach(p=>{
+    const nm = String(p?.univ||'').trim();
+    if(!nm) return;
+    (_membersByUniv[nm] || (_membersByUniv[nm]=[])).push(p);
+  });
   univNames.forEach(name=>{
-    const mem=_players.filter(p=>String(p?.univ||'').trim()===name);
+    const mem=_membersByUniv[name] || [];
     const avgElo=Math.round(mem.reduce((s,p)=>s+(p.elo||1200),0)/Math.max(1, mem.length));
     const pts=mem.reduce((s,p)=>s+(p.points||0),0);
     const races=new Set(mem.map(p=>p.race).filter(Boolean)).size;
@@ -1157,7 +1164,8 @@ function initRadarChart(){
   // HTML entity decode fallback (특수문자 대학명 대응)
   try{const ta=document.createElement('textarea');ta.innerHTML=_radarSelUniv;_radarSelUniv=ta.value;}catch(e){}
   const _players = Array.isArray(players) ? players : [];
-  const allUnivs=getAllUnivs().filter(u=>_players.some(p=>p.univ===u.name));
+  const _univsWithPlayers = new Set(_players.map(p=>p.univ));
+  const allUnivs=getAllUnivs().filter(u=>_univsWithPlayers.has(u.name));
   if((!_radarSelUniv || !allUnivs.some(u=>u.name===_radarSelUniv)) && allUnivs.length) _radarSelUniv = allUnivs[0].name;
   const _allScores=getStatsRadarScores();
   const _activeNames = Array.from(new Set([_radarSelUniv, ...((Array.isArray(_radarCompareUnivs)?_radarCompareUnivs:[]).filter(name=>name && name!==_radarSelUniv))])).slice(0,5);

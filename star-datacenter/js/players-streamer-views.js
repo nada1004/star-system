@@ -297,6 +297,10 @@ function rTotal(C,T){
   }
   
   // University section
+  const _gFallbackTextPos = localStorage.getItem('su_univ_header_text_pos') || 'right';
+  const _gFallbackGradMode = localStorage.getItem('su_univ_header_gradient') || 'left-to-right';
+  const _gFallbackGradLen = localStorage.getItem('su_univ_header_gradient_length') || '70';
+  const _gFallbackGradColor = localStorage.getItem('su_univ_header_gradient_color') || '#ffffff';
   _getUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
     const _isHiddenUniv=isLoggedIn&&u.hidden;
     let up=_univScMap.get(u.name) || [];
@@ -314,14 +318,14 @@ function rTotal(C,T){
     const _hdrText = u.streamerHeaderText || '';
     const _hdrTextSize = u.streamerHeaderTextSize || '12';
     const _hdrTextColor = u.streamerHeaderTextColor || 'rgba(255,255,255,0.8)';
-    const _hdrTextPos = u.streamerHeaderTextPos || localStorage.getItem('su_univ_header_text_pos') || 'right';
+    const _hdrTextPos = u.streamerHeaderTextPos || _gFallbackTextPos;
     // 그라데이션 스타일 결정
     let _gradientStyle = '';
     if (_hdrGradient || (!_hdrBgImg && !_hdrGradient)) {
-      const gMode = _hdrGradient || (localStorage.getItem('su_univ_header_gradient') || 'left-to-right');
+      const gMode = _hdrGradient || _gFallbackGradMode;
       // 대학별 설정 우선, 없으면 전역 설정 사용
-      const gLen = Math.max(20, Math.min(100, parseInt(u.streamerHeaderGradientLen || localStorage.getItem('su_univ_header_gradient_length') || '70', 10) || 70));
-      const gColorRaw = u.streamerHeaderGradientColor || localStorage.getItem('su_univ_header_gradient_color') || '#ffffff';
+      const gLen = Math.max(20, Math.min(100, parseInt(u.streamerHeaderGradientLen || _gFallbackGradLen, 10) || 70));
+      const gColorRaw = u.streamerHeaderGradientColor || _gFallbackGradColor;
       const gColor = (gColorRaw && gColorRaw !== '#ffffff') ? gColorRaw : u.color;
       const gMix = `${gColor} ${gLen}%, transparent`;
       switch(gMode){
@@ -524,6 +528,10 @@ function _buildGalleryView(rankMap){
     if(arr) arr.push(p);
     else _univScActiveMap.set(u, [p]);
   }
+  const _ggFallbackTextPos = localStorage.getItem('su_univ_header_text_pos') || 'right';
+  const _ggFallbackGradMode = localStorage.getItem('su_univ_header_gradient') || 'left-to-right';
+  const _ggFallbackGradLen = localStorage.getItem('su_univ_header_gradient_length') || '70';
+  const _ggFallbackGradColor = localStorage.getItem('su_univ_header_gradient_color') || '#ffffff';
   _getUnivs().filter(u=>isLoggedIn||!u.hidden).forEach(u=>{
     let up=_univScActiveMap.get(u.name) || [];
     if(totalRaceFilter!=='전체') up=up.filter(p=>p.race===totalRaceFilter);
@@ -540,14 +548,14 @@ function _buildGalleryView(rankMap){
     const _gHdrText = u.streamerHeaderText || '';
     const _gHdrTextSize = u.streamerHeaderTextSize || '12';
     const _gHdrTextColor = u.streamerHeaderTextColor || 'rgba(255,255,255,0.85)';
-    const _gHdrTextPos = u.streamerHeaderTextPos || localStorage.getItem('su_univ_header_text_pos') || 'right';
+    const _gHdrTextPos = u.streamerHeaderTextPos || _ggFallbackTextPos;
     // 그라데이션 스타일 결정
     let _gGradientStyle = '';
     if (_gHdrGradient || (!_gHdrBgImg && !_gHdrGradient)) {
-      const gMode = _gHdrGradient || (localStorage.getItem('su_univ_header_gradient') || 'left-to-right');
+      const gMode = _gHdrGradient || _ggFallbackGradMode;
       // 대학별 설정 우선, 없으면 전역 설정 사용
-      const gLen = Math.max(20, Math.min(100, parseInt(u.streamerHeaderGradientLen || localStorage.getItem('su_univ_header_gradient_length') || '70', 10) || 70));
-      const gColorRaw = u.streamerHeaderGradientColor || localStorage.getItem('su_univ_header_gradient_color') || '#ffffff';
+      const gLen = Math.max(20, Math.min(100, parseInt(u.streamerHeaderGradientLen || _ggFallbackGradLen, 10) || 70));
+      const gColorRaw = u.streamerHeaderGradientColor || _ggFallbackGradColor;
       const gColor = (gColorRaw && gColorRaw !== '#ffffff') ? gColorRaw : (u.color || '#6366f1');
       const gMix = `${gColor} ${gLen}%, transparent`;
       switch(gMode){

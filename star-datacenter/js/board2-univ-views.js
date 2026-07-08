@@ -599,12 +599,10 @@ function _b2FemcoView() {
   // [FIX-FEMCO-4] membersByUniv 수집 시 dissolved 선수 제외
   const _femcoDissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : []).filter(u=>u.dissolved).map(u=>String(u.name||'').trim()));
   const membersByUniv = {};
-  univList.forEach(u => {
-    membersByUniv[u.name] = players.filter(p =>
-      String(p?.univ||'').trim() === String(u.name||'').trim()
-      && !p.hidden && !p.retired && !p.hideFromBoard
-      && !_femcoDissSet.has(String(p?.univ||'').trim())
-    );
+  players.forEach(p => {
+    const pu = String(p?.univ||'').trim();
+    if(!pu || p.hidden || p.retired || p.hideFromBoard || _femcoDissSet.has(pu)) return;
+    (membersByUniv[pu] || (membersByUniv[pu]=[])).push(p);
   });
 
   // 공통 로고 크기(기본)
