@@ -425,7 +425,7 @@ function rTotal(C,T){
         <td class="streamer-td-tier" style="text-align:center;white-space:normal;padding:7px 4px">${getTierBadge(p.tier)}</td>
         <td style="text-align:left;padding:6px 8px">
           <span class="streamer-player-cell">
-            ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img loading="lazy" decoding="async" src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:`<span class="streamer-avatar">${p.race||'?'}</span>`}
+            ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img loading="lazy" decoding="async" fetchpriority="low" src="${toThumbUrl(p.photo,96)}" data-orig="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="_thumbFallback(this)"></span>`:`<span class="streamer-avatar">${p.race||'?'}</span>`}
             <span class="streamer-name-stack">
               <span class="streamer-name-line">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name streamer-name-link" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;font-weight:700">⏸️ 휴학</span>':''}</span>
               ${_metaSpan}
@@ -445,7 +445,7 @@ function rTotal(C,T){
         <td class="streamer-td-race col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span class="streamer-player-cell">
-            ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img loading="lazy" decoding="async" src="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'"></span>`:`<span class="streamer-avatar">${p.race||'?'}</span>`}
+            ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img loading="lazy" decoding="async" fetchpriority="low" src="${toThumbUrl(p.photo,72)}" data-orig="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="_thumbFallback(this)"></span>`:`<span class="streamer-avatar">${p.race||'?'}</span>`}
             <span class="streamer-name-stack">
               <span class="streamer-name-line">${p.role?`${getRoleBadgeHTML(p.role,'10px')} `:''}<span class="clickable-name streamer-name-link" data-tp-action="open-player" data-tp-player="${_pAttr}">${p.name}</span>${p.retired?'<span style="font-size:10px;background:#e2e8f0;color:#64748b;border-radius:4px;padding:1px 5px;font-weight:700">🎗️ 은퇴</span>':''}${p.inactive?'<span style="font-size:10px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 5px;font-weight:700">⏸️ 휴학</span>':''}</span>
               ${_metaSpan}
@@ -488,7 +488,7 @@ function rTotal(C,T){
     ${_renderTopChrome('대학별 구성을 유지하면서도 검색, 필터, 순위, 활동 상태를 더 보기 좋고 빠르게 파악할 수 있도록 정리했습니다.', false)}
     ${tableHTML}
   </div>`;
-  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_visiblePhotoUrls, _visiblePhotoUrls.length); }catch(e){}
+  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_visiblePhotoUrls, 60, 96); }catch(e){}
   injectUnivIcons(C);
   requestAnimationFrame(()=>injectUnivIcons(C));
   totalApplySearchFilter();
@@ -625,7 +625,7 @@ function _buildGalleryView(rankMap){
         style="--card-accent:${clr};background:#0b1120;border-color:rgba(255,255,255,.14);backdrop-filter:blur(1px)"
         onmouseenter="try{if(typeof _prewarmPlayerModalImages==='function'){var _pp=window.players&&window.players.find(function(x){return x.name==='${_pSafe}'});if(_pp)_prewarmPlayerModalImages(_pp);}}catch(e){}">
         ${photoSrcRaw
-          ? `<img loading="lazy" decoding="async" src="${toHttpsUrl(photoSrcRaw)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
+          ? `<img loading="lazy" decoding="async" fetchpriority="low" src="${toScaledUrl(photoSrcRaw,340)}" data-orig="${toHttpsUrl(photoSrcRaw)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none';}">`
           : ''}
         <div class="gc-placeholder" style="position:absolute;inset:0;display:${photoSrcRaw?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${clr};background:linear-gradient(160deg,${clr}28 0%,${clr}10 100%)">${p.race||'?'}</div>
         ${photoSrcRaw ? '' : '<div class="streamer-gallery-overlay"></div>'}
@@ -657,7 +657,7 @@ function _buildGalleryView(rankMap){
   });
   if(!anyShown) html+=`<div style="grid-column:1/-1"><div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div></div></div>`;
   html+='</div>';
-  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_galleryPhotoUrls, _galleryPhotoUrls.length); }catch(e){}
+  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_galleryPhotoUrls, 30, 340, 'scaled'); }catch(e){}
   return html;
 }
 
@@ -709,7 +709,7 @@ function _buildSimpleView(rankMap){
       const photoSrcRaw=(typeof p.photo==='string'&&p.photo.trim())?p.photo.trim():'';
       if(photoSrcRaw) _simplePhotoUrls.push(photoSrcRaw);
       html+=`<div class="streamer-simple-row ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-simple-row="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" data-tp-action="open-player" data-tp-player="${_pAttr}">
-        ${photoSrcRaw?`<span class="streamer-simple-avatar"><img loading="lazy" decoding="async" src="${toHttpsUrl(photoSrcRaw)}" onerror="this.style.display='none';this.parentNode.textContent='${p.race||'?'}'"></span>`:`<span class="streamer-simple-avatar">${p.race||'?'}</span>`}
+        ${photoSrcRaw?`<span class="streamer-simple-avatar"><img loading="lazy" decoding="async" fetchpriority="low" src="${toThumbUrl(photoSrcRaw,56)}" data-orig="${toHttpsUrl(photoSrcRaw)}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.parentNode.textContent='${p.race||'?'}';}"></span>`:`<span class="streamer-simple-avatar">${p.race||'?'}</span>`}
         <span class="streamer-simple-name">${p.role?`${getRoleBadgeHTML(p.role,'9px')} `:''}<span class="clickable-name">${p.name}</span>${genderIcon(p.gender)}${p.retired?'<span class="streamer-simple-flag">은퇴</span>':''}${p.inactive?'<span class="streamer-simple-flag">휴학</span>':''}</span>
         <span class="streamer-simple-tier">${p.tier?getTierLabel(p.tier):'미정'}</span>
         <span class="streamer-simple-record">${games?`${win}승 ${loss}패`:'전적없음'}</span>
@@ -719,7 +719,7 @@ function _buildSimpleView(rankMap){
   });
   html+='</div>';
   if(!anyShown) html+=`<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 검색어나 필터를 사용해보세요</div></div>`;
-  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_simplePhotoUrls, _simplePhotoUrls.length); }catch(e){}
+  try{ if(typeof prewarmImageUrls==='function') prewarmImageUrls(_simplePhotoUrls, 60, 56); }catch(e){}
   return html;
 }
 
@@ -800,8 +800,10 @@ function _buildSimpleView(rankMap){
 
 function _buildFocusCardDetail(selected, opts){
   const { selUniv, selColor, selWin, selLoss, selGames, selWr, selAttr, selHistAll, heroPhoto2Pos } = opts;
-  const photoSrc = selected.photo ? toHttpsUrl(selected.photo) : '';
-  const photo2Src = String(selected.secondProfileFile||'').trim() ? toHttpsUrl(String(selected.secondProfileFile||'').trim()) : '';
+  const photoSrcOrig = selected.photo ? toHttpsUrl(selected.photo) : '';
+  const photoSrc = selected.photo ? toScaledUrl(selected.photo, 320) : '';
+  const photo2SrcOrig = String(selected.secondProfileFile||'').trim() ? toHttpsUrl(String(selected.secondProfileFile||'').trim()) : '';
+  const photo2Src = String(selected.secondProfileFile||'').trim() ? toScaledUrl(String(selected.secondProfileFile||'').trim(), 720) : '';
   const photo2Pos = heroPhoto2Pos || 'center center';
   const _p2XNow = (()=>{ const n=Number(selected.photo2PosX); return Number.isFinite(n) ? Math.round(Math.max(0,Math.min(100,n))) : 50; })();
   const _p2YNow = (()=>{ const n=Number(selected.photo2PosY); return Number.isFinite(n) ? Math.round(Math.max(0,Math.min(100,n))) : 50; })();
@@ -832,7 +834,7 @@ function _buildFocusCardDetail(selected, opts){
   return `<div class="streamer-focus-main">
     <div class="streamer-focus-card2">
       <div class="streamer-focus-card2-photo">
-        ${photoSrc ? `<img src="${photoSrc}" alt="${selected.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+        ${photoSrc ? `<img src="${photoSrc}" data-orig="${photoSrcOrig}" alt="${selected.name}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex';}">` : ''}
         <div class="streamer-focus-photo-fallback" style="display:${photoSrc?'none':'flex'}">${selected.race||'?'}</div>
       </div>
       <div class="streamer-focus-card2-info">
@@ -866,12 +868,12 @@ function _buildFocusCardDetail(selected, opts){
     ${photo2Src ? (
       _autoFitOn
         ? `<div class="streamer-focus-card2-photo2 is-autofit">
-             <img class="sfc2p2-fg" src="${photo2Src}" alt="${selected.name}" loading="eager" fetchpriority="high" decoding="async"
+             <img class="sfc2p2-fg" src="${photo2Src}" data-orig="${photo2SrcOrig}" alt="${selected.name}" loading="eager" fetchpriority="high" decoding="async"
                onload="try{var r=this.naturalWidth/this.naturalHeight;if(!isFinite(r)||r<=0)r=16/9;r=Math.max(.68,Math.min(2.1,r));this.parentElement.style.aspectRatio=r;}catch(e){}"
-               onerror="this.parentElement.style.display='none'">
+               onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.parentElement.style.display='none';}">
            </div>`
         : `<div class="streamer-focus-card2-photo2${_showPosNudge?' is-manual':''}"${_showPosNudge?' data-focus-p2-drag="1" ondblclick="_focusPhoto2SetCenter()" title="드래그하면 위치가 바로 바뀝니다 (더블클릭 = 가운데로)"':''}>
-             <img src="${photo2Src}" alt="${selected.name}" loading="eager" fetchpriority="high" decoding="async" style="object-position:${photo2Pos}" onerror="this.parentElement.style.display='none'">
+             <img src="${photo2Src}" data-orig="${photo2SrcOrig}" alt="${selected.name}" loading="eager" fetchpriority="high" decoding="async" style="object-position:${photo2Pos}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.parentElement.style.display='none';}">
              ${_showPosNudge ? `
                <div class="sfp2-gridline-v" style="left:${_p2XNow}%"></div>
                <div class="sfp2-gridline-h" style="top:${_p2YNow}%"></div>
@@ -1041,7 +1043,7 @@ function _buildFocusView(rankMap){
       const photoSrc = String(p.photo||'').trim();
       const _isActive = !!(selected && selected.name===p.name);
       listHtml += `<div class="streamer-focus-card ${_isActive?'active':''}" data-focus-row="1" data-focus-name="${(typeof escAttr==='function'?escAttr(p.name):p.name)}" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" onclick="try{var _sl=document.querySelector('.streamer-focus-list');if(_sl)window._streamerFocusScrollTop=_sl.scrollTop;}catch(e){};totalFocusPlayer='${_pSafe}';render()">
-        ${photoSrc ? `<img loading="lazy" decoding="async" src="${toHttpsUrl(photoSrc)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none'">` : ''}
+        ${photoSrc ? `<img loading="lazy" decoding="async" fetchpriority="low" src="${toScaledUrl(photoSrc,320)}" data-orig="${toHttpsUrl(photoSrc)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="_thumbFallback(this)">` : ''}
         <div class="streamer-focus-card-fallback" style="display:${photoSrc?'none':'flex'}">${p.race||'?'}</div>
         ${_isActive ? `<span class="streamer-focus-card-check">✓</span>` : ''}
         ${(isLoggedIn && p.photo2CardAutoManual===true) ? `<span class="streamer-focus-card-pin" title="이미지2 위치가 수동으로 지정된 스트리머입니다">📌</span>` : ''}
@@ -1092,10 +1094,11 @@ function _buildFocusView(rankMap){
   const _30agoN = _tpDaysAgoNum(30);
   const _c7 = selHistAll.filter(h=>_tpDateNum(h?.date) >= _7agoN).length;
   const _c30 = selHistAll.filter(h=>_tpDateNum(h?.date) >= _30agoN).length;
-  const heroPhotoUrl = selected.photo ? toHttpsUrl(selected.photo).replace(/'/g,'%27').replace(/"/g,'%22') : '';
+  const heroPhotoOrig = selected.photo ? toHttpsUrl(selected.photo).replace(/'/g,'%27').replace(/"/g,'%22') : '';
+  const heroPhotoUrl = selected.photo ? toScaledUrl(selected.photo, 200).replace(/'/g,'%27').replace(/"/g,'%22') : '';
   const heroPhotoUrl2Src = String(selected.secondProfileFile||'').trim();
-  const heroPhotoUrl2 = heroPhotoUrl2Src ? toHttpsUrl(heroPhotoUrl2Src).replace(/'/g,'%27').replace(/"/g,'%22') : '';
-  try{ if(heroPhotoUrl2Src && typeof prewarmImageUrls==='function') prewarmImageUrls([heroPhotoUrl2Src], 1); }catch(e){}
+  const heroPhotoUrl2 = heroPhotoUrl2Src ? toScaledUrl(heroPhotoUrl2Src, 200).replace(/'/g,'%27').replace(/"/g,'%22') : '';
+  try{ if(heroPhotoUrl2Src && typeof prewarmImageUrls==='function') prewarmImageUrls([heroPhotoUrl2Src], 1, 200, 'scaled'); }catch(e){}
   const heroPhoto2Use = (selected.photo2PosUse !== false);
   const heroPhoto2PosX = Number(selected.photo2PosX), heroPhoto2PosY = Number(selected.photo2PosY);
   const heroPhoto2Pos = (heroPhoto2Use && Number.isFinite(heroPhoto2PosX) && Number.isFinite(heroPhoto2PosY)) ? `${heroPhoto2PosX}% ${heroPhoto2PosY}%` : 'center 32%';
@@ -1106,7 +1109,7 @@ function _buildFocusView(rankMap){
       ${heroPhotoUrl ? `<div class="streamer-focus-hero-bg" style="background-image:url('${heroPhotoUrl}')"></div>` : ''}
       ${(heroPhotoUrl2 || heroPhotoUrl) ? `<div class="streamer-focus-hero-bg2" style="background-image:url('${heroPhotoUrl2 || heroPhotoUrl}');--hero-bg2-op:${heroPhotoUrl2 ? '.11' : '.05'};--hero-bg2-pos:${heroPhotoUrl2 ? heroPhoto2Pos : 'top center'};--hero-bg2-left:${heroPhotoUrl2 ? '46%' : '54%'};--hero-bg2-scale:${heroPhotoUrl2 ? '1.02' : '1.05'}"></div>` : ''}
       <div class="streamer-focus-photo">
-        ${selected.photo ? `<img src="${toHttpsUrl(selected.photo)}" alt="${selected.name}">` : ''}
+        ${selected.photo ? `<img src="${toScaledUrl(selected.photo,480)}" data-orig="${heroPhotoOrig}" alt="${selected.name}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';}">` : ''}
         <div class="streamer-focus-photo-fallback" style="display:${selected.photo?'none':'flex'}">${selected.race||'?'}</div>
       </div>
       <div class="streamer-focus-copy">

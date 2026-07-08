@@ -23,6 +23,7 @@ import { transform } from 'esbuild';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC = __dirname;
@@ -265,9 +266,23 @@ const LAZY_CHUNKS = {
   ],
 };
 
-// ──────────────────────────────────────────
-// 유틸리티
-// ──────────────────────────────────────────
+/**
+ * index.html <head>에 개별 <link rel="stylesheet"> 로 걸려있는 CSS 파일들.
+ * 전부 render-blocking 요청이라 번들 시 하나로 합쳐 요청 수를 줄인다.
+ * ⚠️ 캐스케이드(적용 순서)가 곧 우선순위이므로 반드시 index.html에 등장하는 순서를 그대로 유지한다.
+ */
+const CSS_FILES = [
+  'css/style.css',
+  'css/ui-improvements.css',
+  'css/design-improvements.css',
+  'css/ui-fix-empty-classes.css',
+  'css/ui-custom-v3.css',
+  'css/player-detail-design-modes.css',
+  'css/univ-detail-design-modes.css',
+  'css/rec-card-minimal.css',
+];
+
+
 
 function fmtSize(bytes) {
   if (bytes < 1024) return bytes + ' B';
@@ -336,13 +351,62 @@ async function buildChunk(outName, files) {
   return { outName, files: files.length - missing, origSize, newSize };
 }
 
-// ──────────────────────────────────────────
-// index.html 패치
-// ──────────────────────────────────────────
+async function buildCssBundle(files) {
+  const parts = [];
+  let origSize = 0;
 
-function patchIndexHtml(stats) {
+  for (const f of files) {
+    const full = path.join(SRC, f);
+    if (!fs.existsSync(full)) {
+      console.warn(`  ⚠️  CSS 파일 없음: ${f}`);
+      continue;
+    }
+    const src = fs.readFileSync(full, 'utf8');
+    origSize += Buffer.byteLength(src, 'utf8');
+    let out = src;
+    try {
+      const result = await transform(src, { loader: 'css', minifyWhitespace: true, minifySyntax: true });
+      out = result.code;
+    } catch (e) {
+      console.warn(`  ⚠️  CSS minify 실패, 원본 사용: ${path.basename(f)} — ${e.message}`);
+    }
+    parts.push(`/* ${path.basename(f)} */\n${out}`);
+  }
+
+  const combined = parts.join('\n');
+  fs.mkdirSync(path.join(DIST, 'css'), { recursive: true });
+  fs.writeFileSync(path.join(DIST, 'css', 'bundle.css'), combined, 'utf8');
+
+  const newSize = Buffer.byteLength(combined, 'utf8');
+  const saved = origSize > 0 ? (((origSize - newSize) / origSize) * 100).toFixed(1) : '?';
+  console.log(
+    `  ✅ ${'bundle.css'.padEnd(22)} ${String(files.length).padStart(3)}개 파일  ` +
+    `${fmtSize(origSize).padStart(9)} → ${fmtSize(newSize).padStart(9)}  (-${saved}%)`
+  );
+
+  // 내용 기반 해시 → 캐시 버스팅용 버전 문자열 (내용이 안 바뀌면 버전도 그대로라 재다운로드 없음)
+  const hash = crypto.createHash('md5').update(combined).digest('hex').slice(0, 10);
+  return { origSize, newSize, hash };
+}
+
+
+
+function patchIndexHtml(stats, cssHash) {
   const htmlPath = path.join(SRC, 'index.html');
   let html = fs.readFileSync(htmlPath, 'utf8');
+
+  // 개별 css <link> 태그들을 제거하고, 첫 번째 태그가 있던 자리에 번들 하나로 교체
+  let cssInserted = false;
+  for (const f of CSS_FILES) {
+    const re = new RegExp(`<link[^>]*href="${f.replace(/\//g, '\\/')}\\?[^"]*"[^>]*>\\n?`);
+    if (re.test(html)) {
+      html = html.replace(
+        re,
+        cssInserted ? '' : `<link rel="stylesheet" href="dist/css/bundle.css?v=${cssHash}">\n`
+      );
+      cssInserted = true;
+    }
+  }
 
   // 기존 로컬 script 태그를 모두 제거 (CDN 제외)
   // tabs-scroll-init.js는 defer 없이 body에 있으므로 유지
@@ -481,9 +545,12 @@ async function main() {
     results.push(await buildChunk(name, files));
   }
 
+  console.log('\n🎨 CSS 번들 빌드:');
+  const cssResult = await buildCssBundle(CSS_FILES);
+
   // 합계
-  const totalOrig = results.reduce((a, r) => a + r.origSize, 0);
-  const totalNew  = results.reduce((a, r) => a + r.newSize,  0);
+  const totalOrig = results.reduce((a, r) => a + r.origSize, 0) + cssResult.origSize;
+  const totalNew  = results.reduce((a, r) => a + r.newSize,  0) + cssResult.newSize;
   const totalSaved = (((totalOrig - totalNew) / totalOrig) * 100).toFixed(1);
 
   console.log('\n' + '─'.repeat(60));
@@ -491,11 +558,11 @@ async function main() {
     `📊 전체: ${fmtSize(totalOrig)} → ${fmtSize(totalNew)}  (-${totalSaved}%)`
   );
   console.log(
-    `   HTTP 요청: ~140개 → ${chunks.length + Object.keys(LAZY_CHUNKS).length}개 (초기 ${chunks.length}개)`
+    `   HTTP 요청: ~148개 → ${chunks.length + Object.keys(LAZY_CHUNKS).length + 1}개 (초기 ${chunks.length + 1}개)`
   );
 
   // index.html 패치
-  patchIndexHtml(results);
+  patchIndexHtml(results, cssResult.hash);
 
   console.log(`\n✨ 완료 (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
   console.log('\n사용 방법:');

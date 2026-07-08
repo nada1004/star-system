@@ -6,6 +6,8 @@
 <title>⭐ 스타대학 데이터 센터</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.weserv.nl">
+<link rel="dns-prefetch" href="https://images.weserv.nl">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;800;900&display=optional" rel="stylesheet">
 <script defer crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
@@ -21,7 +23,7 @@
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const SWV = '20260701-04';
+    const SWV = '20260708-01';
     try{
       const prev = localStorage.getItem('su_sw_v') || '';
       if(prev !== SWV && navigator.serviceWorker.controller){
@@ -31,7 +33,7 @@ if ('serviceWorker' in navigator) {
         localStorage.setItem('su_sw_v', SWV);
       }
     }catch(e){}
-    navigator.serviceWorker.register('/sw.js?v=20260701-04', { scope: '/' })
+    navigator.serviceWorker.register('/sw.js?v=20260708-01', { scope: '/' })
       .then(reg => {
         console.log('[SW] 등록 완료:', reg.scope);
         try{ reg.update(); }catch(e){}
@@ -659,11 +661,11 @@ if ('serviceWorker' in navigator) {
 
 <script defer src="js/config.js"></script>
 <script defer src="js/match-store-idb.js?v=20260504-01"></script>
-<script defer src="js/constants.js?v=20260701-fix03"></script>
+<script defer src="js/constants.js?v=20260708-thumb01"></script>
 <script defer src="js/constants-save.js?v=20260629-split"></script>
 <script defer src="js/constants-game.js?v=20260629-split"></script>
 <script defer src="js/constants-tab-colors.js?v=20260629-split"></script>
-<script defer src="js/constants-player-html.js?v=20260628-v29z2"></script>
+<script defer src="js/constants-player-html.js?v=20260708-thumb01"></script>
 <script defer src="js/unified-settings.js?v=20260607-03"></script>
 <script defer src="js/modal-open.js?v=20260628-fix01"></script>
 <script defer src="js/modal-drag.js?v=20260504-04"></script>
@@ -743,7 +745,7 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/render-player-modal-entry.js?v=20260705-mvp01"></script>
 <script defer src="js/render-match-id-prepare.js?v=20260501-36"></script>
 <script defer src="js/players-search-state.js?v=20260708-simpleview02"></script>
-<script defer src="js/players-streamer-views.js?v=20260708-simpleview03"></script>
+<script defer src="js/players-streamer-views.js?v=20260708-thumb01"></script>
 <script defer src="js/players-tier-rank.js?v=20260707-cardclick01"></script>
 <script defer src="js/vs.js?v=20260502-03"></script>
 <script defer src="js/history-action-utils.js?v=20260510-02"></script>
@@ -787,8 +789,6 @@ if ('serviceWorker' in navigator) {
 <!-- (성능) vote/elboard/bgm/soop는 기능 사용 시 지연 로딩 (render-core.js/init.js) -->
 <script defer src="js/sync/cloud-apply.js?v=20260502-04"></script>
 <script defer src="js/sync/cloud-status.js?v=20260503-01"></script>
-<!-- html2canvas 라이브러리 직접 로드 (ensureHtml2Canvas와 동일 버전으로 통일) -->
-<script defer crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script defer src="js/cloud-board-state.js?v=20260701-fix03"></script>
 <script defer src="js/cloud-board-render.js?v=20260629-split"></script>
 <script defer src="js/cloud-board-drag.js?v=20260629-split"></script>

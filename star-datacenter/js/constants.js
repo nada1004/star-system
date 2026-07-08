@@ -1531,6 +1531,41 @@ function toHttpsUrl(u){
   const s = String(u||'');
   return s.startsWith('http://') ? ('https://' + s.slice('http://'.length)) : s;
 }
+// 프로필 사진 썸네일 URL (images.weserv.nl 리사이즈 프록시)
+// 사용자가 imgur/디스코드 등에 올린 원본(수백KB~수MB, 고해상도)을
+// 실제 표시 크기(px)에 맞게 축소+webp 재인코딩하여 전송량/디코딩 비용을 크게 줄인다.
+function toThumbUrl(u, px){
+  const s = toHttpsUrl(u);
+  if(!s || !/^https:\/\//.test(s)) return s; // data: 등은 그대로 통과
+  if(s.indexOf('images.weserv.nl') !== -1) return s; // 이미 프록시된 URL이면 중복 방지
+  try{
+    const dpr = (typeof window!=='undefined' && window.devicePixelRatio > 1) ? 2 : 1;
+    const w = Math.max(32, Math.min(640, Math.round((parseInt(px,10)||64) * dpr)));
+    const encoded = encodeURIComponent(s.replace(/^https?:\/\//,''));
+    return 'https://images.weserv.nl/?url='+encoded+'&w='+w+'&h='+w+'&fit=cover&we=1&output=webp&q=78';
+  }catch(e){ return s; }
+}
+// 정사각형으로 자르지 않고 원본 비율을 유지한 채 최대 너비만 제한 (배너/상세 사진 등)
+function toScaledUrl(u, maxPx){
+  const s = toHttpsUrl(u);
+  if(!s || !/^https:\/\//.test(s)) return s;
+  if(s.indexOf('images.weserv.nl') !== -1) return s;
+  try{
+    const dpr = (typeof window!=='undefined' && window.devicePixelRatio > 1) ? 2 : 1;
+    const w = Math.max(64, Math.min(1200, Math.round((parseInt(maxPx,10)||480) * dpr)));
+    const encoded = encodeURIComponent(s.replace(/^https?:\/\//,''));
+    return 'https://images.weserv.nl/?url='+encoded+'&w='+w+'&we=1&output=webp&q=80';
+  }catch(e){ return s; }
+}
+// 썸네일 프록시 실패 시 원본으로 폴백 → 그래도 실패하면 숨김. onerror 핸들러에서 공용으로 호출.
+function _thumbFallback(el){
+  try{
+    if(!el) return;
+    const orig = el.getAttribute('data-orig');
+    if(orig && el.src !== orig){ el.onerror = function(){ this.style.display='none'; }; el.src = orig; }
+    else { el.style.display='none'; }
+  }catch(e){ try{ el.style.display='none'; }catch(e2){} }
+}
 function getStatusIcon(name){
   const expiry = playerStatusExpiry[name];
   if(expiry && expiry < new Date().toISOString().slice(0,10)){

@@ -15,7 +15,7 @@
  *  → 이전 캐시가 모두 삭제되고 새 버전으로 교체됩니다.
  */
 
-const CACHE_VERSION = 'v20260701-04';
+const CACHE_VERSION = 'v20260708-02';
 
 const CACHE_NAMES = {
   immutable: `immutable-${CACHE_VERSION}`,  // 번들/버전 쿼리 파일 (장기 캐시)
@@ -34,9 +34,7 @@ const ALL_CACHES = Object.values(CACHE_NAMES);
 const PRECACHE_URLS = [
   '/',
   '/index.dist.html',
-  '/css/style.css',
-  '/css/ui-improvements.css',
-  '/css/design-improvements.css',
+  '/dist/css/bundle.css',
   '/dist/js/chunk-core.js',
   '/dist/js/chunk-match.js',
   '/dist/js/chunk-search.js',

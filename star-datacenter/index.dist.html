@@ -6,22 +6,18 @@
 <title>⭐ 스타대학 데이터 센터</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.weserv.nl">
+<link rel="dns-prefetch" href="https://images.weserv.nl">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;800;900&display=optional" rel="stylesheet">
 <script defer crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <!-- (성능) html2canvas / chart.js는 기능 사용 시 지연 로딩 (render-core.js) -->
-<link rel="stylesheet" href="css/style.css?v=20260707-avatar2x01"><!-- /* [Z-IDX] */ -->
-<link rel="stylesheet" href="css/ui-improvements.css?v=20260521-v29">
-<link rel="stylesheet" href="css/design-improvements.css?v=20260628-fix01">
-<link rel="stylesheet" href="css/ui-fix-empty-classes.css?v=20260705-mvp01">
-<link rel="stylesheet" href="css/ui-custom-v3.css?v=20260630-v01">
-<link rel="stylesheet" href="css/player-detail-design-modes.css?v=20260702-v02">
-<link rel="stylesheet" href="css/univ-detail-design-modes.css?v=20260702-v02">
-<link rel="stylesheet" href="css/rec-card-minimal.css?v=20260705-v01">
+<link rel="stylesheet" href="dist/css/bundle.css?v=dedd71002f">
+<!-- /* [Z-IDX] */ -->
 <!-- ⚡ Service Worker 등록 (캐싱 최적화) -->
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const SWV = '20260701-04';
+    const SWV = '20260708-01';
     try{
       const prev = localStorage.getItem('su_sw_v') || '';
       if(prev !== SWV && navigator.serviceWorker.controller){
@@ -31,7 +27,7 @@ if ('serviceWorker' in navigator) {
         localStorage.setItem('su_sw_v', SWV);
       }
     }catch(e){}
-    navigator.serviceWorker.register('/sw.js?v=20260701-04', { scope: '/' })
+    navigator.serviceWorker.register('/sw.js?v=20260708-01', { scope: '/' })
       .then(reg => {
         console.log('[SW] 등록 완료:', reg.scope);
         try{ reg.update(); }catch(e){}
@@ -660,8 +656,6 @@ if ('serviceWorker' in navigator) {
 <!-- (성능) stats/calendar는 탭 진입 시 지연 로딩 (render-core.js) -->
 <!-- (성능) 룰렛/부가기능은 탭 진입 시 지연 로딩 (render-core.js에서 로드) -->
 <!-- (성능) vote/elboard/bgm/soop는 기능 사용 시 지연 로딩 (render-core.js/init.js) -->
-<!-- html2canvas 라이브러리 직접 로드 (ensureHtml2Canvas와 동일 버전으로 통일) -->
-<script defer crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- (성능) 챗봇은 열 때 지연 로딩 (render-core.js) -->
 
 
