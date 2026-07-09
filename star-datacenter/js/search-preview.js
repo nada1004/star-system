@@ -958,7 +958,12 @@ function renderPastePreview(results, errors) {
       } else if (!_isCKMode && r.wPlayer?.univ && r.wPlayer.univ !== '무소속' &&
                  r.lPlayer?.univ && r.lPlayer.univ !== '무소속' &&
                  teamAPreview && teamAPreview !== 'A팀' && teamAPreview !== 'A조' &&
-                 teamBPreview && teamBPreview !== 'B팀' && teamBPreview !== 'B조') {
+                 teamBPreview && teamBPreview !== 'B팀' && teamBPreview !== 'B조' &&
+                 (r.wPlayer.univ === teamAPreview || r.wPlayer.univ === teamBPreview) &&
+                 (r.lPlayer.univ === teamAPreview || r.lPlayer.univ === teamBPreview) &&
+                 r.wPlayer.univ !== r.lPlayer.univ) {
+        // 승자/패자 소속이 정확히 A팀/B팀 둘 중 하나씩일 때만 소속 기준으로 판단
+        // (소속이 A/B 어느쪽과도 다른 제3의 소속이면 오분류 방지 → 좌우 위치 기준으로 폴백)
         aWins = r.wPlayer.univ === teamAPreview;
       } else {
         aWins = ((typeof r._leftIsWin==='boolean' ? r._leftIsWin : (r.leftName||r.winName) === r.winName));
@@ -996,7 +1001,12 @@ function renderPastePreview(results, errors) {
         } else if (r.wPlayer?.univ && r.wPlayer.univ !== '무소속' &&
                    r.lPlayer?.univ && r.lPlayer.univ !== '무소속' &&
                    teamAPreview && teamAPreview !== 'A팀' && teamAPreview !== 'A조' &&
-                   teamBPreview && teamBPreview !== 'B팀' && teamBPreview !== 'B조') {
+                   teamBPreview && teamBPreview !== 'B팀' && teamBPreview !== 'B조' &&
+                   (r.wPlayer.univ === teamAPreview || r.wPlayer.univ === teamBPreview) &&
+                   (r.lPlayer.univ === teamAPreview || r.lPlayer.univ === teamBPreview) &&
+                   r.wPlayer.univ !== r.lPlayer.univ) {
+          // 승자/패자 소속이 정확히 A팀/B팀 둘 중 하나씩일 때만 소속 기준으로 판단
+          // (소속이 A/B 어느쪽과도 다른 제3의 소속이면 오분류 방지 → 좌우 위치 기준으로 폴백)
           aW = r.wPlayer.univ === teamAPreview;
         } else {
           aW = ((typeof r._leftIsWin==='boolean' ? r._leftIsWin : (r.leftName||r.winName) === r.winName));
