@@ -336,11 +336,13 @@ function cfgUnivSetColor(i, hex){
   try{ if(typeof renderBoard==='function') renderBoard(); }catch(e){}
 }
 function cfgUnivPickColor(i, btn){
+  if(typeof cfgShowColorPalette!=='function') return;
   const cur = (univCfg[i] && univCfg[i].color) || '#3b82f6';
   cfgShowColorPalette(btn, cur, (hex)=>{ cfgUnivSetColor(i, hex); });
 }
 
 function cfgTierThemePickColor(tier, btn){
+  if(typeof cfgShowColorPalette!=='function') return;
   const td = (typeof tierThemes!=='undefined') && tierThemes && tierThemes[tier];
   const cur = (td && td.color) || '#3b82f6';
   cfgShowColorPalette(btn, cur, (hex)=>{ cfgTierThemeSetColor(tier, hex); });

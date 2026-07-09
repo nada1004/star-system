@@ -726,12 +726,29 @@ function _buildSimpleView(rankMap){
       if(photoSrcRaw) _simplePhotoUrls.push(photoSrcRaw);
       _sRowIdx++;
       const _sImgLoadAttr = _sRowIdx<=20 ? 'loading="eager" fetchpriority="high"' : 'loading="eager" fetchpriority="low"';
-      html+=`<div class="streamer-simple-row ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-simple-row="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" data-tp-action="open-player" data-tp-player="${_pAttr}">
-        ${photoSrcRaw?`<span class="streamer-simple-avatar"><img ${_sImgLoadAttr} decoding="async" src="${toThumbUrl(photoSrcRaw,56)}" data-orig="${toHttpsUrl(photoSrcRaw)}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.parentNode.textContent='${p.race||'?'}';}"></span>`:`<span class="streamer-simple-avatar">${p.race||'?'}</span>`}
-        <span class="streamer-simple-name">${p.role?`${getRoleBadgeHTML(p.role,'9px')} `:''}<span class="clickable-name">${p.name}</span>${genderIcon(p.gender)}${p.retired?'<span class="streamer-simple-flag">은퇴</span>':''}${p.inactive?'<span class="streamer-simple-flag">휴학</span>':''}</span>
-        <span class="streamer-simple-tier">${p.tier?getTierLabel(p.tier):'미정'}</span>
-        <span class="streamer-simple-record">${games?`${win}승 ${loss}패`:'전적없음'}</span>
-        <span class="streamer-simple-wr" style="color:${games===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${games?wr+'%':'-'}</span>
+      const _wrIsHot = games && wr>=70;
+      const _raceCode = p.race || 'N';
+      const _tierColorRaw = (p.tier && typeof getTierBtnColor==='function') ? getTierBtnColor(p.tier) : '#8b5cf6';
+      html+=`<div class="streamer-simple-row ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-simple-row="1" data-univ="${u.name}" data-q="${q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="--c:${u.color||'#6366f1'};--i:${_sRowIdx}">
+        <span class="streamer-simple-avatar-wrap">
+          ${photoSrcRaw?`<span class="streamer-simple-avatar"><img ${_sImgLoadAttr} decoding="async" src="${toThumbUrl(photoSrcRaw,56)}" data-orig="${toHttpsUrl(photoSrcRaw)}" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.parentNode.textContent='${p.race||'?'}';}"></span>`:`<span class="streamer-simple-avatar">${p.race||'?'}</span>`}
+        </span>
+        <span class="streamer-simple-line">
+          <span class="streamer-simple-left">
+            ${p.role?`<span class="streamer-simple-role">${getRoleBadgeHTML(p.role,'9px')}</span>`:''}
+            <span class="streamer-simple-name"><span class="streamer-simple-name-text clickable-name">${p.name}</span>${genderIcon(p.gender)}${p.retired?'<span class="streamer-simple-flag">은퇴</span>':''}${p.inactive?'<span class="streamer-simple-flag">휴학</span>':''}</span>
+          </span>
+          <span class="streamer-simple-mid">
+            <span class="streamer-simple-race race-${_raceCode}">${_raceCode}</span>
+            <span class="streamer-simple-tier" style="--tc:${_tierColorRaw}">${p.tier||'미정'}</span>
+            <span class="streamer-simple-record">${games?`${win}승${loss}패`:'전적없음'}</span>
+          </span>
+        </span>
+        <span class="streamer-simple-medal ${games?(wr>=50?'is-win':'is-lose'):'is-none'}">
+          ${_wrIsHot?'<span class="streamer-simple-medal-hot">HOT</span>':''}
+          <span class="streamer-simple-medal-label">승률</span>
+          <span class="streamer-simple-medal-value">${games?`${wr}%`:'-'}</span>
+        </span>
       </div>`;
     });
   });
@@ -791,27 +808,75 @@ function _buildSimpleView(rankMap){
   const s=document.createElement('style');
   s.id='streamer-simple-style';
   s.textContent=[
-    // 심플형: 여백을 최소화한 한 줄 리스트
-    '.streamer-simple-list{display:flex;flex-direction:column}',
-    '.streamer-simple-head{display:flex;align-items:center;gap:8px;padding:6px 10px;margin-top:8px;border-radius:8px;background:color-mix(in srgb, var(--c,#6366f1) 12%, transparent)}',
-    '.streamer-simple-head:first-child{margin-top:0}',
-    '.streamer-simple-univ{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:900;color:var(--c,#6366f1);cursor:pointer}',
-    '.streamer-simple-univ-count{margin-left:auto;font-size:11px;font-weight:700;color:var(--gray-l)}',
-    '.streamer-simple-row{display:grid;grid-template-columns:28px minmax(0,1fr) 15% 20% 13%;align-items:center;column-gap:12px;padding:8px 10px;border-bottom:1px solid rgba(148,163,184,.16);cursor:pointer}',
-    '.streamer-simple-row:hover{background:rgba(148,163,184,.08)}',
+    // 심플형: 초등학교 저학년st 느낌의 통통 튀는 카드형 리스트. 이모지 장식 없이 색상/모양만으로 귀엽게, 정보는 각자 자리에 또렷하게
+    '.streamer-simple-list{display:flex;flex-direction:column;gap:10px;font-family:inherit}',
+    '.streamer-simple-head{display:flex;align-items:center;gap:8px;padding:8px 16px;margin-top:20px;border-radius:999px;background:linear-gradient(90deg, color-mix(in srgb, var(--c,#6366f1) 22%, transparent), color-mix(in srgb, var(--c,#6366f1) 10%, transparent));box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--c,#6366f1) 30%, transparent)}',
+    '.streamer-simple-head:first-child{margin-top:2px}',
+    '.streamer-simple-univ{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:900;color:var(--c,#6366f1);cursor:pointer;letter-spacing:-.01em}',
+    '.streamer-simple-univ-count{margin-left:auto;font-size:11px;font-weight:900;color:#fff;background:var(--c,#6366f1);padding:3px 10px;border-radius:999px;box-shadow:0 2px 0 rgba(15,23,42,.15);transition:transform .18s cubic-bezier(.34,1.56,.64,1)}',
+    '.streamer-simple-head:hover .streamer-simple-univ-count{transform:scale(1.12) rotate(-4deg)}',
+    '.streamer-simple-row{display:flex;align-items:center;gap:12px;padding:10px 16px 10px 10px;border-radius:24px;border:2.5px solid color-mix(in srgb, var(--c,#6366f1) 38%, rgba(148,163,184,.25));background:linear-gradient(160deg, color-mix(in srgb, var(--c,#6366f1) 10%, var(--panel,#fff)), var(--panel,#fff) 65%);box-shadow:0 3px 0 0 color-mix(in srgb, var(--c,#6366f1) 32%, rgba(148,163,184,.3));cursor:pointer;transition:transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .16s ease, border-color .16s ease;animation:streamerSimpleRowPop .38s cubic-bezier(.34,1.56,.64,1) backwards;animation-delay:calc(min(var(--i,0),14) * 22ms)}',
+    '@keyframes streamerSimpleRowPop{0%{opacity:0;transform:translateY(6px) scale(.96)}100%{opacity:1;transform:translateY(0) scale(1)}}',
+    '@media (prefers-reduced-motion:reduce){.streamer-simple-row{animation:none}}',
+    '.streamer-simple-row:hover{transform:translateY(-3px) rotate(-.3deg) scale(1.012);box-shadow:0 8px 0 0 color-mix(in srgb, var(--c,#6366f1) 40%, rgba(148,163,184,.3));border-color:color-mix(in srgb, var(--c,#6366f1) 60%, transparent)}',
+    '.streamer-simple-row:active{transform:translateY(1px) scale(.99);box-shadow:0 1px 0 0 color-mix(in srgb, var(--c,#6366f1) 32%, rgba(148,163,184,.3))}',
     '.streamer-simple-row.inactive{opacity:.6}',
     '.streamer-simple-row.retired{opacity:.5;filter:grayscale(.5)}',
-    '.streamer-simple-avatar{width:26px;height:26px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:var(--surface2,#eef2ff);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--gray-l);position:relative}',
+    // 프로필 이미지: 설정탭에서 정한 모양(원형/둥근사각 등)은 그대로 따르되, 겹겹의 링과 통통 튀는 hover로 귀여움만 더함 (이모지 스티커 없음)
+    '.streamer-simple-avatar-wrap{position:relative;flex-shrink:0;line-height:0}',
+    '.streamer-simple-avatar{width:50px;height:50px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:color-mix(in srgb, var(--c,#6366f1) 16%, #eef2ff);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:var(--c,#6366f1);position:relative;box-shadow:0 0 0 3px #fff, 0 0 0 5px color-mix(in srgb, var(--c,#6366f1) 55%, transparent);transition:transform .18s cubic-bezier(.34,1.56,.64,1)}',
+    '.streamer-simple-row:hover .streamer-simple-avatar{box-shadow:0 0 0 3px #fff, 0 0 0 5px var(--c,#6366f1);transform:rotate(-4deg) scale(1.05)}',
     '.streamer-simple-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;clip-path:inherit}',
-    '.streamer-simple-name{min-width:0;font-size:13px;font-weight:800;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:3px}',
-    '.streamer-simple-name .clickable-name{overflow:hidden;text-overflow:ellipsis}',
-    '.streamer-simple-flag{font-size:9px;font-weight:700;color:var(--gray-l);background:rgba(148,163,184,.18);border-radius:4px;padding:1px 5px;margin-left:2px}',
-    '.streamer-simple-tier{font-size:11px;font-weight:700;color:var(--text3);text-align:center}',
-    '.streamer-simple-record{font-size:11px;font-weight:700;color:var(--text3);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-    '.streamer-simple-wr{text-align:center;font-size:12px;font-weight:900}',
-    '@media (max-width:768px){.streamer-simple-row{grid-template-columns:24px minmax(0,1fr) 19% 24% 16%;padding:7px 8px;column-gap:8px}.streamer-simple-tier{font-size:10px}.streamer-simple-record{font-size:10px}}',
-    'body.dark .streamer-simple-row{border-color:rgba(255,255,255,.08)}',
-    'body.dark .streamer-simple-row:hover{background:rgba(255,255,255,.05)}'
+    'body.dark .streamer-simple-avatar{box-shadow:0 0 0 3px #0f172a, 0 0 0 5px color-mix(in srgb, var(--c,#6366f1) 65%, transparent)}',
+    'body.dark .streamer-simple-row:hover .streamer-simple-avatar{box-shadow:0 0 0 3px #0f172a, 0 0 0 5px var(--c,#6366f1)}',
+    // 직책+이름(좌측 고정폭 그룹) / 종족·티어·전적(중간 그룹, 남는 공간에 고르게 분산 배치)으로 분리.
+    // 좌측 그룹의 폭을 이름 길이와 무관하게 항상 동일하게 고정해서(내용에 따라 늘어나지 않음),
+    // 종족/티어/전적이 시작되는 위치가 카드마다 흔들리지 않고 항상 같은 자리에서 시작하도록 함
+    '.streamer-simple-line{min-width:0;flex:1;display:flex;align-items:center;gap:10px;margin-left:6px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}',
+    '.streamer-simple-line::-webkit-scrollbar{display:none}',
+    '.streamer-simple-left{flex:0 0 168px;min-width:0;display:flex;align-items:center;gap:6px;overflow:hidden}',
+    '.streamer-simple-mid{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:space-evenly;gap:6px}',
+    '@media (max-width:768px){.streamer-simple-left{flex-basis:120px}}',
+    // 직책: 작은 사각 배지 대신 알약형(pill) 캔디 배지로, 살짝 기울어진 채 호버시 통통 튀도록
+    '.streamer-simple-role{flex:0 0 auto;display:inline-flex;transform:rotate(-2deg);transition:transform .18s cubic-bezier(.34,1.56,.64,1)}',
+    '.streamer-simple-role>span{border-radius:999px!important;padding:3px 9px!important;box-shadow:0 2px 0 rgba(15,23,42,.15), inset 0 1px 0 rgba(255,255,255,.35)!important;border:1.5px solid rgba(255,255,255,.5)!important}',
+    '.streamer-simple-row:hover .streamer-simple-role{transform:rotate(3deg) scale(1.1)}',
+    // 이름: 어떤 상태에서도 효과 없이 항상 담백한 굵은 글씨로 표시
+    '.streamer-simple-name{flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:3px;overflow:hidden}',
+    '.streamer-simple-name-text{font-size:14.5px;font-weight:950;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;color:var(--text1)}',
+    '.streamer-simple-flag{flex:0 0 auto;font-size:9px;font-weight:800;color:#fff;background:linear-gradient(135deg,#94a3b8,#64748b);border-radius:999px;padding:2px 7px}',
+    '.streamer-simple-race{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:20px;font-size:10px;font-weight:900;padding:3px 7px;border-radius:999px;white-space:nowrap;transition:transform .16s cubic-bezier(.34,1.56,.64,1)}',
+    '.streamer-simple-race.race-T{color:#1e40af;background:linear-gradient(135deg,#dbeafe,#93c5fd);border:1.5px solid #93c5fd}',
+    '.streamer-simple-race.race-Z{color:#6b21a8;background:linear-gradient(135deg,#f3e8ff,#d8b4fe);border:1.5px solid #d8b4fe}',
+    '.streamer-simple-race.race-P{color:#92400e;background:linear-gradient(135deg,#fef3c7,#fcd34d);border:1.5px solid #fcd34d}',
+    '.streamer-simple-race.race-N{color:#475569;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);border:1.5px dashed #cbd5e1}',
+    'body.dark .streamer-simple-race.race-N{color:#cbd5e1;background:linear-gradient(135deg,#334155,#1e293b);border-color:#475569}',
+    // 티어/전적 칩 - 티어는 설정탭의 실제 티어 색상(--tc)을 그대로 반영해 파스텔화, 전적은 노란 캔디톤
+    '.streamer-simple-tier,.streamer-simple-record{flex:0 0 auto;position:relative;display:inline-flex;align-items:center;font-size:10.5px;font-weight:900;white-space:nowrap;border-radius:999px;padding:3px 9px;box-shadow:0 2px 0 0 rgba(15,23,42,.08);transition:transform .16s cubic-bezier(.34,1.56,.64,1)}',
+    '.streamer-simple-row:hover .streamer-simple-race{transform:scale(1.08) rotate(-4deg)}',
+    '.streamer-simple-row:hover .streamer-simple-tier{transform:scale(1.08) rotate(3deg)}',
+    '.streamer-simple-row:hover .streamer-simple-record{transform:scale(1.06)}',
+    '.streamer-simple-tier{color:color-mix(in srgb, var(--tc,#8b5cf6) 85%, #000 15%);background:color-mix(in srgb, var(--tc,#8b5cf6) 22%, #fff);border:1.5px solid color-mix(in srgb, var(--tc,#8b5cf6) 55%, transparent)}',
+    '.streamer-simple-record{color:#7c5a00;background:linear-gradient(135deg,#fff7d6,#ffe58a);border:1.5px solid #f0d060}',
+    'body.dark .streamer-simple-tier{color:color-mix(in srgb, var(--tc,#8b5cf6) 88%, #fff 35%);background:color-mix(in srgb, var(--tc,#8b5cf6) 30%, #0f172a)}',
+    'body.dark .streamer-simple-record{color:#ffe9a8;background:linear-gradient(135deg,#4a3c14,#3a2f10);border-color:#7a611f}',
+    // 승률 배지 - 빨간색 대신 민트/스카이블루 캔디톤(승) + 라벤더그레이(패)로, 연승은 별 이모지 대신 HOT 태그로 표시
+    '.streamer-simple-medal{position:relative;flex-shrink:0;width:56px;height:56px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-weight:900;text-align:center;box-shadow:0 3px 0 rgba(15,23,42,.1);transition:transform .16s cubic-bezier(.34,1.56,.64,1);overflow:hidden}',
+    '.streamer-simple-medal::before{content:"";position:absolute;top:3px;left:6px;width:60%;height:38%;border-radius:50%;background:rgba(255,255,255,.55);filter:blur(1px);pointer-events:none}',
+    '.streamer-simple-row:hover .streamer-simple-medal{transform:scale(1.1) rotate(-3deg)}',
+    '.streamer-simple-medal-label{font-size:8.5px;font-weight:800;letter-spacing:.02em;opacity:.8}',
+    '.streamer-simple-medal-value{font-size:14px;font-weight:950;line-height:1.1}',
+    '.streamer-simple-medal-hot{position:absolute;top:-7px;right:-8px;font-size:8px;font-weight:950;letter-spacing:.02em;color:#fff;background:linear-gradient(135deg,#fb923c,#f97316);padding:2px 6px;border-radius:999px;box-shadow:0 2px 0 rgba(15,23,42,.2);animation:streamerSimpleHotPop 1.6s ease-in-out infinite}',
+    '@keyframes streamerSimpleHotPop{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(6deg) scale(1.1)}}',
+    '.streamer-simple-medal.is-win{color:#0e7490;background:radial-gradient(circle at 32% 28%, #cffafe, #67e8f9 75%);border:2.5px solid #22d3ee}',
+    '.streamer-simple-medal.is-lose{color:#475569;background:radial-gradient(circle at 32% 28%, #f1f5f9, #cbd5e1 75%);border:2.5px solid #94a3b8}',
+    '.streamer-simple-medal.is-none{color:var(--gray-l);background:rgba(148,163,184,.16);box-shadow:none;border:2px dashed rgba(148,163,184,.4)}',
+    '@media (max-width:768px){.streamer-simple-row{gap:8px;padding:7px 9px 7px 7px;border-radius:18px}.streamer-simple-avatar{width:38px;height:38px}.streamer-simple-name-text{font-size:12.5px}.streamer-simple-tier,.streamer-simple-record,.streamer-simple-race{font-size:9px;padding:2.5px 6px}.streamer-simple-medal{width:44px;height:44px;border-radius:13px}.streamer-simple-medal-value{font-size:11px}.streamer-simple-medal-label{font-size:7px}}',
+    'body.dark .streamer-simple-row{background:linear-gradient(160deg, color-mix(in srgb, var(--c,#6366f1) 14%, #0f172a), #0f172a 65%);border-color:color-mix(in srgb, var(--c,#6366f1) 45%, rgba(255,255,255,.1))}',
+    'body.dark .streamer-simple-row:hover{box-shadow:0 8px 0 0 color-mix(in srgb, var(--c,#6366f1) 45%, rgba(0,0,0,.4))}',
+    'body.dark .streamer-simple-medal.is-win{color:#a5f3fc;background:radial-gradient(circle at 32% 28%, #0e5b6b, #0a7d94 75%)}',
+    'body.dark .streamer-simple-medal.is-lose{color:#e2e8f0;background:radial-gradient(circle at 32% 28%, #334155, #1e293b 75%)}',
+    'body.dark .streamer-simple-medal.is-none{color:var(--gray-l);background:rgba(255,255,255,.08)}'
   ].join('');
   document.head.appendChild(s);
 })();

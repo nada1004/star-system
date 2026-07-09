@@ -375,9 +375,15 @@ async function init(){
   }catch(e){}
   // (요청사항) 다른 기기에서 저장된 "설정(Gist)"이 있으면 시작 시 반영
   // - 새 신호가 있을 때만 pull 됨
+  // ⚡ 첫 화면 표시를 막지 않도록 백그라운드로 실행 (네트워크 왕복 대기 없이 로컬 데이터로 먼저 렌더),
+  //   변경 신호가 있으면 pull 완료 후 재렌더 (주기적 자동 갱신과 동일한 패턴)
   try{
     if(window.SettingsStore && typeof window.SettingsStore.pullOnSignal==='function'){
-      await window.SettingsStore.pullOnSignal({ silent:true });
+      window.SettingsStore.pullOnSignal({ silent:true, returnInfo:true }).then(info=>{
+        try{
+          if(info && info.ok && !info.skipped && typeof render==='function') render();
+        }catch(e){}
+      }).catch(()=>{});
     }
   }catch(e){}
   fixPoints();

@@ -1,6 +1,22 @@
 (function(){
   window.SettingsModules = window.SettingsModules || {};
 
+  // 프로필 모양 선택 시 체크 배지가 통통 튀며 나타나는 애니메이션 (최초 1회만 주입)
+  try{
+    if(typeof document!=='undefined' && !document.getElementById('profile-shape-check-style')){
+      const _s=document.createElement('style');
+      _s.id='profile-shape-check-style';
+      _s.textContent='@keyframes profileShapeCheckPop{0%{transform:scale(0) rotate(-20deg);opacity:0}60%{transform:scale(1.25) rotate(8deg);opacity:1}100%{transform:scale(1) rotate(0deg)}}'
+        +'@keyframes profileShapeSpinIn{0%{transform:rotate(0deg) scale(.55);opacity:.4}55%{transform:rotate(380deg) scale(1.2)}100%{transform:rotate(360deg) scale(1);opacity:1}}'
+        +'.profile-shape-spin{animation:profileShapeSpinIn .55s cubic-bezier(.34,1.56,.64,1)}'
+        +'.profile-shape-btn:hover{transform:translateY(-3px) scale(1.06) rotate(-1deg)!important;box-shadow:0 6px 0 0 rgba(236,72,153,.22)!important;border-color:#f9a8d4!important}'
+        +'.profile-shape-btn:hover>div:first-of-type{transform:rotate(5deg) scale(1.08)}'
+        +'.profile-shape-btn>div:first-of-type{transition:transform .18s cubic-bezier(.34,1.56,.64,1)}'
+        +'.profile-shape-btn:active{transform:translateY(0) scale(.97)!important}';
+      document.head.appendChild(_s);
+    }
+  }catch(e){}
+
   function renderCfgProfileShapeCard(_scfgD){
     return _scfgD('profileshape','🖼️ 프로필 이미지 모양') + `
     <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">선수 프로필 이미지(스트리머 상세/통계/경기 상세/현황판 등)의 모양을 설정합니다.</div>
@@ -92,10 +108,11 @@
             ${_SHAPE_OPTIONS.map(s=>{
               const sel = shape===s.v;
               const isSports = ['thunder','versus','esports','trophy','crown','target','fist','arena','medal','saber','blast'].includes(s.v);
-              const sampleBg = 'linear-gradient(135deg,#6366f1,#a855f7)';
-              return `<button type="button" onclick="_setGlobalProfileShape('${s.v}');try{applyProfileShapeVars();}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};try{window.SettingsStore&&typeof window.SettingsStore.markPrefsChanged==='function'&&window.SettingsStore.markPrefsChanged();}catch(e){};try{window._renderCfgProfileShapeSection&&window._renderCfgProfileShapeSection();}catch(e){}" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 10px;border-radius:14px;border:${sel?'2.5px solid var(--blue)':isSports?'1.5px solid #7c3aed':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#eff6ff,#eef2ff)':isSports?'linear-gradient(135deg,#fdf4ff,#f5f3ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 3px #2563eb22':'none'};transition:all .15s">
-                <div style="width:52px;height:52px;background:${sampleBg};${s.preview};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.12)"></div>
-                <span style="font-size:12px;font-weight:900;color:${sel?'var(--blue)':'var(--text2)'}">${s.label}</span>
+              const sampleBg = 'linear-gradient(135deg,#f472b6,#a78bfa)';
+              return `<button type="button" class="profile-shape-btn" onclick="_setGlobalProfileShape('${s.v}');try{applyProfileShapeVars();}catch(e){};try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave();}catch(e){};try{window.SettingsStore&&typeof window.SettingsStore.markPrefsChanged==='function'&&window.SettingsStore.markPrefsChanged();}catch(e){};try{window._renderCfgProfileShapeSection&&window._renderCfgProfileShapeSection();}catch(e){};try{setTimeout(function(){var el=document.getElementById('profile-shape-thumb');if(el){el.classList.remove('profile-shape-spin');void el.offsetWidth;el.classList.add('profile-shape-spin');}},60);}catch(e){}" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 10px;border-radius:18px;border:${sel?'2.5px solid #ec4899':isSports?'1.5px solid #7c3aed':'1.5px solid var(--border)'};background:${sel?'linear-gradient(135deg,#fdf2f8,#f5f3ff)':isSports?'linear-gradient(135deg,#fdf4ff,#f5f3ff)':'var(--white)'};cursor:pointer;box-shadow:${sel?'0 0 0 4px #ec489922, 0 4px 0 0 #f9a8d4':'none'};transform:${sel?'translateY(-2px) scale(1.04)':'none'};transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, border-color .18s ease, background .18s ease">
+                ${sel?`<span style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 0 rgba(190,24,93,.4);animation:profileShapeCheckPop .35s cubic-bezier(.34,1.56,.64,1)">✓</span>`:''}
+                <div ${sel?'id="profile-shape-thumb" class="profile-shape-spin"':''} style="width:52px;height:52px;background:${sampleBg};${s.preview};flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.12)${sel?', 0 0 0 3px #fff, 0 0 0 5px #ec4899':''}"></div>
+                <span style="font-size:12px;font-weight:900;color:${sel?'#db2777':'var(--text2)'}">${s.label}</span>
                 <span style="font-size:9px;color:var(--gray-l);font-weight:700;text-align:center;line-height:1.3">${s.desc}</span>
               </button>`;
             }).join('')}

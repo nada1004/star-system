@@ -6,33 +6,10 @@
   }
   checkMobile();
   window.addEventListener('resize',checkMobile);
-  // FAB 표시 여부 설정 반영 (PC/모바일 분리)
+  // FAB 표시 여부 설정 반영 (PC/모바일 분리) — 정의는 fab.js (이 스크립트보다 먼저 로드됨)
   updateFabVisibility();
 })();
 
-// FAB 표시 여부 업데이트 함수 (PC/모바일 분리)
-function updateFabVisibility(){
-  const fab=document.getElementById('mobileFab');
-  if(!fab)return;
-  
-  const isMobile=window.innerWidth<=768;
-  const hideMobile=localStorage.getItem('su_fabHideMobile')==='1';
-  const hidePC=localStorage.getItem('su_fabHidePC')==='1';
-  
-  if(isMobile){
-    fab.style.display=hideMobile?'none':'flex';
-  }else{
-    fab.style.display=hidePC?'none':'flex';
-  }
-  // 로그인 상태에 따라 설정 옵션 표시/숨김
-  const settingsItem=document.querySelector('.fab-sub-item--cfg');
-  if(settingsItem){
-    settingsItem.style.display=typeof isLoggedIn!=='undefined'&&isLoggedIn?'flex':'none';
-  }
-}
-
-// 창 크기 변경 시 FAB 표시 여부 재계산
-window.addEventListener('resize',updateFabVisibility);
 
 // 페이지 로드 시 FAB 설정 옵션 표시 상태 초기화
 window.addEventListener('DOMContentLoaded',function(){
@@ -98,22 +75,7 @@ window.addEventListener('DOMContentLoaded',function(){
 /* ══════════════════════════════════════
    📱 FAB (플로팅 액션 버튼)
 ══════════════════════════════════════ */
-var _fabOpen=false;
-function toggleFab(){
-  _fabOpen=!_fabOpen;
-  const btn=document.getElementById('fabMain');
-  const list=document.getElementById('fabSubList');
-  if(!btn||!list)return;
-  btn.classList.toggle('open',_fabOpen);
-  list.classList.toggle('open',_fabOpen);
-}
-function closeFab(){
-  _fabOpen=false;
-  const btn=document.getElementById('fabMain');
-  const list=document.getElementById('fabSubList');
-  if(btn) btn.classList.remove('open');
-  if(list) list.classList.remove('open');
-}
+// toggleFab/closeFab 정의는 fab.js (이 스크립트보다 먼저 로드됨). _fabOpen 전역변수도 fab.js에서 선언.
 function _fabGo(tabId){
   // 탭 버튼 찾아서 직접 click() 트리거
   var el=null;

@@ -745,7 +745,7 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/render-player-modal-entry.js?v=20260705-mvp01"></script>
 <script defer src="js/render-match-id-prepare.js?v=20260501-36"></script>
 <script defer src="js/players-search-state.js?v=20260708-simpleview02"></script>
-<script defer src="js/players-streamer-views.js?v=20260708-thumb02"></script>
+<script defer src="js/players-streamer-views.js?v=20260709-cute04"></script>
 <script defer src="js/players-tier-rank.js?v=20260707-cardclick01"></script>
 <script defer src="js/vs.js?v=20260502-03"></script>
 <script defer src="js/history-action-utils.js?v=20260510-02"></script>
@@ -804,15 +804,14 @@ if ('serviceWorker' in navigator) {
 <script defer src="js/board2-briefing-data.js?v=20260705-mvp02"></script>
 <script defer src="js/board2-briefing.js?v=20260705-news01"></script>
 <!-- (성능) 챗봇은 열 때 지연 로딩 (render-core.js) -->
+<!-- 📱 FAB: mobile-bar.js가 updateFabVisibility 등을 참조하므로 반드시 먼저 로드 -->
+<script defer src="js/fab.js?v=20260627-01"></script>
 <script defer src="js/mobile-bar.js?v=20260507-01"></script>
 
 
 <!-- 📱 모바일 전용 플로팅 액션 버튼 -->
 <div id="mobileActionBar" style="display:none;position:fixed;bottom:68px;right:12px;z-index:var(--z-sticky)/* [Z-IDX] */;flex-direction:column;gap:8px;align-items:flex-end;">
 </div>
-
-<!-- 📱 FAB -->
-<script defer src="js/fab.js?v=20260627-01"></script>
 
 <div id="mobileFab">
   <div class="fab-sub-list" id="fabSubList">

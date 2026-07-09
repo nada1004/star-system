@@ -865,23 +865,7 @@ window.cfgGistSyncPush = async function(){
   try{ window.cfgRenderGistSyncStatus(); }catch(e){}
 };
 
-async function rebuildIndexedDbStores(){
-  try{
-    let msgs=[];
-    if(window.MatchStore && typeof window.MatchStore.rebuild==='function'){
-      const r=await window.MatchStore.rebuild();
-      msgs.push(`경기 기록: ${r.backend||'unknown'}`);
-    }
-    if(window.HistoryExternalUtils && typeof window.HistoryExternalUtils.rebuildStorage==='function'){
-      const r=await window.HistoryExternalUtils.rebuildStorage();
-      msgs.push(`외부탭: ${r.backend||'unknown'}`);
-    }
-    renderStorageInfo();
-    alert(`재빌드를 완료했습니다.\n${msgs.join('\n')}`);
-  }catch(e){
-    alert('재빌드 중 오류가 발생했습니다.');
-  }
-}
+// rebuildIndexedDbStores → settings-data-ops.js 단일 소스로 통합 (WARNING fix: 중복 정의 제거)
 
 // ── 이미지탭 레이아웃 저장 함수 ──
 
@@ -1304,5 +1288,4 @@ try{ if(typeof window._dissolveIdx !== 'number') window._dissolveIdx = -1; }catc
 
 // ── 색상 입력/스포이드 공용 유틸 ──
 // cfgUnivPickColor / cfgTierThemePickColor / cfgShowColorPalette
-// → settings-crud.js 에 권위 소스 존재, 여기선 생략
-function cfgUnivPickColor(i,btn){ if(typeof cfgShowColorPalette==='function'){ const cur=(univCfg[i]&&univCfg[i].color)||'#3b82f6'; cfgShowColorPalette(btn,cur,(hex)=>cfgUnivSetColor(i,hex)); } }
+// → settings-crud-univ.js 에 권위 소스 존재, 여기선 생략

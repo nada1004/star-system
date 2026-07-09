@@ -113,6 +113,12 @@ const CORE_FILES = [
   'js/render-player-modal-entry.js',
   'js/render-match-id-prepare.js',
   'js/vs.js',
+  // ⚡ (성능) 첫 화면(전체 스트리머 리스트, curTab='total')이 의존하는 렌더 함수(rTotal)와
+  // 그 상태 변수들을 코어 청크로 이동. 원래 chunk-search.js(3번째로 실행)에 있어서
+  // chunk-match.js(경기기록, 초기 화면과 무관)까지 다 실행된 뒤에야 rTotal이 정의되어
+  // 첫 렌더가 그만큼 늦게 시작됐음 → 코어로 옮겨 init() 직후 바로 렌더 가능하게 함.
+  'js/players-search-state.js',
+  'js/players-streamer-views.js',
   'js/rec-side-profiles.js',
   'js/mobile-bar.js',
   'js/fab.js',
@@ -156,8 +162,6 @@ const MATCH_FILES = [
 
 /** 검색/선수 번들 */
 const SEARCH_FILES = [
-  'js/players-search-state.js',
-  'js/players-streamer-views.js',
   'js/players-tier-rank.js',
   'js/search-parsing.js',
   'js/search-preview.js',
