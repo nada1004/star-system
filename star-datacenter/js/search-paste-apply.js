@@ -161,7 +161,12 @@ function pasteApply() {
   // (요청사항) 붙여넣기에서 "A팀 vs B팀"이 뒤집혀 인식되는 경우가 있어,
   // 로스터/소속 기반으로 A/B를 재배치하지 않고 "좌측= A / 우측= B"로 고정합니다.
   const resolveAB = (r) => {
-    const leftIsWin = (r.leftName||r.winName) === r.winName;
+    // (버그수정) r.leftName은 원문 그대로, r.winName은 이름 해석(부분명→정식명) 후
+    // 값일 수 있어 단순 문자열 비교로는 좌/우 판정이 어긋날 수 있음.
+    // 파싱 시점에 저장해둔 _leftIsWin(해석 전 원문 기준 판정)이 있으면 그것을 우선 사용.
+    const leftIsWin = (typeof r._leftIsWin === 'boolean')
+      ? r._leftIsWin
+      : ((r.leftName||r.winName) === r.winName);
     return {
       playerA: leftIsWin ? r.wPlayer : r.lPlayer, // 좌측 선수
       playerB: leftIsWin ? r.lPlayer : r.wPlayer, // 우측 선수
@@ -381,7 +386,9 @@ function pasteApply() {
   } else if (mode === 'ck') {
     // CK: 좌측=A팀, 우측=B팀 절대 고정 (resolveAB 우회)
     const ckAB = (r) => {
-      const leftIsWin = r.leftName ? (r.leftName === r.winName) : true;
+      const leftIsWin = (typeof r._leftIsWin === 'boolean')
+        ? r._leftIsWin
+        : (r.leftName ? (r.leftName === r.winName) : true);
       return {
         playerA: leftIsWin ? r.wPlayer : r.lPlayer,
         playerB: leftIsWin ? r.lPlayer : r.wPlayer,
@@ -516,7 +523,9 @@ function pasteApply() {
     });
   } else if (mode === 'tt') {
     const ttAB = (r) => {
-      const leftIsWin = r.leftName ? (r.leftName === r.winName) : true;
+      const leftIsWin = (typeof r._leftIsWin === 'boolean')
+        ? r._leftIsWin
+        : (r.leftName ? (r.leftName === r.winName) : true);
       return { playerA: leftIsWin ? r.wPlayer : r.lPlayer, playerB: leftIsWin ? r.lPlayer : r.wPlayer, winner: leftIsWin ? 'A' : 'B' };
     };
     const ttSetsSnap = Object.keys(setMap).sort((a,b)=>a-b).map(sn=>{

@@ -631,7 +631,7 @@ function renderPastePreview(results, errors) {
     const _univA2 = {}, _univB2 = {};
     _savableForTeam.forEach(r => {
       // A칸=좌측선수, B칸=우측선수 → 좌측이 승자면 ap=wPlayer, 패자면 ap=lPlayer
-      const _leftIsWinT = (typeof r._leftIsWin==='boolean' ? r._leftIsWin : (r.leftName||r.winName) === r.winName);
+      const _leftIsWinT = (r.leftName||r.winName) === r.winName;
       const ap = _leftIsWinT ? r.wPlayer : r.lPlayer;
       const bp = _leftIsWinT ? r.lPlayer : r.wPlayer;
       const ua = ap?.univ||''; const ub = bp?.univ||'';
@@ -778,7 +778,7 @@ function renderPastePreview(results, errors) {
       if (_isRosterMode && !_isCKPreview) {
         // 승자(winName)가 rosterA 소속이면 A칸=승자, rosterB면 A칸=패자
         const _wInA = _inRA(r.winName), _wInB = _inRB(r.winName);
-        aIsWin  = _wInA ? true : _wInB ? false : ((typeof r._leftIsWin==='boolean' ? r._leftIsWin : (r.leftName||r.winName) === r.winName));
+        aIsWin  = _wInA ? true : _wInB ? false : ((r.leftName||r.winName) === r.winName);
         aPlayer = aIsWin ? r.wPlayer : r.lPlayer;
         bPlayer = aIsWin ? r.lPlayer : r.wPlayer;
         aOk     = !!aPlayer;
@@ -798,7 +798,7 @@ function renderPastePreview(results, errors) {
         // wPlayer=항상승자, lPlayer=항상패자 → _leftIsWin에 따라 직접 배정
         const _leftRaw  = r.leftName  || r.winName  || '';
         const _rightRaw = r.rightName || r.loseName || '';
-        const _leftIsWin = (typeof r._leftIsWin === 'boolean') ? r._leftIsWin : (_leftRaw === r.winName);
+        const _leftIsWin = (_leftRaw === r.winName);
         // 선수 DB 소속으로 A/B 배정 우선 시도 (자동 팀 인식된 경우, CK 모드 제외)
         let _univBased = false;
         if (!_isCKPreview && r.wPlayer?.univ && r.wPlayer.univ !== '무소속' &&
@@ -951,17 +951,17 @@ function renderPastePreview(results, errors) {
       if(!setPreviewMap[sn]) setPreviewMap[sn] = {A:0, B:0};
       let aWins;
       if (_isCKMode) {
-        aWins = ((typeof r._leftIsWin==='boolean' ? r._leftIsWin : (r.leftName||r.winName) === r.winName));
+        aWins = ((r.leftName||r.winName) === r.winName);
       } else if (_sprRA && _sprRB) {
         aWins = !!_sprInA(r.winName);
-        if (!aWins && !_sprInB(r.winName)) aWins = ((typeof r._leftIsWin==='boolean' ? r._leftIsWin : (r.leftName||r.winName) === r.winName));
+        if (!aWins && !_sprInB(r.winName)) aWins = ((r.leftName||r.winName) === r.winName);
       } else if (!_isCKMode && r.wPlayer?.univ && r.wPlayer.univ !== '무소속' &&
                  r.lPlayer?.univ && r.lPlayer.univ !== '무소속' &&
                  teamAPreview && teamAPreview !== 'A팀' && teamAPreview !== 'A조' &&
                  teamBPreview && teamBPreview !== 'B팀' && teamBPreview !== 'B조') {
         aWins = r.wPlayer.univ === teamAPreview;
       } else {
-        aWins = ((typeof r._leftIsWin==='boolean' ? r._leftIsWin : (r.leftName||r.winName) === r.winName));
+        aWins = ((r.leftName||r.winName) === r.winName);
       }
       setPreviewMap[sn][aWins ? 'A' : 'B']++;
     });
@@ -989,17 +989,17 @@ function renderPastePreview(results, errors) {
       savable.forEach(r => {
         let aW;
         if (_isCKMode) {
-          aW = ((typeof r._leftIsWin==='boolean' ? r._leftIsWin : (r.leftName||r.winName) === r.winName));
+          aW = ((r.leftName||r.winName) === r.winName);
         } else if (_sprRA && _sprRB) {
           aW = !!_sprInA(r.winName);
-          if (!aW && !_sprInB(r.winName)) aW = ((typeof r._leftIsWin==='boolean' ? r._leftIsWin : (r.leftName||r.winName) === r.winName));
+          if (!aW && !_sprInB(r.winName)) aW = ((r.leftName||r.winName) === r.winName);
         } else if (r.wPlayer?.univ && r.wPlayer.univ !== '무소속' &&
                    r.lPlayer?.univ && r.lPlayer.univ !== '무소속' &&
                    teamAPreview && teamAPreview !== 'A팀' && teamAPreview !== 'A조' &&
                    teamBPreview && teamBPreview !== 'B팀' && teamBPreview !== 'B조') {
           aW = r.wPlayer.univ === teamAPreview;
         } else {
-          aW = ((typeof r._leftIsWin==='boolean' ? r._leftIsWin : (r.leftName||r.winName) === r.winName));
+          aW = ((r.leftName||r.winName) === r.winName);
         }
         aW ? teamAWins++ : teamBWins++;
       });
