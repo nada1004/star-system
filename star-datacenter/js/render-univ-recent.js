@@ -64,10 +64,10 @@ function buildUnivRecentMatchesHTML(opts){
       return m.mode||'대전';
     })();
     const _compSub = (m._compName||m.compName||m.n||'');
-    const resultBg = win?'linear-gradient(135deg,#fee2e2,#fecaca)':draw?'linear-gradient(135deg,#fef9c3,#fde68a)':'linear-gradient(135deg,#f1f5f9,#e2e8f0)';
-    const resultCol = win?'#dc2626':draw?'#d97706':'#64748b';
-    const resultBd = win?'#fca5a5':draw?'#fcd34d':'#cbd5e1';
-    const leftBarColor = win?'#dc2626':draw?'#f59e0b':'#94a3b8';
+    const resultBg = win?'linear-gradient(135deg,#fee2e2,#fecaca)':draw?'linear-gradient(135deg,#fef9c3,#fde68a)':'linear-gradient(135deg,#dbeafe,#bfdbfe)';
+    const resultCol = win?'#dc2626':draw?'#d97706':'#2563eb';
+    const resultBd = win?'#fca5a5':draw?'#fcd34d':'#93c5fd';
+    const leftBarColor = win?'#dc2626':draw?'#f59e0b':'#2563eb';
 
     const _modeLabel = _compSub
       ? `<div style="display:flex;flex-direction:column;align-items:center;gap:0;background:${mc};color:#fff;font-size:${isMobile?'8.5px':'9.5px'};font-weight:900;padding:3px ${isMobile?'6px':'8px'};border-radius:9px;white-space:nowrap;letter-spacing:.2px;line-height:1.4;text-align:center">${_modeShort}<span style="font-size:7px;font-weight:700;opacity:.88">${_compSub.length>8?_compSub.slice(0,7)+'…':_compSub}</span></div>`
@@ -90,9 +90,9 @@ function buildUnivRecentMatchesHTML(opts){
       <!-- 스코어 -->
       <div style="flex-shrink:0;text-align:center;min-width:${isMobile?'62px':'72px'}">
         <div style="font-size:${isMobile?'17px':'20px'};font-weight:1000;line-height:1;letter-spacing:1px">
-          <span style="color:${win?'#dc2626':'var(--text,#1e293b)'}">${myS}</span>
+          <span style="color:${win?'#dc2626':(draw?'var(--text,#1e293b)':'#2563eb')}">${myS}</span>
           <span style="color:rgba(148,163,184,.5);font-size:13px;margin:0 2px">:</span>
-          <span style="color:${!win&&!draw?'#dc2626':'var(--text,#1e293b)'}">${oppS}</span>
+          <span style="color:${win?'#2563eb':(draw?'var(--text,#1e293b)':'#dc2626')}">${oppS}</span>
         </div>
         <div style="margin-top:4px;display:flex;justify-content:center">
           <span style="font-size:9px;font-weight:900;padding:2px 8px;border-radius:7px;background:${resultBg};color:${resultCol};border:1px solid ${resultBd}">${win?'승':draw?'무':'패'}</span>

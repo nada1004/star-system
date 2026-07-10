@@ -3,11 +3,11 @@
   --blue:#2563eb;--blue-d:#1d4ed8;--blue-l:#eff6ff;--blue-ll:#dbeafe;
   --gold:#d97706;--gold-bg:#fffbeb;--gold-b:#fde68a;
   --green:#16a34a;--red:#dc2626;--gray:#64748b;--gray-l:#9ca3af;
-  /* (요청사항) 전 탭 스코어 색상 통일 */
-  --score-win:#16a34a;
-  --score-win-2:#22c55e;
-  --score-lose:#dc2626;
-  --score-lose-2:#fb7185;
+  /* (요청사항) 전 탭 스코어 색상 통일 — 승=빨강 / 패=파랑 (사이트 전역 컨벤션과 일치) */
+  --score-win:#dc2626;
+  --score-win-2:#ef4444;
+  --score-lose:#2563eb;
+  --score-lose-2:#60a5fa;
   --score-neutral:var(--text);
   --text:#1a202c;--text1:var(--text);--text2:#374151;--text3:#6b7280;
   --hover:rgba(148,163,184,.16);

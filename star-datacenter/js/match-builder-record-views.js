@@ -1004,8 +1004,8 @@ function indRecordsHTML(){
     const p2col=p2univ?gc(p2univ):'#1D9E75';
     const _indP1Win = p1wins > p2wins;
     const _indP2Win = p2wins > p1wins;
-    const _indScoreColP1 = _indP1Win ? (p1col||'#dc2626') : _indP2Win ? '#94a3b8' : 'var(--text2)';
-    const _indScoreColP2 = _indP2Win ? (p2col||'#dc2626') : _indP1Win ? '#94a3b8' : 'var(--text2)';
+    const _indScoreColP1 = _indP1Win ? 'var(--win-col)' : _indP2Win ? 'var(--lose-col)' : 'var(--text2)';
+    const _indScoreColP2 = _indP2Win ? 'var(--win-col)' : _indP1Win ? 'var(--lose-col)' : 'var(--text2)';
     const p1bg=_h2hPlayerBgPanel(s.p1, winner===s.p1, winner && winner!==s.p1);
     const p2bg=_h2hPlayerBgPanel(s.p2, winner===s.p2, winner && winner!==s.p2);
     const _indWrapFx = _safeHeadToHeadSideFx(p1col, p2col);
@@ -1175,8 +1175,8 @@ function gjRecordsHTML(proOnly){
     const _gjP2Win = p2wins > p1wins;
     const _gjP1Col = gj_p1univ?gc(gj_p1univ):'#378ADD';
     const _gjP2Col = gj_p2univ?gc(gj_p2univ):'#1D9E75';
-    const _gjScoreColP1 = _gjP1Win ? (_gjP1Col||'#dc2626') : _gjP2Win ? '#94a3b8' : 'var(--text2)';
-    const _gjScoreColP2 = _gjP2Win ? (_gjP2Col||'#dc2626') : _gjP1Win ? '#94a3b8' : 'var(--text2)';
+    const _gjScoreColP1 = _gjP1Win ? 'var(--win-col)' : _gjP2Win ? 'var(--lose-col)' : 'var(--text2)';
+    const _gjScoreColP2 = _gjP2Win ? 'var(--win-col)' : _gjP1Win ? 'var(--lose-col)' : 'var(--text2)';
     const gj_typeLabel=proOnly?'프로리그 끝장전':'끝장전';
     const gj_typeBg=proOnly?'#E1F5EE':'#FAECE7';
     const gj_typeColor=proOnly?'#085041':'#993C1D';

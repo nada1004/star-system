@@ -772,8 +772,8 @@ function _proCompH2HCardHTML(opts){
     ? _h2hPlayerBgPanel(p2, winner === p2, !!winner && winner !== p2)
     : `<div style="padding:10px 12px;font-weight:900">${p2||'?'}</div>`;
   const mode = (typeof _h2hCardMode === 'function') ? _h2hCardMode() : 'panel';
-  const scoreColP1 = winner === p1 ? p1Col : winner === p2 ? '#94a3b8' : (isTie ? '#b45309' : 'var(--text2)');
-  const scoreColP2 = winner === p2 ? p2Col : winner === p1 ? '#94a3b8' : (isTie ? '#b45309' : 'var(--text2)');
+  const scoreColP1 = winner === p1 ? 'var(--win-col)' : winner === p2 ? 'var(--lose-col)' : (isTie ? '#b45309' : 'var(--text2)');
+  const scoreColP2 = winner === p2 ? 'var(--win-col)' : winner === p1 ? 'var(--lose-col)' : (isTie ? '#b45309' : 'var(--text2)');
   const body = (typeof _h2hCardBody === 'function')
     ? _h2hCardBody(mode, { p1, p2, d:o.date||'', games:o.games||[] }, p1Score, p2Score, winner, p1Col, p2Col, '1fr auto 1fr', isMb, scorePad, scoreGap, '', p1Bg, p2Bg, scoreColP1, scoreColP2)
     : `<div style="display:flex;align-items:center;justify-content:space-between;padding:${isMb?'10px':'14px'}"><div>${p1}</div><div style="font-weight:900">${p1Score}:${p2Score}</div><div>${p2}</div></div>`;

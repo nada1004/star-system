@@ -176,7 +176,7 @@ function buildPlayerOppTableHTML(opts){
               <td style="text-align:center"><span class="rbadge r${s.race||op?.race||'?'}" style="font-size:10px">${s.race||op?.race||'?'}</span></td>
               <td style="text-align:center"><span style="background:${oc};color:#fff;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${op?.univ||'-'}</span></td>
               <td style="text-align:center;font-weight:700;color:#dc2626">${s.w}</td>
-              <td style="text-align:center;font-weight:700;color:#94a3b8">${s.l}</td>
+              <td style="text-align:center;font-weight:700;color:#2563eb">${s.l}</td>
               <td style="text-align:center;font-weight:800;font-size:12px;color:${ot?(ow>=50?'#16a34a':'#dc2626'):'var(--gray-l)'}">${ot?ow+'%':'-'}</td>
             </tr>`;
           }).join('')}
@@ -212,7 +212,7 @@ function buildPlayerVsUnivSectionHTML(opts){
       <div style="margin-top:7px;font-size:13px;font-weight:900;color:#0f172a">
         <span style="color:#dc2626">${row.w}승</span>
         <span style="color:var(--gray-l);margin:0 5px">/</span>
-        <span style="color:#94a3b8">${row.l}패</span>
+        <span style="color:#2563eb">${row.l}패</span>
       </div>
       <div style="margin-top:4px;font-size:11px;color:var(--gray-l);font-weight:700">${row.tot}전</div>
     </div>`;

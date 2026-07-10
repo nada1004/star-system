@@ -187,11 +187,11 @@ window.renderCfgRecCardSection = function(_scfgD) {
         <div style="font-size:11px;color:var(--text3);font-weight:800">스코어 숫자 색상(공통)</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">승</span>
-          <input type="color" id="cfg-score-win" value="${(()=>{try{return (localStorage.getItem('su_score_win')||'#16a34a');}catch(e){return '#16a34a';}})()}" onchange="cfgSetScoreColors()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px;background:none">
+          <input type="color" id="cfg-score-win" value="${(()=>{try{return (localStorage.getItem('su_score_win')||'#dc2626');}catch(e){return '#dc2626';}})()}" onchange="cfgSetScoreColors()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px;background:none">
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;color:var(--gray-l);font-weight:900">패</span>
-          <input type="color" id="cfg-score-lose" value="${(()=>{try{return (localStorage.getItem('su_score_lose')||'#dc2626');}catch(e){return '#dc2626';}})()}" onchange="cfgSetScoreColors()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px;background:none">
+          <input type="color" id="cfg-score-lose" value="${(()=>{try{return (localStorage.getItem('su_score_lose')||'#2563eb');}catch(e){return '#2563eb';}})()}" onchange="cfgSetScoreColors()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px;background:none">
         </div>
         <div style="flex:1;min-width:180px;max-width:280px;border:1px solid var(--border2);border-radius:12px;padding:8px 12px;background:var(--white);display:flex;align-items:center;justify-content:center;gap:10px">
           <span class="wt" style="font-size:18px">3</span><span style="color:var(--gray-l);font-weight:900">:</span><span class="lt" style="font-size:18px">2</span>

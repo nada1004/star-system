@@ -151,9 +151,9 @@ function rCompNormalMatches(tn) {
             <div class="grp-score-col" style="text-align:center;min-width:80px;display:flex;flex-direction:column;align-items:center;gap:3px">
               ${isDone
                 ? `<div class="grp-match-score score-click" style="cursor:pointer" onclick="event.stopPropagation();nmOpenDetailModal('${tn.id}',${i})" title="경기 상세 보기">
-                    <span style="${aWin ? 'color:var(--win-col);font-size:22px' : bWin ? 'color:var(--lose-col)' : ''}">${m.sa}</span>
+                    <span style="${aWin ? 'color:var(--win-col)' : bWin ? 'color:var(--lose-col)' : ''};font-size:22px">${m.sa}</span>
                     <span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span>
-                    <span style="${bWin ? 'color:var(--win-col);font-size:22px' : aWin ? 'color:var(--lose-col)' : ''}">${m.sb}</span>
+                    <span style="${bWin ? 'color:var(--win-col)' : aWin ? 'color:var(--lose-col)' : ''};font-size:22px">${m.sb}</span>
                   </div>`
                 : `<div class="grp-vs-text" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:#6366f1;text-shadow:0 1px 8px #6366f144">VS</div>`
               }

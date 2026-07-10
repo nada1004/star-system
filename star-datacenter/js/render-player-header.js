@@ -37,8 +37,8 @@ function buildPlayerHeaderCardHTML(opts){
   const _bgPos = String(hdrBgLayer?.pos || 'center center').trim() || 'center center';
   const recent10 = histAll.slice(0,10);
   const recent10Wins = recent10.filter(h=>h?.result==='승').length;
+  const recent10Losses = recent10.length - recent10Wins;
   const recent10Rate = recent10.length ? Math.round((recent10Wins/recent10.length)*100) : 0;
-  const activeModes = [...new Set(histAll.map(h=>String(h?.mode||'').trim()).filter(Boolean))].length;
   const quickCardBg = 'linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))';
   const quickCardBd = 'rgba(226,232,240,.92)';
   const quickLabelCol = '#475569';
@@ -152,8 +152,7 @@ function buildPlayerHeaderCardHTML(opts){
       </div>
       <div class="pd-hero-quickcard" data-kind="form" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">최근 폼</div>
-        <div style="margin-top:7px;font-size:${_isMobile?13:15}px;font-weight:1000;color:${quickValueCol};text-shadow:0 1px 0 rgba(255,255,255,.45)">${recent10.length?`<span style="color:${cWin}">${recent10Wins}</span>/<span style="color:${quickMetaCol}">${recent10.length}</span><span style="color:${quickValueCol}">승</span>`:'기록 대기'}</div>
-        <div style="margin-top:3px;font-size:10px;color:${quickMetaCol};font-weight:900">${activeModes}개 모드</div>
+        <div style="margin-top:7px;font-size:${_isMobile?13:15}px;font-weight:1000;text-shadow:0 1px 0 rgba(255,255,255,.45)">${recent10.length?`<span style="color:${cWin}">${recent10Wins}승</span> <span style="color:${cLoss}">${recent10Losses}패</span>`:'<span style="color:'+quickMetaCol+'">기록 대기</span>'}</div>
       </div>
     </div>`;
 

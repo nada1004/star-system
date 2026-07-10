@@ -1157,10 +1157,21 @@ function _rgbToHex_(c){
 }
 window.applyScoreColors = function(){
   try{
-    const win=String(localStorage.getItem('su_score_win')||'#16a34a').trim();
-    const lose=String(localStorage.getItem('su_score_lose')||'#dc2626').trim();
-    const wr=_hexToRgb_(win)||{r:22,g:163,b:74};
-    const lr=_hexToRgb_(lose)||{r:220,g:38,b:38};
+    // (통일) 기존 기본값(승=초록 #16a34a / 패=빨강 #dc2626)을 그대로 쓰고 있던 사용자는
+    // 사이트 전역 승패색 컨벤션(승=빨강 #dc2626 / 패=파랑 #2563eb)에 맞춰 1회 자동 이관한다.
+    if(!localStorage.getItem('su_score_col_migrated_v2')){
+      if((localStorage.getItem('su_score_win')||'#16a34a') === '#16a34a'){
+        localStorage.setItem('su_score_win', '#dc2626');
+      }
+      if((localStorage.getItem('su_score_lose')||'#dc2626') === '#dc2626'){
+        localStorage.setItem('su_score_lose', '#2563eb');
+      }
+      localStorage.setItem('su_score_col_migrated_v2', '1');
+    }
+    const win=String(localStorage.getItem('su_score_win')||'#dc2626').trim();
+    const lose=String(localStorage.getItem('su_score_lose')||'#2563eb').trim();
+    const wr=_hexToRgb_(win)||{r:220,g:38,b:38};
+    const lr=_hexToRgb_(lose)||{r:37,g:99,b:235};
     const w2=_mixRgb_(wr,{r:255,g:255,b:255},0.18);
     const l2=_mixRgb_(lr,{r:255,g:255,b:255},0.20);
     document.documentElement.style.setProperty('--score-win', _rgbToHex_(wr));
@@ -1171,8 +1182,8 @@ window.applyScoreColors = function(){
 };
 window.cfgSetScoreColors = function(){
   try{
-    const w=String(document.getElementById('cfg-score-win')?.value||'#16a34a').trim();
-    const l=String(document.getElementById('cfg-score-lose')?.value||'#dc2626').trim();
+    const w=String(document.getElementById('cfg-score-win')?.value||'#dc2626').trim();
+    const l=String(document.getElementById('cfg-score-lose')?.value||'#2563eb').trim();
     if(/^#[0-9a-fA-F]{6}$/.test(w)) localStorage.setItem('su_score_win', w);
     if(/^#[0-9a-fA-F]{6}$/.test(l)) localStorage.setItem('su_score_lose', l);
   }catch(e){}
