@@ -634,6 +634,32 @@
   text-transform: uppercase;
 }
 
+/* 모바일: 대학 상세 상단 칩 영역(종족비중/티어, 바로가기, 모드) — 여러 줄로 줄바꿈되어
+   지저분해지는 대신 한 줄 가로 스크롤로 정리 */
+@media (max-width: 768px) {
+  .b2-race-tier-row,
+  .b2-jump-row,
+  .b2-mode-row {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent 100%);
+  }
+  .b2-race-tier-row::-webkit-scrollbar,
+  .b2-jump-row::-webkit-scrollbar,
+  .b2-mode-row::-webkit-scrollbar {
+    display: none;
+  }
+  .b2-race-tier-row > *,
+  .b2-jump-row > *,
+  .b2-mode-row > * {
+    flex-shrink: 0;
+  }
+}
+
 /* ═══════════════════════════════════════
    3. 히트맵 팝업 스타일
 ═══════════════════════════════════════ */

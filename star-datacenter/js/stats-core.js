@@ -120,7 +120,7 @@ function _statsLatestActiveMonths(gender){
     '.stats-grouprow .pill{min-width:80px;justify-content:center}',
     /* ── 서브탭(종합/티어랭킹 등) 행 ── */
     '.stats-subrow{display:flex;flex-wrap:wrap;gap:10px}',
-    '@media (max-width:680px){.stats-modeseg{width:100%;justify-content:center}.stats-modebar-hint{width:100%;text-align:center}.stats-grouprow,.stats-subrow{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:10px}.stats-grouprow::-webkit-scrollbar,.stats-subrow::-webkit-scrollbar{display:none}.stats-grouprow .pill{min-width:0}}',
+    '@media (max-width:680px){.stats-modebar{gap:8px}.stats-modeseg{width:100%;justify-content:flex-start}.stats-modebar-hint{width:100%;text-align:left}.stats-grouprow,.stats-subrow{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:10px}.stats-grouprow::-webkit-scrollbar,.stats-subrow::-webkit-scrollbar{display:none}.stats-grouprow .pill{min-width:0}}',
     '.stats-filter-box{display:flex;flex-direction:column;gap:8px;margin-bottom:2px;padding:12px 14px;border-radius:18px;background:linear-gradient(180deg,#f8fbff,#eff6ff);border:1px solid rgba(147,197,253,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.78)}',
     '.stats-filter-box.is-idle{background:linear-gradient(180deg,#fff,#f8fafc);border-color:rgba(148,163,184,.22)}',
     '.stats-award-toggle{display:inline-flex;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--surface);border:1px solid var(--border)}',

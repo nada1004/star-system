@@ -75,16 +75,16 @@ function _b2UnivView() {
           <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">월~오늘 기록 1회 이상</div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
+      <div class="b2-race-tier-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
         <span class="b2-jump-label">종족 비중</span>
         ${_uvRaceBar||`<span style="font-size:11px;font-weight:700;color:var(--gray-l)">집계 없음</span>`}
         ${_uvTierBtns?`<span style="width:1px;height:20px;background:var(--border2);display:inline-block;margin:0 4px;flex-shrink:0"></span><span class="b2-jump-label">티어</span>${_uvTierBtns}`:''}
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
+      <div class="b2-jump-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
         <span class="b2-jump-label">🏛️ 바로가기</span>
         ${_jumpChips}
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(148,163,184,.14)">
+      <div class="b2-mode-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(148,163,184,.14)">
         <span class="b2-jump-label">🖼️ 모드</span>
         ${_viewBtn('default','기본')}
         ${_viewBtn('poster','포스터')}
