@@ -3,33 +3,25 @@ function prepareUnivDetailComputedData(opts){
     univName='',
     members=[]
   } = opts || {};
-  const _isAllowedUnivDetailMode = (mode) => {
-    const m = String(mode || '').trim();
-    if(!m) return false;
-    return m.includes('미니대전')
-      || m.includes('대학대전')
-      || m.includes('일반대회')
-      || m.includes('조별리그')
-      || m.includes('대진표');
-  };
+  // 소속 스트리머 목록의 승/패/승률은 스트리머 상세와 동일하게
+  // 선수 개인 통합 전적(p.win/p.loss, 전체 대학·전체 경기종류 합산)을 그대로 반영한다.
+  // (기존에는 이 대학 소속 + 특정 경기종류로만 필터링한 하위 집계를 써서 스트리머 상세와 수치가 달랐음)
   const _memberScopedSummary = (() => {
     const arr = Array.isArray(members) ? members : [];
     const byPlayer = {};
     let wins = 0, losses = 0, draws = 0, pts = 0;
     arr.forEach(p => {
-      const filteredHist = (Array.isArray(p?.history) ? p.history : []).filter(h=>{
-        if(String(h?.univ || '').trim() !== String(univName || '').trim()) return false;
-        return _isAllowedUnivDetailMode(h?.mode);
-      });
-      const rec = (typeof calcPlayerAffiliationRecord === 'function')
-        ? calcPlayerAffiliationRecord(p, univName, filteredHist)
-        : { w:0, l:0, d:0, tot:0, wr:0, pts:0 };
+      const w = Number(p?.win) || 0;
+      const l = Number(p?.loss) || 0;
+      const t = w + l;
+      const wrP = t ? Math.round(w / t * 100) : 0;
+      const ptsP = (w * 3) - (l * 3);
+      const rec = { w, l, d: 0, tot: t, wr: wrP, pts: ptsP };
       const key = String(p?.name || '').trim();
       if(key) byPlayer[key] = rec;
-      wins += rec.w || 0;
-      losses += rec.l || 0;
-      draws += rec.d || 0;
-      pts += rec.pts || 0;
+      wins += w;
+      losses += l;
+      pts += ptsP;
     });
     const tot = wins + losses;
     const wr = tot ? Math.round(wins / tot * 100) : 0;
