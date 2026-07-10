@@ -7895,10 +7895,8 @@ body.dark .b2-players-img-btn:disabled {
 .hist-subtab-bar::-webkit-scrollbar { display: none; }
 
 /* ── 통계탭 그룹/뷰 pill 강화 ── */
-.fbar .pill {
-  position: relative;
-  overflow: hidden;
-}
+/* [정리] position/overflow는 9343번째 줄 근처의 .fbar .pill{...!important} 블록에서
+   동일 값으로 재정의되어 실제로는 그 쪽이 항상 적용됩니다. 중복 선언 제거. */
 .fbar .pill.on::after {
   content: '';
   position: absolute;
@@ -7966,11 +7964,8 @@ body.dark .b2-players-img-btn:disabled {
 }
 
 /* ── 통계탭 - 핵심/심화 뷰 토글 강화 ── */
-.fbar .pill[onclick*="_statsViewMode='core'"].on,
-.fbar .pill[onclick*="_statsViewMode='advanced'"].on {
-  background: linear-gradient(135deg, #1e3a8a, #2563eb) !important;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.32) !important;
-}
+/* [정리] 아래 규칙은 9363번째 줄 근처의 동일 셀렉터(!important 버전)에 의해
+   완전히 대체되어 실제로 적용되지 않던 죽은 규칙이라 제거했습니다. */
 
 /* ── 대전기록/통계 필터 박스 ── */
 .hist-filter-box, [style*="background:#eff6ff"],

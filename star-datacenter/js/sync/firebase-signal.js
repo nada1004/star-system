@@ -171,7 +171,13 @@ async function _fetchFirebaseSignal(){
   return await res.json();
 }
 async function _pushFirebaseSignal(meta){
-  const pw = localStorage.getItem('su_fb_pw') || FB_AUX_DEFAULT_PW;
+  // [보안 수정] 소스에 하드코딩된 기본 비밀번호를 제거했습니다.
+  // su_fb_pw가 로컬에 설정되어 있지 않으면 신호를 보내지 않고 조용히 건너뜁니다.
+  const pw = localStorage.getItem('su_fb_pw') || '';
+  if(!pw){
+    console.warn('[firebase-signal] su_fb_pw가 설정되어 있지 않아 신호 푸시를 건너뜁니다. 관리자 설정에서 su_fb_pw를 지정하세요.');
+    return;
+  }
   const savedAt = Number(meta && meta.savedAt || Date.now()) || Date.now();
   const payload = {
     admin_pw: pw,

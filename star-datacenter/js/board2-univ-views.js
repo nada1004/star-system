@@ -46,7 +46,8 @@ function _b2UnivView() {
     const col = gc(u.name);
     const txtCol = _b2ContrastColor(col);
     const anchorId = 'b2-univ-anchor-'+u.name.replace(/[^a-zA-Z0-9가-힣]/g,'_');
-    return `<button class="b2-jump-chip" onclick="const el=document.getElementById('${anchorId}');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}" style="--chip-color:${col}40;border:1.5px solid ${col}bb;background:linear-gradient(135deg,${col}ee,${col}cc);color:${txtCol}"><span style="letter-spacing:-.01em">${u.name}</span></button>`;
+    const safeName = (typeof window.escHTML==='function') ? window.escHTML(u.name) : String(u.name||'');
+    return `<button class="b2-jump-chip" onclick="const el=document.getElementById('${anchorId}');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}" style="--chip-color:${col}40;border:1.5px solid ${col}bb;background:linear-gradient(135deg,${col}ee,${col}cc);color:${txtCol}"><span style="letter-spacing:-.01em">${safeName}</span></button>`;
   }).join('');
   const _viewMode = _b2GetUnivProfileViewMode();
   const _viewBtn = (mode, label) => `

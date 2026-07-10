@@ -376,15 +376,16 @@ function _b2WeeklyBriefingView() {
     const _monthlyAceMoreId = `b2w2-monthly-aces-more-${preset}`;
     const _monthlyAceBtnId = `b2w2-monthly-aces-btn-${preset}`;
     const monthlyAceSpotlight = monthlyUnivAces.find(item => item.ace) || null;
+    const _bfEsc = (typeof window.escHTML==='function') ? window.escHTML : (s)=>String(s??'');
     const _heroSummary = (() => {
       const parts = [];
       if (_isMonthly && rankedUnivs[0]) {
-        parts.push(`${rankedUnivs[0].u.name} ${rankedUnivs[0].tw}승 ${rankedUnivs[0].tl}패 · 승률 ${rankedUnivs[0].wr ?? 0}%로 1위`);
+        parts.push(`${_bfEsc(rankedUnivs[0].u.name)} ${rankedUnivs[0].tw}승 ${rankedUnivs[0].tl}패 · 승률 ${rankedUnivs[0].wr ?? 0}%로 1위`);
       } else if (topUnivs[0]) {
-        parts.push(`${topUnivs[0].u.name} 활동량 1위 · ${topUnivs[0].tg}전 · 활동 ${topUnivs[0].active.length}명`);
+        parts.push(`${_bfEsc(topUnivs[0].u.name)} 활동량 1위 · ${topUnivs[0].tg}전 · 활동 ${topUnivs[0].active.length}명`);
       }
-      if (hotPlayer && hotPlayer.wrDelta > 0) parts.push(`${hotPlayer.p?.name || '-'} 승률 변동 ${hotPlayer.wrDelta > 0 ? '+' : ''}${hotPlayer.wrDelta}%p`);
-      if (_isMonthly && monthlyAceSpotlight) parts.push(`${monthlyAceSpotlight.u.name} 에이스 ${monthlyAceSpotlight.ace.p?.name || '-'}`);
+      if (hotPlayer && hotPlayer.wrDelta > 0) parts.push(`${_bfEsc(hotPlayer.p?.name || '-')} 승률 변동 ${hotPlayer.wrDelta > 0 ? '+' : ''}${hotPlayer.wrDelta}%p`);
+      if (_isMonthly && monthlyAceSpotlight) parts.push(`${_bfEsc(monthlyAceSpotlight.u.name)} 에이스 ${_bfEsc(monthlyAceSpotlight.ace.p?.name || '-')}`);
       if (silentUnivs.length) parts.push(`기록 없는 대학 ${silentUnivs.length}곳`);
       return parts.length ? `${parts.join(' · ')}.` : '선택 기간 활동량과 비교 지표를 정리했습니다.';
     })();
@@ -392,9 +393,9 @@ function _b2WeeklyBriefingView() {
       if (_isMonthly && rankedUnivs[0]) {
         const leader = rankedUnivs[0];
         const rankDeltaTxt = leader.rankDelta === null ? '첫 집계' : (leader.rankDelta > 0 ? `전기 대비 ▲${leader.rankDelta}` : leader.rankDelta < 0 ? `전기 대비 ▼${Math.abs(leader.rankDelta)}` : '전기와 동일');
-        return `${leader.u.name} 1위 · ${leader.tw}승 ${leader.tl}패 · 승률 ${leader.wr ?? 0}% · ${rankDeltaTxt}`;
+        return `${_bfEsc(leader.u.name)} 1위 · ${leader.tw}승 ${leader.tl}패 · 승률 ${leader.wr ?? 0}% · ${rankDeltaTxt}`;
       }
-      if (topUnivs[0]) return `${topUnivs[0].u.name} 활동량 1위 · ${topUnivs[0].tg}전 · 활동 ${topUnivs[0].active.length}명`;
+      if (topUnivs[0]) return `${_bfEsc(topUnivs[0].u.name)} 활동량 1위 · ${topUnivs[0].tg}전 · 활동 ${topUnivs[0].active.length}명`;
       return '선택 기간 핵심 지표를 빠르게 확인할 수 있도록 정리했습니다';
     })();
     const _heroFocusLabel = _isMonthly ? '집계 범위' : (_isCustom ? '사용자 기간' : '주간 범위');
@@ -2194,7 +2195,7 @@ function _b2WeeklyBriefingView() {
       <button type="button" class="b2w2-datebtn" onclick="_b2OpenBriefingDateInput('to')" title="종료 날짜 선택">📅 종료일</button>
       <select class="b2w2-sel" id="b2w2-univ" onchange="_b2SyncBriefingCustomInputs(true)">
         <option value="전체"${selUniv==='전체'?' selected':''}>🏫 전체 대학</option>
-        ${univList.map(u=>`<option value="${u.name}"${selUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
+        ${univList.map(u=>{const _n=(typeof escAttr==='function'?escAttr(u.name):String(u.name||''));const _nh=(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''));return `<option value="${_n}"${selUniv===u.name?' selected':''}>${_nh}</option>`;}).join('')}
       </select>
       <button type="button" class="b2w2-btn" onclick="_b2ApplyBriefingCustomFromInputs()">조회</button>
       <button type="button" class="b2w2-btn no-export b2w2-savebtn" onclick="captureBriefingArticle()">📰 브리핑 저장</button>
@@ -2274,7 +2275,7 @@ function _b2WeeklyBriefingView() {
             <div class="b2w2-highlight-row">
               <div style="display:flex;align-items:center;gap:8px;min-width:0">
                 <span style="font-size:11px;font-weight:900;color:${gc ? gc(ud.u.name) : '#64748b'}">${idx + 1}</span>
-                <span style="font-size:12px;font-weight:900;color:var(--text1)">${ud.u.name}</span>
+                <span style="font-size:12px;font-weight:900;color:var(--text1)">${(typeof window.escHTML==='function'?window.escHTML(ud.u.name):String(ud.u.name||''))}</span>
               </div>
               <div style="font-size:11px;font-weight:800;color:var(--text3)">${ud.tg}전 · 활동 ${ud.active.length}명</div>
             </div>
@@ -2462,7 +2463,7 @@ function _b2WeeklyBriefingView() {
                 <div class="b2w2-rank-main">
                   <span class="b2w2-rank-badge" style="background:${col}18;color:${col}">${ud.rank}</span>
                   <div style="min-width:0">
-                    <div class="b2w2-rank-name">${ud.u.name}</div>
+                    <div class="b2w2-rank-name">${(typeof window.escHTML==='function'?window.escHTML(ud.u.name):String(ud.u.name||''))}</div>
                     <div class="b2w2-rank-sub">
                       <span><span style="color:var(--win-col,#dc2626);font-weight:800">${ud.tw}승</span> <span style="color:var(--lose-col,#94a3b8);font-weight:800">${ud.tl}패</span></span>
                       <span>승률 ${ud.wr ?? 0}%</span>
@@ -2491,7 +2492,7 @@ function _b2WeeklyBriefingView() {
                 <div class="b2w2-ace-head" style="margin-bottom:0">
                   <div class="b2w2-ace-univ">
                     <span class="b2w2-ace-dot" style="background:${col}"></span>
-                    <span class="b2w2-ace-univ-name">${item.u.name}</span>
+                    <span class="b2w2-ace-univ-name">${(typeof window.escHTML==='function'?window.escHTML(item.u.name):String(item.u.name||''))}</span>
                   </div>
                   <span class="b2w2-ace-rank">${item.rank}위 대학</span>
                 </div>
@@ -2509,7 +2510,7 @@ function _b2WeeklyBriefingView() {
                 <div class="b2w2-ace-head">
                   <div class="b2w2-ace-univ">
                     <span class="b2w2-ace-dot" style="background:${col}"></span>
-                    <span class="b2w2-ace-univ-name">${item.u.name}</span>
+                    <span class="b2w2-ace-univ-name">${(typeof window.escHTML==='function'?window.escHTML(item.u.name):String(item.u.name||''))}</span>
                   </div>
                   <span class="b2w2-ace-rank">${item.rank}위 대학</span>
                 </div>
@@ -2641,7 +2642,7 @@ function _b2WeeklyBriefingView() {
             <span class="b2w2-card-dot" style="background:${color}"></span>
             <div style="min-width:0">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                <div class="b2w2-card-name">${u.name}</div>
+                <div class="b2w2-card-name">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</div>
                 <button type="button" onclick="event.stopPropagation();if(typeof openUnivModal==='function')openUnivModal('${u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" style="font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;border:1.5px solid ${color};background:var(--b2w-paper-alt);color:${color};cursor:pointer;white-space:nowrap;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,.08)">🏫 대학상세</button>
               </div>
               <div id="b2w2-sub-${ui}" class="b2w2-card-sub" style="display:none">
@@ -2676,13 +2677,13 @@ function _b2WeeklyBriefingView() {
               ${univMVP ? `
                 <div class="b2w2-card-spotlight-body">
                   <div class="b2w2-card-spotlight-photo" style="--_c:${color}">
-                    ${(() => { const _ph = univMVP.p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(univMVP.p.photo):univMVP.p.photo) : ''; return _ph ? `<img src="${_ph}" alt="${univMVP.p.name||''}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''; })()}
+                    ${(() => { const _ph = univMVP.p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(univMVP.p.photo):univMVP.p.photo) : ''; const _altSafe=(typeof escAttr==='function'?escAttr(univMVP.p.name||''):String(univMVP.p.name||'')); return _ph ? `<img src="${_ph}" alt="${_altSafe}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''; })()}
                     <div class="b2w2-card-spotlight-photo-fallback" style="${univMVP.p.photo?'display:none':''}">${String(univMVP.p.name||'-').trim().slice(0,1)}</div>
                   </div>
                   <div style="min-width:0">
                     <div class="b2w2-card-spotlight-kicker">대학별 에이스</div>
                     <div class="b2w2-card-spotlight-title">
-                      <span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${univMVP.p.name}" style="cursor:pointer;border-bottom:1.5px solid ${color}55">${univMVP.p.name}</span>
+                      <span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${(typeof escAttr==='function'?escAttr(univMVP.p.name||''):String(univMVP.p.name||''))}" style="cursor:pointer;border-bottom:1.5px solid ${color}55">${(typeof window.escHTML==='function'?window.escHTML(univMVP.p.name||''):String(univMVP.p.name||''))}</span>
                       ${univMVP.p.tier?`<span style="font-size:10px;padding:2px 6px;border-radius:999px;background:${typeof getTierBtnColor==='function' ? getTierBtnColor(univMVP.p.tier) : '#64748b'};color:${typeof getTierBtnTextColor==='function' ? (getTierBtnTextColor(univMVP.p.tier)||'#fff') : '#fff'}">${univMVP.p.tier}</span>`:''}
                     </div>
                     <div class="b2w2-card-spotlight-sub">
@@ -2722,7 +2723,7 @@ function _b2WeeklyBriefingView() {
         h += `<tr ${isMVP?'style="background:#fef9c322"':''}>
           <td style="font-size:11px;font-weight:900;color:var(--text3);text-align:center">${medal}</td>
           <td>
-            <span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${p.name}" style="font-size:13px;font-weight:900;color:var(--text1);cursor:pointer;border-bottom:1.5px solid var(--border2);padding-bottom:1px">${p.name}</span>
+            <span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||''))}" style="font-size:13px;font-weight:900;color:var(--text1);cursor:pointer;border-bottom:1.5px solid var(--border2);padding-bottom:1px">${(typeof window.escHTML==='function'?window.escHTML(p.name||''):String(p.name||''))}</span>
             ${p.tier?`<span style="font-size:12px;padding:1px 5px;border-radius:4px;background:${tc2};color:${tt2};margin-left:3px">${p.tier}</span>`:''}
             ${isMVP?`<span style="font-size:11px;background:#fef9c3;color:#b45309;padding:1px 4px;border-radius:4px;margin-left:3px;font-weight:800">MVP</span>`:''}
           </td>

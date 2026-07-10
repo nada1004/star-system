@@ -120,7 +120,7 @@ function _statsLatestActiveMonths(gender){
     '.stats-grouprow .pill{min-width:80px;justify-content:center}',
     /* ── 서브탭(종합/티어랭킹 등) 행 ── */
     '.stats-subrow{display:flex;flex-wrap:wrap;gap:10px}',
-    '@media (max-width:680px){.stats-modebar{gap:8px}.stats-modeseg{width:100%;justify-content:flex-start}.stats-modebar-hint{width:100%;text-align:left}.stats-grouprow,.stats-subrow{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:10px}.stats-grouprow::-webkit-scrollbar,.stats-subrow::-webkit-scrollbar{display:none}.stats-grouprow .pill{min-width:0}}',
+    '@media (max-width:768px){.stats-modebar{gap:8px}.stats-modeseg{width:100%;justify-content:flex-start}.stats-modebar-hint{width:100%;text-align:left}.stats-grouprow,.stats-subrow{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:10px}.stats-grouprow::-webkit-scrollbar,.stats-subrow::-webkit-scrollbar{display:none}.stats-grouprow .pill{min-width:0}}',
     '.stats-filter-box{display:flex;flex-direction:column;gap:8px;margin-bottom:2px;padding:12px 14px;border-radius:18px;background:linear-gradient(180deg,#f8fbff,#eff6ff);border:1px solid rgba(147,197,253,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.78)}',
     '.stats-filter-box.is-idle{background:linear-gradient(180deg,#fff,#f8fafc);border-color:rgba(148,163,184,.22)}',
     '.stats-award-toggle{display:inline-flex;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--surface);border:1px solid var(--border)}',
@@ -238,7 +238,7 @@ function _statsLatestActiveMonths(gender){
     'body.dark .stats-compare-table th,body.dark .stats-compare-table td{border-color:#233247;color:#e2e8f0}',
     'body.dark .stats-choice-chip,body.dark .stats-result-card,body.dark .stats-selection-list,body.dark .stats-selection-item,body.dark .stats-preview-frame{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#334155;color:#e2e8f0;box-shadow:0 12px 22px rgba(0,0,0,.18)}',
     'body.dark .stats-selection-item:hover{background:#17263c}',
-    '@media (max-width:780px){.stats-hero{flex-direction:column;padding:16px;border-radius:20px}.stats-hero-title{font-size:20px}.stats-hero-badges{justify-content:flex-start}.stats-toolbar-card{padding:10px 10px 12px}.stats-chart-board,.stats-table-card{padding:10px}.stats-chart-wrap{padding:10px}.stats-select{min-width:180px;width:100%}.stats-compare-duel{grid-template-columns:1fr}.stats-compare-vs{min-height:24px}}',
+    '@media (max-width:768px){.stats-hero{flex-direction:column;padding:16px;border-radius:20px}.stats-hero-title{font-size:20px}.stats-hero-badges{justify-content:flex-start}.stats-toolbar-card{padding:10px 10px 12px}.stats-chart-board,.stats-table-card{padding:10px}.stats-chart-wrap{padding:10px}.stats-select{min-width:180px;width:100%}.stats-compare-duel{grid-template-columns:1fr}.stats-compare-vs{min-height:24px}}',
     '@media (max-width:768px){.stats-hero{display:none}}'
   ].join('');
   document.head.appendChild(s);

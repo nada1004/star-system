@@ -186,7 +186,7 @@ function toggleUnivEdit(){
     const editHTML=`<div id="univ-edit-panel" style="background:var(--surface);border:1.5px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:16px">
       <div style="font-weight:800;font-size:13px;color:var(--blue);margin-bottom:12px">✏️ 대학 정보 수정</div>
       <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대학 이름</label>
-      <input type="text" id="ue-name" value="${u.name||''}" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:13px;box-sizing:border-box" oninput="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
+      <input type="text" id="ue-name" value="${(typeof escAttr==='function'?escAttr(u.name||''):String(u.name||''))}" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:13px;box-sizing:border-box" oninput="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
       <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대표 색상</label>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
         <input type="color" id="ue-color" value="${u.color||'#6b7280'}" style="width:44px;height:36px;padding:2px;border-radius:6px;border:1px solid var(--border2);cursor:pointer" oninput="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
@@ -245,11 +245,11 @@ function toggleUnivEdit(){
             <div style="position:relative;z-index:2;padding:16px;display:flex;align-items:flex-start;gap:12px">
               <div style="width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);box-shadow:0 8px 24px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
                 <img id="ue-hbg-preview-logo" src="" alt="" style="width:100%;height:100%;object-fit:contain;padding:8px;display:none" onerror="this.style.display='none';const f=document.getElementById('ue-hbg-preview-logo-fallback');if(f)f.style.display='flex'">
-                <span id="ue-hbg-preview-logo-fallback" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff">${(u.name||'?').charAt(0)}</span>
+                <span id="ue-hbg-preview-logo-fallback" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff">${(typeof window.escHTML==='function'?window.escHTML((u.name||'?').charAt(0)):(u.name||'?').charAt(0))}</span>
               </div>
               <div style="min-width:0;flex:1;padding-top:2px">
                 <div style="font-size:9px;letter-spacing:.14em;font-weight:900;color:rgba(255,255,255,.60);text-transform:uppercase;margin-bottom:5px">Detail Header Preview</div>
-                <div id="ue-hbg-preview-name" style="font-size:22px;font-weight:950;color:#fff;line-height:1.16;text-shadow:0 2px 10px rgba(0,0,0,.28);word-break:keep-all">${u.name||''}</div>
+                <div id="ue-hbg-preview-name" style="font-size:22px;font-weight:950;color:#fff;line-height:1.16;text-shadow:0 2px 10px rgba(0,0,0,.28);word-break:keep-all">${(typeof window.escHTML==='function'?window.escHTML(u.name||''):String(u.name||''))}</div>
                 <div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">
                   <span style="display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:rgba(15,23,42,.30);border:1px solid rgba(255,255,255,.16);font-size:10px;font-weight:800;color:rgba(255,255,255,.84)">배경 잘림 미리보기</span>
                   <span style="display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:rgba(15,23,42,.24);border:1px solid rgba(255,255,255,.14);font-size:10px;font-weight:700;color:rgba(255,255,255,.72)">실제 저장 전 확인</span>

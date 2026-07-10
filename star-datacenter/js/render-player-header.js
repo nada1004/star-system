@@ -27,6 +27,10 @@ function buildPlayerHeaderCardHTML(opts){
   const _isMobile = isMobile || (typeof window!=='undefined' && window.innerWidth<=768);
   const p = player;
   if(!p) return '';
+  // [보안 강화] 선수명/소속대학명은 innerHTML 텍스트로 그대로 삽입되므로 이스케이프 처리
+  const _esc = (typeof window.escHTML==='function') ? window.escHTML : (s)=>String(s==null?'':s);
+  const pNameSafe = _esc(p.name);
+  const pUnivSafe = _esc(p.univ||'무소속');
 
   const _bgSize = hdrBgLayer?.fit==='fill' ? '100% 100%' : (hdrBgLayer?.fit==='cover' ? 'cover' : 'contain');
   const _bgScale = Math.max(40, Math.min(220, Number(hdrBgLayer?.scale||100)));
@@ -125,7 +129,7 @@ function buildPlayerHeaderCardHTML(opts){
   const univBadge = `<span class="ubadge pd-chip${p.univ&&p.univ!=='무소속'?' clickable-univ':''}" data-icon-done="1"
     ${p.univ&&p.univ!=='무소속'?`data-pph-action="open-univ" data-pph-univ="${String(p.univ).replace(/"/g,'&quot;')}"`:''} 
     style="background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.32);font-size:${pmMetaFs}px;padding:${pmMetaPad};display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-weight:800;backdrop-filter:blur(6px)${p.univ&&p.univ!=='무소속'?';cursor:pointer':''}">
-    ${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>`;
+    ${gUI(p.univ,'12px')}${pUnivSafe}</span>`;
 
   const _raceAccent = { T:'#60a5fa', Z:'#c084fc', P:'#fbbf24', N:'#cbd5e1' }[p.race] || '#cbd5e1';
   const raceBadge = `<span class="pd-chip" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:800;color:#fff;backdrop-filter:blur(6px);display:inline-flex;align-items:center;gap:5px">
@@ -136,7 +140,7 @@ function buildPlayerHeaderCardHTML(opts){
     <div class="pd-hero-quickrail" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(${_isMobile?2:4},minmax(0,1fr));gap:8px;padding:${_isMobile?'10px 10px 12px':'12px 14px 14px'};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
       <div class="pd-hero-quickcard" data-kind="univ" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">소속</div>
-        <div style="margin-top:7px;font-size:${_isMobile?13:15}px;font-weight:1000;color:${univAccent};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 rgba(255,255,255,.35)">${p.univ||'무소속'}</div>
+        <div style="margin-top:7px;font-size:${_isMobile?13:15}px;font-weight:1000;color:${univAccent};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 rgba(255,255,255,.35)">${pUnivSafe}</div>
       </div>
       <div class="pd-hero-quickcard" data-kind="race" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">종족</div>
@@ -165,7 +169,7 @@ function buildPlayerHeaderCardHTML(opts){
       <div class="pd-hero-photo" style="${photoBorder}">${photoHTML}</div>
       <div class="pd-hero-meta" style="min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px">
-          <span class="pd-hero-name" style="font-size:${pmNameFs+4}px;font-weight:1000;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28);letter-spacing:-.02em;line-height:1">${p.name}${genderIcon(p.gender)}</span>
+          <span class="pd-hero-name" style="font-size:${pmNameFs+4}px;font-weight:1000;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.28);letter-spacing:-.02em;line-height:1">${pNameSafe}${genderIcon(p.gender)}</span>
           ${p.role?getRoleBadgeHTML(p.role,'11px'):''}
           ${tierBadge}
         </div>
@@ -181,7 +185,7 @@ function buildPlayerHeaderCardHTML(opts){
       <div class="pd-hero-row" style="display:flex;align-items:center;gap:12px">
         <div class="pd-hero-photo" style="${photoBorder.replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`).replace(`${pmPhotoSz+14}px`,`${pmPhotoSz+8}px`)}">${photoHTML}</div>
         <div class="pd-hero-meta" style="min-width:0;flex:1">
-          <div class="pd-hero-name" style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${p.name}${genderIcon(p.gender)}</div>
+          <div class="pd-hero-name" style="font-size:${pmNameFs+1}px;font-weight:1000;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.22);line-height:1.2;word-break:keep-all;margin-bottom:6px">${pNameSafe}${genderIcon(p.gender)}</div>
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">
             ${p.role?getRoleBadgeHTML(p.role,'10px'):''}${tierBadge}
           </div>

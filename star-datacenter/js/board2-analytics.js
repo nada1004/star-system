@@ -182,7 +182,7 @@ function _b2RankingView() {
     }" onclick="(function(el){document.querySelectorAll('.b2rk2-row').forEach(function(r){r.classList.remove('selected')});el.classList.toggle('selected');})(this);if(typeof openUnivModal==='function')openUnivModal('${(typeof escJS==='function'?escJS(u.name):String(u.name).replace(/'/g,"\\'"))}')">
       <div class="b2rk2-glow" style="background:radial-gradient(ellipse at 0% 50%,${u.color},transparent 60%)"></div>
       <div class="b2rk2-rank">${rankDisplay}${deltaHtml}</div>
-      <div class="b2rk2-name" style="color:${u.color}">${u.name}</div>
+      <div class="b2rk2-name" style="color:${u.color}">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</div>
       ${u.tg === 0
         ? `<div class="b2rk2-bar-wrap"></div>`
         : `<div class="b2rk2-bar-wrap wl" title="이번주 ${u.tw}승 ${u.tl}패 (${u.wr}%)">
@@ -532,7 +532,7 @@ function _b2RadarView() {
           ttipEl.style.opacity='1';
           ttipEl.style.left=(x/W*canvas.getBoundingClientRect().width+canvas.getBoundingClientRect().left+12)+'px';
           ttipEl.style.top=(y/H*canvas.getBoundingClientRect().height+canvas.getBoundingClientRect().top-30)+'px';
-          ttipEl.innerHTML=\`<div style="color:\${bestU.color};font-weight:900">\${bestU.name}</div><div style="color:#475569">\${AXES[bestI]}: <strong>\${bestU.raw[bestI]}</strong></div><div style="font-size:10px;color:#94a3b8">정규화 평균 \${Math.round((AVG_VALS[bestI]||0)*100)}%</div>\`;
+          ttipEl.innerHTML=\`<div style="color:\${bestU.color};font-weight:900">\${(typeof window.escHTML==='function'?window.escHTML(bestU.name):String(bestU.name||''))}</div><div style="color:#475569">\${AXES[bestI]}: <strong>\${bestU.raw[bestI]}</strong></div><div style="font-size:10px;color:#94a3b8">정규화 평균 \${Math.round((AVG_VALS[bestI]||0)*100)}%</div>\`;
         } else { ttipEl.style.opacity='0'; }
       }
 
@@ -541,7 +541,7 @@ function _b2RadarView() {
         const str = getStrengthAxes(u).map(i=>AXES[i]).join(', ');
         return \`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:10px;background:var(--surface);border:1.5px solid \${u.color}44">
           <span style="width:12px;height:12px;border-radius:50%;background:\${u.color};flex-shrink:0"></span>
-          <span style="font-size:12px;font-weight:900;color:\${u.color}">\${u.name}</span>
+          <span style="font-size:12px;font-weight:900;color:\${u.color}">\${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
           <span style="font-size:11px;color:var(--text3);">\${u.total}명\${u.wr!==null?' · '+u.wr+'%':''}\${(u.wins+u.losses)>0?' · '+(u.wins+u.losses)+'전':''}</span>
           \${str?'<span style="font-size:10px;background:#fef9c3;color:#b45309;padding:1px 5px;border-radius:5px;font-weight:800">강점: '+str+'</span>':''}
         </div>\`;
@@ -566,7 +566,7 @@ function _b2RadarView() {
         active.forEach((u,ui)=>{ if(u.vals[ai]>bestV){bestV=u.vals[ai];best=ui;} });
         return best;
       });
-      th.innerHTML = \`<tr><th>항목</th>\${active.map(u=>\`<th style="color:\${u.color}">\${u.name}</th>\`).join('')}<th style="color:#94a3b8">정규화 평균</th></tr>\`;
+      th.innerHTML = \`<tr><th>항목</th>\${active.map(u=>\`<th style="color:\${u.color}">\${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</th>\`).join('')}<th style="color:#94a3b8">정규화 평균</th></tr>\`;
       tb.innerHTML = AXES.map((ax,ai)=>{
         const avgRaw=(AVG_VALS[ai]*100).toFixed(0)+'%';
         return \`<tr>
@@ -818,7 +818,7 @@ function _b2SummaryView() {
         const barW=Math.round(u.count/maxCount*100);
         return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border2)">
           <span style="font-size:10px;font-weight:900;color:var(--text3);width:16px;text-align:center">${i+1}</span>
-          <span style="font-size:11px;font-weight:800;color:${u.color};min-width:60px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</span>
+          <span style="font-size:11px;font-weight:800;color:${u.color};min-width:60px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
           <div style="flex:1;height:8px;border-radius:4px;overflow:hidden;background:var(--border2);display:flex">
             <div style="width:${Math.round(u.races.P/u.count*barW)}%;background:#7c3aed"></div>
             <div style="width:${Math.round(u.races.T/u.count*barW)}%;background:#0284c7"></div>
@@ -846,10 +846,10 @@ function _b2SummaryView() {
           const hist=Array.isArray(p.history)?p.history:[];
           const firstD=hist.length?String(Math.min(...hist.map(h2=>parseInt(String(h2.date||h2.d||'').replace(/[-\.]/g,''))||Infinity))).replace(/(\d{4})(\d{2})(\d{2})/,'$1.$2.$3'):'';
           return `<span class="b2s-new-player" style="border-color:${col}44;background:${col}0d">
-            <span style="color:${col};font-weight:900">${p.name}</span>
+            <span style="color:${col};font-weight:900">${(typeof window.escHTML==='function'?window.escHTML(p.name):String(p.name||''))}</span>
             ${rIco?`<span style="font-size:10px">${rIco}</span>`:''}
             ${p.tier?`<span style="font-size:9px;padding:1px 4px;border-radius:4px;background:${tc};color:${tt}">${p.tier}</span>`:''}
-            <span style="font-size:9px;color:var(--text3)">${p.univ||''}</span>
+            <span style="font-size:9px;color:var(--text3)">${(typeof window.escHTML==='function'?window.escHTML(p.univ||''):String(p.univ||''))}</span>
           </span>`;
         }).join('')}
       </div>
@@ -870,7 +870,7 @@ function _b2SummaryView() {
         return `<div class="b2s-univ-card" style="border-color:${u.color}44;background:${u.color}0d">
           <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
             <span style="font-size:14px">${medal}</span>
-            <span style="font-size:12px;font-weight:900;color:${u.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${u.name}</span>
+            <span style="font-size:12px;font-weight:900;color:${u.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
             <span style="font-size:15px;font-weight:900;color:${u.color}">${u.count}</span>
           </div>
           <div style="height:6px;border-radius:3px;overflow:hidden;background:var(--border2);display:flex;margin-bottom:4px">
@@ -890,7 +890,7 @@ function _b2SummaryView() {
       ${univStats.slice(0,20).map(u=>{
         const barW=Math.round(u.count/maxCount*100);
         return `<div class="b2s-univ-row">
-          <span style="font-size:11px;font-weight:800;color:${u.color};min-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name}</span>
+          <span style="font-size:11px;font-weight:800;color:${u.color};min-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
           <div class="b2s-bar-track">
             <div title="프로토스 ${u.races.P}" style="width:${Math.round(u.races.P/u.count*barW)}%;background:#7c3aed;transition:width .6s ease"></div>
             <div title="테란 ${u.races.T}" style="width:${Math.round(u.races.T/u.count*barW)}%;background:#0284c7;transition:width .6s ease"></div>
@@ -1019,8 +1019,8 @@ function _b2CompareView() {
   const h2h  = (_b2CompareA&&_b2CompareB)?getHeadToHead(_b2CompareA,_b2CompareB):{aw:0,al:0,ag:0};
   const h2hB = (_b2CompareA&&_b2CompareB)?getHeadToHead(_b2CompareB,_b2CompareA):{aw:0,al:0,ag:0};
 
-  const univOptA = univList.map(u=>`<option value="${u.name}"${_b2CompareA===u.name?' selected':''}>${u.name}</option>`).join('');
-  const univOptB = univList.map(u=>`<option value="${u.name}"${_b2CompareB===u.name?' selected':''}>${u.name}</option>`).join('');
+  const univOptA = univList.map(u=>{const _n=(typeof escAttr==='function'?escAttr(u.name):String(u.name||''));const _nh=(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''));return `<option value="${_n}"${_b2CompareA===u.name?' selected':''}>${_nh}</option>`;}).join('');
+  const univOptB = univList.map(u=>{const _n=(typeof escAttr==='function'?escAttr(u.name):String(u.name||''));const _nh=(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''));return `<option value="${_n}"${_b2CompareB===u.name?' selected':''}>${_nh}</option>`;}).join('');
 
   const compareRow = (label,valA,valB) => {
     const numA=typeof valA==='number'?valA:null;

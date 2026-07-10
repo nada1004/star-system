@@ -95,7 +95,7 @@ const SESSION_ID_HASH_KEY='su_session_id_hash';
 const ADMIN_REMOTE_SYNC_KEY='su_admin_remote_sync_state';
 const ADMIN_HASH_VERSION=2;
 const ADMIN_PASSWORD_MIN_LEN=8;
-const ADMIN_PBKDF2_ITER=120000;
+const ADMIN_PBKDF2_ITER=300000; // [보안 강화] 120,000 → 300,000 (OWASP 권장치에 근접). 기존 계정은 저장된 iter값으로 검증되므로 영향 없음
 const ADMIN_FALLBACK_ITER=20000;
 function _normAdminId(id){
   return String(id||'').trim().toLowerCase();
