@@ -53,7 +53,7 @@ function formatPlayerRecentRecord(player) {
     const oppDisplay = oppPlayer
       ? `<span data-chatbot-quick="${escapeAttr(oppRaw)}" style="color:var(--blue);cursor:pointer;text-decoration:underline">${safeOpp}</span>`
       : safeOpp;
-    const resColor = (h.result === '승') ? '#16a34a' : (h.result === '패') ? '#dc2626' : '#64748b';
+    const resColor = (h.result === '승') ? '#dc2626' : (h.result === '패') ? '#2563eb' : '#64748b';
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #eef2f7;font-size:12px">
       <span style="color:#94a3b8;font-weight:700;min-width:72px">${safeDate}</span>
       <span style="color:${resColor};font-weight:900;min-width:22px;text-align:center">${safeRes}</span>

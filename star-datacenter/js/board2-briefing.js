@@ -2465,7 +2465,7 @@ function _b2WeeklyBriefingView() {
                   <div style="min-width:0">
                     <div class="b2w2-rank-name">${(typeof window.escHTML==='function'?window.escHTML(ud.u.name):String(ud.u.name||''))}</div>
                     <div class="b2w2-rank-sub">
-                      <span><span style="color:var(--win-col,#dc2626);font-weight:800">${ud.tw}승</span> <span style="color:var(--lose-col,#94a3b8);font-weight:800">${ud.tl}패</span></span>
+                      <span><span style="color:var(--win-col,#dc2626);font-weight:800">${ud.tw}승</span> <span style="color:var(--lose-col,#2563eb);font-weight:800">${ud.tl}패</span></span>
                       <span>승률 ${ud.wr ?? 0}%</span>
                       <span style="color:${col};font-weight:800">${ud.tg}전</span>
                     </div>
@@ -2647,7 +2647,7 @@ function _b2WeeklyBriefingView() {
               </div>
               <div id="b2w2-sub-${ui}" class="b2w2-card-sub" style="display:none">
                 <span>활동 ${active.length}명</span>
-                <span><span style="color:${color};font-weight:800">${tg}전</span> <span style="color:var(--win-col,#dc2626);font-weight:800">${tw}승</span> <span style="color:var(--lose-col,#94a3b8);font-weight:800">${tl}패</span></span>
+                <span><span style="color:${color};font-weight:800">${tg}전</span> <span style="color:var(--win-col,#dc2626);font-weight:800">${tw}승</span> <span style="color:var(--lose-col,#2563eb);font-weight:800">${tl}패</span></span>
                 ${wr!==null?`<span style="font-weight:900;color:${wrClass}">승률 ${wr}%${_b2WeeklyDelta(wr,prevWr)}</span>`:''}
               </div>
             </div>
@@ -2664,7 +2664,7 @@ function _b2WeeklyBriefingView() {
               </div>
               <div class="b2w2-card-kpi">
                 <div class="b2w2-card-kpi-label">팀 전적</div>
-                <div class="b2w2-card-kpi-value"><span style="color:var(--win-col,#dc2626)">${tw}승</span> <span style="color:var(--lose-col,#94a3b8)">${tl}패</span></div>
+                <div class="b2w2-card-kpi-value"><span style="color:var(--win-col,#dc2626)">${tw}승</span> <span style="color:var(--lose-col,#2563eb)">${tl}패</span></div>
                 <div class="b2w2-card-kpi-sub">총 <span style="color:${color};font-weight:900">${tg}</span>전 소화</div>
               </div>
               <div class="b2w2-card-kpi">

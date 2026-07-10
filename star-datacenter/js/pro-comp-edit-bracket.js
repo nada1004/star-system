@@ -807,7 +807,7 @@ function proCompGrpEdit() {
             <span style="font-weight:600">${m.a||'?'}</span>
             <span style="color:var(--gray-l)">vs</span>
             <span style="font-weight:600">${m.b||'?'}</span>
-            ${m.winner?`<span style="font-size:10px;background:#dcfce7;color:#16a34a;padding:1px 6px;border-radius:10px;font-weight:700">${m.winner==='A'?m.a:m.b} 승</span>`:'<span style="font-size:10px;color:var(--gray-l)">미완료</span>'}
+            ${m.winner?`<span style="font-size:10px;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:10px;font-weight:700">${m.winner==='A'?m.a:m.b} 승</span>`:'<span style="font-size:10px;color:var(--gray-l)">미완료</span>'}
             ${m.d?`<span style="font-size:11px;font-weight:600;color:var(--text3)">${m.d}</span>`:''}
             <button class="btn btn-b btn-xs" style="margin-left:auto" onclick="proCompEditMatch('${tn.id}',${gi},${mi})">✏️</button>
             <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${tn.id}',${gi},${mi})">🗑️</button>

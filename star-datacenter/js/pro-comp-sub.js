@@ -203,8 +203,8 @@ function proCompTourneyStats(tn) {
     h += `<tr style="border-top:1px solid var(--border);${idx===0?'background:#2563eb08':''}">
       <td style="padding:8px 12px;text-align:center;font-size:16px">${medal||idx+1}</td>
       <td style="padding:8px 10px"><div style="display:flex;align-items:center;gap:4px">${photo}<span style="font-weight:${idx<2?'800':'600'};cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${r.name.replace(/'/g,"\\'")}')">${r.name}</span>${rb}${tb}</div></td>
-      <td style="padding:8px 12px;text-align:center;font-weight:700;color:#16a34a">${r.w}</td>
-      <td style="padding:8px 12px;text-align:center;color:var(--red)">${r.l}</td>
+      <td style="padding:8px 12px;text-align:center;font-weight:700;color:#dc2626">${r.w}</td>
+      <td style="padding:8px 12px;text-align:center;color:#2563eb">${r.l}</td>
       <td style="padding:8px 12px;text-align:center;font-weight:700">${r.rate}%</td>
     </tr>`;
   });
@@ -269,7 +269,7 @@ function proCompPrintRank() {
   const tn = getCurrentProTourney();
   if (!tn) return;
   const GL = 'ABCDEFGHIJ';
-  let body = `<style>body{font-family:'Noto Sans KR',sans-serif;margin:20px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th,td{border:1px solid #ddd;padding:8px 12px;text-align:left}th{background:#f0f4ff;font-weight:700}h1{color:#1e3a8a;font-size:20px;margin-bottom:4px}h2{color:#2563eb;font-size:14px;margin:16px 0 6px}.medal{font-size:16px}.wr{font-weight:700}.win{color:#16a34a}.loss{color:#dc2626}</style>`;
+  let body = `<style>body{font-family:'Noto Sans KR',sans-serif;margin:20px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th,td{border:1px solid #ddd;padding:8px 12px;text-align:left}th{background:#f0f4ff;font-weight:700}h1{color:#1e3a8a;font-size:20px;margin-bottom:4px}h2{color:#2563eb;font-size:14px;margin:16px 0 6px}.medal{font-size:16px}.wr{font-weight:700}.win{color:#dc2626}.loss{color:#2563eb}</style>`;
   body += `<h1>🏆 ${tn.name} 대회 조별 순위</h1><p style="color:#888;font-size:12px">출력일: ${new Date().toLocaleDateString('ko-KR')}</p>`;
   tn.groups.forEach((grp, gi) => {
     const col = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2'][gi%6];
@@ -425,8 +425,8 @@ function rProAll(C, T) {
       h+=`<tr style="border-top:1px solid var(--border)">
         <td style="padding:8px 12px;text-align:center;font-size:16px">${medal||idx+1}</td>
         <td style="padding:8px 10px"><div style="display:flex;align-items:center;gap:4px">${photo}<span style="font-weight:${idx<2?'800':'600'};cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${escJS(r.name)}')">${r.name}</span>${rb}</div></td>
-        <td style="padding:8px 12px;text-align:center;font-weight:700;color:#16a34a">${r.w}</td>
-        <td style="padding:8px 12px;text-align:center;color:var(--red)">${r.l}</td>
+        <td style="padding:8px 12px;text-align:center;font-weight:700;color:#dc2626">${r.w}</td>
+        <td style="padding:8px 12px;text-align:center;color:#2563eb">${r.l}</td>
         <td style="padding:8px 12px;text-align:center;font-weight:700">${r.rate}%</td>
         <td style="padding:8px 12px;text-align:center">${srcBadges}</td>
       </tr>`;
@@ -448,13 +448,13 @@ function rProAll(C, T) {
       let result='';
       if(item.type==='일반'){
         const sa=item.scoreA||0;const sb=item.scoreB||0;
-        if(sa>0||sb>0) result=`<span style="font-weight:800;color:${sa>sb?'#16a34a':'var(--text3)'}">${sa}</span><span style="color:var(--gray-l);margin:0 2px">:</span><span style="font-weight:800;color:${sb>sa?'#16a34a':'var(--text3)'}">${sb}</span>`;
+        if(sa>0||sb>0) result=`<span style="font-weight:800;color:${sa>sb?'#dc2626':sb>sa?'#2563eb':'var(--text3)'}">${sa}</span><span style="color:var(--gray-l);margin:0 2px">:</span><span style="font-weight:800;color:${sb>sa?'#dc2626':sa>sb?'#2563eb':'var(--text3)'}">${sb}</span>`;
         else result='<span style="color:var(--gray-l);font-size:11px">기록없음</span>';
       } else if(item.type==='중장전'){
         // [FIX] 중장전은 개인 게임 단위이므로 note에 게임 수 표시
         result=item.winner==='done'?`<span style="font-size:11px;font-weight:700;color:#166534;background:#dcfce7;padding:1px 8px;border-radius:10px">기록완료</span>`:`<span style="font-size:11px;color:var(--gray-l);background:var(--surface);padding:1px 8px;border-radius:10px">미정</span>`;
       } else {
-        result=item.winner?`<span style="font-size:11px;font-weight:700;color:#16a34a;background:#dcfce7;padding:1px 8px;border-radius:10px">${item.winner==='A'?item.aLabel:item.bLabel} 승</span>`:`<span style="font-size:11px;color:var(--gray-l);background:var(--surface);padding:1px 8px;border-radius:10px">미정</span>`;
+        result=item.winner?`<span style="font-size:11px;font-weight:700;color:#dc2626;background:#fee2e2;padding:1px 8px;border-radius:10px">${item.winner==='A'?item.aLabel:item.bLabel} 승</span>`:`<span style="font-size:11px;color:var(--gray-l);background:var(--surface);padding:1px 8px;border-radius:10px">미정</span>`;
       }
       h+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap">
         <span style="font-size:12px;font-weight:600;color:var(--text3);min-width:76px;white-space:nowrap">${item.d||'날짜미정'}</span>
@@ -601,8 +601,8 @@ function _renderProCompGrpShareCard(tnId, gi) {
           ${raceBadge}
         </div>
       </td>
-      <td style="padding:6px 8px;text-align:center;font-weight:700;color:#16a34a;font-size:12px">${r.w}</td>
-      <td style="padding:6px 8px;text-align:center;color:#dc2626;font-size:12px">${r.l}</td>
+      <td style="padding:6px 8px;text-align:center;font-weight:700;color:#dc2626;font-size:12px">${r.w}</td>
+      <td style="padding:6px 8px;text-align:center;color:#2563eb;font-size:12px">${r.l}</td>
       <td style="padding:6px 8px;text-align:center;font-weight:700;font-size:12px;color:${wr>=70?col:'#64748b'}">${wr}%</td>
     </tr>`;
   }).join('');

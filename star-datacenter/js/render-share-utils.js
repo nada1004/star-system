@@ -80,7 +80,7 @@ function _renderShareCardByPlayerFallback(name){
   const bgPosX=((p.shareCardBgPosX||'center')+'').trim();
   const bgPosY=((p.shareCardBgPosY||'center')+'').trim();
   const bgPos=`${bgPosX} ${bgPosY}`;
-  const recent=h.slice(0,5).map(x=>`<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;background:${x.result==='승'?'#16a34a':'#dc2626'};color:#fff;font-size:11px;font-weight:900">${x.result==='승'?'W':'L'}</span>`).join('');
+  const recent=h.slice(0,5).map(x=>`<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;background:${x.result==='승'?'#dc2626':'#2563eb'};color:#fff;font-size:11px;font-weight:900">${x.result==='승'?'W':'L'}</span>`).join('');
   const photo = p.photo ? `<img src="${toHttpsUrl(p.photo)}" style="width:88px;height:88px;border-radius:24px;object-fit:cover;display:block" onerror="this.remove()">` : '';
   const pts=p.points||0;
   const ptsColor=pts>0?'#4ade80':pts<0?'#f87171':'rgba(255,255,255,.8)';

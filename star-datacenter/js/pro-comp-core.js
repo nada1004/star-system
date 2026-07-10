@@ -580,7 +580,7 @@ function proCompLeague(tn) {
           <span ${click} style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;font-weight:${isWin?900:700};color:${isWin?'#dc2626':(isLose?'var(--gray-l)':'var(--text)')};${isLose?'opacity:.75;':''}">${safe(name||'?')}</span>
           ${_rb(p)}${_tb(p)}
           ${_univ(p)}
-          ${isDone?`<span style="font-size:10px;font-weight:900;color:${isWin?'#dc2626':'#94a3b8'}">${isWin?'WIN':'LOSE'}</span>`:''}
+          ${isDone?`<span style="font-size:10px;font-weight:900;color:${isWin?'#dc2626':'#2563eb'}">${isWin?'WIN':'LOSE'}</span>`:''}
         </span>`;
       };
       const _fxClsLeague = (typeof _recSideFxClass==='function') ? _recSideFxClass('procomp') : (_fxOn ? ` rec-sidefx rec-sidefx--${_fxMode}` : '');
@@ -842,8 +842,8 @@ function proCompGrpRank(tn) {
             </div>
           </div>
         </td>
-        <td style="padding:8px 12px;text-align:center;font-weight:700;color:#16a34a">${r.w}</td>
-        <td style="padding:8px 12px;text-align:center;color:var(--red)">${r.l}</td>
+        <td style="padding:8px 12px;text-align:center;font-weight:700;color:#dc2626">${r.w}</td>
+        <td style="padding:8px 12px;text-align:center;color:#2563eb">${r.l}</td>
         <td style="padding:8px 12px;text-align:center;font-weight:700">${wr}%</td>
       </tr>`;
     });
@@ -1887,7 +1887,7 @@ function proCompTourMatchInput(tn){
         <span ${click} style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;font-weight:${isWin?900:700};color:${isWin?'#dc2626':(isLose?'var(--gray-l)':'var(--text)')};${isLose?'opacity:.75;':''}">${safe(name||'?')}</span>
         ${_rb(p)}${_tb(p)}
         ${_univ(p)}
-        ${isDone?`<span style="font-size:10px;font-weight:900;color:${isWin?'#dc2626':'#94a3b8'}">${isWin?'WIN':'LOSE'}</span>`:''}
+        ${isDone?`<span style="font-size:10px;font-weight:900;color:${isWin?'#dc2626':'#2563eb'}">${isWin?'WIN':'LOSE'}</span>`:''}
       </span>`;
     };
     const _srcChip = item.src==='bkt'

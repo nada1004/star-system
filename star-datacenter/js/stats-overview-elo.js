@@ -330,7 +330,7 @@ function initEloChart(){
   pts.forEach(pt=>{
     ctx.beginPath();
     ctx.arc(mapX(pt.i),mapY(pt.elo),4,0,Math.PI*2);
-    ctx.fillStyle=pt.result==='승'?'#16a34a':'#dc2626';
+    ctx.fillStyle=pt.result==='승'?'#dc2626':'#2563eb';
     ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
   });
   // X축 날짜 (첫/마지막)

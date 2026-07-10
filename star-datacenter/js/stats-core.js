@@ -688,7 +688,7 @@ function statsTierRankHTML(){
                         <tbody>
                           ${r.practice.slice(0,25).map(h=>{
                             const w=_srTimeW(h.date||'');
-                            const res=h.result==='승'?'<span style="color:#16a34a;font-weight:1000">승</span>':'<span style="color:#dc2626;font-weight:1000">패</span>';
+                            const res=h.result==='승'?'<span style="color:#dc2626;font-weight:1000">승</span>':'<span style="color:#2563eb;font-weight:1000">패</span>';
                             return `<tr><td>${(h.date||'').slice(5).replace('-','/')}</td><td>${escHTML(h.opp||'')}</td><td>${res}</td><td style="color:#b45309;font-weight:900">×${w.toFixed(2)}</td><td style="color:var(--gray-l)">${escHTML(h.mode||'')}</td></tr>`;
                           }).join('')}
                         </tbody>
@@ -703,7 +703,7 @@ function statsTierRankHTML(){
                         <thead><tr><th>날짜</th><th>상대</th><th>결과</th><th>모드</th><th>맵</th></tr></thead>
                         <tbody>
                           ${(r.important.slice(0,25)).map(h=>{
-                            const res=h.result==='승'?'<span style="color:#16a34a;font-weight:1000">승</span>':'<span style="color:#dc2626;font-weight:1000">패</span>';
+                            const res=h.result==='승'?'<span style="color:#dc2626;font-weight:1000">승</span>':'<span style="color:#2563eb;font-weight:1000">패</span>';
                             return `<tr><td>${(h.date||'').slice(5).replace('-','/')}</td><td>${escHTML(h.opp||'')}${h.oppRace?`(${escHTML(h.oppRace)})`:''}</td><td>${res}</td><td style="color:var(--gray-l)">${escHTML(h.mode||'')}</td><td style="color:var(--gray-l)">${escHTML((h.map&&h.map!=='-')?h.map:'')}</td></tr>`;
                           }).join('') || `<tr><td colspan="5" style="color:var(--gray-l)">중요 경기 기록이 없습니다.</td></tr>`}
                         </tbody>

@@ -92,8 +92,8 @@ function _histPSearchResultsHTML(q){
         <span style="font-weight:800;font-size:15px;color:var(--text)">${p.name}</span>
         <span style="font-size:12px;color:var(--gray-l)">${p.univ||''}</span>
         <span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--text3)">${filteredHist.length}게임</span>
-        <span style="font-size:12px;font-weight:700;color:#16a34a">${wins}승</span>
-        <span style="font-size:12px;font-weight:700;color:#dc2626">${losses}패</span>
+        <span style="font-size:12px;font-weight:700;color:#dc2626">${wins}승</span>
+        <span style="font-size:12px;font-weight:700;color:#2563eb">${losses}패</span>
         <span style="font-size:12px;padding:2px 8px;border-radius:20px;background:${wr>=50?'#dcfce7':'#fee2e2'};color:${wr>=50?'#16a34a':'#dc2626'};font-weight:800">${wr}%</span>
       </div>
       <div style="overflow-x:auto">
@@ -111,10 +111,10 @@ function _histPSearchResultsHTML(q){
         ? `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;padding:0 6px;border-radius:999px;background:${oppMeta.color}18;border:1px solid ${oppMeta.color}55;color:${oppMeta.color};font-size:10px;font-weight:900;line-height:1">팀</span>`
         : '';
       const oppCellInner=`<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:${oppMeta.color};display:inline-block;flex-shrink:0"></span><span style="color:${oppMeta.clickable?'var(--blue)':'var(--text)'}">${oppMeta.text}</span>${oppKindChip}</span>`;
-      h+=`<tr style="background:${isWin?'#f0fdf4':'#fef2f2'}10">
+      h+=`<tr style="background:${isWin?'#fef2f2':'#eff6ff'}10">
         <td style="color:var(--text3);font-size:12px;font-weight:600;white-space:nowrap">${hh.date||''}</td>
         <td><span title="${modeTitle.replace(/"/g,'&quot;')}" style="background:${mc};color:#fff;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${modeLabel||''}</span></td>
-        <td>${isWin?`<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">WIN</span>`:`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">LOSE</span>`}</td>
+        <td>${isWin?`<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">WIN</span>`:`<span style="background:#dbeafe;color:#2563eb;border:1px solid #bfdbfe;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">LOSE</span>`}</td>
         <td title="${oppMeta.kind==='team'?'선수 정보가 없어 상대 팀명으로 표시 중':''}" style="font-weight:700;${oppMeta.clickable?'cursor:pointer':''}" ${oppMeta.clickable?`onclick="openPlayerModal('${oppMeta.text.replace(/'/g,"\\'")}')"`:''}>${oppCellInner}</td>
         <td>${oppMeta.race?`<span class="rbadge r${oppMeta.race}" style="font-size:10px">${oppMeta.race||''}</span>`:`<span style="color:var(--gray-l);font-size:11px">-</span>`}</td>
         <td style="color:var(--gray-l);font-size:11px">${hh.map&&hh.map!=='-'?hh.map:''}</td>
@@ -470,7 +470,7 @@ function compSummaryListHTML(context){
               <span class="${bWin?'wt':aWin?'lt':'pt-z'}">${m.sb||0}</span>
             </div>`:''}
             ${mapStr ? `<span style="font-size:10px;color:var(--gray-l);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${maps.join(', ')}">${mapStr}</span>` : ''}
-            ${aWin ? `<span style="font-size:11px;color:#16a34a;font-weight:700">${a} 승</span>` : bWin ? `<span style="font-size:11px;color:#16a34a;font-weight:700">${b} 승</span>` : ''}
+            ${aWin ? `<span style="font-size:11px;color:#dc2626;font-weight:700">${a} 승</span>` : bWin ? `<span style="font-size:11px;color:#dc2626;font-weight:700">${b} 승</span>` : ''}
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
             ${b?`<span class="ubadge${bWin?'':' loser'} clickable-univ" style="background:${cb}" onclick="openUnivModal('${b}')">${b}</span>`:''}
@@ -1381,9 +1381,9 @@ function _pcRecDetailRowsHTML(payload){
     return `<div class="pcd-row">
       <span class="pcd-row__idx">${idx+1}경기</span>
       ${winSide==='left'?`<span class="pcd-row__win">WIN</span>`:''}
-      <span class="pcd-row__side" style="font-weight:${winSide==='left'?'900':'700'};color:${winSide==='left'?'#16a34a':'var(--text)'}">${leftBadge}<span class="pcd-row__name">${_pcRecDetailEsc(left)}</span></span>
+      <span class="pcd-row__side" style="font-weight:${winSide==='left'?'900':'700'};color:${winSide==='left'?'var(--win-col,#dc2626)':winSide==='right'?'var(--lose-col,#2563eb)':'var(--text)'}">${leftBadge}<span class="pcd-row__name">${_pcRecDetailEsc(left)}</span></span>
       <span class="pcd-row__vs">vs</span>
-      <span class="pcd-row__side" style="font-weight:${winSide==='right'?'900':'700'};color:${winSide==='right'?'#16a34a':'var(--text)'}">${rightBadge}<span class="pcd-row__name">${_pcRecDetailEsc(right)}</span></span>
+      <span class="pcd-row__side" style="font-weight:${winSide==='right'?'900':'700'};color:${winSide==='right'?'var(--win-col,#dc2626)':winSide==='left'?'var(--lose-col,#2563eb)':'var(--text)'}">${rightBadge}<span class="pcd-row__name">${_pcRecDetailEsc(right)}</span></span>
       ${winSide==='right'?`<span class="pcd-row__win pcd-row__win--right">WIN</span>`:''}
       ${map?`<span class="pcd-row__map">🗺️ ${map}</span>`:'<span class="pcd-row__map"></span>'}
       ${note?`<span class="pcd-row__note">📝 ${note}</span>`:''}
@@ -1484,8 +1484,8 @@ function _histProCompH2HCardHTML(opts){
     ? _h2hPlayerBgPanel(p2, winner === p2, !!winner && winner !== p2)
     : `<div style="padding:10px 12px;font-weight:900">${p2||'?'}</div>`;
   const mode = (typeof _h2hCardMode === 'function') ? _h2hCardMode() : 'panel';
-  const scoreColP1 = winner === p1 ? p1Col : winner === p2 ? '#94a3b8' : (isTie ? '#b45309' : 'var(--text2)');
-  const scoreColP2 = winner === p2 ? p2Col : winner === p1 ? '#94a3b8' : (isTie ? '#b45309' : 'var(--text2)');
+  const scoreColP1 = winner === p1 ? 'var(--win-col)' : winner === p2 ? 'var(--lose-col)' : (isTie ? '#b45309' : 'var(--text2)');
+  const scoreColP2 = winner === p2 ? 'var(--win-col)' : winner === p1 ? 'var(--lose-col)' : (isTie ? '#b45309' : 'var(--text2)');
   const body = (typeof _h2hCardBody === 'function')
     ? _h2hCardBody(mode, { p1, p2, d:o.date||'', games:o.games||[] }, p1Score, p2Score, winner, p1Col, p2Col, '1fr auto 1fr', isMb, scorePad, scoreGap, '', p1Bg, p2Bg, scoreColP1, scoreColP2)
     : `<div style="display:flex;align-items:center;justify-content:space-between;padding:${isMb?'10px':'14px'}"><div>${p1}</div><div style="font-weight:900">${p1Score}:${p2Score}</div><div>${p2}</div></div>`;

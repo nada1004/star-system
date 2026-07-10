@@ -31,7 +31,6 @@ function formatPlayerBasicInfo(player) {
   const tierColor = {'S':'#7c3aed','A':'#2563eb','B':'#16a34a','C':'#d97706','D':'#dc2626'}[player.tier] || '#64748b';
   const tierBg = {'S':'#ede9fe','A':'#dbeafe','B':'#dcfce7','C':'#fef3c7','D':'#fee2e2'}[player.tier] || '#f1f5f9';
   const raceIcon = player.race === '테란' ? '🔵' : player.race === '저그' ? '🟣' : player.race === '프로토스' ? '🟡' : '⚫';
-  const winColor = parseFloat(rate) >= 50 ? '#16a34a' : '#dc2626';
 
   const univColor = (typeof univCfg !== 'undefined' ? (univCfg.find(x=>x.name===player.univ)||{}) : {}).color || '#1e3a8a';
   const btnStyle = `flex:1;padding:9px 0;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif`;
@@ -49,7 +48,7 @@ function formatPlayerBasicInfo(player) {
 <span style="font-size:12px;color:#475569;font-weight:600">${raceIcon} ${player.race}</span>
 <span style="font-size:12px;color:#94a3b8">ELO <b style="color:#334155">${player.elo}</b></span>
 </div>
-<div style="font-size:14px;font-weight:800;color:${winColor};margin-top:4px">${player.win}승 ${player.loss}패 <span style="font-size:12px;font-weight:500;color:#94a3b8">(${rate}%)</span></div>`;
+<div style="font-size:14px;font-weight:800;margin-top:4px"><span style="color:#dc2626">${player.win}승</span> <span style="color:#2563eb">${player.loss}패</span> <span style="font-size:12px;font-weight:500;color:#94a3b8">(${rate}%)</span></div>`;
 
   if (player.photo) {
     return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.14)"><div style="background:#f1f5f9"><img src="${toHttpsUrl(player.photo)}" style="width:100%;display:block;object-fit:contain;max-height:300px;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges"></div><div style="background:#fff;padding:12px 12px 6px"><div style="font-size:18px;font-weight:900;color:#1a202c">${safePlayerName}</div><div style="font-size:13px;color:#64748b;margin-top:1px">${safeUniv}</div>${infoBadges}</div>${quickBtns}</div>`;
