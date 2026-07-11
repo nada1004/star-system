@@ -1968,7 +1968,7 @@ function proCompTourMatchInput(tn){
       <div style="font-size:12px;color:var(--gray-l)">대진표 작성이 아니라, 라운드별 경기 결과를 기록합니다 (64강/32강/16강/8강/4강/결승)</div>
       <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
         ${isLoggedIn?`<button class="btn btn-b btn-sm" onclick="openPcStageAddMenu(this,'${tn.id}')">+ 대진표 추가</button>
-        <button class="btn btn-p btn-sm" onclick="openPcStagePasteMenu(this,'${tn.id}')">📋 붙여넣기(자동인식)</button>
+        <button class="btn btn-p btn-sm" onclick="openPcStageBulkPasteModal('${tn.id}','ALL')">📋 붙여넣기(자동인식)</button>
         <button class="btn ${window._pcStageMergeMode?'btn-b':'btn-w'} btn-sm" onclick="proCompToggleStageMergeMode()">${window._pcStageMergeMode?'✅ 합치기 모드 종료':'🔀 경기 선택해서 합치기'}</button>
         ${window._pcStageMergeMode?`<button class="btn btn-p btn-sm" onclick="proCompMergeSelectedStageMatches('${tn.id}')" ${(!window._pcStageMergeSel||window._pcStageMergeSel.size<2)?'disabled':''}>선택 합치기 (${(window._pcStageMergeSel&&window._pcStageMergeSel.size)||0})</button>`:''}`:''}
       </div>

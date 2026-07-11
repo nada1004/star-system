@@ -395,7 +395,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       <div style="font-size:12px;color:var(--gray-l)">\uB300\uC9C4\uD45C \uC791\uC131\uC774 \uC544\uB2C8\uB77C, \uB77C\uC6B4\uB4DC\uBCC4 \uACBD\uAE30 \uACB0\uACFC\uB97C \uAE30\uB85D\uD569\uB2C8\uB2E4 (64\uAC15/32\uAC15/16\uAC15/8\uAC15/4\uAC15/\uACB0\uC2B9)</div>
       <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
         ${isLoggedIn?`<button class="btn btn-b btn-sm" onclick="openPcStageAddMenu(this,'${tn.id}')">+ \uB300\uC9C4\uD45C \uCD94\uAC00</button>
-        <button class="btn btn-p btn-sm" onclick="openPcStagePasteMenu(this,'${tn.id}')">\u{1F4CB} \uBD99\uC5EC\uB123\uAE30(\uC790\uB3D9\uC778\uC2DD)</button>
+        <button class="btn btn-p btn-sm" onclick="openPcStageBulkPasteModal('${tn.id}','ALL')">\u{1F4CB} \uBD99\uC5EC\uB123\uAE30(\uC790\uB3D9\uC778\uC2DD)</button>
         <button class="btn ${window._pcStageMergeMode?"btn-b":"btn-w"} btn-sm" onclick="proCompToggleStageMergeMode()">${window._pcStageMergeMode?"\u2705 \uD569\uCE58\uAE30 \uBAA8\uB4DC \uC885\uB8CC":"\u{1F500} \uACBD\uAE30 \uC120\uD0DD\uD574\uC11C \uD569\uCE58\uAE30"}</button>
         ${window._pcStageMergeMode?`<button class="btn btn-p btn-sm" onclick="proCompMergeSelectedStageMatches('${tn.id}')" ${!window._pcStageMergeSel||window._pcStageMergeSel.size<2?"disabled":""}>\uC120\uD0DD \uD569\uCE58\uAE30 (${window._pcStageMergeSel&&window._pcStageMergeSel.size||0})</button>`:""}`:""}
       </div>
