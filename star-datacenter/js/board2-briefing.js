@@ -601,52 +601,7 @@ function _b2WeeklyBriefingView() {
         color: var(--b2w-ink-soft);
       }
       .b2w2-hero-pill:not(:last-child) { border-right: 1px solid var(--b2w-rule-soft); padding-right: 14px }
-      .b2w2-hero-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px }
-      .b2w2-hero-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 3px 9px;
-        border: 1px solid var(--b2w-rule-soft);
-        background: var(--b2w-paper-alt);
-        border-radius: 999px;
-        font-size: 10px;
-        font-weight: 700;
-        color: var(--b2w-ink-soft);
-        letter-spacing: .02em;
-      }
-      .b2w2-hero-stats {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0,1fr));
-        gap: 0;
-        min-width: min(100%, 260px);
-        border: 1px solid var(--b2w-rule);
-        border-radius: var(--b2w-r-lg);
-        overflow: hidden;
-        background: var(--b2w-paper-alt);
-        box-shadow: var(--b2w-shadow-sm);
-        flex-shrink: 0;
-      }
-      .b2w2-hero-stat {
-        padding: 14px 16px;
-        border-right: 1px solid var(--b2w-rule-soft);
-        border-bottom: 1px solid var(--b2w-rule-soft);
-        transition: background .14s ease;
-      }
-      .b2w2-hero-stat:hover { background: var(--b2w-accent-soft) }
-      .b2w2-hero-stat:nth-child(2n) { border-right: none }
-      .b2w2-hero-stat:nth-last-child(-n+2) { border-bottom: none }
-      .b2w2-hero-stat-label { font-size: 10px; font-weight: 800; color: var(--b2w-ink-soft); text-transform: uppercase; letter-spacing: .1em }
-      .b2w2-hero-stat-value {
-        margin-top: 6px;
-        font-family: 'Noto Serif KR', Georgia, serif;
-        font-size: 18px;
-        font-weight: 800;
-        letter-spacing: -.01em;
-        color: var(--b2w-ink);
-        line-height: 1.15;
-      }
-      .b2w2-hero-stat-sub { margin-top: 4px; font-size: 10px; font-weight: 600; color: var(--b2w-ink-soft) }
+
 
       /* ── KPI Grid ── */
       .b2w2-kpi-grid {
@@ -1736,16 +1691,26 @@ function _b2WeeklyBriefingView() {
         box-shadow: var(--b2w-shadow-sm);
       }
 
-      /* ── 월간 그리드 ── */
+      /* ── 월간 그리드: 순위(상단)/에이스(하단) 완전 분리 — 절반 폭에 눌려있던 문제 해결 ── */
       .b2w2-monthly-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
         margin-bottom: 22px;
       }
 
-      /* ── 월간 순위 리스트 ── */
-      .b2w2-rank-list, .b2w2-ace-list { display: flex; flex-direction: column; gap: 0 }
+      /* ── 월간 순위 리스트: 전체 폭을 활용하도록 2열로 흐르게 ── */
+      .b2w2-rank-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 0 20px;
+      }
+      /* ── 대학별 에이스: 리스트가 아니라 카드 그리드로 ── */
+      .b2w2-ace-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 12px;
+      }
       .b2w2-rank-row {
         display: flex;
         align-items: center;
@@ -1790,8 +1755,9 @@ function _b2WeeklyBriefingView() {
       .b2w2-rank-delta.new { color: #5b21b6; background: #f5f3ff; border-color: #ddd6fe }
 
       /* ── More 버튼 ── */
-      .b2w2-more-stack { display: flex; flex-direction: column; gap: 0; margin-top: 0 }
+      .b2w2-more-stack { display: contents }
       .b2w2-more-btn {
+        grid-column: 1 / -1;
         margin-top: 10px;
         width: 100%;
         padding: 9px 12px;
@@ -1811,13 +1777,17 @@ function _b2WeeklyBriefingView() {
 
       /* ── 에이스 카드 ── */
       .b2w2-ace-card {
-        padding: 12px 4px;
-        border-bottom: 1px solid var(--b2w-rule-soft);
-        background: none;
-        box-shadow: none;
+        display: flex;
+        flex-direction: column;
+        padding: 14px 14px 13px;
+        border: 1px solid var(--b2w-rule-soft);
+        border-radius: var(--b2w-r-lg);
+        background: var(--b2w-paper-alt);
+        box-shadow: var(--b2w-shadow-sm);
+        transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
       }
-      .b2w2-ace-card:last-child { border-bottom: none }
-      .b2w2-ace-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px }
+      .b2w2-ace-card:hover { transform: translateY(-3px); box-shadow: var(--b2w-shadow); border-color: var(--b2w-accent-border) }
+      .b2w2-ace-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px }
       .b2w2-ace-univ { display: flex; align-items: center; gap: 8px; min-width: 0 }
       .b2w2-ace-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0 }
       .b2w2-ace-univ-name {
@@ -1858,11 +1828,14 @@ function _b2WeeklyBriefingView() {
         color: var(--b2w-ink);
         letter-spacing: -.01em;
         cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         transition: color .12s ease;
       }
       .b2w2-ace-player-name:hover { color: var(--b2w-accent) }
       .b2w2-ace-player-sub { margin-top: 4px; font-size: 11px; color: var(--b2w-ink-soft); display: flex; gap: 7px; flex-wrap: wrap }
-      .b2w2-ace-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px }
+      .b2w2-ace-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; padding-top: 9px }
       .b2w2-ace-badge {
         display: inline-flex;
         align-items: center;
@@ -1875,7 +1848,7 @@ function _b2WeeklyBriefingView() {
         background: var(--white);
         color: var(--b2w-ink-mid);
       }
-      .b2w2-ace-empty { padding: 13px 4px; border-bottom: 1px dashed var(--b2w-rule-soft) }
+      .b2w2-ace-empty { padding: 14px 14px 13px; border: 1px dashed var(--b2w-rule); border-radius: var(--b2w-r-lg); background: var(--b2w-paper) }
       .b2w2-ace-empty-title { font-size: 14px; font-weight: 800; color: var(--b2w-ink-mid) }
       .b2w2-ace-empty-sub { margin-top: 5px; font-size: 11px; line-height: 1.6; color: var(--b2w-ink-soft) }
 
@@ -2041,17 +2014,13 @@ function _b2WeeklyBriefingView() {
       }
       @media(max-width:900px){
         .b2w2-hero{flex-direction:column}
-        .b2w2-hero-stats{width:100%;border-top:1px solid var(--b2w-rule-soft);grid-template-columns:repeat(2,minmax(0,1fr));padding-top:12px}
       }
       @media(max-width:600px){
         .b2w2-hero{padding:0 0 14px}
         .b2w2-hero-title{font-size:26px}
-        /* 모바일: 배지 줄(선택 기간/필터)에 이미 같은 정보가 있으므로 중복되는 히어로 통계 카드는 숨김 */
-        .b2w2-hero-stats{display:none!important}
         .b2w2-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
         .b2w2-modebar{grid-template-columns:1fr;gap:8px}
         .b2w2-highlight-grid{grid-template-columns:1fr;gap:8px}
-        .b2w2-monthly-grid{grid-template-columns:1fr;gap:8px}
         .b2w2-card-summary{grid-template-columns:1fr}
         .b2w2-card-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
         .b2w2-race-head,.b2w2-race-row{grid-template-columns:minmax(92px,1.1fr) repeat(4,minmax(0,.7fr));gap:6px}
@@ -2062,7 +2031,6 @@ function _b2WeeklyBriefingView() {
         .b2w2-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
         .b2w2-modebar{grid-template-columns:repeat(2,minmax(0,1fr))}
         .b2w2-highlight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-        .b2w2-monthly-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
         .b2w2-card-summary{grid-template-columns:1fr}
       }
       @media(min-width:961px) and (max-width:1179px){
@@ -2149,27 +2117,11 @@ function _b2WeeklyBriefingView() {
             <div class="b2w2-hero-spotlight-kicker">핵심 지표</div>
             <div class="b2w2-hero-spotlight-title">${_heroSpotlight}</div>
             <div class="b2w2-hero-spotlight-sub">
-              <span class="b2w2-hero-pill">${_heroFocusLabel}</span>
-              <span class="b2w2-hero-pill">${_heroFocusValue}</span>
-              <span class="b2w2-hero-pill">${_heroCompareText}</span>
+              <span class="b2w2-hero-pill"><b>${_briefingInfo.short}</b></span>
+              <span class="b2w2-hero-pill">${_heroFocusLabel} ${_heroFocusValue}</span>
+              <span class="b2w2-hero-pill">비교 ${_heroCompareText}</span>
+              <span class="b2w2-hero-pill">필터 ${selUniv==='전체'?'전체 대학':selUniv}</span>
             </div>
-          </div>
-          <div class="b2w2-hero-badges">
-            <span class="b2w2-hero-badge">${_briefingInfo.short}</span>
-            <span class="b2w2-hero-badge">선택 기간 ${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}</span>
-            <span class="b2w2-hero-badge">필터 ${selUniv}</span>
-          </div>
-        </div>
-        <div class="b2w2-hero-stats">
-          <div class="b2w2-hero-stat">
-            <div class="b2w2-hero-stat-label">선택 범위</div>
-            <div class="b2w2-hero-stat-value">${selUniv==='전체'?'전체 대학':selUniv}</div>
-            <div class="b2w2-hero-stat-sub">필터 즉시 변경 가능</div>
-          </div>
-          <div class="b2w2-hero-stat">
-            <div class="b2w2-hero-stat-label">비교 기준</div>
-            <div class="b2w2-hero-stat-value">${_briefingInfo.prevLabel}</div>
-            <div class="b2w2-hero-stat-sub">${fmtDate(prevDateFrom)} ~ ${fmtDate(prevDateTo)}</div>
           </div>
         </div>
       </section>
@@ -2237,9 +2189,7 @@ function _b2WeeklyBriefingView() {
         ${univList.map(u=>{const _n=(typeof escAttr==='function'?escAttr(u.name):String(u.name||''));const _nh=(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''));return `<option value="${_n}"${selUniv===u.name?' selected':''}>${_nh}</option>`;}).join('')}
       </select>
       <button type="button" class="b2w2-btn" onclick="_b2ApplyBriefingCustomFromInputs()">조회</button>
-      <button type="button" class="b2w2-btn no-export b2w2-savebtn" onclick="captureBriefingArticle()">📰 브리핑 저장</button>
-      <span style="font-size:11px;color:var(--text3);margin-left:auto">${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}</span>
-      <span style="font-size:10px;color:var(--text3)">(${_briefingInfo.prevLabel}: ${fmtDate(prevDateFrom)}~${fmtDate(prevDateTo)})</span>
+      <button type="button" class="b2w2-btn no-export b2w2-savebtn" style="margin-left:auto" onclick="captureBriefingArticle()">📰 브리핑 저장</button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 2px 10px;border-bottom:1px dashed var(--b2w-rule-soft);margin-bottom:16px">
       <span style="font-size:10px;font-weight:800;color:var(--b2w-tag-muted);letter-spacing:.06em;text-transform:uppercase;flex-shrink:0">데이터 범위</span>
