@@ -326,9 +326,9 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
 }
 
 // ─── 유니브 집계 ──────────────────────────────
-function _b2WeeklyUnivStats(players, dateFrom, dateTo, univList) {
+function _b2WeeklyUnivStats(players, dateFrom, dateTo, univList, sortBy) {
   const stats = _b2WeeklyAggregate(players, dateFrom, dateTo);
-  return univList.map(u => {
+  const result = univList.map(u => {
     const members = stats.filter(s => String(s.p?.univ||'').trim() === u.name);
     const active  = members.filter(s => s.total > 0);
     const tw = active.reduce((a,s)=>a+s.wins,0);
@@ -337,7 +337,12 @@ function _b2WeeklyUnivStats(players, dateFrom, dateTo, univList) {
     const raceCount = { P:{w:0,l:0}, T:{w:0,l:0}, Z:{w:0,l:0} };
     active.forEach(s => { ['P','T','Z'].forEach(r => { raceCount[r].w+=s.vsRace[r].w; raceCount[r].l+=s.vsRace[r].l; }); });
     return { u, members, active, tw, tl, tg, wr: tg ? Math.round(tw/tg*100) : null, raceCount };
-  }).sort((a,b) => b.tg - a.tg);
+  });
+  // sortBy: 'winrate' → 승률순(경기수 0인 대학은 맨 뒤로), 그 외(기본) → 전적순
+  if (sortBy === 'winrate') {
+    return result.sort((a,b) => (b.wr ?? -1) - (a.wr ?? -1) || b.tg - a.tg);
+  }
+  return result.sort((a,b) => b.tg - a.tg);
 }
 
 // ─── MVP 선정 ─────────────────────────────────
@@ -499,18 +504,37 @@ try {
   window._b2GetPlayerMvpStats = _b2GetPlayerMvpStats;
 } catch (e) {}
 
+// ─── 티어 뱃지 툴팁(순위 설명) ─────────────────
+function _b2TierRankTooltip(tier) {
+  try {
+    const list = (typeof TIERS !== 'undefined' && Array.isArray(TIERS) && TIERS.length) ? TIERS : ['G','K','JA','J','S','0티어','1티어','2티어','3티어','4티어','5티어','6티어','7티어','8티어','유스','미정'];
+    const idx = list.indexOf(tier);
+    const order = list.join(' > ');
+    if (idx === -1) return `티어 순위: ${order}`;
+    return `티어 순위(높음→낮음): ${order}\n현재 "${tier}" = 상위 ${idx + 1}번째 등급`;
+  } catch (e) { return ''; }
+}
+try { window._b2TierRankTooltip = _b2TierRankTooltip; } catch (e) {}
+
 // ─── 최근 폼 렌더 ─────────────────────────────
 function _b2WeeklyForm(hist) {
   const sorted = [...hist].sort((a,b)=>{
     const da=parseInt(String(a.date||'').replace(/[-\.\/]/g,''))||0;
     const db=parseInt(String(b.date||'').replace(/[-\.\/]/g,''))||0;
     return da!==db?da-db:(a.time||0)-(b.time||0);
-  });
-  return sorted.slice(-5).map(h => {
+  }).slice(-5);
+  const SLOTS = 5;
+  const pad = SLOTS - sorted.length; // 경기 수가 5보다 적으면 앞쪽을 빈 슬롯으로 채워 컬럼 폭 고정
+  let out = '';
+  for (let i = 0; i < pad; i++) {
+    out += `<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--border,#e2e8f0);flex-shrink:0"></span>`;
+  }
+  out += sorted.map(h => {
     const c = h.result==='승'?'var(--win-col,#dc2626)':h.result==='패'?'var(--lose-col,#2563eb)':'#94a3b8';
     const t = h.result==='승'?'W':h.result==='패'?'L':'-';
     return `<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:${c};font-size:9px;color:#fff;font-weight:900;flex-shrink:0">${t}</span>`;
   }).join('');
+  return out;
 }
 
 // ─── 막대 차트 SVG ────────────────────────────
@@ -518,54 +542,38 @@ function _b2WeeklyBarChart(univStats) {
   const visible = univStats.filter(ud => ud.tg > 0).slice(0, 10);
   if (!visible.length) return '';
   const maxGames = Math.max(...visible.map(ud => ud.tg), 1);
-  const BAR_H = 28, GAP = 6, LEFT = 90, RIGHT = 160, TOP = 14, BOT = 10;
-  const H = visible.length * (BAR_H + GAP) + TOP + BOT;
-  const W = '100%';
-  let rows = '';
-  visible.forEach((ud, i) => {
-    const y = TOP + i * (BAR_H + GAP);
+  const ROW_H = 34, BAR_H = 13, LEFT = 90, RIGHT = 160, TOP = 14, BOT = 10;
+  const H = visible.length * ROW_H + TOP + BOT;
+  const MAX_W = 520 - LEFT - RIGHT;
+
+  const rows = visible.map((ud, i) => {
+    const y = TOP + i * ROW_H;
     const color = (gc ? gc(ud.u.name) : '#64748b') || '#64748b';
-    const wBarW = `${Math.round(ud.tw / maxGames * 100)}%`;
-    const lBarW = `${Math.round(ud.tl / maxGames * 100)}%`;
+    // 승+패를 하나의 막대에 이어붙여서 그림 — 전체 길이(=totalW)가 팀 간 총 전적 비교 기준이 됨
+    const totalW = Math.max(2, Math.round(ud.tg / maxGames * MAX_W));
+    const winW   = ud.tg > 0 ? Math.round(totalW * ud.tw / ud.tg) : 0;
+    const lossW  = Math.max(0, totalW - winW);
     const wr = ud.wr !== null ? `${ud.wr}%` : '-';
     const wrColor = ud.wr===null?'#94a3b8':ud.wr>=60?'#10b981':ud.wr>=40?'#f59e0b':'#ef4444';
-    rows += `
-      <text x="${LEFT - 6}" y="${y + BAR_H/2 + 4}" text-anchor="end" font-size="11" font-weight="700" fill="var(--text2)" style="font-family:inherit">${ud.u.name.length > 6 ? ud.u.name.slice(0,6)+'…' : ud.u.name}</text>
-      <rect x="${LEFT}" y="${y}" width="0" height="${BAR_H * 0.55}" rx="3" fill="${color}" opacity="0.85">
-        <animate attributeName="width" from="0" to="${wBarW}" dur="0.5s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
-      </rect>
-      <rect x="${LEFT}" y="${y + BAR_H * 0.58}" width="0" height="${BAR_H * 0.38}" rx="3" fill="${color}" opacity="0.35">
-        <animate attributeName="width" from="0" to="${lBarW}" dur="0.5s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
-      </rect>
-      <text x="${LEFT + 4}" y="${y + BAR_H * 0.55 - 5}" font-size="10" fill="${color}" font-weight="800">${ud.tw}승</text>
-      <text x="${LEFT + 4}" y="${y + BAR_H - 4}" font-size="10" fill="${color}" opacity="0.7">${ud.tl}패</text>
-      <text x="calc(${LEFT}px + ${wBarW})" y="${y + BAR_H/2 + 4}" font-size="12" font-weight="900" fill="${wrColor}" style="font-family:inherit">${wr}</text>`;
-  });
+    const name = ud.u.name.length > 6 ? ud.u.name.slice(0,6)+'…' : ud.u.name;
+    const clipId = `b2wbar-clip-${i}`;
+    return `
+      <text x="${LEFT-6}" y="${y+BAR_H*0.9}" text-anchor="end" font-size="11" font-weight="700" fill="var(--text2)">${name}</text>
+      <defs><clipPath id="${clipId}"><rect x="${LEFT}" y="${y}" width="${totalW}" height="${BAR_H}" rx="4"/></clipPath></defs>
+      <rect x="${LEFT}" y="${y}" width="${MAX_W}" height="${BAR_H}" rx="4" fill="var(--border,#e2e8f0)" opacity="0.35"/>
+      <g clip-path="url(#${clipId})">
+        ${winW>0?`<rect x="${LEFT}" y="${y}" width="${winW}" height="${BAR_H}" fill="${color}"/>`:''}
+        ${lossW>0?`<rect x="${LEFT+winW}" y="${y}" width="${lossW}" height="${BAR_H}" fill="${color}" opacity="0.32"/>`:''}
+      </g>
+      <text x="${LEFT}" y="${y+BAR_H+12}" font-size="10" font-weight="800" fill="${color}">${ud.tw}승</text>
+      <text x="${LEFT+32}" y="${y+BAR_H+12}" font-size="10" fill="${color}" opacity="0.65">${ud.tl}패</text>
+      <text x="${520-RIGHT+8}" y="${y+BAR_H*0.9}" font-size="13" font-weight="900" fill="${wrColor}">${wr}</text>
+      <text x="${520-RIGHT+50}" y="${y+BAR_H*0.9}" font-size="11" fill="var(--text3)">${ud.tg}전 ${ud.active.length}명</text>`;
+  }).join('');
 
-  // foreignObject로 반응형 처리
   return `<div style="width:100%;overflow:hidden;padding:4px 0">
     <svg viewBox="0 0 520 ${H}" width="100%" style="overflow:visible;display:block">
-      <defs>
-        <style>.b2wchart-label{font-family:inherit}</style>
-      </defs>
-      ${visible.map((ud, i) => {
-        const y = TOP + i * (BAR_H + GAP);
-        const color = (gc ? gc(ud.u.name) : '#64748b') || '#64748b';
-        const wPct  = Math.round(ud.tw / maxGames * (520 - LEFT - RIGHT));
-        const lPct  = Math.round(ud.tl / maxGames * (520 - LEFT - RIGHT));
-        const wr = ud.wr !== null ? `${ud.wr}%` : '-';
-        const wrColor = ud.wr===null?'#94a3b8':ud.wr>=60?'#10b981':ud.wr>=40?'#f59e0b':'#ef4444';
-        const name = ud.u.name.length > 6 ? ud.u.name.slice(0,6)+'…' : ud.u.name;
-        const MAX_W = 520 - LEFT - RIGHT;
-        return `
-          <text x="${LEFT-6}" y="${y+BAR_H*0.62}" text-anchor="end" font-size="11" font-weight="700" fill="var(--text2)">${name}</text>
-          <rect x="${LEFT}" y="${y}" width="${wPct}" height="${BAR_H*0.52}" rx="3" fill="${color}" opacity="0.9"/>
-          <rect x="${LEFT}" y="${y+BAR_H*0.56}" width="${lPct}" height="${BAR_H*0.38}" rx="3" fill="${color}" opacity="0.3"/>
-          ${ud.tw>0?`<text x="${LEFT+wPct+4}" y="${y+BAR_H*0.44}" font-size="10" font-weight="900" fill="${color}">${ud.tw}승</text>`:''}
-          ${ud.tl>0?`<text x="${LEFT+lPct+4}" y="${y+BAR_H*0.88}" font-size="10" fill="${color}" opacity="0.7">${ud.tl}패</text>`:''}
-          <text x="${520-RIGHT+8}" y="${y+BAR_H*0.62}" font-size="13" font-weight="900" fill="${wrColor}">${wr}</text>
-          <text x="${520-RIGHT+50}" y="${y+BAR_H*0.62}" font-size="11" fill="var(--text3)">${ud.tg}전 ${ud.active.length}명</text>`;
-      }).join('')}
+      ${rows}
     </svg>
   </div>`;
 }

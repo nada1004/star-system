@@ -214,6 +214,22 @@ function _b2OpenBriefingDateInput(which) {
 
 // 데이터 집계 헬퍼(_b2WeeklyAggregate 등)는 board2-briefing-data.js 로 분리됨
 
+// ─── 대학별 전적 현황 정렬 기준 토글(전적순/승률순) ─────
+function _b2SetWeeklyChartSort(mode) {
+  const next = mode === 'winrate' ? 'winrate' : 'games';
+  if (window._b2WeeklyChartSort === next) return;
+  window._b2WeeklyChartSort = next;
+  try { localStorage.setItem('b2w2_chart_sort_v1', next); } catch (e) {}
+  if (typeof render === 'function') render();
+}
+try {
+  if (typeof window._b2WeeklyChartSort === 'undefined') {
+    window._b2WeeklyChartSort = (() => {
+      try { return localStorage.getItem('b2w2_chart_sort_v1') || 'games'; } catch (e) { return 'games'; }
+    })();
+  }
+} catch (e) {}
+
 function _b2WeeklyBriefingView() {
   try {
     if (
@@ -274,7 +290,8 @@ function _b2WeeklyBriefingView() {
     const _topLimit = _isMonthly ? 5 : 3;
 
     // 이번주 & 이전주 집계
-    const curStats  = _b2WeeklyUnivStats(vis, dateFrom, dateTo, univList);
+    const _chartSort = window._b2WeeklyChartSort === 'winrate' ? 'winrate' : 'games';
+    const curStats  = _b2WeeklyUnivStats(vis, dateFrom, dateTo, univList, _chartSort);
     const prevStats = _b2WeeklyUnivStats(vis, prevDateFrom, prevDateTo, univList);
     const prevMap   = {};
     prevStats.forEach(ud => { prevMap[ud.u.name] = ud; });
@@ -1939,23 +1956,27 @@ function _b2WeeklyBriefingView() {
       .b2w2-card-spotlight {
         padding: 14px 16px;
         border-radius: var(--b2w-r);
-        border: 1.5px solid var(--gold-b, rgba(180,83,9,.2));
-        background: linear-gradient(135deg, var(--gold-bg, #fffbeb), var(--gold-b, #fef9c3));
+        border: 1.5px solid color-mix(in srgb, var(--spot-c, var(--gold, #92651b)) 32%, transparent);
+        background: linear-gradient(135deg, color-mix(in srgb, var(--spot-c, var(--gold, #92651b)) 8%, var(--white,#fff)) 0%, color-mix(in srgb, var(--spot-c, var(--gold, #92651b)) 15%, var(--white,#fff)) 100%);
       }
-      .b2w2-card-spotlight-kicker { font-size: 10px; font-weight: 800; color: var(--gold, #92651b); letter-spacing: .08em; text-transform: uppercase }
+      .b2w2-card-spotlight-kicker { font-size: 10px; font-weight: 800; color: color-mix(in srgb, var(--spot-c, var(--gold, #92651b)) 75%, black 15%); letter-spacing: .08em; text-transform: uppercase }
       .b2w2-card-spotlight-title { margin-top: 6px; font-family: 'Noto Serif KR', Georgia, serif; font-size: 16px; font-weight: 800; color: var(--b2w-ink); display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
       .b2w2-card-spotlight-sub { margin-top: 5px; font-size: 11px; color: var(--b2w-ink-soft); display: flex; gap: 8px; flex-wrap: wrap }
       .b2w2-card-spotlight-body { display: flex; align-items: center; gap: 12px }
       .b2w2-card-spotlight-photo {
-        position: relative; width: 52px; height: 52px; flex-shrink: 0; overflow: hidden;
+        position: relative; width: 56px; height: 56px; flex-shrink: 0; overflow: hidden;
         border-radius: var(--su_profile_radius,50%); clip-path: var(--su_profile_clip,none);
         background: linear-gradient(160deg,#3f3a33,#171512);
-        border: 2px solid var(--_c,#92651b);
-        filter: drop-shadow(0 3px 7px rgba(15,23,42,.18));
+        border: 3px solid var(--_c,#92651b);
+        box-shadow: 0 0 0 3px var(--b2w-paper,#fff), 0 0 0 4px color-mix(in srgb, var(--_c,#92651b) 38%, transparent), 0 3px 7px rgba(15,23,42,.18);
         display: flex; align-items: center; justify-content: center;
       }
       .b2w2-card-spotlight-photo img { width: 100%; height: 100%; object-fit: cover; display: block }
       .b2w2-card-spotlight-photo-fallback { width: 100%; height: 100%; align-items: center; justify-content: center; display: flex; font-size: 19px; font-weight: 900; color: #fff }
+      .b2w2-card-spotlight-wr-badge {
+        display: inline-flex; align-items: center; font-weight: 900; font-size: 11px;
+        padding: 2px 9px; border-radius: 999px; letter-spacing: -.01em;
+      }
 
       /* ── 테이블 ── */
       .b2w2-table-wrap { border: 1px solid var(--b2w-rule-soft); border-radius: var(--b2w-r); overflow: hidden; background: var(--white) }
@@ -2064,6 +2085,11 @@ function _b2WeeklyBriefingView() {
     const _totalGames = curStats.reduce((s,ud)=>s+(ud.tg||0),0);
     const _activeUnivs = curStats.filter(ud=>ud.tg>0).length;
     const _periodDays = diffDays;
+    // 기간 핵심 요약 카드용 보조 지표 — 전체 승/패 합계와 전기 대비 경기 수 변화
+    const _totalWins = curStats.reduce((s,ud)=>s+(ud.tw||0),0);
+    const _totalLosses = curStats.reduce((s,ud)=>s+(ud.tl||0),0);
+    const _prevTotalGames = prevStats.reduce((s,ud)=>s+(ud.tg||0),0);
+    const _gamesDelta = _totalGames - _prevTotalGames;
 
     // ── "저장(1장)" 신문기사 스타일 캡처용 데이터 스냅샷 ──
     // render-capture-utils.js의 captureBriefingArticle('single')에서 사용.
@@ -2262,13 +2288,18 @@ function _b2WeeklyBriefingView() {
         <div class="b2w2-highlight-kicker" style="color:var(--b2w-accent)">기간 요약</div>
         <div class="b2w2-highlight-title">기간 핵심 요약</div>
         <div class="b2w2-highlight-desc">${_heroSummary}</div>
+        <div class="b2w2-highlight-list" style="margin-top:2px">
+          <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">전체 승/패</span><strong style="font-size:12px;color:var(--text1)">${_totalWins}승 ${_totalLosses}패</strong></div>
+          <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">전기 대비 경기 수</span><strong style="font-size:12px;color:${_gamesDelta>0?'#15803d':_gamesDelta<0?'#dc2626':'var(--text1)'}">${_gamesDelta>0?'▲+':_gamesDelta<0?'▼':'━'}${Math.abs(_gamesDelta)}전</strong></div>
+        </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <span class="b2w2-note-chip" style="border-color:var(--b2w-tag-accent-border);color:var(--b2w-accent);background:var(--b2w-tag-accent-bg)">활동 스트리머 ${activePlayers.length}명</span>
           <span class="b2w2-note-chip">${_periodDays}일 집계</span>
+          <span class="b2w2-note-chip">${_briefingInfo.prevLabel} 대비 비교</span>
         </div>
       </article>
-      <article class="b2w2-highlight-card" style="--hc-top:#f59e0b">
-        <div class="b2w2-highlight-kicker" style="color:#b45309">🏫 대학 활동량</div>
+      <article class="b2w2-highlight-card" style="--hc-top:#6366f1">
+        <div class="b2w2-highlight-kicker" style="color:#4f46e5">🏫 대학 활동량</div>
         <div class="b2w2-highlight-title">${_topLabel}</div>
         <div class="b2w2-highlight-list">
           ${topUnivs.length ? topUnivs.map((ud, idx) => `
@@ -2298,7 +2329,7 @@ function _b2WeeklyBriefingView() {
               <div class="b2w2-mini-list">
                 <div class="b2w2-mini-row"><span style="color:var(--text3)">전적</span><span style="color:var(--text1)">${hotPlayer.wins}승 ${hotPlayer.losses}패</span></div>
                 <div class="b2w2-mini-row"><span style="color:var(--text3)">경기 수 변화</span><span style="color:var(--text1)">${hotPlayer.totalDelta >= 0 ? '+' : ''}${hotPlayer.totalDelta}전</span></div>
-                ${risingPlayers[1] ? `<div class="b2w2-mini-row"><span style="color:var(--text3)">다음</span><span style="color:#15803d">${risingPlayers[1].p?.name || '-'} ${risingPlayers[1].wrDelta >= 0 ? '+' : ''}${risingPlayers[1].wrDelta}%p</span></div>` : ''}
+                ${risingPlayers[1] ? `<div class="b2w2-mini-row"><span style="color:var(--text3)">2위</span><span style="color:#15803d">${risingPlayers[1].p?.name || '-'} ${risingPlayers[1].wrDelta >= 0 ? '+' : ''}${risingPlayers[1].wrDelta}%p</span></div>` : ''}
               </div>
             ` : `<div class="b2w2-highlight-desc">전주와 비교할 만큼 상승한 스트리머가 없습니다.</div>`}
           </div>
@@ -2314,7 +2345,7 @@ function _b2WeeklyBriefingView() {
               <div class="b2w2-mini-list">
                 <div class="b2w2-mini-row"><span style="color:var(--text3)">전적</span><span style="color:var(--text1)">${coldPlayer.wins}승 ${coldPlayer.losses}패</span></div>
                 <div class="b2w2-mini-row"><span style="color:var(--text3)">경기 수 변화</span><span style="color:var(--text1)">${coldPlayer.totalDelta >= 0 ? '+' : ''}${coldPlayer.totalDelta}전</span></div>
-                ${decliningPlayers[1] ? `<div class="b2w2-mini-row"><span style="color:var(--text3)">다음</span><span style="color:#dc2626">${decliningPlayers[1].p?.name || '-'} ${decliningPlayers[1].wrDelta}%p</span></div>` : ''}
+                ${decliningPlayers[1] ? `<div class="b2w2-mini-row"><span style="color:var(--text3)">2위</span><span style="color:#dc2626">${decliningPlayers[1].p?.name || '-'} ${decliningPlayers[1].wrDelta}%p</span></div>` : ''}
               </div>
             ` : `<div class="b2w2-highlight-desc">전주와 비교할 만큼 하락한 스트리머가 없습니다.</div>`}
           </div>
@@ -2347,18 +2378,18 @@ function _b2WeeklyBriefingView() {
             ${loseStreakPlayer ? `
               <div class="b2w2-dual-head">
                 <div style="min-width:0">
-                  <div class="b2w2-dual-title" style="color:#7c3aed">연패</div>
+                  <div class="b2w2-dual-title" style="color:#dc2626">연패</div>
                   <div class="b2w2-dual-sub"><span style="font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${loseStreakPlayer.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${loseStreakPlayer.p?.name || '-'}</span> · ${String(loseStreakPlayer.p?.univ || '무소속')}</div>
                 </div>
-                <span class="b2w2-note-chip" style="border-color:#ddd6fe;color:#7c3aed;background:#f5f3ff">💧 ${loseStreakPlayer.streak}연패</span>
+                <span class="b2w2-note-chip" style="border-color:#fecaca;color:#dc2626;background:#fef2f2">💧 ${loseStreakPlayer.streak}연패</span>
               </div>
               <div class="b2w2-mini-list">
                 ${loseStreakPlayers.slice(1, 3).map((s, idx) => `
                   <div class="b2w2-mini-row">
                     <span style="color:var(--text1)">${idx + 2}. ${s.p?.name || '-'}</span>
-                    <span style="color:#7c3aed">${s.streak}연패</span>
+                    <span style="color:#dc2626">${s.streak}연패</span>
                   </div>
-                `).join('') || `<div class="b2w2-mini-row"><span style="color:var(--text3)">보조 랭크</span><span style="color:#7c3aed">단독 집계</span></div>`}
+                `).join('') || `<div class="b2w2-mini-row"><span style="color:var(--text3)">보조 랭크</span><span style="color:#dc2626">단독 집계</span></div>`}
               </div>
             ` : `<div class="b2w2-highlight-desc">2연패 이상 기록 중인 스트리머가 없습니다.</div>`}
           </div>
@@ -2389,8 +2420,8 @@ function _b2WeeklyBriefingView() {
           </div>` : ''}
         ` : `<div class="b2w2-highlight-desc">3전 이상 기록한 스트리머가 없습니다.</div>`}
       </article>
-      <article class="b2w2-highlight-card" style="--hc-top:#7c3aed">
-        <div class="b2w2-highlight-kicker" style="color:#7c3aed">⚔️ 전체 경기 지표</div>
+      <article class="b2w2-highlight-card" style="--hc-top:#0ea5e9">
+        <div class="b2w2-highlight-kicker" style="color:#0284c7">⚔️ 전체 경기 지표</div>
         <div class="b2w2-highlight-title">최다 전체 경기</div>
         ${mostActivePlayer ? `
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
@@ -2398,7 +2429,7 @@ function _b2WeeklyBriefingView() {
               <div style="font-size:18px;font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${mostActivePlayer.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${mostActivePlayer.p?.name || '-'}</div>
               <div style="font-size:12px;color:var(--text3);margin-top:4px">${String(mostActivePlayer.p?.univ || '무소속')}</div>
             </div>
-            <span class="b2w2-note-chip" style="border-color:#ddd6fe;color:#7c3aed;background:#f5f3ff">${mostActivePlayer.total}전</span>
+            <span class="b2w2-note-chip" style="border-color:#bae6fd;color:#0284c7;background:#f0f9ff">${mostActivePlayer.total}전</span>
           </div>
           <div class="b2w2-highlight-list">
             <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">전체 전적</span><strong style="font-size:12px;color:var(--text1)">${mostActivePlayer.wins}승 ${mostActivePlayer.losses}패 · ${mostActivePlayer.winRate ?? '-'}%</strong></div>
@@ -2408,7 +2439,7 @@ function _b2WeeklyBriefingView() {
             ${mostActivePlayers.slice(1, 3).map((s, idx) => `
               <div class="b2w2-highlight-row">
                 <span style="font-size:12px;font-weight:800;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${s.p?.name?.replace(/\\/g,'\\\\').replace(/'/g,"\\'") || ''}')">${idx + 2}. ${s.p?.name || '-'}</span>
-                <strong style="font-size:11px;color:#7c3aed">${s.total}전</strong>
+                <strong style="font-size:11px;color:#0284c7">${s.total}전</strong>
               </div>
             `).join('')}
           </div>` : ''}
@@ -2579,12 +2610,19 @@ function _b2WeeklyBriefingView() {
     // ── 전체 대학 차트 (전체 탭일 때만)
     if (selUniv === '전체' && curStats.some(ud=>ud.tg>0)) {
       h += `<div class="b2w2-chart-box">
-        <div class="b2w2-chart-title">📊 대학별 전적 현황 (이번 기간)</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <div class="b2w2-chart-title">📊 대학별 전적 현황 (이번 기간)</div>
+          <div style="display:flex;gap:4px;background:var(--surface,#f1f5f9);padding:3px;border-radius:999px">
+            <button type="button" onclick="_b2SetWeeklyChartSort('games')" style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;border:none;cursor:pointer;background:${_chartSort==='games'?'var(--b2w-paper,#fff)':'transparent'};color:${_chartSort==='games'?'var(--text1)':'var(--text3)'};box-shadow:${_chartSort==='games'?'0 1px 3px rgba(0,0,0,.12)':'none'}">전적순</button>
+            <button type="button" onclick="_b2SetWeeklyChartSort('winrate')" style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;border:none;cursor:pointer;background:${_chartSort==='winrate'?'var(--b2w-paper,#fff)':'transparent'};color:${_chartSort==='winrate'?'var(--text1)':'var(--text3)'};box-shadow:${_chartSort==='winrate'?'0 1px 3px rgba(0,0,0,.12)':'none'}">승률순</button>
+          </div>
+        </div>
         ${_b2WeeklyBarChart(curStats)}
         <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:8px;border-radius:2px;background:#dc2626;opacity:.9"></div><span style="font-size:10px;font-weight:700;color:var(--text2)">승</span></div>
           <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:8px;border-radius:2px;background:#94a3b8;opacity:.85"></div><span style="font-size:10px;font-weight:700;color:var(--text2)">패</span></div>
           <span style="font-size:10px;color:var(--text3)">우측: 승률 / 경기수</span>
+          <span style="font-size:10px;color:var(--text3)">· 막대 길이 = 최다 전적 대학 대비 상대 전적</span>
         </div>
       </div>`;
     }
@@ -2673,28 +2711,29 @@ function _b2WeeklyBriefingView() {
                 <div class="b2w2-card-kpi-sub">${prevWr!==null&&wr!==null?`전기 대비 ${_b2WeeklyDelta(wr,prevWr)}`:'비교 데이터 없음'}</div>
               </div>
             </div>
-            <div class="b2w2-card-spotlight">
+            <div class="b2w2-card-spotlight" style="--spot-c:${color}">
               ${univMVP ? `
-                <div class="b2w2-card-spotlight-body">
+                <div class="b2w2-card-spotlight-kicker">대학별 에이스</div>
+                <div class="b2w2-card-spotlight-body" style="margin-top:8px">
                   <div class="b2w2-card-spotlight-photo" style="--_c:${color}">
                     ${(() => { const _ph = univMVP.p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(univMVP.p.photo):univMVP.p.photo) : ''; const _altSafe=(typeof escAttr==='function'?escAttr(univMVP.p.name||''):String(univMVP.p.name||'')); return _ph ? `<img src="${_ph}" alt="${_altSafe}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''; })()}
                     <div class="b2w2-card-spotlight-photo-fallback" style="${univMVP.p.photo?'display:none':''}">${String(univMVP.p.name||'-').trim().slice(0,1)}</div>
                   </div>
-                  <div style="min-width:0">
-                    <div class="b2w2-card-spotlight-kicker">대학별 에이스</div>
-                    <div class="b2w2-card-spotlight-title">
+                  <div style="min-width:0;flex:1">
+                    <div class="b2w2-card-spotlight-title" style="margin-top:0">
                       <span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${(typeof escAttr==='function'?escAttr(univMVP.p.name||''):String(univMVP.p.name||''))}" style="cursor:pointer;border-bottom:1.5px solid ${color}55">${(typeof window.escHTML==='function'?window.escHTML(univMVP.p.name||''):String(univMVP.p.name||''))}</span>
-                      ${univMVP.p.tier?`<span style="font-size:10px;padding:2px 6px;border-radius:999px;background:${typeof getTierBtnColor==='function' ? getTierBtnColor(univMVP.p.tier) : '#64748b'};color:${typeof getTierBtnTextColor==='function' ? (getTierBtnTextColor(univMVP.p.tier)||'#fff') : '#fff'}">${univMVP.p.tier}</span>`:''}
+                      ${univMVP.p.tier?`<span title="${typeof escAttr==='function'?escAttr(_b2TierRankTooltip(univMVP.p.tier)):''}" style="font-size:10px;padding:2px 6px;border-radius:999px;background:${typeof getTierBtnColor==='function' ? getTierBtnColor(univMVP.p.tier) : '#64748b'};color:${typeof getTierBtnTextColor==='function' ? (getTierBtnTextColor(univMVP.p.tier)||'#fff') : '#fff'};cursor:help">${univMVP.p.tier}</span>`:''}
                     </div>
                     <div class="b2w2-card-spotlight-sub">
-                      <span>${univMVP.wins}승 ${univMVP.losses}패</span>
-                      <span>승률 ${univMVP.winRate}%</span>
+                      <span style="color:var(--win-col,#dc2626);font-weight:800">${univMVP.wins}승</span>
+                      <span style="color:var(--lose-col,#2563eb);font-weight:800">${univMVP.losses}패</span>
+                      <span class="b2w2-card-spotlight-wr-badge" style="background:${(univMVP.winRate??0)>=70?'rgba(220,38,38,.12)':(univMVP.winRate??0)>=50?'rgba(245,158,11,.16)':'rgba(100,116,139,.14)'};color:${(univMVP.winRate??0)>=70?'#dc2626':(univMVP.winRate??0)>=50?'#b45309':'#64748b'}">${univMVP.winRate??0}%</span>
                     </div>
                   </div>
                 </div>
               ` : `
                 <div class="b2w2-card-spotlight-kicker">대학별 에이스</div>
-                <div class="b2w2-card-spotlight-title">이번 기간 확실한 에이스 없음</div>
+                <div class="b2w2-card-spotlight-title" style="margin-top:6px">이번 기간 확실한 에이스 없음</div>
                 <div class="b2w2-card-spotlight-sub">최소 경기 수와 승률 기준을 동시에 만족한 스트리머가 없습니다.</div>
               `}
             </div>
@@ -2720,11 +2759,12 @@ function _b2WeeklyBriefingView() {
         const prevS    = prevPlayerMap[p.name] || null;
         const prevWr2  = prevS && prevS.total>0 ? prevS.winRate : null;
 
-        h += `<tr ${isMVP?'style="background:#fef9c322"':''}>
+        const _zebraBg = i % 2 === 1 ? 'var(--surface,#f8fafc)' : 'transparent';
+        h += `<tr style="background:${isMVP?'#fef9c322':_zebraBg}">
           <td style="font-size:11px;font-weight:900;color:var(--text3);text-align:center">${medal}</td>
           <td>
             <span onclick="openPlayerModal(this.dataset.n);event.stopPropagation()" data-n="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||''))}" style="font-size:13px;font-weight:900;color:var(--text1);cursor:pointer;border-bottom:1.5px solid var(--border2);padding-bottom:1px">${(typeof window.escHTML==='function'?window.escHTML(p.name||''):String(p.name||''))}</span>
-            ${p.tier?`<span style="font-size:12px;padding:1px 5px;border-radius:4px;background:${tc2};color:${tt2};margin-left:3px">${p.tier}</span>`:''}
+            ${p.tier?`<span title="${typeof escAttr==='function'?escAttr(_b2TierRankTooltip(p.tier)):''}" style="font-size:12px;padding:1px 5px;border-radius:4px;background:${tc2};color:${tt2};margin-left:3px;cursor:help">${p.tier}</span>`:''}
             ${isMVP?`<span style="font-size:11px;background:#fef9c3;color:#b45309;padding:1px 4px;border-radius:4px;margin-left:3px;font-weight:800">MVP</span>`:''}
           </td>
           <td>
