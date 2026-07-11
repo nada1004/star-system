@@ -432,15 +432,31 @@ function _b2MvpHistorySave(arr) {
     localStorage.setItem(_B2_MVP_HISTORY_KEY, JSON.stringify(Array.isArray(arr) ? arr : []));
   } catch (e) {}
 }
-// preset(thisWeek/lastWeek/thisMonth/lastMonth)과 실제 집계 기간(dateFrom~dateTo)을 기준으로
-// 해당 기간의 MVP를 기록/갱신한다. 같은 기간(type+from+to)은 항상 최신 결과로 덮어써서
-// 진행 중인 이번주/이번달의 MVP가 바뀌어도 최종적으로 정확한 값이 남도록 한다.
+// 과거 UTC 변환 버그(하루씩 밀림) + type:from:to 키로 인한 중복 적립 버그로
+// 이미 저장된 기록은 날짜가 틀어져 있어 신뢰할 수 없다. 1회에 한해 초기화하고
+// 이후로는 고쳐진 로직으로 다시 쌓이게 한다.
+// v4: 1월 1일부터 전체 주간/월간을 소급 계산해 새로 채우면서, v3 이후에도 남아있던
+// 하루씩 밀린 구식 레코드(예: month:2026-06-30, month:2026-05-31)를 한 번 더 정리한다.
+const _B2_MVP_HISTORY_MIGRATION_FLAG = 'su_mvp_history_reset_v4';
+(function _b2MvpHistoryMigrateOnce() {
+  try {
+    if (localStorage.getItem(_B2_MVP_HISTORY_MIGRATION_FLAG)) return;
+    localStorage.removeItem(_B2_MVP_HISTORY_KEY);
+    localStorage.setItem(_B2_MVP_HISTORY_MIGRATION_FLAG, '1');
+  } catch (e) {}
+})();
+// preset(thisWeek/lastWeek/thisMonth/lastMonth) 또는 'week'/'month'를 직접 넘겨서
+// 실제 집계 기간(dateFrom~dateTo)의 MVP를 기록/갱신한다. 같은 기간(type+from)은 항상
+// 최신 결과로 덮어써서 진행 중인 이번주/이번달의 MVP가 바뀌어도 최종적으로 정확한
+// 값이 남도록 한다. 소급 계산(1월부터 전체 주/달)도 이 함수를 그대로 사용한다.
 function _b2SyncMvpHistory(preset, dateFrom, dateTo, mvpStat) {
-  const type = (preset === 'thisWeek' || preset === 'lastWeek') ? 'week'
-    : (preset === 'thisMonth' || preset === 'lastMonth') ? 'month'
+  const type = (preset === 'week' || preset === 'thisWeek' || preset === 'lastWeek') ? 'week'
+    : (preset === 'month' || preset === 'thisMonth' || preset === 'lastMonth') ? 'month'
     : null;
   if (!type || !dateFrom || !dateTo) return;
-  const key = `${type}:${dateFrom}:${dateTo}`;
+  // 기간 시작일(from)만으로 키를 잡는다. 진행 중인 이번주/이번달은 매일 to가 바뀌므로,
+  // to까지 키에 넣으면 같은 주/달인데도 하루마다 새 레코드가 쌓이는 버그가 있었다.
+  const key = `${type}:${dateFrom}`;
   const arr = _b2MvpHistoryLoad();
   const idx = arr.findIndex(e => e && e.key === key);
   if (!mvpStat || !mvpStat.p || !mvpStat.p.name) {
@@ -463,8 +479,17 @@ function _b2SyncMvpHistory(preset, dateFrom, dateTo, mvpStat) {
 function _b2GetPlayerMvpStats(playerName) {
   const nm = String(playerName || '').trim();
   if (!nm) return { weekCount: 0, monthCount: 0, entries: [] };
-  const mine = _b2MvpHistoryLoad()
-    .filter(e => e && String(e.name || '').trim() === nm)
+  const raw = _b2MvpHistoryLoad()
+    .filter(e => e && String(e.name || '').trim() === nm);
+  // 방어적 중복 제거: 저장 로직이 바뀌기 전에 쌓인 레코드나 여러 경로에서 동시에
+  // 기록된 레코드가 남아 있어도, 같은 기간(type+from)은 항상 최신 것 하나만 노출한다.
+  const byPeriod = new Map();
+  raw.forEach(e => {
+    const pk = `${e.type}:${String(e.from || '').slice(0, 10)}`;
+    const prev = byPeriod.get(pk);
+    if (!prev || (e.updatedAt || 0) >= (prev.updatedAt || 0)) byPeriod.set(pk, e);
+  });
+  const mine = [...byPeriod.values()]
     .sort((a, b) => String(b.from || '').localeCompare(String(a.from || '')));
   return {
     weekCount: mine.filter(e => e.type === 'week').length,
@@ -472,9 +497,68 @@ function _b2GetPlayerMvpStats(playerName) {
     entries: mine
   };
 }
-// 브리핑 탭에 들어가지 않아도 스트리머탭/상세팝업에서 바로 최신 MVP 현황을 볼 수 있도록,
-// 이번주·저번주·이번달·지난달 MVP를 그 자리에서 즉시 계산해 기록을 최신화한다.
-// (기존에는 브리핑 탭을 열어야만 _b2SyncMvpHistory가 호출되어 기록이 쌓였음)
+// 시즌 시작일(2026-01-01)부터 현재까지의 모든 "주간"(월~일 7일 단위) 구간을 생성한다.
+function _b2GenAllWeekRanges(seasonStartStr){
+  const seasonStart = new Date(seasonStartStr + 'T00:00:00');
+  const day = seasonStart.getDay();
+  const diffToMon = (day === 0 ? -6 : 1 - day);
+  const firstMon = new Date(seasonStart);
+  firstMon.setDate(seasonStart.getDate() + diffToMon);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const ranges = [];
+  const cur = new Date(firstMon);
+  let guard = 0;
+  while (cur <= now && guard < 600) { // 넉넉히 600주(약 11년)까지 방어
+    const sun = new Date(cur);
+    sun.setDate(cur.getDate() + 6);
+    // _b2GenAllMonthRanges의 isCurrent 처리와 동일: 오늘이 포함된 "진행 중인 주"는
+    // 아직 일요일이 지나지 않았으므로 미래 날짜(일요일)가 아니라 오늘까지만 집계 구간으로
+    // 잡는다. 이걸 빠뜨리면 이번주가 끝나지도 않았는데 이미 확정된 주(월~일 전체)처럼
+    // MVP 이력에 저장되어, 이후 매일 경기가 추가될 때마다 "이미 끝난 것처럼 보였던"
+    // 같은 기간의 MVP가 다른 선수로 조용히 바뀌는 것처럼 보이는 원인이 된다.
+    const isCurrentWeek = today >= cur && today <= sun;
+    const to = isCurrentWeek ? today : sun;
+    ranges.push({ from: _b2FmtLocalYMD(cur), to: _b2FmtLocalYMD(to) });
+    cur.setDate(cur.getDate() + 7);
+    guard++;
+  }
+  return ranges;
+}
+// 시즌 시작월(2026-01)부터 현재까지의 모든 "월간"(1월/2월/3월... 달력 기준) 구간을 생성한다.
+// 진행 중인 이번 달은 월초~오늘까지, 이미 지난 달은 1일~말일 전체로 잡는다.
+function _b2GenAllMonthRanges(seasonStartStr){
+  const seasonStart = new Date(seasonStartStr + 'T00:00:00');
+  const now = new Date();
+  const ranges = [];
+  let y = seasonStart.getFullYear(), m = seasonStart.getMonth();
+  let guard = 0;
+  while ((y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth())) && guard < 200) {
+    const isCurrent = (y === now.getFullYear() && m === now.getMonth());
+    const from = new Date(y, m, 1);
+    const to = isCurrent ? new Date(now.getFullYear(), now.getMonth(), now.getDate()) : new Date(y, m + 1, 0);
+    ranges.push({ from: _b2FmtLocalYMD(from), to: _b2FmtLocalYMD(to) });
+    m++; if (m > 11) { m = 0; y++; }
+    guard++;
+  }
+  return ranges;
+}
+const _B2_MVP_SEASON_START = '2026-01-01';
+// 브리핑 탭에 들어가지 않아도 스트리머탭/상세팝업에서 바로 전체 MVP 현황을 볼 수 있도록,
+// 2026년 1월 1일부터 현재까지의 모든 주간/월간 MVP를 그 자리에서 즉시 계산해 기록을 최신화한다.
+// (기존에는 이번주·저번주·이번달·지난달, 총 4개 구간만 계산해서 상세 팝업에 최근 기록만 보였음)
+// 지금의 생성 로직(_b2GenAllWeekRanges/_b2GenAllMonthRanges)으로는 절대 나올 수 없는
+// 키를 가진 레코드를 정리한다. 예전 UTC 변환 버그 시절 하루 밀려 저장된
+// "month:2026-06-30", "month:2026-05-31" 같은 유령 레코드가 대표적인 예 —
+// 새 로직이 "month:2026-06-01"/"month:2026-07-01"로 다시 채워도 옛 키는 아무도
+// 지우지 않아 팝업 MVP 기록에 날짜가 이상한 항목으로 계속 남아있었다.
+function _b2PruneStaleMvpHistory(validKeys) {
+  try {
+    const arr = _b2MvpHistoryLoad();
+    const kept = arr.filter(e => e && validKeys.has(e.key));
+    if (kept.length !== arr.length) _b2MvpHistorySave(kept);
+  } catch (e) {}
+}
 let _b2MvpHistoryFreshAt = 0;
 function _b2EnsureMvpHistoryFresh(force){
   try{
@@ -482,22 +566,34 @@ function _b2EnsureMvpHistoryFresh(force){
     if(!force && _b2MvpHistoryFreshAt && (now - _b2MvpHistoryFreshAt) < 60000) return; // 1분 내 재계산 스킵
     if(typeof players === 'undefined' || !Array.isArray(players)) return;
     if(typeof _b2WeeklyUnivStats !== 'function' || typeof _b2WeeklyMVP !== 'function') return;
-    if(typeof _b2BriefingPresetRange !== 'function') return;
     const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : [])
       .filter(u => u.dissolved || u.hidden).map(u => String(u.name||'').trim()));
     const vis = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !_dissSet.has(String(p?.univ||'').trim()));
     const univList = (typeof _b2VisUnivs === 'function' ? _b2VisUnivs() : []).filter(u => u.name && u.name !== '무소속');
-    ['thisWeek', 'lastWeek', 'thisMonth', 'lastMonth'].forEach(preset => {
-      const r = _b2BriefingPresetRange(preset);
-      if(!r || !r.from || !r.to) return;
+    const weekRanges = _b2GenAllWeekRanges(_B2_MVP_SEASON_START);
+    const monthRanges = _b2GenAllMonthRanges(_B2_MVP_SEASON_START);
+    const validKeys = new Set();
+    weekRanges.forEach(r => {
+      validKeys.add(`week:${r.from}`);
       const stats = _b2WeeklyUnivStats(vis, r.from, r.to, univList);
       const mvp = _b2WeeklyMVP(stats);
-      _b2SyncMvpHistory(preset, r.from, r.to, mvp);
+      _b2SyncMvpHistory('week', r.from, r.to, mvp);
     });
+    monthRanges.forEach(r => {
+      validKeys.add(`month:${r.from}`);
+      const stats = _b2WeeklyUnivStats(vis, r.from, r.to, univList);
+      const mvp = _b2WeeklyMVP(stats);
+      _b2SyncMvpHistory('month', r.from, r.to, mvp);
+    });
+    _b2PruneStaleMvpHistory(validKeys);
     _b2MvpHistoryFreshAt = now;
   }catch(e){}
 }
-try { window._b2EnsureMvpHistoryFresh = _b2EnsureMvpHistoryFresh; } catch (e) {}
+try {
+  window._b2EnsureMvpHistoryFresh = _b2EnsureMvpHistoryFresh;
+  window._b2GenAllWeekRanges = _b2GenAllWeekRanges;
+  window._b2GenAllMonthRanges = _b2GenAllMonthRanges;
+} catch (e) {}
 try {
   window._b2MvpHistoryLoad = _b2MvpHistoryLoad;
   window._b2SyncMvpHistory = _b2SyncMvpHistory;

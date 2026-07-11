@@ -1,3 +1,11 @@
+// 로컬(기기) 시간대 기준 YYYY-MM-DD. toISOString()은 UTC로 변환하면서
+// 한국시간(UTC+9) 자정 근처 날짜가 하루 앞으로 밀리는 문제가 있어 사용하지 않는다.
+function _b2FmtLocalYMD(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 function _b2WeeklyGetDefaultRange(offsetWeeks) {
   const now = new Date();
   const offset = offsetWeeks || 0;
@@ -7,8 +15,14 @@ function _b2WeeklyGetDefaultRange(offsetWeeks) {
   mon.setDate(now.getDate() + diffToMon + offset * 7);
   const sun = new Date(mon);
   sun.setDate(mon.getDate() + 6);
-  const fmt = d => d.toISOString().slice(0, 10);
-  return { from: fmt(mon), to: fmt(sun) };
+  // 월간(_b2MonthlyGetDefaultRange)과 동일하게, 진행 중인 이번주(offset===0)는 아직
+  // 일요일이 지나지 않았으므로 끝나지 않은 미래 날짜(일요일)가 아니라 "오늘"까지만 반영한다.
+  // 이걸 빠뜨리면 이번주 기록이 아직 진행 중인데도 이미 끝난 주(월~일 전체)처럼 저장되어,
+  // 스트리머 팝업 MVP 기록에 미래 날짜가 찍히거나 "확정된" 기록처럼 보이다가 뒤늦게
+  // 다른 선수로 바뀌는 것처럼 보이는 원인이 된다.
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const to = (offset === 0 && today < sun) ? today : sun;
+  return { from: _b2FmtLocalYMD(mon), to: _b2FmtLocalYMD(to) };
 }
 function _b2MonthlyGetDefaultRange(offsetMonths, fullMonth) {
   const now = new Date();
@@ -18,8 +32,7 @@ function _b2MonthlyGetDefaultRange(offsetMonths, fullMonth) {
   const to = fullMonth
     ? new Date(base.getFullYear(), base.getMonth() + 1, 0)
     : (offset === 0 ? new Date(now.getFullYear(), now.getMonth(), now.getDate()) : new Date(base.getFullYear(), base.getMonth() + 1, 0));
-  const fmt = d => d.toISOString().slice(0, 10);
-  return { from: fmt(from), to: fmt(to) };
+  return { from: _b2FmtLocalYMD(from), to: _b2FmtLocalYMD(to) };
 }
 function _b2EnsureStyleTag(id, cssText) {
   try {
@@ -181,10 +194,9 @@ function _b2SetBriefingRecentDays(days) {
   to.setHours(0,0,0,0);
   const from = new Date(to);
   from.setDate(to.getDate() - (n - 1));
-  const fmt = d => d.toISOString().slice(0, 10);
   window._b2WeeklyPreset = 'custom';
-  window._b2WeeklyDateFrom = fmt(from);
-  window._b2WeeklyDateTo = fmt(to);
+  window._b2WeeklyDateFrom = _b2FmtLocalYMD(from);
+  window._b2WeeklyDateTo = _b2FmtLocalYMD(to);
   _b2BriefingSaveState();
   if (typeof render === 'function') render();
 }
@@ -265,8 +277,7 @@ function _b2WeeklyBriefingView() {
     const diffDays = Math.round((new Date(dateTo) - new Date(dateFrom)) / 86400000) + 1;
     const prevTo   = new Date(dateFrom); prevTo.setDate(prevTo.getDate() - 1);
     const prevFrom = new Date(prevTo);   prevFrom.setDate(prevFrom.getDate() - (diffDays - 1));
-    const fmt = d => d.toISOString().slice(0, 10);
-    const prevDateFrom = fmt(prevFrom), prevDateTo = fmt(prevTo);
+    const prevDateFrom = _b2FmtLocalYMD(prevFrom), prevDateTo = _b2FmtLocalYMD(prevTo);
 
     const _dissSet = new Set((typeof univCfg !== 'undefined' ? univCfg : [])
       .filter(u => u.dissolved || u.hidden).map(u => String(u.name||'').trim()));
@@ -303,8 +314,10 @@ function _b2WeeklyBriefingView() {
     const mvp = _b2WeeklyMVP(curStats);
     const mvp2 = _b2WeeklyMVP2(curStats, mvp);
     const worstPlayer = _b2WeeklyWorst(curStats);
-    // 주간/월간 MVP 수상 기록 저장 — 스트리머 상세 팝업의 "MVP 기록"에서 조회됨
-    try { if (typeof _b2SyncMvpHistory === 'function') _b2SyncMvpHistory(preset, dateFrom, dateTo, mvp); } catch (e) {}
+    // 주간/월간 MVP 수상 기록 저장은 _b2EnsureMvpHistoryFresh(board2-briefing-data.js)가
+    // 전담한다. 여기서는 저장된 화면 상태(dateFrom/dateTo)가 최신 달력 기준과 어긋날 수 있어
+    // (예: 며칠 전 '이번주'를 본 뒤 그대로 저장된 상태) 직접 기록을 남기지 않는다 — 범위와
+    // MVP 계산이 서로 다른 시점 기준으로 어긋나 기록이 꼬이는 원인이었다.
     // ── 풀배경 사진형 MVP 카드 빌더 (하이라이트 카드 + MVP 트리플 배너 공용) ──
     const _mvpFx = _b2MvpFxLoad();
     const _mvpFxOp = ((_mvpFx.on ? _mvpFx.intensity : 0) / 100).toFixed(3);

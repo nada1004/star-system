@@ -15,7 +15,7 @@
  *  → 이전 캐시가 모두 삭제되고 새 버전으로 교체됩니다.
  */
 
-const CACHE_VERSION = 'v20260708-03';
+const CACHE_VERSION = 'v20260711-mvpfix06';
 
 const CACHE_NAMES = {
   immutable: `immutable-${CACHE_VERSION}`,  // 번들/버전 쿼리 파일 (장기 캐시)
