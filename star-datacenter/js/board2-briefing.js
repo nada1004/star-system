@@ -106,7 +106,7 @@ function _b2BriefingLoadState() {
     const from = String(st.from || '').trim();
     const to = String(st.to || '').trim();
     const univ = String(st.univ || '').trim() || '전체';
-    const okPreset = ['thisWeek', 'lastWeek', 'thisMonth', 'lastMonth', 'custom'].includes(preset);
+    const okPreset = ['thisWeek', 'lastWeek', 'thisMonth', 'lastMonth', 'custom', 'mvpArchive'].includes(preset);
     const norm = _b2NormalizeBriefingRange(from, to);
     return {
       preset: okPreset ? preset : null,
@@ -125,7 +125,7 @@ function _b2BriefingSaveState() {
     const to = String(window._b2WeeklyDateTo || '').trim();
     const univ = String(window._b2WeeklyUniv || '전체').trim() || '전체';
     const payload = {
-      preset: ['thisWeek', 'lastWeek', 'thisMonth', 'lastMonth', 'custom'].includes(preset) ? preset : 'custom',
+      preset: ['thisWeek', 'lastWeek', 'thisMonth', 'lastMonth', 'custom', 'mvpArchive'].includes(preset) ? preset : 'custom',
       from,
       to,
       univ
@@ -198,6 +198,15 @@ function _b2SetBriefingRecentDays(days) {
   window._b2WeeklyDateFrom = _b2FmtLocalYMD(from);
   window._b2WeeklyDateTo = _b2FmtLocalYMD(to);
   _b2BriefingSaveState();
+  if (typeof render === 'function') render();
+}
+// ─── MVP 아카이브 모드: 기록 종류(전체/주간/월간) · 대학 필터 상태 ──
+function _b2SetMvpArchiveType(kind) {
+  window._b2MvpArchiveType = ['week','month'].includes(kind) ? kind : 'all';
+  if (typeof render === 'function') render();
+}
+function _b2SetMvpArchiveUniv(val) {
+  window._b2MvpArchiveUniv = String(val || '전체').trim() || '전체';
   if (typeof render === 'function') render();
 }
 function _b2OpenBriefingDateInput(which) {
@@ -296,6 +305,7 @@ function _b2WeeklyBriefingView() {
     const _briefingInfo = _briefingMeta[preset] || _briefingMeta.custom;
     const _isMonthly = preset === 'thisMonth' || preset === 'lastMonth';
     const _isCustom = preset === 'custom';
+    const _isArchive = preset === 'mvpArchive';
     const _mvpLabel = preset === 'thisMonth' ? '이달 MVP' : preset === 'lastMonth' ? '지난달 MVP' : '이번 주 MVP';
     const _topLabel = _isMonthly ? '활동 많은 대학 TOP 5' : '활동 많은 대학 TOP 3';
     const _topLimit = _isMonthly ? 5 : 3;
@@ -568,39 +578,43 @@ function _b2WeeklyBriefingView() {
         padding-bottom: 6px;
         border-radius: 0 var(--b2w-r) var(--b2w-r) 0;
       }
-      .b2w2-hero-spotlight {
-        padding: 14px 0 0;
-        border-top: 1px solid var(--b2w-rule-soft);
+      .b2w2-hero-meta {
+        display: flex;
+        flex-direction: column;
+        min-width: min(100%, 300px);
+        flex-shrink: 0;
+        padding: 16px 18px;
+        border: 1px solid var(--b2w-rule);
+        border-radius: var(--b2w-r-lg);
+        background: var(--b2w-paper-alt);
+        box-shadow: var(--b2w-shadow-sm);
       }
-      .b2w2-hero-spotlight-kicker {
+      .b2w2-hero-meta-kicker {
         font-size: 10px;
         font-weight: 800;
         letter-spacing: .16em;
         text-transform: uppercase;
         color: var(--b2w-accent);
       }
-      .b2w2-hero-spotlight-title {
-        margin-top: 5px;
+      .b2w2-hero-meta-headline {
+        margin-top: 6px;
         font-family: 'Noto Serif KR', Georgia, serif;
-        font-size: 19px;
+        font-size: 16px;
         font-weight: 800;
         letter-spacing: -.01em;
-        line-height: 1.3;
+        line-height: 1.35;
         color: var(--b2w-ink);
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--b2w-rule-soft);
       }
-      .b2w2-hero-spotlight-sub { margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap }
-      .b2w2-hero-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 0;
-        background: none;
-        border: none;
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--b2w-ink-soft);
+      .b2w2-hero-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0,1fr));
+        gap: 12px 10px;
+        margin-top: 12px;
       }
-      .b2w2-hero-pill:not(:last-child) { border-right: 1px solid var(--b2w-rule-soft); padding-right: 14px }
+      .b2w2-hero-meta-label { font-size: 10px; font-weight: 800; color: var(--b2w-ink-soft); text-transform: uppercase; letter-spacing: .06em }
+      .b2w2-hero-meta-value { margin-top: 4px; font-size: 13px; font-weight: 800; color: var(--b2w-ink); letter-spacing: -.01em; word-break: keep-all }
 
 
       /* ── KPI Grid ── */
@@ -732,7 +746,7 @@ function _b2WeeklyBriefingView() {
       /* ── 모드 선택 바 ── */
       .b2w2-modebar {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0,1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
         gap: 10px;
         margin-bottom: 20px;
       }
@@ -1940,6 +1954,9 @@ function _b2WeeklyBriefingView() {
       .b2w2-card-kpi-value { margin-top: 6px; font-family: 'Noto Serif KR', Georgia, serif; font-size: 20px; font-weight: 800; letter-spacing: -.01em; color: var(--b2w-ink) }
       .b2w2-card-kpi-sub { margin-top: 3px; font-size: 11px; font-weight: 600; color: var(--b2w-ink-soft) }
       .b2w2-card-spotlight {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
         padding: 14px 16px;
         border-radius: var(--b2w-r);
         border: 1.5px solid color-mix(in srgb, var(--spot-c, var(--gold, #92651b)) 32%, transparent);
@@ -2071,6 +2088,7 @@ function _b2WeeklyBriefingView() {
     const _totalLosses = curStats.reduce((s,ud)=>s+(ud.tl||0),0);
     const _prevTotalGames = prevStats.reduce((s,ud)=>s+(ud.tg||0),0);
     const _gamesDelta = _totalGames - _prevTotalGames;
+    const _overallWr = (_totalWins + _totalLosses) > 0 ? Math.round((_totalWins / (_totalWins + _totalLosses)) * 1000) / 10 : null;
 
     // ── "저장(1장)" 신문기사 스타일 캡처용 데이터 스냅샷 ──
     // render-capture-utils.js의 captureBriefingArticle('single')에서 사용.
@@ -2102,37 +2120,65 @@ function _b2WeeklyBriefingView() {
       };
     } catch (e) {}
 
+    // ── MVP 아카이브 모드용 데이터(시즌 시작부터 현재까지의 전체 주간/월간 MVP 기록) ──
+    let _archiveEntries = [];
+    let _archiveWeekCount = 0, _archiveMonthCount = 0;
+    if (_isArchive) {
+      try {
+        if (typeof _b2EnsureMvpHistoryFresh === 'function') _b2EnsureMvpHistoryFresh(false);
+        _archiveEntries = (typeof _b2MvpHistoryLoad === 'function' ? _b2MvpHistoryLoad() : [])
+          .filter(e => e && e.name)
+          .sort((a, b) => String(b.from || '').localeCompare(String(a.from || '')));
+        _archiveWeekCount = _archiveEntries.filter(e => e.type === 'week').length;
+        _archiveMonthCount = _archiveEntries.filter(e => e.type === 'month').length;
+      } catch (e) {}
+    }
+    const _archiveTypeFilter = ['week','month'].includes(window._b2MvpArchiveType) ? window._b2MvpArchiveType : 'all';
+    const _archiveUnivFilter = window._b2MvpArchiveUniv || '전체';
+
     // ── 헤더 컨트롤
     h += `<div class="b2w2-wrap" id="b2w2-export-root" data-theme="${_b2BriefingThemeLoad()}">
       <div class="b2w2-masthead">
         <span class="b2w2-masthead-brand"><span class="b2w2-masthead-mark"></span>STAR DATACENTER</span>
-        <span>${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)} 발행</span>
+        <span>${_isArchive ? `${fmtDate(_B2_MVP_SEASON_START)} ~ 현재` : `${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)} 발행`}</span>
       </div>
       <section class="b2w2-hero">
         <div class="b2w2-hero-main">
-          <div style="font-size:11px;font-weight:900;letter-spacing:.08em;color:var(--b2w-gold);text-transform:uppercase">${_briefingInfo.kicker}</div>
-          <div class="b2w2-hero-title">${_briefingInfo.title}</div>
-          <div class="b2w2-hero-desc">${_heroSummary}</div>
-          <div class="b2w2-hero-spotlight">
-            <div class="b2w2-hero-spotlight-kicker">핵심 지표</div>
-            <div class="b2w2-hero-spotlight-title">${_heroSpotlight}</div>
-            <div class="b2w2-hero-spotlight-sub">
-              <span class="b2w2-hero-pill"><b>${_briefingInfo.short}</b></span>
-              <span class="b2w2-hero-pill">${_heroFocusLabel} ${_heroFocusValue}</span>
-              <span class="b2w2-hero-pill">비교 ${_heroCompareText}</span>
-              <span class="b2w2-hero-pill">필터 ${selUniv==='전체'?'전체 대학':selUniv}</span>
+          <div style="font-size:11px;font-weight:900;letter-spacing:.08em;color:var(--b2w-gold);text-transform:uppercase">${_isArchive ? 'MVP Archive' : _briefingInfo.kicker}</div>
+          <div class="b2w2-hero-title">${_isArchive ? 'MVP 아카이브' : _briefingInfo.title}</div>
+          <div class="b2w2-hero-desc">${_isArchive ? '시즌이 시작된 이후 지금까지의 모든 주간·월간 MVP 수상 기록을 모아봤습니다.' : _heroSummary}</div>
+        </div>
+        <div class="b2w2-hero-meta">
+          <div class="b2w2-hero-meta-kicker">핵심 지표</div>
+          <div class="b2w2-hero-meta-headline">${_isArchive ? `주간 MVP ${_archiveWeekCount}회 · 월간 MVP ${_archiveMonthCount}회 기록` : _heroSpotlight}</div>
+          <div class="b2w2-hero-meta-grid">
+            <div class="b2w2-hero-meta-cell">
+              <div class="b2w2-hero-meta-label">${_isArchive ? '집계 시작' : '현재 보기'}</div>
+              <div class="b2w2-hero-meta-value">${_isArchive ? fmtDate(_B2_MVP_SEASON_START) : _briefingInfo.short}</div>
+            </div>
+            <div class="b2w2-hero-meta-cell">
+              <div class="b2w2-hero-meta-label">${_isArchive ? '주간 MVP' : _heroFocusLabel}</div>
+              <div class="b2w2-hero-meta-value">${_isArchive ? `${_archiveWeekCount}회` : _heroFocusValue}</div>
+            </div>
+            <div class="b2w2-hero-meta-cell">
+              <div class="b2w2-hero-meta-label">${_isArchive ? '월간 MVP' : '비교 기준'}</div>
+              <div class="b2w2-hero-meta-value">${_isArchive ? `${_archiveMonthCount}회` : _heroCompareText}</div>
+            </div>
+            <div class="b2w2-hero-meta-cell">
+              <div class="b2w2-hero-meta-label">필터</div>
+              <div class="b2w2-hero-meta-value">${_isArchive ? (_archiveUnivFilter==='전체'?'전체 대학':_archiveUnivFilter) : (selUniv==='전체'?'전체 대학':selUniv)}</div>
             </div>
           </div>
         </div>
       </section>
       <div class="b2w2-modebar">
-        <div class="b2w2-modecard ${(!_isMonthly && !_isCustom)?'is-active':''}" onclick="_b2SetBriefingPreset('thisWeek')">
+        <div class="b2w2-modecard ${(!_isMonthly && !_isCustom && !_isArchive)?'is-active':''}" onclick="_b2SetBriefingPreset('thisWeek')">
           <div class="b2w2-modehead">
             <div>
               <div class="b2w2-modekicker">주간 모드</div>
               <div class="b2w2-modetitle">주간</div>
             </div>
-            <span class="b2w2-modebadge">${(!_isMonthly && !_isCustom)?'선택됨':'빠른 확인'}</span>
+            <span class="b2w2-modebadge">${(!_isMonthly && !_isCustom && !_isArchive)?'선택됨':'빠른 확인'}</span>
           </div>
           <div class="b2w2-modedesc">이번주와 지난주 흐름을 빠르게 비교할 때 보기 좋습니다.</div>
           <div class="b2w2-presetrow">
@@ -2175,8 +2221,28 @@ function _b2WeeklyBriefingView() {
             <button type="button" class="b2w2-preset${_isCustom && ![7,14,30].includes(_periodDays)?' on':''}" onclick="event.stopPropagation();_b2ApplyBriefingCustomFromInputs()">${_isCustom ? `${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)}` : '입력값 조회'}</button>
           </div>
         </div>
-      </div>
-      <div class="b2w2-hdr">
+        <div class="b2w2-modecard ${_isArchive?'is-active':''}" onclick="_b2SetBriefingPreset('mvpArchive')">
+          <div class="b2w2-modehead">
+            <div>
+              <div class="b2w2-modekicker">MVP 아카이브</div>
+              <div class="b2w2-modetitle">MVP</div>
+            </div>
+            <span class="b2w2-modebadge">${_isArchive?'보는 중':'전체 기록'}</span>
+          </div>
+          <div class="b2w2-modedesc">시즌 시작부터 지금까지의 주간·월간 MVP를 한 번에 모아봅니다.</div>
+          <div class="b2w2-presetrow">
+            <button type="button" class="b2w2-preset${_isArchive?' on':''}" onclick="event.stopPropagation();_b2SetBriefingPreset('mvpArchive')">아카이브 보기</button>
+          </div>
+        </div>
+      </div>`;
+
+    if (_isArchive) {
+      h += _b2RenderMvpArchiveBody(_archiveEntries, _archiveTypeFilter, _archiveUnivFilter, univList);
+      h += `</div>`;
+      return h;
+    }
+
+    h += `<div class="b2w2-hdr">
       <span style="font-size:16px">📅</span>
       <span style="font-size:14px;font-weight:900;color:var(--text1)">${_briefingInfo.title}</span>
       <input type="date" class="b2w2-din" id="b2w2-from" value="${dateFrom}" onchange="_b2SyncBriefingCustomInputs(true)" title="시작 날짜 변경">
@@ -2248,9 +2314,9 @@ function _b2WeeklyBriefingView() {
 
     h += `<section class="b2w2-highlight-grid">
       <article class="b2w2-highlight-card b2w2-lead-card" style="border-color:var(--b2w-accent-border);--hc-top:var(--b2w-accent)">
-        <div class="b2w2-highlight-kicker" style="color:var(--b2w-accent)">기간 요약</div>
-        <div class="b2w2-highlight-title">기간 핵심 요약</div>
-        <div class="b2w2-highlight-desc">${_heroSummary}</div>
+        <div class="b2w2-highlight-kicker" style="color:var(--b2w-accent)">전체 전적</div>
+        <div class="b2w2-highlight-title">종합 승패 개요</div>
+        <div class="b2w2-highlight-desc">전체 대학 합산 승률은 ${_overallWr !== null ? `${_overallWr}%` : '집계 불가'}이며, 전기 대비 경기 수는 ${_gamesDelta > 0 ? `${_gamesDelta}전 늘었습니다` : _gamesDelta < 0 ? `${Math.abs(_gamesDelta)}전 줄었습니다` : '동일합니다'}.</div>
         <div class="b2w2-highlight-list" style="margin-top:2px">
           <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">전체 승/패</span><strong style="font-size:12px;color:var(--text1)">${_totalWins}승 ${_totalLosses}패</strong></div>
           <div class="b2w2-highlight-row"><span style="font-size:11px;color:var(--text3)">전기 대비 경기 수</span><strong style="font-size:12px;color:${_gamesDelta>0?'#15803d':_gamesDelta<0?'#dc2626':'var(--text1)'}">${_gamesDelta>0?'▲+':_gamesDelta<0?'▼':'━'}${Math.abs(_gamesDelta)}전</strong></div>

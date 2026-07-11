@@ -600,6 +600,135 @@ try {
   window._b2GetPlayerMvpStats = _b2GetPlayerMvpStats;
 } catch (e) {}
 
+// ─── MVP 아카이브 리스트 렌더 (브리핑 탭의 'MVP 아카이브' 모드에서 사용) ──
+// 시즌 시작부터 지금까지 쌓인 su_mvp_history_v1 전체 기록을, 종류(주간/월간)와
+// 대학 필터에 맞춰 카드 그리드로 그려준다. 기존 "대학별 에이스" 카드(b2w2-ace-*)
+// 스타일을 그대로 재사용해 새 CSS 없이 톤을 맞췄다.
+function _b2RenderMvpArchiveBody(entries, typeFilter, univFilter, univList) {
+  const fmtD = s => String(s || '').slice(0, 10).replace(/-/g, '.');
+  const filtered = (Array.isArray(entries) ? entries : []).filter(e => {
+    if (typeFilter !== 'all' && e.type !== typeFilter) return false;
+    if (univFilter !== '전체' && String(e.univ || '').trim() !== univFilter) return false;
+    return true;
+  });
+  const _typeBtn = (key, label) => `<button type="button" class="b2w2-preset${typeFilter===key?' on':''}" onclick="_b2SetMvpArchiveType('${key}')">${label}</button>`;
+  const filterBar = `
+    <div class="b2w2-hdr">
+      <span style="font-size:16px">🏆</span>
+      <span style="font-size:14px;font-weight:900;color:var(--text1)">MVP 아카이브</span>
+      <div class="b2w2-presetrow" style="margin:0">
+        ${_typeBtn('all','전체')}
+        ${_typeBtn('week','주간만')}
+        ${_typeBtn('month','월간만')}
+      </div>
+      <select class="b2w2-sel" onchange="_b2SetMvpArchiveUniv(this.value)">
+        <option value="전체"${univFilter==='전체'?' selected':''}>🏫 전체 대학</option>
+        ${(univList || []).map(u => {
+          const _n = (typeof escAttr === 'function' ? escAttr(u.name) : String(u.name || ''));
+          const _nh = (typeof window.escHTML === 'function' ? window.escHTML(u.name) : String(u.name || ''));
+          return `<option value="${_n}"${univFilter===u.name?' selected':''}>${_nh}</option>`;
+        }).join('')}
+      </select>
+      <span style="font-size:11px;color:var(--text3);margin-left:auto">총 ${filtered.length}건</span>
+      <button type="button" class="b2w2-preset" onclick="(function(){const bodies=[...document.getElementsByClassName('b2w2-mvp-arch-body')];const chevs=[...document.getElementsByClassName('b2w2-mvp-arch-chev')];const anyOpen=bodies.some(b=>b.style.display!=='none');bodies.forEach(b=>{b.style.display=anyOpen?'none':'';});chevs.forEach(c=>{c.textContent=anyOpen?'▶':'▼';});})()">전체 펼치기/접기</button>
+    </div>`;
+
+  if (!filtered.length) {
+    return `${filterBar}<div class="b2w2-empty"><div style="font-size:28px;margin-bottom:8px">🏆</div>조건에 맞는 MVP 기록이 없습니다.<div style="font-size:11px;margin-top:4px">필터를 변경해보세요</div></div>`;
+  }
+
+  const _renderCard = (e) => {
+    const col = (typeof gc === 'function' ? (gc(e.univ) || '#64748b') : '#64748b');
+    const total = (e.wins || 0) + (e.losses || 0);
+    const winRate = total > 0 ? Math.round((e.wins / total) * 1000) / 10 : 0;
+    const nameEsc = String(e.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const player = (typeof players !== 'undefined' && Array.isArray(players))
+      ? players.find(p => String(p?.name || '').trim() === String(e.name || '').trim())
+      : null;
+    const photo = player?.photo ? (typeof toHttpsUrl === 'function' ? toHttpsUrl(player.photo) : player.photo) : '';
+    const nameSafe = (typeof window.escHTML === 'function' ? window.escHTML(e.name || '') : String(e.name || ''));
+    const univSafe = (typeof window.escHTML === 'function' ? window.escHTML(e.univ || '') : String(e.univ || ''));
+    const isMonth = e.type === 'month';
+    // 주간(파랑) / 월간(골드)로 종류를 한눈에 구분
+    const typeBg = isMonth ? 'var(--b2w-gold-soft)' : 'var(--b2w-tag-accent-bg)';
+    const typeBorder = isMonth ? 'rgba(184,134,44,.35)' : 'var(--b2w-tag-accent-border)';
+    const typeColor = isMonth ? 'var(--b2w-gold)' : 'var(--b2w-accent)';
+    return `
+      <div class="b2w2-ace-card" style="border-color:${col}22">
+        <div class="b2w2-ace-head">
+          <div class="b2w2-ace-univ">
+            <span class="b2w2-ace-dot" style="background:${col}"></span>
+            <span class="b2w2-ace-univ-name">${univSafe}</span>
+          </div>
+          <span class="b2w2-ace-rank" style="background:${typeBg};border-color:${typeBorder};color:${typeColor};font-weight:900">${isMonth ? '월간' : '주간'} MVP</span>
+        </div>
+        <div class="b2w2-ace-player">
+          <div class="b2w2-ace-player-main">
+            <div class="b2w2-ace-photo" style="--_c:${col}">
+              ${photo ? `<img src="${photo}" alt="${nameSafe}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+              <div class="b2w2-ace-photo-fallback" style="${photo?'display:none':''}">${String(e.name||'-').trim().slice(0,1)}</div>
+            </div>
+            <div style="min-width:0">
+              <div class="b2w2-ace-player-name" onclick="openPlayerModal('${nameEsc}')">${nameSafe}</div>
+              <div class="b2w2-ace-player-sub">
+                <span>${e.wins||0}승 ${e.losses||0}패</span>
+                <span style="color:${winRate>=60?'var(--green)':winRate>=50?'var(--b2w-accent)':'var(--gray)'}">승률 ${winRate}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="b2w2-ace-badges">
+          <span class="b2w2-ace-badge">${fmtD(e.from)} ~ ${fmtD(e.to)}</span>
+        </div>
+      </div>`;
+  };
+
+  // 기록이 아무리 쌓여도 감당되도록 월별로 묶어서 접이식 섹션으로 보여준다.
+  // 최근 2개월은 펼친 채로 시작하고, 그 이전 달은 헤더만 보이다가 클릭하면 펼쳐진다 —
+  // "더보기"를 계속 눌러야 하는 방식 대신, 원하는 달을 바로 찾아 열어보는 방식.
+  const _groups = new Map();
+  filtered.forEach(e => {
+    const ym = String(e.from || '').slice(0, 7); // 'YYYY-MM'
+    if (!_groups.has(ym)) _groups.set(ym, []);
+    _groups.get(ym).push(e);
+  });
+  const _ymKeys = [..._groups.keys()].sort((a, b) => b.localeCompare(a));
+  const sections = _ymKeys.map((ym, idx) => {
+    const list = _groups.get(ym);
+    const weekN = list.filter(e => e.type === 'week').length;
+    const monthN = list.filter(e => e.type === 'month').length;
+    const [y, m] = ym.split('-');
+    const label = `${y}년 ${parseInt(m, 10)}월`;
+    const isOpen = idx < 2; // 최근 2개월은 기본으로 펼침
+    const bodyId = `b2w2-mvp-arch-${ym}`;
+    const chevId = `b2w2-mvp-arch-chev-${ym}`;
+    return `
+      <div class="b2w2-card" style="margin-bottom:10px">
+        <div class="b2w2-card-head" onclick="(function(){const b=document.getElementById('${bodyId}');const c=document.getElementById('${chevId}');if(!b)return;const show=b.style.display==='none';b.style.display=show?'':'none';if(c)c.textContent=show?'▼':'▶';})()">
+          <div class="b2w2-card-title">
+            <span class="b2w2-card-dot" style="background:var(--b2w-accent)"></span>
+            <div>
+              <div class="b2w2-card-name" style="font-size:15px">${label}</div>
+              <div class="b2w2-card-sub">
+                <span style="color:var(--b2w-accent);font-weight:800">주간 ${weekN}건</span>
+                <span style="color:var(--b2w-gold);font-weight:800">월간 ${monthN}건</span>
+              </div>
+            </div>
+          </div>
+          <span id="${chevId}" class="b2w2-card-chevron b2w2-mvp-arch-chev">${isOpen ? '▼' : '▶'}</span>
+        </div>
+        <div id="${bodyId}" class="b2w2-card-body b2w2-mvp-arch-body" style="${isOpen ? '' : 'display:none'}">
+          <section class="b2w2-ace-list">${list.map(_renderCard).join('')}</section>
+        </div>
+      </div>`;
+  }).join('');
+
+  const cards = sections;
+
+  return `${filterBar}<div style="margin-top:14px">${cards}</div>`;
+}
+try { window._b2RenderMvpArchiveBody = _b2RenderMvpArchiveBody; } catch (e) {}
+
 // ─── 티어 뱃지 툴팁(순위 설명) ─────────────────
 function _b2TierRankTooltip(tier) {
   try {
