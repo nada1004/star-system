@@ -52,6 +52,12 @@
     'body.dark .tm-title{color:#f8fafc}',
     'body.dark .tm-desc{color:#94a3b8}',
     'body.dark .tm-cell{box-shadow:0 2px 0 rgba(0,0,0,.3),0 5px 10px rgba(0,0,0,.3),inset 0 0 0 3px rgba(15,23,42,.55)}',
+    '.tm-diff-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}',
+    '.tm-diff-pill{padding:7px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:.12s;white-space:nowrap}',
+    '.tm-diff-pill:hover{border-color:rgba(37,99,235,.3);color:#2563eb}',
+    '.tm-diff-pill.on{background:linear-gradient(135deg,#34d399,#10b981);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(16,185,129,.28)}',
+    'body.dark .tm-diff-pill{background:linear-gradient(180deg,#162234,#0f172a);border-color:#334155;color:#cbd5e1}',
+    'body.dark .tm-diff-pill.on{color:#fff}',
     '@media (max-width:520px){.tm-card{padding:14px 14px}}',
   ].join('');
   document.head.appendChild(s);
@@ -89,9 +95,30 @@ function _tmPlayInvalid() {
 }
 
 // ─── 상태 ────────────────────────────────────────────────────────────────────
-const _TM_TIME_LIMIT = 110; // 초 (기존 100초 → 여유 있게 조정)
-const _TM_NEIGHBOR_BIAS = 0.68; // 인접 카드와 같은 소속으로 나올 확률 보정
+const _TM_TIME_LIMIT = 110; // 초 — 모든 난이도 공통 (난이도는 보드 크기/소속 수/클러스터링으로만 구분)
+// ─── 난이도 설정 ──────────────────────────────────────────────────────────────
+// maxGroups: 판에 등장하는 소속(팀) 종류 수 상한 — 많을수록 헷갈림.
+// bias: 인접 칸이 같은 소속으로 나올 확률 — 낮을수록 소속이 흩어져서 사각형 찾기가 어려워짐.
+// colBump/rowBump: 기본 그리드 크기에 더할 보정값 — 클수록 판이 커져서 스캔하기 어려워짐.
+const _TM_DIFFICULTIES = {
+  beginner: { key: 'beginner', label: '초급',   emoji: '🌱', maxGroups: 4,  bias: 0.82, colBump: -1, rowBump: -1 },
+  normal:   { key: 'normal',   label: '중급',   emoji: '⚔️', maxGroups: 6,  bias: 0.68, colBump: 0,  rowBump: 0 },
+  hard:     { key: 'hard',     label: '고수',   emoji: '🔥', maxGroups: 8,  bias: 0.55, colBump: 0,  rowBump: 1 },
+  extreme:  { key: 'extreme',  label: '초고수', emoji: '💀', maxGroups: 10, bias: 0.42, colBump: 1,  rowBump: 1 },
+  god:      { key: 'god',      label: '신',     emoji: '👑', maxGroups: 99, bias: 0.30, colBump: 1,  rowBump: 2 },
+};
+const _TM_DIFF_ORDER = ['beginner', 'normal', 'hard', 'extreme', 'god'];
+
+function _tmReadStoredDifficulty() {
+  try {
+    const v = localStorage.getItem('su_tm_diff');
+    if (v && _TM_DIFFICULTIES[v]) return v;
+  } catch (e) {}
+  return 'normal';
+}
+
 window._tmState = window._tmState || {
+  difficulty: _tmReadStoredDifficulty(),
   cols: 0, rows: 0, board: null, teamPool: [], teamBags: {},
   score: 0, combo: 0, bestCombo: 0, timeLeft: _TM_TIME_LIMIT, running: false, ended: false,
   timerId: null, dragging: false, selStart: null, selCur: null, uidSeq: 1,
@@ -99,14 +126,49 @@ window._tmState = window._tmState || {
   statusTone: 'info',
 };
 
-function _tmCols() { return (window.innerWidth || 375) >= 700 ? 8 : 5; }
-function _tmRows() { return (window.innerWidth || 375) >= 700 ? 7 : 8; }
-
-function _tmBestScore() {
-  try { return parseInt(localStorage.getItem('su_tm_best') || '0', 10) || 0; } catch (e) { return 0; }
+function _tmDiffObj() {
+  return _TM_DIFFICULTIES[window._tmState.difficulty] || _TM_DIFFICULTIES.normal;
 }
-function _tmSaveBest(v) {
-  try { localStorage.setItem('su_tm_best', String(v)); } catch (e) {}
+
+function _tmSetDifficulty(key) {
+  if (!_TM_DIFFICULTIES[key]) return;
+  const st = window._tmState;
+  st.difficulty = key;
+  try { localStorage.setItem('su_tm_diff', key); } catch (e) {}
+  _tmStart();
+}
+window._tmSetDifficulty = _tmSetDifficulty;
+
+function _tmDiffBarHTML() {
+  const st = window._tmState;
+  return _TM_DIFF_ORDER.map(k => {
+    const d = _TM_DIFFICULTIES[k];
+    const on = st.difficulty === k;
+    return `<button class="tm-diff-pill${on ? ' on' : ''}" onclick="_tmSetDifficulty('${k}')">${d.emoji} ${d.label}</button>`;
+  }).join('');
+}
+
+function _tmCols() {
+  const base = (window.innerWidth || 375) >= 700 ? 8 : 5;
+  return Math.max(4, base + (_tmDiffObj().colBump || 0));
+}
+function _tmRows() {
+  const base = (window.innerWidth || 375) >= 700 ? 7 : 8;
+  return Math.max(4, base + (_tmDiffObj().rowBump || 0));
+}
+
+function _tmBestScore(diffKey) {
+  const key = diffKey || window._tmState.difficulty || 'normal';
+  try {
+    const v = localStorage.getItem('su_tm_best_' + key);
+    if (v != null) return parseInt(v, 10) || 0;
+    if (key === 'normal') return parseInt(localStorage.getItem('su_tm_best') || '0', 10) || 0; // 구버전 기록 이관
+  } catch (e) {}
+  return 0;
+}
+function _tmSaveBest(v, diffKey) {
+  const key = diffKey || window._tmState.difficulty || 'normal';
+  try { localStorage.setItem('su_tm_best_' + key, String(v)); } catch (e) {}
 }
 
 // ─── 팀(소속) 풀 구성 ─────────────────────────────────────────────────────────
@@ -128,12 +190,13 @@ function _tmBuildTeamPool() {
     color: (typeof gc === 'function') ? gc(u) : '#6b7280',
     players: pool[u],
   }));
-  // 셔플 후 최대 8개 팀만 사용 (너무 많으면 색 구분이 어려워지고 매칭도 어려워짐)
+  // 셔플 후 난이도별 상한만큼만 팀 사용 (너무 많으면 색 구분이 어려워지고 매칭도 어려워짐)
   for (let i = teams.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [teams[i], teams[j]] = [teams[j], teams[i]];
   }
-  if (teams.length > 8) teams = teams.slice(0, 8);
+  const maxGroups = _tmDiffObj().maxGroups || 8;
+  if (teams.length > maxGroups) teams = teams.slice(0, maxGroups);
   return teams;
 }
 
@@ -171,7 +234,7 @@ function _tmPickTeamIndex(neighborSpecs) {
     if (idx < 0) return;
     for (let i = 0; i < weight; i++) weighted.push(idx);
   });
-  if (weighted.length && Math.random() < _TM_NEIGHBOR_BIAS) {
+  if (weighted.length && Math.random() < _tmDiffObj().bias) {
     return weighted[Math.floor(Math.random() * weighted.length)];
   }
   return Math.floor(Math.random() * st.teamPool.length);
@@ -311,6 +374,7 @@ function _tmRenderRoot() {
             <div class="tm-desc">사각형으로 드래그해서 같은 소속(팀) 선수들만 모아 제거하는 매칭 게임입니다.</div>
           </div>
         </div>
+        <div class="tm-diff-bar">${_tmDiffBarHTML()}</div>
         <div class="tm-empty-note">⚠️ 게임을 만들 만큼 소속(팀) 정보와 프로필 사진이 등록된 선수가 부족합니다. 선수 데이터에 소속/사진을 더 등록한 뒤 다시 시도해주세요.</div>
         <div class="tm-actions"><button class="tm-btn tm-btn-primary" onclick="_tmStart()">🔄 다시 확인</button></div>
       </div>
@@ -338,6 +402,7 @@ function _tmRenderRoot() {
           <span class="tm-hud-chip">🥇 최고 ${best}</span>
         </div>
       </div>
+      <div class="tm-diff-bar">${_tmDiffBarHTML()}</div>
       <div class="tm-actions">
         <button class="tm-btn tm-btn-primary" onclick="_tmStart()">${st.ended ? '🔄 다시하기' : '🔀 새로 섞기'}</button>
       </div>

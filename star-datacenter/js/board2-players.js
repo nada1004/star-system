@@ -1168,13 +1168,26 @@ function saveB2Profile(playerName) {
   }catch(e){}
   
   save();
-  render();
-  
+
   document.getElementById('b2-profile-edit-modal').remove();
-  
-  // 프로필 탭 업데이트
-  if (_b2SelectedPlayer && _b2SelectedPlayer.name === playerName) {
-    _b2UpdateMainDisplay(playerName);
+
+  // [FIX] 기존에는 render()로 앱 전체를 다시 그려서, 이미 캐시된 프로필 이미지들까지
+  // DOM에서 새로 생성되며 재로딩되는 것처럼 느려지는 문제가 있었음.
+  // 스트리머탭(board2) 화면이 열려 있으면 #b2-content만 가볍게 다시 그려서
+  // 다른 선수 카드들의 <img>가 불필요하게 재생성되지 않도록 함.
+  const _b2ContentEl = document.getElementById('b2-content');
+  if (_b2ContentEl && typeof _b2PlayersView === 'function') {
+    _b2ContentEl.innerHTML = _b2PlayersView();
+    try{ if(typeof injectUnivIcons === 'function') injectUnivIcons(_b2ContentEl); }catch(e){}
+    if (_b2SelectedPlayer && _b2SelectedPlayer.name === playerName) {
+      _b2UpdateMainDisplay(playerName);
+    }
+  } else {
+    // board2 화면이 아니면(다른 탭에서 저장된 경우 등) 안전하게 전체 렌더
+    render();
+    if (_b2SelectedPlayer && _b2SelectedPlayer.name === playerName) {
+      _b2UpdateMainDisplay(playerName);
+    }
   }
 }
 

@@ -52,6 +52,12 @@
     'body.dark .ti-title{color:#f8fafc}',
     'body.dark .ti-desc{color:#94a3b8}',
     'body.dark .ti-cell{box-shadow:0 2px 0 rgba(0,0,0,.3),0 5px 10px rgba(0,0,0,.3),inset 0 0 0 3px rgba(15,23,42,.55)}',
+    '.ti-diff-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}',
+    '.ti-diff-pill{padding:7px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:.12s;white-space:nowrap}',
+    '.ti-diff-pill:hover{border-color:rgba(37,99,235,.3);color:#2563eb}',
+    '.ti-diff-pill.on{background:linear-gradient(135deg,#34d399,#10b981);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(16,185,129,.28)}',
+    'body.dark .ti-diff-pill{background:linear-gradient(180deg,#162234,#0f172a);border-color:#334155;color:#cbd5e1}',
+    'body.dark .ti-diff-pill.on{color:#fff}',
     '@media (max-width:520px){.ti-card{padding:14px 14px}}',
   ].join('');
   document.head.appendChild(s);
@@ -89,9 +95,30 @@ function _tiPlayInvalid() {
 }
 
 // ─── 상태 ────────────────────────────────────────────────────────────────────
-const _TI_TIME_LIMIT = 110; // 초 (기존 100초 → 여유 있게 조정)
-const _TI_NEIGHBOR_BIAS = 0.68; // 인접 카드와 같은 티어로 나올 확률 보정
+const _TI_TIME_LIMIT = 110; // 초 — 모든 난이도 공통 (난이도는 보드 크기/티어 수/클러스터링으로만 구분)
+// ─── 난이도 설정 ──────────────────────────────────────────────────────────────
+// maxGroups: 판에 등장하는 티어 종류 수 상한 — 많을수록 헷갈림.
+// bias: 인접 칸이 같은 티어로 나올 확률 — 낮을수록 티어가 흩어져서 사각형 찾기가 어려워짐.
+// colBump/rowBump: 기본 그리드 크기에 더할 보정값 — 클수록 판이 커져서 스캔하기 어려워짐.
+const _TI_DIFFICULTIES = {
+  beginner: { key: 'beginner', label: '초급',   emoji: '🌱', maxGroups: 4,  bias: 0.82, colBump: -1, rowBump: -1 },
+  normal:   { key: 'normal',   label: '중급',   emoji: '⚔️', maxGroups: 6,  bias: 0.68, colBump: 0,  rowBump: 0 },
+  hard:     { key: 'hard',     label: '고수',   emoji: '🔥', maxGroups: 8,  bias: 0.55, colBump: 0,  rowBump: 1 },
+  extreme:  { key: 'extreme',  label: '초고수', emoji: '💀', maxGroups: 10, bias: 0.42, colBump: 1,  rowBump: 1 },
+  god:      { key: 'god',      label: '신',     emoji: '👑', maxGroups: 99, bias: 0.30, colBump: 1,  rowBump: 2 },
+};
+const _TI_DIFF_ORDER = ['beginner', 'normal', 'hard', 'extreme', 'god'];
+
+function _tiReadStoredDifficulty() {
+  try {
+    const v = localStorage.getItem('su_ti_diff');
+    if (v && _TI_DIFFICULTIES[v]) return v;
+  } catch (e) {}
+  return 'normal';
+}
+
 window._tiState = window._tiState || {
+  difficulty: _tiReadStoredDifficulty(),
   cols: 0, rows: 0, board: null, tierPool: [], tierBags: {},
   score: 0, combo: 0, bestCombo: 0, timeLeft: _TI_TIME_LIMIT, running: false, ended: false,
   timerId: null, dragging: false, selStart: null, selCur: null, uidSeq: 1,
@@ -99,14 +126,49 @@ window._tiState = window._tiState || {
   statusTone: 'info',
 };
 
-function _tiCols() { return (window.innerWidth || 375) >= 700 ? 8 : 5; }
-function _tiRows() { return (window.innerWidth || 375) >= 700 ? 7 : 8; }
-
-function _tiBestScore() {
-  try { return parseInt(localStorage.getItem('su_tier_best') || '0', 10) || 0; } catch (e) { return 0; }
+function _tiDiffObj() {
+  return _TI_DIFFICULTIES[window._tiState.difficulty] || _TI_DIFFICULTIES.normal;
 }
-function _tiSaveBest(v) {
-  try { localStorage.setItem('su_tier_best', String(v)); } catch (e) {}
+
+function _tiSetDifficulty(key) {
+  if (!_TI_DIFFICULTIES[key]) return;
+  const st = window._tiState;
+  st.difficulty = key;
+  try { localStorage.setItem('su_ti_diff', key); } catch (e) {}
+  _tiStart();
+}
+window._tiSetDifficulty = _tiSetDifficulty;
+
+function _tiDiffBarHTML() {
+  const st = window._tiState;
+  return _TI_DIFF_ORDER.map(k => {
+    const d = _TI_DIFFICULTIES[k];
+    const on = st.difficulty === k;
+    return `<button class="ti-diff-pill${on ? ' on' : ''}" onclick="_tiSetDifficulty('${k}')">${d.emoji} ${d.label}</button>`;
+  }).join('');
+}
+
+function _tiCols() {
+  const base = (window.innerWidth || 375) >= 700 ? 8 : 5;
+  return Math.max(4, base + (_tiDiffObj().colBump || 0));
+}
+function _tiRows() {
+  const base = (window.innerWidth || 375) >= 700 ? 7 : 8;
+  return Math.max(4, base + (_tiDiffObj().rowBump || 0));
+}
+
+function _tiBestScore(diffKey) {
+  const key = diffKey || window._tiState.difficulty || 'normal';
+  try {
+    const v = localStorage.getItem('su_ti_best_' + key);
+    if (v != null) return parseInt(v, 10) || 0;
+    if (key === 'normal') return parseInt(localStorage.getItem('su_tier_best') || '0', 10) || 0; // 구버전 기록 이관
+  } catch (e) {}
+  return 0;
+}
+function _tiSaveBest(v, diffKey) {
+  const key = diffKey || window._tiState.difficulty || 'normal';
+  try { localStorage.setItem('su_ti_best_' + key, String(v)); } catch (e) {}
 }
 
 // ─── 티어 풀 구성 ─────────────────────────────────────────────────────────
@@ -132,8 +194,9 @@ function _tiBuildTierPool() {
     const j = Math.floor(Math.random() * (i + 1));
     [teams[i], teams[j]] = [teams[j], teams[i]];
   }
-  // 티어 종류가 너무 많으면 판이 어수선해져서 매칭이 어려워지므로 최대 8종류만 사용
-  if (teams.length > 8) teams = teams.slice(0, 8);
+  // 티어 종류가 너무 많으면 판이 어수선해져서 매칭이 어려워지므로 난이도별 상한만큼만 사용
+  const maxGroups = _tiDiffObj().maxGroups || 8;
+  if (teams.length > maxGroups) teams = teams.slice(0, maxGroups);
   return teams;
 }
 
@@ -171,7 +234,7 @@ function _tiPickTierIndex(neighborSpecs) {
     if (idx < 0) return;
     for (let i = 0; i < weight; i++) weighted.push(idx);
   });
-  if (weighted.length && Math.random() < _TI_NEIGHBOR_BIAS) {
+  if (weighted.length && Math.random() < _tiDiffObj().bias) {
     return weighted[Math.floor(Math.random() * weighted.length)];
   }
   return Math.floor(Math.random() * st.tierPool.length);
@@ -307,6 +370,7 @@ function _tiRenderRoot() {
             <div class="ti-desc">사각형으로 드래그해서 같은 티어 선수들만 모아 제거하는 매칭 게임입니다.</div>
           </div>
         </div>
+        <div class="ti-diff-bar">${_tiDiffBarHTML()}</div>
         <div class="ti-empty-note">⚠️ 게임을 만들 만큼 티어 정보와 프로필 사진이 등록된 선수가 부족합니다(최소 2개 티어 필요). 선수 데이터에 티어/사진을 더 등록한 뒤 다시 시도해주세요.</div>
         <div class="ti-actions"><button class="ti-btn ti-btn-primary" onclick="_tiStart()">🔄 다시 확인</button></div>
       </div>
@@ -334,6 +398,7 @@ function _tiRenderRoot() {
           <span class="ti-hud-chip">🥇 최고 ${best}</span>
         </div>
       </div>
+      <div class="ti-diff-bar">${_tiDiffBarHTML()}</div>
       <div class="ti-actions">
         <button class="ti-btn ti-btn-primary" onclick="_tiStart()">${st.ended ? '🔄 다시하기' : '🔀 새로 섞기'}</button>
       </div>
