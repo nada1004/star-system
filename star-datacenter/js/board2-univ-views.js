@@ -1184,7 +1184,16 @@ function saveB2NewPlayer() {
   };
   players.push(p);
   save();
-  render();
+
+  // [FIX] 전체 render() 대신 #b2-content만 다시 그려서, 등록 때마다
+  // 이미 캐시된 다른 스트리머들의 프로필 이미지가 재로딩되는 것처럼 보이는 문제를 방지.
+  const _b2ContentEl = document.getElementById('b2-content');
+  if (_b2ContentEl && typeof _b2FemcoView === 'function') {
+    _b2ContentEl.innerHTML = _b2FemcoView();
+    try{ if(typeof injectUnivIcons === 'function') injectUnivIcons(_b2ContentEl); }catch(e){}
+  } else {
+    render();
+  }
 
   // 입력 초기화(연속 등록)
   ['b2-newplayer-name','b2-newplayer-channel','b2-newplayer-photo','b2-newplayer-photo2'].forEach(id=>{
