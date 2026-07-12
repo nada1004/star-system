@@ -33,8 +33,16 @@
     '.pq-hint-btn{padding:9px 16px;border-radius:14px;border:1px dashed rgba(148,163,184,.4);background:rgba(248,250,252,.9);color:var(--text2);font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;transition:.12s}',
     '.pq-hint-btn:hover{border-color:rgba(37,99,235,.35);color:#2563eb}',
     '.pq-hint-btn:disabled{opacity:.45;cursor:default}',
+    '.pq-tool-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}',
+    '.pq-tool-btn{padding:9px 14px;border-radius:14px;border:1px solid rgba(148,163,184,.24);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;transition:.12s}',
+    '.pq-tool-btn:hover{border-color:rgba(37,99,235,.35);color:#2563eb}',
+    '.pq-tool-btn:disabled{opacity:.45;cursor:default}',
     '.pq-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:420px}',
     '.pq-tries-left{font-size:11px;font-weight:800;color:var(--text3)}',
+    '.pq-status{width:100%;max-width:420px;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:800;line-height:1.55}',
+    '.pq-status.is-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}',
+    '.pq-status.is-good{background:#ecfdf5;border:1px solid #86efac;color:#047857}',
+    '.pq-status.is-bad{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c}',
     '.pq-opt{padding:14px 10px;border-radius:16px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text1);font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:.12s;text-align:center;box-shadow:0 6px 14px rgba(15,23,42,.05)}',
     '.pq-opt:hover{border-color:rgba(37,99,235,.3);transform:translateY(-1px)}',
     '.pq-opt.pq-correct{background:linear-gradient(135deg,#bbf7d0,#86efac);border-color:#4ade80;color:#14532d;animation:pqPopOk .3s ease}',
@@ -90,6 +98,7 @@ function _pqPlayWrong() {
 // ─── 상태 ────────────────────────────────────────────────────────────────────
 const _PQ_TIME_LIMIT = 60; // 초
 const _PQ_NEXT_DELAY = 700; // 정답 확인 후 다음 문제까지 대기(ms)
+const _PQ_SKIP_PENALTY = 4; // 패스 시 차감 시간
 // 실루엣(블러 심함) 상태로 시작 → "힌트 보기"를 누를 때마다 조금씩 선명해지고,
 // 누를수록 그 문제에서 받을 수 있는 점수가 줄어듦(총 10단계).
 const _PQ_STAGES = [
@@ -108,6 +117,9 @@ window._pqState = window._pqState || {
   pool: [], score: 0, combo: 0, best: 0,
   timeLeft: _PQ_TIME_LIMIT, running: false, ended: false, locked: false,
   timerId: null, advanceId: null,
+  solved: 0, lastAnswerName: '',
+  statusText: '바로 맞히면 고득점, 막히면 힌트나 50:50을 써서 흐름을 이어가세요.',
+  statusTone: 'info',
   cur: null, // {answer, choices:[{name,uid}], answerIdx}
 };
 
@@ -152,13 +164,17 @@ function _pqShuffle(arr) {
 function _pqNextQuestion() {
   const st = window._pqState;
   if (st.pool.length < 4) { st.cur = null; return; }
-  const answer = st.pool[Math.floor(Math.random() * st.pool.length)];
+  const candidates = st.pool.filter(p => p.name !== st.lastAnswerName);
+  const answerPool = candidates.length ? candidates : st.pool;
+  const answer = answerPool[Math.floor(Math.random() * answerPool.length)];
   const distractorsPool = st.pool.filter(p => p.name !== answer.name);
   _pqShuffle(distractorsPool);
   const distractors = distractorsPool.slice(0, 3);
   const choices = _pqShuffle([answer, ...distractors]);
-  st.cur = { answer, choices, stage: 0, wrongCount: 0, wrongIndices: [] };
+  st.cur = { answer, choices, stage: 0, wrongCount: 0, wrongIndices: [], fiftyUsed: false };
   st.locked = false;
+  st.statusText = '정답이 보이면 바로 찍고, 애매하면 힌트나 50:50으로 좁혀보세요.';
+  st.statusTone = 'info';
 }
 
 // ─── 게임 진행 ────────────────────────────────────────────────────────────────
@@ -168,10 +184,14 @@ function _pqStart() {
   st.pool = _pqBuildPool();
   st.score = 0;
   st.combo = 0;
+  st.solved = 0;
+  st.lastAnswerName = '';
   st.timeLeft = _PQ_TIME_LIMIT;
   st.running = false;
   st.ended = false;
   st.locked = false;
+  st.statusText = '빠른 정답과 연속 콤보를 노려보세요.';
+  st.statusTone = 'info';
   if (st.pool.length < 4) { st.cur = null; _pqRenderRoot(); return; }
   _pqNextQuestion();
   st.running = true;
@@ -253,6 +273,40 @@ function _pqHint() {
 }
 window._pqHint = _pqHint;
 
+function _pqUseFifty() {
+  const st = window._pqState;
+  if (!st.running || !st.cur || st.locked || st.cur.fiftyUsed) return;
+  const correctIdx = st.cur.choices.findIndex(c => c.name === st.cur.answer.name);
+  const availableWrong = st.cur.choices
+    .map((c, i) => ({ c, i }))
+    .filter(({ i }) => i !== correctIdx && !(st.cur.wrongIndices || []).includes(i));
+  if (!availableWrong.length) return;
+  const target = availableWrong[Math.floor(Math.random() * availableWrong.length)];
+  (st.cur.wrongIndices || (st.cur.wrongIndices = [])).push(target.i);
+  st.cur.fiftyUsed = true;
+  st.statusText = '50:50 사용: 오답 보기 하나를 제거했습니다.';
+  st.statusTone = 'info';
+  _pqRenderRoot();
+}
+window._pqUseFifty = _pqUseFifty;
+
+function _pqSkipQuestion() {
+  const st = window._pqState;
+  if (!st.running || !st.cur || st.locked) return;
+  st.combo = 0;
+  st.timeLeft = Math.max(0, st.timeLeft - _PQ_SKIP_PENALTY);
+  st.statusText = `패스 사용: ${_PQ_SKIP_PENALTY}초 차감 후 다음 문제로 넘어갑니다.`;
+  st.statusTone = 'bad';
+  _pqUpdateChips();
+  if (st.timeLeft <= 0) {
+    _pqEndGame();
+    return;
+  }
+  _pqNextQuestion();
+  _pqRenderRoot();
+}
+window._pqSkipQuestion = _pqSkipQuestion;
+
 function _pqOptionsHTML() {
   const st = window._pqState;
   if (!st.cur) return '';
@@ -298,8 +352,13 @@ function _pqRenderRoot() {
   const stageHTML = (!st.ended && st.cur) ? `<div class="pq-stage">
     <div class="pq-photo-wrap">${_pqPhotoHTML(st.cur.answer, st.cur.stage)}</div>
     <button class="pq-hint-btn" id="pq-hint-btn" onclick="_pqHint()" ${isLastStage ? 'disabled' : ''}>${hintLabel}</button>
+    <div class="pq-tool-row">
+      <button class="pq-tool-btn" onclick="_pqUseFifty()" ${st.cur.fiftyUsed ? 'disabled' : ''}>✂️ 50:50 제거</button>
+      <button class="pq-tool-btn" onclick="_pqSkipQuestion()">⏭️ 패스 (-${_PQ_SKIP_PENALTY}초)</button>
+    </div>
     <div class="pq-options">${_pqOptionsHTML()}</div>
     <div class="pq-tries-left" id="pq-tries-left">❌ 오답 ${st.cur.wrongCount || 0}/3 · 남은 기회 ${Math.max(0, 3 - (st.cur.wrongCount || 0))}번</div>
+    <div class="pq-status is-${_pqEsc(st.statusTone || 'info')}" id="pq-status">${_pqEsc(st.statusText || '')}</div>
   </div>` : '';
 
   root.innerHTML = `<div class="pq-shell">
@@ -312,6 +371,7 @@ function _pqRenderRoot() {
         <div class="pq-hud">
           <span class="pq-hud-chip">🏅 점수 ${st.score}</span>
           <span class="pq-hud-chip is-combo">🔥 콤보 ${st.combo}</span>
+          <span class="pq-hud-chip" id="pq-solved-chip">✅ 정답 ${st.solved}</span>
           <span class="pq-hud-chip" id="pq-time-chip">⏱️ 남은 시간 ${st.timeLeft}초</span>
           <span class="pq-hud-chip">🥇 최고 ${best}</span>
         </div>
@@ -344,7 +404,12 @@ function _pqAnswer(idx) {
 
     const stagePoints = (_PQ_STAGES[st.cur.stage] || _PQ_STAGES[_PQ_STAGES.length - 1]).points;
     st.combo++;
-    st.score += stagePoints + Math.max(0, st.combo - 1) * 2; // 실루엣 단계 점수 + 콤보 보너스
+    st.solved++;
+    st.lastAnswerName = st.cur.answer.name;
+    const comboBonus = Math.max(0, st.combo - 1) * 2;
+    st.score += stagePoints + comboBonus; // 실루엣 단계 점수 + 콤보 보너스
+    st.statusText = `정답! ${st.cur.answer.name} · +${stagePoints + comboBonus}점${comboBonus ? ` (콤보 보너스 +${comboBonus})` : ''}`;
+    st.statusTone = 'good';
     _pqPlayCorrect(st.combo);
     _pqUpdateChips();
 
@@ -361,6 +426,8 @@ function _pqAnswer(idx) {
   st.cur.wrongCount = (st.cur.wrongCount || 0) + 1;
   (st.cur.wrongIndices || (st.cur.wrongIndices = [])).push(idx);
   st.combo = 0;
+  st.statusText = `오답입니다. 남은 기회 ${Math.max(0, 3 - st.cur.wrongCount)}번`;
+  st.statusTone = 'bad';
   _pqPlayWrong();
   _pqUpdateChips();
 
@@ -377,6 +444,9 @@ function _pqAnswer(idx) {
     _pqSnapPhotoClear();
     const hintBtn = document.getElementById('pq-hint-btn');
     if (hintBtn) hintBtn.disabled = true;
+    st.lastAnswerName = st.cur.answer.name;
+    st.statusText = `정답은 ${st.cur.answer.name}였습니다. 다음 문제로 넘어갑니다.`;
+    st.statusTone = 'info';
 
     st.advanceId = setTimeout(() => {
       if (!st.running) return;
@@ -393,6 +463,13 @@ function _pqUpdateChips() {
   if (scoreChip) scoreChip.textContent = `🏅 점수 ${st.score}`;
   const comboChip = document.querySelector('#pq-root .pq-hud-chip.is-combo');
   if (comboChip) comboChip.textContent = `🔥 콤보 ${st.combo}`;
+  const solvedChip = document.getElementById('pq-solved-chip');
+  if (solvedChip) solvedChip.textContent = `✅ 정답 ${st.solved}`;
+  const statusEl = document.getElementById('pq-status');
+  if (statusEl) {
+    statusEl.className = `pq-status is-${st.statusTone || 'info'}`;
+    statusEl.textContent = st.statusText || '';
+  }
 }
 
 // ─── 진입점 ──────────────────────────────────────────────────────────────────

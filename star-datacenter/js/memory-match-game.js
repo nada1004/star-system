@@ -31,6 +31,10 @@
     'body.dark .mm-diff-pill{background:linear-gradient(180deg,#162234,#0f172a);border-color:#334155;color:#cbd5e1}',
     'body.dark .mm-diff-pill.on{color:#fff}',
     '.mm-stage{margin-top:14px}',
+    '.mm-tool-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:12px 0 0}',
+    '.mm-tool-btn{padding:9px 14px;border-radius:14px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;transition:.12s}',
+    '.mm-tool-btn:hover{border-color:rgba(37,99,235,.3);color:#2563eb}',
+    '.mm-tool-btn:disabled{opacity:.45;cursor:default}',
     '.mm-grid{display:grid;grid-template-columns:repeat(var(--mm-cols,4),1fr);gap:8px;max-width:calc(var(--mm-cols,4) * 92px + (var(--mm-cols,4) - 1) * 8px);margin:0 auto}',
     '.mm-grid.is-preview .mm-cell{cursor:default}',
     '.mm-cell{position:relative;aspect-ratio:1/1;border-radius:16px;cursor:pointer;perspective:600px}',
@@ -53,6 +57,10 @@
     '.mm-result-sub{font-size:12px;color:var(--text3)}',
     '@keyframes mmPopIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}',
     '.mm-empty-note{font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;margin-top:10px;line-height:1.6}',
+    '.mm-status{margin-top:12px;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:800;line-height:1.55}',
+    '.mm-status.is-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}',
+    '.mm-status.is-good{background:#ecfdf5;border:1px solid #86efac;color:#047857}',
+    '.mm-status.is-bad{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c}',
     'body.dark .mm-card,body.dark .mm-result{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#2d3f55}',
     'body.dark .mm-hud-chip,body.dark .mm-btn{background:linear-gradient(180deg,#162234,#0f172a);border-color:#334155;color:#cbd5e1}',
     'body.dark .mm-title{color:#f8fafc}',
@@ -109,6 +117,7 @@ const _MM_TIME_LIMIT = 90; // 초 — 모든 난이도 공통
 const _MM_PREVIEW_MS = 1000; // 미리보기 시간(ms) — 모든 난이도 공통, 1초 고정
 const _MM_MISMATCH_DELAY = 750; // 오답 시 다시 뒤집기까지 대기(ms)
 const _MM_MATCH_DELAY = 260; // 정답 확정까지 대기(ms) — 두 장 다 보여준 뒤 확정
+const _MM_HINT_TIME_PENALTY = 3; // 힌트 사용 시 차감 시간
 // ─── 난이도 설정 ──────────────────────────────────────────────────────────────
 // 시간/미리보기는 모든 난이도 공통(위 상수 사용), 난이도는 정사각형 그리드 크기(N x N)로만 구분.
 // N이 홀수면 칸 하나가 남으므로 빈 장식 칸(mm-empty)으로 채워서 항상 정사각형 모양을 유지함.
@@ -135,8 +144,10 @@ window._mmState = window._mmState || {
   score: 0, combo: 0, moves: 0, matched: 0,
   timeLeft: _MM_TIME_LIMIT, running: false, ended: false, endReason: '',
   timerId: null, resolveId: null, previewId: null,
-  previewing: false,
+  previewing: false, hintsLeft: 2,
   firstIdx: null, secondIdx: null, locked: false,
+  statusText: '초반 1초 미리보기 때 위치를 기억하고, 막히면 힌트를 아껴 쓰세요.',
+  statusTone: 'info',
 };
 
 function _mmSetDifficulty(key) {
@@ -192,6 +203,12 @@ function _mmCols(diff) {
   return d.grid;
 }
 
+function _mmHintsForDifficulty(key) {
+  if (key === 'beginner') return 3;
+  if (key === 'normal' || key === 'hard') return 2;
+  return 1;
+}
+
 // ─── 보드 초기화 ──────────────────────────────────────────────────────────────
 function _mmNewBoard() {
   const st = window._mmState;
@@ -207,6 +224,7 @@ function _mmNewBoard() {
   st.moves = 0;
   st.matched = 0;
   st.timeLeft = _MM_TIME_LIMIT;
+  st.hintsLeft = _mmHintsForDifficulty(st.difficulty);
   st.running = false;
   st.ended = false;
   st.endReason = '';
@@ -214,6 +232,8 @@ function _mmNewBoard() {
   st.secondIdx = null;
   st.locked = false;
   st._clearBonus = 0;
+  st.statusText = '같은 카드 위치를 기억하고, 연속 성공으로 콤보 점수를 노려보세요.';
+  st.statusTone = 'info';
   if (pairs < 3) { st.cards = null; st.pairs = 0; return; }
   st.pairs = pairs;
   const chosen = _mmShuffle(fullPool.slice()).slice(0, pairs);
@@ -242,12 +262,16 @@ function _mmStart() {
   st.cards.forEach(c => { c.state = 'preview'; });
   st.running = false;
   st.previewing = true;
+  st.statusText = '전체 카드가 잠깐 공개됩니다. 빠르게 위치를 외워두세요!';
+  st.statusTone = 'info';
   _mmRenderRoot();
   st.previewId = setTimeout(() => {
     st.previewId = null;
     st.cards.forEach(c => { if (c.state === 'preview') c.state = 'hidden'; });
     st.previewing = false;
     st.running = true;
+    st.statusText = '시작! 연속으로 맞히면 콤보 보너스가 붙습니다.';
+    st.statusTone = 'info';
     _mmRenderRoot();
     st.timerId = setInterval(_mmTick, 1000);
   }, _MM_PREVIEW_MS);
@@ -305,6 +329,43 @@ function _mmCardFaceHTML(c) {
     <div class="mm-face mm-face-front">${front}<div class="mm-name-tag">${_mmEsc(c.name)}</div></div>
   </div>`;
 }
+
+function _mmUseHint() {
+  const st = window._mmState;
+  if (!st.running || st.locked || st.previewing || !st.cards || st.hintsLeft <= 0) return;
+  const hidden = st.cards
+    .map((c, i) => ({ c, i }))
+    .filter(({ c }) => c && !c.empty && c.state === 'hidden');
+  if (hidden.length < 2) return;
+  const bucket = new Map();
+  hidden.forEach(({ c, i }) => {
+    if (!bucket.has(c.pairId)) bucket.set(c.pairId, []);
+    bucket.get(c.pairId).push(i);
+  });
+  const candidatePairs = [...bucket.values()].filter(list => list.length >= 2);
+  if (!candidatePairs.length) return;
+  const revealPair = candidatePairs[Math.floor(Math.random() * candidatePairs.length)].slice(0, 2);
+  revealPair.forEach(i => { st.cards[i].state = 'preview'; });
+  st.hintsLeft--;
+  st.timeLeft = Math.max(0, st.timeLeft - _MM_HINT_TIME_PENALTY);
+  st.locked = true;
+  st.statusText = `힌트 사용: 짝 하나를 잠깐 공개했습니다. 시간 ${_MM_HINT_TIME_PENALTY}초 차감`;
+  st.statusTone = 'info';
+  _mmRenderRoot();
+  if (st.timeLeft <= 0) {
+    _mmEndGame('timeup');
+    return;
+  }
+  st.resolveId = setTimeout(() => {
+    st.resolveId = null;
+    revealPair.forEach(i => {
+      if (st.cards[i] && st.cards[i].state === 'preview') st.cards[i].state = 'hidden';
+    });
+    st.locked = false;
+    _mmRenderRoot();
+  }, 700);
+}
+window._mmUseHint = _mmUseHint;
 
 function _mmGridHTML() {
   const st = window._mmState;
@@ -377,6 +438,8 @@ function _mmRenderRoot() {
         <div class="mm-hud">
           <span class="mm-hud-chip">🏅 점수 ${st.score}</span>
           <span class="mm-hud-chip is-combo">🔥 콤보 ${st.combo}</span>
+          <span class="mm-hud-chip" id="mm-progress-chip">✅ ${st.matched}/${st.pairs}쌍</span>
+          <span class="mm-hud-chip" id="mm-moves-chip">🕹️ 이동 ${st.moves}</span>
           ${st.previewing
             ? `<span class="mm-hud-chip is-combo" id="mm-preview-chip">👀 카드를 외워보세요!</span>`
             : `<span class="mm-hud-chip" id="mm-time-chip">⏱️ 남은 시간 ${st.timeLeft}초</span>`}
@@ -387,7 +450,9 @@ function _mmRenderRoot() {
       <div class="mm-actions">
         <button class="mm-btn mm-btn-primary" onclick="_mmStart()">${st.ended ? '🔄 다시하기' : '🔀 새로 섞기'}</button>
       </div>
+      ${!st.ended ? `<div class="mm-tool-row"><button class="mm-tool-btn" onclick="_mmUseHint()" ${(!st.running || st.previewing || st.locked || st.hintsLeft <= 0) ? 'disabled' : ''}>💡 짝 힌트 (${st.hintsLeft})</button></div>` : ''}
       ${resultHTML}
+      <div class="mm-status is-${_mmEsc(st.statusTone || 'info')}" id="mm-status">${_mmEsc(st.statusText || '')}</div>
       ${stageHTML}
     </div>
   </div>`;
@@ -422,6 +487,8 @@ function _mmFlip(idx) {
       st.matched++;
       st.combo++;
       st.score += 15 + Math.max(0, st.combo - 1) * 3;
+      st.statusText = `매칭 성공! ${a.name} 카드 한 쌍 완료 · 현재 콤보 ${st.combo}`;
+      st.statusTone = 'good';
       st.firstIdx = null; st.secondIdx = null; st.locked = false;
       _mmPlayMatch(st.combo);
       if (st.matched >= st.pairs) { _mmEndGame('clear'); return; }
@@ -429,6 +496,8 @@ function _mmFlip(idx) {
     }, _MM_MATCH_DELAY);
   } else {
     st.combo = 0;
+    st.statusText = '틀렸습니다. 두 카드의 위치를 기억해두세요.';
+    st.statusTone = 'bad';
     _mmPlayWrong();
     const elA = document.getElementById(`mm-cell-${st.firstIdx}`);
     const elB = document.getElementById(`mm-cell-${st.secondIdx}`);

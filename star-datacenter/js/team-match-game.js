@@ -17,6 +17,7 @@
     '.tm-hud{display:flex;gap:8px;flex-wrap:wrap}',
     '.tm-hud-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.18);font-size:12px;font-weight:900;color:var(--text2);box-shadow:0 8px 16px rgba(15,23,42,.05);white-space:nowrap}',
     '.tm-hud-chip.is-time-low{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#fca5a5;color:#b91c1c;animation:tmPulse 1s ease-in-out infinite}',
+    '.tm-hud-chip.is-combo{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fbbf24;color:#92400e}',
     '@keyframes tmPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}',
     '.tm-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}',
     '.tm-btn{padding:10px 18px;border-radius:14px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 10px 18px rgba(15,23,42,.05);font-family:inherit;transition:.12s}',
@@ -38,6 +39,10 @@
     '.tm-result-score{font-size:clamp(24px,5vw,34px);font-weight:900;color:#C0274A;margin:4px 0 4px}',
     '.tm-result-sub{font-size:12px;color:var(--text3)}',
     '.tm-empty-note{font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;margin-top:10px;line-height:1.6}',
+    '.tm-status{margin-top:12px;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:800;line-height:1.55}',
+    '.tm-status.is-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}',
+    '.tm-status.is-good{background:#ecfdf5;border:1px solid #86efac;color:#047857}',
+    '.tm-status.is-bad{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c}',
     '@keyframes tmDropIn{from{opacity:0;transform:translateY(-14px) scale(.85)}to{opacity:1;transform:translateY(0) scale(1)}}',
     '@keyframes tmPopOut{to{opacity:0;transform:scale(.55)}}',
     '@keyframes tmShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}',
@@ -88,8 +93,10 @@ const _TM_TIME_LIMIT = 110; // 초 (기존 100초 → 여유 있게 조정)
 const _TM_NEIGHBOR_BIAS = 0.68; // 인접 카드와 같은 소속으로 나올 확률 보정
 window._tmState = window._tmState || {
   cols: 0, rows: 0, board: null, teamPool: [], teamBags: {},
-  score: 0, timeLeft: _TM_TIME_LIMIT, running: false, ended: false,
+  score: 0, combo: 0, bestCombo: 0, timeLeft: _TM_TIME_LIMIT, running: false, ended: false,
   timerId: null, dragging: false, selStart: null, selCur: null, uidSeq: 1,
+  statusText: '큰 사각형보다 2x2, 2x3처럼 깔끔한 박스를 빠르게 이어서 그리면 점수가 잘 오릅니다.',
+  statusTone: 'info',
 };
 
 function _tmCols() { return (window.innerWidth || 375) >= 700 ? 8 : 5; }
@@ -192,12 +199,16 @@ function _tmNewBoard() {
   st.cols = _tmCols();
   st.rows = _tmRows();
   st.score = 0;
+  st.combo = 0;
+  st.bestCombo = 0;
   st.timeLeft = _TM_TIME_LIMIT;
   st.running = false;
   st.ended = false;
   st.dragging = false;
   st.selStart = null;
   st.selCur = null;
+  st.statusText = '같은 소속이 붙은 줄을 찾아 작은 직사각형부터 빠르게 지워보세요.';
+  st.statusTone = 'info';
   if (st.teamPool.length < 2) { st.board = null; return; }
   st.board = Array.from({ length: st.rows }, () => Array(st.cols).fill(null));
   for (let r = 0; r < st.rows; r++) {
@@ -310,7 +321,7 @@ function _tmRenderRoot() {
   const resultHTML = st.ended ? `<div class="tm-result">
     <span class="tm-result-emoji">🏆</span>
     <div class="tm-result-score">${st.score}점</div>
-    <div class="tm-result-sub">최고 기록 ${Math.max(best, st.score)}점${st.score >= best && st.score > 0 ? ' · 신기록!' : ''}</div>
+    <div class="tm-result-sub">최고 기록 ${Math.max(best, st.score)}점${st.score >= best && st.score > 0 ? ' · 신기록!' : ''} · 최고 콤보 ${Math.max(st.bestCombo || 0, st.combo || 0)}</div>
   </div>` : '';
 
   root.innerHTML = `<div class="tm-shell">
@@ -322,6 +333,7 @@ function _tmRenderRoot() {
         </div>
         <div class="tm-hud">
           <span class="tm-hud-chip">🏅 점수 ${st.score}</span>
+          <span class="tm-hud-chip is-combo">🔥 콤보 ${st.combo || 0}</span>
           <span class="tm-hud-chip" id="tm-time-chip">⏱️ 남은 시간 ${st.timeLeft}초</span>
           <span class="tm-hud-chip">🥇 최고 ${best}</span>
         </div>
@@ -330,6 +342,7 @@ function _tmRenderRoot() {
         <button class="tm-btn tm-btn-primary" onclick="_tmStart()">${st.ended ? '🔄 다시하기' : '🔀 새로 섞기'}</button>
       </div>
       ${resultHTML}
+      <div class="tm-status is-${_tmEsc(st.statusTone || 'info')}" id="tm-status">${_tmEsc(st.statusText || '')}</div>
       <div class="tm-stage">
         <div class="tm-selbox" id="tm-selbox"></div>
         <div class="tm-grid" id="tm-grid" style="--tm-cols:${st.cols}">${_tmGridHTML()}</div>
@@ -407,6 +420,10 @@ function _tmFinishSelection() {
   const gridEl = document.getElementById('tm-grid');
   if (!firstUniv || matched.length !== cells.length) {
     // 박스 안 전체가 같은 소속이 아니면 무효 처리
+    st.combo = 0;
+    st.statusText = `조건 불일치: ${cells.length}칸이 모두 같은 소속이어야 합니다.`;
+    st.statusTone = 'bad';
+    _tmUpdateHud();
     _tmPlayInvalid();
     if (gridEl) {
       cells.forEach(({ r, c }) => {
@@ -426,10 +443,16 @@ function _tmFinishSelection() {
   }
 
   // 유효한 매칭: 점수 추가 + 제거 애니메이션 후 낙하 보충 (매칭된 셀만)
-  st.score += matched.length;
+  st.combo = (st.combo || 0) + 1;
+  st.bestCombo = Math.max(st.bestCombo || 0, st.combo);
+  const areaBonus = matched.length >= 6 ? 4 : matched.length >= 4 ? 2 : 0;
+  const comboBonus = Math.max(0, st.combo - 1) * 2;
+  const gained = matched.length + areaBonus + comboBonus;
+  st.score += gained;
+  st.statusText = `${matched.length}칸 제거 성공! +${gained}점${areaBonus ? ` · 큰 박스 보너스 +${areaBonus}` : ''}${comboBonus ? ` · 콤보 보너스 +${comboBonus}` : ''}`;
+  st.statusTone = 'good';
   _tmPlayMatch(matched.length);
-  const scoreChip = document.querySelector('#tm-root .tm-hud-chip');
-  if (scoreChip) scoreChip.textContent = `🏅 점수 ${st.score}`;
+  _tmUpdateHud();
 
   if (gridEl) {
     matched.forEach(({ r, c }) => {
@@ -443,6 +466,19 @@ function _tmFinishSelection() {
     _tmApplyGravity(minC, maxC);
     _tmRenderRoot();
   }, 220);
+}
+
+function _tmUpdateHud() {
+  const st = window._tmState;
+  const scoreChip = document.querySelector('#tm-root .tm-hud-chip');
+  if (scoreChip) scoreChip.textContent = `🏅 점수 ${st.score}`;
+  const comboChip = document.querySelector('#tm-root .tm-hud-chip.is-combo');
+  if (comboChip) comboChip.textContent = `🔥 콤보 ${st.combo || 0}`;
+  const statusEl = document.getElementById('tm-status');
+  if (statusEl) {
+    statusEl.className = `tm-status is-${st.statusTone || 'info'}`;
+    statusEl.textContent = st.statusText || '';
+  }
 }
 
 function _tmApplyGravity(minC, maxC) {
