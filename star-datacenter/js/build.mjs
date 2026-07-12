@@ -241,7 +241,6 @@ const LAZY_CHUNKS = {
     'js/duck-race.js',
     'js/roulette.js',
     'js/team-match-game.js',
-    'js/tier-match-game.js',
     'js/photo-quiz-game.js',
     'js/memory-match-game.js',
   ],

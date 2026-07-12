@@ -94,7 +94,7 @@ function _fabGo(tabId){
 function updateFabButtonOnclick(){
   const settings=JSON.parse(localStorage.getItem('su_fabTabs')||'{}');
   const defaults={cal:'cal',comp:'comp',univm:'univm',ind:'ind',pro:'pro'};
-  const tabLabels={cal:'캘린더',total:'스트리머',board2:'현황판',tier:'티어 순위표',hist:'대전 기록',ind:'개인전',univm:'대학대전',comp:'대회',pro:'프로리그',stats:'통계',roulette:'룰렛'};
+  const tabLabels={cal:'캘린더',total:'스트리머',board2:'현황판',tier:'티어 순위표',hist:'대전 기록',ind:'개인전',univm:'대학대전',comp:'대회',pro:'프로리그',stats:'통계',roulette:'룰렛/게임'};
   const fabItems=document.querySelectorAll('.fab-sub-item');
   const fabMap={'🗓️':'cal','⚡':'comp','🏟️':'univm','⚔️':'ind','🏅':'pro'};
   fabItems.forEach(item=>{

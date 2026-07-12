@@ -171,7 +171,7 @@ function applyMainTabLabels(){
       pro:'프로리그',
       stats:'통계',
       cal:'캘린더',
-      roulette:'룰렛',
+      roulette:'룰렛/게임',
       cfg:'설정'
     };
     document.querySelectorAll('.tab').forEach(btn=>{

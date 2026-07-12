@@ -43,15 +43,15 @@ function _renderImpl(){
       if(typeof rRoulette==='function'){
         rRoulette(C,T);
       }else{
-        T.textContent = '룰렛';
-        C.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">룰렛 기능 로딩 중...</div><div class="empty-state-desc">최초 1회만 로드됩니다.</div></div>';
+        T.textContent = '룰렛/게임';
+        C.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">룰렛/게임 기능 로딩 중...</div><div class="empty-state-desc">최초 1회만 로드됩니다.</div></div>';
         (async()=>{
           try{
             await _ensureRouletteLoaded();
             render(true);
           }catch(e){
             console.error('[lazy] roulette load fail', e);
-            C.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">룰렛 로딩 실패</div><div class="empty-state-desc">콘솔 에러를 확인해주세요.</div></div>';
+            C.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">룰렛/게임 로딩 실패</div><div class="empty-state-desc">콘솔 에러를 확인해주세요.</div></div>';
           }
         })();
       }

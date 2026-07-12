@@ -33,7 +33,7 @@
         {id:'pro', d:'프로리그'},
         {id:'stats', d:'통계'},
         {id:'cal', d:'캘린더'},
-        {id:'roulette', d:'룰렛'},
+        {id:'roulette', d:'룰렛/게임'},
         {id:'cfg', d:'설정'}
       ]},
       { title:'📊 현황판 하위탭', ctx:'board2', items:[

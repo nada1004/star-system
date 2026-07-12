@@ -91,6 +91,10 @@ async function _ensureRouletteLoaded(){
     'js/wheel.js?v=20260529-01',
     'js/duck-race.js?v=20260424-04',
     'js/roulette.js?v=20260529-01',
+    'js/team-match-game.js?v=20260712-01',
+    'js/tier-match-game.js?v=20260712-01',
+    'js/photo-quiz-game.js?v=20260712-02',
+    'js/memory-match-game.js?v=20260712-01',
   ];
   for(const src of scripts) await _loadScriptOnce(src);
 }

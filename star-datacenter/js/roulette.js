@@ -1,7 +1,7 @@
 /* LAZY-LOADED — index.html에서 직접 로드되지 않음. 동적으로 필요시 로드 필요. */
 // ─── 가챠 룰렛 시스템 ─────────────────────────────────────────────────────
 function rRoulette(C, T) {
-  T.textContent = '🎰 룰렛';
+  T.textContent = '🎰 룰렛/게임';
   const avW = window.innerWidth;
   const avH = window.innerHeight - 130;
   const isWide = avW >= 700;
@@ -44,6 +44,10 @@ function rRoulette(C, T) {
     else if (_gcTab === 'duck') { setTimeout(()=>{ try{ if(typeof _drInit==='function') _drInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'wheel') { setTimeout(()=>{ try{ if(typeof _whInit==='function') _whInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'ppopgi') { setTimeout(()=>{ try{ if(typeof _ppgInit==='function') _ppgInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'teammatch') { setTimeout(()=>{ try{ if(typeof _tmInit==='function') _tmInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'tiermatch') { setTimeout(()=>{ try{ if(typeof _tiInit==='function') _tiInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'quiz') { setTimeout(()=>{ try{ if(typeof _pqInit==='function') _pqInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'memory') { setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60); }
     else { setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60); }
     return;
   }
@@ -71,6 +75,14 @@ function rRoulette(C, T) {
     setTimeout(()=>{ try{ if(typeof _whInit==='function') _whInit(); }catch(e){} }, 60);
   } else if (_gcTab === 'ppopgi') {
     setTimeout(()=>{ try{ if(typeof _ppgInit==='function') _ppgInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'teammatch') {
+    setTimeout(()=>{ try{ if(typeof _tmInit==='function') _tmInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'tiermatch') {
+    setTimeout(()=>{ try{ if(typeof _tiInit==='function') _tiInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'quiz') {
+    setTimeout(()=>{ try{ if(typeof _pqInit==='function') _pqInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'memory') {
+    setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60);
   } else {
     setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }
@@ -499,6 +511,10 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isDuck   = _gcTab === 'duck';
   const isWheel  = _gcTab === 'wheel';
   const isPpopgi = _gcTab === 'ppopgi';
+  const isTeamMatch = _gcTab === 'teammatch';
+  const isTierMatch = _gcTab === 'tiermatch';
+  const isQuiz = _gcTab === 'quiz';
+  const isMemory = _gcTab === 'memory';
   const savedText   = (!isLadder && !isDuck && !isWheel) ? (_rLsGet(isPlayer ? 'su_gc_p' : 'su_gc_m', '') || '') : '';
   const _w = _gcParseWeightedCSV(savedText);
   const activeItems = _w.items.map(x=>x.name);
@@ -521,8 +537,12 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     ladder: { title:'사다리', desc:'참가자와 결과 항목을 연결해서 재미있게 추첨합니다.', badge1:`참가자 ${ldNames.length}명`, badge2:'캔버스 추첨' },
     duck: { title:'경주', desc:'오리 경주 방식으로 더 시각적으로 결과를 뽑습니다.', badge1:'실시간 애니메이션', badge2:'가볍게 진행' },
     wheel: { title:'휠', desc:'큰 룰렛 휠로 직관적으로 돌리고 결과를 확인합니다.', badge1:'휠 인터랙션', badge2:'몰입감 강화' },
-    ppopgi: { title:'5x5 뽑기', desc:'카드 뒤집기 느낌으로 순서대로 결과를 열어볼 수 있습니다.', badge1:'25칸 보드', badge2:'등수 커스텀' }
-  }[_gcTab] || { title:'룰렛', desc:'원하는 방식으로 간단하게 추첨할 수 있습니다.', badge1:'빠른 추첨', badge2:'탭 전환 지원' };
+    ppopgi: { title:'5x5 뽑기', desc:'카드 뒤집기 느낌으로 순서대로 결과를 열어볼 수 있습니다.', badge1:'25칸 보드', badge2:'등수 커스텀' },
+    teammatch: { title:'소속 매칭', desc:'같은 소속(팀) 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
+    tiermatch: { title:'티어 매칭', desc:'같은 티어 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
+    quiz: { title:'얼굴 맞추기', desc:'사진이 점점 선명해지는 시간제한 퀴즈. 빨리 맞힐수록 스피드 보너스!', badge1:'제한시간 60초', badge2:'블러 리빌' },
+    memory: { title:'짝맞추기', desc:'같은 선수 사진 두 장을 찾는 카드 매칭 게임입니다.', badge1:'제한시간 90초', badge2:'콤보 보너스' }
+  }[_gcTab] || { title:'룰렛/게임', desc:'원하는 방식으로 간단하게 추첨할 수 있습니다.', badge1:'빠른 추첨', badge2:'탭 전환 지원' };
   const _hero = `<section class="gc-hero">
     <div class="gc-hero-copy">
       <div class="gc-hero-kicker">Lucky Studio</div>
@@ -544,6 +564,10 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     <button class="pill${_gcTab==='duck'?' on':''}"   style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('duck')">🐥 경주</button>
     <button class="pill${_gcTab==='wheel'?' on':''}"  style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('wheel')">🎡 휠</button>
     <button class="pill${_gcTab==='ppopgi'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('ppopgi')">🎁 뽑기</button>
+    <button class="pill${_gcTab==='teammatch'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('teammatch')">🧩 소속매칭</button>
+    <button class="pill${_gcTab==='tiermatch'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('tiermatch')">🎖️ 티어매칭</button>
+    <button class="pill${_gcTab==='quiz'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('quiz')">🖼️ 얼굴맞추기</button>
+    <button class="pill${_gcTab==='memory'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('memory')">🃏 짝맞추기</button>
   </div>`;
 
   // 오리경주 탭: 별도 레이아웃
@@ -577,6 +601,42 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     </div>
     <div id="wh-root"></div>
   </div>
+</div>`;
+  }
+
+  // 🧩 소속 매칭 탭: 별도 레이아웃 (내용은 team-match-game.js가 #tm-root에 채움)
+  if (isTeamMatch) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="tm-root"></div>
+</div>`;
+  }
+
+  // 🎖️ 티어 매칭 탭: 별도 레이아웃 (내용은 tier-match-game.js가 #ti-root에 채움)
+  if (isTierMatch) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="ti-root"></div>
+</div>`;
+  }
+
+  // 🖼️ 얼굴 맞추기 탭: 별도 레이아웃 (내용은 photo-quiz-game.js가 #pq-root에 채움)
+  if (isQuiz) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="pq-root"></div>
+</div>`;
+  }
+
+  // 🃏 짝맞추기 탭: 별도 레이아웃 (내용은 memory-match-game.js가 #mm-root에 채움)
+  if (isMemory) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="mm-root"></div>
 </div>`;
   }
 
@@ -837,6 +897,10 @@ function _gcSwitchTab(tab) {
     if (typeof _whAnimId !== 'undefined' && _whAnimId) { cancelAnimationFrame(_whAnimId); _whAnimId = null; }
     if (typeof _whSpinning !== 'undefined') _whSpinning = false;
   }
+  if (_gcTab === 'teammatch' && tab !== 'teammatch' && typeof _tmCleanup === 'function') _tmCleanup();
+  if (_gcTab === 'tiermatch' && tab !== 'tiermatch' && typeof _tiCleanup === 'function') _tiCleanup();
+  if (_gcTab === 'quiz' && tab !== 'quiz' && typeof _pqCleanup === 'function') _pqCleanup();
+  if (_gcTab === 'memory' && tab !== 'memory' && typeof _mmCleanup === 'function') _mmCleanup();
   _gcTab = tab;
   render();
   if (tab === 'ladder') {
@@ -847,6 +911,14 @@ function _gcSwitchTab(tab) {
     setTimeout(()=>{ try{ if(typeof _whInit==='function') _whInit(); }catch(e){} }, 60);
   } else if (tab === 'ppopgi') {
     setTimeout(()=>{ try{ if(typeof _ppgInit==='function') _ppgInit(); }catch(e){} }, 60);
+  } else if (tab === 'teammatch') {
+    setTimeout(()=>{ try{ if(typeof _tmInit==='function') _tmInit(); }catch(e){} }, 60);
+  } else if (tab === 'tiermatch') {
+    setTimeout(()=>{ try{ if(typeof _tiInit==='function') _tiInit(); }catch(e){} }, 60);
+  } else if (tab === 'quiz') {
+    setTimeout(()=>{ try{ if(typeof _pqInit==='function') _pqInit(); }catch(e){} }, 60);
+  } else if (tab === 'memory') {
+    setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60);
   } else {
     setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }

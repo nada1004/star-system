@@ -181,7 +181,7 @@ if ('serviceWorker' in navigator) {
     <button class="tab" role="tab" aria-selected="false" onclick="sw('pro',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 2l5 7 5-7"/><circle cx="12" cy="16" r="5"/><path d="M12 13v6"/></svg></span>프로리그</button><!-- [A11Y] -->
     <button class="tab" role="tab" aria-selected="false" onclick="sw('stats',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 17V9"/><path d="M12 17V7"/><path d="M16 17v-5"/></svg></span>통계</button><!-- [A11Y] -->
     <button class="tab" role="tab" aria-selected="false" onclick="sw('cal',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg></span>캘린더</button><!-- [A11Y] -->
-    <button class="tab" role="tab" aria-selected="false" onclick="sw('roulette',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="14" height="14" rx="2"/><path d="M18 10h2a2 2 0 0 1 2 2v2"/><path d="M7 10h8"/><path d="M7 14h8"/><path d="M7 18h8"/></svg></span>룰렛</button><!-- [A11Y] -->
+    <button class="tab" role="tab" aria-selected="false" onclick="sw('roulette',this)"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="14" height="14" rx="2"/><path d="M18 10h2a2 2 0 0 1 2 2v2"/><path d="M7 10h8"/><path d="M7 14h8"/><path d="M7 18h8"/></svg></span>룰렛/게임</button><!-- [A11Y] -->
     <button id="tabCfg" class="tab cfg" role="tab" aria-selected="false" onclick="sw('cfg',this)" style="display:none"><span class="svg-ico-wrap"><svg class="svg-ico" width="1em" height="1em" style="vertical-align:-0.15em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.2-2-3.4-2.3.5a7.7 7.7 0 0 0-1.7-1l-.4-2.4H9l-.4 2.4c-.6.3-1.2.6-1.7 1l-2.3-.5-2 3.4 2 1.2a7.9 7.9 0 0 0 .1 1 7.9 7.9 0 0 0-.1 1l-2 1.2 2 3.4 2.3-.5c.5.4 1.1.7 1.7 1l.4 2.4h6l.4-2.4c.6-.3 1.2-.6 1.7-1l2.3.5 2-3.4-2-1.2c.1-.3.1-.7.1-1Z"/></svg></span>설정</button><!-- [A11Y] -->
   </div>
   <button class="tabs-arrow" type="button" aria-label="다음 탭">&#9654;</button><!-- [A11Y] -->
@@ -674,7 +674,7 @@ if ('serviceWorker' in navigator) {
     <div class="fab-sub-item" onclick="closeFab();_fabGo('ind')"><span>⚔️</span> 개인전</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('pro')"><span>🏅</span> 프로리그</div>
     <div class="fab-sub-item" onclick="closeFab();_fabGo('tier')"><span>🏆</span> 대회/티어</div>
-    <div class="fab-sub-item" onclick="closeFab();_fabGo('roulette')"><span>🎰</span> 룰렛</div>
+    <div class="fab-sub-item" onclick="closeFab();_fabGo('roulette')"><span>🎰</span> 룰렛/게임</div>
     <div class="fab-sub-item fab-sub-item--cfg" onclick="closeFab();_fabGo('cfg')" style="display:none"><span>⚙️</span> 설정</div>
   </div>
   <button class="fab-main" id="fabMain" onclick="toggleFab()" aria-label="빠른 이동">＋</button>
@@ -700,7 +700,7 @@ if ('serviceWorker' in navigator) {
       <button class="bnav-more-btn" onclick="_bnavMoreNav('pro')"><span style="font-size:22px">🏅</span><span>프로리그</span></button>
       <button class="bnav-more-btn" onclick="_bnavMoreNav('comp')"><span style="font-size:22px">🏆</span><span>대회</span></button>
       <button class="bnav-more-btn" onclick="_bnavMoreNav('cal')"><span style="font-size:22px">🗓️</span><span>캘린더</span></button>
-      <button class="bnav-more-btn" onclick="_bnavMoreNav('roulette')"><span style="font-size:22px">🎡</span><span>룰렛</span></button>
+      <button class="bnav-more-btn" onclick="_bnavMoreNav('roulette')"><span style="font-size:22px">🎡</span><span>룰렛/게임</span></button>
       <button class="bnav-more-btn" onclick="_bnavMoreNav('cfg')"><span style="font-size:22px">⚙️</span><span>설정</span></button>
     </div>
   </div>

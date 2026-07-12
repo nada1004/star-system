@@ -585,7 +585,7 @@ function rTierTourCfg(C,T){
         <select id="cfg-fab-cal" style="flex:1;max-width:200px;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
           <option value="cal">📅 캘린더</option>
           <option value="stats">📊 통계</option>
-          <option value="roulette">🎰 룰렛</option>
+          <option value="roulette">🎰 룰렛/게임</option>
         </select>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
