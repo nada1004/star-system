@@ -85,6 +85,7 @@ function _tmPlayInvalid() {
 
 // ─── 상태 ────────────────────────────────────────────────────────────────────
 const _TM_TIME_LIMIT = 110; // 초 (기존 100초 → 여유 있게 조정)
+const _TM_NEIGHBOR_BIAS = 0.68; // 인접 카드와 같은 소속으로 나올 확률 보정
 window._tmState = window._tmState || {
   cols: 0, rows: 0, board: null, teamPool: [], teamBags: {},
   score: 0, timeLeft: _TM_TIME_LIMIT, running: false, ended: false,
@@ -146,9 +147,32 @@ function _tmDrawFromTeam(teamIdx) {
   return picked;
 }
 
-function _tmRandomCell() {
+function _tmTeamIndexByUniv(univ) {
   const st = window._tmState;
-  const teamIdx = Math.floor(Math.random() * st.teamPool.length);
+  return st.teamPool.findIndex(team => String(team?.univ || '').trim() === String(univ || '').trim());
+}
+
+function _tmPickTeamIndex(neighborSpecs) {
+  const st = window._tmState;
+  const weighted = [];
+  (neighborSpecs || []).forEach(spec => {
+    const cell = spec?.cell;
+    const weight = Math.max(0, spec?.weight || 0);
+    const univ = String(cell?.univ || '').trim();
+    if (!univ || !weight) return;
+    const idx = _tmTeamIndexByUniv(univ);
+    if (idx < 0) return;
+    for (let i = 0; i < weight; i++) weighted.push(idx);
+  });
+  if (weighted.length && Math.random() < _TM_NEIGHBOR_BIAS) {
+    return weighted[Math.floor(Math.random() * weighted.length)];
+  }
+  return Math.floor(Math.random() * st.teamPool.length);
+}
+
+function _tmRandomCell(neighborSpecs) {
+  const st = window._tmState;
+  const teamIdx = _tmPickTeamIndex(neighborSpecs);
   const team = st.teamPool[teamIdx];
   const picked = _tmDrawFromTeam(teamIdx);
   return {
@@ -175,11 +199,15 @@ function _tmNewBoard() {
   st.selStart = null;
   st.selCur = null;
   if (st.teamPool.length < 2) { st.board = null; return; }
-  st.board = [];
+  st.board = Array.from({ length: st.rows }, () => Array(st.cols).fill(null));
   for (let r = 0; r < st.rows; r++) {
-    const row = [];
-    for (let c = 0; c < st.cols; c++) row.push(_tmRandomCell());
-    st.board.push(row);
+    for (let c = 0; c < st.cols; c++) {
+      st.board[r][c] = _tmRandomCell([
+        { cell: c > 0 ? st.board[r][c - 1] : null, weight: 4 },
+        { cell: r > 0 ? st.board[r - 1][c] : null, weight: 3 },
+        { cell: c > 1 ? st.board[r][c - 2] : null, weight: 1 },
+      ]);
+    }
   }
 }
 
@@ -423,9 +451,15 @@ function _tmApplyGravity(minC, maxC) {
     const remaining = [];
     for (let r = 0; r < st.rows; r++) if (st.board[r][c]) remaining.push(st.board[r][c]);
     const removed = st.rows - remaining.length;
-    const newCol = [];
-    for (let i = 0; i < removed; i++) newCol.push(_tmRandomCell());
-    for (const v of remaining) newCol.push(v);
+    const newCol = new Array(st.rows);
+    for (let i = removed - 1; i >= 0; i--) {
+      newCol[i] = _tmRandomCell([
+        { cell: c > 0 ? st.board[i][c - 1] : null, weight: 3 },
+        { cell: c < st.cols - 1 ? st.board[i][c + 1] : null, weight: 2 },
+        { cell: i === removed - 1 ? remaining[0] : newCol[i + 1], weight: 4 },
+      ]);
+    }
+    for (let i = 0; i < remaining.length; i++) newCol[removed + i] = remaining[i];
     for (let r = 0; r < st.rows; r++) st.board[r][c] = newCol[r];
   }
 }
