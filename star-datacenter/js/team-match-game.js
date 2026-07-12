@@ -374,24 +374,11 @@ function _tmFinishSelection() {
   }
   if (cells.length < 2) return;
 
-  // 소속별로 그룹핑 → 2개 이상 모인 그룹만 부분적으로 인정해서 제거
-  // (예전에는 박스 안에 다른 소속이 하나라도 섞이면 전체 무효였지만,
-  //  이제는 같은 소속끼리 2개 이상 모인 묶음만 뽑아서 그 부분만 제거함)
-  const groups = {};
-  cells.forEach(x => {
-    const u = x.cell.univ;
-    (groups[u] || (groups[u] = [])).push(x);
-  });
-  const matched = [];
-  const leftover = [];
-  Object.keys(groups).forEach(u => {
-    if (groups[u].length >= 2) matched.push(...groups[u]);
-    else leftover.push(...groups[u]);
-  });
-
+  const firstUniv = String(cells[0]?.cell?.univ || '').trim();
+  const matched = cells.filter(({ cell }) => String(cell?.univ || '').trim() === firstUniv);
   const gridEl = document.getElementById('tm-grid');
-  if (matched.length === 0) {
-    // 같은 소속 2개 이상 묶음이 하나도 없으면 무효 처리
+  if (!firstUniv || matched.length !== cells.length) {
+    // 박스 안 전체가 같은 소속이 아니면 무효 처리
     _tmPlayInvalid();
     if (gridEl) {
       cells.forEach(({ r, c }) => {
@@ -422,21 +409,6 @@ function _tmFinishSelection() {
       const el = gridEl.children[idx];
       if (el) el.classList.add('tm-clear');
     });
-    // 매칭 안 된 나머지(단독 소속) 셀은 살짝 흔들어서 "이건 남았다"는 피드백만 줌
-    if (leftover.length) {
-      leftover.forEach(({ r, c }) => {
-        const idx = r * st.cols + c;
-        const el = gridEl.children[idx];
-        if (el) el.classList.add('tm-invalid');
-      });
-      setTimeout(() => {
-        leftover.forEach(({ r, c }) => {
-          const idx = r * st.cols + c;
-          const el = gridEl.children[idx];
-          if (el) el.classList.remove('tm-invalid');
-        });
-      }, 320);
-    }
   }
   setTimeout(() => {
     matched.forEach(({ r, c }) => { st.board[r][c] = null; });

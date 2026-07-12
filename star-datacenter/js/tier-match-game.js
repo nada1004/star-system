@@ -1,7 +1,7 @@
 /* LAZY-LOADED — index.html에서 직접 로드되지 않음. 룰렛탭('tiermatch') 진입 시 동적으로 로드됨. */
 // ─── 🎖️ 티어 매칭 게임 (같은 티어끼리 사각형으로 묶어서 제거) ──────────────────────
 // 규칙: 드래그로 사각형을 그려서 그 안의 선수가 전부 같은 티어면 제거.
-//       다른 티어가 섞여있어도, 같은 티어끼리 2개 이상 뭉친 부분만 부분적으로 인정해서 제거.
+//       다른 티어가 하나라도 섞여 있으면 무효. 제거된 자리는 위에서 새 선수가 떨어져 채움.
 
 (function _tiInjectCSS() {
   if (document.getElementById('ti-style')) return;
@@ -286,7 +286,7 @@ function _tiRenderRoot() {
       <div class="ti-head">
         <div>
           <div class="ti-title">🎖️ 티어 매칭</div>
-          <div class="ti-desc">드래그해서 사각형을 그리세요. 안에 있는 선수 중 <b>같은 티어끼리 2명 이상</b> 모이면 그 부분만 사라지고 점수를 얻습니다.</div>
+          <div class="ti-desc">드래그해서 사각형을 그리세요. 안에 있는 선수 사진이 <b>전부 같은 티어</b>이면 사라지고 점수를 얻습니다. 다른 티어가 하나라도 섞이면 무효!</div>
         </div>
         <div class="ti-hud">
           <span class="ti-hud-chip">🏅 점수 ${st.score}</span>
@@ -370,24 +370,11 @@ function _tiFinishSelection() {
   }
   if (cells.length < 2) return;
 
-  // 티어별로 그룹핑 → 2개 이상 모인 그룹만 부분적으로 인정해서 제거
-  // (박스 안에 다른 티어가 섞여있어도 무효 처리하지 않고,
-  //  같은 티어끼리 2개 이상 모인 묶음만 뽑아서 그 부분만 제거함)
-  const groups = {};
-  cells.forEach(x => {
-    const t = x.cell.tier;
-    (groups[t] || (groups[t] = [])).push(x);
-  });
-  const matched = [];
-  const leftover = [];
-  Object.keys(groups).forEach(t => {
-    if (groups[t].length >= 2) matched.push(...groups[t]);
-    else leftover.push(...groups[t]);
-  });
-
+  const firstTier = String(cells[0]?.cell?.tier || '').trim();
+  const matched = cells.filter(({ cell }) => String(cell?.tier || '').trim() === firstTier);
   const gridEl = document.getElementById('ti-grid');
-  if (matched.length === 0) {
-    // 같은 티어 2개 이상 묶음이 하나도 없으면 무효 처리
+  if (!firstTier || matched.length !== cells.length) {
+    // 박스 안 전체가 같은 티어가 아니면 무효 처리
     _tiPlayInvalid();
     if (gridEl) {
       cells.forEach(({ r, c }) => {
@@ -418,21 +405,6 @@ function _tiFinishSelection() {
       const el = gridEl.children[idx];
       if (el) el.classList.add('ti-clear');
     });
-    // 매칭 안 된 나머지(단독 티어) 셀은 살짝 흔들어서 "이건 남았다"는 피드백만 줌
-    if (leftover.length) {
-      leftover.forEach(({ r, c }) => {
-        const idx = r * st.cols + c;
-        const el = gridEl.children[idx];
-        if (el) el.classList.add('ti-invalid');
-      });
-      setTimeout(() => {
-        leftover.forEach(({ r, c }) => {
-          const idx = r * st.cols + c;
-          const el = gridEl.children[idx];
-          if (el) el.classList.remove('ti-invalid');
-        });
-      }, 320);
-    }
   }
   setTimeout(() => {
     matched.forEach(({ r, c }) => { st.board[r][c] = null; });
