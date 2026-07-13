@@ -95,6 +95,7 @@ async function _ensureRouletteLoaded(){
     'js/tier-match-game.js?v=20260712-01',
     'js/photo-quiz-game.js?v=20260712-02',
     'js/memory-match-game.js?v=20260712-01',
+    'js/mole-whack-game.js?v=20260713-02',
   ];
   for(const src of scripts) await _loadScriptOnce(src);
 }

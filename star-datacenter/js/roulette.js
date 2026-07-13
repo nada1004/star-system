@@ -48,6 +48,7 @@ function rRoulette(C, T) {
     else if (_gcTab === 'tiermatch') { setTimeout(()=>{ try{ if(typeof _tiInit==='function') _tiInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'quiz') { setTimeout(()=>{ try{ if(typeof _pqInit==='function') _pqInit(); }catch(e){} }, 60); }
     else if (_gcTab === 'memory') { setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60); }
+    else if (_gcTab === 'mole') { setTimeout(()=>{ try{ if(typeof _mwInit==='function') _mwInit(); }catch(e){} }, 60); }
     else { setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60); }
     return;
   }
@@ -83,6 +84,8 @@ function rRoulette(C, T) {
     setTimeout(()=>{ try{ if(typeof _pqInit==='function') _pqInit(); }catch(e){} }, 60);
   } else if (_gcTab === 'memory') {
     setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60);
+  } else if (_gcTab === 'mole') {
+    setTimeout(()=>{ try{ if(typeof _mwInit==='function') _mwInit(); }catch(e){} }, 60);
   } else {
     setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }
@@ -486,6 +489,28 @@ function _gcPickWeighted(items,total){
   return items[items.length-1];
 }
 
+// ─── 연속 반복 방지 (두더지 게임과 동일한 방식) ──────────────────────────────
+// 같은 이름(프로필)이 바로 다음 스핀에서 또 나오지 않도록 최근 결과를 기억해뒀다가 제외하고 뽑음.
+const _GC_RECENT_AVOID = 1; // 최근 이만큼의 결과는 연속으로 다시 나오지 않음
+let _gcRecentResults = { player: [], map: [] };
+
+function _gcRememberRecent(histKey, name){
+  if(!name) return;
+  const bucket = histKey === 'player' ? 'player' : 'map';
+  const cur = (_gcRecentResults[bucket] || []).filter(n => n !== name);
+  _gcRecentResults[bucket] = [name, ...cur].slice(0, _GC_RECENT_AVOID);
+}
+
+function _gcPickWeightedAvoidRepeat(items, total, avoidNames){
+  if(!items || !items.length) return null;
+  const avoid = avoidNames || [];
+  // 후보가 전부 회피 목록에 걸리면(항목이 1~2개뿐인 경우 등) 회피를 포기하고 그냥 뽑음
+  const filtered = items.filter(it => !avoid.includes(it.name));
+  if(!filtered.length) return _gcPickWeighted(items, total);
+  const filteredTotal = filtered.reduce((s,x)=>s+x.weight,0);
+  return _gcPickWeighted(filtered, filteredTotal);
+}
+
 const _GC_COLORS = [
   ['#FF80AB','#FF4081'],['#81D4FA','#29B6F6'],['#FFF176','#FFD600'],
   ['#B9F6CA','#00E676'],['#CE93D8','#AB47BC'],['#FFCC80','#FFA726'],
@@ -515,6 +540,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const isTierMatch = _gcTab === 'tiermatch';
   const isQuiz = _gcTab === 'quiz';
   const isMemory = _gcTab === 'memory';
+  const isMole = _gcTab === 'mole';
   const savedText   = (!isLadder && !isDuck && !isWheel) ? (_rLsGet(isPlayer ? 'su_gc_p' : 'su_gc_m', '') || '') : '';
   const _w = _gcParseWeightedCSV(savedText);
   const activeItems = _w.items.map(x=>x.name);
@@ -541,7 +567,8 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     teammatch: { title:'소속 매칭', desc:'같은 소속(팀) 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
     tiermatch: { title:'티어 매칭', desc:'같은 티어 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
     quiz: { title:'얼굴 맞추기', desc:'사진이 점점 선명해지는 시간제한 퀴즈. 빨리 맞힐수록 스피드 보너스!', badge1:'제한시간 60초', badge2:'블러 리빌' },
-    memory: { title:'짝맞추기', desc:'같은 선수 사진 두 장을 찾는 카드 매칭 게임입니다.', badge1:'제한시간 90초', badge2:'콤보 보너스' }
+    memory: { title:'짝맞추기', desc:'같은 선수 사진 두 장을 찾는 카드 매칭 게임입니다.', badge1:'제한시간 90초', badge2:'콤보 보너스' },
+    mole: { title:'두더지 잡기', desc:'문제로 나온 선수 사진과 같은 얼굴의 두더지만 재빨리 잡아보세요.', badge1:'제한시간 100초', badge2:'3x3 · 5x5 난이도' }
   }[_gcTab] || { title:'룰렛/게임', desc:'원하는 방식으로 간단하게 추첨할 수 있습니다.', badge1:'빠른 추첨', badge2:'탭 전환 지원' };
   const _hero = `<section class="gc-hero">
     <div class="gc-hero-copy">
@@ -568,6 +595,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     <button class="pill${_gcTab==='tiermatch'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('tiermatch')">🎖️ 티어매칭</button>
     <button class="pill${_gcTab==='quiz'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('quiz')">🖼️ 얼굴맞추기</button>
     <button class="pill${_gcTab==='memory'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('memory')">🃏 짝맞추기</button>
+    <button class="pill${_gcTab==='mole'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('mole')">🐹 두더지</button>
   </div>`;
 
   // 오리경주 탭: 별도 레이아웃
@@ -637,6 +665,15 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   ${_hero}
   <div class="gc-tabbar-card">${_tabBar}</div>
   <div id="mm-root"></div>
+</div>`;
+  }
+
+  // 🐹 두더지 잡기 탭: 별도 레이아웃 (내용은 mole-whack-game.js가 #mw-root에 채움)
+  if (isMole) {
+    return `<div class="gc-shell" style="padding:${pad}px;max-width:${avW-32}px;margin:0 auto;box-sizing:border-box">
+  ${_hero}
+  <div class="gc-tabbar-card">${_tabBar}</div>
+  <div id="mw-root"></div>
 </div>`;
   }
 
@@ -901,6 +938,7 @@ function _gcSwitchTab(tab) {
   if (_gcTab === 'tiermatch' && tab !== 'tiermatch' && typeof _tiCleanup === 'function') _tiCleanup();
   if (_gcTab === 'quiz' && tab !== 'quiz' && typeof _pqCleanup === 'function') _pqCleanup();
   if (_gcTab === 'memory' && tab !== 'memory' && typeof _mmCleanup === 'function') _mmCleanup();
+  if (_gcTab === 'mole' && tab !== 'mole' && typeof _mwCleanup === 'function') _mwCleanup();
   _gcTab = tab;
   render();
   if (tab === 'ladder') {
@@ -919,6 +957,8 @@ function _gcSwitchTab(tab) {
     setTimeout(()=>{ try{ if(typeof _pqInit==='function') _pqInit(); }catch(e){} }, 60);
   } else if (tab === 'memory') {
     setTimeout(()=>{ try{ if(typeof _mmInit==='function') _mmInit(); }catch(e){} }, 60);
+  } else if (tab === 'mole') {
+    setTimeout(()=>{ try{ if(typeof _mwInit==='function') _mwInit(); }catch(e){} }, 60);
   } else {
     setTimeout(()=>{ try{ if(typeof _gcSetup==='function') _gcSetup(); }catch(e){} }, 60);
   }
@@ -1084,8 +1124,11 @@ function _gcSpin() {
     });
 
     setTimeout(() => {
-      const picked = _gcPickWeighted(parsed.items, parsed.total) || parsed.items[0];
+      const _histKey = _gcTab === 'player' ? 'player' : 'map';
+      const _avoidNames = _gcRecentResults[_histKey] || [];
+      const picked = _gcPickWeightedAvoidRepeat(parsed.items, parsed.total, _avoidNames) || parsed.items[0];
       const keyword = picked.name;
+      _gcRememberRecent(_histKey, keyword);
       const p = _gcFindPlayer(keyword);
       const displayName = p ? p.name : keyword;
       const iconSz = Math.round(window._GC_DOME * 0.36);
