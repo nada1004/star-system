@@ -136,7 +136,7 @@ function _pqBuildPool() {
   const seen = new Set();
   const pool = [];
   players.forEach(p => {
-    if (!p || p.hidden || p.retired || p.hideFromBoard || !p.photo) return;
+    if (!p || p.hidden || p.retired || p.hideFromBoard) return;
     if (String(p.univ || '').trim() === 'YB') return;
     const name = String(p.name || '').trim();
     if (!name || seen.has(name)) return;

@@ -181,7 +181,6 @@ function _tmBuildTeamPool() {
     if (!p || p.hidden || p.retired || p.hideFromBoard) return;
     const u = String(p.univ || '').trim();
     if (!u || u === '무소속' || u === 'YB' || dissolved.has(u)) return;
-    if (!p.photo) return;
     if (!pool[u]) pool[u] = [];
     pool[u].push({ name: String(p.name || '').trim(), photo: p.photo });
   });

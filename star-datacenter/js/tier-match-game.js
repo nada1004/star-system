@@ -180,7 +180,6 @@ function _tiBuildTierPool() {
     if (String(p.univ || '').trim() === 'YB') return;
     const t = String(p.tier || '').trim();
     if (!t || t === '?' || t === '미정' || t === '미확인') return;
-    if (!p.photo) return;
     if (!pool[t]) pool[t] = [];
     pool[t].push({ name: String(p.name || '').trim(), photo: p.photo });
   });
