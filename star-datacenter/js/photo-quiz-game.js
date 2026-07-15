@@ -166,6 +166,7 @@ window._pqState = window._pqState || {
   timeLeft: _PQ_TIME_LIMIT, running: false, ended: false, locked: false,
   timerId: null, advanceId: null,
   solved: 0, lastAnswerName: '',
+  usedAnswers: [], // 이번 세션에서 이미 정답으로 나온 이름(전원 소진 전까지 재출제 방지)
   statusText: '바로 맞히면 고득점, 막히면 힌트나 50:50을 써서 흐름을 이어가세요.',
   statusTone: 'info',
   cur: null, // {answer, choices:[{name,uid}], answerIdx}
@@ -206,15 +207,22 @@ function _pqNormalize(s) {
 // ─── 문제 풀 구성 ─────────────────────────────────────────────────────────────
 function _pqBuildPool() {
   const players = Array.isArray(window.players) ? window.players : [];
+  // "대학별" / "무소속" 탭에 실제로 노출되는 소속만 허용 (해체·숨김 대학, YB 등은 제외)
+  const univCfgArr = (typeof univCfg !== 'undefined' && Array.isArray(univCfg)) ? univCfg : (Array.isArray(window.univCfg) ? window.univCfg : []);
+  const excludedUnivs = new Set(
+    univCfgArr.filter(u => u && (u.hidden || u.dissolved)).map(u => String(u.name || '').trim())
+  );
   const seen = new Set();
   const pool = [];
   players.forEach(p => {
     if (!p || p.hidden || p.retired || p.hideFromBoard) return;
-    if (String(p.univ || '').trim() === 'YB') return;
+    const univ = String(p.univ || '').trim();
+    if (univ === 'YB') return;
+    if (univ && excludedUnivs.has(univ)) return;
     const name = String(p.name || '').trim();
     if (!name || seen.has(name)) return;
     seen.add(name);
-    pool.push({ name, photo: p.photo });
+    pool.push({ name, photo: p.photo, gender: String(p.gender || '').trim() });
   });
   return pool;
 }
@@ -236,13 +244,25 @@ function _pqShuffle(arr) {
 
 function _pqNextQuestion() {
   const st = window._pqState;
-  if (st.pool.length < 4) { st.cur = null; return; }
-  const candidates = st.pool.filter(p => p.name !== st.lastAnswerName);
-  const answerPool = candidates.length ? candidates : st.pool;
-  const answer = answerPool[Math.floor(Math.random() * answerPool.length)];
-  const distractorsPool = st.pool.filter(p => p.name !== answer.name);
+  if (st.pool.length < 6) { st.cur = null; return; }
+  // 이번 세션에서 아직 정답으로 안 나온 사람 중에서 우선 출제(다양하게 나오도록).
+  // 전원 소진되면 목록을 비우고 다시 순환 시작(단, 방금 나온 정답은 연속 방지).
+  const used = new Set(st.usedAnswers || []);
+  let fresh = st.pool.filter(p => !used.has(p.name));
+  if (!fresh.length) {
+    st.usedAnswers = [];
+    fresh = st.pool.filter(p => p.name !== st.lastAnswerName);
+    if (!fresh.length) fresh = st.pool;
+  }
+  const answer = fresh[Math.floor(Math.random() * fresh.length)];
+  (st.usedAnswers || (st.usedAnswers = [])).push(answer.name);
+  // 보기는 6지선다(정답 1 + 오답 5)이며, 정답과 같은 성별끼리만 구성
+  // (남자 문제엔 남자만, 여자 문제엔 여자만 보기로 나옴).
+  // 단, 같은 성별 후보가 5명 미만이면(등록 인원 부족 등) 예외적으로 전체 풀에서 채움.
+  const sameGenderPool = st.pool.filter(p => p.name !== answer.name && p.gender === answer.gender);
+  const distractorsPool = sameGenderPool.length >= 5 ? sameGenderPool : st.pool.filter(p => p.name !== answer.name);
   _pqShuffle(distractorsPool);
-  const distractors = distractorsPool.slice(0, 3);
+  const distractors = distractorsPool.slice(0, 5);
   const choices = _pqShuffle([answer, ...distractors]);
   st.cur = { answer, choices, stage: 0, wrongCount: 0, wrongIndices: [], fiftyUsed: false };
   st.locked = false;
@@ -259,13 +279,14 @@ function _pqStart() {
   st.combo = 0;
   st.solved = 0;
   st.lastAnswerName = '';
+  st.usedAnswers = [];
   st.timeLeft = _PQ_TIME_LIMIT;
   st.running = false;
   st.ended = false;
   st.locked = false;
   st.statusText = '빠른 정답과 연속 콤보를 노려보세요.';
   st.statusTone = 'info';
-  if (st.pool.length < 4) { st.cur = null; _pqRenderRoot(); return; }
+  if (st.pool.length < 6) { st.cur = null; _pqRenderRoot(); return; }
   _pqNextQuestion();
   st.running = true;
   _pqRenderRoot();
@@ -409,7 +430,7 @@ function _pqRenderRoot() {
         </div>
         <div class="pq-section-label">정답 모드</div>
         ${_pqModeBarHTML()}
-        <div class="pq-empty-note">⚠️ 퀴즈를 만들 만큼 프로필 사진이 등록된 선수가 부족합니다(최소 4명 필요). 선수 데이터에 사진을 더 등록한 뒤 다시 시도해주세요.</div>
+        <div class="pq-empty-note">⚠️ 퀴즈를 만들 만큼 프로필 사진이 등록된 선수가 부족합니다(최소 6명 필요). 선수 데이터에 사진을 더 등록한 뒤 다시 시도해주세요.</div>
         <div class="pq-actions"><button class="pq-btn pq-btn-primary" onclick="_pqStart()">🔄 다시 확인</button></div>
       </div>
     </div>`;
