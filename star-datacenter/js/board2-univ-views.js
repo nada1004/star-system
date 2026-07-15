@@ -61,11 +61,6 @@ function _b2UnivView() {
           <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">현황판 기준 표시 인원</div>
         </div>
         <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
-          <div style="font-size:11px;font-weight:800;color:var(--text3)">활성 대학</div>
-          <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1)">${univList.length}</div>
-          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">무소속 제외 대학 수</div>
-        </div>
-        <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
           <div style="font-size:11px;font-weight:800;color:var(--text3)">이번주 기록 수</div>
           <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:#2563eb">${_uvWeekG}</div>
           <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">개인전·팀전·대회 기준</div>

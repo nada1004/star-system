@@ -152,9 +152,20 @@ function univTextColor(univName){
 function univSelectStyle(univName,resultState){
   if(!univName) return '';
   if(resultState==='lose') return 'background:#f1f5f9;color:#94a3b8;';
-  const alpha = resultState==='win' ? 0.30 : 0.12;
+  const alpha = resultState==='win' ? 0.62 : 0.40;
   const bg = gcHex8(univName,alpha);
-  const col = univTextColor(univName);
+  // 배경이 진해질수록 실제 블렌딩된 밝기 기준으로 흑/백 텍스트를 다시 골라 대비를 보장
+  const c=gc(univName);
+  const h=String(c||'').replace('#','');
+  let col;
+  if(/^[0-9a-fA-F]{6}$/.test(h)){
+    const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+    const br=r*alpha+255*(1-alpha), bg2=g*alpha+255*(1-alpha), bb=b*alpha+255*(1-alpha);
+    const blendedLum=(0.299*br+0.587*bg2+0.114*bb)/255;
+    col = blendedLum>0.55 ? _darkenHex(c,0.55) : '#ffffff';
+  } else {
+    col = univTextColor(univName);
+  }
   return `background:${bg};color:${col};font-weight:${resultState==='win'?800:600};`;
 }
 // ⚠️ 대학 아이콘(로고)은 코드에 하드코딩하지 않습니다.

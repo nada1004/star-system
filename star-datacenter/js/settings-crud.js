@@ -1366,6 +1366,15 @@ function openRE(mode,idx){
     }catch(e){}
   }
   reMode=mode;reIdx=idx;const allU=getAllUnivs();
+  const _allUActive=allU.filter(u=>!u.dissolved);
+  // 해체된 대학은 목록에서 숨기되, 이미 그 경기에 지정된 대학이면(과거 기록) 계속 선택 가능하게 유지
+  const _univOpts=(selVal)=>{
+    let list=_allUActive;
+    if(selVal && !list.some(u=>u.name===selVal)){
+      list=[...list,(allU.find(u=>u.name===selVal)||{name:selVal})];
+    }
+    return list.map(u=>`<option value="${u.name}"${selVal===u.name?' selected':''}>${u.name}</option>`).join('');
+  };
   let body='',tit='';
   if(mode==='mini'){
     const m=miniM[idx];tit='⚡ 미니대전 수정';
@@ -1373,13 +1382,13 @@ function openRE(mode,idx){
     const mSetsB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
     const _miniMemA = m.teamAMembers||[]; const _miniMemB = m.teamBMembers||[];
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d}">
-      <label>팀 A 대학</label><select id="re-a">${allU.map(u=>`<option value="${u.name}"${m.a===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
+      <label>팀 A 대학</label><select id="re-a">${_univOpts(m.a)}</select>
       <label>팀 A 점수 (sa)</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="number" id="re-sa" value="${m.sa}" style="flex:1">
         ${mSetsA!==null&&mSetsA!==m.sa?`<button type="button" onclick="document.getElementById('re-sa').value=${mSetsA};document.getElementById('re-sb').value=${mSetsB}" style="font-size:11px;padding:2px 8px;background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;cursor:pointer;white-space:nowrap">🔄 게임수(${mSetsA}:${mSetsB})</button>`:''}
       </div>
-      <label>팀 B 대학</label><select id="re-b">${allU.map(u=>`<option value="${u.name}"${m.b===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
+      <label>팀 B 대학</label><select id="re-b">${_univOpts(m.b)}</select>
       <label>팀 B 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb}">
       ${mSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${m.sets.filter(s=>s.winner==='A').length} / B ${m.sets.filter(s=>s.winner==='B').length} | 게임 수: A ${mSetsA} / B ${mSetsB}</div>`:''}
       ${(_miniMemA.length||_miniMemB.length)?_buildMemberEditHTML(_miniMemA,'A','A팀'):''}
@@ -1391,13 +1400,13 @@ function openRE(mode,idx){
     const uSetsB=m.sets?m.sets.reduce((s,st)=>s+(st.scoreB||0),0):null;
     const _univMemA = m.teamAMembers||[]; const _univMemB = m.teamBMembers||[];
     body=`<label>날짜</label><input type="date" id="re-d" value="${m.d}">
-      <label>팀 A</label><select id="re-a">${allU.map(u=>`<option value="${u.name}"${m.a===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
+      <label>팀 A</label><select id="re-a">${_univOpts(m.a)}</select>
       <label>A 점수 (sa)</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="number" id="re-sa" value="${m.sa}" style="flex:1">
         ${uSetsA!==null&&uSetsA!==m.sa?`<button type="button" onclick="document.getElementById('re-sa').value=${uSetsA};document.getElementById('re-sb').value=${uSetsB}" style="font-size:11px;padding:2px 8px;background:#fef9c3;border:1px solid #ca8a04;border-radius:6px;cursor:pointer;white-space:nowrap">🔄 게임수(${uSetsA}:${uSetsB})</button>`:''}
       </div>
-      <label>팀 B</label><select id="re-b">${allU.map(u=>`<option value="${u.name}"${m.b===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
+      <label>팀 B</label><select id="re-b">${_univOpts(m.b)}</select>
       <label>B 점수 (sb)</label><input type="number" id="re-sb" value="${m.sb}">
       ${uSetsA!==null?`<div style="font-size:11px;color:var(--gray-l);margin-top:2px">세트 수: A ${m.sets.filter(s=>s.winner==='A').length} / B ${m.sets.filter(s=>s.winner==='B').length} | 게임 수: A ${uSetsA} / B ${uSetsB}</div>`:''}
       ${_buildMemberEditHTML(_univMemA,'A','A팀')}
@@ -1408,9 +1417,9 @@ function openRE(mode,idx){
     const c=comps[idx];tit='🎖️ 대회 수정';
     body=`<label>날짜</label><input type="date" id="re-d" value="${c.d}">
       <label>대회명</label><input type="text" id="re-cn" value="${c.n}">
-      <label>대학 A</label><select id="re-a">${allU.map(u=>`<option value="${u.name}"${(c.a||c.u)===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
+      <label>대학 A</label><select id="re-a">${_univOpts(c.a||c.u)}</select>
       <label>A 세트 승</label><input type="number" id="re-sa" value="${c.sa||0}">
-      <label>대학 B</label><select id="re-b">${allU.map(u=>`<option value="${u.name}"${c.b===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
+      <label>대학 B</label><select id="re-b">${_univOpts(c.b)}</select>
       <label>B 세트 승</label><input type="number" id="re-sb" value="${c.sb||0}">
       <label>🎙️ 캐스터/스트리머</label><input type="text" id="re-caster" value="${c.caster||''}" placeholder="방송 스트리머 이름 (선택)">`;
   } else if(mode==='pro'){
