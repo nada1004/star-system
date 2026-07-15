@@ -185,7 +185,7 @@ function _nmBuilderHTML(tn) {
 
   // 대학 옵션
   const knownUnivs = [...new Set([
-    ...(typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : []),
+    ...(typeof univCfg !== 'undefined' ? univCfg.filter(u => u && !u.dissolved).map(u => u.name) : []),
     ...(tn.groups || []).flatMap(g => g.univs || [])
   ])].filter(Boolean).sort((a, b) => a.localeCompare(b, 'ko'));
 
@@ -380,7 +380,7 @@ function _nmRenderEditModal(tn) {
   if (!bld) { nmCloseEditModal(); return; }
 
   const knownUnivs = [...new Set([
-    ...(typeof univCfg !== 'undefined' ? univCfg.map(u => u.name) : []),
+    ...(typeof univCfg !== 'undefined' ? univCfg.filter(u => u && !u.dissolved).map(u => u.name) : []),
     ...(tn.groups || []).flatMap(g => g.univs || [])
   ])].filter(Boolean).sort((a, b) => a.localeCompare(b, 'ko'));
 

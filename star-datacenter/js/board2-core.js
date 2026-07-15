@@ -578,8 +578,6 @@ function rBoard2(C, T) {
       .b2-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}
       .b2-hero-title{font-size:30px;font-weight:950;letter-spacing:-.04em;color:var(--text1);line-height:1.08}
       .b2-hero-desc{font-size:13px;line-height:1.65;color:var(--text3);max-width:760px}
-      .b2-hero-badges{display:flex;flex-wrap:wrap;gap:8px}
-      .b2-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.05);font-size:12px;font-weight:800;color:var(--text2)}
       .b2-hero-stats{display:grid;grid-template-columns:repeat(3,minmax(112px,1fr));gap:10px;min-width:min(100%,360px)}
       .b2-hero-stat{padding:14px 14px 12px;border-radius:20px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.05)}
       .b2-hero-stat-label{font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px}
@@ -604,7 +602,6 @@ function rBoard2(C, T) {
       body.dark .b2-hero,
       body.dark .b2-toolbar-card,
       body.dark .b2-content-shell{background:linear-gradient(180deg,rgba(15,23,42,.95),rgba(15,23,42,.90));border-color:#334155;box-shadow:0 20px 34px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.03)}
-      body.dark .b2-hero-badge,
       body.dark .b2-hero-stat{background:linear-gradient(180deg,rgba(30,41,59,.90),rgba(15,23,42,.88));border-color:#334155;box-shadow:none}
       body.dark .b2-tab-pill{background:rgba(15,23,42,.82);border-color:#334155;box-shadow:none}
       body.dark .b2-current-filter{background:rgba(59,130,246,.16)!important;border-color:rgba(96,165,250,.28)!important;color:#bfdbfe!important}
@@ -618,11 +615,6 @@ function rBoard2(C, T) {
         .b2-toolbar-card,.b2-content-shell{padding:10px;border-radius:20px;overflow-x:hidden}
         #b2-content{overflow-x:hidden;max-width:100%}
       }
-      @media (max-width:640px){
-        /* 모바일: 배지 줄(현재보기/표시 스트리머/대학/이번주 활동)에 이미 같은 정보가 요약돼 있으므로
-           중복되는 히어로 통계 카드(현재 보기·표시 인원·활성 대학)는 통째로 숨김 */
-        .b2-hero-stats{display:none!important}
-      }
     </style>`;
 
   const filterBar = `
@@ -633,12 +625,6 @@ function rBoard2(C, T) {
           <div class="b2-hero-kicker">Board Dashboard</div>
           <div class="b2-hero-title">현황판</div>
           <div class="b2-hero-desc">${_curViewMeta.desc}</div>
-          <div class="b2-hero-badges">
-            <span class="b2-hero-badge">현재 보기 · ${_curViewMeta.label}</span>
-            <span class="b2-hero-badge">표시 스트리머 ${visPlayers.length}명</span>
-            <span class="b2-hero-badge">대학 ${univList.length}곳</span>
-            <span class="b2-hero-badge">이번주 활동 ${_heroWeekActive}명</span>
-          </div>
         </div>
         <div class="b2-hero-stats">
           <div class="b2-hero-stat">

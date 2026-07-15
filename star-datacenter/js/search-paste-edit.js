@@ -48,7 +48,7 @@ function pasteQuickRegister(idx, role, name) {
   if (!isLoggedIn) return alert('로그인이 필요합니다.');
 
   // 간단 입력 폼 모달 (인라인 생성)
-  const allUnivs = getAllUnivs().map(u => `<option value="${u.name}">${u.name}</option>`).join('');
+  const allUnivs = getAllUnivs().filter(u => !u.dissolved).map(u => `<option value="${u.name}">${u.name}</option>`).join('');
   const tierOpts = TIERS.map(t => `<option value="${t}">${t}</option>`).join('');
 
   const overlay = document.createElement('div');
