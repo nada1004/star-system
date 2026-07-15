@@ -39,7 +39,10 @@ function _loadScriptOnce(src){
         const _try = (u, retrying)=>{
           const s=document.createElement('script');
           s.src=u;
-          s.async=true;
+          // async=false 로 지정하면(동적으로 추가한 script 태그 기준) 여러 개를 동시에
+          // 병렬로 다운로드하면서도 head에 추가한 순서대로 실행되는 걸 보장할 수 있음
+          // (roulette.js가 team-match-game.js보다 먼저 실행돼야 하는 등 순서 의존성 보호).
+          s.async=false;
           s.onload=()=>{
             try{ window._lazy.loaded[src]=true; }catch(e){}
             try{ window._lazy.loaded[u]=true; }catch(e){}
@@ -97,7 +100,9 @@ async function _ensureRouletteLoaded(){
     'js/memory-match-game.js?v=20260713-02',
     'js/mole-whack-game.js?v=20260713-05',
   ];
-  for(const src of scripts) await _loadScriptOnce(src);
+  // 순차 로딩(하나씩 기다림) 대신 전부 동시에 요청 — 다운로드는 병렬로, 실행 순서는
+  // _loadScriptOnce의 async=false 처리 덕분에 그대로 유지됨. 로딩 체감 속도 대폭 개선.
+  await Promise.all(scripts.map(src => _loadScriptOnce(src)));
 }
 async function _ensureStatsLoaded(){
   await window.ensureChartJS();
