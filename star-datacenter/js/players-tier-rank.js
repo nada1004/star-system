@@ -1223,7 +1223,7 @@ function rTier(C,T){
       style="--card-accent:${col};--selected-accent:${col};background:#0b1120;border-color:rgba(255,255,255,.14);backdrop-filter:blur(1px)"
       onmouseenter="try{if(typeof _prewarmPlayerModalImages==='function'){var _pp=window.players&&window.players.find(function(x){return x.name==='${_pSafe}'});if(_pp)_prewarmPlayerModalImages(_pp);}}catch(e){}">
       ${photoSrcRaw
-        ? `<img loading="lazy" src="${toHttpsUrl(photoSrcRaw)}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
+        ? `<img loading="lazy" src="${toScaledUrl(photoSrcRaw,280)}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${photoPos}" onerror="this.parentNode.querySelector('.gc-placeholder').style.display='flex';this.style.display='none'">`
         : ''}
       <div class="gc-placeholder" style="position:absolute;inset:0;display:${photoSrcRaw?'none':'flex'};align-items:center;justify-content:center;font-size:36px;font-weight:900;color:${col};background:linear-gradient(160deg,${col}2a 0%,${col}0e 100%)">${p.race||'?'}</div>
       ${photoSrcRaw ? '' : '<div class="streamer-gallery-overlay"></div>'}

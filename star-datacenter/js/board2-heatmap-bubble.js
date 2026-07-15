@@ -87,7 +87,7 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
     bodyHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px">';
     members.sort((a,b)=>(String(a && a.name || '')).localeCompare(String(b && b.name || ''),'ko',{sensitivity:'base'})).forEach(p=>{
       const rIco=p && p.race==='P'?'🔮':p && p.race==='T'?'⚔️':p && p.race==='Z'?'🦎':'';
-      const rawPhoto = p && p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
+      const rawPhoto = p && p.photo ? (typeof toThumbUrl==='function'?toThumbUrl(p.photo,84):p.photo) : '';
       const safePhoto = rawPhoto ? escA(rawPhoto) : '';
       const initials = String(p && p.name || '?').slice(0,1);
       let pw=0,pl=0;
@@ -175,7 +175,7 @@ function _b2HeatmapShowAllPopup(uid, univName, color){
     bodyHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px">';
     members.sort((a,b)=>(String(a && a.name || '')).localeCompare(String(b && b.name || ''),'ko',{sensitivity:'base'})).forEach(p=>{
       const rIco=p && p.race==='P'?'🔮':p && p.race==='T'?'⚔️':p && p.race==='Z'?'🦎':'';
-      const rawPhoto = p && p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
+      const rawPhoto = p && p.photo ? (typeof toThumbUrl==='function'?toThumbUrl(p.photo,84):p.photo) : '';
       const safePhoto = rawPhoto ? escA(rawPhoto) : '';
       const initials = String(p && p.name || '?').slice(0,1);
       const pColor = (typeof gc === 'function' ? gc(p && p.univ) : null) || color;

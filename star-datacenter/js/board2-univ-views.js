@@ -754,7 +754,7 @@ function _b2FemcoView() {
   };
 
   function femcoAvatarSquare(p, accent) {
-    const img = (p && p.photo) ? String(p.photo) : '';
+    const img = (p && p.photo) ? toThumbUrl(String(p.photo), playerImgSize) : '';
     const letter = (p && p.name) ? String(p.name).slice(0, 1) : '?';
     const border = `${accent}55`;
     // 상태 아이콘(10시 방향) — 기존 상태 아이콘 시스템 재사용
@@ -1771,7 +1771,7 @@ function _b2SetUnivProfileViewMode(mode) {
 
 function _b2UnivRankRow(p, accentCol, showBadge, idx) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
-  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const photo = p.photo ? toThumbUrl(p.photo,42) : '';
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
   const badgeTxt = showBadge ? (p.tier || p.role || '') : '';
@@ -1815,7 +1815,7 @@ function _b2UnivRankRow(p, accentCol, showBadge, idx) {
 // 대학별 뷰 - 신규 "글래스" 모드 전용 카드 (사진은 그대로 노출, 하단에 연한 프로스티드 글래스 정보바)
 function _b2UnivGlassCard(p, accentCol, showBadge) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
-  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const photo = p.photo ? toScaledUrl(p.photo,300) : '';
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
   const badgeTxt = showBadge ? (p.tier || p.role || '') : '';
@@ -1848,7 +1848,7 @@ function _b2UnivGlassCard(p, accentCol, showBadge) {
 // 대학별 뷰 - 신규 "프레임" 모드 전용 카드 (컬러 테두리 + 솔리드 컬러 하단바)
 function _b2UnivFrameCard(p, accentCol, showBadge) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
-  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const photo = p.photo ? toScaledUrl(p.photo,300) : '';
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
   const badgeTxt = showBadge ? (p.tier || p.role || '') : '';
@@ -1878,7 +1878,7 @@ function _b2UnivFrameCard(p, accentCol, showBadge) {
 
 function _b2UnivPhotoCard(p, accentCol, showBadge) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
-  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const photo = p.photo ? toScaledUrl(p.photo,300) : '';
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const shapeStyle = 'border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);';
   const badgeTxt = showBadge ? (p.tier || p.role || '') : '';
@@ -1926,7 +1926,7 @@ function _b2UnivDefaultTag(p, accentCol, showTier) {
 
 function _b2UnivHeatCard(p, accentCol) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
-  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const photo = p.photo ? toThumbUrl(p.photo,112) : '';
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const shapeStyle = 'border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);';
   return `<button type="button" title="${(p.name||'').replace(/"/g,'&quot;')}" onclick="openPlayerModal('${safeName}')" style="width:112px;height:112px;padding:0;border:none;${shapeStyle}overflow:hidden;background:${accentCol}22;box-shadow:0 8px 20px rgba(15,23,42,.09);cursor:pointer">
@@ -1987,7 +1987,7 @@ function _b2RenderUnivGroupCards(group, accentCol, showBadge, mode, hideTableHea
 function _b2LineupCard3(p, col) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
-  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const photo = p.photo ? toScaledUrl(p.photo,300) : '';
   const win = Number(p.win||0), loss = Number(p.loss||0), games = win+loss;
   const wr = games ? Math.round(win/games*100) : null;
   const wrCol = wr==null ? '#0f172a' : (wr>=50 ? '#16a34a' : '#dc2626');
@@ -2067,7 +2067,7 @@ function _b2LineupCard3(p, col) {
 function _b2LineupTableRow(p, col) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
-  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const photo = p.photo ? toThumbUrl(p.photo,28) : '';
   const raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#94a3b8';
   const win = Number(p.win||0), loss = Number(p.loss||0), games = win+loss;
   const wr = games ? Math.round(win/games*100) : null;
@@ -2110,7 +2110,7 @@ function _b2LineupTable(members, col, iconUrl, univName, hideHead) {
 function _b2LineupCard(p, col, big, iconUrl) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
-  const photo = p.photo ? toHttpsUrl(p.photo) : '';
+  const photo = p.photo ? toScaledUrl(p.photo,340) : '';
   const _raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
   const badgeTxt = big ? (p.role||'') : (p.tier||'');
   // 티어 배지 색상 — 스트리머탭 티어색상과 동일하게
