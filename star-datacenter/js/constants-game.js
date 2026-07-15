@@ -129,6 +129,34 @@ function gcHex8Hover(n,alpha){
   const a=Math.round((alpha||0.12)*255).toString(16).padStart(2,'0');
   return c+a;
 }
+// Darken a #rrggbb hex toward black by amt (0~1), for guaranteed-legible text on tinted backgrounds
+function _darkenHex(hex,amt){
+  const h=String(hex||'').replace('#','');
+  if(!/^[0-9a-fA-F]{6}$/.test(h)) return hex;
+  const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+  const f=(v)=>Math.max(0,Math.round(v*(1-amt))).toString(16).padStart(2,'0');
+  return '#'+f(r)+f(g)+f(b);
+}
+// Pick a readable text color for a university's brand color: darken it if it's too light to read
+function univTextColor(univName){
+  const c=gc(univName);
+  const h=String(c||'').replace('#','');
+  if(!/^[0-9a-fA-F]{6}$/.test(h)) return c;
+  const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+  const lum=(0.299*r+0.587*g+0.114*b)/255;
+  const amt = lum>0.6 ? 0.55 : (lum>0.42 ? 0.3 : 0);
+  return amt>0 ? _darkenHex(c,amt) : c;
+}
+// Inline style for a match-input <select>, tinted by the selected streamer's university color.
+// resultState: 'win' | 'lose' | '' (no winner picked yet)
+function univSelectStyle(univName,resultState){
+  if(!univName) return '';
+  if(resultState==='lose') return 'background:#f1f5f9;color:#94a3b8;';
+  const alpha = resultState==='win' ? 0.30 : 0.12;
+  const bg = gcHex8(univName,alpha);
+  const col = univTextColor(univName);
+  return `background:${bg};color:${col};font-weight:${resultState==='win'?800:600};`;
+}
 // ⚠️ 대학 아이콘(로고)은 코드에 하드코딩하지 않습니다.
 // - 저작권/출처 이슈가 발생할 수 있어, 로고 URL은 data.json(univCfg.icon / univCfg.img)로만 관리합니다.
 const UNIV_ICONS = {};

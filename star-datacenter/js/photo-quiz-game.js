@@ -10,20 +10,35 @@
   s.textContent = [
     '#pq-root{font-family:inherit;width:100%}',
     '.pq-shell{display:flex;flex-direction:column;gap:14px}',
-    '.pq-card{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);border-radius:24px;box-shadow:0 18px 38px rgba(15,23,42,.07),inset 0 1px 0 rgba(255,255,255,.9);padding:18px 20px}',
-    '.pq-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}',
-    '.pq-title{font-size:16px;font-weight:950;letter-spacing:-.02em;color:var(--text1)}',
-    '.pq-desc{margin-top:5px;font-size:12px;line-height:1.6;color:var(--text3)}',
-    '.pq-hud{display:flex;gap:8px;flex-wrap:wrap}',
-    '.pq-hud-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.18);font-size:12px;font-weight:900;color:var(--text2);box-shadow:0 8px 16px rgba(15,23,42,.05);white-space:nowrap}',
-    '.pq-hud-chip.is-time-low{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#fca5a5;color:#b91c1c;animation:pqPulse 1s ease-in-out infinite}',
-    '.pq-hud-chip.is-combo{background:linear-gradient(135deg,#fef9c3,#fde68a);border-color:#fcd34d;color:#92400e}',
-    '@keyframes pqPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}',
-    '.pq-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}',
-    '.pq-btn{padding:10px 18px;border-radius:14px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 10px 18px rgba(15,23,42,.05);font-family:inherit;transition:.12s}',
-    '.pq-btn:hover{border-color:rgba(37,99,235,.25);color:#2563eb}',
-    '.pq-btn.pq-btn-primary{background:linear-gradient(135deg,#60a5fa,#3b82f6 52%,#6366f1);color:#fff;border:none;box-shadow:0 7px 0 #1e3a8a,0 16px 26px rgba(59,130,246,.22)}',
-    '.pq-btn.pq-btn-primary:hover{color:#fff;transform:translateY(-1px)}',
+    '.pq-card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16);border-radius:26px;box-shadow:0 20px 44px rgba(15,23,42,.08),inset 0 1px 0 rgba(255,255,255,.9);padding:22px 22px 20px;overflow:hidden}',
+    '.pq-card::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#60a5fa,#3b82f6,#6366f1,#3b82f6,#60a5fa)}',
+    '.pq-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}',
+    '.pq-head-left{display:flex;align-items:flex-start;gap:12px;min-width:0}',
+    '.pq-icon-badge{flex:none;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px;background:linear-gradient(135deg,#60a5fa,#6366f1);box-shadow:0 8px 16px rgba(99,102,241,.32)}',
+    '.pq-title-group{min-width:0}',
+    '.pq-title{font-size:17px;font-weight:950;letter-spacing:-.02em;color:var(--text1)}',
+    '.pq-desc{margin-top:4px;font-size:12px;line-height:1.6;color:var(--text3);max-width:440px}',
+    '.pq-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px;margin-top:16px}',
+    '.pq-stat{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);box-shadow:0 8px 16px rgba(15,23,42,.05);min-width:0}',
+    '.pq-stat-icon{flex:none;width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;background:#f1f5f9}',
+    '.pq-stat-meta{display:flex;flex-direction:column;min-width:0;line-height:1.25}',
+    '.pq-stat-val{font-size:15px;font-weight:950;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.pq-stat-label{font-size:10.5px;font-weight:800;color:var(--text3)}',
+    '.pq-stat.is-combo .pq-stat-icon{background:linear-gradient(135deg,#fef3c7,#fde68a)}',
+    '.pq-stat.is-combo .pq-stat-val{color:#92400e}',
+    '.pq-stat.is-best .pq-stat-icon{background:linear-gradient(135deg,#fde68a,#fbbf24)}',
+    '.pq-stat.is-best .pq-stat-val{color:#92400e}',
+    '.pq-stat.is-time-low{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#fca5a5;animation:pqPulse 1s ease-in-out infinite}',
+    '.pq-stat.is-time-low .pq-stat-icon{background:#fecaca}',
+    '.pq-stat.is-time-low .pq-stat-val{color:#b91c1c}',
+    '@keyframes pqPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}',
+    '.pq-section-label{margin-top:16px;font-size:11px;font-weight:900;color:var(--text3);letter-spacing:.02em}',
+    '.pq-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}',
+    '.pq-btn{padding:11px 18px;border-radius:14px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 10px 18px rgba(15,23,42,.05);font-family:inherit;transition:.12s;white-space:nowrap}',
+    '.pq-btn:hover{border-color:rgba(37,99,235,.25);color:#2563eb;transform:translateY(-1px)}',
+    '.pq-btn.pq-btn-primary{background:linear-gradient(135deg,#60a5fa,#3b82f6 52%,#6366f1);color:#fff;border:none;box-shadow:0 7px 0 #1e3a8a,0 16px 26px rgba(59,130,246,.24)}',
+    '.pq-btn.pq-btn-primary:hover{color:#fff;transform:translateY(-2px)}',
+    '.pq-btn.pq-btn-primary:active{transform:translateY(1px);box-shadow:0 3px 0 #1e3a8a,0 8px 14px rgba(59,130,246,.24)}',
     '.pq-stage{margin-top:14px;display:flex;flex-direction:column;align-items:center;gap:16px}',
     '.pq-photo-wrap{width:min(220px,60vw);aspect-ratio:1/1;border-radius:26px;overflow:hidden;background:#f1f5f9;box-shadow:0 4px 0 rgba(15,23,42,.10),0 12px 26px rgba(15,23,42,.12),inset 0 0 0 4px rgba(255,255,255,.9);position:relative;animation:pqPhotoIn .3s ease both}',
     '.pq-photo-wrap img{width:100%;height:100%;object-fit:cover;display:block;filter:blur(0px);transform:scale(1.08);transition:filter .35s ease}',
@@ -39,10 +54,14 @@
     '.pq-tool-btn:disabled{opacity:.45;cursor:default}',
     '.pq-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:420px}',
     '.pq-tries-left{font-size:11px;font-weight:800;color:var(--text3)}',
-    '.pq-status{width:100%;max-width:420px;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:800;line-height:1.55}',
+    '.pq-status{width:100%;max-width:420px;display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:14px;font-size:12px;font-weight:800;line-height:1.5}',
+    '.pq-status::before{content:"";flex:none;width:7px;height:7px;border-radius:50%}',
     '.pq-status.is-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}',
+    '.pq-status.is-info::before{background:#3b82f6}',
     '.pq-status.is-good{background:#ecfdf5;border:1px solid #86efac;color:#047857}',
+    '.pq-status.is-good::before{background:#10b981}',
     '.pq-status.is-bad{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c}',
+    '.pq-status.is-bad::before{background:#ef4444}',
     '.pq-opt{padding:14px 10px;border-radius:16px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text1);font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:.12s;text-align:center;box-shadow:0 6px 14px rgba(15,23,42,.05)}',
     '.pq-opt:hover{border-color:rgba(37,99,235,.3);transform:translateY(-1px)}',
     '.pq-opt.pq-correct{background:linear-gradient(135deg,#bbf7d0,#86efac);border-color:#4ade80;color:#14532d;animation:pqPopOk .3s ease}',
@@ -54,13 +73,32 @@
     '.pq-result-emoji{font-size:44px;display:block;margin-bottom:4px}',
     '.pq-result-score{font-size:clamp(24px,5vw,34px);font-weight:900;color:#1D4ED8;margin:4px 0 4px}',
     '.pq-result-sub{font-size:12px;color:var(--text3)}',
-    '.pq-empty-note{font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;margin-top:10px;line-height:1.6}',
+    '.pq-empty-note{font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-top:14px;line-height:1.6}',
+    '.pq-mode-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}',
+    '.pq-mode-pill{padding:7px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:.12s;white-space:nowrap}',
+    '.pq-mode-pill:hover{border-color:rgba(37,99,235,.3);color:#2563eb}',
+    '.pq-mode-pill.on{background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(59,130,246,.28)}',
+    '.pq-type-row{display:flex;gap:8px;width:100%;max-width:420px}',
+    '.pq-type-input{flex:1;min-width:0;padding:12px 14px;border-radius:14px;border:1px solid rgba(148,163,184,.28);background:#fff;color:var(--text1);font-size:14px;font-weight:700;font-family:inherit;box-shadow:inset 0 1px 3px rgba(15,23,42,.06)}',
+    '.pq-type-input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}',
+    '.pq-type-input.pq-correct{border-color:#4ade80;background:#f0fdf4;color:#14532d}',
+    '.pq-type-input.pq-wrong{border-color:#f87171;background:#fef2f2;color:#7f1d1d;animation:pqShake .32s ease}',
+    '.pq-type-input:disabled{opacity:.75}',
+    '.pq-type-submit{padding:12px 18px;border-radius:14px;border:none;background:linear-gradient(135deg,#60a5fa,#3b82f6 52%,#6366f1);color:#fff;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;box-shadow:0 6px 0 #1e3a8a,0 12px 20px rgba(59,130,246,.22);white-space:nowrap}',
+    '.pq-type-submit:disabled{opacity:.5;cursor:default}',
+    '.pq-type-hint{font-size:11px;color:var(--text3);width:100%;max-width:420px;text-align:center}',
     'body.dark .pq-card,body.dark .pq-result{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#2d3f55}',
-    'body.dark .pq-hud-chip,body.dark .pq-btn,body.dark .pq-opt{background:linear-gradient(180deg,#162234,#0f172a);border-color:#334155;color:#cbd5e1}',
+    'body.dark .pq-stat,body.dark .pq-btn,body.dark .pq-opt,body.dark .pq-mode-pill{background:linear-gradient(180deg,#162234,#0f172a);border-color:#334155;color:#cbd5e1}',
+    'body.dark .pq-stat-icon{background:#1e293b}',
+    'body.dark .pq-mode-pill.on{color:#fff}',
     'body.dark .pq-title{color:#f8fafc}',
     'body.dark .pq-desc{color:#94a3b8}',
+    'body.dark .pq-section-label{color:#94a3b8}',
     'body.dark .pq-photo-wrap{box-shadow:0 4px 0 rgba(0,0,0,.3),0 12px 26px rgba(0,0,0,.3),inset 0 0 0 4px rgba(15,23,42,.55)}',
-    '@media (max-width:520px){.pq-card{padding:14px 14px}}',
+    'body.dark .pq-type-input{background:#0f172a;border-color:#334155;color:#e2e8f0}',
+    'body.dark .pq-type-input.pq-correct{background:#052e1a;border-color:#22c55e;color:#bbf7d0}',
+    'body.dark .pq-type-input.pq-wrong{background:#2a0f0f;border-color:#ef4444;color:#fecaca}',
+    '@media (max-width:520px){.pq-card{padding:16px 14px 16px}.pq-stats{grid-template-columns:repeat(2,1fr)}.pq-icon-badge{width:38px;height:38px;font-size:18px}.pq-title{font-size:15px}}',
   ].join('');
   document.head.appendChild(s);
 })();
@@ -113,7 +151,17 @@ const _PQ_STAGES = [
   { blur: 4,  points: 2 },
   { blur: 0,  points: 1 },
 ];
+// 문제 유형: 'choice'(4지선다) / 'typing'(주관식 직접 입력)
+function _pqReadStoredMode() {
+  try {
+    const v = localStorage.getItem('su_pq_mode');
+    if (v === 'choice' || v === 'typing') return v;
+  } catch (e) {}
+  return 'choice';
+}
+
 window._pqState = window._pqState || {
+  mode: _pqReadStoredMode(),
   pool: [], score: 0, combo: 0, best: 0,
   timeLeft: _PQ_TIME_LIMIT, running: false, ended: false, locked: false,
   timerId: null, advanceId: null,
@@ -123,11 +171,36 @@ window._pqState = window._pqState || {
   cur: null, // {answer, choices:[{name,uid}], answerIdx}
 };
 
-function _pqBestScore() {
-  try { return parseInt(localStorage.getItem('su_pq_best') || '0', 10) || 0; } catch (e) { return 0; }
+function _pqBestScore(mode) {
+  const key = mode || window._pqState.mode || 'choice';
+  try {
+    const v = localStorage.getItem('su_pq_best_' + key);
+    if (v != null) return parseInt(v, 10) || 0;
+    if (key === 'choice') return parseInt(localStorage.getItem('su_pq_best') || '0', 10) || 0; // 구버전 기록 이관
+  } catch (e) {}
+  return 0;
 }
-function _pqSaveBest(v) {
-  try { localStorage.setItem('su_pq_best', String(v)); } catch (e) {}
+function _pqSaveBest(v, mode) {
+  const key = mode || window._pqState.mode || 'choice';
+  try { localStorage.setItem('su_pq_best_' + key, String(v)); } catch (e) {}
+}
+function _pqSetMode(mode) {
+  if (mode !== 'choice' && mode !== 'typing') return;
+  const st = window._pqState;
+  st.mode = mode;
+  try { localStorage.setItem('su_pq_mode', mode); } catch (e) {}
+  _pqStart();
+}
+window._pqSetMode = _pqSetMode;
+function _pqModeBarHTML() {
+  const st = window._pqState;
+  return `<div class="pq-mode-bar">
+    <button class="pq-mode-pill${st.mode === 'choice' ? ' on' : ''}" onclick="_pqSetMode('choice')">🔘 객관식 (4지선다)</button>
+    <button class="pq-mode-pill${st.mode === 'typing' ? ' on' : ''}" onclick="_pqSetMode('typing')">⌨️ 주관식 (직접 입력)</button>
+  </div>`;
+}
+function _pqNormalize(s) {
+  return String(s || '').trim().toLowerCase().replace(/\s+/g, '');
 }
 
 // ─── 문제 풀 구성 ─────────────────────────────────────────────────────────────
@@ -204,11 +277,10 @@ function _pqTick() {
   const st = window._pqState;
   if (!st.running) return;
   st.timeLeft--;
-  const chip = document.getElementById('pq-time-chip');
-  if (chip) {
-    chip.textContent = `⏱️ 남은 시간 ${st.timeLeft}초`;
-    chip.classList.toggle('is-time-low', st.timeLeft <= 15);
-  }
+  const timeVal = document.getElementById('pq-time-val');
+  const timeStat = document.getElementById('pq-time-chip');
+  if (timeVal) timeVal.textContent = `${st.timeLeft}초`;
+  if (timeStat) timeStat.classList.toggle('is-time-low', st.timeLeft <= 15);
   if (st.timeLeft <= 0) _pqEndGame();
 }
 
@@ -326,12 +398,17 @@ function _pqRenderRoot() {
   if (!st.cur && !st.ended) {
     root.innerHTML = `<div class="pq-shell">
       <div class="pq-card">
-        <div class="pq-head">
-          <div>
-            <div class="pq-title">🖼️ 얼굴 맞추기</div>
-            <div class="pq-desc">사진을 보고 이름을 맞히는 퀴즈입니다.</div>
+        <div class="pq-head-row">
+          <div class="pq-head-left">
+            <div class="pq-icon-badge">🖼️</div>
+            <div class="pq-title-group">
+              <div class="pq-title">얼굴 맞추기</div>
+              <div class="pq-desc">사진을 보고 이름을 맞히는 퀴즈입니다.</div>
+            </div>
           </div>
         </div>
+        <div class="pq-section-label">정답 모드</div>
+        ${_pqModeBarHTML()}
         <div class="pq-empty-note">⚠️ 퀴즈를 만들 만큼 프로필 사진이 등록된 선수가 부족합니다(최소 4명 필요). 선수 데이터에 사진을 더 등록한 뒤 다시 시도해주세요.</div>
         <div class="pq-actions"><button class="pq-btn pq-btn-primary" onclick="_pqStart()">🔄 다시 확인</button></div>
       </div>
@@ -349,36 +426,48 @@ function _pqRenderRoot() {
   const nextStageInfo = st.cur && !isLastStage ? _PQ_STAGES[st.cur.stage + 1] : null;
   const hintLabel = isLastStage ? '💡 마지막 단계' : `💡 힌트 보기 (현재 정답 시 +${nextStageInfo ? nextStageInfo.points : ''}점)`;
 
+  const isTyping = st.mode === 'typing';
+  const answerAreaHTML = isTyping
+    ? `<div class="pq-type-row">
+        <input type="text" class="pq-type-input" id="pq-type-input" placeholder="이름을 입력하세요" autocomplete="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();_pqSubmitTyped();}">
+        <button class="pq-type-submit" id="pq-type-submit" onclick="_pqSubmitTyped()">제출</button>
+      </div>
+      <div class="pq-type-hint">💡 띄어쓰기와 대소문자는 신경 쓰지 않아도 됩니다.</div>`
+    : `<div class="pq-options">${_pqOptionsHTML()}</div>`;
+
   const stageHTML = (!st.ended && st.cur) ? `<div class="pq-stage">
     <div class="pq-photo-wrap">${_pqPhotoHTML(st.cur.answer, st.cur.stage)}</div>
     <button class="pq-hint-btn" id="pq-hint-btn" onclick="_pqHint()" ${isLastStage ? 'disabled' : ''}>${hintLabel}</button>
     <div class="pq-tool-row">
-      <button class="pq-tool-btn" onclick="_pqUseFifty()" ${st.cur.fiftyUsed ? 'disabled' : ''}>✂️ 50:50 제거</button>
+      ${isTyping ? '' : `<button class="pq-tool-btn" onclick="_pqUseFifty()" ${st.cur.fiftyUsed ? 'disabled' : ''}>✂️ 50:50 제거</button>`}
       <button class="pq-tool-btn" onclick="_pqSkipQuestion()">⏭️ 패스 (-${_PQ_SKIP_PENALTY}초)</button>
     </div>
-    <div class="pq-options">${_pqOptionsHTML()}</div>
+    ${answerAreaHTML}
     <div class="pq-tries-left" id="pq-tries-left">❌ 오답 ${st.cur.wrongCount || 0}/3 · 남은 기회 ${Math.max(0, 3 - (st.cur.wrongCount || 0))}번</div>
     <div class="pq-status is-${_pqEsc(st.statusTone || 'info')}" id="pq-status">${_pqEsc(st.statusText || '')}</div>
   </div>` : '';
 
   root.innerHTML = `<div class="pq-shell">
     <div class="pq-card">
-      <div class="pq-head">
-        <div>
-          <div class="pq-title">🖼️ 얼굴 맞추기</div>
-          <div class="pq-desc">사진이 실루엣으로 시작합니다. 바로 맞히면 최대 10점! 모르겠으면 힌트 버튼을 눌러 조금씩 선명하게 볼 수 있지만, 누를 때마다 획득 점수가 줄어들어요(총 10단계). 3번 틀리면 다음 문제로 넘어갑니다.</div>
+      <div class="pq-head-row">
+        <div class="pq-head-left">
+          <div class="pq-icon-badge">🖼️</div>
+          <div class="pq-title-group">
+            <div class="pq-title">얼굴 맞추기</div>
+            <div class="pq-desc">사진이 실루엣으로 시작합니다. 바로 맞히면 최대 10점! 힌트를 누를 때마다 조금씩 선명해지지만 획득 점수는 줄어들어요(총 10단계). 3번 틀리면 다음 문제로 넘어갑니다.</div>
+          </div>
         </div>
-        <div class="pq-hud">
-          <span class="pq-hud-chip">🏅 점수 ${st.score}</span>
-          <span class="pq-hud-chip is-combo">🔥 콤보 ${st.combo}</span>
-          <span class="pq-hud-chip" id="pq-solved-chip">✅ 정답 ${st.solved}</span>
-          <span class="pq-hud-chip" id="pq-time-chip">⏱️ 남은 시간 ${st.timeLeft}초</span>
-          <span class="pq-hud-chip">🥇 최고 ${best}</span>
-        </div>
-      </div>
-      <div class="pq-actions">
         <button class="pq-btn pq-btn-primary" onclick="_pqStart()">${st.ended ? '🔄 다시하기' : '🔀 새로 시작'}</button>
       </div>
+      <div class="pq-stats">
+        <div class="pq-stat"><span class="pq-stat-icon">🏅</span><div class="pq-stat-meta"><span class="pq-stat-val" id="pq-score-val">${st.score}</span><span class="pq-stat-label">점수</span></div></div>
+        <div class="pq-stat is-combo"><span class="pq-stat-icon">🔥</span><div class="pq-stat-meta"><span class="pq-stat-val" id="pq-combo-val">${st.combo}</span><span class="pq-stat-label">콤보</span></div></div>
+        <div class="pq-stat" id="pq-solved-chip"><span class="pq-stat-icon">✅</span><div class="pq-stat-meta"><span class="pq-stat-val" id="pq-solved-val">${st.solved}</span><span class="pq-stat-label">정답</span></div></div>
+        <div class="pq-stat" id="pq-time-chip"><span class="pq-stat-icon">⏱️</span><div class="pq-stat-meta"><span class="pq-stat-val" id="pq-time-val">${st.timeLeft}초</span><span class="pq-stat-label">남은 시간</span></div></div>
+        <div class="pq-stat is-best"><span class="pq-stat-icon">🥇</span><div class="pq-stat-meta"><span class="pq-stat-val">${best}</span><span class="pq-stat-label">최고 기록</span></div></div>
+      </div>
+      <div class="pq-section-label">정답 모드</div>
+      ${_pqModeBarHTML()}
       ${resultHTML}
       ${stageHTML}
     </div>
@@ -457,14 +546,94 @@ function _pqAnswer(idx) {
 }
 window._pqAnswer = _pqAnswer;
 
+// 주관식(직접 입력) 모드 채점
+function _pqSubmitTyped() {
+  const st = window._pqState;
+  if (!st.running || !st.cur || st.locked) return;
+  const inputEl = document.getElementById('pq-type-input');
+  const submitBtn = document.getElementById('pq-type-submit');
+  if (!inputEl) return;
+  const raw = inputEl.value;
+  if (!raw || !raw.trim()) return;
+  const isCorrect = _pqNormalize(raw) === _pqNormalize(st.cur.answer.name);
+
+  if (isCorrect) {
+    st.locked = true;
+    inputEl.disabled = true;
+    if (submitBtn) submitBtn.disabled = true;
+    inputEl.classList.add('pq-correct');
+    inputEl.value = st.cur.answer.name;
+    _pqSnapPhotoClear();
+    const hintBtn = document.getElementById('pq-hint-btn');
+    if (hintBtn) hintBtn.disabled = true;
+
+    const stagePoints = (_PQ_STAGES[st.cur.stage] || _PQ_STAGES[_PQ_STAGES.length - 1]).points;
+    st.combo++;
+    st.solved++;
+    st.lastAnswerName = st.cur.answer.name;
+    const comboBonus = Math.max(0, st.combo - 1) * 2;
+    st.score += stagePoints + comboBonus;
+    st.statusText = `정답! ${st.cur.answer.name} · +${stagePoints + comboBonus}점${comboBonus ? ` (콤보 보너스 +${comboBonus})` : ''}`;
+    st.statusTone = 'good';
+    _pqPlayCorrect(st.combo);
+    _pqUpdateChips();
+
+    st.advanceId = setTimeout(() => {
+      if (!st.running) return;
+      _pqNextQuestion();
+      _pqRenderRoot();
+    }, _PQ_NEXT_DELAY);
+    return;
+  }
+
+  // 오답: 3번 틀릴 때까지는 같은 문제를 계속 시도 가능
+  st.cur.wrongCount = (st.cur.wrongCount || 0) + 1;
+  st.combo = 0;
+  inputEl.classList.add('pq-wrong');
+  setTimeout(() => { inputEl.classList.remove('pq-wrong'); }, 320);
+  st.statusText = `오답입니다. 남은 기회 ${Math.max(0, 3 - st.cur.wrongCount)}번`;
+  st.statusTone = 'bad';
+  _pqPlayWrong();
+  _pqUpdateChips();
+
+  const triesEl = document.getElementById('pq-tries-left');
+  const remaining = Math.max(0, 3 - st.cur.wrongCount);
+  if (triesEl) triesEl.textContent = `❌ 오답 ${st.cur.wrongCount}/3 · 남은 기회 ${remaining}번`;
+
+  if (st.cur.wrongCount >= 3) {
+    st.locked = true;
+    inputEl.disabled = true;
+    if (submitBtn) submitBtn.disabled = true;
+    inputEl.value = st.cur.answer.name;
+    inputEl.classList.remove('pq-wrong');
+    inputEl.classList.add('pq-correct');
+    _pqSnapPhotoClear();
+    const hintBtn = document.getElementById('pq-hint-btn');
+    if (hintBtn) hintBtn.disabled = true;
+    st.lastAnswerName = st.cur.answer.name;
+    st.statusText = `정답은 ${st.cur.answer.name}였습니다. 다음 문제로 넘어갑니다.`;
+    st.statusTone = 'info';
+
+    st.advanceId = setTimeout(() => {
+      if (!st.running) return;
+      _pqNextQuestion();
+      _pqRenderRoot();
+    }, _PQ_NEXT_DELAY);
+  } else {
+    inputEl.value = '';
+    inputEl.focus();
+  }
+}
+window._pqSubmitTyped = _pqSubmitTyped;
+
 function _pqUpdateChips() {
   const st = window._pqState;
-  const scoreChip = document.querySelector('#pq-root .pq-hud-chip');
-  if (scoreChip) scoreChip.textContent = `🏅 점수 ${st.score}`;
-  const comboChip = document.querySelector('#pq-root .pq-hud-chip.is-combo');
-  if (comboChip) comboChip.textContent = `🔥 콤보 ${st.combo}`;
-  const solvedChip = document.getElementById('pq-solved-chip');
-  if (solvedChip) solvedChip.textContent = `✅ 정답 ${st.solved}`;
+  const scoreVal = document.getElementById('pq-score-val');
+  if (scoreVal) scoreVal.textContent = st.score;
+  const comboVal = document.getElementById('pq-combo-val');
+  if (comboVal) comboVal.textContent = st.combo;
+  const solvedVal = document.getElementById('pq-solved-val');
+  if (solvedVal) solvedVal.textContent = st.solved;
   const statusEl = document.getElementById('pq-status');
   if (statusEl) {
     statusEl.className = `pq-status is-${st.statusTone || 'info'}`;

@@ -344,12 +344,16 @@ function setBuilderHTML(bld, mode){
         <span style="font-size:11px;color:var(--gray-l)">(선수 미지정 시 승수만 저장)</span>
       </div>`;}
       freeGames.forEach((g,gi)=>{
-        const optsA=mA.map(p=>`<option value="${p.name}"${g.playerA===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
-        const optsB=mB.map(p=>`<option value="${p.name}"${g.playerB===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
+        const optsA=mA.map(p=>`<option value="${p.name}"${g.playerA===p.name?' selected':''}>${p.name}[${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
+        const optsB=mB.map(p=>`<option value="${p.name}"${g.playerB===p.name?' selected':''}>${p.name}[${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
         const mapOpts=maps.map(m=>`<option value="${m}"${g.map===m?' selected':''}>${m}</option>`).join('');
+        const _resA = g.winner==='A'?'win':(g.winner==='B'?'lose':'');
+        const _resB = g.winner==='B'?'win':(g.winner==='A'?'lose':'');
+        const _stA = univSelectStyle((mA.find(p=>p.name===g.playerA)||{}).univ, _resA);
+        const _stB = univSelectStyle((mB.find(p=>p.name===g.playerB)||{}).univ, _resB);
         h+=`<div class="game-row">
           <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
-          <button class="btn btn-xs ${g._isTeam?'btn-b':'btn-w'}" onclick="BLD['${mode}'].freeGames[${gi}]._isTeam=!BLD['${mode}'].freeGames[${gi}]._isTeam; if(!BLD['${mode}'].freeGames[${gi}]._isTeam){BLD['${mode}'].freeGames[${gi}].a1='';BLD['${mode}'].freeGames[${gi}].a2='';BLD['${mode}'].freeGames[${gi}].b1='';BLD['${mode}'].freeGames[${gi}].b2='';BLD['${mode}'].freeGames[${gi}].playerA='';BLD['${mode}'].freeGames[${gi}].playerB='';} render()" title="2대2 팀전 입력으로 전환">2:2</button>
+          ${g._isTeam?`<button class="btn btn-xs btn-b" onclick="BLD['${mode}'].freeGames[${gi}]._isTeam=false;BLD['${mode}'].freeGames[${gi}].a1='';BLD['${mode}'].freeGames[${gi}].a2='';BLD['${mode}'].freeGames[${gi}].b1='';BLD['${mode}'].freeGames[${gi}].b2='';BLD['${mode}'].freeGames[${gi}].playerA='';BLD['${mode}'].freeGames[${gi}].playerB='';render()" title="일반 1:1 입력으로 전환">2:2</button>`:''}
           ${g._isTeam
             ? (function(){
                 const sp = (s)=>String(s||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
@@ -361,15 +365,19 @@ function setBuilderHTML(bld, mode){
                 const oA2 = a2 ? mk(optsA, a2) : optsA;
                 const oB1 = b1 ? mk(optsB, b1) : optsB;
                 const oB2 = b2 ? mk(optsB, b2) : optsB;
-                return `<select onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.a1=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');"><option value=\"\">A1</option>${oA1}</select>
-                        <select onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.a2=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');"><option value=\"\">A2</option>${oA2}</select>
+                const stA1 = univSelectStyle((mA.find(p=>p.name===a1)||{}).univ, _resA);
+                const stA2 = univSelectStyle((mA.find(p=>p.name===a2)||{}).univ, _resA);
+                const stB1 = univSelectStyle((mB.find(p=>p.name===b1)||{}).univ, _resB);
+                const stB2 = univSelectStyle((mB.find(p=>p.name===b2)||{}).univ, _resB);
+                return `<select style="${stA1}" onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.a1=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');render()"><option value=\"\">A1</option>${oA1}</select>
+                        <select style="${stA2}" onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.a2=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');render()"><option value=\"\">A2</option>${oA2}</select>
                         <span style="font-size:11px;color:var(--gray-l)">vs</span>
-                        <select onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.b1=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');"><option value=\"\">B1</option>${oB1}</select>
-                        <select onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.b2=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');"><option value=\"\">B2</option>${oB2}</select>`;
+                        <select style="${stB1}" onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.b1=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');render()"><option value=\"\">B1</option>${oB1}</select>
+                        <select style="${stB2}" onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.b2=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');render()"><option value=\"\">B2</option>${oB2}</select>`;
               })()
-            : `<select onchange="BLD['${mode}'].freeGames[${gi}].playerA=this.value"><option value="">A 선택</option>${optsA}</select>
+            : `<select style="${_stA}" onchange="BLD['${mode}'].freeGames[${gi}].playerA=this.value;render()"><option value="">A 선택</option>${optsA}</select>
                <span style="font-size:11px;color:var(--gray-l)">vs</span>
-               <select onchange="BLD['${mode}'].freeGames[${gi}].playerB=this.value"><option value="">B 선택</option>${optsB}</select>`}
+               <select style="${_stB}" onchange="BLD['${mode}'].freeGames[${gi}].playerB=this.value;render()"><option value="">B 선택</option>${optsB}</select>`}
           <select onchange="BLD['${mode}'].freeGames[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
           <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].freeGames[${gi}].winner='A';render()">A 승</button>
           <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="BLD['${mode}'].freeGames[${gi}].winner='B';render()">B 승</button>
@@ -400,12 +408,16 @@ function setBuilderHTML(bld, mode){
             <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].sets.splice(${si},1);render()">세트 삭제</button>
           </div>`;
         set.games.forEach((g,gi)=>{
-          const optsA=mA.map(p=>`<option value="${p.name}"${g.playerA===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
-          const optsB=mB.map(p=>`<option value="${p.name}"${g.playerB===p.name?' selected':''}>${p.name}${p.gender==='F'?'♀':''} [${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
+          const optsA=mA.map(p=>`<option value="${p.name}"${g.playerA===p.name?' selected':''}>${p.name}[${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
+          const optsB=mB.map(p=>`<option value="${p.name}"${g.playerB===p.name?' selected':''}>${p.name}[${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
           const mapOpts=maps.map(m=>`<option value="${m}"${g.map===m?' selected':''}>${m}</option>`).join('');
+          const _resA = g.winner==='A'?'win':(g.winner==='B'?'lose':'');
+          const _resB = g.winner==='B'?'win':(g.winner==='A'?'lose':'');
+          const _stA = univSelectStyle((mA.find(p=>p.name===g.playerA)||{}).univ, _resA);
+          const _stB = univSelectStyle((mB.find(p=>p.name===g.playerB)||{}).univ, _resB);
           h+=`<div class="game-row">
             <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
-            <button class="btn btn-xs ${g._isTeam?'btn-b':'btn-w'}" onclick="BLD['${mode}'].sets[${si}].games[${gi}]._isTeam=!BLD['${mode}'].sets[${si}].games[${gi}]._isTeam; if(!BLD['${mode}'].sets[${si}].games[${gi}]._isTeam){BLD['${mode}'].sets[${si}].games[${gi}].a1='';BLD['${mode}'].sets[${si}].games[${gi}].a2='';BLD['${mode}'].sets[${si}].games[${gi}].b1='';BLD['${mode}'].sets[${si}].games[${gi}].b2='';BLD['${mode}'].sets[${si}].games[${gi}].playerA='';BLD['${mode}'].sets[${si}].games[${gi}].playerB='';} render()" title="2대2 팀전 입력으로 전환">2:2</button>
+            ${g._isTeam?`<button class="btn btn-xs btn-b" onclick="BLD['${mode}'].sets[${si}].games[${gi}]._isTeam=false;BLD['${mode}'].sets[${si}].games[${gi}].a1='';BLD['${mode}'].sets[${si}].games[${gi}].a2='';BLD['${mode}'].sets[${si}].games[${gi}].b1='';BLD['${mode}'].sets[${si}].games[${gi}].b2='';BLD['${mode}'].sets[${si}].games[${gi}].playerA='';BLD['${mode}'].sets[${si}].games[${gi}].playerB='';render()" title="일반 1:1 입력으로 전환">2:2</button>`:''}
             ${g._isTeam
               ? (function(){
                   const sp = (s)=>String(s||'').split(/[,+，]/).map(x=>x.trim()).filter(Boolean);
@@ -417,15 +429,19 @@ function setBuilderHTML(bld, mode){
                   const oA2 = a2 ? mk(optsA, a2) : optsA;
                   const oB1 = b1 ? mk(optsB, b1) : optsB;
                   const oB2 = b2 ? mk(optsB, b2) : optsB;
-                  return `<select onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.a1=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');"><option value=\"\">A1</option>${oA1}</select>
-                          <select onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.a2=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');"><option value=\"\">A2</option>${oA2}</select>
+                  const stA1 = univSelectStyle((mA.find(p=>p.name===a1)||{}).univ, _resA);
+                  const stA2 = univSelectStyle((mA.find(p=>p.name===a2)||{}).univ, _resA);
+                  const stB1 = univSelectStyle((mB.find(p=>p.name===b1)||{}).univ, _resB);
+                  const stB2 = univSelectStyle((mB.find(p=>p.name===b2)||{}).univ, _resB);
+                  return `<select style="${stA1}" onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.a1=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');render()"><option value=\"\">A1</option>${oA1}</select>
+                          <select style="${stA2}" onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.a2=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');render()"><option value=\"\">A2</option>${oA2}</select>
                           <span style="font-size:11px;color:var(--gray-l)">vs</span>
-                          <select onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.b1=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');"><option value=\"\">B1</option>${oB1}</select>
-                          <select onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.b2=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');"><option value=\"\">B2</option>${oB2}</select>`;
+                          <select style="${stB1}" onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.b1=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');render()"><option value=\"\">B1</option>${oB1}</select>
+                          <select style="${stB2}" onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.b2=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');render()"><option value=\"\">B2</option>${oB2}</select>`;
                 })()
-              : `<select onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerA=this.value"><option value="">A 선택</option>${optsA}</select>
+              : `<select style="${_stA}" onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerA=this.value;render()"><option value="">A 선택</option>${optsA}</select>
                  <span style="font-size:11px;color:var(--gray-l)">vs</span>
-                 <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerB=this.value"><option value="">B 선택</option>${optsB}</select>`}
+                 <select style="${_stB}" onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerB=this.value;render()"><option value="">B 선택</option>${optsB}</select>`}
             <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
             <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='A';recalcSet('${mode}',${si});render()">A 승</button>
             <button class="win-btn ${g.winner==='B'?'lose-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='B';recalcSet('${mode}',${si});render()">B 승</button>

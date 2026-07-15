@@ -10,21 +10,36 @@
   s.textContent = [
     '#mm-root{font-family:inherit;width:100%}',
     '.mm-shell{display:flex;flex-direction:column;gap:14px}',
-    '.mm-card{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);border-radius:24px;box-shadow:0 18px 38px rgba(15,23,42,.07),inset 0 1px 0 rgba(255,255,255,.9);padding:18px 20px}',
-    '.mm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}',
-    '.mm-title{font-size:16px;font-weight:950;letter-spacing:-.02em;color:var(--text1)}',
-    '.mm-desc{margin-top:5px;font-size:12px;line-height:1.6;color:var(--text3)}',
-    '.mm-hud{display:flex;gap:8px;flex-wrap:wrap}',
-    '.mm-hud-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.18);font-size:12px;font-weight:900;color:var(--text2);box-shadow:0 8px 16px rgba(15,23,42,.05);white-space:nowrap}',
-    '.mm-hud-chip.is-time-low{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#fca5a5;color:#b91c1c;animation:mmPulse 1s ease-in-out infinite}',
-    '.mm-hud-chip.is-combo{background:linear-gradient(135deg,#fef9c3,#fde68a);border-color:#fcd34d;color:#92400e}',
-    '@keyframes mmPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}',
-    '.mm-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}',
-    '.mm-btn{padding:10px 18px;border-radius:14px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 10px 18px rgba(15,23,42,.05);font-family:inherit;transition:.12s}',
-    '.mm-btn:hover{border-color:rgba(37,99,235,.25);color:#2563eb}',
-    '.mm-btn.mm-btn-primary{background:linear-gradient(135deg,#34d399,#10b981 52%,#059669);color:#fff;border:none;box-shadow:0 7px 0 #065f46,0 16px 26px rgba(16,185,129,.22)}',
-    '.mm-btn.mm-btn-primary:hover{color:#fff;transform:translateY(-1px)}',
-    '.mm-diff-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}',
+    '.mm-card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16);border-radius:26px;box-shadow:0 20px 44px rgba(15,23,42,.08),inset 0 1px 0 rgba(255,255,255,.9);padding:22px 22px 20px;overflow:hidden}',
+    '.mm-card::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#34d399,#10b981,#059669,#10b981,#34d399)}',
+    '.mm-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}',
+    '.mm-head-left{display:flex;align-items:flex-start;gap:12px;min-width:0}',
+    '.mm-icon-badge{flex:none;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px;background:linear-gradient(135deg,#34d399,#059669);box-shadow:0 8px 16px rgba(5,150,105,.32)}',
+    '.mm-title-group{min-width:0}',
+    '.mm-title{font-size:17px;font-weight:950;letter-spacing:-.02em;color:var(--text1)}',
+    '.mm-desc{margin-top:4px;font-size:12px;line-height:1.6;color:var(--text3);max-width:440px}',
+    '.mm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px;margin-top:16px}',
+    '.mm-stat{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);box-shadow:0 8px 16px rgba(15,23,42,.05);min-width:0}',
+    '.mm-stat-icon{flex:none;width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;background:#f1f5f9}',
+    '.mm-stat-meta{display:flex;flex-direction:column;min-width:0;line-height:1.25}',
+    '.mm-stat-val{font-size:15px;font-weight:950;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.mm-stat-label{font-size:10.5px;font-weight:800;color:var(--text3)}',
+    '.mm-stat.is-combo .mm-stat-icon{background:linear-gradient(135deg,#fef3c7,#fde68a)}',
+    '.mm-stat.is-combo .mm-stat-val{color:#92400e}',
+    '.mm-stat.is-best .mm-stat-icon{background:linear-gradient(135deg,#fde68a,#fbbf24)}',
+    '.mm-stat.is-best .mm-stat-val{color:#92400e}',
+    '.mm-stat.is-time-low{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#fca5a5;animation:mmPulse 1s ease-in-out infinite}',
+    '.mm-stat.is-time-low .mm-stat-icon{background:#fecaca}',
+    '.mm-stat.is-time-low .mm-stat-val{color:#b91c1c}',
+    '@keyframes mmPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}',
+    '.mm-section-label{margin-top:16px;font-size:11px;font-weight:900;color:var(--text3);letter-spacing:.02em}',
+    '.mm-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}',
+    '.mm-btn{padding:11px 18px;border-radius:14px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 10px 18px rgba(15,23,42,.05);font-family:inherit;transition:.12s;white-space:nowrap}',
+    '.mm-btn:hover{border-color:rgba(37,99,235,.25);color:#2563eb;transform:translateY(-1px)}',
+    '.mm-btn.mm-btn-primary{background:linear-gradient(135deg,#34d399,#10b981 52%,#059669);color:#fff;border:none;box-shadow:0 7px 0 #065f46,0 16px 26px rgba(16,185,129,.24)}',
+    '.mm-btn.mm-btn-primary:hover{color:#fff;transform:translateY(-2px)}',
+    '.mm-btn.mm-btn-primary:active{transform:translateY(1px);box-shadow:0 3px 0 #065f46,0 8px 14px rgba(16,185,129,.24)}',
+    '.mm-diff-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}',
     '.mm-diff-pill{padding:7px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:.12s;white-space:nowrap}',
     '.mm-diff-pill:hover{border-color:rgba(37,99,235,.3);color:#2563eb}',
     '.mm-diff-pill.on{background:linear-gradient(135deg,#34d399,#10b981);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(16,185,129,.28)}',
@@ -56,17 +71,23 @@
     '.mm-result-score{font-size:clamp(24px,5vw,34px);font-weight:900;color:#047857;margin:4px 0 4px}',
     '.mm-result-sub{font-size:12px;color:var(--text3)}',
     '@keyframes mmPopIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}',
-    '.mm-empty-note{font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;margin-top:10px;line-height:1.6}',
-    '.mm-status{margin-top:12px;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:800;line-height:1.55}',
+    '.mm-empty-note{font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-top:14px;line-height:1.6}',
+    '.mm-status{margin-top:14px;display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:14px;font-size:12px;font-weight:800;line-height:1.5}',
+    '.mm-status::before{content:"";flex:none;width:7px;height:7px;border-radius:50%}',
     '.mm-status.is-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}',
+    '.mm-status.is-info::before{background:#3b82f6}',
     '.mm-status.is-good{background:#ecfdf5;border:1px solid #86efac;color:#047857}',
+    '.mm-status.is-good::before{background:#10b981}',
     '.mm-status.is-bad{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c}',
+    '.mm-status.is-bad::before{background:#ef4444}',
     'body.dark .mm-card,body.dark .mm-result{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#2d3f55}',
-    'body.dark .mm-hud-chip,body.dark .mm-btn{background:linear-gradient(180deg,#162234,#0f172a);border-color:#334155;color:#cbd5e1}',
+    'body.dark .mm-stat,body.dark .mm-btn{background:linear-gradient(180deg,#162234,#0f172a);border-color:#334155;color:#cbd5e1}',
+    'body.dark .mm-stat-icon{background:#1e293b}',
+    'body.dark .mm-section-label{color:#94a3b8}',
     'body.dark .mm-title{color:#f8fafc}',
     'body.dark .mm-desc{color:#94a3b8}',
     'body.dark .mm-face{box-shadow:0 2px 0 rgba(0,0,0,.3),0 5px 10px rgba(0,0,0,.3),inset 0 0 0 3px rgba(15,23,42,.55)}',
-    '@media (max-width:520px){.mm-card{padding:14px 14px}}',
+    '@media (max-width:520px){.mm-card{padding:16px 14px 16px}.mm-stats{grid-template-columns:repeat(2,1fr)}.mm-icon-badge{width:38px;height:38px;font-size:18px}.mm-title{font-size:15px}}',
   ].join('');
   document.head.appendChild(s);
 })();
@@ -282,11 +303,10 @@ function _mmTick() {
   const st = window._mmState;
   if (!st.running) return;
   st.timeLeft--;
-  const chip = document.getElementById('mm-time-chip');
-  if (chip) {
-    chip.textContent = `⏱️ 남은 시간 ${st.timeLeft}초`;
-    chip.classList.toggle('is-time-low', st.timeLeft <= 15);
-  }
+  const timeVal = document.getElementById('mm-time-val');
+  const timeStat = document.getElementById('mm-time-chip');
+  if (timeVal) timeVal.textContent = `${st.timeLeft}초`;
+  if (timeStat) timeStat.classList.toggle('is-time-low', st.timeLeft <= 15);
   if (st.timeLeft <= 0) _mmEndGame('timeup');
 }
 
@@ -398,13 +418,17 @@ function _mmRenderRoot() {
   if (!st.cards && !st.ended) {
     root.innerHTML = `<div class="mm-shell">
       <div class="mm-card">
-        <div class="mm-head">
-          <div>
-            <div class="mm-title">🃏 짝맞추기</div>
-            <div class="mm-desc">같은 선수 사진 두 장을 찾아 맞히는 카드 게임입니다.</div>
+        <div class="mm-head-row">
+          <div class="mm-head-left">
+            <div class="mm-icon-badge">🃏</div>
+            <div class="mm-title-group">
+              <div class="mm-title">짝맞추기</div>
+              <div class="mm-desc">같은 선수 사진 두 장을 찾아 맞히는 카드 게임입니다.</div>
+            </div>
           </div>
         </div>
         <div class="mm-empty-note">⚠️ 카드를 만들 만큼 프로필 사진이 등록된 선수가 부족합니다(최소 3명 필요). 선수 데이터에 사진을 더 등록하거나, 더 쉬운 난이도로 바꿔서 다시 시도해주세요.</div>
+        <div class="mm-section-label">난이도 선택</div>
         <div class="mm-diff-bar">${_mmDiffBarHTML()}</div>
         <div class="mm-actions"><button class="mm-btn mm-btn-primary" onclick="_mmStart()">🔄 다시 확인</button></div>
       </div>
@@ -431,26 +455,28 @@ function _mmRenderRoot() {
 
   root.innerHTML = `<div class="mm-shell">
     <div class="mm-card">
-      <div class="mm-head">
-        <div>
-          <div class="mm-title">🃏 짝맞추기</div>
-          <div class="mm-desc">카드를 두 장씩 뒤집어서 같은 선수 사진을 찾으세요. 연속으로 맞히면 콤보 점수가 올라갑니다!</div>
+      <div class="mm-head-row">
+        <div class="mm-head-left">
+          <div class="mm-icon-badge">🃏</div>
+          <div class="mm-title-group">
+            <div class="mm-title">짝맞추기</div>
+            <div class="mm-desc">카드를 두 장씩 뒤집어서 같은 선수 사진을 찾으세요. 연속으로 맞히면 콤보 점수가 올라갑니다!</div>
+          </div>
         </div>
-        <div class="mm-hud">
-          <span class="mm-hud-chip">🏅 점수 ${st.score}</span>
-          <span class="mm-hud-chip is-combo">🔥 콤보 ${st.combo}</span>
-          <span class="mm-hud-chip" id="mm-progress-chip">✅ ${st.matched}/${st.pairs}쌍</span>
-          <span class="mm-hud-chip" id="mm-moves-chip">🕹️ 이동 ${st.moves}</span>
-          ${st.previewing
-            ? `<span class="mm-hud-chip is-combo" id="mm-preview-chip">👀 카드를 외워보세요!</span>`
-            : `<span class="mm-hud-chip" id="mm-time-chip">⏱️ 남은 시간 ${st.timeLeft}초</span>`}
-          <span class="mm-hud-chip">🥇 최고 ${best}</span>
-        </div>
-      </div>
-      <div class="mm-diff-bar">${_mmDiffBarHTML()}</div>
-      <div class="mm-actions">
         <button class="mm-btn mm-btn-primary" onclick="_mmStart()">${st.ended ? '🔄 다시하기' : '🔀 새로 섞기'}</button>
       </div>
+      <div class="mm-stats">
+        <div class="mm-stat"><span class="mm-stat-icon">🏅</span><div class="mm-stat-meta"><span class="mm-stat-val">${st.score}</span><span class="mm-stat-label">점수</span></div></div>
+        <div class="mm-stat is-combo"><span class="mm-stat-icon">🔥</span><div class="mm-stat-meta"><span class="mm-stat-val">${st.combo}</span><span class="mm-stat-label">콤보</span></div></div>
+        <div class="mm-stat" id="mm-progress-chip"><span class="mm-stat-icon">✅</span><div class="mm-stat-meta"><span class="mm-stat-val">${st.matched}/${st.pairs}</span><span class="mm-stat-label">완성 쌍</span></div></div>
+        <div class="mm-stat" id="mm-moves-chip"><span class="mm-stat-icon">🕹️</span><div class="mm-stat-meta"><span class="mm-stat-val">${st.moves}</span><span class="mm-stat-label">이동 횟수</span></div></div>
+        ${st.previewing
+          ? `<div class="mm-stat is-combo" id="mm-preview-chip"><span class="mm-stat-icon">👀</span><div class="mm-stat-meta"><span class="mm-stat-val">암기 중</span><span class="mm-stat-label">카드를 외워보세요</span></div></div>`
+          : `<div class="mm-stat" id="mm-time-chip"><span class="mm-stat-icon">⏱️</span><div class="mm-stat-meta"><span class="mm-stat-val" id="mm-time-val">${st.timeLeft}초</span><span class="mm-stat-label">남은 시간</span></div></div>`}
+        <div class="mm-stat is-best"><span class="mm-stat-icon">🥇</span><div class="mm-stat-meta"><span class="mm-stat-val">${best}</span><span class="mm-stat-label">최고 기록</span></div></div>
+      </div>
+      <div class="mm-section-label">난이도 선택</div>
+      <div class="mm-diff-bar">${_mmDiffBarHTML()}</div>
       ${!st.ended ? `<div class="mm-tool-row"><button class="mm-tool-btn" onclick="_mmUseHint()" ${(!st.running || st.previewing || st.locked || st.hintsLeft <= 0) ? 'disabled' : ''}>💡 짝 힌트 (${st.hintsLeft})</button></div>` : ''}
       ${resultHTML}
       <div class="mm-status is-${_mmEsc(st.statusTone || 'info')}" id="mm-status">${_mmEsc(st.statusText || '')}</div>

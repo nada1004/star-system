@@ -101,14 +101,22 @@ function rRoulette(C, T) {
     + '@keyframes gcCardAppear{0%{transform:scale(0.75) translateY(10px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}'
     + '.gc-shell{position:relative}'
     + '.gc-shell::before{content:"";position:absolute;inset:0 10px auto 10px;height:220px;border-radius:28px;background:radial-gradient(circle at top left,rgba(96,165,250,.16),transparent 40%),radial-gradient(circle at top right,rgba(244,114,182,.14),transparent 42%);pointer-events:none}'
-    + '.gc-hero{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px;border:1px solid rgba(148,163,184,.18);border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(248,250,252,.92));box-shadow:0 16px 38px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.85);margin-bottom:12px;backdrop-filter:blur(10px)}'
-    + '.gc-hero-copy{display:flex;flex-direction:column;gap:7px;min-width:0}'
+    + '.gc-hero{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;border:1px solid rgba(148,163,184,.18);border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.97),rgba(248,250,252,.93));box-shadow:0 16px 38px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.85);margin-bottom:12px;backdrop-filter:blur(10px);overflow:hidden}'
+    + '.gc-hero::after{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--gc-accent,linear-gradient(180deg,#60a5fa,#6366f1))}'
+    + '.gc-hero-main{display:flex;align-items:flex-start;gap:14px;min-width:0}'
+    + '.gc-hero-icon{flex-shrink:0;width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;background:var(--gc-accent,linear-gradient(135deg,#60a5fa,#6366f1));box-shadow:0 8px 18px rgba(37,99,235,.28),inset 0 1px 0 rgba(255,255,255,.35);animation:gcCardAppear .35s ease both}'
+    + '.gc-hero-copy{display:flex;flex-direction:column;gap:6px;min-width:0}'
     + '.gc-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}'
-    + '.gc-hero-title{font-size:24px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.15}'
-    + '.gc-hero-desc{font-size:13px;line-height:1.6;color:var(--text3);word-break:keep-all}'
-    + '.gc-hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}'
-    + '.gc-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.86);border:1px solid rgba(148,163,184,.18);font-size:12px;font-weight:800;color:var(--text2);box-shadow:0 8px 20px rgba(15,23,42,.05)}'
-    + '.gc-tabbar-card{position:relative;padding:8px;border:1px solid rgba(148,163,184,.18);border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.88));box-shadow:0 14px 30px rgba(15,23,42,.06);margin-bottom:14px}'
+    + '.gc-hero-title{font-size:21px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.2}'
+    + '.gc-hero-desc{font-size:12.5px;line-height:1.6;color:var(--text3);word-break:keep-all;max-width:52ch}'
+    + '.gc-hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;flex-shrink:0}'
+    + '.gc-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.86);border:1px solid rgba(148,163,184,.18);font-size:12px;font-weight:800;color:var(--text2);box-shadow:0 8px 20px rgba(15,23,42,.05);white-space:nowrap}'
+    + '.gc-tabbar-card{position:relative;padding:10px 8px 8px;border:1px solid rgba(148,163,184,.18);border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.88));box-shadow:0 14px 30px rgba(15,23,42,.06);margin-bottom:14px}'
+    + '.gc-tabbar-label{font-size:10.5px;font-weight:900;letter-spacing:.06em;color:var(--text3);text-transform:uppercase;padding:0 8px 6px;display:flex;align-items:center;gap:5px}'
+    + '.gc-tabbar-scroll{position:relative}'
+    + '.gc-tabbar-scroll::before,.gc-tabbar-scroll::after{content:"";position:absolute;top:0;bottom:0;width:18px;pointer-events:none;z-index:2}'
+    + '.gc-tabbar-scroll::before{left:0;background:linear-gradient(90deg,rgba(248,250,252,.95),transparent)}'
+    + '.gc-tabbar-scroll::after{right:0;background:linear-gradient(270deg,rgba(248,250,252,.95),transparent)}'
     + '.gc-tabbar-card .fbar{margin-bottom:0 !important;padding:2px}'
     + '.gc-card{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.18);border-radius:22px;box-shadow:0 16px 34px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.9)}'
     + '.gc-card-soft{position:relative;overflow:hidden}'
@@ -127,10 +135,13 @@ function rRoulette(C, T) {
     + 'body.dark .gc-badge,body.dark .gc-history-item{background:rgba(30,41,59,.76);border-color:#334155;color:#cbd5e1}'
     + 'body.dark .gc-hero-title,body.dark .gc-stage-title{color:#f8fafc}'
     + 'body.dark .gc-hero-desc,body.dark .gc-stage-desc{color:#94a3b8}'
+    + 'body.dark .gc-tabbar-label{color:#94a3b8}'
+    + 'body.dark .gc-tabbar-scroll::before{background:linear-gradient(90deg,rgba(15,23,42,.95),transparent)}'
+    + 'body.dark .gc-tabbar-scroll::after{background:linear-gradient(270deg,rgba(15,23,42,.95),transparent)}'
     + 'body.dark .gc-input-toggle{background:linear-gradient(180deg,#18263b,#0f172a);border-color:#334155;color:#cbd5e1;box-shadow:0 12px 24px rgba(0,0,0,.24)}'
     + 'body.dark .gc-input-toggle:hover{color:#93c5fd;border-color:#3b82f6}'
-    + '@media (max-width:900px){.gc-hero{flex-direction:column}.gc-hero-title{font-size:20px}.gc-hero-badges{justify-content:flex-start}.gc-tabbar-card{border-radius:18px}.gc-stage-card,.gc-card{border-radius:20px}}'
-    + '@media (max-width:640px){.gc-shell::before{left:0;right:0;height:180px}.gc-hero{padding:16px;border-radius:20px}.gc-hero-title{font-size:18px}.gc-badge{font-size:11px;padding:7px 10px}.gc-stage-card{padding:14px}}';
+    + '@media (max-width:900px){.gc-hero-title{font-size:19px}.gc-hero-badges{justify-content:flex-start}.gc-tabbar-card{border-radius:18px}.gc-stage-card,.gc-card{border-radius:20px}}'
+    + '@media (max-width:640px){.gc-shell::before{left:0;right:0;height:180px}.gc-hero{flex-direction:column;align-items:stretch;padding:16px;border-radius:20px}.gc-hero-main{align-items:center}.gc-hero-icon{width:44px;height:44px;font-size:22px;border-radius:14px}.gc-hero-title{font-size:17px}.gc-hero-desc{max-width:none}.gc-hero-badges{justify-content:flex-start}.gc-badge{font-size:11px;padding:7px 10px}.gc-stage-card{padding:14px}}';
   document.head.appendChild(s);
 })();
 
@@ -558,23 +569,26 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
   const rowsGC = isWide ? 3 : 4;
   const rowsLd = isWide ? 2 : 3;
   const _tabMeta = {
-    player: { title:'구슬뽑기', desc:'스트리머 이름을 넣고 바로 뽑는 기본 룰렛입니다.', badge1:`항목 ${activeItems.length}개`, badge2:'가중치 지원' },
-    map: { title:'맵뽑기', desc:'등록된 맵을 빠르게 고르고 랜덤으로 추첨합니다.', badge1:`맵 ${activeItems.length}개`, badge2:'맵 배지 선택' },
-    ladder: { title:'사다리', desc:'참가자와 결과 항목을 연결해서 재미있게 추첨합니다.', badge1:`참가자 ${ldNames.length}명`, badge2:'캔버스 추첨' },
-    duck: { title:'경주', desc:'오리 경주 방식으로 더 시각적으로 결과를 뽑습니다.', badge1:'실시간 애니메이션', badge2:'가볍게 진행' },
-    wheel: { title:'휠', desc:'큰 룰렛 휠로 직관적으로 돌리고 결과를 확인합니다.', badge1:'휠 인터랙션', badge2:'몰입감 강화' },
-    ppopgi: { title:'5x5 뽑기', desc:'카드 뒤집기 느낌으로 순서대로 결과를 열어볼 수 있습니다.', badge1:'25칸 보드', badge2:'등수 커스텀' },
-    teammatch: { title:'소속 매칭', desc:'같은 소속(팀) 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
-    tiermatch: { title:'티어 매칭', desc:'같은 티어 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
-    quiz: { title:'얼굴 맞추기', desc:'사진이 점점 선명해지는 시간제한 퀴즈. 빨리 맞힐수록 스피드 보너스!', badge1:'제한시간 60초', badge2:'블러 리빌' },
-    memory: { title:'짝맞추기', desc:'같은 선수 사진 두 장을 찾는 카드 매칭 게임입니다.', badge1:'제한시간 90초', badge2:'콤보 보너스' },
-    mole: { title:'두더지 잡기', desc:'문제로 나온 선수 사진과 같은 얼굴의 두더지만 재빨리 잡아보세요.', badge1:'제한시간 100초', badge2:'3x3 · 5x5 난이도' }
-  }[_gcTab] || { title:'룰렛/게임', desc:'원하는 방식으로 간단하게 추첨할 수 있습니다.', badge1:'빠른 추첨', badge2:'탭 전환 지원' };
-  const _hero = `<section class="gc-hero">
-    <div class="gc-hero-copy">
-      <div class="gc-hero-kicker">Lucky Studio</div>
-      <div class="gc-hero-title">🎰 ${_tabMeta.title}</div>
-      <div class="gc-hero-desc">${_tabMeta.desc}</div>
+    player: { kicker:'LUCKY DRAW', icon:'🎰', accent:'linear-gradient(135deg,#fb923c,#ef4444)', title:'구슬뽑기', desc:'스트리머 이름을 넣고 바로 뽑는 기본 룰렛입니다.', badge1:`항목 ${activeItems.length}개`, badge2:'가중치 지원' },
+    map: { kicker:'LUCKY DRAW', icon:'🗺️', accent:'linear-gradient(135deg,#34d399,#0ea5e9)', title:'맵뽑기', desc:'등록된 맵을 빠르게 고르고 랜덤으로 추첨합니다.', badge1:`맵 ${activeItems.length}개`, badge2:'맵 배지 선택' },
+    ladder: { kicker:'LUCKY DRAW', icon:'🪜', accent:'linear-gradient(135deg,#a78bfa,#6366f1)', title:'사다리', desc:'참가자와 결과 항목을 연결해서 재미있게 추첨합니다.', badge1:`참가자 ${ldNames.length}명`, badge2:'캔버스 추첨' },
+    duck: { kicker:'LUCKY DRAW', icon:'🐥', accent:'linear-gradient(135deg,#fbbf24,#f97316)', title:'경주', desc:'오리 경주 방식으로 더 시각적으로 결과를 뽑습니다.', badge1:'실시간 애니메이션', badge2:'가볍게 진행' },
+    wheel: { kicker:'LUCKY DRAW', icon:'🎡', accent:'linear-gradient(135deg,#f472b6,#ec4899)', title:'휠', desc:'큰 룰렛 휠로 직관적으로 돌리고 결과를 확인합니다.', badge1:'휠 인터랙션', badge2:'몰입감 강화' },
+    ppopgi: { kicker:'LUCKY DRAW', icon:'🎁', accent:'linear-gradient(135deg,#fb7185,#f43f5e)', title:'5x5 뽑기', desc:'카드 뒤집기 느낌으로 순서대로 결과를 열어볼 수 있습니다.', badge1:'25칸 보드', badge2:'등수 커스텀' },
+    teammatch: { kicker:'PUZZLE GAME', icon:'🧩', accent:'linear-gradient(135deg,#fb7185,#ec4899)', title:'소속 매칭', desc:'같은 소속(팀) 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
+    tiermatch: { kicker:'PUZZLE GAME', icon:'🎖️', accent:'linear-gradient(135deg,#34d399,#10b981)', title:'티어 매칭', desc:'같은 티어 선수들을 사각형으로 묶어서 제거하는 매칭 게임입니다.', badge1:'제한시간 100초', badge2:'낙하 보충' },
+    quiz: { kicker:'QUIZ GAME', icon:'🖼️', accent:'linear-gradient(135deg,#60a5fa,#6366f1)', title:'얼굴 맞추기', desc:'사진이 점점 선명해지는 시간제한 퀴즈. 빨리 맞힐수록 스피드 보너스!', badge1:'제한시간 60초', badge2:'블러 리빌' },
+    memory: { kicker:'PUZZLE GAME', icon:'🃏', accent:'linear-gradient(135deg,#818cf8,#a78bfa)', title:'짝맞추기', desc:'같은 선수 사진 두 장을 찾는 카드 매칭 게임입니다.', badge1:'제한시간 90초', badge2:'콤보 보너스' },
+    mole: { kicker:'ACTION GAME', icon:'🐹', accent:'linear-gradient(135deg,#facc15,#f59e0b)', title:'두더지 잡기', desc:'문제로 나온 선수 사진과 같은 얼굴의 두더지만 재빨리 잡아보세요.', badge1:'제한시간 100초', badge2:'3x3 · 5x5 난이도' }
+  }[_gcTab] || { kicker:'LUCKY STUDIO', icon:'🎰', accent:'linear-gradient(135deg,#60a5fa,#6366f1)', title:'룰렛/게임', desc:'원하는 방식으로 간단하게 추첨할 수 있습니다.', badge1:'빠른 추첨', badge2:'탭 전환 지원' };
+  const _hero = `<section class="gc-hero" style="--gc-accent:${_tabMeta.accent}">
+    <div class="gc-hero-main">
+      <div class="gc-hero-icon">${_tabMeta.icon}</div>
+      <div class="gc-hero-copy">
+        <div class="gc-hero-kicker">${_tabMeta.kicker}</div>
+        <div class="gc-hero-title">${_tabMeta.title}</div>
+        <div class="gc-hero-desc">${_tabMeta.desc}</div>
+      </div>
     </div>
     <div class="gc-hero-badges">
       <span class="gc-badge">✨ ${_tabMeta.badge1}</span>
@@ -583,8 +597,10 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     </div>
   </section>`;
 
-  // 공통 탭바 HTML — 다른 탭 하위 메뉴와 동일한 pill/fbar 스타일
-  const _tabBar = `<div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
+  // 공통 탭바 HTML — 다른 탭 하위 메뉴와 동일한 pill/fbar 스타일 + 라벨/스크롤 힌트로 가독성 보강
+  const _tabBar = `<div class="gc-tabbar-label">🎮 게임 선택</div>
+  <div class="gc-tabbar-scroll">
+  <div class="fbar no-export" style="overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;margin-bottom:6px">
     <button class="pill${_gcTab==='player'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('player')">🎰 구슬뽑기</button>
     <button class="pill${_gcTab==='map'?' on':''}"    style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('map')">🗺️ 맵뽑기</button>
     <button class="pill${_gcTab==='ladder'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('ladder')">🪜 사다리</button>
@@ -596,6 +612,7 @@ function renderRoulettePanel(dome, capR, isWide, avW, avH) {
     <button class="pill${_gcTab==='quiz'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('quiz')">🖼️ 얼굴맞추기</button>
     <button class="pill${_gcTab==='memory'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('memory')">🃏 짝맞추기</button>
     <button class="pill${_gcTab==='mole'?' on':''}" style="flex-shrink:0;white-space:nowrap" onclick="_gcSwitchTab('mole')">🐹 두더지</button>
+  </div>
   </div>`;
 
   // 오리경주 탭: 별도 레이아웃

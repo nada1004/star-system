@@ -10,55 +10,77 @@
   s.textContent = [
     '#ti-root{font-family:inherit;width:100%}',
     '.ti-shell{display:flex;flex-direction:column;gap:14px}',
-    '.ti-card{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);border-radius:24px;box-shadow:0 18px 38px rgba(15,23,42,.07),inset 0 1px 0 rgba(255,255,255,.9);padding:18px 20px}',
-    '.ti-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}',
-    '.ti-title{font-size:16px;font-weight:950;letter-spacing:-.02em;color:var(--text1)}',
-    '.ti-desc{margin-top:5px;font-size:12px;line-height:1.6;color:var(--text3)}',
-    '.ti-hud{display:flex;gap:8px;flex-wrap:wrap}',
-    '.ti-hud-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.18);font-size:12px;font-weight:900;color:var(--text2);box-shadow:0 8px 16px rgba(15,23,42,.05);white-space:nowrap}',
-    '.ti-hud-chip.is-time-low{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#fca5a5;color:#b91c1c;animation:tiPulse 1s ease-in-out infinite}',
-    '.ti-hud-chip.is-combo{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fbbf24;color:#92400e}',
-    '@keyframes tiPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}',
-    '.ti-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}',
-    '.ti-btn{padding:10px 18px;border-radius:14px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 10px 18px rgba(15,23,42,.05);font-family:inherit;transition:.12s}',
-    '.ti-btn:hover{border-color:rgba(37,99,235,.25);color:#2563eb}',
-    '.ti-btn.ti-btn-primary{background:linear-gradient(135deg,#fb7185,#f43f5e 52%,#ec4899);color:#fff;border:none;box-shadow:0 7px 0 #9f1239,0 16px 26px rgba(244,63,94,.22)}',
-    '.ti-btn.ti-btn-primary:hover{color:#fff;transform:translateY(-1px)}',
-    '.ti-stage{position:relative;margin-top:14px}',
-    '.ti-grid{display:grid;grid-template-columns:repeat(var(--ti-cols,8),1fr);gap:7px;position:relative;touch-action:none;-webkit-user-select:none;user-select:none;border-radius:16px}',
-    '.ti-cell{position:relative;aspect-ratio:1/1;border-radius:18px;overflow:hidden;background:var(--ti-cell-color,#f1f5f9);box-shadow:0 2px 0 rgba(15,23,42,.10),0 5px 10px rgba(15,23,42,.10),inset 0 0 0 3px rgba(255,255,255,.85);animation:tiDropIn .28s ease both;transition:transform .12s}',
+    '.ti-card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.16);border-radius:26px;box-shadow:0 20px 44px rgba(15,23,42,.08),inset 0 1px 0 rgba(255,255,255,.9);padding:22px 22px 20px;overflow:hidden}',
+    '.ti-card::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#fb7185,#f43f5e,#ec4899,#f43f5e,#fb7185)}',
+    '.ti-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}',
+    '.ti-head-left{display:flex;align-items:flex-start;gap:12px;min-width:0}',
+    '.ti-icon-badge{flex:none;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px;background:linear-gradient(135deg,#fb7185,#ec4899);box-shadow:0 8px 16px rgba(236,72,153,.32)}',
+    '.ti-title-group{min-width:0}',
+    '.ti-title{font-size:17px;font-weight:950;letter-spacing:-.02em;color:var(--text1)}',
+    '.ti-desc{margin-top:4px;font-size:12px;line-height:1.6;color:var(--text3);max-width:440px}',
+    '.ti-btn{padding:11px 18px;border-radius:14px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 10px 18px rgba(15,23,42,.05);font-family:inherit;transition:.12s;white-space:nowrap}',
+    '.ti-btn:hover{border-color:rgba(37,99,235,.25);color:#2563eb;transform:translateY(-1px)}',
+    '.ti-btn.ti-btn-primary{background:linear-gradient(135deg,#fb7185,#f43f5e 52%,#ec4899);color:#fff;border:none;box-shadow:0 7px 0 #9f1239,0 16px 26px rgba(244,63,94,.24)}',
+    '.ti-btn.ti-btn-primary:hover{color:#fff;transform:translateY(-2px)}',
+    '.ti-btn.ti-btn-primary:active{transform:translateY(1px);box-shadow:0 3px 0 #9f1239,0 8px 14px rgba(244,63,94,.24)}',
+    '.ti-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}',
+    '.ti-stat{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);box-shadow:0 8px 16px rgba(15,23,42,.05);min-width:0}',
+    '.ti-stat-icon{flex:none;width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;background:#f1f5f9}',
+    '.ti-stat-meta{display:flex;flex-direction:column;min-width:0;line-height:1.25}',
+    '.ti-stat-val{font-size:15px;font-weight:950;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.ti-stat-label{font-size:10.5px;font-weight:800;color:var(--text3)}',
+    '.ti-stat.is-combo .ti-stat-icon{background:linear-gradient(135deg,#fef3c7,#fde68a)}',
+    '.ti-stat.is-combo .ti-stat-val{color:#92400e}',
+    '.ti-stat.is-best .ti-stat-icon{background:linear-gradient(135deg,#fde68a,#fbbf24)}',
+    '.ti-stat.is-best .ti-stat-val{color:#92400e}',
+    '.ti-stat.is-time-low{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#fca5a5;animation:tiPulse 1s ease-in-out infinite}',
+    '.ti-stat.is-time-low .ti-stat-icon{background:#fecaca}',
+    '.ti-stat.is-time-low .ti-stat-val{color:#b91c1c}',
+    '@keyframes tiPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}',
+    '.ti-section-label{margin-top:16px;font-size:11px;font-weight:900;color:var(--text3);letter-spacing:.02em}',
+    '.ti-diff-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}',
+    '.ti-diff-pill{padding:8px 13px;border-radius:999px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:.14s;white-space:nowrap}',
+    '.ti-diff-pill:hover{border-color:rgba(37,99,235,.3);color:#2563eb;transform:translateY(-1px)}',
+    '.ti-diff-pill.on{background:linear-gradient(135deg,#34d399,#10b981);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(16,185,129,.3)}',
+    '.ti-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}',
+    '.ti-stage{position:relative;margin-top:16px}',
+    '.ti-grid{display:grid;grid-template-columns:repeat(var(--ti-cols,8),1fr);gap:7px;position:relative;touch-action:none;-webkit-user-select:none;user-select:none;border-radius:18px;padding:10px;background:linear-gradient(180deg,#f8fafc,#f1f5f9);border:1px solid rgba(148,163,184,.14)}',
+    '.ti-cell{position:relative;aspect-ratio:1/1;border-radius:16px;overflow:hidden;background:var(--ti-cell-color,#f1f5f9);box-shadow:0 2px 0 rgba(15,23,42,.08),0 4px 8px rgba(15,23,42,.08),inset 0 0 0 2.5px rgba(255,255,255,.9);animation:tiDropIn .28s ease both;transition:transform .12s}',
     '.ti-cell.ti-empty{box-shadow:none;background:transparent;animation:none}',
-    '.ti-cell.ti-sel{outline:3px solid #2563eb;outline-offset:-2px;filter:brightness(1.06);transform:scale(1.05)}',
+    '.ti-cell.ti-sel{outline:3px solid #2563eb;outline-offset:-2px;filter:brightness(1.06);transform:scale(1.06);z-index:2}',
     '.ti-cell.ti-invalid{animation:tiShake .32s ease}',
     '.ti-cell.ti-clear{animation:tiPopOut .26s ease forwards}',
-    '.ti-cell img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;border-radius:15px}',
+    '.ti-cell img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;border-radius:13.5px}',
     '.ti-cell-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;color:#fff;pointer-events:none}',
-    '.ti-selbox{position:absolute;border:2px dashed #2563eb;background:rgba(37,99,235,.10);border-radius:8px;pointer-events:none;z-index:5;display:none}',
-    '.ti-result{background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:1px solid rgba(251,113,133,.28);border-radius:22px;padding:22px 20px;text-align:center;margin-top:14px;animation:tiPopIn .4s cubic-bezier(.175,.885,.32,1.35)}',
+    '.ti-selbox{position:absolute;border:2px dashed #2563eb;background:rgba(37,99,235,.10);border-radius:10px;pointer-events:none;z-index:5;display:none}',
+    '.ti-result{background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:1px solid rgba(251,113,133,.28);border-radius:22px;padding:22px 20px;text-align:center;margin-top:16px;animation:tiPopIn .4s cubic-bezier(.175,.885,.32,1.35)}',
     '.ti-result-emoji{font-size:44px;display:block;margin-bottom:4px}',
     '.ti-result-score{font-size:clamp(24px,5vw,34px);font-weight:900;color:#C0274A;margin:4px 0 4px}',
     '.ti-result-sub{font-size:12px;color:var(--text3)}',
-    '.ti-empty-note{font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;margin-top:10px;line-height:1.6}',
-    '.ti-status{margin-top:12px;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:800;line-height:1.55}',
+    '.ti-empty-note{font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-top:14px;line-height:1.6}',
+    '.ti-status{margin-top:14px;display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:14px;font-size:12px;font-weight:800;line-height:1.5}',
+    '.ti-status::before{content:"";flex:none;width:7px;height:7px;border-radius:50%}',
     '.ti-status.is-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}',
+    '.ti-status.is-info::before{background:#3b82f6}',
     '.ti-status.is-good{background:#ecfdf5;border:1px solid #86efac;color:#047857}',
+    '.ti-status.is-good::before{background:#10b981}',
     '.ti-status.is-bad{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c}',
+    '.ti-status.is-bad::before{background:#ef4444}',
     '@keyframes tiDropIn{from{opacity:0;transform:translateY(-14px) scale(.85)}to{opacity:1;transform:translateY(0) scale(1)}}',
     '@keyframes tiPopOut{to{opacity:0;transform:scale(.55)}}',
     '@keyframes tiShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}',
     '@keyframes tiPopIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}',
-    'body.dark .ti-card,body.dark .ti-result{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#2d3f55}',
-    'body.dark .ti-hud-chip,body.dark .ti-btn{background:linear-gradient(180deg,#162234,#0f172a);border-color:#334155;color:#cbd5e1}',
+    'body.dark .ti-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#2d3f55}',
+    'body.dark .ti-result{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#2d3f55}',
+    'body.dark .ti-stat,body.dark .ti-btn,body.dark .ti-diff-pill{background:linear-gradient(180deg,#162234,#0f172a);border-color:#334155;color:#cbd5e1}',
+    'body.dark .ti-stat-icon{background:#1e293b}',
+    'body.dark .ti-diff-pill.on{color:#fff}',
     'body.dark .ti-title{color:#f8fafc}',
     'body.dark .ti-desc{color:#94a3b8}',
-    'body.dark .ti-cell{box-shadow:0 2px 0 rgba(0,0,0,.3),0 5px 10px rgba(0,0,0,.3),inset 0 0 0 3px rgba(15,23,42,.55)}',
-    '.ti-diff-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}',
-    '.ti-diff-pill{padding:7px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:.12s;white-space:nowrap}',
-    '.ti-diff-pill:hover{border-color:rgba(37,99,235,.3);color:#2563eb}',
-    '.ti-diff-pill.on{background:linear-gradient(135deg,#34d399,#10b981);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(16,185,129,.28)}',
-    'body.dark .ti-diff-pill{background:linear-gradient(180deg,#162234,#0f172a);border-color:#334155;color:#cbd5e1}',
-    'body.dark .ti-diff-pill.on{color:#fff}',
-    '@media (max-width:520px){.ti-card{padding:14px 14px}}',
+    'body.dark .ti-grid{background:linear-gradient(180deg,#0f172a,#0b1322);border-color:#243349}',
+    'body.dark .ti-cell{box-shadow:0 2px 0 rgba(0,0,0,.3),0 4px 8px rgba(0,0,0,.3),inset 0 0 0 2.5px rgba(15,23,42,.6)}',
+    'body.dark .ti-section-label{color:#94a3b8}',
+    '@media (max-width:520px){.ti-card{padding:16px 14px 16px}.ti-stats{grid-template-columns:repeat(2,1fr)}.ti-icon-badge{width:38px;height:38px;font-size:18px}.ti-title{font-size:15px}}'
   ].join('');
   document.head.appendChild(s);
 })();
@@ -175,19 +197,29 @@ function _tiSaveBest(v, diffKey) {
 function _tiBuildTierPool() {
   const players = Array.isArray(window.players) ? window.players : [];
   const pool = {};
+  const seenByTier = {}; // [버그수정] 동일 인물이 같은 티어 목록에 중복 등록돼 있으면 그 사람만 과도하게 자주 뽑히는 문제 방지
   players.forEach(p => {
     if (!p || p.hidden || p.retired || p.hideFromBoard) return;
     if (String(p.univ || '').trim() === 'YB') return;
     const t = String(p.tier || '').trim();
     if (!t || t === '?' || t === '미정' || t === '미확인') return;
+    const name = String(p.name || '').trim();
+    if (!name) return;
+    if (!seenByTier[t]) seenByTier[t] = new Set();
+    if (seenByTier[t].has(name)) return; // 중복 인물 스킵
+    seenByTier[t].add(name);
     if (!pool[t]) pool[t] = [];
-    pool[t].push({ name: String(p.name || '').trim(), photo: p.photo });
+    pool[t].push({ name, photo: p.photo });
   });
   let teams = Object.keys(pool).map(t => ({
     tier: t,
     color: (typeof getTierBtnColor === 'function') ? getTierBtnColor(t) : '#6b7280',
     players: pool[t],
   }));
+  // [버그수정] 티어에 등록된 선수가 1명뿐이면 그 티어가 나올 때마다 항상 같은 사람 사진만 보이게 되어
+  // "같은 사람만 계속 나온다"는 체감으로 이어짐 → 최소 2명 이상 등록된 티어만 게임 풀에 포함
+  const diverseTiers = teams.filter(t => t.players.length >= 2);
+  if (diverseTiers.length >= 2) teams = diverseTiers;
   // 셔플(티어 등장 순서를 매판마다 다르게)
   for (let i = teams.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -210,9 +242,18 @@ function _tiDrawFromTier(tierIdx) {
       const j = Math.floor(Math.random() * (i + 1));
       [bag[i], bag[j]] = [bag[j], bag[i]];
     }
+    // [버그수정] 이전 가방의 마지막 인물과 새 가방의 첫 뽑힘(맨 뒤 요소)이 같으면
+    // 바로 직전과 동일 인물이 연속으로 뽑혀 "같은 사람만 나온다"고 느껴짐 → 가능하면 위치를 바꿔줌
+    const lastPicked = st.tierLastPicked && st.tierLastPicked[tierIdx];
+    if (lastPicked && bag.length > 1 && bag[bag.length - 1].name === lastPicked) {
+      const swapWith = Math.floor(Math.random() * (bag.length - 1));
+      [bag[bag.length - 1], bag[swapWith]] = [bag[swapWith], bag[bag.length - 1]];
+    }
     st.tierBags[tierIdx] = bag;
   }
   const picked = bag.pop();
+  if (!st.tierLastPicked) st.tierLastPicked = {};
+  st.tierLastPicked[tierIdx] = picked.name;
   return picked;
 }
 
@@ -298,11 +339,10 @@ function _tiTick() {
   const st = window._tiState;
   if (!st.running) return;
   st.timeLeft--;
-  const chip = document.getElementById('ti-time-chip');
-  if (chip) {
-    chip.textContent = `⏱️ 남은 시간 ${st.timeLeft}초`;
-    chip.classList.toggle('is-time-low', st.timeLeft <= 15);
-  }
+  const timeVal = document.getElementById('ti-time-val');
+  const timeStat = document.getElementById('ti-time-chip');
+  if (timeVal) timeVal.textContent = `${st.timeLeft}초`;
+  if (timeStat) timeStat.classList.toggle('is-time-low', st.timeLeft <= 15);
   if (st.timeLeft <= 0) _tiEndGame();
 }
 
@@ -363,12 +403,16 @@ function _tiRenderRoot() {
   if (!st.board && !st.ended) {
     root.innerHTML = `<div class="ti-shell">
       <div class="ti-card">
-        <div class="ti-head">
-          <div>
-            <div class="ti-title">🎖️ 티어 매칭</div>
-            <div class="ti-desc">사각형으로 드래그해서 같은 티어 선수들만 모아 제거하는 매칭 게임입니다.</div>
+        <div class="ti-head-row">
+          <div class="ti-head-left">
+            <div class="ti-icon-badge">🎖️</div>
+            <div class="ti-title-group">
+              <div class="ti-title">티어 매칭</div>
+              <div class="ti-desc">사각형으로 드래그해서 같은 티어 선수들만 모아 제거하는 매칭 게임입니다.</div>
+            </div>
           </div>
         </div>
+        <div class="ti-section-label">난이도 선택</div>
         <div class="ti-diff-bar">${_tiDiffBarHTML()}</div>
         <div class="ti-empty-note">⚠️ 게임을 만들 만큼 티어 정보와 프로필 사진이 등록된 선수가 부족합니다(최소 2개 티어 필요). 선수 데이터에 티어/사진을 더 등록한 뒤 다시 시도해주세요.</div>
         <div class="ti-actions"><button class="ti-btn ti-btn-primary" onclick="_tiStart()">🔄 다시 확인</button></div>
@@ -385,22 +429,24 @@ function _tiRenderRoot() {
 
   root.innerHTML = `<div class="ti-shell">
     <div class="ti-card">
-      <div class="ti-head">
-        <div>
-          <div class="ti-title">🎖️ 티어 매칭</div>
-          <div class="ti-desc">드래그해서 사각형을 그리세요. 안에 있는 선수 사진이 <b>전부 같은 티어</b>이면 사라지고 점수를 얻습니다. 다른 티어가 하나라도 섞이면 무효!</div>
+      <div class="ti-head-row">
+        <div class="ti-head-left">
+          <div class="ti-icon-badge">🎖️</div>
+          <div class="ti-title-group">
+            <div class="ti-title">티어 매칭</div>
+            <div class="ti-desc">드래그해서 사각형을 그리세요. 안에 있는 선수 사진이 <b>전부 같은 티어</b>이면 사라지고 점수를 얻습니다. 다른 티어가 하나라도 섞이면 무효!</div>
+          </div>
         </div>
-        <div class="ti-hud">
-          <span class="ti-hud-chip">🏅 점수 ${st.score}</span>
-          <span class="ti-hud-chip is-combo">🔥 콤보 ${st.combo || 0}</span>
-          <span class="ti-hud-chip" id="ti-time-chip">⏱️ 남은 시간 ${st.timeLeft}초</span>
-          <span class="ti-hud-chip">🥇 최고 ${best}</span>
-        </div>
-      </div>
-      <div class="ti-diff-bar">${_tiDiffBarHTML()}</div>
-      <div class="ti-actions">
         <button class="ti-btn ti-btn-primary" onclick="_tiStart()">${st.ended ? '🔄 다시하기' : '🔀 새로 섞기'}</button>
       </div>
+      <div class="ti-stats">
+        <div class="ti-stat"><span class="ti-stat-icon">🏅</span><div class="ti-stat-meta"><span class="ti-stat-val" id="ti-score-val">${st.score}</span><span class="ti-stat-label">점수</span></div></div>
+        <div class="ti-stat is-combo"><span class="ti-stat-icon">🔥</span><div class="ti-stat-meta"><span class="ti-stat-val" id="ti-combo-val">${st.combo || 0}</span><span class="ti-stat-label">콤보</span></div></div>
+        <div class="ti-stat" id="ti-time-chip"><span class="ti-stat-icon">⏱️</span><div class="ti-stat-meta"><span class="ti-stat-val" id="ti-time-val">${st.timeLeft}초</span><span class="ti-stat-label">남은 시간</span></div></div>
+        <div class="ti-stat is-best"><span class="ti-stat-icon">🥇</span><div class="ti-stat-meta"><span class="ti-stat-val">${best}</span><span class="ti-stat-label">최고 기록</span></div></div>
+      </div>
+      <div class="ti-section-label">난이도 선택</div>
+      <div class="ti-diff-bar">${_tiDiffBarHTML()}</div>
       ${resultHTML}
       <div class="ti-status is-${_tiEsc(st.statusTone || 'info')}" id="ti-status">${_tiEsc(st.statusText || '')}</div>
       <div class="ti-stage">
@@ -530,10 +576,10 @@ function _tiFinishSelection() {
 
 function _tiUpdateHud() {
   const st = window._tiState;
-  const scoreChip = document.querySelector('#ti-root .ti-hud-chip');
-  if (scoreChip) scoreChip.textContent = `🏅 점수 ${st.score}`;
-  const comboChip = document.querySelector('#ti-root .ti-hud-chip.is-combo');
-  if (comboChip) comboChip.textContent = `🔥 콤보 ${st.combo || 0}`;
+  const scoreVal = document.getElementById('ti-score-val');
+  if (scoreVal) scoreVal.textContent = st.score;
+  const comboVal = document.getElementById('ti-combo-val');
+  if (comboVal) comboVal.textContent = st.combo || 0;
   const statusEl = document.getElementById('ti-status');
   if (statusEl) {
     statusEl.className = `ti-status is-${st.statusTone || 'info'}`;
