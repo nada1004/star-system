@@ -324,8 +324,12 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
         }
       }
       // 3) genId 기반(_id/sid)
+      // ⚠️ 주의: genId()는 브라우저가 crypto.randomUUID를 지원하면 완전 랜덤 UUID(32자리 hex)를 반환함.
+      //    이 경우 앞부분을 "생성시각"으로 파싱하면 실제로는 난수값이라 같은 날짜 내 정렬이 뒤죽박죽됨.
+      //    genId()가 Date.now().toString(36)+random 폴백을 쓴 구형 데이터에서만 이 분기를 사용.
       const id = (m && (m._id || m.sid)) ? String(m._id || m.sid) : '';
-      if (id && id.length > 4) {
+      const isRandomUUID = /^[0-9a-f]{32}$/i.test(id);
+      if (id && id.length > 4 && !isRandomUUID) {
         const prefix = id.slice(0, -4); // Date.now().toString(36)
         const t36 = parseInt(prefix, 36);
         if (!isNaN(t36) && isFinite(t36)) return t36;
