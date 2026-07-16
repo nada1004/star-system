@@ -56,25 +56,6 @@ let tierRankMode='tier'; // tier | winstreak | wins | revstreak | winrate | rece
     '.tier-type-box{width:100%;display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;background:linear-gradient(180deg,rgba(248,250,252,.96),rgba(241,245,249,.94));border-radius:14px;border:1px solid rgba(148,163,184,.16);margin-top:2px}',
     '.tier-view-btn{padding:6px 9px;border-radius:10px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);font-size:13px;cursor:pointer;line-height:1;box-shadow:0 8px 16px rgba(15,23,42,.04)}',
     '.tier-view-btn.on{border-color:var(--blue);background:#eff6ff;color:var(--blue)}',
-    /* [큐트 모드] 파스텔 핑크/민트/버터 톤의 사랑스러운 테마 — 🌸 버튼으로 토글 */
-    '.tier-shell[data-tier-mode="cute"] .tier-hero{background:linear-gradient(135deg,#ffd6ec,#c9f7f0 55%,#fff6b7);border-color:rgba(244,114,182,.28);box-shadow:0 20px 40px rgba(244,114,182,.16)}',
-    '.tier-shell[data-tier-mode="cute"] .tier-hero-kicker,.tier-shell[data-tier-mode="cute"] .tier-hero-title{color:#9d174d}',
-    '.tier-shell[data-tier-mode="cute"] .tier-hero-desc{color:#831843}',
-    '.tier-shell[data-tier-mode="cute"] .tier-hero-badge{background:rgba(255,255,255,.6);border-color:rgba(244,114,182,.32);color:#9d174d}',
-    '.tier-shell[data-tier-mode="cute"] .tier-toolbar-card,.tier-shell[data-tier-mode="cute"] .tier-content-card{background:linear-gradient(180deg,#fffdfb,#fff0f7);border-color:rgba(244,114,182,.2);border-radius:26px;box-shadow:0 18px 36px rgba(244,114,182,.13)}',
-    '.tier-shell[data-tier-mode="cute"] .pill{border-radius:999px}',
-    '.tier-shell[data-tier-mode="cute"] .pill.on{background:linear-gradient(135deg,#fb7185,#f9a8d4);border-color:#fb7185;color:#fff}',
-    '.tier-shell[data-tier-mode="cute"] .tier-view-btn{border-radius:999px}',
-    '.tier-shell[data-tier-mode="cute"] .tier-view-btn.on{background:#ffe4f2;border-color:#fb7185;color:#be185d}',
-    '.tier-shell[data-tier-mode="cute"] .tier-table tbody tr{border-radius:18px}',
-    '.tier-shell[data-tier-mode="cute"] .tier-table thead th{background:rgba(255,241,246,.92);color:#9d174d}',
-    '.tier-shell[data-tier-mode="cute"] .tier-avatar-wrap>span:first-child,.tier-shell[data-tier-mode="cute"] .tier-avatar-wrap img{box-shadow:0 0 0 3px #ffe4f2,0 4px 10px rgba(244,114,182,.25)}',
-    '.tier-shell[data-tier-mode="cute"] .tier-rank-chip.gold{background:linear-gradient(135deg,#fde68a,#fbbf24);color:#78350f;border-color:#fbbf24}',
-    '.tier-shell[data-tier-mode="cute"] .tier-rank-chip.silver{background:linear-gradient(135deg,#f1f5f9,#cbd5e1);color:#334155;border-color:#cbd5e1}',
-    '.tier-shell[data-tier-mode="cute"] .tier-rank-chip.bronze{background:linear-gradient(135deg,#fdecd8,#f4c99a);color:#7c2d12;border-color:#f4c99a}',
-    '.tier-shell[data-tier-mode="cute"] .clickable-name{color:#be185d}',
-    '.tier-shell[data-tier-mode="cute"] .tier-compact-item,.tier-shell[data-tier-mode="cute"] .tier-podium-card,.tier-shell[data-tier-mode="cute"] .tier-card{border-radius:22px}',
-    'body.dark .tier-shell[data-tier-mode="cute"] .tier-toolbar-card,body.dark .tier-shell[data-tier-mode="cute"] .tier-content-card{background:linear-gradient(180deg,#1a1025,#241226);border-color:rgba(244,114,182,.22)}',
     '.tier-univ-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;color:#fff;font-weight:900;letter-spacing:-.01em;box-shadow:0 10px 18px rgba(15,23,42,.10),inset 0 1px 0 rgba(255,255,255,.28)}',
     '.tier-univ-badge img{box-shadow:0 4px 10px rgba(15,23,42,.16);background:rgba(255,255,255,.82);padding:1px}',
     '.tier-act-dot{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.92));box-shadow:0 8px 16px rgba(15,23,42,.05);font-size:11px;font-weight:900}',
@@ -314,7 +295,6 @@ function rTier(C,T){
   const _fUniv = (typeof fUniv!=='undefined') ? fUniv : window.fUniv;
   const _fTier = (typeof fTier!=='undefined') ? fTier : window.fTier;
   if(window._tierExcludeMale===undefined) window._tierExcludeMale=false;
-  const _tierCuteMode = (()=>{ try{ return localStorage.getItem('su_tier_cute_mode')==='1'; }catch(e){ return false; } })();
   const _tiers = (typeof TIERS !== 'undefined' && Array.isArray(TIERS))
     ? TIERS
     : (Array.isArray(window.TIERS) ? window.TIERS : null);
@@ -530,7 +510,6 @@ function rTier(C,T){
     fh+=`<button class="tier-view-btn ${on?'on':''}" title="${vm.title}" onclick="window._tierViewMode='${vm.id}';try{localStorage.setItem('su_tier_view_mode','${vm.id}');}catch(e){}render()">${vm.icon}</button>`;
   });
   fh+=`</div>`;
-  fh+=`<button class="tier-view-btn ${_tierCuteMode?'on':''}" title="큐트 모드" onclick="try{localStorage.setItem('su_tier_cute_mode','${_tierCuteMode?'0':'1'}');}catch(e){}render()" style="flex-shrink:0">🌸</button>`;
   fh+=`</div>`;
 
   if(window._tierFilterOpen){
@@ -1452,7 +1431,7 @@ function rTier(C,T){
   });
   }
 
-  C.innerHTML=`<div class="tier-shell" data-tier-mode="${_tierCuteMode?'cute':'classic'}">
+  C.innerHTML=`<div class="tier-shell">
     <section class="tier-hero">
       <div class="tier-hero-copy">
         <div class="tier-hero-kicker">Tier Ranking</div>

@@ -1299,25 +1299,28 @@ body.su-modal-open{ overflow:hidden; }
   width:1px;
   height:26px;
   background:var(--border2);
-  margin:0 6px 0 auto;
+  margin:0 8px;
   flex-shrink:0;
   opacity:.9;
 }
+/* (수정) margin-left:auto가 서브탭 바로 옆이 아니라 컨테이너 우측 끝까지 컨트롤을 밀어내
+   서브탭이 적은 그룹(대회 등)에서 큰 공백이 생기던 문제를 수정. 의도대로 서브탭 바로 우측에 붙게 됨.
+   또한 옅은 트레이 배경을 줘서 필터/정렬/일괄선택이 하나의 컨트롤 묶음임을 시각적으로 구분 */
 .hist-ctrl-group{
   display:inline-flex;
   align-items:center;
   gap:6px;
-  padding:0;              /* (요청사항) 배경 없이 '그룹'만 */
-  border-radius:0;
-  background:transparent;
-  border:none;
+  padding:3px 8px;
+  border-radius:12px;
+  background:rgba(148,163,184,.10);
+  border:1px solid rgba(148,163,184,.14);
   box-shadow:none;
   flex-shrink:0;
 }
 body.dark .hist-inline-sep{background:#2d3f55;opacity:.9;}
 body.dark .hist-ctrl-group{
-  background:transparent;
-  border-color:transparent;
+  background:rgba(255,255,255,.05);
+  border-color:rgba(255,255,255,.08);
   box-shadow:none;
 }
 
@@ -14284,6 +14287,54 @@ body.dark .streamer-quickstat-value { color: #f1f5f9; }
   font-size: 11px !important;
 }
 
+/* ── 스트리머 탭: 뷰 전환(카드형/상세형/리스트/심플형) 전용 세그먼트 컨트롤 ──
+   기존에는 종족 필터/검색/전적숨김과 한 줄에 뒤섞여 있어 모바일에서 가로 스크롤을
+   해야만 원하는 뷰 버튼을 찾을 수 있었음. 4개 뷰 버튼만 별도의 고정 그리드로 분리해
+   스크롤 없이 항상 한 화면에 노출되도록 함. */
+.streamer-viewmode-seg {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.streamer-viewmode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 6px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(148,163,184,.24);
+  background: #f8fafc;
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .14s, border-color .14s, color .14s, box-shadow .14s;
+}
+.streamer-viewmode-btn .streamer-viewmode-ico { font-size: 14px; line-height: 1; }
+.streamer-viewmode-btn:hover { background: rgba(37,99,235,.06); border-color: rgba(37,99,235,.28); }
+.streamer-viewmode-btn:active { transform: scale(.97); }
+.streamer-viewmode-btn.on {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(37,99,235,.28);
+}
+body.dark .streamer-viewmode-btn { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.1); color: #cbd5e1; }
+body.dark .streamer-viewmode-btn:hover { background: rgba(37,99,235,.14); }
+body.dark .streamer-viewmode-btn.on { background: #2563eb; border-color: #2563eb; color: #fff; }
+@media (max-width: 480px) {
+  .streamer-viewmode-btn { font-size: 10.5px; padding: 7px 3px; gap: 3px; }
+  .streamer-viewmode-btn .streamer-viewmode-ico { font-size: 13px; }
+}
+@media (max-width: 360px) {
+  /* 초소형 폰에서는 텍스트를 숨기고 아이콘만 표시해 버튼이 찌그러지지 않도록 */
+  .streamer-viewmode-btn .streamer-viewmode-txt { display: none; }
+  .streamer-viewmode-btn .streamer-viewmode-ico { font-size: 17px; }
+}
+
 /* 직책자/일반 스트리머/티어 구분 칩 - 컴팩트하게 + 폭 통일 */
 .streamer-subgrp-chip {
   display: inline-flex;
@@ -14650,7 +14701,10 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
 /* 모바일에서 숨겨지는 컬럼(종족/승/패/포인트/ELO) 정보를 각 행 아래 요약 줄로 노출 (PC에서는 숨김) */
 .streamer-mobile-info-row { display: none; }
 @media (max-width: 768px) {
-  .streamer-mobile-info-row { display: table-row; }
+  /* 기본은 접힌 상태(아코디언) — 이름 옆 화살표(▾)를 탭했을 때만 펼침.
+     항상 펼쳐두면 한 명당 실질 2줄을 차지해 스캔 밀도가 떨어지므로 기본 숨김으로 변경 */
+  .streamer-mobile-info-row { display: none; }
+  .streamer-mobile-info-row.is-open { display: table-row; }
   .streamer-mobile-info-row td { border-top: none !important; padding: 4px 10px 9px 52px !important; }
   .streamer-mobile-stats { display: flex; flex-wrap: wrap; gap: 6px; }
   .streamer-mobile-stats .sm-stat {
@@ -14662,10 +14716,34 @@ body.dark .pd-mode-card:hover { box-shadow: 0 8px 18px rgba(0,0,0,.30); }
   .streamer-mobile-stats .sm-stat-wr { font-weight: 900; background: rgba(148,163,184,.14); }
   .streamer-mobile-stats .sm-stat-wr b { color: inherit; opacity: .75; }
   body.dark .streamer-mobile-stats .sm-stat { background: rgba(255,255,255,.06); }
-  /* 메인 행과 정보 요약 행 사이 구분선 제거 (같은 스트리머 묶음으로 보이도록) */
-  .streamer-table tbody tr.streamer-row:has(+ .streamer-mobile-info-row) td { border-bottom: none !important; }
+  /* 메인 행과 정보 요약 행 사이 구분선 제거 (같은 스트리머 묶음으로 보이도록, 펼쳐진 경우에만) */
+  .streamer-table tbody tr.streamer-row:has(+ .streamer-mobile-info-row.is-open) td { border-bottom: none !important; }
+
+  /* 펼침/접힘 토글 버튼(이름 옆 화살표) */
+  .streamer-mobile-info-toggle {
+    margin-left: auto;
+    flex-shrink: 0;
+    border: none;
+    background: rgba(148,163,184,.14);
+    color: var(--text2);
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .16s, background .16s;
+  }
+  .streamer-mobile-info-toggle.is-open { transform: rotate(180deg); background: rgba(37,99,235,.16); color: #2563eb; }
+  body.dark .streamer-mobile-info-toggle { background: rgba(255,255,255,.08); color: #cbd5e1; }
+  body.dark .streamer-mobile-info-toggle.is-open { background: rgba(37,99,235,.24); color: #93c5fd; }
 }
-@media (min-width: 769px) { .streamer-mobile-info-row { display: none !important; } }
+@media (min-width: 769px) {
+  .streamer-mobile-info-row { display: none !important; }
+  .streamer-mobile-info-toggle { display: none !important; }
+}
 
 @media (max-width: 768px) {
   /* 스트리머 탭: 리스트(테이블) 보기 - 모바일에서는 컬럼 자체를 줄여서(순위/티어/이름[/관리]만) 렌더링하므로
