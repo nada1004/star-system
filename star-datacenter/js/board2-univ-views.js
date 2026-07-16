@@ -755,6 +755,7 @@ function _b2FemcoView() {
 
   function femcoAvatarSquare(p, accent) {
     const img = (p && p.photo) ? toThumbUrl(String(p.photo), playerImgSize) : '';
+    const imgOrig = (p && p.photo) ? toHttpsUrl(String(p.photo)) : '';
     const letter = (p && p.name) ? String(p.name).slice(0, 1) : '?';
     const border = `${accent}55`;
     // 상태 아이콘(10시 방향) — 기존 상태 아이콘 시스템 재사용
@@ -783,7 +784,7 @@ function _b2FemcoView() {
 
     if (img) {
       return `<span style="position:relative;display:block;width:100%;height:100%">
-        <img src="${img}" decoding="async" fetchpriority="high" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;border:2px solid ${border};background:rgba(255,255,255,.25)" onerror="this.closest('span').outerHTML='<div style=&quot;position:relative;width:100%;height:100%;border-radius:inherit;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}&quot;>${letter}</div>'">
+        <img src="${img}" data-orig="${imgOrig}" decoding="async" fetchpriority="high" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;border:2px solid ${border};background:rgba(255,255,255,.25)" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.closest('span').outerHTML='<div style=&quot;position:relative;width:100%;height:100%;border-radius:inherit;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}&quot;>${letter}</div>'}">
         ${badge}
       </span>`;
     }
@@ -1772,6 +1773,7 @@ function _b2SetUnivProfileViewMode(mode) {
 function _b2UnivRankRow(p, accentCol, showBadge, idx) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const photo = p.photo ? toThumbUrl(p.photo,42) : '';
+  const photoOrig = p.photo ? toHttpsUrl(p.photo) : '';
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
   const badgeTxt = showBadge ? (p.tier || p.role || '') : '';
@@ -1790,7 +1792,7 @@ function _b2UnivRankRow(p, accentCol, showBadge, idx) {
       <div style="flex-shrink:0;width:20px;text-align:center;font-size:11px;font-weight:900;color:${accentCol};opacity:.75">${idx}</div>
       <div style="width:42px;height:42px;flex-shrink:0;${shapeStyle}overflow:hidden;border:2px solid ${accentCol}55;background:${accentCol}22;box-shadow:0 4px 10px ${accentCol}26">
         ${photo
-          ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
+          ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><div style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
           : `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
         }
       </div>
@@ -1816,6 +1818,7 @@ function _b2UnivRankRow(p, accentCol, showBadge, idx) {
 function _b2UnivGlassCard(p, accentCol, showBadge) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const photo = p.photo ? toScaledUrl(p.photo,300) : '';
+  const photoOrig = p.photo ? toHttpsUrl(p.photo) : '';
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
   const badgeTxt = showBadge ? (p.tier || p.role || '') : '';
@@ -1830,7 +1833,7 @@ function _b2UnivGlassCard(p, accentCol, showBadge) {
       onmouseleave="this.style.transform='';this.style.boxShadow='0 10px 22px rgba(15,23,42,.12)'">
       <div style="position:relative;width:100%;aspect-ratio:.86;overflow:hidden;background:linear-gradient(160deg,${accentCol}40,${accentCol}12)">
         ${photo
-          ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
+          ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
           : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
         }
         ${(p.race&&p.race!=='N')?`<div style="position:absolute;top:7px;right:7px;padding:2px 8px;border-radius:999px;background:${raceCol}e6;color:#fff;font-size:10px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.22)">${p.race}</div>`:''}
@@ -1849,6 +1852,7 @@ function _b2UnivGlassCard(p, accentCol, showBadge) {
 function _b2UnivFrameCard(p, accentCol, showBadge) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const photo = p.photo ? toScaledUrl(p.photo,300) : '';
+  const photoOrig = p.photo ? toHttpsUrl(p.photo) : '';
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
   const badgeTxt = showBadge ? (p.tier || p.role || '') : '';
@@ -1863,7 +1867,7 @@ function _b2UnivFrameCard(p, accentCol, showBadge) {
       onmouseleave="this.style.transform='';this.style.boxShadow='0 10px 20px rgba(15,23,42,.14)'">
       <div style="position:relative;width:100%;aspect-ratio:.86;overflow:hidden;background:linear-gradient(160deg,${accentCol}45,${accentCol}14)">
         ${photo
-          ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
+          ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
           : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
         }
         ${badgeTxt?`<div style="position:absolute;top:0;left:0;padding:3px 10px 3px 8px;border-radius:0 0 10px 0;background:${badgeBg};color:${badgeFg};font-weight:900;font-size:10px">${badgeTxt}</div>`:''}
@@ -1879,6 +1883,7 @@ function _b2UnivFrameCard(p, accentCol, showBadge) {
 function _b2UnivPhotoCard(p, accentCol, showBadge) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const photo = p.photo ? toScaledUrl(p.photo,300) : '';
+  const photoOrig = p.photo ? toHttpsUrl(p.photo) : '';
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const shapeStyle = 'border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);';
   const badgeTxt = showBadge ? (p.tier || p.role || '') : '';
@@ -1886,11 +1891,11 @@ function _b2UnivPhotoCard(p, accentCol, showBadge) {
   const badgeFg = (p.tier && typeof getTierBtnTextColor === 'function') ? (getTierBtnTextColor(p.tier) || '#fff') : '#fff';
   const raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
   const backdrop = photo
-    ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.16);filter:blur(14px) saturate(1.08) brightness(.88);opacity:.88" onerror="this.style.display='none'">
+    ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.16);filter:blur(14px) saturate(1.08) brightness(.88);opacity:.88" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none'}">
        <div style="position:absolute;inset:0;background:linear-gradient(180deg,${accentCol}24 0%,rgba(2,6,23,.12) 100%)"></div>`
     : `<div style="position:absolute;inset:0;background:linear-gradient(160deg,${accentCol}44 0%,${accentCol}18 100%)"></div>`;
   const photoHtml = photo
-    ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
        <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.78">${raceLetter}</div>`
     : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:1000;color:${accentCol};opacity:.78">${raceLetter}</div>`;
   return `
@@ -1927,10 +1932,11 @@ function _b2UnivDefaultTag(p, accentCol, showTier) {
 function _b2UnivHeatCard(p, accentCol) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const photo = p.photo ? toThumbUrl(p.photo,112) : '';
+  const photoOrig = p.photo ? toHttpsUrl(p.photo) : '';
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const shapeStyle = 'border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);';
   return `<button type="button" title="${(p.name||'').replace(/"/g,'&quot;')}" onclick="openPlayerModal('${safeName}')" style="width:112px;height:112px;padding:0;border:none;${shapeStyle}overflow:hidden;background:${accentCol}22;box-shadow:0 8px 20px rgba(15,23,42,.09);cursor:pointer">
-    ${photo ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:1000;color:${accentCol}">${raceLetter}</span>` : `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:1000;color:${accentCol}">${raceLetter}</span>`}
+    ${photo ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><span style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:1000;color:${accentCol}">${raceLetter}</span>` : `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:1000;color:${accentCol}">${raceLetter}</span>`}
   </button>`;
 }
 
@@ -1988,6 +1994,7 @@ function _b2LineupCard3(p, col) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const photo = p.photo ? toScaledUrl(p.photo,300) : '';
+  const photoOrig = p.photo ? toHttpsUrl(p.photo) : '';
   const win = Number(p.win||0), loss = Number(p.loss||0), games = win+loss;
   const wr = games ? Math.round(win/games*100) : null;
   const wrCol = wr==null ? '#0f172a' : (wr>=50 ? '#16a34a' : '#dc2626');
@@ -2012,8 +2019,8 @@ function _b2LineupCard3(p, col) {
   return `<div class="b2-lc3" style="--lc-col:${col}" onclick="openPlayerModal('${safeName}')">
     <div class="b2-lc3-photo">
       ${photo
-        ? `<img class="b2-lc3-backdrop" src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" onerror="this.style.display='none'">
-           <img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" onerror="this.style.display='none';this.previousElementSibling.style.display='none';this.nextElementSibling.style.display='flex'">
+        ? `<img class="b2-lc3-backdrop" src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none'}">
+           <img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.previousElementSibling.style.display='none';this.nextElementSibling.style.display='flex'}">
            <div class="b2-lc3-fallback" style="display:none;z-index:1">${raceLetter}</div>`
         : `<div class="b2-lc3-fallback">${raceLetter}</div>`}
       <div class="b2-lc3-overlay">
@@ -2068,6 +2075,7 @@ function _b2LineupTableRow(p, col) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const photo = p.photo ? toThumbUrl(p.photo,28) : '';
+  const photoOrig = p.photo ? toHttpsUrl(p.photo) : '';
   const raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#94a3b8';
   const win = Number(p.win||0), loss = Number(p.loss||0), games = win+loss;
   const wr = games ? Math.round(win/games*100) : null;
@@ -2078,7 +2086,7 @@ function _b2LineupTableRow(p, col) {
     <td><div class="b2-lc4-namecell">
       <div class="b2-lc4-avatar">
         ${photo
-          ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="b2-lc4-fallback" style="display:none">${raceLetter}</div>`
+          ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><div class="b2-lc4-fallback" style="display:none">${raceLetter}</div>`
           : `<div class="b2-lc4-fallback">${raceLetter}</div>`}
       </div>
       <span class="b2-lc4-name">${p.name||''}</span>
@@ -2111,6 +2119,7 @@ function _b2LineupCard(p, col, big, iconUrl) {
   const safeName = (p.name||'').replace(/'/g,"\\'");
   const raceLetter = (p.race && p.race!=='N') ? p.race : '?';
   const photo = p.photo ? toScaledUrl(p.photo,340) : '';
+  const photoOrig = p.photo ? toHttpsUrl(p.photo) : '';
   const _raceCol = { T:'#2563eb', P:'#d97706', Z:'#7c3aed' }[p.race] || '#475569';
   const badgeTxt = big ? (p.role||'') : (p.tier||'');
   // 티어 배지 색상 — 스트리머탭 티어색상과 동일하게
@@ -2118,12 +2127,12 @@ function _b2LineupCard(p, col, big, iconUrl) {
   const _tierBadgeTxt = (!big && p.tier && typeof getTierBtnTextColor==='function') ? (getTierBtnTextColor(p.tier)||'#fff') : '#fff';
   // 배경 blur 레이어
   const _fillBackdrop = photo
-    ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.22);filter:blur(16px) saturate(1.15) brightness(.8);opacity:.85" onerror="this.style.display='none'">
+    ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;transform:scale(1.22);filter:blur(16px) saturate(1.15) brightness(.8);opacity:.85" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none'}">
        <div style="position:absolute;inset:0;background:linear-gradient(180deg,${col}33 0%,rgba(0,0,0,.18) 100%)"></div>`
     : `<div style="position:absolute;inset:0;background:linear-gradient(160deg,${col}44 0%,${col}1a 100%)"></div>`;
   // 메인 사진 (전체 꽉 채움, 모양 적용 없이 카드 자체 overflow:hidden으로 처리)
   const photoHtml = photo
-    ? `<img src="${photo}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
        <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:6px">
          <div style="font-size:56px;font-weight:900;color:${col};opacity:.7">${raceLetter}</div>
        </div>`

@@ -82,7 +82,7 @@ function _b2Avatar(p, col, size) {
     : '';
   if (p.photo) {
     return `<span style="width:${s}px;height:${s}px;flex-shrink:0;display:inline-flex;position:relative">
-      <img src="${_escAttr(toThumbUrl(p.photo,s))}" crossorigin="anonymous" loading="lazy" decoding="async" fetchpriority="low" data-b2-photo="1" style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,6px);clip-path:var(--su_profile_clip,none);object-fit:cover;flex-shrink:0" onerror="console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${_safeNameJs}');this.parentNode.innerHTML=_b2AvatarFallback('${_safeRaceJs}','${_safeColJs}',${s})">
+      <img src="${_escAttr(toThumbUrl(p.photo,s))}" data-orig="${_escAttr(toHttpsUrl(p.photo))}" crossorigin="anonymous" loading="lazy" decoding="async" fetchpriority="low" data-b2-photo="1" style="width:${s}px;height:${s}px;border-radius:var(--su_profile_radius,6px);clip-path:var(--su_profile_clip,none);object-fit:cover;flex-shrink:0" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{console.warn('[현황판] 선수 프로필 이미지 로드 실패:', this.src, '선수:', '${_safeNameJs}');this.parentNode.innerHTML=_b2AvatarFallback('${_safeRaceJs}','${_safeColJs}',${s})}">
       ${badge}
     </span>`;
   }
