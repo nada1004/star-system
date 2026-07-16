@@ -490,7 +490,10 @@ function _rebuildAllPlayerHistoryCore() {
   }
 
   // 2. miniM에서 복구
-  (miniM || []).forEach((m, mi) => {
+  // (버그픽스) miniM은 unshift로 저장되어 배열 앞쪽이 최신 경기임.
+  // applyGameResult가 history.unshift()로 쌓기 때문에, 원본 배열 순서 그대로(최신→과거) 처리하면
+  // 결과적으로 history가 거꾸로(과거가 앞, 최신이 뒤) 쌓이게 됨. 과거→최신 순으로 뒤집어서 처리.
+  (miniM || []).slice().reverse().forEach((m, mi) => {
     const mid = _ensureMid(m, 'mini', mi);
     (m.sets || []).forEach((set, setIdx) => {
       (set.games || []).forEach((g, gameIdx) => {
@@ -513,8 +516,8 @@ function _rebuildAllPlayerHistoryCore() {
     });
   });
 
-  // 3. univM에서 복구
-  (univM || []).forEach((m, mi) => {
+  // 3. univM에서 복구 (unshift 저장이므로 과거→최신 순으로 뒤집어서 처리)
+  (univM || []).slice().reverse().forEach((m, mi) => {
     const mid = _ensureMid(m, 'univ', mi);
     (m.sets || []).forEach((set, setIdx) => {
       (set.games || []).forEach((g, gameIdx) => {
@@ -534,8 +537,8 @@ function _rebuildAllPlayerHistoryCore() {
     });
   });
 
-  // 4. ckM에서 복구
-  (ckM || []).forEach((m, mi) => {
+  // 4. ckM에서 복구 (unshift 저장이므로 과거→최신 순으로 뒤집어서 처리)
+  (ckM || []).slice().reverse().forEach((m, mi) => {
     const mid = _ensureMid(m, 'ck', mi);
     (m.sets || []).forEach((set, setIdx) => {
       (set.games || []).forEach((g, gameIdx) => {
@@ -553,8 +556,8 @@ function _rebuildAllPlayerHistoryCore() {
     });
   });
 
-  // 5. proM에서 복구
-  (proM || []).forEach((m, mi) => {
+  // 5. proM에서 복구 (unshift 저장이므로 과거→최신 순으로 뒤집어서 처리)
+  (proM || []).slice().reverse().forEach((m, mi) => {
     const mid = _ensureMid(m, 'pro', mi);
     (m.sets || []).forEach((set, setIdx) => {
       (set.games || []).forEach((g, gameIdx) => {
@@ -572,8 +575,8 @@ function _rebuildAllPlayerHistoryCore() {
     });
   });
 
-  // 6. ttM에서 복구
-  (ttM || []).forEach((m, mi) => {
+  // 6. ttM에서 복구 (unshift 저장이므로 과거→최신 순으로 뒤집어서 처리)
+  (ttM || []).slice().reverse().forEach((m, mi) => {
     const mid = _ensureMid(m, 'tt', mi);
     (m.sets || []).forEach((set, setIdx) => {
       (set.games || []).forEach((g, gameIdx) => {
@@ -591,15 +594,15 @@ function _rebuildAllPlayerHistoryCore() {
     });
   });
 
-  // 7. indM에서 복구
-  (indM || []).forEach(m => {
+  // 7. indM에서 복구 (unshift 저장이므로 과거→최신 순으로 뒤집어서 처리)
+  (indM || []).slice().reverse().forEach(m => {
     if(!m.wName || !m.lName) return;
     applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id || genId(), '', '', m._proLabel ? '프로리그' : '개인전');
     count++;
   });
 
-  // 8. gjM에서 복구
-  (gjM || []).forEach(m => {
+  // 8. gjM에서 복구 (unshift 저장이므로 과거→최신 순으로 뒤집어서 처리)
+  (gjM || []).slice().reverse().forEach(m => {
     if(!m.wName || !m.lName) return;
     applyGameResult(m.wName, m.lName, m.d, m.map || '-', m._id || genId(), '', '', m._proLabel ? '프로리그끝장전' : '끝장전');
     count++;

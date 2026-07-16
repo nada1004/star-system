@@ -889,7 +889,7 @@ function indRecordsHTML(){
       if(m.sid && sidPairMap.has(k)){
         lastSess=sidPairMap.get(k);lastKey=k;
       } else {
-        const s={key:k,d:m.d||'',p1:pair[0],p2:pair[1],games:[],ids:[]};
+        const s={key:k,d:m.d||'',p1:pair[0],p2:pair[1],games:[],ids:[],_ord:sessions.length};
         sessions.push(s);lastSess=s;lastKey=k;
         if(m.sid) sidPairMap.set(k,s);
       }
@@ -898,7 +898,13 @@ function indRecordsHTML(){
   });
   sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
   let filteredSess=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
-  filteredSess.sort((a,b)=>recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
+  filteredSess.sort((a,b)=>{
+    const cmp = recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||'');
+    if(cmp!==0) return cmp;
+    // 같은 날짜면 등록순으로 정렬: 최신순=나중에 등록한 게 위, 오래된순=먼저 등록한 게 위
+    // indM은 unshift로 채워져 _ord가 작을수록(=sessions에 먼저 등장할수록) 최근 등록임
+    return recSortDir==='asc' ? (b._ord - a._ord) : (a._ord - b._ord);
+  });
 
   const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
   const _datePickKey = 'su_rec_date_pick_hist_ind';
@@ -1055,7 +1061,7 @@ function gjRecordsHTML(proOnly){
       if(m.sid && sidPairMap.has(k)){
         lastSess=sidPairMap.get(k);lastKey=k;
       } else {
-        const s={key:k,d:m.d||'',p1:pair[0],p2:pair[1],games:[],ids:[]};
+        const s={key:k,d:m.d||'',p1:pair[0],p2:pair[1],games:[],ids:[],_ord:sessions.length};
         sessions.push(s);lastSess=s;lastKey=k;
         if(m.sid) sidPairMap.set(k,s);
       }
@@ -1064,7 +1070,12 @@ function gjRecordsHTML(proOnly){
   });
   sessions.forEach(s=>{const ds=s.games.map(g=>g.d||'').filter(Boolean).sort();if(ds.length)s.d=ds[ds.length-1];});
   let filteredSessGj=sessions.filter(s=>typeof passDateFilter!=='function'||passDateFilter(s.d||''));
-  filteredSessGj.sort((a,b)=>recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||''));
+  filteredSessGj.sort((a,b)=>{
+    const cmp = recSortDir==='asc' ? (a.d||'').localeCompare(b.d||'') : (b.d||'').localeCompare(a.d||'');
+    if(cmp!==0) return cmp;
+    // gjM은 unshift로 채워져 _ord가 작을수록(=sessions에 먼저 등장할수록) 최근 등록임
+    return recSortDir==='asc' ? (b._ord - a._ord) : (a._ord - b._ord);
+  });
 
   const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') || 'pill');
   const _datePickKey = proOnly ? 'su_rec_date_pick_hist_progj' : 'su_rec_date_pick_hist_gj';
