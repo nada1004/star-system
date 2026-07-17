@@ -103,18 +103,18 @@ function _statsLatestActiveMonths(gender){
     '.stats-shell{display:flex;flex-direction:column;gap:14px}',
     '.stats-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 20px;border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 38px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.88)}',
     '.stats-hero-copy{display:flex;flex-direction:column;gap:6px;min-width:0}',
-    '.stats-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}',
+    '.stats-hero-kicker{font-size:var(--fs-caption);font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}',
     '.stats-hero-title{font-size:24px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.15}',
-    '.stats-hero-desc{font-size:13px;line-height:1.6;color:var(--text3)}',
+    '.stats-hero-desc{font-size:var(--fs-base);line-height:1.6;color:var(--text3)}',
     '.stats-hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}',
-    '.stats-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);font-size:12px;font-weight:800;color:var(--text2);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.stats-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.16);font-size:var(--fs-sm);font-weight:800;color:var(--text2);box-shadow:0 10px 20px rgba(15,23,42,.04)}',
     '.stats-toolbar-card{padding:12px 14px 14px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 32px rgba(15,23,42,.05)}',
     /* ── 모드 전환(핵심/심화) 세그먼트 ── */
     '.stats-modebar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(148,163,184,.16)}',
     '.stats-modeseg{display:inline-flex;gap:8px;padding:4px;border-radius:14px;background:rgba(148,163,184,.10);border:1px solid rgba(148,163,184,.16)}',
     '.stats-modeseg .pill{margin:0;box-shadow:none;border:none;background:transparent}',
     '.stats-modeseg .pill.on{box-shadow:0 6px 16px rgba(37,99,235,.24)}',
-    '.stats-modebar-hint{font-size:11px;color:var(--gray-l);font-weight:700}',
+    '.stats-modebar-hint{font-size:var(--fs-caption);color:var(--gray-l);font-weight:700}',
     /* ── 그룹(개인/대학/경기/기록실) 행 ── */
     '.stats-grouprow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed rgba(148,163,184,.18)}',
     '.stats-grouprow .pill{min-width:80px;justify-content:center}',
@@ -136,7 +136,7 @@ function _statsLatestActiveMonths(gender){
     '.stats-quickgroup-lbl{font-size:10.5px;font-weight:800;color:var(--text3);white-space:nowrap}',
     '.stats-quickgroup-btns{display:flex;gap:5px;flex-wrap:wrap}',
     '.stats-filter-field{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--text2);white-space:nowrap;background:rgba(255,255,255,.92);border:1px solid rgba(148,163,184,.28);border-radius:9px;padding:5px 10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}',
-    '.stats-filter-field-ico{font-size:11px;line-height:1}',
+    '.stats-filter-field-ico{font-size:var(--fs-caption);line-height:1}',
     '.stats-filter-field-lbl{color:var(--text3);font-weight:700}',
     '.stats-filter-tilde{color:var(--gray-l)}',
     '.stats-filter-field input[type=date],.stats-filter-field input[type=month]{font-size:11.5px;padding:2px 4px;border:none;background:transparent;color:var(--text1);outline:none}',
@@ -162,26 +162,26 @@ function _statsLatestActiveMonths(gender){
     'body.dark .stats-filter-badge.is-active{background:rgba(37,99,235,.18);border-color:rgba(96,165,250,.35);color:#93c5fd}',
     'body.dark .stats-filter-divider{background:rgba(255,255,255,.08)}',
     '.stats-award-toggle{display:inline-flex;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--surface);border:1px solid var(--border)}',
-    '.stats-award-toggle button{border:none;background:transparent;color:var(--text3);padding:7px 12px;border-radius:999px;font-size:12px;font-weight:900;cursor:pointer;transition:.15s}',
+    '.stats-award-toggle button{border:none;background:transparent;color:var(--text3);padding:7px 12px;border-radius:999px;font-size:var(--fs-sm);font-weight:900;cursor:pointer;transition:.15s}',
     '.stats-award-toggle button.on{background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;box-shadow:0 10px 20px rgba(37,99,235,.22)}',
     '.stats-award-toggle button.female.on{background:linear-gradient(135deg,#db2777,#f472b6)}',
     '.stats-award-toggle button.male.on{background:linear-gradient(135deg,#2563eb,#38bdf8)}',
     '.stats-award-grid{display:flex;gap:12px;flex-wrap:wrap}',
-    '.stats-award-label{font-weight:900;font-size:12px;margin:6px 0 8px}',
+    '.stats-award-label{font-weight:900;font-size:var(--fs-sm);margin:6px 0 8px}',
     '.stats-award-card{position:relative;overflow:hidden;border-radius:18px;padding:20px;flex:1;min-width:220px;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s}',
     '.stats-award-card::before{content:"";position:absolute;inset:auto -30px -30px auto;width:120px;height:120px;background:radial-gradient(circle,rgba(255,255,255,.42),transparent 70%);pointer-events:none}',
     '.stats-award-card:hover{transform:translateY(-2px);box-shadow:0 16px 30px rgba(15,23,42,.10)}',
     '.stats-award-card.is-empty{background:linear-gradient(180deg,var(--surface),#f8fafc);border:1px solid var(--border);text-align:center;cursor:default}',
-    '.stats-award-head{font-size:11px;font-weight:800;margin-bottom:8px;letter-spacing:.04em}',
+    '.stats-award-head{font-size:var(--fs-caption);font-weight:800;margin-bottom:8px;letter-spacing:.04em}',
     '.stats-award-body{display:flex;align-items:center;gap:10px;margin-bottom:10px}',
     '.stats-award-avatar{width:48px;height:48px;border-radius:var(--su_profile_radius,50%);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}',
     '.stats-award-name{font-weight:900;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '.stats-award-meta{display:flex;align-items:center;gap:4px;margin-top:4px;flex-wrap:wrap}',
-    '.stats-award-stats{display:flex;gap:8px;font-size:12px;flex-wrap:wrap}',
+    '.stats-award-stats{display:flex;gap:8px;font-size:var(--fs-sm);flex-wrap:wrap}',
     '.stats-award-stat{color:#fff;padding:3px 9px;border-radius:999px;font-weight:800}',
     '.stats-rank-table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border:1px solid rgba(148,163,184,.18);border-radius:18px;background:var(--white);box-shadow:0 14px 28px rgba(15,23,42,.05)}',
-    '.stats-rank-table thead th{background:linear-gradient(135deg,#0f172a,#1d4ed8 58%,#3b82f6);color:#fff;padding:12px 10px;font-size:11px;font-weight:900;letter-spacing:.03em;white-space:nowrap;border:none}',
-    '.stats-rank-table tbody td{padding:11px 10px;border-bottom:1px solid rgba(148,163,184,.12);font-size:13px;vertical-align:middle;background:rgba(255,255,255,.94)}',
+    '.stats-rank-table thead th{background:linear-gradient(135deg,#0f172a,#1d4ed8 58%,#3b82f6);color:#fff;padding:12px 10px;font-size:var(--fs-caption);font-weight:900;letter-spacing:.03em;white-space:nowrap;border:none}',
+    '.stats-rank-table tbody td{padding:11px 10px;border-bottom:1px solid rgba(148,163,184,.12);font-size:var(--fs-base);vertical-align:middle;background:rgba(255,255,255,.94)}',
     '.stats-rank-table tbody tr:nth-child(even) td{background:#fbfdff}',
     '.stats-rank-table tbody tr:hover td{background:#eef6ff}',
     '.stats-rank-table tbody tr:last-child td{border-bottom:none}',
@@ -201,26 +201,26 @@ function _statsLatestActiveMonths(gender){
     '.stats-chart-shell{display:flex;flex-direction:column;gap:14px}',
     '.stats-chart-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}',
     '.stats-chart-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
-    '.stats-select{padding:8px 11px;border:1px solid rgba(148,163,184,.28);border-radius:12px;font-size:12px;font-weight:900;min-width:220px;background:rgba(255,255,255,.92);color:var(--text1);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)}',
+    '.stats-select{padding:8px 11px;border:1px solid rgba(148,163,184,.28);border-radius:12px;font-size:var(--fs-sm);font-weight:900;min-width:220px;background:rgba(255,255,255,.92);color:var(--text1);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)}',
     '.stats-chart-board{padding:14px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 30px rgba(15,23,42,.05)}',
     '.stats-chart-wrap{padding:14px 14px 10px;border-radius:18px;background:linear-gradient(180deg,#ffffff,#f8fbff);border:1px solid rgba(148,163,184,.16)}',
     '.stats-metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}',
     '.stats-metric-card{padding:12px 14px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
-    '.stats-metric-label{font-size:11px;color:var(--text3);font-weight:800;margin-bottom:6px}',
+    '.stats-metric-label{font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:6px}',
     '.stats-metric-value{font-size:20px;font-weight:950;letter-spacing:-.02em;color:var(--text1)}',
-    '.stats-metric-sub{font-size:11px;color:var(--gray-l);margin-top:4px}',
+    '.stats-metric-sub{font-size:var(--fs-caption);color:var(--gray-l);margin-top:4px}',
     '.stats-info-stack{display:flex;flex-direction:column;gap:10px}',
     '.stats-legend-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:2px}',
-    '.stats-legend-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:900;border:1px solid rgba(148,163,184,.22)}',
+    '.stats-legend-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:var(--fs-caption);font-weight:900;border:1px solid rgba(148,163,184,.22)}',
     '.stats-detail-card{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
-    '.stats-detail-title{font-weight:900;font-size:15px}',
+    '.stats-detail-title{font-weight:900;font-size:var(--fs-md)}',
     '.stats-detail-row{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.92);border:1px solid rgba(148,163,184,.16)}',
-    '.stats-detail-row span:first-child{font-size:12px;color:var(--text3)}',
-    '.stats-detail-row span:last-child{font-size:12px;font-weight:800;color:var(--text1)}',
+    '.stats-detail-row span:first-child{font-size:var(--fs-sm);color:var(--text3)}',
+    '.stats-detail-row span:last-child{font-size:var(--fs-sm);font-weight:800;color:var(--text1)}',
     '.stats-table-card{padding:12px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 30px rgba(15,23,42,.05)}',
-    '.stats-search-field{padding:8px 12px;border:2px solid rgba(148,163,184,.22);border-radius:12px;font-size:13px;width:200px;background:rgba(255,255,255,.94);color:var(--text1);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)}',
+    '.stats-search-field{padding:8px 12px;border:2px solid rgba(148,163,184,.22);border-radius:12px;font-size:var(--fs-base);width:200px;background:rgba(255,255,255,.94);color:var(--text1);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)}',
     '.stats-search-drop{display:none;position:absolute;top:42px;left:0;background:var(--white);border:1px solid rgba(148,163,184,.22);border-radius:14px;z-index:300;max-height:220px;overflow-y:auto;width:240px;box-shadow:0 18px 32px rgba(15,23,42,.10)}',
-    '.stats-search-item{padding:8px 12px;cursor:pointer;font-size:12px}',
+    '.stats-search-item{padding:8px 12px;cursor:pointer;font-size:var(--fs-sm)}',
     '.stats-search-item:hover{background:#eff6ff}',
     '.stats-compare-shell{display:flex;flex-direction:column;gap:14px}',
     '.stats-compare-hero{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px}',
@@ -237,16 +237,16 @@ function _statsLatestActiveMonths(gender){
     '.stats-compare-vs{display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:950;color:var(--text3)}',
     '.stats-compare-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}',
     '.stats-compare-kpi{padding:12px 14px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
-    '.stats-note-box{padding:16px 18px;border:1px dashed rgba(148,163,184,.28);border-radius:16px;color:var(--gray-l);font-size:13px;text-align:center;background:rgba(248,250,252,.7)}',
+    '.stats-note-box{padding:16px 18px;border:1px dashed rgba(148,163,184,.28);border-radius:16px;color:var(--gray-l);font-size:var(--fs-base);text-align:center;background:rgba(248,250,252,.7)}',
     '.stats-chip-pool{display:flex;flex-wrap:wrap;gap:8px}',
-    '.stats-choice-chip{padding:7px 14px;border-radius:999px;border:1px solid rgba(148,163,184,.2);background:rgba(255,255,255,.96);font-size:12px;font-weight:800;cursor:pointer;transition:.15s;box-shadow:0 8px 16px rgba(15,23,42,.04)}',
+    '.stats-choice-chip{padding:7px 14px;border-radius:999px;border:1px solid rgba(148,163,184,.2);background:rgba(255,255,255,.96);font-size:var(--fs-sm);font-weight:800;cursor:pointer;transition:.15s;box-shadow:0 8px 16px rgba(15,23,42,.04)}',
     '.stats-choice-chip:hover{transform:translateY(-1px)}',
     '.stats-results-stack{display:flex;flex-direction:column;gap:8px}',
     '.stats-result-card{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid rgba(148,163,184,.18);border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));cursor:pointer;box-shadow:0 10px 20px rgba(15,23,42,.04);transition:.15s}',
     '.stats-result-card:hover{transform:translateY(-1px);box-shadow:0 14px 26px rgba(15,23,42,.07)}',
     '.stats-preview-frame{width:100%;max-width:420px;min-height:140px;border-radius:20px;overflow:hidden;box-shadow:0 12px 34px rgba(15,23,42,.16);font-family:"Noto Sans KR",sans-serif;display:block;cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18)}',
     '.stats-selection-list{display:flex;flex-direction:column;gap:6px;border:1px solid rgba(148,163,184,.18);border-radius:16px;padding:8px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))}',
-    '.stats-selection-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.88);cursor:pointer;text-align:left;font-size:12px;transition:.12s}',
+    '.stats-selection-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.88);cursor:pointer;text-align:left;font-size:var(--fs-sm);transition:.12s}',
     '.stats-selection-item:hover{background:#eff6ff}',
     '.stats-filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:12px}',
     'body.dark .stats-hero,body.dark .stats-toolbar-card{background:linear-gradient(180deg,rgba(15,23,42,.94),rgba(15,23,42,.9));border-color:#2d3f55;box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.03)}',
@@ -490,7 +490,7 @@ function rStats(C,T){
     try{ return fn(); }
     catch(e){
       try{ console.error('[stats tab error]', title, e); }catch(_){}
-      return `<div class="ssec"><div style="color:#dc2626;font-weight:900;margin-bottom:6px">${escHTML(title||'통계')} 렌더 오류</div><div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;color:var(--gray-l)">${escHTML(String(e&&e.stack||e))}</div></div>`;
+      return `<div class="ssec"><div style="color:#dc2626;font-weight:900;margin-bottom:6px">${escHTML(title||'통계')} 렌더 오류</div><div style="font-family:ui-monospace,monospace;font-size:var(--fs-sm);white-space:pre-wrap;color:var(--gray-l)">${escHTML(String(e&&e.stack||e))}</div></div>`;
     }
   }
 
@@ -540,7 +540,7 @@ var _statsInRange = (typeof window._statsInRange==='function') ? window._statsIn
 var _statsAnalyzePeriod = (typeof window._statsAnalyzePeriod==='function') ? window._statsAnalyzePeriod : (()=>({label:'',from:'',to:'',totalMatches:0,totalGames:0,teamMatches:0,soloMatches:0,activeDays:0,bySource:[],topWinners:[],topPlayers:[],topTeams:[]}));
 var statsPeriodAnalysisHTML = (typeof window.statsPeriodAnalysisHTML==='function')
   ? window.statsPeriodAnalysisHTML
-  : (()=>'<div class="ssec"><div style="color:var(--gray-l);font-size:13px">기간 분석을 불러오지 못했습니다.</div></div>');
+  : (()=>'<div class="ssec"><div style="color:var(--gray-l);font-size:var(--fs-base)">기간 분석을 불러오지 못했습니다.</div></div>');
 try{ window.renderShareCardByPlayer = renderShareCardByPlayer; }catch(e){}
 
 // players 맵/히스토리/매치 필터 공통 유틸은 `stats-core-utils.js`로 분리
@@ -563,7 +563,7 @@ function statsTierRankHTML(){
   if(!tierPlayers.length){
     return `<div class="ssec"><h3 style="margin:0 0 10px">🚀 티어 랭킹</h3>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${tierBtns.map(t=>`<button class="pill ${t===tier?'on':''}" onclick="statsSetRankTier('${escJS(t)}')">${t}</button>`).join('')}</div>
-      <div style="color:var(--gray-l);font-size:13px">선택한 티어(${tier})에 선수가 없습니다.</div>
+      <div style="color:var(--gray-l);font-size:var(--fs-base)">선택한 티어(${tier})에 선수가 없습니다.</div>
     </div>`;
   }
 
@@ -635,10 +635,10 @@ function statsTierRankHTML(){
       .sr-row:hover{background:#eef6ff}
       .sr-player{display:flex;gap:8px;align-items:center;justify-content:flex-start}
       .sr-name{font-weight:1000;color:var(--text2);cursor:pointer}
-      .sr-univ{font-size:11px;font-weight:900;opacity:.85}
+      .sr-univ{font-size:var(--fs-caption);font-weight:900;opacity:.85}
       .sr-score{font-weight:1000;color:#7c3aed}
-      .sr-mini{font-size:11px;color:var(--gray-l);line-height:1.45}
-      .sr-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:1000;padding:3px 8px;border-radius:999px;border:1px solid rgba(0,0,0,.10);background:rgba(255,255,255,.88)}
+      .sr-mini{font-size:var(--fs-caption);color:var(--gray-l);line-height:1.45}
+      .sr-tag{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-caption);font-weight:1000;padding:3px 8px;border-radius:999px;border:1px solid rgba(0,0,0,.10);background:rgba(255,255,255,.88)}
       .sr-tag.p{border-color:rgba(37,99,235,.25);color:#1d4ed8}
       .sr-tag.i{border-color:rgba(22,163,74,.25);color:#15803d}
       .sr-tag.b{border-color:rgba(245,158,11,.25);color:#b45309}
@@ -649,7 +649,7 @@ function statsTierRankHTML(){
       .sr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
       @media(max-width:820px){.sr-grid{grid-template-columns:1fr}}
       .sr-log{max-height:200px;overflow:auto;border:1px solid rgba(148,163,184,.18);border-radius:12px;background:rgba(255,255,255,.82)}
-      .sr-log table{width:100%;border-collapse:collapse;font-size:12px}
+      .sr-log table{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
       .sr-log th,.sr-log td{padding:6px 8px;border-bottom:1px solid rgba(148,163,184,.12);text-align:center}
       .sr-muted{opacity:.65}
       body.dark .sr-table{border-color:#334155;box-shadow:0 14px 28px rgba(0,0,0,.22)}
@@ -667,9 +667,9 @@ function statsTierRankHTML(){
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div>
         <h3 style="margin:0">🚀 티어 랭킹 (동일 티어 기준)</h3>
-        <div style="font-size:12px;color:var(--gray-l);margin-top:4px">일반(시간가중치) + 중요(대회/프로/끝장전/CK) + 실전보너스</div>
+        <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-top:4px">일반(시간가중치) + 중요(대회/프로/끝장전/CK) + 실전보너스</div>
       </div>
-      <div style="font-size:12px;color:var(--gray-l)">최소경기: ${_statsMinGames}</div>
+      <div style="font-size:var(--fs-sm);color:var(--gray-l)">최소경기: ${_statsMinGames}</div>
     </div>
     <div class="fbar no-export" style="gap:6px;flex-wrap:wrap;margin:10px 0">
       ${tierBtns.map(t=>`<button class="pill ${t===tier?'on':''}" onclick="statsSetRankTier('${escJS(t)}')">${t}</button>`).join('')}
@@ -698,7 +698,7 @@ function statsTierRankHTML(){
               <div class="sr-player">
                 ${getPlayerPhotoHTML(p.name,'34px')}
                 <div style="min-width:0">
-                  <div class="sr-name" onclick="event.stopPropagation();openPlayerModal('${escJS(p.name)}')">${escHTML(p.name)}${race?`<span style="font-size:12px;color:var(--gray-l);font-weight:900;margin-left:6px">(${escHTML(race)})</span>`:''}</div>
+                  <div class="sr-name" onclick="event.stopPropagation();openPlayerModal('${escJS(p.name)}')">${escHTML(p.name)}${race?`<span style="font-size:var(--fs-sm);color:var(--gray-l);font-weight:900;margin-left:6px">(${escHTML(race)})</span>`:''}</div>
                   <div class="sr-univ" style="color:${gc(p.univ)}">${escHTML(p.univ||'-')} · 최근 ${escHTML(r.lastDate||'-')}</div>
                 </div>
               </div>
@@ -726,7 +726,7 @@ function statsTierRankHTML(){
                   <div>
                     <div style="font-weight:1000;margin-bottom:6px;color:var(--text2);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                       1) 일반(스폰) — 시간가중치
-                      <span title="최근 경기일수에 따라 승/패에 가중치를 곱해 ‘최근 경기’를 더 반영합니다.\n\n가중치 범위: ×1.00(최신) ~ ×0.70(오래됨)\n계산: w = max(0.70, 1 - (daysAgo × 0.0035))\n예: 30일 전≈×0.90, 60일 전≈×0.79" style="font-size:11px;color:var(--gray-l);font-weight:900;cursor:help;border:1px solid var(--border2);padding:0 6px;border-radius:999px;background:var(--surface)">?</span>
+                      <span title="최근 경기일수에 따라 승/패에 가중치를 곱해 ‘최근 경기’를 더 반영합니다.\n\n가중치 범위: ×1.00(최신) ~ ×0.70(오래됨)\n계산: w = max(0.70, 1 - (daysAgo × 0.0035))\n예: 30일 전≈×0.90, 60일 전≈×0.79" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;cursor:help;border:1px solid var(--border2);padding:0 6px;border-radius:999px;background:var(--surface)">?</span>
                     </div>
                     <div class="sr-mini" style="margin-bottom:8px">Raw ${r.pW}승 ${r.pL}패 · 보정승 ${r.practiceScore.toFixed(1)}점</div>
                     <div class="sr-log">
@@ -949,11 +949,11 @@ function statsStarSystemHTML(){
     .ss-tier-h{padding:10px 12px;background:linear-gradient(135deg,#111827,#334155);color:#fff;font-weight:1000;display:flex;align-items:center;gap:8px}
     .ss-tier-b{padding:10px 12px}
     .ss-table{width:100%;border-collapse:collapse}
-    .ss-table th,.ss-table td{padding:8px 6px;border-bottom:1px solid rgba(0,0,0,.06);text-align:center;font-size:12px}
+    .ss-table th,.ss-table td{padding:8px 6px;border-bottom:1px solid rgba(0,0,0,.06);text-align:center;font-size:var(--fs-sm)}
     .ss-table th{text-align:center;color:var(--gray-l);font-weight:900;background:var(--surface)}
     .ss-name{font-weight:1000;color:var(--text2);text-align:left}
     .ss-pts{font-weight:1000;color:#7c3aed}
-    .ss-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:1000;border:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.85);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ss-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:var(--fs-caption);font-weight:1000;border:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.85);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .ss-badge.ok{color:#16a34a;border-color:rgba(22,163,74,.25)}
     .ss-badge.promo{color:#7c3aed;border-color:rgba(124,58,237,.25)}
     .ss-badge.danger{color:#dc2626;border-color:rgba(220,38,38,.25)}
@@ -968,26 +968,26 @@ function statsStarSystemHTML(){
       <button class="btn btn-w btn-sm" ${!enabled?'disabled':''} onclick="starSystemSetEnabled(false)">⛔ 사용 중지</button>
       <button class="btn btn-w btn-sm" onclick="openStarSystemInfo()">📘 산정기준</button>
       <button class="btn btn-w btn-sm" onclick="openCfgTier()">🎭 티어표 관리</button>
-      <span style="font-size:12px;color:var(--gray-l)">※ 서버 없이 “기존 기록 데이터(펨코 스타 게시판 경기결과탭에서 등록된 기록 포함)”로 점수 계산합니다.</span>
+      <span style="font-size:var(--fs-sm);color:var(--gray-l)">※ 서버 없이 “기존 기록 데이터(펨코 스타 게시판 경기결과탭에서 등록된 기록 포함)”로 점수 계산합니다.</span>
     </div>
 
     <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px">
-      <div style="font-size:12px;font-weight:1000;color:var(--text2);margin-bottom:8px">공식전 모드 키워드</div>
+      <div style="font-size:var(--fs-sm);font-weight:1000;color:var(--text2);margin-bottom:8px">공식전 모드 키워드</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <input type="text" value="${escHTML(kwsRaw||_ssKeywords().join(','))}" oninput="starSystemSetKeywords(this.value)" placeholder="예: 대학대전,CK,교수,코치,끝장전..." style="flex:1;min-width:260px">
         <button class="btn btn-w btn-sm" onclick="starSystemSetKeywords('대학대전,대학CK,CK,교수,코치,주관,끝장전,미니대전,프로리그,티어대회,대회,토너먼트')">기본값</button>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">mode(기록의 경기 구분 텍스트)에 키워드가 포함되면 공식전으로 처리합니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">mode(기록의 경기 구분 텍스트)에 키워드가 포함되면 공식전으로 처리합니다.</div>
     </div>
 
     <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-size:12px;font-weight:1000;color:var(--text2);margin-bottom:8px">사양서</div>
-      <pre style="white-space:pre-wrap;line-height:1.55;font-size:12px;color:var(--text3);max-height:300px;overflow:auto;margin:0">${escHTML(spec)}</pre>
+      <div style="font-size:var(--fs-sm);font-weight:1000;color:var(--text2);margin-bottom:8px">사양서</div>
+      <pre style="white-space:pre-wrap;line-height:1.55;font-size:var(--fs-sm);color:var(--text3);max-height:300px;overflow:auto;margin:0">${escHTML(spec)}</pre>
     </div>
   </div>`;
 
   if(!enabled){
-    return header + `<div class="ssec" style="margin-top:10px"><div style="font-size:12px;color:var(--gray-l);line-height:1.6">‘사용 시작’을 누르면 아래에 티어별 점수/랭킹이 표시됩니다.</div></div>`;
+    return header + `<div class="ssec" style="margin-top:10px"><div style="font-size:var(--fs-sm);color:var(--gray-l);line-height:1.6">‘사용 시작’을 누르면 아래에 티어별 점수/랭킹이 표시됩니다.</div></div>`;
   }
 
   const all=_ssComputeAll();
@@ -998,7 +998,7 @@ function statsStarSystemHTML(){
     const arr = byTier[t].slice().sort((a,b)=> b.points-a.points || b.games-a.games);
     const tnum=_ssTierToNum(t);
     return `<div class="ss-tier">
-      <div class="ss-tier-h">🏷️ ${escHTML(t)} <span style="opacity:.8;font-size:12px">(${tnum!=null?tnum:'?'})</span><span style="margin-left:auto;opacity:.85;font-size:12px">인원 ${arr.length}</span></div>
+      <div class="ss-tier-h">🏷️ ${escHTML(t)} <span style="opacity:.8;font-size:var(--fs-sm)">(${tnum!=null?tnum:'?'})</span><span style="margin-left:auto;opacity:.85;font-size:var(--fs-sm)">인원 ${arr.length}</span></div>
       <div class="ss-tier-b">
         <table class="ss-table">
           <thead><tr><th style="width:60px">순위</th><th style="text-align:left">선수</th><th style="width:90px">점수</th><th style="width:150px">상태</th><th style="width:110px">최근 공식전</th><th style="width:70px">경기수</th></tr></thead>
@@ -1007,7 +1007,7 @@ function statsStarSystemHTML(){
               const bcls = r.status==='승급 검증'?'promo':(r.status==='강등 위기'?'danger':'ok');
               return `<tr>
                 <td>${i+1}</td>
-                <td class="ss-name"><span class="clickable-name" onclick="openPlayerModal('${escJS(r.name)}')">${escHTML(r.name)}</span> <span style="color:${gc(r.univ)};font-size:11px;font-weight:900">${escHTML(r.univ||'')}</span></td>
+                <td class="ss-name"><span class="clickable-name" onclick="openPlayerModal('${escJS(r.name)}')">${escHTML(r.name)}</span> <span style="color:${gc(r.univ)};font-size:var(--fs-caption);font-weight:900">${escHTML(r.univ||'')}</span></td>
                 <td class="ss-pts">${r.points}</td>
                 <td><span class="ss-badge ${bcls}">${escHTML(r.status)}${r.inactiveNote?` · ${escHTML(r.inactiveNote)}`:''}</span></td>
                 <td style="color:var(--gray-l)">${escHTML(r.last||'-')}</td>
@@ -1021,7 +1021,7 @@ function statsStarSystemHTML(){
   }).join('');
 
   return header + `<div class="ssec" style="margin-top:10px">
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:8px">※ 현재는 “현재 티어 기준”으로 상대 티어 차이를 계산합니다(과거 티어 변동까지 반영하려면 기록에 tierAtMatch 저장이 필요).</div>
+    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:8px">※ 현재는 “현재 티어 기준”으로 상대 티어 차이를 계산합니다(과거 티어 변동까지 반영하려면 기록에 tierAtMatch 저장이 필요).</div>
   </div>` + tiersHTML;
 }
 

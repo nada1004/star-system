@@ -4,7 +4,7 @@
     const histMaps=[...new Set((window.players||[]).flatMap(p=>(p.history||[]).map(h=>h.map).filter(m=>m&&m!=='-')))];
     const configMaps=((window.maps)||[]).filter(m=>m&&m!=='-');
     const allMaps=[...new Set([...histMaps,...configMaps])].sort();
-    if(!allMaps.length) return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">맵 기록이 없습니다.<br><span style="font-size:11px">설정에서 맵을 등록하거나 경기 기록에 맵 정보를 입력해 주세요.</span></p></div>`;
+    if(!allMaps.length) return`<div class="ssec"><p style="color:var(--gray-l);padding:40px;text-align:center">맵 기록이 없습니다.<br><span style="font-size:var(--fs-caption)">설정에서 맵을 등록하거나 경기 기록에 맵 정보를 입력해 주세요.</span></p></div>`;
     if(!window._mapRankSelMap||!allMaps.includes(window._mapRankSelMap)) window._mapRankSelMap=allMaps[0];
 
     const mapData={};
@@ -63,18 +63,18 @@
 
     return`<div style="display:flex;flex-direction:column;gap:14px">
     <div class="ssec">
-      <h4 style="margin-bottom:12px">🗺️ 맵별 경기 수 <span style="font-size:11px;color:var(--gray-l);font-weight:400">클릭하여 선택</span></h4>
+      <h4 style="margin-bottom:12px">🗺️ 맵별 경기 수 <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:400">클릭하여 선택</span></h4>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${mapSummary.map(m=>`
           <button onclick="window._mapRankSelMap='${m.name.replace(/'/g,"\\'")}';render()"
-            style="padding:6px 14px;border-radius:8px;border:2px solid ${window._mapRankSelMap===m.name?'var(--blue)':'var(--border2)'};background:${window._mapRankSelMap===m.name?'var(--blue-l)':'var(--white)'};font-size:12px;font-weight:${window._mapRankSelMap===m.name?'700':'500'};color:${window._mapRankSelMap===m.name?'var(--blue)':'var(--text3)'};cursor:pointer;transition:.12s">
+            style="padding:6px 14px;border-radius:8px;border:2px solid ${window._mapRankSelMap===m.name?'var(--blue)':'var(--border2)'};background:${window._mapRankSelMap===m.name?'var(--blue-l)':'var(--white)'};font-size:var(--fs-sm);font-weight:${window._mapRankSelMap===m.name?'700':'500'};color:${window._mapRankSelMap===m.name?'var(--blue)':'var(--text3)'};cursor:pointer;transition:.12s">
             ${m.name} <span style="font-size:10px;opacity:.6">${m.games}게임</span>
           </button>`).join('')}
       </div>
     </div>
     <div class="ssec" id="stats-maprank-sec">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <h4 style="margin:0">🏆 <span style="color:var(--blue)">${window._mapRankSelMap}</span> 맵 강자 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(2경기 이상)</span></h4>
+        <h4 style="margin:0">🏆 <span style="color:var(--blue)">${window._mapRankSelMap}</span> 맵 강자 <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:400">(2경기 이상)</span></h4>
       </div>
       ${selData.length===0?'<p style="color:var(--gray-l)">해당 맵 기록이 없습니다.</p>':`
       <div style="overflow-x:auto"><table>
@@ -83,7 +83,7 @@
             <td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td>
             <td style="font-weight:700;color:var(--blue)">${p.name}</td>
             <td><span class="ubadge" style="background:${window.gc(p.univ)}">${p.univ}</span></td>
-            <td style="font-size:11px">${p.tier||'-'}</td>
+            <td style="font-size:var(--fs-caption)">${p.tier||'-'}</td>
             <td class="wt">${p.w}</td><td class="lt">${p.l}</td>
             <td style="font-weight:800;color:${p.rate>=50?'var(--red)':'var(--text3)'}">
               ${p.rate}%

@@ -629,12 +629,12 @@ function _b2RenderMvpArchiveBody(entries, typeFilter, univFilter, univList) {
           return `<option value="${_n}"${univFilter===u.name?' selected':''}>${_nh}</option>`;
         }).join('')}
       </select>
-      <span style="font-size:11px;color:var(--text3);margin-left:auto">총 ${filtered.length}건</span>
+      <span style="font-size:var(--fs-caption);color:var(--text3);margin-left:auto">총 ${filtered.length}건</span>
       <button type="button" class="b2w2-preset" onclick="(function(){const bodies=[...document.getElementsByClassName('b2w2-mvp-arch-body')];const chevs=[...document.getElementsByClassName('b2w2-mvp-arch-chev')];const anyOpen=bodies.some(b=>b.style.display!=='none');bodies.forEach(b=>{b.style.display=anyOpen?'none':'';});chevs.forEach(c=>{c.textContent=anyOpen?'▶':'▼';});})()">전체 펼치기/접기</button>
     </div>`;
 
   if (!filtered.length) {
-    return `${filterBar}<div class="b2w2-empty"><div style="font-size:28px;margin-bottom:8px">🏆</div>조건에 맞는 MVP 기록이 없습니다.<div style="font-size:11px;margin-top:4px">필터를 변경해보세요</div></div>`;
+    return `${filterBar}<div class="b2w2-empty"><div style="font-size:28px;margin-bottom:8px">🏆</div>조건에 맞는 MVP 기록이 없습니다.<div style="font-size:var(--fs-caption);margin-top:4px">필터를 변경해보세요</div></div>`;
   }
 
   const _renderCard = (e) => {
@@ -708,7 +708,7 @@ function _b2RenderMvpArchiveBody(entries, typeFilter, univFilter, univList) {
           <div class="b2w2-card-title">
             <span class="b2w2-card-dot" style="background:var(--b2w-accent)"></span>
             <div>
-              <div class="b2w2-card-name" style="font-size:15px">${label}</div>
+              <div class="b2w2-card-name" style="font-size:var(--fs-md)">${label}</div>
               <div class="b2w2-card-sub">
                 <span style="color:var(--b2w-accent);font-weight:800">주간 ${weekN}건</span>
                 <span style="color:var(--b2w-gold);font-weight:800">월간 ${monthN}건</span>
@@ -817,8 +817,8 @@ function _b2WeeklyRaceStats(raceCount) {
     const wrColor = wr===null ? '#94a3b8' : wr>=60 ? '#10b981' : wr>=40 ? '#f59e0b' : '#ef4444';
     return `<div class="b2w2-race-row">
       <div class="b2w2-race-cell b2w2-race-cell-main">
-        <span style="font-size:13px;width:20px;text-align:center;flex-shrink:0">${ico}</span>
-        <span style="font-size:11px;font-weight:800;color:var(--text2);white-space:nowrap">${label}</span>
+        <span style="font-size:var(--fs-base);width:20px;text-align:center;flex-shrink:0">${ico}</span>
+        <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text2);white-space:nowrap">${label}</span>
       </div>
       <div class="b2w2-race-cell"><span class="b2w2-race-pill win">${w}</span></div>
       <div class="b2w2-race-cell"><span class="b2w2-race-pill loss">${l}</span></div>

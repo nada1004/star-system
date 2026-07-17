@@ -69,12 +69,12 @@
     return`<div style="display:flex;flex-direction:column;gap:16px">
     <div class="ssec" id="stats-heatmap-sec">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-        <h4 style="margin:0">📅 활동량 히트맵 <span style="font-size:11px;color:var(--gray-l);font-weight:400">최근 1년</span></h4>
+        <h4 style="margin:0">📅 활동량 히트맵 <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:400">최근 1년</span></h4>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <div style="position:relative">
             <input id="heatmap-search-input" type="text" placeholder="🔍 스트리머 검색 (전체보기: 비워두기)"
               value="${selName}"
-              style="font-size:12px;padding:4px 10px;border:1px solid var(--border2);border-radius:8px;width:200px"
+              style="font-size:var(--fs-sm);padding:4px 10px;border:1px solid var(--border2);border-radius:8px;width:200px"
               oncompositionstart="window._hsComp=true"
               oncompositionend="window._hsComp=false;heatmapSearchFilter(this.value);if(!this.value){window._heatmapSelPlayer='';render();}"
               oninput="heatmapSearchFilter(this.value);if(!this.value&&!window._hsComp){window._heatmapSelPlayer='';render();}"
@@ -83,12 +83,12 @@
             <div id="heatmap-search-drop" style="display:none;position:absolute;top:34px;left:0;background:var(--white);border:1px solid var(--border2);border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;width:260px;box-shadow:var(--sh2)">
               <div class="sitem" style="color:var(--gray-l);font-style:italic" onmousedown="window._heatmapSelPlayer='';document.getElementById('heatmap-search-input').value='';document.getElementById('heatmap-search-drop').style.display='none';render()">— 전체 경기 보기 —</div>
               ${playersWithHist.map(p=>`<div class="sitem" onmousedown="window._heatmapSelPlayer='${window.escJS(p.name)}';document.getElementById('heatmap-search-input').value='${window.escAttr(p.name)}';document.getElementById('heatmap-search-drop').style.display='none';render()">
-                <b>${p.name}</b> <span style="color:${window.gc(p.univ)};font-size:11px">${p.univ}</span> <span style="color:var(--gray-l);font-size:10px">${(p.history||[]).length}경기</span>
+                <b>${p.name}</b> <span style="color:${window.gc(p.univ)};font-size:var(--fs-caption)">${p.univ}</span> <span style="color:var(--gray-l);font-size:10px">${(p.history||[]).length}경기</span>
               </div>`).join('')}
             </div>
           </div>
           ${selHeatP?`<span class="ubadge" style="background:${window.gc(selHeatP.univ)}">${selHeatP.univ}</span>`:''}
-          <div style="display:flex;gap:12px;font-size:12px;color:var(--gray-l)">
+          <div style="display:flex;gap:12px;font-size:var(--fs-sm);color:var(--gray-l)">
             <span>총 <b style="color:var(--blue)">${totalGames}</b>${isPlayerMode?'경기':'게임'}</span>
             <span>활동일 <b style="color:var(--green)">${activeDays}</b>일</span>
           </div>
@@ -104,14 +104,14 @@
       </div>
     </div>
     <div class="ssec">
-      <h4 style="margin-bottom:12px">🔥 최다 경기일 TOP 5 <span style="font-size:11px;font-weight:600;color:var(--gray-l)">— 숫자 클릭 시 스트리머 목록</span></h4>
+      <h4 style="margin-bottom:12px">🔥 최다 경기일 TOP 5 <span style="font-size:var(--fs-caption);font-weight:600;color:var(--gray-l)">— 숫자 클릭 시 스트리머 목록</span></h4>
       <div style="display:flex;flex-direction:column;gap:8px">
         ${topDays.map(([d,c],i)=>{
           const badge=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
           const safeD=window.escJS?window.escJS(d):d.replace(/'/g,"\'");
           return`<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--white);border:1px solid var(--border);border-radius:12px;transition:box-shadow .15s,transform .15s" onmouseenter="this.style.boxShadow='0 4px 14px rgba(15,23,42,.10)';this.style.transform='translateX(2px)'" onmouseleave="this.style.boxShadow='';this.style.transform=''">
-            <span style="font-size:18px;flex-shrink:0">${badge}</span>
-            <span class="heatmap-top5-date" style="font-weight:800;font-size:13px;color:var(--blue);min-width:96px" onclick="if(typeof openHeatmapDayPopup==='function')openHeatmapDayPopup('${safeD}',${c})">${d}</span>
+            <span style="font-size:var(--fs-lg);flex-shrink:0">${badge}</span>
+            <span class="heatmap-top5-date" style="font-weight:800;font-size:var(--fs-base);color:var(--blue);min-width:96px" onclick="if(typeof openHeatmapDayPopup==='function')openHeatmapDayPopup('${safeD}',${c})">${d}</span>
             <div style="flex:1;background:var(--border2);border-radius:20px;height:10px;overflow:hidden">
               <div style="width:${Math.round(c/topDays[0][1]*100)}%;background:linear-gradient(90deg,#22c55e,#16a34a);height:100%;border-radius:20px"></div>
             </div>

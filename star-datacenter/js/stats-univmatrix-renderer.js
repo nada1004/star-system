@@ -33,14 +33,14 @@
         <h4 style="margin:0">🏛️ 대학 간 상대전적 매트릭스</h4>
         <button class="btn-capture btn-xs no-export" onclick="captureSection('stats-univmatrix-sec','univmatrix')">📷 이미지 저장</button>
       </div>
-      <p style="font-size:11px;color:var(--gray-l);margin-bottom:10px">가로=나, 세로=상대 / 녹색=우세 빨강=열세</p>
+      <p style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">가로=나, 세로=상대 / 녹색=우세 빨강=열세</p>
       <div style="overflow-x:auto">
-      <table style="border-collapse:collapse;font-size:12px;min-width:${60+univRank.length*72}px">
+      <table style="border-collapse:collapse;font-size:var(--fs-sm);min-width:${60+univRank.length*72}px">
         <thead><tr>
           <th style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);white-space:nowrap;min-width:80px"></th>
           ${univRank.map(u=>`<th style="padding:6px 8px;background:${window.gc(u.name)}22;border:1px solid var(--border);white-space:nowrap;min-width:72px">
             <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-              <span style="background:${window.gc(u.name)};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700">${u.name}</span>
+              <span style="background:${window.gc(u.name)};color:#fff;padding:2px 7px;border-radius:4px;font-size:var(--fs-caption);font-weight:700">${u.name}</span>
               <span style="font-size:10px;color:${u.rate>=50?'var(--red)':'var(--text3)'};font-weight:700">${u.rate}%</span>
             </div>
           </th>`).join('')}
@@ -49,20 +49,20 @@
         <tbody>
           ${univRank.map(u=>`<tr>
             <td style="padding:6px 10px;background:${window.gc(u.name)}22;border:1px solid var(--border);font-weight:700;white-space:nowrap">
-              <span style="background:${window.gc(u.name)};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px">${u.name}</span>
+              <span style="background:${window.gc(u.name)};color:#fff;padding:2px 7px;border-radius:4px;font-size:var(--fs-caption)">${u.name}</span>
             </td>
             ${univRank.map(v=>{
               if(u.name===v.name) return`<td style="background:var(--border2);border:1px solid var(--border);text-align:center;color:var(--gray-l)">-</td>`;
               const s=matrix[u.name][v.name];
-              const t=s.w+s.l; if(!t) return`<td style="background:#f8fafc;border:1px solid var(--border);text-align:center;color:var(--gray-l);font-size:11px">-</td>`;
+              const t=s.w+s.l; if(!t) return`<td style="background:#f8fafc;border:1px solid var(--border);text-align:center;color:var(--gray-l);font-size:var(--fs-caption)">-</td>`;
               const r=Math.round(s.w/t*100);
               return`<td style="background:${cellBg(s.w,s.l)};border:1px solid var(--border);text-align:center;padding:5px 4px">
-                <div style="font-weight:800;font-size:13px;color:${r>=50?'#16a34a':'#dc2626'}">${r}%</div>
+                <div style="font-weight:800;font-size:var(--fs-base);color:${r>=50?'#16a34a':'#dc2626'}">${r}%</div>
                 <div style="font-size:10px;color:var(--gray-l)">${s.w}W${s.l}L</div>
               </td>`;
             }).join('')}
             <td style="background:var(--surface);border:1px solid var(--border);text-align:center;padding:5px 8px">
-              <div style="font-weight:800;font-size:13px;color:${u.rate>=50?'#dc2626':'#94a3b8'}">${u.rate}%</div>
+              <div style="font-weight:800;font-size:var(--fs-base);color:${u.rate>=50?'#dc2626':'#94a3b8'}">${u.rate}%</div>
               <div style="font-size:10px;color:var(--gray-l)">${u.w}W${u.l}L</div>
             </td>
           </tr>`).join('')}

@@ -32,10 +32,10 @@
 
     const univs=window.getAllUnivs();
     const bar=(w,l,color)=>{
-      const t=w+l; if(!t) return '<span style="color:var(--gray-l);font-size:11px">-</span>';
+      const t=w+l; if(!t) return '<span style="color:var(--gray-l);font-size:var(--fs-caption)">-</span>';
       const r=Math.round(w/t*100);
       return`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:52px">
-        <div style="font-weight:800;font-size:12px;color:${r>=50?color:'#94a3b8'}">${r}%</div>
+        <div style="font-weight:800;font-size:var(--fs-sm);color:${r>=50?color:'#94a3b8'}">${r}%</div>
         <div style="width:48px;height:6px;background:var(--border2);border-radius:3px;overflow:hidden">
           <div style="width:${r}%;height:100%;background:${r>=50?color:'#e2e8f0'};border-radius:3px"></div>
         </div>
@@ -46,20 +46,20 @@
     return`<div style="display:flex;flex-direction:column;gap:14px">
     <div class="ssec" id="stats-tierwin-sec">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <h4 style="margin:0">🎯 티어별 승률 분석 <span style="font-size:11px;color:var(--gray-l);font-weight:400">(프로리그·남자 포함 전체)</span></h4>
+        <h4 style="margin:0">🎯 티어별 승률 분석 <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:400">(프로리그·남자 포함 전체)</span></h4>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-        <select onchange="_tierWinFilter.race=this.value;render()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:7px">
+        <select onchange="_tierWinFilter.race=this.value;render()" style="font-size:var(--fs-sm);padding:5px 8px;border:1px solid var(--border2);border-radius:7px">
           <option value="">종족 전체</option>
           <option value="T"${f.race==='T'?' selected':''}>테란</option>
           <option value="Z"${f.race==='Z'?' selected':''}>저그</option>
           <option value="P"${f.race==='P'?' selected':''}>프로토스</option>
         </select>
-        <select onchange="_tierWinFilter.univ=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);render()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:7px">
+        <select onchange="_tierWinFilter.univ=(function(v){try{var t=document.createElement('textarea');t.innerHTML=v;return t.value;}catch(e){return v;}})(this.value);render()" style="font-size:var(--fs-sm);padding:5px 8px;border:1px solid var(--border2);border-radius:7px">
           <option value="">대학 전체</option>
           ${univs.map(u=>`<option value="${window.escHTML?window.escHTML(u.name):u.name}"${f.univ===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
-        <select onchange="_tierWinFilter.gender=this.value;render()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:7px">
+        <select onchange="_tierWinFilter.gender=this.value;render()" style="font-size:var(--fs-sm);padding:5px 8px;border:1px solid var(--border2);border-radius:7px">
           <option value="">성별 전체</option>
           <option value="M"${f.gender==='M'?' selected':''}>👨 남자</option>
           <option value="F"${f.gender==='F'?' selected':''}>👩 여자</option>
@@ -83,7 +83,7 @@
           <td style="text-align:center">${bar(p.up.w,p.up.l,'#7c3aed')}</td>
           <td style="text-align:center">${bar(p.same.w,p.same.l,'#2563eb')}</td>
           <td style="text-align:center">${bar(p.down.w,p.down.l,'#16a34a')}</td>
-          <td style="text-align:center;color:var(--gray-l);font-size:12px">${p.tot}</td>
+          <td style="text-align:center;color:var(--gray-l);font-size:var(--fs-sm)">${p.tot}</td>
         </tr>`).join('')}
         </tbody>
       </table></div>`}

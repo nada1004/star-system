@@ -39,7 +39,7 @@ function onGlobalSearch(val){
   }catch(e){}
 
   if(results.length===0 && extResults.length===0){
-    drop.innerHTML=`<div style="padding:16px;text-align:center;color:var(--gray-l);font-size:12px">
+    drop.innerHTML=`<div style="padding:16px;text-align:center;color:var(--gray-l);font-size:var(--fs-sm)">
       <div style="font-size:20px;margin-bottom:6px">🔍</div>
       검색 결과 없음<br>
       <span style="font-size:10px;color:var(--gray-l);margin-top:4px;display:block">이름 · 대학 · 티어 · 종족(테란/저그/프토) · 성별(남/여) 검색 가능</span>
@@ -72,15 +72,15 @@ function onGlobalSearch(val){
       onclick="(function(el){const idx=+el.dataset.gsidx;if(window._gsResults&&window._gsResults[idx]){globalSearchSelect(window._gsResults[idx].name);}else{openPlayerModal(el.dataset.name||'');}}).call(this,this)"
     >
       ${p.photo
-        ?`<img src="${toHttpsUrl(p.photo)}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;flex-shrink:0;border:2px solid ${col}" onerror="this.outerHTML='<div style=\\'width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0\\'>${rc.label}</div>'">`
-        :`<div style="width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:.3px">${rc.label}</div>`
+        ?`<img src="${toHttpsUrl(p.photo)}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;flex-shrink:0;border:2px solid ${col}" onerror="this.outerHTML='<div style=\\'width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:var(--fs-caption);font-weight:800;color:#fff;flex-shrink:0\\'>${rc.label}</div>'">`
+        :`<div style="width:60px;height:60px;border-radius:8px;background:${col};display:flex;align-items:center;justify-content:center;font-size:var(--fs-caption);font-weight:800;color:#fff;flex-shrink:0;letter-spacing:.3px">${rc.label}</div>`
       }
       <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:13px">${hl(p.name,mainQ)}${p.gender==='M'?'<span style="font-size:9px;background:#2563eb;color:#fff;padding:1px 4px;border-radius:4px;margin-left:4px">♂</span>':''}</div>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:1px"><span style="background:${(TIER_CFG[p.tier]||{bg:'#f1f5f9'}).bg};color:${(TIER_CFG[p.tier]||{col:'#475569'}).col};padding:1px 6px;border-radius:4px;font-size:10px;font-weight:800">${hl(p.tier,mainQ)}</span> · ${hl(p.univ,mainQ)}${p.role?` · <span style="color:var(--blue);font-size:10px;font-weight:600">${hl(p.role,mainQ)}</span>`:''} · <span style="background:${rc.bg};color:${rc.col};padding:0 4px;border-radius:3px;font-size:10px;font-weight:700">${rc.label}</span></div>
+        <div style="font-weight:700;font-size:var(--fs-base)">${hl(p.name,mainQ)}${p.gender==='M'?'<span style="font-size:9px;background:#2563eb;color:#fff;padding:1px 4px;border-radius:4px;margin-left:4px">♂</span>':''}</div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:1px"><span style="background:${(TIER_CFG[p.tier]||{bg:'#f1f5f9'}).bg};color:${(TIER_CFG[p.tier]||{col:'#475569'}).col};padding:1px 6px;border-radius:4px;font-size:10px;font-weight:800">${hl(p.tier,mainQ)}</span> · ${hl(p.univ,mainQ)}${p.role?` · <span style="color:var(--blue);font-size:10px;font-weight:600">${hl(p.role,mainQ)}</span>`:''} · <span style="background:${rc.bg};color:${rc.col};padding:0 4px;border-radius:3px;font-size:10px;font-weight:700">${rc.label}</span></div>
       </div>
       <div style="text-align:right;flex-shrink:0">
-        <div style="font-weight:700;font-size:12px;color:${wr>=50?'#dc2626':'#94a3b8'}">${wr}%</div>
+        <div style="font-weight:700;font-size:var(--fs-sm);color:${wr>=50?'#dc2626':'#94a3b8'}">${wr}%</div>
         <div style="font-size:10px;color:var(--gray-l)">${p.win}승${p.loss}패</div>
         ${p.points?`<div style="font-size:10px;color:var(--gold);font-weight:700">${p.points>0?'+':''}${p.points}pt</div>`:''}
       </div>
@@ -98,8 +98,8 @@ function onGlobalSearch(val){
           onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''"
           onclick="(function(el){globalSearchSelectExt(+el.dataset.gsextidx);}).call(this,this)">
           <div style="flex:1;min-width:0">
-            <div style="font-weight:800;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hl(line, mainQ||q)}</div>
-            <div style="font-size:11px;color:var(--gray-l);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hl(sub, mainQ||q)}</div>
+            <div style="font-weight:800;font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hl(line, mainQ||q)}</div>
+            <div style="font-size:var(--fs-caption);color:var(--gray-l);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hl(sub, mainQ||q)}</div>
           </div>
           <div style="flex-shrink:0;font-size:10px;color:var(--blue);font-weight:800">열기</div>
         </div>`;
@@ -142,9 +142,9 @@ function globalSearchSelectExt(idx){
     const src=(it.source||'').trim();
     modal.innerHTML=`<div style="background:var(--white);border-radius:16px;padding:18px 18px 14px;width:420px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3)">
       <div style="font-weight:1000;font-size:14px;margin-bottom:6px">📎 외부 대진기록</div>
-      <div style="font-weight:900;font-size:13px;color:var(--text);margin-bottom:4px">${line}</div>
-      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">${sub}${src?`<br>출처: ${src}`:''}</div>
-      ${memo?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:10px;white-space:pre-wrap">${memo.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
+      <div style="font-weight:900;font-size:var(--fs-base);color:var(--text);margin-bottom:4px">${line}</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6;margin-bottom:10px">${sub}${src?`<br>출처: ${src}`:''}</div>
+      ${memo?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:var(--fs-sm);line-height:1.7;margin-bottom:10px;white-space:pre-wrap">${memo.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
       <div style="display:flex;gap:8px">
         <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_gsExtModal').remove()">닫기</button>
       </div>
@@ -193,7 +193,7 @@ function statsPlayerVsHTML(){
         onblur="setTimeout(()=>{const d=document.getElementById('${dropId}');if(d)d.style.display='none'},200)">
       <div id="${dropId}" class="stats-search-drop">
         ${pAll.map(p=>`<div class="sitem stats-search-item" onmousedown="${selId==='A'?'_vsSelA':'_vsSelB'}='${escJS(p.name)}';document.getElementById('${inputId}').value='${escJS(p.name)}';document.getElementById('${dropId}').style.display='none';render()">
-          <b>${escHTML(p.name)}</b> <span style="color:${gc(p.univ)};font-size:11px">${escHTML(p.univ)}</span> <span style="color:var(--gray-l);font-size:10px">${p.history.length}경기</span>
+          <b>${escHTML(p.name)}</b> <span style="color:${gc(p.univ)};font-size:var(--fs-caption)">${escHTML(p.univ)}</span> <span style="color:var(--gray-l);font-size:10px">${p.history.length}경기</span>
         </div>`).join('')}
       </div>
     </div>`;
@@ -243,7 +243,7 @@ function statsPlayerVsHTML(){
   }
   function raceTbl(rv,race,col){
     const r=rv[race]||{w:0,l:0};const t=r.w+r.l;
-    return`<td style="text-align:center;font-size:11px;font-weight:700;color:${t?col:'var(--gray-l)'}">${t?Math.round(r.w/t*100)+'%':'-'}<br><span style="font-weight:400;font-size:10px;color:var(--gray-l)">${r.w}W${r.l}L</span></td>`;
+    return`<td style="text-align:center;font-size:var(--fs-caption);font-weight:700;color:${t?col:'var(--gray-l)'}">${t?Math.round(r.w/t*100)+'%':'-'}<br><span style="font-weight:400;font-size:10px;color:var(--gray-l)">${r.w}W${r.l}L</span></td>`;
   }
   function statRow(label,valA,valB,higherIsBetter=true){
     const numA=parseFloat(valA),numB=parseFloat(valB);
@@ -251,7 +251,7 @@ function statsPlayerVsHTML(){
     const bWins=!isNaN(numA)&&!isNaN(numB)&&(higherIsBetter?numB>numA:numB<numA);
     return`<tr>
       <td style="text-align:right;font-weight:${aWins?'800':'400'};color:${aWins?colA:'var(--text)'};">${valA}${aWins?` <span style="color:${colA}">◀</span>`:''}</td>
-      <td style="text-align:center;font-size:11px;color:var(--gray-l);padding:4px 12px;white-space:nowrap">${label}</td>
+      <td style="text-align:center;font-size:var(--fs-caption);color:var(--gray-l);padding:4px 12px;white-space:nowrap">${label}</td>
       <td style="text-align:left;font-weight:${bWins?'800':'400'};color:${bWins?colB:'var(--text)'};">${bWins?`<span style="color:${colB}">▶</span> `:''} ${valB}</td>
     </tr>`;
   }
@@ -262,7 +262,7 @@ function statsPlayerVsHTML(){
     <div class="stats-chart-toolbar" style="margin-bottom:14px">
       <div>
         <h4 style="margin:0">⚔️ 스트리머 vs 스트리머 비교</h4>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:4px">직접 대결, 최근 폼, 종족 상성, 월별 흐름을 한 화면에서 비교합니다.</div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:4px">직접 대결, 최근 폼, 종족 상성, 월별 흐름을 한 화면에서 비교합니다.</div>
       </div>
       ${pA&&pB?`<button onclick="_vsSelA='';_vsSelB='';render()" class="btn btn-w btn-xs no-export">초기화</button>`:''}
     </div>
@@ -284,17 +284,17 @@ function statsPlayerVsHTML(){
 
     <!-- 직접 대결 -->
     <div class="stats-h2h-board">
-      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px">⚔️ 직접 대결 기록</div>
-      ${h2hTotal===0?`<span style="color:var(--gray-l);font-size:12px">직접 대결 기록 없음</span>`:`
+      <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:8px">⚔️ 직접 대결 기록</div>
+      ${h2hTotal===0?`<span style="color:var(--gray-l);font-size:var(--fs-sm)">직접 대결 기록 없음</span>`:`
       <div class="stats-h2h-score">
         <div style="text-align:center">
           <div style="font-size:28px;font-weight:900;color:${colA}">${h2hAwin}</div>
-          <div style="font-size:11px;color:var(--gray-l)">${_vsSelA}</div>
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)">${_vsSelA}</div>
         </div>
-        <div style="font-size:13px;color:var(--gray-l)">:&nbsp;</div>
+        <div style="font-size:var(--fs-base);color:var(--gray-l)">:&nbsp;</div>
         <div style="text-align:center">
           <div style="font-size:28px;font-weight:900;color:${colB}">${h2hBwin}</div>
-          <div style="font-size:11px;color:var(--gray-l)">${_vsSelB}</div>
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)">${_vsSelB}</div>
         </div>
       </div>
       <div style="margin-top:8px;height:8px;border-radius:4px;overflow:hidden;background:${colB};display:flex">
@@ -307,9 +307,9 @@ function statsPlayerVsHTML(){
     <div class="stats-table-card" style="margin-bottom:14px"><div style="overflow-x:auto">
     <table class="stats-compare-table">
       <thead><tr>
-        <th style="text-align:right;color:${colA};padding:6px 12px;font-size:13px">${_vsSelA}</th>
-        <th style="text-align:center;color:var(--text3);font-size:11px;padding:4px 0">항목</th>
-        <th style="text-align:left;color:${colB};padding:6px 12px;font-size:13px">${_vsSelB}</th>
+        <th style="text-align:right;color:${colA};padding:6px 12px;font-size:var(--fs-base)">${_vsSelA}</th>
+        <th style="text-align:center;color:var(--text3);font-size:var(--fs-caption);padding:4px 0">항목</th>
+        <th style="text-align:left;color:${colB};padding:6px 12px;font-size:var(--fs-base)">${_vsSelB}</th>
       </tr></thead>
       <tbody>
         ${statRow('승률',stA.rate+'%',stB.rate+'%')}
@@ -325,18 +325,18 @@ function statsPlayerVsHTML(){
     <!-- 최근 폼 -->
     <div class="stats-panel-grid" style="margin-bottom:14px">
       <div class="stats-surface-box">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">${_vsSelA} 최근 폼</div>
+        <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:6px">${_vsSelA} 최근 폼</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap">${formDots(stA.rec)}</div>
       </div>
       <div class="stats-surface-box">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">${_vsSelB} 최근 폼</div>
+        <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:6px">${_vsSelB} 최근 폼</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap">${formDots(stB.rec)}</div>
       </div>
     </div>
 
     <!-- 종족 상성 비교 -->
     <div class="stats-table-card" style="margin-bottom:14px"><div style="overflow-x:auto">
-      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">🎭 종족 상성 (vs 상대 종족 승률)</div>
+      <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:6px">🎭 종족 상성 (vs 상대 종족 승률)</div>
       <table class="stats-compare-table">
         <thead><tr><th>선수</th><th style="color:#3b82f6">vs 테란</th><th style="color:#7c3aed">vs 저그</th><th style="color:#d97706">vs 프로토스</th></tr></thead>
         <tbody>
@@ -348,7 +348,7 @@ function statsPlayerVsHTML(){
 
     <!-- 월별 승수 비교 -->
     <div class="stats-table-card"><div style="overflow-x:auto">
-      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">📅 최근 6개월 월별 승수</div>
+      <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:6px">📅 최근 6개월 월별 승수</div>
       <table class="stats-compare-table">
         <thead><tr><th>월</th>${stA.months.map(ym=>`<th style="font-size:10px">${ym.slice(5)}</th>`).join('')}</tr></thead>
         <tbody>
@@ -369,8 +369,8 @@ function statsUnivWinBarHTML(){
   return `<div id="uwb-wrap" class="stats-chart-shell">
     <div class="stats-chart-toolbar">
       <div>
-        <div style="font-weight:800;font-size:13px">📊 대학별 개인 승률 비교</div>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:4px">(개인 미니/대학대전/CK/프로 합산)</div>
+        <div style="font-weight:800;font-size:var(--fs-base)">📊 대학별 개인 승률 비교</div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:4px">(개인 미니/대학대전/CK/프로 합산)</div>
       </div>
       <select class="stats-select" onchange="_uwbSort=this.value;initUnivWinBarChart()" style="min-width:140px">
         <option value="wr"${_uwbSort==='wr'?' selected':''}>승률순</option>
@@ -483,7 +483,7 @@ function initUnivWinBarChart(){
     });
     const sparkline = (arr, col)=>{
       const vals = (arr||[]).slice(-10);
-      if(!vals.length) return `<div style="font-size:11px;color:var(--gray-l)">최근 10경기 데이터 없음</div>`;
+      if(!vals.length) return `<div style="font-size:var(--fs-caption);color:var(--gray-l)">최근 10경기 데이터 없음</div>`;
       const W=140,H=34,P=4;
       const pts = vals.map((v,i)=>{
         const x = P + ((W-P*2) * (vals.length===1?0.5:i/(vals.length-1)));
@@ -506,11 +506,11 @@ function initUnivWinBarChart(){
       const streak = last.map(v=>v?'승':'패').join(' ');
       return `<div class="stats-surface-box">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-          <span style="font-size:13px;font-weight:900;color:${d.col}">${d.name}</span>
-          <span style="font-size:11px;color:var(--gray-l)">최근 ${Math.min(10,last.length)}경기</span>
+          <span style="font-size:var(--fs-base);font-weight:900;color:${d.col}">${d.name}</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l)">최근 ${Math.min(10,last.length)}경기</span>
         </div>
         ${sparkline(last, d.col)}
-        <div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-size:11px">
+        <div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-size:var(--fs-caption)">
           <span style="color:var(--text3)">추세</span>
           <span style="font-weight:700;color:var(--text2)">${streak || '-'}</span>
         </div>
