@@ -33,12 +33,12 @@ function statsMismatchHTML(){
     const wCol=gc(winner?.univ||'');const lCol=gc(loser?.univ||'');
     return`<div class="stats-list-item" style="flex-wrap:wrap">
       <span style="font-size:11px;color:var(--gray-l);min-width:68px">${m.date}</span>
-      <span class="stats-inline-badge" style="background:var(--green);color:#fff;cursor:pointer" onclick="openPlayerModal('${escJS(m.winner)}')">${m.winner}</span>
+      <span class="stats-inline-badge" style="background:var(--red);color:#fff;cursor:pointer" onclick="openPlayerModal('${escJS(m.winner)}')">${m.winner}</span>
       <span style="font-size:12px;font-weight:700;color:${wElo>=1300?'#7c3aed':wElo>=1200?'var(--green)':'var(--red)'}">${wElo}</span>
       <span style="color:var(--gray-l);font-size:11px">ELO차</span>
       <span class="stats-inline-badge" style="background:var(--red);color:#fff">${m.diff}↑</span>
       <span style="color:var(--gray-l);font-size:11px">vs</span>
-      <span class="stats-inline-badge" style="background:var(--red);color:#fff;cursor:pointer;opacity:.72" onclick="openPlayerModal('${escJS(m.winner===m.pA?m.pB:m.pA)}')">${m.winner===m.pA?m.pB:m.pA}</span>
+      <span class="stats-inline-badge" style="background:var(--blue);color:#fff;cursor:pointer;opacity:.72" onclick="openPlayerModal('${escJS(m.winner===m.pA?m.pB:m.pA)}')">${m.winner===m.pA?m.pB:m.pA}</span>
       <span style="font-size:12px;font-weight:700;color:${lElo>=1300?'#7c3aed':lElo>=1200?'var(--green)':'var(--red)'}">${lElo}</span>
       ${m.upset?'<span class="stats-inline-badge" style="background:#7c3aed;color:#fff">🔥 이변!</span>':''}
     </div>`;
@@ -335,7 +335,7 @@ function _statsPlayerSearchRowHTML(p){
     </div>
     ${p.tier?`<div>${getTierBadge(p.tier)}</div>`:''}
     <div style="text-align:right;font-size:11px;color:var(--text3)">
-      <div style="font-weight:700;color:${wr===null?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">${wr===null?'-':wr+'%'}</div>
+      <div style="font-weight:700;color:${wr===null?'var(--gray-l)':wr>=50?'var(--red)':'var(--blue)'}">${wr===null?'-':wr+'%'}</div>
       <div>${p.win}승 ${p.loss}패</div>
     </div>
   </div>`;
@@ -514,7 +514,7 @@ function statsAdvSearchHTML(){
             <td style="font-weight:800;color:${eloColor}">${p._elo}</td>
             <td class="wt">${p._w}</td>
             <td class="lt">${p._l}</td>
-            <td style="font-weight:700;color:${p._rate>=50?'var(--green)':'var(--red)'}">${p._tot?p._rate+'%':'-'}</td>
+            <td style="font-weight:700;color:${p._rate>=50?'var(--red)':'var(--blue)'}">${p._tot?p._rate+'%':'-'}</td>
             <td>${p._tot}</td>
           </tr>`;
         }).join('')}

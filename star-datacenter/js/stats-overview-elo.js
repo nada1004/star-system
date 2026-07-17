@@ -59,9 +59,9 @@ function statsOverviewHTML(){
   });
   function formRow(p,pi){
     const icons=p.form.map(h=>h.result==='승'
-      ?'<span style="display:inline-block;width:20px;height:20px;background:var(--green);color:#fff;font-size:10px;font-weight:800;border-radius:4px;text-align:center;line-height:20px">W</span>'
-      :'<span style="display:inline-block;width:20px;height:20px;background:var(--red);color:#fff;font-size:10px;font-weight:800;border-radius:4px;text-align:center;line-height:20px">L</span>').join('');
-    const sc=p.streak.type==='승'?'var(--green)':'var(--red)';
+      ?'<span style="display:inline-block;width:20px;height:20px;background:var(--red);color:#fff;font-size:10px;font-weight:800;border-radius:4px;text-align:center;line-height:20px">W</span>'
+      :'<span style="display:inline-block;width:20px;height:20px;background:var(--blue);color:#fff;font-size:10px;font-weight:800;border-radius:4px;text-align:center;line-height:20px">L</span>').join('');
+    const sc=p.streak.type==='승'?'var(--red)':'var(--blue)';
     const si=p.streak.type==='승'?'🔥':'❄️';
     return`<div class="stats-list-item">
       <span style="font-weight:700;font-size:11px;color:var(--gray-l);min-width:20px;text-align:right">${pi+1}</span>
@@ -98,7 +98,7 @@ function statsOverviewHTML(){
     <thead><tr><th>내\상대</th>${['T','Z','P'].map(r=>`<th>${raceEmoji[r]} ${raceName[r]}</th>`).join('')}</tr></thead>
     <tbody>${['T','Z','P'].map(r=>`<tr><td style="font-weight:700;color:${raceColor[r]}">${raceEmoji[r]} ${raceName[r]}</td>${['T','Z','P'].map(o=>{
       const s=rv[r][o];const rate=s.w+s.l===0?'-':Math.round(s.w/(s.w+s.l)*100)+'%';
-      const bg=r===o?'background:var(--border2)':s.w>s.l?'background:#16a34a22':s.w<s.l?'background:#dc262622':'';
+      const bg=r===o?'background:var(--border2)':s.w>s.l?'background:#dc262622':s.w<s.l?'background:#2563eb22':'';
       return`<td style="${bg}">${r===o?'<span style="color:var(--gray-l)">-</span>':`<span style="font-weight:700">${rate}</span><br><span style="font-size:10px;color:var(--gray-l)">${s.w}승${s.l}패</span>`}</td>`;
     }).join('')}</tr>`).join('')}</tbody>
   </table></div>
@@ -128,7 +128,7 @@ function statsOverviewHTML(){
       <div style="font-size:24px;font-weight:800;color:var(--blue)">${m.total}</div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">총 경기</div>
       <div style="height:4px;border-radius:2px;background:var(--border);overflow:hidden;margin-bottom:4px"><div style="height:100%;width:${rate}%;background:var(--blue);border-radius:2px"></div></div>
-      <div style="font-size:11px;display:flex;justify-content:space-between"><span style="color:var(--green);font-weight:700">${m.w}승</span><span style="color:var(--gray-l)">${rate}%</span><span style="color:var(--red);font-weight:700">${m.l}패</span></div>
+      <div style="font-size:11px;display:flex;justify-content:space-between"><span style="color:var(--red);font-weight:700">${m.w}승</span><span style="color:var(--gray-l)">${rate}%</span><span style="color:var(--blue);font-weight:700">${m.l}패</span></div>
     </div>`;}).join('')||'<p style="color:var(--gray-l)">기록 없음</p>'}
   </div></div>
   <div class="ssec"><h4>🔥 최근 폼 TOP 10 <span style="font-size:12px;color:#db2777;font-weight:600">👩 여자</span></h4>
@@ -358,7 +358,7 @@ function initEloChart(){
     pts.forEach((pt,i)=>{const d=Math.abs(mapX(pt.i)-mx);if(d<md){md=d;ci=i;}});
     if(md*(rect.width/W)<32){
       const pt=pts[ci];const sign=(pt.eloDelta||0)>=0?'+':'';
-      _eloTip.innerHTML=`<b>${pt.opp||'?'}</b> <span style="color:${pt.result==='승'?'#86efac':'#fca5a5'}">${pt.result}</span><br>${sign}${pt.eloDelta||0} → <b>${pt.elo}</b><br><span style="color:#94a3b8">${pt.date}</span>`;
+      _eloTip.innerHTML=`<b>${pt.opp||'?'}</b> <span style="color:${pt.result==='승'?'#fca5a5':'#93c5fd'}">${pt.result}</span><br>${sign}${pt.eloDelta||0} → <b>${pt.elo}</b><br><span style="color:#94a3b8">${pt.date}</span>`;
       _eloTip.style.display='block';
       _eloTip.style.left=(e.clientX>window.innerWidth/2?e.clientX-145:e.clientX+12)+'px';
       _eloTip.style.top=(e.clientY-50)+'px';
@@ -500,7 +500,7 @@ function initGrowthChart(){
   ctx.fillText('50%',pad.l+2,baseY-3);
   // 채우기
   const col=pts[pts.length-1].rate>=50?'rgba(22,163,74,0.2)':'rgba(220,38,38,0.2)';
-  const lineCol=pts[pts.length-1].rate>=50?'#16a34a':'#dc2626';
+  const lineCol=pts[pts.length-1].rate>=50?'#dc2626':'#2563eb';
   ctx.beginPath();ctx.moveTo(mapX(0),mapY(pts[0].rate));
   pts.forEach(pt=>ctx.lineTo(mapX(pt.i),mapY(pt.rate)));
   ctx.lineTo(mapX(pts.length-1),H-pad.b);ctx.lineTo(mapX(0),H-pad.b);
@@ -662,8 +662,8 @@ function statsAwardHTML(){
         </div>
       </div>
       <div class="stats-award-stats">
-        <span class="stats-award-stat" style="background:var(--green)">${p.mw}승</span>
-        <span class="stats-award-stat" style="background:var(--red)">${p.ml}패</span>
+        <span class="stats-award-stat" style="background:var(--red)">${p.mw}승</span>
+        <span class="stats-award-stat" style="background:var(--blue)">${p.ml}패</span>
         <span class="stats-award-stat" style="background:${color}">${p.mrate}%</span>
       </div>
       ${extra?`<div style="margin-top:8px;font-size:11px;color:${color};font-weight:600">${extra}</div>`:''}
@@ -755,7 +755,7 @@ function statsAwardHTML(){
       <td><span class="ubadge" style="background:${gc(p.univ)}">${escHTML(p.univ)}</span></td>
       <td>${p.tier||'-'}</td>
       <td class="wt">${p.mw}</td><td class="lt">${p.ml}</td>
-      <td style="font-weight:700;color:${p.mrate>=50?'var(--green)':'var(--red)'}">${p.mrate}%</td>
+      <td style="font-weight:700;color:${p.mrate>=50?'var(--red)':'var(--blue)'}">${p.mrate}%</td>
       <td>${p.mt}</td>
       <td style="font-size:11px;white-space:nowrap">${trendBadge(p)}</td>
     </tr>`).join('')}
@@ -1141,7 +1141,7 @@ function statsRadarHTML(){
           return`<tr class="${_isOn?'stats-rank-top':''}" style="cursor:pointer;${_isOn?'background:'+u.color+'12;':''}" onclick="_radarSelUniv='${escJS(u.name)}';initRadarChart()">
             <td><span class="ubadge clickable-univ" style="background:${u.color}" onclick="event.stopPropagation();openUnivModal('${escJS(u.name)}')">${escHTML(u.name)}</span></td>
             <td>${scores.mem}명</td>
-            <td style="color:${scores.winrate>=50?'var(--green)':'var(--red)'};font-weight:700">${scores.winrate}%</td>
+            <td style="color:${scores.winrate>=50?'var(--red)':'var(--blue)'};font-weight:700">${scores.winrate}%</td>
             <td style="font-weight:700">${scores.w}승 ${scores.l}패</td>
             <td>${scores.avgElo}</td>
             <td class="${scores.pts>=0?'wt':'lt'}">${scores.pts>=0?'+':''}${scores.pts}</td>

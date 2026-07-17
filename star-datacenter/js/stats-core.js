@@ -116,13 +116,51 @@ function _statsLatestActiveMonths(gender){
     '.stats-modeseg .pill.on{box-shadow:0 6px 16px rgba(37,99,235,.24)}',
     '.stats-modebar-hint{font-size:11px;color:var(--gray-l);font-weight:700}',
     /* ── 그룹(개인/대학/경기/기록실) 행 ── */
-    '.stats-grouprow{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed rgba(148,163,184,.18)}',
+    '.stats-grouprow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed rgba(148,163,184,.18)}',
     '.stats-grouprow .pill{min-width:80px;justify-content:center}',
+    '.stats-filter-toggle.pill{background:rgba(148,163,184,.10)!important}',
+    '.stats-filter-toggle.pill.on{background:linear-gradient(135deg,#1e3a8a,#2563eb)!important}',
     /* ── 서브탭(종합/티어랭킹 등) 행 ── */
-    '.stats-subrow{display:flex;flex-wrap:wrap;gap:10px}',
-    '@media (max-width:768px){.stats-modebar{gap:8px}.stats-modeseg{width:100%;justify-content:flex-start}.stats-modebar-hint{width:100%;text-align:left}.stats-grouprow,.stats-subrow{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:10px}.stats-grouprow::-webkit-scrollbar,.stats-subrow::-webkit-scrollbar{display:none}.stats-grouprow .pill{min-width:0}}',
-    '.stats-filter-box{display:flex;flex-direction:column;gap:8px;margin-bottom:2px;padding:12px 14px;border-radius:18px;background:linear-gradient(180deg,#f8fbff,#eff6ff);border:1px solid rgba(147,197,253,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.78)}',
+    '.stats-subrow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}',
+    '.stats-subrow .pill{font-size:11.5px;padding:6px 12px;min-height:28px;opacity:.9}',
+    '.stats-subrow .pill.on{opacity:1}',
+    '@media (max-width:768px){.stats-modebar{gap:8px}.stats-modeseg{width:100%;justify-content:flex-start}.stats-modebar-hint{width:100%;text-align:left}.stats-grouprow,.stats-subrow{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:8px}.stats-grouprow::-webkit-scrollbar,.stats-subrow::-webkit-scrollbar{display:none}.stats-grouprow .pill{min-width:0}}',
+    /* ── 필터 박스(기간/최소경기/빠른선택/배지) ── */
+    '.stats-filter-box{display:flex;flex-direction:column;gap:10px;margin-bottom:2px;padding:14px 16px;border-radius:16px;background:linear-gradient(180deg,#f8fbff,#eff6ff);border:1px solid rgba(147,197,253,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.78)}',
     '.stats-filter-box.is-idle{background:linear-gradient(180deg,#fff,#f8fafc);border-color:rgba(148,163,184,.22)}',
+    '.stats-filter-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}',
+    '.stats-filter-row--quick{justify-content:space-between;gap:14px}',
+    '.stats-filter-row--badges{gap:6px}',
+    '.stats-filter-divider{height:1px;background:rgba(148,163,184,.22);margin:0}',
+    '.stats-quickgroup{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+    '.stats-quickgroup-lbl{font-size:10.5px;font-weight:800;color:var(--text3);white-space:nowrap}',
+    '.stats-quickgroup-btns{display:flex;gap:5px;flex-wrap:wrap}',
+    '.stats-filter-field{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--text2);white-space:nowrap;background:rgba(255,255,255,.92);border:1px solid rgba(148,163,184,.28);border-radius:9px;padding:5px 10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}',
+    '.stats-filter-field-ico{font-size:11px;line-height:1}',
+    '.stats-filter-field-lbl{color:var(--text3);font-weight:700}',
+    '.stats-filter-tilde{color:var(--gray-l)}',
+    '.stats-filter-field input[type=date],.stats-filter-field input[type=month]{font-size:11.5px;padding:2px 4px;border:none;background:transparent;color:var(--text1);outline:none}',
+    '.stats-filter-field--range input[type=date]{width:116px}',
+    '.stats-filter-num{width:44px;font-size:11.5px;padding:2px 4px;border:none;background:transparent;color:var(--text1);outline:none;text-align:center}',
+    '.stats-filter-info{font-size:10px;color:var(--gray-l);cursor:help}',
+    '.stats-filter-reset{font-size:11.5px;font-weight:800;padding:6px 13px;border-radius:9px;border:1px solid #fca5a5;background:#fff1f2;color:#dc2626;cursor:pointer;white-space:nowrap;transition:.14s}',
+    '.stats-filter-reset:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(220,38,38,.15)}',
+    '.stats-filter-reset:active{transform:scale(.96)}',
+    '.stats-quickbtn{font-size:10.5px;font-weight:700;padding:4px 11px;border-radius:999px;border:1px solid var(--border2);background:#fff;color:var(--text3);cursor:pointer;white-space:nowrap;transition:.14s}',
+    '.stats-quickbtn:hover:not(.on){border-color:#93c5fd;color:#2563eb;background:#eff6ff}',
+    '.stats-quickbtn.on{border-color:transparent;background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;font-weight:800;box-shadow:0 3px 10px rgba(37,99,235,.25)}',
+    '.stats-quickbtn--purple:hover:not(.on){border-color:#c4b5fd;color:#7c3aed;background:#f5f3ff}',
+    '.stats-quickbtn--purple.on{background:linear-gradient(135deg,#6d28d9,#7c3aed);box-shadow:0 3px 10px rgba(124,58,237,.25)}',
+    '.stats-filter-badge{display:inline-flex;align-items:center;padding:4px 11px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid var(--border);font-size:10.5px;font-weight:700;color:var(--text3)}',
+    '.stats-filter-badge.is-active{border-color:#bfdbfe;color:#1d4ed8;background:#eff6ff}',
+    '.stats-filter-note{font-size:10.5px;font-weight:800;color:#7c3aed;display:inline-flex;align-items:center}',
+    '@media (max-width:640px){.stats-filter-row--quick{flex-direction:column;align-items:stretch;gap:8px}.stats-quickgroup{justify-content:flex-start}.stats-filter-field--range input[type=date]{width:94px}}',
+    'body.dark .stats-filter-field{background:rgba(15,23,42,.55);border-color:#334155;color:#e2e8f0}',
+    'body.dark .stats-filter-field input,body.dark .stats-filter-num{color:#e2e8f0}',
+    'body.dark .stats-quickbtn{background:rgba(15,23,42,.55);border-color:#334155;color:#94a3b8}',
+    'body.dark .stats-filter-badge{background:rgba(15,23,42,.55);border-color:#334155;color:#94a3b8}',
+    'body.dark .stats-filter-badge.is-active{background:rgba(37,99,235,.18);border-color:rgba(96,165,250,.35);color:#93c5fd}',
+    'body.dark .stats-filter-divider{background:rgba(255,255,255,.08)}',
     '.stats-award-toggle{display:inline-flex;align-items:center;gap:6px;padding:4px;border-radius:999px;background:var(--surface);border:1px solid var(--border)}',
     '.stats-award-toggle button{border:none;background:transparent;color:var(--text3);padding:7px 12px;border-radius:999px;font-size:12px;font-weight:900;cursor:pointer;transition:.15s}',
     '.stats-award-toggle button.on{background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;box-shadow:0 10px 20px rgba(37,99,235,.22)}',
@@ -352,7 +390,7 @@ function rStats(C,T){
   // (요청사항) 통계탭 필터는 맨 좌측(개인 버튼 왼쪽). 단, '항상 펼침'이면 버튼 숨김
   const _enableSubFilter = (localStorage.getItem('su_submenu_filter_enabled') ?? '1') === '1';
   if(_enableSubFilter && !_lockOpen){
-    h+=`<button class="pill ${window._statsFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsFilterOpen=!window._statsFilterOpen;render()">🔍 필터 ${window._statsFilterOpen?'▲':'▼'}</button>`;
+    h+=`<button class="pill stats-filter-toggle ${window._statsFilterOpen?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window._statsFilterOpen=!window._statsFilterOpen;render()">🔍 필터 ${window._statsFilterOpen?'▲':'▼'}</button>`;
   }
   _viewFilteredGroups.forEach(grp=>{
     const isOn=grp===_curGrp;
@@ -373,16 +411,16 @@ function rStats(C,T){
   const _3mAgo=(()=>{const d=new Date(_now);d.setMonth(d.getMonth()-3);return d.toISOString().slice(0,10);})();
   function _qBtn(lbl,from,to){
     const on=_statsDateFrom===from&&_statsDateTo===to;
-    return`<button onclick="_statsDateFrom='${from}';_statsDateTo='${to}';render()" style="font-size:10px;padding:2px 7px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border2)'};background:${on?'var(--blue)':'var(--white)'};color:${on?'#fff':'var(--text3)'};cursor:pointer;white-space:nowrap;font-weight:${on?'700':'400'}">${lbl}</button>`;
+    return`<button class="stats-quickbtn ${on?'on':''}" onclick="_statsDateFrom='${from}';_statsDateTo='${to}';render()">${lbl}</button>`;
   }
   function _nBtn(n){
     const on=_statsLastN===n;
-    return`<button onclick="_statsLastN=${n};render()" style="font-size:10px;padding:2px 7px;border-radius:12px;border:1px solid ${on?'#7c3aed':'var(--border2)'};background:${on?'#7c3aed':'var(--white)'};color:${on?'#fff':'var(--text3)'};cursor:pointer;white-space:nowrap;font-weight:${on?'700':'400'}">${n===0?'전체':n+'경기'}</button>`;
+    return`<button class="stats-quickbtn stats-quickbtn--purple ${on?'on':''}" onclick="_statsLastN=${n};render()">${n===0?'전체':n+'경기'}</button>`;
   }
   // (A안) 필터가 열렸을 때만 하위 탭 + 전역필터 표시
   if((_enableSubFilter?window._statsFilterOpen:true)){
   // 하위 탭 pill 바
-  h+=`<div class="stats-subrow fbar no-export" style="margin:-2px 0 10px">`;
+  h+=`<div class="stats-subrow fbar no-export">`;
   _curGrp.tabs.forEach(o=>{
     h+=`<button class="pill ${(window.statsSub||'overview')===o.id?'on':''}" style="flex-shrink:0;white-space:nowrap" onclick="window.statsSub='${o.id}';localStorage.setItem('su_statsSub','${o.id}');render()">${o.lbl}</button>`;
   });
@@ -395,40 +433,49 @@ function rStats(C,T){
   ];
 
   h+=`<div class="no-export stats-filter-box ${_isFiltered?'':'is-idle'}">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span style="font-size:11px;font-weight:800;color:${_isFiltered?'var(--blue)':'var(--text3)'};white-space:nowrap"></span>
-      <label style="font-size:11px;display:flex;align-items:center;gap:4px;white-space:nowrap">
-        <input type="date" value="${_statsDateFrom}" onchange="_statsDateFrom=this.value;render()" style="font-size:11px;padding:2px 5px;border:1px solid var(--border2);border-radius:5px">
-        ~
-        <input type="date" value="${_statsDateTo}" onchange="_statsDateTo=this.value;render()" style="font-size:11px;padding:2px 5px;border:1px solid var(--border2);border-radius:5px">
+    <div class="stats-filter-row stats-filter-row--inputs">
+      <label class="stats-filter-field stats-filter-field--range" title="기간을 직접 지정합니다">
+        <span class="stats-filter-field-ico">📅</span>
+        <input type="date" value="${_statsDateFrom}" onchange="_statsDateFrom=this.value;render()">
+        <span class="stats-filter-tilde">~</span>
+        <input type="date" value="${_statsDateTo}" onchange="_statsDateTo=this.value;render()">
       </label>
-      <label style="font-size:11px;display:flex;align-items:center;gap:4px;white-space:nowrap" title="월만 선택하면 해당 월의 1일~말일로 자동 설정합니다">
-        🗓️ 월
+      <label class="stats-filter-field" title="월만 선택하면 해당 월의 1일~말일로 자동 설정합니다">
+        <span class="stats-filter-field-ico">🗓️</span>
+        <span class="stats-filter-field-lbl">월</span>
         <input type="month" value="${(_statsDateFrom||_statsDateTo)?(String((_statsDateFrom||_statsDateTo)).slice(0,7)):''}"
-          onchange="try{const v=this.value||'';if(!v){_statsDateFrom='';_statsDateTo='';render();return;}const a=v.split('-');const yy=+a[0],mm=+a[1];const last=new Date(yy,mm,0).getDate();_statsDateFrom=v+'-01';_statsDateTo=v+'-'+String(last).padStart(2,'0');render();}catch(e){render();}"
-          style="font-size:11px;padding:2px 5px;border:1px solid var(--border2);border-radius:5px;width:120px">
+          onchange="try{const v=this.value||'';if(!v){_statsDateFrom='';_statsDateTo='';render();return;}const a=v.split('-');const yy=+a[0],mm=+a[1];const last=new Date(yy,mm,0).getDate();_statsDateFrom=v+'-01';_statsDateTo=v+'-'+String(last).padStart(2,'0');render();}catch(e){render();}">
       </label>
-      <label style="font-size:11px;display:flex;align-items:center;gap:4px;white-space:nowrap" title="이 경기 수 미만인 스트리머는 승률 집계에서 제외됩니다">
-        🎮 최소경기
-        <input type="number" min="1" max="99" value="${_statsMinGames}" onchange="_statsMinGames=Math.max(1,parseInt(this.value)||1);render()" style="width:50px;font-size:11px;padding:2px 5px;border:1px solid var(--border2);border-radius:5px">
-        <span style="font-size:10px;color:var(--gray-l)" title="최소 경기 수 미만인 스트리머는 승률 집계에서 제외">ℹ️</span>
+      <label class="stats-filter-field" title="이 경기 수 미만인 스트리머는 승률 집계에서 제외됩니다">
+        <span class="stats-filter-field-ico">🎮</span>
+        <span class="stats-filter-field-lbl">최소경기</span>
+        <input type="number" min="1" max="99" class="stats-filter-num" value="${_statsMinGames}" onchange="_statsMinGames=Math.max(1,parseInt(this.value)||1);render()">
+        <span class="stats-filter-info" title="최소 경기 수 미만인 스트리머는 승률 집계에서 제외">ℹ️</span>
       </label>
-      ${_isFiltered?`<button onclick="_statsDateFrom='';_statsDateTo='';_statsMinGames=3;_statsLastN=0;render()" style="font-size:11px;padding:2px 9px;border-radius:5px;border:1px solid #fca5a5;background:#fff1f2;cursor:pointer;color:#dc2626;font-weight:700">✕ 초기화</button>`:''}
+      ${_isFiltered?`<button class="stats-filter-reset" onclick="_statsDateFrom='';_statsDateTo='';_statsMinGames=3;_statsLastN=0;render()">✕ 초기화</button>`:''}
     </div>
-    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-      <span style="font-size:10px;color:var(--gray-l);white-space:nowrap"></span>
-      ${_qBtn('올해',_thisYearStart,_today)}
-      ${_qBtn('이번달',_thisMonthStart,_today)}
-      ${_qBtn('최근3개월',_3mAgo,_today)}
-      ${_qBtn('전체','','')}
-      <span style="font-size:10px;color:var(--gray-l);white-space:nowrap;margin-left:8px">🎯 최근N경기:</span>
-      ${_nBtn(0)}${_nBtn(10)}${_nBtn(20)}${_nBtn(30)}${_nBtn(50)}
+    <div class="stats-filter-divider"></div>
+    <div class="stats-filter-row stats-filter-row--quick">
+      <div class="stats-quickgroup">
+        <span class="stats-quickgroup-lbl">기간</span>
+        <div class="stats-quickgroup-btns">
+          ${_qBtn('올해',_thisYearStart,_today)}
+          ${_qBtn('이번달',_thisMonthStart,_today)}
+          ${_qBtn('최근3개월',_3mAgo,_today)}
+          ${_qBtn('전체','','')}
+        </div>
+      </div>
+      <div class="stats-quickgroup">
+        <span class="stats-quickgroup-lbl">🎯 최근N경기</span>
+        <div class="stats-quickgroup-btns">
+          ${_nBtn(0)}${_nBtn(10)}${_nBtn(20)}${_nBtn(30)}${_nBtn(50)}
+        </div>
+      </div>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px">
-      ${_filterBadges.map(txt=>`<span style="display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:var(--white);border:1px solid ${_isFiltered?'#bfdbfe':'var(--border)'};font-size:11px;font-weight:700;color:${_isFiltered?'#1d4ed8':'var(--text3)'}">${txt}</span>`).join('')}
+    <div class="stats-filter-row stats-filter-row--badges">
+      ${_filterBadges.map(txt=>`<span class="stats-filter-badge ${_isFiltered?'is-active':''}">${txt}</span>`).join('')}
+      ${_statsLastN>0?`<span class="stats-filter-note">🎯 최근 ${_statsLastN}경기 기준 통계입니다</span>`:''}
     </div>
-    ${(_statsDateFrom||_statsDateTo)?``:''}
-    ${_statsLastN>0?`<span style="font-size:10px;color:#7c3aed;font-weight:700">🎯 최근 ${_statsLastN}경기 기준 통계입니다</span>`:''}
   </div>`;
   } // end if(_statsFilterOpen)
   h+=`</div>`;
