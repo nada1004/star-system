@@ -1150,6 +1150,7 @@ function proApply() {
       teamBLabel:String(window._proForceTeamB||'').trim()||'B팀',
       teamAMembers:mA, teamBMembers:mB,
       sets:setsSnap, univWins:{}, univLosses:{},
+      scoreMode: (mode==='set' || isMultiSet) ? 'set' : 'game',
       ...(fmt > 0 ? {fmt} : {})
     });
     totalSaved += groupRows.length;
