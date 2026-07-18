@@ -38,6 +38,7 @@
   --rc-bg-a: .12;     /* 카드 배경에 들어가는 승리색 강도(0~.30) */
   --rc-hd-a: .14;     /* 카드 헤더에 들어가는 승리색 강도(0~.30) */
   --rc-uicon: 24px;   /* 대학 아이콘 크기 */
+  --rc-uicon-scope: 24px; /* 대학 아이콘 크기(PC · 미니/대학대전/일반대회 전용) */
   --rc-memo-on: 0;    /* 1이면 메모 입력 표시 */
   /* 대회 카드(조별리그 일정 등) */
   --tc-hd-a: .12;
@@ -2190,6 +2191,20 @@ body.rc-theme-on .rec-summary img.rec-uicon{
   /* (수정) 아이콘 크기: 설정 슬라이더(su_rc_uicon → --rc-uicon) 반영 */
   width:var(--rc-uicon,18px) !important;
   height:var(--rc-uicon,18px) !important;
+}
+/* (요청사항) 대학 로고: PC 전용, 미니대전/대학대전/일반대회 카드만 별도 크기/온오프 */
+@media (min-width:769px){
+  .rec-summary.rec-mode-mini .rec-sum-vs .ubadge img,
+  .rec-summary.rec-mode-univm .rec-sum-vs .ubadge img,
+  .rec-summary.rec-mode-ind .rec-sum-vs .ubadge img{
+    width:var(--rc-uicon-scope, var(--rc-uicon,18px)) !important;
+    height:var(--rc-uicon-scope, var(--rc-uicon,18px)) !important;
+  }
+  body.rc-uicon-scope-off .rec-summary.rec-mode-mini .rec-sum-vs .ubadge img,
+  body.rc-uicon-scope-off .rec-summary.rec-mode-univm .rec-sum-vs .ubadge img,
+  body.rc-uicon-scope-off .rec-summary.rec-mode-ind .rec-sum-vs .ubadge img{
+    display:none !important;
+  }
 }
 .rec-summary[data-rec-mode]{
   position:relative;

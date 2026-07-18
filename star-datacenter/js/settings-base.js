@@ -720,6 +720,8 @@ window.cfgSetRecCardSettings = function(){
   const bg = parseInt(document.getElementById('cfg-rc-bg')?.value||'12',10);
   const hd = parseInt(document.getElementById('cfg-rc-hd')?.value||'14',10);
   const ic = parseInt(document.getElementById('cfg-rc-uicon')?.value||'18',10);
+  const icScopeOff = !!document.getElementById('cfg-rc-uicon-scope-off')?.checked;
+  const icScope = parseInt(document.getElementById('cfg-rc-uicon-scope')?.value||String(ic),10);
   const univFontPct = parseInt(document.getElementById('cfg-rc-univ-font')?.value||'100',10);
   const ymScalePct = parseInt(document.getElementById('cfg-ym-scale')?.value||'100',10);
   const memoOn = !!document.getElementById('cfg-rc-memo-on')?.checked;
@@ -739,6 +741,8 @@ window.cfgSetRecCardSettings = function(){
   try{ localStorage.setItem('su_rc_bg_alpha', String(Math.max(0,Math.min(30,bg)))); }catch(e){}
   try{ localStorage.setItem('su_rc_hd_alpha', String(Math.max(0,Math.min(30,hd)))); }catch(e){}
   try{ localStorage.setItem('su_rc_uicon', String(Math.max(12,Math.min(34,ic)))); }catch(e){}
+  try{ localStorage.setItem('su_rc_uicon_scope_off', icScopeOff ? '1' : '0'); }catch(e){}
+  try{ localStorage.setItem('su_rc_uicon_scope_size', String(Math.max(12,Math.min(34,icScope||ic)))); }catch(e){}
   try{ localStorage.setItem('su_rc_univ_font_pct', String(Math.max(90,Math.min(150,univFontPct||100)))); }catch(e){}
   try{ localStorage.setItem('su_ym_scale_pct', String(Math.max(80,Math.min(140,ymScalePct||100)))); }catch(e){}
   try{ localStorage.setItem('su_rc_memo_on', memoOn ? '1' : '0'); }catch(e){}
@@ -786,10 +790,12 @@ window.cfgSetRecCardSettings = function(){
       document.body.classList.toggle('rc-accent-border', !!on && _accent==='border');
       document.body.classList.toggle('rc-accent-full', !!on && _accent==='full');
       document.body.classList.toggle('rc-accent-gradient', !!on && _accent==='gradient');
+      document.body.classList.toggle('rc-uicon-scope-off', !!icScopeOff);
     }
     document.documentElement.style.setProperty('--rc-bg-a', String(_bg/100));
     document.documentElement.style.setProperty('--rc-hd-a', String(_hd/100));
     document.documentElement.style.setProperty('--rc-uicon', _ic+'px');
+    document.documentElement.style.setProperty('--rc-uicon-scope', Math.max(12,Math.min(34,icScope||_ic))+'px');
     document.documentElement.style.setProperty('--rc-univ-font-scale', String(_uf/100));
     document.documentElement.style.setProperty('--ym-scale', String(_ys/100));
     document.documentElement.style.setProperty('--rc-memo-on', memoOn?'1':'0');

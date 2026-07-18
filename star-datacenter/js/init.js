@@ -978,12 +978,15 @@ function _applyRecCardTheme(){
   const bgKey='su_rc_bg_alpha';
   const hdKey='su_rc_hd_alpha';
   const iconKey='su_rc_uicon';
+  const iconScopeOffKey='su_rc_uicon_scope_off';
+  const iconScopeSizeKey='su_rc_uicon_scope_size';
   const univFontKey='su_rc_univ_font_pct';
   const ymScaleKey='su_ym_scale_pct';
   const memoKey='su_rc_memo_on';
   const vsKey='su_rc_vs_align';
   const scKey='su_rc_score_scale';
   let on=true, accent='none', bg=12, hd=14, uicon=24;
+  let uiconScopeOff=false, uiconScopeSize=24;
   let univFontPct=110, ymScalePct=100;
   let memoOn=false, vsAlign='center', scScale=108;
   // (요청사항) 배경 효과 완전 OFF 감지(승리 배경 + 양끝 효과 모두 OFF)
@@ -995,6 +998,8 @@ function _applyRecCardTheme(){
     const b=parseInt(localStorage.getItem(bgKey)||'',10); if(!isNaN(b)) bg=b;
     const h=parseInt(localStorage.getItem(hdKey)||'',10); if(!isNaN(h)) hd=h;
     const ic=parseInt(localStorage.getItem(iconKey)||'',10); if(!isNaN(ic)) uicon=ic;
+    const iso=localStorage.getItem(iconScopeOffKey); if(iso!=null) uiconScopeOff = iso==='1';
+    const iss=parseInt(localStorage.getItem(iconScopeSizeKey)||'',10); if(!isNaN(iss)) uiconScopeSize=iss; else uiconScopeSize=uicon;
     const uf=parseInt(localStorage.getItem(univFontKey)||'',10); if(!isNaN(uf)) univFontPct=uf;
     const ys=parseInt(localStorage.getItem(ymScaleKey)||'',10); if(!isNaN(ys)) ymScalePct=ys;
     const mo=localStorage.getItem(memoKey); if(mo!=null) memoOn = mo==='1';
@@ -1004,6 +1009,7 @@ function _applyRecCardTheme(){
   bg=Math.max(0,Math.min(30,bg));
   hd=Math.max(0,Math.min(30,hd));
   uicon=Math.max(12,Math.min(34,uicon));
+  uiconScopeSize=Math.max(12,Math.min(34,uiconScopeSize||uicon));
   univFontPct=Math.max(90,Math.min(150,univFontPct||100));
   ymScalePct=Math.max(80,Math.min(140,ymScalePct||100));
   accent = ['none','header','border','full','gradient'].includes(accent) ? accent : 'none';
@@ -1020,10 +1026,12 @@ function _applyRecCardTheme(){
       document.body.classList.toggle('rc-accent-gradient', !!on && accent==='gradient');
       // 배경 효과(모드 컬러/헤더 틴트 포함) 완전 OFF 시, 잔색 제거용 클래스
       document.body.classList.toggle('rc-bgfx-off', (!on && !sideFxOn));
+      document.body.classList.toggle('rc-uicon-scope-off', !!uiconScopeOff);
     }
     document.documentElement.style.setProperty('--rc-bg-a', String(bg/100));
     document.documentElement.style.setProperty('--rc-hd-a', String(hd/100));
     document.documentElement.style.setProperty('--rc-uicon', uicon+'px');
+    document.documentElement.style.setProperty('--rc-uicon-scope', uiconScopeSize+'px');
     document.documentElement.style.setProperty('--rc-univ-font-scale', String(univFontPct/100));
     document.documentElement.style.setProperty('--ym-scale', String(ymScalePct/100));
     document.documentElement.style.setProperty('--rc-memo-on', memoOn?'1':'0');

@@ -22,6 +22,8 @@ window.renderCfgRecCardSection = function(_scfgD) {
   const _sfxTail = Math.max(0,Math.min(140,parseInt(localStorage.getItem('su_rec_side_fx_tail')||'28',10)||28));
   const _sfxSoft = Math.max(0,Math.min(100,parseInt(localStorage.getItem('su_rec_side_fx_softness')||'52',10)||52));
   const _sfxEdge = Math.max(2,Math.min(24,parseInt(localStorage.getItem('su_rec_side_fx_edge')||'8',10)||8));
+  const _rcIcScopeOff = (localStorage.getItem('su_rc_uicon_scope_off') ?? '0') === '1';
+  const _rcIcScope = Math.max(12,Math.min(34,parseInt(localStorage.getItem('su_rc_uicon_scope_size') ?? String(_rcIc),10) || _rcIc));
   return _scfgD('reccard','🧾 기록 카드(기록탭) 스타일') + `
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">개인전/끝장전/미니/프로리그/대회 기록 목록에 쓰이는 “기록 카드” 스타일입니다. (대회탭 조별리그 일정 카드는 별도 설정)</div>
     <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
@@ -280,6 +282,20 @@ window.renderCfgRecCardSection = function(_scfgD) {
           <input type="range" id="cfg-ava-scale" min="70" max="160" step="5" value="${Math.max(70,Math.min(160,_avaScale))}" oninput="document.getElementById('cfg-ava-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
           <div style="font-size:var(--fs-caption);color:var(--gray-l)"><span id="cfg-ava-v">${Math.max(70,Math.min(160,_avaScale))}%</span></div>
         </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:4px;border-top:1px dashed var(--border2)">
+        <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">대학 로고(PC 전용 · 미니대전/대학대전/일반대회)</div>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer">
+          <input type="checkbox" id="cfg-rc-uicon-scope-off" style="width:14px;height:14px" ${_rcIcScopeOff?'checked':''} onchange="document.getElementById('cfg-rc-uicon-scope').disabled=this.checked;cfgSetRecCardSettings()">
+          <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">로고 끄기</span>
+        </label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" id="cfg-rc-uicon-scope" min="12" max="34" step="1" value="${_rcIcScope}" ${_rcIcScopeOff?'disabled':''}
+            oninput="document.getElementById('cfg-rc-uicon-scope-v').textContent=this.value+'px'" onchange="cfgSetRecCardSettings()" style="width:140px">
+          <span id="cfg-rc-uicon-scope-v" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:34px;font-weight:900">${_rcIcScope}px</span>
+        </div>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ PC 화면에서만, 미니대전/대학대전/일반대회 카드에만 적용(모바일·다른 종목은 위 기본 크기 유지)</span>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
