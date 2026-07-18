@@ -3517,6 +3517,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 .cmd-pt-row{
   display:flex;
   align-items:center;
+  justify-content:space-between;
   gap:6px;
   padding:5px 8px;
   border-radius:10px;
@@ -3534,13 +3535,22 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   flex-direction:row-reverse;
   text-align:right;
 }
+.cmd-pt-idcell{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  min-width:0;
+  flex-shrink:1;
+}
+.cmd-pt-row.is-right .cmd-pt-idcell{
+  flex-direction:row-reverse;
+}
 .cmd-pt-photo{
   flex-shrink:0;
   display:inline-flex;
   line-height:0;
 }
 .cmd-pt-name{
-  flex:1;
   min-width:0;
   font-size:12px;
   font-weight:800;
@@ -3683,7 +3693,7 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
 .modal--matchdetail .cmd-detail .cmd-game-row{display:flex;align-items:stretch;gap:4px;}
 .modal--matchdetail .cmd-detail .cmd-player{
   flex:1;min-width:0;
-  display:flex;align-items:center;gap:6px;
+  display:flex;align-items:center;gap:10px;
   padding:5px 7px;
   border-radius:var(--r);
   background:linear-gradient(180deg,#fff, #fbfdff);
@@ -3691,8 +3701,8 @@ details.ssec > summary.cfg-sec-summary .cfg-sec-right{
   box-shadow:0 8px 22px rgba(15,23,42,.05);
   position:relative;
 }
-.modal--matchdetail .cmd-detail .cmd-photo{margin-right:6px;}
-.modal--matchdetail .cmd-detail .cmd-player.is-right .cmd-photo{margin-right:0;margin-left:6px;}
+.modal--matchdetail .cmd-detail .cmd-photo{margin-right:10px;}
+.modal--matchdetail .cmd-detail .cmd-player.is-right .cmd-photo{margin-right:0;margin-left:10px;}
 .modal--matchdetail .cmd-detail .cmd-player.is-lose{
   background:linear-gradient(180deg, rgba(148,163,184, var(--su_md_lose_gray, .12)), #ffffff);
   border-color:rgba(148,163,184,.28);

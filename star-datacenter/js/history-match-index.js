@@ -1044,9 +1044,10 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
       const click=`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } openPlayerModal('${_escJs(name)}'); })()" data-player-link="1"`;
       const recordHtml=`<span class="cmd-pt-record"><b class="wt">${s.w}승</b>${s.l>0?`<span class="cmd-pt-sep">·</span><b class="lt">${s.l}패</b>`:''}</span>`;
       const nameHtml=`<span class="cmd-pt-name">${_escHtml(name)}</span>`;
+      const idCellHtml=`<span class="cmd-pt-idcell"><span class="cmd-pt-photo">${photoHtml}</span>${nameHtml}</span>`;
       return `<div class="cmd-pt-row${alignRight?' is-right':''}" ${click} style="--pt-col:${col}">
-        ${alignRight?recordHtml+nameHtml:'<span class="cmd-pt-photo">'+photoHtml+'</span>'+nameHtml}
-        ${alignRight?'<span class="cmd-pt-photo">'+photoHtml+'</span>':recordHtml}
+        ${idCellHtml}
+        ${recordHtml}
       </div>`;
     };
     const colFor=(name)=>{ const p=(players||[]).find(x=>x&&x.name===name); return (p&&gc(p.univ))||'#64748b'; };
