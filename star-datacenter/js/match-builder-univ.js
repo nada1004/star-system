@@ -23,7 +23,7 @@ function rUnivM(C,T){
     : '';
   h+=_buildMatchSubtabShell(univmSub, subOpts, '_univmFilterOpen', extra, 'univm');
   if(univmSub==='input'&&_li){
-    if(!BLD['univm'])BLD['univm']={date:'',note:'',teamA:'',teamB:'',sets:[]};
+    if(!BLD['univm'])BLD['univm']={date:'',n:'',teamA:'',teamB:'',sets:[]};
     h+=_mbFrame('🏟️ 대학대전 입력', _mbActionBar([`<button class="btn btn-p btn-sm mb-mini-btn" onclick="openUnivmPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button>`], ''), _mbSectionCard('대학대전 입력', `${setBuilderHTML(BLD['univm'],'univm')}`), '');
   }
   else if(univmSub==='rank'){h+=univMRankHTML();}

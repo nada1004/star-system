@@ -19,7 +19,7 @@ function rCK(C,T){
     : '';
   h+=_buildMatchSubtabShell(ckSub, subOpts, '_ckFilterOpen', extra, 'ck');
   if(ckSub==='input'&&isLoggedIn){
-    if(!BLD['ck']){const saved=J('su_bld_ck')||{};BLD['ck']={date:'',membersA:saved.membersA||[],membersB:saved.membersB||[],sets:[]};}
+    if(!BLD['ck']){const saved=J('su_bld_ck')||{};BLD['ck']={date:'',n:'',membersA:saved.membersA||[],membersB:saved.membersB||[],sets:[]};}
     h+=buildCKInputHTML();
   }
   else if(ckSub==='rank'){h+=ckRankHTML();}
@@ -38,6 +38,8 @@ function buildCKInputHTML(){
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <label style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['ck'].date=this.value">
+      <label style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">대회명</label>
+      <input type="text" value="${(bld.n||'').replace(/"/g,'&quot;')}" placeholder="예: 입학테스트 8티어 테스트 미니대전" style="flex:1;min-width:200px" onchange="BLD['ck'].n=this.value">
     </div>`) + _mbSectionCard('② 스트리머 검색으로 빠른 팀 짜기', `
       <div style="position:relative;display:flex;gap:6px;align-items:center">
         <input type="text" id="ck-search-input" placeholder="스트리머/대학/별명 검색..." 

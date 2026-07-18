@@ -265,6 +265,8 @@ function setBuilderHTML(bld, mode){
     <input type="date" value="${bld.date||''}" onchange="BLD['${mode}'].date=this.value" style="width:140px">`;
   if(isComp)h+=`<label style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">대회명</label>
     <input type="text" id="comp-name-input" value="${bld.compName||curComp||''}" placeholder="대회명" style="width:150px" onchange="BLD['comp'].compName=this.value">`;
+  else if(mode==='mini'||mode==='univm')h+=`<label style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">대회명</label>
+    <input type="text" value="${(bld.n||'').replace(/"/g,'&quot;')}" placeholder="예: 입학테스트 8티어 테스트 미니대전" style="flex:1;min-width:200px" onchange="BLD['${mode}'].n=this.value">`;
   h+=`</div>`;
   }
   if(!isCK){
@@ -651,7 +653,7 @@ function saveMatch(mode){
         });
 
         const _defTlA=mode==='ck'?'A조':'A팀', _defTlB=mode==='ck'?'B조':'B팀';
-        const matchData = {_id:matchId,d:date,sa:totalA,sb:totalB, teamALabel:String(bld.teamNameA||'').trim()||_defTlA, teamBLabel:String(bld.teamNameB||'').trim()||_defTlB, teamAMembers:mA,teamBMembers:mB,sets:setsSnap, univWins:univW,univLosses:univL, noSetMode:true };
+        const matchData = {_id:matchId,d:date,sa:totalA,sb:totalB, teamALabel:String(bld.teamNameA||'').trim()||_defTlA, teamBLabel:String(bld.teamNameB||'').trim()||_defTlB, teamAMembers:mA,teamBMembers:mB,sets:setsSnap, univWins:univW,univLosses:univL, noSetMode:true, ...(mode==='ck'&&bld.n?{n:String(bld.n).trim()}:{}) };
 
         if(mode==='ck') ckM.unshift(matchData);
         else if (mode==='pro') proM.unshift(matchData);
@@ -672,8 +674,8 @@ function saveMatch(mode){
         }
     } else {
         if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
-        const matchObj={_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap,noSetMode:true};
-        if(mode==='mini') miniM.unshift(matchObj);
+        const matchObj={_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap,noSetMode:true,...((mode==='mini'||mode==='univm')&&bld.n?{n:String(bld.n).trim()}:{})};
+        if(mode==='mini') miniM.unshift({...matchObj,type:(typeof miniType!=='undefined'?miniType:'mini')});
         else if(mode==='univm') univM.unshift(matchObj);
         else if(mode==='comp'){
           const cn=bld.compName||document.getElementById('comp-name-input')?.value||curComp||'';
@@ -770,10 +772,10 @@ function saveMatch(mode){
   });
   if(mode==='mini'){
     if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
-    miniM.unshift({_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap,type:(typeof miniType!=='undefined'?miniType:'mini')});
+    miniM.unshift({_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap,type:(typeof miniType!=='undefined'?miniType:'mini'),...(bld.n?{n:String(bld.n).trim()}:{})});
   } else if(mode==='univm'){
     if(!bld.teamA||!bld.teamB)return alert('팀을 선택하세요.');
-    univM.unshift({_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap});
+    univM.unshift({_id:matchId,d:date,a:bld.teamA,b:bld.teamB,sa:totalA,sb:totalB,sets:setsSnap,...(bld.n?{n:String(bld.n).trim()}:{})});
   } else if(mode==='ck'){
     const mA=bld.membersA||[];const mB=bld.membersB||[];
     if(!mA.length||!mB.length)return alert('팀 멤버를 추가하세요.');
@@ -788,7 +790,8 @@ function saveMatch(mode){
       teamALabel:String(bld.teamNameA||'').trim()||'A조',
       teamBLabel:String(bld.teamNameB||'').trim()||'B조',
       teamAMembers:mA,teamBMembers:mB,sets:setsSnap,
-      univWins:univW,univLosses:univL
+      univWins:univW,univLosses:univL,
+      ...(bld.n?{n:String(bld.n).trim()}:{})
     });
   } else if(mode==='pro'){
     const mA=bld.membersA||[];const mB=bld.membersB||[];
