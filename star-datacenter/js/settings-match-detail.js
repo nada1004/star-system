@@ -73,6 +73,10 @@ function _renderCfgMatchDetailSection(){
     </div>
     <div style="font-size:var(--fs-caption);color:var(--gray-l);margin:-2px 0 12px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,var(--surface),var(--white));border:1px solid var(--border)">현재 설정은 <b>미니대전</b>, <b>대학대전</b>, <b>대학CK</b>, 대회/프로리그 경기 상세 팝업에도 같이 적용됩니다.</div>
 
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+    <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🎨 디자인 · 레이아웃</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:8px">🎨 디자인 모드</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
@@ -133,7 +137,11 @@ function _renderCfgMatchDetailSection(){
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">선택하면 열려 있는 경기 상세 팝업에 바로 반영됩니다.</div>
     </div>
-
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">✨ 효과</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:8px">✨ 헤더 애니메이션/효과</div>
       <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;gap:10px">
@@ -187,7 +195,11 @@ function _renderCfgMatchDetailSection(){
         </div>
       </div>
     </div>
-
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">↔️ 정렬 · 폰트 · 로고</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">↔️ 상단 대학 카드 정렬</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
@@ -240,7 +252,11 @@ function _renderCfgMatchDetailSection(){
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:8px">PC/태블릿/모바일에서 각각 다른 상단 대학 카드 폰트와 로고 크기를 사용할 수 있습니다.</div>
     </div>
-
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🖼️ 프로필 · 색상</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🖼️ 프로필 이미지(선수)</div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">현재 기기: <b>${_mdDevLabel}</b></div>
@@ -260,7 +276,11 @@ function _renderCfgMatchDetailSection(){
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">팝업 상단의 프로필 표시 크기/채우기 방식입니다</div>
     </div>
-
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">⚙️ 팝업 동작</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🎨 승/패 배경 강도</div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
@@ -283,6 +303,9 @@ function _renderCfgMatchDetailSection(){
         <input type="checkbox" ${closeOnMatchPlayer?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdCloseOnMatchPlayer(this.checked)">
         <span style="font-size:var(--fs-sm);color:var(--text)">경기 상세에서 선수 클릭 시 팝업 닫기</span>
       </label>
+    </div>
+      </div>
+    </details>
     </div>
   `;
 }

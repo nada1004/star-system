@@ -1961,7 +1961,10 @@ ${_scfgD('notice','📢 공지 관리')}
   </details>
   ${_scfgD('b2femco','🧩 펨코스타일 설정')}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">현황판 &gt; <b>펨코스타일</b> 탭에서 사용하는 전용 설정입니다. 저장 즉시 반영됩니다.</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+    <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">⚙️ 기본 레이아웃 · 로고 크기</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2)">
           <input type="checkbox" id="cfg-femco-autoLayout" style="width:15px;height:15px" onchange="cfgFemcoUpd('autoLayout', this.checked?1:0)">
@@ -2005,6 +2008,11 @@ ${_scfgD('notice','📢 공지 관리')}
         <input type="range" id="cfg-femco-bgOverlay" min="0" max="70" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgOverlayNum').value=this.value;cfgFemcoUpd('bgOverlay',this.value)">
         <input type="number" id="cfg-femco-bgOverlayNum" min="0" max="70" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-bgOverlay').value=this.value;cfgFemcoUpd('bgOverlay',this.value)">
       </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🎨 로고 · 제목 배치</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:-6px">0=투명(원본 그대로) · 70=글자 잘 보이게 진하게</div>
 
       <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:800;color:var(--text2)">
@@ -2078,7 +2086,11 @@ ${_scfgD('notice','📢 공지 관리')}
           <option value="gmarket">GmarketSans</option>
         </select>
       </div>
-
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🖼️ 스트리머 카드 · 격자 표시</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">스트리머 이미지 크기</div>
         <input type="range" id="cfg-femco-playerImgSize" min="28" max="160" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-playerImgSizeNum').value=this.value;cfgFemcoUpd('playerImgSize',this.value)">
@@ -2178,7 +2190,11 @@ ${_scfgD('notice','📢 공지 관리')}
         <input type="number" id="cfg-femco-countFontSizeNum" min="10" max="18" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-countFontSize').value=this.value;cfgFemcoUpd('countFontSize',this.value)">
       </div>
 
-      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🎓 대학별 설정 (배경 · 색상 · 문구)</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">대학별 설정</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:140px">대학 선택</div>
@@ -2251,6 +2267,11 @@ ${_scfgD('notice','📢 공지 관리')}
         <input type="range" id="cfg-femco-bgOffY" min="-260" max="260" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgOffYNum').value=this.value;cfgFemcoSetBgOpt('oy',this.value)">
         <input type="number" id="cfg-femco-bgOffYNum" min="-260" max="260" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-bgOffY').value=this.value;cfgFemcoSetBgOpt('oy',this.value)">
       </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">📝 문구 스타일 · 초기화</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:140px">문구 스타일</div>
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">크기</span>
@@ -2268,6 +2289,8 @@ ${_scfgD('notice','📢 공지 관리')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         <button class="btn btn-b" onclick="cfgFemcoReset()">초기화</button>
       </div>
+      </div>
+    </details>
     </div>
   </details>
   ${_scfgD('cfgmenu','🧭 설정 메뉴 정리')}
@@ -2444,7 +2467,10 @@ ${_scfgD('notice','📢 공지 관리')}
   </details>
   ${_scfgD('boardchip','🏷️ 현황판 칩/대학로고 크기')}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">현황판 칩/대학 로고 관련 설정입니다. <b>스트리머 프로필 이미지 전역 배율</b>과는 별개로 동작합니다.</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:14px">
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+    <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🖼️ 프로필/칩 표시</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:14px">
       <div>
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">📐 프로필 이미지 모양</div>
         <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">프로필 이미지 모양(원형/네모)은 별도 메뉴에서 전역으로 설정합니다.</div>
@@ -2462,7 +2488,12 @@ ${_scfgD('notice','📢 공지 관리')}
           oninput="boardChipLayoutScale=+this.value;saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-layout-val').textContent=this.value+'%';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
         <div style="display:flex;justify-content:space-between;font-size:var(--fs-caption);color:var(--gray-l);margin-top:2px"><span>70%</span><span>160%</span></div>
       </div>
-      <div style="border-top:1px dashed var(--border2);padding-top:12px">
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🏫 대학 로고 모양 · 크기</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:14px">
+      <div>
         <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:10px">🏫 대학 로고 설정</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
           <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">📐 프로필(로고) 모양</div>
@@ -2513,7 +2544,12 @@ ${_scfgD('notice','📢 공지 관리')}
           <input type="range" min="34" max="72" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_ul_box')||'46');}catch(e){return 46;}})()}" style="width:100%;accent-color:var(--blue)"
             oninput="localStorage.setItem('su_ul_box',String(this.value));if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();document.getElementById('cfg-ul-box-val').textContent=this.value+'px';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
         </div>
-        <div style="border-top:1px dashed var(--border2);padding-top:12px">
+      </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🏛️ 대학 상세 · 현황판 로고 크기</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:14px">
           <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:10px">🏛️ 대학 상세(모달) 로고 크기</div>
           <div style="margin-bottom:10px">
             <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">📏 로고 이미지 크기 <span id="cfg-ul-size-d-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_ul_size_detail')||localStorage.getItem('su_ul_size')||'46');}catch(e){return 46;}})()}px</span></div>
@@ -2525,7 +2561,6 @@ ${_scfgD('notice','📢 공지 관리')}
             <input type="range" min="48" max="110" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_ul_box_detail')||localStorage.getItem('su_ul_box')||'72');}catch(e){return 72;}})()}" style="width:100%;accent-color:var(--blue)"
               oninput="localStorage.setItem('su_ul_box_detail',String(this.value));if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();document.getElementById('cfg-ul-box-d-val').textContent=this.value+'px';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
           </div>
-        </div>
         <div style="border-top:1px dashed var(--border2);padding-top:12px">
           <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:10px">📊 현황판(대학별 신현황판) 대학 로고 크기</div>
           <div>
@@ -2534,7 +2569,11 @@ ${_scfgD('notice','📢 공지 관리')}
               oninput="localStorage.setItem('su_b2_univ_logo_size',String(this.value));if(typeof applyBoard2LogoVars==='function')applyBoard2LogoVars();document.getElementById('cfg-b2-ul-val').textContent=this.value+'px';try{window._cfgSoftRefreshBoard2&&window._cfgSoftRefreshBoard2();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
           </div>
         </div>
-        <div style="border-top:1px dashed var(--border2);padding-top:12px">
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🖼️ 멤버 표시 모드</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:14px">
           <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🖼️ 현황판(대학별) 멤버 표시 모드</div>
           <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">대학 카드 안에서 멤버들을 어떤 형태로 보여줄지 선택합니다.</div>
           <div id="cfg-b2-univview" style="display:flex;flex-wrap:wrap;gap:8px">
@@ -2554,8 +2593,11 @@ ${_scfgD('notice','📢 공지 관리')}
               ].join('');
             })()}
           </div>
-        </div>
-        <div style="border-top:1px dashed var(--border2);padding-top:12px">
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🧷 로고 워터마크(우측 아래/가운데)</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:14px">
           <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🧷 대학별 신현황판 워터마크(우측 아래/가운데)</div>
           <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">우측 아래 로고(작은 워터마크)와 가운데 로고(배경 로고)의 위치/크기를 전체 또는 대학별로 조정합니다.</div>
           ${(()=>{
@@ -2619,7 +2661,7 @@ ${_scfgD('notice','📢 공지 관리')}
           })()}
         </div>
       </div>
-    </div>
+    </details>
   </details>
   ${_scfgD('oldbright','🎨 구현황판 카드 배경/라벨 밝기 조절')}
     <p style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">구현황판 카드의 배경과 라벨 밝기를 조절합니다. (구현황판 툴바에서도 조절 가능)</p>
