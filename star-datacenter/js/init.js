@@ -45,14 +45,14 @@ function _ensureAppErrorBanner(){
     if(_appErrorBannerEl && document.body.contains(_appErrorBannerEl)) return _appErrorBannerEl;
     const el = document.createElement('div');
     el.id = 'app-error-banner';
-    el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:99999;display:none;max-width:min(92vw,720px);width:max-content;background:#7f1d1d;color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 30px rgba(0,0,0,.24);border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.45;align-items:center;gap:10px';
+    el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:99999;display:none;max-width:min(92vw,720px);width:max-content;background:#7f1d1d;color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 30px rgba(0,0,0,.24);border-radius:14px;padding:10px 14px;font-size:var(--fs-base);line-height:1.45;align-items:center;gap:10px';
     const msg = document.createElement('div');
     msg.id = 'app-error-banner-msg';
     msg.style.cssText = 'font-weight:700;letter-spacing:-.2px';
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.textContent = '닫기';
-    btn.style.cssText = 'border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0';
+    btn.style.cssText = 'border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:6px 10px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;flex-shrink:0';
     btn.onclick = ()=>{ try{ el.style.display='none'; }catch(e){} };
     el.appendChild(msg);
     el.appendChild(btn);
@@ -456,8 +456,8 @@ async function init(){
     const loadExtras = ()=>{
       try{
         if(typeof window._loadScriptOnce!=='function') return;
-        window._loadScriptOnce('js/yt-bgm.js?v=20260420-06').catch(()=>{});
-        window._loadScriptOnce('js/soop-multiview.js?v=20260504-02').catch(()=>{});
+        window._loadScriptOnce('js/yt-bgm.js?v=20260717-ds01').catch(()=>{});
+        window._loadScriptOnce('js/soop-multiview.js?v=20260717-ds01').catch(()=>{});
       }catch(e){}
     };
     if('requestIdleCallback' in window) requestIdleCallback(loadExtras, {timeout: 2500});

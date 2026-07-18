@@ -208,7 +208,7 @@
     grid.innerHTML = ids.map(id=>`
       <div class="soop-cell" style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:0">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--surface);border-bottom:1px solid var(--border2)">
-          <div style="font-weight:900;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${id}</div>
+          <div style="font-weight:900;font-size:var(--fs-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${id}</div>
         </div>
         <iframe src="${embedUrl(id)}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="no-referrer" style="width:100%;height:100%;border:0;background:#000;flex:1;min-height:0"></iframe>
       </div>

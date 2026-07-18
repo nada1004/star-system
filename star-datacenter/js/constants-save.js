@@ -271,10 +271,10 @@ async function _ensureRemoteSaveReady(){
     if (typeof window._ensureCloudBoardLoaded === 'function') {
       await window._ensureCloudBoardLoaded();
     } else if (typeof window._loadScriptOnce === 'function') {
-      await window._loadScriptOnce('js/cloud-board-state.js?v=20260629-split');
-      await window._loadScriptOnce('js/cloud-board-render.js?v=20260629-split');
-      await window._loadScriptOnce('js/cloud-board-drag.js?v=20260629-split');
-      await window._loadScriptOnce('js/cloud-board-rank-sync.js?v=20260629-split');
+      await window._loadScriptOnce('js/cloud-board-state.js?v=20260717-ds03');
+      await window._loadScriptOnce('js/cloud-board-render.js?v=20260717-ds03');
+      await window._loadScriptOnce('js/cloud-board-drag.js?v=20260717-ds03');
+      await window._loadScriptOnce('js/cloud-board-rank-sync.js?v=20260717-ds01');
     }
   }catch(e){
     console.error('[save] cloud-board load fail', e);

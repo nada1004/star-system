@@ -33,24 +33,24 @@ function indInputHTML(){
   ], '');
   const baseCard = _mbSectionCard('① 날짜 & 대전 스트리머', `
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
-        <label style="font-size:12px;font-weight:700">날짜</label>
-        <input type="date" value="${gi.date||''}" onchange="_indInput.date=this.value;if(BLD['ind'])BLD['ind'].date=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+        <label style="font-size:var(--fs-sm);font-weight:700">날짜</label>
+        <input type="date" value="${gi.date||''}" onchange="_indInput.date=this.value;if(BLD['ind'])BLD['ind'].date=this.value" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm)">
       </div>
       <div class="mb-split">
         <div>
-          <div style="font-size:11px;font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
           ${pA?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${aCol}18;border:2px solid ${aCol};border-radius:8px">
             ${getPlayerPhotoHTML(pA,'28px')}<span style="font-weight:800;color:${aCol}">${pA}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
-            <button onclick="_indInput.playerA='';BLD['ind']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+            <button onclick="_indInput.playerA='';BLD['ind']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:var(--fs-sm)">✕</button>
           </div>` : ''}
         </div>
         <div>
-          <div style="font-size:11px;font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
           ${pB?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${bCol}18;border:2px solid ${bCol};border-radius:8px">
             ${getPlayerPhotoHTML(pB,'28px')}<span style="font-weight:800;color:${bCol}">${pB}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
-            <button onclick="_indInput.playerB='';BLD['ind']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+            <button onclick="_indInput.playerB='';BLD['ind']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:var(--fs-sm)">✕</button>
           </div>` : ''}
         </div>
       </div>
@@ -140,27 +140,27 @@ function gjInputHTML(){
   const baseCard = _mbSectionCard('① 날짜 & 대전 스트리머', `
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:6px">
-          <label style="font-size:12px;font-weight:700">날짜</label>
-          <input type="date" value="${gi.date||''}" onchange="_gjInput.date=this.value;if(BLD['gj'])BLD['gj'].date=this.value;render()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <label style="font-size:var(--fs-sm);font-weight:700">날짜</label>
+          <input type="date" value="${gi.date||''}" onchange="_gjInput.date=this.value;if(BLD['gj'])BLD['gj'].date=this.value;render()" style="padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm)">
         </div>
       </div>
       <div class="mb-split">
         <div>
-          <div style="font-size:11px;font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:${aCol};margin-bottom:4px">🔵 A 스트리머</div>
           ${pA?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${aCol}18;border:2px solid ${aCol};border-radius:8px">
             ${getPlayerPhotoHTML(pA,'28px')}
             <span style="font-weight:800;color:${aCol}">${pA}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pAObj.univ||''}</span>
-            <button onclick="_gjInput.playerA='';BLD['gj']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+            <button onclick="_gjInput.playerA='';BLD['gj']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:var(--fs-sm)">✕</button>
           </div>` : ''}
         </div>
         <div>
-          <div style="font-size:11px;font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:${bCol};margin-bottom:4px">🔴 B 스트리머</div>
           ${pB?`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:${bCol}18;border:2px solid ${bCol};border-radius:8px">
             ${getPlayerPhotoHTML(pB,'28px')}
             <span style="font-weight:800;color:${bCol}">${pB}</span>
             <span style="font-size:10px;color:var(--gray-l)">${pBObj.univ||''}</span>
-            <button onclick="_gjInput.playerB='';BLD['gj']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px">✕</button>
+            <button onclick="_gjInput.playerB='';BLD['gj']=null;render()" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:var(--fs-sm)">✕</button>
           </div>` : ''}
         </div>
       </div>

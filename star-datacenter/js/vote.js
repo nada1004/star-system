@@ -38,7 +38,7 @@ function rVote(C,T){
     const bCol = gc(_vm.b||'');
     return `
       <div style="margin-top:10px">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray-l);margin-bottom:4px">
+        <div style="display:flex;justify-content:space-between;font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:4px">
           <span>🗳️ 총 ${total}표</span>
           ${myVote?`<span style="color:var(--blue);font-weight:700">✅ 내 예측: ${myVote==='a'?_vm.a||'A':_vm.b||'B'}</span>`:''}
         </div>
@@ -56,7 +56,7 @@ function rVote(C,T){
     <div class="ssec">
       <h4>🎯 승부예측</h4>
       ${upcoming.length===0
-        ? '<p style="color:var(--gray-l);font-size:13px">예측 가능한 경기가 없습니다.<br><span style="font-size:11px">미니대전에서 결과 미입력 경기가 여기에 표시됩니다.</span></p>'
+        ? '<p style="color:var(--gray-l);font-size:var(--fs-base)">예측 가능한 경기가 없습니다.<br><span style="font-size:var(--fs-caption)">미니대전에서 결과 미입력 경기가 여기에 표시됩니다.</span></p>'
         : upcoming.map(m=>{
             const key=getVoteKey(m);
             const v=voteData[key]||{a:0,b:0};
@@ -69,13 +69,13 @@ function rVote(C,T){
             return `<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
                 <span style="font-size:10px;background:#e0e7ff;color:#3730a3;padding:1px 7px;border-radius:20px;font-weight:700">${m._mode||'⚡ 미니대전'}</span>
-                <span style="font-size:11px;color:var(--gray-l)">📅 ${m.d||'날짜 미정'}</span>
+                <span style="font-size:var(--fs-caption);color:var(--gray-l)">📅 ${m.d||'날짜 미정'}</span>
               </div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
                 <div style="flex:1;text-align:center;padding:10px;background:${aCol}22;border-radius:8px;border:2px solid ${myVote==='a'?aCol:'transparent'}">
                   <div style="font-weight:800;color:${aCol}">${tA}</div>
                 </div>
-                <div style="font-weight:900;color:var(--gray-l);font-size:18px">VS</div>
+                <div style="font-weight:900;color:var(--gray-l);font-size:var(--fs-lg)">VS</div>
                 <div style="flex:1;text-align:center;padding:10px;background:${bCol}22;border-radius:8px;border:2px solid ${myVote==='b'?bCol:'transparent'}">
                   <div style="font-weight:800;color:${bCol}">${tB}</div>
                 </div>
@@ -97,7 +97,7 @@ function rVote(C,T){
     <div class="ssec">
       <h4>🏆 예측 결과</h4>
       ${finished.length===0
-        ? '<p style="color:var(--gray-l);font-size:13px">결과가 나온 경기가 없습니다.</p>'
+        ? '<p style="color:var(--gray-l);font-size:var(--fs-base)">결과가 나온 경기가 없습니다.</p>'
         : finished.map(m=>{
             const key=getVoteKey(m);
             const v=voteData[key]||{a:0,b:0};
@@ -114,8 +114,8 @@ function rVote(C,T){
             const pctA=total===0?50:Math.round(v.a/total*100);
             return `<div style="background:var(--white);border:1px solid ${voted?(correct?'var(--green)':'var(--red)'):'var(--border)'};border-radius:12px;padding:14px;margin-bottom:8px;opacity:${voted?1:0.7}">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                <span style="font-size:11px;color:var(--gray-l)">📅 ${m.d||''}</span>
-                ${voted?`<span style="font-size:12px;font-weight:700;color:${correct?'var(--green)':'var(--red)'}">${correct?'✅ 예측 성공!':'❌ 예측 실패'}</span>`:'<span style="font-size:11px;color:var(--gray-l)">예측 안함</span>'}
+                <span style="font-size:var(--fs-caption);color:var(--gray-l)">📅 ${m.d||''}</span>
+                ${voted?`<span style="font-size:var(--fs-sm);font-weight:700;color:${correct?'var(--green)':'var(--red)'}">${correct?'✅ 예측 성공!':'❌ 예측 실패'}</span>`:'<span style="font-size:var(--fs-caption);color:var(--gray-l)">예측 안함</span>'}
               </div>
               <div style="display:flex;align-items:center;gap:8px">
                 <div style="flex:1;text-align:center;font-weight:${m.sa>m.sb?'900':'400'};color:${m.sa>m.sb?aCol:'var(--gray-l)'}">
@@ -172,7 +172,7 @@ function fsearch(type){
   if(!inp||!d)return;
   const v=inp.value.toLowerCase();
   const f=players.filter(p=>p.name.toLowerCase().includes(v));
-  if(v&&f.length){d.innerHTML=f.map(p=>`<div class="sitem" onclick="selP('${type}','${p.name}')">${p.name} <span style="color:var(--gray-l);font-size:11px">(${p.univ})</span></div>`).join('');d.style.display='block';}
+  if(v&&f.length){d.innerHTML=f.map(p=>`<div class="sitem" onclick="selP('${type}','${p.name}')">${p.name} <span style="color:var(--gray-l);font-size:var(--fs-caption)">(${p.univ})</span></div>`).join('');d.style.display='block';}
   else d.style.display='none';
 }
 function selP(type,name){

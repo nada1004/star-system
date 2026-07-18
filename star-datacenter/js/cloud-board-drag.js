@@ -469,12 +469,12 @@ async function _dlCanvasBoard(canvas, filename) {
       ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;';
       const safeName = String(pngName||'image.png').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       ov.innerHTML = `
-        <div style="width:min(980px,96vw);max-height:92vh;background:#0b1220;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 60px rgba(0,0,0,.45);display:flex;flex-direction:column">
+        <div style="width:min(980px,96vw);max-height:92vh;background:#0b1220;border-radius:var(--r2);overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 60px rgba(0,0,0,.45);display:flex;flex-direction:column">
           <div style="display:flex;gap:10px;align-items:center;padding:12px 14px;background:rgba(15,23,42,.92);color:#fff">
-            <div style="font-weight:900;font-size:13px">이미지 저장</div>
-            <div style="font-size:12px;opacity:.8">자동 다운로드가 막혔습니다. PC는 우클릭 저장 / 모바일은 길게 눌러 저장</div>
-            <a href="${src}" download="${safeName}" style="margin-left:auto;text-decoration:none;color:#fff;background:#2563eb;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 10px;font-weight:900;font-size:12px">다운로드</a>
-            <button id="__img_save_overlay_close" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;border-radius:10px;padding:6px 10px;font-weight:900;cursor:pointer;font-size:12px">닫기</button>
+            <div style="font-weight:900;font-size:var(--fs-base)">이미지 저장</div>
+            <div style="font-size:var(--fs-sm);opacity:.8">자동 다운로드가 막혔습니다. PC는 우클릭 저장 / 모바일은 길게 눌러 저장</div>
+            <a href="${src}" download="${safeName}" style="margin-left:auto;text-decoration:none;color:#fff;background:#2563eb;border:1px solid rgba(255,255,255,.14);border-radius:var(--r);padding:6px 10px;font-weight:900;font-size:var(--fs-sm)">다운로드</a>
+            <button id="__img_save_overlay_close" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;border-radius:var(--r);padding:6px 10px;font-weight:900;cursor:pointer;font-size:var(--fs-sm)">닫기</button>
           </div>
           <div style="padding:12px;overflow:auto;background:#111">
             <img src="${src}" style="max-width:100%;display:block;margin:0 auto;border-radius:12px;background:#111">
@@ -511,7 +511,7 @@ async function _dlCanvasBoard(canvas, filename) {
       preWin.document.open();
       preWin.document.write('<html><head><meta charset="utf-8"><title>이미지 저장</title></head>'
         + '<body style="margin:0;background:#111;color:#fff;font-family:sans-serif">'
-        + '<div style="padding:12px;font-size:13px">이미지가 자동 다운로드되지 않으면, 아래 이미지를 길게 눌러 저장하세요.</div>'
+        + '<div style="padding:12px;font-size:var(--fs-base)">이미지가 자동 다운로드되지 않으면, 아래 이미지를 길게 눌러 저장하세요.</div>'
         + '<img src="' + src + '" style="max-width:100%;display:block;margin:0 auto">'
         + '</body></html>');
       preWin.document.close();

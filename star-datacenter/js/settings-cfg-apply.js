@@ -72,8 +72,8 @@ function _cfgApplyCat(cat, autoGo=true){
       secWrap.innerHTML = show.map(id=>{
         const title=titleMap[id]||id;
         return `<button type="button" class="btn btn-w no-export" onclick="cfgGo('${id}')" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;text-align:left;background:var(--white);justify-content:flex-start">
-          <span style="font-size:15px;line-height:1">${String(title).match(/^[^\s]+/)?.[0]||'⚙️'}</span>
-          <span style="font-size:12px;font-weight:800;color:var(--text2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${title.replace(/^[^\s]+\s*/,'')}</span>
+          <span style="font-size:var(--fs-md);line-height:1">${String(title).match(/^[^\s]+/)?.[0]||'⚙️'}</span>
+          <span style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${title.replace(/^[^\s]+\s*/,'')}</span>
         </button>`;
       }).join('');
     });
@@ -268,10 +268,10 @@ window.cfgUnivOrderMove = function(i, dir){
         return;
       }
       Promise.all([
-        loader('js/cloud-board-state.js?v=20260629-split'),
-        loader('js/cloud-board-render.js?v=20260629-split'),
-        loader('js/cloud-board-drag.js?v=20260629-split'),
-        loader('js/cloud-board-rank-sync.js?v=20260629-split')
+        loader('js/cloud-board-state.js?v=20260717-ds03'),
+        loader('js/cloud-board-render.js?v=20260717-ds03'),
+        loader('js/cloud-board-drag.js?v=20260717-ds03'),
+        loader('js/cloud-board-rank-sync.js?v=20260717-ds01')
       ]).then(()=>{
         const fn = window.checkFbSyncStatus;
         if(typeof fn === 'function' && fn !== _lazyCheckFbSyncStatus) fn();
@@ -291,7 +291,7 @@ window.cfgUnivOrderMove = function(i, dir){
         if(C) C.innerHTML = '<div style="padding:24px;color:var(--gray-l);text-align:center">캘린더 로딩 중...</div>';
         return;
       }
-      loader('js/calendar.js?v=20260504-02').then(()=>{
+      loader('js/calendar.js?v=20260717-ds03').then(()=>{
         const fn = window.rCal;
         if(typeof fn === 'function' && fn !== _lazyRCal) fn(C, T);
       }).catch((e)=>{
@@ -331,7 +331,7 @@ window.cfgUnivOrderMove = function(i, dir){
 // ─────────────────────────────────────────────────────────────
 window.cfgRunFullQaDryRun = function(){
   const out = document.getElementById('cfg-selfcheck-out');
-  if(out) out.innerHTML = '<div style="color:var(--gray-l);font-size:12px">QA 점검 중...</div>';
+  if(out) out.innerHTML = '<div style="color:var(--gray-l);font-size:var(--fs-sm)">QA 점검 중...</div>';
   const rows = [];
   const ok = (name, pass, detail='')=>{
     rows.push({name, pass, detail});
@@ -562,18 +562,18 @@ window.cfgRunFullQaDryRun = function(){
     const failN = rows.length - passN;
     out.innerHTML = `
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-        <div style="font-size:12px;font-weight:1000;color:${failN? '#dc2626':'#16a34a'}">QA 결과: ${passN} PASS / ${failN} FAIL</div>
-        <div style="font-size:11px;color:var(--gray-l)">※ 동기화/외부 이미지 링크/실서버 연동은 여기서 완전 검증이 어렵습니다(함수/초기화 수준만 확인).</div>
+        <div style="font-size:var(--fs-sm);font-weight:1000;color:${failN? '#dc2626':'#16a34a'}">QA 결과: ${passN} PASS / ${failN} FAIL</div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l)">※ 동기화/외부 이미지 링크/실서버 연동은 여기서 완전 검증이 어렵습니다(함수/초기화 수준만 확인).</div>
       </div>
       <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden">
-        <div style="display:grid;grid-template-columns:1.4fr .4fr 1fr;gap:0;background:var(--surface);border-bottom:1px solid var(--border);font-size:11px;font-weight:900;color:var(--text2)">
+        <div style="display:grid;grid-template-columns:1.4fr .4fr 1fr;gap:0;background:var(--surface);border-bottom:1px solid var(--border);font-size:var(--fs-caption);font-weight:900;color:var(--text2)">
           <div style="padding:8px 10px">항목</div><div style="padding:8px 10px">결과</div><div style="padding:8px 10px">메모</div>
         </div>
         ${rows.map(r=>`
           <div style="display:grid;grid-template-columns:1.4fr .4fr 1fr;gap:0;border-bottom:1px solid var(--border)">
-            <div style="padding:8px 10px;font-size:12px;color:var(--text2)">${esc(r.name)}</div>
-            <div style="padding:8px 10px;font-size:12px;font-weight:1000;color:${r.pass?'#16a34a':'#dc2626'}">${r.pass?'PASS':'FAIL'}</div>
-            <div style="padding:8px 10px;font-size:11px;color:var(--gray-l);font-family:ui-monospace,monospace;white-space:pre-wrap">${esc(r.detail||'')}</div>
+            <div style="padding:8px 10px;font-size:var(--fs-sm);color:var(--text2)">${esc(r.name)}</div>
+            <div style="padding:8px 10px;font-size:var(--fs-sm);font-weight:1000;color:${r.pass?'#16a34a':'#dc2626'}">${r.pass?'PASS':'FAIL'}</div>
+            <div style="padding:8px 10px;font-size:var(--fs-caption);color:var(--gray-l);font-family:ui-monospace,monospace;white-space:pre-wrap">${esc(r.detail||'')}</div>
           </div>
         `).join('')}
       </div>
@@ -744,7 +744,7 @@ window.cfgSearchSettings = function(q){
       sug.style.display='none';
       return;
     }
-    sug.innerHTML = top.map(x=>`<button type="button" class="cfg-search-item" onclick="(function(){try{cfgGo('${x.id}');}catch(e){};try{document.getElementById('cfgSearchSug').style.display='none';}catch(e){}})()"><span style="display:block;font-size:12px;font-weight:900;color:var(--text2)">${x.t}</span><span style="display:block;font-size:10px;color:var(--gray-l);font-weight:700">${x.m ? '매칭: '+x.m : '내부 기능 설정 매칭'}</span></button>`).join('');
+    sug.innerHTML = top.map(x=>`<button type="button" class="cfg-search-item" onclick="(function(){try{cfgGo('${x.id}');}catch(e){};try{document.getElementById('cfgSearchSug').style.display='none';}catch(e){}})()"><span style="display:block;font-size:var(--fs-sm);font-weight:900;color:var(--text2)">${x.t}</span><span style="display:block;font-size:10px;color:var(--gray-l);font-weight:700">${x.m ? '매칭: '+x.m : '내부 기능 설정 매칭'}</span></button>`).join('');
     sug.style.display='block';
   }catch(e){}
 };
@@ -941,14 +941,14 @@ window.openEP=function(name){
     <label>대학</label>
     <div style="display:flex;gap:6px;align-items:center">
       <select id="ed-u" style="flex:1">${getAllUnivs().filter(u=>!u.dissolved||u.name===p.univ).map(u=>`<option value="${u.name}"${p.univ===u.name?' selected':''}>${u.name}</option>`).join('')}</select>
-      ${p.univ!=='무소속'?`<button type="button" onclick="document.getElementById('ed-u').value='무소속'" style="flex-shrink:0;padding:4px 10px;border-radius:7px;border:1.5px solid #9ca3af;background:var(--surface);color:#6b7280;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">🚶 무소속</button>`:''}
+      ${p.univ!=='무소속'?`<button type="button" onclick="document.getElementById('ed-u').value='무소속'" style="flex-shrink:0;padding:4px 10px;border-radius:7px;border:1.5px solid #9ca3af;background:var(--surface);color:#6b7280;font-size:var(--fs-caption);font-weight:700;cursor:pointer;white-space:nowrap">🚶 무소속</button>`:''}
     </div>
     <label>종족</label><select id="ed-r"><option value="T"${p.race==='T'?' selected':''}>테란</option><option value="Z"${p.race==='Z'?' selected':''}>저그</option><option value="P"${p.race==='P'?' selected':''}>프로토스</option><option value="N"${p.race==='N'?' selected':''}>종족미정</option></select>
     <label>성별</label><select id="ed-g"><option value="F"${(p.gender||'F')==='F'?' selected':''}>👩 여자</option><option value="M"${p.gender==='M'?' selected':''}>👨 남자</option></select>
     <label>직책 <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(이사장/선장/동아리장/반장/총장/부총장/총괄/교수/코치는 정렬 우선순위 적용)</span></label>
     <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
-      ${MAIN_ROLES.map(r=>{const ic=ROLE_ICONS[r]||'🏷️';const col=ROLE_COLORS[r]||'#6b7280';return `<button type="button" onclick="const el=document.getElementById('ed-role');el.value=el.value===this.dataset.role?'':this.dataset.role;" data-role="${r}" style="padding:3px 8px;border-radius:6px;border:1.5px solid ${col};background:${p.role===r?col+'22':'var(--white)'};color:${col};font-size:11px;font-weight:700;cursor:pointer">${ic} ${r}</button>`;}).join('')}
-      <button type="button" onclick="document.getElementById('ed-role').value=''" style="padding:3px 8px;border-radius:6px;border:1.5px solid #9ca3af;background:var(--white);color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer">✕ 없음</button>
+      ${MAIN_ROLES.map(r=>{const ic=ROLE_ICONS[r]||'🏷️';const col=ROLE_COLORS[r]||'#6b7280';return `<button type="button" onclick="const el=document.getElementById('ed-role');el.value=el.value===this.dataset.role?'':this.dataset.role;" data-role="${r}" style="padding:3px 8px;border-radius:6px;border:1.5px solid ${col};background:${p.role===r?col+'22':'var(--white)'};color:${col};font-size:var(--fs-caption);font-weight:700;cursor:pointer">${ic} ${r}</button>`;}).join('')}
+      <button type="button" onclick="document.getElementById('ed-role').value=''" style="padding:3px 8px;border-radius:6px;border:1.5px solid #9ca3af;background:var(--white);color:#9ca3af;font-size:var(--fs-caption);font-weight:700;cursor:pointer">✕ 없음</button>
     </div>
     <input type="text" id="ed-role" value="${p.role||''}" placeholder="직책 직접 입력 또는 위 버튼 클릭" style="width:100%">
     <label>🖼 프로필 사진 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(현황판 카드에 표시 · 비워두면 기본 아이콘)</span></label>
@@ -960,17 +960,17 @@ window.openEP=function(name){
     </div>
     <div id="ed-photo-warn" style="font-size:10px;color:${p.photo&&p.photo.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:-6px">${p.photo&&p.photo.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
 
-    <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-weight:900;font-size:12px;color:var(--text2);margin-bottom:6px">🖼 프로필 사진 1 — 얼굴 위치(자르기 보정)</div>
-      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
+    <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+      <div style="font-weight:900;font-size:var(--fs-sm);color:var(--text2);margin-bottom:6px">🖼 프로필 사진 1 — 얼굴 위치(자르기 보정)</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6;margin-bottom:10px">
         (채우기/cover 사용 시) 얼굴이 잘리면 아래 미리보기에서 <b>드래그</b>하거나 X/Y로 위치를 보정할 수 있습니다.
       </div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:900;color:var(--text3);margin:-2px 0 10px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-caption);font-weight:900;color:var(--text3);margin:-2px 0 10px">
         <input type="checkbox" id="ed-p1pos-use" ${_p1Use?'checked':''} onchange="document.getElementById('ed-p1pos-prev').style.opacity=this.checked?1:.55">
         이 보정 적용(체크 해제 시 기존 설정 사용)
       </label>
       <input type="hidden" id="ed-p1pos-del" value="0">
-      <div id="ed-p1pos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${_p1Use?1:.55}">
+      <div id="ed-p1pos-prev" style="position:relative;height:150px;border-radius:var(--r2);overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${_p1Use?1:.55}">
         ${p.photo?`<img id="ed-p1pos-img" src="${toHttpsUrl(p.photo).replace(/\"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${_p1X}% ${_p1Y}%;transform:scale(1.02)" onerror="this.style.display='none'">`:''}
         <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
         <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
@@ -978,14 +978,14 @@ window.openEP=function(name){
         <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">가로(X)</div>
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">가로(X)</div>
         <input type="range" id="ed-p1pos-x" min="0" max="100" step="1" value="${_p1X}" oninput="edP1PosSyncFromInputs()" style="width:100%">
-        <div id="ed-p1pos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${_p1X}%</div>
+        <div id="ed-p1pos-xv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_p1X}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">세로(Y)</div>
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">세로(Y)</div>
         <input type="range" id="ed-p1pos-y" min="0" max="100" step="1" value="${_p1Y}" oninput="edP1PosSyncFromInputs()" style="width:100%">
-        <div id="ed-p1pos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${_p1Y}%</div>
+        <div id="ed-p1pos-yv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_p1Y}%</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">
         <button type="button" class="btn btn-w btn-xs" onclick="edP1PosCenter()">센터(50/50)</button>
@@ -993,20 +993,20 @@ window.openEP=function(name){
       </div>
     </div>
 
-    <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-weight:900;font-size:12px;color:var(--text2);margin-bottom:6px">🎯 개인/끝장전 카드 — 얼굴 위치(배경)</div>
-      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">
+    <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+      <div style="font-weight:900;font-size:var(--fs-sm);color:var(--text2);margin-bottom:6px">🎯 개인/끝장전 카드 — 얼굴 위치(배경)</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6;margin-bottom:10px">
         채우기(cover)에서 얼굴이 잘리는 경우, 아래 미리보기에서 <b>드래그</b>하거나 X/Y로 위치를 보정할 수 있습니다. (개인전/끝장전/프로리그 끝장전 적용)
       </div>
       <input type="hidden" id="ed-h2hpos-del" value="0">
-      <div id="ed-h2hpos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:${p.photo?`url('${toHttpsUrl(p.photo)}')`:'linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10))'};background-size:${_h2hBgSize};background-position:${_h2hX}% ${_h2hY}%;background-repeat:no-repeat;touch-action:none;user-select:none">
+      <div id="ed-h2hpos-prev" style="position:relative;height:150px;border-radius:var(--r2);overflow:hidden;border:1.5px solid var(--border);background:${p.photo?`url('${toHttpsUrl(p.photo)}')`:'linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10))'};background-size:${_h2hBgSize};background-position:${_h2hX}% ${_h2hY}%;background-repeat:no-repeat;touch-action:none;user-select:none">
         <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.06) 0%, rgba(15,23,42,.32) 60%, rgba(15,23,42,.78) 100%)"></div>
         <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
         <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
         <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
         <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 12px;z-index:1;text-align:center">
           <div style="font-weight:1000;font-size:16px;line-height:1.1;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.45)">${p.name}</div>
-          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.86);text-shadow:0 2px 10px rgba(0,0,0,.35)">${p.univ||''}</div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:rgba(255,255,255,.86);text-shadow:0 2px 10px rgba(0,0,0,.35)">${p.univ||''}</div>
           <div style="margin-top:4px;display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap">
             ${(p.race&&p.race!=='N')?`<span class="rbadge r${p.race}" style="transform:scale(.92);transform-origin:center">${p.race}</span>`:''}
             ${p.tier?`<span style="transform:scale(.92);transform-origin:center">${getTierBadge(p.tier)}</span>`:''}
@@ -1014,38 +1014,38 @@ window.openEP=function(name){
         </div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">가로(X)</div>
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">가로(X)</div>
         <input type="range" id="ed-h2hpos-x" min="0" max="100" step="1" value="${_h2hX}"
           oninput="edH2HPosSyncFromInputs()" style="width:100%">
-        <div id="ed-h2hpos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${_h2hX}%</div>
+        <div id="ed-h2hpos-xv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_h2hX}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">세로(Y)</div>
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">세로(Y)</div>
         <input type="range" id="ed-h2hpos-y" min="0" max="100" step="1" value="${_h2hY}"
           oninput="edH2HPosSyncFromInputs()" style="width:100%">
-        <div id="ed-h2hpos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${_h2hY}%</div>
+        <div id="ed-h2hpos-yv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_h2hY}%</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">
         <button type="button" class="btn btn-w btn-xs" onclick="edH2HPosCenter()">센터(50/50)</button>
         <button type="button" class="btn btn-w btn-xs" onclick="edH2HPosDelete()">삭제(기본)</button>
         <button type="button" class="btn btn-b btn-xs" onclick="edH2HPosSave()">저장</button>
       </div>
-      <div id="ed-h2hpos-msg" style="display:none;margin-top:6px;font-size:11px;color:var(--green);font-weight:900;text-align:right">저장됨!</div>
+      <div id="ed-h2hpos-msg" style="display:none;margin-top:6px;font-size:var(--fs-caption);color:var(--green);font-weight:900;text-align:right">저장됨!</div>
     </div>
 
     <label>🖼 프로필 이미지 2 <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(모바일/교체용 · 1초 후 자동 전환)</span></label>
     <input type="text" id="ed-photo2" value="${p.secondProfileFile||''}" placeholder="https://... 이미지 URL 입력" style="width:100%">
     <div style="font-size:10px;color:var(--gray-l);margin-top:-6px">현황판 등에서 보조 프로필 이미지로 사용됩니다.</div>
 
-    <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-weight:900;font-size:12px;color:var(--text2);margin-bottom:6px">🖼 프로필 사진 2 — 얼굴 위치(자르기 보정)</div>
-      <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">프로필 2도 필요하면 위치를 저장할 수 있습니다.</div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:900;color:var(--text3);margin:-2px 0 10px">
+    <div style="margin-top:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+      <div style="font-weight:900;font-size:var(--fs-sm);color:var(--text2);margin-bottom:6px">🖼 프로필 사진 2 — 얼굴 위치(자르기 보정)</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6;margin-bottom:10px">프로필 2도 필요하면 위치를 저장할 수 있습니다.</div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-caption);font-weight:900;color:var(--text3);margin:-2px 0 10px">
         <input type="checkbox" id="ed-p2pos-use" ${_p2Use?'checked':''} onchange="document.getElementById('ed-p2pos-prev').style.opacity=this.checked?1:.55">
         이 보정 적용(체크 해제 시 기존 설정 사용)
       </label>
       <input type="hidden" id="ed-p2pos-del" value="0">
-      <div id="ed-p2pos-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${_p2Use?1:.55}">
+      <div id="ed-p2pos-prev" style="position:relative;height:150px;border-radius:var(--r2);overflow:hidden;border:1.5px solid var(--border);background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none;opacity:${_p2Use?1:.55}">
         ${p.secondProfileFile?`<img id="ed-p2pos-img" src="${toHttpsUrl(p.secondProfileFile).replace(/\"/g,'&quot;')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${_p2X}% ${_p2Y}%;transform:scale(1.02)" onerror="this.style.display='none'">`:''}
         <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%)"></div>
         <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
@@ -1053,14 +1053,14 @@ window.openEP=function(name){
         <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:10px">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">가로(X)</div>
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">가로(X)</div>
         <input type="range" id="ed-p2pos-x" min="0" max="100" step="1" value="${_p2X}" oninput="edP2PosSyncFromInputs()" style="width:100%">
-        <div id="ed-p2pos-xv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${_p2X}%</div>
+        <div id="ed-p2pos-xv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_p2X}%</div>
       </div>
       <div style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:6px">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">세로(Y)</div>
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">세로(Y)</div>
         <input type="range" id="ed-p2pos-y" min="0" max="100" step="1" value="${_p2Y}" oninput="edP2PosSyncFromInputs()" style="width:100%">
-        <div id="ed-p2pos-yv" style="font-size:11px;color:var(--gray-l);font-weight:900;text-align:right">${_p2Y}%</div>
+        <div id="ed-p2pos-yv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${_p2Y}%</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px">
         <button type="button" class="btn btn-w btn-xs" onclick="edP2PosCenter()">센터(50/50)</button>
@@ -1070,21 +1070,21 @@ window.openEP=function(name){
     <label>🏠 방송국 홈 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(홈 아이콘 클릭 시 이동)</span></label>
     <div style="display:flex;gap:8px;align-items:center">
       <input type="text" id="ed-channel" value="${p.channelUrl||''}" placeholder="https://chzzk.naver.com/... 또는 https://twitch.tv/..." style="flex:1">
-      ${p.channelUrl?`<a href="${p.channelUrl}" target="_blank" style="font-size:18px;text-decoration:none" title="방송국 바로가기">🏠</a>`:''}
+      ${p.channelUrl?`<a href="${p.channelUrl}" target="_blank" style="font-size:var(--fs-lg);text-decoration:none" title="방송국 바로가기">🏠</a>`:''}
     </div>
     <div style="font-size:10px;color:var(--gray-l);margin-top:-6px">치지직/트위치/유튜브 등 방송국 주소. 스트리머 상세에서 홈 아이콘으로 이동됩니다.</div>
     <div style="margin-top:14px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">🖼 스트리머 상세 헤더 배경</div>
+      <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px">🖼 스트리머 상세 헤더 배경</div>
       <label>배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 설정탭 기본값 사용)</span></label>
       <input type="text" id="ed-phbg" value="${p.detailHeaderBgImg||''}" placeholder="https://... 이미지 URL">
-      <div id="ed-phbg-prev" style="position:relative;height:150px;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);margin-top:10px;background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none">
+      <div id="ed-phbg-prev" style="position:relative;height:150px;border-radius:var(--r2);overflow:hidden;border:1.5px solid var(--border);margin-top:10px;background:linear-gradient(135deg, rgba(100,116,139,.26), rgba(100,116,139,.10));touch-action:none;user-select:none">
         ${(p.detailHeaderBgImg||'').trim()?`<div id="ed-phbg-prev-bg" style="position:absolute;inset:-8%;background-image:url('${toHttpsUrl((p.detailHeaderBgImg||'').trim()).replace(/'/g,'%27')}');background-repeat:no-repeat;background-position:${Number(p.detailHeaderBgPosX??50)||50}% ${Number(p.detailHeaderBgPosY??50)||50}%;background-size:${(p.detailHeaderBgFit||'')==='fill'?'100% 100%':((p.detailHeaderBgFit||'')==='cover'?'cover':'contain')};transform:scale(${Math.max(40,Math.min(220,Number(p.detailHeaderBgScale||100)||100))/100});transform-origin:center center;opacity:.85;pointer-events:none"></div>`:''}
         <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(15,23,42,.04) 0%, rgba(15,23,42,.10) 60%, rgba(15,23,42,.22) 100%);pointer-events:none"></div>
         <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none"></div>
         <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
         <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,.35);pointer-events:none"></div>
-        <div style="position:absolute;left:10px;top:10px;z-index:1;font-size:11px;font-weight:900;color:rgba(255,255,255,.82);text-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none">드래그로 위치 조정</div>
-        ${!(p.detailHeaderBgImg||'').trim()?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:rgba(15,23,42,.55)">URL을 입력하면 미리보기가 표시됩니다</div>`:''}
+        <div style="position:absolute;left:10px;top:10px;z-index:1;font-size:var(--fs-caption);font-weight:900;color:rgba(255,255,255,.82);text-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none">드래그로 위치 조정</div>
+        ${!(p.detailHeaderBgImg||'').trim()?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:var(--fs-sm);font-weight:900;color:rgba(15,23,42,.55)">URL을 입력하면 미리보기가 표시됩니다</div>`:''}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
         <div>
@@ -1100,11 +1100,11 @@ window.openEP=function(name){
           <label>크기 조절</label>
           <div style="display:flex;align-items:center;gap:8px">
             <input type="range" id="ed-phbg-scale" min="40" max="220" step="5" value="${Number(p.detailHeaderBgScale||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-scale-val').textContent=this.value+'%'; edPhbgSyncFromInputs()">
-            <span id="ed-phbg-scale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.detailHeaderBgScale||100)||100}%</span>
+            <span id="ed-phbg-scale-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.detailHeaderBgScale||100)||100}%</span>
           </div>
         </div>
       </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 6px">이미지 위치</div>
+      <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin:10px 0 6px">이미지 위치</div>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
         ${[
           ['left top','↖ 좌상'],['center top','↑ 상단'],['right top','↗ 우상'],
@@ -1119,20 +1119,20 @@ window.openEP=function(name){
           <label>가로 미세 위치</label>
           <div style="display:flex;align-items:center;gap:8px">
             <input type="range" id="ed-phbg-posx" min="0" max="100" step="1" value="${Number(p.detailHeaderBgPosX??50)||50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-posx-val').textContent=this.value+'%'; edPhbgSyncFromInputs()">
-            <span id="ed-phbg-posx-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.detailHeaderBgPosX??50)||50}%</span>
+            <span id="ed-phbg-posx-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.detailHeaderBgPosX??50)||50}%</span>
           </div>
         </div>
         <div>
           <label>세로 미세 위치</label>
           <div style="display:flex;align-items:center;gap:8px">
             <input type="range" id="ed-phbg-posy" min="0" max="100" step="1" value="${Number(p.detailHeaderBgPosY??50)||50}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-phbg-posy-val').textContent=this.value+'%'; edPhbgSyncFromInputs()">
-            <span id="ed-phbg-posy-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.detailHeaderBgPosY??50)||50}%</span>
+            <span id="ed-phbg-posy-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.detailHeaderBgPosY??50)||50}%</span>
           </div>
         </div>
       </div>
     </div>
     <div style="margin-top:14px;padding:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px">
-      <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">🪪 개인 공유카드 배경</div>
+      <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px">🪪 개인 공유카드 배경</div>
       <label>배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 대학색 배경 사용)</span></label>
       <input type="text" id="ed-sharebg" value="${p.shareCardBgImg||''}" placeholder="https://... 이미지 URL">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
@@ -1149,7 +1149,7 @@ window.openEP=function(name){
           <label>크기 조절</label>
           <div style="display:flex;align-items:center;gap:8px">
             <input type="range" id="ed-sharebg-scale" min="40" max="220" step="5" value="${Number(p.shareCardBgScale||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-sharebg-scale-val').textContent=this.value+'%'">
-            <span id="ed-sharebg-scale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.shareCardBgScale||100)||100}%</span>
+            <span id="ed-sharebg-scale-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.shareCardBgScale||100)||100}%</span>
           </div>
         </div>
       </div>
@@ -1158,14 +1158,14 @@ window.openEP=function(name){
           <label>어둡게 덮기</label>
           <div style="display:flex;align-items:center;gap:8px">
             <input type="range" id="ed-sharebg-dark" min="0" max="85" step="5" value="${Number(p.shareCardBgDark||18)||18}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-sharebg-dark-val').textContent=this.value+'%'">
-            <span id="ed-sharebg-dark-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.shareCardBgDark||18)||18}%</span>
+            <span id="ed-sharebg-dark-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.shareCardBgDark||18)||18}%</span>
           </div>
         </div>
         <div>
           <label>반투명 밝기</label>
           <div style="display:flex;align-items:center;gap:8px">
             <input type="range" id="ed-sharebg-fade" min="0" max="100" step="5" value="${Number(p.shareCardBgFade||0)||0}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ed-sharebg-fade-val').textContent=this.value+'%'">
-            <span id="ed-sharebg-fade-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.shareCardBgFade||0)||0}%</span>
+            <span id="ed-sharebg-fade-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(p.shareCardBgFade||0)||0}%</span>
           </div>
         </div>
       </div>
@@ -1190,29 +1190,29 @@ window.openEP=function(name){
       <div style="font-size:10px;color:var(--gray-l);margin-top:8px">공유카드 전용 배경입니다. 스트리머 상세 헤더 배경과 별도로 저장됩니다.</div>
     </div>
     <div style="margin-top:14px;padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
-      <div style="font-weight:700;font-size:12px;color:#15803d;margin-bottom:10px">🎭 상태 아이콘</div>
+      <div style="font-weight:700;font-size:var(--fs-sm);color:#15803d;margin-bottom:10px">🎭 상태 아이콘</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="ed-icon-btns">
-        ${(()=>{const cur=getStatusIcon(p.name);return Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const isSelected=(id==='none'&&!cur)||(d.emoji&&cur===d.emoji);const iconHTML=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'18px'):d.emoji):'<span style="font-size:11px;font-weight:700">없음</span>';return `<button type="button" onclick="setStatusIconFromModal(this,'${escJS(p.name)}','${id}')" data-icon-id="${id}" title="${d.label}" style="padding:5px 10px;border-radius:7px;border:2px solid ${isSelected?'#16a34a':'var(--border)'};background:${isSelected?'#dcfce7':'var(--white)'};cursor:pointer;min-width:38px;transition:.12s;font-family:'Noto Sans KR',sans-serif;">${iconHTML}</button>`}).join('')})()}
+        ${(()=>{const cur=getStatusIcon(p.name);return Object.entries(STATUS_ICON_DEFS).map(([id,d])=>{const isSelected=(id==='none'&&!cur)||(d.emoji&&cur===d.emoji);const iconHTML=d.emoji?(_siIsImg(d.emoji)?_siRender(d.emoji,'18px'):d.emoji):'<span style="font-size:var(--fs-caption);font-weight:700">없음</span>';return `<button type="button" onclick="setStatusIconFromModal(this,'${escJS(p.name)}','${id}')" data-icon-id="${id}" title="${d.label}" style="padding:5px 10px;border-radius:7px;border:2px solid ${isSelected?'#16a34a':'var(--border)'};background:${isSelected?'#dcfce7':'var(--white)'};cursor:pointer;min-width:38px;transition:.12s;font-family:'Noto Sans KR',sans-serif;">${iconHTML}</button>`}).join('')})()}
       </div>
-      <div id="ed-icon-label" style="font-size:11px;color:var(--gray-l);margin-top:7px">선택: ${(()=>{const c=getStatusIcon(p.name);const found=Object.entries(STATUS_ICON_DEFS).find(([,d])=>d.emoji&&d.emoji===c);const expiry=playerStatusExpiry[p.name];const expTxt=expiry?` (${expiry} 만료)`:'';return (found?found[1].label:'없음')+expTxt;})()}</div>
+      <div id="ed-icon-label" style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:7px">선택: ${(()=>{const c=getStatusIcon(p.name);const found=Object.entries(STATUS_ICON_DEFS).find(([,d])=>d.emoji&&d.emoji===c);const expiry=playerStatusExpiry[p.name];const expTxt=expiry?` (${expiry} 만료)`:'';return (found?found[1].label:'없음')+expTxt;})()}</div>
       <div id="ed-icon-expiry-row" style="display:${getStatusIcon(p.name)?'flex':'none'};align-items:center;gap:7px;margin-top:8px">
         <input type="checkbox" id="ed-icon-expiry" ${playerStatusExpiry[p.name]?'checked':''} onchange="onStatusExpiryChange('${p.name}')" style="width:14px;height:14px;cursor:pointer;accent-color:#16a34a">
-        <label for="ed-icon-expiry" style="font-size:11px;color:#15803d;font-weight:600;cursor:pointer;margin:0">10일 후 자동으로 없음으로 변경</label>
+        <label for="ed-icon-expiry" style="font-size:var(--fs-caption);color:#15803d;font-weight:600;cursor:pointer;margin:0">10일 후 자동으로 없음으로 변경</label>
       </div>
     </div>
     <div style="margin-top:16px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
-      <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:12px">📊 승패 직접 조정</div>
+      <div style="font-weight:700;font-size:var(--fs-sm);color:var(--blue);margin-bottom:12px">📊 승패 직접 조정</div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <div style="flex:1;min-width:100px">
-          <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:4px">승 (현재: ${p.win})</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l);margin-bottom:4px">승 (현재: ${p.win})</div>
           <input type="number" id="ed-win" value="${p.win}" min="0" style="width:100%">
         </div>
         <div style="flex:1;min-width:100px">
-          <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:4px">패 (현재: ${p.loss})</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l);margin-bottom:4px">패 (현재: ${p.loss})</div>
           <input type="number" id="ed-loss" value="${p.loss}" min="0" style="width:100%">
         </div>
         <div style="flex:1;min-width:100px">
-          <div style="font-size:11px;font-weight:700;color:var(--gray-l);margin-bottom:4px">포인트 (현재: ${p.points})</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l);margin-bottom:4px">포인트 (현재: ${p.points})</div>
           <input type="number" id="ed-pts" value="${p.points}" style="width:100%">
         </div>
       </div>
@@ -1236,32 +1236,32 @@ window.openEP=function(name){
           document.getElementById('emBody').querySelector('.apply-ok').style.display='inline-block';
           setTimeout(()=>document.getElementById('emBody').querySelector('.apply-ok').style.display='none',1500);
         " style="border-color:var(--green);color:var(--green)">✅ 승패 적용</button>
-        <span class="apply-ok" style="display:none;color:var(--green);font-weight:700;font-size:12px;align-self:center">적용됨!</span>
+        <span class="apply-ok" style="display:none;color:var(--green);font-weight:700;font-size:var(--fs-sm);align-self:center">적용됨!</span>
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-top:8px">※ 승패 초기화 시 개인 경기 기록(히스토리)도 함께 삭제됩니다. 대전 기록(미니/대학대전 등)은 유지됩니다.</div>
     </div>
     <div style="margin-top:14px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:10px">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:var(--fs-base);font-weight:600;color:var(--text2);margin:0">
         <input type="checkbox" id="ed-retired" ${p.retired?'checked':''} style="width:16px;height:16px;cursor:pointer">
         🎗️ 은퇴 (현황판에서만 숨김, 경기 기록은 유지)
       </label>
     </div>
     <div style="margin-top:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:10px">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:var(--fs-base);font-weight:600;color:var(--text2);margin:0">
         <input type="checkbox" id="ed-inactive" ${p.inactive?'checked':''} style="width:16px;height:16px;cursor:pointer">
         ⏸️ 임시 상태 (휴학/활동중단) — 현황판에서 반투명 표시, 은퇴와 달리 숨기지 않음
       </label>
     </div>
     <div style="margin-top:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:10px">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);margin:0">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:var(--fs-base);font-weight:600;color:var(--text2);margin:0">
         <input type="checkbox" id="ed-hide-board" ${p.hideFromBoard?'checked':''} style="width:16px;height:16px;cursor:pointer">
         👁️ 현황판에서 숨기기 (스탯·기록은 유지, 구현황판·신현황판 모두 적용)
       </label>
     </div>
     <!-- (요청사항) 크루 소속 항목 제거 -->
     <div style="margin-top:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
-      <div style="font-weight:700;font-size:12px;color:#b45309;margin-bottom:8px">📝 선수 메모</div>
-      <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:12px;border:1px solid #fde68a;border-radius:6px;padding:8px;background:#fff;resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
+      <div style="font-weight:700;font-size:var(--fs-sm);color:#b45309;margin-bottom:8px">📝 선수 메모</div>
+      <textarea id="ed-memo" style="width:100%;min-height:70px;font-size:var(--fs-sm);border:1px solid #fde68a;border-radius:6px;padding:8px;background:#fff;resize:vertical;font-family:'Noto Sans KR',sans-serif;line-height:1.6;box-sizing:border-box;" placeholder="선수에 대한 메모를 입력하세요...">${p.memo||''}</textarea>
     </div>`;
   om('emModal');
   try{ setTimeout(()=>{ 

@@ -7,16 +7,16 @@ function buildBoardRankViewHTML(univs){
   if(!allPlayers.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">스트리머 없음</div>`;
   const TIER_ICONS={'G':'👑','K':'🌟','JA':'⚡','J':'🔥','S':'💎','0티어':'⭐','1티어':'🥇','2티어':'🥈','3티어':'🥉'};
   let h=`<div style="background:var(--white);border-radius:14px;border:1px solid var(--border);overflow:hidden">
-    <div style="padding:14px 18px;font-weight:900;font-size:15px;color:var(--blue);border-bottom:2px solid var(--blue-ll)">🏅 포인트 순 전체 랭킹</div>
+    <div style="padding:14px 18px;font-weight:900;font-size:var(--fs-md);color:var(--blue);border-bottom:2px solid var(--blue-ll)">🏅 포인트 순 전체 랭킹</div>
     <table style="width:100%;border-collapse:collapse">
       <thead><tr style="background:var(--bg2)">
-        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">순위</th>
-        <th style="padding:8px 12px;text-align:left;font-size:12px;color:var(--text3)">선수</th>
-        <th style="padding:8px 12px;text-align:left;font-size:12px;color:var(--text3)">대학</th>
-        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">티어</th>
-        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">승</th>
-        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">패</th>
-        <th style="padding:8px 12px;text-align:center;font-size:12px;color:var(--text3)">포인트</th>
+        <th style="padding:8px 12px;text-align:center;font-size:var(--fs-sm);color:var(--text3)">순위</th>
+        <th style="padding:8px 12px;text-align:left;font-size:var(--fs-sm);color:var(--text3)">선수</th>
+        <th style="padding:8px 12px;text-align:left;font-size:var(--fs-sm);color:var(--text3)">대학</th>
+        <th style="padding:8px 12px;text-align:center;font-size:var(--fs-sm);color:var(--text3)">티어</th>
+        <th style="padding:8px 12px;text-align:center;font-size:var(--fs-sm);color:var(--text3)">승</th>
+        <th style="padding:8px 12px;text-align:center;font-size:var(--fs-sm);color:var(--text3)">패</th>
+        <th style="padding:8px 12px;text-align:center;font-size:var(--fs-sm);color:var(--text3)">포인트</th>
       </tr></thead><tbody>`;
   allPlayers.forEach((p,i)=>{
     const tierIcon=TIER_ICONS[p.tier]||'';
@@ -34,13 +34,13 @@ function buildBoardRankViewHTML(univs){
       <td style="padding:7px 12px;text-align:left">
         <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="openPlayerModal('${pNameJs}')">
           ${getPlayerPhotoHTML(p.name,'24px')}
-          <span style="font-weight:700;font-size:13px">${p.name||''}</span>
+          <span style="font-weight:700;font-size:var(--fs-base)">${p.name||''}</span>
         </div>
       </td>
       <td style="padding:7px 12px">
         <span class="ubadge clickable-univ" style="background:${p._col};font-size:10px;padding:2px 7px" onclick="openUnivModal('${univNameJs}')">${p._univ||''}</span>
       </td>
-      <td style="padding:7px 12px;text-align:center;font-size:12px">${tierIcon}${p.tier||''}</td>
+      <td style="padding:7px 12px;text-align:center;font-size:var(--fs-sm)">${tierIcon}${p.tier||''}</td>
       <td style="padding:7px 12px;text-align:center;color:#16a34a;font-weight:700">${p.win||0}</td>
       <td style="padding:7px 12px;text-align:center;color:#dc2626;font-weight:700">${p.loss||0}</td>
       <td style="padding:7px 12px;text-align:center;font-weight:900;font-size:14px;color:${ptsCol}">${pts>0?'+':''}${pts}</td>
@@ -173,7 +173,7 @@ async function _autoSyncCheck() {
           const statusEl = document.getElementById('cloudStatus');
           if (statusEl) {
             statusEl.style.color = '#2563eb';
-            statusEl.innerHTML = `🔄 GitHub에 새 데이터 있음 <button onclick="window.cloudLoad()" style="margin-left:6px;padding:2px 8px;border:1px solid #2563eb;border-radius:4px;background:#eff6ff;color:#2563eb;font-size:11px;cursor:pointer">불러오기</button>`;
+            statusEl.innerHTML = `🔄 GitHub에 새 데이터 있음 <button onclick="window.cloudLoad()" style="margin-left:6px;padding:2px 8px;border:1px solid #2563eb;border-radius:4px;background:#eff6ff;color:#2563eb;font-size:var(--fs-caption);cursor:pointer">불러오기</button>`;
           }
         }
       }

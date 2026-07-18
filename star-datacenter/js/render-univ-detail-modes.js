@@ -11,7 +11,7 @@ function buildUnivDetailModeDecorHTML(mode){
   if(mode==='pastel'){
     return `<div class="ud-decor ud-decor-pastel" aria-hidden="true">
       <span class="ud-decor-pastel-emoji" style="top:8px;right:14px">✨</span>
-      <span class="ud-decor-pastel-emoji" style="top:22px;right:38px;font-size:11px">🎓</span>
+      <span class="ud-decor-pastel-emoji" style="top:22px;right:38px;font-size:var(--fs-caption)">🎓</span>
     </div>`;
   }
   if(mode==='glass'){

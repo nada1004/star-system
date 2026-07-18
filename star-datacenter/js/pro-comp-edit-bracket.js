@@ -239,25 +239,25 @@ function proCompOpenBktPasteModal(tnId) {
     if (m.a&&m.b&&m.a!=='TBD'&&m.b!=='TBD') pending.push({ri, mi, a:m.a, b:m.b, round:rndLabel(ri), done:!!m.winner});
   }));
   const pendHTML = pending.length
-    ? `<div style="font-size:11px;color:var(--text3);margin-bottom:8px;padding:8px;background:var(--surface);border-radius:8px;line-height:1.9">
-        ${pending.map(p=>`<span style="display:inline-block;margin:1px 4px;padding:1px 8px;border-radius:10px;background:${p.done?'#dcfce7':'#fef3c7'};color:${p.done?'#16a34a':'#92400e'};font-size:10px;font-weight:700">${p.round}: ${p.a} vs ${p.b}${p.done?' 완료':''}</span>`).join('')}
+    ? `<div style="font-size:var(--fs-caption);color:var(--text3);margin-bottom:8px;padding:8px;background:var(--surface);border-radius:8px;line-height:1.9">
+        ${pending.map(p=>`<span style="display:inline-block;margin:1px 4px;padding:1px 8px;border-radius:var(--r);background:${p.done?'#dcfce7':'#fef3c7'};color:${p.done?'#16a34a':'#92400e'};font-size:10px;font-weight:700">${p.round}: ${p.a} vs ${p.b}${p.done?' 완료':''}</span>`).join('')}
        </div>` : '';
   const modal = document.createElement('div');
   modal.id = '_bktPasteModal';
   modal.className = 'modal-compact-overlay';
   modal.innerHTML = `<div class="modal-compact-box" style="width:440px;max-height:90vh;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
-      <div style="font-weight:900;font-size:15px">대진표 결과 일괄 입력</div>
+      <div style="font-weight:900;font-size:var(--fs-md)">대진표 결과 일괄 입력</div>
       <span class="btn btn-w btn-xs" style="margin-left:auto">선택 경기 ${pending.length}</span>
     </div>
-    <div style="font-size:11px;color:var(--text3);background:var(--surface);border-radius:8px;padding:10px;margin-bottom:10px;line-height:1.8">
+    <div style="font-size:var(--fs-caption);color:var(--text3);background:var(--surface);border-radius:8px;padding:10px;margin-bottom:10px;line-height:1.8">
       한 줄에 한 경기 (공백/탭 구분):<br>
       <code>승자이름 패자이름 [맵]</code><br>
       대진표에 등록된 선수명과 일치해야 자동 배정됩니다.
     </div>
     ${pendHTML}
-    <textarea id="_bkt_text" rows="8" placeholder="${pending.slice(0,3).map(p=>`${p.a} ${p.b} 맵이름`).join('\n')||'승자이름 패자이름 맵이름'}" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:12px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
-    <div id="_bkt_preview" style="margin-top:6px;font-size:11px;color:var(--text3)"></div>
+    <textarea id="_bkt_text" rows="8" placeholder="${pending.slice(0,3).map(p=>`${p.a} ${p.b} 맵이름`).join('\n')||'승자이름 패자이름 맵이름'}" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:var(--fs-sm);box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
+    <div id="_bkt_preview" style="margin-top:6px;font-size:var(--fs-caption);color:var(--text3)"></div>
     <div style="display:flex;gap:8px;margin-top:12px">
       <button class="btn btn-b" style="flex:1" onclick="proCompSaveBktPaste('${tnId}')">적용</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_bktPasteModal').remove()">취소</button>
@@ -395,8 +395,8 @@ function proCompBktSetMap(tnId, ri, mi) {
   modal.id = '_bktMapModal';
   modal.className = 'modal-compact-overlay';
   modal.innerHTML = `<div class="modal-compact-box" style="width:320px">
-    <div style="font-weight:900;font-size:15px;margin-bottom:10px">🗺️ 맵 설정</div>
-    <input id="_bktMapInp" value="${(m.map||'').replace(/"/g,'&quot;')}" placeholder="맵 이름 입력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px;box-sizing:border-box;margin-bottom:10px">
+    <div style="font-weight:900;font-size:var(--fs-md);margin-bottom:10px">🗺️ 맵 설정</div>
+    <input id="_bktMapInp" value="${(m.map||'').replace(/"/g,'&quot;')}" placeholder="맵 이름 입력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:var(--fs-base);box-sizing:border-box;margin-bottom:10px">
     <div style="display:flex;gap:8px">
       <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_bktMapInp').value.trim();const t2=_findTourneyById('${tnId}');if(t2&&t2.bracket&&t2.bracket[${ri}]&&t2.bracket[${ri}][${mi}]){const m2=t2.bracket[${ri}][${mi}];m2.map=v; if(m2.winner)_syncBktMatchToHistory(t2,m2,'pbn_${tnId}_${ri}_${mi}',${ri},${mi});}document.getElementById('_bktMapModal').remove();save();render();})()">확인</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_bktMapModal').remove()">취소</button>
@@ -415,15 +415,15 @@ function _bktEditRenderGames() {
   const m = tn && tn.bracket ? tn.bracket[_bktEditRi]?.[_bktEditMi] : null;
   const aV = (document.getElementById('_bktEditA')?.value || document.getElementById('_bktEditAInp')?.value || '').trim() || m?.a || 'A';
   const bV = (document.getElementById('_bktEditB')?.value || document.getElementById('_bktEditBInp')?.value || '').trim() || m?.b || 'B';
-  if (!_bktEditGames.length) { cont.innerHTML = '<div style="font-size:11px;color:var(--gray-l);padding:6px 0">게임 없음 — 아래 버튼으로 추가</div>'; return; }
+  if (!_bktEditGames.length) { cont.innerHTML = '<div style="font-size:var(--fs-caption);color:var(--gray-l);padding:6px 0">게임 없음 — 아래 버튼으로 추가</div>'; return; }
   cont.innerHTML = _bktEditGames.map((g,i)=>`<div style="display:flex;gap:5px;align-items:center;padding:4px 0;border-top:1px solid var(--border)">
-    <span style="font-size:11px;color:var(--gray-l);min-width:26px">${i+1}G</span>
-    <select onchange="_bktEditGames[${i}].winner=this.value;_bktEditRenderGames()" style="flex:1;min-width:90px;font-size:11px;padding:3px">
+    <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:26px">${i+1}G</span>
+    <select onchange="_bktEditGames[${i}].winner=this.value;_bktEditRenderGames()" style="flex:1;min-width:90px;font-size:var(--fs-caption);padding:3px">
       <option value="">승자</option>
       <option value="A"${g.winner==='A'?' selected':''}>🔵 ${aV}</option>
       <option value="B"${g.winner==='B'?' selected':''}>🔴 ${bV}</option>
     </select>
-    <input type="text" value="${g.map||''}" placeholder="맵" style="flex:1;min-width:60px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;font-size:11px" oninput="_bktEditGames[${i}].map=this.value">
+    <input type="text" value="${g.map||''}" placeholder="맵" style="flex:1;min-width:60px;padding:3px 6px;border:1px solid var(--border2);border-radius:5px;font-size:var(--fs-caption)" oninput="_bktEditGames[${i}].map=this.value">
     <button class="btn btn-r btn-xs" onclick="_bktEditGames.splice(${i},1);_bktEditRenderGames()">×</button>
   </div>`).join('');
 }
@@ -473,7 +473,7 @@ function openBktEditPasteModal() {
   const modeLabel = document.getElementById('paste-mode-label');
   if (modeLabel) modeLabel.style.display = 'none';
   const hintEl = document.getElementById('paste-mode-hint');
-  if (hintEl) hintEl.innerHTML = `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#1d4ed8;font-weight:700">📝 경기 결과 입력 (게임 목록에 추가)</span> — <b>${aV}</b> vs <b>${bV}</b><br><span style="font-size:11px;color:#6b7280">형식: <code>${aV} ${bV} [맵]</code> / <code>${bV} ${aV} [맵]</code></span></div>`;
+  if (hintEl) hintEl.innerHTML = `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#1d4ed8;font-weight:700">📝 경기 결과 입력 (게임 목록에 추가)</span> — <b>${aV}</b> vs <b>${bV}</b><br><span style="font-size:var(--fs-caption);color:#6b7280">형식: <code>${aV} ${bV} [맵]</code> / <code>${bV} ${aV} [맵]</code></span></div>`;
   const compWrap = document.getElementById('paste-comp-wrap');
   if (compWrap) compWrap.style.display = 'none';
   const _pd = document.querySelector('#pasteModal details');
@@ -602,25 +602,25 @@ function proCompBktEditPlayers(tnId, ri, mi) {
   modal.innerHTML = `<div style="background:var(--white);border-radius:14px;padding:20px;width:360px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)">
     <div style="font-weight:900;font-size:14px;margin-bottom:14px">📝 대진표 경기 수정</div>
     <div style="margin-bottom:8px">
-      <label style="font-size:11px;font-weight:700;color:var(--text3)">A 선수</label>
+      <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3)">A 선수</label>
       <select id="_bktEditA" onchange="_bktEditRenderGames()" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px">${pOpts(m.a||'')}</select>
-      <input id="_bktEditAInp" placeholder="직접 입력" value="${pList.some(p=>p.name===m.a)?'':m.a||''}" oninput="_bktEditRenderGames()" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box;font-size:12px">
+      <input id="_bktEditAInp" placeholder="직접 입력" value="${pList.some(p=>p.name===m.a)?'':m.a||''}" oninput="_bktEditRenderGames()" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box;font-size:var(--fs-sm)">
     </div>
     <div style="margin-bottom:8px">
-      <label style="font-size:11px;font-weight:700;color:var(--text3)">B 선수</label>
+      <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3)">B 선수</label>
       <select id="_bktEditB" onchange="_bktEditRenderGames()" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px">${pOpts(m.b||'')}</select>
-      <input id="_bktEditBInp" placeholder="직접 입력" value="${pList.some(p=>p.name===m.b)?'':m.b||''}" oninput="_bktEditRenderGames()" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box;font-size:12px">
+      <input id="_bktEditBInp" placeholder="직접 입력" value="${pList.some(p=>p.name===m.b)?'':m.b||''}" oninput="_bktEditRenderGames()" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box;font-size:var(--fs-sm)">
     </div>
     <div style="margin-bottom:10px">
-      <label style="font-size:11px;font-weight:700;color:var(--text3)">날짜</label>
+      <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3)">날짜</label>
       <input id="_bktEditD" type="date" value="${m.d||''}" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);margin-top:4px;box-sizing:border-box">
     </div>
     <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;background:#fef9ee;border:1px solid #f59e0b44;border-radius:8px;padding:8px 12px">
-      <label style="font-size:11px;font-weight:700;color:#f59e0b;white-space:nowrap">🎙️ 캐스터/스트리머</label>
-      <input type="text" id="_bktEditCaster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)" style="flex:1;min-width:0;padding:5px 9px;border:1px solid var(--border);border-radius:7px;font-size:12px">
+      <label style="font-size:var(--fs-caption);font-weight:700;color:#f59e0b;white-space:nowrap">🎙️ 캐스터/스트리머</label>
+      <input type="text" id="_bktEditCaster" value="${m.caster||''}" placeholder="방송 스트리머 이름 (선택)" style="flex:1;min-width:0;padding:5px 9px;border:1px solid var(--border);border-radius:7px;font-size:var(--fs-sm)">
     </div>
-    <div style="margin-bottom:10px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:6px">⚖️ 스코어로 빠른 입력 (2:2 / 3:3 등)</div>
+    <div style="margin-bottom:10px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+      <div style="font-size:var(--fs-caption);font-weight:900;color:var(--text3);margin-bottom:6px">⚖️ 스코어로 빠른 입력 (2:2 / 3:3 등)</div>
       <div style="display:flex;gap:6px;align-items:center">
         <input id="_bktEditScoreA" type="number" min="0" value="0" style="width:70px;padding:6px;border-radius:8px;border:1px solid var(--border);box-sizing:border-box">
         <span style="font-weight:900;color:var(--gray-l)">:</span>
@@ -634,7 +634,7 @@ function proCompBktEditPlayers(tnId, ri, mi) {
     </div>
     <div style="margin-bottom:4px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <label style="font-size:11px;font-weight:700;color:var(--text3)">게임 결과</label>
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3)">게임 결과</label>
         <div style="display:flex;gap:4px">
           <button class="btn btn-b btn-xs" onclick="_bktEditAddGame()">+ 게임 추가</button>
           <button class="btn btn-p btn-xs" onclick="openBktEditPasteModal()">📋 붙여넣기</button>
@@ -738,9 +738,9 @@ function proCompSetThirdMap(tnId) {
   const modal = document.createElement('div');
   modal.id = '_thirdMapModal';
   modal.style.cssText = 'position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
-  modal.innerHTML = `<div style="background:var(--white);border-radius:16px;padding:24px;width:320px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-    <div style="font-weight:900;font-size:15px;margin-bottom:14px">🗺️ 3·4위전 맵 설정</div>
-    <input id="_thirdMapInp" value="${((tn.thirdPlace.map)||'').replace(/"/g,'&quot;')}" placeholder="맵 이름 입력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px;box-sizing:border-box;margin-bottom:14px">
+  modal.innerHTML = `<div style="background:var(--white);border-radius:var(--r2);padding:24px;width:320px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-weight:900;font-size:var(--fs-md);margin-bottom:14px">🗺️ 3·4위전 맵 설정</div>
+    <input id="_thirdMapInp" value="${((tn.thirdPlace.map)||'').replace(/"/g,'&quot;')}" placeholder="맵 이름 입력" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:var(--fs-base);box-sizing:border-box;margin-bottom:14px">
     <div style="display:flex;gap:8px">
       <button class="btn btn-b" style="flex:1" onclick="(function(){const v=document.getElementById('_thirdMapInp').value.trim();const t2=_findTourneyById('${tnId}');if(t2&&t2.thirdPlace){const tp=t2.thirdPlace;tp.map=v;if(tp.winner)_syncBktMatchToHistory(t2,tp,'pbn_${tnId}_3rd','3rd',0);}document.getElementById('_thirdMapModal').remove();save();render();})()">확인</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_thirdMapModal').remove()">취소</button>
@@ -754,7 +754,7 @@ function proCompSetThirdMap(tnId) {
    조편??관�??�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?*/
 function proCompGrpEdit() {
   const tn = getCurrentProTourney();
-  let h = `<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:14px">🏗️ 조편성 관리 ${tn?' ('+tn.name+')':''}</div>`;
+  let h = `<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md);color:var(--blue);margin-bottom:14px">🏗️ 조편성 관리 ${tn?' ('+tn.name+')':''}</div>`;
   if (!tn) {
     h += `<div style="padding:40px;text-align:center;color:var(--gray-l)">먼저 대회를 선택하거나 생성하세요.</div>`;
     return h;
@@ -769,46 +769,46 @@ function proCompGrpEdit() {
     const recRound = grp._recRound || '16강'; // stage일 때만 사용
     h += `<div style="margin-bottom:16px;border-radius:12px;overflow:hidden;border:1.5px solid ${col}44">
       <div style="padding:10px 16px;background:linear-gradient(135deg,${col},${col}cc);color:#fff;display:flex;align-items:center;gap:8px">
-        <span style="font-weight:900;font-size:13px">GROUP ${GL[gi]}</span>
-        <input value="${grp.name||''}" placeholder="조 이름" style="background:#fff3;border:1px solid #fff5;border-radius:6px;padding:3px 8px;font-size:12px;color:#fff;width:120px"
+        <span style="font-weight:900;font-size:var(--fs-base)">GROUP ${GL[gi]}</span>
+        <input value="${grp.name||''}" placeholder="조 이름" style="background:#fff3;border:1px solid #fff5;border-radius:6px;padding:3px 8px;font-size:var(--fs-sm);color:#fff;width:120px"
           onchange="proCompRenameGrp('${tn.id}',${gi},this.value)">
-        <span style="margin-left:8px;font-size:11px;font-weight:900;opacity:.9">기록 반영</span>
-        <select style="padding:4px 8px;border-radius:8px;border:1px solid #fff7;background:#0002;color:#fff;font-weight:900;font-size:11px"
+        <span style="margin-left:8px;font-size:var(--fs-caption);font-weight:900;opacity:.9">기록 반영</span>
+        <select style="padding:4px 8px;border-radius:8px;border:1px solid #fff7;background:#0002;color:#fff;font-weight:900;font-size:var(--fs-caption)"
           onchange="proCompSetGrpRecTarget('${tn.id}',${gi},this.value)">
           <option value="" ${!recTarget?'selected':''}>선택</option>
           <option value="pro" ${recTarget==='pro'?'selected':''}>프로리그</option>
           <option value="stage" ${recTarget==='stage'?'selected':''}>대진표 기록</option>
           <option value="none" ${recTarget==='none'?'selected':''}>반영안함</option>
         </select>
-        ${recTarget==='stage'?`<select style="padding:4px 8px;border-radius:8px;border:1px solid #fff7;background:#0002;color:#fff;font-weight:900;font-size:11px"
+        ${recTarget==='stage'?`<select style="padding:4px 8px;border-radius:8px;border:1px solid #fff7;background:#0002;color:#fff;font-weight:900;font-size:var(--fs-caption)"
           onchange="proCompSetGrpRecRound('${tn.id}',${gi},this.value)">
           ${_PC_STAGE_ROUNDS.map(r=>`<option value="${r}" ${recRound===r?'selected':''}>${r}</option>`).join('')}
         </select>`:''}
         <button class="btn btn-r btn-xs" style="margin-left:auto" onclick="proCompDelGrp('${tn.id}',${gi})">🗑️ 조 삭제</button>
       </div>
       <div style="padding:12px 16px;background:var(--white)">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px">선수 목록 (${(grp.players||[]).length}명)</div>
+        <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:8px">선수 목록 (${(grp.players||[]).length}명)</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
           ${(grp.players||[]).map((p,pi)=>`<div style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:var(--surface);border-radius:20px;border:1px solid var(--border)">
-            <span style="font-size:12px;font-weight:600">${p}</span>
-            <button onclick="proCompRemovePlayer('${tn.id}',${gi},${pi})" style="background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:12px;padding:0;line-height:1">×</button>
+            <span style="font-size:var(--fs-sm);font-weight:600">${p}</span>
+            <button onclick="proCompRemovePlayer('${tn.id}',${gi},${pi})" style="background:none;border:none;cursor:pointer;color:var(--gray-l);font-size:var(--fs-sm);padding:0;line-height:1">×</button>
           </div>`).join('')}
-          ${!(grp.players||[]).length?`<span style="color:var(--gray-l);font-size:12px">아직 선수가 없습니다</span>`:''}
+          ${!(grp.players||[]).length?`<span style="color:var(--gray-l);font-size:var(--fs-sm)">아직 선수가 없습니다</span>`:''}
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <input id="proAddP_${gi}" placeholder="선수 이름 검색" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-size:12px;width:160px"
+          <input id="proAddP_${gi}" placeholder="선수 이름 검색" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-size:var(--fs-sm);width:160px"
             oninput="proCompSearchPlayerSug('${tn.id}',${gi})">
           <button class="btn btn-b btn-sm" onclick="proCompAddPlayerManual('${tn.id}',${gi})">+ 추가</button>
         </div>
         <div id="proSug_${gi}" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
         <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
-          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px">경기 목록 (${(grp.matches||[]).length}경기)</div>
-          ${(grp.matches||[]).map((m,mi)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface);border-radius:8px;margin-bottom:4px;font-size:12px">
+          <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:8px">경기 목록 (${(grp.matches||[]).length}경기)</div>
+          ${(grp.matches||[]).map((m,mi)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface);border-radius:8px;margin-bottom:4px;font-size:var(--fs-sm)">
             <span style="font-weight:600">${m.a||'?'}</span>
             <span style="color:var(--gray-l)">vs</span>
             <span style="font-weight:600">${m.b||'?'}</span>
-            ${m.winner?`<span style="font-size:10px;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:10px;font-weight:700">${m.winner==='A'?m.a:m.b} 승</span>`:'<span style="font-size:10px;color:var(--gray-l)">미완료</span>'}
-            ${m.d?`<span style="font-size:11px;font-weight:600;color:var(--text3)">${m.d}</span>`:''}
+            ${m.winner?`<span style="font-size:10px;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:var(--r);font-weight:700">${m.winner==='A'?m.a:m.b} 승</span>`:'<span style="font-size:10px;color:var(--gray-l)">미완료</span>'}
+            ${m.d?`<span style="font-size:var(--fs-caption);font-weight:600;color:var(--text3)">${m.d}</span>`:''}
             <button class="btn btn-b btn-xs" style="margin-left:auto" onclick="proCompEditMatch('${tn.id}',${gi},${mi})">✏️</button>
             <button class="btn btn-r btn-xs" onclick="proCompDelMatch('${tn.id}',${gi},${mi})">🗑️</button>
           </div>`).join('')}
@@ -852,7 +852,7 @@ function proCompSearchPlayerSug(tnId, gi) {
   const already = (tn&&tn.groups[gi]&&tn.groups[gi].players)||[];
   const matched = players.filter(p=>p.name.includes(q)&&!already.includes(p.name)).slice(0,8);
   sug.innerHTML = matched.map(p=>`<button onclick="proCompAddPlayer('${tnId}',${gi},'${p.name.replace(/'/g,"\\'")}',document.getElementById('proAddP_${gi}'))"
-    style="padding:4px 10px;border-radius:12px;border:1px solid var(--border);background:var(--white);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px">
+    style="padding:4px 10px;border-radius:12px;border:1px solid var(--border);background:var(--white);font-size:var(--fs-sm);cursor:pointer;display:flex;align-items:center;gap:4px">
     ${p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:18px;height:18px;border-radius:var(--su_profile_radius,50%);object-fit:cover" onerror="this.style.display='none'">`:''}
     ${p.name}
     ${p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;padding:1px 4px;border-radius:3px">${p.tier}</span>`:''}
@@ -923,17 +923,17 @@ function proCompOpenBktMatchPaste(tnId, ri, mi) {
   modal.className = 'modal-compact-overlay';
   const defDate = m.d || new Date().toISOString().slice(0,10);
   modal.innerHTML = `<div class="modal-compact-box" style="width:400px">
-    <div style="font-weight:900;font-size:15px;margin-bottom:6px">📋 결과 붙여넣기</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;line-height:1.55">
+    <div style="font-weight:900;font-size:var(--fs-md);margin-bottom:6px">📋 결과 붙여넣기</div>
+    <div style="font-size:var(--fs-sm);color:var(--text3);margin-bottom:8px;line-height:1.55">
       <b>${m.a}</b> vs <b>${m.b}</b><br>
       이 경기 결과만 저장합니다. 여러 줄 입력 가능<br>
       형식: <code>A [맵]</code> / <code>B [맵]</code> 또는 <code>승자이름 패자이름 [맵]</code>
     </div>
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
-      <div style="font-size:12px;font-weight:700;color:var(--text3);min-width:44px">날짜</div>
-      <input id="_pcBktPasteDate" type="date" value="${defDate}" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid var(--border);box-sizing:border-box">
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text3);min-width:44px">날짜</div>
+      <input id="_pcBktPasteDate" type="date" value="${defDate}" style="flex:1;padding:8px;border-radius:var(--r);border:1.5px solid var(--border);box-sizing:border-box">
     </div>
-    <textarea id="_pcBktPasteText" rows="5" placeholder="A 투혼" style="width:100%;padding:10px;border-radius:12px;border:1.5px solid var(--border);font-size:13px;box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
+    <textarea id="_pcBktPasteText" rows="5" placeholder="A 투혼" style="width:100%;padding:10px;border-radius:12px;border:1.5px solid var(--border);font-size:var(--fs-base);box-sizing:border-box;font-family:monospace;resize:vertical"></textarea>
     <div style="display:flex;gap:10px;margin-top:10px">
       <button class="btn btn-b" style="flex:1" onclick="proCompSaveBktMatchPaste('${tnId}',${ri},${mi})">적용</button>
       <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_pcBktMatchPaste').remove()">취소</button>

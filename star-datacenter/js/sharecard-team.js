@@ -204,18 +204,18 @@
             const _safeRepN = String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
             return `<div onclick="openPlayerModal('${_safeRepN}')" title="스트리머 상세" style="position:relative;width:${sOuter};height:${sOuter};border-radius:var(--su_profile_radius,50%);margin:0 auto 8px;overflow:hidden;cursor:pointer;${ring}">
               <img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover;filter:${win?`brightness(${scp.heroBrightness||1})`:`grayscale(${loseGray}%) brightness(${scp.loserPhotoBrightness||.92})`}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-              <div style="display:none;position:absolute;inset:0;border-radius:16px;background:rgba(${rgb},.22);align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);':''}">
+              <div style="display:none;position:absolute;inset:0;border-radius:var(--r2);background:rgba(${rgb},.22);align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);overflow:hidden;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);':''}">
                 ${hasUnivLogo(p.univ||'') ? univIconHTML(p.univ||'', `${teamLogoInner}px`) : `<span style="color:#fff;font-weight:1000;font-size:${Math.round(20*scp.logoSize)}px">${sideTitle.slice(0,1)||side}</span>`}
               </div>
             </div>`;
           }
           if(p && p.univ && !hideTopUnivMeta && hasUnivLogo(p.univ)){
-            return `<div style="width:${teamLogoBox}px;height:${teamLogoBox}px;border-radius:16px;background:${panelBg};margin:${teamHeaderLayout==='stack'?'0 auto 8px':'0'};display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden">
+            return `<div style="width:${teamLogoBox}px;height:${teamLogoBox}px;border-radius:var(--r2);background:${panelBg};margin:${teamHeaderLayout==='stack'?'0 auto 8px':'0'};display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden">
               ${univIconHTML(p.univ,`${Math.round(40*scp.logoSize)}px`)}
             </div>`;
           }
         }
-        return `<div style="width:${teamLogoBox}px;height:${teamLogoBox}px;border-radius:16px;background:${panelBg};margin:${teamHeaderLayout==='stack'?'0 auto 8px':'0'};display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden;color:#fff;font-weight:1000;font-size:${Math.round(22*scp.logoSize)}px">${side}</div>`;
+        return `<div style="width:${teamLogoBox}px;height:${teamLogoBox}px;border-radius:var(--r2);background:${panelBg};margin:${teamHeaderLayout==='stack'?'0 auto 8px':'0'};display:flex;align-items:center;justify-content:center;${win?'box-shadow:0 4px 20px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.55);':'opacity:.72;'}overflow:hidden;color:#fff;font-weight:1000;font-size:${Math.round(22*scp.logoSize)}px">${side}</div>`;
       };
       const teamMiniMemberCell = (side, mem, idx, sz)=>{
         const p = hydratePlayer(mem&&mem.name, mem);

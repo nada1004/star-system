@@ -58,9 +58,9 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
       '<div style="display:flex;align-items:center;gap:10px">' +
         '<div style="width:12px;height:12px;border-radius:50%;background:'+color+';flex-shrink:0;box-shadow:0 0 0 3px '+color+'30"></div>' +
         '<span style="font-size:16px;font-weight:900;color:'+color+';">'+escH(univName)+'</span>' +
-        '<span style="font-size:12px;padding:3px 10px;border-radius:20px;background:'+tierCol+';color:'+tierTc+';font-weight:800;letter-spacing:.3px">'+escH(tier)+'</span>' +
+        '<span style="font-size:var(--fs-sm);padding:3px 10px;border-radius:20px;background:'+tierCol+';color:'+tierTc+';font-weight:800;letter-spacing:.3px">'+escH(tier)+'</span>' +
         '<div style="margin-left:auto;text-align:right">' +
-          (wr!==null?'<div style="font-size:18px;font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:10px;color:var(--text3);">'+tw+'승 '+tl+'패</div>':'<div style="font-size:13px;color:var(--text3)">기록 없음</div>') +
+          (wr!==null?'<div style="font-size:var(--fs-lg);font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:10px;color:var(--text3);">'+tw+'승 '+tl+'패</div>':'<div style="font-size:var(--fs-base);color:var(--text3)">기록 없음</div>') +
         '</div>' +
       '</div>';
     let bodyHtml = '';
@@ -80,7 +80,7 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
         '<div style="font-size:10px;color:#c2410c;font-weight:700">이번주 '+wl+'패</div>' +
       '</div>';
     bodyHtml += '</div>';
-    bodyHtml += '<div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px">' +
+    bodyHtml += '<div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px">' +
       '<span style="width:20px;height:2px;background:var(--border2);display:inline-block;border-radius:1px"></span>' +
       members.length+'명' +
       '<span style="flex:1;height:1px;background:var(--border2);display:inline-block;border-radius:1px"></span></div>';
@@ -150,7 +150,7 @@ function _b2HeatmapShowAllPopup(uid, univName, color){
         '<div style="width:12px;height:12px;border-radius:50%;background:'+color+';flex-shrink:0;box-shadow:0 0 0 3px '+color+'30"></div>' +
         '<span style="font-size:16px;font-weight:900;color:'+color+';">'+escH(univName)+'</span>' +
         '<div style="margin-left:auto;text-align:right">' +
-          (wr!==null?'<div style="font-size:18px;font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:10px;color:var(--text3);">'+tw+'승 '+tl+'패</div>':'<div style="font-size:13px;color:var(--text3)">기록 없음</div>') +
+          (wr!==null?'<div style="font-size:var(--fs-lg);font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:10px;color:var(--text3);">'+tw+'승 '+tl+'패</div>':'<div style="font-size:var(--fs-base);color:var(--text3)">기록 없음</div>') +
         '</div>' +
       '</div>';
     let bodyHtml = '';
@@ -170,7 +170,7 @@ function _b2HeatmapShowAllPopup(uid, univName, color){
         '<div style="font-size:10px;color:#c2410c;font-weight:700">이번주 '+wl+'패</div>' +
       '</div>';
     bodyHtml += '</div>';
-    bodyHtml += '<div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px">' +
+    bodyHtml += '<div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px">' +
       '<span style="width:20px;height:2px;background:var(--border2);display:inline-block;border-radius:1px"></span>' +
       members.length+'명' +
       '<span style="flex:1;height:1px;background:var(--border2);display:inline-block;border-radius:1px"></span></div>';
@@ -320,18 +320,18 @@ function _b2HeatmapView() {
     .b2hm2-wrap { overflow-x:auto; }
     .b2hm2-ctrl { display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;padding:10px 12px;background:var(--surface);border:1px solid var(--border2);border-radius:12px }
     .b2hm2-ctrl-group { display:flex;gap:4px;align-items:center;flex-wrap:wrap }
-    .b2hm2-lbl { font-size:11px;font-weight:800;color:var(--text3);margin-right:2px }
-    .b2hm2-btn { padding:4px 10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--white);font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .12s;user-select:none }
+    .b2hm2-lbl { font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-right:2px }
+    .b2hm2-btn { padding:4px 10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--white);font-size:var(--fs-caption);font-weight:700;color:var(--text2);cursor:pointer;transition:all .12s;user-select:none }
     .b2hm2-btn.on { background:var(--text1);color:var(--white);border-color:var(--text1);box-shadow:inset 0 2px 4px rgba(0,0,0,.25) }
     .b2hm2-btn:not(.on):hover { border-color:var(--text1);color:var(--text1) }
     .b2hm2-btn:not(.on):active { background:var(--border2);transform:scale(.97) }
-    .b2hm2-sel { padding:4px 10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--white);font-size:11px;font-weight:700;color:var(--text2);cursor:pointer; }
+    .b2hm2-sel { padding:4px 10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--white);font-size:var(--fs-caption);font-weight:700;color:var(--text2);cursor:pointer; }
     .b2hm2-sep { width:1px;height:22px;background:var(--border2);margin:0 4px }
     .b2hm2-tbl { border-collapse:separate;border-spacing:3px;min-width:100% }
     .b2hm2-tbl th { font-size:10px;font-weight:800;color:var(--text3);padding:4px 6px;text-align:center;white-space:nowrap;position:sticky }
     .b2hm2-tbl th.row-head { text-align:left;left:0;top:0;z-index:4;background:var(--bg) }
     .b2hm2-tbl th.col-head { top:0;z-index:2;background:var(--bg) }
-    .b2hm2-tbl td { border-radius:8px;text-align:center;font-size:11px;font-weight:800;padding:6px 4px;min-width:44px;cursor:pointer;position:relative;transition:none }
+    .b2hm2-tbl td { border-radius:8px;text-align:center;font-size:var(--fs-caption);font-weight:800;padding:6px 4px;min-width:44px;cursor:pointer;position:relative;transition:none }
     .b2hm2-popup { display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px) }
     .b2hm2-popup.show { display:flex }
     .b2hm2-popup-inner { background:var(--white);border-radius:22px;padding:0;max-width:400px;width:92%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 72px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.06);position:relative;animation:b2hmIn .22s cubic-bezier(.34,1.56,.64,1) }
@@ -345,18 +345,18 @@ function _b2HeatmapView() {
     .b2hm2-pcard-photo { width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;flex-shrink:0;display:block }
     .b2hm2-pcard-avatar { width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;flex-shrink:0 }
     .b2hm2-pcard-info { position:absolute;bottom:0;left:0;right:0;padding:18px 6px 7px;background:linear-gradient(transparent,rgba(0,0,0,.78));display:flex;flex-direction:column;gap:2px;align-items:center }
-    .b2hm2-pcard-name { font-size:11px;font-weight:900;line-height:1.2;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5) }
+    .b2hm2-pcard-name { font-size:var(--fs-caption);font-weight:900;line-height:1.2;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5) }
     .b2hm2-pcard-sub { font-size:10px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:3px;flex-wrap:wrap;justify-content:center }
     .b2hm2-stat-row { display:flex;gap:8px;margin-bottom:12px }
     .b2hm2-stat-box { flex:1;padding:10px 8px;border-radius:12px;text-align:center;border:1.5px solid transparent }
-    .b2hm2-week-badge { display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:#fff7ed;border:1px solid #fed7aa;font-size:11px;font-weight:800;color:#c2410c;margin-bottom:12px }
+    .b2hm2-week-badge { display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:#fff7ed;border:1px solid #fed7aa;font-size:var(--fs-caption);font-weight:800;color:#c2410c;margin-bottom:12px }
     .b2hm2-tbl td:hover { filter:none;box-shadow:none; }
     .b2hm2-tbl tr:hover td { filter:none; box-shadow:none; }
-    .b2hm2-tbl td.univ-name { text-align:left;font-size:11px;font-weight:800;padding:4px 8px;white-space:nowrap;background:var(--bg);color:var(--text1);position:sticky;left:0;z-index:2;min-width:72px }
+    .b2hm2-tbl td.univ-name { text-align:left;font-size:var(--fs-caption);font-weight:800;padding:4px 8px;white-space:nowrap;background:var(--bg);color:var(--text1);position:sticky;left:0;z-index:2;min-width:72px }
     .b2hm2-tbl td.total-cell { background:var(--surface);border:1px solid var(--border2);font-weight:900 }
-    .b2hm2-legend { display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--text3) }
+    .b2hm2-legend { display:flex;align-items:center;gap:6px;margin-top:8px;font-size:var(--fs-caption);color:var(--text3) }
     .b2hm2-legend-bar { height:12px;width:120px;border-radius:6px }
-    .b2hm2-empty { font-size:11px;color:var(--text3);padding:2px 4px }
+    .b2hm2-empty { font-size:var(--fs-caption);color:var(--text3);padding:2px 4px }
   </style>`;
 
   // 컨트롤
@@ -430,7 +430,7 @@ function _b2HeatmapView() {
           fc = 'var(--text3)';
         }
         return `<td style="background:${bg} !important;color:${fc}" title="${u.name} / ${t}: ${c.count}명 ${c.wins}승 ${c.losses}패" data-hm-uid="${hmUid}" data-hm-univ="${_au(u.name)}" data-hm-tier="${_au(t)}" data-hm-color="${_au(color)}" onclick="_b2HeatmapCellClick(this)">
-          <div style="font-size:12px;font-weight:900">${label}</div>
+          <div style="font-size:var(--fs-sm);font-weight:900">${label}</div>
           ${sub?`<div style="font-size:9px;opacity:.8">${sub}</div>`:''}
         </td>`;
       }).join('')}
@@ -541,20 +541,20 @@ function _b2BubbleView() {
     #${uid}-canvas { display:block; width:100%; cursor:pointer; border-radius:12px; }
     #${uid}-tooltip { position:absolute; pointer-events:none; opacity:0; background:var(--white); border:1px solid var(--border2); border-radius:14px; padding:14px 16px; box-shadow:0 8px 32px #0003; transition:opacity .15s ease; min-width:180px; z-index:var(--z-dropdown,100); }
     #${uid}-legend { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-    .${uid}-sort-btn { padding:5px 12px; border-radius:20px; border:1.5px solid var(--border2); background:var(--surface); font-size:12px; font-weight:700; color:var(--text2); cursor:pointer; transition:all .15s; }
+    .${uid}-sort-btn { padding:5px 12px; border-radius:20px; border:1.5px solid var(--border2); background:var(--surface); font-size:var(--fs-sm); font-weight:700; color:var(--text2); cursor:pointer; transition:all .15s; }
     .${uid}-sort-btn.on { background:var(--text1); color:var(--white); border-color:var(--text1); }
     .${uid}-sort-btn:hover:not(.on) { border-color:var(--text2); }
     #${uid}-popup { display:none; position:fixed; inset:0; z-index:999; align-items:center; justify-content:center; background:rgba(0,0,0,.45); }
     #${uid}-popup.show { display:flex; }
     #${uid}-popup-inner { background:var(--white); border-radius:20px; padding:24px; max-width:340px; width:90%; box-shadow:0 20px 60px #0005; position:relative; animation:b2bblIn .25s ease; }
     @keyframes b2bblIn { from{opacity:0;transform:scale(.92) translateY(12px)} to{opacity:1;transform:none} }
-    #${uid}-popup-close { position:absolute;top:14px;right:14px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);line-height:1 }
+    #${uid}-popup-close { position:absolute;top:14px;right:14px;background:none;border:none;font-size:var(--fs-lg);cursor:pointer;color:var(--text3);line-height:1 }
     #${uid}-popup-close:hover { color:var(--text1) }
   </style>
   <div id="${uid}-wrap">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <span style="font-size:13px;font-weight:900;color:var(--text1)">🌐 대학별 버블맵</span>
-      <span style="font-size:12px;color:var(--text3)">버블 크기 = 인원 · 파이 = 종족 비율</span>
+      <span style="font-size:var(--fs-base);font-weight:900;color:var(--text1)">🌐 대학별 버블맵</span>
+      <span style="font-size:var(--fs-sm);color:var(--text3)">버블 크기 = 인원 · 파이 = 종족 비율</span>
       <div style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap">
         <button class="${uid}-sort-btn on" onclick="_${uid}setSort('total',this)">인원순</button>
         <button class="${uid}-sort-btn" onclick="_${uid}setSort('wr',this)">승률순</button>
@@ -699,10 +699,10 @@ function _b2BubbleView() {
       const pct=n=>b.total>0?Math.round(n/b.total*100):0;
       const wrCol=b.wr===null?'#94a3b8':b.wr>=60?'#10b981':b.wr>=40?'#f59e0b':'#ef4444';
       ttip.innerHTML=\`
-        <div style="font-weight:900;font-size:13px;color:\${b.color};margin-bottom:6px">\${b.name}</div>
-        <div style="font-size:12px;font-weight:700;color:#334155;margin-bottom:2px">👥 \${b.total}명 · 활성 \${b.weekActive}명</div>
-        \${b.wr!==null?'<div style="font-size:12px;font-weight:800;color:'+wrCol+'">📈 승률 '+b.wr+'% ('+b.wins+'승'+b.losses+'패)</div>':''}
-        \${b.topTier?'<div style="font-size:11px;margin-top:4px"><span style="padding:1px 6px;border-radius:5px;background:'+b.topTierCol+';color:'+b.topTierTc+';font-size:10px;font-weight:800">TOP '+b.topTier+'</span></div>':''}
+        <div style="font-weight:900;font-size:var(--fs-base);color:\${b.color};margin-bottom:6px">\${b.name}</div>
+        <div style="font-size:var(--fs-sm);font-weight:700;color:#334155;margin-bottom:2px">👥 \${b.total}명 · 활성 \${b.weekActive}명</div>
+        \${b.wr!==null?'<div style="font-size:var(--fs-sm);font-weight:800;color:'+wrCol+'">📈 승률 '+b.wr+'% ('+b.wins+'승'+b.losses+'패)</div>':''}
+        \${b.topTier?'<div style="font-size:var(--fs-caption);margin-top:4px"><span style="padding:1px 6px;border-radius:5px;background:'+b.topTierCol+';color:'+b.topTierTc+';font-size:10px;font-weight:800">TOP '+b.topTier+'</span></div>':''}
         <div style="font-size:10px;color:#94a3b8;margin-top:6px">클릭 → 상세 정보</div>
       \`;
       const wrap=canvas.parentElement.getBoundingClientRect();
@@ -719,26 +719,26 @@ function _b2BubbleView() {
       popBody.innerHTML=\`
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
           <div style="width:14px;height:14px;border-radius:50%;background:\${b.color}"></div>
-          <div style="font-size:18px;font-weight:900;color:\${b.color}">\${b.name}</div>
+          <div style="font-size:var(--fs-lg);font-weight:900;color:\${b.color}">\${b.name}</div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
           <div style="padding:10px;border-radius:12px;background:\${b.color}12;border:1px solid \${b.color}33;text-align:center">
             <div style="font-size:22px;font-weight:900;color:\${b.color}">\${b.total}</div>
-            <div style="font-size:11px;color:#94a3b8">총 인원</div>
+            <div style="font-size:var(--fs-caption);color:#94a3b8">총 인원</div>
           </div>
           <div style="padding:10px;border-radius:12px;background:#f59e0b12;border:1px solid #f59e0b33;text-align:center">
             <div style="font-size:22px;font-weight:900;color:#f59e0b">\${b.weekActive}</div>
-            <div style="font-size:11px;color:#94a3b8">이번주 활동</div>
+            <div style="font-size:var(--fs-caption);color:#94a3b8">이번주 활동</div>
           </div>
-          \${b.wr!==null?'<div style="padding:10px;border-radius:12px;background:'+wrCol+'12;border:1px solid '+wrCol+'33;text-align:center"><div style="font-size:22px;font-weight:900;color:'+wrCol+'">'+b.wr+'%</div><div style="font-size:11px;color:#94a3b8">통산 승률</div></div>':''}
+          \${b.wr!==null?'<div style="padding:10px;border-radius:12px;background:'+wrCol+'12;border:1px solid '+wrCol+'33;text-align:center"><div style="font-size:22px;font-weight:900;color:'+wrCol+'">'+b.wr+'%</div><div style="font-size:var(--fs-caption);color:#94a3b8">통산 승률</div></div>':''}
           <div style="padding:10px;border-radius:12px;background:#3b82f612;border:1px solid #3b82f633;text-align:center">
-            <div style="font-size:15px;font-weight:900;color:#3b82f6">\${b.wins}승 \${b.losses}패</div>
-            <div style="font-size:11px;color:#94a3b8">통산 전적</div>
+            <div style="font-size:var(--fs-md);font-weight:900;color:#3b82f6">\${b.wins}승 \${b.losses}패</div>
+            <div style="font-size:var(--fs-caption);color:#94a3b8">통산 전적</div>
           </div>
         </div>
-        \${b.topTier?'<div style="margin-bottom:12px"><span style="padding:2px 10px;border-radius:8px;background:'+b.topTierCol+';color:'+b.topTierTc+';font-size:12px;font-weight:800">🏅 최상위 티어: '+b.topTier+'</span></div>':''}
-        <div style="font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:6px">종족 구성</div>
-        \${[['🔮','프로토스','#7c3aed',b.P],['⚔️','테란','#0284c7',b.T],['🦎','저그','#059669',b.Z]].filter(function(r){return r[3]>0;}).map(function(r){var ico=r[0],lbl=r[1],col=r[2],n=r[3];return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span>'+ico+'</span><span style="font-size:12px;font-weight:700;min-width:52px;color:'+col+'">'+lbl+'</span><div style="flex:1;height:8px;border-radius:4px;background:#f1f5f9;overflow:hidden"><div style="width:'+pct(n)+'%;height:100%;background:'+col+';border-radius:4px"></div></div><span style="font-size:12px;font-weight:900;color:'+col+'">'+n+'명 ('+pct(n)+'%)</span></div>';}).join('')}
+        \${b.topTier?'<div style="margin-bottom:12px"><span style="padding:2px 10px;border-radius:8px;background:'+b.topTierCol+';color:'+b.topTierTc+';font-size:var(--fs-sm);font-weight:800">🏅 최상위 티어: '+b.topTier+'</span></div>':''}
+        <div style="font-size:var(--fs-sm);font-weight:700;color:#94a3b8;margin-bottom:6px">종족 구성</div>
+        \${[['🔮','프로토스','#7c3aed',b.P],['⚔️','테란','#0284c7',b.T],['🦎','저그','#059669',b.Z]].filter(function(r){return r[3]>0;}).map(function(r){var ico=r[0],lbl=r[1],col=r[2],n=r[3];return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span>'+ico+'</span><span style="font-size:var(--fs-sm);font-weight:700;min-width:52px;color:'+col+'">'+lbl+'</span><div style="flex:1;height:8px;border-radius:4px;background:#f1f5f9;overflow:hidden"><div style="width:'+pct(n)+'%;height:100%;background:'+col+';border-radius:4px"></div></div><span style="font-size:var(--fs-sm);font-weight:900;color:'+col+'">'+n+'명 ('+pct(n)+'%)</span></div>';}).join('')}
       \`;
       popup.classList.add('show');
     }
@@ -771,9 +771,9 @@ function _b2BubbleView() {
     };
 
     function buildLegend(){
-      legendEl.innerHTML = '<span style="font-size:11px;font-weight:700;color:var(--text3)">종족 범례:</span>' +
-        [['#7c3aed','🔮 프로토스'],['#0284c7','⚔️ 테란'],['#059669','🦎 저그'],['#94a3b8','❓ 미정']].map(function(r){var c=r[0],l=r[1];return '<span style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#334155"><span style="width:10px;height:10px;border-radius:50%;background:'+c+';display:inline-block"></span>'+l+'</span>';}).join('') +
-        '<span style="font-size:11px;color:var(--text3);margin-left:6px">버블 안 숫자 = 인원 · % = 승률</span>';
+      legendEl.innerHTML = '<span style="font-size:var(--fs-caption);font-weight:700;color:var(--text3)">종족 범례:</span>' +
+        [['#7c3aed','🔮 프로토스'],['#0284c7','⚔️ 테란'],['#059669','🦎 저그'],['#94a3b8','❓ 미정']].map(function(r){var c=r[0],l=r[1];return '<span style="display:flex;align-items:center;gap:4px;font-size:var(--fs-caption);font-weight:700;color:#334155"><span style="width:10px;height:10px;border-radius:50%;background:'+c+';display:inline-block"></span>'+l+'</span>';}).join('') +
+        '<span style="font-size:var(--fs-caption);color:var(--text3);margin-left:6px">버블 안 숫자 = 인원 · % = 승률</span>';
     }
 
     function tryInit(attempt){

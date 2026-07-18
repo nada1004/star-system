@@ -830,7 +830,7 @@ function _b2WeeklyBriefingView() {
       }
       /* ── 전체 이미지형 MVP 카드 ── */
       .b2w2-mvp-card {
-        border-radius: 16px;
+        border-radius:var(--r2);
         border: none;
         position: relative;
         overflow: hidden;
@@ -2104,6 +2104,13 @@ function _b2WeeklyBriefingView() {
           .filter(ud => ud.tg > 0)
           .sort((a, b) => (b.tg - a.tg) || (b.active.length - a.active.length) || ((b.wr ?? -1) - (a.wr ?? -1)))
           .map(ud => ({ ...ud, ace: _b2WeeklyUnivMVP(ud.active) }));
+    // ── 저장(신문) 내보내기에 종족별 상대 전적 / 전체 선수 랭킹을 추가로 담기 위한 집계 ──
+    // (화면에는 대학별로만 노출되던 종족 통계를 선택 범위 전체로 합산하고,
+    //  화면 카드에서는 5명으로 잘리던 선수 랭킹을 전체 다 담는다)
+    const _exportRaceCount = { P:{w:0,l:0}, T:{w:0,l:0}, Z:{w:0,l:0} };
+    targetStats.forEach(ud => { ['P','T','Z'].forEach(r => { _exportRaceCount[r].w += ud.raceCount[r].w; _exportRaceCount[r].l += ud.raceCount[r].l; }); });
+    const _allActivePlayersRanked = [...activePlayers]
+      .sort((a, b) => (b.total - a.total) || (b.wins - a.wins) || ((b.winRate ?? -1) - (a.winRate ?? -1)));
     try {
       window._b2BriefingExportCtx = {
         preset, dateFrom, dateTo, prevDateFrom, prevDateTo,
@@ -2112,6 +2119,7 @@ function _b2WeeklyBriefingView() {
         heroSummary: _heroSummary, heroSpotlight: _heroSpotlight,
         mvp, mvp2, worstPlayer,
         topUnivs, rankedUnivs, univAces: _univAcesForExport,
+        raceCountGlobal: _exportRaceCount, allActivePlayersRanked: _allActivePlayersRanked,
         hotPlayer, coldPlayer, streakPlayer, loseStreakPlayer,
         bestWrPlayer, mostWinsPlayer, mostActivePlayer,
         monthlyMvp, monthlyTopPlayers, silentUnivs,

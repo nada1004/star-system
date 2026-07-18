@@ -11,8 +11,8 @@ function rElboard(C, T) {
   if (!isLoggedIn) {
     C.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:16px">
       <div style="font-size:48px">🔒</div>
-      <div style="font-size:18px;font-weight:800;color:var(--text)">관리자 전용 페이지</div>
-      <div style="font-size:13px;color:var(--gray-l)">최근전적 탭은 관리자 로그인 후 이용할 수 있습니다.</div>
+      <div style="font-size:var(--fs-lg);font-weight:800;color:var(--text)">관리자 전용 페이지</div>
+      <div style="font-size:var(--fs-base);color:var(--gray-l)">최근전적 탭은 관리자 로그인 후 이용할 수 있습니다.</div>
       <button class="btn btn-b" onclick="om('loginModal')">🔑 로그인</button>
     </div>`;
     return;
@@ -109,7 +109,7 @@ function rElboard(C, T) {
     const date = m.d || '날짜미정';
     if (date !== lastDate) {
       if (lastDate !== null) h += `<div style="height:4px"></div>`;
-      h += `<div style="padding:6px 0 4px;font-size:12px;font-weight:800;color:var(--text3);letter-spacing:.03em">${date}</div>`;
+      h += `<div style="padding:6px 0 4px;font-size:var(--fs-sm);font-weight:800;color:var(--text3);letter-spacing:.03em">${date}</div>`;
       lastDate = date;
     }
 
@@ -122,36 +122,36 @@ function rElboard(C, T) {
     if (isCK && m.teamAMembers && m.teamBMembers) {
       const mA = (m.teamAMembers || []).slice(0, 4).map(p => p.name).join(', ');
       const mB = (m.teamBMembers || []).slice(0, 4).map(p => p.name).join(', ');
-      membersHtml = `<div style="font-size:11px;color:var(--gray-l);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
+      membersHtml = `<div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
         <span><b style="color:#2563eb">A</b> ${mA}${(m.teamAMembers||[]).length>4?'…':''}</span>
         <span><b style="color:#dc2626">B</b> ${mB}${(m.teamBMembers||[]).length>4?'…':''}</span>
       </div>`;
     } else if (!isCK && m.sets && m.sets.length) {
       // 미니/대학대전: 세트별 선수 요약
       const gameCount = m.sets.reduce((s, st) => s + (st.games ? st.games.length : (st.playerA ? 1 : 0)), 0);
-      if (gameCount) membersHtml = `<div style="font-size:11px;color:var(--gray-l);margin-top:3px">${gameCount}게임</div>`;
+      if (gameCount) membersHtml = `<div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:3px">${gameCount}게임</div>`;
     }
 
     // 대회명/티어
-    const subLabel = m.n ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text3)">${m.n}</span>` :
-      m._label ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text3)">${m._label}</span>` : '';
+    const subLabel = m.n ? `<span style="font-size:10px;padding:2px 7px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);color:var(--text3)">${m.n}</span>` :
+      m._label ? `<span style="font-size:10px;padding:2px 7px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);color:var(--text3)">${m._label}</span>` : '';
 
     const MODE_COL = {mini:'#7c3aed',univm:'#16a34a',ck:'#f59e0b',pro:'#0ea5e9',tt:'#10b981',all:'#2563eb'};
     const _mc = MODE_COL[src] || '#64748b';
     const _rgb = (hex)=>{const h=String(hex||'').replace('#',''); if(h.length!==6) return '100,116,139'; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `${r},${g},${b}`;};
     h += `<div class="rec-summary rec-mode-${src}" data-rec-mode="${src}" style="--rec-mode-col:${_mc};--rec-mode-rgb:${_rgb(_mc)};margin-bottom:6px">
       <div class="rec-sum-header" style="flex-wrap:wrap;gap:8px">
-        <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text3);white-space:nowrap">${srcLabel}</span>
+        <span style="font-size:10px;padding:2px 8px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);color:var(--text3);white-space:nowrap">${srcLabel}</span>
         ${subLabel}
         <div class="rec-sum-vs" style="flex:1;min-width:200px">
-          <span style="font-size:13px;font-weight:900;padding:3px 10px;border-radius:8px;color:#fff;background:${aColor};opacity:${aWin?1:.65}">${aLabel}</span>
-          <div style="display:flex;align-items:center;gap:4px;font-size:18px;font-weight:900">
+          <span style="font-size:var(--fs-base);font-weight:900;padding:3px 10px;border-radius:8px;color:#fff;background:${aColor};opacity:${aWin?1:.65}">${aLabel}</span>
+          <div style="display:flex;align-items:center;gap:4px;font-size:var(--fs-lg);font-weight:900">
             <span style="color:${aWin?'var(--win-col)':bWin?'var(--lose-col)':'var(--text3)'}">${sa}</span>
-            <span style="color:var(--gray-l);font-size:13px">:</span>
+            <span style="color:var(--gray-l);font-size:var(--fs-base)">:</span>
             <span style="color:${bWin?'var(--win-col)':aWin?'var(--lose-col)':'var(--text3)'}">${sb}</span>
           </div>
-          <span style="font-size:13px;font-weight:900;padding:3px 10px;border-radius:8px;color:#fff;background:${bColor};opacity:${bWin?1:.65}">${bLabel}</span>
-          <span style="font-size:11px;font-weight:700;color:${aWin?'var(--win-col)':bWin?'var(--win-col)':'#6b7280'}">
+          <span style="font-size:var(--fs-base);font-weight:900;padding:3px 10px;border-radius:8px;color:#fff;background:${bColor};opacity:${bWin?1:.65}">${bLabel}</span>
+          <span style="font-size:var(--fs-caption);font-weight:700;color:${aWin?'var(--win-col)':bWin?'var(--win-col)':'#6b7280'}">
             ${aWin?'▶ '+aLabel+' 승':bWin?'▶ '+bLabel+' 승':'🤝 무승부'}
           </span>
         </div>
@@ -172,7 +172,7 @@ function rElboard(C, T) {
     </div>`;
   }
 
-  h += `<div style="text-align:center;padding-top:4px;font-size:11px;color:var(--gray-l)">
+  h += `<div style="text-align:center;padding-top:4px;font-size:var(--fs-caption);color:var(--gray-l)">
     총 ${filtered.length}건 · 전체 ${all.length}건
   </div>`;
 

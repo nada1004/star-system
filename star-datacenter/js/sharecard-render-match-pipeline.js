@@ -50,7 +50,7 @@
     const summaryHTML = (typeof window._buildShareMatchSummaryHTML==='function')
       ? window._buildShareMatchSummaryHTML({ variant, theme, winnerColor, summaryCards, setsHTML, teamMode })
       : '';
-    const centerVersusHTML = `<div style="text-align:center;min-width:44px"><div style="font-size:12px;font-weight:1000;letter-spacing:1px;color:rgba(255,255,255,.72)">VS</div></div>`;
+    const centerVersusHTML = `<div style="text-align:center;min-width:44px"><div style="font-size:var(--fs-sm);font-weight:1000;letter-spacing:1px;color:rgba(255,255,255,.72)">VS</div></div>`;
     const saTxt = (typeof window._shareMatchScoreText==='function') ? window._shareMatchScoreText(m.sa, m._scoreA) : String((m.sa ?? m._scoreA ?? '-'));
     const sbTxt = (typeof window._shareMatchScoreText==='function') ? window._shareMatchScoreText(m.sb, m._scoreB) : String((m.sb ?? m._scoreB ?? '-'));
     const raceLabel = (typeof window._shareMatchRaceLabel==='function') ? window._shareMatchRaceLabel : (r=>String(r||''));

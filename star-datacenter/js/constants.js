@@ -29,7 +29,7 @@ function _lsSave(k,obj){
 
 // 데이터 버전 관리 - 캐시 무효화용 (데이터 구조 변경 시 버전 증가)
 const DATA_VERSION = 2;
-try{ window.SU_STATS_JS_V = window.SU_STATS_JS_V || '20260717-01'; }catch(e){}
+try{ window.SU_STATS_JS_V = window.SU_STATS_JS_V || '20260717-ds03'; }catch(e){}
 
 // 캐시 관리 함수
 function _checkDataVersion(){

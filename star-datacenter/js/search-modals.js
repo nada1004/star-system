@@ -61,12 +61,12 @@ function setPasteMatchMode(mode){
   const hint    = document.getElementById('paste-match-mode-hint');
   if(lblGame){
     if(mode==='game'){
-      lblGame.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s';
-      lblSet.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s';
+      lblGame.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s';
+      lblSet.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s';
       if(hint) hint.textContent='경기 방식: 1경기·2경기·3경기 → 이긴 경기 수 많은 팀 우승';
     } else {
-      lblSet.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s';
-      lblGame.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s';
+      lblSet.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s';
+      lblGame.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s';
       if(hint) hint.textContent='세트제: 세트별로 경기를 묶어 세트를 많이 이긴 팀 우승';
     }
   }
@@ -116,7 +116,7 @@ function closePasteModal() {
     const compWrap = document.getElementById('paste-comp-wrap');
     if(compWrap) {
       compWrap.style.display='none';
-      compWrap.innerHTML='<input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:180px">';
+      compWrap.innerHTML='<input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:var(--fs-base);width:180px">';
     }
     const hintEl = document.getElementById('paste-mode-hint');
     if(hintEl) hintEl.textContent='';
@@ -135,8 +135,8 @@ function closePasteModal() {
   // Reset match mode UI
   const lblGame = document.getElementById('match-mode-label-game');
   const lblSet  = document.getElementById('match-mode-label-set');
-  if(lblGame) lblGame.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s';
-  if(lblSet)  lblSet.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s';
+  if(lblGame) lblGame.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s';
+  if(lblSet)  lblSet.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s';
   cm('pasteModal');
 }
 

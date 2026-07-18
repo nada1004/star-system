@@ -663,14 +663,14 @@ function renderPastePreview(results, errors) {
         </div>
         <div class="pv-cards">`;
     }else{
-      html += `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px">`;
-      html += `<table style="margin:0;width:100%;font-size:12px"><thead><tr>
-        <th style="text-align:left;padding:6px 8px;font-size:11px;width:86px">${_colLabel}</th>
-        <th style="text-align:left;padding:6px 8px;font-size:11px;width:90px">맵</th>
-        <th style="text-align:left;padding:6px 8px;font-size:11px">${_teamALabel}</th>
-        <th style="text-align:left;padding:6px 8px;font-size:11px">${_teamBLabel}</th>
-        <th style="text-align:left;padding:6px 8px;font-size:11px;width:70px">상태</th>
-        <th style="text-align:center;padding:6px 8px;font-size:11px;width:52px">관리</th>
+      html += `<div style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:10px">`;
+      html += `<table style="margin:0;width:100%;font-size:var(--fs-sm)"><thead><tr>
+        <th style="text-align:left;padding:6px 8px;font-size:var(--fs-caption);width:86px">${_colLabel}</th>
+        <th style="text-align:left;padding:6px 8px;font-size:var(--fs-caption);width:90px">맵</th>
+        <th style="text-align:left;padding:6px 8px;font-size:var(--fs-caption)">${_teamALabel}</th>
+        <th style="text-align:left;padding:6px 8px;font-size:var(--fs-caption)">${_teamBLabel}</th>
+        <th style="text-align:left;padding:6px 8px;font-size:var(--fs-caption);width:70px">상태</th>
+        <th style="text-align:center;padding:6px 8px;font-size:var(--fs-caption);width:52px">관리</th>
       </tr></thead><tbody>`;
     }
 
@@ -734,7 +734,7 @@ function renderPastePreview(results, errors) {
             <span style="font-size:10px;color:#b45309;font-weight:600">선택:</span>` +
             candidates.map(c =>
               `<button class="paste-pick-btn" data-idx="${i}" data-role="${role}" data-name="${c.name.replace(/"/g,'&quot;')}"
-                style="padding:3px 9px;border-radius:5px;border:1.5px solid #fcd34d;background:#fffbeb;color:#92400e;font-size:11px;font-weight:700;cursor:pointer;transition:.12s"
+                style="padding:3px 9px;border-radius:5px;border:1.5px solid #fcd34d;background:#fffbeb;color:#92400e;font-size:var(--fs-caption);font-weight:700;cursor:pointer;transition:.12s"
                 onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fffbeb'">
                 ${c.name}${c.univ?`<span style="font-size:9px;opacity:.7;margin-left:2px">(${c.univ})</span>`:''}</button>`
             ).join('') + `</div>`;
@@ -747,7 +747,7 @@ function renderPastePreview(results, errors) {
               <span style="font-size:10px;color:#7c3aed;font-weight:700">혹시:</span>` +
               similar.map(c =>
                 `<button class="paste-pick-btn" data-idx="${i}" data-role="${role}" data-name="${c.name.replace(/"/g,'&quot;')}"
-                  style="padding:3px 9px;border-radius:5px;border:1.5px solid #c4b5fd;background:#faf5ff;color:#6d28d9;font-size:11px;font-weight:700;cursor:pointer;transition:.12s"
+                  style="padding:3px 9px;border-radius:5px;border:1.5px solid #c4b5fd;background:#faf5ff;color:#6d28d9;font-size:var(--fs-caption);font-weight:700;cursor:pointer;transition:.12s"
                   onmouseover="this.style.background='#ede9fe'" onmouseout="this.style.background='#faf5ff'"
                   title="${c.univ||''}">
                   ${c.name}${c.univ?`<span style="font-size:9px;opacity:.7;margin-left:2px">(${c.univ})</span>`:''}</button>`
@@ -840,23 +840,23 @@ function renderPastePreview(results, errors) {
       const wSim = !wOk && !wAmbig && (r.wSimilar||[]).length > 0;
       const lSim = !lOk && !lAmbig && (r.lSimilar||[]).length > 0;
       const statusBadge = ok
-        ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap">저장가능</span>`
+        ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:2px 6px;border-radius:var(--r);white-space:nowrap">저장가능</span>`
         : (wAmbig || lAmbig)
-          ? `<span style="background:#fef9c3;color:#b45309;border:1px solid #fcd34d;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap">선택필요</span>`
+          ? `<span style="background:#fef9c3;color:#b45309;border:1px solid #fcd34d;font-size:10px;font-weight:700;padding:2px 6px;border-radius:var(--r);white-space:nowrap">선택필요</span>`
           : (wSim || lSim)
-            ? `<span style="background:#faf5ff;color:#6d28d9;border:1px solid #c4b5fd;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap">유사이름</span>`
-            : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap">미등록</span>`;
+            ? `<span style="background:#faf5ff;color:#6d28d9;border:1px solid #c4b5fd;font-size:10px;font-weight:700;padding:2px 6px;border-radius:var(--r);white-space:nowrap">유사이름</span>`
+            : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:2px 6px;border-radius:var(--r);white-space:nowrap">미등록</span>`;
 
       // ── 경기/세트 표시 ──
       const gn = r.gameNum || r.game || r.gameNo || null;
-      const gameTag = `<span style="font-size:11px;font-weight:900;color:var(--text3);white-space:nowrap">${(gn|| (i+1))}경기</span>`;
+      const gameTag = `<span style="font-size:var(--fs-caption);font-weight:900;color:var(--text3);white-space:nowrap">${(gn|| (i+1))}경기</span>`;
       let setCell = '';
       if(_matchModePreview==='set'){
         // 세트 드롭다운 + 경기번호
         const setOpts = Array.from({length: Math.max(maxSet, r.setNum||1)}, (_,k) => k+1)
           .map(n => `<option value="${n}" ${(r.setNum||1)===n?'selected':''}>${n}세트</option>`).join('');
         const setSel = `<select class="paste-set-sel" data-idx="${i}"
-          style="font-size:11px;font-weight:700;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;color:${(r.setNum||1)>=3?'#7c3aed':'var(--blue)'};background:var(--white);cursor:pointer;max-width:72px"
+          style="font-size:var(--fs-caption);font-weight:700;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;color:${(r.setNum||1)>=3?'#7c3aed':'var(--blue)'};background:var(--white);cursor:pointer;max-width:72px"
           onchange="pasteChangeSet(${i},parseInt(this.value))">${setOpts}</select>`;
         setCell = `<div style="display:flex;flex-direction:column;gap:2px">${setSel}<span style="font-size:10px;color:var(--gray-l);font-weight:800">${(gn|| (i+1))}경기</span></div>`;
       } else {
@@ -869,13 +869,13 @@ function renderPastePreview(results, errors) {
       const mapOpts = `<option value="">-</option>` +
         allMaps.map(m => `<option value="${m}" ${mapVal===m?'selected':''}>${m}</option>`).join('');
       const mapCell = `<select class="paste-map-sel" data-idx="${i}"
-        style="font-size:11px;border:1px solid ${mapVal?'#7dd3fc':'var(--border2)'};border-radius:5px;padding:2px 4px;background:${mapVal?'#e0f2fe':'var(--white)'};color:${mapVal?'#0369a1':'var(--gray-l)'};cursor:pointer;max-width:88px"
+        style="font-size:var(--fs-caption);border:1px solid ${mapVal?'#7dd3fc':'var(--border2)'};border-radius:5px;padding:2px 4px;background:${mapVal?'#e0f2fe':'var(--white)'};color:${mapVal?'#0369a1':'var(--gray-l)'};cursor:pointer;max-width:88px"
         onchange="pasteChangeMap(${i},this.value)">${mapOpts}</select>`;
 
 
       // ── 행 삭제 버튼 ──
       const delBtn = `<button class="paste-del-btn" data-idx="${i}" title="이 행 삭제"
-        style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;font-size:12px;cursor:pointer;transition:.12s;line-height:1.4"
+        style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;font-size:var(--fs-sm);cursor:pointer;transition:.12s;line-height:1.4"
         onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff5f5'">🗑</button>`;
 
       const _hasSim = wSim||lSim;
@@ -889,7 +889,7 @@ function renderPastePreview(results, errors) {
               html += `<div class="pv-date">📅 ${_rowDate} <span class="pv-date-sub">이후 경기 날짜</span></div>`;
             }else{
               html += `<tr><td colspan="6" style="padding:4px 8px;background:#eff6ff;border-top:2px solid #bfdbfe;border-bottom:1px solid #bfdbfe">
-                <span style="font-size:11px;font-weight:700;color:#1d4ed8">📅 ${_rowDate}</span>
+                <span style="font-size:var(--fs-caption);font-weight:700;color:#1d4ed8">📅 ${_rowDate}</span>
                 <span style="font-size:10px;color:#6b7280;margin-left:6px">이후 경기 날짜</span>
               </td></tr>`;
             }
@@ -978,7 +978,7 @@ function renderPastePreview(results, errors) {
       if(sw === 'A') setScoreA++; else if(sw === 'B') setScoreB++;
       const acol = sw==='A' ? '#16a34a' : s.A>0 ? '#64748b' : '#9ca3af';
       const bcol = sw==='B' ? '#16a34a' : s.B>0 ? '#64748b' : '#9ca3af';
-      return `<span style="display:inline-flex;align-items:center;gap:4px;background:${sw?'#f0fdf4':'#f8fafc'};border:1px solid ${sw?'#86efac':'#e2e8f0'};border-radius:8px;padding:3px 10px;font-size:12px">
+      return `<span style="display:inline-flex;align-items:center;gap:4px;background:${sw?'#f0fdf4':'#f8fafc'};border:1px solid ${sw?'#86efac':'#e2e8f0'};border-radius:8px;padding:3px 10px;font-size:var(--fs-sm)">
         <span style="font-size:10px;color:var(--gray-l);font-weight:600">${sn}세트</span>
         <span style="font-weight:800;color:${acol}">${s.A}</span>
         <span style="color:var(--gray-l)">:</span>
@@ -1018,8 +1018,8 @@ function renderPastePreview(results, errors) {
       const _dA='A팀';
       const _dB='B팀';
       const winner = totalA > totalB ? _dA : totalB > totalA ? _dB : '무승부';
-      html += `<div style="margin-top:8px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">📊 현재 결과 미리보기 ${multiSetPreview?'(세트제)':'(개인전)'}</div>
+      html += `<div style="margin-top:8px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+        <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:6px">📊 현재 결과 미리보기 ${multiSetPreview?'(세트제)':'(개인전)'}</div>
         ${multiSetPreview ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">${setRows}</div>` : ''}
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-weight:800;font-size:14px;color:${totalA>totalB?'#2563eb':'#64748b'}">${_dA}</span>
@@ -1029,7 +1029,7 @@ function renderPastePreview(results, errors) {
             <span style="color:${totalB>totalA?'#16a34a':'#dc2626'}">${totalB}</span>
           </span>
           <span style="font-weight:800;font-size:14px;color:${totalB>totalA?'#dc2626':'#64748b'}">${_dB}</span>
-          <span style="font-size:12px;font-weight:700;padding:2px 10px;border-radius:12px;background:${winner==='무승부'?'#f1f5f9':'#dcfce7'};color:${winner==='무승부'?'#64748b':'#15803d'}">
+          <span style="font-size:var(--fs-sm);font-weight:700;padding:2px 10px;border-radius:12px;background:${winner==='무승부'?'#f1f5f9':'#dcfce7'};color:${winner==='무승부'?'#64748b':'#15803d'}">
             ${winner==='무승부'?'🤝 무승부':'🏆 '+winner+' 승'}
           </span>
         </div>
@@ -1039,7 +1039,7 @@ function renderPastePreview(results, errors) {
 
   if (errors && errors.length > 0) {
     html += `<div style="background:#fff5f5;border:1.5px solid #fca5a5;border-radius:8px;padding:10px 12px;margin-top:6px">
-      <div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:6px">⛔ 인식 실패 ${errors.length}줄 — 저장되지 않습니다</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:#dc2626;margin-bottom:6px">⛔ 인식 실패 ${errors.length}줄 — 저장되지 않습니다</div>
       ${errors.map(e => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
         <span style="flex-shrink:0;font-size:10px;font-weight:700;background:#fecaca;color:#dc2626;padding:1px 6px;border-radius:4px">${e.line}행</span>
         <code style="font-size:10px;color:#991b1b;background:#fff1f2;padding:2px 7px;border-radius:4px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.raw.replace(/"/g,'&quot;')}">${e.raw.slice(0,90)}${e.raw.length>90?'…':''}</code>

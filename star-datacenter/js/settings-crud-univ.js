@@ -247,11 +247,11 @@ function cfgShowColorPalette(anchorEl, currentHex, onSelect){
 
   // HEX 입력 + EyeDropper(Chrome/Edge)
   const eyedropperBtn = window.EyeDropper
-    ? `<button title="화면에서 직접 찍기 (Chrome/Edge)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-size:12px" onclick="window._cfgPaletteEyedrop()">🎯 찍기</button>`
+    ? `<button title="화면에서 직접 찍기 (Chrome/Edge)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-size:var(--fs-sm)" onclick="window._cfgPaletteEyedrop()">🎯 찍기</button>`
     : '';
 
   pop.innerHTML = `
-    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
       색상 선택
       <button onclick="document.getElementById('cfg-color-palette-pop').remove()" style="border:none;background:none;cursor:pointer;font-size:16px;color:var(--gray-l);line-height:1;padding:0">×</button>
     </div>
@@ -261,11 +261,11 @@ function cfgShowColorPalette(anchorEl, currentHex, onSelect){
     <div style="font-size:10px;font-weight:700;color:var(--gray-l);margin:8px 0 5px;letter-spacing:.06em;text-transform:uppercase">직접 입력</div>
     <div style="display:flex;gap:6px;align-items:center">
       <input id="cfg-palette-hex-inp" type="text" value="${currentHex||''}" placeholder="#RRGGBB"
-        style="flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-weight:700;font-family:monospace"
+        style="flex:1;font-size:var(--fs-sm);padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-weight:700;font-family:monospace"
         oninput="const el=this;const h=window.cfgNormHex?cfgNormHex(el.value):null;if(h){el.style.background=h;el.style.color=window._cfgContrastColor(h);}"
         onkeydown="if(event.key==='Enter'){const h=window.cfgNormHex?cfgNormHex(this.value):null;if(h)window._cfgPaletteSelect(h);}">
       ${eyedropperBtn}
-      <button style="padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-size:12px" onclick="const h=window.cfgNormHex?cfgNormHex(document.getElementById('cfg-palette-hex-inp').value):null;if(h)window._cfgPaletteSelect(h);">적용</button>
+      <button style="padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-size:var(--fs-sm)" onclick="const h=window.cfgNormHex?cfgNormHex(document.getElementById('cfg-palette-hex-inp').value):null;if(h)window._cfgPaletteSelect(h);">적용</button>
     </div>`;
 
   document.body.appendChild(pop);

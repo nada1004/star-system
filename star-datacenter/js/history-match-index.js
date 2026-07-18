@@ -862,8 +862,8 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     const uL=!isTeamGame&&pL?.univ?`<span class="ubadge" style="background:${lc};font-size:10px;opacity:.92">${pL.univ}</span>`:'';
     const winNameHtml=isTeamGame?_renderNameList(winNames):_escHtml(m.wName||'');
     const loseNameHtml=isTeamGame?_renderNameList(loseNames):_escHtml(m.lName||'');
-    const mapStr=m.map?`<span style="font-size:11px;color:var(--text3);white-space:nowrap">${m.map}</span>`:'';
-    const memoStr=m.memo?`<div style="font-size:11px;color:var(--gray-l);margin-top:4px">📝 ${m.memo}</div>`:'';
+    const mapStr=m.map?`<span style="font-size:var(--fs-caption);color:var(--text3);white-space:nowrap">${m.map}</span>`:'';
+    const memoStr=m.memo?`<div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:4px">📝 ${m.memo}</div>`:'';
     return _wrapMdDetail(`<div class="cmd-single-summary">
       <div class="cmd-single-summary__row">
         ${_teamBadge(winNames)}<span class="cmd-single-name">${winNameHtml}</span>${rW}${uW}
@@ -874,7 +874,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
       ${memoStr?`<div class="cmd-single-summary__memo">${memoStr}</div>`:''}
     </div>`);
   }
-  if(!m.sets||!m.sets.length) return _wrapMdDetail('<div style="font-size:12px;color:var(--gray-l);padding:8px 0">세트 상세 기록 없음</div>');
+  if(!m.sets||!m.sets.length) return _wrapMdDetail('<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:8px 0">세트 상세 기록 없음</div>');
 
   const _buildGameCard = (g, si, gi) => {
     if(!g || (!g.playerA && !g.playerB)) return '';
@@ -953,20 +953,20 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     const nameStyleB = loseB ? 'opacity:.7;color:#64748b;' : 'opacity:1;';
     return `<div data-si="${si}" data-gi="${gi}" style="display:flex;flex-direction:column;gap:3px;padding:5px 2px;">
       <div style="display:flex;align-items:center;gap:5px;">
-        <span style="color:var(--gray-l);font-size:11px;min-width:40px;font-weight:700;flex-shrink:0;text-align:center">경기${gi+1}</span>
+        <span style="color:var(--gray-l);font-size:var(--fs-caption);min-width:40px;font-weight:700;flex-shrink:0;text-align:center">경기${gi+1}</span>
         <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winA?pca+'18':(loseA?'linear-gradient(180deg, rgba(148,163,184,.14), rgba(255,255,255,.96))':pca+'12')};border:${winA?'1.5px solid '+pca+'55':(loseA?'1px solid rgba(148,163,184,.26)':'1px solid '+pca+'33')};min-width:0;">
           <div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:4px;overflow:hidden">
             ${_teamBadge(namesA)}${univLogoA}${tierA}${raceA}
-            <strong style="font-size:13px;color:var(--text);white-space:nowrap;${nameStyleA}" ${clickA}>${nameHtmlA}</strong>
+            <strong style="font-size:var(--fs-base);color:var(--text);white-space:nowrap;${nameStyleA}" ${clickA}>${nameHtmlA}</strong>
           </div>
           ${photoAHtml}
         </div>
-        <span style="color:var(--gray-l);font-size:12px;font-weight:800;flex-shrink:0">vs</span>
+        <span style="color:var(--gray-l);font-size:var(--fs-sm);font-weight:800;flex-shrink:0">vs</span>
         <div style="flex:1;display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:12px;background:${winB?pcb+'18':(loseB?'linear-gradient(180deg, rgba(148,163,184,.14), rgba(255,255,255,.96))':pcb+'12')};border:${winB?'1.5px solid '+pcb+'55':(loseB?'1px solid rgba(148,163,184,.26)':'1px solid '+pcb+'33')};min-width:0;">
           ${photoBHtml}
           <div style="flex:1;min-width:0;display:flex;align-items:center;gap:4px;overflow:hidden">
             ${_teamBadge(namesB)}${univLogoB}${tierB}${raceB}
-            <strong style="font-size:13px;color:var(--text);white-space:nowrap;${nameStyleB}" ${clickB}>${nameHtmlB}</strong>
+            <strong style="font-size:var(--fs-base);color:var(--text);white-space:nowrap;${nameStyleB}" ${clickB}>${nameHtmlB}</strong>
           </div>
         </div>
         ${editBtn}
@@ -982,7 +982,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     const swA=set.scoreA||0, swB=set.scoreB||0;
     const setAWin=swA>swB, setBWin=swB>swA;
     const head=`<div class="cmd-set-head" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:5px 10px;background:${isAce?'#f5f3ff':'var(--blue-l)'};border-radius:7px;border:1px solid ${isAce?'#ddd6fe':'var(--blue-ll)'}">
-      <span class="set-row-title ${isAce?'ace-t':''}" style="margin-bottom:0;font-size:12px">${sLabel}</span>
+      <span class="set-row-title ${isAce?'ace-t':''}" style="margin-bottom:0;font-size:var(--fs-sm)">${sLabel}</span>
       <span class="ubadge${setAWin?'':' loser'}" style="background:${setAWin?ca:`linear-gradient(135deg, ${typeof getMatchWinTint==='function'?getMatchWinTint(ca):ca+'18'}, rgba(255,255,255,.92))`};color:${setAWin?'#fff':'#334155'};border-color:${setAWin?ca:ca+'33'};font-size:10px">${labelA}</span>
       <span style="font-weight:800;font-size:14px">
         <span class="${setAWin?'wt':setBWin?'lt':'pt-z'}">${swA}</span>
@@ -998,7 +998,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         if(card) gamesArr.push(card);
       });
     }
-    const gamesHtml = gamesArr.length ? gamesArr.join('') : `<div style="font-size:11px;color:var(--gray-l);padding:4px 0">상세 경기 기록 없음</div>`;
+    const gamesHtml = gamesArr.length ? gamesArr.join('') : `<div style="font-size:var(--fs-caption);color:var(--gray-l);padding:4px 0">상세 경기 기록 없음</div>`;
     const id=`md-set-${si+1}`;
     const html=`<div class="set-row cmd-set" id="${id}" data-si="${si}" data-is-ace="${isAce?'1':'0'}">${head}${gamesHtml}</div>`;
     setBlocks.push({si,isAce,sLabel,swA,swB,setAWin,setBWin,gamesArr,html});

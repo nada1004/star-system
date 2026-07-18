@@ -56,9 +56,9 @@ function _renderCfgPdSection(){
     const safe=u.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
       <span style="width:14px;height:14px;border-radius:50%;background:${u.color};flex-shrink:0;border:1px solid rgba(0,0,0,.12)"></span>
-      <span style="font-size:12px;font-weight:600;color:var(--text2);min-width:72px;flex-shrink:0">${u.name}</span>
+      <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text2);min-width:72px;flex-shrink:0">${u.name}</span>
       <input type="range" min="0" max="50" step="5" value="${val}" style="flex:1;accent-color:var(--blue)" oninput="_setPdUnivDarken('${safe}',this.value/100,${i})">
-      <span style="font-size:11px;color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="pd-dv-${i}">${val}%</span>
+      <span style="font-size:var(--fs-caption);color:var(--gray-l);min-width:30px;text-align:right;font-weight:700" id="pd-dv-${i}">${val}%</span>
     </div>`;
   }).join('');
   const _validPdLayoutModes=['default','photocard','showcase','stats','split','banner','poster','timeline','board'];
@@ -90,7 +90,7 @@ function _renderCfgPdSection(){
         <span style="position:absolute;bottom:4px;left:6px;width:8px;height:8px;border-radius:50%;background:${accent};box-shadow:0 0 6px ${accent}"></span>
       </span>
       <span style="padding:7px 9px;background:var(--white)">
-        <span style="display:block;font-size:12px;font-weight:900;color:var(--text2)">${label}${dm===key?' ✓':''}</span>
+        <span style="display:block;font-size:var(--fs-sm);font-weight:900;color:var(--text2)">${label}${dm===key?' ✓':''}</span>
         <span style="display:block;font-size:10px;color:var(--gray-l);margin-top:2px;font-weight:600">${desc}</span>
       </span>
     </button>`).join('');
@@ -112,7 +112,7 @@ function _renderCfgPdSection(){
           <span style="display:grid;${grid}gap:4px;align-items:center">
             <span style="width:${key==='photocard'?'100%':'24px'};height:${key==='photocard'?'24px':'24px'};border-radius:${key==='stats'?'8px':'999px'};background:rgba(79,70,229,.26);display:block"></span>
             <span style="height:8px;border-radius:999px;background:rgba(15,23,42,.16);display:block"></span>
-            ${key==='default'?'<span style="height:18px;border-radius:10px;background:rgba(148,163,184,.26);display:block"></span>':(key==='photocard'?'':(key==='showcase'?'':(key==='split'?'':'<span style="height:18px;border-radius:10px;background:rgba(148,163,184,.22);display:block"></span>')))}
+            ${key==='default'?'<span style="height:18px;border-radius:var(--r);background:rgba(148,163,184,.26);display:block"></span>':(key==='photocard'?'':(key==='showcase'?'':(key==='split'?'':'<span style="height:18px;border-radius:var(--r);background:rgba(148,163,184,.22);display:block"></span>')))}
           </span>
           <span style="display:grid;grid-template-columns:${key==='stats'||key==='banner'?'repeat(4,1fr)':(key==='split'?'repeat(3,1fr)':'repeat(3,1fr)')};gap:4px">
             ${Array.from({length:key==='stats'||key==='banner'?4:3}).map(()=>'<span style="height:12px;border-radius:7px;background:rgba(255,255,255,.92);border:1px solid rgba(99,102,241,.12)"></span>').join('')}
@@ -120,7 +120,7 @@ function _renderCfgPdSection(){
         </span>
       </span>
       <span style="padding:7px 9px;background:var(--white)">
-        <span style="display:block;font-size:12px;font-weight:900;color:var(--text2)">${label}${lm===key?' ✓':''}</span>
+        <span style="display:block;font-size:var(--fs-sm);font-weight:900;color:var(--text2)">${label}${lm===key?' ✓':''}</span>
         <span style="display:block;font-size:10px;color:var(--gray-l);margin-top:2px;font-weight:600">${desc}</span>
       </span>
     </button>`).join('');
@@ -157,18 +157,18 @@ function _renderCfgPdSection(){
   const _pdPreviewMetaAlign = (lm==='photocard' || lm==='poster') ? 'center' : 'left';
   const _pdUiPreset = `
     <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--white));box-shadow:0 10px 28px rgba(15,23,42,.05);margin-bottom:16px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🪄 추천 UI 프리셋</div>
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🪄 추천 UI 프리셋</div>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
         <button class="btn btn-xs btn-w" onclick="_applyPdUiPreset('photocard')">포토카드형</button>
         <button class="btn btn-xs btn-w" onclick="_applyPdUiPreset('studio')">방송형</button>
         <button class="btn btn-xs btn-w" onclick="_applyPdUiPreset('dark')">라이트 프리미엄</button>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">디자인 + 레이아웃 조합을 한 번에 적용합니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">디자인 + 레이아웃 조합을 한 번에 적용합니다.</div>
     </div>`;
   const _pdPreviewCard = `
     <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--white));box-shadow:0 10px 28px rgba(15,23,42,.06);margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">👀 현재 조합 미리보기</div>
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">👀 현재 조합 미리보기</div>
         <div style="font-size:10px;color:var(--gray-l);font-weight:800">${dm} × ${lm}</div>
       </div>
       <div style="display:grid;grid-template-columns:minmax(0,1fr) 118px;gap:12px;align-items:stretch">
@@ -195,11 +195,11 @@ function _renderCfgPdSection(){
         <div style="display:flex;flex-direction:column;gap:8px;justify-content:center">
           <div style="padding:9px 10px;border-radius:12px;background:var(--white);border:1px solid var(--border)">
             <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-bottom:3px">추천 포인트</div>
-            <div style="font-size:11px;color:var(--text2);font-weight:800">${lm==='photocard'?'프로필 이미지와 감성 분위기 강조':lm==='showcase'?'이름과 핵심 정보가 넓게 펼쳐짐':lm==='stats'?'상단에서 지표를 먼저 읽기 쉬움':lm==='poster'?'포스터/배너 느낌으로 ‘완전 다른 화면’ 체감':lm==='timeline'?'최근 경기 스트림을 메인으로 바로 보는 구조':lm==='board'?'KPI/카드 보드 중심으로 빠르게 스캔':'균형형 구조로 가장 안정적'}</div>
+            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='photocard'?'프로필 이미지와 감성 분위기 강조':lm==='showcase'?'이름과 핵심 정보가 넓게 펼쳐짐':lm==='stats'?'상단에서 지표를 먼저 읽기 쉬움':lm==='poster'?'포스터/배너 느낌으로 ‘완전 다른 화면’ 체감':lm==='timeline'?'최근 경기 스트림을 메인으로 바로 보는 구조':lm==='board'?'KPI/카드 보드 중심으로 빠르게 스캔':'균형형 구조로 가장 안정적'}</div>
           </div>
           <div style="padding:9px 10px;border-radius:12px;background:var(--white);border:1px solid var(--border)">
             <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-bottom:3px">추천 조합</div>
-            <div style="font-size:11px;color:var(--text2);font-weight:800">${lm==='photocard'?'glass / aurora / pastel':lm==='showcase'?'luxury / editorial / sunset':lm==='stats'?'dashboard / classic / mono':lm==='poster'?'sunset / blush / aurora':lm==='timeline'?'studio / glass / aurora':lm==='board'?'dashboard / mono / classic':'classic / botanical / holo'}</div>
+            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='photocard'?'glass / aurora / pastel':lm==='showcase'?'luxury / editorial / sunset':lm==='stats'?'dashboard / classic / mono':lm==='poster'?'sunset / blush / aurora':lm==='timeline'?'studio / glass / aurora':lm==='board'?'dashboard / mono / classic':'classic / botanical / holo'}</div>
           </div>
         </div>
       </div>
@@ -208,39 +208,39 @@ function _renderCfgPdSection(){
     ${_pdPreviewCard}
     ${_pdUiPreset}
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🎨 디자인 모드</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">🎨 디자인 모드</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${dmCards}</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">스트리머 상세 팝업의 전체적인 UI/디자인을 통째로 바꿉니다. 색상뿐 아니라 카드 모양·글꼴·레이아웃 느낌이 모드마다 다릅니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">스트리머 상세 팝업의 전체적인 UI/디자인을 통째로 바꿉니다. 색상뿐 아니라 카드 모양·글꼴·레이아웃 느낌이 모드마다 다릅니다.</div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🧩 레이아웃 모드</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">🧩 레이아웃 모드</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${lmCards}</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">썸네일은 미리보기이고, 선택하면 현재 열려 있는 스트리머 상세 팝업에 바로 반영됩니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">썸네일은 미리보기이고, 선택하면 현재 열려 있는 스트리머 상세 팝업에 바로 반영됩니다.</div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📏 폰트 크기</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">📏 폰트 크기</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${fsBtns}</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">스트리머 상세 모달 전체 크기에 적용됩니다</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">스트리머 상세 모달 전체 크기에 적용됩니다</div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🖼️ 프로필 이미지 크기</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">🖼️ 프로필 이미지 크기</div>
       <div style="display:flex;align-items:center;gap:10px">
         <input type="range" min="60" max="140" step="5" value="${ps}" style="flex:1;accent-color:var(--blue)" oninput="_setPdProfileSize(this.value);document.getElementById('pd-ps-val').textContent=this.value+'%'">
-        <span id="pd-ps-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${ps}%</span>
+        <span id="pd-ps-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${ps}%</span>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 크기 (기본 100%)</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">프로필 이미지 크기 (기본 100%)</div>
     </div>
-    <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🎓 대학 색상 팝업 배경</div>
+    <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🎓 대학 색상 팝업 배경</div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px">
         <input type="checkbox" ${pdUnivBgEnabled?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdUnivBgEnabled(this.checked)">
-        <span style="font-size:12px;color:var(--text)">스트리머 상세 팝업 배경에 소속 대학 색상 적용</span>
+        <span style="font-size:var(--fs-sm);color:var(--text)">스트리머 상세 팝업 배경에 소속 대학 색상 적용</span>
       </label>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;opacity:${pdUnivBgEnabled?1:.55}">
         <input type="checkbox" ${pdUnivBgPastel?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdUnivBgPastel(this.checked)">
-        <span style="font-size:12px;color:var(--text)">파스텔톤으로 부드럽게 보정</span>
+        <span style="font-size:var(--fs-sm);color:var(--text)">파스텔톤으로 부드럽게 보정</span>
       </label>
-      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">적용 범위</div>
+      <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:6px">적용 범위</div>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:10px;opacity:${pdUnivBgEnabled?1:.55}">
         <button class="btn btn-xs ${pdUnivBgScope==='header'?'btn-b':'btn-w'}" onclick="_setPdUnivBgScope('header')">헤더만</button>
         <button class="btn btn-xs ${pdUnivBgScope==='body'?'btn-b':'btn-w'}" onclick="_setPdUnivBgScope('body')">본문까지</button>
@@ -248,22 +248,22 @@ function _renderCfgPdSection(){
       </div>
       <div style="display:flex;align-items:center;gap:10px;opacity:${pdUnivBgEnabled?1:.55}">
         <input type="range" min="0" max="60" step="2" value="${pdUnivBgTint}" style="flex:1;accent-color:var(--blue)" oninput="_setPdUnivBgTint(this.value);document.getElementById('pd-univbg-val').textContent=this.value+'%'">
-        <span id="pd-univbg-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${pdUnivBgTint}%</span>
+        <span id="pd-univbg-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${pdUnivBgTint}%</span>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">켜면 헤더/본문 배경에 대학 색상이 은은하게 섞입니다. 농도는 0~60% 범위에서 조절됩니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">켜면 헤더/본문 배경에 대학 색상이 은은하게 섞입니다. 농도는 0~60% 범위에서 조절됩니다.</div>
       <div style="height:1px;background:var(--border2);margin:10px 0"></div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
         <input type="checkbox" ${pdUnivBtnEnabled?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdUnivBtnEnabled(this.checked)">
-        <span style="font-size:12px;color:var(--text)">팝업 안 버튼에도 소속 대학 색상 적용</span>
+        <span style="font-size:var(--fs-sm);color:var(--text)">팝업 안 버튼에도 소속 대학 색상 적용</span>
       </label>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">켜면 팝업 안의 보조 버튼(흰 버튼)에도 대학 색상이 은은하게 섞입니다. 배경 적용을 켜야 함께 동작합니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">켜면 팝업 안의 보조 버튼(흰 버튼)에도 대학 색상이 은은하게 섞입니다. 배경 적용을 켜야 함께 동작합니다.</div>
     </div>
-    <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🖼 스트리머 상세 헤더 기본 배경</div>
+    <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🖼 스트리머 상세 헤더 기본 배경</div>
       <input type="text" value="${phbg}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px" oninput="_setPdHeaderBg('header_bg_img',this.value)">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">표시 방식</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:4px">표시 방식</div>
           <select style="width:100%" onchange="_setPdHeaderBg('header_bg_fit',this.value)">
             <option value="contain"${phbgFit==='contain'?' selected':''}>맞춤</option>
             <option value="cover"${phbgFit==='cover'?' selected':''}>채우기</option>
@@ -271,14 +271,14 @@ function _renderCfgPdSection(){
           </select>
         </div>
         <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">크기 조절</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:4px">크기 조절</div>
           <div style="display:flex;gap:8px;align-items:center">
             <input type="range" min="40" max="220" step="5" value="${phbgScale}" style="flex:1;accent-color:var(--blue)" oninput="_setPdHeaderBg('header_bg_scale',this.value);document.getElementById('cfg-pdh-scale').textContent=this.value+'%'">
-            <span id="cfg-pdh-scale" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${phbgScale}%</span>
+            <span id="cfg-pdh-scale" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${phbgScale}%</span>
           </div>
         </div>
       </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 6px">이미지 위치</div>
+      <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin:10px 0 6px">이미지 위치</div>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
         ${[
           ['left top','↖ 좌상'],['center top','↑ 상단'],['right top','↗ 우상'],
@@ -289,28 +289,28 @@ function _renderCfgPdSection(){
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
         <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">가로 미세 위치</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:4px">가로 미세 위치</div>
           <div style="display:flex;gap:8px;align-items:center">
             <input type="range" min="0" max="100" step="1" value="${_phbgPosX}" style="flex:1;accent-color:var(--blue)" oninput="_setPdHeaderBg('header_bg_pos_x',this.value);document.getElementById('cfg-pdh-posx').textContent=this.value+'%'">
-            <span id="cfg-pdh-posx" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${_phbgPosX}%</span>
+            <span id="cfg-pdh-posx" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${_phbgPosX}%</span>
           </div>
         </div>
         <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">세로 미세 위치</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:4px">세로 미세 위치</div>
           <div style="display:flex;gap:8px;align-items:center">
             <input type="range" min="0" max="100" step="1" value="${_phbgPosY}" style="flex:1;accent-color:var(--blue)" oninput="_setPdHeaderBg('header_bg_pos_y',this.value);document.getElementById('cfg-pdh-posy').textContent=this.value+'%'">
-            <span id="cfg-pdh-posy" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${_phbgPosY}%</span>
+            <span id="cfg-pdh-posy" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${_phbgPosY}%</span>
           </div>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">개별 스트리머에 별도 배경을 넣지 않은 경우 기본값으로 사용됩니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">개별 스트리머에 별도 배경을 넣지 않은 경우 기본값으로 사용됩니다.</div>
     </div>
-    <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🏫 대학 상세 헤더 기본 배경</div>
+    <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🏫 대학 상세 헤더 기본 배경</div>
       <input type="text" value="${uhbg}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px" oninput="_setUdHeaderBg('header_bg_img',this.value)">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">표시 방식</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:4px">표시 방식</div>
           <select style="width:100%" onchange="_setUdHeaderBg('header_bg_fit',this.value)">
             <option value="contain"${uhbgFit==='contain'?' selected':''}>맞춤</option>
             <option value="cover"${uhbgFit==='cover'?' selected':''}>채우기</option>
@@ -318,95 +318,95 @@ function _renderCfgPdSection(){
           </select>
         </div>
         <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">크기 조절</div>
+          <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:4px">크기 조절</div>
           <div style="display:flex;gap:8px;align-items:center">
             <input type="range" min="40" max="220" step="5" value="${uhbgScale}" style="flex:1;accent-color:var(--blue)" oninput="_setUdHeaderBg('header_bg_scale',this.value);document.getElementById('cfg-udh-scale').textContent=this.value+'%'">
-            <span id="cfg-udh-scale" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${uhbgScale}%</span>
+            <span id="cfg-udh-scale" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${uhbgScale}%</span>
           </div>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">개별 대학에 별도 배경을 넣지 않은 경우 기본값으로 사용됩니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">개별 대학에 별도 배경을 넣지 않은 경우 기본값으로 사용됩니다.</div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📐 프로필 이미지 모양 (전역)</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">📐 프로필 이미지 모양 (전역)</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-xs btn-w" onclick="cfgGo('profileshape')">⚙️ 설정 열기</button>
-        <span style="font-size:11px;color:var(--gray-l);font-weight:800">현재: ${_shapeLbl}</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:800">현재: ${_shapeLbl}</span>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">프로필 이미지 모양 설정은 ‘🖼️ 프로필 이미지 모양’ 메뉴로 분리되었습니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">프로필 이미지 모양 설정은 ‘🖼️ 프로필 이미지 모양’ 메뉴로 분리되었습니다.</div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🎨 승패 색상 농도</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">🎨 승패 색상 농도</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">${cpBtns}</div>
-      <div style="font-size:11px;color:var(--gray-l)">전적·승률·포인트·모드별 전적의 승/패/승률 색상 전체에 적용</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l)">전적·승률·포인트·모드별 전적의 승/패/승률 색상 전체에 적용</div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🎨 경기 상세(팝업) 승/패 배경 강도</div>
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🎨 경기 상세(팝업) 승/패 배경 강도</div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">승자 배경 강도</label>
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:128px">승자 배경 강도</label>
         <input type="range" min="0" max="30" step="1" value="${mdWinTint}" style="flex:1;accent-color:var(--blue)"
           oninput="localStorage.setItem('su_md_win_tint',String(this.value));document.getElementById('cfg-md-win-val').textContent=this.value+'%';try{if(typeof render==='function')render();}catch(e){}">
-        <span id="cfg-md-win-val" style="font-size:11px;color:var(--gray-l);min-width:34px;text-align:right;font-weight:800">${mdWinTint}%</span>
+        <span id="cfg-md-win-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:34px;text-align:right;font-weight:800">${mdWinTint}%</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">패자 회색 강도</label>
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:128px">패자 회색 강도</label>
         <input type="range" min="0" max="30" step="1" value="${mdLoseGray}" style="flex:1;accent-color:var(--blue)"
           oninput="localStorage.setItem('su_md_lose_gray',String(this.value));document.getElementById('cfg-md-lose-val').textContent=this.value+'%';try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){}">
-        <span id="cfg-md-lose-val" style="font-size:11px;color:var(--gray-l);min-width:34px;text-align:right;font-weight:800">${mdLoseGray}%</span>
+        <span id="cfg-md-lose-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:34px;text-align:right;font-weight:800">${mdLoseGray}%</span>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">승자는 대학색 배경의 농도, 패자는 회색 배경의 농도를 조절합니다</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">승자는 대학색 배경의 농도, 패자는 회색 배경의 농도를 조절합니다</div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🏫 경기 상세 상단 대학 로고 크기</div>
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🏫 경기 상세 상단 대학 로고 크기</div>
       <div style="display:flex;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">로고 크기</label>
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:128px">로고 크기</label>
         <input type="range" min="28" max="64" step="2" value="${mdLogoSize}" style="flex:1;accent-color:var(--blue)"
           oninput="localStorage.setItem('su_md_logo_size',String(this.value));document.getElementById('cfg-md-logo-val').textContent=this.value+'px';try{document.documentElement.style.setProperty('--su_md_logo_size',this.value+'px');}catch(e){};try{if(typeof applyMatchDetailVars==='function')applyMatchDetailVars();}catch(e){};try{if(typeof render==='function')render();}catch(e){}">
-        <span id="cfg-md-logo-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdLogoSize}px</span>
+        <span id="cfg-md-logo-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdLogoSize}px</span>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">경기 상세 팝업 상단(대학 카드) 로고 크기를 조절합니다</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">경기 상세 팝업 상단(대학 카드) 로고 크기를 조절합니다</div>
     </div>
-    <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🎨 경기 상세 팀 헤더 색상</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">대학CK / 티어대회 / 프로리그 경기 상세 상단의 A팀·B팀 색상을 기본 대학색 대신 고정 색으로 덮어쓸 수 있습니다.</div>
+    <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🎨 경기 상세 팀 헤더 색상</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">대학CK / 티어대회 / 프로리그 경기 상세 상단의 A팀·B팀 색상을 기본 대학색 대신 고정 색으로 덮어쓸 수 있습니다.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
-        <div style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--white)">
-          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:8px">🤝 대학CK</div>
+        <div style="padding:10px;border:1px solid var(--border);border-radius:var(--r);background:var(--white)">
+          <div style="font-size:var(--fs-caption);font-weight:900;color:var(--text2);margin-bottom:8px">🤝 대학CK</div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">A팀</label>
+            <label style="min-width:48px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">A팀</label>
             <input type="color" value="${mdCkA}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('ck','a',this.value)">
-            <input type="text" value="${mdCkA}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('ck','a',this.value)">
+            <input type="text" value="${mdCkA}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:800" onblur="_setMdTeamHeaderColor('ck','a',this.value)">
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">B팀</label>
+            <label style="min-width:48px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">B팀</label>
             <input type="color" value="${mdCkB}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('ck','b',this.value)">
-            <input type="text" value="${mdCkB}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('ck','b',this.value)">
+            <input type="text" value="${mdCkB}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:800" onblur="_setMdTeamHeaderColor('ck','b',this.value)">
           </div>
         </div>
-        <div style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--white)">
-          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:8px">🎯 티어대회</div>
+        <div style="padding:10px;border:1px solid var(--border);border-radius:var(--r);background:var(--white)">
+          <div style="font-size:var(--fs-caption);font-weight:900;color:var(--text2);margin-bottom:8px">🎯 티어대회</div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">A팀</label>
+            <label style="min-width:48px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">A팀</label>
             <input type="color" value="${mdTtA}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('tt','a',this.value)">
-            <input type="text" value="${mdTtA}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('tt','a',this.value)">
+            <input type="text" value="${mdTtA}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:800" onblur="_setMdTeamHeaderColor('tt','a',this.value)">
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">B팀</label>
+            <label style="min-width:48px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">B팀</label>
             <input type="color" value="${mdTtB}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('tt','b',this.value)">
-            <input type="text" value="${mdTtB}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('tt','b',this.value)">
+            <input type="text" value="${mdTtB}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:800" onblur="_setMdTeamHeaderColor('tt','b',this.value)">
           </div>
         </div>
-        <div style="padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--white)">
-          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:8px">🏅 프로리그</div>
+        <div style="padding:10px;border:1px solid var(--border);border-radius:var(--r);background:var(--white)">
+          <div style="font-size:var(--fs-caption);font-weight:900;color:var(--text2);margin-bottom:8px">🏅 프로리그</div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">A팀</label>
+            <label style="min-width:48px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">A팀</label>
             <input type="color" value="${mdProA}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('pro','a',this.value)">
-            <input type="text" value="${mdProA}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('pro','a',this.value)">
+            <input type="text" value="${mdProA}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:800" onblur="_setMdTeamHeaderColor('pro','a',this.value)">
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <label style="min-width:48px;font-size:11px;font-weight:700;color:var(--text3)">B팀</label>
+            <label style="min-width:48px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">B팀</label>
             <input type="color" value="${mdProB}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);cursor:pointer" onchange="_setMdTeamHeaderColor('pro','b',this.value)">
-            <input type="text" value="${mdProB}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:800" onblur="_setMdTeamHeaderColor('pro','b',this.value)">
+            <input type="text" value="${mdProB}" style="flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:800" onblur="_setMdTeamHeaderColor('pro','b',this.value)">
           </div>
         </div>
       </div>
@@ -415,8 +415,8 @@ function _renderCfgPdSection(){
       </div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🖼️ 경기 상세 프로필 이미지</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">현재 기기: <b>${_mdDevLabel}</b></div>
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🖼️ 경기 상세 프로필 이미지</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">현재 기기: <b>${_mdDevLabel}</b></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <button class="btn btn-xs ${mdAvatarFit==='cover'?'btn-b':'btn-w'}"
           onclick="localStorage.setItem('su_md_avatar_fit_${_mdDevKey}','cover');try{if(typeof render==='function')render();}catch(e){};_renderCfgPdSection()">가득 채우기</button>
@@ -426,12 +426,12 @@ function _renderCfgPdSection(){
           onclick="localStorage.setItem('su_md_avatar_fit_${_mdDevKey}','contain');try{if(typeof render==='function')render();}catch(e){};_renderCfgPdSection()">원본 비율</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <label style="font-size:12px;font-weight:700;color:var(--text2);min-width:128px">크기 배율</label>
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:128px">크기 배율</label>
         <input type="range" min="80" max="200" step="10" value="${mdAvatarScale}" style="flex:1;accent-color:var(--blue)"
           oninput="localStorage.setItem('su_md_avatar_scale_${_mdDevKey}',String(this.value));document.getElementById('cfg-md-avscale-val').textContent=this.value+'%';try{if(typeof render==='function')render();}catch(e){}">
-        <span id="cfg-md-avscale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdAvatarScale}%</span>
+        <span id="cfg-md-avscale-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:800">${mdAvatarScale}%</span>
       </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text3);margin:10px 0 6px">이미지 위치</div>
+      <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin:10px 0 6px">이미지 위치</div>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
         ${[
           ['left top','↖ 좌상'],['center top','↑ 상단'],['right top','↗ 우상'],
@@ -440,62 +440,62 @@ function _renderCfgPdSection(){
         ].map(([pos,label])=>`<button class="btn btn-xs ${mdAvatarPos===pos?'btn-b':'btn-w'}"
           onclick="localStorage.setItem('su_md_avatar_pos_${_mdDevKey}','${pos}');try{if(typeof render==='function')render();}catch(e){};_renderCfgPdSection()">${label}</button>`).join('')}
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">경기 상세(대회탭 포함) 프로필 이미지의 채우기/크기 배율을 조절합니다</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">경기 상세(대회탭 포함) 프로필 이미지의 채우기/크기 배율을 조절합니다</div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">📊 전적·승률 배경 색상 강도</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">📊 전적·승률 배경 색상 강도</div>
       <div style="display:flex;align-items:center;gap:10px">
         <input type="range" min="0" max="30" step="2" value="${st}" style="flex:1;accent-color:var(--blue)" oninput="_setPdTint('stats',this.value);document.getElementById('pd-st-val').textContent=this.value+'%'">
-        <span id="pd-st-val" style="font-size:11px;color:var(--gray-l);min-width:28px;font-weight:700">${st}%</span>
+        <span id="pd-st-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:28px;font-weight:700">${st}%</span>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">전적/승률/포인트/ELO 영역 배경 대학색 강도 (현재 ${st}%)</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:4px">전적/승률/포인트/ELO 영역 배경 대학색 강도 (현재 ${st}%)</div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🃏 모드별 전적 배경 색상 강도</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">🃏 모드별 전적 배경 색상 강도</div>
       <div style="display:flex;align-items:center;gap:10px">
         <input type="range" min="0" max="30" step="2" value="${mt}" style="flex:1;accent-color:var(--blue)" oninput="_setPdTint('mode',this.value);document.getElementById('pd-mt-val').textContent=this.value+'%'">
-        <span id="pd-mt-val" style="font-size:11px;color:var(--gray-l);min-width:28px;font-weight:700">${mt}%</span>
+        <span id="pd-mt-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:28px;font-weight:700">${mt}%</span>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">모드별 전적 카드 배경 모드색 강도 (현재 ${mt}%)</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:4px">모드별 전적 카드 배경 모드색 강도 (현재 ${mt}%)</div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🎨 최근 경기 기록 ‘종목(종류) 배지’ 색상</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">스트리머 상세 → 최근 경기 기록의 “종류” 배지 색상을 변경합니다.</div>
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🎨 최근 경기 기록 ‘종목(종류) 배지’ 색상</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">스트리머 상세 → 최근 경기 기록의 “종류” 배지 색상을 변경합니다.</div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px">
         ${_pdModeColorRows}
         <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
           <button class="btn btn-w btn-xs" onclick="cfgPdResetModeBadgeColors()">🔄 기본값으로 초기화</button>
-          <span style="font-size:11px;color:var(--gray-l)">※ 바뀐 색상은 즉시 반영됩니다</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 바뀐 색상은 즉시 반영됩니다</span>
         </div>
       </div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">⚙️ 팝업 동작 설정</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">⚙️ 팝업 동작 설정</div>
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
           <input type="checkbox" ${closeOnBadge?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdCloseOnBadge(this.checked)">
-          <span style="font-size:12px;color:var(--text)">종목 클릭 시 팝업 닫기</span>
+          <span style="font-size:var(--fs-sm);color:var(--text)">종목 클릭 시 팝업 닫기</span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--gray-l)">활성화 시: 종목 아이콘/배지 클릭 시 스트리머 상세 팝업이 닫힙니다</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l)">활성화 시: 종목 아이콘/배지 클릭 시 스트리머 상세 팝업이 닫힙니다</div>
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
           <input type="checkbox" ${closeOnMatchPlayer?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdCloseOnMatchPlayer(this.checked)">
-          <span style="font-size:12px;color:var(--text)">경기 상세에서 선수 클릭 시 팝업 닫기</span>
+          <span style="font-size:var(--fs-sm);color:var(--text)">경기 상세에서 선수 클릭 시 팝업 닫기</span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--gray-l)">활성화 시: 경기 상세 팝업에서 선수 이름을 누르면 경기 상세 팝업이 닫힙니다</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l)">활성화 시: 경기 상세 팝업에서 선수 이름을 누르면 경기 상세 팝업이 닫힙니다</div>
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
           <input type="checkbox" ${headerClickClose?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setPdHeaderClickClose(this.checked)">
-          <span style="font-size:12px;color:var(--text)">팝업 헤더 클릭 시 닫기</span>
+          <span style="font-size:var(--fs-sm);color:var(--text)">팝업 헤더 클릭 시 닫기</span>
         </label>
       </div>
-      <div style="font-size:11px;color:var(--gray-l)">활성화 시: 각 팝업 상단 헤더(제목)를 클릭하면 팝업이 닫힙니다 (드래그 이동은 유지)</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l)">활성화 시: 각 팝업 상단 헤더(제목)를 클릭하면 팝업이 닫힙니다 (드래그 이동은 유지)</div>
     </div>
     <div>
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">🌗 대학별 헤더 어둡기</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">밝은 색상 대학은 어둡게 조정하면 이름이 더 잘 보입니다</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:4px">🌗 대학별 헤더 어둡기</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">밝은 색상 대학은 어둡게 조정하면 이름이 더 잘 보입니다</div>
       ${univRows}
     </div>`;
 }

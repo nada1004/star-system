@@ -58,7 +58,7 @@
 .mw-target-wrap img{width:100%;height:100%;object-fit:cover;display:block}
 .mw-target-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;background:linear-gradient(135deg,var(--mw-gold-l),var(--mw-gold-d))}
 @keyframes mwTargetIn{from{opacity:0;transform:scale(.8) rotate(-6deg)}to{opacity:1;transform:scale(1) rotate(0)}}
-.mw-wanted-caption{margin-top:8px;font-size:11px;font-weight:800;color:var(--mw-ink2);line-height:1.5}
+.mw-wanted-caption{margin-top:8px;font-size:var(--fs-caption);font-weight:800;color:var(--mw-ink2);line-height:1.5}
 
 /* 점수판 — 앰버 LED 전광판 */
 .mw-scoreboard{
@@ -73,7 +73,7 @@
 .mw-timer-row{margin-top:8px}
 .mw-timer-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
 .mw-timer-label{font-size:9px;font-weight:800;letter-spacing:.08em;color:#c4a877;text-transform:uppercase}
-.mw-timer-value{font-family:'Courier New',ui-monospace,monospace;font-size:12px;font-weight:900;color:#ffe4ae}
+.mw-timer-value{font-family:'Courier New',ui-monospace,monospace;font-size:var(--fs-sm);font-weight:900;color:#ffe4ae}
 .mw-timer-track{height:7px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
 .mw-timer-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--mw-gold-l),var(--mw-gold));transition:width .3s linear,background .3s}
 .mw-scoreboard.is-time-low .mw-timer-fill{background:linear-gradient(90deg,#f87171,#ef4444);animation:mwPulseBar .6s ease-in-out infinite}
@@ -82,7 +82,7 @@
 
 .mw-diff-bar{display:flex;gap:6px}
 .mw-diff-pill{
-  flex:1;padding:8px 6px;border-radius:10px;border:1px solid rgba(217,119,6,.3);
+  flex:1;padding:8px 6px;border-radius:var(--r);border:1px solid rgba(217,119,6,.3);
   background:linear-gradient(180deg,#fff,#f8edd2);color:var(--mw-ink2);
   font-size:11.5px;font-weight:900;cursor:pointer;font-family:inherit;transition:.12s;
   box-shadow:0 6px 12px rgba(154,92,7,.08);text-align:center;
@@ -105,7 +105,7 @@
 /* 게임판 — 은은한 저녁 초원 (사선 스트라이프 제거, 여백 확보로 프레임 밖 튀어나옴 방지) */
 .mw-board-area{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
 .mw-status{
-  padding:9px 12px;border-radius:11px;font-size:12px;font-weight:800;line-height:1.5;text-align:center;
+  padding:9px 12px;border-radius:11px;font-size:var(--fs-sm);font-weight:800;line-height:1.5;text-align:center;
   background:rgba(255,255,255,.85);border:1px solid rgba(217,119,6,.18);color:var(--mw-ink2);
   box-shadow:0 4px 10px rgba(60,40,15,.05);
 }
@@ -150,8 +150,8 @@
 @keyframes mwHitGood{0%{transform:translate(-50%,0) scale(1);opacity:1}55%{transform:translate(-50%,-14%) scale(1.18) rotate(-8deg);opacity:1}100%{transform:translate(-50%,54%) scale(.5) rotate(10deg);opacity:0}}
 @keyframes mwHitBad{0%{transform:translate(-50%,0) scale(1);opacity:1}25%{transform:translate(-58%,0) scale(1) rotate(-10deg)}55%{transform:translate(-42%,0) scale(1) rotate(10deg)}100%{transform:translate(-50%,54%) scale(.55);opacity:0}}
 .mw-mole img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
-.mw-mole-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;background:#6b7280;pointer-events:none}
-.mw-hole.is-good::after{content:attr(data-gain);position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:15px;font-weight:950;color:#ffd76a;text-shadow:0 2px 4px rgba(0,0,0,.5);animation:mwFloatUp .55s ease forwards;pointer-events:none;white-space:nowrap}
+.mw-mole-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:var(--fs-base);font-weight:900;color:#fff;background:#6b7280;pointer-events:none}
+.mw-hole.is-good::after{content:attr(data-gain);position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:var(--fs-md);font-weight:950;color:#ffd76a;text-shadow:0 2px 4px rgba(0,0,0,.5);animation:mwFloatUp .55s ease forwards;pointer-events:none;white-space:nowrap}
 @keyframes mwFloatUp{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-20px)}}
 
 /* 결과 오버레이 — 포획 완료 트로피 카드 */
@@ -169,7 +169,7 @@
 .mw-result-score{font-family:'Courier New',ui-monospace,monospace;font-size:clamp(26px,6vw,36px);font-weight:900;color:var(--mw-gold-d);margin:2px 0 8px}
 .mw-result-sub{font-size:11.5px;color:var(--mw-ink3);line-height:1.7}
 @keyframes mwPopIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
-.mw-empty-note{font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;margin-top:4px;line-height:1.6}
+.mw-empty-note{font-size:var(--fs-sm);color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r);padding:10px 12px;margin-top:4px;line-height:1.6}
 
 body.dark .mw-console{background:linear-gradient(155deg,#1c1710,#171310);border-color:rgba(242,181,66,.16)}
 body.dark .mw-console::before{border-color:rgba(242,181,66,.1)}

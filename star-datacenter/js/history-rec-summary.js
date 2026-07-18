@@ -165,7 +165,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
         const dt = new Date(dk + 'T00:00:00');
         _dkLabel = `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_daysF[dt.getDay()]}`;
       }
-      h += `<div style="margin-bottom:22px"><div class="rec-date-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
+      h += `<div style="margin-bottom:22px"><div class="rec-date-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base);color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
       _byDatePage[dk].forEach(m => _renderItem(m));
       h += `</div>`;
     });
@@ -174,7 +174,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
     if (_totalPages > 1) {
       const _pgStart = _safePage * _pgSize + 1;
       const _pgEnd   = Math.min((_safePage + 1) * _pgSize, _totalItems);
-      const _btnBase = `style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 10px;border-radius:8px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s"`;
+      const _btnBase = `style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 10px;border-radius:8px;border:1.5px solid;font-size:var(--fs-base);font-weight:700;cursor:pointer;transition:all .15s"`;
       const _btnOn   = `background:linear-gradient(135deg,#064e3b,#10b981);border-color:#10b981;color:#fff;box-shadow:0 4px 12px rgba(16,185,129,.30)`;
       const _btnOff  = `background:var(--card,#fff);border-color:var(--border,#e2e8f0);color:var(--text,#334155)`;
       const _btnDis  = `background:var(--card,#fff);border-color:var(--border,#e2e8f0);color:var(--gray-l,#94a3b8);cursor:not-allowed;opacity:0.5`;
@@ -197,7 +197,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
       _pgBtns += `<button ${_btnBase} style="${_safePage===_totalPages-1?_btnDis:_btnOff}" onclick="if(${_safePage}<${_totalPages-1}){window._ttPageMap=window._ttPageMap||{};window._ttPageMap['${_pgKey}']=${_safePage}+1;render()}" ${_safePage===_totalPages-1?'disabled':''}>▶</button>`;
 
       h += `<div class="no-export" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 0 24px">
-        <div style="font-size:12px;color:var(--text2,#64748b);font-weight:600">${_totalItems}개 중 ${_pgStart}–${_pgEnd}번째 · 총 ${_totalPages}페이지</div>
+        <div style="font-size:var(--fs-sm);color:var(--text2,#64748b);font-weight:600">${_totalItems}개 중 ${_pgStart}–${_pgEnd}번째 · 총 ${_totalPages}페이지</div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center">${_pgBtns}</div>
       </div>`;
     }
@@ -206,7 +206,7 @@ function recSummaryListHTMLFiltered(arr,mode,ctxPrefix,filterUniv,pageOpts){
     _dateKeysF.forEach(dk=>{
       let _dkLabel=dk;
       if(dk!=='날짜 미정'&&dk.match(/^\d{4}-\d{2}-\d{2}$/)){const dt=new Date(dk+'T00:00:00');_dkLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_daysF[dt.getDay()]}`;}
-      h+=`<div style="margin-bottom:22px"><div class="rec-date-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
+      h+=`<div style="margin-bottom:22px"><div class="rec-date-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base);color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
       _byDateF[dk].forEach(m=>_renderItem(m));
       h+=`</div>`;
     });
@@ -404,7 +404,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">`;
     const _onAll = !_pickedDate;
     h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','');histPage['${mode}']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?_dateBtnCol:'var(--border)'};background:${_onAll?_dateBtnBg:'var(--surface)'};cursor:pointer;text-align:left">
-        <div style="font-weight:1000;font-size:12px;color:${_onAll?_dateBtnCol:'var(--text2)'}">전체</div>
+        <div style="font-weight:1000;font-size:var(--fs-sm);color:${_onAll?_dateBtnCol:'var(--text2)'}">전체</div>
         <div style="margin-top:6px;font-size:10px;color:var(--gray-l)">날짜 필터 해제</div>
       </button>`;
     _allDates.forEach(d0=>{
@@ -419,7 +419,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       const cnt=_baseFiltered.filter(x=>String(x.m.d||'').trim()===d0).length;
       h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','${d0}');histPage['${mode}']=0;render()" style="flex-shrink:0;text-align:left;min-width:150px;max-width:240px;padding:10px 12px;border-radius:12px;border:1px solid ${on?_dateBtnCol:'var(--border)'};background:${on?_dateBtnBg:'var(--surface)'};cursor:pointer">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-weight:1000;font-size:12px;color:${on?_dateBtnCol:'var(--text2)'}">${label}</span>
+          <span style="font-weight:1000;font-size:var(--fs-sm);color:${on?_dateBtnCol:'var(--text2)'}">${label}</span>
           <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${cnt?`기록 ${cnt}`:''}</span>
         </div>
         ${prev}
@@ -446,13 +446,13 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     :_bulkKey==='civil'?[{l:'⚡ 미니대전',d:'mini'},{l:'🏟️ 대학대전',d:'univm'}]
     :_bulkKey==='univm'?[{l:'⚡ 미니대전',d:'mini'},{l:'⚔️ 시빌워',d:'civil'}]:[];
   const sortBar=`${_bulkOn?`<div class="no-export" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
-    <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">
+    <label style="display:flex;align-items:center;gap:5px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;color:var(--blue)">
       <input type="checkbox" id="bulk-all-${_bulkKey}" onchange="bulkToggleAll('${_bulkKey}',this.checked)" style="width:14px;height:14px;cursor:pointer"> 전체
     </label>
-    <span id="bulk-cnt-${_bulkKey}" style="font-size:11px;color:var(--blue);font-weight:700;min-width:64px">0개 선택됨</span>
+    <span id="bulk-cnt-${_bulkKey}" style="font-size:var(--fs-caption);color:var(--blue);font-weight:700;min-width:64px">0개 선택됨</span>
     <span style="color:var(--border2)">│</span>
-    ${_bulkDests.map(bd=>`<button onclick="bulkMoveTeam('${_bulkKey}','${bd.d}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer">${bd.l}로 이동</button>`).join('')}
-    <button onclick="bulkDeleteRecs('${_bulkKey}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #dc2626;background:#dc2626;color:#fff;font-size:11px;font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
+    ${_bulkDests.map(bd=>`<button onclick="bulkMoveTeam('${_bulkKey}','${bd.d}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:var(--fs-caption);font-weight:700;cursor:pointer">${bd.l}로 이동</button>`).join('')}
+    <button onclick="bulkDeleteRecs('${_bulkKey}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #dc2626;background:#dc2626;color:#fff;font-size:var(--fs-caption);font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
   </div>`:''}`;
 
   if(!totalItems){
@@ -563,7 +563,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
             <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
               <div class="rec-sum-score score-click" onclick="toggleDetail('${key}')" title="클릭하여 상세 보기/닫기">
                 <span style="color:${aWin?'var(--win-col)':bWin?'var(--lose-col)':'var(--text)'}">${m.sa}</span>
-                <span style="color:var(--gray-l);font-size:12px;font-weight:400">:</span>
+                <span style="color:var(--gray-l);font-size:var(--fs-sm);font-weight:400">:</span>
                 <span style="color:${bWin?'var(--win-col)':aWin?'var(--lose-col)':'var(--text)'}">${m.sb}</span>
               </div>
             </div>
@@ -580,7 +580,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
       </div>
       <div id="det-${key}" class="rec-detail-area">
         ${_regDet(key,{...m,_editRef:`${_editMode}:${i}`}, mode, labelA, labelB, ca, cb, aWin, bWin, i)}
-        ${(()=>{const _note=m.memo?`<div class="rec-note-box">📝 ${m.memo}</div>`:''; const _memo=isLoggedIn&&_rcMemoOn?`<div class="fbar merged-subbar no-export rec-detail-footer__actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:12px"><button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">🗑️ 삭제</button>`:''}</div>`:''; return (_note||_memo)?`<div class="rec-detail-footer">${_note}${_memo}</div>`:'';})()}
+        ${(()=>{const _note=m.memo?`<div class="rec-note-box">📝 ${m.memo}</div>`:''; const _memo=isLoggedIn&&_rcMemoOn?`<div class="fbar merged-subbar no-export rec-detail-footer__actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="text" id="memo-${key}" placeholder="경기 메모 입력..." value="${m.memo||''}" style="flex:1;font-size:var(--fs-sm)"><button class="btn btn-w btn-xs" onclick="saveMemo('${mode}',${i},'memo-${key}')">💾 메모</button>${m.memo?`<button class="btn btn-r btn-xs" onclick="saveMemo('${mode}',${i},null)">🗑️ 삭제</button>`:''}</div>`:''; return (_note||_memo)?`<div class="rec-detail-footer">${_note}${_memo}</div>`:'';})()}
       </div>
     </div>`;
   }
@@ -594,7 +594,7 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
   _dateKeys.forEach(dk=>{
     let _dkLabel=dk;
     if(dk!=='날짜 미정'&&dk.match(/^\d{4}-\d{2}-\d{2}$/)){const dt=new Date(dk+'T00:00:00');_dkLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_days[dt.getDay()]}`;}
-    h+=`<div style="margin-bottom:22px"><div class="rec-date-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
+    h+=`<div style="margin-bottom:22px"><div class="rec-date-header" style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base);color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_dkLabel}</div></div>`;
     _byDate[dk].forEach(({m,i})=>{ h+=_recItemHTML(m,i); });
     h+=`</div>`;
   });
@@ -614,10 +614,10 @@ function recSummaryListHTML(arr, mode, context, extraFilter){
     }
     pager+=`</span>`;
     // 모바일: 현재 페이지/전체페이지 표시
-    pager+=`<span class="rec-pager-simple" style="font-size:13px;font-weight:500;color:var(--text);min-width:60px;text-align:center">${curPage+1} / ${pages}</span>`;
+    pager+=`<span class="rec-pager-simple" style="font-size:var(--fs-base);font-weight:500;color:var(--text);min-width:60px;text-align:center">${curPage+1} / ${pages}</span>`;
     pager+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['${pageKey}']=Math.min(${pages-1},${curPage}+1);render()" ${curPage===pages-1?'disabled':''}>›</button>`;
     pager+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['${pageKey}']=${pages-1};render()" ${curPage===pages-1?'disabled':''}>»</button>`;
-    pager+=`<span style="font-size:11px;color:var(--text3);margin-left:6px">${curPage+1} / ${pages}</span>`;
+    pager+=`<span style="font-size:var(--fs-caption);color:var(--text3);margin-left:6px">${curPage+1} / ${pages}</span>`;
     pager+=`</div>`;
     h+=pager;
   }

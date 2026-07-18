@@ -254,7 +254,7 @@ function buildPlayerYearFilterBar(opts){
   const yLoss=modeHist.filter(h=>h.result==='패').length;
   const yTot=yWin+yLoss;
   const yWr=yTot?Math.round(yWin/yTot*100):0;
-  return `<div class="pd-year-filter-bar" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px;padding:${isMobile?'5px 7px':'6px 8px'};background:var(--surface);border:1px solid var(--border);border-radius:10px">
+  return `<div class="pd-year-filter-bar" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px;padding:${isMobile?'5px 7px':'6px 8px'};background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
     <span style="font-size:${chipFs}px;font-weight:900;color:var(--text3);flex-shrink:0">연도</span>
     ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
       <label class="year-filter-chip ${selectedYears.length===0?'active':''}" data-pd-action="year-set-all" data-pd-name="${safeName}" data-pd-all-years='${JSON.stringify(availYears).replace(/'/g,'&#39;')}' style="display:flex;align-items:center;gap:4px;font-size:${chipFs}px;font-weight:900;padding:${chipPad};border-radius:${chipR};border:1px solid var(--border2);background:${selectedYears.length===0?'var(--blue)':'var(--surface)'};color:${selectedYears.length===0?'#fff':'var(--text3)'};cursor:pointer">
@@ -269,7 +269,7 @@ function buildPlayerYearFilterBar(opts){
       ${availYears.map(y=>`<option value="${y}" ${selectedYear===y?'selected':''}>${y}년</option>`).join('')}
     </select>`}
     ${selectedYear&&yTot?`<span style="font-size:10px;font-weight:800;color:var(--text2)">${yWin}승 ${yLoss}패 <span style="color:${yWr>=50?'#16a34a':'#dc2626'}">${yWr}%</span> (${yTot})</span>`:''}
-    ${selectedYear?`<button data-pd-action="year-reset" data-pd-name="${safeName}" style="margin-left:auto;padding:2px 8px;border-radius:10px;border:1px solid var(--border2);background:var(--white);font-size:10px;cursor:pointer;font-weight:800;color:var(--text3)">초기화</button>`:''}
+    ${selectedYear?`<button data-pd-action="year-reset" data-pd-name="${safeName}" style="margin-left:auto;padding:2px 8px;border-radius:var(--r);border:1px solid var(--border2);background:var(--white);font-size:10px;cursor:pointer;font-weight:800;color:var(--text3)">초기화</button>`:''}
   </div>`;
 }
 
@@ -286,19 +286,19 @@ function buildPlayerSeasonFilterBar(opts){
   return `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
     <span style="font-size:10px;color:var(--gray-l);font-weight:700">시즌</span>
     ${isLoggedIn?`<div style="display:flex;gap:4px;flex-wrap:wrap">
-      <label class="season-filter-chip ${selectedFilters.length===0?'active':''}" data-pd-action="season-set-all" data-pd-name="${safeName}" data-pd-all-seasons='${JSON.stringify(seasons.map(s=>s.id)).replace(/'/g,'&#39;')}' style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${selectedFilters.length===0?'var(--blue)':'var(--surface)'};color:${selectedFilters.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
+      <label class="season-filter-chip ${selectedFilters.length===0?'active':''}" data-pd-action="season-set-all" data-pd-name="${safeName}" data-pd-all-seasons='${JSON.stringify(seasons.map(s=>s.id)).replace(/'/g,'&#39;')}' style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:var(--r);border:1px solid var(--border2);background:${selectedFilters.length===0?'var(--blue)':'var(--surface)'};color:${selectedFilters.length===0?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
         <input type="checkbox" ${selectedFilters.length===0?'checked':''} style="cursor:pointer;pointer-events:none">전체
       </label>
       ${seasons.map(s=>{
         const isOn=selectedFilters.includes(s.id);
-        return `<label class="season-filter-chip ${isOn?'active':''}" data-pd-action="season-toggle" data-pd-name="${safeName}" data-pd-season="${s.id}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;border:1px solid var(--border2);background:${isOn?'var(--blue)':'var(--surface)'};color:${isOn?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
+        return `<label class="season-filter-chip ${isOn?'active':''}" data-pd-action="season-toggle" data-pd-name="${safeName}" data-pd-season="${s.id}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:var(--r);border:1px solid var(--border2);background:${isOn?'var(--blue)':'var(--surface)'};color:${isOn?'#fff':'var(--text3)'};cursor:pointer;transition:all 0.15s">
           <input type="checkbox" value="${s.id}" ${isOn?'checked':''} style="cursor:pointer;pointer-events:none">${s.name}
         </label>`;
       }).join('')}
-    </div>`:`<button data-pd-action="season-single" data-pd-name="${safeName}" data-pd-season="전체" style="padding:2px 8px;border-radius:10px;border:1px solid ${selectedFilter==='전체'?'var(--blue)':'var(--border2)'};background:${selectedFilter==='전체'?'var(--blue)':'var(--white)'};color:${selectedFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
+    </div>`:`<button data-pd-action="season-single" data-pd-name="${safeName}" data-pd-season="전체" style="padding:2px 8px;border-radius:var(--r);border:1px solid ${selectedFilter==='전체'?'var(--blue)':'var(--border2)'};background:${selectedFilter==='전체'?'var(--blue)':'var(--white)'};color:${selectedFilter==='전체'?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">전체</button>
     ${seasons.map(s=>{
       const isOn=selectedFilter===s.id;
-      return `<button data-pd-action="season-single" data-pd-name="${safeName}" data-pd-season="${s.id}" style="padding:2px 8px;border-radius:10px;border:1px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--white)'};color:${isOn?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${s.name}</button>`;
+      return `<button data-pd-action="season-single" data-pd-name="${safeName}" data-pd-season="${s.id}" style="padding:2px 8px;border-radius:var(--r);border:1px solid ${isOn?'var(--blue)':'var(--border2)'};background:${isOn?'var(--blue)':'var(--white)'};color:${isOn?'#fff':'var(--text3)'};font-size:10px;font-weight:700;cursor:pointer">${s.name}</button>`;
     }).join('')}`}
   </div>`;
 }

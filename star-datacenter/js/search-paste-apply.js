@@ -21,10 +21,10 @@ function pasteApply() {
       if(compWrap) {
         compWrap.style.display='none';
         compWrap.innerHTML=
-          '<input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:180px">' +
+          '<input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:var(--fs-base);width:180px">' +
           '<div id="paste-tt-stage-wrap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap">' +
-            '<label style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">구분</label>' +
-            '<select id="paste-tt-stage" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">' +
+            '<label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);white-space:nowrap">구분</label>' +
+            '<select id="paste-tt-stage" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:var(--fs-base)">' +
               '<option value="general">📝 일반</option>' +
               '<option value="league">📅 조별리그</option>' +
               '<option value="bkt">🏆 토너먼트</option>' +
@@ -816,7 +816,7 @@ function pasteApply() {
   const modeLabel = { individual:'개인 전적', mini:'미니대전', univm:'대학대전', pro:'프로리그', comp:'대회' }[mode] || '';
   const toast = document.createElement('div');
   toast.textContent = `✅ ${savable.length}건 저장 완료${modeLabel ? ' → ' + modeLabel : ''}!`;
-  toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
+  toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:var(--r);font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2800);
 }

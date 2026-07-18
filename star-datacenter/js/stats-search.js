@@ -140,11 +140,11 @@ function globalSearchSelectExt(idx){
     const sub=`${it.date||''}${it.map?` · ${it.map}`:''}${it.elo?` · ELO ${it.elo}`:''}${it.type?` · ${it.type}`:''}`;
     const memo=(it.memo||'').trim();
     const src=(it.source||'').trim();
-    modal.innerHTML=`<div style="background:var(--white);border-radius:16px;padding:18px 18px 14px;width:420px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    modal.innerHTML=`<div style="background:var(--white);border-radius:var(--r2);padding:18px 18px 14px;width:420px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3)">
       <div style="font-weight:1000;font-size:14px;margin-bottom:6px">📎 외부 대진기록</div>
       <div style="font-weight:900;font-size:var(--fs-base);color:var(--text);margin-bottom:4px">${line}</div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6;margin-bottom:10px">${sub}${src?`<br>출처: ${src}`:''}</div>
-      ${memo?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:var(--fs-sm);line-height:1.7;margin-bottom:10px;white-space:pre-wrap">${memo.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
+      ${memo?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px;font-size:var(--fs-sm);line-height:1.7;margin-bottom:10px;white-space:pre-wrap">${memo.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
       <div style="display:flex;gap:8px">
         <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_gsExtModal').remove()">닫기</button>
       </div>

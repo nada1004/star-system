@@ -194,10 +194,10 @@ function _doOpenPlayerModal(name, p){
     ? buildPlayerDetailHTML
     : (typeof window.buildPlayerDetailHTML==='function' ? window.buildPlayerDetailHTML : null);
   if(!_fn){
-    mbody.innerHTML = `<div style="padding:14px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 12px 24px rgba(15,23,42,.06)">
-      <div style="font-size:13px;font-weight:950;color:var(--text2);margin-bottom:6px">스트리머 상세 로딩 중…</div>
-      <div style="font-size:12px;color:var(--text3);line-height:1.6">렌더러가 아직 로드되지 않았습니다. 자동으로 다시 불러옵니다.</div>
-      <div id="pd-load-status" style="margin-top:8px;font-size:11px;color:var(--gray-l)"></div>
+    mbody.innerHTML = `<div style="padding:14px 12px;border-radius:var(--r2);border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 12px 24px rgba(15,23,42,.06)">
+      <div style="font-size:var(--fs-base);font-weight:950;color:var(--text2);margin-bottom:6px">스트리머 상세 로딩 중…</div>
+      <div style="font-size:var(--fs-sm);color:var(--text3);line-height:1.6">렌더러가 아직 로드되지 않았습니다. 자동으로 다시 불러옵니다.</div>
+      <div id="pd-load-status" style="margin-top:8px;font-size:var(--fs-caption);color:var(--gray-l)"></div>
       <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
         <button type="button" class="btn btn-w btn-xs" onclick="location.reload()">새로고침</button>
         <button type="button" class="btn btn-w btn-xs" onclick="try{window.__pdRendererLoading=null;window.openPlayerModal('${String(name).replace(/'/g,'&#39;')}');}catch(e){}">재시도</button>

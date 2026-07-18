@@ -51,15 +51,15 @@ function miniRankHTML(data){
   const sorted=Object.entries(sc).filter(([,s])=>s.total>0).sort((a,b)=>b[1].pts-a[1].pts);
   const rankTitle = miniType==='civil'?'⚔️ 시빌워 팀별 순위':'🏆 미니대전 대학별 순위';
   const delCol=isLoggedIn?`<th class="no-export" style="width:36px"></th>`:'';
-  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">${rankTitle}</div>
+  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md);color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">${rankTitle}</div>
   <table><thead><tr><th style="text-align:left">순위</th><th style="text-align:left">대학</th><th>승</th><th>패</th><th>포인트</th>${delCol}</tr></thead><tbody>`;
   if(!sorted.length)h+=`<tr><td colspan="${isLoggedIn?6:5}" style="padding:30px;color:var(--gray-l)">기록 없음</td></tr>`;
   sorted.forEach(([name,s],i)=>{
     const col=gc(name);let rnkHTML;
-    if(i===0) rnkHTML=`<span class="rk1">1등</span>`;else if(i===1) rnkHTML=`<span class="rk2">2등</span>`;else if(i===2) rnkHTML=`<span class="rk3">3등</span>`;else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
+    if(i===0) rnkHTML=`<span class="rk1">1등</span>`;else if(i===1) rnkHTML=`<span class="rk2">2등</span>`;else if(i===2) rnkHTML=`<span class="rk3">3등</span>`;else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base)">${i+1}위</span>`;
     const sn=name.replace(/'/g,"\\'");
-    const delBtn=isLoggedIn?`<td class="no-export"><button onclick="deleteUnivFromRank('${sn}','mini')" style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;color:#dc2626;font-size:11px;cursor:pointer" title="이 대학 미니대전 기록 삭제">🗑</button></td>`:'';
-    h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:15px;font-weight:800">${s.w}</td><td class="lt" style="font-size:15px;font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn}</tr>`;
+    const delBtn=isLoggedIn?`<td class="no-export"><button onclick="deleteUnivFromRank('${sn}','mini')" style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;color:#dc2626;font-size:var(--fs-caption);cursor:pointer" title="이 대학 미니대전 기록 삭제">🗑</button></td>`:'';
+    h+=`<tr><td style="text-align:left">${rnkHTML}</td><td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${sn}')">${name}</span></td><td class="wt" style="font-size:var(--fs-md);font-weight:800">${s.w}</td><td class="lt" style="font-size:var(--fs-md);font-weight:800">${s.l}</td><td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:16px">${pS(s.pts)}</td>${delBtn}</tr>`;
   });
   h+=`</tbody></table>`;
   if(!window._rankSort)window._rankSort={};
@@ -116,7 +116,7 @@ function miniRankHTML(data){
   h+=`</tbody></table>`;
   const _pageNav_mini=_tot_mini>_PAGE_mini?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
   <button class="btn btn-sm" ${_cp_mini===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK_mini}']=${_cp_mini-1};render()">← 이전</button>
-  <span style="font-size:12px;color:var(--gray-l)">${_cp_mini+1} / ${_totP_mini} (${_tot_mini}명)</span>
+  <span style="font-size:var(--fs-sm);color:var(--gray-l)">${_cp_mini+1} / ${_totP_mini} (${_tot_mini}명)</span>
   <button class="btn btn-sm" ${_cp_mini>=_totP_mini-1?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK_mini}']=${_cp_mini+1};render()">다음 →</button>
 </div>`:'';
   h+=_pageNav_mini;

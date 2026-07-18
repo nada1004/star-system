@@ -54,7 +54,7 @@ if (typeof _b2NameTag !== 'function') {
         onmouseover="this.style.background='${accentCol}14'"
         onmouseout="this.style.background='transparent'"
         onclick="openPlayerModal('${safeName}')">
-        <span style="font-weight:700;font-size:18px;color:var(--text1);white-space:nowrap;${inactive?'opacity:.6':''}">${name}</span>
+        <span style="font-weight:700;font-size:var(--fs-lg);color:var(--text1);white-space:nowrap;${inactive?'opacity:.6':''}">${name}</span>
         ${race&&race!=='N'?`<span class="rbadge r${race}" style="font-size:10px;flex-shrink:0">${race}</span>`:''}
         ${showTier&&tier?`<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:${tierBg};color:${tierFg};flex-shrink:0">${tier}</span>`:''}
       </div>`;
@@ -391,41 +391,41 @@ function rBoard2(C, T) {
   if (_b2View === 'univ') {
     saveBar = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
       <div style="position:relative">
-        <select id="b2-save-sel" class="b2-toolbar-select" onchange="_b2SaveUniv=this.value" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <select id="b2-save-sel" class="b2-toolbar-select" onchange="_b2SaveUniv=this.value" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="전체">🏫 전체</option>
           ${univList.map(u=>`<option value="${u.name}"${_b2SaveUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
-      <button class="b2-toolbar-btn" onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
+      <button class="b2-toolbar-btn" onclick="saveB2Img()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
   } else if (_b2View === 'free') {
     saveBar = `<div style="flex-shrink:0">
-      <button class="b2-toolbar-btn" onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
+      <button class="b2-toolbar-btn" onclick="saveB2FreeImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">📷 이미지저장</button>
     </div>`;
   } else if (_b2View === 'femco') {
     saveBar = `<div style="display:flex;gap:6px;flex-shrink:0">
-      <button class="b2-toolbar-btn" onclick="saveB2FemcoAllImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">💾 전체 저장</button>
+      <button class="b2-toolbar-btn" onclick="saveB2FemcoAllImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">💾 전체 저장</button>
     </div>`;
   } else if (_b2View === 'lineup') {
     if (!_b2LineupUniv || !univList.some(u=>u.name===_b2LineupUniv)) _b2LineupUniv = univList[0] ? univList[0].name : '';
-    const _lcModeBtn = (mode, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2SetLineupCardMode('${mode}')" style="padding:4px 10px;border-radius:8px;border:1px solid ${_b2LineupCardMode===mode?'#2563eb':'var(--border2)'};background:${_b2LineupCardMode===mode?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LineupCardMode===mode?'#1d4ed8':'var(--text2)'};font-size:12px;font-weight:${_b2LineupCardMode===mode?900:700};cursor:pointer;margin-bottom:0">${label}</button>`;
+    const _lcModeBtn = (mode, label) => `<button type="button" class="b2-toolbar-btn" onclick="_b2SetLineupCardMode('${mode}')" style="padding:4px 10px;border-radius:8px;border:1px solid ${_b2LineupCardMode===mode?'#2563eb':'var(--border2)'};background:${_b2LineupCardMode===mode?'linear-gradient(135deg,#eff6ff,#dbeafe)':'var(--white)'};color:${_b2LineupCardMode===mode?'#1d4ed8':'var(--text2)'};font-size:var(--fs-sm);font-weight:${_b2LineupCardMode===mode?900:700};cursor:pointer;margin-bottom:0">${label}</button>`;
     saveBar = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">
       <div style="position:relative">
-        <select id="b2-lineup-sel" class="b2-toolbar-select" onchange="_b2LineupUniv=this.value;document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:12px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <select id="b2-lineup-sel" class="b2-toolbar-select" onchange="_b2LineupUniv=this.value;document.getElementById('b2-content').innerHTML=_b2LineupView();injectUnivIcons(document.getElementById('b2-content'));render();" style="padding:4px 28px 4px 10px;border-radius:8px;border:1px solid var(--border2);font-size:var(--fs-sm);background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           ${univList.map(u=>`<option value="${u.name}"${_b2LineupUniv===u.name?' selected':''}>${u.name}</option>`).join('')}
         </select>
         <svg style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
       <div style="display:flex;align-items:center;gap:6px">
-        <span style="font-size:11px;font-weight:800;color:var(--text3);flex-shrink:0">모드</span>
+        <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);flex-shrink:0">모드</span>
         <div style="display:flex;gap:4px">
           ${_lcModeBtn('default','🖼️ 기본')}
           ${_lcModeBtn('stat','📊 통계카드')}
           ${_lcModeBtn('table','🗂️ 테이블')}
         </div>
       </div>
-      <button class="b2-toolbar-btn" onclick="saveB2LineupImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
+      <button class="b2-toolbar-btn" onclick="saveB2LineupImg()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:0">📷 이미지저장</button>
     </div>`;
   }
 
@@ -458,7 +458,7 @@ function rBoard2(C, T) {
     <div class="b2-nav-playerfilters" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0">
       <div style="width:1px;height:24px;background:var(--border2);display:inline-block"></div>
       <div style="position:relative">
-        <select id="b2-players-univ-sel" class="b2-toolbar-select" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <select id="b2-players-univ-sel" class="b2-toolbar-select" onchange="_b2PlayersUnivFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:var(--fs-base);background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="전체" ${_b2PlayersUnivFilter === '전체' ? 'selected' : ''}>🏫 전체 대학</option>
           ${playerUnivList.map(u => `<option value="${u}" ${_b2PlayersUnivFilter === u ? 'selected' : ''}>${u}</option>`).join('')}
         </select>
@@ -466,7 +466,7 @@ function rBoard2(C, T) {
       </div>
       ${_selBadge}
       <div style="position:relative">
-        <select id="b2-players-race-sel" class="b2-toolbar-select" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <select id="b2-players-race-sel" class="b2-toolbar-select" onchange="_b2PlayersFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:var(--fs-base);background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="all" ${_b2PlayersFilter === 'all' ? 'selected' : ''}>🎮 전체 종족</option>
           <option value="P" ${_b2PlayersFilter === 'P' ? 'selected' : ''}>🔮 프로토스</option>
           <option value="T" ${_b2PlayersFilter === 'T' ? 'selected' : ''}>⚔️ 테란</option>
@@ -475,7 +475,7 @@ function rBoard2(C, T) {
         <svg style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-l)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </div>
       <div style="position:relative">
-        <select id="b2-players-tier-sel" class="b2-toolbar-select" onchange="_b2PlayersTierFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:13px;background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
+        <select id="b2-players-tier-sel" class="b2-toolbar-select" onchange="_b2PlayersTierFilter=this.value;document.getElementById('b2-content').innerHTML=_b2PlayersView();setTimeout(()=>{if(_b2SelectedPlayer)_b2UpdateMainDisplay(_b2SelectedPlayer.name)},0)" style="padding:6px 28px 6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:var(--fs-base);background:var(--white);color:var(--text2);appearance:none;cursor:pointer">
           <option value="전체" ${_b2PlayersTierFilter==='전체'?'selected':''}>🏅 전체 티어</option>
           ${(typeof TIERS!=='undefined'?TIERS:[]).map(t=>`<option value="${t}" ${_b2PlayersTierFilter===t?'selected':''}>${t}티어</option>`).join('')}
         </select>
@@ -575,14 +575,14 @@ function rBoard2(C, T) {
       .b2-shell{display:flex;flex-direction:column;gap:14px}
       .b2-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:22px 24px;border-radius:28px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.97));box-shadow:0 20px 36px rgba(15,23,42,.06)}
       .b2-hero-main{display:flex;flex-direction:column;gap:10px;min-width:0}
-      .b2-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}
+      .b2-hero-kicker{font-size:var(--fs-caption);font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase}
       .b2-hero-title{font-size:30px;font-weight:950;letter-spacing:-.04em;color:var(--text1);line-height:1.08}
-      .b2-hero-desc{font-size:13px;line-height:1.65;color:var(--text3);max-width:760px}
+      .b2-hero-desc{font-size:var(--fs-base);line-height:1.65;color:var(--text3);max-width:760px}
       .b2-hero-stats{display:grid;grid-template-columns:repeat(3,minmax(112px,1fr));gap:10px;min-width:min(100%,360px)}
       .b2-hero-stat{padding:14px 14px 12px;border-radius:20px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.05)}
-      .b2-hero-stat-label{font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px}
+      .b2-hero-stat-label{font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:6px}
       .b2-hero-stat-value{font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1}
-      .b2-hero-stat-sub{margin-top:5px;font-size:11px;font-weight:700;color:var(--text3)}
+      .b2-hero-stat-sub{margin-top:5px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)}
       .b2-toolbar-card{padding:12px;border-radius:24px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.95));box-shadow:0 14px 28px rgba(15,23,42,.05)}
       #b2-nav.b2-nav-new{display:flex;align-items:center;gap:10px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
       #b2-nav.b2-nav-new::-webkit-scrollbar{display:none}
@@ -668,7 +668,7 @@ function rBoard2(C, T) {
       </div>
       ${_b2View === 'lineup' ? `
       <div style="display:flex;align-items:center;gap:8px;margin:-6px 0 14px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow-x:auto;scrollbar-width:none" class="b2-lineup-jumpbar">
-        <span style="font-size:11px;font-weight:800;color:var(--gray-l);flex-shrink:0;white-space:nowrap">🏫 바로가기</span>
+        <span style="font-size:var(--fs-caption);font-weight:800;color:var(--gray-l);flex-shrink:0;white-space:nowrap">🏫 바로가기</span>
         <span style="width:1px;height:14px;background:var(--border2);flex-shrink:0"></span>
         ${univList.map(u=>{
           const _uc = gc(u.name);
@@ -811,7 +811,7 @@ function rBoard2(C, T) {
     console.error('[rBoard2] 오류:', e);
     C.innerHTML = `<div style="padding:40px;text-align:center;color:#dc2626">
       <div style="font-weight:700;margin-bottom:8px">현황판 로딩 중 오류가 발생했습니다</div>
-      <div style="font-size:12px;color:var(--gray-l)">${e.message}</div>
+      <div style="font-size:var(--fs-sm);color:var(--gray-l)">${e.message}</div>
     </div>`;
   }
 }

@@ -31,7 +31,7 @@
   display: flex;
   align-items: baseline;
   gap: 6px;
-  font-size: 15px;
+  font-size:var(--fs-md);
   font-weight: 900;
   letter-spacing: -.01em;
   color: var(--text, #0f172a);
@@ -81,7 +81,7 @@ body.dark .su-sec__title {
   display: flex;
   align-items: baseline;
   gap: 6px;
-  font-size: 15px;
+  font-size:var(--fs-md);
   font-weight: 900;
   letter-spacing: -.01em;
   color: var(--text, #0f172a);
@@ -102,7 +102,7 @@ body.dark .su-sec__title {
 .su-sec--details summary::after {
   content: '▾';
   margin-left: auto;
-  font-size: 11px;
+  font-size:var(--fs-caption);
   color: var(--gray-l, #94a3b8);
   transition: transform .18s;
 }
@@ -175,7 +175,7 @@ body.dark .su-sec--details summary {
   position: absolute;
   top: 8px; left: 8px;
   z-index: 3;
-  font-size: 11px;
+  font-size:var(--fs-caption);
   font-weight: 1000;
   color: #fff;
   background: rgba(15,23,42,.55);
@@ -297,7 +297,7 @@ body.dark .su-sec--details summary {
   align-items: baseline;
   flex-wrap: wrap;
   gap: 4px;
-  font-size: 11px;
+  font-size:var(--fs-caption);
   font-weight: 800;
   color: rgba(255,255,255,.90);
   text-shadow: 0 1px 3px rgba(0,0,0,.35);
@@ -331,7 +331,7 @@ body.dark .su-sec--details summary {
   background: rgba(15,23,42,.22);
   border: 1px solid rgba(255,255,255,.16);
   backdrop-filter: blur(6px) saturate(1.15);
-  border-radius: 10px;
+  border-radius:var(--r);
   padding: 6px 8px;
   margin-top: 2px;
 }
@@ -420,7 +420,7 @@ body.dark .su-sec--details summary {
   padding: 18px 20px !important;
 }
 #b2-content .b2w2-highlight-title {
-  font-size: 18px !important;
+  font-size:var(--fs-lg) !important;
   padding-bottom: 10px !important;
 }
 
@@ -432,7 +432,7 @@ body.dark .su-sec--details summary {
 
 /* 섹션 제목 줄 높이 */
 #b2-content .b2w2-chart-title {
-  font-size: 15px !important;
+  font-size:var(--fs-md) !important;
   margin-bottom: 16px !important;
 }
 
@@ -453,7 +453,7 @@ body.dark .su-sec--details summary {
 #b2-content .b2w2-rank-badge {
   width: 30px !important;
   height: 30px !important;
-  font-size: 13px !important;
+  font-size:var(--fs-base) !important;
 }
 #b2-content .b2w2-rank-name {
   font-size: 14px !important;
@@ -492,7 +492,7 @@ body.dark .su-sec--details summary {
   flex-wrap: wrap;
 }
 .b2-femco-subtitle {
-  font-size: 13px;
+  font-size:var(--fs-base);
   font-weight: 700;
   margin-top: 4px;
   opacity: .88;
@@ -623,7 +623,7 @@ body.dark .su-sec--details summary {
   gap: 4px;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size:var(--fs-caption);
   font-weight: 700;
   background: rgba(255,255,255,.18);
   border: 1px solid rgba(255,255,255,.22);
@@ -639,7 +639,7 @@ body.dark .su-sec--details summary {
 ═══════════════════════════════════════════════════════════ */
 
 #b2-content .b2rk2-row {
-  border-radius: 16px !important;
+  border-radius:var(--r2) !important;
   padding: 12px 16px !important;
   gap: 12px !important;
   margin-bottom: 8px !important;
@@ -654,7 +654,7 @@ body.dark .su-sec--details summary {
   min-width: 40px !important;
 }
 #b2-content .b2rk2-name {
-  font-size: 15px !important;
+  font-size:var(--fs-md) !important;
   min-width: 70px !important;
 }
 #b2-content .b2rk2-bar-wrap {
@@ -675,28 +675,28 @@ body.dark .su-sec--details summary {
 ═══════════════════════════════════════════════════════════ */
 
 #b2-content .b2hm2-ctrl {
-  border-radius: 16px !important;
+  border-radius:var(--r2) !important;
   padding: 12px 16px !important;
   gap: 10px !important;
 }
 #b2-content .b2hm2-btn {
   padding: 6px 13px !important;
-  border-radius: 10px !important;
-  font-size: 12px !important;
+  border-radius:var(--r) !important;
+  font-size:var(--fs-sm) !important;
   font-weight: 800 !important;
 }
 #b2-content .b2hm2-tbl td {
-  border-radius: 10px !important;
+  border-radius:var(--r) !important;
   padding: 8px 6px !important;
-  font-size: 12px !important;
+  font-size:var(--fs-sm) !important;
 }
 #b2-content .b2hm2-tbl th {
-  font-size: 11px !important;
+  font-size:var(--fs-caption) !important;
   padding: 6px 8px !important;
   font-weight: 900 !important;
 }
 #b2-content .b2hm2-tbl td.univ-name {
-  font-size: 12px !important;
+  font-size:var(--fs-sm) !important;
   padding: 6px 10px !important;
 }
 #b2-content .b2hm2-popup-inner {
@@ -708,7 +708,7 @@ body.dark .su-sec--details summary {
 }
 #b2-content .b2hm2-legend {
   margin-top: 12px !important;
-  font-size: 12px !important;
+  font-size:var(--fs-sm) !important;
   font-weight: 700 !important;
 }
 
@@ -724,7 +724,7 @@ body.dark .su-sec--details summary {
   font-size: 28px !important;
 }
 #b2-content .b2s-kpi-lbl {
-  font-size: 12px !important;
+  font-size:var(--fs-sm) !important;
   margin-top: 5px !important;
 }
 #b2-content .b2s-panel {
@@ -744,7 +744,7 @@ body.dark .su-sec--details summary {
   padding: 12px 14px !important;
 }
 #b2-content .b2s-tier-chip {
-  border-radius: 16px !important;
+  border-radius:var(--r2) !important;
   padding: 10px 12px !important;
 }
 #b2-content .b2s-hero {
@@ -754,7 +754,7 @@ body.dark .su-sec--details summary {
 #b2-content .b2s-new-player {
   padding: 6px 11px !important;
   border-radius: 999px !important;
-  font-size: 12px !important;
+  font-size:var(--fs-sm) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════

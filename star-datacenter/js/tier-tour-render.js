@@ -35,7 +35,7 @@ function rTierTourTab(C, T){
   if(_ttCurComp && !_allCompNames.includes(String(_ttCurComp).trim())) _ttCurComp='';
   if(!_ttCurComp && _allCompNames.length) _ttCurComp=_allCompNames[0];
   let h='';
-  h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px">
+  h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:12px 16px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:var(--r)">
     <span style="font-weight:700;color:#7c3aed;white-space:nowrap">🎯 티어대회 선택:</span>
     <select style="flex:1;max-width:220px;font-weight:700" onchange="_ttCurComp=this.value;render()">
       <option value="">— 대회를 선택하세요 —</option>
@@ -146,14 +146,14 @@ function rTierTourTab(C, T){
       }catch(e){}
     }
     const _allBkt=_ttm.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='bkt').sort((a,b)=>(b.d||'').localeCompare(a.d||''));
-    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🏆 ${_ttCurComp} 토너먼트 기록</div>`;
+    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:var(--fs-sm);color:#7c3aed;font-weight:700">🏆 ${_ttCurComp} 토너먼트 기록</div>`;
     if(_li && _curTierTn){
       h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:-2px 0 12px">
         <button class="btn btn-p btn-sm" onclick="openTierBktPasteModal('${_curTierTn.id}')">📋 경기 결과 붙여넣기(자동인식)</button>
-        <span style="font-size:11px;color:var(--gray-l)">결과는 “토너먼트 기록”으로 저장됩니다. (대진표 자동 반영은 하지 않음)</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">결과는 “토너먼트 기록”으로 저장됩니다. (대진표 자동 반영은 하지 않음)</span>
       </div>`;
     }
-    h+=_allBkt.length?recSummaryListHTML(_allBkt,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">토너먼트 기록이 없습니다.<br><span style="font-size:11px">🗂️ 토너먼트 탭에서 경기 결과를 입력하세요.</span></div>';
+    h+=_allBkt.length?recSummaryListHTML(_allBkt,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">토너먼트 기록이 없습니다.<br><span style="font-size:var(--fs-caption)">🗂️ 토너먼트 탭에서 경기 결과를 입력하세요.</span></div>';
     } // end guard: _ttCurComp 선택된 경우
   } else if(_ttSub==='grpedit'){
     if(!_curTierTn){ h+=_noTnMsg; C.innerHTML=h; return; }
@@ -186,8 +186,8 @@ function rTierTourTab(C, T){
       }catch(e){}
     }
     const _allGrp=_ttm.filter(m=>_eqComp(m,_ttCurComp)&&m.stage==='league').sort((a,b)=>(b.d||'').localeCompare(a.d||''));
-    if(_ttCurComp) h+=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#16a34a;font-weight:700">📅 ${_ttCurComp} 조별리그 기록</div>`;
-    h+=_allGrp.length?recSummaryListHTML(_allGrp,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">조별리그 기록이 없습니다.<br><span style="font-size:11px">📅 조별리그 탭에서 경기 결과를 입력하세요.</span></div>';
+    if(_ttCurComp) h+=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:var(--fs-sm);color:#16a34a;font-weight:700">📅 ${_ttCurComp} 조별리그 기록</div>`;
+    h+=_allGrp.length?recSummaryListHTML(_allGrp,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">조별리그 기록이 없습니다.<br><span style="font-size:var(--fs-caption)">📅 조별리그 탭에서 경기 결과를 입력하세요.</span></div>';
   } else {
     // records 탭 (일반 기록)
     const _ttGeneralBase = _ttm.filter(m=>!m?.stage || m.stage==='general' || m.stage==='normal');
@@ -209,7 +209,7 @@ function rTierTourTab(C, T){
         _ttFiltered = _ttGeneralBase.filter(m=>_eqComp(m,_ttCurComp));
       }
     }
-    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 일반 기록</div>`;
+    if(_ttCurComp) h+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:var(--fs-sm);color:#7c3aed;font-weight:700">🎯 ${_ttCurComp} 일반 기록</div>`;
     h+=_ttFiltered.length?recSummaryListHTML(_ttFiltered,'tt','tiertour'):'<div style="padding:40px;text-align:center;color:var(--gray-l)">일반 기록이 없습니다.</div>';
   }
   C.innerHTML=h;
@@ -328,7 +328,7 @@ function ttPlayerRankHTML(compName){
   const skLabel=sk==='w'?'🏆 승순':sk==='l'?'📉 패순':'📊 승률순';
   const entries=Object.entries(sc).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0,univ:sc[name].univ}));
   entries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
-  if(!entries.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:11px">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
+  if(!entries.length) return `<div style="padding:40px;text-align:center;color:var(--gray-l)">기록이 없습니다.<br><span style="font-size:var(--fs-caption)">경기 입력 시 선수 매칭 정보가 있어야 집계됩니다.</span></div>`;
   // [BUGFIX] 공동 순위 계산: 정렬 기준 값이 같으면 같은 순위 부여
   const _rankNums=[];
   entries.forEach((p,i)=>{
@@ -352,8 +352,8 @@ function ttPlayerRankHTML(compName){
   let h=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #ddd6fe">
     <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:14px;color:#7c3aed">🏆 티어대회 개인 순위${compName?` — ${compName}`:''}</span>
     <span style="display:flex;align-items:center;gap:5px">
-      <span style="font-size:11px;color:var(--gray-l)">정렬:</span>
-      <span style="font-size:11px;font-weight:700;background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;border-radius:6px;padding:2px 8px">${skLabel}</span>
+      <span style="font-size:var(--fs-caption);color:var(--gray-l)">정렬:</span>
+      <span style="font-size:var(--fs-caption);font-weight:700;background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;border-radius:6px;padding:2px 8px">${skLabel}</span>
       <span style="font-size:10px;color:var(--gray-l)">(우클릭으로 변경)</span>
     </span>
   </div>
@@ -368,7 +368,7 @@ function ttPlayerRankHTML(compName){
   });
   const _pageNav=_tot>_PAGE?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
   <button class="btn btn-sm" ${_cp===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp-1};render()">← 이전</button>
-  <span style="font-size:12px;color:var(--gray-l)">${_cp+1} / ${_totP} (${_tot}명)</span>
+  <span style="font-size:var(--fs-sm);color:var(--gray-l)">${_cp+1} / ${_totP} (${_tot}명)</span>
   <button class="btn btn-sm" ${_cp>=_totP-1?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK}']=${_cp+1};render()">다음 →</button>
 </div>`:'';
   return h+`</tbody></table>`+_pageNav;
@@ -413,34 +413,34 @@ function buildTierTourInputHTML(){
   let h=`<div class="match-builder"><h3>🎯 티어대회 입력</h3>
     <div style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="openTTPasteModal()" style="display:inline-flex;align-items:center;gap:5px">📋 자동인식</button></div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
+      <label style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['tt'].date=this.value">
     </div>
 
     <!-- 참가 티어 선택 -->
-    <div style="background:var(--blue-l);border:1px solid var(--blue-ll);border-radius:10px;padding:10px 14px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">① 참가 티어 <span style="font-weight:400;color:var(--gray-l)">(복수 선택)</span></div>
+    <div style="background:var(--blue-l);border:1px solid var(--blue-ll);border-radius:var(--r);padding:10px 14px;margin-bottom:14px">
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--blue);margin-bottom:8px">① 참가 티어 <span style="font-weight:400;color:var(--gray-l)">(복수 선택)</span></div>
       <div style="display:flex;gap:5px;flex-wrap:wrap">
         <button class="tier-filter-btn ${tfs.length===0?'on':''}" onclick="BLD['tt'].tiers=[];BLD['tt'].membersA=[];BLD['tt'].membersB=[];BLD['tt'].sets=[];render()">전체</button>
         ${TIERS.map(t=>{const _bg=getTierBtnColor(t),_tc=getTierBtnTextColor(t),_on=tfs.includes(t);return`<button class="tier-filter-btn ${_on?'on':''}" style="${_on?`background:${_bg};color:${_tc};border-color:${_bg}`:''}" onclick="ttToggleTier('${t}')">${getTierLabel(t)}</button>`;}).join('')}
       </div>
-      <div style="font-size:11px;color:var(--blue);margin-top:6px">대상 선수: <strong>${eligible.length}명</strong></div>
+      <div style="font-size:var(--fs-caption);color:var(--blue);margin-top:6px">대상 선수: <strong>${eligible.length}명</strong></div>
     </div>
 
     <!-- 선수 목록 클릭으로 팀 배정 -->
     <div style="margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">② 선수 클릭 → 팀 배정 <span style="font-weight:400;color:var(--gray-l);font-size:11px">(A팀 버튼 / B팀 버튼으로 추가)</span></div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">② 선수 클릭 → 팀 배정 <span style="font-weight:400;color:var(--gray-l);font-size:var(--fs-caption)">(A팀 버튼 / B팀 버튼으로 추가)</span></div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto">
         ${eligible.length===0
-          ?'<span style="color:var(--gray-l);font-size:12px">티어를 선택하면 선수 목록이 표시됩니다</span>'
+          ?'<span style="color:var(--gray-l);font-size:var(--fs-sm)">티어를 선택하면 선수 목록이 표시됩니다</span>'
           :eligible.map(p=>{
               const inA=mA.some(m=>m.name===p.name);
               const inB=mB.some(m=>m.name===p.name);
               const bg=inA?'#2563eb':inB?'#dc2626':gc(p.univ);
               if(inA||inB){
-                return `<span style="display:inline-flex;align-items:center;gap:3px;background:${bg};color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;opacity:0.55">${p.name}<span style="opacity:.8;font-size:10px;margin-left:2px">${p.univ}/${p.tier}</span><span style="background:rgba(255,255,255,.3);border-radius:2px;padding:0 4px;font-size:9px;font-weight:800;margin-left:3px">${inA?'A팀':'B팀'}</span></span>`;
+                return `<span style="display:inline-flex;align-items:center;gap:3px;background:${bg};color:#fff;padding:4px 8px;border-radius:6px;font-size:var(--fs-caption);opacity:0.55">${p.name}<span style="opacity:.8;font-size:10px;margin-left:2px">${p.univ}/${p.tier}</span><span style="background:rgba(255,255,255,.3);border-radius:2px;padding:0 4px;font-size:9px;font-weight:800;margin-left:3px">${inA?'A팀':'B팀'}</span></span>`;
               }
-              return `<span style="display:inline-flex;align-items:center;gap:4px;background:${bg};color:#fff;padding:3px 6px;border-radius:6px;font-size:11px">
+              return `<span style="display:inline-flex;align-items:center;gap:4px;background:${bg};color:#fff;padding:3px 6px;border-radius:6px;font-size:var(--fs-caption)">
                 <span style="font-weight:700">${p.name}</span><span style="opacity:.8;font-size:10px">${p.univ}/${p.tier}</span>
                 <button onclick="ttAddPlayer('A','${p.name}')" style="background:var(--white);color:#2563eb;border:none;border-radius:3px;padding:1px 6px;font-size:10px;font-weight:800;cursor:pointer;margin-left:2px">A팀</button>
                 <button onclick="ttAddPlayer('B','${p.name}')" style="background:var(--white);color:#dc2626;border:none;border-radius:3px;padding:1px 6px;font-size:10px;font-weight:800;cursor:pointer">B팀</button>
@@ -454,21 +454,21 @@ function buildTierTourInputHTML(){
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px">
       <div class="ck-panel">
         <h4>🔵 팀 A (${mA.length}명)</h4>
-        <input type="text" id="tt-tla-input" value="${(bld.teamNameA||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 A팀)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;margin-bottom:6px;font-weight:700" onchange="BLD['tt'].teamNameA=this.value">
+        <input type="text" id="tt-tla-input" value="${(bld.teamNameA||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 A팀)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm);margin-bottom:6px;font-weight:700" onchange="BLD['tt'].teamNameA=this.value">
         <div style="display:flex;gap:6px;margin-bottom:6px">
-          <input type="text" id="tt-a-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="ttSearchPlayer('A')">
+          <input type="text" id="tt-a-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm)" oninput="ttSearchPlayer('A')">
         </div>
         <div id="tt-a-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:var(--white);margin-bottom:6px"></div>
-        <div>${mA.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersA.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">선수 없음</span>'}</div>
+        <div>${mA.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersA.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:var(--fs-sm)">선수 없음</span>'}</div>
       </div>
       <div class="ck-panel">
         <h4>🔴 팀 B (${mB.length}명)</h4>
-        <input type="text" id="tt-tlb-input" value="${(bld.teamNameB||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 B팀)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;margin-bottom:6px;font-weight:700" onchange="BLD['tt'].teamNameB=this.value">
+        <input type="text" id="tt-tlb-input" value="${(bld.teamNameB||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 B팀)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm);margin-bottom:6px;font-weight:700" onchange="BLD['tt'].teamNameB=this.value">
         <div style="display:flex;gap:6px;margin-bottom:6px">
-          <input type="text" id="tt-b-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px" oninput="ttSearchPlayer('B')">
+          <input type="text" id="tt-b-search" placeholder="🔍 이름·메모 검색..." style="flex:1;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm)" oninput="ttSearchPlayer('B')">
         </div>
         <div id="tt-b-drop" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;background:var(--white);margin-bottom:6px"></div>
-        <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersB.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">선수 없음</span>'}</div>
+        <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''})</span><button onclick="BLD['tt'].membersB.splice(${i},1);BLD['tt'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:var(--fs-sm)">선수 없음</span>'}</div>
       </div>
     </div>`;
   h+=setBuilderHTML(bld,'tt');h+=`</div>`;return h;
@@ -506,9 +506,9 @@ function ttSearchPlayer(team){
     !already.includes(p.name) &&
     (p.name.toLowerCase().includes(q)||(p.memo||'').toLowerCase().includes(q)||(p.univ||'').toLowerCase().includes(q))
   ).slice(0,15);
-  if(!results.length){dropEl.innerHTML='<div style="padding:8px 12px;color:var(--gray-l);font-size:12px">결과 없음</div>';dropEl.style.display='block';return;}
+  if(!results.length){dropEl.innerHTML='<div style="padding:8px 12px;color:var(--gray-l);font-size:var(--fs-sm)">결과 없음</div>';dropEl.style.display='block';return;}
   dropEl.innerHTML=results.map(p=>`<div onclick="ttAddPlayer('${team}','${p.name}')"
-    style="padding:7px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;font-size:12px"
+    style="padding:7px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;font-size:var(--fs-sm)"
     onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background=''">
     <span style="width:26px;height:26px;border-radius:5px;background:${gc(p.univ)};color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${p.race||'?'}</span>
     <div><div style="font-weight:700">${p.name} <span style="font-size:10px;color:var(--gray-l)">${p.univ} · ${p.tier||'-'}</span></div></div>
@@ -722,7 +722,7 @@ function grpRemoveUniv(tnId,gi,ui){
 ══════════════════════════════════════ */
 function _cfgOpen(id){try{return !!(JSON.parse(localStorage.getItem('su_cfg_open')||'{}')[id]);}catch(e){return false;}}
 function _cfgToggle(id,el){try{const o=JSON.parse(localStorage.getItem('su_cfg_open')||'{}');o[id]=el.open;localStorage.setItem('su_cfg_open',JSON.stringify(o));const sp=el.querySelector('summary .cfg-toggle-txt');if(sp)sp.textContent=el.open?'▴ 접기':'▾ 펼치기';}catch(e){}}
-function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class="ssec" ${isOpen?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''}><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span class="cfg-toggle-txt" style="font-size:11px;color:var(--gray-l);font-weight:400">${isOpen?'▴ 접기':'▾ 펼치기'}</span></summary>`;}
+function _cfgD(id,title,extra){const isOpen=_cfgOpen(id);return `<details class="ssec" ${isOpen?'open':''} ontoggle="_cfgToggle('${id}',this)"${extra?' '+extra:''}><summary style="cursor:pointer;list-style:none;outline:none;display:flex;align-items:center;gap:6px;-webkit-appearance:none"><h4 style="margin:0;display:inline">${title}</h4><span class="cfg-toggle-txt" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:400">${isOpen?'▴ 접기':'▾ 펼치기'}</span></summary>`;}
 
 /* ══════════════════════════════════════
    설정

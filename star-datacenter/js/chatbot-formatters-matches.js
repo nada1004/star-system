@@ -36,19 +36,19 @@ function _matchCardHeader(emoji, title, subtitle, color) {
     <span style="font-size:20px">${emoji}</span>
     <div>
       <div style="font-size:14px;font-weight:900;color:#fff">${title}</div>
-      ${subtitle ? `<div style="font-size:11px;color:rgba(255,255,255,0.75)">${subtitle}</div>` : ''}
+      ${subtitle ? `<div style="font-size:var(--fs-caption);color:rgba(255,255,255,0.75)">${subtitle}</div>` : ''}
     </div>
   </div>`;
 }
 
 function _noRecordCard(emoji, label) {
-  return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;text-align:center;color:#94a3b8;font-size:13px">${emoji} ${label} 기록이 없습니다.</div>`;
+  return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;text-align:center;color:#94a3b8;font-size:var(--fs-base)">${emoji} ${label} 기록이 없습니다.</div>`;
 }
 
 function _matchRow(date, leftText, score, rightText, highlight) {
   const bg = highlight ? '#eff6ff' : '#f8fafc';
   const border = highlight ? '#bfdbfe' : '#e8edf2';
-  return `<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;background:${bg};border:1px solid ${border};margin-bottom:4px;font-size:12px">
+  return `<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;background:${bg};border:1px solid ${border};margin-bottom:4px;font-size:var(--fs-sm)">
     <span style="color:#94a3b8;min-width:70px">${date||''}</span>
     <span style="font-weight:700;color:#1a202c;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${leftText}</span>
     ${score ? `<span style="font-weight:900;color:#2563eb;min-width:32px;text-align:center">${score}</span>` : ''}
@@ -273,7 +273,7 @@ function formatPlayerAllRecords(player) {
     if(!data.w&&!data.l) return '';
     const r=data.w+data.l>0?((data.w/(data.w+data.l))*100).toFixed(1):0;
     const q = `${player.name} ${key}`;
-    return `<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;background:#f8fafc;border:1px solid #e8edf2;margin-bottom:4px"><span style="font-size:14px">${emoji}</span><span style="flex:1;font-size:12px;font-weight:700;color:#1a202c">${label}</span><span style="font-size:12px;color:#2563eb;font-weight:800">${data.w}승${data.l}패</span><span style="font-size:11px;color:#94a3b8;margin-left:2px">(${r}%)</span><span data-chatbot-quick="${escapeAttr(q)}" style="color:#2563eb;cursor:pointer;font-size:11px;margin-left:4px;text-decoration:underline">조회▶</span></div>`;
+    return `<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;background:#f8fafc;border:1px solid #e8edf2;margin-bottom:4px"><span style="font-size:14px">${emoji}</span><span style="flex:1;font-size:var(--fs-sm);font-weight:700;color:#1a202c">${label}</span><span style="font-size:var(--fs-sm);color:#2563eb;font-weight:800">${data.w}승${data.l}패</span><span style="font-size:var(--fs-caption);color:#94a3b8;margin-left:2px">(${r}%)</span><span data-chatbot-quick="${escapeAttr(q)}" style="color:#2563eb;cursor:pointer;font-size:var(--fs-caption);margin-left:4px;text-decoration:underline">조회▶</span></div>`;
   }
 
   const rows=[

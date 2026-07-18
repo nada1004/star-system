@@ -79,7 +79,7 @@ function openPlayerDetail(playerName) {
     if (modalBody) {
       modalBody.innerHTML = _fn
         ? _fn(player)
-        : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
+        : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
       if (typeof injectUnivIcons !== 'undefined') {
         injectUnivIcons(modalBody);
       }
@@ -103,7 +103,7 @@ function _renderChatbotHeaderByMode(){
     const hdr=document.querySelector('#chatbotSheet .chatbot-sheet-title');
     if(!hdr) return;
     if(chatbotMode === 'aibot'){
-      hdr.innerHTML = `<div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:18px">⚽</div>
+      hdr.innerHTML = `<div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg)">⚽</div>
         <div><div>${meta.title}</div><div class="chatbot-sheet-title-sub">${meta.sub}</div></div>`;
     }else{
       hdr.innerHTML = `<img src="${meta.avatarImg}" style="width:28px;height:28px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.15);padding:3px">
@@ -145,7 +145,7 @@ function renderChatHistory() {
     const avatar = msg.role === 'user' ? '👤' : '<img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:100%;height:100%;object-fit:cover;border-radius:8px">';
     const content = msg.content;
     const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
-    const copyBtn = msg.role === 'bot' ? `<button data-chatbot-copy-index="${index}" style="background:none;border:none;font-size:12px;color:#94a3b8;cursor:pointer;padding:4px;border-radius:4px;margin-left:auto">📋</button>` : '';
+    const copyBtn = msg.role === 'bot' ? `<button data-chatbot-copy-index="${index}" style="background:none;border:none;font-size:var(--fs-sm);color:#94a3b8;cursor:pointer;padding:4px;border-radius:4px;margin-left:auto">📋</button>` : '';
     
     const isHtml = (msg && msg.format === 'html');
     const wsStyle = isHtml ? 'white-space:normal' : 'white-space:pre-wrap';

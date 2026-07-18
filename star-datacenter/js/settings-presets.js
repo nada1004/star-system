@@ -368,15 +368,15 @@ window.cfgRenderPlayerAliasMap = function(){
   const m = _palLoad();
   const keys = Object.keys(m).sort((a,b)=>a.localeCompare(b));
   if(!keys.length){
-    box.innerHTML = `<div style="font-size:12px;color:var(--gray-l);text-align:center;padding:18px">등록된 별명 매핑 없음</div>`;
+    box.innerHTML = `<div style="font-size:var(--fs-sm);color:var(--gray-l);text-align:center;padding:18px">등록된 별명 매핑 없음</div>`;
     return;
   }
   box.innerHTML = keys.map(k=>{
     const v = String(m[k]||'').trim();
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--border)">
-      <span style="font-family:monospace;font-size:12px;font-weight:900;color:var(--text2);min-width:90px">${esc(k)}</span>
+      <span style="font-family:monospace;font-size:var(--fs-sm);font-weight:900;color:var(--text2);min-width:90px">${esc(k)}</span>
       <span style="color:var(--gray-l)">→</span>
-      <span style="font-size:12px;font-weight:900;color:var(--blue);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v)}</span>
+      <span style="font-size:var(--fs-sm);font-weight:900;color:var(--blue);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v)}</span>
       <button class="btn btn-r btn-xs" onclick="cfgDelPlayerAlias('${encodeURIComponent(k)}')">삭제</button>
     </div>`;
   }).join('');
@@ -424,13 +424,13 @@ window.epRenderAliasesList = function(playerName){
   const m = _palLoad();
   const aliases = Object.keys(m).filter(k => m[k] === playerName).sort((a,b)=>a.localeCompare(b));
   if(!aliases.length){
-    box.innerHTML = '<span style="font-size:11px;color:var(--gray-l)">등록된 별명 없음</span>';
+    box.innerHTML = '<span style="font-size:var(--fs-caption);color:var(--gray-l)">등록된 별명 없음</span>';
     return;
   }
   box.innerHTML = aliases.map(alias=>{
     const safe = alias.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const enc = encodeURIComponent(alias);
-    return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 10px 3px 12px;border-radius:99px;background:var(--white);border:1px solid var(--border);color:var(--text2);white-space:nowrap">
+    return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-sm);padding:3px 10px 3px 12px;border-radius:99px;background:var(--white);border:1px solid var(--border);color:var(--text2);white-space:nowrap">
       ${safe}
       <button onclick="epAliasDel('${enc}','${encodeURIComponent(playerName)}')" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:none;background:var(--border);color:var(--gray-l);cursor:pointer;font-size:10px;padding:0;line-height:1;flex-shrink:0">✕</button>
     </span>`;

@@ -91,14 +91,14 @@ function _lazyLoadingView(T, C, title, desc){
 
 async function _ensureRouletteLoaded(){
   const scripts=[
-    'js/wheel.js?v=20260529-01',
-    'js/duck-race.js?v=20260424-04',
-    'js/roulette.js?v=20260715-01',
-    'js/team-match-game.js?v=20260715-01',
-    'js/tier-match-game.js?v=20260715-01',
-    'js/photo-quiz-game.js?v=20260715-01',
-    'js/memory-match-game.js?v=20260713-02',
-    'js/mole-whack-game.js?v=20260713-05',
+    'js/wheel.js?v=20260717-ds03',
+    'js/duck-race.js?v=20260717-ds03',
+    'js/roulette.js?v=20260717-ds03',
+    'js/team-match-game.js?v=20260717-ds03',
+    'js/tier-match-game.js?v=20260717-ds03',
+    'js/photo-quiz-game.js?v=20260717-ds03',
+    'js/memory-match-game.js?v=20260717-ds03',
+    'js/mole-whack-game.js?v=20260717-ds03',
   ];
   // 순차 로딩(하나씩 기다림) 대신 전부 동시에 요청 — 다운로드는 병렬로, 실행 순서는
   // _loadScriptOnce의 async=false 처리 덕분에 그대로 유지됨. 로딩 체감 속도 대폭 개선.
@@ -106,32 +106,32 @@ async function _ensureRouletteLoaded(){
 }
 async function _ensureStatsLoaded(){
   await window.ensureChartJS();
-  await _loadScriptOnce('js/sharecard-normalize.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-theme.js?v=20260503-05');
-  await _loadScriptOnce('js/sharecard-team.js?v=20260517-01');
+  await _loadScriptOnce('js/sharecard-normalize.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-theme.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-team.js?v=20260717-ds03');
   await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
   await _loadScriptOnce('js/stats-tier-rank-utils.js?v=20260503-01');
   await _loadScriptOnce('js/stats-heatmap-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/heatmap-day-popup.js?v=20260630-01');
+  await _loadScriptOnce('js/heatmap-day-popup.js?v=20260717-ds01');
   await _loadScriptOnce('js/stats-period-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-period-renderer.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-period-renderer.js?v=20260717-ds03');
   await _loadScriptOnce('js/stats-tierwin-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-heatmap-renderer.js?v=20260630-02');
   await _loadScriptOnce('js/stats-maprank-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-univmatrix-renderer.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260627-01');
+  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260717-ds03');
   await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-runtime.js?v=20260517-01');
-  await _loadScriptOnce('js/sharecard-render-entity.js?v=20260504-03');
-  await _loadScriptOnce('js/sharecard-render-match-helpers.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-render-match-layout.js?v=20260504-02');
-  await _loadScriptOnce('js/sharecard-render-match-shell.js?v=20260504-01');
-  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260503-02');
-  await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260517-01');
-  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260517-01');
-  await _loadScriptOnce('js/sharecard-match-openers.js?v=20260503-01');
+  await _loadScriptOnce('js/sharecard-runtime.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-render-entity.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-render-match-helpers.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-layout.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-shell.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-match-openers.js?v=20260717-ds01');
   await _loadScriptOnce('js/stats-core.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
@@ -141,36 +141,36 @@ window._ensureShareCardRuntime = window._ensureShareCardRuntime || async functio
   await _loadScriptOnce('js/stats-core-utils.js?v=20260503-02');
   await _loadScriptOnce('js/stats-tier-rank-utils.js?v=20260503-01');
   await _loadScriptOnce('js/stats-heatmap-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/heatmap-day-popup.js?v=20260630-01');
+  await _loadScriptOnce('js/heatmap-day-popup.js?v=20260717-ds01');
   await _loadScriptOnce('js/stats-period-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-period-renderer.js?v=20260503-01');
+  await _loadScriptOnce('js/stats-period-renderer.js?v=20260717-ds03');
   await _loadScriptOnce('js/stats-tierwin-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-heatmap-renderer.js?v=20260630-02');
   await _loadScriptOnce('js/stats-maprank-renderer.js?v=20260503-01');
   await _loadScriptOnce('js/stats-univmatrix-renderer.js?v=20260503-01');
-  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260627-01');
+  await _loadScriptOnce('js/stats-advanced-renderers.js?v=20260717-ds03');
   await _loadScriptOnce('js/stats-export-utils.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-normalize.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-theme.js?v=20260503-05');
-  await _loadScriptOnce('js/sharecard-team.js?v=20260517-01');
-  await _loadScriptOnce('js/sharecard-runtime.js?v=20260517-01');
-  await _loadScriptOnce('js/sharecard-render-entity.js?v=20260504-03');
-  await _loadScriptOnce('js/sharecard-render-match-helpers.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-render-match-layout.js?v=20260504-02');
-  await _loadScriptOnce('js/sharecard-render-match-shell.js?v=20260504-01');
-  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260503-02');
-  await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260503-01');
-  await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260517-01');
-  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260517-01');
-  await _loadScriptOnce('js/sharecard-match-openers.js?v=20260503-01');
+  await _loadScriptOnce('js/sharecard-normalize.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-theme.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-team.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-runtime.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-render-entity.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-render-match-helpers.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-score.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-layout.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-shell.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-sections.js?v=20260717-ds03');
+  await _loadScriptOnce('js/sharecard-render-match-context.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-utils.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-render-match-pipeline.js?v=20260717-ds01');
+  await _loadScriptOnce('js/sharecard-match-openers.js?v=20260717-ds01');
   await _loadScriptOnce('js/stats-core.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-overview-elo.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-sharecard.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
   await _loadScriptOnce('js/stats-search.js?v=' + (window.SU_STATS_JS_V || '20260629-split'));
 };
 async function _ensureCalendarLoaded(){
-  await _loadScriptOnce('js/calendar.js?v=20260504-02');
+  await _loadScriptOnce('js/calendar.js?v=20260717-ds03');
 }
 try{
   const _prewarmCalendar = ()=>{ try{ _ensureCalendarLoaded(); }catch(e){} };
@@ -219,25 +219,25 @@ async function _ensureVoteLoaded(){
 }
 async function _ensureCloudBoardLoaded(){
   await window.ensureHtml2Canvas();
-  await _loadScriptOnce('js/sync/cloud-apply.js?v=20260502-04');
+  await _loadScriptOnce('js/sync/cloud-apply.js?v=20260717-ds01');
   await _loadScriptOnce('js/sync/cloud-status.js?v=20260503-01');
-  await _loadScriptOnce('js/cloud-board-state.js?v=20260629-split');
-  await _loadScriptOnce('js/cloud-board-render.js?v=20260629-split');
-  await _loadScriptOnce('js/cloud-board-drag.js?v=20260629-split');
-  await _loadScriptOnce('js/cloud-board-rank-sync.js?v=20260629-split');
+  await _loadScriptOnce('js/cloud-board-state.js?v=20260717-ds03');
+  await _loadScriptOnce('js/cloud-board-render.js?v=20260717-ds03');
+  await _loadScriptOnce('js/cloud-board-drag.js?v=20260717-ds03');
+  await _loadScriptOnce('js/cloud-board-rank-sync.js?v=20260717-ds01');
 }
 async function _ensureSettingsLoaded(){
   await _loadScriptOnce('js/settings/font-controls.js?v=20260502-01');
   await _loadScriptOnce('js/settings/ui-scale-controls.js?v=20260502-01');
   await _loadScriptOnce('js/settings/team-colors.js?v=20260503-01');
   await _loadScriptOnce('js/settings/sharecard.js?v=20260503-01');
-  await _loadScriptOnce('js/settings-base.js?v=20260629-split');
-  await _loadScriptOnce('js/settings-presets.js?v=20260629-split');
-  await _loadScriptOnce('js/settings-femco-cfg.js?v=20260629-split');
-  await _loadScriptOnce('js/settings-cfg-modal.js?v=20260629-split');
-  await _loadScriptOnce('js/settings-cfg-apply.js?v=20260629-split');
-  await _loadScriptOnce('js/settings-cfg-misc.js?v=20260629-split');
-  await _loadScriptOnce('js/settings-render.js?v=20260521-v29');
+  await _loadScriptOnce('js/settings-base.js?v=20260717-ds03');
+  await _loadScriptOnce('js/settings-presets.js?v=20260717-ds01');
+  await _loadScriptOnce('js/settings-femco-cfg.js?v=20260717-ds01');
+  await _loadScriptOnce('js/settings-cfg-modal.js?v=20260717-ds01');
+  await _loadScriptOnce('js/settings-cfg-apply.js?v=20260717-ds03');
+  await _loadScriptOnce('js/settings-cfg-misc.js?v=20260717-ds01');
+  await _loadScriptOnce('js/settings-render.js?v=20260717-ds03');
 }
 function _lazyGsSetStatus(msg, color='var(--gray-l)'){
   try{
@@ -280,7 +280,7 @@ window.fbCloudSave = window.fbCloudSave || _lazyFbCloudSave;
 window.fbUpdate = window.fbUpdate || _lazyFbUpdate;
 window.cloudLoad = window.cloudLoad || _lazyCloudLoad;
 async function _ensureElboardLoaded(){
-  await _loadScriptOnce('js/elboard.js?v=20260703');
+  await _loadScriptOnce('js/elboard.js?v=20260717-ds03');
 }
 function _lazyRCfg(C, T){
   _lazyLoadingView(T, C, '설정', '설정 모듈을 불러오는 중...');
@@ -327,22 +327,22 @@ function _lazyReCfg(){
   })();
 }
 async function _ensureChatbotLoaded(){
-  await _loadScriptOnce('js/chatbot.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-utils.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-fuzzy.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-sync.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-aibot.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-formatters.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-formatters-player-card.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-formatters-recent.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-formatters-stats.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-formatters-matches.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-formatters-records.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-formatters-search.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-formatters-tournaments.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-formatters-univ.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-handlers.js?v=20260623-01');
-  await _loadScriptOnce('js/chatbot-ui.js?v=20260628-fix01');
+  await _loadScriptOnce('js/chatbot.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-utils.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-fuzzy.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-sync.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-aibot.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-player-card.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-recent.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-stats.js?v=20260717-ds03');
+  await _loadScriptOnce('js/chatbot-formatters-matches.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-records.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-search.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-tournaments.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-univ.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-handlers.js?v=20260717-ds01');
+  await _loadScriptOnce('js/chatbot-ui.js?v=20260717-ds01');
 }
 function _lazyOpenChatbot(mode){
   (async()=>{

@@ -35,17 +35,17 @@
       }).join('');
       const setBg=isAce?`${theme.accentDark}15`:variant.setBg;
       const setBorder=isAce?`${theme.accentDark}30`:variant.setBorder;
-      return`<div style="background:${setBg};border:1px solid ${setBorder};border-radius:10px;padding:10px 12px;margin-bottom:8px">
+      return`<div style="background:${setBg};border:1px solid ${setBorder};border-radius:var(--r);padding:10px 12px;margin-bottom:8px">
         <div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:${gameList.length?'7':'0'}px">
-          <span style="font-size:11px;font-weight:900;color:${isAce?theme.accentDark:theme.textDim};letter-spacing:.3px;min-width:60px;text-align:center">${sLabel}</span>
-          <span style="font-weight:900;background:${sAW?ca:'transparent'};${sAW?'':'border:1px solid '+theme.divider};color:${sAW?'#fff':theme.textDim};padding:2px 10px;border-radius:6px;font-size:12px;text-align:center">${dispA}</span>
+          <span style="font-size:var(--fs-caption);font-weight:900;color:${isAce?theme.accentDark:theme.textDim};letter-spacing:.3px;min-width:60px;text-align:center">${sLabel}</span>
+          <span style="font-weight:900;background:${sAW?ca:'transparent'};${sAW?'':'border:1px solid '+theme.divider};color:${sAW?'#fff':theme.textDim};padding:2px 10px;border-radius:6px;font-size:var(--fs-sm);text-align:center">${dispA}</span>
           <span style="font-weight:900;font-size:16px;letter-spacing:2px;min-width:48px;text-align:center">
             <span style="color:${sAW?ca:theme.textDim}">${swA}</span>
-            <span style="color:${theme.textDim};font-size:12px;margin:0 4px">:</span>
+            <span style="color:${theme.textDim};font-size:var(--fs-sm);margin:0 4px">:</span>
             <span style="color:${sBW?cb:theme.textDim}">${swB}</span>
           </span>
-          <span style="font-weight:900;background:${sBW?cb:'transparent'};${sBW?'':'border:1px solid '+theme.divider};color:${sBW?'#fff':theme.textDim};padding:2px 10px;border-radius:6px;font-size:12px;text-align:center">${dispB}</span>
-          <span style="font-size:11px;color:${theme.textDim};white-space:nowrap;font-weight:800">${sAW?'▶ '+a:sBW?'▶ '+b:'무승부'}</span>
+          <span style="font-weight:900;background:${sBW?cb:'transparent'};${sBW?'':'border:1px solid '+theme.divider};color:${sBW?'#fff':theme.textDim};padding:2px 10px;border-radius:6px;font-size:var(--fs-sm);text-align:center">${dispB}</span>
+          <span style="font-size:var(--fs-caption);color:${theme.textDim};white-space:nowrap;font-weight:800">${sAW?'▶ '+a:sBW?'▶ '+b:'무승부'}</span>
         </div>
         ${games}
       </div>`;
@@ -57,7 +57,7 @@
     return `<div class="share-match-summary-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:${setsHTML||teamMode?'12':'0'}px">
       ${(summaryCards||[]).map(it=>`<div style="padding:10px 10px 9px;border-radius:14px;background:rgba(255,255,255,.88);border:1px solid ${variant.setBorder};box-shadow:0 8px 22px rgba(15,23,42,.06)">
         <div style="font-size:9px;font-weight:800;color:${theme.textDim};letter-spacing:.3px;margin-bottom:4px">${it.label}</div>
-        <div class="share-match-summary-value" style="font-size:12px;font-weight:900;color:${it.tone||winnerColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.value}</div>
+        <div class="share-match-summary-value" style="font-size:var(--fs-sm);font-weight:900;color:${it.tone||winnerColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.value}</div>
       </div>`).join('')}
     </div>`;
   }

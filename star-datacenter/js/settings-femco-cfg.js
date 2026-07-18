@@ -49,7 +49,7 @@ window.cfgAutoOutfmtRefreshPreview = function(){
 // ─────────────────────────────────────────────────────────────
 window.cfgRunSettingsSelfCheck = function(){
   const out = document.getElementById('cfg-selfcheck-out');
-  if(out) out.innerHTML = '<div style="color:var(--gray-l);font-size:12px">검사 중...</div>';
+  if(out) out.innerHTML = '<div style="color:var(--gray-l);font-size:var(--fs-sm)">검사 중...</div>';
   try{
     const JS_KEYWORDS = new Set(['if','for','while','function','typeof','new','return','let','const','var','switch','case','do','break','continue','try','catch','finally','throw','class','extends','super','static','async','await','yield','import','export','default','from','as','delete','in','instanceof','of','void','undefined','null','true','false','this','arguments','eval','isNaN','parseInt','parseFloat','encodeURIComponent','decodeURIComponent']);
     const secs = Array.from(document.querySelectorAll('[data-cfg-sec]'));
@@ -81,24 +81,24 @@ window.cfgRunSettingsSelfCheck = function(){
     if(out){
       let html = '';
       if(missing.length > 0){
-        html += `<div style="font-size:12px;color:#dc2626;font-weight:1000;margin-bottom:8px">⚠️ settings.js 핸들러 누락 ${missing.length}개</div>
-                 <div style="font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;margin-bottom:12px">${missing.join('\\n')}</div>`;
+        html += `<div style="font-size:var(--fs-sm);color:#dc2626;font-weight:1000;margin-bottom:8px">⚠️ settings.js 핸들러 누락 ${missing.length}개</div>
+                 <div style="font-family:ui-monospace,monospace;font-size:var(--fs-sm);white-space:pre-wrap;line-height:1.5;margin-bottom:12px">${missing.join('\\n')}</div>`;
       }
       if(Object.keys(tabMissing).length > 0){
-        html += `<div style="font-size:12px;color:#ea580c;font-weight:1000;margin-bottom:6px">⚠️ 탭 렌더러 누락</div>
-                 <div style="font-family:ui-monospace,monospace;font-size:11px;white-space:pre-wrap;line-height:1.6">`;
+        html += `<div style="font-size:var(--fs-sm);color:#ea580c;font-weight:1000;margin-bottom:6px">⚠️ 탭 렌더러 누락</div>
+                 <div style="font-family:ui-monospace,monospace;font-size:var(--fs-caption);white-space:pre-wrap;line-height:1.6">`;
         for(const [tab, funcs] of Object.entries(tabMissing)){
           html += `${tab}: ${funcs.join(', ')}\\n`;
         }
         html += `</div>`;
       }
       if(missing.length === 0 && Object.keys(tabMissing).length === 0){
-        html = `<div style="font-size:12px;color:#16a34a;font-weight:1000">✅ 모든 핸들러 및 탭 함수 정상</div>`;
+        html = `<div style="font-size:var(--fs-sm);color:#16a34a;font-weight:1000">✅ 모든 핸들러 및 탭 함수 정상</div>`;
       }
       out.innerHTML = html;
     }
   }catch(e){
-    if(out) out.innerHTML = `<div style="font-size:12px;color:#dc2626;font-weight:1000">검사 실패: ${String(e)}</div>`;
+    if(out) out.innerHTML = `<div style="font-size:var(--fs-sm);color:#dc2626;font-weight:1000">검사 실패: ${String(e)}</div>`;
   }
 };
 function _cfgMenuSave(v){

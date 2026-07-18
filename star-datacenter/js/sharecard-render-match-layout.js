@@ -188,10 +188,10 @@
     const typeLbl = {ind:'🎯 개인전',gj:'⚡ 끝장전',progj:'🏆 프로리그 끝장전'}[m?m._matchType:''] || '🎮 개인전';
     return `<div class="share-personal-meta" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
       <div class="share-personal-meta-left" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
-        <div style="font-size:11px;color:rgba(255,255,255,.96);font-weight:800;background:${variant.chipBg};border:1px solid ${variant.chipBd};padding:4px 12px;border-radius:999px;backdrop-filter:blur(6px);white-space:nowrap">${typeLbl}${m&&m._subLabel?` · ${m._subLabel}`:''}</div>
+        <div style="font-size:var(--fs-caption);color:rgba(255,255,255,.96);font-weight:800;background:${variant.chipBg};border:1px solid ${variant.chipBd};padding:4px 12px;border-radius:999px;backdrop-filter:blur(6px);white-space:nowrap">${typeLbl}${m&&m._subLabel?` · ${m._subLabel}`:''}</div>
         ${scoreInlineHTML('personal')}
       </div>
-      <div class="share-personal-meta-date" style="font-size:11px;color:rgba(255,255,255,.84);font-weight:800">${(m&&m.d)||''}</div>
+      <div class="share-personal-meta-date" style="font-size:var(--fs-caption);color:rgba(255,255,255,.84);font-weight:800">${(m&&m.d)||''}</div>
     </div>`;
   }
 

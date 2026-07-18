@@ -58,7 +58,7 @@ body:not(.dark) {
 
 /* exportHint: 모바일에서 공간 부족 시 숨김 */
 #exportHint {
-  font-size: 12px !important;
+  font-size:var(--fs-sm) !important;
   color: var(--gray-l) !important;
   margin-left: auto !important; /* 오른쪽 정렬 */
   white-space: nowrap !important;

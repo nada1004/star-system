@@ -55,23 +55,23 @@ function pasteQuickRegister(idx, role, name) {
   overlay.className = 'modal-compact-overlay';
   overlay.innerHTML = `
     <div class="modal-compact-box" style="width:320px;font-family:'Noto Sans KR',sans-serif">
-      <div style="font-weight:900;font-size:15px;margin-bottom:12px;color:#1a202c">👤 선수 즉시 등록</div>
-      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
-        <div><label style="font-size:11px;font-weight:700;color:#2563eb;display:block;margin-bottom:3px">이름</label>
-          <input id="qreg-name" value="${name.replace(/"/g,'&quot;')}" style="width:100%;padding:7px 10px;border:1px solid #cdd3dc;border-radius:7px;font-size:13px;box-sizing:border-box"></div>
-        <div><label style="font-size:11px;font-weight:700;color:#2563eb;display:block;margin-bottom:3px">대학</label>
-          <select id="qreg-univ" style="width:100%;padding:7px 10px;border:1px solid #cdd3dc;border-radius:7px;font-size:13px"><option value="">선택 안함</option>${allUnivs}</select></div>
+      <div style="font-weight:900;font-size:var(--fs-md);margin-bottom:12px;color:#1a202c">👤 선수 즉시 등록</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:var(--fs-base)">
+        <div><label style="font-size:var(--fs-caption);font-weight:700;color:#2563eb;display:block;margin-bottom:3px">이름</label>
+          <input id="qreg-name" value="${name.replace(/"/g,'&quot;')}" style="width:100%;padding:7px 10px;border:1px solid #cdd3dc;border-radius:7px;font-size:var(--fs-base);box-sizing:border-box"></div>
+        <div><label style="font-size:var(--fs-caption);font-weight:700;color:#2563eb;display:block;margin-bottom:3px">대학</label>
+          <select id="qreg-univ" style="width:100%;padding:7px 10px;border:1px solid #cdd3dc;border-radius:7px;font-size:var(--fs-base)"><option value="">선택 안함</option>${allUnivs}</select></div>
         <div style="display:flex;gap:8px">
-          <div style="flex:1"><label style="font-size:11px;font-weight:700;color:#2563eb;display:block;margin-bottom:3px">티어</label>
-            <select id="qreg-tier" style="width:100%;padding:7px 6px;border:1px solid #cdd3dc;border-radius:7px;font-size:12px">${tierOpts}</select></div>
-          <div style="flex:1"><label style="font-size:11px;font-weight:700;color:#2563eb;display:block;margin-bottom:3px">종족</label>
-            <select id="qreg-race" style="width:100%;padding:7px 6px;border:1px solid #cdd3dc;border-radius:7px;font-size:12px">
+          <div style="flex:1"><label style="font-size:var(--fs-caption);font-weight:700;color:#2563eb;display:block;margin-bottom:3px">티어</label>
+            <select id="qreg-tier" style="width:100%;padding:7px 6px;border:1px solid #cdd3dc;border-radius:7px;font-size:var(--fs-sm)">${tierOpts}</select></div>
+          <div style="flex:1"><label style="font-size:var(--fs-caption);font-weight:700;color:#2563eb;display:block;margin-bottom:3px">종족</label>
+            <select id="qreg-race" style="width:100%;padding:7px 6px;border:1px solid #cdd3dc;border-radius:7px;font-size:var(--fs-sm)">
               <option value="T">테란</option><option value="Z">저그</option><option value="P">프로토스</option></select></div>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-        <button id="qreg-cancel" style="padding:7px 16px;border-radius:7px;border:1px solid #cdd3dc;background:#f7f9fc;font-size:13px;font-weight:600;cursor:pointer">취소</button>
-        <button id="qreg-ok" style="padding:7px 16px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:700;cursor:pointer">등록하기</button>
+        <button id="qreg-cancel" style="padding:7px 16px;border-radius:7px;border:1px solid #cdd3dc;background:#f7f9fc;font-size:var(--fs-base);font-weight:600;cursor:pointer">취소</button>
+        <button id="qreg-ok" style="padding:7px 16px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:var(--fs-base);font-weight:700;cursor:pointer">등록하기</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);

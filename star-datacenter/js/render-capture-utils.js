@@ -6,7 +6,7 @@ function _showSaveLoading(){
   if(!t){
     t=document.createElement('div');
     t.id='_save-toast';
-    t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.88);color:#fff;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:700;z-index:99999;display:none;align-items:center;gap:8px;backdrop-filter:blur(6px);font-family:"Noto Sans KR",sans-serif;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3)';
+    t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.88);color:#fff;padding:10px 22px;border-radius:24px;font-size:var(--fs-base);font-weight:700;z-index:99999;display:none;align-items:center;gap:8px;backdrop-filter:blur(6px);font-family:"Noto Sans KR",sans-serif;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3)';
     document.body.appendChild(t);
   }
   t.innerHTML='<span style="display:inline-block;animation:_spin .8s linear infinite">⏳</span> 저장 중...';
@@ -226,7 +226,7 @@ function _newsMvpFeatureHtml(ctx){
 function _newsStandingsHtml(ctx){
   const list = (ctx.rankedUnivs && ctx.rankedUnivs.length ? ctx.rankedUnivs : ctx.topUnivs) || [];
   if(!list.length) return `<div class="b2n-empty">집계된 대학 활동이 없습니다.</div>`;
-  const rows = list.slice(0, ctx.isMonthly?7:5).map((ud, idx)=>{
+  const rows = list.map((ud, idx)=>{
     const rank = ud.rank || (idx+1);
     const rankCls = rank===1?' r1':rank===2?' r2':rank===3?' r3':'';
     return `<div class="b2n-stline">
@@ -251,21 +251,31 @@ function _newsHighlightRows(ctx){
   ].filter(Boolean).join('');
   return rows || `<div class="b2n-empty">집계된 기록이 없습니다.</div>`;
 }
-function _newsTopPlayersHtml(ctx){
-  const list = (ctx.monthlyTopPlayers||[]).filter(s=>s && s.p).slice(0,5);
-  if(!list.length) return '';
-  const rows = list.map((s, idx)=>{
-    const p=s.p;
-    const rank=idx+1;
-    const rankCls = rank===1?' r1':rank===2?' r2':rank===3?' r3':'';
-    return `<div class="b2n-stline">
-      <span class="b2n-stline-rank${rankCls}">${rank}</span>
-      <span class="b2n-stline-name">${_esc(p.name||'-')} <span style="font-weight:600;color:#9ca3af;font-size:10px">${_esc(p.univ||'무소속')}</span></span>
-      <span class="b2n-stline-rec">${s.wins ?? 0}승 ${s.losses ?? 0}패</span>
-      <span class="b2n-stline-wr">${s.winRate ?? 0}%</span>
+function _newsRaceStatsHtml(ctx){
+  const rc = ctx.raceCountGlobal;
+  if(!rc) return '';
+  const races = [
+    { key:'P', label:'프로토스', ico:'🔮' },
+    { key:'T', label:'테란',     ico:'⚔️' },
+    { key:'Z', label:'저그',     ico:'🦎' }
+  ];
+  const hasAny = races.some(({key})=> (rc[key].w + rc[key].l) > 0);
+  if(!hasAny) return '';
+  const rows = races.map(({key,label,ico})=>{
+    const { w, l } = rc[key];
+    const t = w + l;
+    const wr = t ? Math.round(w/t*100) : null;
+    const wrCol = wr===null ? '#a8a29e' : wr>=60 ? '#15803d' : wr>=50 ? '#9f1d1d' : '#a8a29e';
+    return `<div class="b2n-stline" style="flex-wrap:wrap">
+      <span class="b2n-stline-name">${ico} ${_esc(label)} 상대</span>
+      <span class="b2n-stline-rec">${w}승 ${l}패</span>
+      <span class="b2n-stline-wr" style="color:${wrCol}">${wr!==null?`${wr}%`:'-'}</span>
+      <span style="flex-basis:100%;height:4px;border-radius:2px;background:rgba(28,25,23,.08);overflow:hidden;margin-top:4px">
+        <span style="display:block;height:100%;width:${wr!==null?wr:0}%;background:${wrCol};border-radius:2px"></span>
+      </span>
     </div>`;
   }).join('');
-  return `<div class="b2n-col-title"><i></i>최다 출전 TOP 5</div><div class="b2n-standings">${rows}</div>`;
+  return `<div class="b2n-col-title"><i></i>종족별 상대 전적</div><div class="b2n-standings">${rows}</div>`;
 }
 function _newsUnivAceCardHtml(item){
   const col = (typeof gc === 'function' ? (gc(item.u.name) || '#9f1d1d') : '#9f1d1d');
@@ -293,6 +303,48 @@ function _newsUnivAceCardHtml(item){
     </div>
   </div>`;
 }
+function _newsUnivRosterCardHtml(item){
+  const col = (typeof gc === 'function' ? (gc(item.u.name) || '#9f1d1d') : '#9f1d1d');
+  const roster = [...(item.active||[])].sort((a,b)=> (b.wins - a.wins) || (b.total - a.total) || ((b.winRate ?? -1) - (a.winRate ?? -1)));
+  const head = `<div class="b2n-roster-head" style="background:${col}1a;border-top:3px solid ${col}">
+      <span class="b2n-ace-dot" style="background:${col}"></span>
+      <span style="font-size:11px;font-weight:900;color:#292524;text-transform:uppercase;letter-spacing:.02em">${_esc(item.u.name)}</span>
+      <span class="b2n-roster-count">${roster.length}명</span>
+    </div>`;
+  if(!roster.length){
+    return `<div class="b2n-roster-card">${head}<div class="b2n-ace-empty" style="padding:10px 13px">활동 기록 없음</div></div>`;
+  }
+  const rows = roster.map(s=>{
+    const wrCol = (s.winRate ?? 0) >= 60 ? '#15803d' : (s.winRate ?? 0) >= 50 ? '#9f1d1d' : '#a8a29e';
+    return `<div class="b2n-roster-row">
+      <span class="b2n-roster-name">${_esc(s.p && s.p.name || '-')}</span>
+      <span class="b2n-roster-rec">${s.wins ?? 0}승 ${s.losses ?? 0}패</span>
+      <span class="b2n-roster-wr" style="color:${wrCol}">${s.winRate ?? 0}%</span>
+    </div>`;
+  }).join('');
+  return `<div class="b2n-roster-card">${head}<div class="b2n-roster-list">${rows}</div></div>`;
+}
+function _newsUnivRostersHtml(ctx){
+  const list = (ctx.univAces || []).filter(item => item && item.u).slice(0, 30);
+  if(!list.length) return '';
+  // 카드 높이가 팀마다 크게 달라(스트리머 20명 vs 3명) 2열 그리드에 그대로 넣으면
+  // 짝이 된 카드끼리 높이가 맞춰지며 아래쪽에 큰 여백이 남는 문제가 있었다.
+  // → 로스터 크기 기준으로 내림차순 정렬 후, 매번 "누적 인원이 더 적은 열"에
+  //   카드를 채우는 그리디 방식으로 두 열의 높이를 최대한 맞춘다(신문 다단 편집과 동일한 방식).
+  const withWeight = list.map(item => ({ item, weight: Math.max(1, (item.active||[]).length) }))
+    .sort((a,b)=> b.weight - a.weight);
+  const cols = [ { items:[], total:0 }, { items:[], total:0 } ];
+  withWeight.forEach(({item, weight})=>{
+    const target = cols[0].total <= cols[1].total ? cols[0] : cols[1];
+    target.items.push(item);
+    target.total += weight;
+  });
+  const colHtml = cols.map(c => `<div class="b2n-roster-col">${c.items.map(_newsUnivRosterCardHtml).join('')}</div>`).join('');
+  return `<div class="b2n-aces-section">
+    <div class="b2n-aces-title"><i></i>대학별 스트리머 성적</div>
+    <div class="b2n-roster-grid">${colHtml}</div>
+  </div>`;
+}
 function _newsUnivAcesHtml(ctx){
   const list = (ctx.univAces || []).filter(item => item && item.u);
   if(!list.length) return '';
@@ -305,10 +357,11 @@ function _newsUnivAcesHtml(ctx){
 function _newsCss(){
   return `
     .b2n-sheet{
+      --ink:#1c1917; --ink2:#6b6a63; --accent:#9f1d1d;
       width:1040px; margin:0 auto; padding:0 0 30px;
       font-family:'Noto Sans KR', -apple-system, sans-serif;
       background:radial-gradient(140% 100% at 50% 0%, #f3efe4 0%, #ece7da 55%, #e6e0d0 100%);
-      color:#1c1917;
+      color:var(--ink);
       border-radius:14px; overflow:hidden;
       box-shadow:0 24px 60px rgba(15,23,42,.20), 0 2px 8px rgba(15,23,42,.08);
     }
@@ -323,18 +376,18 @@ function _newsCss(){
     .b2n-masthead{ padding:18px 26px 0; background:#ece7da; }
     .b2n-masthead-top{
       display:flex; align-items:center; justify-content:space-between;
-      font-size:11px; font-weight:700; color:#57534e; letter-spacing:.04em; margin-bottom:10px;
+      font-size:var(--fs-caption); font-weight:700; color:var(--ink2); letter-spacing:.04em; margin-bottom:10px;
     }
     .b2n-masthead-brand{
       display:flex; align-items:center; justify-content:center; gap:12px; text-align:center;
     }
     .b2n-brand-name{
-      font-family:'Noto Serif KR', Georgia, serif; font-size:44px; font-weight:900;
-      letter-spacing:-.01em; color:#1c1917; text-shadow:0 1px 0 rgba(255,255,255,.5);
+      font-family:'Noto Serif KR', Georgia, serif; font-size:26px; font-weight:900;
+      letter-spacing:.05em; color:var(--ink2);
     }
-    .b2n-brand-name b{ color:#9f1d1d }
+    .b2n-brand-name b{ color:var(--ink) }
     .b2n-edition{
-      margin-top:7px; text-align:center; font-size:11px; font-weight:800; color:#57534e;
+      margin-top:7px; text-align:center; font-size:var(--fs-caption); font-weight:800; color:var(--ink2);
       letter-spacing:.12em; padding-bottom:15px;
     }
     .b2n-rule-double{ border-top:3px solid #1c1917; margin-top:0; }
@@ -342,40 +395,40 @@ function _newsCss(){
     .b2n-headline-wrap{ padding:22px 26px 0; background:linear-gradient(180deg,#faf7f0 0%,#f8f5ee 100%); }
     .b2n-headline{
       font-family:'Noto Serif KR', Georgia, serif;
-      font-size:39px; font-weight:900; line-height:1.22; letter-spacing:-.02em; color:#1c1917;
+      font-size:44px; font-weight:900; line-height:1.18; letter-spacing:-.02em; color:var(--ink);
     }
     .b2n-dek{
-      margin-top:10px; font-size:14px; line-height:1.7; color:#374151; max-width:900px;
-      border-left:4px solid #9f1d1d; padding-left:12px;
+      margin-top:10px; font-size:14px; line-height:1.7; color:var(--ink2); max-width:900px;
+      border-left:4px solid var(--accent); padding-left:12px;
     }
     .b2n-analysis{
-      margin-top:14px; font-size:12.5px; line-height:1.8; color:#292524; max-width:960px;
+      margin-top:14px; font-size:12.5px; line-height:1.8; color:var(--ink); max-width:960px;
       background:#faf9f6; border:1px solid rgba(28,25,23,.14); border-radius:8px; padding:12px 16px;
       column-gap:22px;
     }
-    .b2n-analysis b{ color:#9f1d1d }
+    .b2n-analysis b{ color:var(--ink); font-weight:900 }
     .b2n-bylinebar{
       display:flex; gap:14px; flex-wrap:wrap; margin-top:14px; padding-top:10px; padding-bottom:16px;
-      border-top:1px dashed rgba(28,25,23,.3); font-size:11px; font-weight:700; color:#6b7280;
+      border-top:1px dashed rgba(28,25,23,.3); font-size:var(--fs-caption); font-weight:700; color:var(--ink2);
     }
     .b2n-body{ display:flex; gap:22px; padding:20px 26px 0 }
     .b2n-body > .b2n-col:first-child{ width:638px; flex-shrink:0 }
     .b2n-body > .b2n-col:last-child{ flex:1; min-width:0 }
     .b2n-col-title{
       display:flex; align-items:center; gap:7px;
-      font-size:12px; font-weight:900; letter-spacing:.08em; text-transform:uppercase;
-      color:#57534e; margin:18px 0 10px; padding-bottom:7px; border-bottom:1.5px solid rgba(28,25,23,.55);
+      font-size:var(--fs-sm); font-weight:900; letter-spacing:.08em; text-transform:uppercase;
+      color:var(--ink2); margin:18px 0 10px; padding-bottom:7px; border-bottom:1.5px solid rgba(28,25,23,.55);
     }
     .b2n-col-title:first-child{ margin-top:0 }
-    .b2n-col-title i{ display:inline-block; width:7px; height:7px; border-radius:2px; background:#9f1d1d; flex-shrink:0; font-style:normal }
+    .b2n-col-title i{ display:inline-block; width:7px; height:7px; border-radius:2px; background:var(--accent); flex-shrink:0; font-style:normal }
     .b2n-feature{
       display:flex; gap:18px; background:linear-gradient(155deg,#fefcf8 0%,#fbf8f2 65%,#f5efe1 100%);
       border:1px solid rgba(28,25,23,.14); border-top:3px solid #d4af37;
-      border-radius:16px; padding:16px; box-shadow:0 12px 30px rgba(15,23,42,.10), inset 0 1px 0 rgba(255,255,255,.6); margin-bottom:16px;
+      border-radius:var(--r2); padding:16px; box-shadow:0 12px 30px rgba(15,23,42,.10), inset 0 1px 0 rgba(255,255,255,.6); margin-bottom:16px;
     }
     .b2n-feature-empty{
       background:#fbf8f2; border:1px dashed rgba(28,25,23,.25); border-radius:12px; padding:20px;
-      text-align:center; color:#6b7280; font-size:12px; margin-bottom:16px;
+      text-align:center; color:var(--ink2); font-size:var(--fs-sm); margin-bottom:16px;
     }
     .b2n-feature-photo{
       position:relative; width:158px; height:192px; flex-shrink:0; border-radius:14px; overflow:hidden;
@@ -396,45 +449,45 @@ function _newsCss(){
     }
     .b2n-feature-body{ display:flex; flex-direction:column; justify-content:center; gap:7px; min-width:0 }
     .b2n-feature-name{ font-family:'Noto Serif KR', Georgia, serif; font-size:24px; font-weight:900; color:#111827 }
-    .b2n-feature-univ{ font-size:12.5px; font-weight:700; color:#6b7280 }
+    .b2n-feature-univ{ font-size:12.5px; font-weight:700; color:var(--ink2) }
     .b2n-feature-stats{ display:flex; gap:14px; margin-top:6px }
     .b2n-fstat{ display:flex; flex-direction:column; align-items:center; }
-    .b2n-fstat b{ font-size:19px; font-weight:900; color:#9f1d1d }
-    .b2n-fstat i{ font-style:normal; font-size:10px; font-weight:700; color:#6b7280 }
+    .b2n-fstat b{ font-size:19px; font-weight:900; color:var(--ink) }
+    .b2n-fstat i{ font-style:normal; font-size:10px; font-weight:700; color:var(--ink2) }
     .b2n-fstat-streak b{ color:#b45309 }
     .b2n-fstat-sub{ margin-left:2px; padding-left:12px; border-left:1px dashed rgba(28,25,23,.2) }
-    .b2n-fstat-sub b{ font-size:13px; color:#8a8578; font-weight:800 }
+    .b2n-fstat-sub b{ font-size:var(--fs-base); color:#8a8578; font-weight:800 }
     .b2n-row{
       display:flex; gap:10px; align-items:flex-start; background:#fbf8f2; border:1px solid rgba(28,25,23,.12);
-      border-radius:10px; padding:9px 12px; margin-bottom:8px;
+      border-radius:var(--r); padding:9px 12px; margin-bottom:8px;
     }
     .b2n-row-tag{
       flex-shrink:0; font-size:10px; font-weight:900; color:#fff; background:#111827;
       border-radius:6px; padding:4px 8px; letter-spacing:.02em; white-space:nowrap;
     }
-    .b2n-row-body{ font-size:12px; color:#374151; display:flex; flex-wrap:wrap; gap:6px; align-items:baseline }
-    .b2n-row-body b{ font-size:13px; color:#111827 }
-    .b2n-row-univ{ color:#9ca3af; font-size:11px }
-    .b2n-row-stat{ color:#292524; font-weight:900; font-size:11.5px }
-    .b2n-row-wr{ color:#a39d8c; font-weight:700; font-size:10.5px }
-    .b2n-row-extra{ color:#9f1d1d; font-weight:800; font-size:11px }
+    .b2n-row-body{ font-size:var(--fs-sm); color:var(--ink2); display:flex; flex-wrap:wrap; gap:6px; align-items:baseline }
+    .b2n-row-body b{ font-size:var(--fs-base); color:var(--ink) }
+    .b2n-row-univ{ color:var(--ink2); font-size:var(--fs-caption) }
+    .b2n-row-stat{ color:var(--ink); font-weight:900; font-size:11.5px }
+    .b2n-row-wr{ color:var(--ink2); font-weight:700; font-size:10.5px }
+    .b2n-row-extra{ color:var(--ink); font-weight:800; font-size:var(--fs-caption) }
     .b2n-standings{ background:#fbf8f2; border:1px solid rgba(28,25,23,.14); border-radius:14px; overflow:hidden; margin-bottom:16px; box-shadow:0 4px 12px rgba(15,23,42,.05) }
     .b2n-stline{
       display:flex; gap:9px; align-items:center;
-      padding:9px 12px; font-size:12px; border-bottom:1px solid rgba(28,25,23,.08);
+      padding:9px 12px; font-size:var(--fs-sm); border-bottom:1px solid rgba(28,25,23,.08);
     }
     .b2n-stline:nth-child(even){ background:rgba(28,25,23,.025) }
     .b2n-stline:last-child{ border-bottom:none }
     .b2n-stline-rank{
-      width:22px; height:22px; line-height:22px; flex-shrink:0; font-weight:900; font-size:11px;
-      color:#78716c; text-align:center; border-radius:50%; background:rgba(28,25,23,.06);
+      width:22px; height:22px; line-height:22px; flex-shrink:0; font-weight:900; font-size:var(--fs-caption);
+      color:var(--ink2); text-align:center; border-radius:50%; background:rgba(28,25,23,.06);
     }
     .b2n-stline-rank.r1{ background:linear-gradient(160deg,#fde68a,#d97706); color:#78350f; box-shadow:0 2px 6px rgba(217,119,6,.35) }
     .b2n-stline-rank.r2{ background:linear-gradient(160deg,#e7e5e4,#a8a29e); color:#292524; box-shadow:0 2px 6px rgba(120,113,108,.3) }
     .b2n-stline-rank.r3{ background:linear-gradient(160deg,#e7bfa3,#b4623a); color:#431407; box-shadow:0 2px 6px rgba(180,98,58,.3) }
-    .b2n-stline-name{ flex:1; min-width:0; font-weight:800; color:#111827; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-    .b2n-stline-rec{ flex-shrink:0; color:#292524; font-weight:800; font-size:11.5px; white-space:nowrap }
-    .b2n-stline-wr{ flex-shrink:0; font-weight:600; color:#a39d8c; font-size:11px; white-space:nowrap }
+    .b2n-stline-name{ flex:1; min-width:0; font-weight:800; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .b2n-stline-rec{ flex-shrink:0; color:var(--ink); font-weight:800; font-size:11.5px; white-space:nowrap }
+    .b2n-stline-wr{ flex-shrink:0; font-weight:600; color:var(--ink2); font-size:var(--fs-caption); white-space:nowrap }
     .b2n-rd{ font-size:10px; font-weight:800; border-radius:6px; padding:2px 6px; text-align:center; white-space:nowrap }
     .b2n-rd.up{ background:#f0fdf4; color:#15803d }
     .b2n-rd.down{ background:#fef2f2; color:#b91c1c }
@@ -442,32 +495,54 @@ function _newsCss(){
     .b2n-rd.new{ background:#f5f3ff; color:#5b21b6 }
     .b2n-kpis{ display:flex; gap:10px; margin-bottom:16px }
     .b2n-kpi{
-      position:relative; flex:1; min-width:0; color:#111827; border-radius:12px; padding:13px 14px 13px 50px;
+      position:relative; flex:1; min-width:0; color:var(--ink); border-radius:12px; padding:13px 14px 13px 50px;
       background:linear-gradient(155deg,#fefcf8 0%,#fbf8f2 60%,#f5efe1 100%);
-      border:1px solid rgba(28,25,23,.1); border-top:3px solid #9f1d1d;
+      border:1px solid rgba(28,25,23,.1); border-top:3px solid rgba(28,25,23,.22);
       box-shadow:0 6px 16px rgba(15,23,42,.07), inset 0 1px 0 rgba(255,255,255,.6);
     }
-    .b2n-kpi:nth-child(2){ border-top-color:#0e7490 }
     .b2n-kpi-ico{
       position:absolute; left:12px; top:50%; transform:translateY(-50%);
-      width:26px; height:26px; border-radius:50%; font-size:13px;
+      width:26px; height:26px; border-radius:50%; font-size:var(--fs-base);
       display:flex; align-items:center; justify-content:center;
       background:radial-gradient(120% 120% at 30% 25%, #fff 0%, #ede4cf 100%);
       box-shadow:0 2px 6px rgba(15,23,42,.14), inset 0 0 0 1px rgba(28,25,23,.08);
     }
-    .b2n-kpi b{ display:block; font-size:23px; font-weight:900; color:#111827; line-height:1.2 }
-    .b2n-kpi i{ font-style:normal; font-size:10px; font-weight:800; color:#9ca3af; letter-spacing:.02em }
+    .b2n-kpi b{ display:block; font-size:23px; font-weight:900; color:var(--ink); line-height:1.2 }
+    .b2n-kpi i{ font-style:normal; font-size:10px; font-weight:800; color:var(--ink2); letter-spacing:.02em }
     .b2n-worst{ background:#fbf8f2; border:1px dashed rgba(28,25,23,.25); border-radius:12px; padding:12px; margin-top:16px }
-    .b2n-worst-title{ font-size:11px; font-weight:900; color:#6b7280; margin-bottom:6px }
-    .b2n-empty{ font-size:12px; color:#9ca3af; padding:10px 0 }
+    .b2n-worst-title{ font-size:var(--fs-caption); font-weight:900; color:var(--ink2); margin-bottom:6px }
+    .b2n-empty{ font-size:var(--fs-sm); color:var(--ink2); padding:10px 0 }
     .b2n-aces-section{ padding:4px 26px 22px }
     .b2n-aces-title{
       display:flex; align-items:center; gap:7px;
-      font-size:12px; font-weight:900; letter-spacing:.08em; text-transform:uppercase;
-      color:#57534e; margin:6px 0 12px; padding-bottom:7px; border-bottom:1.5px solid rgba(28,25,23,.55);
+      font-size:var(--fs-sm); font-weight:900; letter-spacing:.08em; text-transform:uppercase;
+      color:var(--ink2); margin:6px 0 12px; padding-bottom:7px; border-bottom:1.5px solid rgba(28,25,23,.55);
     }
-    .b2n-aces-title i{ display:inline-block; width:7px; height:7px; border-radius:2px; background:#9f1d1d; flex-shrink:0; font-style:normal }
+    .b2n-aces-title i{ display:inline-block; width:7px; height:7px; border-radius:2px; background:var(--accent); flex-shrink:0; font-style:normal }
     .b2n-aces-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px }
+    .b2n-roster-grid{ display:flex; align-items:flex-start; gap:12px }
+    .b2n-roster-col{ flex:1; min-width:0; display:flex; flex-direction:column; gap:12px }
+    .b2n-roster-card{
+      --_c:#9f1d1d;
+      background:#fff; border:1px solid rgba(28,25,23,.12); border-radius:14px;
+      padding:0 0 6px; box-shadow:0 4px 12px rgba(15,23,42,.05); overflow:hidden;
+    }
+    .b2n-roster-head{
+      display:flex; align-items:center; gap:6px; padding:9px 13px;
+      background:rgba(28,25,23,.035);
+      border-bottom:1px solid rgba(28,25,23,.1);
+    }
+    .b2n-roster-count{ font-size:10px; font-weight:700; color:var(--ink2); margin-left:auto }
+    .b2n-roster-list{ display:flex; flex-direction:column; padding:2px 13px 0 }
+    .b2n-roster-row{
+      display:flex; align-items:center; gap:8px; padding:5.5px 0;
+      border-bottom:1px solid rgba(28,25,23,.06); font-size:var(--fs-caption);
+    }
+    .b2n-roster-row:nth-child(even){ background:rgba(28,25,23,.022); margin:0 -13px; padding-left:13px; padding-right:13px }
+    .b2n-roster-row:last-child{ border-bottom:none }
+    .b2n-roster-name{ flex:1; min-width:0; font-weight:800; color:#111827; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .b2n-roster-rec{ flex-shrink:0; color:var(--ink2); font-weight:700; white-space:nowrap }
+    .b2n-roster-wr{ flex-shrink:0; font-weight:900; min-width:34px; text-align:right; white-space:nowrap }
     .b2n-ace-card{
       background:#fbf8f2; border:1px solid rgba(28,25,23,.14); border-top:3px solid var(--_c,#9f1d1d);
       border-radius:12px; padding:11px 12px; display:flex; flex-direction:column; gap:6px; min-width:0;
@@ -485,18 +560,18 @@ function _newsCss(){
     .b2n-ace-photo-fallback{ width:100%; height:100%; align-items:center; justify-content:center; display:flex; font-size:16px; font-weight:900; color:#fff }
     .b2n-ace-info{ min-width:0; flex:1 }
     .b2n-ace-univ{
-      display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:900; color:#57534e;
+      display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:900; color:var(--ink2);
       text-transform:uppercase; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
     .b2n-ace-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0 }
-    .b2n-ace-name{ font-size:14px; font-weight:900; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-    .b2n-ace-rec{ font-size:11px; font-weight:700; color:#374151; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-    .b2n-ace-empty{ font-size:11px; color:#9ca3af; font-weight:600 }
+    .b2n-ace-name{ font-size:14px; font-weight:900; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .b2n-ace-rec{ font-size:var(--fs-caption); font-weight:700; color:var(--ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .b2n-ace-empty{ font-size:var(--fs-caption); color:var(--ink2); font-weight:600 }
     .b2n-footer{
       margin-top:22px; padding:14px 26px 0; border-top:3px double rgba(28,25,23,.5);
-      display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:700; color:#9ca3af;
+      display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:700; color:var(--ink2);
     }
-    .b2n-footer-dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:#9f1d1d; margin-right:6px; vertical-align:middle }
+    .b2n-footer-dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent); margin-right:6px; vertical-align:middle }
   `;
 }
 function _newsBuildHtml(ctx, meta){
@@ -546,7 +621,7 @@ function _newsBuildHtml(ctx, meta){
         </div>
         <div class="b2n-col-title"><i></i>대학 순위</div>
         ${_newsStandingsHtml(ctx)}
-        ${_newsTopPlayersHtml(ctx)}
+        ${_newsRaceStatsHtml(ctx)}
         ${ctx.worstPlayer && ctx.worstPlayer.p ? `<div class="b2n-worst">
           <div class="b2n-worst-title">💧 ${_esc(worstLabel)}</div>
           ${_newsStatRow('최다패', ctx.worstPlayer, '')}
@@ -554,6 +629,7 @@ function _newsBuildHtml(ctx, meta){
       </div>
     </div>
     ${_newsUnivAcesHtml(ctx)}
+    ${_newsUnivRostersHtml(ctx)}
     <div class="b2n-footer">
       <span><span class="b2n-footer-dot"></span>STAR DATACENTER · star-datacenter</span>
       <span>${_esc(meta.univ)} · ${_esc(info.title||'브리핑')}</span>
@@ -627,7 +703,7 @@ async function _saveCanvasImage(canvas, filename, fmt){
     const w = window.open('', '_blank');
     if(w){
       w.document.write('<html><body style="margin:0;background:#111">'
-        + '<p style="color:#fff;font-family:sans-serif;padding:12px;font-size:13px">이미지를 길게 눌러 저장하세요 📥</p>'
+        + '<p style="color:#fff;font-family:sans-serif;padding:12px;font-size:var(--fs-base)">이미지를 길게 눌러 저장하세요 📥</p>'
         + '<img src="' + dataUrl + '" style="max-width:100%;display:block">'
         + '</body></html>');
     } else {

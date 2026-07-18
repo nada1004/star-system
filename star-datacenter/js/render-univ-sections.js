@@ -67,19 +67,19 @@ function buildUnivHeaderCardHTML(opts){
   const quickMetaCol = '#334155';
   const quickRail = `
     <div class="ud-hero-quickrail" data-ud-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(${isMobile?2:4},minmax(0,1fr));gap:8px;padding:${isMobile?'10px 10px 12px':'12px 14px 14px'};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
-      <div class="ud-hero-quickcard" data-kind="members" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+      <div class="ud-hero-quickcard" data-kind="members" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">활동 인원</div>
         <div style="margin-top:7px;font-size:${isMobile?13:15}px;font-weight:1000;color:${quickValueCol};text-shadow:0 1px 0 rgba(255,255,255,.35)">${activeCount}명</div>
       </div>
-      <div class="ud-hero-quickcard" data-kind="tier" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+      <div class="ud-hero-quickcard" data-kind="tier" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">핵심 티어</div>
         <div style="margin-top:7px;font-size:${isMobile?13:15}px;font-weight:1000;color:${quickValueCol};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 rgba(255,255,255,.35)">${tierSummary||'집계 대기'}</div>
       </div>
-      <div class="ud-hero-quickcard" data-kind="ace" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+      <div class="ud-hero-quickcard" data-kind="ace" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">에이스</div>
         <div style="margin-top:7px;font-size:${isMobile?13:15}px;font-weight:1000;color:${quickValueCol};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 rgba(255,255,255,.35)">${aceName}</div>
       </div>
-      <div class="ud-hero-quickcard" data-kind="form" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+      <div class="ud-hero-quickcard" data-kind="form" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">대학 폼</div>
         <div style="margin-top:7px;font-size:${isMobile?13:15}px;font-weight:1000;color:${wrColor};text-shadow:0 1px 0 rgba(255,255,255,.45)">${tot?`${winPct}%`:'기록 대기'}</div>
         <div style="margin-top:3px;font-size:10px;color:${quickMetaCol};font-weight:900">${wins}승 ${losses}패</div>
@@ -105,7 +105,7 @@ function buildUnivHeaderCardHTML(opts){
     { icon:'⚔️', label:'대학전적', value:`<span style="color:#f87171">${wins}승</span> <span style="color:#cbd5e1">${losses}패</span>`, fs: isMobile?13:15 },
     { icon:'📈', label:'승률', value:`<span style="color:${tot?wrColor:'rgba(255,255,255,.5)'}">${tot?winPct+'%':'-'}</span>`, fs: isMobile?17:20 },
     { icon:'🏆', label:'총 포인트', value:`<span style="color:${pts>0?'#4ade80':pts<0?'#f87171':'rgba(255,255,255,.85)'}">${pts>0?'+':''}${pts}</span>`, fs: isMobile?15:17 },
-    { icon:'👥', label:'선수 수', value:`<span style="color:var(--text,#1e293b)">${members.length}<span style="font-size:12px;font-weight:600;color:var(--gray-l,#94a3b8)">명</span></span>`, fs: isMobile?17:19 }
+    { icon:'👥', label:'선수 수', value:`<span style="color:var(--text,#1e293b)">${members.length}<span style="font-size:var(--fs-sm);font-weight:600;color:var(--gray-l,#94a3b8)">명</span></span>`, fs: isMobile?17:19 }
   ];
 
   // 로고: 등록된 아이콘이 있으면 그대로, 없으면 대학명 첫 글자로 큰 placeholder
@@ -157,7 +157,7 @@ function buildUnivHeaderCardHTML(opts){
         </div>
       </div>`:''}
       <div style="display:grid;grid-template-columns:repeat(${isMobile?'2':'4'},1fr);gap:${isMobile?'7px':'9px'}">
-        ${statItems.map(s=>`<div class="ud-hero-stat" style="background:linear-gradient(145deg,${col}0c,${col}06);border:1.5px solid ${col}22;border-radius:16px;padding:${isMobile?'10px 8px':'13px 10px'};text-align:center;position:relative;overflow:hidden;transition:border-color .15s">
+        ${statItems.map(s=>`<div class="ud-hero-stat" style="background:linear-gradient(145deg,${col}0c,${col}06);border:1.5px solid ${col}22;border-radius:var(--r2);padding:${isMobile?'10px 8px':'13px 10px'};text-align:center;position:relative;overflow:hidden;transition:border-color .15s">
           <div style="position:absolute;bottom:-8px;right:-6px;font-size:26px;opacity:.07;line-height:1">${s.icon}</div>
           <div class="ud-hero-stat-label" style="font-size:8.5px;color:var(--text3,#475569);margin-bottom:5px;font-weight:900;letter-spacing:.9px;text-transform:uppercase">${s.label}</div>
           <div class="ud-hero-stat-val" style="font-weight:900;font-size:${s.fs}px;color:var(--text,#1e293b);text-shadow:0 0 .3px currentColor">${s.value}</div>
@@ -181,15 +181,15 @@ function buildUnivMembersTableHTML(opts){
     <table class="ud-members-table" style="margin:0;border:none;border-radius:0;table-layout:auto">
       <thead>
         <tr>
-          <th style="text-align:center;width:1px;white-space:nowrap;padding:9px 7px;background:${col}!important;color:#fff!important;font-weight:900;letter-spacing:.3px;font-size:11px">직책</th>
-          <th style="text-align:center;background:${col}!important;color:#fff!important;font-weight:900;font-size:11px">티어</th>
-          <th style="text-align:center;width:46px;background:${col}!important;color:#fff!important;font-weight:900;font-size:11px">종족</th>
-          <th style="text-align:left;padding-left:10px;background:${col}!important;color:#fff!important;font-weight:900;font-size:11px">이름</th>
-          <th style="text-align:center;width:36px;background:${col}!important;color:#fff!important;font-weight:900;font-size:11px">성별</th>
-          <th style="text-align:center;width:36px;background:${col}!important;color:#fff!important;font-weight:900;font-size:11px">승</th>
-          <th style="text-align:center;width:36px;background:${col}!important;color:#fff!important;font-weight:900;font-size:11px">패</th>
-          <th style="text-align:center;width:50px;background:${col}!important;color:#fff!important;font-weight:900;font-size:11px">승률</th>
-          <th style="text-align:center;width:58px;background:${col}!important;color:#fff!important;font-weight:900;font-size:11px">포인트</th>
+          <th style="text-align:center;width:1px;white-space:nowrap;padding:9px 7px;background:${col}!important;color:#fff!important;font-weight:900;letter-spacing:.3px;font-size:var(--fs-caption)">직책</th>
+          <th style="text-align:center;background:${col}!important;color:#fff!important;font-weight:900;font-size:var(--fs-caption)">티어</th>
+          <th style="text-align:center;width:46px;background:${col}!important;color:#fff!important;font-weight:900;font-size:var(--fs-caption)">종족</th>
+          <th style="text-align:left;padding-left:10px;background:${col}!important;color:#fff!important;font-weight:900;font-size:var(--fs-caption)">이름</th>
+          <th style="text-align:center;width:36px;background:${col}!important;color:#fff!important;font-weight:900;font-size:var(--fs-caption)">성별</th>
+          <th style="text-align:center;width:36px;background:${col}!important;color:#fff!important;font-weight:900;font-size:var(--fs-caption)">승</th>
+          <th style="text-align:center;width:36px;background:${col}!important;color:#fff!important;font-weight:900;font-size:var(--fs-caption)">패</th>
+          <th style="text-align:center;width:50px;background:${col}!important;color:#fff!important;font-weight:900;font-size:var(--fs-caption)">승률</th>
+          <th style="text-align:center;width:58px;background:${col}!important;color:#fff!important;font-weight:900;font-size:var(--fs-caption)">포인트</th>
         </tr>
       </thead>
       <tbody>`;

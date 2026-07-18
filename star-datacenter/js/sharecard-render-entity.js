@@ -71,8 +71,8 @@
     const elo=p.elo||1200;
     const col=gc(p.univ);
     const form=h.slice(0,5).map(x=>x.result==='승'
-      ?'<span style="display:inline-block;width:30px;height:30px;background:#16a34a;color:#fff;font-size:12px;font-weight:900;border-radius:8px;text-align:center;line-height:30px;box-shadow:0 2px 10px rgba(0,0,0,.18)">W</span>'
-      :'<span style="display:inline-block;width:30px;height:30px;background:#dc2626;color:#fff;font-size:12px;font-weight:900;border-radius:8px;text-align:center;line-height:30px;box-shadow:0 2px 10px rgba(0,0,0,.18)">L</span>').join('');
+      ?'<span style="display:inline-block;width:30px;height:30px;background:#16a34a;color:#fff;font-size:var(--fs-sm);font-weight:900;border-radius:8px;text-align:center;line-height:30px;box-shadow:0 2px 10px rgba(0,0,0,.18)">W</span>'
+      :'<span style="display:inline-block;width:30px;height:30px;background:#dc2626;color:#fff;font-size:var(--fs-sm);font-weight:900;border-radius:8px;text-align:center;line-height:30px;box-shadow:0 2px 10px rgba(0,0,0,.18)">L</span>').join('');
     const pts=p.points||0;
     const raceLabel=p.race==='T'?'테란':p.race==='Z'?'저그':p.race==='P'?'프로토스':'?';
     const bgImg=String(p.shareCardBgImg||'').trim();
@@ -135,7 +135,7 @@
             <span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900;display:inline-flex;align-items:center;gap:5px">${gUI(p.univ,'12px')}${p.univ||'무소속'}</span>
             <span style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900">${raceLabel}</span>
           </div>
-          <div class="share-player-form" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px">${form||'<span style="opacity:.6;font-size:12px">기록없음</span>'}</div>
+          <div class="share-player-form" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px">${form||'<span style="opacity:.6;font-size:var(--fs-sm)">기록없음</span>'}</div>
         </div>
         <div class="share-hero-metric" style="min-width:92px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:10px 12px;text-align:center">
           <div class="share-kicker" style="font-size:9px;letter-spacing:.8px;font-weight:900;color:rgba(255,255,255,.92);text-shadow:0 1px 3px rgba(0,0,0,.35)">ELO</div>
@@ -149,15 +149,15 @@
         </div>
         <div class="share-stat-card" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.20);border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
           <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.88);font-weight:800;letter-spacing:.6px;text-shadow:0 1px 2px rgba(0,0,0,.3)">📈 승률</div>
-          <div class="share-stat-value" style="margin-top:5px;font-size:18px;font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${tot?rate+'%':'-'}</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:var(--fs-lg);font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${tot?rate+'%':'-'}</div>
         </div>
         <div class="share-stat-card" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.20);border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
           <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.88);font-weight:800;letter-spacing:.6px;text-shadow:0 1px 2px rgba(0,0,0,.3)">🏆 포인트</div>
-          <div class="share-stat-value" style="margin-top:5px;font-size:18px;font-weight:1000;color:${ptsColor};text-shadow:0 1px 3px rgba(0,0,0,.28)">${pts>=0?'+':''}${pts}</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:var(--fs-lg);font-weight:1000;color:${ptsColor};text-shadow:0 1px 3px rgba(0,0,0,.28)">${pts>=0?'+':''}${pts}</div>
         </div>
         <div class="share-stat-card" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.20);border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
           <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.88);font-weight:800;letter-spacing:.6px;text-shadow:0 1px 2px rgba(0,0,0,.3)">🔥 최근5경기</div>
-          <div class="share-stat-value" style="margin-top:5px;font-size:18px;font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${h.slice(0,5).filter(x=>x.result==='승').length}</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:var(--fs-lg);font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${h.slice(0,5).filter(x=>x.result==='승').length}</div>
         </div>
       </div>
       ${tot?`<div style="margin-top:14px">
@@ -204,7 +204,7 @@
           </div>
           <div style="min-width:0">
             <div class="share-univ-name" style="font-size:28px;font-weight:1000;line-height:1.06;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 8px rgba(0,0,0,.35)">${u.name}</div>
-            <div class="share-univ-sub" style="font-size:11px;color:rgba(255,255,255,.90);font-weight:700;margin-top:5px;text-shadow:0 1px 2px rgba(0,0,0,.25)">소속 선수 ${mem.length}명</div>
+            <div class="share-univ-sub" style="font-size:var(--fs-caption);color:rgba(255,255,255,.90);font-weight:700;margin-top:5px;text-shadow:0 1px 2px rgba(0,0,0,.25)">소속 선수 ${mem.length}명</div>
           </div>
         </div>
         <div class="share-hero-metric" style="min-width:102px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:10px 12px;text-align:center">
@@ -215,28 +215,28 @@
       <div class="share-stat-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px">
         <div class="share-stat-card" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20);border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
           <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.88);font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.3)">📈 승률</div>
-          <div class="share-stat-value" style="margin-top:5px;font-size:18px;font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${sc.winrate}%</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:var(--fs-lg);font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${sc.winrate}%</div>
         </div>
         <div class="share-stat-card" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20);border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
           <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.88);font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.3)">⚔️ 전적</div>
-          <div class="share-stat-value share-stat-value--compact" style="margin-top:5px;font-size:15px;font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${sc.w}W / ${sc.l}L</div>
+          <div class="share-stat-value share-stat-value--compact" style="margin-top:5px;font-size:var(--fs-md);font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${sc.w}W / ${sc.l}L</div>
         </div>
         <div class="share-stat-card" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20);border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
           <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.88);font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.3)">💎 평균ELO</div>
-          <div class="share-stat-value" style="margin-top:5px;font-size:18px;font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${sc.avgElo}</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:var(--fs-lg);font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${sc.avgElo}</div>
         </div>
         <div class="share-stat-card" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20);border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
           <div class="share-kicker" style="font-size:9px;color:rgba(255,255,255,.88);font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.3)">👥 로스터</div>
-          <div class="share-stat-value" style="margin-top:5px;font-size:18px;font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${mem.length}</div>
+          <div class="share-stat-value" style="margin-top:5px;font-size:var(--fs-lg);font-weight:1000;text-shadow:0 1px 3px rgba(0,0,0,.28)">${mem.length}</div>
         </div>
       </div>
       ${aces.length?`<div style="margin-bottom:14px">
         <div style="font-size:10px;font-weight:900;letter-spacing:.8px;color:rgba(255,255,255,.92);margin-bottom:8px;text-shadow:0 1px 2px rgba(0,0,0,.3)">ACE LINE</div>
         <div class="share-ace-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
-          ${aces.map((p,idx)=>`<div class="share-ace-card" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.20);border-radius:16px;padding:10px 9px;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
+          ${aces.map((p,idx)=>`<div class="share-ace-card" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.20);border-radius:var(--r2);padding:10px 9px;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.22) inset">
             <div style="font-size:9px;color:rgba(255,255,255,.85);font-weight:900;margin-bottom:6px;text-shadow:0 1px 2px rgba(0,0,0,.3)">${idx===0?'TOP ACE':idx===1?'CORE PLAYER':'KEY MEMBER'}</div>
             <div class="share-ace-photo" style="display:flex;justify-content:center;margin-bottom:7px">${getPlayerPhotoHTML(p.name,'42px')}</div>
-            <div style="font-size:12px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+            <div style="font-size:var(--fs-sm);font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
             <div style="font-size:10px;color:rgba(255,255,255,.85);margin-top:3px;text-shadow:0 1px 2px rgba(0,0,0,.25)">${p.tier||'-'} · ${pS(p.points)}</div>
           </div>`).join('')}
         </div>

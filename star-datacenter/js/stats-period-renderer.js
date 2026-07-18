@@ -32,25 +32,25 @@
           ${metricCard('최다 유형', data.bySource[0]?data.bySource[0].label:'-', data.bySource[0]?`${data.bySource[0].count}경기 · ${data.bySource[0].pct}%`:'기록 없음', '#ea580c')}
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px">
-          ${rankList('유형별 경기 수', data.bySource, (it,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface)">
+          ${rankList('유형별 경기 수', data.bySource, (it,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface)">
             <span style="min-width:20px;font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">${i+1}</span>
             <span style="flex:1;font-size:var(--fs-sm);font-weight:800">${it.label}</span>
             <span style="font-size:var(--fs-sm);font-weight:1000;color:${accent}">${it.count}경기</span>
             <span style="font-size:var(--fs-caption);color:var(--gray-l)">${it.pct}%</span>
           </div>`)}
-          ${rankList('다승 TOP 5', data.topWinners, (it,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface)">
+          ${rankList('다승 TOP 5', data.topWinners, (it,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface)">
             <span style="min-width:20px;font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">${i+1}</span>
             <span style="flex:1;font-size:var(--fs-sm);font-weight:900;cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${window.escJS(it.name)}')">${window.escHTML(it.name)}</span>
             <span style="font-size:var(--fs-caption);color:${window.gc(it.univ)};font-weight:800">${window.escHTML(it.univ||'')}</span>
             <span style="font-size:var(--fs-sm);font-weight:1000;color:var(--green)">${it.wins}승</span>
           </div>`)}
-          ${rankList('최다 출전 TOP 5', data.topPlayers, (it,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface)">
+          ${rankList('최다 출전 TOP 5', data.topPlayers, (it,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface)">
             <span style="min-width:20px;font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">${i+1}</span>
             <span style="flex:1;font-size:var(--fs-sm);font-weight:900;cursor:pointer;color:var(--blue)" onclick="openPlayerModal('${window.escJS(it.name)}')">${window.escHTML(it.name)}</span>
             <span style="font-size:var(--fs-sm);font-weight:1000;color:${accent}">${it.total}경기</span>
             <span style="font-size:var(--fs-caption);color:var(--gray-l)">${it.wins}승 ${it.losses}패</span>
           </div>`)}
-          ${rankList('팀전 다승 팀/대학 TOP 5', data.topTeams, (it,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface)">
+          ${rankList('팀전 다승 팀/대학 TOP 5', data.topTeams, (it,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface)">
             <span style="min-width:20px;font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">${i+1}</span>
             <span style="flex:1;font-size:var(--fs-sm);font-weight:900;color:${window.gc(it.name)}">${window.escHTML(it.name)}</span>
             <span style="font-size:var(--fs-sm);font-weight:1000;color:${accent}">${it.wins}승</span>

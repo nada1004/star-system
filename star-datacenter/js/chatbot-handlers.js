@@ -17,7 +17,7 @@ async function _chatbotHandleMainCommands(msg, userMessage){
       if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
       if (player.name !== playerName) {
         return `<div style="display:flex;flex-direction:column;gap:8px">
-          <div style="font-size:12px;color:#64748b;font-weight:700">🤔 '${escapeHtml(playerName)}' 대신 '${escapeHtml(player.name)}'을 찾았습니다.</div>
+          <div style="font-size:var(--fs-sm);color:#64748b;font-weight:700">🤔 '${escapeHtml(playerName)}' 대신 '${escapeHtml(player.name)}'을 찾았습니다.</div>
           ${formatPlayerRecentRecord(player)}
         </div>`;
       }
@@ -34,7 +34,7 @@ async function _chatbotHandleMainCommands(msg, userMessage){
       if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
       if (player.name !== playerName) {
         return `<div style="display:flex;flex-direction:column;gap:8px">
-          <div style="font-size:12px;color:#64748b;font-weight:700">🤔 '${escapeHtml(playerName)}' 대신 '${escapeHtml(player.name)}'을 찾았습니다.</div>
+          <div style="font-size:var(--fs-sm);color:#64748b;font-weight:700">🤔 '${escapeHtml(playerName)}' 대신 '${escapeHtml(player.name)}'을 찾았습니다.</div>
           ${formatPlayerStats(player)}
         </div>`;
       }

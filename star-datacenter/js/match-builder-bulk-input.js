@@ -86,7 +86,7 @@ function _renderIndBulkModal(keepScroll){
   const body = `
     <div class="mbox" style="width:min(760px,96vw);max-height:88vh;overflow:auto">
       <div class="mtitle">➕ 개인전 여러 경기 입력</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">한 번에 여러 경기(1:1)를 추가합니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">한 번에 여러 경기(1:1)를 추가합니다.</div>
       <datalist id="${listId}">${dl}</datalist>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
         <button class="btn btn-w btn-sm" onclick="indBulkAddRow()">+ 행 추가</button>
@@ -94,7 +94,7 @@ function _renderIndBulkModal(keepScroll){
         <button class="btn btn-w btn-sm" onclick="closeIndBulkModal()">닫기</button>
       </div>
       <div style="overflow:auto;border:1px solid var(--border);border-radius:12px;background:var(--white)">
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <table style="width:100%;border-collapse:collapse;font-size:var(--fs-sm)">
           <thead>
             <tr style="background:var(--surface);color:var(--text3);font-weight:900">
               <th style="padding:10px;text-align:left;white-space:nowrap;width:34px">#</th>

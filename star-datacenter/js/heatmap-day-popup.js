@@ -123,13 +123,13 @@ window.openHeatmapDayPopup = function(dateStr, gameCount){
           <div class="hm-player-name">${p.name||'-'}</div>
           <div class="hm-player-sub">
             ${p.univ?`<span style="color:${uc};font-weight:800;font-size:10px">${p.univ}</span>`:''}
-            ${raceIco?`<span style="font-size:11px">${raceIco}</span>`:''}
+            ${raceIco?`<span style="font-size:var(--fs-caption)">${raceIco}</span>`:''}
             ${p.tier?`<span style="background:${tierColor};color:${tierTxt};font-size:9px;font-weight:800;padding:1px 6px;border-radius:999px">${p.tier}</span>`:''}
           </div>
           ${wins>0||losses>0?`<div class="hm-player-wins">⚔️ ${wins}승 ${losses}패</div>`:''}
         </div>`;
       }).join('')
-    : `<div style="text-align:center;padding:32px;color:var(--gray-l);font-size:13px;font-weight:700;grid-column:1/-1">이 날 경기 기록을 찾을 수 없습니다</div>`;
+    : `<div style="text-align:center;padding:32px;color:var(--gray-l);font-size:var(--fs-base);font-weight:700;grid-column:1/-1">이 날 경기 기록을 찾을 수 없습니다</div>`;
 
   const overlay = document.createElement('div');
   overlay.id = 'heatmap-day-popup';

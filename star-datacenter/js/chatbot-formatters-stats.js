@@ -1,7 +1,7 @@
 function createWinRateChart(player) {
   if (!player.history || player.history.length === 0) return '';
   if (typeof Chart !== 'function') {
-    return `<div style="margin:8px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:12px;color:#64748b;font-weight:700">차트 모듈이 로드되지 않아 그래프를 표시할 수 없습니다.</div>`;
+    return `<div style="margin:8px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:var(--r);padding:10px 12px;font-size:var(--fs-sm);color:#64748b;font-weight:700">차트 모듈이 로드되지 않아 그래프를 표시할 수 없습니다.</div>`;
   }
   
   const total = player.win + player.loss;
@@ -139,7 +139,7 @@ function createTrendChart(player) {
   }, 100);
   
   return `<div style="margin:8px 0">
-    <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:4px">📈 최근 승률 추세</div>
+    <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text);margin-bottom:4px">📈 최근 승률 추세</div>
     <canvas id="${chartId}" style="max-height:160px"></canvas>
   </div>`;
 }
@@ -156,24 +156,24 @@ function formatPlayerStats(player) {
 
   const header = `<div style="background:linear-gradient(135deg,#0f172a,#334155);color:#fff;padding:12px 14px">
     <div style="font-size:14px;font-weight:900">📊 ${safeName} 통계</div>
-    <div style="font-size:12px;font-weight:800;opacity:.92;margin-top:4px">총 ${escapeHtml(total)}경기 · 승률 ${escapeHtml(rate)}%</div>
+    <div style="font-size:var(--fs-sm);font-weight:800;opacity:.92;margin-top:4px">총 ${escapeHtml(total)}경기 · 승률 ${escapeHtml(rate)}%</div>
   </div>`;
 
   const info = `<div style="background:#fff;padding:10px 12px;border-bottom:1px solid #eef2f7">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-size:12px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-size:var(--fs-sm)">
       <div style="color:#64748b;font-weight:800">소속</div><div style="color:#0f172a;font-weight:900">${safeUniv}</div>
       <div style="color:#64748b;font-weight:800">티어</div><div style="color:#0f172a;font-weight:900">${safeTier}</div>
       <div style="color:#64748b;font-weight:800">종족</div><div style="color:#0f172a;font-weight:900">${safeRace}</div>
       <div style="color:#64748b;font-weight:800">ELO</div><div style="color:#0f172a;font-weight:900">${safeElo}</div>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
-      <div style="flex:1;min-width:160px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px">
-        <div style="font-size:11px;color:#94a3b8;font-weight:800">전적</div>
-        <div style="font-size:13px;color:#0f172a;font-weight:900;margin-top:3px">${escapeHtml(player.win)}승 ${escapeHtml(player.loss)}패</div>
+      <div style="flex:1;min-width:160px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:var(--r);padding:10px 12px">
+        <div style="font-size:var(--fs-caption);color:#94a3b8;font-weight:800">전적</div>
+        <div style="font-size:var(--fs-base);color:#0f172a;font-weight:900;margin-top:3px">${escapeHtml(player.win)}승 ${escapeHtml(player.loss)}패</div>
       </div>
-      <div style="flex:1;min-width:160px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px">
-        <div style="font-size:11px;color:#94a3b8;font-weight:800">승률</div>
-        <div style="font-size:13px;color:#0f172a;font-weight:900;margin-top:3px">${escapeHtml(rate)}%</div>
+      <div style="flex:1;min-width:160px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:var(--r);padding:10px 12px">
+        <div style="font-size:var(--fs-caption);color:#94a3b8;font-weight:800">승률</div>
+        <div style="font-size:var(--fs-base);color:#0f172a;font-weight:900;margin-top:3px">${escapeHtml(rate)}%</div>
       </div>
     </div>
   </div>`;
@@ -185,7 +185,7 @@ function formatPlayerStats(player) {
     const recentMatches = player.history.slice(-10);
     const recentWins = recentMatches.filter(h => h.result === '승').length;
     const recentRate = recentMatches.length > 0 ? ((recentWins / recentMatches.length) * 100).toFixed(1) : 0;
-    footer = `<div style="background:#f8fafc;padding:10px 12px;border-top:1px solid #eef2f7;font-size:12px;color:#475569;font-weight:800">🕐 최근 10경기 승률: <span style="color:#2563eb">${escapeHtml(recentRate)}%</span> (${escapeHtml(recentWins)}승 ${escapeHtml(recentMatches.length - recentWins)}패)</div>`;
+    footer = `<div style="background:#f8fafc;padding:10px 12px;border-top:1px solid #eef2f7;font-size:var(--fs-sm);color:#475569;font-weight:800">🕐 최근 10경기 승률: <span style="color:#2563eb">${escapeHtml(recentRate)}%</span> (${escapeHtml(recentWins)}승 ${escapeHtml(recentMatches.length - recentWins)}패)</div>`;
   }
 
   return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${header}${info}${charts}${footer}</div>`;

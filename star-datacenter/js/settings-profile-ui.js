@@ -13,10 +13,10 @@ function _cfgBuildPdModeBadgeColorRows(){
     const v = colors[k] || defaults[k];
     const kk = k.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
-      <span style="min-width:84px;font-size:12px;font-weight:800;color:var(--text2)">${k}</span>
+      <span style="min-width:84px;font-size:var(--fs-sm);font-weight:800;color:var(--text2)">${k}</span>
       <input type="color" value="${v}" style="width:42px;height:32px;padding:2px;border-radius:8px;border:1px solid var(--border2);background:var(--white);cursor:pointer"
         onchange="cfgPdSetModeBadgeColor('${kk}',this.value)">
-      <input type="text" value="${v}" style="width:96px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;text-align:center"
+      <input type="text" value="${v}" style="width:96px;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900;text-align:center"
         onblur="cfgPdSetModeBadgeColor('${kk}',this.value)" placeholder="#RRGGBB">
       <span style="margin-left:auto;background:${v};color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px">예시</span>
     </div>`;
@@ -30,12 +30,12 @@ function _renderCfgPdModeBadgeSection(){
   const {rows} = _cfgBuildPdModeBadgeColorRows();
   body.innerHTML = `
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🎨 종목(종류) 배지 색상</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">변경 즉시 반영됩니다.</div>
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🎨 종목(종류) 배지 색상</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">변경 즉시 반영됩니다.</div>
       ${rows}
       <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
         <button class="btn btn-w btn-xs" onclick="cfgPdResetModeBadgeColors()">🔄 기본값으로 초기화</button>
-        <span style="font-size:11px;color:var(--gray-l)">※ 바뀐 색상은 즉시 반영됩니다</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 바뀐 색상은 즉시 반영됩니다</span>
       </div>
     </div>
   `;
@@ -76,12 +76,12 @@ function _renderCfgUiSizeSection(){
     const pct=Math.round(val*100);
     return `
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <div style="min-width:170px;font-size:12px;font-weight:900;color:var(--text2)">${label}</div>
+        <div style="min-width:170px;font-size:var(--fs-sm);font-weight:900;color:var(--text2)">${label}</div>
         <input type="range" min="${min}" max="${max}" step="${step}" value="${val}"
           oninput="(function(el){ localStorage.setItem('${id}', String(el.value)); try{ window.applyResponsiveUiVars && window.applyResponsiveUiVars(); }catch(e){}; try{ render(); }catch(e){}; try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}; try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}; const v=document.getElementById('${id}-v'); if(v) v.textContent=Math.round(parseFloat(el.value)*100)+'%'; })(this)"
           style="flex:1;min-width:220px;accent-color:var(--blue)">
-        <div id="${id}-v" style="width:52px;text-align:right;font-size:11px;color:var(--gray-l);font-weight:900">${pct}%</div>
-        ${hint?`<div style="font-size:11px;color:var(--gray-l)">${hint}</div>`:''}
+        <div id="${id}-v" style="width:52px;text-align:right;font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">${pct}%</div>
+        ${hint?`<div style="font-size:var(--fs-caption);color:var(--gray-l)">${hint}</div>`:''}
       </div>
     `;
   };
@@ -109,7 +109,7 @@ function _renderCfgUiSizeSection(){
       ${row('종목/연도 필터 칩', 'su_pd_chip_scale', chip, 0.70, 1.30, 0.05, '')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
         <button class="btn btn-w btn-sm" onclick="['su_mb_scale','su_tb_scale','su_modal_mb_scale','su_modal_tb_scale','su_tab_mb_scale','su_tab_tb_scale','su_top_tab_font_pc_px','su_top_tab_font_tb_px','su_top_tab_font_mb_px','su_subtab_font_px','su_select_mb_scale','su_select_tb_scale','su_md_mb_btn_scale','su_md_tb_btn_scale','su_pd_badge_scale','su_pd_badge_scale_mb','su_pd_badge_scale_tb','su_univ_recent_chip_scale_mb','su_univ_recent_chip_scale_tb','su_pd_chip_scale'].forEach(k=>localStorage.removeItem(k)); try{ window.applyResponsiveUiVars && window.applyResponsiveUiVars(); }catch(e){}; try{ render(); }catch(e){}; try{ window._scheduleCloudAppSettingsSave && window._scheduleCloudAppSettingsSave(); }catch(e){}; try{ window._renderCfgUiSizeSection && window._renderCfgUiSizeSection(); }catch(e){}; try{ if(typeof window.cfgTouchPrefsSync==="function") window.cfgTouchPrefsSync(); }catch(e){}">↩️ 기본값으로</button>
-        <div style="font-size:11px;color:var(--gray-l);align-self:center">※ PC에는 영향 거의 없고, 모바일/태블릿만 주로 변화합니다</div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);align-self:center">※ PC에는 영향 거의 없고, 모바일/태블릿만 주로 변화합니다</div>
       </div>
     </div>
   `;

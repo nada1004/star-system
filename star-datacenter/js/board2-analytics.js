@@ -103,7 +103,7 @@ function _b2RankingView() {
   let h = `<style>
     .b2rk2-wrap {}
     .b2rk2-sortbar { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px }
-    .b2rk2-sbtn { padding:6px 14px;border-radius:20px;border:1.5px solid var(--border2);background:var(--surface);font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s }
+    .b2rk2-sbtn { padding:6px 14px;border-radius:20px;border:1.5px solid var(--border2);background:var(--surface);font-size:var(--fs-sm);font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s }
     .b2rk2-sbtn.on { background:var(--text1);color:var(--white);border-color:var(--text1) }
     .b2rk2-sbtn:hover:not(.on) { border-color:var(--text2) }
     .b2rk2-row { display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;margin-bottom:6px;border:1.5px solid var(--border2);background:var(--white);cursor:pointer;position:relative;overflow:hidden;transition:border-color .12s,background .12s }
@@ -120,18 +120,18 @@ function _b2RankingView() {
     .b2rk2-wl-legend { display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:10.5px;font-weight:800;color:var(--text3) }
     .b2rk2-wl-legend span { display:inline-flex;align-items:center;gap:4px }
     .b2rk2-wl-legend i { width:9px;height:9px;border-radius:3px;display:inline-block }
-    .b2rk2-score { font-size:13px;font-weight:900;min-width:52px;text-align:right }
+    .b2rk2-score { font-size:var(--fs-base);font-weight:900;min-width:52px;text-align:right }
     .b2rk2-badges { display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;align-items:center }
     .b2rk2-glow { position:absolute;inset:0;opacity:.05;pointer-events:none }
-    .b2rk2-delta { font-size:11px;font-weight:800;margin-left:2px }
+    .b2rk2-delta { font-size:var(--fs-caption);font-weight:800;margin-left:2px }
   </style>`;
 
   // 헤더 배너
   h += `<div style="margin-bottom:14px;padding:12px 16px;background:linear-gradient(135deg,#f97316,#fb923c);border-radius:14px;display:flex;align-items:center;gap:10px">
     <span style="font-size:24px">🏆</span>
     <div>
-      <div style="font-size:15px;font-weight:900;color:#fff">대학별 종합 랭킹</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.8)">정렬 기준을 선택해 다양한 관점으로 비교</div>
+      <div style="font-size:var(--fs-md);font-weight:900;color:#fff">대학별 종합 랭킹</div>
+      <div style="font-size:var(--fs-caption);color:rgba(255,255,255,.8)">정렬 기준을 선택해 다양한 관점으로 비교</div>
     </div>
     <div style="margin-left:auto;text-align:right">
       <div style="font-size:20px;font-weight:900;color:#fff">${sorted.length}</div>
@@ -202,8 +202,8 @@ function _b2RankingView() {
 
   // 점수 기준 설명
   if (sortMode === 'tier') {
-    h += `<div style="margin-top:12px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--border2)">
-      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">📌 티어 점수 기준</div>
+    h += `<div style="margin-top:12px;padding:10px 14px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border2)">
+      <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:6px">📌 티어 점수 기준</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${TIERS_LOCAL.filter(t=>tieredVis.some(p=>p.tier===t)).map(t=>{
           const col=typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
@@ -347,12 +347,12 @@ function _b2RadarView() {
   return `<style>
     #${uid}-wrap {}
     #${uid}-sel { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
-    .${uid}-chip { padding:5px 12px; border-radius:20px; border:1.5px solid var(--border2); background:var(--surface); font-size:11px; font-weight:700; color:var(--text2); cursor:pointer; transition:all .12s; }
+    .${uid}-chip { padding:5px 12px; border-radius:20px; border:1.5px solid var(--border2); background:var(--surface); font-size:var(--fs-caption); font-weight:700; color:var(--text2); cursor:pointer; transition:all .12s; }
     .${uid}-chip.on { color:#fff; border-color:transparent; }
     .${uid}-chip:hover:not(.on) { border-color:var(--text2); }
     #${uid}-canvas { display:block; max-width:520px; margin:0 auto; cursor:crosshair; }
     #${uid}-legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; justify-content:center; }
-    #${uid}-table { width:100%; border-collapse:collapse; margin-top:14px; font-size:11px; }
+    #${uid}-table { width:100%; border-collapse:collapse; margin-top:14px; font-size:var(--fs-caption); }
     #${uid}-table th { padding:5px 8px; background:var(--bg); border-bottom:2px solid var(--border2); font-size:10px; font-weight:800; color:var(--text3); text-align:center; white-space:nowrap; position:sticky; top:0; z-index:1; }
     #${uid}-table th:first-child { text-align:left; }
     #${uid}-table td { padding:5px 8px; border-bottom:1px solid var(--border2); text-align:center; font-weight:700; }
@@ -360,17 +360,17 @@ function _b2RadarView() {
     #${uid}-table tr:hover td { background:var(--hover); }
     #${uid}-table td.hi { background:#fef9c366; font-weight:900; }
     .${uid}-avg-note { font-size:10px; color:var(--text3); display:flex; align-items:center; gap:4px; margin-top:4px; }
-    #${uid}-tooltip { position:fixed; pointer-events:none; opacity:0; background:var(--white); border:1px solid var(--border2); border-radius:10px; padding:8px 12px; box-shadow:0 4px 20px #0003; font-size:11px; font-weight:700; color:var(--text2); z-index:999; transition:opacity .1s; max-width:180px; }
+    #${uid}-tooltip { position:fixed; pointer-events:none; opacity:0; background:var(--white); border:1px solid var(--border2); border-radius:var(--r); padding:8px 12px; box-shadow:0 4px 20px #0003; font-size:var(--fs-caption); font-weight:700; color:var(--text2); z-index:999; transition:opacity .1s; max-width:180px; }
   </style>
   <div id="${uid}-wrap">
     <div style="margin-bottom:12px;padding:10px 14px;background:linear-gradient(135deg,#a855f7,#9333ea);border-radius:12px;display:flex;align-items:center;gap:8px">
       <span style="font-size:20px">🕸️</span>
       <div>
-        <div style="font-size:13px;font-weight:900;color:#fff">대학별 다차원 레이더</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.8)">최대 3개 선택 · 점선 = 전체 평균 · 강점 축 자동 하이라이트</div>
+        <div style="font-size:var(--fs-base);font-weight:900;color:#fff">대학별 다차원 레이더</div>
+        <div style="font-size:var(--fs-caption);color:rgba(255,255,255,.8)">최대 3개 선택 · 점선 = 전체 평균 · 강점 축 자동 하이라이트</div>
       </div>
     </div>
-    <div style="margin-bottom:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;font-size:11px;color:var(--text3);line-height:1.6">
+    <div style="margin-bottom:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;font-size:var(--fs-caption);color:var(--text3);line-height:1.6">
       <strong style="color:var(--text2)">축 설명</strong> —
       승/패: 공식 기록 기준 · 참가율: 해당 종목 1경기 이상 뛴 비율 · 인원·평균티어: 최대값 기준 정규화
     </div>
@@ -539,10 +539,10 @@ function _b2RadarView() {
       // 범례
       legendEl.innerHTML = activeUnivs.map(u=>{
         const str = getStrengthAxes(u).map(i=>AXES[i]).join(', ');
-        return \`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:10px;background:var(--surface);border:1.5px solid \${u.color}44">
+        return \`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--r);background:var(--surface);border:1.5px solid \${u.color}44">
           <span style="width:12px;height:12px;border-radius:50%;background:\${u.color};flex-shrink:0"></span>
-          <span style="font-size:12px;font-weight:900;color:\${u.color}">\${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
-          <span style="font-size:11px;color:var(--text3);">\${u.total}명\${u.wr!==null?' · '+u.wr+'%':''}\${(u.wins+u.losses)>0?' · '+(u.wins+u.losses)+'전':''}</span>
+          <span style="font-size:var(--fs-sm);font-weight:900;color:\${u.color}">\${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
+          <span style="font-size:var(--fs-caption);color:var(--text3);">\${u.total}명\${u.wr!==null?' · '+u.wr+'%':''}\${(u.wins+u.losses)>0?' · '+(u.wins+u.losses)+'전':''}</span>
           \${str?'<span style="font-size:10px;background:#fef9c3;color:#b45309;padding:1px 5px;border-radius:5px;font-weight:800">강점: '+str+'</span>':''}
         </div>\`;
       }).join('');
@@ -679,36 +679,36 @@ function _b2SummaryView() {
   let h = `<style>
     .b2s-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px;border-radius:26px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 18px 32px rgba(15,23,42,.05);margin-bottom:16px}
     .b2s-hero-title{font-size:26px;font-weight:950;letter-spacing:-.04em;color:var(--text1);line-height:1.08}
-    .b2s-hero-desc{margin-top:6px;font-size:13px;line-height:1.65;color:var(--text3);max-width:720px}
+    .b2s-hero-desc{margin-top:6px;font-size:var(--fs-base);line-height:1.65;color:var(--text3);max-width:720px}
     .b2s-hero-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-    .b2s-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.04);font-size:12px;font-weight:800;color:var(--text2)}
+    .b2s-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.04);font-size:var(--fs-sm);font-weight:800;color:var(--text2)}
     .b2s-hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;min-width:min(100%,360px)}
     .b2s-hero-stat{padding:14px;border-radius:18px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 18px rgba(15,23,42,.04)}
-    .b2s-hero-stat-label{font-size:11px;font-weight:800;color:var(--text3)}
+    .b2s-hero-stat-label{font-size:var(--fs-caption);font-weight:800;color:var(--text3)}
     .b2s-hero-stat-value{margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1}
-    .b2s-hero-stat-sub{margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)}
+    .b2s-hero-stat-sub{margin-top:4px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)}
     .b2s-grid7 { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-bottom:16px; }
     @media(max-width:700px){ .b2s-grid7{ grid-template-columns:repeat(4,1fr); } }
     @media(max-width:420px){ .b2s-grid7{ grid-template-columns:repeat(2,1fr); } }
     .b2s-kpi { border-radius:18px; padding:15px 12px; text-align:center; position:relative; overflow:hidden; border:1px solid rgba(148,163,184,.16); background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96)); box-shadow:0 14px 24px rgba(15,23,42,.04); transition:transform .15s,box-shadow .15s; cursor:default; }
     .b2s-kpi:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(15,23,42,.08); }
     .b2s-kpi-num { font-size:26px; font-weight:900; line-height:1.1; }
-    .b2s-kpi-lbl { font-size:11px; font-weight:700; margin-top:3px; opacity:.75; }
+    .b2s-kpi-lbl { font-size:var(--fs-caption); font-weight:700; margin-top:3px; opacity:.75; }
     .b2s-kpi-sub { font-size:10px; opacity:.6; margin-top:1px; }
     .b2s-kpi-glow { position:absolute;inset:0;opacity:.08;pointer-events:none; }
     .b2s-2col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:14px; }
     @media(max-width:780px){ .b2s-2col{ grid-template-columns:1fr 1fr; } }
     @media(max-width:520px){ .b2s-2col{ grid-template-columns:1fr; } }
     .b2s-panel { background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96)); border:1px solid rgba(148,163,184,.16); border-radius:20px; padding:16px; box-shadow:0 16px 28px rgba(15,23,42,.04); }
-    .b2s-panel-title { font-size:13px; font-weight:900; color:var(--text1); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+    .b2s-panel-title { font-size:var(--fs-base); font-weight:900; color:var(--text1); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
     .b2s-univ-row { display:flex; align-items:center; gap:8px; padding:5px 0; }
     .b2s-univ-row + .b2s-univ-row { border-top:1px solid var(--border2); }
     .b2s-bar-track { flex:1; height:12px; border-radius:6px; overflow:hidden; background:var(--border2); display:flex; }
     .b2s-tier-chip { display:inline-flex; flex-direction:column; align-items:center; padding:8px 10px; border-radius:14px; min-width:54px; box-shadow:0 10px 16px rgba(15,23,42,.04); }
     .b2s-top-univ { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; }
-    .b2s-univ-card { border-radius:16px; padding:10px 12px; border:1.5px solid; position:relative; overflow:hidden; transition:transform .12s,box-shadow .12s; cursor:default; box-shadow:0 12px 18px rgba(15,23,42,.04); }
+    .b2s-univ-card { border-radius:var(--r2); padding:10px 12px; border:1.5px solid; position:relative; overflow:hidden; transition:transform .12s,box-shadow .12s; cursor:default; box-shadow:0 12px 18px rgba(15,23,42,.04); }
     .b2s-univ-card:hover { transform:translateY(-2px); box-shadow:0 12px 24px rgba(15,23,42,.08); }
-    .b2s-new-player { display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:var(--surface);border:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text2);margin:2px; }
+    .b2s-new-player { display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:var(--surface);border:1px solid var(--border2);font-size:var(--fs-caption);font-weight:700;color:var(--text2);margin:2px; }
     @media(max-width:900px){ .b2s-hero{flex-direction:column}.b2s-hero-stats{width:100%;grid-template-columns:repeat(3,minmax(0,1fr));} }
     @media(max-width:640px){
       .b2s-hero{padding:18px 16px;border-radius:22px}
@@ -731,7 +731,7 @@ function _b2SummaryView() {
 
   h += `<section class="b2s-hero">
     <div>
-      <div style="font-size:11px;font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase">Summary Dashboard</div>
+      <div style="font-size:var(--fs-caption);font-weight:900;letter-spacing:.08em;color:#2563eb;text-transform:uppercase">Summary Dashboard</div>
       <div class="b2s-hero-title">현황판 요약</div>
       <div class="b2s-hero-desc">전체 인원, 활동 대학, 종족 분포, 최근 유입과 대학별 구성을 한 화면에서 빠르게 훑을 수 있도록 정리한 요약 화면입니다.</div>
       <div class="b2s-hero-badges">
@@ -775,7 +775,7 @@ function _b2SummaryView() {
   h += `<div class="b2s-2col">
     <div class="b2s-panel">
       <div class="b2s-panel-title">🎮 종족 비율
-        <span style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:600">${tieredVis.length}명 기준</span>
+        <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">${tieredVis.length}명 기준</span>
       </div>
       <div style="display:flex;align-items:center;gap:16px">
         <div style="flex-shrink:0">${donutRings()}</div>
@@ -784,8 +784,8 @@ function _b2SummaryView() {
             const n=raceCts[r]; const pct=Math.round(n/total3*100);
             return `<div>
               <div style="display:flex;justify-content:space-between;margin-bottom:3px">
-                <span style="font-size:11px;font-weight:800;color:${c}">${l}</span>
-                <span style="font-size:11px;font-weight:900;color:var(--text2)">${n}<span style="font-weight:600;color:var(--text3)"> (${pct}%)</span></span>
+                <span style="font-size:var(--fs-caption);font-weight:800;color:${c}">${l}</span>
+                <span style="font-size:var(--fs-caption);font-weight:900;color:var(--text2)">${n}<span style="font-weight:600;color:var(--text3)"> (${pct}%)</span></span>
               </div>
               <div style="height:7px;border-radius:4px;background:var(--border2);overflow:hidden">
                 <div style="width:${pct}%;height:100%;background:${c};border-radius:4px;transition:width .8s ease"></div>
@@ -803,8 +803,8 @@ function _b2SummaryView() {
           const tcol=typeof getTierBtnTextColor==='function'?(getTierBtnTextColor(t)||'#fff'):'#fff';
           const n=tierCts[t]; const pct=Math.round(n/tieredVis.length*100);
           return `<div class="b2s-tier-chip" style="background:${col}18;border:1.5px solid ${col}55" title="${t}: ${n}명 (${pct}%)">
-            <div style="font-size:12px;font-weight:900;padding:2px 8px;border-radius:6px;background:${col};color:${tcol}">${t}</div>
-            <div style="font-size:11px;font-weight:800;color:${col};margin-top:3px">${n}명</div>
+            <div style="font-size:var(--fs-sm);font-weight:900;padding:2px 8px;border-radius:6px;background:${col};color:${tcol}">${t}</div>
+            <div style="font-size:var(--fs-caption);font-weight:800;color:${col};margin-top:3px">${n}명</div>
             <div style="font-size:10px;color:var(--text3)">${pct}%</div>
           </div>`;
         }).join('')}
@@ -812,22 +812,22 @@ function _b2SummaryView() {
     </div>
     <div class="b2s-panel">
       <div class="b2s-panel-title">🏫 대학별 현황
-        <span style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:600">${univStats.length}개 대학</span>
+        <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">${univStats.length}개 대학</span>
       </div>
       ${univStats.slice(0,10).map((u,i)=>{
         const barW=Math.round(u.count/maxCount*100);
         return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border2)">
           <span style="font-size:10px;font-weight:900;color:var(--text3);width:16px;text-align:center">${i+1}</span>
-          <span style="font-size:11px;font-weight:800;color:${u.color};min-width:60px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
+          <span style="font-size:var(--fs-caption);font-weight:800;color:${u.color};min-width:60px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
           <div style="flex:1;height:8px;border-radius:4px;overflow:hidden;background:var(--border2);display:flex">
             <div style="width:${Math.round(u.races.P/u.count*barW)}%;background:#7c3aed"></div>
             <div style="width:${Math.round(u.races.T/u.count*barW)}%;background:#0284c7"></div>
             <div style="width:${Math.round(u.races.Z/u.count*barW)}%;background:#059669"></div>
           </div>
-          <span style="font-size:11px;font-weight:900;color:${u.color};min-width:20px;text-align:right">${u.count}</span>
+          <span style="font-size:var(--fs-caption);font-weight:900;color:${u.color};min-width:20px;text-align:right">${u.count}</span>
         </div>`;
       }).join('')}
-      ${univStats.length>10?`<div style="text-align:center;color:var(--text3);font-size:11px;margin-top:6px">외 ${univStats.length-10}개 대학</div>`:''}
+      ${univStats.length>10?`<div style="text-align:center;color:var(--text3);font-size:var(--fs-caption);margin-top:6px">외 ${univStats.length-10}개 대학</div>`:''}
     </div>
   </div>`;
 
@@ -835,7 +835,7 @@ function _b2SummaryView() {
   if (newPlayers.length > 0) {
     h += `<div class="b2s-panel" style="margin-bottom:14px">
       <div class="b2s-panel-title">🆕 최근 30일 첫 경기 선수
-        <span style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:600">${newPlayers.length}명</span>
+        <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">${newPlayers.length}명</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:4px">
         ${newPlayers.map(p=>{
@@ -859,7 +859,7 @@ function _b2SummaryView() {
   // 대학별 인원 현황
   h += `<div class="b2s-panel" style="margin-bottom:14px">
     <div class="b2s-panel-title">🏫 대학별 인원 현황
-      <span style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:600">${univStats.length}개 대학</span>
+      <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--text3);font-weight:600">${univStats.length}개 대학</span>
     </div>
     <div class="b2s-top-univ" style="margin-bottom:12px">
       ${univStats.slice(0,6).map((u,i)=>{
@@ -870,8 +870,8 @@ function _b2SummaryView() {
         return `<div class="b2s-univ-card" style="border-color:${u.color}44;background:${u.color}0d">
           <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
             <span style="font-size:14px">${medal}</span>
-            <span style="font-size:12px;font-weight:900;color:${u.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
-            <span style="font-size:15px;font-weight:900;color:${u.color}">${u.count}</span>
+            <span style="font-size:var(--fs-sm);font-weight:900;color:${u.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
+            <span style="font-size:var(--fs-md);font-weight:900;color:${u.color}">${u.count}</span>
           </div>
           <div style="height:6px;border-radius:3px;overflow:hidden;background:var(--border2);display:flex;margin-bottom:4px">
             <div style="width:${pP}%;background:#7c3aed" title="P ${u.races.P}"></div>
@@ -890,13 +890,13 @@ function _b2SummaryView() {
       ${univStats.slice(0,20).map(u=>{
         const barW=Math.round(u.count/maxCount*100);
         return `<div class="b2s-univ-row">
-          <span style="font-size:11px;font-weight:800;color:${u.color};min-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
+          <span style="font-size:var(--fs-caption);font-weight:800;color:${u.color};min-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''))}</span>
           <div class="b2s-bar-track">
             <div title="프로토스 ${u.races.P}" style="width:${Math.round(u.races.P/u.count*barW)}%;background:#7c3aed;transition:width .6s ease"></div>
             <div title="테란 ${u.races.T}" style="width:${Math.round(u.races.T/u.count*barW)}%;background:#0284c7;transition:width .6s ease"></div>
             <div title="저그 ${u.races.Z}" style="width:${Math.round(u.races.Z/u.count*barW)}%;background:#059669;transition:width .6s ease"></div>
           </div>
-          <span style="font-size:11px;font-weight:900;color:${u.color};min-width:22px;text-align:right">${u.count}</span>
+          <span style="font-size:var(--fs-caption);font-weight:900;color:${u.color};min-width:22px;text-align:right">${u.count}</span>
           <div style="display:flex;gap:3px;margin-left:3px;min-width:70px">
             ${u.races.P?`<span style="font-size:9px;background:#ede9fe;color:#5b21b6;padding:1px 4px;border-radius:5px;font-weight:800">P${u.races.P}</span>`:''}
             ${u.races.T?`<span style="font-size:9px;background:#e0f2fe;color:#075985;padding:1px 4px;border-radius:5px;font-weight:800">T${u.races.T}</span>`:''}
@@ -904,7 +904,7 @@ function _b2SummaryView() {
           </div>
         </div>`;
       }).join('')}
-      ${univStats.length>20?`<div style="text-align:center;color:var(--text3);font-size:12px;margin-top:8px;padding-top:6px;border-top:1px solid var(--border2)">외 ${univStats.length-20}개 대학</div>`:''}
+      ${univStats.length>20?`<div style="text-align:center;color:var(--text3);font-size:var(--fs-sm);margin-top:8px;padding-top:6px;border-top:1px solid var(--border2)">외 ${univStats.length-20}개 대학</div>`:''}
     </div>
   </div>`;
 
@@ -1033,11 +1033,11 @@ function _b2CompareView() {
     const showBar=numA!==null&&numB!==null&&tot>0;
     return `<div style="padding:7px 0;border-bottom:1px solid var(--border2)">
       <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:${showBar?'5px':'0'}">
-        <div style="text-align:right;font-size:13px;font-weight:${winA?'900':'600'};color:${winA?colA:'var(--text2)'}">
+        <div style="text-align:right;font-size:var(--fs-base);font-weight:${winA?'900':'600'};color:${winA?colA:'var(--text2)'}">
           ${winA?'▲ ':''}${valA}
         </div>
         <div style="font-size:10px;color:var(--text3);font-weight:700;text-align:center;white-space:nowrap;min-width:58px">${label}</div>
-        <div style="text-align:left;font-size:13px;font-weight:${winB?'900':'600'};color:${winB?colB:'var(--text2)'}">
+        <div style="text-align:left;font-size:var(--fs-base);font-weight:${winB?'900':'600'};color:${winB?colB:'var(--text2)'}">
           ${valB}${winB?' ▲':''}
         </div>
       </div>
@@ -1097,7 +1097,7 @@ function _b2CompareView() {
         ${labels}
       </svg>
     </div>
-    <div style="display:flex;justify-content:center;gap:16px;font-size:11px;font-weight:700">
+    <div style="display:flex;justify-content:center;gap:16px;font-size:var(--fs-caption);font-weight:700">
       <span style="color:${colA}">━ ${_b2CompareA}</span>
       <span style="color:${colB}">╌ ${_b2CompareB}</span>
     </div>`;
@@ -1115,31 +1115,31 @@ function _b2CompareView() {
     <div class="b2cv2-sel">
       <div>
         <select onchange="if(this.value===_b2CompareB){this.value=_b2CompareA;return;}; _b2CompareA=this.value;document.getElementById('b2-content').innerHTML=_b2CompareView()"
-          style="width:100%;padding:8px 12px;border-radius:10px;border:2px solid ${colA};font-size:13px;font-weight:700;background:var(--white);color:${colA};cursor:pointer">
+          style="width:100%;padding:8px 12px;border-radius:var(--r);border:2px solid ${colA};font-size:var(--fs-base);font-weight:700;background:var(--white);color:${colA};cursor:pointer">
           ${univOptA}
         </select>
       </div>
-      <div style="text-align:center;font-size:18px;font-weight:900;color:var(--text3)">VS</div>
+      <div style="text-align:center;font-size:var(--fs-lg);font-weight:900;color:var(--text3)">VS</div>
       <div>
         <select onchange="if(this.value===_b2CompareA){this.value=_b2CompareB;return;}; _b2CompareB=this.value;document.getElementById('b2-content').innerHTML=_b2CompareView()"
-          style="width:100%;padding:8px 12px;border-radius:10px;border:2px solid ${colB};font-size:13px;font-weight:700;background:var(--white);color:${colB};cursor:pointer">
+          style="width:100%;padding:8px 12px;border-radius:var(--r);border:2px solid ${colB};font-size:var(--fs-base);font-weight:700;background:var(--white);color:${colB};cursor:pointer">
           ${univOptB}
         </select>
       </div>
     </div>
-    ${_b2CompareA === _b2CompareB ? `<div style="text-align:center;padding:10px;color:#b45309;font-size:12px;font-weight:700;background:#fef9c3;border-radius:10px;margin-bottom:8px">⚠️ 같은 대학을 선택하면 비교가 의미 없습니다. 다른 대학을 선택해 주세요.</div>` : ''}`;
+    ${_b2CompareA === _b2CompareB ? `<div style="text-align:center;padding:10px;color:#b45309;font-size:var(--fs-sm);font-weight:700;background:#fef9c3;border-radius:var(--r);margin-bottom:8px">⚠️ 같은 대학을 선택하면 비교가 의미 없습니다. 다른 대학을 선택해 주세요.</div>` : ''}`;
 
   if (stA && stB) {
     // 헤더 카드
     h += `<div class="b2cv2-header">
       <div class="b2cv2-col" style="background:${colA}15;border:2px solid ${colA}44">
         <div style="font-size:22px;font-weight:900;color:${colA}">${stA.total}</div>
-        <div style="font-size:12px;color:var(--text3)">총 인원</div>
+        <div style="font-size:var(--fs-sm);color:var(--text3)">총 인원</div>
         ${stA.wr!==null?`<div style="font-size:14px;font-weight:900;color:${stA.wr>=50?'#10b981':'#ef4444'};margin-top:4px">${stA.wr}% 승률</div>`:''}
       </div>
       <div class="b2cv2-col" style="background:${colB}15;border:2px solid ${colB}44">
         <div style="font-size:22px;font-weight:900;color:${colB}">${stB.total}</div>
-        <div style="font-size:12px;color:var(--text3)">총 인원</div>
+        <div style="font-size:var(--fs-sm);color:var(--text3)">총 인원</div>
         ${stB.wr!==null?`<div style="font-size:14px;font-weight:900;color:${stB.wr>=50?'#10b981':'#ef4444'};margin-top:4px">${stB.wr}% 승률</div>`:''}
       </div>
     </div>`;
@@ -1152,11 +1152,11 @@ function _b2CompareView() {
       const bWr = totalAg>0?Math.round(h2hB.aw/totalAg*100):null;
       if (totalAg > 0) {
         h += `<div class="b2cv2-h2h">
-          <div style="font-size:12px;font-weight:800;color:var(--text3);margin-bottom:8px">⚔️ 직접 맞대결 전적 <span style="font-size:10px;font-weight:600;color:var(--text3)">(총 ${totalAg}전)</span></div>
+          <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text3);margin-bottom:8px">⚔️ 직접 맞대결 전적 <span style="font-size:10px;font-weight:600;color:var(--text3)">(총 ${totalAg}전)</span></div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
             <div style="text-align:right;min-width:70px">
               <div style="font-size:16px;font-weight:900;color:${colA}">${h2h.aw}승 ${h2h.al}패</div>
-              ${aWr!==null?`<div style="font-size:11px;font-weight:800;color:${aWr>=50?colA:'var(--text3)'}">${aWr}%</div>`:''}
+              ${aWr!==null?`<div style="font-size:var(--fs-caption);font-weight:800;color:${aWr>=50?colA:'var(--text3)'}">${aWr}%</div>`:''}
             </div>
             <div style="flex:1;height:14px;border-radius:7px;overflow:hidden;background:var(--border2);display:flex">
               <div style="width:${aWpct}%;background:${colA};height:100%;transition:width .6s ease"></div>
@@ -1164,25 +1164,25 @@ function _b2CompareView() {
             </div>
             <div style="text-align:left;min-width:70px">
               <div style="font-size:16px;font-weight:900;color:${colB}">${h2hB.aw}승 ${h2hB.al}패</div>
-              ${bWr!==null?`<div style="font-size:11px;font-weight:800;color:${bWr>=50?colB:'var(--text3)'}">${bWr}%</div>`:''}
+              ${bWr!==null?`<div style="font-size:var(--fs-caption);font-weight:800;color:${bWr>=50?colB:'var(--text3)'}">${bWr}%</div>`:''}
             </div>
           </div>
-          <div style="display:flex;justify-content:space-between;font-size:11px">
+          <div style="display:flex;justify-content:space-between;font-size:var(--fs-caption)">
             <span style="color:${colA};font-weight:800">${_b2CompareA}</span>
             <span style="color:var(--text3)">${aWpct>50?_b2CompareA+'이 우세':aWpct<50?_b2CompareB+'이 우세':'균형'}</span>
             <span style="color:${colB};font-weight:800">${_b2CompareB}</span>
           </div>
         </div>`;
       } else {
-        h += `<div class="b2cv2-h2h" style="color:var(--text3);font-size:12px">
-          ⚔️ 직접 맞대결 기록 없음 <span style="font-size:11px">(경기 데이터 누적 시 표시)</span>
+        h += `<div class="b2cv2-h2h" style="color:var(--text3);font-size:var(--fs-sm)">
+          ⚔️ 직접 맞대결 기록 없음 <span style="font-size:var(--fs-caption)">(경기 데이터 누적 시 표시)</span>
         </div>`;
       }
     }
 
     // 레이더 차트
     h += `<div class="b2cv2-col" style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;margin-bottom:12px;padding:14px">
-      <div style="font-size:12px;font-weight:800;color:var(--text3);margin-bottom:4px;text-align:center">📡 다차원 비교</div>
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text3);margin-bottom:4px;text-align:center">📡 다차원 비교</div>
       ${radarChart(stA, stB)}
     </div>`;
 
@@ -1208,7 +1208,7 @@ function _b2CompareView() {
     const allTiers=[...new Set([...Object.keys(stA.tiers),...Object.keys(stB.tiers)])];
     const sortedTiers=(typeof TIERS!=='undefined'?TIERS.filter(t=>allTiers.includes(t)):[]).concat(allTiers.filter(t=>typeof TIERS==='undefined'||!TIERS.includes(t)));
     if (sortedTiers.length) {
-      h+=`<div style="margin-top:12px;font-size:12px;font-weight:700;color:var(--text3);text-align:center;margin-bottom:8px">티어별 비교</div>`;
+      h+=`<div style="margin-top:12px;font-size:var(--fs-sm);font-weight:700;color:var(--text3);text-align:center;margin-bottom:8px">티어별 비교</div>`;
       sortedTiers.forEach(t=>{
         const nA=stA.tiers[t]||0,nB=stB.tiers[t]||0;
         const col=typeof getTierBtnColor==='function'?getTierBtnColor(t):'#64748b';
@@ -1218,15 +1218,15 @@ function _b2CompareView() {
           <div style="display:flex;justify-content:flex-end">
             <div style="height:10px;width:${Math.round(nA/maxN*100)}%;max-width:100%;background:${nA>nB?colA:colA+'88'};border-radius:5px 0 0 5px;min-width:${nA?'8px':'0'}"></div>
           </div>
-          <div style="text-align:center;font-size:11px;font-weight:800;padding:2px 6px;border-radius:8px;background:${col};color:${tcol}">${t}</div>
+          <div style="text-align:center;font-size:var(--fs-caption);font-weight:800;padding:2px 6px;border-radius:8px;background:${col};color:${tcol}">${t}</div>
           <div>
             <div style="height:10px;width:${Math.round(nB/maxN*100)}%;max-width:100%;background:${nB>nA?colB:colB+'88'};border-radius:0 5px 5px 0;min-width:${nB?'8px':'0'}"></div>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 52px 1fr;gap:6px;margin-bottom:4px">
-          <div style="text-align:right;font-size:11px;color:${nA>nB?colA:'var(--text3)'};font-weight:${nA>nB?'800':'400'}">${nA?nA+'명':''}</div>
+          <div style="text-align:right;font-size:var(--fs-caption);color:${nA>nB?colA:'var(--text3)'};font-weight:${nA>nB?'800':'400'}">${nA?nA+'명':''}</div>
           <div></div>
-          <div style="font-size:11px;color:${nB>nA?colB:'var(--text3)'};font-weight:${nB>nA?'800':'400'}">${nB?nB+'명':''}</div>
+          <div style="font-size:var(--fs-caption);color:${nB>nA?colB:'var(--text3)'};font-weight:${nB>nA?'800':'400'}">${nB?nB+'명':''}</div>
         </div>`;
       });
     }
@@ -1243,14 +1243,14 @@ function _b2CompareView() {
       return tieredHtml + roledHtml;
     };
     h+=`<div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:12px;margin-top:14px">
-      <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:10px;text-align:center">👥 선수 명단 (클릭하여 상세 보기)</div>
+      <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:10px;text-align:center">👥 선수 명단 (클릭하여 상세 보기)</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div>
-          <div style="font-size:12px;font-weight:900;color:${colA};margin-bottom:6px;text-align:center;padding:4px 8px;background:${colA}14;border-radius:8px">${_b2CompareA} · ${stA.tiered.length}명</div>
+          <div style="font-size:var(--fs-sm);font-weight:900;color:${colA};margin-bottom:6px;text-align:center;padding:4px 8px;background:${colA}14;border-radius:8px">${_b2CompareA} · ${stA.tiered.length}명</div>
           <div style="display:flex;flex-wrap:wrap;gap:2px">${_makePlayerList(stA, colA)}</div>
         </div>
         <div>
-          <div style="font-size:12px;font-weight:900;color:${colB};margin-bottom:6px;text-align:center;padding:4px 8px;background:${colB}14;border-radius:8px">${_b2CompareB} · ${stB.tiered.length}명</div>
+          <div style="font-size:var(--fs-sm);font-weight:900;color:${colB};margin-bottom:6px;text-align:center;padding:4px 8px;background:${colB}14;border-radius:8px">${_b2CompareB} · ${stB.tiered.length}명</div>
           <div style="display:flex;flex-wrap:wrap;gap:2px">${_makePlayerList(stB, colB)}</div>
         </div>
       </div>

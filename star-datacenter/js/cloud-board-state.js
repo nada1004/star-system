@@ -191,7 +191,7 @@ async function fbCloudSave(opts) {
       const display = fullErr || '알 수 없는 오류 (콘솔 F12 확인)';
       statusEl.style.color='#dc2626';
       statusEl.innerHTML = '❌ GitHub 저장 실패: ' + display + hint
-        + ' <button onclick="this.parentElement.textContent=\'\'" style="margin-left:6px;background:none;border:1px solid #dc2626;border-radius:4px;color:#dc2626;font-size:11px;cursor:pointer;padding:1px 6px">닫기</button>';
+        + ' <button onclick="this.parentElement.textContent=\'\'" style="margin-left:6px;background:none;border:1px solid #dc2626;border-radius:4px;color:#dc2626;font-size:var(--fs-caption);cursor:pointer;padding:1px 6px">닫기</button>';
     }
     throw e;
   } finally {
@@ -798,8 +798,8 @@ function rBoard(C,T){
   const _brdStatsHtml = `<div class="brd-mini-stats">
     <div class="brd-mini-stat" style="--stat-accent:#6366f1"><div class="brd-mini-stat-label">표시 스트리머</div><div class="brd-mini-stat-value">${_brdAllVis.length}</div><div class="brd-mini-stat-sub">구현황판 기준 인원</div></div>
     <div class="brd-mini-stat" style="--stat-accent:#0ea5e9"><div class="brd-mini-stat-label">활성 대학</div><div class="brd-mini-stat-value">${visUnivs.length}</div><div class="brd-mini-stat-sub">숨김/해체 제외</div></div>
-    <div class="brd-mini-stat" style="--stat-accent:${_heroCol}"><div class="brd-mini-stat-label">현재 보기</div><div class="brd-mini-stat-value" style="font-size:18px;color:${_heroCol}">${_currentUnivLabel}</div><div class="brd-mini-stat-sub">${boardSelUniv!=='전체'?'선택 대학 중심':'전체 흐름 보기'}</div></div>
-    <div class="brd-mini-stat" style="--stat-accent:#f59e0b"><div class="brd-mini-stat-label">티어 분포</div><div class="brd-mini-stat-tier">${_tierBadges||'<span style="font-size:11px;color:var(--text3);font-weight:700">집계 없음</span>'}</div></div>
+    <div class="brd-mini-stat" style="--stat-accent:${_heroCol}"><div class="brd-mini-stat-label">현재 보기</div><div class="brd-mini-stat-value" style="font-size:var(--fs-lg);color:${_heroCol}">${_currentUnivLabel}</div><div class="brd-mini-stat-sub">${boardSelUniv!=='전체'?'선택 대학 중심':'전체 흐름 보기'}</div></div>
+    <div class="brd-mini-stat" style="--stat-accent:#f59e0b"><div class="brd-mini-stat-label">티어 분포</div><div class="brd-mini-stat-tier">${_tierBadges||'<span style="font-size:var(--fs-caption);color:var(--text3);font-weight:700">집계 없음</span>'}</div></div>
   </div>`;
   let h=`
   <style>
@@ -808,23 +808,23 @@ function rBoard(C,T){
     .brd-hero::after{content:'';position:absolute;right:-70px;top:-70px;width:220px;height:220px;border-radius:999px;background:${_hexToRgba(_heroCol,.16)};filter:blur(2px);pointer-events:none}
     .brd-hero-copy,.brd-hero-side{position:relative;z-index:1}
     .brd-hero-copy{display:flex;flex-direction:column;gap:7px;min-width:0}
-    .brd-hero-kicker{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:${_heroCol}}
+    .brd-hero-kicker{font-size:var(--fs-caption);font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:${_heroCol}}
     .brd-hero-title{font-size:25px;font-weight:950;letter-spacing:-.03em;color:var(--text1);line-height:1.14}
-    .brd-hero-desc{font-size:13px;line-height:1.6;color:var(--text3);max-width:720px}
+    .brd-hero-desc{font-size:var(--fs-base);line-height:1.6;color:var(--text3);max-width:720px}
     .brd-hero-badges{display:flex;flex-wrap:wrap;gap:8px}
-    .brd-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:${_hexToRgba(_heroCol,.1)};border:1px solid ${_hexToRgba(_heroCol,.18)};font-size:12px;font-weight:800;color:${_heroCol};box-shadow:0 10px 18px rgba(15,23,42,.05)}
+    .brd-hero-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:${_hexToRgba(_heroCol,.1)};border:1px solid ${_hexToRgba(_heroCol,.18)};font-size:var(--fs-sm);font-weight:800;color:${_heroCol};box-shadow:0 10px 18px rgba(15,23,42,.05)}
     .brd-hero-side{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}
     .brd-toolbar-card{padding:14px 16px;border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.18);box-shadow:0 18px 34px rgba(15,23,42,.06)}
     .brd-toolbar-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
     .brd-toolbar-controls{display:flex;flex-direction:column;gap:10px;min-width:min(100%,720px)}
     .brd-toolbar-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .brd-toolbar-note{font-size:11px;color:var(--text3);font-weight:700}
+    .brd-toolbar-note{font-size:var(--fs-caption);color:var(--text3);font-weight:700}
     .brd-mini-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;min-width:min(100%,520px)}
-    .brd-mini-stat{padding:14px 16px;border-radius:16px;border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.94));box-shadow:0 6px 16px rgba(15,23,42,.05);position:relative;overflow:hidden}
-    .brd-mini-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--stat-accent,#2563eb);border-radius:16px 16px 0 0;opacity:.7}
+    .brd-mini-stat{padding:14px 16px;border-radius:var(--r2);border:1px solid rgba(148,163,184,.16);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.94));box-shadow:0 6px 16px rgba(15,23,42,.05);position:relative;overflow:hidden}
+    .brd-mini-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--stat-accent,#2563eb);border-radius:var(--r2) 16px 0 0;opacity:.7}
     .brd-mini-stat-label{font-size:10px;font-weight:900;color:var(--text3);letter-spacing:.06em;text-transform:uppercase}
     .brd-mini-stat-value{margin-top:5px;font-size:24px;font-weight:950;letter-spacing:-.03em;color:var(--text1)}
-    .brd-mini-stat-sub{margin-top:3px;font-size:11px;font-weight:700;color:var(--text3)}
+    .brd-mini-stat-sub{margin-top:3px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)}
     .brd-mini-stat-tier{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
     .brd-card{background:var(--brd-col,#dbeafe);border-radius:18px;overflow:hidden;box-shadow:0 4px 18px var(--brd-shd,rgba(37,99,235,.15)),0 1px 6px rgba(0,0,0,.07);position:relative;transition:transform .18s,box-shadow .18s;align-self:start;border:1px solid rgba(0,0,0,.06);}
     .brd-card:hover{transform:translateY(-2px);box-shadow:0 10px 32px var(--brd-shd,rgba(37,99,235,.22)),0 3px 10px rgba(0,0,0,.1);}
@@ -852,7 +852,7 @@ function rBoard(C,T){
     .brd-row-drag{cursor:grab;}.brd-row-drag:active{cursor:grabbing;}
     .brd-tier-lbl{font-size:9px;font-weight:700;color:rgba(0,0,0,.45);letter-spacing:.8px;text-transform:uppercase;padding:0 2px;margin:6px 0 2px;}
     .brd-tier-lbl:first-child{margin-top:0;}
-    .brd-univ-name-btn{font-weight:900;font-size:18px;color:#fff;letter-spacing:.2px;line-height:1.15;text-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;border:none;background:none;padding:0;font-family:'Noto Sans KR',sans-serif;text-align:left;transition:opacity .15s;}
+    .brd-univ-name-btn{font-weight:900;font-size:var(--fs-lg);color:#fff;letter-spacing:.2px;line-height:1.15;text-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;border:none;background:none;padding:0;font-family:'Noto Sans KR',sans-serif;text-align:left;transition:opacity .15s;}
     .brd-univ-name-btn:hover{text-decoration:underline;text-underline-offset:3px;opacity:.8;}
     .brd-drag-hint{font-size:10px;color:rgba(255,255,255,.5);margin-left:auto;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.1);cursor:grab;flex-shrink:0;user-select:none;}
     .brd-side-panel{float:right;width:230px;margin:0 0 6px 10px;}
@@ -860,8 +860,8 @@ function rBoard(C,T){
     @media(max-width:640px){.brd-side-panel{display:none!important;}.brd-bottom-section-img{display:none!important;}}
     /* 이동 팝업 */
     .brd-move-popup{position:fixed;z-index:5000;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.22);padding:10px;min-width:220px;max-width:260px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);}
-    .brd-move-popup-title{font-size:11px;font-weight:700;color:var(--text3);padding:4px 6px 8px;border-bottom:1px solid var(--border);margin-bottom:6px;}
-    .brd-move-popup-btn{display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:none;background:none;border-radius:7px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:600;color:var(--text);transition:background .1s;text-align:left;}
+    .brd-move-popup-title{font-size:var(--fs-caption);font-weight:700;color:var(--text3);padding:4px 6px 8px;border-bottom:1px solid var(--border);margin-bottom:6px;}
+    .brd-move-popup-btn{display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:none;background:none;border-radius:7px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:var(--fs-sm);font-weight:600;color:var(--text);transition:background .1s;text-align:left;}
     .brd-move-popup-btn:hover{background:var(--blue-l);color:var(--blue);}
     .brd-move-popup-btn:disabled{opacity:.35;cursor:default;background:none;}
     .brd-move-popup-sep{height:1px;background:var(--border);margin:4px 0;}
@@ -908,7 +908,7 @@ function rBoard(C,T){
     <div class="brd-toolbar-controls">
       <div class="brd-toolbar-row">
       <div style="position:relative">
-        <select id="board-univ-sel" onchange="boardSelUniv=this.value;_updateBoardSaveLabel();render();if(boardSelUniv!=='전체'){setTimeout(()=>{const c=document.querySelector(\`.brd-card[data-univ='\${boardSelUniv}']\`);if(c)c.scrollIntoView({behavior:'smooth',block:'center'});},120);}" style="appearance:none;-webkit-appearance:none;padding:6px 28px 6px 12px;border-radius:9px;border:1.5px solid var(--border2);font-size:12px;font-weight:700;color:var(--text);background:var(--surface);cursor:pointer;outline:none;min-width:120px;">
+        <select id="board-univ-sel" onchange="boardSelUniv=this.value;_updateBoardSaveLabel();render();if(boardSelUniv!=='전체'){setTimeout(()=>{const c=document.querySelector(\`.brd-card[data-univ='\${boardSelUniv}']\`);if(c)c.scrollIntoView({behavior:'smooth',block:'center'});},120);}" style="appearance:none;-webkit-appearance:none;padding:6px 28px 6px 12px;border-radius:9px;border:1.5px solid var(--border2);font-size:var(--fs-sm);font-weight:700;color:var(--text);background:var(--surface);cursor:pointer;outline:none;min-width:120px;">
           <option value="전체">🏫 전체 보기</option>
           ${visUnivs.map(u=>`<option value="${u.name}"${boardSelUniv===u.name?' selected':''}>${u.name}${_canManage&&u.hidden?' (숨김)':''}</option>`).join('')}
         </select>
@@ -919,16 +919,16 @@ function rBoard(C,T){
       </button>
       <div style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface)">
         <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap">배경</span>
-        <button onclick="b2BgAlpha=Math.max(0,b2BgAlpha-5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 연하게">−</button>
+        <button onclick="b2BgAlpha=Math.max(0,b2BgAlpha-5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:var(--fs-caption);cursor:pointer;line-height:1.4" title="배경 더 연하게">−</button>
         <input type="range" min="0" max="100" value="${b2BgAlpha}" id="brd-bg-range" style="width:55px;height:4px;cursor:pointer" title="배경 진하기 (${b2BgAlpha})" oninput="b2BgAlpha=+this.value;localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()">
-        <button onclick="b2BgAlpha=Math.min(100,b2BgAlpha+5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="배경 더 진하게">+</button>
+        <button onclick="b2BgAlpha=Math.min(100,b2BgAlpha+5);localStorage.setItem('su_b2ba',b2BgAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:var(--fs-caption);cursor:pointer;line-height:1.4" title="배경 더 진하게">+</button>
         <span style="font-size:10px;color:var(--gray-l);font-weight:700;white-space:nowrap;margin-left:4px">라벨</span>
-        <button onclick="b2LabelAlpha=Math.max(0,b2LabelAlpha-5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 연하게">−</button>
+        <button onclick="b2LabelAlpha=Math.max(0,b2LabelAlpha-5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:var(--fs-caption);cursor:pointer;line-height:1.4" title="라벨 더 연하게">−</button>
         <input type="range" min="0" max="100" value="${b2LabelAlpha}" id="brd-label-range" style="width:55px;height:4px;cursor:pointer" title="라벨 진하기 (${b2LabelAlpha})" oninput="b2LabelAlpha=+this.value;localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()">
-        <button onclick="b2LabelAlpha=Math.min(100,b2LabelAlpha+5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:11px;cursor:pointer;line-height:1.4" title="라벨 더 진하게">+</button>
+        <button onclick="b2LabelAlpha=Math.min(100,b2LabelAlpha+5);localStorage.setItem('su_b2la',b2LabelAlpha);render();if(typeof save==='function')save()" style="padding:1px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--white);font-size:var(--fs-caption);cursor:pointer;line-height:1.4" title="라벨 더 진하게">+</button>
       </div>
       </div>
-      <div class="brd-toolbar-note">${_canManage?`🖱️ 헤더 드래그·◀▶ = 대학순서 | 스트리머 드래그/클릭 = 순서·대학이동 <button onclick="openCfgHome()" style="margin-left:6px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:4px 10px;font-size:11px;cursor:pointer;color:var(--text2);font-weight:700">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</div>
+      <div class="brd-toolbar-note">${_canManage?`🖱️ 헤더 드래그·◀▶ = 대학순서 | 스트리머 드래그/클릭 = 순서·대학이동 <button onclick="openCfgHome()" style="margin-left:6px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:4px 10px;font-size:var(--fs-caption);cursor:pointer;color:var(--text2);font-weight:700">⚙️ 대학 색상·숨기기</button>`:'👆 스트리머 클릭 → 스트리머 상세'}</div>
     </div>
     ${_brdStatsHtml}
   </div>

@@ -10,7 +10,7 @@ window._goPlayerHistPage = function(page, name){
     : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
   _mb.innerHTML = _fn
     ? _fn(_p)
-    : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
+    : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
   _mb.scrollTop = _st;
   injectUnivIcons(_mb);
 };
@@ -28,7 +28,7 @@ window._goPlayerOppPage = function(page, name){
     : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
   _mb.innerHTML = _fn
     ? _fn(_p)
-    : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
+    : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
   _mb.scrollTop = _st;
   injectUnivIcons(_mb);
 };
@@ -43,7 +43,7 @@ window._rebuildPlayerDetail = function(name){
     : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
   _mb.innerHTML = _fn
     ? _fn(_p)
-    : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
+    : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
   injectUnivIcons(_mb);
 };
 
@@ -558,7 +558,7 @@ function deletePlayerHist(playerName, histIdx){
         : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
       pb.innerHTML = _fn
         ? _fn(p)
-        : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
+        : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
       injectUnivIcons(pb);
     }
   }
@@ -634,7 +634,7 @@ function deletePlayerHistBulk(playerName){
     if(pb){
       pb.innerHTML = _fn
         ? _fn(p)
-        : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
+        : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
       injectUnivIcons(pb);
     }
   }
@@ -686,9 +686,9 @@ function openPlayerHistBulkEdit(playerName){
   document.getElementById('reTitle').textContent=`일괄 경기 수정 — ${playerName} (${_playerHistBulkSelected.size}개)`;
   document.getElementById('reBody').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:11px;color:#92400e">선택된 ${_playerHistBulkSelected.size}개의 경기 기록을 일괄 수정합니다.</div>
+      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:var(--fs-caption);color:#92400e">선택된 ${_playerHistBulkSelected.size}개의 경기 기록을 일괄 수정합니다.</div>
       <div>
-        <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">종목 변경</label>
+        <label style="font-weight:700;font-size:var(--fs-sm);margin-bottom:4px;display:block">종목 변경</label>
         <select id="phe-bulk-mode" style="width:100%">
           <option value="">변경 안함</option>
           ${allModes.map(m=>`<option value="${m}">${m} (현재값)</option>`).join('')}
@@ -696,7 +696,7 @@ function openPlayerHistBulkEdit(playerName){
         </select>
       </div>
       <div>
-        <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">맵 변경</label>
+        <label style="font-weight:700;font-size:var(--fs-sm);margin-bottom:4px;display:block">맵 변경</label>
         <div style="display:flex;gap:6px">
           <select id="phe-bulk-map-sel" data-pha-action="bulk-map-sync" style="flex:1">
             <option value="">목록에서 선택</option>
@@ -706,7 +706,7 @@ function openPlayerHistBulkEdit(playerName){
         </div>
       </div>
       <div>
-        <label style="font-weight:700;font-size:12px;margin-bottom:4px;display:block">날짜 변경</label>
+        <label style="font-weight:700;font-size:var(--fs-sm);margin-bottom:4px;display:block">날짜 변경</label>
         <input id="phe-bulk-date" type="date" placeholder="YYYY-MM-DD" style="width:100%">
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
@@ -758,7 +758,7 @@ function savePlayerHistBulkEdit(playerName){
         : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
       pb.innerHTML = _fn
         ? _fn(p)
-        : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
+        : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
       injectUnivIcons(pb);
     }
   }
@@ -874,7 +874,7 @@ function openPlayerHistEdit(playerName, histIdx){
             : (typeof buildPlayerDetailHTML==='function' ? buildPlayerDetailHTML : null);
           pb.innerHTML = _fn
             ? _fn(p)
-            : `<div style="font-size:12px;color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
+            : `<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:10px 0">스트리머 상세 렌더러가 아직 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.</div>`;
           injectUnivIcons(pb);
         }
       }

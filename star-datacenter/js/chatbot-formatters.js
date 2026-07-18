@@ -11,16 +11,16 @@ function _renderPaged(key, items, page, perPage, headerHtml, rowFn, totalWL) {
 
   const pageInfo = `${page * perPage + 1}–${Math.min((page + 1) * perPage, total)} / 전체 ${total}건`;
   const prevBtn = page > 0
-    ? `<button data-chatbot-nav-key="${escapeAttr(key)}" data-chatbot-nav-dir="-1" style="padding:5px 12px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">◀ 이전</button>`
-    : `<button style="padding:5px 12px;background:#e2e8f0;color:#94a3b8;border:none;border-radius:7px;font-size:12px;cursor:default">◀ 이전</button>`;
+    ? `<button data-chatbot-nav-key="${escapeAttr(key)}" data-chatbot-nav-dir="-1" style="padding:5px 12px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">◀ 이전</button>`
+    : `<button style="padding:5px 12px;background:#e2e8f0;color:#94a3b8;border:none;border-radius:7px;font-size:var(--fs-sm);cursor:default">◀ 이전</button>`;
   const nextBtn = page < maxPage
-    ? `<button data-chatbot-nav-key="${escapeAttr(key)}" data-chatbot-nav-dir="1" style="padding:5px 12px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">다음 ▶</button>`
-    : `<button style="padding:5px 12px;background:#e2e8f0;color:#94a3b8;border:none;border-radius:7px;font-size:12px;cursor:default">다음 ▶</button>`;
+    ? `<button data-chatbot-nav-key="${escapeAttr(key)}" data-chatbot-nav-dir="1" style="padding:5px 12px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">다음 ▶</button>`
+    : `<button style="padding:5px 12px;background:#e2e8f0;color:#94a3b8;border:none;border-radius:7px;font-size:var(--fs-sm);cursor:default">다음 ▶</button>`;
 
   const winRate = totalWL && totalWL.w + totalWL.l > 0 ? ((totalWL.w/(totalWL.w+totalWL.l))*100).toFixed(1) : null;
   const statsText = totalWL ? ` · 개인 ${totalWL.w}승${totalWL.l}패${winRate ? ` (${winRate}%)` : ''}` : '';
 
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${headerHtml.replace('__STATS__', statsText)}<div style="background:#fff;padding:8px 8px 4px">${rows}</div><div style="background:#f8fafc;padding:7px 10px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #e8edf2">${prevBtn}<span style="font-size:11px;color:#94a3b8">${pageInfo}</span>${nextBtn}</div></div>`;
+  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${headerHtml.replace('__STATS__', statsText)}<div style="background:#fff;padding:8px 8px 4px">${rows}</div><div style="background:#f8fafc;padding:7px 10px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #e8edf2">${prevBtn}<span style="font-size:var(--fs-caption);color:#94a3b8">${pageInfo}</span>${nextBtn}</div></div>`;
 }
 
 function chatNavPage(key, dir) {

@@ -986,13 +986,13 @@ function openGameEditModal(editRef, si, gi){
     '<div class="su-field-row" style="border-left:3px solid #16a34a;border-radius:0 14px 14px 0">' +
     '<label class="su-field-label" style="color:#16a34a">🏆 승자</label>' +
     '<div style="display:flex;gap:8px;flex:1">' +
-    '<button type="button" id="gem-win-A" onclick="gemSetWinner('+"\'A\'"+')" style="flex:1;padding:8px 0;border-radius:10px;'+winA_style+'font-weight:800;font-size:12px;cursor:pointer;transition:all .15s">🔵 '+ _nameA +' 승</button>' +
-    '<button type="button" id="gem-win-B" onclick="gemSetWinner('+"\'B\'"+')" style="flex:1;padding:8px 0;border-radius:10px;'+winB_style+'font-weight:800;font-size:12px;cursor:pointer;transition:all .15s">🔴 '+ _nameB +' 승</button>' +
+    '<button type="button" id="gem-win-A" onclick="gemSetWinner('+"\'A\'"+')" style="flex:1;padding:8px 0;border-radius:var(--r);'+winA_style+'font-weight:800;font-size:var(--fs-sm);cursor:pointer;transition:all .15s">🔵 '+ _nameA +' 승</button>' +
+    '<button type="button" id="gem-win-B" onclick="gemSetWinner('+"\'B\'"+')" style="flex:1;padding:8px 0;border-radius:var(--r);'+winB_style+'font-weight:800;font-size:var(--fs-sm);cursor:pointer;transition:all .15s">🔴 '+ _nameB +' 승</button>' +
     '</div><input type="hidden" id="gem-winner" value="' + (g.winner||'')+'"></div>' +
     '<div class="su-field-row"><label class="su-field-label">🗺️ 맵</label><select id="gem-map" style="flex:1;min-width:0"><option value="">맵 없음</option>'+mapOpts+'</select></div>' +
     '<div class="su-field-row" style="border-left:3px solid #f59e0b;border-radius:0 14px 14px 0">' +
     '<label class="su-field-label" style="color:#f59e0b">🎙️ 캐스터/스트리머</label>' +
-    '<input type="text" id="gem-caster" value="'+(m.caster||'')+'" placeholder="방송 스트리머 이름 (선택)" style="flex:1;min-width:0;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px">' +
+    '<input type="text" id="gem-caster" value="'+(m.caster||'')+'" placeholder="방송 스트리머 이름 (선택)" style="flex:1;min-width:0;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm)">' +
     '</div>';
 
   om('gameEditModal');
@@ -1007,12 +1007,12 @@ function gemSetWinner(side){
   const nameA = (pA && pA.value) || 'A팀';
   const nameB = (pB && pB.value) || 'B팀';
   if(btnA){
-    btnA.style.cssText = 'flex:1;padding:8px 0;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;transition:all .15s;' +
+    btnA.style.cssText = 'flex:1;padding:8px 0;border-radius:var(--r);font-weight:800;font-size:var(--fs-sm);cursor:pointer;transition:all .15s;' +
       (side==='A' ? 'border:2px solid #2563eb;background:#2563eb;color:#fff;' : 'border:2px solid rgba(148,163,184,.3);background:var(--white);color:var(--text2);');
     btnA.textContent = '🔵 '+nameA+' 승';
   }
   if(btnB){
-    btnB.style.cssText = 'flex:1;padding:8px 0;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;transition:all .15s;' +
+    btnB.style.cssText = 'flex:1;padding:8px 0;border-radius:var(--r);font-weight:800;font-size:var(--fs-sm);cursor:pointer;transition:all .15s;' +
       (side==='B' ? 'border:2px solid #dc2626;background:#dc2626;color:#fff;' : 'border:2px solid rgba(148,163,184,.3);background:var(--white);color:var(--text2);');
     btnB.textContent = '🔴 '+nameB+' 승';
   }
@@ -1151,7 +1151,7 @@ function toggleHdrSearch(){
   if(!wrap) return;
   wrap.classList.toggle('open');
   if(wrap.classList.contains('open')){
-    input.style.cssText = 'width:140px!important;opacity:1!important;pointer-events:auto!important;position:relative!important;padding:5px 10px!important;font-size:12px!important;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;outline:none;';
+    input.style.cssText = 'width:140px!important;opacity:1!important;pointer-events:auto!important;position:relative!important;padding:5px 10px!important;font-size:var(--fs-sm)!important;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;outline:none;';
     setTimeout(()=>input.focus(), 50);
     input.onblur = ()=>{ if(!input.value){ wrap.classList.remove('open'); input.style.cssText=''; } };
   } else {
@@ -1258,7 +1258,7 @@ function showToast(msg, duration=2000){
   let t=document.getElementById('_toast');
   if(!t){
     t=document.createElement('div');t.id='_toast';
-    t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;pointer-events:none;opacity:0;transition:opacity .2s;font-family:"Noto Sans KR",sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.25)';
+    t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:9px 20px;border-radius:20px;font-size:var(--fs-base);font-weight:600;z-index:9999;pointer-events:none;opacity:0;transition:opacity .2s;font-family:"Noto Sans KR",sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.25)';
     document.body.appendChild(t);
   }
   t.textContent=msg;

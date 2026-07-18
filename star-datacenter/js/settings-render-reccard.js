@@ -23,31 +23,31 @@ window.renderCfgRecCardSection = function(_scfgD) {
   const _sfxSoft = Math.max(0,Math.min(100,parseInt(localStorage.getItem('su_rec_side_fx_softness')||'52',10)||52));
   const _sfxEdge = Math.max(2,Math.min(24,parseInt(localStorage.getItem('su_rec_side_fx_edge')||'8',10)||8));
   return _scfgD('reccard','🧾 기록 카드(기록탭) 스타일') + `
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">개인전/끝장전/미니/프로리그/대회 기록 목록에 쓰이는 “기록 카드” 스타일입니다. (대회탭 조별리그 일정 카드는 별도 설정)</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:12px">
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">개인전/끝장전/미니/프로리그/대회 기록 목록에 쓰이는 “기록 카드” 스타일입니다. (대회탭 조별리그 일정 카드는 별도 설정)</div>
+    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2)">
         <input type="checkbox" id="cfg-rc-theme-on" style="width:15px;height:15px" ${_rcOn?'checked':''} onchange="cfgSetRecCardSettings()">
         승리 대학색을 카드 배경/헤더에 연하게 적용
       </label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+      <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2)">
         <input type="checkbox" id="cfg-rc-bgfx-all" style="width:15px;height:15px" ${(_rcOn && _sfxOn)?'checked':''} onchange="cfgSetRecBgFxAll(this.checked)">
         기록 카드 배경 효과 전체 사용 (배경/양끝 효과)
       </label>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">디자인 모드</div>
-        <select id="cfg-rc-accent" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+        <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">디자인 모드</div>
+        <select id="cfg-rc-accent" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900">
           <option value="none" ${_rcAccent==='none'?'selected':''}>무색</option>
           <option value="header" ${_rcAccent==='header'?'selected':''}>헤더만 포인트</option>
           <option value="border" ${_rcAccent==='border'?'selected':''}>테두리만 포인트</option>
           <option value="full" ${_rcAccent==='full'?'selected':''}>전체 배경 포인트</option>
           <option value="gradient" ${_rcAccent==='gradient'?'selected':''}>그라디언트 헤더</option>
         </select>
-        <span style="font-size:11px;color:var(--gray-l)">※ 체크를 끄면 무조건 무색</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 체크를 끄면 무조건 무색</span>
       </div>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">카드 모양</div>
+        <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">카드 모양</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
           ${(function(){
             const _curShape = localStorage.getItem('su_rc_card_shape') || 'default';
@@ -133,7 +133,7 @@ window.renderCfgRecCardSection = function(_scfgD) {
             const btn = (s)=>`<button type="button"
               onclick="if(typeof cfgSetRecCardShape==='function')cfgSetRecCardShape('${s.v}');try{render();}catch(e){}"
               title="${s.desc}"
-              style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;border:1.5px solid ${_curShape===s.v?'var(--blue)':'var(--border2)'};background:${_curShape===s.v?'#eff6ff':'var(--white)'};color:${_curShape===s.v?'var(--blue)':'var(--text2)'}"
+              style="padding:4px 10px;border-radius:8px;font-size:var(--fs-caption);font-weight:900;cursor:pointer;border:1.5px solid ${_curShape===s.v?'var(--blue)':'var(--border2)'};background:${_curShape===s.v?'#eff6ff':'var(--white)'};color:${_curShape===s.v?'var(--blue)':'var(--text2)'}"
             >${s.icon} ${s.l}</button>`;
 
             return groups.map(g=>{
@@ -146,200 +146,200 @@ window.renderCfgRecCardSection = function(_scfgD) {
             }).join('');
           })()}
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">카드 레이아웃/모양을 변경합니다</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">카드 레이아웃/모양을 변경합니다</span>
       </div>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">스코어/좌우 배치(PC)</div>
-        <select id="cfg-rc-vs-align" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+        <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">스코어/좌우 배치(PC)</div>
+        <select id="cfg-rc-vs-align" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900">
           <option value="left" ${(localStorage.getItem('su_rc_vs_align')||'center')==='left'?'selected':''}>좌측</option>
           <option value="center" ${(localStorage.getItem('su_rc_vs_align')||'center')==='center'?'selected':''}>가운데</option>
           <option value="right" ${(localStorage.getItem('su_rc_vs_align')||'center')==='right'?'selected':''}>우측</option>
         </select>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:11px;color:var(--text3);font-weight:800">스코어 크기(기록탭·대학전·프로리그·티어)</span>
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">공통(PC/모바일)</span>
+          <span style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">스코어 크기(기록탭·대학전·프로리그·티어)</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">공통(PC/모바일)</span>
           <input type="range" id="cfg-rc-score-scale" min="50" max="130" step="5" value="${(()=>{try{return Math.max(50,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'88',10)||88));}catch(e){return 88;}})(  )}" oninput="document.getElementById('cfg-rc-score-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
-          <span id="cfg-rc-score-scale-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${(()=>{try{return Math.max(50,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'88',10)||88));}catch(e){return 88;}})(  )}%</span>
+          <span id="cfg-rc-score-scale-v" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:44px;font-weight:900">${(()=>{try{return Math.max(50,Math.min(130,parseInt(localStorage.getItem('su_rc_score_scale')||'88',10)||88));}catch(e){return 88;}})(  )}%</span>
         </div>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">레이아웃 크기(기록 카드)</div>
+        <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">레이아웃 크기(기록 카드)</div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-rc-layout-pc" min="60" max="120" step="5"
             value="${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_pc')||'100',10)||100))}"
             oninput="document.getElementById('cfg-rc-layout-pc-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
-          <span id="cfg-rc-layout-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_pc')||'100',10)||100))}%</span>
+          <span id="cfg-rc-layout-pc-v" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_pc')||'100',10)||100))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">모바일</span>
           <input type="range" id="cfg-rc-layout-mb" min="60" max="120" step="5"
             value="${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_mb')||'100',10)||100))}"
             oninput="document.getElementById('cfg-rc-layout-mb-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:140px">
-          <span id="cfg-rc-layout-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_mb')||'100',10)||100))}%</span>
+          <span id="cfg-rc-layout-mb-v" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(60,Math.min(120,parseInt(localStorage.getItem('su_rc_layout_scale_mb')||'100',10)||100))}%</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ 카드 여백/칩/스코어 박스 등 전반을 함께 줄입니다</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 카드 여백/칩/스코어 박스 등 전반을 함께 줄입니다</span>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">스코어 숫자 색상(공통)</div>
+        <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">스코어 숫자 색상(공통)</div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">승</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">승</span>
           <input type="color" id="cfg-score-win" value="${(()=>{try{return (localStorage.getItem('su_score_win')||'#dc2626');}catch(e){return '#dc2626';}})()}" onchange="cfgSetScoreColors()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px;background:none">
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">패</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">패</span>
           <input type="color" id="cfg-score-lose" value="${(()=>{try{return (localStorage.getItem('su_score_lose')||'#2563eb');}catch(e){return '#2563eb';}})()}" onchange="cfgSetScoreColors()" style="width:36px;height:28px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px;background:none">
         </div>
         <div style="flex:1;min-width:180px;max-width:280px;border:1px solid var(--border2);border-radius:12px;padding:8px 12px;background:var(--white);display:flex;align-items:center;justify-content:center;gap:10px">
-          <span class="wt" style="font-size:18px">3</span><span style="color:var(--gray-l);font-weight:900">:</span><span class="lt" style="font-size:18px">2</span>
+          <span class="wt" style="font-size:var(--fs-lg)">3</span><span style="color:var(--gray-l);font-weight:900">:</span><span class="lt" style="font-size:var(--fs-lg)">2</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">대회탭 조별/토너, 프로리그 대회, 기록탭 스코어에 공통 적용</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">대회탭 조별/토너, 프로리그 대회, 기록탭 스코어에 공통 적용</span>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">대학/팀 버튼 크기(기록탭/프로리그/티어대회 등)</div>
+        <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">대학/팀 버튼 크기(기록탭/프로리그/티어대회 등)</div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-mbtn-pc" min="40" max="220" step="5"
             value="${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_pc')||'100',10)||100))}"
             oninput="document.getElementById('cfg-mbtn-pc-v').textContent=this.value+'%'" onchange="cfgSetMatchBtnScaleSettings()" style="width:140px">
-          <span id="cfg-mbtn-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_pc')||'100',10)||100))}%</span>
+          <span id="cfg-mbtn-pc-v" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_pc')||'100',10)||100))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">모바일</span>
           <input type="range" id="cfg-mbtn-mb" min="40" max="220" step="5"
             value="${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_mb')||'100',10)||100))}"
             oninput="document.getElementById('cfg-mbtn-mb-v').textContent=this.value+'%'" onchange="cfgSetMatchBtnScaleSettings()" style="width:140px">
-          <span id="cfg-mbtn-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_mb')||'100',10)||100))}%</span>
+          <span id="cfg-mbtn-mb-v" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(220,parseInt(localStorage.getItem('su_match_btn_scale_mb')||'100',10)||100))}%</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ 미니/시빌워/대학대전/대학CK/티어대회/프로리그/일반 기록카드에 적용 (대회탭 조별/토너는 아래 “대회 카드”에서 별도)</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 미니/시빌워/대학대전/대학CK/티어대회/프로리그/일반 기록카드에 적용 (대회탭 조별/토너는 아래 “대회 카드”에서 별도)</span>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">참가자(👥) 버튼 크기(기록탭)</div>
+        <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">참가자(👥) 버튼 크기(기록탭)</div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-rc-mem-pc" min="40" max="240" step="5"
             value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_pc')||'100',10)||100))}"
             oninput="document.getElementById('cfg-rc-mem-pc-v').textContent=this.value+'%'" onchange="cfgSetRecMemBtnScaleSettings()" style="width:140px">
-          <span id="cfg-rc-mem-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_pc')||'100',10)||100))}%</span>
+          <span id="cfg-rc-mem-pc-v" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_pc')||'100',10)||100))}%</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">모바일</span>
           <input type="range" id="cfg-rc-mem-mb" min="40" max="240" step="5"
             value="${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_mb')||'100',10)||100))}"
             oninput="document.getElementById('cfg-rc-mem-mb-v').textContent=this.value+'%'" onchange="cfgSetRecMemBtnScaleSettings()" style="width:140px">
-          <span id="cfg-rc-mem-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_mb')||'100',10)||100))}%</span>
+          <span id="cfg-rc-mem-mb-v" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(40,Math.min(240,parseInt(localStorage.getItem('su_rc_mem_btn_scale_mb')||'100',10)||100))}%</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ 미니/시빌워/대학대전/대학CK/티어대회/프로리그/대회(기록탭) 참가자 버튼에 적용</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 미니/시빌워/대학대전/대학CK/티어대회/프로리그/대회(기록탭) 참가자 버튼에 적용</span>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(기록탭)</div>
+        <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(기록탭)</div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">PC</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">PC</span>
           <input type="range" id="cfg-rc-gap-pc" min="0" max="120" step="1"
             value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}"
             oninput="document.getElementById('cfg-rc-gap-pc-v').textContent=this.value+'px'" onchange="cfgSetRecVsGapSettings()" style="width:140px">
-          <span id="cfg-rc-gap-pc-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}px</span>
+          <span id="cfg-rc-gap-pc-v" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_pc')||'12',10)||12))}px</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:var(--gray-l);font-weight:900">모바일</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">모바일</span>
           <input type="range" id="cfg-rc-gap-mb" min="0" max="120" step="1"
             value="${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}"
             oninput="document.getElementById('cfg-rc-gap-mb-v').textContent=this.value+'px'" onchange="cfgSetRecVsGapSettings()" style="width:140px">
-          <span id="cfg-rc-gap-mb-v" style="font-size:11px;color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}px</span>
+          <span id="cfg-rc-gap-mb-v" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:44px;font-weight:900">${Math.max(0,Math.min(120,parseInt(localStorage.getItem('su_rc_vs_gap_mb')||'8',10)||8))}px</span>
         </div>
-        <span style="font-size:11px;color:var(--gray-l)">※ “스코어 - 대학버튼” 좌우 간격</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ “스코어 - 대학버튼” 좌우 간격</span>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">카드 배경 색상 강도</div>
+          <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">카드 배경 색상 강도</div>
           <input type="range" id="cfg-rc-bg" min="0" max="30" step="1" value="${Math.max(0,Math.min(30,_rcBg))}" oninput="document.getElementById('cfg-rc-bg-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-bg-v">${Math.max(0,Math.min(30,_rcBg))}%</span></div>
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)"><span id="cfg-rc-bg-v">${Math.max(0,Math.min(30,_rcBg))}%</span></div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">카드 헤더 색상 강도</div>
+          <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">카드 헤더 색상 강도</div>
           <input type="range" id="cfg-rc-hd" min="0" max="30" step="1" value="${Math.max(0,Math.min(30,_rcHd))}" oninput="document.getElementById('cfg-rc-hd-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-hd-v">${Math.max(0,Math.min(30,_rcHd))}%</span></div>
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)"><span id="cfg-rc-hd-v">${Math.max(0,Math.min(30,_rcHd))}%</span></div>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">대학 아이콘 크기(기록 카드)</div>
+          <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">대학 아이콘 크기(기록 카드)</div>
           <input type="range" id="cfg-rc-uicon" min="12" max="34" step="1" value="${Math.max(12,Math.min(34,_rcIc))}" oninput="document.getElementById('cfg-rc-ic-v').textContent=this.value+'px'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-ic-v">${Math.max(12,Math.min(34,_rcIc))}px</span></div>
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)"><span id="cfg-rc-ic-v">${Math.max(12,Math.min(34,_rcIc))}px</span></div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">스트리머 프로필 이미지 크기(전역 배율)</div>
+          <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">스트리머 프로필 이미지 크기(전역 배율)</div>
           <input type="range" id="cfg-ava-scale" min="70" max="160" step="5" value="${Math.max(70,Math.min(160,_avaScale))}" oninput="document.getElementById('cfg-ava-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-ava-v">${Math.max(70,Math.min(160,_avaScale))}%</span></div>
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)"><span id="cfg-ava-v">${Math.max(70,Math.min(160,_avaScale))}%</span></div>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">대학명 글자 크기(기록 카드)</div>
+          <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">대학명 글자 크기(기록 카드)</div>
           <input type="range" id="cfg-rc-univ-font" min="90" max="150" step="5"
             value="${Math.max(90,Math.min(150,_rcUnivFont))}"
             oninput="document.getElementById('cfg-rc-univ-font-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-rc-univ-font-v">${Math.max(90,Math.min(150,_rcUnivFont))}%</span></div>
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)"><span id="cfg-rc-univ-font-v">${Math.max(90,Math.min(150,_rcUnivFont))}%</span></div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">연/월 필터 크기(기록탭)</div>
+          <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">연/월 필터 크기(기록탭)</div>
           <input type="range" id="cfg-ym-scale" min="80" max="140" step="5"
             value="${Math.max(80,Math.min(140,_ymScale))}"
             oninput="document.getElementById('cfg-ym-scale-v').textContent=this.value+'%'" onchange="cfgSetRecCardSettings()" style="width:100%">
-          <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-ym-scale-v">${Math.max(80,Math.min(140,_ymScale))}%</span></div>
+          <div style="font-size:var(--fs-caption);color:var(--gray-l)"><span id="cfg-ym-scale-v">${Math.max(80,Math.min(140,_ymScale))}%</span></div>
         </div>
       </div>
 
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+      <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2)">
         <input type="checkbox" id="cfg-rc-memo-on" style="width:15px;height:15px" ${_rcMemoOn?'checked':''} onchange="cfgSetRecCardSettings()">
         기록 카드에서 메모 입력 기능 사용(관리자)
       </label>
-      <div style="font-size:11px;color:var(--gray-l)">※ 메모가 이미 저장된 경우는 항상 표시됩니다. 이 옵션은 “입력칸”만 켜고 끕니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l)">※ 메모가 이미 저장된 경우는 항상 표시됩니다. 이 옵션은 “입력칸”만 켜고 끕니다.</div>
       
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">🖼️ 기록 카드 프로필 이미지 설정</div>
+        <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:10px">🖼️ 기록 카드 프로필 이미지 설정</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">프로필 이미지 크기 <span id="cfg-rc-avatar-size-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_rec_avatar_size')||'38',10);}catch(e){return 38;}})()}px</span></div>
+            <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">프로필 이미지 크기 <span id="cfg-rc-avatar-size-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_rec_avatar_size')||'38',10);}catch(e){return 38;}})()}px</span></div>
             <input type="range" id="cfg-rc-avatar-size" min="20" max="80" step="2" value="${(()=>{try{return parseInt(localStorage.getItem('su_rec_avatar_size')||'38',10);}catch(e){return 38;}})()}" oninput="document.getElementById('cfg-rc-avatar-size-v').textContent=this.value+'px'" onchange="cfgSetRecCardSettings()" style="width:100%">
             <div style="font-size:10px;color:var(--gray-l);margin-top:2px">기록 카드 내 프로필 이미지 지름 (px)</div>
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">이미지 맞춤 방식</div>
-            <select id="cfg-rc-avatar-fit" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;width:100%">
+            <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">이미지 맞춤 방식</div>
+            <select id="cfg-rc-avatar-fit" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900;width:100%">
               <option value="contain" ${(localStorage.getItem('su_rec_avatar_fit')||'contain')==='contain'?'selected':''}>맞춤(contain)</option>
               <option value="cover" ${(localStorage.getItem('su_rec_avatar_fit')||'contain')==='cover'?'selected':''}>채우기(cover)</option>
             </select>
             <div style="font-size:10px;color:var(--gray-l);margin-top:4px"><b>맞춤</b>: 이미지 전체 보임 · <b>채우기</b>: 원형 꽉 채움</div>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--gray-l);margin-top:6px">※ 전역 배율(위 슬라이더)과 별개로 기록 카드만 따로 설정됩니다.</div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">※ 전역 배율(위 슬라이더)과 별개로 기록 카드만 따로 설정됩니다.</div>
       </div>
 
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-          <span style="font-size:12px;font-weight:900;color:var(--text2)">👤 기록 카드 양쪽 끝 참여자 프로필</span>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2);margin-left:auto">
+          <span style="font-size:var(--fs-sm);font-weight:900;color:var(--text2)">👤 기록 카드 양쪽 끝 참여자 프로필</span>
+          <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2);margin-left:auto">
             <input type="checkbox" id="cfg-rec-side-panel-on" style="width:15px;height:15px"
               ${(()=>{ try{ return (localStorage.getItem('su_rec_side_panel_on')??'1') !== '0' ? 'checked' : ''; }catch(e){ return 'checked'; } })()}
               onchange="(window.cfgSetRecSidePanelSettings||function(){})()">
             표시 사용
           </label>
         </div>
-        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">기록 카드(미니대전·대학대전·대학CK·티어대회·프로리그 일반·일반 등) 및 대회탭(조별리그·토너먼트) 좌우에 각 팀 참여자 이미지를 표시합니다. 승리팀은 이긴 선수, 패배팀은 진 선수를 랜덤 표시합니다. 이미지가 없으면 패널을 표시하지 않습니다.</div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">기록 카드(미니대전·대학대전·대학CK·티어대회·프로리그 일반·일반 등) 및 대회탭(조별리그·토너먼트) 좌우에 각 팀 참여자 이미지를 표시합니다. 승리팀은 이긴 선수, 패배팀은 진 선수를 랜덤 표시합니다. 이미지가 없으면 패널을 표시하지 않습니다.</div>
 
         <!-- 표시 타입: 프로필 이미지 / 대학 로고 -->
         <div style="margin-bottom:12px;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px">🖼️ 표시 타입</div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:8px">🖼️ 표시 타입</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             ${(()=>{const cur=(()=>{try{return localStorage.getItem('su_rsp_image_type')||'profile';}catch(e){return 'profile';}})();return[['profile','👤 선수 프로필 이미지'],['logo','🏫 대학 로고']].map(([v,l])=>`<button class="btn btn-sm ${cur===v?'btn-b':'btn-w'}" onclick="(window.cfgSetRspImageType||function(){})(this.dataset.v);document.querySelectorAll('[data-rsptype]').forEach(b=>{b.classList.remove('btn-b');b.classList.add('btn-w')});this.classList.remove('btn-w');this.classList.add('btn-b')" data-rsptype="${v}" data-v="${v}">${l}</button>`).join('');})()}
           </div>
@@ -348,7 +348,7 @@ window.renderCfgRecCardSection = function(_scfgD) {
 
         <!-- 대회탭 포함 여부 -->
         <div style="margin-bottom:12px">
-          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:700;color:var(--text2)">
+          <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:700;color:var(--text2)">
             <input type="checkbox" id="cfg-rsp-comp-on" style="width:14px;height:14px"
               ${(()=>{ try{ return (localStorage.getItem('su_rsp_comp_on')??'1') !== '0' ? 'checked' : ''; }catch(e){ return 'checked'; } })()}
               onchange="(window.cfgSetRspCompOn||function(){})()">
@@ -358,19 +358,19 @@ window.renderCfgRecCardSection = function(_scfgD) {
 
         <!-- 이미지 크기 -->
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">📐 이미지 크기 <span id="cfg-rsp-size-v" style="font-weight:400;color:var(--gray-l)">${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_size')||'72',10); }catch(e){ return 72; } })()}px</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px">📐 이미지 크기 <span id="cfg-rsp-size-v" style="font-weight:400;color:var(--gray-l)">${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_size')||'72',10); }catch(e){ return 72; } })()}px</span></div>
           <input type="range" min="40" max="160" step="4" value="${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_size')||'72',10); }catch(e){ return 72; } })()}" style="width:100%;max-width:260px;accent-color:var(--blue)" oninput="document.getElementById('cfg-rsp-size-v').textContent=this.value+'px'" onchange="(window.cfgSetRspSize||function(){})(this.value)">
         </div>
 
         <!-- 패널 너비 -->
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">↔️ 패널 너비 <span id="cfg-rsp-width-v" style="font-weight:400;color:var(--gray-l)">${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_width')||'90',10); }catch(e){ return 90; } })()}px</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px">↔️ 패널 너비 <span id="cfg-rsp-width-v" style="font-weight:400;color:var(--gray-l)">${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_width')||'90',10); }catch(e){ return 90; } })()}px</span></div>
           <input type="range" min="60" max="180" step="4" value="${(()=>{ try{ return parseInt(localStorage.getItem('su_rsp_width')||'90',10); }catch(e){ return 90; } })()}" style="width:100%;max-width:260px;accent-color:var(--blue)" oninput="document.getElementById('cfg-rsp-width-v').textContent=this.value+'px'" onchange="(window.cfgSetRspWidth||function(){})(this.value)">
         </div>
 
         <!-- 이미지 세로 위치 -->
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">📍 이미지 세로 위치</div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:6px">📍 이미지 세로 위치</div>
           <div style="display:flex;gap:6px" id="cfg-rsp-valign-row">
             ${['top','center','bottom'].map(v=>{const cur=(()=>{try{return localStorage.getItem('su_rsp_valign')||'center';}catch(e){return 'center';}})();const labelMap={top:'⬆ 위',center:'가운데',bottom:'⬇ 아래'};return `<button class="btn btn-xs ${cur===v?'btn-b':'btn-w'}" onclick="(window.cfgSetRspValign||function(){})(this.dataset.v);document.getElementById('cfg-rsp-valign-row').querySelectorAll('button').forEach(b=>{b.classList.remove('btn-b');b.classList.add('btn-w')});this.classList.remove('btn-w');this.classList.add('btn-b')" data-v="${v}">${labelMap[v]}</button>`;}).join('')}
           </div>
@@ -378,7 +378,7 @@ window.renderCfgRecCardSection = function(_scfgD) {
 
         <!-- 이미지 수평/수직 이동 -->
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">↔️ 이미지 수평 이동 <span id="cfg-rsp-hoffset-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{const v=parseInt(localStorage.getItem('su_rsp_hoffset')||'0',10);return(v>0?'+':'')+v+'px';}catch(e){return '0px';}})()}</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px">↔️ 이미지 수평 이동 <span id="cfg-rsp-hoffset-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{const v=parseInt(localStorage.getItem('su_rsp_hoffset')||'0',10);return(v>0?'+':'')+v+'px';}catch(e){return '0px';}})()}</span></div>
           <input type="range" min="-200" max="200" step="4"
             value="${(()=>{try{return parseInt(localStorage.getItem('su_rsp_hoffset')||'0',10);}catch(e){return 0;}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
@@ -387,7 +387,7 @@ window.renderCfgRecCardSection = function(_scfgD) {
           <div style="font-size:10px;color:var(--gray-l);margin-top:3px">양수(+): 좌우 이미지가 스코어 방향(안쪽)으로 이동 &nbsp;|&nbsp; 음수(-): 카드 바깥쪽으로 이동</div>
         </div>
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">↕️ 이미지 수직 이동 <span id="cfg-rsp-voffset-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{const v=parseInt(localStorage.getItem('su_rsp_voffset')||'0',10);return(v>0?'+':'')+v+'px';}catch(e){return '0px';}})()}</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px">↕️ 이미지 수직 이동 <span id="cfg-rsp-voffset-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{const v=parseInt(localStorage.getItem('su_rsp_voffset')||'0',10);return(v>0?'+':'')+v+'px';}catch(e){return '0px';}})()}</span></div>
           <input type="range" min="-200" max="200" step="4"
             value="${(()=>{try{return parseInt(localStorage.getItem('su_rsp_voffset')||'0',10);}catch(e){return 0;}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
@@ -398,13 +398,13 @@ window.renderCfgRecCardSection = function(_scfgD) {
 
         <!-- 슬라이드쇼 -->
         <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
-          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:800;color:var(--text2);margin-bottom:8px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:800;color:var(--text2);margin-bottom:8px">
             <input type="checkbox" id="cfg-rsp-rotate-on" style="width:14px;height:14px"
               ${(()=>{try{return (localStorage.getItem('su_rsp_rotate_on')??'1')!=='0'?'checked':'';}catch(e){return 'checked';}})()}
               onchange="(window.cfgSetRspRotateOn||function(){})()">
             🔄 참여자 슬라이드쇼 (자동 전환)
           </label>
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">⏱ 전환 주기 <span id="cfg-rsp-rotate-sec-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_rsp_rotate_sec')||'5',10);}catch(e){return 5;}})()}초</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px">⏱ 전환 주기 <span id="cfg-rsp-rotate-sec-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem('su_rsp_rotate_sec')||'5',10);}catch(e){return 5;}})()}초</span></div>
           <input type="range" min="1" max="60" step="1"
             value="${(()=>{try{return parseInt(localStorage.getItem('su_rsp_rotate_sec')||'5',10);}catch(e){return 5;}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
@@ -414,15 +414,15 @@ window.renderCfgRecCardSection = function(_scfgD) {
 
         <!-- 연한색(Opacity) 조절: 승리팀의 진 선수 -->
         <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
-          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">🏆 승리팀 패널 – 진 선수 연한 회색 조절</div>
+          <div style="font-size:var(--fs-caption);font-weight:900;color:var(--text2);margin-bottom:6px">🏆 승리팀 패널 – 진 선수 연한 회색 조절</div>
           <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">승리팀에서 개인전을 진 선수의 투명도·흑백을 조절합니다.</div>
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-wtlo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_opacity')||'0.65').toFixed(2);}catch(e){return '0.65';}})()}</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-wtlo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_opacity')||'0.65').toFixed(2);}catch(e){return '0.65';}})()}</span></div>
           <input type="range" min="0.1" max="1.0" step="0.05"
             value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_opacity')||'0.50');}catch(e){return 0.50;}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
             oninput="document.getElementById('cfg-rsp-wtlo-v').textContent=parseFloat(this.value).toFixed(2)"
             onchange="(window.cfgSetRspWinTeamLoseOpacity||function(){})(this.value)">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">흑백(Grayscale) <span id="cfg-rsp-wtlg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_gray')||'0.35').toFixed(2);}catch(e){return '0.35';}})()}</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">흑백(Grayscale) <span id="cfg-rsp-wtlg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_gray')||'0.35').toFixed(2);}catch(e){return '0.35';}})()}</span></div>
           <input type="range" min="0" max="1.0" step="0.05"
             value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_winteam_lose_gray')||'0.70');}catch(e){return 0.70;}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
@@ -432,21 +432,21 @@ window.renderCfgRecCardSection = function(_scfgD) {
 
         <!-- 밝기 조절: 패배팀의 이긴 선수 -->
         <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
-          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">💪 패배팀 패널 – 이긴 선수 원색/밝기 조절</div>
+          <div style="font-size:var(--fs-caption);font-weight:900;color:var(--text2);margin-bottom:6px">💪 패배팀 패널 – 이긴 선수 원색/밝기 조절</div>
           <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">패배팀이지만 개인전은 이긴 선수입니다. 밝기를 올리면 더 밝고 원색이 살아나고, 흑백을 낮추면 회색감이 줄어듭니다.</div>
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">원색/밝기(Brightness) <span id="cfg-rsp-ltwb-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_brightness')||'1.0').toFixed(2);}catch(e){return '1.00';}})()}x</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px">원색/밝기(Brightness) <span id="cfg-rsp-ltwb-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_brightness')||'1.0').toFixed(2);}catch(e){return '1.00';}})()}x</span></div>
           <input type="range" min="0.5" max="1.8" step="0.05"
             value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_brightness')||'1.0');}catch(e){return 1.0;}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
             oninput="document.getElementById('cfg-rsp-ltwb-v').textContent=parseFloat(this.value).toFixed(2)+'x'"
             onchange="(window.cfgSetRspLoseTeamWinBrightness||function(){})(this.value)">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-ltwo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_opacity')||'0.80').toFixed(2);}catch(e){return '0.80';}})()}</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-ltwo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_opacity')||'0.80').toFixed(2);}catch(e){return '0.80';}})()}</span></div>
           <input type="range" min="0.1" max="1.0" step="0.05"
             value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_opacity')||'0.80');}catch(e){return 0.80;}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
             oninput="document.getElementById('cfg-rsp-ltwo-v').textContent=parseFloat(this.value).toFixed(2)"
             onchange="(window.cfgSetRspLoseTeamWinOpacity||function(){})(this.value)">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">흑백(Grayscale) <span id="cfg-rsp-ltwg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_gray')||'0.15').toFixed(2);}catch(e){return '0.15';}})()}</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">흑백(Grayscale) <span id="cfg-rsp-ltwg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_gray')||'0.15').toFixed(2);}catch(e){return '0.15';}})()}</span></div>
           <input type="range" min="0" max="1.0" step="0.05"
             value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_win_gray')||'0.15');}catch(e){return 0.15;}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
@@ -456,15 +456,15 @@ window.renderCfgRecCardSection = function(_scfgD) {
 
         <!-- 연한색(Opacity) 조절: 패배팀의 진 선수 -->
         <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--border2)">
-          <div style="font-size:11px;font-weight:900;color:var(--text2);margin-bottom:6px">💔 패배팀 패널 – 진 선수 연한색 조절</div>
+          <div style="font-size:var(--fs-caption);font-weight:900;color:var(--text2);margin-bottom:6px">💔 패배팀 패널 – 진 선수 연한색 조절</div>
           <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">패배팀에서 개인전까지 진 선수(전패)의 투명도·흑백을 조절합니다.</div>
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-ltlo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_opacity')||'0.45').toFixed(2);}catch(e){return '0.45';}})()}</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px">투명도(Opacity) <span id="cfg-rsp-ltlo-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_opacity')||'0.45').toFixed(2);}catch(e){return '0.45';}})()}</span></div>
           <input type="range" min="0.1" max="1.0" step="0.05"
             value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_opacity')||'0.45');}catch(e){return 0.45;}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
             oninput="document.getElementById('cfg-rsp-ltlo-v').textContent=parseFloat(this.value).toFixed(2)"
             onchange="(window.cfgSetRspLoseTeamLoseOpacity||function(){})(this.value)">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">흑백(Grayscale) <span id="cfg-rsp-ltlg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_gray')||'0.75').toFixed(2);}catch(e){return '0.75';}})()}</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px;margin-top:6px">흑백(Grayscale) <span id="cfg-rsp-ltlg-v" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_gray')||'0.75').toFixed(2);}catch(e){return '0.75';}})()}</span></div>
           <input type="range" min="0" max="1.0" step="0.05"
             value="${(()=>{try{return parseFloat(localStorage.getItem('su_rsp_loseteam_lose_gray')||'0.75');}catch(e){return 0.75;}})()}"
             style="width:100%;max-width:260px;accent-color:var(--blue)"
@@ -474,7 +474,7 @@ window.renderCfgRecCardSection = function(_scfgD) {
 
         <!-- 네모 박스(배경/테두리) 표시 -->
         <div style="margin-bottom:10px">
-          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:700;color:var(--text2)">
+          <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:700;color:var(--text2)">
             <input type="checkbox" id="cfg-rsp-show-box" style="width:14px;height:14px"
               ${(()=>{try{return (localStorage.getItem('su_rsp_show_box')||'0')!=='0'?'checked':'';}catch(e){return '';}})()}
               onchange="(window.cfgSetRspShowBox||function(){})(this.checked)">
@@ -484,36 +484,36 @@ window.renderCfgRecCardSection = function(_scfgD) {
 
         <!-- 밝기 -->
         <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:4px">☀️ 밝기 <span id="cfg-rsp-br-v" style="font-weight:400;color:var(--gray-l)">${(()=>{ try{ return parseFloat(localStorage.getItem('su_rsp_brightness')||'1.0').toFixed(1); }catch(e){ return '1.0'; } })()}x</span></div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:4px">☀️ 밝기 <span id="cfg-rsp-br-v" style="font-weight:400;color:var(--gray-l)">${(()=>{ try{ return parseFloat(localStorage.getItem('su_rsp_brightness')||'1.0').toFixed(1); }catch(e){ return '1.0'; } })()}x</span></div>
           <input type="range" min="0.3" max="2.0" step="0.1" value="${(()=>{ try{ return parseFloat(localStorage.getItem('su_rsp_brightness')||'1.0'); }catch(e){ return 1.0; } })()}" style="width:100%;max-width:260px;accent-color:var(--blue)" oninput="document.getElementById('cfg-rsp-br-v').textContent=parseFloat(this.value).toFixed(1)+'x'" onchange="(window.cfgSetRspBrightness||function(){})(this.value)">
         </div>
 
         <!-- 이미지 효과 -->
         <div style="margin-bottom:4px">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">✨ 이미지 효과(필터)</div>
-          <select onchange="(window.cfgSetRspEffect||function(){})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:700;width:100%;max-width:200px">
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:6px">✨ 이미지 효과(필터)</div>
+          <select onchange="(window.cfgSetRspEffect||function(){})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:700;width:100%;max-width:200px">
             ${[['none','없음(기본)'],['sepia','세피아'],['warm','따뜻한 톤'],['cool','차가운 톤'],['vivid','선명하게'],['dark','어둡게'],['mono','흑백']].map(([v,l])=>{const cur=(()=>{try{return localStorage.getItem('su_rsp_effect')||'none';}catch(e){return 'none';}})();return `<option value="${v}" ${cur===v?'selected':''}>${l}</option>`;}).join('')}
           </select>
         </div>
       </div>
 
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:10px">🎨 기록 카드 양쪽 끝 색상 효과</div>
-        <div style="font-size:11px;color:var(--gray-l);margin-bottom:8px">기록 카드 좌우 끝에 A·B팀 대학 색상 그라디언트를 표시합니다. 대전기록탭·대회탭(조별리그 일정·대진표 기록·프로리그 조별리그·대진표) 기록 카드 전체에 적용됩니다.</div>
-        <div style="font-size:11px;color:#475569;margin-bottom:8px"><b>대학CK</b> / <b>프로리그 일반</b>의 양쪽 끝 색상은 바로 아래 나오는 <b>팀 버튼 색상</b> 블록에서 바꿉니다.</div>
+        <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:10px">🎨 기록 카드 양쪽 끝 색상 효과</div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">기록 카드 좌우 끝에 A·B팀 대학 색상 그라디언트를 표시합니다. 대전기록탭·대회탭(조별리그 일정·대진표 기록·프로리그 조별리그·대진표) 기록 카드 전체에 적용됩니다.</div>
+        <div style="font-size:var(--fs-caption);color:#475569;margin-bottom:8px"><b>대학CK</b> / <b>프로리그 일반</b>의 양쪽 끝 색상은 바로 아래 나오는 <b>팀 버튼 색상</b> 블록에서 바꿉니다.</div>
         <div style="display:flex;flex-direction:column;gap:10px">
-          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;font-weight:900;color:var(--text2)">
+          <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2)">
             <input type="checkbox" id="cfg-sidefx-on" style="width:15px;height:15px" ${_sfxOn?'checked':''} onchange="(window.cfgSetRecSideFxEnabled||function(){})(this.checked)">
             색상 효과 사용
           </label>
-          ${_sfxOn ? `<div id="cfg-sidefx-preview" class="grp-match-card grp-sidefx grp-sidefx--${_sfxMode}" style="${(()=>{try{if(typeof _recSideFxVarStyle==='function')return _recSideFxVarStyle('#2563eb','#a855f7',{mode:_sfxMode,intensity:_sfxInt,length:_sfxLen,tail:_sfxTail,softness:_sfxSoft,edge:_sfxEdge});}catch(e){}return '';})()}--rec-side-left-rgb:37,99,235;--rec-side-right-rgb:168,85,247;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:10px;background:var(--white);margin:0;">
-            <span style="position:relative;z-index:1;font-size:11px;font-weight:900;color:#2563eb">🔵 A팀</span>
-            <span style="position:relative;z-index:1;font-size:11px;color:var(--gray-l);font-weight:700">미리보기</span>
-            <span style="position:relative;z-index:1;font-size:11px;font-weight:900;color:#a855f7">B팀 🟣</span>
+          ${_sfxOn ? `<div id="cfg-sidefx-preview" class="grp-match-card grp-sidefx grp-sidefx--${_sfxMode}" style="${(()=>{try{if(typeof _recSideFxVarStyle==='function')return _recSideFxVarStyle('#2563eb','#a855f7',{mode:_sfxMode,intensity:_sfxInt,length:_sfxLen,tail:_sfxTail,softness:_sfxSoft,edge:_sfxEdge});}catch(e){}return '';})()}--rec-side-left-rgb:37,99,235;--rec-side-right-rgb:168,85,247;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:var(--r);background:var(--white);margin:0;">
+            <span style="position:relative;z-index:1;font-size:var(--fs-caption);font-weight:900;color:#2563eb">🔵 A팀</span>
+            <span style="position:relative;z-index:1;font-size:var(--fs-caption);color:var(--gray-l);font-weight:700">미리보기</span>
+            <span style="position:relative;z-index:1;font-size:var(--fs-caption);font-weight:900;color:#a855f7">B팀 🟣</span>
           </div>` : ''}
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <div style="font-size:11px;color:var(--text3);font-weight:800">효과 종류</div>
-            <select id="cfg-sidefx-mode" onchange="(window.cfgSetRecSideFxMode||function(){})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+            <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">효과 종류</div>
+            <select id="cfg-sidefx-mode" onchange="(window.cfgSetRecSideFxMode||function(){})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900">
               <optgroup label="── 기본 ──">
               <option value="soft" ${_sfxMode==='soft'?'selected':''}>소프트 (기본)</option>
               <option value="glow" ${_sfxMode==='glow'?'selected':''}>글로우 (발광)</option>
@@ -563,19 +563,19 @@ window.renderCfgRecCardSection = function(_scfgD) {
             </select>
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">색상 강도 <span id="cfg-sidefx-int-v" style="font-weight:400;color:var(--gray-l)">${_sfxInt}</span></div>
+            <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">색상 강도 <span id="cfg-sidefx-int-v" style="font-weight:400;color:var(--gray-l)">${_sfxInt}</span></div>
             <input type="range" id="cfg-sidefx-int" min="20" max="100" step="4" value="${_sfxInt}" oninput="document.getElementById('cfg-sidefx-int-v').textContent=this.value" onchange="(window.cfgSetRecSideFxIntensity||function(){})(this.value)" style="width:100%;max-width:260px">
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 효과 길이 <span id="cfg-sidefx-len-v" style="font-weight:400;color:var(--gray-l)">${_sfxLen}%</span></div>
+            <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 효과 길이 <span id="cfg-sidefx-len-v" style="font-weight:400;color:var(--gray-l)">${_sfxLen}%</span></div>
             <input type="range" id="cfg-sidefx-len" min="4" max="80" step="2" value="${_sfxLen}" oninput="document.getElementById('cfg-sidefx-len-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxLength||function(){})(this.value)" style="width:100%;max-width:260px">
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 끝 진하기 <span id="cfg-sidefx-tail-v" style="font-weight:400;color:var(--gray-l)">${_sfxTail}%</span></div>
+            <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">양쪽 끝 진하기 <span id="cfg-sidefx-tail-v" style="font-weight:400;color:var(--gray-l)">${_sfxTail}%</span></div>
             <input type="range" id="cfg-sidefx-tail" min="0" max="140" step="4" value="${_sfxTail}" oninput="document.getElementById('cfg-sidefx-tail-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxTail||function(){})(this.value)" style="width:100%;max-width:260px">
           </div>
           <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">연해지는 정도(부드러움) <span id="cfg-sidefx-soft-v" style="font-weight:400;color:var(--gray-l)">${_sfxSoft}%</span></div>
+            <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">연해지는 정도(부드러움) <span id="cfg-sidefx-soft-v" style="font-weight:400;color:var(--gray-l)">${_sfxSoft}%</span></div>
             <input type="range" id="cfg-sidefx-soft" min="0" max="100" step="4" value="${_sfxSoft}" oninput="document.getElementById('cfg-sidefx-soft-v').textContent=this.value+'%'" onchange="(window.cfgSetRecSideFxSoftness||function(){})(this.value)" style="width:100%;max-width:260px">
           </div>
         </div>
@@ -583,15 +583,15 @@ window.renderCfgRecCardSection = function(_scfgD) {
       ${(typeof window.buildSettingsTeamColorBlock==='function' ? window.buildSettingsTeamColorBlock() : '')}
 
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-        <div style="font-size:12px;font-weight:900;color:var(--text2);margin-bottom:6px">📄 경기 기록 페이지 크기 (한 페이지에 표시할 기록 수)</div>
-        <div style="font-size:11px;color:var(--gray-l);margin-bottom:10px">
+        <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:6px">📄 경기 기록 페이지 크기 (한 페이지에 표시할 기록 수)</div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">
           대전기록 탭·티어대회·프로리그 등 모든 기록 목록에 적용됩니다.<br>
           기본값: PC 20개 / 모바일 10개 (설정 시 PC·모바일 구분 없이 고정 적용)
         </div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <div style="font-size:11px;color:var(--text3);font-weight:800;min-width:80px">한 페이지 수</div>
-            <select id="cfg-hist-page-size" onchange="(function(v){try{if(v==='auto'){localStorage.removeItem('su_hist_page_size');}else{localStorage.setItem('su_hist_page_size',v);}try{render();}catch(e){}try{if(typeof showToast==='function')showToast('✅ 페이지 크기 변경: '+(v==='auto'?'기본(자동)':v+'개'));}catch(e){}}catch(e){}})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+            <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;min-width:80px">한 페이지 수</div>
+            <select id="cfg-hist-page-size" onchange="(function(v){try{if(v==='auto'){localStorage.removeItem('su_hist_page_size');}else{localStorage.setItem('su_hist_page_size',v);}try{render();}catch(e){}try{if(typeof showToast==='function')showToast('✅ 페이지 크기 변경: '+(v==='auto'?'기본(자동)':v+'개'));}catch(e){}}catch(e){}})(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900">
               <option value="auto" ${!(()=>{try{return localStorage.getItem('su_hist_page_size');}catch(e){return '';}})()? 'selected':''}>기본 (PC 20개 / 모바일 10개)</option>
               <option value="10" ${(()=>{try{return localStorage.getItem('su_hist_page_size')==='10';}catch(e){return false;}})()? 'selected':''}>10개씩</option>
               <option value="15" ${(()=>{try{return localStorage.getItem('su_hist_page_size')==='15';}catch(e){return false;}})()? 'selected':''}>15개씩</option>
@@ -604,7 +604,7 @@ window.renderCfgRecCardSection = function(_scfgD) {
             </select>
             <button class="btn btn-w btn-xs" onclick="localStorage.removeItem('su_hist_page_size');document.getElementById('cfg-hist-page-size').value='auto';try{render();}catch(e){}">초기화</button>
           </div>
-          <div style="font-size:11px;color:var(--gray-l);line-height:1.6">
+          <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6">
             ※ 기록 수가 많으면 30~50개, 빠른 스크롤을 원하면 20개를 권장합니다.<br>
             ※ 적용 범위: 대전기록(전체·개인전·끝장전·미니대전·시빌워·CK·대학대전·프로·티어대회·대회 등)
           </div>

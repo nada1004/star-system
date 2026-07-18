@@ -361,7 +361,7 @@ window.histExtFetchFromProxy = async function(){
   const pageLog=[];
   const logEl=document.getElementById('hist-ext-log');
   const setLog=(html)=>{ if(logEl) logEl.innerHTML=html; };
-  setLog(`<div style="font-size:11px;color:var(--gray-l)">요청 범위: ${start} ~ ${end} (bo_table=${bo})</div>`);
+  setLog(`<div style="font-size:var(--fs-caption);color:var(--gray-l)">요청 범위: ${start} ~ ${end} (bo_table=${bo})</div>`);
 
   let lastHtmlPreview='';
   for(let p=start; p<=end; p++){
@@ -394,10 +394,10 @@ window.histExtFetchFromProxy = async function(){
     pageLog.push({p, ok:true, rows:items.length, sample, minD, maxD});
 
     setLog(`
-      <div style="font-size:11px;color:var(--gray-l)">요청 범위: ${start} ~ ${end} (bo_table=${bo})</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:4px">가져온 페이지: ${pageLog.length} / ${end-start+1}</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l)">요청 범위: ${start} ~ ${end} (bo_table=${bo})</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:4px">가져온 페이지: ${pageLog.length} / ${end-start+1}</div>
       <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">
-        ${pageLog.map(x=>`<span style="border:1px solid var(--border);background:var(--surface);padding:3px 8px;border-radius:999px;font-size:11px">
+        ${pageLog.map(x=>`<span style="border:1px solid var(--border);background:var(--surface);padding:3px 8px;border-radius:999px;font-size:var(--fs-caption)">
           p${x.p}: ${x.ok ? (x.rows+'행') : '실패'}${x.minD&&x.maxD?` · ${x.minD}~${x.maxD}`:''}${x.sample ? ` · ${x.sample}`:''}
         </span>`).join('')}
       </div>
@@ -438,7 +438,7 @@ window.histExtFetchFromProxy = async function(){
         </div>
         <details style="margin-top:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:10px">
           <summary style="cursor:pointer;font-weight:900">디버그: 가져온 HTML 일부 보기</summary>
-          <pre style="white-space:pre-wrap;font-size:11px;color:var(--gray-l);margin-top:8px">${esc(lastHtmlPreview)}</pre>
+          <pre style="white-space:pre-wrap;font-size:var(--fs-caption);color:var(--gray-l);margin-top:8px">${esc(lastHtmlPreview)}</pre>
         </details>
       `;
     }
@@ -499,7 +499,7 @@ function _histExtRenderTable(items){
   const allOnPage = slice.length>0 && slice.every(x=>sel.has(_histExtKey(x)));
   const pager = `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-      <div style="font-size:12px;color:var(--gray-l);font-weight:900">
+      <div style="font-size:var(--fs-sm);color:var(--gray-l);font-weight:900">
         ${items.length}경기 · ${page}/${totalPages} 페이지 · (페이지당 ${_HIST_EXT_PAGE_SIZE})
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -512,7 +512,7 @@ function _histExtRenderTable(items){
   `;
   out.innerHTML= pager + `
     <div style="overflow:auto;border:1px solid var(--border);border-radius:12px;background:var(--white)">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <table style="width:100%;border-collapse:collapse;font-size:var(--fs-sm)">
         <thead>
           <tr style="background:var(--surface);color:var(--text3);font-weight:900">
             <th style="padding:10px;text-align:left;white-space:nowrap;width:34px"><input type="checkbox" ${allOnPage?'checked':''} onchange="histExtSelPage(this.checked)" /></th>
@@ -535,10 +535,10 @@ function _histExtRenderTable(items){
             return `
               <tr style="border-top:1px solid var(--border)">
                 <td style="padding:10px;white-space:nowrap"><input type="checkbox" ${on?'checked':''} onchange="histExtToggleSel('${k.replace(/'/g,"\\'")}')" /></td>
-                <td style="padding:10px;white-space:nowrap;color:var(--gray-l);font-size:11px;font-weight:900">${x.source?esc(x.source):''}</td>
+                <td style="padding:10px;white-space:nowrap;color:var(--gray-l);font-size:var(--fs-caption);font-weight:900">${x.source?esc(x.source):''}</td>
                 <td style="padding:10px;white-space:nowrap;font-weight:900">${x.date}</td>
-                <td style="padding:10px"><span style="display:inline-flex;align-items:center;gap:6px"><span style="font-size:11px;font-weight:1000;padding:2px 7px;border-radius:999px;background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.28);color:#166534">승</span><span style="font-weight:1000">${w}</span></span></td>
-                <td style="padding:10px"><span style="display:inline-flex;align-items:center;gap:6px"><span style="font-size:11px;font-weight:1000;padding:2px 7px;border-radius:999px;background:rgba(220,38,38,.10);border:1px solid rgba(220,38,38,.25);color:#7f1d1d">패</span><span style="font-weight:900;color:var(--text2)">${l}</span></span></td>
+                <td style="padding:10px"><span style="display:inline-flex;align-items:center;gap:6px"><span style="font-size:var(--fs-caption);font-weight:1000;padding:2px 7px;border-radius:999px;background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.28);color:#166534">승</span><span style="font-weight:1000">${w}</span></span></td>
+                <td style="padding:10px"><span style="display:inline-flex;align-items:center;gap:6px"><span style="font-size:var(--fs-caption);font-weight:1000;padding:2px 7px;border-radius:999px;background:rgba(220,38,38,.10);border:1px solid rgba(220,38,38,.25);color:#7f1d1d">패</span><span style="font-weight:900;color:var(--text2)">${l}</span></span></td>
                 <td style="padding:10px;color:var(--text3);font-weight:700">${x.map||''}</td>
                 <td style="padding:10px;white-space:nowrap">${x.elo||''}</td>
                 <td style="padding:10px;color:var(--gray-l)">${x.type||''}</td>
@@ -572,24 +572,24 @@ function histExternalHTML(){
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
       <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px">
         <div style="font-weight:900">0) 프록시 URL로 자동 가져오기</div>
-        <div id="hist-ext-prog" style="font-size:11px;color:var(--gray-l)"></div>
+        <div id="hist-ext-prog" style="font-size:var(--fs-caption);color:var(--gray-l)"></div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
         <div class="flabel">프리셋</div>
-        <select id="hist-ext-preset" onchange="histExtPresetSelect(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:160px">
+        <select id="hist-ext-preset" onchange="histExtPresetSelect(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900;min-width:160px">
           ${presets.map(p=>`<option value="${p.id}"${p.id===selPresetId?' selected':''}>${esc(p.name||'')}</option>`).join('')}
         </select>
         <button class="btn btn-w btn-xs" onclick="histExtPresetAdd()">+ 추가</button>
         <button class="btn btn-w btn-xs" onclick="histExtPresetRename()">이름변경</button>
         <button class="btn btn-b btn-xs" onclick="histExtPresetSaveCurrent()">저장</button>
         <button class="btn btn-r btn-xs" onclick="histExtPresetDelete()">삭제</button>
-        <span style="font-size:11px;color:var(--gray-l)">※ 선택 후 URL로 가져오기</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 선택 후 URL로 가져오기</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
         <div class="flabel">빠른 URL</div>
         <input id="hist-ext-quickurl" placeholder="예: https://elo-proxy1.kpoppd.workers.dev/board.php?bo_table=bj_board&page=1&page=2" style="flex:1;min-width:260px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
         <button class="btn btn-w btn-xs" onclick="histExtApplyQuickUrl()">자동 입력</button>
-        <span style="font-size:11px;color:var(--gray-l)"></span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)"></span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div class="flabel">프록시</div>
@@ -602,7 +602,7 @@ function histExternalHTML(){
         <input id="hist-ext-pageTo" type="number" value="${(pCfg.pTo||6)}" min="1" style="width:78px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px">
         <button class="btn btn-b" onclick="histExtFetchFromProxy()">URL로 가져오기</button>
       </div>
-      <div style="margin-top:8px;font-size:11px;color:var(--gray-l)"></div>
+      <div style="margin-top:8px;font-size:var(--fs-caption);color:var(--gray-l)"></div>
       <div id="hist-ext-log" style="margin-top:8px"></div>
       <details style="margin-top:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:10px">
         <summary style="cursor:pointer;font-weight:1000">1) 붙여넣기</summary>
@@ -611,9 +611,9 @@ function histExternalHTML(){
           <button class="btn btn-w btn-xs" onclick="histExtParseAndRender()">🔎 외부탭으로 인식/추가</button>
           <button class="btn btn-p btn-xs" onclick="histExtInputToPasteModal()">➡️ 선택한 저장대상으로 자동인식</button>
           <button class="btn btn-w btn-xs" onclick="histExtClear()">🗑️ 데이터 초기화</button>
-          <span style="font-size:11px;color:var(--gray-l)">형식: 날짜\t승자\t패자\t맵\tELO\t경기방식\t메모</span>
+          <span style="font-size:var(--fs-caption);color:var(--gray-l)">형식: 날짜\t승자\t패자\t맵\tELO\t경기방식\t메모</span>
         </div>
-        <textarea id="hist-ext-raw" style="width:100%;min-height:140px;border:1px solid var(--border2);border-radius:10px;padding:10px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;margin-top:8px" placeholder="여기에 TSV/CSV를 붙여넣으면 자동으로 인식해서 표에 추가합니다.">${(st.raw||'').replace(/</g,'&lt;')}</textarea>
+        <textarea id="hist-ext-raw" style="width:100%;min-height:140px;border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:var(--fs-sm);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;margin-top:8px" placeholder="여기에 TSV/CSV를 붙여넣으면 자동으로 인식해서 표에 추가합니다.">${(st.raw||'').replace(/</g,'&lt;')}</textarea>
       </details>
     </div>
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px">
@@ -622,7 +622,7 @@ function histExternalHTML(){
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-w btn-xs" onclick="histExtCopy()">전체 복사(현재 보기)</button>
           <button class="btn btn-w btn-xs" onclick="histExtClearAll()">🗑️ 전체 삭제</button>
-          <select id="hist-ext-target" style="padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+          <select id="hist-ext-target" style="padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900">
             <option value="" ${!tSel?'selected':''}>(저장대상 선택)</option>
             <option value="mini" ${tSel==='mini'?'selected':''}>미니대전</option>
             <option value="ind" ${tSel==='ind'?'selected':''}>개인전</option>
@@ -635,9 +635,9 @@ function histExternalHTML(){
           <button class="btn btn-p btn-xs" onclick="histExtSendToPasteModal()">선택 → 자동인식 열기</button>
         </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:-2px 0 8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface)">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:-2px 0 8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface)">
         <div class="flabel">🔎 검색</div>
-        <select id="hist-ext-srcsel" onchange="histExtSetSource(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900;min-width:140px">
+        <select id="hist-ext-srcsel" onchange="histExtSetSource(this.value)" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900;min-width:140px">
           <option value=""${!srcSel?' selected':''}>전체</option>
           ${srcOptions.map(s=>`<option value="${esc(s)}"${s===srcSel?' selected':''}>${esc(s)}</option>`).join('')}
         </select>
@@ -645,14 +645,14 @@ function histExternalHTML(){
           onkeydown="if(event.key==='Enter'){histExtSetKeyword(this.value)}">
         <button class="btn btn-w btn-xs" onclick="histExtSetKeyword(document.getElementById('hist-ext-keyword').value)">적용</button>
         <button class="btn btn-w btn-xs" onclick="histExtClearKeyword()">초기화</button>
-        <span style="margin-left:auto;font-size:11px;color:var(--gray-l)">※ 현재 보기(미리보기)만 필터</span>
+        <span style="margin-left:auto;font-size:var(--fs-caption);color:var(--gray-l)">※ 현재 보기(미리보기)만 필터</span>
       </div>
-      <div id="hist-ext-hint" style="font-size:11px;color:var(--gray-l);margin:-2px 0 8px"></div>
+      <div id="hist-ext-hint" style="font-size:var(--fs-caption);color:var(--gray-l);margin:-2px 0 8px"></div>
       <div style="display:grid;grid-template-columns:repeat(4, minmax(0,1fr));gap:6px;margin-bottom:8px">
-        <div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface)"><div style="font-size:11px;color:var(--gray-l);font-weight:900">형식</div><div style="font-size:13px;font-weight:1000" id="hist-ext-fmt">-</div></div>
-        <div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface)"><div style="font-size:11px;color:var(--gray-l);font-weight:900">가져온 행(원본)</div><div style="font-size:13px;font-weight:1000" id="hist-ext-cnt-raw">0</div></div>
-        <div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface)"><div style="font-size:11px;color:var(--gray-l);font-weight:900">중복 제거 후</div><div style="font-size:13px;font-weight:1000" id="hist-ext-cnt">0</div></div>
-        <div style="border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--surface)"><div style="font-size:11px;color:var(--gray-l);font-weight:900">저장됨(누적)</div><div style="font-size:13px;font-weight:1000" id="hist-ext-cnt-store">${(st.items||[]).length}</div></div>
+        <div style="border:1px solid var(--border);border-radius:var(--r);padding:8px;background:var(--surface)"><div style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">형식</div><div style="font-size:var(--fs-base);font-weight:1000" id="hist-ext-fmt">-</div></div>
+        <div style="border:1px solid var(--border);border-radius:var(--r);padding:8px;background:var(--surface)"><div style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">가져온 행(원본)</div><div style="font-size:var(--fs-base);font-weight:1000" id="hist-ext-cnt-raw">0</div></div>
+        <div style="border:1px solid var(--border);border-radius:var(--r);padding:8px;background:var(--surface)"><div style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">중복 제거 후</div><div style="font-size:var(--fs-base);font-weight:1000" id="hist-ext-cnt">0</div></div>
+        <div style="border:1px solid var(--border);border-radius:var(--r);padding:8px;background:var(--surface)"><div style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900">저장됨(누적)</div><div style="font-size:var(--fs-base);font-weight:1000" id="hist-ext-cnt-store">${(st.items||[]).length}</div></div>
       </div>
       <div id="hist-ext-out"></div>
     </div>
@@ -744,18 +744,18 @@ function histExternal2HTML(){
         <div style="font-weight:900">🌐 외부2 (관리자 전용)</div>
         <a class="btn btn-w btn-xs" href="${url}" target="_blank" rel="noopener noreferrer" style="text-decoration:none">새 창으로 열기</a>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px;line-height:1.5">
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px;line-height:1.5">
         ※ 외부 사이트가 <b>X-Frame-Options / CSP</b>로 iframe을 차단하면 화면에 표시되지 않을 수 있습니다. (그 경우 ‘새 창으로 열기’만 가능)
       </div>
     </div>
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
       <div style="font-weight:900;margin-bottom:8px">📋 특정 경기만 복사 → 자동인식</div>
-      <div style="font-size:11px;color:var(--gray-l);line-height:1.55;margin-bottom:8px">
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.55;margin-bottom:8px">
         외부2 화면이나 새 창에서 <b>원하는 경기 몇 개만 드래그 복사</b>한 뒤 여기에 붙여넣고 자동인식을 누르면 됩니다.<br>
         표 형태(날짜/승자/패자/맵)면 자동 정리해서 보내고, 아니면 원문 그대로 자동인식 모달에 넘깁니다.
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-        <select id="hist-ext2-target" style="padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+        <select id="hist-ext2-target" style="padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900">
           <option value="" ${!tSel?'selected':''}>(저장대상 선택)</option>
           <option value="mini" ${tSel==='mini'?'selected':''}>미니대전</option>
           <option value="ind" ${tSel==='ind'?'selected':''}>개인전</option>
@@ -778,11 +778,11 @@ function histExternal2HTML(){
         <button class="btn btn-w btn-xs" onclick="histExt2PasteFromClipboard()">📋 클립보드 붙여넣기</button>
         <button class="btn btn-p btn-xs" onclick="histExt2SendRawToPasteModal()">➡️ 자동인식 열기</button>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin:-2px 0 8px 0;line-height:1.5">
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin:-2px 0 8px 0;line-height:1.5">
         ※ 프로리그 일반/끝장전, 프로리그 대회 64강~결승, 티어대회 일반/조별리그/토너먼트까지 선택 가능하게 연결했습니다.<br>
         ※ 프로리그 대회 저장은 현재 선택된 프로리그 대회 기준으로 들어갑니다.
       </div>
-      <textarea id="hist-ext2-raw" style="width:100%;min-height:110px;border:1px solid var(--border2);border-radius:10px;padding:10px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace" placeholder="예: 특정 경기 몇 개만 선택 복사한 텍스트"></textarea>
+      <textarea id="hist-ext2-raw" style="width:100%;min-height:110px;border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:var(--fs-sm);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace" placeholder="예: 특정 경기 몇 개만 선택 복사한 텍스트"></textarea>
     </div>
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);overflow:hidden">
       <iframe src="${url}" style="width:100%;height:72vh;min-height:520px;border:0;display:block;background:#fff" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
@@ -820,24 +820,24 @@ function histExternal3HTML(){
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
         <button class="btn btn-w btn-xs" onclick="histExt3SetPage((parseInt(document.getElementById('hist-ext3-page').value||'1',10)||1)-1)">◀ 이전</button>
-        <div style="font-size:12px;font-weight:900;color:var(--text2)">페이지</div>
+        <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2)">페이지</div>
         <input id="hist-ext3-page" type="number" min="1" value="${page}" style="width:92px;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-weight:900" onkeydown="if(event.key==='Enter'){histExt3SetPage(this.value)}">
         <button class="btn btn-b btn-xs" onclick="histExt3SetPage(document.getElementById('hist-ext3-page').value)">이동</button>
         <button class="btn btn-w btn-xs" onclick="histExt3SetPage((parseInt(document.getElementById('hist-ext3-page').value||'1',10)||1)+1)">다음 ▶</button>
-        <span style="font-size:11px;color:var(--gray-l)">※ iframe은 1페이지만 표시됩니다(페이지 이동으로 2/3/… 확인)</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ iframe은 1페이지만 표시됩니다(페이지 이동으로 2/3/… 확인)</span>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px;line-height:1.5">
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px;line-height:1.5">
         ※ 외부 사이트가 <b>X-Frame-Options / CSP</b>로 iframe을 차단하면 화면에 표시되지 않을 수 있습니다.
       </div>
     </div>
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);padding:12px;margin-bottom:10px">
       <div style="font-weight:900;margin-bottom:8px">📋 외부3 복사 → 자동인식</div>
-      <div style="font-size:11px;color:var(--gray-l);line-height:1.55;margin-bottom:8px">
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.55;margin-bottom:8px">
         외부3 화면이나 새 창에서 <b>원하는 경기만 드래그 복사</b>한 뒤 여기에 붙여넣고 자동인식을 누르면 됩니다.<br>
         표 형태면 자동 정리해서 보내고, 아니면 원문 그대로 자동인식 모달에 넘깁니다.
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-        <select id="hist-ext3-target" style="padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:900">
+        <select id="hist-ext3-target" style="padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900">
           <option value="" ${!tSel?'selected':''}>(저장대상 선택)</option>
           <option value="mini" ${tSel==='mini'?'selected':''}>미니대전</option>
           <option value="ind" ${tSel==='ind'?'selected':''}>개인전</option>
@@ -850,7 +850,7 @@ function histExternal3HTML(){
         <button class="btn btn-w btn-xs" onclick="histExt3PasteFromClipboard()">📋 클립보드 붙여넣기</button>
         <button class="btn btn-p btn-xs" onclick="histExt3SendRawToPasteModal()">➡️ 자동인식 열기</button>
       </div>
-      <textarea id="hist-ext3-raw" style="width:100%;min-height:110px;border:1px solid var(--border2);border-radius:10px;padding:10px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace" placeholder="예: 외부3에서 특정 경기만 선택 복사한 텍스트"></textarea>
+      <textarea id="hist-ext3-raw" style="width:100%;min-height:110px;border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:var(--fs-sm);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace" placeholder="예: 외부3에서 특정 경기만 선택 복사한 텍스트"></textarea>
     </div>
     <div style="border:1px solid var(--border);border-radius:12px;background:var(--white);overflow:hidden">
       <iframe id="hist-ext3-frame" src="${url}" style="width:100%;height:72vh;min-height:520px;border:0;display:block;background:#fff" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>

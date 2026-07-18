@@ -10,35 +10,35 @@
     '.dr-shell{display:flex;flex-direction:column;gap:14px}',
     '.dr-card{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);border-radius:24px;box-shadow:0 18px 38px rgba(15,23,42,.07),inset 0 1px 0 rgba(255,255,255,.9)}',
     '.dr-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 20px}',
-    '.dr-hero-title{font-size:18px;font-weight:950;letter-spacing:-.03em;color:var(--text1)}',
-    '.dr-hero-desc{margin-top:5px;font-size:12px;line-height:1.6;color:var(--text3)}',
+    '.dr-hero-title{font-size:var(--fs-lg);font-weight:950;letter-spacing:-.03em;color:var(--text1)}',
+    '.dr-hero-desc{margin-top:5px;font-size:var(--fs-sm);line-height:1.6;color:var(--text3)}',
     '.dr-badge-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}',
-    '.dr-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.88);border:1px solid rgba(148,163,184,.16);font-size:11px;font-weight:900;color:var(--text2);box-shadow:0 10px 18px rgba(15,23,42,.04)}',
+    '.dr-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.88);border:1px solid rgba(148,163,184,.16);font-size:var(--fs-caption);font-weight:900;color:var(--text2);box-shadow:0 10px 18px rgba(15,23,42,.04)}',
     '.dr-setup{background:transparent;border:none;border-radius:0;padding:0;margin:0}',
     '.dr-setup-panel{padding:0 20px 18px}',
     '.dr-pool-wrap{position:relative;overflow:hidden;border-radius:24px;border:1px solid rgba(148,163,184,.18);box-shadow:0 20px 38px rgba(15,23,42,.12),inset 0 1px 0 rgba(255,255,255,.7)}',
     '.dr-pool-inner{position:relative;height:100%}',
     '.dr-duck-el{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);pointer-events:none;transition:left 0s}',
     '.dr-duck-emoji{font-size:30px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));display:inline-block;transform:scaleX(-1)}',
-    '.dr-duck-name{font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);white-space:nowrap;max-width:72px;overflow:hidden;text-overflow:ellipsis;text-align:center;background:rgba(0,0,0,.28);padding:1px 4px;border-radius:4px;margin-top:1px}',
+    '.dr-duck-name{font-size:var(--fs-caption);font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);white-space:nowrap;max-width:72px;overflow:hidden;text-overflow:ellipsis;text-align:center;background:rgba(0,0,0,.28);padding:1px 4px;border-radius:4px;margin-top:1px}',
     '.dr-finish-flag{position:absolute;top:0;display:flex;flex-direction:column;pointer-events:none}',
     '.dr-race-panel{padding:16px 18px 18px}',
     '.dr-race-meta{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}',
     '.dr-race-title{font-size:16px;font-weight:950;color:var(--text1);letter-spacing:-.02em}',
-    '.dr-race-desc{margin-top:4px;font-size:12px;line-height:1.55;color:var(--text3)}',
+    '.dr-race-desc{margin-top:4px;font-size:var(--fs-sm);line-height:1.55;color:var(--text3)}',
     '.dr-progress-panel{margin-top:12px;background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(248,250,252,.82));border:1px solid rgba(148,163,184,.18);border-radius:18px;padding:12px 14px;box-shadow:0 12px 24px rgba(15,23,42,.05)}',
     '.dr-rank-board{margin-top:10px;display:flex;flex-wrap:wrap;gap:7px;padding:2px}',
-    '.dr-rank-chip{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.88);font-weight:800;font-size:12px;box-shadow:0 8px 18px rgba(15,23,42,.04)}',
+    '.dr-rank-chip{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.88);font-weight:800;font-size:var(--fs-sm);box-shadow:0 8px 18px rgba(15,23,42,.04)}',
     '.dr-rank-chip.is-finished{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fbbf24;color:#78350f}',
     '.dr-result-card{background:linear-gradient(135deg,#FFF0F3,#FFF8FA);border:1px solid rgba(251,113,133,.28);border-radius:24px;padding:22px 24px;text-align:center;margin-top:14px;animation:drPopIn .4s cubic-bezier(.175,.885,.32,1.35);box-shadow:0 20px 36px rgba(244,63,94,.12)}',
     '.dr-result-trophy{font-size:52px;display:block;margin-bottom:4px}',
     '.dr-result-winner{font-size:clamp(22px,5vw,36px);font-weight:900;color:#C0274A;margin:6px 0 12px;word-break:keep-all}',
-    '.dr-result-rank{font-size:13px;color:var(--text2);margin-bottom:16px;line-height:2;text-align:left;background:var(--white);border-radius:10px;padding:8px 14px;border:1px solid var(--border)}',
+    '.dr-result-rank{font-size:var(--fs-base);color:var(--text2);margin-bottom:16px;line-height:2;text-align:left;background:var(--white);border-radius:var(--r);padding:8px 14px;border:1px solid var(--border)}',
     '.dr-btn-primary{background:linear-gradient(135deg,#fb7185,#f43f5e 52%,#ec4899);color:#fff;border:none;border-radius:999px;padding:12px 28px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 7px 0 #9f1239,0 18px 30px rgba(244,63,94,.22);transition:transform .1s,box-shadow .1s;font-family:inherit}',
     '.dr-btn-primary:active{transform:translateY(3px);box-shadow:0 1px 0 #C0274A}',
-    '.dr-btn-secondary{background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);border:1px solid rgba(148,163,184,.22);border-radius:14px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.1s;box-shadow:0 10px 18px rgba(15,23,42,.04)}',
+    '.dr-btn-secondary{background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);border:1px solid rgba(148,163,184,.22);border-radius:14px;padding:9px 16px;font-size:var(--fs-base);font-weight:700;cursor:pointer;font-family:inherit;transition:.1s;box-shadow:0 10px 18px rgba(15,23,42,.04)}',
     '.dr-btn-secondary:hover{border-color:var(--text3)}',
-    '.dr-ev-badge{position:absolute;background:rgba(255,255,80,.92);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700;color:#333;pointer-events:none;animation:drBadgePop 1.6s ease forwards;white-space:nowrap;z-index:10}',
+    '.dr-ev-badge{position:absolute;background:rgba(255,255,80,.92);border-radius:6px;padding:2px 7px;font-size:var(--fs-caption);font-weight:700;color:#333;pointer-events:none;animation:drBadgePop 1.6s ease forwards;white-space:nowrap;z-index:10}',
     '.dr-history-card{margin-top:2px;padding:14px 16px}',
     '.dr-hist-item{cursor:pointer;padding:10px 12px;background:linear-gradient(180deg,#fff,#f8fafc);border-radius:14px;border:1px solid rgba(148,163,184,.18);transition:.1s;box-shadow:0 8px 18px rgba(15,23,42,.04)}',
     '.dr-hist-item:hover{border-color:#2aace0;transform:translateY(-1px)}',
@@ -121,17 +121,17 @@ function _drRenderHistory() {
     }).join('');
     return '<div class="dr-hist-item" onclick="_drToggleHistDetail(' + i + ')">'
       + '<div style="display:flex;align-items:center;gap:8px">'
-      + '<span style="color:var(--text3);font-size:11px;min-width:88px;flex-shrink:0">' + h.time + '</span>'
+      + '<span style="color:var(--text3);font-size:var(--fs-caption);min-width:88px;flex-shrink:0">' + h.time + '</span>'
       + '<span style="font-weight:800;color:#C0274A;flex:1">' + h.winner + ' 🏆</span>'
-      + '<span style="color:var(--text3);font-size:11px">' + h.participants + '명 ▾</span>'
+      + '<span style="color:var(--text3);font-size:var(--fs-caption)">' + h.participants + '명 ▾</span>'
       + '</div>'
       + '<div id="dr-hist-d-' + i + '" class="dr-hist-detail">' + rankRows + '</div>'
       + '</div>';
   }).join('');
   return '<div class="dr-card dr-history-card">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-    + '<div style="font-size:12px;font-weight:800;color:var(--text2)">📋 최근 경주 결과 <span style="color:var(--text3);font-weight:400">(클릭하면 전체 순위)</span></div>'
-    + '<button onclick="_drClearHistory()" class="dr-btn-secondary" style="font-size:11px;padding:3px 8px">전체 삭제</button>'
+    + '<div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">📋 최근 경주 결과 <span style="color:var(--text3);font-weight:400">(클릭하면 전체 순위)</span></div>'
+    + '<button onclick="_drClearHistory()" class="dr-btn-secondary" style="font-size:var(--fs-caption);padding:3px 8px">전체 삭제</button>'
     + '</div>'
     + '<div style="display:flex;flex-direction:column;gap:7px">' + rows + '</div></div>';
 }
@@ -174,15 +174,15 @@ function _drRenderSetup(root, saved) {
     + '</div>'
     + '</div>'
     + '<div class="dr-setup-panel">'
-    + '<div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px">🐥 참가자 이름 (쉼표 구분, 2~12명)</div>'
+    + '<div style="font-size:var(--fs-base);font-weight:700;color:var(--text2);margin-bottom:8px">🐥 참가자 이름 (쉼표 구분, 2~12명)</div>'
     + '<textarea id="dr-names-ta" rows="3" oninput="_drSaveNames(this.value)"'
-    + ' style="width:100%;border:1px solid rgba(148,163,184,.24);border-radius:18px;padding:12px 14px;font-size:15px;line-height:1.7;resize:none;color:var(--text1);background:linear-gradient(180deg,#fff,#f8fafc);font-family:inherit;box-sizing:border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)"'
+    + ' style="width:100%;border:1px solid rgba(148,163,184,.24);border-radius:18px;padding:12px 14px;font-size:var(--fs-md);line-height:1.7;resize:none;color:var(--text1);background:linear-gradient(180deg,#fff,#f8fafc);font-family:inherit;box-sizing:border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)"'
     + ' placeholder="예: 김스타, 이스타, 박스타">' + saved + '</textarea>'
     + '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
     + '<button onclick="document.getElementById(\'dr-names-ta\').value=\'\';_drSaveNames(\'\')" class="dr-btn-secondary">🗑 지우기</button>'
     + '</div>'
     + '<div style="text-align:center;padding:12px 0 2px">'
-    + '<button onclick="_drBeginRace()" class="dr-btn-primary" style="font-size:18px;padding:14px 44px">🚀 경주 시작!</button>'
+    + '<button onclick="_drBeginRace()" class="dr-btn-primary" style="font-size:var(--fs-lg);padding:14px 44px">🚀 경주 시작!</button>'
     + '</div>'
     + '</div>'
     + '</div>'
@@ -253,7 +253,7 @@ function _drRenderRace(root) {
     + '<div class="dr-race-title">🏁 프리미엄 레이스 보드</div>'
     + '<div class="dr-race-desc">선두 오리와 진행률, 실시간 순위를 한눈에 볼 수 있도록 정리한 레이스 화면입니다.</div>'
     + '</div>'
-    + '<button onclick="_drResetRace()" class="dr-btn-secondary" style="font-size:12px;padding:7px 14px">🔄 다시하기</button>'
+    + '<button onclick="_drResetRace()" class="dr-btn-secondary" style="font-size:var(--fs-sm);padding:7px 14px">🔄 다시하기</button>'
     + '</div>'
     + '<div class="dr-pool-wrap" id="dr-pool-wrap" style="width:' + viewW + 'px;height:' + canvasH + 'px">'
     + '<canvas id="dr-bg-canvas" style="position:absolute;top:0;left:0;display:block"></canvas>'
@@ -262,10 +262,10 @@ function _drRenderRace(root) {
     // 진행도 바
     + '<div class="dr-progress-panel">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">'
-    + '<div id="dr-status" style="font-size:13px;font-weight:700;color:var(--text2)">🏁 경주 중!</div>'
+    + '<div id="dr-status" style="font-size:var(--fs-base);font-weight:700;color:var(--text2)">🏁 경주 중!</div>'
     + '<span class="dr-badge">🌊 랜덤 이벤트 진행 중</span>'
     + '</div>'
-    + '<div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px" id="dr-progress-label">🥇 선두 진행률 0%</div>'
+    + '<div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:4px" id="dr-progress-label">🥇 선두 진행률 0%</div>'
     + '<div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden">'
     + '<div id="dr-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#2aace0,#38bdf8);border-radius:6px;transition:width .1s"></div>'
     + '</div>'
@@ -555,7 +555,7 @@ function _drShowResult(winner) {
     var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':((i+1)+'위');
     return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0">'
       + '<span style="font-weight:900;min-width:28px">' + medal + '</span>'
-      + '<span style="font-size:18px">' + d.emoji + '</span>'
+      + '<span style="font-size:var(--fs-lg)">' + d.emoji + '</span>'
       + '<span style="font-weight:700;font-size:14px">' + d.name + '</span>'
       + '</div>';
   }).join('');
@@ -577,7 +577,7 @@ function _drShowResult(winner) {
     card.id = 'dr-result-overlay';
     card.innerHTML =
       '<span class="dr-result-trophy">🏆</span>'
-      + '<div style="font-size:13px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:6px">🎉 경주 결과!</div>'
+      + '<div style="font-size:var(--fs-base);font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:6px">🎉 경주 결과!</div>'
       + '<div class="dr-result-winner">' + winner.emoji + ' ' + winner.name + '</div>'
       + '<div class="dr-result-rank">' + rankLines + '</div>'
       + '<button onclick="_drResetRace()" class="dr-btn-primary">🔄 다시하기</button>';

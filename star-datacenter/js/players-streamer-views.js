@@ -147,7 +147,7 @@ function rTotal(C,T){
     ${totalViewMode==='table'?(isLoggedIn?`<span style="color:var(--border2);align-self:center">│</span><button class="pill ${_bulkEditMode?'on edit-on':''}" onclick="toggleBulkEditMode()">일괄 수정</button>`:''):''}
     ${totalViewMode==='table'?(isLoggedIn?`<button class="pill" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
     ${_showBulk&&totalViewMode==='table'?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
-      <button id="bulk-edit-apply-btn" onclick="openBulkEditModal()" style="padding:4px 12px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;cursor:pointer;display:${_bulkEditSelected.size>0?'inline-flex':'none'};align-items:center;gap:4px">✏️ <span id="bulk-edit-cnt">${_bulkEditSelected.size}</span>명 수정</button>
+      <button id="bulk-edit-apply-btn" onclick="openBulkEditModal()" style="padding:4px 12px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:${_bulkEditSelected.size>0?'inline-flex':'none'};align-items:center;gap:4px">✏️ <span id="bulk-edit-cnt">${_bulkEditSelected.size}</span>명 수정</button>
       <input type="text" value="${(_bulkEditSearch||'').replace(/"/g,'&quot;')}" placeholder="선택 모드 내 검색..."
         oncompositionstart="window._tsComp2=true"
         oncompositionend="window._tsComp2=false;_bulkEditSearch=this.value;bulkApplySearchFilter()"
@@ -466,12 +466,12 @@ function rTotal(C,T){
         ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onclick="event.stopPropagation()" onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
         <td style="text-align:center;white-space:nowrap;padding:5px 4px">
           <div class="streamer-rank-box">
-          <div style="font-size:11px;font-weight:900;color:var(--text2);line-height:1.2">${_pRank||'-'}</div>
+          <div style="font-size:var(--fs-caption);font-weight:900;color:var(--text2);line-height:1.2">${_pRank||'-'}</div>
           <div>${_pChange}</div>
           </div>
         </td>
         <td class="streamer-td-tier" style="text-align:center;white-space:nowrap;padding:7px 10px">${getTierBadge(p.tier)}</td>
-        <td class="streamer-td-race col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:11px">${p.race||'?'}</span></td>
+        <td class="streamer-td-race col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 8px"><span class="rbadge r${p.race}" style="font-size:var(--fs-caption)">${p.race||'?'}</span></td>
         <td style="text-align:left;padding:6px 12px;white-space:nowrap">
           <span class="streamer-player-cell">
             ${p.photo?`<span class="streamer-avatar" data-tp-action="open-player" data-tp-player="${_pAttr}" title="스트리머 상세">${p.race||'?'}<img ${_imgLoadAttr} decoding="async" src="${toThumbUrl(p.photo,72)}" data-orig="${toHttpsUrl(p.photo)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="_thumbFallback(this)"></span>`:`<span class="streamer-avatar">${p.race||'?'}</span>`}
@@ -488,7 +488,7 @@ function rTotal(C,T){
           ${games?wr+'%':'-'}${games?`<span style="font-size:9px;color:var(--gray-l);font-weight:400">${games}전</span>`:''}
           </div>
         </td>
-        <td class="col-hide-mobile ${pC(points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${pS(points)}</td>
+        <td class="col-hide-mobile ${pC(points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base);cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${pS(points)}</td>
         <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}"><span class="streamer-elo-chip" style="color:${elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${elo}</span></td>
         <td class="col-hide-mobile" style="text-align:center;padding:7px 4px"></td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="event.stopPropagation();openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
@@ -625,9 +625,9 @@ function _buildGalleryView(rankMap){
     const _uSafe=(typeof escJS==='function') ? escJS(u.name||'') : String(u.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n');
     html+=`<div class="streamer-gallery-head" data-gallery-univ-header="${u.name}" style="background:${_gFinalBgStyle};background-size:${_gFinalBgSize};background-position:${_gFinalBgPos};background-repeat:no-repeat;margin-top:6px;">
       ${_gHdrTextPos === 'left' ? _gTextHtml : ''}
-      <span class="ubadge streamer-gallery-univ clickable-univ" data-icon-done="1" onclick="event.stopPropagation();openUnivModal('${_uSafe}')" style="color:#fff;display:inline-flex;align-items:center;gap:4px;font-size:12px">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','20px'):'20px'))}${u.name}</span>
+      <span class="ubadge streamer-gallery-univ clickable-univ" data-icon-done="1" onclick="event.stopPropagation();openUnivModal('${_uSafe}')" style="color:#fff;display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-sm)">${gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','20px'):'20px'))}${u.name}</span>
       ${_gHdrTextPos === 'center' ? _gTextHtml : ''}
-      <span style="font-size:11px;color:rgba(255,255,255,.85);font-weight:700;position:relative;z-index:1">${up.length}명</span>
+      <span style="font-size:var(--fs-caption);color:rgba(255,255,255,.85);font-weight:700;position:relative;z-index:1">${up.length}명</span>
       ${_gHdrTextPos === 'right' ? _gTextHtml : ''}
     </div>`;
     sorted.forEach(p=>{
@@ -794,8 +794,8 @@ function _buildSimpleView(rankMap){
     '.streamer-focus-card2-name{font-size:24px;font-weight:950;letter-spacing:-.02em;color:var(--text1);margin-bottom:8px}',
     '.streamer-focus-card2-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 2px;border-bottom:1px dashed rgba(148,163,184,.38)}',
     '.streamer-focus-card2-row:last-child{border-bottom:none}',
-    '.streamer-focus-card2-label{font-size:13px;font-weight:700;color:var(--text3)}',
-    '.streamer-focus-card2-value{font-size:15px;font-weight:900;color:var(--text1);text-align:right}',
+    '.streamer-focus-card2-label{font-size:var(--fs-base);font-weight:700;color:var(--text3)}',
+    '.streamer-focus-card2-value{font-size:var(--fs-md);font-weight:900;color:var(--text1);text-align:right}',
     '.streamer-focus-card2-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}',
     '.streamer-focus-card2-photo2{margin-top:10px;border-radius:22px;overflow:hidden;position:relative;width:100%;aspect-ratio:3/2;background:#e2e8f0;border-top:1px solid rgba(148,163,184,.18);border-right:1px solid rgba(148,163,184,.18);border-bottom:1px solid rgba(148,163,184,.18);border-left:none;box-shadow:0 16px 32px rgba(15,23,42,.08);transition:aspect-ratio .18s ease}',
     '.streamer-focus-card2-photo2 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}',
@@ -814,10 +814,10 @@ function _buildSimpleView(rankMap){
     '.sfp2-cross{position:absolute;width:18px;height:18px;border-radius:999px;border:2px solid rgba(255,255,255,.95);box-shadow:0 2px 10px rgba(0,0,0,.4),0 0 0 3px rgba(0,0,0,.15);transform:translate(-50%,-50%);pointer-events:none;z-index:3}',
     '.sfp2-gridline-v{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.45);pointer-events:none;z-index:2}',
     '.sfp2-gridline-h{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,.45);pointer-events:none;z-index:2}',
-    '.sfp2-badge{position:absolute;top:10px;left:10px;background:rgba(15,23,42,.72);color:#fff;font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;pointer-events:none;z-index:4;letter-spacing:.01em}',
+    '.sfp2-badge{position:absolute;top:10px;left:10px;background:rgba(15,23,42,.72);color:#fff;font-size:var(--fs-caption);font-weight:800;padding:4px 9px;border-radius:999px;pointer-events:none;z-index:4;letter-spacing:.01em}',
     '.sfp2-hint{position:absolute;bottom:10px;right:12px;background:rgba(15,23,42,.55);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;pointer-events:none;z-index:4}',
     // 사이드바 카드 - 이미지2 수동 위치 지정 여부 뱃지
-    '.streamer-focus-card-pin{position:absolute;top:7px;left:7px;font-size:12px;line-height:1;background:rgba(15,23,42,.55);border-radius:999px;padding:3px 4px;z-index:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}'
+    '.streamer-focus-card-pin{position:absolute;top:7px;left:7px;font-size:var(--fs-sm);line-height:1;background:rgba(15,23,42,.55);border-radius:999px;padding:3px 4px;z-index:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}'
   ].join('');
   document.head.appendChild(s);
 })();
@@ -833,16 +833,16 @@ function _buildSimpleView(rankMap){
     '.streamer-simple-list{display:flex;flex-direction:column;gap:6px;font-family:inherit}',
     '.streamer-simple-head{display:flex;align-items:center;gap:8px;padding:6px 10px;margin-top:16px;border-bottom:2px solid color-mix(in srgb, var(--c,#6366f1) 45%, transparent)}',
     '.streamer-simple-head:first-child{margin-top:0}',
-    '.streamer-simple-univ{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:800;color:var(--c,#6366f1);cursor:pointer;letter-spacing:-.01em}',
-    '.streamer-simple-univ-count{margin-left:auto;font-size:11px;font-weight:700;color:var(--text3)}',
-    '.streamer-simple-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;border:1px solid rgba(148,163,184,.16);background:var(--panel,#fff);cursor:pointer;transition:background-color .12s ease,border-color .12s ease}',
+    '.streamer-simple-univ{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-base);font-weight:800;color:var(--c,#6366f1);cursor:pointer;letter-spacing:-.01em}',
+    '.streamer-simple-univ-count{margin-left:auto;font-size:var(--fs-caption);font-weight:700;color:var(--text3)}',
+    '.streamer-simple-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);border:1px solid rgba(148,163,184,.16);background:var(--panel,#fff);cursor:pointer;transition:background-color .12s ease,border-color .12s ease}',
     '@media (prefers-reduced-motion:reduce){.streamer-simple-row{transition:none}}',
     '.streamer-simple-row:hover{background:color-mix(in srgb, var(--c,#6366f1) 6%, var(--panel,#fff));border-color:color-mix(in srgb, var(--c,#6366f1) 30%, rgba(148,163,184,.16))}',
     '.streamer-simple-row.inactive{opacity:.6}',
     '.streamer-simple-row.retired{opacity:.5;filter:grayscale(.5)}',
     // 프로필 이미지: 설정탭에서 정한 모양(원형/둥근사각 등)은 그대로 따름. 장식 없는 단일 테두리만
     '.streamer-simple-avatar-wrap{position:relative;flex-shrink:0;line-height:0}',
-    '.streamer-simple-avatar{width:40px;height:40px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:color-mix(in srgb, var(--c,#6366f1) 14%, #eef2ff);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--c,#6366f1);position:relative;box-shadow:0 0 0 1.5px color-mix(in srgb, var(--c,#6366f1) 40%, transparent)}',
+    '.streamer-simple-avatar{width:40px;height:40px;border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);overflow:hidden;background:color-mix(in srgb, var(--c,#6366f1) 14%, #eef2ff);display:flex;align-items:center;justify-content:center;font-size:var(--fs-sm);font-weight:800;color:var(--c,#6366f1);position:relative;box-shadow:0 0 0 1.5px color-mix(in srgb, var(--c,#6366f1) 40%, transparent)}',
     '.streamer-simple-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;clip-path:inherit}',
     // 직책+이름(좌측 고정폭 그룹) / 종족·티어·전적(중간 그룹, 남는 공간에 고르게 분산 배치)으로 분리.
     // 좌측 그룹의 폭을 이름 길이와 무관하게 항상 동일하게 고정해서(내용에 따라 늘어나지 않음),
@@ -857,7 +857,7 @@ function _buildSimpleView(rankMap){
     '.streamer-simple-name{flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:3px;overflow:hidden}',
     '.streamer-simple-name-text{font-size:13.5px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;color:var(--text1)}',
     '.streamer-simple-flag{flex:0 0 auto;font-size:9px;font-weight:700;color:var(--text3);background:rgba(148,163,184,.16);border-radius:6px;padding:2px 6px}',
-    '.streamer-simple-race{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:20px;font-size:11px;font-weight:900;padding:3px 7px;border-radius:6px;white-space:nowrap;border:1px solid transparent}',
+    '.streamer-simple-race{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:20px;font-size:var(--fs-caption);font-weight:900;padding:3px 7px;border-radius:6px;white-space:nowrap;border:1px solid transparent}',
     '.streamer-simple-race.race-T{color:#1e40af;background:#dbe9ff;border-color:#b8d4ff}',
     '.streamer-simple-race.race-Z{color:#6b21a8;background:#ecdcff;border-color:#ddc2fb}',
     '.streamer-simple-race.race-P{color:#92400e;background:#fbe6b0;border-color:#f3d488}',
@@ -867,7 +867,7 @@ function _buildSimpleView(rankMap){
     'body.dark .streamer-simple-race.race-P{color:#fcd34d;background:rgba(245,158,11,.22);border-color:rgba(245,158,11,.3)}',
     'body.dark .streamer-simple-race.race-N{color:#cbd5e1;background:rgba(148,163,184,.2);border-color:rgba(148,163,184,.3)}',
     // 티어/전적: 담백한 플랫 칩이되, 테두리와 진한 배경으로 잘 보이도록
-    '.streamer-simple-tier,.streamer-simple-record{flex:0 0 auto;display:inline-flex;align-items:center;font-size:11px;font-weight:900;white-space:nowrap;border-radius:6px;padding:3px 8px;border:1px solid transparent}',
+    '.streamer-simple-tier,.streamer-simple-record{flex:0 0 auto;display:inline-flex;align-items:center;font-size:var(--fs-caption);font-weight:900;white-space:nowrap;border-radius:6px;padding:3px 8px;border:1px solid transparent}',
     '.streamer-simple-tier{color:color-mix(in srgb, var(--tc,#8b5cf6) 88%, #000 10%);background:color-mix(in srgb, var(--tc,#8b5cf6) 22%, #fff);border-color:color-mix(in srgb, var(--tc,#8b5cf6) 45%, transparent)}',
     '.streamer-simple-record{color:var(--text2);background:rgba(148,163,184,.16);border-color:rgba(148,163,184,.3)}',
     'body.dark .streamer-simple-tier{color:color-mix(in srgb, var(--tc,#8b5cf6) 90%, #fff 35%);background:color-mix(in srgb, var(--tc,#8b5cf6) 30%, #0f172a);border-color:color-mix(in srgb, var(--tc,#8b5cf6) 50%, transparent)}',
@@ -875,14 +875,14 @@ function _buildSimpleView(rankMap){
     // 승률: 다른 탭과 동일한 승패 색상(--win-col 빨강 / --lose-col 파랑)을 그대로 사용, 옅은 배경 칩으로 시인성 확보
     '.streamer-simple-medal{position:relative;flex-shrink:0;min-width:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font-weight:900;text-align:center;padding:3px 6px;border-radius:8px}',
     '.streamer-simple-medal-label{font-size:8.5px;font-weight:700;letter-spacing:.02em;color:var(--text3)}',
-    '.streamer-simple-medal-value{font-size:15px;font-weight:900;line-height:1.2}',
+    '.streamer-simple-medal-value{font-size:var(--fs-md);font-weight:900;line-height:1.2}',
     '.streamer-simple-medal-hot{position:absolute;top:-8px;right:-2px;font-size:8px;font-weight:800;letter-spacing:.02em;color:#f97316}',
     '.streamer-simple-medal.is-win{background:color-mix(in srgb, var(--win-col,#dc2626) 12%, transparent)}',
     '.streamer-simple-medal.is-win .streamer-simple-medal-value{color:var(--win-col,#dc2626)}',
     '.streamer-simple-medal.is-lose{background:color-mix(in srgb, var(--lose-col,#2563eb) 10%, transparent)}',
     '.streamer-simple-medal.is-lose .streamer-simple-medal-value{color:var(--lose-col,#2563eb)}',
     '.streamer-simple-medal.is-none .streamer-simple-medal-value{color:var(--gray-l)}',
-    '@media (max-width:768px){.streamer-simple-row{gap:8px;padding:6px 8px}.streamer-simple-avatar{width:34px;height:34px}.streamer-simple-name-text{font-size:12px}.streamer-simple-tier,.streamer-simple-record,.streamer-simple-race{font-size:9.5px;padding:2.5px 6px}.streamer-simple-medal{min-width:40px}.streamer-simple-medal-value{font-size:12.5px}.streamer-simple-medal-label{font-size:7px}}',
+    '@media (max-width:768px){.streamer-simple-row{gap:8px;padding:6px 8px}.streamer-simple-avatar{width:34px;height:34px}.streamer-simple-name-text{font-size:var(--fs-sm)}.streamer-simple-tier,.streamer-simple-record,.streamer-simple-race{font-size:9.5px;padding:2.5px 6px}.streamer-simple-medal{min-width:40px}.streamer-simple-medal-value{font-size:12.5px}.streamer-simple-medal-label{font-size:7px}}',
     'body.dark .streamer-simple-row{background:#0f172a;border-color:rgba(255,255,255,.08)}',
     'body.dark .streamer-simple-row:hover{background:color-mix(in srgb, var(--c,#6366f1) 10%, #0f172a)}'
   ].join('');
@@ -940,19 +940,19 @@ function _buildFocusCardDetail(selected, opts){
           ${isLoggedIn ? `<button class="pill" onclick="openEPFromModal('${(typeof escJS==='function'?escJS(selected.name):selected.name)}')">✏️ 수정</button>` : ''}
           ${_showPosNudge ? (
             _autoFitOn
-              ? `<button type="button" class="pill" onclick="event.stopPropagation();_focusPhoto2EnableManual()" style="padding:3px 10px;font-size:11px" title="아래 이미지를 마우스/터치로 드래그해 이 스트리머만의 위치를 직접 잡을 수 있습니다">🎯 위치 직접 조정</button>`
+              ? `<button type="button" class="pill" onclick="event.stopPropagation();_focusPhoto2EnableManual()" style="padding:3px 10px;font-size:var(--fs-caption)" title="아래 이미지를 마우스/터치로 드래그해 이 스트리머만의 위치를 직접 잡을 수 있습니다">🎯 위치 직접 조정</button>`
               : `<span class="pill" style="display:inline-flex;align-items:center;gap:0;padding:2px 4px" title="아래 사진을 드래그하면 위치가 바로 바뀝니다. 화살표는 1%씩 미세 조정용이고, 변경 즉시 저장됩니다.">
-                  <button type="button" onclick="event.stopPropagation();_nudgeFocusPhoto2(-4,0)" style="border:none;background:transparent;cursor:pointer;font-size:12px;padding:3px 6px;line-height:1;color:inherit" title="왼쪽으로">◀</button>
+                  <button type="button" onclick="event.stopPropagation();_nudgeFocusPhoto2(-4,0)" style="border:none;background:transparent;cursor:pointer;font-size:var(--fs-sm);padding:3px 6px;line-height:1;color:inherit" title="왼쪽으로">◀</button>
                   <span style="display:inline-flex;flex-direction:column;align-items:center;line-height:1">
-                    <button type="button" onclick="event.stopPropagation();_nudgeFocusPhoto2(0,-4)" style="border:none;background:transparent;cursor:pointer;font-size:11px;padding:0 6px 1px;line-height:1.3;color:inherit" title="위로">▲</button>
-                    <button type="button" onclick="event.stopPropagation();_nudgeFocusPhoto2(0,4)" style="border:none;background:transparent;cursor:pointer;font-size:11px;padding:1px 6px 0;line-height:1.3;color:inherit" title="아래로">▼</button>
+                    <button type="button" onclick="event.stopPropagation();_nudgeFocusPhoto2(0,-4)" style="border:none;background:transparent;cursor:pointer;font-size:var(--fs-caption);padding:0 6px 1px;line-height:1.3;color:inherit" title="위로">▲</button>
+                    <button type="button" onclick="event.stopPropagation();_nudgeFocusPhoto2(0,4)" style="border:none;background:transparent;cursor:pointer;font-size:var(--fs-caption);padding:1px 6px 0;line-height:1.3;color:inherit" title="아래로">▼</button>
                   </span>
-                  <button type="button" onclick="event.stopPropagation();_nudgeFocusPhoto2(4,0)" style="border:none;background:transparent;cursor:pointer;font-size:12px;padding:3px 6px;line-height:1;color:inherit" title="오른쪽으로">▶</button>
+                  <button type="button" onclick="event.stopPropagation();_nudgeFocusPhoto2(4,0)" style="border:none;background:transparent;cursor:pointer;font-size:var(--fs-sm);padding:3px 6px;line-height:1;color:inherit" title="오른쪽으로">▶</button>
                   <span style="font-size:10px;font-weight:800;color:var(--text3);min-width:56px;text-align:center;padding:0 3px">X${_p2XNow}·Y${_p2YNow}%</span>
                 </span>
-                 <button type="button" class="pill" onclick="event.stopPropagation();_focusPhoto2SetCenter()" style="padding:3px 8px;font-size:11px" title="가로/세로 모두 가운데(50%)로 되돌립니다">가운데로</button>`
+                 <button type="button" class="pill" onclick="event.stopPropagation();_focusPhoto2SetCenter()" style="padding:3px 8px;font-size:var(--fs-caption)" title="가로/세로 모두 가운데(50%)로 되돌립니다">가운데로</button>`
           ) : ''}
-          ${(_showPosNudge && !_autoFitOn && _globalAutoFitOn && _manualOverride) ? `<button type="button" class="pill" onclick="event.stopPropagation();_resetFocusPhoto2ToAuto()" style="padding:3px 8px;font-size:11px" title="이 스트리머만 전역 자동 배치로 되돌립니다">↺ 자동으로</button>` : ''}
+          ${(_showPosNudge && !_autoFitOn && _globalAutoFitOn && _manualOverride) ? `<button type="button" class="pill" onclick="event.stopPropagation();_resetFocusPhoto2ToAuto()" style="padding:3px 8px;font-size:var(--fs-caption)" title="이 스트리머만 전역 자동 배치로 되돌립니다">↺ 자동으로</button>` : ''}
         </div>
       </div>
     </div>
@@ -1120,7 +1120,7 @@ function _buildFocusView(rankMap){
     listHtml += `<section class="streamer-focus-group">
       <div class="streamer-focus-group-title" data-focus-univ-header="${u.name}" style="background:linear-gradient(135deg,${color},color-mix(in srgb, ${color} 68%, #ffffff))">
         <span style="display:inline-flex;align-items:center;gap:6px">${u.name && u.name!=='무소속' ? gUI(u.name,(typeof getUnivLogoSizeStr==='function'?getUnivLogoSizeStr(u.name,'players','18px'):'18px')) : '🏷️'}<span class="${u.name&&u.name!=='무소속'?'clickable-univ':''}" ${u.name&&u.name!=='무소속'?`onclick="event.stopPropagation();openUnivModal('${u.name.replace(/'/g,"\\'")}')"`:''}>${u.name}</span></span>
-        <span style="font-size:11px;color:rgba(255,255,255,.82)">${members.length}명</span>
+        <span style="font-size:var(--fs-caption);color:rgba(255,255,255,.82)">${members.length}명</span>
       </div>`;
     const sorted = [...members].sort((a,b)=>getRoleOrder(a.role)-getRoleOrder(b.role)||TIERS.indexOf(a.tier)-TIERS.indexOf(b.tier)||(b.points||0)-(a.points||0));
     listHtml += `<div class="streamer-focus-card-grid">`;
@@ -1245,9 +1245,9 @@ function _buildFocusView(rankMap){
       <div class="streamer-focus-section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;row-gap:6px">
         <span>스트리머 선택</span>
         <span style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
-          <button class="pill ${totalFocusDetailStyle==='hero'?'on':''}" style="padding:4px 10px;font-size:11px;white-space:nowrap" onclick="totalFocusDetailStyle='hero';try{localStorage.setItem('su_focus_detail_style','hero');}catch(e){};render()" title="기본형">🖼️ 기본</button>
-          <button class="pill ${totalFocusDetailStyle==='card'?'on':''}" style="padding:4px 10px;font-size:11px;white-space:nowrap" onclick="totalFocusDetailStyle='card';try{localStorage.setItem('su_focus_detail_style','card');}catch(e){};render()" title="사진+리스트형">📋 리스트</button>
-          ${(totalFocusDetailStyle==='card' && isLoggedIn) ? `<button class="pill ${totalFocusCard2AutoFit?'on':''}" style="padding:4px 10px;font-size:11px;white-space:nowrap" onclick="totalFocusCard2AutoFit=!totalFocusCard2AutoFit;try{localStorage.setItem('su_focus_card2_autofit',totalFocusCard2AutoFit?'1':'0');}catch(e){};render()" title="하단 이미지2 배치의 기본값입니다. 자동: 크롭 없이 꽉 차게 배치. 수동: 스트리머별로 지정한 위치를 사용. 자동 상태에서도 개별 스트리머에서 ▲▼로 위치를 조정하면 그 스트리머만 수동 위치가 우선 적용됩니다.">${totalFocusCard2AutoFit?'🪄 자동':'✋ 수동'}</button>` : ''}
+          <button class="pill ${totalFocusDetailStyle==='hero'?'on':''}" style="padding:4px 10px;font-size:var(--fs-caption);white-space:nowrap" onclick="totalFocusDetailStyle='hero';try{localStorage.setItem('su_focus_detail_style','hero');}catch(e){};render()" title="기본형">🖼️ 기본</button>
+          <button class="pill ${totalFocusDetailStyle==='card'?'on':''}" style="padding:4px 10px;font-size:var(--fs-caption);white-space:nowrap" onclick="totalFocusDetailStyle='card';try{localStorage.setItem('su_focus_detail_style','card');}catch(e){};render()" title="사진+리스트형">📋 리스트</button>
+          ${(totalFocusDetailStyle==='card' && isLoggedIn) ? `<button class="pill ${totalFocusCard2AutoFit?'on':''}" style="padding:4px 10px;font-size:var(--fs-caption);white-space:nowrap" onclick="totalFocusCard2AutoFit=!totalFocusCard2AutoFit;try{localStorage.setItem('su_focus_card2_autofit',totalFocusCard2AutoFit?'1':'0');}catch(e){};render()" title="하단 이미지2 배치의 기본값입니다. 자동: 크롭 없이 꽉 차게 배치. 수동: 스트리머별로 지정한 위치를 사용. 자동 상태에서도 개별 스트리머에서 ▲▼로 위치를 조정하면 그 스트리머만 수동 위치가 우선 적용됩니다.">${totalFocusCard2AutoFit?'🪄 자동':'✋ 수동'}</button>` : ''}
         </span>
       </div>
       ${listHtml}
@@ -1303,46 +1303,46 @@ function openBulkEditModal(){
   const first=sel.slice(0,30);
   const more=sel.length-first.length;
   document.getElementById('bulkEditBody').innerHTML=`
-    <div style="margin-bottom:14px;padding:10px;background:var(--surface);border-radius:8px;font-size:12px;color:var(--text2)">
+    <div style="margin-bottom:14px;padding:10px;background:var(--surface);border-radius:8px;font-size:var(--fs-sm);color:var(--text2)">
       <strong style="color:var(--blue)">${sel.length}명</strong> 선택됨: ${first.join(', ')}${more?` 외 ${more}명`:''}
-      ${more?`<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--gray-l);font-size:11px">전체 보기</summary><div style="margin-top:6px;line-height:1.6">${sel.join(', ')}</div></details>`:''}
+      ${more?`<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--gray-l);font-size:var(--fs-caption)">전체 보기</summary><div style="margin-top:6px;line-height:1.6">${sel.join(', ')}</div></details>`:''}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <div>
-        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">티어</label>
-        <select id="bulk-ed-t" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:4px">티어</label>
+        <select id="bulk-ed-t" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
           <option value="">변경 안함</option>${tierOpts}
         </select>
       </div>
       <div>
-        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">대학</label>
-        <select id="bulk-ed-u" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:4px">대학</label>
+        <select id="bulk-ed-u" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
           <option value="">변경 안함</option>${univOpts}
         </select>
       </div>
       <div>
-        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">종족</label>
-        <select id="bulk-ed-r" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:4px">종족</label>
+        <select id="bulk-ed-r" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
           <option value="">변경 안함</option>
           <option value="T">테란</option><option value="Z">저그</option><option value="P">프로토스</option><option value="N">종족미정</option>
         </select>
       </div>
       <div>
-        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">성별</label>
-        <select id="bulk-ed-g" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);display:block;margin-bottom:4px">성별</label>
+        <select id="bulk-ed-g" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
           <option value="">변경 안함</option>
           <option value="F">👩 여자</option><option value="M">👨 남자</option>
         </select>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border-radius:8px;margin-bottom:4px">
-      <label style="font-size:12px;font-weight:700;color:var(--text2)">현황판</label>
-      <select id="bulk-ed-h" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+      <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">현황판</label>
+      <select id="bulk-ed-h" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
         <option value="">변경 안함</option>
         <option value="hide">제외 (숨김)</option>
         <option value="show">표시</option>
       </select>
-      <button onclick="bulkDeleteSelected()" style="margin-left:auto;padding:6px 14px;border-radius:8px;border:1.5px solid #ef4444;background:#fef2f2;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
+      <button onclick="bulkDeleteSelected()" style="margin-left:auto;padding:6px 14px;border-radius:8px;border:1.5px solid #ef4444;background:#fef2f2;color:#dc2626;font-size:var(--fs-sm);font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
     </div>`;
   om('bulkEditModal');
 }
@@ -1402,30 +1402,30 @@ function openMergePlayersModal(){
   modal.id=modalId;
   modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:var(--z-modal-5);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
   const list=players.map(p=>p.name).filter(Boolean).sort((a,b)=>a.localeCompare(b));
-  modal.innerHTML=`<div style="background:var(--white);border-radius:16px;padding:18px 18px 16px;width:520px;max-width:100%;box-shadow:0 10px 50px rgba(0,0,0,.35)">
+  modal.innerHTML=`<div style="background:var(--white);border-radius:var(--r2);padding:18px 18px 16px;width:520px;max-width:100%;box-shadow:0 10px 50px rgba(0,0,0,.35)">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
-      <div style="font-weight:900;font-size:15px">🔀 스트리머 병합</div>
+      <div style="font-weight:900;font-size:var(--fs-md)">🔀 스트리머 병합</div>
       <button class="btn btn-w btn-xs" onclick="document.getElementById('${modalId}').remove()">닫기</button>
     </div>
-    <div style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:12px">
+    <div style="font-size:var(--fs-sm);color:var(--text3);line-height:1.6;margin-bottom:12px">
       A(원본)를 B(대상)로 합칩니다. 모든 기록/대진/현황판에서 A 이름을 B로 치환합니다.
     </div>
     <datalist id="_mergePlayersList">${list.map(n=>`<option value="${escAttr(n)}"></option>`).join('')}</datalist>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <div style="flex:1;min-width:220px">
-        <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:4px">A (원본)</div>
-        <input id="_mergeFrom" list="_mergePlayersList" placeholder="예: 닉네임(오타)" style="width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:10px;box-sizing:border-box">
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:4px">A (원본)</div>
+        <input id="_mergeFrom" list="_mergePlayersList" placeholder="예: 닉네임(오타)" style="width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:var(--r);box-sizing:border-box">
       </div>
       <div style="flex:1;min-width:220px">
-        <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:4px">B (대상)</div>
-        <input id="_mergeTo" list="_mergePlayersList" placeholder="예: 닉네임(정상)" style="width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:10px;box-sizing:border-box">
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:4px">B (대상)</div>
+        <input id="_mergeTo" list="_mergePlayersList" placeholder="예: 닉네임(정상)" style="width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:var(--r);box-sizing:border-box">
       </div>
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3);cursor:pointer">
+      <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--text3);cursor:pointer">
         <input id="_mergeDel" type="checkbox" checked style="width:15px;height:15px;cursor:pointer"> A(원본) 스트리머 삭제
       </label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3);cursor:pointer">
+      <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--text3);cursor:pointer">
         <input id="_mergeFill" type="checkbox" checked style="width:15px;height:15px;cursor:pointer"> B 정보가 비면 A 정보로 보강(사진/채널/메모)
       </label>
     </div>

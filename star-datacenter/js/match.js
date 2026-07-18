@@ -61,14 +61,14 @@ function rUnivBodyHTML(){
     if(i===0) rnkHTML=`<span class="rk1">1등</span>`;
     else if(i===1) rnkHTML=`<span class="rk2">2등</span>`;
     else if(i===2) rnkHTML=`<span class="rk3">3등</span>`;
-    else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px">${i+1}위</span>`;
+    else rnkHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base)">${i+1}위</span>`;
     h+=`<tr style="background:${col}08">
       <td style="text-align:left">${rnkHTML}</td>
       <td style="text-align:left"><span class="ubadge clickable-univ" style="background:${col}" onclick="openUnivModal('${name}')">${name}</span></td>
       <td style="color:var(--gray-l)">${s.cnt}명</td>
-      <td class="wt" style="font-size:15px;font-weight:800">${s.w}</td>
-      <td class="lt" style="font-size:15px;font-weight:800">${s.l}</td>
-      <td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px">${pS(s.pts)}</td>
+      <td class="wt" style="font-size:var(--fs-md);font-weight:800">${s.w}</td>
+      <td class="lt" style="font-size:var(--fs-md);font-weight:800">${s.l}</td>
+      <td class="${pC(s.pts)}" style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-lg)">${pS(s.pts)}</td>
       <td style="font-weight:700;color:${wr>=50?'var(--green)':'var(--red)'}">${tot?wr+'%':'-'}</td>
     </tr>`;
   });
@@ -251,7 +251,7 @@ function setBuilderHTML(bld, mode){
     const _isEdit = !!(bld && bld._editCtx && (mode==='ind' || mode==='gj'));
     const _saveLbl = _isEdit ? '✅ 수정 저장' : '✅ 저장';
     return `<div class="mb-savebar" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-      <div style="font-size:11px;color:var(--gray-l);font-weight:700">저장 전 스코어와 세트 구성을 마지막으로 확인하세요.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:700">저장 전 스코어와 세트 구성을 마지막으로 확인하세요.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-g" onclick="saveMatch('${mode}')">${_saveLbl}</button>
         <button class="btn btn-w" onclick="BLD['${mode}']=null;render()">🔄 초기화</button>
@@ -261,9 +261,9 @@ function setBuilderHTML(bld, mode){
   // CK 모드에서는 날짜를 buildCKInputHTML에서만 표시 (중복 방지)
   if(!isCK){
   h+=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
-    <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
+    <label style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">날짜</label>
     <input type="date" value="${bld.date||''}" onchange="BLD['${mode}'].date=this.value" style="width:140px">`;
-  if(isComp)h+=`<label style="font-size:12px;font-weight:700;color:var(--blue)">대회명</label>
+  if(isComp)h+=`<label style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">대회명</label>
     <input type="text" id="comp-name-input" value="${bld.compName||curComp||''}" placeholder="대회명" style="width:150px" onchange="BLD['comp'].compName=this.value">`;
   h+=`</div>`;
   }
@@ -272,31 +272,31 @@ function setBuilderHTML(bld, mode){
     const rfA=bld.raceFilterA||'';const rfB=bld.raceFilterB||'';
     h+=`<div style="display:flex;gap:14px;margin-bottom:16px;flex-wrap:wrap">
       <div style="flex:1;min-width:160px">
-        <label style="font-size:12px;font-weight:700;color:var(--blue);display:block;margin-bottom:6px">🔵 ${isComp?'주최 대학 A':'팀 A 대학'}</label>
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--blue);display:block;margin-bottom:6px">🔵 ${isComp?'주최 대학 A':'팀 A 대학'}</label>
         <select onchange="BLD['${mode}'].teamA=this.value;BLD['${mode}'].raceFilterA='';BLD['${mode}'].sets=[];render()" style="width:100%">
           <option value="">대학 선택</option>${uOptsA}
         </select>
         ${bld.teamA?`<div style="margin-top:6px;display:flex;gap:4px;align-items:center;flex-wrap:wrap">
           <span class="ubadge" style="background:${gc(bld.teamA)}">${bld.teamA}</span>
-          ${!isComp?`<span style="font-size:11px;color:var(--gray-l)">종족 필터:</span>
-          <button class="pill ${rfA===''?'on':''}" style="padding:2px 8px;font-size:11px" onclick="BLD['${mode}'].raceFilterA='';render()">전체</button>
-          <button class="pill ${rfA==='T'?'on':''}" style="padding:2px 8px;font-size:11px" onclick="BLD['${mode}'].raceFilterA='T';render()">테란</button>
-          <button class="pill ${rfA==='Z'?'on':''}" style="padding:2px 8px;font-size:11px" onclick="BLD['${mode}'].raceFilterA='Z';render()">저그</button>
-          <button class="pill ${rfA==='P'?'on':''}" style="padding:2px 8px;font-size:11px" onclick="BLD['${mode}'].raceFilterA='P';render()">프토</button>`:''}
+          ${!isComp?`<span style="font-size:var(--fs-caption);color:var(--gray-l)">종족 필터:</span>
+          <button class="pill ${rfA===''?'on':''}" style="padding:2px 8px;font-size:var(--fs-caption)" onclick="BLD['${mode}'].raceFilterA='';render()">전체</button>
+          <button class="pill ${rfA==='T'?'on':''}" style="padding:2px 8px;font-size:var(--fs-caption)" onclick="BLD['${mode}'].raceFilterA='T';render()">테란</button>
+          <button class="pill ${rfA==='Z'?'on':''}" style="padding:2px 8px;font-size:var(--fs-caption)" onclick="BLD['${mode}'].raceFilterA='Z';render()">저그</button>
+          <button class="pill ${rfA==='P'?'on':''}" style="padding:2px 8px;font-size:var(--fs-caption)" onclick="BLD['${mode}'].raceFilterA='P';render()">프토</button>`:''}
         </div>`:''}
       </div>
       <div style="flex:1;min-width:160px">
-        <label style="font-size:12px;font-weight:700;color:var(--red);display:block;margin-bottom:6px">🔴 ${isComp?'대결 대학 B':'팀 B 대학'}</label>
+        <label style="font-size:var(--fs-sm);font-weight:700;color:var(--red);display:block;margin-bottom:6px">🔴 ${isComp?'대결 대학 B':'팀 B 대학'}</label>
         <select onchange="BLD['${mode}'].teamB=this.value;BLD['${mode}'].raceFilterB='';BLD['${mode}'].sets=[];render()" style="width:100%">
           <option value="">대학 선택</option>${uOptsB}
         </select>
         ${bld.teamB?`<div style="margin-top:6px;display:flex;gap:4px;align-items:center;flex-wrap:wrap">
           <span class="ubadge" style="background:${gc(bld.teamB)}">${bld.teamB}</span>
-          ${!isComp?`<span style="font-size:11px;color:var(--gray-l)">종족 필터:</span>
-          <button class="pill ${rfB===''?'on':''}" style="padding:2px 8px;font-size:11px" onclick="BLD['${mode}'].raceFilterB='';render()">전체</button>
-          <button class="pill ${rfB==='T'?'on':''}" style="padding:2px 8px;font-size:11px" onclick="BLD['${mode}'].raceFilterB='T';render()">테란</button>
-          <button class="pill ${rfB==='Z'?'on':''}" style="padding:2px 8px;font-size:11px" onclick="BLD['${mode}'].raceFilterB='Z';render()">저그</button>
-          <button class="pill ${rfB==='P'?'on':''}" style="padding:2px 8px;font-size:11px" onclick="BLD['${mode}'].raceFilterB='P';render()">프토</button>`:''}
+          ${!isComp?`<span style="font-size:var(--fs-caption);color:var(--gray-l)">종족 필터:</span>
+          <button class="pill ${rfB===''?'on':''}" style="padding:2px 8px;font-size:var(--fs-caption)" onclick="BLD['${mode}'].raceFilterB='';render()">전체</button>
+          <button class="pill ${rfB==='T'?'on':''}" style="padding:2px 8px;font-size:var(--fs-caption)" onclick="BLD['${mode}'].raceFilterB='T';render()">테란</button>
+          <button class="pill ${rfB==='Z'?'on':''}" style="padding:2px 8px;font-size:var(--fs-caption)" onclick="BLD['${mode}'].raceFilterB='Z';render()">저그</button>
+          <button class="pill ${rfB==='P'?'on':''}" style="padding:2px 8px;font-size:var(--fs-caption)" onclick="BLD['${mode}'].raceFilterB='P';render()">프토</button>`:''}
         </div>`:''}
       </div>
     </div>`;
@@ -317,7 +317,7 @@ function setBuilderHTML(bld, mode){
     // 입력 모드 토글: 세트 방식 / 세트 없는 방식
     const useNoSet=bld.noSetMode||false;
     h+=`<div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
-      <span style="font-size:12px;font-weight:600;color:var(--text3)">입력 방식:</span>
+      <span style="font-size:var(--fs-sm);font-weight:600;color:var(--text3)">입력 방식:</span>
       <button class="btn btn-sm ${!useNoSet?'btn-b':'btn-w'}" onclick="BLD['${mode}'].noSetMode=false;render()">📦 세트 방식</button>
       <button class="btn btn-sm ${useNoSet?'btn-b':'btn-w'}" onclick="BLD['${mode}'].noSetMode=true;BLD['${mode}'].freeGames=BLD['${mode}'].freeGames||[];render()">📋 세트 없이 경기 추가</button>
     </div>`;
@@ -333,15 +333,15 @@ function setBuilderHTML(bld, mode){
         <span style="color:var(--gray-l);font-size:20px;font-weight:700">:</span>
         <span class="score-num lt">${dB}</span>
         <span style="font-weight:700">${mode==='gj'?_gjLabelB:(isCK?'팀B ('+mB.map(m=>m.name).join(',')+')':(teamB||'팀B'))}</span>
-        <span style="font-size:11px;color:var(--gray-l);margin-left:auto">총 ${freeGames.length}경기</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l);margin-left:auto">총 ${freeGames.length}경기</span>
       </div>`;
       if(mode!=='gj'){h+=`<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
-        <span style="font-size:12px;font-weight:700;color:var(--blue)">⚡ 간편 승수 입력</span>
-        <span style="font-size:12px">${teamA||'팀A'}:</span>
+        <span style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">⚡ 간편 승수 입력</span>
+        <span style="font-size:var(--fs-sm)">${teamA||'팀A'}:</span>
         <input type="number" min="0" value="${bld.directSA??''}" style="width:60px" placeholder="0" oninput="BLD['${mode}'].directSA=parseInt(this.value)||0;render()">
-        <span style="font-size:12px">${teamB||'팀B'}:</span>
+        <span style="font-size:var(--fs-sm)">${teamB||'팀B'}:</span>
         <input type="number" min="0" value="${bld.directSB??''}" style="width:60px" placeholder="0" oninput="BLD['${mode}'].directSB=parseInt(this.value)||0;render()">
-        <span style="font-size:11px;color:var(--gray-l)">(선수 미지정 시 승수만 저장)</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">(선수 미지정 시 승수만 저장)</span>
       </div>`;}
       freeGames.forEach((g,gi)=>{
         const optsA=mA.map(p=>`<option value="${p.name}"${g.playerA===p.name?' selected':''}>${p.name}[${p.tier}/${p.race}]${isCK?' ('+p.univ+')':''}</option>`).join('');
@@ -352,7 +352,7 @@ function setBuilderHTML(bld, mode){
         const _stA = univSelectStyle((mA.find(p=>p.name===g.playerA)||{}).univ, _resA);
         const _stB = univSelectStyle((mB.find(p=>p.name===g.playerB)||{}).univ, _resB);
         h+=`<div class="game-row">
-          <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
+          <span style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
           ${g._isTeam?`<button class="btn btn-xs btn-b" onclick="BLD['${mode}'].freeGames[${gi}]._isTeam=false;BLD['${mode}'].freeGames[${gi}].a1='';BLD['${mode}'].freeGames[${gi}].a2='';BLD['${mode}'].freeGames[${gi}].b1='';BLD['${mode}'].freeGames[${gi}].b2='';BLD['${mode}'].freeGames[${gi}].playerA='';BLD['${mode}'].freeGames[${gi}].playerB='';render()" title="일반 1:1 입력으로 전환">2:2</button>`:''}
           ${g._isTeam
             ? (function(){
@@ -371,12 +371,12 @@ function setBuilderHTML(bld, mode){
                 const stB2 = univSelectStyle((mB.find(p=>p.name===b2)||{}).univ, _resB);
                 return `<select style="${stA1}" onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.a1=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');render()"><option value=\"\">A1</option>${oA1}</select>
                         <select style="${stA2}" onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.a2=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');render()"><option value=\"\">A2</option>${oA2}</select>
-                        <span style="font-size:11px;color:var(--gray-l)">vs</span>
+                        <span style="font-size:var(--fs-caption);color:var(--gray-l)">vs</span>
                         <select style="${stB1}" onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.b1=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');render()"><option value=\"\">B1</option>${oB1}</select>
                         <select style="${stB2}" onchange="var g=BLD['${mode}'].freeGames[${gi}];g._isTeam=true;g.b2=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');render()"><option value=\"\">B2</option>${oB2}</select>`;
               })()
             : `<select style="${_stA}" onchange="BLD['${mode}'].freeGames[${gi}].playerA=this.value;render()"><option value="">A 선택</option>${optsA}</select>
-               <span style="font-size:11px;color:var(--gray-l)">vs</span>
+               <span style="font-size:var(--fs-caption);color:var(--gray-l)">vs</span>
                <select style="${_stB}" onchange="BLD['${mode}'].freeGames[${gi}].playerB=this.value;render()"><option value="">B 선택</option>${optsB}</select>`}
           <select onchange="BLD['${mode}'].freeGames[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
           <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].freeGames[${gi}].winner='A';render()">A 승</button>
@@ -396,7 +396,7 @@ function setBuilderHTML(bld, mode){
         <span style="color:var(--gray-l);font-size:20px;font-weight:700">:</span>
         <span class="score-num lt">${scoreB}</span>
         <span style="font-weight:700">${mode==='gj'?_gjLabelB:(isCK?'팀B ('+mB.map(m=>m.name).join(',')+')':(teamB||'팀B'))}</span>
-        <span style="font-size:11px;color:var(--gray-l);margin-left:auto">${bld.sets.length}세트</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l);margin-left:auto">${bld.sets.length}세트</span>
       </div>`;
       bld.sets.forEach((set,si)=>{
         const isAce=(si===2);const sLabel=isAce?'🎯 에이스전':`${si+1}세트`;
@@ -404,7 +404,7 @@ function setBuilderHTML(bld, mode){
         h+=`<div class="set-block ${isAce?'ace':''}">
           <div class="set-title">
             <span class="set-badge ${isAce?'ace':''}">${sLabel}</span>
-            <span style="font-size:12px;color:var(--gray-l)">경기 ${set.games.length}개 &nbsp;|&nbsp; <span class="${sA>sB?'wt':''}">${sA}</span>:<span class="${sB>sA?'wt':''}">${sB}</span></span>
+            <span style="font-size:var(--fs-sm);color:var(--gray-l)">경기 ${set.games.length}개 &nbsp;|&nbsp; <span class="${sA>sB?'wt':''}">${sA}</span>:<span class="${sB>sA?'wt':''}">${sB}</span></span>
             <button class="btn btn-r btn-xs" onclick="BLD['${mode}'].sets.splice(${si},1);render()">세트 삭제</button>
           </div>`;
         set.games.forEach((g,gi)=>{
@@ -416,7 +416,7 @@ function setBuilderHTML(bld, mode){
           const _stA = univSelectStyle((mA.find(p=>p.name===g.playerA)||{}).univ, _resA);
           const _stB = univSelectStyle((mB.find(p=>p.name===g.playerB)||{}).univ, _resB);
           h+=`<div class="game-row">
-            <span style="font-size:11px;font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
+            <span style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l);min-width:40px">경기${gi+1}</span>
             ${g._isTeam?`<button class="btn btn-xs btn-b" onclick="BLD['${mode}'].sets[${si}].games[${gi}]._isTeam=false;BLD['${mode}'].sets[${si}].games[${gi}].a1='';BLD['${mode}'].sets[${si}].games[${gi}].a2='';BLD['${mode}'].sets[${si}].games[${gi}].b1='';BLD['${mode}'].sets[${si}].games[${gi}].b2='';BLD['${mode}'].sets[${si}].games[${gi}].playerA='';BLD['${mode}'].sets[${si}].games[${gi}].playerB='';render()" title="일반 1:1 입력으로 전환">2:2</button>`:''}
             ${g._isTeam
               ? (function(){
@@ -435,12 +435,12 @@ function setBuilderHTML(bld, mode){
                   const stB2 = univSelectStyle((mB.find(p=>p.name===b2)||{}).univ, _resB);
                   return `<select style="${stA1}" onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.a1=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');render()"><option value=\"\">A1</option>${oA1}</select>
                           <select style="${stA2}" onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.a2=this.value;g.playerA=[g.a1,g.a2].filter(Boolean).join(',');render()"><option value=\"\">A2</option>${oA2}</select>
-                          <span style="font-size:11px;color:var(--gray-l)">vs</span>
+                          <span style="font-size:var(--fs-caption);color:var(--gray-l)">vs</span>
                           <select style="${stB1}" onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.b1=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');render()"><option value=\"\">B1</option>${oB1}</select>
                           <select style="${stB2}" onchange="var g=BLD['${mode}'].sets[${si}].games[${gi}];g._isTeam=true;g.b2=this.value;g.playerB=[g.b1,g.b2].filter(Boolean).join(',');render()"><option value=\"\">B2</option>${oB2}</select>`;
                 })()
               : `<select style="${_stA}" onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerA=this.value;render()"><option value="">A 선택</option>${optsA}</select>
-                 <span style="font-size:11px;color:var(--gray-l)">vs</span>
+                 <span style="font-size:var(--fs-caption);color:var(--gray-l)">vs</span>
                  <select style="${_stB}" onchange="BLD['${mode}'].sets[${si}].games[${gi}].playerB=this.value;render()"><option value="">B 선택</option>${optsB}</select>`}
             <select onchange="BLD['${mode}'].sets[${si}].games[${gi}].map=this.value" style="max-width:100px"><option value="">맵 선택</option>${mapOpts}</select>
             <button class="win-btn ${g.winner==='A'?'win-sel':''}" onclick="BLD['${mode}'].sets[${si}].games[${gi}].winner='A';recalcSet('${mode}',${si});render()">A 승</button>
@@ -510,7 +510,7 @@ function _accumulateSideUnivStats(univWins, univLosses, teamA, teamB, game){
 
 function _teamModeHintHTML(mode){
   if(!['mini','univm','ck','pro','tt','comp'].includes(String(mode||''))) return '';
-  return `<div style="margin-bottom:12px;padding:10px 12px;border:1px solid rgba(14,165,233,.22);background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(248,250,252,.98));border-radius:10px;font-size:11px;color:#0f172a;line-height:1.6">
+  return `<div style="margin-bottom:12px;padding:10px 12px;border:1px solid rgba(14,165,233,.22);background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(248,250,252,.98));border-radius:var(--r);font-size:var(--fs-caption);color:#0f172a;line-height:1.6">
     <strong style="color:#0369a1">2대2 수동 입력 가능</strong>
     <span style="color:#475569"> 각 경기의 </span>
     <span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;padding:0 7px;border-radius:999px;background:#e0f2fe;color:#0369a1;font-size:10px;font-weight:900;vertical-align:middle">2:2</span>

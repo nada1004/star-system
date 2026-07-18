@@ -33,7 +33,7 @@ function formatPlayerBasicInfo(player) {
   const raceIcon = player.race === '테란' ? '🔵' : player.race === '저그' ? '🟣' : player.race === '프로토스' ? '🟡' : '⚫';
 
   const univColor = (typeof univCfg !== 'undefined' ? (univCfg.find(x=>x.name===player.univ)||{}) : {}).color || '#1e3a8a';
-  const btnStyle = `flex:1;padding:9px 0;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif`;
+  const btnStyle = `flex:1;padding:9px 0;border:none;border-radius:9px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif`;
   const qRecent = `${player.name} 최근전적`;
   const qStats = `${player.name} 통계`;
   const qAll = `${player.name} 전체기록`;
@@ -44,17 +44,17 @@ function formatPlayerBasicInfo(player) {
 </div>`;
 
   const infoBadges = `<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:6px">
-<span style="font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px;color:${tierColor};background:${tierBg}">${player.tier}티어</span>
-<span style="font-size:12px;color:#475569;font-weight:600">${raceIcon} ${player.race}</span>
-<span style="font-size:12px;color:#94a3b8">ELO <b style="color:#334155">${player.elo}</b></span>
+<span style="font-size:var(--fs-sm);font-weight:800;padding:3px 10px;border-radius:20px;color:${tierColor};background:${tierBg}">${player.tier}티어</span>
+<span style="font-size:var(--fs-sm);color:#475569;font-weight:600">${raceIcon} ${player.race}</span>
+<span style="font-size:var(--fs-sm);color:#94a3b8">ELO <b style="color:#334155">${player.elo}</b></span>
 </div>
-<div style="font-size:14px;font-weight:800;margin-top:4px"><span style="color:#dc2626">${player.win}승</span> <span style="color:#2563eb">${player.loss}패</span> <span style="font-size:12px;font-weight:500;color:#94a3b8">(${rate}%)</span></div>`;
+<div style="font-size:14px;font-weight:800;margin-top:4px"><span style="color:#dc2626">${player.win}승</span> <span style="color:#2563eb">${player.loss}패</span> <span style="font-size:var(--fs-sm);font-weight:500;color:#94a3b8">(${rate}%)</span></div>`;
 
   if (player.photo) {
-    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.14)"><div style="background:#f1f5f9"><img src="${toHttpsUrl(player.photo)}" style="width:100%;display:block;object-fit:contain;max-height:300px;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges"></div><div style="background:#fff;padding:12px 12px 6px"><div style="font-size:18px;font-weight:900;color:#1a202c">${safePlayerName}</div><div style="font-size:13px;color:#64748b;margin-top:1px">${safeUniv}</div>${infoBadges}</div>${quickBtns}</div>`;
+    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.14)"><div style="background:#f1f5f9"><img src="${toHttpsUrl(player.photo)}" style="width:100%;display:block;object-fit:contain;max-height:300px;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges"></div><div style="background:#fff;padding:12px 12px 6px"><div style="font-size:var(--fs-lg);font-weight:900;color:#1a202c">${safePlayerName}</div><div style="font-size:var(--fs-base);color:#64748b;margin-top:1px">${safeUniv}</div>${infoBadges}</div>${quickBtns}</div>`;
   }
 
-  return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.1)"><div style="background:${univColor};padding:18px 14px 14px;display:flex;align-items:center;gap:12px"><div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">👤</div><div><div style="font-size:19px;font-weight:900;color:#fff">${safePlayerName}</div><div style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:1px">${safeUniv}</div></div></div><div style="background:#fff;padding:12px 12px 6px">${infoBadges}</div>${quickBtns}</div>`;
+  return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.1)"><div style="background:${univColor};padding:18px 14px 14px;display:flex;align-items:center;gap:12px"><div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">👤</div><div><div style="font-size:19px;font-weight:900;color:#fff">${safePlayerName}</div><div style="font-size:var(--fs-base);color:rgba(255,255,255,0.8);margin-top:1px">${safeUniv}</div></div></div><div style="background:#fff;padding:12px 12px 6px">${infoBadges}</div>${quickBtns}</div>`;
 }
 
 try{

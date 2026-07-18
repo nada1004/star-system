@@ -205,7 +205,7 @@ function _b2PlayersView() {
         left: 16px;
         background: rgba(0,0,0,0.75);
         backdrop-filter: blur(10px);
-        border-radius: 16px;
+        border-radius:var(--r2);
         padding: 12px;
         z-index: 10;
         width: min(320px, calc(100% - 32px));
@@ -386,7 +386,7 @@ function _b2PlayersView() {
       }
       .b2-players-grid-wrapper::-webkit-scrollbar-thumb {
         background: rgba(255,255,255,0.2);
-        border-radius: 10px;
+        border-radius:var(--r);
       }
       .b2-players-grid {
         display: grid;
@@ -678,7 +678,7 @@ function _b2PlayersView() {
         </div>` : ''}
         
         <!-- 컨트롤 패널 토글 버튼 - 관리자(로그인 사용자)만 표시 [BUGFIX-IMG-SETTINGS] -->
-        ${isLoggedIn ? `<button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:var(--z-fixed);padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>` : ''}
+        ${isLoggedIn ? `<button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:var(--z-fixed);padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:var(--fs-sm);font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>` : ''}
         
         <div class="b2-players-info">
           <div class="b2-players-name">${_b2SelectedPlayer.name || '이름 없음'}</div>
@@ -691,7 +691,7 @@ function _b2PlayersView() {
                 : `<span class="b2-players-chip">🏫 ${_b2SelectedPlayer.univ}</span>`;
             })() : '<span class="b2-players-chip">🏫 무소속</span>'}
           </div>
-          ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>` : ''}
+          ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${_b2SelectedPlayer.name.replace(/'/g, "\\'")}')" style="margin-top:12px;padding:8px 16px;background:#fff;border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:var(--text1);font-size:var(--fs-base);font-weight:700;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">✏️ 프로필 수정</button>` : ''}
         </div>
       </div>
     </div>
@@ -747,7 +747,7 @@ function _b2PlayersView() {
         <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:9px 10px 10px">
           <div style="display:flex;align-items:center;gap:5px;overflow:hidden">
             ${raceTxt?`<span class="rbadge r${raceTxt}" style="flex-shrink:0;font-size:10px;padding:1px 6px;opacity:.8">${raceTxt}</span>`:''}
-            <span style="color:rgba(255,255,255,.85);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;text-shadow:0 2px 8px rgba(0,0,0,.75),0 1px 3px rgba(0,0,0,.9)">${p.name||''}</span>
+            <span style="color:rgba(255,255,255,.85);font-size:var(--fs-base);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;text-shadow:0 2px 8px rgba(0,0,0,.75),0 1px 3px rgba(0,0,0,.9)">${p.name||''}</span>
           </div>
           <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:nowrap;overflow:hidden">
             ${gridUnivIcon?`<img src="${toHttpsUrl(gridUnivIcon)}" onerror="this.style.display='none'" style="flex-shrink:0;width:16px;height:16px;object-fit:contain;opacity:.85;filter:drop-shadow(0 1px 3px rgba(0,0,0,.8))">`:''}
@@ -876,7 +876,7 @@ function _b2UpdateMainDisplay(playerName) {
       </div>` : ''}
       
       <!-- 컨트롤 패널 토글 버튼 - 관리자(로그인 사용자)만 표시 [BUGFIX-IMG-SETTINGS] -->
-      ${isLoggedIn ? `<button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:var(--z-fixed);padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>` : ''}
+      ${isLoggedIn ? `<button onclick="document.getElementById('b2-img-controls').style.display=document.getElementById('b2-img-controls').style.display==='none'?'block':'none'" style="position:absolute;top:16px;right:16px;z-index:var(--z-fixed);padding:8px 12px;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);border-radius:8px;color:#fff;font-size:var(--fs-sm);font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.2)">⚙️ 설정</button>` : ''}
       
       <div class="b2-players-info">
         <div class="b2-players-name">${player.name || '이름 없음'}</div>
@@ -889,7 +889,7 @@ function _b2UpdateMainDisplay(playerName) {
               : `<span class="b2-players-chip">🏫 ${player.univ}</span>`;
           })() : '<span class="b2-players-chip">🏫 무소속</span>'}
         </div>
-        ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:8px;padding:6px 12px;background:#fff;border:1px solid rgba(255,255,255,0.45);border-radius:12px;color:var(--text1);font-size:12px;font-weight:800;cursor:pointer;transition:all 0.15s ease" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">✏️ 프로필 수정</button>` : ''}
+        ${isLoggedIn ? `<button onclick="openB2ProfileEditModal('${player.name.replace(/'/g, "\\'")}')" style="margin-top:8px;padding:6px 12px;background:#fff;border:1px solid rgba(255,255,255,0.45);border-radius:12px;color:var(--text1);font-size:var(--fs-sm);font-weight:800;cursor:pointer;transition:all 0.15s ease" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">✏️ 프로필 수정</button>` : ''}
       </div>
     `;
     _b2ApplyImgSettingsToElement(document.getElementById('b2-main-img-1'), primarySettings);
@@ -955,14 +955,14 @@ function openB2ProfileEditModal(playerName) {
     return Math.max(0.2, Math.min(60, n));
   };
   const _swapDelayInputs = _slotOrder.length < 2
-    ? `<div style="font-size:11px;color:var(--gray-l);line-height:1.65">등록된 이미지가 1개라 전환 시간 설정이 필요하지 않습니다.</div>`
+    ? `<div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.65">등록된 이미지가 1개라 전환 시간 설정이 필요하지 않습니다.</div>`
     : `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">${_slotOrder.map((item, idx)=>{
         const next = _slotOrder[(idx + 1) % _slotOrder.length];
         const key = _swapDelayKey(item.slot, next.slot);
         if(!key) return '';
         return `<div>
-          <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">${item.slot} → ${next.slot}</div>
-          <input type="number" data-b2-delay-key="${key}" min="0.2" max="60" step="0.1" value="${_swapDelayVal(key)}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);margin-bottom:6px">${item.slot} → ${next.slot}</div>
+          <input type="number" data-b2-delay-key="${key}" min="0.2" max="60" step="0.1" value="${_swapDelayVal(key)}" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
         </div>`;
       }).join('')}</div>`;
 
@@ -971,19 +971,19 @@ function openB2ProfileEditModal(playerName) {
   modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:var(--z-modal-5)';
   
   modal.innerHTML = `
-    <div style="background:var(--white);border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)">
+    <div style="background:var(--white);border-radius:var(--r2);padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <h3 style="margin:0;font-size:18px;font-weight:800;color:var(--text1)">✏️ 프로필 수정</h3>
+        <h3 style="margin:0;font-size:var(--fs-lg);font-weight:800;color:var(--text1)">✏️ 프로필 수정</h3>
         <button onclick="document.getElementById('b2-profile-edit-modal').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-l)">✕</button>
       </div>
       <div style="margin-bottom:16px">
-        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">선수 이름</label>
+        <label style="font-size:var(--fs-base);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">선수 이름</label>
         <div style="font-size:14px;color:var(--text3);padding:8px 12px;background:var(--surface);border-radius:8px">${player.name}</div>
       </div>
       <div style="margin-bottom:16px">
-        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 1 (PC/기본) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(선택 즉시 표시)</span></label>
+        <label style="font-size:var(--fs-base);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 1 (PC/기본) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(선택 즉시 표시)</span></label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="b2-ed-photo" value="${_media1}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <input type="text" id="b2-ed-photo" value="${_media1}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
           <span id="b2-ed-photo-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:var(--su_profile_radius,50%);overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${_media1&&!_media1.startsWith('data:')?'inline-block':'none'}">
             <img id="b2-ed-photo-preview" src="${_media1&&!_media1.startsWith('data:')?toHttpsUrl(_media1):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
           </span>
@@ -991,9 +991,9 @@ function openB2ProfileEditModal(playerName) {
         <div id="b2-ed-photo-warn" style="font-size:10px;color:${_media1&&_media1.startsWith('data:')?'#dc2626':'var(--gray-l)'};margin-top:4px">${_media1&&_media1.startsWith('data:')?'❌ base64 이미지 직접 입력 불가 — imgur.com 등에 업로드 후 URL 사용':'이미지 URL을 붙여넣으면 현황판 선수 카드에 프로필 사진이 표시됩니다.'}</div>
       </div>
       <div style="margin-bottom:16px">
-        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 2 (모바일/교체용) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(설정한 시간 후 자동 교체)</span></label>
+        <label style="font-size:var(--fs-base);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 2 (모바일/교체용) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(설정한 시간 후 자동 교체)</span></label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="b2-ed-second-profile" value="${_media2}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <input type="text" id="b2-ed-second-profile" value="${_media2}" placeholder="https://... 이미지 URL 입력" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
           <span id="b2-ed-photo2-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${_media2&&!_media2.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
             <img id="b2-ed-photo2-preview" src="${_media2&&!_media2.startsWith('data:')?toHttpsUrl(_media2).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
             <video id="b2-ed-photo2-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
@@ -1002,9 +1002,9 @@ function openB2ProfileEditModal(playerName) {
         <div style="font-size:10px;color:var(--gray-l);margin-top:4px">스트리머 선택 후 설정한 시간 뒤 이 이미지로 자동 전환됩니다.</div>
       </div>
       <div style="margin-bottom:16px">
-        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 3 (순환용)</label>
+        <label style="font-size:var(--fs-base);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 3 (순환용)</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="b2-ed-photo3" value="${_media3}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <input type="text" id="b2-ed-photo3" value="${_media3}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
           <span id="b2-ed-photo3-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${_media3&&!_media3.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
             <img id="b2-ed-photo3-preview" src="${_media3&&!_media3.startsWith('data:')?toHttpsUrl(_media3).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
             <video id="b2-ed-photo3-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
@@ -1012,9 +1012,9 @@ function openB2ProfileEditModal(playerName) {
         </div>
       </div>
       <div style="margin-bottom:16px">
-        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 4 (순환용)</label>
+        <label style="font-size:var(--fs-base);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 4 (순환용)</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="b2-ed-photo4" value="${_media4}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <input type="text" id="b2-ed-photo4" value="${_media4}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
           <span id="b2-ed-photo4-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${_media4&&!_media4.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
             <img id="b2-ed-photo4-preview" src="${_media4&&!_media4.startsWith('data:')?toHttpsUrl(_media4).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
             <video id="b2-ed-photo4-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
@@ -1022,9 +1022,9 @@ function openB2ProfileEditModal(playerName) {
         </div>
       </div>
       <div style="margin-bottom:16px">
-        <label style="font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 5 (순환용)</label>
+        <label style="font-size:var(--fs-base);font-weight:700;color:var(--text2);display:block;margin-bottom:6px">프로필 이미지 5 (순환용)</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="b2-ed-photo5" value="${_media5}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px">
+          <input type="text" id="b2-ed-photo5" value="${_media5}" placeholder="https://... (gif/mp4 가능)" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-base)">
           <span id="b2-ed-photo5-preview-wrap" style="position:relative;width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#e2e8f0;border:2px solid var(--border);display:${_media5&&!_media5.startsWith('data:')?'inline-flex':'none'};align-items:center;justify-content:center">
             <img id="b2-ed-photo5-preview" src="${_media5&&!_media5.startsWith('data:')?toHttpsUrl(_media5).replace(/\"/g,'&quot;'):''}" style="width:40px;height:40px;object-fit:cover;display:block" onerror="this.style.display='none'">
             <video id="b2-ed-photo5-preview-vid" src="" muted playsinline loop style="width:40px;height:40px;object-fit:cover;display:none"></video>
@@ -1032,14 +1032,14 @@ function openB2ProfileEditModal(playerName) {
         </div>
         <div style="font-size:10px;color:var(--gray-l);margin-top:4px">이미지별 탭에서 2→3→4→5(→1) 순서로 전환됩니다.</div>
       </div>
-      <div style="margin-top:10px;margin-bottom:16px;padding:12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px">
-        <div style="font-size:13px;font-weight:800;color:var(--text2);margin-bottom:10px">전환 시간(초)</div>
+      <div style="margin-top:10px;margin-bottom:16px;padding:12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:var(--r)">
+        <div style="font-size:var(--fs-base);font-weight:800;color:var(--text2);margin-bottom:10px">전환 시간(초)</div>
         ${_swapDelayInputs}
         <div style="font-size:10px;color:var(--gray-l);margin-top:10px">※ 실제 존재하는 이미지 순서만 순환합니다. mp4는 끝까지 재생 후 다음 이미지로 이동합니다.</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:20px">
-        <button onclick="document.getElementById('b2-profile-edit-modal').remove()" style="flex:1;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer">취소</button>
-        <button onclick="saveB2Profile('${player.name.replace(/'/g, "\\'")}')" style="flex:1;padding:10px 16px;background:var(--blue);border:1px solid var(--blue);border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">저장</button>
+        <button onclick="document.getElementById('b2-profile-edit-modal').remove()" style="flex:1;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:var(--fs-base);font-weight:600;cursor:pointer">취소</button>
+        <button onclick="saveB2Profile('${player.name.replace(/'/g, "\\'")}')" style="flex:1;padding:10px 16px;background:var(--blue);border:1px solid var(--blue);border-radius:8px;color:#fff;font-size:var(--fs-base);font-weight:600;cursor:pointer">저장</button>
       </div>
     </div>
   `;

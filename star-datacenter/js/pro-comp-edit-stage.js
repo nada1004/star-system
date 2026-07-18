@@ -18,22 +18,22 @@ window.openPcStageRecModal = function(tnId, round, idx){
       <button class="btn btn-w btn-xs" style="margin-left:auto" onclick="document.getElementById('_pcStageRecModal')?.remove()">닫기</button>
     </div>
     <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center">
-      <div style="font-size:12px;font-weight:800;color:var(--text2)">날짜</div>
-      <input id="_pcsr_d" type="date" value="${m.d||''}" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2)">A</div>
-      <input id="_pcsr_a" type="text" value="${(m.a||'').replace(/\"/g,'&quot;')}" placeholder="선수명" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2)">B</div>
-      <input id="_pcsr_b" type="text" value="${(m.b||'').replace(/\"/g,'&quot;')}" placeholder="선수명" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2)">승자</div>
-      <select id="_pcsr_w" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px;font-weight:900">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">날짜</div>
+      <input id="_pcsr_d" type="date" value="${m.d||''}" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r)">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">A</div>
+      <input id="_pcsr_a" type="text" value="${(m.a||'').replace(/\"/g,'&quot;')}" placeholder="선수명" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r)">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">B</div>
+      <input id="_pcsr_b" type="text" value="${(m.b||'').replace(/\"/g,'&quot;')}" placeholder="선수명" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r)">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">승자</div>
+      <select id="_pcsr_w" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r);font-weight:900">
         <option value="" ${!m.winner?'selected':''}>미정</option>
         <option value="A" ${m.winner==='A'?'selected':''}>A 승</option>
         <option value="B" ${m.winner==='B'?'selected':''}>B 승</option>
       </select>
-      <div style="font-size:12px;font-weight:800;color:var(--text2)">맵</div>
-      <input id="_pcsr_map" type="text" value="${(m.map||'').replace(/\"/g,'&quot;')}" placeholder="맵(선택)" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2)">참고</div>
-      <input id="_pcsr_note" type="text" value="${(m.note||'').replace(/\"/g,'&quot;')}" placeholder="참고 메모(선택)" style="padding:8px 10px;border:1px solid var(--border2);border-radius:10px">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">맵</div>
+      <input id="_pcsr_map" type="text" value="${(m.map||'').replace(/\"/g,'&quot;')}" placeholder="맵(선택)" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r)">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">참고</div>
+      <input id="_pcsr_note" type="text" value="${(m.note||'').replace(/\"/g,'&quot;')}" placeholder="참고 메모(선택)" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r)">
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn btn-b" style="flex:1" onclick="pcSaveStageRec('${tnId}','${r}',${idx},'${mid.replace(/'/g,"\\'")}')">✅ 저장</button>
@@ -397,16 +397,16 @@ function _renderPcStageBulkPreview(tnId, round){
   if(warnEl) warnEl.style.display = unresolved.length ? 'inline' : 'none';
   if(saveBtn) saveBtn.disabled = results.length > 0 && !savable.length;
   if(!results.length){
-    previewEl.innerHTML = '<div style="margin-top:12px;padding:16px 14px;border-radius:12px;border:1px dashed var(--border2);background:var(--surface);font-size:12px;color:var(--gray-l);text-align:center;line-height:1.7">붙여넣기하면 여기에 자동인식 미리보기가 표시됩니다.<br><span style="font-size:11px">선수 선택, 승패 뒤집기, 맵/날짜 수정 후 저장할 수 있습니다.</span></div>';
+    previewEl.innerHTML = '<div style="margin-top:12px;padding:16px 14px;border-radius:12px;border:1px dashed var(--border2);background:var(--surface);font-size:var(--fs-sm);color:var(--gray-l);text-align:center;line-height:1.7">붙여넣기하면 여기에 자동인식 미리보기가 표시됩니다.<br><span style="font-size:var(--fs-caption)">선수 선택, 승패 뒤집기, 맵/날짜 수정 후 저장할 수 있습니다.</span></div>';
     return;
   }
   const allMaps = [...new Set([...maps.filter(m=>m&&m!=='-'), ...results.map(r=>r.map).filter(m=>m&&m!=='-')])].sort();
   const buildCell = (i, ok, ambig, player, rawName, cands, similar, role) => {
-    if (ok) return `<button onclick="pcStageBulkPick(${i},${JSON.stringify(role)},${JSON.stringify(player.name)},${JSON.stringify(tnId)},${JSON.stringify(round)})" style="font-size:12px;font-weight:900;color:${role==='w'?'#1d4ed8':'#991b1b'};background:${role==='w'?'#dbeafe':'#fee2e2'};border:1.5px solid ${role==='w'?'#93c5fd':'#fca5a5'};border-radius:7px;padding:2px 8px;cursor:pointer;white-space:nowrap">${player.name}</button>`;
+    if (ok) return `<button onclick="pcStageBulkPick(${i},${JSON.stringify(role)},${JSON.stringify(player.name)},${JSON.stringify(tnId)},${JSON.stringify(round)})" style="font-size:var(--fs-sm);font-weight:900;color:${role==='w'?'#1d4ed8':'#991b1b'};background:${role==='w'?'#dbeafe':'#fee2e2'};border:1.5px solid ${role==='w'?'#93c5fd':'#fca5a5'};border-radius:7px;padding:2px 8px;cursor:pointer;white-space:nowrap">${player.name}</button>`;
     if (ambig) return `<div><span style="color:#b45309;font-size:10px;font-weight:700">${rawName}</span><div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">${(cands||[]).map(c=>`<button onclick="pcStageBulkPick(${i},${JSON.stringify(role)},${JSON.stringify(c.name)},${JSON.stringify(tnId)},${JSON.stringify(round)})" style="padding:2px 6px;border-radius:4px;border:1.5px solid #fcd34d;background:#fffbeb;color:#92400e;font-size:10px;cursor:pointer">${c.name}</button>`).join('')}</div></div>`;
-    return `<div><span style="color:#dc2626;font-size:11px;font-weight:700">${rawName||'?'}</span>${(similar||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">${similar.map(c=>`<button onclick="pcStageBulkPick(${i},${JSON.stringify(role)},${JSON.stringify(c.name)},${JSON.stringify(tnId)},${JSON.stringify(round)})" style="padding:2px 6px;border-radius:4px;border:1.5px solid #c4b5fd;background:#faf5ff;color:#6d28d9;font-size:10px;cursor:pointer">${c.name}</button>`).join('')}</div>`:''}</div>`;
+    return `<div><span style="color:#dc2626;font-size:var(--fs-caption);font-weight:700">${rawName||'?'}</span>${(similar||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">${similar.map(c=>`<button onclick="pcStageBulkPick(${i},${JSON.stringify(role)},${JSON.stringify(c.name)},${JSON.stringify(tnId)},${JSON.stringify(round)})" style="padding:2px 6px;border-radius:4px;border:1.5px solid #c4b5fd;background:#faf5ff;color:#6d28d9;font-size:10px;cursor:pointer">${c.name}</button>`).join('')}</div>`:''}</div>`;
   };
-  let h = `<div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:11px">
+  let h = `<div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:var(--fs-caption)">
     <thead><tr style="background:var(--surface)">
       ${isAll?`<th style="padding:5px 6px;text-align:left;font-weight:700;color:var(--text3)">라운드</th>`:''}
       <th style="padding:5px 8px;text-align:left;font-weight:700;color:var(--text3)">승자</th>
@@ -431,7 +431,7 @@ function _renderPcStageBulkPreview(tnId, round){
     const noteCell = r.note
       ? `<div style="max-width:220px;font-size:10px;line-height:1.5;color:var(--gray-l);white-space:normal;word-break:break-word">${String(r.note).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
       : `<span style="font-size:10px;color:#cbd5e1">-</span>`;
-    const flipBtn = `<button onclick="pcStageBulkFlip(${i},${JSON.stringify(tnId)},${JSON.stringify(round)})" title="승패 교체" style="padding:2px 5px;border-radius:4px;border:1px solid #ddd6fe;background:#f5f3ff;font-size:12px;cursor:pointer">⇄</button>`;
+    const flipBtn = `<button onclick="pcStageBulkFlip(${i},${JSON.stringify(tnId)},${JSON.stringify(round)})" title="승패 교체" style="padding:2px 5px;border-radius:4px;border:1px solid #ddd6fe;background:#f5f3ff;font-size:var(--fs-sm);cursor:pointer">⇄</button>`;
     const status = okAll
       ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:1px 4px;border-radius:6px">✓</span>`
       : (wAmbig||lAmbig)
@@ -489,47 +489,47 @@ window.openPcStageBulkPasteModal = function(tnId, round){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
   const stageRounds = (typeof _PC_STAGE_ROUNDS !== 'undefined' && Array.isArray(_PC_STAGE_ROUNDS)) ? _PC_STAGE_ROUNDS : ['64강','32강','16강','8강','4강','결승'];
   const roundDefaultSel = isAll
-    ? `<label style="font-size:12px;font-weight:700;color:var(--text2)">🏷️ 기본 라운드</label>
-      <select id="_pcStageBulkRoundDefault" onchange="pcStageBulkPreview('${tnId}','${r}')" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;font-weight:800">
+    ? `<label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">🏷️ 기본 라운드</label>
+      <select id="_pcStageBulkRoundDefault" onchange="pcStageBulkPreview('${tnId}','${r}')" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:var(--fs-base);font-weight:800">
         ${stageRounds.map(rr=>`<option value="${rr}" ${rr==='16강'?'selected':''}>${rr}</option>`).join('')}
       </select>
-      <div style="font-size:11px;color:var(--gray-l)">줄에 라운드(예: 64강)가 없으면 이 값으로 저장됩니다.</div>`
+      <div style="font-size:var(--fs-caption);color:var(--gray-l)">줄에 라운드(예: 64강)가 없으면 이 값으로 저장됩니다.</div>`
     : '';
   modal.innerHTML=`<div class="umbox" style="width:780px;max-width:97vw;max-height:92vh;overflow:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div class="mtitle" style="margin-bottom:0">🏅 프로리그 대회 ${isAll?'전체 라운드':r} 경기 결과 붙여넣기</div>
       <div style="display:flex;gap:6px;align-items:center">
-        <span id="_pcStageBulkBadge" style="display:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0"></span>
+        <span id="_pcStageBulkBadge" style="display:none;font-size:var(--fs-sm);font-weight:700;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0"></span>
         <button class="btn btn-w btn-sm" onclick="document.getElementById('_pcStageBulkPaste')?.remove()">✕ 닫기</button>
       </div>
     </div>
     <details style="margin-bottom:12px">
-      <summary style="font-size:12px;font-weight:700;color:#7c3aed;cursor:pointer;padding:6px 10px;background:#f5f3ff;border-radius:8px;border:1px solid #ddd6fe;list-style:none;display:flex;align-items:center;gap:5px">📌 사용법 보기</summary>
-      <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:0 0 8px 8px;padding:10px 14px;font-size:12px;color:#5b21b6;line-height:1.9;margin-top:-1px">
+      <summary style="font-size:var(--fs-sm);font-weight:700;color:#7c3aed;cursor:pointer;padding:6px 10px;background:#f5f3ff;border-radius:8px;border:1px solid #ddd6fe;list-style:none;display:flex;align-items:center;gap:5px">📌 사용법 보기</summary>
+      <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:0 0 8px 8px;padding:10px 14px;font-size:var(--fs-sm);color:#5b21b6;line-height:1.9;margin-top:-1px">
         형식 A: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">승자이름 패자이름 [맵]</span><br>
         형식 B: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">[맵] 홍길동T (승) vs (패) 이순신Z</span><br>
         형식 C: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">2026-05-02[TAB]승자[TAB]패자[TAB]맵</span><br>
-        ${isAll?`<div style="margin-top:6px;font-size:11px;color:#6d28d9">💡 한 번에 여러 라운드를 넣으려면 줄에 라운드를 포함하세요. 예: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">64강 홍길동 임꺽정 투혼</span> / <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">결승 홍길동 이순신 투혼</span></div>`:''}
-        <span style="color:#7c3aed;font-size:11px">💡 일반 경기 결과 자동인식과 같은 방식으로 선수/맵을 인식하고, 애매하면 아래 미리보기에서 직접 선택할 수 있습니다.</span>
+        ${isAll?`<div style="margin-top:6px;font-size:var(--fs-caption);color:#6d28d9">💡 한 번에 여러 라운드를 넣으려면 줄에 라운드를 포함하세요. 예: <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">64강 홍길동 임꺽정 투혼</span> / <span style="font-family:monospace;background:#ede9fe;padding:1px 6px;border-radius:4px">결승 홍길동 이순신 투혼</span></div>`:''}
+        <span style="color:#7c3aed;font-size:var(--fs-caption)">💡 일반 경기 결과 자동인식과 같은 방식으로 선수/맵을 인식하고, 애매하면 아래 미리보기에서 직접 선택할 수 있습니다.</span>
       </div>
     </details>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
-      <label style="font-size:12px;font-weight:700;color:var(--text2)">📅 기본 날짜</label>
-      <input type="date" id="_pcStageBulkDate" value="${today}" onchange="pcStageBulkPreview('${tnId}','${r}')" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">
-      <div style="font-size:11px;color:var(--gray-l)">줄마다 날짜가 없으면 이 날짜로 저장됩니다.</div>
+      <label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">📅 기본 날짜</label>
+      <input type="date" id="_pcStageBulkDate" value="${today}" onchange="pcStageBulkPreview('${tnId}','${r}')" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:var(--fs-base)">
+      <div style="font-size:var(--fs-caption);color:var(--gray-l)">줄마다 날짜가 없으면 이 날짜로 저장됩니다.</div>
       ${roundDefaultSel}
     </div>
     <div style="position:relative">
-      <textarea id="_pcStageBulkText" oninput="pcStageBulkPreview('${tnId}','${r}')" style="width:100%;min-height:160px;font-size:13px;border:1.5px solid #ddd6fe;border-radius:10px;padding:12px 36px 12px 12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box" placeholder="예)&#10;[실피드] 홍길동T (승) vs (패) 임꺽정Z&#10;또는&#10;홍길동 임꺽정 투혼&#10;또는&#10;2026-05-02\t홍길동\t임꺽정\t투혼"></textarea>
+      <textarea id="_pcStageBulkText" oninput="pcStageBulkPreview('${tnId}','${r}')" style="width:100%;min-height:160px;font-size:var(--fs-base);border:1.5px solid #ddd6fe;border-radius:var(--r);padding:12px 36px 12px 12px;resize:vertical;font-family:'Noto Sans KR',monospace;line-height:1.8;box-sizing:border-box" placeholder="예)&#10;[실피드] 홍길동T (승) vs (패) 임꺽정Z&#10;또는&#10;홍길동 임꺽정 투혼&#10;또는&#10;2026-05-02\t홍길동\t임꺽정\t투혼"></textarea>
       <button onclick="document.getElementById('_pcStageBulkText').value='';pcStageBulkPreview('${tnId}','${r}')"
         title="입력 지우기"
-        style="position:absolute;top:8px;right:8px;background:var(--border2);border:none;border-radius:5px;width:22px;height:22px;font-size:13px;line-height:1;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center;transition:.15s;"
+        style="position:absolute;top:8px;right:8px;background:var(--border2);border:none;border-radius:5px;width:22px;height:22px;font-size:var(--fs-base);line-height:1;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center;transition:.15s;"
         onmouseover="this.style.background='#dc2626';this.style.color='#fff'"
         onmouseout="this.style.background='var(--border2)';this.style.color='var(--text3)'">✕</button>
     </div>
     <div id="_pcStageBulkPreview"></div>
     <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;align-items:center">
-      <span id="_pcStageBulkWarn" style="display:none;font-size:11px;color:#b45309;font-weight:600">⚠️ 선택 필요한 항목이 있습니다</span>
+      <span id="_pcStageBulkWarn" style="display:none;font-size:var(--fs-caption);color:#b45309;font-weight:600">⚠️ 선택 필요한 항목이 있습니다</span>
       <button class="btn btn-w" onclick="document.getElementById('_pcStageBulkPaste')?.remove()">취소</button>
       <button id="_pcStageBulkApplyBtn" class="btn btn-g" onclick="pcApplyStageBulkPaste('${tnId}','${r}')">✅ 저장하기</button>
     </div>
@@ -630,16 +630,16 @@ function proCompOpenSeedModal(tnId){
         <button class="btn btn-w btn-sm" onclick="document.getElementById('_pcSeedModal')?.remove()">닫기</button>
       </div>
     </div>
-    <div style="font-size:12px;color:var(--gray-l);margin-bottom:12px">
+    <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">
       32강 대회에서 일부 선수가 16강/8강부터 합류하는 케이스를 지원합니다. <b>적용</b>을 누르면 “시작 라운드가 첫 라운드가 아닌 선수”는 해당 라운드의 빈 슬롯에 자동 배치됩니다.<br>
-      <span style="font-size:11px">※ 정확한 위치 재배치는 각 경기의 <b>✏️ 경기수정</b>에서 선수(A/B)를 바꾸면 됩니다.</span>
+      <span style="font-size:var(--fs-caption)">※ 정확한 위치 재배치는 각 경기의 <b>✏️ 경기수정</b>에서 선수(A/B)를 바꾸면 됩니다.</span>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px">
       ${cand.map(name=>{
         const cur = parseInt(tn.seedStarts[name]||firstSize,10)||firstSize;
-        return `<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface)">
-          <div style="font-weight:900;font-size:12px;min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-          <select data-seed-player="${name.replace(/\"/g,'&quot;')}" style="flex:1;padding:6px 10px;border-radius:10px;border:1px solid var(--border2);font-weight:800;font-size:12px">
+        return `<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;background:var(--surface)">
+          <div style="font-weight:900;font-size:var(--fs-sm);min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+          <select data-seed-player="${name.replace(/\"/g,'&quot;')}" style="flex:1;padding:6px 10px;border-radius:var(--r);border:1px solid var(--border2);font-weight:800;font-size:var(--fs-sm)">
             ${sizes.map((s,i)=>`<option value="${s}" ${s===cur?'selected':''}>${i===0?`${_pcRoundLabelBySize(s)}(첫 라운드)`:`${_pcRoundLabelBySize(s)}부터`}</option>`).join('')}
           </select>
         </div>`;

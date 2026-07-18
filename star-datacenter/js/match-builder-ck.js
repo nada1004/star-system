@@ -36,12 +36,12 @@ function buildCKInputHTML(){
   ], '');
   let h = _mbSectionCard('① 기본 정보', `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <label style="font-size:12px;font-weight:700;color:var(--blue)">날짜</label>
+      <label style="font-size:var(--fs-sm);font-weight:700;color:var(--blue)">날짜</label>
       <input type="date" value="${bld.date||''}" onchange="BLD['ck'].date=this.value">
     </div>`) + _mbSectionCard('② 스트리머 검색으로 빠른 팀 짜기', `
       <div style="position:relative;display:flex;gap:6px;align-items:center">
         <input type="text" id="ck-search-input" placeholder="스트리머/대학/별명 검색..." 
-          style="flex:1;padding:8px 12px;border:1.5px solid var(--blue);border-radius:8px;font-size:13px"
+          style="flex:1;padding:8px 12px;border:1.5px solid var(--blue);border-radius:8px;font-size:var(--fs-base)"
           oninput="ckSearchPlayer()">
       </div>
       <div id="ck-search-results" style="display:none;margin-top:6px;background:var(--white);border:1px solid var(--border2);border-radius:8px;max-height:180px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1)"></div>
@@ -49,23 +49,23 @@ function buildCKInputHTML(){
     <div class="mb-split">
       <div class="ck-panel">
         <h4>🔵 팀 A 구성 (${mA.length}명)</h4>
-        <input type="text" id="ck-tla-input" value="${(bld.teamNameA||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 A조)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;margin-bottom:6px;font-weight:700" onchange="BLD['ck'].teamNameA=this.value">
+        <input type="text" id="ck-tla-input" value="${(bld.teamNameA||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 A조)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm);margin-bottom:6px;font-weight:700" onchange="BLD['ck'].teamNameA=this.value">
         <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
           <select id="ck-a-univ" style="flex:1" onchange="ckFilterPlayers('A')">${uO}</select>
           <select id="ck-a-player" style="flex:1"><option value="">대학 먼저 선택</option></select>
           <button class="btn btn-b btn-xs" onclick="ckAddMember('A')">+ 추가</button>
         </div>
-        <div>${mA.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['ck'].membersA.splice(${i},1);BLD['ck'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">멤버를 추가하세요</span>'}</div>
+        <div>${mA.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['ck'].membersA.splice(${i},1);BLD['ck'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:var(--fs-sm)">멤버를 추가하세요</span>'}</div>
       </div>
       <div class="ck-panel">
         <h4>🔴 팀 B 구성 (${mB.length}명)</h4>
-        <input type="text" id="ck-tlb-input" value="${(bld.teamNameB||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 B조)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:12px;margin-bottom:6px;font-weight:700" onchange="BLD['ck'].teamNameB=this.value">
+        <input type="text" id="ck-tlb-input" value="${(bld.teamNameB||'').replace(/"/g,'&quot;')}" placeholder="팀명 (미입력 시 B조)" style="width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-sm);margin-bottom:6px;font-weight:700" onchange="BLD['ck'].teamNameB=this.value">
         <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
           <select id="ck-b-univ" style="flex:1" onchange="ckFilterPlayers('B')">${uO}</select>
           <select id="ck-b-player" style="flex:1"><option value="">대학 먼저 선택</option></select>
           <button class="btn btn-b btn-xs" onclick="ckAddMember('B')">+ 추가</button>
         </div>
-        <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['ck'].membersB.splice(${i},1);BLD['ck'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:12px">멤버를 추가하세요</span>'}</div>
+        <div>${mB.map((m,i)=>`<span class="mem-tag" style="background:${gc(m.univ)}">${m.name}<span style="font-size:10px;opacity:.8">(${m.univ}${m.tier?'/'+m.tier:''}${m.race?'/'+m.race:''})</span><button onclick="BLD['ck'].membersB.splice(${i},1);BLD['ck'].sets=[];render()">×</button></span>`).join('')||'<span style="color:var(--gray-l);font-size:var(--fs-sm)">멤버를 추가하세요</span>'}</div>
       </div>
     </div>`) + _mbSectionCard('④ 경기 결과 입력', `${setBuilderHTML(bld,'ck')}`);
   return _mbFrame('🤝 대학CK 입력', actionBar, h, '');
@@ -89,7 +89,7 @@ function ckSearchPlayer(){
       results=[ap, ...results.filter(x=>x.name!==ap.name)].slice(0,20);
     }
   }
-  if(!results.length){res.innerHTML='<div style="padding:10px 12px;color:var(--gray-l);font-size:12px">검색 결과 없음</div>';res.style.display='block';return;}
+  if(!results.length){res.innerHTML='<div style="padding:10px 12px;color:var(--gray-l);font-size:var(--fs-sm)">검색 결과 없음</div>';res.style.display='block';return;}
   res.innerHTML=results.map(p=>{
     const col=gc(p.univ);
     const inA=(bld.membersA||[]).some(m=>m.name===p.name);
@@ -98,16 +98,16 @@ function ckSearchPlayer(){
     const aliasTag = (aliasName && p.name===aliasName) ? `<span style="background:#ecfeff;color:#0e7490;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:800;margin-left:6px">별명: ${esc(q0)}</span>` : '';
     return `<div style="padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);${inTeam?'opacity:.5;':''}">
       <span style="width:28px;height:28px;border-radius:6px;background:${col};color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${p.race||'?'}</span>
-      <div style="flex:1;font-size:12px">
+      <div style="flex:1;font-size:var(--fs-sm)">
         <span style="font-weight:700">${p.name}</span>${aliasTag}
-        <span style="color:var(--gray-l);font-size:11px;margin-left:4px">${p.univ} · ${p.tier||'-'} · ${p.race||'-'}</span>
+        <span style="color:var(--gray-l);font-size:var(--fs-caption);margin-left:4px">${p.univ} · ${p.tier||'-'} · ${p.race||'-'}</span>
         ${inA?'<span style="background:#dbeafe;color:#1d4ed8;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:700;margin-left:4px">A팀</span>':''}
         ${inB?'<span style="background:#fee2e2;color:#dc2626;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:700;margin-left:4px">B팀</span>':''}
       </div>
       ${!inTeam?`
-      <button onclick="ckAddBySearch('A','${escJS(p.name)}')" style="background:#2563eb;color:#fff;border:none;border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">A팀</button>
-      <button onclick="ckAddBySearch('B','${escJS(p.name)}')" style="background:#dc2626;color:#fff;border:none;border-radius:5px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">B팀</button>
-      `:'<span style="font-size:11px;color:var(--gray-l)">배정됨</span>'}
+      <button onclick="ckAddBySearch('A','${escJS(p.name)}')" style="background:#2563eb;color:#fff;border:none;border-radius:5px;padding:4px 10px;font-size:var(--fs-caption);font-weight:700;cursor:pointer">A팀</button>
+      <button onclick="ckAddBySearch('B','${escJS(p.name)}')" style="background:#dc2626;color:#fff;border:none;border-radius:5px;padding:4px 10px;font-size:var(--fs-caption);font-weight:700;cursor:pointer">B팀</button>
+      `:'<span style="font-size:var(--fs-caption);color:var(--gray-l)">배정됨</span>'}
     </div>`;
   }).join('');
   res.style.display='block';
@@ -177,7 +177,7 @@ function ckRankHTML(){
   });
   const pEntries=Object.entries(pS2).filter(([,s])=>s.w+s.l>0).map(([name,s])=>({name,w:s.w,l:s.l,total:s.w+s.l,rate:s.w+s.l?Math.round(s.w/(s.w+s.l)*100):0}));
   pEntries.sort((a,b)=>sk==='w'?b.w-a.w||b.rate-a.rate:sk==='l'?b.l-a.l||a.rate-b.rate:b.rate-a.rate||b.w-a.w);
-  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏅 대학CK 개인 순위</div>${sortBar}`;
+  let h=`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md);color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue-ll)">🏅 대학CK 개인 순위</div>${sortBar}`;
   if(!pEntries.length){h+=`<div style="padding:20px;text-align:center;color:var(--gray-l)">개인 기록 없음</div>`;return h;}
   if(!window._rankPage)window._rankPage={};
   const _PK_ck='ck_ind';
@@ -198,7 +198,7 @@ function ckRankHTML(){
   });
   const _pageNav_ck=_tot_ck>_PAGE_ck?`<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
   <button class="btn btn-sm" ${_cp_ck===0?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK_ck}']=${_cp_ck-1};render()">← 이전</button>
-  <span style="font-size:12px;color:var(--gray-l)">${_cp_ck+1} / ${_totP_ck} (${_tot_ck}명)</span>
+  <span style="font-size:var(--fs-sm);color:var(--gray-l)">${_cp_ck+1} / ${_totP_ck} (${_tot_ck}명)</span>
   <button class="btn btn-sm" ${_cp_ck>=_totP_ck-1?'disabled':''} onclick="if(!window._rankPage)window._rankPage={};window._rankPage['${_PK_ck}']=${_cp_ck+1};render()">다음 →</button>
 </div>`:'';
   h+=`</tbody></table>`+_pageNav_ck;

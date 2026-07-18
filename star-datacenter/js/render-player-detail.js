@@ -170,7 +170,7 @@ function buildPlayerDetailHTML(p){
 
   const _eloChartPts=_computed?.eloChartPts || _modeHist.filter(h=>h.eloDelta!=null||h.eloAfter!=null);
   const _secEloChart = (_eloChartPts.length>=3) ? `<div class="pd-elo-chart-card" style="background:var(--white);border:1.5px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:14px">
-      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+      <div style="font-weight:700;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
         <span style="display:inline-block;width:3px;height:14px;background:#7c3aed;border-radius:2px"></span>
         ELO 변화 추이${_year?` (${_year}년)`:''}
         <span style="font-size:10px;color:var(--gray-l);font-weight:400;margin-left:4px">${_eloChartPts.length}경기</span>

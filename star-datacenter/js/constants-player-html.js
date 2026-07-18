@@ -148,7 +148,7 @@ function getStatusIconHTML(name){
   const def=Object.values(STATUS_ICON_DEFS).find(d=>d.emoji===ic);
   const lbl=def?def.label:ic;
   if(_siIsImg(ic)) return `<span style="margin-left:3px;flex-shrink:0;display:inline-flex;align-items:center" title="${lbl}">${_siRender(ic,'18px')}</span>`;
-  return `<span style="font-size:13px;margin-left:3px;flex-shrink:0" title="${lbl}">${ic}</span>`;
+  return `<span style="font-size:var(--fs-base);margin-left:3px;flex-shrink:0" title="${lbl}">${ic}</span>`;
 }
 
 function genderIcon(gender){

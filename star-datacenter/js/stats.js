@@ -143,7 +143,7 @@ function _statsLatestActiveMonths(gender){
     '.stats-inline-badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800}',
     '.stats-progress{flex:1;background:var(--border2);border-radius:999px;height:14px;overflow:hidden;min-width:80px}',
     '.stats-progress-bar{height:100%;border-radius:999px;transition:.25s}',
-    '.stats-surface-box{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);border-radius:16px;padding:12px 14px;box-shadow:0 10px 22px rgba(15,23,42,.04)}',
+    '.stats-surface-box{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);border-radius:var(--r2);padding:12px 14px;box-shadow:0 10px 22px rgba(15,23,42,.04)}',
     '.stats-duo-grid{display:flex;flex-wrap:wrap;gap:8px}',
     '.stats-records-grid{display:flex;flex-wrap:wrap;gap:14px}',
     '.stats-record-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);border-radius:14px;cursor:pointer;box-shadow:0 8px 18px rgba(15,23,42,.04)}',
@@ -155,16 +155,16 @@ function _statsLatestActiveMonths(gender){
     '.stats-chart-board{padding:14px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 30px rgba(15,23,42,.05)}',
     '.stats-chart-wrap{padding:14px 14px 10px;border-radius:18px;background:linear-gradient(180deg,#ffffff,#f8fbff);border:1px solid rgba(148,163,184,.16)}',
     '.stats-metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}',
-    '.stats-metric-card{padding:12px 14px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.stats-metric-card{padding:12px 14px;border-radius:var(--r2);border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
     '.stats-metric-label{font-size:11px;color:var(--text3);font-weight:800;margin-bottom:6px}',
     '.stats-metric-value{font-size:20px;font-weight:950;letter-spacing:-.02em;color:var(--text1)}',
     '.stats-metric-sub{font-size:11px;color:var(--gray-l);margin-top:4px}',
     '.stats-info-stack{display:flex;flex-direction:column;gap:10px}',
     '.stats-legend-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:2px}',
     '.stats-legend-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:900;border:1px solid rgba(148,163,184,.22)}',
-    '.stats-detail-card{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.stats-detail-card{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:var(--r2);border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
     '.stats-detail-title{font-weight:900;font-size:15px}',
-    '.stats-detail-row{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.92);border:1px solid rgba(148,163,184,.16)}',
+    '.stats-detail-row{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:var(--r);background:rgba(255,255,255,.92);border:1px solid rgba(148,163,184,.16)}',
     '.stats-detail-row span:first-child{font-size:12px;color:var(--text3)}',
     '.stats-detail-row span:last-child{font-size:12px;font-weight:800;color:var(--text1)}',
     '.stats-table-card{padding:12px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 16px 30px rgba(15,23,42,.05)}',
@@ -186,16 +186,16 @@ function _statsLatestActiveMonths(gender){
     '.stats-compare-univ-card{padding:14px;border-radius:18px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 12px 22px rgba(15,23,42,.05)}',
     '.stats-compare-vs{display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:950;color:var(--text3)}',
     '.stats-compare-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}',
-    '.stats-compare-kpi{padding:12px 14px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
-    '.stats-note-box{padding:16px 18px;border:1px dashed rgba(148,163,184,.28);border-radius:16px;color:var(--gray-l);font-size:13px;text-align:center;background:rgba(248,250,252,.7)}',
+    '.stats-compare-kpi{padding:12px 14px;border-radius:var(--r2);border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 10px 20px rgba(15,23,42,.04)}',
+    '.stats-note-box{padding:16px 18px;border:1px dashed rgba(148,163,184,.28);border-radius:var(--r2);color:var(--gray-l);font-size:13px;text-align:center;background:rgba(248,250,252,.7)}',
     '.stats-chip-pool{display:flex;flex-wrap:wrap;gap:8px}',
     '.stats-choice-chip{padding:7px 14px;border-radius:999px;border:1px solid rgba(148,163,184,.2);background:rgba(255,255,255,.96);font-size:12px;font-weight:800;cursor:pointer;transition:.15s;box-shadow:0 8px 16px rgba(15,23,42,.04)}',
     '.stats-choice-chip:hover{transform:translateY(-1px)}',
     '.stats-results-stack{display:flex;flex-direction:column;gap:8px}',
-    '.stats-result-card{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid rgba(148,163,184,.18);border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));cursor:pointer;box-shadow:0 10px 20px rgba(15,23,42,.04);transition:.15s}',
+    '.stats-result-card{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid rgba(148,163,184,.18);border-radius:var(--r2);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));cursor:pointer;box-shadow:0 10px 20px rgba(15,23,42,.04);transition:.15s}',
     '.stats-result-card:hover{transform:translateY(-1px);box-shadow:0 14px 26px rgba(15,23,42,.07)}',
     '.stats-preview-frame{width:100%;max-width:420px;min-height:140px;border-radius:20px;overflow:hidden;box-shadow:0 12px 34px rgba(15,23,42,.16);font-family:"Noto Sans KR",sans-serif;display:block;cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18)}',
-    '.stats-selection-list{display:flex;flex-direction:column;gap:6px;border:1px solid rgba(148,163,184,.18);border-radius:16px;padding:8px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))}',
+    '.stats-selection-list{display:flex;flex-direction:column;gap:6px;border:1px solid rgba(148,163,184,.18);border-radius:var(--r2);padding:8px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))}',
     '.stats-selection-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.88);cursor:pointer;text-align:left;font-size:12px;transition:.12s}',
     '.stats-selection-item:hover{background:#eff6ff}',
     '.stats-filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:12px}',
@@ -583,7 +583,7 @@ function statsTierRankHTML(){
       .sr-det{display:none}
       .sr-det.open{display:table-row}
       .sr-det td{padding:14px 12px;background:linear-gradient(175deg,#f8fbff,#eef4fb)}
-      .sr-box{background:#fff;border:1px solid rgba(148,163,184,.18);border-radius:16px;padding:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.85)}
+      .sr-box{background:#fff;border:1px solid rgba(148,163,184,.18);border-radius:var(--r2);padding:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.85)}
       .sr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
       @media(max-width:820px){.sr-grid{grid-template-columns:1fr}}
       .sr-log{max-height:200px;overflow:auto;border:1px solid rgba(148,163,184,.18);border-radius:12px;background:rgba(255,255,255,.82)}
@@ -909,7 +909,7 @@ function statsStarSystemHTML(){
       <span style="font-size:12px;color:var(--gray-l)">※ 서버 없이 “기존 기록 데이터(펨코 스타 게시판 경기결과탭에서 등록된 기록 포함)”로 점수 계산합니다.</span>
     </div>
 
-    <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px">
+    <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px">
       <div style="font-size:12px;font-weight:1000;color:var(--text2);margin-bottom:8px">공식전 모드 키워드</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <input type="text" value="${escHTML(kwsRaw||_ssKeywords().join(','))}" oninput="starSystemSetKeywords(this.value)" placeholder="예: 대학대전,CK,교수,코치,끝장전..." style="flex:1;min-width:260px">
@@ -918,7 +918,7 @@ function statsStarSystemHTML(){
       <div style="font-size:11px;color:var(--gray-l);margin-top:6px">mode(기록의 경기 구분 텍스트)에 키워드가 포함되면 공식전으로 처리합니다.</div>
     </div>
 
-    <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+    <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
       <div style="font-size:12px;font-weight:1000;color:var(--text2);margin-bottom:8px">사양서</div>
       <pre style="white-space:pre-wrap;line-height:1.55;font-size:12px;color:var(--text3);max-height:300px;overflow:auto;margin:0">${escHTML(spec)}</pre>
     </div>
@@ -2907,11 +2907,11 @@ function globalSearchSelectExt(idx){
     const sub=`${it.date||''}${it.map?` · ${it.map}`:''}${it.elo?` · ELO ${it.elo}`:''}${it.type?` · ${it.type}`:''}`;
     const memo=(it.memo||'').trim();
     const src=(it.source||'').trim();
-    modal.innerHTML=`<div style="background:var(--white);border-radius:16px;padding:18px 18px 14px;width:420px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    modal.innerHTML=`<div style="background:var(--white);border-radius:var(--r2);padding:18px 18px 14px;width:420px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3)">
       <div style="font-weight:1000;font-size:14px;margin-bottom:6px">📎 외부 대진기록</div>
       <div style="font-weight:900;font-size:13px;color:var(--text);margin-bottom:4px">${line}</div>
       <div style="font-size:11px;color:var(--gray-l);line-height:1.6;margin-bottom:10px">${sub}${src?`<br>출처: ${src}`:''}</div>
-      ${memo?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:12px;line-height:1.7;margin-bottom:10px;white-space:pre-wrap">${memo.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
+      ${memo?`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px;font-size:12px;line-height:1.7;margin-bottom:10px;white-space:pre-wrap">${memo.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`:''}
       <div style="display:flex;gap:8px">
         <button class="btn btn-w" style="flex:1" onclick="document.getElementById('_gsExtModal').remove()">닫기</button>
       </div>

@@ -108,7 +108,7 @@ function rBracketSchedule(tn){
       <div style="margin-bottom:0">
       <div class="grp-match-card match-card-v3 tc-card${_fxOn?' grp-sidefx grp-sidefx--'+_fxMode:''}${(_bktSide.left||_bktSide.right)?' has-side-panels':''}" style="--tc-win-rgb:${winRgb};${_sideRgbVars}${_fxVars}border-left:4px solid ${_fxOn?(ca||'#3b82f6'):(isManual?'#7c3aed':'var(--blue)')};${_fxOn?`border-right:4px solid ${cb||'#ef4444'};`:''};background:var(--white);margin-bottom:0">
         <div class="grp-match-leftpad" style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:72px">
-          ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:10px">예정</span>`:''}
+          ${!isDone?`<span style="background:var(--surface);color:var(--gray-l);font-size:10px;padding:2px 8px;border-radius:var(--r)">예정</span>`:''}
         </div>
         ${_bktSide.left||''}
         <div class="grp-match-main" style="flex:1;display:flex;align-items:center;gap:var(--tc-vs-gap,12px);justify-content:center;flex-wrap:wrap">
@@ -121,7 +121,7 @@ function rBracketSchedule(tn){
 
           </div>
           <div class="grp-score-col" style="text-align:center;min-width:80px">
-            ${isDone?`<div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:18px" onclick="openCompMatchDetailModal('${tn.id}',null,${mi},${r},${isManual})"><span style="color:${aWin?'var(--win-col)':bWin?'var(--lose-col)':'var(--text2)'}">${sa}</span><span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span><span style="color:${bWin?'var(--win-col)':aWin?'var(--lose-col)':'var(--text2)'}">${sb}</span></div>
+            ${isDone?`<div class="grp-match-score score-click" style="cursor:pointer;padding:6px 14px;background:var(--white);border-radius:12px;border:1.5px solid var(--border);font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-lg)" onclick="openCompMatchDetailModal('${tn.id}',null,${mi},${r},${isManual})"><span style="color:${aWin?'var(--win-col)':bWin?'var(--lose-col)':'var(--text2)'}">${sa}</span><span class="score-sep" style="color:var(--text2);font-size:0.72em;font-weight:900;margin:0 5px;opacity:0.8">:</span><span style="color:${bWin?'var(--win-col)':aWin?'var(--lose-col)':'var(--text2)'}">${sb}</span></div>
             `:`<div style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:22px;color:var(--blue)">VS</div>`}
           </div>
           <div class="grp-team-col" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:100px">
@@ -149,7 +149,7 @@ function rBracketSchedule(tn){
 
   let h=`<div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:15px;color:var(--blue)">⚔️ 토너먼트</span>
+      <span style="font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-md);color:var(--blue)">⚔️ 토너먼트</span>
       ${isLoggedIn?`<button class="btn btn-w btn-sm no-export" onclick="openBktSeedModal('${tn.id}')" title="상위 시드(부전승/라운드 합류) 및 자동 배치">🎫 시드/부전승</button>
 <button class="btn btn-b btn-sm no-export" onclick="bktAddManualMatch('${tn.id}')">+ 경기 추가</button><button class="btn btn-p btn-sm no-export" onclick="openBktBulkPaste('${tn.id}')">📋 결과 붙여넣기</button>
 <button class="btn btn-w btn-xs no-export" onclick="openBktBulkPaste('${tn.id}','64강')">64강</button>
@@ -167,13 +167,13 @@ function rBracketSchedule(tn){
     `;
 
   if(!pending.filter(m=>m.teamA||m.teamB).length&&!done.length){
-    h+=`<div style="padding:30px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:10px">
+    h+=`<div style="padding:30px;text-align:center;color:var(--gray-l);background:var(--surface);border-radius:var(--r)">
       ${isLoggedIn?'+ 경기 추가 버튼으로 경기를 등록하거나 브라켓에서 팀을 배정하세요.':'팀이 배정되면 경기 일정이 표시됩니다.'}
     </div>`;
   } else {
     if(pending.filter(m=>m.teamA||m.teamB).length){
       h+=`<div style="margin-bottom:16px">
-        <div style="font-size:12px;font-weight:700;color:var(--gray-l);margin-bottom:8px;padding:4px 10px;background:var(--surface);border-radius:6px;display:inline-block">📅 예정 경기</div>`;
+        <div style="font-size:var(--fs-sm);font-weight:700;color:var(--gray-l);margin-bottom:8px;padding:4px 10px;background:var(--surface);border-radius:6px;display:inline-block">📅 예정 경기</div>`;
       pending.filter(m=>m.teamA||m.teamB).forEach(m=>{h+=matchCard(m);});
       h+=`</div>`;
     }
@@ -186,7 +186,7 @@ function rBracketSchedule(tn){
       _bktDayKeys.forEach(dk=>{
         let _bktDkLabel=dk;
         if(dk!=='날짜 미정'){const dt=new Date(dk+'T00:00:00');_bktDkLabel=`${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${_bktDays[dt.getDay()]}`;}
-        h+=`<div style="margin-bottom:22px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:13px;color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_bktDkLabel}</div></div>`;
+        h+=`<div style="margin-bottom:22px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base);color:#1e3a8a;padding:8px 16px;background:linear-gradient(90deg,#1e3a8a10,transparent);border-left:4px solid #2563eb;border-radius:0 8px 8px 0">📅 ${_bktDkLabel}</div></div>`;
         _bktByDate[dk].forEach(mc=>{h+=matchCard(mc);});
         h+=`</div>`;
       });

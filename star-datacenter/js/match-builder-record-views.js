@@ -201,11 +201,11 @@ function _h2hPlayerBgPanel(pName, isWin, isLose){
     : `width:min(100%, ${Math.max(80,sizeW)}px);flex:0 1 auto;min-width:0;`;
   // 패배자는 눈에 띄게 흑백 처리(예전엔 grayscale(.14)로 거의 표시가 안 됐음)
   const loseImgFx = isLose ? 'filter:grayscale(.9) saturate(.3) brightness(.9) contrast(.96);opacity:.88;' : '';
-  return `<div ${click} style="position:relative;overflow:hidden;border-radius:16px;height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${frameCol};box-shadow:${frameShadow};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${loseImgFx}">
+  return `<div ${click} style="position:relative;overflow:hidden;border-radius:var(--r2);height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${frameCol};box-shadow:${frameShadow};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${loseImgFx}">
     ${!p.photo?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(28,Math.round(base*0.30))}px;font-weight:1000;color:rgba(255,255,255,.16)">${initial}</div>`:''}
     <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;z-index:1;${loseFx}">
       <div style="font-weight:1000;font-size:16px;line-height:1.1;color:${txtCol};text-shadow:0 1px 3px rgba(0,0,0,.9),0 2px 10px rgba(0,0,0,.7)">${pName||'미정'}</div>
-      <div style="font-size:11px;font-weight:800;color:${txtCol2};text-shadow:0 1px 3px rgba(0,0,0,.9),0 2px 8px rgba(0,0,0,.6)">${univ}</div>
+      <div style="font-size:var(--fs-caption);font-weight:800;color:${txtCol2};text-shadow:0 1px 3px rgba(0,0,0,.9),0 2px 8px rgba(0,0,0,.6)">${univ}</div>
       <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;align-items:center">${race}${tier?`<span style="transform:scale(.92);transform-origin:center">${tier}</span>`:''}</div>
     </div>
   </div>`;
@@ -493,7 +493,7 @@ function _h2hGlassCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
       <div style="${bg2?`background-image:${bg2};background-size:cover;background-position:${p2pos};`:`background:linear-gradient(225deg,${p2col}66,${p2col}22);`}filter:blur(10px) saturate(1.15);transform:scale(1.06);"></div>
     </div>
     <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,23,42,.55),rgba(15,23,42,.10),rgba(15,23,42,.55))"></div>
-    <div style="position:absolute;inset:${isMb?'10px 10px 12px':'12px 14px 14px'};border-radius:16px;background:rgba(255,255,255,.62);backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);border:1px solid rgba(255,255,255,.55);box-shadow:0 12px 28px rgba(15,23,42,.16);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:${isMb?'10px 12px':'12px 16px'}">
+    <div style="position:absolute;inset:${isMb?'10px 10px 12px':'12px 14px 14px'};border-radius:var(--r2);background:rgba(255,255,255,.62);backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);border:1px solid rgba(255,255,255,.55);box-shadow:0 12px 28px rgba(15,23,42,.16);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:${isMb?'10px 12px':'12px 16px'}">
       <div style="min-width:0;display:flex;flex-direction:column;gap:3px">
         <div style="font-weight:1000;font-size:${isMb?13:15}px;color:${win1?p1col:'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.p1}</div>
         <div style="font-size:10px;color:var(--gray-l);font-weight:800">${p1.univ||''}</div>
@@ -733,8 +733,8 @@ function _h2hBattleCard(s, p1wins, p2wins, winner, p1col, p2col, isMb){
   const av = (pName, col)=>{
     const p = players.find(x=>x.name===pName)||{};
     const sz = isMb ? 40 : 48;
-    if(p.photo) return `<div style="width:${sz}px;height:${sz}px;border-radius:10px;overflow:hidden;border:2.5px solid rgba(255,255,255,.55);box-shadow:0 0 0 2px ${col}66,0 6px 18px rgba(0,0,0,.28);flex-shrink:0"><img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover"></div>`;
-    return `<div style="width:${sz}px;height:${sz}px;border-radius:10px;background:${col}33;border:2.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?17:20}px;color:rgba(255,255,255,.9);flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
+    if(p.photo) return `<div style="width:${sz}px;height:${sz}px;border-radius:var(--r);overflow:hidden;border:2.5px solid rgba(255,255,255,.55);box-shadow:0 0 0 2px ${col}66,0 6px 18px rgba(0,0,0,.28);flex-shrink:0"><img src="${toHttpsUrl(p.photo)}" style="width:100%;height:100%;object-fit:cover"></div>`;
+    return `<div style="width:${sz}px;height:${sz}px;border-radius:var(--r);background:${col}33;border:2.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:${isMb?17:20}px;color:rgba(255,255,255,.9);flex-shrink:0">${(pName||'?').slice(0,1)}</div>`;
   };
 
   return `<div style="position:relative;height:${h}px;overflow:hidden;border-radius:var(--h2h-card-radius,12px) var(--h2h-card-radius,12px) 0 0">
@@ -937,7 +937,7 @@ function indRecordsHTML(){
       <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">`;
     const _onAll = !_pickedDate;
     h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','');histPage['ind']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
-      <div style="font-weight:1000;font-size:12px;color:${_onAll?'var(--blue)':'var(--text2)'}">전체</div>
+      <div style="font-weight:1000;font-size:var(--fs-sm);color:${_onAll?'var(--blue)':'var(--text2)'}">전체</div>
       <div style="margin-top:6px;font-size:10px;color:var(--gray-l)">날짜 필터 해제</div>
     </button>`;
     _allDates.forEach(d0=>{
@@ -948,7 +948,7 @@ function indRecordsHTML(){
       const on=(_pickedDate===d0);
       h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','${d0}');histPage['ind']=0;render()" style="flex-shrink:0;text-align:left;min-width:170px;max-width:280px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-weight:1000;font-size:12px;color:${on?'var(--blue)':'var(--text2)'}">${label}</span>
+          <span style="font-weight:1000;font-size:var(--fs-sm);color:${on?'var(--blue)':'var(--text2)'}">${label}</span>
           <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${dayS.length?`세션 ${dayS.length}`:''}</span>
         </div>
         ${prev}
@@ -966,19 +966,19 @@ function indRecordsHTML(){
   const slice=total>pageSize?filteredSess.slice(cur*pageSize,(cur+1)*pageSize):filteredSess;
   const _indBulkOn=isLoggedIn&&!!_bulkModes['ind'];
   let h=isLoggedIn?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
-    <button onclick="toggleBulkMode('ind')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_indBulkOn?'#dc2626':'var(--border2)'};background:${_indBulkOn?'#fff1f2':'var(--surface)'};color:${_indBulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_indBulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
+    <button onclick="toggleBulkMode('ind')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_indBulkOn?'#dc2626':'var(--border2)'};background:${_indBulkOn?'#fff1f2':'var(--surface)'};color:${_indBulkOn?'#dc2626':'var(--text3)'};font-size:var(--fs-caption);font-weight:700;cursor:pointer">${_indBulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
   </div>`:'';
   h+=_dateMenuHTML;
   if(_indBulkOn){
     h+=`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
-      <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">
+      <label style="display:flex;align-items:center;gap:5px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;color:var(--blue)">
         <input type="checkbox" id="bulk-all-ind" onchange="indBulkToggleAll('ind',this.checked)" style="width:14px;height:14px;cursor:pointer"> 전체
       </label>
-      <span id="bulk-cnt-ind" style="font-size:11px;color:var(--blue);font-weight:700;min-width:64px">0개 선택됨</span>
+      <span id="bulk-cnt-ind" style="font-size:var(--fs-caption);color:var(--blue);font-weight:700;min-width:64px">0개 선택됨</span>
       <span style="color:var(--border2)">│</span>
-      <button onclick="bulkMoveInd('ind','gj')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer">⚔️ 끝장전으로 이동</button>
-      <button onclick="bulkMoveInd('ind','progj')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #7c3aed;background:#7c3aed;color:#fff;font-size:11px;font-weight:700;cursor:pointer">🏅 프로리그 끝장전으로 이동</button>
-      <button onclick="bulkDeleteInd('ind')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #dc2626;background:#dc2626;color:#fff;font-size:11px;font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
+      <button onclick="bulkMoveInd('ind','gj')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:var(--fs-caption);font-weight:700;cursor:pointer">⚔️ 끝장전으로 이동</button>
+      <button onclick="bulkMoveInd('ind','progj')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #7c3aed;background:#7c3aed;color:#fff;font-size:var(--fs-caption);font-weight:700;cursor:pointer">🏅 프로리그 끝장전으로 이동</button>
+      <button onclick="bulkDeleteInd('ind')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #dc2626;background:#dc2626;color:#fff;font-size:var(--fs-caption);font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
     </div>`;
   }
   slice.forEach(s=>{
@@ -1024,9 +1024,9 @@ function indRecordsHTML(){
     h+=`<div class="h2h-rec-card" style="border:var(--h2h-card-border,1px solid var(--border));border-bottom:var(--h2h-card-border-bottom,none);border-radius:var(--h2h-card-radius,12px);margin-bottom:var(--h2h-card-gap,8px);overflow:hidden;box-shadow:var(--h2h-card-shadow,none);${_indWrapFx||'background:var(--white);'}">
       <div style="cursor:pointer" onclick="openIndSessionPopup('${_indSessKey}')">${_bodyHTML}</div>
       <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:${_isMb?'7px 10px':'8px 14px'};background:var(--bg2);flex-wrap:wrap">
-        <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#E6F1FB;color:#185FA5">개인전</span>
-        <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.games.length}경기</span>
         <span style="margin-left:auto"></span>
         <span onclick="event.stopPropagation()">${actionBtn}</span>
       </div>
@@ -1040,7 +1040,7 @@ function indRecordsHTML(){
     for(let p=s2;p<=e2;p++) h+=`<button class="btn ${p===cur?'btn-b':'btn-w'} btn-xs" style="min-width:32px" onclick="histPage['ind']=${p};render()">${p+1}</button>`;
     h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['ind']=Math.min(${totalPages-1},${cur}+1);render()" ${cur===totalPages-1?'disabled':''}>›</button>`;
     h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['ind']=${totalPages-1};render()" ${cur===totalPages-1?'disabled':''}>»</button>`;
-    h+=`<span style="font-size:11px;color:var(--text3);margin-left:6px">${cur+1} / ${totalPages}</span></div>`;
+    h+=`<span style="font-size:var(--fs-caption);color:var(--text3);margin-left:6px">${cur+1} / ${totalPages}</span></div>`;
   }
   return h;
 }
@@ -1108,7 +1108,7 @@ function gjRecordsHTML(proOnly){
       <div style="display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">`;
     const _onAll = !_pickedDate;
     h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','');histPage['gj']=0;render()" style="flex-shrink:0;min-width:92px;padding:10px 12px;border-radius:12px;border:1px solid ${_onAll?'var(--blue)':'var(--border)'};background:${_onAll?'#eff6ff':'var(--surface)'};cursor:pointer;text-align:left">
-      <div style="font-weight:1000;font-size:12px;color:${_onAll?'var(--blue)':'var(--text2)'}">전체</div>
+      <div style="font-weight:1000;font-size:var(--fs-sm);color:${_onAll?'var(--blue)':'var(--text2)'}">전체</div>
       <div style="margin-top:6px;font-size:10px;color:var(--gray-l)">날짜 필터 해제</div>
     </button>`;
     _allDates.forEach(d0=>{
@@ -1119,7 +1119,7 @@ function gjRecordsHTML(proOnly){
       const on=(_pickedDate===d0);
       h+=`<button type="button" onclick="localStorage.setItem('${_datePickKey}','${d0}');histPage['gj']=0;render()" style="flex-shrink:0;text-align:left;min-width:170px;max-width:280px;padding:10px 12px;border-radius:12px;border:1px solid ${on?'var(--blue)':'var(--border)'};background:${on?'#eff6ff':'var(--surface)'};cursor:pointer">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-weight:1000;font-size:12px;color:${on?'var(--blue)':'var(--text2)'}">${label}</span>
+          <span style="font-weight:1000;font-size:var(--fs-sm);color:${on?'var(--blue)':'var(--text2)'}">${label}</span>
           <span style="margin-left:auto;font-size:10px;color:var(--gray-l);font-weight:900">${dayS.length?`세션 ${dayS.length}`:''}</span>
         </div>
         ${prev}
@@ -1141,18 +1141,18 @@ function gjRecordsHTML(proOnly){
     ?[{l:'⚔️ 일반 끝장전',d:'ungj'},{l:'🎮 개인전',d:'ind'}]
     :[{l:'🎮 개인전',d:'ind'},{l:'🏅 프로리그 끝장전',d:'progj'}];
   let h=isLoggedIn?`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px">
-    <button onclick="toggleBulkMode('${_gjBulkKey}')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_gjBulkOn?'#dc2626':'var(--border2)'};background:${_gjBulkOn?'#fff1f2':'var(--surface)'};color:${_gjBulkOn?'#dc2626':'var(--text3)'};font-size:11px;font-weight:700;cursor:pointer">${_gjBulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
+    <button onclick="toggleBulkMode('${_gjBulkKey}')" style="padding:3px 10px;border-radius:12px;border:1.5px solid ${_gjBulkOn?'#dc2626':'var(--border2)'};background:${_gjBulkOn?'#fff1f2':'var(--surface)'};color:${_gjBulkOn?'#dc2626':'var(--text3)'};font-size:var(--fs-caption);font-weight:700;cursor:pointer">${_gjBulkOn?'✕ 선택 해제':'☑ 일괄 선택'}</button>
   </div>`:'';
   h+=_dateMenuHTML;
   if(_gjBulkOn){
     h+=`<div class="no-export" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#eff6ff;border:1.5px solid var(--blue);border-radius:8px;margin-bottom:6px">
-      <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;color:var(--blue)">
+      <label style="display:flex;align-items:center;gap:5px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;color:var(--blue)">
         <input type="checkbox" id="bulk-all-${_gjBulkKey}" onchange="indBulkToggleAll('${_gjBulkKey}',this.checked)" style="width:14px;height:14px;cursor:pointer"> 전체
       </label>
-      <span id="bulk-cnt-${_gjBulkKey}" style="font-size:11px;color:var(--blue);font-weight:700;min-width:64px">0개 선택됨</span>
+      <span id="bulk-cnt-${_gjBulkKey}" style="font-size:var(--fs-caption);color:var(--blue);font-weight:700;min-width:64px">0개 선택됨</span>
       <span style="color:var(--border2)">│</span>
-      ${_gjBulkDests.map(bd=>`<button onclick="bulkMoveInd('${_gjBulkKey}','${bd.d}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer">${bd.l}로 이동</button>`).join('')}
-      <button onclick="bulkDeleteInd('${_gjBulkKey}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #dc2626;background:#dc2626;color:#fff;font-size:11px;font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
+      ${_gjBulkDests.map(bd=>`<button onclick="bulkMoveInd('${_gjBulkKey}','${bd.d}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:var(--fs-caption);font-weight:700;cursor:pointer">${bd.l}로 이동</button>`).join('')}
+      <button onclick="bulkDeleteInd('${_gjBulkKey}')" style="padding:3px 12px;border-radius:12px;border:1.5px solid #dc2626;background:#dc2626;color:#fff;font-size:var(--fs-caption);font-weight:700;cursor:pointer">🗑️ 선택 삭제</button>
     </div>`;
   }
   slice.forEach(s=>{
@@ -1203,9 +1203,9 @@ function gjRecordsHTML(proOnly){
     h+=`<div class="h2h-rec-card" style="border:var(--h2h-card-border,1px solid var(--border));border-bottom:var(--h2h-card-border-bottom,none);border-radius:var(--h2h-card-radius,12px);margin-bottom:var(--h2h-card-gap,8px);overflow:hidden;box-shadow:var(--h2h-card-shadow,none);${_gjWrapFx||'background:var(--white);'}">
       <div style="cursor:pointer" onclick="openGJSessionPopup('${_gjSessKey}')">${_gjBodyHTML}</div>
       <div style="border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:${_isMb?'7px 10px':'8px 14px'};background:var(--bg2);flex-wrap:wrap">
-        <span style="font-size:11px;color:var(--gray-l)">${s.d||'날짜 미정'}</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.d||'날짜 미정'}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${gj_typeBg};color:${gj_typeColor}">${gj_typeLabel}</span>
-        <span style="font-size:11px;color:var(--gray-l)">${s.games.length}경기</span>
+        <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.games.length}경기</span>
         <span style="margin-left:auto"></span>
         <span onclick="event.stopPropagation()">${actionBtn}</span>
       </div>
@@ -1219,7 +1219,7 @@ function gjRecordsHTML(proOnly){
     for(let p=s2;p<=e2;p++) h+=`<button class="btn ${p===cur?'btn-b':'btn-w'} btn-xs" style="min-width:32px" onclick="histPage['gj']=${p};render()">${p+1}</button>`;
     h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['gj']=Math.min(${totalPages-1},${cur}+1);render()" ${cur===totalPages-1?'disabled':''}>›</button>`;
     h+=`<button class="btn btn-w btn-xs" style="min-width:32px" onclick="histPage['gj']=${totalPages-1};render()" ${cur===totalPages-1?'disabled':''}>»</button>`;
-    h+=`<span style="font-size:11px;color:var(--text3);margin-left:6px">${cur+1} / ${totalPages}</span></div>`;
+    h+=`<span style="font-size:var(--fs-caption);color:var(--text3);margin-left:6px">${cur+1} / ${totalPages}</span></div>`;
   }
   return h;
 }

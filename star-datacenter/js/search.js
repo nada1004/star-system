@@ -2092,14 +2092,14 @@ function renderPastePreview(results, errors) {
         </div>
         <div class="pv-cards">`;
     }else{
-      html += `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px">`;
-      html += `<table style="margin:0;width:100%;font-size:12px"><thead><tr>
-        <th style="text-align:left;padding:6px 8px;font-size:11px;width:86px">${_colLabel}</th>
-        <th style="text-align:left;padding:6px 8px;font-size:11px;width:90px">맵</th>
-        <th style="text-align:left;padding:6px 8px;font-size:11px">${_teamALabel}</th>
-        <th style="text-align:left;padding:6px 8px;font-size:11px">${_teamBLabel}</th>
-        <th style="text-align:left;padding:6px 8px;font-size:11px;width:70px">상태</th>
-        <th style="text-align:center;padding:6px 8px;font-size:11px;width:52px">관리</th>
+      html += `<div style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:10px">`;
+      html += `<table style="margin:0;width:100%;font-size:var(--fs-sm)"><thead><tr>
+        <th style="text-align:left;padding:6px 8px;font-size:var(--fs-caption);width:86px">${_colLabel}</th>
+        <th style="text-align:left;padding:6px 8px;font-size:var(--fs-caption);width:90px">맵</th>
+        <th style="text-align:left;padding:6px 8px;font-size:var(--fs-caption)">${_teamALabel}</th>
+        <th style="text-align:left;padding:6px 8px;font-size:var(--fs-caption)">${_teamBLabel}</th>
+        <th style="text-align:left;padding:6px 8px;font-size:var(--fs-caption);width:70px">상태</th>
+        <th style="text-align:center;padding:6px 8px;font-size:var(--fs-caption);width:52px">관리</th>
       </tr></thead><tbody>`;
     }
 
@@ -2163,7 +2163,7 @@ function renderPastePreview(results, errors) {
             <span style="font-size:10px;color:#b45309;font-weight:600">선택:</span>` +
             candidates.map(c =>
               `<button class="paste-pick-btn" data-idx="${i}" data-role="${role}" data-name="${c.name.replace(/"/g,'&quot;')}"
-                style="padding:3px 9px;border-radius:5px;border:1.5px solid #fcd34d;background:#fffbeb;color:#92400e;font-size:11px;font-weight:700;cursor:pointer;transition:.12s"
+                style="padding:3px 9px;border-radius:5px;border:1.5px solid #fcd34d;background:#fffbeb;color:#92400e;font-size:var(--fs-caption);font-weight:700;cursor:pointer;transition:.12s"
                 onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fffbeb'">
                 ${c.name}${c.univ?`<span style="font-size:9px;opacity:.7;margin-left:2px">(${c.univ})</span>`:''}</button>`
             ).join('') + `</div>`;
@@ -2176,7 +2176,7 @@ function renderPastePreview(results, errors) {
               <span style="font-size:10px;color:#7c3aed;font-weight:700">혹시:</span>` +
               similar.map(c =>
                 `<button class="paste-pick-btn" data-idx="${i}" data-role="${role}" data-name="${c.name.replace(/"/g,'&quot;')}"
-                  style="padding:3px 9px;border-radius:5px;border:1.5px solid #c4b5fd;background:#faf5ff;color:#6d28d9;font-size:11px;font-weight:700;cursor:pointer;transition:.12s"
+                  style="padding:3px 9px;border-radius:5px;border:1.5px solid #c4b5fd;background:#faf5ff;color:#6d28d9;font-size:var(--fs-caption);font-weight:700;cursor:pointer;transition:.12s"
                   onmouseover="this.style.background='#ede9fe'" onmouseout="this.style.background='#faf5ff'"
                   title="${c.univ||''}">
                   ${c.name}${c.univ?`<span style="font-size:9px;opacity:.7;margin-left:2px">(${c.univ})</span>`:''}</button>`
@@ -2269,23 +2269,23 @@ function renderPastePreview(results, errors) {
       const wSim = !wOk && !wAmbig && (r.wSimilar||[]).length > 0;
       const lSim = !lOk && !lAmbig && (r.lSimilar||[]).length > 0;
       const statusBadge = ok
-        ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap">저장가능</span>`
+        ? `<span style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;font-size:10px;font-weight:700;padding:2px 6px;border-radius:var(--r);white-space:nowrap">저장가능</span>`
         : (wAmbig || lAmbig)
-          ? `<span style="background:#fef9c3;color:#b45309;border:1px solid #fcd34d;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap">선택필요</span>`
+          ? `<span style="background:#fef9c3;color:#b45309;border:1px solid #fcd34d;font-size:10px;font-weight:700;padding:2px 6px;border-radius:var(--r);white-space:nowrap">선택필요</span>`
           : (wSim || lSim)
-            ? `<span style="background:#faf5ff;color:#6d28d9;border:1px solid #c4b5fd;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap">유사이름</span>`
-            : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap">미등록</span>`;
+            ? `<span style="background:#faf5ff;color:#6d28d9;border:1px solid #c4b5fd;font-size:10px;font-weight:700;padding:2px 6px;border-radius:var(--r);white-space:nowrap">유사이름</span>`
+            : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:2px 6px;border-radius:var(--r);white-space:nowrap">미등록</span>`;
 
       // ── 경기/세트 표시 ──
       const gn = r.gameNum || r.game || r.gameNo || null;
-      const gameTag = `<span style="font-size:11px;font-weight:900;color:var(--text3);white-space:nowrap">${(gn|| (i+1))}경기</span>`;
+      const gameTag = `<span style="font-size:var(--fs-caption);font-weight:900;color:var(--text3);white-space:nowrap">${(gn|| (i+1))}경기</span>`;
       let setCell = '';
       if(_matchModePreview==='set'){
         // 세트 드롭다운 + 경기번호
         const setOpts = Array.from({length: Math.max(maxSet, r.setNum||1)}, (_,k) => k+1)
           .map(n => `<option value="${n}" ${(r.setNum||1)===n?'selected':''}>${n}세트</option>`).join('');
         const setSel = `<select class="paste-set-sel" data-idx="${i}"
-          style="font-size:11px;font-weight:700;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;color:${(r.setNum||1)>=3?'#7c3aed':'var(--blue)'};background:var(--white);cursor:pointer;max-width:72px"
+          style="font-size:var(--fs-caption);font-weight:700;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;color:${(r.setNum||1)>=3?'#7c3aed':'var(--blue)'};background:var(--white);cursor:pointer;max-width:72px"
           onchange="pasteChangeSet(${i},parseInt(this.value))">${setOpts}</select>`;
         setCell = `<div style="display:flex;flex-direction:column;gap:2px">${setSel}<span style="font-size:10px;color:var(--gray-l);font-weight:800">${(gn|| (i+1))}경기</span></div>`;
       } else {
@@ -2298,13 +2298,13 @@ function renderPastePreview(results, errors) {
       const mapOpts = `<option value="">-</option>` +
         allMaps.map(m => `<option value="${m}" ${mapVal===m?'selected':''}>${m}</option>`).join('');
       const mapCell = `<select class="paste-map-sel" data-idx="${i}"
-        style="font-size:11px;border:1px solid ${mapVal?'#7dd3fc':'var(--border2)'};border-radius:5px;padding:2px 4px;background:${mapVal?'#e0f2fe':'var(--white)'};color:${mapVal?'#0369a1':'var(--gray-l)'};cursor:pointer;max-width:88px"
+        style="font-size:var(--fs-caption);border:1px solid ${mapVal?'#7dd3fc':'var(--border2)'};border-radius:5px;padding:2px 4px;background:${mapVal?'#e0f2fe':'var(--white)'};color:${mapVal?'#0369a1':'var(--gray-l)'};cursor:pointer;max-width:88px"
         onchange="pasteChangeMap(${i},this.value)">${mapOpts}</select>`;
 
 
       // ── 행 삭제 버튼 ──
       const delBtn = `<button class="paste-del-btn" data-idx="${i}" title="이 행 삭제"
-        style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;font-size:12px;cursor:pointer;transition:.12s;line-height:1.4"
+        style="padding:2px 6px;border-radius:4px;border:1px solid #fecaca;background:#fff5f5;font-size:var(--fs-sm);cursor:pointer;transition:.12s;line-height:1.4"
         onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff5f5'">🗑</button>`;
 
       const _hasSim = wSim||lSim;
@@ -2318,7 +2318,7 @@ function renderPastePreview(results, errors) {
               html += `<div class="pv-date">📅 ${_rowDate} <span class="pv-date-sub">이후 경기 날짜</span></div>`;
             }else{
               html += `<tr><td colspan="6" style="padding:4px 8px;background:#eff6ff;border-top:2px solid #bfdbfe;border-bottom:1px solid #bfdbfe">
-                <span style="font-size:11px;font-weight:700;color:#1d4ed8">📅 ${_rowDate}</span>
+                <span style="font-size:var(--fs-caption);font-weight:700;color:#1d4ed8">📅 ${_rowDate}</span>
                 <span style="font-size:10px;color:#6b7280;margin-left:6px">이후 경기 날짜</span>
               </td></tr>`;
             }
@@ -2402,7 +2402,7 @@ function renderPastePreview(results, errors) {
       if(sw === 'A') setScoreA++; else if(sw === 'B') setScoreB++;
       const acol = sw==='A' ? '#16a34a' : s.A>0 ? '#64748b' : '#9ca3af';
       const bcol = sw==='B' ? '#16a34a' : s.B>0 ? '#64748b' : '#9ca3af';
-      return `<span style="display:inline-flex;align-items:center;gap:4px;background:${sw?'#f0fdf4':'#f8fafc'};border:1px solid ${sw?'#86efac':'#e2e8f0'};border-radius:8px;padding:3px 10px;font-size:12px">
+      return `<span style="display:inline-flex;align-items:center;gap:4px;background:${sw?'#f0fdf4':'#f8fafc'};border:1px solid ${sw?'#86efac':'#e2e8f0'};border-radius:8px;padding:3px 10px;font-size:var(--fs-sm)">
         <span style="font-size:10px;color:var(--gray-l);font-weight:600">${sn}세트</span>
         <span style="font-weight:800;color:${acol}">${s.A}</span>
         <span style="color:var(--gray-l)">:</span>
@@ -2437,8 +2437,8 @@ function renderPastePreview(results, errors) {
       const _dA='A팀';
       const _dB='B팀';
       const winner = totalA > totalB ? _dA : totalB > totalA ? _dB : '무승부';
-      html += `<div style="margin-top:8px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">📊 현재 결과 미리보기 ${multiSetPreview?'(세트제)':'(개인전)'}</div>
+      html += `<div style="margin-top:8px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+        <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:6px">📊 현재 결과 미리보기 ${multiSetPreview?'(세트제)':'(개인전)'}</div>
         ${multiSetPreview ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">${setRows}</div>` : ''}
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-weight:800;font-size:14px;color:${totalA>totalB?'#2563eb':'#64748b'}">${_dA}</span>
@@ -2448,7 +2448,7 @@ function renderPastePreview(results, errors) {
             <span style="color:${totalB>totalA?'#16a34a':'#dc2626'}">${totalB}</span>
           </span>
           <span style="font-weight:800;font-size:14px;color:${totalB>totalA?'#dc2626':'#64748b'}">${_dB}</span>
-          <span style="font-size:12px;font-weight:700;padding:2px 10px;border-radius:12px;background:${winner==='무승부'?'#f1f5f9':'#dcfce7'};color:${winner==='무승부'?'#64748b':'#15803d'}">
+          <span style="font-size:var(--fs-sm);font-weight:700;padding:2px 10px;border-radius:12px;background:${winner==='무승부'?'#f1f5f9':'#dcfce7'};color:${winner==='무승부'?'#64748b':'#15803d'}">
             ${winner==='무승부'?'🤝 무승부':'🏆 '+winner+' 승'}
           </span>
         </div>
@@ -2458,7 +2458,7 @@ function renderPastePreview(results, errors) {
 
   if (errors && errors.length > 0) {
     html += `<div style="background:#fff5f5;border:1.5px solid #fca5a5;border-radius:8px;padding:10px 12px;margin-top:6px">
-      <div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:6px">⛔ 인식 실패 ${errors.length}줄 — 저장되지 않습니다</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:#dc2626;margin-bottom:6px">⛔ 인식 실패 ${errors.length}줄 — 저장되지 않습니다</div>
       ${errors.map(e => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
         <span style="flex-shrink:0;font-size:10px;font-weight:700;background:#fecaca;color:#dc2626;padding:1px 6px;border-radius:4px">${e.line}행</span>
         <code style="font-size:10px;color:#991b1b;background:#fff1f2;padding:2px 7px;border-radius:4px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.raw.replace(/"/g,'&quot;')}">${e.raw.slice(0,90)}${e.raw.length>90?'…':''}</code>
@@ -2581,23 +2581,23 @@ function pasteQuickRegister(idx, role, name) {
   overlay.className = 'modal-compact-overlay';
   overlay.innerHTML = `
     <div class="modal-compact-box" style="width:320px;font-family:'Noto Sans KR',sans-serif">
-      <div style="font-weight:900;font-size:15px;margin-bottom:12px;color:#1a202c">👤 선수 즉시 등록</div>
-      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
-        <div><label style="font-size:11px;font-weight:700;color:#2563eb;display:block;margin-bottom:3px">이름</label>
-          <input id="qreg-name" value="${name.replace(/"/g,'&quot;')}" style="width:100%;padding:7px 10px;border:1px solid #cdd3dc;border-radius:7px;font-size:13px;box-sizing:border-box"></div>
-        <div><label style="font-size:11px;font-weight:700;color:#2563eb;display:block;margin-bottom:3px">대학</label>
-          <select id="qreg-univ" style="width:100%;padding:7px 10px;border:1px solid #cdd3dc;border-radius:7px;font-size:13px"><option value="">선택 안함</option>${allUnivs}</select></div>
+      <div style="font-weight:900;font-size:var(--fs-md);margin-bottom:12px;color:#1a202c">👤 선수 즉시 등록</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:var(--fs-base)">
+        <div><label style="font-size:var(--fs-caption);font-weight:700;color:#2563eb;display:block;margin-bottom:3px">이름</label>
+          <input id="qreg-name" value="${name.replace(/"/g,'&quot;')}" style="width:100%;padding:7px 10px;border:1px solid #cdd3dc;border-radius:7px;font-size:var(--fs-base);box-sizing:border-box"></div>
+        <div><label style="font-size:var(--fs-caption);font-weight:700;color:#2563eb;display:block;margin-bottom:3px">대학</label>
+          <select id="qreg-univ" style="width:100%;padding:7px 10px;border:1px solid #cdd3dc;border-radius:7px;font-size:var(--fs-base)"><option value="">선택 안함</option>${allUnivs}</select></div>
         <div style="display:flex;gap:8px">
-          <div style="flex:1"><label style="font-size:11px;font-weight:700;color:#2563eb;display:block;margin-bottom:3px">티어</label>
-            <select id="qreg-tier" style="width:100%;padding:7px 6px;border:1px solid #cdd3dc;border-radius:7px;font-size:12px">${tierOpts}</select></div>
-          <div style="flex:1"><label style="font-size:11px;font-weight:700;color:#2563eb;display:block;margin-bottom:3px">종족</label>
-            <select id="qreg-race" style="width:100%;padding:7px 6px;border:1px solid #cdd3dc;border-radius:7px;font-size:12px">
+          <div style="flex:1"><label style="font-size:var(--fs-caption);font-weight:700;color:#2563eb;display:block;margin-bottom:3px">티어</label>
+            <select id="qreg-tier" style="width:100%;padding:7px 6px;border:1px solid #cdd3dc;border-radius:7px;font-size:var(--fs-sm)">${tierOpts}</select></div>
+          <div style="flex:1"><label style="font-size:var(--fs-caption);font-weight:700;color:#2563eb;display:block;margin-bottom:3px">종족</label>
+            <select id="qreg-race" style="width:100%;padding:7px 6px;border:1px solid #cdd3dc;border-radius:7px;font-size:var(--fs-sm)">
               <option value="T">테란</option><option value="Z">저그</option><option value="P">프로토스</option></select></div>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-        <button id="qreg-cancel" style="padding:7px 16px;border-radius:7px;border:1px solid #cdd3dc;background:#f7f9fc;font-size:13px;font-weight:600;cursor:pointer">취소</button>
-        <button id="qreg-ok" style="padding:7px 16px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:700;cursor:pointer">등록하기</button>
+        <button id="qreg-cancel" style="padding:7px 16px;border-radius:7px;border:1px solid #cdd3dc;background:#f7f9fc;font-size:var(--fs-base);font-weight:600;cursor:pointer">취소</button>
+        <button id="qreg-ok" style="padding:7px 16px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:var(--fs-base);font-weight:700;cursor:pointer">등록하기</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -2815,10 +2815,10 @@ function pasteApply() {
       if(compWrap) {
         compWrap.style.display='none';
         compWrap.innerHTML=
-          '<input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:180px">' +
+          '<input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:var(--fs-base);width:180px">' +
           '<div id="paste-tt-stage-wrap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap">' +
-            '<label style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">구분</label>' +
-            '<select id="paste-tt-stage" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px">' +
+            '<label style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);white-space:nowrap">구분</label>' +
+            '<select id="paste-tt-stage" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:var(--fs-base)">' +
               '<option value="general">📝 일반</option>' +
               '<option value="league">📅 조별리그</option>' +
               '<option value="bkt">🏆 토너먼트</option>' +
@@ -3599,7 +3599,7 @@ function pasteApply() {
   const modeLabel = { individual:'개인 전적', mini:'미니대전', univm:'대학대전', pro:'프로리그', comp:'대회' }[mode] || '';
   const toast = document.createElement('div');
   toast.textContent = `✅ ${savable.length}건 저장 완료${modeLabel ? ' → ' + modeLabel : ''}!`;
-  toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
+  toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:var(--r);font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2800);
 }
@@ -4050,12 +4050,12 @@ function setPasteMatchMode(mode){
   const hint    = document.getElementById('paste-match-mode-hint');
   if(lblGame){
     if(mode==='game'){
-      lblGame.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s';
-      lblSet.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s';
+      lblGame.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s';
+      lblSet.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s';
       if(hint) hint.textContent='경기 방식: 1경기·2경기·3경기 → 이긴 경기 수 많은 팀 우승';
     } else {
-      lblSet.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s';
-      lblGame.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s';
+      lblSet.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s';
+      lblGame.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s';
       if(hint) hint.textContent='세트제: 세트별로 경기를 묶어 세트를 많이 이긴 팀 우승';
     }
   }
@@ -4105,7 +4105,7 @@ function closePasteModal() {
     const compWrap = document.getElementById('paste-comp-wrap');
     if(compWrap) {
       compWrap.style.display='none';
-      compWrap.innerHTML='<input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:13px;width:180px">';
+      compWrap.innerHTML='<input type="text" id="paste-comp-name" placeholder="대회명 입력" style="border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:var(--fs-base);width:180px">';
     }
     const hintEl = document.getElementById('paste-mode-hint');
     if(hintEl) hintEl.textContent='';
@@ -4124,8 +4124,8 @@ function closePasteModal() {
   // Reset match mode UI
   const lblGame = document.getElementById('match-mode-label-game');
   const lblSet  = document.getElementById('match-mode-label-set');
-  if(lblGame) lblGame.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s';
-  if(lblSet)  lblSet.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s';
+  if(lblGame) lblGame.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1;transition:.15s';
+  if(lblSet)  lblSet.style.cssText='display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3);transition:.15s';
   cm('pasteModal');
 }
 
@@ -4399,11 +4399,11 @@ function setProPasteMode(mode) {
   const gl = document.getElementById('pro-mode-game-lbl');
   const sl = document.getElementById('pro-mode-set-lbl');
   if (gl) gl.style.cssText = mode==='game'
-    ? 'display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1'
-    : 'display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3)';
+    ? 'display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1'
+    : 'display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3)';
   if (sl) sl.style.cssText = mode==='set'
-    ? 'display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1'
-    : 'display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3)';
+    ? 'display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid #0284c7;background:#e0f2fe;color:#0369a1'
+    : 'display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:var(--fs-sm);font-weight:600;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);color:var(--text3)';
   if (window._proPasteResults) renderProPreview(window._proPasteResults);
 }
 
@@ -4590,25 +4590,25 @@ function renderProPreview(results) {
       if (leftPlayer) {
         return `<div style="display:inline-flex;align-items:center;gap:6px">
           <button class="pro-name-flip" data-idx="${i}" ${ho('#bfdbfe','#dbeafe')}
-            style="font-size:13px;font-weight:900;color:#1d4ed8;background:#dbeafe;border:1.5px solid #93c5fd;border-radius:8px;padding:3px 10px;cursor:pointer;white-space:${leftIsTeam?'normal':'nowrap'};display:inline-flex;align-items:center;gap:6px">
+            style="font-size:var(--fs-base);font-weight:900;color:#1d4ed8;background:#dbeafe;border:1.5px solid #93c5fd;border-radius:8px;padding:3px 10px;cursor:pointer;white-space:${leftIsTeam?'normal':'nowrap'};display:inline-flex;align-items:center;gap:6px">
             ${teamBadge(leftIsTeam)}<span>${aDisplay}</span></button>${isLeftWinner ? winBadge : loseBadge}</div>`;
       }
       if (leftAmbig) {
         return `<div style="display:flex;flex-direction:column;gap:3px">
-          <span style="font-size:11px;color:#b45309;font-weight:700;display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap">${teamBadge(leftIsTeam)}<span>${aDisplay}</span></span>
+          <span style="font-size:var(--fs-caption);color:#b45309;font-weight:700;display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap">${teamBadge(leftIsTeam)}<span>${aDisplay}</span></span>
           <div style="display:flex;flex-wrap:wrap;gap:3px">
           ${leftCands.map(c=>`<button class="pro-pick-btn" data-idx="${i}" data-role="${leftRole}" data-name="${c.name.replace(/"/g,'&quot;')}"
-            ${ho('#fef3c7','#fffbeb')} style="padding:3px 9px;border-radius:5px;border:1.5px solid #fcd34d;background:#fffbeb;color:#92400e;font-size:11px;font-weight:700;cursor:pointer">${c.name}</button>`).join('')}
+            ${ho('#fef3c7','#fffbeb')} style="padding:3px 9px;border-radius:5px;border:1.5px solid #fcd34d;background:#fffbeb;color:#92400e;font-size:var(--fs-caption);font-weight:700;cursor:pointer">${c.name}</button>`).join('')}
           </div></div>`;
       }
       return `<div style="display:flex;flex-direction:column;gap:3px">
         <div style="display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap">${teamBadge(leftIsTeam)}
         <input value="${aName}" data-idx="${i}" data-role="${leftRole}" onchange="proEditName(this,${i},'${leftRole}')"
-          style="width:${leftIsTeam?'170px':'90px'};border:1px solid #fca5a5;border-radius:5px;padding:2px 6px;font-size:12px;font-weight:700;color:#dc2626;background:#fff5f5" placeholder="${leftIsTeam?'팀명/A1,A2':'선수명'}"></div>
+          style="width:${leftIsTeam?'170px':'90px'};border:1px solid #fca5a5;border-radius:5px;padding:2px 6px;font-size:var(--fs-sm);font-weight:700;color:#dc2626;background:#fff5f5" placeholder="${leftIsTeam?'팀명/A1,A2':'선수명'}"></div>
         ${leftSim.length ? `<div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center">
           <span style="font-size:10px;color:#7c3aed;font-weight:700">혹시:</span>
           ${leftSim.map(c=>`<button class="pro-pick-btn" data-idx="${i}" data-role="${leftRole}" data-name="${c.name.replace(/"/g,'&quot;')}"
-            ${ho('#ede9fe','#faf5ff')} style="padding:2px 8px;border-radius:5px;border:1.5px solid #c4b5fd;background:#faf5ff;color:#6d28d9;font-size:11px;font-weight:700;cursor:pointer">${c.name}</button>`).join('')}
+            ${ho('#ede9fe','#faf5ff')} style="padding:2px 8px;border-radius:5px;border:1.5px solid #c4b5fd;background:#faf5ff;color:#6d28d9;font-size:var(--fs-caption);font-weight:700;cursor:pointer">${c.name}</button>`).join('')}
           </div>` : ''}
       </div>`;
     };
@@ -4617,25 +4617,25 @@ function renderProPreview(results) {
       if (rightPlayer) {
         return `<div style="display:inline-flex;align-items:center;gap:6px">
           <button class="pro-name-flip" data-idx="${i}" ${ho('#fecaca','#fee2e2')}
-            style="font-size:13px;font-weight:900;color:#991b1b;background:#fee2e2;border:1.5px solid #fca5a5;border-radius:8px;padding:3px 10px;cursor:pointer;white-space:${rightIsTeam?'normal':'nowrap'};display:inline-flex;align-items:center;gap:6px">
+            style="font-size:var(--fs-base);font-weight:900;color:#991b1b;background:#fee2e2;border:1.5px solid #fca5a5;border-radius:8px;padding:3px 10px;cursor:pointer;white-space:${rightIsTeam?'normal':'nowrap'};display:inline-flex;align-items:center;gap:6px">
             ${teamBadge(rightIsTeam)}<span>${bDisplay}</span></button>${isLeftWinner ? loseBadge : winBadge}</div>`;
       }
       if (rightAmbig) {
         return `<div style="display:flex;flex-direction:column;gap:3px">
-          <span style="font-size:11px;color:#b45309;font-weight:700;display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap">${teamBadge(rightIsTeam)}<span>${bDisplay}</span></span>
+          <span style="font-size:var(--fs-caption);color:#b45309;font-weight:700;display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap">${teamBadge(rightIsTeam)}<span>${bDisplay}</span></span>
           <div style="display:flex;flex-wrap:wrap;gap:3px">
           ${rightCands.map(c=>`<button class="pro-pick-btn" data-idx="${i}" data-role="${rightRole}" data-name="${c.name.replace(/"/g,'&quot;')}"
-            ${ho('#fef3c7','#fffbeb')} style="padding:3px 9px;border-radius:5px;border:1.5px solid #fcd34d;background:#fffbeb;color:#92400e;font-size:11px;font-weight:700;cursor:pointer">${c.name}</button>`).join('')}
+            ${ho('#fef3c7','#fffbeb')} style="padding:3px 9px;border-radius:5px;border:1.5px solid #fcd34d;background:#fffbeb;color:#92400e;font-size:var(--fs-caption);font-weight:700;cursor:pointer">${c.name}</button>`).join('')}
           </div></div>`;
       }
       return `<div style="display:flex;flex-direction:column;gap:3px">
         <div style="display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap">${teamBadge(rightIsTeam)}
         <input value="${bName}" data-idx="${i}" data-role="${rightRole}" onchange="proEditName(this,${i},'${rightRole}')"
-          style="width:${rightIsTeam?'170px':'90px'};border:1px solid #fca5a5;border-radius:5px;padding:2px 6px;font-size:12px;font-weight:700;color:#dc2626;background:#fff5f5" placeholder="${rightIsTeam?'팀명/B1,B2':'선수명'}"></div>
+          style="width:${rightIsTeam?'170px':'90px'};border:1px solid #fca5a5;border-radius:5px;padding:2px 6px;font-size:var(--fs-sm);font-weight:700;color:#dc2626;background:#fff5f5" placeholder="${rightIsTeam?'팀명/B1,B2':'선수명'}"></div>
         ${rightSim.length ? `<div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center">
           <span style="font-size:10px;color:#7c3aed;font-weight:700">혹시:</span>
           ${rightSim.map(c=>`<button class="pro-pick-btn" data-idx="${i}" data-role="${rightRole}" data-name="${c.name.replace(/"/g,'&quot;')}"
-            ${ho('#ede9fe','#faf5ff')} style="padding:2px 8px;border-radius:5px;border:1.5px solid #c4b5fd;background:#faf5ff;color:#6d28d9;font-size:11px;font-weight:700;cursor:pointer">${c.name}</button>`).join('')}
+            ${ho('#ede9fe','#faf5ff')} style="padding:2px 8px;border-radius:5px;border:1.5px solid #c4b5fd;background:#faf5ff;color:#6d28d9;font-size:var(--fs-caption);font-weight:700;cursor:pointer">${c.name}</button>`).join('')}
           </div>` : ''}
       </div>`;
     };
@@ -4644,15 +4644,15 @@ function renderProPreview(results) {
       allMaps.map(m=>`<option value="${m}" ${m===r.map?'selected':''}>${m}</option>`).join('') +
       `<option value="__custom__">직접입력...</option>`;
     const mapCell = `<select class="pro-map-sel" data-idx="${i}"
-      style="width:80px;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;font-size:11px">${mapOpts}</select>`;
+      style="width:80px;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;font-size:var(--fs-caption)">${mapOpts}</select>`;
 
     let setOpts='';
     for(let s=1;s<=Math.max(maxSet,3);s++) setOpts+=`<option value="${s}" ${s===(r.setNum||1)?'selected':''}>${s}세트</option>`;
     const setCell = `<select class="pro-set-sel" data-idx="${i}"
-      style="width:56px;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;font-size:11px">${setOpts}</select>`;
+      style="width:56px;border:1px solid var(--border2);border-radius:5px;padding:2px 4px;font-size:var(--fs-caption)">${setOpts}</select>`;
 
     const flipBtn = `<button class="pro-flip-btn" data-idx="${i}" title="A팀↔B팀 교체"
-      style="padding:3px 6px;border-radius:5px;border:1px solid #ddd6fe;background:#f5f3ff;font-size:13px;cursor:pointer;transition:.12s"
+      style="padding:3px 6px;border-radius:5px;border:1px solid #ddd6fe;background:#f5f3ff;font-size:var(--fs-base);cursor:pointer;transition:.12s"
       onmouseover="this.style.background='#ede9fe'" onmouseout="this.style.background='#f5f3ff'">⇄</button>`;
 
     const statusBadge = ok
@@ -4662,7 +4662,7 @@ function renderProPreview(results) {
         : `<span style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:10px;font-weight:700;padding:2px 5px;border-radius:8px;white-space:nowrap">미인식</span>`;
 
     const delBtn = `<button class="pro-del-btn" data-idx="${i}"
-      style="padding:3px 6px;border-radius:5px;border:1px solid #fecaca;background:#fff5f5;font-size:12px;cursor:pointer;transition:.12s"
+      style="padding:3px 6px;border-radius:5px;border:1px solid #fecaca;background:#fff5f5;font-size:var(--fs-sm);cursor:pointer;transition:.12s"
       onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff5f5'">🗑</button>`;
 
     const rowBg = ok ? '#f8faff' : (wAmbig||lAmbig) ? '#fffbeb' : '#fff8f8';
@@ -4695,7 +4695,7 @@ function renderProPreview(results) {
     const setRows = Object.keys(setMap2).sort((a,b)=>a-b).map(sn=>{
       const s=setMap2[sn]; const sw=s.A>s.B?'A':s.B>s.A?'B':'';
       if(sw==='A') sa++; else if(sw==='B') sb++;
-      return `<span style="display:inline-flex;align-items:center;gap:4px;background:${sw?'#f0fdf4':'#f8fafc'};border:1px solid ${sw?'#86efac':'#e2e8f0'};border-radius:8px;padding:3px 10px;font-size:12px">
+      return `<span style="display:inline-flex;align-items:center;gap:4px;background:${sw?'#f0fdf4':'#f8fafc'};border:1px solid ${sw?'#86efac':'#e2e8f0'};border-radius:8px;padding:3px 10px;font-size:var(--fs-sm)">
         <span style="font-size:10px;color:var(--gray-l);font-weight:600">${sn}세트</span>
         <span style="font-weight:800;color:${sw==='A'?'#1d4ed8':'#64748b'}">${s.A}</span>:
         <span style="font-weight:800;color:${sw==='B'?'#16a34a':'#64748b'}">${s.B}</span>
@@ -4709,23 +4709,23 @@ function renderProPreview(results) {
     return `<div style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:${multiSet?'6px':'0'}">
         ${fmtBadge}
-        <span style="font-size:11px;font-weight:700;color:var(--text3)">📊 결과${multiSet?' (세트제)':''}</span>
+        <span style="font-size:var(--fs-caption);font-weight:700;color:var(--text3)">📊 결과${multiSet?' (세트제)':''}</span>
         ${multiSet?'':'<span style="flex:1"></span>'}
         ${!multiSet?`<span style="font-weight:900;font-size:14px;color:#1d4ed8">🔵 A팀</span>
-        <span style="font-weight:900;font-size:18px;color:${totalA>totalB?'#16a34a':'#dc2626'}">${totalA}</span>
-        <span style="font-size:12px;color:var(--gray-l)">:</span>
-        <span style="font-weight:900;font-size:18px;color:${totalB>totalA?'#16a34a':'#dc2626'}">${totalB}</span>
+        <span style="font-weight:900;font-size:var(--fs-lg);color:${totalA>totalB?'#16a34a':'#dc2626'}">${totalA}</span>
+        <span style="font-size:var(--fs-sm);color:var(--gray-l)">:</span>
+        <span style="font-weight:900;font-size:var(--fs-lg);color:${totalB>totalA?'#16a34a':'#dc2626'}">${totalB}</span>
         <span style="font-weight:900;font-size:14px;color:#dc2626">🔴 B팀</span>
-        <span style="font-size:12px;font-weight:700;padding:2px 10px;border-radius:10px;background:${totalA===totalB?'#f1f5f9':'#dcfce7'};color:${totalA===totalB?'#64748b':'#15803d'}">${totalA===totalB?'🤝 무승부':'🏆 '+winner+' 승'}</span>`:''}
+        <span style="font-size:var(--fs-sm);font-weight:700;padding:2px 10px;border-radius:var(--r);background:${totalA===totalB?'#f1f5f9':'#dcfce7'};color:${totalA===totalB?'#64748b':'#15803d'}">${totalA===totalB?'🤝 무승부':'🏆 '+winner+' 승'}</span>`:''}
       </div>
       ${multiSet?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">${setRows}</div>
       <div style="display:flex;align-items:center;gap:6px">
         <span style="font-weight:900;font-size:14px;color:#1d4ed8">🔵 A팀</span>
-        <span style="font-weight:900;font-size:18px;color:${totalA>totalB?'#16a34a':'#dc2626'}">${totalA}</span>
-        <span style="font-size:12px;color:var(--gray-l)">:</span>
-        <span style="font-weight:900;font-size:18px;color:${totalB>totalA?'#16a34a':'#dc2626'}">${totalB}</span>
+        <span style="font-weight:900;font-size:var(--fs-lg);color:${totalA>totalB?'#16a34a':'#dc2626'}">${totalA}</span>
+        <span style="font-size:var(--fs-sm);color:var(--gray-l)">:</span>
+        <span style="font-weight:900;font-size:var(--fs-lg);color:${totalB>totalA?'#16a34a':'#dc2626'}">${totalB}</span>
         <span style="font-weight:900;font-size:14px;color:#dc2626">🔴 B팀</span>
-        <span style="font-size:12px;font-weight:700;padding:2px 10px;border-radius:10px;background:${totalA===totalB?'#f1f5f9':'#dcfce7'};color:${totalA===totalB?'#64748b':'#15803d'}">${totalA===totalB?'🤝 무승부':'🏆 '+winner+' 승'}</span>
+        <span style="font-size:var(--fs-sm);font-weight:700;padding:2px 10px;border-radius:var(--r);background:${totalA===totalB?'#f1f5f9':'#dcfce7'};color:${totalA===totalB?'#64748b':'#15803d'}">${totalA===totalB?'🤝 무승부':'🏆 '+winner+' 승'}</span>
       </div>`:''}
     </div>`;
   };
@@ -4739,19 +4739,19 @@ function renderProPreview(results) {
     if (isMultiMatch) {
       html += `<div style="margin-bottom:10px;border:2px solid #7c3aed;border-radius:12px;overflow:hidden">
         <div style="background:linear-gradient(90deg,#5b21b6,#7c3aed);color:#fff;padding:7px 14px;display:flex;align-items:center;gap:8px">
-          <span style="font-size:13px;font-weight:900">🏅 경기 ${mg+1}</span>
-          ${dateVal?`<span style="font-size:11px;opacity:.8">${dateVal}</span>`:''}
-          ${fmtLabel?`<span style="font-size:11px;background:rgba(255,255,255,.2);border-radius:8px;padding:1px 7px">${fmtLabel}</span>`:''}
+          <span style="font-size:var(--fs-base);font-weight:900">🏅 경기 ${mg+1}</span>
+          ${dateVal?`<span style="font-size:var(--fs-caption);opacity:.8">${dateVal}</span>`:''}
+          ${fmtLabel?`<span style="font-size:var(--fs-caption);background:rgba(255,255,255,.2);border-radius:8px;padding:1px 7px">${fmtLabel}</span>`:''}
         </div>`;
     }
-    html += `<div style="${isMultiMatch?'padding:8px 10px':'border:1px solid #ddd6fe;border-radius:10px;overflow:hidden;margin-bottom:10px'}">
-    <table style="margin:0;width:100%;font-size:12px;border-collapse:collapse">
+    html += `<div style="${isMultiMatch?'padding:8px 10px':'border:1px solid #ddd6fe;border-radius:var(--r);overflow:hidden;margin-bottom:10px'}">
+    <table style="margin:0;width:100%;font-size:var(--fs-sm);border-collapse:collapse">
     <thead><tr style="background:${isMultiMatch?'#f5f3ff':'linear-gradient(90deg,#5b21b6,#7c3aed)'};color:${isMultiMatch?'#5b21b6':'#fff'}">
       <th style="padding:6px 8px;font-size:10px;width:56px">세트</th>
       <th style="padding:6px 8px;font-size:10px;width:84px">맵</th>
-      <th style="padding:6px 10px;font-size:11px;font-weight:900">🔵 A팀</th>
+      <th style="padding:6px 10px;font-size:var(--fs-caption);font-weight:900">🔵 A팀</th>
       <th style="padding:6px 4px;font-size:10px;width:44px;text-align:center">교체</th>
-      <th style="padding:6px 10px;font-size:11px;font-weight:900">🔴 B팀</th>
+      <th style="padding:6px 10px;font-size:var(--fs-caption);font-weight:900">🔴 B팀</th>
       <th style="padding:6px 4px;font-size:10px;width:56px">상태</th>
       <th style="padding:6px 4px;font-size:10px;width:32px;text-align:center">삭제</th>
     </tr></thead><tbody>`;
@@ -5033,7 +5033,7 @@ function proApply() {
   toast.textContent = matchCount > 1
     ? `✅ ${matchCount}경기 (${totalSaved}게임) 프로리그 저장 완료!`
     : `✅ ${totalSaved}건 프로리그 저장 완료!`;
-  toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#7c3aed;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
+  toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#7c3aed;color:#fff;padding:12px 24px;border-radius:var(--r);font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
   document.body.appendChild(toast);
   setTimeout(()=>toast.remove(), 2800);
 }

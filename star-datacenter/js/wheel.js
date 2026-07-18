@@ -11,26 +11,26 @@
     '.wh-wrap::before{content:"";position:absolute;inset:0 auto auto 0;width:220px;height:220px;background:radial-gradient(circle,rgba(251,113,133,.18),transparent 68%);pointer-events:none}',
     '.wh-panel{width:100%;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.18);border-radius:24px;box-shadow:0 18px 38px rgba(15,23,42,.07),inset 0 1px 0 rgba(255,255,255,.9)}',
     '.wh-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 20px 0}',
-    '.wh-panel-title{font-size:18px;font-weight:950;letter-spacing:-.03em;color:var(--text1)}',
-    '.wh-panel-desc{margin-top:5px;font-size:12px;line-height:1.6;color:var(--text3)}',
+    '.wh-panel-title{font-size:var(--fs-lg);font-weight:950;letter-spacing:-.03em;color:var(--text1)}',
+    '.wh-panel-desc{margin-top:5px;font-size:var(--fs-sm);line-height:1.6;color:var(--text3)}',
     '.wh-badge-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}',
-    '.wh-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.88);border:1px solid rgba(148,163,184,.16);font-size:11px;font-weight:900;color:var(--text2);box-shadow:0 10px 20px rgba(15,23,42,.05)}',
+    '.wh-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.88);border:1px solid rgba(148,163,184,.16);font-size:var(--fs-caption);font-weight:900;color:var(--text2);box-shadow:0 10px 20px rgba(15,23,42,.05)}',
     '.wh-input-row{width:100%;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px 0;box-sizing:border-box}',
-    '.wh-menu-btn{padding:9px 14px;border-radius:14px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:0 10px 18px rgba(15,23,42,.04)}',
+    '.wh-menu-btn{padding:9px 14px;border-radius:14px;border:1px solid rgba(148,163,184,.22);background:linear-gradient(180deg,#fff,#f8fafc);color:var(--text2);font-size:var(--fs-sm);font-weight:900;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:0 10px 18px rgba(15,23,42,.04)}',
     '.wh-menu-btn:hover{border-color:rgba(37,99,235,.22);color:#2563eb;box-shadow:0 14px 24px rgba(37,99,235,.08)}',
     '.wh-spin-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}',
     '.wh-textarea{flex:1;min-width:0;border:1px solid rgba(148,163,184,.24);border-radius:18px;padding:12px 14px;font-size:14px;font-family:inherit;resize:none;height:78px;color:var(--text1);background:linear-gradient(180deg,#fff,#f8fafc);line-height:1.7;outline:none;transition:border-color .18s,box-shadow .18s;background-clip:padding-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}',
     '.wh-textarea:focus{border-color:#fb7185;box-shadow:0 0 0 4px rgba(251,113,133,.12),0 12px 24px rgba(15,23,42,.05)}',
-    '.wh-speed-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0;background:linear-gradient(180deg,#fff,#f8fafc);border:1px solid rgba(148,163,184,.22);border-radius:16px;padding:8px 12px;box-shadow:0 10px 18px rgba(15,23,42,.04)}',
-    '.wh-speed-lbl{font-size:12px;font-weight:700;color:var(--text3);min-width:60px}',
+    '.wh-speed-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0;background:linear-gradient(180deg,#fff,#f8fafc);border:1px solid rgba(148,163,184,.22);border-radius:var(--r2);padding:8px 12px;box-shadow:0 10px 18px rgba(15,23,42,.04)}',
+    '.wh-speed-lbl{font-size:var(--fs-sm);font-weight:700;color:var(--text3);min-width:60px}',
     '.wh-chipbox{width:100%;display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:10px 20px 0;box-sizing:border-box}',
-    '.wh-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,#fff,#f8fafc);border-radius:999px;font-size:12px;font-weight:900;color:var(--text2);box-shadow:0 8px 18px rgba(15,23,42,.04)}',
-    '.wh-chip-x{border:none;background:transparent;color:var(--gray-l);cursor:pointer;font-weight:1000;font-size:12px;line-height:1}',
+    '.wh-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,#fff,#f8fafc);border-radius:999px;font-size:var(--fs-sm);font-weight:900;color:var(--text2);box-shadow:0 8px 18px rgba(15,23,42,.04)}',
+    '.wh-chip-x{border:none;background:transparent;color:var(--gray-l);cursor:pointer;font-weight:1000;font-size:var(--fs-sm);line-height:1}',
     '.wh-stage{width:100%;display:flex;flex-direction:column;align-items:center;padding:16px 20px 20px;box-sizing:border-box}',
     '.wh-stage-card{width:100%;max-width:620px;position:relative;padding:22px 18px 18px;border-radius:28px;background:radial-gradient(circle at top,rgba(255,255,255,.92),rgba(244,247,251,.94));border:1px solid rgba(148,163,184,.18);box-shadow:0 24px 46px rgba(15,23,42,.08),inset 0 1px 0 rgba(255,255,255,.9)}',
     '.wh-stage-card::before{content:"";position:absolute;inset:20px 18px auto 18px;height:140px;border-radius:22px;background:radial-gradient(circle at top left,rgba(244,114,182,.16),transparent 40%),radial-gradient(circle at top right,rgba(96,165,250,.16),transparent 44%);pointer-events:none}',
-    '.wh-stage-title{position:relative;font-size:15px;font-weight:950;color:var(--text1);text-align:center;letter-spacing:-.02em;margin-bottom:6px}',
-    '.wh-stage-desc{position:relative;font-size:12px;color:var(--text3);text-align:center;line-height:1.55;margin-bottom:14px}',
+    '.wh-stage-title{position:relative;font-size:var(--fs-md);font-weight:950;color:var(--text1);text-align:center;letter-spacing:-.02em;margin-bottom:6px}',
+    '.wh-stage-desc{position:relative;font-size:var(--fs-sm);color:var(--text3);text-align:center;line-height:1.55;margin-bottom:14px}',
     '.wh-canvas-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin:0 auto}',
     '.wh-pointer{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:30px;z-index:10;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25));animation:whBob 1.2s ease-in-out infinite}',
     '@keyframes whBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(4px)}}',
@@ -170,7 +170,7 @@ function _whRender(root) {
     + '<div class="wh-input-row">'
     + '<textarea class="wh-textarea" id="wh-input" placeholder="이름 입력... (쉼표로 구분, 가중치: 이름*2)" oninput="_whOnInput(this.value,event)" oncompositionend="_whOnInput(this.value)">' + savedInput + '</textarea>'
     + '<button onclick="_whShuffleInput()" class="wh-menu-btn">🔀 섞기</button>'
-    + '<div class="wh-speed-wrap"><span style="font-size:12px;font-weight:700;color:var(--text3)">⚡</span><input type="range" id="wh-speed" min="1" max="5" value="' + (sIdx+1) + '" oninput="_whUpdateSpeed(this.value)" style="width:70px;accent-color:#FF4B6E"><span class="wh-speed-lbl" id="wh-speed-lbl">' + _WH_SPEED_LBLS[sIdx] + '</span></div>'
+    + '<div class="wh-speed-wrap"><span style="font-size:var(--fs-sm);font-weight:700;color:var(--text3)">⚡</span><input type="range" id="wh-speed" min="1" max="5" value="' + (sIdx+1) + '" oninput="_whUpdateSpeed(this.value)" style="width:70px;accent-color:#FF4B6E"><span class="wh-speed-lbl" id="wh-speed-lbl">' + _WH_SPEED_LBLS[sIdx] + '</span></div>'
     + '</div>'
     // 칩(입력 편의)
     + '<div class="wh-chipbox">' + (parsed.entries.map(function(it){
@@ -193,10 +193,10 @@ function _whRender(root) {
     + '</div>'
     // 결과 카드 (hidden 초기)
     + '<div id="wh-result-card" class="wh-result-card">'
-    + '<div style="font-size:15px;font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>'
+    + '<div style="font-size:var(--fs-md);font-weight:700;color:#FF89AB;letter-spacing:1px;margin-bottom:10px">🎊 당첨!</div>'
     + '<div id="wh-res-icon" style="font-size:52px;margin-bottom:6px;line-height:1.1">🏆</div>'
     + '<div id="wh-res-name" style="font-size:clamp(28px,6vw,48px);font-weight:900;color:#C0274A;word-break:break-all;margin-bottom:6px"></div>'
-    + '<button onclick="_whSpin()" style="font-family:inherit;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,#FF4B6E,#FF89AB);border:none;border-radius:22px;padding:10px 28px;cursor:pointer;box-shadow:0 4px 0 #C0274A;transition:transform .12s,box-shadow .12s" onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'\'">🎡 다시 돌리기</button>'
+    + '<button onclick="_whSpin()" style="font-family:inherit;font-size:var(--fs-md);font-weight:700;color:#fff;background:linear-gradient(135deg,#FF4B6E,#FF89AB);border:none;border-radius:22px;padding:10px 28px;cursor:pointer;box-shadow:0 4px 0 #C0274A;transition:transform .12s,box-shadow .12s" onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'\'">🎡 다시 돌리기</button>'
     + '</div>'
     // 히스토리
     + _whHistHTML()
@@ -212,15 +212,15 @@ function _whHistHTML() {
   const rows = _whHistory.slice(0, 8).map(function(h, i) {
     const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'위';
     return '<div class="wh-hist-item">'
-      + '<span style="font-size:15px;min-width:26px">' + medal + '</span>'
+      + '<span style="font-size:var(--fs-md);min-width:26px">' + medal + '</span>'
       + '<span style="font-weight:700;color:var(--text1);flex:1">' + h.name + '</span>'
-      + '<span style="font-size:11px;color:var(--text3)">' + h.time + '</span>'
+      + '<span style="font-size:var(--fs-caption);color:var(--text3)">' + h.time + '</span>'
       + '</div>';
   }).join('');
   return '<div class="wh-hist-box">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-    + '<span style="font-size:13px;font-weight:700;color:var(--text2)">📋 최근 당첨 기록</span>'
-    + '<button onclick="_whClearHistory()" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer">전체 삭제</button>'
+    + '<span style="font-size:var(--fs-base);font-weight:700;color:var(--text2)">📋 최근 당첨 기록</span>'
+    + '<button onclick="_whClearHistory()" style="font-size:var(--fs-caption);padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer">전체 삭제</button>'
     + '</div>' + rows + '</div>';
 }
 

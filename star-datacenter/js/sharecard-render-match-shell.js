@@ -57,12 +57,12 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;margin-right:${hiCss};position:relative;z-index:1;gap:10px;flex-wrap:wrap">
           ${fullLbl
             ? `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
-                <div style="font-size:11px;color:rgba(255,255,255,.94);font-weight:700;background:${variant.chipBg};border:1px solid ${variant.chipBd};padding:3px 12px;border-radius:20px;backdrop-filter:blur(4px);white-space:nowrap">${fullLbl}</div>
+                <div style="font-size:var(--fs-caption);color:rgba(255,255,255,.94);font-weight:700;background:${variant.chipBg};border:1px solid ${variant.chipBd};padding:3px 12px;border-radius:20px;backdrop-filter:blur(4px);white-space:nowrap">${fullLbl}</div>
                 ${scoreInlineHTML(teamMode?'team':'default')}
               </div>`
             : '<div></div>'}
           <div style="text-align:right">
-            <div style="font-size:11px;color:rgba(255,255,255,.84);font-weight:800">${(m&&m.d)||''}</div>
+            <div style="font-size:var(--fs-caption);color:rgba(255,255,255,.84);font-weight:800">${(m&&m.d)||''}</div>
           </div>
         </div>
         ${teamMode && teamHeaderHTML ? teamHeaderHTML : `

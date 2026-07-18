@@ -118,11 +118,11 @@
           const isW_A = g.wName===A, isW_B = g.wName===B;
           const mapVal = g.map||'';
           return `<div data-gi="${i}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border)">
-            <span style="font-size:11px;color:var(--gray-l);font-weight:700;min-width:20px">${i+1}G</span>
-            <button type="button" onclick="_iem_setWinner(${i},'A')" style="flex:1;padding:5px 6px;border-radius:7px;font-size:11px;font-weight:900;cursor:pointer;border:2px solid ${isW_A?p1Col:'var(--border2)'};background:${isW_A?p1Col+'22':'var(--white)'};color:${isW_A?p1Col:'var(--text2)'};">${A}${isW_A?' 🏆':''}</button>
-            <button type="button" onclick="_iem_setWinner(${i},'B')" style="flex:1;padding:5px 6px;border-radius:7px;font-size:11px;font-weight:900;cursor:pointer;border:2px solid ${isW_B?p2Col:'var(--border2)'};background:${isW_B?p2Col+'22':'var(--white)'};color:${isW_B?p2Col:'var(--text2)'};">${B}${isW_B?' 🏆':''}</button>
-            <input value="${mapVal}" placeholder="맵" oninput="_iem_setMap(${i},this.value)" style="width:80px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:11px">
-            <button type="button" onclick="_iem_delGame(${i})" style="padding:3px 7px;border:1px solid #fca5a5;border-radius:6px;background:#fff1f2;color:#dc2626;font-size:11px;cursor:pointer;font-weight:900">✕</button>
+            <span style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:700;min-width:20px">${i+1}G</span>
+            <button type="button" onclick="_iem_setWinner(${i},'A')" style="flex:1;padding:5px 6px;border-radius:7px;font-size:var(--fs-caption);font-weight:900;cursor:pointer;border:2px solid ${isW_A?p1Col:'var(--border2)'};background:${isW_A?p1Col+'22':'var(--white)'};color:${isW_A?p1Col:'var(--text2)'};">${A}${isW_A?' 🏆':''}</button>
+            <button type="button" onclick="_iem_setWinner(${i},'B')" style="flex:1;padding:5px 6px;border-radius:7px;font-size:var(--fs-caption);font-weight:900;cursor:pointer;border:2px solid ${isW_B?p2Col:'var(--border2)'};background:${isW_B?p2Col+'22':'var(--white)'};color:${isW_B?p2Col:'var(--text2)'};">${B}${isW_B?' 🏆':''}</button>
+            <input value="${mapVal}" placeholder="맵" oninput="_iem_setMap(${i},this.value)" style="width:80px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-caption)">
+            <button type="button" onclick="_iem_delGame(${i})" style="padding:3px 7px;border:1px solid #fca5a5;border-radius:6px;background:#fff1f2;color:#dc2626;font-size:var(--fs-caption);cursor:pointer;font-weight:900">✕</button>
           </div>`;
         }).join('');
       }
@@ -205,26 +205,26 @@
           <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
             <div style="width:8px;height:28px;border-radius:4px;background:${typeColor};flex-shrink:0"></div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:15px;font-weight:1000;color:var(--text)">✏️ 경기 기록 수정</div>
-              <div style="font-size:11px;color:var(--gray-l);margin-top:2px"><span style="font-weight:800;color:${typeColor}">${typeName}</span> · ${A} vs ${B}</div>
+              <div style="font-size:var(--fs-md);font-weight:1000;color:var(--text)">✏️ 경기 기록 수정</div>
+              <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:2px"><span style="font-weight:800;color:${typeColor}">${typeName}</span> · ${A} vs ${B}</div>
             </div>
-            <button type="button" onclick="_iem_close()" style="padding:6px 10px;border:none;background:none;font-size:18px;color:var(--gray-l);cursor:pointer;border-radius:8px;line-height:1">✕</button>
+            <button type="button" onclick="_iem_close()" style="padding:6px 10px;border:none;background:none;font-size:var(--fs-lg);color:var(--gray-l);cursor:pointer;border-radius:8px;line-height:1">✕</button>
           </div>
 
           <div style="overflow-y:auto;flex:1;padding:16px 20px;display:flex;flex-direction:column;gap:14px">
             <div style="display:flex;align-items:center;gap:10px">
-              <label style="font-size:12px;font-weight:800;color:var(--text2);white-space:nowrap">📅 날짜</label>
-              <input type="date" id="__iem_date" value="${dateVal}" style="padding:7px 10px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-weight:900;flex:1">
+              <label style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);white-space:nowrap">📅 날짜</label>
+              <input type="date" id="__iem_date" value="${dateVal}" style="padding:7px 10px;border:1.5px solid var(--border2);border-radius:8px;font-size:var(--fs-base);font-weight:900;flex:1">
             </div>
 
-            <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px;background:var(--bg2);border-radius:10px;border:1px solid var(--border)">
+            <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border)">
               <div style="text-align:center">
-                <div style="font-size:12px;font-weight:900;color:${p1Col}">${A}</div>
+                <div style="font-size:var(--fs-sm);font-weight:900;color:${p1Col}">${A}</div>
                 <div style="font-size:10px;color:var(--gray-l)">${p1Obj.univ||''}</div>
               </div>
               <div id="__iem_score" style="font-size:28px;font-weight:900;letter-spacing:-2px;color:var(--text)">${p1w0} : ${p2w0}</div>
               <div style="text-align:center">
-                <div style="font-size:12px;font-weight:900;color:${p2Col}">${B}</div>
+                <div style="font-size:var(--fs-sm);font-weight:900;color:${p2Col}">${B}</div>
                 <div style="font-size:10px;color:var(--gray-l)">${p2Obj.univ||''}</div>
               </div>
             </div>
@@ -232,14 +232,14 @@
             <div style="display:flex;flex-direction:column;gap:6px" id="__iem_rows">${_buildGameRows()}</div>
 
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <button type="button" onclick="_iem_addA()" style="flex:1;padding:8px;border-radius:8px;border:1.5px dashed ${p1Col};background:${p1Col}11;color:${p1Col};font-size:11px;font-weight:900;cursor:pointer">+ ${A} 승 추가</button>
-              <button type="button" onclick="_iem_addB()" style="flex:1;padding:8px;border-radius:8px;border:1.5px dashed ${p2Col};background:${p2Col}11;color:${p2Col};font-size:11px;font-weight:900;cursor:pointer">+ ${B} 승 추가</button>
+              <button type="button" onclick="_iem_addA()" style="flex:1;padding:8px;border-radius:8px;border:1.5px dashed ${p1Col};background:${p1Col}11;color:${p1Col};font-size:var(--fs-caption);font-weight:900;cursor:pointer">+ ${A} 승 추가</button>
+              <button type="button" onclick="_iem_addB()" style="flex:1;padding:8px;border-radius:8px;border:1.5px dashed ${p2Col};background:${p2Col}11;color:${p2Col};font-size:var(--fs-caption);font-weight:900;cursor:pointer">+ ${B} 승 추가</button>
             </div>
           </div>
 
           <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px">
-            <button type="button" onclick="_iem_close()" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface);font-size:13px;font-weight:900;cursor:pointer;color:var(--text2)">취소</button>
-            <button type="button" onclick="_iem_save()" style="flex:2;padding:10px;border-radius:10px;border:none;background:${typeColor};color:#fff;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 2px 10px ${typeColor}44">💾 저장</button>
+            <button type="button" onclick="_iem_close()" style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border2);background:var(--surface);font-size:var(--fs-base);font-weight:900;cursor:pointer;color:var(--text2)">취소</button>
+            <button type="button" onclick="_iem_save()" style="flex:2;padding:10px;border-radius:var(--r);border:none;background:${typeColor};color:#fff;font-size:var(--fs-base);font-weight:900;cursor:pointer;box-shadow:0 2px 10px ${typeColor}44">💾 저장</button>
           </div>
         </div>`;
       document.body.appendChild(modal);

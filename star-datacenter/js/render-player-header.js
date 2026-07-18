@@ -105,7 +105,7 @@ function buildPlayerHeaderCardHTML(opts){
   // ELO 패널 (PC) — 레이팅과 추이를 하나의 카드로 통합해 붕 뜨는 느낌 제거
   const eloPanel = `
     <div class="pd-elo-panel" style="display:flex;flex-direction:column;min-width:118px;align-self:stretch;justify-content:center">
-      <div class="pd-elo-panel-inner" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.24);border-radius:16px;padding:10px 12px ${eloSparkHTML?'8px':'10px'};text-align:center;backdrop-filter:blur(10px)">
+      <div class="pd-elo-panel-inner" style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.24);border-radius:var(--r2);padding:10px 12px ${eloSparkHTML?'8px':'10px'};text-align:center;backdrop-filter:blur(10px)">
         <div class="pd-elo-label" style="font-size:8px;letter-spacing:1.2px;font-weight:900;color:rgba(255,255,255,.6);margin-bottom:2px">ELO RATING</div>
         <div class="pd-elo-value" style="font-size:28px;font-weight:1000;color:#fff;line-height:1.05;letter-spacing:-1px">${eloVal}</div>
         <div class="pd-elo-grade" style="font-size:9px;font-weight:900;color:${eloGradeColor};letter-spacing:.6px;margin-top:2px">${eloGrade}</div>
@@ -138,19 +138,19 @@ function buildPlayerHeaderCardHTML(opts){
   const tierBadge = p.tier ? `<span class="pd-chip" style="background:rgba(255,255,255,.20);border:1.5px solid rgba(255,255,255,.36);border-radius:999px;padding:${pmMetaPad2};font-size:${pmMetaFs}px;font-weight:900;color:#fff">${getTierLabel(p.tier)||p.tier}</span>` : '';
   const quickRail = `
     <div class="pd-hero-quickrail" data-pd-layout="${layoutMode}" style="display:grid;grid-template-columns:repeat(${_isMobile?2:4},minmax(0,1fr));gap:8px;padding:${_isMobile?'10px 10px 12px':'12px 14px 14px'};background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));border-top:1px solid rgba(255,255,255,.14)">
-      <div class="pd-hero-quickcard" data-kind="univ" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+      <div class="pd-hero-quickcard" data-kind="univ" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">소속</div>
         <div style="margin-top:7px;font-size:${_isMobile?13:15}px;font-weight:1000;color:${univAccent};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 rgba(255,255,255,.35)">${pUnivSafe}</div>
       </div>
-      <div class="pd-hero-quickcard" data-kind="race" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+      <div class="pd-hero-quickcard" data-kind="race" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">종족</div>
         <div style="margin-top:7px;font-size:${_isMobile?13:15}px;font-weight:1000;color:${raceTheme.chip};text-shadow:0 1px 0 rgba(255,255,255,.35)">${RNAME[p.race]||p.race||'-'}</div>
       </div>
-      <div class="pd-hero-quickcard" data-kind="elo" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+      <div class="pd-hero-quickcard" data-kind="elo" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">등급</div>
         <div style="margin-top:7px;font-size:${_isMobile?13:15}px;font-weight:1000;color:${eloGradeColor};text-shadow:0 1px 0 rgba(255,255,255,.45)">${eloGrade}</div>
       </div>
-      <div class="pd-hero-quickcard" data-kind="form" style="padding:11px 12px;border-radius:16px;background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
+      <div class="pd-hero-quickcard" data-kind="form" style="padding:11px 12px;border-radius:var(--r2);background:${quickCardBg};border:1px solid ${quickCardBd};box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 22px rgba(15,23,42,.10);backdrop-filter:blur(10px)">
         <div style="font-size:10px;font-weight:1000;letter-spacing:.08em;color:${quickLabelCol};text-transform:uppercase">최근 폼</div>
         <div style="margin-top:7px;font-size:${_isMobile?13:15}px;font-weight:1000;text-shadow:0 1px 0 rgba(255,255,255,.45)">${recent10.length?`<span style="color:${cWin}">${recent10Wins}승</span> <span style="color:${cLoss}">${recent10Losses}패</span>`:'<span style="color:'+quickMetaCol+'">기록 대기</span>'}</div>
       </div>
@@ -227,12 +227,12 @@ function buildPlayerSummaryStripHTML(opts){
   const streakCol = isWinStreak ? cWin : cLoss;
   const streakBd = isWinStreak ? '#86efac' : '#fca5a5';
   const streakHTML = streak>=2
-    ? `<span style="font-size:11px;font-weight:900;padding:4px 11px;border-radius:99px;background:${streakBg};color:${streakCol};border:1.5px solid ${streakBd};box-shadow:0 2px 8px ${streakCol}28">${streak}연${streakType}</span>`
+    ? `<span style="font-size:var(--fs-caption);font-weight:900;padding:4px 11px;border-radius:99px;background:${streakBg};color:${streakCol};border:1.5px solid ${streakBd};box-shadow:0 2px 8px ${streakCol}28">${streak}연${streakType}</span>`
     : '';
   const allRanked=[...players].filter(q=>!q.retired).sort((a,b)=>(b.points||0)-(a.points||0)||(b.win||0)-(a.win||0));
   const myRank = allRanked.findIndex(q=>q.name===p.name)+1;
   const rankChange = typeof getRankChangeBadge==='function' ? getRankChangeBadge(p.name, myRank) : '';
-  const rankHTML = myRank ? `<span style="font-size:11px;font-weight:900;color:var(--text2,#334155);display:inline-flex;align-items:center;gap:4px"><span style="color:var(--text3)">전체</span> ${myRank}위</span> ${rankChange}` : '';
+  const rankHTML = myRank ? `<span style="font-size:var(--fs-caption);font-weight:900;color:var(--text2,#334155);display:inline-flex;align-items:center;gap:4px"><span style="color:var(--text3)">전체</span> ${myRank}위</span> ${rankChange}` : '';
   let mvpHTML = '';
   try{
     if(typeof _b2EnsureMvpHistoryFresh==='function') _b2EnsureMvpHistoryFresh(true);
@@ -241,7 +241,7 @@ function buildPlayerSummaryStripHTML(opts){
       const parts=[];
       if(mvpStats.weekCount) parts.push(`주간 ${mvpStats.weekCount}회`);
       if(mvpStats.monthCount) parts.push(`월간 ${mvpStats.monthCount}회`);
-      mvpHTML = `<span style="font-size:11px;font-weight:900;padding:4px 11px;border-radius:99px;background:linear-gradient(135deg,#fef9c3,#fde68a);color:#b45309;border:1.5px solid #fcd34d;box-shadow:0 2px 8px rgba(217,119,6,.16);display:inline-flex;align-items:center;gap:4px">MVP ${parts.join(' · ')}</span>`;
+      mvpHTML = `<span style="font-size:var(--fs-caption);font-weight:900;padding:4px 11px;border-radius:99px;background:linear-gradient(135deg,#fef9c3,#fde68a);color:#b45309;border:1.5px solid #fcd34d;box-shadow:0 2px 8px rgba(217,119,6,.16);display:inline-flex;align-items:center;gap:4px">MVP ${parts.join(' · ')}</span>`;
     }
   }catch(e){}
   const recent10 = hist.slice(0,10);
@@ -250,7 +250,7 @@ function buildPlayerSummaryStripHTML(opts){
     <span style="font-size:10px;color:var(--gray-l);margin-left:4px;font-weight:700">최근${recent10.length}</span>
   </div>` : '';
   if(!(streakHTML||rankHTML||formHTML||mvpHTML)) return '';
-  return `<div class="pd-strip" style="background:linear-gradient(135deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.15);border-radius:16px;padding:11px 14px;margin-bottom:10px;box-shadow:0 6px 18px rgba(15,23,42,.04)">
+  return `<div class="pd-strip" style="background:linear-gradient(135deg,#ffffff,#f8fafc);border:1px solid rgba(148,163,184,.15);border-radius:var(--r2);padding:11px 14px;margin-bottom:10px;box-shadow:0 6px 18px rgba(15,23,42,.04)">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       ${rankHTML}${mvpHTML}${streakHTML}${formHTML}
     </div>

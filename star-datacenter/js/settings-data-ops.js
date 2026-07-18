@@ -133,8 +133,8 @@ function renderStorageInfo(){
       const bg = backend==='localStorage' ? '#fff7ed' : isIdb ? '#ecfdf5' : '#f1f5f9';
       const col = backend==='localStorage' ? '#c2410c' : isIdb ? '#047857' : '#64748b';
       return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:${bg}">
-        <span style="font-size:11px;color:var(--text2)">${label}</span>
-        <span style="font-size:11px;font-weight:800;color:${col}">${text}</span>
+        <span style="font-size:var(--fs-caption);color:var(--text2)">${label}</span>
+        <span style="font-size:var(--fs-caption);font-weight:800;color:${col}">${text}</span>
       </div>`;
     };
     const matchSnap = (window.MatchStore && typeof window.MatchStore.snapshot==='function') ? window.MatchStore.snapshot() : null;
@@ -176,25 +176,25 @@ function renderStorageInfo(){
     };
     el.innerHTML=`
     <div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+      <div style="display:flex;justify-content:space-between;font-size:var(--fs-sm);margin-bottom:5px">
         <span style="font-weight:700;color:var(--text)">${fmt(total)} / 5MB 사용</span>
         <span style="font-weight:700;color:${barCol}">${pct}%</span>
       </div>
       <div style="height:10px;border-radius:5px;background:var(--border2);overflow:hidden">
         <div style="height:100%;width:${pct}%;background:${barCol};border-radius:5px;transition:.3s"></div>
       </div>
-      ${pct>=70?`<div style="font-size:11px;color:${barCol};margin-top:5px;font-weight:600">${pct>=90?'⚠️ 저장 공간이 거의 가득 찼습니다! 데이터를 정리해 주세요.':'⚠️ 저장 공간이 많이 사용되고 있습니다.'}</div>`:''}
+      ${pct>=70?`<div style="font-size:var(--fs-caption);color:${barCol};margin-top:5px;font-weight:600">${pct>=90?'⚠️ 저장 공간이 거의 가득 찼습니다! 데이터를 정리해 주세요.':'⚠️ 저장 공간이 많이 사용되고 있습니다.'}</div>`:''}
     </div>
-    <div style="font-size:11px;color:var(--gray-l);margin-bottom:4px">항목별 사용량 (상위 10개)</div>
+    <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:4px">항목별 사용량 (상위 10개)</div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:8px">기본 저장소는 <b>IndexedDB</b>이며, 아래 localStorage 사용량은 주로 설정/레거시 키 기준입니다. IndexedDB가 불가능한 환경에서만 localStorage fallback이 사용됩니다.</div>
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
       ${backendBadge('경기 기록 저장소', matchMeta.backend||'')}
       ${backendBadge('외부탭 기록 저장소', histMeta.backend||'')}
     </div>
-    ${idbRows.length?`<div style="margin-bottom:10px;padding:10px;border:1px solid var(--border);background:var(--surface);border-radius:10px">
+    ${idbRows.length?`<div style="margin-bottom:10px;padding:10px;border:1px solid var(--border);background:var(--surface);border-radius:var(--r)">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">IndexedDB 사용량 추정</div>
-        <div style="font-size:11px;color:var(--gray-l)">합계 약 ${fmt(idbTotal)}</div>
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">IndexedDB 사용량 추정</div>
+        <div style="font-size:var(--fs-caption);color:var(--gray-l)">합계 약 ${fmt(idbTotal)}</div>
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:6px">실제 브라우저 내부 저장 오버헤드는 제외한 JSON 기준 추정치입니다.</div>
       <div style="display:flex;flex-direction:column;gap:5px">
@@ -208,19 +208,19 @@ function renderStorageInfo(){
         </div>`).join('')}
       </div>
     </div>`:''}
-    <div style="margin-bottom:10px;padding:10px;border:1px solid var(--border);background:var(--surface);border-radius:10px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px">저장소 관리</div>
+    <div style="margin-bottom:10px;padding:10px;border:1px solid var(--border);background:var(--surface);border-radius:var(--r)">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:6px">저장소 관리</div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:8px">기록 원본은 기본적으로 IndexedDB에 저장됩니다. 문제가 있을 때 현재 메모리 데이터를 다시 저장소에 안전하게 다시 기록합니다. 기록 삭제 기능은 설정에서 제공하지 않습니다.</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="btn btn-w btn-xs" onclick="rebuildIndexedDbStores()">IndexedDB 재빌드</button>
       </div>
     </div>
     ${legacyRows.length?`<div style="margin-bottom:8px;padding:8px 10px;border:1px solid #fcd34d;background:#fffbeb;border-radius:8px">
-      <div style="font-size:11px;font-weight:800;color:#92400e;margin-bottom:4px">레거시 저장 키가 남아 있습니다</div>
+      <div style="font-size:var(--fs-caption);font-weight:800;color:#92400e;margin-bottom:4px">레거시 저장 키가 남아 있습니다</div>
       <div style="font-size:10px;color:#a16207;margin-bottom:6px">${legacyRows.map(r=>LABELS[r.k]||r.k).join(', ')}</div>
       <button class="btn btn-w btn-xs" onclick="cleanupLegacyMatchStorageKeys()">레거시 키 정리</button>
     </div>`:''}
-    <div style="font-size:11px;line-height:1.8">
+    <div style="font-size:var(--fs-caption);line-height:1.8">
       ${rows.slice(0,10).map(({k,bytes})=>{
         const label=LABELS[k]||k;
         const bpct=Math.min(100,Math.round(bytes/limit*100));
@@ -231,7 +231,7 @@ function renderStorageInfo(){
         </div>`;
       }).join('')}
     </div>`;
-  }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:12px">사용량 계산 불가</div>';}
+  }catch(e){el.innerHTML='<div style="color:var(--gray-l);font-size:var(--fs-sm)">사용량 계산 불가</div>';}
 }
 function cleanupLegacyMatchStorageKeys(){
   const keys=['su_mm','su_um','su_cm','su_ck','su_pro','su_ptn','su_tn','su_ttm','su_indm','su_gjm','su_hist_ext_data_v1'];
@@ -819,13 +819,13 @@ function renderSeasonList(){
   const el = document.getElementById('cfg-season-list');
   if(!el) return;
   if(!seasons.length){
-    el.innerHTML = '<div style="font-size:12px;color:var(--gray-l);padding:8px 0">등록된 시즌이 없습니다.</div>';
+    el.innerHTML = '<div style="font-size:var(--fs-sm);color:var(--gray-l);padding:8px 0">등록된 시즌이 없습니다.</div>';
     return;
   }
   el.innerHTML = seasons.map((s,i) => `
     <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;flex-wrap:wrap">
-      <span style="font-size:13px;font-weight:800;color:#7c3aed;min-width:100px">🏆 ${s.name}</span>
-      <span style="font-size:11px;color:var(--gray-l)">${s.from} ~ ${s.to}</span>
+      <span style="font-size:var(--fs-base);font-weight:800;color:#7c3aed;min-width:100px">🏆 ${s.name}</span>
+      <span style="font-size:var(--fs-caption);color:var(--gray-l)">${s.from} ~ ${s.to}</span>
       ${isLoggedIn ? '<button class="btn btn-w btn-xs" style="margin-left:auto" onclick="editSeason('+i+')">✏️ 수정</button><button class="btn btn-r btn-xs" onclick="deleteSeason('+i+')">🗑️</button>' : '<span style="margin-left:auto"></span>'}
     </div>`).join('');
 }

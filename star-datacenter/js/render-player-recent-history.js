@@ -45,7 +45,7 @@ function buildPlayerRecentHistoryRowHTML(opts){
   const isWin=hh.result==='승';
   const isDraw=hh.result==='무';
   const eloStr=hh.eloDelta!=null
-    ?`<span style="font-weight:700;font-size:11px;color:${hh.eloDelta>0?'#16a34a':hh.eloDelta<0?'#dc2626':'#64748b'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`
+    ?`<span style="font-weight:700;font-size:var(--fs-caption);color:${hh.eloDelta>0?'#16a34a':hh.eloDelta<0?'#dc2626':'#64748b'}">${hh.eloDelta>0?'+':''}${hh.eloDelta}</span>`
     :'-';
   const oppP=players.find(x=>x.name===hh.opp);
   const oppRace=hh.oppRace||oppP?.race||'';
@@ -54,7 +54,7 @@ function buildPlayerRecentHistoryRowHTML(opts){
   const isChecked = !!(bulkSelectedSet && typeof bulkSelectedSet.has==='function' && bulkSelectedSet.has(hi));
   const selectCheckboxHTML=(bulkMode && canBulkEdit)
     ? `<td class="no-export" style="text-align:center"><input type="checkbox" class="hist-select-checkbox" data-ph-action="hist-select-one" data-ph-index="${hi}" value="${hi}" ${isChecked?'checked':''} style="cursor:pointer"></td>`
-    : (bulkMode?`<td class="no-export" style="text-align:center;color:#9ca3af;font-size:11px">-</td>`:'');
+    : (bulkMode?`<td class="no-export" style="text-align:center;color:#9ca3af;font-size:var(--fs-caption)">-</td>`:'');
   const _editableSourceAttrs = (()=>{
     if(!(hh && hh._editableSource)) return '';
     const st = hh._sourceType || '';
@@ -105,7 +105,7 @@ function buildPlayerRecentHistoryRowHTML(opts){
   ):'';
   return `<tr class="pd-hist-row ${isWin?'is-win':isDraw?'is-draw':'is-lose'}" style="background:${isWin?'#fef2f2':isDraw?'#f1f5f9':'#f8fafc'}10">
     ${selectCheckboxHTML}
-    <td style="color:var(--gray-l);font-size:11px">${hh.date}</td>
+    <td style="color:var(--gray-l);font-size:var(--fs-caption)">${hh.date}</td>
     <td style="white-space:nowrap;text-align:center">${modeCellHTML}</td>
     <td style="text-align:center">${isWin
       ?`<span style="${resultBadgeStyle};background:#fee2e2;color:#dc2626;border:1px solid #fecaca">WIN</span>`
@@ -114,7 +114,7 @@ function buildPlayerRecentHistoryRowHTML(opts){
         :`<span style="${resultBadgeStyle};background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0">LOSE</span>`}</td>
     <td style="cursor:pointer;font-weight:700" data-ph-action="hist-open-player" data-ph-player="${escJS(hh.opp)}"><span style="display:inline-flex;align-items:center;gap:5px">${getPlayerPhotoHTML(hh.opp,'22px','pointer-events:none;')}<span style="color:var(--blue)">${hh.opp}</span></span></td>
     <td><span class="rbadge r${oppRace||''}" style="font-size:10px">${oppRace||''}</span></td>
-    <td class="ph-col-map" style="color:var(--gray-l);font-size:11px">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
+    <td class="ph-col-map" style="color:var(--gray-l);font-size:var(--fs-caption)">${hh.map && hh.map !== '-' ? hh.map : ''}</td>
     <td class="ph-col-elo">${eloStr}</td>
     ${editBtnHTML}
   </tr>`;
@@ -141,10 +141,10 @@ function buildPlayerRecentHistorySectionHTML(opts){
   let h=`<div class="su-sec" style="--su-sec-accent:var(--blue)">
     <div class="su-sec__title-row">
       <div class="su-sec__title">최근 경기 기록 <small>(총 ${totalGames}게임 · ${fromN}–${toN}번째 표시)</small></div>
-      ${isLoggedIn?`<div class="su-sec__tools"><button class="no-export" data-ph-action="hist-bulk-toggle" style="padding:2px 10px;border-radius:10px;border:1px solid var(--border2);background:var(--white);font-size:10px;font-weight:900;cursor:pointer;color:${bulkMode?'#dc2626':'var(--text3)'}">${bulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button></div>`:''}
+      ${isLoggedIn?`<div class="su-sec__tools"><button class="no-export" data-ph-action="hist-bulk-toggle" style="padding:2px 10px;border-radius:var(--r);border:1px solid var(--border2);background:var(--white);font-size:10px;font-weight:900;cursor:pointer;color:${bulkMode?'#dc2626':'var(--text3)'}">${bulkMode?'✕ 선택 완료':'☐ 일괄 선택'}</button></div>`:''}
     </div>`;
   h+=seasonBar;
-  h+=`<div class="player-hist-table-wrap" style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">`;
+  h+=`<div class="player-hist-table-wrap" style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px">`;
   h+=`<table style="margin:0;border:none;border-radius:0"><thead><tr>${selectAllCheckbox}<th>날짜</th><th>종류</th><th>결과</th><th>상대</th><th>종족</th><th class="ph-col-map">맵</th><th class="ph-col-elo">ELO</th>${manageHeader}</tr></thead><tbody>`;
   displayHist.forEach(hh=>{
     h += buildPlayerRecentHistoryRowHTML({
@@ -161,7 +161,7 @@ function buildPlayerRecentHistorySectionHTML(opts){
   if(totalPages>1){
     h+=`<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border)">
       <button class="btn btn-w btn-xs" ${curPage===0?'disabled':''} data-ph-action="hist-page" data-ph-name="${escJS(pName)}" data-ph-page="${curPage-1}">◀ 이전</button>
-      <span style="font-size:12px;color:var(--gray-l)">${curPage+1} / ${totalPages} 페이지</span>
+      <span style="font-size:var(--fs-sm);color:var(--gray-l)">${curPage+1} / ${totalPages} 페이지</span>
       <button class="btn btn-w btn-xs" ${curPage>=totalPages-1?'disabled':''} data-ph-action="hist-page" data-ph-name="${escJS(pName)}" data-ph-page="${curPage+1}">다음 ▶</button>
       ${bulkMode?`<button id="bulk-edit-btn" class="btn btn-g btn-xs no-export" data-ph-action="hist-bulk-edit" data-ph-name="${escJS(pName)}" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">선택 수정 (${bulkSelectedSet?.size||0})</button><button id="bulk-delete-btn" class="btn btn-r btn-xs no-export" data-ph-action="hist-bulk-delete" data-ph-name="${escJS(pName)}" style="padding:2px 8px;font-size:10px;border-color:var(--border2)">선택 삭제 (${bulkSelectedSet?.size||0})</button>`:''}
     </div>`;

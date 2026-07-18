@@ -87,7 +87,7 @@ window.openStarSystemInfo = function(){
         <div style="display:flex;flex-direction:column;gap:12px">
           <div style="display:flex;flex-direction:column;gap:6px">
             <div style="font-weight:1000;color:var(--text2)">1) 포함 데이터(출처)</div>
-            <div style="font-size:12px;color:var(--text3);line-height:1.65">
+            <div style="font-size:var(--fs-sm);color:var(--text3);line-height:1.65">
               <ul style="margin:0;padding-left:18px">
                 <li>앱에 <b>등록된 경기 기록</b>(개인전/대학대전/CK/프로리그/대회/티어대회/토너먼트 등)</li>
                 <li><b>펨코 스타 게시판 → 경기결과탭</b>에서 가져와 <b>“기록으로 등록된 항목”</b>도 포함됩니다(등록되어 있는 경우)</li>
@@ -99,15 +99,15 @@ window.openStarSystemInfo = function(){
 
           <div style="display:flex;flex-direction:column;gap:6px">
             <div style="font-weight:1000;color:var(--text2)">2) 공식전 인정 기준</div>
-            <div style="font-size:12px;color:var(--text3);line-height:1.6">
+            <div style="font-size:var(--fs-sm);color:var(--text3);line-height:1.6">
               통계 → ⭐ 스타시스템에서 설정한 <b>“공식전 모드 키워드”</b>가 경기 기록의 <code>mode</code>에 포함되면 공식전으로 처리합니다.
             </div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:6px">
             <div style="font-weight:1000;color:var(--text2)">3) 점수 로직(제로섬 3점 체제)</div>
-            <div style="overflow:auto;border:1px solid var(--border);border-radius:10px;background:#fff">
-              <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <div style="overflow:auto;border:1px solid var(--border);border-radius:var(--r);background:#fff">
+              <table style="width:100%;border-collapse:collapse;font-size:var(--fs-sm)">
                 <thead>
                   <tr style="background:var(--surface);color:var(--gray-l)">
                     <th style="padding:8px;border-bottom:1px solid var(--border)">대전 상대</th>
@@ -122,7 +122,7 @@ window.openStarSystemInfo = function(){
                 </tbody>
               </table>
             </div>
-            <div style="font-size:11px;color:var(--gray-l);line-height:1.55">
+            <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.55">
               ※ 제로섬(Zero-sum): 승자 +X / 패자 -X (경기 단위로 총점 보존)<br>
               ※ 현재 버전은 “현재 티어 기준”으로 상대 티어 차이를 계산합니다. (경기 당시 티어까지 정확히 하려면 기록에 tierAtMatch 저장이 필요)
             </div>
@@ -130,7 +130,7 @@ window.openStarSystemInfo = function(){
 
           <div style="display:flex;flex-direction:column;gap:6px">
             <div style="font-weight:1000;color:var(--text2)">4) 승강급 기준</div>
-            <div style="font-size:12px;color:var(--text3);line-height:1.6">
+            <div style="font-size:var(--fs-sm);color:var(--text3);line-height:1.6">
               시작점수 100점. <b>130점</b> 도달 시 <b>승급 검증</b>, <b>70점 미만</b>이면 <b>강등 위기</b>.
             </div>
           </div>

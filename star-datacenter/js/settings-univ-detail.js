@@ -40,7 +40,7 @@ function _renderCfgUdSection(){
         <span style="position:absolute;bottom:4px;left:6px;width:8px;height:8px;border-radius:50%;background:${accent};box-shadow:0 0 6px ${accent}"></span>
       </span>
       <span style="padding:7px 9px;background:var(--white)">
-        <span style="display:block;font-size:12px;font-weight:900;color:var(--text2)">${label}${dm===key?' ✓':''}</span>
+        <span style="display:block;font-size:var(--fs-sm);font-weight:900;color:var(--text2)">${label}${dm===key?' ✓':''}</span>
         <span style="display:block;font-size:10px;color:var(--gray-l);margin-top:2px;font-weight:600">${desc}</span>
       </span>
     </button>`).join('');
@@ -70,7 +70,7 @@ function _renderCfgUdSection(){
         </span>
       </span>
       <span style="padding:7px 9px;background:var(--white)">
-        <span style="display:block;font-size:12px;font-weight:900;color:var(--text2)">${label}${lm===key?' ✓':''}</span>
+        <span style="display:block;font-size:var(--fs-sm);font-weight:900;color:var(--text2)">${label}${lm===key?' ✓':''}</span>
         <span style="display:block;font-size:10px;color:var(--gray-l);margin-top:2px;font-weight:600">${desc}</span>
       </span>
     </button>`).join('');
@@ -103,18 +103,18 @@ function _renderCfgUdSection(){
   const _udPreviewStatsCols = (lm==='stats' || lm==='board' || lm==='banner') ? 'repeat(4,1fr)' : (lm==='split' ? 'repeat(3,1fr)' : 'repeat(2,1fr)');
   const _udUiPreset = `
     <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--white));box-shadow:0 10px 28px rgba(15,23,42,.05);margin-bottom:12px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🪄 추천 UI 프리셋</div>
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🪄 추천 UI 프리셋</div>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
         <button class="btn btn-xs btn-w" onclick="_applyUdUiPreset('photocard')">포토카드형</button>
         <button class="btn btn-xs btn-w" onclick="_applyUdUiPreset('studio')">방송형</button>
         <button class="btn btn-xs btn-w" onclick="_applyUdUiPreset('dark')">라이트 프리미엄</button>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">디자인 + 레이아웃 조합을 한 번에 적용합니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">디자인 + 레이아웃 조합을 한 번에 적용합니다.</div>
     </div>`;
   const _udPreviewCard = `
     <div style="padding:12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--white));box-shadow:0 10px 28px rgba(15,23,42,.06);margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
-        <div style="font-size:12px;font-weight:800;color:var(--text2)">👀 현재 조합 미리보기</div>
+        <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">👀 현재 조합 미리보기</div>
         <div style="font-size:10px;color:var(--gray-l);font-weight:800">${dm} × ${lm}</div>
       </div>
       <div style="display:grid;grid-template-columns:minmax(0,1fr) 118px;gap:12px;align-items:stretch">
@@ -141,11 +141,11 @@ function _renderCfgUdSection(){
         <div style="display:flex;flex-direction:column;gap:8px;justify-content:center">
           <div style="padding:9px 10px;border-radius:12px;background:var(--white);border:1px solid var(--border)">
             <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-bottom:3px">추천 포인트</div>
-            <div style="font-size:11px;color:var(--text2);font-weight:800">${lm==='photocard'?'로고와 컬러 헤더를 감성적으로 강조':lm==='showcase'?'대학명과 상위 멤버 존재감이 큼':lm==='stats'?'승률/전적 중심으로 빠르게 읽힘':lm==='poster'?'대학을 ‘포스터’처럼 크게 보여주는 비주얼형':lm==='timeline'?'최근 흐름(경기 스트림)을 메인으로 보는 구조':lm==='board'?'KPI/카드 보드 중심으로 빠르게 스캔':'가장 범용적이고 안정적인 균형형'}</div>
+            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='photocard'?'로고와 컬러 헤더를 감성적으로 강조':lm==='showcase'?'대학명과 상위 멤버 존재감이 큼':lm==='stats'?'승률/전적 중심으로 빠르게 읽힘':lm==='poster'?'대학을 ‘포스터’처럼 크게 보여주는 비주얼형':lm==='timeline'?'최근 흐름(경기 스트림)을 메인으로 보는 구조':lm==='board'?'KPI/카드 보드 중심으로 빠르게 스캔':'가장 범용적이고 안정적인 균형형'}</div>
           </div>
           <div style="padding:9px 10px;border-radius:12px;background:var(--white);border:1px solid var(--border)">
             <div style="font-size:10px;color:var(--gray-l);font-weight:800;margin-bottom:3px">추천 조합</div>
-            <div style="font-size:11px;color:var(--text2);font-weight:800">${lm==='photocard'?'aurora / pastel / glass':lm==='showcase'?'luxury / editorial / classic':lm==='stats'?'dashboard / mono / terminal':lm==='poster'?'sunset / blush / aurora':lm==='timeline'?'studio / glass / aurora':lm==='board'?'dashboard / mono / classic':'classic / botanical / sunset'}</div>
+            <div style="font-size:var(--fs-caption);color:var(--text2);font-weight:800">${lm==='photocard'?'aurora / pastel / glass':lm==='showcase'?'luxury / editorial / classic':lm==='stats'?'dashboard / mono / terminal':lm==='poster'?'sunset / blush / aurora':lm==='timeline'?'studio / glass / aurora':lm==='board'?'dashboard / mono / classic':'classic / botanical / sunset'}</div>
           </div>
         </div>
       </div>
@@ -154,26 +154,26 @@ function _renderCfgUdSection(){
     ${_udPreviewCard}
     ${_udUiPreset}
     <div style="margin-bottom:6px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🎨 디자인 모드</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">🎨 디자인 모드</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${dmCards}</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">대학 상세 팝업의 전체적인 UI/디자인을 통째로 바꿉니다. 스트리머 상세 팝업과 같은 컨셉을 공유해 앱 전체의 통일감을 유지합니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">대학 상세 팝업의 전체적인 UI/디자인을 통째로 바꿉니다. 스트리머 상세 팝업과 같은 컨셉을 공유해 앱 전체의 통일감을 유지합니다.</div>
     </div>
     <div style="margin-bottom:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🧩 레이아웃 모드</div>
+      <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">🧩 레이아웃 모드</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${lmCards}</div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">썸네일은 미리보기이고, 선택하면 현재 열려 있는 대학 상세 팝업 레이아웃이 바로 바뀝니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">썸네일은 미리보기이고, 선택하면 현재 열려 있는 대학 상세 팝업 레이아웃이 바로 바뀝니다.</div>
     </div>
-    <div style="margin-bottom:12px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
-      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">🎓 대학 색상 팝업 배경</div>
+    <div style="margin-bottom:12px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+      <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🎓 대학 색상 팝업 배경</div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px">
         <input type="checkbox" ${udUnivBgEnabled?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setUdUnivBgEnabled(this.checked)">
-        <span style="font-size:12px;color:var(--text)">대학 상세 팝업 배경에 대학 색상 적용</span>
+        <span style="font-size:var(--fs-sm);color:var(--text)">대학 상세 팝업 배경에 대학 색상 적용</span>
       </label>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;opacity:${udUnivBgEnabled?1:.55}">
         <input type="checkbox" ${udUnivBgPastel?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setUdUnivBgPastel(this.checked)">
-        <span style="font-size:12px;color:var(--text)">파스텔톤으로 부드럽게 보정</span>
+        <span style="font-size:var(--fs-sm);color:var(--text)">파스텔톤으로 부드럽게 보정</span>
       </label>
-      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">적용 범위</div>
+      <div style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);margin-bottom:6px">적용 범위</div>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:10px;opacity:${udUnivBgEnabled?1:.55}">
         <button class="btn btn-xs ${udUnivBgScope==='header'?'btn-b':'btn-w'}" onclick="_setUdUnivBgScope('header')">헤더만</button>
         <button class="btn btn-xs ${udUnivBgScope==='body'?'btn-b':'btn-w'}" onclick="_setUdUnivBgScope('body')">본문까지</button>
@@ -181,17 +181,17 @@ function _renderCfgUdSection(){
       </div>
       <div style="display:flex;align-items:center;gap:10px;opacity:${udUnivBgEnabled?1:.55}">
         <input type="range" min="0" max="60" step="2" value="${udUnivBgTint}" style="flex:1;accent-color:var(--blue)" oninput="_setUdUnivBgTint(this.value);document.getElementById('ud-univbg-val').textContent=this.value+'%'">
-        <span id="ud-univbg-val" style="font-size:11px;color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${udUnivBgTint}%</span>
+        <span id="ud-univbg-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:35px;text-align:right;font-weight:700">${udUnivBgTint}%</span>
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">헤더/본문 배경에 대학 색상이 은은하게 섞입니다. 파스텔톤을 끄면 원래 대학 색감에 더 가깝게 보입니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">헤더/본문 배경에 대학 색상이 은은하게 섞입니다. 파스텔톤을 끄면 원래 대학 색감에 더 가깝게 보입니다.</div>
       <div style="height:1px;background:var(--border2);margin:10px 0"></div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
         <input type="checkbox" ${udUnivBtnEnabled?'checked':''} style="width:16px;height:16px;cursor:pointer" onchange="_setUdUnivBtnEnabled(this.checked)">
-        <span style="font-size:12px;color:var(--text)">팝업 안 버튼에도 대학 색상 적용</span>
+        <span style="font-size:var(--fs-sm);color:var(--text)">팝업 안 버튼에도 대학 색상 적용</span>
       </label>
-      <div style="font-size:11px;color:var(--gray-l);margin-top:6px">켜면 팝업 안의 보조 버튼(흰 버튼)에도 대학 색상이 은은하게 섞입니다. 배경 적용을 켜야 함께 동작합니다.</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">켜면 팝업 안의 보조 버튼(흰 버튼)에도 대학 색상이 은은하게 섞입니다. 배경 적용을 켜야 함께 동작합니다.</div>
     </div>
-    <div style="font-size:11px;color:var(--gray-l);margin-top:10px;padding:0 2px">※ 대학 상세 헤더 배경 이미지는 스트리머 상세 설정 안내와 별개로, 각 대학 편집 화면에서 개별 설정할 수 있습니다.</div>
+    <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:10px;padding:0 2px">※ 대학 상세 헤더 배경 이미지는 스트리머 상세 설정 안내와 별개로, 각 대학 편집 화면에서 개별 설정할 수 있습니다.</div>
   `;
 }
 function _setUdDesignMode(mode){

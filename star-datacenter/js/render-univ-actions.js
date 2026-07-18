@@ -125,9 +125,9 @@ function openUnivModal(univName){
       : (typeof window.buildUnivDetailHTML==='function' ? window.buildUnivDetailHTML : null);
     bodyEl.innerHTML = _fn
       ? _fn(univName)
-      : `<div style="padding:14px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 12px 24px rgba(15,23,42,.06)">
-          <div style="font-size:13px;font-weight:950;color:var(--text2);margin-bottom:6px">대학 상세 렌더러 로드 실패</div>
-          <div style="font-size:12px;color:var(--text3);line-height:1.6">buildUnivDetailHTML을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.</div>
+      : `<div style="padding:14px 12px;border-radius:var(--r2);border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 12px 24px rgba(15,23,42,.06)">
+          <div style="font-size:var(--fs-base);font-weight:950;color:var(--text2);margin-bottom:6px">대학 상세 렌더러 로드 실패</div>
+          <div style="font-size:var(--fs-sm);color:var(--text3);line-height:1.6">buildUnivDetailHTML을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.</div>
         </div>`;
     bodyEl.scrollTop = 0;
     try{
@@ -184,28 +184,28 @@ function toggleUnivEdit(){
       }catch(e){ return { url:'', alpha:30 }; }
     })();
     const editHTML=`<div id="univ-edit-panel" style="background:var(--surface);border:1.5px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:16px">
-      <div style="font-weight:800;font-size:13px;color:var(--blue);margin-bottom:12px">✏️ 대학 정보 수정</div>
-      <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대학 이름</label>
-      <input type="text" id="ue-name" value="${(typeof escAttr==='function'?escAttr(u.name||''):String(u.name||''))}" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:13px;box-sizing:border-box" oninput="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
-      <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대표 색상</label>
+      <div style="font-weight:800;font-size:var(--fs-base);color:var(--blue);margin-bottom:12px">✏️ 대학 정보 수정</div>
+      <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대학 이름</label>
+      <input type="text" id="ue-name" value="${(typeof escAttr==='function'?escAttr(u.name||''):String(u.name||''))}" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-base);box-sizing:border-box" oninput="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
+      <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">대표 색상</label>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
         <input type="color" id="ue-color" value="${u.color||'#6b7280'}" style="width:44px;height:36px;padding:2px;border-radius:6px;border:1px solid var(--border2);cursor:pointer" oninput="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
-        <span style="font-size:12px;color:var(--text3)">현재: ${u.color||'미설정'}</span>
+        <span style="font-size:var(--fs-sm);color:var(--text3)">현재: ${u.color||'미설정'}</span>
       </div>
-      <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">🖼 로고 이미지 URL</label>
+      <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">🖼 로고 이미지 URL</label>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-        <input type="text" id="ue-icon" value="${u.icon||''}" placeholder="https://... 이미지 URL" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" oninput="const v=this.value.trim();const img=document.getElementById('ue-icon-preview');if(v){img.src=toHttpsUrl(v);img.style.display='block';}else img.style.display='none';try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
+        <input type="text" id="ue-icon" value="${u.icon||''}" placeholder="https://... 이미지 URL" style="flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm)" oninput="const v=this.value.trim();const img=document.getElementById('ue-icon-preview');if(v){img.src=toHttpsUrl(v);img.style.display='block';}else img.style.display='none';try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
         <img id="ue-icon-preview" src="${toHttpsUrl(u.icon||'')}" style="width:40px;height:40px;object-fit:contain;border-radius:var(--su_univ_logo_radius,8px);border:1px solid var(--border);${u.icon?'':'display:none'}" onerror="this.style.display='none'">
       </div>
       <div style="font-size:10px;color:var(--gray-l);margin-bottom:12px">현황판·선수 상세에서 대학 로고로 표시됩니다.</div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
-        <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">🖼 대학 상세 헤더 배경</div>
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 설정탭 기본값 사용)</span></label>
-        <input type="text" id="ue-hbg" value="${u.detailHeaderBgImg||''}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;box-sizing:border-box" oninput="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
+        <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px">🖼 대학 상세 헤더 배경</div>
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 설정탭 기본값 사용)</span></label>
+        <input type="text" id="ue-hbg" value="${u.detailHeaderBgImg||''}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm);box-sizing:border-box" oninput="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">표시 방식</label>
-            <select id="ue-hbg-fit" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px" onchange="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">표시 방식</label>
+            <select id="ue-hbg-fit" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm)" onchange="try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
               <option value=""${!u.detailHeaderBgFit?' selected':''}>설정값 따름</option>
               <option value="contain"${u.detailHeaderBgFit==='contain'?' selected':''}>맞춤</option>
               <option value="cover"${u.detailHeaderBgFit==='cover'?' selected':''}>채우기</option>
@@ -213,29 +213,29 @@ function toggleUnivEdit(){
             </select>
           </div>
           <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">크기 조절</label>
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">크기 조절</label>
             <div style="display:flex;align-items:center;gap:8px">
               <input type="range" id="ue-hbg-scale" min="40" max="220" step="5" value="${Number(u.detailHeaderBgScale||100)||100}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-hbg-scale-val').textContent=this.value+'%';try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
-              <span id="ue-hbg-scale-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(u.detailHeaderBgScale||100)||100}%</span>
+              <span id="ue-hbg-scale-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(u.detailHeaderBgScale||100)||100}%</span>
             </div>
           </div>
         </div>
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;margin-top:10px">가로 위치 (좌/우)</label>
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px;margin-top:10px">가로 위치 (좌/우)</label>
         <div style="display:flex;align-items:center;gap:8px">
           <input type="range" id="ue-hbg-posx" min="0" max="100" step="1" value="${(u.detailHeaderBgPosX==null?50:Math.max(0,Math.min(100,parseInt(u.detailHeaderBgPosX,10)||50)))}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-hbg-posx-val').textContent=this.value+'%';try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
-          <span id="ue-hbg-posx-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${(u.detailHeaderBgPosX==null?50:Math.max(0,Math.min(100,parseInt(u.detailHeaderBgPosX,10)||50)))}%</span>
+          <span id="ue-hbg-posx-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${(u.detailHeaderBgPosX==null?50:Math.max(0,Math.min(100,parseInt(u.detailHeaderBgPosX,10)||50)))}%</span>
         </div>
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;margin-top:10px">세로 위치 (위/아래)</label>
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px;margin-top:10px">세로 위치 (위/아래)</label>
         <div style="display:flex;align-items:center;gap:8px">
           <input type="range" id="ue-hbg-posy" min="0" max="100" step="1" value="${(u.detailHeaderBgPosY==null?50:Math.max(0,Math.min(100,parseInt(u.detailHeaderBgPosY,10)||50)))}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-hbg-posy-val').textContent=this.value+'%';try{if(typeof _updateUnivHeaderEditPreview==='function')_updateUnivHeaderEditPreview();}catch(e){}">
-          <span id="ue-hbg-posy-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${(u.detailHeaderBgPosY==null?50:Math.max(0,Math.min(100,parseInt(u.detailHeaderBgPosY,10)||50)))}%</span>
+          <span id="ue-hbg-posy-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${(u.detailHeaderBgPosY==null?50:Math.max(0,Math.min(100,parseInt(u.detailHeaderBgPosY,10)||50)))}%</span>
         </div>
         <div style="margin-top:12px">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-            <div style="font-size:11px;font-weight:800;color:var(--text2)">미리보기</div>
+            <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text2)">미리보기</div>
             <div id="ue-hbg-preview-meta" style="font-size:10px;color:var(--gray-l);font-weight:700">이미지 없음</div>
           </div>
-          <div id="ue-hbg-preview-frame" style="position:relative;min-height:152px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.24);box-shadow:0 14px 26px rgba(15,23,42,.12);background:linear-gradient(145deg,${u.color||'#6b7280'} 0%,${(u.color||'#6b7280')}cc 60%,${(u.color||'#6b7280')}88 100%)">
+          <div id="ue-hbg-preview-frame" style="position:relative;min-height:152px;border-radius:var(--r2);overflow:hidden;border:1px solid rgba(255,255,255,.24);box-shadow:0 14px 26px rgba(15,23,42,.12);background:linear-gradient(145deg,${u.color||'#6b7280'} 0%,${(u.color||'#6b7280')}cc 60%,${(u.color||'#6b7280')}88 100%)">
             <div style="position:absolute;inset:0;overflow:hidden">
               <img id="ue-hbg-preview-img" src="" alt="" style="position:absolute;inset:-8%;width:116%;height:116%;object-fit:contain;object-position:50% 50%;transform:scale(1);transform-origin:center center;opacity:.32;display:none" onerror="this.style.display='none';const empty=document.getElementById('ue-hbg-preview-empty');if(empty)empty.style.display='flex'">
             </div>
@@ -256,7 +256,7 @@ function toggleUnivEdit(){
                 </div>
               </div>
             </div>
-            <div id="ue-hbg-preview-empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;text-align:center;font-size:11px;line-height:1.6;color:rgba(255,255,255,.82);font-weight:700;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.00))">
+            <div id="ue-hbg-preview-empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;text-align:center;font-size:var(--fs-caption);line-height:1.6;color:rgba(255,255,255,.82);font-weight:700;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.00))">
               배경 이미지 URL을 입력하면<br>여기서 바로 헤더 느낌을 확인할 수 있습니다.
             </div>
           </div>
@@ -264,21 +264,21 @@ function toggleUnivEdit(){
         </div>
       </div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
-        <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">📋 스트리머탭 대학 헤더 설정</div>
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">헤더 배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 기본 그라데이션)</span></label>
-        <input type="text" id="ue-streamer-hbg" value="${u.streamerHeaderBgImg||''}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;box-sizing:border-box">
+        <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px">📋 스트리머탭 대학 헤더 설정</div>
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">헤더 배경 이미지 URL <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(비워두면 기본 그라데이션)</span></label>
+        <input type="text" id="ue-streamer-hbg" value="${u.streamerHeaderBgImg||''}" placeholder="https://... 이미지 URL" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm);box-sizing:border-box">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">이미지 크기</label>
-            <select id="ue-streamer-hbg-size" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px">
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">이미지 크기</label>
+            <select id="ue-streamer-hbg-size" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm)">
               <option value="cover"${(!u.streamerHeaderBgSize||u.streamerHeaderBgSize==='cover')?' selected':''}>꽉 차게 (cover)</option>
               <option value="contain"${u.streamerHeaderBgSize==='contain'?' selected':''}>맞추기 (contain)</option>
               <option value="auto"${u.streamerHeaderBgSize==='auto'?' selected':''}>자동 (auto)</option>
             </select>
           </div>
           <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">이미지 위치</label>
-            <select id="ue-streamer-hbg-pos" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px">
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">이미지 위치</label>
+            <select id="ue-streamer-hbg-pos" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm)">
               <option value="center center"${(!u.streamerHeaderBgPos||u.streamerHeaderBgPos==='center center')?' selected':''}>중앙</option>
               <option value="top center"${u.streamerHeaderBgPos==='top center'?' selected':''}>상단 중앙</option>
               <option value="bottom center"${u.streamerHeaderBgPos==='bottom center'?' selected':''}>하단 중앙</option>
@@ -287,13 +287,13 @@ function toggleUnivEdit(){
             </select>
           </div>
         </div>
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">이미지 투명도</label>
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">이미지 투명도</label>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
           <input type="range" id="ue-streamer-hbg-opacity" min="0" max="100" step="5" value="${Number(u.streamerHeaderBgOpacity||30)||30}" style="flex:1;accent-color:var(--blue)" oninput="document.getElementById('ue-streamer-hbg-opacity-val').textContent=this.value+'%'">
-          <span id="ue-streamer-hbg-opacity-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(u.streamerHeaderBgOpacity||30)||30}%</span>
+          <span id="ue-streamer-hbg-opacity-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Number(u.streamerHeaderBgOpacity||30)||30}%</span>
         </div>
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">그라데이션 스타일</label>
-        <select id="ue-streamer-hbg-gradient" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;margin-bottom:10px">
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">그라데이션 스타일</label>
+        <select id="ue-streamer-hbg-gradient" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm);margin-bottom:10px">
           <option value=""${!u.streamerHeaderGradient?' selected':''}>설정탭 기본값</option>
           <option value="solid"${u.streamerHeaderGradient==='solid'?' selected':''}>단색</option>
           <option value="left-to-right"${u.streamerHeaderGradient==='left-to-right'?' selected':''}>왼쪽→오른쪽</option>
@@ -303,8 +303,8 @@ function toggleUnivEdit(){
         </select>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">효과 길이</label>
-            <select id="ue-streamer-hbg-len" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px">
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">효과 길이</label>
+            <select id="ue-streamer-hbg-len" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm)">
               <option value=""${!u.streamerHeaderGradientLen?' selected':''}>설정탭 기본값</option>
               <option value="30"${u.streamerHeaderGradientLen==='30'?' selected':''}>30% (짧게)</option>
               <option value="50"${u.streamerHeaderGradientLen==='50'?' selected':''}>50%</option>
@@ -313,16 +313,16 @@ function toggleUnivEdit(){
             </select>
           </div>
           <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">효과 색상</label>
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">효과 색상</label>
             <input type="color" id="ue-streamer-hbg-color" value="${u.streamerHeaderGradientColor||'#ffffff'}" style="width:100%;height:32px;padding:2px;border-radius:6px;border:1px solid var(--border2);cursor:pointer">
           </div>
         </div>
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">커스텀 텍스트</label>
-        <input type="text" id="ue-streamer-text" value="${u.streamerHeaderText||''}" placeholder="헤더에 표시할 텍스트" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;box-sizing:border-box">
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">커스텀 텍스트</label>
+        <input type="text" id="ue-streamer-text" value="${u.streamerHeaderText||''}" placeholder="헤더에 표시할 텍스트" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm);box-sizing:border-box">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
           <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">텍스트 크기</label>
-            <select id="ue-streamer-text-size" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px">
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">텍스트 크기</label>
+            <select id="ue-streamer-text-size" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm)">
               <option value="10"${(!u.streamerHeaderTextSize||u.streamerHeaderTextSize==='10')?' selected':''}>10px</option>
               <option value="12"${u.streamerHeaderTextSize==='12'?' selected':''}>12px</option>
               <option value="14"${u.streamerHeaderTextSize==='14'?' selected':''}>14px</option>
@@ -331,26 +331,26 @@ function toggleUnivEdit(){
             </select>
           </div>
           <div>
-            <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">텍스트 색상</label>
+            <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">텍스트 색상</label>
             <input type="color" id="ue-streamer-text-color" value="${u.streamerHeaderTextColor||'#ffffff'}" style="width:100%;height:32px;padding:2px;border-radius:6px;border:1px solid var(--border2);cursor:pointer">
           </div>
         </div>
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">텍스트 위치</label>
-        <select id="ue-streamer-text-pos" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px">
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">텍스트 위치</label>
+        <select id="ue-streamer-text-pos" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm)">
           <option value="left"${(!u.streamerHeaderTextPos||u.streamerHeaderTextPos==='left')?' selected':''}>좌측 (대학 이름 옆)</option>
           <option value="center"${u.streamerHeaderTextPos==='center'?' selected':''}>중앙</option>
           <option value="right"${u.streamerHeaderTextPos==='right'?' selected':''}>우측 (기본)</option>
         </select>
       </div>
       <div style="padding:12px;background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
-        <div style="font-weight:800;font-size:12px;color:var(--text2);margin-bottom:10px">🧩 펨코스타일 배경 이미지/영상</div>
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">배경 링크(URL) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(펨코스타일 대학 카드 배경)</span></label>
-        <input type="text" id="ue-femco-bg-url" value="${(fem.url||'').replace(/\"/g,'&quot;')}" placeholder="https://... (jpg/png/gif/webp/mp4/유튜브/트위치)" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:12px;box-sizing:border-box">
-        <label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px">투명도</label>
+        <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px">🧩 펨코스타일 배경 이미지/영상</div>
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">배경 링크(URL) <span style="font-size:10px;font-weight:400;color:var(--gray-l)">(펨코스타일 대학 카드 배경)</span></label>
+        <input type="text" id="ue-femco-bg-url" value="${(fem.url||'').replace(/\"/g,'&quot;')}" placeholder="https://... (jpg/png/gif/webp/mp4/유튜브/트위치)" style="width:100%;margin-bottom:10px;padding:6px 10px;border-radius:7px;border:1px solid var(--border2);font-size:var(--fs-sm);box-sizing:border-box">
+        <label style="font-size:var(--fs-caption);font-weight:700;color:var(--text3);display:block;margin-bottom:4px">투명도</label>
         <div style="display:flex;align-items:center;gap:8px">
           <input type="range" id="ue-femco-bg-alpha" min="0" max="100" step="1" value="${Math.max(0,Math.min(100,parseInt(fem.alpha||30,10)||30))}" style="flex:1;accent-color:var(--blue)"
             oninput="document.getElementById('ue-femco-bg-alpha-val').textContent=this.value+'%'">
-          <span id="ue-femco-bg-alpha-val" style="font-size:11px;color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Math.max(0,Math.min(100,parseInt(fem.alpha||30,10)||30))}%</span>
+          <span id="ue-femco-bg-alpha-val" style="font-size:var(--fs-caption);color:var(--gray-l);min-width:40px;text-align:right;font-weight:700">${Math.max(0,Math.min(100,parseInt(fem.alpha||30,10)||30))}%</span>
         </div>
         <div style="font-size:10px;color:var(--gray-l);margin-top:8px;line-height:1.45">
           • 이미지/GIF: 대학 카드 배경으로 적용<br>
@@ -463,9 +463,9 @@ function saveUnivEdit(){
       : (typeof window.buildUnivDetailHTML==='function' ? window.buildUnivDetailHTML : null);
     document.getElementById('univModalBody').innerHTML = _fn
       ? _fn(newName)
-      : `<div style="padding:14px 12px;border-radius:16px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 12px 24px rgba(15,23,42,.06)">
-          <div style="font-size:13px;font-weight:950;color:var(--text2);margin-bottom:6px">대학 상세 렌더러 로드 실패</div>
-          <div style="font-size:12px;color:var(--text3);line-height:1.6">buildUnivDetailHTML을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.</div>
+      : `<div style="padding:14px 12px;border-radius:var(--r2);border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 12px 24px rgba(15,23,42,.06)">
+          <div style="font-size:var(--fs-base);font-weight:950;color:var(--text2);margin-bottom:6px">대학 상세 렌더러 로드 실패</div>
+          <div style="font-size:var(--fs-sm);color:var(--text3);line-height:1.6">buildUnivDetailHTML을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.</div>
         </div>`;
   }
   injectUnivIcons(document.getElementById('univModalBody'));

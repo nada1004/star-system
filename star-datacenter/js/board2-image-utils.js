@@ -273,15 +273,15 @@ function _renderCfgImgSettings(playerName) {
   if (primaryDiv) {
     primaryDiv.innerHTML = hasPrimary ? `
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">크기: <span id="cfg-p-scale">${primarySettings.scale}%</span></div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">크기: <span id="cfg-p-scale">${primarySettings.scale}%</span></div>
         <input type="range" min="50" max="220" value="${primarySettings.scale}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','primary','scale',this.value);document.getElementById('cfg-p-scale').textContent=this.value+'%'">
       </div>
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">밝기: <span id="cfg-p-bright">${primarySettings.brightness}%</span></div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">밝기: <span id="cfg-p-bright">${primarySettings.brightness}%</span></div>
         <input type="range" min="20" max="180" value="${primarySettings.brightness}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','primary','brightness',this.value);document.getElementById('cfg-p-bright').textContent=this.value+'%'">
       </div>
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">배치</div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">배치</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button class="btn btn-xs ${primarySettings.fit==='cover'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','primary','fit','cover');_renderCfgImgSettings('${safeName}')">채우기</button>
           <button class="btn btn-xs ${primarySettings.fit==='contain'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','primary','fit','contain');_renderCfgImgSettings('${safeName}')">맞춤</button>
@@ -289,7 +289,7 @@ function _renderCfgImgSettings(playerName) {
         </div>
       </div>
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">위치 이동</div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">위치 이동</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','primary',0,-12)">↑</button>
           <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','primary',0,12)">↓</button>
@@ -301,20 +301,20 @@ function _renderCfgImgSettings(playerName) {
       <div>
         <button class="btn btn-xs btn-r" onclick="_b2ResetImgSettings('${safeName}','primary');_renderCfgImgSettings('${safeName}')">초기화</button>
       </div>
-    ` : '<div style="color:var(--gray-l);font-size:12px">등록된 이미지 없음</div>';
+    ` : '<div style="color:var(--gray-l);font-size:var(--fs-sm)">등록된 이미지 없음</div>';
   }
   if (secondaryDiv) {
     secondaryDiv.innerHTML = hasSecondary ? `
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">크기: <span id="cfg-s-scale">${secondarySettings.scale}%</span></div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">크기: <span id="cfg-s-scale">${secondarySettings.scale}%</span></div>
         <input type="range" min="50" max="220" value="${secondarySettings.scale}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','secondary','scale',this.value);document.getElementById('cfg-s-scale').textContent=this.value+'%'">
       </div>
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">밝기: <span id="cfg-s-bright">${secondarySettings.brightness}%</span></div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">밝기: <span id="cfg-s-bright">${secondarySettings.brightness}%</span></div>
         <input type="range" min="20" max="180" value="${secondarySettings.brightness}" style="width:100%" oninput="_b2UpdateImgSetting('${safeName}','secondary','brightness',this.value);document.getElementById('cfg-s-bright').textContent=this.value+'%'">
       </div>
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">배치</div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">배치</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button class="btn btn-xs ${secondarySettings.fit==='cover'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','secondary','fit','cover');_renderCfgImgSettings('${safeName}')">채우기</button>
           <button class="btn btn-xs ${secondarySettings.fit==='contain'?'btn-b':'btn-w'}" onclick="_b2UpdateImgSetting('${safeName}','secondary','fit','contain');_renderCfgImgSettings('${safeName}')">맞춤</button>
@@ -322,7 +322,7 @@ function _renderCfgImgSettings(playerName) {
         </div>
       </div>
       <div style="margin-bottom:10px">
-        <div style="font-size:12px;margin-bottom:4px">위치 이동</div>
+        <div style="font-size:var(--fs-sm);margin-bottom:4px">위치 이동</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','secondary',0,-12)">↑</button>
           <button class="btn btn-xs btn-w" onclick="_b2MoveImg('${safeName}','secondary',0,12)">↓</button>
@@ -334,7 +334,7 @@ function _renderCfgImgSettings(playerName) {
       <div>
         <button class="btn btn-xs btn-r" onclick="_b2ResetImgSettings('${safeName}','secondary');_renderCfgImgSettings('${safeName}')">초기화</button>
       </div>
-    ` : '<div style="color:var(--gray-l);font-size:12px">등록된 이미지 없음</div>';
+    ` : '<div style="color:var(--gray-l);font-size:var(--fs-sm)">등록된 이미지 없음</div>';
   }
 }
 function _b2ClearSwapTimer(mainBox) {

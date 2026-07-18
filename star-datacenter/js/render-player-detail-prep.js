@@ -89,7 +89,7 @@ function preparePlayerHeaderDisplayData(opts){
     else if(url.includes('afreecatv.com')){icon='<img src="https://res.afreecatv.com/images/aflogo.png" style="width:13px;height:13px;border-radius:3px" onerror="this.style.display=\'none\'">';label='아프리카';}
     else if(url.includes('youtube.com')||url.includes('youtu.be')){icon='<img src="https://www.youtube.com/favicon.ico" style="width:13px;height:13px;border-radius:3px" onerror="this.style.display=\'none\'">';label='유튜브';}
     else if(url.includes('twitch.tv')){icon='<img src="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c1a5e8.png" style="width:13px;height:13px;border-radius:3px" onerror="this.style.display=\'none\'">';label='트위치';}
-    return `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);text-decoration:none;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${icon} ${label}</a>`;
+    return `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.38);text-decoration:none;font-size:var(--fs-caption);font-weight:700;color:#fff;flex-shrink:0">${icon} ${label}</a>`;
   })();
 
   const eloSparkHTML = (()=>{

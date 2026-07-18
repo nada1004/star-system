@@ -28,7 +28,7 @@ function formatPlayerRecentRecord(player) {
 
   const allHistory = [...(player.history||[]), ..._tourExtra];
   if (!allHistory.length) {
-    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;text-align:center;color:#94a3b8;font-size:13px">📭 ${escapeHtml(player.name)}의 경기 기록이 없습니다.</div>`;
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;text-align:center;color:#94a3b8;font-size:var(--fs-base)">📭 ${escapeHtml(player.name)}의 경기 기록이 없습니다.</div>`;
   }
 
   const sortedHistory = [...allHistory].sort((a, b) => (b.date||'').localeCompare(a.date||''));
@@ -40,7 +40,7 @@ function formatPlayerRecentRecord(player) {
   const safePlayerName = escapeHtml(player.name);
   const header = `<div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:12px 14px">
     <div style="font-size:14px;font-weight:900">📊 ${safePlayerName} 최근 30경기 전적</div>
-    <div style="font-size:12px;font-weight:800;opacity:.92;margin-top:4px">승 ${escapeHtml(wins)} · 패 ${escapeHtml(losses)} · 승률 ${escapeHtml(rate)}%</div>
+    <div style="font-size:var(--fs-sm);font-weight:800;opacity:.92;margin-top:4px">승 ${escapeHtml(wins)} · 패 ${escapeHtml(losses)} · 승률 ${escapeHtml(rate)}%</div>
   </div>`;
 
   const rows = recentGames.map(h=>{
@@ -54,7 +54,7 @@ function formatPlayerRecentRecord(player) {
       ? `<span data-chatbot-quick="${escapeAttr(oppRaw)}" style="color:var(--blue);cursor:pointer;text-decoration:underline">${safeOpp}</span>`
       : safeOpp;
     const resColor = (h.result === '승') ? '#dc2626' : (h.result === '패') ? '#2563eb' : '#64748b';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #eef2f7;font-size:12px">
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #eef2f7;font-size:var(--fs-sm)">
       <span style="color:#94a3b8;font-weight:700;min-width:72px">${safeDate}</span>
       <span style="color:${resColor};font-weight:900;min-width:22px;text-align:center">${safeRes}</span>
       <span style="color:#475569;font-weight:700;min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${safeMap}</span>

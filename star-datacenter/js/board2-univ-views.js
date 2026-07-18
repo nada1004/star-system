@@ -56,24 +56,24 @@ function _b2UnivView() {
     <div style="padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 16px 28px rgba(15,23,42,.05)">
       <div class="b2-univ-statsbar-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
         <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
-          <div style="font-size:11px;font-weight:800;color:var(--text3)">표시 선수</div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3)">표시 선수</div>
           <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1)">${_allVis.length}</div>
-          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">현황판 기준 표시 인원</div>
+          <div style="margin-top:4px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">현황판 기준 표시 인원</div>
         </div>
         <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
-          <div style="font-size:11px;font-weight:800;color:var(--text3)">이번주 기록 수</div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3)">이번주 기록 수</div>
           <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:#2563eb">${_uvWeekG}</div>
-          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">개인전·팀전·대회 기준</div>
+          <div style="margin-top:4px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">개인전·팀전·대회 기준</div>
         </div>
         <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
-          <div style="font-size:11px;font-weight:800;color:var(--text3)">이번주 활동 스트리머</div>
+          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3)">이번주 활동 스트리머</div>
           <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:#f59e0b">${_uvWeekActive}</div>
-          <div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--text3)">월~오늘 기록 1회 이상</div>
+          <div style="margin-top:4px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">월~오늘 기록 1회 이상</div>
         </div>
       </div>
       <div class="b2-race-tier-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
         <span class="b2-jump-label">종족 비중</span>
-        ${_uvRaceBar||`<span style="font-size:11px;font-weight:700;color:var(--gray-l)">집계 없음</span>`}
+        ${_uvRaceBar||`<span style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l)">집계 없음</span>`}
         ${_uvTierBtns?`<span style="width:1px;height:20px;background:var(--border2);display:inline-block;margin:0 4px;flex-shrink:0"></span><span class="b2-jump-label">티어</span>${_uvTierBtns}`:''}
       </div>
       <div class="b2-jump-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
@@ -90,7 +90,7 @@ function _b2UnivView() {
     </div>
   </div>`;
   const _b2Cols = (typeof boardGridCols!=='undefined'&&boardGridCols===2) ? 'repeat(2,1fr)' : '1fr';
-  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:10px;padding:8px;box-sizing:border-box;}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:1fr!important;}.b2-side-panel{width:180px;}}@media(max-width:900px){.b2-univ-grid{grid-template-columns:1fr!important;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}.b2-univ-statsbar-grid{display:none!important;}}</style>`;
+  let h = statsBar + `<style>.b2-bottom-img{max-width:130px;max-height:110px;object-fit:contain;}.b2-side-panel{float:right;width:230px;margin:0 0 6px 10px;border-radius:var(--r);padding:8px;box-sizing:border-box;}@media(min-width:769px) and (max-width:1024px){.b2-univ-grid{grid-template-columns:1fr!important;}.b2-side-panel{width:180px;}}@media(max-width:900px){.b2-univ-grid{grid-template-columns:1fr!important;}}@media(max-width:640px){.b2-side-panel{display:none!important;}.b2-bottom-img{display:none!important;}.b2-univ-statsbar-grid{display:none!important;}}</style>`;
   h += `<div class="b2-univ-grid" style="display:grid;grid-template-columns:${_b2Cols};gap:12px;align-items:start">`;
   univList.forEach(u => {
     if (!u.name) {
@@ -141,35 +141,35 @@ try{
             #b2RaceTierOverlay .su-modal-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(148,163,184,.14);background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(255,255,255,.92))}
             #b2RaceTierOverlay .su-modal-bd{padding:14px 14px 16px;overflow:auto;flex:1;min-height:0}
             #b2RaceTierOverlay .b2rt-title{font-size:16px;font-weight:1000;letter-spacing:-.02em;color:var(--text1)}
-            #b2RaceTierOverlay .b2rt-sub{font-size:11px;font-weight:800;color:var(--text3)}
+            #b2RaceTierOverlay .b2rt-sub{font-size:var(--fs-caption);font-weight:800;color:var(--text3)}
             #b2RaceTierOverlay .b2rt-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
             #b2RaceTierOverlay .b2rt-summarycard{padding:12px 13px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.14);box-shadow:0 10px 24px rgba(15,23,42,.06)}
             #b2RaceTierOverlay .b2rt-summarylabel{font-size:10px;font-weight:900;letter-spacing:.08em;color:var(--text3);text-transform:uppercase}
             #b2RaceTierOverlay .b2rt-summaryvalue{margin-top:7px;font-size:20px;font-weight:1000;letter-spacing:-.03em;color:var(--text1)}
-            #b2RaceTierOverlay .b2rt-summarymeta{margin-top:4px;font-size:11px;font-weight:800;color:var(--text3)}
+            #b2RaceTierOverlay .b2rt-summarymeta{margin-top:4px;font-size:var(--fs-caption);font-weight:800;color:var(--text3)}
             #b2RaceTierOverlay .b2rt-univbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-            #b2RaceTierOverlay .b2rt-univbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(248,250,252,.98);font-size:11px;font-weight:900;color:var(--text2);cursor:pointer}
+            #b2RaceTierOverlay .b2rt-univbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(248,250,252,.98);font-size:var(--fs-caption);font-weight:900;color:var(--text2);cursor:pointer}
             #b2RaceTierOverlay .b2rt-univbtn.on{border-color:rgba(37,99,235,.35);background:linear-gradient(180deg,rgba(239,246,255,.98),rgba(219,234,254,.92));color:#1d4ed8}
             #b2RaceTierOverlay .b2rt-groupgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:12px;margin-bottom:2px}
             #b2RaceTierOverlay .b2rt-groupcard{padding:12px 13px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.14);box-shadow:0 10px 22px rgba(15,23,42,.06);cursor:pointer}
             #b2RaceTierOverlay .b2rt-grouphead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-            #b2RaceTierOverlay .b2rt-groupname{font-size:13px;font-weight:950;color:var(--text1);display:flex;align-items:center;gap:6px;min-width:0}
-            #b2RaceTierOverlay .b2rt-groupcount{font-size:11px;font-weight:900;color:var(--text3);flex-shrink:0}
+            #b2RaceTierOverlay .b2rt-groupname{font-size:var(--fs-base);font-weight:950;color:var(--text1);display:flex;align-items:center;gap:6px;min-width:0}
+            #b2RaceTierOverlay .b2rt-groupcount{font-size:var(--fs-caption);font-weight:900;color:var(--text3);flex-shrink:0}
             #b2RaceTierOverlay .b2rt-groupavatars{display:flex;flex-wrap:wrap;gap:6px}
-            #b2RaceTierOverlay .b2rt-av{width:44px;height:44px;border-radius:16px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(160deg,rgba(148,163,184,.26),rgba(15,23,42,.12));box-shadow:0 6px 14px rgba(15,23,42,.08);cursor:pointer;padding:0}
+            #b2RaceTierOverlay .b2rt-av{width:44px;height:44px;border-radius:var(--r2);overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(160deg,rgba(148,163,184,.26),rgba(15,23,42,.12));box-shadow:0 6px 14px rgba(15,23,42,.08);cursor:pointer;padding:0}
             #b2RaceTierOverlay .b2rt-av img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
             #b2RaceTierOverlay .b2rt-av span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:rgba(255,255,255,.75)}
             #b2RaceTierOverlay .b2rt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-top:12px}
             #b2RaceTierOverlay .b2rt-card{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:0.78;background:#0b1120;border:1px solid rgba(255,255,255,.14);box-shadow:0 10px 22px rgba(15,23,42,.10);cursor:pointer}
             #b2RaceTierOverlay .b2rt-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}
             #b2RaceTierOverlay .b2rt-topbadges{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;z-index:2}
-            #b2RaceTierOverlay .b2rt-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:rgba(15,23,42,.72);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(10px);font-size:11px;font-weight:900;color:#fff}
+            #b2RaceTierOverlay .b2rt-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:rgba(15,23,42,.72);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(10px);font-size:var(--fs-caption);font-weight:900;color:#fff}
             #b2RaceTierOverlay .b2rt-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000;color:rgba(255,255,255,.85);background:linear-gradient(160deg,rgba(71,85,105,.55),rgba(15,23,42,.42))}
             #b2RaceTierOverlay .b2rt-bottom{position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;gap:4px}
             #b2RaceTierOverlay .b2rt-bottom::before{content:'';position:absolute;left:0;right:0;bottom:0;height:78%;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.40) 24%,rgba(4,7,18,.92) 100%);pointer-events:none}
             #b2RaceTierOverlay .b2rt-bottom>*{position:relative;z-index:1}
-            #b2RaceTierOverlay .b2rt-name{font-size:13px;font-weight:950;color:#fff;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.5)}
-            #b2RaceTierOverlay .b2rt-meta{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:850;color:rgba(255,255,255,.92);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 5px rgba(0,0,0,.5)}
+            #b2RaceTierOverlay .b2rt-name{font-size:var(--fs-base);font-weight:950;color:#fff;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+            #b2RaceTierOverlay .b2rt-meta{display:flex;align-items:center;gap:6px;font-size:var(--fs-caption);font-weight:850;color:rgba(255,255,255,.92);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 5px rgba(0,0,0,.5)}
             #b2RaceTierOverlay .b2rt-ubadge{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.3);font-size:10.5px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(6px);background:rgba(15,23,42,.55)!important}
             @media (max-width:780px){#b2RaceTierOverlay .su-modal{height:min(860px,calc(100vh - 14px));width:min(100vw - 14px,1120px);border-radius:22px}#b2RaceTierOverlay .b2rt-summary{grid-template-columns:1fr}#b2RaceTierOverlay .b2rt-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}#b2RaceTierOverlay .b2rt-groupgrid{grid-template-columns:1fr}}
           `;
@@ -345,35 +345,35 @@ try{
             #b2TierUnivOverlay .su-modal-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(148,163,184,.14);background:linear-gradient(135deg,rgba(239,246,255,.96),rgba(255,255,255,.92))}
             #b2TierUnivOverlay .su-modal-bd{padding:14px 14px 16px;overflow:auto;flex:1;min-height:0}
             #b2TierUnivOverlay .b2tu-title{font-size:16px;font-weight:1000;letter-spacing:-.02em;color:var(--text1)}
-            #b2TierUnivOverlay .b2tu-sub{font-size:11px;font-weight:800;color:var(--text3)}
+            #b2TierUnivOverlay .b2tu-sub{font-size:var(--fs-caption);font-weight:800;color:var(--text3)}
             #b2TierUnivOverlay .b2tu-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
             #b2TierUnivOverlay .b2tu-summarycard{padding:12px 13px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.14);box-shadow:0 10px 24px rgba(15,23,42,.06)}
             #b2TierUnivOverlay .b2tu-summarylabel{font-size:10px;font-weight:900;letter-spacing:.08em;color:var(--text3);text-transform:uppercase}
             #b2TierUnivOverlay .b2tu-summaryvalue{margin-top:7px;font-size:20px;font-weight:1000;letter-spacing:-.03em;color:var(--text1)}
-            #b2TierUnivOverlay .b2tu-summarymeta{margin-top:4px;font-size:11px;font-weight:800;color:var(--text3)}
+            #b2TierUnivOverlay .b2tu-summarymeta{margin-top:4px;font-size:var(--fs-caption);font-weight:800;color:var(--text3)}
             #b2TierUnivOverlay .b2tu-filter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-            #b2TierUnivOverlay .b2tu-filterbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(248,250,252,.98);font-size:11px;font-weight:900;color:var(--text2);cursor:pointer}
+            #b2TierUnivOverlay .b2tu-filterbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.16);background:rgba(248,250,252,.98);font-size:var(--fs-caption);font-weight:900;color:var(--text2);cursor:pointer}
             #b2TierUnivOverlay .b2tu-filterbtn.on{border-color:rgba(37,99,235,.35);background:linear-gradient(180deg,rgba(239,246,255,.98),rgba(219,234,254,.92));color:#1d4ed8}
             #b2TierUnivOverlay .b2tu-groupgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:12px}
             #b2TierUnivOverlay .b2tu-groupcard{padding:12px 13px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.95));border:1px solid rgba(148,163,184,.14);box-shadow:0 10px 22px rgba(15,23,42,.06)}
             #b2TierUnivOverlay .b2tu-grouphead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-            #b2TierUnivOverlay .b2tu-groupname{font-size:13px;font-weight:950;color:var(--text1);display:flex;align-items:center;gap:6px;min-width:0}
-            #b2TierUnivOverlay .b2tu-groupcount{font-size:11px;font-weight:900;color:var(--text3)}
+            #b2TierUnivOverlay .b2tu-groupname{font-size:var(--fs-base);font-weight:950;color:var(--text1);display:flex;align-items:center;gap:6px;min-width:0}
+            #b2TierUnivOverlay .b2tu-groupcount{font-size:var(--fs-caption);font-weight:900;color:var(--text3)}
             #b2TierUnivOverlay .b2tu-groupavatars{display:flex;flex-wrap:wrap;gap:6px}
             #b2TierUnivOverlay .b2tu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
             #b2TierUnivOverlay .b2tu-card{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:0.78;background:#0b1120;border:1px solid rgba(255,255,255,.14);box-shadow:0 10px 22px rgba(15,23,42,.10);cursor:pointer}
             #b2TierUnivOverlay .b2tu-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}
             #b2TierUnivOverlay .b2tu-topbadges{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;z-index:2}
-            #b2TierUnivOverlay .b2tu-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:rgba(15,23,42,.72);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(10px);font-size:11px;font-weight:900;color:#fff}
+            #b2TierUnivOverlay .b2tu-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;background:rgba(15,23,42,.72);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(10px);font-size:var(--fs-caption);font-weight:900;color:#fff}
             #b2TierUnivOverlay .b2tu-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:1000;color:rgba(255,255,255,.85);background:linear-gradient(160deg,rgba(71,85,105,.55),rgba(15,23,42,.42))}
             #b2TierUnivOverlay .b2tu-bottom{position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;gap:4px}
             #b2TierUnivOverlay .b2tu-bottom::before{content:'';position:absolute;left:0;right:0;bottom:0;height:78%;background:linear-gradient(180deg,rgba(15,23,42,0) 0%,rgba(15,23,42,.40) 24%,rgba(4,7,18,.92) 100%);pointer-events:none}
             #b2TierUnivOverlay .b2tu-bottom>*{position:relative;z-index:1}
-            #b2TierUnivOverlay .b2tu-name{font-size:13px;font-weight:950;color:#fff;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.5)}
-            #b2TierUnivOverlay .b2tu-meta{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:850;color:rgba(255,255,255,.92);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 5px rgba(0,0,0,.5)}
+            #b2TierUnivOverlay .b2tu-name{font-size:var(--fs-base);font-weight:950;color:#fff;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+            #b2TierUnivOverlay .b2tu-meta{display:flex;align-items:center;gap:6px;font-size:var(--fs-caption);font-weight:850;color:rgba(255,255,255,.92);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 5px rgba(0,0,0,.5)}
             #b2TierUnivOverlay .b2tu-ubadge{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.3);font-size:10.5px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(6px);background:rgba(15,23,42,.55)!important}
             #b2TierUnivOverlay .b2tu-heat{display:grid;grid-template-columns:repeat(auto-fill,44px);gap:8px}
-            #b2TierUnivOverlay .b2tu-av{width:44px;height:44px;border-radius:16px;overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(160deg,rgba(148,163,184,.26),rgba(15,23,42,.12));box-shadow:0 6px 14px rgba(15,23,42,.08);cursor:pointer;padding:0}
+            #b2TierUnivOverlay .b2tu-av{width:44px;height:44px;border-radius:var(--r2);overflow:hidden;border:1px solid rgba(148,163,184,.16);background:linear-gradient(160deg,rgba(148,163,184,.26),rgba(15,23,42,.12));box-shadow:0 6px 14px rgba(15,23,42,.08);cursor:pointer;padding:0}
             #b2TierUnivOverlay .b2tu-av img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
             #b2TierUnivOverlay .b2tu-av span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:rgba(255,255,255,.75)}
             @media (max-width:780px){#b2TierUnivOverlay .su-modal{height:min(920px,calc(100vh - 14px));width:min(100vw - 14px,1120px);border-radius:22px}#b2TierUnivOverlay .b2tu-summary{grid-template-columns:1fr}#b2TierUnivOverlay .b2tu-groupgrid{grid-template-columns:1fr}#b2TierUnivOverlay .b2tu-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}}
@@ -561,11 +561,11 @@ function _b2FemcoView() {
       ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.60);z-index:var(--z-modal-5);display:flex;align-items:center;justify-content:center;padding:16px';
       const safeTitle = (u||'영상').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       ov.innerHTML = `
-        <div style="width:min(980px,96vw);background:var(--white);border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 18px 60px rgba(0,0,0,.35)">
+        <div style="width:min(980px,96vw);background:var(--white);border-radius:var(--r2);overflow:hidden;border:1px solid rgba(255,255,255,.16);box-shadow:0 18px 60px rgba(0,0,0,.35)">
           <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(to bottom, rgba(255,255,255,.95), rgba(255,255,255,.85));border-bottom:1px solid var(--border)">
             <div style="font-weight:1000;color:var(--text2)">🎞️ ${safeTitle} 배경 영상</div>
-            <span style="color:var(--gray-l);font-size:12px">클릭해서 재생됩니다</span>
-            <button style="margin-left:auto;border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:6px 10px;cursor:pointer;font-weight:1000" onclick="document.getElementById('b2-femco-bg-modal')?.remove()">닫기</button>
+            <span style="color:var(--gray-l);font-size:var(--fs-sm)">클릭해서 재생됩니다</span>
+            <button style="margin-left:auto;border:1px solid var(--border);background:var(--surface);border-radius:var(--r);padding:6px 10px;cursor:pointer;font-weight:1000" onclick="document.getElementById('b2-femco-bg-modal')?.remove()">닫기</button>
           </div>
           <div style="padding:12px 14px">
             <video src="${link}" controls playsinline style="width:100%;max-height:72vh;border-radius:12px;background:#000"></video>
@@ -814,13 +814,13 @@ function _b2FemcoView() {
       }
       .b2-femco-countbox div{font-size:${countFontSize}px;font-weight:1000;line-height:1.15;white-space:nowrap}
       .b2-femco-meta{margin-top:6px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
-      .b2-femco-pill{font-size:12px;font-weight:1000;padding:3px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.16)}
+      .b2-femco-pill{font-size:var(--fs-sm);font-weight:1000;padding:3px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.16)}
       .b2-femco-body{padding:12px 12px 16px}
       .b2-femco-group{margin-top:10px}
       .b2-femco-group:first-child{margin-top:0}
       .b2-femco-ghead{display:flex;align-items:center;gap:8px;margin:0 0 8px}
-      .b2-femco-glabel{font-size:12px;font-weight:1000;background:rgba(255,255,255,.78);border:1px solid rgba(0,0,0,.10);padding:3px 10px;border-radius:999px}
-      .b2-femco-gcount{font-size:11px;font-weight:900;opacity:.85}
+      .b2-femco-glabel{font-size:var(--fs-sm);font-weight:1000;background:rgba(255,255,255,.78);border:1px solid rgba(0,0,0,.10);padding:3px 10px;border-radius:999px}
+      .b2-femco-gcount{font-size:var(--fs-caption);font-weight:900;opacity:.85}
 
       /* ✅ 배치 규칙(요구사항)
          - 1번(첫 컬럼) 위→아래로 5명 채움
@@ -1082,37 +1082,37 @@ function openB2PlayerCreateModal() {
         }
       }
     </style>
-    <div style="background:var(--white);border-radius:16px;padding:24px;max-width:560px;width:92%;max-height:84vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)">
+    <div style="background:var(--white);border-radius:var(--r2);padding:24px;max-width:560px;width:92%;max-height:84vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-        <h3 style="margin:0;font-size:18px;font-weight:900;color:var(--text1)">🎬 스트리머 등록</h3>
+        <h3 style="margin:0;font-size:var(--fs-lg);font-weight:900;color:var(--text1)">🎬 스트리머 등록</h3>
         <button onclick="document.getElementById('b2-player-create-modal').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-l)">✕</button>
       </div>
 
-      <div id="b2-newplayer-msg" style="font-size:12px;color:var(--gray-l);margin-bottom:12px">저장 후 자동으로 입력칸이 초기화되어 연속 등록할 수 있습니다.</div>
+      <div id="b2-newplayer-msg" style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">저장 후 자동으로 입력칸이 초기화되어 연속 등록할 수 있습니다.</div>
 
       <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:800;color:var(--text2)">이름</div>
-        <input id="b2-newplayer-name" type="text" placeholder="예: 홍길동" style="padding:8px 12px;border:1px solid var(--border2);border-radius:10px;font-size:13px">
+        <div style="font-size:var(--fs-base);font-weight:800;color:var(--text2)">이름</div>
+        <input id="b2-newplayer-name" type="text" placeholder="예: 홍길동" style="padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:var(--fs-base)">
       </div>
 
       <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:800;color:var(--text2)">대학</div>
-        <select id="b2-newplayer-univ" style="padding:8px 12px;border:1px solid var(--border2);border-radius:10px;font-size:13px">
+        <div style="font-size:var(--fs-base);font-weight:800;color:var(--text2)">대학</div>
+        <select id="b2-newplayer-univ" style="padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:var(--fs-base)">
           <option value="">(선택)</option>
           ${univs.map(u=>`<option value="${u}">${u}</option>`).join('')}
         </select>
       </div>
 
       <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:800;color:var(--text2)">직급</div>
-        <select id="b2-newplayer-role" style="padding:8px 12px;border:1px solid var(--border2);border-radius:10px;font-size:13px">
+        <div style="font-size:var(--fs-base);font-weight:800;color:var(--text2)">직급</div>
+        <select id="b2-newplayer-role" style="padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:var(--fs-base)">
           ${roleOpts.map(r=>`<option value="${r}"${r==='학생'?' selected':''}>${r}</option>`).join('')}
         </select>
       </div>
 
       <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:800;color:var(--text2)">종족</div>
-        <select id="b2-newplayer-race" style="padding:8px 12px;border:1px solid var(--border2);border-radius:10px;font-size:13px">
+        <div style="font-size:var(--fs-base);font-weight:800;color:var(--text2)">종족</div>
+        <select id="b2-newplayer-race" style="padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:var(--fs-base)">
           <option value="P">프로토스</option>
           <option value="T">테란</option>
           <option value="Z">저그</option>
@@ -1121,32 +1121,32 @@ function openB2PlayerCreateModal() {
       </div>
 
       <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:800;color:var(--text2)">티어</div>
-        <select id="b2-newplayer-tier" style="padding:8px 12px;border:1px solid var(--border2);border-radius:10px;font-size:13px">
+        <div style="font-size:var(--fs-base);font-weight:800;color:var(--text2)">티어</div>
+        <select id="b2-newplayer-tier" style="padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:var(--fs-base)">
           <option value="?" selected>미정</option>
           ${tierOpts.map(t=>`<option value="${t}">${t}</option>`).join('')}
         </select>
       </div>
 
       <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:800;color:var(--text2)">채널 URL</div>
-        <input id="b2-newplayer-channel" type="text" placeholder="https://..." style="padding:8px 12px;border:1px solid var(--border2);border-radius:10px;font-size:13px">
+        <div style="font-size:var(--fs-base);font-weight:800;color:var(--text2)">채널 URL</div>
+        <input id="b2-newplayer-channel" type="text" placeholder="https://..." style="padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:var(--fs-base)">
       </div>
 
       <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:800;color:var(--text2)">프로필 이미지 1</div>
-        <input id="b2-newplayer-photo" type="text" placeholder="https://... (base64 불가)" style="padding:8px 12px;border:1px solid var(--border2);border-radius:10px;font-size:13px">
+        <div style="font-size:var(--fs-base);font-weight:800;color:var(--text2)">프로필 이미지 1</div>
+        <input id="b2-newplayer-photo" type="text" placeholder="https://... (base64 불가)" style="padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:var(--fs-base)">
       </div>
 
       <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;margin-bottom:4px">
-        <div style="font-size:13px;font-weight:800;color:var(--text2)">프로필 이미지 2</div>
-        <input id="b2-newplayer-photo2" type="text" placeholder="https://... (선택)" style="padding:8px 12px;border:1px solid var(--border2);border-radius:10px;font-size:13px">
+        <div style="font-size:var(--fs-base);font-weight:800;color:var(--text2)">프로필 이미지 2</div>
+        <input id="b2-newplayer-photo2" type="text" placeholder="https://... (선택)" style="padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:var(--fs-base)">
       </div>
-      <div style="font-size:11px;color:var(--gray-l);margin:0 0 14px 150px">※ 2번 이미지는 이미지별(Players) 메인에서 1초 후 자동 교체용</div>
+      <div style="font-size:var(--fs-caption);color:var(--gray-l);margin:0 0 14px 150px">※ 2번 이미지는 이미지별(Players) 메인에서 1초 후 자동 교체용</div>
 
       <div style="display:flex;gap:10px;margin-top:18px">
-        <button onclick="document.getElementById('b2-player-create-modal').remove()" style="flex:1;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer">닫기</button>
-        <button onclick="saveB2NewPlayer()" style="flex:1;padding:10px 16px;background:var(--blue);border:1px solid var(--blue);border-radius:10px;color:#fff;font-size:13px;font-weight:800;cursor:pointer">저장</button>
+        <button onclick="document.getElementById('b2-player-create-modal').remove()" style="flex:1;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);color:var(--text2);font-size:var(--fs-base);font-weight:700;cursor:pointer">닫기</button>
+        <button onclick="saveB2NewPlayer()" style="flex:1;padding:10px 16px;background:var(--blue);border:1px solid var(--blue);border-radius:var(--r);color:#fff;font-size:var(--fs-base);font-weight:800;cursor:pointer">저장</button>
       </div>
     </div>
   `;
@@ -1284,8 +1284,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   // Safety check for undefined university name
   if (!univName) {
     return `<div style="border-radius:14px;border:2px dashed #ccc55;padding:16px 18px;background:#f5f5f5;display:flex;align-items:center;gap:10px;opacity:.7">
-      <span style="font-weight:900;font-size:15px;color:#999;">[Unknown University]</span>
-      <span style="font-size:11px;color:var(--gray-l)"> university name is undefined</span>
+      <span style="font-weight:900;font-size:var(--fs-md);color:#999;">[Unknown University]</span>
+      <span style="font-size:var(--fs-caption);color:var(--gray-l)"> university name is undefined</span>
     </div>`;
   }
   
@@ -1310,8 +1310,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   if (!members.length) {
     return `<div style="border-radius:14px;border:2px dashed ${col}55;padding:16px 18px;background:${lightCol};display:flex;align-items:center;gap:10px;opacity:.7">
       ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:var(--su_univ_logo_size,36px);height:var(--su_univ_logo_size,36px);object-fit:contain;border-radius:var(--su_univ_logo_radius,10px)" onerror="this.style.display='none'">`:''}
-      <span style="font-weight:900;font-size:15px;color:${col};cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
-      <span style="font-size:11px;color:var(--gray-l)">등록된 선수 없음</span>
+      <span style="font-weight:900;font-size:var(--fs-md);color:${col};cursor:pointer" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
+      <span style="font-size:var(--fs-caption);color:var(--gray-l)">등록된 선수 없음</span>
     </div>`;
   }
 
@@ -1339,8 +1339,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   // 새 레이아웃: 왼쪽 라벨 열(대학색) + 오른쪽 스트리머 열(연한 배경)
   const _tableRow = (label, isRole, chips) => `
     <div data-b2-univ-row="1" class="b2-univ-row" style="display:flex;align-items:stretch;gap:0;margin-bottom:8px">
-      <div class="b2-univ-row-label" style="background:${labelCol}!important;min-width:70px;width:70px;display:flex;align-items:center;justify-content:center;padding:10px 6px;flex-shrink:0;border-radius:16px 0 0 16px;border:1px solid ${col}33;border-right:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.28)">
-        <span style="font-size:11px;font-weight:900;color:${col};text-align:center;line-height:1.35;word-break:keep-all;letter-spacing:-.01em">${label}</span>
+      <div class="b2-univ-row-label" style="background:${labelCol}!important;min-width:70px;width:70px;display:flex;align-items:center;justify-content:center;padding:10px 6px;flex-shrink:0;border-radius:var(--r2) 0 0 16px;border:1px solid ${col}33;border-right:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.28)">
+        <span style="font-size:var(--fs-caption);font-weight:900;color:${col};text-align:center;line-height:1.35;word-break:keep-all;letter-spacing:-.01em">${label}</span>
       </div>
       <div class="b2-univ-row-body" style="flex:1;min-width:0;background:${_rowPanelBg};padding:10px 12px;border-radius:0 16px 16px 0;border:1px solid ${_rowPanelBorder};box-shadow:${_rowPanelShadow}">
         ${chips}
@@ -1433,9 +1433,9 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
     rows += _tableRow(tier, false, chips);
   });
   const sidePanelHtml = hasSide ? `<div style="margin-top:10px;background:${_memoPanelBg};padding:12px;box-sizing:border-box;overflow:hidden;border-radius:18px;border:1px solid ${_softBorder};box-shadow:0 14px 26px rgba(15,23,42,.06)">
-    <div style="font-size:11px;font-weight:900;color:${col};margin-bottom:${(_simgs.length||_smemo)?'10px':'0'}">사이드 메모</div>
+    <div style="font-size:var(--fs-caption);font-weight:900;color:${col};margin-bottom:${(_simgs.length||_smemo)?'10px':'0'}">사이드 메모</div>
     ${_simgs.map((src,i)=>`<img src="${src}" style="width:100%;max-width:260px;border-radius:12px;${(i<_simgs.length-1||_smemo)?'margin-bottom:8px;':''}display:block;object-fit:contain;border:1px solid rgba(148,163,184,.14);background:#fff" onerror="this.style.display='none'">`).join('')}
-    ${_smemo?`<div style="font-size:11px;color:#334155;white-space:pre-wrap;line-height:1.65;margin-top:${_simgs.length?'8px':'0'}">${_smemo}</div>`:''}
+    ${_smemo?`<div style="font-size:var(--fs-caption);color:#334155;white-space:pre-wrap;line-height:1.65;margin-top:${_simgs.length?'8px':'0'}">${_smemo}</div>`:''}
   </div>` : '';
   const _wmSpec = (() => {
     const kRaw = String(univName||'').trim();
@@ -1484,9 +1484,9 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
   const _bimgs = (uCfg.bMemoImgs||[]).concat(uCfg.bMemoImg?[uCfg.bMemoImg]:[]);
   const _bimgHtmls = _bimgs.map(src=>`<img class="b2-bottom-img" src="${src}" style="border-radius:12px;display:inline-block;border:1px solid rgba(148,163,184,.14);background:#fff" onerror="this.style.display='none'">`).join('');
   const bottomSection = (_bnote||_bimgs.length) ? `<div style="padding:14px 16px 16px;background:${_hasBgImg?'linear-gradient(180deg,rgba(255,255,255,.28),rgba(248,250,252,.14))':'linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,252,.86))'};border-top:1px solid rgba(148,163,184,.16)">
-    <div style="font-size:11px;font-weight:900;color:${col};margin-bottom:${(_bimgHtmls||_bnote)?'10px':'0'}">하단 메모</div>
+    <div style="font-size:var(--fs-caption);font-weight:900;color:${col};margin-bottom:${(_bimgHtmls||_bnote)?'10px':'0'}">하단 메모</div>
     ${_bimgHtmls?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:${_bnote?'8px':'0'}">${_bimgHtmls}</div>`:''}
-    ${_bnote?`<div style="font-size:12px;color:#334155;white-space:pre-wrap;line-height:1.7">${_bnote}</div>`:''}
+    ${_bnote?`<div style="font-size:var(--fs-sm);color:#334155;white-space:pre-wrap;line-height:1.7">${_bnote}</div>`:''}
   </div>` : '';
 
   return `
@@ -1501,7 +1501,7 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0">
                   <span style="font-weight:950;font-size:20px;color:${textCol};cursor:pointer;letter-spacing:-.03em;line-height:1.08;min-width:0;flex:0 1 auto;max-width:min(420px,62%);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="if(typeof openUnivModal==='function')openUnivModal('${univName}')">${univName}</span>
                   <span style="display:inline-flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap">
-                    <span style="background:${textCol}1f;color:${textCol};font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;border:1px solid ${textCol}26;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);white-space:nowrap" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
+                    <span style="background:${textCol}1f;color:${textCol};font-size:var(--fs-caption);font-weight:800;padding:4px 9px;border-radius:999px;border:1px solid ${textCol}26;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);white-space:nowrap" onclick="event.stopPropagation();openB2MemberBreakdown(this,'${univName}')">${members.length}명</span>
                     ${_ubCreatedLabel?`<span style="background:${textCol}18;color:${textCol};font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px;border:1px solid ${textCol}22;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);flex-shrink:0;white-space:nowrap">${_ubCreatedLabel}</span>`:''}
                   </span>
                 </div>
@@ -1510,8 +1510,8 @@ function _b2UnivBlock(univName, col, members, forExport=false) {
                 </div>`:''}
               </div>
               <div style="display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-                ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12)">${'<span style="font-size:15px">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
-                ${isLoggedIn?`<button class="no-export" onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:11px;cursor:pointer;padding:4px 9px;border-radius:10px;flex-shrink:0;font-weight:800;z-index:var(--z-dropdown);position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶ 접기 해제':'▼ 접기'}</button>`:''}
+                ${(uCfg.championships||0)>0?`<span style="display:flex;gap:1px;flex-shrink:0;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12)">${'<span style="font-size:var(--fs-md)">⭐</span>'.repeat(uCfg.championships)}</span>`:''}
+                ${isLoggedIn?`<button class="no-export" onclick="event.stopPropagation();_b2ToggleCard(this,'${univName.replace(/'/g,"\\'")}')" style="background:${textCol}22;border:1px solid ${textCol}33;color:${textCol};font-size:var(--fs-caption);cursor:pointer;padding:4px 9px;border-radius:var(--r);flex-shrink:0;font-weight:800;z-index:var(--z-dropdown);position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)" title="${_b2Collapsed.has(univName)?'펼치기':'접기'}">${_b2Collapsed.has(univName)?'▶ 접기 해제':'▼ 접기'}</button>`:''}
               </div>
             </div>
           </div>
@@ -1588,8 +1588,8 @@ function _b2FreeView() {
       <div style="position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,0) 58%);pointer-events:none"></div>
       <div style="position:relative;z-index:1">
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <span style="font-weight:950;font-size:18px;color:#fff;letter-spacing:-.02em">🚶 무소속</span>
-        <span style="background:rgba(255,255,255,.18);color:#fff;font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.15)">${freeMembers.length}명</span>
+        <span style="font-weight:950;font-size:var(--fs-lg);color:#fff;letter-spacing:-.02em">🚶 무소속</span>
+        <span style="background:rgba(255,255,255,.18);color:#fff;font-size:var(--fs-caption);font-weight:800;padding:4px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.15)">${freeMembers.length}명</span>
         ${_fvActive>0?`<span style="background:rgba(255,165,0,.35);color:#fef08a;font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12)">🔥 이번주 ${_fvActive}명</span>`:''}
         ${_fvWwT>0?`<span style="background:rgba(0,0,0,.18);color:${_fvWw>=_fvWl?'#bbf7d0':'#fecaca'};font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12)">${_fvWw}승${_fvWl}패</span>`:''}
         ${_fvWr!==null?`<span style="background:rgba(0,0,0,.18);color:${_fvWrc};font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12)" title="통산 ${_fvTw}승 ${_fvTl}패">📊 통산 ${_fvWr}%</span>`:''}
@@ -1623,7 +1623,7 @@ function _b2FreeView() {
     h += _b2LineupTable(_allFree, defCol);
   } else {
     const _frow = (labelEl, contentEl) => `<div style="display:flex;align-items:stretch;gap:0;margin-bottom:8px">${labelEl}<div style="flex:1;padding:10px 12px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));border:1px solid rgba(148,163,184,.14);border-left:none;border-radius:0 16px 16px 0;box-shadow:0 10px 18px rgba(15,23,42,.04)">${contentEl}</div></div>`;
-    const _fl = (text, isRole) => `<span style="font-size:12px;font-weight:900;color:${isRole?defCol:'var(--text3)'};width:68px;min-width:68px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)}!important;border:1px solid rgba(100,116,139,.28);border-right:none;border-radius:16px 0 0 16px;padding:8px 6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)">${text}</span>`;
+    const _fl = (text, isRole) => `<span style="font-size:var(--fs-sm);font-weight:900;color:${isRole?defCol:'var(--text3)'};width:68px;min-width:68px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:#64748b${_b2AlphaHex(b2LabelAlpha)}!important;border:1px solid rgba(100,116,139,.28);border-right:none;border-radius:var(--r2) 0 0 16px;padding:8px 6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)">${text}</span>`;
 
     roledFree.forEach(p => {
       h += _frow(_fl(p.role||'', true), _b2PlayerRow(p, defCol));
@@ -1666,19 +1666,19 @@ function openB2MemberBreakdown(el, univName) {
   tiered.forEach(p => { const t = p.tier||'?'; tierCounts[t] = (tierCounts[t]||0)+1; });
   const orderedTiers = TIERS.filter(t => tierCounts[t]).concat(Object.keys(tierCounts).filter(t => !TIERS.includes(t)));
   const row = (label, val, c) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:2px 0">
-    <span style="color:${c||'var(--text2)'};font-size:12px">${label}</span>
-    <span style="font-weight:700;color:var(--text1);font-size:12px">${val}명</span></div>`;
+    <span style="color:${c||'var(--text2)'};font-size:var(--fs-sm)">${label}</span>
+    <span style="font-weight:700;color:var(--text1);font-size:var(--fs-sm)">${val}명</span></div>`;
   const popup = document.createElement('div');
   popup.id = 'b2-mbp';
   popup.style.cssText = 'position:fixed;z-index:var(--z-top);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));border:1px solid rgba(148,163,184,.16);border-radius:18px;box-shadow:0 16px 38px rgba(15,23,42,.16);padding:14px 15px;min-width:220px;backdrop-filter:blur(12px)';
   popup.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px">
       <div style="font-weight:900;font-size:14px;color:${col};letter-spacing:-.02em">${univName} 구성</div>
-      <div style="font-size:11px;font-weight:900;color:var(--text3)">${members.length}명</div>
+      <div style="font-size:var(--fs-caption);font-weight:900;color:var(--text3)">${members.length}명</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px">
-      <div style="padding:10px 11px;border-radius:14px;background:${col}12;border:1px solid ${col}22"><div style="font-size:10px;font-weight:900;color:var(--text3)">직책자</div><div style="margin-top:5px;font-size:18px;font-weight:1000;color:${col}">${roled.length}</div></div>
-      <div style="padding:10px 11px;border-radius:14px;background:${col}0a;border:1px solid ${col}18"><div style="font-size:10px;font-weight:900;color:var(--text3)">일반 스트리머</div><div style="margin-top:5px;font-size:18px;font-weight:1000;color:var(--text1)">${tiered.length}</div></div>
+      <div style="padding:10px 11px;border-radius:14px;background:${col}12;border:1px solid ${col}22"><div style="font-size:10px;font-weight:900;color:var(--text3)">직책자</div><div style="margin-top:5px;font-size:var(--fs-lg);font-weight:1000;color:${col}">${roled.length}</div></div>
+      <div style="padding:10px 11px;border-radius:14px;background:${col}0a;border:1px solid ${col}18"><div style="font-size:10px;font-weight:900;color:var(--text3)">일반 스트리머</div><div style="margin-top:5px;font-size:var(--fs-lg);font-weight:1000;color:var(--text1)">${tiered.length}</div></div>
     </div>
     ${row('직책자', roled.length)}
     ${row('일반 스트리머', tiered.length)}
@@ -1785,11 +1785,11 @@ function _b2UnivRankRow(p, accentCol, showBadge, idx) {
   const recordTxt = games ? `${win}승 ${loss}패` : '기록 없음';
   const shapeStyle = 'border-radius:var(--su_profile_radius,50%);clip-path:var(--su_profile_clip,none);';
   return `
-    <div style="display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:16px;border:1px solid ${accentCol}22;background:linear-gradient(120deg,${accentCol}14 0%,${accentCol}05 100%);box-shadow:0 6px 16px rgba(15,23,42,.06);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease"
+    <div style="display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:var(--r2);border:1px solid ${accentCol}22;background:linear-gradient(120deg,${accentCol}14 0%,${accentCol}05 100%);box-shadow:0 6px 16px rgba(15,23,42,.06);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease"
       onclick="openPlayerModal('${safeName}')"
       onmouseenter="this.style.transform='translateX(3px)';this.style.boxShadow='0 10px 22px rgba(15,23,42,.14)';this.style.borderColor='${accentCol}55'"
       onmouseleave="this.style.transform='';this.style.boxShadow='0 6px 16px rgba(15,23,42,.06)';this.style.borderColor='${accentCol}22'">
-      <div style="flex-shrink:0;width:20px;text-align:center;font-size:11px;font-weight:900;color:${accentCol};opacity:.75">${idx}</div>
+      <div style="flex-shrink:0;width:20px;text-align:center;font-size:var(--fs-caption);font-weight:900;color:${accentCol};opacity:.75">${idx}</div>
       <div style="width:42px;height:42px;flex-shrink:0;${shapeStyle}overflow:hidden;border:2px solid ${accentCol}55;background:${accentCol}22;box-shadow:0 4px 10px ${accentCol}26">
         ${photo
           ? `<img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:top center" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}"><div style="display:none;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:1000;color:${accentCol}">${raceLetter}</div>`
@@ -1798,7 +1798,7 @@ function _b2UnivRankRow(p, accentCol, showBadge, idx) {
       </div>
       <div style="min-width:0;flex:0 0 auto;width:112px">
         <div style="display:flex;align-items:center;gap:6px;min-width:0">
-          <span style="font-size:13px;font-weight:950;color:var(--text1);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
+          <span style="font-size:var(--fs-base);font-weight:950;color:var(--text1);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
         </div>
         <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap">
           ${(p.race&&p.race!=='N')?`<span style="display:inline-flex;padding:1px 6px;border-radius:999px;background:${raceCol};color:#fff;font-size:9px;font-weight:900">${p.race}</span>`:''}
@@ -1808,7 +1808,7 @@ function _b2UnivRankRow(p, accentCol, showBadge, idx) {
       <div style="flex:1;min-width:100px;display:flex;flex-direction:column;gap:4px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
           <span style="font-size:10px;font-weight:800;color:var(--text3);white-space:nowrap">${recordTxt}</span>
-          <span style="font-size:11px;font-weight:950;color:${wrCol};flex-shrink:0">${wr==null?'-':wr+'%'}</span>
+          <span style="font-size:var(--fs-caption);font-weight:950;color:${wrCol};flex-shrink:0">${wr==null?'-':wr+'%'}</span>
         </div>
       </div>
     </div>`;
@@ -1840,9 +1840,9 @@ function _b2UnivGlassCard(p, accentCol, showBadge) {
         ${badgeTxt?`<div style="position:absolute;top:7px;left:7px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.85);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:${badgeBg};font-weight:900;font-size:10px;box-shadow:0 2px 6px rgba(0,0,0,.12)">${badgeTxt}</div>`:''}
       </div>
       <div style="padding:9px 11px 10px;background:rgba(255,255,255,.7);backdrop-filter:blur(10px) saturate(1.3);-webkit-backdrop-filter:blur(10px) saturate(1.3);border-top:1px solid ${accentCol}20">
-        <div style="color:var(--text1);font-weight:950;font-size:13px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name||''}</div>
+        <div style="color:var(--text1);font-weight:950;font-size:var(--fs-base);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name||''}</div>
         <div style="margin-top:6px;display:flex;align-items:center;justify-content:flex-end;gap:6px">
-          <span style="font-size:11px;font-weight:900;color:${wrCol};flex-shrink:0">${wr==null?'-':wr+'%'}</span>
+          <span style="font-size:var(--fs-caption);font-weight:900;color:${wrCol};flex-shrink:0">${wr==null?'-':wr+'%'}</span>
         </div>
       </div>
     </div>`;
@@ -1874,7 +1874,7 @@ function _b2UnivFrameCard(p, accentCol, showBadge) {
         ${(p.race&&p.race!=='N')?`<div style="position:absolute;top:7px;right:7px;padding:2px 8px;border-radius:999px;background:${raceCol}e6;color:#fff;font-size:10px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.22)">${p.race}</div>`:''}
       </div>
       <div style="padding:8px 10px 9px;background:${accentCol};text-align:center">
-        <div style="color:#fff;font-weight:950;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.22)">${p.name||''}</div>
+        <div style="color:#fff;font-weight:950;font-size:var(--fs-base);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.22)">${p.name||''}</div>
         <div style="margin-top:4px;font-size:10px;font-weight:800;color:rgba(255,255,255,.92)">${games?`${win}승 ${loss}패 · ${wr}%`:'기록 없음'}</div>
       </div>
     </div>`;
@@ -1907,7 +1907,7 @@ function _b2UnivPhotoCard(p, accentCol, showBadge) {
       ${p.race&&p.race!=='N'?`<div style="position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:999px;background:${raceCol};color:#fff;font-size:10px;font-weight:900;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.26)">${p.race}</div>`:''}
       <div style="position:absolute;left:0;right:0;bottom:0;padding:9px 9px 10px;background:linear-gradient(180deg,rgba(2,6,23,0) 0%,rgba(2,6,23,.20) 30%,rgba(2,6,23,.62) 100%);z-index:2">
         ${badgeTxt?`<div style="margin-bottom:3px"><span style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;background:${badgeBg};color:${badgeFg};font-size:10px;font-weight:900;line-height:1.4">${badgeTxt}</span></div>`:''}
-        <div style="color:#fff;font-size:12px;font-weight:950;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.5)">${p.name||''}</div>
+        <div style="color:#fff;font-size:var(--fs-sm);font-weight:950;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.5)">${p.name||''}</div>
       </div>
     </div>`;
 }
@@ -1922,8 +1922,8 @@ function _b2UnivDefaultTag(p, accentCol, showTier) {
       <div onclick="openPlayerModal('${safeName}')" style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
       ${_b2Avatar(p, crewCol||accentCol, 58)}
       <span style="font-weight:800;font-size:20px;color:var(--text1);white-space:nowrap;${p.inactive?'opacity:.6':''}">${p.name||''}</span>
-      ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:11px;flex-shrink:0">${p.race}</span>`:''}
-      ${showTier&&p.tier?`<span style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)||'#fff'};flex-shrink:0">${p.tier}</span>`:''}
+      ${p.race&&p.race!=='N'?`<span class="rbadge r${p.race}" style="font-size:var(--fs-caption);flex-shrink:0">${p.race}</span>`:''}
+      ${showTier&&p.tier?`<span style="font-size:var(--fs-caption);font-weight:800;padding:2px 7px;border-radius:6px;background:${getTierBtnColor(p.tier)};color:${getTierBtnTextColor(p.tier)||'#fff'};flex-shrink:0">${p.tier}</span>`:''}
       ${p.inactive?'<span style="font-size:9px;background:#fff7ed;color:#9a3412;border-radius:4px;padding:1px 4px;font-weight:700;flex-shrink:0">⏸️</span>':''}
       </div>
     </div>`;
@@ -1980,11 +1980,11 @@ function _b2RenderUnivGroupCards(group, accentCol, showBadge, mode, hideTableHea
     '.b2-lc3-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:1000;color:#fff;opacity:.85}',
     '.b2-lc3-overlay{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:28px 12px 10px;text-align:left;background:linear-gradient(180deg,rgba(2,6,23,0) 0%,rgba(2,6,23,.30) 45%,rgba(2,6,23,.76) 100%)}',
     '.b2-lc3-tierchip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:900;color:#fff;line-height:1.6;margin-bottom:4px}',
-    '.b2-lc3-name{font-size:15px;font-weight:950;color:#fff;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.5)}',
+    '.b2-lc3-name{font-size:var(--fs-md);font-weight:950;color:#fff;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.5)}',
     '.b2-lc3-sub{font-size:10px;font-weight:800;color:rgba(255,255,255,.82);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '.b2-lc3-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:9px 10px 10px}',
-    '.b2-lc3-box{border-radius:10px;padding:7px 4px;background:var(--lc-col,#64748b)14;text-align:center}',
-    '.b2-lc3-box-value{font-size:13px;font-weight:950;color:#0f172a}',
+    '.b2-lc3-box{border-radius:var(--r);padding:7px 4px;background:var(--lc-col,#64748b)14;text-align:center}',
+    '.b2-lc3-box-value{font-size:var(--fs-base);font-weight:950;color:#0f172a}',
     '.b2-lc3-box-label{font-size:10px;font-weight:800;color:#475569;margin-top:2px}'
   ].join('');
   document.head.appendChild(s);
@@ -2044,7 +2044,7 @@ function _b2LineupCard3(p, col) {
   s.id='b2-lineup-card4-style';
   s.textContent=[
     '.b2-lc4-wrap{width:100%;overflow-x:auto;border-radius:14px}',
-    '.b2-lc4{width:100%;border-collapse:separate;border-spacing:0;font-size:12px;min-width:520px}',
+    '.b2-lc4{width:100%;border-collapse:separate;border-spacing:0;font-size:var(--fs-sm);min-width:520px}',
     '.b2-lc4 thead th{position:sticky;top:0;text-align:left;padding:9px 12px;font-size:10px;font-weight:900;color:#64748b;text-transform:uppercase;letter-spacing:.05em;background:transparent!important;background-image:none!important;border-bottom:1px solid rgba(0,0,0,.08);white-space:nowrap}',
     '.b2-lc4 thead th:first-child{border-radius:14px 0 0 0}',
     '.b2-lc4 thead th:last-child{border-radius:0 14px 0 0;text-align:right}',
@@ -2056,11 +2056,11 @@ function _b2LineupCard3(p, col) {
     '.b2-lc4 tbody tr:hover td{background:var(--white,#fff)!important}',
     '.b2-lc4-head{display:flex;align-items:center;gap:8px;padding:9px 12px}',
     '.b2-lc4-head img{width:24px;height:24px;object-fit:contain;border-radius:6px;flex-shrink:0}',
-    '.b2-lc4-head span{font-size:12px;font-weight:900;color:#0f172a}',
+    '.b2-lc4-head span{font-size:var(--fs-sm);font-weight:900;color:#0f172a}',
     '.b2-lc4-namecell{display:flex;align-items:center;gap:9px;min-width:120px}',
     '.b2-lc4-avatar{position:relative;width:28px;height:28px;flex-shrink:0;border-radius:50%;overflow:hidden;border:1.5px solid var(--lc-col,#64748b)55;background:linear-gradient(160deg,var(--lc-col,#64748b)55,var(--lc-col,#64748b)22)}',
     '.b2-lc4-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}',
-    '.b2-lc4-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:1000;color:#fff}',
+    '.b2-lc4-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:var(--fs-caption);font-weight:1000;color:#fff}',
     '.b2-lc4-name{font-weight:900;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}',
     '.b2-lc4-chip{display:inline-flex;align-items:center;padding:1px 8px;border-radius:999px;font-size:10px;font-weight:900;color:#fff;line-height:1.6;white-space:nowrap}',
     '.b2-lc4-wrcell{display:flex;align-items:center;justify-content:flex-end;gap:7px}',
@@ -2141,15 +2141,15 @@ function _b2LineupCard(p, col, big, iconUrl) {
        </div>`;
   // 종족 배지 — 우상단
   const _raceBadge = (p.race && p.race!=='N')
-    ? `<div style="position:absolute;top:10px;right:10px;padding:3px 10px;border-radius:999px;background:${_raceCol};color:#fff;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.32);z-index:2;letter-spacing:.02em">${p.race}</div>`
+    ? `<div style="position:absolute;top:10px;right:10px;padding:3px 10px;border-radius:999px;background:${_raceCol};color:#fff;font-size:var(--fs-sm);font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.32);z-index:2;letter-spacing:.02em">${p.race}</div>`
     : '';
   const _nameBar = `
     <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:12px 14px 13px">
-      ${badgeTxt?`<div style="margin-bottom:4px"><span style="background:${_tierBadgeCol};color:${_tierBadgeTxt};font-weight:900;font-size:13px;padding:2px 9px;border-radius:999px;white-space:nowrap;line-height:1.6;letter-spacing:-.01em">${badgeTxt}</span></div>`:''}
+      ${badgeTxt?`<div style="margin-bottom:4px"><span style="background:${_tierBadgeCol};color:${_tierBadgeTxt};font-weight:900;font-size:var(--fs-base);padding:2px 9px;border-radius:999px;white-space:nowrap;line-height:1.6;letter-spacing:-.01em">${badgeTxt}</span></div>`:''}
       <div style="color:#fff;font-weight:900;font-size:19px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.5)">${p.name||''}</div>
     </div>`;
   return `
-    <div style="position:relative;cursor:pointer;border-radius:16px;overflow:hidden;background:${_b2PastelBg(col,0.10)};box-shadow:0 4px 16px rgba(15,23,42,.18);border:1px solid ${col}33;transition:transform .15s,box-shadow .15s" onclick="openPlayerModal('${safeName}')"
+    <div style="position:relative;cursor:pointer;border-radius:var(--r2);overflow:hidden;background:${_b2PastelBg(col,0.10)};box-shadow:0 4px 16px rgba(15,23,42,.18);border:1px solid ${col}33;transition:transform .15s,box-shadow .15s" onclick="openPlayerModal('${safeName}')"
       onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 26px rgba(15,23,42,.28)'"
       onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(15,23,42,.18)'">
       <div style="position:relative;width:100%;aspect-ratio:3/4;overflow:hidden">
@@ -2207,8 +2207,8 @@ function _b2LineupPoster(univName, col, forExport=false) {
     { k:'Z', ico:'🦎', col:'#7c3aed' }
   ];
   const raceStatHtml = _raceMeta.filter(r => raceCount[r.k] > 0).map(r => `
-    <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 12px 5px 10px;color:#fff;font-size:12px;font-weight:800">
-      <span style="font-size:12px">${r.ico}</span>${r.k} ${raceCount[r.k]}
+    <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 12px 5px 10px;color:#fff;font-size:var(--fs-sm);font-weight:800">
+      <span style="font-size:var(--fs-sm)">${r.ico}</span>${r.k} ${raceCount[r.k]}
     </span>`).join('');
 
   return `
@@ -2218,15 +2218,15 @@ function _b2LineupPoster(univName, col, forExport=false) {
         ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-height:84%;max-width:160px;width:auto;height:auto;opacity:.20;object-fit:contain;pointer-events:none;filter:drop-shadow(0 0 20px ${col})" onerror="this.style.display='none'">`:''}
         <div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:14px;min-width:0">
-            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:62px;height:62px;object-fit:contain;border-radius:16px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);padding:7px;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.22)" onerror="this.style.display='none'">`:''}
+            ${iconUrl?`<img src="${toHttpsUrl(iconUrl)}" style="width:62px;height:62px;object-fit:contain;border-radius:var(--r2);background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);padding:7px;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.22)" onerror="this.style.display='none'">`:''}
             <div style="min-width:0">
-              <div style="color:rgba(255,255,255,.64);font-size:12px;font-weight:800;letter-spacing:.10em;text-transform:uppercase">SDC MEMBER LINEUP</div>
+              <div style="color:rgba(255,255,255,.64);font-size:var(--fs-sm);font-weight:800;letter-spacing:.10em;text-transform:uppercase">SDC MEMBER LINEUP</div>
               <div style="color:#fff;font-weight:950;font-size:32px;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 8px rgba(0,0,0,.18)">${univName}</div>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            <span style="background:rgba(255,255,255,.16);color:#fff;font-size:13px;font-weight:800;padding:7px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(8px)">총 ${members.length}명</span>
-            <span style="color:rgba(255,255,255,.55);font-size:12px;font-weight:700">${dateTxt}</span>
+            <span style="background:rgba(255,255,255,.16);color:#fff;font-size:var(--fs-base);font-weight:800;padding:7px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(8px)">총 ${members.length}명</span>
+            <span style="color:rgba(255,255,255,.55);font-size:var(--fs-sm);font-weight:700">${dateTxt}</span>
           </div>
         </div>
         ${raceStatHtml ? `<div style="position:relative;z-index:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:16px">${raceStatHtml}</div>` : ''}
@@ -2237,7 +2237,7 @@ function _b2LineupPoster(univName, col, forExport=false) {
           ${roleCardsHtml ? `
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
             <div style="width:3px;height:14px;border-radius:999px;background:${col};flex-shrink:0"></div>
-            <div style="font-size:11px;font-weight:900;color:${col};letter-spacing:.06em;text-transform:uppercase">직급자</div>
+            <div style="font-size:var(--fs-caption);font-weight:900;color:${col};letter-spacing:.06em;text-transform:uppercase">직급자</div>
           </div>
           <div style="display:grid;grid-template-columns:${_lcGridCols};gap:${_lcGridGap}px;margin-bottom:24px">${roleCardsHtml}</div>
           ${_lcMode === 'table' ? '' : `<div style="height:1px;background:linear-gradient(90deg,${col}44,transparent);margin-bottom:20px"></div>`}
@@ -2245,7 +2245,7 @@ function _b2LineupPoster(univName, col, forExport=false) {
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:8px">
               <div style="width:3px;height:14px;border-radius:999px;background:${col}99;flex-shrink:0"></div>
-              <div style="font-size:11px;font-weight:900;color:${col};letter-spacing:.06em;text-transform:uppercase">멤버</div>
+              <div style="font-size:var(--fs-caption);font-weight:900;color:${col};letter-spacing:.06em;text-transform:uppercase">멤버</div>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:${_lcGridCols};gap:${_lcGridGap}px">${rosterCardsHtml}</div>

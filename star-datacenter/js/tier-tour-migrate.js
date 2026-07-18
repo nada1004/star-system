@@ -218,14 +218,14 @@ function openBktPasteModal(){
   if(compWrap){
     const setOpts=(m.sets||[]).map((s,i)=>{const lbl=i===2?'🎯 에이스전':`${i+1}세트`;return`<option value="${i}">${lbl}</option>`;}).join('');
     const teamInputs=(!tA&&!tB)?`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-      <label style="font-size:12px;font-weight:700">팀A:</label>
-      <input id="bkt-paste-ta" placeholder="대학명 입력" style="font-size:12px;padding:3px 8px;border:1px solid var(--border2);border-radius:6px;width:100px">
-      <label style="font-size:12px;font-weight:700">팀B:</label>
-      <input id="bkt-paste-tb" placeholder="대학명 입력" style="font-size:12px;padding:3px 8px;border:1px solid var(--border2);border-radius:6px;width:100px">
+      <label style="font-size:var(--fs-sm);font-weight:700">팀A:</label>
+      <input id="bkt-paste-ta" placeholder="대학명 입력" style="font-size:var(--fs-sm);padding:3px 8px;border:1px solid var(--border2);border-radius:6px;width:100px">
+      <label style="font-size:var(--fs-sm);font-weight:700">팀B:</label>
+      <input id="bkt-paste-tb" placeholder="대학명 입력" style="font-size:var(--fs-sm);padding:3px 8px;border:1px solid var(--border2);border-radius:6px;width:100px">
     </div>`:'';
     compWrap.innerHTML=teamInputs+`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <label style="font-size:12px;font-weight:700">적용 세트:</label>
-      <select id="grp-paste-set-sel" style="font-size:12px;padding:3px 8px;border:1px solid var(--border2);border-radius:6px">
+      <label style="font-size:var(--fs-sm);font-weight:700">적용 세트:</label>
+      <select id="grp-paste-set-sel" style="font-size:var(--fs-sm);padding:3px 8px;border:1px solid var(--border2);border-radius:6px">
         <option value="new">새 세트 추가</option>${setOpts}
       </select></div>`;
     compWrap.style.display='block';
@@ -275,9 +275,9 @@ function openGrpPasteModal(){
   const hintEl = document.getElementById('paste-mode-hint');
   if(hintEl){
     if(autoDetect)
-      hintEl.innerHTML=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#16a34a;font-weight:700">🤖 자동인식 모드</span> — 선수 소속 대학을 자동으로 인식해 해당 조 경기에 저장합니다.<br><span style="font-size:11px;color:#6b7280">팀이 다른 조일 경우 교류전으로 추가할지 확인합니다.</span></div>`;
+      hintEl.innerHTML=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#16a34a;font-weight:700">🤖 자동인식 모드</span> — 선수 소속 대학을 자동으로 인식해 해당 조 경기에 저장합니다.<br><span style="font-size:var(--fs-caption);color:#6b7280">팀이 다른 조일 경우 교류전으로 추가할지 확인합니다.</span></div>`;
     else
-      hintEl.innerHTML=`<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#1d4ed8;font-weight:700">🏆 경기 지정 모드</span> — <b>${teamA||'팀A'}</b> vs <b>${teamB||'팀B'}</b><br><span style="font-size:11px;color:#6b7280">세트 선택 후 붙여넣기하면 해당 세트에 저장됩니다.</span></div>`;
+      hintEl.innerHTML=`<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:4px"><span style="color:#1d4ed8;font-weight:700">🏆 경기 지정 모드</span> — <b>${teamA||'팀A'}</b> vs <b>${teamB||'팀B'}</b><br><span style="font-size:var(--fs-caption);color:#6b7280">세트 선택 후 붙여넣기하면 해당 세트에 저장됩니다.</span></div>`;
   }
 
   // 세트 선택 드롭다운 (경기 지정 모드에서 항상 표시)
@@ -291,8 +291,8 @@ function openGrpPasteModal(){
       }).join('');
       compWrap.style.display='flex';
       compWrap.innerHTML = `
-        <label style="font-size:12px;font-weight:700;white-space:nowrap">추가할 세트:</label>
-        <select id="grp-paste-set-sel" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);font-size:12px">
+        <label style="font-size:var(--fs-sm);font-weight:700;white-space:nowrap">추가할 세트:</label>
+        <select id="grp-paste-set-sel" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);font-size:var(--fs-sm)">
           <option value="new">+ 새 세트 추가</option>
           ${setOpts}
         </select>`;
@@ -579,7 +579,7 @@ function _grpPasteApplyLogic(savable){
 
   const toast=document.createElement('div');
   toast.textContent=toastMsg;
-  toast.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
+  toast.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:var(--r);font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
   document.body.appendChild(toast);
   setTimeout(()=>toast.remove(),2500);
   return true;
@@ -697,7 +697,7 @@ function _bktPasteApplyLogic(savable, tn){
   }
   const toast=document.createElement('div');
   toast.textContent=`✅ ${savable.length}건 ${setIdx===2?'에이스전':(setIdx+1)+'세트'}에 추가됨!`;
-  toast.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:10px;font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
+  toast.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 24px;border-radius:var(--r);font-weight:700;font-size:14px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.2)';
   document.body.appendChild(toast);
   setTimeout(()=>toast.remove(),2500);
   return true;

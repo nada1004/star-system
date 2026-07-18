@@ -233,7 +233,7 @@
     const overlay=document.createElement('div');
     overlay.id='sharecard-overlay';
     overlay.className='sharecard-modal-overlay modal-compact-overlay';
-    overlay.innerHTML=`<div class="sharecard-modal-box modal-compact-box" onclick="event.stopPropagation()" style="max-width:438px;width:calc(100vw - 18px);padding:12px 12px 10px;border-radius:16px">
+    overlay.innerHTML=`<div class="sharecard-modal-box modal-compact-box" onclick="event.stopPropagation()" style="max-width:438px;width:calc(100vw - 18px);padding:12px 12px 10px;border-radius:var(--r2)">
     <div class="sharecard-modal-hdr" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;cursor:move;user-select:none">
       <div style="font-weight:700;font-size:14px;color:var(--blue);padding-right:8px">🎴 공유 카드</div>
       <button type="button" class="sharecard-modal-close" onclick="document.getElementById('sharecard-overlay').remove()" style="z-index:2;position:static;flex-shrink:0">✕</button>
@@ -272,7 +272,7 @@
   function resetShareCard(el){
     const c=el||document.getElementById('share-card');
     if(!c)return;
-    c.innerHTML='<p style="text-align:center;color:var(--gray-l);padding:36px 20px;font-size:13px">위에서 선택하면 카드가 생성됩니다</p>';
+    c.innerHTML='<p style="text-align:center;color:var(--gray-l);padding:36px 20px;font-size:var(--fs-base)">위에서 선택하면 카드가 생성됩니다</p>';
   }
 
   async function _waitForShareCardAssets(el){

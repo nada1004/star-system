@@ -88,8 +88,8 @@ function buildPlayerTeammatesHTML(opts){
     const qSafe=(typeof escJS==='function') ? escJS(q.name) : String(q.name||'').replace(/'/g,"\\'");
     const qPhoto=q.photo
       ?`<img src="${toHttpsUrl(q.photo)}" style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);object-fit:cover;flex-shrink:0;border:2px solid ${qCol}66" onerror="this.style.display='none'">`
-      :`<div style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);background:${qCol};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
-    return `<button class="pd-teammate-chip" data-px-action="open-player" data-px-player="${qSafe}" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:24px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:700;color:var(--text)">
+      :`<div style="width:32px;height:32px;border-radius:var(--su_profile_radius,50%);background:${qCol};display:flex;align-items:center;justify-content:center;font-size:var(--fs-base);font-weight:900;color:#fff;flex-shrink:0">${q.name[0]}</div>`;
+    return `<button class="pd-teammate-chip" data-px-action="open-player" data-px-player="${qSafe}" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:24px;border:1.5px solid ${qCol}44;background:${qCol}10;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:var(--fs-caption);font-weight:700;color:var(--text)">
       ${qPhoto}<span>${q.role?getRoleBadgeHTML(q.role,'9px')+' ':''} ${q.name}</span>${getTierBadge(q.tier)}
     </button>`;
   }).join('');
@@ -137,16 +137,16 @@ function _buildMvpHistoryBodyHTML(entries, page){
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid rgba(148,163,184,.14)">
       <div style="display:flex;align-items:center;gap:8px;min-width:0">
         <span style="font-size:10px;font-weight:900;padding:2px 7px;border-radius:999px;background:${badgeBg};color:${badgeCol};white-space:nowrap;flex-shrink:0">${badge} MVP</span>
-        <span style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtRange(e.from,e.to)}</span>
+        <span style="font-size:var(--fs-caption);color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${fmtRange(e.from,e.to)}</span>
         ${progressTag}
       </div>
-      <span style="font-size:11px;font-weight:800;color:var(--text3);white-space:nowrap;flex-shrink:0">${e.univ||'무소속'}</span>
+      <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text3);white-space:nowrap;flex-shrink:0">${e.univ||'무소속'}</span>
     </div>`;
   }).join('');
   const pager = totalPages>1 ? `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px">
-    <button type="button" data-px-action="mvp-page" data-px-dir="prev" ${p<=1?'disabled':''} style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:${p<=1?'default':'pointer'};opacity:${p<=1?'.4':'1'}">이전</button>
-    <span style="font-size:11px;font-weight:700;color:var(--text2)">${p} / ${totalPages}</span>
-    <button type="button" data-px-action="mvp-page" data-px-dir="next" ${p>=totalPages?'disabled':''} style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:${p>=totalPages?'default':'pointer'};opacity:${p>=totalPages?'.4':'1'}">다음</button>
+    <button type="button" data-px-action="mvp-page" data-px-dir="prev" ${p<=1?'disabled':''} style="font-size:var(--fs-caption);font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:${p<=1?'default':'pointer'};opacity:${p<=1?'.4':'1'}">이전</button>
+    <span style="font-size:var(--fs-caption);font-weight:700;color:var(--text2)">${p} / ${totalPages}</span>
+    <button type="button" data-px-action="mvp-page" data-px-dir="next" ${p>=totalPages?'disabled':''} style="font-size:var(--fs-caption);font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:${p>=totalPages?'default':'pointer'};opacity:${p>=totalPages?'.4':'1'}">다음</button>
   </div>` : '';
   return rows + pager;
 }
@@ -168,8 +168,8 @@ function buildPlayerMemoHTML(player){
   const safeName=(typeof escJS==='function') ? escJS(p.name) : String(p.name||'').replace(/'/g,"\\'");
   return `<div class="su-sec" style="--su-sec-accent:var(--gold,#f59e0b)">
     <div class="su-sec__title">스트리머 메모</div>
-    ${p.memo?`<div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7;white-space:pre-wrap">${p.memo}</div>`:'<div style="font-size:12px;color:var(--gray-l);margin-bottom:10px">메모 없음</div>'}
-    <textarea id="player-memo-input" class="pd-memo-input" style="width:100%;min-height:60px;font-size:12px;padding:10px 12px;resize:vertical;font-family:'Noto Sans KR',sans-serif" placeholder="스트리머 메모...">${p.memo||''}</textarea>
+    ${p.memo?`<div style="font-size:var(--fs-sm);color:var(--text2);margin-bottom:10px;line-height:1.7;white-space:pre-wrap">${p.memo}</div>`:'<div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">메모 없음</div>'}
+    <textarea id="player-memo-input" class="pd-memo-input" style="width:100%;min-height:60px;font-size:var(--fs-sm);padding:10px 12px;resize:vertical;font-family:'Noto Sans KR',sans-serif" placeholder="스트리머 메모...">${p.memo||''}</textarea>
     <div style="display:flex;gap:6px;margin-top:8px">
       <button class="btn btn-b btn-sm" data-px-action="save-memo" data-px-player="${safeName}">저장</button>
       ${p.memo?`<button class="btn btn-r btn-sm" data-px-action="delete-memo" data-px-player="${safeName}">삭제</button>`:''}
