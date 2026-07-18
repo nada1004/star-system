@@ -1017,6 +1017,58 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     return {a:wa,b:wb};
   };
 
+  // (요청사항) 경기 상세 팝업에 "이번 경기 개인 기록" (참가자별 몇승 몇패) 인라인 표시
+  const _playerTallyHTML = (()=>{
+    const tally = {};
+    (m.sets||[]).forEach(set=>{
+      (set.games||[]).forEach(g=>{
+        if(!g) return;
+        const namesA=_gameSideNames(g,'A');
+        const namesB=_gameSideNames(g,'B');
+        // 팀전(2:2 등)은 개인 집계 대상에서 제외 — 1:1 게임만 집계
+        if(namesA.length!==1 || namesB.length!==1) return;
+        const nameA=namesA[0], nameB=namesB[0];
+        if(!nameA || !nameB || !g.winner) return;
+        if(!tally[nameA]) tally[nameA]={w:0,l:0,side:'A'};
+        if(!tally[nameB]) tally[nameB]={w:0,l:0,side:'B'};
+        if(g.winner==='A'){ tally[nameA].w++; tally[nameB].l++; }
+        else if(g.winner==='B'){ tally[nameB].w++; tally[nameA].l++; }
+      });
+    });
+    const entries=Object.entries(tally).filter(([,s])=>s.w+s.l>0);
+    if(!entries.length) return '';
+    const sortFn=(a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l)||b[1].w-a[1].w;
+    const sideEntries=(side)=>entries.filter(([,s])=>s.side===side).sort(sortFn);
+    const _row=(name,s,col,alignRight)=>{
+      const photoHtml = typeof getPlayerPhotoHTML==='function' ? getPlayerPhotoHTML(name,'26px','border:1.5px solid '+col+';box-shadow:0 1px 5px '+col+'40;') : '';
+      const click=`onclick="(()=>{ const _s=JSON.parse(localStorage.getItem('su_pd_style')||'{}'); if(_s.close_on_match_player!==false){ const _m=document.getElementById('histDetModal'); if(_m) _m.style.display='none'; } openPlayerModal('${_escJs(name)}'); })()" data-player-link="1"`;
+      const recordHtml=`<span class="cmd-pt-record"><b class="wt">${s.w}승</b>${s.l>0?`<span class="cmd-pt-sep">·</span><b class="lt">${s.l}패</b>`:''}</span>`;
+      const nameHtml=`<span class="cmd-pt-name">${_escHtml(name)}</span>`;
+      return `<div class="cmd-pt-row${alignRight?' is-right':''}" ${click} style="--pt-col:${col}">
+        ${alignRight?recordHtml+nameHtml:'<span class="cmd-pt-photo">'+photoHtml+'</span>'+nameHtml}
+        ${alignRight?'<span class="cmd-pt-photo">'+photoHtml+'</span>':recordHtml}
+      </div>`;
+    };
+    const colFor=(name)=>{ const p=(players||[]).find(x=>x&&x.name===name); return (p&&gc(p.univ))||'#64748b'; };
+    const listA=sideEntries('A').map(([name,s])=>_row(name,s,colFor(name),false)).join('');
+    const listB=sideEntries('B').map(([name,s])=>_row(name,s,colFor(name),true)).join('');
+    if(!listA && !listB) return '';
+    return `<div class="cmd-player-tally">
+      <div class="cmd-player-tally__head"><span class="cmd-player-tally__icon">🧑‍🤝‍🧑</span><span class="cmd-player-tally__title">이번 경기 개인 기록</span></div>
+      <div class="cmd-player-tally__cols">
+        <div class="cmd-player-tally__col cmd-player-tally__col--a">
+          <div class="cmd-pt-colhead" style="--pt-col:${ca}">${_escHtml(labelA||'A')}</div>
+          <div class="cmd-player-tally__list">${listA||'<div class="cmd-pt-empty">기록 없음</div>'}</div>
+        </div>
+        <div class="cmd-player-tally__div"></div>
+        <div class="cmd-player-tally__col cmd-player-tally__col--b">
+          <div class="cmd-pt-colhead" style="--pt-col:${cb}">${_escHtml(labelB||'B')}</div>
+          <div class="cmd-player-tally__list">${listB||'<div class="cmd-pt-empty">기록 없음</div>'}</div>
+        </div>
+      </div>
+    </div>`;
+  })();
+
   const _posterHero = ()=>{
     const sc=_matchScore();
     const d=_escHtml(String(m.d||'').trim());
@@ -1065,7 +1117,7 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
         </div>`);
       }
     });
-    return _wrapMdDetail(`<div class="cmd-timeline">${items.join('')}</div>`);
+    return _wrapMdDetail(`<div class="cmd-timeline">${items.join('')}</div>${_playerTallyHTML}`);
   }
 
   if(_mdLayoutMode==='split'){
@@ -1083,12 +1135,12 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
       </button>`;
     }).join('');
     const main=setBlocks.map(sb=>sb.html).join('');
-    return _wrapMdDetail(`<div class="cmd-split"><div class="cmd-split-index">${idx}</div><div class="cmd-split-main">${main}</div></div>`);
+    return _wrapMdDetail(`<div class="cmd-split"><div class="cmd-split-index">${idx}</div><div class="cmd-split-main">${main}${_playerTallyHTML}</div></div>`);
   }
 
   if(_mdLayoutMode==='poster'){
     const main=setBlocks.map(sb=>sb.html).join('');
-    return _wrapMdDetail(`<div class="cmd-poster">${_posterHero()}<div class="cmd-sets">${main}</div></div>`);
+    return _wrapMdDetail(`<div class="cmd-poster">${_posterHero()}<div class="cmd-sets">${main}</div>${_playerTallyHTML}</div>`);
   }
 
   if(_mdLayoutMode==='focus'){
@@ -1096,9 +1148,9 @@ function buildDetailHTML(m, mode, labelA, labelB, ca, cb, aWin, bWin){
     const rest=setBlocks.filter(x=>!x.isAce);
     const ordered=ace.concat(rest);
     const main=ordered.map(sb=>sb.html).join('');
-    return _wrapMdDetail(`<div class="cmd-focus">${main}</div>`);
+    return _wrapMdDetail(`<div class="cmd-focus">${main}${_playerTallyHTML}</div>`);
   }
 
   const main=setBlocks.map(sb=>sb.html).join('');
-  return _wrapMdDetail(`<div class="cmd-sets">${main}</div>`);
+  return _wrapMdDetail(`<div class="cmd-sets">${main}${_playerTallyHTML}</div>`);
 }

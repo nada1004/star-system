@@ -52,6 +52,37 @@
     }).join('');
   }
 
+  // (요청사항) 공유카드 "이번 경기 개인 기록" 표시 옵션 — su_sc_show_tally 토글 시에만 사용
+  function buildShareMatchPlayerTallyHTML(args){
+    const { m, theme, getPlayerPhotoHTML } = args || {};
+    if(!(m && m.sets && m.sets.length)) return '';
+    const tally = {};
+    m.sets.forEach(set=>{
+      (set.games||[]).forEach(g=>{
+        if(!g || !g.playerA || !g.playerB || (g.teamA && g.teamA.length) || (g.teamB && g.teamB.length) || !g.winner) return;
+        const nameA=g.playerA, nameB=g.playerB;
+        if(!tally[nameA]) tally[nameA]={w:0,l:0};
+        if(!tally[nameB]) tally[nameB]={w:0,l:0};
+        if(g.winner==='A'){ tally[nameA].w++; tally[nameB].l++; }
+        else if(g.winner==='B'){ tally[nameB].w++; tally[nameA].l++; }
+      });
+    });
+    const entries=Object.entries(tally).filter(([,s])=>s.w+s.l>0);
+    if(!entries.length) return '';
+    entries.sort((a,b)=>(b[1].w-b[1].l)-(a[1].w-a[1].l)||b[1].w-a[1].w);
+    const chips=entries.map(([name,s])=>{
+      const photo=getPlayerPhotoHTML?`<span style="display:inline-flex;flex-shrink:0">${getPlayerPhotoHTML(name,'18px','flex-shrink:0')}</span>`:'';
+      return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid ${theme.divider};font-size:11px;font-weight:800;white-space:nowrap">
+        ${photo}<span style="color:${theme.text}">${name}</span>
+        <span style="color:#16a34a">${s.w}승</span><span style="color:${theme.textDim}">·</span><span style="color:#dc2626">${s.l}패</span>
+      </span>`;
+    }).join('');
+    return `<div class="share-match-tally" style="margin-top:10px;padding-top:10px;border-top:1px dashed ${theme.divider}">
+      <div style="font-size:9px;font-weight:800;color:${theme.textDim};letter-spacing:.3px;margin-bottom:6px">🧑‍🤝‍🧑 이번 경기 개인 기록</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${chips}</div>
+    </div>`;
+  }
+
   function buildShareMatchSummaryHTML(args){
     const { variant, theme, winnerColor, summaryCards, setsHTML, teamMode } = args || {};
     return `<div class="share-match-summary-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:${setsHTML||teamMode?'12':'0'}px">
@@ -64,4 +95,5 @@
 
   window._buildShareMatchSetsHTML = buildShareMatchSetsHTML;
   window._buildShareMatchSummaryHTML = buildShareMatchSummaryHTML;
+  window._buildShareMatchPlayerTallyHTML = buildShareMatchPlayerTallyHTML;
 })();

@@ -66,7 +66,8 @@
     const cardShape = ['rounded','sharp','soft','ribbon','tag','ticket'].includes(cardShapeSrc) ? cardShapeSrc : 'rounded';
     const entityLayout=((t ? localStorage.getItem(`su_sc_entity_layout_${t}`) : null) ?? localStorage.getItem('su_sc_entity_layout') ?? 'default').trim();
     const matchLayout=((t ? localStorage.getItem(`su_sc_match_layout_${t}`) : null) ?? localStorage.getItem('su_sc_match_layout') ?? 'default').trim();
-    return { mode: ov||mode, color, fx, winbg, loserGray, profileScale, fontScale, heroBrightness, loserPhotoBrightness, titleScale, univScale, surface, logoLayout, logoSize, logoFit, cardShape, entityLayout, matchLayout };
+    const showTally = (localStorage.getItem('su_sc_show_tally') ?? '0') === '1';
+    return { mode: ov||mode, color, fx, winbg, loserGray, profileScale, fontScale, heroBrightness, loserPhotoBrightness, titleScale, univScale, surface, logoLayout, logoSize, logoFit, cardShape, entityLayout, matchLayout, showTally };
   };
 
   window._makeShareCardTheme = window._makeShareCardTheme || function(hex, opts){

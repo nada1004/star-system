@@ -331,6 +331,14 @@
         <input type="range" id="cfg-sc-losergray" min="10" max="90" step="5" value="${Math.max(10,Math.min(90,_losergray))}" oninput="document.getElementById('cfg-sc-losergray-v').textContent=this.value+'%'" onchange="cfgSetShareCardSettings()" style="width:100%">
         <div style="font-size:11px;color:var(--gray-l)"><span id="cfg-sc-losergray-v">${Math.max(10,Math.min(90,_losergray))}%</span></div>
       </div>
+      <div style="padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:800;color:var(--text2);font-size:11px">
+          <input type="checkbox" id="cfg-sc-show-tally" ${((localStorage.getItem('su_sc_show_tally') ?? '0')==='1')?'checked':''} style="width:16px;height:16px;cursor:pointer"
+            onchange="localStorage.setItem('su_sc_show_tally', this.checked?'1':'0'); try{if(typeof render==='function')render();}catch(e){}; try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
+          이번 경기 개인 기록(몇승 몇패) 표시
+          <span style="font-size:10px;color:var(--gray-l);font-weight:600">— 대학대전/대회/티어대회/프로리그/미니대전 공유카드에 참가자별 승패 칩 추가</span>
+        </label>
+      </div>
       <div>
         <div style="font-size:11px;color:var(--text3);font-weight:800;margin-bottom:4px">공유카드 전용 프로필 이미지 크기</div>
         <input type="range" id="cfg-sc-profile" min="70" max="145" step="5" value="${Math.max(70,Math.min(145,_profile))}" oninput="document.getElementById('cfg-sc-profile-v').textContent=this.value+'%'" onchange="cfgSetShareCardSettings()" style="width:100%">

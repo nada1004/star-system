@@ -1504,6 +1504,14 @@ VS
   const results = [];
   const errors = [];
   let currentSet = 1;
+  // (버그픽스) 미니대전/시빌워는 "1. [맵] A vs B" 처럼 세트 헤더 없이 한 줄 = 한 세트인 경우가 많음.
+  // 기존 로직은 이런 줄들을 전부 currentSet=1로 뭉치고, "[Super Ace Match]" 같은 브라켓 헤더만
+  // parseSetSeparator에 의해 "3세트"로 오인식해 별도 세트로 튀어버림 → 세트 수가 2개가 되며
+  // "세트제" 채점으로 강제 전환되고, 앞의 여러 경기가 뭉친 세트 내부 동률(예 3:3)이
+  // 무조건 A팀 승으로 타이브레이크되어 최종 스코어가 엉뚱하게 1:1로 나오는 문제가 있었음.
+  // → 미니대전/시빌워 모드에서는 세트 헤더 유무와 무관하게 "경기 한 줄 = 세트 하나"로 자동 증가시킴.
+  const _pmMode = window._forcedPasteMode || document.getElementById('paste-mode')?.value || '';
+  const _isMiniPaste = _pmMode === 'mini';
   let currentLineDate = null; // "일자: YYYY-MM-DD" 줄로 설정되는 현재 날짜
   let currentRoundLabel = null; // "64강/32강/16강/8강/4강/준결승/결승" 헤더 감지
   let formatCScore = null;   // 형식 C 누적 스코어 상태 { a, b }

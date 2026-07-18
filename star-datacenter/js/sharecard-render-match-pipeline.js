@@ -35,9 +35,14 @@
       : {};
 
     const { a, b, scp, teamMode, dispA, dispB, pa, pb, usePlayerPhoto, photoOuter, photoCoverH, iconOuter, iconInner, isCivil, civUniv, ca, cb, aWin, bWin, draw, theme, variant, winnerTeam, winnerColor, caRgb, cbRgb } = ctx || {};
-    const setsHTML = (typeof window._buildShareMatchSetsHTML==='function')
+    const _baseSetsHTML = (typeof window._buildShareMatchSetsHTML==='function')
       ? window._buildShareMatchSetsHTML({ m, theme, variant, ca, cb, a, b, dispA, dispB, getPlayerPhotoHTML })
       : '';
+    // (요청사항) "이번 경기 개인 기록" 표시 옵션 — 설정탭 su_sc_show_tally 토글 ON일 때만 카드에 추가
+    const _tallyHTML = (scp && scp.showTally && typeof window._buildShareMatchPlayerTallyHTML==='function')
+      ? window._buildShareMatchPlayerTallyHTML({ m, theme, getPlayerPhotoHTML })
+      : '';
+    const setsHTML = _baseSetsHTML + _tallyHTML;
     const univIconHTML = (name, size)=>(typeof window._buildShareMatchUnivIconHTML==='function')
       ? window._buildShareMatchUnivIconHTML({ name, size, scp, toHttpsUrl })
       : `<span style="display:inline-flex;width:${size||'40px'};height:${size||'40px'};align-items:center;justify-content:center;color:#fff">🏫</span>`;
