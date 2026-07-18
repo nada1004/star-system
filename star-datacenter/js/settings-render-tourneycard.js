@@ -16,7 +16,10 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
   const _dateMenuStyle = (localStorage.getItem('su_date_menu_style') ?? 'pill');
   return _scfgD('tourneycard','🏆 대회 카드(대회탭) 스타일') + `
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">대회탭 “조별리그 일정/대진표” 카드 스타일입니다. 기록탭 카드와 <b>별도</b>로 설정됩니다.</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+      <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">⚙️ 기본 설정</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2)">
         <input type="checkbox" id="cfg-tc-theme-on" style="width:15px;height:15px" ${_tcOn?'checked':''} onchange="cfgSetTourneyCardSettings()">
         대회 카드 디자인 모드 사용
@@ -49,6 +52,12 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
           <option value="border" ${_tcAccent==='border'?'selected':''}>테두리 포인트</option>
         </select>
       </div>
+        </div>
+      </details>
+
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🎨 색상 · 두께</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
           <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">상단 바 색상 강도</div>
@@ -66,7 +75,12 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
         <input type="range" id="cfg-tc-uicon" min="24" max="48" step="2" value="${Math.max(24,Math.min(48,_tcIc))}" oninput="document.getElementById('cfg-tc-ic-v').textContent=this.value+'px'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
         <div style="font-size:var(--fs-caption);color:var(--gray-l)"><span id="cfg-tc-ic-v">${Math.max(24,Math.min(48,_tcIc))}px</span></div>
       </div>
+        </div>
+      </details>
 
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">📐 크기 · 간격</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">대학 버튼 크기(대회탭)</div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -160,6 +174,12 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 대회탭 조별리그/토너 기록카드 스코어 크기</span>
       </div>
 
+        </div>
+      </details>
+
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🔗 브라켓 연결선 · 대학-스코어 간격</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">대학 ↔ 스코어 간격(대회탭)</div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -190,6 +210,8 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
           <div style="font-size:var(--fs-caption);color:var(--gray-l)"><span id="cfg-tc-la-v">${Math.max(25,Math.min(100,_tcLa))}%</span></div>
         </div>
       </div>
+        </div>
+      </details>
     </div>
   </details>` +
   (()=>{ 
@@ -255,7 +277,10 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
       <div style="margin-top:10px;font-size:var(--fs-caption);color:var(--gray-l)">※ 패널형·배너형·사진전체 모드는 아래 이미지 설정이 함께 적용됩니다.</div>
     </div>
 
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+      <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">📐 패널 크기 · 간격 · 이미지 맞춤</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);min-width:90px">이미지 맞춤</div>
         <select id="cfg-h2h-panel-fit" onchange="cfgSetH2HPanelSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900">
@@ -331,8 +356,12 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
         <div id="cfg-h2h-h-mb-v" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem('su_h2h_panel_hmul_mb')||'100',10)||100));}catch(e){return 100;}})()}%</div>
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6">※ 값 변경 후 자동으로 재렌더링됩니다.</div>
+        </div>
+      </details>
 
-      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">📍 스트리머별 얼굴 위치 보정</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2)">스트리머별 얼굴 위치 보정(채우기/늘리기 모드에서)</div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6">
         채우기(cover)에서 얼굴이 잘리는 경우, 스트리머별로 배경 위치(가로/세로 %)를 저장할 수 있습니다.
@@ -355,6 +384,8 @@ window.renderCfgTourneyCardSection = function(_scfgD) {
           oninput="document.getElementById('cfg-h2h-bgpos-yv').textContent=this.value+'%'" style="width:100%">
         <div id="cfg-h2h-bgpos-yv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">50%</div>
       </div>
+        </div>
+      </details>
     </div>
   </details>`
   })() +

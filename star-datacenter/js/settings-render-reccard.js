@@ -26,7 +26,10 @@ window.renderCfgRecCardSection = function(_scfgD) {
   const _rcIcScope = Math.max(12,Math.min(34,parseInt(localStorage.getItem('su_rc_uicon_scope_size') ?? String(_rcIc),10) || _rcIc));
   return _scfgD('reccard','🧾 기록 카드(기록탭) 스타일') + `
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">개인전/끝장전/미니/프로리그/대회 기록 목록에 쓰이는 “기록 카드” 스타일입니다. (대회탭 조별리그 일정 카드는 별도 설정)</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+      <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🎨 기본 색상/테마</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2)">
         <input type="checkbox" id="cfg-rc-theme-on" style="width:15px;height:15px" ${_rcOn?'checked':''} onchange="cfgSetRecCardSettings()">
         승리 대학색을 카드 배경/헤더에 연하게 적용
@@ -47,7 +50,12 @@ window.renderCfgRecCardSection = function(_scfgD) {
         </select>
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">※ 체크를 끄면 무조건 무색</span>
       </div>
+        </div>
+      </details>
 
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🃏 카드 모양</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">카드 모양</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
@@ -150,7 +158,12 @@ window.renderCfgRecCardSection = function(_scfgD) {
         </div>
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">카드 레이아웃/모양을 변경합니다</span>
       </div>
+        </div>
+      </details>
 
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">📐 배치 · 크기 · 색상</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">스코어/좌우 배치(PC)</div>
         <select id="cfg-rc-vs-align" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900">
@@ -320,7 +333,12 @@ window.renderCfgRecCardSection = function(_scfgD) {
         기록 카드에서 메모 입력 기능 사용(관리자)
       </label>
       <div style="font-size:var(--fs-caption);color:var(--gray-l)">※ 메모가 이미 저장된 경우는 항상 표시됩니다. 이 옵션은 “입력칸”만 켜고 끕니다.</div>
-      
+        </div>
+      </details>
+
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🖼️ 프로필 이미지</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:10px">🖼️ 기록 카드 프로필 이미지 설정</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">
@@ -340,7 +358,12 @@ window.renderCfgRecCardSection = function(_scfgD) {
         </div>
         <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">※ 전역 배율(위 슬라이더)과 별개로 기록 카드만 따로 설정됩니다.</div>
       </div>
+        </div>
+      </details>
 
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">👤 양쪽 끝 참가자 패널</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
           <span style="font-size:var(--fs-sm);font-weight:900;color:var(--text2)">👤 기록 카드 양쪽 끝 참여자 프로필</span>
@@ -512,7 +535,12 @@ window.renderCfgRecCardSection = function(_scfgD) {
           </select>
         </div>
       </div>
+        </div>
+      </details>
 
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">✨ 양쪽 끝 색상 효과</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:10px">🎨 기록 카드 양쪽 끝 색상 효과</div>
         <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">기록 카드 좌우 끝에 A·B팀 대학 색상 그라디언트를 표시합니다. 대전기록탭·대회탭(조별리그 일정·대진표 기록·프로리그 조별리그·대진표) 기록 카드 전체에 적용됩니다.</div>
@@ -597,7 +625,12 @@ window.renderCfgRecCardSection = function(_scfgD) {
         </div>
       </div>
       ${(typeof window.buildSettingsTeamColorBlock==='function' ? window.buildSettingsTeamColorBlock() : '')}
+        </div>
+      </details>
 
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">📄 페이지당 표시 개수</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:6px">📄 경기 기록 페이지 크기 (한 페이지에 표시할 기록 수)</div>
         <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">
@@ -626,6 +659,8 @@ window.renderCfgRecCardSection = function(_scfgD) {
           </div>
         </div>
       </div>
+        </div>
+      </details>
     </div>
   </details>`;
 };

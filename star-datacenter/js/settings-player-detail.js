@@ -207,6 +207,10 @@ function _renderCfgPdSection(){
   body.innerHTML=`
     ${_pdPreviewCard}
     ${_pdUiPreset}
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+    <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🎨 디자인 · 레이아웃</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">🎨 디자인 모드</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${dmCards}</div>
@@ -217,6 +221,11 @@ function _renderCfgPdSection(){
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${lmCards}</div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">썸네일은 미리보기이고, 선택하면 현재 열려 있는 스트리머 상세 팝업에 바로 반영됩니다.</div>
     </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">📏 크기</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">📏 폰트 크기</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${fsBtns}</div>
@@ -230,6 +239,11 @@ function _renderCfgPdSection(){
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">프로필 이미지 크기 (기본 100%)</div>
     </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🌈 배경 · 색상</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🎓 대학 색상 팝업 배경</div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px">
@@ -327,6 +341,11 @@ function _renderCfgPdSection(){
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">개별 대학에 별도 배경을 넣지 않은 경우 기본값으로 사용됩니다.</div>
     </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🎨 표시 · 강도</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">📐 프로필 이미지 모양 (전역)</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -414,6 +433,11 @@ function _renderCfgPdSection(){
         <button class="btn btn-w btn-xs" onclick="['su_md_team_hdr_ck_a','su_md_team_hdr_ck_b','su_md_team_hdr_tt_a','su_md_team_hdr_tt_b','su_md_team_hdr_pro_a','su_md_team_hdr_pro_b'].forEach(k=>localStorage.removeItem(k));try{ if(typeof _applyOpenHistDetailTeamHeaderColors==='function') _applyOpenHistDetailTeamHeaderColors(); }catch(e){}; _renderCfgPdSection(); try{ if(typeof render==='function') render(); }catch(e){}">🔄 기본값으로 초기화</button>
       </div>
     </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">🖼️ 경기 상세 프로필 · 전적 표시</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">🖼️ 경기 상세 프로필 이미지</div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">현재 기기: <b>${_mdDevLabel}</b></div>
@@ -469,6 +493,11 @@ function _renderCfgPdSection(){
         </div>
       </div>
     </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">⚙️ 팝업 동작 · 기타</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">⚙️ 팝업 동작 설정</div>
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
@@ -497,6 +526,9 @@ function _renderCfgPdSection(){
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:4px">🌗 대학별 헤더 어둡기</div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">밝은 색상 대학은 어둡게 조정하면 이름이 더 잘 보입니다</div>
       ${univRows}
+    </div>
+      </div>
+    </details>
     </div>`;
 }
 
