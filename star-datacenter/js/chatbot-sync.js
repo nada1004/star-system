@@ -91,6 +91,10 @@ async function _chatbotHandleMetaCommands(msg, userMessage){
     return `📌 저장된 메모:\n${alMemo.last}`;
   }
 
+  if (/업데이트|개선사항|패치노트|변경사항|새기능|새로운\s*기능|뭐가\s*(달라졌|바뀌었|좋아졌)/.test(msg) && typeof formatChangelog === 'function') {
+    return formatChangelog();
+  }
+
   if (msg.includes('도움') || msg.includes('help') || msg.includes('?') || msg.includes('명령')) {
     return `🤖 알등이 명령어 모음\n\n` +
            `1️⃣ 스트리머 조회\n` +
@@ -109,7 +113,12 @@ async function _chatbotHandleMetaCommands(msg, userMessage){
            `• 스트리머명 티어대회 → 티어대회 기록\n\n` +
            `3️⃣ 대학·랭킹\n` +
            `• 대학명 → 소속 선수 목록 (직책순·티어순)\n` +
-           `• 랭킹 → ELO 전체 랭킹`;
+           `• 랭킹 → ELO 전체 랭킹\n\n` +
+           `4️⃣ 날짜별 경기결과\n` +
+           `• 어제 경기 / 오늘 경기 → 그날의 전체 대전 결과\n` +
+           `• 미니대전 결과 / 어제 미니대전 결과 / 7월 18일 미니대전 결과 → 해당 날짜의 미니대전 결과 (대학대전·프로리그·CK리그도 동일)\n\n` +
+           `5️⃣ 기타\n` +
+           `• 업데이트 / 개선사항 → 알등이 최신 변경 내역`;
   }
 
   return null;

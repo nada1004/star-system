@@ -8,6 +8,23 @@ async function _chatbotHandleMainCommands(msg, userMessage){
     return typeof players !== 'undefined' ? players.find(p => p.name === name) : null;
   }
 
+  // 📅 날짜별 "전체 경기결과" 조회 (예: "어제 경기", "오늘 경기결과", "그제 경기")
+  const dailyAllMatch = userMessage.match(/^(어제|오늘|그제|그저께)\s*(경기|경기결과|결과)?$/);
+  if (dailyAllMatch && typeof formatDailyAllMatches === 'function') {
+    const keyword = dailyAllMatch[1];
+    const dateStr = typeof _resolveDateKeyword === 'function' ? _resolveDateKeyword(keyword) : null;
+    return formatDailyAllMatches(dateStr, `${keyword}(${dateStr})`);
+  }
+
+  // 📅 날짜별 "특정 대전유형 결과" 조회 (예: "미니대전 결과", "어제 미니대전 결과", "7월 18일 미니대전 결과")
+  const dailyTypeMatch = userMessage.match(/^(어제|오늘|그제|그저께|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}월\s*\d{1,2}일)?\s*(미니대전|대학대전|프로리그|ck)\s*(결과)?$/i);
+  if (dailyTypeMatch && (dailyTypeMatch[1] || dailyTypeMatch[3]) && typeof formatDailyTypeResult === 'function') {
+    const dateKeyword = dailyTypeMatch[1] || '';
+    const dateStr = dateKeyword && typeof _resolveDateKeyword === 'function' ? _resolveDateKeyword(dateKeyword) : null;
+    const typeKey = dailyTypeMatch[2].toLowerCase() === 'ck' ? 'ck' : dailyTypeMatch[2];
+    return formatDailyTypeResult(typeKey, dateStr, dateKeyword || null);
+  }
+
   if (msg.includes('최근전적')) {
     const nameMatch = userMessage.match(/([^\s]+)\s+최근전적/);
     if (nameMatch) {

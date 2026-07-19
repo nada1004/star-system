@@ -71,7 +71,7 @@ function _getUniversities() {
     if (idx._universities && idx._universitiesKey === key) return idx._universities;
     const playerUnivs = typeof players !== 'undefined' ? players.map(p => p.univ).filter(Boolean) : [];
     const cfgUnivs = typeof univCfg !== 'undefined' ? univCfg.map(u => u && u.name).filter(Boolean) : [];
-    idx._universities = [...new Set([...playerUnivs, ...cfgUnivs])];
+    idx._universities = [...new Set([...playerUnivs, ...cfgUnivs])].filter(u => u !== 'YB');
     idx._universitiesKey = key;
     return idx._universities;
   }catch(e){}

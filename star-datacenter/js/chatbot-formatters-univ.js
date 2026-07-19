@@ -1,5 +1,6 @@
 function formatUniversityInfo(univName) {
   if (typeof players === 'undefined') return '❌ 선수 데이터를 불러올 수 없습니다.';
+  if (univName === 'YB') return `❌ 'YB'는 대학이 아니라 미소속 선수 표기입니다.`;
 
   const univPlayers = players.filter(p => p.univ === univName);
   const inCfg = typeof univCfg !== 'undefined' && univCfg.some(u => u.name === univName);
@@ -52,6 +53,7 @@ function formatUniversityInfo(univName) {
 
 function formatUniversityVsRecord(univ1, univ2) {
   if (typeof players === 'undefined') return '❌ 선수 데이터를 불러올 수 없습니다.';
+  if (univ1 === 'YB' || univ2 === 'YB') return `❌ 'YB'는 대학이 아니라 미소속 선수 표기라 대항전을 비교할 수 없습니다.`;
   
   const univ1Players = players.filter(p => p.univ === univ1);
   const univ2Players = players.filter(p => p.univ === univ2);
