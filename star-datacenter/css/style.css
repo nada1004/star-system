@@ -7282,7 +7282,7 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
 .chat-message {
   display: flex;
   gap: 8px;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 .chat-message.user-message {
   flex-direction: row-reverse;
@@ -7295,7 +7295,7 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
   justify-content: center;
   font-size:var(--fs-md);
   flex-shrink: 0;
-  margin-bottom: 2px;
+  margin-top: 2px;
 }
 .chat-message.user-message .chat-avatar {
   background: #f1f5f9;
@@ -7336,12 +7336,16 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
   box-shadow: none !important;
   max-width: 100% !important;
 }
+.chat-message.bot-message .chat-content-card {
+  margin-right: 38px;
+}
 
 /* 모바일 챗봇 최적화 */
 @media(max-width:768px) {
   .chat-message { gap: 6px; }
   .chat-avatar { width: 26px; height: 26px; font-size:var(--fs-base); }
   .chat-content { font-size:var(--fs-base); padding: 8px 12px; max-width: 86%; }
+  .chat-message.bot-message .chat-content-card { margin-right: 32px; }
   #chatMessages { padding: 12px 10px 4px; }
   .chatbot-input-area { padding: 8px 10px 10px; }
   #chatInput { font-size:var(--fs-base); padding: 9px 12px; }
