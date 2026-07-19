@@ -40,7 +40,7 @@ function formatUniversityInfo(univName) {
   });
 
   const playerListHTML = sortedPlayers.map(p => {
-    const tC = {'S':['#7c3aed','#ede9fe'],'A':['#2563eb','#dbeafe'],'B':['#16a34a','#dcfce7'],'C':['#d97706','#fef3c7'],'D':['#dc2626','#fee2e2']}[p.tier] || ['#64748b','#f1f5f9'];
+    const tC = _tierBadgeColors(p.tier);
     const raceIcon = p.race === '테란' ? '🔵' : p.race === '저그' ? '🟣' : p.race === '프로토스' ? '🟡' : '⚫';
     return `<div data-chatbot-quick="${escapeAttr(p.name)}" style="display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:9px;cursor:pointer;background:#f8fafc;margin-bottom:4px;border:1px solid #e8edf2"><span style="font-size:var(--fs-base);font-weight:700;color:#1a202c;flex:1">${escapeHtml(p.name)}</span><span style="font-size:var(--fs-caption);padding:2px 7px;border-radius:6px;font-weight:700;color:${tC[0]};background:${tC[1]}">${p.tier}티어</span><span style="font-size:var(--fs-caption);color:#64748b">${raceIcon} ${p.race}</span></div>`;
   }).join('');

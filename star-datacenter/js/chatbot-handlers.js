@@ -146,9 +146,22 @@ async function _chatbotHandleMainCommands(msg, userMessage){
   
   const h2hMatch = userMessage.match(/([^\s]+)\s+vs\s+([^\s]+)/i);
   if (h2hMatch) {
-    const player1Name = h2hMatch[1];
-    const player2Name = h2hMatch[2];
-    
+    const name1 = h2hMatch[1];
+    const name2 = h2hMatch[2];
+
+    // 대학 vs 대학 비교인지 먼저 확인 (선수 이름 매칭보다 우선)
+    const universitiesForVs = (typeof window !== 'undefined' && typeof window._chatbotGetUniversities === 'function')
+      ? window._chatbotGetUniversities()
+      : [];
+    if (universitiesForVs.length > 0) {
+      const univ1 = universitiesForVs.includes(name1) ? name1 : findSimilarUniversity(name1, universitiesForVs);
+      const univ2 = universitiesForVs.includes(name2) ? name2 : findSimilarUniversity(name2, universitiesForVs);
+      if (univ1 && univ2) return formatUniversityVsRecord(univ1, univ2);
+    }
+
+    const player1Name = name1;
+    const player2Name = name2;
+
     let player1 = _getExactPlayer(player1Name);
     let player2 = _getExactPlayer(player2Name);
     
@@ -172,13 +185,6 @@ async function _chatbotHandleMainCommands(msg, userMessage){
       return formatTierRanking(tier);
     }
     return formatTierRanking('');
-  }
-  
-  const univVsMatch = userMessage.match(/([^\s]+)\s+vs\s+([^\s]+)/i);
-  if (univVsMatch) {
-    const univ1 = univVsMatch[1];
-    const univ2 = univVsMatch[2];
-    return formatUniversityVsRecord(univ1, univ2);
   }
   
   const singleWordMatch = userMessage.match(/^([^\s]+)$/);
@@ -227,16 +233,16 @@ async function _chatbotHandleMainCommands(msg, userMessage){
     return '검색 자료가 없습니다.';
   }
   
-  const tierRangeMatch = userMessage.match(/티어\s*([A-Z])\s*~\s*([A-Z])/i);
+  const tierRangeMatch = userMessage.match(/티어\s*([^\s~]+)\s*~\s*([^\s~]+)/i);
   if (tierRangeMatch) {
-    const startTier = tierRangeMatch[1].toUpperCase();
-    const endTier = tierRangeMatch[2].toUpperCase();
+    const startTier = tierRangeMatch[1];
+    const endTier = tierRangeMatch[2];
     return formatTierRangeSearch(startTier, endTier);
   }
   
-  const tierAboveMatch = userMessage.match(/([A-Z])\s*티어\s*이상/i);
+  const tierAboveMatch = userMessage.match(/(\S+?)\s*티어\s*이상/i) || userMessage.match(/(유스|미정)\s*이상/i);
   if (tierAboveMatch) {
-    const tier = tierAboveMatch[1].toUpperCase();
+    const tier = tierAboveMatch[1];
     return formatTierAboveSearch(tier);
   }
   

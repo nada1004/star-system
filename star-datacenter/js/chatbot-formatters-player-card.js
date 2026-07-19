@@ -28,8 +28,9 @@ function formatPlayerBasicInfo(player) {
   const safePlayerName = escapeHtml(player.name);
   const safeUniv = escapeHtml(player.univ);
   
-  const tierColor = {'S':'#7c3aed','A':'#2563eb','B':'#16a34a','C':'#d97706','D':'#dc2626'}[player.tier] || '#64748b';
-  const tierBg = {'S':'#ede9fe','A':'#dbeafe','B':'#dcfce7','C':'#fef3c7','D':'#fee2e2'}[player.tier] || '#f1f5f9';
+  const _tc = _tierBadgeColors(player.tier);
+  const tierColor = _tc[0];
+  const tierBg = _tc[1];
   const raceIcon = player.race === '테란' ? '🔵' : player.race === '저그' ? '🟣' : player.race === '프로토스' ? '🟡' : '⚫';
 
   const univColor = (typeof univCfg !== 'undefined' ? (univCfg.find(x=>x.name===player.univ)||{}) : {}).color || '#1e3a8a';
@@ -65,8 +66,9 @@ function formatFuzzyPlayerConfirm(query, player, followupCmd) {
   const safeQuery = escapeHtml(query);
   const safeName = escapeHtml(player.name);
   const safeUniv = escapeHtml(player.univ || '');
-  const tierColor = {'S':'#7c3aed','A':'#2563eb','B':'#16a34a','C':'#d97706','D':'#dc2626'}[player.tier] || '#64748b';
-  const tierBg = {'S':'#ede9fe','A':'#dbeafe','B':'#dcfce7','C':'#fef3c7','D':'#fee2e2'}[player.tier] || '#f1f5f9';
+  const _tc = _tierBadgeColors(player.tier);
+  const tierColor = _tc[0];
+  const tierBg = _tc[1];
   const raceIcon = player.race === '테란' ? '🔵' : player.race === '저그' ? '🟣' : player.race === '프로토스' ? '🟡' : '⚫';
 
   return `<div style="display:flex;flex-direction:column;gap:6px">
