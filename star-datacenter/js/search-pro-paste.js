@@ -807,19 +807,7 @@ function renderProPreview(results) {
 
       // 별칭 자동 저장
       const origName = role==='w' ? r.winName : r.loseName;
-      if (origName && origName !== p.name) {
-        const memos = (p.memo||'').split(/[\s,\n]+/).map(s=>s.trim()).filter(Boolean);
-        if (!memos.includes(origName)) {
-          p.memo = memos.length ? p.memo + ' ' + origName : origName;
-          save();
-          const toast = document.createElement('div');
-          toast.textContent = `✅ "${origName}" → "${p.name}" 자동 인식 등록됨`;
-          Object.assign(toast.style, {position:'fixed',bottom:'76px',left:'50%',transform:'translateX(-50%)',background:'#1e3a8a',color:'#fff',padding:'9px 18px',borderRadius:'20px',fontSize:'13px',fontWeight:'600',zIndex:'99999',opacity:'0',transition:'opacity .25s',whiteSpace:'nowrap'});
-          document.body.appendChild(toast);
-          requestAnimationFrame(()=>{ toast.style.opacity='1'; });
-          setTimeout(()=>{ toast.style.opacity='0'; setTimeout(()=>toast.remove(),300); },2800);
-        }
-      }
+      _proAutoSaveAlias(origName, p);
 
       if (role==='w') {
         r.winName = p.name; r.wPlayer = p; r.wCandidates = [p]; r.wSimilar = [];
@@ -931,6 +919,7 @@ function proEditName(input, idx, role) {
   const m = _proPasteResolvePlayer(name);
   const r = window._proPasteResults[idx];
   if (!r) return;
+  const origName = role==='w' ? r.winName : r.loseName;
   if (role==='w') {
     r.wPlayer = m.player; r.winName = m.name || name;
     r.wCandidates = m.candidates; r.wSimilar = m.similar||[];
@@ -938,8 +927,27 @@ function proEditName(input, idx, role) {
     r.lPlayer = m.player; r.loseName = m.name || name;
     r.lCandidates = m.candidates; r.lSimilar = m.similar||[];
   }
-  // 맵 별칭 학습: 입력된 이름과 실제 맵 이름이 다르면 alias에 추가
+  // 별명 자동 저장: 직접 입력해서 매칭에 성공한 경우, 다음부터 자동 인식되도록 등록
+  _proAutoSaveAlias(origName, m.player);
   renderProPreview(window._proPasteResults);
+}
+
+// 붙여넣기 화면에서 사용자가 직접 입력/선택해 매칭에 성공한 별명을
+// 선수 메모에 등록해서 다음 붙여넣기부터 자동 인식되게 함
+function _proAutoSaveAlias(origName, player) {
+  if (!origName || !player || origName === player.name) return;
+  try {
+    const memos = (player.memo||'').split(/[\s,\n]+/).map(s=>s.trim()).filter(Boolean);
+    if (memos.includes(origName)) return;
+    player.memo = memos.length ? player.memo + ' ' + origName : origName;
+    save();
+    const toast = document.createElement('div');
+    toast.textContent = `✅ "${origName}" → "${player.name}" 자동 인식 등록됨`;
+    Object.assign(toast.style, {position:'fixed',bottom:'76px',left:'50%',transform:'translateX(-50%)',background:'#1e3a8a',color:'#fff',padding:'9px 18px',borderRadius:'20px',fontSize:'13px',fontWeight:'600',zIndex:'99999',opacity:'0',transition:'opacity .25s',whiteSpace:'nowrap'});
+    document.body.appendChild(toast);
+    requestAnimationFrame(()=>{ toast.style.opacity='1'; });
+    setTimeout(()=>{ toast.style.opacity='0'; setTimeout(()=>toast.remove(),300); },2800);
+  } catch(e) {}
 }
 
 function proEditTeamName(input, idx, sideKey, slot) {
@@ -947,7 +955,9 @@ function proEditTeamName(input, idx, sideKey, slot) {
   const r = window._proPasteResults[idx];
   if (!r || !r.isTeam) return;
   const name = (input?.value || '').trim();
+  const origName = sideKey === 'L' ? (r.leftNames?.[slot] || '') : (r.rightNames?.[slot] || '');
   const m = name ? _proPasteResolvePlayer(name) : { name: '', player: null, candidates: [], similar: [] };
+  _proAutoSaveAlias(origName, m.player);
   if (sideKey === 'L') {
     if (!Array.isArray(r.leftNames)) r.leftNames = ['', ''];
     if (!Array.isArray(r.leftPlayers)) r.leftPlayers = [null, null];
