@@ -14124,28 +14124,8 @@ button[onclick="openB2PlayerCreateModal()"]:hover {
 
 /* ===== v29m: 설정탭 전면 리디자인 ===== */
 
-/* 카테고리 수평 탭 */
-.cfg-cat-tab { transition: background .14s, border-color .14s, color .14s; }
-.cfg-cat-tab:not(.cfg-cat-tab-on):hover {
-  background: var(--surface) !important;
-  border-color: var(--border2) !important;
-}
-
-/* 퀵버튼 카드 hover */
-.cfg-quick-card:hover {
-  background: var(--surface) !important;
-  border-color: var(--border2) !important;
-}
-
-/* 핀 버튼 hover */
-.cfg-quick-card button[title*="고정"]:hover,
-.cfg-quick-card button[title*="해제"]:hover { opacity: 0.9 !important; }
-
 /* 핀 바 스크롤 숨김 */
 .cfg-topbar div[style*="overflow-x:auto"]::-webkit-scrollbar { display: none; }
-
-/* 카테고리 탭 스크롤 숨김 */
-.cfg-topbar div[style*="gap:5px"][style*="overflow-x:auto"]::-webkit-scrollbar { display: none; }
 
 /* 섹션 summary 헤더 — 아이콘 박스 스타일 강화 */
 details.ssec > summary.cfg-sec-summary h4 {
