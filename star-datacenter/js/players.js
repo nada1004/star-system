@@ -484,21 +484,23 @@ function rTotal(C,T){
     : '';
   // (모바일/태블릿) 검색창이 커서 버튼들이 2줄로 밀리는 문제 방지
   // - 한 줄 유지 + 가로 스크롤(드래그)로 접근
-  let filterBar=`<div class="streamer-toolbar-card"><div class="fbar utilbar utilbar--scroll" style="flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-    ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
-    <span style="color:var(--border2);align-self:center">│</span>
+  let filterBar=`<div class="streamer-toolbar-card">
+    <div class="view-mode-group" style="margin-bottom:8px">
+    <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode='gallery';try{localStorage.setItem('su_streamer_view_mode','gallery');}catch(e){};_bulkEditMode=false;render()" title="카드형 대시보드 보기">🪪 카드형</button>
+    <button class="pill ${totalViewMode==='focus'?'on':''}" onclick="if(totalViewMode!=='focus')totalFocusPlayer='';totalViewMode='focus';try{localStorage.setItem('su_streamer_view_mode','focus');}catch(e){};_bulkEditMode=false;render()" title="좌측 목록 + 우측 상세 보기">🧾 상세형</button>
+    <button class="pill ${totalViewMode==='table'?'on':''}" onclick="totalViewMode='table';try{localStorage.setItem('su_streamer_view_mode','table');}catch(e){};_bulkEditMode=false;render()" title="리스트 보기">☰ 리스트</button>
+    </div>
+    <div class="fbar utilbar utilbar--scroll" style="flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+    ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?'on':''}" data-race="${r}" onclick="totalRaceFilter='${r}';render()">${r==='전체'?'전체':RNAME[r]||r}</button>`).join('')}
+    <span class="fbar-divider"></span>
     <input id="total-search" class="streamer-search" type="text" value="${(totalSearch||'').replace(/"/g,'&quot;')}" placeholder="🔍 이름/대학/티어/직책 + (테/저/프, 남/여) 검색..."
       oncompositionstart="window._tsComp=true"
       oncompositionend="window._tsComp=false;totalSearch=this.value;totalApplySearchFilter()"
       oninput="totalSearch=this.value;if(!window._tsComp)totalApplySearchFilter()"
       autocomplete="off" spellcheck="false">
     <button class="pill ${totalHideNoRecord?'on warn-on':''}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">전적없음 숨김</button>
-    <span style="color:var(--border2);align-self:center">│</span>
-    <button class="pill ${totalViewMode==='gallery'?'on':''}" onclick="totalViewMode='gallery';try{localStorage.setItem('su_streamer_view_mode','gallery');}catch(e){};_bulkEditMode=false;render()" title="카드형 대시보드 보기">🪪 카드형</button>
-    <button class="pill ${totalViewMode==='focus'?'on':''}" onclick="if(totalViewMode!=='focus')totalFocusPlayer='';totalViewMode='focus';try{localStorage.setItem('su_streamer_view_mode','focus');}catch(e){};_bulkEditMode=false;render()" title="좌측 목록 + 우측 상세 보기">🧾 상세형</button>
-    <button class="pill ${totalViewMode==='table'?'on':''}" onclick="totalViewMode='table';try{localStorage.setItem('su_streamer_view_mode','table');}catch(e){};_bulkEditMode=false;render()" title="리스트 보기">☰ 리스트</button>
-    ${totalViewMode==='table'?(isLoggedIn?`<button class="pill ${_bulkEditMode?'on edit-on':''}" onclick="toggleBulkEditMode()">일괄 수정</button>`:''):''}
-    ${totalViewMode==='table'?(isLoggedIn?`<button class="pill" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
+    ${totalViewMode==='table'?(isLoggedIn?`<span class="fbar-divider"></span><button class="pill action-btn ${_bulkEditMode?'on edit-on':''}" onclick="toggleBulkEditMode()">✏️ 일괄 수정</button>`:''):''}
+    ${totalViewMode==='table'?(isLoggedIn?`<button class="pill action-btn" onclick="openMergePlayersModal()">🔀 병합</button>`:''):''}
     ${_showBulk&&totalViewMode==='table'?`<button class="pill ${_bulkEditSelected.size>0?'on':''}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?'background:#ef4444;border-color:#ef4444;color:#fff':''}">선택 초기화</button>
       <button id="bulk-edit-apply-btn" onclick="openBulkEditModal()" style="padding:4px 12px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:${_bulkEditSelected.size>0?'inline-flex':'none'};align-items:center;gap:4px">✏️ <span id="bulk-edit-cnt">${_bulkEditSelected.size}</span>명 수정</button>
       <input type="text" value="${(_bulkEditSearch||'').replace(/"/g,'&quot;')}" placeholder="선택 모드 내 검색..."
@@ -521,11 +523,11 @@ function rTotal(C,T){
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">티어</th>
     <th style="text-align:center;white-space:nowrap;padding:8px 8px">종족</th>
     <th style="text-align:left;padding:8px 12px">스트리머</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">승</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">패</th>
-    <th style="text-align:center;white-space:nowrap;padding:8px 10px">승률</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">포인트</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">ELO</th>
+    <th class="col-hide-mobile num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">승</th>
+    <th class="col-hide-mobile num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">패</th>
+    <th class="num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">승률</th>
+    <th class="col-hide-mobile num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">포인트</th>
+    <th class="col-hide-mobile num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">ELO</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">활동</th>
     ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">관리</th>':''}
   </tr></thead><tbody>`;
@@ -534,6 +536,7 @@ function rTotal(C,T){
   const _allRanked = [..._pl].filter(p=>!p.retired).sort((a,b)=>(b.points||0)-(a.points||0)||(b.win||0)-(a.win||0));
   const _rankMap = {};
   _allRanked.forEach((p,i) => { _rankMap[p.name] = i+1; });
+  let _zebraIdx = 0; // 줄무늬(zebra) 표시용 카운터 - 그룹 헤더 행은 제외하고 실제 데이터 행만 셈
 
   // 갤러리 뷰 분기
   if(totalViewMode==='gallery'){
@@ -718,7 +721,8 @@ function rTotal(C,T){
         : String(p.name||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/[\r\n]+/g,' ');
       const _q = `${p.name||''} ${(p.univ||'')} ${(p.tier||'')} ${(p.role||'')}`.toLowerCase();
       if(typeof p.photo==='string' && p.photo.trim()) _visiblePhotoUrls.push(p.photo.trim());
-      tableHTML+=`<tr class="streamer-row ${_pRank===1?'top1':_pRank===2?'top2':_pRank===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
+      _zebraIdx++;
+      tableHTML+=`<tr class="streamer-row ${_zebraIdx%2===0?'zebra':''} ${_pRank===1?'top1':_pRank===2?'top2':_pRank===3?'top3':''} ${p.inactive?'inactive':''} ${p.retired?'retired':''}" data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g,' ').replace(/"/g,'&quot;')}" data-r="${p.race||''}" data-g="${p.gender||''}">
         ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?'checked':''} onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:''}
         <td style="text-align:center;white-space:nowrap;padding:5px 4px">
           <div class="streamer-rank-box">
@@ -737,15 +741,15 @@ function rTotal(C,T){
             </span>
           </span>
         </td>
-        <td class="col-hide-mobile wt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px">${win}</td>
-        <td class="col-hide-mobile lt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px">${loss}</td>
-        <td style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${games===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
-          <div class="streamer-wr-box">
+        <td class="col-hide-mobile wt streamer-stat-num" style="text-align:right;white-space:nowrap;padding:7px 16px 7px 10px">${win}</td>
+        <td class="col-hide-mobile lt streamer-stat-num" style="text-align:right;white-space:nowrap;padding:7px 16px 7px 10px">${loss}</td>
+        <td style="text-align:right;white-space:nowrap;padding:7px 16px 7px 10px;font-weight:700;color:${games===0?'var(--gray-l)':wr>=50?'var(--green)':'var(--red)'}">
+          <div class="streamer-wr-box" style="justify-content:flex-end">
           ${games?wr+'%':'-'}${games?`<span style="font-size:9px;color:var(--gray-l);font-weight:400">${games}전</span>`:''}
           </div>
         </td>
-        <td class="col-hide-mobile ${pC(points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base)">${pS(points)}</td>
-        <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px"><span class="streamer-elo-chip" style="color:${elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${elo}</span></td>
+        <td class="col-hide-mobile ${pC(points)}" style="text-align:right;white-space:nowrap;padding:7px 16px 7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base)">${pS(points)}</td>
+        <td class="col-hide-mobile" style="text-align:right;white-space:nowrap;padding:7px 16px 7px 10px"><span class="streamer-elo-chip" style="color:${elo>=ELO_DEFAULT?'#2563eb':'#dc2626'}">${elo}</span></td>
         <td class="col-hide-mobile" style="text-align:center;padding:7px 4px"></td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="openEPFromModal('${_pSafe}')">✏️ 수정</button>`)}</td>`:''}
       </tr>`;

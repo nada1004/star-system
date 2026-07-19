@@ -8649,16 +8649,16 @@ let totalRaceFilter="\uC804\uCCB4",totalSearch="",totalHideNoRecord=!1,_bulkEdit
     <button class="streamer-viewmode-btn ${totalViewMode==="simple"?"on":""}" onclick="totalViewMode='simple';try{localStorage.setItem('su_streamer_view_mode','simple');}catch(e){};_bulkEditMode=false;render()" title="\uC5EC\uBC31\uC744 \uC904\uC778 \uD55C \uC904 \uBBF8\uB2C8\uBA40 \uB9AC\uC2A4\uD2B8"><span class="streamer-viewmode-ico">\u2728</span><span class="streamer-viewmode-txt">\uC2EC\uD50C\uD615</span></button>
   </div>`}
     <div class="fbar utilbar utilbar--scroll" style="flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-    ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?"on":""}" onclick="totalRaceFilter='${r}';render()">${r==="\uC804\uCCB4"?"\uC804\uCCB4":RNAME[r]||r}</button>`).join("")}
-    <span style="color:var(--border2);align-self:center">\u2502</span>
+    ${raceOpts.map(r=>`<button class="pill ${totalRaceFilter===r?"on":""}" data-race="${r}" onclick="totalRaceFilter='${r}';render()">${r==="\uC804\uCCB4"?"\uC804\uCCB4":RNAME[r]||r}</button>`).join("")}
+    <span class="fbar-divider"></span>
     <input id="total-search" class="streamer-search" type="text" value="${(totalSearch||"").replace(/"/g,"&quot;")}" placeholder="\u{1F50D} \uC774\uB984/\uB300\uD559/\uD2F0\uC5B4/\uC9C1\uCC45 + (\uD14C/\uC800/\uD504, \uB0A8/\uC5EC) \uAC80\uC0C9..."
       oncompositionstart="window._tsComp=true"
       oncompositionend="window._tsComp=false;totalSearch=this.value;totalApplySearchFilter()"
       oninput="totalSearch=this.value;if(!window._tsComp)totalApplySearchFilter()"
       autocomplete="off" spellcheck="false">
     <button class="pill ${totalHideNoRecord?"on warn-on":""}" onclick="totalHideNoRecord=!totalHideNoRecord;render()">\uC804\uC801\uC5C6\uC74C \uC228\uAE40</button>
-    ${totalViewMode==="table"&&isLoggedIn?`<span style="color:var(--border2);align-self:center">\u2502</span><button class="pill ${_bulkEditMode?"on edit-on":""}" onclick="toggleBulkEditMode()">\uC77C\uAD04 \uC218\uC815</button>`:""}
-    ${totalViewMode==="table"&&isLoggedIn?'<button class="pill" onclick="openMergePlayersModal()">\u{1F500} \uBCD1\uD569</button>':""}
+    ${totalViewMode==="table"&&isLoggedIn?`<span class="fbar-divider"></span><button class="pill action-btn ${_bulkEditMode?"on edit-on":""}" onclick="toggleBulkEditMode()">\u270F\uFE0F \uC77C\uAD04 \uC218\uC815</button>`:""}
+    ${totalViewMode==="table"&&isLoggedIn?'<button class="pill action-btn" onclick="openMergePlayersModal()">\u{1F500} \uBCD1\uD569</button>':""}
     ${_showBulk&&totalViewMode==="table"?`<button class="pill ${_bulkEditSelected.size>0?"on":""}" onclick="clearBulkEditSelection()" style="${_bulkEditSelected.size>0?"background:#ef4444;border-color:#ef4444;color:#fff":""}">\uC120\uD0DD \uCD08\uAE30\uD654</button>
       <button id="bulk-edit-apply-btn" onclick="openBulkEditModal()" style="padding:4px 12px;border-radius:12px;border:1.5px solid #2563eb;background:#eff6ff;color:#1d4ed8;font-size:var(--fs-sm);font-weight:700;cursor:pointer;display:${_bulkEditSelected.size>0?"inline-flex":"none"};align-items:center;gap:4px">\u270F\uFE0F <span id="bulk-edit-cnt">${_bulkEditSelected.size}</span>\uBA85 \uC218\uC815</button>
       <input type="text" value="${(_bulkEditSearch||"").replace(/"/g,"&quot;")}" placeholder="\uC120\uD0DD \uBAA8\uB4DC \uB0B4 \uAC80\uC0C9..."
@@ -8741,11 +8741,11 @@ let totalRaceFilter="\uC804\uCCB4",totalSearch="",totalHideNoRecord=!1,_bulkEdit
     <th style="text-align:center;white-space:nowrap;padding:8px 10px">\uD2F0\uC5B4</th>
     <th class="streamer-th-race col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 8px">\uC885\uC871</th>
     <th style="text-align:left;padding:8px 12px">\uC2A4\uD2B8\uB9AC\uBA38</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">\uC2B9</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">\uD328</th>
-    <th class="streamer-th-wr" style="text-align:center;white-space:nowrap;padding:8px 10px">\uC2B9\uB960</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">\uD3EC\uC778\uD2B8</th>
-    <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 10px">ELO</th>
+    <th class="col-hide-mobile num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">\uC2B9</th>
+    <th class="col-hide-mobile num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">\uD328</th>
+    <th class="streamer-th-wr num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">\uC2B9\uB960</th>
+    <th class="col-hide-mobile num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">\uD3EC\uC778\uD2B8</th>
+    <th class="col-hide-mobile num" style="text-align:right;white-space:nowrap;padding:8px 16px 8px 10px">ELO</th>
     <th class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:8px 6px">\uD65C\uB3D9</th>
     ${isLoggedIn?'<th class="no-export" style="text-align:center;white-space:nowrap;padding:8px 10px">\uAD00\uB9AC</th>':""}
   </tr></thead><tbody>`;const _allRanked=[..._pl].filter(p=>!p.retired).sort((a,b)=>(b.points||0)-(a.points||0)||(b.win||0)-(a.win||0)),_rankMap={};if(_allRanked.forEach((p,i)=>{_rankMap[p.name]=i+1}),totalViewMode==="gallery"){C.innerHTML=`<div class="streamer-shell" data-st-mode="${_streamerTabDesignMode}" data-st-layout="${_streamerTabLayoutMode}" data-st-ui="${_streamerTabUiMode}" data-st-view="${totalViewMode}">
@@ -8789,7 +8789,7 @@ let totalRaceFilter="\uC804\uCCB4",totalSearch="",totalHideNoRecord=!1,_bulkEdit
           </span>
         </td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 4px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="event.stopPropagation();openEPFromModal('${_pSafe}')">\u270F\uFE0F</button>`)}</td>`:""}
-      </tr>`:`<tr class="streamer-row ${_pRank===1?"top1":_pRank===2?"top2":_pRank===3?"top3":""} ${p.inactive?"inactive":""} ${p.retired?"retired":""}" data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g," ").replace(/"/g,"&quot;")}" data-r="${p.race||""}" data-g="${p.gender||""}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="cursor:pointer">
+      </tr>`:`<tr class="streamer-row ${_rowIdx%2===0?"zebra":""} ${_pRank===1?"top1":_pRank===2?"top2":_pRank===3?"top3":""} ${p.inactive?"inactive":""} ${p.retired?"retired":""}" data-player-row="1" data-univ="${u.name}" data-q="${_q.replace(/[\r\n]+/g," ").replace(/"/g,"&quot;")}" data-r="${p.race||""}" data-g="${p.gender||""}" data-tp-action="open-player" data-tp-player="${_pAttr}" style="cursor:pointer">
         ${_showBulk?`<td style="text-align:center;padding:7px 4px"><input type="checkbox" data-player-name="${_pSafe}" ${_bulkEditSelected.has(p.name)?"checked":""} onclick="event.stopPropagation()" onchange="toggleBulkEditPlayer('${_pSafe}',this.checked)" style="cursor:pointer;width:15px;height:15px"></td>`:""}
         <td style="text-align:center;white-space:nowrap;padding:5px 4px">
           <div class="streamer-rank-box">
@@ -8808,15 +8808,15 @@ let totalRaceFilter="\uC804\uCCB4",totalSearch="",totalHideNoRecord=!1,_bulkEdit
             </span>
           </span>
         </td>
-        <td class="col-hide-mobile wt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:900;color:var(--text1);cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${win}</td>
-        <td class="col-hide-mobile lt streamer-stat-num" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:900;color:var(--text1);cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${loss}</td>
-        <td class="streamer-td-wr" style="text-align:center;white-space:nowrap;padding:7px 10px;font-weight:700;color:${games===0?"var(--gray-l)":wr>=50?"var(--green)":"var(--red)"};cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">
-          <div class="streamer-wr-box">
+        <td class="col-hide-mobile wt streamer-stat-num" style="text-align:right;white-space:nowrap;padding:7px 16px 7px 10px;font-weight:900;color:var(--text1);cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${win}</td>
+        <td class="col-hide-mobile lt streamer-stat-num" style="text-align:right;white-space:nowrap;padding:7px 16px 7px 10px;font-weight:900;color:var(--text1);cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${loss}</td>
+        <td class="streamer-td-wr" style="text-align:right;white-space:nowrap;padding:7px 16px 7px 10px;font-weight:700;color:${games===0?"var(--gray-l)":wr>=50?"var(--green)":"var(--red)"};cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">
+          <div class="streamer-wr-box" style="justify-content:flex-end">
           ${games?wr+"%":"-"}${games?`<span style="font-size:9px;color:var(--gray-l);font-weight:400">${games}\uC804</span>`:""}
           </div>
         </td>
-        <td class="col-hide-mobile ${pC(points)}" style="text-align:center;white-space:nowrap;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base);cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${pS(points)}</td>
-        <td class="col-hide-mobile" style="text-align:center;white-space:nowrap;padding:7px 10px;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}"><span class="streamer-elo-chip" style="color:${elo>=ELO_DEFAULT?"#2563eb":"#dc2626"}">${elo}</span></td>
+        <td class="col-hide-mobile ${pC(points)}" style="text-align:right;white-space:nowrap;padding:7px 16px 7px 10px;font-family:'Noto Sans KR',sans-serif;font-weight:900;font-size:var(--fs-base);cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}">${pS(points)}</td>
+        <td class="col-hide-mobile" style="text-align:right;white-space:nowrap;padding:7px 16px 7px 10px;cursor:pointer" data-tp-action="open-player" data-tp-player="${_pAttr}"><span class="streamer-elo-chip" style="color:${elo>=ELO_DEFAULT?"#2563eb":"#dc2626"}">${elo}</span></td>
         <td class="col-hide-mobile" style="text-align:center;padding:7px 4px"></td>
         ${isLoggedIn?`<td class="no-export" style="text-align:center;white-space:nowrap;padding:7px 8px">${adminBtn(`<button class="btn btn-w btn-xs" onclick="event.stopPropagation();openEPFromModal('${_pSafe}')">\u270F\uFE0F \uC218\uC815</button>`)}</td>`:""}
       </tr>`,tableHTML+=`

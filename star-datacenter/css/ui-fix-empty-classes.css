@@ -777,3 +777,201 @@ body.dark .su-sec--details summary {
   margin-bottom: 20px !important;
   align-items: center;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   5. 티어 순위표 필터 패널 (.tier-toolbar-card / .tier-filter-*)
+      → players-tier-rank.js가 렌더하지만 CSS가 전혀 없어
+        빈 여백만 있던 상태. 카드형 그리드 레이아웃 보강.
+═══════════════════════════════════════════════════════════ */
+
+.tier-toolbar-card {
+  background: linear-gradient(180deg, #fff, #f8fafc);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 6px 20px #0f172a0d;
+}
+body.dark .tier-toolbar-card {
+  background: linear-gradient(180deg, #1e293b, #162032);
+  border-color: #2d3f55;
+  box-shadow: 0 6px 20px #00000038;
+}
+body.design-v2 .tier-toolbar-card {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+
+.tier-filter-shell { display: flex; flex-direction: column; }
+
+.tier-filter-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+.tier-filter-block.is-full { grid-column: unset; }
+
+.tier-filter-block {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px 14px;
+  box-shadow: 0 2px 10px #0f172a08;
+}
+body.dark .tier-filter-block {
+  background: #1e293b;
+  border-color: #2d3f55;
+}
+
+.tier-filter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border2);
+  flex-wrap: wrap;
+}
+.tier-filter-title {
+  font-size: var(--fs-sm);
+  font-weight: 900;
+  color: var(--text2);
+  letter-spacing: -.01em;
+  padding-left: 10px;
+  position: relative;
+}
+.tier-filter-title::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 1px; bottom: 1px;
+  width: 4px;
+  border-radius: 99px;
+  background: var(--uifx-accent);
+}
+.tier-filter-desc {
+  font-size: var(--fs-caption);
+  color: var(--gray-l);
+  font-weight: 700;
+}
+
+.tier-filter-selectrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.tier-filter-selectbox {
+  flex: 1 1 160px;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.tier-filter-selectbox label {
+  font-size: var(--fs-caption);
+  font-weight: 800;
+  color: var(--text3);
+  padding-left: 2px;
+}
+.tier-filter-selectbox select { width: 100%; }
+
+.tier-filter-sub {
+  font-size: var(--fs-caption);
+  font-weight: 900;
+  color: var(--gray-l);
+  letter-spacing: .2px;
+  margin: 10px 0 6px;
+}
+.tier-filter-sub:first-of-type { margin-top: 0; }
+
+.tier-filter-chiprow { margin-bottom: 2px; }
+
+.tier-filter-option-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tier-toggle-pill {
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border2);
+  background: linear-gradient(180deg, #fff, #f8fafc);
+  color: var(--text3);
+  font-size: var(--fs-caption);
+  font-weight: 800;
+  cursor: pointer;
+  transition: var(--tr);
+  min-height: 32px;
+}
+.tier-toggle-pill:hover { border-color: var(--uifx-accent); color: var(--uifx-accent); background: var(--blue-l); }
+.tier-toggle-pill.on {
+  background: linear-gradient(135deg, #0f172a, #1d4ed8 58%, #3b82f6);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 16px #2563eb40;
+}
+body.dark .tier-toggle-pill {
+  background: linear-gradient(180deg, #1e293b, #162032);
+  border-color: #3a4f6a;
+  color: #94a3b8;
+}
+body.dark .tier-toggle-pill.on {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb, #3b82f6);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* 유형 필터 세부 (프리셋/선택칩/그룹 그리드) */
+.tier-type-preset-row,
+.tier-type-selected {
+  display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0;
+}
+.tier-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.tier-type-group {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+body.dark .tier-type-group { background: #162032; border-color: #2d3f55; }
+.tier-type-group-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.tier-type-group-title { font-size: var(--fs-caption); font-weight: 900; color: var(--text2); }
+.tier-type-group-count {
+  font-size: 10px; font-weight: 800; color: var(--gray-l);
+  background: #94a3b81a; border-radius: 999px; padding: 1px 8px;
+}
+
+.tier-chip-soft {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 6px 4px 12px;
+  border-radius: 999px;
+  background: var(--blue-l);
+  border: 1px solid rgba(37,99,235,.22);
+  color: var(--blue);
+  font-size: var(--fs-caption);
+  font-weight: 800;
+}
+.tier-chip-soft button {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: none; background: #2563eb1f; color: var(--blue);
+  cursor: pointer; font-size: 11px; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.tier-chip-soft button:hover { background: #2563eb38; }
+body.dark .tier-chip-soft { background: #1e3a5f; border-color: #60a5fa47; color: #93c5fd; }
+body.dark .tier-chip-soft button { background: #ffffff1a; color: #93c5fd; }
+
+@media (max-width: 768px) {
+  .tier-filter-block { padding: 10px 12px 12px; border-radius: 12px; }
+  .tier-toolbar-card { padding: 10px; }
+}
