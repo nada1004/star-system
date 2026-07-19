@@ -2155,7 +2155,10 @@ try{window.statsSub=window.statsSub||"overview"}catch(e){}
 /* settings-render-reccard.js */
 window.renderCfgRecCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,_i,_j,_k;const localStorage=(function(){try{const ls=window.localStorage,k="__su_ls_test__";return ls.setItem(k,"1"),ls.removeItem(k),ls}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),_rcOn=((_a=localStorage.getItem("su_rc_theme_on"))!=null?_a:"1")==="1",_rcAccent=(_b=localStorage.getItem("su_rc_accent_mode"))!=null?_b:"none",_rcBg=parseInt((_c=localStorage.getItem("su_rc_bg_alpha"))!=null?_c:"12",10)||12,_rcHd=parseInt((_d=localStorage.getItem("su_rc_hd_alpha"))!=null?_d:"14",10)||14,_rcIc=parseInt((_e=localStorage.getItem("su_rc_uicon"))!=null?_e:"24",10)||24,_rcUnivFont=parseInt((_f=localStorage.getItem("su_rc_univ_font_pct"))!=null?_f:"110",10)||110,_ymScale=parseInt((_g=localStorage.getItem("su_ym_scale_pct"))!=null?_g:"100",10)||100,_rcMemoOn=((_h=localStorage.getItem("su_rc_memo_on"))!=null?_h:"0")==="1",_avaScale=Math.round((parseFloat((_i=localStorage.getItem("su_avatar_scale"))!=null?_i:"1")||1)*100),_sfxOn=(localStorage.getItem("su_rec_side_fx_on")||"1")!=="0",_sfxMode=localStorage.getItem("su_rec_side_fx_mode")||"soft",_sfxInt=Math.max(20,Math.min(100,parseInt(localStorage.getItem("su_rec_side_fx_intensity")||"68",10)||68)),_sfxLen=Math.max(4,Math.min(80,parseInt(localStorage.getItem("su_rec_side_fx_length")||"25",10)||25)),_sfxTail=Math.max(0,Math.min(140,parseInt(localStorage.getItem("su_rec_side_fx_tail")||"28",10)||28)),_sfxSoft=Math.max(0,Math.min(100,parseInt(localStorage.getItem("su_rec_side_fx_softness")||"52",10)||52)),_sfxEdge=Math.max(2,Math.min(24,parseInt(localStorage.getItem("su_rec_side_fx_edge")||"8",10)||8)),_rcIcScopeOff=((_j=localStorage.getItem("su_rc_uicon_scope_off"))!=null?_j:"0")==="1",_rcIcScope=Math.max(12,Math.min(34,parseInt((_k=localStorage.getItem("su_rc_uicon_scope_size"))!=null?_k:String(_rcIc),10)||_rcIc));return _scfgD("reccard","\u{1F9FE} \uAE30\uB85D \uCE74\uB4DC(\uAE30\uB85D\uD0ED) \uC2A4\uD0C0\uC77C")+`
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">\uAC1C\uC778\uC804/\uB05D\uC7A5\uC804/\uBBF8\uB2C8/\uD504\uB85C\uB9AC\uADF8/\uB300\uD68C \uAE30\uB85D \uBAA9\uB85D\uC5D0 \uC4F0\uC774\uB294 \u201C\uAE30\uB85D \uCE74\uB4DC\u201D \uC2A4\uD0C0\uC77C\uC785\uB2C8\uB2E4. (\uB300\uD68C\uD0ED \uC870\uBCC4\uB9AC\uADF8 \uC77C\uC815 \uCE74\uB4DC\uB294 \uBCC4\uB3C4 \uC124\uC815)</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+      <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F3A8} \uAE30\uBCF8 \uC0C9\uC0C1/\uD14C\uB9C8</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2)">
         <input type="checkbox" id="cfg-rc-theme-on" style="width:15px;height:15px" ${_rcOn?"checked":""} onchange="cfgSetRecCardSettings()">
         \uC2B9\uB9AC \uB300\uD559\uC0C9\uC744 \uCE74\uB4DC \uBC30\uACBD/\uD5E4\uB354\uC5D0 \uC5F0\uD558\uAC8C \uC801\uC6A9
@@ -2176,7 +2179,12 @@ window.renderCfgRecCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,_i,_
         </select>
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">\u203B \uCCB4\uD06C\uB97C \uB044\uBA74 \uBB34\uC870\uAC74 \uBB34\uC0C9</span>
       </div>
+        </div>
+      </details>
 
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F0CF} \uCE74\uB4DC \uBAA8\uC591</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">\uCE74\uB4DC \uBAA8\uC591</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
@@ -2191,7 +2199,12 @@ window.renderCfgRecCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,_i,_
         </div>
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">\uCE74\uB4DC \uB808\uC774\uC544\uC6C3/\uBAA8\uC591\uC744 \uBCC0\uACBD\uD569\uB2C8\uB2E4</span>
       </div>
+        </div>
+      </details>
 
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F4D0} \uBC30\uCE58 \xB7 \uD06C\uAE30 \xB7 \uC0C9\uC0C1</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">\uC2A4\uCF54\uC5B4/\uC88C\uC6B0 \uBC30\uCE58(PC)</div>
         <select id="cfg-rc-vs-align" onchange="cfgSetRecCardSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900">
@@ -2361,7 +2374,12 @@ window.renderCfgRecCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,_i,_
         \uAE30\uB85D \uCE74\uB4DC\uC5D0\uC11C \uBA54\uBAA8 \uC785\uB825 \uAE30\uB2A5 \uC0AC\uC6A9(\uAD00\uB9AC\uC790)
       </label>
       <div style="font-size:var(--fs-caption);color:var(--gray-l)">\u203B \uBA54\uBAA8\uAC00 \uC774\uBBF8 \uC800\uC7A5\uB41C \uACBD\uC6B0\uB294 \uD56D\uC0C1 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uC774 \uC635\uC158\uC740 \u201C\uC785\uB825\uCE78\u201D\uB9CC \uCF1C\uACE0 \uB055\uB2C8\uB2E4.</div>
-      
+        </div>
+      </details>
+
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F5BC}\uFE0F \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:10px">\u{1F5BC}\uFE0F \uAE30\uB85D \uCE74\uB4DC \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 \uC124\uC815</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">
@@ -2381,7 +2399,12 @@ window.renderCfgRecCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,_i,_
         </div>
         <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">\u203B \uC804\uC5ED \uBC30\uC728(\uC704 \uC2AC\uB77C\uC774\uB354)\uACFC \uBCC4\uAC1C\uB85C \uAE30\uB85D \uCE74\uB4DC\uB9CC \uB530\uB85C \uC124\uC815\uB429\uB2C8\uB2E4.</div>
       </div>
+        </div>
+      </details>
 
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F464} \uC591\uCABD \uB05D \uCC38\uAC00\uC790 \uD328\uB110</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
           <span style="font-size:var(--fs-sm);font-weight:900;color:var(--text2)">\u{1F464} \uAE30\uB85D \uCE74\uB4DC \uC591\uCABD \uB05D \uCC38\uC5EC\uC790 \uD504\uB85C\uD544</span>
@@ -2553,7 +2576,12 @@ window.renderCfgRecCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,_i,_
           </select>
         </div>
       </div>
+        </div>
+      </details>
 
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u2728 \uC591\uCABD \uB05D \uC0C9\uC0C1 \uD6A8\uACFC</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:10px">\u{1F3A8} \uAE30\uB85D \uCE74\uB4DC \uC591\uCABD \uB05D \uC0C9\uC0C1 \uD6A8\uACFC</div>
         <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">\uAE30\uB85D \uCE74\uB4DC \uC88C\uC6B0 \uB05D\uC5D0 A\xB7B\uD300 \uB300\uD559 \uC0C9\uC0C1 \uADF8\uB77C\uB514\uC5B8\uD2B8\uB97C \uD45C\uC2DC\uD569\uB2C8\uB2E4. \uB300\uC804\uAE30\uB85D\uD0ED\xB7\uB300\uD68C\uD0ED(\uC870\uBCC4\uB9AC\uADF8 \uC77C\uC815\xB7\uB300\uC9C4\uD45C \uAE30\uB85D\xB7\uD504\uB85C\uB9AC\uADF8 \uC870\uBCC4\uB9AC\uADF8\xB7\uB300\uC9C4\uD45C) \uAE30\uB85D \uCE74\uB4DC \uC804\uCCB4\uC5D0 \uC801\uC6A9\uB429\uB2C8\uB2E4.</div>
@@ -2638,7 +2666,12 @@ window.renderCfgRecCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,_i,_
         </div>
       </div>
       ${typeof window.buildSettingsTeamColorBlock=="function"?window.buildSettingsTeamColorBlock():""}
+        </div>
+      </details>
 
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F4C4} \uD398\uC774\uC9C0\uB2F9 \uD45C\uC2DC \uAC1C\uC218</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
         <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:6px">\u{1F4C4} \uACBD\uAE30 \uAE30\uB85D \uD398\uC774\uC9C0 \uD06C\uAE30 (\uD55C \uD398\uC774\uC9C0\uC5D0 \uD45C\uC2DC\uD560 \uAE30\uB85D \uC218)</div>
         <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">
@@ -2667,13 +2700,18 @@ window.renderCfgRecCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,_i,_
           </div>
         </div>
       </div>
+        </div>
+      </details>
     </div>
   </details>`};
 
 /* settings-render-tourneycard.js */
 window.renderCfgTourneyCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,_i;const localStorage=(function(){try{const ls=window.localStorage,k="__su_ls_test__";return ls.setItem(k,"1"),ls.removeItem(k),ls}catch(e){return{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}}})(),_tcOn=((_a=localStorage.getItem("su_tc_theme_on"))!=null?_a:"0")==="1",_tcAccent=(_b=localStorage.getItem("su_tc_accent_mode"))!=null?_b:"none",_tcHd=parseInt((_c=localStorage.getItem("su_tc_hd_alpha"))!=null?_c:"12",10)||12,_tcBw=parseInt((_d=localStorage.getItem("su_tc_border_w"))!=null?_d:"4",10)||4,_tcIc=parseInt((_e=localStorage.getItem("su_tc_uicon"))!=null?_e:"34",10)||34,_tcLw=parseInt((_f=localStorage.getItem("su_tc_line_w"))!=null?_f:"2",10)||2,_tcLa=parseInt((_g=localStorage.getItem("su_tc_line_a"))!=null?_g:"70",10)||70,_tcPreset=(_h=localStorage.getItem("su_tc_preset"))!=null?_h:"\uAE30\uBCF8",_dateMenuStyle=(_i=localStorage.getItem("su_date_menu_style"))!=null?_i:"pill";return _scfgD("tourneycard","\u{1F3C6} \uB300\uD68C \uCE74\uB4DC(\uB300\uD68C\uD0ED) \uC2A4\uD0C0\uC77C")+`
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">\uB300\uD68C\uD0ED \u201C\uC870\uBCC4\uB9AC\uADF8 \uC77C\uC815/\uB300\uC9C4\uD45C\u201D \uCE74\uB4DC \uC2A4\uD0C0\uC77C\uC785\uB2C8\uB2E4. \uAE30\uB85D\uD0ED \uCE74\uB4DC\uC640 <b>\uBCC4\uB3C4</b>\uB85C \uC124\uC815\uB429\uB2C8\uB2E4.</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+      <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u2699\uFE0F \uAE30\uBCF8 \uC124\uC815</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2)">
         <input type="checkbox" id="cfg-tc-theme-on" style="width:15px;height:15px" ${_tcOn?"checked":""} onchange="cfgSetTourneyCardSettings()">
         \uB300\uD68C \uCE74\uB4DC \uB514\uC790\uC778 \uBAA8\uB4DC \uC0AC\uC6A9
@@ -2706,6 +2744,12 @@ window.renderCfgTourneyCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,
           <option value="border" ${_tcAccent==="border"?"selected":""}>\uD14C\uB450\uB9AC \uD3EC\uC778\uD2B8</option>
         </select>
       </div>
+        </div>
+      </details>
+
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F3A8} \uC0C9\uC0C1 \xB7 \uB450\uAED8</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
         <div>
           <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800;margin-bottom:4px">\uC0C1\uB2E8 \uBC14 \uC0C9\uC0C1 \uAC15\uB3C4</div>
@@ -2723,7 +2767,12 @@ window.renderCfgTourneyCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,
         <input type="range" id="cfg-tc-uicon" min="24" max="48" step="2" value="${Math.max(24,Math.min(48,_tcIc))}" oninput="document.getElementById('cfg-tc-ic-v').textContent=this.value+'px'" onchange="cfgSetTourneyCardSettings()" style="width:100%">
         <div style="font-size:var(--fs-caption);color:var(--gray-l)"><span id="cfg-tc-ic-v">${Math.max(24,Math.min(48,_tcIc))}px</span></div>
       </div>
+        </div>
+      </details>
 
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F4D0} \uD06C\uAE30 \xB7 \uAC04\uACA9</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">\uB300\uD559 \uBC84\uD2BC \uD06C\uAE30(\uB300\uD68C\uD0ED)</div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -2817,6 +2866,12 @@ window.renderCfgTourneyCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">\u203B \uB300\uD68C\uD0ED \uC870\uBCC4\uB9AC\uADF8/\uD1A0\uB108 \uAE30\uB85D\uCE74\uB4DC \uC2A4\uCF54\uC5B4 \uD06C\uAE30</span>
       </div>
 
+        </div>
+      </details>
+
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F517} \uBE0C\uB77C\uCF13 \uC5F0\uACB0\uC120 \xB7 \uB300\uD559-\uC2A4\uCF54\uC5B4 \uAC04\uACA9</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <div style="font-size:var(--fs-caption);color:var(--text3);font-weight:800">\uB300\uD559 \u2194 \uC2A4\uCF54\uC5B4 \uAC04\uACA9(\uB300\uD68C\uD0ED)</div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -2847,6 +2902,8 @@ window.renderCfgTourneyCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,
           <div style="font-size:var(--fs-caption);color:var(--gray-l)"><span id="cfg-tc-la-v">${Math.max(25,Math.min(100,_tcLa))}%</span></div>
         </div>
       </div>
+        </div>
+      </details>
     </div>
   </details>`+(()=>{const pc=parseInt(localStorage.getItem("su_h2h_panel_pc")||"150",10)||150,mb=parseInt(localStorage.getItem("su_h2h_panel_mb")||"126",10)||126,fit=localStorage.getItem("su_h2h_panel_fit")||"cover",gpc=parseInt(localStorage.getItem("su_h2h_score_gap_pc")||"10",10)||10,gmb=parseInt(localStorage.getItem("su_h2h_score_gap_mb")||"8",10)||8,spc=parseInt(localStorage.getItem("su_h2h_score_pad_pc")||"10",10)||10,smb=parseInt(localStorage.getItem("su_h2h_score_pad_mb")||"6",10)||6;return _scfgD("h2hpanel","\u{1F3AE} \uAC1C\uC778\uC804/\uB05D\uC7A5\uC804(\uD504\uB85C\uB9AC\uADF8 \uB05D\uC7A5\uC804) \uCE74\uB4DC")+`
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">\uB300\uC804\uAE30\uB85D \uD0ED\uC758 \uAC1C\uC778\uC804/\uB05D\uC7A5\uC804/\uD504\uB85C\uB9AC\uADF8 \uB05D\uC7A5\uC804 \uCE74\uB4DC\uC5D0\uC11C \uC120\uC218 \uD328\uB110(\uD504\uB85C\uD544 \uBC30\uACBD \uCE74\uB4DC) \uD06C\uAE30\uC640 \uC774\uBBF8\uC9C0 \uB9DE\uCDA4\uC744 \uC124\uC815\uD569\uB2C8\uB2E4.</div>
@@ -2868,7 +2925,10 @@ window.renderCfgTourneyCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,
       <div style="margin-top:10px;font-size:var(--fs-caption);color:var(--gray-l)">\u203B \uD328\uB110\uD615\xB7\uBC30\uB108\uD615\xB7\uC0AC\uC9C4\uC804\uCCB4 \uBAA8\uB4DC\uB294 \uC544\uB798 \uC774\uBBF8\uC9C0 \uC124\uC815\uC774 \uD568\uAED8 \uC801\uC6A9\uB429\uB2C8\uB2E4.</div>
     </div>
 
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+      <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F4D0} \uD328\uB110 \uD06C\uAE30 \xB7 \uAC04\uACA9 \xB7 \uC774\uBBF8\uC9C0 \uB9DE\uCDA4</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);min-width:90px">\uC774\uBBF8\uC9C0 \uB9DE\uCDA4</div>
         <select id="cfg-h2h-panel-fit" onchange="cfgSetH2HPanelSettings()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:var(--fs-sm);font-weight:900">
@@ -2944,8 +3004,12 @@ window.renderCfgTourneyCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,
         <div id="cfg-h2h-h-mb-v" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">${(()=>{try{return Math.max(10,Math.min(300,parseInt(localStorage.getItem("su_h2h_panel_hmul_mb")||"100",10)||100))}catch(e){return 100}})()}%</div>
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6">\u203B \uAC12 \uBCC0\uACBD \uD6C4 \uC790\uB3D9\uC73C\uB85C \uC7AC\uB80C\uB354\uB9C1\uB429\uB2C8\uB2E4.</div>
+        </div>
+      </details>
 
-      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+      <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F4CD} \uC2A4\uD2B8\uB9AC\uBA38\uBCC4 \uC5BC\uAD74 \uC704\uCE58 \uBCF4\uC815</summary>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2)">\uC2A4\uD2B8\uB9AC\uBA38\uBCC4 \uC5BC\uAD74 \uC704\uCE58 \uBCF4\uC815(\uCC44\uC6B0\uAE30/\uB298\uB9AC\uAE30 \uBAA8\uB4DC\uC5D0\uC11C)</div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);line-height:1.6">
         \uCC44\uC6B0\uAE30(cover)\uC5D0\uC11C \uC5BC\uAD74\uC774 \uC798\uB9AC\uB294 \uACBD\uC6B0, \uC2A4\uD2B8\uB9AC\uBA38\uBCC4\uB85C \uBC30\uACBD \uC704\uCE58(\uAC00\uB85C/\uC138\uB85C %)\uB97C \uC800\uC7A5\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.
@@ -2968,6 +3032,8 @@ window.renderCfgTourneyCardSection=function(_scfgD){var _a,_b,_c,_d,_e,_f,_g,_h,
           oninput="document.getElementById('cfg-h2h-bgpos-yv').textContent=this.value+'%'" style="width:100%">
         <div id="cfg-h2h-bgpos-yv" style="font-size:var(--fs-caption);color:var(--gray-l);font-weight:900;text-align:right">50%</div>
       </div>
+        </div>
+      </details>
     </div>
   </details>`})()+(()=>{const pc=parseInt(localStorage.getItem("su_procomp_avatar_pc")||"52",10)||52,mb=parseInt(localStorage.getItem("su_procomp_avatar_mb")||"40",10)||40,fit=localStorage.getItem("su_procomp_avatar_fit")||"cover",spc=parseInt(localStorage.getItem("su_procomp_score_scale_pc")||"100",10)||100,smb=parseInt(localStorage.getItem("su_procomp_score_scale_mb")||"100",10)||100,lpc=parseInt(localStorage.getItem("su_procomp_layout_scale_pc")||"100",10)||100,lmb=parseInt(localStorage.getItem("su_procomp_layout_scale_mb")||"100",10)||100;return _scfgD("procompcard","\u2B50 \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uCE74\uB4DC(\uD504\uB85C\uB9AC\uADF8\uD0ED)")+`
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">\uD504\uB85C\uB9AC\uADF8\uD0ED \u2192 \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \u2192 \uC870\uBCC4\uB9AC\uADF8/\uB300\uC9C4\uD45C \uAE30\uB85D \uCE74\uB4DC\uC5D0\uC11C \uC120\uC218(\uC2A4\uD2B8\uB9AC\uBA38) \uD504\uB85C\uD544 \uD06C\uAE30\uB97C \uC870\uC808\uD569\uB2C8\uB2E4.</div>
@@ -3333,18 +3399,10 @@ var __defProp=Object.defineProperty;var __getOwnPropSymbols=Object.getOwnPropert
         <span class="cfg-lock-chip">\u{1F4BE} \uB3D9\uAE30\uD654/\uBC31\uC5C5</span>
       </div>
       <button class="btn btn-b cfg-lock-screen__btn" onclick="om('loginModal')">&#128273; \uB85C\uADF8\uC778</button>
-    </div>`;return}(!window._cfgCat||window._cfgCat==="\uC804\uCCB4")&&(window._cfgCat="\u{1F9E9} \uC6B4\uC601/\uCF58\uD150\uCE20");const _catSecs=window._catSecs||{},_cfgCats=window._cfgCatOrder&&Array.isArray(window._cfgCatOrder)?window._cfgCatOrder:Object.keys(_catSecs||{}),_cfgCatIcons={"\u{1F9E9} \uC6B4\uC601/\uCF58\uD150\uCE20":"\u{1F9E9}","\u{1F5BC}\uFE0F \uC2A4\uD2B8\uB9AC\uBA38/\uD504\uB85C\uD544":"\u{1F5BC}\uFE0F","\u{1F9FE} \uCE74\uB4DC/\uAE30\uB85D":"\u{1F9FE}","\u{1F3A8} UI/\uD14C\uB9C8":"\u{1F3A8}","\u{1F9E0} \uC790\uB3D9\uD654/\uB3C4\uAD6C":"\u{1F9E0}","\u{1F9E9} \uD604\uD669\uD310/\uD3A8\uCF54":"\u{1F9E9}","\u{1F4BE} \uB370\uC774\uD130":"\u{1F4BE}","\u{1F9EA} \uC810\uAC80/\uACE0\uAE09":"\u{1F9EA}",\uAE30\uD0C0:"\u{1F5C2}\uFE0F"},_catLabel=c=>String(c||"").replace(/^[\u{1F300}-\u{1FAFF}\u2600-\u27BF]+\s*/u,""),_cfgCatDesc={"\u{1F9E9} \uC6B4\uC601/\uCF58\uD150\uCE20":"\uACF5\uC9C0/\uD2F0\uC5B4/\uC2DC\uC98C/\uB300\uD559/\uB9F5/\uC790\uB3D9\uC778\uC2DD","\u{1F5BC}\uFE0F \uC2A4\uD2B8\uB9AC\uBA38/\uD504\uB85C\uD544":"\uC774\uBBF8\uC9C0\uD0ED/\uC2A4\uD2B8\uB9AC\uBA38 \uC0C1\uC138/\uB300\uD559 \uC0C1\uC138(\uD31D\uC5C5)/\uACBD\uAE30 \uC0C1\uC138(\uD31D\uC5C5)/\uC0C1\uD0DC\uC544\uC774\uCF58","\u{1F9FE} \uCE74\uB4DC/\uAE30\uB85D":"\uAE30\uB85D\uCE74\uB4DC/\uB300\uD68C\uCE74\uB4DC/\uD504\uB85C\uB9AC\uADF8/\uAC1C\uC778\xB7\uB05D\uC7A5\uC804","\u{1F3A8} UI/\uD14C\uB9C8":"\uD0ED/\uBC84\uD2BC/\uD544\uD130/\uD3F0\uD2B8/\uBAA8\uBC14\uC77C\uD06C\uAE30/\uD14C\uB9C8","\u{1F9E0} \uC790\uB3D9\uD654/\uB3C4\uAD6C":"\uBC30\uACBD\uC74C\uC545(BGM)/SOOP \uBA40\uD2F0\uBDF0/\uBD99\uC5EC\uB123\uAE30 \uBD84\uB9AC/FAB","\u{1F9E9} \uD604\uD669\uD310/\uD3A8\uCF54":"\uD604\uD669\uD310/\uD3A8\uCF54\uC2A4\uD0C0\uC77C/\uC21C\uC11C/\uCE69/\uBC1D\uAE30/\uBC30\uACBD","\u{1F4BE} \uB370\uC774\uD130":"\uB3D9\uAE30\uD654/\uBC31\uC5C5/\uC77C\uAD04 \uC791\uC5C5","\u{1F9EA} \uC810\uAC80/\uACE0\uAE09":"\uBA54\uB274\uC815\uB9AC/\uC124\uC815 \uC810\uAC80"},_cfgSecTitle={notice:"\u{1F4E2} \uACF5\uC9C0",tier:"\u{1F3AF} \uD2F0\uC5B4/\uC810\uC218",season:"\u{1F5D3}\uFE0F \uC2DC\uC98C",teammatch:"\u{1F3DF}\uFE0F \uD300\uACBD\uAE30",acct:"\u{1F510} \uACC4\uC815",univ:"\u{1F3DB}\uFE0F \uB300\uD559",maps:"\u{1F5FA}\uFE0F \uB9F5",mAlias:"\u{1F524} \uB9F5 \uC57D\uC790",si:"\u{1F3AD} \uC0C1\uD0DC \uC544\uC774\uCF58 (\uBAA9\uB85D/\uCD94\uAC00)",paste:"\u{1F916} \uC790\uB3D9\uC778\uC2DD",b2layout:"\u{1F4D0} \uC774\uBBF8\uC9C0\uD0ED \uB808\uC774\uC544\uC6C3",imgsettings:"\u{1F5BC}\uFE0F \uC774\uBBF8\uC9C0\uD0ED \uC774\uBBF8\uC9C0",imgmodalsettings:"\u{1F5BC}\uFE0F \uC2A4\uD2B8\uB9AC\uBA38 \uC0C1\uC138 \uC774\uBBF8\uC9C0",profileshape:"\u{1F5BC}\uFE0F \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 \uBAA8\uC591",pdModeBadge:"\u{1F3A8} \uCD5C\uADFC \uACBD\uAE30 \uC885\uBAA9 \uBC30\uC9C0 \uC0C9\uC0C1",pd:"\u{1F3A8} \uC2A4\uD2B8\uB9AC\uBA38 \uC0C1\uC138 \uC2A4\uD0C0\uC77C",matchdetail:"\u{1F3AE} \uACBD\uAE30 \uC0C1\uC138(\uD31D\uC5C5)",ud:"\u{1F3EB} \uB300\uD559 \uC0C1\uC138(\uD31D\uC5C5) \uB514\uC790\uC778",streamerheader:"\u{1F393} \uC2A4\uD2B8\uB9AC\uBA38\uD0ED \uB300\uD559 \uD5E4\uB354",univlogoimg:"\u{1F3EB} \uB300\uD559 \uB85C\uACE0 \uC774\uBBF8\uC9C0(URL)",b2femco:"\u{1F9E9} \uD3A8\uCF54\uC2A4\uD0C0\uC77C",femcoorder:"\u{1F500} \uD3A8\uCF54\uC2A4\uD0C0\uC77C \uC2A4\uD0C0\uB300\uD559 \uC21C\uC11C",boardchip:"\u{1F3F7}\uFE0F \uD604\uD669\uD310 \uCE69/\uB300\uD559\uB85C\uACE0",oldbright:"\u{1F3A8} \uAD6C\uD604\uD669\uD310 \uBC1D\uAE30",boardbg:"\u{1F9F1} \uD604\uD669\uD310 \uBC30\uACBD",briefingfx:"\u{1F39E}\uFE0F \uBE0C\uB9AC\uD551 \uB514\uC790\uC778 & \uD6A8\uACFC",tablabels:"\u{1F3F7}\uFE0F \uD0ED \uC774\uB984(\uB77C\uBCA8) \uC124\uC815",uisize:"\u{1F4F1} \uBAA8\uBC14\uC77C/\uD0DC\uBE14\uB9BF UI \uD06C\uAE30",cardgap:"\u{1F9E9} \uCE74\uB4DC \uAC04\uACA9(\uC2A4\uD2B8\uB9AC\uBA38/\uD2F0\uC5B4)",siAssign:"\u{1F3AD} \uC2A4\uD2B8\uB9AC\uBA38\uBCC4 \uC0C1\uD0DC \uC544\uC774\uCF58 \uC9C0\uC815",cfgmenu:"\u{1F9ED} \uC124\uC815 \uBA54\uB274 \uC815\uB9AC",autofitall:"\u{1F4F1} \uC804\uC5ED \uC790\uB3D9 \uB9DE\uCDA4",reccard:"\u{1F9FE} \uAE30\uB85D \uCE74\uB4DC",tourneycard:"\u{1F3C6} \uB300\uD68C \uCE74\uB4DC",h2hpanel:"\u{1F3AE} \uAC1C\uC778\uC804/\uB05D\uC7A5\uC804(\uD504\uB85C\uB9AC\uADF8 \uB05D\uC7A5\uC804) \uCE74\uB4DC",minicard:"\u26A1 \uBBF8\uB2C8\uB300\uC804/\uC2DC\uBE4C\uC6CC \uAE30\uB85D \uCE74\uB4DC",civilcard:"\u2694\uFE0F \uC2DC\uBE4C\uC6CC \uAE30\uB85D \uCE74\uB4DC",univckcard:"\u{1F91D} \uB300\uD559CK \uAE30\uB85D \uCE74\uB4DC",univmcard:"\u{1F3DF}\uFE0F \uB300\uD559\uB300\uC804 \uAE30\uB85D \uCE74\uB4DC",tiertourcard:"\u{1F3AF} \uD2F0\uC5B4\uB300\uD68C \uC77C\uBC18 \uAE30\uB85D \uCE74\uB4DC",tiertourleaguecard:"\u{1F3AF} \uD2F0\uC5B4\uB300\uD68C \uC870\uBCC4\uB9AC\uADF8 \uAE30\uB85D",tiertourbrackcard:"\u{1F3AF} \uD2F0\uC5B4\uB300\uD68C \uB300\uC9C4\uD45C \uAE30\uB85D",procompleaguecard:"\u{1F3C6} \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uC870\uBCC4\uB9AC\uADF8",procompteamcard:"\u{1F3C6} \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uD300\uC804 \uCE74\uB4DC",procompgjcard:"\u{1F3C6} \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uC911\uC7A5\uC804 \uCE74\uB4DC",procompcard:"\u2B50 \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uCE74\uB4DC",sharecard:"\u{1FAAA} \uACF5\uC720\uCE74\uB4DC \uB514\uC790\uC778",calui:"\u{1F4C5} \uCE98\uB9B0\uB354",appfont:"\u{1F170}\uFE0F \uC804\uC5ED \uD3F0\uD2B8","tierrank-view":"\u{1F4CA} \uD2F0\uC5B4 \uC21C\uC704\uD45C \uBCF4\uAE30 \uBC29\uC2DD","streamer-view":"\u{1F3AC} \uC2A4\uD2B8\uB9AC\uBA38\uD0ED \uAE30\uBCF8 \uBDF0","streamer-tab-style":"\u{1F3AC} \uC2A4\uD2B8\uB9AC\uBA38\uD0ED \uB514\uC790\uC778/\uB808\uC774\uC544\uC6C3",bgm:"\u{1F3B5} \uC720\uD29C\uBE0C \uBC30\uACBD\uC74C\uC545(BGM)",soopmv:"\u{1F4FA} SOOP(\uC232) \uBA40\uD2F0\uBDF0",pasteRoute:"\u{1F9E0} \uBD99\uC5EC\uB123\uAE30 \uC790\uB3D9 \uBD84\uB9AC",designv2:"\u2728 \uB514\uC790\uC778 \uBAA8\uB4DC",hdr:"\u{1F9E9} \uD5E4\uB354 \uC0C1\uB2E8\uBC14",fab:"\u{1F4F1} \uD50C\uB85C\uD305(FAB)",storage:"\u{1F4BE} \uC800\uC7A5\uC18C",datacheck:"\u{1F9FE} \uB370\uC774\uD130 \uAC80\uC218",selfcheck:"\u{1F9EA} \uC124\uC815 \uC810\uAC80",sync:"\u{1F504} \uB3D9\uAE30\uD654",firebase:"\u2601\uFE0F GitHub(\uAE43\uD5C8\uBE0C) \uB3D9\uAE30\uD654",aibot:"\u{1F916} AI\uBD07(Groq) \uC11C\uBC84 \uC124\uC815",bulkdate:"\u{1F4C5} \uC77C\uAD04 \uB0A0\uC9DC",bulkmap:"\u{1F5FA}\uFE0F \uC77C\uAD04 \uB9F5",bulktier:"\u{1F3AF} \uC77C\uAD04 \uD2F0\uC5B4",bulkdel:"\u{1F5D1}\uFE0F \uC77C\uAD04 \uC0AD\uC81C",bulkconv:"\u{1F9FE} \uBCC0\uD658"};try{const _ren=_cfgMenuLoadRenames();for(const k in _ren||{})_ren[k]&&(_cfgSecTitle[k]=String(_ren[k]))}catch(e){}const typeOpts=[{v:"\u{1F4E2}",l:"\u{1F4E2} \uC77C\uBC18 \uACF5\uC9C0"},{v:"\u{1F525}",l:"\u{1F525} \uC911\uC694"},{v:"\u26A0\uFE0F",l:"\u26A0\uFE0F \uACBD\uACE0/\uC8FC\uC758"},{v:"\u{1F389}",l:"\u{1F389} \uC774\uBCA4\uD2B8"}],_curSecs=_catSecs[window._cfgCat]||[];window._cfgSecTitle=_cfgSecTitle;const _regBtn=isSubAdmin?"":'<button class="btn btn-b no-export" onclick="openB2PlayerCreateModal()" style="padding:6px 10px;border-radius:14px;font-size:var(--fs-caption);font-weight:900;white-space:nowrap;flex-shrink:0">\u{1F3AC} \uC2A4\uD2B8\uB9AC\uBA38 \uB4F1\uB85D</button>',_menuBtn=`<button class="btn btn-w no-export" onclick="cfgGo('cfgmenu')" style="padding:6px 10px;border-radius:14px;font-size:var(--fs-caption);font-weight:900;white-space:nowrap;flex-shrink:0" title="\uC124\uC815 \uD558\uC704 \uBA54\uB274 \uC774\uB984 \uBCC0\uACBD/\uC815\uB9AC">\u{1F9ED} \uBA54\uB274\uC815\uB9AC</button>`,_afOn=localStorage.getItem("su_af_alltabs_v1")==="1",_rcOn=((_a=localStorage.getItem("su_rc_theme_on"))!=null?_a:"1")==="1",_rcAccent=(_b=localStorage.getItem("su_rc_accent_mode"))!=null?_b:"none",_rcBg=parseInt((_c=localStorage.getItem("su_rc_bg_alpha"))!=null?_c:"12",10)||12,_rcHd=parseInt((_d=localStorage.getItem("su_rc_hd_alpha"))!=null?_d:"14",10)||14,_rcIc=parseInt((_e=localStorage.getItem("su_rc_uicon"))!=null?_e:"24",10)||24,_rcUnivFont=parseInt((_f=localStorage.getItem("su_rc_univ_font_pct"))!=null?_f:"110",10)||110,_ymScale=parseInt((_g=localStorage.getItem("su_ym_scale_pct"))!=null?_g:"100",10)||100,_rcMemoOn=((_h=localStorage.getItem("su_rc_memo_on"))!=null?_h:"0")==="1",_sfxOn=(localStorage.getItem("su_rec_side_fx_on")||"1")!=="0",_sfxMode=localStorage.getItem("su_rec_side_fx_mode")||"soft",_sfxInt=Math.max(20,Math.min(100,parseInt(localStorage.getItem("su_rec_side_fx_intensity")||"68",10)||68)),_sfxLen=Math.max(4,Math.min(80,parseInt(localStorage.getItem("su_rec_side_fx_length")||"25",10)||25)),_sfxTail=Math.max(0,Math.min(140,parseInt(localStorage.getItem("su_rec_side_fx_tail")||"28",10)||28)),_sfxSoft=Math.max(0,Math.min(100,parseInt(localStorage.getItem("su_rec_side_fx_softness")||"52",10)||52)),_sfxEdge=Math.max(2,Math.min(24,parseInt(localStorage.getItem("su_rec_side_fx_edge")||"8",10)||8)),_avaScale=Math.round((parseFloat((_i=localStorage.getItem("su_avatar_scale"))!=null?_i:"1")||1)*100),_mvpFxOn=((_j=localStorage.getItem("su_b2mvp_fx_on"))!=null?_j:"1")==="1",_mvpFxStyle=(()=>{const v=localStorage.getItem("su_b2mvp_fx_style");return["fade","vignette","topbottom","tint","spotlight","noir","diagonal","glass","none"].includes(v)?v:"fade"})(),_mvpFxIntensity=(()=>{const n=parseInt(localStorage.getItem("su_b2mvp_fx_intensity"),10);return Number.isFinite(n)?Math.max(0,Math.min(100,n)):45})(),_mvpDesignMode=(()=>{const v=localStorage.getItem("su_b2mvp_design_mode");return["photo","panel","frame","glasscard","border","ribbon","split","poster"].includes(v)?v:"photo"})(),_briefingTheme=(()=>{const v=localStorage.getItem("su_b2_briefing_theme");return["classic","minimal","vivid","mono","elegant","pastel","luxury","sports","esports","pop","nature","ocean","sunset","neon"].includes(v)?v:"classic"})(),_cfgViewMode=(localStorage.getItem("su_cfg_view_mode")||"basic")==="advanced"?"advanced":"basic",_cfgBottomOpen=(()=>{try{const saved=localStorage.getItem("su_cfg_bottom_open");if(saved==="1"||saved==="0")return saved==="1"}catch(e){}return!1})(),_quickBtns=[{id:"univ",icon:"\u{1F3DB}\uFE0F",title:"\uB300\uD559 \uAD00\uB9AC",desc:"\uCD94\uAC00/\uC218\uC815/\uC0C9\uC0C1/\uC228\uAE40"},{id:"pd",icon:"\u{1F3A8}",title:"\uC2A4\uD2B8\uB9AC\uBA38 \uC0C1\uC138",desc:"\uBC30\uACBD/\uBC30\uC9C0/\uD504\uB85C\uD544"},{id:"matchdetail",icon:"\u{1F3AE}",title:"\uACBD\uAE30 \uC0C1\uC138",desc:"\uD5E4\uB354/\uD504\uB85C\uD544/\uC0C9\uC0C1"},{id:"profileshape",icon:"\u{1F5BC}\uFE0F",title:"\uD504\uB85C\uD544 \uBAA8\uC591",desc:"\uC6D0\uD615/\uB124\uBAA8/\uD6A8\uACFC"},{id:"uisize",icon:"\u{1F4F1}",title:"UI \uD06C\uAE30",desc:"\uBAA8\uBC14\uC77C/\uD0DC\uBE14\uB9BF \uD06C\uAE30"},{id:"tablabels",icon:"\u{1F3F7}\uFE0F",title:"\uD0ED \uC774\uB984",desc:"\uC0C1\uB2E8/\uD558\uC704 \uBA54\uB274\uBA85"},{id:"hdr",icon:"\u{1F9E9}",title:"\uD5E4\uB354 \uBC14",desc:"\uC81C\uBAA9/\uC544\uC774\uCF58/\uBC30\uACBD"},{id:"reccard",icon:"\u{1F9FE}",title:"\uAE30\uB85D \uCE74\uB4DC",desc:"CK/\uD504\uB85C \uBC84\uD2BC\uC0C9 \uD3EC\uD568"},{id:"tierrank-view",icon:"\u{1F4CA}",title:"\uD2F0\uC5B4 \uC21C\uC704\uD45C",desc:"\uD14C\uC774\uBE14/\uCE74\uB4DC/\uD3EC\uB514\uC6C0"},{id:"cfgmenu",icon:"\u{1F9ED}",title:"\uBA54\uB274 \uC815\uB9AC",desc:"\uC790\uC8FC \uC4F0\uB294 \uC124\uC815 \uC815\uB9AC"},{id:"sharecard",icon:"\u{1FAAA}",title:"\uACF5\uC720\uCE74\uB4DC \uB514\uC790\uC778",desc:"\uBAA8\uB4DC/\uC0C9\uC0C1/\uC2B9\uC790\uBC30\uACBD"},{id:"boardchip",icon:"\u{1F3F7}\uFE0F",title:"\uD604\uD669\uD310 \uCE69/\uB85C\uACE0",desc:"\uD504\uB85C\uD544/\uB85C\uACE0/\uCE69 \uD06C\uAE30"},{id:"boardbg",icon:"\u{1F5BC}\uFE0F",title:"\uD604\uD669\uD310 \uBC30\uACBD",desc:"\uC774\uBBF8\uC9C0/\uB77C\uBCA8/\uD45C\uC2DC\uBC29\uC2DD"},{id:"oldbright",icon:"\u2728",title:"\uD604\uD669\uD310 \uBC1D\uAE30",desc:"\uCE74\uB4DC/\uB77C\uBCA8 \uBC1D\uAE30 \uC870\uC808"}],_basicQuickBtns=_quickBtns.slice(0,4),_moreQuickBtns=_quickBtns.slice(4),_catButtons=_cfgCats.map(c=>{const on=window._cfgCat===c,cj=_escJS(c),ca=_escAttr(c);return`<button type="button" onclick="cfgApplyCat('${cj}')" class="no-export cfg-cat-card" data-cat="${ca}" data-cfg-cat="${ca}"
-      style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;border-radius:var(--r2);cursor:pointer;text-align:left;background:${on?"linear-gradient(135deg,var(--blue),#7c3aed)":"var(--white)"};color:${on?"#fff":"var(--text2)"};border:2px solid ${on?"transparent":"var(--border)"};box-shadow:${on?"0 10px 24px rgba(37,99,235,.22)":"0 2px 8px rgba(15,23,42,.05)"};min-height:82px;transition:background .18s,box-shadow .18s,border-color .18s,transform .12s;outline-offset:2px">
-      <span style="font-size:var(--fs-lg);line-height:1">${_cfgCatIcons[c]||"\u{1F5C2}\uFE0F"}</span>
-      <span style="font-size:var(--fs-sm);font-weight:900;line-height:1.3">${_catLabel(c)}</span>
-      <span data-cfg-cat-desc="1" style="font-size:var(--fs-caption);opacity:${on?".92":".65"};font-weight:700;line-height:1.4">${_cfgCatDesc[c]||""}</span>
-    </button>`}).join(""),_cfgSecDescFallback={notice:"\uD31D\uC5C5 \uACF5\uC9C0 \uB4F1\uB85D\uACFC \uB178\uCD9C \uC0C1\uD0DC \uAD00\uB9AC",tier:"\uD2F0\uC5B4 \uC810\uC218 \uAE30\uC900\uACFC \uAD6C\uAC04 \uC870\uC815",season:"\uC2DC\uC98C \uCD94\uAC00, \uC774\uB984 \uBCC0\uACBD, \uAE30\uBCF8 \uC2DC\uC98C \uAD00\uB9AC",teammatch:"\uD300\uC804 \uD3EC\uB9F7\uACFC \uAE30\uBCF8 \uADDC\uCE59 \uC124\uC815",acct:"\uAD00\uB9AC\uC790/\uBD80\uAD00\uB9AC\uC790 \uACC4\uC815\uACFC \uAD8C\uD55C \uAD00\uB9AC",univ:"\uB300\uD559 \uCD94\uAC00, \uC218\uC815, \uC228\uAE40, \uC0C9\uC0C1 \uC815\uB9AC",maps:"\uB9F5 \uBAA9\uB85D \uCD94\uAC00\uC640 \uC774\uB984 \uAD00\uB9AC",mAlias:"\uB9F5 \uC57D\uC790 \uC790\uB3D9\uC778\uC2DD \uADDC\uCE59 \uAD00\uB9AC",si:"\uC0C1\uD0DC \uC544\uC774\uCF58 \uB4F1\uB85D\uACFC \uBAA9\uB85D \uC815\uB9AC",paste:"\uBD99\uC5EC\uB123\uAE30 \uC778\uC2DD \uADDC\uCE59\uACFC \uCD9C\uB825 \uD615\uC2DD \uC124\uC815",b2layout:"\uC774\uBBF8\uC9C0\uD0ED \uC88C\uC6B0 \uBE44\uC728\uACFC \uB192\uC774 \uC870\uC815",imgsettings:"\uC774\uBBF8\uC9C0\uD0ED \uC774\uBBF8\uC9C0 \uD45C\uC2DC \uBC29\uC2DD \uC124\uC815",imgmodalsettings:"\uC2A4\uD2B8\uB9AC\uBA38 \uC0C1\uC138 \uC774\uBBF8\uC9C0 \uD45C\uC2DC \uBC29\uC2DD \uC124\uC815",profileshape:"\uD504\uB85C\uD544 \uC378\uB124\uC77C \uBAA8\uC591\uACFC \uD6A8\uACFC \uC124\uC815",pd:"\uC2A4\uD2B8\uB9AC\uBA38 \uC0C1\uC138 \uCE74\uB4DC \uC0C9\uAC10\uACFC \uBC30\uCE58 \uC870\uC815",matchdetail:"\uACBD\uAE30 \uC0C1\uC138 \uD31D\uC5C5 \uB808\uC774\uC544\uC6C3\uACFC \uC0C9\uAC10 \uC870\uC815",streamerheader:"\uC2A4\uD2B8\uB9AC\uBA38\uD0ED \uC0C1\uB2E8 \uB300\uD559 \uD5E4\uB354 \uAFB8\uBBF8\uAE30","streamer-tab-style":"\uC2A4\uD2B8\uB9AC\uBA38\uD0ED \uCE74\uB4DC/\uD5E4\uB354/\uB808\uC774\uC544\uC6C3 \uBD84\uC704\uAE30 \uC124\uC815",univlogoimg:"\uB300\uD559 \uB85C\uACE0 \uC774\uBBF8\uC9C0 \uB4F1\uB85D\uACFC \uAD00\uB9AC",b2femco:"\uD3A8\uCF54\uC2A4\uD0C0\uC77C \uC0C9\uAC10\uACFC \uCE74\uB4DC \uB514\uC790\uC778 \uC870\uC815",femcoorder:"\uD3A8\uCF54\uC2A4\uD0C0\uC77C \uB300\uD559 \uC21C\uC11C \uC815\uB9AC",boardchip:"\uD604\uD669\uD310 \uCE69, \uB85C\uACE0, \uD504\uB85C\uD544 \uD45C\uC2DC \uC124\uC815",oldbright:"\uD604\uD669\uD310 \uCE74\uB4DC\uC640 \uB77C\uBCA8 \uBC1D\uAE30 \uC870\uC815",boardbg:"\uD604\uD669\uD310 \uBC30\uACBD \uC774\uBBF8\uC9C0\uC640 \uB77C\uBCA8 \uBC30\uACBD \uAD00\uB9AC",briefingfx:"\uBE0C\uB9AC\uD551 \uD0ED \uC804\uCCB4 \uB514\uC790\uC778 \uD14C\uB9C8\uC640 MVP \uCE74\uB4DC \uADF8\uB77C\uB514\uC5B8\uD2B8 \uAC15\uB3C4/\uC2A4\uD0C0\uC77C, \uCE74\uB4DC \uB514\uC790\uC778 \uBAA8\uB4DC \uC124\uC815",tablabels:"\uC0C1\uB2E8\uACFC \uD558\uC704 \uBA54\uB274 \uC774\uB984 \uBCC0\uACBD",uisize:"\uBAA8\uBC14\uC77C/\uD0DC\uBE14\uB9BF \uBC84\uD2BC\uACFC \uAE00\uC790 \uD06C\uAE30 \uC870\uC815",cardgap:"\uC2A4\uD2B8\uB9AC\uBA38/\uD2F0\uC5B4 \uCE74\uB4DC\uD615 \uCE74\uB4DC \uAC04\uACA9 \uC870\uC815",siAssign:"\uC2A4\uD2B8\uB9AC\uBA38\uBCC4 \uC0C1\uD0DC \uC544\uC774\uCF58 \uC9C0\uC815",cfgmenu:"\uC790\uC8FC \uC4F0\uB294 \uC124\uC815 \uBA54\uB274 \uC774\uB984\uACFC \uC21C\uC11C \uC815\uB9AC",autofitall:"\uD654\uBA74 \uD06C\uAE30\uC5D0 \uB9DE\uCD98 \uC790\uB3D9 \uB9DE\uCDA4 \uC124\uC815",reccard:"\uAE30\uB85D\uD0ED \uCE74\uB4DC \uC2A4\uD0C0\uC77C\uACFC \uAC15\uC870 \uBC29\uC2DD \uC124\uC815",tourneycard:"\uB300\uD68C\uD0ED \uCE74\uB4DC \uB514\uC790\uC778 \uC124\uC815",h2hpanel:"\uAC1C\uC778\uC804/\uB05D\uC7A5\uC804 \uCE74\uB4DC \uB808\uC774\uC544\uC6C3 \uC870\uC815",minicard:"\uBBF8\uB2C8\uB300\uC804/\uC2DC\uBE4C\uC6CC \uCE74\uB4DC \uC2A4\uD0C0\uC77C \uC870\uC815",univckcard:"\uB300\uD559CK \uCE74\uB4DC \uB514\uC790\uC778 \uC124\uC815",univmcard:"\uB300\uD559\uB300\uC804 \uCE74\uB4DC \uB514\uC790\uC778 \uC124\uC815",tiertourcard:"\uD2F0\uC5B4\uB300\uD68C \uC77C\uBC18 \uACBD\uAE30 \uCE74\uB4DC \uC2A4\uD0C0\uC77C",tiertourleaguecard:"\uD2F0\uC5B4\uB300\uD68C \uC870\uBCC4\uB9AC\uADF8 \uCE74\uB4DC \uC2A4\uD0C0\uC77C",tiertourbrackcard:"\uD2F0\uC5B4\uB300\uD68C \uB300\uC9C4\uD45C \uCE74\uB4DC \uC2A4\uD0C0\uC77C",procompleaguecard:"\uD504\uB85C\uB9AC\uADF8 \uC870\uBCC4\uB9AC\uADF8 \uCE74\uB4DC \uC2A4\uD0C0\uC77C",procompteamcard:"\uD504\uB85C\uB9AC\uADF8 \uD300\uC804 \uCE74\uB4DC \uC2A4\uD0C0\uC77C",procompgjcard:"\uD504\uB85C\uB9AC\uADF8 \uC911\uC7A5\uC804 \uCE74\uB4DC \uC2A4\uD0C0\uC77C",procompcard:"\uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uBA54\uC778 \uCE74\uB4DC \uC2A4\uD0C0\uC77C",sharecard:"\uACF5\uC720\uCE74\uB4DC \uD15C\uD50C\uB9BF\uACFC \uC0C9\uAC10 \uC870\uC815",calui:"\uCE98\uB9B0\uB354 \uB0A0\uC9DC\uCE78\uACFC \uBC84\uD2BC \uAD6C\uC131 \uC124\uC815",appfont:"\uC571 \uC804\uCCB4 \uD3F0\uD2B8\uC640 \uD06C\uAE30 \uC870\uC815","tierrank-view":"\uD2F0\uC5B4 \uC21C\uC704\uD45C \uBCF4\uAE30 \uBC29\uC2DD \uBCC0\uACBD",bgm:"\uC720\uD29C\uBE0C \uBC30\uACBD\uC74C\uC545 \uD45C\uC2DC\uC640 \uB9C1\uD06C \uC124\uC815",soopmv:"SOOP \uBA40\uD2F0\uBDF0 \uC5F0\uACB0 \uC124\uC815",pasteRoute:"\uBD99\uC5EC\uB123\uAE30 \uACB0\uACFC \uC790\uB3D9 \uBD84\uB9AC \uADDC\uCE59 \uC124\uC815",hdr:"\uC0C1\uB2E8 \uD5E4\uB354 \uC81C\uBAA9, \uBC30\uACBD, \uC544\uC774\uCF58 \uC870\uC815",fab:"\uBAA8\uBC14\uC77C \uD50C\uB85C\uD305 \uBC84\uD2BC \uAD6C\uC131 \uC124\uC815",storage:"\uB85C\uCEEC \uC800\uC7A5 \uC6A9\uB7C9\uACFC \uC0AC\uC6A9 \uD604\uD669 \uD655\uC778",datacheck:"\uC0AC\uC9C4/\uB300\uD559/\uD2F0\uC5B4/\uAE30\uB85D \uB204\uB77D\uACFC \uB0A0\uC9DC \uC774\uC0C1 \uC810\uAC80",selfcheck:"\uC124\uC815 \uB3D9\uC791 \uC774\uC0C1 \uC5EC\uBD80 \uC810\uAC80",sync:"\uC124\uC815 \uBC31\uC5C5, \uB0B4\uBCF4\uB0B4\uAE30, \uAC00\uC838\uC624\uAE30, \uB3D9\uAE30\uD654",firebase:"GitHub/Firebase \uC5F0\uB3D9 \uC124\uC815",aibot:"AI\uBD07 \uC11C\uBC84 \uC8FC\uC18C\uC640 \uD0A4 \uC124\uC815",bulkdate:"\uC5EC\uB7EC \uAE30\uB85D \uB0A0\uC9DC \uC77C\uAD04 \uBCC0\uACBD",bulkmap:"\uB9F5 \uC774\uB984 \uC77C\uAD04 \uCE58\uD658",bulktier:"\uC120\uC218 \uD2F0\uC5B4 \uC77C\uAD04 \uBCC0\uACBD",bulkdel:"\uAE30\uAC04\uBCC4 \uAE30\uB85D \uC77C\uAD04 \uC0AD\uC81C",bulkconv:"\uC138\uD2B8\uC81C \uAE30\uB85D \uD615\uC2DD \uC77C\uAD04 \uBCC0\uD658"},_cfgSecDesc=window._cfgSecDescMap||{},_getCfgSecDesc=id=>_cfgSecDesc[id]||_cfgSecDescFallback[id]||"\uC138\uBD80 \uC124\uC815 \uC5F4\uAE30",_secButtons=_curSecs.map(id=>{var _a2;const title=_cfgSecTitle[id]||id,desc=_getCfgSecDesc(id);return`<button type="button" class="btn btn-w no-export cfg-sec-link" onclick="cfgGo('${id}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;border-radius:14px;text-align:left;background:var(--white);justify-content:flex-start;min-height:86px">
+    </div>`;return}(!window._cfgCat||window._cfgCat==="\uC804\uCCB4")&&(window._cfgCat="\u{1F9E9} \uC6B4\uC601/\uCF58\uD150\uCE20");const _catSecs=window._catSecs||{},_cfgCats=window._cfgCatOrder&&Array.isArray(window._cfgCatOrder)?window._cfgCatOrder:Object.keys(_catSecs||{}),_cfgCatIcons={"\u{1F9E9} \uC6B4\uC601/\uCF58\uD150\uCE20":"\u{1F9E9}","\u{1F5BC}\uFE0F \uC2A4\uD2B8\uB9AC\uBA38/\uD504\uB85C\uD544":"\u{1F5BC}\uFE0F","\u{1F9FE} \uCE74\uB4DC/\uAE30\uB85D":"\u{1F9FE}","\u{1F3A8} UI/\uD14C\uB9C8":"\u{1F3A8}","\u{1F9E0} \uC790\uB3D9\uD654/\uB3C4\uAD6C":"\u{1F9E0}","\u{1F9E9} \uD604\uD669\uD310/\uD3A8\uCF54":"\u{1F4CA}","\u{1F4BE} \uB370\uC774\uD130":"\u{1F4BE}","\u{1F9EA} \uC810\uAC80/\uACE0\uAE09":"\u{1F9EA}",\uAE30\uD0C0:"\u{1F5C2}\uFE0F"},_catLabel=c=>String(c||"").replace(/^[\u{1F300}-\u{1FAFF}\u2600-\u27BF]+\s*/u,""),_cfgCatDesc={"\u{1F9E9} \uC6B4\uC601/\uCF58\uD150\uCE20":"\uACF5\uC9C0/\uD2F0\uC5B4/\uC2DC\uC98C/\uB300\uD559/\uB9F5/\uC790\uB3D9\uC778\uC2DD","\u{1F5BC}\uFE0F \uC2A4\uD2B8\uB9AC\uBA38/\uD504\uB85C\uD544":"\uC774\uBBF8\uC9C0\uD0ED/\uC2A4\uD2B8\uB9AC\uBA38 \uC0C1\uC138/\uB300\uD559 \uC0C1\uC138(\uD31D\uC5C5)/\uACBD\uAE30 \uC0C1\uC138(\uD31D\uC5C5)/\uC0C1\uD0DC\uC544\uC774\uCF58","\u{1F9FE} \uCE74\uB4DC/\uAE30\uB85D":"\uAE30\uB85D\uCE74\uB4DC/\uB300\uD68C\uCE74\uB4DC/\uD504\uB85C\uB9AC\uADF8/\uAC1C\uC778\xB7\uB05D\uC7A5\uC804","\u{1F3A8} UI/\uD14C\uB9C8":"\uD0ED/\uBC84\uD2BC/\uD544\uD130/\uD3F0\uD2B8/\uBAA8\uBC14\uC77C\uD06C\uAE30/\uD14C\uB9C8","\u{1F9E0} \uC790\uB3D9\uD654/\uB3C4\uAD6C":"\uBC30\uACBD\uC74C\uC545(BGM)/SOOP \uBA40\uD2F0\uBDF0/\uBD99\uC5EC\uB123\uAE30 \uBD84\uB9AC/FAB","\u{1F9E9} \uD604\uD669\uD310/\uD3A8\uCF54":"\uD604\uD669\uD310/\uD3A8\uCF54\uC2A4\uD0C0\uC77C/\uC21C\uC11C/\uCE69/\uBC1D\uAE30/\uBC30\uACBD","\u{1F4BE} \uB370\uC774\uD130":"\uB3D9\uAE30\uD654/\uBC31\uC5C5/\uC77C\uAD04 \uC791\uC5C5","\u{1F9EA} \uC810\uAC80/\uACE0\uAE09":"\uBA54\uB274\uC815\uB9AC/\uC124\uC815 \uC810\uAC80"},_cfgSecTitle={notice:"\u{1F4E2} \uACF5\uC9C0",tier:"\u{1F3AF} \uD2F0\uC5B4/\uC810\uC218",season:"\u{1F5D3}\uFE0F \uC2DC\uC98C",teammatch:"\u{1F3DF}\uFE0F \uD300\uACBD\uAE30",acct:"\u{1F510} \uACC4\uC815",univ:"\u{1F3DB}\uFE0F \uB300\uD559",maps:"\u{1F5FA}\uFE0F \uB9F5",mAlias:"\u{1F524} \uB9F5 \uC57D\uC790",si:"\u{1F3AD} \uC0C1\uD0DC \uC544\uC774\uCF58 (\uBAA9\uB85D/\uCD94\uAC00)",paste:"\u{1F916} \uC790\uB3D9\uC778\uC2DD",b2layout:"\u{1F4D0} \uC774\uBBF8\uC9C0\uD0ED \uB808\uC774\uC544\uC6C3",imgsettings:"\u{1F5BC}\uFE0F \uC774\uBBF8\uC9C0\uD0ED \uC774\uBBF8\uC9C0",imgmodalsettings:"\u{1F5BC}\uFE0F \uC2A4\uD2B8\uB9AC\uBA38 \uC0C1\uC138 \uC774\uBBF8\uC9C0",profileshape:"\u{1F5BC}\uFE0F \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 \uBAA8\uC591",pdModeBadge:"\u{1F3A8} \uCD5C\uADFC \uACBD\uAE30 \uC885\uBAA9 \uBC30\uC9C0 \uC0C9\uC0C1",pd:"\u{1F3A8} \uC2A4\uD2B8\uB9AC\uBA38 \uC0C1\uC138 \uC2A4\uD0C0\uC77C",matchdetail:"\u{1F3AE} \uACBD\uAE30 \uC0C1\uC138(\uD31D\uC5C5)",ud:"\u{1F3EB} \uB300\uD559 \uC0C1\uC138(\uD31D\uC5C5) \uB514\uC790\uC778",streamerheader:"\u{1F393} \uC2A4\uD2B8\uB9AC\uBA38\uD0ED \uB300\uD559 \uD5E4\uB354",univlogoimg:"\u{1F3EB} \uB300\uD559 \uB85C\uACE0 \uC774\uBBF8\uC9C0(URL)",b2femco:"\u{1F9E9} \uD3A8\uCF54\uC2A4\uD0C0\uC77C",femcoorder:"\u{1F500} \uD3A8\uCF54\uC2A4\uD0C0\uC77C \uC2A4\uD0C0\uB300\uD559 \uC21C\uC11C",boardchip:"\u{1F3F7}\uFE0F \uD604\uD669\uD310 \uCE69/\uB300\uD559\uB85C\uACE0",oldbright:"\u{1F3A8} \uAD6C\uD604\uD669\uD310 \uBC1D\uAE30",boardbg:"\u{1F9F1} \uD604\uD669\uD310 \uBC30\uACBD",briefingfx:"\u{1F39E}\uFE0F \uBE0C\uB9AC\uD551 \uB514\uC790\uC778 & \uD6A8\uACFC",tablabels:"\u{1F3F7}\uFE0F \uD0ED \uC774\uB984(\uB77C\uBCA8) \uC124\uC815",uisize:"\u{1F4F1} \uBAA8\uBC14\uC77C/\uD0DC\uBE14\uB9BF UI \uD06C\uAE30",cardgap:"\u{1F9E9} \uCE74\uB4DC \uAC04\uACA9(\uC2A4\uD2B8\uB9AC\uBA38/\uD2F0\uC5B4)",siAssign:"\u{1F3AD} \uC2A4\uD2B8\uB9AC\uBA38\uBCC4 \uC0C1\uD0DC \uC544\uC774\uCF58 \uC9C0\uC815",cfgmenu:"\u{1F9ED} \uC124\uC815 \uBA54\uB274 \uC815\uB9AC",autofitall:"\u{1F4F1} \uC804\uC5ED \uC790\uB3D9 \uB9DE\uCDA4",reccard:"\u{1F9FE} \uAE30\uB85D \uCE74\uB4DC",tourneycard:"\u{1F3C6} \uB300\uD68C \uCE74\uB4DC",h2hpanel:"\u{1F3AE} \uAC1C\uC778\uC804/\uB05D\uC7A5\uC804(\uD504\uB85C\uB9AC\uADF8 \uB05D\uC7A5\uC804) \uCE74\uB4DC",minicard:"\u26A1 \uBBF8\uB2C8\uB300\uC804/\uC2DC\uBE4C\uC6CC \uAE30\uB85D \uCE74\uB4DC",civilcard:"\u2694\uFE0F \uC2DC\uBE4C\uC6CC \uAE30\uB85D \uCE74\uB4DC",univckcard:"\u{1F91D} \uB300\uD559CK \uAE30\uB85D \uCE74\uB4DC",univmcard:"\u{1F3DF}\uFE0F \uB300\uD559\uB300\uC804 \uAE30\uB85D \uCE74\uB4DC",tiertourcard:"\u{1F3AF} \uD2F0\uC5B4\uB300\uD68C \uC77C\uBC18 \uAE30\uB85D \uCE74\uB4DC",tiertourleaguecard:"\u{1F3AF} \uD2F0\uC5B4\uB300\uD68C \uC870\uBCC4\uB9AC\uADF8 \uAE30\uB85D",tiertourbrackcard:"\u{1F3AF} \uD2F0\uC5B4\uB300\uD68C \uB300\uC9C4\uD45C \uAE30\uB85D",procompleaguecard:"\u{1F3C6} \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uC870\uBCC4\uB9AC\uADF8",procompteamcard:"\u{1F3C6} \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uD300\uC804 \uCE74\uB4DC",procompgjcard:"\u{1F3C6} \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uC911\uC7A5\uC804 \uCE74\uB4DC",procompcard:"\u2B50 \uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uCE74\uB4DC",sharecard:"\u{1FAAA} \uACF5\uC720\uCE74\uB4DC \uB514\uC790\uC778",calui:"\u{1F4C5} \uCE98\uB9B0\uB354",appfont:"\u{1F170}\uFE0F \uC804\uC5ED \uD3F0\uD2B8","tierrank-view":"\u{1F4CA} \uD2F0\uC5B4 \uC21C\uC704\uD45C \uBCF4\uAE30 \uBC29\uC2DD","streamer-view":"\u{1F3AC} \uC2A4\uD2B8\uB9AC\uBA38\uD0ED \uAE30\uBCF8 \uBDF0","streamer-tab-style":"\u{1F3AC} \uC2A4\uD2B8\uB9AC\uBA38\uD0ED \uB514\uC790\uC778/\uB808\uC774\uC544\uC6C3",bgm:"\u{1F3B5} \uC720\uD29C\uBE0C \uBC30\uACBD\uC74C\uC545(BGM)",soopmv:"\u{1F4FA} SOOP(\uC232) \uBA40\uD2F0\uBDF0",pasteRoute:"\u{1F9E0} \uBD99\uC5EC\uB123\uAE30 \uC790\uB3D9 \uBD84\uB9AC",designv2:"\u2728 \uB514\uC790\uC778 \uBAA8\uB4DC",hdr:"\u{1F9E9} \uD5E4\uB354 \uC0C1\uB2E8\uBC14",fab:"\u{1F4F1} \uD50C\uB85C\uD305(FAB)",storage:"\u{1F4BE} \uC800\uC7A5\uC18C",datacheck:"\u{1F9FE} \uB370\uC774\uD130 \uAC80\uC218",selfcheck:"\u{1F9EA} \uC124\uC815 \uC810\uAC80",sync:"\u{1F504} \uB3D9\uAE30\uD654",firebase:"\u2601\uFE0F GitHub(\uAE43\uD5C8\uBE0C) \uB3D9\uAE30\uD654",aibot:"\u{1F916} AI\uBD07(Groq) \uC11C\uBC84 \uC124\uC815",bulkdate:"\u{1F4C5} \uC77C\uAD04 \uB0A0\uC9DC",bulkmap:"\u{1F5FA}\uFE0F \uC77C\uAD04 \uB9F5",bulktier:"\u{1F3AF} \uC77C\uAD04 \uD2F0\uC5B4",bulkdel:"\u{1F5D1}\uFE0F \uC77C\uAD04 \uC0AD\uC81C",bulkconv:"\u{1F9FE} \uBCC0\uD658"};try{const _ren=_cfgMenuLoadRenames();for(const k in _ren||{})_ren[k]&&(_cfgSecTitle[k]=String(_ren[k]))}catch(e){}const typeOpts=[{v:"\u{1F4E2}",l:"\u{1F4E2} \uC77C\uBC18 \uACF5\uC9C0"},{v:"\u{1F525}",l:"\u{1F525} \uC911\uC694"},{v:"\u26A0\uFE0F",l:"\u26A0\uFE0F \uACBD\uACE0/\uC8FC\uC758"},{v:"\u{1F389}",l:"\u{1F389} \uC774\uBCA4\uD2B8"}],_curSecs=_catSecs[window._cfgCat]||[];window._cfgSecTitle=_cfgSecTitle;const _regBtn=isSubAdmin?"":'<button class="btn btn-b no-export" onclick="openB2PlayerCreateModal()" style="padding:6px 10px;border-radius:14px;font-size:var(--fs-caption);font-weight:900;white-space:nowrap;flex-shrink:0">\u{1F3AC} \uC2A4\uD2B8\uB9AC\uBA38 \uB4F1\uB85D</button>',_menuBtn=`<button class="btn btn-w no-export" onclick="cfgGo('cfgmenu')" style="padding:6px 10px;border-radius:14px;font-size:var(--fs-caption);font-weight:900;white-space:nowrap;flex-shrink:0" title="\uC124\uC815 \uD558\uC704 \uBA54\uB274 \uC774\uB984 \uBCC0\uACBD/\uC815\uB9AC">\u{1F9ED} \uBA54\uB274\uC815\uB9AC</button>`,_afOn=localStorage.getItem("su_af_alltabs_v1")==="1",_rcOn=((_a=localStorage.getItem("su_rc_theme_on"))!=null?_a:"1")==="1",_rcAccent=(_b=localStorage.getItem("su_rc_accent_mode"))!=null?_b:"none",_rcBg=parseInt((_c=localStorage.getItem("su_rc_bg_alpha"))!=null?_c:"12",10)||12,_rcHd=parseInt((_d=localStorage.getItem("su_rc_hd_alpha"))!=null?_d:"14",10)||14,_rcIc=parseInt((_e=localStorage.getItem("su_rc_uicon"))!=null?_e:"24",10)||24,_rcUnivFont=parseInt((_f=localStorage.getItem("su_rc_univ_font_pct"))!=null?_f:"110",10)||110,_ymScale=parseInt((_g=localStorage.getItem("su_ym_scale_pct"))!=null?_g:"100",10)||100,_rcMemoOn=((_h=localStorage.getItem("su_rc_memo_on"))!=null?_h:"0")==="1",_sfxOn=(localStorage.getItem("su_rec_side_fx_on")||"1")!=="0",_sfxMode=localStorage.getItem("su_rec_side_fx_mode")||"soft",_sfxInt=Math.max(20,Math.min(100,parseInt(localStorage.getItem("su_rec_side_fx_intensity")||"68",10)||68)),_sfxLen=Math.max(4,Math.min(80,parseInt(localStorage.getItem("su_rec_side_fx_length")||"25",10)||25)),_sfxTail=Math.max(0,Math.min(140,parseInt(localStorage.getItem("su_rec_side_fx_tail")||"28",10)||28)),_sfxSoft=Math.max(0,Math.min(100,parseInt(localStorage.getItem("su_rec_side_fx_softness")||"52",10)||52)),_sfxEdge=Math.max(2,Math.min(24,parseInt(localStorage.getItem("su_rec_side_fx_edge")||"8",10)||8)),_avaScale=Math.round((parseFloat((_i=localStorage.getItem("su_avatar_scale"))!=null?_i:"1")||1)*100),_mvpFxOn=((_j=localStorage.getItem("su_b2mvp_fx_on"))!=null?_j:"1")==="1",_mvpFxStyle=(()=>{const v=localStorage.getItem("su_b2mvp_fx_style");return["fade","vignette","topbottom","tint","spotlight","noir","diagonal","glass","none"].includes(v)?v:"fade"})(),_mvpFxIntensity=(()=>{const n=parseInt(localStorage.getItem("su_b2mvp_fx_intensity"),10);return Number.isFinite(n)?Math.max(0,Math.min(100,n)):45})(),_mvpDesignMode=(()=>{const v=localStorage.getItem("su_b2mvp_design_mode");return["photo","panel","frame","glasscard","border","ribbon","split","poster"].includes(v)?v:"photo"})(),_briefingTheme=(()=>{const v=localStorage.getItem("su_b2_briefing_theme");return["classic","minimal","vivid","mono","elegant","pastel","luxury","sports","esports","pop","nature","ocean","sunset","neon"].includes(v)?v:"classic"})(),_cfgSecDescFallback={notice:"\uD31D\uC5C5 \uACF5\uC9C0 \uB4F1\uB85D\uACFC \uB178\uCD9C \uC0C1\uD0DC \uAD00\uB9AC",tier:"\uD2F0\uC5B4 \uC810\uC218 \uAE30\uC900\uACFC \uAD6C\uAC04 \uC870\uC815",season:"\uC2DC\uC98C \uCD94\uAC00, \uC774\uB984 \uBCC0\uACBD, \uAE30\uBCF8 \uC2DC\uC98C \uAD00\uB9AC",teammatch:"\uD300\uC804 \uD3EC\uB9F7\uACFC \uAE30\uBCF8 \uADDC\uCE59 \uC124\uC815",acct:"\uAD00\uB9AC\uC790/\uBD80\uAD00\uB9AC\uC790 \uACC4\uC815\uACFC \uAD8C\uD55C \uAD00\uB9AC",univ:"\uB300\uD559 \uCD94\uAC00, \uC218\uC815, \uC228\uAE40, \uC0C9\uC0C1 \uC815\uB9AC",maps:"\uB9F5 \uBAA9\uB85D \uCD94\uAC00\uC640 \uC774\uB984 \uAD00\uB9AC",mAlias:"\uB9F5 \uC57D\uC790 \uC790\uB3D9\uC778\uC2DD \uADDC\uCE59 \uAD00\uB9AC",si:"\uC0C1\uD0DC \uC544\uC774\uCF58 \uB4F1\uB85D\uACFC \uBAA9\uB85D \uC815\uB9AC",paste:"\uBD99\uC5EC\uB123\uAE30 \uC778\uC2DD \uADDC\uCE59\uACFC \uCD9C\uB825 \uD615\uC2DD \uC124\uC815",b2layout:"\uC774\uBBF8\uC9C0\uD0ED \uC88C\uC6B0 \uBE44\uC728\uACFC \uB192\uC774 \uC870\uC815",imgsettings:"\uC774\uBBF8\uC9C0\uD0ED \uC774\uBBF8\uC9C0 \uD45C\uC2DC \uBC29\uC2DD \uC124\uC815",imgmodalsettings:"\uC2A4\uD2B8\uB9AC\uBA38 \uC0C1\uC138 \uC774\uBBF8\uC9C0 \uD45C\uC2DC \uBC29\uC2DD \uC124\uC815",profileshape:"\uD504\uB85C\uD544 \uC378\uB124\uC77C \uBAA8\uC591\uACFC \uD6A8\uACFC \uC124\uC815",pd:"\uC2A4\uD2B8\uB9AC\uBA38 \uC0C1\uC138 \uCE74\uB4DC \uC0C9\uAC10\uACFC \uBC30\uCE58 \uC870\uC815",matchdetail:"\uACBD\uAE30 \uC0C1\uC138 \uD31D\uC5C5 \uB808\uC774\uC544\uC6C3\uACFC \uC0C9\uAC10 \uC870\uC815",streamerheader:"\uC2A4\uD2B8\uB9AC\uBA38\uD0ED \uC0C1\uB2E8 \uB300\uD559 \uD5E4\uB354 \uAFB8\uBBF8\uAE30","streamer-tab-style":"\uC2A4\uD2B8\uB9AC\uBA38\uD0ED \uCE74\uB4DC/\uD5E4\uB354/\uB808\uC774\uC544\uC6C3 \uBD84\uC704\uAE30 \uC124\uC815",univlogoimg:"\uB300\uD559 \uB85C\uACE0 \uC774\uBBF8\uC9C0 \uB4F1\uB85D\uACFC \uAD00\uB9AC",b2femco:"\uD3A8\uCF54\uC2A4\uD0C0\uC77C \uC0C9\uAC10\uACFC \uCE74\uB4DC \uB514\uC790\uC778 \uC870\uC815",femcoorder:"\uD3A8\uCF54\uC2A4\uD0C0\uC77C \uB300\uD559 \uC21C\uC11C \uC815\uB9AC",boardchip:"\uD604\uD669\uD310 \uCE69, \uB85C\uACE0, \uD504\uB85C\uD544 \uD45C\uC2DC \uC124\uC815",oldbright:"\uD604\uD669\uD310 \uCE74\uB4DC\uC640 \uB77C\uBCA8 \uBC1D\uAE30 \uC870\uC815",boardbg:"\uD604\uD669\uD310 \uBC30\uACBD \uC774\uBBF8\uC9C0\uC640 \uB77C\uBCA8 \uBC30\uACBD \uAD00\uB9AC",briefingfx:"\uBE0C\uB9AC\uD551 \uD0ED \uC804\uCCB4 \uB514\uC790\uC778 \uD14C\uB9C8\uC640 MVP \uCE74\uB4DC \uADF8\uB77C\uB514\uC5B8\uD2B8 \uAC15\uB3C4/\uC2A4\uD0C0\uC77C, \uCE74\uB4DC \uB514\uC790\uC778 \uBAA8\uB4DC \uC124\uC815",tablabels:"\uC0C1\uB2E8\uACFC \uD558\uC704 \uBA54\uB274 \uC774\uB984 \uBCC0\uACBD",uisize:"\uBAA8\uBC14\uC77C/\uD0DC\uBE14\uB9BF \uBC84\uD2BC\uACFC \uAE00\uC790 \uD06C\uAE30 \uC870\uC815",cardgap:"\uC2A4\uD2B8\uB9AC\uBA38/\uD2F0\uC5B4 \uCE74\uB4DC\uD615 \uCE74\uB4DC \uAC04\uACA9 \uC870\uC815",siAssign:"\uC2A4\uD2B8\uB9AC\uBA38\uBCC4 \uC0C1\uD0DC \uC544\uC774\uCF58 \uC9C0\uC815",cfgmenu:"\uC790\uC8FC \uC4F0\uB294 \uC124\uC815 \uBA54\uB274 \uC774\uB984\uACFC \uC21C\uC11C \uC815\uB9AC",autofitall:"\uD654\uBA74 \uD06C\uAE30\uC5D0 \uB9DE\uCD98 \uC790\uB3D9 \uB9DE\uCDA4 \uC124\uC815",reccard:"\uAE30\uB85D\uD0ED \uCE74\uB4DC \uC2A4\uD0C0\uC77C\uACFC \uAC15\uC870 \uBC29\uC2DD \uC124\uC815",tourneycard:"\uB300\uD68C\uD0ED \uCE74\uB4DC \uB514\uC790\uC778 \uC124\uC815",h2hpanel:"\uAC1C\uC778\uC804/\uB05D\uC7A5\uC804 \uCE74\uB4DC \uB808\uC774\uC544\uC6C3 \uC870\uC815",minicard:"\uBBF8\uB2C8\uB300\uC804/\uC2DC\uBE4C\uC6CC \uCE74\uB4DC \uC2A4\uD0C0\uC77C \uC870\uC815",univckcard:"\uB300\uD559CK \uCE74\uB4DC \uB514\uC790\uC778 \uC124\uC815",univmcard:"\uB300\uD559\uB300\uC804 \uCE74\uB4DC \uB514\uC790\uC778 \uC124\uC815",tiertourcard:"\uD2F0\uC5B4\uB300\uD68C \uC77C\uBC18 \uACBD\uAE30 \uCE74\uB4DC \uC2A4\uD0C0\uC77C",tiertourleaguecard:"\uD2F0\uC5B4\uB300\uD68C \uC870\uBCC4\uB9AC\uADF8 \uCE74\uB4DC \uC2A4\uD0C0\uC77C",tiertourbrackcard:"\uD2F0\uC5B4\uB300\uD68C \uB300\uC9C4\uD45C \uCE74\uB4DC \uC2A4\uD0C0\uC77C",procompleaguecard:"\uD504\uB85C\uB9AC\uADF8 \uC870\uBCC4\uB9AC\uADF8 \uCE74\uB4DC \uC2A4\uD0C0\uC77C",procompteamcard:"\uD504\uB85C\uB9AC\uADF8 \uD300\uC804 \uCE74\uB4DC \uC2A4\uD0C0\uC77C",procompgjcard:"\uD504\uB85C\uB9AC\uADF8 \uC911\uC7A5\uC804 \uCE74\uB4DC \uC2A4\uD0C0\uC77C",procompcard:"\uD504\uB85C\uB9AC\uADF8 \uB300\uD68C \uBA54\uC778 \uCE74\uB4DC \uC2A4\uD0C0\uC77C",sharecard:"\uACF5\uC720\uCE74\uB4DC \uD15C\uD50C\uB9BF\uACFC \uC0C9\uAC10 \uC870\uC815",calui:"\uCE98\uB9B0\uB354 \uB0A0\uC9DC\uCE78\uACFC \uBC84\uD2BC \uAD6C\uC131 \uC124\uC815",appfont:"\uC571 \uC804\uCCB4 \uD3F0\uD2B8\uC640 \uD06C\uAE30 \uC870\uC815","tierrank-view":"\uD2F0\uC5B4 \uC21C\uC704\uD45C \uBCF4\uAE30 \uBC29\uC2DD \uBCC0\uACBD",bgm:"\uC720\uD29C\uBE0C \uBC30\uACBD\uC74C\uC545 \uD45C\uC2DC\uC640 \uB9C1\uD06C \uC124\uC815",soopmv:"SOOP \uBA40\uD2F0\uBDF0 \uC5F0\uACB0 \uC124\uC815",pasteRoute:"\uBD99\uC5EC\uB123\uAE30 \uACB0\uACFC \uC790\uB3D9 \uBD84\uB9AC \uADDC\uCE59 \uC124\uC815",hdr:"\uC0C1\uB2E8 \uD5E4\uB354 \uC81C\uBAA9, \uBC30\uACBD, \uC544\uC774\uCF58 \uC870\uC815",fab:"\uBAA8\uBC14\uC77C \uD50C\uB85C\uD305 \uBC84\uD2BC \uAD6C\uC131 \uC124\uC815",storage:"\uB85C\uCEEC \uC800\uC7A5 \uC6A9\uB7C9\uACFC \uC0AC\uC6A9 \uD604\uD669 \uD655\uC778",datacheck:"\uC0AC\uC9C4/\uB300\uD559/\uD2F0\uC5B4/\uAE30\uB85D \uB204\uB77D\uACFC \uB0A0\uC9DC \uC774\uC0C1 \uC810\uAC80",selfcheck:"\uC124\uC815 \uB3D9\uC791 \uC774\uC0C1 \uC5EC\uBD80 \uC810\uAC80",sync:"\uC124\uC815 \uBC31\uC5C5, \uB0B4\uBCF4\uB0B4\uAE30, \uAC00\uC838\uC624\uAE30, \uB3D9\uAE30\uD654",firebase:"GitHub/Firebase \uC5F0\uB3D9 \uC124\uC815",aibot:"AI\uBD07 \uC11C\uBC84 \uC8FC\uC18C\uC640 \uD0A4 \uC124\uC815",bulkdate:"\uC5EC\uB7EC \uAE30\uB85D \uB0A0\uC9DC \uC77C\uAD04 \uBCC0\uACBD",bulkmap:"\uB9F5 \uC774\uB984 \uC77C\uAD04 \uCE58\uD658",bulktier:"\uC120\uC218 \uD2F0\uC5B4 \uC77C\uAD04 \uBCC0\uACBD",bulkdel:"\uAE30\uAC04\uBCC4 \uAE30\uB85D \uC77C\uAD04 \uC0AD\uC81C",bulkconv:"\uC138\uD2B8\uC81C \uAE30\uB85D \uD615\uC2DD \uC77C\uAD04 \uBCC0\uD658"},_cfgSecDesc=window._cfgSecDescMap||{},_getCfgSecDesc=id=>_cfgSecDesc[id]||_cfgSecDescFallback[id]||"\uC138\uBD80 \uC124\uC815 \uC5F4\uAE30",_secButtons=_curSecs.map(id=>{var _a2;const title=_cfgSecTitle[id]||id,desc=_getCfgSecDesc(id);return`<button type="button" class="btn btn-w no-export cfg-sec-link" onclick="cfgGo('${id}')" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px;border-radius:14px;text-align:left;background:var(--white);justify-content:flex-start;min-height:86px">
       <span style="font-size:var(--fs-md);line-height:1">${((_a2=String(title).match(/^[^\s]+/))==null?void 0:_a2[0])||"\u2699\uFE0F"}</span>
       <span style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);line-height:1.3;word-break:keep-all;white-space:normal">${title.replace(/^[^\s]+\s*/,"")}</span>
       <span style="font-size:10px;color:var(--gray-l);font-weight:700;line-height:1.35;white-space:normal">${desc}</span>
-    </button>`}).join(""),_cfgPins=(()=>{try{const v=localStorage.getItem("su_cfg_pins");return v?JSON.parse(v):["univ","pd","matchdetail","profileshape"]}catch(e){return["univ","pd","matchdetail","profileshape"]}})(),_qBtnColors=[{bg:"#eff6ff",ic:"#2563eb"},{bg:"#f0fdf4",ic:"#16a34a"},{bg:"#fff7ed",ic:"#ea580c"},{bg:"#fdf4ff",ic:"#9333ea"},{bg:"#fefce8",ic:"#ca8a04"},{bg:"#fff1f2",ic:"#e11d48"},{bg:"#f0fdfa",ic:"#0d9488"},{bg:"#faf5ff",ic:"#7c3aed"},{bg:"#eff6ff",ic:"#2563eb"},{bg:"#f0fdf4",ic:"#16a34a"},{bg:"#fff7ed",ic:"#ea580c"},{bg:"#fdf4ff",ic:"#9333ea"},{bg:"#fefce8",ic:"#ca8a04"},{bg:"#fff1f2",ic:"#e11d48"}],_catTabsHtml=_cfgCats.map(c=>{const on=window._cfgCat===c,cj=_escJS(c),icon=_cfgCatIcons[c]||"\u{1F5C2}\uFE0F",label=_catLabel(c);return`<button type="button" class="no-export cfg-cat-tab${on?" cfg-cat-tab-on":""}" onclick="cfgApplyCat('${cj}')" data-cfg-cat="${_escAttr(c)}"
-      style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;cursor:pointer;white-space:nowrap;font-size:var(--fs-sm);font-weight:900;border:1.5px solid ${on?"var(--blue)":"var(--border)"};background:${on?"var(--blue)":"var(--white)"};color:${on?"#fff":"var(--text2)"};transition:background .14s,border-color .14s,color .14s;flex-shrink:0">
-      <span style="font-size:var(--fs-base);line-height:1">${icon}</span>${label}
     </button>`}).join(""),_catCardAccents=["#4f46e5","#0891b2","#16a34a","#ea580c","#7c3aed","#0369a1","#15803d","#9333ea"],_catCardsHtml=_cfgCats.map((c,ci)=>{const on=window._cfgCat===c,cj=_escJS(c),icon=_cfgCatIcons[c]||"\u{1F5C2}\uFE0F",label=_catLabel(c),desc=_cfgCatDesc[c]||"",secCount=(_catSecs[c]||[]).length,accent=_catCardAccents[ci%_catCardAccents.length];return`<button type="button" class="no-export cfg-cat-tile" onclick="cfgApplyCat('${cj}')" data-cfg-cat="${_escAttr(c)}"
       style="display:flex;flex-direction:column;align-items:flex-start;gap:0;padding:0;border-radius:14px;cursor:pointer;text-align:left;border:1.5px solid ${on?`${accent}55`:"var(--border)"};background:${on?`linear-gradient(180deg,${accent}12,rgba(255,255,255,.98))`:"var(--white)"};transition:all .15s;overflow:hidden;box-shadow:${on?`0 10px 26px ${accent}18`:"0 1px 4px rgba(15,23,42,.05)"}">
       <div style="width:100%;height:3px;background:${on?accent:"transparent"};flex-shrink:0;transition:background .15s"></div>
@@ -3356,20 +3414,6 @@ var __defProp=Object.defineProperty;var __getOwnPropSymbols=Object.getOwnPropert
         <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);line-height:1.2;margin-bottom:3px">${label}</div>
         <div style="font-size:10px;color:var(--gray-l);font-weight:600;line-height:1.4;word-break:keep-all">${desc}</div>
       </div>
-    </button>`}).join(""),_cfgPinsHtml=(()=>{const pins=_cfgPins.filter(id=>_cfgSecTitle[id]);return pins.length?pins.map(id=>{var _a2;const title=(_cfgSecTitle[id]||id).replace(/^[^\s]+\s*/,""),icon=((_a2=(_cfgSecTitle[id]||"").match(/^([^\s]+)/))==null?void 0:_a2[1])||"\u2699\uFE0F";return`<button type="button" class="no-export cfg-pin-chip" onclick="cfgGo('${id}')"
-        style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px 5px 8px;border-radius:20px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:var(--fs-caption);font-weight:900;white-space:nowrap;cursor:pointer;flex-shrink:0">
-        <span style="font-size:var(--fs-base);line-height:1">${icon}</span>${_escHTML(title)}
-            <span onclick="event.stopPropagation();(function(el){try{const p=JSON.parse(localStorage.getItem('su_cfg_pins')||'[]');const i=p.indexOf('${id}');if(i>-1)p.splice(i,1);localStorage.setItem('su_cfg_pins',JSON.stringify(p));}catch(e){};try{const b=el&&el.closest?el.closest('button'):null;if(b)b.remove();}catch(e){}})(this);"
-          style="margin-left:1px;opacity:.5;font-size:10px;cursor:pointer;line-height:1;padding:0 1px" title="\uD540 \uD574\uC81C">\u2715</span>
-      </button>`}).join(""):""})(),_quickBtnsHtml=_quickBtns.map((x,qi)=>{const col=_qBtnColors[qi%_qBtnColors.length],isPinned=_cfgPins.includes(x.id);return`<button type="button" class="btn no-export cfg-quick-card" onclick="cfgGo('${x.id}')"
-      style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:11px;text-align:left;background:var(--white);border:1px solid var(--border);cursor:pointer;position:relative;min-width:0">
-      <span style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r);background:${col.bg};font-size:17px;flex-shrink:0;border:1px solid ${col.ic}22">${x.icon}</span>
-      <span style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1">
-        <span style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x.title}</span>
-        <span style="font-size:10px;color:var(--gray-l);font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x.desc}</span>
-      </span>
-        <button type="button" onclick="event.stopPropagation();(function(el){try{const p=JSON.parse(localStorage.getItem('su_cfg_pins')||JSON.stringify(['univ','pd','matchdetail','profileshape']));const i=p.indexOf('${x.id}');if(i>-1)p.splice(i,1);else p.unshift('${x.id}');localStorage.setItem('su_cfg_pins',JSON.stringify(p));const on=(i===-1);el.style.opacity=on?'1':'0.2';el.title=on?'\uD540 \uD574\uC81C':'\uC990\uACA8\uCC3E\uAE30 \uACE0\uC815';}catch(e){}})(this);"
-        style="background:none;border:none;cursor:pointer;font-size:var(--fs-sm);opacity:${isPinned?"1":"0.2"};padding:0;line-height:1;flex-shrink:0" title="${isPinned?"\uD540 \uD574\uC81C":"\uC990\uACA8\uCC3E\uAE30 \uACE0\uC815"}">\u{1F4CC}</button>
     </button>`}).join(""),_secBtnColors=["#eff6ff","#f0fdf4","#fff7ed","#fdf4ff","#fefce8","#fff1f2","#f0fdfa","#faf5ff"],_secBtnIcColors=["#2563eb","#16a34a","#ea580c","#9333ea","#ca8a04","#e11d48","#0d9488","#7c3aed"],_secButtonsHtml=_curSecs.map((id,si)=>{var _a2;const title=_cfgSecTitle[id]||id,desc=_getCfgSecDesc(id),icon=((_a2=String(title).match(/^([^\s]+)/))==null?void 0:_a2[0])||"\u2699\uFE0F",label=title.replace(/^[^\s]+\s*/,""),bg=_secBtnColors[si%_secBtnColors.length],ic=_secBtnIcColors[si%_secBtnIcColors.length];return`<button type="button" class="btn btn-w no-export cfg-sec-jump" onclick="cfgGo('${id}')"
       style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;text-align:left;background:var(--white);border:1.5px solid var(--border)">
       <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;background:${bg};font-size:var(--fs-md);flex-shrink:0;border:1px solid ${ic}22">${icon}</span>
@@ -3378,7 +3422,7 @@ var __defProp=Object.defineProperty;var __getOwnPropSymbols=Object.getOwnPropert
         ${desc?`<span style="font-size:10px;color:var(--gray-l);font-weight:600;line-height:1.3">${_escHTML(desc)}</span>`:""}
       </span>
       <span style="font-size:var(--fs-caption);color:var(--gray-l);flex-shrink:0">\u203A</span>
-    </button>`}).join(""),_cfgModeLabel=_cfgViewMode==="advanced"?"\uACE0\uAE09 \uBAA8\uB4DC":"\uAC04\uD3B8 \uBAA8\uB4DC",_cfgHeroStatsHtml=[{label:"\uCE74\uD14C\uACE0\uB9AC",value:`${_cfgCats.length}\uAC1C`,icon:"\u{1F5C2}\uFE0F"},{label:"\uD604\uC7AC \uC124\uC815",value:`${_curSecs.length}\uAC1C`,icon:"\u2699\uFE0F"},{label:"\uC990\uACA8\uCC3E\uAE30",value:`${_cfgPins.filter(id=>_cfgSecTitle[id]).length}\uAC1C`,icon:"\u{1F4CC}"},{label:"\uD654\uBA74 \uBC29\uC2DD",value:_cfgModeLabel,icon:_cfgViewMode==="advanced"?"\u2728":"\u{1FA84}"}].map(item=>`
+    </button>`}).join(""),_cfgHeroStatsHtml=[{label:"\uCE74\uD14C\uACE0\uB9AC",value:`${_cfgCats.length}\uAC1C`,icon:"\u{1F5C2}\uFE0F"},{label:"\uD604\uC7AC \uC124\uC815",value:`${_curSecs.length}\uAC1C`,icon:"\u2699\uFE0F"}].map(item=>`
     <div class="cfg-stat-card">
       <span class="cfg-stat-card__icon">${item.icon}</span>
       <span class="cfg-stat-card__meta">
@@ -3386,45 +3430,29 @@ var __defProp=Object.defineProperty;var __getOwnPropSymbols=Object.getOwnPropert
         <strong class="cfg-stat-card__value">${item.value}</strong>
       </span>
     </div>
-  `).join("");let h=`<div class="cfg-page cfg-mode-${_cfgViewMode}">
+  `).join("");let h=`<div class="cfg-page">
   <div class="no-export cfg-topbar" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:0;margin-bottom:0;border-bottom:1px solid var(--border)">
     <!-- \u2460 \uC2A4\uD2F0\uD0A4 \uD5E4\uB354: \uAC80\uC0C9 -->
     <div class="cfg-toolbar-row" style="display:flex;align-items:center;gap:7px;padding:7px 2px;flex-wrap:nowrap">
       <div class="cfg-search-wrap" style="position:relative;flex:1;min-width:0">
         <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:var(--fs-sm);pointer-events:none;opacity:.4">\u{1F50E}</span>
-        <input id="cfgSearchInp" placeholder="\uC124\uC815 \uAC80\uC0C9..." value="${esc(String(window._cfgSearchQ||""))}"
+        <input id="cfgSearchInp" placeholder="\uC124\uC815 \uAC80\uC0C9 (\uC608: \uD504\uB85C\uD544, \uBC30\uACBD, \uD3F0\uD2B8...)" value="${esc(String(window._cfgSearchQ||""))}"
           style="width:100%;padding:6px 10px 6px 28px;border:1.5px solid var(--border2);border-radius:20px;font-size:var(--fs-sm);font-weight:700;background:var(--surface);box-sizing:border-box"
           oninput="cfgSearchSettings(this.value)">
         <div id="cfgSearchSug" class="cfg-search-sug" style="display:none"></div>
       </div>
       <span id="cfgSearchCnt" class="cfg-search-count" style="font-size:10px;color:var(--gray-l);font-weight:900;white-space:nowrap;flex-shrink:0"></span>
-      ${_cfgViewMode==="advanced"?`<div class="cfg-mode-toggle" style="display:flex;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:2px;flex-shrink:0;gap:1px">
-        <button class="btn btn-xs no-export" onclick="cfgSetViewMode('basic')"
-          style="border-radius:7px;padding:4px 10px;font-size:var(--fs-caption);font-weight:900;${_cfgViewMode==="basic"?"background:var(--blue);color:#fff;border-color:transparent":"background:transparent;color:var(--text3);border-color:transparent"}">\uAE30\uBCF8</button>
-        <button class="btn btn-xs no-export" onclick="cfgSetViewMode('advanced')"
-          style="border-radius:7px;padding:4px 10px;font-size:var(--fs-caption);font-weight:900;${_cfgViewMode==="advanced"?"background:var(--blue);color:#fff;border-color:transparent":"background:transparent;color:var(--text3);border-color:transparent"}">\uACE0\uAE09</button>
-      </div>`:""}
-      ${_cfgViewMode==="advanced"?_menuBtn:""}
-      ${_cfgViewMode==="advanced"?_regBtn:""}
+      ${_menuBtn}
+      ${_regBtn}
     </div>
-    ${_cfgViewMode==="advanced"?`<!-- \uACE0\uAE09\uBAA8\uB4DC: \uCE74\uD14C\uACE0\uB9AC \uD0ED \uC218\uD3C9 \uC2A4\uD06C\uB864 -->
-    <div class="cfg-cat-tab-row" style="display:flex;gap:5px;padding:0 2px 7px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;min-width:0">
-      ${_catTabsHtml}
-    </div>`:""}
   </div>
 
   <section class="no-export cfg-hero">
     <div class="cfg-hero__main">
-      <div class="cfg-hero__eyebrow">${_cfgModeLabel}</div>
+      <div class="cfg-hero__eyebrow">\u2699\uFE0F \uC124\uC815</div>
       <div class="cfg-hero__title">\uC124\uC815 \uD0ED</div>
       <div class="cfg-hero__desc">
-        <strong>${_catLabel(window._cfgCat)}</strong> \uCE74\uD14C\uACE0\uB9AC\uB97C \uBCF4\uACE0 \uC788\uC2B5\uB2C8\uB2E4.
-        ${_cfgCatDesc[window._cfgCat]||"\uC790\uC8FC \uC4F0\uB294 \uC124\uC815\uC744 \uBE60\uB974\uAC8C \uCC3E\uACE0 \uC815\uB9AC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."}
-      </div>
-      <div class="cfg-hero__chips">
-        <span class="cfg-hero-chip">${_cfgCatIcons[window._cfgCat]||"\u{1F5C2}\uFE0F"} \uD604\uC7AC \uCE74\uD14C\uACE0\uB9AC</span>
-        <span class="cfg-hero-chip">\u{1F50E} \uAC80\uC0C9 \uC989\uC2DC \uC774\uB3D9</span>
-        <span class="cfg-hero-chip">\u{1F4CC} \uC790\uC8FC \uC4F0\uB294 \uC124\uC815 \uACE0\uC815</span>
+        <strong>${_catLabel(window._cfgCat)}</strong> \u2014 ${_cfgCatDesc[window._cfgCat]||"\uC6D0\uD558\uB294 \uCE74\uD14C\uACE0\uB9AC\uB97C \uC120\uD0DD\uD574 \uC124\uC815\uC744 \uCC3E\uC544\uBCF4\uC138\uC694."}
       </div>
     </div>
     <div class="cfg-hero__stats">
@@ -3432,70 +3460,22 @@ var __defProp=Object.defineProperty;var __getOwnPropSymbols=Object.getOwnPropert
     </div>
   </section>
 
-  ${_cfgViewMode==="basic"?`<!-- \u2461 \uAE30\uBCF8\uBAA8\uB4DC: \uCE74\uD14C\uACE0\uB9AC \uCE74\uB4DC \uADF8\uB9AC\uB4DC + \uC990\uACA8\uCC3E\uAE30 -->
+  <!-- \u2461 \uCE74\uD14C\uACE0\uB9AC \uCE74\uB4DC \uADF8\uB9AC\uB4DC + \uC138\uBD80 \uC124\uC815 \uBAA9\uB85D (\uB2E8\uC77C \uB808\uC774\uC544\uC6C3) -->
   <div class="no-export cfg-overview-block" style="margin:10px 0 6px">
-    <div class="cfg-subpanel cfg-subpanel--soft" style="margin-bottom:10px;padding:10px 10px 9px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-        <div class="cfg-mode-toggle" style="display:flex;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:2px;flex-shrink:0;gap:1px">
-          <button class="btn btn-xs no-export" onclick="cfgSetViewMode('basic')"
-            style="border-radius:7px;padding:4px 10px;font-size:var(--fs-caption);font-weight:900;${_cfgViewMode==="basic"?"background:var(--blue);color:#fff;border-color:transparent":"background:transparent;color:var(--text3);border-color:transparent"}">\uAE30\uBCF8</button>
-          <button class="btn btn-xs no-export" onclick="cfgSetViewMode('advanced')"
-            style="border-radius:7px;padding:4px 10px;font-size:var(--fs-caption);font-weight:900;${_cfgViewMode==="advanced"?"background:var(--blue);color:#fff;border-color:transparent":"background:transparent;color:var(--text3);border-color:transparent"}">\uACE0\uAE09</button>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          ${_menuBtn}
-          ${_regBtn}
-        </div>
-      </div>
-      <div class="cfg-utility-row" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">
-        <button class="btn btn-w btn-xs cfg-mini-btn" data-cfg-toggle-variant="long" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()" title="\uC6D0\uBCF8 \uC124\uC815 \uBAA9\uB85D(\uD558\uB2E8)\uC744 \uD45C\uC2DC/\uC228\uAE40">${_cfgBottomOpen?"\u{1F4DA} \uC6D0\uBCF8 \uBAA9\uB85D \uC228\uAE30\uAE30":"\u{1F4DA} \uC6D0\uBCF8 \uBAA9\uB85D \uBCF4\uAE30"}</button>
-        <button class="btn btn-w btn-xs cfg-mini-btn" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()" title="\uC5F4\uC5B4\uB454 \uC124\uC815 \uD56D\uBAA9\uB9CC \uBAA8\uB450 \uB2EB\uAE30">\u{1F4E6} \uC5F4\uB9B0 \uD56D\uBAA9 \uB2EB\uAE30</button>
-        <button class="btn btn-w btn-xs cfg-mini-btn" onclick="window.cfgFocusSearch&&window.cfgFocusSearch()">\u{1F50E} \uAC80\uC0C9</button>
-      </div>
-    </div>
-    ${_cfgPinsHtml?`<div class="cfg-subpanel cfg-subpanel--soft" style="margin-bottom:10px">
-      <div class="cfg-subpanel__label" style="font-size:10px;font-weight:900;color:var(--gray-l);margin-bottom:5px">\u{1F4CC} \uC990\uACA8\uCC3E\uAE30</div>
-      <div class="cfg-pins-row" style="display:flex;gap:5px;flex-wrap:wrap">${_cfgPinsHtml}</div>
-    </div>`:""}
     <div class="cfg-subpanel__label" style="font-size:10px;font-weight:900;color:var(--gray-l);margin-bottom:6px">\u{1F5C2}\uFE0F \uCE74\uD14C\uACE0\uB9AC \uC120\uD0DD</div>
     <div class="cfg-cat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:7px;margin-bottom:10px">
       ${_catCardsHtml}
     </div>
     <div class="cfg-subpanel cfg-subpanel--surface" data-cfg-bottom-panel="1" style="padding:10px;border:1px solid var(--border);border-radius:14px;background:var(--surface)">
-      <div class="cfg-section-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+      <div class="cfg-section-head" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px">
         <div class="cfg-section-title" style="font-size:var(--fs-caption);font-weight:900;color:var(--text2)">\u{1F4DA} <span data-cfg-cur-cat-label="1">${_catLabel(window._cfgCat)}</span></div>
-        <button class="btn btn-w btn-xs cfg-mini-btn" data-cfg-toggle-variant="plain" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()" title="\uC6D0\uBCF8 \uC124\uC815 \uBAA9\uB85D(\uD558\uB2E8)\uC744 \uD45C\uC2DC/\uC228\uAE40">${_cfgBottomOpen?"\uC6D0\uBCF8 \uBAA9\uB85D \uC228\uAE30\uAE30":"\uC6D0\uBCF8 \uBAA9\uB85D \uBCF4\uAE30"}</button>
+        <span style="font-size:10px;font-weight:800;color:var(--gray-l)">${_curSecs.length}\uAC1C \uD56D\uBAA9</span>
       </div>
       <div class="cfg-sec-grid" data-cfg-cur-sec-buttons="1" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px">
         ${_secButtonsHtml}
       </div>
     </div>
-  </div>`:`<!-- \u2461 \uACE0\uAE09\uBAA8\uB4DC: \uD035\uBC84\uD2BC \uADF8\uB9AC\uB4DC + \uC139\uC158 \uBC84\uD2BC -->
-  <div class="no-export cfg-overview-block" style="margin:8px 0 6px">
-    ${_cfgPinsHtml?`<div class="cfg-pins-row" style="display:flex;align-items:center;gap:5px;margin-bottom:8px;flex-wrap:wrap">
-      <span class="cfg-subpanel__label" style="font-size:10px;font-weight:900;color:var(--gray-l);flex-shrink:0">\u{1F4CC}</span>
-      ${_cfgPinsHtml}
-    </div>`:""}
-    <div class="cfg-section-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-      <div class="cfg-subpanel__label" style="font-size:10px;font-weight:900;color:var(--gray-l)">\u26A1 \uBE60\uB978 \uC774\uB3D9 <span style="opacity:.65">(\u{1F4CC} \uACE0\uC815)</span></div>
-      <div class="cfg-utility-row" style="display:flex;gap:4px">
-        <button class="btn btn-w btn-xs cfg-mini-btn" data-cfg-toggle-variant="short" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()" title="\uC6D0\uBCF8 \uC124\uC815 \uBAA9\uB85D(\uD558\uB2E8)\uC744 \uD45C\uC2DC/\uC228\uAE40">${_cfgBottomOpen?"\u{1F4DA} \uC228\uAE30\uAE30":"\u{1F4DA} \uBCF4\uAE30"}</button>
-        <button class="btn btn-w btn-xs cfg-mini-btn" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()" title="\uC5F4\uC5B4\uB454 \uC124\uC815 \uD56D\uBAA9\uB9CC \uBAA8\uB450 \uB2EB\uAE30">\u{1F4E6} \uC5F4\uB9B0 \uD56D\uBAA9 \uB2EB\uAE30</button>
-      </div>
-    </div>
-    <div class="cfg-quick-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:5px;margin-bottom:10px">
-      ${_quickBtnsHtml}
-    </div>
-    <div class="cfg-subpanel cfg-subpanel--surface" data-cfg-bottom-panel="1" style="padding:10px;border:1px solid var(--border);border-radius:14px;background:var(--surface)">
-      <div class="cfg-section-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-        <div class="cfg-section-title" style="font-size:var(--fs-caption);font-weight:900;color:var(--text2)">\u{1F4DA} <span data-cfg-cur-cat-label="1">${_catLabel(window._cfgCat)}</span></div>
-        <button class="btn btn-w btn-xs cfg-mini-btn" data-cfg-toggle-variant="plain" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()" title="\uC6D0\uBCF8 \uC124\uC815 \uBAA9\uB85D(\uD558\uB2E8)\uC744 \uD45C\uC2DC/\uC228\uAE40">${_cfgBottomOpen?"\uC6D0\uBCF8 \uBAA9\uB85D \uC228\uAE30\uAE30":"\uC6D0\uBCF8 \uBAA9\uB85D \uBCF4\uAE30"}</button>
-      </div>
-      <div class="cfg-sec-grid" data-cfg-cur-sec-buttons="1" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px">
-        ${_secButtonsHtml}
-      </div>
-    </div>
-  </div>`}
+  </div>
 <div class="cfg-bottom-sections-grid">
 ${_scfgD("notice","\u{1F4E2} \uACF5\uC9C0 \uAD00\uB9AC")}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:14px">\uC811\uC18D \uC2DC \uD31D\uC5C5\uC73C\uB85C \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uD65C\uC131\uD654\uB41C \uACF5\uC9C0\uB9CC \uBCF4\uC5EC\uC9D1\uB2C8\uB2E4.</div>
@@ -4774,7 +4754,10 @@ E-SCORE TOURNAMENT => \uB05D\uC7A5\uC804
   </details>
   ${_scfgD("b2femco","\u{1F9E9} \uD3A8\uCF54\uC2A4\uD0C0\uC77C \uC124\uC815")}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:10px">\uD604\uD669\uD310 &gt; <b>\uD3A8\uCF54\uC2A4\uD0C0\uC77C</b> \uD0ED\uC5D0\uC11C \uC0AC\uC6A9\uD558\uB294 \uC804\uC6A9 \uC124\uC815\uC785\uB2C8\uB2E4. \uC800\uC7A5 \uC989\uC2DC \uBC18\uC601\uB429\uB2C8\uB2E4.</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:12px">
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+    <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u2699\uFE0F \uAE30\uBCF8 \uB808\uC774\uC544\uC6C3 \xB7 \uB85C\uACE0 \uD06C\uAE30</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:900;color:var(--text2)">
           <input type="checkbox" id="cfg-femco-autoLayout" style="width:15px;height:15px" onchange="cfgFemcoUpd('autoLayout', this.checked?1:0)">
@@ -4814,6 +4797,11 @@ E-SCORE TOURNAMENT => \uB05D\uC7A5\uC804
         <input type="range" id="cfg-femco-bgOverlay" min="0" max="70" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgOverlayNum').value=this.value;cfgFemcoUpd('bgOverlay',this.value)">
         <input type="number" id="cfg-femco-bgOverlayNum" min="0" max="70" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-bgOverlay').value=this.value;cfgFemcoUpd('bgOverlay',this.value)">
       </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F3A8} \uB85C\uACE0 \xB7 \uC81C\uBAA9 \uBC30\uCE58</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:-6px">0=\uD22C\uBA85(\uC6D0\uBCF8 \uADF8\uB300\uB85C) \xB7 70=\uAE00\uC790 \uC798 \uBCF4\uC774\uAC8C \uC9C4\uD558\uAC8C</div>
 
       <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);cursor:pointer;font-weight:800;color:var(--text2)">
@@ -4887,7 +4875,11 @@ E-SCORE TOURNAMENT => \uB05D\uC7A5\uC804
           <option value="gmarket">GmarketSans</option>
         </select>
       </div>
-
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F5BC}\uFE0F \uC2A4\uD2B8\uB9AC\uBA38 \uCE74\uB4DC \xB7 \uACA9\uC790 \uD45C\uC2DC</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:grid;grid-template-columns:140px 1fr 100px;gap:10px;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2)">\uC2A4\uD2B8\uB9AC\uBA38 \uC774\uBBF8\uC9C0 \uD06C\uAE30</div>
         <input type="range" id="cfg-femco-playerImgSize" min="28" max="160" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-playerImgSizeNum').value=this.value;cfgFemcoUpd('playerImgSize',this.value)">
@@ -4987,7 +4979,11 @@ E-SCORE TOURNAMENT => \uB05D\uC7A5\uC804
         <input type="number" id="cfg-femco-countFontSizeNum" min="10" max="18" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-countFontSize').value=this.value;cfgFemcoUpd('countFontSize',this.value)">
       </div>
 
-      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F393} \uB300\uD559\uBCC4 \uC124\uC815 (\uBC30\uACBD \xB7 \uC0C9\uC0C1 \xB7 \uBB38\uAD6C)</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2)">\uB300\uD559\uBCC4 \uC124\uC815</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:140px">\uB300\uD559 \uC120\uD0DD</div>
@@ -5060,6 +5056,11 @@ E-SCORE TOURNAMENT => \uB05D\uC7A5\uC804
         <input type="range" id="cfg-femco-bgOffY" min="-260" max="260" step="1" style="width:100%;accent-color:var(--blue)" oninput="document.getElementById('cfg-femco-bgOffYNum').value=this.value;cfgFemcoSetBgOpt('oy',this.value)">
         <input type="number" id="cfg-femco-bgOffYNum" min="-260" max="260" step="1" style="width:100%;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:var(--fs-base);font-weight:700" onchange="document.getElementById('cfg-femco-bgOffY').value=this.value;cfgFemcoSetBgOpt('oy',this.value)">
       </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F4DD} \uBB38\uAD6C \uC2A4\uD0C0\uC77C \xB7 \uCD08\uAE30\uD654</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);min-width:140px">\uBB38\uAD6C \uC2A4\uD0C0\uC77C</div>
         <span style="font-size:var(--fs-caption);color:var(--gray-l)">\uD06C\uAE30</span>
@@ -5077,6 +5078,8 @@ E-SCORE TOURNAMENT => \uB05D\uC7A5\uC804
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         <button class="btn btn-b" onclick="cfgFemcoReset()">\uCD08\uAE30\uD654</button>
       </div>
+      </div>
+    </details>
     </div>
   </details>
   ${_scfgD("cfgmenu","\u{1F9ED} \uC124\uC815 \uBA54\uB274 \uC815\uB9AC")}
@@ -5243,7 +5246,10 @@ E-SCORE TOURNAMENT => \uB05D\uC7A5\uC804
   </details>
   ${_scfgD("boardchip","\u{1F3F7}\uFE0F \uD604\uD669\uD310 \uCE69/\uB300\uD559\uB85C\uACE0 \uD06C\uAE30")}
     <div style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">\uD604\uD669\uD310 \uCE69/\uB300\uD559 \uB85C\uACE0 \uAD00\uB828 \uC124\uC815\uC785\uB2C8\uB2E4. <b>\uC2A4\uD2B8\uB9AC\uBA38 \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 \uC804\uC5ED \uBC30\uC728</b>\uACFC\uB294 \uBCC4\uAC1C\uB85C \uB3D9\uC791\uD569\uB2C8\uB2E4.</div>
-    <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;gap:14px">
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+    <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F5BC}\uFE0F \uD504\uB85C\uD544/\uCE69 \uD45C\uC2DC</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:14px">
       <div>
         <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">\u{1F4D0} \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 \uBAA8\uC591</div>
         <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">\uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 \uBAA8\uC591(\uC6D0\uD615/\uB124\uBAA8)\uC740 \uBCC4\uB3C4 \uBA54\uB274\uC5D0\uC11C \uC804\uC5ED\uC73C\uB85C \uC124\uC815\uD569\uB2C8\uB2E4.</div>
@@ -5261,7 +5267,12 @@ E-SCORE TOURNAMENT => \uB05D\uC7A5\uC804
           oninput="boardChipLayoutScale=+this.value;saveBoardChipPhotoSettings();document.getElementById('cfg-bcp-layout-val').textContent=this.value+'%';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){}">
         <div style="display:flex;justify-content:space-between;font-size:var(--fs-caption);color:var(--gray-l);margin-top:2px"><span>70%</span><span>160%</span></div>
       </div>
-      <div style="border-top:1px dashed var(--border2);padding-top:12px">
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F3EB} \uB300\uD559 \uB85C\uACE0 \uBAA8\uC591 \xB7 \uD06C\uAE30</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:14px">
+      <div>
         <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:10px">\u{1F3EB} \uB300\uD559 \uB85C\uACE0 \uC124\uC815</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
           <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">\u{1F4D0} \uD504\uB85C\uD544(\uB85C\uACE0) \uBAA8\uC591</div>
@@ -5282,7 +5293,12 @@ E-SCORE TOURNAMENT => \uB05D\uC7A5\uC804
           <input type="range" min="34" max="72" step="2" value="${(()=>{try{return parseInt(localStorage.getItem("su_ul_box")||"46")}catch(e){return 46}})()}" style="width:100%;accent-color:var(--blue)"
             oninput="localStorage.setItem('su_ul_box',String(this.value));if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();document.getElementById('cfg-ul-box-val').textContent=this.value+'px';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
         </div>
-        <div style="border-top:1px dashed var(--border2);padding-top:12px">
+      </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F3DB}\uFE0F \uB300\uD559 \uC0C1\uC138 \xB7 \uD604\uD669\uD310 \uB85C\uACE0 \uD06C\uAE30</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:14px">
           <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:10px">\u{1F3DB}\uFE0F \uB300\uD559 \uC0C1\uC138(\uBAA8\uB2EC) \uB85C\uACE0 \uD06C\uAE30</div>
           <div style="margin-bottom:10px">
             <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">\u{1F4CF} \uB85C\uACE0 \uC774\uBBF8\uC9C0 \uD06C\uAE30 <span id="cfg-ul-size-d-val" style="font-weight:400;color:var(--gray-l)">${(()=>{try{return parseInt(localStorage.getItem("su_ul_size_detail")||localStorage.getItem("su_ul_size")||"46")}catch(e){return 46}})()}px</span></div>
@@ -5294,7 +5310,6 @@ E-SCORE TOURNAMENT => \uB05D\uC7A5\uC804
             <input type="range" min="48" max="110" step="2" value="${(()=>{try{return parseInt(localStorage.getItem("su_ul_box_detail")||localStorage.getItem("su_ul_box")||"72")}catch(e){return 72}})()}" style="width:100%;accent-color:var(--blue)"
               oninput="localStorage.setItem('su_ul_box_detail',String(this.value));if(typeof applyUnivLogoVars==='function')applyUnivLogoVars();document.getElementById('cfg-ul-box-d-val').textContent=this.value+'px';try{window._cfgSoftRefreshLive&&window._cfgSoftRefreshLive();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
           </div>
-        </div>
         <div style="border-top:1px dashed var(--border2);padding-top:12px">
           <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:10px">\u{1F4CA} \uD604\uD669\uD310(\uB300\uD559\uBCC4 \uC2E0\uD604\uD669\uD310) \uB300\uD559 \uB85C\uACE0 \uD06C\uAE30</div>
           <div>
@@ -5303,15 +5318,22 @@ E-SCORE TOURNAMENT => \uB05D\uC7A5\uC804
               oninput="localStorage.setItem('su_b2_univ_logo_size',String(this.value));if(typeof applyBoard2LogoVars==='function')applyBoard2LogoVars();document.getElementById('cfg-b2-ul-val').textContent=this.value+'px';try{window._cfgSoftRefreshBoard2&&window._cfgSoftRefreshBoard2();}catch(e){};try{if(typeof window.cfgTouchPrefsSync==='function')window.cfgTouchPrefsSync();}catch(e){}">
           </div>
         </div>
-        <div style="border-top:1px dashed var(--border2);padding-top:12px">
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F5BC}\uFE0F \uBA64\uBC84 \uD45C\uC2DC \uBAA8\uB4DC</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:14px">
           <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">\u{1F5BC}\uFE0F \uD604\uD669\uD310(\uB300\uD559\uBCC4) \uBA64\uBC84 \uD45C\uC2DC \uBAA8\uB4DC</div>
           <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">\uB300\uD559 \uCE74\uB4DC \uC548\uC5D0\uC11C \uBA64\uBC84\uB4E4\uC744 \uC5B4\uB5A4 \uD615\uD0DC\uB85C \uBCF4\uC5EC\uC904\uC9C0 \uC120\uD0DD\uD569\uB2C8\uB2E4.</div>
           <div id="cfg-b2-univview" style="display:flex;flex-wrap:wrap;gap:8px">
             ${(()=>{const cur=typeof window.cfgGetB2UnivProfileView=="function"?window.cfgGetB2UnivProfileView():"default",mkBtn=(v,label)=>{const on=cur===v;return`<button type="button" onclick="cfgSetB2UnivProfileView('${v}');try{const g=document.getElementById('cfg-b2-univview'); if(g){ g.querySelectorAll('button').forEach(b=>{ b.style.border='1.5px solid rgba(148,163,184,.20)'; b.style.background='linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94))'; b.style.color='var(--text2)'; b.style.boxShadow='0 4px 10px rgba(15,23,42,.04)'; }); this.style.border='1.5px solid #2563eb'; this.style.background='linear-gradient(135deg,#eff6ff,#dbeafe)'; this.style.color='#1d4ed8'; this.style.boxShadow='0 6px 16px rgba(37,99,235,.12)'; }}catch(e){}"
                   style="border:${on?"1.5px solid #2563eb":"1.5px solid rgba(148,163,184,.20)"};background:${on?"linear-gradient(135deg,#eff6ff,#dbeafe)":"linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94))"};color:${on?"#1d4ed8":"var(--text2)"};box-shadow:${on?"0 6px 16px rgba(37,99,235,.12)":"0 4px 10px rgba(15,23,42,.04)"};padding:8px 10px;border-radius:14px;font-size:var(--fs-sm);font-weight:900;cursor:pointer">${label}</button>`};return[mkBtn("default","\uAE30\uBCF8"),mkBtn("poster","\uD3EC\uC2A4\uD130"),mkBtn("heat","\uD788\uD2B8\uB9F5"),mkBtn("split","\uB9AC\uC2A4\uD2B8"),mkBtn("board","\uBCF4\uB4DC")].join("")})()}
           </div>
-        </div>
-        <div style="border-top:1px dashed var(--border2);padding-top:12px">
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F9F7} \uB85C\uACE0 \uC6CC\uD130\uB9C8\uD06C(\uC6B0\uCE21 \uC544\uB798/\uAC00\uC6B4\uB370)</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:14px">
           <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">\u{1F9F7} \uB300\uD559\uBCC4 \uC2E0\uD604\uD669\uD310 \uC6CC\uD130\uB9C8\uD06C(\uC6B0\uCE21 \uC544\uB798/\uAC00\uC6B4\uB370)</div>
           <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">\uC6B0\uCE21 \uC544\uB798 \uB85C\uACE0(\uC791\uC740 \uC6CC\uD130\uB9C8\uD06C)\uC640 \uAC00\uC6B4\uB370 \uB85C\uACE0(\uBC30\uACBD \uB85C\uACE0)\uC758 \uC704\uCE58/\uD06C\uAE30\uB97C \uC804\uCCB4 \uB610\uB294 \uB300\uD559\uBCC4\uB85C \uC870\uC815\uD569\uB2C8\uB2E4.</div>
           ${(()=>{const _esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"),_sel=(()=>{try{return(localStorage.getItem("su_cfg_b2_wm_univ")||"__ALL__").trim()||"__ALL__"}catch(e){return"__ALL__"}})(),_list=(Array.isArray(window.univCfg)?window.univCfg:[]).map(u=>String(u&&u.name||"").trim()).filter(Boolean).sort((a,b)=>a.localeCompare(b,"ko")),_cfg=typeof window._cfgB2LogoOverlayGet=="function"?window._cfgB2LogoOverlayGet(_sel):{wmScale:150,wmRight:120,wmBottom:30,bgScale:100},_gcfg=typeof window._cfgB2LogoOverlayGet=="function"?window._cfgB2LogoOverlayGet("__ALL__"):{wmGlobalOn:1},_wmGlobalOn=_gcfg.wmGlobalOn==null?1:Number(_gcfg.wmGlobalOn),_wmScale=parseInt(_cfg.wmScale||150,10),_wmRight=parseInt(_cfg.wmRight||120,10),_wmBottom=parseInt(_cfg.wmBottom||30,10),_bgScale=parseInt(_cfg.bgScale||100,10);return`
@@ -5363,7 +5385,7 @@ E-SCORE TOURNAMENT => \uB05D\uC7A5\uC804
             `})()}
         </div>
       </div>
-    </div>
+    </details>
   </details>
   ${_scfgD("oldbright","\u{1F3A8} \uAD6C\uD604\uD669\uD310 \uCE74\uB4DC \uBC30\uACBD/\uB77C\uBCA8 \uBC1D\uAE30 \uC870\uC808")}
     <p style="font-size:var(--fs-sm);color:var(--gray-l);margin-bottom:12px">\uAD6C\uD604\uD669\uD310 \uCE74\uB4DC\uC758 \uBC30\uACBD\uACFC \uB77C\uBCA8 \uBC1D\uAE30\uB97C \uC870\uC808\uD569\uB2C8\uB2E4. (\uAD6C\uD604\uD669\uD310 \uD234\uBC14\uC5D0\uC11C\uB3C4 \uC870\uC808 \uAC00\uB2A5)</p>
@@ -6337,6 +6359,10 @@ function cfgMdFxApplyPreset(preset){try{const p=String(preset||"").trim();p==="m
     </div>
     <div style="font-size:var(--fs-caption);color:var(--gray-l);margin:-2px 0 12px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,var(--surface),var(--white));border:1px solid var(--border)">\uD604\uC7AC \uC124\uC815\uC740 <b>\uBBF8\uB2C8\uB300\uC804</b>, <b>\uB300\uD559\uB300\uC804</b>, <b>\uB300\uD559CK</b>, \uB300\uD68C/\uD504\uB85C\uB9AC\uADF8 \uACBD\uAE30 \uC0C1\uC138 \uD31D\uC5C5\uC5D0\uB3C4 \uAC19\uC774 \uC801\uC6A9\uB429\uB2C8\uB2E4.</div>
 
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+    <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F3A8} \uB514\uC790\uC778 \xB7 \uB808\uC774\uC544\uC6C3</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:8px">\u{1F3A8} \uB514\uC790\uC778 \uBAA8\uB4DC</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
@@ -6381,7 +6407,11 @@ function cfgMdFxApplyPreset(preset){try{const p=String(preset||"").trim();p==="m
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">\uC120\uD0DD\uD558\uBA74 \uC5F4\uB824 \uC788\uB294 \uACBD\uAE30 \uC0C1\uC138 \uD31D\uC5C5\uC5D0 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4.</div>
     </div>
-
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u2728 \uD6A8\uACFC</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:900;color:var(--text2);margin-bottom:8px">\u2728 \uD5E4\uB354 \uC560\uB2C8\uBA54\uC774\uC158/\uD6A8\uACFC</div>
       <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;gap:10px">
@@ -6435,7 +6465,11 @@ function cfgMdFxApplyPreset(preset){try{const p=String(preset||"").trim();p==="m
         </div>
       </div>
     </div>
-
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u2194\uFE0F \uC815\uB82C \xB7 \uD3F0\uD2B8 \xB7 \uB85C\uACE0</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">\u2194\uFE0F \uC0C1\uB2E8 \uB300\uD559 \uCE74\uB4DC \uC815\uB82C</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
@@ -6484,7 +6518,11 @@ function cfgMdFxApplyPreset(preset){try{const p=String(preset||"").trim();p==="m
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:8px">PC/\uD0DC\uBE14\uB9BF/\uBAA8\uBC14\uC77C\uC5D0\uC11C \uAC01\uAC01 \uB2E4\uB978 \uC0C1\uB2E8 \uB300\uD559 \uCE74\uB4DC \uD3F0\uD2B8\uC640 \uB85C\uACE0 \uD06C\uAE30\uB97C \uC0AC\uC6A9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.</div>
     </div>
-
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F5BC}\uFE0F \uD504\uB85C\uD544 \xB7 \uC0C9\uC0C1</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">\u{1F5BC}\uFE0F \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0(\uC120\uC218)</div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">\uD604\uC7AC \uAE30\uAE30: <b>${_mdDevLabel}</b></div>
@@ -6504,7 +6542,11 @@ function cfgMdFxApplyPreset(preset){try{const p=String(preset||"").trim();p==="m
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">\uD31D\uC5C5 \uC0C1\uB2E8\uC758 \uD504\uB85C\uD544 \uD45C\uC2DC \uD06C\uAE30/\uCC44\uC6B0\uAE30 \uBC29\uC2DD\uC785\uB2C8\uB2E4</div>
     </div>
-
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u2699\uFE0F \uD31D\uC5C5 \uB3D9\uC791</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">\u{1F3A8} \uC2B9/\uD328 \uBC30\uACBD \uAC15\uB3C4</div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
@@ -6527,6 +6569,9 @@ function cfgMdFxApplyPreset(preset){try{const p=String(preset||"").trim();p==="m
         <input type="checkbox" ${closeOnMatchPlayer?"checked":""} style="width:16px;height:16px;cursor:pointer" onchange="_setPdCloseOnMatchPlayer(this.checked)">
         <span style="font-size:var(--fs-sm);color:var(--text)">\uACBD\uAE30 \uC0C1\uC138\uC5D0\uC11C \uC120\uC218 \uD074\uB9AD \uC2DC \uD31D\uC5C5 \uB2EB\uAE30</span>
       </label>
+    </div>
+      </div>
+    </details>
     </div>
   `}function _refreshOpenMatchDetailModals(){try{const histOpen=(()=>{try{const el=document.getElementById("histDetModal");return!!(el&&el.style.display!=="none")}catch(e){return!1}})(),compOpen=(()=>{try{const el=document.getElementById("compMatchDetailModal");return!!(el&&el.style.display!=="none")}catch(e){return!1}})();if(histOpen&&window._lastHistDetailState&&typeof openHistDetailModal=="function"&&openHistDetailModal(window._lastHistDetailState.key),compOpen&&window._cmdDetailState){const st=window._cmdDetailState;st.isNm&&typeof nmOpenDetailModal=="function"?nmOpenDetailModal(st.tnId,st.nmIdx):(st.isLeague&&typeof openCompMatchDetailModal=="function"||typeof openCompMatchDetailModal=="function")&&openCompMatchDetailModal(st.tnId,st.gi,st.mi,st.rnd,!!st.isManual)}}catch(e){}}function cfgSetMatchDetailMode(mode){try{localStorage.setItem("su_md_design_mode",["classic","glass","editorial","neon","midnight","sunset","aurora","mono"].includes(mode)?mode:"classic")}catch(e){}try{typeof applyMatchDetailVars=="function"&&applyMatchDetailVars()}catch(e){}try{const md=(localStorage.getItem("su_md_design_mode")||"classic").trim(),lm=(localStorage.getItem("su_md_layout_mode")||"default").trim(),m1=document.getElementById("histDetModal"),m2=document.getElementById("compMatchDetailModal");m1&&(m1.setAttribute("data-md-mode",md),m1.setAttribute("data-md-layout",lm)),m2&&(m2.setAttribute("data-md-mode",md),m2.setAttribute("data-md-layout",lm)),document.querySelectorAll(".modal--matchdetail .mbox--matchdetail, .modal--matchdetail .cmd-body").forEach(el=>{el.setAttribute("data-md-mode",md),el.setAttribute("data-md-layout",lm)}),document.querySelectorAll(".cmd-detail-shell").forEach(el=>{el.setAttribute("data-md-mode",md),el.setAttribute("data-md-layout",lm)})}catch(e){}try{typeof render=="function"&&render()}catch(e){}try{_refreshOpenMatchDetailModals()}catch(e){}try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(e){}try{_renderCfgMatchDetailSection()}catch(e){}}function cfgSetMatchDetailLayout(mode){try{localStorage.setItem("su_md_layout_mode",["default","compact","focus","broadcast","split","poster"].includes(mode)?mode:"default")}catch(e){}try{typeof applyMatchDetailVars=="function"&&applyMatchDetailVars()}catch(e){}try{const md=(localStorage.getItem("su_md_design_mode")||"classic").trim(),lm=(localStorage.getItem("su_md_layout_mode")||"default").trim(),m1=document.getElementById("histDetModal"),m2=document.getElementById("compMatchDetailModal");m1&&(m1.setAttribute("data-md-mode",md),m1.setAttribute("data-md-layout",lm)),m2&&(m2.setAttribute("data-md-mode",md),m2.setAttribute("data-md-layout",lm)),document.querySelectorAll(".modal--matchdetail .mbox--matchdetail, .modal--matchdetail .cmd-body").forEach(el=>{el.setAttribute("data-md-mode",md),el.setAttribute("data-md-layout",lm)}),document.querySelectorAll(".cmd-detail-shell").forEach(el=>{el.setAttribute("data-md-mode",md),el.setAttribute("data-md-layout",lm)})}catch(e){}try{typeof render=="function"&&render()}catch(e){}try{_refreshOpenMatchDetailModals()}catch(e){}try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(e){}try{_renderCfgMatchDetailSection()}catch(e){}}try{window.SettingsModules=window.SettingsModules||{},window.SettingsModules.matchDetail={applyFxPreset:cfgMdFxApplyPreset,renderMatchDetailSection:_renderCfgMatchDetailSection},window.cfgMdFxApplyPreset=cfgMdFxApplyPreset,window.cfgSetMatchDetailMode=cfgSetMatchDetailMode,window.cfgSetMatchDetailLayout=cfgSetMatchDetailLayout,window._renderCfgMatchDetailSection=_renderCfgMatchDetailSection}catch(e){}
 
@@ -6615,6 +6660,10 @@ function _renderCfgPdSection(){const body=document.getElementById("cfg-pd-body")
     </div>`;body.innerHTML=`
     ${_pdPreviewCard}
     ${_pdUiPreset}
+    <div style="padding:0;display:flex;flex-direction:column;gap:8px">
+    <details class="cfg-grp" open style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F3A8} \uB514\uC790\uC778 \xB7 \uB808\uC774\uC544\uC6C3</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">\u{1F3A8} \uB514\uC790\uC778 \uBAA8\uB4DC</div>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${dmCards}</div>
@@ -6625,6 +6674,11 @@ function _renderCfgPdSection(){const body=document.getElementById("cfg-pd-body")
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${lmCards}</div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">\uC378\uB124\uC77C\uC740 \uBBF8\uB9AC\uBCF4\uAE30\uC774\uACE0, \uC120\uD0DD\uD558\uBA74 \uD604\uC7AC \uC5F4\uB824 \uC788\uB294 \uC2A4\uD2B8\uB9AC\uBA38 \uC0C1\uC138 \uD31D\uC5C5\uC5D0 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4.</div>
     </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F4CF} \uD06C\uAE30</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">\u{1F4CF} \uD3F0\uD2B8 \uD06C\uAE30</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${fsBtns}</div>
@@ -6638,6 +6692,11 @@ function _renderCfgPdSection(){const body=document.getElementById("cfg-pd-body")
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">\uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 \uD06C\uAE30 (\uAE30\uBCF8 100%)</div>
     </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F308} \uBC30\uACBD \xB7 \uC0C9\uC0C1</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">\u{1F393} \uB300\uD559 \uC0C9\uC0C1 \uD31D\uC5C5 \uBC30\uACBD</div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px">
@@ -6731,6 +6790,11 @@ function _renderCfgPdSection(){const body=document.getElementById("cfg-pd-body")
       </div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-top:6px">\uAC1C\uBCC4 \uB300\uD559\uC5D0 \uBCC4\uB3C4 \uBC30\uACBD\uC744 \uB123\uC9C0 \uC54A\uC740 \uACBD\uC6B0 \uAE30\uBCF8\uAC12\uC73C\uB85C \uC0AC\uC6A9\uB429\uB2C8\uB2E4.</div>
     </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F3A8} \uD45C\uC2DC \xB7 \uAC15\uB3C4</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">\u{1F4D0} \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0 \uBAA8\uC591 (\uC804\uC5ED)</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -6818,6 +6882,11 @@ function _renderCfgPdSection(){const body=document.getElementById("cfg-pd-body")
         <button class="btn btn-w btn-xs" onclick="['su_md_team_hdr_ck_a','su_md_team_hdr_ck_b','su_md_team_hdr_tt_a','su_md_team_hdr_tt_b','su_md_team_hdr_pro_a','su_md_team_hdr_pro_b'].forEach(k=>localStorage.removeItem(k));try{ if(typeof _applyOpenHistDetailTeamHeaderColors==='function') _applyOpenHistDetailTeamHeaderColors(); }catch(e){}; _renderCfgPdSection(); try{ if(typeof render==='function') render(); }catch(e){}">\u{1F504} \uAE30\uBCF8\uAC12\uC73C\uB85C \uCD08\uAE30\uD654</button>
       </div>
     </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u{1F5BC}\uFE0F \uACBD\uAE30 \uC0C1\uC138 \uD504\uB85C\uD544 \xB7 \uC804\uC801 \uD45C\uC2DC</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:800;color:var(--text2);margin-bottom:8px">\u{1F5BC}\uFE0F \uACBD\uAE30 \uC0C1\uC138 \uD504\uB85C\uD544 \uC774\uBBF8\uC9C0</div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:8px">\uD604\uC7AC \uAE30\uAE30: <b>${_mdDevLabel}</b></div>
@@ -6869,6 +6938,11 @@ function _renderCfgPdSection(){const body=document.getElementById("cfg-pd-body")
         </div>
       </div>
     </div>
+      </div>
+    </details>
+    <details class="cfg-grp" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);font-weight:900;font-size:var(--fs-sm);color:var(--text2)">\u2699\uFE0F \uD31D\uC5C5 \uB3D9\uC791 \xB7 \uAE30\uD0C0</summary>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
     <div style="margin-bottom:16px">
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:8px">\u2699\uFE0F \uD31D\uC5C5 \uB3D9\uC791 \uC124\uC815</div>
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
@@ -6897,6 +6971,9 @@ function _renderCfgPdSection(){const body=document.getElementById("cfg-pd-body")
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--text2);margin-bottom:4px">\u{1F317} \uB300\uD559\uBCC4 \uD5E4\uB354 \uC5B4\uB461\uAE30</div>
       <div style="font-size:var(--fs-caption);color:var(--gray-l);margin-bottom:10px">\uBC1D\uC740 \uC0C9\uC0C1 \uB300\uD559\uC740 \uC5B4\uB461\uAC8C \uC870\uC815\uD558\uBA74 \uC774\uB984\uC774 \uB354 \uC798 \uBCF4\uC785\uB2C8\uB2E4</div>
       ${univRows}
+    </div>
+      </div>
+    </details>
     </div>`}function _pdTouchPrefs(){try{typeof window.cfgTouchPrefsSync=="function"&&window.cfgTouchPrefsSync()}catch(e){}}function _setPdFontSize(size){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.font_size=size,localStorage.setItem("su_pd_style",JSON.stringify(s)),_renderCfgPdSection(),_pdTouchPrefs()}function _setPdProfileSize(val){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.profile_size=parseInt(val)||100,localStorage.setItem("su_pd_style",JSON.stringify(s));try{_refreshOpenDetailModals()}catch(e){}_pdTouchPrefs()}function _setPdUnivBgEnabled(checked){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.univ_bg_enabled=!!checked,localStorage.setItem("su_pd_style",JSON.stringify(s));try{_renderCfgPdSection()}catch(e){}try{_refreshOpenDetailModals()}catch(e){}_pdTouchPrefs()}function _setPdUnivBgPastel(checked){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.univ_bg_pastel=!!checked,localStorage.setItem("su_pd_style",JSON.stringify(s));try{_renderCfgPdSection()}catch(e){}try{_refreshOpenDetailModals()}catch(e){}_pdTouchPrefs()}function _setPdUnivBgScope(scope){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.univ_bg_scope=["header","body","cards"].includes(scope)?scope:"cards",localStorage.setItem("su_pd_style",JSON.stringify(s));try{_renderCfgPdSection()}catch(e){}try{_refreshOpenDetailModals()}catch(e){}_pdTouchPrefs()}function _setPdUnivBtnEnabled(checked){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.univ_btn_enabled=!!checked,localStorage.setItem("su_pd_style",JSON.stringify(s));try{_renderCfgPdSection()}catch(e){}try{_refreshOpenDetailModals()}catch(e){}_pdTouchPrefs()}function _setPdUnivBgTint(val){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}"),n=parseInt(val,10);s.univ_bg_tint=isNaN(n)?18:Math.max(0,Math.min(60,n)),localStorage.setItem("su_pd_style",JSON.stringify(s));try{_refreshOpenDetailModals()}catch(e){}_pdTouchPrefs()}function _applyPdUiPreset(preset){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");preset==="photocard"?(s.design_mode="blush",s.layout_mode="photocard"):preset==="studio"?(s.design_mode="studio",s.layout_mode="banner"):preset==="dark"&&(s.design_mode="obsidian",s.layout_mode="split"),localStorage.setItem("su_pd_style",JSON.stringify(s)),_renderCfgPdSection();try{_refreshOpenDetailModals()}catch(e){}_pdTouchPrefs()}function _setPdDesignMode(mode){const valid=["classic","editorial","pastel","glass","dashboard","mono","sunset","botanical","neon","terminal","paper","holo","arcade","luxury","aurora","studio","blush","obsidian"],s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.design_mode=valid.includes(mode)?mode:"classic",localStorage.setItem("su_pd_style",JSON.stringify(s)),_renderCfgPdSection();try{_refreshOpenDetailModals()}catch(e){}_pdTouchPrefs()}function _setPdLayoutMode(mode){const valid=["default","photocard","showcase","stats","split","banner","poster","timeline","board"],s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.layout_mode=valid.includes(mode)?mode:"default",localStorage.setItem("su_pd_style",JSON.stringify(s)),_renderCfgPdSection();try{_refreshOpenDetailModals()}catch(e){}_pdTouchPrefs()}function _setPdColorPreset(cp){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.color_preset=cp,localStorage.setItem("su_pd_style",JSON.stringify(s)),_renderCfgPdSection(),_pdTouchPrefs()}function _refreshOpenDetailModals(){try{const pst=typeof getPlayerDetailState=="function"?getPlayerDetailState():null;pst!=null&&pst.currentName&&document.getElementById("playerModal")&&getComputedStyle(document.getElementById("playerModal")).display!=="none"&&typeof openPlayerModal=="function"&&openPlayerModal(pst.currentName)}catch(e){}try{const ust=typeof getUnivDetailState=="function"?getUnivDetailState():null;ust!=null&&ust.currentName&&document.getElementById("univModal")&&getComputedStyle(document.getElementById("univModal")).display!=="none"&&typeof openUnivModal=="function"&&openUnivModal(ust.currentName)}catch(e){}}function _setPdHeaderBg(key,val){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");key==="header_bg_scale"?s[key]=parseInt(val,10)||100:s[key]=String(val||"").trim(),localStorage.setItem("su_pd_style",JSON.stringify(s));try{_refreshOpenDetailModals()}catch(e){}_pdTouchPrefs()}function _setUdHeaderBg(key,val){const s=(()=>{try{return JSON.parse(localStorage.getItem("su_ud_style")||"{}")||{}}catch(e){return{}}})();key==="header_bg_scale"?s[key]=parseInt(val,10)||100:s[key]=String(val||"").trim(),localStorage.setItem("su_ud_style",JSON.stringify(s));try{_refreshOpenDetailModals()}catch(e){}_pdTouchPrefs()}function _setMdTeamHeaderColor(mode,side,val){const modeKey=String(mode||"").trim(),sideKey=String(side||"a").toLowerCase()==="b"?"b":"a",raw=String(val||"").trim(),key=`su_md_team_hdr_${modeKey}_${sideKey}`;/^#[0-9a-fA-F]{6}$/.test(raw)?localStorage.setItem(key,raw):localStorage.removeItem(key);try{typeof _applyOpenHistDetailTeamHeaderColors=="function"&&_applyOpenHistDetailTeamHeaderColors()}catch(e){}try{typeof render=="function"&&render()}catch(e){}try{_renderCfgPdSection()}catch(e){}_pdTouchPrefs()}function _setPdTint(type,val){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s[type+"_tint"]=parseInt(val)||0,localStorage.setItem("su_pd_style",JSON.stringify(s)),_pdTouchPrefs()}function _setPdUnivDarken(univ,val,idx){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.univ_darken||(s.univ_darken={}),s.univ_darken[univ]=parseFloat(val)||0,localStorage.setItem("su_pd_style",JSON.stringify(s));const el=document.getElementById("pd-dv-"+idx);el&&(el.textContent=Math.round(val*100)+"%"),_pdTouchPrefs()}function _setPdCloseOnBadge(checked){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.close_on_badge=!!checked,localStorage.setItem("su_pd_style",JSON.stringify(s)),_pdTouchPrefs()}function _setPdCloseOnMatchPlayer(checked){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.close_on_match_player=!!checked,localStorage.setItem("su_pd_style",JSON.stringify(s)),_pdTouchPrefs()}function _setPdHeaderClickClose(checked){const s=JSON.parse(localStorage.getItem("su_pd_style")||"{}");s.header_click_close=!!checked,localStorage.setItem("su_pd_style",JSON.stringify(s)),_pdTouchPrefs()}function cfgPdSetModeBadgeColor(mode,color){try{const m=String(mode||"").trim();let c=String(color||"").trim();if(!m)return;if(c&&c[0]!=="#"&&(c="#"+c),!/^#[0-9a-fA-F]{6}$/.test(c)){try{alert("\uC0C9\uC0C1 \uCF54\uB4DC\uB294 #RRGGBB \uD615\uC2DD\uC73C\uB85C \uC785\uB825\uD558\uC138\uC694.")}catch(e){}return}const obj=(()=>{try{return JSON.parse(localStorage.getItem("su_pd_mode_badge_colors")||"{}")||{}}catch(e){return{}}})();obj[m]=c,localStorage.setItem("su_pd_mode_badge_colors",JSON.stringify(obj));try{typeof render=="function"&&render()}catch(e){}_renderCfgPdSection();try{typeof _renderCfgPdModeBadgeSection=="function"&&_renderCfgPdModeBadgeSection()}catch(e){}}catch(e){}}function cfgPdResetModeBadgeColors(){try{if(!confirm("\uC885\uBAA9(\uC885\uB958) \uBC30\uC9C0 \uC0C9\uC0C1\uC744 \uAE30\uBCF8\uAC12\uC73C\uB85C \uCD08\uAE30\uD654\uD560\uAE4C\uC694?"))return}catch(e){}try{localStorage.removeItem("su_pd_mode_badge_colors")}catch(e){}try{typeof render=="function"&&render()}catch(e){}_renderCfgPdSection();try{typeof _renderCfgPdModeBadgeSection=="function"&&_renderCfgPdModeBadgeSection()}catch(e){}}function _setGlobalProfileShape(shape){const _prevCfgSec=window._cfgModalSecId||"";try{const v=shape||"circle";localStorage.setItem("su_profile_shape",v);try{typeof applyProfileShapeVars=="function"&&applyProfileShapeVars()}catch(e){}}catch(e){}try{window._scheduleCloudAppSettingsSave&&window._scheduleCloudAppSettingsSave()}catch(e){}try{window.SettingsStore&&typeof window.SettingsStore.markPrefsChanged=="function"&&window.SettingsStore.markPrefsChanged()}catch(e){}try{typeof window._renderCfgProfileShapeSection=="function"&&window._renderCfgProfileShapeSection()}catch(e){}try{typeof _renderCfgPdSection=="function"&&_renderCfgPdSection()}catch(e){}try{typeof render=="function"&&render()}catch(e){}}try{window.SettingsModules=window.SettingsModules||{},window.SettingsModules.playerDetail={renderPlayerDetailSection:_renderCfgPdSection},window._renderCfgPdSection=_renderCfgPdSection,window._setGlobalProfileShape=_setGlobalProfileShape,window._setPdHeaderBg=_setPdHeaderBg,window._setPdUnivBgEnabled=_setPdUnivBgEnabled,window._setPdUnivBgPastel=_setPdUnivBgPastel,window._setPdUnivBgScope=_setPdUnivBgScope,window._setPdUnivBgTint=_setPdUnivBgTint,window._setPdUnivBtnEnabled=_setPdUnivBtnEnabled,window._applyPdUiPreset=_applyPdUiPreset,window._setPdDesignMode=_setPdDesignMode,window._setPdLayoutMode=_setPdLayoutMode,window._setUdHeaderBg=_setUdHeaderBg,window._setMdTeamHeaderColor=_setMdTeamHeaderColor}catch(e){}
 
 /* render-lazy-utils.js */

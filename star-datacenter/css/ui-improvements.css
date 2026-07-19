@@ -1317,25 +1317,6 @@ div[style*="border:1px solid var(--border);border-radius:14px;background:var(--s
 .cfg-hero__desc strong {
   color: var(--text2);
 }
-.cfg-hero__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-}
-.cfg-hero-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 11px;
-  border-radius: 999px;
-  border: 1px solid rgba(148,163,184,.26);
-  background: rgba(255,255,255,.86);
-  color: var(--text2);
-  font-size:var(--fs-caption);
-  font-weight: 800;
-  box-shadow: 0 2px 10px rgba(15,23,42,.04);
-}
 .cfg-hero__stats {
   display: grid;
   grid-template-columns: 1fr;
@@ -1443,18 +1424,6 @@ div[style*="border:1px solid var(--border);border-radius:14px;background:var(--s
   background: linear-gradient(180deg, #ffffff, #f8faff) !important;
   transform: translateY(-1px);
 }
-.cfg-mini-btn {
-  border-radius: 999px !important;
-  min-height: 30px;
-  padding: 5px 12px !important;
-  border-color: rgba(148,163,184,.24) !important;
-  background: rgba(255,255,255,.88) !important;
-  font-weight: 800 !important;
-}
-.cfg-mini-btn:hover {
-  border-color: rgba(79,70,229,.22) !important;
-  background: #fff !important;
-}
 
 /* ── 22. 다크모드 ── */
 body.dark .cfg-hero {
@@ -1465,7 +1434,6 @@ body.dark .cfg-hero {
   box-shadow: 0 18px 34px rgba(0,0,0,.22);
 }
 body.dark .cfg-hero__eyebrow,
-body.dark .cfg-hero-chip,
 body.dark .cfg-stat-card,
 body.dark .cfg-subpanel--soft {
   background: rgba(20,28,45,.82);
@@ -1478,8 +1446,7 @@ body.dark .cfg-stat-card__label {
   color: #94a3b8;
 }
 body.dark .cfg-sec-link:hover,
-body.dark .cfg-sec-jump:hover,
-body.dark .cfg-mini-btn:hover {
+body.dark .cfg-sec-jump:hover {
   background: rgba(30,41,59,.92) !important;
 }
 

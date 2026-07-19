@@ -99,7 +99,7 @@ function pastePreview() {
           ...(currentRoundLabel ? { _rndLabel: currentRoundLabel } : {})
         });
       } else {
-        errors.push({ lineNum: idx + 1, rawLine: trimmed, reason: '스코어만 입력(예: 2:2)은 대회/세트 붙여넣기에서만 지원됩니다.' });
+        errors.push({ line: idx + 1, raw: trimmed, reason: '스코어만 입력(예: 2:2)은 대회/세트 붙여넣기에서만 지원됩니다.' });
       }
       return;
     }
@@ -390,7 +390,7 @@ function pastePreview() {
               ...(currentRoundLabel ? { _rndLabel: currentRoundLabel } : {})
             });
           } else {
-            errors.push({ lineNum: idx + 1, rawLine: trimmed, reason: '스코어만 입력(예: 2:2)은 대회/세트 붙여넣기에서만 지원됩니다.' });
+            errors.push({ line: idx + 1, raw: trimmed, reason: '스코어만 입력(예: 2:2)은 대회/세트 붙여넣기에서만 지원됩니다.' });
           }
           return;
         }
@@ -1040,10 +1040,14 @@ function renderPastePreview(results, errors) {
   if (errors && errors.length > 0) {
     html += `<div style="background:#fff5f5;border:1.5px solid #fca5a5;border-radius:8px;padding:10px 12px;margin-top:6px">
       <div style="font-size:var(--fs-sm);font-weight:700;color:#dc2626;margin-bottom:6px">⛔ 인식 실패 ${errors.length}줄 — 저장되지 않습니다</div>
-      ${errors.map(e => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-        <span style="flex-shrink:0;font-size:10px;font-weight:700;background:#fecaca;color:#dc2626;padding:1px 6px;border-radius:4px">${e.line}행</span>
-        <code style="font-size:10px;color:#991b1b;background:#fff1f2;padding:2px 7px;border-radius:4px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.raw.replace(/"/g,'&quot;')}">${e.raw.slice(0,90)}${e.raw.length>90?'…':''}</code>
-      </div>`).join('')}
+      ${errors.map(e => {
+        const _line = e.line ?? e.lineNum ?? '';
+        const _raw = String(e.raw ?? e.rawLine ?? '');
+        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="flex-shrink:0;font-size:10px;font-weight:700;background:#fecaca;color:#dc2626;padding:1px 6px;border-radius:4px">${_line}행</span>
+        <code style="font-size:10px;color:#991b1b;background:#fff1f2;padding:2px 7px;border-radius:4px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${_raw.replace(/"/g,'&quot;')}">${_raw.slice(0,90)}${_raw.length>90?'…':''}</code>
+      </div>`;
+      }).join('')}
     </div>`;
   }
 

@@ -56,7 +56,7 @@ function rCfg(C,T){
     '🧾 카드/기록':'🧾',
     '🎨 UI/테마':'🎨',
     '🧠 자동화/도구':'🧠',
-    '🧩 현황판/펨코':'🧩',
+    '🧩 현황판/펨코':'📊',
     '💾 데이터':'💾',
     '🧪 점검/고급':'🧪',
     '기타':'🗂️'
@@ -140,11 +140,6 @@ function rCfg(C,T){
   const _mvpFxIntensity = (()=>{ const n=parseInt(localStorage.getItem('su_b2mvp_fx_intensity'),10); return Number.isFinite(n) ? Math.max(0,Math.min(100,n)) : 45; })();
   const _mvpDesignMode = (()=>{ const v=localStorage.getItem('su_b2mvp_design_mode'); return ['photo','panel','frame','glasscard','border','ribbon','split','poster'].includes(v) ? v : 'photo'; })();
   const _briefingTheme = (()=>{ const v=localStorage.getItem('su_b2_briefing_theme'); return ['classic','minimal','vivid','mono','elegant','pastel','luxury','sports','esports','pop','nature','ocean','sunset','neon'].includes(v) ? v : 'classic'; })();
-  const _cfgBottomOpen = (()=>{ try{
-    const saved=localStorage.getItem('su_cfg_bottom_open');
-    if(saved==='1' || saved==='0') return saved==='1';
-  }catch(e){}
-  return false; })();
   const _cfgSecDescFallback = {
     notice:'팝업 공지 등록과 노출 상태 관리',
     tier:'티어 점수 기준과 구간 조정',
@@ -286,7 +281,7 @@ function rCfg(C,T){
     <div class="cfg-toolbar-row" style="display:flex;align-items:center;gap:7px;padding:7px 2px;flex-wrap:nowrap">
       <div class="cfg-search-wrap" style="position:relative;flex:1;min-width:0">
         <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:var(--fs-sm);pointer-events:none;opacity:.4">🔎</span>
-        <input id="cfgSearchInp" placeholder="설정 검색..." value="${esc(String(window._cfgSearchQ||''))}"
+        <input id="cfgSearchInp" placeholder="설정 검색 (예: 프로필, 배경, 폰트...)" value="${esc(String(window._cfgSearchQ||''))}"
           style="width:100%;padding:6px 10px 6px 28px;border:1.5px solid var(--border2);border-radius:20px;font-size:var(--fs-sm);font-weight:700;background:var(--surface);box-sizing:border-box"
           oninput="cfgSearchSettings(this.value)">
         <div id="cfgSearchSug" class="cfg-search-sug" style="display:none"></div>
@@ -302,12 +297,7 @@ function rCfg(C,T){
       <div class="cfg-hero__eyebrow">⚙️ 설정</div>
       <div class="cfg-hero__title">설정 탭</div>
       <div class="cfg-hero__desc">
-        <strong>${_catLabel(window._cfgCat)}</strong> 카테고리를 보고 있습니다.
-        ${_cfgCatDesc[window._cfgCat] || '원하는 카테고리를 선택해 설정을 찾아보세요.'}
-      </div>
-      <div class="cfg-hero__chips">
-        <span class="cfg-hero-chip">${_cfgCatIcons[window._cfgCat]||'🗂️'} 현재 카테고리</span>
-        <span class="cfg-hero-chip">🔎 검색으로 바로 이동</span>
+        <strong>${_catLabel(window._cfgCat)}</strong> — ${_cfgCatDesc[window._cfgCat] || '원하는 카테고리를 선택해 설정을 찾아보세요.'}
       </div>
     </div>
     <div class="cfg-hero__stats">
@@ -322,13 +312,9 @@ function rCfg(C,T){
       ${_catCardsHtml}
     </div>
     <div class="cfg-subpanel cfg-subpanel--surface" data-cfg-bottom-panel="1" style="padding:10px;border:1px solid var(--border);border-radius:14px;background:var(--surface)">
-      <div class="cfg-section-head" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:7px">
+      <div class="cfg-section-head" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px">
         <div class="cfg-section-title" style="font-size:var(--fs-caption);font-weight:900;color:var(--text2)">📚 <span data-cfg-cur-cat-label="1">${_catLabel(window._cfgCat)}</span></div>
-        <div class="cfg-utility-row" style="display:flex;gap:5px;flex-wrap:wrap">
-          <button class="btn btn-w btn-xs cfg-mini-btn" onclick="window.cfgFocusSearch&&window.cfgFocusSearch()">🔎 검색</button>
-          <button class="btn btn-w btn-xs cfg-mini-btn" onclick="window.cfgCollapseAll&&window.cfgCollapseAll()" title="열어둔 설정 항목만 모두 닫기">📦 열린 항목 닫기</button>
-          <button class="btn btn-w btn-xs cfg-mini-btn" data-cfg-toggle-variant="plain" onclick="window.cfgToggleBottomSections&&window.cfgToggleBottomSections()" title="원본 설정 목록(하단)을 표시/숨김">${_cfgBottomOpen?'원본 목록 숨기기':'원본 목록 보기'}</button>
-        </div>
+        <span style="font-size:10px;font-weight:800;color:var(--gray-l)">${_curSecs.length}개 항목</span>
       </div>
       <div class="cfg-sec-grid" data-cfg-cur-sec-buttons="1" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px">
         ${_secButtonsHtml}
