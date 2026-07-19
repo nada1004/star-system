@@ -185,7 +185,10 @@ function addMessage(role, content, opts) {
     if (role === 'user') format = 'text';
     else {
       const s = String(content || '');
-      format = s.trimStart().startsWith('<') ? 'html' : 'text';
+      // '<'로 "시작"하는지만 보면, 안내 문구(🔍/🤔 등)가 카드 앞에 붙은 경우
+      // (예: "🔍 '...' 찾을 수 없어 랜덤 스트리머를 소개합니다!\n\n<div>...") html로 인식되지 않아
+      // 태그가 그대로 텍스트로 노출되는 문제가 있었음 → 문자열 어디든 HTML 태그가 있으면 html로 판정
+      format = /<[a-z][^>]*>/i.test(s) ? 'html' : 'text';
     }
   }
   chatHistory.push({ role, content: String(content || ''), timestamp: Date.now(), format });

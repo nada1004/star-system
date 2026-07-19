@@ -15,12 +15,7 @@ async function _chatbotHandleMainCommands(msg, userMessage){
       let player = _getExactPlayer(playerName);
       if (!player) player = findSimilarPlayer(playerName);
       if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
-      if (player.name !== playerName) {
-        return `<div style="display:flex;flex-direction:column;gap:8px">
-          <div style="font-size:var(--fs-sm);color:#64748b;font-weight:700">🤔 '${escapeHtml(playerName)}' 대신 '${escapeHtml(player.name)}'을 찾았습니다.</div>
-          ${formatPlayerRecentRecord(player)}
-        </div>`;
-      }
+      if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerRecentRecord(player);
       return formatPlayerRecentRecord(player);
     }
   }
@@ -32,12 +27,7 @@ async function _chatbotHandleMainCommands(msg, userMessage){
       let player = _getExactPlayer(playerName);
       if (!player) player = findSimilarPlayer(playerName);
       if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
-      if (player.name !== playerName) {
-        return `<div style="display:flex;flex-direction:column;gap:8px">
-          <div style="font-size:var(--fs-sm);color:#64748b;font-weight:700">🤔 '${escapeHtml(playerName)}' 대신 '${escapeHtml(player.name)}'을 찾았습니다.</div>
-          ${formatPlayerStats(player)}
-        </div>`;
-      }
+      if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerStats(player);
       return formatPlayerStats(player);
     }
   }
@@ -49,7 +39,7 @@ async function _chatbotHandleMainCommands(msg, userMessage){
     let player = _getExactPlayer(playerName);
     if (!player) player = findSimilarPlayer(playerName);
     if (player) {
-      if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerMonthRecord(player, month);
+      if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerMonthRecord(player, month);
       return formatPlayerMonthRecord(player, month);
     }
   }
@@ -61,7 +51,7 @@ async function _chatbotHandleMainCommands(msg, userMessage){
     let player = _getExactPlayer(playerName);
     if (!player) player = findSimilarPlayer(playerName);
     if (player) {
-      if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerPeriodRecord(player, period);
+      if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerPeriodRecord(player, period);
       return formatPlayerPeriodRecord(player, period);
     }
   }
@@ -73,7 +63,7 @@ async function _chatbotHandleMainCommands(msg, userMessage){
     let player = _getExactPlayer(playerName);
     if (!player) player = findSimilarPlayer(playerName);
     if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
-    if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerRaceRecord(player, race);
+    if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerRaceRecord(player, race);
     return formatPlayerRaceRecord(player, race);
   }
   
@@ -103,7 +93,10 @@ async function _chatbotHandleMainCommands(msg, userMessage){
       if (playerName) {
         let player = _getExactPlayer(playerName);
         if (!player) player = findSimilarPlayer(playerName);
-        if (player) return p.fn(player);
+        if (player) {
+          if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + p.fn(player);
+          return p.fn(player);
+        }
         return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
       }
     }
@@ -115,7 +108,10 @@ async function _chatbotHandleMainCommands(msg, userMessage){
       const playerName = dcMatch[1];
       let player = _getExactPlayer(playerName);
       if (!player) player = findSimilarPlayer(playerName);
-      if (player) return formatPlayerCompOnly(player);
+      if (player) {
+        if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerCompOnly(player);
+        return formatPlayerCompOnly(player);
+      }
     }
   }
 
@@ -126,7 +122,7 @@ async function _chatbotHandleMainCommands(msg, userMessage){
     let player = _getExactPlayer(playerName);
     if (!player) player = findSimilarPlayer(playerName);
     if (player) {
-      if (player.name !== playerName) return `🤔 '${playerName}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerMapRecord(player, mapName);
+      if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerMapRecord(player, mapName);
       return formatPlayerMapRecord(player, mapName);
     }
   }
@@ -144,12 +140,12 @@ async function _chatbotHandleMainCommands(msg, userMessage){
     
     if (!player1) return `❌ '${player1Name}' 선수를 찾을 수 없습니다.`;
     if (!player2) return `❌ '${player2Name}' 선수를 찾을 수 없습니다.`;
-    
-    let resultMsg = '';
-    if (player1.name !== player1Name) resultMsg = `🤔 '${player1Name}' 대신 '${player1.name}'을 찾았습니다.\n\n`;
-    if (player2.name !== player2Name) resultMsg += `🤔 '${player2Name}' 대신 '${player2.name}'을 찾았습니다.\n\n`;
-    
-    return resultMsg + formatHeadToHeadRecord(player1, player2);
+
+    let h2hNote = '';
+    if (player1.name !== player1Name) h2hNote += formatFuzzyNote(player1Name, player1.name);
+    if (player2.name !== player2Name) h2hNote += formatFuzzyNote(player2Name, player2.name);
+
+    return h2hNote + formatHeadToHeadRecord(player1, player2);
   }
   
   if (msg.includes('랭킹')) {
@@ -191,7 +187,7 @@ async function _chatbotHandleMainCommands(msg, userMessage){
       }
     }
     if (player) {
-      if (player.name !== query) return `🤔 '${query}' 대신 '${player.name}'을 찾았습니다.\n\n` + formatPlayerBasicInfo(player);
+      if (player.name !== query) return formatFuzzyNote(query, player.name) + formatPlayerBasicInfo(player);
       return formatPlayerBasicInfo(player);
     }
 
@@ -202,8 +198,14 @@ async function _chatbotHandleMainCommands(msg, userMessage){
     }
 
     if (typeof players !== 'undefined' && players.length > 0) {
+      // 아무 매칭도 안 될 때: 랜덤 스트리머 / 랜덤 대학 정보를 반반 확률로 소개
+      const showUniv = universities.length > 0 && Math.random() < 0.5;
+      if (showUniv) {
+        const randomUniv = universities[Math.floor(Math.random() * universities.length)];
+        return formatChatNote(`🔍 '${query}'을(를) 찾을 수 없어 랜덤 대학 정보를 소개합니다!`) + formatUniversityInfo(randomUniv);
+      }
       const randomPlayer = players[Math.floor(Math.random() * players.length)];
-      return `🔍 '${query}'을(를) 찾을 수 없어 랜덤 스트리머를 소개합니다!\n\n` + formatPlayerBasicInfo(randomPlayer);
+      return formatChatNote(`🔍 '${query}'을(를) 찾을 수 없어 랜덤 스트리머를 소개합니다!`) + formatPlayerBasicInfo(randomPlayer);
     }
     return '검색 자료가 없습니다.';
   }

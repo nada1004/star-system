@@ -9,7 +9,7 @@ function formatUniversityInfo(univName) {
     const universities = [...new Set([...playerUnivs, ...cfgUnivs])];
     const similarUniv = findSimilarUniversity(univName, universities);
     if (similarUniv) {
-      return `🤔 '${univName}' 대신 '${similarUniv}'을 찾았습니다.\n\n` + formatUniversityInfo(similarUniv);
+      return formatChatNote(`🤔 '${univName}' 대신 '${similarUniv}'을 찾았습니다.`) + formatUniversityInfo(similarUniv);
     }
     return `❌ '${univName}' 대학을 찾을 수 없습니다. 다시 입력해주세요.`;
   }

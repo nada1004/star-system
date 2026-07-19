@@ -171,7 +171,11 @@ function findSimilarUniversity(input, universities) {
   let bestScore = Infinity;
   universities.forEach(function(u) {
     const score = levenshteinDistance(inputLower, u.toLowerCase());
-    if (score < bestScore && score <= 3) {
+    // 짧은 입력일수록 허용 오차를 줄여, "hm" 같은 무관한 문자열이
+    // 엉뚱한 대학명과 우연히 편집거리 이내로 묶이는 것을 방지
+    const maxLen = Math.max(inputLower.length, u.length);
+    const allowed = Math.min(3, Math.floor(maxLen * 0.34));
+    if (score < bestScore && score <= allowed) {
       bestScore = score;
       bestMatch = u;
     }

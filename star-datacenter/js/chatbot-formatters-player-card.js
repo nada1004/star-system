@@ -50,14 +50,46 @@ function formatPlayerBasicInfo(player) {
 </div>
 <div style="font-size:14px;font-weight:800;margin-top:4px"><span style="color:#dc2626">${player.win}승</span> <span style="color:#2563eb">${player.loss}패</span> <span style="font-size:var(--fs-sm);font-weight:500;color:#94a3b8">(${rate}%)</span></div>`;
 
-  if (player.photo) {
+  if (player.photo && String(player.photo).trim()) {
     return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.14)"><div style="background:#f1f5f9"><img src="${toHttpsUrl(player.photo)}" style="width:100%;display:block;object-fit:contain;max-height:300px;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges"></div><div style="background:#fff;padding:12px 12px 6px"><div style="font-size:var(--fs-lg);font-weight:900;color:#1a202c">${safePlayerName}</div><div style="font-size:var(--fs-base);color:#64748b;margin-top:1px">${safeUniv}</div>${infoBadges}</div>${quickBtns}</div>`;
   }
 
   return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.1)"><div style="background:${univColor};padding:18px 14px 14px;display:flex;align-items:center;gap:12px"><div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">👤</div><div><div style="font-size:19px;font-weight:900;color:#fff">${safePlayerName}</div><div style="font-size:var(--fs-base);color:rgba(255,255,255,0.8);margin-top:1px">${safeUniv}</div></div></div><div style="background:#fff;padding:12px 12px 6px">${infoBadges}</div>${quickBtns}</div>`;
 }
 
+// 퍼지(부분일치/유사도) 검색 결과가 입력값과 다를 때: 자동으로 확정하지 않고
+// "혹시 이 선수인가요?" 확인 카드를 보여준다. 사용자가 '맞아요'를 눌러야
+// 실제 정보(followupCmd)가 표시된다. (예: "시조" 검색 시 "시조새"로 임의 확정되는 것 방지)
+function formatFuzzyPlayerConfirm(query, player, followupCmd) {
+  const cmd = followupCmd || player.name;
+  const safeQuery = escapeHtml(query);
+  const safeName = escapeHtml(player.name);
+  const safeUniv = escapeHtml(player.univ || '');
+  const tierColor = {'S':'#7c3aed','A':'#2563eb','B':'#16a34a','C':'#d97706','D':'#dc2626'}[player.tier] || '#64748b';
+  const tierBg = {'S':'#ede9fe','A':'#dbeafe','B':'#dcfce7','C':'#fef3c7','D':'#fee2e2'}[player.tier] || '#f1f5f9';
+  const raceIcon = player.race === '테란' ? '🔵' : player.race === '저그' ? '🟣' : player.race === '프로토스' ? '🟡' : '⚫';
+
+  return `<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font-size:var(--fs-sm);color:#64748b;font-weight:700">🤔 '${safeQuery}' 선수를 찾을 수 없어요. 혹시 이 선수인가요?</div>
+<div style="border-radius:12px;border:1px solid #e2e8f0;padding:10px 12px;display:flex;align-items:center;gap:10px;background:#f8fafc">
+<div style="width:38px;height:38px;border-radius:10px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👤</div>
+<div style="flex:1;min-width:0">
+<div style="font-weight:800;color:#1a202c;font-size:var(--fs-base)">${safeName} <span style="font-weight:600;color:#94a3b8;font-size:var(--fs-sm)">${safeUniv}</span></div>
+<div style="font-size:var(--fs-sm);color:#64748b;margin-top:2px">${raceIcon} ${escapeHtml(player.race||'')} · <span style="color:${tierColor};font-weight:700;background:${tierBg};padding:1px 7px;border-radius:10px">${escapeHtml(player.tier||'')}티어</span></div>
+</div>
+<button data-chatbot-quick="${escapeAttr(cmd)}" style="padding:8px 14px;border:none;border-radius:9px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;background:#2563eb;color:#fff;flex-shrink:0;white-space:nowrap">맞아요</button>
+</div>
+</div>`;
+}
+
+// 퍼지 매칭 결과를 안내만 하는 가벼운 한 줄 표시 (클릭 필요 없음)
+function formatFuzzyNote(query, actualName) {
+  return `<div style="font-size:var(--fs-sm);color:#94a3b8;font-weight:600;margin-bottom:2px">🔍 '${escapeHtml(query)}' → <b style="color:#2563eb">${escapeHtml(actualName)}</b></div>`;
+}
+
 try{
   window.getTeamColor = getTeamColor;
   window.formatPlayerBasicInfo = formatPlayerBasicInfo;
+  window.formatFuzzyPlayerConfirm = formatFuzzyPlayerConfirm;
+  window.formatFuzzyNote = formatFuzzyNote;
 }catch(e){}

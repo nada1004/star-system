@@ -61,7 +61,7 @@ async function generateResponse(msg) {
     const fn = (typeof window !== 'undefined' && typeof window.formatPlayerBasicInfo === 'function')
       ? window.formatPlayerBasicInfo
       : (typeof formatPlayerBasicInfo === 'function' ? formatPlayerBasicInfo : null);
-    return fn ? (`🎲 랜덤 스트리머를 소개합니다!\n\n` + fn(randomPlayer)) : '검색 자료가 없습니다.';
+    return fn ? (formatChatNote('🎲 랜덤 스트리머를 소개합니다!') + fn(randomPlayer)) : '검색 자료가 없습니다.';
   }
   return `질문을 이해하지 못했어요 😅\n"도움"을 입력하면 사용법을 알려드릴게요!`;
 }
