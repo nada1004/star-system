@@ -86,7 +86,7 @@ function formatDailyTypeResult(typeKey, dateStr, dateLabel) {
     return _matchRow(m.d, `${left} vs ${right}`, `${m.sa}:${m.sb}`, '', m.sa > m.sb);
   };
   const rows = matches.map(rowFn).join('');
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${header}<div style="background:#fff;padding:8px 8px 4px">${rows}</div></div>`;
+  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${header}<div style="background:var(--white);padding:8px 8px 4px">${rows}</div></div>`;
 }
 
 // 특정 날짜의 전체 경기(미니대전/대학대전/프로리그/CK리그/개인전/끝장전) 결과를 한번에 모아서 보여줌
@@ -119,7 +119,7 @@ function formatDailyAllMatches(dateStr, dateLabel) {
       return _matchRow(m.d, `${left} vs ${right}`, `${m.sa}:${m.sb}`, '', m.sa > m.sb);
     }).join('');
     sections += `<div style="margin:0 2px 10px">
-      <div style="font-weight:800;font-size:var(--fs-sm);color:#334155;margin-bottom:4px">${g.emoji} ${g.key} (${matches.length})</div>
+      <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text);margin-bottom:4px">${g.emoji} ${g.key} (${matches.length})</div>
       ${rows}
     </div>`;
   });
@@ -127,7 +127,7 @@ function formatDailyAllMatches(dateStr, dateLabel) {
   if (!totalCount) return _noRecordCard('📅', `${dateLabel || dateStr} 경기`);
 
   const header = _matchCardHeader('📅', `${dateLabel || dateStr} 경기 결과`, `총 ${totalCount}경기`, 'linear-gradient(135deg,#1e3a8a,#2563eb)');
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${header}<div style="background:#fff;padding:10px 8px 4px">${sections}</div></div>`;
+  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${header}<div style="background:var(--white);padding:10px 8px 4px">${sections}</div></div>`;
 }
 
 try{

@@ -35,7 +35,7 @@ function _tierBadgeColors(tier) {
 // 안내 문구(🔍/🎲 등) 뒤에 HTML 카드를 이어붙일 때 쓰는 한 줄 노트.
 // 순수 "\n\n" 텍스트로 이어붙이면 html 포맷일 때 줄바꿈이 무시되므로 div로 감싼다.
 function formatChatNote(text) {
-  return `<div style="font-size:var(--fs-sm);color:#64748b;font-weight:700;margin-bottom:8px">${escapeHtml(text)}</div>`;
+  return `<div style="font-size:var(--fs-sm);color:var(--text3);font-weight:700;margin-bottom:8px">${escapeHtml(text)}</div>`;
 }
 try{
   window._escapeRegExp = window._escapeRegExp || _escapeRegExp;

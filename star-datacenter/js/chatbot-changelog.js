@@ -19,14 +19,14 @@ function formatChangelog(limit) {
 
   const header = _matchCardHeader('🛠️', '알등이 업데이트 내역', `최근 ${list.length}건`, 'linear-gradient(135deg,#334155,#1e293b)');
   const rows = list.map(entry => {
-    const itemsHtml = (entry.items || []).map(t => `<div style="padding:2px 0 2px 2px;color:#334155;font-size:var(--fs-sm);line-height:1.4">• ${t}</div>`).join('');
-    return `<div style="padding:9px 12px;border-bottom:1px solid #e8edf2">
-      <div style="font-weight:800;font-size:var(--fs-sm);color:#0f172a;margin-bottom:3px">🗓️ ${entry.date} · ${entry.title}</div>
+    const itemsHtml = (entry.items || []).map(t => `<div style="padding:2px 0 2px 2px;color:var(--text);font-size:var(--fs-sm);line-height:1.4">• ${t}</div>`).join('');
+    return `<div style="padding:9px 12px;border-bottom:1px solid var(--border)">
+      <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text);margin-bottom:3px">🗓️ ${entry.date} · ${entry.title}</div>
       ${itemsHtml}
     </div>`;
   }).join('');
 
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${header}<div style="background:#fff">${rows}</div></div>`;
+  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${header}<div style="background:var(--white)">${rows}</div></div>`;
 }
 
 try{

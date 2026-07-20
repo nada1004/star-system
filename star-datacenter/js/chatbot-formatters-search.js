@@ -22,10 +22,10 @@ function _raceIcon(race) {
 // 티어/승률/종족 검색 공용 선수 목록 행 (클릭 시 해당 선수 기본정보로 이동)
 function _searchPlayerRow(p, rightText) {
   const tC = _tierBadgeColors(p.tier);
-  return `<div data-chatbot-quick="${escapeAttr(p.name)}" style="display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:9px;cursor:pointer;background:#f8fafc;margin-bottom:4px;border:1px solid #e8edf2">
-    <span style="font-size:var(--fs-base);font-weight:700;color:#1a202c;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(p.name)} <span style="font-weight:600;color:#94a3b8;font-size:var(--fs-caption)">${escapeHtml(p.univ||'')}</span></span>
+  return `<div data-chatbot-quick="${escapeAttr(p.name)}" style="display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:9px;cursor:pointer;background:var(--surface);margin-bottom:4px;border:1px solid var(--border)">
+    <span style="font-size:var(--fs-base);font-weight:700;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(p.name)} <span style="font-weight:600;color:var(--text3);font-size:var(--fs-caption)">${escapeHtml(p.univ||'')}</span></span>
     <span style="font-size:var(--fs-caption);padding:2px 7px;border-radius:6px;font-weight:700;color:${tC[0]};background:${tC[1]};white-space:nowrap">${escapeHtml(p.tier||'미정')}</span>
-    <span style="font-size:var(--fs-caption);color:#64748b;white-space:nowrap">${_raceIcon(p.race)} ${escapeHtml(rightText||'')}</span>
+    <span style="font-size:var(--fs-caption);color:var(--text3);white-space:nowrap">${_raceIcon(p.race)} ${escapeHtml(rightText||'')}</span>
   </div>`;
 }
 
@@ -45,15 +45,15 @@ function formatTierRanking(tier) {
   const header = _matchCardHeader('🏆', `${tier || '전체'} 랭킹`, `TOP ${sortedPlayers.length}`, 'linear-gradient(135deg,#b45309,#f59e0b)');
   const rows = sortedPlayers.map((p, i) => {
     const tC = _tierBadgeColors(p.tier);
-    return `<div data-chatbot-quick="${escapeAttr(p.name)}" style="display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:9px;cursor:pointer;background:#f8fafc;margin-bottom:4px;border:1px solid #e8edf2">
-      <span style="font-size:var(--fs-base);font-weight:900;color:#94a3b8;min-width:26px">${medal[i] || (i+1)}</span>
-      <span style="font-size:var(--fs-base);font-weight:700;color:#1a202c;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(p.name)} <span style="font-weight:600;color:#94a3b8;font-size:var(--fs-caption)">${escapeHtml(p.univ||'')}</span></span>
+    return `<div data-chatbot-quick="${escapeAttr(p.name)}" style="display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:9px;cursor:pointer;background:var(--surface);margin-bottom:4px;border:1px solid var(--border)">
+      <span style="font-size:var(--fs-base);font-weight:900;color:var(--text3);min-width:26px">${medal[i] || (i+1)}</span>
+      <span style="font-size:var(--fs-base);font-weight:700;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(p.name)} <span style="font-weight:600;color:var(--text3);font-size:var(--fs-caption)">${escapeHtml(p.univ||'')}</span></span>
       <span style="font-size:var(--fs-caption);padding:2px 7px;border-radius:6px;font-weight:700;color:${tC[0]};background:${tC[1]}">${escapeHtml(p.tier||'미정')}</span>
-      <span style="font-size:var(--fs-sm);color:#334155;font-weight:800;white-space:nowrap">ELO ${p.elo}</span>
+      <span style="font-size:var(--fs-sm);color:var(--text);font-weight:800;white-space:nowrap">ELO ${p.elo}</span>
     </div>`;
   }).join('');
 
-  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${header}<div style="background:#fff;padding:8px 8px 4px">${rows}</div></div>`;
+  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09)">${header}<div style="background:var(--white);padding:8px 8px 4px">${rows}</div></div>`;
 }
 
 function formatTierRangeSearch(startTier, endTier) {

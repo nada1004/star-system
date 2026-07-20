@@ -32,8 +32,8 @@ function renderMarkdownText(text) {
 
   let html = escapeHtml(text);
 
-  html = html.replace(/```([\s\S]*?)```/g, '<pre style="background:#f1f5f9;padding:12px;border-radius:8px;overflow-x:auto"><code>$1</code></pre>');
-  html = html.replace(/`(.*?)`/g, '<code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-family:monospace">$1</code>');
+  html = html.replace(/```([\s\S]*?)```/g, '<pre style="background:var(--surface);padding:12px;border-radius:8px;overflow-x:auto"><code>$1</code></pre>');
+  html = html.replace(/`(.*?)`/g, '<code style="background:var(--surface);padding:2px 6px;border-radius:4px;font-family:monospace">$1</code>');
   html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
   html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
 
@@ -41,17 +41,33 @@ function renderMarkdownText(text) {
     const playerNames = players.map(p => p.name).filter(Boolean);
     const universities = [...new Set(players.map(p => p.univ).filter(Boolean))];
 
-    playerNames.forEach(playerName => {
-      const escapedName = escapeHtml(playerName);
-      const regex = new RegExp(`(${_escapeRegExp(playerName)})`, 'g');
-      html = html.replace(regex, `<span data-chatbot-player="${escapeAttr(playerName)}" style="color:var(--blue);cursor:pointer;text-decoration:underline">${escapedName}</span>`);
+    // 선수명/대학명을 각각 따로 여러 번 replace하면, 어떤 이름이 다른 이름의
+    // 부분 문자열일 때(예: '아리송이' 안에 '송이'가 포함) 이미 삽입된
+    // <span data-chatbot-player="아리송이" ...> 속성값 안의 '송이'까지 다시 매칭되어
+    // 태그 중간에 태그가 끼어들며 HTML이 깨지는 문제가 있었다.
+    // → 선수명+대학명을 합쳐 '한 번의 패스'로만 치환하고, 긴 이름을 먼저 매칭해
+    //   부분 문자열 충돌을 원천 차단한다.
+    const candidates = [];
+    const seenNames = new Set();
+    playerNames.forEach(n => {
+      if (n && !seenNames.has(n)) { seenNames.add(n); candidates.push({ name: n, type: 'player' }); }
     });
+    universities.forEach(n => {
+      if (n && !seenNames.has(n)) { seenNames.add(n); candidates.push({ name: n, type: 'univ' }); }
+    });
+    // 긴 이름부터 매칭되도록 정렬 (짧은 이름이 긴 이름 안쪽을 잘라먹지 않도록)
+    candidates.sort((a, b) => b.name.length - a.name.length);
 
-    universities.forEach(univName => {
-      const escapedName = escapeHtml(univName);
-      const regex = new RegExp(`(${_escapeRegExp(univName)})`, 'g');
-      html = html.replace(regex, `<span data-chatbot-univ="${escapeAttr(univName)}" style="color:var(--blue);cursor:pointer;text-decoration:underline">${escapedName}</span>`);
-    });
+    if (candidates.length) {
+      const typeByName = new Map(candidates.map(c => [c.name, c.type]));
+      const pattern = candidates.map(c => _escapeRegExp(c.name)).join('|');
+      const regex = new RegExp(`(${pattern})`, 'g');
+      html = html.replace(regex, (matched) => {
+        const type = typeByName.get(matched);
+        const attr = type === 'univ' ? 'data-chatbot-univ' : 'data-chatbot-player';
+        return `<span ${attr}="${escapeAttr(matched)}" style="color:var(--blue);cursor:pointer;text-decoration:underline">${escapeHtml(matched)}</span>`;
+      });
+    }
   }
 
   return html;
@@ -125,13 +141,13 @@ function renderChatHistory() {
   if (chatHistory.length === 0) {
     if (chatbotMode === 'aibot') {
       container.innerHTML = `
-        <div class="chat-message bot-message">
+        <div class="chat-message bot-message chat-msg-new">
           <div class="chat-avatar">⚽</div>
           <div class="chat-content">펨붕이붓 채팅창입니다.</div>
         </div>`;
     } else {
       container.innerHTML = `
-        <div class="chat-message bot-message">
+        <div class="chat-message bot-message chat-msg-new">
           <div class="chat-avatar"><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:26px;height:26px;object-fit:contain"></div>
           <div class="chat-content">안녕하세요! 알등이입니다. 😊<br>선수명, 대학명을 입력하거나 <b>도움</b>을 입력하면 명령어 목록을 볼 수 있어요!</div>
         </div>`;
@@ -140,12 +156,13 @@ function renderChatHistory() {
   
   chatHistory.forEach((msg, index) => {
     const msgDiv = document.createElement('div');
-    msgDiv.className = `chat-message ${msg.role === 'user' ? 'user-message' : 'bot-message'}`;
+    const isLast = index === chatHistory.length - 1;
+    msgDiv.className = `chat-message ${msg.role === 'user' ? 'user-message' : 'bot-message'}${isLast ? ' chat-msg-new' : ''}`;
     
     const avatar = msg.role === 'user' ? '👤' : '<img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:100%;height:100%;object-fit:cover;border-radius:8px">';
     const content = msg.content;
     const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
-    const copyBtn = msg.role === 'bot' ? `<button data-chatbot-copy-index="${index}" style="background:none;border:none;font-size:var(--fs-sm);color:#94a3b8;cursor:pointer;padding:4px;border-radius:4px;margin-left:auto">📋</button>` : '';
+    const copyBtn = msg.role === 'bot' ? `<button data-chatbot-copy-index="${index}" style="background:none;border:none;font-size:var(--fs-sm);color:var(--text3);cursor:pointer;padding:4px;border-radius:4px;margin-left:auto">📋</button>` : '';
     
     const isHtml = (msg && msg.format === 'html');
     const wsStyle = isHtml ? 'white-space:normal' : 'white-space:pre-wrap';
@@ -155,7 +172,7 @@ function renderChatHistory() {
       <div style="flex:1;display:flex;flex-direction:column;min-width:0">
         <div class="chat-content ${isHtml ? 'chat-content-card' : ''}" style="${wsStyle};${padStyle}">${isHtml ? String(content || '') : renderMarkdownText(String(content || ''))}</div>
         <div style="display:flex;justify-content:flex-end;align-items:center;margin-top:3px;gap:8px">
-          ${timestamp ? `<span style="font-size:10px;color:#94a3b8">${timestamp}</span>` : ''}
+          ${timestamp ? `<span style="font-size:var(--fs-caption);color:var(--text3)">${timestamp}</span>` : ''}
           ${copyBtn}
         </div>
       </div>
@@ -239,7 +256,7 @@ function sendMessage() {
     loadingDiv.id = 'chatbot-loading';
     loadingDiv.innerHTML = `
       <div class="chat-avatar"><img src="https://i.ibb.co/Y7GXGXtv/11e55f999b9d.png" style="width:32px;height:32px;object-fit:contain"></div>
-      <div class="chat-content">...</div>
+      <div class="chat-content"><span class="chat-typing-dots"><span></span><span></span><span></span></span></div>
     `;
     container.appendChild(loadingDiv);
     container.scrollTop = container.scrollHeight;

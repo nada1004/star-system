@@ -7454,6 +7454,67 @@ body.dark .chatbot-send-btn:hover {
   .chat-content { font-size: 14px; }
   #chatInput { font-size: 14px; }
 }
+
+/* ── 챗봇 답변 카드 인터랙션 v2 (등장 애니메이션 / 타이핑 인디케이터 / hover) ── */
+@keyframes chatMsgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.chat-message.chat-msg-new {
+  animation: chatMsgIn .32s cubic-bezier(.22,1,.36,1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-message.chat-msg-new { animation: none; }
+}
+
+/* 응답 대기 중 타이핑 점 애니메이션 */
+.chat-typing-dots { display: inline-flex; align-items: center; gap: 4px; padding: 3px 2px; }
+.chat-typing-dots span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text3);
+  animation: chatTypingBounce 1.2s infinite ease-in-out;
+}
+.chat-typing-dots span:nth-child(2) { animation-delay: .15s; }
+.chat-typing-dots span:nth-child(3) { animation-delay: .3s; }
+@keyframes chatTypingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: .45; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* 답변 카드 내부 버튼(빠른조회/페이지네비/'맞아요' 등) hover·active 피드백 */
+.chat-content-card button,
+.chatbot-messages button[data-chatbot-copy-index] {
+  transition: transform .15s ease, filter .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.chat-content-card button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 4px 10px rgba(0,0,0,.18);
+}
+.chat-content-card button:active:not(:disabled) {
+  transform: translateY(0) scale(.97);
+  filter: brightness(0.98);
+}
+.chatbot-messages button[data-chatbot-copy-index]:hover {
+  background: var(--hover) !important;
+  color: var(--blue) !important;
+}
+
+/* 클릭 가능한 행(선수/대학 리스트 등, data-chatbot-quick가 달린 div) hover 피드백 */
+.chat-content-card [data-chatbot-quick]:not(button) {
+  transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.chat-content-card [data-chatbot-quick]:not(button):hover {
+  background: var(--hover) !important;
+  transform: translateX(2px);
+}
+
+/* 본문 내 선수명/대학명 링크(밑줄 텍스트) hover */
+.chat-content [data-chatbot-player]:hover,
+.chat-content [data-chatbot-univ]:hover {
+  color: var(--blue-d, #1d4ed8);
+}
+
 /* 이미지 설정 버튼 스타일 (pill 스타일, active 강조) */
 .b2-players-img-btns {
   display: flex;

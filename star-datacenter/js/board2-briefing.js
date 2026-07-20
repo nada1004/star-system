@@ -2489,12 +2489,13 @@ function _b2WeeklyBriefingView() {
           <div style="display:flex;flex-direction:column;gap:5px">
             ${_raceMatchups.map(m => {
               const _wrCol = m.wr>=60?'#15803d':m.wr>=50?'#9f1d1d':'var(--text3)';
+              const _raceBarCol = { T:'#2563eb', Z:'#7c3aed', P:'#d97706' }[m.a] || _wrCol;
               const _isMirror = m.a === m.b;
               return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--b2w-r);background:var(--b2w-paper-alt)">
                 <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">${_isMirror
                   ? `<span class="rbadge r${m.a}" style="font-size:9px">${m.a}</span><span style="font-size:9px;color:var(--text3);font-weight:700">동족전</span>`
                   : `<span class="rbadge r${m.a}" style="font-size:9px">${m.a}</span><span style="font-size:9px;color:var(--text3);font-weight:700">vs</span><span class="rbadge r${m.b}" style="font-size:9px">${m.b}</span>`}</span>
-                <span style="flex:1;height:5px;border-radius:3px;background:var(--b2w-rule-soft);overflow:hidden"><span style="display:block;height:100%;width:${m.wr}%;background:${_wrCol};border-radius:3px"></span></span>
+                <span style="flex:1;height:5px;border-radius:3px;background:var(--b2w-rule-soft);overflow:hidden"><span style="display:block;height:100%;width:${m.wr}%;background:${_raceBarCol};border-radius:3px"></span></span>
                 <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text1);flex-shrink:0">${m.w}승 ${m.l}패</span>
                 <span style="font-size:var(--fs-sm);font-weight:900;color:${_wrCol};min-width:38px;text-align:right;flex-shrink:0">${m.wr}%</span>
               </div>`;
