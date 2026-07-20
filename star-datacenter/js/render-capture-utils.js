@@ -254,6 +254,7 @@ function _newsHighlightRows(ctx){
 function _newsRaceStatsHtml(ctx){
   const rc = ctx.raceCountGlobal;
   if(!rc) return '';
+  const mc = ctx.mirrorRaceCountGlobal || {};
   const races = [
     { key:'P', label:'프로토스', ico:'🔮' },
     { key:'T', label:'테란',     ico:'⚔️' },
@@ -266,6 +267,7 @@ function _newsRaceStatsHtml(ctx){
     const t = w + l;
     const wr = t ? Math.round(w/t*100) : null;
     const wrCol = wr===null ? '#a8a29e' : wr>=60 ? '#15803d' : wr>=50 ? '#9f1d1d' : '#a8a29e';
+    const mm = mc[key] || { w:0, l:0 };
     return `<div class="b2n-stline" style="flex-wrap:wrap">
       <span class="b2n-stline-name">${ico} ${_esc(label)} 상대</span>
       <span class="b2n-stline-rec">${w}승 ${l}패</span>
@@ -273,9 +275,10 @@ function _newsRaceStatsHtml(ctx){
       <span style="flex-basis:100%;height:4px;border-radius:2px;background:rgba(28,25,23,.08);overflow:hidden;margin-top:4px">
         <span style="display:block;height:100%;width:${wr!==null?wr:0}%;background:${wrCol};border-radius:2px"></span>
       </span>
+      <span style="flex-basis:100%;font-size:9px;color:#a8a29e;margin-top:2px">└ 동족전(${_esc(label)} vs ${_esc(label)}) ${mm.w}승 ${mm.l}패</span>
     </div>`;
   }).join('');
-  return `<div class="b2n-col-title"><i></i>종족별 상대 전적</div><div class="b2n-standings">${rows}</div>`;
+  return `<div class="b2n-col-title"><i></i>종족별 상대 전적 <span style="font-size:9px;font-weight:700;color:#78716c">(동족전 포함)</span></div><div class="b2n-standings">${rows}</div>`;
 }
 function _newsUnivAceCardHtml(item){
   const col = (typeof gc === 'function' ? (gc(item.u.name) || '#9f1d1d') : '#9f1d1d');
@@ -613,6 +616,11 @@ function _newsBuildHtml(ctx, meta){
         ${_newsMvpFeatureHtml(ctx)}
         <div class="b2n-col-title"><i></i>이 주의 기록</div>
         ${_newsHighlightRows(ctx)}
+        ${_newsRaceStatsHtml(ctx)}
+        ${ctx.worstPlayer && ctx.worstPlayer.p ? `<div class="b2n-worst">
+          <div class="b2n-worst-title">💧 ${_esc(worstLabel)}</div>
+          ${_newsStatRow('최다패', ctx.worstPlayer, '')}
+        </div>` : ''}
       </div>
       <div class="b2n-col">
         <div class="b2n-kpis">
@@ -621,11 +629,6 @@ function _newsBuildHtml(ctx, meta){
         </div>
         <div class="b2n-col-title"><i></i>대학 순위</div>
         ${_newsStandingsHtml(ctx)}
-        ${_newsRaceStatsHtml(ctx)}
-        ${ctx.worstPlayer && ctx.worstPlayer.p ? `<div class="b2n-worst">
-          <div class="b2n-worst-title">💧 ${_esc(worstLabel)}</div>
-          ${_newsStatRow('최다패', ctx.worstPlayer, '')}
-        </div>` : ''}
       </div>
     </div>
     ${_newsUnivAcesHtml(ctx)}

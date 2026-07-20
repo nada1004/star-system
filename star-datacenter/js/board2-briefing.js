@@ -2175,8 +2175,6 @@ function _b2WeeklyBriefingView() {
     // 전체 대학 종족별 승패 — "전체 승/패"(선수 개인전적 합산, tw+tl)는 대학간 매치는 양쪽이 각각
     // 승/패로 잡혀 총 경기 수(게임 1건=1)와 어긋나 보일 수 있어 카드에는 노출하지 않고,
     // 대신 오해 소지가 적은 종족별 승패 구성을 보여준다.
-    const _totalRaceCount = { P:{w:0,l:0}, T:{w:0,l:0}, Z:{w:0,l:0} };
-    curStats.forEach(ud => { ['P','T','Z'].forEach(r => { _totalRaceCount[r].w += ud.raceCount[r].w; _totalRaceCount[r].l += ud.raceCount[r].l; }); });
     // 선수당 평균 경기 수 — 총 경기 수 / 활동 스트리머 수
     const _avgGamesPerPlayer = activePlayers.length ? Math.round((_totalGames / activePlayers.length) * 10) / 10 : null;
     // 종족전 상대 승률(T vs Z / T vs P / Z vs P) + 동족전(T vs T / Z vs Z / P vs P) —
@@ -2197,7 +2195,17 @@ function _b2WeeklyBriefingView() {
       const total = rec.w + rec.l;
       return { a, b, w: rec.w, l: rec.l, total, wr: total ? Math.round(rec.w/total*1000)/10 : null };
     };
-    const _raceMatchups = [_mkMatchup('T','Z'), _mkMatchup('T','P'), _mkMatchup('Z','P')].filter(m => m.total > 0);
+    const _raceMatchups = [_mkMatchup('T','Z'), _mkMatchup('T','P'), _mkMatchup('Z','P'), _mkMatchup('T','T'), _mkMatchup('Z','Z'), _mkMatchup('P','P')].filter(m => m.total > 0);
+    // 종족별 승/패(그 종족 자신의 전체 성적) — 동족전 + 두 종족전 매치업을 합산.
+    // (과거엔 raceCount(=해당 종족을 "상대"한 모든 선수의 합산 성적)를 그대로 썼던 탓에
+    //  화면에 함께 노출되는 "종족전 상대 승패" 매치업 합계와 값이 어긋나 보이는 문제가 있었음)
+    const _ownRaceCount = { P:{w:0,l:0}, T:{w:0,l:0}, Z:{w:0,l:0} };
+    ['T','Z','P'].forEach(own => {
+      Object.keys(_matchupByOwnRace[own]).forEach(opp => {
+        _ownRaceCount[own].w += _matchupByOwnRace[own][opp].w;
+        _ownRaceCount[own].l += _matchupByOwnRace[own][opp].l;
+      });
+    });
     const _prevTotalGames = prevStats.gameCount || 0;
     const _gamesDelta = _totalGames - _prevTotalGames;
 
@@ -2220,6 +2228,16 @@ function _b2WeeklyBriefingView() {
     //  화면 카드에서는 5명으로 잘리던 선수 랭킹을 전체 다 담는다)
     const _exportRaceCount = { P:{w:0,l:0}, T:{w:0,l:0}, Z:{w:0,l:0} };
     targetStats.forEach(ud => { ['P','T','Z'].forEach(r => { _exportRaceCount[r].w += ud.raceCount[r].w; _exportRaceCount[r].l += ud.raceCount[r].l; }); });
+    // 동족전(미러매치) 승패 — 선택 범위(targetStats) 기준, 저장 이미지의 "종족별 상대 전적"에 함께 노출
+    const _exportMirrorCount = { P:{w:0,l:0}, T:{w:0,l:0}, Z:{w:0,l:0} };
+    targetStats.forEach(ud => {
+      ud.active.forEach(s => {
+        const own = String(s.p?.race||'').trim().toUpperCase();
+        if (!_exportMirrorCount[own] || !s.vsRace) return;
+        const m = s.vsRace[own];
+        if (m) { _exportMirrorCount[own].w += m.w; _exportMirrorCount[own].l += m.l; }
+      });
+    });
     const _allActivePlayersRanked = [...activePlayers]
       .sort((a, b) => (b.total - a.total) || (b.wins - a.wins) || ((b.winRate ?? -1) - (a.winRate ?? -1)));
     try {
@@ -2230,7 +2248,7 @@ function _b2WeeklyBriefingView() {
         heroSummary: _heroSummary, heroSpotlight: _heroSpotlight,
         mvp, mvp2, worstPlayer,
         topUnivs, rankedUnivs, univAces: _univAcesForExport,
-        raceCountGlobal: _exportRaceCount, allActivePlayersRanked: _allActivePlayersRanked,
+        raceCountGlobal: _exportRaceCount, mirrorRaceCountGlobal: _exportMirrorCount, allActivePlayersRanked: _allActivePlayersRanked,
         hotPlayer, coldPlayer, streakPlayer, loseStreakPlayer,
         bestWrPlayer, mostWinsPlayer, mostActivePlayer,
         monthlyMvp, monthlyTopPlayers, silentUnivs,
@@ -2461,23 +2479,29 @@ function _b2WeeklyBriefingView() {
           <div class="b2w2-racetable-cell"><strong>${_raceParticipation.P}명</strong><span>${_mkRaceShare('P') ?? '-'}%</span></div>
 
           <div class="b2w2-racetable-label">종족별 승/패</div>
-          <div class="b2w2-racetable-cell"><strong>${_totalRaceCount.T.w}승 ${_totalRaceCount.T.l}패</strong></div>
-          <div class="b2w2-racetable-cell"><strong>${_totalRaceCount.Z.w}승 ${_totalRaceCount.Z.l}패</strong></div>
-          <div class="b2w2-racetable-cell"><strong>${_totalRaceCount.P.w}승 ${_totalRaceCount.P.l}패</strong></div>
-
-          <div class="b2w2-racetable-label">동족전 승패</div>
-          <div class="b2w2-racetable-cell"><strong>${_matchupByOwnRace.T.T.w}승 ${_matchupByOwnRace.T.T.l}패</strong></div>
-          <div class="b2w2-racetable-cell"><strong>${_matchupByOwnRace.Z.Z.w}승 ${_matchupByOwnRace.Z.Z.l}패</strong></div>
-          <div class="b2w2-racetable-cell"><strong>${_matchupByOwnRace.P.P.w}승 ${_matchupByOwnRace.P.P.l}패</strong></div>
+          <div class="b2w2-racetable-cell"><strong>${_ownRaceCount.T.w}승 ${_ownRaceCount.T.l}패</strong></div>
+          <div class="b2w2-racetable-cell"><strong>${_ownRaceCount.Z.w}승 ${_ownRaceCount.Z.l}패</strong></div>
+          <div class="b2w2-racetable-cell"><strong>${_ownRaceCount.P.w}승 ${_ownRaceCount.P.l}패</strong></div>
         </div>
+        ${_raceMatchups.length ? `
+        <div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--b2w-rule-soft)">
+          <div style="font-size:var(--fs-caption);color:var(--text3);margin-bottom:6px">종족전 상대 승패 (승률)</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            ${_raceMatchups.map(m => {
+              const _wrCol = m.wr>=60?'#15803d':m.wr>=50?'#9f1d1d':'var(--text3)';
+              const _isMirror = m.a === m.b;
+              return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--b2w-r);background:var(--b2w-paper-alt)">
+                <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">${_isMirror
+                  ? `<span class="rbadge r${m.a}" style="font-size:9px">${m.a}</span><span style="font-size:9px;color:var(--text3);font-weight:700">동족전</span>`
+                  : `<span class="rbadge r${m.a}" style="font-size:9px">${m.a}</span><span style="font-size:9px;color:var(--text3);font-weight:700">vs</span><span class="rbadge r${m.b}" style="font-size:9px">${m.b}</span>`}</span>
+                <span style="flex:1;height:5px;border-radius:3px;background:var(--b2w-rule-soft);overflow:hidden"><span style="display:block;height:100%;width:${m.wr}%;background:${_wrCol};border-radius:3px"></span></span>
+                <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text1);flex-shrink:0">${m.w}승 ${m.l}패</span>
+                <span style="font-size:var(--fs-sm);font-weight:900;color:${_wrCol};min-width:38px;text-align:right;flex-shrink:0">${m.wr}%</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>` : ''}
         <div class="b2w2-highlight-list" style="margin-top:2px">
-          ${_raceMatchups.length ? `
-          <div class="b2w2-highlight-row">
-            <span style="font-size:var(--fs-caption);color:var(--text3)">종족전 상대 승률</span>
-            <span style="display:flex;gap:10px;flex-wrap:wrap">
-              ${_raceMatchups.map(m => `<span style="display:flex;align-items:center;gap:4px;font-size:var(--fs-caption);font-weight:800;color:var(--text1)"><span class="rbadge r${m.a}" style="font-size:9px">${m.a}</span>vs<span class="rbadge r${m.b}" style="font-size:9px">${m.b}</span> ${m.wr}%</span>`).join('')}
-            </span>
-          </div>` : ''}
           <div class="b2w2-highlight-row"><span style="font-size:var(--fs-caption);color:var(--text3)">전기 대비 경기 수</span><strong style="font-size:var(--fs-sm);color:${_gamesDelta>0?'#15803d':_gamesDelta<0?'#dc2626':'var(--text1)'}">${_gamesDelta>0?'▲+':_gamesDelta<0?'▼':'━'}${Math.abs(_gamesDelta)}전</strong></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
