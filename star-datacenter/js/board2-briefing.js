@@ -148,6 +148,13 @@ function _b2SetBriefingPreset(preset) {
   _b2BriefingSaveState();
   if (typeof render === 'function') render();
 }
+// 기간/대학 필터를 기본값(이번주 · 전체 대학)으로 되돌림
+function _b2ResetBriefingFilters() {
+  window._b2WeeklyUniv = '전체';
+  window._b2WeeklyChartSort = 'games';
+  try { localStorage.setItem('b2w2_chart_sort_v1', 'games'); } catch (e) {}
+  _b2SetBriefingPreset('thisWeek');
+}
 function _b2GetBriefingInputValues() {
   const f = document.getElementById('b2w2-from');
   const t = document.getElementById('b2w2-to');
@@ -620,7 +627,7 @@ function _b2WeeklyBriefingView() {
       /* ── KPI Grid ── */
       .b2w2-kpi-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0,1fr));
+        grid-template-columns: repeat(5, minmax(0,1fr));
         gap: 10px;
         margin-bottom: 20px;
       }
@@ -669,7 +676,7 @@ function _b2WeeklyBriefingView() {
       .b2w2-hdr {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         flex-wrap: wrap;
         padding: 10px 14px;
         border: 1px solid var(--b2w-rule);
@@ -678,43 +685,71 @@ function _b2WeeklyBriefingView() {
         background: var(--b2w-paper);
         box-shadow: var(--b2w-shadow-sm);
       }
-      .b2w2-din {
-        padding: 5px 10px;
-        border-radius: var(--b2w-r);
+      .b2w2-hdr-title { display: flex; align-items: center; gap: 6px; flex-shrink: 0 }
+
+      /* 필터 그룹(기간+대학) — 하나의 알약 컨테이너로 묶어 값이 중복 표시되지 않게 함 */
+      .b2w2-filtergroup {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 3px;
         border: 1px solid var(--b2w-rule);
-        font-size: 12px;
-        background: var(--white);
-        color: var(--text2);
-        box-shadow: var(--b2w-shadow-sm);
-        min-width: 132px;
-        cursor: pointer;
-        transition: border-color .14s ease;
-      }
-      .b2w2-din:focus { border-color: var(--b2w-accent); outline: none }
-      .b2w2-datebtn {
-        padding: 5px 10px;
-        border-radius: var(--b2w-r);
-        border: 1px solid var(--b2w-rule);
+        border-radius: var(--b2w-r-lg);
         background: var(--b2w-paper-alt);
+        flex-wrap: wrap;
+      }
+      .b2w2-dategroup {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding-right: 6px;
+        margin-right: 4px;
+        border-right: 1px solid var(--b2w-rule);
+      }
+      .b2w2-daterange-tilde { font-size: 11px; color: var(--text3); font-weight: 700; padding: 0 1px }
+      .b2w2-din {
+        padding: 5px 6px;
+        border-radius: var(--b2w-r);
+        border: none;
         font-size: 12px;
-        font-weight: 700;
+        background: transparent;
+        color: var(--text2);
+        width: 108px;
+        cursor: pointer;
+        transition: background-color .14s ease;
+      }
+      .b2w2-din:hover, .b2w2-din:focus { background: var(--white); outline: none }
+      .b2w2-datebtn {
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--b2w-r);
+        border: none;
+        background: transparent;
+        font-size: 13px;
         color: var(--b2w-ink-mid);
         cursor: pointer;
-        box-shadow: var(--b2w-shadow-sm);
-        transition: border-color .14s ease, color .14s ease, background .14s ease;
+        transition: background .14s ease, color .14s ease;
       }
-      .b2w2-datebtn:hover { border-color: var(--b2w-accent); color: var(--b2w-accent); background: var(--b2w-accent-soft) }
+      .b2w2-datebtn:hover { color: var(--b2w-accent); background: var(--b2w-accent-soft) }
       .b2w2-din::-webkit-calendar-picker-indicator { cursor: pointer; opacity: .95 }
       .b2w2-sel {
-        padding: 5px 10px;
+        padding: 5px 8px;
         border-radius: var(--b2w-r);
-        border: 1px solid var(--b2w-rule);
+        border: none;
         font-size: 12px;
-        background: var(--white);
+        background: transparent;
         color: var(--text2);
-        max-width: 220px;
-        box-shadow: var(--b2w-shadow-sm);
+        max-width: 160px;
+        cursor: pointer;
       }
+      .b2w2-sel:hover, .b2w2-sel:focus { background: var(--white); outline: none }
+
+      /* 액션 그룹(조회+초기화) — 필터와 시각적으로 분리 */
+      .b2w2-actiongroup { display: flex; align-items: center; gap: 6px }
       .b2w2-btn {
         padding: 6px 16px;
         border-radius: var(--b2w-r);
@@ -730,10 +765,28 @@ function _b2WeeklyBriefingView() {
       }
       .b2w2-btn:hover { background: var(--b2w-accent-strong); transform: translateY(-1px) }
       .b2w2-btn:focus-visible { outline: 2px solid var(--b2w-accent); outline-offset: 2px }
+      .b2w2-ghostbtn {
+        padding: 6px 10px;
+        background: transparent;
+        color: var(--text3);
+        border: 1px solid var(--b2w-rule);
+        box-shadow: none;
+        font-weight: 700;
+      }
+      .b2w2-ghostbtn:hover { background: var(--b2w-paper-alt); color: var(--b2w-ink-mid); transform: none }
+
+      /* 저장 버튼 — 조회/초기화와 성격이 다른 액션이므로 구분선으로 분리 */
       .b2w2-savebtn {
+        padding: 6px 14px 6px 10px;
+        margin-left: auto;
+        padding-left: 14px;
+        border-left: 1px solid var(--b2w-rule);
+        border-radius: 0 var(--b2w-r) var(--b2w-r) 0;
         background: linear-gradient(135deg, #fff5f5, #fee2e2 60%, #fecaca);
         color: #9f1d1d;
-        border: 1px solid rgba(159,29,29,.28);
+        border-top: 1px solid rgba(159,29,29,.28);
+        border-right: 1px solid rgba(159,29,29,.28);
+        border-bottom: 1px solid rgba(159,29,29,.28);
         box-shadow: 0 4px 14px rgba(159,29,29,.16), inset 0 1px 0 rgba(255,255,255,.7);
         font-weight: 900;
       }
@@ -1660,6 +1713,35 @@ function _b2WeeklyBriefingView() {
       }
       .b2w2-highlight-row:last-child { border-bottom: none }
 
+      /* ── 종족별 미니 테이블(참여 비율/승패/동족전) — 값이 종족(T/Z/P) 컬럼에 정렬되도록 그리드로 정리 ── */
+      .b2w2-racetable {
+        display: grid;
+        grid-template-columns: 74px repeat(3, minmax(0,1fr));
+        column-gap: 6px;
+        row-gap: 2px;
+        padding: 6px 0 8px;
+        border-bottom: 1px solid var(--b2w-rule-soft);
+      }
+      .b2w2-racetable-label {
+        font-size: var(--fs-caption);
+        color: var(--text3);
+        align-self: center;
+        padding: 5px 0;
+      }
+      .b2w2-racetable-head { display: flex; align-items: center; justify-content: center; padding-bottom: 3px }
+      .b2w2-racetable-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1px;
+        padding: 5px 2px;
+        border-radius: var(--b2w-r);
+        background: var(--b2w-paper-alt);
+      }
+      .b2w2-racetable-cell strong { font-size: var(--fs-caption); font-weight: 900; color: var(--text1); letter-spacing: -.01em }
+      .b2w2-racetable-cell span { font-size: 10px; font-weight: 700; color: var(--text3) }
+
       /* ── 듀얼 블록 ── */
       .b2w2-dual-card { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--b2w-rule-soft) }
       .b2w2-dual-block {
@@ -2068,6 +2150,7 @@ function _b2WeeklyBriefingView() {
       .b2w2-kpi-grid .b2w2-kpi-card:nth-child(2){animation-delay:.06s}
       .b2w2-kpi-grid .b2w2-kpi-card:nth-child(3){animation-delay:.10s}
       .b2w2-kpi-grid .b2w2-kpi-card:nth-child(4){animation-delay:.14s}
+      .b2w2-kpi-grid .b2w2-kpi-card:nth-child(5){animation-delay:.18s}
       .b2w2-highlight-grid .b2w2-highlight-card:nth-child(1){animation-delay:.04s}
       .b2w2-highlight-grid .b2w2-highlight-card:nth-child(2){animation-delay:.08s}
       .b2w2-highlight-grid .b2w2-highlight-card:nth-child(3){animation-delay:.12s}
@@ -2080,15 +2163,43 @@ function _b2WeeklyBriefingView() {
     _b2EnsureStyleTag('b2w2-style', css);
     let h = '';
 
-    const _totalGames = curStats.reduce((s,ud)=>s+(ud.tg||0),0);
+    const _totalGames = curStats.gameCount || 0;
     const _activeUnivs = curStats.filter(ud=>ud.tg>0).length;
     const _periodDays = diffDays;
     // 기간 핵심 요약 카드용 보조 지표 — 전체 승/패 합계와 전기 대비 경기 수 변화
-    const _totalWins = curStats.reduce((s,ud)=>s+(ud.tw||0),0);
-    const _totalLosses = curStats.reduce((s,ud)=>s+(ud.tl||0),0);
-    const _prevTotalGames = prevStats.reduce((s,ud)=>s+(ud.tg||0),0);
+    // 종족 참여 비율 — 종족별 승률 해석 시 표본 크기를 함께 보여주기 위함(활동 스트리머 기준)
+    const _raceParticipation = { T:0, Z:0, P:0 };
+    activePlayers.forEach(s => { const r = String(s.p?.race||'').trim().toUpperCase(); if (_raceParticipation[r] !== undefined) _raceParticipation[r]++; });
+    const _raceParticipationTotal = _raceParticipation.T + _raceParticipation.Z + _raceParticipation.P;
+    const _mkRaceShare = (r) => _raceParticipationTotal ? Math.round(_raceParticipation[r]/_raceParticipationTotal*1000)/10 : null;
+    // 전체 대학 종족별 승패 — "전체 승/패"(선수 개인전적 합산, tw+tl)는 대학간 매치는 양쪽이 각각
+    // 승/패로 잡혀 총 경기 수(게임 1건=1)와 어긋나 보일 수 있어 카드에는 노출하지 않고,
+    // 대신 오해 소지가 적은 종족별 승패 구성을 보여준다.
+    const _totalRaceCount = { P:{w:0,l:0}, T:{w:0,l:0}, Z:{w:0,l:0} };
+    curStats.forEach(ud => { ['P','T','Z'].forEach(r => { _totalRaceCount[r].w += ud.raceCount[r].w; _totalRaceCount[r].l += ud.raceCount[r].l; }); });
+    // 선수당 평균 경기 수 — 총 경기 수 / 활동 스트리머 수
+    const _avgGamesPerPlayer = activePlayers.length ? Math.round((_totalGames / activePlayers.length) * 10) / 10 : null;
+    // 종족전 상대 승률(T vs Z / T vs P / Z vs P) + 동족전(T vs T / Z vs Z / P vs P) —
+    // 자기 종족 기준 상대 종족전 기록을 모아 승률을 계산. 각 선수의 vsRace(상대 종족별 전적)를
+    // 본인 종족으로 묶어 집계(동족전은 상대 종족이 본인과 같은 경우).
+    const _matchupByOwnRace = { T:{T:{w:0,l:0},P:{w:0,l:0},Z:{w:0,l:0}}, Z:{Z:{w:0,l:0},T:{w:0,l:0},P:{w:0,l:0}}, P:{P:{w:0,l:0},T:{w:0,l:0},Z:{w:0,l:0}} };
+    curStats.forEach(ud => {
+      ud.active.forEach(s => {
+        const own = String(s.p?.race||'').trim().toUpperCase();
+        if (!_matchupByOwnRace[own] || !s.vsRace) return;
+        Object.keys(_matchupByOwnRace[own]).forEach(opp => {
+          if (s.vsRace[opp]) { _matchupByOwnRace[own][opp].w += s.vsRace[opp].w; _matchupByOwnRace[own][opp].l += s.vsRace[opp].l; }
+        });
+      });
+    });
+    const _mkMatchup = (a, b) => {
+      const rec = _matchupByOwnRace[a][b];
+      const total = rec.w + rec.l;
+      return { a, b, w: rec.w, l: rec.l, total, wr: total ? Math.round(rec.w/total*1000)/10 : null };
+    };
+    const _raceMatchups = [_mkMatchup('T','Z'), _mkMatchup('T','P'), _mkMatchup('Z','P')].filter(m => m.total > 0);
+    const _prevTotalGames = prevStats.gameCount || 0;
     const _gamesDelta = _totalGames - _prevTotalGames;
-    const _overallWr = (_totalWins + _totalLosses) > 0 ? Math.round((_totalWins / (_totalWins + _totalLosses)) * 1000) / 10 : null;
 
     // ── "저장(1장)" 신문기사 스타일 캡처용 데이터 스냅샷 ──
     // render-capture-utils.js의 captureBriefingArticle('single')에서 사용.
@@ -2251,19 +2362,28 @@ function _b2WeeklyBriefingView() {
     }
 
     h += `<div class="b2w2-hdr">
-      <span style="font-size:16px">📅</span>
-      <span style="font-size:14px;font-weight:900;color:var(--text1)">${_briefingInfo.title}</span>
-      <input type="date" class="b2w2-din" id="b2w2-from" value="${dateFrom}" onchange="_b2SyncBriefingCustomInputs(true)" title="시작 날짜 변경">
-      <button type="button" class="b2w2-datebtn" onclick="_b2OpenBriefingDateInput('from')" title="시작 날짜 선택">📅 시작일</button>
-      <span style="font-size:var(--fs-sm);color:var(--text3);font-weight:700">~</span>
-      <input type="date" class="b2w2-din" id="b2w2-to" value="${dateTo}" onchange="_b2SyncBriefingCustomInputs(true)" title="종료 날짜 변경">
-      <button type="button" class="b2w2-datebtn" onclick="_b2OpenBriefingDateInput('to')" title="종료 날짜 선택">📅 종료일</button>
-      <select class="b2w2-sel" id="b2w2-univ" onchange="_b2SyncBriefingCustomInputs(true)">
-        <option value="전체"${selUniv==='전체'?' selected':''}>🏫 전체 대학</option>
-        ${univList.map(u=>{const _n=(typeof escAttr==='function'?escAttr(u.name):String(u.name||''));const _nh=(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''));return `<option value="${_n}"${selUniv===u.name?' selected':''}>${_nh}</option>`;}).join('')}
-      </select>
-      <button type="button" class="b2w2-btn" onclick="_b2ApplyBriefingCustomFromInputs()">조회</button>
-      <button type="button" class="b2w2-btn no-export b2w2-savebtn" style="margin-left:auto" onclick="captureBriefingArticle()">📰 브리핑 저장</button>
+      <div class="b2w2-hdr-title">
+        <span style="font-size:16px">📅</span>
+        <span style="font-size:14px;font-weight:900;color:var(--text1)">${_briefingInfo.title}</span>
+      </div>
+      <div class="b2w2-filtergroup">
+        <span class="b2w2-dategroup" title="기간 선택">
+          <button type="button" class="b2w2-datebtn" onclick="_b2OpenBriefingDateInput('from')" title="시작 날짜 선택" aria-label="시작 날짜 선택">📅</button>
+          <input type="date" class="b2w2-din" id="b2w2-from" value="${dateFrom}" onchange="_b2SyncBriefingCustomInputs(true)" title="시작 날짜 변경">
+          <span class="b2w2-daterange-tilde">~</span>
+          <input type="date" class="b2w2-din" id="b2w2-to" value="${dateTo}" onchange="_b2SyncBriefingCustomInputs(true)" title="종료 날짜 변경">
+          <button type="button" class="b2w2-datebtn" onclick="_b2OpenBriefingDateInput('to')" title="종료 날짜 선택" aria-label="종료 날짜 선택">📅</button>
+        </span>
+        <select class="b2w2-sel" id="b2w2-univ" onchange="_b2SyncBriefingCustomInputs(true)">
+          <option value="전체"${selUniv==='전체'?' selected':''}>🏫 전체 대학</option>
+          ${univList.map(u=>{const _n=(typeof escAttr==='function'?escAttr(u.name):String(u.name||''));const _nh=(typeof window.escHTML==='function'?window.escHTML(u.name):String(u.name||''));return `<option value="${_n}"${selUniv===u.name?' selected':''}>${_nh}</option>`;}).join('')}
+        </select>
+      </div>
+      <div class="b2w2-actiongroup">
+        <button type="button" class="b2w2-btn" onclick="_b2ApplyBriefingCustomFromInputs()">조회</button>
+        <button type="button" class="b2w2-btn b2w2-ghostbtn no-export" onclick="_b2ResetBriefingFilters()" title="이번주 브리핑으로 초기화" aria-label="초기화">↺</button>
+      </div>
+      <button type="button" class="b2w2-btn no-export b2w2-savebtn" onclick="captureBriefingArticle()">📰 브리핑 저장</button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 2px 10px;border-bottom:1px dashed var(--b2w-rule-soft);margin-bottom:16px">
       <span style="font-size:10px;font-weight:800;color:var(--b2w-tag-muted);letter-spacing:.06em;text-transform:uppercase;flex-shrink:0">데이터 범위</span>
@@ -2318,15 +2438,46 @@ function _b2WeeklyBriefingView() {
         <div class="b2w2-kpi-value" style="color:#10b981">${bestWrPlayer ? `${bestWrPlayer.winRate}%` : '-'}</div>
         <div class="b2w2-kpi-sub">${_bestWrSub}</div>
       </article>
+      <article class="b2w2-kpi-card" style="--kpi-accent:#8b5cf6">
+        <div class="b2w2-kpi-label">📊 선수당 평균</div>
+        <div class="b2w2-kpi-value">${_avgGamesPerPlayer !== null ? _avgGamesPerPlayer : '-'}<span style="font-size:14px;font-weight:700;color:var(--b2w-ink-soft);margin-left:2px">전</span></div>
+        <div class="b2w2-kpi-sub">활동 스트리머 ${activePlayers.length}명 기준</div>
+      </article>
     </section>`;
 
     h += `<section class="b2w2-highlight-grid">
       <article class="b2w2-highlight-card b2w2-lead-card" style="border-color:var(--b2w-accent-border);--hc-top:var(--b2w-accent)">
         <div class="b2w2-highlight-kicker" style="color:var(--b2w-accent)">전체 전적</div>
         <div class="b2w2-highlight-title">종합 승패 개요</div>
-        <div class="b2w2-highlight-desc">전체 대학 합산 승률은 ${_overallWr !== null ? `${_overallWr}%` : '집계 불가'}이며, 전기 대비 경기 수는 ${_gamesDelta > 0 ? `${_gamesDelta}전 늘었습니다` : _gamesDelta < 0 ? `${Math.abs(_gamesDelta)}전 줄었습니다` : '동일합니다'}.</div>
+        <div class="b2w2-racetable">
+          <div></div>
+          <div class="b2w2-racetable-head"><span class="rbadge rT" style="font-size:10px">T</span></div>
+          <div class="b2w2-racetable-head"><span class="rbadge rZ" style="font-size:10px">Z</span></div>
+          <div class="b2w2-racetable-head"><span class="rbadge rP" style="font-size:10px">P</span></div>
+
+          <div class="b2w2-racetable-label">참여 비율</div>
+          <div class="b2w2-racetable-cell"><strong>${_raceParticipation.T}명</strong><span>${_mkRaceShare('T') ?? '-'}%</span></div>
+          <div class="b2w2-racetable-cell"><strong>${_raceParticipation.Z}명</strong><span>${_mkRaceShare('Z') ?? '-'}%</span></div>
+          <div class="b2w2-racetable-cell"><strong>${_raceParticipation.P}명</strong><span>${_mkRaceShare('P') ?? '-'}%</span></div>
+
+          <div class="b2w2-racetable-label">종족별 승/패</div>
+          <div class="b2w2-racetable-cell"><strong>${_totalRaceCount.T.w}승 ${_totalRaceCount.T.l}패</strong></div>
+          <div class="b2w2-racetable-cell"><strong>${_totalRaceCount.Z.w}승 ${_totalRaceCount.Z.l}패</strong></div>
+          <div class="b2w2-racetable-cell"><strong>${_totalRaceCount.P.w}승 ${_totalRaceCount.P.l}패</strong></div>
+
+          <div class="b2w2-racetable-label">동족전 승패</div>
+          <div class="b2w2-racetable-cell"><strong>${_matchupByOwnRace.T.T.w}승 ${_matchupByOwnRace.T.T.l}패</strong></div>
+          <div class="b2w2-racetable-cell"><strong>${_matchupByOwnRace.Z.Z.w}승 ${_matchupByOwnRace.Z.Z.l}패</strong></div>
+          <div class="b2w2-racetable-cell"><strong>${_matchupByOwnRace.P.P.w}승 ${_matchupByOwnRace.P.P.l}패</strong></div>
+        </div>
         <div class="b2w2-highlight-list" style="margin-top:2px">
-          <div class="b2w2-highlight-row"><span style="font-size:var(--fs-caption);color:var(--text3)">전체 승/패</span><strong style="font-size:var(--fs-sm);color:var(--text1)">${_totalWins}승 ${_totalLosses}패</strong></div>
+          ${_raceMatchups.length ? `
+          <div class="b2w2-highlight-row">
+            <span style="font-size:var(--fs-caption);color:var(--text3)">종족전 상대 승률</span>
+            <span style="display:flex;gap:10px;flex-wrap:wrap">
+              ${_raceMatchups.map(m => `<span style="display:flex;align-items:center;gap:4px;font-size:var(--fs-caption);font-weight:800;color:var(--text1)"><span class="rbadge r${m.a}" style="font-size:9px">${m.a}</span>vs<span class="rbadge r${m.b}" style="font-size:9px">${m.b}</span> ${m.wr}%</span>`).join('')}
+            </span>
+          </div>` : ''}
           <div class="b2w2-highlight-row"><span style="font-size:var(--fs-caption);color:var(--text3)">전기 대비 경기 수</span><strong style="font-size:var(--fs-sm);color:${_gamesDelta>0?'#15803d':_gamesDelta<0?'#dc2626':'var(--text1)'}">${_gamesDelta>0?'▲+':_gamesDelta<0?'▼':'━'}${Math.abs(_gamesDelta)}전</strong></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">

@@ -633,7 +633,7 @@ function rBoard2(C, T) {
             <div class="b2-hero-stat-sub">자주 쓰는 하위 화면으로 즉시 전환</div>
           </div>
           <div class="b2-hero-stat">
-            <div class="b2-hero-stat-label">표시 인원</div>
+            <div class="b2-hero-stat-label">표시 스트리머</div>
             <div class="b2-hero-stat-value">${visPlayers.length}</div>
             <div class="b2-hero-stat-sub">숨김·은퇴 제외 기준</div>
           </div>

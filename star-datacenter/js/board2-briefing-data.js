@@ -157,12 +157,17 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
   // ── 외부 소스에서 플레이어별 경기 목록 구성 ──────────────────
   // key: playerName → [{date,result,oppRace,mode}]
   const extMap = {};
+  // 실제 경기 수(선수별 참가 횟수 합산이 아니라, 게임 1건당 1로 세는 카운터)
+  let gameCount = 0;
   const addExt = (name, date, result, oppRace, mode) => {
     if (!name || !date || !result) return;
     if (!inRange(date)) return;
     if (isBriefingExcluded(mode)) return;
     if (!extMap[name]) extMap[name] = [];
     extMap[name].push({ date, result, oppRace: oppRace||'', mode: mode||'' });
+  };
+  const _b2CountGame = (date, mode) => {
+    if (date && inRange(date) && !isBriefingExcluded(mode)) gameCount++;
   };
   const _b2TeamNames = (side) => {
     if (Array.isArray(side)) {
@@ -190,6 +195,7 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
       const loseTeam = game.winner === 'A' ? teamB : teamA;
       winTeam.forEach(name => addExt(name, date, '승', '', modeLabel));
       loseTeam.forEach(name => addExt(name, date, '패', '', modeLabel));
+      _b2CountGame(date, modeLabel);
       return true;
     }
     return false;
@@ -223,6 +229,7 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
         const wA = g.winner==='A', wB = g.winner==='B';
         addExt(g.playerA, m.d, wA?'승':'패', pB?.race||'', '티어대회');
         addExt(g.playerB, m.d, wB?'승':'패', pA?.race||'', '티어대회');
+        _b2CountGame(m.d, '티어대회');
       });
     });
   }); } catch(e){}
@@ -240,6 +247,7 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
             const pA=players.find(p=>p.name===g.playerA), pB=players.find(p=>p.name===g.playerB);
             addExt(g.playerA, m.d, g.winner==='A'?'승':'패', pB?.race||'', modeLabel);
             addExt(g.playerB, m.d, g.winner==='B'?'승':'패', pA?.race||'', modeLabel);
+            _b2CountGame(m.d, modeLabel);
           }
         });
       });
@@ -262,6 +270,7 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
             const pA=players.find(p=>p.name===g.playerA), pB=players.find(p=>p.name===g.playerB);
             addExt(g.playerA, m.d, g.winner==='A'?'승':'패', pB?.race||'', '대회');
             addExt(g.playerB, m.d, g.winner==='B'?'승':'패', pA?.race||'', '대회');
+            _b2CountGame(m.d, '대회');
           });
         });
       });
@@ -276,6 +285,7 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
           const pA=players.find(p=>p.name===g.playerA), pB=players.find(p=>p.name===g.playerB);
           addExt(g.playerA, m.d, g.winner==='A'?'승':'패', pB?.race||'', '대회');
           addExt(g.playerB, m.d, g.winner==='B'?'승':'패', pA?.race||'', '대회');
+          _b2CountGame(m.d, '대회');
         });
       });
     });
@@ -289,12 +299,13 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
           const pA=players.find(p=>p.name===g.playerA), pB=players.find(p=>p.name===g.playerB);
           addExt(g.playerA, m.d, g.winner==='A'?'승':'패', pB?.race||'', '대회');
           addExt(g.playerB, m.d, g.winner==='B'?'승':'패', pA?.race||'', '대회');
+          _b2CountGame(m.d, '대회');
         });
       });
     });
   }); } catch(e){}
 
-  return players.map(p => {
+  const _result = players.map(p => {
     // p.history (직접 기록) + 외부 소스 경기 합산
     const phist = (Array.isArray(p.history) ? p.history : [])
       .filter(h => inRange(h.date || h.d || '') && !isBriefingExcluded(h.mode || h.label || h.type || h.kind || h.cat || ''));
@@ -323,6 +334,10 @@ function _b2WeeklyAggregateCompute(players, dateFrom, dateTo) {
       vsRace, hist
     };
   });
+  // 배열 자체는 기존과 동일하게 동작(map/filter/reduce 그대로 사용 가능)하면서,
+  // 실제 경기 수(참가 횟수 합산이 아닌 게임 1건=1)만 별도 속성으로 함께 반환
+  _result.gameCount = gameCount;
+  return _result;
 }
 
 // ─── 유니브 집계 ──────────────────────────────
@@ -338,6 +353,8 @@ function _b2WeeklyUnivStats(players, dateFrom, dateTo, univList, sortBy) {
     active.forEach(s => { ['P','T','Z'].forEach(r => { raceCount[r].w+=s.vsRace[r].w; raceCount[r].l+=s.vsRace[r].l; }); });
     return { u, members, active, tw, tl, tg, wr: tg ? Math.round(tw/tg*100) : null, raceCount };
   });
+  // 실제 경기 수(대학별 참가 횟수 합산이 아닌, 게임 1건=1로 센 값)를 함께 전달
+  result.gameCount = stats.gameCount || 0;
   // sortBy: 'winrate' → 승률순(경기수 0인 대학은 맨 뒤로), 그 외(기본) → 전적순
   if (sortBy === 'winrate') {
     return result.sort((a,b) => (b.wr ?? -1) - (a.wr ?? -1) || b.tg - a.tg);

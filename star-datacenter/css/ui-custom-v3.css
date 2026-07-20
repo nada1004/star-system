@@ -634,6 +634,73 @@
   text-transform: uppercase;
 }
 
+/* 대학 상세 상단 3단 정보줄(종족비중/티어, 바로가기, 모드) 재설계
+   — 선 대신 은은한 배경 톤으로 구간을 구분 */
+.b2-stats-subrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 9px 11px;
+  border-radius: 14px;
+  background: rgba(148,163,184,.07);
+}
+.b2-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size:var(--fs-caption);
+  font-weight: 900;
+  color: var(--text2);
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(148,163,184,.16);
+  padding: 5px 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(15,23,42,.05);
+}
+.b2-subrow-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(148,163,184,.28);
+  display: inline-block;
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+/* 모드 전환 — 세그먼트 컨트롤 */
+.b2-seg-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: rgba(148,163,184,.14);
+  flex-wrap: wrap;
+}
+.b2-seg-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 13px;
+  border-radius: 9px;
+  font-size:var(--fs-caption);
+  font-weight: 800;
+  color: var(--text2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, color .15s, box-shadow .15s;
+}
+.b2-seg-btn:hover:not(.on) { color: #1d4ed8; }
+.b2-seg-btn.on {
+  background: #fff;
+  color: #1d4ed8;
+  box-shadow: 0 2px 8px rgba(15,23,42,.10);
+}
+body.dark .b2-stats-subrow { background: rgba(255,255,255,.04); }
+body.dark .b2-section-label { background: rgba(30,41,59,.7); border-color: rgba(255,255,255,.08); color: var(--text2); }
+body.dark .b2-seg-track { background: rgba(255,255,255,.06); }
+body.dark .b2-seg-btn.on { background: rgba(37,99,235,.22); color: #93c5fd; }
+
 /* 모바일: 대학 상세 상단 칩 영역(종족비중/티어, 바로가기, 모드) — 여러 줄로 줄바꿈되어
    지저분해지는 대신 한 줄 가로 스크롤로 정리 */
 @media (max-width: 768px) {

@@ -50,42 +50,24 @@ function _b2UnivView() {
     return `<button class="b2-jump-chip" onclick="const el=document.getElementById('${anchorId}');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}" style="--chip-color:${col}40;border:1.5px solid ${col}bb;background:linear-gradient(135deg,${col}ee,${col}cc);color:${txtCol}"><span style="letter-spacing:-.01em">${safeName}</span></button>`;
   }).join('');
   const _viewMode = _b2GetUnivProfileViewMode();
-  const _viewBtn = (mode, label) => `
-    <button type="button" class="b2-jump-chip" onclick="_b2SetUnivProfileViewMode('${mode}')" style="border:${_viewMode===mode?'1.5px solid #2563eb':'1.5px solid rgba(148,163,184,.20)'};background:${_viewMode===mode?'linear-gradient(135deg,#eff6ff,#dbeafe)':'linear-gradient(135deg,rgba(255,255,255,.98),rgba(248,250,252,.94))'};color:${_viewMode===mode?'#1d4ed8':'var(--text2)'};box-shadow:${_viewMode===mode?'0 6px 16px rgba(37,99,235,.12)':'0 4px 10px rgba(15,23,42,.04)'}">${label}</button>`;
+  const _viewModes = [['default','기본',''],['poster','포스터',''],['glass','글래스','✨'],['table','테이블','📋']];
+  const _viewBtn = _viewModes.map(([mode,label,ico]) =>
+    `<button type="button" class="b2-seg-btn${_viewMode===mode?' on':''}" onclick="_b2SetUnivProfileViewMode('${mode}')">${ico?ico+' ':''}${label}</button>`
+  ).join('');
   const statsBar = `<div style="margin-bottom:12px">
-    <div style="padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 16px 28px rgba(15,23,42,.05)">
-      <div class="b2-univ-statsbar-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
-        <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
-          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3)">표시 선수</div>
-          <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:var(--text1)">${_allVis.length}</div>
-          <div style="margin-top:4px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">현황판 기준 표시 인원</div>
-        </div>
-        <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
-          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3)">이번주 기록 수</div>
-          <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:#2563eb">${_uvWeekG}</div>
-          <div style="margin-top:4px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">개인전·팀전·대회 기준</div>
-        </div>
-        <div style="padding:13px 14px;border-radius:18px;border:1px solid rgba(148,163,184,.14);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94))">
-          <div style="font-size:var(--fs-caption);font-weight:800;color:var(--text3)">이번주 활동 스트리머</div>
-          <div style="margin-top:6px;font-size:22px;font-weight:950;letter-spacing:-.03em;color:#f59e0b">${_uvWeekActive}</div>
-          <div style="margin-top:4px;font-size:var(--fs-caption);font-weight:700;color:var(--text3)">월~오늘 기록 1회 이상</div>
-        </div>
-      </div>
-      <div class="b2-race-tier-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
-        <span class="b2-jump-label">종족 비중</span>
+    <div style="padding:14px;border-radius:22px;border:1px solid rgba(148,163,184,.18);background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(248,250,252,.96));box-shadow:0 16px 28px rgba(15,23,42,.05);display:flex;flex-direction:column;gap:8px">
+      <div class="b2-race-tier-row b2-stats-subrow">
+        <span class="b2-section-label">⚔️ 종족 비중</span>
         ${_uvRaceBar||`<span style="font-size:var(--fs-caption);font-weight:700;color:var(--gray-l)">집계 없음</span>`}
-        ${_uvTierBtns?`<span style="width:1px;height:20px;background:var(--border2);display:inline-block;margin:0 4px;flex-shrink:0"></span><span class="b2-jump-label">티어</span>${_uvTierBtns}`:''}
+        ${_uvTierBtns?`<span class="b2-subrow-divider"></span><span class="b2-section-label">🏅 티어</span>${_uvTierBtns}`:''}
       </div>
-      <div class="b2-jump-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid rgba(148,163,184,.14)">
-        <span class="b2-jump-label">🏛️ 바로가기</span>
+      <div class="b2-jump-row b2-stats-subrow">
+        <span class="b2-section-label">🏛️ 바로가기</span>
         ${_jumpChips}
       </div>
-      <div class="b2-mode-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(148,163,184,.14)">
-        <span class="b2-jump-label">🖼️ 모드</span>
-        ${_viewBtn('default','기본')}
-        ${_viewBtn('poster','포스터')}
-        ${_viewBtn('glass','✨ 글래스')}
-        ${_viewBtn('table','📋 테이블')}
+      <div class="b2-mode-row b2-stats-subrow" style="justify-content:space-between">
+        <span class="b2-section-label">🖼️ 모드</span>
+        <div class="b2-seg-track">${_viewBtn}</div>
       </div>
     </div>
   </div>`;
