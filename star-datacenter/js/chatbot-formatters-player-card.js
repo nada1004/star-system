@@ -66,7 +66,7 @@ function formatPlayerMoreOptions(player) {
 .pcm-txt-less{display:none}
 .pcm-chev{display:inline-block;font-size:11px;transform:rotate(90deg)}
 .pcm-panel{display:none;grid-template-columns:1fr 1fr;gap:6px;padding-top:6px}
-.pcm-chip{padding:9px 0;border-radius:10px;border:1px solid var(--border);background:var(--white);color:var(--text2);font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.pcm-chip{padding:9px 0;border-radius:10px;border:1px solid var(--blue-ll);background:var(--blue-l);color:var(--blue-d);font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
 .pcm-chip:nth-child(5){grid-column:1 / span 2}
 #${uid}:checked ~ .pcm-panel{display:grid}
 #${uid}:checked ~ label .pcm-txt-more{display:none}

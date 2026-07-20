@@ -333,7 +333,7 @@ async function _ensureChatbotLoaded(){
   await _loadScriptOnce('js/chatbot-sync.js?v=20260720-ds02');
   await _loadScriptOnce('js/chatbot-aibot.js?v=20260717-ds01');
   await _loadScriptOnce('js/chatbot-formatters.js?v=20260717-ds01');
-  await _loadScriptOnce('js/chatbot-formatters-player-card.js?v=20260720-mo03');
+  await _loadScriptOnce('js/chatbot-formatters-player-card.js?v=20260720-mo04');
   await _loadScriptOnce('js/chatbot-formatters-recent.js?v=20260717-ds01');
   await _loadScriptOnce('js/chatbot-formatters-stats.js?v=20260717-ds03');
   await _loadScriptOnce('js/chatbot-formatters-matches.js?v=20260717-ds01');
