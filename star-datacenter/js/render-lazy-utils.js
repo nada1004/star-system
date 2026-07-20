@@ -330,10 +330,10 @@ async function _ensureChatbotLoaded(){
   await _loadScriptOnce('js/chatbot.js?v=20260719-ds01');
   await _loadScriptOnce('js/chatbot-utils.js?v=20260719-ds01');
   await _loadScriptOnce('js/chatbot-fuzzy.js?v=20260719-ds01');
-  await _loadScriptOnce('js/chatbot-sync.js?v=20260719-ds02');
+  await _loadScriptOnce('js/chatbot-sync.js?v=20260720-ds02');
   await _loadScriptOnce('js/chatbot-aibot.js?v=20260717-ds01');
   await _loadScriptOnce('js/chatbot-formatters.js?v=20260717-ds01');
-  await _loadScriptOnce('js/chatbot-formatters-player-card.js?v=20260719-ds01');
+  await _loadScriptOnce('js/chatbot-formatters-player-card.js?v=20260720-mo03');
   await _loadScriptOnce('js/chatbot-formatters-recent.js?v=20260717-ds01');
   await _loadScriptOnce('js/chatbot-formatters-stats.js?v=20260717-ds03');
   await _loadScriptOnce('js/chatbot-formatters-matches.js?v=20260717-ds01');
@@ -343,7 +343,8 @@ async function _ensureChatbotLoaded(){
   await _loadScriptOnce('js/chatbot-formatters-search.js?v=20260717-ds01');
   await _loadScriptOnce('js/chatbot-formatters-tournaments.js?v=20260717-ds01');
   await _loadScriptOnce('js/chatbot-formatters-univ.js?v=20260719-ds01');
-  await _loadScriptOnce('js/chatbot-handlers.js?v=20260719-ds02');
+  await _loadScriptOnce('js/chatbot-formatters-extra.js?v=20260720-ds02');
+  await _loadScriptOnce('js/chatbot-handlers.js?v=20260720-ds02');
   await _loadScriptOnce('js/chatbot-ui.js?v=20260719-ds01');
 }
 function _lazyOpenChatbot(mode){

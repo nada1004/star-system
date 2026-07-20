@@ -7176,7 +7176,7 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
 .chatbot-sheet {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  background: #fff;
+  background: var(--white);
   border-radius: 22px 22px 0 0;
   max-height: 82vh;
   display: flex;
@@ -7208,7 +7208,7 @@ body.dark .rec-detail-area [style*="background:var(--surface)"]{background:#1620
 }
 .chatbot-sheet-handle {
   width: 36px; height: 4px;
-  background: #e2e8f0;
+  background: var(--border2);
   border-radius: 2px;
   margin: 10px auto 0;
   flex-shrink: 0;

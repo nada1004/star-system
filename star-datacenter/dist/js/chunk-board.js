@@ -3174,7 +3174,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
   </div>`}function _b2WeeklyDelta(curr,prev){if(prev===null||curr===null)return"";const d=curr-prev;if(d===0)return`<span style="font-size:10px;color:var(--text3);margin-left:4px">\u2501 ${prev}%</span>`;const arrow=d>0?"\u25B2":"\u25BC";return`<span style="font-size:10px;font-weight:800;color:${d>0?"#10b981":"#ef4444"};margin-left:4px">${arrow}${Math.abs(d)}%</span><span style="font-size:10px;color:var(--text3);margin-left:2px">vs \uC804\uC8FC</span>`}
 
 /* board2-briefing.js */
-var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __getOwnPropDescs=Object.getOwnPropertyDescriptors;var __getOwnPropSymbols=Object.getOwnPropertySymbols;var __hasOwnProp=Object.prototype.hasOwnProperty,__propIsEnum=Object.prototype.propertyIsEnumerable;var __defNormalProp=(obj,key,value)=>key in obj?__defProp(obj,key,{enumerable:!0,configurable:!0,writable:!0,value}):obj[key]=value,__spreadValues=(a,b)=>{for(var prop in b||(b={}))__hasOwnProp.call(b,prop)&&__defNormalProp(a,prop,b[prop]);if(__getOwnPropSymbols)for(var prop of __getOwnPropSymbols(b))__propIsEnum.call(b,prop)&&__defNormalProp(a,prop,b[prop]);return a},__spreadProps=(a,b)=>__defProps(a,__getOwnPropDescs(b));function _b2FmtLocalYMD(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`}function _b2WeeklyGetDefaultRange(offsetWeeks){const now=new Date,offset=offsetWeeks||0,day=now.getDay(),diffToMon=day===0?-6:1-day,mon=new Date(now);mon.setDate(now.getDate()+diffToMon+offset*7);const sun=new Date(mon);sun.setDate(mon.getDate()+6);const today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),to=offset===0&&today<sun?today:sun;return{from:_b2FmtLocalYMD(mon),to:_b2FmtLocalYMD(to)}}function _b2MonthlyGetDefaultRange(offsetMonths,fullMonth){const now=new Date,offset=offsetMonths||0,base=new Date(now.getFullYear(),now.getMonth()+offset,1),from=new Date(base.getFullYear(),base.getMonth(),1),to=fullMonth?new Date(base.getFullYear(),base.getMonth()+1,0):offset===0?new Date(now.getFullYear(),now.getMonth(),now.getDate()):new Date(base.getFullYear(),base.getMonth()+1,0);return{from:_b2FmtLocalYMD(from),to:_b2FmtLocalYMD(to)}}function _b2EnsureStyleTag(id,cssText){try{const head=document.head||document.getElementsByTagName&&document.getElementsByTagName("head")[0];if(!head)return;const css=String(cssText||"");let el=document.getElementById(id);if(!el){el=document.createElement("style"),el.id=id,el.type="text/css",el.appendChild(document.createTextNode(css)),head.appendChild(el);return}(el.textContent||"")!==css&&(el.textContent=css)}catch(e){}}function _b2MvpFxDefaults(){return{on:!0,style:"fade",intensity:45,design:"photo"}}const _B2_MVP_FX_STYLES=["fade","vignette","topbottom","tint","spotlight","noir","diagonal","glass","none"],_B2_MVP_DESIGNS=["photo","panel","frame","glasscard","border","ribbon","split","poster"];function _b2MvpFxLoad(){const d=_b2MvpFxDefaults();try{const onRaw=localStorage.getItem("su_b2mvp_fx_on"),styleRaw=localStorage.getItem("su_b2mvp_fx_style"),intRaw=localStorage.getItem("su_b2mvp_fx_intensity"),designRaw=localStorage.getItem("su_b2mvp_design_mode"),on=onRaw===null?d.on:onRaw==="1",style=_B2_MVP_FX_STYLES.includes(styleRaw)?styleRaw:d.style,design=_B2_MVP_DESIGNS.includes(designRaw)?designRaw:d.design,intN=parseInt(intRaw,10),intensity=Number.isFinite(intN)?Math.max(0,Math.min(100,intN)):d.intensity;return{on,style,intensity,design}}catch(e){return d}}const _B2_BRIEFING_THEMES=["classic","minimal","vivid","mono","elegant","pastel","luxury","sports","esports","pop","nature","ocean","sunset","neon"];function _b2BriefingThemeLoad(){try{const v=localStorage.getItem("su_b2_briefing_theme");return _B2_BRIEFING_THEMES.includes(v)?v:"classic"}catch(e){return"classic"}}function _b2IsValidDateStr(s){return/^\d{4}-\d{2}-\d{2}$/.test(String(s||"").trim())}function _b2NormalizeBriefingRange(from,to){const f=String(from||"").trim().slice(0,10),t=String(to||"").trim().slice(0,10);if(!_b2IsValidDateStr(f)||!_b2IsValidDateStr(t))return{from:f,to:t,swapped:!1};const fn=parseInt(f.replace(/-/g,""),10)||0,tn=parseInt(t.replace(/-/g,""),10)||0;return fn&&tn&&fn>tn?{from:t,to:f,swapped:!0}:{from:f,to:t,swapped:!1}}function _b2BriefingLoadState(){try{const raw=localStorage.getItem("b2w2_state_v1");if(!raw)return null;const st=JSON.parse(raw);if(!st||typeof st!="object")return null;const preset=String(st.preset||"").trim(),from=String(st.from||"").trim(),to=String(st.to||"").trim(),univ=String(st.univ||"").trim()||"\uC804\uCCB4",okPreset=["thisWeek","lastWeek","thisMonth","lastMonth","custom","mvpArchive"].includes(preset),norm=_b2NormalizeBriefingRange(from,to);return{preset:okPreset?preset:null,from:_b2IsValidDateStr(norm.from)?norm.from:null,to:_b2IsValidDateStr(norm.to)?norm.to:null,univ}}catch(e){return null}}function _b2BriefingSaveState(){try{const preset=String(window._b2WeeklyPreset||"").trim(),from=String(window._b2WeeklyDateFrom||"").trim(),to=String(window._b2WeeklyDateTo||"").trim(),univ=String(window._b2WeeklyUniv||"\uC804\uCCB4").trim()||"\uC804\uCCB4",payload={preset:["thisWeek","lastWeek","thisMonth","lastMonth","custom","mvpArchive"].includes(preset)?preset:"custom",from,to,univ};localStorage.setItem("b2w2_state_v1",JSON.stringify(payload))}catch(e){}}function _b2BriefingPresetRange(preset){const key=String(preset||"thisWeek");return key==="lastWeek"?_b2WeeklyGetDefaultRange(-1):key==="thisMonth"?_b2MonthlyGetDefaultRange(0,!1):key==="lastMonth"?_b2MonthlyGetDefaultRange(-1,!0):_b2WeeklyGetDefaultRange(0)}function _b2SetBriefingPreset(preset){const r=_b2BriefingPresetRange(preset);window._b2WeeklyPreset=String(preset||"thisWeek"),window._b2WeeklyDateFrom=r.from,window._b2WeeklyDateTo=r.to,_b2BriefingSaveState(),typeof render=="function"&&render()}function _b2ResetBriefingFilters(){window._b2WeeklyUniv="\uC804\uCCB4",window._b2WeeklyChartSort="games";try{localStorage.setItem("b2w2_chart_sort_v1","games")}catch(e){}_b2SetBriefingPreset("thisWeek")}function _b2GetBriefingInputValues(){const f=document.getElementById("b2w2-from"),t=document.getElementById("b2w2-to"),s=document.getElementById("b2w2-univ"),fallback=_b2BriefingPresetRange("thisWeek");return{from:f&&f.value||window._b2WeeklyDateFrom||fallback.from,to:t&&t.value||window._b2WeeklyDateTo||fallback.to,univ:s&&s.value||window._b2WeeklyUniv||"\uC804\uCCB4"}}function _b2SyncBriefingCustomInputs(applyNow){const v=_b2GetBriefingInputValues(),norm=_b2NormalizeBriefingRange(v.from,v.to);if(window._b2WeeklyDateFrom=norm.from,window._b2WeeklyDateTo=norm.to,window._b2WeeklyUniv=v.univ,window._b2WeeklyPreset="custom",norm.swapped){const f=document.getElementById("b2w2-from"),t=document.getElementById("b2w2-to");f&&(f.value=norm.from),t&&(t.value=norm.to)}_b2BriefingSaveState(),applyNow&&typeof render=="function"&&render()}function _b2ApplyBriefingCustomFromInputs(){_b2SyncBriefingCustomInputs(!0)}function _b2ActivateBriefingCustom(focusInput){_b2SyncBriefingCustomInputs(!0),focusInput&&setTimeout(()=>{const el=document.getElementById("b2w2-from");el&&typeof el.focus=="function"&&el.focus();try{el&&typeof el.showPicker=="function"&&el.showPicker()}catch(e){}},30)}function _b2SetBriefingRecentDays(days){const n=Math.max(1,Number(days)||7),to=new Date;to.setHours(0,0,0,0);const from=new Date(to);from.setDate(to.getDate()-(n-1)),window._b2WeeklyPreset="custom",window._b2WeeklyDateFrom=_b2FmtLocalYMD(from),window._b2WeeklyDateTo=_b2FmtLocalYMD(to),_b2BriefingSaveState(),typeof render=="function"&&render()}function _b2SetMvpArchiveType(kind){window._b2MvpArchiveType=["week","month"].includes(kind)?kind:"all",typeof render=="function"&&render()}function _b2SetMvpArchiveUniv(val){window._b2MvpArchiveUniv=String(val||"\uC804\uCCB4").trim()||"\uC804\uCCB4",typeof render=="function"&&render()}function _b2OpenBriefingDateInput(which){const id=which==="to"?"b2w2-to":"b2w2-from",el=document.getElementById(id);if(!el)return;try{typeof el.focus=="function"&&el.focus()}catch(e){}try{if(typeof el.showPicker=="function"){el.showPicker();return}}catch(e){}const current=String(el.value||(which==="to"?window._b2WeeklyDateTo:window._b2WeeklyDateFrom)||"").trim(),input=window.prompt("\uB0A0\uC9DC\uB97C YYYY-MM-DD \uD615\uC2DD\uC73C\uB85C \uC785\uB825\uD558\uC138\uC694.",current);if(input==null)return;const raw=String(input).trim().replace(/\./g,"-").replace(/\//g,"-");if(!/^\d{4}-\d{2}-\d{2}$/.test(raw)){alert("\uB0A0\uC9DC \uD615\uC2DD\uC740 YYYY-MM-DD \uB85C \uC785\uB825\uD574\uC8FC\uC138\uC694.");return}el.value=raw,_b2SyncBriefingCustomInputs(!0)}function _b2SetWeeklyChartSort(mode){const next=mode==="winrate"?"winrate":"games";if(window._b2WeeklyChartSort!==next){window._b2WeeklyChartSort=next;try{localStorage.setItem("b2w2_chart_sort_v1",next)}catch(e){}typeof render=="function"&&render()}}try{typeof window._b2WeeklyChartSort=="undefined"&&(window._b2WeeklyChartSort=(()=>{try{return localStorage.getItem("b2w2_chart_sort_v1")||"games"}catch(e){return"games"}})())}catch(e){}function _b2WeeklyBriefingView(){var _a,_b,_c,_d,_e,_f,_g,_h,_i,_j,_k,_l,_m,_n,_o,_p,_q,_r,_s,_t,_u,_v,_w,_x,_y,_z,_A,_B,_C,_D,_E,_F,_G;try{if(typeof window._b2WeeklyPreset=="undefined"||!window._b2WeeklyDateFrom||!window._b2WeeklyDateTo||typeof window._b2WeeklyUniv=="undefined"){const st=_b2BriefingLoadState();st&&(typeof window._b2WeeklyPreset=="undefined"&&st.preset&&(window._b2WeeklyPreset=st.preset),!window._b2WeeklyDateFrom&&st.from&&(window._b2WeeklyDateFrom=st.from),!window._b2WeeklyDateTo&&st.to&&(window._b2WeeklyDateTo=st.to),typeof window._b2WeeklyUniv=="undefined"&&st.univ&&(window._b2WeeklyUniv=st.univ))}if(typeof window._b2WeeklyPreset=="undefined"&&(window._b2WeeklyPreset="thisWeek"),!window._b2WeeklyDateFrom||!window._b2WeeklyDateTo){const def=_b2BriefingPresetRange(window._b2WeeklyPreset);window._b2WeeklyDateFrom=def.from,window._b2WeeklyDateTo=def.to}typeof window._b2WeeklyUniv=="undefined"&&(window._b2WeeklyUniv="\uC804\uCCB4");const _normInit=_b2NormalizeBriefingRange(window._b2WeeklyDateFrom,window._b2WeeklyDateTo);window._b2WeeklyDateFrom=_normInit.from,window._b2WeeklyDateTo=_normInit.to;const preset=String(window._b2WeeklyPreset||"thisWeek"),dateFrom=window._b2WeeklyDateFrom,dateTo=window._b2WeeklyDateTo,fmtN=s=>parseInt(String(s||"").replace(/[-\.\/]/g,""))||0,diffDays=Math.round((new Date(dateTo)-new Date(dateFrom))/864e5)+1,prevTo=new Date(dateFrom);prevTo.setDate(prevTo.getDate()-1);const prevFrom=new Date(prevTo);prevFrom.setDate(prevFrom.getDate()-(diffDays-1));const prevDateFrom=_b2FmtLocalYMD(prevFrom),prevDateTo=_b2FmtLocalYMD(prevTo),_dissSet=new Set((typeof univCfg!="undefined"?univCfg:[]).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||"").trim())),vis=players.filter(p=>!p.hidden&&!p.retired&&!p.hideFromBoard&&!_dissSet.has(String((p==null?void 0:p.univ)||"").trim())),univList=(_b2VisUnivs?_b2VisUnivs():[]).filter(u=>u.name&&u.name!=="\uBB34\uC18C\uC18D"),selUniv=window._b2WeeklyUniv||"\uC804\uCCB4",fmtDate=s=>String(s||"").slice(0,10).replace(/-/g,"."),_briefingMeta={thisWeek:{kicker:"Weekly Briefing",title:"\uBE0C\uB9AC\uD551",short:"\uC774\uBC88\uC8FC",prevLabel:"\uC9C0\uB09C\uC8FC",desc:"\uC774\uBC88 \uC8FC \uD65C\uB3D9\uACFC \uD750\uB984\uC744 \uCE74\uB4DC \uC704\uC8FC\uB85C \uBE60\uB974\uAC8C \uD6D1\uC5B4\uBCFC \uC218 \uC788\uB3C4\uB85D \uC815\uB9AC\uD55C \uD654\uBA74\uC785\uB2C8\uB2E4."},lastWeek:{kicker:"Weekly Briefing",title:"\uBE0C\uB9AC\uD551",short:"\uC9C0\uB09C\uC8FC",prevLabel:"\uADF8 \uC804 \uC8FC",desc:"\uC9C0\uB09C\uC8FC \uD65C\uB3D9 \uD750\uB984\uACFC \uC8FC\uC694 \uBCC0\uD654\uB97C \uB418\uC9DA\uC5B4\uBCF4\uAE30 \uC88B\uAC8C \uC815\uB9AC\uD55C \uD654\uBA74\uC785\uB2C8\uB2E4."},thisMonth:{kicker:"Monthly Briefing",title:"\uC6D4\uAC04 \uBE0C\uB9AC\uD551",short:"\uC774\uBC88\uB2EC",prevLabel:"\uC9C0\uB09C\uB2EC",desc:"\uC774\uBC88 \uB2EC \uD65C\uB3D9 \uD750\uB984\uACFC \uC6D4\uAC04 \uBCC0\uD654 \uD3EC\uC778\uD2B8\uB97C \uD55C \uD654\uBA74\uC5D0\uC11C \uBCF4\uAE30 \uC88B\uAC8C \uC815\uB9AC\uD55C \uD654\uBA74\uC785\uB2C8\uB2E4."},lastMonth:{kicker:"Monthly Briefing",title:"\uC6D4\uAC04 \uBE0C\uB9AC\uD551",short:"\uC9C0\uB09C\uB2EC",prevLabel:"\uADF8 \uC804 \uB2EC",desc:"\uC9C0\uB09C\uB2EC \uD65C\uB3D9 \uD750\uB984\uACFC \uC6D4\uAC04 \uC694\uC57D\uC744 \uB418\uB3CC\uC544\uBCF4\uAE30 \uC88B\uAC8C \uC815\uB9AC\uD55C \uD654\uBA74\uC785\uB2C8\uB2E4."},custom:{kicker:"Period Briefing",title:"\uAE30\uAC04 \uBE0C\uB9AC\uD551",short:"\uC0AC\uC6A9\uC790 \uAE30\uAC04",prevLabel:"\uC774\uC804 \uAE30\uAC04",desc:"\uC9C1\uC811 \uC9C0\uC815\uD55C \uAE30\uAC04\uC758 \uD65C\uB3D9 \uD750\uB984\uACFC \uD575\uC2EC \uBCC0\uD654\uB97C \uBE44\uAD50\uD574\uC11C \uBCF4\uB294 \uD654\uBA74\uC785\uB2C8\uB2E4."}},_briefingInfo=_briefingMeta[preset]||_briefingMeta.custom,_isMonthly=preset==="thisMonth"||preset==="lastMonth",_isCustom=preset==="custom",_isArchive=preset==="mvpArchive",_mvpLabel=preset==="thisMonth"?"\uC774\uB2EC MVP":preset==="lastMonth"?"\uC9C0\uB09C\uB2EC MVP":"\uC774\uBC88 \uC8FC MVP",_topLabel=_isMonthly?"\uD65C\uB3D9 \uB9CE\uC740 \uB300\uD559 TOP 5":"\uD65C\uB3D9 \uB9CE\uC740 \uB300\uD559 TOP 3",_topLimit=_isMonthly?5:3,_chartSort=window._b2WeeklyChartSort==="winrate"?"winrate":"games",curStats=_b2WeeklyUnivStats(vis,dateFrom,dateTo,univList,_chartSort),prevStats=_b2WeeklyUnivStats(vis,prevDateFrom,prevDateTo,univList),prevMap={};prevStats.forEach(ud=>{prevMap[ud.u.name]=ud});const targetStats=selUniv==="\uC804\uCCB4"?curStats:curStats.filter(ud=>ud.u.name===selUniv),mvp=_b2WeeklyMVP(curStats),mvp2=_b2WeeklyMVP2(curStats,mvp),worstPlayer=_b2WeeklyWorst(curStats),_mvpFx=_b2MvpFxLoad(),_mvpFxOp=((_mvpFx.on?_mvpFx.intensity:0)/100).toFixed(3),_mvpFxStyleAttr=_mvpFx.on?_mvpFx.style:"none",_mkMvpCard=(s,rank,isWorst,extraClass)=>_b2BuildMvpCardHtml(s,rank,isWorst,extraClass,{isMonthly:_isMonthly,mvpLabel:_mvpLabel,mvpFxStyleAttr:_mvpFxStyleAttr,mvpFxDesign:_mvpFx.design,mvpFxOp:_mvpFxOp}),curPlayerStats=_b2WeeklyAggregate(vis,dateFrom,dateTo),prevPlayerStats=_b2WeeklyAggregate(vis,prevDateFrom,prevDateTo),prevPlayerMap={};prevPlayerStats.forEach(s=>{var _a2;prevPlayerMap[((_a2=s.p)==null?void 0:_a2.name)||""]=s});const activePlayers=curPlayerStats.filter(s=>s.total>0),topUnivs=[...curStats].filter(ud=>ud.tg>0).sort((a,b)=>{var _a2,_b2;return b.tg-a.tg||b.active.length-a.active.length||((_a2=b.wr)!=null?_a2:-1)-((_b2=a.wr)!=null?_b2:-1)}).slice(0,_topLimit),silentUnivs=curStats.filter(ud=>ud.tg===0).map(ud=>ud.u.name),risingPlayers=activePlayers.map(s=>{var _a2,_b2,_c2;const prev=prevPlayerMap[((_a2=s.p)==null?void 0:_a2.name)||""]||null,prevWr=prev&&prev.total>0&&(_b2=prev.winRate)!=null?_b2:0,prevTotal=prev&&prev.total||0;return __spreadProps(__spreadValues({},s),{wrDelta:((_c2=s.winRate)!=null?_c2:0)-prevWr,totalDelta:s.total-prevTotal,prevTotal})}).filter(s=>s.total>=2).sort((a,b)=>b.wrDelta-a.wrDelta||b.totalDelta-a.totalDelta||b.wins-a.wins),hotPlayer=risingPlayers[0]||null,decliningPlayers=risingPlayers.filter(s=>s.prevTotal>=2&&s.wrDelta<0).slice().sort((a,b)=>a.wrDelta-b.wrDelta||a.totalDelta-b.totalDelta),coldPlayer=decliningPlayers[0]||null,_calcStreak=_b2CalcStreak,streakPlayers=activePlayers.map(s=>__spreadProps(__spreadValues({},s),{streak:_calcStreak(s.hist,"\uC2B9")})).filter(s=>s.streak>=2).sort((a,b)=>b.streak-a.streak),streakPlayer=streakPlayers[0]||null,loseStreakPlayers=activePlayers.map(s=>__spreadProps(__spreadValues({},s),{streak:_calcStreak(s.hist,"\uD328")})).filter(s=>s.streak>=2).sort((a,b)=>b.streak-a.streak),loseStreakPlayer=loseStreakPlayers[0]||null,bestWrPlayers=activePlayers.filter(s=>s.total>=3).slice().sort((a,b)=>{var _a2,_b2;return((_a2=b.winRate)!=null?_a2:-1)-((_b2=a.winRate)!=null?_b2:-1)||b.total-a.total}),bestWrPlayer=bestWrPlayers[0]||null,mostWinsPlayers=activePlayers.filter(s=>(s.wins||0)>0).slice().sort((a,b)=>{var _a2,_b2;return b.wins-a.wins||b.total-a.total||((_a2=b.winRate)!=null?_a2:-1)-((_b2=a.winRate)!=null?_b2:-1)}),mostWinsPlayer=mostWinsPlayers[0]||null,mostActivePlayers=activePlayers.filter(s=>s.total>0).slice().sort((a,b)=>{var _a2,_b2;return b.total-a.total||((_a2=b.winRate)!=null?_a2:-1)-((_b2=a.winRate)!=null?_b2:-1)}),mostActivePlayer=mostActivePlayers[0]||null,monthlyTopPlayers=[...activePlayers].sort((a,b)=>{var _a2,_b2;return b.total-a.total||b.wins-a.wins||((_a2=b.winRate)!=null?_a2:-1)-((_b2=a.winRate)!=null?_b2:-1)}).slice(0,5),monthlyMvp=monthlyTopPlayers[0]||null,_rankSort=_b2RankSortUnivs,rankedUnivs=_b2BuildRankedUnivs(curStats,prevStats),rankedUnivLeaders=rankedUnivs,monthlyUnivAces=rankedUnivs.map(ud=>__spreadProps(__spreadValues({},ud),{ace:_b2WeeklyUnivMVP(ud.active)})),_monthlyPreviewCount=rankedUnivLeaders.length,_monthlyRankMoreId=`b2w2-monthly-ranks-more-${preset}`,_monthlyRankBtnId=`b2w2-monthly-ranks-btn-${preset}`,_monthlyAceMoreId=`b2w2-monthly-aces-more-${preset}`,_monthlyAceBtnId=`b2w2-monthly-aces-btn-${preset}`,monthlyAceSpotlight=monthlyUnivAces.find(item=>item.ace)||null,_bfEsc=typeof window.escHTML=="function"?window.escHTML:s=>String(s!=null?s:""),_heroSummary=(()=>{var _a2,_b2,_c2;const parts=[];return _isMonthly&&rankedUnivs[0]?parts.push(`${_bfEsc(rankedUnivs[0].u.name)} ${rankedUnivs[0].tw}\uC2B9 ${rankedUnivs[0].tl}\uD328 \xB7 \uC2B9\uB960 ${(_a2=rankedUnivs[0].wr)!=null?_a2:0}%\uB85C 1\uC704`):topUnivs[0]&&parts.push(`${_bfEsc(topUnivs[0].u.name)} \uD65C\uB3D9\uB7C9 1\uC704 \xB7 ${topUnivs[0].tg}\uC804 \xB7 \uD65C\uB3D9 ${topUnivs[0].active.length}\uBA85`),hotPlayer&&hotPlayer.wrDelta>0&&parts.push(`${_bfEsc(((_b2=hotPlayer.p)==null?void 0:_b2.name)||"-")} \uC2B9\uB960 \uBCC0\uB3D9 ${hotPlayer.wrDelta>0?"+":""}${hotPlayer.wrDelta}%p`),_isMonthly&&monthlyAceSpotlight&&parts.push(`${_bfEsc(monthlyAceSpotlight.u.name)} \uC5D0\uC774\uC2A4 ${_bfEsc(((_c2=monthlyAceSpotlight.ace.p)==null?void 0:_c2.name)||"-")}`),silentUnivs.length&&parts.push(`\uAE30\uB85D \uC5C6\uB294 \uB300\uD559 ${silentUnivs.length}\uACF3`),parts.length?`${parts.join(" \xB7 ")}.`:"\uC120\uD0DD \uAE30\uAC04 \uD65C\uB3D9\uB7C9\uACFC \uBE44\uAD50 \uC9C0\uD45C\uB97C \uC815\uB9AC\uD588\uC2B5\uB2C8\uB2E4."})(),_heroSpotlight=(()=>{var _a2;if(_isMonthly&&rankedUnivs[0]){const leader=rankedUnivs[0],rankDeltaTxt=leader.rankDelta===null?"\uCCAB \uC9D1\uACC4":leader.rankDelta>0?`\uC804\uAE30 \uB300\uBE44 \u25B2${leader.rankDelta}`:leader.rankDelta<0?`\uC804\uAE30 \uB300\uBE44 \u25BC${Math.abs(leader.rankDelta)}`:"\uC804\uAE30\uC640 \uB3D9\uC77C";return`${_bfEsc(leader.u.name)} 1\uC704 \xB7 ${leader.tw}\uC2B9 ${leader.tl}\uD328 \xB7 \uC2B9\uB960 ${(_a2=leader.wr)!=null?_a2:0}% \xB7 ${rankDeltaTxt}`}return topUnivs[0]?`${_bfEsc(topUnivs[0].u.name)} \uD65C\uB3D9\uB7C9 1\uC704 \xB7 ${topUnivs[0].tg}\uC804 \xB7 \uD65C\uB3D9 ${topUnivs[0].active.length}\uBA85`:"\uC120\uD0DD \uAE30\uAC04 \uD575\uC2EC \uC9C0\uD45C\uB97C \uBE60\uB974\uAC8C \uD655\uC778\uD560 \uC218 \uC788\uB3C4\uB85D \uC815\uB9AC\uD588\uC2B5\uB2C8\uB2E4"})(),_heroFocusLabel=_isMonthly?"\uC9D1\uACC4 \uBC94\uC704":_isCustom?"\uC0AC\uC6A9\uC790 \uAE30\uAC04":"\uC8FC\uAC04 \uBC94\uC704",_heroFocusValue=_isMonthly?`\uB300\uD559 ${rankedUnivs.length}\uACF3`:`\uD65C\uB3D9 ${activePlayers.length}\uBA85`,_heroCompareText=`${_briefingInfo.prevLabel} ${fmtDate(prevDateFrom)} ~ ${fmtDate(prevDateTo)}`;_b2EnsureStyleTag("b2w2-style",`
+var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __getOwnPropDescs=Object.getOwnPropertyDescriptors;var __getOwnPropSymbols=Object.getOwnPropertySymbols;var __hasOwnProp=Object.prototype.hasOwnProperty,__propIsEnum=Object.prototype.propertyIsEnumerable;var __defNormalProp=(obj,key,value)=>key in obj?__defProp(obj,key,{enumerable:!0,configurable:!0,writable:!0,value}):obj[key]=value,__spreadValues=(a,b)=>{for(var prop in b||(b={}))__hasOwnProp.call(b,prop)&&__defNormalProp(a,prop,b[prop]);if(__getOwnPropSymbols)for(var prop of __getOwnPropSymbols(b))__propIsEnum.call(b,prop)&&__defNormalProp(a,prop,b[prop]);return a},__spreadProps=(a,b)=>__defProps(a,__getOwnPropDescs(b));function _b2FmtLocalYMD(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");return`${y}-${m}-${day}`}function _b2WeeklyGetDefaultRange(offsetWeeks){const now=new Date,offset=offsetWeeks||0,day=now.getDay(),diffToMon=day===0?-6:1-day,mon=new Date(now);mon.setDate(now.getDate()+diffToMon+offset*7);const sun=new Date(mon);sun.setDate(mon.getDate()+6);const today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),to=offset===0&&today<sun?today:sun;return{from:_b2FmtLocalYMD(mon),to:_b2FmtLocalYMD(to)}}function _b2MonthlyGetDefaultRange(offsetMonths,fullMonth){const now=new Date,offset=offsetMonths||0,base=new Date(now.getFullYear(),now.getMonth()+offset,1),from=new Date(base.getFullYear(),base.getMonth(),1),to=fullMonth?new Date(base.getFullYear(),base.getMonth()+1,0):offset===0?new Date(now.getFullYear(),now.getMonth(),now.getDate()):new Date(base.getFullYear(),base.getMonth()+1,0);return{from:_b2FmtLocalYMD(from),to:_b2FmtLocalYMD(to)}}function _b2EnsureStyleTag(id,cssText){try{const head=document.head||document.getElementsByTagName&&document.getElementsByTagName("head")[0];if(!head)return;const css=String(cssText||"");let el=document.getElementById(id);if(!el){el=document.createElement("style"),el.id=id,el.type="text/css",el.appendChild(document.createTextNode(css)),head.appendChild(el);return}(el.textContent||"")!==css&&(el.textContent=css)}catch(e){}}function _b2MvpFxDefaults(){return{on:!0,style:"fade",intensity:45,design:"photo"}}const _B2_MVP_FX_STYLES=["fade","vignette","topbottom","tint","spotlight","noir","diagonal","glass","none"],_B2_MVP_DESIGNS=["photo","panel","frame","glasscard","border","ribbon","split","poster"];function _b2MvpFxLoad(){const d=_b2MvpFxDefaults();try{const onRaw=localStorage.getItem("su_b2mvp_fx_on"),styleRaw=localStorage.getItem("su_b2mvp_fx_style"),intRaw=localStorage.getItem("su_b2mvp_fx_intensity"),designRaw=localStorage.getItem("su_b2mvp_design_mode"),on=onRaw===null?d.on:onRaw==="1",style=_B2_MVP_FX_STYLES.includes(styleRaw)?styleRaw:d.style,design=_B2_MVP_DESIGNS.includes(designRaw)?designRaw:d.design,intN=parseInt(intRaw,10),intensity=Number.isFinite(intN)?Math.max(0,Math.min(100,intN)):d.intensity;return{on,style,intensity,design}}catch(e){return d}}const _B2_BRIEFING_THEMES=["classic","minimal","vivid","mono","elegant","pastel","luxury","sports","esports","pop","nature","ocean","sunset","neon"];function _b2BriefingThemeLoad(){try{const v=localStorage.getItem("su_b2_briefing_theme");return _B2_BRIEFING_THEMES.includes(v)?v:"classic"}catch(e){return"classic"}}function _b2IsValidDateStr(s){return/^\d{4}-\d{2}-\d{2}$/.test(String(s||"").trim())}function _b2NormalizeBriefingRange(from,to){const f=String(from||"").trim().slice(0,10),t=String(to||"").trim().slice(0,10);if(!_b2IsValidDateStr(f)||!_b2IsValidDateStr(t))return{from:f,to:t,swapped:!1};const fn=parseInt(f.replace(/-/g,""),10)||0,tn=parseInt(t.replace(/-/g,""),10)||0;return fn&&tn&&fn>tn?{from:t,to:f,swapped:!0}:{from:f,to:t,swapped:!1}}function _b2BriefingLoadState(){try{const raw=localStorage.getItem("b2w2_state_v1");if(!raw)return null;const st=JSON.parse(raw);if(!st||typeof st!="object")return null;const preset=String(st.preset||"").trim(),from=String(st.from||"").trim(),to=String(st.to||"").trim(),univ=String(st.univ||"").trim()||"\uC804\uCCB4",okPreset=["thisWeek","lastWeek","thisMonth","lastMonth","custom","mvpArchive"].includes(preset),norm=_b2NormalizeBriefingRange(from,to);return{preset:okPreset?preset:null,from:_b2IsValidDateStr(norm.from)?norm.from:null,to:_b2IsValidDateStr(norm.to)?norm.to:null,univ}}catch(e){return null}}function _b2BriefingSaveState(){try{const preset=String(window._b2WeeklyPreset||"").trim(),from=String(window._b2WeeklyDateFrom||"").trim(),to=String(window._b2WeeklyDateTo||"").trim(),univ=String(window._b2WeeklyUniv||"\uC804\uCCB4").trim()||"\uC804\uCCB4",payload={preset:["thisWeek","lastWeek","thisMonth","lastMonth","custom","mvpArchive"].includes(preset)?preset:"custom",from,to,univ};localStorage.setItem("b2w2_state_v1",JSON.stringify(payload))}catch(e){}}function _b2BriefingPresetRange(preset){const key=String(preset||"thisWeek");return key==="lastWeek"?_b2WeeklyGetDefaultRange(-1):key==="thisMonth"?_b2MonthlyGetDefaultRange(0,!1):key==="lastMonth"?_b2MonthlyGetDefaultRange(-1,!0):_b2WeeklyGetDefaultRange(0)}function _b2SetBriefingPreset(preset){const r=_b2BriefingPresetRange(preset);window._b2WeeklyPreset=String(preset||"thisWeek"),window._b2WeeklyDateFrom=r.from,window._b2WeeklyDateTo=r.to,_b2BriefingSaveState(),typeof render=="function"&&render()}function _b2ResetBriefingFilters(){window._b2WeeklyUniv="\uC804\uCCB4",window._b2WeeklyChartSort="games";try{localStorage.setItem("b2w2_chart_sort_v1","games")}catch(e){}_b2SetBriefingPreset("thisWeek")}function _b2GetBriefingInputValues(){const f=document.getElementById("b2w2-from"),t=document.getElementById("b2w2-to"),s=document.getElementById("b2w2-univ"),fallback=_b2BriefingPresetRange("thisWeek");return{from:f&&f.value||window._b2WeeklyDateFrom||fallback.from,to:t&&t.value||window._b2WeeklyDateTo||fallback.to,univ:s&&s.value||window._b2WeeklyUniv||"\uC804\uCCB4"}}function _b2SyncBriefingCustomInputs(applyNow){const v=_b2GetBriefingInputValues(),norm=_b2NormalizeBriefingRange(v.from,v.to);if(window._b2WeeklyDateFrom=norm.from,window._b2WeeklyDateTo=norm.to,window._b2WeeklyUniv=v.univ,window._b2WeeklyPreset="custom",norm.swapped){const f=document.getElementById("b2w2-from"),t=document.getElementById("b2w2-to");f&&(f.value=norm.from),t&&(t.value=norm.to)}_b2BriefingSaveState(),applyNow&&typeof render=="function"&&render()}function _b2ApplyBriefingCustomFromInputs(){_b2SyncBriefingCustomInputs(!0)}function _b2ActivateBriefingCustom(focusInput){_b2SyncBriefingCustomInputs(!0),focusInput&&setTimeout(()=>{const el=document.getElementById("b2w2-from");el&&typeof el.focus=="function"&&el.focus();try{el&&typeof el.showPicker=="function"&&el.showPicker()}catch(e){}},30)}function _b2SetBriefingRecentDays(days){const n=Math.max(1,Number(days)||7),to=new Date;to.setHours(0,0,0,0);const from=new Date(to);from.setDate(to.getDate()-(n-1)),window._b2WeeklyPreset="custom",window._b2WeeklyDateFrom=_b2FmtLocalYMD(from),window._b2WeeklyDateTo=_b2FmtLocalYMD(to),_b2BriefingSaveState(),typeof render=="function"&&render()}function _b2SetMvpArchiveType(kind){window._b2MvpArchiveType=["week","month"].includes(kind)?kind:"all",typeof render=="function"&&render()}function _b2SetMvpArchiveUniv(val){window._b2MvpArchiveUniv=String(val||"\uC804\uCCB4").trim()||"\uC804\uCCB4",typeof render=="function"&&render()}function _b2OpenBriefingDateInput(which){const id=which==="to"?"b2w2-to":"b2w2-from",el=document.getElementById(id);if(!el)return;try{typeof el.focus=="function"&&el.focus()}catch(e){}try{if(typeof el.showPicker=="function"){el.showPicker();return}}catch(e){}const current=String(el.value||(which==="to"?window._b2WeeklyDateTo:window._b2WeeklyDateFrom)||"").trim(),input=window.prompt("\uB0A0\uC9DC\uB97C YYYY-MM-DD \uD615\uC2DD\uC73C\uB85C \uC785\uB825\uD558\uC138\uC694.",current);if(input==null)return;const raw=String(input).trim().replace(/\./g,"-").replace(/\//g,"-");if(!/^\d{4}-\d{2}-\d{2}$/.test(raw)){alert("\uB0A0\uC9DC \uD615\uC2DD\uC740 YYYY-MM-DD \uB85C \uC785\uB825\uD574\uC8FC\uC138\uC694.");return}el.value=raw,_b2SyncBriefingCustomInputs(!0)}function _b2SetWeeklyChartSort(mode){const next=mode==="winrate"?"winrate":"games";if(window._b2WeeklyChartSort!==next){window._b2WeeklyChartSort=next;try{localStorage.setItem("b2w2_chart_sort_v1",next)}catch(e){}typeof render=="function"&&render()}}try{typeof window._b2WeeklyChartSort=="undefined"&&(window._b2WeeklyChartSort=(()=>{try{return localStorage.getItem("b2w2_chart_sort_v1")||"games"}catch(e){return"games"}})())}catch(e){}function _b2WeeklyBriefingView(){var _a,_b,_c,_d,_e,_f,_g,_h,_i,_j,_k,_l,_m,_n,_o,_p,_q,_r,_s,_t,_u,_v,_w,_x,_y,_z,_A,_B,_C,_D,_E,_F,_G,_H,_I,_J;try{if(typeof window._b2WeeklyPreset=="undefined"||!window._b2WeeklyDateFrom||!window._b2WeeklyDateTo||typeof window._b2WeeklyUniv=="undefined"){const st=_b2BriefingLoadState();st&&(typeof window._b2WeeklyPreset=="undefined"&&st.preset&&(window._b2WeeklyPreset=st.preset),!window._b2WeeklyDateFrom&&st.from&&(window._b2WeeklyDateFrom=st.from),!window._b2WeeklyDateTo&&st.to&&(window._b2WeeklyDateTo=st.to),typeof window._b2WeeklyUniv=="undefined"&&st.univ&&(window._b2WeeklyUniv=st.univ))}if(typeof window._b2WeeklyPreset=="undefined"&&(window._b2WeeklyPreset="thisWeek"),!window._b2WeeklyDateFrom||!window._b2WeeklyDateTo){const def=_b2BriefingPresetRange(window._b2WeeklyPreset);window._b2WeeklyDateFrom=def.from,window._b2WeeklyDateTo=def.to}typeof window._b2WeeklyUniv=="undefined"&&(window._b2WeeklyUniv="\uC804\uCCB4");const _normInit=_b2NormalizeBriefingRange(window._b2WeeklyDateFrom,window._b2WeeklyDateTo);window._b2WeeklyDateFrom=_normInit.from,window._b2WeeklyDateTo=_normInit.to;const preset=String(window._b2WeeklyPreset||"thisWeek"),dateFrom=window._b2WeeklyDateFrom,dateTo=window._b2WeeklyDateTo,fmtN=s=>parseInt(String(s||"").replace(/[-\.\/]/g,""))||0,diffDays=Math.round((new Date(dateTo)-new Date(dateFrom))/864e5)+1,prevTo=new Date(dateFrom);prevTo.setDate(prevTo.getDate()-1);const prevFrom=new Date(prevTo);prevFrom.setDate(prevFrom.getDate()-(diffDays-1));const prevDateFrom=_b2FmtLocalYMD(prevFrom),prevDateTo=_b2FmtLocalYMD(prevTo),_dissSet=new Set((typeof univCfg!="undefined"?univCfg:[]).filter(u=>u.dissolved||u.hidden).map(u=>String(u.name||"").trim())),vis=players.filter(p=>!p.hidden&&!p.retired&&!p.hideFromBoard&&!_dissSet.has(String((p==null?void 0:p.univ)||"").trim())),univList=(_b2VisUnivs?_b2VisUnivs():[]).filter(u=>u.name&&u.name!=="\uBB34\uC18C\uC18D"),selUniv=window._b2WeeklyUniv||"\uC804\uCCB4",fmtDate=s=>String(s||"").slice(0,10).replace(/-/g,"."),_briefingMeta={thisWeek:{kicker:"Weekly Briefing",title:"\uBE0C\uB9AC\uD551",short:"\uC774\uBC88\uC8FC",prevLabel:"\uC9C0\uB09C\uC8FC",desc:"\uC774\uBC88 \uC8FC \uD65C\uB3D9\uACFC \uD750\uB984\uC744 \uCE74\uB4DC \uC704\uC8FC\uB85C \uBE60\uB974\uAC8C \uD6D1\uC5B4\uBCFC \uC218 \uC788\uB3C4\uB85D \uC815\uB9AC\uD55C \uD654\uBA74\uC785\uB2C8\uB2E4."},lastWeek:{kicker:"Weekly Briefing",title:"\uBE0C\uB9AC\uD551",short:"\uC9C0\uB09C\uC8FC",prevLabel:"\uADF8 \uC804 \uC8FC",desc:"\uC9C0\uB09C\uC8FC \uD65C\uB3D9 \uD750\uB984\uACFC \uC8FC\uC694 \uBCC0\uD654\uB97C \uB418\uC9DA\uC5B4\uBCF4\uAE30 \uC88B\uAC8C \uC815\uB9AC\uD55C \uD654\uBA74\uC785\uB2C8\uB2E4."},thisMonth:{kicker:"Monthly Briefing",title:"\uC6D4\uAC04 \uBE0C\uB9AC\uD551",short:"\uC774\uBC88\uB2EC",prevLabel:"\uC9C0\uB09C\uB2EC",desc:"\uC774\uBC88 \uB2EC \uD65C\uB3D9 \uD750\uB984\uACFC \uC6D4\uAC04 \uBCC0\uD654 \uD3EC\uC778\uD2B8\uB97C \uD55C \uD654\uBA74\uC5D0\uC11C \uBCF4\uAE30 \uC88B\uAC8C \uC815\uB9AC\uD55C \uD654\uBA74\uC785\uB2C8\uB2E4."},lastMonth:{kicker:"Monthly Briefing",title:"\uC6D4\uAC04 \uBE0C\uB9AC\uD551",short:"\uC9C0\uB09C\uB2EC",prevLabel:"\uADF8 \uC804 \uB2EC",desc:"\uC9C0\uB09C\uB2EC \uD65C\uB3D9 \uD750\uB984\uACFC \uC6D4\uAC04 \uC694\uC57D\uC744 \uB418\uB3CC\uC544\uBCF4\uAE30 \uC88B\uAC8C \uC815\uB9AC\uD55C \uD654\uBA74\uC785\uB2C8\uB2E4."},custom:{kicker:"Period Briefing",title:"\uAE30\uAC04 \uBE0C\uB9AC\uD551",short:"\uC0AC\uC6A9\uC790 \uAE30\uAC04",prevLabel:"\uC774\uC804 \uAE30\uAC04",desc:"\uC9C1\uC811 \uC9C0\uC815\uD55C \uAE30\uAC04\uC758 \uD65C\uB3D9 \uD750\uB984\uACFC \uD575\uC2EC \uBCC0\uD654\uB97C \uBE44\uAD50\uD574\uC11C \uBCF4\uB294 \uD654\uBA74\uC785\uB2C8\uB2E4."}},_briefingInfo=_briefingMeta[preset]||_briefingMeta.custom,_isMonthly=preset==="thisMonth"||preset==="lastMonth",_isCustom=preset==="custom",_isArchive=preset==="mvpArchive",_mvpLabel=preset==="thisMonth"?"\uC774\uB2EC MVP":preset==="lastMonth"?"\uC9C0\uB09C\uB2EC MVP":"\uC774\uBC88 \uC8FC MVP",_topLabel=_isMonthly?"\uD65C\uB3D9 \uB9CE\uC740 \uB300\uD559 TOP 5":"\uD65C\uB3D9 \uB9CE\uC740 \uB300\uD559 TOP 3",_topLimit=_isMonthly?5:3,_chartSort=window._b2WeeklyChartSort==="winrate"?"winrate":"games",curStats=_b2WeeklyUnivStats(vis,dateFrom,dateTo,univList,_chartSort),prevStats=_b2WeeklyUnivStats(vis,prevDateFrom,prevDateTo,univList),prevMap={};prevStats.forEach(ud=>{prevMap[ud.u.name]=ud});const targetStats=selUniv==="\uC804\uCCB4"?curStats:curStats.filter(ud=>ud.u.name===selUniv),mvp=_b2WeeklyMVP(curStats),mvp2=_b2WeeklyMVP2(curStats,mvp),worstPlayer=_b2WeeklyWorst(curStats),_mvpFx=_b2MvpFxLoad(),_mvpFxOp=((_mvpFx.on?_mvpFx.intensity:0)/100).toFixed(3),_mvpFxStyleAttr=_mvpFx.on?_mvpFx.style:"none",_mkMvpCard=(s,rank,isWorst,extraClass)=>_b2BuildMvpCardHtml(s,rank,isWorst,extraClass,{isMonthly:_isMonthly,mvpLabel:_mvpLabel,mvpFxStyleAttr:_mvpFxStyleAttr,mvpFxDesign:_mvpFx.design,mvpFxOp:_mvpFxOp}),curPlayerStats=_b2WeeklyAggregate(vis,dateFrom,dateTo),prevPlayerStats=_b2WeeklyAggregate(vis,prevDateFrom,prevDateTo),prevPlayerMap={};prevPlayerStats.forEach(s=>{var _a2;prevPlayerMap[((_a2=s.p)==null?void 0:_a2.name)||""]=s});const activePlayers=curPlayerStats.filter(s=>s.total>0),topUnivs=[...curStats].filter(ud=>ud.tg>0).sort((a,b)=>{var _a2,_b2;return b.tg-a.tg||b.active.length-a.active.length||((_a2=b.wr)!=null?_a2:-1)-((_b2=a.wr)!=null?_b2:-1)}).slice(0,_topLimit),silentUnivs=curStats.filter(ud=>ud.tg===0).map(ud=>ud.u.name),risingPlayers=activePlayers.map(s=>{var _a2,_b2,_c2;const prev=prevPlayerMap[((_a2=s.p)==null?void 0:_a2.name)||""]||null,prevWr=prev&&prev.total>0&&(_b2=prev.winRate)!=null?_b2:0,prevTotal=prev&&prev.total||0;return __spreadProps(__spreadValues({},s),{wrDelta:((_c2=s.winRate)!=null?_c2:0)-prevWr,totalDelta:s.total-prevTotal,prevTotal})}).filter(s=>s.total>=2).sort((a,b)=>b.wrDelta-a.wrDelta||b.totalDelta-a.totalDelta||b.wins-a.wins),hotPlayer=risingPlayers[0]||null,decliningPlayers=risingPlayers.filter(s=>s.prevTotal>=2&&s.wrDelta<0).slice().sort((a,b)=>a.wrDelta-b.wrDelta||a.totalDelta-b.totalDelta),coldPlayer=decliningPlayers[0]||null,_calcStreak=_b2CalcStreak,streakPlayers=activePlayers.map(s=>__spreadProps(__spreadValues({},s),{streak:_calcStreak(s.hist,"\uC2B9")})).filter(s=>s.streak>=2).sort((a,b)=>b.streak-a.streak),streakPlayer=streakPlayers[0]||null,loseStreakPlayers=activePlayers.map(s=>__spreadProps(__spreadValues({},s),{streak:_calcStreak(s.hist,"\uD328")})).filter(s=>s.streak>=2).sort((a,b)=>b.streak-a.streak),loseStreakPlayer=loseStreakPlayers[0]||null,bestWrPlayers=activePlayers.filter(s=>s.total>=3).slice().sort((a,b)=>{var _a2,_b2;return((_a2=b.winRate)!=null?_a2:-1)-((_b2=a.winRate)!=null?_b2:-1)||b.total-a.total}),bestWrPlayer=bestWrPlayers[0]||null,mostWinsPlayers=activePlayers.filter(s=>(s.wins||0)>0).slice().sort((a,b)=>{var _a2,_b2;return b.wins-a.wins||b.total-a.total||((_a2=b.winRate)!=null?_a2:-1)-((_b2=a.winRate)!=null?_b2:-1)}),mostWinsPlayer=mostWinsPlayers[0]||null,mostActivePlayers=activePlayers.filter(s=>s.total>0).slice().sort((a,b)=>{var _a2,_b2;return b.total-a.total||((_a2=b.winRate)!=null?_a2:-1)-((_b2=a.winRate)!=null?_b2:-1)}),mostActivePlayer=mostActivePlayers[0]||null,monthlyTopPlayers=[...activePlayers].sort((a,b)=>{var _a2,_b2;return b.total-a.total||b.wins-a.wins||((_a2=b.winRate)!=null?_a2:-1)-((_b2=a.winRate)!=null?_b2:-1)}).slice(0,5),monthlyMvp=monthlyTopPlayers[0]||null,_rankSort=_b2RankSortUnivs,rankedUnivs=_b2BuildRankedUnivs(curStats,prevStats),rankedUnivLeaders=rankedUnivs,monthlyUnivAces=rankedUnivs.map(ud=>__spreadProps(__spreadValues({},ud),{ace:_b2WeeklyUnivMVP(ud.active)})),_monthlyPreviewCount=rankedUnivLeaders.length,_monthlyRankMoreId=`b2w2-monthly-ranks-more-${preset}`,_monthlyRankBtnId=`b2w2-monthly-ranks-btn-${preset}`,_monthlyAceMoreId=`b2w2-monthly-aces-more-${preset}`,_monthlyAceBtnId=`b2w2-monthly-aces-btn-${preset}`,monthlyAceSpotlight=monthlyUnivAces.find(item=>item.ace)||null,_bfEsc=typeof window.escHTML=="function"?window.escHTML:s=>String(s!=null?s:""),_heroSummary=(()=>{var _a2,_b2,_c2;const parts=[];return _isMonthly&&rankedUnivs[0]?parts.push(`${_bfEsc(rankedUnivs[0].u.name)} ${rankedUnivs[0].tw}\uC2B9 ${rankedUnivs[0].tl}\uD328 \xB7 \uC2B9\uB960 ${(_a2=rankedUnivs[0].wr)!=null?_a2:0}%\uB85C 1\uC704`):topUnivs[0]&&parts.push(`${_bfEsc(topUnivs[0].u.name)} \uD65C\uB3D9\uB7C9 1\uC704 \xB7 ${topUnivs[0].tg}\uC804 \xB7 \uD65C\uB3D9 ${topUnivs[0].active.length}\uBA85`),hotPlayer&&hotPlayer.wrDelta>0&&parts.push(`${_bfEsc(((_b2=hotPlayer.p)==null?void 0:_b2.name)||"-")} \uC2B9\uB960 \uBCC0\uB3D9 ${hotPlayer.wrDelta>0?"+":""}${hotPlayer.wrDelta}%p`),_isMonthly&&monthlyAceSpotlight&&parts.push(`${_bfEsc(monthlyAceSpotlight.u.name)} \uC5D0\uC774\uC2A4 ${_bfEsc(((_c2=monthlyAceSpotlight.ace.p)==null?void 0:_c2.name)||"-")}`),silentUnivs.length&&parts.push(`\uAE30\uB85D \uC5C6\uB294 \uB300\uD559 ${silentUnivs.length}\uACF3`),parts.length?`${parts.join(" \xB7 ")}.`:"\uC120\uD0DD \uAE30\uAC04 \uD65C\uB3D9\uB7C9\uACFC \uBE44\uAD50 \uC9C0\uD45C\uB97C \uC815\uB9AC\uD588\uC2B5\uB2C8\uB2E4."})(),_heroSpotlight=(()=>{var _a2;if(_isMonthly&&rankedUnivs[0]){const leader=rankedUnivs[0],rankDeltaTxt=leader.rankDelta===null?"\uCCAB \uC9D1\uACC4":leader.rankDelta>0?`\uC804\uAE30 \uB300\uBE44 \u25B2${leader.rankDelta}`:leader.rankDelta<0?`\uC804\uAE30 \uB300\uBE44 \u25BC${Math.abs(leader.rankDelta)}`:"\uC804\uAE30\uC640 \uB3D9\uC77C";return`${_bfEsc(leader.u.name)} 1\uC704 \xB7 ${leader.tw}\uC2B9 ${leader.tl}\uD328 \xB7 \uC2B9\uB960 ${(_a2=leader.wr)!=null?_a2:0}% \xB7 ${rankDeltaTxt}`}return topUnivs[0]?`${_bfEsc(topUnivs[0].u.name)} \uD65C\uB3D9\uB7C9 1\uC704 \xB7 ${topUnivs[0].tg}\uC804 \xB7 \uD65C\uB3D9 ${topUnivs[0].active.length}\uBA85`:"\uC120\uD0DD \uAE30\uAC04 \uD575\uC2EC \uC9C0\uD45C\uB97C \uBE60\uB974\uAC8C \uD655\uC778\uD560 \uC218 \uC788\uB3C4\uB85D \uC815\uB9AC\uD588\uC2B5\uB2C8\uB2E4"})(),_heroFocusLabel=_isMonthly?"\uC9D1\uACC4 \uBC94\uC704":_isCustom?"\uC0AC\uC6A9\uC790 \uAE30\uAC04":"\uC8FC\uAC04 \uBC94\uC704",_heroFocusValue=_isMonthly?`\uB300\uD559 ${rankedUnivs.length}\uACF3`:`\uD65C\uB3D9 ${activePlayers.length}\uBA85`,_heroCompareText=`${_briefingInfo.prevLabel} ${fmtDate(prevDateFrom)} ~ ${fmtDate(prevDateTo)}`;_b2EnsureStyleTag("b2w2-style",`
       /* \u2500\u2500 \uBE0C\uB9AC\uD551 \uB798\uD37C: \uC2E0\uBB38/\uB9E4\uAC70\uC9C4 \uCEE8\uC149 \uC720\uC9C0, \uAC00\uB3C5\uC131\xB7\uACC4\uCE35\xB7\uC0C9\uC0C1 \uC804\uBA74 \uAC15\uD654 \u2500\u2500 */
       .b2w2-wrap {
         width: min(100%, 1320px);
@@ -3350,7 +3350,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       /* \u2500\u2500 KPI Grid \u2500\u2500 */
       .b2w2-kpi-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0,1fr));
+        grid-template-columns: repeat(5, minmax(0,1fr));
         gap: 10px;
         margin-bottom: 20px;
       }
@@ -3399,7 +3399,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       .b2w2-hdr {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         flex-wrap: wrap;
         padding: 10px 14px;
         border: 1px solid var(--b2w-rule);
@@ -3408,43 +3408,71 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
         background: var(--b2w-paper);
         box-shadow: var(--b2w-shadow-sm);
       }
-      .b2w2-din {
-        padding: 5px 10px;
-        border-radius: var(--b2w-r);
+      .b2w2-hdr-title { display: flex; align-items: center; gap: 6px; flex-shrink: 0 }
+
+      /* \uD544\uD130 \uADF8\uB8F9(\uAE30\uAC04+\uB300\uD559) \u2014 \uD558\uB098\uC758 \uC54C\uC57D \uCEE8\uD14C\uC774\uB108\uB85C \uBB36\uC5B4 \uAC12\uC774 \uC911\uBCF5 \uD45C\uC2DC\uB418\uC9C0 \uC54A\uAC8C \uD568 */
+      .b2w2-filtergroup {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 3px;
         border: 1px solid var(--b2w-rule);
-        font-size: 12px;
-        background: var(--white);
-        color: var(--text2);
-        box-shadow: var(--b2w-shadow-sm);
-        min-width: 132px;
-        cursor: pointer;
-        transition: border-color .14s ease;
-      }
-      .b2w2-din:focus { border-color: var(--b2w-accent); outline: none }
-      .b2w2-datebtn {
-        padding: 5px 10px;
-        border-radius: var(--b2w-r);
-        border: 1px solid var(--b2w-rule);
+        border-radius: var(--b2w-r-lg);
         background: var(--b2w-paper-alt);
+        flex-wrap: wrap;
+      }
+      .b2w2-dategroup {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding-right: 6px;
+        margin-right: 4px;
+        border-right: 1px solid var(--b2w-rule);
+      }
+      .b2w2-daterange-tilde { font-size: 11px; color: var(--text3); font-weight: 700; padding: 0 1px }
+      .b2w2-din {
+        padding: 5px 6px;
+        border-radius: var(--b2w-r);
+        border: none;
         font-size: 12px;
-        font-weight: 700;
+        background: transparent;
+        color: var(--text2);
+        width: 108px;
+        cursor: pointer;
+        transition: background-color .14s ease;
+      }
+      .b2w2-din:hover, .b2w2-din:focus { background: var(--white); outline: none }
+      .b2w2-datebtn {
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--b2w-r);
+        border: none;
+        background: transparent;
+        font-size: 13px;
         color: var(--b2w-ink-mid);
         cursor: pointer;
-        box-shadow: var(--b2w-shadow-sm);
-        transition: border-color .14s ease, color .14s ease, background .14s ease;
+        transition: background .14s ease, color .14s ease;
       }
-      .b2w2-datebtn:hover { border-color: var(--b2w-accent); color: var(--b2w-accent); background: var(--b2w-accent-soft) }
+      .b2w2-datebtn:hover { color: var(--b2w-accent); background: var(--b2w-accent-soft) }
       .b2w2-din::-webkit-calendar-picker-indicator { cursor: pointer; opacity: .95 }
       .b2w2-sel {
-        padding: 5px 10px;
+        padding: 5px 8px;
         border-radius: var(--b2w-r);
-        border: 1px solid var(--b2w-rule);
+        border: none;
         font-size: 12px;
-        background: var(--white);
+        background: transparent;
         color: var(--text2);
-        max-width: 220px;
-        box-shadow: var(--b2w-shadow-sm);
+        max-width: 160px;
+        cursor: pointer;
       }
+      .b2w2-sel:hover, .b2w2-sel:focus { background: var(--white); outline: none }
+
+      /* \uC561\uC158 \uADF8\uB8F9(\uC870\uD68C+\uCD08\uAE30\uD654) \u2014 \uD544\uD130\uC640 \uC2DC\uAC01\uC801\uC73C\uB85C \uBD84\uB9AC */
+      .b2w2-actiongroup { display: flex; align-items: center; gap: 6px }
       .b2w2-btn {
         padding: 6px 16px;
         border-radius: var(--b2w-r);
@@ -3460,10 +3488,28 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       }
       .b2w2-btn:hover { background: var(--b2w-accent-strong); transform: translateY(-1px) }
       .b2w2-btn:focus-visible { outline: 2px solid var(--b2w-accent); outline-offset: 2px }
+      .b2w2-ghostbtn {
+        padding: 6px 10px;
+        background: transparent;
+        color: var(--text3);
+        border: 1px solid var(--b2w-rule);
+        box-shadow: none;
+        font-weight: 700;
+      }
+      .b2w2-ghostbtn:hover { background: var(--b2w-paper-alt); color: var(--b2w-ink-mid); transform: none }
+
+      /* \uC800\uC7A5 \uBC84\uD2BC \u2014 \uC870\uD68C/\uCD08\uAE30\uD654\uC640 \uC131\uACA9\uC774 \uB2E4\uB978 \uC561\uC158\uC774\uBBC0\uB85C \uAD6C\uBD84\uC120\uC73C\uB85C \uBD84\uB9AC */
       .b2w2-savebtn {
+        padding: 6px 14px 6px 10px;
+        margin-left: auto;
+        padding-left: 14px;
+        border-left: 1px solid var(--b2w-rule);
+        border-radius: 0 var(--b2w-r) var(--b2w-r) 0;
         background: linear-gradient(135deg, #fff5f5, #fee2e2 60%, #fecaca);
         color: #9f1d1d;
-        border: 1px solid rgba(159,29,29,.28);
+        border-top: 1px solid rgba(159,29,29,.28);
+        border-right: 1px solid rgba(159,29,29,.28);
+        border-bottom: 1px solid rgba(159,29,29,.28);
         box-shadow: 0 4px 14px rgba(159,29,29,.16), inset 0 1px 0 rgba(255,255,255,.7);
         font-weight: 900;
       }
@@ -4390,6 +4436,35 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       }
       .b2w2-highlight-row:last-child { border-bottom: none }
 
+      /* \u2500\u2500 \uC885\uC871\uBCC4 \uBBF8\uB2C8 \uD14C\uC774\uBE14(\uCC38\uC5EC \uBE44\uC728/\uC2B9\uD328/\uB3D9\uC871\uC804) \u2014 \uAC12\uC774 \uC885\uC871(T/Z/P) \uCEEC\uB7FC\uC5D0 \uC815\uB82C\uB418\uB3C4\uB85D \uADF8\uB9AC\uB4DC\uB85C \uC815\uB9AC \u2500\u2500 */
+      .b2w2-racetable {
+        display: grid;
+        grid-template-columns: 74px repeat(3, minmax(0,1fr));
+        column-gap: 6px;
+        row-gap: 2px;
+        padding: 6px 0 8px;
+        border-bottom: 1px solid var(--b2w-rule-soft);
+      }
+      .b2w2-racetable-label {
+        font-size: var(--fs-caption);
+        color: var(--text3);
+        align-self: center;
+        padding: 5px 0;
+      }
+      .b2w2-racetable-head { display: flex; align-items: center; justify-content: center; padding-bottom: 3px }
+      .b2w2-racetable-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1px;
+        padding: 5px 2px;
+        border-radius: var(--b2w-r);
+        background: var(--b2w-paper-alt);
+      }
+      .b2w2-racetable-cell strong { font-size: var(--fs-caption); font-weight: 900; color: var(--text1); letter-spacing: -.01em }
+      .b2w2-racetable-cell span { font-size: 10px; font-weight: 700; color: var(--text3) }
+
       /* \u2500\u2500 \uB4C0\uC5BC \uBE14\uB85D \u2500\u2500 */
       .b2w2-dual-card { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--b2w-rule-soft) }
       .b2w2-dual-block {
@@ -4798,6 +4873,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       .b2w2-kpi-grid .b2w2-kpi-card:nth-child(2){animation-delay:.06s}
       .b2w2-kpi-grid .b2w2-kpi-card:nth-child(3){animation-delay:.10s}
       .b2w2-kpi-grid .b2w2-kpi-card:nth-child(4){animation-delay:.14s}
+      .b2w2-kpi-grid .b2w2-kpi-card:nth-child(5){animation-delay:.18s}
       .b2w2-highlight-grid .b2w2-highlight-card:nth-child(1){animation-delay:.04s}
       .b2w2-highlight-grid .b2w2-highlight-card:nth-child(2){animation-delay:.08s}
       .b2w2-highlight-grid .b2w2-highlight-card:nth-child(3){animation-delay:.12s}
@@ -4806,7 +4882,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
       @media (prefers-reduced-motion: reduce) {
         .b2w2-kpi-card, .b2w2-highlight-card, .b2w2-mvp-card, .b2w2-card { animation: none }
       }
-    `);let h="";const _totalGames=curStats.gameCount||0,_activeUnivs=curStats.filter(ud=>ud.tg>0).length,_periodDays=diffDays,_totalWins=curStats.reduce((s,ud)=>s+(ud.tw||0),0),_totalLosses=curStats.reduce((s,ud)=>s+(ud.tl||0),0),_prevTotalGames=prevStats.gameCount||0,_gamesDelta=_totalGames-_prevTotalGames,_overallWr=_totalWins+_totalLosses>0?Math.round(_totalWins/(_totalWins+_totalLosses)*1e3)/10:null,_univAcesForExport=_isMonthly?monthlyUnivAces:[...curStats].filter(ud=>ud.tg>0).sort((a,b)=>{var _a2,_b2;return b.tg-a.tg||b.active.length-a.active.length||((_a2=b.wr)!=null?_a2:-1)-((_b2=a.wr)!=null?_b2:-1)}).map(ud=>__spreadProps(__spreadValues({},ud),{ace:_b2WeeklyUnivMVP(ud.active)})),_exportRaceCount={P:{w:0,l:0},T:{w:0,l:0},Z:{w:0,l:0}};targetStats.forEach(ud=>{["P","T","Z"].forEach(r=>{_exportRaceCount[r].w+=ud.raceCount[r].w,_exportRaceCount[r].l+=ud.raceCount[r].l})});const _allActivePlayersRanked=[...activePlayers].sort((a,b)=>{var _a2,_b2;return b.total-a.total||b.wins-a.wins||((_a2=b.winRate)!=null?_a2:-1)-((_b2=a.winRate)!=null?_b2:-1)});try{window._b2BriefingExportCtx={preset,dateFrom,dateTo,prevDateFrom,prevDateTo,selUniv,isMonthly:_isMonthly,isCustom:_isCustom,briefingInfo:_briefingInfo,mvpLabel:_mvpLabel,heroSummary:_heroSummary,heroSpotlight:_heroSpotlight,mvp,mvp2,worstPlayer,topUnivs,rankedUnivs,univAces:_univAcesForExport,raceCountGlobal:_exportRaceCount,allActivePlayersRanked:_allActivePlayersRanked,hotPlayer,coldPlayer,streakPlayer,loseStreakPlayer,bestWrPlayer,mostWinsPlayer,mostActivePlayer,monthlyMvp,monthlyTopPlayers,silentUnivs,totalGames:_totalGames,activeUnivs:_activeUnivs,activePlayerCount:activePlayers.length,periodDays:_periodDays}}catch(e){}let _archiveEntries=[],_archiveWeekCount=0,_archiveMonthCount=0;if(_isArchive)try{typeof _b2EnsureMvpHistoryFresh=="function"&&_b2EnsureMvpHistoryFresh(!1),_archiveEntries=(typeof _b2MvpHistoryLoad=="function"?_b2MvpHistoryLoad():[]).filter(e=>e&&e.name).sort((a,b)=>String(b.from||"").localeCompare(String(a.from||""))),_archiveWeekCount=_archiveEntries.filter(e=>e.type==="week").length,_archiveMonthCount=_archiveEntries.filter(e=>e.type==="month").length}catch(e){}const _archiveTypeFilter=["week","month"].includes(window._b2MvpArchiveType)?window._b2MvpArchiveType:"all",_archiveUnivFilter=window._b2MvpArchiveUniv||"\uC804\uCCB4";if(h+=`<div class="b2w2-wrap" id="b2w2-export-root" data-theme="${_b2BriefingThemeLoad()}">
+    `);let h="";const _totalGames=curStats.gameCount||0,_activeUnivs=curStats.filter(ud=>ud.tg>0).length,_periodDays=diffDays,_raceParticipation={T:0,Z:0,P:0};activePlayers.forEach(s=>{var _a2;const r=String(((_a2=s.p)==null?void 0:_a2.race)||"").trim().toUpperCase();_raceParticipation[r]!==void 0&&_raceParticipation[r]++});const _raceParticipationTotal=_raceParticipation.T+_raceParticipation.Z+_raceParticipation.P,_mkRaceShare=r=>_raceParticipationTotal?Math.round(_raceParticipation[r]/_raceParticipationTotal*1e3)/10:null,_avgGamesPerPlayer=activePlayers.length?Math.round(_totalGames/activePlayers.length*10)/10:null,_matchupByOwnRace={T:{T:{w:0,l:0},P:{w:0,l:0},Z:{w:0,l:0}},Z:{Z:{w:0,l:0},T:{w:0,l:0},P:{w:0,l:0}},P:{P:{w:0,l:0},T:{w:0,l:0},Z:{w:0,l:0}}};curStats.forEach(ud=>{ud.active.forEach(s=>{var _a2;const own=String(((_a2=s.p)==null?void 0:_a2.race)||"").trim().toUpperCase();!_matchupByOwnRace[own]||!s.vsRace||Object.keys(_matchupByOwnRace[own]).forEach(opp=>{s.vsRace[opp]&&(_matchupByOwnRace[own][opp].w+=s.vsRace[opp].w,_matchupByOwnRace[own][opp].l+=s.vsRace[opp].l)})})});const _mkMatchup=(a,b)=>{const rec=_matchupByOwnRace[a][b],total=rec.w+rec.l;return{a,b,w:rec.w,l:rec.l,total,wr:total?Math.round(rec.w/total*1e3)/10:null}},_raceMatchups=[_mkMatchup("T","Z"),_mkMatchup("T","P"),_mkMatchup("Z","P"),_mkMatchup("T","T"),_mkMatchup("Z","Z"),_mkMatchup("P","P")].filter(m=>m.total>0),_ownRaceCount={P:{w:0,l:0},T:{w:0,l:0},Z:{w:0,l:0}};["T","Z","P"].forEach(own=>{Object.keys(_matchupByOwnRace[own]).forEach(opp=>{_ownRaceCount[own].w+=_matchupByOwnRace[own][opp].w,_ownRaceCount[own].l+=_matchupByOwnRace[own][opp].l})});const _prevTotalGames=prevStats.gameCount||0,_gamesDelta=_totalGames-_prevTotalGames,_univAcesForExport=_isMonthly?monthlyUnivAces:[...curStats].filter(ud=>ud.tg>0).sort((a,b)=>{var _a2,_b2;return b.tg-a.tg||b.active.length-a.active.length||((_a2=b.wr)!=null?_a2:-1)-((_b2=a.wr)!=null?_b2:-1)}).map(ud=>__spreadProps(__spreadValues({},ud),{ace:_b2WeeklyUnivMVP(ud.active)})),_exportRaceCount={P:{w:0,l:0},T:{w:0,l:0},Z:{w:0,l:0}};targetStats.forEach(ud=>{["P","T","Z"].forEach(r=>{_exportRaceCount[r].w+=ud.raceCount[r].w,_exportRaceCount[r].l+=ud.raceCount[r].l})});const _exportMirrorCount={P:{w:0,l:0},T:{w:0,l:0},Z:{w:0,l:0}};targetStats.forEach(ud=>{ud.active.forEach(s=>{var _a2;const own=String(((_a2=s.p)==null?void 0:_a2.race)||"").trim().toUpperCase();if(!_exportMirrorCount[own]||!s.vsRace)return;const m=s.vsRace[own];m&&(_exportMirrorCount[own].w+=m.w,_exportMirrorCount[own].l+=m.l)})});const _allActivePlayersRanked=[...activePlayers].sort((a,b)=>{var _a2,_b2;return b.total-a.total||b.wins-a.wins||((_a2=b.winRate)!=null?_a2:-1)-((_b2=a.winRate)!=null?_b2:-1)});try{window._b2BriefingExportCtx={preset,dateFrom,dateTo,prevDateFrom,prevDateTo,selUniv,isMonthly:_isMonthly,isCustom:_isCustom,briefingInfo:_briefingInfo,mvpLabel:_mvpLabel,heroSummary:_heroSummary,heroSpotlight:_heroSpotlight,mvp,mvp2,worstPlayer,topUnivs,rankedUnivs,univAces:_univAcesForExport,raceCountGlobal:_exportRaceCount,mirrorRaceCountGlobal:_exportMirrorCount,allActivePlayersRanked:_allActivePlayersRanked,hotPlayer,coldPlayer,streakPlayer,loseStreakPlayer,bestWrPlayer,mostWinsPlayer,mostActivePlayer,monthlyMvp,monthlyTopPlayers,silentUnivs,totalGames:_totalGames,activeUnivs:_activeUnivs,activePlayerCount:activePlayers.length,periodDays:_periodDays}}catch(e){}let _archiveEntries=[],_archiveWeekCount=0,_archiveMonthCount=0;if(_isArchive)try{typeof _b2EnsureMvpHistoryFresh=="function"&&_b2EnsureMvpHistoryFresh(!1),_archiveEntries=(typeof _b2MvpHistoryLoad=="function"?_b2MvpHistoryLoad():[]).filter(e=>e&&e.name).sort((a,b)=>String(b.from||"").localeCompare(String(a.from||""))),_archiveWeekCount=_archiveEntries.filter(e=>e.type==="week").length,_archiveMonthCount=_archiveEntries.filter(e=>e.type==="month").length}catch(e){}const _archiveTypeFilter=["week","month"].includes(window._b2MvpArchiveType)?window._b2MvpArchiveType:"all",_archiveUnivFilter=window._b2MvpArchiveUniv||"\uC804\uCCB4";if(h+=`<div class="b2w2-wrap" id="b2w2-export-root" data-theme="${_b2BriefingThemeLoad()}">
       <div class="b2w2-masthead">
         <span class="b2w2-masthead-brand"><span class="b2w2-masthead-mark"></span>STAR DATACENTER</span>
         <span>${_isArchive?`${fmtDate(_B2_MVP_SEASON_START)} ~ \uD604\uC7AC`:`${fmtDate(dateFrom)} ~ ${fmtDate(dateTo)} \uBC1C\uD589`}</span>
@@ -4898,20 +4974,28 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
           </div>
         </div>
       </div>`,_isArchive)return h+=_b2RenderMvpArchiveBody(_archiveEntries,_archiveTypeFilter,_archiveUnivFilter,univList),h+="</div>",h;if(h+=`<div class="b2w2-hdr">
-      <span style="font-size:16px">\u{1F4C5}</span>
-      <span style="font-size:14px;font-weight:900;color:var(--text1)">${_briefingInfo.title}</span>
-      <input type="date" class="b2w2-din" id="b2w2-from" value="${dateFrom}" onchange="_b2SyncBriefingCustomInputs(true)" title="\uC2DC\uC791 \uB0A0\uC9DC \uBCC0\uACBD">
-      <button type="button" class="b2w2-datebtn" onclick="_b2OpenBriefingDateInput('from')" title="\uC2DC\uC791 \uB0A0\uC9DC \uC120\uD0DD">\u{1F4C5} \uC2DC\uC791\uC77C</button>
-      <span style="font-size:var(--fs-sm);color:var(--text3);font-weight:700">~</span>
-      <input type="date" class="b2w2-din" id="b2w2-to" value="${dateTo}" onchange="_b2SyncBriefingCustomInputs(true)" title="\uC885\uB8CC \uB0A0\uC9DC \uBCC0\uACBD">
-      <button type="button" class="b2w2-datebtn" onclick="_b2OpenBriefingDateInput('to')" title="\uC885\uB8CC \uB0A0\uC9DC \uC120\uD0DD">\u{1F4C5} \uC885\uB8CC\uC77C</button>
-      <select class="b2w2-sel" id="b2w2-univ" onchange="_b2SyncBriefingCustomInputs(true)">
-        <option value="\uC804\uCCB4"${selUniv==="\uC804\uCCB4"?" selected":""}>\u{1F3EB} \uC804\uCCB4 \uB300\uD559</option>
-        ${univList.map(u=>{const _n2=typeof escAttr=="function"?escAttr(u.name):String(u.name||""),_nh=typeof window.escHTML=="function"?window.escHTML(u.name):String(u.name||"");return`<option value="${_n2}"${selUniv===u.name?" selected":""}>${_nh}</option>`}).join("")}
-      </select>
-      <button type="button" class="b2w2-btn" onclick="_b2ApplyBriefingCustomFromInputs()">\uC870\uD68C</button>
-      <button type="button" class="b2w2-btn no-export" style="background:var(--b2w-paper-alt);color:var(--text2);border:1px solid rgba(148,163,184,.3)" onclick="_b2ResetBriefingFilters()" title="\uC774\uBC88\uC8FC \uBE0C\uB9AC\uD551\uC73C\uB85C \uCD08\uAE30\uD654">\u21BA \uCD08\uAE30\uD654</button>
-      <button type="button" class="b2w2-btn no-export b2w2-savebtn" style="margin-left:auto" onclick="captureBriefingArticle()">\u{1F4F0} \uBE0C\uB9AC\uD551 \uC800\uC7A5</button>
+      <div class="b2w2-hdr-title">
+        <span style="font-size:16px">\u{1F4C5}</span>
+        <span style="font-size:14px;font-weight:900;color:var(--text1)">${_briefingInfo.title}</span>
+      </div>
+      <div class="b2w2-filtergroup">
+        <span class="b2w2-dategroup" title="\uAE30\uAC04 \uC120\uD0DD">
+          <button type="button" class="b2w2-datebtn" onclick="_b2OpenBriefingDateInput('from')" title="\uC2DC\uC791 \uB0A0\uC9DC \uC120\uD0DD" aria-label="\uC2DC\uC791 \uB0A0\uC9DC \uC120\uD0DD">\u{1F4C5}</button>
+          <input type="date" class="b2w2-din" id="b2w2-from" value="${dateFrom}" onchange="_b2SyncBriefingCustomInputs(true)" title="\uC2DC\uC791 \uB0A0\uC9DC \uBCC0\uACBD">
+          <span class="b2w2-daterange-tilde">~</span>
+          <input type="date" class="b2w2-din" id="b2w2-to" value="${dateTo}" onchange="_b2SyncBriefingCustomInputs(true)" title="\uC885\uB8CC \uB0A0\uC9DC \uBCC0\uACBD">
+          <button type="button" class="b2w2-datebtn" onclick="_b2OpenBriefingDateInput('to')" title="\uC885\uB8CC \uB0A0\uC9DC \uC120\uD0DD" aria-label="\uC885\uB8CC \uB0A0\uC9DC \uC120\uD0DD">\u{1F4C5}</button>
+        </span>
+        <select class="b2w2-sel" id="b2w2-univ" onchange="_b2SyncBriefingCustomInputs(true)">
+          <option value="\uC804\uCCB4"${selUniv==="\uC804\uCCB4"?" selected":""}>\u{1F3EB} \uC804\uCCB4 \uB300\uD559</option>
+          ${univList.map(u=>{const _n2=typeof escAttr=="function"?escAttr(u.name):String(u.name||""),_nh=typeof window.escHTML=="function"?window.escHTML(u.name):String(u.name||"");return`<option value="${_n2}"${selUniv===u.name?" selected":""}>${_nh}</option>`}).join("")}
+        </select>
+      </div>
+      <div class="b2w2-actiongroup">
+        <button type="button" class="b2w2-btn" onclick="_b2ApplyBriefingCustomFromInputs()">\uC870\uD68C</button>
+        <button type="button" class="b2w2-btn b2w2-ghostbtn no-export" onclick="_b2ResetBriefingFilters()" title="\uC774\uBC88\uC8FC \uBE0C\uB9AC\uD551\uC73C\uB85C \uCD08\uAE30\uD654" aria-label="\uCD08\uAE30\uD654">\u21BA</button>
+      </div>
+      <button type="button" class="b2w2-btn no-export b2w2-savebtn" onclick="captureBriefingArticle()">\u{1F4F0} \uBE0C\uB9AC\uD551 \uC800\uC7A5</button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 2px 10px;border-bottom:1px dashed var(--b2w-rule-soft);margin-bottom:16px">
       <span style="font-size:10px;font-weight:800;color:var(--b2w-tag-muted);letter-spacing:.06em;text-transform:uppercase;flex-shrink:0">\uB370\uC774\uD130 \uBC94\uC704</span>
@@ -4946,13 +5030,44 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
         <div class="b2w2-kpi-value" style="color:#10b981">${bestWrPlayer?`${bestWrPlayer.winRate}%`:"-"}</div>
         <div class="b2w2-kpi-sub">${_bestWrSub}</div>
       </article>
+      <article class="b2w2-kpi-card" style="--kpi-accent:#8b5cf6">
+        <div class="b2w2-kpi-label">\u{1F4CA} \uC120\uC218\uB2F9 \uD3C9\uADE0</div>
+        <div class="b2w2-kpi-value">${_avgGamesPerPlayer!==null?_avgGamesPerPlayer:"-"}<span style="font-size:14px;font-weight:700;color:var(--b2w-ink-soft);margin-left:2px">\uC804</span></div>
+        <div class="b2w2-kpi-sub">\uD65C\uB3D9 \uC2A4\uD2B8\uB9AC\uBA38 ${activePlayers.length}\uBA85 \uAE30\uC900</div>
+      </article>
     </section>`,h+=`<section class="b2w2-highlight-grid">
       <article class="b2w2-highlight-card b2w2-lead-card" style="border-color:var(--b2w-accent-border);--hc-top:var(--b2w-accent)">
         <div class="b2w2-highlight-kicker" style="color:var(--b2w-accent)">\uC804\uCCB4 \uC804\uC801</div>
         <div class="b2w2-highlight-title">\uC885\uD569 \uC2B9\uD328 \uAC1C\uC694</div>
-        <div class="b2w2-highlight-desc">\uC804\uCCB4 \uB300\uD559 \uD569\uC0B0 \uC2B9\uB960\uC740 ${_overallWr!==null?`${_overallWr}%`:"\uC9D1\uACC4 \uBD88\uAC00"}\uC774\uBA70, \uC804\uAE30 \uB300\uBE44 \uACBD\uAE30 \uC218\uB294 ${_gamesDelta>0?`${_gamesDelta}\uC804 \uB298\uC5C8\uC2B5\uB2C8\uB2E4`:_gamesDelta<0?`${Math.abs(_gamesDelta)}\uC804 \uC904\uC5C8\uC2B5\uB2C8\uB2E4`:"\uB3D9\uC77C\uD569\uB2C8\uB2E4"}.</div>
+        <div class="b2w2-racetable">
+          <div></div>
+          <div class="b2w2-racetable-head"><span class="rbadge rT" style="font-size:10px">T</span></div>
+          <div class="b2w2-racetable-head"><span class="rbadge rZ" style="font-size:10px">Z</span></div>
+          <div class="b2w2-racetable-head"><span class="rbadge rP" style="font-size:10px">P</span></div>
+
+          <div class="b2w2-racetable-label">\uCC38\uC5EC \uBE44\uC728</div>
+          <div class="b2w2-racetable-cell"><strong>${_raceParticipation.T}\uBA85</strong><span>${(_c=_mkRaceShare("T"))!=null?_c:"-"}%</span></div>
+          <div class="b2w2-racetable-cell"><strong>${_raceParticipation.Z}\uBA85</strong><span>${(_d=_mkRaceShare("Z"))!=null?_d:"-"}%</span></div>
+          <div class="b2w2-racetable-cell"><strong>${_raceParticipation.P}\uBA85</strong><span>${(_e=_mkRaceShare("P"))!=null?_e:"-"}%</span></div>
+
+          <div class="b2w2-racetable-label">\uC885\uC871\uBCC4 \uC2B9/\uD328</div>
+          <div class="b2w2-racetable-cell"><strong>${_ownRaceCount.T.w}\uC2B9 ${_ownRaceCount.T.l}\uD328</strong></div>
+          <div class="b2w2-racetable-cell"><strong>${_ownRaceCount.Z.w}\uC2B9 ${_ownRaceCount.Z.l}\uD328</strong></div>
+          <div class="b2w2-racetable-cell"><strong>${_ownRaceCount.P.w}\uC2B9 ${_ownRaceCount.P.l}\uD328</strong></div>
+        </div>
+        ${_raceMatchups.length?`
+        <div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--b2w-rule-soft)">
+          <div style="font-size:var(--fs-caption);color:var(--text3);margin-bottom:6px">\uC885\uC871\uC804 \uC0C1\uB300 \uC2B9\uD328 (\uC2B9\uB960)</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            ${_raceMatchups.map(m=>{const _wrCol=m.wr>=60?"#15803d":m.wr>=50?"#9f1d1d":"var(--text3)",_raceBarCol={T:"#2563eb",Z:"#7c3aed",P:"#d97706"}[m.a]||_wrCol;return`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--b2w-r);background:var(--b2w-paper-alt)">
+                <span style="display:flex;align-items:center;gap:4px;flex-shrink:0">${m.a===m.b?`<span class="rbadge r${m.a}" style="font-size:9px">${m.a}</span><span style="font-size:9px;color:var(--text3);font-weight:700">\uB3D9\uC871\uC804</span>`:`<span class="rbadge r${m.a}" style="font-size:9px">${m.a}</span><span style="font-size:9px;color:var(--text3);font-weight:700">vs</span><span class="rbadge r${m.b}" style="font-size:9px">${m.b}</span>`}</span>
+                <span style="flex:1;height:5px;border-radius:3px;background:var(--b2w-rule-soft);overflow:hidden"><span style="display:block;height:100%;width:${m.wr}%;background:${_raceBarCol};border-radius:3px"></span></span>
+                <span style="font-size:var(--fs-caption);font-weight:800;color:var(--text1);flex-shrink:0">${m.w}\uC2B9 ${m.l}\uD328</span>
+                <span style="font-size:var(--fs-sm);font-weight:900;color:${_wrCol};min-width:38px;text-align:right;flex-shrink:0">${m.wr}%</span>
+              </div>`}).join("")}
+          </div>
+        </div>`:""}
         <div class="b2w2-highlight-list" style="margin-top:2px">
-          <div class="b2w2-highlight-row"><span style="font-size:var(--fs-caption);color:var(--text3)">\uC804\uCCB4 \uC2B9/\uD328</span><strong style="font-size:var(--fs-sm);color:var(--text1)">${_totalWins}\uC2B9 ${_totalLosses}\uD328</strong></div>
           <div class="b2w2-highlight-row"><span style="font-size:var(--fs-caption);color:var(--text3)">\uC804\uAE30 \uB300\uBE44 \uACBD\uAE30 \uC218</span><strong style="font-size:var(--fs-sm);color:${_gamesDelta>0?"#15803d":_gamesDelta<0?"#dc2626":"var(--text1)"}">${_gamesDelta>0?"\u25B2+":_gamesDelta<0?"\u25BC":"\u2501"}${Math.abs(_gamesDelta)}\uC804</strong></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -4985,14 +5100,14 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
               <div class="b2w2-dual-head">
                 <div style="min-width:0">
                   <div class="b2w2-dual-title" style="color:#15803d">\uC0C1\uC2B9\uC138</div>
-                  <div class="b2w2-dual-sub"><span style="font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_d=(_c=hotPlayer.p)==null?void 0:_c.name)==null?void 0:_d.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_e=hotPlayer.p)==null?void 0:_e.name)||"-"}</span> \xB7 ${String(((_f=hotPlayer.p)==null?void 0:_f.univ)||"\uBB34\uC18C\uC18D")}</div>
+                  <div class="b2w2-dual-sub"><span style="font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_g=(_f=hotPlayer.p)==null?void 0:_f.name)==null?void 0:_g.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_h=hotPlayer.p)==null?void 0:_h.name)||"-"}</span> \xB7 ${String(((_i=hotPlayer.p)==null?void 0:_i.univ)||"\uBB34\uC18C\uC18D")}</div>
                 </div>
                 <span class="b2w2-note-chip" style="border-color:#bbf7d0;color:#15803d;background:#f0fdf4">${hotPlayer.wrDelta>=0?"+":""}${hotPlayer.wrDelta}%p</span>
               </div>
               <div class="b2w2-mini-list">
                 <div class="b2w2-mini-row"><span style="color:var(--text3)">\uC804\uC801</span><span style="color:var(--text1)">${hotPlayer.wins}\uC2B9 ${hotPlayer.losses}\uD328</span></div>
                 <div class="b2w2-mini-row"><span style="color:var(--text3)">\uACBD\uAE30 \uC218 \uBCC0\uD654</span><span style="color:var(--text1)">${hotPlayer.totalDelta>=0?"+":""}${hotPlayer.totalDelta}\uC804</span></div>
-                ${risingPlayers[1]?`<div class="b2w2-mini-row"><span style="color:var(--text3)">2\uC704</span><span style="color:#15803d">${((_g=risingPlayers[1].p)==null?void 0:_g.name)||"-"} ${risingPlayers[1].wrDelta>=0?"+":""}${risingPlayers[1].wrDelta}%p</span></div>`:""}
+                ${risingPlayers[1]?`<div class="b2w2-mini-row"><span style="color:var(--text3)">2\uC704</span><span style="color:#15803d">${((_j=risingPlayers[1].p)==null?void 0:_j.name)||"-"} ${risingPlayers[1].wrDelta>=0?"+":""}${risingPlayers[1].wrDelta}%p</span></div>`:""}
               </div>
             `:'<div class="b2w2-highlight-desc">\uC804\uC8FC\uC640 \uBE44\uAD50\uD560 \uB9CC\uD07C \uC0C1\uC2B9\uD55C \uC2A4\uD2B8\uB9AC\uBA38\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.</div>'}
           </div>
@@ -5001,14 +5116,14 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
               <div class="b2w2-dual-head">
                 <div style="min-width:0">
                   <div class="b2w2-dual-title" style="color:#dc2626">\uD558\uB77D\uC138</div>
-                  <div class="b2w2-dual-sub"><span style="font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_i=(_h=coldPlayer.p)==null?void 0:_h.name)==null?void 0:_i.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_j=coldPlayer.p)==null?void 0:_j.name)||"-"}</span> \xB7 ${String(((_k=coldPlayer.p)==null?void 0:_k.univ)||"\uBB34\uC18C\uC18D")}</div>
+                  <div class="b2w2-dual-sub"><span style="font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_l=(_k=coldPlayer.p)==null?void 0:_k.name)==null?void 0:_l.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_m=coldPlayer.p)==null?void 0:_m.name)||"-"}</span> \xB7 ${String(((_n=coldPlayer.p)==null?void 0:_n.univ)||"\uBB34\uC18C\uC18D")}</div>
                 </div>
                 <span class="b2w2-note-chip" style="border-color:#fecaca;color:#dc2626;background:#fef2f2">${coldPlayer.wrDelta}%p</span>
               </div>
               <div class="b2w2-mini-list">
                 <div class="b2w2-mini-row"><span style="color:var(--text3)">\uC804\uC801</span><span style="color:var(--text1)">${coldPlayer.wins}\uC2B9 ${coldPlayer.losses}\uD328</span></div>
                 <div class="b2w2-mini-row"><span style="color:var(--text3)">\uACBD\uAE30 \uC218 \uBCC0\uD654</span><span style="color:var(--text1)">${coldPlayer.totalDelta>=0?"+":""}${coldPlayer.totalDelta}\uC804</span></div>
-                ${decliningPlayers[1]?`<div class="b2w2-mini-row"><span style="color:var(--text3)">2\uC704</span><span style="color:#dc2626">${((_l=decliningPlayers[1].p)==null?void 0:_l.name)||"-"} ${decliningPlayers[1].wrDelta}%p</span></div>`:""}
+                ${decliningPlayers[1]?`<div class="b2w2-mini-row"><span style="color:var(--text3)">2\uC704</span><span style="color:#dc2626">${((_o=decliningPlayers[1].p)==null?void 0:_o.name)||"-"} ${decliningPlayers[1].wrDelta}%p</span></div>`:""}
               </div>
             `:'<div class="b2w2-highlight-desc">\uC804\uC8FC\uC640 \uBE44\uAD50\uD560 \uB9CC\uD07C \uD558\uB77D\uD55C \uC2A4\uD2B8\uB9AC\uBA38\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.</div>'}
           </div>
@@ -5023,7 +5138,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
               <div class="b2w2-dual-head">
                 <div style="min-width:0">
                   <div class="b2w2-dual-title" style="color:#0891b2">\uC5F0\uC2B9</div>
-                  <div class="b2w2-dual-sub"><span style="font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_n=(_m=streakPlayer.p)==null?void 0:_m.name)==null?void 0:_n.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_o=streakPlayer.p)==null?void 0:_o.name)||"-"}</span> \xB7 ${String(((_p=streakPlayer.p)==null?void 0:_p.univ)||"\uBB34\uC18C\uC18D")}</div>
+                  <div class="b2w2-dual-sub"><span style="font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_q=(_p=streakPlayer.p)==null?void 0:_p.name)==null?void 0:_q.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_r=streakPlayer.p)==null?void 0:_r.name)||"-"}</span> \xB7 ${String(((_s=streakPlayer.p)==null?void 0:_s.univ)||"\uBB34\uC18C\uC18D")}</div>
                 </div>
                 <span class="b2w2-note-chip" style="border-color:#a5f3fc;color:#0891b2;background:#ecfeff">\u{1F525} ${streakPlayer.streak}\uC5F0\uC2B9</span>
               </div>
@@ -5042,7 +5157,7 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
               <div class="b2w2-dual-head">
                 <div style="min-width:0">
                   <div class="b2w2-dual-title" style="color:#dc2626">\uC5F0\uD328</div>
-                  <div class="b2w2-dual-sub"><span style="font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_r=(_q=loseStreakPlayer.p)==null?void 0:_q.name)==null?void 0:_r.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_s=loseStreakPlayer.p)==null?void 0:_s.name)||"-"}</span> \xB7 ${String(((_t=loseStreakPlayer.p)==null?void 0:_t.univ)||"\uBB34\uC18C\uC18D")}</div>
+                  <div class="b2w2-dual-sub"><span style="font-weight:900;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_u=(_t=loseStreakPlayer.p)==null?void 0:_t.name)==null?void 0:_u.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_v=loseStreakPlayer.p)==null?void 0:_v.name)||"-"}</span> \xB7 ${String(((_w=loseStreakPlayer.p)==null?void 0:_w.univ)||"\uBB34\uC18C\uC18D")}</div>
                 </div>
                 <span class="b2w2-note-chip" style="border-color:#fecaca;color:#dc2626;background:#fef2f2">\u{1F4A7} ${loseStreakPlayer.streak}\uC5F0\uD328</span>
               </div>
@@ -5064,8 +5179,8 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
         ${bestWrPlayer?`
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
             <div>
-              <div style="font-size:var(--fs-lg);font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_v=(_u=bestWrPlayer.p)==null?void 0:_u.name)==null?void 0:_v.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_w=bestWrPlayer.p)==null?void 0:_w.name)||"-"}</div>
-              <div style="font-size:var(--fs-sm);color:var(--text3);margin-top:4px">${String(((_x=bestWrPlayer.p)==null?void 0:_x.univ)||"\uBB34\uC18C\uC18D")}</div>
+              <div style="font-size:var(--fs-lg);font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_y=(_x=bestWrPlayer.p)==null?void 0:_x.name)==null?void 0:_y.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_z=bestWrPlayer.p)==null?void 0:_z.name)||"-"}</div>
+              <div style="font-size:var(--fs-sm);color:var(--text3);margin-top:4px">${String(((_A=bestWrPlayer.p)==null?void 0:_A.univ)||"\uBB34\uC18C\uC18D")}</div>
             </div>
             <span class="b2w2-note-chip" style="border-color:#bbf7d0;color:#16a34a;background:#f0fdf4">${bestWrPlayer.winRate}%</span>
           </div>
@@ -5089,13 +5204,13 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
         ${mostActivePlayer?`
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
             <div>
-              <div style="font-size:var(--fs-lg);font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_z=(_y=mostActivePlayer.p)==null?void 0:_y.name)==null?void 0:_z.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_A=mostActivePlayer.p)==null?void 0:_A.name)||"-"}</div>
-              <div style="font-size:var(--fs-sm);color:var(--text3);margin-top:4px">${String(((_B=mostActivePlayer.p)==null?void 0:_B.univ)||"\uBB34\uC18C\uC18D")}</div>
+              <div style="font-size:var(--fs-lg);font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_C=(_B=mostActivePlayer.p)==null?void 0:_B.name)==null?void 0:_C.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_D=mostActivePlayer.p)==null?void 0:_D.name)||"-"}</div>
+              <div style="font-size:var(--fs-sm);color:var(--text3);margin-top:4px">${String(((_E=mostActivePlayer.p)==null?void 0:_E.univ)||"\uBB34\uC18C\uC18D")}</div>
             </div>
             <span class="b2w2-note-chip" style="border-color:#bae6fd;color:#0284c7;background:#f0f9ff">${mostActivePlayer.total}\uC804</span>
           </div>
           <div class="b2w2-highlight-list">
-            <div class="b2w2-highlight-row"><span style="font-size:var(--fs-caption);color:var(--text3)">\uC804\uCCB4 \uC804\uC801</span><strong style="font-size:var(--fs-sm);color:var(--text1)">${mostActivePlayer.wins}\uC2B9 ${mostActivePlayer.losses}\uD328 \xB7 ${(_C=mostActivePlayer.winRate)!=null?_C:"-"}%</strong></div>
+            <div class="b2w2-highlight-row"><span style="font-size:var(--fs-caption);color:var(--text3)">\uC804\uCCB4 \uC804\uC801</span><strong style="font-size:var(--fs-sm);color:var(--text1)">${mostActivePlayer.wins}\uC2B9 ${mostActivePlayer.losses}\uD328 \xB7 ${(_F=mostActivePlayer.winRate)!=null?_F:"-"}%</strong></div>
           </div>
           ${mostActivePlayers.length>1?`
           <div class="b2w2-highlight-list" style="margin-top:4px;padding-top:8px;border-top:1px dashed rgba(148,163,184,.25)">
@@ -5114,8 +5229,8 @@ var __defProp=Object.defineProperty,__defProps=Object.defineProperties;var __get
         ${mostWinsPlayer?`
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
             <div>
-              <div style="font-size:var(--fs-lg);font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_E=(_D=mostWinsPlayer.p)==null?void 0:_D.name)==null?void 0:_E.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_F=mostWinsPlayer.p)==null?void 0:_F.name)||"-"}</div>
-              <div style="font-size:var(--fs-sm);color:var(--text3);margin-top:4px">${String(((_G=mostWinsPlayer.p)==null?void 0:_G.univ)||"\uBB34\uC18C\uC18D")}</div>
+              <div style="font-size:var(--fs-lg);font-weight:950;color:var(--text1);cursor:pointer" onclick="openPlayerModal('${((_H=(_G=mostWinsPlayer.p)==null?void 0:_G.name)==null?void 0:_H.replace(/\\/g,"\\\\").replace(/'/g,"\\'"))||""}')">${((_I=mostWinsPlayer.p)==null?void 0:_I.name)||"-"}</div>
+              <div style="font-size:var(--fs-sm);color:var(--text3);margin-top:4px">${String(((_J=mostWinsPlayer.p)==null?void 0:_J.univ)||"\uBB34\uC18C\uC18D")}</div>
             </div>
             <span class="b2w2-note-chip" style="border-color:#fed7aa;color:#c2410c;background:#fff7ed">${mostWinsPlayer.wins}\uC2B9</span>
           </div>

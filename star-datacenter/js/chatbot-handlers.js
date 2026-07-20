@@ -8,6 +8,38 @@ async function _chatbotHandleMainCommands(msg, userMessage){
     return typeof players !== 'undefined' ? players.find(p => p.name === name) : null;
   }
 
+  // 🏆 이번주 / 이번달 MVP
+  if (/^(이번\s*주|주간)\s*mvp$/.test(userMessage) && typeof formatWeeklyMvp === 'function') {
+    return formatWeeklyMvp();
+  }
+  if (/^(이번\s*달|이번달|월간)\s*mvp$/.test(userMessage) && typeof formatMonthlyMvp === 'function') {
+    return formatMonthlyMvp();
+  }
+
+  // 🏫 대학 순위 (전체 누적 / 이번주 / 이번달)
+  if (/^(이번\s*주|주간)\s*대학\s*(순위|랭킹)$/.test(userMessage) && typeof formatUniversityRanking === 'function') {
+    return formatUniversityRanking('week');
+  }
+  if (/^(이번\s*달|이번달|월간)\s*대학\s*(순위|랭킹)$/.test(userMessage) && typeof formatUniversityRanking === 'function') {
+    return formatUniversityRanking('month');
+  }
+  if (/^대학\s*(순위|랭킹)$/.test(userMessage) && typeof formatUniversityRanking === 'function') {
+    return formatUniversityRanking(null);
+  }
+
+  // 🏫 대학 승패 기록 (예: "케이대 승패기록", "케이대 승패 기록")
+  const univRecordMatch = userMessage.match(/^(.+?)\s*(승패\s*기록)$/);
+  if (univRecordMatch && typeof formatUniversityRecord === 'function') {
+    const rawName = univRecordMatch[1].trim();
+    const universitiesForRecord = (typeof window !== 'undefined' && typeof window._chatbotGetUniversities === 'function')
+      ? window._chatbotGetUniversities()
+      : [];
+    if (universitiesForRecord.length > 0) {
+      const univMatch = universitiesForRecord.includes(rawName) ? rawName : findSimilarUniversity(rawName, universitiesForRecord);
+      if (univMatch) return formatUniversityRecord(univMatch);
+    }
+  }
+
   // 📅 날짜별 "전체 경기결과" 조회 (예: "어제 경기", "오늘 경기결과", "그제 경기")
   const dailyAllMatch = userMessage.match(/^(어제|오늘|그제|그저께)\s*(경기|경기결과|결과)?$/);
   if (dailyAllMatch && typeof formatDailyAllMatches === 'function') {
@@ -84,6 +116,50 @@ async function _chatbotHandleMainCommands(msg, userMessage){
     return formatPlayerRaceRecord(player, race);
   }
   
+  // ⚔️ 스트리머 상대전적 (예: "우힝이 상대전적" → 상대별 승패 전체 요약)
+  const oppRecordMatch = userMessage.match(/^([^\s]+)\s*상대\s*전적$/);
+  if (oppRecordMatch && typeof formatPlayerOpponentRecord === 'function') {
+    const playerName = oppRecordMatch[1];
+    let player = _getExactPlayer(playerName);
+    if (!player) player = findSimilarPlayer(playerName);
+    if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+    if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerOpponentRecord(player);
+    return formatPlayerOpponentRecord(player);
+  }
+
+  // ⚡ 스트리머 ELO (예: "홍길동 elo", "홍길동 ELO")
+  const eloMatch = userMessage.match(/^([^\s]+)\s+elo$/i);
+  if (eloMatch && typeof formatPlayerElo === 'function') {
+    const playerName = eloMatch[1];
+    let player = _getExactPlayer(playerName);
+    if (!player) player = findSimilarPlayer(playerName);
+    if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+    if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerElo(player);
+    return formatPlayerElo(player);
+  }
+
+  // 🗺️ 스트리머 맵별 승률 전체 요약 (예: "홍길동 맵별승률", "홍길동 맵별 전적")
+  const mapWinRateMatch = userMessage.match(/^([^\s]+)\s*(맵별\s*승률|맵별\s*전적|맵승률)$/);
+  if (mapWinRateMatch && typeof formatPlayerMapWinRates === 'function') {
+    const playerName = mapWinRateMatch[1];
+    let player = _getExactPlayer(playerName);
+    if (!player) player = findSimilarPlayer(playerName);
+    if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+    if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerMapWinRates(player);
+    return formatPlayerMapWinRates(player);
+  }
+
+  // 🎮 스트리머 상대종족별 전적 요약(저그/테란/프로토스 한번에)
+  const raceBreakdownMatch = userMessage.match(/^([^\s]+)\s*(상대\s*종족별\s*전적|종족별\s*전적|상대종족전적|종족전적)$/);
+  if (raceBreakdownMatch && typeof formatPlayerRaceBreakdown === 'function') {
+    const playerName = raceBreakdownMatch[1];
+    let player = _getExactPlayer(playerName);
+    if (!player) player = findSimilarPlayer(playerName);
+    if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+    if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerRaceBreakdown(player);
+    return formatPlayerRaceBreakdown(player);
+  }
+
   const raceOnlyMatch = userMessage.match(/^(저그전|테란전|프로토스전)$/);
   if (raceOnlyMatch) {
     const race = raceOnlyMatch[1];
