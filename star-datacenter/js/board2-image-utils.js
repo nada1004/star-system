@@ -349,7 +349,6 @@ function _b2ScheduleImageSwap(playerName) {
   if (!mainBox) return;
   _b2ClearSwapTimer(mainBox);
   mainBox._swapGen = (mainBox._swapGen || 0) + 1;
-  const swapGen = mainBox._swapGen;
   const _hasMediaUrl = (v)=>!!String(v || '').trim();
   // 현재 선수의 이미지 목록 수집 (photo + profileFile2~5)
   const p = (typeof players !== 'undefined') ? players.find(x => x.name === playerName) : null;
@@ -367,23 +366,21 @@ function _b2ScheduleImageSwap(playerName) {
   };
   const getEl = (slot)=>document.getElementById('b2-main-img-' + slot);
   const isVideo = (el)=>!!(el && el.tagName === 'VIDEO');
+  // 비디오 슬롯이 화면에 보일 때 재생 시작(음소거 자동재생) — 전환 타이밍 자체는
+  // 항상 아래 delayMs()로 설정한 "전환 시간(초)"을 따르며, 영상 길이와는 무관함.
   const applyMediaForSlot = (slot)=>{
     try{
       const el = getEl(slot);
-      if(!isVideo(el)) return { handled:false };
+      if(!isVideo(el)) return;
       try{ el.loop = false; }catch(e){}
       try{ el.muted = true; }catch(e){}
       try{ el.playsInline = true; }catch(e){}
       try{ el.currentTime = 0; }catch(e){}
-      try{ el.__b2SwapDone = false; }catch(e){}
       try{
-        const p = el.play && el.play();
-        if(p && typeof p.catch === 'function') p.catch(()=>{});
+        const pr = el.play && el.play();
+        if(pr && typeof pr.catch === 'function') pr.catch(()=>{});
       }catch(e){}
-      return { handled:true, el };
-    }catch(e){
-      return { handled:false };
-    }
+    }catch(e){}
   };
   const delayMs = (fromSlot, toSlot)=>{
     try{
@@ -414,6 +411,7 @@ function _b2ScheduleImageSwap(playerName) {
       const el = document.getElementById('b2-main-img-' + slot);
       if (el) el.style.opacity = '0';
     }
+    applyMediaForSlot(showSlot);
     return;
   }
   // 모든 이미지 초기화: 첫 번째 이미지(slot 기준)만 보이게
@@ -451,142 +449,22 @@ function _b2ScheduleImageSwap(playerName) {
         const s = imgList[i] ? imgList[i].slot : 1;
         const el = getEl(s);
         if(isVideo(el) && s !== curSlot){
-          try{ el.onended = null; }catch(e){}
-          try{ el.onloadedmetadata = null; }catch(e){}
           try{ el.pause && el.pause(); }catch(e){}
-          try{ el.__b2SwapDone = false; }catch(e){}
         }
       }
     }catch(e){}
 
-    // 다음 전환 예약(현재→다음 기준)
+    // 새로 보이는 슬롯이 비디오면 재생 시작
+    applyMediaForSlot(curSlot);
+
+    // 다음 전환 예약(현재→다음 기준) — 항상 설정된 전환 시간(초)을 그대로 따름
     if (mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
     const next = (cur + 1) % totalImgs;
-    const fromSlot = imgList[cur] ? imgList[cur].slot : 1;
+    const fromSlot = curSlot;
     const toSlot = imgList[next] ? imgList[next].slot : 1;
-
-    const media = applyMediaForSlot(curSlot);
-    if(media.handled && media.el){
-      try{
-        const el = media.el;
-        const dur = Number(el.duration);
-        if(Number.isFinite(dur) && dur > 0){
-          try{ el.__b2SwapDone = false; }catch(e){}
-          el.onended = ()=>{
-            try{
-              if(mainBox._swapGen !== swapGen) return;
-              if(mainBox._swapIdx !== cur) return;
-              if(mainBox._swapCurSlot !== curSlot) return;
-              if(el.__b2SwapDone) return;
-              el.__b2SwapDone = true;
-            }catch(e){}
-            try{ if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer); }catch(e){}
-            try{ doSwap(); }catch(e){}
-          };
-          const remain = Math.max(0.2, dur - Number(el.currentTime||0));
-          mainBox._swapTimer = setTimeout(()=>{
-            try{
-              if(mainBox._swapGen !== swapGen) return;
-              if(mainBox._swapIdx !== cur) return;
-              if(mainBox._swapCurSlot !== curSlot) return;
-              if(el.__b2SwapDone) return;
-              el.__b2SwapDone = true;
-            }catch(e){}
-            doSwap();
-          }, Math.round(remain * 1000) + 180);
-          return;
-        }
-        // duration을 아직 모르면: 메타데이터 로딩 후 "끝까지 재생 후 이동"으로 재예약.
-        // 메타데이터가 늦어도 타이머가 먼저 발화해 넘어가 버리는 문제를 막기 위해,
-        // 여기서는 매우 긴 fallback(60초)을 걸고, metadata가 오면 즉시 재예약한다.
-        try{ el.__b2SwapDone = false; }catch(e){}
-        try{
-          el.onended = ()=>{
-            try{
-              if(mainBox._swapGen !== swapGen) return;
-              if(mainBox._swapIdx !== cur) return;
-              if(mainBox._swapCurSlot !== curSlot) return;
-              if(el.__b2SwapDone) return;
-              el.__b2SwapDone = true;
-            }catch(e){}
-            try{ if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer); }catch(e){}
-            try{ doSwap(); }catch(e){}
-          };
-        }catch(e){}
-        try{
-          el.onloadedmetadata = ()=>{
-            try{
-              if(mainBox._swapGen !== swapGen) return;
-              if(mainBox._swapIdx !== cur) return;
-              if(mainBox._swapCurSlot !== curSlot) return;
-              const d = Number(el.duration);
-              if(!(Number.isFinite(d) && d > 0)) return;
-              if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
-              mainBox._swapTimer = setTimeout(()=>{
-                try{
-                  if(mainBox._swapGen !== swapGen) return;
-                  if(mainBox._swapIdx !== cur) return;
-                  if(mainBox._swapCurSlot !== curSlot) return;
-                  if(el.__b2SwapDone) return;
-                  el.__b2SwapDone = true;
-                }catch(e){}
-                doSwap();
-              }, Math.round(d * 1000) + 180);
-            }catch(e){}
-          };
-        }catch(e){}
-        mainBox._swapTimer = setTimeout(doSwap, 60000);
-        return;
-      }catch(e){}
-    }
     mainBox._swapTimer = setTimeout(doSwap, delayMs(fromSlot, toSlot));
   }
-  let firstDelay = (imgList[0] && imgList[1]) ? delayMs(imgList[0].slot, imgList[1].slot) : 1000;
-  try{
-    const el = getEl(firstSlot);
-    if(isVideo(el)){
-      const dur = Number(el.duration);
-      if(Number.isFinite(dur) && dur > 0){
-        firstDelay = Math.round(dur * 1000) + 180;
-      }else{
-        firstDelay = 60000;
-        el.onloadedmetadata = ()=>{
-          try{
-            if(mainBox._swapGen !== swapGen) return;
-            if(mainBox._swapIdx !== 0) return;
-            if(mainBox._swapCurSlot !== firstSlot) return;
-            const d = Number(el.duration);
-            if(Number.isFinite(d) && d > 0){
-              if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer);
-              try{ el.__b2SwapDone = false; }catch(e){}
-              mainBox._swapTimer = setTimeout(()=>{
-                try{
-                  if(mainBox._swapGen !== swapGen) return;
-                  if(mainBox._swapIdx !== 0) return;
-                  if(mainBox._swapCurSlot !== firstSlot) return;
-                  if(el.__b2SwapDone) return;
-                  el.__b2SwapDone = true;
-                }catch(e){}
-                doSwap();
-              }, Math.round(d * 1000) + 180);
-            }
-          }catch(e){}
-        };
-      }
-      try{ el.__b2SwapDone = false; }catch(e){}
-      el.onended = ()=>{
-        try{
-          if(mainBox._swapGen !== swapGen) return;
-          if(mainBox._swapIdx !== 0) return;
-          if(mainBox._swapCurSlot !== firstSlot) return;
-          if(el.__b2SwapDone) return;
-          el.__b2SwapDone = true;
-        }catch(e){}
-        try{ if(mainBox._swapTimer) clearTimeout(mainBox._swapTimer); }catch(e){}
-        try{ doSwap(); }catch(e){}
-      };
-    }
-  }catch(e){}
+  const firstDelay = (imgList[0] && imgList[1]) ? delayMs(imgList[0].slot, imgList[1].slot) : 1000;
   mainBox._swapCurSlot = firstSlot;
   mainBox._swapTimer = setTimeout(doSwap, firstDelay);
 }
