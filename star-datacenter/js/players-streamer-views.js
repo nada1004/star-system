@@ -1246,8 +1246,7 @@ function _buildFocusView(rankMap){
         <span>스트리머 선택</span>
         <span style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
           <button class="pill ${totalFocusDetailStyle==='hero'?'on':''}" style="padding:4px 10px;font-size:var(--fs-caption);white-space:nowrap" onclick="totalFocusDetailStyle='hero';try{localStorage.setItem('su_focus_detail_style','hero');}catch(e){};render()" title="기본형">🖼️ 기본</button>
-          <button class="pill ${totalFocusDetailStyle==='card'?'on':''}" style="padding:4px 10px;font-size:var(--fs-caption);white-space:nowrap" onclick="totalFocusDetailStyle='card';try{localStorage.setItem('su_focus_detail_style','card');}catch(e){};render()" title="사진+리스트형">📋 리스트</button>
-          ${(totalFocusDetailStyle==='card' && isLoggedIn) ? `<button class="pill ${totalFocusCard2AutoFit?'on':''}" style="padding:4px 10px;font-size:var(--fs-caption);white-space:nowrap" onclick="totalFocusCard2AutoFit=!totalFocusCard2AutoFit;try{localStorage.setItem('su_focus_card2_autofit',totalFocusCard2AutoFit?'1':'0');}catch(e){};render()" title="하단 이미지2 배치의 기본값입니다. 자동: 크롭 없이 꽉 차게 배치. 수동: 스트리머별로 지정한 위치를 사용. 자동 상태에서도 개별 스트리머에서 ▲▼로 위치를 조정하면 그 스트리머만 수동 위치가 우선 적용됩니다.">${totalFocusCard2AutoFit?'🪄 자동':'✋ 수동'}</button>` : ''}
+          <button class="pill ${totalFocusDetailStyle==='card'?'on':''}" style="padding:4px 10px;font-size:var(--fs-caption);white-space:nowrap" onclick="totalFocusDetailStyle='card';try{localStorage.setItem('su_focus_detail_style','card');}catch(e){};render()" title="사진+리스트형">📋 포토</button>
         </span>
       </div>
       ${listHtml}
