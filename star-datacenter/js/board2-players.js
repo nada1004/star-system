@@ -4,6 +4,25 @@ function _b2TierLabel(t) {
   return s.endsWith('티어') ? s : s + '티어';
 }
 
+// 프로필탭 그리드 카드 — 우측에 마우스를 올리면 두번째 프로필 사진이 잠깐 미리보기(스크럽)로 표시됨 (PC 마우스 전용)
+function _b2CardHoverScrub(e, card) {
+  if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  const img2 = card.querySelector('.b2-players-card-secondary');
+  if (!img2) return;
+  const rect = card.getBoundingClientRect();
+  if (!rect.width) return;
+  const x = e.clientX - rect.left;
+  if (x > rect.width / 2) {
+    img2.classList.add('is-visible');
+  } else {
+    img2.classList.remove('is-visible');
+  }
+}
+function _b2CardHoverLeave(card) {
+  const img2 = card && card.querySelector ? card.querySelector('.b2-players-card-secondary') : null;
+  if (img2) img2.classList.remove('is-visible');
+}
+
 function _b2PlayersView() {
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
   const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
@@ -429,6 +448,23 @@ function _b2PlayersView() {
       .b2-players-card.active {
         transform: translateY(-4px);
       }
+      .b2-players-card-secondary {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top center;
+        z-index: 0;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.22s ease;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .b2-players-card-secondary.is-visible {
+          opacity: 1;
+        }
+      }
       @media (max-width: 768px) {
         .b2-players-wrapper {
           flex-direction: column;
@@ -734,13 +770,24 @@ function _b2PlayersView() {
       const uCfg = univCfg.find(x => x.name === p.univ) || {};
       return uCfg.icon || uCfg.img || UNIV_ICONS[p.univ] || '';
     })();
+    // 우측 호버 스크럽 미리보기용 두번째 프로필 이미지 (PC 전용, 동영상 제외)
+    const _gridSecondRaw = String(p.secondProfileFile || '').trim();
+    const _gridSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_gridSecondRaw);
+    const gridSecondPhoto = (_gridSecondRaw && !_gridSecondIsVideo) ? _gridSecondRaw : '';
+    const _gridSecondIsGif = /\.gif(\?|$)/i.test(_gridSecondRaw);
+    // gif는 toScaledUrl(webp 변환 프록시)을 거치면 정지 이미지가 되므로 원본 URL을 그대로 사용
+    const gridSecondSrc = gridSecondPhoto ? (_gridSecondIsGif ? toHttpsUrl(gridSecondPhoto) : toScaledUrl(gridSecondPhoto,260)) : '';
 
     h += `
-      <div class="b2-players-card" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))" style="position:relative;cursor:pointer;border-radius:18px;overflow:hidden;aspect-ratio:3/4;background:${playerTheme.bg};border:1.5px solid ${tierCol}66;isolation:isolate">
+      <div class="b2-players-card" data-player-name="${(typeof escAttr==='function'?escAttr(p.name||''):String(p.name||'').replace(/"/g,'&quot;'))}" data-player-key="${encodedPlayerName}" onclick="_b2UpdateMainDisplay(decodeURIComponent(this.dataset.playerKey||''))"${gridSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : ''} style="position:relative;cursor:pointer;border-radius:18px;overflow:hidden;aspect-ratio:3/4;background:${playerTheme.bg};border:1.5px solid ${tierCol}66;isolation:isolate">
         ${p.photo
           ? `<img src="${toScaledUrl(p.photo,260)}" data-orig="${toHttpsUrl(p.photo)}" loading="lazy" decoding="async" alt="${p.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:0" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
              <div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
           : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:${playerTheme.bg};font-size:44px;font-weight:900;color:${tierCol};z-index:0">${(p.name||'?')[0]}</div>`
+        }
+        ${gridSecondPhoto
+          ? `<img class="b2-players-card-secondary" src="${gridSecondSrc}" data-orig="${toHttpsUrl(gridSecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
+          : ''
         }
         ${p.tier?`<span style="position:absolute;top:8px;left:8px;z-index:2;font-size:10px;font-weight:900;padding:1px 6px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;opacity:.8">${p.tier}</span>`:''}
         <div style="position:absolute;bottom:0;left:0;right:0;z-index:1;height:62%;background:linear-gradient(180deg, transparent 0%, rgba(0,0,0,.15) 35%, rgba(0,0,0,.75) 100%);pointer-events:none"></div>
