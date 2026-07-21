@@ -87,10 +87,12 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
     bodyHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px">';
     members.sort((a,b)=>(String(a && a.name || '')).localeCompare(String(b && b.name || ''),'ko',{sensitivity:'base'})).forEach(p=>{
       const rIco=p && p.race==='P'?'🔮':p && p.race==='T'?'⚔️':p && p.race==='Z'?'🦎':'';
-      const rawPhoto = p && p.photo ? (typeof toThumbUrl==='function'?toThumbUrl(p.photo,84):p.photo) : '';
+      const _isGif = p && p.photo ? /\.gif(\?|$)/i.test(String(p.photo)) : false;
+      const rawPhoto = p && p.photo ? (_isGif ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : (typeof toThumbUrl==='function'?toThumbUrl(p.photo,84):p.photo)) : '';
       const rawPhotoOrig = p && p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
       const safePhoto = rawPhoto ? escA(rawPhoto) : '';
       const safePhotoOrig = rawPhotoOrig ? escA(rawPhotoOrig) : '';
+      const _2ndHm1 = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p && p.secondProfileFile, {style:'border-radius:inherit'}) : '';
       const initials = String(p && p.name || '?').slice(0,1);
       let pw=0,pl=0;
       (Array.isArray(p && p.history)?p.history:[]).forEach(h=>{ if(h && h.result==='승') pw++; else if(h && h.result==='패') pl++; });
@@ -101,8 +103,10 @@ function _b2HeatmapShowPopup(uid, univName, tier, color){
       const tierTxt1 = (typeof getTierBtnTextColor==='function'&&p&&p.tier)?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
       bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+color+'55" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
       if (safePhoto) {
-        bodyHtml += '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" data-orig="'+safePhotoOrig+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display=\'none\';this.nextSibling.style.display=\'flex\'}">'+ 
-          '<div class="b2hm2-pcard-avatar" style="display:none;background:linear-gradient(160deg,'+color+'44,'+color+'22);color:'+color+'">'+ escH(initials)+'</div>';
+        bodyHtml += '<span class="'+(_2ndHm1?'ph-swap':'')+'" style="position:relative;display:block">'
+          + '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" data-orig="'+safePhotoOrig+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display=\'none\';this.nextSibling.style.display=\'flex\'}">'+ 
+          '<div class="b2hm2-pcard-avatar" style="display:none;background:linear-gradient(160deg,'+color+'44,'+color+'22);color:'+color+'">'+ escH(initials)+'</div>'
+          + _2ndHm1 + '</span>';
       } else {
         bodyHtml += '<div class="b2hm2-pcard-avatar" style="background:linear-gradient(160deg,'+color+'44,'+color+'22);color:'+color+'">'+ escH(initials)+'</div>';
       }
@@ -177,10 +181,12 @@ function _b2HeatmapShowAllPopup(uid, univName, color){
     bodyHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px">';
     members.sort((a,b)=>(String(a && a.name || '')).localeCompare(String(b && b.name || ''),'ko',{sensitivity:'base'})).forEach(p=>{
       const rIco=p && p.race==='P'?'🔮':p && p.race==='T'?'⚔️':p && p.race==='Z'?'🦎':'';
-      const rawPhoto = p && p.photo ? (typeof toThumbUrl==='function'?toThumbUrl(p.photo,84):p.photo) : '';
+      const _isGif2 = p && p.photo ? /\.gif(\?|$)/i.test(String(p.photo)) : false;
+      const rawPhoto = p && p.photo ? (_isGif2 ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : (typeof toThumbUrl==='function'?toThumbUrl(p.photo,84):p.photo)) : '';
       const rawPhotoOrig = p && p.photo ? (typeof toHttpsUrl==='function'?toHttpsUrl(p.photo):p.photo) : '';
       const safePhoto = rawPhoto ? escA(rawPhoto) : '';
       const safePhotoOrig = rawPhotoOrig ? escA(rawPhotoOrig) : '';
+      const _2ndHm2 = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p && p.secondProfileFile, {style:'border-radius:inherit'}) : '';
       const initials = String(p && p.name || '?').slice(0,1);
       const pColor = (typeof gc === 'function' ? gc(p && p.univ) : null) || color;
       let pw=0,pl=0;
@@ -192,8 +198,10 @@ function _b2HeatmapShowAllPopup(uid, univName, color){
       const tierTxt2 = (typeof getTierBtnTextColor==='function'&&p&&p.tier)?(getTierBtnTextColor(p.tier)||'#fff'):'#fff';
       bodyHtml += '<div class="b2hm2-pcard" style="border-color:'+pColor+'55" onclick="openPlayerModal(\''+safeNameAttr.replace(/'/g,"\\'")+'\')">';
       if (safePhoto) {
-        bodyHtml += '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" data-orig="'+safePhotoOrig+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display=\'none\';this.nextSibling.style.display=\'flex\'}">'+ 
-          '<div class="b2hm2-pcard-avatar" style="display:none;background:linear-gradient(160deg,'+pColor+'44,'+pColor+'22);color:'+pColor+'">'+ escH(initials)+'</div>';
+        bodyHtml += '<span class="'+(_2ndHm2?'ph-swap':'')+'" style="position:relative;display:block">'
+          + '<img class="b2hm2-pcard-photo" src="'+safePhoto+'" data-orig="'+safePhotoOrig+'" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.style.display=\'none\';this.nextSibling.style.display=\'flex\'}">'+ 
+          '<div class="b2hm2-pcard-avatar" style="display:none;background:linear-gradient(160deg,'+pColor+'44,'+pColor+'22);color:'+pColor+'">'+ escH(initials)+'</div>'
+          + _2ndHm2 + '</span>';
       } else {
         bodyHtml += '<div class="b2hm2-pcard-avatar" style="background:linear-gradient(160deg,'+pColor+'44,'+pColor+'22);color:'+pColor+'">'+ escH(initials)+'</div>';
       }

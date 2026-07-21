@@ -3789,7 +3789,12 @@ function _histProCompLeagueListHTML(){
 
   const _tb = p => p&&p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb = p => p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _photo = p => p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')" onerror="this.style.display='none'">`:'';
+  const _photo = p => {
+  if(!p||!p.photo) return '';
+  const _p2 = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile, {style:'border-radius:inherit'}) : '';
+  const _img = `<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')" onerror="this.style.display='none'">`;
+  return _p2 ? `<span class="ph-swap" style="position:relative;display:inline-block;width:22px;height:22px;vertical-align:middle;margin-right:3px;border-radius:var(--su_profile_radius,50%);overflow:hidden">${_img.replace('style="width:22px', 'style="position:absolute;inset:0;margin:0;width:22px')}${_p2}</span>` : _img;
+};
 
   h += sortBar;
   Object.entries(groups).forEach(([tnName, items]) => {
@@ -3917,7 +3922,12 @@ function histProCompTourneyHTML(_omitBar) {
   allItems.forEach(m=>{if(!groups[m._tnName])groups[m._tnName]=[];groups[m._tnName].push(m);});
   const _tb=p=>p&&p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _photo=p=>p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')" onerror="this.style.display='none'">`:'';
+  const _photo = p => {
+  if(!p||!p.photo) return '';
+  const _p2 = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile, {style:'border-radius:inherit'}) : '';
+  const _img = `<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')" onerror="this.style.display='none'">`;
+  return _p2 ? `<span class="ph-swap" style="position:relative;display:inline-block;width:22px;height:22px;vertical-align:middle;margin-right:3px;border-radius:var(--su_profile_radius,50%);overflow:hidden">${_img.replace('style="width:22px', 'style="position:absolute;inset:0;margin:0;width:22px')}${_p2}</span>` : _img;
+};
   let h=_pcSubBar2+sortBar;
   Object.entries(groups).forEach(([tnName,items])=>{
     h+=`<div class="procomp-group-header" style="border-left-color:#7c3aed;background:linear-gradient(135deg,#f5f3ff 0%,var(--white) 100%);border-color:#ddd6fe">
@@ -4002,7 +4012,12 @@ function histProCompTeamHTML(_omitBar) {
   if (!tmList.length) return sortBar+`<div class="empty-state"><div class="empty-state-icon">🤝</div><div class="empty-state-title">팀전 기록이 없습니다</div><div class="empty-state-desc">프로리그 대회 팀전 결과를 입력하면 여기에 표시됩니다</div></div>`;
   const _tb=p=>p&&p.tier?`<span style="background:${getTierBtnColor(p.tier)||'#64748b'};color:${getTierBtnTextColor(p.tier)||'#fff'};font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">${p.tier}</span>`:'';
   const _rb=p=>p&&p.race?`<span class="rbadge r${p.race}" style="font-size:9px;padding:0 3px">${p.race}</span>`:'';
-  const _photo=p=>p&&p.photo?`<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')" onerror="this.style.display='none'">`:'';
+  const _photo = p => {
+  if(!p||!p.photo) return '';
+  const _p2 = (typeof _phSwap2ndHTML==='function') ? _phSwap2ndHTML(p.secondProfileFile, {style:'border-radius:inherit'}) : '';
+  const _img = `<img src="${toHttpsUrl(p.photo)}" style="width:22px;height:22px;border-radius:var(--su_profile_radius,50%);object-fit:cover;vertical-align:middle;margin-right:3px;cursor:pointer" onclick="openPlayerModal('${escJS(p.name)}')" onerror="this.style.display='none'">`;
+  return _p2 ? `<span class="ph-swap" style="position:relative;display:inline-block;width:22px;height:22px;vertical-align:middle;margin-right:3px;border-radius:var(--su_profile_radius,50%);overflow:hidden">${_img.replace('style="width:22px', 'style="position:absolute;inset:0;margin:0;width:22px')}${_p2}</span>` : _img;
+};
   const _proSideCols = getFixedSideColors('pro');
   const colA=_proSideCols.a, colB=_proSideCols.b;
   let h=sortBar;

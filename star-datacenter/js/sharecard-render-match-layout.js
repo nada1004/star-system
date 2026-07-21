@@ -100,10 +100,14 @@
     const heroCoverH = _isPersonalScoreCard ? _photoCoverH : Math.round(118*(scp.profileScale||1));
     const _faceUrl = _isPersonalScoreCard ? _scResolvePersonalFaceUrl(player) : (player?.photo || '');
     const _facePos = _isPersonalScoreCard ? _scResolvePersonalFacePos(player, 'center 22%') : 'center center';
+    const _face2nd = (typeof _phSwap2ndHTML==='function' && player?.secondProfileFile)
+      ? _phSwap2ndHTML(player.secondProfileFile, { style: `object-fit:cover;object-position:${_facePos};filter:${isWin?`brightness(${scp.heroBrightness||1})`:`grayscale(${Math.round((scp.loserGray||.55)*100)}%) brightness(${scp.loserPhotoBrightness||.92})`};` })
+      : '';
     const photoHTML = !m._noUnivIcon ? (_usePlayerPhoto
       ? (_faceUrl
-        ? `<div style="width:100%;height:${heroCoverH}px;border-radius:18px;overflow:hidden;margin:0 0 12px;position:relative;${_isPersonalScoreCard?'box-shadow:0 6px 18px rgba(15,23,42,.12);border:1px solid rgba(255,255,255,.22);':(isWin?`box-shadow:0 10px 22px rgba(0,0,0,.18), 0 0 0 2px ${univColor}aa`:`opacity:.98;box-shadow:0 6px 16px rgba(2,6,23,.14), 0 0 0 1px ${univColor}66`)}">
+        ? `<div class="${_face2nd?'ph-swap':''}" style="width:100%;height:${heroCoverH}px;border-radius:18px;overflow:hidden;margin:0 0 12px;position:relative;${_isPersonalScoreCard?'box-shadow:0 6px 18px rgba(15,23,42,.12);border:1px solid rgba(255,255,255,.22);':(isWin?`box-shadow:0 10px 22px rgba(0,0,0,.18), 0 0 0 2px ${univColor}aa`:`opacity:.98;box-shadow:0 6px 16px rgba(2,6,23,.14), 0 0 0 1px ${univColor}66`)}">
             <img onclick="openPlayerModal('${safeName}')" title="스트리머 상세" src="${toHttpsUrl(_faceUrl)}" style="width:100%;height:100%;object-fit:cover;object-position:${_facePos};display:block;cursor:pointer;filter:${isWin?`brightness(${scp.heroBrightness||1})`:`grayscale(${Math.round((scp.loserGray||.55)*100)}%) brightness(${scp.loserPhotoBrightness||.92})`};">
+            ${_face2nd}
             <div style="position:absolute;inset:0;background:${_isPersonalScoreCard?'linear-gradient(180deg,rgba(255,255,255,.00),rgba(15,23,42,.08))':(isWin?'linear-gradient(180deg,rgba(255,255,255,.00),rgba(15,23,42,.14))':'linear-gradient(180deg,rgba(15,23,42,.03),rgba(15,23,42,.18))')};pointer-events:none"></div>
           </div>`
         : `<div onclick="openPlayerModal('${safeName}')" title="스트리머 상세" style="width:${_photoOuter}px;height:${_photoOuter}px;border-radius:var(--su_profile_radius,50%);margin:0 auto 10px;overflow:hidden;cursor:pointer;${isWin?`box-shadow:0 0 0 2px rgba(255,255,255,.26),0 8px 18px rgba(0,0,0,.12)`:`opacity:.97;filter:grayscale(${(scp.loserGray||.55).toFixed(2)});box-shadow:0 0 0 1px rgba(255,255,255,.18)`}">
