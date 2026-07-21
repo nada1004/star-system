@@ -44,12 +44,14 @@ function _pcRaceInfo(race) {
 // 순수 CSS(체크박스 해크)로 펼치기/접기를 구현해 버튼이 많아져도 카드가 지저분해지지 않도록 함.
 function formatPlayerMoreOptions(player) {
   const uid = 'pcmore_' + Math.random().toString(36).slice(2, 9);
+  const _hasMoreImgs = !!(String(player.secondProfileFile||'').trim() || String(player.profileFile3||'').trim() || String(player.profileFile4||'').trim() || String(player.profileFile5||'').trim());
   const opts = [
     { label: '상대전적', q: `${player.name} 상대전적` },
     { label: '맵별승률', q: `${player.name} 맵별승률` },
     { label: '종족별전적', q: `${player.name} 종족별전적` },
     { label: '대회기록', q: `${player.name} 대회기록` },
-    { label: 'ELO', q: `${player.name} elo` }
+    { label: 'ELO', q: `${player.name} elo` },
+    ..._hasMoreImgs ? [{ label: '📷 프로필 이미지 더보기', q: `${player.name} 프로필사진` }] : []
   ];
   const chips = opts.map(o => `<button class="pcm-chip" data-chatbot-quick="${escapeAttr(o.q)}">${o.label}</button>`).join('');
 
@@ -67,7 +69,7 @@ function formatPlayerMoreOptions(player) {
 .pcm-chev{display:inline-block;font-size:11px;transform:rotate(90deg)}
 .pcm-panel{display:none;grid-template-columns:1fr 1fr;gap:6px;padding-top:6px}
 .pcm-chip{padding:9px 0;border-radius:10px;border:1px solid var(--blue-ll);background:var(--blue-l);color:var(--blue-d);font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
-.pcm-chip:nth-child(5){grid-column:1 / span 2}
+.pcm-chip:last-child:nth-child(odd){grid-column:1 / span 2}
 #${uid}:checked ~ .pcm-panel{display:grid}
 #${uid}:checked ~ label .pcm-txt-more{display:none}
 #${uid}:checked ~ label .pcm-txt-less{display:inline}
@@ -119,6 +121,34 @@ function formatPlayerBasicInfo(player) {
   return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.1)"><div style="background:${univColor};padding:18px 14px 14px;display:flex;align-items:center;gap:12px"><div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">👤</div><div><div style="font-size:var(--fs-lg);font-weight:900;color:#fff">${safePlayerName}</div><div style="font-size:var(--fs-base);color:rgba(255,255,255,0.8);margin-top:1px">${safeUniv}</div></div></div><div style="background:var(--white);padding:12px 12px 6px">${infoBadges}</div>${quickBtns}</div>`;
 }
 
+// 프로필 이미지(1~5번) 전체를 갤러리 형태로 보여줌 — "더 많은 기록 보기"의
+// "프로필 이미지 더보기" 칩 및 "이름 프로필사진" 검색에서 사용.
+function formatPlayerPhotoGallery(player) {
+  const imgs = [
+    { label: '이미지 1', url: player.photo },
+    { label: '이미지 2', url: player.secondProfileFile },
+    { label: '이미지 3', url: player.profileFile3 },
+    { label: '이미지 4', url: player.profileFile4 },
+    { label: '이미지 5', url: player.profileFile5 }
+  ].filter(x => x.url && String(x.url).trim());
+
+  const safeName = escapeHtml(player.name);
+  if (!imgs.length) {
+    return `<div style="padding:14px 12px;text-align:center;color:var(--text3);font-size:var(--fs-sm);font-weight:700">${safeName} 님은 등록된 프로필 이미지가 없어요.</div>`;
+  }
+  if (imgs.length === 1) {
+    return `<div style="border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.1)"><img src="${toHttpsUrl(imgs[0].url)}" style="width:100%;max-height:360px;display:block;object-fit:cover"><div style="padding:8px 12px;font-size:var(--fs-sm);color:var(--text3);font-weight:700">${safeName} 님은 등록된 프로필 이미지가 1장뿐이에요.</div></div>`;
+  }
+  const cells = imgs.map(x => `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.14)">
+<img src="${toHttpsUrl(x.url)}" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block" loading="lazy">
+<div style="padding:4px 6px;font-size:var(--fs-caption);font-weight:700;color:var(--text3);text-align:center;background:var(--surface)">${x.label}</div>
+</div>`).join('');
+  return `<div style="padding:8px 10px 4px">
+<div style="font-size:var(--fs-sm);font-weight:800;color:var(--text);margin-bottom:8px">📷 ${safeName} 프로필 이미지 (${imgs.length}장)</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">${cells}</div>
+</div>`;
+}
+
 // 퍼지(부분일치/유사도) 검색 결과가 입력값과 다를 때: 자동으로 확정하지 않고
 // "혹시 이 선수인가요?" 확인 카드를 보여준다. 사용자가 '맞아요'를 눌러야
 // 실제 정보(followupCmd)가 표시된다. (예: "시조" 검색 시 "시조새"로 임의 확정되는 것 방지)
@@ -155,6 +185,7 @@ function formatFuzzyNote(query, actualName) {
 try{
   window.getTeamColor = getTeamColor;
   window.formatPlayerBasicInfo = formatPlayerBasicInfo;
+  window.formatPlayerPhotoGallery = formatPlayerPhotoGallery;
   window.formatFuzzyPlayerConfirm = formatFuzzyPlayerConfirm;
   window.formatFuzzyNote = formatFuzzyNote;
 }catch(e){}

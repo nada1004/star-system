@@ -209,7 +209,7 @@ window._cfgB2RenderSwapDelay = function(playerName){
       area.innerHTML = `<div style="font-size:var(--fs-sm);color:var(--gray-l)">선수를 찾을 수 없습니다.</div>`;
       return;
     }
-    const clamp = (v)=>{ const n = parseFloat(v); if(isNaN(n)) return 1; return Math.max(0.2, Math.min(60, n)); };
+    const clamp = (v)=>{ const n = parseFloat(v); if(isNaN(n)) return 4; return Math.max(0.2, Math.min(60, n)); };
     const slotOrder = [
       { slot:1, url:String(p.photo||'').trim() },
       { slot:2, url:String(p.secondProfileFile||'').trim() },
@@ -237,7 +237,7 @@ window._cfgB2RenderSwapDelay = function(playerName){
           const next = slotOrder[(idx + 1) % slotOrder.length];
           const key = delayKey(item.slot, next.slot);
           if(!key) return '';
-          const val = clamp(p[key] ?? 1);
+          const val = clamp(p[key] ?? 4);
           return `<div>
             <div style="font-size:var(--fs-caption);font-weight:900;color:var(--text3);margin-bottom:6px">${item.slot} → ${next.slot} (초)</div>
             <input type="number" data-delay-key="${key}" min="0.2" max="60" step="0.1" value="${val}" style="width:100%" oninput="_cfgB2SaveSwapDelay('${safe}')">
@@ -245,7 +245,7 @@ window._cfgB2RenderSwapDelay = function(playerName){
         }).join('')}</div>`;
     area.innerHTML = `
       ${inputsHtml}
-      <div style="font-size:10px;color:var(--gray-l);margin-top:8px">값은 즉시 저장됩니다. 기본값(1초)은 저장하지 않습니다.</div>
+      <div style="font-size:10px;color:var(--gray-l);margin-top:8px">값은 즉시 저장됩니다.</div>
     `;
   }catch(e){}
 };
@@ -258,12 +258,12 @@ window._cfgB2SaveSwapDelay = function(playerName){
     if(!p) return;
     const inputs = area.querySelectorAll('input[type="number"]');
     if(!inputs || !inputs.length) return;
-    const clamp = (v)=>{ const n = parseFloat(v); if(isNaN(n)) return 1; return Math.max(0.2, Math.min(60, n)); };
+    const clamp = (v)=>{ const n = parseFloat(v); if(isNaN(n)) return 4; return Math.max(0.2, Math.min(60, n)); };
     inputs.forEach(input=>{
       const key = String(input?.getAttribute('data-delay-key') || '').trim();
       if(!key) return;
-      const v = clamp(input.value);
-      if(v===1) delete p[key]; else p[key] = v;
+      // [FIX] 값이 1이면 무조건 삭제하던 로직 제거 — 사용자가 입력한 값을 항상 그대로 저장한다.
+      p[key] = clamp(input.value);
     });
     if(typeof window.save === 'function') window.save();
     try{

@@ -25,7 +25,13 @@ function _b2CardHoverLeave(card) {
 
 function _b2PlayersView() {
   const dissolvedUnivs = typeof univCfg !== 'undefined' ? new Set((univCfg.filter(u => u.dissolved) || []).map(u => u.name)) : new Set();
-  const visPlayers = players.filter(p => !p.hidden && !p.retired && !p.hideFromBoard && !dissolvedUnivs.has(p.univ));
+  const visPlayers = players.filter(p => {
+    if (p.hidden || p.retired || p.hideFromBoard) return false;
+    if (dissolvedUnivs.has(p.univ)) return false;
+    const _u = String(p?.univ || '').trim();
+    if (_u === 'YB' || _u === '무소속' || !_u) return false;
+    return true;
+  });
   
   // 대학 필터링
   const univFilteredPlayers = _b2PlayersUnivFilter === '전체' 
@@ -790,7 +796,6 @@ function _b2PlayersView() {
           : ''
         }
         ${p.tier?`<span style="position:absolute;top:8px;left:8px;z-index:2;font-size:10px;font-weight:900;padding:1px 6px;border-radius:999px;background:${tierCol};color:${tierTc};line-height:1.5;opacity:.8">${p.tier}</span>`:''}
-        <div style="position:absolute;bottom:0;left:0;right:0;z-index:1;height:62%;background:linear-gradient(180deg, transparent 0%, rgba(0,0,0,.15) 35%, rgba(0,0,0,.75) 100%);pointer-events:none"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:9px 10px 10px">
           <div style="display:flex;align-items:center;gap:5px;overflow:hidden">
             ${raceTxt?`<span class="rbadge r${raceTxt}" style="flex-shrink:0;font-size:10px;padding:1px 6px;opacity:.8">${raceTxt}</span>`:''}
@@ -992,13 +997,13 @@ function openB2ProfileEditModal(playerName) {
     return '';
   };
   const _swapDelayVal = (key)=>{
-    const n = parseFloat(player?.[key] ?? 1);
-    if(isNaN(n)) return 1;
+    const n = parseFloat(player?.[key] ?? 4);
+    if(isNaN(n)) return 4;
     return Math.max(0.2, Math.min(60, n));
   };
   const clampDelay = (v)=>{
     const n = parseFloat(v);
-    if(isNaN(n)) return 1;
+    if(isNaN(n)) return 4;
     return Math.max(0.2, Math.min(60, n));
   };
   const _swapDelayInputs = _slotOrder.length < 2
@@ -1208,9 +1213,10 @@ function saveB2Profile(playerName) {
     document.querySelectorAll('#b2-profile-edit-modal [data-b2-delay-key]').forEach(inp=>{
       const key = String(inp?.getAttribute('data-b2-delay-key') || '').trim();
       if(!key) return;
-      const v = clampDelay(inp?.value || '1');
-      if(v === 1) delete player[key];
-      else player[key] = v;
+      // [FIX] 예전에는 값이 1(구 기본값 표기)이면 무조건 삭제해서, 사용자가 실제로 원하는
+      // 전환 시간을 입력해도 저장 시 사라지고 런타임 기본값(4초)으로 되돌아가는 문제가 있었음.
+      // 이제는 입력된 값을 항상 그대로 저장한다.
+      player[key] = clampDelay(inp?.value ?? player[key] ?? 4);
     });
   }catch(e){}
   

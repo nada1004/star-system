@@ -5,7 +5,9 @@ async function _chatbotHandleMainCommands(msg, userMessage){
         return window._chatbotGetPlayerByName(name);
       }
     }catch(e){}
-    return typeof players !== 'undefined' ? players.find(p => p.name === name) : null;
+    if (typeof players === 'undefined') return null;
+    const lower = String(name || '').toLowerCase();
+    return players.find(p => p.name === name) || players.find(p => String(p.name || '').toLowerCase() === lower) || null;
   }
 
   // 🏆 이번주 / 이번달 MVP
@@ -55,6 +57,30 @@ async function _chatbotHandleMainCommands(msg, userMessage){
     const dateStr = dateKeyword && typeof _resolveDateKeyword === 'function' ? _resolveDateKeyword(dateKeyword) : null;
     const typeKey = dailyTypeMatch[2].toLowerCase() === 'ck' ? 'ck' : dailyTypeMatch[2];
     return formatDailyTypeResult(typeKey, dateStr, dateKeyword || null);
+  }
+
+  if (msg.includes('프로필') && msg.includes('카드')) {
+    const nameMatch = userMessage.match(/([^\s]+)\s+프로필\s*카드/);
+    if (nameMatch) {
+      const playerName = nameMatch[1];
+      let player = _getExactPlayer(playerName);
+      if (!player) player = findSimilarPlayer(playerName);
+      if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+      if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerBasicInfo(player);
+      return formatPlayerBasicInfo(player);
+    }
+  }
+
+  if (msg.includes('프로필') && (msg.includes('사진') || msg.includes('이미지')) && typeof formatPlayerPhotoGallery === 'function') {
+    const nameMatch = userMessage.match(/([^\s]+)\s+프로필\s*(사진|이미지)(들)?/);
+    if (nameMatch) {
+      const playerName = nameMatch[1];
+      let player = _getExactPlayer(playerName);
+      if (!player) player = findSimilarPlayer(playerName);
+      if (!player) return `❌ '${playerName}' 선수를 찾을 수 없습니다.`;
+      if (player.name !== playerName) return formatFuzzyNote(playerName, player.name) + formatPlayerPhotoGallery(player);
+      return formatPlayerPhotoGallery(player);
+    }
   }
 
   if (msg.includes('최근전적')) {
@@ -281,7 +307,7 @@ async function _chatbotHandleMainCommands(msg, userMessage){
 
     if (!player) {
       const similarPlayer = findSimilarPlayer(query);
-      if (similarPlayer && levenshteinDistance(query, similarPlayer.name) <= 2) {
+      if (similarPlayer && levenshteinDistance(query, String(similarPlayer.name || '').toLowerCase()) <= 2) {
         player = similarPlayer;
       }
     }

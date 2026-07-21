@@ -492,6 +492,18 @@ try{
 /* ── 🧩 펨코현황 뷰 ──
    첨부 이미지처럼 "대학별 컬러 섹션 + 촘촘한 프로필 그리드" 형태로 렌더링
 */
+;(function _injectImg2HoverStyle(){
+  if(typeof document==='undefined') return;
+  if(document.getElementById('b2-img2-hover-style')) return;
+  const s=document.createElement('style');
+  s.id='b2-img2-hover-style';
+  s.textContent=[
+    '.b2-players-card-secondary{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:5;opacity:0;pointer-events:none;transition:opacity .22s ease}',
+    '@media (hover: hover) and (pointer: fine){ .b2-players-card-secondary.is-visible{opacity:1} }'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
 function _b2FemcoView() {
   // ─────────────────────────────────────────────────────────────
   // 펨코현황 설정(단일 소스)
@@ -764,13 +776,24 @@ function _b2FemcoView() {
       console.warn('[femcoAvatarSquare] 상태 아이콘 생성 실패:', e.message);
     }
 
+    // 이미지2(두번째 프로필) 호버 스크럽 미리보기 — 프로필탭 그리드 카드와 동일한 방식(PC 마우스 전용)
+    const _femcoSecondRaw = (p && p.secondProfileFile) ? String(p.secondProfileFile).trim() : '';
+    const _femcoSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_femcoSecondRaw);
+    const femcoSecondPhoto = (_femcoSecondRaw && !_femcoSecondIsVideo) ? _femcoSecondRaw : '';
+    const _femcoSecondIsGif = /\.gif(\?|$)/i.test(_femcoSecondRaw);
+    const femcoSecondSrc = femcoSecondPhoto ? (_femcoSecondIsGif ? toHttpsUrl(femcoSecondPhoto) : toThumbUrl(femcoSecondPhoto, playerImgSize)) : '';
+    const femcoSecondHtml = femcoSecondPhoto
+      ? `<img class="b2-players-card-secondary" src="${femcoSecondSrc}" data-orig="${toHttpsUrl(femcoSecondPhoto)}" loading="lazy" decoding="async" alt="" style="border-radius:inherit;z-index:0" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
+      : '';
+
     if (img) {
       return `<span style="position:relative;display:block;width:100%;height:100%">
         <img src="${img}" data-orig="${imgOrig}" decoding="async" fetchpriority="high" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;border:2px solid ${border};background:rgba(255,255,255,.25)" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.closest('span').outerHTML='<div style=&quot;position:relative;width:100%;height:100%;border-radius:inherit;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}&quot;>${letter}</div>'}">
+        ${femcoSecondHtml}
         ${badge}
       </span>`;
     }
-    return `<div style="position:relative;width:100%;height:100%;border-radius:inherit;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}">${letter}${badge}</div>`;
+    return `<div style="position:relative;width:100%;height:100%;border-radius:inherit;background:${accent};display:flex;align-items:center;justify-content:center;font-weight:1000;font-size:22px;color:#fff;border:2px solid ${border}">${letter}${femcoSecondHtml}${badge}</div>`;
   }
 
   let h = `
@@ -1016,7 +1039,7 @@ function _b2FemcoView() {
               const rcol = raceColor(p, col);
               return `
                 <div class="b2-femco-item" onclick="openPlayerModal('${safeName}');event.stopPropagation();">
-                  <div class="b2-femco-avatar">${femcoAvatarSquare(p, rcol)}</div>
+                  <div class="b2-femco-avatar"${String(p.secondProfileFile||'').trim() ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : ''}>${femcoAvatarSquare(p, rcol)}</div>
                   <div class="b2-femco-text" style="${p.inactive ? 'opacity:.65' : ''};color:${textCol}">
                     <div class="b2-femco-tier">
                       <span class="b2-femco-tierbadge" style="background:${tierBg};color:${tierFg}">${tier}</span>
@@ -1998,13 +2021,22 @@ function _b2LineupCard3(p, col) {
     [pS(points), '포인트', '#0f172a'],
     [elo, 'ELO', eloCol]
   ];
-  return `<div class="b2-lc3" style="--lc-col:${col}" onclick="openPlayerModal('${safeName}')">
+  const _lc3SecondRaw = String(p.secondProfileFile || '').trim();
+  const _lc3SecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_lc3SecondRaw);
+  const lc3SecondPhoto = (_lc3SecondRaw && !_lc3SecondIsVideo) ? _lc3SecondRaw : '';
+  const _lc3SecondIsGif = /\.gif(\?|$)/i.test(_lc3SecondRaw);
+  const lc3SecondSrc = lc3SecondPhoto ? (_lc3SecondIsGif ? toHttpsUrl(lc3SecondPhoto) : toScaledUrl(lc3SecondPhoto,300)) : '';
+  const lc3SecondHtml = lc3SecondPhoto
+    ? `<img class="b2-players-card-secondary" style="z-index:1" src="${lc3SecondSrc}" data-orig="${toHttpsUrl(lc3SecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
+    : '';
+  return `<div class="b2-lc3" style="--lc-col:${col}" onclick="openPlayerModal('${safeName}')"${lc3SecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : ''}>
     <div class="b2-lc3-photo">
       ${photo
         ? `<img class="b2-lc3-backdrop" src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" aria-hidden="true" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none'}">
            <img src="${photo}" data-orig="${photoOrig}" crossorigin="anonymous" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.removeAttribute('crossorigin');this.src=this.dataset.orig;}else{this.style.display='none';this.previousElementSibling.style.display='none';this.nextElementSibling.style.display='flex'}">
            <div class="b2-lc3-fallback" style="display:none;z-index:1">${raceLetter}</div>`
         : `<div class="b2-lc3-fallback">${raceLetter}</div>`}
+      ${lc3SecondHtml}
       <div class="b2-lc3-overlay">
         ${p.tier?`<div><span class="b2-lc3-tierchip" style="background:${tierCol};color:${tierTxt}">${p.tier}</span></div>`:''}
         <div class="b2-lc3-name">${p.name||''}</div>
@@ -2121,6 +2153,15 @@ function _b2LineupCard(p, col, big, iconUrl) {
     : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px">
          <div style="font-size:56px;font-weight:900;color:${col};opacity:.7">${raceLetter}</div>
        </div>`;
+  // 이미지2(두번째 프로필) 호버 스크럽 미리보기 (PC 마우스 전용)
+  const _lcSecondRaw = String(p.secondProfileFile || '').trim();
+  const _lcSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_lcSecondRaw);
+  const lcSecondPhoto = (_lcSecondRaw && !_lcSecondIsVideo) ? _lcSecondRaw : '';
+  const _lcSecondIsGif = /\.gif(\?|$)/i.test(_lcSecondRaw);
+  const lcSecondSrc = lcSecondPhoto ? (_lcSecondIsGif ? toHttpsUrl(lcSecondPhoto) : toScaledUrl(lcSecondPhoto,340)) : '';
+  const lcSecondHtml = lcSecondPhoto
+    ? `<img class="b2-players-card-secondary" style="z-index:1" src="${lcSecondSrc}" data-orig="${toHttpsUrl(lcSecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}else{this.remove()}">`
+    : '';
   // 종족 배지 — 우상단
   const _raceBadge = (p.race && p.race!=='N')
     ? `<div style="position:absolute;top:10px;right:10px;padding:3px 10px;border-radius:999px;background:${_raceCol};color:#fff;font-size:var(--fs-sm);font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.32);z-index:2;letter-spacing:.02em">${p.race}</div>`
@@ -2133,10 +2174,11 @@ function _b2LineupCard(p, col, big, iconUrl) {
   return `
     <div style="position:relative;cursor:pointer;border-radius:var(--r2);overflow:hidden;background:${_b2PastelBg(col,0.10)};box-shadow:0 4px 16px rgba(15,23,42,.18);border:1px solid ${col}33;transition:transform .15s,box-shadow .15s" onclick="openPlayerModal('${safeName}')"
       onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 26px rgba(15,23,42,.28)'"
-      onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(15,23,42,.18)'">
+      onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(15,23,42,.18)'${lcSecondPhoto ? ";_b2CardHoverLeave(this)" : ""}"${lcSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)"` : ''}>
       <div style="position:relative;width:100%;aspect-ratio:3/4;overflow:hidden">
         ${_fillBackdrop}
         ${photoHtml}
+        ${lcSecondHtml}
         ${_raceBadge}
         ${_nameBar}
       </div>

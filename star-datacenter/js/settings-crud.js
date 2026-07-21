@@ -1090,7 +1090,13 @@ function savePlayer(){
   render();
   try{
     const cur = window._b2SelectedPlayer && window._b2SelectedPlayer.name;
-    if(cur === p.name && typeof window._b2ScheduleImageSwap === 'function') window._b2ScheduleImageSwap(p.name);
+    // [FIX] 프로필 링크(이미지2~5)를 지운 경우, 스케줄만 다시 잡으면 삭제된 슬롯의 DOM이
+    // 그대로 남아 빈 화면(공백)으로 보일 수 있었음. 슬롯 HTML을 통째로 다시 그려주는
+    // _b2UpdateMainDisplay를 우선 사용하고, 없으면 기존 방식으로 폴백한다.
+    if(cur === p.name){
+      if(typeof window._b2UpdateMainDisplay === 'function') window._b2UpdateMainDisplay(p.name);
+      else if(typeof window._b2ScheduleImageSwap === 'function') window._b2ScheduleImageSwap(p.name);
+    }
   }catch(e){}
   if(typeof openPlayerModal==='function'){
     const _savedName=p.name;

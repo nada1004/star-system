@@ -349,6 +349,7 @@ function _b2ScheduleImageSwap(playerName) {
   if (!mainBox) return;
   _b2ClearSwapTimer(mainBox);
   mainBox._swapGen = (mainBox._swapGen || 0) + 1;
+  const _myGen = mainBox._swapGen;
   const _hasMediaUrl = (v)=>!!String(v || '').trim();
   // 현재 선수의 이미지 목록 수집 (photo + profileFile2~5)
   const p = (typeof players !== 'undefined') ? players.find(x => x.name === playerName) : null;
@@ -430,6 +431,7 @@ function _b2ScheduleImageSwap(playerName) {
   // 첫 이미지가 비디오면 즉시 재생
   applyMediaForSlot(firstSlot);
   function doSwap() {
+    if (mainBox._swapGen !== _myGen) return; // 더 최신 스케줄이 시작됐으면 이 루프는 중단
     const prev = mainBox._swapIdx;
     mainBox._swapIdx = (prev + 1) % totalImgs;
     const cur = mainBox._swapIdx;

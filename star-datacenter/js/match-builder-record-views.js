@@ -201,8 +201,17 @@ function _h2hPlayerBgPanel(pName, isWin, isLose){
     : `width:min(100%, ${Math.max(80,sizeW)}px);flex:0 1 auto;min-width:0;`;
   // 패배자는 눈에 띄게 흑백 처리(예전엔 grayscale(.14)로 거의 표시가 안 됐음)
   const loseImgFx = isLose ? 'filter:grayscale(.9) saturate(.3) brightness(.9) contrast(.96);opacity:.88;' : '';
-  return `<div ${click} style="position:relative;overflow:hidden;border-radius:var(--r2);height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${frameCol};box-shadow:${frameShadow};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${loseImgFx}">
+  // 이미지2(두번째 프로필) 호버 스크럽 미리보기 (PC 마우스 전용)
+  const _h2hSecondRaw = String(p.secondProfileFile || '').trim();
+  const _h2hSecondIsVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(_h2hSecondRaw);
+  const h2hSecondPhoto = (_h2hSecondRaw && !_h2hSecondIsVideo) ? _h2hSecondRaw : '';
+  const h2hHoverAttrs = h2hSecondPhoto ? ` onmousemove="_b2CardHoverScrub(event,this)" onmouseleave="_b2CardHoverLeave(this)"` : '';
+  const h2hSecondHtml = h2hSecondPhoto
+    ? `<img class="b2-players-card-secondary" style="z-index:0;object-position:${bgPos}" src="${toHttpsUrl(h2hSecondPhoto)}" loading="lazy" decoding="async" alt="" onerror="this.remove()">`
+    : '';
+  return `<div ${click}${h2hHoverAttrs} style="position:relative;overflow:hidden;border-radius:var(--r2);height:${Math.max(60,sizeH)}px;${wCss}border:2px solid ${frameCol};box-shadow:${frameShadow};cursor:pointer;${bgImg}background-size:${bgSize};background-position:${bgPos};background-repeat:no-repeat;${!p.photo?`background:linear-gradient(135deg,rgba(100,116,139,.28),rgba(100,116,139,.10));`:''}${loseImgFx}">
     ${!p.photo?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${Math.max(28,Math.round(base*0.30))}px;font-weight:1000;color:rgba(255,255,255,.16)">${initial}</div>`:''}
+    ${h2hSecondHtml}
     <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;z-index:1;${loseFx}">
       <div style="font-weight:1000;font-size:16px;line-height:1.1;color:${txtCol};text-shadow:0 1px 3px rgba(0,0,0,.9),0 2px 10px rgba(0,0,0,.7)">${pName||'미정'}</div>
       <div style="font-size:var(--fs-caption);font-weight:800;color:${txtCol2};text-shadow:0 1px 3px rgba(0,0,0,.9),0 2px 8px rgba(0,0,0,.6)">${univ}</div>
